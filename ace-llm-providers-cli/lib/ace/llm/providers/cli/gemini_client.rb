@@ -162,7 +162,7 @@ module Ace
             cmd << "--output-format" << "json"
 
             # Add model selection if not default
-            if @model && @model != DEFAULT_MODEL
+            if @model
               cmd << "--model" << @model
             end
 
@@ -188,7 +188,7 @@ module Ace
             cmd << "--output-format" << "json"
 
             # Add model selection if not default
-            if @model && @model != DEFAULT_MODEL
+            if @model
               cmd << "--model" << @model
             end
 
@@ -232,7 +232,7 @@ module Ace
             cmd << "--output-format" << "json"
 
             # Add model selection if not default
-            if @model && @model != DEFAULT_MODEL
+            if @model
               cmd << "--model" << @model
             end
 

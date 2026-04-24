@@ -169,7 +169,7 @@ module Ace
             cmd << "--output-format" << "json"
 
             # Add model selection if not default
-            if @model && @model != DEFAULT_MODEL
+            if @model
               cmd << "--model" << @model
             end
 
@@ -196,7 +196,7 @@ module Ace
           def build_claude_interactive_command(prompt, options)
             cmd = ["claude"]
 
-            if @model && @model != DEFAULT_MODEL
+            if @model
               cmd << "--model" << @model
             end
 

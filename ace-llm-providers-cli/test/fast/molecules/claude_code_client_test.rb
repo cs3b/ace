@@ -29,6 +29,14 @@ describe "ClaudeCodeClient" do
   end
 
   describe "build_claude_command" do
+    it "passes the default model explicitly" do
+      cmd = client_with_probe_guard.send(:build_claude_command, {})
+      model_idx = cmd.index("--model")
+
+      refute_nil model_idx
+      assert_equal "claude-sonnet-4-0", cmd[model_idx + 1]
+    end
+
     it "does not pass unsupported temperature flag" do
       cmd = client_with_probe_guard.send(:build_claude_command, temperature: 0.2)
       refute_includes cmd, "--temperature"

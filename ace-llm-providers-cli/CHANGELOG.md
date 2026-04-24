@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.31.6] - 2026-04-24
+
+### Fixed
+- Always passed the explicit resolved model name to Codex, Gemini, and Claude Code CLI invocations so runtime execution matches config lookup and limit resolution.
+
 ## [0.31.5] - 2026-04-23
 
 
