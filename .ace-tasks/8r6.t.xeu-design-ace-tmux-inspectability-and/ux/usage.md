@@ -9,7 +9,7 @@
 
 ## Usage Scenarios
 
-This usage draft covers the read-side follow-up only. The current public baseline is `ace-tmux list`. Interactive control commands such as `send`, `wait`, live pane-tail `capture`, `attach`, and `detach` already belong to sibling task `8re.t.n1d`.
+This usage draft covers the read-side follow-up only. The current public baseline is `ace-tmux list`, and any future enhancement extends that command rather than introducing a separate `state` entrypoint. Interactive control commands such as `send`, `wait`, live pane-tail `capture`, `attach`, and `detach` already belong to sibling task `8re.t.n1d`.
 
 ### Scenario 1: Inspect current tmux runtime state through the shipped CLI
 
@@ -39,28 +39,28 @@ ace-tmux list --format json
 
 #### Expected Output
 
-- This scenario is blocked pending review.
+- This scenario is a candidate follow-up, not shipped behavior.
 - If implemented, it should report the same runtime entities already exposed by the shipped `list` scopes.
-- It must not imply recording provenance or artifacts unless those concepts are explicitly accepted into scope.
+- It must not imply recording provenance or artifacts, which are out of scope for this task.
 
-### Scenario 3: Recording/provenance remains unresolved
+### Scenario 3: Recording/provenance is out of scope for this task
 
-**Goal**: Keep unimplemented recording ideas explicit instead of silently treating them as accepted contract.
+**Goal**: Keep deferred recording ideas explicit instead of silently treating them as accepted contract.
 
 ```bash
 # No shipped command today.
-# Future ownership is unresolved:
-#   ace-tmux state
+# Deferred to a separate future task if ever needed:
 #   ace-tmux start --record
+#   ace-tmux list --recording
 ```
 
 #### Expected Output
 
-- The task review should decide whether recording/provenance remains here, moves elsewhere, or is deferred entirely.
-- Until that decision is made, no usage documentation should present recording flags, `source_scope`, or `.ace-local/tmux` artifacts as live behavior.
+- This task must not present recording flags, `source_scope`, or `.ace-local/tmux` artifacts as live behavior.
+- If a future consumer requires generic tmux recording/provenance, that work should be drafted separately.
 
 ## Notes for Implementer
 
 - Shipped visible fork launch behavior is owned by sibling task `8r6.t.u53`.
 - Interactive control behavior is owned by sibling task `8re.t.n1d`.
-- Full usage documentation should be completed only after the review questions on command shape and recording ownership are resolved.
+- Full usage documentation should be completed only after a concrete additive `ace-tmux list` follow-up is selected for implementation.
