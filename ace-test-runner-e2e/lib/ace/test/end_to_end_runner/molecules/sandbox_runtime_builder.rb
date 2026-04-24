@@ -2,6 +2,7 @@
 
 require "fileutils"
 require "open3"
+require "digest"
 
 module Ace
   module Test
@@ -10,6 +11,9 @@ module Ace
         # Builds a sandbox-local Ruby/Bundler runtime for E2E execution.
         class SandboxRuntimeBuilder
           DEFAULT_RUBY_VERSION = "3.4.9"
+          DEFAULT_SHARED_RUNTIME_CACHE_ROOT = ".ace-local/test-e2e/runtime-cache"
+          SHARED_RUNTIME_ENV_KEY = "ACE_E2E_SHARED_RUNTIME_ROOT"
+          RUNTIME_CACHE_LAYOUT_VERSION = 1
           RESERVED_ENV_KEYS = %w[
             PROJECT_ROOT_PATH
             ACE_E2E_SOURCE_ROOT
@@ -37,19 +41,35 @@ module Ace
 
           def prepare(sandbox_root:, env: {}, tool_names: nil)
             sandbox_root = File.expand_path(sandbox_root)
-            runtime_root = File.join(sandbox_root, ".ace-local", "e2e-runtime")
-            FileUtils.mkdir_p(runtime_root)
+            local_runtime_root = File.join(sandbox_root, ".ace-local", "e2e-runtime")
+            runtime_root = resolve_runtime_root(local_runtime_root, env)
+            FileUtils.mkdir_p(runtime_root) unless shared_runtime_root?(env)
 
-            runtime_env = build_runtime_env(sandbox_root, runtime_root, env)
+            runtime_env = build_runtime_env(
+              sandbox_root,
+              runtime_root,
+              env,
+              mutable_runtime_root: local_runtime_root
+            )
             ensure_runtime_dirs(runtime_env)
-            write_runtime_gemfile(runtime_root)
-            write_command_shims(runtime_root, tool_names)
-            install_runtime!(runtime_root, runtime_env)
+            if shared_runtime_root?(env)
+              ensure_shared_runtime!(runtime_root, tool_names)
+            else
+              prepare_runtime_root!(runtime_root, runtime_env, tool_names)
+            end
 
             {
               runtime_root: runtime_root,
               env: runtime_env
             }
+          end
+
+          def prepare_shared_runtime(cache_root: nil, tool_names: nil)
+            runtime_root = shared_runtime_root(cache_root: cache_root)
+            runtime_env = build_shared_runtime_env(runtime_root)
+            ensure_runtime_dirs(runtime_env)
+            prepare_runtime_root!(runtime_root, runtime_env, tool_names)
+            runtime_root
           end
 
           private
@@ -58,9 +78,9 @@ module Ace
             Open3.capture3(env, *cmd, chdir: chdir, unsetenv_others: true)
           end
 
-          def build_runtime_env(sandbox_root, runtime_root, env)
+          def build_runtime_env(sandbox_root, runtime_root, env, mutable_runtime_root: runtime_root)
             merged = stringify_keys(env).reject { |key, _value| RESERVED_ENV_KEYS.include?(key) }
-            bundler_root = File.join(runtime_root, "bundler")
+            bundler_root = File.join(mutable_runtime_root, "bundler")
             gem_root = File.join(runtime_root, "gems")
             bin_root = File.join(runtime_root, "bin")
             path = merged["PATH"].to_s
@@ -85,6 +105,10 @@ module Ace
               "GEM_PATH" => gem_root,
               "PATH" => [bin_root, path].reject(&:empty?).join(File::PATH_SEPARATOR)
             )
+          end
+
+          def build_shared_runtime_env(runtime_root)
+            build_runtime_env(@source_root, runtime_root, {}, mutable_runtime_root: runtime_root)
           end
 
           def ensure_runtime_dirs(env)
@@ -167,6 +191,73 @@ module Ace
               .map(&:strip)
               .reject(&:empty?)
               .uniq
+          end
+
+          def resolve_runtime_root(local_runtime_root, env)
+            shared_root = shared_runtime_root_from_env(env)
+            return shared_root if shared_root
+
+            local_runtime_root
+          end
+
+          def shared_runtime_root?(env)
+            !shared_runtime_root_from_env(env).nil?
+          end
+
+          def shared_runtime_root_from_env(env)
+            raw = stringify_keys(env)[SHARED_RUNTIME_ENV_KEY].to_s.strip
+            return nil if raw.empty?
+
+            File.expand_path(raw)
+          end
+
+          def shared_runtime_root(cache_root: nil)
+            base = if cache_root
+              File.expand_path(cache_root)
+            else
+              File.join(@source_root, DEFAULT_SHARED_RUNTIME_CACHE_ROOT)
+            end
+
+            File.join(base, runtime_cache_key)
+          end
+
+          def runtime_cache_key
+            @runtime_cache_key ||= begin
+              digest = Digest::SHA256.new
+              digest.update("layout:#{RUNTIME_CACHE_LAYOUT_VERSION}\n")
+              digest.update("ruby:#{@ruby_version}\n")
+              digest.update(File.read(File.join(@source_root, "Gemfile")))
+              lockfile_path = File.join(@source_root, "Gemfile.lock")
+              digest.update(File.read(lockfile_path)) if File.file?(lockfile_path)
+              digest.hexdigest[0, 16]
+            end
+          end
+
+          def ensure_shared_runtime!(runtime_root, tool_names)
+            runtime_env = build_shared_runtime_env(runtime_root)
+            ensure_runtime_dirs(runtime_env)
+            prepare_runtime_root!(runtime_root, runtime_env, tool_names)
+          end
+
+          def prepare_runtime_root!(runtime_root, env, tool_names)
+            with_runtime_lock(runtime_root) do
+              marker_path = File.join(runtime_root, ".bootstrapped")
+              return if File.exist?(marker_path)
+
+              FileUtils.mkdir_p(runtime_root)
+              write_runtime_gemfile(runtime_root)
+              write_command_shims(runtime_root, tool_names)
+              install_runtime!(runtime_root, env)
+            end
+          end
+
+          def with_runtime_lock(runtime_root)
+            lock_path = "#{runtime_root}.lock"
+            FileUtils.mkdir_p(File.dirname(lock_path))
+            File.open(lock_path, File::RDWR | File::CREAT, 0o644) do |lock_file|
+              lock_file.flock(File::LOCK_EX)
+              yield
+            end
           end
 
           def install_runtime!(runtime_root, env)

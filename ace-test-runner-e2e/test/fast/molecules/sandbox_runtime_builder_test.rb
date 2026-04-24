@@ -69,6 +69,90 @@ class SandboxRuntimeBuilderTest < Minitest::Test
     end
   end
 
+  def test_prepare_shared_runtime_builds_cached_runtime_once
+    Dir.mktmpdir do |tmpdir|
+      source_root = File.join(tmpdir, "source")
+      cache_root = File.join(tmpdir, "cache")
+      build_source_root(source_root)
+
+      calls = []
+      ruby_root = File.join(tmpdir, "mise", "ruby", "3.4.9")
+      ruby_exec = File.join(ruby_root, "bin", "ruby")
+      runner = lambda do |env, *cmd, chdir:|
+        calls << {env: env, cmd: cmd, chdir: chdir}
+
+        case cmd
+        when ["mise", "where", "ruby@3.4.9"]
+          ["#{ruby_root}\n", "", FakeStatus.new(true)]
+        when Array
+          if cmd[0] == ruby_exec && cmd[1] == "-e"
+            ["", "", FakeStatus.new(true)]
+          elsif cmd[0, 3] == [ruby_exec, "-S", "bundle"] && cmd[3] == "install"
+            ["installed", "", FakeStatus.new(true)]
+          else
+            ["", "unexpected command: #{cmd.inspect}", FakeStatus.new(false)]
+          end
+        end
+      end
+
+      builder = SandboxRuntimeBuilder.new(source_root: source_root, command_runner: runner)
+      first_root = builder.prepare_shared_runtime(cache_root: cache_root)
+      second_root = builder.prepare_shared_runtime(cache_root: cache_root)
+
+      assert_equal first_root, second_root
+      assert File.exist?(File.join(first_root, ".bootstrapped"))
+      assert_equal 1, calls.count { |entry| entry[:cmd][0, 3] == [ruby_exec, "-S", "bundle"] }
+    end
+  end
+
+  def test_prepare_uses_shared_runtime_root_from_env_with_local_mutable_bundler_dirs
+    Dir.mktmpdir do |tmpdir|
+      source_root = File.join(tmpdir, "source")
+      sandbox_root = File.join(tmpdir, "sandbox")
+      cache_root = File.join(tmpdir, "cache")
+      build_source_root(source_root)
+
+      calls = []
+      ruby_root = File.join(tmpdir, "mise", "ruby", "3.4.9")
+      ruby_exec = File.join(ruby_root, "bin", "ruby")
+      runner = lambda do |env, *cmd, chdir:|
+        calls << {env: env, cmd: cmd, chdir: chdir}
+
+        case cmd
+        when ["mise", "where", "ruby@3.4.9"]
+          ["#{ruby_root}\n", "", FakeStatus.new(true)]
+        when Array
+          if cmd[0] == ruby_exec && cmd[1] == "-e"
+            ["", "", FakeStatus.new(true)]
+          elsif cmd[0, 3] == [ruby_exec, "-S", "bundle"] && cmd[3] == "install"
+            ["installed", "", FakeStatus.new(true)]
+          else
+            ["", "unexpected command: #{cmd.inspect}", FakeStatus.new(false)]
+          end
+        end
+      end
+
+      builder = SandboxRuntimeBuilder.new(source_root: source_root, command_runner: runner)
+      shared_root = builder.prepare_shared_runtime(cache_root: cache_root)
+      result = builder.prepare(
+        sandbox_root: sandbox_root,
+        env: {"PATH" => "/usr/bin", "ACE_E2E_SHARED_RUNTIME_ROOT" => shared_root},
+        tool_names: ["fake-tool"]
+      )
+
+      assert_equal shared_root, result[:runtime_root]
+      assert_equal File.join(shared_root, "Gemfile"), result[:env]["BUNDLE_GEMFILE"]
+      assert_equal File.join(shared_root, "gems"), result[:env]["GEM_HOME"]
+      assert_equal File.join(shared_root, "gems"), result[:env]["GEM_PATH"]
+      assert_equal File.join(sandbox_root, ".ace-local", "e2e-runtime", "bundler", "app-config"),
+        result[:env]["BUNDLE_APP_CONFIG"]
+      assert_equal File.join(sandbox_root, ".ace-local", "e2e-runtime", "bundler", "cache"),
+        result[:env]["BUNDLE_USER_CACHE"]
+      assert_includes result[:env]["PATH"].split(File::PATH_SEPARATOR), File.join(shared_root, "bin")
+      assert_equal 1, calls.count { |entry| entry[:cmd][0, 3] == [ruby_exec, "-S", "bundle"] }
+    end
+  end
+
   def test_prepare_rejects_ruby_with_global_ace_gems
     Dir.mktmpdir do |tmpdir|
       source_root = File.join(tmpdir, "source")
@@ -136,6 +220,18 @@ class SandboxRuntimeBuilderTest < Minitest::Test
       gem "ace-handbook", path: "./ace-handbook"
       gem "json"
     RUBY
+    File.write(File.join(source_root, "Gemfile.lock"), <<~LOCK)
+      GEM
+        remote: https://rubygems.org/
+        specs:
+          json (2.0.0)
+
+      PLATFORMS
+        ruby
+
+      DEPENDENCIES
+        json
+    LOCK
 
     FileUtils.mkdir_p(File.join(source_root, "bin"))
     write_executable(File.join(source_root, "bin", "ace-config"))

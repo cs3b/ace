@@ -67,6 +67,7 @@ ace-test-e2e-suite [PACKAGES] [OPTIONS]
 - `--parallel=VALUE`: suite worker count (`0` = sequential, default: `8`)
 - `--affected` / `--no-affected`: test only changed/affected packages
 - `--only-failures` / `--no-only-failures`: rerun only previously failed scenarios
+- `--retry-failures-once` / `--no-retry-failures-once`: retry failed scenarios once after a full unfiltered suite run
 - `--cli-args=VALUE`: extra provider CLI args
 - `--provider=VALUE`: provider:model (default: `claude:haiku@yolo`)
 - `--timeout=VALUE`: timeout per scenario in seconds (default: `600`)
@@ -83,6 +84,7 @@ ace-test-e2e-suite [PACKAGES] [OPTIONS]
 
 - Exit code `0`: all scenarios passed
 - Exit code `1`: one or more scenarios failed or errored
+- Full unfiltered suite runs retry failed scenarios once by default; scoped runs (`PACKAGES`, `--affected`, `--only-failures`, `--tags`, `--exclude-tags`) do not retry unless you explicitly stay on the default full-suite path
 
 ### Examples
 
@@ -90,6 +92,7 @@ ace-test-e2e-suite [PACKAGES] [OPTIONS]
 ace-test-e2e-suite
 ace-test-e2e-suite ace-bundle,ace-lint
 ace-test-e2e-suite --parallel 4
+ace-test-e2e-suite --no-retry-failures-once
 ace-test-e2e-suite --affected
 ace-test-e2e-suite --affected --parallel 8
 ace-test-e2e-suite --only-failures
@@ -135,4 +138,5 @@ When using default report paths, derive the newest directory from `.ace-local/te
 - Grouped runner shorthand such as ``results/tc/02/help.stdout`, `.stderr`, `.exit`` counts as an explicit declaration of all three files.
 - Use `--dry-run` before long executions when validating selection and tags.
 - Use `--only-failures` in suite mode to shorten rerun loops after large failures.
+- Auto-retry is intended for full-suite stabilization. Explicit reruns such as `--only-failures` stay single-pass so targeted fix loops preserve clean scenario-level evidence.
 - Package and suite reports are aggregate summaries. When failed TC IDs or evidence matter, use the referenced per-scenario `report.md` as the canonical source of truth.

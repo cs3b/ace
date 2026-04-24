@@ -57,7 +57,8 @@ class SuiteOrchestratorTest < Minitest::Test
     defaults = {
       output: @output,
       suite_report_writer: StubSuiteReportWriter.new,
-      scenario_loader: StubScenarioLoader.new
+      scenario_loader: StubScenarioLoader.new,
+      runtime_builder: StubRuntimeBuilder.new
     }
     SuiteOrchestrator.new(**defaults.merge(kwargs))
   end
@@ -584,6 +585,20 @@ class SuiteOrchestratorTest < Minitest::Test
     end
   end
 
+  class StubRuntimeBuilder
+    attr_reader :calls
+
+    def initialize(runtime_root: "/tmp/shared-runtime")
+      @runtime_root = runtime_root
+      @calls = []
+    end
+
+    def prepare_shared_runtime(cache_root:, tool_names: nil)
+      @calls << {cache_root: cache_root, tool_names: tool_names}
+      @runtime_root
+    end
+  end
+
   def test_report_generated_after_sequential_run
     report_writer = StubSuiteReportWriter.new(report_path: "/tmp/test-suite-report.md")
     discoverer = StubDiscoverer.new(
@@ -618,6 +633,43 @@ class SuiteOrchestratorTest < Minitest::Test
     # Output contains report path
     assert_match(/Report: \/tmp\/test-suite-report\.md/, @output.string)
     assert_equal :suite, call[:report_kind]
+  end
+
+  def test_run_prewarms_shared_runtime_once_before_execution
+    discoverer = StubDiscoverer.new(
+      packages: ["ace-lint"],
+      tests: {"ace-lint" => ["/path/to/TS-LINT-001-test/scenario.yml"]}
+    )
+    runtime_builder = StubRuntimeBuilder.new(runtime_root: "/tmp/shared-runtime")
+
+    orchestrator = build_orchestrator(
+      discoverer: discoverer,
+      output: @output,
+      runtime_builder: runtime_builder
+    )
+
+    def orchestrator.run_single_test(package, test_file, options, run_id: nil)
+      {status: "pass", summary: "Test passed", passed_cases: 1, total_cases: 1,
+       test_name: File.basename(File.dirname(test_file))}
+    end
+
+    orchestrator.run(parallel: false)
+
+    assert_equal 1, runtime_builder.calls.length
+    assert_equal File.expand_path(".ace-local/test-e2e/runtime-cache", Dir.pwd),
+      runtime_builder.calls.first[:cache_root]
+  end
+
+  def test_suite_subprocess_env_uses_shared_runtime_root
+    runtime_builder = StubRuntimeBuilder.new(runtime_root: "/tmp/shared-runtime")
+    orchestrator = build_orchestrator(runtime_builder: runtime_builder)
+
+    orchestrator.instance_variable_set(:@shared_runtime_root, "/tmp/shared-runtime")
+
+    assert_equal(
+      {"ACE_E2E_SHARED_RUNTIME_ROOT" => "/tmp/shared-runtime"},
+      orchestrator.send(:suite_subprocess_env)
+    )
   end
 
   def test_report_converts_result_hashes_to_test_result_models
