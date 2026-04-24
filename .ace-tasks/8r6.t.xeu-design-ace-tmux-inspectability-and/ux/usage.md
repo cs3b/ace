@@ -28,7 +28,7 @@ ace-tmux list --sessions
 - Window rows identify active state, tmux window id, session/index, name, and pane count.
 - Session rows identify session name, attached-client count, and window count.
 
-### Scenario 2: Reopen machine-readable runtime output only if a concrete consumer appears
+### Scenario 2: Future machine-readable runtime output requires a new task, not this archived family
 
 **Goal**: Keep speculative CLI JSON work out of the accepted contract unless a concrete consumer later requires it.
 
@@ -36,7 +36,7 @@ ace-tmux list --sessions
 
 - This is not an accepted follow-up contract today.
 - Current structured consumers already use Ruby APIs or local metadata rather than a shared CLI JSON schema.
-- If a later consumer justifies this, it must stay additive to the shipped `list` scopes and must not imply recording provenance or artifacts.
+- If a later consumer justifies this, it must be drafted as a new task, stay additive to the shipped `list` scopes, and must not imply recording provenance or artifacts.
 
 ### Scenario 3: Recording/provenance is out of scope for this task
 
@@ -58,5 +58,5 @@ ace-tmux list --sessions
 
 - Shipped visible fork launch behavior is owned by sibling task `8r6.t.u53`.
 - Interactive control behavior is owned by sibling task `8re.t.n1d`.
-- Current repo evidence supports no new read-side CLI implementation task.
-- Reopen this task only if a concrete consumer needs more than the shipped `ace-tmux list` surface or the existing Ruby read-side APIs.
+- Current repo evidence supports no new read-side CLI implementation task from this task family.
+- Archive this task family after closure. If a concrete consumer later needs more than the shipped `ace-tmux list` surface or the existing Ruby read-side APIs, draft a new task.
