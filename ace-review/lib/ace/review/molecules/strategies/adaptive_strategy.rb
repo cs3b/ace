@@ -70,7 +70,7 @@ module Ace
             explicit_limit = context[:model_context_limit] || context["model_context_limit"]
 
             # Resolve model context limit
-            model_limit = explicit_limit || Atoms::ContextLimitResolver.resolve(model)
+            model_limit = explicit_limit || Atoms::ContextLimitResolver.resolve_details(model).context_limit
 
             # Select and delegate to appropriate strategy
             selected = select_strategy(subject, model_limit, model)

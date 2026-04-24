@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.53.6] - 2026-04-24
+
+### Fixed
+- Sized review prompts and adaptive review execution against the resolved concrete model target so role and alias-based reviews no longer rely on provider-wide context assumptions.
+
 ## [0.53.5] - 2026-04-19
 
 ### Technical

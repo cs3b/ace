@@ -84,6 +84,8 @@ end
 
 # Base test class
 class AceReviewTest < Minitest::Test
+  REPO_ROOT = File.expand_path("../..", __dir__)
+
   # Include shared prompt stubbing helpers from ace-support-test-helpers
   include Ace::TestSupport::Fixtures::PromptHelpers
   # Include shared temp dir functionality for opt-in performance optimization
@@ -114,6 +116,7 @@ class AceReviewTest < Minitest::Test
     # Restore original ace-bundle and git methods
     restore_ace_bundle
     restore_branch_reader
+    Ace::LLM.reset_configuration! if defined?(Ace::LLM)
 
     Dir.chdir(@original_pwd)
 
@@ -186,6 +189,26 @@ class AceReviewTest < Minitest::Test
       repo: repo,
       gh_format: gh_format
     )
+  end
+
+  # Copy selected project llm provider fixtures plus the project llm config
+  # into the test sandbox so review tests can resolve project-only aliases/roles.
+  def install_project_llm_provider_fixtures(*provider_names)
+    FileUtils.mkdir_p(".ace/llm")
+    FileUtils.mkdir_p(".ace/llm/providers")
+    File.write(".ace/llm/config.yml", <<~YAML)
+      llm:
+        roles:
+          review-codex:
+            - codex:gpt:high@ro
+    YAML
+
+    provider_names.each do |provider_name|
+      source = File.join(REPO_ROOT, ".ace/llm/providers/#{provider_name}.yml")
+      FileUtils.cp(source, ".ace/llm/providers/#{provider_name}.yml")
+    end
+
+    Ace::LLM.reset_configuration! if defined?(Ace::LLM)
   end
 
   private

@@ -14,8 +14,8 @@ module Ace
         # Default timeout for LLM queries (5 minutes)
         DEFAULT_LLM_TIMEOUT = 300
 
-        # Warning threshold: 80% of typical 1M context window
-        PROMPT_SIZE_WARNING_THRESHOLD = 800_000
+        # Warning threshold: 80% of the smallest resolved context window in the batch
+        PROMPT_SIZE_WARNING_RATIO = LlmExecutor::PROMPT_SIZE_WARNING_RATIO
 
         def initialize(max_concurrent: nil, llm_timeout: nil)
           # Read from config, fallback to default of 3, clamp to minimum 1
@@ -266,7 +266,14 @@ module Ace
           total_chars = (system_prompt&.length || 0) + (user_prompt&.length || 0)
           estimated_tokens = total_chars / 4  # Rough estimate: 4 chars per token
 
-          return unless estimated_tokens > PROMPT_SIZE_WARNING_THRESHOLD
+          resolved_limits = models.map do |model|
+            Atoms::ContextLimitResolver.resolve_details(model)
+          end
+          min_context_limit = resolved_limits.map(&:context_limit).compact.min
+          return if min_context_limit.nil?
+
+          threshold = (min_context_limit * PROMPT_SIZE_WARNING_RATIO).to_i
+          return unless estimated_tokens > threshold
 
           model_list = models.join(", ")
           warn "Warning: Prompt size (~#{estimated_tokens.to_s.gsub(/(\d)(?=(\d{3})+(?!\d))/, '\\1,')} tokens) " \
