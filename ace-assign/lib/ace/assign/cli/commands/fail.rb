@@ -21,7 +21,7 @@ module Ace
 
             target = resolve_assignment_target(options)
             executor = build_executor_for_target(target)
-            result = executor.fail(message)
+            result = executor.fail(message, fork_root: target.scope)
 
             unless options[:quiet]
               failed = result[:failed]

@@ -79,4 +79,47 @@ class FailCommandTest < AceAssignTestCase
       Ace::Assign.reset_config!
     end
   end
+
+  def test_fail_with_assignment_scope_targets_active_step_inside_subtree
+    with_temp_cache do |cache_dir|
+      report_path = create_report(cache_dir, "Scoped progress")
+      steps = [
+        {"name" => "precheck", "instructions" => "Run precheck"},
+        {
+          "name" => "work-on-task",
+          "instructions" => "Implement task 235.01",
+          "context" => "fork",
+          "sub_steps" => %w[onboard plan-task]
+        },
+        {"name" => "postcheck", "instructions" => "Run postcheck"}
+      ]
+      config_path = create_test_config(cache_dir, steps: steps)
+
+      Ace::Assign.config["cache_dir"] = cache_dir
+      executor = build_fast_executor(cache_base: cache_dir)
+      start = executor.start(config_path)
+      target_id = start[:assignment].id
+      executor.start_step(step_number: "010")
+      writer = Ace::Assign::Molecules::StepWriter.new
+      writer.mark_active(start[:state].find_by_number("020").file_path)
+      executor.start_step(fork_root: "020")
+      executor.start_step(step_number: "030")
+
+      output = capture_io do
+        Ace::Assign::CLI::Commands::Fail.new.call(
+          message: "Scoped failure",
+          assignment: "#{target_id}@020"
+        )
+      end
+
+      assert_includes output.first, "Step 020.01 (onboard) marked as failed"
+
+      scanner = Ace::Assign::Molecules::QueueScanner.new
+      state = scanner.scan(start[:assignment].steps_dir, assignment: start[:assignment])
+      assert_equal :failed, state.find_by_number("020.01").status
+      assert_equal :active, state.find_by_number("030").status
+    ensure
+      Ace::Assign.reset_config!
+    end
+  end
 end

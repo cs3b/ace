@@ -163,6 +163,9 @@ expansion:
   batch-parent:
     name: batch-tasks
     number: "010"
+    batch_parent: true
+    parallel: false
+    fork_retry_limit: 1
     instructions: |
       Batch container for multiple task implementations.
       This step auto-completes when all child tasks are done.

@@ -10,6 +10,9 @@ class WorkOnTaskTerminalFilterContractTest < AceAssignTestCase
     assert_includes content, "taskrefs:"
     assert_includes content, "type: array"
     assert_includes content, "batch-tasks"
+    assert_includes content, "batch_parent: true"
+    assert_includes content, "parallel: false"
+    assert_includes content, "fork_retry_limit: 1"
     assert_includes content, 'name: "work-on-{{item}}"'
     assert_includes content, "foreach: taskrefs"
   end
@@ -41,6 +44,13 @@ class WorkOnTaskTerminalFilterContractTest < AceAssignTestCase
     assert_includes mixed_example, "Skipped terminal tasks (done/skipped/cancelled): 149"
     assert_includes all_terminal_example, "All requested tasks are already terminal (done/skipped/cancelled): 148,149"
     assert_includes all_terminal_example, "No assignment created."
+  end
+
+  def test_prepare_workflow_documents_batch_parent_scheduler_metadata
+    content = prepare_workflow
+
+    assert_includes content, "010 batch-tasks (parent, auto-completes, batch_parent: true, parallel: false)"
+    assert_includes content, "fork_retry_limit: 1"
   end
 
   def test_create_workflow_blocks_hidden_spec_and_create_for_all_terminal_requests

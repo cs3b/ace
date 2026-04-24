@@ -289,7 +289,7 @@ module Ace
           candidate_steps = scope_root ? subtree_steps(scope_root) : steps
           candidate_steps
             .select { |s| s.status == :pending }
-            .reject { |s| has_incomplete_children?(s.number) }
+            .reject { |s| has_incomplete_children?(s.number) && !runnable_delegation_parent?(s, scope_root: scope_root) }
             .reject { |s| hidden_by_active_fork_root?(s.number, scope_root: scope_root) }
             .first
         end
@@ -333,6 +333,12 @@ module Ace
         end
 
         private
+
+        def runnable_delegation_parent?(step, scope_root:)
+          return false unless scope_root.nil? || scope_root.to_s.strip.empty?
+
+          step.batch_parent == true || step.fork?
+        end
 
         # Build index of children by parent number for O(1) lookups
         # @param steps [Array<Step>] All steps

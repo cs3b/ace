@@ -19,7 +19,7 @@ module Ace
           def call(step_ref:, **options)
             target = resolve_assignment_target(options)
             executor = build_executor_for_target(target)
-            result = executor.retry_step(step_ref)
+            result = executor.retry_step(step_ref, fork_root: target.scope)
 
             unless options[:quiet]
               retry_step = result[:retry]

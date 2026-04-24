@@ -35,11 +35,11 @@ module Ace
             mode = selected_mode(options)
             case mode
             when :yaml
-              handle_yaml_mode(executor, options)
+              handle_yaml_mode(executor, options, target)
             when :step
-              handle_step_mode(executor, options)
+              handle_step_mode(executor, options, target)
             when :task
-              handle_task_mode(executor, options)
+              handle_task_mode(executor, options, target)
             else
               raise Ace::Support::Cli::Error, "Exactly one of --yaml, --step, or --task is required"
             end
@@ -77,20 +77,21 @@ module Ace
             insertion_modes(options).find { |_, value| !value.to_s.strip.empty? }&.first
           end
 
-          def handle_yaml_mode(executor, options)
+          def handle_yaml_mode(executor, options, target)
             yaml_path = options[:yaml].to_s.strip
             steps = load_steps_from_file(yaml_path)
             result = executor.add_batch(
               steps: steps,
               after: options[:after],
               as_child: options[:child],
-              source_file: yaml_path
+              source_file: yaml_path,
+              fork_root: target.scope
             )
             print_yaml_result(result, yaml_path) unless options[:quiet]
             nil
           end
 
-          def handle_step_mode(executor, options)
+          def handle_step_mode(executor, options, target)
             preset_name = resolve_preset_name(executor, options)
             preset = Atoms::PresetLoader.load(preset_name)
             requested = parse_step_names(options[:step])
@@ -111,7 +112,8 @@ module Ace
                 steps: [step],
                 after: options[:child] ? options[:after] : sibling_cursor,
                 as_child: options[:child],
-                source_file: "preset:#{preset_name}"
+                source_file: "preset:#{preset_name}",
+                fork_root: target.scope
               )
 
               inserted_added = Array(inserted[:added])
@@ -126,7 +128,7 @@ module Ace
             nil
           end
 
-          def handle_task_mode(executor, options)
+          def handle_task_mode(executor, options, target)
             preset_name = resolve_preset_name(executor, options)
             preset = Atoms::PresetLoader.load(preset_name)
             task_ref = options[:task].to_s.strip
@@ -139,7 +141,8 @@ module Ace
             end
 
             parent_step = options[:after].to_s.strip
-            parent_step = detect_batch_parent(executor) if parent_step.empty?
+            parent_step = target.scope.to_s.strip if parent_step.empty? && !target.scope.to_s.strip.empty?
+            parent_step = detect_batch_parent(executor, target) if parent_step.empty?
             if parent_step.to_s.strip.empty?
               raise Ace::Support::Cli::Error, "No batch parent found. Pass --after <step> to specify."
             end
@@ -150,7 +153,8 @@ module Ace
               steps: [task_step],
               after: parent_step,
               as_child: insert_as_child,
-              source_file: "preset:#{preset_name}:task:#{task_ref}"
+              source_file: "preset:#{preset_name}:task:#{task_ref}",
+              fork_root: target.scope
             )
 
             print_task_result(result, task_ref, parent_step, as_child: insert_as_child) unless options[:quiet]
@@ -235,8 +239,13 @@ module Ace
             tokens.to_a.sort
           end
 
-          def detect_batch_parent(executor)
+          def detect_batch_parent(executor, target)
             state = executor.status[:state]
+            if target.scope && !target.scope.to_s.strip.empty?
+              scoped_steps = state.subtree_steps(target.scope.strip)
+              scoped_state = Ace::Assign::Models::QueueState.new(steps: scoped_steps, assignment: state.assignment)
+              state = scoped_state
+            end
 
             batch_parent = state.top_level.find { |step| step.name == "batch-tasks" }
             return batch_parent.number if batch_parent

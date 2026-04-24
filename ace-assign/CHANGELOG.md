@@ -7,6 +7,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.54.7] - 2026-04-24
+
+### Fixed
+- Made forked `ace-assign` workers honor an explicit default assignment target so scoped subtree execution stays inside the passed `<assignment>@<root>` boundary instead of widening back to parent assignment status.
+- Restored root-first fork scheduling for unscoped resume so global queue selection and `start --assignment <id>` activate pending fork roots before child steps.
+
+### Technical
+- Propagated `ACE_ASSIGN_DEFAULT_TARGET` through headless and tmux fork launches, tightened scoped `fail` and `retry` handling, and aligned drive workflow plus queue/command regressions with the explicit scoped-target contract.
+
+## [0.54.6] - 2026-04-24
+
+### Fixed
+- Ordered tmux fork-launch environment unsets before assignments so mixed `env -u NAME` and `NAME=value` invocations stay valid during pane execution.
+
+### Technical
+- Preserved explicit `fork_retry_limit: 0` values during preset expansion and tightened the assignment-drive workflow guidance so scoped subtree resumes scan all active descendants before auto-starting child work.
+
+## [0.54.5] - 2026-04-24
+
+### Fixed
+- Corrected scoped subtree-drive guidance so agents already running inside `/as-assign-drive <assignment>@<root>` start child work inline instead of attempting a same-root `fork-run` first.
+
+### Technical
+- Replaced tmux fork-pane wrapper-script bootstrapping with direct interactive pane launches built from the resolved invocation environment and added regressions for scoped subtree-root instructions and tmux launch transport.
+
+## [0.54.4] - 2026-04-24
+
+### Fixed
+- Blocked same-root scoped `fork-run` re-entry so forked assignment drivers continue inline instead of launching duplicate panes into the shared tmux fork window.
+
+### Technical
+- Propagated explicit fork-scope environment markers through headless and tmux launches and added command, launcher, and workflow regressions for the no-refork contract.
+
+## [0.54.3] - 2026-04-24
+
+### Fixed
+- Restored metadata-driven batch scheduling for generated `work-on-task` assignments so top-level batch parents remain the next global step until the driver delegates a child fork root.
+
+### Technical
+- Preserved `batch_parent`, scheduling, and fork-retry metadata during preset expansion and aligned queue/start behavior so explicit batch-parent starts match unscoped next-step selection.
+
 ## [0.54.2] - 2026-04-23
 
 ### Technical

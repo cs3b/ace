@@ -95,6 +95,91 @@ class StatusCommandTest < AceAssignTestCase
     end
   end
 
+  def test_status_uses_marked_batch_parent_as_next_step_globally
+    with_temp_cache do |cache_dir|
+      steps = [
+        {"number" => "000", "name" => "onboard", "instructions" => "Load context"},
+        {"number" => "010", "name" => "batch-tasks", "instructions" => "Batch container instructions", "batch_parent" => true, "parallel" => false, "fork_retry_limit" => 1},
+        {"number" => "010.01", "name" => "work-on-148", "parent" => "010", "context" => "fork", "instructions" => "Task context:\nWork on task 148"},
+        {"number" => "020", "name" => "finalize", "instructions" => "Finalize"}
+      ]
+      config_path = create_test_config(cache_dir, steps: steps)
+      report = create_report(cache_dir, "done")
+      Ace::Assign.config["cache_dir"] = cache_dir
+
+      executor = build_fast_executor(cache_base: cache_dir)
+      result = executor.start(config_path)
+      executor.start_step
+      executor.advance(report)
+
+      output = capture_status_command(cache_base: cache_dir, assignment: result[:assignment].id).first
+
+      assert_includes output, "Next: 010 batch-tasks"
+      refute_includes output, "Next: 010.01 work-on-148"
+    ensure
+      Ace::Assign.reset_config!
+    end
+  end
+
+  def test_status_uses_pending_fork_root_as_next_step_globally
+    with_temp_cache do |cache_dir|
+      steps = [
+        {"number" => "010", "name" => "precheck", "instructions" => "Precheck"},
+        {"number" => "020", "name" => "review-cycle", "instructions" => "Review cycle", "context" => "fork"},
+        {"number" => "020.01", "name" => "review-pr", "parent" => "020", "instructions" => "Review PR"},
+        {"number" => "030", "name" => "postcheck", "instructions" => "Postcheck"}
+      ]
+      config_path = create_test_config(cache_dir, steps: steps)
+      report = create_report(cache_dir, "done")
+      Ace::Assign.config["cache_dir"] = cache_dir
+
+      executor = build_fast_executor(cache_base: cache_dir)
+      result = executor.start(config_path)
+      executor.start_step
+      executor.advance(report)
+
+      output = capture_status_command(cache_base: cache_dir, assignment: result[:assignment].id).first
+
+      assert_includes output, "Next: 020 review-cycle"
+      refute_includes output, "Next: 020.01 review-pr"
+    ensure
+      Ace::Assign.reset_config!
+    end
+  end
+
+  def test_status_uses_default_target_env_when_assignment_flag_missing
+    with_temp_cache do |cache_dir|
+      steps = [
+        {"number" => "010", "name" => "precheck", "instructions" => "Precheck"},
+        {"number" => "020", "name" => "review-cycle", "instructions" => "Review cycle", "context" => "fork"},
+        {"number" => "020.01", "name" => "review-pr", "parent" => "020", "instructions" => "Review PR"},
+        {"number" => "020.02", "name" => "release", "parent" => "020", "instructions" => "Release"},
+        {"number" => "030", "name" => "postcheck", "instructions" => "Postcheck"}
+      ]
+      config_path = create_test_config(cache_dir, steps: steps)
+      Ace::Assign.config["cache_dir"] = cache_dir
+
+      executor = build_fast_executor(cache_base: cache_dir)
+      result = executor.start(config_path)
+
+      previous = ENV["ACE_ASSIGN_DEFAULT_TARGET"]
+      ENV["ACE_ASSIGN_DEFAULT_TARGET"] = "#{result[:assignment].id}@020"
+
+      output = capture_status_command(cache_base: cache_dir).first
+
+      assert_includes output, "Next: 020.01 review-pr"
+      refute_includes output, "Next: 010 precheck"
+      refute_includes output, "030 next postcheck"
+    ensure
+      if previous.nil?
+        ENV.delete("ACE_ASSIGN_DEFAULT_TARGET")
+      else
+        ENV["ACE_ASSIGN_DEFAULT_TARGET"] = previous
+      end
+      Ace::Assign.reset_config!
+    end
+  end
+
   def test_status_compact_completed_assignment_reads_cleanly
     with_temp_cache do |cache_dir|
       config_path = create_test_config(cache_dir)

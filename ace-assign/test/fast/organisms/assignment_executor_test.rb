@@ -1082,6 +1082,8 @@ class AssignmentExecutorTest < AceAssignTestCase
             assert_nil parent_step.skill
             assert_includes parent_step.instructions, "Subtree root orchestrator step."
             assert_includes parent_step.instructions, "ace-assign fork-run --assignment <assignment-id>@010"
+            assert_includes parent_step.instructions, "Scoped forked agent action: do not call fork-run again for 010."
+            assert_includes parent_step.instructions, "ace-assign start --assignment <assignment-id>@010"
             assert_includes parent_step.instructions, "Do work"
 
             onboard_step = state.find_by_number("010.01")
@@ -1100,9 +1102,10 @@ class AssignmentExecutorTest < AceAssignTestCase
             assert_equal "verify-test", verify_step.name
             assert_equal "release-minor", release_step.name
 
-            # First actionable child stays pending until scoped execution explicitly starts it.
+            # Global scheduling now surfaces the pending fork root first; scoped execution still starts at the first child.
             assert_nil result[:current]
-            assert_equal "010.01", result[:state].next_workable.number
+            assert_equal "010", result[:state].next_workable.number
+            assert_equal "010.01", result[:state].next_workable_in_subtree("010").number
 
             # Skill-backed steps materialize from canonical skill bodies with provenance metadata.
             assert_nil onboard_step.skill

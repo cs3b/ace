@@ -55,7 +55,7 @@ module Ace
               focused = scoped_state.current
               puts "Active steps remaining: #{active_steps.map { |step| "#{step.number} #{step.name}" }.join(', ')}"
               puts "Next: ace-assign step#{step_target_suffix(focused.number, options[:assignment])}" if focused
-            elsif (next_step = scoped_state.next_workable)
+            elsif (next_step = next_pending_step(result[:state], scoped_state, target.scope))
               puts "No active step selected."
               puts "Next pending step: #{next_step.number} - #{next_step.name}"
             else
@@ -97,6 +97,13 @@ module Ace
             return " #{step_number}" if assignment_target.nil? || assignment_target.to_s.strip.empty?
 
             %( #{step_number} --assignment "#{assignment_target}")
+          end
+
+          def next_pending_step(state, scoped_state, scope_root)
+            scope_ref = scope_root.to_s.strip
+            return scoped_state.next_workable if scope_ref.empty?
+
+            state.next_workable_in_subtree(scope_ref)
           end
         end
       end

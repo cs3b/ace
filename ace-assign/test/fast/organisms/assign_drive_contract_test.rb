@@ -23,6 +23,14 @@ class AssignDriveContractTest < AceAssignTestCase
     assert_includes content, "If a prior drive session or terminal ended, a new `/as-assign-drive` invocation MUST recover from assignment state"
     assert_includes content, "Correct after interruption: re-run `/as-assign-drive <assignment-id>`"
     assert_includes content, "sleep 360"
+    assert_includes content, "First decide whether the fork boundary is already entered before issuing `fork-run`."
+    assert_includes content, "same-root call to `ace-assign fork-run --assignment <id>@<root>` from inside that exact scoped subtree is invalid"
+    assert_includes content, "continue inline and never call `fork-run` again for the same `<root>`"
+    assert_includes content, 'ace-assign start --assignment "$ASSIGNMENT_TARGET"'
+    assert_includes content, "ACE_ASSIGN_DEFAULT_TARGET"
+    assert_includes content, "If `ASSIGNMENT_TARGET` includes `@<root>`, that scoped subtree is the entire execution boundary."
+    assert_includes content, "Do not widen a scoped target back to parent assignment status."
+    assert_includes content, "Do not continue into later sibling roots such as `070` from `/as-assign-drive <id>@040`."
   end
 
   def test_drive_skill_remains_a_thin_workflow_wrapper

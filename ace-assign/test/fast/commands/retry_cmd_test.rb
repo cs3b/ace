@@ -106,4 +106,34 @@ class RetryCmdTest < AceAssignTestCase
       Ace::Assign.reset_config!
     end
   end
+
+  def test_retry_with_assignment_scope_rejects_step_outside_subtree
+    with_temp_cache do |cache_dir|
+      Ace::Assign.config["cache_dir"] = cache_dir
+
+      steps = [
+        {"number" => "010", "name" => "precheck", "instructions" => "Precheck"},
+        {"number" => "020", "name" => "review-cycle", "instructions" => "Review cycle", "context" => "fork"},
+        {"number" => "020.01", "name" => "review-pr", "parent" => "020", "instructions" => "Review PR"},
+        {"number" => "030", "name" => "postcheck", "instructions" => "Postcheck"}
+      ]
+      config_path = create_test_config(cache_dir, steps: steps)
+
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      result = executor.start(config_path)
+      executor.start_step(step_number: "010")
+      executor.fail("Failed precheck")
+
+      error = assert_raises(Ace::Support::Cli::Error) do
+        Ace::Assign::CLI::Commands::RetryCmd.new.call(
+          step_ref: "010",
+          assignment: "#{result[:assignment].id}@020"
+        )
+      end
+
+      assert_includes error.message, "outside scoped subtree 020"
+    ensure
+      Ace::Assign.reset_config!
+    end
+  end
 end

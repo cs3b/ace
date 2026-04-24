@@ -4,6 +4,8 @@ require_relative "../../test_helper"
 
 class ForkSessionLauncherTest < AceAssignTestCase
   class FakeTmuxRunner
+    attr_reader :last_prepare, :last_invocation, :last_select, :last_ensure
+
     def initialize(enabled: false, session: "dev", window: "task")
       @enabled = enabled
       @session = session
@@ -27,6 +29,7 @@ class ForkSessionLauncherTest < AceAssignTestCase
     end
 
     def ensure_window(session:, name:, root:)
+      @last_ensure = {session: session, name: name, root: root}
       {created: true, target: "@42", window_id: "@42", root: root}
     end
 
@@ -37,8 +40,14 @@ class ForkSessionLauncherTest < AceAssignTestCase
       "%42"
     end
 
-    def run_script_in_pane(pane_target:, script_path:)
-      @last_script = {pane_target: pane_target, script_path: script_path}
+    def run_invocation_in_pane(pane_target:, command:, env: nil, working_dir: nil, visible_handoff: nil)
+      @last_invocation = {
+        pane_target: pane_target,
+        command: command,
+        env: env,
+        working_dir: working_dir,
+        visible_handoff: visible_handoff
+      }
     end
 
     def select_window(session:, window:, window_target: nil)
@@ -63,12 +72,12 @@ class ForkSessionLauncherTest < AceAssignTestCase
       @calls = []
     end
 
-    def build(provider_model:, prompt:, cli_args: nil, **_options)
-      @calls << {provider_model: provider_model, prompt: prompt, cli_args: cli_args}
+    def build(provider_model:, prompt:, cli_args: nil, **options)
+      @calls << {provider_model: provider_model, prompt: prompt, cli_args: cli_args, options: options}
       {
         command: ["ace-llm", provider_model, prompt, "--interactive"],
-        env: {},
-        working_dir: Dir.pwd,
+        env: {"FROM_BUILDER" => "1"},
+        working_dir: options[:working_dir] || Dir.pwd,
         prompt: "$as-assign-drive abc123@010",
         provider: provider_model.split(":").first,
         model: provider_model.split(":")[1]
@@ -93,11 +102,23 @@ class ForkSessionLauncherTest < AceAssignTestCase
     end
   end
 
-  def build_launcher(config:, query_interface:, tmux_enabled: false, session: "dev", window: "task", interactive_builder: nil)
+  def with_env(vars)
+    original = {}
+    vars.each_key do |key|
+      original[key] = ENV[key]
+    end
+    vars.each { |key, value| value.nil? ? ENV.delete(key) : ENV[key] = value }
+    yield
+  ensure
+    original.each { |key, value| value.nil? ? ENV.delete(key) : ENV[key] = value }
+  end
+
+  def build_launcher(config:, query_interface:, tmux_enabled: false, session: "dev", window: "task", interactive_builder: nil,
+    tmux_runner: nil)
     Ace::Assign::Molecules::ForkSessionLauncher.new(
       config: config,
       query_interface: query_interface,
-      tmux_runner: FakeTmuxRunner.new(enabled: tmux_enabled, session: session, window: window),
+      tmux_runner: tmux_runner || FakeTmuxRunner.new(enabled: tmux_enabled, session: session, window: window),
       interactive_builder: interactive_builder
     )
   end
@@ -118,6 +139,14 @@ class ForkSessionLauncherTest < AceAssignTestCase
     assert_nil call[:options][:cli_args]
     assert_equal 900, call[:options][:timeout]
     assert_equal false, call[:options][:fallback]
+      assert_equal(
+        {
+          "ACE_ASSIGN_DEFAULT_TARGET" => "abc123@010.01",
+          "ACE_ASSIGN_CURRENT_ASSIGNMENT_ID" => "abc123",
+          "ACE_ASSIGN_CURRENT_FORK_ROOT" => "010.01"
+        },
+        call[:options][:subprocess_env]
+      )
   end
 
   def test_launch_passes_user_cli_args_without_merging
@@ -342,14 +371,13 @@ class ForkSessionLauncherTest < AceAssignTestCase
   def test_launch_mode_auto_uses_tmux_when_context_available
     fake = FakeQueryInterface.new
     interactive = FakeInteractiveBuilder.new
+    tmux_runner = FakeTmuxRunner.new(enabled: true, session: "dev", window: "work")
     config = {"execution" => {"provider" => "claude:sonnet", "timeout" => 30}, "providers" => {}}
     launcher = build_launcher(
       config: config,
       query_interface: fake,
-      tmux_enabled: true,
-      session: "dev",
-      window: "work",
-      interactive_builder: interactive
+      interactive_builder: interactive,
+      tmux_runner: tmux_runner
     )
 
     with_temp_cache do |tmp_dir|
@@ -374,13 +402,102 @@ class ForkSessionLauncherTest < AceAssignTestCase
       assert_equal "%42", meta["tmux_pane_id"]
 
       wrapper = File.join(tmp_dir, "sessions", "010-tmux-launch.sh")
-      assert File.exist?(wrapper), "tmux launch wrapper should be written"
-      wrapper_contents = File.read(wrapper)
-      assert_includes wrapper_contents, "export PROJECT_ROOT_PATH=#{Dir.pwd}"
-      assert_includes wrapper_contents, "printf '%s\n' \\$as-assign-drive\\ abc123@010"
-      assert_equal [], fake.calls, "tmux mode should run through the pane wrapper, not direct query"
+      refute File.exist?(wrapper), "tmux launch wrapper should not be written"
+      assert_equal [], fake.calls, "tmux mode should launch directly in the pane, not use direct query"
       assert_equal "claude:sonnet", interactive.calls.last[:provider_model]
       assert_equal "/as-assign-drive abc123@010", interactive.calls.last[:prompt]
+      assert_equal(
+        {
+          "PROJECT_ROOT_PATH" => Dir.pwd,
+          "ACE_TMUX_SESSION" => "dev",
+          "ACE_ASSIGN_LAUNCH_MODE" => "tmux",
+          "ACE_ASSIGN_FORK_WINDOW" => "work-fs",
+          "ACE_ASSIGN_DEFAULT_TARGET" => "abc123@010",
+          "ACE_ASSIGN_CURRENT_ASSIGNMENT_ID" => "abc123",
+          "ACE_ASSIGN_CURRENT_FORK_ROOT" => "010"
+        },
+        interactive.calls.last[:options][:subprocess_env]
+      )
+      assert_equal "%42", tmux_runner.last_invocation[:pane_target]
+      assert_equal ["ace-llm", "claude:sonnet", "/as-assign-drive abc123@010", "--interactive"],
+        tmux_runner.last_invocation[:command]
+      assert_equal({"FROM_BUILDER" => "1"}, tmux_runner.last_invocation[:env])
+      assert_equal Dir.pwd, tmux_runner.last_invocation[:working_dir]
+      assert_equal "$as-assign-drive abc123@010", tmux_runner.last_invocation[:visible_handoff]
     end
+  end
+
+  def test_launch_rejects_same_scoped_refork_before_query
+    fake = FakeQueryInterface.new
+    config = {"execution" => {"provider" => "claude:sonnet", "timeout" => 1800}, "providers" => {}}
+    launcher = build_launcher(config: config, query_interface: fake)
+
+    with_env(
+      "ACE_ASSIGN_CURRENT_ASSIGNMENT_ID" => "abc123",
+      "ACE_ASSIGN_CURRENT_FORK_ROOT" => "010"
+    ) do
+      error = assert_raises(Ace::Support::Cli::Error) do
+        launcher.launch(assignment_id: "abc123", fork_root: "010")
+      end
+
+      assert_includes error.message, "already running inside that scoped subtree"
+    end
+
+    assert_equal [], fake.calls
+  end
+
+  def test_launch_allows_same_root_for_different_assignment
+    fake = FakeQueryInterface.new
+    config = {"execution" => {"provider" => "claude:sonnet", "timeout" => 1800}, "providers" => {}}
+    launcher = build_launcher(config: config, query_interface: fake)
+
+    with_env(
+      "ACE_ASSIGN_CURRENT_ASSIGNMENT_ID" => "other-assignment",
+      "ACE_ASSIGN_CURRENT_FORK_ROOT" => "010"
+    ) do
+      launcher.launch(assignment_id: "abc123", fork_root: "010")
+    end
+
+    call = fake.calls.last
+    assert_equal "/as-assign-drive abc123@010", call[:prompt]
+    assert_equal(
+      {
+        "ACE_ASSIGN_DEFAULT_TARGET" => "abc123@010",
+        "ACE_ASSIGN_CURRENT_ASSIGNMENT_ID" => "abc123",
+        "ACE_ASSIGN_CURRENT_FORK_ROOT" => "010"
+      },
+      call[:options][:subprocess_env]
+    )
+  end
+
+  def test_launch_mode_tmux_rejects_same_scoped_refork_before_pane_creation
+    fake = FakeQueryInterface.new
+    interactive = FakeInteractiveBuilder.new
+    tmux_runner = FakeTmuxRunner.new(enabled: true, session: "dev", window: "work")
+    config = {"execution" => {"provider" => "claude:sonnet", "timeout" => 30}, "providers" => {}}
+    launcher = build_launcher(
+      config: config,
+      query_interface: fake,
+      interactive_builder: interactive,
+      tmux_runner: tmux_runner
+    )
+
+    with_temp_cache do |tmp_dir|
+      with_env(
+        "ACE_ASSIGN_CURRENT_ASSIGNMENT_ID" => "abc123",
+        "ACE_ASSIGN_CURRENT_FORK_ROOT" => "010"
+      ) do
+        error = assert_raises(Ace::Support::Cli::Error) do
+          launcher.launch(assignment_id: "abc123", fork_root: "010", cache_dir: tmp_dir, launch_mode: "tmux")
+        end
+
+        assert_includes error.message, "already running inside that scoped subtree"
+      end
+    end
+
+    assert_nil tmux_runner.last_ensure
+    assert_nil tmux_runner.last_prepare
+    assert_equal [], interactive.calls
+    assert_equal [], fake.calls
   end
 end

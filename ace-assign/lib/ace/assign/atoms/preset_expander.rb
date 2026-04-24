@@ -192,6 +192,10 @@ module Ace
 
           step["skill"] = config["skill"] if config["skill"]
           step["context"] = config["context"] if config["context"]
+          step["batch_parent"] = config["batch_parent"] unless config["batch_parent"].nil?
+          step["parallel"] = config["parallel"] unless config["parallel"].nil?
+          step["max_parallel"] = config["max_parallel"] if config["max_parallel"]
+          step["fork_retry_limit"] = config["fork_retry_limit"] unless config["fork_retry_limit"].nil?
 
           step
         end
