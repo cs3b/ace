@@ -26,7 +26,11 @@ bundle exec ace-bundle project
 
 ## Expected Output
 
-The docs explain that this path creates or updates project-local ACE config and agent guidance, including `.ace/`, `.codex/skills/`, `AGENTS.md`, `CLAUDE.md`, `Gemfile`, and `Gemfile.lock` when applicable.
+The docs explain that this path creates or updates project-local ACE config and agent guidance, including `.ace/`,
+`.codex/skills/`, `AGENTS.md`, `CLAUDE.md`, `Gemfile`, and `Gemfile.lock` when applicable. Generated `AGENTS.md` and
+`CLAUDE.md` identify ACE as the starter source, say they are safe to customize for repo-specific guidance, and point
+back to the refresh path through `bundle exec ace-config sync ace-support-core --force` plus `bundle exec
+ace-handbook sync` for projected skills.
 
 ### Scenario 2: Full-Stack Setup
 
@@ -55,12 +59,16 @@ The docs identify this as the larger path and explain that the generated file se
 **Goal**: A user commits ACE setup files deterministically without depending on provider-backed commit message generation.
 
 ```bash
+git status
 bundle exec ace-git-commit --only-staged --no-split -m "chore: set up ace tooling"
+bundle exec ace-git-commit --dry-run -i "set up ace tooling"
 ```
 
 ## Expected Output
 
-The docs explain that `--only-staged` commits the current index, `--no-split` keeps the initial setup snapshot in one commit, and `-m` avoids LLM-backed message generation.
+The docs explain that `git status` can confirm whether a failed LLM-backed attempt already staged setup files,
+`--only-staged` commits the current index, `--no-split` keeps the initial setup snapshot in one commit, and `-m`
+avoids LLM-backed message generation until provider readiness is confirmed.
 
 ### Scenario 4: Setup Readiness
 
@@ -74,7 +82,10 @@ bundle exec ace-config doctor --no-probe
 
 ## Expected Output
 
-Provider discovery lists available providers and setup hints. Setup doctor reports readiness for generated files, ignored local artifacts, bundled gems, and provider execution readiness according to the runtime contract in task `8rl.t.k5a.2`.
+Provider discovery lists available providers and setup hints only. Setup doctor is the separate readiness command: it
+reports blockers versus actionable warnings for generated files, ignored local artifacts, bundled gems/provider
+packages, and provider execution readiness according to the runtime contract in task `8rl.t.k5a.2`. `--no-probe`
+remains the path for users who want readiness validation without live provider pings.
 
 ## Notes for Implementer
 
