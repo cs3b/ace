@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.40.0] - 2026-04-24
+
+### Changed
+- Added `--[no-]prune-artifacts` to `ace-test-e2e` and `ace-test-e2e-suite` so operators can clear stale `.ace-local/test-e2e` run artifacts before execution while preserving suite reports and the shared `runtime-cache/`.
+
 ## [0.39.1] - 2026-04-24
 
 ### Fixed

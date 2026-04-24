@@ -68,6 +68,8 @@ Each run writes reports under `.ace-local/test-e2e/` with timestamped folders.
 ls .ace-local/test-e2e
 ```
 
+If you want a fresh run surface without deleting the shared E2E runtime cache, use `--prune-artifacts` on `ace-test-e2e` or `ace-test-e2e-suite`. It removes stale run artifacts under `.ace-local/test-e2e/` while preserving suite reports and `runtime-cache/`.
+
 Typical run output includes:
 
 - scenario-level pass/fail summary
@@ -81,8 +83,10 @@ Typical run output includes:
 | `ace-test-e2e ace-lint TS-LINT-001` | Run one specific TS scenario |
 | `ace-test-e2e ace-lint` | Run all TS scenarios in one package |
 | `ace-test-e2e ace-lint --tags smoke` | Run only matching-tag scenarios |
+| `ace-test-e2e ace-lint --prune-artifacts` | Clear stale E2E artifacts before running |
 | `ace-test-e2e ace-lint TS-LINT-001 --dry-run` | Preview without execution |
 | `ace-test-e2e-suite --affected` | Run suite for changed packages |
+| `ace-test-e2e-suite --prune-artifacts` | Clear stale E2E artifacts before a full suite |
 | `ace-test-e2e-suite --only-failures` | Re-run cached failures only |
 
 ## Next steps
