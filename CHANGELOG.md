@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- **ace-test-runner-e2e v0.38.17**: Restored fixture-commit detection for split-step setup flows so sandbox support paths stay excluded from git-backed fixture commits even when `git add` and `git commit` run in separate setup steps.
 - **ace-review v0.53.6**: Sized review prompts and adaptive review execution against the resolved concrete provider/model target instead of provider-wide context assumptions.
 - **ace-llm-providers-cli v0.31.6**: Always passed explicit resolved model names to Codex, Gemini, and Claude Code CLIs so runtime execution matches config lookup and limit resolution.
 - **ace-test-runner-e2e v0.38.16**: Enforced runner-owned verifier artifact contracts, expanded grouped capture shorthand, and rejected verifier-only or wildcard artifact declarations so retained E2E drift fails at scenario-load time instead of leaking into later reruns.
