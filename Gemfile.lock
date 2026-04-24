@@ -338,7 +338,7 @@ PATH
 PATH
   remote: ace-task
   specs:
-    ace-task (0.36.3)
+    ace-task (0.36.4)
       ace-b36ts (~> 0.13)
       ace-git (~> 0.19)
       ace-support-cli (~> 0.6)
@@ -379,7 +379,7 @@ PATH
 PATH
   remote: ace-tmux
   specs:
-    ace-tmux (0.17.0)
+    ace-tmux (0.17.1)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.9)
       ace-support-core (~> 0.29)

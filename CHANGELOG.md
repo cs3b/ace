@@ -6,8 +6,10 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 - **ace-task v0.36.3**: Parent-task auto-close now follows the same `TaskManager#update` path as explicit closes, so linked GitHub issues close consistently when child tasks move to archive or are manually closed.
+- **ace-tmux v0.17.1**: Clarified the shipped runtime-inspection contract so docs consistently treat `ace-tmux list` as the read-side baseline and no longer reference the stale `ace-tmux state` surface.
 
 ### Changed
+- **ace-task v0.36.4**: Tightened spike draft/work/review guidance so spike tasks must declare a completion contract, synchronize affected task/doc artifacts, and rerun parent `as-task-review` before they can be considered complete.
 - **ace-assign v0.55.0**: Added `ace-assign fork-run --callback` for tmux-backed parent/child agent flows so the forked child can send one final status sentence back to the origin pane with `ace-tmux send` while the parent drive session stays idle until that callback arrives.
 
 ### Technical
