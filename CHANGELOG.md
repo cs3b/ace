@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+
+- **ace-task v0.36.6**: redesigned spike-task workflow around explicit parent-goal evaluation, in-folder post-spike task-tree rewrites, later review handoff, and same-parent follow-up subtasks for any out-of-folder drift.
+
 ### Fixed
 - **ace-task v0.36.3**: Parent-task auto-close now follows the same `TaskManager#update` path as explicit closes, so linked GitHub issues close consistently when child tasks move to archive or are manually closed.
 - **ace-tmux v0.17.1**: Clarified the shipped runtime-inspection contract so docs consistently treat `ace-tmux list` as the read-side baseline and no longer reference the stale `ace-tmux state` surface.
