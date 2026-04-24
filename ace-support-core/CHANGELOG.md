@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Clarified the first-use bootstrap guidance so root `AGENTS.md` / `CLAUDE.md` starter files are documented as outputs of `ace-support-core` sync, and updated the shipped refresh commands to use `bundle exec` for repo-local installs.
+
+## [0.29.10] - 2026-04-24
+
+### Changed
+- Updated the shipped `AGENTS.md` and `CLAUDE.md` bootstrap templates to identify ACE as the starter source, document safe repo-specific customization, and point users to the refresh flow.
+
 ## [0.29.9] - 2026-04-23
 
 ### Changed

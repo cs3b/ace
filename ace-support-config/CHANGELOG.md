@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.2] - 2026-04-24
+
+### Technical
+- Expanded bootstrap feature coverage so generated `AGENTS.md` and `CLAUDE.md` files must retain ACE provenance, customization, and refresh guidance.
+
+## [0.16.1] - 2026-04-24
+
+### Changed
+- Clarified setup-readiness documentation so `ace-llm --list-providers` remains the provider discovery command while `ace-config doctor` is documented as the quick-start readiness check, including blocker versus warning guidance and `--no-probe` usage.
+
 ## [0.16.0] - 2026-04-23
 
 ### Changed

@@ -28,20 +28,34 @@ ace-config help
 
 ### Setup Readiness Doctor
 
-Run `ace-config doctor` after `ace-config sync ace-llm-providers-cli` and provider setup to verify that the quick-start path is ready without changing files.
+Run `ace-config doctor` after `ace-config sync ace-llm-providers-cli` and provider setup to verify that the quick-start
+path is ready without changing files. `ace-llm --list-providers` is still the provider discovery command; doctor is the
+separate readiness command that tells you whether the documented setup can actually execute.
 
 The doctor checks:
 
-- health markers for `.ace-local/` gitignore readiness
-- `ace-llm-providers-cli` availability
-- `ace-llm --list-providers` discovery
+- health markers for generated local artifacts and `.ace-local/` gitignore readiness
+- `ace-llm-providers-cli` availability and bundled gem/package readiness
+- `ace-llm --list-providers` discovery for configured providers
 - project `.ace` vs package `.ace-defaults` config-default mode counts
 - usable core role defaults
 - provider-native skill projection sync status from `ace-handbook status`
 - a one-line hygiene summary for configured provider aliases and wider role/default drift
 - concurrent `ace-llm TARGET "ping" --no-fallback` checks for deduped `_utility` and `commit` role candidates
 
-Use `--hygiene` to expand full hygiene findings and `--json` for structured output in automation. By default, doctor prints fast health/info checks as they complete, runs concurrent `ace-llm TARGET "ping" --no-fallback` checks for deduped `_utility` and `commit` role candidates, and then prints the final report; use `--no-probe` to skip live provider calls.
+Interpret results as setup blockers versus actionable warnings:
+
+- Missing provider packages, unresolved provider/model configuration, or failed readiness requirements for the active
+  quick-start path are blockers.
+- Missing credentials or missing local CLI account access are reported as setup readiness issues with next actions,
+  not as ACE install corruption.
+- API-only users can still pass doctor when their configured API providers are ready, even if unrelated CLI providers
+  are inactive.
+
+Use `--hygiene` to expand full hygiene findings and `--json` for structured output in automation. By default, doctor
+prints fast health/info checks as they complete, runs concurrent `ace-llm TARGET "ping" --no-fallback` checks for
+deduped `_utility` and `commit` role candidates, and then prints the final report. Use `--no-probe` to skip live
+provider calls when you want a readiness check based only on local setup and configuration.
 
 ## Testing Contract
 
