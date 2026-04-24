@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.36.7] - 2026-04-25
+
+### Changed
+
+- Removed spike as a first-class task pattern from active ACE task drafting. Drafts must now create real child tasks for each original intention, while `as-task-review` owns the deep analysis, draft reshaping, dependency repair, and skip/split decisions for uncertain families.
+
 ## [0.36.6] - 2026-04-24
 
 ### Changed

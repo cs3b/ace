@@ -15,7 +15,7 @@ bundle:
 doc-type: template
 purpose: Template for drafting task definitions
 ace-docs:
-  last-updated: '2026-03-21'
+  last-updated: '2026-04-25'
 ---
 
 # {title}
@@ -98,7 +98,7 @@ GET/POST/PUT/DELETE /endpoint
 <!-- Ask about unclear requirements, edge cases, and user expectations -->
 
 - [ ] **Requirement Clarity**: [Question about unclear or ambiguous requirements]
-- [ ] **Edge Case Handling**: [Question about boundary conditions or unusual scenarios]  
+- [ ] **Edge Case Handling**: [Question about boundary conditions or unusual scenarios]
 - [ ] **User Experience**: [Question about user expectations, workflows, or interactions]
 - [ ] **Success Definition**: [Question about how success will be measured or validated]
 
@@ -127,32 +127,6 @@ GET/POST/PUT/DELETE /endpoint
 #### Verification Commands
 - [ ] [Command/check]: [Expected outcome]
 
-### Learning Targets Before Decomposition (Spike-First Parent Tasks Only)
-<!-- Required on the parent when decomposition intentionally starts with a spike. -->
-
-| Target ID | Parent goal / unresolved question | Why a spike is needed | If resolved differently, rewrite impact |
-|-----------|-----------------------------------|------------------------|-----------------------------------------|
-| LT1 | [Question / goal] | [Why review/planning alone is insufficient] | [Which in-folder tasks would likely change] |
-
-### Parent Goal Mapping (Spike Tasks Only)
-<!-- Required for spike subtasks. -->
-
-| Parent target ID | What the spike evaluates | Evidence / tracer / comparison | Rewrite targets if answer changes |
-|------------------|--------------------------|--------------------------------|-----------------------------------|
-| LT1 | [Evaluation scope] | [What the spike checks] | [Parent / subtasks in same task folder] |
-
-### Post-Spike Rewrite Contract (Spike Tasks Only)
-<!-- Required for spike tasks. Remove if this is not a spike. -->
-
-- **Spike Type**: [Design-contract | Proof-of-concept]
-- **Parent Rewrite Target**: [Parent/orchestrator task ref that must be rewritten]
-- **Affected Task Rewrite Targets**:
-  - [Active subtasks in the same task folder the spike may rewrite or create, or "none"]
-- **Out-of-Folder Follow-Up Subtasks**:
-  - [Docs/packages/workflows outside the task folder that require a new subtask under the same parent, or "none"]
-- **Lifecycle Handoff**: [Usually "After rewrite, later `as-task-review <parent-ref>` decides lifecycle"]
-- **Done Gate**: [What must be rewritten in-folder, which new subtasks must exist for out-of-folder drift, and how each learning target must be resolved before the spike can be marked done]
-
 ## Objective
 
 Why are we doing this? Focus on user value and behavioral outcomes.
@@ -161,7 +135,7 @@ Why are we doing this? Focus on user value and behavioral outcomes.
 <!-- Define the behavioral scope - what user experiences and system behaviors are included -->
 
 - **User Experience Scope**: [Which user interactions, workflows, and experiences are included]
-- **System Behavior Scope**: [Which system capabilities, responses, and behaviors are included]  
+- **System Behavior Scope**: [Which system capabilities, responses, and behaviors are included]
 - **Interface Scope**: [Which APIs, commands, or interfaces are included]
 
 ### Deliverables
@@ -169,7 +143,7 @@ Why are we doing this? Focus on user value and behavioral outcomes.
 
 #### Behavioral Specifications
 - User experience flow definitions
-- System behavior specifications  
+- System behavior specifications
 - Interface contract definitions
 
 #### Validation Artifacts
@@ -195,7 +169,7 @@ Why are we doing this? Focus on user value and behavioral outcomes.
 <!-- Explicitly exclude implementation concerns to maintain behavioral focus -->
 
 - ❌ **Implementation Details**: File structures, code organization, technical architecture
-- ❌ **Technology Decisions**: Tool selections, library choices, framework decisions  
+- ❌ **Technology Decisions**: Tool selections, library choices, framework decisions
 - ❌ **Performance Optimization**: Specific performance improvement strategies
 - ❌ **Future Enhancements**: Related features or capabilities not in current scope
 

@@ -1,19 +1,18 @@
 ---
 name: task-draft
 allowed-tools: Bash, Read
-description: Create behavior-first draft tasks and subtasks with vertical slicing
-  and verification plans
+description: Create high-level behavioral specifications that define WHAT the system should do (UX/DX/AX) rather than HOW to implement it. This workflow transforms ideas or requirements into behavior-first draft tasks with clear interface contracts, leaving implementation details for the replan step. This workflow also includes automated idea file management, moving original idea files to organized locations with task number prefixes for clear traceability.
 doc-type: workflow
 purpose: task draft workflow instruction
 ace-docs:
-  last-updated: '2026-04-24'
+  last-updated: '2026-04-25'
 ---
 
 # Draft Task - Behavior-First Specification
 
 ## Goal
 
-Create high-level behavioral specifications that define WHAT the system should do (UX/DX/AX) rather than HOW to implement it. This workflow transforms ideas or requirements into behavior-first draft tasks with clear interface contracts, leaving implementation details for the replan step. The workflow also includes automated idea file management, moving original idea files to organized locations with task number prefixes for clear traceability.
+Create high-level behavioral specifications that define WHAT the system should do (UX/DX/AX) rather than HOW to implement it. This workflow transforms ideas or requirements into behavior-first draft tasks with clear interface contracts, leaving implementation details for the replan step. This workflow also includes automated idea file management, moving original idea files to organized locations with task number prefixes for clear traceability.
 
 ## Prerequisites
 
@@ -117,6 +116,8 @@ Create high-level behavioral specifications that define WHAT the system should d
      * Integration/E2E scenarios when behavior crosses boundaries
      * At least one invalid/failure-path scenario
    * Capture required context files per slice for fresh sessions in `bundle.files`
+   * Draft real child subtasks immediately when a parent has multiple original intentions
+   * Do not preserve major goals only in parent prose; if an intention matters, it must exist as a real child task/subtask
 
 7. **Determine Storage Location and Create Draft Tasks**
 
@@ -172,64 +173,15 @@ Create high-level behavioral specifications that define WHAT the system should d
      * Run `ace-task github-sync <parent-or-task-ref>` after creation so the
        GitHub issue receives the ACE task tracking update.
 
-### Spike-First Rule for Engine/Pipeline Redesigns
+### Review-First Rule for Uncertain Drafts
 
-When an orchestrator task redesigns a core execution path (test runner, build pipeline,
-deployment flow), the FIRST subtask should be a time-boxed spike that:
-1. Validates the target architecture end-to-end with a single scenario
-2. Identifies which existing concepts survive and which get removed
-3. Produces a "concept inventory" showing what the final system looks like
+When requirements are uncertain, do not create a special spike task. Draft the real goal subtasks immediately, then let later `as-task-review` do the deep analysis.
 
-Only AFTER the spike validates the unresolved parent goals should remaining subtasks be drafted.
-This prevents decomposing into subtasks that add concepts the spike later proves unnecessary.
-
-**Anti-pattern**: a parent exists only to host one spike, and the spike effectively becomes the task family's real end-state.
-**Correct pattern**: the parent owns a real product/runtime goal, one spike subtask evaluates the unresolved parts of that goal, then the spike rewrites the task tree so later review can decide the next lifecycle step.
-
-Every spike-first draft must also declare the spike type:
-- **Design-contract spike**: validates target behavior and ownership boundaries, but does not yet claim runnable proof
-- **Proof-of-concept spike**: validates target behavior with runnable proof, not only a design contract
-
-For both spike types, the draft must include:
-1. one **Learning Targets Before Decomposition** section on the parent task naming the exact unresolved parent goals/questions the spike must evaluate
-2. one **Parent Goal Mapping** section on the spike mapping each parent learning target to concrete evaluation work
-3. one **Validated End-State Scenario**
-4. one **Concept Inventory** with kept / changed / new / rejected outcomes
-5. one **Adopted Decisions / Rejected Decisions / Deferred Gaps** section
-6. one **Post-Spike Rewrite Contract** section naming how the spike updates the task tree before later review
-
-For proof-of-concept spikes, the draft must additionally include:
-1. one concrete **Proof Artifact Plan** describing what runnable evidence will prove the spike
-2. success criteria that require the proof artifact, not only the concept inventory
-
-Do not treat "we now understand the design" as sufficient spike completion when the spike affects a runtime, UX, or execution-path contract. A useful spike must resolve the parent's declared learning targets and leave the active task tree rewritten around what was learned.
-
-The **Learning Targets Before Decomposition** section must be decision-complete. Each target must have:
-1. a stable target id
-2. the unresolved parent goal/question
-3. why normal review/planning is insufficient and a spike is required
-4. what task-tree impact is expected if the answer changes direction
-
-The **Parent Goal Mapping** section must be decision-complete. Each mapping must state:
-1. which parent learning target id it evaluates
-2. what evidence, comparison, or tracer path the spike will use
-3. which parent tasks or subtasks in the same task folder may need rewriting if the target resolves differently
-
-The **Post-Spike Rewrite Contract** must be decision-complete. It must state:
-1. **Parent rewrite target**: which parent/orchestrator task must be rewritten when the spike finishes
-2. **Affected task rewrite targets**: which active subtasks in the same task folder may be rewritten or created when the spike resolves its targets
-3. **Out-of-folder follow-up subtasks**: which docs/packages/workflows outside the task folder must become new subtasks under the same parent if the spike discovers drift there
-4. **Lifecycle handoff**: spikes update the task tree first; later `as-task-review` decides promotion, blocking, or archive
-5. **Done gate**: the spike is not complete until every declared learning target is resolved, the declared in-folder rewrite targets are updated, and any out-of-folder impacts are captured as subtasks under the current parent
-
-`reopen later if needed` is not a valid target resolution. Every learning target must end as exactly one of:
-1. `keep-in-family`
-2. `split-to-new-subtask`
-3. `already-satisfied`
-4. `explicitly-abandoned`
-
-A spike may not silently narrow or remove a parent goal. If a target changes owner, the spike must rewrite the parent and affected in-folder tasks immediately instead of leaving the change implicit for later.
-A spike must not modify files outside its own task folder. If the spike finds outdated docs, package files, or handbook assets elsewhere, it must create a new subtask under the current parent instead of editing those files directly.
+1. The parent owns the umbrella outcome and decomposition map only.
+2. Each original intention or goal must exist as a real child subtask from the start.
+3. If ordering matters, make the first child the smallest real vertical slice that validates the riskiest path.
+4. Review may later rewrite, split, reorder, skip, or add dependencies between draft subtasks.
+5. Do not preserve uncertainty by inventing a dedicated research-only subtask when normal review can answer it.
 
 8. **Complete Behavioral Specifications**
    * For each created draft task, populate with:
@@ -297,20 +249,14 @@ A spike must not modify files outside its own task folder. If the spike finds ou
      * [ ] Interface contracts are defined
      * [ ] Success criteria are measurable
      * [ ] Vertical slices are defined using task/subtask model (no horizontal-only decomposition)
+     * [ ] Every original intention is represented as a real task/subtask, not only parent prose
      * [ ] Verification Plan includes unit/equivalent validation, integration/E2E when needed, and failure path checks
      * [ ] `bundle` frontmatter exists with canonical key order (`presets`, `files`, `commands`)
      * [ ] Required context artifacts are explicitly listed in `bundle.files` for each task/subtask
      * [ ] Draft is decision-complete: no unresolved behavior choices left for implementer
      * [ ] Defaults are explicit where behavior could otherwise be ambiguous
      * [ ] Usage documentation created in `ux/usage.md` (when task changes any API surface)
-     * [ ] Spike tasks declare whether they are `design-contract` or `proof-of-concept`
-     * [ ] Spike tasks do not rely on synthetic post-spike closure work; they rewrite the task tree around what was learned
-     * [ ] Any out-of-folder impacts are captured as new subtasks under the same parent instead of in-spike edits
-     * [ ] Spike-first parents include decision-complete Learning Targets Before Decomposition
-     * [ ] Spike subtasks include a decision-complete Parent Goal Mapping
-     * [ ] Spike tasks include a decision-complete Post-Spike Rewrite Contract
-     * [ ] Every declared learning target has an auditable resolution path; none can disappear via scope rewrite
-     * [ ] Proof-of-concept spikes include a runnable proof artifact plan
+     * [ ] For uncertain families, the first slice is still a real subtask rather than a dedicated spike
 
 12. **Run Quality Pass (Better, Not More)**
    * Perform one concise quality pass before finalizing:
@@ -541,32 +487,6 @@ GET/POST/PUT/DELETE /endpoint
 
 #### Verification Commands
 - [ ] [Command/check]: [Expected outcome]
-
-### Learning Targets Before Decomposition (Spike-First Parent Tasks Only)
-<!-- Required on the parent when decomposition intentionally begins with a spike. -->
-
-| Target ID | Parent goal / unresolved question | Why a spike is needed | If resolved differently, rewrite impact |
-|-----------|-----------------------------------|------------------------|-----------------------------------------|
-| LT1 | [Question / goal] | [Why review/planning alone is insufficient] | [Which in-folder tasks would likely change] |
-
-### Parent Goal Mapping (Spike Tasks Only)
-<!-- Required for spike subtasks. Map the spike back to the parent's learning targets. -->
-
-| Parent target ID | What the spike evaluates | Evidence / tracer / comparison | Rewrite targets if answer changes |
-|------------------|--------------------------|--------------------------------|-----------------------------------|
-| LT1 | [Evaluation scope] | [What the spike checks] | [Parent / subtasks in same task folder] |
-
-### Post-Spike Rewrite Contract (Spike Tasks Only)
-<!-- Required for spike tasks. Remove if this is not a spike. -->
-
-- **Spike Type**: [Design-contract | Proof-of-concept]
-- **Parent Rewrite Target**: [Parent/orchestrator task ref that must be rewritten]
-- **Affected Task Rewrite Targets**:
-  - [Active subtasks in the same task folder the spike may rewrite or create, or "none"]
-- **Out-of-Folder Follow-Up Subtasks**:
-  - [Docs/packages/workflows outside the task folder that require a new subtask under the same parent, or "none"]
-- **Lifecycle Handoff**: [Usually "After rewrite, later `as-task-review <parent-ref>` decides lifecycle"]
-- **Done Gate**: [What must be rewritten in-folder, which new subtasks must exist for out-of-folder drift, and how each learning target must be resolved before the spike can be marked done]
 
 ## Objective
 

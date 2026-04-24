@@ -1,19 +1,18 @@
 ---
 name: task-review
 allowed-tools: Bash, Read
-description: Review draft tasks for readiness, vertical slice quality, verification
-  plans, and promotion to pending
+description: Review draft tasks for readiness, vertical slice quality, verification plans, and promotion to pending
 doc-type: workflow
 purpose: Review draft tasks for readiness and quality before promotion
 ace-docs:
-  last-updated: '2026-03-21'
+  last-updated: '2026-04-25'
 ---
 
 # Review Task Workflow Instruction
 
 ## Goal
 
-Validate draft behavioral specifications and promote to pending when ready. This workflow acts as the readiness gate between drafting and implementation. It reviews draft tasks for completeness, conducts autonomous research to resolve open questions, generates critical questions for unresolved items, and either promotes validated drafts to `status: pending` or blocks with `needs_review: true` when questions remain.
+Validate draft behavioral specifications and promote to pending when ready. This workflow acts as the readiness gate between drafting and implementation. It reviews draft tasks for completeness, conducts autonomous research to resolve open questions, rewrites draft families when codebase reality differs from the original draft, generates critical questions for unresolved items, and either promotes validated drafts to `status: pending` or blocks with `needs_review: true` when questions remain.
 
 ## Prerequisites
 
@@ -40,6 +39,7 @@ Validate draft behavioral specifications and promote to pending when ready. This
        - Enumerate child subtasks and their current statuses before any promotion
        - Treat every child subtask still in `draft` as an additional review target
        - Review draft subtasks first and defer any parent promotion decision until child review outcomes are known
+       - Confirm the parent is acting as umbrella outcome plus decomposition map rather than hiding major work only in parent prose
      - Parse the behavioral specification sections:
        - User Experience (input, process, output)
        - Expected Behavior
@@ -51,13 +51,19 @@ Validate draft behavioral specifications and promote to pending when ready. This
        - Frontmatter `bundle` block (`presets`, `files`, `commands`)
      - Identify gaps, ambiguities, or assumptions that need clarification
 
-2. **Autonomous Research Phase:**
+2. **Autonomous Research and Draft Repair Phase:**
    - **Attempt Self-Resolution First:**
      - Search project documentation for answers
      - Analyze similar implementations in codebase
      - Review related tasks and their solutions
      - Check architectural decisions and patterns
      - Consult technical documentation and best practices
+   - **Repair draft structure when research changes the shape:**
+     - Rewrite draft subtasks when codebase reality or shipped behavior differs from the original draft
+     - Split draft subtasks when one child is hiding multiple real goals
+     - Add or change normal task dependencies when ordering matters
+     - Mark obsolete draft subtasks `skipped` when the goal is already satisfied or no longer valid
+     - Update the parent decomposition summary to match the repaired child set
    - **Web Search When Appropriate:**
      - If WebSearch tool is available and needed:
        - Search for industry standards or best practices
@@ -102,9 +108,10 @@ Validate draft behavioral specifications and promote to pending when ready. This
    - [ ] **Scope Boundaries Clear**: In-scope and out-of-scope explicitly stated
    - [ ] **Validation Questions Addressed**: All validation questions either answered or documented as blocking
    - [ ] **Vertical Slice Quality (Task/Subtask)**: Scope is decomposed into end-to-end capability slices (standalone task or orchestrator+subtasks), not horizontal layer-only work
+   - [ ] **Original Intention Coverage**: Each major original intention exists as a real child task/subtask instead of being preserved only in parent prose
    - [ ] **Subtask Slice Clarity**: Each subtask has a distinct observable outcome and does not duplicate sibling scope
    - [ ] **Child Readiness Complete** (orchestrators only): Every draft child subtask has been reviewed and either promoted to `pending` or blocked with documented questions
-   - [ ] **Tracer-First for Uncertain Architecture**: For uncertain/novel execution paths, first subtask is a tracer slice validating viability
+   - [ ] **First Slice Is Real Work**: When ordering matters, the first slice is the smallest real capability, not a synthetic research-only task
    - [ ] **Slice Size Signal Present**: Each slice includes advisory size (`small|medium|large`) for planning visibility
    - [ ] **Decision-Complete Spec**: Implementer can execute without inventing missing behavioral decisions
    - [ ] **Defaults Declared**: Ambiguous/unspecified behavior has explicit defaults
@@ -119,16 +126,12 @@ Validate draft behavioral specifications and promote to pending when ready. This
    - [ ] **Operating Modes Covered**: Spec addresses relevant operating modes (dry-run, force, verbose, quiet) or explicitly marks them out-of-scope
    - [ ] **Degenerate Inputs Covered**: Spec considers identity operations (X=Y), empty inputs, and self-referential calls where the same entity appears in both argument positions
    - [ ] **Per-Path Variations Covered**: If spec says "same behavior for X and Y", it enumerates edge cases unique to each path (guard logic, error handling, parameter differences)
-   - [ ] **End-State Coherence** (orchestrator subtasks only): Concepts introduced by this subtask
-         (new fields, modes, formats) are expected to exist in the final deliverable --
-         not be removed by a later subtask. If this subtask adds a concept that a later
-         subtask will consolidate away, flag as SCOPE RISK and consider merging subtasks.
+   - [ ] **End-State Coherence** (orchestrator subtasks only): Concepts introduced by this subtask are expected to exist in the final deliverable and not be removed by a later sibling rewrite without reasoned review-driven reshaping
    - [ ] **Title Length**: Title is max 80 characters
    - [ ] **Folder Slug**: 3-5 word context slug for folder
    - [ ] **File Slug**: 4-7 word action slug for spec file
    - [ ] **No Slug Repetition**: Subtask slugs do not repeat words from parent folder slug
    - [ ] **Usage Documentation Present**: If task changes CLI/API/workflow/config interfaces, `ux/usage.md` exists with concrete usage scenarios
-   - [ ] **Spike Evaluation Contract Present**: spike-first parents declare Learning Targets Before Decomposition, spike subtasks declare Parent Goal Mapping, and spike tasks declare a Post-Spike Rewrite Contract with lifecycle handoff and done gate
    - [ ] **No Blocking Questions Remain**: All HIGH priority questions resolved or have acceptable defaults
 
    **Assessment:**
@@ -240,34 +243,6 @@ While review-task primarily serves as the draft-to-pending gate, it can provide 
 
 For non-draft tasks, skip the Readiness Checklist and Promote/Block steps. Focus on content enhancement and question generation only.
 
-### Completed Spike Review
-
-When the reviewed task is a completed spike, treat spike usefulness as a review target:
-
-- Compare the archived spike contract against the shipped public/runtime contract instead of assuming the spike remained accurate.
-- Classify every meaningful difference as exactly one of:
-  - **intentional and adopted**
-  - **intentional but deferred to follow-up**
-  - **spec miss that must be corrected**
-- Verify that the spike resolved every declared learning target:
-  - each target ends as exactly one of `keep-in-family`, `split-to-new-subtask`, `already-satisfied`, or `explicitly-abandoned`
-  - no parent goal disappeared via scope rewrite
-  - deferred gaps are named, not implied
-  - any promised proof artifact exists if the spike was a proof-of-concept
-- Verify that spike rewrite happened cleanly:
-  - the parent/orchestrator task was synchronized to the spike outcome
-  - all declared in-folder rewrite targets were updated or created
-  - any declared out-of-folder impacts were captured as new subtasks under the same parent
-- Fail closed on spike usefulness if the spike completed without resolving one or more declared learning targets, even if later implementation succeeded through ad-hoc decisions.
-- Treat `reopen later if needed` without a concrete target resolution as a failed spike result.
-- In the review summary for completed spikes, explicitly state whether the spike produced:
-  - a reusable contract
-  - a reusable proof artifact
-  - a rewritten task tree
-  - a synchronized parent outcome
-
-Treat "concept inventory exists" as insufficient by itself for a successful spike review when the spike was meant to guide real runtime or UX work.
-
 ## Decision Guidance
 
 ### When to Use This Workflow
@@ -277,6 +252,7 @@ Treat "concept inventory exists" as insufficient by itself for a successful spik
 - Refining draft specifications before implementation
 - Researching answers to open questions on draft tasks
 - Checking if a draft is implementation-ready
+- Reshaping uncertain draft families without inventing a dedicated spike subtask
 
 **Don't use review-task when:**
 - Creating new tasks (use draft-task)
@@ -295,11 +271,11 @@ Treat "concept inventory exists" as insufficient by itself for a successful spik
 - Bundle frontmatter (`presets`, `files`, `commands`) validated for completeness
 - Task promoted to pending if ready, or blocked with `needs_review: true`
 - Orchestrator parents are promoted only after draft child subtasks have also passed review
+- Review can rewrite, split, reorder, skip, or dependency-shape draft children when research proves the initial draft wrong
 - Structure and formatting preserved
 - No loss of existing information
 - Clear improvement in task clarity or completeness
 - User receives actionable list of questions to answer (if any)
-- Completed spike reviews identify contract drift and verify learning-target resolution
 
 ## Task Management Integration
 
@@ -365,10 +341,11 @@ cd .ace-tasks && ace-search "needs_review: true" --content
 The review-task workflow serves as the quality gate between specification and implementation:
 
 1. **Research-First Approach**: AI agents attempt to find answers through documentation, codebase analysis, and pattern recognition before escalating
-2. **Readiness Checklist**: Systematic validation ensures behavioral specs are complete before promotion
-3. **Smart Question Filtering**: Only truly unresolvable questions requiring business/design decisions are escalated
-4. **Persistent Question Tracking**: Questions are saved in task files with `needs_review: true` metadata for easy filtering
-5. **Clear Lifecycle Decision**: Every review results in either promotion to pending or documented blocking questions
+2. **Draft Repair Authority**: Review rewrites, splits, reorders, and dependency-shapes uncertain draft families instead of requiring a special spike task type
+3. **Readiness Checklist**: Systematic validation ensures behavioral specs are complete before promotion
+4. **Smart Question Filtering**: Only truly unresolvable questions requiring business/design decisions are escalated
+5. **Persistent Question Tracking**: Questions are saved in task files with `needs_review: true` metadata for easy filtering
+6. **Clear Lifecycle Decision**: Every review results in either promotion to pending or documented blocking questions
 
 This approach enables:
 - **Clear Lifecycle Gate**: Draft tasks must pass validation before entering the implementation pipeline

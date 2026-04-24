@@ -2,13 +2,13 @@
 doc-type: guide
 purpose: Guide for writing clear, actionable task definitions in ace-task
 ace-docs:
-  last-updated: '2026-03-21'
+  last-updated: '2026-04-25'
 ---
 
 <!-- markdownlint-disable -->
-# 📑 Writing Clear, Actionable Dev Tasks
+# 📑 Writing Clear, Actionable Dev Tasks
 
-## A playbook for documentation‑oriented tickets, with a complete worked example
+## A playbook for documentation-oriented tickets, with a complete worked example
 
 ## Introduction & Goal
 
@@ -19,7 +19,7 @@ minimize ambiguity and streamline the process of defining and executing document
 
 ---
 
-## 0. Directory Audit Step ✅
+## 0. Directory Audit Step ✅
 
 **Always start by discovering what actually exists in the repo.**
 
@@ -28,7 +28,7 @@ minimize ambiguity and streamline the process of defining and executing document
 3. From that listing, build the deliverable manifest.
 
 > **Tip:**
-> • If you don’t have repo access, create a tiny *pre‑ticket* titled “Generate Guide‑Audit Manifest”.
+> • If you don’t have repo access, create a tiny *pre-ticket* titled “Generate Guide-Audit Manifest”.
 > • Commit the tree output as a comment or markdown file, then reference it in the main ticket.
 
 Example audit snippet to embed:
@@ -45,18 +45,18 @@ guides
 
 ---
 
-## 1. Anatomy of a Great Task
+## 1. Anatomy of a Great Task
 
-| Section | Purpose | Key Questions |
+| Section | Purpose | Key Questions |
 |---------|---------|---------------|
-| **Front‑matter** | Helps tooling & humans filter | id (use `task-manager generate-id VERSION` to generate), status, priority, estimate, dependencies |
+| **Front-matter** | Helps tooling & humans filter | id (use `task-manager generate-id VERSION` to generate), status, priority, estimate, dependencies |
 | **Objective / Problem** | *Why* are we doing this? | What pain are we fixing? |
-| **Directory Audit (0)** | Source‑of‑truth for scope | Did we include the current tree? |
+| **Directory Audit (0)** | Source-of-truth for scope | Did we include the current tree? |
 | **Scope of Work** | *What* to touch | Which guides/folders? |
 | **Deliverables / Manifest** | Exact files to create / modify / delete | Could a newcomer do it with just this? |
-| **Phases** | Bite‑sized plan | Audit → Extract → Refactor → Index |
+| **Phases** | Bite-sized plan | Audit → Extract → Refactor → Index |
 | **Implementation Plan** | Divided into Planning Steps (`* [ ]`) for analysis/design and Execution Steps (`- [ ]`) for implementation actions. Consider embedding automated test/verification steps directly. | |
-| **Acceptance Criteria** | Definition of Done | Check‑list style `[ ]`. **Can include references to automated checks defined in the Implementation Plan's Planning and Execution sections or be high-level checks themselves.** |
+| **Acceptance Criteria** | Definition of Done | Check-list style `[ ]`. **Can include references to automated checks defined in the Implementation Plan's Planning and Execution sections or be high-level checks themselves.** |
 | **Out of Scope** | Prevent scope creep | What must *not* be touched? |
 | **References & Risks** | Links to style guides, ADRs, **testing standards (like [Embedded Testing Guide](ace-docs/handbook/guides/embedded-testing-guide.g.md))**; mitigations | Any scripts to run? **Use links relative to the project root (e.g., `ace-handbook/handbook/guides/some-guide.g.md`), not relative to the current file (`../guides/some-guide.md`)** |
 
@@ -88,7 +88,7 @@ This distinction supports workflow separation where review/planning phases focus
 
 ---
 
-## 3. **Full Worked Example**
+## 3. Full Worked Example
 
 A full worked example of a task, "Tailor Guides to Tech Stack," has been moved to a separate file:
 [`ace-task/handbook/templates/release-tasks/example.md`](../templates/release-tasks/example.md)
@@ -157,35 +157,34 @@ Tick them all → merge the ticket.
 
 ---
 
-## Spike Tasks: treat them as learning mechanisms, not pseudo-features
+## Review-first task shaping
 
-Use a spike only when the parent has a real goal but one or more critical questions would make later decomposition unstable.
+ACE no longer uses spike as a special task type.
 
 ### Rules
 
-1. The parent must already own a real product/runtime goal.
-2. The spike is only a learning subtask against that parent goal.
-3. The spike may not silently redefine or narrow the parent.
-4. The spike rewrites the task tree inside its own task folder after it learns.
-5. The spike must not edit files outside its own task folder. If it finds out-of-folder drift, it creates a new subtask under the same parent.
-6. Later `as-task-review` decides lifecycle after the rewrite; the spike itself should not fabricate closure work just to satisfy process.
+1. The parent owns the umbrella outcome and the child-task map.
+2. Every original intention that matters must exist as a real child task from the start.
+3. If ordering matters, the first child should be the smallest real vertical slice, not a synthetic research-only task.
+4. `as-task-review` is the deep-analysis stage: it may rewrite, split, reorder, skip, or dependency-shape draft subtasks after codebase research.
+5. Do not preserve major uncertainty only in parent prose. If a goal matters enough to protect, give it a child task.
+6. If review later proves a drafted child obsolete or already satisfied, review updates the task family directly instead of relying on a dedicated spike artifact.
 
-### Required sections for spike-first parents
+### Parent responsibility
 
-- `Learning Targets Before Decomposition`
-- one row per unresolved parent goal/question
-- each row states why a spike is needed and what might need to be rewritten
+The parent should keep:
+- umbrella objective
+- why the family exists
+- decomposition map of child refs and concerns
+- shared boundaries or references
 
-### Required sections for spike subtasks
+The parent should not hide work that has no child owner.
 
-- `Parent Goal Mapping`
-- `Post-Spike Rewrite Contract`
+### Child responsibility
 
-Every mapped learning target must end as exactly one of:
+Each child task should own:
+- one concrete slice of the original intention
+- its own interface contract and success criteria
+- its own verification plan
 
-- `keep-in-family`
-- `split-to-new-subtask`
-- `already-satisfied`
-- `explicitly-abandoned`
-
-`reopen later if needed` is not a valid result. A spike is successful only when the affected in-folder tasks have already been rewritten around what was learned and any out-of-folder impacts have been captured as follow-up subtasks under the same parent.
+If a single child is trying to answer multiple independent questions, split it before implementation.

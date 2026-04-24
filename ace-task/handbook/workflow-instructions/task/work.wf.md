@@ -1,7 +1,6 @@
 ---
 name: task-work
-description: Execute task implementation against behavioral spec using pre-loaded
-  plan
+description: Execute task implementation against behavioral spec using pre-loaded plan
 allowed-tools: Bash, Read, Write
 assign:
   sub-steps:
@@ -17,7 +16,7 @@ assign:
 doc-type: workflow
 purpose: Execute task implementation from plan with quality gates
 ace-docs:
-  last-updated: '2026-04-24'
+  last-updated: '2026-04-25'
 ---
 
 # Work on Task
@@ -42,7 +41,7 @@ To avoid known `--content` stalls in some environments:
    - `ace-task plan <ref>` (path mode, reuse cached plan when available)
    - The most recent plan artifact plus current task spec, documented in the step report
 4. If stalls repeat, add a follow-up fix task and capture evidence in the retrospective.
-5. If implementation reveals the spec or spike contract is materially wrong, stale, or missing an adoption path, stop and either update the spec or add a follow-up task before continuing.
+5. If implementation reveals the spec is materially wrong, stale, or missing an adoption path, stop and either update the spec or add a follow-up task before continuing.
 
 ## Primary Directive
 
@@ -60,13 +59,13 @@ Work through the plan checklist, step by step:
 - If the spec says X, implement X — don't gold-plate, don't simplify away requirements
 - If spec and plan conflict, spec wins — the plan is a HOW, not a WHAT
 - If the spec is ambiguous or incomplete: stop and ask, don't assume
-- If runtime work materially changes a public contract promised by a spike (flags, naming, fallback behavior, proof surface, ownership boundary), do not silently drift. Update the task/spec or create a follow-up task before release or demo cleanup.
+- If runtime work materially changes a promised public contract (flags, naming, fallback behavior, proof surface, ownership boundary), do not silently drift. Update the task/spec or create a follow-up task before release or demo cleanup.
 - If implementation reveals the plan targets only a symptom/consumer package for a shared primitive, stop and re-plan at the owner layer before editing. The owner layer is the package that creates, names, persists, routes, or navigates the primitive; adapters and consumers should reuse owner APIs instead of duplicating policy.
 
 **Prior implementation awareness:**
-- Before creating new modules, search for existing implementations of the same concern — especially spike or prototype code from prior subtasks
-- If a sibling task (same parent, earlier sequence) produced spike code: refactor and promote it rather than creating parallel "production" versions
-- Check dependency task reports and the task folder for prior work artifacts (concept inventories, spike reports)
+- Before creating new modules, search for existing implementations of the same concern
+- If a sibling task produced prototype or exploratory code, refactor and promote it rather than creating parallel "production" versions
+- Check dependency task reports and the task folder for prior work artifacts
 - When plan file paths point to locations where code already exists, integrate rather than duplicate
 
 **Execution discipline:**
@@ -79,11 +78,7 @@ Work through the plan checklist, step by step:
 - `draft` status: warn the user that the spec hasn't been reviewed, then continue only with explicit confirmation. In unattended/fork contexts where interactive confirmation is not possible, proceed after marking in-progress -- the assignment creation layer is responsible for blocking draft tasks before they reach this point.
 - Mark in-progress before first change, done after last verification
 - Never modify task frontmatter directly -- use `ace-task update <ref> --set key=value`
-- If the task implements a spike outcome, verify before marking done that deferred gaps and ownership changes are explicit rather than left implicit in release notes or retrospectives.
-- If the task is a spike, treat the spec's **Parent Goal Mapping** and **Post-Spike Rewrite Contract** as mandatory. Before marking the spike done, resolve every declared parent learning target, update the parent rewrite target, and update or create all declared in-folder affected task rewrite targets.
-- Do not mark a spike done while the parent task or directly affected active tasks in the same task folder still describe the pre-spike contract.
-- A spike must not modify files outside its own task folder. If the spike discovers drift in package docs, handbook assets, or any other out-of-folder files, capture that work as a new subtask under the current parent instead of editing those files in the spike.
-- Do not rerun `as-task-review` from inside the spike unless the task explicitly says review is part of a separate non-spike follow-up. Spikes rewrite task truth first; later review decides lifecycle.
+- If implementation reveals the reviewed draft structure is materially wrong, update the affected task specs or add follow-up tasks before continuing with misleading assumptions.
 
 ## Code Conventions
 
@@ -113,17 +108,3 @@ All plan steps checked, all success criteria pass:
    ```bash
    ace-task update <ref> --set status=done
    ```
-
-### Spike-Specific Done Gate
-
-Before a spike task is marked done:
-1. Update the spike file with the final outcome, concept inventory, and adopted/rejected/deferred decisions.
-2. Update the declared parent/orchestrator task so its contract matches the spike outcome.
-3. Update every declared related artifact sync target whose written contract changed:
-   - sibling task specs
-   - task-local `ux/usage.md`
-   - public package docs
-4. Run the declared final review command, normally `as-task-review <parent-ref>`.
-5. Reflect that parent-review outcome in the task tree before `status=done`.
-
-If any of those steps remain undone, the spike is still in progress even if the analytical work is finished.
