@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.38.2] - 2026-04-24
+
+### Technical
+- Tightened `TS-LLM-002` verification so `ace-llm --list-providers` remains a discovery-only public-surface check instead of implying provider readiness.
+
+## [0.38.1] - 2026-04-24
+
+### Changed
+- Clarified provider-listing documentation so `ace-llm --list-providers` is described as discovery plus setup hints, with setup readiness delegated to `ace-config doctor`.
+
 ## [0.38.0] - 2026-04-24
 
 ### Added

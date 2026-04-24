@@ -12,7 +12,10 @@ Validation order (impact-first):
 2. Exit code evidence is explicit and numeric in `*.exit`.
 3. `*.stdout` includes provider-discovery surface text (for example an
    "Available LLM Providers" header, provider rows, setup hints, or inactive-provider section).
-4. Evidence corresponds to the Goal 1 command and not unrelated setup output.
+4. Evidence corresponds to the Goal 1 command and not unrelated setup output such as `ace-config doctor` readiness
+   diagnostics.
+5. Verification treats this command as discovery-only surface evidence. It must not require proof that a configured
+   role can execute prompts end-to-end.
 
 ## Verdict
 
