@@ -43,7 +43,7 @@ PATH
 PATH
   remote: ace-demo
   specs:
-    ace-demo (0.25.1)
+    ace-demo (0.25.2)
       ace-b36ts (~> 0.13)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.9)
@@ -273,7 +273,7 @@ PATH
 PATH
   remote: ace-support-config
   specs:
-    ace-support-config (0.16.2)
+    ace-support-config (0.16.3)
       ace-support-fs (~> 0.3)
 
 PATH

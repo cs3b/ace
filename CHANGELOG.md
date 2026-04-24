@@ -22,6 +22,8 @@ All notable changes to this project will be documented in this file.
 - **ace-tmux v0.14.4**: Fixed tmux command dispatch to honor active `TMUX` sessions instead of forcing socket-based execution when already inside tmux.
 - **ace-support-config v0.12.1**: Hardened `ace-config doctor` readiness checks by validating stale `aliases.global` provider targets and accepting semantic `.ace-local` ignore patterns instead of exact-line matching.
 - **ace-support-config v0.13.0**: Made `ace-config doctor` fast by default with structural role-default checks and moved live provider probes behind explicit `--probe`.
+- **ace-demo v0.25.2**: Failed demo verification by default when a recording exits non-zero, added an explicit `verify.allow_nonzero_exit` escape hatch, and surfaced exit-code failures in CLI and report output.
+- **ace-support-config v0.16.3**: Corrected the bootstrap root-files demo tape to sync `ace-support-core` and record against the real sandbox repo root.
 - **ace-llm-providers-cli v0.31.4**: Replaced tmux Codex HOME overlays with per-launch `-C` and trust config overrides so interactive Codex sessions keep the user's normal `HOME` for git, GitHub CLI, and other auth-sensitive tools.
 - **ace-tmux v0.14.4**: Centralized ACE-managed tmux window-name sanitization so dotted or punctuation-bearing worktree/window names become safe tmux targets and startup selection uses window IDs.
 - **ace-assign v0.53.5**: Reused the shared tmux sanitizer for fork windows and targeted fork panes/windows by tmux window ID after lookup or creation.
