@@ -14,7 +14,7 @@ scenes:
   commands:
   - type: mkdir -p repo/subdir && cd repo && git init
     sleep: 3s
-  - type: cd subdir && ace-config sync support-core
+  - type: cd subdir && ace-config sync ace-support-core
     sleep: 5s
 - name: Verify bootstrap files landed at the repository root
   commands:
