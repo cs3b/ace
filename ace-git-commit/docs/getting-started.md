@@ -62,15 +62,38 @@ When changes span multiple packages, `ace-git-commit` can split work by scope ba
 
 ## Setup failure recovery (first commit)
 
-If your first LLM-backed commit fails because provider credentials or model access are not ready, run:
+For the first ACE setup snapshot, prefer the deterministic direct-message path:
 
 ```bash
-ace-llm --list-providers
-ace-config doctor
-ace-git-commit --only-staged --no-split -m "chore: set up ace tooling"
+bundle exec ace-git-commit --only-staged --no-split -m "chore: set up ace tooling"
 ```
 
-This keeps your staged setup files commit-able even when `role:commit` or an explicit model cannot be used yet.
+This is the reliable first-use path because it commits the current staged setup files without invoking LLM-backed
+message generation.
+
+If you try an LLM-backed setup commit first and provider credentials, model access, or local CLI readiness are not
+ready yet, inspect the current staged state and then fall back to the deterministic command:
+
+```bash
+git status
+bundle exec ace-llm --list-providers
+bundle exec ace-config doctor
+bundle exec ace-git-commit --only-staged --no-split -m "chore: set up ace tooling"
+```
+
+Use the flags as follows:
+
+- `--only-staged` commits only the current index and preserves any unstaged edits.
+- `--no-split` keeps the initial setup snapshot in one commit when setup touches multiple scopes such as root docs,
+  config, and generated agent assets.
+- `-m` bypasses LLM generation entirely.
+
+After `bundle exec ace-config doctor` confirms readiness, provider-backed commit generation becomes optional. Preview it
+without committing by running:
+
+```bash
+bundle exec ace-git-commit --dry-run -i "set up ace tooling"
+```
 
 ## Common Commands
 

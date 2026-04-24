@@ -59,6 +59,7 @@ ace-git-commit automatically:
    - Specific files: `ace-git-commit file1 file2`
    - Only staged: `ace-git-commit --only-staged`
    - Dry run first: `ace-git-commit --dry-run -i "$intention"`
+   - First setup snapshot after provider-readiness issues: `ace-git-commit --only-staged --no-split -m "chore: set up ace tooling"`
 
 3. **Verify result**:
    ```bash
@@ -71,6 +72,7 @@ ace-git-commit automatically:
 - `-m, --message`: Use direct message (bypass LLM)
 - `--model MODEL`: Override LLM model (e.g., gflash)
 - `-s, --only-staged`: Commit only staged changes
+- `--no-split`: Force one commit across detected scopes
 - `-n, --dry-run`: Preview without committing
 - `-d, --debug`: Enable debug output
 
