@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+- **ace-assign v0.55.0**: Added `ace-assign fork-run --callback` for tmux-backed parent/child agent flows so the forked child can send one final status sentence back to the origin pane with `ace-tmux send` while the parent drive session stays idle until that callback arrives.
+
+### Technical
+- **ace-assign v0.55.0**: Persisted callback-pane metadata in fork tmux session files, exported `ACE_ASSIGN_CALLBACK_PANE` into tmux fork launches, and updated `/as-assign-drive` to document callback-mode resume and assignment-state recovery when the callback is missing on re-entry.
+
 ### Fixed
 - **ace-assign v0.54.8**: Corrected tmux fork-window naming to derive from the launcher origin pane instead of the session's currently active window, and stopped tmux fork launches from stealing focus by creating fork windows and panes detached.
 - **ace-assign v0.54.7**: Made forked assignment workers honor an explicit default scoped target so `/as-assign-drive <assignment>@<root>` cannot widen back to parent status, and restored root-first fork scheduling so unscoped resume activates pending fork roots before child steps.
