@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.54.8] - 2026-04-24
+
+### Fixed
+- Resolved tmux fork-window naming from the launcher origin pane so fork launches keep targeting the originating `<window>-fs` name even when another tmux window is currently active.
+- Stopped tmux fork launches from stealing focus by creating fork windows and panes detached and removing the automatic fork-window selection step.
+
+### Technical
+- Added regressions for origin-pane window resolution, detached pane/window creation, and no-focus tmux fork launching.
+
 ## [0.54.7] - 2026-04-24
 
 ### Fixed

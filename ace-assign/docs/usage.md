@@ -232,7 +232,7 @@ Launch modes:
 
 - `auto` (default): use tmux when the current process is already inside tmux or `ACE_TMUX_SESSION` is set; otherwise use the headless subprocess path
 - `headless`: force the existing provider subprocess path and never create tmux panes
-- `tmux`: require tmux context, create or reuse `<current-window>-fs`, start a real interactive agent in a pane there via `ace-llm --interactive`, and send the scoped `/as-assign-drive <assignment>@<root>` handoff automatically. The fork window name uses the shared `ace-tmux` safe-name policy, so punctuation in the base window is replaced with `-`.
+- `tmux`: require tmux context, create or reuse `<origin-window>-fs`, start a real interactive agent in a pane there via `ace-llm --interactive`, and send the scoped `/as-assign-drive <assignment>@<root>` handoff automatically. The fork window name uses the shared `ace-tmux` safe-name policy, so punctuation in the base window is replaced with `-`. Fork windows and panes are created detached, so the current tmux focus stays where the user left it.
 
 Provider resolution precedence for fork execution:
 

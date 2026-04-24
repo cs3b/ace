@@ -175,9 +175,6 @@ module Ace
             working_dir: invocation[:working_dir],
             visible_handoff: invocation[:prompt]
           )
-          if window_info[:created] && current_window != fork_window
-            tmux_runner.select_window(session: session, window: fork_window, window_target: window_info[:target])
-          end
           write_tmux_launch_metadata(
             session_meta_file: session_meta_file,
             provider: invocation[:provider],

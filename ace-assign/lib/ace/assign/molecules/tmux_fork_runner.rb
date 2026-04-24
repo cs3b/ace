@@ -34,7 +34,15 @@ module Ace
         def current_window
           explicit = ENV["ACE_ASSIGN_FORK_WINDOW"].to_s.strip
           return explicit unless explicit.empty?
+
+          pane = ENV["TMUX_PANE"].to_s.strip
           session = ENV["ACE_TMUX_SESSION"].to_s.strip
+          if !pane.empty?
+            pane_session = pane_session_name(pane)
+            pane_window = pane_window_name(pane)
+            return pane_window if !pane_window.empty? && (session.empty? || pane_session == session)
+          end
+
           if !session.empty?
             window = capture([tmux_binary, "display-message", "-t", "#{session}:", "-p", "#W"]).stdout
             return window unless window.empty?
@@ -61,7 +69,7 @@ module Ace
           end
 
           result = capture([
-            tmux_binary, "new-window", "-t", "#{session}:", "-n", name, "-c", File.expand_path(root),
+            tmux_binary, "new-window", "-d", "-t", "#{session}:", "-n", name, "-c", File.expand_path(root),
             "-P", "-F", '#{window_id}'
           ])
           raise Error, "Failed to create tmux fork window #{name}: #{result.stderr}" unless result.success?
@@ -79,7 +87,9 @@ module Ace
             return pane
           end
 
-          result = capture([tmux_binary, "split-window", "-t", target, "-c", File.expand_path(root), "-P", "-F", '#{pane_id}'])
+          result = capture([
+            tmux_binary, "split-window", "-d", "-t", target, "-c", File.expand_path(root), "-P", "-F", '#{pane_id}'
+          ])
           raise Error, "Failed to create tmux fork pane in #{window}: #{result.stderr}" unless result.success?
 
           pane = result.stdout
@@ -155,6 +165,14 @@ module Ace
 
           active = result.stdout_lines.find { |line| line.start_with?("1 ") }
           active&.sub(/\A1\s+/, "") || result.stdout_lines.first&.sub(/\A[01]\s+/, "")
+        end
+
+        def pane_session_name(pane)
+          capture([tmux_binary, "display-message", "-t", pane, "-p", "#S"]).stdout
+        end
+
+        def pane_window_name(pane)
+          capture([tmux_binary, "display-message", "-t", pane, "-p", "#W"]).stdout
         end
 
         def first_pane(target)
