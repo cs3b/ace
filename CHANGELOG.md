@@ -27,6 +27,7 @@ All notable changes to this project will be documented in this file.
 - **ace-support-config v0.12.0**: Added `ace-config doctor` as a non-mutating setup readiness check with text/JSON output plus `--no-probe` support.
 
 ### Changed
+- **ace-test-runner-e2e v0.39.0**: Added default retry-once handling for full suite runs with explicit flaky recovery reporting, and reused a suite-shared runtime cache under `.ace-local/test-e2e/runtime-cache/` so sandbox workers stop rebuilding the same Bundler/native-extension environment per scenario.
 - **ace-assign v0.54.0**: Replaced persisted/public `in_progress` state with `active`, stopped treating queue prediction as started work, and introduced scope-aware `active_steps` plus `next_step` status semantics for normal and forked assignment execution.
 - **ace-overseer v0.15.0**: Updated status collection and work-on orchestration to consume the new `ace-assign` active-step contract, including `active_steps`, `next_step`, and focused-step resume behavior.
 - **ace-assign v0.53.6**: Improved tmux-backed fork launch behavior so fork windows are resolved through shared window-name sanitation and active-session targeting updates.
