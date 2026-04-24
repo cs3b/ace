@@ -934,6 +934,48 @@ class TestOrchestratorTest < Minitest::Test
     end
   end
 
+  def test_cli_setup_passes_support_git_excludes_for_split_fixture_commit_scenarios
+    Dir.mktmpdir do |tmpdir|
+      create_ts_test_package_with_split_setup_commit(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001])
+      create_protocol_source_package(tmpdir, "ace-bundle", protocol: "skill",
+        relative_path: "handbook/skills", source_file: "as-onboard/SKILL.md", source_content: "---\nname: as-onboard\n---\n")
+
+      received = {}
+      setup_executor = Object.new
+      setup_executor.define_singleton_method(:execute) do |setup_steps:, sandbox_dir:, fixture_source: nil, scenario_name: nil, run_id: nil, initial_env: {}, git_excludes: []|
+        received[:git_excludes] = git_excludes
+        {
+          success: true,
+          steps_completed: setup_steps.length,
+          error: nil,
+          env: initial_env.merge("PROJECT_ROOT_PATH" => "."),
+          tmux_session: nil
+        }
+      end
+      setup_executor.define_singleton_method(:teardown) do
+        nil
+      end
+
+      orchestrator = create_orchestrator(
+        base_dir: tmpdir,
+        provider: "claude:sonnet",
+        setup_executor_factory: ->(sandbox_backend: nil) { setup_executor }
+      )
+
+      orchestrator.run(
+        package: "my-pkg",
+        test_id: "TS-TEST-001",
+        output: @output
+      )
+
+      assert_includes received[:git_excludes], "my-pkg/"
+      assert_includes received[:git_excludes], "ace-bundle/"
+      assert_includes received[:git_excludes], ".ace-handbook/"
+      assert_includes received[:git_excludes], ".ace/git/"
+      assert_includes received[:git_excludes], ".ace/llm/providers/"
+    end
+  end
+
   def test_cli_setup_keeps_package_git_excludes_empty_for_non_commit_scenarios
     Dir.mktmpdir do |tmpdir|
       create_ts_test_package_with_setup(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001])
@@ -1414,6 +1456,63 @@ class TestOrchestratorTest < Minitest::Test
         - git-init
         - copy-fixtures
         - run: git add -A && git commit -m "initial" --quiet
+        - agent-env:
+            PROJECT_ROOT_PATH: "."
+    YAML
+
+    runner_files = tc_ids.map { |tc_id| "          - ./#{tc_id}-check.runner.md" }.join("\n")
+    verify_files = tc_ids.map { |tc_id| "          - ./#{tc_id}-check.verify.md" }.join("\n")
+
+    File.write(File.join(ts_dir, "runner.yml.md"), <<~MD)
+            ---
+            bundle:
+              files:
+      #{runner_files}
+            ---
+      
+            # Runner
+            Workspace root: (current directory)
+    MD
+
+    File.write(File.join(ts_dir, "verifier.yml.md"), <<~MD)
+            ---
+            bundle:
+              files:
+      #{verify_files}
+            ---
+      
+            # Verifier
+    MD
+
+    tc_ids.each do |tc_id|
+      File.write(File.join(ts_dir, "#{tc_id}-check.runner.md"), <<~CONTENT)
+        # Goal #{tc_id}
+        Run #{tc_id}.
+      CONTENT
+      File.write(File.join(ts_dir, "#{tc_id}-check.verify.md"), <<~CONTENT)
+        # Verify #{tc_id}
+        Verify #{tc_id}.
+      CONTENT
+    end
+  end
+
+  def create_ts_test_package_with_split_setup_commit(tmpdir, package, scenario_id, tc_ids)
+    ts_dir = File.join(tmpdir, package, "test", "e2e", "#{scenario_id}-split-setup-commit")
+    fixtures_dir = File.join(ts_dir, "fixtures")
+    FileUtils.mkdir_p(fixtures_dir)
+    File.write(File.join(fixtures_dir, "sample.txt"), "fixture content")
+
+    File.write(File.join(ts_dir, "scenario.yml"), <<~YAML)
+      test-id: #{scenario_id}
+      title: Test #{scenario_id}
+      area: test
+      package: #{package}
+      priority: medium
+      setup:
+        - git-init
+        - copy-fixtures
+        - run: git add -A
+        - run: git commit -m "initial" --quiet
         - agent-env:
             PROJECT_ROOT_PATH: "."
     YAML
