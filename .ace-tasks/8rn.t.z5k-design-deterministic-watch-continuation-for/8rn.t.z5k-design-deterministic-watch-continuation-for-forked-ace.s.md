@@ -1,6 +1,6 @@
 ---
 id: 8rn.t.z5k
-status: draft
+status: pending
 priority: medium
 created_at: "2026-04-24 23:26:11"
 estimate: TBD
@@ -10,6 +10,7 @@ bundle:
   presets: [project]
   files: [ace-assign/lib/ace/assign/cli.rb, ace-assign/lib/ace/assign/cli/commands/fork_run.rb, ace-assign/lib/ace/assign/molecules/fork_session_launcher.rb, ace-assign/handbook/workflow-instructions/assign/drive.wf.md, ace-assign/docs/usage.md, ace-assign/test/fast/commands/fork_run_command_test.rb, ace-assign/test/fast/molecules/fork_session_launcher_test.rb, ace-assign/test/fast/organisms/assign_drive_contract_test.rb, ace-assign/test/e2e/TS-ASSIGN-003-operations/scenario.yml, ace-assign/test/e2e/TS-ASSIGN-003-operations/runner.yml.md, ace-assign/test/e2e/TS-ASSIGN-003-operations/verifier.yml.md, .ace-tasks/_archive/8r/w/8r6.t.u53-design-visible-tmux-backed-fork/8r6.t.u53-design-visible-tmux-backed-fork-execution-for.s.md, .ace-tasks/_archive/8r/x/8re.t.n1d-design-ace-tmux-control-integrations/8re.t.n1d-design-ace-tmux-control-integrations-for-assignment.s.md, ux/usage.md]
   commands: [ace-task show 8rn.t.z5k --content, ace-task show 8rn.t.z5k.0 --content, ace-task show 8rn.t.z5k.1 --content, ace-task show 8rn.t.z5k.2 --content, ace-assign status, ace-assign fork-run --help]
+needs_review: false
 ---
 
 # Design deterministic watch continuation for forked ace-assign work

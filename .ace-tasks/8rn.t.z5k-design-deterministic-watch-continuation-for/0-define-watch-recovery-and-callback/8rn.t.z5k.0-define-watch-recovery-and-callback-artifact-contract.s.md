@@ -1,6 +1,6 @@
 ---
 id: 8rn.t.z5k.0
-status: draft
+status: pending
 priority: medium
 created_at: "2026-04-24 23:26:18"
 estimate: TBD
@@ -11,6 +11,7 @@ bundle:
   presets: [project]
   files: [.ace-tasks/8rn.t.z5k-design-deterministic-watch-continuation-for/8rn.t.z5k-design-deterministic-watch-continuation-for-forked-ace.s.md, ace-assign/lib/ace/assign/cli/commands/fork_run.rb, ace-assign/lib/ace/assign/molecules/fork_session_launcher.rb, ace-assign/lib/ace/assign/molecules/tmux_control_surface_runner.rb, ace-assign/handbook/workflow-instructions/assign/drive.wf.md, ace-assign/docs/usage.md, ace-assign/test/fast/commands/fork_run_command_test.rb, ace-assign/test/fast/molecules/fork_session_launcher_test.rb, ace-assign/test/fast/organisms/assign_drive_contract_test.rb, ux/usage.md]
   commands: [ace-task show 8rn.t.z5k.0 --content, ace-task show 8rn.t.z5k --content, ace-assign fork-run --help]
+needs_review: false
 ---
 
 # Define watch recovery and callback artifact contract

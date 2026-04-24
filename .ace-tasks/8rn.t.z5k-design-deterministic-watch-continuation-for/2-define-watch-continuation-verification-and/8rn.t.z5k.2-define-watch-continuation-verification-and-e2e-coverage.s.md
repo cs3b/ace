@@ -1,6 +1,6 @@
 ---
 id: 8rn.t.z5k.2
-status: draft
+status: pending
 priority: medium
 created_at: "2026-04-24 23:26:18"
 estimate: TBD
@@ -11,6 +11,7 @@ bundle:
   presets: [project]
   files: [.ace-tasks/8rn.t.z5k-design-deterministic-watch-continuation-for/8rn.t.z5k-design-deterministic-watch-continuation-for-forked-ace.s.md, ace-assign/test/fast/commands/fork_run_command_test.rb, ace-assign/test/fast/molecules/fork_session_launcher_test.rb, ace-assign/test/fast/organisms/assign_drive_contract_test.rb, ace-assign/test/e2e/TS-ASSIGN-003-operations/scenario.yml, ace-assign/test/e2e/TS-ASSIGN-003-operations/runner.yml.md, ace-assign/test/e2e/TS-ASSIGN-003-operations/verifier.yml.md, ace-assign/test/e2e/TS-ASSIGN-003-operations/TC-001-multi-assignment.runner.md, ace-assign/test/e2e/TS-ASSIGN-003-operations/TC-002-fork-run-delegation.runner.md, ux/usage.md]
   commands: [ace-task show 8rn.t.z5k.2 --content, ace-task show 8rn.t.z5k --content]
+needs_review: false
 ---
 
 # Define watch continuation verification and e2e coverage

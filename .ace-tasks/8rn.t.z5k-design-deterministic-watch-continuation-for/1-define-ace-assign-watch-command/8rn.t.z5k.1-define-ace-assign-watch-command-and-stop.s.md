@@ -1,6 +1,6 @@
 ---
 id: 8rn.t.z5k.1
-status: draft
+status: pending
 priority: medium
 created_at: "2026-04-24 23:26:18"
 estimate: TBD
@@ -11,6 +11,7 @@ bundle:
   presets: [project]
   files: [.ace-tasks/8rn.t.z5k-design-deterministic-watch-continuation-for/8rn.t.z5k-design-deterministic-watch-continuation-for-forked-ace.s.md, ace-assign/lib/ace/assign/cli.rb, ace-assign/lib/ace/assign/cli/commands/fork_run.rb, ace-assign/lib/ace/assign/models/step.rb, ace-assign/handbook/workflow-instructions/assign/drive.wf.md, ace-assign/docs/usage.md, ace-assign/test/fast/organisms/assign_drive_contract_test.rb, ux/usage.md]
   commands: [ace-task show 8rn.t.z5k.1 --content, ace-assign status, ace-assign fork-run --help]
+needs_review: false
 ---
 
 # Define ace-assign watch command and stop-state contract
