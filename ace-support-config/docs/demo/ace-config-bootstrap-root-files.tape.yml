@@ -12,13 +12,13 @@ settings:
 scenes:
 - name: Sync config from a nested working directory
   commands:
-  - type: mkdir -p repo/subdir && cd repo && git init
+  - type: mkdir -p subdir && git init
     sleep: 3s
   - type: cd subdir && ace-config sync ace-support-core
     sleep: 5s
 - name: Verify bootstrap files landed at the repository root
   commands:
-  - type: cd repo
+  - type: cd ..
     sleep: 1s
   - type: ls .gitignore AGENTS.md CLAUDE.md
     sleep: 4s
