@@ -80,7 +80,7 @@ Work through the plan checklist, step by step:
 - Mark in-progress before first change, done after last verification
 - Never modify task frontmatter directly -- use `ace-task update <ref> --set key=value`
 - If the task implements a spike outcome, verify before marking done that deferred gaps and adoption follow-ups are explicit rather than left implicit in release notes or retrospectives.
-- If the task is a spike, treat the spec's **Spike Completion Contract** as mandatory. Before marking the spike done, update the parent sync target, update all declared related artifact sync targets, and rerun `as-task-review` on the declared parent task.
+- If the task is a spike, treat the spec's **Spike Completion Contract** as mandatory. Before marking the spike done, ensure the declared concrete outcome task exists, update the parent sync target, update all declared related artifact sync targets, and rerun `as-task-review` on the declared parent task.
 - Do not mark a spike done while the parent task or directly affected sibling/public docs still describe the pre-spike contract.
 
 ## Code Conventions

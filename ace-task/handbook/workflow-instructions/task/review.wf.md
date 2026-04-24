@@ -250,14 +250,16 @@ When the reviewed task is a completed spike, treat spike usefulness as a review 
   - **intentional but deferred to follow-up**
   - **spec miss that must be corrected**
 - Verify that the spike left a reusable adoption path:
-  - explicit next task(s) exist
+  - explicit outcome task(s) exist
+  - the outcome task type matches the declared completion mode
   - deferred gaps are named, not implied
   - any promised proof artifact exists if the spike was a proof-of-concept
 - Verify that spike closure happened cleanly:
   - the parent/orchestrator task was synchronized to the spike outcome
   - all declared related artifact sync targets were updated or explicitly confirmed unaffected
   - the declared final parent review command was rerun
-- Fail closed on spike usefulness if the spike completed without an explicit follow-up task, even if later implementation succeeded through ad-hoc decisions.
+- Fail closed on spike usefulness if the spike completed without an explicit concrete outcome task, even if later implementation succeeded through ad-hoc decisions.
+- Treat `reopen later if needed` without a concrete closure/adoption task as a failed spike closure.
 - In the review summary for completed spikes, explicitly state whether the spike produced:
   - a reusable contract
   - a reusable proof artifact
@@ -297,7 +299,7 @@ Treat "concept inventory exists" as insufficient by itself for a successful spik
 - No loss of existing information
 - Clear improvement in task clarity or completeness
 - User receives actionable list of questions to answer (if any)
-- Completed spike reviews identify contract drift and verify explicit follow-up tasks
+- Completed spike reviews identify contract drift and verify explicit outcome tasks
 
 ## Task Management Integration
 

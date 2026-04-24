@@ -194,14 +194,14 @@ For both spike types, the draft must include:
 1. one **Validated End-State Scenario**
 2. one **Concept Inventory** with kept / changed / new / rejected outcomes
 3. one **Adopted Decisions / Rejected Decisions / Deferred Gaps** section
-4. one **Follow-up Tasks After Spike** section naming the next implementation or adoption work that must happen if the spike succeeds
+4. one **Outcome Tasks After Spike** section naming the concrete next task(s) that close the loop after the spike succeeds, narrows, or no-goes
 5. one **Spike Completion Contract** section naming how the spike closes the loop when work finishes
 
 For proof-of-concept spikes, the draft must additionally include:
 1. one concrete **Proof Artifact Plan** describing what runnable evidence will prove the spike
 2. success criteria that require the proof artifact, not only the concept inventory
 
-Do not treat "we now understand the design" as sufficient spike completion when the spike affects a runtime, UX, or execution-path contract. A useful spike must also leave a clear proof path and explicit next task.
+Do not treat "we now understand the design" as sufficient spike completion when the spike affects a runtime, UX, or execution-path contract. A useful spike must also leave a clear proof path and explicit concrete outcome task.
 
 The **Spike Completion Contract** must be decision-complete. It must state:
 1. **Completion mode**: `recommendation-only`, `decompose-follow-up`, or `archive/no-go`
@@ -209,6 +209,13 @@ The **Spike Completion Contract** must be decision-complete. It must state:
 3. **Related artifact sync targets**: which sibling tasks, task-local docs, and public docs must be updated if the spike changes their stated contract
 4. **Final review command**: the required `as-task-review <parent-ref>` rerun that closes the spike
 5. **Done gate**: the spike is not complete until the declared sync targets are updated and the parent review result is reflected in the task tree
+
+The **Outcome Tasks After Spike** section must match the declared completion mode:
+1. `decompose-follow-up` -> name at least one concrete implementation or adoption task
+2. `recommendation-only` -> name exactly one concrete recommendation-adoption or narrowing task
+3. `archive/no-go` -> name exactly one concrete closure/archive task
+
+`reopen later if needed` is not a valid outcome task. If the spike concludes that no implementation work is justified now, it must still produce an explicit closure task that retires the parent cleanly.
 
 8. **Complete Behavioral Specifications**
    * For each created draft task, populate with:
@@ -283,7 +290,8 @@ The **Spike Completion Contract** must be decision-complete. It must state:
      * [ ] Defaults are explicit where behavior could otherwise be ambiguous
      * [ ] Usage documentation created in `ux/usage.md` (when task changes any API surface)
      * [ ] Spike tasks declare whether they are `design-contract` or `proof-of-concept`
-     * [ ] Spike tasks include explicit follow-up task(s) after the spike
+     * [ ] Spike tasks include explicit outcome task(s) after the spike
+     * [ ] Outcome task shape matches completion mode (`decompose-follow-up`, `recommendation-only`, `archive/no-go`)
      * [ ] Spike tasks include a decision-complete Spike Completion Contract
      * [ ] Proof-of-concept spikes include a runnable proof artifact plan
 
@@ -516,6 +524,11 @@ GET/POST/PUT/DELETE /endpoint
 
 #### Verification Commands
 - [ ] [Command/check]: [Expected outcome]
+
+### Outcome Tasks After Spike (Spike Tasks Only)
+<!-- Required for spike tasks. Name the concrete task(s) that happen next. -->
+
+- [Task ref and title]: [Implementation / adoption / narrowing / closure purpose]
 
 ### Spike Completion Contract (Spike Tasks Only)
 <!-- Required for spike tasks. Remove if this is not a spike. -->
