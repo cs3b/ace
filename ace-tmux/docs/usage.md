@@ -356,7 +356,7 @@ Chained preset references are supported (depth-limited).
 ## Boundary Notes
 
 - `ace-tmux` control commands (`send`, `capture`, `wait`, `attach`, `detach`) define the live interaction surface.
-- Read-side runtime inventory currently uses the shipped `ace-tmux list` surface; any richer follow-up remains a separate consumer-driven question tracked in sibling task `8r6.t.xeu`.
+- Read-side runtime inventory currently uses the shipped `ace-tmux list` surface. No additional shared read-side CLI follow-up is active today; any future consumer-driven expansion should start as a new task rather than reopening the archived `8r6.t.xeu` family.
 
 ## Testing Contract
 

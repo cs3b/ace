@@ -7,10 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.17.1] - 2026-04-24
+## [0.17.2] - 2026-04-24
+
+### Changed
+- Clarified usage docs to treat speculative shared read-side follow-up as closed for now, so any future tmux inspectability expansion must start as a new task rather than reopening the archived `8r6.t.xeu` task family.
 
 ### Fixed
 - Clarified usage docs to treat `ace-tmux list` as the shipped read-side runtime inventory baseline and removed stale `ace-tmux state` references from capture and boundary notes.
+
+## [0.17.1] - 2026-04-24
 
 ## [0.17.0] - 2026-04-16
 
