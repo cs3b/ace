@@ -205,7 +205,8 @@ module Ace
           end
 
           def shared_runtime_root_from_env(env)
-            raw = stringify_keys(env)[SHARED_RUNTIME_ENV_KEY].to_s.strip
+            merged = stringify_keys(ENV.to_h).merge(stringify_keys(env))
+            raw = merged[SHARED_RUNTIME_ENV_KEY].to_s.strip
             return nil if raw.empty?
 
             File.expand_path(raw)

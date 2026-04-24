@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.39.1] - 2026-04-24
+
+### Fixed
+- Resolved suite-shared runtime reuse in child `ace-test-e2e` subprocesses by honoring inherited `ACE_E2E_SHARED_RUNTIME_ROOT` from the process environment instead of rebuilding sandbox-local runtimes after prewarming.
+
 ## [0.39.0] - 2026-04-24
 
 ### Changed
