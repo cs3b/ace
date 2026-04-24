@@ -16,7 +16,7 @@ llm:
       - gemini:flash-latest
       - claude:haiku
     _assign-worker: &assign-worker
-      - codex:codex:medium@yolo
+      - codex:gpt:medium@yolo
       - gemini:flash-latest@yolo
       - claude:sonnet:medium@yolo
 
