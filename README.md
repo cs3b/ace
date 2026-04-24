@@ -76,9 +76,36 @@ ace-bundle wfi://task/work
 
 ## Install
 
-Use this full-stack path for a new project (Ruby 3.2+):
+Ruby 3.2+ required.
 
-1. Add the ACE tools you need:
+Choose one setup path:
+
+- **Minimal (first-use default):** task specs, context loading, provider access, and one agent integration.
+- **Full-stack:** complete ACE workflow surface (assign/overseer/review/tmux/tests/docs/retro/demo/git helpers).
+
+### What this will create
+
+Before you run setup, expect these repository artifacts:
+
+- `.ace/` (project-level ACE overrides/config when you sync package config)
+- Agent skill directories from installed integrations (for example `.codex/skills/`, `.claude/skills/`)
+- Optional `AGENTS.md` and `CLAUDE.md` starter guidance files with ACE provenance, customization notes, and refresh
+  commands when you also sync `ace-support-core` project-root templates
+  (existing user-authored guidance is preserved)
+- `Gemfile` and `Gemfile.lock` dependency updates from `bundle add`/`bundle install`
+
+### 1. Add the ACE tools you need
+
+Minimal path:
+
+```bash
+bundle add --group "development, test" \
+  ace-task ace-bundle ace-handbook ace-llm ace-llm-providers-cli \
+  ace-handbook-integration-codex
+# Optional integrations: ace-handbook-integration-claude, ace-handbook-integration-gemini, ace-handbook-integration-opencode, ace-handbook-integration-pi
+```
+
+Full-stack path:
 
 ```bash
 bundle add --group "development, test" \
@@ -93,37 +120,66 @@ bundle add --group "development, test" \
 
 Dependencies like `ace-git`, `ace-tmux`, and all `ace-support-*` gems are pulled in automatically.
 
-2. Install gems:
+If you install only the minimal path, advanced workflow commands (for example `ace-assign`, `ace-overseer`, and review/test orchestration commands) require adding full-stack packages later.
+
+### 2. Install gems
 
 ```bash
 bundle install
 ```
 
-3. Sync CLI provider config (`ace-config` is provided by `ace-support-config`):
+### 3. Sync CLI provider config (`ace-config` is provided by `ace-support-config`)
 
 ```bash
-ace-config sync ace-llm-providers-cli
+bundle exec ace-config sync ace-llm-providers-cli
 ```
 
-4. Sync agent assets:
+If you also want ACE to generate starter `AGENTS.md` and `CLAUDE.md` files in the repository root, sync the
+`ace-support-core` project-root templates as a separate step:
 
 ```bash
-ace-handbook sync
+bundle exec ace-config sync ace-support-core
 ```
 
-Most ACE tools run from packaged `.ace-defaults`; sync additional package config only when you want project-local overrides.
-`ace-handbook sync` projects agent skill folders (for example `.claude/skills/` and `.codex/skills/`).
-
-5. Verify setup, provider discovery, and project context:
+### 4. Sync agent assets
 
 ```bash
-ace-config doctor
-ace-llm --list-providers
-ace-bundle project
+bundle exec ace-handbook sync
 ```
 
-`ace-llm --list-providers` is the canonical provider availability check. If CLI providers appear unavailable, confirm
-`ace-llm-providers-cli` is included in your install list. API-only setups can still use ACE with API-backed providers.
+Use `bundle exec` for the repo-local quick-start path so copied commands resolve to the ACE gems installed in this
+project, not an older or differently configured global install. Advanced environments that intentionally use binstubs,
+shell wrappers, or globally installed ACE executables can still run bare `ace-*` commands by choice.
+
+Most ACE tools run from packaged `.ace-defaults`; sync additional package config only when you want project-local
+overrides. `bundle exec ace-handbook sync` projects agent skill folders (for example `.claude/skills/` and
+`.codex/skills/`).
+
+When you sync `ace-support-core`, ACE creates `AGENTS.md` and `CLAUDE.md` starter files that identify ACE as their
+source, note that they are safe to customize for repo-specific guidance, and point back to
+`bundle exec ace-config sync ace-support-core --force` for refreshing the starter content. Use
+`bundle exec ace-handbook sync` when you want to refresh projected skill folders.
+
+### 5. Verify setup, provider discovery, and project context
+
+```bash
+bundle exec ace-llm --list-providers
+bundle exec ace-config doctor
+bundle exec ace-bundle project
+```
+
+Run these checks in order:
+
+- `bundle exec ace-llm --list-providers` is the discovery command. It shows which providers are available and prints
+  setup hints, but it does not prove a configured role can execute end-to-end.
+- `bundle exec ace-config doctor` is the setup readiness command. It validates the quick-start path, including local
+  setup artifacts, provider package availability, config hygiene, and provider execution readiness. Use
+  `bundle exec ace-config doctor --no-probe` when you want the readiness check without live provider pings.
+- `bundle exec ace-bundle project` confirms context loading after setup is ready.
+
+If CLI providers appear unavailable in `--list-providers`, confirm `ace-llm-providers-cli` is included in your install
+list. Missing credentials or local CLI account access are setup readiness issues that `ace-config doctor` reports as
+actionable guidance. API-only setups can still pass readiness even when unrelated CLI providers are inactive.
 
 If `bundle install` fails immediately after a large ACE release, rerun with:
 

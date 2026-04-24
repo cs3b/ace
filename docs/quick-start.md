@@ -6,9 +6,34 @@ By the end of this walkthrough you will have captured an idea, turned it into a 
 
 Ruby 3.2+ required.
 
-Use this full-stack setup path before the walkthrough:
+Choose one setup path:
 
-1. Add the ACE tools you need:
+- **Minimal (first-use default):** enough for task specs, context loading, provider access, and one integration.
+- **Full-stack (recommended for this walkthrough):** includes assign/overseer/review/tmux/test/docs/retro/demo/git workflows.
+
+### What this will create
+
+Before setup commands run, expect:
+
+- `.ace/` config overrides when project-local config is synced
+- Agent skill folders for installed integrations (for example `.codex/skills/`, `.claude/skills/`)
+- Optional `AGENTS.md` and `CLAUDE.md` starter guidance files with ACE provenance, customization notes, and refresh
+  commands when you also sync `ace-support-core` project-root templates
+  (existing user-maintained content is preserved)
+- `Gemfile` and `Gemfile.lock` dependency updates
+
+### 1. Add the ACE tools you need
+
+Minimal path:
+
+```bash
+bundle add --group "development, test" \
+  ace-task ace-bundle ace-handbook ace-llm ace-llm-providers-cli \
+  ace-handbook-integration-codex
+# Optional integrations: ace-handbook-integration-claude, ace-handbook-integration-gemini, ace-handbook-integration-opencode, ace-handbook-integration-pi
+```
+
+Full-stack path:
 
 ```bash
 bundle add --group "development, test" \
@@ -21,41 +46,70 @@ bundle add --group "development, test" \
 # Also available: ace-handbook-integration-gemini, ace-handbook-integration-opencode, ace-handbook-integration-pi
 ```
 
-2. Install gems:
+If you install only the minimal path, advanced workflow commands in this walkthrough may be unavailable until you add the full-stack packages. In particular, `ace-git-commit` is part of the full-stack path, so the first-commit flow below includes a plain `git commit` fallback for minimal installs.
+
+### 2. Install gems
 
 ```bash
 bundle install
 ```
 
-3. Sync CLI provider config (`ace-config` comes from `ace-support-config`, not a separate gem):
+### 3. Sync CLI provider config (`ace-config` comes from `ace-support-config`, not a separate gem)
 
 ```bash
-ace-config sync ace-llm-providers-cli
+bundle exec ace-config sync ace-llm-providers-cli
 ```
 
-Most ACE tools run from packaged `.ace-defaults`; sync additional package config only when you want project-local overrides.
-
-4. Sync handbook assets to your agent platforms:
+If you also want starter `AGENTS.md` and `CLAUDE.md` files in the repository root, sync the `ace-support-core`
+project-root templates separately:
 
 ```bash
-ace-handbook sync
+bundle exec ace-config sync ace-support-core
 ```
 
-5. Verify setup, providers, and project context:
+Use `bundle exec` for this repo-local setup path so the copied commands run against the ACE gems installed in the
+current project instead of any global executable that may be older or configured differently. If you intentionally use
+binstubs, shell wrappers, or global installs, bare `ace-*` commands remain an advanced option.
+
+Most ACE tools run from packaged `.ace-defaults`; sync additional package config only when you want project-local
+overrides.
+
+When you sync `ace-support-core`, ACE creates `AGENTS.md` and `CLAUDE.md` starter files that identify ACE as their
+source, note that they are safe to customize for repo-specific guidance, and point back to
+`bundle exec ace-config sync ace-support-core --force` for refreshing the starter content. Use
+`bundle exec ace-handbook sync` when you want to refresh projected skill folders.
+
+### 4. Sync handbook assets to your agent platforms
 
 ```bash
-ace-config doctor
-ace-llm --list-providers
-ace-bundle project
+bundle exec ace-handbook sync
 ```
 
-Treat `ace-llm --list-providers` as the canonical provider availability check. If CLI providers are unavailable, verify
-`ace-llm-providers-cli` is in your install list. API-only usage remains valid even when local CLI provider probes are unavailable.
-
-6. Optional assignment sanity check in plain projects:
+### 5. Verify setup, providers, and project context
 
 ```bash
-ace-assign create --preset work-on-task --task <taskref>
+bundle exec ace-llm --list-providers
+bundle exec ace-config doctor
+bundle exec ace-bundle project
+```
+
+Treat these commands as separate checks with different purposes:
+
+- `bundle exec ace-llm --list-providers` is the canonical provider discovery command for repo-local setup. It lists
+  available providers and setup hints, but it does not prove your configured ACE roles can execute prompts.
+- `bundle exec ace-config doctor` is the readiness check for the quick-start path. It validates generated local
+  artifacts, ignored `.ace-local/` output, provider package availability, config hygiene, and provider execution
+  readiness. Use `bundle exec ace-config doctor --no-probe` if you want to skip live provider probes during setup.
+- `bundle exec ace-bundle project` confirms project context loading once setup is ready.
+
+If CLI providers are unavailable in `--list-providers`, verify `ace-llm-providers-cli` is in your install list.
+Missing credentials or local CLI account access should be treated as provider readiness issues, not ACE install
+corruption. API-only usage remains valid even when unrelated CLI providers are inactive.
+
+### 6. Optional assignment sanity check in plain projects
+
+```bash
+bundle exec ace-assign create --preset work-on-task --task <taskref>
 ```
 
 If `bundle install` fails right after a large ACE release, run:
@@ -65,6 +119,47 @@ bundle install --full-index
 ```
 
 Then return to normal `bundle install` once RubyGems propagation catches up.
+
+### 7. First commit after setup
+
+For the initial ACE setup snapshot, prefer a deterministic first commit before relying on provider-backed message
+generation.
+
+If you installed the full-stack path, use:
+
+```bash
+bundle exec ace-git-commit --only-staged --no-split -m "chore: set up ace tooling"
+```
+
+If you installed only the minimal path, use plain Git instead:
+
+```bash
+git commit -m "chore: set up ace tooling"
+```
+
+If you want to preview the LLM-backed path after readiness is confirmed, add the full-stack packages first, then run:
+
+```bash
+bundle exec ace-git-commit --dry-run -i "set up ace tooling"
+```
+
+Use this first-commit guidance when setup files are already staged or when a prior LLM-backed attempt failed after
+staging. Check the current state with:
+
+```bash
+git status
+```
+
+Why this combination is recommended for the first setup commit:
+
+- `--only-staged` commits the current index only, so unrelated unstaged changes stay out of the setup snapshot.
+- `--no-split` forces one setup commit even if ACE detects multiple configuration scopes across root files and
+  generated agent assets.
+- `-m` bypasses LLM-backed message generation entirely, which keeps the first setup commit unblocked while provider
+  readiness is still being verified.
+
+Once `bundle exec ace-config doctor` passes, LLM-backed commit generation becomes an optional next step rather than a
+setup prerequisite.
 
 ## 1. Capture an idea
 
