@@ -108,11 +108,15 @@ module Ace
             lines << "Summary: #{summary[:added]} added, #{summary[:removed]} removed, " \
                      "#{summary[:unchanged]} unchanged across #{summary[:providers_synced]} providers"
 
-            if summary[:deprecated] > 0
+            if summary[:deprecated].to_i > 0
               lines << "  (#{summary[:deprecated]} deprecated models flagged)"
             end
 
-            if summary[:providers_skipped] > 0
+            if summary[:limit_updates].to_i > 0
+              lines << "  (#{summary[:limit_updates]} provider limit configs need updates)"
+            end
+
+            if summary[:providers_skipped].to_i > 0
               lines << "  (#{summary[:providers_skipped]} providers not found in models.dev)"
             end
 
@@ -171,7 +175,7 @@ module Ace
 
             diff_results.each do |provider_name, diff|
               next unless diff[:status] == :ok
-              next if diff[:added].empty? && diff[:removed].empty?
+              next if diff[:added].empty? && diff[:removed].empty? && !diff[:limits_changed]
 
               begin
                 config = current_configs[provider_name]
@@ -191,7 +195,11 @@ module Ace
                 Atoms::ProviderConfigWriter.backup(source_file)
 
                 # Update file with models and last_synced date
-                Atoms::ProviderConfigWriter.update_models_and_sync_date(source_file, new_models)
+                Atoms::ProviderConfigWriter.update_models_and_sync_date(
+                  source_file,
+                  new_models,
+                  limits: diff[:desired_limits]
+                )
                 output.puts "Updated: #{source_file}"
               rescue ConfigError => e
                 errors << "#{provider_name}: #{e.message}"
@@ -238,7 +246,7 @@ module Ace
               return lines.join("\n")
             end
 
-            if diff[:added].empty? && diff[:removed].empty? && diff[:deprecated].empty?
+            if diff[:added].empty? && diff[:removed].empty? && diff[:deprecated].empty? && !diff[:limits_changed]
               lines << "  = (no changes)"
               if diff[:last_synced]
                 lines << "  Last synced: #{diff[:last_synced]}"
@@ -259,6 +267,21 @@ module Ace
               lines << "  - #{model.ljust(35)} (removed)"
             end
 
+            if diff[:limits_changed]
+              default_limits = diff.dig(:desired_limits, "default") || {}
+              default_parts = []
+              default_parts << "context=#{format_number(default_limits["context"])}" if default_limits["context"]
+              default_parts << "output=#{format_number(default_limits["output"])}" if default_limits["output"]
+              unless default_parts.empty?
+                lines << "  ~ default limits -> #{default_parts.join(', ')}"
+              end
+
+              override_models = diff.dig(:desired_limits, "models")&.keys || []
+              unless override_models.empty?
+                lines << "  ~ per-model limit overrides: #{override_models.join(', ')}"
+              end
+            end
+
             diff[:deprecated].each do |model|
               lines << "  ! #{model.ljust(35)} (deprecated)"
             end
@@ -270,6 +293,10 @@ module Ace
             lines << "" if diff[:added].any? || diff[:removed].any?
 
             lines.join("\n")
+          end
+
+          def format_number(value)
+            value.to_s.gsub(/(\d)(?=(\d{3})+(?!\d))/, '\\1,')
           end
         end
       end

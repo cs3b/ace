@@ -69,11 +69,31 @@ class ProviderSyncOrchestratorTest < AceModelsTestCase
   end
 
   def test_sync_does_not_apply_when_no_changes
-    with_temp_config_and_cache(no_changes: true) do |config_dir|
+    with_temp_config_and_cache(no_changes: true, synced_limits: true) do |config_dir|
       result = @orchestrator.sync(config_dir: config_dir, apply: true)
 
       refute result[:changes_detected]
       refute result[:applied]
+    end
+  end
+
+  def test_sync_detects_limit_only_changes
+    with_temp_config_and_cache(no_changes: true, stale_limits: true) do |config_dir|
+      result = @orchestrator.sync(config_dir: config_dir, show_all: true)
+
+      assert result[:changes_detected]
+      assert result[:diff]["anthropic"][:limits_changed]
+    end
+  end
+
+  def test_sync_applies_limit_only_changes
+    with_temp_config_and_cache(no_changes: true, stale_limits: true) do |config_dir|
+      result = @orchestrator.sync(config_dir: config_dir, apply: true, show_all: true)
+
+      assert result[:applied]
+      config = YAML.safe_load_file(File.join(config_dir, "anthropic.yml"), permitted_classes: [Date])
+      assert_equal({"context" => 1_000_000, "output" => 128_000}, config.dig("limits", "default"))
+      assert_equal({"output" => 64_000}, config.dig("limits", "models", "claude-3-sonnet"))
     end
   end
 
@@ -166,15 +186,54 @@ class ProviderSyncOrchestratorTest < AceModelsTestCase
     assert_match(/1 providers not found/, output)
   end
 
+  def test_format_result_shows_limit_updates
+    result = {
+      diff: {
+        "anthropic" => {
+          status: :ok,
+          added: [],
+          removed: [],
+          unchanged: ["claude-3-sonnet"],
+          deprecated: [],
+          limits_changed: true,
+          desired_limits: {
+            "default" => {"context" => 1_000_000, "output" => 128_000},
+            "models" => {"claude-3-sonnet" => {"output" => 64_000}}
+          }
+        }
+      },
+      summary: {added: 0, removed: 0, unchanged: 1, deprecated: 0, limit_updates: 1, providers_synced: 1, providers_skipped: 0},
+      changes_detected: true,
+      applied: false,
+      committed: false
+    }
+
+    output = @orchestrator.format_result(result)
+
+    assert_match(/provider limit configs need updates/, output)
+    assert_match(/default limits -> context=1,000,000, output=128,000/, output)
+    assert_match(/per-model limit overrides: claude-3-sonnet/, output)
+  end
+
   private
 
-  def with_temp_config_and_cache(no_changes: false)
+  def with_temp_config_and_cache(no_changes: false, stale_limits: false, synced_limits: false)
     Dir.mktmpdir("ace-llm-provider-sync-test") do |dir|
       # Create provider config
       config = {
         "name" => "anthropic",
         "models" => no_changes ? ["claude-3-sonnet", "claude-4-opus"] : ["claude-3-sonnet"]
       }
+      if stale_limits
+        config["limits"] = {
+          "default" => {"context" => 200_000, "output" => 64_000}
+        }
+      elsif synced_limits
+        config["limits"] = {
+          "default" => {"context" => 1_000_000, "output" => 128_000},
+          "models" => {"claude-3-sonnet" => {"output" => 64_000}}
+        }
+      end
       File.write(File.join(dir, "anthropic.yml"), YAML.dump(config))
 
       # Setup mock cache manager
@@ -182,8 +241,14 @@ class ProviderSyncOrchestratorTest < AceModelsTestCase
         "anthropic" => {
           "id" => "anthropic",
           "models" => {
-            "claude-3-sonnet" => {"name" => "Claude 3 Sonnet"},
-            "claude-4-opus" => {"name" => "Claude 4 Opus"}
+            "claude-3-sonnet" => {
+              "name" => "Claude 3 Sonnet",
+              "limit" => {"context" => 1_000_000, "output" => 64_000}
+            },
+            "claude-4-opus" => {
+              "name" => "Claude 4 Opus",
+              "limit" => {"context" => 1_000_000, "output" => 128_000}
+            }
           }
         }
       }
