@@ -18,9 +18,11 @@ scenes:
     sleep: 5s
 - name: Verify bootstrap files landed at the repository root
   commands:
-  - type: cd ../ && find . -maxdepth 2 \\( -name '.gitignore' -o -name 'AGENTS.md' -o -name 'CLAUDE.md' \\) | sort
+  - type: cd repo
+    sleep: 1s
+  - type: ls .gitignore AGENTS.md CLAUDE.md
     sleep: 4s
-  - type: printf '\n.gitignore contents:\n' && cat .gitignore
+  - type: sed -n '1,20p' AGENTS.md
     sleep: 4s
 setup:
 - sandbox
