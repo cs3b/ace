@@ -33,8 +33,9 @@ limits:
       output: 8192
 aliases:
   model:
-    flash: gemini-2.5-flash
-    pro: gemini-2.5
+    lite: gemini-3.1-flash-lite-preview
+    flash: gemini-3-flash-preview
+    pro: gemini-3.1-pro-preview
     flash-latest: gemini-3-flash-preview
     pro-latest: gemini-3.1-pro-preview
 capabilities:
