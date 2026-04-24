@@ -8,6 +8,7 @@ require "ace/review/molecules/strategies/adaptive_strategy"
 class AdaptiveStrategyTest < AceReviewTest
   def setup
     super
+    install_project_llm_provider_fixtures("codex")
     @strategy = Ace::Review::Molecules::Strategies::AdaptiveStrategy.new
   end
 
@@ -158,6 +159,15 @@ class AdaptiveStrategyTest < AceReviewTest
     result = @strategy.prepare(subject, context)
 
     # 250 tokens easily fits in 200k context
+    assert_equal :full, result[0][:metadata][:strategy]
+  end
+
+  def test_prepare_resolves_limit_from_expanded_model_alias
+    subject = "a" * 1_800_000 # ~450k tokens
+    context = {model: "codex:gpt:high@ro"}
+
+    result = @strategy.prepare(subject, context)
+
     assert_equal :full, result[0][:metadata][:strategy]
   end
 

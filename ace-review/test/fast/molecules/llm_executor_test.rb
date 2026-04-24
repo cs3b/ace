@@ -5,6 +5,7 @@ require "test_helper"
 class LlmExecutorTest < AceReviewTest
   def setup
     super
+    install_project_llm_provider_fixtures("claude", "codex")
     @executor = Ace::Review::Molecules::LlmExecutor.new
   end
 
@@ -79,6 +80,16 @@ class LlmExecutorTest < AceReviewTest
 
     # Should include comma-formatted number (e.g., "900,000")
     assert_match(/900,000/, warning_output)
+  end
+
+  def test_warning_shows_resolved_concrete_model_for_alias_target
+    large_prompt = "x" * 3_600_000
+
+    warning_output = capture_stderr do
+      @executor.send(:warn_if_prompt_large, large_prompt, "", "codex:gpt:high@ro")
+    end
+
+    assert_match(/codex:gpt:high@ro -> codex:gpt-5\.4/, warning_output)
   end
 
   def test_execute_forwards_timeout_to_query_interface

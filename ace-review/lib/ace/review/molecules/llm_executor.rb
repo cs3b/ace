@@ -67,12 +67,19 @@ module Ace
           total_chars = (system_prompt&.length || 0) + (user_prompt&.length || 0)
           estimated_tokens = total_chars / 4  # Rough estimate: 4 chars per token
 
-          context_limit = Ace::Review::Atoms::ContextLimitResolver.resolve(model)
+          limit_details = Ace::Review::Atoms::ContextLimitResolver.resolve_details(model)
+          context_limit = limit_details.context_limit
           threshold = (context_limit * PROMPT_SIZE_WARNING_RATIO).to_i
           return unless estimated_tokens > threshold
 
+          display_model = if limit_details.full_model && limit_details.full_model != model
+            "#{model} -> #{limit_details.full_model}"
+          else
+            model
+          end
+
           warn "Warning: Prompt size (~#{estimated_tokens.to_s.gsub(/(\d)(?=(\d{3})+(?!\d))/, '\\1,')} tokens) " \
-               "may exceed #{model} context limit (#{context_limit.to_s.gsub(/(\d)(?=(\d{3})+(?!\d))/, '\\1,')} tokens)"
+               "may exceed #{display_model} context limit (#{context_limit.to_s.gsub(/(\d)(?=(\d{3})+(?!\d))/, '\\1,')} tokens)"
         end
 
         # Check if Ruby API is available
