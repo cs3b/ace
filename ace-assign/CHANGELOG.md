@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+### Changed
+- Added a public `ace-assign watch` command with scoped subtree targeting, explicit startup summaries, and deterministic stop/failure handling for terminal scoped targets and inline/manual tails.
+
+### Technical
+- Shared subtree root resolution and fork-root validation between `watch` and `fork-run`, added direct watcher fast coverage, and hardened `ace-assign` command tests against inherited scoped-target environment leakage from forked drive sessions.
+
 ## [0.55.0] - 2026-04-23
 
 ### Changed
