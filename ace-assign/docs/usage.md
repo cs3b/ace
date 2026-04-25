@@ -260,6 +260,50 @@ Provider resolution precedence for fork execution:
 3. Config `execution.provider`
 4. Built-in default provider
 
+### `ace-assign watch`
+
+Watch assignment or subtree continuation state using assignment status as the
+source of truth.
+
+Options:
+
+- `--assignment <id>`
+- `--root <step-number>`
+- `--poll-interval <seconds>`
+- `--quiet, -q`
+- `--debug, -d`
+
+Usage:
+
+```bash
+ace-assign watch --assignment abc123
+ace-assign watch --assignment abc123@010
+ace-assign watch --assignment abc123 --root 010 --poll-interval 60
+```
+
+Behavior:
+
+- Scoped forms `--assignment <id>@<root>` and `--assignment <id> --root <root>`
+  watch the same subtree boundary.
+- Conflicting scoped forms such as `--assignment abc123@010 --root 020` fail
+  before the watch loop begins.
+- Scoped watches never widen into later parent siblings after the watched
+  subtree becomes terminal.
+- When active fork work still appears alive, watch waits and polls again.
+- When historical telemetry is stale but assignment state remains non-terminal,
+  watch recovers from assignment state instead of depending on the old session.
+- When no fork work remains, watch exits with either:
+  - a completion summary if the target is already terminal, or
+  - a stop summary naming the remaining inline/manual boundary.
+- Failed watched scopes or assignments exit non-zero with explicit failed-work
+  output.
+
+Callback compatibility:
+
+- `watch` does not define a `--callback` option.
+- Callback-pane behavior remains a `fork-run --callback` capability for tmux
+  parent/child flows.
+
 Step-level example:
 
 ```yaml
