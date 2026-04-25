@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.53.7] - 2026-04-25
+
+### Fixed
+- Corrected the `code-shine` preset to use the shipped `review-gemini` role so phased polish reviews run the intended Gemini model instead of failing on a misspelled role name.
+
 ## [0.53.6] - 2026-04-24
 
 ### Fixed
