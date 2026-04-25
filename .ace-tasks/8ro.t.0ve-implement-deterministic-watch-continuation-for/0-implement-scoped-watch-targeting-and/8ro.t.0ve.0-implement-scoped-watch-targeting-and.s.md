@@ -1,6 +1,6 @@
 ---
 id: 8ro.t.0ve.0
-status: pending
+status: in_progress
 priority: medium
 created_at: "2026-04-25 00:34:53"
 estimate: TBD
@@ -62,11 +62,11 @@ ace-assign watch --assignment 8abcd1 --poll-interval 60
 
 ### Success Criteria
 
-- [ ] `ace-assign watch` is registered in `ace-assign/lib/ace/assign/cli.rb`.
-- [ ] Scoped-target parsing is deterministic and rejects conflicting root forms.
-- [ ] Terminal scoped subtrees exit successfully without relaunching.
-- [ ] Manual-tail stop behavior is implemented for watched scopes with no remaining fork work.
-- [ ] Invalid-target and invalid-poll-interval paths fail non-zero.
+- [x] `ace-assign watch` is registered in `ace-assign/lib/ace/assign/cli.rb`.
+- [x] Scoped-target parsing is deterministic and rejects conflicting root forms.
+- [x] Terminal scoped subtrees exit successfully without relaunching.
+- [x] Manual-tail stop behavior is implemented for watched scopes with no remaining fork work.
+- [x] Invalid-target and invalid-poll-interval paths fail non-zero.
 
 ## Vertical Slice Decomposition (Task/Subtask Model)
 
