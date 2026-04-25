@@ -1,6 +1,6 @@
 ---
 id: 8rn.t.z5k.0
-status: pending
+status: done
 priority: medium
 created_at: "2026-04-24 23:26:18"
 estimate: TBD
@@ -32,7 +32,7 @@ Define how the future watcher contract recovers from lost parent sessions and co
 
 1. Recovery begins from `ace-assign status` and scoped subtree state, not from historical PTY handles.
 2. Callback mode remains an additive compatibility path for interactive tmux parent/child flows.
-3. Watcher design must treat callback messages as wake-up hints only; they do not replace assignment state as truth.
+3. Callback messages are wake-up hints only; they can prompt a parent or watcher to resume, but they never replace assignment state as truth.
 4. Event-like payloads may be preserved in task artifacts for future follow-up, but v1 implementation is not required to emit them.
 5. The task must explicitly distinguish between:
    - current shipped behavior that implementers must preserve
@@ -41,35 +41,46 @@ Define how the future watcher contract recovers from lost parent sessions and co
 ### Interface Contract
 
 - **Current shipped callback contract to preserve**
+
   ```bash
   ace-assign fork-run --assignment 8abcd1@010 --launch-mode tmux --callback
   ```
+
   Expected v1-preserved behavior:
+
   - parent origin pane is captured via `ACE_ASSIGN_CALLBACK_PANE`
   - child fork session receives that pane id in its environment
   - child sends one final success or failure sentence with direct `ace-tmux send`
+
 - **Recovery contract**
-  - if the parent terminal/session disappears, a fresh watcher or drive invocation must recover from assignment state
+
+  - if the parent terminal/session disappears, a fresh watcher or drive invocation must recover from assignment state rather than waiting on the old pane/session handle
+  - recovery may use PID/session metadata as advisory telemetry, but never as authoritative proof of completion or failure
   - callback absence is never proof of failure
   - stale callback text is never proof of completion
-- **Artifact-only event examples**
+  - callback delivery may wake a parent flow, but the resumed parent still checks `ace-assign status` before deciding that work is complete or failed
+
+- **Future event examples (artifact-only, non-binding for v1)**
+
   ```json
   ACE_ASSIGN_EVENT {"assignment_id":"8abcd1","scope":"010","event":"subtree_completed","current_step":"010.02","next_step":"020","session_id":"sess_123","report_path_or_dir":".ace-local/assign/8abcd1/reports/","resume_command":"ace-assign watch --assignment 8abcd1","timestamp":"2026-04-25T00:00:00Z"}
   ACE_ASSIGN_EVENT {"assignment_id":"8abcd1","scope":"010","event":"subtree_failed","current_step":"010.02","next_step":null,"session_id":"sess_123","report_path_or_dir":".ace-local/assign/8abcd1/reports/010.02-report.md","resume_command":"ace-assign watch --assignment 8abcd1@010","timestamp":"2026-04-25T00:00:00Z"}
   ACE_ASSIGN_EVENT {"assignment_id":"8abcd1","scope":null,"event":"assignment_completed","current_step":null,"next_step":null,"session_id":"sess_parent","report_path_or_dir":".ace-local/assign/8abcd1/reports/","resume_command":null,"timestamp":"2026-04-25T00:00:00Z"}
   ```
+
 - **Artifact-only rules**
-  - examples must be clearly labeled “future event examples”
+
+  - examples must be clearly labeled `Future event examples (artifact-only, non-binding for v1)`
   - examples must not appear in success criteria as required runtime behavior
   - implementers must not infer a mandatory `watch --callback` API from these artifacts
 
 ### Success Criteria
 
-- [ ] The task preserves current callback-pane behavior as a required compatibility contract.
-- [ ] The task specifies status-first interruption recovery and rejects historical terminal handles as source of truth.
-- [ ] The task includes concrete structured event examples in the artifact body and `ux/usage.md`.
-- [ ] The task makes those event examples explicitly non-binding for v1.
-- [ ] The task leaves no ambiguity about callback-message versus status-truth ownership.
+- [x] The task preserves current callback-pane behavior as a required compatibility contract.
+- [x] The task specifies status-first interruption recovery and rejects historical terminal handles as source of truth.
+- [x] The task includes concrete structured event examples in the artifact body and `ux/usage.md`.
+- [x] The task makes those event examples explicitly non-binding for v1.
+- [x] The task leaves no ambiguity that callback messages are wake-up hints while `ace-assign status` owns completion/failure truth.
 
 ## Vertical Slice Decomposition (Task/Subtask Model)
 
