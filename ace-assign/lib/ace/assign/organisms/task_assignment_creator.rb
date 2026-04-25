@@ -115,21 +115,38 @@ module Ace
         end
 
         def expand_task_refs_in_order(resolved_refs)
-          resolved_refs.flat_map do |entry|
+          expanded_entries = resolved_refs.flat_map do |entry|
             ref = entry[:ref]
             task = entry[:task]
 
             if entry[:is_subtask]
-              [ref]
+              [{id: ref, task: task}]
             elsif task.respond_to?(:subtasks) && task.subtasks&.any?
               active_subtasks = task.subtasks
                 .reject { |st| Ace::Task::Atoms::TaskValidationRules.terminal_status?(st.status.to_s) }
-                .map(&:id)
-              active_subtasks.empty? ? [ref] : active_subtasks
+              active_subtasks.empty? ? [{id: ref, task: task}] : active_subtasks.map { |subtask| {id: subtask.id, task: subtask} }
             else
-              [ref]
+              [{id: ref, task: task}]
             end
           end
+
+          sort_expanded_entries(expanded_entries).map { |entry| entry[:id] }
+        rescue Ace::Task::Molecules::SiblingTaskSorter::CycleError => e
+          raise Ace::Support::Cli::Error,
+            "Cannot create dependency-ordered assignment: cyclic dependencies in requested batch (#{e.task_ids.join(', ')})"
+        end
+        
+        def sort_expanded_entries(entries)
+          synthetic_tasks = entries.map do |entry|
+            Ace::Task::Models::Task.new(
+              id: entry[:id],
+              dependencies: Array(entry[:task]&.dependencies),
+              metadata: entry[:task]&.metadata || {}
+            )
+          end
+          sorted_tasks = Ace::Task::Molecules::SiblingTaskSorter.sort(synthetic_tasks, raise_on_cycle: true)
+          entries_by_id = entries.to_h { |entry| [entry[:id], entry] }
+          sorted_tasks.map { |task| entries_by_id.fetch(task.id) }
         end
 
         def build_parameters(preset, primary_ref, task_refs)

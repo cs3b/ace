@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.57.1] - 2026-04-25
+
+### Fixed
+- Dependency-sort expanded `work-on-task` task batches so sibling tasks respect in-batch dependencies instead of raw subtask folder order.
+- Fail fast when the requested assignment batch contains a dependency cycle instead of materializing an invalid execution order.
+
+### Technical
+- Added regression coverage for parent-subtask expansion ordering, explicit multi-task dependency ordering, and cyclic batch rejection.
+
 ## [0.57.0] - 2026-04-25
 
 ### Changed
