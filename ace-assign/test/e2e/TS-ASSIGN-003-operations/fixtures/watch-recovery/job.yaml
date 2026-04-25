@@ -5,6 +5,8 @@ session:
 steps:
   - name: delegated-recovery
     context: fork
+    fork:
+      mode: headless
     instructions: |
       Resume this subtree from assignment state after telemetry goes stale.
     sub_steps:
@@ -13,6 +15,8 @@ steps:
 
   - name: later-sibling
     context: fork
+    fork:
+      mode: headless
     instructions: |
       Remains outside the scoped recovery boundary.
 

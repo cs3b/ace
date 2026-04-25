@@ -5,6 +5,8 @@ session:
 steps:
   - name: delegated-alpha
     context: fork
+    fork:
+      mode: headless
     instructions: |
       Execute the first retained watcher subtree.
     sub_steps:
@@ -13,6 +15,8 @@ steps:
 
   - name: delegated-beta
     context: fork
+    fork:
+      mode: headless
     instructions: |
       Execute the second retained watcher subtree.
     sub_steps:
