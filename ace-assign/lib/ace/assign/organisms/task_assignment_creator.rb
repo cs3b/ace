@@ -138,15 +138,28 @@ module Ace
         
         def sort_expanded_entries(entries)
           synthetic_tasks = entries.map do |entry|
+            task = entry[:task]
             Ace::Task::Models::Task.new(
               id: entry[:id],
-              dependencies: Array(entry[:task]&.dependencies),
-              metadata: entry[:task]&.metadata || {}
+              dependencies: Array(task_dependencies(task)),
+              metadata: task_metadata(task)
             )
           end
           sorted_tasks = Ace::Task::Molecules::SiblingTaskSorter.sort(synthetic_tasks, raise_on_cycle: true)
           entries_by_id = entries.to_h { |entry| [entry[:id], entry] }
           sorted_tasks.map { |task| entries_by_id.fetch(task.id) }
+        end
+
+        def task_dependencies(task)
+          return [] unless task&.respond_to?(:dependencies)
+
+          task.dependencies
+        end
+
+        def task_metadata(task)
+          return {} unless task&.respond_to?(:metadata)
+
+          task.metadata || {}
         end
 
         def build_parameters(preset, primary_ref, task_refs)

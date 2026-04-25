@@ -7,11 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.57.3] - 2026-04-25
+
 ### Fixed
 - Preserved mapped `sub_steps` overrides during `ace-assign create --yaml` startup so nested fork children keep their declared fork context, launch mode, provider, and custom instructions instead of collapsing into plain child names.
+- Restored compatibility with task-like objects that do not expose `dependencies` or `metadata`, so dependency-ordered assignment expansion no longer breaks `ace-overseer` launcher flows and similar integrations.
 
 ### Technical
 - Added regression coverage for initial assignment creation with mapped `sub_steps` children to keep retained watch-recovery fixtures materialized as real nested fork work.
+- Added direct regression coverage for task-like objects that only provide `status` and `subtasks`, matching `ace-overseer` assignment launcher compatibility expectations.
 
 ## [0.57.1] - 2026-04-25
 

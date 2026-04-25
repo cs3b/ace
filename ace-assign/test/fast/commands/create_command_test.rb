@@ -12,6 +12,8 @@ class CreateCommandTest < AceAssignTestCase
       data = @tasks[ref]
       return nil unless data
 
+      return data if data.respond_to?(:status)
+
       FakeTask.new(data)
     end
   end
@@ -42,6 +44,24 @@ class CreateCommandTest < AceAssignTestCase
       @status = status
       @dependencies = Array(dependencies)
       @metadata = metadata || {}
+    end
+  end
+
+  class CompatibilityTask
+    attr_reader :status, :subtasks
+
+    def initialize(status:, subtasks: nil)
+      @status = status
+      @subtasks = Array(subtasks)
+    end
+  end
+
+  class CompatibilitySubtask
+    attr_reader :id, :status
+
+    def initialize(id, status)
+      @id = id
+      @status = status
     end
   end
 
@@ -265,6 +285,25 @@ class CreateCommandTest < AceAssignTestCase
     result = creator.call(task_refs: ["601", "602", "603"])
 
     assert_equal %w[601 603 602], result[:task_refs]
+  end
+
+  def test_task_assignment_creator_accepts_task_like_objects_without_dependency_methods
+    creator = Ace::Assign::Organisms::TaskAssignmentCreator.new(
+      task_manager: FakeTaskManager.new(
+        "801" => CompatibilityTask.new(
+          status: "pending",
+          subtasks: [
+            CompatibilitySubtask.new("801.01", "pending"),
+            CompatibilitySubtask.new("801.02", "pending")
+          ]
+        )
+      ),
+      executor: FakeExecutor.new
+    )
+
+    result = creator.call(task_refs: ["801"])
+
+    assert_equal %w[801.01 801.02], result[:task_refs]
   end
 
   def test_task_assignment_creator_rejects_cycles_in_requested_batch
