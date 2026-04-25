@@ -11,6 +11,9 @@ All notable changes to this project will be documented in this file.
 - **ace-assign v0.57.0**: Extended the public `ace-assign watch` flow with live fork waiting, assignment-state recovery after lost session state, and sequential continuation across pending fork roots while preserving scoped subtree boundaries.
 
 ### Fixed
+- **ace-review v0.53.7**: Corrected the `code-shine` review preset to use the shipped `review-gemini` role so polish review runs no longer fail on the misspelled Gemini alias.
+- **ace-assign v0.57.5**: Preserved mapped `sub_steps` overrides for explicitly numbered top-level roots so generated child steps keep their declared fork context, provider, and workflow-backed instructions during assignment startup.
+- **ace-assign v0.57.4**: Hardened scoped `ace-assign watch` continuation so leaf fork roots are recovered correctly and tmux-backed live subtrees are not relaunched while still running.
 - **ace-assign v0.57.3**: Restored dependency-ordered batch compatibility for task-like objects that only expose `status` and `subtasks`, so `ace-overseer` launcher flows no longer crash when expanding explicit task refs.
 - **ace-assign v0.57.2**: Preserved mapped `sub_steps` overrides during `ace-assign create --yaml`, keeping nested fork recovery/watch fixtures materialized as real fork children instead of flattening override hashes into plain child names.
 - **ace-task v0.36.3**: Parent-task auto-close now follows the same `TaskManager#update` path as explicit closes, so linked GitHub issues close consistently when child tasks move to archive or are manually closed.
@@ -25,6 +28,8 @@ All notable changes to this project will be documented in this file.
 - **ace-assign v0.55.0**: Added `ace-assign fork-run --callback` for tmux-backed parent/child agent flows so the forked child can send one final status sentence back to the origin pane with `ace-tmux send` while the parent drive session stays idle until that callback arrives.
 
 ### Technical
+- **ace-assign v0.57.5**: Moved watch polling and recovery state handling into a dedicated runtime helper, and added fast regression coverage for explicit numbered-root overrides plus the extracted watch runtime path.
+- **ace-assign v0.57.4**: Synced retained watch fixture paths, expanded shared fork-environment cleanup in tests, and added direct regression coverage for scoped leaf recovery plus tmux liveness detection.
 - **ace-assign v0.55.0**: Persisted callback-pane metadata in fork tmux session files, exported `ACE_ASSIGN_CALLBACK_PANE` into tmux fork launches, and updated `/as-assign-drive` to document callback-mode resume and assignment-state recovery when the callback is missing on re-entry.
 - Dependency-following patch release after the `ace-assign v0.57.0` line update: `ace-overseer v0.15.5`.
 
