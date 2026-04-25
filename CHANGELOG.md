@@ -11,6 +11,7 @@ All notable changes to this project will be documented in this file.
 - **ace-assign v0.57.0**: Extended the public `ace-assign watch` flow with live fork waiting, assignment-state recovery after lost session state, and sequential continuation across pending fork roots while preserving scoped subtree boundaries.
 
 ### Fixed
+- **ace-assign v0.57.3**: Restored dependency-ordered batch compatibility for task-like objects that only expose `status` and `subtasks`, so `ace-overseer` launcher flows no longer crash when expanding explicit task refs.
 - **ace-assign v0.57.2**: Preserved mapped `sub_steps` overrides during `ace-assign create --yaml`, keeping nested fork recovery/watch fixtures materialized as real fork children instead of flattening override hashes into plain child names.
 - **ace-task v0.36.3**: Parent-task auto-close now follows the same `TaskManager#update` path as explicit closes, so linked GitHub issues close consistently when child tasks move to archive or are manually closed.
 - **ace-tmux v0.17.1**: Clarified the shipped runtime-inspection contract so docs consistently treat `ace-tmux list` as the read-side baseline and no longer reference the stale `ace-tmux state` surface.
