@@ -1529,7 +1529,8 @@ module Ace
             updated = step.dup
             updated["sub_steps"] = descriptors[:names]
             updated.delete("sub-steps")
-            overrides_by_root[Atoms::NumberGenerator.from_index(index)] = descriptors[:overrides]
+            root_number = step["number"] || Atoms::NumberGenerator.from_index(index)
+            overrides_by_root[root_number] = descriptors[:overrides]
             updated
           end
 

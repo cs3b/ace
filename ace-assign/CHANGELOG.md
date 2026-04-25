@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.57.5] - 2026-04-25
+
+### Fixed
+- Preserved mapped `sub_steps` overrides for explicitly numbered top-level roots during assignment startup, so generated children keep their declared fork context, provider, and workflow-backed instructions.
+
+### Technical
+- Extracted `ace-assign watch` polling, boundary evaluation, telemetry checks, and recovery flow into a dedicated `WatchRuntime`, keeping the CLI command focused on option parsing and dispatch.
+- Added fast regression coverage for explicit numbered-root override preservation and the extracted watch runtime wiring.
+
+## [0.57.4] - 2026-04-25
+
+### Fixed
+- Hardened scoped `ace-assign watch` continuation so a fork-enabled leaf root remains eligible for recovery or launch instead of exiting early with a false "no fork work remains" result.
+- Treated tmux session metadata as valid fork liveness telemetry so watcher recovery no longer relaunches already-running tmux-backed fork subtrees.
+
+### Technical
+- Corrected retained `TS-ASSIGN-003` watch runner fixture references to the shipped `job.yaml` paths.
+- Expanded shared test environment cleanup to clear and restore the full active fork runtime variable set, and added direct watch command coverage for scoped leaf recovery and tmux liveness handling.
+
 ## [0.57.3] - 2026-04-25
 
 ### Fixed

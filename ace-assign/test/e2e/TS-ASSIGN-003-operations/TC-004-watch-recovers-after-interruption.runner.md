@@ -20,7 +20,7 @@ Save output to `results/tc/04/`.
 
 ## Constraints
 
-- Create the assignment from `fixtures/watch-recovery/jobs/8roi8i-job.yml`.
+- Create the assignment from `fixtures/watch-recovery/job.yaml`.
 - Persist the created assignment ID to `results/tc/04/assignment-id.txt`.
 - Prepare the fixture so subtree `010` is the watched recovery scope and its
   assignment state remains non-terminal when watch begins.

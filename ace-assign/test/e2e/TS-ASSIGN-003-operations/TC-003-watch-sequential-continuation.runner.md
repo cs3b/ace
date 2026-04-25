@@ -20,7 +20,7 @@ Save output to `results/tc/03/`.
 
 ## Constraints
 
-- Create the assignment from `fixtures/watch/jobs/8roi8i1-job.yml`.
+- Create the assignment from `fixtures/watch/job.yaml`.
 - Persist the created assignment ID to `results/tc/03/assignment-id.txt`.
 - Capture `ace-assign status --assignment "<id>"` before invoking watch.
 - Run `ace-assign watch --assignment "<id>"` and capture the raw command output.

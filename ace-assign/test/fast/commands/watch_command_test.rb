@@ -41,20 +41,42 @@ class WatchCommandTest < AceAssignTestCase
     end
   end
 
-  def run_watch_command(cache_base:, launcher: nil, sleeper: nil, pid_probe: nil, **kwargs)
-    command = Ace::Assign::CLI::Commands::Watch.new(launcher: launcher, sleeper: sleeper, pid_probe: pid_probe)
+  class FakeTmuxRunner
+    attr_reader :captures
+
+    def initialize(alive_panes: [])
+      @alive_panes = Array(alive_panes)
+      @captures = []
+    end
+
+    def capture_recent_output(pane_target:, lines:)
+      @captures << {pane_target: pane_target, lines: lines}
+      raise Ace::Assign::Error, "pane not found" unless @alive_panes.include?(pane_target)
+
+      "fork pane is still running"
+    end
+  end
+
+  def run_watch_command(cache_base:, launcher: nil, sleeper: nil, pid_probe: nil, tmux_runner: nil, **kwargs)
+    command = Ace::Assign::CLI::Commands::Watch.new(
+      launcher: launcher,
+      sleeper: sleeper,
+      pid_probe: pid_probe,
+      tmux_runner: tmux_runner
+    )
     with_fast_command_executor(command, cache_base: cache_base) do
       command.call(**kwargs)
     end
   end
 
-  def capture_watch_command(cache_base:, launcher: nil, sleeper: nil, pid_probe: nil, **kwargs)
+  def capture_watch_command(cache_base:, launcher: nil, sleeper: nil, pid_probe: nil, tmux_runner: nil, **kwargs)
     capture_io do
       run_watch_command(
         cache_base: cache_base,
         launcher: launcher,
         sleeper: sleeper,
         pid_probe: pid_probe,
+        tmux_runner: tmux_runner,
         **kwargs
       )
     end
@@ -83,6 +105,20 @@ class WatchCommandTest < AceAssignTestCase
       step.file_path,
       launch_pid: pid,
       tracked_pids: [pid]
+    )
+  end
+
+  def write_tmux_session_meta(assignment, root_number, pane: "%42")
+    sessions_dir = File.join(assignment.cache_dir, "sessions")
+    FileUtils.mkdir_p(sessions_dir)
+    File.write(
+      File.join(sessions_dir, "#{root_number}-session.yml"),
+      {
+        "launch_mode" => "tmux",
+        "tmux_session" => "demo",
+        "tmux_window" => "work-fs",
+        "tmux_pane_id" => pane
+      }.to_yaml
     )
   end
 
@@ -229,6 +265,34 @@ class WatchCommandTest < AceAssignTestCase
     end
   end
 
+  def test_watch_scoped_leaf_root_recovers_active_root_instead_of_reporting_no_fork_work
+    with_temp_cache do |cache_dir|
+      config_path = create_test_config(cache_dir, steps: [{"name" => "forked", "instructions" => "Work", "context" => "fork"}])
+      Ace::Assign.config["cache_dir"] = cache_dir
+
+      executor = build_fast_executor(cache_base: cache_dir)
+      result = executor.start(config_path)
+      assignment = load_assignment(cache_dir, result[:assignment].id)
+      root = result[:state].find_by_number("010")
+      Ace::Assign::Molecules::StepWriter.new.mark_active(root.file_path)
+      record_fork_pid_info(root, pid: 11_111)
+
+      launcher = CompletingLauncher.new(cache_base: cache_dir)
+      output = capture_watch_command(
+        cache_base: cache_dir,
+        assignment: "#{assignment.id}@010",
+        launcher: launcher,
+        pid_probe: ->(_pid) { false }
+      )
+
+      assert_equal ["010"], launcher.calls.map { |call| call[:fork_root] }
+      assert_includes output.first, "Recovering watched scope #{assignment.id}@010 from assignment state via subtree 010."
+      assert_includes output.first, "Watch target #{assignment.id}@010 is already complete."
+
+      Ace::Assign.reset_config!
+    end
+  end
+
   def test_watch_waits_for_live_active_fork_work_without_duplicate_relaunch
     with_temp_cache do |cache_dir|
       config_path = create_test_config(cache_dir, steps: [{"name" => "forked", "instructions" => "Work", "context" => "fork"}])
@@ -264,6 +328,49 @@ class WatchCommandTest < AceAssignTestCase
 
       Ace::Assign.reset_config!
     end
+  end
+
+  def test_watch_treats_live_tmux_pane_metadata_as_active_fork_telemetry
+    with_temp_cache do |cache_dir|
+      config_path = create_test_config(cache_dir, steps: [{"name" => "forked", "instructions" => "Work", "context" => "fork", "fork" => {"mode" => "tmux"}}])
+      Ace::Assign.config["cache_dir"] = cache_dir
+
+      executor = build_fast_executor(cache_base: cache_dir)
+      result = executor.start(config_path)
+      assignment = load_assignment(cache_dir, result[:assignment].id)
+      root = result[:state].find_by_number("010")
+      Ace::Assign::Molecules::StepWriter.new.mark_active(root.file_path)
+      write_tmux_session_meta(assignment, "010", pane: "%42")
+
+      launcher = SpyLauncher.new
+      tmux_runner = FakeTmuxRunner.new(alive_panes: ["%42"])
+      sleeper = lambda do |_seconds|
+        refreshed_root = step_for(assignment, "010")
+        mark_step_done(assignment, refreshed_root)
+      end
+
+      output = capture_watch_command(
+        cache_base: cache_dir,
+        assignment: assignment.id,
+        launcher: launcher,
+        sleeper: sleeper,
+        pid_probe: ->(_pid) { false },
+        tmux_runner: tmux_runner
+      )
+
+      assert_empty launcher.calls
+      assert_equal [{pane_target: "%42", lines: 1}], tmux_runner.captures
+      assert_includes output.first, "Waiting for active fork subtree 010 in watched assignment #{assignment.id}."
+
+      Ace::Assign.reset_config!
+    end
+  end
+
+  def test_watch_uses_extracted_runtime_for_assignment_and_scoped_paths
+    command = Ace::Assign::CLI::Commands::Watch.new
+    runtime = command.send(:runtime)
+
+    assert_instance_of Ace::Assign::CLI::Commands::WatchRuntime, runtime
   end
 
   def test_watch_treats_eperm_pid_probe_as_alive

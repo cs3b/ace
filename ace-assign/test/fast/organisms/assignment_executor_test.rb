@@ -949,6 +949,49 @@ class AssignmentExecutorTest < AceAssignTestCase
     end
   end
 
+  def test_start_preserves_sub_step_overrides_for_explicit_numbered_roots
+    with_temp_cache do |cache_dir|
+      steps = [
+        {
+          "number" => "070",
+          "name" => "review-cycle",
+          "instructions" => "Review work",
+          "sub_steps" => [
+            {
+              "name" => "review-pr",
+              "context" => "fork",
+              "fork" => {"mode" => "headless", "provider" => "codex:gpt-5.4-mini"},
+              "instructions" => "Run fit review."
+            },
+            {
+              "name" => "apply-feedback",
+              "instructions" => "Apply verified feedback."
+            }
+          ]
+        }
+      ]
+      config_path = create_test_config(cache_dir, steps: steps)
+
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      result = executor.start(config_path)
+
+      state = result[:state]
+      root = state.find_by_number("070")
+      review = state.find_by_number("070.01")
+      apply = state.find_by_number("070.02")
+
+      assert_equal "review-cycle", root.name
+      assert_equal "review-pr", review.name
+      assert_equal "fork", review.context
+      assert_equal "codex:gpt-5.4-mini", review.fork_provider
+      assert_includes review.instructions, "Task request: Run fit review."
+      assert_includes review.instructions, "# Review PR and Plan Feedback Workflow"
+      assert_equal "apply-feedback", apply.name
+      assert_includes apply.instructions, "Task request: Apply verified feedback."
+      assert_includes apply.instructions, "# Apply Feedback Workflow"
+    end
+  end
+
   def test_start_with_parent_id_sets_parent_on_assignment
     with_temp_cache do |cache_dir|
       config_path = create_test_config(cache_dir)
