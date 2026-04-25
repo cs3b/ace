@@ -93,7 +93,7 @@ module Ace
                 return
               end
 
-              if active_fork_root = active_fork_root_for_scope(state, root_step.number)
+              if (active_fork_root = active_fork_root_for_scope(state, root_step.number))
                 if fork_telemetry_alive?(assignment.cache_dir, active_fork_root)
                   puts "Waiting for active fork subtree #{active_fork_root.number} in watched scope #{scope_ref}." unless quiet
                   sleeper.call(poll_interval)
@@ -143,7 +143,7 @@ module Ace
                 return
               end
 
-              if active_fork_root = active_fork_root_for_assignment(state)
+              if (active_fork_root = active_fork_root_for_assignment(state))
                 if fork_telemetry_alive?(assignment.cache_dir, active_fork_root)
                   puts "Waiting for active fork subtree #{active_fork_root.number} in watched assignment #{assignment_ref}." unless quiet
                   sleeper.call(poll_interval)
