@@ -7,11 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.57.0] - 2026-04-25
+
 ### Changed
-- Added a public `ace-assign watch` command with scoped subtree targeting, explicit startup summaries, and deterministic stop/failure handling for terminal scoped targets and inline/manual tails.
+- Added a public `ace-assign watch` command with scoped subtree targeting, explicit startup summaries, live wait/recovery behavior for active fork roots, and sequential continuation across pending fork roots until only inline/manual work remains.
 
 ### Technical
-- Shared subtree root resolution and fork-root validation between `watch` and `fork-run`, added direct watcher fast coverage, and hardened `ace-assign` command tests against inherited scoped-target environment leakage from forked drive sessions.
+- Shared subtree root resolution and fork-root validation between `watch` and `fork-run`, added direct watcher fast coverage for wait/recovery/`Errno::EPERM`/scoped-boundary behavior, and hardened package verification against inherited scoped-target environment leakage from forked drive sessions.
 
 ## [0.55.0] - 2026-04-23
 
