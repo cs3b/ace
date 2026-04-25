@@ -13,6 +13,8 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - **ace-task v0.36.3**: Parent-task auto-close now follows the same `TaskManager#update` path as explicit closes, so linked GitHub issues close consistently when child tasks move to archive or are manually closed.
 - **ace-tmux v0.17.1**: Clarified the shipped runtime-inspection contract so docs consistently treat `ace-tmux list` as the read-side baseline and no longer reference the stale `ace-tmux state` surface.
+- **ace-assign v0.57.1**: Fixed `work-on-task` batch expansion so sibling task execution respects in-batch dependencies and fails clearly on cyclic dependency sets instead of trusting raw child order.
+- **ace-task v0.36.8**: Fixed parent subtask loading and tree display to use dependency-safe sibling ordering, and tightened draft/review guidance so executable child order is encoded explicitly.
 
 ### Changed
 - **ace-task v0.36.4**: Tightened spike draft/work/review guidance so spike tasks must declare a completion contract, synchronize affected task/doc artifacts, and rerun parent `as-task-review` before they can be considered complete.
