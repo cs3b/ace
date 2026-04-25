@@ -11,12 +11,26 @@ require "tmpdir"
 class AceAssignTestCase < AceTestCase
   def setup
     super
+    @original_env = {
+      "ACE_ASSIGN_DEFAULT_TARGET" => ENV["ACE_ASSIGN_DEFAULT_TARGET"],
+      "ACE_ASSIGN_ID" => ENV["ACE_ASSIGN_ID"]
+    }
+    ENV.delete("ACE_ASSIGN_DEFAULT_TARGET")
+    ENV.delete("ACE_ASSIGN_ID")
+
     # Clean class-level tmpdir contents before each test (skip if not yet created)
     tmp = self.class.instance_variable_get(:@class_temp_dir)
     if tmp && Dir.exist?(tmp)
       Dir.children(tmp).each do |child|
         FileUtils.rm_rf(File.join(tmp, child))
       end
+    end
+  end
+
+  def teardown
+    super
+    @original_env.each do |key, value|
+      value.nil? ? ENV.delete(key) : ENV[key] = value
     end
   end
 
