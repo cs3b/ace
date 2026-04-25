@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+### Technical
+- Updated the `ace-assign` runtime dependency constraint to `~> 0.56` so overseer stays aligned with the new watcher-enabled assign release line.
+
 ### Fixed
 - Updated the `ace-tmux` runtime dependency constraint to `~> 0.17` so overseer stays compatible with the current tmux runtime control release line.
 
