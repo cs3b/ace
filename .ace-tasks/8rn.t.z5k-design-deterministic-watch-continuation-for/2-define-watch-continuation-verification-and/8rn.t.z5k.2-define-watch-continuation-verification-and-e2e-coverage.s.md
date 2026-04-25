@@ -1,6 +1,6 @@
 ---
 id: 8rn.t.z5k.2
-status: pending
+status: done
 priority: medium
 created_at: "2026-04-24 23:26:18"
 estimate: TBD
@@ -42,7 +42,9 @@ Define the exact missing verification surface needed to make watcher-based conti
 ### Interface Contract
 
 - **Fast test additions**
+
   - `ace-assign/test/fast/commands/watch_command_test.rb`
+
   - scenarios:
     - sequential fork children continue until inline work remains
     - scoped subtree already complete exits cleanly
@@ -51,16 +53,25 @@ Define the exact missing verification surface needed to make watcher-based conti
     - invalid root is rejected
     - failed subtree fails clearly
     - `Errno::EPERM` is treated as live process existence
+
 - **Existing test updates**
-  - update drive-workflow contract tests only where watcher behavior becomes part of the public continuation contract
-  - preserve current callback-path assertions
+
+  - update `ace-assign/test/fast/organisms/assign_drive_contract_test.rb` only where watcher behavior becomes part of the public continuation contract
+  - preserve the current callback-path assertions already carried by `assign_drive_contract_test.rb` and `ace-assign/test/fast/molecules/fork_session_launcher_test.rb`
+
 - **E2E suite additions under `TS-ASSIGN-003-operations`**
+
+  - update `ace-assign/test/e2e/TS-ASSIGN-003-operations/scenario.yml` so the retained suite declares watcher evidence directories alongside `results/tc/01/` and `results/tc/02/`
+  - update `ace-assign/test/e2e/TS-ASSIGN-003-operations/runner.yml.md` so it bundles `TC-003` and `TC-004` next to the existing `TC-001` and `TC-002` goals rather than replacing them
+  - update `ace-assign/test/e2e/TS-ASSIGN-003-operations/verifier.yml.md` so it judges four goals in total and intentionally changes the verifier contract from the current impact-first ordering to treat raw captures under `results/tc/{NN}/` as the primary evidence
   - `TC-003-watch-sequential-continuation.runner.md`
   - `TC-003-watch-sequential-continuation.verify.md`
   - `TC-004-watch-recovers-after-interruption.runner.md`
   - `TC-004-watch-recovers-after-interruption.verify.md`
-  - fixture directories for `watch/` and `watch-recovery/`
+  - fixture directories under `ace-assign/test/e2e/TS-ASSIGN-003-operations/fixtures/` for `watch/` and `watch-recovery/`
+
 - **Expected E2E evidence**
+
   ```text
   results/tc/03/watch.stdout
   results/tc/03/watch.stderr
@@ -72,17 +83,22 @@ Define the exact missing verification surface needed to make watcher-based conti
   results/tc/04/watch-recover.exit
   results/tc/04/status-after.stdout
   ```
+
+  - raw `stdout`/`stderr`/`.exit` captures are the primary proof surface for this updated verifier contract; optional markdown summaries are secondary only
+
 - **Illustrative verifier expectations**
+
   - Goal 3 passes when evidence shows multiple fork roots completed in order and watcher stopped at inline/manual tail
   - Goal 4 passes when evidence shows watcher resumed from assignment state without duplicating scope or widening from subtree to parent unexpectedly
+  - at least one direct fast-test invalid/failure path must prove invalid root rejection or failed-subtree failure without relying on E2E prose alone
 
 ### Success Criteria
 
-- [ ] The task names the exact fast-test file to add and the required behavioral cases.
-- [ ] The task extends `TS-ASSIGN-003` in place with concrete new TC files and fixture areas.
-- [ ] The task defines expected raw evidence artifacts under `results/tc/03/` and `results/tc/04/`.
-- [ ] The task includes both happy-path and failure-path coverage requirements.
-- [ ] The task leaves no ambiguity about what the verifier must consider PASS for sequential continuation and interruption recovery.
+- [x] The task names the exact fast-test file to add and the required behavioral cases.
+- [x] The task extends `TS-ASSIGN-003` in place with concrete new TC files and fixture areas.
+- [x] The task defines expected raw evidence artifacts under `results/tc/03/` and `results/tc/04/`.
+- [x] The task includes both happy-path and failure-path coverage requirements.
+- [x] The task leaves no ambiguity about what the verifier must consider PASS for sequential continuation and interruption recovery.
 
 ## Vertical Slice Decomposition (Task/Subtask Model)
 
@@ -102,12 +118,13 @@ Define the exact missing verification surface needed to make watcher-based conti
 
 - Confirm `TC-003` and `TC-004` are specified with enough detail for runner, verifier, and fixture implementation.
 - Confirm expected artifact names and evidence sources are concrete and aligned with current E2E conventions.
+- Confirm `scenario.yml`, `runner.yml.md`, and `verifier.yml.md` are described as additive updates to the retained `TS-ASSIGN-003` suite rather than a replacement surface.
 
 ### Failure / Invalid Path Validation
 
 - Confirm verifier language does not rely on fabricated summaries instead of raw captures.
 - Confirm the task does not replace or erase current `TC-001` and `TC-002` flows.
-- Confirm recovery coverage includes “resume from state” rather than only “callback arrived.”
+- Confirm recovery coverage includes "resume from state" rather than only "callback arrived."
 
 ### Verification Commands
 
@@ -131,6 +148,7 @@ Define the exact missing verification surface needed to make watcher-based conti
 ### Validation Artifacts
 
 - explicit `TC-003` and `TC-004` test-artifact plan in the task body and `ux/usage.md`
+- explicit runner/verifier update contract for `scenario.yml`, `runner.yml.md`, and `verifier.yml.md`
 
 ## Out of Scope
 

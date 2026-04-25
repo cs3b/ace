@@ -1,6 +1,6 @@
 ---
 id: 8rn.t.z5k.1
-status: pending
+status: done
 priority: medium
 created_at: "2026-04-24 23:26:18"
 estimate: TBD
@@ -41,7 +41,7 @@ Define the public `ace-assign watch` command as the deterministic continuation p
 5. When no fork root is active but a pending fork root is next, the watcher launches it immediately.
 6. Unscoped watcher invocations may continue through multiple fork roots in sequence.
 7. Scoped watcher invocations must never widen back to the parent assignment.
-8. `Errno::EPERM` on PID liveness checks must be treated as “process exists but cannot be signaled,” not as proof of death.
+8. `Errno::EPERM` on PID liveness checks must be treated as "process exists but cannot be signaled," not as proof of death.
 
 ### Interface Contract
 
@@ -52,7 +52,42 @@ ace-assign watch --assignment 8abcd1 --root 010
 ace-assign watch --assignment 8abcd1 --root 010 --poll-interval 300
 ```
 
+- **Scope contract**
+
+  - `--assignment <id>` watches the full assignment as the parent continuation surface.
+  - `--assignment <id>@<root>` watches only that scoped subtree and must never inspect later parent siblings.
+  - `--root <root>` is a convenience for explicit subtree targeting on an unscoped assignment id.
+  - `--assignment <id> --root <root>` is semantically identical to `--assignment <id>@<root>` for scope resolution, stop conditions, and continuation boundaries.
+  - conflicting `--root <root-a>` and scoped `--assignment <id>@<root-b>` must fail clearly with a non-zero exit instead of guessing which root wins.
+
+- **Polling contract**
+
+  - `--poll-interval` is a positive integer in seconds.
+  - the watcher uses that interval only for wait/recovery polling; it does not change assignment truth semantics.
+
+- **Loop contract**
+
+  - startup resolves the watched scope first and prints a summary naming assignment, subtree scope, and poll interval
+  - if an active fork root is still alive according to advisory telemetry, the watcher waits and prints a waiting summary
+  - if an active fork root is non-terminal but telemetry no longer supports liveness, the watcher prints a recovery summary and re-enters from assignment state
+  - if no fork root is active but a pending fork root is next, the watcher launches it immediately and prints a launch summary
+  - if the watched scope is already terminal, the watcher exits successfully without relaunching work
+
+- **Stop contract**
+
+  - stop when the watched scope is complete
+  - fail when the watched scope contains failed work with a non-zero exit
+  - stop when the watched scope contains only inline/manual work and no pending fork root remains
+  - continue through multiple fork roots in sequence only for unscoped assignment watching via `--assignment <id>` without `--root`
+
+- **Telemetry contract**
+
+  - live PID/session metadata may classify `wait` versus `recover`
+  - `ace-assign status` remains authoritative for completion, failure, and next runnable work
+  - callback text remains a wake-up hint only and never overrides assignment state
+
 Expected outputs:
+
 - startup summary naming the watched assignment or subtree
 - waiting summary while active fork work still appears alive
 - recovery summary when relaunching from assignment state
@@ -61,23 +96,28 @@ Expected outputs:
 - stop summary when only inline/manual work remains
 
 Error handling:
-- conflicting `--root` versus scoped `@<root>` fails clearly
-- non-fork root targets fail clearly
-- watched failed steps fail clearly
-- invalid `--poll-interval` values fail clearly
+
+- conflicting `--root` versus scoped `@<root>` exits non-zero with a clear CLI error
+- non-fork root targets exit non-zero with a clear CLI error
+- watched failed steps exit non-zero with a clear CLI error
+- invalid `--poll-interval` values exit non-zero with a clear CLI error
+- zero or negative `--poll-interval` values exit non-zero with a clear CLI error
+- scoped invocations never silently widen back to parent assignment state
 
 Edge cases:
+
 - scoped subtree already terminal at invocation time returns success without relaunching
 - old child metadata exists but status already shows terminal subtree; status wins
 - active PID is inaccessible with `EPERM`; watcher still treats it as alive
+- callback delivery may be missing even while subtree state remains healthy; the watcher still uses status and advisory telemetry rather than callback absence
 
 ### Success Criteria
 
-- [ ] The task defines the full public command surface for `ace-assign watch`.
-- [ ] The task defines exact watcher stop conditions and recovery behavior without leaving hidden scheduler decisions to implementation.
-- [ ] The task preserves status-as-truth and telemetry-as-advisory semantics.
-- [ ] The task explicitly covers scoped versus unscoped behavior.
-- [ ] The task explicitly calls out `Errno::EPERM` as a live-process case for PID checks.
+- [x] The task defines the full public command surface for `ace-assign watch`.
+- [x] The task defines exact watcher stop conditions and recovery behavior without leaving hidden scheduler decisions to implementation.
+- [x] The task preserves status-as-truth and telemetry-as-advisory semantics.
+- [x] The task explicitly covers scoped versus unscoped behavior.
+- [x] The task explicitly calls out `Errno::EPERM` as a live-process case for PID checks.
 
 ## Vertical Slice Decomposition (Task/Subtask Model)
 
@@ -102,7 +142,7 @@ Edge cases:
 
 ### Failure / Invalid Path Validation
 
-- Confirm invalid root, conflicting scope, failed subtree, and invalid poll interval all fail clearly.
+- Confirm invalid root, conflicting scope, failed subtree, and invalid poll interval all fail clearly with non-zero exits.
 - Confirm `EPERM` is treated as live process existence rather than dead process inference.
 
 ### Verification Commands
