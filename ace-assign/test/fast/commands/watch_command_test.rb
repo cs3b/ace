@@ -5,16 +5,58 @@ require_relative "../../test_helper"
 class WatchCommandTest < AceAssignTestCase
   ResolverTarget = Ace::Assign::CLI::Commands::AssignmentTarget::Target
 
-  def run_watch_command(cache_base:, **kwargs)
-    command = Ace::Assign::CLI::Commands::Watch.new
+  class CompletingLauncher
+    attr_reader :calls
+
+    def initialize(cache_base:)
+      @cache_base = cache_base
+      @calls = []
+    end
+
+    def launch(assignment_id:, fork_root:, **kwargs)
+      @calls << kwargs.merge(assignment_id: assignment_id, fork_root: fork_root)
+      manager = Ace::Assign::Molecules::AssignmentManager.new(cache_base: @cache_base)
+      scanner = Ace::Assign::Molecules::QueueScanner.new
+      writer = Ace::Assign::Molecules::StepWriter.new
+      assignment = manager.load(assignment_id)
+      state = scanner.scan(assignment.steps_dir, assignment: assignment)
+
+      state.subtree_steps(fork_root).each do |step|
+        next if step.status == :done
+
+        writer.mark_done(step.file_path, report_content: "Completed by watcher launcher", reports_dir: assignment.reports_dir)
+      end
+    end
+  end
+
+  class SpyLauncher
+    attr_reader :calls
+
+    def initialize
+      @calls = []
+    end
+
+    def launch(**kwargs)
+      @calls << kwargs
+    end
+  end
+
+  def run_watch_command(cache_base:, launcher: nil, sleeper: nil, pid_probe: nil, **kwargs)
+    command = Ace::Assign::CLI::Commands::Watch.new(launcher: launcher, sleeper: sleeper, pid_probe: pid_probe)
     with_fast_command_executor(command, cache_base: cache_base) do
       command.call(**kwargs)
     end
   end
 
-  def capture_watch_command(cache_base:, **kwargs)
+  def capture_watch_command(cache_base:, launcher: nil, sleeper: nil, pid_probe: nil, **kwargs)
     capture_io do
-      run_watch_command(cache_base: cache_base, **kwargs)
+      run_watch_command(
+        cache_base: cache_base,
+        launcher: launcher,
+        sleeper: sleeper,
+        pid_probe: pid_probe,
+        **kwargs
+      )
     end
   end
 
@@ -27,6 +69,20 @@ class WatchCommandTest < AceAssignTestCase
       step.file_path,
       report_content: "Done",
       reports_dir: assignment.reports_dir
+    )
+  end
+
+  def step_for(assignment, number)
+    scanner = Ace::Assign::Molecules::QueueScanner.new
+    state = scanner.scan(assignment.steps_dir, assignment: assignment)
+    state.find_by_number(number)
+  end
+
+  def record_fork_pid_info(step, pid:)
+    Ace::Assign::Molecules::StepWriter.new.record_fork_pid_info(
+      step.file_path,
+      launch_pid: pid,
+      tracked_pids: [pid]
     )
   end
 
@@ -168,6 +224,164 @@ class WatchCommandTest < AceAssignTestCase
 
       assert_includes output.first, "No fork work remains in watched scope #{result[:assignment].id}@010."
       assert_includes output.first, "Remaining inline/manual boundary: 010.01 manual-tail."
+
+      Ace::Assign.reset_config!
+    end
+  end
+
+  def test_watch_waits_for_live_active_fork_work_without_duplicate_relaunch
+    with_temp_cache do |cache_dir|
+      config_path = create_test_config(cache_dir, steps: [{"name" => "forked", "instructions" => "Work", "context" => "fork"}])
+      Ace::Assign.config["cache_dir"] = cache_dir
+
+      executor = build_fast_executor(cache_base: cache_dir)
+      result = executor.start(config_path)
+      assignment = load_assignment(cache_dir, result[:assignment].id)
+      root = result[:state].find_by_number("010")
+      Ace::Assign::Molecules::StepWriter.new.mark_active(root.file_path)
+      record_fork_pid_info(root, pid: 12_345)
+
+      launcher = SpyLauncher.new
+      waited = false
+      sleeper = lambda do |_seconds|
+        waited = true
+        refreshed_root = step_for(assignment, "010")
+        mark_step_done(assignment, refreshed_root)
+      end
+
+      output = capture_watch_command(
+        cache_base: cache_dir,
+        assignment: assignment.id,
+        launcher: launcher,
+        sleeper: sleeper,
+        pid_probe: ->(pid) { pid == 12_345 }
+      )
+
+      assert waited
+      assert_empty launcher.calls
+      assert_includes output.first, "Waiting for active fork subtree 010 in watched assignment #{assignment.id}."
+      assert_includes output.first, "Watch target #{assignment.id} is already complete."
+
+      Ace::Assign.reset_config!
+    end
+  end
+
+  def test_watch_treats_eperm_pid_probe_as_alive
+    with_temp_cache do |cache_dir|
+      config_path = create_test_config(cache_dir, steps: [{"name" => "forked", "instructions" => "Work", "context" => "fork"}])
+      Ace::Assign.config["cache_dir"] = cache_dir
+
+      executor = build_fast_executor(cache_base: cache_dir)
+      result = executor.start(config_path)
+      assignment = load_assignment(cache_dir, result[:assignment].id)
+      root = result[:state].find_by_number("010")
+      Ace::Assign::Molecules::StepWriter.new.mark_active(root.file_path)
+      record_fork_pid_info(root, pid: 54_321)
+
+      launcher = SpyLauncher.new
+      sleeper = lambda do |_seconds|
+        refreshed_root = step_for(assignment, "010")
+        mark_step_done(assignment, refreshed_root)
+      end
+
+      output = capture_watch_command(
+        cache_base: cache_dir,
+        assignment: assignment.id,
+        launcher: launcher,
+        sleeper: sleeper,
+        pid_probe: lambda do |pid|
+          raise Errno::EPERM, pid.to_s
+        end
+      )
+
+      assert_empty launcher.calls
+      assert_includes output.first, "Waiting for active fork subtree 010 in watched assignment #{assignment.id}."
+
+      Ace::Assign.reset_config!
+    end
+  end
+
+  def test_watch_recovers_stale_active_fork_from_assignment_state
+    with_temp_cache do |cache_dir|
+      config_path = create_test_config(cache_dir, steps: [{"name" => "forked", "instructions" => "Work", "context" => "fork"}])
+      Ace::Assign.config["cache_dir"] = cache_dir
+
+      executor = build_fast_executor(cache_base: cache_dir)
+      result = executor.start(config_path)
+      assignment = load_assignment(cache_dir, result[:assignment].id)
+      root = result[:state].find_by_number("010")
+      Ace::Assign::Molecules::StepWriter.new.mark_active(root.file_path)
+      record_fork_pid_info(root, pid: 11_111)
+
+      launcher = CompletingLauncher.new(cache_base: cache_dir)
+      output = capture_watch_command(
+        cache_base: cache_dir,
+        assignment: assignment.id,
+        launcher: launcher,
+        pid_probe: ->(_pid) { false }
+      )
+
+      assert_equal ["010"], launcher.calls.map { |call| call[:fork_root] }
+      assert_includes output.first, "Recovering watched assignment #{assignment.id} from assignment state via subtree 010."
+      assert_includes output.first, "Watch target #{assignment.id} is already complete."
+
+      Ace::Assign.reset_config!
+    end
+  end
+
+  def test_watch_continues_across_multiple_pending_fork_roots_in_order
+    with_temp_cache do |cache_dir|
+      steps = [
+        {"name" => "fork-a", "instructions" => "Work", "context" => "fork"},
+        {"name" => "fork-b", "instructions" => "Work", "context" => "fork"}
+      ]
+      config_path = create_test_config(cache_dir, steps: steps)
+      Ace::Assign.config["cache_dir"] = cache_dir
+
+      executor = build_fast_executor(cache_base: cache_dir)
+      result = executor.start(config_path)
+      launcher = CompletingLauncher.new(cache_base: cache_dir)
+
+      output = capture_watch_command(
+        cache_base: cache_dir,
+        assignment: result[:assignment].id,
+        launcher: launcher,
+        pid_probe: ->(_pid) { false }
+      )
+
+      assert_equal %w[010 020], launcher.calls.map { |call| call[:fork_root] }
+      assert_includes output.first, "Launching next fork subtree 010 for watched assignment #{result[:assignment].id}."
+      assert_includes output.first, "Launching next fork subtree 020 for watched assignment #{result[:assignment].id}."
+      assert_includes output.first, "Watch target #{result[:assignment].id} is already complete."
+
+      Ace::Assign.reset_config!
+    end
+  end
+
+  def test_watch_scoped_target_does_not_widen_into_later_siblings
+    with_temp_cache do |cache_dir|
+      steps = [
+        {"name" => "fork-a", "instructions" => "Work", "context" => "fork"},
+        {"name" => "fork-b", "instructions" => "Work", "context" => "fork"}
+      ]
+      config_path = create_test_config(cache_dir, steps: steps)
+      Ace::Assign.config["cache_dir"] = cache_dir
+
+      executor = build_fast_executor(cache_base: cache_dir)
+      result = executor.start(config_path)
+      assignment = load_assignment(cache_dir, result[:assignment].id)
+      root = result[:state].find_by_number("010")
+      mark_step_done(assignment, root)
+
+      launcher = SpyLauncher.new
+      output = capture_watch_command(
+        cache_base: cache_dir,
+        assignment: "#{assignment.id}@010",
+        launcher: launcher
+      )
+
+      assert_empty launcher.calls
+      assert_includes output.first, "Watch target #{assignment.id}@010 is already complete."
 
       Ace::Assign.reset_config!
     end
