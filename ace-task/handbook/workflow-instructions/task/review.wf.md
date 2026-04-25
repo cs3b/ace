@@ -62,6 +62,7 @@ Validate draft behavioral specifications and promote to pending when ready. This
      - Rewrite draft subtasks when codebase reality or shipped behavior differs from the original draft
      - Split draft subtasks when one child is hiding multiple real goals
      - Add or change normal task dependencies when ordering matters
+     - Repair sibling display order with `ace-task update <child-ref> --position ...` when the intended execution order is not reflected by the family
      - Mark obsolete draft subtasks `skipped` when the goal is already satisfied or no longer valid
      - Update the parent decomposition summary to match the repaired child set
    - **Web Search When Appropriate:**
@@ -112,6 +113,7 @@ Validate draft behavioral specifications and promote to pending when ready. This
    - [ ] **Subtask Slice Clarity**: Each subtask has a distinct observable outcome and does not duplicate sibling scope
    - [ ] **Child Readiness Complete** (orchestrators only): Every draft child subtask has been reviewed and either promoted to `pending` or blocked with documented questions
    - [ ] **First Slice Is Real Work**: When ordering matters, the first slice is the smallest real capability, not a synthetic research-only task
+   - [ ] **Executable Child Order Encoded**: When sibling order matters, dependencies encode execution order and visible family ordering has been repaired if needed
    - [ ] **Slice Size Signal Present**: Each slice includes advisory size (`small|medium|large`) for planning visibility
    - [ ] **Decision-Complete Spec**: Implementer can execute without inventing missing behavioral decisions
    - [ ] **Defaults Declared**: Ambiguous/unspecified behavior has explicit defaults

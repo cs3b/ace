@@ -195,4 +195,57 @@ class TaskLoaderTest < AceTaskTestCase
 
     assert_equal [], task.subtasks
   end
+
+  def test_loads_subtasks_in_dependency_safe_order
+    task_dir = File.join(@tmpdir, "8pp.t.q7w-parent")
+    FileUtils.mkdir_p(task_dir)
+    File.write(File.join(task_dir, "8pp.t.q7w-parent.s.md"), <<~CONTENT)
+      ---
+      id: 8pp.t.q7w
+      status: pending
+      ---
+
+      # Parent
+    CONTENT
+
+    {
+      "0-bootstrap" => <<~CONTENT,
+        ---
+        id: 8pp.t.q7w.0
+        status: pending
+        parent: 8pp.t.q7w
+        ---
+
+        # Bootstrap
+      CONTENT
+      "1-finalize" => <<~CONTENT,
+        ---
+        id: 8pp.t.q7w.1
+        status: pending
+        parent: 8pp.t.q7w
+        dependencies: [8pp.t.q7w.2]
+        ---
+
+        # Finalize
+      CONTENT
+      "2-load-data" => <<~CONTENT
+        ---
+        id: 8pp.t.q7w.2
+        status: pending
+        parent: 8pp.t.q7w
+        ---
+
+        # Load Data
+      CONTENT
+    }.each do |folder, content|
+      subtask_dir = File.join(task_dir, folder)
+      FileUtils.mkdir_p(subtask_dir)
+      File.write(File.join(subtask_dir, "8pp.t.q7w.#{folder.split('-').first}-#{folder.split('-', 2).last}.s.md"), content)
+    end
+
+    loader = Ace::Task::Molecules::TaskLoader.new
+    task = loader.load(task_dir, id: "8pp.t.q7w")
+
+    assert_equal %w[8pp.t.q7w.0 8pp.t.q7w.2 8pp.t.q7w.1], task.subtasks.map(&:id)
+  end
 end
