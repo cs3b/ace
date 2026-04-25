@@ -29,7 +29,7 @@ class AceAssignTestCase < AceTestCase
 
   def teardown
     super
-    @original_env.each do |key, value|
+    (@original_env || {}).each do |key, value|
       value.nil? ? ENV.delete(key) : ENV[key] = value
     end
   end
