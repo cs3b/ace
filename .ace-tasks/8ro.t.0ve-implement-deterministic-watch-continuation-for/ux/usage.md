@@ -85,6 +85,7 @@ TC-004-watch-recovers-after-interruption
 - `TC-003` records raw artifacts proving the watcher advanced across multiple fork roots and stopped at an inline/manual tail.
 - `TC-004` records raw artifacts proving the watcher resumed from assignment state after the original parent/session disappeared.
 - The verifier uses raw captures under `results/tc/03/` and `results/tc/04/` as primary evidence.
+- The retained runner/verifier bundle order expands from 2 goals to 4 goals without creating a watcher-only suite.
 
 ## Notes for Implementer
 
