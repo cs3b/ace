@@ -1,6 +1,6 @@
 ---
 id: 8ro.t.0ve.2
-status: pending
+status: in-progress
 priority: medium
 created_at: "2026-04-25 00:34:53"
 estimate: TBD
@@ -55,11 +55,11 @@ Telemetry rules:
 
 ### Success Criteria
 
-- [ ] Whole-assignment watch can continue across multiple fork roots in sequence.
-- [ ] Active-live telemetry causes wait instead of duplicate relaunch.
-- [ ] Lost-session state triggers recovery from assignment state rather than terminal-handle dependence.
-- [ ] `Errno::EPERM` is treated as alive.
-- [ ] Scoped targets still respect the scoped boundary while using wait/recovery logic.
+- [x] Whole-assignment watch can continue across multiple fork roots in sequence.
+- [x] Active-live telemetry causes wait instead of duplicate relaunch.
+- [x] Lost-session state triggers recovery from assignment state rather than terminal-handle dependence.
+- [x] `Errno::EPERM` is treated as alive.
+- [x] Scoped targets still respect the scoped boundary while using wait/recovery logic.
 
 ## Vertical Slice Decomposition (Task/Subtask Model)
 
