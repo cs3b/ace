@@ -8,7 +8,7 @@ All notable changes to this project will be documented in this file.
 
 - **ace-task**: Removed spike as an active task type from drafting/review guidance. Drafts now create real child tasks for each original intention, and `as-task-review` is responsible for deep analysis, draft reshaping, and dependency repair for uncertain task families.
 - **ace-task v0.36.6**: redesigned spike-task workflow around explicit parent-goal evaluation, in-folder post-spike task-tree rewrites, later review handoff, and same-parent follow-up subtasks for any out-of-folder drift.
-- **ace-assign v0.56.0**: Added the public `ace-assign watch` command surface with scoped subtree targeting, deterministic stop/failure summaries, and shared root-validation semantics with `fork-run`.
+- **ace-assign v0.57.0**: Extended the public `ace-assign watch` flow with live fork waiting, assignment-state recovery after lost session state, and sequential continuation across pending fork roots while preserving scoped subtree boundaries.
 
 ### Fixed
 - **ace-task v0.36.3**: Parent-task auto-close now follows the same `TaskManager#update` path as explicit closes, so linked GitHub issues close consistently when child tasks move to archive or are manually closed.
@@ -22,7 +22,7 @@ All notable changes to this project will be documented in this file.
 
 ### Technical
 - **ace-assign v0.55.0**: Persisted callback-pane metadata in fork tmux session files, exported `ACE_ASSIGN_CALLBACK_PANE` into tmux fork launches, and updated `/as-assign-drive` to document callback-mode resume and assignment-state recovery when the callback is missing on re-entry.
-- Dependency-following patch release after the `ace-assign v0.56.0` line update: `ace-overseer v0.15.4`.
+- Dependency-following patch release after the `ace-assign v0.57.0` line update: `ace-overseer v0.15.5`.
 
 ### Fixed
 - **ace-assign v0.54.8**: Corrected tmux fork-window naming to derive from the launcher origin pane instead of the session's currently active window, and stopped tmux fork launches from stealing focus by creating fork windows and panes detached.
