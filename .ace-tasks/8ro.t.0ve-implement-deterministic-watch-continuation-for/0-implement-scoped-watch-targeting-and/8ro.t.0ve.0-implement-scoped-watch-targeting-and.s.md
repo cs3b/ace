@@ -1,6 +1,6 @@
 ---
 id: 8ro.t.0ve.0
-status: draft
+status: pending
 priority: medium
 created_at: "2026-04-25 00:34:53"
 estimate: TBD
@@ -9,20 +9,9 @@ tags: [ace-assign, watch, cli]
 parent: 8ro.t.0ve
 bundle:
   presets: [project]
-  files:
-    - .ace-tasks/_archive/8r/y/8rn.t.z5k-design-deterministic-watch-continuation-for/1-define-ace-assign-watch-command/8rn.t.z5k.1-define-ace-assign-watch-command-and-stop.s.md
-    - .ace-tasks/_archive/8r/y/8rn.t.z5k-design-deterministic-watch-continuation-for/ux/usage.md
-    - ace-assign/lib/ace/assign/cli.rb
-    - ace-assign/lib/ace/assign/cli/commands/assignment_target.rb
-    - ace-assign/lib/ace/assign/cli/commands/fork_run.rb
-    - ace-assign/docs/usage.md
-    - ace-assign/test/fast/commands/assignment_target_test.rb
-    - ace-assign/test/fast/commands/fork_run_command_test.rb
-    - ux/usage.md
-  commands:
-    - ace-task show 8ro.t.0ve.0 --content
-    - ace-assign status
-    - ace-assign fork-run --help
+  files: [.ace-tasks/_archive/8r/y/8rn.t.z5k-design-deterministic-watch-continuation-for/1-define-ace-assign-watch-command/8rn.t.z5k.1-define-ace-assign-watch-command-and-stop.s.md, .ace-tasks/_archive/8r/y/8rn.t.z5k-design-deterministic-watch-continuation-for/ux/usage.md, ace-assign/lib/ace/assign/cli.rb, ace-assign/lib/ace/assign/cli/commands/assignment_target.rb, ace-assign/lib/ace/assign/cli/commands/fork_run.rb, ace-assign/docs/usage.md, ace-assign/test/fast/commands/assignment_target_test.rb, ace-assign/test/fast/commands/fork_run_command_test.rb, .ace-tasks/8ro.t.0ve-implement-deterministic-watch-continuation-for/ux/usage.md]
+  commands: [ace-task show 8ro.t.0ve.0 --content, ace-assign status, ace-assign fork-run --help]
+needs_review: false
 ---
 
 # Implement scoped watch targeting and stop-state behavior

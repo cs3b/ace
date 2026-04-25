@@ -1,6 +1,6 @@
 ---
 id: 8ro.t.0ve.1
-status: draft
+status: pending
 priority: medium
 created_at: "2026-04-25 00:34:53"
 estimate: TBD
@@ -9,21 +9,9 @@ tags: [ace-assign, watch, e2e, docs]
 parent: 8ro.t.0ve
 bundle:
   presets: [project]
-  files:
-    - .ace-tasks/_archive/8r/y/8rn.t.z5k-design-deterministic-watch-continuation-for/2-define-watch-continuation-verification-and/8rn.t.z5k.2-define-watch-continuation-verification-and-e2e-coverage.s.md
-    - .ace-tasks/_archive/8r/y/8rn.t.z5k-design-deterministic-watch-continuation-for/ux/usage.md
-    - ace-assign/docs/usage.md
-    - ace-assign/README.md
-    - ace-assign/test/fast/commands/fork_run_command_test.rb
-    - ace-assign/test/fast/organisms/assign_drive_contract_test.rb
-    - ace-assign/test/e2e/TS-ASSIGN-003-operations/scenario.yml
-    - ace-assign/test/e2e/TS-ASSIGN-003-operations/runner.yml.md
-    - ace-assign/test/e2e/TS-ASSIGN-003-operations/verifier.yml.md
-    - ux/usage.md
-  commands:
-    - ace-task show 8ro.t.0ve.1 --content
-    - ace-test ace-assign test/fast/commands/watch_command_test.rb
-    - ace-test ace-assign test/e2e/TS-ASSIGN-003-operations
+  files: [.ace-tasks/_archive/8r/y/8rn.t.z5k-design-deterministic-watch-continuation-for/2-define-watch-continuation-verification-and/8rn.t.z5k.2-define-watch-continuation-verification-and-e2e-coverage.s.md, .ace-tasks/_archive/8r/y/8rn.t.z5k-design-deterministic-watch-continuation-for/ux/usage.md, ace-assign/docs/usage.md, ace-assign/README.md, ace-assign/test/fast/commands/fork_run_command_test.rb, ace-assign/test/fast/organisms/assign_drive_contract_test.rb, ace-assign/test/e2e/TS-ASSIGN-003-operations/scenario.yml, ace-assign/test/e2e/TS-ASSIGN-003-operations/runner.yml.md, ace-assign/test/e2e/TS-ASSIGN-003-operations/verifier.yml.md, .ace-tasks/8ro.t.0ve-implement-deterministic-watch-continuation-for/ux/usage.md]
+  commands: [ace-task show 8ro.t.0ve.1 --content, ace-test ace-assign test/fast/commands/watch_command_test.rb, ace-test ace-assign test/e2e/TS-ASSIGN-003-operations]
+needs_review: false
 ---
 
 # Implement watcher verification retained E2E and package docs
