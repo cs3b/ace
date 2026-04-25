@@ -47,14 +47,17 @@ ace-assign watch --assignment 8abcd1 --poll-interval 60
 ```
 
 - CLI options in v1:
+
   - `--assignment <id>`
   - `--root <root>`
   - `--poll-interval <seconds>`
   - `--quiet`
   - `--debug`
+
 - Startup summary reports assignment id, optional subtree root, and effective poll interval.
 - Stop summary names the remaining inline/manual boundary when fork work is exhausted.
 - Error output is explicit and non-zero for:
+
   - conflicting `--root` versus scoped `@<root>`
   - non-fork root target
   - invalid or non-positive poll interval
