@@ -7,6 +7,7 @@ steps:
     context: fork
     fork:
       mode: headless
+      provider: codex:gpt-5.4-mini
     instructions: |
       Execute the first retained watcher subtree.
     sub_steps:
@@ -17,6 +18,7 @@ steps:
     context: fork
     fork:
       mode: headless
+      provider: codex:gpt-5.4-mini
     instructions: |
       Execute the second retained watcher subtree.
     sub_steps:

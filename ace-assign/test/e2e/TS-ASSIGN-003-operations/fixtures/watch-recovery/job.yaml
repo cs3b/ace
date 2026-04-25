@@ -7,16 +7,24 @@ steps:
     context: fork
     fork:
       mode: headless
+      provider: codex:gpt-5.4-mini
     instructions: |
       Resume this subtree from assignment state after telemetry goes stale.
     sub_steps:
-      - onboard
-      - work-on-task
+      - name: nested-recovery-fork
+        context: fork
+        fork:
+          mode: headless
+          provider: codex:gpt-5.4-mini
+        instructions: |
+          Nested fork work remains inside the scoped recovery subtree.
+      - verify-inline
 
   - name: later-sibling
     context: fork
     fork:
       mode: headless
+      provider: codex:gpt-5.4-mini
     instructions: |
       Remains outside the scoped recovery boundary.
 

@@ -67,11 +67,12 @@ module Ace
 
           raise Error, "No steps defined in config" if steps_config.empty?
 
-          # Enrich steps using declared workflow/skill assign metadata.
           steps_config = enrich_declared_sub_steps(steps_config)
+          steps_config, start_child_overrides = normalize_start_sub_step_overrides(steps_config)
 
           # Expand sub-step declarations into batch parent + child steps
           steps_config = expand_sub_steps(steps_config)
+          steps_config = apply_start_sub_step_overrides(steps_config, start_child_overrides)
           steps_config = materialize_skill_backed_steps(steps_config)
 
           # Create assignment
@@ -1517,6 +1518,24 @@ module Ace
           [canonical, overrides]
         end
 
+        def normalize_start_sub_step_overrides(steps_config)
+          overrides_by_root = {}
+
+          normalized = steps_config.each_with_index.map do |step, index|
+            raw_sub_steps = step["sub_steps"] || step["sub-steps"]
+            descriptors = parse_canonical_sub_step_descriptors(raw_sub_steps, location: "steps[#{index}].sub_steps")
+            next step if descriptors.nil? || descriptors[:overrides].empty?
+
+            updated = step.dup
+            updated["sub_steps"] = descriptors[:names]
+            updated.delete("sub-steps")
+            overrides_by_root[Atoms::NumberGenerator.from_index(index)] = descriptors[:overrides]
+            updated
+          end
+
+          [normalized, overrides_by_root]
+        end
+
         def parse_canonical_sub_step_descriptors(raw_sub_steps, location:)
           return {names: nil, overrides: {}} if raw_sub_steps.nil?
           return nil unless raw_sub_steps.is_a?(Array)
@@ -1543,6 +1562,32 @@ module Ace
           end
 
           {names: names, overrides: overrides}
+        end
+
+        def apply_start_sub_step_overrides(expanded_steps, overrides_by_root)
+          return expanded_steps if overrides_by_root.empty?
+
+          merged = expanded_steps.map(&:dup)
+          index_by_number = {}
+          merged.each_with_index { |step, idx| index_by_number[step["number"]] = idx }
+
+          overrides_by_root.each do |root_number, overrides|
+            children = merged
+              .select { |step| step["parent"] == root_number }
+              .sort_by { |step| step["number"].to_s }
+
+            children.each_with_index do |child, child_index|
+              override = overrides[child_index]
+              next unless override
+
+              merged[index_by_number.fetch(child["number"])] = child.merge(override).merge(
+                "number" => child["number"],
+                "parent" => child["parent"]
+              )
+            end
+          end
+
+          merged
         end
 
         def apply_canonical_child_overrides(expanded_steps, overrides)

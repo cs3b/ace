@@ -907,6 +907,48 @@ class AssignmentExecutorTest < AceAssignTestCase
     end
   end
 
+  def test_start_materializes_sub_step_overrides_for_initial_yaml
+    with_temp_cache do |cache_dir|
+      steps = [
+        {
+          "name" => "delegated-recovery",
+          "context" => "fork",
+          "fork" => {"mode" => "headless", "provider" => "codex:gpt-5.4-mini"},
+          "instructions" => "Resume this subtree from assignment state after telemetry goes stale.",
+          "sub_steps" => [
+            {
+              "name" => "nested-recovery-fork",
+              "context" => "fork",
+              "fork" => {"mode" => "headless", "provider" => "codex:gpt-5.4-mini"},
+              "instructions" => "Nested fork work remains inside the scoped recovery subtree."
+            },
+            "verify-inline"
+          ]
+        }
+      ]
+      config_path = create_test_config(cache_dir, steps: steps)
+
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      result = executor.start(config_path)
+
+      state = result[:state]
+      root = state.find_by_number("010")
+      nested = state.find_by_number("010.01")
+      inline = state.find_by_number("010.02")
+
+      assert_equal "delegated-recovery", root.name
+      assert_equal "fork", root.context
+      assert_equal "codex:gpt-5.4-mini", root.fork_provider
+
+      assert_equal "nested-recovery-fork", nested.name
+      assert_equal "fork", nested.context
+      assert_equal "codex:gpt-5.4-mini", nested.fork_provider
+      assert_equal "Nested fork work remains inside the scoped recovery subtree.", nested.instructions
+
+      assert_equal "verify-inline", inline.name
+    end
+  end
+
   def test_start_with_parent_id_sets_parent_on_assignment
     with_temp_cache do |cache_dir|
       config_path = create_test_config(cache_dir)

@@ -32,3 +32,7 @@ setup:
   - copy-fixtures
   - agent-env:
       PROJECT_ROOT_PATH: .
+      ACE_ASSIGN_DEFAULT_TARGET: ""
+      ACE_ASSIGN_CURRENT_ASSIGNMENT_ID: ""
+      ACE_ASSIGN_CURRENT_FORK_ROOT: ""
+      ACE_ASSIGN_LAUNCH_MODE: ""

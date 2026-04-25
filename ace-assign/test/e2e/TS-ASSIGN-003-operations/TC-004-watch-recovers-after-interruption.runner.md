@@ -20,10 +20,12 @@ Save output to `results/tc/04/`.
 
 ## Constraints
 
-- Create the assignment from `fixtures/watch-recovery/job.yaml`.
+- Create the assignment from `fixtures/watch-recovery/jobs/8roi8i-job.yml`.
 - Persist the created assignment ID to `results/tc/04/assignment-id.txt`.
 - Prepare the fixture so subtree `010` is the watched recovery scope and its
   assignment state remains non-terminal when watch begins.
+- Explicitly activate subtree `010` before invoking watch so the watcher sees an
+  active scoped root with nested fork work still pending inside that subtree.
 - Simulate stale or disappeared prior session telemetry using the assignment's
   own `.ace-local/assign/<id>/...` metadata before invoking watch.
 - Capture scoped status with `ace-assign status --assignment "<id>@010"` before

@@ -9,6 +9,9 @@ steps:
 
   - name: delegated-subtree
     context: fork
+    fork:
+      mode: headless
+      provider: codex:gpt-5.4-mini
     instructions: |
       Execute delegated subtree using fork-run.
     sub_steps:
