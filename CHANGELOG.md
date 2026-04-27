@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.940] - 2026-04-27
+
+
 ### Changed
 
 - **ace-task**: Removed spike as an active task type from drafting/review guidance. Drafts now create real child tasks for each original intention, and `as-task-review` is responsible for deep analysis, draft reshaping, and dependency repair for uncertain task families.
@@ -98,6 +101,7 @@ All notable changes to this project will be documented in this file.
 - **ace-assign v0.53.5 / ace-overseer v0.14.13**: Tightened runtime dependency constraints to `ace-tmux ~> 0.14.4` for the shared sanitizer API.
 - **ace-git-commit v0.26.1**: Tightened `TS-COMMIT-001` Goal 7/8 staging contracts to prevent generated `results/` artifacts from contaminating staged-only commit evidence.
 - **ace-git-secrets v0.15.6**: Tightened the remediation-path E2E contract so saved-report coverage requires a full-history scan and rejects narrowed `--since HEAD` false-clean artifacts.
+
 
 ## [0.9.939] - 2026-04-20
 
