@@ -8,6 +8,8 @@ bundle:
   files:
     - ./TC-001-multi-assignment.verify.md
     - ./TC-002-fork-run-delegation.verify.md
+    - ./TC-003-watch-sequential-continuation.verify.md
+    - ./TC-004-watch-recovers-after-interruption.verify.md
 ---
 
 # E2E Verification: ace-assign Operations
@@ -33,4 +35,4 @@ For each goal output:
 - **Verdict**: PASS | FAIL
 - **Evidence**: <specific file/content citations>
 
-Final line: **Results: X/2 passed**
+Final line: **Results: X/4 passed**

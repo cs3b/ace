@@ -116,6 +116,35 @@ module Ace
             state.nearest_fork_ancestor(step.number)
           end
 
+          def resolve_root_step(state, current, explicit_root, scoped_root)
+            if explicit_root && scoped_root && explicit_root.strip != scoped_root.strip
+              raise Error, "Conflicting subtree roots: --root #{explicit_root.strip} and scope #{scoped_root.strip}"
+            end
+
+            root_ref = explicit_root&.strip
+            root_ref = scoped_root&.strip if root_ref.nil? || root_ref.empty?
+
+            if root_ref && !root_ref.empty?
+              root = state.find_by_number(root_ref)
+              raise StepErrors::NotFound, "Step #{root_ref} not found in queue" unless root
+
+              return root
+            end
+
+            raise Error, "No active step. Use --root <step-number> or --assignment <id>@<step-number>." unless current
+
+            root = state.nearest_fork_ancestor(current.number)
+            raise Error, "Active step is not in a forked subtree. Provide --root or --assignment <id>@<step-number>." unless root
+
+            root
+          end
+
+          def ensure_root_is_fork!(root_step)
+            return if root_step.fork?
+
+            raise Error, "Step #{root_step.number} is not fork-enabled (context: fork missing)."
+          end
+
           def scoped_fork_metadata_step(state, step, scope, scope_root)
             return nil unless step
 

@@ -12,20 +12,51 @@ class CreateCommandTest < AceAssignTestCase
       data = @tasks[ref]
       return nil unless data
 
+      return data if data.respond_to?(:status)
+
       FakeTask.new(data)
     end
   end
 
   class FakeTask
-    attr_reader :status, :subtasks
+    attr_reader :status, :subtasks, :dependencies, :metadata
 
     def initialize(data)
       @status = data[:status]
-      @subtasks = Array(data[:subtasks]).map { |entry| FakeSubtask.new(entry[:id], entry[:status]) }
+      @dependencies = Array(data[:dependencies])
+      @metadata = data[:metadata] || {}
+      @subtasks = Array(data[:subtasks]).map do |entry|
+        FakeSubtask.new(
+          entry[:id],
+          entry[:status],
+          dependencies: entry[:dependencies],
+          metadata: entry[:metadata]
+        )
+      end
     end
   end
 
   class FakeSubtask
+    attr_reader :id, :status, :dependencies, :metadata
+
+    def initialize(id, status, dependencies: nil, metadata: nil)
+      @id = id
+      @status = status
+      @dependencies = Array(dependencies)
+      @metadata = metadata || {}
+    end
+  end
+
+  class CompatibilityTask
+    attr_reader :status, :subtasks
+
+    def initialize(status:, subtasks: nil)
+      @status = status
+      @subtasks = Array(subtasks)
+    end
+  end
+
+  class CompatibilitySubtask
     attr_reader :id, :status
 
     def initialize(id, status)
@@ -219,6 +250,78 @@ class CreateCommandTest < AceAssignTestCase
     assert_includes error.message, "All requested tasks are already terminal"
     assert_includes error.message, "402"
     assert_includes error.message, "403"
+  end
+
+  def test_task_assignment_creator_orders_parent_subtasks_by_dependencies
+    creator = Ace::Assign::Organisms::TaskAssignmentCreator.new(
+      task_manager: FakeTaskManager.new(
+        "500" => {
+          status: "pending",
+          subtasks: [
+            {id: "500.0", status: "pending"},
+            {id: "500.1", status: "pending", dependencies: ["500.2"]},
+            {id: "500.2", status: "pending"}
+          ]
+        }
+      ),
+      executor: FakeExecutor.new
+    )
+
+    result = creator.call(task_refs: ["500"])
+
+    assert_equal %w[500.0 500.2 500.1], result[:task_refs]
+  end
+
+  def test_task_assignment_creator_orders_explicit_taskrefs_by_dependencies
+    creator = Ace::Assign::Organisms::TaskAssignmentCreator.new(
+      task_manager: FakeTaskManager.new(
+        "601" => {status: "pending"},
+        "602" => {status: "pending", dependencies: ["603"]},
+        "603" => {status: "pending"}
+      ),
+      executor: FakeExecutor.new
+    )
+
+    result = creator.call(task_refs: ["601", "602", "603"])
+
+    assert_equal %w[601 603 602], result[:task_refs]
+  end
+
+  def test_task_assignment_creator_accepts_task_like_objects_without_dependency_methods
+    creator = Ace::Assign::Organisms::TaskAssignmentCreator.new(
+      task_manager: FakeTaskManager.new(
+        "801" => CompatibilityTask.new(
+          status: "pending",
+          subtasks: [
+            CompatibilitySubtask.new("801.01", "pending"),
+            CompatibilitySubtask.new("801.02", "pending")
+          ]
+        )
+      ),
+      executor: FakeExecutor.new
+    )
+
+    result = creator.call(task_refs: ["801"])
+
+    assert_equal %w[801.01 801.02], result[:task_refs]
+  end
+
+  def test_task_assignment_creator_rejects_cycles_in_requested_batch
+    creator = Ace::Assign::Organisms::TaskAssignmentCreator.new(
+      task_manager: FakeTaskManager.new(
+        "701" => {status: "pending", dependencies: ["702"]},
+        "702" => {status: "pending", dependencies: ["701"]}
+      ),
+      executor: FakeExecutor.new
+    )
+
+    error = assert_raises(Ace::Support::Cli::Error) do
+      creator.call(task_refs: ["701", "702"])
+    end
+
+    assert_includes error.message, "cyclic dependencies"
+    assert_includes error.message, "701"
+    assert_includes error.message, "702"
   end
 
   def test_create_task_mode_creates_assignment_and_step_files_end_to_end

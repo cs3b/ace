@@ -41,5 +41,5 @@ bundle: "project"
 
 models:
   - role:review-codex
-  - role:review-geminie
+  - role:review-gemini
   # - role:review-claude

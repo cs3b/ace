@@ -182,6 +182,10 @@ When requirements are uncertain, do not create a special spike task. Draft the r
 3. If ordering matters, make the first child the smallest real vertical slice that validates the riskiest path.
 4. Review may later rewrite, split, reorder, skip, or add dependencies between draft subtasks.
 5. Do not preserve uncertainty by inventing a dedicated research-only subtask when normal review can answer it.
+6. If sibling execution order matters, encode it as executable metadata immediately:
+   * Add sibling `dependencies` for required ordering
+   * If creation order is already wrong, repair visible family order with `ace-task update <child-ref> --position ...`
+   * Do not rely on parent prose order alone to express runnable sequence
 
 8. **Complete Behavioral Specifications**
    * For each created draft task, populate with:
@@ -257,6 +261,7 @@ When requirements are uncertain, do not create a special spike task. Draft the r
      * [ ] Defaults are explicit where behavior could otherwise be ambiguous
      * [ ] Usage documentation created in `ux/usage.md` (when task changes any API surface)
      * [ ] For uncertain families, the first slice is still a real subtask rather than a dedicated spike
+     * [ ] When child order matters, sibling dependencies encode that order and any visible family ordering has been repaired with `position` metadata if needed
 
 12. **Run Quality Pass (Better, Not More)**
    * Perform one concise quality pass before finalizing:

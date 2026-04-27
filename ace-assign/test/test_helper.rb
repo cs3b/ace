@@ -9,14 +9,34 @@ require "fileutils"
 require "tmpdir"
 
 class AceAssignTestCase < AceTestCase
+  ASSIGN_ENV_KEYS = %w[
+    ACE_ASSIGN_DEFAULT_TARGET
+    ACE_ASSIGN_ID
+    ACE_ASSIGN_CURRENT_ASSIGNMENT_ID
+    ACE_ASSIGN_CURRENT_FORK_ROOT
+    ACE_ASSIGN_LAUNCH_MODE
+    ACE_ASSIGN_FORK_WINDOW
+    ACE_ASSIGN_CALLBACK_PANE
+  ].freeze
+
   def setup
     super
+    @original_env = ASSIGN_ENV_KEYS.to_h { |key| [key, ENV[key]] }
+    ASSIGN_ENV_KEYS.each { |key| ENV.delete(key) }
+
     # Clean class-level tmpdir contents before each test (skip if not yet created)
     tmp = self.class.instance_variable_get(:@class_temp_dir)
     if tmp && Dir.exist?(tmp)
       Dir.children(tmp).each do |child|
         FileUtils.rm_rf(File.join(tmp, child))
       end
+    end
+  end
+
+  def teardown
+    super
+    (@original_env || {}).each do |key, value|
+      value.nil? ? ENV.delete(key) : ENV[key] = value
     end
   end
 

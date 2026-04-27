@@ -85,9 +85,10 @@ module Ace
         # Scan for subtask directories within the parent task directory.
         def load_subtask_dirs(parent_dir, parent_id, special_folder)
           subtask_dirs = find_subtask_dirs(parent_dir, parent_id)
-          subtask_dirs.filter_map do |subtask_id, subtask_dir|
+          loaded_subtasks = subtask_dirs.filter_map do |subtask_id, subtask_dir|
             load(subtask_dir, id: subtask_id, special_folder: special_folder, load_subtasks: false)
           end
+          SiblingTaskSorter.sort(loaded_subtasks)
         end
 
         # Find all subtask directories within a parent directory.

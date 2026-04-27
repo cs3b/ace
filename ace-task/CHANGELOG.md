@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.36.8] - 2026-04-25
+
+### Fixed
+- Load parent subtasks in dependency-safe sibling order so `ace-task show --tree` and other parent-driven views no longer follow raw folder ordering when sibling dependencies require a different sequence.
+
+### Changed
+- Tightened task draft and review workflow guidance so sibling execution order must be encoded as executable metadata and repaired with `position` metadata when visible family order is wrong.
+
+### Technical
+- Added a shared sibling-task sorter plus regression coverage for dependency-ordered subtask loading.
+
 ## [0.36.7] - 2026-04-25
 
 ### Changed

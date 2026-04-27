@@ -1,7 +1,7 @@
 PATH
   remote: ace-assign
   specs:
-    ace-assign (0.55.0)
+    ace-assign (0.57.5)
       ace-b36ts (~> 0.13)
       ace-llm (~> 0.34)
       ace-support-cli (~> 0.6)
@@ -199,8 +199,8 @@ PATH
 PATH
   remote: ace-overseer
   specs:
-    ace-overseer (0.15.3)
-      ace-assign (~> 0.54)
+    ace-overseer (0.15.5)
+      ace-assign (~> 0.57)
       ace-git (~> 0.19)
       ace-git-worktree (~> 0.21)
       ace-support-cli (~> 0.6)
@@ -237,7 +237,7 @@ PATH
 PATH
   remote: ace-review
   specs:
-    ace-review (0.53.6)
+    ace-review (0.53.7)
       ace-b36ts (~> 0.13)
       ace-bundle (~> 0.41)
       ace-git (~> 0.19)
@@ -338,7 +338,7 @@ PATH
 PATH
   remote: ace-task
   specs:
-    ace-task (0.36.7)
+    ace-task (0.36.8)
       ace-b36ts (~> 0.13)
       ace-git (~> 0.19)
       ace-support-cli (~> 0.6)

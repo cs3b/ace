@@ -50,6 +50,7 @@ Assignment verification uses deterministic commands only:
 1. Define steps from a [preset](.ace-defaults/assign/presets/work-on-task.yml) or compose from the [step catalog](.ace-defaults/assign/catalog/steps/) -- steps can nest into substeps and reference workflow instructions for execution details.
 2. Expand the definition into a session with explicit per-step instructions, state tracking (`pending` → `in_progress` → `done`/`failed`), and numbered hierarchy (e.g., `010`, `010.01`, `010.01.01`).
 3. Drive execution with `/as-assign-drive` -- fork long-running steps to isolated agent subprocesses, advance the queue on completion, and retry or inject fix steps on failure.
+4. Use `ace-assign watch` to monitor whole-assignment or scoped subtree continuation, recover from stale fork session metadata, and stop cleanly when only inline/manual work remains.
 
 ## Use Cases
 
@@ -58,6 +59,8 @@ Assignment verification uses deterministic commands only:
 `work-on-task` release steps resolve `wfi://release/publish` from shipped workflow sources by default, and project-level `wfi://` source overrides registered under `.ace/nav/protocols/wfi-sources/` are honored by both `ace-bundle` and `ace-assign`.
 
 **Run with orchestrator and fork agents** - use `/as-assign-drive` to walk through steps, forking long-running work (implementation, review, release) to isolated agent subprocesses with configurable [execution defaults](.ace-defaults/assign/config.yml) or per-step `fork.provider` overrides. Forks can run sequentially or as parallel batches, each producing inspectable traces and session reports under `.ace-local/assign/`.
+
+**Observe retained continuation state** - use `ace-assign watch --assignment <id>` for whole-assignment continuation or `ace-assign watch --assignment <id>@<root>` for a scoped subtree. The watcher uses assignment status as the source of truth, waits on live fork work, recovers from stale session metadata, and stops when only inline/manual work remains. See [docs/usage.md](docs/usage.md) for the full command contract.
 
 **Recover from failure without losing history** - keep failed-step lineage intact, inject targeted retries or fix steps, and continue execution with auditable failure evidence.
 

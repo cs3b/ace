@@ -6,6 +6,53 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.57.5] - 2026-04-25
+
+### Fixed
+- Preserved mapped `sub_steps` overrides for explicitly numbered top-level roots during assignment startup, so generated children keep their declared fork context, provider, and workflow-backed instructions.
+
+### Technical
+- Extracted `ace-assign watch` polling, boundary evaluation, telemetry checks, and recovery flow into a dedicated `WatchRuntime`, keeping the CLI command focused on option parsing and dispatch.
+- Added fast regression coverage for explicit numbered-root override preservation and the extracted watch runtime wiring.
+
+## [0.57.4] - 2026-04-25
+
+### Fixed
+- Hardened scoped `ace-assign watch` continuation so a fork-enabled leaf root remains eligible for recovery or launch instead of exiting early with a false "no fork work remains" result.
+- Treated tmux session metadata as valid fork liveness telemetry so watcher recovery no longer relaunches already-running tmux-backed fork subtrees.
+
+### Technical
+- Corrected retained `TS-ASSIGN-003` watch runner fixture references to the shipped `job.yaml` paths.
+- Expanded shared test environment cleanup to clear and restore the full active fork runtime variable set, and added direct watch command coverage for scoped leaf recovery and tmux liveness handling.
+
+## [0.57.3] - 2026-04-25
+
+### Fixed
+- Preserved mapped `sub_steps` overrides during `ace-assign create --yaml` startup so nested fork children keep their declared fork context, launch mode, provider, and custom instructions instead of collapsing into plain child names.
+- Restored compatibility with task-like objects that do not expose `dependencies` or `metadata`, so dependency-ordered assignment expansion no longer breaks `ace-overseer` launcher flows and similar integrations.
+
+### Technical
+- Added regression coverage for initial assignment creation with mapped `sub_steps` children to keep retained watch-recovery fixtures materialized as real nested fork work.
+- Added direct regression coverage for task-like objects that only provide `status` and `subtasks`, matching `ace-overseer` assignment launcher compatibility expectations.
+
+## [0.57.1] - 2026-04-25
+
+### Fixed
+- Dependency-sort expanded `work-on-task` task batches so sibling tasks respect in-batch dependencies instead of raw subtask folder order.
+- Fail fast when the requested assignment batch contains a dependency cycle instead of materializing an invalid execution order.
+
+### Technical
+- Added regression coverage for parent-subtask expansion ordering, explicit multi-task dependency ordering, and cyclic batch rejection.
+
+## [0.57.0] - 2026-04-25
+
+### Changed
+- Added a public `ace-assign watch` command with scoped subtree targeting, explicit startup summaries, live wait/recovery behavior for active fork roots, and sequential continuation across pending fork roots until only inline/manual work remains.
+
+### Technical
+- Shared subtree root resolution and fork-root validation between `watch` and `fork-run`, added direct watcher fast coverage for wait/recovery/`Errno::EPERM`/scoped-boundary behavior, and hardened package verification against inherited scoped-target environment leakage from forked drive sessions.
+
 ## [0.55.0] - 2026-04-23
 
 ### Changed

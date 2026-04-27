@@ -11,12 +11,16 @@ tool-under-test: ace-assign
 sandbox-layout:
   results/tc/01/: "Multi-assignment operator flow evidence"
   results/tc/02/: "Fork-run delegated subtree evidence"
+  results/tc/03/: "Watcher sequential continuation evidence"
+  results/tc/04/: "Watcher interruption recovery evidence"
 
 e2e-justification: >
   Assignment operators rely on explicit assignment targeting and scoped subtree
   execution. This scenario validates those user-visible operations through real
-  CLI journeys: working with multiple concurrent assignments and executing a
-  fork-enabled subtree using `fork-run` with scoped assignment syntax.
+  CLI journeys: working with multiple concurrent assignments, executing a
+  fork-enabled subtree using `fork-run` with scoped assignment syntax, and
+  validating retained watcher continuation and recovery behavior with raw
+  captures.
 
 requires:
   tools: [ace-assign]
@@ -28,3 +32,7 @@ setup:
   - copy-fixtures
   - agent-env:
       PROJECT_ROOT_PATH: .
+      ACE_ASSIGN_DEFAULT_TARGET: ""
+      ACE_ASSIGN_CURRENT_ASSIGNMENT_ID: ""
+      ACE_ASSIGN_CURRENT_FORK_ROOT: ""
+      ACE_ASSIGN_LAUNCH_MODE: ""

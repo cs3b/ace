@@ -8,6 +8,8 @@ bundle:
   files:
     - ./TC-001-multi-assignment.runner.md
     - ./TC-002-fork-run-delegation.runner.md
+    - ./TC-003-watch-sequential-continuation.runner.md
+    - ./TC-004-watch-recovers-after-interruption.runner.md
 ---
 
 # E2E Test Runner: ace-assign Operations
@@ -21,7 +23,7 @@ Execute each goal sequentially.
 ## Rules
 
 - Setup ownership belongs to `scenario.yml` and fixtures; do not re-implement setup in TC runners
-- Execute each goal in order (1 through 2)
+- Execute each goal in order (1 through 4)
 - Use only declared scenario tools (`ace-*` and explicit exceptions from `requires.tools`)
 - Save all artifacts to results/tc/{NN}/ directories as specified
 - Do not assign PASS/FAIL verdicts in runner output

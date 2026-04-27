@@ -43,7 +43,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "ace-support-core", "~> 0.29"
   spec.add_dependency "ace-support-config", "~> 0.9"
   spec.add_dependency "ace-support-fs", "~> 0.3"
-  spec.add_dependency "ace-assign", "~> 0.54"
+  spec.add_dependency "ace-assign", "~> 0.57"
   spec.add_dependency "ace-git", "~> 0.19"
   spec.add_dependency "ace-git-worktree", "~> 0.21"
   spec.add_dependency "ace-task", "~> 0.31"
