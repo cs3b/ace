@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.30.1] - 2026-06-30
+
+### Fixed
+- Made frontmatter-free policy path matching symlink-safe by canonicalizing project roots and missing descendants before pattern evaluation.
+
 ### Changed
 - Updated generated bootstrap guidance to describe `.agents/skills/` as the default handbook skill projection and harness-native skill folders as explicit provider sync outputs.
 

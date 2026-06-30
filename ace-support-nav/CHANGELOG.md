@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.3] - 2026-06-30
+
+### Technical
+- Stabilized navigation create-from-template fast-test expectations against the current working directory used for generated files.
+
 ## [0.28.2] - 2026-04-20
 
 ### Technical
