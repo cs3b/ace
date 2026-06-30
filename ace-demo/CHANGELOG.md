@@ -6,9 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.25.7] - 2026-06-30
+
 ### Fixed
 - Failed YAML tape verification by default when the final asciinema shell exit is non-zero, unless `verify.allow_nonzero_exit: true` opts out explicitly.
 - Surfaced non-zero cast exit codes in `record` / `verify` output and verification reports so broken recordings are diagnosable without opening the raw cast.
+
+### Technical
+- Stabilized demo recorder fast tests against the current working directory used for generated visual and cast paths.
 
 ## [0.25.6] - 2026-04-16
 
