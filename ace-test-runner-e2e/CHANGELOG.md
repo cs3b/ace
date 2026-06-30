@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.40.2] - 2026-06-30
+
+### Technical
+- Stabilized fast tests with sandbox-local fake backends and fixture setup executors so path handling remains independent of host temporary directories.
+
 ## [0.40.1] - 2026-04-24
 
 ### Fixed
