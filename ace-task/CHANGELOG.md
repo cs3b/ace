@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Accepted `--title` as an alternate title input for `ace-task create`, with clear conflict handling when both title forms are provided.
+
 ## [0.36.7] - 2026-04-25
 
 ### Changed

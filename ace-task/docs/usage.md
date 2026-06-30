@@ -47,12 +47,16 @@ github_issue: 276
 
 Create a new task with a B36TS-based ID.
 
+The task title can be provided as the positional `TITLE` argument or with
+`--title TITLE`. Provide only one title form.
+
 If the generated task ID collides with an existing persisted task, `ace-task create`
 automatically retries with a new ID. If it cannot obtain a unique ID within the retry
 budget, the command fails cleanly without leaving behind a partial task artifact.
 
 | Option | Alias | Description |
 |--------|-------|-------------|
+| `--title` | | Task title (alternative to positional `TITLE`) |
 | `--priority` | `-p` | Priority: critical, high, medium, low |
 | `--tags` | `-T` | Tags (comma-separated) |
 | `--status` | `-s` | Initial status: draft, pending, blocked, ... |
@@ -65,6 +69,7 @@ budget, the command fails cleanly without leaving behind a partial task artifact
 
 ```bash
 ace-task create "Fix login bug"
+ace-task create --title "Fix login bug"
 ace-task create "Fix auth" --priority high --tags auth,security
 ace-task create "Setup DB" --child-of q7w
 ace-task create "Quick task" --in maybe

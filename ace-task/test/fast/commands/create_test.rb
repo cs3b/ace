@@ -35,6 +35,53 @@ class CreateCommandTest < AceTaskTestCase
     refute Dir.exist?(File.join(@tmpdir, ".ace-tasks"))
   end
 
+  def test_create_dry_run_accepts_title_flag
+    output = capture_io do
+      Ace::Task::TaskCLI.start(["create", "--title", "Flag dry run task", "--dry-run"])
+    end.first
+
+    assert_match(/Would create task/, output)
+    assert_match(/Title:.*Flag dry run task/, output)
+    refute Dir.exist?(File.join(@tmpdir, ".ace-tasks"))
+  end
+
+  def test_create_accepts_title_flag
+    output = capture_io do
+      Ace::Task::TaskCLI.start(["create", "--title", "Flag title task"])
+    end.first
+
+    assert_match(/Created task/, output)
+
+    tasks_dir = File.join(@tmpdir, ".ace-tasks")
+    task_dirs = Dir.entries(tasks_dir).reject { |e| e.start_with?(".") }
+    assert_equal 1, task_dirs.length
+    assert_match(/flag-title-task$/, task_dirs.first)
+
+    spec_file = Dir.glob(File.join(tasks_dir, task_dirs.first, "*.s.md")).first
+    content = File.read(spec_file)
+    assert_match(/^# Flag title task$/, content)
+  end
+
+  def test_create_rejects_positional_and_title_flag_together
+    err = assert_raises(Ace::Support::Cli::Error) do
+      capture_io do
+        Ace::Task::TaskCLI.start(["create", "Positional title", "--title", "Flag title", "--dry-run"])
+      end
+    end
+
+    assert_match(/Choose either positional TITLE or --title, not both/, err.message)
+  end
+
+  def test_create_requires_title_from_positional_or_flag
+    err = assert_raises(Ace::Support::Cli::Error) do
+      capture_io do
+        Ace::Task::TaskCLI.start(["create", "--status", "draft", "--dry-run"])
+      end
+    end
+
+    assert_match(/Title required: provide positional TITLE or --title/, err.message)
+  end
+
   def test_create_dry_run_with_options
     output = capture_io do
       Ace::Task::TaskCLI.start(["create", "Test task", "--dry-run", "--priority", "high", "--tags", "auth,security"])

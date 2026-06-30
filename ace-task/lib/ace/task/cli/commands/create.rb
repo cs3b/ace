@@ -18,6 +18,7 @@ module Ace
 
           example [
             '"Fix login bug"                              # Create task with title',
+            '--title "Fix login bug"                      # Create task with title flag',
             '"Fix auth" --priority high --tags auth,security  # With priority and tags',
             '"Setup DB" --child-of q7w                    # Create as subtask',
             '"Track issue" --github-issue 276             # Link GitHub issue',
@@ -26,8 +27,9 @@ module Ace
             '"Preview only" --dry-run                     # Show what would be created'
           ]
 
-          argument :title, required: true, desc: "Task title"
+          argument :title_arg, required: false, desc: "Task title"
 
+          option :title, type: :string, desc: "Task title (alternative to positional TITLE)"
           option :priority, type: :string, aliases: %w[-p], desc: "Priority (critical, high, medium, low)"
           option :tags, type: :string, aliases: %w[-T], desc: "Tags (comma-separated)"
           option :status, type: :string, aliases: %w[-s], desc: "Initial status (draft, pending, blocked, ...)"
@@ -43,7 +45,8 @@ module Ace
           option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
           option :debug, type: :boolean, aliases: %w[-d], desc: "Show debug output"
 
-          def call(title:, **options)
+          def call(title_arg: nil, **options)
+            title = resolve_title(title_arg, options[:title])
             dry_run = options[:"dry-run"]
             priority = options[:priority]
             tags_str = options[:tags]
@@ -126,6 +129,24 @@ module Ace
           end
 
           private
+
+          def resolve_title(positional_title, flag_title)
+            positional_present = present_string?(positional_title)
+            flag_present = present_string?(flag_title)
+
+            if positional_present && flag_present
+              raise Ace::Support::Cli::Error.new("Choose either positional TITLE or --title, not both")
+            end
+
+            return positional_title if positional_present
+            return flag_title if flag_present
+
+            raise Ace::Support::Cli::Error.new("Title required: provide positional TITLE or --title")
+          end
+
+          def present_string?(value)
+            !value.nil? && !value.to_s.strip.empty?
+          end
 
           def parse_github_issue(raw_values)
             values = Array(raw_values).flatten.compact
