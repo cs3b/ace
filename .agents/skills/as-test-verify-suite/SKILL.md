@@ -1,7 +1,6 @@
 ---
 name: as-test-verify-suite
-description: Run modified-package deterministic verification plus the default fast
-  monorepo suite
+description: Verify test suite health and enforce performance budgets
 user-invocable: true
 allowed-tools:
 - Bash(ace-bundle:*)
@@ -17,10 +16,11 @@ argument-hint:
 last_modified: 2026-01-31
 source: ace-test
 assign:
+  source: wfi://test/verify-suite
   steps:
   - name: verify-test-suite
-    description: Run modified-package deterministic verification plus the default
-      fast monorepo suite
+    description: Run package test suites with profiling to verify correctness and
+      performance
     intent:
       phrases:
       - run tests
@@ -28,21 +28,6 @@ assign:
       - verify tests
       - test changes
       - check tests
-    prerequisites:
-    - name: work-on-task
-      strength: recommended
-      reason: Should have code changes to verify
-    produces:
-    - test-results
-    consumes:
-    - code-changes
-    context:
-      default:
-      reason: Test execution needs access to project environment
-    when_to_skip:
-    - No code changes that could affect tests (documentation-only)
-    - Tests were already run and profiled in a previous step
-    effort: light
     tags:
     - testing
     - verification

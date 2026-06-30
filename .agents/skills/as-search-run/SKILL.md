@@ -13,8 +13,6 @@ skill:
   kind: workflow
   execution:
     workflow: wfi://search/run
-context: fork
-model: haiku
 ---
 
 ## Arguments

@@ -10,7 +10,7 @@ allowed-tools:
 - AskUserQuestion
 - Skill
 argument-hint: "[assignment[@scope]]"
-last_modified: 2026-04-07
+last_modified: 2026-04-23
 source: ace-assign
 skill:
   kind: workflow
@@ -26,7 +26,7 @@ Hard stop rule:
 - Do not stop while waiting on a forked subtree; keep polling and resume the parent drive loop as soon as the subtree reaches a terminal state.
 - Treat `ace-assign status --assignment <id>@<root>` as the source of truth for fork completion; quiet terminal output is not enough reason to stop or declare a stall.
 - If a prior terminal or drive session ended, re-enter from assignment state and continue from the next runnable work instead of depending on the old terminal handle.
-- Before any final response, re-check pinned assignment status. If any runnable `pending` or `in_progress` work remains, continue driving.
+- Before any final response, re-check pinned assignment status. If any runnable `pending` or `active` work remains, continue driving.
 - If unrelated dirty files are generated side effects outside task scope, clean/reset them instead of auto-committing them.
 - Use progress updates for partial status only.
 - Return a final user-facing completion response only when the assignment is complete or the workflow reaches an explicit blocker/failure stop condition.

@@ -7,7 +7,7 @@ allowed-tools:
 - Read
 - Write
 - Glob
-argument-hint: "[topic] --agents Codex,gemini,codex"
+argument-hint: "[topic] --agents claude,gemini,codex"
 last_modified: 2026-01-31
 source: ace-handbook
 skill:

@@ -31,8 +31,6 @@ skill:
   kind: workflow
   execution:
     workflow: wfi://github/release-publish
-context: fork
-model: haiku
 ---
 
 ## Arguments

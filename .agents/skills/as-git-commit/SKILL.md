@@ -23,8 +23,6 @@ skill:
   kind: workflow
   execution:
     workflow: wfi://git/commit
-context: fork
-model: haiku
 ---
 
 ## Arguments

@@ -14,8 +14,6 @@ skill:
   kind: workflow
   execution:
     workflow: wfi://release/rubygems-publish
-context: fork
-model: haiku
 ---
 
 ## Arguments
