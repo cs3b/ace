@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.25.7] - 2026-06-30
+
+### Fixed
+- Hardened prompt-file root-boundary checks by canonicalizing symlinked paths and missing descendants before rejecting files outside the project.
+
 ## [0.25.6] - 2026-04-19
 
 ### Technical
