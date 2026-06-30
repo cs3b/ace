@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.29.0] - 2026-06-30
+
 ### Added
 - Added the built-in `agents` skill projection target, generating `.agents/skills/` for default handbook sync.
 
