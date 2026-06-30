@@ -1,6 +1,6 @@
 ---
 id: 8tt.t.fbg
-status: draft
+status: progress
 priority: medium
 created_at: "2026-06-30 10:12:43"
 estimate: TBD
