@@ -4,6 +4,8 @@ All notable changes to ace-handbook-integration-codex will be documented in this
 
 ## [Unreleased]
 
+## [0.3.8] - 2026-06-30
+
 ### Changed
 - Clarified Codex integration documentation so `.codex/skills/` is described as an explicit `ace-handbook sync --provider codex` output, while plain sync uses `.agents/skills/`.
 

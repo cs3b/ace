@@ -6,22 +6,34 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+- **ace-compressor v0.25.2**: Canonicalized compressor source labeling through real paths so symlinked project files and missing descendants render stable project-relative labels.
+- **ace-demo v0.25.7**: Failed YAML tape verification by default on non-zero asciinema shell exits and surfaced cast exit codes in recording reports.
+- **ace-prompt-prep v0.25.7**: Hardened prompt-file root-boundary checks by canonicalizing symlinked paths and missing descendants before rejecting out-of-project files.
 - **ace-support-config v0.17.0**: Corrected bootstrap root-file sync recording to use the sandbox root layout where generated files are created.
+- **ace-support-core v0.30.1**: Made frontmatter-free policy path matching symlink-safe for project roots and missing path descendants.
 
 ### Added
 
+- **ace-handbook v0.29.0**: Added the built-in `agents` skill projection target so default handbook sync generates `.agents/skills/`.
 - **ace-support-config v0.17.0**: Added `ace-config doctor` warnings for incomplete generated agent-engineering guidance in root agent files and `docs/tools.md`.
 - **ace-support-core v0.30.0**: Added generated project-root `docs/tools.md` bootstrap guidance with day-to-day agent engineering practices.
 - **ace-task v0.37.0**: Added `ace-task create --title` as an alternative to positional task titles, including conflict handling when both title forms are provided.
 
 ### Changed
 
+- **ace-handbook v0.29.0**: Changed plain `ace-handbook sync` and `ace-handbook status` to use the default/enabled projection set while preserving explicit provider sync such as `--provider codex`.
+- **ace-handbook-integration-codex v0.3.8**: Clarified Codex integration documentation so `.codex/skills/` is explicit provider output and plain sync uses `.agents/skills/`.
+- **ace-support-config v0.17.1**: Updated `ace-config doctor` skill projection health to ignore disabled provider projections reported by `ace-handbook status`.
 - **ace-support-core v0.30.0**: Updated generated root `AGENTS.md` and `CLAUDE.md` starter guidance with cost-bias guidance, `docs/tools.md` links, and repo-local refresh commands.
+- **ace-support-core v0.30.1**: Updated generated bootstrap guidance to describe `.agents/skills/` as the default handbook skill projection and harness-native folders as explicit provider outputs.
 
 ### Technical
 
+- **ace-demo v0.25.7**: Stabilized demo recorder fast-test expectations against the current working directory used for generated visual and cast paths.
 - **ace-retro v0.18.5**: Added regression coverage for repository-root `.ace-retros/` resolution from nested working directories while preserving explicit `--root` workspaces.
-- Released coordinated package updates: `ace-retro v0.18.5`, `ace-support-config v0.17.0`, `ace-support-core v0.30.0`, and `ace-task v0.37.0`.
+- **ace-support-nav v0.28.3**: Stabilized navigation create-from-template fast-test expectations against current working-directory output paths.
+- **ace-test-runner-e2e v0.40.2**: Stabilized fast tests with sandbox-local fake backends and fixture setup executors for path handling.
+- Released coordinated package updates: `ace-compressor v0.25.2`, `ace-demo v0.25.7`, `ace-handbook v0.29.0`, `ace-handbook-integration-codex v0.3.8`, `ace-prompt-prep v0.25.7`, `ace-retro v0.18.5`, `ace-support-config v0.17.1`, `ace-support-core v0.30.1`, `ace-support-nav v0.28.3`, `ace-task v0.37.0`, and `ace-test-runner-e2e v0.40.2`.
 
 ## [0.9.940] - 2026-04-27
 
