@@ -17,8 +17,9 @@ Before setup commands run, expect:
 
 - `.ace/` config overrides when project-local config is synced
 - Agent skill folders for installed integrations (for example `.codex/skills/`, `.claude/skills/`)
-- Optional `AGENTS.md` and `CLAUDE.md` starter guidance files with ACE provenance, customization notes, and refresh
-  commands when you also sync `ace-support-core` project-root templates
+- Optional `AGENTS.md`, `CLAUDE.md`, and `docs/tools.md` starter guidance with ACE provenance, customization notes,
+  expanded [agent engineering practices](tools.md#agent-engineering-practices), and refresh commands when you also sync
+  `ace-support-core` project-root templates
   (existing user-maintained content is preserved)
 - `Gemfile` and `Gemfile.lock` dependency updates
 
@@ -60,8 +61,8 @@ bundle install
 bundle exec ace-config sync ace-llm-providers-cli
 ```
 
-If you also want starter `AGENTS.md` and `CLAUDE.md` files in the repository root, sync the `ace-support-core`
-project-root templates separately:
+If you also want starter `AGENTS.md`, `CLAUDE.md`, and `docs/tools.md` guidance in the repository root, sync the
+`ace-support-core` project-root templates separately:
 
 ```bash
 bundle exec ace-config sync ace-support-core
@@ -74,9 +75,11 @@ binstubs, shell wrappers, or global installs, bare `ace-*` commands remain an ad
 Most ACE tools run from packaged `.ace-defaults`; sync additional package config only when you want project-local
 overrides.
 
-When you sync `ace-support-core`, ACE creates `AGENTS.md` and `CLAUDE.md` starter files that identify ACE as their
-source, note that they are safe to customize for repo-specific guidance, and point back to
-`bundle exec ace-config sync ace-support-core --force` for refreshing the starter content. Use
+When you sync `ace-support-core`, ACE creates compact `AGENTS.md` and `CLAUDE.md` starter files plus
+`docs/tools.md` for longer day-to-day guidance. The root files hold must-read agent rules, while
+[`docs/tools.md#agent-engineering-practices`](tools.md#agent-engineering-practices) holds expanded practices for
+workspace safety, debugging, push safety, daemon reuse, UI review, and agent-facing CLI output. Use
+`bundle exec ace-config sync ace-support-core --force` to refresh generated starter content and
 `bundle exec ace-handbook sync` when you want to refresh projected skill folders.
 
 ### 4. Sync handbook assets to your agent platforms

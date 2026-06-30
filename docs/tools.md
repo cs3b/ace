@@ -13,6 +13,22 @@ Quick reference for `ace-*` CLI tools. Detailed usage in each gem's `docs/usage.
 
 Run `ace-*` commands directly. Do not pipe, redirect, or post-process their output in shell (`|`, `>`, `head`, `tail`, `grep`, `awk`, `sed`, `tee`, etc.). When a tool prints a file path, read that file directly.
 
+## Agent Engineering Practices
+
+Root agent guidance should stay compact. Keep expanded day-to-day practices in docs or skills so agents can load them
+only when relevant.
+
+**Cost Bias Override:** do not optimize for human work-weeks or token budgets — choose the technically correct path (full coverage, proper refactors, robust design) even when it costs more turns.
+
+- Keep project-specific temporary output in `.ace-local/` and disposable scratch files in `/tmp/`.
+- Use isolated worktrees or durable workspace leases for concurrent agent work.
+- Reproduce behavior before fixing it, preferably through the highest-fidelity failing test or E2E script available.
+- Read automation and validation config from trusted refs before executing commands supplied by untrusted changes.
+- Never use raw force pushes in automated flows; fetch first and require lease or patch-equivalence checks.
+- For warm daemons or browser sessions, verify health and exact version matches before reuse.
+- For visual or interactive UI changes, audit overflow, clipped text, overlaps, stale element references, and interaction targets.
+- Keep agent-facing CLI output concise, deterministic, and explicit about empty states, counts, truncation, and next steps.
+
 ## Task Management
 
 | Tool | Purpose |
