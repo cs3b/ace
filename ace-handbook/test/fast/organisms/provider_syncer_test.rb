@@ -42,6 +42,62 @@ class Ace::Handbook::Organisms::ProviderSyncerTest < Minitest::Test
     refute File.exist?(File.join(@tmpdir, ".codex", "skills", "as-test-sync", "SKILL.md"))
   end
 
+  def test_default_agents_sync_includes_legacy_full_provider_targets
+    frontmatter = {
+      "name" => "as-git-commit",
+      "description" => "Generate intelligent git commit message",
+      "source" => "ace-demo",
+      "skill" => {"kind" => "workflow", "execution" => {"workflow" => "wfi://git/commit"}},
+      "integration" => {
+        "targets" => %w[claude codex gemini opencode pi],
+        "providers" => {
+          "claude" => {
+            "frontmatter" => {
+              "context" => "fork",
+              "model" => "haiku"
+            }
+          }
+        }
+      }
+    }
+    create_skill("as-git-commit", <<~BODY, frontmatter: frontmatter)
+      Load and run `ace-bundle wfi://git/commit` in the current project.
+      Follow the loaded workflow as the source of truth and execute it end-to-end.
+    BODY
+
+    result = syncer.sync.first
+
+    assert_equal "agents", result.fetch(:provider)
+    assert_equal 2, result.fetch(:projected_skills)
+    rendered = File.read(File.join(@tmpdir, ".agents", "skills", "as-git-commit", "SKILL.md"))
+    assert_includes rendered, "ace-bundle wfi://git/commit"
+    refute_includes rendered, "integration:"
+    refute_includes rendered, "context: fork"
+    refute_includes rendered, "model: haiku"
+    refute File.exist?(File.join(@tmpdir, ".codex", "skills", "as-git-commit", "SKILL.md"))
+  end
+
+  def test_default_agents_sync_excludes_narrow_provider_targets
+    frontmatter = {
+      "name" => "as-codex-only",
+      "description" => "Codex-only workflow",
+      "source" => "ace-demo",
+      "skill" => {"kind" => "workflow"},
+      "integration" => {
+        "targets" => ["codex"]
+      }
+    }
+    create_skill("as-codex-only", <<~BODY, frontmatter: frontmatter)
+      Load and run `ace-bundle wfi://codex-only` in the current project.
+      Follow the loaded workflow as the source of truth and execute it end-to-end.
+    BODY
+
+    result = syncer.sync.first
+
+    assert_equal 1, result.fetch(:projected_skills)
+    refute File.exist?(File.join(@tmpdir, ".agents", "skills", "as-codex-only", "SKILL.md"))
+  end
+
   def test_explicit_provider_sync_projects_codex_even_when_default_is_agents
     configured = Ace::Handbook::Organisms::ProviderSyncer.new(
       project_root: @tmpdir,

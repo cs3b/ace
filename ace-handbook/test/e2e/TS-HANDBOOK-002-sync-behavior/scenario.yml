@@ -10,6 +10,7 @@ tool-under-test: ace-handbook
 sandbox-layout:
   results/tc/01/: "sync provider projection evidence"
   results/tc/02/: "status unknown provider error evidence"
+  results/tc/03/: "default agents projection evidence"
 
 e2e-justification: >
   Sync and provider-validation behavior are user-visible CLI contracts that depend

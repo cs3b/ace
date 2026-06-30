@@ -90,6 +90,48 @@ class Ace::Handbook::Organisms::StatusCollectorTest < Minitest::Test
     refute_includes providers.map { |entry| entry.fetch("provider") }, "codex"
   end
 
+  def test_default_agents_status_matches_sync_for_legacy_full_provider_targets
+    create_skill(
+      "as-git-commit",
+      source: "ace-demo",
+      frontmatter: {
+        "name" => "as-git-commit",
+        "description" => "Generate intelligent git commit message",
+        "source" => "ace-demo",
+        "skill" => {"kind" => "workflow", "execution" => {"workflow" => "wfi://git/commit"}},
+        "integration" => {
+          "targets" => %w[claude codex gemini opencode pi]
+        }
+      }
+    )
+    create_skill(
+      "as-codex-only",
+      source: "ace-demo",
+      frontmatter: {
+        "name" => "as-codex-only",
+        "description" => "Codex-only workflow",
+        "source" => "ace-demo",
+        "skill" => {"kind" => "workflow"},
+        "integration" => {
+          "targets" => ["codex"]
+        }
+      }
+    )
+
+    Ace::Handbook::Organisms::ProviderSyncer.new(project_root: @tmpdir, config: {}).sync
+
+    snapshot = collector.collect
+    provider = snapshot.fetch("providers").first
+
+    assert_equal "agents", provider.fetch("provider")
+    assert_equal 4, provider.fetch("expected")
+    assert_equal 4, provider.fetch("installed")
+    assert_equal 4, provider.fetch("in_sync")
+    assert_equal 0, provider.fetch("extra")
+    assert File.exist?(File.join(@tmpdir, ".agents", "skills", "as-git-commit", "SKILL.md"))
+    refute File.exist?(File.join(@tmpdir, ".agents", "skills", "as-codex-only", "SKILL.md"))
+  end
+
   def test_collect_explicit_provider_reports_codex_when_not_default
     snapshot = collector.collect(provider: "codex")
 
@@ -151,17 +193,24 @@ class Ace::Handbook::Organisms::StatusCollectorTest < Minitest::Test
     YML
   end
 
-  def create_skill(name, source:, body: "Load and run `ace-bundle wfi://test` in the current project, then follow the loaded workflow as the source of truth and execute it end-to-end instead of only summarizing it.\n")
+  def create_skill(
+    name,
+    source:,
+    body: "Load and run `ace-bundle wfi://test` in the current project, then follow the loaded workflow " \
+      "as the source of truth and execute it end-to-end instead of only summarizing it.\n",
+    frontmatter: nil
+  )
     skill_dir = File.join(@tmpdir, source, "handbook", "skills", name)
     FileUtils.mkdir_p(skill_dir)
+    data = frontmatter || {
+      "name" => name,
+      "description" => "Test skill",
+      "source" => source,
+      "skill" => {"kind" => "workflow"}
+    }
     File.write(File.join(skill_dir, "SKILL.md"), <<~MD)
       ---
-      name: #{name}
-      description: Test skill
-      source: #{source}
-      skill:
-        kind: workflow
-      ---
+      #{YAML.dump(data).sub(/\A---\n/, "")}---
 
       #{body}
     MD

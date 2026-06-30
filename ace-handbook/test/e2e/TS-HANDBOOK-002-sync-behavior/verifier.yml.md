@@ -8,6 +8,7 @@ bundle:
   files:
     - ./TC-001-sync-provider-projection.verify.md
     - ./TC-002-status-unknown-provider-error.verify.md
+    - ./TC-003-default-agents-projection.verify.md
 ---
 
 # E2E Verification: ace-handbook sync behavior
@@ -40,4 +41,4 @@ For each goal output:
 - **Category**: <one of the categories above when FAIL>
 - **Evidence**: <specific file/content citations>
 
-Final line: **Results: X/2 passed**
+Final line: **Results: X/3 passed**

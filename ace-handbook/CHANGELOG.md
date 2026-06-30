@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Treated skills targeting the legacy full provider set (`claude`, `codex`, `gemini`, `opencode`, `pi`) as compatible
+  with the default `agents` projection, so installed common ACE workflow skills such as `as-git-commit` are written to
+  `.agents/skills/` by plain `ace-handbook sync`.
+
 ## [0.29.0] - 2026-06-30
 
 ### Added

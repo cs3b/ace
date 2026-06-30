@@ -7,12 +7,19 @@ module Ace
     module Molecules
       class SkillProjection
         class << self
+          LEGACY_PROVIDER_TARGETS = %w[claude codex gemini opencode pi].freeze
+
           def projection_targets(frontmatter, registry:)
             integration = frontmatter.fetch("integration", {})
             targets = integration["targets"]
             return registry.providers if targets.nil? || targets.empty?
 
-            Array(targets).map(&:to_s).select { |provider| registry.known?(provider) }
+            known_targets = Array(targets).map(&:to_s).select { |provider| registry.known?(provider) }
+            if registry.known?("agents") && legacy_provider_target_set?(known_targets)
+              known_targets = known_targets + ["agents"]
+            end
+
+            known_targets.uniq
           end
 
           def projected_frontmatter(frontmatter, provider:)
@@ -31,6 +38,10 @@ module Ace
           end
 
           private
+
+          def legacy_provider_target_set?(targets)
+            targets.sort == LEGACY_PROVIDER_TARGETS.sort
+          end
 
           def deep_copy(data)
             Marshal.load(Marshal.dump(data))
