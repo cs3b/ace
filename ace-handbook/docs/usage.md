@@ -121,14 +121,14 @@ ace-demo record ace-handbook/docs/demo/ace-handbook-getting-started.tape --outpu
 
 ## Sync completeness and rerun guidance
 
-`ace-handbook sync` prints provider projection counts and inventory source counts. If it reports only one source
-(for example `ace-handbook`), you may have synced before installing the full ACE stack. After installing additional
-packages, rerun:
+`ace-handbook sync` prints projection counts and inventory source counts. By default it writes `.agents/skills/`.
+Use `--provider` when a harness needs its native tree. If sync reports only one source (for example `ace-handbook`),
+you may have synced before installing the full ACE stack. After installing additional packages, rerun:
 
 ```bash
 ace-handbook sync
-ace-handbook sync --provider pi
-ace-handbook status --provider pi --format json
+ace-handbook sync --provider codex
+ace-handbook status --provider codex --format json
 ```
 
 Unknown provider IDs are a public error contract and should fail with a non-zero exit plus an `Unknown provider: ...`

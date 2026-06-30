@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Added the built-in `agents` skill projection target, generating `.agents/skills/` for default handbook sync.
+
+### Changed
+- Changed plain `ace-handbook sync` and `ace-handbook status` to use the default/enabled projection set, with `agents` as the default when no providers are configured.
+- Allowed explicit provider sync, such as `ace-handbook sync --provider codex`, even when the provider is not part of the default enabled set unless it is explicitly disabled.
+
+### Technical
+- Added regression coverage for default `.agents/skills` projection, explicit Codex projection, disabled-provider blocking, and default status filtering.
+
 ## [0.28.1] - 2026-04-23
 
 ### Changed

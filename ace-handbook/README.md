@@ -34,9 +34,9 @@
 
 **Coordinate larger handbook deliveries** - use `/as-handbook-update-docs` to plan, execute, and synthesize multi-step documentation changes across package handbook assets.
 
-**Integrate with resource discovery and context loading** - pair with [ace-nav](../ace-support-nav) for workflow and resource discovery, [ace-bundle](../ace-bundle) for loading complete workflow instructions, and provider integrations (`ace-handbook-integration-*`) that project canonical handbook skills into provider-native folders.
+**Integrate with resource discovery and context loading** - pair with [ace-nav](../ace-support-nav) for workflow and resource discovery, [ace-bundle](../ace-bundle) for loading complete workflow instructions, and provider integrations (`ace-handbook-integration-*`) that can project canonical handbook skills into harness-native folders on request.
 
-**Sync and inspect provider integrations** - run `ace-handbook sync` to project canonical skills into provider-native folders and `ace-handbook status` to check integration health across all configured providers.
+**Sync and inspect skill projections** - run `ace-handbook sync` to project canonical skills into `.agents/skills/` by default, or use `ace-handbook sync --provider PROVIDER` for harness-native folders such as `.codex/skills/`.
 
 **Extend handbook content in normal projects** - put project-specific workflows, guides, cookbooks, templates, and skills under `.ace-handbook/` and discover them with protocol URLs (`wfi://`, `guide://`, `cookbook://`, `tmpl://`, `skill://`). See [Usage Guide](docs/usage.md) for path conventions.
 

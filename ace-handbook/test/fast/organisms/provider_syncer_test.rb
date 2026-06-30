@@ -7,6 +7,7 @@ class Ace::Handbook::Organisms::ProviderSyncerTest < Minitest::Test
 
   def setup
     @tmpdir = Dir.mktmpdir
+    create_handbook_provider_manifest("agents", ".agents/skills")
     create_provider_manifest("pi", ".pi/skills")
     create_provider_manifest("claude", ".claude/skills")
     create_provider_manifest("codex", ".codex/skills")
@@ -31,6 +32,38 @@ class Ace::Handbook::Organisms::ProviderSyncerTest < Minitest::Test
     refute File.symlink?(output_dir)
     assert File.directory?(output_dir)
     assert File.exist?(File.join(output_dir, "as-test-sync", "SKILL.md"))
+  end
+
+  def test_default_sync_projects_to_agents_only
+    results = syncer.sync
+
+    assert_equal ["agents"], results.map { |entry| entry[:provider] }
+    assert File.exist?(File.join(@tmpdir, ".agents", "skills", "as-test-sync", "SKILL.md"))
+    refute File.exist?(File.join(@tmpdir, ".codex", "skills", "as-test-sync", "SKILL.md"))
+  end
+
+  def test_explicit_provider_sync_projects_codex_even_when_default_is_agents
+    configured = Ace::Handbook::Organisms::ProviderSyncer.new(
+      project_root: @tmpdir,
+      config: {"sync" => {"providers" => {"enabled" => ["agents"], "disabled" => []}}}
+    )
+
+    results = configured.sync(provider: "codex")
+
+    assert_equal ["codex"], results.map { |entry| entry[:provider] }
+    assert File.exist?(File.join(@tmpdir, ".codex", "skills", "as-test-sync", "SKILL.md"))
+    refute File.exist?(File.join(@tmpdir, ".agents", "skills", "as-test-sync", "SKILL.md"))
+  end
+
+  def test_explicit_provider_sync_blocks_disabled_provider
+    configured = Ace::Handbook::Organisms::ProviderSyncer.new(
+      project_root: @tmpdir,
+      config: {"sync" => {"providers" => {"enabled" => ["agents"], "disabled" => ["codex"]}}}
+    )
+
+    error = assert_raises(ArgumentError) { configured.sync(provider: "codex") }
+
+    assert_includes error.message, "Provider 'codex' is disabled"
   end
 
   def test_sync_applies_provider_frontmatter_overrides_and_removes_integration_block
@@ -288,6 +321,15 @@ class Ace::Handbook::Organisms::ProviderSyncerTest < Minitest::Test
 
   def create_provider_manifest(provider, output_dir)
     dir = File.join(@tmpdir, "ace-handbook-integration-#{provider}", ".ace-defaults", "handbook", "providers")
+    FileUtils.mkdir_p(dir)
+    File.write(File.join(dir, "#{provider}.yml"), <<~YML)
+      provider: #{provider}
+      output_dir: #{output_dir}
+    YML
+  end
+
+  def create_handbook_provider_manifest(provider, output_dir)
+    dir = File.join(@tmpdir, "ace-handbook", ".ace-defaults", "handbook", "providers")
     FileUtils.mkdir_p(dir)
     File.write(File.join(dir, "#{provider}.yml"), <<~YML)
       provider: #{provider}

@@ -23,10 +23,17 @@ gem install ace-handbook
 
 ```
 
-After install, run sync once to project skills to your configured providers:
+After install, run sync once to project generated skills to `.agents/skills/`:
 
 ```bash
 ace-handbook sync
+
+```
+
+Use an explicit provider only when a harness needs its native projection:
+
+```bash
+ace-handbook sync --provider codex
 
 ```
 

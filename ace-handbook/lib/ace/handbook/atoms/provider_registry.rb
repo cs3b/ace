@@ -7,13 +7,10 @@ module Ace
   module Handbook
     module Atoms
       class ProviderRegistry
-        LOCAL_MANIFEST_GLOB = File.join(
-          "ace-handbook-integration-*",
-          ".ace-defaults",
-          "handbook",
-          "providers",
-          "*.yml"
-        ).freeze
+        LOCAL_MANIFEST_GLOBS = [
+          File.join("ace-handbook", ".ace-defaults", "handbook", "providers", "*.yml"),
+          File.join("ace-handbook-integration-*", ".ace-defaults", "handbook", "providers", "*.yml")
+        ].freeze
 
         attr_reader :project_root
 
@@ -54,12 +51,14 @@ module Ace
         private
 
         def local_manifest_paths
-          Dir.glob(File.join(project_root, LOCAL_MANIFEST_GLOB)).sort
+          LOCAL_MANIFEST_GLOBS.flat_map do |glob|
+            Dir.glob(File.join(project_root, glob))
+          end.sort
         end
 
         def installed_manifest_paths
           Gem::Specification.find_all.filter_map do |spec|
-            next unless spec.name.start_with?("ace-handbook-integration-")
+            next unless spec.name == "ace-handbook" || spec.name.start_with?("ace-handbook-integration-")
 
             Dir.glob(File.join(spec.full_gem_path, ".ace-defaults", "handbook", "providers", "*.yml"))
           end.flatten.sort

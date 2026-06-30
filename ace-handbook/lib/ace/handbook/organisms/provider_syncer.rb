@@ -73,30 +73,45 @@ module Ace
         end
 
         def providers_to_sync(requested_provider)
-          providers = if requested_provider
-            [requested_provider.to_s]
-          else
-            registry.providers
+          if requested_provider
+            provider = requested_provider.to_s
+            raise ArgumentError, "Unknown provider: #{provider}" unless registry.known?(provider)
+            if provider_disabled?(provider)
+              raise ArgumentError, "Provider '#{provider}' is disabled in handbook sync config"
+            end
+
+            return [provider]
           end
 
+          providers = default_sync_providers
           unknown = providers.reject { |provider| registry.known?(provider) }
           raise ArgumentError, "Unknown provider: #{unknown.join(", ")}" if unknown.any?
 
-          enabled = providers.select { |provider| provider_enabled?(provider) }
-          return enabled if requested_provider.nil? || enabled.any?
-
-          raise ArgumentError, "Provider '#{requested_provider}' is disabled in handbook sync config"
+          providers.reject { |provider| provider_disabled?(provider) }
         end
 
-        def provider_enabled?(provider)
+        def default_sync_providers
+          enabled = enabled_providers
+          return enabled unless enabled.empty?
+
+          return ["agents"] if registry.known?("agents") && !provider_disabled?("agents")
+
+          registry.providers
+        end
+
+        def enabled_providers
           sync_config = config.fetch("sync", {})
           providers = sync_config.fetch("providers", {})
-          enabled = Array(providers["enabled"]).map(&:to_s)
+
+          Array(providers["enabled"]).map(&:to_s)
+        end
+
+        def provider_disabled?(provider)
+          sync_config = config.fetch("sync", {})
+          providers = sync_config.fetch("providers", {})
           disabled = Array(providers["disabled"]).map(&:to_s)
 
-          return enabled.include?(provider) unless enabled.empty?
-
-          !disabled.include?(provider)
+          disabled.include?(provider.to_s)
         end
 
         def prepare_output_dir(output_dir)

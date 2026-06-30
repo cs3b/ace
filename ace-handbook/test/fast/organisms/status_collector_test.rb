@@ -5,7 +5,9 @@ require "test_helper"
 class Ace::Handbook::Organisms::StatusCollectorTest < Minitest::Test
   def setup
     @tmpdir = Dir.mktmpdir
+    create_handbook_provider_manifest("agents", ".agents/skills")
     create_provider_manifest("pi", ".pi/skills")
+    create_provider_manifest("codex", ".codex/skills")
     create_skill_source_registration("ace-demo", "ace-demo/handbook/skills")
     create_skill_source_registration("ace-task", "ace-task/handbook/skills")
     create_skill("as-sync", source: "ace-demo")
@@ -77,6 +79,27 @@ class Ace::Handbook::Organisms::StatusCollectorTest < Minitest::Test
     assert_equal 0, provider.fetch("extra")
   end
 
+  def test_collect_without_provider_reports_default_agents_projection_only
+    install_skill("agents", "as-sync")
+
+    snapshot = collector.collect
+    providers = snapshot.fetch("providers")
+
+    assert_equal ["agents"], providers.map { |entry| entry.fetch("provider") }
+    assert_equal ".agents/skills", providers.first.fetch("relative_output_dir")
+    refute_includes providers.map { |entry| entry.fetch("provider") }, "codex"
+  end
+
+  def test_collect_explicit_provider_reports_codex_when_not_default
+    snapshot = collector.collect(provider: "codex")
+
+    provider = snapshot.fetch("providers").first
+
+    assert_equal "codex", provider.fetch("provider")
+    assert_equal false, provider.fetch("enabled")
+    assert_equal ".codex/skills", provider.fetch("relative_output_dir")
+  end
+
   def test_to_table_includes_canonical_summary_and_provider_metrics
     install_skill("pi", "as-sync")
 
@@ -101,6 +124,15 @@ class Ace::Handbook::Organisms::StatusCollectorTest < Minitest::Test
 
   def create_provider_manifest(provider, output_dir)
     dir = File.join(@tmpdir, "ace-handbook-integration-#{provider}", ".ace-defaults", "handbook", "providers")
+    FileUtils.mkdir_p(dir)
+    File.write(File.join(dir, "#{provider}.yml"), <<~YML)
+      provider: #{provider}
+      output_dir: #{output_dir}
+    YML
+  end
+
+  def create_handbook_provider_manifest(provider, output_dir)
+    dir = File.join(@tmpdir, "ace-handbook", ".ace-defaults", "handbook", "providers")
     FileUtils.mkdir_p(dir)
     File.write(File.join(dir, "#{provider}.yml"), <<~YML)
       provider: #{provider}

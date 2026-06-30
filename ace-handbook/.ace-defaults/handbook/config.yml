@@ -1,4 +1,5 @@
 sync:
   providers:
-    enabled: []
+    enabled:
+      - agents
     disabled: []

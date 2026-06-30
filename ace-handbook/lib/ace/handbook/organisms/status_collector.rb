@@ -150,22 +150,49 @@ module Ace
         end
 
         def selected_providers(provider)
-          selected = provider ? [provider.to_s] : registry.providers
+          selected = if provider
+            [provider.to_s]
+          else
+            default_status_providers
+          end
           unknown = selected.reject { |provider_id| registry.known?(provider_id) }
           raise ArgumentError, "Unknown provider: #{unknown.join(", ")}" if unknown.any?
 
           selected
         end
 
-        def provider_enabled?(provider)
+        def default_status_providers
+          enabled = enabled_providers
+          return enabled unless enabled.empty?
+
+          return ["agents"] if registry.known?("agents") && !provider_disabled?("agents")
+
+          registry.providers.reject { |provider| provider_disabled?(provider) }
+        end
+
+        def enabled_providers
           sync_config = config.fetch("sync", {})
           providers = sync_config.fetch("providers", {})
-          enabled = Array(providers["enabled"]).map(&:to_s)
+
+          Array(providers["enabled"]).map(&:to_s)
+        end
+
+        def provider_disabled?(provider)
+          sync_config = config.fetch("sync", {})
+          providers = sync_config.fetch("providers", {})
           disabled = Array(providers["disabled"]).map(&:to_s)
+
+          disabled.include?(provider.to_s)
+        end
+
+        def provider_enabled?(provider)
+          enabled = enabled_providers
 
           return enabled.include?(provider) unless enabled.empty?
 
-          !disabled.include?(provider)
+          return provider.to_s == "agents" if registry.known?("agents")
+
+          !provider_disabled?(provider)
         end
 
         def path_type(path)
