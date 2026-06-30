@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.941] - 2026-06-30
+
 ### Fixed
 
 - **ace-compressor v0.25.2**: Canonicalized compressor source labeling through real paths so symlinked project files and missing descendants render stable project-relative labels.
