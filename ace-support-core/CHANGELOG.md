@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.30.0] - 2026-06-30
+
 ### Added
 - Added generated `docs/tools.md` project-root bootstrap guidance with an `Agent Engineering Practices` section for expanded day-to-day agent conventions.
 

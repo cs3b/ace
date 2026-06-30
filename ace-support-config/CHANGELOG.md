@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.0] - 2026-06-30
+
 ### Added
 - Added `ace-config doctor` warnings for projects whose root agent guidance or `docs/tools.md` are missing generated agent-engineering guidance markers.
 

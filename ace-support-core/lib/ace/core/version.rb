@@ -2,6 +2,6 @@
 
 module Ace
   module Core
-    VERSION = '0.29.11'
+    VERSION = '0.30.0'
   end
 end

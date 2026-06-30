@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+
+- **ace-support-config v0.17.0**: Corrected bootstrap root-file sync recording to use the sandbox root layout where generated files are created.
+
+### Added
+
+- **ace-support-config v0.17.0**: Added `ace-config doctor` warnings for incomplete generated agent-engineering guidance in root agent files and `docs/tools.md`.
+- **ace-support-core v0.30.0**: Added generated project-root `docs/tools.md` bootstrap guidance with day-to-day agent engineering practices.
+- **ace-task v0.37.0**: Added `ace-task create --title` as an alternative to positional task titles, including conflict handling when both title forms are provided.
+
+### Changed
+
+- **ace-support-core v0.30.0**: Updated generated root `AGENTS.md` and `CLAUDE.md` starter guidance with cost-bias guidance, `docs/tools.md` links, and repo-local refresh commands.
+
+### Technical
+
+- **ace-retro v0.18.5**: Added regression coverage for repository-root `.ace-retros/` resolution from nested working directories while preserving explicit `--root` workspaces.
+- Released coordinated package updates: `ace-retro v0.18.5`, `ace-support-config v0.17.0`, `ace-support-core v0.30.0`, and `ace-task v0.37.0`.
+
 ## [0.9.940] - 2026-04-27
 
 

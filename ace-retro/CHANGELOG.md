@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.5] - 2026-06-30
+
 ### Technical
 - Added regression coverage ensuring default `ace-retro` operations use the repository-root `.ace-retros/`
   workspace from nested directories while preserving explicit `--root` overrides.
