@@ -139,7 +139,7 @@ This document provides actionable decisions from Architecture Decision Records (
 
 ### Canonical Skill Platform and Projection Model
 **Decision**: Package-owned canonical `handbook/skills/` entries are the source of truth; provider-native skill trees are generated projections with provider-specific frontmatter only.
-**Impact**: Put skill contracts, workflow bindings, and schema-valid metadata in canonical package skills. Treat `.claude/skills`, `.codex/skills`, `.gemini/skills`, `.opencode/skills`, and `.pi/skills` as sync outputs, not authored content.
+**Impact**: Put skill contracts, workflow bindings, and schema-valid metadata in canonical package skills. Treat `.agents/skills` as the default generated projection and `.claude/skills`, `.codex/skills`, `.gemini/skills`, `.opencode/skills`, and `.pi/skills` as explicit provider sync outputs, not authored content.
 **Details**: [ADR-027](decisions/ADR-027-canonical-skill-platform-and-projection-model.md)
 
 ### Assignment Fork Execution and Recovery

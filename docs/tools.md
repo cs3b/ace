@@ -20,6 +20,9 @@ only when relevant.
 
 **Cost Bias Override:** do not optimize for human work-weeks or token budgets — choose the technically correct path (full coverage, proper refactors, robust design) even when it costs more turns.
 
+- `ace-handbook sync` writes generated skills to `.agents/skills/` by default.
+- Use explicit provider sync, such as `ace-handbook sync --provider codex`, only when a harness needs its native folder.
+- Do not hand-edit generated skill projections; edit canonical package `handbook/skills/` or project `.ace-handbook/skills/`.
 - Keep project-specific temporary output in `.ace-local/` and disposable scratch files in `/tmp/`.
 - Use isolated worktrees or durable workspace leases for concurrent agent work.
 - Reproduce behavior before fixing it, preferably through the highest-fidelity failing test or E2E script available.

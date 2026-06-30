@@ -15,11 +15,11 @@
 > Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
 
 [ace-handbook](../ace-handbook)
-`ace-handbook-integration-codex` maps canonical ACE handbook skills into Codex-compatible projection assets so that skill invocations from Codex CLI resolve correctly while keeping semantics unchanged from the definitions in [ace-handbook](../ace-handbook).
+`ace-handbook-integration-codex` maps canonical ACE handbook skills into Codex-native projection assets when you explicitly run `ace-handbook sync --provider codex`, while keeping semantics unchanged from the definitions in [ace-handbook](../ace-handbook). Plain `ace-handbook sync` uses the neutral `.agents/skills/` projection.
 
 ## Use Cases
 
-**Run handbook workflows in Codex contexts** - keep the same behavior while using Codex-native execution entrypoints, so agents running under Codex CLI get the same skill intent as any other provider.
+**Run handbook workflows in Codex-native contexts** - keep the same behavior while using Codex-native execution entrypoints when a project explicitly needs `.codex/skills/`.
 
 **Avoid duplication across providers** - update canonical skill definitions once in [ace-handbook](../ace-handbook) and generate Codex-specific projections automatically from shared contracts.
 

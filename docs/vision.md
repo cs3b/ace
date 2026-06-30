@@ -90,10 +90,11 @@ ace-git-commit/
 │   └── git-commit.system.md          # project commit style
 ```
 
-🤖 **Agent integration** - canonical skills are authored once, then projected into provider-native folders:
+🤖 **Agent integration** - canonical skills are authored once, then projected into generated folders:
 
 - Canonical source lives in package `handbook/skills/`
-- Provider packages generate `.claude/skills/`, `.codex/skills/`, `.gemini/skills/`, `.opencode/skills/`, and `.pi/skills/`
+- Default sync generates `.agents/skills/`
+- Explicit provider sync can generate harness-native folders such as `.claude/skills/`, `.codex/skills/`, `.gemini/skills/`, `.opencode/skills/`, and `.pi/skills/`
 - Provider-specific frontmatter overrides live inside the canonical skill under `integration.providers.<provider>`
 
 This is the simplest ACE tool. The pattern scales to code review, task management, and documentation workflows.

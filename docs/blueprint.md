@@ -25,18 +25,18 @@ ace-*/          # Ruby gems following ATOM architecture (25+ production gems)
 .ace-task/  # Task and release management
 .claude/        # Claude Code integration (commands and agent symlinks)
 .ace/           # Configuration cascade root
-.agents/        # Canonical project-specific skills when a project defines local agent skills
-.codex/skills/  # Codex-projected skills when the Codex integration is synced
-.claude/skills/ # Claude-projected skills when the Claude integration is synced
+.agents/skills/ # Default generated ACE skill projection
+.codex/skills/  # Explicit Codex projection when synced with --provider codex
+.claude/skills/ # Explicit Claude projection when synced with --provider claude
 .ace-bin/       # Shared scripts for non-package CLI helpers
 docs/           # System documentation and ADRs
 .github/        # CI/CD workflows
 _legacy/        # Archived content (dev-handbook, dev-tools)
 ```
 
-Projects that use provider-projected skill folders should treat `.agents/skills/` as the canonical project-specific
-source and refresh provider-native projections with `ace-handbook sync`. Projects that do not use projected skills do
-not need to create `.agents/skills/`, `.codex/skills/`, or `.claude/skills/`.
+Package `handbook/skills/` and project `.ace-handbook/skills/` are authored skill sources. Generated projections live
+under `.agents/skills/` by default; harness-native folders such as `.codex/skills/` and `.claude/skills/` are generated
+only through explicit provider sync.
 
 ## Read-Only Paths
 

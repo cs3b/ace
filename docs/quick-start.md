@@ -8,7 +8,7 @@ Ruby 3.2+ required.
 
 Choose one setup path:
 
-- **Minimal (first-use default):** enough for task specs, context loading, provider access, and one integration.
+- **Minimal (first-use default):** enough for task specs, context loading, provider access, and the default `.agents/skills/` projection.
 - **Full-stack (recommended for this walkthrough):** includes assign/overseer/review/tmux/test/docs/retro/demo/git workflows.
 
 ### What this will create
@@ -16,7 +16,8 @@ Choose one setup path:
 Before setup commands run, expect:
 
 - `.ace/` config overrides when project-local config is synced
-- Agent skill folders for installed integrations (for example `.codex/skills/`, `.claude/skills/`)
+- Default generated agent skills in `.agents/skills/`; harness-specific projections such as `.codex/skills/` or
+  `.claude/skills/` only when explicitly synced
 - Optional `AGENTS.md`, `CLAUDE.md`, and `docs/tools.md` starter guidance with ACE provenance, customization notes,
   expanded [agent engineering practices](tools.md#agent-engineering-practices), and refresh commands when you also sync
   `ace-support-core` project-root templates
@@ -30,8 +31,7 @@ Minimal path:
 ```bash
 bundle add --group "development, test" \
   ace-task ace-bundle ace-handbook ace-llm ace-llm-providers-cli \
-  ace-handbook-integration-codex
-# Optional integrations: ace-handbook-integration-claude, ace-handbook-integration-gemini, ace-handbook-integration-opencode, ace-handbook-integration-pi
+# Optional native projections: ace-handbook-integration-codex, ace-handbook-integration-claude, ace-handbook-integration-gemini, ace-handbook-integration-opencode, ace-handbook-integration-pi
 ```
 
 Full-stack path:
@@ -80,13 +80,16 @@ When you sync `ace-support-core`, ACE creates compact `AGENTS.md` and `CLAUDE.md
 [`docs/tools.md#agent-engineering-practices`](tools.md#agent-engineering-practices) holds expanded practices for
 workspace safety, debugging, push safety, daemon reuse, UI review, and agent-facing CLI output. Use
 `bundle exec ace-config sync ace-support-core --force` to refresh generated starter content and
-`bundle exec ace-handbook sync` when you want to refresh projected skill folders.
+`bundle exec ace-handbook sync` when you want to refresh the default `.agents/skills/` projection.
 
-### 4. Sync handbook assets to your agent platforms
+### 4. Sync handbook assets
 
 ```bash
 bundle exec ace-handbook sync
 ```
+
+By default this writes generated skills to `.agents/skills/`. To generate a harness-specific projection, run an
+explicit provider sync, for example `bundle exec ace-handbook sync --provider codex` for `.codex/skills/`.
 
 ### 5. Verify setup, providers, and project context
 
@@ -413,7 +416,9 @@ EOF
 
 ### Agent platform skills
 
-Skills project to agent-specific directories — `.claude/skills/`, `.codex/skills/`, `.gemini/skills/`. The `ace-handbook-integration-*` gems handle this projection. Run `ace-handbook sync` to project skills to all configured agent platforms.
+Skills project to `.agents/skills/` by default. Harness-specific directories such as `.claude/skills/`,
+`.codex/skills/`, and `.gemini/skills/` are explicit provider projections handled by `ace-handbook-integration-*`
+gems. Run `ace-handbook sync --provider codex` or another provider id only when that harness needs its native tree.
 
 ## Next steps
 

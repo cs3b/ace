@@ -116,7 +116,7 @@ Each gem includes `handbook/` with `agents/`, `guides/`, `templates/`, and `work
 ## AI Integration
 
 * **Skills**: package `handbook/skills/` files are canonical source of truth for provider-agent integrations and `ace-assign` skill discovery
-* **Provider projections**: provider packages project canonical skills directly into provider-native folders (`.claude/skills/`, `.codex/skills/`, `.gemini/skills/`, `.opencode/skills/`, `.pi/skills/`)
+* **Provider projections**: default sync projects canonical skills into `.agents/skills/`; explicit provider sync can generate harness-native folders (`.claude/skills/`, `.codex/skills/`, `.gemini/skills/`, `.opencode/skills/`, `.pi/skills/`)
 * **Provider overrides**: provider-specific frontmatter in `integration.providers.<provider>.frontmatter` can carry execution hints such as Claude `model: role:e2e-reporter` and Codex `model: role:assign-executor`
 * **Integration runtime**: `ace-handbook` owns shared provider discovery, projection, sync, and status behavior used by provider packages
 * **Agents**: `.claude/agents/` provides agent access via frontmatter-defined capabilities

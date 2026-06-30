@@ -129,8 +129,8 @@ General documentation should point readers to workflows via `ace-bundle wfi://..
 `ace-*` commands. Skills are reserved for provider-agent integrations and `ace-assign`
 discovery/dispatch.
 
-Provider packages project canonical skills from `handbook/skills/` into provider-native folders
-such as `.claude/skills/` and `.codex/skills/`.
+Default handbook sync projects canonical skills from `handbook/skills/` into `.agents/skills/`. Provider packages can
+also project explicit harness-native folders such as `.claude/skills/` and `.codex/skills/`.
 
 ## CLI Commands
 
