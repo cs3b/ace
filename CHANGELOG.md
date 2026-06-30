@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+
+- **ace-handbook v0.29.1**: Treated skills targeting the legacy full provider set (`claude`, `codex`, `gemini`,
+  `opencode`, `pi`) as compatible with the default `agents` projection, so common ACE workflow skills such as
+  `as-git-commit` are written to `.agents/skills/` by plain `ace-handbook sync`.
+
 ## [0.9.941] - 2026-06-30
 
 ### Fixed
