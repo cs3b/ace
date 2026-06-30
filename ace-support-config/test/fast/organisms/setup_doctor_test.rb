@@ -362,6 +362,75 @@ module Ace
           end
         end
 
+        def test_agent_engineering_guidance_warns_when_docs_are_missing
+          with_temp_config(
+            ".git" => {},
+            ".gitignore" => ".ace-local/\n",
+            "AGENTS.md" => "# Repository Guidelines\n\nCost Bias Override\n"
+          ) do
+            doctor = Organisms::SetupDoctor.new
+
+            check = doctor.send(:check_agent_engineering_guidance)
+
+            assert_equal "warn", check[:status]
+            assert_includes check[:details], "docs/tools.md is missing"
+            assert_includes check[:next_action], "ace-config sync ace-support-core --force"
+          end
+        end
+
+        def test_agent_engineering_guidance_warns_when_root_marker_is_missing
+          with_temp_config(
+            ".git" => {},
+            ".gitignore" => ".ace-local/\n",
+            "AGENTS.md" => "# Repository Guidelines\n",
+            "docs" => {"tools.md" => "## Agent Engineering Practices\n"}
+          ) do
+            doctor = Organisms::SetupDoctor.new
+
+            check = doctor.send(:check_agent_engineering_guidance)
+
+            assert_equal "warn", check[:status]
+            assert_includes check[:details], "AGENTS.md lacks Cost Bias Override"
+          end
+        end
+
+        def test_agent_engineering_guidance_warns_when_root_link_anchor_is_missing
+          with_temp_config(
+            ".git" => {},
+            ".gitignore" => ".ace-local/\n",
+            "AGENTS.md" => "# Repository Guidelines\n\nCost Bias Override\nSee docs/tools.md#agent-engineering-practices\n",
+            "docs" => {"tools.md" => "# Tools\n"}
+          ) do
+            doctor = Organisms::SetupDoctor.new
+
+            check = doctor.send(:check_agent_engineering_guidance)
+
+            assert_equal "warn", check[:status]
+            assert_includes check[:details], "docs/tools.md lacks ## Agent Engineering Practices"
+            assert_includes(
+              check[:details],
+              "root guidance links docs/tools.md#agent-engineering-practices but the anchor target is absent"
+            )
+          end
+        end
+
+        def test_agent_engineering_guidance_passes_when_markers_are_present
+          with_temp_config(
+            ".git" => {},
+            ".gitignore" => ".ace-local/\n",
+            "AGENTS.md" => "# Repository Guidelines\n\nCost Bias Override\nSee docs/tools.md#agent-engineering-practices\n",
+            "CLAUDE.md" => "# CLAUDE.md\n\nCost Bias Override\nSee docs/tools.md#agent-engineering-practices\n",
+            "docs" => {"tools.md" => "## Agent Engineering Practices\n"}
+          ) do
+            doctor = Organisms::SetupDoctor.new
+
+            check = doctor.send(:check_agent_engineering_guidance)
+
+            assert_equal "pass", check[:status]
+            assert_includes check[:message], "Agent engineering guidance is present"
+          end
+        end
+
         def test_streaming_output_prints_fast_checks_before_provider_progress
           with_temp_config(
             ".git" => {},

@@ -28,6 +28,12 @@ module Ace
           CORE_ROLES = %w[commit doctor].freeze
           UTILITY_ROLE_GROUPS = %w[_utility _utility-lite].freeze
           ROLE_REFERENCE_PATTERN = /\brole:([A-Za-z0-9_-]+)\b/
+          COST_BIAS_MARKER = "Cost Bias Override"
+          AGENT_ENGINEERING_ANCHOR = "docs/tools.md#agent-engineering-practices"
+          AGENT_ENGINEERING_HEADING = "## Agent Engineering Practices"
+          AGENT_ENGINEERING_NEXT_ACTION = "Run ace-config sync ace-support-core --force in generated projects, " \
+            "or manually add the Cost Bias Override line and docs/tools.md Agent Engineering Practices section " \
+            "in customized projects."
 
           def run(json: false, no_probe: false, probe: false, hygiene: false, verbose: false, colors: true, quiet: false, io: $stdout)
             started_at = Process.clock_gettime(Process::CLOCK_MONOTONIC)
@@ -43,6 +49,7 @@ module Ace
             append_check(checks, discovery_check, stream: stream, io: io)
 
             append_check(checks, check_config_defaults, stream: stream, io: io)
+            append_check(checks, check_agent_engineering_guidance, stream: stream, io: io)
 
             provider_context = load_provider_context if package_check[:status] != BLOCKER
 
@@ -170,6 +177,68 @@ module Ace
               status: INFO,
               message: "Config defaults comparison skipped: #{e.message}",
               next_action: "Run ace-config diff --one-line to inspect config drift."
+            )
+          end
+
+          def check_agent_engineering_guidance
+            root = project_root
+            root_guidance_paths = %w[AGENTS.md CLAUDE.md].map { |name| File.join(root, name) }
+            docs_path = File.join(root, "docs", "tools.md")
+            existing_root_guidance = root_guidance_paths.select { |path| File.exist?(path) }
+            docs_content = File.exist?(docs_path) ? File.read(docs_path) : nil
+            guidance_contents = existing_root_guidance.to_h { |path| [path, File.read(path)] }
+
+            unless existing_root_guidance.any? || docs_content
+              return check(
+                id: "agent-engineering-guidance",
+                kind: "health",
+                status: PASS,
+                message: "Agent engineering guidance not installed"
+              )
+            end
+
+            findings = []
+            guidance_contents.each do |path, content|
+              next if content.include?(COST_BIAS_MARKER)
+
+              findings << "#{File.basename(path)} lacks #{COST_BIAS_MARKER}"
+            end
+
+            if docs_content.nil?
+              findings << "docs/tools.md is missing"
+            elsif !docs_content.include?(AGENT_ENGINEERING_HEADING)
+              findings << "docs/tools.md lacks #{AGENT_ENGINEERING_HEADING}"
+            end
+
+            if guidance_contents.values.any? { |content| content.include?(AGENT_ENGINEERING_ANCHOR) } &&
+                (!docs_content || !docs_content.include?(AGENT_ENGINEERING_HEADING))
+              findings << "root guidance links #{AGENT_ENGINEERING_ANCHOR} but the anchor target is absent"
+            end
+
+            if findings.empty?
+              return check(
+                id: "agent-engineering-guidance",
+                kind: "health",
+                status: PASS,
+                message: "Agent engineering guidance is present"
+              )
+            end
+
+            check(
+              id: "agent-engineering-guidance",
+              kind: "health",
+              status: WARN,
+              message: "Agent engineering guidance is incomplete",
+              next_action: AGENT_ENGINEERING_NEXT_ACTION,
+              details: findings.uniq
+            )
+          rescue => e
+            check(
+              id: "agent-engineering-guidance",
+              kind: "health",
+              status: WARN,
+              message: "Agent engineering guidance check failed: #{e.message}",
+              next_action: AGENT_ENGINEERING_NEXT_ACTION
             )
           end
 

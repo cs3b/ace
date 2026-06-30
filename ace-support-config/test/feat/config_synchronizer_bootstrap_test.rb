@@ -19,12 +19,14 @@ module Ace
             assert File.exist?(".gitignore")
             assert File.exist?("AGENTS.md")
             assert File.exist?("CLAUDE.md")
+            assert File.exist?("docs/tools.md")
 
             project_preset = File.read(".ace/bundle/presets/project.md")
             readme = File.read(".ace/README.md")
             gitignore = File.read(".gitignore")
             agents = File.read("AGENTS.md")
             claude = File.read("CLAUDE.md")
+            tools = File.read("docs/tools.md")
 
             refute_includes project_preset, "ace-task"
             refute_includes project_preset, "Coding Agent Workflow Toolkit (Meta)"
@@ -35,11 +37,17 @@ module Ace
             assert_includes agents, "ace-config sync ace-support-core --force"
             assert_includes agents, "ace-handbook sync"
             assert_includes agents, "Run `ace-*` commands directly."
+            assert_includes agents, "Cost Bias Override"
+            assert_includes agents, "docs/tools.md#agent-engineering-practices"
             assert_includes claude, "ACE generated this starter guidance from `ace-support-core` defaults."
             assert_includes claude, "Customize it for your repository-specific rules and workflows."
             assert_includes claude, "ace-config sync ace-support-core --force"
             assert_includes claude, "ace-handbook sync"
             assert_includes claude, "Do not use pipes, redirects, or shell post-processors"
+            assert_includes claude, "Cost Bias Override"
+            assert_includes claude, "docs/tools.md#agent-engineering-practices"
+            assert_includes tools, "## Agent Engineering Practices"
+            assert_includes tools, "Cost Bias Override"
           end
         end
 
@@ -47,7 +55,8 @@ module Ace
           with_temp_config(
             ".gitignore" => "node_modules/\n",
             "AGENTS.md" => "# Custom AGENTS\n",
-            "CLAUDE.md" => "# Custom CLAUDE\n"
+            "CLAUDE.md" => "# Custom CLAUDE\n",
+            "docs" => {"tools.md" => "# Custom Tools\n"}
           ) do
             synchronizer = Organisms::ConfigSynchronizer.new
             synchronizer.send(:sync_gem, "ace-support-core")
@@ -58,13 +67,15 @@ module Ace
             assert_equal 1, gitignore.scan(".ace-local/").length
             assert_equal "# Custom AGENTS\n", File.read("AGENTS.md")
             assert_equal "# Custom CLAUDE\n", File.read("CLAUDE.md")
+            assert_equal "# Custom Tools\n", File.read("docs/tools.md")
           end
         end
 
         def test_sync_force_refreshes_generated_agent_guidance
           with_temp_config(
             "AGENTS.md" => "# Old AGENTS\n",
-            "CLAUDE.md" => "# Old CLAUDE\n"
+            "CLAUDE.md" => "# Old CLAUDE\n",
+            "docs" => {"tools.md" => "# Old Tools\n"}
           ) do
             synchronizer = Organisms::ConfigSynchronizer.new(force: true)
             synchronizer.send(:sync_gem, "ace-support-core")
@@ -73,10 +84,15 @@ module Ace
             assert_includes File.read("AGENTS.md"), "Customize it for your repository-specific rules and workflows."
             assert_includes File.read("AGENTS.md"), "ace-config sync ace-support-core --force"
             assert_includes File.read("AGENTS.md"), "Run `ace-*` commands directly."
+            assert_includes File.read("AGENTS.md"), "Cost Bias Override"
+            assert_includes File.read("AGENTS.md"), "docs/tools.md#agent-engineering-practices"
             assert_includes File.read("CLAUDE.md"), "ACE generated this starter guidance from `ace-support-core` defaults."
             assert_includes File.read("CLAUDE.md"), "Customize it for your repository-specific rules and workflows."
             assert_includes File.read("CLAUDE.md"), "ace-config sync ace-support-core --force"
             assert_includes File.read("CLAUDE.md"), "Do not use pipes, redirects, or shell post-processors"
+            assert_includes File.read("CLAUDE.md"), "Cost Bias Override"
+            assert_includes File.read("CLAUDE.md"), "docs/tools.md#agent-engineering-practices"
+            assert_includes File.read("docs/tools.md"), "## Agent Engineering Practices"
           end
         end
 
@@ -124,10 +140,12 @@ module Ace
             assert File.exist?(File.join(tmpdir, "AGENTS.md"))
             assert File.exist?(File.join(tmpdir, "CLAUDE.md"))
             assert File.exist?(File.join(tmpdir, ".gitignore"))
+            assert File.exist?(File.join(tmpdir, "docs", "tools.md"))
 
             refute File.exist?(File.join(tmpdir, "subdir", "AGENTS.md"))
             refute File.exist?(File.join(tmpdir, "subdir", "CLAUDE.md"))
             refute File.exist?(File.join(tmpdir, "subdir", ".gitignore"))
+            refute File.exist?(File.join(tmpdir, "subdir", "docs", "tools.md"))
           end
         end
       end

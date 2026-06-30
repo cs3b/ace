@@ -7,8 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Added generated `docs/tools.md` project-root bootstrap guidance with an `Agent Engineering Practices` section for expanded day-to-day agent conventions.
+
 ### Changed
 - Clarified the first-use bootstrap guidance so root `AGENTS.md` / `CLAUDE.md` starter files are documented as outputs of `ace-support-core` sync, and updated the shipped refresh commands to use `bundle exec` for repo-local installs.
+- Updated generated root `AGENTS.md` and `CLAUDE.md` starter files with a compact cost-bias override and a pointer to `docs/tools.md#agent-engineering-practices`.
 
 ## [0.29.10] - 2026-04-24
 

@@ -7,8 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Added `ace-config doctor` warnings for projects whose root agent guidance or `docs/tools.md` are missing generated agent-engineering guidance markers.
+
 ### Fixed
 - Corrected `ace-config-bootstrap-root-files` to sync `ace-support-core` and record from the sandbox root layout where the bootstrap files are actually created.
+
+### Technical
+- Expanded bootstrap sync coverage for generated `docs/tools.md`, cost-bias markers, preservation without `--force`, force refresh, and subdirectory root targeting.
 
 ## [0.16.2] - 2026-04-24
 
