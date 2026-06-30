@@ -48,6 +48,35 @@ class RetroCliTest < AceRetroTestCase
     Ace::Retro::Organisms::RetroManager.singleton_class.remove_method(:new)
   end
 
+  def with_project_root_workspace
+    Dir.mktmpdir("ace-retro-project-root") do |tmp_repo_root|
+      repo_root = File.realpath(tmp_repo_root)
+      old_pwd = Dir.pwd
+      old_project_root = ENV["PROJECT_ROOT_PATH"]
+
+      FileUtils.touch(File.join(repo_root, "Gemfile"))
+      nested_dir = File.join(repo_root, "app", "subdir")
+      FileUtils.mkdir_p(nested_dir)
+      ENV.delete("PROJECT_ROOT_PATH")
+      clear_project_root_cache
+
+      yield repo_root, nested_dir
+    ensure
+      Dir.chdir(old_pwd) if old_pwd
+      if old_project_root.nil?
+        ENV.delete("PROJECT_ROOT_PATH")
+      else
+        ENV["PROJECT_ROOT_PATH"] = old_project_root
+      end
+      clear_project_root_cache
+    end
+  end
+
+  def chdir_for_root_resolution(path)
+    Dir.chdir(path)
+    clear_project_root_cache
+  end
+
   # ---------------------------------------------------------------------------
   # create command
   # ---------------------------------------------------------------------------
@@ -247,6 +276,51 @@ class RetroCliTest < AceRetroTestCase
         assert_equal 0, result[:exit_code], result[:stderr]
         assert_match(/Retros:.*total/, result[:stdout])
       end
+    end
+  end
+
+  def test_commands_default_to_project_root_retros_from_nested_cwd
+    with_project_root_workspace do |repo_root, nested_dir|
+      root_retros = File.join(repo_root, ".ace-retros")
+      nested_retros = File.join(nested_dir, ".ace-retros")
+      package_retros = File.join(repo_root, "app", ".ace-retros")
+
+      chdir_for_root_resolution(nested_dir)
+      create_result = run_cli(["create", "Nested cwd retro", "--type", "standard"])
+      assert_equal 0, create_result[:exit_code], create_result[:stderr]
+      assert_match(/Path: #{Regexp.escape(root_retros)}\//, create_result[:stdout])
+      refute Dir.exist?(nested_retros), "nested cwd should not receive the default retros workspace"
+
+      retro_id = create_result[:stdout].match(/Retro created: ([0-9a-z]+)/)[1]
+
+      chdir_for_root_resolution(repo_root)
+      list_result = run_cli(["list"])
+      assert_equal 0, list_result[:exit_code], list_result[:stderr]
+      assert_match(/Nested cwd retro/, list_result[:stdout])
+
+      show_result = run_cli(["show", retro_id, "--path"])
+      assert_equal 0, show_result[:exit_code], show_result[:stderr]
+      assert_match(/\A#{Regexp.escape(root_retros)}\//, show_result[:stdout])
+
+      update_result = run_cli(["update", retro_id, "--set", "status=done"])
+      assert_equal 0, update_result[:exit_code], update_result[:stderr]
+      assert_match(/Retro updated: #{retro_id}/, update_result[:stdout])
+
+      chdir_for_root_resolution(nested_dir)
+      doctor_result = run_cli(["doctor", "--quiet"])
+      assert_equal 0, doctor_result[:exit_code], doctor_result[:stderr]
+
+      create_retro_fixture(package_retros, id: "bbb222", slug: "package-local")
+
+      chdir_for_root_resolution(repo_root)
+      root_list_result = run_cli(["list", "--in", "all"])
+      assert_equal 0, root_list_result[:exit_code], root_list_result[:stderr]
+      refute_match(/Package local/, root_list_result[:stdout])
+
+      custom_list_result = run_cli(["list", "--root", package_retros])
+      assert_equal 0, custom_list_result[:exit_code], custom_list_result[:stderr]
+      assert_match(/Package local/, custom_list_result[:stdout])
+      refute_match(/Nested cwd retro/, custom_list_result[:stdout])
     end
   end
 
