@@ -9,6 +9,12 @@ Root agent files should stay short and reserve detail for this page or project s
 
 **Cost Bias Override:** do not optimize for human work-weeks or token budgets — choose the technically correct path (full coverage, proper refactors, robust design) even when it costs more turns.
 
+### Skill Projections
+
+- `ace-handbook sync` writes generated skills to `.agents/skills/` by default.
+- Use explicit provider sync, such as `ace-handbook sync --provider codex`, only when a harness needs its native folder.
+- Do not hand-edit generated skill projections; edit canonical package `handbook/skills/` or project `.ace-handbook/skills/`.
+
 ### Workspace and File Safety
 
 - Keep project-specific temporary output in `.ace-local/` and disposable scratch files in `/tmp/`.

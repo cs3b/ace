@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Updated `ace-config doctor` skill projection health to ignore disabled provider projections reported by `ace-handbook status`.
+
 ## [0.17.0] - 2026-06-30
 
 ### Added

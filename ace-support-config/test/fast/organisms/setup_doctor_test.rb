@@ -362,6 +362,25 @@ module Ace
           end
         end
 
+        def test_skill_sync_ignores_disabled_provider_projection_drift
+          doctor = Organisms::SetupDoctor.new
+          payload = {
+            "canonical" => {"total" => 100},
+            "providers" => [
+              {"provider" => "agents", "enabled" => true, "expected" => 100, "installed" => 100, "in_sync" => 100, "outdated" => 0, "missing" => 0, "extra" => 0},
+              {"provider" => "codex", "enabled" => false, "expected" => 100, "installed" => 0, "in_sync" => 0, "outdated" => 0, "missing" => 100, "extra" => 0}
+            ]
+          }
+
+          Open3.stub(:capture3, ->(*_args) { [JSON.generate(payload), "", command_status(true)] }) do
+            check = doctor.send(:check_skill_sync)
+
+            assert_equal "pass", check[:status]
+            assert_includes check[:message], "1 providers"
+            assert_equal ["agents"], check.fetch(:skill_sync).fetch(:providers).map { |entry| entry.fetch("provider") }
+          end
+        end
+
         def test_agent_engineering_guidance_warns_when_docs_are_missing
           with_temp_config(
             ".git" => {},

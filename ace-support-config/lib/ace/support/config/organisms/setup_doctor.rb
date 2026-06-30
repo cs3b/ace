@@ -257,7 +257,8 @@ module Ace
 
             snapshot = JSON.parse(out)
             providers = Array(snapshot["providers"])
-            drifted = providers.select do |entry|
+            checked_providers = providers.select { |entry| entry.fetch("enabled", true) }
+            drifted = checked_providers.select do |entry|
               entry.fetch("missing", 0).to_i.positive? ||
                 entry.fetch("outdated", 0).to_i.positive? ||
                 entry.fetch("extra", 0).to_i.positive?
@@ -269,8 +270,8 @@ module Ace
                 id: "skill-sync",
                 kind: "health",
                 status: PASS,
-                message: "Provider skills are in sync (#{providers.length} providers, #{total_skills} skills)",
-                skill_sync: {providers: providers, canonical_total: total_skills}
+                message: "Provider skills are in sync (#{checked_providers.length} providers, #{total_skills} skills)",
+                skill_sync: {providers: checked_providers, canonical_total: total_skills}
               )
             end
 
@@ -278,10 +279,10 @@ module Ace
               id: "skill-sync",
               kind: "health",
               status: WARN,
-              message: "Provider skill sync drift detected (#{drifted.length}/#{providers.length} providers)",
+              message: "Provider skill sync drift detected (#{drifted.length}/#{checked_providers.length} providers)",
               next_action: "Run ace-handbook sync to refresh provider-native skills.",
               details: drifted.map { |entry| skill_sync_detail(entry) },
-              skill_sync: {providers: providers, drifted: drifted}
+              skill_sync: {providers: checked_providers, drifted: drifted}
             )
           rescue Errno::ENOENT
             check(

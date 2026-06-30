@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Updated generated bootstrap guidance to describe `.agents/skills/` as the default handbook skill projection and harness-native skill folders as explicit provider sync outputs.
+
 ## [0.30.0] - 2026-06-30
 
 ### Added

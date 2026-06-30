@@ -3,7 +3,7 @@
 ACE generated this starter guidance from `ace-support-core` defaults.
 Customize it for your repository-specific rules and workflows.
 Refresh the starter version with `bundle exec ace-config sync ace-support-core --force`.
-Run `bundle exec ace-handbook sync` separately when you need to refresh projected skill folders.
+Run `bundle exec ace-handbook sync` separately to refresh generated `.agents/skills`.
 
 Agent guidance for this repository.
 See `docs/tools.md#agent-engineering-practices` for expanded day-to-day agent practices.
