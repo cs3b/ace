@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.25.2] - 2026-06-30
+
+### Fixed
+- Canonicalized exact and compact compressor source labels through real paths so symlinked project files and missing descendants render stable project-relative labels.
+
+### Technical
+- Bumped exact, compact, and agent cache contract keys for the source-labeling fix.
+
 ## [0.25.1] - 2026-04-16
 
 ### Technical
