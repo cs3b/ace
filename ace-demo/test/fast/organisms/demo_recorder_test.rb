@@ -166,7 +166,7 @@ class DemoRecorderTest < AceDemoTestCase
     recorder = Ace::Demo::Organisms::DemoRecorder.new(resolver: resolver, executor: executor, default_backend: "vhs")
     output = recorder.record(tape_ref: "hello", format: "gif")
 
-    assert_equal File.expand_path(".ace-local/demo/hello.gif", @tmp), output.visual_path
+    assert_equal File.expand_path(".ace-local/demo/hello.gif", Dir.pwd), output.visual_path
     assert_equal "vhs", output.backend
     assert_nil output.cast_path
     assert_includes executor.cmd, "--output"
@@ -186,7 +186,7 @@ class DemoRecorderTest < AceDemoTestCase
       )
       output = recorder.record(tape_ref: "hello", format: "gif")
 
-      assert_equal File.expand_path("tmp/demo-out/hello.gif", @tmp), output.visual_path
+      assert_equal File.expand_path("tmp/demo-out/hello.gif", Dir.pwd), output.visual_path
       assert_equal "vhs-custom", executor.cmd.first
     end
   end
@@ -376,8 +376,8 @@ class DemoRecorderTest < AceDemoTestCase
 
     output = recorder.record(tape_ref: "demo")
 
-    raw_path = File.expand_path(".ace-local/demo/demo.gif", @tmp)
-    assert_equal File.expand_path(".ace-local/demo/demo-4x.gif", @tmp), output.visual_path
+    raw_path = File.expand_path(".ace-local/demo/demo.gif", Dir.pwd)
+    assert_equal File.expand_path(".ace-local/demo/demo-4x.gif", Dir.pwd), output.visual_path
     assert_includes executor.cmd, raw_path
     assert_equal raw_path, retimer.calls[0][:input_path]
     assert_equal "4x", retimer.calls[0][:speed]
@@ -411,7 +411,7 @@ class DemoRecorderTest < AceDemoTestCase
 
     output = recorder.record(tape_ref: "demo", retime_output: final_output)
 
-    raw_path = File.expand_path(".ace-local/demo/demo.gif", @tmp)
+    raw_path = File.expand_path(".ace-local/demo/demo.gif", Dir.pwd)
     assert_equal final_output, output.visual_path
     assert_includes executor.cmd, raw_path
     assert_equal raw_path, retimer.calls[0][:input_path]
@@ -476,7 +476,7 @@ class DemoRecorderTest < AceDemoTestCase
 
     output = recorder.record(tape_ref: "demo")
 
-    raw_path = File.expand_path(".ace-local/demo/demo.gif", @tmp)
+    raw_path = File.expand_path(".ace-local/demo/demo.gif", Dir.pwd)
     assert_equal final_output, output.visual_path
     assert_includes executor.cmd, raw_path
     assert_equal raw_path, retimer.calls[0][:input_path]
@@ -521,8 +521,8 @@ class DemoRecorderTest < AceDemoTestCase
     output = recorder.record(tape_ref: "demo")
 
     assert_equal "asciinema", output.backend
-    assert_equal File.expand_path(".ace-local/demo/demo.gif", @tmp), output.visual_path
-    assert_equal File.expand_path(".ace-local/demo/demo.cast", @tmp), output.cast_path
+    assert_equal File.expand_path(".ace-local/demo/demo.gif", Dir.pwd), output.visual_path
+    assert_equal File.expand_path(".ace-local/demo/demo.cast", Dir.pwd), output.cast_path
     assert_equal verification_result, output.verification
     assert_equal yaml_path, output.tape_path
     assert_equal sandbox_path, output.sandbox_path

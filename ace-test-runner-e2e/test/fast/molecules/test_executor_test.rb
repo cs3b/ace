@@ -7,8 +7,17 @@ class TestExecutorTest < Minitest::Test
   TestScenario = Ace::Test::EndToEndRunner::Models::TestScenario
 
   class FakeSandboxBackend
+    def initialize(sandbox_path)
+      @sandbox_path = sandbox_path
+    end
+
     def prepared_env(env)
-      env.merge("HOME" => "/tmp/fake-home", "TMPDIR" => "/tmp/fake-tmp", "XDG_RUNTIME_DIR" => "/tmp/fake-runtime")
+      env.merge(
+        "PROJECT_ROOT_PATH" => @sandbox_path,
+        "HOME" => "#{@sandbox_path}.support/home",
+        "TMPDIR" => "#{@sandbox_path}.support/tmp",
+        "XDG_RUNTIME_DIR" => "#{@sandbox_path}.support/runtime"
+      )
     end
 
     def command_prefix(chdir:, env:)
@@ -36,7 +45,7 @@ class TestExecutorTest < Minitest::Test
       executor = TestExecutor.new(
         provider: "claude:sonnet",
         timeout: 10,
-        sandbox_backend_factory: ->(_sandbox_path, source_root: nil) { FakeSandboxBackend.new }
+        sandbox_backend_factory: ->(sandbox_path, source_root: nil) { FakeSandboxBackend.new(sandbox_path) }
       )
 
       captured_timeouts = []
@@ -93,7 +102,7 @@ class TestExecutorTest < Minitest::Test
       executor = TestExecutor.new(
         provider: "claude:sonnet",
         timeout: 10,
-        sandbox_backend_factory: ->(_sandbox_path, source_root: nil) { FakeSandboxBackend.new }
+        sandbox_backend_factory: ->(sandbox_path, source_root: nil) { FakeSandboxBackend.new(sandbox_path) }
       )
 
       calls = []
@@ -189,7 +198,7 @@ class TestExecutorTest < Minitest::Test
       executor = TestExecutor.new(
         provider: "claude:sonnet",
         timeout: 10,
-        sandbox_backend_factory: ->(_sandbox_path, source_root: nil) { FakeSandboxBackend.new }
+        sandbox_backend_factory: ->(sandbox_path, source_root: nil) { FakeSandboxBackend.new(sandbox_path) }
       )
 
       responses = [
@@ -282,7 +291,7 @@ class TestExecutorTest < Minitest::Test
   end
 
   def test_execute_tc_via_skill_happy_path
-    executor = TestExecutor.new(provider: "opencode:glm", timeout: 10)
+    executor = cli_test_executor(provider: "opencode:glm")
     scenario = create_scenario(test_id: "TS-LINT-001")
     tc = create_test_case
 
@@ -311,7 +320,7 @@ class TestExecutorTest < Minitest::Test
   end
 
   def test_execute_tc_via_skill_detects_no_tests_found_error
-    executor = TestExecutor.new(provider: "opencode:glm", timeout: 10)
+    executor = cli_test_executor(provider: "opencode:glm")
     scenario = create_scenario(test_id: "TS-LINT-001")
     tc = create_test_case
 
@@ -340,7 +349,7 @@ class TestExecutorTest < Minitest::Test
   end
 
   def test_execute_tc_via_skill_passes_env_vars_as_subprocess_env
-    executor = TestExecutor.new(provider: "claude:sonnet", timeout: 10)
+    executor = cli_test_executor(provider: "claude:sonnet")
     scenario = create_scenario(test_id: "TS-LINT-001")
     tc = create_test_case
     env_vars = {"ACE_TMUX_SESSION" => "TS-TEST-001-e2e"}
@@ -370,6 +379,14 @@ class TestExecutorTest < Minitest::Test
   end
 
   private
+
+  def cli_test_executor(provider:)
+    TestExecutor.new(
+      provider: provider,
+      timeout: 10,
+      sandbox_backend_factory: ->(sandbox_path, source_root: nil) { FakeSandboxBackend.new(sandbox_path) }
+    )
+  end
 
   PipelineSandboxBuilder = Ace::Test::EndToEndRunner::Molecules::PipelineSandboxBuilder
 

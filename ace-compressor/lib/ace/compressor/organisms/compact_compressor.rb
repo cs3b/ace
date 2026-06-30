@@ -445,13 +445,53 @@ module Ace
         end
 
         def source_label(source)
-          pathname = Pathname.new(source)
-          project_root = Pathname.new(Dir.pwd)
-          relative = pathname.relative_path_from(project_root).to_s
-          return relative unless relative.start_with?("..")
-          source
+          value = source.to_s
+          return value if logical_source?(value)
+
+          source_path = canonical_path(value)
+          project_root = canonical_path(Dir.pwd)
+          relative = relative_path_under(source_path, project_root)
+          return relative if relative
+
+          value
+        end
+
+        def logical_source?(value)
+          return true unless Pathname.new(value).absolute?
+
+          value.match?(%r{\A[a-z][a-z0-9+\-.]*://}i)
         rescue ArgumentError
-          source
+          true
+        end
+
+        def canonical_path(path)
+          expanded = File.expand_path(path)
+          return File.realpath(expanded) if File.exist?(expanded)
+
+          canonical_missing_path(expanded)
+        rescue
+          File.expand_path(path)
+        end
+
+        def canonical_missing_path(path)
+          parent = path
+          suffix = []
+          until File.exist?(parent) || parent == File.dirname(parent)
+            suffix.unshift(File.basename(parent))
+            parent = File.dirname(parent)
+          end
+          return path unless File.exist?(parent)
+
+          File.join(File.realpath(parent), *suffix)
+        end
+
+        def relative_path_under(path, root)
+          return "." if path == root
+
+          prefix = "#{root}#{File::SEPARATOR}"
+          return path.delete_prefix(prefix) if path.start_with?(prefix)
+
+          nil
         end
 
         def flush_pending_section!(lines, pending_section)

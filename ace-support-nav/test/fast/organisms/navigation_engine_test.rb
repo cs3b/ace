@@ -27,7 +27,7 @@ module Ace
               engine = NavigationEngine.new(resource_resolver: resolver)
               result = engine.create("wfi://release/publish")
 
-              assert_equal File.join(test_dir, ".ace-handbook", "workflow-instructions", "publish.wf.md"), result[:created]
+              assert_equal File.join(Dir.pwd, ".ace-handbook", "workflow-instructions", "publish.wf.md"), result[:created]
               assert_equal "# Publish", File.read(result[:created])
             end
           ensure

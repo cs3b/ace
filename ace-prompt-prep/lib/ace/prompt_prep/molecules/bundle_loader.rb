@@ -44,15 +44,10 @@ module Ace
             end
 
             # Resolve symlinks and validate project boundaries
-            real_path = begin
-              File.realpath(prompt_path)
-            rescue
-              prompt_path
-            end
             project_root = Ace::Support::Fs::Molecules::ProjectRootFinder.find_or_current
 
-            unless real_path.start_with?(project_root)
-              warn "Error: File path resolves outside project: #{real_path}"
+            unless path_within_root?(prompt_path, project_root)
+              warn "Error: File path resolves outside project: #{canonical_path(prompt_path)}"
               return ""
             end
 
@@ -171,6 +166,33 @@ module Ace
           end
 
           true
+        end
+
+        def self.path_within_root?(path, root)
+          canonical = canonical_path(path)
+          canonical_root = canonical_path(root)
+          canonical == canonical_root || canonical.start_with?("#{canonical_root}#{File::SEPARATOR}")
+        end
+
+        def self.canonical_path(path)
+          expanded = File.expand_path(path)
+          return File.realpath(expanded) if File.exist?(expanded)
+
+          canonical_missing_path(expanded)
+        rescue
+          File.expand_path(path)
+        end
+
+        def self.canonical_missing_path(path)
+          parent = path
+          suffix = []
+          until File.exist?(parent) || parent == File.dirname(parent)
+            suffix.unshift(File.basename(parent))
+            parent = File.dirname(parent)
+          end
+          return path unless File.exist?(parent)
+
+          File.join(File.realpath(parent), *suffix)
         end
       end
     end

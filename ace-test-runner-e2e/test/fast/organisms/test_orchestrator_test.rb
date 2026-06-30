@@ -833,7 +833,8 @@ class TestOrchestratorTest < Minitest::Test
       orchestrator = create_orchestrator(
         base_dir: tmpdir,
         provider: "claude:sonnet",
-        executor: executor
+        executor: executor,
+        setup_executor_factory: ->(sandbox_backend: nil) { fixture_copying_setup_executor(source_root: tmpdir) }
       )
 
       orchestrator.run(
@@ -1097,7 +1098,8 @@ class TestOrchestratorTest < Minitest::Test
       orchestrator = create_orchestrator(
         base_dir: tmpdir,
         provider: "claude:sonnet",
-        executor: executor
+        executor: executor,
+        setup_executor_factory: ->(sandbox_backend: nil) { fixture_copying_setup_executor(source_root: tmpdir) }
       )
 
       orchestrator.run(
@@ -1284,6 +1286,33 @@ class TestOrchestratorTest < Minitest::Test
   end
 
   private
+
+  def fixture_copying_setup_executor(source_root:)
+    Object.new.tap do |setup_executor|
+      setup_executor.define_singleton_method(:execute) do |setup_steps:, sandbox_dir:, fixture_source: nil, scenario_name: nil, run_id: nil, initial_env: {}, git_excludes: []|
+        FileUtils.mkdir_p(sandbox_dir)
+        if fixture_source && Dir.exist?(fixture_source)
+          Dir.children(fixture_source).each do |entry|
+            FileUtils.cp_r(File.join(fixture_source, entry), File.join(sandbox_dir, entry))
+          end
+        end
+
+        env = initial_env.merge(
+          "PROJECT_ROOT_PATH" => File.expand_path(sandbox_dir),
+          "ACE_E2E_SOURCE_ROOT" => File.expand_path(source_root)
+        )
+
+        {
+          success: true,
+          steps_completed: setup_steps.length,
+          error: nil,
+          env: env,
+          tmux_session: nil
+        }
+      end
+      setup_executor.define_singleton_method(:teardown) { nil }
+    end
+  end
 
   class StubRuntimeBuilder
     def prepare(sandbox_root:, env:, tool_names: nil)
