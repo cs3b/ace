@@ -24,6 +24,8 @@ class Ace::Handbook::Organisms::ProviderSyncerTest < Minitest::Test
     create_provider_manifest("pi", ".pi/skills")
     create_provider_manifest("claude", ".claude/skills")
     create_provider_manifest("codex", ".codex/skills")
+    create_provider_manifest("gemini", ".gemini/skills")
+    create_provider_manifest("opencode", ".opencode/skills")
     create_skill_source_registration("ace-demo", "ace-demo/handbook/skills")
     create_skill("as-test-sync", <<~BODY)
       Load and run `ace-bundle wfi://test/sync` in the current project, then follow the loaded workflow as the source of truth and execute it end-to-end instead of only summarizing it.
@@ -173,6 +175,66 @@ class Ace::Handbook::Organisms::ProviderSyncerTest < Minitest::Test
 
     refute Dir.exist?(stale_dir)
     assert_equal 1, result[:removed_entries]
+  end
+
+  def test_all_provider_projections_are_consistent_and_idempotent
+    create_skill(
+      "as-provider-contract",
+      <<~BODY,
+        Load and run `ace-bundle wfi://test/provider-contract` in the current project, then follow the loaded workflow as the source of truth and execute it end-to-end instead of only summarizing it.
+      BODY
+      frontmatter: {
+        "name" => "as-provider-contract",
+        "description" => "Canonical provider contract",
+        "source" => "ace-demo",
+        "skill" => {"kind" => "workflow"},
+        "integration" => {
+          "providers" => {
+            "agents" => {"frontmatter" => {"description" => "agents projection"}},
+            "claude" => {"frontmatter" => {"description" => "claude projection"}},
+            "codex" => {"frontmatter" => {"description" => "codex projection"}},
+            "gemini" => {"frontmatter" => {"description" => "gemini projection"}},
+            "opencode" => {"frontmatter" => {"description" => "opencode projection"}},
+            "pi" => {"frontmatter" => {"description" => "pi projection"}}
+          }
+        }
+      }
+    )
+
+    projection_providers.each do |provider|
+      first = syncer.sync(provider: provider).fetch(0)
+      assert_equal 2, first.fetch(:projected_skills), provider
+
+      output_path = File.join(@tmpdir, ".#{provider}", "skills", "as-provider-contract", "SKILL.md")
+      rendered = File.read(output_path)
+      document = YAML.safe_load(rendered.split("---\n", 3).fetch(1))
+      assert_equal "#{provider} projection", document.fetch("description"), provider
+      refute_includes rendered, "integration:", provider
+
+      stale_dir = File.join(@tmpdir, ".#{provider}", "skills", "as-stale-contract")
+      FileUtils.mkdir_p(stale_dir)
+      File.write(File.join(stale_dir, "SKILL.md"), "---\nname: as-stale-contract\n---\n")
+
+      second = syncer.sync(provider: provider).fetch(0)
+      assert_equal 0, second.fetch(:updated_files), provider
+      assert_equal 1, second.fetch(:removed_entries), provider
+      refute Dir.exist?(stale_dir), provider
+
+      third = syncer.sync(provider: provider).fetch(0)
+      assert_equal 0, third.fetch(:updated_files), provider
+      assert_equal 0, third.fetch(:removed_entries), provider
+
+      status = Ace::Handbook::Organisms::StatusCollector.new(
+        project_root: @tmpdir,
+        config: {}
+      ).collect(provider: provider).fetch("providers").fetch(0)
+      assert_equal first.fetch(:projected_skills), status.fetch("expected"), provider
+      assert_equal status.fetch("expected"), status.fetch("installed"), provider
+      assert_equal status.fetch("expected"), status.fetch("in_sync"), provider
+      assert_equal 0, status.fetch("outdated"), provider
+      assert_equal 0, status.fetch("missing"), provider
+      assert_equal 0, status.fetch("extra"), provider
+    end
   end
 
   def test_sync_projects_claude_overrides_and_preserves_canonical_git_commit_body
@@ -396,6 +458,10 @@ class Ace::Handbook::Organisms::ProviderSyncerTest < Minitest::Test
       }),
       config: {}
     )
+  end
+
+  def projection_providers
+    %w[agents claude codex gemini opencode pi]
   end
 
   def create_provider_manifest(provider, output_dir)
