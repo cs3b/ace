@@ -1,0 +1,6 @@
+source "https://rubygems.org"
+
+source_root = ENV.fetch("ACE_E2E_SOURCE_ROOT")
+
+gem "ace-handbook", path: File.join(source_root, "ace-handbook")
+gem "ace-git-commit", path: File.join(source_root, "ace-git-commit")

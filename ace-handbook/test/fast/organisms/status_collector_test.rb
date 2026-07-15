@@ -3,6 +3,24 @@
 require "test_helper"
 
 class Ace::Handbook::Organisms::StatusCollectorTest < Minitest::Test
+  FakeProviderRegistry = Struct.new(:provider_manifests) do
+    def providers
+      provider_manifests.keys.sort
+    end
+
+    def known?(provider)
+      provider_manifests.key?(provider.to_s)
+    end
+
+    def output_dir(provider)
+      manifest(provider).fetch("output_dir")
+    end
+
+    def manifest(provider)
+      provider_manifests.fetch(provider.to_s)
+    end
+  end
+
   def setup
     @tmpdir = Dir.mktmpdir
     create_handbook_provider_manifest("agents", ".agents/skills")
@@ -104,6 +122,28 @@ class Ace::Handbook::Organisms::StatusCollectorTest < Minitest::Test
         }
       }
     )
+    registry = agents_only_registry
+    Ace::Handbook::Organisms::ProviderSyncer.new(
+      project_root: @tmpdir,
+      registry: registry,
+      config: {}
+    ).sync
+
+    snapshot = collector(registry: registry).collect
+    provider = snapshot.fetch("providers").first
+
+    assert_equal "agents", provider.fetch("provider")
+    assert_equal 4, provider.fetch("expected")
+    assert_equal 4, provider.fetch("installed")
+    assert_equal 4, provider.fetch("in_sync")
+    assert_equal 0, provider.fetch("extra")
+    assert_equal "complete", provider.fetch("projection_policy")
+    assert_equal 0, provider.fetch("excluded_count")
+    assert_nil provider.fetch("policy_reason")
+    assert File.exist?(File.join(@tmpdir, ".agents", "skills", "as-git-commit", "SKILL.md"))
+  end
+
+  def test_agents_only_status_reports_curated_when_narrow_provider_target_is_excluded
     create_skill(
       "as-codex-only",
       source: "ace-demo",
@@ -118,20 +158,21 @@ class Ace::Handbook::Organisms::StatusCollectorTest < Minitest::Test
       }
     )
 
-    Ace::Handbook::Organisms::ProviderSyncer.new(project_root: @tmpdir, config: {}).sync
+    registry = agents_only_registry
+    Ace::Handbook::Organisms::ProviderSyncer.new(
+      project_root: @tmpdir,
+      registry: registry,
+      config: {}
+    ).sync
 
-    snapshot = collector.collect
-    provider = snapshot.fetch("providers").first
+    provider = collector(registry: registry).collect.fetch("providers").first
 
-    assert_equal "agents", provider.fetch("provider")
-    assert_equal 4, provider.fetch("expected")
-    assert_equal 4, provider.fetch("installed")
-    assert_equal 4, provider.fetch("in_sync")
-    assert_equal 0, provider.fetch("extra")
+    assert_equal 3, provider.fetch("expected")
+    assert_equal 3, provider.fetch("installed")
+    assert_equal 3, provider.fetch("in_sync")
     assert_equal "curated", provider.fetch("projection_policy")
     assert_equal 1, provider.fetch("excluded_count")
     assert_equal "provider-specific targeting", provider.fetch("policy_reason")
-    assert File.exist?(File.join(@tmpdir, ".agents", "skills", "as-git-commit", "SKILL.md"))
     refute File.exist?(File.join(@tmpdir, ".agents", "skills", "as-codex-only", "SKILL.md"))
   end
 
@@ -180,11 +221,24 @@ class Ace::Handbook::Organisms::StatusCollectorTest < Minitest::Test
 
   private
 
-  def collector
-    @collector ||= Ace::Handbook::Organisms::StatusCollector.new(
+  def collector(registry: nil)
+    return @collector if registry.nil? && @collector
+
+    instance = Ace::Handbook::Organisms::StatusCollector.new(
       project_root: @tmpdir,
+      registry: registry,
       config: {}
     )
+    registry.nil? ? (@collector = instance) : instance
+  end
+
+  def agents_only_registry
+    FakeProviderRegistry.new({
+      "agents" => {
+        "output_dir" => ".agents/skills",
+        "_manifest_path" => "agents-only-test-manifest.yml"
+      }
+    })
   end
 
   def create_provider_manifest(provider, output_dir)

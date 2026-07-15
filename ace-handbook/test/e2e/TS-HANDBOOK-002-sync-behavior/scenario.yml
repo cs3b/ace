@@ -24,7 +24,7 @@ unit-coverage-reviewed:
   - test/fast/organisms/status_collector_test.rb
 
 requires:
-  tools: [ace-handbook]
+  tools: [ace-handbook, ace-git-commit]
   ruby: ">= 3.0"
 
 setup:

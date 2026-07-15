@@ -124,8 +124,10 @@ ace-demo record ace-handbook/docs/demo/ace-handbook-getting-started.tape --outpu
 
 `ace-handbook sync` prints projection counts and inventory source counts. By default it writes `.agents/skills/`.
 The default `agents` projection is the neutral ACE skill surface: common workflow skills that target the legacy full
-provider set (`claude`, `codex`, `gemini`, `opencode`, `pi`) are included there without requiring projects to restore
-provider-native folders such as `.codex/skills/`. Use `--provider` when a harness needs its native tree. If sync
+provider set (`claude`, `codex`, `gemini`, `opencode`, `pi`) are included there based on their canonical target
+declaration, even when the corresponding provider integration manifests are not installed. Projects do not need to
+restore provider-native folders such as `.codex/skills/` to receive these skills. Use `--provider` when a harness needs
+its native tree. If sync
 reports only one source (for example `ace-handbook`), you may have synced before installing the full ACE stack. After
 installing additional packages, rerun:
 
