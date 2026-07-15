@@ -191,9 +191,22 @@ Make the documented default ACE setup trustworthy. When canonical skill sources 
 
 ## Verification Results
 
-- `ace-test ace-handbook`: passed, 32 tests, 178 assertions, 0 failures.
+- Correction after the published `ace-handbook 0.30.0` retest: the original success evidence was invalid because the
+  fast tests and local checkout discovered globally installed `ace-handbook-integration-*` manifests. In a project
+  where only `agents` is known, `SkillProjection.projection_targets` filtered the declared legacy target set to an empty
+  list before checking neutral compatibility, leaving `as-git-commit` absent and reporting 32 of 90 canonical skills.
+- The corrective acceptance case must inject or install an agents-only provider registry and prove that the canonical
+  legacy target declaration is recognized before provider availability filtering. Installed integration manifests are
+  not valid evidence for this case.
+- Corrective agents-only fixture using local `ace-handbook` and `ace-git-commit` with no integration gems: passed;
+  sync projected 17/17 canonical skills, status reported `complete`, `EXCLUDED=0`, and
+  `.agents/skills/as-git-commit/SKILL.md` existed. Explicit Codex status failed with `Unknown provider: codex`, proving
+  the fixture had no Codex provider manifest.
+- `ace-test ace-handbook`: passed, 37 tests, 193 assertions, 0 failures.
 - `ace-test-e2e ace-handbook TS-HANDBOOK-002 --dry-run`: passed, three test cases discovered.
-- `ace-test-e2e ace-handbook TS-HANDBOOK-002`: blocked before scenario execution because the dedicated Ruby 3.4.9 sandbox exposes globally installed `ace-*` gems; no scenario assertion ran.
+- `ace-test-e2e ace-handbook TS-HANDBOOK-002`: the default Ruby 3.4.9 runtime is blocked by global ACE gems; a clean
+  Ruby 3.2.2 runtime passed dependency setup but the macOS host cannot provide the Linux-only `bwrap` backend. No E2E
+  scenario assertion ran locally; the retained scenario now builds its own agents-only fixture bundle for Linux CI.
 
 ## Review Summary
 
