@@ -4,6 +4,19 @@ require "test_helper"
 
 class Ace::Handbook::Organisms::ProviderSyncerTest < Minitest::Test
   FakeSkillSource = Struct.new(:source)
+  FakeProviderRegistry = Struct.new(:provider_manifests) do
+    def providers
+      provider_manifests.keys.sort
+    end
+
+    def known?(provider)
+      provider_manifests.key?(provider.to_s)
+    end
+
+    def output_dir(provider)
+      provider_manifests.fetch(provider.to_s).fetch("output_dir")
+    end
+  end
 
   def setup
     @tmpdir = Dir.mktmpdir
@@ -65,7 +78,7 @@ class Ace::Handbook::Organisms::ProviderSyncerTest < Minitest::Test
       Follow the loaded workflow as the source of truth and execute it end-to-end.
     BODY
 
-    result = syncer.sync.first
+    result = agents_only_syncer.sync.first
 
     assert_equal "agents", result.fetch(:provider)
     assert_equal 2, result.fetch(:projected_skills)
@@ -92,7 +105,7 @@ class Ace::Handbook::Organisms::ProviderSyncerTest < Minitest::Test
       Follow the loaded workflow as the source of truth and execute it end-to-end.
     BODY
 
-    result = syncer.sync.first
+    result = agents_only_syncer.sync.first
 
     assert_equal 1, result.fetch(:projected_skills)
     refute File.exist?(File.join(@tmpdir, ".agents", "skills", "as-codex-only", "SKILL.md"))
@@ -371,6 +384,16 @@ class Ace::Handbook::Organisms::ProviderSyncerTest < Minitest::Test
   def syncer
     @syncer ||= Ace::Handbook::Organisms::ProviderSyncer.new(
       project_root: @tmpdir,
+      config: {}
+    )
+  end
+
+  def agents_only_syncer
+    Ace::Handbook::Organisms::ProviderSyncer.new(
+      project_root: @tmpdir,
+      registry: FakeProviderRegistry.new({
+        "agents" => {"output_dir" => ".agents/skills"}
+      }),
       config: {}
     )
   end

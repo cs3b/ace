@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Made the neutral `agents` projection recognize canonical skills targeting the full legacy provider set before
+  filtering unavailable provider manifests, so agents-only projects receive common workflows such as `as-git-commit`.
+
 ## [0.30.0] - 2026-07-15
 
 ### Added

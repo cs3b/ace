@@ -14,8 +14,9 @@ module Ace
             targets = integration["targets"]
             return registry.providers if targets.nil? || targets.empty?
 
-            known_targets = Array(targets).map(&:to_s).select { |provider| registry.known?(provider) }
-            if registry.known?("agents") && legacy_provider_target_set?(known_targets)
+            declared_targets = Array(targets).map(&:to_s).uniq
+            known_targets = declared_targets.select { |provider| registry.known?(provider) }
+            if registry.known?("agents") && legacy_provider_target_set?(declared_targets)
               known_targets = known_targets + ["agents"]
             end
 
