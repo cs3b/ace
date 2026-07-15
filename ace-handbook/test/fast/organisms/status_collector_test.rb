@@ -128,8 +128,21 @@ class Ace::Handbook::Organisms::StatusCollectorTest < Minitest::Test
     assert_equal 4, provider.fetch("installed")
     assert_equal 4, provider.fetch("in_sync")
     assert_equal 0, provider.fetch("extra")
+    assert_equal "curated", provider.fetch("projection_policy")
+    assert_equal 1, provider.fetch("excluded_count")
+    assert_equal "provider-specific targeting", provider.fetch("policy_reason")
     assert File.exist?(File.join(@tmpdir, ".agents", "skills", "as-git-commit", "SKILL.md"))
     refute File.exist?(File.join(@tmpdir, ".agents", "skills", "as-codex-only", "SKILL.md"))
+  end
+
+  def test_default_agents_status_reports_complete_coverage
+    snapshot = collector.collect
+    provider = snapshot.fetch("providers").first
+
+    assert_equal "agents", provider.fetch("provider")
+    assert_equal "complete", provider.fetch("projection_policy")
+    assert_equal 0, provider.fetch("excluded_count")
+    assert_nil provider.fetch("policy_reason")
   end
 
   def test_collect_explicit_provider_reports_codex_when_not_default
@@ -153,6 +166,14 @@ class Ace::Handbook::Organisms::StatusCollectorTest < Minitest::Test
     assert_includes output, "IN_SYNC"
     assert_includes output, "ace-task"
     assert_includes output, "pi"
+  end
+
+  def test_to_table_includes_agents_projection_coverage
+    output = collector.to_table(collector.collect)
+
+    assert_includes output, "POLICY"
+    assert_includes output, "EXCLUDED"
+    assert_includes output, "complete"
   end
 
   private
