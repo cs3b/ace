@@ -138,7 +138,7 @@ PATH
 PATH
   remote: ace-handbook
   specs:
-    ace-handbook (0.30.0)
+    ace-handbook (0.30.1)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.9)
       ace-support-core (~> 0.29)

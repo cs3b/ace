@@ -11,7 +11,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
-- **ace-handbook**: Made the default `agents` projection independent of installed legacy provider manifests, restoring
+- **ace-handbook v0.30.1**: Made the default `agents` projection independent of installed legacy provider manifests, restoring
   common canonical workflows such as `as-git-commit` in agents-only projects.
 - **ace-handbook v0.29.1**: Treated skills targeting the legacy full provider set (`claude`, `codex`, `gemini`,
   `opencode`, `pi`) as compatible with the default `agents` projection, so common ACE workflow skills such as
