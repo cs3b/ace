@@ -35,6 +35,9 @@ module Ace
               entry.fetch("outdated").to_s,
               entry.fetch("missing").to_s,
               entry.fetch("extra").to_s,
+              entry.fetch("projection_policy", "").to_s,
+              entry.fetch("excluded_count", "").to_s,
+              entry.fetch("policy_reason", "").to_s,
               entry.fetch("relative_output_dir")
             ]
           end
@@ -48,19 +51,20 @@ module Ace
             ["IN_SYNC", *rows.map { |row| row[5] }].map(&:length).max,
             ["OUTDATED", *rows.map { |row| row[6] }].map(&:length).max,
             ["MISSING", *rows.map { |row| row[7] }].map(&:length).max,
-            ["EXTRA", *rows.map { |row| row[8] }].map(&:length).max
+            ["EXTRA", *rows.map { |row| row[8] }].map(&:length).max,
+            ["POLICY", *rows.map { |row| row[9] }].map(&:length).max,
+            ["EXCLUDED", *rows.map { |row| row[10] }].map(&:length).max,
+            ["REASON", *rows.map { |row| row[11] }].map(&:length).max
           ]
 
-          header = format(
-            "%-#{widths[0]}s  %-#{widths[1]}s  %-#{widths[2]}s  %#{widths[3]}s  %#{widths[4]}s  %#{widths[5]}s  %#{widths[6]}s  %#{widths[7]}s  %#{widths[8]}s  %s",
-            "PROVIDER", "ENABLED", "TYPE", "EXPECTED", "INSTALLED", "IN_SYNC", "OUTDATED", "MISSING", "EXTRA", "PATH"
-          )
-          lines = rows.map do |provider, enabled, type, expected, installed, in_sync, outdated, missing, extra, path|
-            format(
-              "%-#{widths[0]}s  %-#{widths[1]}s  %-#{widths[2]}s  %#{widths[3]}s  %#{widths[4]}s  %#{widths[5]}s  %#{widths[6]}s  %#{widths[7]}s  %#{widths[8]}s  %s",
-              provider, enabled, type, expected, installed, in_sync, outdated, missing, extra, path
-            )
+          right_aligned = (3..8).to_a + [10]
+          formats = widths.each_index.map do |index|
+            right_aligned.include?(index) ? "%#{widths[index]}s" : "%-#{widths[index]}s"
           end
+          table_format = formats.join("  ")
+          headers = %w[PROVIDER ENABLED TYPE EXPECTED INSTALLED IN_SYNC OUTDATED MISSING EXTRA POLICY EXCLUDED REASON PATH]
+          header = format(table_format, *headers)
+          lines = rows.map { |row| format(table_format, *row) }
 
           (summary_lines + ["", header] + lines).join("\n")
         end
@@ -102,7 +106,7 @@ module Ace
             end
           end
 
-          {
+          status = {
             "provider" => provider,
             "enabled" => provider_enabled?(provider),
             "relative_output_dir" => relative_output_dir,
@@ -115,6 +119,19 @@ module Ace
             "outdated" => outdated,
             "missing" => (expected.keys - installed_names).size,
             "extra" => extra
+          }
+
+          status.merge!(projection_coverage(skills, expected)) if provider == "agents"
+          status
+        end
+
+        def projection_coverage(skills, expected)
+          excluded_count = skills.size - expected.size
+
+          {
+            "projection_policy" => excluded_count.zero? ? "complete" : "curated",
+            "excluded_count" => excluded_count,
+            "policy_reason" => excluded_count.zero? ? nil : "provider-specific targeting"
           }
         end
 

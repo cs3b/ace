@@ -88,6 +88,7 @@ ace-test-e2e ace-handbook
 ```
 
 Notes:
+
 - `ace-test ace-handbook` targets deterministic tests in `test/fast`.
 - `ace-test ace-handbook feat` is only needed when feature-layer deterministic tests exist in `test/feat`.
 - `ace-test-e2e ace-handbook` is reserved for scenario workflows in `test/e2e`.
@@ -133,6 +134,12 @@ ace-handbook sync
 ace-handbook sync --provider codex
 ace-handbook status --provider codex --format json
 ```
+
+`ace-handbook status` also reports neutral-projection coverage. For the `agents` provider, table output includes
+`POLICY` and `EXCLUDED` columns, while JSON includes `projection_policy`, `excluded_count`, and `policy_reason`.
+`projection_policy: complete` means every canonical skill is in the effective default projection. When provider-specific
+targeting intentionally narrows the neutral projection, status reports `projection_policy: curated`, the excluded count,
+and the reason instead of presenting the file-level projection as a complete canonical mirror.
 
 Unknown provider IDs are a public error contract and should fail with a non-zero exit plus an `Unknown provider: ...`
 message:

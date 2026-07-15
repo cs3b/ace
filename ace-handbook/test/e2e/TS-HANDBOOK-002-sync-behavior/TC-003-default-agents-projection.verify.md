@@ -20,6 +20,6 @@ legacy-targeted workflow skill available in that neutral provider tree.
 - `results/tc/03/status-agents.exit` is `0`
 - `results/tc/03/sync-agents.stdout` includes `synced agents -> .agents/skills`
 - `.agents/skills/as-git-commit/SKILL.md` exists when `ace-git-commit` skills are installed in the sandbox
-- If `as-git-commit` is not installed in the sandbox, at least one installed common workflow skill from the legacy
-  full-provider target set exists under `.agents/skills`
+- If `as-git-commit` is not installed in the sandbox, at least one installed common workflow skill from the legacy full-provider target set exists under `.agents/skills`
 - `results/tc/03/status-agents.stdout` does not report the projected legacy-targeted workflow skill as an extra entry
+- `results/tc/03/status-agents.stdout` includes `POLICY` and `EXCLUDED` coverage columns for the default `agents` row
