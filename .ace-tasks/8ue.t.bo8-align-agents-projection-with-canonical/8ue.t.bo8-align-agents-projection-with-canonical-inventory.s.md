@@ -1,6 +1,6 @@
 ---
 id: 8ue.t.bo8
-status: in_progress
+status: in-progress
 priority: medium
 created_at: "2026-07-15 07:46:55"
 estimate: TBD
@@ -12,6 +12,12 @@ bundle:
   files: [ace-handbook/.ace-defaults/handbook/providers/agents.yml, ace-handbook/docs/usage.md, ace-handbook/lib/ace/handbook/atoms/provider_registry.rb, ace-handbook/lib/ace/handbook/organisms/skill_inventory.rb, ace-handbook/lib/ace/handbook/molecules/skill_projection.rb, ace-handbook/lib/ace/handbook/organisms/provider_syncer.rb, ace-handbook/lib/ace/handbook/organisms/status_collector.rb, ace-handbook/test/fast/organisms/skill_inventory_test.rb, ace-handbook/test/fast/organisms/provider_syncer_test.rb, ace-handbook/test/fast/organisms/status_collector_test.rb, ace-handbook/test/e2e/TS-HANDBOOK-002-sync-behavior/scenario.yml, ace-handbook/test/e2e/TS-HANDBOOK-002-sync-behavior/TC-003-default-agents-projection.verify.md, .ace-tasks/8ue.t.bo8-align-agents-projection-with-canonical/ux/usage.md]
   commands: [ace-task show 8ue.t.bo8 --content, ace-handbook sync, ace-handbook status, ace-handbook status --format json, ace-handbook sync --provider codex, ace-test ace-handbook, ace-test-e2e ace-handbook TS-HANDBOOK-002]
 needs_review: false
+worktree:
+  branch: bo8-align-agents-projection-with-canonical-inventory
+  path: ../ace-t.bo8
+  created_at: "2026-07-15 09:54:15"
+  updated_at: "2026-07-15 09:54:15"
+  target_branch: main
 ---
 
 # Align agents projection with canonical inventory
