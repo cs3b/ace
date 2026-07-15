@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.30.0] - 2026-07-15
+
+### Added
+- Added agents projection coverage fields to `ace-handbook status` JSON and table output, including projection policy,
+  excluded skill count, and the reason for curated projections.
+
+### Technical
+- Added fast and E2E regression coverage for the neutral agents projection status contract.
+
 ## [0.29.1] - 2026-06-30
 
 ### Fixed
