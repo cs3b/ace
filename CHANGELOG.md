@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- **ace-handbook v0.30.0**: Added agents projection coverage fields to `ace-handbook status` JSON and table output,
+  including projection policy, excluded skill count, and the reason for curated projections.
+
 ### Fixed
 
 - **ace-handbook v0.29.1**: Treated skills targeting the legacy full provider set (`claude`, `codex`, `gemini`,
