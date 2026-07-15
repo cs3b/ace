@@ -164,8 +164,10 @@ class Ace::Handbook::Organisms::StatusCollectorTest < Minitest::Test
     assert_includes output, "SOURCE"
     assert_includes output, "EXPECTED"
     assert_includes output, "IN_SYNC"
+    assert_includes output, "PATH"
     assert_includes output, "ace-task"
     assert_includes output, "pi"
+    assert_includes output, ".pi/skills"
   end
 
   def test_to_table_includes_agents_projection_coverage

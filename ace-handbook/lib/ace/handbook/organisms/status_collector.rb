@@ -54,7 +54,8 @@ module Ace
             ["EXTRA", *rows.map { |row| row[8] }].map(&:length).max,
             ["POLICY", *rows.map { |row| row[9] }].map(&:length).max,
             ["EXCLUDED", *rows.map { |row| row[10] }].map(&:length).max,
-            ["REASON", *rows.map { |row| row[11] }].map(&:length).max
+            ["REASON", *rows.map { |row| row[11] }].map(&:length).max,
+            ["PATH", *rows.map { |row| row[12] }].map(&:length).max
           ]
 
           right_aligned = (3..8).to_a + [10]
