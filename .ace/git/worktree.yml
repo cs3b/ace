@@ -12,7 +12,8 @@ git:
   worktree:
     # Root directory for all worktrees (relative to project root)
     # This is where worktree directories will be created
-    root_path: "../"
+    # .ace-wt is git-ignored, so worktrees stay internal to the repo without polluting status
+    root_path: ".ace-wt"
 
     # Automatically navigate to worktree after creation
     # If true, changes directory to the created worktree
