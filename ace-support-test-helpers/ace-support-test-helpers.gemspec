@@ -41,7 +41,7 @@ Gem::Specification.new do |spec|
 
   # Runtime dependencies for test support
   spec.add_dependency "minitest", "~> 5.20"
-  spec.add_dependency "minitest-reporters", "~> 1.6"
+  spec.add_dependency "minitest-reporters", "~> 1.8"
 
   # Development dependencies are managed in the root Gemfile
 end

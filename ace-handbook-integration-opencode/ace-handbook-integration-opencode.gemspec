@@ -24,5 +24,5 @@ Gem::Specification.new do |spec|
   spec.bindir = "exe"
   spec.executables = []
   spec.require_paths = ["lib"]
-  spec.add_dependency "ace-handbook", "~> 0.28"
+  spec.add_dependency "ace-handbook", "~> 0.30"
 end

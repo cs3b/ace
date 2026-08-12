@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.25.3] - 2026-08-12
+
+### Technical
+- Aligned gemspec dependency floors with current ACE package minor release lines and safe external minor dependency bumps (no major version jumps).
+
 ## [0.25.2] - 2026-06-30
 
 ### Fixed

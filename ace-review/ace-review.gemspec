@@ -42,20 +42,20 @@ Gem::Specification.new do |spec|
 
   # Runtime dependencies
   spec.add_dependency "ace-support-cli", "~> 0.6"
-  spec.add_dependency "ace-support-config", "~> 0.9"
-  spec.add_dependency "ace-b36ts", "~> 0.13"
-  spec.add_dependency "ace-support-core", "~> 0.29" # For ProcessTerminator
-  spec.add_dependency "ace-bundle", "~> 0.41"
-  spec.add_dependency "ace-git", "~> 0.19"
+  spec.add_dependency "ace-support-config", "~> 0.17"
+  spec.add_dependency "ace-b36ts", "~> 0.14"
+  spec.add_dependency "ace-support-core", "~> 0.30" # For ProcessTerminator
+  spec.add_dependency "ace-bundle", "~> 0.43"
+  spec.add_dependency "ace-git", "~> 0.22"
   # Note: ace-git-diff dependency removed in v0.26.0 - functionality migrated to ace-git
-  spec.add_dependency "ace-support-nav", "~> 0.25"
-  spec.add_dependency "ace-llm", "~> 0.30"
-  spec.add_dependency "ace-task", "~> 0.31"
+  spec.add_dependency "ace-support-nav", "~> 0.28"
+  spec.add_dependency "ace-llm", "~> 0.38"
+  spec.add_dependency "ace-task", "~> 0.37"
 
   # Development dependencies
-  spec.add_development_dependency "ace-support-test-helpers", "~> 0.13"
+  spec.add_development_dependency "ace-support-test-helpers", "~> 0.14"
   spec.add_development_dependency "bundler", "~> 2.0"
   spec.add_development_dependency "minitest", "~> 5.0"
   spec.add_development_dependency "rake", "~> 13.0"
-  spec.add_development_dependency "rubocop", "~> 1.21"
+  spec.add_development_dependency "rubocop", "~> 1.88"
 end

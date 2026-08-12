@@ -39,13 +39,13 @@ Gem::Specification.new do |spec|
 
   # Runtime dependencies
   spec.add_dependency "ace-support-cli", "~> 0.6"
-  spec.add_dependency "ace-support-config", "~> 0.9"
-  spec.add_dependency "ace-support-core", "~> 0.29"
+  spec.add_dependency "ace-support-config", "~> 0.17"
+  spec.add_dependency "ace-support-core", "~> 0.30"
   spec.add_dependency "ace-support-models", "~> 0.12"
-  spec.add_dependency "faraday", "~> 2.0"
-  spec.add_dependency "addressable", "~> 2.8"
-  spec.add_dependency "kramdown", "~> 2.0"
-  spec.add_dependency "kramdown-parser-gfm", "~> 1.0"
+  spec.add_dependency "faraday", "~> 2.14"
+  spec.add_dependency "addressable", "~> 2.9"
+  spec.add_dependency "kramdown", "~> 2.5"
+  spec.add_dependency "kramdown-parser-gfm", "~> 1.1"
 
   # Development dependencies
   spec.add_development_dependency "bundler", "~> 2.0"

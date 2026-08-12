@@ -21,11 +21,11 @@ Gem::Specification.new do |spec|
   # rubocop:enable Gemspec/DeprecatedAttributeAssignment
 
   spec.add_dependency "ace-support-cli", "~> 0.6"
-  spec.add_dependency "ace-support-core", "~> 0.29"
-  spec.add_dependency "ace-support-config", "~> 0.9"
+  spec.add_dependency "ace-support-core", "~> 0.30"
+  spec.add_dependency "ace-support-config", "~> 0.17"
   spec.add_dependency "ace-support-test-helpers", "~> 0.14"
-  spec.add_dependency "ace-llm", "~> 0.30"
-  spec.add_dependency "ace-b36ts", "~> 0.13"
+  spec.add_dependency "ace-llm", "~> 0.38"
+  spec.add_dependency "ace-b36ts", "~> 0.14"
 
   spec.add_development_dependency "minitest", "~> 5.0"
   spec.add_development_dependency "rake", "~> 13.0"

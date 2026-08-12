@@ -4,7 +4,7 @@ module Ace
   module Handbook
     module Integration
       module Opencode
-        VERSION = '0.3.7'
+        VERSION = "0.3.8"
       end
     end
   end

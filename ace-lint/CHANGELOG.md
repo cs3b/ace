@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.30.8] - 2026-08-12
+
+### Technical
+- Aligned gemspec dependency floors with current ACE package minor release lines and safe external minor dependency bumps (no major version jumps).
+
 ## [0.30.7] - 2026-04-23
 
 ### Technical

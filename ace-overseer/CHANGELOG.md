@@ -6,8 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.15.4] - 2026-08-12
+
 ### Fixed
 - Updated the `ace-tmux` runtime dependency constraint to `~> 0.17` so overseer stays compatible with the current tmux runtime control release line.
+
+### Technical
+- Aligned gemspec dependency floors with current ACE package minor release lines and safe external minor dependency bumps (no major version jumps).
 
 ## [0.15.3] - 2026-04-23
 

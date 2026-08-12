@@ -44,12 +44,12 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   # Runtime dependencies
-  spec.add_dependency "ace-support-config", "~> 0.9"
-  spec.add_dependency "ace-b36ts", "~> 0.13"
-  spec.add_dependency "ace-support-core", "~> 0.29"
+  spec.add_dependency "ace-support-config", "~> 0.17"
+  spec.add_dependency "ace-b36ts", "~> 0.14"
+  spec.add_dependency "ace-support-core", "~> 0.30"
   spec.add_dependency "ace-support-cli", "~> 0.6"
-  spec.add_dependency "faraday", "~> 2.7", ">= 2.7.4"
-  spec.add_dependency "faraday-retry", "~> 2.2"
+  spec.add_dependency "faraday", "~> 2.14"
+  spec.add_dependency "faraday-retry", "~> 2.4"
 
   # Development dependencies
   spec.add_development_dependency "minitest", "~> 5.19"

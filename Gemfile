@@ -48,7 +48,7 @@ group :development, :test do
   gem 'ace-test-runner-e2e', path: 'ace-test-runner-e2e'
   gem 'bundler', '~> 2.4'
   gem 'minitest', '~> 5.20'
-  gem 'minitest-reporters', '~> 1.6'
+  gem 'minitest-reporters', '~> 1.8'
   gem 'rake', '~> 13.0'
   gem 'simplecov', '~> 0.22'
   gem 'standardrb'

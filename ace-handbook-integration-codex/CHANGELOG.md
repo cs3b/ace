@@ -4,6 +4,11 @@ All notable changes to ace-handbook-integration-codex will be documented in this
 
 ## [Unreleased]
 
+## [0.3.9] - 2026-08-12
+
+### Technical
+- Aligned gemspec dependency floors with current ACE package minor release lines and safe external minor dependency bumps (no major version jumps).
+
 ## [0.3.8] - 2026-06-30
 
 ### Changed

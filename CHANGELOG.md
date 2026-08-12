@@ -17,6 +17,11 @@ All notable changes to this project will be documented in this file.
   `opencode`, `pi`) as compatible with the default `agents` projection, so common ACE workflow skills such as
   `as-git-commit` are written to `.agents/skills/` by plain `ace-handbook sync`.
 
+### Technical
+
+- Coordinated patch releases aligning gemspec dependency floors with current ACE package minor lines and safe external minor bumps (no major jumps): `ace-assign v0.55.1`, `ace-b36ts v0.14.9`, `ace-bundle v0.43.6`, `ace-compressor v0.25.3`, `ace-demo v0.25.8`, `ace-docs v0.34.2`, `ace-git v0.22.1`, `ace-git-commit v0.26.4`, `ace-git-secrets v0.15.9`, `ace-git-worktree v0.21.7`, `ace-handbook v0.30.2`, `ace-handbook-integration-claude v0.3.9`, `ace-handbook-integration-codex v0.3.9`, `ace-handbook-integration-gemini v0.3.8`, `ace-handbook-integration-opencode v0.3.8`, `ace-handbook-integration-pi v0.3.9`, `ace-hitl v0.8.8`, `ace-idea v0.21.4`, `ace-lint v0.30.8`, `ace-llm v0.38.3`, `ace-llm-providers-cli v0.31.7`, `ace-overseer v0.15.4`, `ace-prompt-prep v0.25.8`, `ace-retro v0.18.6`, `ace-review v0.53.7`, `ace-search v0.26.4`, `ace-sim v0.15.6`, `ace-support-core v0.30.2`, `ace-support-items v0.15.11`, `ace-support-mac-clipboard v0.3.4`, `ace-support-markdown v0.3.5`, `ace-support-models v0.12.1`, `ace-support-nav v0.28.4`, `ace-support-test-helpers v0.14.3`, `ace-task v0.37.1`, `ace-test-runner v0.25.6`, `ace-test-runner-e2e v0.40.3`, `ace-tmux v0.17.3`.
+
+
 ## [0.9.941] - 2026-06-30
 
 ### Fixed

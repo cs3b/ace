@@ -31,5 +31,5 @@ Gem::Specification.new do |spec|
   ]).select { |f| File.file?(f) }
   spec.require_paths = ["lib"]
 
-  spec.add_dependency "ffi", "~> 1.15"
+  spec.add_dependency "ffi", "~> 1.17"
 end
