@@ -6,11 +6,14 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- Added `docs/agent-harnesses.md` for optional harness-native skill projections and `ace-handbook-integration-*` setup.
+- **ace-handbook**: Shipped generic baseline `wfi://release/*` workflows so plain installs resolve release skills without monorepo overlays (non-publishing by default).
 - **ace-handbook v0.30.0**: Added agents projection coverage fields to `ace-handbook status` JSON and table output,
   including projection policy, excluded skill count, and the reason for curated projections.
 
 ### Changed
 
+- Reoriented `docs/quick-start.md` default setup around root `AGENTS.md` and `.agents/skills/` (harness trees are optional/separate).
 - **ace-support-core v0.31.0**: Replaced bootstrap `AGENTS.md` with principles-first starter guidance and made generated
   `CLAUDE.md` a thin pointer to `AGENTS.md`.
 
@@ -24,6 +27,7 @@ All notable changes to this project will be documented in this file.
 
 ### Technical
 
+- Extended `ace-bundle` workflow-resolution feat coverage for gem-shipped `wfi://release/*` baselines.
 - Coordinated patch releases aligning gemspec dependency floors with current ACE package minor lines and safe external minor bumps (no major jumps): `ace-assign v0.55.1`, `ace-b36ts v0.14.9`, `ace-bundle v0.43.6`, `ace-compressor v0.25.3`, `ace-demo v0.25.8`, `ace-docs v0.34.2`, `ace-git v0.22.1`, `ace-git-commit v0.26.4`, `ace-git-secrets v0.15.9`, `ace-git-worktree v0.21.7`, `ace-handbook v0.30.2`, `ace-handbook-integration-claude v0.3.9`, `ace-handbook-integration-codex v0.3.9`, `ace-handbook-integration-gemini v0.3.8`, `ace-handbook-integration-opencode v0.3.8`, `ace-handbook-integration-pi v0.3.9`, `ace-hitl v0.8.8`, `ace-idea v0.21.4`, `ace-lint v0.30.8`, `ace-llm v0.38.3`, `ace-llm-providers-cli v0.31.7`, `ace-overseer v0.15.4`, `ace-prompt-prep v0.25.8`, `ace-retro v0.18.6`, `ace-review v0.53.7`, `ace-search v0.26.4`, `ace-sim v0.15.6`, `ace-support-core v0.30.2`, `ace-support-items v0.15.11`, `ace-support-mac-clipboard v0.3.4`, `ace-support-markdown v0.3.5`, `ace-support-models v0.12.1`, `ace-support-nav v0.28.4`, `ace-support-test-helpers v0.14.3`, `ace-task v0.37.1`, `ace-test-runner v0.25.6`, `ace-test-runner-e2e v0.40.3`, `ace-tmux v0.17.3`.
 - Dependency-following patch releases after the ace-support-core 0.31 line update: `ace-assign v0.55.2`, `ace-b36ts v0.14.10`, `ace-bundle v0.43.7`, `ace-compressor v0.25.4`, `ace-demo v0.25.9`, `ace-docs v0.34.3`, `ace-git v0.22.2`, `ace-git-commit v0.26.5`, `ace-git-secrets v0.15.10`, `ace-git-worktree v0.21.8`, `ace-handbook v0.30.3`, `ace-hitl v0.8.9`, `ace-idea v0.21.5`, `ace-lint v0.30.9`, `ace-llm v0.38.4`, `ace-overseer v0.15.5`, `ace-prompt-prep v0.25.9`, `ace-retro v0.18.7`, `ace-review v0.53.8`, `ace-search v0.26.5`, `ace-sim v0.15.7`, `ace-support-items v0.15.12`, `ace-support-models v0.12.2`, `ace-support-nav v0.28.5`, `ace-task v0.37.2`, `ace-test-runner v0.25.7`, `ace-test-runner-e2e v0.40.4`, `ace-tmux v0.17.4`.
 
