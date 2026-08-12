@@ -80,6 +80,20 @@ module Ace
                 ))
               end
 
+              # Snapshot pre-existing dirty state & resolve owned task paths
+              dirty_snapshot = snapshot_dirty_state
+              workflow_result[:preexisting_dirty] = dirty_snapshot
+              owned_paths = resolve_owned_task_paths(task_data)
+              workflow_result[:owned_task_paths] = owned_paths
+
+              # Check for pre-existing target conflicts on owned paths
+              all_dirty_files = dirty_snapshot[:staged] + dirty_snapshot[:unstaged] + dirty_snapshot[:untracked]
+              conflicting_paths = all_dirty_files & owned_paths
+              unless conflicting_paths.empty?
+                workflow_result[:recovery] = "Clean pre-existing edits on target task paths before creating worktree: #{conflicting_paths.join(', ')}"
+                return error_workflow_result("Pre-existing edits on target task paths: #{conflicting_paths.join(', ')}", workflow_result)
+              end
+
               # Step 3: Update task status if configured (and not overridden)
               should_update_status = options[:no_status_update] ? false : @config.auto_mark_in_progress?
               if should_update_status && task_data[:status] != "in-progress"
@@ -116,10 +130,21 @@ module Ace
               has_changes_to_commit = should_update_status || metadata_was_added
               if should_commit && has_changes_to_commit
                 commit_message = options[:commit_message] || "in-progress"
-                if commit_task_changes(task_data, commit_message)
-                  workflow_result[:steps_completed] << "task_committed"
+                commit_res = commit_task_changes(task_data, commit_message, owned_paths: owned_paths)
+                if commit_res[:success]
+                  workflow_result[:bookkeeping_commit] = commit_res[:commit_sha]
+                  workflow_result[:committed_paths] = commit_res[:committed_paths]
+
+                  unowned_in_commit = commit_res[:committed_paths] - owned_paths
+                  if unowned_in_commit.empty?
+                    workflow_result[:path_set_verified] = true
+                    workflow_result[:steps_completed] << "task_committed"
+                  else
+                    workflow_result[:path_set_verified] = false
+                    workflow_result[:recovery] = "Bookkeeping commit #{commit_res[:commit_sha]} captured unowned paths: #{unowned_in_commit.join(', ')}"
+                    return error_workflow_result("Bookkeeping commit captured unowned paths: #{unowned_in_commit.join(', ')}", workflow_result)
+                  end
                 else
-                  # Continue even if commit fails, but note it
                   workflow_result[:warnings] << "Failed to commit task changes"
                 end
               end
@@ -127,12 +152,18 @@ module Ace
               # Step 7: Push task changes if configured (so PR shows updates)
               should_push = options[:no_push] ? false : @config.auto_push_task?
               if should_push && should_commit && workflow_result[:steps_completed].include?("task_committed")
+                unless workflow_result[:path_set_verified]
+                  workflow_result[:publication] = "not_attempted"
+                  return error_workflow_result("Refusing to push unverified bookkeeping commit", workflow_result)
+                end
+
                 push_remote = options[:push_remote] || @config.push_remote
                 if push_task_changes(push_remote)
                   workflow_result[:steps_completed] << "task_pushed"
                   workflow_result[:pushed_to] = push_remote
+                  workflow_result[:publication] = "pushed"
                 else
-                  # Continue even if push fails, but note it
+                  workflow_result[:publication] = "not_attempted"
                   workflow_result[:warnings] << "Failed to push task changes"
                 end
               end
@@ -498,12 +529,84 @@ module Ace
               worktree_path: nil,
               branch: nil,
               directory_name: nil,
+              preexisting_dirty: {staged: [], unstaged: [], untracked: []},
+              owned_task_paths: [],
+              bookkeeping_commit: nil,
+              committed_paths: [],
+              index_preserved: true,
+              path_set_verified: false,
+              publication: "not_attempted",
+              recovery: nil,
               steps_completed: [],
               steps_planned: [],
               warnings: [],
               error: nil,
               existing: false
             }
+          end
+
+          # Snapshot working tree and index dirty state
+          #
+          # @return [Hash] Hash with :staged, :unstaged, :untracked path arrays
+          def snapshot_dirty_state
+            staged = []
+            unstaged = []
+            untracked = []
+
+            result = Atoms::GitCommand.execute("status", "--porcelain=v1", timeout: 10)
+            if result[:success] && result[:output]
+              result[:output].each_line do |line|
+                line = line.chomp
+                next if line.empty?
+                x = line[0]
+                y = line[1]
+                file = line[3..-1].to_s.strip
+                file = file.split(" -> ").last if file.include?(" -> ")
+
+                if x == "?" && y == "?"
+                  untracked << file
+                else
+                  staged << file if x != " " && x != "?"
+                  unstaged << file if y != " " && y != "?"
+                end
+              end
+            end
+
+            {staged: staged.uniq, unstaged: unstaged.uniq, untracked: untracked.uniq}
+          end
+
+          # Resolve relative task paths owned by ACE for this operation
+          #
+          # @param task_data [Hash] Task data hash
+          # @return [Array<String>] Array of relative file paths
+          def resolve_owned_task_paths(task_data)
+            paths = []
+            if task_data
+              raw_path = task_data[:path] || task_data["path"]
+              if raw_path
+                rel_path = relative_task_path(raw_path)
+                paths << rel_path if rel_path
+              end
+            end
+            paths.compact.uniq
+          end
+
+          # Make a task file path relative to project root
+          #
+          # @param path [String] Absolute or relative file path
+          # @return [String] Relative file path
+          def relative_task_path(path)
+            return nil unless path
+            require "pathname"
+            pn = Pathname.new(path)
+            root = Pathname.new(@project_root)
+            if pn.absolute?
+              pn.relative_path_from(root).to_s
+            else
+              path
+            end
+          rescue
+            path
           end
 
           # Load configuration
@@ -574,12 +677,19 @@ module Ace
           #
           # @param task_data [Hash] Task data hash from ace-task
           # @param status [String] Task status
-          # @return [Boolean] true if successful
-          def commit_task_changes(task_data, status)
-            # Find the task file (this would need implementation)
-            # For now, commit all changes
+          # @param owned_paths [Array<String>, nil] Target paths to commit
+          # @return [Hash] Result hash with :success, :commit_sha, :committed_paths
+          def commit_task_changes(task_data, status, owned_paths: nil)
             task_id = extract_task_id(task_data)
-            @task_committer.commit_all_changes(status, task_id)
+            paths = owned_paths || resolve_owned_task_paths(task_data)
+            return {success: false, commit_sha: nil, committed_paths: [], error: "No task paths"} if paths.empty?
+
+            message = begin
+              @config.format_commit_message(task_data)
+            rescue
+              "chore(task-#{task_id}): mark as #{status}"
+            end
+            @task_committer.commit_scoped(paths, message)
           end
 
           # Push task changes to remote

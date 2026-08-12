@@ -234,9 +234,40 @@ module Ace
             add_result = execute_git_command("add", *files)
             return false unless add_result[:success]
 
-            # Commit
-            commit_result = execute_git_command("commit", "-m", message)
+            # Commit only the specified files
+            commit_result = execute_git_command("commit", "-m", message, "--", *files)
             commit_result[:success]
+          end
+
+          # Commit scoped files and return commit metadata + changed path list
+          #
+          # @param files [Array<String>] Files to commit
+          # @param message [String] Commit message
+          # @return [Hash] Result with :success, :commit_sha, :committed_paths, :error
+          def commit_scoped(files, message)
+            existing_files = Array(files).select { |file| File.exist?(file) }
+            return {success: false, commit_sha: nil, committed_paths: [], error: "No existing files to commit"} if existing_files.empty?
+
+            success = commit_with_message(existing_files, message)
+            return {success: false, commit_sha: nil, committed_paths: [], error: "Commit failed"} unless success
+
+            sha_res = execute_git_command("rev-parse", "HEAD")
+            sha = sha_res[:success] ? sha_res[:output].strip : nil
+
+            committed_paths = []
+            if sha
+              diff_res = execute_git_command("diff-tree", "--no-commit-id", "--name-only", "-r", sha)
+              if diff_res[:success]
+                committed_paths = diff_res[:output].to_s.lines.map(&:strip).reject(&:empty?)
+              end
+            end
+
+            {
+              success: true,
+              commit_sha: sha,
+              committed_paths: committed_paths,
+              error: nil
+            }
           end
 
           # Commit all changes using direct git commands
