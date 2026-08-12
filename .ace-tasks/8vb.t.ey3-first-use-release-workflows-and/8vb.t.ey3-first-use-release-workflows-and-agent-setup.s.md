@@ -1,6 +1,6 @@
 ---
 id: 8vb.t.ey3
-status: progress
+status: done
 priority: medium
 created_at: "2026-08-12 09:57:53"
 estimate: TBD
