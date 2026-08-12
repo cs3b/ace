@@ -10,7 +10,7 @@ allowed-tools:
   - Bash(ace-bundle:*)
   - Read
 argument-hint: "[gem-name...] [--dry-run]"
-last_modified: 2026-04-10
+last_modified: 2026-08-12
 source: ace-handbook
 integration:
   targets:
@@ -46,5 +46,6 @@ None
 - Follow the workflow as the source of truth.
 - Do the work described by the workflow instead of only summarizing it.
 - When the workflow requires edits, tests, or commits, perform them in this project.
+- OTP timing: build every pending `.gem` first, then ask for one OTP (~30–45s), then push in ≤5-concurrent dependency waves aiming to finish within ~30s; verify metadata only after the burst.
 
 - After live publishing, recommend running `ace-test-e2e ace-monorepo-e2e TS-MONO-001` for installation verification.

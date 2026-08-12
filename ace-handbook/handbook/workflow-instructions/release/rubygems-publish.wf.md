@@ -72,6 +72,7 @@ Publish plan (dry):
 echo "${GEM_HOST_API_KEY:+GEM_HOST_API_KEY is set}"
 ```
 
+If unset, try loading tooling env (for example `mise env`) without printing secrets, then re-check.
 Do not print secret values.
 
 ### 4. Publication gate
@@ -87,11 +88,23 @@ Only if a higher-priority project workflow authorizes pushes **and** the operato
 real publish (not merely prep/dry-run) may `gem build` + `gem push` proceed under that
 project contract's steps and verification gates.
 
-Suggested placeholders for a project overlay (not executed by this baseline):
+### 5. OTP-burst contract for project overlays (do not run from this baseline)
+
+When a project overlay authorizes live `gem push`, use this timing contract so one OTP can cover a large queue:
+
+1. Resolve credentials and the pending queue first
+2. **Build every pending `.gem` artifact** before asking for OTP
+3. Show the final queue (order, versions, artifact paths, count)
+4. Prompt once for OTP — codes are short-lived (**~30–45s**)
+5. Push immediately in dependency-respecting waves of **up to 5 concurrent** `gem push --otp` calls; aim to finish the burst in **≤30s**
+6. Verify RubyGems metadata **after** the burst (not between pushes)
+7. On expired/incorrect OTP: stop, list remaining gems, request a fresh OTP, resume without rebuilding unless an artifact is missing
+
+Suggested overlay commands (executed only under a project publication contract):
 
 ```bash
-# gem build <gemspec>
-# gem push <built-gem>   # only under project publication contract
+# gem build <gemspec>   # all pending artifacts first
+# gem push <built-gem> --otp <OTP>   # waves of ≤5 concurrent
 ```
 
 ## Override
@@ -105,8 +118,10 @@ WFI source). Keep URI `wfi://release/rubygems-publish` stable for the distribute
 - [ ] Ordered publish plan produced for requested gems
 - [ ] Credential presence reported without leaking secrets
 - [ ] No `gem push` / registry mutation from this baseline alone
+- [ ] Overlay guidance documents build-all → OTP → ≤5 concurrent wave publish → deferred verify
 
 ## Common Issues
 
 - ACE monorepo operators may use a specialized overlay; plain projects must not depend on it.
 - Missing credentials should block publish contracts, not local planning.
+- Asking for OTP before builds complete wastes the short OTP window on slow work.

@@ -7,7 +7,7 @@ doc-type: workflow
 purpose: RubyGems publishing workflow
 update:
   frequency: on-change
-  last-updated: '2026-03-29'
+  last-updated: '2026-08-12'
 ---
 
 # RubyGems Publish Workflow
@@ -23,6 +23,21 @@ Publish ACE gems to RubyGems.org in correct dependency order, skipping already-p
 * RubyGems credentials are configured (`~/.gem/credentials` or `GEM_HOST_API_KEY` env var)
 * No version bumping — this workflow publishes versions as they currently exist
 
+## Timing Contract (critical)
+
+RubyGems OTP codes are short-lived (**~30–45 seconds**). The live publish burst must finish inside that window.
+
+Hard sequence:
+
+1. Resolve credentials and pending queue
+2. **Build every pending `.gem` artifact**
+3. Show the final publish queue
+4. **Only then** ask the operator for one OTP
+5. Push immediately in dependency-respecting waves of **up to 5 concurrent** `gem push` calls (aim **≤30s** for the whole burst)
+6. Verify metadata **after** the burst (never between pushes inside the OTP window)
+
+Never request OTP before builds are complete. Never run slow verification, network discovery, or rebuilds after the OTP is collected.
+
 ## Instructions
 
 ### 1. Verify Credentials
@@ -34,7 +49,9 @@ Check that RubyGems authentication is available:
 echo "${GEM_HOST_API_KEY:+✓ GEM_HOST_API_KEY is set}"
 ```
 
-If neither exists, stop and report:
+If `GEM_HOST_API_KEY` is unset, try loading project/tooling env without printing secrets (for example `mise env`) and re-check. Do not dump the key value.
+
+If neither credentials file nor `GEM_HOST_API_KEY` exists after that, stop and report:
 
 ```text
 No RubyGems credentials found. Set up ~/.gem/credentials or export GEM_HOST_API_KEY before publishing.
@@ -98,7 +115,7 @@ Decision matrix:
 | Found, local version already published | Skip with message |
 | Found, different owner | Warn and skip |
 
-### 5. Build Gems
+### 5. Build Gems (before OTP)
 
 For each gem that needs publishing (in dependency order):
 
@@ -106,23 +123,28 @@ For each gem that needs publishing (in dependency order):
 cd ace-<name> && gem build ace-<name>.gemspec
 ```
 
-Run all builds before any `gem push` step.
+Rules:
+
+* Run **all** builds before any OTP prompt or `gem push`
+* Confirm every pending gem has a local `ace-<name>-X.Y.Z.gem` artifact
+* Do **not** ask for OTP in this step
 
 ### 6. Validate Plan and Collect OTP
 
-In live mode, before publishing:
+In live mode, only after every artifact exists:
 
-1. Show the final publish queue with order and artifact names.
-2. Prompt once for the RubyGems OTP.
-3. If OTP is not provided, abort:
+1. Show the final publish queue with order, versions, and artifact paths (and total count)
+2. Tell the operator OTP is short-lived (~30–45s) and pushes start immediately
+3. Prompt once for the RubyGems OTP
+4. If OTP is not provided, abort:
 
 ```text
 Aborted by operator: no OTP provided.
 ```
 
-Use the same OTP for all publishes.
+Use the same OTP for the whole burst. If the OTP expires mid-burst, stop, list remaining unpublished gems, ask for a **fresh** OTP, and resume from the first unpublished artifact (rebuild only if an artifact is missing).
 
-### 7. Publish Gems
+### 7. Publish Gems (OTP-critical path)
 
 **Dry-run mode** (`--dry-run`):
 
@@ -131,29 +153,36 @@ Use the same OTP for all publishes.
   Gem:     ace-<name>
   Version: X.Y.Z
   Order:   N of M
+  Wave:    W (up to 5 concurrent)
 ```
 
 **Live mode**:
 
-Publish each pre-built gem artifact in order:
+1. Partition the topo-ordered pending queue into waves where each wave has at most **5** gems and every gem's unpublished ACE runtime dependencies are already published (or already on RubyGems / earlier waves).
+2. For each wave, start up to 5 concurrent pushes:
 
 ```bash
-cd ace-<name> && gem push ace-<name>-X.Y.Z.gem --otp <OTP>
+gem push ace-<name>-X.Y.Z.gem --otp <OTP>
 ```
 
-Clean up after each publish:
+3. Wait for the wave to finish before starting the next wave.
+4. Aim to complete all waves within ~30 seconds of receiving the OTP.
+5. Do **not** run metadata verification, changelog edits, or other slow work between pushes.
+6. Clean up each successful artifact after its push returns:
 
 ```bash
 rm -f ace-<name>/ace-<name>-*.gem
 ```
 
-**On failure**: Stop immediately. Report which gem failed and why. Do not attempt to publish dependent gems.
+**On failure**: Stop immediately. Report which gem failed and why. Do not attempt to publish dependent gems that still need the failed dependency.
 
 ```text
 ✗ Failed to publish ace-<name> X.Y.Z — dependents skipped:
   - ace-dependent-a
   - ace-dependent-b
 ```
+
+If the failure is an incorrect/expired OTP, request a fresh OTP and resume the remaining queue.
 
 ### 8. Report Results
 
@@ -167,21 +196,23 @@ Summarize all actions:
   Skipped dependents: ace-overseer
 ```
 
-### 9. Verify Published Metadata
+### 9. Verify Published Metadata (after the burst)
 
-After each successful live publish, verify that RubyGems recorded both the publish timestamp and the gem build date:
+After the full publish burst succeeds (or after a completed resume batch), verify RubyGems recorded publish timestamp and build date for each newly published version:
 
 ```bash
 curl -fsSL https://rubygems.org/api/v1/versions/ace-<name>.json
 curl -fsSL https://rubygems.org/api/v1/gems/ace-<name>.json
 ```
 
-Check the newly published version entry and confirm:
+Check:
 
 * `created_at` matches the actual publish event
 * `built_at` is not the RubyGems fallback `1980-01-02T00:00:00.000Z`
 
-If `built_at` falls back to `1980-01-02T00:00:00.000Z`, stop and treat it as a gemspec metadata regression before publishing more packages.
+If `built_at` falls back to `1980-01-02T00:00:00.000Z`, stop and treat it as a gemspec metadata regression before any further publishes.
+
+RubyGems search-index lag is expected briefly after a burst; prefer the versions API over `gem search` for immediate confirmation.
 
 ### 10. Recommended: Verify Installation
 
@@ -197,13 +228,13 @@ This sets up an isolated sandbox and classifies the install path as `SAFE`, `LAG
 
 - Gems are published in correct dependency order
 - Already-published versions are skipped cleanly
-- First failure stops the pipeline (dependents would fail anyway)
+- First non-OTP failure stops the pipeline (dependents would fail anyway)
 - No version bumping occurs
 - `.gem` build artifacts are cleaned up
 - `--dry-run` produces accurate output without side effects
-- Credentials are verified before any publish attempt
-- Live mode gathers publish plan then collects OTP once and reuses it for every `gem push`
-- Live mode verifies RubyGems `created_at` and `built_at` for each newly published version
+- Credentials are verified before any publish attempt (including `mise`/env loading when needed)
+- OTP is collected only after all builds exist, then used in ≤5-wide concurrent waves aimed at ≤30s
+- Metadata verification runs after the burst, not between pushes
 - After live publishing, recommend running `ace-test-e2e ace-monorepo-e2e TS-MONO-001` to verify installation propagation
 
 ## Response Template
@@ -212,4 +243,5 @@ This sets up an isolated sandbox and classifies the install path as `SAFE`, `LAG
 **Skipped:** [count] (already on RubyGems)
 **Failed:** [count and reasons, if any]
 **Mode:** [live|dry-run]
+**Waves:** [count × ≤5 concurrent]
 **Next Step:** Run `ace-test-e2e ace-monorepo-e2e TS-MONO-001` to verify installation
