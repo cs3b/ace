@@ -16,7 +16,7 @@ Run `ace-*` commands directly. Do not pipe, redirect, or post-process their outp
 ## Agent Engineering Practices
 
 Root agent guidance should stay compact. Keep expanded day-to-day practices in docs or skills so agents can load them
-only when relevant.
+only when relevant. Add a rule to `AGENTS.md` only after an agent repeatedly gets something wrong; aim to keep the root file under ~80 lines.
 
 **Cost Bias Override:** do not optimize for human work-weeks or token budgets — choose the technically correct path (full coverage, proper refactors, robust design) even when it costs more turns.
 
@@ -31,6 +31,85 @@ only when relevant.
 - For warm daemons or browser sessions, verify health and exact version matches before reuse.
 - For visual or interactive UI changes, audit overflow, clipped text, overlaps, stale element references, and interaction targets.
 - Keep agent-facing CLI output concise, deterministic, and explicit about empty states, counts, truncation, and next steps.
+
+### Command types
+
+| Type | Environment | Prefix | Example |
+|------|-------------|--------|---------|
+| Skill / slash command | Chat | `/as-` | `/as-task-work 121` |
+| CLI tool | Terminal | `ace-` | `ace-task show 121` |
+
+Examples: `/as-task-work 148`, `/as-git-commit`, `/as-review-pr 90`, `ace-task show 148`, `ace-git-commit --staged`, `ace-review --preset pr`, `ace-test atoms`.
+
+### Bundle shortcuts
+
+- `>project` → `ace-bundle project`
+- `>guide://markdown-style` → `ace-bundle guide://markdown-style`
+- `>>git/commit` → load and run `ace-bundle wfi://git/commit`
+
+Skills under `.agents/skills/*` → follow the skill `SKILL.md`. Workflow loading → `ace-bundle` / `ace-bundle wfi://…`.
+
+### Workflow context embedding
+
+When workflows are invoked via `/as-command`, they may include embedded context (`embed_document_source: true`).
+
+1. Check for embedded XML sections like `<current_repository_status>` or `<available_presets>`
+2. Use that context instead of running redundant commands
+3. Reference embedded sections explicitly in responses
+
+For full patterns, run `ace-bundle guide://workflow-context-embedding`.
+
+### ACE CLI command integrity
+
+`ace-*` commands are optimized for agentic execution. Run them directly and do not wrap or transform their terminal output.
+
+- **MUST** invoke directly: `ace-...`
+- **MUST NOT** use shell output manipulation on `ace-*` invocations: pipes (`|`, `|&`), redirects (`>`, `>>`, `2>`, `&>`), post-processors (`head`, `tail`, `grep`, `awk`, `sed`, `tee`, `xargs`), command substitution/backgrounding (`$()`, backticks, trailing `&`)
+- **MUST** read referenced output files directly when an `ace-*` command prints a path (for example `.ace-local/bundle/project.md`)
+- **MUST NOT** create extra temp capture files for `ace-*` output unless the user explicitly asks for export/logging
+- If a violation happens, rerun the same `ace-*` command in compliant form immediately and treat that rerun as source of truth
+
+Never reset or discard changes you didn't make — use `ace-git-commit $paths` to commit only your changes. For scoped commit/release requests, treat unrelated modified files as acceptable background state unless the user asks to clean them.
+
+### Skill-first planning and execution
+
+If a user names a skill (for example `/as-github-pr-create`) or the task clearly matches an available skill, that skill is mandatory and takes precedence over ad-hoc/manual flow.
+
+**Planning phase (mandatory load, optional run)** — before drafting or finalizing any substantial plan:
+
+1. Match named or clearly relevant skill(s)
+2. Load each selected skill's `SKILL.md`
+3. Load referenced workflow/guidance resources (`wfi://`, `guide://`, `tmpl://`) when available
+4. Decide per skill: **Load-only** (shape the plan) or **Run** (execute the workflow when that validates assumptions better)
+5. Include a short `Skills Applied` section: `Loaded:`, `Executed:` (or `none`), `Why not executed:` when a relevant skill stayed load-only
+
+A substantial plan is incomplete if a clearly relevant skill was not loaded. If discovered later, stop and re-plan from skill-informed context.
+
+**Execution phase** — before any non-read command:
+
+1. Run a quick skill check and list candidate skills
+2. Load selected `SKILL.md` instructions
+3. Run selected skill workflow(s) as primary path
+4. Use manual commands only when no applicable skill exists or a skill is unavailable/blocked
+5. If manual fallback is used, state the reason briefly in status updates
+
+If manual execution starts and a matching skill is identified later: stop manual flow, run the matching skill workflow, continue from skill outputs as source of truth.
+
+### Search and research
+
+- `/as-search-run` — code/file search and discovery
+- `/as-search-research` — multi-search analysis and synthesis
+- `/as-search-feature-research` — feature gap analysis and implementation patterns
+
+### Testing
+
+Always use `ace-test` instead of `bundle exec rake test` or raw `bundle exec ruby` for package tests:
+
+- `ace-test` — run all tests in current package
+- `ace-test test/file_test.rb` — run a single test file
+- `ace-test atoms` — run a test group
+- `ace-test molecules --profile 10` — profile slowest tests
+- `ace-test-suite` — validate the entire monorepo before commits
 
 ## Task Management
 
