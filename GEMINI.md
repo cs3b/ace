@@ -1,4 +1,3 @@
 # Repository Guidelines
 
-Read `CLAUDE.md` first. The only additional guidance here is specific to Codex sandbox execution.
-
+Read `AGENTS.md` first. Skills are projected only to `.agents/skills/`.

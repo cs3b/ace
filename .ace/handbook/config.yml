@@ -1,0 +1,12 @@
+# Project handbook sync: neutral agents projection only.
+# Harness-native trees (.codex/skills, .claude/skills, etc.) are disabled.
+sync:
+  providers:
+    enabled:
+      - agents
+    disabled:
+      - claude
+      - codex
+      - gemini
+      - opencode
+      - pi
