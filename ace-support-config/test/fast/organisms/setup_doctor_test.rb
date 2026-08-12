@@ -1095,6 +1095,24 @@ module Ace
             assert_equal false, parsed["valid"]
           end
         end
+
+        def test_run_recommendations_ace_development_profile
+          with_temp_config(
+            ".git" => {},
+            ".gitignore" => ".ace-local/\n",
+            "AGENTS.md" => "guidance",
+            "docs" => {"tools.md" => "tools"},
+            ".ace" => {"git" => {"worktree.yml" => "git:\n  worktree:\n    root_path: .ace-wt\n"}}
+          ) do
+            doctor = Organisms::SetupDoctor.new
+            io = StringIO.new
+            code = doctor.run_recommendations(profile: "ace-development", json: true, io: io)
+            assert_equal 0, code
+            parsed = JSON.parse(io.string)
+            assert_equal "ace-development", parsed["profile"]
+            assert parsed["findings"].any? { |f| f["id"] == "rec-dev-pipeline" }
+          end
+        end
       end
     end
   end

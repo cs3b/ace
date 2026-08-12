@@ -148,7 +148,7 @@ module Ace
             root = project_root
             version = "0.38.0"
 
-            # Finding 1: Artifact Hygiene
+            # Finding 1: Artifact Hygiene (all profiles)
             gitignore_path = File.join(root, ".gitignore")
             if !File.exist?(gitignore_path) || !gitignore_entry_present?(File.read(gitignore_path), ".ace-local/")
               findings << {
@@ -165,7 +165,7 @@ module Ace
               }
             end
 
-            # Finding 2: Provider Package
+            # Finding 2: Provider Package (all profiles)
             installed = begin
               Gem::Specification.find_all_by_name(PROVIDER_GEM).any?
             rescue
@@ -186,7 +186,7 @@ module Ace
               }
             end
 
-            # Finding 3: Profile declaration
+            # Finding 3: Profile declaration (minimal profile)
             if profile == "minimal"
               findings << {
                 id: "rec-profile-config",
@@ -202,7 +202,7 @@ module Ace
               }
             end
 
-            # Finding 4: Profile-specific checks
+            # Finding 4: Profile-specific checks for application & ace-development
             if %w[application ace-development].include?(profile)
               wt_config = File.join(root, ".ace", "git", "worktree.yml")
               unless File.exist?(wt_config)
@@ -219,6 +219,69 @@ module Ace
                   version: version
                 }
               end
+
+              # Guidance check
+              agents_md = File.join(root, "AGENTS.md")
+              tools_md = File.join(root, "docs", "tools.md")
+              unless File.exist?(agents_md) && File.exist?(tools_md)
+                findings << {
+                  id: "rec-agent-guidance",
+                  severity: "warning",
+                  profile: profile,
+                  evidence: "Agent engineering guidance is incomplete or unanchored",
+                  resolved_source: "project",
+                  current_value: File.exist?(agents_md) ? "missing docs/tools.md" : "missing AGENTS.md",
+                  recommended_value: "AGENTS.md and docs/tools.md present",
+                  rationale: "Provides structured engineering principles and agent practice guidance",
+                  next_action: "Run ace-config sync ace-support-core --force",
+                  version: version
+                }
+              end
+            end
+
+            # Finding 5: Application profile policy checks (strict application workflow validation)
+            if profile == "application"
+              # Check worktree root path safety if config exists
+              wt_config = File.join(root, ".ace", "git", "worktree.yml")
+              if File.exist?(wt_config)
+                begin
+                  wt_data = YAML.safe_load_file(wt_config, aliases: true)
+                  root_p = wt_data&.dig("git", "worktree", "root_path") || wt_data&.dig("root_path")
+                  if root_p && (root_p.start_with?("/") || root_p.include?(".."))
+                    findings << {
+                      id: "rec-worktree-policy",
+                      severity: "warning",
+                      profile: "application",
+                      evidence: "Worktree root_path '#{root_p}' escapes repository boundary",
+                      resolved_source: "project",
+                      current_value: root_p,
+                      recommended_value: ".ace-wt (repository-local)",
+                      rationale: "Application profile requires repository-local or common-root worktrees",
+                      next_action: "Set git.worktree.root_path to .ace-wt in .ace/git/worktree.yml",
+                      version: version
+                    }
+                  end
+                rescue
+                  # Ignore parse failure
+                end
+              end
+            end
+
+            # Finding 6: ACE-development profile exception handling
+            if profile == "ace-development"
+              # Under ace-development profile, broad pipelines (batch worktrees, retrospectives, releases) are expected
+              findings << {
+                id: "rec-dev-pipeline",
+                severity: "info",
+                profile: "ace-development",
+                evidence: "ACE-development profile active",
+                resolved_source: "project",
+                current_value: "ace-development",
+                recommended_value: "ace-development",
+                rationale: "Broad development pipeline capabilities (batch, fork, release, demo) are enabled and accepted",
+                next_action: "No action required",
+                version: version
+              }
             end
 
             # Opt-in update check
