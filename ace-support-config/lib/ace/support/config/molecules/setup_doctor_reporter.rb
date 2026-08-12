@@ -51,6 +51,42 @@ module Ace
             end
           end
 
+          def self.format_recommendations(profile, findings, strict: false)
+            output = []
+            output << "\n🏥 Configuration Recommendations (Profile: #{profile})"
+            output << "=" * 50
+            output << ""
+
+            if findings.empty?
+              output << "✅ No recommendations found - configuration matches profile '#{profile}'."
+            else
+              findings.each_with_index do |f, idx|
+                glyph = case f[:severity]
+                        when "blocker" then "❌"
+                        when "warning" then "⚠️"
+                        when "recommendation" then "💡"
+                        else "ℹ️"
+                        end
+                output << "#{idx + 1}. #{glyph} [#{f[:severity].upcase}] #{f[:id]}"
+                output << "   Source: #{f[:resolved_source]} | Version: #{f[:version]}"
+                output << "   Current: #{f[:current_value]}"
+                output << "   Recommended: #{f[:recommended_value]}"
+                output << "   Rationale: #{f[:rationale]}" if f[:rationale]
+                output << "   Next Action: #{f[:next_action]}" if f[:next_action]
+                output << ""
+              end
+            end
+
+            output << "=" * 50
+            has_failures = findings.any? { |f| %w[blocker warning].include?(f[:severity]) }
+            if strict && has_failures
+              output << "\e[31mRecommendation check failed under strict mode\e[0m"
+            else
+              output << "\e[32mRecommendation check completed\e[0m"
+            end
+            output.join("\n")
+          end
+
           def initialize(results, hygiene:, verbose:, colors:)
             @results = results
             @hygiene = hygiene

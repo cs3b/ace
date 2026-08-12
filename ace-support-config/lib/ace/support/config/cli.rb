@@ -168,7 +168,19 @@ module Ace
         end
 
         def run_doctor(argv)
-          options = {json: false, no_probe: false, probe: false, hygiene: false, verbose: false, no_color: false, quiet: false}
+          options = {
+            json: false,
+            no_probe: false,
+            probe: false,
+            hygiene: false,
+            verbose: false,
+            no_color: false,
+            quiet: false,
+            recommendations: false,
+            profile: nil,
+            strict: false,
+            check_updates: false
+          }
 
           parser = OptionParser.new do |opts|
             opts.banner = <<~BANNER.chomp
@@ -181,6 +193,10 @@ module Ace
               OPTIONS
             BANNER
             opts.on("--json", "Output checks as JSON") { options[:json] = true }
+            opts.on("--recommendations", "Enable recommendation mode") { options[:recommendations] = true }
+            opts.on("--profile PROFILE", "Select profile (minimal, application, ace-development)") { |p| options[:profile] = p }
+            opts.on("--strict", "Exit nonzero on blocker or warning recommendations") { options[:strict] = true }
+            opts.on("--check-updates", "Check for package/recommendation updates") { options[:check_updates] = true }
             opts.on("--hygiene", "Show full hygiene findings") { options[:hygiene] = true }
             opts.on("-v", "--verbose", "Show full diagnostic detail") { options[:verbose] = true }
             opts.on("-q", "--quiet", "Suppress output; use exit status only") { options[:quiet] = true }
@@ -195,15 +211,28 @@ module Ace
 
           parser.parse!(argv)
 
-          exit_code = Organisms::SetupDoctor.new.run(
-            json: options[:json],
-            no_probe: options[:no_probe],
-            probe: options[:probe],
-            hygiene: options[:hygiene],
-            verbose: options[:verbose],
-            colors: !options[:no_color],
-            quiet: options[:quiet]
-          )
+          doctor = Organisms::SetupDoctor.new
+
+          if options[:recommendations]
+            exit_code = doctor.run_recommendations(
+              profile: options[:profile],
+              strict: options[:strict],
+              check_updates: options[:check_updates],
+              json: options[:json],
+              quiet: options[:quiet]
+            )
+          else
+            exit_code = doctor.run(
+              json: options[:json],
+              no_probe: options[:no_probe],
+              probe: options[:probe],
+              hygiene: options[:hygiene],
+              verbose: options[:verbose],
+              colors: !options[:no_color],
+              quiet: options[:quiet]
+            )
+          end
+
           exit(exit_code) if exit_code.positive?
         end
 

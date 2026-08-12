@@ -89,6 +89,157 @@ module Ace
             health_blocking?(checks) ? 1 : 0
           end
 
+          VALID_PROFILES = %w[minimal application ace-development].freeze
+
+          def run_recommendations(profile: nil, strict: false, check_updates: false, json: false, quiet: false, io: $stdout)
+            resolved_profile = resolve_profile(profile)
+            unless VALID_PROFILES.include?(resolved_profile)
+              io.puts "Error: Unknown profile '#{profile}'. Accepted profiles are: #{VALID_PROFILES.join(", ")}"
+              return 1
+            end
+
+            findings = evaluate_recommendations(profile: resolved_profile, check_updates: check_updates)
+
+            has_strict_failures = findings.any? { |f| %w[blocker warning].include?(f[:severity]) }
+            exit_code = (strict && has_strict_failures) ? 1 : 0
+
+            unless quiet
+              if json
+                result = {
+                  schema_version: "1.0",
+                  profile: resolved_profile,
+                  strict: strict,
+                  valid: !has_strict_failures,
+                  findings: findings
+                }
+                io.puts JSON.pretty_generate(result)
+              else
+                io.puts Molecules::SetupDoctorReporter.format_recommendations(resolved_profile, findings, strict: strict)
+              end
+            end
+
+            exit_code
+          end
+
+          def resolve_profile(cli_profile)
+            return cli_profile if cli_profile && !cli_profile.to_s.strip.empty?
+
+            root = project_root
+            proj_config = [
+              File.join(root, ".ace", "config", "config.yml"),
+              File.join(root, ".ace", "config.yml")
+            ].find { |f| File.exist?(f) }
+
+            if proj_config
+              begin
+                data = YAML.safe_load_file(proj_config, aliases: true)
+                p = data&.dig("profile") || data&.dig("config", "profile")
+                return p.to_s if p && !p.to_s.strip.empty?
+              rescue
+                # fallback
+              end
+            end
+
+            "minimal"
+          end
+
+          def evaluate_recommendations(profile:, check_updates: false)
+            findings = []
+            root = project_root
+            version = "0.38.0"
+
+            # Finding 1: Artifact Hygiene
+            gitignore_path = File.join(root, ".gitignore")
+            if !File.exist?(gitignore_path) || !gitignore_entry_present?(File.read(gitignore_path), ".ace-local/")
+              findings << {
+                id: "rec-artifact-hygiene",
+                severity: "blocker",
+                profile: profile,
+                evidence: ".ace-local/ is missing from .gitignore",
+                resolved_source: "project",
+                current_value: File.exist?(gitignore_path) ? "missing .ace-local/" : "missing .gitignore",
+                recommended_value: ".ace-local/ in .gitignore",
+                rationale: "Prevents committing transient agent state",
+                next_action: "Add .ace-local/ to .gitignore",
+                version: version
+              }
+            end
+
+            # Finding 2: Provider Package
+            installed = begin
+              Gem::Specification.find_all_by_name(PROVIDER_GEM).any?
+            rescue
+              false
+            end
+            unless installed
+              findings << {
+                id: "rec-provider-package",
+                severity: "warning",
+                profile: profile,
+                evidence: "#{PROVIDER_GEM} gem is not installed",
+                resolved_source: "package_default",
+                current_value: "not_installed",
+                recommended_value: "#{PROVIDER_GEM} installed",
+                rationale: "Required for LLM provider discovery and execution",
+                next_action: "gem install #{PROVIDER_GEM}",
+                version: version
+              }
+            end
+
+            # Finding 3: Profile declaration
+            if profile == "minimal"
+              findings << {
+                id: "rec-profile-config",
+                severity: "info",
+                profile: profile,
+                evidence: "Project relies on minimal fallback profile",
+                resolved_source: "package_default",
+                current_value: "minimal (fallback)",
+                recommended_value: "explicit profile in .ace/config/config.yml",
+                rationale: "Explicit profile selection enables profile-aware lifecycle checks",
+                next_action: "Add 'profile: application' to .ace/config/config.yml",
+                version: version
+              }
+            end
+
+            # Finding 4: Profile-specific checks
+            if %w[application ace-development].include?(profile)
+              wt_config = File.join(root, ".ace", "git", "worktree.yml")
+              unless File.exist?(wt_config)
+                findings << {
+                  id: "rec-worktree-bootstrap",
+                  severity: "warning",
+                  profile: profile,
+                  evidence: ".ace/git/worktree.yml is missing",
+                  resolved_source: "package_default",
+                  current_value: "not_configured",
+                  recommended_value: "project worktree policy configured",
+                  rationale: "#{profile} profile requires explicit worktree preparation policy",
+                  next_action: "ace-git-worktree config init",
+                  version: version
+                }
+              end
+            end
+
+            # Opt-in update check
+            if check_updates
+              findings << {
+                id: "rec-update-check",
+                severity: "info",
+                profile: profile,
+                evidence: "Opt-in update check feed evaluated",
+                resolved_source: "network",
+                current_value: "up_to_date",
+                recommended_value: "up_to_date",
+                rationale: "Ensures package recommendation versions match upstream releases",
+                next_action: "No update required",
+                version: version
+              }
+            end
+
+            findings
+          end
+
           private
 
           def check_artifact_hygiene

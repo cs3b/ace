@@ -1056,6 +1056,45 @@ module Ace
             registry: registry
           }
         end
+
+        def test_run_recommendations_unknown_profile_returns_error
+          doctor = Organisms::SetupDoctor.new
+          io = StringIO.new
+          code = doctor.run_recommendations(profile: "unknown", io: io)
+          assert_equal 1, code
+          assert_includes io.string, "Unknown profile 'unknown'"
+          assert_includes io.string, "Accepted profiles are: minimal, application, ace-development"
+        end
+
+        def test_run_recommendations_json_output
+          with_temp_config(
+            ".git" => {},
+            ".gitignore" => ".ace-local/\n"
+          ) do
+            doctor = Organisms::SetupDoctor.new
+            io = StringIO.new
+            code = doctor.run_recommendations(profile: "application", json: true, io: io)
+            assert_equal 0, code
+            parsed = JSON.parse(io.string)
+            assert_equal "1.0", parsed["schema_version"]
+            assert_equal "application", parsed["profile"]
+            assert parsed["findings"].any? { |f| f["id"] == "rec-worktree-bootstrap" }
+          end
+        end
+
+        def test_run_recommendations_strict_mode_fails_on_warning
+          with_temp_config(
+            ".git" => {},
+            ".gitignore" => ".ace-local/\n"
+          ) do
+            doctor = Organisms::SetupDoctor.new
+            io = StringIO.new
+            code = doctor.run_recommendations(profile: "application", strict: true, json: true, io: io)
+            assert_equal 1, code
+            parsed = JSON.parse(io.string)
+            assert_equal false, parsed["valid"]
+          end
+        end
       end
     end
   end
