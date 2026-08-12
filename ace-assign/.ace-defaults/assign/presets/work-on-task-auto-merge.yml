@@ -1,0 +1,47 @@
+# work-on-task-auto-merge preset
+# Advanced authorized guarded auto-merge task delivery preset
+
+name: work-on-task-auto-merge
+description: Work on a task with PR, review cycles, and advance authorization for guarded auto-merge
+
+parameters:
+  taskrefs:
+    required: true
+    type: array
+    description: Task references
+
+steps:
+  - name: onboard
+    number: "000"
+    workflow: wfi://onboard
+    instructions:
+      - "Load project context for the task: {{taskrefs}}."
+
+  - name: create-pr
+    number: "030"
+    workflow: wfi://github/pr/create
+    instructions:
+      - "Create a pull request summarizing task: {{taskrefs}}."
+
+  - name: review-valid-1
+    number: "040"
+    context: fork
+    sub_steps: [review-pr, apply-feedback]
+    instructions:
+      - Execute valid review cycle and apply feedback.
+
+  - name: push-to-remote
+    number: "140"
+    instructions:
+      - Push changes with force-with-lease.
+
+  - name: auto-merge
+    number: "150"
+    instructions:
+      - "Guarded auto-merge authorized PR when checks pass."
+
+  - name: mark-tasks-done
+    number: "155"
+    workflow: wfi://task/update
+    instructions:
+      - "Mark task {{taskrefs}} done during final delivery."

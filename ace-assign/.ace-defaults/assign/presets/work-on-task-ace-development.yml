@@ -1,0 +1,59 @@
+# work-on-task-ace-development preset
+# Complete ACE framework development pipeline preset (batching, releases, demo recording, retro)
+
+name: work-on-task-ace-development
+description: Full ACE development pipeline with batching, releases, demo recording, and retrospectives
+
+parameters:
+  taskrefs:
+    required: true
+    type: array
+    description: Task references
+
+steps:
+  - name: onboard
+    number: "000"
+    workflow: wfi://onboard
+    instructions:
+      - "Load project context for the task batch: {{taskrefs}}."
+
+  - name: verify-test-suite
+    number: "012"
+    workflow: wfi://assign/verify-test-suite
+    instructions:
+      - "Verify test coverage and performance across batch tasks: {{taskrefs}}."
+
+  - name: release-minor
+    number: "020"
+    instructions:
+      - Release all modified packages touched by this batch.
+
+  - name: create-pr
+    number: "030"
+    workflow: wfi://github/pr/create
+    instructions:
+      - "Create a pull request summarizing batch tasks: {{taskrefs}}."
+
+  - name: review-valid-1
+    number: "040"
+    context: fork
+    sub_steps: [review-pr, apply-feedback, release]
+    instructions:
+      - Execute valid review cycle.
+
+  - name: record-demo
+    number: "145"
+    instructions:
+      - "Record a demo showing the feature implemented in this PR."
+
+  - name: mark-tasks-done
+    number: "155"
+    workflow: wfi://task/update
+    instructions:
+      - "Mark each top-level task in {{taskrefs}} as done and archive it."
+
+  - name: create-retro
+    number: "160"
+    skill: as-retro-create
+    instructions:
+      - "Create a retrospective for the batch work on: {{taskrefs}}."

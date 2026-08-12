@@ -1,0 +1,42 @@
+# work-on-task-in-place preset
+# In-place single checkout task delivery preset
+
+name: work-on-task-in-place
+description: Work on a task in the current checkout with reviewed, verified, scoped commit (no worktree, PR, or merge)
+
+parameters:
+  taskrefs:
+    required: true
+    type: array
+    description: Task references
+
+steps:
+  - name: onboard
+    number: "000"
+    workflow: wfi://onboard
+    instructions:
+      - "Load project context for the task: {{taskrefs}}."
+
+  - name: verify-test-suite
+    number: "012"
+    workflow: wfi://assign/verify-test-suite
+    instructions:
+      - "Verify test coverage for task in current checkout: {{taskrefs}}."
+
+  - name: review-valid-1
+    number: "040"
+    context: fork
+    sub_steps: [review-pr, apply-feedback]
+    instructions:
+      - Execute valid review cycle and apply feedback in current checkout.
+
+  - name: commit-in-place
+    number: "050"
+    instructions:
+      - "Create one reviewed, verified, scoped commit in the current authorized checkout."
+
+  - name: mark-tasks-done
+    number: "060"
+    workflow: wfi://task/update
+    instructions:
+      - "Mark task {{taskrefs}} done during final delivery."
