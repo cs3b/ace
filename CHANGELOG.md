@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.942] - 2026-08-12
+
 ### Added
 
 - Added `docs/agent-harnesses.md` for optional harness-native skill projections and `ace-handbook-integration-*` setup.
