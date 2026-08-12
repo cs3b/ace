@@ -126,6 +126,12 @@ ace-git-worktree remove feature-branch
 # Skip automatic mise trust
 ace-git-worktree create --task 081 --no-mise-trust
 
+# Skip bootstrap command execution
+ace-git-worktree create --task 081 --no-bootstrap
+
+# Rerun preparation phases (toolchain trust and bootstrap policy) on existing worktree
+ace-git-worktree bootstrap 081
+
 # Skip task status update
 ace-git-worktree create --task 081 --no-status-update
 

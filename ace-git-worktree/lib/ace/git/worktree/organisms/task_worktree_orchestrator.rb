@@ -278,6 +278,39 @@ module Ace
                 end
               end
 
+              # Step 13: Execute toolchain trust and bootstrap preparation phases
+              require_relative "../molecules/toolchain_truster"
+              require_relative "../molecules/bootstrap_executor"
+
+              wt_path = worktree_result[:worktree_path]
+              truster = Molecules::ToolchainTruster.new(project_root: wt_path, policy: "required")
+              trust_res = truster.verify_and_trust
+
+              executor = Molecules::BootstrapExecutor.new(
+                project_root: @project_root,
+                worktree_path: wt_path,
+                bootstrap_config: @config.bootstrap,
+                no_bootstrap: options[:no_bootstrap] || false
+              )
+              bootstrap_res = executor.run
+
+              workflow_result[:phases] = [trust_res, bootstrap_res]
+
+              req_failed = workflow_result[:phases].any? { |p| p[:status] == "required_failed" }
+              adv_failed = workflow_result[:phases].any? { |p| p[:status] == "advisory_failed" }
+
+              if req_failed
+                workflow_result[:readiness] = "not_ready"
+                workflow_result[:retry_command] = "ace-git-worktree bootstrap #{task_data[:id]}"
+                workflow_result[:success] = false
+                workflow_result[:error] = "Required preparation phase failed for #{wt_path}"
+                return workflow_result
+              elsif adv_failed
+                workflow_result[:readiness] = "ready_with_warning"
+              else
+                workflow_result[:readiness] = "ready"
+              end
+
               # Success!
               success_workflow_result("Task worktree created successfully", workflow_result)
             rescue => e

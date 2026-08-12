@@ -19,14 +19,15 @@ gem install ace-git-worktree
 
 ## Command Overview
 
-`ace-git-worktree` ships six commands:
+`ace-git-worktree` ships seven commands:
 
 * `create` for task-aware, PR-aware, and branch-based worktree creation
+* `bootstrap` for rerunning preparation phases (toolchain trust and bootstrap policy) on existing worktrees
 * `list` for active worktree inventory and filtering
 * `switch` for resolving a worktree path you can `cd` into
 * `remove` for safe worktree removal
 * `prune` for stale-reference cleanup
-* `config` for configuration inspection and validation
+* `config` for configuration initialization, bootstrap policy settings, inspection, and validation
 
 Run `ace-git-worktree --help` for the top-level summary and examples.
 
@@ -273,6 +274,22 @@ ace-git-worktree prune --cleanup-directories
 * `--dry-run` - Preview what would be pruned
 * `--cleanup-directories` - Remove orphaned worktree directories
 * `--force` - Force cleanup
+* `-q`, `--quiet` - Suppress non-essential output
+* `-v`, `--verbose` - Show verbose output
+* `-d`, `--debug` - Show debug output
+
+### `ace-git-worktree bootstrap [IDENTIFIER]`
+
+Rerun preparation phases (toolchain trust and bootstrap policy) for an existing worktree in place.
+
+```bash
+ace-git-worktree bootstrap 081
+ace-git-worktree bootstrap t.081 --json
+```
+
+**Options:**
+
+* `--json` - Output format as JSON
 * `-q`, `--quiet` - Suppress non-essential output
 * `-v`, `--verbose` - Show verbose output
 * `-d`, `--debug` - Show debug output
