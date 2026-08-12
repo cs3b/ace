@@ -61,6 +61,13 @@ module Ace
               "on_merge" => false,
               "on_delete" => true
             },
+            "bootstrap" => {
+              "command" => nil,
+              "working_dir" => ".",
+              "timeout" => 60,
+              "policy" => "required",
+              "env" => {}
+            },
             "hooks" => {
               "after_create" => []
             }
@@ -69,7 +76,7 @@ module Ace
           # Configuration namespace paths
           CONFIG_NAMESPACE = ["git", "worktree"].freeze
 
-          attr_reader :root_path, :auto_navigate, :tmux, :mise_trust_auto, :task_config, :pr_config, :branch_config, :cleanup_config, :hooks_config
+          attr_reader :root_path, :auto_navigate, :tmux, :mise_trust_auto, :task_config, :pr_config, :branch_config, :cleanup_config, :bootstrap_config, :hooks_config
 
           # Initialize a new WorktreeConfig
           #
@@ -370,9 +377,25 @@ module Ace
               auto_navigate: auto_navigate?,
               mise_trust_auto: mise_trust_auto?,
               task: @task_config.dup,
+              bootstrap: @bootstrap_config.dup,
               cleanup: @cleanup_config.dup,
               hooks: @hooks_config.dup
             }
+          end
+
+          # Get bootstrap configuration
+          #
+          # @return [Hash] Bootstrap configuration hash
+          def bootstrap
+            @bootstrap_config
+          end
+
+          # Check if bootstrap is configured with a command
+          #
+          # @return [Boolean] true if bootstrap command is set
+          def bootstrap_configured?
+            cmd = @bootstrap_config["command"]
+            !cmd.nil? && !cmd.to_s.strip.empty?
           end
 
           private
@@ -397,8 +420,14 @@ module Ace
           # @param config_hash [Hash] Full configuration hash
           # @return [Hash] Worktree-specific configuration
           def extract_worktree_config(config_hash)
-            CONFIG_NAMESPACE.reduce(config_hash) do |current, key|
-              current&.dig(key) || {}
+            return {} unless config_hash.is_a?(Hash)
+
+            if config_hash.key?("git")
+              config_hash.dig("git", "worktree") || config_hash
+            elsif config_hash.key?("worktree")
+              config_hash.dig("worktree") || config_hash
+            else
+              config_hash
             end
           end
 
@@ -435,6 +464,7 @@ module Ace
             @pr_config = @merged_config["pr"] || {}
             @branch_config = @merged_config["branch"] || {}
             @cleanup_config = @merged_config["cleanup"] || {}
+            @bootstrap_config = @merged_config["bootstrap"] || {}
             @hooks_config = @merged_config["hooks"] || {}
           end
 

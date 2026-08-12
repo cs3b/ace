@@ -101,7 +101,7 @@ module Ace
             # Resolve config for git/worktree namespace
             config = resolver.resolve_namespace("git", filename: "worktree")
 
-            @config_hash = config.data
+            @config_hash = config.respond_to?(:to_h) ? config.to_h : (config.respond_to?(:data) ? config.data : {})
           rescue => e
             warn "Warning: Error loading worktree configuration: #{e.message}"
             @config_hash = {}

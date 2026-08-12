@@ -135,32 +135,59 @@ class ConfigCommandTest < Minitest::Test
     mock_manager.verify
   end
 
-  def test_config_with_special_characters
-    skip "Mock config object expectations don't match implementation method calls - needs investigation of config object interface"
+  def test_config_init_creates_minimal_file
+    Dir.mktmpdir do |dir|
+      Dir.chdir(dir) do
+        cmd = Ace::Git::Worktree::Commands::ConfigCommand.new
+        res = cmd.run(["init"])
+        assert_equal 0, res
+        target = File.join(dir, ".ace", "git", "worktree.yml")
+        assert File.exist?(target)
+        content = File.read(target)
+        assert_match(/git:/, content)
+      end
+    end
+  end
 
-    # Test handling of special characters in config values
-    mock_manager = Minitest::Mock.new
-    mock_config = Minitest::Mock.new
-    mock_config.expect(:root_path, "/path/with-dashes_and.underscores")
-    mock_config.expect(:absolute_root_path, "/absolute/path/with-dashes_and.underscores")
-    mock_config.expect(:mise_trust_auto?, false)
-    mock_config.expect(:directory_format, "task-{id}-{slug} (v{version})")
-    mock_config.expect(:branch_format, "task-{id}")
-    mock_config.expect(:auto_mark_in_progress?, false)
-    mock_config.expect(:auto_commit_task?, false)
-    mock_config.expect(:add_worktree_metadata?, false)
-    mock_config.expect(:cleanup_on_merge?, false)
-    mock_config.expect(:cleanup_on_delete?, false)
-    # Called again in the example section
-    mock_config.expect(:directory_format, "task-{id}-{slug} (v{version})")
-    mock_config.expect(:branch_format, "task-{id}")
+  def test_config_set_bootstrap_and_show_json_with_provenance
+    Dir.mktmpdir do |dir|
+      Dir.chdir(dir) do
+        cmd = Ace::Git::Worktree::Commands::ConfigCommand.new
+        res = cmd.run(["set-bootstrap", "--command", "npm test", "--timeout", "120", "--required", "--env", "SECRET_TOKEN=supersecret"])
+        assert_equal 0, res
 
-    mock_manager.expect(:configuration, mock_config)
+        out, err = capture_io do
+          cmd.run(["show", "--json"])
+        end
 
-    @command.instance_variable_set(:@manager, mock_manager)
+        begin
+          parsed = JSON.parse(out)
+          assert_equal "1.0", parsed["schema_version"]
+          assert_equal "npm test", parsed["effective"]["bootstrap"]["command"]
+          assert_equal 120, parsed["effective"]["bootstrap"]["timeout"]
+          assert_equal "required", parsed["effective"]["bootstrap"]["policy"]
+          assert_equal "[REDACTED]", parsed["effective"]["bootstrap"]["env"]["SECRET_TOKEN"]
+          assert_equal "project", parsed["provenance"]["bootstrap.command"]
+        rescue => e
+          flunk "JSON parse failed. STDOUT was:\n#{out}\nSTDERR was:\n#{err}\nError: #{e.message}"
+        end
+      end
+    end
+  end
 
-    result = @command.run(["show"])
-    assert_equal 0, result
-    mock_manager.verify
+  def test_config_validate_bootstrap
+    Dir.mktmpdir do |dir|
+      Dir.chdir(dir) do
+        cmd = Ace::Git::Worktree::Commands::ConfigCommand.new
+        cmd.run(["set-bootstrap", "--command", "bundle exec rake test", "--working-dir", "."])
+
+        out, err = capture_io do
+          cmd.run(["validate", "--bootstrap", "--json"])
+        end
+
+        parsed = JSON.parse(out)
+        assert parsed["valid"], "Expected valid to be true, got:\nSTDOUT:\n#{out}\nSTDERR:\n#{err}"
+      end
+    end
   end
 end
