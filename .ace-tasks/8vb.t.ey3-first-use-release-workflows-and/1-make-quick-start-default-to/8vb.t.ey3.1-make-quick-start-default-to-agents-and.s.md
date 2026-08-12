@@ -1,6 +1,6 @@
 ---
 id: 8vb.t.ey3.1
-status: draft
+status: pending
 priority: medium
 created_at: "2026-08-12 09:58:02"
 estimate: TBD
@@ -8,17 +8,10 @@ dependencies: []
 tags: []
 parent: 8vb.t.ey3
 bundle:
-  presets:
-  - project
-  files:
-  - docs/quick-start.md
-  - docs/tools.md
-  - ace-support-core/.ace-defaults/project-root/AGENTS.md
-  - ace-support-core/.ace-defaults/project-root/CLAUDE.md
-  - ace-support-core/.ace-defaults/project-root/docs/tools.md
-  commands:
-  - ace-config sync ace-support-core
-  - ace-handbook sync
+  presets: [project]
+  files: [docs/quick-start.md, docs/tools.md, ace-support-core/.ace-defaults/project-root/AGENTS.md, ace-support-core/.ace-defaults/project-root/CLAUDE.md, ace-support-core/.ace-defaults/project-root/docs/tools.md]
+  commands: [ace-config sync ace-support-core, ace-handbook sync]
+needs_review: false
 ---
 
 # Make quick-start default to AGENTS and agents
@@ -82,7 +75,10 @@ Edge Cases:
 
 ## Validation Questions
 
-- None open. Separate harness doc name locked to `docs/agent-harnesses.md`.
+- None open. Research-confirmed defaults:
+  - Separate harness doc name locked to `docs/agent-harnesses.md`.
+  - Current `docs/quick-start.md` still treats `ace-support-core` / `AGENTS.md` as optional (“If you also want…”) and lists `ace-handbook-integration-*` in the full-stack default install; this slice reorients those to agents-first default + harness-doc optional path.
+  - `docs/tools.md` is already largely agents-first; touch only if wording drifts from the new quick-start contract.
 
 ## Vertical Slice Decomposition Task/Subtask Model
 

@@ -1,6 +1,6 @@
 ---
 id: 8vb.t.ey3
-status: draft
+status: pending
 priority: medium
 created_at: "2026-08-12 09:57:53"
 estimate: TBD
@@ -8,16 +8,10 @@ dependencies: []
 tags: []
 github_issue: 310
 bundle:
-  presets:
-  - project
-  files:
-  - docs/quick-start.md
-  - docs/tools.md
-  - ace-handbook/handbook/skills/as-release/SKILL.md
-  - ace-bundle/test/feat/workflow_resolution_test.rb
-  commands:
-  - ace-bundle wfi://release/local
-  - ace-task show 8vb.t.ey3
+  presets: [project]
+  files: [docs/quick-start.md, docs/tools.md, ace-handbook/handbook/skills/as-release/SKILL.md, ace-bundle/test/feat/workflow_resolution_test.rb]
+  commands: [ace-bundle wfi://release/local, ace-task show 8vb.t.ey3]
+needs_review: false
 ---
 
 # First-use release workflows and agent setup
@@ -73,7 +67,10 @@ Edge Cases:
 
 ## Validation Questions
 
-- None open for drafting. Defaults locked: baselines ship with the handbook WFI tree; docs deepen is in-scope as subtask `.1`.
+- None open for drafting. Research-confirmed defaults:
+  - Baselines ship under `ace-handbook/handbook/workflow-instructions/release/` (currently absent; monorepo `.ace-handbook/` overlays are the only resolvers today).
+  - Docs deepen is in-scope as subtask `.1` (`docs/agent-harnesses.md` + agents-first quick-start).
+  - URI set matches shipped skills + assign catalog: `local`, `bump-version`, `update-changelog`, `publish`, `rubygems-publish`.
 
 ## Vertical Slice Decomposition Task/Subtask Model
 

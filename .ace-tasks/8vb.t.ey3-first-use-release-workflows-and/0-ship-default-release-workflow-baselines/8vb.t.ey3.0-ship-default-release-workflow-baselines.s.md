@@ -1,6 +1,6 @@
 ---
 id: 8vb.t.ey3.0
-status: draft
+status: pending
 priority: medium
 created_at: "2026-08-12 09:58:01"
 estimate: TBD
@@ -8,21 +8,10 @@ dependencies: []
 tags: []
 parent: 8vb.t.ey3
 bundle:
-  presets:
-  - project
-  files:
-  - ace-handbook/handbook/skills/as-release/SKILL.md
-  - ace-handbook/handbook/skills/as-release-bump-version/SKILL.md
-  - ace-handbook/handbook/skills/as-release-update-changelog/SKILL.md
-  - ace-handbook/handbook/skills/as-release-rubygems-publish/SKILL.md
-  - ace-assign/.ace-defaults/assign/catalog/steps/release.step.yml
-  - ace-bundle/test/feat/workflow_resolution_test.rb
-  commands:
-  - ace-bundle wfi://release/local
-  - ace-bundle wfi://release/bump-version
-  - ace-bundle wfi://release/update-changelog
-  - ace-bundle wfi://release/publish
-  - ace-bundle wfi://release/rubygems-publish
+  presets: [project]
+  files: [ace-handbook/handbook/skills/as-release/SKILL.md, ace-handbook/handbook/skills/as-release-bump-version/SKILL.md, ace-handbook/handbook/skills/as-release-update-changelog/SKILL.md, ace-handbook/handbook/skills/as-release-rubygems-publish/SKILL.md, ace-handbook/.ace-defaults/nav/protocols/wfi-sources/ace-handbook.yml, ace-assign/.ace-defaults/assign/catalog/steps/release.step.yml, ace-assign/.ace-defaults/assign/catalog/steps/release-minor.step.yml, ace-bundle/test/feat/workflow_resolution_test.rb, .ace-handbook/workflow-instructions/release/local.wf.md, .ace-handbook/workflow-instructions/release/publish.wf.md]
+  commands: [ace-bundle wfi://release/local, ace-bundle wfi://release/bump-version, ace-bundle wfi://release/update-changelog, ace-bundle wfi://release/publish, ace-bundle wfi://release/rubygems-publish]
+needs_review: false
 ---
 
 # Ship default release workflow baselines
@@ -90,9 +79,22 @@ Edge Cases:
 - Package tests prove resolution for the URI set above (extend the existing workflow-resolution feat pattern).
 - At least one failure-path test shows a missing WFI URI still fails clearly.
 
+## Consumer Packages
+
+| Package | Role |
+|---------|------|
+| `ace-handbook` | Ships baseline `handbook/workflow-instructions/release/*.wf.md` via existing `wfi-sources` registration |
+| `ace-assign` | Catalog steps `release` / `release-minor` consume `wfi://release/publish` |
+| `ace-bundle` | Feat coverage for URI resolution/load (extend `workflow_resolution_test.rb`) |
+
+Monorepo `.ace-handbook/workflow-instructions/release/*` remains a higher-priority specialized overlay and is **not** the shipped baseline copy.
+
 ## Validation Questions
 
-- None open. Ship home default: handbook-packaged WFI tree (skills already live there); assign keeps catalog refs.
+- None open. Research-confirmed defaults:
+  - Ship home: `ace-handbook/handbook/workflow-instructions/release/` (gem already registers that tree).
+  - Today those URIs resolve only via monorepo `.ace-handbook/` overlays; gem tree has no `release/` WFIs yet (#310).
+  - Assign keeps catalog refs; baselines are generic contracts, not ACE monorepo release procedures.
 
 ## Vertical Slice Decomposition Task/Subtask Model
 
@@ -106,6 +108,7 @@ Edge Cases:
 ### Unit/Component Validation
 
 - Feat tests assert each required `wfi://release/*` URI resolves against installed/gem-default sources (without project release overlays).
+- Resolution evidence must identify the gem handbook path (not monorepo `.ace-handbook/`); isolate or fixture away project overlays when asserting the plain-install contract.
 - Assert loaded workflow content distinguishes prep vs publish and defaults to non-publishing.
 - Assert missing URI failure remains clear.
 
