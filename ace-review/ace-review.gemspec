@@ -44,7 +44,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "ace-support-cli", "~> 0.6"
   spec.add_dependency "ace-support-config", "~> 0.17"
   spec.add_dependency "ace-b36ts", "~> 0.14"
-  spec.add_dependency "ace-support-core", "~> 0.30" # For ProcessTerminator
+  spec.add_dependency "ace-support-core", "~> 0.31" # For ProcessTerminator
   spec.add_dependency "ace-bundle", "~> 0.43"
   spec.add_dependency "ace-git", "~> 0.22"
   # Note: ace-git-diff dependency removed in v0.26.0 - functionality migrated to ace-git

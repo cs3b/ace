@@ -40,7 +40,7 @@ Gem::Specification.new do |spec|
 
   # Dependencies
   spec.add_dependency "ace-support-cli", "~> 0.6"
-  spec.add_dependency "ace-support-core", "~> 0.30"
+  spec.add_dependency "ace-support-core", "~> 0.31"
   spec.add_dependency "ace-support-config", "~> 0.17"
   spec.add_dependency "ace-support-nav", "~> 0.28"
   spec.add_dependency "ace-b36ts", "~> 0.14"

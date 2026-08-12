@@ -2,6 +2,6 @@
 
 module Ace
   module TestRunner
-    VERSION = "0.25.6"
+    VERSION = "0.25.7"
   end
 end

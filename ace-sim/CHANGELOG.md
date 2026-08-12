@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.15.7] - 2026-08-12
+
+### Technical
+- Raised the `ace-support-core` dependency floor to `~> 0.31` after the principles-first bootstrap guidance release.
 ## [0.15.6] - 2026-08-12
 
 ### Technical

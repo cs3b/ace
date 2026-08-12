@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.7] - 2026-08-12
+
+### Technical
+- Raised the `ace-support-core` dependency floor to `~> 0.31` after the principles-first bootstrap guidance release.
 ## [0.18.6] - 2026-08-12
 
 ### Technical

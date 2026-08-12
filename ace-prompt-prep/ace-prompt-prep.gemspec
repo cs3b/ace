@@ -49,7 +49,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "ace-git", "~> 0.22" # Unified git operations (task 140.04)
   spec.add_dependency "ace-llm", "~> 0.38"
   spec.add_dependency "ace-support-nav", "~> 0.28"
-  spec.add_dependency "ace-support-core", "~> 0.30" # ace-support-cli infrastructure (task 179.01)
+  spec.add_dependency "ace-support-core", "~> 0.31" # ace-support-cli infrastructure (task 179.01)
   spec.add_dependency "ace-task", "~> 0.37"
   spec.add_dependency "ace-b36ts", "~> 0.14" # Base36 compact IDs (task 149, renamed 202.03)
   spec.add_dependency "ace-support-cli", "~> 0.6"

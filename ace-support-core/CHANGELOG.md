@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.31.0] - 2026-08-12
+
+### Changed
+- Replaced bootstrap `AGENTS.md` with principles-first starter guidance and made generated `CLAUDE.md` a thin pointer to `AGENTS.md`.
+- Documented when to expand root `AGENTS.md` in generated `docs/tools.md` agent engineering practices.
 ## [0.30.2] - 2026-08-12
 
 ### Technical

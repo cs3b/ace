@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.43.7] - 2026-08-12
+
+### Technical
+- Raised the `ace-support-core` dependency floor to `~> 0.31` after the principles-first bootstrap guidance release.
 ## [0.43.6] - 2026-08-12
 
 ### Technical
