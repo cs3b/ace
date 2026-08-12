@@ -6,6 +6,7 @@ Customize it for repository-specific agent workflows and operational practices.
 ## Agent Engineering Practices
 
 Root agent files should stay short and reserve detail for this page or project skills.
+Add a rule to `AGENTS.md` only after an agent repeatedly gets something wrong; keep the root file under ~30–50 lines.
 
 **Cost Bias Override:** do not optimize for human work-weeks or token budgets — choose the technically correct path (full coverage, proper refactors, robust design) even when it costs more turns.
 
