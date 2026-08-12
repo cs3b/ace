@@ -49,7 +49,7 @@ Work through the plan checklist, step by step:
 1. Mark task in-progress: `ace-task update <ref> --set status=in-progress`
 2. For each plan step: implement → verify → commit → mark corresponding task checkbox done
    - Plan steps include `path:line` anchors to spec sections — when satisfied, mark the corresponding Success Criteria or Deliverables checkbox as `[x]`
-3. Mark task done: `ace-task update <ref> --set status=done`
+3. Leave task in-progress for final delivery: `ace-task update <ref> --set status=in-progress` (final delivery step is sole owner of `done` and archive)
 
 ## Principles
 
@@ -104,7 +104,7 @@ All plan steps checked, all success criteria pass:
    ```
    If dirty, commit remaining changes with `ace-git-commit` before proceeding.
 
-2. Mark task done:
+2. Keep task status as in-progress (final delivery owns marking status=done):
    ```bash
-   ace-task update <ref> --set status=done
+   ace-task update <ref> --set status=in-progress
    ```
