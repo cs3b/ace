@@ -4,6 +4,11 @@ All notable changes to ace-handbook-integration-pi will be documented in this fi
 
 ## [Unreleased]
 
+## [0.3.10] - 2026-08-12
+
+### Technical
+- Raised the `ace-handbook` dependency floor to `~> 0.31` after the generic release workflow baselines release.
+
 ## [0.3.9] - 2026-08-12
 
 ### Technical

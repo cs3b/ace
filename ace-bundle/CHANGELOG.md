@@ -6,7 +6,9 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
-### Added
+## [0.43.8] - 2026-08-12
+
+### Technical
 - Extended workflow-resolution feat coverage for gem-shipped `wfi://release/*` baselines (isolated from monorepo overlays) plus a clear failure path for missing release URIs.
 
 ## [0.43.7] - 2026-08-12
