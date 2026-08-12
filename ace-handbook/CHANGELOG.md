@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Shipped generic baseline `wfi://release/*` workflows (`local`, `bump-version`, `update-changelog`, `publish`, `rubygems-publish`) under `handbook/workflow-instructions/release/` so plain installs resolve release skills without monorepo overlays; defaults stay non-publishing until a project publication contract exists.
+
 ## [0.30.3] - 2026-08-12
 
 ### Technical
