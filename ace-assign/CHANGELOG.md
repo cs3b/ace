@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.56.0] - 2026-08-13
+### Added
+- Calculate exact-head evidence for status
+- Add outcome-based task presets
+### Fixed
+- Resolve PR 316 findings and finalize cleanup proofs
+
 ## [0.55.2] - 2026-08-12
 
 ### Technical

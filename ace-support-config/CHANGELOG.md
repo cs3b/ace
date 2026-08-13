@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.0] - 2026-08-13
+### Added
+- Manage expiring drift acknowledgements
+- Add profile-aware policy checks to doctor
+- Report profile-aware configuration drift in doctor
+### Technical
+- Streamline bootstrap templates around principles-first guidance
+
 ## [0.17.1] - 2026-06-30
 
 ### Changed

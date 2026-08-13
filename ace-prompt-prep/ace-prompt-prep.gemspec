@@ -44,9 +44,9 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   # Runtime dependencies
-  spec.add_dependency "ace-support-config", "~> 0.17"
+  spec.add_dependency "ace-support-config", "~> 0.18"
   spec.add_dependency "ace-bundle", "~> 0.43"
-  spec.add_dependency "ace-git", "~> 0.22" # Unified git operations (task 140.04)
+  spec.add_dependency "ace-git", "~> 0.23" # Unified git operations (task 140.04)
   spec.add_dependency "ace-llm", "~> 0.38"
   spec.add_dependency "ace-support-nav", "~> 0.28"
   spec.add_dependency "ace-support-core", "~> 0.31" # ace-support-cli infrastructure (task 179.01)

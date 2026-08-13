@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.22.0] - 2026-08-13
+### Added
+- Add cleanup plan application with drift guards
+- Classify merged refs with GitHub PR evidence
+- Report repository inventory with ancestry proof
+- Run recoverable preparation phases in place
+- Add bootstrap config management and provenance
+- Fail closed on tracked mise trust verification
+### Fixed
+- Resolve PR 316 findings and finalize cleanup proofs
+- Restrict bookkeeping commits to owned paths
+
 ## [0.21.8] - 2026-08-12
 
 ### Technical

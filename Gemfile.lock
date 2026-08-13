@@ -1,11 +1,11 @@
 PATH
   remote: ace-assign
   specs:
-    ace-assign (0.55.2)
+    ace-assign (0.56.0)
       ace-b36ts (~> 0.14)
       ace-llm (~> 0.38)
       ace-support-cli (~> 0.6)
-      ace-support-config (~> 0.17)
+      ace-support-config (~> 0.18)
       ace-support-core (~> 0.31)
       ace-support-markdown (~> 0.3)
       ace-support-nav (~> 0.28)
@@ -17,7 +17,7 @@ PATH
   specs:
     ace-b36ts (0.14.10)
       ace-support-cli (~> 0.6)
-      ace-support-config (~> 0.17)
+      ace-support-config (~> 0.18)
       ace-support-core (~> 0.31)
 
 PATH
@@ -25,9 +25,9 @@ PATH
   specs:
     ace-bundle (0.43.8)
       ace-compressor (~> 0.25)
-      ace-git (~> 0.22)
+      ace-git (~> 0.23)
       ace-support-cli (~> 0.6)
-      ace-support-config (~> 0.17)
+      ace-support-config (~> 0.18)
       ace-support-core (~> 0.31)
       ace-support-fs (~> 0.3)
       ace-support-nav (~> 0.28)
@@ -37,7 +37,7 @@ PATH
   specs:
     ace-compressor (0.25.4)
       ace-support-cli (~> 0.6)
-      ace-support-config (~> 0.17)
+      ace-support-config (~> 0.18)
       ace-support-core (~> 0.31)
 
 PATH
@@ -46,7 +46,7 @@ PATH
     ace-demo (0.25.9)
       ace-b36ts (~> 0.14)
       ace-support-cli (~> 0.6)
-      ace-support-config (~> 0.17)
+      ace-support-config (~> 0.18)
       ace-support-core (~> 0.31)
       ace-tmux (~> 0.17)
 
@@ -55,10 +55,10 @@ PATH
   specs:
     ace-docs (0.34.3)
       ace-b36ts (~> 0.14)
-      ace-git (~> 0.22)
+      ace-git (~> 0.23)
       ace-llm (~> 0.38)
       ace-support-cli (~> 0.6)
-      ace-support-config (~> 0.17)
+      ace-support-config (~> 0.18)
       ace-support-core (~> 0.31)
       ace-support-markdown (~> 0.3)
       colorize (~> 1.1)
@@ -70,10 +70,10 @@ PATH
   remote: ace-git-commit
   specs:
     ace-git-commit (0.26.5)
-      ace-git (~> 0.22)
+      ace-git (~> 0.23)
       ace-llm (~> 0.38)
       ace-support-cli (~> 0.6)
-      ace-support-config (~> 0.17)
+      ace-support-config (~> 0.18)
       ace-support-core (~> 0.31)
 
 PATH
@@ -82,7 +82,7 @@ PATH
     ace-git-secrets (0.15.10)
       ace-b36ts (~> 0.14)
       ace-support-cli (~> 0.6)
-      ace-support-config (~> 0.17)
+      ace-support-config (~> 0.18)
       ace-support-core (~> 0.31)
       faraday (~> 2.14)
       faraday-retry (~> 2.4)
@@ -90,19 +90,19 @@ PATH
 PATH
   remote: ace-git-worktree
   specs:
-    ace-git-worktree (0.21.8)
-      ace-git (~> 0.22)
+    ace-git-worktree (0.22.0)
+      ace-git (~> 0.23)
       ace-support-cli (~> 0.6)
-      ace-support-config (~> 0.17)
+      ace-support-config (~> 0.18)
       ace-support-core (~> 0.31)
       ace-task (~> 0.37)
 
 PATH
   remote: ace-git
   specs:
-    ace-git (0.22.2)
+    ace-git (0.23.0)
       ace-support-cli (~> 0.6)
-      ace-support-config (~> 0.17)
+      ace-support-config (~> 0.18)
       ace-support-core (~> 0.31)
 
 PATH
@@ -140,7 +140,7 @@ PATH
   specs:
     ace-handbook (0.31.0)
       ace-support-cli (~> 0.6)
-      ace-support-config (~> 0.17)
+      ace-support-config (~> 0.18)
       ace-support-core (~> 0.31)
       ace-support-nav (~> 0.28)
 
@@ -150,7 +150,7 @@ PATH
     ace-hitl (0.8.9)
       ace-b36ts (~> 0.14)
       ace-support-cli (~> 0.6)
-      ace-support-config (~> 0.17)
+      ace-support-config (~> 0.18)
       ace-support-core (~> 0.31)
       ace-support-fs (~> 0.3)
       ace-support-items (~> 0.15)
@@ -171,7 +171,7 @@ PATH
     ace-lint (0.30.9)
       ace-b36ts (~> 0.14)
       ace-support-cli (~> 0.6)
-      ace-support-config (~> 0.17)
+      ace-support-config (~> 0.18)
       ace-support-core (~> 0.31)
       colorize (~> 1.1)
       kramdown (~> 2.5)
@@ -188,7 +188,7 @@ PATH
   specs:
     ace-llm (0.38.4)
       ace-support-cli (~> 0.6)
-      ace-support-config (~> 0.17)
+      ace-support-config (~> 0.18)
       ace-support-core (~> 0.31)
       ace-support-models (~> 0.12)
       addressable (~> 2.9)
@@ -200,11 +200,11 @@ PATH
   remote: ace-overseer
   specs:
     ace-overseer (0.15.5)
-      ace-assign (~> 0.55)
-      ace-git (~> 0.22)
-      ace-git-worktree (~> 0.21)
+      ace-assign (~> 0.56)
+      ace-git (~> 0.23)
+      ace-git-worktree (~> 0.22)
       ace-support-cli (~> 0.6)
-      ace-support-config (~> 0.17)
+      ace-support-config (~> 0.18)
       ace-support-core (~> 0.31)
       ace-support-fs (~> 0.3)
       ace-task (~> 0.37)
@@ -216,10 +216,10 @@ PATH
     ace-prompt-prep (0.25.9)
       ace-b36ts (~> 0.14)
       ace-bundle (~> 0.43)
-      ace-git (~> 0.22)
+      ace-git (~> 0.23)
       ace-llm (~> 0.38)
       ace-support-cli (~> 0.6)
-      ace-support-config (~> 0.17)
+      ace-support-config (~> 0.18)
       ace-support-core (~> 0.31)
       ace-support-nav (~> 0.28)
       ace-task (~> 0.37)
@@ -237,13 +237,13 @@ PATH
 PATH
   remote: ace-review
   specs:
-    ace-review (0.53.8)
+    ace-review (0.54.0)
       ace-b36ts (~> 0.14)
       ace-bundle (~> 0.43)
-      ace-git (~> 0.22)
+      ace-git (~> 0.23)
       ace-llm (~> 0.38)
       ace-support-cli (~> 0.6)
-      ace-support-config (~> 0.17)
+      ace-support-config (~> 0.18)
       ace-support-core (~> 0.31)
       ace-support-nav (~> 0.28)
       ace-task (~> 0.37)
@@ -252,9 +252,9 @@ PATH
   remote: ace-search
   specs:
     ace-search (0.26.5)
-      ace-git (~> 0.22)
+      ace-git (~> 0.23)
       ace-support-cli (~> 0.6)
-      ace-support-config (~> 0.17)
+      ace-support-config (~> 0.18)
       ace-support-core (~> 0.31)
 
 PATH
@@ -263,7 +263,7 @@ PATH
     ace-sim (0.15.7)
       ace-b36ts (~> 0.14)
       ace-support-cli (~> 0.6)
-      ace-support-config (~> 0.17)
+      ace-support-config (~> 0.18)
       ace-support-core (~> 0.31)
 
 PATH
@@ -274,7 +274,7 @@ PATH
 PATH
   remote: ace-support-config
   specs:
-    ace-support-config (0.17.1)
+    ace-support-config (0.18.0)
       ace-support-fs (~> 0.3)
 
 PATH
@@ -282,7 +282,7 @@ PATH
   specs:
     ace-support-core (0.31.0)
       ace-support-cli (~> 0.6)
-      ace-support-config (~> 0.17)
+      ace-support-config (~> 0.18)
       ace-support-fs (~> 0.3)
 
 PATH
@@ -324,7 +324,7 @@ PATH
   specs:
     ace-support-nav (0.28.5)
       ace-support-cli (~> 0.6)
-      ace-support-config (~> 0.17)
+      ace-support-config (~> 0.18)
       ace-support-core (~> 0.31)
       ace-support-fs (~> 0.3)
 
@@ -338,9 +338,9 @@ PATH
 PATH
   remote: ace-task
   specs:
-    ace-task (0.37.2)
+    ace-task (0.37.3)
       ace-b36ts (~> 0.14)
-      ace-git (~> 0.22)
+      ace-git (~> 0.23)
       ace-support-cli (~> 0.6)
       ace-support-core (~> 0.31)
       ace-support-fs (~> 0.3)
@@ -354,7 +354,7 @@ PATH
       ace-b36ts (~> 0.14)
       ace-llm (~> 0.38)
       ace-support-cli (~> 0.6)
-      ace-support-config (~> 0.17)
+      ace-support-config (~> 0.18)
       ace-support-core (~> 0.31)
       ace-support-test-helpers (~> 0.14)
 
@@ -364,7 +364,7 @@ PATH
     ace-test-runner (0.25.7)
       ace-b36ts (~> 0.14)
       ace-support-cli (~> 0.6)
-      ace-support-config (~> 0.17)
+      ace-support-config (~> 0.18)
       ace-support-core (~> 0.31)
       ace-support-test-helpers (~> 0.14)
       minitest (~> 5.0)
@@ -381,7 +381,7 @@ PATH
   specs:
     ace-tmux (0.17.4)
       ace-support-cli (~> 0.6)
-      ace-support-config (~> 0.17)
+      ace-support-config (~> 0.18)
       ace-support-core (~> 0.31)
       ace-support-fs (~> 0.3)
 
