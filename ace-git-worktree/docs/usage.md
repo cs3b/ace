@@ -25,6 +25,7 @@ gem install ace-git-worktree
 * `bootstrap` for rerunning preparation phases (toolchain trust and bootstrap policy) on existing worktrees
 * `list` for active worktree inventory and filtering
 * `switch` for resolving a worktree path you can `cd` into
+* `cleanup` for report/apply cleanup of squash-merged branches
 * `remove` for safe worktree removal
 * `prune` for stale-reference cleanup
 * `config` for configuration initialization, bootstrap policy settings, inspection, and validation
@@ -113,7 +114,23 @@ Would remove task.081
 
 **Next steps:** Re-run either command without `--dry-run` once the preview looks correct.
 
-### Scenario 4: Filter Task and Non-Task Worktrees
+### Scenario 2: Clean up merged worktrees
+
+**Goal:** Remove worktrees and branches that have been merged to main.
+
+**Commands:**
+
+```bash
+# Generate a cleanup plan and review it
+ace-git-worktree cleanup --target main
+
+# Apply the reviewed plan using the digest from the report
+ace-git-worktree cleanup --target main --apply --approved-digest <sha256-digest>
+```
+
+**Outcome:** Merged worktrees, local branches, and remote-tracking branches are removed safely without dropping unmerged work.
+
+### Scenario 3: Switch Task Context and Validate Dependencies
 
 **Goal:** Show task-associated worktrees separately from non-task worktrees.
 
