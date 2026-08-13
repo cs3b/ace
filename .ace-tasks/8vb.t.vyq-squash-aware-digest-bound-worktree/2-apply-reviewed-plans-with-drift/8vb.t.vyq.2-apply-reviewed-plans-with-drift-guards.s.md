@@ -1,6 +1,6 @@
 ---
 id: 8vb.t.vyq.2
-status: draft
+status: done
 priority: medium
 created_at: "2026-08-12 21:18:48"
 estimate: TBD
@@ -11,6 +11,7 @@ bundle:
   presets: [project]
   files: [ace-git-worktree/lib/ace/git/worktree/cli.rb, ace-git-worktree/lib/ace/git/worktree/molecules/worktree_remover.rb, ace-git-worktree/lib/ace/git/worktree/organisms/worktree_manager.rb, ace-git-worktree/handbook/workflow-instructions/git/worktree-manage.wf.md, ace-git-worktree/handbook/skills/as-git-worktree-manage/SKILL.md, ace-git-worktree/docs/usage.md, ace-git-worktree/test/fast/molecules/worktree_remover_test.rb, ace-git-worktree/test/feat/worktree_manager_contract_test.rb, ace-git-worktree/test/e2e/TS-WORKTREE-002-task-aware/TC-007-remove-and-cleanup.runner.md, ace-git-worktree/test/e2e/TS-WORKTREE-002-task-aware/TC-007-remove-and-cleanup.verify.md]
   commands: [ace-bundle wfi://git/worktree-manage, ace-git-worktree prune --dry-run, ace-test ace-git-worktree all]
+needs_review: false
 ---
 
 # Apply reviewed plans with drift guards

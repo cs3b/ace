@@ -1,6 +1,6 @@
 ---
 id: 8vb.t.vy9.4
-status: draft
+status: done
 priority: high
 created_at: "2026-08-12 21:18:26"
 estimate: TBD
@@ -11,6 +11,7 @@ bundle:
   presets: [project]
   files: [ace-assign/.ace-defaults/assign/presets/work-on-task.yml, ace-assign/.ace-defaults/assign/catalog/steps/review-pr.step.yml, ace-assign/.ace-defaults/assign/catalog/steps/rebase-with-main.step.yml, ace-assign/.ace-defaults/assign/catalog/steps/update-pr-desc.step.yml, ace-assign/handbook/workflow-instructions/assign/drive.wf.md, ace-git/handbook/workflow-instructions/github/pr/create.wf.md, ace-git/handbook/workflow-instructions/github/pr/update.wf.md, ace-review/lib/ace/review/organisms/review_manager.rb]
   commands: [ace-bundle wfi://assign/drive, ace-bundle wfi://github/pr/update, ace-git pr --format json]
+needs_review: false
 ---
 
 # Bind final evidence to exact heads

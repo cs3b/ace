@@ -1,6 +1,6 @@
 ---
 id: 8vb.t.vyz.0
-status: draft
+status: done
 priority: high
 created_at: "2026-08-12 21:18:59"
 estimate: TBD
@@ -11,6 +11,7 @@ bundle:
   presets: [project]
   files: [ace-git-worktree/lib/ace/git/worktree/molecules/hook_executor.rb, ace-git-worktree/lib/ace/git/worktree/molecules/worktree_creator.rb, ace-git-worktree/lib/ace/git/worktree/organisms/worktree_manager.rb, ace-git-worktree/test/fast/molecules/worktree_creator_test.rb, ace-git-worktree/test/feat/worktree_manager_contract_test.rb]
   commands: [ace-git-worktree create --help, ace-test ace-git-worktree all]
+needs_review: false
 ---
 
 # Fail closed on tracked mise trust

@@ -1,6 +1,6 @@
 ---
 id: 8vb.t.vyz.2
-status: draft
+status: done
 priority: high
 created_at: "2026-08-12 21:19:05"
 estimate: TBD
@@ -11,6 +11,7 @@ bundle:
   presets: [project]
   files: [ace-git-worktree/lib/ace/git/worktree/cli/commands/create.rb, ace-git-worktree/lib/ace/git/worktree/molecules/hook_executor.rb, ace-git-worktree/lib/ace/git/worktree/molecules/worktree_creator.rb, ace-git-worktree/lib/ace/git/worktree/organisms/task_worktree_orchestrator.rb, ace-git-worktree/handbook/workflow-instructions/git/worktree-create.wf.md, ace-git-worktree/handbook/skills/as-git-worktree-create/SKILL.md, ace-git-worktree/docs/usage.md, ace-git-worktree/test/fast/organisms/task_worktree_orchestrator_test.rb, ace-git-worktree/test/feat/worktree_manager_contract_test.rb, ace-git-worktree/test/e2e/TS-WORKTREE-002-task-aware/TC-002-create-task-worktree.runner.md, ace-git-worktree/test/e2e/TS-WORKTREE-002-task-aware/TC-002-create-task-worktree.verify.md]
   commands: [ace-git-worktree create --help, ace-bundle wfi://git/worktree-create, ace-test ace-git-worktree all]
+needs_review: false
 ---
 
 # Run recoverable preparation phases

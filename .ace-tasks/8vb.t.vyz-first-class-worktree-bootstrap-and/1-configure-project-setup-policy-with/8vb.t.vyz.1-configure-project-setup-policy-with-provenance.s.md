@@ -1,6 +1,6 @@
 ---
 id: 8vb.t.vyz.1
-status: draft
+status: done
 priority: high
 created_at: "2026-08-12 21:19:02"
 estimate: TBD
@@ -11,6 +11,7 @@ bundle:
   presets: [project]
   files: [ace-git-worktree/lib/ace/git/worktree/configuration.rb, ace-git-worktree/lib/ace/git/worktree/commands/config_command.rb, ace-git-worktree/lib/ace/git/worktree/cli/commands/config.rb, ace-git-worktree/lib/ace/git/worktree/molecules/config_loader.rb, ace-git-worktree/lib/ace/git/worktree/models/worktree_config.rb, ace-git-worktree/test/fast/models/worktree_config_test.rb, ace-git-worktree/test/e2e/TS-WORKTREE-001-basic-lifecycle/TC-007-config-surface-validation.runner.md]
   commands: [ace-git-worktree config show --json, ace-git-worktree config validate --bootstrap --json, ace-test ace-git-worktree all]
+needs_review: false
 ---
 
 # Configure project setup policy with provenance

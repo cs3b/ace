@@ -106,6 +106,7 @@ module Ace
                   --no-push               Skip pushing task changes to remote (task mode only)
                   --no-upstream           Skip pushing worktree branch with upstream tracking (task mode only)
                   --no-pr                 Skip creating draft PR (task mode only)
+                  --no-bootstrap          Skip worktree bootstrap preparation
                   --push-remote <name>    Remote to push to (default: origin) (task mode only)
                   --no-auto-navigate      Stay in current directory (default: navigate to worktree)
                   --commit-message <msg>  Custom commit message for task updates (task mode only)
@@ -173,6 +174,7 @@ module Ace
               no_push: false,
               no_upstream: false,
               no_pr: false,
+              no_bootstrap: false,
               push_remote: nil,
               no_auto_navigate: false,
               commit_message: nil,
@@ -213,6 +215,8 @@ module Ace
                 options[:no_upstream] = true
               when "--no-pr"
                 options[:no_pr] = true
+              when "--no-bootstrap"
+                options[:no_bootstrap] = true
               when "--push-remote"
                 i += 1
                 options[:push_remote] = args[i]
@@ -367,6 +371,7 @@ module Ace
               no_push: options[:no_push],
               no_upstream: options[:no_upstream],
               no_pr: options[:no_pr],
+              no_bootstrap: options[:no_bootstrap],
               push_remote: options[:push_remote],
               commit_message: options[:commit_message],
               target_branch: options[:target_branch],

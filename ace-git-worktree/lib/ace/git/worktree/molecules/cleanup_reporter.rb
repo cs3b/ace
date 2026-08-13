@@ -250,7 +250,7 @@ module Ace
                 name: parts[0],
                 short_name: short_name,
                 sha: parts[1],
-                protected: short_name == @target,
+                protected: protected_ref?(short_name),
                 ancestry: nil,
                 action: nil,
                 retention_reason: nil

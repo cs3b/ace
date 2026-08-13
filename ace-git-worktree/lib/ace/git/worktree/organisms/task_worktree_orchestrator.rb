@@ -28,7 +28,7 @@ module Ace
             @config = config || load_configuration
             @task_fetcher = Molecules::TaskFetcher.new
             @task_status_updater = Molecules::TaskStatusUpdater.new
-            @task_committer = Molecules::TaskCommitter.new
+            @task_committer = Molecules::TaskCommitter.new(project_root: project_root)
             @task_pusher = Molecules::TaskPusher.new
             @worktree_creator = Molecules::WorktreeCreator.new
             @pr_creator = Molecules::PrCreator.new
@@ -130,7 +130,7 @@ module Ace
               has_changes_to_commit = should_update_status || metadata_was_added
               if should_commit && has_changes_to_commit
                 commit_message = options[:commit_message] || "in-progress"
-                commit_res = commit_task_changes(task_data, commit_message, owned_paths: owned_paths)
+                commit_res = commit_task_changes(task_data, commit_message, owned_paths: owned_paths, explicit_message: options[:commit_message])
                 if commit_res[:success]
                   workflow_result[:bookkeeping_commit] = commit_res[:commit_sha]
                   workflow_result[:committed_paths] = commit_res[:committed_paths]
@@ -283,8 +283,14 @@ module Ace
               require_relative "../molecules/bootstrap_executor"
 
               wt_path = worktree_result[:worktree_path]
-              truster = Molecules::ToolchainTruster.new(project_root: wt_path, policy: "required")
-              trust_res = truster.verify_and_trust
+              
+              if options[:no_mise_trust]
+                trust_res = {success: true, status: "not_applicable"}
+              else
+                policy = @config.mise_trust_auto? ? "required" : "advisory"
+                truster = Molecules::ToolchainTruster.new(project_root: wt_path, policy: policy)
+                trust_res = truster.verify_and_trust
+              end
 
               executor = Molecules::BootstrapExecutor.new(
                 project_root: @project_root,
@@ -712,12 +718,12 @@ module Ace
           # @param status [String] Task status
           # @param owned_paths [Array<String>, nil] Target paths to commit
           # @return [Hash] Result hash with :success, :commit_sha, :committed_paths
-          def commit_task_changes(task_data, status, owned_paths: nil)
+          def commit_task_changes(task_data, status, owned_paths: nil, explicit_message: nil)
             task_id = extract_task_id(task_data)
             paths = owned_paths || resolve_owned_task_paths(task_data)
             return {success: false, commit_sha: nil, committed_paths: [], error: "No task paths"} if paths.empty?
 
-            message = begin
+            message = explicit_message || begin
               @config.format_commit_message(task_data)
             rescue
               "chore(task-#{task_id}): mark as #{status}"

@@ -1,6 +1,6 @@
 ---
 id: 8vb.t.vyq
-status: draft
+status: done
 priority: medium
 created_at: "2026-08-12 21:18:35"
 estimate: TBD

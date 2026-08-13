@@ -1,6 +1,6 @@
 ---
 id: 8vb.t.vy9.2
-status: draft
+status: done
 priority: high
 created_at: "2026-08-12 21:18:20"
 estimate: TBD
@@ -11,6 +11,7 @@ bundle:
   presets: [project]
   files: [ace-git-worktree/.ace-defaults/git/worktree.yml, ace-git-worktree/lib/ace/git/worktree/models/worktree_config.rb, ace-task/handbook/workflow-instructions/task/work.wf.md, ace-review/.ace-defaults/review/config.yml, ace-review/.ace-defaults/review/presets/code-valid.yml, ace-handbook/.ace-defaults/handbook/providers/agents.yml, ace-support-core/.ace-defaults/project-root/AGENTS.md, ace-support-core/.ace-defaults/project-root/docs/tools.md]
   commands: [ace-git-worktree config --show, ace-bundle wfi://task/work, ace-handbook status]
+needs_review: false
 ---
 
 # Adopt conservative package-owned workflow defaults

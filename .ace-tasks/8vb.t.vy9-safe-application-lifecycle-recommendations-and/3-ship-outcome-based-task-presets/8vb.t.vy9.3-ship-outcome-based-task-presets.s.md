@@ -1,6 +1,6 @@
 ---
 id: 8vb.t.vy9.3
-status: draft
+status: done
 priority: high
 created_at: "2026-08-12 21:18:23"
 estimate: TBD
@@ -11,6 +11,7 @@ bundle:
   presets: [project]
   files: [ace-assign/.ace-defaults/assign/presets/work-on-task.yml, ace-assign/.ace-defaults/assign/catalog/steps/work-on-task.step.yml, ace-assign/handbook/workflow-instructions/assign/drive.wf.md, ace-assign/lib/ace/assign/molecules/preset_inferrer.rb, ace-task/handbook/skills/as-task-work/SKILL.md, ace-task/handbook/workflow-instructions/task/work.wf.md, ace-assign/.ace-defaults/assign/catalog/steps/mark-task-done.step.yml, CHANGELOG.md]
   commands: [ace-bundle wfi://task/work, ace-bundle wfi://assign/create, ace-bundle wfi://assign/drive, ace-assign status]
+needs_review: false
 ---
 
 # Ship outcome-based task presets

@@ -1,6 +1,6 @@
 ---
 id: 8vb.t.vyq.1
-status: draft
+status: done
 priority: medium
 created_at: "2026-08-12 21:18:45"
 estimate: TBD
@@ -11,6 +11,7 @@ bundle:
   presets: [project]
   files: [ace-git/lib/ace/git/molecules/pr_metadata_fetcher.rb, ace-git/lib/ace/git/molecules/gh_cli_executor.rb, ace-git-worktree/lib/ace/git/worktree/molecules/worktree_lister.rb, ace-git-worktree/lib/ace/git/worktree/models/worktree_info.rb, ace-git/test/fast/molecules/pr_metadata_fetcher_test.rb, ace-git/test/fast/molecules/gh_cli_executor_test.rb, ace-git-worktree/test/fast/molecules/worktree_lister_test.rb, ace-git-worktree/test/feat/worktree_manager_contract_test.rb]
   commands: [ace-git pr --format json, ace-test ace-git all, ace-test ace-git-worktree all]
+needs_review: false
 ---
 
 # Classify merged refs through bounded GitHub evidence

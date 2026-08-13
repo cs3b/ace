@@ -1,6 +1,6 @@
 ---
 id: 8vb.t.vy9.5
-status: draft
+status: done
 priority: high
 created_at: "2026-08-12 21:18:29"
 estimate: TBD
@@ -11,6 +11,7 @@ bundle:
   presets: [project]
   files: [ace-support-config/lib/ace/support/config/cli.rb, ace-support-config/lib/ace/support/config/organisms/setup_doctor.rb, ace-support-config/lib/ace/support/config/molecules/setup_doctor_reporter.rb, ace-support-config/lib/ace/support/config/organisms/config_resolver.rb, ace-support-config/.ace-defaults/config/config.yml, ace-support-config/test/fast/organisms/setup_doctor_test.rb, ace-support-config/test/feat/cli_test.rb]
   commands: [ace-config doctor --recommendations --json, ace-config doctor --recommendations --check-updates --json, ace-test ace-support-config all]
+needs_review: false
 ---
 
 # Manage expiring drift acknowledgements

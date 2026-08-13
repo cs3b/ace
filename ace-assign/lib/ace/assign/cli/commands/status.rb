@@ -86,7 +86,7 @@ module Ace
             # Extract auto_merge config if present in assignment settings or preset
             auto_merge = false
             preset_name = Ace::Assign::Molecules::PresetInferrer.infer_from_assignment(assignment)
-            auto_merge = true if preset_name == "work-on-task-auto-merge"
+            auto_merge = true if preset_name && preset_name.start_with?("work-on-task-auto-merge")
 
             evidence = Ace::Assign::Molecules::EvidenceCalculator.calculate(auto_merge: auto_merge)
 

@@ -121,8 +121,8 @@ class WorktreeManagerTest < Minitest::Test
       worktrees
     end
 
-    fake_lister.define_singleton_method(:filter) do |items, task_associated:, usable:, branch_pattern:|
-      calls << [:filter, task_associated, usable, branch_pattern]
+    fake_lister.define_singleton_method(:filter) do |items, task_associated:, usable:, branch_pattern:, task_id: nil, pr_number: nil|
+      calls << [:filter, task_associated, usable, branch_pattern, task_id, pr_number]
       items
     end
 
@@ -167,8 +167,8 @@ class WorktreeManagerTest < Minitest::Test
       worktrees
     end
 
-    fake_lister.define_singleton_method(:filter) do |items, task_associated:, usable:, branch_pattern:|
-      calls << [:filter, task_associated, usable, branch_pattern]
+    fake_lister.define_singleton_method(:filter) do |items, task_associated:, usable:, branch_pattern:, task_id: nil, pr_number: nil|
+      calls << [:filter, task_associated, usable, branch_pattern, task_id, pr_number]
       items
     end
 

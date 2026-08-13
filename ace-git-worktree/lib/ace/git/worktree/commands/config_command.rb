@@ -24,8 +24,6 @@ module Ace
           # @param args [Array<String>] Command arguments
           # @return [Integer] Exit code (0 for success, 1 for error)
           def run(args = [])
-            return show_help if args.empty?
-
             options = parse_arguments(args)
             return show_help if options[:help]
 

@@ -1,6 +1,6 @@
 ---
 id: 8vb.t.vy9.1
-status: draft
+status: done
 priority: high
 created_at: "2026-08-12 21:18:17"
 estimate: TBD
@@ -11,6 +11,7 @@ bundle:
   presets: [project]
   files: [ace-support-config/lib/ace/support/config/organisms/setup_doctor.rb, ace-git-worktree/.ace-defaults/git/worktree.yml, ace-git-worktree/lib/ace/git/worktree/models/worktree_config.rb, ace-assign/.ace-defaults/assign/presets/work-on-task.yml, ace-task/handbook/workflow-instructions/task/work.wf.md, ace-review/.ace-defaults/review/config.yml, ace-handbook/.ace-defaults/handbook/providers/agents.yml, ace-support-core/.ace-defaults/project-root/AGENTS.md]
   commands: [ace-config doctor --no-probe --json, ace-bundle wfi://task/work, ace-bundle wfi://assign/drive, ace-handbook status]
+needs_review: false
 ---
 
 # Detect workflow policy violations

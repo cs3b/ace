@@ -278,12 +278,14 @@ module Ace
             end
 
             # Apply filters
-            if !options[:task_associated].nil? || !options[:usable].nil? || options[:search]
+            if !options[:task_associated].nil? || !options[:usable].nil? || options[:search] || options[:task_id] || options[:pr_number]
               worktrees = @worktree_lister.filter(
                 worktrees,
                 task_associated: options[:task_associated],
                 usable: options[:usable],
-                branch_pattern: options[:search]
+                branch_pattern: options[:search],
+                task_id: options[:task_id],
+                pr_number: options[:pr_number]
               )
             end
 

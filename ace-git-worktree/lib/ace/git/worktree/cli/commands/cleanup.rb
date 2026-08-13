@@ -23,6 +23,9 @@ module Ace
             option :target, desc: "Target ref for ancestry proof (required)", type: :string, aliases: []
             option :remote, desc: "Remote name (default: origin)", type: :string, default: "origin", aliases: []
             option :offline, desc: "Skip remote evidence refresh", type: :boolean, aliases: []
+            option :apply, desc: "Apply a reviewed plan", type: :boolean, aliases: []
+            option :approved_digest, desc: "Approved plan digest to apply", type: :string, aliases: []
+            option :require_only_target, desc: "Fail if final rescan has retained non-target state", type: :boolean, aliases: []
             option :format, desc: "Output format (table, json)", type: :string, default: "table", aliases: []
             option :quiet, type: :boolean, aliases: ["-q"], desc: "Suppress non-essential output"
             option :debug, type: :boolean, aliases: ["-d"], desc: "Show debug output"

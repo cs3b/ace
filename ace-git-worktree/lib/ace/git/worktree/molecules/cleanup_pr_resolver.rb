@@ -149,10 +149,12 @@ module Ace
               path = parts[1]
               
               dst_mode = meta[1]
+              dst_sha = meta[3]
               status_char = meta[4]
               
               inventory[path] = {
                 mode: dst_mode,
+                sha: dst_sha,
                 status: status_char[0] # handle R100 etc by taking first char
               }
             end

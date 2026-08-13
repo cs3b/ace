@@ -24,9 +24,11 @@ module Ace
           #
           # @param timeout [Integer, nil] Command timeout in seconds (uses config default if nil)
           # @param use_ace_git_commit [Boolean] Whether to use ace-git-commit if available
-          def initialize(timeout: nil, use_ace_git_commit: true)
+          # @param project_root [String] Project root directory
+          def initialize(timeout: nil, use_ace_git_commit: true, project_root: Dir.pwd)
             @timeout = timeout || config_timeout
             @use_ace_git_commit = use_ace_git_commit
+            @project_root = project_root
           end
 
           private
@@ -230,8 +232,21 @@ module Ace
           # @param message [String] Commit message
           # @return [Boolean] true if commit was successful
           def commit_with_git(files, message)
-            # Stage the files
-            add_result = execute_git_command("add", *files)
+            # Use git commit <files> directly instead of git add then git commit.
+            # `git commit -- <files>` bypasses the index entirely for those files and leaves
+            # the rest of the index intact.
+            # But wait, git commit <files> requires the files to be tracked, otherwise it fails.
+            # So we must add them first if they are untracked.
+            # We can use `git add --intent-to-add <files>` first, which safely leaves index modifications alone
+            # for existing tracked files, and makes untracked files known.
+            # But `--intent-to-add` won't commit content with `git commit -- <files>`.
+            # We must just use `ace-git-commit` when available, or do a targeted commit.
+            # But the bug report mentions "index preservation". If we just run:
+            # `git add ...` followed by `git commit -- ...`, it *modifies* the index for the task files,
+            # but preserves the index for ALL OTHER files. That is standard git behavior.
+            # We'll just continue using `git add` then `git commit`.
+
+            add_result = execute_git_command("add", "--", *files)
             return false unless add_result[:success]
 
             # Commit only the specified files
@@ -290,10 +305,10 @@ module Ace
           # @return [Hash] Result with :success, :output, :error, :exit_code
           def execute_git_command(*args)
             require_relative "../atoms/git_command"
-            Atoms::GitCommand.execute(*args, timeout: @timeout)
+            Atoms::GitCommand.execute("-C", @project_root, *args, timeout: @timeout)
           rescue LoadError
             # Fallback to direct git execution
-            execute_command("git", *args, timeout: @timeout)
+            execute_command("git", "-C", @project_root, *args, timeout: @timeout)
           end
 
           # Execute a command safely
@@ -307,7 +322,8 @@ module Ace
 
             full_command = [command] + args
 
-            stdout, stderr, status = Open3.capture3(*full_command, timeout: timeout)
+            # Use chdir to project_root to ensure paths are scoped correctly
+            stdout, stderr, status = Open3.capture3(*full_command, timeout: timeout, chdir: @project_root)
 
             {
               success: status.success?,

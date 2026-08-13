@@ -1,6 +1,6 @@
 ---
 id: 8vb.t.vyq.0
-status: draft
+status: done
 priority: medium
 created_at: "2026-08-12 21:18:42"
 estimate: TBD
@@ -11,6 +11,7 @@ bundle:
   presets: [project]
   files: [ace-git-worktree/lib/ace/git/worktree/cli.rb, ace-git-worktree/lib/ace/git/worktree/configuration.rb, ace-git-worktree/lib/ace/git/worktree/molecules/worktree_lister.rb, ace-git-worktree/lib/ace/git/worktree/molecules/worktree_remover.rb, ace-git-worktree/lib/ace/git/worktree/models/worktree_info.rb, ace-git-worktree/test/fast/molecules/worktree_lister_test.rb, ace-git-worktree/test/feat/worktree_manager_contract_test.rb]
   commands: [ace-git-worktree list --format json, ace-git-worktree prune --dry-run, ace-test ace-git-worktree all]
+needs_review: false
 ---
 
 # Report repository inventory with ancestry proof

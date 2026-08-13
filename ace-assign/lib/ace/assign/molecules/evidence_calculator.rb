@@ -84,6 +84,11 @@ module Ace
           return "missing" if reviews.empty?
 
           latest = reviews.max_by { |f| File.mtime(f) }
+          session_dir = File.dirname(latest)
+          
+          # Review must actually be executed, not just prepared
+          return "missing" unless File.exist?(File.join(session_dir, "report.md")) || File.exist?(File.join(session_dir, "report.json"))
+          
           begin
             require "yaml"
             metadata = YAML.safe_load_file(latest, permitted_classes: [Time, Date]) || {}
@@ -95,7 +100,22 @@ module Ace
           "current"
         end
 
-        def evaluate_release_receipt(_root, _current_head)
+        def evaluate_release_receipt(root, current_head)
+          session_dir = File.join(root, ".ace-local", "release", "sessions")
+          return "missing" unless Dir.exist?(session_dir)
+
+          releases = Dir.glob(File.join(session_dir, "*", "metadata.yml"))
+          return "missing" if releases.empty?
+
+          latest = releases.max_by { |f| File.mtime(f) }
+          begin
+            require "yaml"
+            metadata = YAML.safe_load_file(latest, permitted_classes: [Time, Date]) || {}
+            return "stale" unless metadata["head"] == current_head
+          rescue StandardError
+            return "missing"
+          end
+
           "current"
         end
 

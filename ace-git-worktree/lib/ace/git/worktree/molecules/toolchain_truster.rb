@@ -21,8 +21,8 @@ module Ace
           #
           # @return [Array<String>] List of repository-relative paths to tracked mise configs
           def discover_tracked_configs
-            result = Atoms::GitCommand.execute("ls-files", timeout: 10)
-            return [] unless result[:success] && result[:output]
+            result = Atoms::GitCommand.execute("-C", @project_root, "ls-files")
+            return [] unless result[:success]
 
             tracked_files = result[:output].lines.map(&:strip).reject(&:empty?)
             tracked_files.select do |file|

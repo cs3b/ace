@@ -10,6 +10,7 @@ require_relative "cli/commands/remove"
 require_relative "cli/commands/prune"
 require_relative "cli/commands/config"
 require_relative "cli/commands/cleanup"
+require_relative "cli/commands/bootstrap"
 require "ace/core"
 require "ace/support/cli"
 
@@ -31,6 +32,7 @@ module Ace
           ["remove", "Remove a worktree by task, branch, or path"],
           ["prune", "Prune stale/deleted worktree references"],
           ["cleanup", "Report cleanup plan for merged worktrees and refs"],
+          ["bootstrap", "Rerun preparation phases for an existing worktree"],
           ["config", "Show and validate configuration"]
         ].freeze
 
@@ -81,6 +83,7 @@ module Ace
         register "remove", wrap_command(CLI::Commands::Remove), aliases: ["rm"]
         register "prune", wrap_command(CLI::Commands::Prune), aliases: []
         register "cleanup", wrap_command(CLI::Commands::Cleanup), aliases: []
+        register "bootstrap", wrap_command(CLI::Commands::Bootstrap), aliases: []
         register "config", wrap_command(CLI::Commands::Config), aliases: []
 
         # Version command

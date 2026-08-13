@@ -1,6 +1,6 @@
 ---
 id: 8vb.t.vy9.0
-status: draft
+status: done
 priority: high
 created_at: "2026-08-12 21:18:14"
 estimate: TBD
@@ -11,6 +11,7 @@ bundle:
   presets: [project]
   files: [ace-support-config/lib/ace/support/config/organisms/setup_doctor.rb, ace-support-config/lib/ace/support/config/molecules/setup_doctor_reporter.rb, ace-support-config/lib/ace/support/config/cli.rb, ace-support-config/.ace-defaults/config/config.yml, ace-support-config/test/fast/organisms/setup_doctor_test.rb, ace-support-config/test/feat/cli_test.rb]
   commands: [ace-config doctor --no-probe, ace-config doctor --no-probe --json]
+needs_review: false
 ---
 
 # Report profile-aware configuration drift

@@ -1,6 +1,6 @@
 ---
 id: 8vc.t.j3p
-status: pending
+status: done
 priority: medium
 created_at: "2026-08-13 12:44:08"
 estimate: TBD

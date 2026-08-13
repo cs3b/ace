@@ -138,7 +138,7 @@ module Ace
           #
           #   # Get worktrees with branches matching a pattern
           #   auth_worktrees = lister.filter(worktrees, branch_pattern: "auth")
-          def filter(worktrees, task_associated: nil, usable: nil, branch_pattern: nil)
+          def filter(worktrees, task_associated: nil, usable: nil, branch_pattern: nil, task_id: nil, pr_number: nil)
             filtered = Array(worktrees)
 
             # Filter by task association
@@ -159,6 +159,22 @@ module Ace
             if branch_pattern
               pattern = Regexp.new(branch_pattern, Regexp::IGNORECASE)
               filtered = filtered.select { |wt| wt.branch&.match?(pattern) }
+            end
+
+            # Filter by task ID
+            if task_id
+              task_id_str = Atoms::TaskIDExtractor.normalize(task_id.to_s)
+              filtered = filtered.select { |wt| wt.task_id == task_id_str }
+            end
+
+            # Filter by PR number
+            if pr_number
+              pr_number_str = pr_number.to_s
+              filtered = filtered.select do |wt|
+                wt.branch&.match?(/pr-#{pr_number_str}(?:-|$)/i) ||
+                wt.branch&.match?(/-#{pr_number_str}$/i) ||
+                wt.branch&.match?(/^#{pr_number_str}-/i)
+              end
             end
 
             filtered
