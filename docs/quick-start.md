@@ -8,8 +8,9 @@ Ruby 3.2+ required.
 
 Choose one setup path:
 
-- **Minimal (first-use default):** enough for task specs, context loading, provider access, root `AGENTS.md`, and the default `.agents/skills/` projection.
-- **Full-stack (recommended for this walkthrough):** includes assign/overseer/review/tmux/test/docs/retro/demo/git workflows.
+- **Application (recommended default):** equips the core primitives plus standard capability skills (`ace-idea`, `ace-search`, `ace-docs`, `ace-hitl`, `ace-retro`, `ace-test`). Recommended for most users building or extending apps.
+- **Minimal:** enough for task specs, context loading, provider access, root `AGENTS.md`, and the default `.agents/skills/` projection.
+- **Full-stack:** includes assign/overseer/review/tmux/test/docs/retro/demo/git workflows.
 
 ### What this will create
 
@@ -31,6 +32,18 @@ bundle add --group "development, test" \
   ace-task ace-bundle ace-handbook ace-llm ace-llm-providers-cli
 ```
 
+Application path (Recommended):
+
+```bash
+bundle add --group "development, test" \
+  ace-task ace-idea \
+  ace-bundle ace-handbook ace-search ace-docs \
+  ace-hitl ace-retro ace-test ace-test-runner \
+  ace-llm ace-llm-providers-cli
+```
+
+*Note on testing:* The `ace-test` package provides the agent skill surface and workflows, while `ace-test-runner` provides the actual `ace-test` and `ace-test-suite` binaries. Both must be installed together on the application path to avoid "can't find executable" errors.
+
 Full-stack path:
 
 ```bash
@@ -38,11 +51,11 @@ bundle add --group "development, test" \
   ace-idea ace-task ace-sim \
   ace-overseer ace-assign ace-git-worktree ace-tmux \
   ace-bundle ace-handbook ace-search ace-docs ace-llm ace-llm-providers-cli \
-  ace-review ace-lint ace-test-runner ace-test-runner-e2e ace-retro ace-demo \
+  ace-review ace-lint ace-hitl ace-test ace-test-runner ace-test-runner-e2e ace-retro ace-demo \
   ace-git-commit ace-git-secrets ace-git
 ```
 
-If you install only the minimal path, advanced workflow commands in this walkthrough may be unavailable until you add the full-stack packages. In particular, `ace-git-commit` is part of the full-stack path, so the first-commit flow below includes a plain `git commit` fallback for minimal installs.
+If you install only the minimal path, advanced workflow commands (like `ace-idea create`) in this walkthrough may be unavailable until you add the appropriate capability gems. In particular, `ace-git-commit` is part of the full-stack path, so the first-commit flow below includes a plain `git commit` fallback for minimal installs.
 
 ### 2. Install gems
 
@@ -78,11 +91,15 @@ Most ACE tools run from packaged `.ace-defaults`; sync additional package config
 bundle exec ace-handbook sync
 ```
 
-By default this writes generated skills to **`.agents/skills/`**. That is the default agent skill surface for first-use setup.
+By default this writes generated skills to **`.agents/skills/`**. This must be run after installation to project the advertised skills (the application setup projects 64+ skills out-of-the-box). It is completely idempotent; re-running it produces zero unnecessary changes.
 
 ### 6. Verify setup, providers, and project context
 
 ```bash
+bundle exec ace-idea --help
+bundle exec ace-search --version
+bundle exec ace-test --version
+bundle exec ace-test-suite --version
 bundle exec ace-llm --list-providers
 bundle exec ace-config doctor
 bundle exec ace-bundle project
