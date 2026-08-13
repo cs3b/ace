@@ -83,6 +83,13 @@ module Ace
           end
 
           def status_to_h(assignment, state, active_steps, next_step, target:, scope_root:)
+            # Extract auto_merge config if present in assignment settings or preset
+            auto_merge = false
+            preset_name = Ace::Assign::Molecules::PresetInferrer.infer_from_assignment(assignment)
+            auto_merge = true if preset_name == "work-on-task-auto-merge"
+
+            evidence = Ace::Assign::Molecules::EvidenceCalculator.calculate(auto_merge: auto_merge)
+
             payload = {
               assignment: {
                 id: assignment.id,
@@ -95,6 +102,10 @@ module Ace
             }
 
             payload[:next_step] = step_to_h(next_step, effective_fork_provider: effective_fork_provider_for(next_step, scoped_fork_metadata_step(state, next_step, target.scope, scope_root))) if active_steps.empty? && next_step
+            
+            # Merge exact head evidence into root payload
+            payload.merge!(evidence)
+
             payload
           end
 

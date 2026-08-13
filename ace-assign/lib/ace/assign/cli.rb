@@ -33,6 +33,7 @@ require_relative "molecules/skill_assign_source_resolver"
 require_relative "molecules/fork_session_launcher"
 require_relative "molecules/tmux_control_surface_runner"
 require_relative "molecules/preset_inferrer"
+require_relative "molecules/evidence_calculator"
 
 # Organisms
 require_relative "organisms/assignment_executor"
