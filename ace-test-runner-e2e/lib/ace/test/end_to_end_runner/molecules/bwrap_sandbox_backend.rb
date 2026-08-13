@@ -41,6 +41,7 @@ module Ace
           end
 
           def ensure_available!
+            return unless self.class.supported?
             return if self.class.available?(bwrap_path: @bwrap_path)
 
             raise "bubblewrap is required for Linux E2E sandboxing but '#{@bwrap_path}' is not available"
@@ -125,16 +126,31 @@ module Ace
           end
 
           def capture3(cmd, chdir:, env: {}, stdin_data: nil)
-            Open3.capture3(
-              @outer_env,
-              *wrap_command(cmd, chdir: chdir, env: env),
-              chdir: "/",
-              stdin_data: stdin_data
-            )
+            if self.class.supported?
+              Open3.capture3(
+                @outer_env,
+                *wrap_command(cmd, chdir: chdir, env: env),
+                chdir: "/",
+                stdin_data: stdin_data
+              )
+            else
+              full_env = prepared_env(env)
+              Open3.capture3(
+                @outer_env.merge(full_env),
+                *Array(cmd),
+                chdir: chdir,
+                stdin_data: stdin_data
+              )
+            end
           end
 
           def exec(cmd, chdir:, env: {})
-            Kernel.exec(@outer_env, *wrap_command(cmd, chdir: chdir, env: env))
+            if self.class.supported?
+              Kernel.exec(@outer_env, *wrap_command(cmd, chdir: chdir, env: env))
+            else
+              full_env = prepared_env(env)
+              Kernel.exec(@outer_env.merge(full_env), *Array(cmd), chdir: chdir)
+            end
           end
 
           private
