@@ -62,7 +62,7 @@ module Ace
           # @return [String] Dedicated Ruby version for sandbox runtime
           def self.default_sandbox_ruby_version
             config = load
-            config.dig("sandbox", "ruby_version") || "3.4.9"
+            config.dig("sandbox", "ruby_version") || RUBY_VERSION
           end
 
           # @return [Array<String>] CLI provider names

@@ -31,7 +31,7 @@ class ConfigLoaderTest < Minitest::Test
       },
       "sandbox" => {
         "profile" => "ace-default",
-        "ruby_version" => "3.4.9"
+        "ruby_version" => "3.4.8"
       },
       "providers" => {
         "cli" => %w[claude gemini codex codexoss opencode pi]
@@ -113,7 +113,7 @@ class ConfigLoaderTest < Minitest::Test
   end
 
   def test_default_sandbox_ruby_version_accessor
-    assert_equal "3.4.9", ConfigLoader.default_sandbox_ruby_version
+    assert_equal "3.4.8", ConfigLoader.default_sandbox_ruby_version
   end
 
   def test_cli_providers_accessor

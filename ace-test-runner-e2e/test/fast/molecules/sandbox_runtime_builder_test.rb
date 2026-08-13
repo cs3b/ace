@@ -18,13 +18,13 @@ class SandboxRuntimeBuilderTest < Minitest::Test
       build_source_root(source_root)
 
       calls = []
-      ruby_root = File.join(tmpdir, "mise", "ruby", "3.4.9")
+      ruby_root = File.join(tmpdir, "mise", "ruby", RUBY_VERSION)
       ruby_exec = File.join(ruby_root, "bin", "ruby")
       runner = lambda do |env, *cmd, chdir:|
         calls << {env: env, cmd: cmd, chdir: chdir}
 
         case cmd
-        when ["mise", "where", "ruby@3.4.9"]
+        when ["mise", "where", "ruby@#{RUBY_VERSION}"]
           ["#{ruby_root}\n", "", FakeStatus.new(true)]
         when Array
           if cmd[0] == ruby_exec && cmd[1] == "-e"
@@ -76,13 +76,13 @@ class SandboxRuntimeBuilderTest < Minitest::Test
       build_source_root(source_root)
 
       calls = []
-      ruby_root = File.join(tmpdir, "mise", "ruby", "3.4.9")
+      ruby_root = File.join(tmpdir, "mise", "ruby", RUBY_VERSION)
       ruby_exec = File.join(ruby_root, "bin", "ruby")
       runner = lambda do |env, *cmd, chdir:|
         calls << {env: env, cmd: cmd, chdir: chdir}
 
         case cmd
-        when ["mise", "where", "ruby@3.4.9"]
+        when ["mise", "where", "ruby@#{RUBY_VERSION}"]
           ["#{ruby_root}\n", "", FakeStatus.new(true)]
         when Array
           if cmd[0] == ruby_exec && cmd[1] == "-e"
@@ -113,13 +113,13 @@ class SandboxRuntimeBuilderTest < Minitest::Test
       build_source_root(source_root)
 
       calls = []
-      ruby_root = File.join(tmpdir, "mise", "ruby", "3.4.9")
+      ruby_root = File.join(tmpdir, "mise", "ruby", RUBY_VERSION)
       ruby_exec = File.join(ruby_root, "bin", "ruby")
       runner = lambda do |env, *cmd, chdir:|
         calls << {env: env, cmd: cmd, chdir: chdir}
 
         case cmd
-        when ["mise", "where", "ruby@3.4.9"]
+        when ["mise", "where", "ruby@#{RUBY_VERSION}"]
           ["#{ruby_root}\n", "", FakeStatus.new(true)]
         when Array
           if cmd[0] == ruby_exec && cmd[1] == "-e"
@@ -158,12 +158,12 @@ class SandboxRuntimeBuilderTest < Minitest::Test
       source_root = File.join(tmpdir, "source")
       sandbox_root = File.join(tmpdir, "sandbox")
       build_source_root(source_root)
-      ruby_root = File.join(tmpdir, "mise", "ruby", "3.4.9")
+      ruby_root = File.join(tmpdir, "mise", "ruby", RUBY_VERSION)
       ruby_exec = File.join(ruby_root, "bin", "ruby")
 
       runner = lambda do |_env, *cmd, chdir:|
         case cmd
-        when ["mise", "where", "ruby@3.4.9"]
+        when ["mise", "where", "ruby@#{RUBY_VERSION}"]
           ["#{ruby_root}\n", "", FakeStatus.new(true)]
         when Array
           if cmd[0] == ruby_exec && cmd[1] == "-e"

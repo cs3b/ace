@@ -10,7 +10,7 @@ module Ace
       module Molecules
         # Builds a sandbox-local Ruby/Bundler runtime for E2E execution.
         class SandboxRuntimeBuilder
-          DEFAULT_RUBY_VERSION = "3.4.9"
+          DEFAULT_RUBY_VERSION = RUBY_VERSION
           DEFAULT_SHARED_RUNTIME_CACHE_ROOT = ".ace-local/test-e2e/runtime-cache"
           SHARED_RUNTIME_ENV_KEY = "ACE_E2E_SHARED_RUNTIME_ROOT"
           RUNTIME_CACHE_LAYOUT_VERSION = 1
