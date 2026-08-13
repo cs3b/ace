@@ -780,6 +780,10 @@ module Ace
         end
 
         def create_metadata(review_data)
+          root = @project_root || Ace::Support::Fs::Molecules::ProjectRootFinder.find_or_current
+          head, _s = Open3.capture2("git", "rev-parse", "HEAD", chdir: root)
+          tree, _s = Open3.capture2("git", "rev-parse", "HEAD^{tree}", chdir: root)
+
           {
             "timestamp" => Time.now.iso8601,
             "preset" => review_data[:preset],
@@ -787,7 +791,9 @@ module Ace
             "has_context" => !review_data[:context].to_s.empty?,
             "subject_size" => review_data[:subject]&.length || 0,
             "system_prompt_size" => review_data[:system_prompt]&.length || 0,
-            "user_prompt_size" => review_data[:user_prompt]&.length || 0
+            "user_prompt_size" => review_data[:user_prompt]&.length || 0,
+            "head" => head.to_s.strip,
+            "tree" => tree.to_s.strip
           }
         end
 
