@@ -71,6 +71,8 @@ module Ace
           end
 
           def command_prefix(chdir:, env: {})
+            return [] unless self.class.supported?
+
             ensure_available!
             merged_env = prepared_env(env)
             ensure_runtime_dirs(merged_env)

@@ -69,18 +69,20 @@ class BwrapSandboxBackendTest < Minitest::Test
   def test_command_prefix_mounts_source_root_and_sandbox_root
     Dir.mktmpdir do |tmpdir|
       backend = Backend.new(sandbox_root: tmpdir, source_root: "/repo")
-      backend.stub(:ensure_available!, true) do
-        prefix = backend.command_prefix(chdir: tmpdir, env: {"PATH" => "/usr/bin"})
+      Backend.stub(:supported?, true) do
+        backend.stub(:ensure_available!, true) do
+          prefix = backend.command_prefix(chdir: tmpdir, env: {"PATH" => "/usr/bin"})
 
-        assert_includes prefix, "bwrap"
-        assert_includes prefix, "--clearenv"
-        assert_includes prefix, "--ro-bind"
-        assert_includes prefix, "/repo"
-        assert_includes prefix, "--bind"
-        assert_includes prefix, File.expand_path(tmpdir)
-        assert_includes prefix, "--setenv"
-        assert_includes prefix, "HOME"
-        assert_equal "--", prefix.last
+          assert_includes prefix, "bwrap"
+          assert_includes prefix, "--clearenv"
+          assert_includes prefix, "--ro-bind"
+          assert_includes prefix, "/repo"
+          assert_includes prefix, "--bind"
+          assert_includes prefix, File.expand_path(tmpdir)
+          assert_includes prefix, "--setenv"
+          assert_includes prefix, "HOME"
+          assert_equal "--", prefix.last
+        end
       end
     end
   end
@@ -91,17 +93,19 @@ class BwrapSandboxBackendTest < Minitest::Test
       FileUtils.mkdir_p(ruby_root)
       backend = Backend.new(sandbox_root: File.join(tmpdir, "sandbox"), source_root: "/repo")
 
-      backend.stub(:ensure_available!, true) do
-        prefix = backend.command_prefix(
-          chdir: tmpdir,
-          env: {
-            "PATH" => "/usr/bin",
-            "ACE_E2E_SANDBOX_RUBY_ROOT" => ruby_root
-          }
-        )
+      Backend.stub(:supported?, true) do
+        backend.stub(:ensure_available!, true) do
+          prefix = backend.command_prefix(
+            chdir: tmpdir,
+            env: {
+              "PATH" => "/usr/bin",
+              "ACE_E2E_SANDBOX_RUBY_ROOT" => ruby_root
+            }
+          )
 
-        assert_includes prefix, ruby_root
-        assert_includes prefix, "ACE_E2E_SANDBOX_RUBY_ROOT"
+          assert_includes prefix, ruby_root
+          assert_includes prefix, "ACE_E2E_SANDBOX_RUBY_ROOT"
+        end
       end
     end
   end
