@@ -1,6 +1,6 @@
 ---
 id: 8vc.t.j3p
-status: draft
+status: pending
 priority: medium
 created_at: "2026-08-13 12:44:08"
 estimate: TBD
@@ -8,10 +8,10 @@ dependencies: []
 tags: []
 github_issue: 315
 bundle:
-  presets: ["project"]
-  files:
-    - docs/quick-start.md
+  presets: [project]
+  files: [docs/quick-start.md]
   commands: []
+needs_review: false
 ---
 
 # Add application capability packages to default quick start
