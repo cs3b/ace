@@ -1113,6 +1113,365 @@ module Ace
             assert parsed["findings"].any? { |f| f["id"] == "rec-dev-pipeline" }
           end
         end
+
+        # --- Acknowledgement tests ---
+
+        def test_active_acknowledgement_suppresses_finding
+          future = (Time.now + 86400 * 30).iso8601
+          config_yml = <<~YAML
+            profile: application
+            recommendation_acknowledgements:
+              rec-worktree-bootstrap:
+                rationale: "We use custom worktree setup"
+                actor: "developer@example.com"
+                acknowledged_at: "2026-01-01T00:00:00Z"
+                expires_at: "#{future}"
+                profile: application
+          YAML
+
+          with_temp_config(
+            ".git" => {},
+            ".gitignore" => ".ace-local/\n",
+            "AGENTS.md" => "guidance",
+            "docs" => {"tools.md" => "tools"},
+            ".ace" => {"config" => {"config.yml" => config_yml}}
+          ) do
+            doctor = Organisms::SetupDoctor.new
+            io = StringIO.new
+            code = doctor.run_recommendations(profile: "application", json: true, io: io)
+            parsed = JSON.parse(io.string)
+
+            wt_finding = parsed["findings"].find { |f| f["id"] == "rec-worktree-bootstrap" }
+            assert_equal "acknowledged", wt_finding["severity"]
+            assert_equal "warning", wt_finding["original_severity"]
+            assert_equal "We use custom worktree setup", wt_finding.dig("acknowledgement", "rationale")
+
+            # Acknowledged findings should not cause strict failure
+            assert_equal 0, code
+          end
+        end
+
+        def test_active_acknowledgement_suppresses_strict_failure
+          future = (Time.now + 86400 * 30).iso8601
+          config_yml = <<~YAML
+            profile: application
+            recommendation_acknowledgements:
+              rec-worktree-bootstrap:
+                rationale: "Custom worktree"
+                actor: "dev"
+                acknowledged_at: "2026-01-01T00:00:00Z"
+                expires_at: "#{future}"
+                profile: application
+              rec-agent-guidance:
+                rationale: "Custom guidance"
+                actor: "dev"
+                acknowledged_at: "2026-01-01T00:00:00Z"
+                expires_at: "#{future}"
+                profile: application
+          YAML
+
+          with_temp_config(
+            ".git" => {},
+            ".gitignore" => ".ace-local/\n",
+            ".ace" => {"config" => {"config.yml" => config_yml}}
+          ) do
+            doctor = Organisms::SetupDoctor.new
+            io = StringIO.new
+            code = doctor.run_recommendations(profile: "application", strict: true, json: true, io: io)
+            # With all warnings acknowledged, strict mode should pass
+            assert_equal 0, code
+          end
+        end
+
+        def test_expired_acknowledgement_reexposes_finding
+          past = (Time.now - 86400).iso8601
+          config_yml = <<~YAML
+            profile: application
+            recommendation_acknowledgements:
+              rec-worktree-bootstrap:
+                rationale: "Was custom, now needs review"
+                actor: "developer@example.com"
+                acknowledged_at: "2026-01-01T00:00:00Z"
+                expires_at: "#{past}"
+                profile: application
+          YAML
+
+          with_temp_config(
+            ".git" => {},
+            ".gitignore" => ".ace-local/\n",
+            "AGENTS.md" => "guidance",
+            "docs" => {"tools.md" => "tools"},
+            ".ace" => {"config" => {"config.yml" => config_yml}}
+          ) do
+            doctor = Organisms::SetupDoctor.new
+            io = StringIO.new
+            doctor.run_recommendations(profile: "application", json: true, io: io)
+            parsed = JSON.parse(io.string)
+
+            wt_finding = parsed["findings"].find { |f| f["id"] == "rec-worktree-bootstrap" }
+            # Severity preserved — finding is visible again
+            assert_equal "warning", wt_finding["severity"]
+            assert_equal true, wt_finding["acknowledgement_expired"]
+            assert_equal "Was custom, now needs review", wt_finding.dig("acknowledgement", "rationale")
+          end
+        end
+
+        def test_expired_acknowledgement_shows_context_in_terminal
+          past = (Time.now - 86400).iso8601
+          config_yml = <<~YAML
+            profile: application
+            recommendation_acknowledgements:
+              rec-worktree-bootstrap:
+                rationale: "Temporary exception"
+                actor: "admin"
+                acknowledged_at: "2026-01-01T00:00:00Z"
+                expires_at: "#{past}"
+                profile: application
+          YAML
+
+          with_temp_config(
+            ".git" => {},
+            ".gitignore" => ".ace-local/\n",
+            "AGENTS.md" => "guidance",
+            "docs" => {"tools.md" => "tools"},
+            ".ace" => {"config" => {"config.yml" => config_yml}}
+          ) do
+            doctor = Organisms::SetupDoctor.new
+            io = StringIO.new
+            doctor.run_recommendations(profile: "application", io: io)
+            assert_includes io.string, "Prior Acknowledgement Expired: Temporary exception (by admin)"
+          end
+        end
+
+        def test_malformed_acknowledgement_ignored
+          future = (Time.now + 86400 * 30).iso8601
+          config_yml = <<~YAML
+            profile: application
+            recommendation_acknowledgements:
+              rec-worktree-bootstrap:
+                rationale: ""
+                actor: "dev"
+                acknowledged_at: "2026-01-01T00:00:00Z"
+                expires_at: "#{future}"
+          YAML
+
+          with_temp_config(
+            ".git" => {},
+            ".gitignore" => ".ace-local/\n",
+            "AGENTS.md" => "guidance",
+            "docs" => {"tools.md" => "tools"},
+            ".ace" => {"config" => {"config.yml" => config_yml}}
+          ) do
+            doctor = Organisms::SetupDoctor.new
+            io = StringIO.new
+            doctor.run_recommendations(profile: "application", json: true, io: io)
+            parsed = JSON.parse(io.string)
+
+            wt_finding = parsed["findings"].find { |f| f["id"] == "rec-worktree-bootstrap" }
+            # Empty rationale → invalid → severity unchanged
+            assert_equal "warning", wt_finding["severity"]
+            assert_nil wt_finding["acknowledgement"]
+          end
+        end
+
+        def test_acknowledgement_missing_time_boundary_ignored
+          config_yml = <<~YAML
+            profile: application
+            recommendation_acknowledgements:
+              rec-worktree-bootstrap:
+                rationale: "Valid rationale"
+                actor: "dev"
+                acknowledged_at: "2026-01-01T00:00:00Z"
+          YAML
+
+          with_temp_config(
+            ".git" => {},
+            ".gitignore" => ".ace-local/\n",
+            "AGENTS.md" => "guidance",
+            "docs" => {"tools.md" => "tools"},
+            ".ace" => {"config" => {"config.yml" => config_yml}}
+          ) do
+            doctor = Organisms::SetupDoctor.new
+            io = StringIO.new
+            doctor.run_recommendations(profile: "application", json: true, io: io)
+            parsed = JSON.parse(io.string)
+
+            wt_finding = parsed["findings"].find { |f| f["id"] == "rec-worktree-bootstrap" }
+            # No expires_at or recheck_after → invalid
+            assert_equal "warning", wt_finding["severity"]
+          end
+        end
+
+        def test_acknowledgement_wrong_profile_ignored
+          future = (Time.now + 86400 * 30).iso8601
+          config_yml = <<~YAML
+            profile: application
+            recommendation_acknowledgements:
+              rec-worktree-bootstrap:
+                rationale: "Only for ace-development"
+                actor: "dev"
+                acknowledged_at: "2026-01-01T00:00:00Z"
+                expires_at: "#{future}"
+                profile: ace-development
+          YAML
+
+          with_temp_config(
+            ".git" => {},
+            ".gitignore" => ".ace-local/\n",
+            "AGENTS.md" => "guidance",
+            "docs" => {"tools.md" => "tools"},
+            ".ace" => {"config" => {"config.yml" => config_yml}}
+          ) do
+            doctor = Organisms::SetupDoctor.new
+            io = StringIO.new
+            doctor.run_recommendations(profile: "application", json: true, io: io)
+            parsed = JSON.parse(io.string)
+
+            wt_finding = parsed["findings"].find { |f| f["id"] == "rec-worktree-bootstrap" }
+            # Profile mismatch → invalid
+            assert_equal "warning", wt_finding["severity"]
+          end
+        end
+
+        def test_acknowledgement_version_mismatch_ignored
+          future = (Time.now + 86400 * 30).iso8601
+          config_yml = <<~YAML
+            profile: application
+            recommendation_acknowledgements:
+              rec-worktree-bootstrap:
+                rationale: "Old version"
+                actor: "dev"
+                acknowledged_at: "2026-01-01T00:00:00Z"
+                expires_at: "#{future}"
+                profile: application
+                recommendation_version: "0.37.0"
+          YAML
+
+          with_temp_config(
+            ".git" => {},
+            ".gitignore" => ".ace-local/\n",
+            "AGENTS.md" => "guidance",
+            "docs" => {"tools.md" => "tools"},
+            ".ace" => {"config" => {"config.yml" => config_yml}}
+          ) do
+            doctor = Organisms::SetupDoctor.new
+            io = StringIO.new
+            doctor.run_recommendations(profile: "application", json: true, io: io)
+            parsed = JSON.parse(io.string)
+
+            wt_finding = parsed["findings"].find { |f| f["id"] == "rec-worktree-bootstrap" }
+            # Version mismatch → invalid
+            assert_equal "warning", wt_finding["severity"]
+          end
+        end
+
+        def test_acknowledgement_with_recheck_after_works
+          future = (Time.now + 86400 * 30).iso8601
+          config_yml = <<~YAML
+            profile: application
+            recommendation_acknowledgements:
+              rec-worktree-bootstrap:
+                rationale: "Deferred setup"
+                actor: "dev"
+                acknowledged_at: "2026-01-01T00:00:00Z"
+                recheck_after: "#{future}"
+                profile: application
+          YAML
+
+          with_temp_config(
+            ".git" => {},
+            ".gitignore" => ".ace-local/\n",
+            "AGENTS.md" => "guidance",
+            "docs" => {"tools.md" => "tools"},
+            ".ace" => {"config" => {"config.yml" => config_yml}}
+          ) do
+            doctor = Organisms::SetupDoctor.new
+            io = StringIO.new
+            doctor.run_recommendations(profile: "application", json: true, io: io)
+            parsed = JSON.parse(io.string)
+
+            wt_finding = parsed["findings"].find { |f| f["id"] == "rec-worktree-bootstrap" }
+            assert_equal "acknowledged", wt_finding["severity"]
+          end
+        end
+
+        def test_acknowledgement_json_includes_all_findings_including_acknowledged
+          future = (Time.now + 86400 * 30).iso8601
+          config_yml = <<~YAML
+            profile: application
+            recommendation_acknowledgements:
+              rec-worktree-bootstrap:
+                rationale: "Custom setup"
+                actor: "dev"
+                acknowledged_at: "2026-01-01T00:00:00Z"
+                expires_at: "#{future}"
+                profile: application
+          YAML
+
+          with_temp_config(
+            ".git" => {},
+            ".gitignore" => ".ace-local/\n",
+            "AGENTS.md" => "guidance",
+            "docs" => {"tools.md" => "tools"},
+            ".ace" => {"config" => {"config.yml" => config_yml}}
+          ) do
+            doctor = Organisms::SetupDoctor.new
+            io = StringIO.new
+            doctor.run_recommendations(profile: "application", json: true, io: io)
+            parsed = JSON.parse(io.string)
+
+            # JSON output includes all findings (acknowledged ones visible for auditing)
+            ids = parsed["findings"].map { |f| f["id"] }
+            assert_includes ids, "rec-worktree-bootstrap"
+          end
+        end
+
+        def test_acknowledged_finding_hidden_in_terminal_output
+          future = (Time.now + 86400 * 30).iso8601
+          config_yml = <<~YAML
+            profile: application
+            recommendation_acknowledgements:
+              rec-worktree-bootstrap:
+                rationale: "Custom setup"
+                actor: "dev"
+                acknowledged_at: "2026-01-01T00:00:00Z"
+                expires_at: "#{future}"
+                profile: application
+          YAML
+
+          with_temp_config(
+            ".git" => {},
+            ".gitignore" => ".ace-local/\n",
+            "AGENTS.md" => "guidance",
+            "docs" => {"tools.md" => "tools"},
+            ".ace" => {"config" => {"config.yml" => config_yml}}
+          ) do
+            doctor = Organisms::SetupDoctor.new
+            io = StringIO.new
+            doctor.run_recommendations(profile: "application", io: io)
+            # Terminal output should not display the acknowledged finding
+            refute_includes io.string, "rec-worktree-bootstrap"
+            assert_includes io.string, "suppressed by active acknowledgement"
+          end
+        end
+
+        def test_no_acknowledgements_section_works_normally
+          with_temp_config(
+            ".git" => {},
+            ".gitignore" => ".ace-local/\n",
+            ".ace" => {"config" => {"config.yml" => "profile: application\n"}}
+          ) do
+            doctor = Organisms::SetupDoctor.new
+            io = StringIO.new
+            doctor.run_recommendations(profile: "application", json: true, io: io)
+            parsed = JSON.parse(io.string)
+
+            # Normal behavior — no acknowledgement fields
+            wt_finding = parsed["findings"].find { |f| f["id"] == "rec-worktree-bootstrap" }
+            assert_equal "warning", wt_finding["severity"]
+            assert_nil wt_finding["acknowledgement"]
+          end
+        end
       end
     end
   end

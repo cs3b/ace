@@ -300,6 +300,9 @@ module Ace
               }
             end
 
+            # Apply acknowledgements: suppress acknowledged findings, re-expose expired ones
+            apply_acknowledgements(findings, profile: profile, root: root)
+
             findings
           end
 
@@ -1345,6 +1348,115 @@ module Ace
             token = token.delete_prefix("/")
             token = token.delete_suffix("/")
             token
+          end
+
+          # --- Acknowledgement support ---
+
+          # Load acknowledgements from project config and apply them to findings.
+          # Active valid acknowledgements change severity to "acknowledged".
+          # Expired acknowledgements keep original severity but attach prior context.
+          def apply_acknowledgements(findings, profile:, root:)
+            acks = load_acknowledgements(root)
+            return if acks.nil? || acks.empty?
+
+            now = Time.now
+
+            findings.each do |finding|
+              ack = acks[finding[:id]]
+              next unless ack.is_a?(Hash)
+
+              validity = validate_acknowledgement(ack, finding, profile, now)
+              case validity
+              when :active
+                finding[:original_severity] = finding[:severity]
+                finding[:severity] = "acknowledged"
+                finding[:acknowledgement] = ack
+              when :expired
+                finding[:acknowledgement] = ack
+                finding[:acknowledgement_expired] = true
+              end
+              # :invalid — leave finding unchanged, ack is silently ignored
+            end
+          end
+
+          # Load recommendation_acknowledgements from project config file.
+          # Returns a Hash keyed by finding id, or empty Hash.
+          def load_acknowledgements(root)
+            config_paths = [
+              File.join(root, ".ace", "config", "config.yml"),
+              File.join(root, ".ace", "config.yml")
+            ]
+            config_path = config_paths.find { |f| File.exist?(f) }
+            return {} unless config_path
+
+            data = YAML.safe_load_file(config_path, permitted_classes: [Time, Date], aliases: true)
+            data&.dig("recommendation_acknowledgements") || {}
+          rescue StandardError
+            {}
+          end
+
+          # Validate an acknowledgement against finding, profile, and time.
+          # Returns :active, :expired, or :invalid.
+          def validate_acknowledgement(ack, finding, profile, now)
+            # Required fields
+            rationale = ack["rationale"].to_s.strip
+            return :invalid if rationale.empty?
+
+            actor = ack["actor"].to_s.strip
+            return :invalid if actor.empty?
+
+            acknowledged_at = parse_time(ack["acknowledged_at"])
+            return :invalid unless acknowledged_at
+
+            # Profile scope: if declared, must match
+            ack_profile = ack["profile"].to_s.strip
+            return :invalid if !ack_profile.empty? && ack_profile != profile
+
+            # Version scope: if declared, must match finding version
+            ack_version = ack["recommendation_version"].to_s.strip
+            if !ack_version.empty? && finding[:version]
+              return :invalid unless version_matches?(ack_version, finding[:version])
+            end
+
+            # Time boundary: expires_at or recheck_after required
+            expires_at = parse_time(ack["expires_at"])
+            recheck_after = parse_time(ack["recheck_after"])
+            return :invalid if expires_at.nil? && recheck_after.nil?
+
+            # Expiry check: at-the-instant is expired
+            boundary = expires_at || recheck_after
+            return :expired if now >= boundary
+
+            :active
+          end
+
+          # Parse a time value from string or Time object.
+          # Returns Time or nil.
+          def parse_time(value)
+            return nil if value.nil?
+            return value if value.is_a?(Time)
+            return value.to_time if value.is_a?(Date)
+
+            Time.parse(value.to_s)
+          rescue ArgumentError, TypeError
+            nil
+          end
+
+          # Check if acknowledgement version constraint matches finding version.
+          # Supports exact match and pessimistic (~>) constraints.
+          def version_matches?(constraint, version)
+            return true if constraint == version
+
+            if constraint.start_with?("~>")
+              prefix = constraint.sub("~>", "").strip
+              parts = prefix.split(".")
+              return false if parts.length < 2
+
+              # Pessimistic: ~> 0.38 means >= 0.38.0 and < 1.0
+              version.start_with?(parts[0...-1].join(".") + ".")
+            else
+              constraint == version
+            end
           end
         end
       end

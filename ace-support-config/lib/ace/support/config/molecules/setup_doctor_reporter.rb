@@ -57,10 +57,16 @@ module Ace
             output << "=" * 50
             output << ""
 
-            if findings.empty?
+            # Separate acknowledged from visible findings
+            visible = findings.reject { |f| f[:severity] == "acknowledged" }
+            acknowledged_count = findings.count { |f| f[:severity] == "acknowledged" }
+
+            if visible.empty? && acknowledged_count.zero?
               output << "✅ No recommendations found - configuration matches profile '#{profile}'."
+            elsif visible.empty?
+              output << "✅ All findings acknowledged (#{acknowledged_count} active)."
             else
-              findings.each_with_index do |f, idx|
+              visible.each_with_index do |f, idx|
                 glyph = case f[:severity]
                         when "blocker" then "❌"
                         when "warning" then "⚠️"
@@ -73,6 +79,14 @@ module Ace
                 output << "   Recommended: #{f[:recommended_value]}"
                 output << "   Rationale: #{f[:rationale]}" if f[:rationale]
                 output << "   Next Action: #{f[:next_action]}" if f[:next_action]
+                if f[:acknowledgement_expired] && f[:acknowledgement]
+                  ack = f[:acknowledgement]
+                  output << "   Prior Acknowledgement Expired: #{ack["rationale"]} (by #{ack["actor"]})"
+                end
+                output << ""
+              end
+              if acknowledged_count.positive?
+                output << "   (#{acknowledged_count} finding#{"s" if acknowledged_count > 1} suppressed by active acknowledgement#{"s" if acknowledged_count > 1})"
                 output << ""
               end
             end
