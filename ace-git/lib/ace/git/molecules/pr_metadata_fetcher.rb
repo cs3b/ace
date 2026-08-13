@@ -30,6 +30,8 @@ module Ace
           url
           isCrossRepository
           headRepositoryOwner
+          headRefOid
+          mergeCommit
         ].freeze
 
         class << self
@@ -206,7 +208,7 @@ module Ace
           def fetch_all_prs(limit: 15, timeout: Ace::Git.network_timeout)
             result = execute_gh_command(
               ["gh", "pr", "list", "--state", "all", "--limit", limit.to_s,
-                "--json", "number,title,state,mergedAt,author,headRefName,isDraft,baseRefName,url"],
+                "--json", "number,title,state,mergedAt,author,headRefName,isDraft,baseRefName,url,headRefOid,mergeCommit"],
               timeout: timeout
             )
 
