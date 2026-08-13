@@ -251,7 +251,26 @@ class CleanupReporterTest < Minitest::Test
             @reporter.stub(:inventory_remote_refs, remote_refs) do
               ancestor_impl = ->(candidate, _target) { ancestry_map.fetch(candidate, false) }
               @reporter.stub(:ancestor?, ancestor_impl) do
-                yield
+                # Stub PR Resolver
+                mock_resolver = Object.new
+                def mock_resolver.classify(branch, sha)
+                  {
+                    proof: "none",
+                    pr: nil,
+                    candidate_head: nil,
+                    merged_head: nil,
+                    merge_commit: nil,
+                    target_reachable: "unknown",
+                    path_type_mode_match: "unknown",
+                    provider_status: "offline",
+                    action: "retain",
+                    retention_reason: "ancestry_unproven"
+                  }
+                end
+                
+                Ace::Git::Worktree::Molecules::CleanupPrResolver.stub :new, mock_resolver do
+                  yield
+                end
               end
             end
           end

@@ -4,6 +4,7 @@ require "digest"
 require "json"
 require "open3"
 require "time"
+require_relative "cleanup_pr_resolver"
 
 module Ace
   module Git
@@ -45,10 +46,12 @@ module Ace
             local_refs = inventory_local_refs
             remote_refs = inventory_remote_refs
 
+            pr_resolver = CleanupPrResolver.new(target: @target, target_sha: target_sha, offline: @offline)
+
             # Classify each item
-            classify_worktrees(worktrees, target_sha)
-            classify_refs(local_refs, target_sha, "local")
-            classify_refs(remote_refs, target_sha, "remote")
+            classify_worktrees(worktrees, target_sha, pr_resolver)
+            classify_refs(local_refs, target_sha, "local", pr_resolver)
+            classify_refs(remote_refs, target_sha, "remote", pr_resolver)
 
             # Build ordered action plan
             actions = build_action_plan(worktrees, local_refs, remote_refs)
@@ -268,7 +271,7 @@ module Ace
 
           # --- Classification ---
 
-          def classify_worktrees(worktrees, target_sha)
+          def classify_worktrees(worktrees, target_sha, pr_resolver)
             worktrees.each do |wt|
               if wt[:primary]
                 wt[:action] = "retain"
@@ -283,14 +286,23 @@ module Ace
                 wt[:ancestry] = "ancestor"
                 wt[:action] = "remove"
               else
-                wt[:ancestry] = "unproven"
-                wt[:action] = "retain"
-                wt[:retention_reason] = "ancestry_unproven"
+                # Try GitHub PR evidence
+                proof_result = pr_resolver.classify(wt[:branch], wt[:sha])
+                if proof_result[:action] == "remove"
+                  wt[:ancestry] = proof_result[:proof]
+                  wt[:action] = "remove"
+                  wt[:pr_proof] = proof_result # Keep details
+                else
+                  wt[:ancestry] = proof_result[:proof] == "none" ? "unproven" : proof_result[:proof]
+                  wt[:action] = "retain"
+                  wt[:retention_reason] = proof_result[:retention_reason] || "ancestry_unproven"
+                  wt[:pr_proof] = proof_result
+                end
               end
             end
           end
 
-          def classify_refs(refs, target_sha, kind)
+          def classify_refs(refs, target_sha, kind, pr_resolver)
             refs.each do |ref|
               if ref[:protected]
                 ref[:action] = "retain"
@@ -299,9 +311,21 @@ module Ace
                 ref[:ancestry] = "ancestor"
                 ref[:action] = "remove"
               else
-                ref[:ancestry] = "unproven"
-                ref[:action] = "retain"
-                ref[:retention_reason] = "ancestry_unproven"
+                # Try GitHub PR evidence
+                # Only local refs and remote-tracking refs have meaningful branch names for PR lookup
+                branch_name = kind == "remote" ? ref[:short_name] : ref[:name]
+                proof_result = pr_resolver.classify(branch_name, ref[:sha])
+                
+                if proof_result[:action] == "remove"
+                  ref[:ancestry] = proof_result[:proof]
+                  ref[:action] = "remove"
+                  ref[:pr_proof] = proof_result
+                else
+                  ref[:ancestry] = proof_result[:proof] == "none" ? "unproven" : proof_result[:proof]
+                  ref[:action] = "retain"
+                  ref[:retention_reason] = proof_result[:retention_reason] || "ancestry_unproven"
+                  ref[:pr_proof] = proof_result
+                end
               end
             end
           end
