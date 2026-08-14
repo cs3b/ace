@@ -4,6 +4,27 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.943] - 2026-08-13
+
+### Added
+
+- **ace-git-worktree v0.22.0**: Added cleanup plan application with drift guards, merged ref classification with GitHub PR evidence, repository inventory reporting with ancestry proof, in-place recoverable preparation phases, bootstrap config management with provenance, and fail-closed tracked mise trust verification.
+- **ace-assign v0.56.0**: Added exact-head evidence calculation for status and outcome-based task presets.
+- **ace-git v0.23.0**: Exposed PR head and merge commit metadata.
+- **ace-review v0.54.0**: Recorded git head and tree in review metadata.
+- **ace-support-config v0.18.0**: Added management of expiring drift acknowledgements, profile-aware policy checks to doctor, and profile-aware configuration drift reporting.
+
+### Fixed
+
+- **ace-git-worktree v0.22.0**: Resolved PR 316 review findings and restricted task bookkeeping commits to owned paths.
+- **ace-assign v0.56.0**: Resolved PR 316 review findings for status preset detection.
+
+### Technical
+
+- **docs**: Added application capability packages and verification steps to `docs/quick-start.md`.
+- **ace-task v0.37.3**: Moved task completion to final delivery workflow.
+- **ace-support-config v0.18.0**: Streamlined bootstrap templates around principles-first guidance.
+
 ## [0.9.942] - 2026-08-12
 
 ### Added
