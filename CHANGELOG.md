@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- **ace-llm-providers-cli v0.32.0**: Added first-class Antigravity CLI (`agy`) provider support with headless JSON execution, resume metadata handling, provider health checks, and retained smoke coverage.
+
+### Changed
+
+- **ace-llm v0.39.0**: Added shipped `agy` presets plus Antigravity CLI setup, alias, and usage documentation so the new provider can be selected through the standard `ace-llm` surface.
+
+### Fixed
+
+- **ace-llm-providers-cli v0.32.1**: Added an explicit oversized-prompt guard for Antigravity one-shot execution and corrected the provider readiness check so installed `agy` binaries no longer report a false unauthenticated state by default.
+- **ace-llm-providers-cli v0.32.2**: Switched the Antigravity prompt guard to byte-size enforcement for argv safety and changed `agy` readiness to report installed-but-unverified headless authentication instead of claiming it is already authenticated.
+- **ace-llm-providers-cli v0.32.3**: Split `agy` readiness from headless-auth verification so installed, callable Antigravity CLI setups can be reported as ready without being treated as blocked on authentication.
+
 ## [0.9.943] - 2026-08-13
 
 ### Added
