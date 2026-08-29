@@ -12,6 +12,7 @@ if ARGV.include?("--help") || ARGV.include?("-h") || ARGV.include?("help")
       -h, --help    Display this help message
 
     This utility checks for the following CLI tools:
+      - Antigravity (agy)
       - Claude Code (claude)
       - Codex (codex)
       - OpenCode (opencode)
@@ -36,7 +37,7 @@ max_name_length = results.map { |r| r[:name].length }.max
 results.each do |result|
   name_padded = result[:name].ljust(max_name_length)
   status_icon = result[:available] ? "✅" : "❌"
-  auth_icon = result[:authenticated] ? "🔓" : "🔒"
+  auth_icon = result[:ready] ? "🔓" : "🔒"
   config = result[:config]
 
   puts "#{status_icon} #{name_padded} (#{result[:provider]})"
@@ -56,16 +57,18 @@ end
 # Summary
 available_count = results.count { |r| r[:available] }
 authenticated_count = results.count { |r| r[:authenticated] }
+ready_count = results.count { |r| r[:ready] }
 
 puts "─" * 50
 puts "\n📊 Summary:"
 puts "   Available: #{available_count}/#{results.size} CLI tools installed"
 puts "   Authenticated: #{authenticated_count}/#{available_count} tools authenticated" if available_count > 0
+puts "   Ready: #{ready_count}/#{available_count} tools ready for use" if available_count > 0
 
 if available_count == 0
   puts "\n💡 To use CLI providers, install at least one tool from above."
   puts "   After installation, run this check again to verify authentication."
-elsif authenticated_count < available_count
+elsif ready_count < available_count
   puts "\n💡 Some tools need authentication. Run the auth commands shown above."
 else
   puts "\n🎉 All installed CLI tools are ready to use with ace-llm!"

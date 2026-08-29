@@ -4,7 +4,7 @@ module Ace
   module LLM
     module Providers
       module CLI
-        VERSION = "0.31.7"
+        VERSION = "0.32.3"
       end
     end
   end

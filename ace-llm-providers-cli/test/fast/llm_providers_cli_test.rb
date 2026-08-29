@@ -22,6 +22,10 @@ module Ace
           assert_kind_of Class, ::Ace::LLM::Providers::CLI::ClaudeCodeClient
         end
 
+        def test_agy_client_exists
+          assert_kind_of Class, ::Ace::LLM::Providers::CLI::AgyClient
+        end
+
         def test_codex_client_exists
           assert_kind_of Class, ::Ace::LLM::Providers::CLI::CodexClient
         end

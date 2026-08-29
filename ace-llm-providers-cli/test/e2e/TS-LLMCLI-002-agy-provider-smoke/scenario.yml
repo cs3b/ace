@@ -1,0 +1,36 @@
+test-id: TS-LLMCLI-002
+title: "agy provider smoke"
+area: llmcli
+package: ace-llm-providers-cli
+priority: high
+duration: ~8min
+cost-tier: smoke
+tags: [smoke, happy-path, "use-case:agy-provider"]
+tool-under-test: ace-llm
+
+sandbox-layout:
+  results/tc/01/: "Fixture-backed agy success evidence"
+  results/tc/02/: "Conversation resume flag passthrough evidence"
+  results/tc/03/: "Fixture-backed agy failure evidence"
+
+e2e-justification: >
+  These checks validate that `ace-llm` can route to the new `agy` provider
+  through a real executable path, preserve documented Antigravity CLI args, and
+  surface deterministic failure behavior without authenticating to a live
+  provider.
+
+unit-coverage-reviewed:
+  - test/fast/molecules/agy_client_test.rb
+  - test/feat/provider_registration_test.rb
+  - test/fast/molecules/cli_providers_test.rb
+
+requires:
+  tools: [ruby]
+  ruby: ">= 3.0"
+
+setup:
+  - git-init
+  - run: "if [ -f \"${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}/mise.toml\" ] && command -v mise >/dev/null 2>&1; then cp \"${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}/mise.toml\" mise.toml && mise trust mise.toml; fi"
+  - run: "mkdir -p results/tc/01/bin results/tc/02/bin results/tc/03/bin"
+  - agent-env:
+      PROJECT_ROOT_PATH: .

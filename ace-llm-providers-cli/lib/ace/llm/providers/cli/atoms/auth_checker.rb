@@ -11,9 +11,10 @@ module Ace
           class AuthChecker
             # Check authentication for a specific provider
             # @param provider [String] Provider name (claude, codex, opencode, codexoss)
-            # @return [Hash] Result with :authenticated and :message
+            # @return [Hash] Result with :authenticated, :ready, and :message
             def self.check(provider)
               case provider
+              when "agy" then check_agy
               when "claude" then check_claude
               when "codex" then check_codex
               when "opencode" then check_opencode
@@ -32,6 +33,21 @@ module Ace
               end
             rescue Errno::ENOENT, Errno::EACCES
               {authenticated: false, message: "Authentication check failed"}
+            end
+
+            def self.check_agy
+              _, _, status = Open3.capture3("agy", "--help")
+              if status.success?
+                {
+                  authenticated: false,
+                  ready: true,
+                  message: "Installed, but headless authentication is not verified (interactive agy auth may still need to be completed before the first headless run)"
+                }
+              else
+                {authenticated: false, ready: false, message: "Run: agy"}
+              end
+            rescue Errno::ENOENT, Errno::EACCES
+              {authenticated: false, ready: false, message: "Authentication check failed"}
             end
 
             def self.check_codex

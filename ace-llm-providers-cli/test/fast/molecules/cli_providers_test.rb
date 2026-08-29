@@ -43,11 +43,12 @@ describe "CLI Providers" do
       captured_cmd = nil
 
       @client.stub :validate_claude_availability!, true do
-        @client.stub :execute_claude_command, lambda { |cmd, prompt, subprocess_env: nil, working_dir: nil,
-          subprocess_command_prefix: nil|
+        command_stub = lambda do |cmd, prompt, subprocess_env: nil, working_dir: nil, subprocess_command_prefix: nil|
           captured_cmd = cmd
           ['{"result":"ok","usage":{}}', "", status]
-        } do
+        end
+
+        @client.stub :execute_claude_command, command_stub do
           @client.generate([{role: "user", content: "hi"}], cli_args: "--verbose")
         end
       end
@@ -73,6 +74,24 @@ describe "CLI Providers" do
     ensure
       ENV["ACE_LLM_DEBUG_SUBPROCESS"] = old_env
       $stderr = old_stderr
+    end
+  end
+
+  describe "AgyClient" do
+    before do
+      @client = Ace::LLM::Providers::CLI::AgyClient.new
+    end
+
+    it "initializes with default model" do
+      model = @client.instance_variable_get(:@model)
+      assert_equal "gemini-3.5-flash-medium", model
+    end
+
+    it "provides models" do
+      models = @client.list_models
+      assert_kind_of Array, models
+      assert models.any? { |m| m[:id] == "gemini-3.5-flash-medium" }
+      assert models.any? { |m| m[:id] == "claude-sonnet-4-6" }
     end
   end
 

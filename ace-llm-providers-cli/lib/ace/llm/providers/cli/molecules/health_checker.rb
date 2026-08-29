@@ -11,6 +11,13 @@ module Ace
           # Orchestrates provider detection and authentication checking
           class HealthChecker
             PROVIDERS = {
+              "agy" => {
+                name: "Antigravity",
+                provider: "agy",
+                check_cmd: ["agy", "--help"],
+                install_cmd: "curl -fsSL https://antigravity.google/cli/install.sh | bash",
+                install_url: "https://antigravity.google/product/antigravity-cli"
+              },
               "claude" => {
                 name: "Claude Code",
                 provider: "claude",
@@ -57,6 +64,7 @@ module Ace
                 config: config,
                 available: false,
                 authenticated: false,
+                ready: false,
                 version: nil,
                 auth_status: "Not checked"
               }
@@ -67,6 +75,7 @@ module Ace
 
                 auth_result = Atoms::AuthChecker.check(config[:provider])
                 result[:authenticated] = auth_result[:authenticated]
+                result[:ready] = auth_result.fetch(:ready, auth_result[:authenticated])
                 result[:auth_status] = auth_result[:message]
               end
 

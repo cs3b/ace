@@ -7,6 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.32.3] - 2026-08-29
+
+### Fixed
+- Split `agy` readiness from headless-auth verification so installed, callable Antigravity CLI setups report as ready without being misclassified as blocked on authentication.
+
+### Technical
+- Added focused readiness regression coverage and updated the retained CLI smoke scenario to exercise the five-provider surface, including the `agy` ready-but-unverified path.
+
+## [0.32.2] - 2026-08-29
+
+### Fixed
+- Switched the Antigravity CLI one-shot prompt guard to enforce the configured limit by byte size, preventing multibyte prompts from bypassing the argv launch safety check.
+- Corrected the `agy` readiness check to report installed-but-unverified headless authentication instead of claiming the provider is already authenticated.
+
+### Technical
+- Added regression coverage for multibyte prompt-limit enforcement and the updated `agy` readiness semantics.
+
+## [0.32.1] - 2026-08-29
+
+### Fixed
+- Rejected oversized Antigravity CLI one-shot prompts with a clear provider error before they can fail at process launch on OS argv-length limits.
+- Treated installed `agy` binaries as configured in readiness checks instead of reporting a hard-coded unauthenticated false negative.
+
+### Technical
+- Added regression coverage for the Antigravity oversized-prompt guard and configured-readiness behavior.
+
+## [0.32.0] - 2026-08-29
+
+### Added
+- Added first-class Antigravity CLI (`agy`) provider support with documented model aliases, one-shot JSON output handling, conversation resume metadata, timeout forwarding, and health-check coverage.
+
+### Technical
+- Added retained provider smoke coverage and deterministic registration/command-construction tests for the new Antigravity adapter.
+
 ## [0.31.7] - 2026-08-12
 
 ### Technical

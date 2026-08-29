@@ -9,6 +9,7 @@ describe "Provider Registration" do
   end
 
   it "defines all provider clients" do
+    assert defined?(Ace::LLM::Providers::CLI::AgyClient), "AgyClient should be defined"
     assert defined?(Ace::LLM::Providers::CLI::ClaudeCodeClient), "ClaudeCodeClient should be defined"
     assert defined?(Ace::LLM::Providers::CLI::ClaudeOaiClient), "ClaudeOaiClient should be defined"
     assert defined?(Ace::LLM::Providers::CLI::CodexClient), "CodexClient should be defined"
@@ -17,6 +18,7 @@ describe "Provider Registration" do
   end
 
   it "providers have correct provider_name" do
+    assert_equal "agy", Ace::LLM::Providers::CLI::AgyClient.provider_name
     assert_equal "claude", Ace::LLM::Providers::CLI::ClaudeCodeClient.provider_name
     assert_equal "claudeoai", Ace::LLM::Providers::CLI::ClaudeOaiClient.provider_name
     assert_equal "codex", Ace::LLM::Providers::CLI::CodexClient.provider_name
@@ -25,6 +27,9 @@ describe "Provider Registration" do
   end
 
   it "providers don't need credentials" do
+    agy = Ace::LLM::Providers::CLI::AgyClient.new
+    assert_equal false, agy.needs_credentials?
+
     # These CLI providers handle auth through the CLI tool itself
     cc = Ace::LLM::Providers::CLI::ClaudeCodeClient.new
     assert_equal false, cc.needs_credentials?

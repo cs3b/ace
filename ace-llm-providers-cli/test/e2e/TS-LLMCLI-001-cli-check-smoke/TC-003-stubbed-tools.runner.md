@@ -15,6 +15,7 @@ Capture:
 Preparation:
 - Create `tc03-stubs` and keep it isolated to this test case.
 - Create executable provider stubs in `tc03-stubs` before invocation:
+  - `agy`: supports `--help` with exit `0`
   - `claude`: supports `--version` and prints a Claude-like version line
   - `codex`: supports `--version` and `--help` with exit `0`
   - `opencode`: supports `--version` and prints a version line

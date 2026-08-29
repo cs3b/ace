@@ -22,6 +22,7 @@ module Ace
           def require_cli_providers
             # Require each CLI provider client
             providers = %w[
+              agy_client
               claude_code_client
               claude_oai_client
               codex_client

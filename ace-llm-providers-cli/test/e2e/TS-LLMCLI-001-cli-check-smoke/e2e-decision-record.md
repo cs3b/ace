@@ -2,15 +2,15 @@
 
 ## Verification Lifecycle Metadata
 
-- Last verified: 2026-04-15
+- Last verified: 2026-08-29
 - Verified by: assignment `8rddnp@010.15` (`work-on-task` for task `8rd.t.bzp.e`)
-- Verification entrypoint: `ace-test-e2e ace-llm-providers-cli --scenario TS-LLMCLI-001-cli-check-smoke`
+- Verification entrypoint: `ace-test-e2e ace-llm-providers-cli TS-LLMCLI-001`
 - Metadata refresh trigger: update this block whenever a testcase contract, verifier rule, or expected summary text changes.
 
 | TC ID | Decision | E2E-only reason | Unit tests reviewed |
 | --- | --- | --- | --- |
 | TC-001 help surface | ADD | Verifies packaged executable wiring and user-visible help contract from a real shell command path. | `test/fast/edge/cli_execution_edge_test.rb`, `test/fast/llm_providers_cli_test.rb` |
 | TC-002 no-tools deterministic path | ADD | Validates full binary behavior under real PATH constraints (availability summary + process exit code) not captured by unit-level method stubs. | `test/fast/molecules/claude_code_client_test.rb`, `test/fast/molecules/codex_client_test.rb` |
-| TC-003 stubbed-tools deterministic path | ADD | Confirms end-to-end available/authenticated summary rendering and success exit semantics through filesystem-backed provider stubs. | `test/fast/atoms/session_finders/claude_session_finder_test.rb`, `test/fast/atoms/session_finders/codex_session_finder_test.rb` |
+| TC-003 stubbed-tools deterministic path | ADD | Confirms end-to-end available, authenticated, and ready summary rendering for the full five-provider CLI surface, including Antigravity's installed-but-unverified readiness path, through filesystem-backed provider stubs. | `test/fast/atoms/auth_checker_test.rb`, `test/fast/molecules/health_checker_test.rb` |
 | Candidate: exhaustive provider output formatting permutations | SKIP | High combinatorial surface better covered by deterministic fast tests for formatter/parser internals; smoke scope keeps representative CLI-level assertions only. | `test/fast/edge/cli_execution_edge_test.rb` |
 | Candidate: real external provider authentication/network flows | SKIP | Depends on live external provider state and credentials; unsuitable for deterministic smoke E2E. | `test/fast/molecules/claude_oai_client_test.rb`, `test/fast/molecules/codex_oai_client_test.rb` |
