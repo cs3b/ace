@@ -1,6 +1,6 @@
 ---
 id: 8vs.t.whe
-status: in-progress
+status: done
 priority: medium
 created_at: "2026-08-29 21:39:20"
 estimate: TBD
