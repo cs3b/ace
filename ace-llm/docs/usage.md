@@ -3,8 +3,8 @@ doc-type: how-to-guide
 title: ace-llm Usage Guide
 purpose: Usage guide for ace-llm CLI — querying providers, managing output, and handling errors.
 ace-docs:
-  last-updated: 2026-04-19
-  last-checked: 2026-04-19
+  last-updated: 2026-08-29
+  last-checked: 2026-08-29
 ---
 
 # ace-llm Usage Guide
@@ -18,6 +18,7 @@ ace-docs:
 ```bash
 ace-llm gflash "What changed in this branch?"
 ace-llm google:gemini-2.5-flash "Explain this function"
+ace-llm agy:flash "Summarize the latest failing test"
 ace-llm --list-providers
 ```
 
@@ -73,6 +74,10 @@ Common aliases in current defaults:
 | `codex:mini` | `codex:gpt-5.4-mini` |
 | `codex:codex` | `codex:gpt-5.3-codex` |
 | `codex:spark` | `codex:gpt-5.3-codex-spark` |
+| `agy` | `agy:gemini-3.5-flash-medium` |
+| `agy:flash` | `agy:gemini-3.5-flash-medium` |
+| `agy:flash-high` | `agy:gemini-3.7-flash-high` |
+| `agy:pro` | `agy:gemini-3.1-pro-high` |
 | `codex-gpt5` | `codex:gpt-5.4` |
 | `codex-mini` | `codex:gpt-5.4-mini` |
 | `sonnet` | `anthropic:s` -> `anthropic:claude-sonnet-4-5` |
@@ -92,9 +97,9 @@ Built-in presets for CLI providers:
 
 | Preset | Meaning | Providers |
 |--------|---------|-----------|
-| `@ro` | Read-only | `claude`, `codex`, `gemini`, `opencode`, `pi` |
-| `@rw` | Read-write | `claude`, `codex`, `gemini`, `opencode`, `pi` |
-| `@yolo` | Full autonomy | `claude`, `codex`, `gemini`, `opencode`, `pi` |
+| `@ro` | Read-only | `claude`, `codex`, `gemini`, `opencode`, `pi`, `agy` |
+| `@rw` | Read-write | `claude`, `codex`, `gemini`, `opencode`, `pi`, `agy` |
+| `@yolo` | Full autonomy | `claude`, `codex`, `gemini`, `opencode`, `pi`, `agy` |
 
 Preset configs are loaded from `.ace-defaults/llm/presets/<provider>/<preset>.yml` and can be overridden in `.ace/llm/presets/`.
 
@@ -174,6 +179,7 @@ discovery command, not a readiness guarantee for configured ACE workflows or rol
 ```bash
 ace-llm gemini:pro "ping" --no-fallback --timeout 15 --max-tokens 4
 ace-llm codex:mini "ping" --no-fallback --json --timeout 15 --max-tokens 4
+ace-llm agy:flash "Summarize this diff" --no-fallback --cli-args "--continue"
 ```
 
 Fallback is enabled by default through `llm.fallback`. Add `--no-fallback` when you want the result or failure to represent the requested provider/model rather than a configured fallback provider.
@@ -187,6 +193,23 @@ Common credential env keys:
 | `anthropic` | `ANTHROPIC_API_KEY` |
 | `mistral` | `MISTRAL_API_KEY` |
 | `togetherai` | `TOGETHER_API_KEY` or `TOGETHERAI_API_KEY` |
+
+### Antigravity headless notes
+
+`agy` currently maps to Antigravity CLI headless mode. ACE drives it with `agy -p ... --output-format json` and can forward documented Antigravity flags through `--cli-args`, such as:
+
+```bash
+ace-llm agy:flash "Continue the previous plan" --cli-args "--continue"
+ace-llm agy:flash-high "Resume the saved thread" --cli-args "--conversation 055a398f-db14-4c5f-abbb-1bf03f8120a7"
+ace-llm agy@ro "Review this repository state"
+ace-llm agy@yolo "Run the targeted test command and explain the failures"
+```
+
+Notes:
+
+- The current implementation is based on Antigravity public docs verified on August 29, 2026.
+- `ace-llm` does not expose a dedicated Antigravity session flag; use `--cli-args` for `--continue` / `--conversation`.
+- Interactive `ace-llm --interactive` launch is not yet implemented for `agy`.
 
 ### Provider filtering
 
@@ -245,6 +268,7 @@ ace-test-e2e ace-llm
 ```
 
 Coverage layout:
+
 - `test/fast/` for deterministic package tests
 - `test/feat/` for deterministic feature/CLI contract tests
 - `test/e2e/` for retained scenario workflows only

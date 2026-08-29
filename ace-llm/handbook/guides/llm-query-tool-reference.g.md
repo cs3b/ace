@@ -3,8 +3,8 @@ doc-type: guide
 title: ace-llm Query Reference Guide
 purpose: Documentation for ace-llm/handbook/guides/llm-query-tool-reference.g.md
 ace-docs:
-  last-updated: 2026-04-23
-  last-checked: 2026-04-23
+  last-updated: 2026-08-29
+  last-checked: 2026-08-29
 ---
 
 # ace-llm Query Reference Guide
@@ -28,6 +28,7 @@ Examples:
 ```bash
 ace-llm gflash "Summarize this branch"
 ace-llm google:gemini-2.5-flash "Explain service objects in Ruby"
+ace-llm agy:flash "Summarize the current diff"
 ace-llm codex:gpt:high "Review this architecture"
 ace-llm codex:gpt@yolo "/as-assign-drive abc123@010" --interactive
 ```
@@ -36,7 +37,7 @@ ace-llm codex:gpt@yolo "/as-assign-drive abc123@010" --interactive
 
 ### Aliases and explicit models
 
-- Use aliases when you want stable shorthand such as `gflash`, `glite`, `sonnet`, or `codex:mini`.
+- Use aliases when you want stable shorthand such as `gflash`, `glite`, `sonnet`, `codex:mini`, or `agy:flash`.
 - Use `provider:model` when you need an exact model target.
 - Use `--model` when the provider is fixed but the model varies per call.
 
@@ -45,6 +46,7 @@ Examples:
 ```bash
 ace-llm gflash "Quick summary"
 ace-llm gemini:flash-latest "Check provider alias resolution"
+ace-llm agy:flash "Summarize the failing tests"
 ace-llm google --model gemini-3-flash-preview --prompt "Hi"
 ```
 
@@ -74,6 +76,16 @@ ace-llm pi:zai/glm-4.7 "/as-assign-drive abc123@010" --interactive
 ```
 
 Interactive mode still resolves aliases, presets, and translated skill prompts before launching the provider CLI.
+
+### Antigravity headless sessions
+
+- `agy:*` targets the Antigravity CLI-backed headless provider from `ace-llm-providers-cli`.
+- Use `--cli-args` to forward documented Antigravity resume flags:
+
+  - `ace-llm agy:flash "Continue" --cli-args "--continue"`
+  - `ace-llm agy:flash "Resume by id" --cli-args "--conversation <conversation-id>"`
+
+- Current implementation intentionally excludes `--interactive` for `agy` until ACE has a verified native interactive launch contract for prompt seeding.
 
 ### Exact provider reachability
 
@@ -109,6 +121,7 @@ ace-llm codex:mini "ping" --no-fallback --json --timeout 15 --max-tokens 4
 - `google:*` targets API-backed Gemini models.
 - `gemini:*` targets the Gemini CLI-backed provider from `ace-llm-providers-cli`.
 - Current CLI alias examples:
+
   - `gemini:flash-latest` -> `gemini:gemini-3-flash-preview`
   - `gemini:pro-latest` -> `gemini:gemini-3.1-pro-preview`
 

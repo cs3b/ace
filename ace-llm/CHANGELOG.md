@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.39.0] - 2026-08-29
+
+### Added
+- Added shipped `agy` presets (`@ro`, `@rw`, `@yolo`) plus provider activation guidance so Antigravity CLI can be selected through the standard `ace-llm` query surface.
+
+### Changed
+- Documented Antigravity CLI aliases, setup flow, and provider examples across the README, usage guide, and LLM query tool reference.
+
 ## [0.38.4] - 2026-08-12
 
 ### Technical

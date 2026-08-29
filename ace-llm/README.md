@@ -12,7 +12,7 @@
 
 </div>
 
-> Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
+> Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, Antigravity CLI, pi-agent, and more.
 
 [Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md)
 
@@ -35,7 +35,7 @@ Deterministic coverage lives in `test/fast/` and `test/feat/`. Scenario assets s
 
 ## How It Works
 
-1. Select a model — by alias, `provider:model`, with a thinking level suffix (`:low`/`:medium`/`:high`), or an `@preset` — and submit a prompt.
+1. Select a model -- by alias, `provider:model`, with a thinking level suffix (`:low`/`:medium`/`:high`), or an `@preset` -- and submit a prompt.
 2. The provider router resolves the target through [ace-llm-providers-cli](../ace-llm-providers-cli) adapters, applying fallback and retry rules from the [config cascade](../ace-support-config).
 3. The response is returned as text, markdown, or JSON with optional token usage metadata.
 
@@ -45,7 +45,7 @@ Deterministic coverage lives in `test/fast/` and `test/feat/`. Scenario assets s
 
 **Control reasoning depth** - append a thinking level (`codex:gpt:high`, `claude:sonnet:low`) to tune reasoning budgets. Supported CLI providers: `claude`, `codex` (levels: `low`, `medium`, `high`, `xhigh`).
 
-**Run preset-driven prompts** - apply execution profiles with `@preset` or `--preset`. Built-in presets for CLI providers: `@ro` (read-only), `@rw` (read-write), `@yolo` (full autonomy). Supported by: `claude`, `codex`, `gemini`, `opencode`, `pi`.
+**Run preset-driven prompts** - apply execution profiles with `@preset` or `--preset`. Built-in presets for CLI providers: `@ro` (read-only), `@rw` (read-write), `@yolo` (full autonomy). Supported by: `claude`, `codex`, `gemini`, `opencode`, `pi`, `agy`.
 
 **Launch real interactive agents** - use `--interactive` for supported CLI providers so alias resolution, presets, and skill translation still flow through `ace-llm`, but the provider starts its native terminal UI instead of one-shot print mode.
 
