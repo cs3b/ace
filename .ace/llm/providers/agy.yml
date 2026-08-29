@@ -1,0 +1,29 @@
+name: agy
+last_synced: 2026-08-29
+class: Ace::LLM::Providers::CLI::AgyClient
+gem: ace-llm-providers-cli
+models_dev_id: google
+context_limit: 1000000
+models:
+  - gemini-3.7-flash-high
+  - gemini-3.7-flash-medium
+  - gemini-3.6-flash-high
+  - gemini-3.6-flash-medium
+  - gemini-3.5-flash-medium
+  - gemini-3.1-pro-high
+  - claude-sonnet-4-6
+aliases:
+  global:
+    agy: agy:gemini-3.5-flash-medium
+  model:
+    flash: gemini-3.5-flash-medium
+    flash-medium: gemini-3.5-flash-medium
+    flash-high: gemini-3.7-flash-high
+    pro: gemini-3.1-pro-high
+capabilities:
+  - text_generation
+  - code_generation
+  - streaming
+  - function_calling
+default_options:
+  temperature: 0.7

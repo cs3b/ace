@@ -1,6 +1,7 @@
 llm:
   providers:
     active:
+      - agy
       - opencode
       - pi
       - codex
