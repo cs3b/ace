@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "../../test_helper"
+require "tmpdir"
 require "yaml"
 
 describe "AgyClient" do
@@ -41,8 +42,8 @@ describe "AgyClient" do
     assert_includes prompt, "User: Ping"
   end
 
-  it "builds a JSON print command with cwd and timeout" do
-    cmd = @client.send(:build_agy_command, "Ping", {timeout: 45}, working_dir: "/tmp/work")
+  it "builds a JSON print command using the supported agy CLI contract" do
+    cmd = @client.send(:build_agy_command, "Ping", {timeout: 45})
 
     assert_equal "agy", cmd[0]
     assert_includes cmd, "-p"
@@ -50,8 +51,7 @@ describe "AgyClient" do
     assert_includes cmd, "json"
     assert_includes cmd, "--model"
     assert_includes cmd, "gemini-3.5-flash-medium"
-    assert_includes cmd, "--cwd"
-    assert_includes cmd, "/tmp/work"
+    refute_includes cmd, "--cwd"
     assert_includes cmd, "--print-timeout"
     assert_includes cmd, "45s"
   end
@@ -60,8 +60,7 @@ describe "AgyClient" do
     cmd = @client.send(
       :build_agy_command,
       "Continue",
-      {cli_args: "--continue --conversation abc-123"},
-      working_dir: "/tmp/work"
+      {cli_args: "--continue --conversation abc-123"}
     )
 
     assert_includes cmd, "--continue"
@@ -79,7 +78,7 @@ describe "AgyClient" do
 
   it "rejects stream-json stdin mode because generate uses one-shot print mode" do
     error = assert_raises(Ace::LLM::ProviderError) do
-      @client.send(:build_agy_command, "Ping", {cli_args: "--input-format stream-json"}, working_dir: "/tmp/work")
+      @client.send(:build_agy_command, "Ping", {cli_args: "--input-format stream-json"})
     end
 
     assert_includes error.message, "--input-format"
@@ -89,7 +88,7 @@ describe "AgyClient" do
     client = Ace::LLM::Providers::CLI::AgyClient.new(max_prompt_length: 10)
 
     error = assert_raises(Ace::LLM::ProviderError) do
-      client.send(:build_agy_command, "x" * 11, {}, working_dir: "/tmp/work")
+      client.send(:build_agy_command, "x" * 11, {})
     end
 
     assert_includes error.message, "prompt bytesize 11 exceeds configured limit 10"
@@ -99,7 +98,7 @@ describe "AgyClient" do
     client = Ace::LLM::Providers::CLI::AgyClient.new(max_prompt_length: 10)
 
     error = assert_raises(Ace::LLM::ProviderError) do
-      client.send(:build_agy_command, "🙂🙂🙂", {}, working_dir: "/tmp/work")
+      client.send(:build_agy_command, "🙂🙂🙂", {})
     end
 
     assert_includes error.message, "prompt bytesize 12 exceeds configured limit 10"
@@ -142,6 +141,26 @@ describe "AgyClient" do
         assert_equal "conv-123", result[:metadata][:conversation_id]
         assert_equal "conv-123", result[:metadata][:session_id]
         assert_equal 17, result[:metadata][:total_tokens]
+      end
+    end
+  end
+
+  it "uses the resolved working directory as the subprocess cwd without passing --cwd" do
+    Dir.mktmpdir do |working_dir|
+      fake_agy = <<~RUBY
+        require "json"
+        abort "unsupported --cwd" if ARGV.include?("--cwd")
+        puts({status: "SUCCESS", response: Dir.pwd}.to_json)
+      RUBY
+
+      @client.stub(:agy_available?, true) do
+        result = @client.generate(
+          "Hi",
+          working_dir: working_dir,
+          subprocess_command_prefix: [RbConfig.ruby, "-e", fake_agy, "--"]
+        )
+
+        assert_equal working_dir, result[:text]
       end
     end
   end

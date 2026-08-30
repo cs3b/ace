@@ -56,7 +56,7 @@ module Ace
               subprocess_env: subprocess_env
             )
 
-            cmd = build_agy_command(prompt, options, working_dir: working_dir)
+            cmd = build_agy_command(prompt, options)
             stdout, stderr, status = execute_agy_command(cmd, working_dir: working_dir, options: options)
 
             parse_agy_response(stdout, stderr, status, prompt)
@@ -126,14 +126,13 @@ module Ace
               "Antigravity CLI does not support #{unsupported.join(", ")} through ace-llm; use documented cli_args instead"
           end
 
-          def build_agy_command(prompt, options, working_dir:)
+          def build_agy_command(prompt, options)
             args = normalized_cli_args(options)
             reject_stream_input_args!(args)
             reject_oversized_prompt!(prompt)
 
             cmd = ["agy", "-p", prompt.to_s, "--output-format", "json"]
             cmd << "--model" << @model if @model
-            cmd << "--cwd" << working_dir if working_dir
             cmd << "--print-timeout" << normalize_print_timeout(options[:timeout]) if options[:timeout]
             cmd << "--sandbox" if options[:sandbox]
             cmd.concat(args)
