@@ -1,0 +1,52 @@
+name: Test Suite
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Test Suite
+    runs-on: ubuntu-latest
+    container:
+      image: docker.io/library/ruby:3.4
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Bundle install
+        run: |
+          bundle config set --local path 'vendor/bundle'
+          bundle install --jobs 4 --retry 3
+
+      - name: Validate test package inventory
+        run: |
+          ruby .ace-bin/ci_package_inventory.rb
+
+      - name: Run ACE test suite
+        run: |
+          export PATH="$PWD/bin:$PATH"
+          bundle exec bin/ace-test-suite
+        env:
+          RAILS_ENV: test
+          BUNDLE_PATH: vendor/bundle
+
+      - name: Run handbook projection contract
+        run: |
+          export PATH="$PWD/bin:$PATH"
+          bundle exec bin/ace-test ace-handbook all
+        env:
+          RAILS_ENV: test
+          BUNDLE_PATH: vendor/bundle
+
+      - name: Run monorepo E2E dry-run
+        run: |
+          export PATH="$PWD/bin:$PATH"
+          bundle exec bin/ace-test-e2e ace-monorepo-e2e --dry-run
+        env:
+          RAILS_ENV: test
+          BUNDLE_PATH: vendor/bundle
