@@ -61,6 +61,25 @@ class WorkOnCommandTest < AceOverseerTestCase
     assert_equal %w[work dispatch W321 --agent builder-codex], lab_client.calls.first[:arguments]
   end
 
+  def test_lab_runtime_rejects_tmux_task_options
+    lab_client = FakeLabClient.new
+    command = Ace::Overseer::CLI::Commands::WorkOn.new(
+      orchestrator: FakeWorkOnOrchestrator.new,
+      lab_client: lab_client
+    )
+
+    task_error = assert_raises(Ace::Support::Cli::Error) do
+      command.call(runtime: "lab", work: "W321", agent: "builder-codex", task: ["230"])
+    end
+    preset_error = assert_raises(Ace::Support::Cli::Error) do
+      command.call(runtime: "lab", work: "W321", agent: "builder-codex", preset: "fix-bug")
+    end
+
+    assert_equal "--task and --preset are not supported with Lab runtime", task_error.message
+    assert_equal "--task and --preset are not supported with Lab runtime", preset_error.message
+    assert_empty lab_client.calls
+  end
+
   def test_passes_task_and_preset_to_orchestrator
     orchestrator = FakeWorkOnOrchestrator.new(result: build_result)
     command = Ace::Overseer::CLI::Commands::WorkOn.new(orchestrator: orchestrator)

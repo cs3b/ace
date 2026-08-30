@@ -26,6 +26,9 @@ module Ace
 
           def call(task: nil, preset: nil, runtime: "tmux", work: nil, agent: nil, **options)
             if runtime == "lab"
+              if task || preset
+                raise Ace::Support::Cli::Error, "--task and --preset are not supported with Lab runtime"
+              end
               raise Ace::Support::Cli::Error, "--work and --agent are required for Lab runtime" if work.to_s.empty? || agent.to_s.empty?
 
               output = @lab_client.call("work", "dispatch", work, "--agent", agent, json: false)
