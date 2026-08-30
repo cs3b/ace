@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Fixed
+- Skip permission-denial cascade edge tests when file permission bits are not enforced for the running process (root/`CAP_DAC_OVERRIDE` in containers), fixing false CI failures while keeping full denial coverage for unprivileged users.
 
 ## [0.18.0] - 2026-08-13
 ### Added

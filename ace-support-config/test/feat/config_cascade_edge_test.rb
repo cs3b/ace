@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "tempfile"
 require "test_helper"
 
 module Ace
@@ -428,6 +429,7 @@ module Ace
 
         def test_permission_denied_on_config_file
           skip "Cannot test permission denial on Windows" if Gem.win_platform?
+          skip "Permission bits not enforced for this process (root/CAP_DAC_OVERRIDE)" unless permission_denial_enforced?
 
           with_temp_config(
             ".git" => "",
@@ -457,6 +459,7 @@ module Ace
 
         def test_permission_denied_on_config_directory
           skip "Cannot test permission denial on Windows" if Gem.win_platform?
+          skip "Permission bits not enforced for this process (root/CAP_DAC_OVERRIDE)" unless permission_denial_enforced?
 
           with_temp_config(
             ".git" => "",
@@ -548,6 +551,34 @@ module Ace
               assert_equal "valid", config.get("key") if config.data.any?
             rescue YamlParseError => e
               assert_match(/Failed to parse/, e.message)
+            end
+          end
+        end
+
+        private
+
+        # Returns true when mode-0000 permission bits are actually enforced
+        # against the current process. Root (UID 0) and processes granted
+        # CAP_DAC_OVERRIDE (typical in containers) bypass read permission
+        # checks, so chmod-based denial tests cannot produce a denial there.
+        def permission_denial_enforced?
+          return false if Gem.win_platform?
+
+          Tempfile.create("ace_config_perm_probe") do |probe|
+            probe.write("probe")
+            probe.flush
+            begin
+              File.chmod(0o000, probe.path)
+            rescue NotImplementedError, SystemCallError
+              # Filesystem cannot represent or apply mode bits; denial is
+              # untestable here, same as when bits are ignored.
+              return false
+            end
+            begin
+              File.read(probe.path)
+              false
+            rescue SystemCallError
+              true
             end
           end
         end
