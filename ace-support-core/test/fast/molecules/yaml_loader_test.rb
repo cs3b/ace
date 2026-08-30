@@ -154,15 +154,29 @@ class YamlLoaderTest < AceTestCase
 
   def test_handles_io_errors_on_save
     with_temp_dir do
-      # Create a file and make it read-only to cause an IO error
-      FileUtils.mkdir_p("readonly")
-      FileUtils.chmod(0o444, "readonly")
-
       config = Ace::Support::Config::Models::Config.new({"test" => "data"})
 
-      assert_raises(IOError) do
-        Ace::Support::Config::Molecules::YamlLoader.save_file(config, "readonly/subdir/file.yml")
+      if Process.uid.zero?
+        # Root (UID 0 in Docker containers) bypasses permission bits, so
+        # FileUtils.chmod(0o444, "readonly") cannot trigger a write failure.
+        # Simulate the failure structurally instead: a regular file can never
+        # contain a subdirectory, so FileUtils.mkdir_p raises a
+        # SystemCallError (ENOTDIR/EEXIST) for every UID, root included.
+        File.write("blocker", "not a directory")
+        target = "blocker/subdir/file.yml"
+      else
+        # Create a directory and make it read-only to cause an IO error
+        FileUtils.mkdir_p("readonly")
+        FileUtils.chmod(0o444, "readonly")
+        target = "readonly/subdir/file.yml"
       end
+
+      error = assert_raises(IOError) do
+        Ace::Support::Config::Molecules::YamlLoader.save_file(config, target)
+      end
+
+      assert_includes error.message, "Failed to save file"
+      assert_includes error.message, target
     ensure
       FileUtils.chmod(0o755, "readonly") if File.exist?("readonly")
     end
