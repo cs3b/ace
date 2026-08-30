@@ -8,11 +8,14 @@ on:
   workflow_dispatch:
 
 jobs:
-  test:
-    name: Test Suite
+  package_inventory:
+    name: Validate test package inventory
     runs-on: ubuntu-latest
     container:
       image: docker.io/library/ruby:3.4
+
+    outputs:
+      packages: ${{ steps.inventory.outputs.packages }}
 
     steps:
       - name: Checkout code
@@ -29,48 +32,134 @@ jobs:
           host_path="${host_path#https://}"
           proto="http"
           if [[ "$server_url" =~ ^https:// ]]; then proto="https"; fi
-
           git remote add origin "${proto}://x-access-token:${FORGEJO_TOKEN}@${host_path}/${repo}.git"
           git fetch --depth 1 origin "$FORGEJO_SHA"
           git checkout --force "$FORGEJO_SHA"
-
           git remote set-url origin "${proto}://${host_path}/${repo}.git"
           if git config --get remote.origin.url | grep -q "x-access-token"; then
             echo "ERROR: Token detected in git remote URL" >&2
             exit 1
           fi
 
-          git log -1 --oneline
+      - name: Validate suite and publish matrix
+        id: inventory
+        run: |
+          packages="$(ruby .ace-bin/ci_package_inventory.rb)"
+          echo "packages=$packages" >> "$GITHUB_OUTPUT"
+
+  test:
+    name: Test ${{ matrix.package }}
+    runs-on: ubuntu-latest
+    container:
+      image: docker.io/library/ruby:3.4
+    needs: package_inventory
+
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        package: ${{ fromJSON(needs.package_inventory.outputs.packages) }}
+
+    steps:
+      - name: Checkout code
+        env:
+          FORGEJO_TOKEN: ${{ secrets.FORGEJO_TOKEN || secrets.GITHUB_TOKEN || github.token }}
+          FORGEJO_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git init .
+          server_url="${GITHUB_SERVER_URL:-http://forgejo:3000}"
+          repo="${GITHUB_REPOSITORY:-cs3b/ace}"
+          host_path="${server_url#http://}"
+          host_path="${host_path#https://}"
+          proto="http"
+          if [[ "$server_url" =~ ^https:// ]]; then proto="https"; fi
+          git remote add origin "${proto}://x-access-token:${FORGEJO_TOKEN}@${host_path}/${repo}.git"
+          git fetch --depth 1 origin "$FORGEJO_SHA"
+          git checkout --force "$FORGEJO_SHA"
+          git remote set-url origin "${proto}://${host_path}/${repo}.git"
+          if git config --get remote.origin.url | grep -q "x-access-token"; then
+            echo "ERROR: Token detected in git remote URL" >&2
+            exit 1
+          fi
 
       - name: Bundle install
         run: |
           bundle config set --local path 'vendor/bundle'
           bundle install --jobs 4 --retry 3
 
-      - name: Validate test package inventory
-        run: |
-          ruby .ace-bin/ci_package_inventory.rb
-
-      - name: Run ACE test suite
+      - name: Run tests for ${{ matrix.package }}
         run: |
           export PATH="$PWD/bin:$PATH"
-          bundle exec bin/ace-test-suite --target all
+          if [ "${{ matrix.package }}" = "ace-monorepo-e2e" ]; then
+            bundle exec ace-test-e2e ace-monorepo-e2e --dry-run
+          else
+            bundle exec ace-test "${{ matrix.package }}" all
+          fi
         env:
           RAILS_ENV: test
           BUNDLE_PATH: vendor/bundle
 
-      - name: Run handbook projection contract
+  projection_contract:
+    name: Skill projection contract
+    runs-on: ubuntu-latest
+    container:
+      image: docker.io/library/ruby:3.4
+    needs: package_inventory
+
+    steps:
+      - name: Checkout code
+        env:
+          FORGEJO_TOKEN: ${{ secrets.FORGEJO_TOKEN || secrets.GITHUB_TOKEN || github.token }}
+          FORGEJO_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git init .
+          server_url="${GITHUB_SERVER_URL:-http://forgejo:3000}"
+          repo="${GITHUB_REPOSITORY:-cs3b/ace}"
+          host_path="${server_url#http://}"
+          host_path="${host_path#https://}"
+          proto="http"
+          if [[ "$server_url" =~ ^https:// ]]; then proto="https"; fi
+          git remote add origin "${proto}://x-access-token:${FORGEJO_TOKEN}@${host_path}/${repo}.git"
+          git fetch --depth 1 origin "$FORGEJO_SHA"
+          git checkout --force "$FORGEJO_SHA"
+          git remote set-url origin "${proto}://${host_path}/${repo}.git"
+          if git config --get remote.origin.url | grep -q "x-access-token"; then
+            echo "ERROR: Token detected in git remote URL" >&2
+            exit 1
+          fi
+
+      - name: Bundle install
+        run: |
+          bundle config set --local path 'vendor/bundle'
+          bundle install --jobs 4 --retry 3
+
+      - name: Run handbook projection contract tests
         run: |
           export PATH="$PWD/bin:$PATH"
-          bundle exec bin/ace-test ace-handbook all
+          bundle exec ace-test ace-handbook all
         env:
           RAILS_ENV: test
           BUNDLE_PATH: vendor/bundle
 
-      - name: Run monorepo E2E dry-run
+  test-summary:
+    name: Test Summary
+    runs-on: ubuntu-latest
+    container:
+      image: docker.io/library/ruby:3.4
+    needs: [package_inventory, test, projection_contract]
+    if: always()
+
+    steps:
+      - name: Check test results
         run: |
-          export PATH="$PWD/bin:$PATH"
-          bundle exec bin/ace-test-e2e ace-monorepo-e2e --dry-run
-        env:
-          RAILS_ENV: test
-          BUNDLE_PATH: vendor/bundle
+          if [ "${{ needs.package_inventory.result }}" == "success" ] &&              [ "${{ needs.test.result }}" == "success" ] &&              [ "${{ needs.projection_contract.result }}" == "success" ]; then
+            echo "✅ All tests passed!"
+            exit 0
+          else
+            echo "❌ Some tests failed. Check the individual job logs for details."
+            exit 1
+          fi
