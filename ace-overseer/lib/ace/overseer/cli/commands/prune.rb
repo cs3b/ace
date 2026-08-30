@@ -30,9 +30,7 @@ module Ace
           def call(**options)
             runtime = options.fetch(:runtime, "tmux")
             if runtime == "lab"
-              raise Ace::Support::Cli::Error, "Lab prune is dry-run only; use lab work destroy WORK --confirm for one exact Work" unless options[:dry_run]
-
-              puts @lab_client.call("work", "status", "--json", json: false) unless options[:quiet]
+              prune_lab(**options)
               return
             end
             raise Ace::Support::Cli::Error, "unsupported runtime: #{runtime}" unless runtime == "tmux"
@@ -75,6 +73,28 @@ module Ace
           end
 
           private
+
+          def prune_lab(**options)
+            raise Ace::Support::Cli::Error, "--assignment is not supported with Lab runtime; provide exact Work IDs" if options[:assignment]
+            raise Ace::Support::Cli::Error, "--force is not supported with Lab runtime" if options[:force]
+
+            works = Array(options[:targets]).map(&:to_s)
+            raise Ace::Support::Cli::Error, "provide at least one exact Lab Work ID to prune" if works.empty?
+
+            if options[:dry_run]
+              return if options[:quiet]
+
+              works.each { |work| puts "Would destroy Lab Work #{work}: /usr/local/bin/lab work destroy #{work} --confirm" }
+              return
+            end
+
+            raise Ace::Support::Cli::Error, "Lab prune requires --yes after reviewing --dry-run" unless options[:yes]
+
+            works.each do |work|
+              result = @lab_client.call("work", "destroy", work, "--confirm", json: false)
+              puts result unless options[:quiet]
+            end
+          end
 
           def print_assignment_result(result)
             candidate = result[:assignment_candidate]

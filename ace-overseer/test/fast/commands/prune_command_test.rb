@@ -19,6 +19,57 @@ class PruneCommandTest < AceOverseerTestCase
     end
   end
 
+  class FakeLabClient
+    attr_reader :calls
+
+    def initialize
+      @calls = []
+    end
+
+    def call(*arguments, **options)
+      @calls << {arguments: arguments, options: options}
+      "destroyed"
+    end
+  end
+
+  def test_lab_dry_run_previews_exact_destroy_commands
+    client = FakeLabClient.new
+    command = Ace::Overseer::CLI::Commands::Prune.new(lab_client: client)
+
+    output = capture_io do
+      command.call(runtime: "lab", targets: %w[W321 W322], dry_run: true)
+    end.first
+
+    assert_includes output, "/usr/local/bin/lab work destroy W321 --confirm"
+    assert_includes output, "/usr/local/bin/lab work destroy W322 --confirm"
+    assert_empty client.calls
+  end
+
+  def test_lab_prune_requires_exact_work_and_confirmation
+    command = Ace::Overseer::CLI::Commands::Prune.new(lab_client: FakeLabClient.new)
+
+    error = assert_raises(Ace::Support::Cli::Error) { command.call(runtime: "lab", dry_run: true) }
+    assert_equal "provide at least one exact Lab Work ID to prune", error.message
+
+    error = assert_raises(Ace::Support::Cli::Error) do
+      command.call(runtime: "lab", targets: ["W321"], dry_run: false, yes: false)
+    end
+    assert_equal "Lab prune requires --yes after reviewing --dry-run", error.message
+  end
+
+  def test_lab_prune_delegates_exact_destroy_to_lab
+    client = FakeLabClient.new
+    command = Ace::Overseer::CLI::Commands::Prune.new(lab_client: client)
+
+    output = capture_io do
+      command.call(runtime: "lab", targets: ["W321"], dry_run: false, yes: true)
+    end.first
+
+    assert_equal %w[work destroy W321 --confirm], client.calls.first[:arguments]
+    assert_equal false, client.calls.first[:options][:json]
+    assert_includes output, "destroyed"
+  end
+
   def test_progress_output_passed_when_not_quiet
     orchestrator = FakePruneOrchestrator.new(
       result: {dry_run: false, safe: [], unsafe: [], pruned: [], failed: [], aborted: false}

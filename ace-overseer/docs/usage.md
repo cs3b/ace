@@ -98,6 +98,7 @@ does not read Lab credentials and does not call Podman or Herdr directly.
 - `ace-overseer prompt --work WORK`: forward stdin to the Work pane; prompt text is never passed as a process argument.
 - `ace-overseer review --work WORK --pr NUMBER`: prepare an exact-head admin review checkout and pane.
 - `ace-overseer stop --work WORK`: stop the assigned process without destroying Work state.
+- `ace-overseer prune WORK... --runtime lab --dry-run`: preview exact Work destruction commands; rerun with `--yes` to delegate each destruction to Lab.
 
 Example:
 

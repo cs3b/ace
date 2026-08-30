@@ -59,6 +59,8 @@ ace-overseer status --runtime lab --project nervus
 
 Lab owns worktrees, credentials, Podman, and Herdr. Overseer decides what to
 run and delegates only through the absolute `/usr/local/bin/lab` boundary.
+Use `ace-overseer prune WORK... --runtime lab --dry-run` to preview exact Work
+destruction, then repeat with `--yes` to delegate it to Lab.
 
 **Clean up finished work** - [`ace-overseer prune`](docs/usage.md#ace-overseer-prune) removes completed worktrees safely. It checks three conditions before removing: assignment completed, task marked done, and git working tree clean. Use `--dry-run` to preview what would be pruned, `--force` for worktrees that fail safety checks, or `--assignment` to prune a single stale assignment.
 

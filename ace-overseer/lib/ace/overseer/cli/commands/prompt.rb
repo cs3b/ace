@@ -13,7 +13,14 @@ module Ace
             @input = input
           end
           def call(work:, **)
-            puts @client.call("work", "prompt", work, stdin_data: @input.read, json: false)
+            if @input.respond_to?(:tty?) && @input.tty?
+              raise Ace::Support::Cli::Error, "prompt text is required on stdin"
+            end
+
+            prompt = @input.read
+            raise Ace::Support::Cli::Error, "prompt text is required on stdin" if prompt.empty?
+
+            puts @client.call("work", "prompt", work, stdin_data: prompt, json: false)
           rescue => error
             raise Ace::Support::Cli::Error.new(error.message)
           end
