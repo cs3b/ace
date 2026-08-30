@@ -188,14 +188,18 @@ class Ace::Lint::Organisms::ReportGeneratorTest < Minitest::Test
   end
 
   def test_generate_handles_errors_gracefully
-    # Use an invalid path that cannot be created
-    result = Ace::Lint::Organisms::ReportGenerator.generate(
-      [create_passed_result],
-      project_root: "/nonexistent/path/that/should/fail"
-    )
+    mkdir_error = Errno::EACCES.new(File.join(@temp_dir, ".ace-local", "lint"))
+
+    result = FileUtils.stub(:mkdir_p, ->(*) { raise mkdir_error }) do
+      Ace::Lint::Organisms::ReportGenerator.generate(
+        [create_passed_result],
+        project_root: @temp_dir
+      )
+    end
 
     refute result[:success]
     assert_includes result.keys, :error
+    assert_includes result[:error], "Permission denied"
   end
 
   # Tests for new markdown report generation
