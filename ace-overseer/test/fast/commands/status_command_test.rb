@@ -4,6 +4,19 @@ require_relative "../../test_helper"
 require "tmpdir"
 
 class StatusCommandTest < AceOverseerTestCase
+  class FakeLabClient
+    attr_reader :calls
+
+    def initialize
+      @calls = []
+    end
+
+    def call(*arguments, **options)
+      @calls << {arguments: arguments, options: options}
+      "W321\tnervus\trunning\tbuilder-codex\tPR -\n"
+    end
+  end
+
   class FakeCollector
     attr_reader :collect_count, :collect_quick_count
 
@@ -124,5 +137,29 @@ class StatusCommandTest < AceOverseerTestCase
 
     assert_empty stdout
     assert_empty stderr
+  end
+
+  def test_lab_runtime_delegates_project_filter_without_repo_guard
+    client = FakeLabClient.new
+    command = Ace::Overseer::CLI::Commands::Status.new(lab_client: client)
+
+    Dir.mktmpdir("overseer-lab-status") do |dir|
+      Dir.chdir(dir) do
+        output = capture_io { command.call(format: "table", runtime: "lab", project: "nervus") }.first
+        assert_includes output, "W321"
+      end
+    end
+
+    assert_equal %w[work status --project nervus], client.calls.first[:arguments]
+  end
+
+  def test_lab_runtime_rejects_duplicate_watch_loop
+    command = Ace::Overseer::CLI::Commands::Status.new(lab_client: FakeLabClient.new)
+
+    error = assert_raises(Ace::Support::Cli::Error) do
+      command.call(format: "table", runtime: "lab", watch: true)
+    end
+
+    assert_equal "Lab watch runs in the project Herdr status pane; omit --watch", error.message
   end
 end

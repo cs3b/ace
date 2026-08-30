@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Added an explicit Lab runtime adapter for listing projects and agents, preparing and dispatching Works, forwarding prompts over stdin, starting exact-head reviews, and stopping workers.
+
+### Changed
+- Kept tmux as the default runtime while allowing `work-on`, `status`, and dry-run `prune` to delegate through the system-owned `/usr/local/bin/lab` boundary.
+
 ## [0.15.5] - 2026-08-12
 
 ### Technical

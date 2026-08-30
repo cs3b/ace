@@ -3,8 +3,8 @@ doc-type: user
 title: ace-overseer Usage
 purpose: Full CLI reference for ace-overseer commands and options.
 ace-docs:
-  last-updated: 2026-03-22
-  last-checked: 2026-03-22
+  last-updated: 2026-08-30
+  last-checked: 2026-08-30
 ---
 
 # Usage
@@ -14,6 +14,12 @@ ace-docs:
 - `ace-overseer work-on`
 - `ace-overseer status`
 - `ace-overseer prune`
+- `ace-overseer projects`
+- `ace-overseer agents`
+- `ace-overseer prepare`
+- `ace-overseer prompt`
+- `ace-overseer review`
+- `ace-overseer stop`
 
 ## `ace-overseer work-on`
 
@@ -23,8 +29,11 @@ Invocation: `ace-overseer work-on --task <task-ref>`.
 
 Options:
 
-- `--task`, `-t` (required): task reference(s); repeatable and comma-separated values supported
+- `--task`, `-t` (required for tmux): task reference(s); repeatable and comma-separated values supported
 - `--preset`, `-p`: assignment preset name
+- `--runtime`: `tmux` (default) or `lab`
+- `--work`: existing Lab Work ID; required with `--runtime lab`
+- `--agent`: configured Lab agent ID; required with `--runtime lab`
 - `--quiet`, `-q`: suppress non-essential output
 - `--debug`, `-d`: show debug output
 - `--help`, `-h`: show help
@@ -41,6 +50,8 @@ Options:
 
 - `--format`: output format (`table`, `json`)
 - `--watch`, `-w`: auto-refresh dashboard
+- `--runtime`: `tmux` (default) or `lab`
+- `--project`: filter Lab Works by project
 - `--quiet`, `-q`: suppress non-essential output
 - `--debug`, `-d`: show debug output
 - `--help`, `-h`: show help
@@ -61,6 +72,7 @@ Options:
 - `--force`, `-f`: force-remove unsafe worktrees
 - `--yes`, `-y`: skip interactive confirmation
 - `--dry-run`: list prune candidates only
+- `--runtime`: `tmux` (default) or `lab`; Lab accepts dry-run only and delegates destruction to the exact `lab work destroy WORK --confirm` command
 - `--quiet`, `-q`: suppress non-essential output
 - `--debug`, `-d`: show debug output
 - `--help`, `-h`: show help
@@ -72,6 +84,32 @@ Start task work: `ace-overseer work-on --task 8q4.t.umu.1`.
 Check dashboard: `ace-overseer status`.
 
 Preview then prune: `ace-overseer prune --dry-run`, then `ace-overseer prune --yes`.
+
+## Lab Runtime
+
+Lab commands are available only where `/usr/local/bin/lab` is installed. ACE
+does not read Lab credentials and does not call Podman or Herdr directly.
+
+- `ace-overseer projects`: list registered Lab projects.
+- `ace-overseer agents`: list registered Lab agents and concurrency limits.
+- `ace-overseer prepare --runtime lab --project PROJECT --source KIND:ID --work WORK --planner AGENT --title TITLE`: create a reviewed Work and its isolated worktree.
+- `ace-overseer work-on --runtime lab --work WORK --agent AGENT`: reserve the agent, create or reuse its Herdr workspace, and dispatch it.
+- `ace-overseer status --runtime lab [--project PROJECT] [--format table|json]`: show Lab Work state. Continuous status lives in each project Herdr session, so `--watch` is intentionally rejected for Lab.
+- `ace-overseer prompt --work WORK`: forward stdin to the Work pane; prompt text is never passed as a process argument.
+- `ace-overseer review --work WORK --pr NUMBER`: prepare an exact-head admin review checkout and pane.
+- `ace-overseer stop --work WORK`: stop the assigned process without destroying Work state.
+
+Example:
+
+```bash
+ace-overseer prepare --runtime lab --project nervus \
+  --source nervus-thread:67611c0b-f44c-4ac4-ae4e-55773b175617 \
+  --work W321 --planner admin-agy --title "Reviewed task title"
+ace-overseer work-on --runtime lab --work W321 --agent builder-codex
+printf '%s\n' 'Continue with the reviewed acceptance criteria.' |
+  ace-overseer prompt --work W321
+ace-overseer status --runtime lab --project nervus --format json
+```
 
 ## Public Verification Paths
 

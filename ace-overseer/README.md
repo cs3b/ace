@@ -1,7 +1,7 @@
 <div align="center">
   <h1> ACE - Overseer </h1>
 
-  One command to provision a worktree, open a tmux window, and start working on a task.
+  One command surface for local tmux work and isolated Lab workers.
 
   <img src="../docs/brand/AgenticCodingEnvironment.Logo.XS.jpg" alt="ACE Logo" width="480">
   <br><br>
@@ -19,6 +19,10 @@
 ![ace-overseer demo](docs/demo/ace-overseer-getting-started.gif)
 
 Starting task work means creating a worktree, opening a tmux window, and preparing an assignment - three manual steps before you even begin coding. ace-overseer collapses that into a single command, tracks what is running where, and cleans up finished worktrees so nothing lingers. You can jump straight to a focused worktree any time with a single invocation.
+
+On a configured Lab machine, the same CLI can prepare and dispatch the Lab's
+system-owned `Work` objects. The default remains the existing tmux runtime;
+using Lab always requires an explicit `--runtime lab` or a Lab-only command.
 
 ## How It Works
 
@@ -41,6 +45,20 @@ ace-overseer work-on --task 8q4 --preset work-on-task
 ```bash
 ace-overseer status --watch
 ```
+
+**Operate Lab workers** - prepare a reviewed Work, dispatch it to a configured
+agent, and inspect it without teaching ACE how to manage containers or Herdr:
+
+```bash
+ace-overseer prepare --runtime lab --project nervus \
+  --source lab-plan:oauth-callback --work W142 \
+  --planner admin-agy --title "OAuth callback validation"
+ace-overseer work-on --runtime lab --work W142 --agent builder-codex
+ace-overseer status --runtime lab --project nervus
+```
+
+Lab owns worktrees, credentials, Podman, and Herdr. Overseer decides what to
+run and delegates only through the absolute `/usr/local/bin/lab` boundary.
 
 **Clean up finished work** - [`ace-overseer prune`](docs/usage.md#ace-overseer-prune) removes completed worktrees safely. It checks three conditions before removing: assignment completed, task marked done, and git working tree clean. Use `--dry-run` to preview what would be pruned, `--force` for worktrees that fail safety checks, or `--assignment` to prune a single stale assignment.
 

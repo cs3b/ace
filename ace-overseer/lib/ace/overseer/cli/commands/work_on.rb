@@ -9,18 +9,31 @@ module Ace
 
           desc "Create worktree, open tmux window, and prepare assignment"
 
-          option :task, aliases: ["-t"], type: :array, required: true,
+          option :task, aliases: ["-t"], type: :array,
             desc: "Task reference(s), repeatable and comma-separated (e.g., 230 --task 231,232)"
           option :preset, aliases: ["-p"], desc: "Assignment preset name"
+          option :runtime, default: "tmux", desc: "Runtime (tmux, lab)"
+          option :work, desc: "Existing Lab Work ID"
+          option :agent, desc: "Configured Lab agent ID"
           option :quiet, aliases: ["-q"], type: :boolean, default: false, desc: "Suppress non-essential output"
           option :debug, aliases: ["-d"], type: :boolean, default: false, desc: "Show debug output"
 
-          def initialize(orchestrator: nil)
+          def initialize(orchestrator: nil, lab_client: nil)
             super()
             @orchestrator = orchestrator || Organisms::WorkOnOrchestrator.new
+            @lab_client = lab_client || Molecules::LabClient.new
           end
 
-          def call(task: nil, preset: nil, **options)
+          def call(task: nil, preset: nil, runtime: "tmux", work: nil, agent: nil, **options)
+            if runtime == "lab"
+              raise Ace::Support::Cli::Error, "--work and --agent are required for Lab runtime" if work.to_s.empty? || agent.to_s.empty?
+
+              output = @lab_client.call("work", "dispatch", work, "--agent", agent, json: false)
+              puts output unless options[:quiet]
+              return
+            end
+            raise Ace::Support::Cli::Error, "unsupported runtime: #{runtime}" unless runtime == "tmux"
+
             Atoms::RepoGuard.ensure_repo!
 
             task_refs = normalize_task_refs(task)

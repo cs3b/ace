@@ -4,6 +4,18 @@ require "tmpdir"
 require_relative "../../test_helper"
 
 class WorkOnCommandTest < AceOverseerTestCase
+  class FakeLabClient
+    attr_reader :calls
+
+    def initialize
+      @calls = []
+    end
+
+    def call(*arguments, **options)
+      @calls << {arguments: arguments, options: options}
+      "dispatched"
+    end
+  end
   class FakeWorkOnOrchestrator
     attr_reader :calls
 
@@ -31,6 +43,22 @@ class WorkOnCommandTest < AceOverseerTestCase
 
     assert_equal "--task is required. Usage: ace-overseer work-on --task <ref>", error.message
     assert_empty orchestrator.calls
+  end
+
+  def test_lab_runtime_dispatches_existing_work_without_repo_guard
+    lab_client = FakeLabClient.new
+    command = Ace::Overseer::CLI::Commands::WorkOn.new(
+      orchestrator: FakeWorkOnOrchestrator.new,
+      lab_client: lab_client
+    )
+
+    Dir.mktmpdir("overseer-lab-no-repo") do |dir|
+      Dir.chdir(dir) do
+        command.call(runtime: "lab", work: "W321", agent: "builder-codex", quiet: true)
+      end
+    end
+
+    assert_equal %w[work dispatch W321 --agent builder-codex], lab_client.calls.first[:arguments]
   end
 
   def test_passes_task_and_preset_to_orchestrator

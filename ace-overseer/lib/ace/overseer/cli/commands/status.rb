@@ -15,14 +15,30 @@ module Ace
           option :quiet, aliases: ["-q"], type: :boolean, default: false, desc: "Suppress non-essential output"
           option :debug, aliases: ["-d"], type: :boolean, default: false, desc: "Show debug output"
           option :watch, aliases: ["-w"], type: :boolean, default: false, desc: "Auto-refresh dashboard"
+          option :runtime, default: "tmux", desc: "Runtime (tmux, lab)"
+          option :project, desc: "Filter Lab status by project"
 
-          def initialize(collector: nil, config: nil)
+          def initialize(collector: nil, config: nil, lab_client: nil)
             super()
             @collector = collector || Organisms::StatusCollector.new
             @config = config
+            @lab_client = lab_client || Molecules::LabClient.new
           end
 
-          def call(format:, **options)
+          def call(format:, runtime: "tmux", project: nil, **options)
+            if runtime == "lab"
+              if options[:watch]
+                raise Ace::Support::Cli::Error, "Lab watch runs in the project Herdr status pane; omit --watch"
+              end
+              arguments = ["work", "status"]
+              arguments.concat(["--project", project]) unless project.to_s.empty?
+              arguments << "--json" if format == "json"
+              output = @lab_client.call(*arguments, json: false)
+              puts output unless options[:quiet]
+              return
+            end
+            raise Ace::Support::Cli::Error, "unsupported runtime: #{runtime}" unless runtime == "tmux"
+
             Atoms::RepoGuard.ensure_repo!
             return if options[:quiet]
 

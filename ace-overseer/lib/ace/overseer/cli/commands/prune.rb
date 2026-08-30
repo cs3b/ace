@@ -17,15 +17,26 @@ module Ace
           option :dry_run, type: :boolean, default: false, desc: "Show candidates only"
           option :quiet, aliases: ["-q"], type: :boolean, default: false, desc: "Suppress non-essential output"
           option :debug, aliases: ["-d"], type: :boolean, default: false, desc: "Show debug output"
+          option :runtime, default: "tmux", desc: "Runtime (tmux, lab)"
 
-          def initialize(orchestrator: nil, input: $stdin, output: $stdout)
+          def initialize(orchestrator: nil, input: $stdin, output: $stdout, lab_client: nil)
             super()
             @orchestrator = orchestrator || Organisms::PruneOrchestrator.new
             @input = input
             @output = output
+            @lab_client = lab_client || Molecules::LabClient.new
           end
 
           def call(**options)
+            runtime = options.fetch(:runtime, "tmux")
+            if runtime == "lab"
+              raise Ace::Support::Cli::Error, "Lab prune is dry-run only; use lab work destroy WORK --confirm for one exact Work" unless options[:dry_run]
+
+              puts @lab_client.call("work", "status", "--json", json: false) unless options[:quiet]
+              return
+            end
+            raise Ace::Support::Cli::Error, "unsupported runtime: #{runtime}" unless runtime == "tmux"
+
             Atoms::RepoGuard.ensure_repo!
 
             targets = Array(options[:targets] || [])
