@@ -133,9 +133,9 @@ module Ace
 
                 child_pid = wait_for_pid_file(pid_file)
                 @tracked_pids << child_pid
-                sleep 0.05
 
-                refute process_alive?(child_pid), "background child PID #{child_pid} should be terminated"
+                refute process_alive?(child_pid),
+                  "background child PID #{child_pid} should be terminated (#{process_status(child_pid)})"
               end
             end
 
@@ -156,9 +156,9 @@ module Ace
 
                 child_pid = wait_for_pid_file(pid_file)
                 @tracked_pids << child_pid
-                sleep 0.05
 
-                refute process_alive?(child_pid), "timed-out child PID #{child_pid} should be terminated"
+                refute process_alive?(child_pid),
+                  "timed-out child PID #{child_pid} should be terminated (#{process_status(child_pid)})"
               end
             end
 
@@ -232,6 +232,15 @@ module Ace
               false
             rescue Errno::EPERM
               true
+            end
+
+            def process_status(pid)
+              File.read("/proc/#{pid}/status").lines
+                .grep(/\A(?:State|PPid|NSpid):/)
+                .map(&:strip)
+                .join(", ")
+            rescue Errno::ENOENT, Errno::EACCES
+              "process status unavailable"
             end
           end
         end
