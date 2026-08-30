@@ -7,10 +7,17 @@ require "fileutils"
 class Ace::Lint::Organisms::LintDoctorTest < Minitest::Test
   def setup
     @temp_dir = Dir.mktmpdir("lint_doctor_test")
+    reset_diagnostic_caches
   end
 
   def teardown
+    reset_diagnostic_caches
     FileUtils.remove_entry(@temp_dir) if @temp_dir && Dir.exist?(@temp_dir)
+  end
+
+  def reset_diagnostic_caches
+    Ace::Lint::Atoms::ConfigLocator.reset_cache!
+    Ace::Lint::Atoms::ValidatorRegistry.reset_cache!
   end
 
   # Basic diagnostics tests
@@ -28,6 +35,20 @@ class Ace::Lint::Organisms::LintDoctorTest < Minitest::Test
     # Should have diagnostics about validator availability
     validator_diagnostics = doctor.diagnostics.select { |d| d.category == :validator }
     refute_empty validator_diagnostics
+  end
+
+  def test_diagnose_reports_missing_validators_as_unavailable_warnings
+    Ace::Lint::Atoms::ValidatorRegistry.stub(:available?, false) do
+      doctor = Ace::Lint::Organisms::LintDoctor.new(project_root: @temp_dir)
+      doctor.diagnose
+
+      validator_diagnostics = doctor.diagnostics.select { |diagnostic| diagnostic.category == :validator }
+
+      assert_equal Ace::Lint::Atoms::ValidatorRegistry.registered_validators.size, validator_diagnostics.size
+      assert validator_diagnostics.all?(&:warning?)
+      assert validator_diagnostics.all? { |diagnostic| diagnostic.details[:status] == :unavailable }
+      refute doctor.errors?
+    end
   end
 
   def test_diagnose_checks_config_files

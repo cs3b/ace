@@ -14,6 +14,7 @@ class Ace::Lint::Organisms::LintOrchestratorTest < Minitest::Test
 
   def teardown
     Dir.chdir(@original_dir)
+    Ace::Lint::Atoms::SkillSchemaLoader.reset_cache!
     FileUtils.remove_entry(@temp_dir) if @temp_dir && Dir.exist?(@temp_dir)
   end
 
