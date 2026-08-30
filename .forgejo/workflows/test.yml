@@ -20,6 +20,7 @@ jobs:
           FORGEJO_TOKEN: ${{ secrets.FORGEJO_TOKEN || secrets.GITHUB_TOKEN || github.token }}
           FORGEJO_SHA: ${{ github.sha }}
         run: |
+          set -euo pipefail
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           git init .
           server_url="${GITHUB_SERVER_URL:-http://forgejo:3000}"
@@ -28,16 +29,18 @@ jobs:
           host_path="${host_path#https://}"
           proto="http"
           if [[ "$server_url" =~ ^https:// ]]; then proto="https"; fi
+
           git remote add origin "${proto}://x-access-token:${FORGEJO_TOKEN}@${host_path}/${repo}.git"
-          sha="${FORGEJO_SHA:-${GITHUB_SHA}}"
-          ref="${GITHUB_REF:-}"
-          if [ -n "$ref" ]; then
-            git fetch --depth 1 origin "$ref" || git fetch --depth 1 origin "$sha"
-          else
-            git fetch --depth 1 origin "$sha"
+          git fetch --depth 1 origin "$FORGEJO_SHA"
+          git checkout --force "$FORGEJO_SHA"
+
+          git remote set-url origin "${proto}://${host_path}/${repo}.git"
+          if git config --get remote.origin.url | grep -q "x-access-token"; then
+            echo "ERROR: Token detected in git remote URL" >&2
+            exit 1
           fi
-          git checkout --force FETCH_HEAD
-          git log -1
+
+          git log -1 --oneline
 
       - name: Bundle install
         run: |
@@ -51,7 +54,7 @@ jobs:
       - name: Run ACE test suite
         run: |
           export PATH="$PWD/bin:$PATH"
-          bundle exec bin/ace-test-suite
+          bundle exec bin/ace-test-suite --target all
         env:
           RAILS_ENV: test
           BUNDLE_PATH: vendor/bundle
