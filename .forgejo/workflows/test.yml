@@ -16,7 +16,15 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git clone --depth 1 "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git" .
+          if [ -n "$GITHUB_REF" ]; then
+            git fetch --depth 1 origin "$GITHUB_REF":ci_ref || true
+            git checkout ci_ref || true
+          fi
+          git checkout "$GITHUB_SHA" || true
+          git log -1
 
       - name: Bundle install
         run: |
