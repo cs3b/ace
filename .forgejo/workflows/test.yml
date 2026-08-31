@@ -61,7 +61,7 @@ jobs:
           chmod 0755 /usr/local/bin/gitleaks
 
       - name: Validate package inventory
-        run: ruby .ace-bin/ci_package_inventory.rb | tee .forgejo-package-inventory.json
+        run: ruby .ace-bin/ci_package_inventory.rb | tee forgejo-package-inventory.json
 
       - name: Resolve dependency identity and trust scope
         id: dependencies
@@ -191,7 +191,7 @@ jobs:
             .ace-local/ci/
             .ace-local/test/reports/
             .ace-local/test-e2e/
-            .forgejo-package-inventory.json
+            forgejo-package-inventory.json
           retention-days: 7
 
   test-summary:
