@@ -44,18 +44,21 @@ it.
   suite. Do not use raw package Rake or Ruby test commands.
 - Validate the inventory with `.ace-bin/ci_package_inventory.rb`, exercise the
   monorepo E2E discovery with `ace-test-e2e ace-monorepo-e2e --dry-run`, and run
-  the explicit handbook projection gate with `ace-test ace-handbook all` when
-  handbook sources or generated guidance can change.
+  the package handbook projection gate with `ace-test ace-handbook all` when
+  package-owned handbook sources or generated guidance can change. Project
+  overlays under `.ace-handbook/` require the conceptual and cross-reference
+  review in [`wfi://handbook/review-guides`](wfi://handbook/review-guides);
+  the package test alone does not validate them.
 - A builder always works in its assigned branch and worktree. Provider homes,
   credentials, prompts, and logs are not shared even when compatible compiled
   gems are reused by one Unix trust role.
 
 ## Work and agent development
 
-Work execution follows [`wfi://task/work`](wfi://task/work). Coordinated
-single-delivery execution may use
-[`wfi://handbook/perform-delivery`](wfi://handbook/perform-delivery), while the
-project-level release decision in this guide remains authoritative.
+Work execution follows [`wfi://task/work`](wfi://task/work). Forgejo PR
+creation, exact-head review, integration, and optional release remain separate
+capability-owned outcomes; the current GitHub-oriented combined delivery
+workflow is not the canonical ACE Forgejo path.
 
 - Every Work is bound to a reviewed task snapshot and exact base SHA. Agent,
   toolchain, provider, guide, and remote capability preflight happens before a
@@ -109,7 +112,7 @@ project-level release decision in this guide remains authoritative.
 - A coordinated multi-package publication is not onboarding-safe until
   `ace-test-e2e ace-monorepo-e2e TS-MONO-001` records its post-publish proof and
   classification (`SAFE`, `LAG_DETECTED`, or `METADATA_BROKEN`) according to
-  [`ace-handbook/docs/release-rubygems-proof.md`](../../ace-handbook/docs/release-rubygems-proof.md).
+  [`ace-handbook/docs/release-rubygems-proof.md`](/ace-handbook/docs/release-rubygems-proof.md).
 - Deployment, when a future ACE service requires it, is another named admin
   capability and another decision. The current gem-only ACE release has no
   implicit deployment step.
