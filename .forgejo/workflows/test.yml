@@ -139,11 +139,11 @@ jobs:
           RAILS_ENV: test
         run: |
           set -euo pipefail
+          # The shared runner has three execution slots. More package
+          # processes increase contention and can trip valid 30s package
+          # timeouts without reducing useful wall time.
           /usr/bin/time -f 'wall=%e user=%U system=%S max_rss_kb=%M' \
             -o .ace-local/ci/suite-time.txt \
-            # The shared runner has three execution slots. More package
-            # processes increase contention and can trip valid 30s package
-            # timeouts without reducing useful wall time.
             bundle exec ace-test-suite --no-color --parallel 3 2>&1 \
               | tee .ace-local/ci/suite.log
 
@@ -182,7 +182,9 @@ jobs:
 
       - name: Retain package-level reports
         if: always()
-        uses: actions/upload-artifact@v4
+        # Forgejo's artifact service supports v3 and its patched v4 action;
+        # upstream GitHub upload-artifact@v4 targets a different protocol.
+        uses: actions/upload-artifact@v3
         with:
           name: ace-test-evidence-${{ github.sha }}
           path: |
