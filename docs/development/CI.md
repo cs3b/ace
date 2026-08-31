@@ -1,108 +1,91 @@
-# CI/CD Documentation
+# Continuous integration
 
-## GitHub Actions Configuration
+ACE uses Forgejo Actions for the canonical protected-branch test contract.
+The workflow is [`.forgejo/workflows/test.yml`](../../.forgejo/workflows/test.yml).
 
-This repository uses GitHub Actions for continuous integration testing. The CI pipeline validates the repository test inventory, then runs every test project across multiple Ruby versions.
+## Execution strategy
 
-## CI Strategy
+The complete deterministic suite runs in one clean Ruby environment. This is
+deliberate: the repository's 43-package suite normally completes in about ten
+seconds, while one environment per package repeated checkout, system setup,
+dependency installation, and native compilation 43 times.
 
-We use **Option 2: Independent Package Testing** with GitHub Actions Matrix strategy for CI because:
+The single suite environment still preserves package-level evidence. The
+repository's `ace-test-suite` process runs packages in parallel and writes one
+report tree with the failing package names, output, and summaries. A separate
+small `Test Summary` job remains the stable protected-branch check.
 
-1. **Clean CI logs**: No ANSI escape codes or terminal UI issues
-2. **Native parallelization**: GitHub Actions handles parallel jobs efficiently
-3. **Better failure isolation**: Each package/Ruby version combo runs independently
-4. **Easy debugging**: Each job has its own clean log output
+The workflow executes all of these contracts:
 
-## Test Execution
+1. `.ace-bin/ci_package_inventory.rb` validates that the suite contains every
+   registered test package exactly once.
+2. `ace-test-suite --no-color` runs the complete deterministic package suite.
+3. `ace-test-e2e ace-monorepo-e2e --dry-run` validates monorepo E2E discovery
+   without invoking an agent provider.
+4. `ace-test ace-handbook all` keeps the explicit handbook projection gate.
+5. `Test Summary` reports the combined result under the protected context
+   `Test Suite / Test Summary (pull_request)`.
 
-### Local Development
+## Dependency reuse and trust
+
+The workflow computes a compatibility fingerprint from the repository, exact
+`Gemfile.lock`, Ruby engine/version/ABI/platform, and runner image. A warm run
+uses the compatible `vendor/bundle` cache only after `bundle check` succeeds.
+Missing or corrupt content is reported as `cold-owner` or `invalidated` and is
+rebuilt once in the suite environment.
+
+Cache publication is trust-scoped:
+
+- `main` publishes and consumes the protected `main` key;
+- a pull request may restore a compatible `main` result but saves only under
+  its own untrusted PR scope;
+- `main` never restores a PR cache.
+
+Cancelled or failed jobs do not publish their post-job cache. Dependency
+outcome, the short fingerprint, Bundler identity, suite timing, package logs,
+and reports are retained as non-secret run evidence for seven days.
+
+## Local development
 
 ```bash
-# Run all deterministic tests with nice UI (recommended for local development)
+# Complete deterministic suite (recommended)
 ace-test-suite
 
-# Run all tests sequentially without color
+# Pipe-friendly output matching CI
 ace-test-suite --no-color
 
-# Run tests for a specific package
+# One package
 ace-test ace-support-core all
 
-# Preview monorepo E2E scenario coverage without invoking an agent provider
+# Monorepo E2E discovery without an agent provider
 ace-test-e2e ace-monorepo-e2e --dry-run
+
+# Inventory contract used by CI
+ruby .ace-bin/ci_package_inventory.rb
 ```
 
-### In GitHub Actions
+## Triggers
 
-The CI matrix is generated from `.ace/test/suite.yml` by `.ace-bin/ci_package_inventory.rb`.
+Tests run for pushes to `main`, pull requests targeting `main`, and manual
+workflow dispatches.
 
-It validates that:
+## Adding a package
 
-- Every `ace-*` gem with a `test/` directory is listed exactly once.
-- The `ace-monorepo-e2e` test project is included.
-- No removed or misspelled package is present in the suite configuration.
-
-Each validated project runs on Ruby 3.2, 3.3, and 3.4. The handbook projection contract also runs as a dedicated release-blocking job.
-
-Each deterministic package job runs:
+Add the package to `.ace/test/suite.yml`, including its path, group, and
+priority. Then run:
 
 ```bash
-bundle exec ace-test <package> all
+ruby .ace-bin/ci_package_inventory.rb
+ace-test-suite --no-color
 ```
 
-The `ace-monorepo-e2e` entry runs `bundle exec ace-test-e2e ace-monorepo-e2e --dry-run` to validate scenario discovery without requiring an agent provider in CI.
+Do not add a package-specific Actions job. Failure localization belongs to the
+suite reports rather than a dedicated dependency environment.
 
-## Workflow Triggers
+## Debugging
 
-Tests run automatically on:
-
-- Push to `main` or `master` branch
-- Pull requests to `main` or `master`
-- Manual workflow dispatch (via GitHub UI)
-
-## Test Reports
-
-Failed tests automatically upload artifacts including:
-
-- Test reports from `.ace-local/test/reports/`
-- E2E dry-run artifacts from `.ace-local/test-e2e/`
-- Artifacts are retained for 7 days
-
-## Caching
-
-The CI uses Ruby's `bundler-cache` to cache dependencies:
-
-- Cache key based on `Gemfile.lock`
-- Separate cache per Ruby version
-- Significantly speeds up CI runs
-
-## Adding New Packages
-
-To add a new test project to the suite:
-
-1. Add it to `.ace/test/suite.yml`:
-
-```yaml
-packages:
-  - name: your-new-package
-    path: your-new-package
-```
-
-2. Ensure the package has:
-   - Tests in the `test/` directory
-   - Proper dependencies in its `.gemspec`
-
-3. Run `ruby .ace-bin/ci_package_inventory.rb` locally. GitHub Actions generates the matrix from the validated suite; do not edit the workflow matrix manually.
-
-## Debugging CI Failures
-
-1. **Check the job logs**: Each package/Ruby combo has its own job log
-2. **Download artifacts**: Failed jobs upload test reports as artifacts
-3. **Run locally**: Reproduce with `ace-test <package> all`
-4. **Use debug mode**: Trigger workflow with debug logging enabled
-
-## Best Practices
-
-1. **Keep tests fast**: CI runs on every PR
-2. **Use descriptive test names**: Helps identify failures quickly
-3. **Fix flaky tests**: Don't ignore intermittent failures
-4. **Update Ruby versions**: Keep the matrix current with supported versions
+1. Open the `Complete package suite` log and identify the failed package.
+2. Download `ace-test-evidence-<SHA>` for the suite log and package reports.
+3. Reproduce with `ace-test <package> all` or the complete suite.
+4. If setup failed, inspect `.ace-local/ci/dependencies.txt`,
+   `bundle-check.txt`, and `bundle-time.txt` before changing test topology.

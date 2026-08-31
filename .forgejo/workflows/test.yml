@@ -2,23 +2,20 @@ name: Test Suite
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
   workflow_dispatch:
 
 jobs:
-  package_inventory:
-    name: Validate test package inventory
+  suite:
+    name: Complete package suite
     runs-on: ubuntu-latest
     container:
       image: docker.io/library/ruby:3.4
 
-    outputs:
-      packages: ${{ steps.inventory.outputs.packages }}
-
     steps:
-      - name: Checkout code
+      - name: Checkout exact revision
         env:
           FORGEJO_TOKEN: ${{ secrets.FORGEJO_TOKEN || secrets.GITHUB_TOKEN || github.token }}
           FORGEJO_SHA: ${{ github.sha }}
@@ -30,160 +27,178 @@ jobs:
           repo="${GITHUB_REPOSITORY:-cs3b/ace}"
           host_path="${server_url#http://}"
           host_path="${host_path#https://}"
-          proto="http"
-          if [[ "$server_url" =~ ^https:// ]]; then proto="https"; fi
+          proto=http
+          if [[ "$server_url" =~ ^https:// ]]; then proto=https; fi
           git remote add origin "${proto}://x-access-token:${FORGEJO_TOKEN}@${host_path}/${repo}.git"
           git fetch --depth 1 origin "$FORGEJO_SHA"
           git checkout --force "$FORGEJO_SHA"
           git remote set-url origin "${proto}://${host_path}/${repo}.git"
-          if git config --get remote.origin.url | grep -q "x-access-token"; then
+          if git config --get remote.origin.url | grep -q x-access-token; then
             echo "ERROR: Token detected in git remote URL" >&2
             exit 1
           fi
 
-      - name: Validate suite and publish matrix
-        id: inventory
-        run: |
-          packages="$(ruby .ace-bin/ci_package_inventory.rb)"
-          echo "packages=$packages" >> "$GITHUB_OUTPUT"
-
-  test:
-    name: Test ${{ matrix.package }}
-    runs-on: ubuntu-latest
-    container:
-      image: docker.io/library/ruby:3.4
-    needs: package_inventory
-
-    strategy:
-      fail-fast: false
-      max-parallel: 3
-      matrix:
-        package: ${{ fromJSON(needs.package_inventory.outputs.packages) }}
-
-    steps:
-      - name: Checkout code
-        env:
-          FORGEJO_TOKEN: ${{ secrets.FORGEJO_TOKEN || secrets.GITHUB_TOKEN || github.token }}
-          FORGEJO_SHA: ${{ github.sha }}
-        run: |
-          set -euo pipefail
-          git config --global --add safe.directory "$GITHUB_WORKSPACE"
-          git init .
-          server_url="${GITHUB_SERVER_URL:-http://forgejo:3000}"
-          repo="${GITHUB_REPOSITORY:-cs3b/ace}"
-          host_path="${server_url#http://}"
-          host_path="${host_path#https://}"
-          proto="http"
-          if [[ "$server_url" =~ ^https:// ]]; then proto="https"; fi
-          git remote add origin "${proto}://x-access-token:${FORGEJO_TOKEN}@${host_path}/${repo}.git"
-          git fetch --depth 1 origin "$FORGEJO_SHA"
-          git checkout --force "$FORGEJO_SHA"
-          git remote set-url origin "${proto}://${host_path}/${repo}.git"
-          if git config --get remote.origin.url | grep -q "x-access-token"; then
-            echo "ERROR: Token detected in git remote URL" >&2
-            exit 1
-          fi
-
-      - name: Install system dependencies
+      - name: Install system test tools once
         run: |
           set -euo pipefail
           apt-get update -qq
-          apt-get install -y -qq ripgrep fd-find tmux git-filter-repo curl
+          apt-get install -y -qq curl fd-find git-filter-repo procps ripgrep time tmux
           if command -v fdfind >/dev/null 2>&1; then
             ln -sf "$(command -v fdfind)" /usr/local/bin/fd
           fi
-          
-          # Pinned, checksum-verified gitleaks installation
-          GITLEAKS_VERSION="8.18.2"
-          GITLEAKS_SHA256="6298c9235dfc9278c14b28afd9b7fa4e6f4a289cb1974bd27949fc1e9122bdee"
-          TARBALL="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
-          URL="https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/${TARBALL}"
-          curl -sSL -o "${TARBALL}" "${URL}"
-          echo "${GITLEAKS_SHA256}  ${TARBALL}" | sha256sum -c -
-          tar -xzf "${TARBALL}" -C /usr/local/bin gitleaks
-          rm -f "${TARBALL}"
+
+          GITLEAKS_VERSION=8.18.2
+          GITLEAKS_SHA256=6298c9235dfc9278c14b28afd9b7fa4e6f4a289cb1974bd27949fc1e9122bdee
+          tarball="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          curl -sSL -o "$tarball" \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/${tarball}"
+          echo "${GITLEAKS_SHA256}  ${tarball}" | sha256sum -c -
+          tar -xzf "$tarball" -C /usr/local/bin gitleaks
+          rm -f "$tarball"
           chmod 0755 /usr/local/bin/gitleaks
 
-      - name: Bundle install
-        run: |
-          bundle config set --local path 'vendor/bundle'
-          bundle install --jobs 4 --retry 3
+      - name: Validate package inventory
+        run: ruby .ace-bin/ci_package_inventory.rb | tee .forgejo-package-inventory.json
 
-      - name: Run tests for ${{ matrix.package }}
-        run: |
-          export PATH="$PWD/bin:$PATH"
-          if [ "${{ matrix.package }}" = "ace-monorepo-e2e" ]; then
-            bundle exec ace-test-e2e ace-monorepo-e2e --dry-run
-          else
-            bundle exec ace-test "${{ matrix.package }}" all
-          fi
+      - name: Resolve dependency identity and trust scope
+        id: dependencies
         env:
-          RAILS_ENV: test
-          BUNDLE_PATH: vendor/bundle
-          BUNDLE_GEMFILE: ${{ github.workspace }}/Gemfile
-          PROJECT_ROOT_PATH: ${{ github.workspace }}
-
-  projection_contract:
-    name: Skill projection contract
-    runs-on: ubuntu-latest
-    container:
-      image: docker.io/library/ruby:3.4
-    needs: package_inventory
-
-    steps:
-      - name: Checkout code
-        env:
-          FORGEJO_TOKEN: ${{ secrets.FORGEJO_TOKEN || secrets.GITHUB_TOKEN || github.token }}
-          FORGEJO_SHA: ${{ github.sha }}
+          EVENT_NAME: ${{ github.event_name }}
+          EVENT_REF: ${{ github.ref }}
+          HEAD_REF: ${{ github.head_ref }}
+          ACTOR: ${{ github.actor }}
         run: |
           set -euo pipefail
-          git config --global --add safe.directory "$GITHUB_WORKSPACE"
-          git init .
-          server_url="${GITHUB_SERVER_URL:-http://forgejo:3000}"
-          repo="${GITHUB_REPOSITORY:-cs3b/ace}"
-          host_path="${server_url#http://}"
-          host_path="${host_path#https://}"
-          proto="http"
-          if [[ "$server_url" =~ ^https:// ]]; then proto="https"; fi
-          git remote add origin "${proto}://x-access-token:${FORGEJO_TOKEN}@${host_path}/${repo}.git"
-          git fetch --depth 1 origin "$FORGEJO_SHA"
-          git checkout --force "$FORGEJO_SHA"
-          git remote set-url origin "${proto}://${host_path}/${repo}.git"
-          if git config --get remote.origin.url | grep -q "x-access-token"; then
-            echo "ERROR: Token detected in git remote URL" >&2
-            exit 1
+          ruby_identity="$(ruby -rrbconfig -e \
+            'print [RUBY_ENGINE, RUBY_VERSION, RbConfig::CONFIG["ruby_version"], RUBY_PLATFORM, RbConfig::CONFIG["arch"]].join(":")')"
+          lock_sha="$(sha256sum Gemfile.lock | cut -d' ' -f1)"
+          image='docker.io/library/ruby:3.4'
+          fingerprint="$(printf '%s\n%s\n%s\n%s\n' \
+            "$GITHUB_REPOSITORY" "$lock_sha" "$ruby_identity" "$image" | sha256sum | cut -d' ' -f1)"
+          if [[ "$EVENT_NAME" == push && "$EVENT_REF" == refs/heads/main ]]; then
+            scope=main
+            main_restore_key=''
+          else
+            untrusted="${HEAD_REF:-${ACTOR:-unknown}}"
+            untrusted="$(printf '%s' "$untrusted" | tr -cs 'A-Za-z0-9._-' '-')"
+            scope="pr-${untrusted:0:80}"
+            main_restore_key="ace-bundle-v3-${fingerprint}-main"
           fi
+          echo "fingerprint=$fingerprint" >> "$GITHUB_OUTPUT"
+          echo "scope=$scope" >> "$GITHUB_OUTPUT"
+          echo "cache_key=ace-bundle-v3-${fingerprint}-${scope}" >> "$GITHUB_OUTPUT"
+          echo "main_restore_key=$main_restore_key" >> "$GITHUB_OUTPUT"
 
-      - name: Bundle install
-        run: |
-          bundle config set --local path 'vendor/bundle'
-          bundle install --jobs 4 --retry 3
+      - name: Restore exact compatible bundle
+        id: bundle-cache
+        uses: actions/cache@v5
+        with:
+          path: vendor/bundle
+          key: ${{ steps.dependencies.outputs.cache_key }}
+          restore-keys: ${{ steps.dependencies.outputs.main_restore_key }}
 
-      - name: Run handbook projection contract tests
-        run: |
-          export PATH="$PWD/bin:$PATH"
-          bundle exec ace-test ace-handbook all
+      - name: Prepare dependencies at most once
+        id: bundle
         env:
-          RAILS_ENV: test
-          BUNDLE_PATH: vendor/bundle
+          BUNDLE_FROZEN: "true"
           BUNDLE_GEMFILE: ${{ github.workspace }}/Gemfile
+          BUNDLE_PATH: vendor/bundle
+          DEPENDENCY_FINGERPRINT: ${{ steps.dependencies.outputs.fingerprint }}
+          DEPENDENCY_SCOPE: ${{ steps.dependencies.outputs.scope }}
+        run: |
+          set -euo pipefail
+          mkdir -p .ace-local/ci
+          if bundle check >.ace-local/ci/bundle-check.txt 2>&1; then
+            outcome=warm
+          else
+            outcome=cold-owner
+            if [[ -d vendor/bundle ]]; then outcome=invalidated; fi
+            rm -rf vendor/bundle
+            mkdir -p vendor/bundle
+            /usr/bin/time -f 'wall=%e user=%U system=%S max_rss_kb=%M' \
+              -o .ace-local/ci/bundle-time.txt \
+              bundle install --jobs 4 --retry 3
+            bundle check >.ace-local/ci/bundle-check.txt
+          fi
+          bundle list >.ace-local/ci/bundle-list.txt
+          resolved_sha="$(sha256sum .ace-local/ci/bundle-list.txt | cut -d' ' -f1)"
+          printf 'outcome=%s\nfingerprint=%s\nscope=%s\nresolved_sha256=%s\n' \
+            "$outcome" "$DEPENDENCY_FINGERPRINT" "$DEPENDENCY_SCOPE" "$resolved_sha" \
+            | tee .ace-local/ci/dependencies.txt
+          echo "outcome=$outcome" >> "$GITHUB_OUTPUT"
+
+      - name: Run complete deterministic suite
+        env:
+          BUNDLE_FROZEN: "true"
+          BUNDLE_GEMFILE: ${{ github.workspace }}/Gemfile
+          BUNDLE_PATH: vendor/bundle
           PROJECT_ROOT_PATH: ${{ github.workspace }}
+          RAILS_ENV: test
+        run: |
+          set -euo pipefail
+          /usr/bin/time -f 'wall=%e user=%U system=%S max_rss_kb=%M' \
+            -o .ace-local/ci/suite-time.txt \
+            bundle exec ace-test-suite --no-color 2>&1 | tee .ace-local/ci/suite.log
+
+      - name: Verify monorepo E2E discovery
+        env:
+          BUNDLE_FROZEN: "true"
+          BUNDLE_GEMFILE: ${{ github.workspace }}/Gemfile
+          BUNDLE_PATH: vendor/bundle
+          PROJECT_ROOT_PATH: ${{ github.workspace }}
+        run: bundle exec ace-test-e2e ace-monorepo-e2e --dry-run
+
+      - name: Verify handbook projection contract
+        env:
+          BUNDLE_FROZEN: "true"
+          BUNDLE_GEMFILE: ${{ github.workspace }}/Gemfile
+          BUNDLE_PATH: vendor/bundle
+          PROJECT_ROOT_PATH: ${{ github.workspace }}
+          RAILS_ENV: test
+        run: bundle exec ace-test ace-handbook all
+
+      - name: Publish run summary
+        if: always()
+        env:
+          OUTCOME: ${{ steps.bundle.outputs.outcome }}
+          FINGERPRINT: ${{ steps.dependencies.outputs.fingerprint }}
+          SCOPE: ${{ steps.dependencies.outputs.scope }}
+        run: |
+          {
+            echo '## ACE test environment'
+            echo
+            echo "- Dependencies: ${OUTCOME:-not-prepared}"
+            echo "- Fingerprint: ${FINGERPRINT:0:12}"
+            echo "- Trust scope: ${SCOPE:-unknown}"
+            echo '- Topology: one complete-suite environment'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Retain package-level reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ace-test-evidence-${{ github.sha }}
+          path: |
+            .ace-local/ci/
+            .ace-local/test/reports/
+            .ace-local/test-e2e/
+            .forgejo-package-inventory.json
+          retention-days: 7
 
   test-summary:
     name: Test Summary
     runs-on: ubuntu-latest
-    container:
-      image: docker.io/library/ruby:3.4
-    needs: [package_inventory, test, projection_contract]
+    needs: [suite]
     if: always()
 
     steps:
-      - name: Check test results
+      - name: Check complete suite result
+        env:
+          SUITE_RESULT: ${{ needs.suite.result }}
         run: |
-          if [ "${{ needs.package_inventory.result }}" == "success" ] &&              [ "${{ needs.test.result }}" == "success" ] &&              [ "${{ needs.projection_contract.result }}" == "success" ]; then
-            echo "✅ All tests passed!"
+          if [[ "$SUITE_RESULT" == success ]]; then
+            echo "All ACE package, inventory, E2E discovery, and projection checks passed."
             exit 0
-          else
-            echo "❌ Some tests failed. Check the individual job logs for details."
-            exit 1
           fi
+          echo "ACE suite failed. Inspect the package-level report artifact and suite log." >&2
+          exit 1
