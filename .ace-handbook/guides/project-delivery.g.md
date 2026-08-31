@@ -74,8 +74,10 @@ project-level release decision in this guide remains authoritative.
 - Review uses a clean, exact PR-head checkout and an independent reviewer.
   Findings, commands, artifact digests, trust boundary, and verdict are stored
   as exact-SHA evidence. The feedback lifecycle belongs to
-  [`wfi://review/run`](wfi://review/run); the remote PR adapter is
-  [`wfi://review/pr`](wfi://review/pr) where that Forge transport is supported.
+  [`wfi://review/run`](wfi://review/run). The current
+  [`wfi://review/pr`](wfi://review/pr) adapter is GitHub-only and uses `gh`;
+  Forgejo review therefore uses `wfi://review/run` against the clean local
+  exact-head diff until ACE gains a Forgejo PR adapter.
 - Forgejo CI must validate the complete registered package inventory and keep
   the protected summary context `Test Suite / Test Summary (pull_request)`.
   Package-level results remain visible even when one shared suite environment
@@ -99,9 +101,15 @@ project-level release decision in this guide remains authoritative.
   decision. Run `ace-bundle wfi://release/local` for coordinated release
   preparation.
 - RubyGems publication is a separate `release.rubygems` admin transaction.
-  Publish only artifacts built from the synchronized release SHA. OTP is
-  supplied through the approved out-of-band path and is never sent through
-  Telegram, stored in task history, or delegated to a builder.
+  Publish through
+  [`wfi://release/rubygems-publish`](wfi://release/rubygems-publish), using only
+  artifacts built from the synchronized release SHA. OTP is supplied through
+  the approved out-of-band path and is never sent through Telegram, stored in
+  task history, or delegated to a builder.
+- A coordinated multi-package publication is not onboarding-safe until
+  `ace-test-e2e ace-monorepo-e2e TS-MONO-001` records its post-publish proof and
+  classification (`SAFE`, `LAG_DETECTED`, or `METADATA_BROKEN`) according to
+  [`ace-handbook/docs/release-rubygems-proof.md`](../../ace-handbook/docs/release-rubygems-proof.md).
 - Deployment, when a future ACE service requires it, is another named admin
   capability and another decision. The current gem-only ACE release has no
   implicit deployment step.
