@@ -141,7 +141,11 @@ jobs:
           set -euo pipefail
           /usr/bin/time -f 'wall=%e user=%U system=%S max_rss_kb=%M' \
             -o .ace-local/ci/suite-time.txt \
-            bundle exec ace-test-suite --no-color 2>&1 | tee .ace-local/ci/suite.log
+            # The shared runner has three execution slots. More package
+            # processes increase contention and can trip valid 30s package
+            # timeouts without reducing useful wall time.
+            bundle exec ace-test-suite --no-color --parallel 3 2>&1 \
+              | tee .ace-local/ci/suite.log
 
       - name: Verify monorepo E2E discovery
         env:

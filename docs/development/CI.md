@@ -5,10 +5,13 @@ The workflow is [`.forgejo/workflows/test.yml`](../../.forgejo/workflows/test.ym
 
 ## Execution strategy
 
-The complete deterministic suite runs in one clean Ruby environment. This is
-deliberate: the repository's 43-package suite normally completes in about ten
-seconds, while one environment per package repeated checkout, system setup,
-dependency installation, and native compilation 43 times.
+The complete deterministic suite runs in one clean Ruby environment with at
+most three package processes. This is deliberate: the repository's 43-package
+suite normally completes in about ten seconds on a development workstation,
+while one environment per package repeated checkout, system setup, dependency
+installation, and native compilation 43 times. The shared Forgejo runner has
+three execution slots; higher package concurrency adds CPU contention and can
+turn a healthy package into a 30-second timeout.
 
 The single suite environment still preserves package-level evidence. The
 repository's `ace-test-suite` process runs packages in parallel and writes one
@@ -52,7 +55,7 @@ and reports are retained as non-secret run evidence for seven days.
 ace-test-suite
 
 # Pipe-friendly output matching CI
-ace-test-suite --no-color
+ace-test-suite --no-color --parallel 3
 
 # One package
 ace-test ace-support-core all
