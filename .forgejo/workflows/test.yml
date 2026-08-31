@@ -185,6 +185,22 @@ jobs:
             echo '- Topology: one complete-suite environment'
           } >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Stage retained evidence
+        if: always()
+        run: |
+          set -euo pipefail
+          mkdir -p forgejo-evidence
+          for source in .ace-local/ci .ace-local/test/reports .ace-local/test-e2e; do
+            if [[ -e "$source" ]]; then
+              target="forgejo-evidence/${source#.ace-local/}"
+              mkdir -p "$(dirname "$target")"
+              cp -a "$source" "$target"
+            fi
+          done
+          if [[ -f forgejo-package-inventory.json ]]; then
+            cp forgejo-package-inventory.json forgejo-evidence/
+          fi
+
       - name: Retain package-level reports
         if: always()
         # Forgejo's artifact service supports v3 and its patched v4 action;
@@ -192,11 +208,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: ace-test-evidence-${{ github.sha }}
-          path: |
-            .ace-local/ci/
-            .ace-local/test/reports/
-            .ace-local/test-e2e/
-            forgejo-package-inventory.json
+          path: forgejo-evidence/
           retention-days: 7
 
   test-summary:

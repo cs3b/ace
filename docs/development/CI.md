@@ -49,7 +49,8 @@ Cache publication is trust-scoped:
 
 Cancelled or failed jobs do not publish their post-job cache. Dependency
 outcome, the short fingerprint, Bundler identity, suite timing, package logs,
-and reports are retained as non-secret run evidence for seven days.
+and reports are copied into the explicit non-hidden `forgejo-evidence/` staging
+directory and retained as non-secret run evidence for seven days.
 Forgejo artifacts use the service-compatible `upload-artifact@v3` protocol;
 the runner must resolve its configured canonical HTTPS origin from inside the
 job network.
