@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "stringio"
+require "tmpdir"
 require_relative "../../test_helper"
 
 class LabCommandsTest < AceOverseerTestCase
@@ -53,16 +54,29 @@ class LabCommandsTest < AceOverseerTestCase
     assert_equal false, client.calls.first[:options][:json]
   end
 
-  def test_prompt_rejects_tty_and_empty_stdin
+  def test_prompt_rejects_tty_and_blank_stdin
     tty_error = assert_raises(Ace::Support::Cli::Error) do
       Ace::Overseer::CLI::Commands::Prompt.new(client: FakeLabClient.new, input: TtyInput.new).call(work: "W321")
     end
-    assert_equal "prompt text is required on stdin", tty_error.message
+    assert_equal "prompt text is required via --file or stdin", tty_error.message
 
-    empty_error = assert_raises(Ace::Support::Cli::Error) do
-      Ace::Overseer::CLI::Commands::Prompt.new(client: FakeLabClient.new, input: StringIO.new).call(work: "W321")
+    blank_error = assert_raises(Ace::Support::Cli::Error) do
+      Ace::Overseer::CLI::Commands::Prompt.new(client: FakeLabClient.new, input: StringIO.new(" \n\t")).call(work: "W321")
     end
-    assert_equal "prompt text is required on stdin", empty_error.message
+    assert_equal "prompt text must contain non-whitespace characters", blank_error.message
+  end
+
+  def test_prompt_reads_direct_file_without_reading_tty
+    client = FakeLabClient.new
+    command = Ace::Overseer::CLI::Commands::Prompt.new(client: client, input: TtyInput.new)
+
+    Dir.mktmpdir("overseer-prompt") do |dir|
+      path = File.join(dir, "prompt.md")
+      File.write(path, "continue safely\n")
+      capture_io { command.call(work: "W321", file: path) }
+    end
+
+    assert_equal "continue safely\n", client.calls.first[:options][:stdin_data]
   end
 
   def test_review_and_stop_forward_exact_work_arguments

@@ -24,6 +24,8 @@ module Ace
           return stdout unless json
 
           JSON.parse(stdout)
+        rescue Errno::ENOENT
+          raise Error, "Lab runtime unavailable: #{BINARY} is not installed"
         rescue JSON::ParserError => error
           raise Error, "Lab returned invalid JSON: #{error.message}"
         end

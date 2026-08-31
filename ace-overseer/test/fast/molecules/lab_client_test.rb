@@ -21,6 +21,12 @@ class LabClientTest < AceOverseerTestCase
     end
   end
 
+  class MissingBinaryRunner
+    def capture3(*)
+      raise Errno::ENOENT
+    end
+  end
+
   def test_uses_only_absolute_lab_binary_and_parses_json
     runner = FakeRunner.new(stdout: '{"works":[]}')
     client = Ace::Overseer::Molecules::LabClient.new(runner: runner)
@@ -48,5 +54,13 @@ class LabClientTest < AceOverseerTestCase
     error = assert_raises(Ace::Overseer::Error) { client.call("agents", "--json") }
 
     assert_equal "permission denied", error.message
+  end
+
+  def test_raises_actionable_error_when_lab_binary_is_missing
+    client = Ace::Overseer::Molecules::LabClient.new(runner: MissingBinaryRunner.new)
+
+    error = assert_raises(Ace::Overseer::Error) { client.call("agents", "--json") }
+
+    assert_equal "Lab runtime unavailable: /usr/local/bin/lab is not installed", error.message
   end
 end

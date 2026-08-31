@@ -95,7 +95,7 @@ does not read Lab credentials and does not call Podman or Herdr directly.
 - `ace-overseer prepare --runtime lab --project PROJECT --source KIND:ID --work WORK --planner AGENT --title TITLE`: create a reviewed Work and its isolated worktree.
 - `ace-overseer work-on --runtime lab --work WORK --agent AGENT`: reserve the agent, create or reuse its Herdr workspace, and dispatch it.
 - `ace-overseer status --runtime lab [--project PROJECT] [--format table|json]`: show Lab Work state. Continuous status lives in each project Herdr session, so `--watch` is intentionally rejected for Lab.
-- `ace-overseer prompt --work WORK`: forward stdin to the Work pane; prompt text is never passed as a process argument.
+- `ace-overseer prompt --work WORK --file PATH`: forward prompt text from a file to the Work pane. Piped stdin is also supported; prompt text is never passed as a process argument.
 - `ace-overseer review --work WORK --pr NUMBER`: prepare an exact-head admin review checkout and pane.
 - `ace-overseer stop --work WORK`: stop the assigned process without destroying Work state.
 - `ace-overseer prune WORK... --runtime lab --dry-run`: preview exact Work destruction commands; rerun with `--yes` to delegate each destruction to Lab.
@@ -107,8 +107,7 @@ ace-overseer prepare --runtime lab --project nervus \
   --source nervus-thread:67611c0b-f44c-4ac4-ae4e-55773b175617 \
   --work W321 --planner admin-agy --title "Reviewed task title"
 ace-overseer work-on --runtime lab --work W321 --agent builder-codex
-printf '%s\n' 'Continue with the reviewed acceptance criteria.' |
-  ace-overseer prompt --work W321
+ace-overseer prompt --work W321 --file .ace-local/prompts/W321.md
 ace-overseer status --runtime lab --project nervus --format json
 ```
 
