@@ -22,10 +22,13 @@ The workflow executes all of these contracts:
 
 1. `.ace-bin/ci_package_inventory.rb` validates that the suite contains every
    registered test package exactly once.
-2. `ace-test-suite --no-color` runs the complete deterministic package suite.
+2. `ace-test-suite --no-color --target all` explicitly runs every package's
+   complete deterministic target instead of relying on the runner's default.
 3. `ace-test-e2e ace-monorepo-e2e --dry-run` validates monorepo E2E discovery
    without invoking an agent provider.
 4. `ace-test ace-handbook all` keeps the explicit handbook projection gate.
+   The E2E discovery and handbook projection checks use `if: always()` so a
+   package-suite failure does not hide their independent results.
 5. `Test Summary` reports the combined result under the protected context
    `Test Suite / Test Summary (pull_request)`.
 
@@ -55,10 +58,10 @@ job network.
 
 ```bash
 # Complete deterministic suite (recommended)
-ace-test-suite
+ace-test-suite --target all
 
 # Pipe-friendly output matching CI
-ace-test-suite --no-color --parallel 3
+ace-test-suite --no-color --parallel 3 --target all
 
 # One package
 ace-test ace-support-core all
@@ -82,7 +85,7 @@ priority. Then run:
 
 ```bash
 ruby .ace-bin/ci_package_inventory.rb
-ace-test-suite --no-color
+ace-test-suite --no-color --target all
 ```
 
 Do not add a package-specific Actions job. Failure localization belongs to the

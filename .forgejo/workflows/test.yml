@@ -61,7 +61,10 @@ jobs:
           chmod 0755 /usr/local/bin/gitleaks
 
       - name: Validate package inventory
-        run: ruby .ace-bin/ci_package_inventory.rb | tee forgejo-package-inventory.json
+        run: |
+          set -euo pipefail
+          ruby .ace-bin/ci_package_inventory.rb > forgejo-package-inventory.json
+          cat forgejo-package-inventory.json
 
       - name: Resolve dependency identity and trust scope
         id: dependencies
@@ -144,10 +147,11 @@ jobs:
           # timeouts without reducing useful wall time.
           /usr/bin/time -f 'wall=%e user=%U system=%S max_rss_kb=%M' \
             -o .ace-local/ci/suite-time.txt \
-            bundle exec ace-test-suite --no-color --parallel 3 2>&1 \
+            bundle exec ace-test-suite --no-color --parallel 3 --target all 2>&1 \
               | tee .ace-local/ci/suite.log
 
       - name: Verify monorepo E2E discovery
+        if: always()
         env:
           BUNDLE_FROZEN: "true"
           BUNDLE_GEMFILE: ${{ github.workspace }}/Gemfile
@@ -156,6 +160,7 @@ jobs:
         run: bundle exec ace-test-e2e ace-monorepo-e2e --dry-run
 
       - name: Verify handbook projection contract
+        if: always()
         env:
           BUNDLE_FROZEN: "true"
           BUNDLE_GEMFILE: ${{ github.workspace }}/Gemfile
