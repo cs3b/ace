@@ -42,7 +42,10 @@ jobs:
         run: |
           set -euo pipefail
           apt-get update -qq
-          apt-get install -y -qq curl fd-find git-filter-repo procps ripgrep time tmux
+          # Forgejo executes JavaScript actions inside the job container. Keep
+          # Node available before actions/cache runs; the upstream ruby image
+          # intentionally does not ship it.
+          apt-get install -y -qq curl fd-find git-filter-repo nodejs procps ripgrep time tmux
           if command -v fdfind >/dev/null 2>&1; then
             ln -sf "$(command -v fdfind)" /usr/local/bin/fd
           fi
