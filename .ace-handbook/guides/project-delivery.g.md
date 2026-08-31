@@ -18,12 +18,14 @@ it.
 
 ## Sources and planning
 
-- The canonical implementation task is an reviewed `ace-task` specification in
+- The canonical implementation task is a reviewed `ace-task` specification in
   this repository. GitHub issues, Forgejo PRs, and a Lab high-level plan may
   point to it, but do not replace its acceptance contract.
-- Inspect tasks with `ace-task show REF --tree`. Work a reviewed task with the
-  applicable `/as-task-work` skill. Draft or still-reviewable work returns to
-  planning before implementation.
+- Inspect tasks with `ace-task show REF --tree`. The canonical implementation
+  procedure is [`wfi://task/work`](wfi://task/work), loaded with
+  `ace-bundle wfi://task/work`; harness-specific skills are projections of that
+  workflow, not a separate project contract. Draft or still-reviewable work
+  returns to planning before implementation.
 - A project-level goal may become several ordered or independent Works. The
   Overseer records dependencies, integration points, accepted Deliveries, and
   whether a later Release is required. Each Work retains its own detailed ACE
@@ -38,36 +40,42 @@ it.
 - Trust the exact repository `mise.toml`, activate it with `mise`, and use the
   locked root bundle. Do not install a private bundle per package.
 - Run ACE commands directly. Use `ace-test PACKAGE all` for a package and
-  `ace-test-suite --no-color` for the complete deterministic suite. Do not use
-  raw package Rake or Ruby test commands.
+  `ace-test-suite --no-color --target all` for the complete deterministic
+  suite. Do not use raw package Rake or Ruby test commands.
 - Validate the inventory with `.ace-bin/ci_package_inventory.rb`, exercise the
   monorepo E2E discovery with `ace-test-e2e ace-monorepo-e2e --dry-run`, and run
-  the handbook projection check when handbook sources or generated guidance
-  can change.
+  the explicit handbook projection gate with `ace-test ace-handbook all` when
+  handbook sources or generated guidance can change.
 - A builder always works in its assigned branch and worktree. Provider homes,
   credentials, prompts, and logs are not shared even when compatible compiled
   gems are reused by one Unix trust role.
 
 ## Work and agent development
 
-1. Snapshot the reviewed task and exact base SHA.
-2. Preflight the selected agent, toolchain, provider authentication, full
-   harness profile, project guide, and remote capability without minting a
-   credential.
-3. Dispatch one immutable Attempt with the reviewed brief. Retries create new
-   Attempts; they do not rewrite the accepted Work result.
-4. Implement only the assigned scope. Run focused tests while developing and
-   the task's required acceptance commands before delivery.
-5. Commit through `ace-git-commit`, push the Work branch with its Work-scoped
-   builder credential, and open a Forgejo PR. A builder cannot merge, change
-   repository policy, publish, deploy, synchronize GitHub main, or close the
-   upstream task.
+Work execution follows [`wfi://task/work`](wfi://task/work). Coordinated
+single-delivery execution may use
+[`wfi://handbook/perform-delivery`](wfi://handbook/perform-delivery), while the
+project-level release decision in this guide remains authoritative.
+
+- Every Work is bound to a reviewed task snapshot and exact base SHA. Agent,
+  toolchain, provider, guide, and remote capability preflight happens before a
+  credential is minted.
+- An Attempt is immutable execution evidence. A retry creates another Attempt;
+  it does not rewrite an accepted Work result.
+- Builders remain within the assigned scope, branch, worktree, and credential
+  boundary. Focused development checks do not replace the task's acceptance
+  contract.
+- Commits, branch publication, and PR creation are builder outcomes. Merge,
+  repository policy, publication, deployment, GitHub synchronization, and
+  upstream closure belong to their named roles and decisions.
 
 ## Review, verification, and integration
 
 - Review uses a clean, exact PR-head checkout and an independent reviewer.
   Findings, commands, artifact digests, trust boundary, and verdict are stored
-  as exact-SHA evidence.
+  as exact-SHA evidence. The feedback lifecycle belongs to
+  [`wfi://review/run`](wfi://review/run); the remote PR adapter is
+  [`wfi://review/pr`](wfi://review/pr) where that Forge transport is supported.
 - Forgejo CI must validate the complete registered package inventory and keep
   the protected summary context `Test Suite / Test Summary (pull_request)`.
   Package-level results remain visible even when one shared suite environment
@@ -140,4 +148,3 @@ network, and repository boundary. It never upgrades this table.
   a reviewed version according to RubyGems policy.
 - Reconciliation is dry-run first, evidence-bound, atomic, and idempotent. It
   never performs release, deploy, sync, or closure as a side effect.
-
