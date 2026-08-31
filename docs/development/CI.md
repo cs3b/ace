@@ -44,7 +44,8 @@ Cache publication is trust-scoped:
 
 - `main` publishes and consumes the protected `main` key;
 - a pull request may restore a compatible `main` result but saves only under
-  its own untrusted PR scope;
+  its numeric, repository-local PR scope, so equal branch names from different
+  forks cannot share an untrusted cache;
 - `main` never restores a PR cache.
 
 Cancelled or failed jobs do not publish their post-job cache. Dependency
@@ -53,7 +54,9 @@ and reports are copied into the explicit non-hidden `forgejo-evidence/` staging
 directory and retained as non-secret run evidence for seven days.
 Forgejo artifacts use the service-compatible `upload-artifact@v3` protocol;
 the runner must resolve its configured canonical HTTPS origin from inside the
-job network.
+job network. Evidence staging and upload are best-effort diagnostics and cannot
+change the protected test result. The post-suite handbook check writes to its
+own report directory so it cannot replace the package-suite evidence.
 
 ## Local development
 

@@ -73,6 +73,8 @@ jobs:
           EVENT_REF: ${{ github.ref }}
           HEAD_REF: ${{ github.head_ref }}
           ACTOR: ${{ github.actor }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          RUN_ID: ${{ github.run_id }}
         run: |
           set -euo pipefail
           ruby_identity="$(ruby -rrbconfig -e \
@@ -84,10 +86,17 @@ jobs:
           if [[ "$EVENT_NAME" == push && "$EVENT_REF" == refs/heads/main ]]; then
             scope=main
             main_restore_key=''
+          elif [[ "$EVENT_NAME" == pull_request ]]; then
+            if ! [[ "$PR_NUMBER" =~ ^[0-9]+$ ]]; then
+              echo "ERROR: pull_request cache scope requires a numeric PR number" >&2
+              exit 1
+            fi
+            scope="pr-${PR_NUMBER}"
+            main_restore_key="ace-bundle-v3-${fingerprint}-main"
           else
-            untrusted="${HEAD_REF:-${ACTOR:-unknown}}"
+            untrusted="run-${RUN_ID:-${HEAD_REF:-${ACTOR:-unknown}}}"
             untrusted="$(printf '%s' "$untrusted" | tr -cs 'A-Za-z0-9._-' '-')"
-            scope="pr-${untrusted:0:80}"
+            scope="${untrusted:0:80}"
             main_restore_key="ace-bundle-v3-${fingerprint}-main"
           fi
           echo "fingerprint=$fingerprint" >> "$GITHUB_OUTPUT"
@@ -167,7 +176,7 @@ jobs:
           BUNDLE_PATH: vendor/bundle
           PROJECT_ROOT_PATH: ${{ github.workspace }}
           RAILS_ENV: test
-        run: bundle exec ace-test ace-handbook all
+        run: bundle exec ace-test ace-handbook all --report-dir .ace-local/verification/handbook-projection
 
       - name: Publish run summary
         if: always()
@@ -187,10 +196,11 @@ jobs:
 
       - name: Stage retained evidence
         if: always()
+        continue-on-error: true
         run: |
           set -euo pipefail
           mkdir -p forgejo-evidence
-          for source in .ace-local/ci .ace-local/test/reports .ace-local/test-e2e; do
+          for source in .ace-local/ci .ace-local/test/reports .ace-local/test-e2e .ace-local/verification; do
             if [[ -e "$source" ]]; then
               target="forgejo-evidence/${source#.ace-local/}"
               mkdir -p "$(dirname "$target")"
@@ -203,6 +213,7 @@ jobs:
 
       - name: Retain package-level reports
         if: always()
+        continue-on-error: true
         # Forgejo's artifact service supports v3 and its patched v4 action;
         # upstream GitHub upload-artifact@v4 targets a different protocol.
         uses: actions/upload-artifact@v3
