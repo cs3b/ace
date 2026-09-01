@@ -4,12 +4,15 @@ $LOAD_PATH.unshift File.expand_path("../lib", __dir__)
 
 require "minitest/autorun"
 require "ace/support/config"
+require "ace/test_support"
 
 module Ace
   module Support
     module Config
       # Base test case for ace-support-config tests
       class TestCase < Minitest::Test
+        include Ace::TestSupport::TestHelper
+
         # Clear any caches before each test
         def setup
           Ace::Support::Fs::Molecules::ProjectRootFinder.clear_cache!

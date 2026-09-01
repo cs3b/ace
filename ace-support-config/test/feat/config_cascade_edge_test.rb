@@ -555,33 +555,6 @@ module Ace
           end
         end
 
-        private
-
-        # Returns true when mode-0000 permission bits are actually enforced
-        # against the current process. Root (UID 0) and processes granted
-        # CAP_DAC_OVERRIDE (typical in containers) bypass read permission
-        # checks, so chmod-based denial tests cannot produce a denial there.
-        def permission_denial_enforced?
-          return false if Gem.win_platform?
-
-          Tempfile.create("ace_config_perm_probe") do |probe|
-            probe.write("probe")
-            probe.flush
-            begin
-              File.chmod(0o000, probe.path)
-            rescue NotImplementedError, SystemCallError
-              # Filesystem cannot represent or apply mode bits; denial is
-              # untestable here, same as when bits are ignored.
-              return false
-            end
-            begin
-              File.read(probe.path)
-              false
-            rescue SystemCallError
-              true
-            end
-          end
-        end
       end
     end
   end

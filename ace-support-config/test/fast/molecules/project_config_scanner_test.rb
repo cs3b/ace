@@ -313,7 +313,7 @@ module Ace
           end
 
           def test_scan_handles_permission_denied_on_subdirectory
-            skip "Permission tests require non-root" if Process.uid.zero?
+            skip "Permission bits not enforced for this process (root/CAP_DAC_OVERRIDE)" unless permission_denial_enforced?
 
             with_temp_config(
               ".git" => "",
