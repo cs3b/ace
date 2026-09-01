@@ -8,8 +8,17 @@ dependencies: []
 tags: [ace-support-test-helpers, ace-support-config, ace-git-worktree, testing, containers, permissions]
 bundle:
   presets: [project]
-  files: [ace-support-test-helpers/lib/ace/test_support/test_helper.rb, ace-support-test-helpers/test/fast/atoms/test_helper_test.rb, ace-support-config/test/test_helper.rb, ace-support-config/test/feat/config_cascade_edge_test.rb, ace-support-config/test/fast/molecules/project_config_scanner_test.rb, ace-git-worktree/test/fast/atoms/path_expander_test.rb]
-  commands: [bundle exec ace-test ace-support-test-helpers all, bundle exec ace-test ace-support-config all, bundle exec ace-test ace-git-worktree all]
+  files:
+    - ace-support-test-helpers/lib/ace/test_support/test_helper.rb
+    - ace-support-test-helpers/test/fast/atoms/test_helper_test.rb
+    - ace-support-config/test/test_helper.rb
+    - ace-support-config/test/feat/config_cascade_edge_test.rb
+    - ace-support-config/test/fast/molecules/project_config_scanner_test.rb
+    - ace-git-worktree/test/fast/atoms/path_expander_test.rb
+  commands:
+    - bundle exec ace-test ace-support-test-helpers all
+    - bundle exec ace-test ace-support-config all
+    - bundle exec ace-test ace-git-worktree all
 needs_review: false
 ---
 
