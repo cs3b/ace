@@ -43,6 +43,45 @@ class TestHelperTest < Minitest::Test
     end
   end
 
+  def test_permission_denial_enforced_returns_false_on_windows
+    Gem.stub(:win_platform?, true) do
+      assert_equal false, permission_denial_enforced?
+    end
+  end
+
+  def test_permission_denial_enforced_returns_false_when_chmod_is_unsupported
+    File.stub(:chmod, proc { raise NotImplementedError }) do
+      assert_equal false, permission_denial_enforced?
+    end
+  end
+
+  def test_permission_denial_enforced_returns_false_when_read_succeeds_and_restores_mode
+    chmod_modes = []
+    chmod = proc { |mode, _path| chmod_modes << mode }
+
+    File.stub(:chmod, chmod) do
+      File.stub(:read, "probe") do
+        assert_equal false, permission_denial_enforced?
+      end
+    end
+
+    assert_equal [0o000, 0o600], chmod_modes
+  end
+
+  def test_permission_denial_enforced_returns_true_when_read_is_denied_and_restores_mode
+    chmod_modes = []
+    chmod = proc { |mode, _path| chmod_modes << mode }
+    denied_read = proc { raise Errno::EACCES }
+
+    File.stub(:chmod, chmod) do
+      File.stub(:read, denied_read) do
+        assert_equal true, permission_denial_enforced?
+      end
+    end
+
+    assert_equal [0o000, 0o600], chmod_modes
+  end
+
   def test_create_config_file_creates_directories_and_file
     Dir.mktmpdir do |dir|
       Dir.chdir(dir) do

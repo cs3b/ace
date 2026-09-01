@@ -38,6 +38,35 @@ module Ace
         end
       end
 
+      # Returns true when mode-0000/DAC permission bits are enforced against
+      # the current process. Root and processes with CAP_DAC_OVERRIDE bypass
+      # these checks, so chmod-based permission tests must be skipped there.
+      def permission_denial_enforced?
+        return false if Gem.win_platform?
+
+        Tempfile.create("ace_perm_probe") do |probe|
+          probe.write("probe")
+          probe.flush
+          begin
+            File.chmod(0o000, probe.path)
+          rescue NotImplementedError, SystemCallError
+            return false
+          end
+          begin
+            File.read(probe.path)
+            false
+          rescue SystemCallError
+            true
+          ensure
+            begin
+              File.chmod(0o600, probe.path)
+            rescue StandardError
+              nil
+            end
+          end
+        end
+      end
+
       def create_config_file(path, content)
         FileUtils.mkdir_p(File.dirname(path))
         File.write(path, content)
