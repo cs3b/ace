@@ -5,6 +5,7 @@ require "fileutils"
 
 class PathExpanderTest < Minitest::Test
   include TestHelper
+  include Ace::TestSupport::TestHelper
 
   def setup
     @expander = Ace::Git::Worktree::Atoms::PathExpander
@@ -94,8 +95,7 @@ class PathExpanderTest < Minitest::Test
   end
 
   def test_writable_permission_denied
-    # Skip this test when running as root, as root can bypass permission checks
-    skip "Permission tests don't work as root" if Process.uid == 0
+    skip "Permission bits not enforced for this process (root/CAP_DAC_OVERRIDE)" unless permission_denial_enforced?
 
     # Create a directory and remove write permissions
     test_dir = File.join(@temp_dir, "readonly")
