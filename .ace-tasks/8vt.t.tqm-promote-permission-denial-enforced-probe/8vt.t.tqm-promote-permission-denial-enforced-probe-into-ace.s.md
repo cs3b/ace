@@ -1,6 +1,6 @@
 ---
 id: 8vt.t.tqm
-status: pending
+status: in-progress
 priority: medium
 created_at: "2026-08-30 19:49:35"
 estimate: 2h
@@ -8,17 +8,8 @@ dependencies: []
 tags: [ace-support-test-helpers, ace-support-config, ace-git-worktree, testing, containers, permissions]
 bundle:
   presets: [project]
-  files:
-    - ace-support-test-helpers/lib/ace/test_support/test_helper.rb
-    - ace-support-test-helpers/test/fast/atoms/test_helper_test.rb
-    - ace-support-config/test/test_helper.rb
-    - ace-support-config/test/feat/config_cascade_edge_test.rb
-    - ace-support-config/test/fast/molecules/project_config_scanner_test.rb
-    - ace-git-worktree/test/fast/atoms/path_expander_test.rb
-  commands:
-    - bundle exec ace-test ace-support-test-helpers all
-    - bundle exec ace-test ace-support-config all
-    - bundle exec ace-test ace-git-worktree all
+  files: [ace-support-test-helpers/lib/ace/test_support/test_helper.rb, ace-support-test-helpers/test/fast/atoms/test_helper_test.rb, ace-support-config/test/test_helper.rb, ace-support-config/test/feat/config_cascade_edge_test.rb, ace-support-config/test/fast/molecules/project_config_scanner_test.rb, ace-git-worktree/test/fast/atoms/path_expander_test.rb]
+  commands: [bundle exec ace-test ace-support-test-helpers all, bundle exec ace-test ace-support-config all, bundle exec ace-test ace-git-worktree all]
 needs_review: false
 ---
 
@@ -109,14 +100,14 @@ end
 
 ## Success Criteria
 
-- [ ] `Ace::TestSupport::TestHelper#permission_denial_enforced?` is implemented and unit tested in `ace-support-test-helpers`.
-- [ ] `permission_denial_enforced?` properly restores temporary file permissions to `0o600` in an `ensure` block before Tempfile disposal.
-- [ ] `ace-support-config` adopts shared `permission_denial_enforced?` and removes private duplicate.
-- [ ] `ace-support-config/test/fast/molecules/project_config_scanner_test.rb` replaces `Process.uid.zero?` with `permission_denial_enforced?`.
-- [ ] `ace-git-worktree/test/fast/atoms/path_expander_test.rb` replaces `Process.uid == 0` with `permission_denial_enforced?`.
-- [ ] All package test suites (`ace-support-test-helpers`, `ace-support-config`, `ace-git-worktree`) pass with 0 failures and 0 errors.
+- [x] `Ace::TestSupport::TestHelper#permission_denial_enforced?` is implemented and unit tested in `ace-support-test-helpers`.
+- [x] `permission_denial_enforced?` properly restores temporary file permissions to `0o600` in an `ensure` block before Tempfile disposal.
+- [x] `ace-support-config` adopts shared `permission_denial_enforced?` and removes private duplicate.
+- [x] `ace-support-config/test/fast/molecules/project_config_scanner_test.rb` replaces `Process.uid.zero?` with `permission_denial_enforced?`.
+- [x] `ace-git-worktree/test/fast/atoms/path_expander_test.rb` replaces `Process.uid == 0` with `permission_denial_enforced?`.
+- [x] All package test suites (`ace-support-test-helpers`, `ace-support-config`, `ace-git-worktree`) pass with 0 failures and 0 errors.
 - [ ] Full monorepo deterministic test suite (`bundle exec ace-test-suite --no-color --target all`) passes cleanly.
-- [ ] Zero changes to production code in `lib/` (except test support gem `ace-support-test-helpers/lib/ace/test_support/test_helper.rb`).
+- [x] Zero changes to production code in `lib/` (except test support gem `ace-support-test-helpers/lib/ace/test_support/test_helper.rb`).
 
 ## Required Package Tests
 
