@@ -1,6 +1,6 @@
 ---
 id: 8vt.t.tqm
-status: in-progress
+status: done
 priority: medium
 created_at: "2026-08-30 19:49:35"
 estimate: 2h
@@ -106,7 +106,7 @@ end
 - [x] `ace-support-config/test/fast/molecules/project_config_scanner_test.rb` replaces `Process.uid.zero?` with `permission_denial_enforced?`.
 - [x] `ace-git-worktree/test/fast/atoms/path_expander_test.rb` replaces `Process.uid == 0` with `permission_denial_enforced?`.
 - [x] All package test suites (`ace-support-test-helpers`, `ace-support-config`, `ace-git-worktree`) pass with 0 failures and 0 errors.
-- [ ] Full monorepo deterministic test suite (`bundle exec ace-test-suite --no-color --target all`) passes cleanly.
+- [x] Full monorepo deterministic test suite (`bundle exec ace-test-suite --no-color --target all`) passes cleanly.
 - [x] Zero changes to production code in `lib/` (except test support gem `ace-support-test-helpers/lib/ace/test_support/test_helper.rb`).
 
 ## Required Package Tests
