@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+
+## [0.25.5] - 2026-09-02
+
+### Technical
+- Included in the coordinated all-package patch release preparation for ACE monorepo review.
 ## [0.25.4] - 2026-08-12
 
 ### Technical

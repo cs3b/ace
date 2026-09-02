@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+
+## [0.43.9] - 2026-09-02
+
+### Technical
+- Included in the coordinated all-package patch release preparation for ACE monorepo review.
 ## [0.43.8] - 2026-08-12
 
 ### Technical

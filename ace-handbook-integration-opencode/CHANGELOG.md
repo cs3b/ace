@@ -4,6 +4,11 @@ All notable changes to ace-handbook-integration-opencode will be documented in t
 
 ## [Unreleased]
 
+
+## [0.3.10] - 2026-09-02
+
+### Technical
+- Included in the coordinated all-package patch release preparation for ACE monorepo review.
 ## [0.3.9] - 2026-08-12
 
 ### Technical

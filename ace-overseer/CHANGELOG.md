@@ -13,6 +13,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Kept tmux as the default runtime while allowing `work-on`, `status`, and dry-run `prune` to delegate through the system-owned `/usr/local/bin/lab` boundary.
 
+
+## [0.15.6] - 2026-09-02
+
+### Technical
+- Included in the coordinated all-package patch release preparation for ACE monorepo review.
 ## [0.15.5] - 2026-08-12
 
 ### Technical

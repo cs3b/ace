@@ -4,7 +4,7 @@ module Ace
   module Handbook
     module Integration
       module Claude
-        VERSION = "0.3.10"
+        VERSION = "0.3.11"
       end
     end
   end

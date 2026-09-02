@@ -10,6 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Tightened `wfi://release/rubygems-publish` baseline guidance with an OTP-burst publication contract (build all artifacts before OTP; push in ≤5 concurrent waves; defer metadata verification) for project overlays.
 
+
+## [0.31.1] - 2026-09-02
+
+### Technical
+- Included in the coordinated all-package patch release preparation for ACE monorepo review.
 ## [0.31.0] - 2026-08-12
 
 ### Added

@@ -4,7 +4,7 @@ module Ace
   module Handbook
     module Integration
       module Codex
-        VERSION = "0.3.10"
+        VERSION = "0.3.11"
       end
     end
   end

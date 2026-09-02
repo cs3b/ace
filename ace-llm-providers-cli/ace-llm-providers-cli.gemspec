@@ -40,7 +40,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   # Dependencies
-  spec.add_dependency "ace-llm", "~> 0.38"
+  spec.add_dependency "ace-llm", "~> 0.39"
 
   # Development dependencies
   spec.add_development_dependency "rake", "~> 13.0"

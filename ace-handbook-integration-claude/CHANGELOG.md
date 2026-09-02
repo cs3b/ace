@@ -4,6 +4,11 @@ All notable changes to ace-handbook-integration-claude will be documented in thi
 
 ## [Unreleased]
 
+
+## [0.3.11] - 2026-09-02
+
+### Technical
+- Included in the coordinated all-package patch release preparation for ACE monorepo review.
 ## [0.3.10] - 2026-08-12
 
 ### Technical

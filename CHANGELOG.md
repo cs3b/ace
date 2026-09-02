@@ -18,6 +18,10 @@ All notable changes to this project will be documented in this file.
 - **ace-llm-providers-cli v0.32.2**: Switched the Antigravity prompt guard to byte-size enforcement for argv safety and changed `agy` readiness to report installed-but-unverified headless authentication instead of claiming it is already authenticated.
 - **ace-llm-providers-cli v0.32.3**: Split `agy` readiness from headless-auth verification so installed, callable Antigravity CLI setups can be reported as ready without being treated as blocked on authentication.
 
+### Technical
+
+- Coordinated patch release preparation across all 42 publishable ACE gems refreshed package versions, kept package changelogs in sync, updated stale `ace-llm` dependency floors to the `0.39` line where needed, and regenerated `Gemfile.lock` for release review.
+
 ## [0.9.943] - 2026-08-13
 
 ### Added

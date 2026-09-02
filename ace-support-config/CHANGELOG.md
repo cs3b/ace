@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Skip permission-denial cascade edge tests when file permission bits are not enforced for the running process (root/`CAP_DAC_OVERRIDE` in containers), fixing false CI failures while keeping full denial coverage for unprivileged users.
 
+
+## [0.18.1] - 2026-09-02
+
+### Technical
+- Included in the coordinated all-package patch release preparation for ACE monorepo review.
 ## [0.18.0] - 2026-08-13
 ### Added
 - Manage expiring drift acknowledgements

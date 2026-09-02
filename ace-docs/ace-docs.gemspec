@@ -44,7 +44,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "ace-support-core", "~> 0.31"
   spec.add_dependency "ace-git", "~> 0.23"
   spec.add_dependency "ace-b36ts", "~> 0.14"
-  spec.add_dependency "ace-llm", "~> 0.38"
+  spec.add_dependency "ace-llm", "~> 0.39"
   spec.add_dependency "ace-support-markdown", "~> 0.3"
   spec.add_dependency "ace-support-cli", "~> 0.6"
   spec.add_dependency "yaml", "~> 0.4"

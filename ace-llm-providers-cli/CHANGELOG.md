@@ -10,6 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Hardened `SafeCapture` process group termination for container PID namespaces where background processes reparent to PID 1, ensuring reliable cleanup of descendant processes without ESRCH failures.
 
+
+## [0.32.4] - 2026-09-02
+
+### Technical
+- Included in the coordinated all-package patch release preparation for ACE monorepo review.
 ## [0.32.3] - 2026-08-29
 
 ### Fixed
