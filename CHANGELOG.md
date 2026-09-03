@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.944] - 2026-09-03
+
 ### Added
 
 - **ace-llm-providers-cli v0.32.0**: Added first-class Antigravity CLI (`agy`) provider support with headless JSON execution, resume metadata handling, provider health checks, and retained smoke coverage.
