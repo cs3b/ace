@@ -9,7 +9,7 @@ describe "PiClient" do
 
   it "initializes with default model" do
     model = @client.instance_variable_get(:@model)
-    assert_equal "zai/glm-4.7", model
+    assert_equal "zai/glm-5.3-flash", model
   end
 
   it "can be initialized with custom model" do
@@ -29,7 +29,10 @@ describe "PiClient" do
   it "can list models" do
     models = @client.list_models
     assert_kind_of Array, models
-    assert models.any? { |m| m[:id] == "zai/glm-4.7" }
+    assert models.any? { |m| m[:id] == "zai/glm-5.3" }
+    assert models.any? { |m| m[:id] == "zai/glm-5.3-flash" }
+    assert models.any? { |m| m[:id] == "zai/glm-5.3-highspeed" }
+    assert models.none? { |m| m[:id].match?(/glm-(4\.|5\.1|5-turbo)/) }
     assert models.any? { |m| m[:id] == "anthropic/claude-opus-4-6" }
     assert models.any? { |m| m[:id] == "google-gemini-cli/gemini-2.5-pro" }
   end
@@ -217,7 +220,7 @@ describe "PiClient" do
             assert_equal 10, result[:metadata][:input_tokens]
             assert_equal 5, result[:metadata][:output_tokens]
             assert_equal "pi", result[:metadata][:provider]
-            assert_equal "zai/glm-4.7", result[:metadata][:model]
+            assert_equal "zai/glm-5.3-flash", result[:metadata][:model]
           end
         end
       end

@@ -10,6 +10,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Hardened `SafeCapture` process group termination for container PID namespaces where background processes reparent to PID 1, ensuring reliable cleanup of descendant processes without ESRCH failures.
 
+## [0.33.0] - 2026-09-04
+
+### Changed
+- Registered the live Pi/Z.AI GLM 5.3 family (`zai/glm-5.3`, `zai/glm-5.3-flash`, `zai/glm-5.3-highspeed`) in the shipped provider registry and removed the obsolete GLM 4.x/5.1/5-turbo entries and `glmturbo` alias.
+- Made `zai/glm-5.3-flash` the routine Pi default: the global `pi` alias and `PiClient` default model now target the flash model, with `glm`, `glmflash`, and `glmhighspeed` model aliases for the three live targets.
+
+### Technical
+- Added focused regression coverage for registry parity between project and shipped defaults, alias and full-slash-selector resolution without truncation, unknown-model fail-closed behavior, and `--no-fallback` preserving exactly one provider/model target.
 
 ## [0.32.4] - 2026-09-02
 

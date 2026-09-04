@@ -27,7 +27,7 @@ module Ace
             "pi"
           end
 
-          DEFAULT_MODEL = "zai/glm-4.7"
+          DEFAULT_MODEL = "zai/glm-5.3-flash"
 
           def initialize(model: nil, **options)
             @model = model || DEFAULT_MODEL
@@ -67,7 +67,9 @@ module Ace
           # List available Pi models
           def list_models
             [
-              {id: "zai/glm-4.7", name: "GLM 4.7", description: "ZAI default model", context_size: 128_000},
+              {id: "zai/glm-5.3", name: "GLM 5.3", description: "ZAI flagship model", context_size: 1_000_000},
+              {id: "zai/glm-5.3-flash", name: "GLM 5.3 Flash", description: "ZAI routine default", context_size: 1_000_000},
+              {id: "zai/glm-5.3-highspeed", name: "GLM 5.3 Highspeed", description: "ZAI low-latency model", context_size: 1_000_000},
               {id: "anthropic/claude-opus-4-6", name: "Claude Opus 4.6", description: "Anthropic flagship", context_size: 200_000},
               {id: "anthropic/claude-sonnet-4-5", name: "Claude Sonnet 4.5", description: "Anthropic balanced", context_size: 200_000},
               {id: "anthropic/claude-haiku-4-5", name: "Claude Haiku 4.5", description: "Anthropic fast", context_size: 200_000},
