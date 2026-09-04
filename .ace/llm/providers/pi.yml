@@ -3,11 +3,9 @@ class: Ace::LLM::Providers::CLI::PiClient
 gem: ace-llm-providers-cli
 models:
   # ZAI (default provider)
-  - zai/glm-4.7
-  - zai/glm-4.6
-  - zai/glm-4.5
-  - zai/glm-5.1
-  - zai/glm-5-turbo 
+  - zai/glm-5.3
+  - zai/glm-5.3-flash
+  - zai/glm-5.3-highspeed
   # Anthropic
   - anthropic/claude-opus-4-6
   - anthropic/claude-opus-4-5
@@ -26,10 +24,11 @@ models:
   - openai-codex/gpt-5.1
 aliases:
   global:
-    pi: pi:zai/glm-5.1
+    pi: pi:zai/glm-5.3-flash
   model:
-    glm: zai/glm-5.1
-    glmturbo: zai/glm-5-turbo
+    glm: zai/glm-5.3
+    glmflash: zai/glm-5.3-flash
+    glmhighspeed: zai/glm-5.3-highspeed
     gpt: openai-codex/gpt-5.4
 capabilities:
   - text_generation
