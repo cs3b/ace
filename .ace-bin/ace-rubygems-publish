@@ -1,0 +1,392 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Publishes pending ace-* gems to RubyGems.org in dependency order.
+#
+# Built after a failed live burst (2026-09) where GEM_HOST_API_KEY resolved empty
+# from mise.toml's {{env.GEM_HOST_API_KEY}} indirection and the collected OTP was
+# burned on rejected pushes. This script validates credentials BEFORE any OTP is
+# consumed, precomputes the dependency-ordered queue, builds every artifact, and
+# only then starts the ≤5-concurrent push burst. Failed runs are resumable:
+# rerun with a fresh OTP and already-published versions are skipped.
+
+require "open3"
+require "pathname"
+require "rubygems"
+require "net/http"
+require "set"
+require "shellwords"
+
+ROOT = Pathname.new(__FILE__).dirname.parent.realpath
+RUBYGEMS_HOST = "https://rubygems.org"
+MAX_CONCURRENCY = 5
+PROBE_GEM = "ace-support-core"
+
+def usage
+  <<~USAGE
+    NAME
+      ace-rubygems-publish - publish pending ace-* gems to RubyGems.org in dependency order
+
+    SYNOPSIS
+      .ace-bin/ace-rubygems-publish [OPTIONS] [gem-name...]
+      .ace-bin/ace-rubygems-publish --dry-run [gem-name...]
+
+    ARGUMENTS
+      [gem-name...]  Restrict the queue to these gems. Their pending ace-* runtime
+                     dependencies are included automatically so the dependency
+                     order stays publishable.
+
+    OPTIONS
+      --dry-run      Print the publish queue (order, waves, versions, artifacts)
+                     without building, pushing, or consuming an OTP.
+      --help, -h     Show this help.
+
+    CREDENTIALS
+      GEM_HOST_API_KEY must be set and non-empty in this shell (it is validated
+      against RubyGems before anything is pushed), or ~/.gem/credentials must exist.
+      GEM_HOST_OTP_CODE must contain a 6-8 character one-time password in live mode.
+      Both variables are inherited by RubyGems and are never copied into command
+      arguments or output. Note: a mise.toml entry like
+      GEM_HOST_API_KEY = { value = "{{env.GEM_HOST_API_KEY}}" }
+      resolves EMPTY unless the calling shell already exports the key.
+
+    SAFETY
+      - All builds finish before the first push; any build failure aborts before
+        the OTP is consumed.
+      - Pushes run in dependency-respecting waves of up to 5 concurrent pushes.
+      - First push failure stops the burst; unpublished artifacts are kept on
+        disk. Rerun with a fresh OTP to resume (published versions are skipped).
+
+    EXAMPLES
+      .ace-bin/ace-rubygems-publish --dry-run
+      GEM_HOST_OTP_CODE=123456 .ace-bin/ace-rubygems-publish
+      GEM_HOST_OTP_CODE=123456 .ace-bin/ace-rubygems-publish ace-support-core ace-support-cli
+  USAGE
+end
+
+def abort!(message)
+  warn "✗ #{message}"
+  exit 1
+end
+
+# --- credentials -------------------------------------------------------------
+
+def resolve_api_key
+  key = ENV["GEM_HOST_API_KEY"]
+  return key.strip if key && !key.strip.empty?
+
+  credentials = Pathname.new(Dir.home).join(".gem", "credentials")
+  return :credentials_file if credentials.exist? && credentials.read.match?(/^(:|\s*api_key)/)
+
+  hints = []
+  mise_toml = ROOT.join("mise.toml")
+  if mise_toml.exist? && mise_toml.read.include?("GEM_HOST_API_KEY")
+    hints << "mise.toml maps GEM_HOST_API_KEY from {{env.GEM_HOST_API_KEY}}, which resolves " \
+             "empty unless the calling shell exports it (e.g. via your shell profile or `mise set`)."
+  end
+  hints << "Or create ~/.gem/credentials with a :rubygems_api_key entry."
+
+  abort! <<~MSG.rstrip
+    GEM_HOST_API_KEY is empty or unset and no ~/.gem/credentials found.
+
+    Export a valid RubyGems API key before publishing:
+      export GEM_HOST_API_KEY=<your-api-key>
+
+    #{hints.join("\n")}
+  MSG
+end
+
+def probe_api_key!(key)
+  # /api/v1/gems/:name.json is public (always 200), but ownership requires the API
+  # key — and pushing requires ownership, so a non-200 here means the key cannot
+  # publish either. This is the last checkpoint before the OTP gets consumed.
+  uri = URI("#{RUBYGEMS_HOST}/api/v1/owner/gems/#{PROBE_GEM}.json")
+  response = Net::HTTP.start(uri.host, uri.port, use_ssl: true, open_timeout: 10, read_timeout: 10) do |http|
+    request = Net::HTTP::Get.new(uri)
+    request["Authorization"] = key
+    http.request(request)
+  end
+  code = response.code.to_i
+  return if code == 200
+
+  abort! <<~MSG.rstrip
+    RubyGems rejected the API key (HTTP #{code}) for the ownership probe of #{PROBE_GEM}.
+    Two possible causes:
+      1. The key is invalid/expired/typo — it could not publish anything. Fix GEM_HOST_API_KEY.
+      2. The key is push-scoped (no owner scope) — it CAN push, the probe is just stricter.
+    If (2) applies to you, rerun with --skip-probe (fresh OTP — the previous one has expired).
+    Self-check: curl -s -o /dev/null -w "%{http_code}\n" -H "Authorization: $GEM_HOST_API_KEY" \
+      #{RUBYGEMS_HOST}/api/v1/owner/gems/#{PROBE_GEM}.json   # 200 = key passes the probe
+    No OTP was consumed, nothing was pushed.
+  MSG
+rescue StandardError => e
+  abort!("Could not reach #{RUBYGEMS_HOST} to verify the API key: #{e.class}: #{e.message}")
+end
+
+def validate_otp!
+  otp = ENV["GEM_HOST_OTP_CODE"]
+  abort!("GEM_HOST_OTP_CODE is missing or invalid; expected 6-8 alphanumeric characters") unless otp&.match?(/\A[[:alnum:]]{6,8}\z/)
+end
+
+# --- discovery ---------------------------------------------------------------
+
+def load_local_specs
+  specs = {}
+  Dir.glob(ROOT.join("ace-*/*.gemspec")).sort.each do |gemspec_path|
+    spec = Gem::Specification.load(gemspec_path)
+    abort!("Failed to load gemspec: #{gemspec_path}") unless spec
+    specs[spec.name] = { spec: spec, dir: File.dirname(gemspec_path), gemspec: File.basename(gemspec_path) }
+  end
+  abort!("No ace-*/**.gemspec found under #{ROOT}") if specs.empty?
+  specs
+end
+
+def internal_runtime_deps(specs)
+  specs.transform_values do |entry|
+    entry[:spec].dependencies
+                .select { |dep| dep.type == :runtime && dep.name.start_with?("ace-") && dep.name != entry[:spec].name && specs.key?(dep.name) }
+                .map(&:name)
+                .sort
+  end
+end
+
+# Kahn levels: every gem's dependencies live in strictly earlier levels, so any
+# chunking of a level keeps the publish order dependency-safe.
+def dependency_levels(graph)
+  indegree = graph.transform_values(&:size)
+  dependents = Hash.new { |hash, key| hash[key] = [] }
+  graph.each { |name, deps| deps.each { |dep| dependents[dep] << name } }
+
+  levels = []
+  frontier = graph.keys.select { |name| indegree[name].zero? }.sort
+  until frontier.empty?
+    levels << frontier.sort
+    next_frontier = []
+    frontier.each do |name|
+      dependents[name].each do |dependent|
+        indegree[dependent] -= 1
+        next_frontier << dependent if indegree[dependent].zero?
+      end
+    end
+    frontier = next_frontier
+  end
+
+  unresolved = graph.keys - levels.flatten
+  abort!("Circular dependency detected among: #{unresolved.sort.join(', ')}") unless unresolved.empty?
+  levels
+end
+
+def fetch_remote_versions
+  stdout, status = Open3.capture2("gem", "search", "ace-", "--remote", "--versions")
+  abort!("Failed to query RubyGems for published versions (gem search exited #{status.exitstatus})") unless status.success?
+
+  versions = {}
+  stdout.each_line do |line|
+    next unless line =~ /^(ace-[^ ]+) \(([^)]+)\)$/
+
+    highest = Regexp.last_match(2)
+                 .split(/,\s*/)
+                 .reject(&:empty?)
+                 .max_by { |version| Gem::Version.new(version) }
+    versions[Regexp.last_match(1)] = highest if highest
+  end
+  versions
+end
+
+# --- queue -------------------------------------------------------------------
+
+def build_queue(specs, levels, remote_versions, gems_filter)
+  pending = {}
+  skipped_published = []
+
+  levels.flatten.each do |name|
+    entry = specs.fetch(name)
+    local_version = entry[:spec].version.to_s
+    remote_version = remote_versions[name]
+
+    if remote_version && Gem::Version.new(local_version) <= Gem::Version.new(remote_version)
+      skipped_published << name unless gems_filter.any? && !gems_filter.include?(name)
+      next
+    end
+    pending[name] = local_version
+  end
+
+  if gems_filter.any?
+    unknown = gems_filter - specs.keys
+    abort!("Unknown gem(s): #{unknown.join(', ')} — no gemspec found") unless unknown.empty?
+
+    # Auto-include pending dependencies so the restricted queue stays publishable.
+    expanded = Set.new(gems_filter)
+    levels.flatten.each do |name|
+      next unless expanded.include?(name) && pending.key?(name)
+
+      internal_runtime_deps(specs).fetch(name, []).each do |dep|
+        next unless pending.key?(dep)
+
+        expanded << dep
+        puts "note: including pending dependency #{dep} #{pending[dep]} (required by #{name})"
+      end
+    end
+    pending = pending.slice(*expanded.to_a)
+  end
+
+  queue = []
+  levels.each_with_index do |level, level_index|
+    level.each do |name|
+      next unless pending.key?(name)
+
+      entry = specs.fetch(name)
+      queue << {
+        name: name,
+        version: pending[name],
+        wave: level_index + 1,
+        artifact: File.join(entry[:dir], "#{name}-#{pending[name]}.gem"),
+      }
+    end
+  end
+  [queue, skipped_published]
+end
+
+def print_queue(queue, total_waves, dry_run)
+  puts
+  puts(dry_run ? "[DRY RUN] Would publish #{queue.size} gem(s) in #{total_waves} wave(s):" :
+                 "Publish queue: #{queue.size} gem(s), #{total_waves} wave(s) of ≤#{MAX_CONCURRENCY} concurrent pushes")
+  queue.each_with_index do |item, index|
+    puts format("  %2d. wave %-2d %-36s %-10s %s",
+                index + 1, item[:wave], item[:name], item[:version],
+                item[:artifact].sub("#{ROOT}/", ""))
+  end
+  puts
+end
+
+# --- build -------------------------------------------------------------------
+
+def build_artifacts!(specs, queue)
+  reused = 0
+  queue.each do |item|
+    entry = specs.fetch(item[:name])
+    if File.exist?(item[:artifact])
+      reused += 1
+      next
+    end
+    output, status = Open3.capture2e("gem", "build", entry[:gemspec], chdir: entry[:dir])
+    artifact_ok = File.exist?(item[:artifact])
+    next if status.success? && artifact_ok
+
+    warn output.lines.last(5).join
+    abort!("Build failed for #{item[:name]} #{item[:version]} — aborted before any push, OTP not consumed.")
+  end
+  puts "✓ #{queue.size} artifact(s) ready: #{queue.size - reused} newly built, #{reused} reused from disk (no rebuild)"
+end
+
+# --- publish -----------------------------------------------------------------
+
+def push_one(item)
+  output, _status = Open3.capture2e("gem", "push", File.basename(item[:artifact]),
+                                    chdir: File.dirname(item[:artifact]))
+  if output.include?("Successfully registered gem")
+    :published
+  elsif output.match?(/already been published|already exists/i)
+    :already_published
+  elsif output.match?(/otp/i) && output.match?(/invalid|expired|incorrect|missing/i)
+    :otp_rejected
+  else
+    :failed
+  end
+end
+
+def publish!(queue)
+  started = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+  results = Hash.new { |hash, key| hash[key] = [] }
+
+  queue.group_by { |item| item[:wave] }.sort.each do |_wave, items|
+    items.each_slice(MAX_CONCURRENCY) do |chunk|
+      outcomes = chunk.map { |item| Thread.new { [item, push_one(item)] } }.map(&:value)
+      failed = false
+
+      outcomes.each do |item, outcome|
+        case outcome
+        when :published
+          File.delete(item[:artifact]) if File.exist?(item[:artifact])
+          results[:published] << item
+          puts "✓ Published #{item[:name]} #{item[:version]}"
+        when :already_published
+          File.delete(item[:artifact]) if File.exist?(item[:artifact])
+          results[:already_published] << item
+          puts "⊘ Skipped #{item[:name]} #{item[:version]} (already published on RubyGems)"
+        when :otp_rejected
+          results[:otp_rejected] << item
+          puts "✗ #{item[:name]} #{item[:version]} — OTP rejected or expired"
+          failed = true
+        else
+          results[:failed] << item
+          puts "✗ Failed #{item[:name]} #{item[:version]} — RubyGems push failed"
+          failed = true
+        end
+      end
+
+      if failed
+        remaining = queue.select { |item| File.exist?(item[:artifact]) }
+        puts
+        puts "Stopped after failure. Remaining unpublished artifacts kept on disk:"
+        remaining.each { |item| puts "  #{item[:artifact].sub("#{ROOT}/", '')}" }
+        if results[:otp_rejected].any?
+          puts "Set a FRESH GEM_HOST_OTP_CODE and rerun to resume."
+        end
+        exit 1
+      end
+    end
+  end
+
+  elapsed = (Process.clock_gettime(Process::CLOCK_MONOTONIC) - started).round(1)
+  puts
+  puts "Done in #{elapsed}s"
+  results
+end
+
+# --- main --------------------------------------------------------------------
+
+if ARGV.empty? || ARGV.include?("--help") || ARGV.include?("-h")
+  puts usage
+  exit ARGV.empty? ? 2 : 0
+end
+
+dry_run = ARGV.delete("--dry-run")
+abort!("Unknown option: #{ARGV.grep(/\A--/).join(', ')}\n\n#{usage}") if ARGV.any?(/\A--/)
+
+gems_filter = ARGV
+
+# Credentials first: fail fast before any slow work or OTP consumption.
+unless dry_run
+  validate_otp!
+  api_key = resolve_api_key
+  probe_api_key!(api_key) if api_key.is_a?(String)
+end
+
+puts "Resolving publish queue..."
+specs = load_local_specs
+levels = dependency_levels(internal_runtime_deps(specs))
+remote_versions = fetch_remote_versions
+queue, skipped_published = build_queue(specs, levels, remote_versions, gems_filter)
+
+skipped_published.each do |name|
+  puts "⊘ #{name} #{specs.fetch(name)[:spec].version} already published on RubyGems"
+end
+
+if queue.empty?
+  puts "Nothing to publish — all requested gems are up to date on RubyGems."
+  exit 0
+end
+
+total_waves = queue.map { |item| item[:wave] }.max
+print_queue(queue, total_waves, dry_run)
+
+exit 0 if dry_run
+
+build_artifacts!(specs, queue)
+publish!(queue)
+
+puts
+published = queue.size
+puts "Published: #{published}  Waves: #{total_waves} × ≤#{MAX_CONCURRENCY} concurrent  Mode: live"
+puts "Next step: run `ace-test-e2e ace-monorepo-e2e TS-MONO-001` to verify installation propagation."
