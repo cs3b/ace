@@ -50,20 +50,38 @@ artifacts.
 
 ## OTP HITL Handoff
 
-Only after prepare succeeds, create a canonical human-attention event:
+Only after prepare succeeds, use exactly one of these paths. Do not mix them.
+
+### Secure Lab broker
+
+When the Lab deployment provides an approved secure secret broker, request one
+fresh six-digit OTP through the canonical Lab Telegram/HITL prompt. That
+six-digit OTP is the only secret allowed in an authenticated, exact Lab
+Telegram/HITL reply. The broker validates that the complete reply is exactly
+six ASCII digits, consumes it at the transport boundary, and injects it once
+as `GEM_HOST_OTP_CODE` into the resumed publisher process.
+
+The OTP reply body must not persist in ACE HITL data, evidence, logs, task
+files, reports, or later resume instructions. Long-lived API keys, personal
+access tokens (PATs), passwords, private keys, and recovery codes remain
+forbidden in chat and HITL. If the broker cannot guarantee non-persistence and
+one-time injection, this path is unavailable.
+
+### Readiness-only fallback
+
+Without a secure secret broker, create a non-secret readiness event:
 
 ```bash
 ace-hitl create "RubyGems OTP environment ready" \
   --kind approval \
-  --question "Configure a fresh GEM_HOST_OTP_CODE in the publisher process environment, then answer ready. Do not include the OTP in this answer." \
+  --question "Configure a fresh GEM_HOST_OTP_CODE out of band, then answer ready. Do not include the OTP in this answer." \
   --tags release,rubygems,security \
   --resume "/as-release-rubygems-publish"
 ```
 
-The operator's persisted HITL answer is readiness only. Never put an OTP in an
-HITL title, question, answer, task, report, command argument, shell trace, or
-chat transcript. The operator configures `GEM_HOST_OTP_CODE` through the
-approved secret environment outside the logged command surface.
+The persisted HITL answer is readiness only. The operator configures
+`GEM_HOST_OTP_CODE` out of band in the resumed publisher process environment;
+the OTP never enters Telegram, chat, or ACE HITL on this path.
 
 ## Live Publish
 

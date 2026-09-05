@@ -106,9 +106,12 @@ workflow is not the canonical ACE Forgejo path.
 - RubyGems publication is a separate `release.rubygems` admin transaction.
   Publish through
   [`wfi://release/rubygems-publish`](wfi://release/rubygems-publish), using only
-  artifacts built from the synchronized release SHA. OTP is supplied through
-  the approved out-of-band path and is never sent through Telegram, stored in
-  task history, or delegated to a builder.
+  artifacts built from the synchronized release SHA. A six-digit OTP may pass
+  through the approved secure Lab Telegram/HITL broker only when it is consumed
+  without persistence and injected once into the resumed publisher; otherwise
+  use the readiness-only, out-of-band environment path. No OTP is stored in
+  task history or delegated to a builder, and no long-lived secret enters chat
+  or HITL.
 - A coordinated multi-package publication is not onboarding-safe until
   `ace-test-e2e ace-monorepo-e2e TS-MONO-001` records its post-publish proof and
   classification (`SAFE`, `LAG_DETECTED`, or `METADATA_BROKEN`) according to

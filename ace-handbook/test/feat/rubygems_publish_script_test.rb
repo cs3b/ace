@@ -184,15 +184,25 @@ module Ace
         end
       end
 
-      def test_project_workflow_uses_non_secret_hitl_handoff
+      def test_project_workflow_documents_brokered_otp_and_readiness_only_paths
         workflow_path = File.expand_path(
           "../../../.ace-handbook/workflow-instructions/release/rubygems-publish.wf.md",
           __dir__
         )
         workflow = File.read(workflow_path)
 
-        assert_includes workflow, "ace-hitl create"
-        assert_includes workflow, "GEM_HOST_OTP_CODE"
+        assert workflow.match?(
+          /six-digit OTP is the only secret allowed in an authenticated, exact Lab\s+Telegram\/HITL reply/m
+        ), "secure broker reply contract is missing"
+        assert workflow.match?(
+          /injects it once\s+as `GEM_HOST_OTP_CODE`.*must not persist in ACE HITL data, evidence, logs, task\s+files/m
+        ), "one-time injection or non-persistence contract is missing"
+        assert workflow.match?(
+          /Long-lived API keys, personal\s+access tokens \(PATs\), passwords, private keys, and recovery codes remain\s+forbidden/m
+        ), "long-lived secret prohibition is missing"
+        assert workflow.match?(
+          /Without a secure secret broker.*readiness event:.*out of band/m
+        ), "readiness-only fallback is missing"
         refute_match(/gem push.*--otp/, workflow)
         refute workflow.include?(SECRET), "workflow contains an OTP value"
       end
