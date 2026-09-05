@@ -13,14 +13,14 @@
 require "open3"
 require "pathname"
 require "rubygems"
-require "net/http"
-require "set"
-require "shellwords"
+require "rubygems/package"
 
 ROOT = Pathname.new(__FILE__).dirname.parent.realpath
-RUBYGEMS_HOST = "https://rubygems.org"
 MAX_CONCURRENCY = 5
 PROBE_GEM = "ace-support-core"
+NON_OTP_ENV = {"GEM_HOST_OTP_CODE" => nil}.freeze
+NON_SECRET_ENV = {"GEM_HOST_API_KEY" => nil, "GEM_HOST_OTP_CODE" => nil}.freeze
+OTP_PATTERN = /\A[[:alnum:]]{6,8}\z/
 
 def usage
   <<~USAGE
@@ -29,6 +29,7 @@ def usage
 
     SYNOPSIS
       .ace-bin/ace-rubygems-publish [OPTIONS] [gem-name...]
+      .ace-bin/ace-rubygems-publish --prepare [gem-name...]
       .ace-bin/ace-rubygems-publish --dry-run [gem-name...]
 
     ARGUMENTS
@@ -39,6 +40,8 @@ def usage
     OPTIONS
       --dry-run      Print the publish queue (order, waves, versions, artifacts)
                      without building, pushing, or consuming an OTP.
+      --prepare      Validate credentials and build the full pending queue, but do
+                     not require an OTP or push. Run this before requesting an OTP.
       --help, -h     Show this help.
 
     CREDENTIALS
@@ -59,8 +62,9 @@ def usage
 
     EXAMPLES
       .ace-bin/ace-rubygems-publish --dry-run
-      GEM_HOST_OTP_CODE=123456 .ace-bin/ace-rubygems-publish
-      GEM_HOST_OTP_CODE=123456 .ace-bin/ace-rubygems-publish ace-support-core ace-support-cli
+      .ace-bin/ace-rubygems-publish --prepare
+      GEM_HOST_OTP_CODE=<otp> .ace-bin/ace-rubygems-publish
+      GEM_HOST_OTP_CODE=<otp> .ace-bin/ace-rubygems-publish ace-support-core ace-support-cli
   USAGE
 end
 
@@ -71,12 +75,15 @@ end
 
 # --- credentials -------------------------------------------------------------
 
-def resolve_api_key
-  key = ENV["GEM_HOST_API_KEY"]
-  return key.strip if key && !key.strip.empty?
+def credentials_available?
+  return true if ENV["GEM_HOST_API_KEY"]&.match?(/\S/)
 
   credentials = Pathname.new(Dir.home).join(".gem", "credentials")
-  return :credentials_file if credentials.exist? && credentials.read.match?(/^(:|\s*api_key)/)
+  credentials.file? && !credentials.empty?
+end
+
+def validate_credentials!
+  return if credentials_available?
 
   hints = []
   mise_toml = ROOT.join("mise.toml")
@@ -96,36 +103,20 @@ def resolve_api_key
   MSG
 end
 
-def probe_api_key!(key)
-  # /api/v1/gems/:name.json is public (always 200), but ownership requires the API
-  # key — and pushing requires ownership, so a non-200 here means the key cannot
-  # publish either. This is the last checkpoint before the OTP gets consumed.
-  uri = URI("#{RUBYGEMS_HOST}/api/v1/owner/gems/#{PROBE_GEM}.json")
-  response = Net::HTTP.start(uri.host, uri.port, use_ssl: true, open_timeout: 10, read_timeout: 10) do |http|
-    request = Net::HTTP::Get.new(uri)
-    request["Authorization"] = key
-    http.request(request)
-  end
-  code = response.code.to_i
-  return if code == 200
+def probe_credentials!
+  _output, status = Open3.capture2e(NON_OTP_ENV, "gem", "owner", PROBE_GEM)
+  return if status.success?
 
-  abort! <<~MSG.rstrip
-    RubyGems rejected the API key (HTTP #{code}) for the ownership probe of #{PROBE_GEM}.
-    Two possible causes:
-      1. The key is invalid/expired/typo — it could not publish anything. Fix GEM_HOST_API_KEY.
-      2. The key is push-scoped (no owner scope) — it CAN push, the probe is just stricter.
-    If (2) applies to you, rerun with --skip-probe (fresh OTP — the previous one has expired).
-    Self-check: curl -s -o /dev/null -w "%{http_code}\n" -H "Authorization: $GEM_HOST_API_KEY" \
-      #{RUBYGEMS_HOST}/api/v1/owner/gems/#{PROBE_GEM}.json   # 200 = key passes the probe
-    No OTP was consumed, nothing was pushed.
-  MSG
-rescue StandardError => e
-  abort!("Could not reach #{RUBYGEMS_HOST} to verify the API key: #{e.class}: #{e.message}")
+  abort!("RubyGems rejected the configured credentials during the ownership probe; nothing was pushed")
+rescue SystemCallError
+  abort!("Could not run RubyGems to verify configured credentials; nothing was pushed")
 end
 
 def validate_otp!
   otp = ENV["GEM_HOST_OTP_CODE"]
-  abort!("GEM_HOST_OTP_CODE is missing or invalid; expected 6-8 alphanumeric characters") unless otp&.match?(/\A[[:alnum:]]{6,8}\z/)
+  return if otp&.match?(OTP_PATTERN)
+
+  abort!("GEM_HOST_OTP_CODE is missing or invalid; expected 6-8 alphanumeric characters")
 end
 
 # --- discovery ---------------------------------------------------------------
@@ -135,7 +126,9 @@ def load_local_specs
   Dir.glob(ROOT.join("ace-*/*.gemspec")).sort.each do |gemspec_path|
     spec = Gem::Specification.load(gemspec_path)
     abort!("Failed to load gemspec: #{gemspec_path}") unless spec
-    specs[spec.name] = { spec: spec, dir: File.dirname(gemspec_path), gemspec: File.basename(gemspec_path) }
+    abort!("Duplicate local gem name: #{spec.name}") if specs.key?(spec.name)
+
+    specs[spec.name] = {spec: spec, dir: File.dirname(gemspec_path), gemspec: File.basename(gemspec_path)}
   end
   abort!("No ace-*/**.gemspec found under #{ROOT}") if specs.empty?
   specs
@@ -144,9 +137,14 @@ end
 def internal_runtime_deps(specs)
   specs.transform_values do |entry|
     entry[:spec].dependencies
-                .select { |dep| dep.type == :runtime && dep.name.start_with?("ace-") && dep.name != entry[:spec].name && specs.key?(dep.name) }
-                .map(&:name)
-                .sort
+      .select do |dependency|
+        dependency.type == :runtime &&
+          dependency.name.start_with?("ace-") &&
+          dependency.name != entry[:spec].name &&
+          specs.key?(dependency.name)
+      end
+      .map(&:name)
+      .sort
   end
 end
 
@@ -172,32 +170,56 @@ def dependency_levels(graph)
   end
 
   unresolved = graph.keys - levels.flatten
-  abort!("Circular dependency detected among: #{unresolved.sort.join(', ')}") unless unresolved.empty?
+  abort!("Circular dependency detected among: #{unresolved.sort.join(", ")}") unless unresolved.empty?
   levels
 end
 
 def fetch_remote_versions
-  stdout, status = Open3.capture2("gem", "search", "ace-", "--remote", "--versions")
+  stdout, status = Open3.capture2(NON_SECRET_ENV, "gem", "search", "ace-", "--remote", "--versions")
   abort!("Failed to query RubyGems for published versions (gem search exited #{status.exitstatus})") unless status.success?
 
   versions = {}
   stdout.each_line do |line|
     next unless line =~ /^(ace-[^ ]+) \(([^)]+)\)$/
 
+    name = Regexp.last_match(1)
     highest = Regexp.last_match(2)
-                 .split(/,\s*/)
-                 .reject(&:empty?)
-                 .max_by { |version| Gem::Version.new(version) }
-    versions[Regexp.last_match(1)] = highest if highest
+      .split(/,\s*/)
+      .reject(&:empty?)
+      .max_by { |version| Gem::Version.new(version) }
+    versions[name] = highest if highest
   end
   versions
 end
 
 # --- queue -------------------------------------------------------------------
 
-def build_queue(specs, levels, remote_versions, gems_filter)
+def selected_gems(specs, graph, gems_filter, pending)
+  return specs.keys if gems_filter.empty?
+
+  unknown = gems_filter - specs.keys
+  abort!("Unknown gem(s): #{unknown.join(", ")} — no gemspec found") unless unknown.empty?
+
+  selected = gems_filter.dup
+  visit = lambda do |name|
+    return unless pending.key?(name)
+
+    graph.fetch(name).each do |dependency|
+      next unless pending.key?(dependency)
+
+      unless selected.include?(dependency)
+        selected << dependency
+        puts "note: including pending dependency #{dependency} #{pending[dependency]} (required by #{name})"
+      end
+      visit.call(dependency)
+    end
+  end
+  gems_filter.sort.each { |name| visit.call(name) }
+  selected
+end
+
+def build_queue(specs, graph, levels, remote_versions, gems_filter)
   pending = {}
-  skipped_published = []
 
   levels.flatten.each do |name|
     entry = specs.fetch(name)
@@ -205,76 +227,81 @@ def build_queue(specs, levels, remote_versions, gems_filter)
     remote_version = remote_versions[name]
 
     if remote_version && Gem::Version.new(local_version) <= Gem::Version.new(remote_version)
-      skipped_published << name unless gems_filter.any? && !gems_filter.include?(name)
       next
     end
     pending[name] = local_version
   end
 
-  if gems_filter.any?
-    unknown = gems_filter - specs.keys
-    abort!("Unknown gem(s): #{unknown.join(', ')} — no gemspec found") unless unknown.empty?
-
-    # Auto-include pending dependencies so the restricted queue stays publishable.
-    expanded = Set.new(gems_filter)
-    levels.flatten.each do |name|
-      next unless expanded.include?(name) && pending.key?(name)
-
-      internal_runtime_deps(specs).fetch(name, []).each do |dep|
-        next unless pending.key?(dep)
-
-        expanded << dep
-        puts "note: including pending dependency #{dep} #{pending[dep]} (required by #{name})"
-      end
-    end
-    pending = pending.slice(*expanded.to_a)
-  end
+  selected = selected_gems(specs, graph, gems_filter, pending)
+  skipped_published = selected.reject { |name| pending.key?(name) }.sort
 
   queue = []
-  levels.each_with_index do |level, level_index|
-    level.each do |name|
-      next unless pending.key?(name)
-
-      entry = specs.fetch(name)
-      queue << {
-        name: name,
-        version: pending[name],
-        wave: level_index + 1,
-        artifact: File.join(entry[:dir], "#{name}-#{pending[name]}.gem"),
-      }
+  wave = 0
+  levels.each do |level|
+    level.select { |name| selected.include?(name) && pending.key?(name) }
+      .sort
+      .each_slice(MAX_CONCURRENCY) do |chunk|
+      wave += 1
+      chunk.each do |name|
+        entry = specs.fetch(name)
+        queue << {
+          name: name,
+          version: pending[name],
+          wave: wave,
+          artifact: File.join(entry[:dir], "#{name}-#{pending[name]}.gem")
+        }
+      end
     end
   end
   [queue, skipped_published]
 end
 
-def print_queue(queue, total_waves, dry_run)
+def print_queue(queue, total_waves, mode)
   puts
-  puts(dry_run ? "[DRY RUN] Would publish #{queue.size} gem(s) in #{total_waves} wave(s):" :
-                 "Publish queue: #{queue.size} gem(s), #{total_waves} wave(s) of ≤#{MAX_CONCURRENCY} concurrent pushes")
+  heading = case mode
+  when :dry_run
+    "[DRY RUN] Would publish #{queue.size} gem(s) in #{total_waves} wave(s):"
+  when :prepare
+    "[PREPARE] Building #{queue.size} gem(s) for #{total_waves} publish wave(s):"
+  else
+    "Publish queue: #{queue.size} gem(s), #{total_waves} wave(s) of ≤#{MAX_CONCURRENCY} concurrent pushes"
+  end
+  puts heading
   queue.each_with_index do |item, index|
-    puts format("  %2d. wave %-2d %-36s %-10s %s",
-                index + 1, item[:wave], item[:name], item[:version],
-                item[:artifact].sub("#{ROOT}/", ""))
+    puts format(
+      "  %2d. wave %-2d %-36s %-10s %s",
+      index + 1, item[:wave], item[:name], item[:version],
+      item[:artifact].sub("#{ROOT}/", "")
+    )
   end
   puts
 end
 
 # --- build -------------------------------------------------------------------
 
+def validate_artifact!(item)
+  artifact_spec = Gem::Package.new(item[:artifact]).spec
+  return if artifact_spec.name == item[:name] && artifact_spec.version.to_s == item[:version]
+
+  abort!("Existing artifact does not match #{item[:name]} #{item[:version]}: #{item[:artifact]}")
+rescue Gem::Exception
+  abort!("Existing artifact is invalid for #{item[:name]} #{item[:version]}: #{item[:artifact]}")
+end
+
 def build_artifacts!(specs, queue)
   reused = 0
   queue.each do |item|
     entry = specs.fetch(item[:name])
     if File.exist?(item[:artifact])
+      validate_artifact!(item)
       reused += 1
       next
     end
-    output, status = Open3.capture2e("gem", "build", entry[:gemspec], chdir: entry[:dir])
+    _output, status = Open3.capture2e(NON_SECRET_ENV, "gem", "build", entry[:gemspec], chdir: entry[:dir])
     artifact_ok = File.exist?(item[:artifact])
-    next if status.success? && artifact_ok
+    abort!("Build failed for #{item[:name]} #{item[:version]} — aborted before any push, OTP not consumed.") unless status.success? && artifact_ok
 
-    warn output.lines.last(5).join
-    abort!("Build failed for #{item[:name]} #{item[:version]} — aborted before any push, OTP not consumed.")
+    validate_artifact!(item)
   end
   puts "✓ #{queue.size} artifact(s) ready: #{queue.size - reused} newly built, #{reused} reused from disk (no rebuild)"
 end
@@ -282,9 +309,11 @@ end
 # --- publish -----------------------------------------------------------------
 
 def push_one(item)
-  output, _status = Open3.capture2e("gem", "push", File.basename(item[:artifact]),
-                                    chdir: File.dirname(item[:artifact]))
-  if output.include?("Successfully registered gem")
+  output, status = Open3.capture2e(
+    "gem", "push", File.basename(item[:artifact]),
+    chdir: File.dirname(item[:artifact])
+  )
+  if status.success? && output.include?("Successfully registered gem")
     :published
   elsif output.match?(/already been published|already exists/i)
     :already_published
@@ -329,7 +358,7 @@ def publish!(queue)
         remaining = queue.select { |item| File.exist?(item[:artifact]) }
         puts
         puts "Stopped after failure. Remaining unpublished artifacts kept on disk:"
-        remaining.each { |item| puts "  #{item[:artifact].sub("#{ROOT}/", '')}" }
+        remaining.each { |item| puts "  #{item[:artifact].sub("#{ROOT}/", "")}" }
         if results[:otp_rejected].any?
           puts "Set a FRESH GEM_HOST_OTP_CODE and rerun to resume."
         end
@@ -346,28 +375,31 @@ end
 
 # --- main --------------------------------------------------------------------
 
-if ARGV.empty? || ARGV.include?("--help") || ARGV.include?("-h")
+if ARGV.include?("--help") || ARGV.include?("-h")
   puts usage
-  exit ARGV.empty? ? 2 : 0
+  exit 0
 end
 
 dry_run = ARGV.delete("--dry-run")
-abort!("Unknown option: #{ARGV.grep(/\A--/).join(', ')}\n\n#{usage}") if ARGV.any?(/\A--/)
+prepare = ARGV.delete("--prepare")
+abort!("Choose either --dry-run or --prepare, not both") if dry_run && prepare
+abort!("Unknown option: #{ARGV.grep(/\A--/).join(", ")}\n\n#{usage}") if ARGV.any?(/\A--/)
+abort!("OTP values are forbidden in command arguments; use GEM_HOST_OTP_CODE") if ARGV.any? { |arg| arg.match?(OTP_PATTERN) }
 
 gems_filter = ARGV
 
 # Credentials first: fail fast before any slow work or OTP consumption.
 unless dry_run
-  validate_otp!
-  api_key = resolve_api_key
-  probe_api_key!(api_key) if api_key.is_a?(String)
+  validate_credentials!
+  probe_credentials!
 end
 
 puts "Resolving publish queue..."
 specs = load_local_specs
-levels = dependency_levels(internal_runtime_deps(specs))
+graph = internal_runtime_deps(specs)
+levels = dependency_levels(graph)
 remote_versions = fetch_remote_versions
-queue, skipped_published = build_queue(specs, levels, remote_versions, gems_filter)
+queue, skipped_published = build_queue(specs, graph, levels, remote_versions, gems_filter)
 
 skipped_published.each do |name|
   puts "⊘ #{name} #{specs.fetch(name)[:spec].version} already published on RubyGems"
@@ -379,11 +411,24 @@ if queue.empty?
 end
 
 total_waves = queue.map { |item| item[:wave] }.max
-print_queue(queue, total_waves, dry_run)
+mode = if dry_run
+  :dry_run
+elsif prepare
+  :prepare
+else
+  :live
+end
+print_queue(queue, total_waves, mode)
 
 exit 0 if dry_run
 
 build_artifacts!(specs, queue)
+if prepare
+  puts "Prepared all artifacts. Set GEM_HOST_OTP_CODE through the approved secret environment and rerun without --prepare."
+  exit 0
+end
+
+validate_otp!
 publish!(queue)
 
 puts
