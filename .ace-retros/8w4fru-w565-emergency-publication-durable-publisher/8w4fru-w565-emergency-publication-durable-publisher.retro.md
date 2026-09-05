@@ -39,4 +39,4 @@ status: active
 
 - [x] Point the ACE release workflow at the publisher and document a non-secret HITL readiness handoff.
 
-- [ ] Record exact test, commit, tree, and Forgejo PR evidence in task `8w4.t.frh`.
+- [x] Record exact test, commit, tree, and Forgejo PR evidence in task `8w4.t.frh` and PR #19.
