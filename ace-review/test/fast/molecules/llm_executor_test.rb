@@ -89,7 +89,8 @@ class LlmExecutorTest < AceReviewTest
       @executor.send(:warn_if_prompt_large, large_prompt, "", "codex:gpt:high@ro")
     end
 
-    assert_match(/codex:gpt:high@ro -> codex:gpt-5\.4/, warning_output)
+    assert_match(/codex:gpt:high@ro -> codex:gpt-5\.6-terra/, warning_output)
+    assert_match(/context limit \(200,000 tokens\)/, warning_output)
   end
 
   def test_execute_forwards_timeout_to_query_interface

@@ -168,6 +168,15 @@ class AdaptiveStrategyTest < AceReviewTest
 
     result = @strategy.prepare(subject, context)
 
+    assert_equal :chunked, result[0][:metadata][:strategy]
+  end
+
+  def test_prepare_preserves_explicit_legacy_model_limit
+    subject = "a" * 1_800_000 # ~450k tokens
+    context = {model: "codex:gpt-5.4:high@ro"}
+
+    result = @strategy.prepare(subject, context)
+
     assert_equal :full, result[0][:metadata][:strategy]
   end
 

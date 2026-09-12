@@ -9,18 +9,22 @@ class ContextLimitResolverTest < AceReviewTest
     @resolver = Ace::Review::Atoms::ContextLimitResolver
   end
 
-  def test_resolve_uses_concrete_model_override_for_provider_alias
-    assert_equal 1_050_000, @resolver.resolve("codex:gpt:high@ro")
+  def test_resolve_uses_fallback_for_alias_without_published_native_limits
+    assert_equal 200_000, @resolver.resolve("codex:gpt:high@ro")
+  end
+
+  def test_resolve_preserves_explicit_legacy_model_limits
+    assert_equal 1_050_000, @resolver.resolve("codex:gpt-5.4:high@ro")
   end
 
   def test_resolve_details_expands_role_before_lookup
     result = @resolver.resolve_details("role:review-codex")
 
     assert_equal "codex", result.provider
-    assert_equal "gpt-5.4", result.model
-    assert_equal 1_050_000, result.context_limit
-    assert_equal 128_000, result.output_limit
-    assert_equal :model_override, result.source
+    assert_equal "gpt-5.6-terra", result.model
+    assert_equal 200_000, result.context_limit
+    assert_nil result.output_limit
+    assert_equal :fallback, result.source
   end
 
   def test_resolve_returns_provider_default_when_model_uses_default_pair
