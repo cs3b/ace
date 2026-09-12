@@ -1,24 +1,17 @@
 ---
 id: 8wb.t.og5
 title: Register Codex gpt-6-astra and gpt-5.6 family in provider registry
-status: draft
+status: pending
 priority: critical
 created_at: "2026-09-12 16:17:56"
 estimate: TBD
 dependencies: []
 tags: [llm, registry, codex]
 bundle:
-  presets: ["project"]
-  files:
-    - ace-llm-providers-cli/.ace-defaults/llm/providers/codex.yml
-    - .ace/llm/providers/codex.yml
-    - ace-llm-providers-cli/test/fast/molecules/pi_registry_test.rb
-    - ace-support-models/lib/ace/support/models/organisms/provider_sync_orchestrator.rb
-    - ace-support-models/lib/ace/support/models/molecules/provider_sync_diff.rb
-  commands:
-    - ace-test ace-llm-providers-cli all
-    - ace-test ace-llm all
-    - ace-test ace-support-models all
+  presets: [project]
+  files: [ace-llm-providers-cli/.ace-defaults/llm/providers/codex.yml, .ace/llm/providers/codex.yml, ace-llm-providers-cli/test/fast/molecules/pi_registry_test.rb, ace-support-models/lib/ace/support/models/organisms/provider_sync_orchestrator.rb, ace-support-models/lib/ace/support/models/molecules/provider_sync_diff.rb]
+  commands: [ace-test ace-llm-providers-cli all, ace-test ace-llm all, ace-test ace-support-models all]
+needs_review: false
 ---
 
 # Register Codex gpt-6-astra and gpt-5.6 family in provider registry
