@@ -28,15 +28,15 @@ module Ace
           assert_equal :provider_default, result.source
         end
 
-        def test_resolve_uses_model_override_for_explicit_alias
-          result = @resolver.resolve("codex:gpt:high@ro")
+        def test_resolve_preserves_legacy_explicit_model_limits
+          result = @resolver.resolve("codex:gpt-5.4:high@ro")
 
           assert_equal "codex", result.provider
           assert_equal "gpt-5.4", result.model
           assert_equal 1_050_000, result.context_limit
           assert_equal 128_000, result.output_limit
           assert_equal :model_override, result.source
-          assert_equal "codex:gpt:high@ro", result.original_target
+          assert_equal "codex:gpt-5.4:high@ro", result.original_target
         end
 
         def test_resolve_expands_role_before_limit_lookup

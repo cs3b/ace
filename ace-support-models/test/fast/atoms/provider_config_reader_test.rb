@@ -246,6 +246,34 @@ class ProviderConfigReaderTest < AceModelsTestCase
     assert_nil result
   end
 
+  def test_fresh_install_discovers_cli_package_without_project_or_user_config
+    @reader.stub(:project_config_dir, nil) do
+      @reader.stub(:user_config_dir, nil) do
+        config = @reader.read_all.fetch("codex")
+        assert_equal "gpt-5.6-terra", config.fetch("models").first
+        assert_includes config.fetch("_source_file"), "ace-llm-providers-cli/.ace-defaults"
+        assert_nil @reader.writable_config_directory
+      end
+    end
+  end
+
+  def test_project_over_user_over_bundled_and_separate_catalog
+    with_temp_config_dir do |project|
+      with_temp_config_dir do |user|
+        write_config(project, "codex.yml", {"models" => ["project-pin"]})
+        write_config(user, "codex.yml", {"models" => ["user-pin"]})
+        @reader.stub(:project_config_dir, project) do
+          @reader.stub(:user_config_dir, user) do
+            assert_equal ["project-pin"], @reader.read_all.fetch("codex")["models"]
+            File.delete(File.join(project, "codex.yml"))
+            assert_equal ["user-pin"], @reader.read_all.fetch("codex")["models"]
+            assert_equal "gpt-5.6-terra", @reader.bundled_config("codex")["models"].first
+          end
+        end
+      end
+    end
+  end
+
   private
 
   def with_temp_config_dir

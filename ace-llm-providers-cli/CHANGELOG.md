@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Register Codex Astra, Sol, Terra and Luna with Terra as the generic default and Luna as mini; retain all existing explicit IDs and omit unverified new-model limits.
+- Derive Codex client defaults and model listings from provider configuration instead of a separate hardcoded catalog.
+
+### Technical
+
+- Isolate subprocess cleanup test fixtures from login-shell startup while retaining timeout and descendant-termination assertions.
+
 ### Fixed
 - Hardened `SafeCapture` process group termination for container PID namespaces where background processes reparent to PID 1, ensuring reliable cleanup of descendant processes without ESRCH failures.
 

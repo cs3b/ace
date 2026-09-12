@@ -8,13 +8,13 @@ module Ace
       module CLI
         module Commands
           module Providers
-            # Sync provider YAML configs with models.dev
+            # Sync provider YAML configs with native catalogs or models.dev.
             class Sync < Ace::Support::Cli::Command
               include Ace::Support::Cli::Base
 
-              desc "Sync provider YAML configs with models.dev"
+              desc "Sync provider YAML configs with bundled catalogs and models.dev"
 
-              option :apply, type: :boolean, desc: "Apply changes to config files (default: dry-run)"
+              option :apply, type: :boolean, desc: "Apply eligible changes; unresolved Codex offers require explicit config"
               option :commit, type: :boolean, desc: "Commit changes via ace-git-commit"
               option :provider, type: :string, aliases: ["-p"], desc: "Sync specific provider only"
               option :config_dir, type: :string, desc: "Target config directory"
@@ -45,6 +45,10 @@ module Ace
 
                 if result[:status] == :error
                   raise Ace::Support::Cli::Error.new(result[:message])
+                end
+
+                if result[:apply_errors]&.any?
+                  raise Ace::Support::Cli::Error.new(result[:apply_errors].join("; "))
                 end
 
                 if options[:json]

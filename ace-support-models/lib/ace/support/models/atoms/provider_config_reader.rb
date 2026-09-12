@@ -11,7 +11,7 @@ module Ace
         # Reads provider configuration files with cascade support:
         # - Project: .ace/llm/providers/
         # - User: ~/.ace/llm/providers/
-        # - Gem: ace-llm/.ace-defaults/llm/providers/ (single source of truth)
+        # - Gem: owning packages' .ace-defaults/llm/providers/
         class ProviderConfigReader
           class << self
             # Find all provider config directories in cascade order
@@ -32,8 +32,7 @@ module Ace
                 dirs << user_dir if user_dir && Dir.exist?(user_dir)
 
                 # Gem-level config (ace-llm/providers/)
-                gem_dir = gem_config_dir
-                dirs << gem_dir if gem_dir && Dir.exist?(gem_dir)
+                dirs.concat(bundled_config_directories)
               end
 
               dirs
@@ -43,7 +42,7 @@ module Ace
             # @param config_dir [String, nil] Override config directory
             # @return [String, nil] Writable directory or nil
             def writable_config_directory(config_dir: nil)
-              dirs = config_directories(config_dir: config_dir)
+              dirs = config_directories(config_dir: config_dir) - bundled_config_directories
               dirs.find { |dir| writable?(dir) }
             end
 
@@ -61,6 +60,25 @@ module Ace
               end
 
               configs
+            end
+
+            # Package defaults are sources, never sync destinations. Discover via
+            # gem metadata without loading provider clients or reversing dependencies.
+            def bundled_config_directories
+              Gem::Specification.latest_specs.filter_map do |spec|
+                next unless spec.name.start_with?("ace-")
+
+                path = File.join(spec.full_gem_path, ".ace-defaults", "llm", "providers")
+                path if Dir.exist?(path)
+              end.sort
+            end
+
+            def bundled_config(name)
+              bundled_config_directories.each do |dir|
+                config = read_file(File.join(dir, "#{name}.yml"))
+                return config if config
+              end
+              nil
             end
 
             # Read provider configs from a specific directory
@@ -206,25 +224,6 @@ module Ace
               File.join(home, ".ace", "llm", "providers")
             end
 
-            def gem_config_dir
-              # Find ace-llm gem's providers directory (from .ace-defaults/ - single source of truth)
-              if defined?(Ace::LLM)
-                # Try to find via gem spec
-                spec = begin
-                  Gem::Specification.find_by_name("ace-llm")
-                rescue
-                  nil
-                end
-                return File.join(spec.gem_dir, ".ace-defaults", "llm", "providers") if spec
-              end
-
-              # Fallback: look relative to this gem in mono-repo development
-              # This enables development without installing ace-llm as a gem.
-              # Production/installed gem use goes through Gem::Specification above.
-              ace_llm_path = find_ace_llm_path
-              File.join(ace_llm_path, ".ace-defaults", "llm", "providers") if ace_llm_path
-            end
-
             def find_project_root_dir
               dir = Dir.pwd
               while dir != "/"
@@ -234,16 +233,6 @@ module Ace
                 dir = File.dirname(dir)
               end
               nil
-            end
-
-            def find_ace_llm_path
-              # Look in common locations relative to this gem
-              candidates = [
-                File.expand_path("../../../../../../ace-llm", __FILE__),
-                File.expand_path("../../../../../../../ace-llm", __FILE__)
-              ]
-
-              candidates.find { |path| Dir.exist?(path) }
             end
 
             def writable?(dir)

@@ -13,7 +13,8 @@ module Ace
         THINKING_LEVELS = %w[low medium high xhigh].freeze
 
         # Result object for parsed provider:model combinations.
-        ParseResult = Struct.new(:provider, :model, :preset, :thinking_level, :valid, :error, :original_input, :role_fallbacks) do
+        ParseResult = Struct.new(:provider, :model, :preset, :thinking_level, :valid, :error,
+          :original_input, :role_fallbacks, :explicit_model) do
           def valid?
             valid
           end
@@ -109,6 +110,11 @@ module Ace
           provider_target, preset_name, preset_error = split_preset_suffix(original_input)
           return create_error_result(original_input, preset_error) if preset_error
 
+          raw_provider, raw_model = provider_target.split(":", 2)
+          raw_model, = split_thinking_suffix(raw_model) if raw_model
+          raw_selector = "#{raw_provider}:#{raw_model}"
+          explicit_model = !raw_model.to_s.empty? && @alias_resolver.resolve(raw_selector) == raw_selector
+
           provider_target = @alias_resolver.resolve(provider_target).to_s.strip
           return create_error_result(original_input, "Invalid target: provider/model portion cannot be empty") if provider_target.empty?
 
@@ -146,7 +152,8 @@ module Ace
             return create_error_result(original_input, "Invalid target: resolved model cannot be empty")
           end
 
-          ParseResult.new(resolved_provider, model, preset_name, thinking_level, true, nil, original_input)
+          ParseResult.new(resolved_provider, model, preset_name, thinking_level, true, nil,
+            original_input, nil, explicit_model)
         end
 
         def build_role_fallbacks(candidates, caller_preset, caller_thinking)

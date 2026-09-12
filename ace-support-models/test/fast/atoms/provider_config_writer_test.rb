@@ -9,6 +9,37 @@ class ProviderConfigWriterTest < AceModelsTestCase
     @writer = Ace::Support::Models::Atoms::ProviderConfigWriter
   end
 
+  def test_replace_persists_config_and_history_atomically_with_permissions
+    with_temp_config_dir do |dir|
+      path = File.join(dir, "codex.yml")
+      original = {"models" => ["local"], "note" => "keep"}
+      File.write(path, YAML.dump(original))
+      File.chmod(0o640, path)
+      desired = original.merge("sync_state" => {"accepted" => ["local"]})
+      @writer.replace(path, desired, expected: original)
+      assert_equal desired, YAML.safe_load_file(path)
+      assert_equal 0o640, File.stat(path).mode & 0o777
+      assert_equal original, YAML.safe_load_file(Dir.glob("#{path}.backup.*").fetch(0))
+      assert_empty Dir.glob(File.join(dir, ".provider-sync-*"))
+    end
+  end
+
+  def test_replace_rejects_concurrent_edit_and_failed_rename_keeps_original
+    with_temp_config_dir do |dir|
+      path = File.join(dir, "codex.yml")
+      original = {"models" => ["local"]}
+      File.write(path, YAML.dump(original))
+      assert_raises(Ace::Support::Models::ConfigError) do
+        @writer.replace(path, {}, expected: {"models" => ["stale"]})
+      end
+      File.stub(:rename, ->(*) { raise Errno::ENOSPC }) do
+        assert_raises(Errno::ENOSPC) { @writer.replace(path, {"models" => ["new"]}, expected: original) }
+      end
+      assert_equal original, YAML.safe_load_file(path)
+      assert_empty Dir.glob(File.join(dir, ".provider-sync-*"))
+    end
+  end
+
   def test_update_models_replaces_model_list
     with_temp_config_dir do |dir|
       path = File.join(dir, "provider.yml")

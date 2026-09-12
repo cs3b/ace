@@ -123,7 +123,7 @@ module Ace
                 escaped = Shellwords.escape(pid_file)
 
                 stdout, _stderr, status = SafeCapture.call(
-                  ["bash", "-lc", "sleep 5 & child=$!; echo \"$child\" > #{escaped}; echo done"],
+                  ["bash", "--noprofile", "--norc", "-c", "sleep 5 & child=$!; echo \"$child\" > #{escaped}; echo done"],
                   timeout: 5,
                   provider_name: "Test"
                 )
@@ -146,7 +146,7 @@ module Ace
 
                 error = assert_raises(Ace::LLM::ProviderError) do
                   SafeCapture.call(
-                    ["bash", "-lc", "sleep 5 & child=$!; echo \"$child\" > #{escaped}; sleep 5"],
+                    ["bash", "--noprofile", "--norc", "-c", "sleep 5 & child=$!; echo \"$child\" > #{escaped}; sleep 5"],
                     timeout: FAST_TIMEOUT,
                     provider_name: "Test"
                   )

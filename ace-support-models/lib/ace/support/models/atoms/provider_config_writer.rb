@@ -3,6 +3,7 @@
 require "yaml"
 require "fileutils"
 require "date"
+require "tempfile"
 
 module Ace
   module Support
@@ -12,6 +13,24 @@ module Ace
         # Updates only the models: section while keeping other fields intact
         class ProviderConfigWriter
           class << self
+            # Replace config and provenance together; reject edits made after preview.
+            def replace(path, config, expected:)
+              raise ConfigError, "Config changed during sync: #{path}" unless read_config(path) == expected
+
+              content = format_config(config)
+              Tempfile.create([".provider-sync-", ".yml"], File.dirname(path)) do |file|
+                file.chmod(File.stat(path).mode & 0o777)
+                file.write(content)
+                file.flush
+                file.fsync
+                raise ConfigError, "Config changed during sync: #{path}" unless read_config(path) == expected
+
+                backup(path)
+                File.rename(file.path, path)
+              end
+              true
+            end
+
             # Update the models list in a provider config file
             # @param path [String] Path to config file
             # @param models [Array<String>] New list of model IDs

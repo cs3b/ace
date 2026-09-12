@@ -90,6 +90,9 @@ module Ace
         end
 
         fallback_config = load_fallback_config(fallback, fallback_providers, parser: parser)
+        if parse_result.provider == "codex" && (model || parse_result.explicit_model)
+          fallback_config = fallback_config.merge(enabled: false)
+        end
         timeout_value = first_non_nil(timeout, execution_overrides["timeout"], Molecules::ConfigLoader.get("llm.timeout"), 120)
         resolved_timeout = normalize_timeout(timeout_value)
         parser_for_options = Molecules::ProviderModelParser.new(registry: registry)

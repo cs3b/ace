@@ -24,6 +24,22 @@ class CLIIntegrationTest < AceModelsTestCase
     FileUtils.rm_rf(@tmpdir)
   end
 
+  def test_public_codex_sync_preview_apply_and_repeat_without_api_cache
+    create_provider_config("codex", ["gpt-5.4", "native-local"])
+    path = File.join(@config_dir, "codex.yml")
+    original = File.binread(path)
+    command = Ace::Support::Models::CLI::Commands::Providers::Sync.new
+    preview = capture_io { command.call(provider: "codex", config_dir: @config_dir) }.first
+    assert_match(/offer only/, preview)
+    assert_equal original, File.binread(path)
+    capture_io { command.call(provider: "codex", config_dir: @config_dir, apply: true, all: true) }
+    assert_equal ["gpt-5.4", "native-local"], YAML.safe_load_file(path)["models"]
+    applied = File.binread(path)
+    repeated = capture_io { command.call(provider: "codex", config_dir: @config_dir, apply: true) }.first
+    assert_match(/Unresolved catalog offers/, repeated)
+    assert_equal applied, File.binread(path)
+  end
+
   # ============================================
   # Provider sync --apply E2E tests
   # ============================================
@@ -175,7 +191,9 @@ class CLIIntegrationTest < AceModelsTestCase
     )
 
     # Stub the system call to capture the commit message
-    orchestrator.define_singleton_method(:commit_changes) do |summary|
+    committed_paths = nil
+    orchestrator.define_singleton_method(:commit_changes) do |summary, paths|
+      committed_paths = paths
       commit_called = true
       commit_message = "chore(providers): Sync model lists with models.dev\n\n" \
                        "Added: #{summary[:added]} models\n" \
@@ -195,6 +213,7 @@ class CLIIntegrationTest < AceModelsTestCase
     assert result[:applied], "Changes should be applied"
     assert result[:committed], "Commit should be attempted"
     assert commit_called, "Commit command should be called"
+    assert_equal [File.join(@config_dir, "anthropic.yml")], committed_paths
     assert_match(/Sync model lists/, commit_message)
     assert_match(/Added: 1 models/, commit_message)
   end
@@ -331,7 +350,7 @@ class CLIIntegrationTest < AceModelsTestCase
 
     # For commit tests, stub the system call
     if commit
-      orchestrator.define_singleton_method(:commit_changes) { |_summary| true }
+      orchestrator.define_singleton_method(:commit_changes) { |_summary, _paths| true }
     end
 
     orchestrator.sync(

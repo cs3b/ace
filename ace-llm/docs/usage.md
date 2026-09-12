@@ -70,9 +70,11 @@ Common aliases in current defaults:
 | `gpro` | `google:pro` -> `google:gemini-2.5-pro` |
 | `gemini:flash-latest` | `gemini:gemini-3-flash-preview` |
 | `gemini:pro-latest` | `gemini:gemini-3.1-pro-preview` |
-| `codex:gpt` | `codex:gpt-5.4` |
-| `codex:mini` | `codex:gpt-5.4-mini` |
-| `codex:codex` | `codex:gpt-5.3-codex` |
+| `codex`, `codex:gpt`, `codex:codex` | `codex:gpt-5.6-terra` |
+| `codex:astra` | `codex:gpt-6-astra` |
+| `codex:sol` | `codex:gpt-5.6-sol` |
+| `codex:terra` | `codex:gpt-5.6-terra` |
+| `codex:luna`, `codex:mini` | `codex:gpt-5.6-luna` |
 | `codex:spark` | `codex:gpt-5.3-codex-spark` |
 | `agy` | `agy:gemini-3.5-flash-medium` |
 | `agy:flash` | `agy:gemini-3.5-flash-medium` |
@@ -84,6 +86,34 @@ Common aliases in current defaults:
 | `opus` | `anthropic:o` -> `anthropic:claude-opus-4-5` |
 | `haiku` | `anthropic:h` -> `anthropic:claude-haiku-4-5` |
 | `grok` | `xai:grok-4` |
+
+Codex full model IDs pass through unchanged, including IDs absent from the catalog.
+For example, `ace-llm codex:gpt-6-astra:medium "ping"` sends that exact model and
+the medium reasoning setting. An explicit Codex model (including the Ruby `model:`
+override) disables fallback substitution. A native rejection is returned as an
+error; ACE does not replace the target. `--no-fallback` also disables fallback for
+aliases and provider defaults.
+
+Fresh installations ship the aliases above. To preview offers for an existing
+configuration, run `ace-llm-providers sync --provider codex`. Missing models with
+unknown history appear as `? ... (offer only; explicit configuration required)`.
+Add the desired ID to `models` in `.ace/llm/providers/codex.yml` to adopt it;
+configure its alias there if desired. The first entry remains the provider default.
+Existing aliases, limits, native-only entries and default pins are preserved.
+
+`ace-llm-providers sync --provider codex --apply` records the observed catalog and
+selection in `sync_state` together with any eligible additions. It preserves
+unknown absences and subsequent removals. Later catalog additions can be applied
+when the recorded history proves they are new; preview alone never records that
+history. Unresolved offers remain visible on repeated sync. Codex sync reads its
+bundled native catalog and does not require models.dev or infer retirement from it.
+
+The four new entries omit unverified native numeric limits. ACE's limit resolver
+therefore reports its operational context fallback of 200,000 and no output limit;
+these are not official model limits. The existing `xhigh` preset still sends
+`model_reasoning_effort="high"`; it is an ACE compatibility setting, not native
+`xhigh` equivalence. Native model documentation is available in
+[OpenAI's model guide](https://learn.chatgpt.com/docs/models).
 
 Preset suffixes can be applied with `@` or `--preset`:
 

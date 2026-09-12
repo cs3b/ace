@@ -1,7 +1,7 @@
 ---
 id: 8wb.t.og5
 title: Register Codex gpt-6-astra and gpt-5.6 family in provider registry
-status: pending
+status: in-progress
 priority: critical
 created_at: "2026-09-12 16:17:56"
 estimate: TBD
@@ -158,16 +158,16 @@ ace-llm codex:spark "ping" --no-fallback               # alias preserved
 
 ## Success Criteria
 
-- [ ] Both codex registry copies byte-identical (digest match) and offering
+- [x] Both codex registry copies byte-identical (digest match) and offering
       `gpt-6-astra`, `gpt-5.6-sol`, `gpt-5.6-terra`, `gpt-5.6-luna` with the
       alias map above; generic `codex`/`gpt` -> Terra, `mini` -> Luna.
-- [ ] Every listed full model ID still resolves exactly; `spark` preserved;
+- [x] Every listed full model ID still resolves exactly; `spark` preserved;
       unmatched explicit IDs pass through verbatim with truthful native
       rejection and no silent substitution; `--no-fallback` keeps one exact
       target.
 - [ ] Every new-model registry datum cites a current official source in the
       PR; nothing fabricated; native vs API distinction recorded.
-- [ ] Fresh-install defaults and existing-config sync preservation both
+- [x] Fresh-install defaults and existing-config sync preservation both
       proven by tests (sync adds new models, preserves local overrides,
       leaves unrelated providers untouched; verified native-only models
       absent from models.dev retained; locally removed entries stay

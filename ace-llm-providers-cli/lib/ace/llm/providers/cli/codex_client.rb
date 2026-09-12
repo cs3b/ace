@@ -30,11 +30,9 @@ module Ace
             "codex"
           end
 
-          # Default model (can be overridden by config)
-          DEFAULT_MODEL = "gpt-5.4"
-
           def initialize(model: nil, **options)
-            @model = model || DEFAULT_MODEL
+            @model = model || Ace::LLM::Molecules::ClientRegistry.new.models_for_provider("codex").first
+            raise Ace::LLM::ConfigurationError, "No default model configured for codex" if @model.to_s.empty?
             # Skip normal BaseClient initialization that requires API key
             @options = options
             @generation_config = options[:generation_config] || {}
@@ -72,14 +70,7 @@ module Ace
 
           # List available Codex models
           def list_models
-            # Return models based on what the CLI supports
-            # Actual models come from YAML config
-            [
-              {id: "gpt-5.3-codex", name: "GPT-5.3 Codex", description: "Code-specialized Codex model", context_size: 128_000},
-              {id: "gpt-5.3-codex-spark", name: "GPT-5.3 Codex Spark", description: "Faster Codex model", context_size: 128_000},
-              {id: "gpt-5.4", name: "GPT-5.4", description: "Advanced Codex model", context_size: 128_000},
-              {id: "gpt-5.4-mini", name: "GPT-5.4 Mini", description: "Smaller, faster Codex model", context_size: 128_000}
-            ]
+            Ace::LLM::Molecules::ClientRegistry.new.models_for_provider("codex").map { |id| {id: id, name: id} }
           end
 
           def interactive_supported?

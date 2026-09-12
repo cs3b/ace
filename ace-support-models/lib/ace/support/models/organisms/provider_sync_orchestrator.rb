@@ -31,11 +31,10 @@ module Ace
           # @param since [String, Date, nil] Only show models released after this date
           # @return [Hash] Result with status and details
           def sync(config_dir: nil, provider: nil, apply: false, commit: false, show_all: false, since: nil)
-            # Ensure cache is fresh
-            ensure_cache_fresh
-
             # Read current provider configs
             current_configs = Atoms::ProviderConfigReader.read_all(config_dir: config_dir)
+            selected_names = current_configs.keys.select { |name| !provider || name == provider }
+            ensure_cache_fresh unless selected_names == ["codex"] || provider == "codex"
 
             if current_configs.empty?
               return {
@@ -75,7 +74,7 @@ module Ace
 
               # Commit if requested and apply succeeded
               if commit && result[:applied]
-                result[:committed] = commit_changes(result[:summary])
+                result[:committed] = commit_changes(result[:summary], apply_result[:paths])
               end
             end
 
@@ -87,7 +86,7 @@ module Ace
           # @return [String] Formatted output
           def format_result(result)
             lines = []
-            lines << "Syncing provider configs with models.dev..."
+            lines << "Syncing provider configs with bundled catalogs and models.dev..."
 
             # Show date filter info
             if result[:show_all]
@@ -120,6 +119,10 @@ module Ace
               lines << "  (#{summary[:providers_skipped]} providers not found in models.dev)"
             end
 
+            if summary[:providers_unresolved].to_i > 0
+              lines << "  (#{summary[:providers_unresolved]} providers have unresolved catalog offers)"
+            end
+
             # Add action hints
             lines << ""
             if result[:changes_detected]
@@ -133,6 +136,8 @@ module Ace
               else
                 lines << "Run with --apply to update config files."
               end
+            elsif result[:diff].values.any? { |diff| Array(diff[:offered]).any? }
+              lines << "Unresolved catalog offers remain; add desired models explicitly to your provider configuration."
             else
               lines << "All providers are up to date."
             end
@@ -172,10 +177,11 @@ module Ace
           def apply_changes(diff_results, current_configs)
             errors = []
             success = true
+            paths = []
 
             diff_results.each do |provider_name, diff|
               next unless diff[:status] == :ok
-              next if diff[:added].empty? && diff[:removed].empty? && !diff[:limits_changed]
+              next if diff[:added].empty? && diff[:removed].empty? && !diff[:limits_changed] && !diff[:config_changed]
 
               begin
                 config = current_configs[provider_name]
@@ -184,6 +190,20 @@ module Ace
                 unless source_file
                   errors << "#{provider_name}: No source file found"
                   success = false
+                  next
+                end
+
+                if Atoms::ProviderConfigReader.bundled_config_directories.include?(File.dirname(source_file))
+                  raise ConfigError, "Cannot write bundled provider defaults: #{source_file}"
+                end
+
+                if diff[:source] == :bundled
+                  expected = config.reject { |key, _| key.start_with?("_source_") }
+                  Atoms::ProviderConfigWriter.replace(
+                    source_file, @diff_generator.desired_configs.fetch(provider_name), expected: expected
+                  )
+                  paths << source_file
+                  output.puts "Updated: #{source_file}"
                   next
                 end
 
@@ -201,6 +221,7 @@ module Ace
                   limits: diff[:desired_limits]
                 )
                 output.puts "Updated: #{source_file}"
+                paths << source_file
               rescue ConfigError => e
                 errors << "#{provider_name}: #{e.message}"
                 success = false
@@ -210,17 +231,17 @@ module Ace
               end
             end
 
-            {success: success, errors: errors}
+            {success: success && paths.any?, errors: errors, paths: paths}
           end
 
-          def commit_changes(summary)
+          def commit_changes(summary, paths)
             message = "chore(providers): Sync model lists with models.dev\n\n" \
                       "Added: #{summary[:added]} models\n" \
                       "Removed: #{summary[:removed]} models"
 
             # Try to use ace-git-commit if available
             begin
-              system("ace-git-commit", "-m", message)
+              system("ace-git-commit", *paths, "-m", message)
               $?.success?
             rescue Errno::ENOENT
               output.puts "Warning: ace-git-commit not found. Please commit changes manually."
@@ -230,6 +251,14 @@ module Ace
 
           def format_provider_diff(provider_name, diff)
             lines = []
+            if diff[:source] == :bundled
+              lines << "#{provider_name}: (bundled catalog)"
+              diff[:added].each { |model| lines << "  + #{model} (eligible catalog addition)" }
+              diff[:offered].each { |model| lines << "  ? #{model} (offer only; explicit configuration required)" }
+              diff[:preserved_removals].each { |model| lines << "  = #{model} (local removal preserved)" }
+              lines << "  ~ record observed catalog and selection" if diff[:config_changed]
+              return lines.join("\n")
+            end
 
             # Show models_dev_id mapping if different from provider name
             lines << if diff[:models_dev_id]

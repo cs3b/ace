@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "date"
+require_relative "../atoms/provider_catalog_reconciler"
 
 module Ace
   module Support
@@ -15,12 +16,13 @@ module Ace
           UNCHANGED = :unchanged
           DEPRECATED = :deprecated
 
-          attr_reader :cache_manager
+          attr_reader :cache_manager, :desired_configs
 
           # Initialize diff generator
           # @param cache_manager [CacheManager, nil] Cache manager for models.dev data
           def initialize(cache_manager: nil)
             @cache_manager = cache_manager || CacheManager.new
+            @desired_configs = {}
           end
 
           # Generate diff for all providers
@@ -30,12 +32,19 @@ module Ace
           # @param show_all [Boolean] Show all models regardless of date (ignores since_date)
           # @return [Hash] Diff results by provider
           def generate(current_configs, provider_filter: nil, since_date: nil, show_all: false)
-            models_dev_data = load_models_dev_data
+            selected = current_configs.select { |name, _| !provider_filter || name == provider_filter }
+            models_dev_data = (selected.keys.all? { |name| name == "codex" }) ? {} : load_models_dev_data
+            @desired_configs = {}
             results = {}
 
             current_configs.each do |provider_name, config|
               # Skip if filtering and this isn't the target provider
               next if provider_filter && provider_name != provider_filter
+
+              if provider_name == "codex"
+                results[provider_name] = diff_provider(config, nil, provider_name: provider_name)
+                next
+              end
 
               # Determine the models.dev ID to use (may be mapped via models_dev_id field)
               models_dev_id = Atoms::ProviderConfigReader.extract_models_dev_id(config)
@@ -73,6 +82,8 @@ module Ace
           # @param provider_name [String, nil] Provider name for canonicalization (e.g., "openrouter")
           # @return [Hash] Diff result
           def diff_provider(config, provider_data, since_date: nil, provider_name: nil)
+            return diff_bundled_codex(config) if provider_name == "codex" || config["name"] == "codex"
+
             current_models = Set.new(Atoms::ProviderConfigReader.extract_models(config))
             models_dev_models = extract_models_dev_models(provider_data)
 
@@ -162,10 +173,15 @@ module Ace
             total_limit_updates = 0
             providers_synced = 0
             providers_skipped = 0
+            providers_unresolved = 0
 
             results.each do |_provider, result|
               if result[:status] == :ok
-                providers_synced += 1
+                if Array(result[:offered]).any?
+                  providers_unresolved += 1
+                else
+                  providers_synced += 1
+                end
                 total_added += result[:added].size
                 total_removed += result[:removed].size
                 total_unchanged += result[:unchanged].size
@@ -183,6 +199,7 @@ module Ace
               deprecated: total_deprecated,
               limit_updates: total_limit_updates,
               providers_synced: providers_synced,
+              providers_unresolved: providers_unresolved,
               providers_skipped: providers_skipped
             }
           end
@@ -194,11 +211,25 @@ module Ace
             results.any? do |_provider, result|
               next false unless result[:status] == :ok
 
-              result[:added].any? || result[:removed].any? || result[:limits_changed]
+              result[:added].any? || result[:removed].any? || result[:limits_changed] || result[:config_changed]
             end
           end
 
           private
+
+          def diff_bundled_codex(config)
+            catalog = Atoms::ProviderConfigReader.bundled_config("codex")
+            raise ConfigError, "Bundled Codex catalog not found" unless catalog
+
+            reconciliation = Atoms::ProviderCatalogReconciler.reconcile(config, catalog)
+            @desired_configs["codex"] = reconciliation[:config]
+            {
+              status: :ok, source: :bundled, added: reconciliation[:added], removed: [], deprecated: [],
+              unchanged: Atoms::ProviderConfigReader.extract_models(config),
+              offered: reconciliation[:offered], preserved_removals: reconciliation[:removed],
+              config_changed: reconciliation[:changed], limits_changed: false
+            }
+          end
 
           def load_models_dev_data
             data = cache_manager.read

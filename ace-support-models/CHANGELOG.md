@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Preserve Codex local selections, removals, aliases, limits and default order during provider sync; use the bundled native catalog instead of treating models.dev absence as retirement.
+- Discover provider defaults from their owning gems and prevent sync writes into bundled defaults.
+- Persist observed Codex catalog and selection history atomically, keep unknown offers unapplied, and scope sync commits to changed provider files.
+
 
 ## [0.12.3] - 2026-09-02
 
