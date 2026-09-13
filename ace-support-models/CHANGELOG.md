@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.4] - 2026-09-13
+
 ### Fixed
 
 - Preserve Codex local selections, removals, aliases, limits and default order during provider sync; use the bundled native catalog instead of treating models.dev absence as retirement.

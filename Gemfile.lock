@@ -180,13 +180,13 @@ PATH
 PATH
   remote: ace-llm-providers-cli
   specs:
-    ace-llm-providers-cli (0.33.0)
+    ace-llm-providers-cli (0.34.0)
       ace-llm (~> 0.39)
 
 PATH
   remote: ace-llm
   specs:
-    ace-llm (0.39.1)
+    ace-llm (0.39.2)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)
       ace-support-core (~> 0.31)
@@ -237,7 +237,7 @@ PATH
 PATH
   remote: ace-review
   specs:
-    ace-review (0.54.1)
+    ace-review (0.54.2)
       ace-b36ts (~> 0.14)
       ace-bundle (~> 0.43)
       ace-git (~> 0.23)
@@ -313,7 +313,7 @@ PATH
 PATH
   remote: ace-support-models
   specs:
-    ace-support-models (0.12.3)
+    ace-support-models (0.12.4)
       ace-support-cli (~> 0.6)
       ace-support-core (~> 0.31)
       faraday (~> 2.14)

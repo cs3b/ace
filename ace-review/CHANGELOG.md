@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.54.2] - 2026-09-13
+
 ### Technical
 - Update Codex alias tests for Terra and unknown native limits, retaining explicit legacy-model limit coverage.
 

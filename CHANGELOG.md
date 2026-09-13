@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+
+- **ace-llm v0.39.2**: Preserved explicit Codex model targets and native errors without fallback substitution, including Ruby model overrides, while retaining fallback behavior for aliases, roles and other providers.
+- **ace-llm-providers-cli v0.34.0**: Hardened `SafeCapture` process group termination for container PID namespaces where background processes reparent to PID 1, ensuring reliable descendant cleanup without ESRCH failures.
+- **ace-support-models v0.12.4**: Preserved Codex local selections, removals, aliases, limits and default order during provider sync, used the bundled native catalog instead of treating models.dev absence as retirement, discovered provider defaults from their owning gems, and persisted catalog and selection history atomically.
+
+### Changed
+
+- **ace-llm-providers-cli v0.34.0**: Registered Codex Astra, Sol, Terra and Luna with Terra as the generic default and Luna as mini, retaining all existing explicit IDs, and derived Codex client defaults and model listings from provider configuration instead of a separate hardcoded catalog.
+
+### Technical
+
+- **ace-review v0.54.2**: Updated Codex alias tests for Terra and unknown native limits, retaining explicit legacy-model limit coverage.
+
 ## [0.9.944] - 2026-09-03
 
 ### Added

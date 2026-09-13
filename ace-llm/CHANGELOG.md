@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.39.2] - 2026-09-13
+
 ### Fixed
 
 - Preserve explicit Codex model targets and native errors without fallback substitution, including Ruby model overrides; retain fallback behavior for aliases, roles and other providers.

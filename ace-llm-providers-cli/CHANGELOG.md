@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.34.0] - 2026-09-13
+
 ### Changed
 
 - Register Codex Astra, Sol, Terra and Luna with Terra as the generic default and Luna as mini; retain all existing explicit IDs and omit unverified new-model limits.
