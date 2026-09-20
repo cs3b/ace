@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- `ace-nav resolve <uri> --why` prints every duplicate candidate in resolution order with its source, priority, and origin, marks the winner, and states the source-priority rule, making override precedence observable without planting probe files.
+
 
 ## [0.28.6] - 2026-09-02
 

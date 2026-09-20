@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Shipped `wfi://handbook/manage-overrides` (with paired skill `as-handbook-manage-overrides`): canonical override documentation covering all overridable surfaces (workflows, cookbooks, guides), the source-priority resolution rule, skills' non-overridability ("override the workflow the skill calls"), the `.agents/` sync-projection status, and planted-competitor verification probes.
+
 ### Changed
 - Tightened `wfi://release/rubygems-publish` baseline guidance with an OTP-burst publication contract (build all artifacts before OTP; push in ≤5 concurrent waves; defer metadata verification) for project overlays.
 

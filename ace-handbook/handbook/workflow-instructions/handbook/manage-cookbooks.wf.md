@@ -60,6 +60,7 @@ Brief description of what this cookbook accomplishes.
 
 - Package-owned cookbooks (inside `ace-handbook`): `ace-handbook/handbook/cookbooks/`
 - Project-local cookbooks (outside package scope): `.ace-handbook/cookbooks/`
+- Project-local document overrides (workflows, cookbooks, guides) and resolution precedence are governed canonically by `wfi://handbook/manage-overrides`
 
 ## Process Steps
 

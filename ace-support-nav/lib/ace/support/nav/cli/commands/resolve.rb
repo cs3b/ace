@@ -39,6 +39,9 @@ module Ace
                 # Display content
                 $ ace-nav resolve wfi://setup --content
 
+                # Explain precedence: all candidates + the rule that picked the winner
+                $ ace-nav resolve wfi://setup --why
+
                 # Wildcard patterns auto-route to list
                 $ ace-nav resolve wfi://*
 
@@ -57,6 +60,8 @@ module Ace
 
                 By default, displays resolved path
                 Use --content to display resource content
+                Use --why to print all candidates in resolution order plus the
+                rule that picked the winner (useful when duplicates exist)
                 Exit codes: 0 (success), 1 (error)
             DESC
 
@@ -71,6 +76,7 @@ module Ace
 
             option :path, type: :boolean, desc: "Display resource path"
             option :content, type: :boolean, desc: "Display resource content"
+            option :why, type: :boolean, desc: "Explain precedence: print all candidates in resolution order and the winner"
             option :tree, type: :boolean, desc: "Display resources in tree format (passed through to cmd protocols)"
             option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
             option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
@@ -103,9 +109,16 @@ module Ace
               if @uri.include?("://")
                 protocol = @uri.split("://").first
                 if @engine.cmd_protocol?(protocol)
+                  if @options[:why]
+                    raise Ace::Support::Cli::Error.new("--why is not available for cmd protocols (#{protocol} delegates to an external command; there are no local candidates)")
+                  end
                   delegator = Organisms::CommandDelegator.new
                   return delegator.delegate(@uri, @options)
                 end
+              end
+
+              if @options[:why]
+                return print_explanation(@engine.explain(@uri))
               end
 
               result = @engine.resolve(@uri, content: @options[:content], verbose: @options[:verbose])
@@ -126,6 +139,28 @@ module Ace
             end
 
             private
+
+            # Print a precedence explanation produced by NavigationEngine#explain
+            def print_explanation(explanation)
+              if explanation[:candidates].empty?
+                raise Ace::Support::Cli::Error.new("Resource not found: #{@uri}")
+              end
+
+              if @options[:verbose]
+                require "json"
+                puts JSON.pretty_generate(explanation)
+                return
+              end
+
+              puts "uri: #{explanation[:uri]}"
+              puts "rule: #{explanation[:rule]}"
+              puts "candidates (resolution order):"
+              explanation[:candidates].each do |candidate|
+                origin = candidate[:origin] || candidate[:source_type]
+                puts "  #{candidate[:position]}. [priority #{candidate[:priority]}] #{candidate[:source]} (#{origin}) → #{candidate[:path]}"
+                puts "     ← winner" if candidate[:winner]
+              end
+            end
 
             # Normalize bare protocol names (e.g., "wfi") to protocol:// format
             # This allows users to type "ace-nav wfi" instead of "ace-nav wfi://"

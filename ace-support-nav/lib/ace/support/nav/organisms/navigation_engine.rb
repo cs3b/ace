@@ -17,6 +17,15 @@ module Ace
             @path_normalizer = path_normalizer || Atoms::PathNormalizer.new
           end
 
+          # Resolution rule applied when multiple sources register the same resource.
+          # Sources are ordered by ascending priority (lower number = higher precedence)
+          # and the first source containing the resource wins.
+          RESOLUTION_RULE = "Candidates are tried in ascending source-priority order " \
+            "(lower priority number wins); the first source containing the resource is " \
+            "the winner and remaining duplicates are ignored. Registration defaults: " \
+            "project sources 10, user sources 50, gem defaults 100 - individual source " \
+            "registrations may pin other values.".freeze
+
           # Resolve a single resource URI to a path
           def resolve(uri_string, options = {})
             resource = @resource_resolver.resolve(uri_string)
@@ -29,6 +38,28 @@ module Ace
             else
               resource.path
             end
+          end
+
+          # Explain resolution precedence for a URI
+          # Returns every candidate in resolution order plus the rule that picked the winner
+          def explain(uri_string)
+            candidates = @resource_resolver.resolve_pattern(uri_string)
+
+            {
+              uri: uri_string,
+              rule: RESOLUTION_RULE,
+              candidates: candidates.each_with_index.map do |resource, index|
+                {
+                  position: index + 1,
+                  winner: index.zero?,
+                  path: resource.path,
+                  source: resource.source.alias_name,
+                  source_type: resource.source.type.to_s,
+                  priority: resource.source.priority,
+                  origin: resource.source.respond_to?(:origin) ? resource.source.origin : nil
+                }
+              end
+            }
           end
 
           # List resources matching a pattern
