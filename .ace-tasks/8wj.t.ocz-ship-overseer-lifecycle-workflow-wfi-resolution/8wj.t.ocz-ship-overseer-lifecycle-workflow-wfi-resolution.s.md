@@ -1,12 +1,12 @@
 ---
 id: 8wj.t.ocz
-status: draft
+status: pending
 priority: medium
 created_at: "2026-09-20 16:15:48"
 estimate: medium
 dependencies: []
 tags: [ace-overseer, workflow-instructions, nav, packaging]
-needs_review: true
+needs_review: false
 ---
 
 # Ship overseer lifecycle workflow so wfi://overseer resolves for gem consumers
@@ -165,3 +165,24 @@ after gem install/update.
   resolves via project-local source registration while consumers fail — the
   masking effect documented above.
 
+### Review note (2026-09-20, promotion)
+
+Reviewed fresh-eyes before promotion:
+
+- **Evidence currency**: every claim re-executed 2026-09-20 (neutral-env
+  resolve/bundle probes including `wfi://retro` vs `wfi://retro/selfimprove`;
+  `gem contents` on installed 0.15.5; git history of the payload; the
+  `discover_gem_default_sources` code path). The r59-era belief that the gem
+  ships no workflow-instructions payload was corrected by executed
+  inspection — the spec records the correction instead of propagating a
+  described-but-unverified claim.
+- **Bounded scope**: spec is implementation-free; resolution mechanics,
+  omarchy-config, publication, and cs3b/lab-overseer are explicitly out of
+  scope.
+- **Testable acceptance criteria**: all six criteria are executable probes or
+  greppable content checks; the verification plan pins the clean consumer env
+  so the monorepo's project-local registration cannot mask a failure.
+- **Executed-check contracts**: prune-safety and status-truth are explicit,
+  non-negotiable behavioral-specification items with the exact proof commands.
+
+No blocking findings.
