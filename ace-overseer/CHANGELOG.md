@@ -14,6 +14,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Kept tmux as the default runtime while allowing `work-on`, `status`, and dry-run `prune` to delegate through the system-owned `/usr/local/bin/lab` boundary.
 
 
+## [0.16.0] - 2026-09-20
+
+### Added
+- Shipped the overseer lifecycle workflow so `wfi://overseer` resolves for gem consumers: the gem now registers `.ace-defaults/nav/protocols/wfi-sources/ace-overseer.yml` (ace-hitl pattern) and ships real workflow instructions for `work-on`, `status`, and `prune` in `handbook/workflow-instructions/overseer.wf.md`, with prune-safety and status-truth executed-check contracts as first-class non-negotiable steps.
+- Added a packaging test proving the built gem ships both the workflow-instructions payload and the wfi source registration so a future gemspec glob change cannot silently drop them.
+
 ## [0.15.6] - 2026-09-02
 
 ### Technical
