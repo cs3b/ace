@@ -1,6 +1,6 @@
 ---
 id: 8wj.t.vle
-status: draft
+status: pending
 priority: low
 created_at: "2026-09-20 21:03:46"
 estimate: 
@@ -67,3 +67,8 @@ green.
 
 Review report of PR #24 (`/lab/state/admin/reviews/W669/…report.md`,
 findings N1/N2); task 8wg.t.tjv (done, W669).
+
+### Review note (2026-09-20, promotion)
+
+Fresh-eyes: scope is the two executed review findings verbatim; docs-only;
+verification re-cites the probe. No blocking questions.
