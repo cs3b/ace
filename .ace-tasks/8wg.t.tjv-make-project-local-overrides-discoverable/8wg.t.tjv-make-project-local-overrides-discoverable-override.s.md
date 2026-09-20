@@ -1,16 +1,17 @@
 ---
 id: 8wg.t.tjv
-status: draft
+status: pending
 priority: medium
 created_at: "2026-09-17 19:42:05"
-estimate: TBD
+estimate: medium
 dependencies: []
 tags: [handbook, nav, overrides]
+needs_review: false
 ---
 
 # Make project-local overrides discoverable: override surfaces, resolution precedence, and ace-nav ergonomics
 
-## Behavioral Specification (draft)
+## Behavioral Specification
 
 ### User Experience
 
@@ -27,13 +28,16 @@ tags: [handbook, nav, overrides]
 
 The sharpest edge: a workflow override silently WINS while a skill override silently LOSES. "Customize the skill" is the intuitive first move and it does nothing.
 
-### Expected Behavior (proposed)
+### Expected Behavior
 
 1. `ace-handbook` ships a canonical override-management surface (extend `wfi://handbook/manage-cookbooks` or add `wfi://handbook/manage-overrides`) covering ALL surfaces: workflows, cookbooks, guides, skills (not overridable — thin layers; override the called workflow), `.agents/` projection status, with the precedence table and verification commands.
 2. `ace-nav` exposes precedence: `list` duplicate entries indicate the winner (or a `--why` mode on `resolve` printing all candidates + the resolution rule).
-3. Optional: `ace-nav create wfi://ns/name --override` scaffolds the project-local copy from the current gem content with a provenance header (source gem version), so overrides start from reality and divergence is visible.
 
-### Interface Contract (draft)
+### Out of scope (follow-up candidate, not this task)
+
+- `ace-nav create wfi://ns/name --override` scaffolding with provenance header (original EB item 3). Recorded as an idea; a separate task may adopt it after the documentation surface lands.
+
+### Interface Contract
 
 ```bash
 ace-nav overrides                    # per surface: overridable? path? who wins?
@@ -41,7 +45,25 @@ ace-nav resolve --why wfi://x/y     # all candidates + the rule that picked one
 ace-bundle wfi://handbook/manage-overrides   # canonical documentation
 ```
 
+Exact surface (new handbook page vs extending manage-cookbooks; `--why` vs annotated `list`) is an implementer decision guided by gem conventions; the contract is that BOTH questions — "which surfaces can I override?" and "why did this candidate win?" — are answerable from shipped tooling without planting probe files.
+
+### Acceptance criteria
+
+- [ ] Canonical override documentation ships in `ace-handbook` and covers workflows, cookbooks, guides, skills (non-overridable, with the "override the called workflow" rule), and the `.agents/` projection status, with the precedence table and planted-competitor verification commands.
+- [ ] `ace-nav` answers precedence for duplicate candidates (winner indicated in `list` or `--why` on `resolve`), with tests covering the duplicate-candidate path.
+- [ ] Gem test suites green; documentation claims verified against actual resolution behavior (no asserted-but-unexecuted claims).
+
+### Verification plan
+
+- Planted-competitor probes per surface (the Problem section's method) against the shipped gems, executed and cited in the PR body.
+- `ace-nav` unit tests for duplicate candidates (project-local wins workflows/cookbooks/guides; skills always resolve to the gem).
+- Handbook contract/lint checks per gem conventions.
+
 ### Provenance
 
 - Downstream reference implementation: cs3b/lab-config `cookbook://override-ace-docs` (PR #26, 3 review rounds) + AGENTS.md summary; full evidence transcript available.
 - Related: task 8tt.t.stj (agents-provider projection), `ace-nav sources` directory-source registration (`.ace/nav/protocols/*-sources/project-local.yml`).
+
+### Review note (2026-09-20, promotion)
+
+Reviewed fresh-eyes: evidence is executed and reproducible; Expected Behavior items 1–2 are the bounded scope; EB item 3 (scaffolding) moved to out-of-scope; acceptance criteria and verification plan added; interface contract marked implementer-flexible on surface choice. No blocking questions.
