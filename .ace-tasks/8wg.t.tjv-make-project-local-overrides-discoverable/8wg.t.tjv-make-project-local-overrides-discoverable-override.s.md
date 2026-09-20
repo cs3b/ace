@@ -1,6 +1,6 @@
 ---
 id: 8wg.t.tjv
-status: pending
+status: done
 priority: medium
 created_at: "2026-09-17 19:42:05"
 estimate: medium
@@ -49,9 +49,9 @@ Exact surface (new handbook page vs extending manage-cookbooks; `--why` vs annot
 
 ### Acceptance criteria
 
-- [ ] Canonical override documentation ships in `ace-handbook` and covers workflows, cookbooks, guides, skills (non-overridable, with the "override the called workflow" rule), and the `.agents/` projection status, with the precedence table and planted-competitor verification commands.
-- [ ] `ace-nav` answers precedence for duplicate candidates (winner indicated in `list` or `--why` on `resolve`), with tests covering the duplicate-candidate path.
-- [ ] Gem test suites green; documentation claims verified against actual resolution behavior (no asserted-but-unexecuted claims).
+- [x] Canonical override documentation ships in `ace-handbook` and covers workflows, cookbooks, guides, skills (non-overridable, with the "override the called workflow" rule), and the `.agents/` projection status, with the precedence table and planted-competitor verification commands.
+- [x] `ace-nav` answers precedence for duplicate candidates (winner indicated in `list` or `--why` on `resolve`), with tests covering the duplicate-candidate path.
+- [x] Gem test suites green; documentation claims verified against actual resolution behavior (no asserted-but-unexecuted claims).
 
 ### Verification plan
 
@@ -67,3 +67,14 @@ Exact surface (new handbook page vs extending manage-cookbooks; `--why` vs annot
 ### Review note (2026-09-20, promotion)
 
 Reviewed fresh-eyes: evidence is executed and reproducible; Expected Behavior items 1–2 are the bounded scope; EB item 3 (scaffolding) moved to out-of-scope; acceptance criteria and verification plan added; interface contract marked implementer-flexible on surface choice. No blocking questions.
+
+### Delivery (2026-09-20)
+
+Work W669 (golden path): PR #24 cs3b/ace, head 0ff9dd7290282152d36f08207b5b233ebb6874ec,
+FF-merged (main tip == reviewed head). Independent adversarial review
+(lab-admin, pi-deep): APPROVE, zero blocking findings, all probes re-executed
+(report /lab/state/admin/reviews/W669/pr-24-1789908595283598530.report.md).
+Suites: ace-support-nav 151/0, ace-handbook 49/0, monorepo 8915/0.
+Notable correction over the draft spec: with shipped defaults the GEM wins
+cookbook duplicates (priority 10 vs project-local 20) — documented per
+actual behavior (docs must state the priority rule, not a fixed winner).
