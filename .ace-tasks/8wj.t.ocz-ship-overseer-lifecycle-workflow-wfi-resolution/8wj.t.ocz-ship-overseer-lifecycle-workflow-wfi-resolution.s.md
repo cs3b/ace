@@ -1,5 +1,6 @@
 ---
 id: 8wj.t.ocz
+title: Ship overseer lifecycle workflow so wfi://overseer resolves for gem consumers
 status: pending
 priority: medium
 created_at: "2026-09-20 16:15:48"
