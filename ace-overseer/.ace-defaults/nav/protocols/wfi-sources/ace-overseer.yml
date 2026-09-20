@@ -1,0 +1,13 @@
+---
+# WFI Sources Protocol Configuration for ace-overseer gem
+# This enables workflow discovery from the installed ace-overseer gem
+
+name: ace-overseer
+type: gem
+description: Overseer workflow instructions from ace-overseer gem
+priority: 10
+
+config:
+  relative_path: handbook/workflow-instructions
+  pattern: "*.wf.md"
+  enabled: true
