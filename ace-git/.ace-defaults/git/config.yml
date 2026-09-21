@@ -10,7 +10,22 @@ git:
 
   # Timeout settings (in seconds)
   timeout: 30          # Local git operations (diff, status, log)
-  network_timeout: 60  # Network operations (gh CLI, remote operations)
+  network_timeout: 60  # Network operations (provider CLIs, remote operations)
+
+  # Forge server registry (provider-neutral)
+  # Configure each forge server once with a unique name; mark at most one as
+  # default. Resolve by explicit name, by default, or by matching a git remote
+  # URL. The `provider` value selects the registered provider package that owns
+  # that server's behavior.
+  servers: []
+  # servers:
+  #   - name: forgejo-lab
+  #     provider: forgejo
+  #     url: https://forgejo.example.com/owner/repo
+  #     default: true
+  #   - name: github-public
+  #     provider: github
+  #     url: https://github.example.com/owner/repo
 
   # Status command settings
   status:

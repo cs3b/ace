@@ -2,6 +2,7 @@
 
 require "ace/support/config"
 require_relative "git/version"
+require_relative "git/errors"
 
 module Ace
   module Git
@@ -12,14 +13,9 @@ module Ace
     # - Organisms: Orchestrate molecules, propagate or wrap exceptions
     # - Commands: Catch exceptions and return exit codes (0=success, 1=error)
     #
-    # All custom exceptions inherit from Ace::Git::Error for consistent catching.
-    class Error < StandardError; end
-    class GitError < Error; end
-    class ConfigError < Error; end
-    class GhNotInstalledError < Error; end
-    class GhAuthenticationError < Error; end
-    class PrNotFoundError < Error; end
-    class TimeoutError < Error; end
+    # All custom exceptions inherit from Ace::Git::Error for consistent catching;
+    # they are defined in git/errors.rb (local git failures plus the forge server
+    # resolution and provider interaction taxonomy).
 
     # Mutex for thread-safe config initialization
     @config_mutex = Mutex.new
@@ -124,7 +120,7 @@ module Ace
       normalized = normalize_keys(git_section)
 
       # Copy top-level settings
-      %w[default_branch remote verbose timeout network_timeout].each do |key|
+      %w[default_branch remote verbose timeout network_timeout servers].each do |key|
         config[key] = normalized[key] if normalized.key?(key)
       end
 
@@ -170,7 +166,7 @@ module Ace
       config["timeout"] || 30
     end
 
-    # Timeout for network operations (gh CLI, remote operations)
+    # Timeout for network operations (provider CLIs, remote operations)
     # @return [Integer] Timeout in seconds (default: 60)
     def self.network_timeout
       config["network_timeout"] || 60
@@ -198,6 +194,8 @@ end
 
 # Require ATOM architecture components
 require_relative "git/atoms/command_executor"
+require_relative "git/atoms/server_url"
+require_relative "git/atoms/pr_identifier"
 require_relative "git/atoms/pattern_filter"
 require_relative "git/atoms/diff_parser"
 require_relative "git/atoms/diff_numstat_parser"
@@ -226,6 +224,12 @@ require_relative "git/molecules/github_issue_sync"
 
 require_relative "git/organisms/diff_orchestrator"
 require_relative "git/organisms/repo_status_loader"
+
+require_relative "git/resolved_server"
+require_relative "git/server_registry"
+require_relative "git/providers/base"
+require_relative "git/providers/evidence"
+require_relative "git/providers"
 
 require_relative "git/models/diff_result"
 require_relative "git/models/diff_config"
