@@ -13,7 +13,7 @@ module Ace
         class << self
           # Load configuration using ace-config cascade with deep merge
           # Priority: instance_config merged over global config (which is already defaults + user)
-          # @param instance_config [Hash] Instance-level configuration (highest priority)
+          # @param instance_config [Hash] Instance-level configuration (top priority)
           # @return [Models::DiffConfig] Merged configuration
           def load(instance_config = {})
             # Get global config from ace-git (already merged defaults + user per ADR-022)

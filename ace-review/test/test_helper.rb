@@ -181,10 +181,10 @@ class AceReviewTest < Minitest::Test
   # @param number [String, Integer] PR number
   # @param repo [String, nil] Repository in "owner/repo" format (nil for local-only PRs)
   # @param gh_format [String, nil] gh CLI format (defaults to repo#number or just number)
-  # @return [Ace::Git::Atoms::PrIdentifierParser::ParseResult]
+  # @return [Ace::Git::Github::PrIdentifier::ParseResult]
   def mock_parse_result(number:, repo: nil, gh_format: nil)
     gh_format ||= repo ? "#{repo}##{number}" : number.to_s
-    Ace::Git::Atoms::PrIdentifierParser::ParseResult.new(
+    Ace::Git::Github::PrIdentifier::ParseResult.new(
       number: number.to_s,
       repo: repo,
       gh_format: gh_format

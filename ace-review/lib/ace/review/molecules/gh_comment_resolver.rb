@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "ace/git/github"
 require "json"
 
 module Ace
@@ -23,7 +24,7 @@ module Ace
           end
 
           # Parse identifier using ace-git
-          parsed = Ace::Git::Atoms::PrIdentifierParser.parse(pr_identifier)
+          parsed = Ace::Git::Github::PrIdentifier.parse(pr_identifier)
           gh_format = parsed.gh_format
 
           # Build message
@@ -34,7 +35,7 @@ module Ace
           timeout = options[:timeout] || 30
 
           # Post comment using gh CLI
-          result = Ace::Git::Molecules::GhCliExecutor.execute(
+          result = Ace::Git::Github::CliExecutor.execute(
             "pr",
             ["comment", gh_format, "--body", body],
             timeout: timeout
@@ -55,7 +56,7 @@ module Ace
             }
           end
         rescue Ace::Review::Errors::GhCliNotInstalledError, Ace::Review::Errors::GhAuthenticationError,
-          Ace::Git::GhNotInstalledError, Ace::Git::GhAuthenticationError
+          Ace::Git::ProviderCliMissingError, Ace::Git::ProviderAuthenticationError
           raise
         rescue => e
           {
@@ -92,7 +93,7 @@ module Ace
           mutation = build_resolve_thread_mutation(thread_id)
 
           # Execute via gh api graphql
-          result = Ace::Git::Molecules::GhCliExecutor.execute(
+          result = Ace::Git::Github::CliExecutor.execute(
             "api",
             ["graphql", "-f", "query=#{mutation}"],
             timeout: timeout
@@ -120,7 +121,7 @@ module Ace
             }
           end
         rescue Ace::Review::Errors::GhCliNotInstalledError, Ace::Review::Errors::GhAuthenticationError,
-          Ace::Git::GhNotInstalledError, Ace::Git::GhAuthenticationError
+          Ace::Git::ProviderCliMissingError, Ace::Git::ProviderAuthenticationError
           raise
         rescue => e
           {

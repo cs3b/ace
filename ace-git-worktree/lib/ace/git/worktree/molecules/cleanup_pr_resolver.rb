@@ -2,7 +2,8 @@
 
 require "json"
 require "open3"
-require "ace/git/molecules/pr_metadata_fetcher"
+require "ace/git/github"
+require "ace/git/github/pr_fetcher"
 
 module Ace
   module Git
@@ -16,8 +17,8 @@ module Ace
             @offline = offline
             
             # Cache gh availability to avoid repeated checks
-            @gh_available = Ace::Git::Molecules::PrMetadataFetcher.gh_installed? && 
-                            Ace::Git::Molecules::PrMetadataFetcher.gh_authenticated?
+            @gh_available = Ace::Git::Github::PrFetcher.installed? &&
+                            Ace::Git::Github::PrFetcher.authenticated?
           end
 
           # Classify a candidate branch with GitHub PR evidence.
@@ -84,7 +85,7 @@ module Ace
                 retention_reason: "patch_mismatch"
               }
             end
-          rescue Ace::Git::GhNotInstalledError, Ace::Git::GhAuthenticationError, Ace::Git::TimeoutError
+          rescue Ace::Git::ProviderCliMissingError, Ace::Git::ProviderAuthenticationError, Ace::Git::TimeoutError
             # Provider failure degradation
             offline_result("unavailable")
           end

@@ -66,7 +66,7 @@ module Ace
           end
 
           valid_ids.each do |valid_id|
-            Ace::Git::Molecules::GhCliExecutor.stub :execute, mock_executor do
+            Ace::Git::Github::CliExecutor.stub :execute, mock_executor do
               result = GhCommentResolver.resolve_thread(valid_id)
               # Should proceed past validation (may fail for other reasons in tests)
               refute_match(/Invalid thread ID format/, result[:error].to_s)
@@ -80,7 +80,7 @@ module Ace
             stdout: '{"data":{"resolveReviewThread":{"thread":{"isResolved":true}}}}'
           }
 
-          Ace::Git::Molecules::GhCliExecutor.stub :execute, mock_response do
+          Ace::Git::Github::CliExecutor.stub :execute, mock_response do
             result = GhCommentResolver.resolve_thread("PRRT_kwDOPzGJW85lJfEC")
 
             assert result[:success]
@@ -94,7 +94,7 @@ module Ace
             stdout: '{"errors":[{"message":"Could not resolve thread"}]}'
           }
 
-          Ace::Git::Molecules::GhCliExecutor.stub :execute, mock_response do
+          Ace::Git::Github::CliExecutor.stub :execute, mock_response do
             result = GhCommentResolver.resolve_thread("PRRT_abc123")
 
             refute result[:success]
@@ -108,7 +108,7 @@ module Ace
             stderr: "gh: Not logged in"
           }
 
-          Ace::Git::Molecules::GhCliExecutor.stub :execute, mock_response do
+          Ace::Git::Github::CliExecutor.stub :execute, mock_response do
             result = GhCommentResolver.resolve_thread("PRRT_abc123")
 
             refute result[:success]
@@ -122,7 +122,7 @@ module Ace
             stdout: "not valid json"
           }
 
-          Ace::Git::Molecules::GhCliExecutor.stub :execute, mock_response do
+          Ace::Git::Github::CliExecutor.stub :execute, mock_response do
             result = GhCommentResolver.resolve_thread("PRRT_abc123")
 
             refute result[:success]
@@ -156,12 +156,12 @@ module Ace
             }
           end
 
-          parsed = Ace::Git::Atoms::PrIdentifierParser::ParseResult.new(
+          parsed = Ace::Git::Github::PrIdentifier::ParseResult.new(
             number: "69", repo: nil, gh_format: "69"
           )
 
-          Ace::Git::Molecules::GhCliExecutor.stub :execute, mock_executor do
-            Ace::Git::Atoms::PrIdentifierParser.stub :parse, parsed do
+          Ace::Git::Github::CliExecutor.stub :execute, mock_executor do
+            Ace::Git::Github::PrIdentifier.stub :parse, parsed do
               result = GhCommentResolver.reply("69", nil, message: "Custom message without SHA")
 
               assert result[:success]
@@ -180,12 +180,12 @@ module Ace
             end
           end
 
-          parsed = Ace::Git::Atoms::PrIdentifierParser::ParseResult.new(
+          parsed = Ace::Git::Github::PrIdentifier::ParseResult.new(
             number: "69", repo: nil, gh_format: "69"
           )
 
-          Ace::Git::Molecules::GhCliExecutor.stub :execute, mock_executor do
-            Ace::Git::Atoms::PrIdentifierParser.stub :parse, parsed do
+          Ace::Git::Github::CliExecutor.stub :execute, mock_executor do
+            Ace::Git::Github::PrIdentifier.stub :parse, parsed do
               result = GhCommentResolver.reply("69", "abc1234")
 
               assert result[:success]
@@ -203,12 +203,12 @@ module Ace
             }
           end
 
-          parsed = Ace::Git::Atoms::PrIdentifierParser::ParseResult.new(
+          parsed = Ace::Git::Github::PrIdentifier::ParseResult.new(
             number: "69", repo: nil, gh_format: "69"
           )
 
-          Ace::Git::Molecules::GhCliExecutor.stub :execute, mock_executor do
-            Ace::Git::Atoms::PrIdentifierParser.stub :parse, parsed do
+          Ace::Git::Github::CliExecutor.stub :execute, mock_executor do
+            Ace::Git::Github::PrIdentifier.stub :parse, parsed do
               result = GhCommentResolver.reply("69", "abc1234", message: "Custom fix message")
 
               assert result[:success]
@@ -228,12 +228,12 @@ module Ace
             }
           end
 
-          parsed = Ace::Git::Atoms::PrIdentifierParser::ParseResult.new(
+          parsed = Ace::Git::Github::PrIdentifier::ParseResult.new(
             number: "69", repo: nil, gh_format: "69"
           )
 
-          Ace::Git::Molecules::GhCliExecutor.stub :execute, custom_executor do
-            Ace::Git::Atoms::PrIdentifierParser.stub :parse, parsed do
+          Ace::Git::Github::CliExecutor.stub :execute, custom_executor do
+            Ace::Git::Github::PrIdentifier.stub :parse, parsed do
               result = GhCommentResolver.reply("69", "abc1234567890full")
 
               assert result[:success]
@@ -250,12 +250,12 @@ module Ace
             }
           end
 
-          parsed = Ace::Git::Atoms::PrIdentifierParser::ParseResult.new(
+          parsed = Ace::Git::Github::PrIdentifier::ParseResult.new(
             number: "invalid", repo: nil, gh_format: "invalid"
           )
 
-          Ace::Git::Molecules::GhCliExecutor.stub :execute, mock_executor do
-            Ace::Git::Atoms::PrIdentifierParser.stub :parse, parsed do
+          Ace::Git::Github::CliExecutor.stub :execute, mock_executor do
+            Ace::Git::Github::PrIdentifier.stub :parse, parsed do
               result = GhCommentResolver.reply("invalid", "abc123")
 
               refute result[:success]
@@ -265,16 +265,16 @@ module Ace
         end
 
         def test_reply_reraises_ace_git_not_installed_error
-          parsed = Ace::Git::Atoms::PrIdentifierParser::ParseResult.new(
+          parsed = Ace::Git::Github::PrIdentifier::ParseResult.new(
             number: "69", repo: nil, gh_format: "69"
           )
           mock_executor = lambda do |_cmd, _args, **_opts|
-            raise Ace::Git::GhNotInstalledError, "missing gh"
+            raise Ace::Git::ProviderCliMissingError, "missing gh"
           end
 
-          Ace::Git::Molecules::GhCliExecutor.stub :execute, mock_executor do
-            Ace::Git::Atoms::PrIdentifierParser.stub :parse, parsed do
-              assert_raises(Ace::Git::GhNotInstalledError) do
+          Ace::Git::Github::CliExecutor.stub :execute, mock_executor do
+            Ace::Git::Github::PrIdentifier.stub :parse, parsed do
+              assert_raises(Ace::Git::ProviderCliMissingError) do
                 GhCommentResolver.reply("69", "abc123")
               end
             end
@@ -302,12 +302,12 @@ module Ace
             end
           end
 
-          parsed = Ace::Git::Atoms::PrIdentifierParser::ParseResult.new(
+          parsed = Ace::Git::Github::PrIdentifier::ParseResult.new(
             number: "69", repo: nil, gh_format: "69"
           )
 
-          Ace::Git::Molecules::GhCliExecutor.stub :execute, mock_executor do
-            Ace::Git::Atoms::PrIdentifierParser.stub :parse, parsed do
+          Ace::Git::Github::CliExecutor.stub :execute, mock_executor do
+            Ace::Git::Github::PrIdentifier.stub :parse, parsed do
               result = GhCommentResolver.reply_and_resolve("69", "abc123", thread_id: "PRRT_test123")
 
               assert result[:success]
@@ -326,12 +326,12 @@ module Ace
             }
           end
 
-          parsed = Ace::Git::Atoms::PrIdentifierParser::ParseResult.new(
+          parsed = Ace::Git::Github::PrIdentifier::ParseResult.new(
             number: "69", repo: nil, gh_format: "69"
           )
 
-          Ace::Git::Molecules::GhCliExecutor.stub :execute, mock_executor do
-            Ace::Git::Atoms::PrIdentifierParser.stub :parse, parsed do
+          Ace::Git::Github::CliExecutor.stub :execute, mock_executor do
+            Ace::Git::Github::PrIdentifier.stub :parse, parsed do
               result = GhCommentResolver.reply_and_resolve("69", "abc123")
 
               assert result[:success]
@@ -349,12 +349,12 @@ module Ace
             }
           end
 
-          parsed = Ace::Git::Atoms::PrIdentifierParser::ParseResult.new(
+          parsed = Ace::Git::Github::PrIdentifier::ParseResult.new(
             number: "69", repo: nil, gh_format: "69"
           )
 
-          Ace::Git::Molecules::GhCliExecutor.stub :execute, mock_executor do
-            Ace::Git::Atoms::PrIdentifierParser.stub :parse, parsed do
+          Ace::Git::Github::CliExecutor.stub :execute, mock_executor do
+            Ace::Git::Github::PrIdentifier.stub :parse, parsed do
               result = GhCommentResolver.reply_and_resolve("69", "abc123", thread_id: "PRRT_test123")
 
               refute result[:success]
@@ -381,12 +381,12 @@ module Ace
             end
           end
 
-          parsed = Ace::Git::Atoms::PrIdentifierParser::ParseResult.new(
+          parsed = Ace::Git::Github::PrIdentifier::ParseResult.new(
             number: "69", repo: nil, gh_format: "69"
           )
 
-          Ace::Git::Molecules::GhCliExecutor.stub :execute, mock_executor do
-            Ace::Git::Atoms::PrIdentifierParser.stub :parse, parsed do
+          Ace::Git::Github::CliExecutor.stub :execute, mock_executor do
+            Ace::Git::Github::PrIdentifier.stub :parse, parsed do
               result = GhCommentResolver.reply_and_resolve("69", "abc123", thread_id: "PRRT_test123")
 
               # Reply succeeded, but thread resolution failed
@@ -401,11 +401,11 @@ module Ace
 
         def test_resolve_thread_reraises_ace_git_authentication_error
           mock_executor = lambda do |_cmd, _args, **_opts|
-            raise Ace::Git::GhAuthenticationError, "auth required"
+            raise Ace::Git::ProviderAuthenticationError, "auth required"
           end
 
-          Ace::Git::Molecules::GhCliExecutor.stub :execute, mock_executor do
-            assert_raises(Ace::Git::GhAuthenticationError) do
+          Ace::Git::Github::CliExecutor.stub :execute, mock_executor do
+            assert_raises(Ace::Git::ProviderAuthenticationError) do
               GhCommentResolver.resolve_thread("PRRT_valid123")
             end
           end

@@ -46,6 +46,8 @@ module Ace
           def installed?(runner: nil)
             result = execute_simple(["--version"], runner: runner)
             result != :timeout && result[:success]
+          rescue Ace::Git::ProviderCliMissingError
+            false
           end
 
           # Probe whether `gh` is authenticated for the current host.
@@ -55,6 +57,8 @@ module Ace
           def authenticated?(runner: nil)
             result = execute_simple(["auth", "status"], runner: runner)
             result != :timeout && result[:success]
+          rescue Ace::Git::ProviderCliMissingError
+            false
           end
 
           # @raise [Ace::Git::ProviderCliMissingError] when `gh` is missing

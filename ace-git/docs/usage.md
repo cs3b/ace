@@ -23,12 +23,11 @@ gem install ace-git
 
 ## Command Overview
 
-`ace-git` ships five commands:
+`ace-git` ships four commands:
 
 - `diff` for filtered or formatted git diffs
 - `status` for repository context and PR activity
 - `branch` for current branch and tracking state
-- `pr` for PR metadata lookup
 - `version` for the installed package version
 
 `ace-git` with no arguments shows help. Git range shorthand such as `HEAD~5..HEAD` routes to `diff`.
@@ -155,43 +154,6 @@ ace-git branch --format json
 **Options:**
 - `--format, -f` - Output format: `text` (default), `json`
 
-### `ace-git pr [NUMBER]`
-
-Fetch and display PR metadata using GitHub CLI.
-
-```bash
-# Auto-detect PR from current branch
-ace-git pr
-
-# Specific PR number
-ace-git pr 123
-
-# Cross-repository PR
-ace-git pr owner/repo#456
-
-# JSON output
-ace-git pr --format json
-```
-
-**Options:**
-- `--format, -f` - Output format: `markdown` (default), `json`
-- `--with-diff` - Include PR diff in output
-
-**PR Number Formats:**
-- Simple number: `123`
-- Qualified: `owner/repo#456`
-- GitHub URL: `https://github.com/owner/repo/pull/789`
-
-**Requirements:** GitHub CLI (`gh`) must be installed and authenticated.
-
-```bash
-# Install gh
-brew install gh
-
-# Authenticate
-gh auth login
-```
-
 ### `ace-git version`
 
 Print the installed `ace-git` version.
@@ -267,11 +229,18 @@ Note: `test/**/*` and `spec/**/*` are NOT excluded by default - test changes are
 - **ace-bundle** - Load ACE workflow instructions directly
 - **ace-nav** - Discover workflow and template protocol paths
 
-## Reusable GitHub Issue Primitives
+## Provider Packages
 
-`ace-git` also exposes reusable library primitives for issue synchronization flows used by other ACE packages:
+`ace-git` is forge-neutral. It defines the server registry (`Ace::Git::ServerRegistry`),
+the provider contract (`Ace::Git::Providers::Base`), and normalized evidence types;
+provider packages own all forge CLI behavior:
 
-- `Ace::Git::Molecules::GhCliExecutor` - shared `gh` command execution with timeout and auth/install error handling
-- `Ace::Git::Molecules::GithubIssueSync.sync_task(...)` - sticky comment upsert, `ace:tracked` label management, and close/reopen lifecycle actions
+- **ace-git-github** - GitHub behavior via the `gh` CLI (PR lookups, diffs, issue
+  synchronization). Registers under the `github` provider type.
+- **ace-git-forgejo** - Forgejo behavior via the `fj` CLI. Registers under the
+  `forgejo` provider type.
 
-These are intended for package integrations such as `ace-task` and are not invoked directly through `ace-git` CLI commands.
+Configure servers in `.ace/git.yml` (or project config) under `git.servers`, then
+resolve them by name, by default, or from a git remote URL. Every failure path is
+classified (missing CLI, unauthenticated, unreachable, malformed output, object
+not found) with no silent fallbacks.

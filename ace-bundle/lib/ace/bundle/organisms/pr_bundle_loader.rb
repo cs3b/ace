@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "ace/git"
+require "ace/git/github"
 
 module Ace
   module Bundle
@@ -9,7 +10,7 @@ module Ace
       #
       # Responsible for:
       # - Normalizing PR references (string, array, hash formats)
-      # - Fetching diffs via Ace::Git::Molecules::PrMetadataFetcher
+      # - Fetching diffs via Ace::Git::Github::PrFetcher
       # - Integrating results into bundle sections
       # - Error handling and surfacing
       #
@@ -82,7 +83,7 @@ module Ace
         # @param pr_ref [String] Single PR reference
         # @return [Hash, nil] Diff result or nil on skip
         def fetch_single_diff(bundle, pr_ref)
-          result = Ace::Git::Molecules::PrMetadataFetcher.fetch_diff(pr_ref, timeout: @timeout)
+          result = Ace::Git::Github::PrFetcher.fetch_diff(pr_ref, timeout: @timeout)
 
           if result[:success]
             {
@@ -96,8 +97,8 @@ module Ace
             {range: pr_range_identifier(pr_ref), output: "Error: #{result[:error]}", success: false, error: result[:error], source: :pr}
           end
         rescue Ace::Git::Error => e
-          # Catches all ace-git errors: GitError, GhNotInstalledError, GhAuthenticationError,
-          # PrNotFoundError, TimeoutError (all inherit from Ace::Git::Error)
+          # Catches all ace-git errors: GitError, ProviderCliMissingError, ProviderAuthenticationError,
+          # ProviderObjectNotFoundError, TimeoutError (all inherit from Ace::Git::Error)
           record_error(bundle, "PR fetch failed for '#{pr_ref}': #{e.message}")
           {range: pr_range_identifier(pr_ref), output: "Error: #{e.message}", success: false, error: e.message, source: :pr}
         rescue ArgumentError => e

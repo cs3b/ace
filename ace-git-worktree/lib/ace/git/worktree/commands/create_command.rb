@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "ace/git/github"
+
 module Ace
   module Git
     module Worktree
@@ -55,9 +57,9 @@ module Ace
             puts
             show_help
             1
-          rescue Ace::Git::PrNotFoundError,
-            Ace::Git::GhAuthenticationError,
-            Ace::Git::GhNotInstalledError,
+          rescue Ace::Git::ProviderObjectNotFoundError,
+            Ace::Git::ProviderAuthenticationError,
+            Ace::Git::ProviderCliMissingError,
             Ace::Git::TimeoutError => e
             puts "Error: #{e.message}"
             1
@@ -432,15 +434,15 @@ module Ace
 
             puts "Creating worktree for PR ##{pr_number}..."
 
-            # Check gh CLI availability using ace-git's PrMetadataFetcher
-            unless Ace::Git::Molecules::PrMetadataFetcher.gh_installed?
+            # Check gh CLI availability via the GitHub provider (ace-git-github)
+            unless Ace::Git::Github::PrFetcher.installed?
               puts "Error: gh CLI is required for PR worktree creation."
               puts
               puts gh_not_available_message
               return 1
             end
 
-            unless Ace::Git::Molecules::PrMetadataFetcher.gh_authenticated?
+            unless Ace::Git::Github::PrFetcher.authenticated?
               puts "Error: gh CLI is not authenticated."
               puts
               puts "Authenticate with: gh auth login"
@@ -450,7 +452,7 @@ module Ace
             # Fetch PR data
             puts "Fetching PR information..."
             begin
-              result = Ace::Git::Molecules::PrMetadataFetcher.fetch_metadata(pr_number.to_s)
+              result = Ace::Git::Github::PrFetcher.fetch_metadata(pr_number.to_s)
 
               unless result[:success]
                 puts "Error: #{result[:error]}"
@@ -493,8 +495,8 @@ module Ace
                 display_warnings(result[:warnings]) if result[:warnings]
                 1
               end
-            rescue Ace::Git::PrNotFoundError, Ace::Git::GhAuthenticationError,
-              Ace::Git::GhNotInstalledError => e
+            rescue Ace::Git::ProviderObjectNotFoundError, Ace::Git::ProviderAuthenticationError,
+              Ace::Git::ProviderCliMissingError => e
               # Let specific ace-git errors be handled by handle_pr_fetch_error
               # Other errors will bubble up to the top-level rescue in run()
               handle_pr_fetch_error(e, pr_number)
@@ -868,7 +870,7 @@ module Ace
           # Anti-corruption layer that translates gh CLI JSON output to internal format.
           # This isolates worktree creation from gh CLI output structure changes.
           #
-          # Expected metadata schema from ace-git PrMetadataFetcher (via gh pr view --json):
+          # Expected metadata schema from the GitHub provider PrFetcher (via gh pr view --json):
           #   {
           #     "number" => Integer,
           #     "title" => String,
@@ -898,11 +900,11 @@ module Ace
           # @return [Integer] Exit code (always 1 for errors)
           def handle_pr_fetch_error(error, pr_number)
             case error
-            when Ace::Git::PrNotFoundError
+            when Ace::Git::ProviderObjectNotFoundError
               handle_pr_not_found(error, pr_number)
-            when Ace::Git::GhAuthenticationError
+            when Ace::Git::ProviderAuthenticationError
               handle_gh_auth_error(error)
-            when Ace::Git::GhNotInstalledError
+            when Ace::Git::ProviderCliMissingError
               handle_gh_not_installed(error)
             else
               handle_unknown_error(error)

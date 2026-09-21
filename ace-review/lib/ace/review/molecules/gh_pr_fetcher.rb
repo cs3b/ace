@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "ace/git/github"
 require "json"
 require_relative "../atoms/retry_with_backoff"
 
@@ -18,7 +19,7 @@ module Ace
         # @return [Hash] Result with :success, :diff, :error
         def self.fetch_diff(pr_identifier, options = {})
           # Parse identifier to get gh CLI format using ace-git
-          parsed = Ace::Git::Atoms::PrIdentifierParser.parse(pr_identifier)
+          parsed = Ace::Git::Github::PrIdentifier.parse(pr_identifier)
           gh_format = parsed.gh_format
 
           # Default timeout for PR diff operations
@@ -26,7 +27,7 @@ module Ace
 
           # Fetch diff with retry logic
           result = Ace::Review::Atoms::RetryWithBackoff.execute(options) do
-            Ace::Git::Molecules::GhCliExecutor.execute("pr", ["diff", gh_format], timeout: timeout)
+            Ace::Git::Github::CliExecutor.execute("pr", ["diff", gh_format], timeout: timeout)
           end
 
           if result[:success]
@@ -43,7 +44,7 @@ module Ace
           # Fall back to local git diff when GitHub API rejects large diffs
           fetch_local_diff_fallback(pr_identifier, options)
         rescue Ace::Review::Errors::GhCliNotInstalledError, Ace::Review::Errors::GhAuthenticationError,
-          Ace::Git::GhNotInstalledError, Ace::Git::GhAuthenticationError
+          Ace::Git::ProviderCliMissingError, Ace::Git::ProviderAuthenticationError
           # Re-raise authentication and installation errors
           raise
         rescue => e
@@ -61,7 +62,7 @@ module Ace
         # @return [Hash] Result with :success, :metadata, :error
         def self.fetch_metadata(pr_identifier, options = {})
           # Parse identifier using ace-git
-          parsed = Ace::Git::Atoms::PrIdentifierParser.parse(pr_identifier)
+          parsed = Ace::Git::Github::PrIdentifier.parse(pr_identifier)
           gh_format = parsed.gh_format
 
           # Default timeout for PR operations
@@ -71,7 +72,7 @@ module Ace
           fields = "number,state,isDraft,title,body,author,headRefName,baseRefName,url"
 
           result = Ace::Review::Atoms::RetryWithBackoff.execute(options) do
-            Ace::Git::Molecules::GhCliExecutor.execute("pr", ["view", gh_format, "--json", fields], timeout: timeout)
+            Ace::Git::Github::CliExecutor.execute("pr", ["view", gh_format, "--json", fields], timeout: timeout)
           end
 
           if result[:success]
@@ -91,7 +92,7 @@ module Ace
             error: "Failed to parse PR metadata: #{e.message}"
           }
         rescue Ace::Review::Errors::GhCliNotInstalledError, Ace::Review::Errors::GhAuthenticationError,
-          Ace::Git::GhNotInstalledError, Ace::Git::GhAuthenticationError
+          Ace::Git::ProviderCliMissingError, Ace::Git::ProviderAuthenticationError
           raise
         rescue => e
           {

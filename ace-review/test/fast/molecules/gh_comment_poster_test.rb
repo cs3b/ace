@@ -228,16 +228,16 @@ module Ace
         end
 
         def test_post_comment_reraises_ace_git_authentication_error
-          parsed = Ace::Git::Atoms::PrIdentifierParser::ParseResult.new(
+          parsed = Ace::Git::Github::PrIdentifier::ParseResult.new(
             number: "69", repo: nil, gh_format: "69"
           )
           mock_executor = lambda do |_cmd, _args, **_opts|
-            raise Ace::Git::GhAuthenticationError, "auth required"
+            raise Ace::Git::ProviderAuthenticationError, "auth required"
           end
 
-          Ace::Git::Atoms::PrIdentifierParser.stub :parse, parsed do
-            Ace::Git::Molecules::GhCliExecutor.stub :execute, mock_executor do
-              assert_raises(Ace::Git::GhAuthenticationError) do
+          Ace::Git::Github::PrIdentifier.stub :parse, parsed do
+            Ace::Git::Github::CliExecutor.stub :execute, mock_executor do
+              assert_raises(Ace::Git::ProviderAuthenticationError) do
                 GhCommentPoster.post_comment("69", "review")
               end
             end

@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.24.0] - 2026-09-21
+
+### Added
+
+- Forge-neutral provider foundation: `Ace::Git::ServerRegistry` (explicit named servers, exactly-one-default resolution, deterministic remote-URL matching with no hostname assumptions), `Ace::Git::ResolvedServer`, the `Ace::Git::Providers` registry with the `Providers::Base` contract, normalized evidence types (`ProviderPullRequest`, `ProviderIssue`, `ProviderCheck`, `ProviderRepository`), and the neutral `Atoms::PrIdentifier` / `Atoms::ServerUrl` atoms.
+- Classified failure taxonomy in `git/errors.rb`: `NoDefaultServerConfiguredError`, `MultipleDefaultServersError`, `DuplicateServerNameError`, `UnknownProviderError`, `UnknownServerNameError`, `AmbiguousRemoteError`, `ProviderCliMissingError`, `ProviderAuthenticationError`, `ProviderUnreachableError`, `ProviderMalformedOutputError`, `ProviderObjectNotFoundError`.
+- `git.servers` configuration section supporting multiple uniquely named servers with at most one explicit default.
+- Boundary proof: local Git operations succeed with provider CLIs scrubbed from PATH, and a test pins the core lib to zero forge CLI references.
+
+### Changed
+
+- Status PR enrichment routes through the provider contract (default server + registered provider); with no server or provider configured, status stays purely local and PR sections are skipped.
+- Forge server URLs in gemspec metadata point at the canonical delivery forge instead of hardcoded GitHub URLs.
+
+### Removed
+
+- All forge behavior from the core (pre-1.0 replacement, no shims or aliases): `GhCliExecutor`, `PrMetadataFetcher`, `GithubIssueSync`, the `ace-git pr` CLI command, the GitHub-specific `PrIdentifierParser`, and the `GhNotInstalledError` / `GhAuthenticationError` / `PrNotFoundError` error classes. GitHub behavior moved to the new `ace-git-github` gem; Forgejo behavior is provided by the new `ace-git-forgejo` gem.
 
 ## [0.23.1] - 2026-09-02
 

@@ -68,7 +68,7 @@ module Ace
         # Check if has associated PR
         # @return [Boolean] True if PR metadata present
         def has_pr?
-          !pr_metadata.nil? && !pr_metadata.empty?
+          !pr_metadata.nil?
         end
 
         # Check if has detected task pattern

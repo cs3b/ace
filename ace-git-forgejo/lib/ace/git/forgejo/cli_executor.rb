@@ -38,6 +38,8 @@ module Ace
           def installed?(runner: nil)
             result = execute(["--version"], runner: runner)
             result != :timeout && result[:success]
+          rescue Ace::Git::ProviderCliMissingError
+            false
           end
 
           # Probe whether the resolved server host has a configured `fj` login.
@@ -51,6 +53,8 @@ module Ace
             return hosts.any? unless host
 
             hosts.any? { |line| line.include?(host.to_s) }
+          rescue Ace::Git::ProviderCliMissingError
+            false
           end
 
           # @raise [Ace::Git::ProviderCliMissingError] when `fj` is missing

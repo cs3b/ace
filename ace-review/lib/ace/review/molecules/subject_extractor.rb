@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "ace/git/github"
 require "yaml"
 require "open3"
 require "timeout"
@@ -188,7 +189,7 @@ module Ace
             # Pre-validate PR refs for early error feedback using ace-git's parser
             # Supports: simple numbers (123), qualified refs (owner/repo#456), GitHub URLs
             pr_refs.each do |ref|
-              Ace::Git::Atoms::PrIdentifierParser.parse(ref)
+              Ace::Git::Github::PrIdentifier.parse(ref)
             end
             {"bundle" => {"pr" => pr_refs}}
           when /^pr:$/

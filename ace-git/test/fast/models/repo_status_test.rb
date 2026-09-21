@@ -3,6 +3,22 @@
 require "test_helper"
 
 class RepoStatusTest < AceGitTestCase
+  def pr_evidence
+    Ace::Git::ProviderPullRequest.new(
+      server_name: "forge",
+      number: 75,
+      title: "Add feature",
+      state: :open,
+      head_ref: "140-feature",
+      base_ref: "main",
+      head_sha: "a" * 40,
+      author: "dev",
+      url: nil,
+      draft: false,
+      merged_at: nil
+    )
+  end
+
   def setup
     super
     @context = Ace::Git::Models::RepoStatus.new(
@@ -11,7 +27,7 @@ class RepoStatusTest < AceGitTestCase
       ahead: 2,
       behind: 1,
       task_pattern: "140",
-      pr_metadata: {"number" => 75, "title" => "Add feature", "state" => "open"},
+      pr_metadata: pr_evidence,
       repository_type: :normal,
       repository_state: :clean
     )
@@ -35,8 +51,8 @@ class RepoStatusTest < AceGitTestCase
   end
 
   def test_stores_pr_metadata
-    assert_equal 75, @context.pr_metadata["number"]
-    assert_equal "Add feature", @context.pr_metadata["title"]
+    assert_equal 75, @context.pr_metadata.number
+    assert_equal "Add feature", @context.pr_metadata.title
   end
 
   def test_detached_returns_true_for_head

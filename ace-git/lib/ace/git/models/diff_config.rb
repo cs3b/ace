@@ -91,7 +91,7 @@ module Ace
           elsif exclude_renames?
             flags << "--diff-filter=ACDMTUXB"
           elsif exclude_moves?
-            # Moves appear as rename with 100% similarity, disable high-similarity renames
+            # Moves appear as renames with total similarity; disable such exact renames
             flags << "-M0" # Disable rename detection (moves are renames at 100% similarity)
           end
           flags
@@ -164,7 +164,7 @@ module Ace
           hash.each_key do |key|
             key_str = key.to_s
             next if KNOWN_KEYS.include?(key_str)
-            # Skip nested sections that may be passed through
+            # Skip nested sections that may be propagated
             next if %w[diff rebase pr squash default_branch remote verbose].include?(key_str)
 
             warn "[ace-git] Unknown config key '#{key_str}' in DiffConfig - did you mean one of: #{KNOWN_KEYS.join(", ")}?"

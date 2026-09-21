@@ -376,11 +376,11 @@ class CreateCommandTest < Minitest::Test
     end
   end
 
-  # PR worktree creation tests using PrMetadataFetcher
+  # PR worktree creation tests using the GitHub provider PrFetcher
   def test_run_with_pr_argument_success
     # Mock gh CLI availability
-    Ace::Git::Molecules::PrMetadataFetcher.stub(:gh_installed?, true) do
-      Ace::Git::Molecules::PrMetadataFetcher.stub(:gh_authenticated?, true) do
+    Ace::Git::Github::PrFetcher.stub(:installed?, true) do
+      Ace::Git::Github::PrFetcher.stub(:authenticated?, true) do
         # Mock PR metadata fetch
         mock_metadata_result = {
           success: true,
@@ -393,7 +393,7 @@ class CreateCommandTest < Minitest::Test
             "headRepositoryOwner" => {"login" => "owner"}
           }
         }
-        Ace::Git::Molecules::PrMetadataFetcher.stub(:fetch_metadata, mock_metadata_result) do
+        Ace::Git::Github::PrFetcher.stub(:fetch_metadata, mock_metadata_result) do
           # Mock worktree creation
           mock_worktree_manager = Minitest::Mock.new
           mock_worktree_manager.expect(:create_pr, {
@@ -418,8 +418,8 @@ class CreateCommandTest < Minitest::Test
 
   def test_run_with_pr_fork_warning
     # Mock gh CLI availability
-    Ace::Git::Molecules::PrMetadataFetcher.stub(:gh_installed?, true) do
-      Ace::Git::Molecules::PrMetadataFetcher.stub(:gh_authenticated?, true) do
+    Ace::Git::Github::PrFetcher.stub(:installed?, true) do
+      Ace::Git::Github::PrFetcher.stub(:authenticated?, true) do
         # Mock PR metadata for a fork
         mock_metadata_result = {
           success: true,
@@ -432,7 +432,7 @@ class CreateCommandTest < Minitest::Test
             "headRepositoryOwner" => {"login" => "contributor"}
           }
         }
-        Ace::Git::Molecules::PrMetadataFetcher.stub(:fetch_metadata, mock_metadata_result) do
+        Ace::Git::Github::PrFetcher.stub(:fetch_metadata, mock_metadata_result) do
           mock_worktree_manager = Minitest::Mock.new
           mock_worktree_manager.expect(:create_pr, {
             success: true,
@@ -461,11 +461,11 @@ class CreateCommandTest < Minitest::Test
 
   def test_run_with_pr_not_found_error
     # Mock gh CLI availability
-    Ace::Git::Molecules::PrMetadataFetcher.stub(:gh_installed?, true) do
-      Ace::Git::Molecules::PrMetadataFetcher.stub(:gh_authenticated?, true) do
+    Ace::Git::Github::PrFetcher.stub(:installed?, true) do
+      Ace::Git::Github::PrFetcher.stub(:authenticated?, true) do
         # Mock PR not found error
-        Ace::Git::Molecules::PrMetadataFetcher.stub(:fetch_metadata, ->(id, **_opts) {
-          raise Ace::Git::PrNotFoundError, "PR not found: #{id}"
+        Ace::Git::Github::PrFetcher.stub(:fetch_metadata, ->(id, **_opts) {
+          raise Ace::Git::ProviderObjectNotFoundError, "PR not found: #{id}"
         }) do
           output = capture_io do
             result = @command.run(["--pr", "99999"])
@@ -481,11 +481,11 @@ class CreateCommandTest < Minitest::Test
 
   def test_run_with_pr_auth_error
     # Mock gh CLI availability
-    Ace::Git::Molecules::PrMetadataFetcher.stub(:gh_installed?, true) do
-      Ace::Git::Molecules::PrMetadataFetcher.stub(:gh_authenticated?, true) do
+    Ace::Git::Github::PrFetcher.stub(:installed?, true) do
+      Ace::Git::Github::PrFetcher.stub(:authenticated?, true) do
         # Mock auth error during fetch
-        Ace::Git::Molecules::PrMetadataFetcher.stub(:fetch_metadata, ->(*_args) {
-          raise Ace::Git::GhAuthenticationError, "Not authenticated with GitHub"
+        Ace::Git::Github::PrFetcher.stub(:fetch_metadata, ->(*_args) {
+          raise Ace::Git::ProviderAuthenticationError, "Not authenticated with GitHub"
         }) do
           output = capture_io do
             result = @command.run(["--pr", "26"])
@@ -501,7 +501,7 @@ class CreateCommandTest < Minitest::Test
 
   def test_run_with_pr_gh_not_installed
     # Mock gh CLI not installed
-    Ace::Git::Molecules::PrMetadataFetcher.stub(:gh_installed?, false) do
+    Ace::Git::Github::PrFetcher.stub(:installed?, false) do
       output = capture_io do
         result = @command.run(["--pr", "26"])
         assert_equal 1, result
@@ -513,8 +513,8 @@ class CreateCommandTest < Minitest::Test
 
   def test_run_with_pr_not_authenticated
     # Mock gh CLI installed but not authenticated
-    Ace::Git::Molecules::PrMetadataFetcher.stub(:gh_installed?, true) do
-      Ace::Git::Molecules::PrMetadataFetcher.stub(:gh_authenticated?, false) do
+    Ace::Git::Github::PrFetcher.stub(:installed?, true) do
+      Ace::Git::Github::PrFetcher.stub(:authenticated?, false) do
         output = capture_io do
           result = @command.run(["--pr", "26"])
           assert_equal 1, result
@@ -630,8 +630,8 @@ class CreateCommandTest < Minitest::Test
     ENV.delete("TMUX")
 
     # Mock gh CLI availability and metadata
-    Ace::Git::Molecules::PrMetadataFetcher.stub(:gh_installed?, true) do
-      Ace::Git::Molecules::PrMetadataFetcher.stub(:gh_authenticated?, true) do
+    Ace::Git::Github::PrFetcher.stub(:installed?, true) do
+      Ace::Git::Github::PrFetcher.stub(:authenticated?, true) do
         mock_metadata_result = {
           success: true,
           metadata: {
@@ -643,7 +643,7 @@ class CreateCommandTest < Minitest::Test
             "headRepositoryOwner" => {"login" => "owner"}
           }
         }
-        Ace::Git::Molecules::PrMetadataFetcher.stub(:fetch_metadata, mock_metadata_result) do
+        Ace::Git::Github::PrFetcher.stub(:fetch_metadata, mock_metadata_result) do
           # Mock PR worktree creation
           mock_worktree_manager = Minitest::Mock.new
           mock_worktree_manager.expect(:create_pr, {
@@ -733,8 +733,8 @@ class CreateCommandTest < Minitest::Test
     ENV["TMUX"] = "/tmp/tmux-1000,12345,0"
 
     # Mock gh CLI availability and metadata
-    Ace::Git::Molecules::PrMetadataFetcher.stub(:gh_installed?, true) do
-      Ace::Git::Molecules::PrMetadataFetcher.stub(:gh_authenticated?, true) do
+    Ace::Git::Github::PrFetcher.stub(:installed?, true) do
+      Ace::Git::Github::PrFetcher.stub(:authenticated?, true) do
         mock_metadata_result = {
           success: true,
           metadata: {
@@ -746,7 +746,7 @@ class CreateCommandTest < Minitest::Test
             "headRepositoryOwner" => {"login" => "owner"}
           }
         }
-        Ace::Git::Molecules::PrMetadataFetcher.stub(:fetch_metadata, mock_metadata_result) do
+        Ace::Git::Github::PrFetcher.stub(:fetch_metadata, mock_metadata_result) do
           # Mock PR worktree creation
           mock_worktree_manager = Minitest::Mock.new
           mock_worktree_manager.expect(:create_pr, {

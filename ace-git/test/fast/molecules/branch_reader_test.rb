@@ -66,8 +66,10 @@ class BranchReaderTest < AceGitTestCase
 
   def test_tracking_status_returns_ahead_behind_counts
     executor = Object.new
-    def executor.execute(*_args)
-      {success: true, output: "3\t5\n"}  # behind\tahead format
+    def executor.execute(*args)
+      range = args.last
+      output = range.include?("upstream}..HEAD") ? "5\n" : "3\n"
+      {success: true, output: output}
     end
 
     result = Ace::Git::Molecules::BranchReader.tracking_status(executor: executor)

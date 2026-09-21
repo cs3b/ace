@@ -14,13 +14,13 @@ module Ace
     #
     # ```yaml
     # servers:
-    #   - name: forgejo-lab
-    #     provider: forgejo
-    #     url: https://forgejo.example.com/owner/repo
+    #   - name: forge-lab
+    #     provider: acme
+    #     url: https://forge.example.com/owner/repo
     #     default: true
-    #   - name: github-public
-    #     provider: github
-    #     url: https://github.com/owner/repo
+    #   - name: forge-mirror
+    #     provider: other
+    #     url: https://other.example.com/owner/repo
     # ```
     #
     # At most one server may be marked `default: true`. Resolution never falls

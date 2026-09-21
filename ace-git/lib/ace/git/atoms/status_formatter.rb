@@ -75,40 +75,37 @@ module Ace
             lines
           end
 
-          # Format current PR section (highlighted for current branch)
-          # @param pr_metadata [Hash] PR metadata
+          # Format current PR section (spotlit for current branch)
+          # @param pr [ProviderPullRequest, nil] normalized pull request evidence
           # @return [Array<String>] Lines of markdown
-          def format_current_pr_section(pr_metadata)
+          def format_current_pr_section(pr)
             lines = []
             lines << ""
             lines << "## Current PR"
             lines << ""
 
-            # Main line: #85 [OPEN] Title
-            main_line = "##{pr_metadata["number"]}"
-            main_line += " [#{pr_metadata["state"]}]" if pr_metadata["state"]
-            main_line += " #{pr_metadata["title"]}" if pr_metadata["title"]
+            # Main line: #85 [open] Title
+            main_line = "##{pr.number}"
+            main_line += " [#{pr.state}]" if pr.state
+            main_line += " #{pr.title}" if pr.title
             lines << main_line
 
             # Details line: Target: main | Author: @username | Draft/Not draft
             details = []
-            details << "Target: #{pr_metadata["baseRefName"]}" if pr_metadata["baseRefName"]
-            if pr_metadata["author"]
-              author = pr_metadata.dig("author", "login") || pr_metadata["author"]
-              details << "Author: @#{author}"
-            end
-            details << (pr_metadata["isDraft"] ? "Draft" : "Not draft") if pr_metadata.key?("isDraft")
+            details << "Target: #{pr.base_ref}" if pr.base_ref
+            details << "Author: @#{pr.author}" if pr.author
+            details << (pr.draft ? "Draft" : "Not draft") unless pr.draft.nil?
             lines << "  #{details.join(" | ")}" unless details.empty?
 
             # URL line
-            lines << "  #{pr_metadata["url"]}" if pr_metadata["url"]
+            lines << "  #{pr.url}" if pr.url
 
             lines
           end
 
           # Format PR activity section
-          # @param pr_activity [Hash, nil] PR activity with :merged and :open arrays
-          #   Each PR in the arrays has string keys from JSON parsing: "number", "title", etc.
+          # @param pr_activity [Hash, nil] Activity with :merged and :open arrays of
+          #   normalized ProviderPullRequest evidence
           # @return [Array<String>] Lines of markdown
           def format_pr_activity_section(pr_activity)
             lines = []
@@ -119,17 +116,15 @@ module Ace
             # Handle nil pr_activity for defensive programming
             return lines << "No recent PR activity" if pr_activity.nil?
 
-            # pr_activity uses symbol keys (from RepoStatusLoader)
-            # PR data within uses string keys (from JSON parsing)
             merged = pr_activity[:merged] || []
             open_prs = pr_activity[:open] || []
 
             unless merged.empty?
               lines << "Merged:"
               merged.each do |pr|
-                title = pr["title"] || "(no title)"
-                merged_ago = format_merged_time_compact(pr["mergedAt"])
-                lines << "  ##{pr["number"]} #{title}#{merged_ago}"
+                title = pr.title || "(no title)"
+                merged_ago = format_merged_time_compact(pr.merged_at)
+                lines << "  ##{pr.number} #{title}#{merged_ago}"
               end
             end
 
@@ -137,9 +132,9 @@ module Ace
               lines << "" unless merged.empty? # Add spacing between Merged and Open
               lines << "Open:"
               open_prs.each do |pr|
-                title = pr["title"] || "(no title)"
-                author = format_author(pr["author"])
-                lines << "  ##{pr["number"]} #{title}#{author}"
+                title = pr.title || "(no title)"
+                author = format_author(pr.author)
+                lines << "  ##{pr.number} #{title}#{author}"
               end
             end
 
@@ -163,13 +158,13 @@ module Ace
           end
 
           # Format author info
-          # @param author [Hash, String, nil] Author data
+          # @param author [String, nil] Author identifier
           # @return [String] Formatted string like " (@username)"
           def format_author(author)
             return "" if author.nil?
 
-            login = author.is_a?(Hash) ? author["login"] : author.to_s
-            return "" if login.nil? || login.empty?
+            login = author.to_s
+            return "" if login.empty?
 
             " (@#{login})"
           end

@@ -93,9 +93,9 @@ class CreateCommandTmuxContractTest < Minitest::Test
       }
     }
 
-    Ace::Git::Molecules::PrMetadataFetcher.stub(:gh_installed?, true) do
-      Ace::Git::Molecules::PrMetadataFetcher.stub(:gh_authenticated?, true) do
-        Ace::Git::Molecules::PrMetadataFetcher.stub(:fetch_metadata, fake_metadata) do
+    Ace::Git::Github::PrFetcher.stub(:installed?, true) do
+      Ace::Git::Github::PrFetcher.stub(:authenticated?, true) do
+        Ace::Git::Github::PrFetcher.stub(:fetch_metadata, fake_metadata) do
           command = Ace::Git::Worktree::Commands::CreateCommand.new(manager: mock_worktree_manager)
           Kernel.stub(:exec, ->(*args) { Kernel.system(*args) }) do
             command.stub(:tmux_enabled?, true) do

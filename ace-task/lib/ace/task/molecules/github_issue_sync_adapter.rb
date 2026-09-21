@@ -9,10 +9,8 @@ module Ace
           "Complete dependency task 8r4.t.ilo.2 or update ace-git."
 
         CANDIDATE_INTEGRATIONS = [
-          ["Ace::Git::Molecules::GithubIssueSync", :validate_link!],
-          ["Ace::Git::Molecules::IssueSync", :validate_link!],
-          ["Ace::Git::Molecules::GithubIssueSync", :sync_task],
-          ["Ace::Git::Molecules::IssueSync", :sync_task]
+          ["Ace::Git::Github::IssueSync", :validate_link!],
+          ["Ace::Git::Github::IssueSync", :sync_task]
         ].freeze
 
         def validate_link!(issue_id:, previous_task: nil)

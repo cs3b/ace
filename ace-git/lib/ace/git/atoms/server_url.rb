@@ -8,11 +8,11 @@ module Ace
       # no assumptions about any particular forge host.
       #
       # Supported input shapes:
-      # - "https://forgejo.example.com/owner/repo.git"
-      # - "http://forgejo.internal:3000/owner/repo"
-      # - "git@forgejo.example.com:owner/repo.git" (scp-style)
-      # - "ssh://git@forgejo.example.com:2222/owner/repo.git"
-      # - "forgejo.example.com/owner/repo"
+      # - "https://forge.example.com/owner/repo.git"
+      # - "http://forge.internal:3000/owner/repo"
+      # - "git@forge.example.com:owner/repo.git" (scp-style)
+      # - "ssh://git@forge.example.com:2222/owner/repo.git"
+      # - "forge.example.com/owner/repo"
       #
       # Canonical form: lowercase "host[:port]/path" with any credentials,
       # scheme, trailing slash, and ".git" suffix removed. A colon segment is

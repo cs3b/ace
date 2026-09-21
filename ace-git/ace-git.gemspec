@@ -8,11 +8,11 @@ Gem::Specification.new do |spec|
   spec.authors = ["Michal Czyz"]
   spec.email = ["mc@cs3b.com"]
 
-  spec.summary = "Git workflows and context commands for developers and AI agents"
+  spec.summary = "Forge-neutral Git workflows and context commands for developers and AI agents"
   spec.description = "ace-git gives developers and coding agents focused git context commands and guided " \
-                     "workflows for rebases, pull requests, and commit reorganization, with smart diff " \
-                     "output and Git 2.23+ guardrails."
-  spec.homepage = "https://github.com/cs3b/ace/tree/main/ace-git"
+                     "workflows for rebases and commit reorganization, with smart diff output, a " \
+                     "forge server registry, and a provider contract backed by pluggable provider gems."
+  spec.homepage = "https://forgejo.tail6c0887.ts.net/cs3b/ace"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
 
@@ -24,8 +24,8 @@ Gem::Specification.new do |spec|
   spec.metadata["allowed_push_host"] = "https://rubygems.org"
 
   spec.metadata["homepage_uri"] = spec.homepage
-  spec.metadata["source_code_uri"] = "https://github.com/cs3b/ace/tree/main/ace-git/"
-  spec.metadata["changelog_uri"] = "https://github.com/cs3b/ace/blob/main/ace-git/CHANGELOG.md"
+  spec.metadata["source_code_uri"] = "#{spec.homepage}/src/branch/main/ace-git"
+  spec.metadata["changelog_uri"] = "#{spec.homepage}/src/branch/main/ace-git/CHANGELOG.md"
 
   # Specify which files should be added to the gem when it is released.
   # Include lib, exe, handbook (workflows and templates), and config examples

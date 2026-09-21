@@ -59,23 +59,33 @@ module Ace
             # Include diff if requested
             if options[:with_diff] && status.has_pr?
               begin
-                diff_result = Molecules::PrMetadataFetcher.fetch_diff(
-                  status.pr_metadata["number"].to_s
-                )
-                if diff_result[:success]
+                provider = active_provider
+                diff = provider&.pull_request_diff(number: status.pr_metadata.number.to_s)
+                if diff
                   puts ""
                   puts "## PR Diff"
                   puts ""
                   puts "```diff"
-                  puts diff_result[:diff]
+                  puts diff
                   puts "```"
                 end
               rescue Ace::Git::Error
-                # Silently skip diff if it fails
+                # Classified provider failure: skip the diff section
               end
             end
           rescue Ace::Git::Error => e
             raise Ace::Support::Cli::Error.new(e.message)
+          end
+
+          private
+
+          # Resolve the default server's registered provider for optional
+          # enrichment; nil when no server or provider is configured.
+          def active_provider
+            server = Ace::Git::ServerRegistry.resolve_default
+            Ace::Git::Providers.for(server)
+          rescue Ace::Git::Error
+            nil
           end
         end
       end

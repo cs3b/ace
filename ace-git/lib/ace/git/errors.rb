@@ -52,11 +52,5 @@ module Ace
 
     # The requested pull request, issue, branch, or commit does not exist.
     class ProviderObjectNotFoundError < Error; end
-
-    # Legacy GitHub-coupled failures kept until the forge-behavior extraction
-    # commit removes them together with the molecules that raise them.
-    class GhNotInstalledError < Error; end
-    class GhAuthenticationError < Error; end
-    class PrNotFoundError < Error; end
   end
 end

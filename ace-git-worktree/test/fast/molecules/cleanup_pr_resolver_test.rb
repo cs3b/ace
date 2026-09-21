@@ -8,8 +8,8 @@ class CleanupPrResolverTest < Minitest::Test
     super
     
     # Ensure gh is considered available for most tests
-    Ace::Git::Molecules::PrMetadataFetcher.stub :gh_installed?, true do
-      Ace::Git::Molecules::PrMetadataFetcher.stub :gh_authenticated?, true do
+    Ace::Git::Github::PrFetcher.stub :installed?, true do
+      Ace::Git::Github::PrFetcher.stub :authenticated?, true do
         @resolver = Ace::Git::Worktree::Molecules::CleanupPrResolver.new(
           target: "main", target_sha: "main123", offline: false
         )

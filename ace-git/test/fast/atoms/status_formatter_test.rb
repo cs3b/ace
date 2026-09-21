@@ -3,6 +3,22 @@
 require "test_helper"
 
 class StatusFormatterTest < AceGitTestCase
+  # Build normalized PR evidence the way providers do
+  def pr_evidence(number:, title: "PR", state: :open, author: "dev", draft: false, merged_at: nil, url: nil)
+    Ace::Git::ProviderPullRequest.new(
+      server_name: "forge",
+      number: number,
+      title: title,
+      state: state,
+      head_ref: "feature",
+      base_ref: "main",
+      head_sha: "a" * 40,
+      author: author,
+      url: url,
+      draft: draft,
+      merged_at: merged_at
+    )
+  end
   def test_to_markdown_includes_header_and_position_section
     context = Ace::Git::Models::RepoStatus.new(
       branch: "feature-123",
@@ -90,22 +106,19 @@ class StatusFormatterTest < AceGitTestCase
     context = Ace::Git::Models::RepoStatus.new(
       branch: "feature-123",
       repository_state: :clean,
-      pr_metadata: {
-        "number" => 82,
-        "title" => "Add new feature",
-        "state" => "OPEN",
-        "isDraft" => false,
-        "baseRefName" => "main",
-        "headRefName" => "feature-123",
-        "author" => {"login" => "dev1"},
-        "url" => "https://github.com/owner/repo/pull/82"
-      }
+      pr_metadata: pr_evidence(
+        number: 82,
+        title: "Add new feature",
+        state: :open,
+        author: "dev1",
+        url: "https://forge.example.com/owner/repo/pulls/82"
+      )
     )
 
     markdown = Ace::Git::Atoms::StatusFormatter.to_markdown(context)
 
     assert_match(/## Current PR/, markdown)
-    assert_match(/#82 \[OPEN\] Add new feature/, markdown)
+    assert_match(/#82 \[open\] Add new feature/, markdown)
     assert_match(/Target: main/, markdown)
     assert_match(/Author: @dev1/, markdown)
   end
@@ -114,9 +127,7 @@ class StatusFormatterTest < AceGitTestCase
     context = Ace::Git::Models::RepoStatus.new(
       branch: "feature-123",
       repository_state: :clean,
-      pr_metadata: {
-        "number" => 82
-      }
+      pr_metadata: pr_evidence(number: 82, title: nil, state: nil, author: nil, url: nil)
     )
 
     markdown = Ace::Git::Atoms::StatusFormatter.to_markdown(context)
@@ -133,10 +144,10 @@ class StatusFormatterTest < AceGitTestCase
       repository_state: :clean,
       pr_activity: {
         merged: [
-          {"number" => 84, "title" => "Update docs", "mergedAt" => Time.now.iso8601}
+          pr_evidence(number: 84, title: "Update docs", state: :merged, merged_at: Time.now.iso8601)
         ],
         open: [
-          {"number" => 85, "title" => "New feature", "author" => {"login" => "user1"}}
+          pr_evidence(number: 85, title: "New feature", author: "user1")
         ]
       }
     )
@@ -156,7 +167,7 @@ class StatusFormatterTest < AceGitTestCase
       branch: "feature-123",
       repository_state: :clean,
       pr_activity: {
-        merged: [{"number" => 84, "title" => "Fix bug", "mergedAt" => merged_at}],
+        merged: [pr_evidence(number: 84, title: "Fix bug", state: :merged, merged_at: merged_at)],
         open: []
       }
     )
@@ -184,7 +195,7 @@ class StatusFormatterTest < AceGitTestCase
 
   def test_format_pr_activity_section_with_only_merged
     activity = {
-      merged: [{"number" => 84, "title" => "PR One"}],
+      merged: [pr_evidence(number: 84, title: "PR One", state: :merged)],
       open: []
     }
 
@@ -199,7 +210,7 @@ class StatusFormatterTest < AceGitTestCase
   def test_format_pr_activity_section_with_only_open
     activity = {
       merged: [],
-      open: [{"number" => 85, "title" => "PR Two", "author" => {"login" => "dev"}}]
+      open: [pr_evidence(number: 85, title: "PR Two", author: "dev")]
     }
 
     lines = Ace::Git::Atoms::StatusFormatter.format_pr_activity_section(activity)
@@ -213,7 +224,7 @@ class StatusFormatterTest < AceGitTestCase
   def test_format_pr_activity_section_handles_missing_author
     activity = {
       merged: [],
-      open: [{"number" => 85, "title" => "PR Without Author"}]
+      open: [pr_evidence(number: 85, title: "PR Without Author", author: nil)]
     }
 
     lines = Ace::Git::Atoms::StatusFormatter.format_pr_activity_section(activity)
@@ -227,14 +238,14 @@ class StatusFormatterTest < AceGitTestCase
     # RepoStatusLoader uses symbol keys for the structure (:merged, :open)
     # PR data within uses string keys from JSON parsing ("number", "title")
     activity = {
-      merged: [{"number" => 84, "title" => "Symbol Keys"}],
+      merged: [pr_evidence(number: 84, title: "Normalized Evidence", state: :merged)],
       open: []
     }
 
     lines = Ace::Git::Atoms::StatusFormatter.format_pr_activity_section(activity)
     output = lines.join("\n")
 
-    assert_match(/#84 Symbol Keys/, output)
+    assert_match(/#84 Normalized Evidence/, output)
   end
 
   # New section format tests
@@ -295,22 +306,13 @@ class StatusFormatterTest < AceGitTestCase
   end
 
   def test_format_current_pr_section
-    pr = {
-      "number" => 85,
-      "title" => "Feature PR",
-      "state" => "OPEN",
-      "baseRefName" => "main",
-      "headRefName" => "feature",
-      "author" => {"login" => "dev"},
-      "isDraft" => false,
-      "url" => "https://github.com/o/r/pull/85"
-    }
+    pr = pr_evidence(number: 85, title: "Feature PR", state: :open, author: "dev", draft: false)
 
     lines = Ace::Git::Atoms::StatusFormatter.format_current_pr_section(pr)
     output = lines.join("\n")
 
     assert_match(/## Current PR/, output)
-    assert_match(/#85 \[OPEN\] Feature PR/, output)
+    assert_match(/#85 \[open\] Feature PR/, output)
     assert_match(/Target: main/, output)
     assert_match(/Author: @dev/, output)
     assert_match(/Not draft/, output)

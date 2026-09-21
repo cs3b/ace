@@ -77,7 +77,7 @@ module Ace
         def test_process_with_successful_pr_fetch
           mock_diff = PrMockFixtures::MOCK_DIFF_STANDARD
 
-          # Stub ace-git public API (PrMetadataFetcher.fetch_diff) instead of Open3.capture3
+          # Stub the GitHub provider public API (PrFetcher.fetch_diff) instead of Open3.capture3
           mock_response = {
             success: true,
             diff: mock_diff,
@@ -85,7 +85,7 @@ module Ace
             source: "pr:123"
           }
 
-          Ace::Git::Molecules::PrMetadataFetcher.stub(:fetch_diff, ->(_id, **_opts) { mock_response }) do
+          Ace::Git::Github::PrFetcher.stub(:fetch_diff, ->(_id, **_opts) { mock_response }) do
             loader = PrBundleLoader.new
             result = loader.process(@bundle, "123")
 
@@ -99,14 +99,14 @@ module Ace
         def test_process_with_multiple_prs
           call_count = 0
 
-          # Stub ace-git public API (PrMetadataFetcher.fetch_diff) instead of Open3.capture3
+          # Stub the GitHub provider public API (PrFetcher.fetch_diff) instead of Open3.capture3
           mock_fetch = lambda do |id, **_opts|
             diff = (call_count == 0) ? PrMockFixtures::MOCK_DIFF_PR_123 : PrMockFixtures::MOCK_DIFF_PR_456
             call_count += 1
             {success: true, diff: diff, identifier: id, source: "pr:#{id}"}
           end
 
-          Ace::Git::Molecules::PrMetadataFetcher.stub(:fetch_diff, mock_fetch) do
+          Ace::Git::Github::PrFetcher.stub(:fetch_diff, mock_fetch) do
             loader = PrBundleLoader.new
             result = loader.process(@bundle, ["123", "456"])
 
@@ -122,7 +122,7 @@ module Ace
             error: "PR not found"
           }
 
-          Ace::Git::Molecules::PrMetadataFetcher.stub(:fetch_diff, ->(_id, **_opts) { mock_response }) do
+          Ace::Git::Github::PrFetcher.stub(:fetch_diff, ->(_id, **_opts) { mock_response }) do
             loader = PrBundleLoader.new
             result = loader.process(@bundle, "999999")
 
@@ -139,7 +139,7 @@ module Ace
             error: "PR not found"
           }
 
-          Ace::Git::Molecules::PrMetadataFetcher.stub(:fetch_diff, ->(_id, **_opts) { mock_response }) do
+          Ace::Git::Github::PrFetcher.stub(:fetch_diff, ->(_id, **_opts) { mock_response }) do
             loader = PrBundleLoader.new
             loader.process(@bundle, "999999")
 
@@ -165,9 +165,9 @@ module Ace
         # --- ace-git error type handling tests ---
 
         def test_process_handles_gh_not_installed_error
-          mock_fetch = ->(_id, **_opts) { raise Ace::Git::GhNotInstalledError, "gh not installed" }
+          mock_fetch = ->(_id, **_opts) { raise Ace::Git::ProviderCliMissingError, "gh not installed" }
 
-          Ace::Git::Molecules::PrMetadataFetcher.stub(:fetch_diff, mock_fetch) do
+          Ace::Git::Github::PrFetcher.stub(:fetch_diff, mock_fetch) do
             loader = PrBundleLoader.new
             result = loader.process(@bundle, "123")
 
@@ -178,9 +178,9 @@ module Ace
         end
 
         def test_process_handles_gh_authentication_error
-          mock_fetch = ->(_id, **_opts) { raise Ace::Git::GhAuthenticationError, "not authenticated" }
+          mock_fetch = ->(_id, **_opts) { raise Ace::Git::ProviderAuthenticationError, "not authenticated" }
 
-          Ace::Git::Molecules::PrMetadataFetcher.stub(:fetch_diff, mock_fetch) do
+          Ace::Git::Github::PrFetcher.stub(:fetch_diff, mock_fetch) do
             loader = PrBundleLoader.new
             result = loader.process(@bundle, "123")
 
@@ -191,9 +191,9 @@ module Ace
         end
 
         def test_process_handles_pr_not_found_error
-          mock_fetch = ->(_id, **_opts) { raise Ace::Git::PrNotFoundError, "PR #999 not found" }
+          mock_fetch = ->(_id, **_opts) { raise Ace::Git::ProviderObjectNotFoundError, "PR #999 not found" }
 
-          Ace::Git::Molecules::PrMetadataFetcher.stub(:fetch_diff, mock_fetch) do
+          Ace::Git::Github::PrFetcher.stub(:fetch_diff, mock_fetch) do
             loader = PrBundleLoader.new
             result = loader.process(@bundle, "999")
 
@@ -206,7 +206,7 @@ module Ace
         def test_process_handles_timeout_error
           mock_fetch = ->(_id, **_opts) { raise Ace::Git::TimeoutError, "command timed out after 30s" }
 
-          Ace::Git::Molecules::PrMetadataFetcher.stub(:fetch_diff, mock_fetch) do
+          Ace::Git::Github::PrFetcher.stub(:fetch_diff, mock_fetch) do
             loader = PrBundleLoader.new
             result = loader.process(@bundle, "123")
 
@@ -224,7 +224,7 @@ module Ace
             error: "gh pr command failed: network error"
           }
 
-          Ace::Git::Molecules::PrMetadataFetcher.stub(:fetch_diff, ->(_id, **_opts) { mock_response }) do
+          Ace::Git::Github::PrFetcher.stub(:fetch_diff, ->(_id, **_opts) { mock_response }) do
             loader = PrBundleLoader.new
             result = loader.process(@bundle, "123")
 
@@ -238,7 +238,7 @@ module Ace
           # Tests the base GitError rescue (for errors not in the specific list)
           mock_fetch = ->(_id, **_opts) { raise Ace::Git::GitError, "unexpected git operation failed" }
 
-          Ace::Git::Molecules::PrMetadataFetcher.stub(:fetch_diff, mock_fetch) do
+          Ace::Git::Github::PrFetcher.stub(:fetch_diff, mock_fetch) do
             loader = PrBundleLoader.new
             result = loader.process(@bundle, "123")
 

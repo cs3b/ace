@@ -703,7 +703,7 @@ class BundleLoaderTest < AceTestCase
           pr: "123"
       YAML
 
-      # Stub ace-git public API (PrMetadataFetcher.fetch_diff) instead of Open3.capture3
+      # Stub the GitHub provider public API (PrFetcher.fetch_diff) instead of Open3.capture3
       mock_response = {
         success: true,
         diff: PrMockFixtures::MOCK_DIFF_STANDARD,
@@ -711,7 +711,7 @@ class BundleLoaderTest < AceTestCase
         source: "pr:123"
       }
 
-      Ace::Git::Molecules::PrMetadataFetcher.stub(:fetch_diff, ->(_id, **_opts) { mock_response }) do
+      Ace::Git::Github::PrFetcher.stub(:fetch_diff, ->(_id, **_opts) { mock_response }) do
         loader = Ace::Bundle::Organisms::BundleLoader.new(base_dir: Dir.pwd)
         context = loader.load_inline_yaml(yaml_config)
 
@@ -739,14 +739,14 @@ class BundleLoaderTest < AceTestCase
 
       call_count = 0
 
-      # Stub ace-git public API (PrMetadataFetcher.fetch_diff) instead of Open3.capture3
+      # Stub the GitHub provider public API (PrFetcher.fetch_diff) instead of Open3.capture3
       mock_fetch = lambda do |id, **_opts|
         diff = (call_count == 0) ? PrMockFixtures::MOCK_DIFF_PR_123 : PrMockFixtures::MOCK_DIFF_PR_456
         call_count += 1
         {success: true, diff: diff, identifier: id, source: "pr:#{id}"}
       end
 
-      Ace::Git::Molecules::PrMetadataFetcher.stub(:fetch_diff, mock_fetch) do
+      Ace::Git::Github::PrFetcher.stub(:fetch_diff, mock_fetch) do
         loader = Ace::Bundle::Organisms::BundleLoader.new(base_dir: Dir.pwd)
         context = loader.load_inline_yaml(yaml_config)
 
@@ -773,7 +773,7 @@ class BundleLoaderTest < AceTestCase
 
       invalid_pr_error = ->(_id, **_opts) { raise ArgumentError, "Invalid PR identifier: invalid-pr-format" }
 
-      Ace::Git::Molecules::PrMetadataFetcher.stub(:fetch_diff, invalid_pr_error) do
+      Ace::Git::Github::PrFetcher.stub(:fetch_diff, invalid_pr_error) do
         loader = Ace::Bundle::Organisms::BundleLoader.new(base_dir: Dir.pwd)
         context = loader.load_file("config.md")
 

@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "ace/git/github"
 require "json"
 require_relative "../atoms/retry_with_backoff"
 
@@ -71,7 +72,7 @@ module Ace
         # @return [Hash] Result with :success, :comments, :reviews, :review_threads, :error
         def self.fetch(pr_identifier, options = {})
           # Parse identifier to get gh CLI format using ace-git
-          parsed = Ace::Git::Atoms::PrIdentifierParser.parse(pr_identifier)
+          parsed = Ace::Git::Github::PrIdentifier.parse(pr_identifier)
           gh_format = parsed.gh_format
 
           # Default timeout for PR operations
@@ -82,7 +83,7 @@ module Ace
           fields = "comments,reviews,number,title,author"
 
           result = Ace::Review::Atoms::RetryWithBackoff.execute(options) do
-            Ace::Git::Molecules::GhCliExecutor.execute("pr", ["view", gh_format, "--json", fields], timeout: timeout)
+            Ace::Git::Github::CliExecutor.execute("pr", ["view", gh_format, "--json", fields], timeout: timeout)
           end
 
           if result[:success]
@@ -117,7 +118,7 @@ module Ace
             error: "Failed to parse PR comments: #{e.message}"
           }
         rescue Ace::Review::Errors::GhCliNotInstalledError, Ace::Review::Errors::GhAuthenticationError,
-          Ace::Git::GhNotInstalledError, Ace::Git::GhAuthenticationError
+          Ace::Git::ProviderCliMissingError, Ace::Git::ProviderAuthenticationError
           raise
         rescue => e
           {
@@ -251,7 +252,7 @@ module Ace
 
           # Execute GraphQL query
           result = Ace::Review::Atoms::RetryWithBackoff.execute(options) do
-            Ace::Git::Molecules::GhCliExecutor.execute(
+            Ace::Git::Github::CliExecutor.execute(
               "api",
               [
                 "graphql",
@@ -383,7 +384,7 @@ module Ace
         # @return [String, nil] "owner/name" format or nil if not a GitHub repo
         def self.discover_repo_from_remote(options = {})
           timeout = options[:timeout] || 10
-          result = Ace::Git::Molecules::GhCliExecutor.execute(
+          result = Ace::Git::Github::CliExecutor.execute(
             "repo",
             ["view", "--json", "owner,name"],
             timeout: timeout

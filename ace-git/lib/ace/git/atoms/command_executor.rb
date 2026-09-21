@@ -106,7 +106,7 @@ module Ace
             # Using Timeout to prevent hanging on network issues or stuck git operations
             Timeout.timeout(timeout) do
               # Using Open3.capture3 to avoid shell injection
-              # Arguments are passed directly as array elements, not through shell
+              # Arguments are passed directly as array elements, never via a shell
               # If env is provided, prepend it to the command (Open3 convention)
               args = env ? [env, *command_parts] : command_parts
               stdout, stderr, status = Open3.capture3(*args)

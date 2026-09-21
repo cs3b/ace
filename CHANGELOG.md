@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- **ace-git-github v0.1.0**: New GitHub provider package implementing the forge-neutral ace-git provider contract, owning all `gh` CLI invocation, output parsing, authentication verification, and issue synchronization moved out of the ace-git core, with normalized evidence translation and the shared classified failure taxonomy.
+- **ace-git-forgejo v0.1.0**: New Forgejo provider package implementing the same provider contract with `fj` CLI invocation, minimal-style output parsing, per-host authentication verification, and classified failures; ad-hoc curl fallbacks are strictly excluded.
+
+### Changed
+
+- **ace-git v0.24.0**: Decoupled local Git from forge behavior. Added the `ServerRegistry` (named servers, one explicit default, deterministic remote-URL matching), the `Providers` registry and `Providers::Base` contract, normalized evidence types, and the full classified failure taxonomy. Status PR enrichment now routes through the provider contract and stays purely local without configuration. Removed all `gh` execution, GitHub-specific parsing, the `ace-git pr` CLI command, and hardcoded GitHub gemspec URLs (pre-1.0 replacement; consumers migrate to the provider packages in subsequent chunks).
+- **ace-bundle, ace-git-worktree, ace-review, ace-task v0.37+**: Repointed PR/issue lookups from the removed ace-git core molecules to the new `ace-git-github` owner classes (mechanical call-site updates ahead of the dedicated consumer-migration chunks).
+
 ### Fixed
 
 - **ace-llm v0.39.2**: Preserved explicit Codex model targets and native errors without fallback substitution, including Ruby model overrides, while retaining fallback behavior for aliases, roles and other providers.

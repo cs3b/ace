@@ -5,6 +5,23 @@ require "ace/git/cli/commands/status"
 
 class StatusTest < AceGitTestCase
   def setup
+  # Build normalized PR evidence the way providers do
+  def pr_evidence(number:, title: "PR", state: :open, author: "dev")
+    Ace::Git::ProviderPullRequest.new(
+      server_name: "forge",
+      number: number,
+      title: title,
+      state: state,
+      head_ref: "feature",
+      base_ref: "main",
+      head_sha: "a" * 40,
+      author: author,
+      url: nil,
+      draft: false,
+      merged_at: nil
+    )
+  end
+
     super
     @command = Ace::Git::CLI::Commands::Status.new
   end
@@ -89,19 +106,24 @@ class StatusTest < AceGitTestCase
       branch: "feature/pr-test",
       repository_type: :normal,
       repository_state: :clean,
-      pr_metadata: {"number" => 123, "title" => "Test PR"}
+      pr_metadata: pr_evidence(number: 123, title: "Test PR")
     )
 
-    mock_diff_result = {success: true, diff: "+added line\n-removed line"}
+    fake_provider = Object.new
+    def fake_provider.pull_request_diff(number:)
+      "+added line\n-removed line"
+    end
 
     Ace::Git::Organisms::RepoStatusLoader.stub :load, mock_context do
-      Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_diff, mock_diff_result do
-        output = capture_io do
-          result = @command.call(format: nil, with_diff: true)
-          assert_nil result
+      Ace::Git::ServerRegistry.stub :resolve_default, -> { Ace::Git::ResolvedServer.new(name: "forge", provider: :fake, url: "https://forge.example.com") } do
+        Ace::Git::Providers.stub :for, ->(_server, **_opts) { fake_provider } do
+          output = capture_io do
+            result = @command.call(format: nil, with_diff: true)
+            assert_nil result
+          end
+          assert_match(/PR Diff/, output.first)
+          assert_match(/\+added line/, output.first)
         end
-        assert_match(/PR Diff/, output.first)
-        assert_match(/\+added line/, output.first)
       end
     end
   end
@@ -111,18 +133,25 @@ class StatusTest < AceGitTestCase
       branch: "feature/pr-test",
       repository_type: :normal,
       repository_state: :clean,
-      pr_metadata: {"number" => 123, "title" => "Test PR"}
+      pr_metadata: pr_evidence(number: 123, title: "Test PR")
     )
 
+    fake_provider = Object.new
+    def fake_provider.pull_request_diff(number:)
+      raise Ace::Git::ProviderUnreachableError, "offline"
+    end
+
     Ace::Git::Organisms::RepoStatusLoader.stub :load, mock_context do
-      Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_diff, ->(_pr) { raise Ace::Git::Error, "Diff failed" } do
-        output = capture_io do
-          result = @command.call(format: nil, with_diff: true)
-          # Should still succeed - diff errors are silently skipped
-          assert_nil result
+      Ace::Git::ServerRegistry.stub :resolve_default, -> { Ace::Git::ResolvedServer.new(name: "forge", provider: :fake, url: "https://forge.example.com") } do
+        Ace::Git::Providers.stub :for, ->(_server, **_opts) { fake_provider } do
+          output = capture_io do
+            result = @command.call(format: nil, with_diff: true)
+            # Should still succeed - provider failures skip the diff section
+            assert_nil result
+          end
+          # Should NOT contain error message
+          refute_match(/offline/, output.join)
         end
-        # Should NOT contain error message
-        refute_match(/Diff failed/, output.join)
       end
     end
   end
@@ -179,8 +208,8 @@ class StatusTest < AceGitTestCase
       repository_type: :normal,
       repository_state: :clean,
       pr_activity: {
-        merged: [{"number" => 84, "title" => "Merged PR"}],
-        open: [{"number" => 85, "title" => "Open PR", "author" => {"login" => "dev"}}]
+        merged: [pr_evidence(number: 84, title: "Merged PR", state: :merged)],
+        open: [pr_evidence(number: 85, title: "Open PR", author: "dev")]
       }
     )
 

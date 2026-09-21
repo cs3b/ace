@@ -17,7 +17,8 @@ guided workflow.
 - Ruby 3.2+
 - Git 2.23+
 - `ace-git` installed
-- Optional: GitHub CLI (`gh`) for PR-aware commands and workflows
+- Optional: a provider package (`ace-git-github` or `ace-git-forgejo`) plus a configured
+  default forge server for PR-aware status enrichment
 
 ## Installation
 
@@ -76,7 +77,6 @@ Use this for preferences, not for redefining the workflow logic.
 | Show repo context | `ace-git status` |
 | Show a quick diff summary | `ace-git diff --format summary` |
 | Show branch tracking info | `ace-git branch` |
-| Show PR metadata | `ace-git pr` |
 | Show package version | `ace-git version` |
 
 ## Run Package Tests
@@ -90,7 +90,7 @@ Use the restarted package test model:
 
 ## Next Steps
 
-- Load `wfi://github/pr/create` to open a structured PR workflow
-- Load `wfi://github/pr/update` to refresh an existing PR description
 - Load `wfi://git/reorganize-commits` to clean up branch history before review
+- Install a provider package (`ace-git-github` / `ace-git-forgejo`) and configure
+  `git.servers` for PR-aware status enrichment
 - Run `ace-git --help` to browse command-level examples

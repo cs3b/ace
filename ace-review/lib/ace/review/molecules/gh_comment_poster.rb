@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "ace/git/github"
 require "tempfile"
 
 module Ace
@@ -17,7 +18,7 @@ module Ace
         # @return [Hash] Result with :success, :comment_url, :preview, :error
         def self.post_comment(pr_identifier, review_text, options = {})
           # Parse identifier using ace-git
-          parsed = Ace::Git::Atoms::PrIdentifierParser.parse(pr_identifier)
+          parsed = Ace::Git::Github::PrIdentifier.parse(pr_identifier)
           gh_format = parsed.gh_format
 
           # Check PR state before posting
@@ -54,7 +55,7 @@ module Ace
             }
           end
         rescue Ace::Review::Errors::GhCliNotInstalledError, Ace::Review::Errors::GhAuthenticationError,
-          Ace::Git::GhNotInstalledError, Ace::Git::GhAuthenticationError
+          Ace::Git::ProviderCliMissingError, Ace::Git::ProviderAuthenticationError
           raise
         rescue => e
           {
@@ -69,7 +70,7 @@ module Ace
         # @return [Hash] Result with :success or :error
         def self.check_pr_state(gh_format)
           # Fetch PR metadata
-          result = Ace::Git::Molecules::GhCliExecutor.execute(
+          result = Ace::Git::Github::CliExecutor.execute(
             "pr",
             ["view", gh_format, "--json", "state,number"]
           )
@@ -170,7 +171,7 @@ module Ace
             file.flush
 
             # Post using gh pr comment
-            Ace::Git::Molecules::GhCliExecutor.execute(
+            Ace::Git::Github::CliExecutor.execute(
               "pr",
               ["comment", gh_format, "--body-file", file.path]
             )

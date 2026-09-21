@@ -35,17 +35,14 @@ module Ace
           # @param executor [Module] Command executor
           # @return [Hash] { ahead: Integer, behind: Integer }
           def tracking_status(executor: Atoms::CommandExecutor)
-            result = executor.execute("git", "rev-list", "--left-right", "--count", "@{upstream}...HEAD")
+            ahead = count_commits("@{upstream}..HEAD", executor: executor)
+            behind = count_commits("HEAD..@{upstream}", executor: executor)
 
-            unless result[:success]
+            if ahead.nil? || behind.nil?
               return {ahead: 0, behind: 0, error: "No tracking branch or not in git repo"}
             end
 
-            parts = result[:output].strip.split(/\s+/)
-            {
-              ahead: parts[1].to_i,
-              behind: parts[0].to_i
-            }
+            {ahead: ahead, behind: behind}
           end
 
           # Get full branch information
@@ -84,6 +81,15 @@ module Ace
             else
               "#{behind} behind"
             end
+          end
+
+          # Count commits in a rev-list range; nil when the range is invalid
+          # (e.g. no upstream configured)
+          def count_commits(range, executor: Atoms::CommandExecutor)
+            result = executor.execute("git", "rev-list", "--count", range)
+            return nil unless result[:success]
+
+            result[:output].strip.to_i
           end
         end
       end

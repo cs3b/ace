@@ -25,7 +25,8 @@ PATH
   specs:
     ace-bundle (0.43.9)
       ace-compressor (~> 0.25)
-      ace-git (~> 0.23)
+      ace-git (~> 0.24)
+      ace-git-github (~> 0.1)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)
       ace-support-core (~> 0.31)
@@ -103,7 +104,8 @@ PATH
   remote: ace-git-worktree
   specs:
     ace-git-worktree (0.22.1)
-      ace-git (~> 0.23)
+      ace-git (~> 0.24)
+      ace-git-github (~> 0.1)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)
       ace-support-core (~> 0.31)
@@ -252,7 +254,8 @@ PATH
     ace-review (0.54.2)
       ace-b36ts (~> 0.14)
       ace-bundle (~> 0.43)
-      ace-git (~> 0.23)
+      ace-git (~> 0.24)
+      ace-git-github (~> 0.1)
       ace-llm (~> 0.39)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)
@@ -352,7 +355,8 @@ PATH
   specs:
     ace-task (0.37.4)
       ace-b36ts (~> 0.14)
-      ace-git (~> 0.23)
+      ace-git (~> 0.24)
+      ace-git-github (~> 0.1)
       ace-support-cli (~> 0.6)
       ace-support-core (~> 0.31)
       ace-support-fs (~> 0.3)

@@ -8,12 +8,12 @@ module Ace
   module Git
     # Registry of provider implementations owned by provider packages.
     #
-    # The core never executes provider CLIs. Provider packages (ace-git-github,
-    # ace-git-forgejo) register their contract implementation here when loaded;
-    # higher-level consumers then obtain a provider through {Providers.for}.
+    # The core never executes provider CLIs. Provider packages register their
+    # contract implementation here when loaded; downstream consumers then
+    # obtain a provider via {Providers.for}.
     #
     # @example Registering (inside a provider package)
-    #   Ace::Git::Providers.register(:github, Ace::Git::Github::Provider)
+    #   Ace::Git::Providers.register(:acme, Ace::Git::Acme::Provider)
     #
     # @example Resolving (in consumers)
     #   server = Ace::Git::ServerRegistry.resolve_default
@@ -26,7 +26,7 @@ module Ace
       class << self
         # Register a provider implementation for a provider type.
         #
-        # @param type [Symbol, String] provider type (e.g. :github, :forgejo)
+        # @param type [Symbol, String] provider type (e.g. :acme)
         # @param provider_class [Class] class implementing Providers::Base;
         #   must respond to .new
         # @raise [ArgumentError] when type or provider_class is invalid
