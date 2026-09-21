@@ -80,5 +80,64 @@ module Forgejo
       assert_equal "owner/repo", parsed[:full_name]
       assert_equal "https://forge.example.com/owner/repo", parsed[:url]
     end
+
+    # --- Real `fj` v0.6.0 output (captured live, isolate marks included) ---
+
+    REAL_FIXTURES = File.expand_path("../../fixtures", __dir__).freeze
+
+    def real_fixture(name)
+      File.read(File.join(REAL_FIXTURES, name))
+    end
+
+    def test_clean_strips_bidi_isolate_and_pop_directional_marks
+      assert_equal "abc def", Ace::Git::Forgejo::Parsers.clean("\u2068abc\u2069 def")
+      assert_equal "clean", Ace::Git::Forgejo::Parsers.clean("\u202acl\u202cean\u2069")
+    end
+
+    def test_parse_pr_view_parses_real_fj_output
+      parsed = Ace::Git::Forgejo::Parsers.parse_pr_view(real_fixture("pr_view_26.txt"))
+      assert_equal 26, parsed[:number]
+      assert_equal "Forge-neutral Git core with GitHub and Forgejo providers (8wk.t.l1e, F0)", parsed[:title]
+      assert_equal "lab-builder", parsed[:author]
+      assert_equal :open, parsed[:state]
+      assert_equal "lab/W675-ace", parsed[:head_ref]
+      assert_equal "main", parsed[:base_ref]
+    end
+
+    def test_parse_pr_view_real_evidence_contains_no_embedded_marks
+      parsed = Ace::Git::Forgejo::Parsers.parse_pr_view(real_fixture("pr_view_26.txt"))
+      [parsed[:title], parsed[:head_ref], parsed[:base_ref], parsed[:author]].each do |field|
+        refute_includes field, "\u2068"
+        refute_includes field, "\u2069"
+      end
+    end
+
+    def test_parse_head_sha_from_real_commits_output
+      assert_equal "1bc61f4c2f78d2b9e987f8898752029603be126b",
+        Ace::Git::Forgejo::Parsers.parse_head_sha(real_fixture("pr_commits_26.txt"))
+    end
+
+    def test_parse_search_parses_real_fj_listing
+      entries = Ace::Git::Forgejo::Parsers.parse_search(real_fixture("pr_search_all.txt"))
+      assert_equal 26, entries.length
+      assert_equal 26, entries[0][:number]
+      assert_equal "Forge-neutral Git core with GitHub and Forgejo providers (8wk.t.l1e, F0)", entries[0][:title]
+      assert_equal "lab-builder", entries[0][:author]
+      assert_equal 1, entries.last[:number]
+    end
+
+    def test_parse_issue_view_parses_real_fj_output
+      parsed = Ace::Git::Forgejo::Parsers.parse_issue_view(real_fixture("issue_view_26.txt"))
+      assert_equal 26, parsed[:number]
+      assert_equal "lab-builder", parsed[:author]
+      assert_equal :open, parsed[:state]
+      refute parsed.key?(:head_ref)
+    end
+
+    def test_parse_repo_view_real_url_evidence_is_clean
+      parsed = Ace::Git::Forgejo::Parsers.parse_repo_view(real_fixture("repo_view.txt"))
+      assert_equal "cs3b/ace", parsed[:full_name]
+      assert_equal "https://forgejo.tail6c0887.ts.net/cs3b/ace", parsed[:url]
+    end
   end
 end

@@ -17,13 +17,13 @@ class ForgejoProviderContractTest < AceGitForgejoTestCase
 
   def ok_runner
     @ok_runner ||= scripted_runner(
-      "fj --version" => {success: true, stdout: "fj 0.14.0", stderr: "", exit_code: 0},
+      "fj version" => {success: true, stdout: "fj v0.6.0\nCheck for a new version with `fj version --check`\n", stderr: "", exit_code: 0},
       "fj auth list" => {success: true, stdout: "forgejo.example.com\n", stderr: "", exit_code: 0},
       "fj --style minimal pr view 25" => {success: true, stdout: pr25_view, stderr: "", exit_code: 0},
       "fj --style minimal pr view 25 commits" => {
         success: true, stdout: "commit fc14c43d3660ac6c133959a6dec29603413f0e8a (+252, -8)\nAuthor: Lab Builder <lab-builder@lab.invalid>\n", stderr: "", exit_code: 0
       },
-      "fj --style minimal pr search --state all --limit 30" => {
+      "fj --style minimal pr search --state all" => {
         success: true, stdout: "2 pull requests\n#31: Wire status to providers (by lab-builder)\n#25: Ship the provider contract (by lab-builder)\n", stderr: "", exit_code: 0
       },
       "fj --style minimal pr view 31" => {success: true, stdout: pr31_view, stderr: "", exit_code: 0},
@@ -44,19 +44,19 @@ class ForgejoProviderContractTest < AceGitForgejoTestCase
   end
 
   def version_fail_runner
-    scripted_runner("fj --version" => ["fj: command not found", 127])
+    scripted_runner("fj version" => ["fj: command not found", 127])
   end
 
   def auth_fail_runner
     scripted_runner(
-      "fj --version" => {success: true, stdout: "fj 0.14.0", stderr: "", exit_code: 0},
+      "fj version" => {success: true, stdout: "fj v0.6.0\nCheck for a new version with `fj version --check`\n", stderr: "", exit_code: 0},
       "fj auth list" => {success: true, stdout: "other-host.example.com\n", stderr: "", exit_code: 0}
     )
   end
 
   def not_found_runner
     scripted_runner(
-      "fj --version" => {success: true, stdout: "fj 0.14.0", stderr: "", exit_code: 0},
+      "fj version" => {success: true, stdout: "fj v0.6.0\nCheck for a new version with `fj version --check`\n", stderr: "", exit_code: 0},
       "fj auth list" => {success: true, stdout: "forgejo.example.com\n", stderr: "", exit_code: 0},
       "fj --style minimal pr view 999" => ["error: pull request does not exist", 1]
     )
@@ -64,7 +64,7 @@ class ForgejoProviderContractTest < AceGitForgejoTestCase
 
   def malformed_runner
     scripted_runner(
-      "fj --version" => {success: true, stdout: "fj 0.14.0", stderr: "", exit_code: 0},
+      "fj version" => {success: true, stdout: "fj v0.6.0\nCheck for a new version with `fj version --check`\n", stderr: "", exit_code: 0},
       "fj auth list" => {success: true, stdout: "forgejo.example.com\n", stderr: "", exit_code: 0},
       "fj --style minimal pr view 25" => {success: true, stdout: "unexpected output shape", stderr: "", exit_code: 0}
     )
@@ -72,7 +72,7 @@ class ForgejoProviderContractTest < AceGitForgejoTestCase
 
   def unreachable_runner
     scripted_runner(
-      "fj --version" => {success: true, stdout: "fj 0.14.0", stderr: "", exit_code: 0},
+      "fj version" => {success: true, stdout: "fj v0.6.0\nCheck for a new version with `fj version --check`\n", stderr: "", exit_code: 0},
       "fj auth list" => {success: true, stdout: "forgejo.example.com\n", stderr: "", exit_code: 0},
       "fj --style minimal pr view 25" => ["fj: Forgejo request failed with HTTP 502", 1]
     )

@@ -8,9 +8,18 @@ module Ace
       # `fj` has no JSON output mode, so the provider owns parsers for the
       # stable text formats. All parsers are pure functions over strings.
       module Parsers
-        # Strip soft-hyphen/position markers and whitespace from an `fj` line.
+        # Invisible bidi isolate/pop-directional marks. Real `fj` (v0.6.0) wraps
+        # dynamic fields (titles, numbers, URLs) in U+2068/U+2069 even in minimal
+        # style; they are Unicode Cf format characters, so `[[:cntrl:]]` does not
+        # cover them and they must be stripped explicitly. Includes the full
+        # isolate/pop set (U+2066-U+2069, U+202A-U+202E), directional marks
+        # (U+200E/U+200F), and the soft hyphen.
+        BIDI_MARKS = /[\u00ad\u200e\u200f\u202a-\u202e\u2066-\u2069]/.freeze
+
+        # Strip control characters, bidi isolate/pop-directional marks, and
+        # surrounding whitespace from an `fj` line.
         def self.clean(line)
-          line.to_s.gsub(/[[:cntrl:]]/, "").strip
+          line.to_s.gsub(/[[:cntrl:]]/, "").gsub(BIDI_MARKS, "").strip
         end
 
         # Parse `fj pr view <ID>` output.

@@ -1,0 +1,78 @@
+commit 1bc61f4c2f78d2b9e987f8898752029603be126b (+775, -2340)
+Author: Lab Builder <lab-builder@lab.invalid>
+Date:   Mon Sep 21 16:20:08 2026 +0000
+
+    feat(ace-git)!: decouple local Git from forge behavior; providers own all forge CLI execution
+    
+    The atomic core swap of foundation chunk F0 (8wk.t.l1e / 8vu.t.l2d.0):
+    
+    Removed from the ace-git core (pre-1.0 replacement, no shims/aliases/dual
+    paths survive):
+    - molecules/gh_cli_executor.rb (direct gh subprocess execution)
+    - molecules/pr_metadata_fetcher.rb (gh pr invocation and output parsing)
+    - molecules/github_issue_sync.rb (GitHub issue task-linkage sync)
+    - cli/commands/pr.rb (GitHub CLI semantics exposed as a core command)
+    - atoms/pr_identifier_parser.rb (gh_format-specific identifier handling)
+    - GhNotInstalledError / GhAuthenticationError / PrNotFoundError classes
+    
+    The core now contains zero provider CLI invocation and zero provider output
+    parsing:  and
+    'grep -rniE forgejo
+
+commit 5f021579d9a2ce029ba72ff708cb315241e433e3 (+3073, -55)
+Author: Lab Builder <lab-builder@lab.invalid>
+Date:   Mon Sep 21 15:53:10 2026 +0000
+
+    feat(ace-git-github),feat(ace-git-forgejo): add provider packages owning all forge behavior
+    
+    Foundation chunk F0 (8wk.t.l1e / 8vu.t.l2d.1 + .2):
+    
+    ace-git-github (0.1.0) owns all GitHub behavior moved out of the core:
+    - gh CLI invocation with timeout and classified failures (CliExecutor)
+    - gh pr output parsing with normalized evidence translation (PrFetcher)
+    - GitHub identifier formats including github.com PR URLs (PrIdentifier)
+    - GitHub issue task-linkage sync (IssueSync; legacy alias removed)
+    
+    ace-git-forgejo (0.1.0) introduces first-class Forgejo support behind the
+    same contract:
+    - fj CLI invocation, auth verification per configured server host
+    - minimal-style output parsers for PRs, issues, Actions checks, repository
+    - classified failures only; ad-hoc curl fallbacks strictly excluded
+    
+    Both providers implement the shared Providers::Base contract, register in
+    the core provider registry, and pass the identical parity suite shipped in
+    ace-support-test-helpers (ProviderContract) against scripted fakes.
+    
+    Also: ace-git bumped to 0.24.0 (provider gemspec floor), ResolvedServer
+    moved to its own file, monorepo wiring (Gemfile, Gemfile.lock, suite and
+    runner config with new providers/contract/core test patterns).
+
+commit 997287784551275b8faf19e3e69b612b2f439322 (+1167, -11)
+Author: Lab Builder <lab-builder@lab.invalid>
+Date:   Mon Sep 21 15:26:46 2026 +0000
+
+    feat(ace-git): add provider contract, server registry, and failure taxonomy
+    
+    Foundation for forge-neutral Git core (8wk.t.l1e / 8vu.t.l2d.0):
+    
+    - ServerRegistry resolves forge servers deterministically: explicit named
+      servers, exactly-one-default resolution, and remote-URL matching with no
+      hostname assumptions (scp/URL/port forms normalized by Atoms::ServerUrl)
+    - ResolvedServer identity value exposed to consumers
+    - Providers registry + Providers::Base abstract contract: the core defines
+      the interface and normalized evidence while provider packages own all CLI
+      invocation and output parsing
+    - Normalized evidence types: ProviderPullRequest, ProviderIssue,
+      ProviderCheck, ProviderRepository
+    - Full classified failure taxonomy in git/errors.rb
+    - Atoms::PrIdentifier neutral identifier parsing (number, owner/repo#N)
+    - git.servers configuration section with validation
+    - Core boundary proof: local Git operations succeed with provider CLIs
+      scrubbed from PATH
+
+commit 56c218ef02647548d8120cf4d4c7cc69f0eaa8d8 (+1, -1)
+Author: Lab Builder <lab-builder@lab.invalid>
+Date:   Mon Sep 21 15:26:46 2026 +0000
+
+    chore(task-specs): mark 8wk.t.l1e in progress (W675 builder execution)
+

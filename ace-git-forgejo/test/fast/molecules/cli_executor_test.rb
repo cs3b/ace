@@ -41,6 +41,16 @@ module Forgejo
       end
     end
 
+    def test_installed_probes_fj_version_subcommand
+      runner = ->(args:, timeout: nil, env: nil) do
+        # Real `fj` v0.6.0 has no --version flag; `fj version` is the probe.
+        assert_equal ["fj", "version"], args
+        {success: true, stdout: "fj v0.6.0\n", stderr: "", exit_code: 0}
+      end
+
+      assert Ace::Git::Forgejo::CliExecutor.installed?(runner: runner)
+    end
+
     def test_check_installed_raises_classified_error
       runner = ->(_args:, timeout: nil, env: nil) { {success: false, stdout: "", stderr: "nope", exit_code: 127} }
       assert_raises(Ace::Git::ProviderCliMissingError) do

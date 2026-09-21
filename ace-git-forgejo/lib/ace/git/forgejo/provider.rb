@@ -57,7 +57,8 @@ module Ace
 
         # @return [ProviderPullRequest, nil] evidence for the branch's PR
         def pull_request_for_branch(branch:)
-          listing = fj(["--style", "minimal", "pr", "search", "--state", "all", "--limit", "30"])
+          # `fj pr search` has no --limit flag; fetch all and order newest-first.
+          listing = fj(["--style", "minimal", "pr", "search", "--state", "all"])
           entries = Parsers.parse_search(listing).sort_by { |entry| -entry[:number] }
 
           entries.each do |entry|
@@ -77,12 +78,16 @@ module Ace
           fj(["pr", "view", number.to_s, "diff"])
         end
 
+        # `fj pr search` has no --limit flag; cap client-side after sorting
+        # newest-first so the returned window is deterministic.
+        #
         # @return [Array<ProviderPullRequest>] recent PRs, newest first
         def recent_pull_requests(limit:)
-          listing = fj(["--style", "minimal", "pr", "search", "--state", "all", "--limit", limit.to_s])
+          listing = fj(["--style", "minimal", "pr", "search", "--state", "all"])
           Parsers.parse_search(listing)
             .map { |entry| normalize_search_entry(entry) }
             .sort_by { |pr| -pr.number }
+            .first(limit)
         end
 
         # @return [ProviderIssue] normalized issue evidence

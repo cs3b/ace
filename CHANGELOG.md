@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+
+- **ace-git-forgejo (unreleased fix)**: Aligned the Forgejo provider with the real `fj` v0.6.0 CLI per independent PR #26 review: strip Unicode bidi isolate/pop-directional marks (U+2066–U+2069 and friends) that real minimal-style output wraps around dynamic fields so PR/issue/repo views parse and URL evidence stays clean, drop the nonexistent `fj pr search --limit` flag (client-side cap after newest-first sort), and probe CLI presence with `fj version` instead of the rejected `fj --version`, keeping classified `ProviderCliMissingError` semantics. Captured real `fj` outputs as test fixtures.
+
 ### Added
 
 - **ace-git-github v0.1.0**: New GitHub provider package implementing the forge-neutral ace-git provider contract, owning all `gh` CLI invocation, output parsing, authentication verification, and issue synchronization moved out of the ace-git core, with normalized evidence translation and the shared classified failure taxonomy.

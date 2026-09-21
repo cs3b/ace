@@ -1,0 +1,73 @@
+⁨⁩⁨Forge-neutral Git core with GitHub and Forgejo providers (8wk.t.l1e, F0)⁩ ⁨⁩#⁨26⁩⁨⁩
+By ⁨⁩⁨lab-builder⁩⁨⁩ — ⁨⁨⁩Open⁨⁩⁩ — ⁨⁩+⁨4438⁩ ⁨⁩-⁨1829⁩⁨⁩
+⁨From `⁨lab-builder/ace:lab/W675-ace⁩` into `⁨main⁩`⁩
+
+> Implements reviewed task `8wk.t.l1e` — **Forge-neutral Git core with GitHub and Forgejo providers** (foundation chunk F0: `8vu.t.l2d.0` + `.1` + `.2` shipped atomically). Prepared via W674 (commit `b1f113c6c`), fresh-eyes reviewed, promoted to pending. Builder Work W675.
+> 
+> ## What changed
+> 
+> 1. **`ace-git` core refactor (v0.23.1 → 0.24.0)** — local Git fully decoupled from forge behavior:
+>    - Removed (pre-1.0 replacement, no shims/aliases/dual paths survive): `molecules/gh_cli_executor.rb`, `molecules/pr_metadata_fetcher.rb`, `molecules/github_issue_sync.rb`, `cli/commands/pr.rb` (CLI `pr` command), `atoms/pr_identifier_parser.rb`, and error classes `GhNotInstalledError` / `GhAuthenticationError` / `PrNotFoundError`.
+>    - Added: `ServerRegistry` (multiple uniquely named servers, at most one explicit default, explicit name resolution, deterministic remote-URL matching with no hostname assumptions via `Atoms::ServerUrl`), `ResolvedServer`, `Providers` registry + `Providers::Base` contract, normalized evidence (`ProviderPullRequest`, `ProviderIssue`, `ProviderCheck`, `ProviderRepository`), neutral `Atoms::PrIdentifier`, and the full classified failure taxonomy (all 11 errors from the spec).
+>    - Status PR enrichment (`RepoStatusLoader`, `StatusFormatter`, `status --with-diff`) routes through the provider contract and degrades to purely local output with no server/provider configured — no silent fallback to any provider, no ad-hoc curl.
+>    - `ace-git.gemspec` hardcoded `github.com` URLs replaced with the canonical delivery forge (`forgejo.tail6c0887.ts.net/cs3b/ace`).
+> 2. **`ace-git-github` v0.1.0 (new)** — owns all GitHub behavior moved out of the core: `gh` invocation (`CliExecutor`), PR parsing (`PrFetcher`), GitHub URL/identifier formats (`PrIdentifier`), issue task-linkage sync (`IssueSync`; the old `IssueSync = GithubIssueSync` alias is gone). Implements the shared contract; registers under `:github`.
+> 3. **`ace-git-forgejo` v0.1.0 (new)** — owns all Forgejo behavior: `fj` invocation, minimal-style text parsers (PR view/search/commits, issue view, Actions tasks, repo view), per-host auth verification via `fj auth list`. Ad-hoc curl fallbacks strictly excluded. Registers under `:forgejo`.
+> 4. **Shared parity suite** — `ace-support-test-helpers` ships `Ace::TestSupport::ProviderContract`; identical assertions run against both providers' scripted fakes (normalized evidence shapes + exact failure classes).
+> 5. **Consumer call sites mechanically repointed** to the moved owner classes (behavior-preserving; full consumer migration remains chunk F1/F2 as the spec assigns): ace-bundle, ace-git-worktree, ace-review, ace-task. Suite wiring: root `Gemfile`/`Gemfile.lock`, `.ace/test/suite.yml`, runner patterns (`providers`/`contract`/`core`).
+> 
+> ## Raw evidence
+> 
+> ### Core-coupling proof (at head `1bc61f4c2`)
+> 
+> ```
+> $ grep -rniE "gh|github" ace-git/lib ; echo "exit: $?"
+> exit: 1          # zero matches
+> $ grep -rniE "forgejo|\bfj\b" ace-git/lib ; echo "exit: $?"
+> exit: 1          # zero matches (forgejo zero stays zero)
+> ```
+> 
+> ### Offline local-Git proof
+> 
+> - Environment: `gh` is **not installed** (`command -v gh` → not found); `Ace::Git` never shells to `fj`.
+> - `ace-git/test/fast/core/local_git_boundary_test.rb`: scrubs PATH to a dir containing only `git`, asserts `gh`/`fj` are unreachable, then runs branch/status/log/rev-parse operations through the core molecules — all succeed. **1 test, 7 assertions, PASS.**
+> - `ace-test ace-git all` → 513 tests, 0 failures, 0 errors (includes the PATH-scrubbed boundary test).
+> 
+> ### Server config + failure-taxonomy test results
+> 
+> - `test/fast/providers/server_registry_test.rb` (15 tests): zero/one/two defaults (`NoDefaultServerConfiguredError` / success / `MultipleDefaultServersError`), duplicate names (`DuplicateServerNameError`), explicit selection (`UnknownServerNameError` on miss), remote matching incl. scp-style vs https normalization, no-match and multi-match → `AmbiguousRemoteError`, malformed entries → `ConfigError`.
+> - `test/fast/providers/providers_registry_test.rb` (8 tests): register/resolve, `UnknownProviderError` on unregistered type, invalid registration arguments.
+> - `test/fast/providers/base_test.rb` (3 tests): every contract method is abstract; core never executes provider commands.
+> - `test/fast/errors/taxonomy_test.rb` (3 tests): all 11 classified failures exist, inherit `Ace::Git::Error`, are distinct.
+> - Provider failure classification (exact exception types): `ProviderCliMissingError` (missing binary probe), `ProviderAuthenticationError` (auth probe), `ProviderUnreachableError` (timeout / endpoint failure), `ProviderMalformedOutputError` (unparseable output), `ProviderObjectNotFoundError` (missing object) — asserted identically for both providers by the parity suite (`test/contract/provider_contract_test.rb` in each gem, 14 tests each) plus per-provider molecule/behavior tests (ace-git-github 61 tests, ace-git-forgejo 41 tests, all green).
+> 
+> ### `ace-test-suite --target all` summary
+> 
+> ```
+> Packages:    44 passed, 1 failed
+> Tests:       9122 passed, 1 failed, 47 skipped
+> Assertions:  26196 passed, 0 failed
+> ```
+> 
+> The single failed test is `ace-support-config#test_resolve_namespace_performance_vs_resolve_nested_files` — a wall-clock timing threshold (< 3.0x overhead) that is flaky under 12-way parallel suite load. Rerun in isolation twice: **green both times** (252 tests, 0 failures). `ace-support-config` is untouched by this PR (verify: `git diff --name-only upstream/main...HEAD | grep support-config` → empty).
+> 
+> ### `bundle exec ace-task doctor` (8wk tree)
+> 
+> 8 errors / 429 warnings — **all pre-existing on `main`** and none reference the `8wk.t.l1e` tree: 6 errors in `.ace-tasks/_archive/*` (invalid/missing frontmatter fields) and 2 in `8vt.t.rtr-*` (missing id/status). The `8wk.t.l1e-forge-neutral-git-core-with` folder is clean.
+> 
+> ### Hygiene
+> 
+> - `git diff --check upstream/main` → clean (exit 0)
+> - Worktree clean after commits; `git status --porcelain` empty
+> - No publication, no release train, no host changes, no secrets
+> 
+> ## Head SHA
+> 
+> `1bc61f4c2f78d2b9e987f8898752029603be126b` (branch `lab/W675-ace`, fork `lab-builder/ace`)
+> 
+> ## Out of scope (per spec)
+> 
+> Consumer migration (F1 `8vu.t.l2d.3`–`.5`, F2 `.6`–`.7`), F3 cross-provider proof, RubyGems publication, host/Lab and overseer repo changes.
+
+
+⁨0⁩ comments

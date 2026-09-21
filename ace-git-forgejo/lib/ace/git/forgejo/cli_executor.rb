@@ -35,8 +35,10 @@ module Ace
           end
 
           # Probe whether the `fj` binary is installed and runnable.
+          # `fj` has no `--version` flag (it rejects it with "unexpected
+          # argument"); the supported presence probe is `fj version`.
           def installed?(runner: nil)
-            result = execute(["--version"], runner: runner)
+            result = execute(["version"], runner: runner)
             result != :timeout && result[:success]
           rescue Ace::Git::ProviderCliMissingError
             false
