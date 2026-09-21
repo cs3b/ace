@@ -145,6 +145,16 @@ test_suite:
       group: tools
       priority: 2
 
+    - name: ace-git-github
+      path: ace-git-github
+      group: tools
+      priority: 2
+
+    - name: ace-git-forgejo
+      path: ace-git-forgejo
+      group: tools
+      priority: 2
+
     - name: ace-git-secrets
       path: ace-git-secrets
       group: tools

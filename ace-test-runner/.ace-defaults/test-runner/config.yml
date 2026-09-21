@@ -21,6 +21,9 @@ patterns:
   prompts: "test/{fast/,}prompts/**/*_test.rb"
   fixtures: "test/{fast/,}fixtures/**/*_test.rb"
   support: "test/{fast/,}support/**/*_test.rb"
+  providers: "test/{fast/,}providers/**/*_test.rb"
+  contract: "test/{fast/,}contract/**/*_test.rb"
+  core: "test/{fast/,}core/**/*_test.rb"
   edge: "test/{fast/,}edge/**/*_test.rb"
   feat_tests: "test/feat/**/*_test.rb"
 
@@ -37,6 +40,9 @@ targets:
     - prompts
     - fixtures
     - support
+    - providers
+    - contract
+    - core
   feat:
     - feat_tests
     - edge

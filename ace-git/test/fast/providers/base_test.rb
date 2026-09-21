@@ -24,22 +24,26 @@ module Providers
 
     def test_contract_methods_are_abstract
       methods = {
-        available?: [],
-        check_available!: [],
-        authenticated?: [],
-        check_authenticated!: [],
-        pull_request: [number: 1],
-        pull_request_for_branch: [branch: "main"],
-        pull_request_diff: [number: 1],
-        recent_pull_requests: [limit: 5],
-        issue: [number: 1],
-        checks: [ref: "main"],
-        repository: []
+        available?: {},
+        check_available!: {},
+        authenticated?: {},
+        check_authenticated!: {},
+        pull_request: {number: 1},
+        pull_request_for_branch: {branch: "main"},
+        pull_request_diff: {number: 1},
+        recent_pull_requests: {limit: 5},
+        issue: {number: 1},
+        checks: {ref: "main"},
+        repository: {}
       }
 
-      methods.each do |method_name, args|
+      methods.each do |method_name, kwargs|
         error = assert_raises(NotImplementedError, "#{method_name} must be abstract") do
-          @base.public_send(method_name, **args)
+          if kwargs.empty?
+            @base.public_send(method_name)
+          else
+            @base.public_send(method_name, **kwargs)
+          end
         end
         assert_match(/must implement/, error.message)
       end

@@ -7,21 +7,6 @@ require_relative "resolved_server"
 
 module Ace
   module Git
-    # An exactly-resolved forge server identity.
-    #
-    # Produced by ServerRegistry (by explicit name, by default resolution, or by
-    # remote URL matching). Carries the configured server name, the provider
-    # type that owns its behavior, and the configured base URL.
-    #
-    # @example
-    #   ResolvedServer.new(name: "forgejo-lab", provider: :forgejo, url: "https://forgejo.example.com")
-    ResolvedServer = Data.define(:name, :provider, :url) do
-      # @return [Hash] Plain hash representation
-      def to_h
-        {name: name, provider: provider, url: url}
-      end
-    end
-
     # Resolves forge server identity from configuration, deterministically.
     #
     # Configuration lives under the `git.servers` key (see

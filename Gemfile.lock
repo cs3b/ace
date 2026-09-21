@@ -77,6 +77,18 @@ PATH
       ace-support-core (~> 0.31)
 
 PATH
+  remote: ace-git-forgejo
+  specs:
+    ace-git-forgejo (0.1.0)
+      ace-git (~> 0.24)
+
+PATH
+  remote: ace-git-github
+  specs:
+    ace-git-github (0.1.0)
+      ace-git (~> 0.24)
+
+PATH
   remote: ace-git-secrets
   specs:
     ace-git-secrets (0.15.11)
@@ -100,7 +112,7 @@ PATH
 PATH
   remote: ace-git
   specs:
-    ace-git (0.23.1)
+    ace-git (0.24.0)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)
       ace-support-core (~> 0.31)
@@ -503,6 +515,8 @@ DEPENDENCIES
   ace-docs!
   ace-git!
   ace-git-commit!
+  ace-git-forgejo!
+  ace-git-github!
   ace-git-secrets!
   ace-git-worktree!
   ace-handbook!
