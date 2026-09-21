@@ -1,7 +1,7 @@
 ---
 id: 8wk.t.l1e
 title: Forge-neutral Git core with GitHub and Forgejo providers
-status: pending
+status: in-progress
 priority: high
 created_at: "2026-09-21 14:01:33"
 estimate: large
