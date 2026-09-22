@@ -47,8 +47,15 @@ module Ace
               event = result[:event]
               puts "HITL event answered: #{event.id} #{event.title}"
               puts "Answer: #{event.answer}"
+              puts "Lab request: #{event.metadata["lab_request_id"]} (#{result[:lab_state]})" if result[:lab_state]
               resume = event.metadata["resume_instructions"]
               puts "Resume: #{resume}" if resume
+            when :lab_delivered
+              event = result[:event]
+              lab_request_id = event.metadata["lab_request_id"]
+              puts "Lab request delivered: #{event.id} (#{result[:lab_state]})"
+              puts "Lab request: #{lab_request_id}"
+              puts "Consume the answer when ready: lab-hitl consume #{lab_request_id}"
             when :timeout
               raise Ace::Support::Cli::Error.new("Timed out waiting for HITL event '#{ref}'")
             else

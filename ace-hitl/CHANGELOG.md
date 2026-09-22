@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **`ace-hitl ask`**: requester-side effect-callback API. Creates the local HITL event, binds it to a Lab HITL request via `--ace-hitl-id`, and passes effect declarations (`--effect-match`, `--effect-arg`, `--effect-cwd`, `--effect-timeout-s`) through verbatim after client-side bounds mirroring (match <= 200 chars and compilable; argv 1..16 x 1..512 chars with at least one element when any effect flag is present; cwd absolute and existing; timeout 1..600). Prints both the event id and the Lab request id.
+- **`ace-hitl wait` Lab awareness**: while waiting on the event answer, the waiter also observes the Lab request public projection (`/run/lab/hitl/public/<id>.json`, overridable via `ACE_HITL_LAB_PUBLIC_DIR`) and surfaces lab-side states (`answer-delivered`, `callback-ok`, `callback-escalated`) instead of hanging blind. Relay consumption stays the agent's choice (`lab-hitl consume`).
+
 
 ## [0.8.10] - 2026-09-02
 

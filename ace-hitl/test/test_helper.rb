@@ -5,6 +5,7 @@ $LOAD_PATH.unshift File.expand_path("../lib", __dir__)
 require "ace/test_support"
 require "ace/hitl"
 require "fileutils"
+require "stringio"
 
 class AceHitlTestCase < AceTestCase
   class StaticScopeResolver
@@ -29,6 +30,50 @@ class AceHitlTestCase < AceTestCase
     def worktree_roots(scope:)
       @roots_by_scope.fetch(scope, [])
     end
+  end
+
+  def run_cli(args)
+    old_stdout = $stdout
+    old_stderr = $stderr
+    $stdout = StringIO.new
+    $stderr = StringIO.new
+
+    exit_code = 0
+
+    begin
+      Ace::Hitl::HitlCLI.start(args)
+    rescue Ace::Support::Cli::Error => e
+      warn e.message
+      exit_code = e.exit_code
+    rescue SystemExit => e
+      exit_code = e.status
+    end
+
+    {stdout: $stdout.string, stderr: $stderr.string, exit_code: exit_code}
+  ensure
+    $stdout = old_stdout
+    $stderr = old_stderr
+  end
+
+  def with_cli_root(root_dir, config: nil, scope_resolver: nil)
+    config ||= {"hitl" => {"root_dir" => root_dir}}
+    original_new = Ace::Hitl::Organisms::HitlManager.method(:new)
+    Ace::Hitl::Organisms::HitlManager.define_singleton_method(:new) do |**opts|
+      original_new.call(
+        **opts.merge(root_dir: root_dir, config: config, scope_resolver: scope_resolver).compact
+      )
+    end
+    yield
+  ensure
+    Ace::Hitl::Organisms::HitlManager.singleton_class.remove_method(:new)
+  end
+
+  def with_env(env)
+    saved = {}
+    env.each { |key, value| saved[key] = ENV[key]; env[key].nil? ? ENV.delete(key) : ENV[key] = value }
+    yield
+  ensure
+    saved.each { |key, value| value.nil? ? ENV.delete(key) : ENV[key] = value }
   end
 
   def with_hitl_dir

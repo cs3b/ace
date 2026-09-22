@@ -5,42 +5,6 @@ require "ace/hitl/cli"
 require "stringio"
 
 class HitlCliTest < AceHitlTestCase
-  def run_cli(args)
-    old_stdout = $stdout
-    old_stderr = $stderr
-    $stdout = StringIO.new
-    $stderr = StringIO.new
-
-    exit_code = 0
-
-    begin
-      Ace::Hitl::HitlCLI.start(args)
-    rescue Ace::Support::Cli::Error => e
-      warn e.message
-      exit_code = e.exit_code
-    rescue SystemExit => e
-      exit_code = e.status
-    end
-
-    {stdout: $stdout.string, stderr: $stderr.string, exit_code: exit_code}
-  ensure
-    $stdout = old_stdout
-    $stderr = old_stderr
-  end
-
-  def with_cli_root(root_dir, config: nil, scope_resolver: nil)
-    config ||= {"hitl" => {"root_dir" => root_dir}}
-    original_new = Ace::Hitl::Organisms::HitlManager.method(:new)
-    Ace::Hitl::Organisms::HitlManager.define_singleton_method(:new) do |**opts|
-      original_new.call(
-        **opts.merge(root_dir: root_dir, config: config, scope_resolver: scope_resolver).compact
-      )
-    end
-    yield
-  ensure
-    Ace::Hitl::Organisms::HitlManager.singleton_class.remove_method(:new)
-  end
-
   def test_library_contract
     assert_kind_of String, Ace::Hitl::VERSION
     assert_match(/\A\d+\.\d+\.\d+\z/, Ace::Hitl::VERSION)

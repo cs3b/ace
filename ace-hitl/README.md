@@ -10,6 +10,7 @@ Canonical workflow and skill for agents:
 ## Commands
 
 - `ace-hitl create` creates a HITL event
+- `ace-hitl ask` asks a human via HITL and forwards the request to the Lab (`--work`, effect callback flags)
 - `ace-hitl list` lists HITL events with filters (`--scope current|all`, all statuses by default)
 - `ace-hitl show` renders event details, path, or raw content (`--scope current|all`)
 - `ace-hitl update` updates frontmatter, answer content, and folder location
@@ -28,6 +29,7 @@ Use `ace-overseer status` for a global worktree dashboard.
 ace-hitl list
 ace-hitl list --scope all
 ace-hitl create "Which auth strategy?" --kind decision --question "JWT or sessions?"
+ace-hitl ask "Proceed with deploy?" --work W685 --effect-arg /bin/false --effect-cwd /tmp
 ace-hitl show abc123 --content
 ace-hitl show abc123 --scope current
 ace-hitl update abc123 --answer "Use JWT with server-side refresh tokens."

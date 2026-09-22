@@ -102,6 +102,29 @@ ace-hitl update abc123 --move-to next
 ace-hitl update abc123 --answer "close the assignment" --resume
 ```
 
+## Ask (Lab request with effect callback)
+
+`ace-hitl ask` creates the local HITL event, forwards the question to the Lab
+as a HITL request bound to the event via `--ace-hitl-id`, and prints both ids.
+Effect declarations are validated client-side (exact bounds) and passed through
+verbatim; the Lab tool remains the authority.
+
+```bash
+ace-hitl ask "Proceed with deploy?" \
+  --work W685 \
+  --effect-arg /usr/bin/notify-send "{answer}" \
+  --effect-cwd /tmp
+```
+
+- `--attempt` defaults to `LAB_ATTEMPT_ID`; `--project` to `ace`;
+  `--harness` to `lab-admin`; `--plan` to `ace-hitl ask`.
+- Effect flags: `--effect-match` (regex, <= 200 chars, must compile),
+  `--effect-arg` (repeatable, 1..16 x 1..512 chars, `{answer}` substituted
+  lab-side), `--effect-cwd` (absolute, must exist), `--effect-timeout-s`
+  (1..600).
+- The answer is always relayed unchanged; consume it with
+  `lab-hitl consume <request-id>` when ready.
+
 ## Wait (Polling Default)
 
 Wait only for a specific HITL id. This is the default reliability path for the requester agent.
@@ -111,6 +134,11 @@ ace-hitl wait abc123
 ace-hitl wait abc123 --poll-every 600 --timeout 14400
 ace-hitl wait abc123 --scope current
 ```
+
+When the event carries a Lab request (`lab_request_id`), wait also observes the
+Lab public projection and surfaces lab-side states (`answer-delivered`,
+`callback-ok`, `callback-escalated`) instead of hanging blind. Relay
+consumption stays the agent's choice.
 
 ## Lifecycle Event Names
 

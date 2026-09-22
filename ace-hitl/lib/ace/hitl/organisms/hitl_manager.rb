@@ -8,6 +8,7 @@ require_relative "../molecules/hitl_config_loader"
 require_relative "../molecules/hitl_scanner"
 require_relative "../molecules/hitl_loader"
 require_relative "../molecules/hitl_creator"
+require_relative "../molecules/lab_projection_observer"
 require_relative "../molecules/hitl_answer_editor"
 require_relative "../molecules/resume_dispatcher"
 require_relative "../molecules/worktree_scope_resolver"
@@ -121,7 +122,7 @@ module Ace
           loader.load(current_path, id: event.id, special_folder: current_special)
         end
 
-        def wait_for_answer(ref, scope: nil, poll_every: 600, timeout: 14_400, waiter: {}, now_proc: nil, sleeper: nil)
+        def wait_for_answer(ref, scope: nil, poll_every: 600, timeout: 14_400, waiter: {}, now_proc: nil, sleeper: nil, lab_observer: nil)
           poll_every = normalize_poll_seconds(poll_every)
           timeout = normalize_timeout_seconds(timeout)
           now_proc ||= -> { Time.now.utc }
@@ -148,6 +149,8 @@ module Ace
               scope: scope
             )
 
+            lab_state = observe_lab_state(event, lab_observer: lab_observer, scope: scope)
+
             if event.answered?
               update(event.id,
                 set: {
@@ -157,12 +160,24 @@ module Ace
                 scope: scope
               )
               refreshed = show(event.id, scope: scope)&.dig(:event) || event
-              return {status: :answered, event: refreshed}
+              return {status: :answered, event: refreshed, lab_state: lab_state}
+            end
+
+            if lab_state && lab_observer_for(lab_observer).terminal?(lab_state)
+              update(event.id,
+                set: {
+                  "waiter_state" => "lab_delivered",
+                  "waiter_last_seen_at" => now.iso8601,
+                  "lab_request_state" => lab_state
+                },
+                scope: scope
+              )
+              return {status: :lab_delivered, event: event, lab_state: lab_state}
             end
 
             if now >= deadline
               update(event.id, set: {"waiter_state" => "timed_out"}, scope: scope)
-              return {status: :timeout, event: event}
+              return {status: :timeout, event: event, lab_state: lab_state}
             end
 
             sleep_seconds = [poll_every, (deadline - now).ceil].min
@@ -215,6 +230,21 @@ module Ace
         end
 
         private
+
+        def lab_observer_for(lab_observer)
+          lab_observer || Molecules::LabProjectionObserver.new
+        end
+
+        def observe_lab_state(event, lab_observer:, scope:)
+          request_id = event.metadata["lab_request_id"]
+          return nil if request_id.nil? || request_id.to_s.strip.empty?
+
+          state = lab_observer_for(lab_observer).state_for(request_id)
+          if state && state != event.metadata["lab_request_state"]
+            update(event.id, set: {"lab_request_state" => state}, scope: scope)
+          end
+          state
+        end
 
         def load_config
           Molecules::HitlConfigLoader.load

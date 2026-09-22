@@ -3,6 +3,7 @@
 require "ace/support/cli"
 require_relative "../hitl/version"
 require_relative "cli/commands/create"
+require_relative "cli/commands/ask"
 require_relative "cli/commands/show"
 require_relative "cli/commands/list"
 require_relative "cli/commands/update"
@@ -17,6 +18,7 @@ module Ace
 
       REGISTERED_COMMANDS = [
         ["create", "Create HITL event"],
+        ["ask", "Ask a human via HITL and forward the request to the Lab"],
         ["show", "Show HITL event details"],
         ["list", "List HITL events"],
         ["update", "Update HITL event metadata or answer"],
@@ -27,11 +29,13 @@ module Ace
         "ace-hitl list --status pending",
         "ace-hitl show abc123 --content",
         "ace-hitl create \"Which auth strategy?\" --kind decision",
+        "ace-hitl ask \"Proceed with deploy?\" --work W685 --effect-arg /bin/false --effect-cwd /tmp",
         "ace-hitl update abc123 --answer \"Use JWT with refresh tokens\"",
         "ace-hitl wait abc123 --poll-every 600 --timeout 14400"
       ].freeze
 
       register "create", CLI::Commands::Create
+      register "ask", CLI::Commands::Ask
       register "show", CLI::Commands::Show
       register "list", CLI::Commands::List
       register "update", CLI::Commands::Update
