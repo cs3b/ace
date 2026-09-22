@@ -7,6 +7,7 @@ created_at: "2026-09-22 10:52:16"
 estimate: 
 dependencies: []
 tags: [ace-hitl, hitl, effects, minor, pilot]
+needs_review: false
 ---
 
 # ace-hitl minor — requester-side effect-callback API
