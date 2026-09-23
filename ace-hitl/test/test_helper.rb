@@ -70,7 +70,10 @@ class AceHitlTestCase < AceTestCase
 
   def with_env(env)
     saved = {}
-    env.each { |key, value| saved[key] = ENV[key]; env[key].nil? ? ENV.delete(key) : ENV[key] = value }
+    env.each do |key, value|
+      saved[key] = ENV[key]
+      env[key].nil? ? ENV.delete(key) : ENV[key] = value
+    end
     yield
   ensure
     saved.each { |key, value| value.nil? ? ENV.delete(key) : ENV[key] = value }
