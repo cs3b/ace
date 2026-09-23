@@ -5,6 +5,7 @@ priority: high
 created_at: "2026-09-23 22:42:16"
 estimate: 
 dependencies: [8wm.t.vs1]
+needs_review: false
 tags: [ace-hitl-hermes, migration, telegram, plugin, lab-config, gad]
 ---
 
