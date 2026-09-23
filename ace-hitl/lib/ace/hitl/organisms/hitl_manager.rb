@@ -175,7 +175,8 @@ module Ace
             end
 
             if observer.terminal?(lab_snapshot, effect_declared: effect_declared?(event))
-              update(event.id,
+              update(
+                event.id,
                 set: {
                   "waiter_state" => "lab_delivered",
                   "waiter_last_seen_at" => now.iso8601,

@@ -118,8 +118,6 @@ ace-hitl ask "Proceed with deploy?" \
 
 - `--attempt` defaults to `LAB_ATTEMPT_ID`; `--project` to `ace`;
   `--harness` to `lab-admin`; `--plan` to `ace-hitl ask`.
-- `--attempt` defaults to `LAB_ATTEMPT_ID`; `--project` to `ace`;
-  `--harness` to `lab-admin`; `--plan` to `ace-hitl ask`.
 - Effect flags: `--effect-match` (regex, <= 200 chars, must compile),
   `--effect-arg` (repeatable, 1..16 x 1..512 chars after the lab's
   strip-then-bounds check; whitespace-only elements fail fast, valid
