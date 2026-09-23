@@ -48,7 +48,7 @@ class HitlWaitLabTest < AceHitlTestCase
           assert_equal 0, result[:exit_code], result[:stderr]
           assert_match(/Lab request delivered: 8ppq7w \(answer-delivered\)/, result[:stdout])
           assert_match(/Lab request: labreq42/, result[:stdout])
-          assert_match(/lab-hitl consume labreq42/, result[:stdout])
+          assert_match(/Consume the answer when ready from the lab relay\./, result[:stdout])
           refute_match(/Effect callback/, result[:stdout])
 
           metadata = event_metadata(root, "8ppq7w")
@@ -129,8 +129,8 @@ class HitlWaitLabTest < AceHitlTestCase
 
           assert_equal 0, result[:exit_code], result[:stderr]
           assert_match(/Lab request delivered: 8ppq7w \(callback-escalated\)/, result[:stdout])
-          assert_match(/Effect callback: escalated; inspect with: lab-hitl duty/, result[:stdout])
-          assert_match(/lab-hitl consume labreq42/, result[:stdout])
+          assert_match(/Effect callback: escalated; inspect the lab duty projection/, result[:stdout])
+          assert_match(/Consume the answer when ready from the lab relay\./, result[:stdout])
 
           metadata = event_metadata(root, "8ppq7w")
           assert_equal "callback-escalated", metadata["lab_request_state"]

@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Provider adapter interface + provider=lab contract (spec 8wm.t.vrz)**: `ace-hitl ask` dispatches through the `Ace::Hitl::Providers` registry (selection: `--provider` flag → `ACE_HITL_PROVIDER` env → `lab`). The ask performs the local-event + transport send in ONE operation and captures the asker's reverse address fail-closed from the herdr environment (`HERDR_SESSION` / `HERDR_PANE`; versioned schema `ace.hitl.ref/v1`), persisting `provider`, `ref_schema`, `ref_session`, `ref_pane` alongside the existing `lab_request_*` fields. Pinned error model: `UnknownProviderError`, `InvalidRefError` (fail closed before any event or transport state), `ProviderUnavailableError` (transport failure; orphan event id message preserved), `UnsupportedOperationError` (`deliver(ref, answer)` lands with ace-herdr push delivery 8wm.t.vs0 + provider=lab integration 8wm.t.vs2; `wait` remains the pane-less CLI path outside the adapter).
+
+### Changed
+- **Zero-lab-hitl guard**: the legacy `Molecules::LabRequestSubmitter` was deleted and re-homed (same behavior, provider error model) as `Providers::Lab::Transport`, the sole owner of the lab transport binary reference. A fast guard test keeps every agent-facing ace-hitl path free of direct lab transport references, and agent-facing ask/wait output no longer names the relay binary.
+
 ## [0.9.0] - 2026-09-23
 
 ### Added

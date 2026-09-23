@@ -55,11 +55,11 @@ module Ace
               lab_request_id = event.metadata["lab_request_id"]
               puts "Lab request delivered: #{event.id} (#{result[:lab_state]})"
               puts "Lab request: #{lab_request_id}"
-              puts "Consume the answer when ready: lab-hitl consume #{lab_request_id}"
+              puts "Consume the answer when ready from the lab relay."
               if result[:lab_state] == "callback-ok"
                 puts "Effect callback: ok"
               elsif result[:lab_state] == "callback-escalated"
-                puts "Effect callback: escalated; inspect with: lab-hitl duty"
+                puts "Effect callback: escalated; inspect the lab duty projection"
               end
             when :timeout
               raise Ace::Support::Cli::Error.new("Timed out waiting for HITL event '#{ref}'")

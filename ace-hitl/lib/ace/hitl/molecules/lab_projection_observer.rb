@@ -10,7 +10,7 @@ module Ace
       # states instead of hanging blind. Read-only; consumption of the
       # answer relay remains the caller's choice.
       #
-      # Projection schema (deployed lab-hitl, lab-config 8wl.t.ga9): the
+      # Projection schema (deployed lab relay, lab-config 8wl.t.ga9): the
       # lifecycle field `state` carries created / answer-delivered /
       # consumed / cancelled, while effect-callback outcomes live in the
       # SEPARATE `effect_state` field (callback-pending-with-answer /

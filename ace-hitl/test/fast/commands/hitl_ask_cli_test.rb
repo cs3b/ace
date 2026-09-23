@@ -20,7 +20,7 @@ class HitlAskCliTest < AceHitlTestCase
     super
   end
 
-  def with_stub_lab_bin(exit_code: 0, request_id: LAB_REQUEST_ID)
+  def with_stub_lab_bin(exit_code: 0, request_id: LAB_REQUEST_ID, herdr: {session: "w692-test", pane: "agent-1"})
     File.write(@stub_bin, <<~SH)
       #!/bin/sh
       {
@@ -36,7 +36,13 @@ class HitlAskCliTest < AceHitlTestCase
     SH
     FileUtils.chmod(0o755, @stub_bin)
 
-    with_env("ACE_HITL_LAB_BIN" => @stub_bin, "ACE_HITL_LAB_CAPTURE" => @capture_path) do
+    env = {
+      "ACE_HITL_LAB_BIN" => @stub_bin,
+      "ACE_HITL_LAB_CAPTURE" => @capture_path
+    }
+    env["HERDR_SESSION"] = herdr && herdr[:session]
+    env["HERDR_PANE"] = herdr && herdr[:pane]
+    with_env(env) do
       yield
     end
   end
@@ -85,6 +91,112 @@ class HitlAskCliTest < AceHitlTestCase
           assert_equal LAB_REQUEST_ID, event.metadata["lab_request_id"]
           assert_equal "created", event.metadata["lab_request_state"]
           assert_equal "declared", event.metadata["lab_request_effect"]
+          assert_equal "lab", event.metadata["provider"]
+          assert_equal "ace.hitl.ref/v1", event.metadata["ref_schema"]
+          assert_equal "w692-test", event.metadata["ref_session"]
+          assert_equal "agent-1", event.metadata["ref_pane"]
+        end
+      end
+    end
+  end
+
+  def test_ask_prints_provider_and_reverse_address
+    with_hitl_dir do |root|
+      with_cli_root(root) do
+        with_stub_lab_bin do
+          result = run_cli(["ask", "Continue?", "--work", "W685", "--attempt", "A-a73ebdaeb811210d51e0251e"])
+
+          assert_equal 0, result[:exit_code], result[:stderr]
+          assert_match(/Provider: lab \(ref w692-test\/agent-1, ace\.hitl\.ref\/v1\)/, result[:stdout])
+        end
+      end
+    end
+  end
+
+  def test_explicit_provider_lab_dispatches
+    with_hitl_dir do |root|
+      with_cli_root(root) do
+        with_stub_lab_bin do
+          result = run_cli([
+            "ask", "Explicit?", "--provider", "lab",
+            "--work", "W685", "--attempt", "A-a73ebdaeb811210d51e0251e"
+          ])
+
+          assert_equal 0, result[:exit_code], result[:stderr]
+          assert_match(HITL_EVENT_LINE, result[:stdout])
+          assert_match(LAB_REQUEST_LINE, result[:stdout])
+        end
+      end
+    end
+  end
+
+  def test_unknown_provider_fails_closed_without_event_or_transport
+    with_hitl_dir do |root|
+      with_cli_root(root) do
+        with_stub_lab_bin do
+          result = run_cli([
+            "ask", "No such provider?", "--provider", "nope",
+            "--work", "W685", "--attempt", "A-a73ebdaeb811210d51e0251e"
+          ])
+
+          assert_equal 1, result[:exit_code]
+          assert_match(/unknown HITL provider 'nope'/, result[:stderr])
+          assert_match(/available: lab/, result[:stderr])
+          refute File.exist?(@capture_path), "transport must not be invoked for an unknown provider"
+
+          manager = Ace::Hitl::Organisms::HitlManager.new(root_dir: root)
+          assert_empty manager.list(in_folder: "all")
+        end
+      end
+    end
+  end
+
+  def test_missing_herdr_session_fails_closed_without_event_or_transport
+    with_hitl_dir do |root|
+      with_cli_root(root) do
+        with_stub_lab_bin(herdr: nil) do
+          result = run_cli(["ask", "No ref?", "--work", "W685", "--attempt", "A-a73ebdaeb811210d51e0251e"])
+
+          assert_equal 1, result[:exit_code]
+          assert_match(/HERDR_SESSION is required/, result[:stderr])
+          refute File.exist?(@capture_path), "transport must not be invoked without a reverse address"
+
+          manager = Ace::Hitl::Organisms::HitlManager.new(root_dir: root)
+          assert_empty manager.list(in_folder: "all")
+        end
+      end
+    end
+  end
+
+  def test_missing_herdr_pane_fails_closed_without_event_or_transport
+    with_hitl_dir do |root|
+      with_cli_root(root) do
+        with_stub_lab_bin(herdr: {session: "w692-test", pane: nil}) do
+          result = run_cli(["ask", "No pane?", "--work", "W685", "--attempt", "A-a73ebdaeb811210d51e0251e"])
+
+          assert_equal 1, result[:exit_code]
+          assert_match(/HERDR_PANE is required/, result[:stderr])
+          refute File.exist?(@capture_path), "transport must not be invoked without a reverse address"
+
+          manager = Ace::Hitl::Organisms::HitlManager.new(root_dir: root)
+          assert_empty manager.list(in_folder: "all")
+        end
+      end
+    end
+  end
+
+  def test_invalid_herdr_pane_fails_closed
+    with_hitl_dir do |root|
+      with_cli_root(root) do
+        with_stub_lab_bin(herdr: {session: "w692-test", pane: "bad pane; rm"}) do
+          result = run_cli(["ask", "Bad pane?", "--work", "W685", "--attempt", "A-a73ebdaeb811210d51e0251e"])
+
+          assert_equal 1, result[:exit_code]
+          assert_match(/HERDR_PANE contains invalid characters/, result[:stderr])
+          refute File.exist?(@capture_path)
+
+          manager = Ace::Hitl::Organisms::HitlManager.new(root_dir: root)
+          assert_empty manager.list(in_folder: "all")
         end
       end
     end

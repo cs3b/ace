@@ -15,6 +15,7 @@ require_relative "hitl/molecules/hitl_creator"
 require_relative "hitl/molecules/resume_dispatcher"
 require_relative "hitl/molecules/worktree_scope_resolver"
 require_relative "hitl/organisms/hitl_manager"
+require_relative "hitl/providers/providers"
 require_relative "hitl/cli"
 
 module Ace

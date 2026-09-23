@@ -102,12 +102,14 @@ ace-hitl update abc123 --move-to next
 ace-hitl update abc123 --answer "close the assignment" --resume
 ```
 
-## Ask (Lab request with effect callback)
+## Ask (Provider adapter with effect callback)
 
-`ace-hitl ask` creates the local HITL event, forwards the question to the Lab
-as a HITL request bound to the event via `--ace-hitl-id`, and prints both ids.
-Effect declarations are validated client-side (exact bounds) and passed through
-verbatim; the Lab tool remains the authority.
+`ace-hitl ask` dispatches through the provider adapter registry
+(`--provider`, default: `ACE_HITL_PROVIDER` env, then `lab`). ONE
+operation: it creates the local HITL event, forwards the question through
+the provider transport bound to the event via `--ace-hitl-id`, and prints
+both ids. Effect declarations are validated client-side (exact bounds)
+and passed through verbatim; the lab tool remains the authority.
 
 ```bash
 ace-hitl ask "Proceed with deploy?" \
@@ -118,6 +120,12 @@ ace-hitl ask "Proceed with deploy?" \
 
 - `--attempt` defaults to `LAB_ATTEMPT_ID`; `--project` to `ace`;
   `--harness` to `lab-admin`; `--plan` to `ace-hitl ask`.
+- Reverse address (fail closed): the asker's herdr session + pane are
+  read from `HERDR_SESSION` / `HERDR_PANE` and persisted on the event as
+  `ref_session` / `ref_pane` with `ref_schema: ace.hitl.ref/v1` and
+  `provider: lab`. Absent or invalid values abort the ask before any
+  event is created or transport is called — an ask must always know
+  where its answer can be delivered.
 - Effect flags: `--effect-match` (regex, <= 200 chars, must compile),
   `--effect-arg` (repeatable, 1..16 x 1..512 chars after the lab's
   strip-then-bounds check; whitespace-only elements fail fast, valid
@@ -126,12 +134,15 @@ ace-hitl ask "Proceed with deploy?" \
 - Whether an effect was declared is recorded on the event as
   `lab_request_effect: declared|none` so `wait` can apply the right
   terminal semantics.
-- The answer is always relayed unchanged; consume it with
-  `lab-hitl consume <request-id>` when ready.
-- If the Lab request fails after the local event was created, the error
-  surfaces the event id as an orphan (created but never bound to a Lab
-  request); inspect it with `ace-hitl show <id>` and delete or re-ask
-  as needed.
+- The answer is always relayed unchanged; consumption stays on the
+  operator side via the lab relay tool.
+- If the transport send fails after the local event was created, the
+  error surfaces the event id as an orphan (created but never bound to a
+  relay request); inspect it with `ace-hitl show <id>` and delete or
+  re-ask as needed.
+- `deliver(ref, answer)` — pushing the answer back to the asker's pane —
+  is declared by the adapter interface; provider `lab` reports it as
+  unsupported until the ace-herdr push-delivery integration lands.
 
 ## Wait (Polling Default)
 
@@ -154,11 +165,14 @@ callback-ok / callback-escalated). Terminal semantics are effect-aware:
 - Effect-declaring requests keep waiting until the callback verdict
   (`callback-ok` or `callback-escalated`) appears — they never end
   silently at answer delivery; `callback-escalated` output points at
-  `lab-hitl duty` for the escalation.
+  the lab duty projection for the escalation.
 - The event's `lab_request_state` records the effective state, so it
   never claims plain `answer-delivered` while an effect outcome exists.
 
-Relay consumption stays the agent's choice (`lab-hitl consume`).
+Relay consumption stays on the operator side via the lab relay tool.
+`wait` is the pane-less script path: agents with a herdr pane ask
+through the provider adapter and receive answers delivered back to
+their pane.
 
 ## Lifecycle Event Names
 
