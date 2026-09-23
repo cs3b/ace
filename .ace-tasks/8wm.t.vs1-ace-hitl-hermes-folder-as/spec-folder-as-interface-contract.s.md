@@ -156,9 +156,12 @@ same field sets as the Ruby validation.
   target (labd pushes the Captain's answer to the asking agent's herdr
   pane; hermes surfaces the question to the Captain). Delivery changes no
   file content; it is observable only by the ACK or the retry clock.
-- `ACK deletion` — the consuming side deletes `<id>.json` AFTER delivery;
+- `ACK deletion` — the CONSUMING side deletes `<id>.json` AFTER delivery;
   deletion is the ACK and is idempotent (deleting an absent file reports
-  `already_acked`, never an error).
+  `already_acked`, never an error). This applies symmetrically: hermes
+  acks a question after surfacing it to the Captain, labd acks an answer
+  after pushing it to the asking agent. ACKing the question also frees
+  the name `<id>.json` for the answer, which reuses the question's id.
 - `retry` — §8 policies; every retry attempt re-delivers IDENTICAL bytes
   (same id), so retries never duplicate answers.
 - `quarantine` — terminal for the message (§7); never delivered.
@@ -183,7 +186,11 @@ same field sets as the Ruby validation.
 - **Collision retries (write time)**: on `CollisionError`, publish
   retries with a fresh id, at most 3 attempts, then fails terminally with
   the original error surfaced. Each attempt emits a `retry_scheduled`
-  notification.
+  notification. An EXPLICITLY supplied id never gets regenerated — it
+  asserts correlation (the answer of question `<id>` is `<id>.json`), so
+  a collision there fails loudly instead of silently breaking the
+  question -> answer pairing; the answer is published only after the
+  question file was acked (§6).
 - **Undeleted-file retries (post-delivery)**: the delivering role tracks
   its deliveries; a delivered file that is still present (not ACKed)
   after the stale deadline is re-delivered as IDENTICAL bytes, at most 3

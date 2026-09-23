@@ -200,6 +200,11 @@ test_suite:
       group: tools
       priority: 2
 
+    - name: ace-hitl-hermes
+      path: ace-hitl-hermes
+      group: tools
+      priority: 2
+
     - name: ace-test
       path: ace-test
       group: tools

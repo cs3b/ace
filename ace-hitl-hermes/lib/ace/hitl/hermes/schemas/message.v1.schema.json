@@ -1,0 +1,70 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "ace.hitl.hermes.message/v1",
+  "title": "ace-hitl-hermes message envelope v1",
+  "description": "One JSON object per file in the shared lab <-> hermes folder (folder contract ace.hitl.hermes.folder/v1, spec 8wm.t.vs1). File name must be <id>.json with id equal to the payload id.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "id", "kind", "sender"],
+  "properties": {
+    "schema": {
+      "const": "ace.hitl.hermes.message/v1"
+    },
+    "id": {
+      "$ref": "#/definitions/token"
+    },
+    "sender": {
+      "$ref": "#/definitions/token"
+    },
+    "kind": {
+      "enum": ["question", "answer"]
+    },
+    "question": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Required for kind=question; non-empty after strip."
+    },
+    "answer": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Required for kind=answer (the Captain's answer); non-empty after strip."
+    },
+    "created_at": {
+      "$ref": "#/definitions/timestamp",
+      "description": "Required for kind=question."
+    },
+    "received_at": {
+      "$ref": "#/definitions/timestamp",
+      "description": "Required for kind=answer."
+    }
+  },
+  "definitions": {
+    "token": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,63}$"
+    },
+    "timestamp": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$",
+      "format": "date-time"
+    }
+  },
+  "oneOf": [
+    {
+      "properties": {
+        "kind": {
+          "const": "question"
+        }
+      },
+      "required": ["question", "created_at"]
+    },
+    {
+      "properties": {
+        "kind": {
+          "const": "answer"
+        }
+      },
+      "required": ["answer", "received_at"]
+    }
+  ]
+}
