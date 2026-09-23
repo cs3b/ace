@@ -43,6 +43,8 @@ module Ace
             rescue Atoms::HitlEffectValidator::ValidationError => e
               raise_cli_error(e.message)
             end
+            effect_declared = !!(effect[:match] || effect[:effect_cwd] || effect[:effect_timeout] ||
+              Array(effect[:effect_args]).any?)
 
             work = require_work!(options)
             attempt = options[:attempt] || ENV["LAB_ATTEMPT_ID"]
@@ -74,12 +76,17 @@ module Ace
             begin
               lab_request_id = submitter.submit(argv)
             rescue Molecules::LabRequestSubmitter::SubmissionError => e
-              raise_cli_error(e.message)
+              raise_cli_error(
+                "#{e.message}; local HITL event #{event.id} was created but never bound to a " \
+                  "Lab request (orphan) - inspect it with ace-hitl show #{event.id} and delete " \
+                  "or re-ask as needed"
+              )
             end
 
             manager.update(event.id, set: {
               "lab_request_id" => lab_request_id,
-              "lab_request_state" => "created"
+              "lab_request_state" => "created",
+              "lab_request_effect" => effect_declared ? "declared" : "none"
             })
 
             puts "HITL event: #{event.id}"
