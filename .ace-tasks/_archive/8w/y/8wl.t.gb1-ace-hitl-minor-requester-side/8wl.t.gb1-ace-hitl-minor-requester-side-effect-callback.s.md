@@ -1,7 +1,7 @@
 ---
-title: "ace-hitl minor - requester-side effect-callback API"
+title: ace-hitl minor - requester-side effect-callback API
 id: 8wl.t.gb1
-status: in-progress
+status: done
 priority: high
 created_at: "2026-09-22 10:52:16"
 estimate: 
