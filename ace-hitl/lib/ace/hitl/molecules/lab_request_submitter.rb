@@ -49,19 +49,23 @@ module Ace
         end
 
         def submit(argv)
-          stdout, stderr, status = @runner.call(argv)
+          stdout, stderr, status = run(argv)
           unless status.success?
             raise SubmissionError, "lab-hitl request failed (exit #{status.exitstatus}): #{stderr.to_s.strip}"
           end
 
           parse_request_id(stdout)
-        rescue SubmissionError
-          raise
-        rescue StandardError => e
-          raise SubmissionError, "lab-hitl request could not be parsed: #{e.message}"
         end
 
         private
+
+        # Distinguishes could-not-execute (missing/unreadable binary,
+        # Errno::*) from could-not-parse so failures are actionable.
+        def run(argv)
+          @runner.call(argv)
+        rescue => e
+          raise SubmissionError, "could not execute #{@bin}: #{e.class}: #{e.message}"
+        end
 
         def parse_request_id(stdout)
           value = JSON.parse(stdout)
@@ -69,6 +73,8 @@ module Ace
           raise SubmissionError, "lab-hitl request returned no id" if id.nil? || id.to_s.strip.empty?
 
           id
+        rescue JSON::ParserError => e
+          raise SubmissionError, "could not parse lab-hitl request output as JSON: #{e.message}"
         end
       end
     end

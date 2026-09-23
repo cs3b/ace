@@ -139,7 +139,21 @@ class LabRequestSubmitterTest < AceHitlTestCase
     error = assert_raises(Ace::Hitl::Molecules::LabRequestSubmitter::SubmissionError) do
       submitter.submit(submitter.build_argv(**base_kwargs))
     end
-    assert_match(/could not be parsed|returned no id/, error.message)
+    assert_match(/could not parse lab-hitl request output as JSON/, error.message)
+  end
+
+  def test_submit_missing_binary_is_reported_as_execution_failure
+    runner = lambda do |_argv|
+      raise Errno::ENOENT, "/usr/local/bin/lab-hitl"
+    end
+    submitter = build_submitter(runner)
+
+    error = assert_raises(Ace::Hitl::Molecules::LabRequestSubmitter::SubmissionError) do
+      submitter.submit(submitter.build_argv(**base_kwargs))
+    end
+    assert_match(%r{could not execute /usr/local/bin/lab-hitl}, error.message)
+    assert_match(/Errno::ENOENT/, error.message)
+    refute_match(/could not parse/, error.message)
   end
 
   def test_env_override_selects_binary
