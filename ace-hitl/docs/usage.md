@@ -118,12 +118,22 @@ ace-hitl ask "Proceed with deploy?" \
 
 - `--attempt` defaults to `LAB_ATTEMPT_ID`; `--project` to `ace`;
   `--harness` to `lab-admin`; `--plan` to `ace-hitl ask`.
+- `--attempt` defaults to `LAB_ATTEMPT_ID`; `--project` to `ace`;
+  `--harness` to `lab-admin`; `--plan` to `ace-hitl ask`.
 - Effect flags: `--effect-match` (regex, <= 200 chars, must compile),
-  `--effect-arg` (repeatable, 1..16 x 1..512 chars, `{answer}` substituted
-  lab-side), `--effect-cwd` (absolute, must exist), `--effect-timeout-s`
-  (1..600).
+  `--effect-arg` (repeatable, 1..16 x 1..512 chars after the lab's
+  strip-then-bounds check; whitespace-only elements fail fast, valid
+  values pass through verbatim; `{answer}` substituted lab-side),
+  `--effect-cwd` (absolute, must exist), `--effect-timeout-s` (1..600).
+- Whether an effect was declared is recorded on the event as
+  `lab_request_effect: declared|none` so `wait` can apply the right
+  terminal semantics.
 - The answer is always relayed unchanged; consume it with
   `lab-hitl consume <request-id>` when ready.
+- If the Lab request fails after the local event was created, the error
+  surfaces the event id as an orphan (created but never bound to a Lab
+  request); inspect it with `ace-hitl show <id>` and delete or re-ask
+  as needed.
 
 ## Wait (Polling Default)
 
@@ -135,10 +145,22 @@ ace-hitl wait abc123 --poll-every 600 --timeout 14400
 ace-hitl wait abc123 --scope current
 ```
 
-When the event carries a Lab request (`lab_request_id`), wait also observes the
-Lab public projection and surfaces lab-side states (`answer-delivered`,
-`callback-ok`, `callback-escalated`) instead of hanging blind. Relay
-consumption stays the agent's choice.
+When the event carries a Lab request (`lab_request_id`), wait also observes
+the Lab public projection instead of hanging blind. Both projection fields
+are observed: the lifecycle `state` (created / answer-delivered / consumed /
+cancelled) and the separate `effect_state` (callback-pending-with-answer /
+callback-ok / callback-escalated). Terminal semantics are effect-aware:
+
+- Requests without a declared effect terminate on lifecycle states
+  (`answer-delivered`, `consumed`, `cancelled`).
+- Effect-declaring requests keep waiting until the callback verdict
+  (`callback-ok` or `callback-escalated`) appears — they never end
+  silently at answer delivery; `callback-escalated` output points at
+  `lab-hitl duty` for the escalation.
+- The event's `lab_request_state` records the effective state, so it
+  never claims plain `answer-delivered` while an effect outcome exists.
+
+Relay consumption stays the agent's choice (`lab-hitl consume`).
 
 ## Lifecycle Event Names
 
