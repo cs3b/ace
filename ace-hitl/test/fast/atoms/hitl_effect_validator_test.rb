@@ -80,6 +80,26 @@ class HitlEffectValidatorTest < AceHitlTestCase
     assert_match(/#1 is empty/, error.message)
   end
 
+  def test_whitespace_only_effect_arg_fails_like_lab_strip_check
+    error = assert_raises(Ace::Hitl::Atoms::HitlEffectValidator::ValidationError) do
+      validate(effect_args: ["   "])
+    end
+    assert_match(/#1 is empty/, error.message)
+  end
+
+  def test_padded_effect_arg_passes
+    validate(effect_args: ["  /bin/false  "])
+  end
+
+  def test_effect_arg_bounds_apply_to_stripped_value
+    validate(effect_args: ["#{"x" * 512}  "])
+
+    error = assert_raises(Ace::Hitl::Atoms::HitlEffectValidator::ValidationError) do
+      validate(effect_args: ["  #{"x" * 513}  "])
+    end
+    assert_match(/#1 exceeds 512 characters \(got 513\)/, error.message)
+  end
+
   # -- cwd: absolute and existing -------------------------------------------
 
   def test_relative_cwd_fails

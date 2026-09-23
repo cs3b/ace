@@ -10,7 +10,6 @@ module Ace
         MAX_MATCH_LENGTH = 200
         MIN_ARGV_ELEMENTS = 1
         MAX_ARGV_ELEMENTS = 16
-        MIN_ARG_LENGTH = 1
         MAX_ARG_LENGTH = 512
         MIN_TIMEOUT = 1
         MAX_TIMEOUT = 600
@@ -75,12 +74,14 @@ module Ace
           end
 
           @effect_args.each_with_index do |arg, index|
-            length = arg.to_s.length
-            if length < MIN_ARG_LENGTH
+            # Mirror the lab's strip-then-bounds check; the value itself
+            # still passes through verbatim.
+            stripped = arg.to_s.strip
+            if stripped.empty?
               raise ValidationError, "--effect-arg ##{index + 1} is empty"
             end
-            if length > MAX_ARG_LENGTH
-              raise ValidationError, "--effect-arg ##{index + 1} exceeds #{MAX_ARG_LENGTH} characters (got #{length})"
+            if stripped.length > MAX_ARG_LENGTH
+              raise ValidationError, "--effect-arg ##{index + 1} exceeds #{MAX_ARG_LENGTH} characters (got #{stripped.length})"
             end
           end
         end
@@ -106,7 +107,7 @@ module Ace
             raise ValidationError, "--effect-timeout-s must be an integer (got '#{@effect_timeout}')"
           end
 
-          return if seconds >= MIN_TIMEOUT && seconds <= MAX_TIMEOUT
+          return if seconds.between?(MIN_TIMEOUT, MAX_TIMEOUT)
 
           raise ValidationError, "--effect-timeout-s must be between #{MIN_TIMEOUT} and #{MAX_TIMEOUT} (got #{@effect_timeout})"
         end
