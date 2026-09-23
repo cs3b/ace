@@ -149,9 +149,20 @@ module Ace
               scope: scope
             )
 
-            lab_state = observe_lab_state(event, lab_observer: lab_observer, scope: scope)
+            observer = lab_observer_for(lab_observer)
+            lab_snapshot = observe_lab_state(event, observer: observer, scope: scope)
+            lab_state = observer.effective_state(lab_snapshot)
 
-            if event.answered?
+            # An effect-declaring request keeps waiting until the callback
+            # verdict (callback-ok / callback-escalated) is visible; answer
+            # delivery alone never ends the wait. When the projection is
+            # unreadable there is nothing to hold on, so the wait falls
+            # back to the event/lifecycle behavior (timeout stays the
+            # backstop).
+            hold_for_effect = effect_declared?(event) && lab_snapshot &&
+              !observer.terminal?(lab_snapshot, effect_declared: true)
+
+            if event.answered? && !hold_for_effect
               update(event.id,
                 set: {
                   "waiter_state" => "answered",
@@ -163,7 +174,7 @@ module Ace
               return {status: :answered, event: refreshed, lab_state: lab_state}
             end
 
-            if lab_state && lab_observer_for(lab_observer).terminal?(lab_state)
+            if observer.terminal?(lab_snapshot, effect_declared: effect_declared?(event))
               update(event.id,
                 set: {
                   "waiter_state" => "lab_delivered",
@@ -235,15 +246,20 @@ module Ace
           lab_observer || Molecules::LabProjectionObserver.new
         end
 
-        def observe_lab_state(event, lab_observer:, scope:)
+        def effect_declared?(event)
+          event.metadata["lab_request_effect"] == "declared"
+        end
+
+        def observe_lab_state(event, observer:, scope:)
           request_id = event.metadata["lab_request_id"]
           return nil if request_id.nil? || request_id.to_s.strip.empty?
 
-          state = lab_observer_for(lab_observer).state_for(request_id)
+          snapshot = observer.snapshot_for(request_id)
+          state = observer.effective_state(snapshot)
           if state && state != event.metadata["lab_request_state"]
             update(event.id, set: {"lab_request_state" => state}, scope: scope)
           end
-          state
+          snapshot
         end
 
         def load_config
