@@ -19,6 +19,22 @@ ace-herdr: doręczenie pushem + bootstrap.
 
 Zależność: po A1 (8wm.t.vrz). Biegnie równolegle z A3 (8wm.t.vs1).
 
+## Scope extension (Kapitan, 2026-09-23 — brief 8wl.t.gad.7, back-ref)
+
+Warstwa ergonomiczna zero-token nad herdr CLI (jak ace-tmux dla tmuxa):
+
+1. **Dispatch podagenta w 1 komendzie**: tab + `herdr agent start` +
+   prompt z sensownymi domyślnymi: ten sam workspace/sesja co
+   wywołujący, label = id zadania, nazwa agenta = id zadania, prompt
+   z pliku lub stdin.
+2. **Monitor bez szumu**: odczyt stanu/wyjścia agenta; oczekiwanie na
+   gotowość (wait); wyciszenie kodów/statusów.
+3. **Domknięcie**: rename/close po zakończeniu, zwrot wyniku.
+
+Wszystko deterministyczne (zero token) — cienki wrapper na socket API
+herdra; żadnych decyzji LLM w środku. Domyślnie ten sam space, w którym
+pracuje wywołujący.
+
 ## Pipeline
 
 Pełny pipeline architekta: spec przez buildera, kod przez buildera, review z
