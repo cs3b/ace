@@ -28,6 +28,20 @@ ace-hitl-hermes: folder jako interfejs.
 
 Zależność: po A1 (8wm.t.vrz). Biegnie równolegle z A2 (8wm.t.vs0).
 
+## Spec review findings (review-8wmw3q, codex gpt-5.6-luna)
+
+Wymagania dla buildera spec (A3):
+
+- folder contract document must be versioned and ship a JSON schema:
+  filename validation, encoding + size bounds, ownership/permissions,
+  invalid-file handling (quarantine), collision and undeleted-file retries;
+- define state transitions: write → validate → deliver → ACK deletion /
+  retry / quarantine;
+- atomic write = same-directory tmp file + rename, no root privileges;
+- `8wm.t.vp9` is the lab-config side (separate repo, intentional
+  cross-repo reference); canonical contract location/ownership is settled
+  in A4 (8wm.t.vs2) — reference it explicitly.
+
 ## Pipeline
 
 Pełny pipeline architekta: spec przez buildera, kod przez buildera, review z

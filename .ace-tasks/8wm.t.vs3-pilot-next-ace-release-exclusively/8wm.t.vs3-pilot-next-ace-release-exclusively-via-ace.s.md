@@ -24,3 +24,13 @@ Zależność: po A4 (8wm.t.vs2).
 
 Pełny pipeline architekta: spec przez buildera, kod przez buildera, review z
 executed checks, merge, release testowanym publisherem.
+
+## Spec review findings (review-8wmw3q, codex gpt-5.6-luna)
+
+Wymagania dla buildera spec (A5):
+
+- `kind=otp` ask only after an OTP-required publisher result;
+- OTP values never persisted or printed (events, files, logs, argv);
+- re-ask after rejected/expired OTP; stop on non-OTP publisher failures
+  (deterministic failure classification);
+- end-to-end test with a fake publisher.

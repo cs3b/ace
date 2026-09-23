@@ -21,3 +21,13 @@ folderowego z A3 (8wm.t.vs1).
 
 Pełny pipeline architekta: spec przez buildera, kod przez buildera, review z
 executed checks, merge, release testowanym publisherem.
+
+## Spec review findings (review-8wmw3q, codex gpt-5.6-luna)
+
+Wymagania dla buildera spec (A4):
+
+- name the canonical shared-contract file (path in this repo), its owner,
+  and versioning policy; lab-config 8wm.t.vp9 consumes it;
+- require A2 (8wm.t.vs0) and A3 (8wm.t.vs1) to consume the same contract;
+- add shared contract tests exercised by Hermes, Herdr, and the
+  provider=lab adapter.
