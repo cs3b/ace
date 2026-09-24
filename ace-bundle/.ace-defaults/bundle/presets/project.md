@@ -20,14 +20,6 @@ bundle:
         TODO: Add key architecture notes, major components, and decision records.
         You can later split this into docs/architecture.md, docs/decisions.md, and docs/blueprint.md.
 
-    project_status:
-      title: Project Status
-      compressor_mode: exact
-      commands:
-        - pwd
-        - date
-        - ls -1
-
     onboarding_notes:
       title: Onboarding Notes
       content: |

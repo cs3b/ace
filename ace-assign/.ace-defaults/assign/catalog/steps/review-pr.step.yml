@@ -1,2 +1,4 @@
 name: review-pr
 skill: as-review-pr
+produces:
+  - review-feedback

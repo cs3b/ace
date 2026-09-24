@@ -1,1 +1,5 @@
 timeout: 600
+cli_args:
+  - --tools
+  - read,grep,find,ls
+  - --no-extensions

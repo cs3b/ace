@@ -10,12 +10,14 @@ module Ace
     module Molecules
       # Manages context presets from markdown files in .ace/bundle/presets/
       class PresetManager
-        attr_reader :presets
+        attr_reader :presets, :used_source_files
 
         def initialize
           @section_validator = Atoms::SectionValidator.new
+          @source_snapshots = {}
           @presets = load_presets
           @preset_cache = {}  # Cache for composed presets during single execution
+          @used_source_files = []
         end
 
         def list_presets
@@ -24,7 +26,14 @@ module Ace
 
         def get_preset(name)
           preset = @presets[name.to_s]
+          @used_source_files << preset[:source_file] if preset && preset[:source_file]
           preset&.dup
+        end
+
+        def used_source_snapshots
+          @used_source_files.uniq.map do |path|
+            {path: path, content: @source_snapshots.fetch(path)}
+          end
         end
 
         def preset_exists?(name)
@@ -263,6 +272,8 @@ module Ace
           frontmatter, body = parse_frontmatter(content)
 
           return nil unless frontmatter
+
+          @source_snapshots[file] = content
 
           # Use 'bundle' key for preset configuration
           bundle_config = frontmatter["bundle"] || {}

@@ -1,0 +1,11 @@
+name: mark-pr-ready
+description: Mark a reviewed draft pull request ready after the review completion rule
+instructions: "After the review completion rule is met and appropriate tests have passed, run gh pr ready on the draft PR."
+prerequisites:
+  - name: review-pr
+    strength: required
+    reason: Review must complete before marking the PR ready
+  - name: update-pr-desc
+    strength: required
+    reason: The PR description must record the review rounds, reviewer roster, tests, and dispositions before readiness
+consumes: [review-feedback]

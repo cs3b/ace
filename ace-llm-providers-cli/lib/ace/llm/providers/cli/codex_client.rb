@@ -3,6 +3,8 @@
 require "json"
 require "open3"
 require "shellwords"
+require "tempfile"
+require "fileutils"
 
 require_relative "cli_args_support"
 require_relative "atoms/execution_context"
@@ -59,11 +61,42 @@ module Ace
               subprocess_env: subprocess_env
             )
             prompt = rewrite_skill_commands(prompt, working_dir: working_dir)
+            requested_last_message = File.expand_path(options[:last_message_file], working_dir) if options[:last_message_file]
+            if requested_last_message && File.directory?(requested_last_message)
+              raise Ace::LLM::ProviderError, "last_message_file must name a file, not a directory: #{requested_last_message}"
+            end
 
-            cmd = build_codex_command(prompt, options, working_dir: working_dir)
-            stdout, stderr, status = execute_codex_command(cmd, prompt, options)
-
-            parse_codex_response(stdout, stderr, status, prompt, options)
+            Tempfile.create(["ace-codex-last-", ".md"]) do |last_message|
+              last_message.close
+              direct_capture = requested_last_message && File.writable?(File.dirname(requested_last_message)) && !File.directory?(requested_last_message)
+              execution_options = options.merge(last_message_file: direct_capture ? requested_last_message : last_message.path)
+              cmd = build_codex_command(prompt, execution_options, working_dir: working_dir)
+              if direct_capture && File.exist?(requested_last_message)
+                begin
+                  File.delete(requested_last_message)
+                rescue SystemCallError
+                  direct_capture = false
+                  execution_options = options.merge(last_message_file: last_message.path)
+                  cmd = build_codex_command(prompt, execution_options, working_dir: working_dir)
+                end
+              end
+              completed = false
+              result = nil
+              begin
+                stdout, stderr, status = execute_codex_command(cmd, prompt, execution_options)
+                result = parse_codex_response(stdout, stderr, status, prompt, execution_options)
+                completed = true
+                result
+              ensure
+                if requested_last_message && !direct_capture && (completed || File.size?(last_message.path))
+                  begin
+                    FileUtils.cp(last_message.path, requested_last_message)
+                  rescue => copy_error
+                    result[:metadata][:last_message_copy_error] = copy_error.message if completed
+                  end
+                end
+              end
+            end
           rescue => e
             handle_codex_error(e)
           end
@@ -200,8 +233,15 @@ module Ace
               cmd << "--output-last-message" << options[:last_message_file]
             end
 
-            # User CLI args last so they take precedence (last-wins in most CLIs)
-            cmd.concat(normalized_cli_args(options))
+            cli_args = normalized_cli_args_without_conflicts(
+              options,
+              forbidden_flags: ["--model", "-m", "--profile", "--output-last-message"],
+              label: "Codex"
+            )
+            if codex_cli_args_override_model?(cli_args)
+              raise Ace::LLM::ProviderError, "Codex cli args cannot override the resolved model"
+            end
+            cmd.concat(cli_args)
 
             cmd
           end
@@ -233,15 +273,21 @@ module Ace
               cmd << "-c" << trust_override
             end
 
-            cmd.concat(
-              normalized_cli_args_without_conflicts(
-                options,
-                forbidden_flags: ["exec", "review", "-C", "--cd", "--output-last-message"],
-                label: "Codex"
-              )
+            cli_args = normalized_cli_args_without_conflicts(
+              options,
+              forbidden_flags: ["exec", "review", "-C", "--cd", "--output-last-message", "--model", "-m", "--profile"],
+              label: "Codex"
             )
+            raise Ace::LLM::ProviderError, "Codex cli args cannot override the resolved model" if codex_cli_args_override_model?(cli_args)
+            cmd.concat(cli_args)
             cmd << prompt.to_s unless prompt.to_s.empty?
             cmd
+          end
+
+          def codex_cli_args_override_model?(args)
+            args.any? { |arg| arg.match?(/\A-m.+/) } ||
+              args.each_cons(2).any? { |flag, value| %w[-c --config].include?(flag) && value.match?(/\A(?:model|model_provider|profiles\.[^.]+\.(?:model|model_provider))\s*=/) } ||
+              args.any? { |arg| arg.match?(/\A(?:-c|--config)=?(?:model|model_provider|profiles\.[^.]+\.(?:model|model_provider))\s*=/) }
           end
 
           def execute_codex_command(cmd, prompt, options)
@@ -280,16 +326,28 @@ module Ace
               raise Ace::LLM::ProviderError, "Codex CLI failed: #{error_msg}"
             end
 
-            # Parse Codex output format to extract the actual response
+            # The native last-message file contains only the final response,
+            # unlike stdout's transcript of tools and status messages.
+            last_message_path = options[:last_message_file]
+            if last_message_path
+              text = File.file?(last_message_path) ? File.read(last_message_path).strip : ""
+              raise Ace::LLM::ProviderError, "Codex CLI produced no final message" if text.empty?
+
+              return {text: text, metadata: build_synthetic_metadata(text, prompt)}
+            end
+
+            # Older CLI wrappers may supply stdout only. Parse its transcript
+            # only when a real CLI banner is present, not when report prose
+            # happens to contain a standalone `codex` line.
             # Codex output includes metadata lines and the actual response
             lines = stdout.split("\n")
 
-            # Find where the actual response starts (after "codex" header)
-            response_start = lines.find_index { |line| line.include?("codex") }
+            has_cli_banner = lines.first(20).any? { |line| line.start_with?("OpenAI Codex v") }
+            response_start = lines.find_index { |line| line.strip == "codex" } if has_cli_banner
 
             if response_start && response_start < lines.length - 1
               # Extract text after the "codex" line, skipping empty lines
-              response_lines = lines[(response_start + 1)..-1]
+              response_lines = lines[(response_start + 1)..]
               # Remove token usage lines at the end
               response_lines = response_lines.reject { |line| line.include?("tokens used") }
               text = response_lines.join("\n").strip

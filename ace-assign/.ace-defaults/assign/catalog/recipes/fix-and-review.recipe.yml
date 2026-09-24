@@ -8,7 +8,6 @@ matches:
 
 parameters:
   taskref: { required: true }
-  review_cycles: { required: false, default: 1 }
 
 steps:
   - name: onboard
@@ -22,11 +21,18 @@ steps:
     required: true
   - name: create-pr
     required: true
-  - name: review-cycle
-    repeat: "{{review_cycles}}"
-    sub_steps: [review-pr, apply-feedback]
+    instructions_template: "Create the pull request with --draft; keep it draft until the review completion rule is met."
+  - name: review-pr
+    required: true
+    workflow: wfi://review/pr
+    note: "Iterate verified fixes and affected reviews until the round completion rule is met"
+  - name: update-pr-desc
+    required: true
+  - name: mark-pr-ready
+    required: true
+    note: "Only after review completion rule"
 
 customization_hints:
   - "Add fix-tests after verify-test-suite if failures found"
   - "Add security-audit for security-related fixes"
-  - "Increase review cycles for critical fixes"
+  - "Include integration scope when the fix crosses module boundaries"

@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "fileutils"
+require "tmpdir"
 
 module Ace
   module Review
@@ -92,6 +93,13 @@ module Ace
         #   )
         #   # Produces deduplicated findings with reviewers arrays
         def extract_and_save(report_paths:, base_path:, model: nil, session_dir: nil)
+          # Completed findings are immutable; avoid an unnecessary model call
+          # on a retry that cannot publish into this session.
+          feedback_dir = @directory_manager.feedback_path(base_path)
+          if published_findings?(feedback_dir)
+            return {success: false, error: "Session already has published findings; start a new review session"}
+          end
+
           # Step 1: Synthesize feedback items from reports (handles deduplication)
           synthesis_result = @synthesizer.synthesize(
             report_paths: report_paths,
@@ -104,36 +112,54 @@ module Ace
           end
 
           items = synthesis_result[:items]
-          return {success: true, items_count: 0, paths: [], metadata: synthesis_result[:metadata]} if items.empty?
 
-          # Step 2: Ensure feedback directory exists
-          feedback_dir = @directory_manager.ensure_directory(base_path)
+          # A completed session's findings are immutable. A new review gets a
+          # new session; retry is allowed only when no findings were published.
+          lock_path = File.join(base_path, ".feedback_publish.lock")
+          File.open(lock_path, File::RDWR | File::CREAT, 0o600) do |lock|
+            lock.flock(File::LOCK_EX)
+            if published_findings?(feedback_dir)
+              return {success: false, error: "Session already has published findings; start a new review session"}
+            end
+            if items.empty?
+              result = {success: true, items_count: 0, paths: [], metadata: synthesis_result[:metadata]}
 
-          # Step 3: Save each item
-          saved_paths = []
-          errors = []
+              return result
+            end
 
-          items.each do |item|
-            write_result = @file_writer.write(item, feedback_dir)
+            # An attempt is private until every finding has been written. A
+            # failed model retry cannot leave unaccounted files in the session.
+            Dir.mktmpdir(".feedback-attempt-", base_path) do |stage_root|
+              stage_dir = @directory_manager.ensure_directory(stage_root)
+              staged_paths = []
+              errors = []
+              items.each do |item|
+                write_result = @file_writer.write(item, stage_dir)
+                if write_result[:success]
+                  staged_paths << write_result[:path]
+                else
+                  errors << "Failed to save #{item.id}: #{write_result[:error]}"
+                end
+              end
+              return {success: false, error: errors.join("; "), paths: [], items_count: 0} if errors.any?
 
-            if write_result[:success]
-              saved_paths << write_result[:path]
-            else
-              errors << "Failed to save #{item.id}: #{write_result[:error]}"
+              backup = "#{feedback_dir}.previous-#{Process.pid}-#{rand(1_000_000)}"
+              File.rename(feedback_dir, backup) if Dir.exist?(feedback_dir)
+              begin
+                File.rename(stage_dir, feedback_dir)
+              rescue SystemCallError
+                File.rename(backup, feedback_dir) if Dir.exist?(backup)
+                raise
+              end
+              result = {success: true, items_count: staged_paths.length,
+                        paths: staged_paths.map { |path| File.join(feedback_dir, File.basename(path)) },
+                        metadata: synthesis_result[:metadata]}
+              FileUtils.rm_rf(backup) if Dir.exist?(backup)
+              result
             end
           end
-
-          if errors.any? && saved_paths.empty?
-            return {success: false, error: errors.join("; ")}
-          end
-
-          {
-            success: true,
-            items_count: saved_paths.length,
-            paths: saved_paths,
-            metadata: synthesis_result[:metadata],
-            warnings: errors.any? ? errors : nil
-          }.compact
+        rescue SystemCallError, IOError => e
+          {success: false, error: "Failed to publish feedback: #{e.message}", paths: [], items_count: 0}
         end
 
         # ========================================================================
@@ -311,6 +337,10 @@ module Ace
         end
 
         private
+
+        def published_findings?(feedback_dir)
+          Dir.exist?(feedback_dir) && Dir.glob(File.join(feedback_dir, "{*,_archived/*}.s.md"), File::FNM_EXTGLOB).any?
+        end
 
         # Perform a state transition on a feedback item
         #

@@ -5,7 +5,7 @@ require "fileutils"
 require "json"
 
 class FeedbackSynthesizerTest < AceReviewTest
-  SAMPLE_REPORT_CONTENT = <<~MARKDOWN.freeze
+  SAMPLE_REPORT_CONTENT = <<~MARKDOWN
     # Code Review Report
 
     ## Security Issues
@@ -77,10 +77,10 @@ class FeedbackSynthesizerTest < AceReviewTest
     ]
   }.to_json.freeze
 
-  INVALID_JSON_RESPONSE = "This is not valid JSON".freeze
-  INVALID_JSON_REPAIR_RESPONSE = "Still not valid JSON".freeze
+  INVALID_JSON_RESPONSE = "This is not valid JSON"
+  INVALID_JSON_REPAIR_RESPONSE = "Still not valid JSON"
 
-  INVALID_JSON_WITH_TRAILING_COMMA = <<~JSON.freeze
+  INVALID_JSON_WITH_TRAILING_COMMA = <<~JSON
     {
       "findings": [
         {
@@ -92,7 +92,7 @@ class FeedbackSynthesizerTest < AceReviewTest
     }
   JSON
 
-  TRUNCATED_JSON_WITH_SECOND_PASS = <<~BROKEN.freeze
+  TRUNCATED_JSON_WITH_SECOND_PASS = <<~BROKEN
     {
       "findings": [
         {
@@ -100,7 +100,7 @@ class FeedbackSynthesizerTest < AceReviewTest
           "finding": "The query builder uses string interpolation
   BROKEN
 
-  EMPTY_FINDINGS_RESPONSE = '{"findings": []}'.freeze
+  EMPTY_FINDINGS_RESPONSE = '{"findings": []}'
 
   # Opt into shared temp directory for performance
   def self.use_shared_temp_dir?
@@ -274,7 +274,57 @@ class FeedbackSynthesizerTest < AceReviewTest
     )
 
     refute result[:success]
-    assert_includes result[:error], "No valid reports found"
+    assert_includes result[:error], "Review report is missing"
+  end
+
+  def test_synthesize_rejects_partial_input_when_one_report_is_missing
+    report_path = create_report_file("review-report-r1.md", sample_report_content)
+    result = @synthesizer.synthesize(
+      report_paths: [report_path, File.join(@temp_dir, "review-report-r2.md")],
+      session_dir: @session_dir
+    )
+
+    refute result[:success]
+    assert_includes result[:error], "Review report is missing"
+    assert_equal 0, @mock_executor.call_count
+  end
+
+  def test_synthesize_rejects_oversized_input_without_truncating_a_report
+    report_path = create_report_file("review-report-r1.md", "unique finding at end\n" * 50_000)
+    result = @synthesizer.synthesize(report_paths: [report_path], session_dir: @session_dir)
+
+    refute result[:success]
+    assert_includes result[:error], "Synthesis prompt exceeds budget"
+    assert_equal 0, @mock_executor.call_count
+  end
+
+  def test_extracts_each_report_when_the_combined_prompt_exceeds_budget
+    report1 = create_report_file("review-report-r1.md", "first finding\n" * 19_000)
+    report2 = create_report_file("review-report-r2.md", "second finding\n" * 19_000)
+    @mock_executor.set_responses([
+      {findings: [{title: "First defect", files: ["src/one.rb:1"],
+                   priority: "high", finding: "First report finding"}]}.to_json,
+      {findings: [{title: "Second defect", files: ["src/two.rb:2"],
+                   priority: "medium", finding: "Second report finding"}]}.to_json
+    ])
+
+    result = @synthesizer.synthesize(report_paths: [report1, report2], session_dir: @session_dir)
+    assert result[:success], result[:error]
+    assert_equal %w[First Second], result[:items].map { |item| item.title.split.first }
+    assert_equal 2, result[:items].map(&:id).uniq.length
+    assert result[:metadata][:segmented]
+    assert_equal 2, @mock_executor.call_count
+  end
+
+  def test_segmented_clean_reports_produce_zero_findings
+    report1 = create_report_file("review-report-r1.md", "first report\n" * 19_000)
+    report2 = create_report_file("review-report-r2.md", "second report\n" * 19_000)
+    @mock_executor.set_responses([EMPTY_FINDINGS_RESPONSE, EMPTY_FINDINGS_RESPONSE])
+
+    result = @synthesizer.synthesize(report_paths: [report1, report2], session_dir: @session_dir)
+    assert result[:success], result[:error]
+    assert_empty result[:items]
+    assert result[:metadata][:segmented]
   end
 
   def test_synthesize_handles_llm_failure

@@ -15,6 +15,7 @@ module Github
       assert_equal "123", result.number
       assert_nil result.repo
       assert_equal "123", result.gh_format
+      assert_equal ["123"], result.cli_target_args
     end
 
     def test_parse_integer
@@ -31,6 +32,7 @@ module Github
       assert_equal "789", result.number
       assert_equal "owner/repo", result.repo
       assert_equal "owner/repo#789", result.gh_format
+      assert_equal ["789", "--repo", "owner/repo"], result.cli_target_args
     end
 
     def test_parse_github_url

@@ -172,35 +172,20 @@ When parsing informal instructions, identify:
    - "review", "review pr" → `ace:review-pr`
    - "commit" → `ace:git-commit`
    - "onboard" → `onboard`
-3. **Loop Indicators**: "2 cycles", "3 iterations", "twice"
+3. **Loop Indicators**: Treat requested review counts as a minimum number of independent passes, never as a stopping rule for unresolved findings.
 4. **Sequence Markers**: "then", "after that", "finally"
 
-### Loop Expansion
+### Review continuation
 
-Review loops expand into forked cycle parent steps with standard child sub-steps:
+Default PR delivery uses one `review-pr` workflow step after tracked code and history edits. The workflow verifies findings, applies fixes, reruns affected scopes, and finishes with a fresh integration review. It continues while important findings remain; a fixed count cannot declare completion.
 
 ```yaml
-# "do 3 review cycles" becomes:
-- name: review-valid-1
-  context: fork
-  sub_steps: [review-pr, apply-feedback, release]
+- name: review-pr
+  workflow: wfi://review/pr
   instructions:
-    - "Child review-pr: use preset code-valid."
-    - "Focus: correctness — bugs, logic errors, missing functionality, broken contracts."
-
-- name: review-fit-1
-  context: fork
-  sub_steps: [review-pr, apply-feedback, release]
-  instructions:
-    - "Child review-pr: use preset code-fit."
-    - "Focus: quality — performance, architecture, standards, test coverage."
-
-- name: review-shine-1
-  context: fork
-  sub_steps: [review-pr, apply-feedback, release]
-  instructions:
-    - "Child review-pr: use preset code-shine."
-    - "Focus: polish — simplification, naming, documentation (non-blocking suggestions)."
+    - "Cover all changed files with coherent scopes."
+    - "Verify findings and repeat affected scopes after fixes."
+    - "Require fresh integration evidence for the current head."
 ```
 
 ## Process Steps
@@ -269,7 +254,7 @@ ace-task show <taskref>
 Parse modifications:
 - "skip onboarding" → remove onboard step
 - "add security review" → insert security review step
-- "only 2 cycles" → adjust loop count
+- "2 reviews" → require at least 2 independent review passes; unresolved findings still require another pass
 
 ### 5. Expand and Inject Parameters
 
@@ -358,16 +343,14 @@ Report:
 Job configuration created: job.yaml
 
 Session: work-on-task-123
-Steps: 10 total
+Steps: 8 total
   - onboard
   - work-on-task
   - create-pr
-  - review-cycle-1
-  - apply-feedback-1
-  - review-cycle-2
-  - apply-feedback-2
-  - review-cycle-3
-  - apply-feedback-3
+  - push-to-remote
+  - review-pr
+  - update-pr-desc
+  - mark-pr-ready
   - finalize
 
 Start assignment with: ace-assign create --yaml job.yaml
@@ -380,7 +363,7 @@ Start assignment with: ace-assign create --yaml job.yaml
 ```yaml
 session:
   name: work-on-task-123
-  description: Work on task 123 with PR and review cycles
+  description: Work on task 123 with PR and iterative review
 
 steps:
   - name: onboard
@@ -424,20 +407,19 @@ steps:
 /as-assign-prepare work-on-task --taskref 148
 ```
 
-Creates job with 13 steps: onboard, work-on-task, release, create-pr, 2 review cycles (review + apply-feedback + release each), reorganize-commits, push-to-remote, update-pr-desc.
+Creates a job with implementation, release, draft PR, history/push, and one iterative review workflow. The agent completes at least three PR rounds and stops after two consecutive rounds without confirmed P0/P1. There is no separate final review.
 
 ### Example 2: Informal Instructions
 
 ```
-/as-assign-prepare "implement task 148, create pr, review twice"
+/as-assign-prepare "implement task 148, create pr, review until clear"
 ```
 
 Parses instructions and creates job with:
 - onboard
 - work-on-task (148)
 - create-pr
-- review-valid-1 (fork subtree: review-pr → apply-feedback → release)
-- review-fit-1 (fork subtree: review-pr → apply-feedback → release)
+- review-pr (review → verify → fix; minimum 3 rounds, last 2 without confirmed P0/P1)
 - finalize
 
 ### Example 3: Custom Output Path

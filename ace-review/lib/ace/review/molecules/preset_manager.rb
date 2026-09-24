@@ -2,6 +2,7 @@
 
 require "yaml"
 require "pathname"
+require "digest"
 require_relative "../atoms/preset_validator"
 
 module Ace
@@ -9,13 +10,14 @@ module Ace
     module Molecules
       # Manages loading and resolving review presets from configuration
       class PresetManager
-        attr_reader :config_path, :config, :project_root
+        attr_reader :config_path, :config, :project_root, :source_files
 
         # Metadata keys that are added during composition and should be stripped before use
         COMPOSITION_METADATA_KEYS = %w[success composed composed_from].freeze
 
         def initialize(config_path: nil, project_root: nil)
           @project_root = project_root || find_project_root
+          @source_files = []
           @config_path = resolve_config_path(config_path)
           @config = load_configuration
           @preset_cache = {}  # Final preset cache (after merging with defaults)
@@ -105,6 +107,12 @@ module Ace
             context: resolve_context_config(preset_context, overrides[:context]),
             subject: resolve_subject_config(preset["subject"], overrides[:subject]),
             models: models_config,
+            reviewers: preset["reviewers"],
+            file_patterns: preset["file_patterns"],
+            file_pattern_groups: preset["file_pattern_groups"],
+            budget: preset["budget"],
+            goals_brief: preset["goals_brief"],
+            review_role: preset["review_role"] || "scope",
             output_format: overrides[:output_format] || preset["output_format"] || default_output_format
           }
         end
@@ -226,7 +234,7 @@ module Ace
         # @param preset_hash [Hash] Preset data with potential metadata
         # @return [Hash] Preset data without composition metadata at any nesting level
         def strip_composition_metadata(preset_hash)
-          result = preset_hash.reject { |k, _| COMPOSITION_METADATA_KEYS.include?(k) }
+          result = preset_hash.except(*COMPOSITION_METADATA_KEYS)
 
           # Recursively strip metadata from nested structures
           result.transform_values do |value|
@@ -287,6 +295,7 @@ module Ace
 
           content = File.read(config_path)
           config_data = YAML.safe_load(content, permitted_classes: [Symbol]) || {}
+          record_source(config_path, content)
           deep_stringify_keys(config_data)
         rescue => e
           warn "Failed to load configuration from #{config_path}: #{e.message}" if Ace::Review.debug?
@@ -306,6 +315,7 @@ module Ace
           if preset_file && File.exist?(preset_file)
             content = File.read(preset_file)
             preset_data = YAML.safe_load(content, permitted_classes: [Symbol])
+            record_source(preset_file, content)
             return deep_stringify_keys(preset_data)
           end
 
@@ -316,6 +326,7 @@ module Ace
           if File.exist?(preset_file)
             content = File.read(preset_file)
             preset_data = YAML.safe_load(content, permitted_classes: [Symbol])
+            record_source(preset_file, content)
             return deep_stringify_keys(preset_data)
           end
 
@@ -331,6 +342,11 @@ module Ace
         def load_preset_from_config(preset_name)
           return nil unless config && config["presets"]
           config["presets"][preset_name.to_s]
+        end
+
+        def record_source(path, content)
+          @source_files << {path: File.realpath(path), sha256: Digest::SHA256.hexdigest(content)}
+          @source_files.uniq! { |source| source[:path] }
         end
 
         def config_presets

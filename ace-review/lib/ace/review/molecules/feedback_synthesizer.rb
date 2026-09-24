@@ -3,6 +3,7 @@
 require "json"
 require "fileutils"
 require "tmpdir"
+require_relative "../atoms/prompt_budget"
 
 module Ace
   module Review
@@ -28,7 +29,7 @@ module Ace
       class FeedbackSynthesizer
         # Cached system prompt and prompt-path lookups to avoid repeated
         # shell/file reads during test and command-heavy runs.
-        FALLBACK_SYSTEM_PROMPT = <<~PROMPT.freeze
+        FALLBACK_SYSTEM_PROMPT = <<~PROMPT
           Synthesize feedback from code review reports into unique findings.
 
           For each unique issue found:
@@ -56,6 +57,8 @@ module Ace
           - When only one report: extract all findings as-is with that reviewer
           - When multiple reports: deduplicate findings that describe the same issue
           - When multiple reviewers find the same issue, list ALL of them in reviewers array
+          - Preserve every distinct finding, including ones reported by only one reviewer
+          - Consensus is metadata, never a reason to omit a finding
           - Merge file arrays from all sources for each finding
           - Return ONLY the JSON, no markdown code fences
         PROMPT
@@ -66,10 +69,10 @@ module Ace
               system_prompt_cache.fetch(prompt_name) do
                 prompt_path = resolve_prompt_path_cached(prompt_name)
 
-                if prompt_path && File.exist?(prompt_path)
-                  system_prompt_cache[prompt_name] = File.read(prompt_path)
+                system_prompt_cache[prompt_name] = if prompt_path && File.exist?(prompt_path)
+                  File.read(prompt_path)
                 else
-                  system_prompt_cache[prompt_name] = FALLBACK_SYSTEM_PROMPT
+                  FALLBACK_SYSTEM_PROMPT
                 end
               end
             end
@@ -117,9 +120,6 @@ module Ace
           end
         end
 
-        # Maximum combined report size before truncation (characters)
-        MAX_COMBINED_SIZE = 200_000
-
         attr_reader :llm_executor
 
         def initialize(llm_executor: nil)
@@ -161,26 +161,19 @@ module Ace
         # @param report_paths [Array<String>] Paths to report files
         # @return [Array<Hash>] Array of report hashes with :path, :reviewer, :content
         def read_reports(report_paths)
-          reports = []
-
-          report_paths.each do |path|
-            next unless File.exist?(path)
-
+          report_paths.map do |path|
+            raise ArgumentError, "Review report is missing: #{path}" unless File.file?(path)
             content = File.read(path)
-            next if content.strip.empty?
+            raise ArgumentError, "Review report is empty: #{path}" if content.strip.empty?
 
             reviewer = extract_reviewer_from_filename(path)
-            reports << {
+            {
               path: path,
               reviewer: reviewer,
               content: content,
               size: content.bytesize
             }
-          rescue => e
-            warn "Warning: Failed to read report #{path}: #{e.message}" if Ace::Review.debug?
           end
-
-          reports
         end
 
         # Synthesize reports into unified findings
@@ -200,6 +193,14 @@ module Ace
           output_file = File.join(session_dir, "feedback-synthesis.raw.txt")
 
           synthesis_model = model || default_synthesis_model
+          budget = Atoms::PromptBudget.check(system_prompt: system_prompt, user_prompt: user_prompt,
+            models: [synthesis_model])
+          unless budget[:success]
+            return synthesize_reports_separately(reports, session_dir, synthesis_model) if reports.length > 1
+
+            return error_result("Synthesis prompt exceeds budget: #{budget[:errors].join("; ")}")
+          end
+
           display_synthesis_start(reports.size, synthesis_model)
 
           result = @llm_executor.execute(
@@ -225,6 +226,26 @@ module Ace
           )
         end
 
+        def synthesize_reports_separately(reports, session_dir, model)
+          extracted = reports.each_with_index.map do |report, index|
+            part_dir = File.join(session_dir, "report-#{index + 1}")
+            FileUtils.mkdir_p(part_dir)
+            result = synthesize_reports([report], part_dir, model)
+            return error_result("Report #{index + 1} could not be extracted: #{result[:error]}") unless result[:success]
+
+            result[:items]
+          end.flatten
+
+          # Keep every finding. Per-report extraction cannot safely infer that
+          # two differently worded findings are the same defect.
+          ids = extracted.empty? ? [] : Atoms::FeedbackIdGenerator.generate_sequence(extracted.length)
+          items = extracted.each_with_index.map { |item, index| item.dup_with(id: ids[index]) }
+          persist_cleaned_json(session_dir, {"findings" => items.map(&:to_h)})
+          {success: true, items: items,
+           metadata: {total_findings: items.length, consensus_findings: 0,
+                      reviewers_count: reports.length, segmented: true}}
+        end
+
         # Load the synthesis system prompt
         #
         # @return [String] System prompt content
@@ -244,9 +265,6 @@ module Ace
         # @param reports [Array<Hash>] Array of report data
         # @return [String] User prompt
         def build_reports_prompt(reports)
-          # Check total size
-          total_size = reports.sum { |r| r[:size] }
-
           content = "Synthesize these #{reports.size} code review report"
           content += (reports.size == 1) ? "." : "s into unique, deduplicated findings."
           content += "\n\n"
@@ -256,16 +274,7 @@ module Ace
             content += "---\n"
             content += "## Report #{idx + 1}: #{report[:reviewer]}\n\n"
 
-            # Truncate individual reports if total is too large
-            report_content = report[:content]
-            if total_size > MAX_COMBINED_SIZE
-              max_per_report = MAX_COMBINED_SIZE / reports.size
-              if report_content.length > max_per_report
-                report_content = report_content[0, max_per_report] + "\n\n[... truncated ...]"
-              end
-            end
-
-            content += report_content
+            content += report[:content]
             content += "\n\n"
           end
 

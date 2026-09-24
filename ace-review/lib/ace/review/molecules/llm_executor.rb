@@ -117,6 +117,22 @@ module Ace
             fallback: false  # Disable ace-llm fallback - ace-review handles retries
           )
 
+          unless result[:text].is_a?(String) && !result[:text].strip.empty?
+            return {success: false, response: result[:text], output_file: output_file,
+                    execution: result[:execution], requested_selector: model,
+                    error: "Reviewer returned an empty report"}
+          end
+
+          metadata = result[:metadata] || {}
+          finish_reason = metadata[:finish_reason] || metadata["finish_reason"] || metadata[:stop_reason] || metadata["stop_reason"]
+          execution_status = result.dig(:execution, :status) || result.dig(:execution, "status")
+          if incomplete_finish_reason?(finish_reason) || execution_status != "succeeded"
+            return {success: false, response: result[:text], output_file: output_file,
+                    execution: result[:execution], requested_selector: model,
+                    metadata: result[:metadata],
+                    error: "Reviewer report is incomplete (finish reason: #{finish_reason}, execution status: #{execution_status})"}
+          end
+
           # Return structured result with rich metadata
           {
             success: true,
@@ -126,6 +142,8 @@ module Ace
             usage: result[:usage],
             model_info: result[:model],
             provider_info: result[:provider],
+            execution: result[:execution],
+            requested_selector: model,
             error: nil
           }
         rescue Ace::LLM::Error => e
@@ -142,6 +160,10 @@ module Ace
             error: "Unexpected error: #{e.message}",
             error_type: e.class.name
           }
+        end
+
+        def incomplete_finish_reason?(reason)
+          !Ace::LLM::SUCCESSFUL_FINISH_REASONS.include?(reason.to_s.downcase)
         end
       end
     end

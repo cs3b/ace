@@ -32,6 +32,38 @@ module Ace
           assert_empty @status_messages
         end
 
+        def test_preserves_configuration_error_from_a_fallback_target
+          config = Models::FallbackConfig.new(retry_count: 0, providers: ["anthropic"])
+          orchestrator = FallbackOrchestrator.new(config: config, status_callback: @status_callback)
+          registry = MockRegistry.new
+          registry.add_client("google", MockClient.new(errors: [mock_server_error(503)]))
+          registry.add_client("anthropic", MockClient.new(response: "unused"))
+
+          error = assert_raises(Ace::LLM::ConfigurationError) do
+            orchestrator.execute(primary_provider: "google", registry: registry) do |client, provider|
+              raise Ace::LLM::ConfigurationError, "Invalid selector: #{provider}" if provider == "anthropic"
+
+              client.call
+            end
+          end
+          assert_match(/Invalid selector: anthropic/, error.message)
+        end
+
+        def test_primary_configuration_error_can_fall_back
+          config = Models::FallbackConfig.new(retry_count: 0, providers: ["anthropic"])
+          orchestrator = FallbackOrchestrator.new(config: config, status_callback: @status_callback)
+          registry = MockRegistry.new
+          registry.add_client("google", MockClient.new(response: "unused"))
+          registry.add_client("anthropic", MockClient.new(response: "fallback success"))
+
+          result = orchestrator.execute(primary_provider: "google", registry: registry) do |client, provider|
+            raise Ace::LLM::ConfigurationError, "Primary configuration unavailable" if provider == "google"
+
+            client.call
+          end
+          assert_equal "fallback success", result
+        end
+
         def test_executes_without_fallback_when_disabled
           config = Models::FallbackConfig.new(enabled: false)
           orchestrator = FallbackOrchestrator.new(

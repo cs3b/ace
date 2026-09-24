@@ -123,7 +123,9 @@ module Ace
           files.each do |file_info|
             language = detect_language(file_info[:path])
             output << "  <file path=\"#{file_info[:path]}\" language=\"#{language}\">"
-            output << format_file_content(file_info[:content])
+            content = format_file_content(file_info[:content])
+            # A review subject must remain byte-exact for the provenance check.
+            output << ((section_data[:verbatim_files] || section_data["verbatim_files"]) ? content : format_xml_payload(content))
             output << "  </file>"
           end
 
@@ -137,7 +139,7 @@ module Ace
           commands = section_data[:_processed_commands] || section_data["_processed_commands"] || []
           commands.each do |command_data|
             output << "  <output command=\"#{command_data[:command]}\">"
-            output << format_command_output(command_data[:output])
+            output << format_xml_payload(format_command_output(command_data[:output]))
             output << "  </output>"
           end
 
@@ -152,6 +154,8 @@ module Ace
           diffs.each do |diff_data|
             command = diff_command_for(diff_data)
             output << "  <output command=\"#{command}\">"
+            # Review diff provenance requires these bytes to remain contiguous.
+            # The XML-like tags are presentation markers, not a parsed XML envelope.
             output << format_diff_output(diff_data[:output])
             output << "  </output>"
           end
@@ -175,7 +179,7 @@ module Ace
         # Formats inline content section
         def format_content_section(section_data)
           content = section_data[:_processed_content] || section_data["_processed_content"] || ""
-          format_inline_content(content)
+          format_xml_payload(format_inline_content(content))
         end
 
         # Formats full bundle data with sections in markdown format
@@ -472,8 +476,13 @@ module Ace
         def format_file_content(content)
           return "" if content.nil? || content.empty?
 
-          # Indent content for XML formatting
-          content.lines.map { |line| "    #{line}" }.join.rstrip
+          # Keep source bytes intact. Indentation/trim here changes diff context,
+          # including significant trailing whitespace and final newlines.
+          content
+        end
+
+        def format_xml_payload(content)
+          "<![CDATA[#{content.to_s.gsub("]]>", "]]]]><![CDATA[>")}]]>"
         end
 
         def format_command_output(output)
@@ -486,8 +495,7 @@ module Ace
         def format_diff_output(output)
           return "" if output.nil? || output.empty?
 
-          # Indent diff output for XML formatting
-          output.lines.map { |line| "    #{line}" }.join.rstrip
+          output
         end
 
         def format_inline_content(content)

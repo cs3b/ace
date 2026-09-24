@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Preserve completed Codex responses when copying the optional last-message diagnostic fails, and handle Pi retry streams without accepting partial output.
+- Reject unresolved Pi model selectors before CLI execution and keep the `glm5` alias synchronized across provider registries.
+- Preserve Codex JSON response text containing a preset path without mistaking it for the CLI banner.
+- Reject directory destinations for Codex last-message capture and preserve the final Pi stop reason when earlier turns appear in terminal events.
+
+### Changed
+
+- Restrict Pi `@ro` to read-only tools (`read`, `grep`, `find`, `ls`) and disable extensions.
+
 ## [0.34.0] - 2026-09-13
 
 ### Changed

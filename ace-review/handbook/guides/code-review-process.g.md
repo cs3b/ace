@@ -126,6 +126,41 @@ The project uses a structured review system that supports:
 
 Reviews are executed through standardized commands that create organized sessions with input files, prompts, model reports, and synthesis results. The system handles both general code reviews and specialized handbook reviews with appropriate templates and context.
 
+For a large monorepo PR, compose a review preset from high-level module and functional-lens presets. `file_pattern_groups` intersects its groups: a changed path must match every group's include patterns, and any matching exclusion removes it. Composition concatenates groups, while the older single `file_patterns` remains available for simple scopes. For example:
+
+```yaml
+presets:
+  admin:
+    file_pattern_groups:
+      - include: ["apps/admin/**"]
+  ui:
+    file_pattern_groups:
+      - include: ["**/*.tsx", "**/*.css"]
+        exclude: ["**/*.test.tsx"]
+  admin-ui:
+    presets: [admin, ui]
+```
+
+Select only the scopes needed for the PR. A code-only pass does not account for omitted tests; include needed code/test evidence and cross-module integration within the round. Scope manifests show selected and omitted files. ACE refuses an unparsed diff, missing sources or an oversized prompt rather than silently truncating it.
+
+The agent follows `wfi://review/pr`: minimum three completed PR rounds, ending after the last two consecutive rounds have no confirmed P0/P1 (Critical/High). Provider failures and incomplete reports do not count. Earlier open blockers remain visible; P2 and lower findings do not independently extend the loop. Changes of SHA do not reset counters and there is no additional final review or coverage certificate. Use `--evidence-session` to include selected earlier reports and finding dispositions, including reports from earlier commits. Formal merge checks remain at merge time.
+
+Presets can opt into one shared, content-addressed goals brief. Sources name an exact PR ref and authority. Only base sources may be marked accepted; head sources remain proposals. The brief includes source links and hashes, and its cache key includes source content, summary instructions and the resolved model. Prepare it once before dry runs; subsequent scoped reviews reuse the same artifact. A dry run with a cache miss fails rather than unexpectedly calling a model.
+
+```yaml
+goals_brief:
+  sources:
+    - path: docs/requirements.md
+      ref: base
+      authority: accepted
+    - path: task
+      ref: head
+      authority: proposed
+  models: ["pi:glmflash", "gemini:flash-latest"]
+```
+
+`task` resolves the single applicable PR task spec. Run `ace-review --pr 123 --preset admin-ui --prepare-goals-brief` before `--dry-run`. Model preference is configurable and unavailable providers can be replaced; the cache records which model actually generated the brief. Changing the source content or summarization contract invalidates it.
+
 ## Integration with Development Workflow
 
 ### Development Phases

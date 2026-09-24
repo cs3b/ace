@@ -1,0 +1,19 @@
+presets:
+  - code-valid
+description: "Shared runtime: bundles, model adapters, GitHub and Assign; includes the review orchestration boundary"
+file_patterns:
+  include:
+    - "ace-bundle/**"
+    - "ace-bundle/.ace-defaults/**"
+    - "ace-llm/**"
+    - "ace-llm/.ace-defaults/**"
+    - "ace-llm-providers-cli/**"
+    - "ace-llm-providers-cli/.ace-defaults/**"
+    - "ace-git-github/**"
+    - "ace-assign/**"
+    - "ace-assign/.ace-defaults/**"
+    - "ace-support-test-helpers/**"
+    - ".ace/llm/**"
+    - "Gemfile.lock"
+    - "ace-review/lib/ace/review/organisms/review_manager.rb"
+    - "ace-review/handbook/workflow-instructions/review/pr.wf.md"

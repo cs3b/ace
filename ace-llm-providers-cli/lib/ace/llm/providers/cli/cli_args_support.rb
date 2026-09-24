@@ -18,7 +18,7 @@ module Ace
             conflict = find_conflicting_cli_arg(args, forbidden_flags)
             return args unless conflict
 
-            raise Ace::LLM::ProviderError, "#{label} interactive mode does not support cli arg #{conflict}"
+            raise Ace::LLM::ProviderError, "#{label} does not support cli arg #{conflict} in this invocation"
           end
 
           def find_conflicting_cli_arg(args, forbidden_flags)

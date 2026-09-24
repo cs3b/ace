@@ -21,7 +21,7 @@ module Ace
         # Load composition rules from catalog directory.
         #
         # @param catalog_dir [String] Path to catalog/ directory
-        # @return [Hash] Parsed rules with ordering, pairs, conditional, review_cycles
+        # @return [Hash] Parsed rules with ordering, pairs, conditional
         def self.load(catalog_dir)
           rules_path = File.join(catalog_dir, "composition-rules.yml")
           return default_rules unless File.exist?(rules_path)
@@ -78,11 +78,7 @@ module Ace
           {
             "ordering" => [],
             "pairs" => [],
-            "conditional" => [],
-            "review_cycles" => {
-              "default_count" => 2,
-              "max_count" => 5
-            }
+            "conditional" => []
           }
         end
         private_class_method :default_rules
@@ -107,8 +103,10 @@ module Ace
 
           # Before/after rules (e.g., "create-pr must come before review-pr")
           if rule["before"] && rule["after"]
-            before_idx = find_step_index(step_names, rule["before"])
-            after_idx = find_step_index(step_names, rule["after"])
+            before_idx = find_step_index(step_names, rule["before"],
+              last: rule["before_occurrence"] == "last")
+            after_idx = find_step_index(step_names, rule["after"],
+              last: rule["after_occurrence"] == "last")
 
             if before_idx && after_idx && before_idx >= after_idx
               return {
@@ -134,11 +132,13 @@ module Ace
         # @param step_names [Array<String>] Step name list
         # @param name [String] Name to find (exact or prefix)
         # @return [Integer, nil] Index or nil if not found
-        def self.find_step_index(step_names, name)
-          idx = step_names.index(name)
-          return idx if idx
-
-          step_names.index { |p| p.start_with?("#{name}-") }
+        def self.find_step_index(step_names, name, last: false)
+          names = [name]
+          matches = step_names.each_index.select do |index|
+            step = step_names[index]
+            names.any? { |candidate| step == candidate || step.start_with?("#{candidate}-") }
+          end
+          last ? matches.last : matches.first
         end
         private_class_method :find_step_index
 

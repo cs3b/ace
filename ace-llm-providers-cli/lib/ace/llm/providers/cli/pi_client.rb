@@ -183,6 +183,10 @@ module Ace
             # No session (stateless)
             cmd << "--no-session"
 
+            # Keep the terminal stop reason so truncated responses cannot pass
+            # as successful plain-text output.
+            cmd << "--mode" << "json"
+
             # No skills (we handle skill content ourselves in one-shot mode)
             cmd << "--no-skills"
 
@@ -194,13 +198,16 @@ module Ace
             # Provider/model from the model string (format: "provider/model")
             model_to_use = @model || @generation_config[:model] || DEFAULT_MODEL
             provider_name, model_id = split_provider_model(model_to_use)
-            if provider_name && model_id
-              cmd << "--provider" << provider_name
-              cmd << "--model" << model_id
-            end
+            cmd << "--provider" << provider_name
+            cmd << "--model" << model_id
 
-            # User CLI args after generated flags (last-wins precedence)
-            cmd.concat(normalized_cli_args(options))
+            cmd.concat(
+              normalized_cli_args_without_conflicts(
+                options,
+                forbidden_flags: ["--mode", "--provider", "--model", "--models"],
+                label: "Pi"
+              )
+            )
 
             cmd
           end
@@ -214,15 +221,13 @@ module Ace
 
             model_to_use = @model || @generation_config[:model] || DEFAULT_MODEL
             provider_name, model_id = split_provider_model(model_to_use)
-            if provider_name && model_id
-              cmd << "--provider" << provider_name
-              cmd << "--model" << model_id
-            end
+            cmd << "--provider" << provider_name
+            cmd << "--model" << model_id
 
             cmd.concat(
               normalized_cli_args_without_conflicts(
                 options,
-                forbidden_flags: ["-p", "--print", "--no-session", "--no-skills", "--mode"],
+                forbidden_flags: ["-p", "--print", "--no-session", "--no-skills", "--mode", "--provider", "--model", "--models"],
                 label: "Pi"
               )
             )
@@ -234,20 +239,25 @@ module Ace
           # Handles multi-segment providers like "google-gemini-cli/gemini-2.5-pro"
           # Also handles nested providers like "openrouter:openai/gpt-oss-120b"
           def split_provider_model(model_string)
-            return [nil, nil] unless model_string
+            raise Ace::LLM::ProviderError, "Pi model must resolve to provider/model" unless model_string
+            raise Ace::LLM::ProviderError, "Pi model must resolve to provider/model: #{model_string}" if model_string.start_with?(":")
 
             # Check for nested provider pattern (e.g., "openrouter:openai/model")
-            if model_string.count(":") > 0
+            colon = model_string.index(":")
+            slash = model_string.index("/")
+            if colon && (!slash || colon < slash)
               parts = model_string.split(":", 2)
-              if parts.length == 2 && parts[1].include?("/")
+              nested_parts = parts[1]&.split("/", 2)
+              if parts.length == 2 && !parts[0].empty? && nested_parts&.length == 2 && nested_parts.all? { |part| !part.empty? }
                 # Nested provider: "openrouter:openai/model" -> ["openrouter", "openai/model"]
                 return [parts[0], parts[1]]
               end
+              raise Ace::LLM::ProviderError, "Pi model must resolve to provider/model: #{model_string}"
             end
 
             # Standard provider/model format
             parts = model_string.split("/", 2)
-            return [nil, nil] unless parts.length == 2
+            raise Ace::LLM::ProviderError, "Pi model must resolve to provider/model: #{model_string}" unless parts.length == 2 && parts.all? { |part| !part.empty? }
 
             [parts[0], parts[1]]
           end
@@ -276,15 +286,8 @@ module Ace
               raise Ace::LLM::ProviderError, "Pi CLI failed: #{error_msg}"
             end
 
-            # Detect NDJSON: starts with {"type":"
-            if stdout.strip.start_with?('{"type":"')
-              text, usage = parse_ndjson(stdout)
-              response = {"usage" => normalize_usage(usage)}
-            else
-              # Plain text output
-              text = stdout.strip
-              response = {}
-            end
+            text, usage, finish_reason = parse_ndjson(stdout)
+            response = {"usage" => normalize_usage(usage), "finish_reason" => finish_reason}
 
             metadata = build_metadata(response, text, prompt, options)
 
@@ -320,36 +323,65 @@ module Ace
             lines = stdout.split("\n")
             text_parts = []
             usage = nil
+            terminal_event = nil
+            settled = false
+            message_stop_reason = nil
 
             lines.each do |line|
               next if line.strip.empty?
               event = JSON.parse(line)
+              raise Ace::LLM::ProviderError, "Pi JSON stream contains a non-object event" unless event.is_a?(Hash)
               case event["type"]
               when "message_end"
                 # Extract text from content array
-                content = event.dig("message", "content") || []
-                content.each do |c|
-                  text_parts << c["text"] if c["type"] == "text"
+                message = event["message"] || {}
+                if message["role"].nil? || message["role"] == "assistant"
+                  text_parts = extract_message_text(message)
+                  usage = message["usage"]
+                  message_stop_reason = message["stopReason"] if message["stopReason"]
                 end
-                usage = event.dig("message", "usage")
               when "agent_end"
-                # Fallback: extract from messages array
-                messages = event["messages"] || []
-                messages.each do |msg|
-                  content = msg["content"] || []
-                  content.each do |c|
-                    text_parts << c["text"] if c["type"] == "text"
-                  end
+                settled = false
+                if event["willRetry"]
+                  text_parts.clear
+                  usage = nil
+                  terminal_event = nil
+                  message_stop_reason = nil
+                  next
                 end
-                usage = messages.dig(0, "usage") if usage.nil?
+                terminal_event = event
+                messages = event["messages"] || []
+                if (last_assistant = messages.reverse.find { |msg| (msg["role"].nil? || msg["role"] == "assistant") && extract_message_text(msg).any? })
+                  text_parts = extract_message_text(last_assistant)
+                  usage ||= last_assistant["usage"]
+                  message_stop_reason ||= last_assistant["stopReason"]
+                end
+              when "agent_settled"
+                settled = true if terminal_event
               end
             end
 
+            raise Ace::LLM::ProviderError, "Pi JSON stream ended without agent_end" unless terminal_event
+            raise Ace::LLM::ProviderError, "Pi JSON stream ended without agent_settled" unless settled
+
             text = text_parts.join("")
-            [text, usage || {}]
+            raise Ace::LLM::ProviderError, "Pi JSON stream produced no final assistant message" if text.strip.empty?
+            terminal_reason = terminal_event["stopReason"] || terminal_event.dig("messages", -1, "stopReason")
+            successful_reasons = Ace::LLM::SUCCESSFUL_FINISH_REASONS
+            finish_reason = if %w[error aborted].include?(terminal_reason.to_s.downcase)
+              terminal_reason
+            elsif message_stop_reason && !successful_reasons.include?(message_stop_reason.to_s.downcase)
+              message_stop_reason
+            else
+              terminal_reason || message_stop_reason || "success"
+            end
+            [text, usage || {}, finish_reason]
           rescue JSON::ParserError
-            # If parsing fails, treat as plain text
-            [stdout.strip, {}]
+            raise Ace::LLM::ProviderError, "Pi JSON stream contains invalid events"
+          end
+
+          def extract_message_text(message)
+            Array(message["content"]).filter_map { |content| content["text"] if content["type"] == "text" }
           end
 
           # Normalize Pi usage field names to our standard format.

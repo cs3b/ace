@@ -2,6 +2,8 @@
 
 require "pathname"
 require "date"
+require "json"
+require "yaml"
 require "ace/core"
 require_relative "../molecules/bundle_merger"
 require "ace/core/molecules/file_aggregator"
@@ -27,13 +29,18 @@ module Ace
       class BundleLoader
         def initialize(options = {})
           @options = options
+          @review_safe_mode = options[:allow_commands] == false || options["allow_commands"] == false
+          @review_allowed_root = options[:allowed_root] || options["allowed_root"] || project_root if @review_safe_mode
+          @allowed_protocol_files = []
           @template_dir = nil
           @preset_manager = Molecules::PresetManager.new
           @section_processor = Molecules::SectionProcessor.new
           @merger = Molecules::BundleMerger.new
           @file_aggregator = Ace::Core::Molecules::FileAggregator.new(
             max_size: options[:max_size],
-            base_dir: options[:base_dir] || project_root
+            base_dir: options[:base_dir] || project_root,
+            allowed_root: safe_allowed_root,
+            allowed_paths: @allowed_protocol_files
           )
           @command_executor = Ace::Core::Atoms::CommandExecutor
           @output_formatter = Ace::Core::Molecules::OutputFormatter.new(
@@ -43,6 +50,7 @@ module Ace
 
         def load_preset(preset_name)
           # Use composition-aware loading
+          preset_sources_start = @preset_manager.used_source_files.length
           preset = @preset_manager.load_preset_with_composition(preset_name)
 
           # Handle errors from composition loading
@@ -55,7 +63,7 @@ module Ace
 
           # Merge params into options for processing
           params = preset.dig(:context, :params) || preset.dig(:context, "params") || {}
-          merged_options = @options.merge(params)
+          merged_options = merge_params(params)
 
           # Process the preset bundle configuration
           begin
@@ -78,26 +86,16 @@ module Ace
             bundle.metadata[:composed_from] = preset[:composed_from]
           end
 
-          # Determine format - respect explicit format requests but default to markdown-xml for embedded sources
-          # Check for explicit format request in preset or params
-          explicit_format = preset[:format] || params["format"] || params[:format] || merged_options[:format]
+          format_preset_bundle(bundle, preset, params, merged_options)
 
-          format = if explicit_format
-            # Use the explicitly requested format
-            explicit_format
-          elsif preset.dig(:context, "embed_document_source")
-            # Default to markdown-xml format when embed_document_source is true and no explicit format requested
-            "markdown-xml"
-          else
-            # Fallback to markdown
-            "markdown"
-          end
-          format_bundle(bundle, format)
+          record_review_preset_sources!(bundle, since: preset_sources_start)
+          include_review_section_sources!(bundle)
 
           bundle
         end
 
         def load_file(path)
+          assert_allowed_file!(path)
           # Check if it's a template file
           content = begin
             File.read(path)
@@ -126,6 +124,7 @@ module Ace
               # Plain file inputs should emit readable content to stdout.
               # Keep content as primary payload and record source metadata.
               bundle.content = result[:content]
+              bundle.source_files = [{path: path, content: result[:content]}] if @review_safe_mode
               bundle.metadata[:raw_content_for_auto_format] = bundle.content
               bundle.metadata[:source] = path
             else
@@ -143,11 +142,12 @@ module Ace
 
           preset_names.each do |preset_name|
             # Use composition-aware loading for each preset
+            preset_sources_start = @preset_manager.used_source_files.length
             preset = @preset_manager.load_preset_with_composition(preset_name)
 
             if preset[:success]
               params = preset.dig(:context, :params) || preset.dig(:context, "params") || {}
-              merged_options = @options.merge(params)
+              merged_options = merge_params(params)
               bundle = load_from_preset_config(preset, merged_options)
               bundle.metadata[:preset_name] = preset_name
               bundle.metadata[:output] = preset[:output]  # Store preset's output mode
@@ -157,6 +157,9 @@ module Ace
                 bundle.metadata[:composed] = true
                 bundle.metadata[:composed_from] = preset[:composed_from]
               end
+
+              record_review_preset_sources!(bundle, since: preset_sources_start)
+              format_preset_bundle(bundle, preset, params, merged_options) if @review_safe_mode
 
               bundles << bundle
             else
@@ -180,6 +183,7 @@ module Ace
           # Merge all bundles
           merged = merge_bundles(bundles)
           merged.metadata[:warnings] = warnings if warnings.any?
+          merged.metadata[:errors] = Array(merged.metadata[:errors]) + warnings if @review_safe_mode && warnings.any?
 
           merged
         end
@@ -309,11 +313,12 @@ module Ace
           # Process presets
           preset_names.each do |preset_name|
             # Use composition-aware loading for each preset
+            preset_sources_start = @preset_manager.used_source_files.length
             preset = @preset_manager.load_preset_with_composition(preset_name)
 
             if preset[:success]
               params = preset.dig(:context, :params) || preset.dig(:context, "params") || {}
-              merged_options = @options.merge(params)
+              merged_options = merge_params(params)
               bundle = load_from_preset_config(preset, merged_options)
               bundle.metadata[:preset_name] = preset_name
               bundle.metadata[:source_type] = "preset"
@@ -324,6 +329,9 @@ module Ace
                 bundle.metadata[:composed] = true
                 bundle.metadata[:composed_from] = preset[:composed_from]
               end
+
+              record_review_preset_sources!(bundle, since: preset_sources_start)
+              format_preset_bundle(bundle, preset, params, merged_options) if @review_safe_mode
 
               bundles << bundle
             else
@@ -358,6 +366,7 @@ module Ace
 
           # Add warnings to metadata if any
           merged_bundle.metadata[:warnings] = warnings if warnings.any?
+          merged_bundle.metadata[:errors] = Array(merged_bundle.metadata[:errors]) + warnings if @review_safe_mode && warnings.any?
 
           merged_bundle
         end
@@ -416,6 +425,8 @@ module Ace
         end
 
         def load_template(path)
+          assert_allowed_file!(path)
+          preset_sources_start = @preset_manager.used_source_files.length
           # Track the template file's directory for resolving ./ relative paths
           @template_dir = File.dirname(File.expand_path(path))
 
@@ -454,7 +465,7 @@ module Ace
             # Merge params into options if present
             params = config["params"]
             if params.is_a?(Hash)
-              @options = @options.merge(params)
+              @options = merge_params(params)
             end
 
             # Handle preset/presets keys from frontmatter
@@ -515,41 +526,58 @@ module Ace
 
             # Track base resolution before metadata reset (metadata gets replaced below)
             resolved = bundle.metadata[:base_type] ? bundle.content : nil
+            base_path = bundle.metadata[:base_path]
             base_content_resolved = resolved.to_s.strip.empty? ? nil : resolved
 
             # Replace metadata with original frontmatter (keep it unmodified)
             # Convert string keys to symbols for consistency
+            processing_errors = Array(bundle.metadata[:errors])
+            if @review_safe_mode
+              processing_errors << bundle.metadata[:preset_error] if bundle.metadata[:preset_error]
+              processing_errors << bundle.metadata[:base_error] if bundle.metadata[:base_error] && !processing_errors.include?(bundle.metadata[:base_error])
+            end
             bundle.metadata = {}
             frontmatter.each do |key, value|
               bundle.metadata[key.to_sym] = value
             end
+            bundle.metadata[:base_path] = base_path if base_path
+            bundle.metadata[:errors] = processing_errors if processing_errors.any?
+            record_review_preset_sources!(bundle, since: preset_sources_start)
             # Store original YAML for output formatting
             bundle.metadata[:frontmatter_yaml] = frontmatter_yaml if frontmatter_yaml
 
             # If embed_document_source is true, store original document and keep embedded files separate
             if config["embed_document_source"]
               # base replaces the source document for embedding
-              bundle.content = base_content_resolved || original_content
+              bundle.content = if base_content_resolved
+                base_content_resolved
+              else
+                [original_content, (bundle.content if bundle.source_files.any? && bundle.has_sections?)].compact.join("\n\n")
+              end
 
               # bundle.files already has embedded files from process_template_config
               # Don't add source to files array - it will be output as raw content
 
               # Format and return
               format = config["format"] || @options[:format] || "markdown-xml"
-              return format_bundle(bundle, format)
+              format_bundle(bundle, format)
+              bundle.metadata[:rendered_format] = format
+              return record_review_template_source!(bundle, path, original_content)
             end
 
             # Format bundle before returning (same as preset loading)
             format = config["format"] || @options[:format] || "markdown-xml"
             format_bundle(bundle, format)
+            bundle.metadata[:rendered_format] = format
 
-            return bundle
+            return record_review_template_source!(bundle, path, original_content)
           end
 
           # Check if this is plain markdown with metadata-only frontmatter
           # (e.g., workflow files with description/allowed-tools but no context config)
           if frontmatter.any?
-            return load_plain_markdown(original_content, frontmatter, path)
+            bundle = load_plain_markdown(original_content, frontmatter, path)
+            return record_review_template_source!(bundle, path, original_content)
           end
 
           # Otherwise, parse template configuration from body
@@ -558,7 +586,7 @@ module Ace
           unless parse_result[:success]
             bundle = Models::BundleData.new
             bundle.metadata[:error] = parse_result[:error]
-            return bundle
+            return record_review_template_source!(bundle, path, original_content)
           end
 
           config = parse_result[:config]
@@ -572,7 +600,7 @@ module Ace
           # Add frontmatter to metadata for reference
           bundle.metadata[:frontmatter] = frontmatter if frontmatter.any?
 
-          bundle
+          record_review_template_source!(bundle, path, original_content)
         end
 
         def load_from_config(config)
@@ -591,6 +619,8 @@ module Ace
             aggregator = Ace::Core::Molecules::FileAggregator.new(
               max_size: @options[:max_size],
               base_dir: @options[:base_dir] || project_root,
+              allowed_root: safe_allowed_root,
+              allowed_paths: @allowed_protocol_files,
               exclude: config[:exclude] || []
             )
 
@@ -650,7 +680,7 @@ module Ace
 
           # If embed_document_source is true, set content to trigger XML formatting
           if bundle_config["embed_document_source"] && preset[:body] && !preset[:body].empty?
-            bundle.content = preset[:body]
+            bundle.content = [bundle.content, preset[:body]].reject(&:empty?).join("\n\n")
           elsif preset[:body] && !preset[:body].empty?
             # Add preset body to metadata (old behavior for non-embedded)
             bundle.metadata[:preset_content] = preset[:body]
@@ -837,13 +867,59 @@ module Ace
         def merge_bundles(bundles)
           return Models::BundleData.new if bundles.empty?
 
+          if @review_safe_mode
+            contents = bundles.map(&:content).reject(&:empty?)
+            preset_formats = bundles.map { |bundle| bundle.metadata[:rendered_format] }.compact.uniq
+            format = @options[:format] || @options["format"] ||
+              ((preset_formats.first if preset_formats.size == 1) || "markdown-xml")
+            merged_content = case format
+            when "json"
+              JSON.pretty_generate("bundles" => contents)
+            when "yaml"
+              YAML.dump("bundles" => contents)
+            when "xml"
+              entries = contents.map { |content| "<bundle><![CDATA[#{content.gsub("]]>", "]]]]><![CDATA[>")}]]></bundle>" }
+              "<bundles>\n#{entries.join("\n")}\n</bundles>"
+            else
+              contents.join("\n\n")
+            end
+            merged_sections = if bundles.size == 1
+              bundles.first.sections
+            else
+              bundles.each_with_index.each_with_object({}) do |(bundle, index), sections|
+                bundle.sections.each { |name, section| sections["#{index + 1}:#{name}"] = section }
+              end
+            end
+            result = Models::BundleData.new(
+              content: merged_content,
+              sections: merged_sections,
+              metadata: {
+                merged: true,
+                total_bundles: bundles.size,
+                sources: bundles.map { |bundle| bundle.metadata[:preset_name] || bundle.metadata[:source_path] || bundle.metadata[:source_input] }.compact,
+                errors: bundles.flat_map do |bundle|
+                  Array(bundle.metadata[:errors]) + Array(bundle.metadata[:error]) + Array(bundle.metadata[:warnings])
+                end,
+                preset_source_files: bundles.flat_map { |bundle| Array(bundle.metadata[:preset_source_files]) }.uniq,
+                preset_sources: bundles.flat_map { |bundle| Array(bundle.metadata[:preset_sources]) }.uniq
+              }
+            )
+            result.source_files = bundles.flat_map do |bundle|
+              bundle.source_files +
+                bundle.sections.values.flat_map { |section| Array(section[:_processed_files]) }
+            end.uniq { |file| [file[:path], file[:content]] }
+            # Inputs are already formatted. Preserve each complete payload while
+            # keeping the requested outer format parseable.
+            return result
+          end
+
           # Single context with actual processed section content: preserve sections
           # This handles presets with explicit `sections:` that have real content
           if bundles.size == 1 && has_processed_section_content?(bundles.first)
             result = bundles.first
             result.metadata[:merged] = true
             result.metadata[:total_bundles] = 1
-            result.metadata[:sources] = [result.metadata[:preset_name] || result.metadata[:source_path]].compact
+            result.metadata[:sources] = [result.metadata[:preset_name] || result.metadata[:source_path] || result.metadata[:source_input]].compact
             return format_bundle(result, @options[:format] || "markdown-xml")
           end
 
@@ -873,6 +949,9 @@ module Ace
           result.metadata[:total_bundles] = merged[:total_bundles]
           result.metadata[:sources] = merged[:sources]
           result.metadata[:errors] = merged[:errors] if merged[:errors]&.any?
+          result.metadata[:preset_source_files] = bundles.flat_map { |bundle| Array(bundle.metadata[:preset_source_files]) }.uniq
+          result.metadata[:preset_sources] = bundles.flat_map { |bundle| Array(bundle.metadata[:preset_sources]) }.uniq
+          result.source_files = bundles.flat_map(&:source_files)
 
           format_bundle(result, @options[:format] || "markdown-xml")
         end
@@ -907,13 +986,25 @@ module Ace
           # Process files
           if config["files"] && config["files"].any?
             # Resolve any protocol references (e.g., wfi://workflow-name)
-            resolved_files = config["files"].map do |file_ref|
-              resolve_file_reference(file_ref)
-            end.compact
+            resolved_files = config["files"].filter_map do |file_ref|
+              resolved = resolve_file_reference(file_ref)
+              if !resolved && @review_safe_mode
+                data[:errors] << "Unresolved file source: #{file_ref}"
+              end
+              resolved
+            end
+            missing_sources = missing_review_sources(resolved_files, base_dir: @options[:base_dir] || project_root,
+              exclude: config["exclude"] || [])
+            missing_sources.each do |pattern|
+              data[:errors] << "Unmatched required file pattern: #{pattern}"
+            end
+            resolved_files -= missing_sources
 
             aggregator = Ace::Core::Molecules::FileAggregator.new(
               max_size: config["max_size"] || @options[:max_size],
               base_dir: @options[:base_dir] || project_root,
+              allowed_root: safe_allowed_root,
+              allowed_paths: @allowed_protocol_files,
               exclude: config["exclude"] || []
             )
 
@@ -932,9 +1023,20 @@ module Ace
 
           # Process include patterns (similar to files)
           if config["include"] && config["include"].any?
+            if @review_safe_mode
+              config["include"].each do |pattern|
+                if Ace::Core::Atoms::GlobExpander.expand_with_exclusions(pattern,
+                  base_dir: @options[:base_dir] || project_root,
+                  exclude: config["exclude"] || []).empty?
+                  data[:errors] << "Unmatched required include pattern: #{pattern}"
+                end
+              end
+            end
             aggregator = Ace::Core::Molecules::FileAggregator.new(
               max_size: config["max_size"] || @options[:max_size],
               base_dir: @options[:base_dir] || project_root,
+              allowed_root: safe_allowed_root,
+              allowed_paths: @allowed_protocol_files,
               exclude: config["exclude"] || []
             )
 
@@ -945,6 +1047,7 @@ module Ace
 
           # Process commands
           if config["commands"] && config["commands"].any?
+            reject_untrusted_commands!
             timeout = config["timeout"] || @options[:timeout] || 30
             config["commands"].each do |command|
               cmd_result = @command_executor.execute(command, timeout: timeout, cwd: project_root)
@@ -959,6 +1062,7 @@ module Ace
 
           # Process diffs
           if config["diffs"] && config["diffs"].any?
+            reject_untrusted_diff_sources!
             data[:diffs] ||= []
             diff_paths = config["paths"] || config[:paths] || []
             config["diffs"].each do |diff_range|
@@ -980,8 +1084,10 @@ module Ace
 
           # Create bundle with formatted content
           bundle = Models::BundleData.new(metadata: data[:metadata])
+          bundle.metadata[:errors] = data[:errors] if data[:errors].any?
           bundle.content = formatted_content
           bundle.commands = data[:commands]
+          bundle.source_files = data[:files]
 
           # Store individual files if embed_document_source is true
           if config["embed_document_source"]
@@ -1026,6 +1132,14 @@ module Ace
           normalized
         end
 
+        def format_preset_bundle(bundle, preset, params, merged_options)
+          explicit = preset[:format] || params["format"] || params[:format] || merged_options[:format]
+          format = explicit || (preset.dig(:context, "embed_document_source") ? "markdown-xml" : "markdown")
+          format_bundle(bundle, format)
+          bundle.metadata[:rendered_format] = format
+          bundle
+        end
+
         def format_bundle(bundle, format)
           bundle.metadata[:raw_content_for_auto_format] = bundle.content
 
@@ -1066,6 +1180,10 @@ module Ace
         end
 
         def compress_bundle_sections(bundle)
+          # PR review validates file provenance after rendering. Never send
+          # unvalidated review sources to a model-backed compressor here.
+          return if @review_safe_mode
+
           # --compressor off: absolute kill switch
           return if @options[:compressor]&.to_s == "off"
 
@@ -1097,6 +1215,8 @@ module Ace
         # section-level compression was a no-op (no _processed_files to compress).
         # This handles template bundles with command-only/diff-only sections.
         def compress_rendered_bundle(bundle)
+          return if @review_safe_mode
+
           return unless bundle.has_sections?
           return if bundle.metadata[:compressed]
           return if sections_have_processed_files?(bundle)
@@ -1170,9 +1290,15 @@ module Ace
         def resolve_protocol(protocol_ref)
           require "ace/support/nav"
           engine = Ace::Support::Nav::Organisms::NavigationEngine.new
+          if @review_safe_mode && engine.cmd_protocol?(protocol_ref.split("://", 2).first)
+            raise Ace::Bundle::Error, "Command protocol sources are forbidden in review prompts"
+          end
           path = engine.resolve(protocol_ref)
 
-          return path if path && File.exist?(path)
+          if path && File.exist?(path)
+            authorize_protocol_path!(protocol_ref, path)
+            return path
+          end
 
           # Fallback: handle cmd-type protocols (e.g., task://) by capturing command output
           protocol = protocol_ref.split("://", 2).first
@@ -1230,13 +1356,27 @@ module Ace
           return unless files.any?
 
           # Resolve any protocol references (e.g., wfi://workflow-name)
-          resolved_files = files.map do |file_ref|
-            resolve_file_reference(file_ref)
-          end.compact
+          resolved_files = files.filter_map do |file_ref|
+            resolved = resolve_file_reference(file_ref)
+            if !resolved && @review_safe_mode
+              bundle.metadata[:errors] ||= []
+              bundle.metadata[:errors] << "Section '#{section_name}': unresolved file source: #{file_ref}"
+            end
+            resolved
+          end
+          missing_sources = missing_review_sources(resolved_files, base_dir: options[:base_dir] || project_root,
+            exclude: section_data[:exclude] || section_data["exclude"] || [])
+          missing_sources.each do |pattern|
+            bundle.metadata[:errors] ||= []
+            bundle.metadata[:errors] << "Section '#{section_name}': unmatched required file pattern: #{pattern}"
+          end
+          resolved_files -= missing_sources
 
           aggregator = Ace::Core::Molecules::FileAggregator.new(
             max_size: options[:max_size] || options["max_size"],
             base_dir: options[:base_dir] || project_root,
+            allowed_root: safe_allowed_root,
+            allowed_paths: @allowed_protocol_files,
             exclude: section_data[:exclude] || section_data["exclude"] || []
           )
 
@@ -1272,6 +1412,8 @@ module Ace
           commands = section_data[:commands] || section_data["commands"] || []
           return unless commands.any?
 
+          reject_untrusted_commands!
+
           timeout = options[:timeout] || options["timeout"] || 30
           processed_commands = []
 
@@ -1298,6 +1440,7 @@ module Ace
         def process_pr_config(bundle, bundle_config, options)
           pr_refs = bundle_config["pr"] || bundle_config[:pr]
           return false unless pr_refs
+          reject_untrusted_diff_sources!
 
           PrBundleLoader.new(options).process(bundle, pr_refs)
         end
@@ -1306,6 +1449,7 @@ module Ace
         def process_diffs_section(bundle, section_name, section_data, options)
           ranges = section_data[:ranges] || section_data["ranges"] || []
           return unless ranges.any?
+          reject_untrusted_diff_sources!
 
           processed_diffs = []
           diff_paths = section_data[:paths] || section_data["paths"] || []
@@ -1344,11 +1488,15 @@ module Ace
           base_ref = bundle_config["base"] || bundle_config[:base]
           return unless base_ref && !base_ref.to_s.strip.empty?
 
+          files_in_content = bundle.source_files.any? &&
+            (!bundle_config["embed_document_source"] || @section_processor.has_sections?({"bundle" => bundle_config}))
+
           # Check if base_ref looks like a file reference (has protocol, slashes, or is a known path pattern)
           # This heuristic helps prioritize file resolution for extension-less files
           has_protocol = base_ref.match?(/^[\w-]+:\/\//)
           has_path_separators = base_ref.match?(/[\/\\]/)
-          looks_like_file_ref = has_protocol || has_path_separators
+          looks_like_file_ref = has_protocol || has_path_separators ||
+            (@review_safe_mode && base_ref.match?(/\.(?:md|markdown|txt|json|ya?ml)\z/i))
 
           # Try to resolve as file reference first (handles extension-less files like README, CONTEXT)
           resolved_path = resolve_file_reference(base_ref)
@@ -1356,16 +1504,19 @@ module Ace
           # Check if we successfully resolved to an existing file
           if resolved_path && File.exist?(resolved_path)
             # Load base content from file
-            base_content = File.read(resolved_path).strip
+            assert_allowed_file!(resolved_path)
+            base_source = File.read(resolved_path)
+            base_content = base_source.strip
             if base_content.empty?
               warn "Warning: Base file is empty: #{resolved_path}" if options[:debug]
             end
 
             # Store base content as primary content
-            bundle.content = base_content
+            bundle.content = [base_content, (bundle.content if files_in_content)].compact.join("\n\n")
             bundle.metadata[:base_path] = resolved_path
             bundle.metadata[:base_ref] = base_ref
             bundle.metadata[:base_type] = "file"
+            bundle.source_files << {path: resolved_path, content: base_source}
           elsif looks_like_file_ref
             # It looks like a file reference but resolution failed - set error
             if !resolved_path
@@ -1375,11 +1526,15 @@ module Ace
               bundle.metadata[:base_error] = "Base file not found: #{resolved_path}"
               warn "Warning: Base file not found: #{resolved_path}" if options[:debug]
             end
+            if @review_safe_mode
+              bundle.metadata[:errors] ||= []
+              bundle.metadata[:errors] << bundle.metadata[:base_error]
+            end
           else
             # Simple string without path indicators - treat as inline content
             # This allows direct definition of base context without requiring separate files
             # Example: base: "System instructions for the task"
-            bundle.content = base_ref.to_s.strip
+            bundle.content = [base_ref.to_s.strip, (bundle.content if files_in_content)].compact.join("\n\n")
             bundle.metadata[:base_type] = "inline"
             bundle.metadata[:base_ref] = base_ref
           end
@@ -1479,6 +1634,102 @@ module Ace
           return [] unless ENV["ACE_BUNDLE_STRICT"]
 
           Atoms::TypoDetector.detect_suspicious_keys(frontmatter, path)
+        end
+
+        def reject_untrusted_commands!
+          return unless @review_safe_mode
+
+          raise Ace::Bundle::Error, "Command sources are forbidden in review prompts"
+        end
+
+        def reject_untrusted_diff_sources!
+          return unless @review_safe_mode
+
+          raise Ace::Bundle::Error, "Secondary PR and Git diff sources are forbidden in review prompts"
+        end
+
+        def merge_params(params)
+          if @review_safe_mode
+            restricted = %w[allow_commands allowed_root allowed_paths base_dir]
+            supplied = params.keys.map(&:to_s) & restricted
+            unless supplied.empty?
+              raise Ace::Bundle::Error, "Review template cannot override safety options: #{supplied.join(", ")}"
+            end
+          end
+          @options.merge(params)
+        end
+
+        def missing_review_sources(files, base_dir:, exclude:)
+          return [] unless @review_safe_mode
+
+          files.select do |pattern|
+            Ace::Core::Atoms::GlobExpander.expand_with_exclusions(pattern,
+              base_dir: base_dir, exclude: exclude).empty?
+          end
+        end
+
+        def record_review_preset_sources!(bundle, since:)
+          return unless @review_safe_mode
+
+          paths = @preset_manager.used_source_files.drop(since).uniq
+          paths.each { |path| assert_allowed_file!(path) }
+          bundle.metadata[:preset_source_files] = paths if paths.any?
+          if paths.any?
+            bundle.metadata[:preset_sources] = @preset_manager.used_source_snapshots.select { |source| paths.include?(source[:path]) }
+          end
+        end
+
+        def record_review_template_source!(bundle, path, content)
+          return bundle unless @review_safe_mode
+
+          include_review_section_sources!(bundle)
+          bundle.source_files << {path: path, content: content}
+          bundle.source_files.uniq! { |file| [file[:path], file[:content]] }
+          bundle
+        end
+
+        def include_review_section_sources!(bundle)
+          return unless @review_safe_mode
+
+          bundle.source_files += bundle.sections.values.flat_map { |section| Array(section[:_processed_files]) }
+          bundle.source_files.uniq! { |file| [file[:path], file[:content]] }
+        end
+
+        def safe_allowed_root
+          @review_allowed_root if @review_safe_mode
+        end
+
+        def assert_allowed_file!(path)
+          return unless @review_safe_mode
+          return unless File.exist?(path)
+
+          root = File.realpath(safe_allowed_root)
+          actual = File.realpath(path)
+          return if actual == root || actual.start_with?("#{root}#{File::SEPARATOR}")
+          return if @allowed_protocol_files.include?(actual)
+
+          raise Ace::Bundle::Error, "File source outside allowed project root: #{path}"
+        end
+
+        def authorize_protocol_path!(reference, path)
+          return unless @review_safe_mode
+
+          actual = File.realpath(path)
+          root = File.realpath(safe_allowed_root)
+          return if actual == root || actual.start_with?("#{root}#{File::SEPARATOR}")
+
+          unless reference.start_with?("prompt://")
+            raise Ace::Bundle::Error, "Protocol file source outside allowed project root: #{reference}"
+          end
+          spec = Gem.loaded_specs["ace-review"] || Gem::Specification.find_by_name("ace-review")
+          package_root = File.realpath(spec.full_gem_path)
+          unless actual.start_with?("#{package_root}#{File::SEPARATOR}")
+            raise Ace::Bundle::Error, "Prompt source is not owned by the installed ace-review package: #{reference}"
+          end
+
+          @allowed_protocol_files << actual unless @allowed_protocol_files.include?(actual)
+        rescue Gem::LoadError
+          raise Ace::Bundle::Error, "Cannot validate installed ace-review prompt source: #{reference}"
         end
 
         # Delegate to Atoms::TypoDetector for architectural consistency

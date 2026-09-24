@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "strscan"
+
 module Ace
   module Review
     module Atoms
@@ -20,9 +22,7 @@ module Ace
       #   #     { path: "test/foo_test.rb", content: "diff --git...", lines: 30, change_type: :modified }
       #   #   ]
       module DiffBoundaryFinder
-        # Pattern to match the start of a file diff block
-        # Matches: diff --git a/path/to/file b/path/to/file
-        DIFF_HEADER_PATTERN = /^diff --git a\/(.+?) b\/(.+?)$/
+        DIFF_HEADER_PREFIX = "diff --git "
 
         # Pattern to detect new file mode
         NEW_FILE_PATTERN = /^new file mode/
@@ -50,7 +50,8 @@ module Ace
           current_lines = []
 
           diff_text.each_line do |line|
-            if (match = DIFF_HEADER_PATTERN.match(line))
+            if line.start_with?(DIFF_HEADER_PREFIX)
+              old_path, new_path = parse_header(line)
               # Save the previous block if exists
               if current_block
                 current_block[:content] = current_lines.join
@@ -60,10 +61,11 @@ module Ace
 
               # Start a new block
               current_block = {
-                path: match[2],  # Use the 'b/' side (destination path)
+                path: new_path,
+                old_path: old_path,
                 content: "",
                 lines: 0,
-                change_type: :modified  # Default, may be updated below
+                change_type: (old_path == new_path) ? :modified : :renamed
               }
               current_lines = [line]
             elsif current_block
@@ -88,6 +90,44 @@ module Ace
           blocks
         end
 
+        def self.parse_header(line)
+          paths = line.delete_prefix(DIFF_HEADER_PREFIX).strip
+          if !paths.start_with?('"') && (match = /\Aa\/(.+?) b\/(.+)\z/.match(paths))
+            return [match[1], match[2]]
+          end
+
+          scanner = StringScanner.new(paths)
+          old_path = scan_git_path(scanner)
+          raise ArgumentError, "Unparseable git diff header" unless scanner.skip(/\s+/)
+
+          new_path = scan_git_path(scanner)
+          unless scanner.eos? && old_path&.start_with?("a/") && new_path&.start_with?("b/")
+            raise ArgumentError, "Unparseable git diff header"
+          end
+
+          [old_path.delete_prefix("a/"), new_path.delete_prefix("b/")]
+        end
+        private_class_method :parse_header
+
+        def self.scan_git_path(scanner)
+          if (quoted = scanner.scan(/"(?:\\.|[^"])*"/))
+            decode_git_quoted(quoted[1...-1])
+          else
+            scanner.scan(/\S+/)
+          end
+        end
+        private_class_method :scan_git_path
+
+        def self.decode_git_quoted(value)
+          escapes = {"n" => "\n", "t" => "\t", "r" => "\r", "b" => "\b", "f" => "\f",
+                     "v" => "\v", "a" => "\a", "\\" => "\\", '"' => '"'}
+          value.b.gsub(/\\([0-7]{3}|.)/m) do
+            code = Regexp.last_match(1)
+            code.match?(/\A[0-7]{3}\z/) ? [code.to_i(8)].pack("C") : escapes.fetch(code, code)
+          end.force_encoding(Encoding::UTF_8)
+        end
+        private_class_method :decode_git_quoted
+
         # Parse and return just the file paths from a diff
         #
         # @param diff_text [String, nil] The unified diff text to parse
@@ -111,7 +151,7 @@ module Ace
         def self.file_count(diff_text)
           return 0 if diff_text.nil? || diff_text.empty?
 
-          diff_text.scan(DIFF_HEADER_PATTERN).length
+          diff_text.each_line.count { |line| line.start_with?(DIFF_HEADER_PREFIX) }
         end
 
         # Group file blocks by directory

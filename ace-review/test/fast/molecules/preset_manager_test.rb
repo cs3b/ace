@@ -87,6 +87,15 @@ class PresetManagerTest < AceReviewTest
     assert_equal "project", preset["bundle"]
   end
 
+  def test_default_integration_preset_declares_distinct_role_and_focus
+    manager = Ace::Review::Molecules::PresetManager.new(project_root: @test_dir)
+    resolved = manager.resolve_preset("integration")
+
+    assert_equal "integration", resolved[:review_role]
+    assert_equal ["prompt://focus/phase/integration"],
+      resolved.dig(:instructions, "bundle", "sections", "integration_focus", "files")
+  end
+
   def test_preset_exists_check
     create_test_config(<<~YAML)
       presets:
@@ -124,6 +133,42 @@ class PresetManagerTest < AceReviewTest
     # Test that prompt_composition is passed through (ace-bundle processes it)
     assert_equal "prompt://base/system", resolved[:system_prompt]["base"]
     assert_includes resolved[:system_prompt]["focus"], "prompt://focus/quality/security"
+  end
+
+  def test_resolved_preset_preserves_reviewer_settings_for_validation
+    create_test_config(<<~YAML)
+      presets:
+        reviewers-test:
+          reviewers:
+            - name: security
+              model: codex:gpt-6-sol:high@ro
+              file_patterns:
+                include: ["lib/**"]
+    YAML
+    manager = Ace::Review::Molecules::PresetManager.new(project_root: @test_dir)
+    assert_equal "security", manager.resolve_preset("reviewers-test")[:reviewers].first["name"]
+  end
+
+  def test_composed_module_and_lens_keep_separate_intersecting_filter_groups
+    create_test_config(<<~YAML)
+      presets:
+        admin:
+          file_pattern_groups:
+            - include: ["apps/admin/**"]
+        ui:
+          file_pattern_groups:
+            - include: ["**/*.tsx"]
+              exclude: ["**/*.test.tsx"]
+        admin-ui:
+          presets: [admin, ui]
+    YAML
+
+    manager = Ace::Review::Molecules::PresetManager.new(project_root: @test_dir)
+    resolved = manager.resolve_preset("admin-ui")
+
+    assert_equal 2, resolved[:file_pattern_groups].size
+    assert_equal ["apps/admin/**"], resolved[:file_pattern_groups][0]["include"]
+    assert_equal ["**/*.tsx"], resolved[:file_pattern_groups][1]["include"]
   end
 
   # Composition tests

@@ -12,6 +12,88 @@ module Ace
           @parsed = mock_parse_result(number: "42")
         end
 
+        def test_qualified_url_passes_repo_flag_to_gh
+          commands = []
+          executor = lambda do |command, args, **_options|
+            commands << [command, args]
+            {success: true, stdout: (args.first == "view") ? "{\"number\":42}" : "diff", stderr: "", exit_code: 0}
+          end
+          Ace::Git::Github::CliExecutor.stub(:execute, executor) do
+            assert GhPrFetcher.fetch_diff("https://github.com/owner/repo/pull/42")[:success]
+            assert GhPrFetcher.fetch_metadata("https://github.com/owner/repo/pull/42")[:success]
+          end
+          assert_equal ["diff", "42", "--repo", "owner/repo"], commands[0][1]
+          assert_equal ["view", "42", "--repo", "owner/repo"], commands[1][1].first(4)
+        end
+
+        def test_fetch_pr_retries_when_head_changes_during_diff_fetch
+          heads = ["a", "b", "b", "b"]
+          diffs = ["old diff", "current diff"]
+          metadata = ->(*) do
+            {success: true, metadata: {"headRefOid" => heads.shift, "baseRefOid" => "base"}}
+          end
+          diff = ->(*) { {success: true, diff: diffs.shift, identifier: "42"} }
+
+          GhPrFetcher.stub(:fetch_metadata, metadata) do
+            GhPrFetcher.stub(:fetch_diff, diff) do
+              GhPrFetcher.stub(:fetch_file_inventory, {success: true, files: []}) do
+                result = GhPrFetcher.fetch_pr("42")
+
+                assert result[:success]
+                assert_equal "current diff", result[:diff]
+                assert_equal "b", result[:metadata]["headRefOid"]
+              end
+            end
+          end
+        end
+
+        def test_fetch_pr_rejects_continuously_moving_head
+          heads = %w[a b c d]
+          metadata = ->(*) do
+            {success: true, metadata: {"headRefOid" => heads.shift, "baseRefOid" => "base"}}
+          end
+          diff = ->(*) { {success: true, diff: "diff"} }
+
+          GhPrFetcher.stub(:fetch_metadata, metadata) do
+            GhPrFetcher.stub(:fetch_diff, diff) do
+              GhPrFetcher.stub(:fetch_file_inventory, {success: true, files: []}) do
+                result = GhPrFetcher.fetch_pr("42")
+                refute result[:success]
+                assert_match(/changed while fetching/, result[:error])
+              end
+            end
+          end
+        end
+
+        def test_file_inventory_retries_transient_failures_and_reports_exhaustion
+          calls = 0
+          responses = [{success: false, stderr: "connection reset"}, {success: true, stdout: "[\"a.rb\"]\n"}]
+          executor = ->(*) {
+            calls += 1
+            responses.shift
+          }
+          metadata = {"url" => "https://github.com/acme/repo/pull/42"}
+          Ace::Git::Github::CliExecutor.stub(:execute, executor) do
+            result = GhPrFetcher.fetch_file_inventory(metadata, initial_backoff: 0)
+            assert result[:success]
+            assert_equal 2, calls
+          end
+          Ace::Git::Github::CliExecutor.stub(:execute, {success: false, stderr: "connection reset"}) do
+            result = GhPrFetcher.fetch_file_inventory(metadata, max_retries: 2, initial_backoff: 0)
+            refute result[:success]
+            assert_includes result[:error], "Failed to fetch PR file inventory"
+          end
+        end
+
+        def test_fetch_file_inventory_reads_all_paginated_pages
+          response = {success: true, stdout: "[\"a.rb\"]\n[\"b.rb\"]\n"}
+          Ace::Git::Github::CliExecutor.stub(:execute, response) do
+            result = GhPrFetcher.fetch_file_inventory({"url" => "https://github.com/acme/repo/pull/42"})
+            assert result[:success]
+            assert_equal [{"path" => "a.rb"}, {"path" => "b.rb"}], result[:files]
+          end
+        end
+
         # ====================================
         # handle_fetch_error: 406 detection
         # ====================================
@@ -57,7 +139,7 @@ module Ace
               {success: false, stdout: "", stderr: "HTTP 406", exit_code: 1}
             else
               # pr view (metadata fetch for fallback)
-              {success: true, stdout: '{"baseRefName":"main","number":42}'}
+              {success: true, stdout: "{\"baseRefOid\":\"#{"a" * 40}\",\"headRefOid\":\"#{"b" * 40}\",\"number\":42}"}
             end
           end
 
@@ -66,6 +148,8 @@ module Ace
             commands << args
             if args.include?("fetch")
               {success: true, stdout: "", stderr: ""}
+            elsif args.include?("rev-parse")
+              {success: true, stdout: "#{"b" * 40}\n", stderr: ""}
             elsif args.include?("merge-base")
               {success: true, stdout: "abc123\n", stderr: ""}
             elsif args.include?("update-ref")
@@ -114,12 +198,14 @@ module Ace
           parse_stub = ->(_id) { @parsed }
 
           mock_executor = lambda do |_cmd, _args, **_opts|
-            {success: true, stdout: '{"baseRefName":"main","number":42}'}
+            {success: true, stdout: "{\"baseRefOid\":\"#{"a" * 40}\",\"headRefOid\":\"#{"b" * 40}\",\"number\":42}"}
           end
 
           mock_local = lambda do |*args|
             if args.include?("fetch") || args.include?("update-ref")
               {success: true, stdout: "", stderr: ""}
+            elsif args.include?("rev-parse")
+              {success: true, stdout: "#{"b" * 40}\n", stderr: ""}
             else
               {success: false, stdout: "", stderr: "fatal: not a git repo"}
             end
@@ -141,7 +227,7 @@ module Ace
           parse_stub = ->(_id) { @parsed }
 
           mock_executor = lambda do |_cmd, _args, **_opts|
-            {success: true, stdout: '{"baseRefName":"main","number":42}'}
+            {success: true, stdout: "{\"baseRefOid\":\"#{"a" * 40}\",\"headRefOid\":\"#{"b" * 40}\",\"number\":42}"}
           end
 
           commands = []
@@ -149,6 +235,8 @@ module Ace
             commands << args
             if args.include?("fetch")
               {success: true, stdout: "", stderr: ""}
+            elsif args.include?("rev-parse")
+              {success: true, stdout: "#{"b" * 40}\n", stderr: ""}
             elsif args.include?("merge-base")
               {success: true, stdout: "deadbeef\n", stderr: ""}
             elsif args.include?("update-ref")
@@ -173,8 +261,10 @@ module Ace
 
                 assert_equal ["git", "fetch", "--no-tags", "origin"], fetch_args.first(4)
                 assert_match(%r{\+refs/pull/42/head:refs/ace/review/pr-42-\d+}, fetch_args[4])
-                assert_equal "origin/main", merge_base_args[2]
+                assert_match(%r{refs/ace/review/pr-42-\d+-base}, merge_base_args[2])
                 assert_match(%r{refs/ace/review/pr-42-\d+}, merge_base_args[3])
+                base_fetch = commands.find { |args| args[1] == "fetch" && args[4].start_with?("+#{"a" * 40}:") }
+                refute_nil base_fetch
                 assert_equal "deadbeef", diff_args[2]
                 assert_equal merge_base_args[3], diff_args[3]
                 assert_equal ["git", "update-ref", "-d"], cleanup_args.first(3)
@@ -182,6 +272,31 @@ module Ace
               end
             end
           end
+        end
+
+        def test_fallback_fetches_qualified_pr_from_its_repository
+          metadata = {success: true, metadata: {"baseRefOid" => "a" * 40, "headRefOid" => "b" * 40, "number" => 42}, identifier: "owner/repo#42"}
+          commands = []
+          local = lambda do |*args|
+            commands << args
+            stdout = if args[1] == "rev-parse"
+              "#{"b" * 40}\n"
+            elsif args[1] == "merge-base"
+              "abc123\n"
+            elsif args[1] == "diff"
+              "diff --git a/a b/a\n+change"
+            else
+              ""
+            end
+            {success: true, stdout: stdout, stderr: ""}
+          end
+          GhPrFetcher.stub(:fetch_metadata, metadata) do
+            GhPrFetcher.stub(:run_local_command, local) do
+              result = GhPrFetcher.send(:fetch_local_diff_fallback, "owner/repo#42")
+              assert result[:success]
+            end
+          end
+          assert_equal 2, commands.count { |args| args[1] == "fetch" && args[3] == "https://github.com/owner/repo.git" }
         end
 
         def test_fetch_diff_reraises_ace_git_authentication_errors

@@ -12,6 +12,7 @@ Read all provided review reports and identify **unique actionable findings**.
 
 - **Single report**: Extract each finding with the reviewer tracked
 - **Multiple reports**: When reviewers identify the same issue, merge them into one finding and track all reviewers
+- Preserve every distinct finding, even when only one reviewer identified it. Consensus is metadata, not a filter.
 
 When merging findings from multiple reviewers:
 1. Merge them into a single finding
@@ -144,4 +145,4 @@ User input is directly interpolated into SQL.
 - **For single reports**: Extract each finding with the reviewer in the `reviewers` array
 - **For multiple reports**: Never duplicate findings - if multiple reviewers found the same issue, merge them
 - Process ALL reports thoroughly to capture ALL unique findings
-- When uncertain if two findings are the same (multiple reports), prefer merging if they affect the same code
+- When uncertain whether two findings describe the same defect, keep them separate for verification.

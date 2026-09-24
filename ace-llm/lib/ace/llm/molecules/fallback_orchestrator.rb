@@ -33,6 +33,7 @@ module Ace
         # @raise [Error] If all providers and retries exhausted
         def execute(primary_provider:, registry:)
           @start_time = Time.now
+          @primary_provider = primary_provider
           @visited_providers.clear
 
           # If fallback disabled, just execute with primary
@@ -84,6 +85,7 @@ module Ace
             client = get_client(provider_name, registry)
             return yield client, provider_name
           rescue => error
+            raise if error.is_a?(Ace::LLM::ConfigurationError) && provider_name != @primary_provider
             last_error = error
 
             # Handle the error - returns :retry or :stop_and_fallback

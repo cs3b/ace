@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Pass PR number and repository as separate `gh` arguments for cross-repository pull requests.
+
 ## [0.1.0] - 2026-09-21
 
 ### Added

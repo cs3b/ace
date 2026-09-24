@@ -11,6 +11,7 @@ module Ace
           :auto_execute, :save_session, :session_dir,
           :pr, :post_comment, :pr_metadata, :gh_timeout,
           :pr_comments, :pr_comment_data,
+          :evidence_sessions,
           :no_feedback, :feedback_model,
           :list_presets, :list_prompts, :help
 
@@ -57,6 +58,7 @@ module Ace
           # PR comment options
           @pr_comments = hash[:pr_comments]  # nil = use default, true/false = explicit
           @pr_comment_data = nil  # Populated during execution
+          @evidence_sessions = Array(hash[:evidence_session]).flat_map { |value| value.to_s.split("\x1F") }.reject(&:empty?)
 
           # Feedback extraction options
           @no_feedback = hash[:no_feedback] || false

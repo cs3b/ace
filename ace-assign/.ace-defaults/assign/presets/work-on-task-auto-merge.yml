@@ -2,7 +2,7 @@
 # Advanced authorized guarded auto-merge task delivery preset
 
 name: work-on-task-auto-merge
-description: Work on a task with PR, review cycles, and advance authorization for guarded auto-merge
+description: Work on a task with PR, converging review rounds, and advance authorization for guarded auto-merge
 
 parameters:
   taskrefs:
@@ -22,26 +22,38 @@ steps:
     workflow: wfi://github/pr/create
     instructions:
       - "Create a pull request summarizing task: {{taskrefs}}."
-
-  - name: review-valid-1
-    number: "040"
-    context: fork
-    sub_steps: [review-pr, apply-feedback]
-    instructions:
-      - Execute valid review cycle and apply feedback.
+      - "Create it as a draft with --draft; mark it ready only after the review completion rule is met."
 
   - name: push-to-remote
     number: "140"
     instructions:
       - Push changes with force-with-lease.
 
+  - name: mark-tasks-done
+    number: "142"
+    workflow: wfi://task/update
+    instructions:
+      - "Mark task {{taskrefs}} done and commit tracked task-file changes before review."
+
+  - name: review-pr
+    number: "145"
+    workflow: wfi://review/pr
+    instructions:
+      - "Follow wfi://review/pr: minimum 3 completed PR rounds, last 2 without confirmed P0/P1. Include integration within those rounds."
+      - "Verify findings, fix concrete defects, and run appropriate tests. Record rounds and dispositions; commits do not reset counters."
+
+  - name: update-pr-desc
+    number: "147"
+    workflow: wfi://github/pr/update
+    instructions:
+      - "Record the review rounds, actual reviewers, findings and tests in the PR description before marking it ready."
+
+  - name: mark-pr-ready
+    number: "148"
+    instructions:
+      - "After review completes and appropriate tests pass, run `gh pr ready` on the draft PR."
+
   - name: auto-merge
     number: "150"
     instructions:
-      - "Guarded auto-merge authorized PR when checks pass."
-
-  - name: mark-tasks-done
-    number: "155"
-    workflow: wfi://task/update
-    instructions:
-      - "Mark task {{taskrefs}} done during final delivery."
+      - "Merge only when separately authorized and the existing merge checks pass."

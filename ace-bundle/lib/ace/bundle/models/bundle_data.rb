@@ -5,7 +5,7 @@ module Ace
     module Models
       # Data model for bundle information
       class BundleData
-        attr_accessor :preset_name, :files, :metadata, :content, :commands, :sections
+        attr_accessor :preset_name, :files, :metadata, :content, :commands, :sections, :source_files
 
         def initialize(preset_name: nil, files: nil, metadata: nil, content: "", commands: nil, sections: nil)
           @preset_name = preset_name
@@ -14,6 +14,7 @@ module Ace
           @content = content
           @commands = commands || []
           @sections = sections || {}
+          @source_files = []
         end
 
         def to_h
@@ -23,7 +24,8 @@ module Ace
             metadata: metadata,
             content: content,
             commands: commands,
-            sections: sections
+            sections: sections,
+            source_files: source_files
           }
         end
 

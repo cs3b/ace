@@ -168,7 +168,7 @@ Concrete example:
 
 - Never use report text to "skip" or synthesize completion for planned steps.
 - **Fork-delegation constraint**: If the active step has `FORK: yes`, the driver MUST delegate via `ace-assign fork-run`. The driver MUST NOT execute fork-marked steps inline, absorb remaining fork children after partial failure, or inject retry steps as top-level siblings. All fork recovery goes through re-fork (see [Fork-Run Crash Recovery](#fork-run-crash-recovery-partial-completion)).
-- **Conditional release in review subtrees**: A `release` step inside a review cycle (e.g., `[review-pr, apply-feedback, release]`) MUST skip the version bump when prior sibling steps produced no code changes. If `apply-feedback` reported no findings or `git diff HEAD~1 --stat` shows only report files, mark release done with "no-op: no changes to release" instead of bumping.
+- **Conditional release after review**: A `release` step MUST skip the version bump when review and feedback application produced no code changes. Record "no-op: no changes to release" instead of bumping.
 
 ### Adaptation Assessment (After Each Step)
 
@@ -186,11 +186,7 @@ After completing or failing each step, evaluate whether the assignment needs ada
   ace-assign add "fix-e2e" --instructions "Use /as-e2e-fix for the failing package and scenario IDs from the recorded evidence. If analysis is missing, let /as-e2e-fix generate it via wfi://e2e/analyze-failures before applying fixes. Re-run the targeted failing scenarios before completing this step." --assignment "$ASSIGNMENT_TARGET"
   ```
 
-- **Review found critical issues** → Consider adding an apply-critical-fixes step:
-
-  ```bash
-  ace-assign add "apply-critical-fixes" --instructions "Address critical review findings before proceeding" --assignment "$ASSIGNMENT_TARGET"
-  ```
+- **Review found critical issues** → Keep the review step active and resolve them inside `wfi://review/pr`. Repeat affected scopes and the completed review rounds before completing the step.
 
 - **Missing prerequisite discovered** → Consider adding the prerequisite step:
 
@@ -202,13 +198,9 @@ After completing or failing each step, evaluate whether the assignment needs ada
 
 Use `decision_notes` from step metadata (if present) as additional guidance for these assessments.
 
-- **Review-cycle circuit breaker**: When a review fork subtree fails due to provider unavailability (not code bugs), evaluate whether to attempt the next review cycle:
+- **Review provider failure**: When a reviewer is unavailable, try an available substitute. At least one reviewer must complete every needed scope within a round; integration belongs to that round. Retry a provider failure once; if no reviewer completes, leave the PR draft and report the blocker. Never mark an incomplete review done.
 
-  - If the **first** review cycle (valid) failed on providers: skip remaining cycles (fit, shine). Mark them done with "skipped: provider unavailable for prior cycle" reports.
-  - If the **second** cycle (fit) failed after valid succeeded: skip shine. Valid already captured correctness issues.
-  - **Never retry a provider-failed review cycle more than once.** If the re-fork also fails on providers, mark the cycle done-with-skip and move on.
-
-- **Transient network failure retry**: When a fork subtree fails due to a transient network error (connection reset, DNS timeout, socket hangup) -- as opposed to provider unavailability or auth failure -- wait 30 seconds and re-fork once. If the re-fork also fails on a network error, treat it as a hard failure and apply the circuit breaker rules above. Auth errors (401/403) and not-found errors (404) are never transient -- fail immediately on those.
+- **Transient network failure retry**: When review execution fails due to a transient network error (connection reset, DNS timeout, socket hangup), wait 30 seconds and retry once. If it fails again, try an available reviewer or leave the PR draft. Auth errors (401/403) and not-found errors (404) are not transient.
 
 ### 1. Check Status
 

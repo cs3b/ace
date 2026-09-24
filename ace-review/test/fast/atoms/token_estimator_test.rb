@@ -23,6 +23,17 @@ class TokenEstimatorTest < AceReviewTest
     assert_equal 2, result
   end
 
+  def test_multilingual_text_counts_utf8_bytes_conservatively
+    assert_equal 9, @estimator.estimate("海" * 3)
+    assert_equal 10, @estimator.estimate("abcd" + ("海" * 3))
+  end
+
+  def test_invalid_utf8_uses_conservative_byte_count
+    invalid = ("diff --git a/a b/a\n".b + "\xFF".b).force_encoding(Encoding::UTF_8)
+    refute invalid.valid_encoding?
+    assert_equal invalid.bytesize, @estimator.estimate(invalid)
+  end
+
   def test_estimate_rounds_up
     # 5 chars = 1.25 tokens, should round up to 2
     result = @estimator.estimate("hello")

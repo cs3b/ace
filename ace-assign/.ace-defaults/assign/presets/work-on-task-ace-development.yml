@@ -33,13 +33,7 @@ steps:
     workflow: wfi://github/pr/create
     instructions:
       - "Create a pull request summarizing batch tasks: {{taskrefs}}."
-
-  - name: review-valid-1
-    number: "040"
-    context: fork
-    sub_steps: [review-pr, apply-feedback, release]
-    instructions:
-      - Execute valid review cycle.
+      - "Create it as a draft with --draft; mark it ready only after the review completion rule is met."
 
   - name: record-demo
     number: "145"
@@ -47,13 +41,31 @@ steps:
       - "Record a demo showing the feature implemented in this PR."
 
   - name: mark-tasks-done
-    number: "155"
+    number: "146"
     workflow: wfi://task/update
     instructions:
-      - "Mark each top-level task in {{taskrefs}} as done and archive it."
+      - "Mark each top-level task in {{taskrefs}} as done and archive it before review."
 
   - name: create-retro
-    number: "160"
+    number: "147"
     skill: as-retro-create
     instructions:
       - "Create a retrospective for the batch work on: {{taskrefs}}."
+
+  - name: review-pr
+    number: "148"
+    workflow: wfi://review/pr
+    instructions:
+      - "Follow wfi://review/pr: minimum 3 completed PR rounds, last 2 without confirmed P0/P1. Include integration within those rounds."
+      - "Verify findings, fix concrete defects, and run appropriate tests. Record rounds and dispositions; commits do not reset counters."
+
+  - name: update-pr-desc
+    number: "149"
+    workflow: wfi://github/pr/update
+    instructions:
+      - "Record the review rounds, actual reviewers, findings and tests in the PR description before marking it ready."
+
+  - name: mark-pr-ready
+    number: "150"
+    instructions:
+      - "After review completes and appropriate tests pass, run `gh pr ready` on the draft PR."

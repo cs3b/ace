@@ -83,7 +83,7 @@ module Ace
           fields = "comments,reviews,number,title,author"
 
           result = Ace::Review::Atoms::RetryWithBackoff.execute(options) do
-            Ace::Git::Github::CliExecutor.execute("pr", ["view", gh_format, "--json", fields], timeout: timeout)
+            Ace::Git::Github::CliExecutor.execute("pr", ["view", *parsed.cli_target_args, "--json", fields], timeout: timeout)
           end
 
           if result[:success]
@@ -397,7 +397,7 @@ module Ace
           return nil unless owner && name
 
           "#{owner}/#{name}"
-        rescue JSON::ParserError, StandardError
+        rescue
           nil
         end
 

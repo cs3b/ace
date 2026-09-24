@@ -24,10 +24,8 @@ class CompositionRulesTest < AceAssignTestCase
     assert @rules["pairs"].length >= 1
   end
 
-  def test_load_has_review_cycles
-    assert @rules["review_cycles"]
-    assert_equal 3, @rules["review_cycles"]["default_count"]
-    assert_equal 5, @rules["review_cycles"]["max_count"]
+  def test_load_does_not_define_a_fixed_review_cycle_limit
+    refute @rules.key?("review_cycles")
   end
 
   def test_load_missing_directory_returns_defaults
@@ -41,7 +39,7 @@ class CompositionRulesTest < AceAssignTestCase
   # validate_ordering tests
 
   def test_validate_ordering_correct_sequence
-    step_names = ["onboard", "work-on-task", "create-pr", "review-pr", "apply-feedback"]
+    step_names = ["onboard", "work-on-task", "create-pr", "apply-feedback", "review-pr", "update-pr-desc"]
     violations = Ace::Assign::Atoms::CompositionRules.validate_ordering(step_names, @rules)
 
     assert_empty violations
@@ -65,12 +63,75 @@ class CompositionRulesTest < AceAssignTestCase
     assert_match(/create-pr.*must come before.*review-pr/, pr_violation[:message])
   end
 
-  def test_validate_ordering_apply_before_review
-    step_names = ["onboard", "create-pr", "apply-feedback", "review-pr"]
+  def test_validate_ordering_feedback_after_final_review
+    step_names = ["onboard", "create-pr", "review-pr", "apply-feedback"]
     violations = Ace::Assign::Atoms::CompositionRules.validate_ordering(step_names, @rules)
 
-    review_violation = violations.find { |v| v[:rule] == "review-before-apply" }
+    review_violation = violations.find { |v| v[:rule] == "apply-before-final-review" }
     refute_nil review_violation
+  end
+
+  def test_validate_ordering_feedback_after_review_workflow
+    violations = Ace::Assign::Atoms::CompositionRules.validate_ordering(
+      ["create-pr", "review-pr", "apply-feedback-1"], @rules
+    )
+    assert violations.any? { |violation| violation[:rule] == "apply-before-final-review" }
+  end
+
+  def test_validate_ordering_rejects_ready_before_final_review
+    violations = Ace::Assign::Atoms::CompositionRules.validate_ordering(
+      ["create-pr", "mark-pr-ready", "review-pr"], @rules
+    )
+    assert violations.any? { |violation| violation[:rule] == "review-before-ready" }
+  end
+
+  def test_validate_ordering_rejects_description_update_after_ready
+    violations = Ace::Assign::Atoms::CompositionRules.validate_ordering(
+      ["create-pr", "review-pr", "mark-pr-ready", "update-pr-desc"], @rules
+    )
+    assert violations.any? { |violation| violation[:rule] == "pr-desc-before-ready" }
+  end
+
+  def test_validate_ordering_rejects_merge_before_ready
+    violations = Ace::Assign::Atoms::CompositionRules.validate_ordering(
+      ["create-pr", "review-pr", "auto-merge", "mark-pr-ready"], @rules
+    )
+    assert violations.any? { |violation| violation[:rule] == "ready-before-merge" }
+  end
+
+  def test_validate_ordering_rejects_feedback_after_first_matching_review
+    violations = Ace::Assign::Atoms::CompositionRules.validate_ordering(
+      ["create-pr", "apply-feedback-1", "review-pr", "apply-feedback-2"], @rules
+    )
+    assert violations.any? { |violation| violation[:rule] == "apply-before-final-review" }
+  end
+
+  def test_validate_ordering_accepts_final_review_after_all_feedback
+    violations = Ace::Assign::Atoms::CompositionRules.validate_ordering(
+      ["create-pr", "apply-feedback-1", "review-pr-1", "apply-feedback-2", "review-pr"], @rules
+    )
+    refute violations.any? { |violation| violation[:rule] == "apply-before-final-review" }
+  end
+
+  def test_reflect_verify_cycle_allows_a_second_verification_after_reflection
+    violations = Ace::Assign::Atoms::CompositionRules.validate_ordering(
+      ["verify-test-suite", "reflect-and-refactor", "verify-test-suite-2"], @rules
+    )
+    refute violations.any? { |violation| violation[:rule] == "reflect-after-verify" }
+  end
+
+  def test_validate_ordering_pr_description_before_final_review
+    violations = Ace::Assign::Atoms::CompositionRules.validate_ordering(
+      ["create-pr", "update-pr-desc", "review-pr"], @rules
+    )
+    assert violations.any? { |violation| violation[:rule] == "review-before-update-pr" }
+  end
+
+  def test_validate_ordering_accepts_refreshed_description_after_final_review
+    violations = Ace::Assign::Atoms::CompositionRules.validate_ordering(
+      ["create-pr", "update-pr-desc-early", "review-pr", "update-pr-desc-final"], @rules
+    )
+    refute violations.any? { |violation| violation[:rule] == "review-before-update-pr" }
   end
 
   def test_validate_ordering_missing_steps_no_violation
@@ -133,14 +194,12 @@ class CompositionRulesTest < AceAssignTestCase
 
   # suggest_additions tests
 
-  def test_suggest_additions_missing_pair_member
-    # review-pr is present but apply-feedback is missing
+  def test_suggest_additions_does_not_add_feedback_after_final_review
     step_names = ["onboard", "work-on-task", "create-pr", "review-pr"]
     suggestions = Ace::Assign::Atoms::CompositionRules.suggest_additions(step_names, @rules)
 
     apply_suggestion = suggestions.find { |s| s[:step] == "apply-feedback" }
-    refute_nil apply_suggestion
-    assert_equal "recommended", apply_suggestion[:strength]
+    assert_nil apply_suggestion
   end
 
   def test_suggest_additions_pair_complete
@@ -261,36 +320,6 @@ class CompositionRulesTest < AceAssignTestCase
 
     release_violation = violations.find { |v| v[:rule] == "release-after-implementation" }
     refute_nil release_violation
-  end
-
-  # "and" conditional tests
-
-  def test_suggest_additions_conditional_and_both_present
-    # "assignment includes review-pr and apply-feedback" → suggest release
-    step_names = ["onboard", "work-on-task", "review-pr", "apply-feedback"]
-    suggestions = Ace::Assign::Atoms::CompositionRules.suggest_additions(step_names, @rules)
-
-    release_suggestion = suggestions.find { |s| s[:step] == "release" }
-    refute_nil release_suggestion
-    assert_equal "recommended", release_suggestion[:strength]
-  end
-
-  def test_suggest_additions_conditional_and_only_one_present
-    # Only review-pr present, not apply-feedback — "and" rule should NOT fire
-    step_names = ["onboard", "work-on-task", "review-pr"]
-    suggestions = Ace::Assign::Atoms::CompositionRules.suggest_additions(step_names, @rules)
-
-    release_suggestion = suggestions.find { |s| s[:step] == "release" && s[:reason]&.include?("review-pr and apply-feedback") }
-    assert_nil release_suggestion
-  end
-
-  def test_suggest_additions_conditional_and_already_included
-    # Both present but release already included — no suggestion
-    step_names = ["review-pr", "apply-feedback", "release"]
-    suggestions = Ace::Assign::Atoms::CompositionRules.suggest_additions(step_names, @rules)
-
-    release_suggestion = suggestions.find { |s| s[:step] == "release" && s[:reason]&.include?("review-pr and apply-feedback") }
-    assert_nil release_suggestion
   end
 
   private

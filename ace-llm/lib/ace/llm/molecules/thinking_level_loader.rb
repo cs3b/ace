@@ -8,7 +8,7 @@ module Ace
     module Molecules
       # Loads provider-scoped thinking-level overrides from llm/thinking/*.yml.
       class ThinkingLevelLoader
-        ALLOWED_LEVELS = %w[low medium high xhigh].freeze
+        ALLOWED_LEVELS = %w[low medium high xhigh max].freeze
 
         class << self
           def load_for_provider(provider, level)

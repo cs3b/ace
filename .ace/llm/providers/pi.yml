@@ -27,6 +27,7 @@ aliases:
     pi: pi:zai/glm-5.3-flash
   model:
     glm: zai/glm-5.3
+    glm5: zai/glm-5.3
     glmflash: zai/glm-5.3-flash
     glmhighspeed: zai/glm-5.3-highspeed
     gpt: openai-codex/gpt-5.4

@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Scope complete PR diff blocks by module/lens and enforce 30k context, 30k instructions and 128k complete-input budgets without silent truncation.
+- Cache a shared goals brief by source content and instructions; include selected prior findings and resolutions as optional context.
+
+### Fixed
+
+- Preserve PR identity, task requirements, complete sources and the selected diff in the actual prompt; reject command sources in PR review context.
+- Resolve Pi model/reasoning and record actual reviewer execution identity; incomplete or empty reports do not count as completed reviews.
+- Use one agent-led workflow: at least three PR rounds, ending after two consecutive rounds without confirmed Critical/High findings. Commits do not reset review progress; there is no separate final certification.
+
 ## [0.54.2] - 2026-09-13
 
 ### Technical

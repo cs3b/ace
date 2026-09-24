@@ -2,10 +2,7 @@ name: apply-feedback
 skill: as-review-apply-feedback
 description: Apply review feedback and commit improvements
 
-prerequisites:
-  - name: review-pr
-    strength: required
-    reason: "Must have review feedback to apply"
+prerequisites: []
 
 produces: [code-changes, commits]
 consumes: [review-feedback]

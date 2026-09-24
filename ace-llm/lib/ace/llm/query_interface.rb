@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "shellwords"
+
 require_relative "molecules/client_registry"
 require_relative "molecules/provider_model_parser"
 require_relative "molecules/preset_loader"
@@ -145,10 +147,12 @@ module Ace
 
         result = {
           text: text_content,
-          model: final_model,
-          provider: parse_result.provider,
-          preset: resolved_preset,
-          thinking_level: parse_result.thinking_level,
+          model: response.dig(:execution, :model) || final_model,
+          provider: response.dig(:execution, :provider) || parse_result.provider,
+          preset: response.fetch(:execution, {}).fetch(:preset, resolved_preset),
+          thinking_level: response.fetch(:execution, {}).fetch(:thinking_level, parse_result.thinking_level),
+          execution: response[:execution],
+          requested_selector: provider_model,
           usage: response[:usage],
           metadata: response[:metadata]
         }
@@ -364,7 +368,8 @@ module Ace
         registry:, fallback_config:, timeout:, debug:, role_fallbacks: nil, preset: nil, thinking_level: nil, option_builder:)
         if fallback_config.disabled?
           client = registry.get_client(provider, model: model, timeout: timeout)
-          return client.generate(messages, **generation_opts)
+          response = client.generate(messages, **generation_opts)
+          return response.merge(execution: execution_identity(provider, model, preset, thinking_level, response, generation_opts))
         end
 
         primary_provider_string = model ? "#{provider}:#{model}" : provider
@@ -391,9 +396,60 @@ module Ace
           else
             option_builder.call(target_selector)
           end
-          client.generate(messages, **opts)
+          parsed = Molecules::ProviderModelParser.new(registry: registry).parse(target_selector)
+          raise ConfigurationError, parsed.error unless parsed.valid?
+          primary = target_selector.to_s == primary_provider_string
+          response = client.generate(messages, **opts)
+          response.merge(execution: execution_identity(
+            parsed.provider, parsed.model,
+            primary ? preset : (parsed.preset || preset),
+            primary ? thinking_level : parsed.thinking_level,
+            response,
+            opts
+          ))
         end
       end
+
+      # Transport identity records what ACE executed, not a provider attestation.
+      def self.execution_identity(provider, model, preset, thinking_level, response, options)
+        model ||= response.dig(:metadata, :model) || response.dig(:metadata, "model")
+        finish_reason = response.dig(:metadata, :finish_reason) || response.dig(:metadata, "finish_reason") ||
+          response.dig(:metadata, :stop_reason) || response.dig(:metadata, "stop_reason")
+        status = if Ace::LLM::SUCCESSFUL_FINISH_REASONS.include?(finish_reason.to_s.downcase)
+          "succeeded"
+        else
+          "incomplete"
+        end
+        {provider: provider, model: model, preset: preset, thinking_level: effective_thinking_level(provider, thinking_level, options),
+         identity_source: "resolved_request", status: status}
+      end
+      private_class_method :execution_identity
+
+      def self.effective_thinking_level(provider, default, options)
+        return default unless %w[pi codex].include?(provider)
+
+        args = Array(options[:cli_args]).flat_map { |arg| Shellwords.split(arg.to_s) }
+        effective = default
+        args.each_with_index do |arg, index|
+          if provider == "pi"
+            candidate = if arg == "--thinking"
+              args[index + 1]
+            elsif arg.start_with?("--thinking=")
+              arg.delete_prefix("--thinking=")
+            end
+            effective = candidate if %w[off minimal low medium high xhigh max].include?(candidate)
+          else
+            config = if %w[-c --config].include?(arg)
+              args[index + 1]
+            elsif arg.match?(/\A(?:-c|--config)=?model_reasoning_effort=/)
+              arg.sub(/\A(?:-c|--config)=?/, "")
+            end
+            effective = config.split("=", 2).last if config&.start_with?("model_reasoning_effort=")
+          end
+        end
+        effective
+      end
+      private_class_method :effective_thinking_level
 
       def self.extract_text_content(response)
         if response[:text]

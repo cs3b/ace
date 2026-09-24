@@ -22,6 +22,13 @@ module Ace
         # File.fnmatch flags for glob pattern matching
         FNMATCH_FLAGS = File::FNM_PATHNAME | File::FNM_EXTGLOB
 
+        # File.fnmatch treats a trailing /** as a single path segment. Append
+        # /* so the recursive glob covers files at every depth.
+        def self.glob_match?(pattern, file_path, flags = FNMATCH_FLAGS)
+          File.fnmatch?(pattern, file_path, flags) ||
+            (pattern.end_with?("/**") && File.fnmatch?("#{pattern}/*", file_path, flags))
+        end
+
         # Filter subject content based on file patterns
         #
         # Dispatches to appropriate filter method based on subject type.
@@ -134,11 +141,11 @@ module Ace
 
           # If include patterns exist, file must match at least one
           if includes.any?
-            return false unless includes.any? { |pattern| File.fnmatch?(pattern, file_path, FNMATCH_FLAGS) }
+            return false unless includes.any? { |pattern| glob_match?(pattern, file_path) }
           end
 
           # File must not match any exclude pattern
-          return false if excludes.any? { |pattern| File.fnmatch?(pattern, file_path, FNMATCH_FLAGS) }
+          return false if excludes.any? { |pattern| glob_match?(pattern, file_path) }
 
           true
         end

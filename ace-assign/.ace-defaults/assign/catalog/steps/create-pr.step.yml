@@ -1,2 +1,3 @@
 name: create-pr
 skill: as-github-pr-create
+instructions: "Create the pull request with --draft before PR review begins."

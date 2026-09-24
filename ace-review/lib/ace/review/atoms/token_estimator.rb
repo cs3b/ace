@@ -5,8 +5,9 @@ module Ace
     module Atoms
       # Pure function for estimating token counts from text
       #
-      # Uses a simple chars/4 heuristic which provides reasonable accuracy
-      # (typically within 20% of actual token counts) for most text types.
+      # Uses chars/4 for ASCII and counts each non-ASCII UTF-8 byte as one
+      # potential token. The latter deliberately errs high for multilingual
+      # review packets rather than letting a Unicode-heavy prompt exceed its cap.
       # This is intentionally simple and fast - actual tokenization would
       # require model-specific tokenizers which adds complexity and latency.
       #
@@ -34,7 +35,12 @@ module Ace
         def self.estimate(text)
           return 0 if text.nil? || text.empty?
 
-          (text.length.to_f / CHARS_PER_TOKEN).ceil
+          return (text.length.to_f / CHARS_PER_TOKEN).ceil if text.ascii_only?
+          return text.bytesize unless text.valid_encoding?
+
+          ascii_chars = text.each_codepoint.count { |codepoint| codepoint < 128 }
+          non_ascii_bytes = text.bytesize - ascii_chars
+          (ascii_chars.to_f / CHARS_PER_TOKEN).ceil + non_ascii_bytes
         end
 
         # Estimate token count from a file

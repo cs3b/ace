@@ -68,7 +68,7 @@ module Ace
 
           @status = attrs[:status] || "draft"
           @priority = attrs[:priority] || "medium"
-          @created = attrs[:created] || Time.now.utc.iso8601
+          @created = attrs[:created] || Time.now.utc.iso8601(6)
           @updated = attrs[:updated] || @created
           @finding = attrs[:finding]
           @context = attrs[:context]
@@ -130,7 +130,7 @@ module Ace
         # @return [FeedbackItem] New instance with merged attributes
         def dup_with(**changes)
           # Auto-update the updated timestamp when making changes
-          changes[:updated] ||= Time.now.utc.iso8601
+          changes[:updated] ||= Time.now.utc.iso8601(6)
           FeedbackItem.new(to_h.merge(stringify_keys(changes)))
         end
 

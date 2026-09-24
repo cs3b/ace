@@ -9,8 +9,11 @@ module Github
         "gh --version" => {success: true, stdout: "gh version 2.63.0", stderr: "", exit_code: 0},
         "gh auth status" => {success: true, stdout: "", stderr: "ok", exit_code: 0},
         "gh pr diff 42" => {success: true, stdout: "+added line\n-removed line", stderr: "", exit_code: 0},
-        "gh pr diff owner/repo#42" => {success: true, stdout: "+added line\n-removed line", stderr: "", exit_code: 0},
+        "gh pr diff 42 --repo owner/repo" => {success: true, stdout: "+added line\n-removed line", stderr: "", exit_code: 0},
         "gh pr view 42 --json #{fields}" => {
+          success: true, stdout: {"number" => 42, "title" => "Test PR", "state" => "OPEN"}.to_json, stderr: "", exit_code: 0
+        },
+        "gh pr view 42 --repo owner/repo --json #{fields}" => {
           success: true, stdout: {"number" => 42, "title" => "Test PR", "state" => "OPEN"}.to_json, stderr: "", exit_code: 0
         },
         "gh pr view --json number" => {success: true, stdout: {"number" => 123}.to_json, stderr: "", exit_code: 0},
@@ -121,6 +124,12 @@ module Github
       result = Ace::Git::Github::PrFetcher.fetch_diff("owner/repo#42", timeout: 5, runner: ok_runner)
       assert result[:success]
       assert_match(/owner\/repo/, result[:source])
+    end
+
+    def test_fetch_metadata_from_url_uses_explicit_repo
+      result = Ace::Git::Github::PrFetcher.fetch_metadata("https://github.com/owner/repo/pull/42", timeout: 5, runner: ok_runner)
+      assert result[:success]
+      assert_equal 42, result[:metadata]["number"]
     end
 
     def test_timeout_raises_unreachable_error

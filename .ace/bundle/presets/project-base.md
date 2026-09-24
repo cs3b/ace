@@ -28,14 +28,6 @@ bundle:
       files:
         - docs/blueprint.md
 
-    project_status:
-      title: Project Status
-      compressor_mode: exact
-      commands:
-        - pwd
-        - date
-        - ace-git status
-
 ---
 
 # Project Context

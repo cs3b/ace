@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+### Changed
+
+- Make review-safe bundles reject command and external diff sources before execution, preserve source snapshots for coverage checks, and fail when required context is incomplete.
+- Preserve file and diff bytes in rendered context, including trailing whitespace and final newlines.
+- Include top-level files with base and embedded templates in normal bundle output.
+- Remove volatile status commands from shipped starter presets.
+
+### Fixed
+
+- Preserve base-file provenance in rendered bundle metadata so PR review can verify it against the reviewed commit.
+- Include file inputs in merged bundle source metadata.
 
 ## [0.43.9] - 2026-09-02
 

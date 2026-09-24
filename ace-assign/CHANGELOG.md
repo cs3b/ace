@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Delegate PR review rounds to the shared review workflow instead of duplicating fixed cycles in assignments.
+- Create PRs as drafts and update their descriptions before marking them ready after review; no separate coverage receipt or SHA gate.
 
 ## [0.56.1] - 2026-09-02
 

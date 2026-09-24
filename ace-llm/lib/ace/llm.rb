@@ -55,6 +55,8 @@ module Ace
     class ConfigurationError < Error; end
     class AuthenticationError < Error; end
 
+    SUCCESSFUL_FINISH_REASONS = %w[success stop end_turn complete completed stop_sequence].freeze
+
     # Define module namespaces
     module Atoms; end
     module Molecules; end

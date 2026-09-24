@@ -1,5 +1,5 @@
 name: batch-tasks
-description: Work on multiple tasks with PR, review cycles, and releases
+description: Work on multiple tasks with PR, iterative review, and releases
 
 matches:
   - "work on tasks *"
@@ -8,7 +8,6 @@ matches:
 
 parameters:
   taskrefs: { required: true, type: array }
-  review_cycles: { required: false, default: 3 }
 
 steps:
   - name: onboard
@@ -25,20 +24,23 @@ steps:
     note: "Initial version bump (usually minor)"
   - name: create-pr
     required: true
-  - name: review-cycle
-    repeat: "{{review_cycles}}"
-    context: fork
-    sub_steps: [review-pr, apply-feedback, release, create-retro]
-    note: "Each cycle includes patch release after applying feedback"
+    instructions_template: "Create the pull request with --draft; keep it draft until the review completion rule is met."
   - name: reorganize-commits
     required: false
   - name: push-to-remote
     required: true
+  - name: review-pr
+    required: true
+    workflow: wfi://review/pr
+    note: "Apply verified fixes, release as needed, and rerun affected scopes using the shared round completion rule"
   - name: update-pr-desc
-    required: false
+    required: true
+  - name: mark-pr-ready
+    required: true
+    note: "Only after review completion rule and PR description update"
 
 customization_hints:
   - "Add create-pr after batch for consolidated review"
-  - "Add review cycles if changes need review"
+  - "Use the iterative PR review workflow for all changed modules"
   - "Reduce batch size for complex tasks"
   - "Skip reorganize-commits if history is already clean"

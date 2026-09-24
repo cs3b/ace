@@ -20,13 +20,6 @@ bundle:
         TODO: Describe the top-level folders and where core logic lives.
         Move this to docs/blueprint.md once project docs exist.
 
-    quick_status:
-      title: Quick Status
-      compressor_mode: exact
-      commands:
-        - pwd
-        - date
-
     starter_guidance:
       title: Starter Guidance
       content: |

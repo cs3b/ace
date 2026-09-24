@@ -7,6 +7,21 @@ module Ace
   module Review
     module Molecules
       class GhCommentResolverTest < AceReviewTest
+        def test_qualified_pr_reply_uses_explicit_repo
+          arguments = nil
+          executor = lambda do |_command, args, **_options|
+            arguments = args
+            {success: true, stdout: "https://github.com/owner/repo/pull/42#issuecomment-1"}
+          end
+
+          Ace::Git::Github::CliExecutor.stub :execute, executor do
+            result = GhCommentResolver.reply("owner/repo#42", "abcdef123")
+            assert result[:success], result[:error]
+          end
+
+          assert_equal ["comment", "42", "--repo", "owner/repo", "--body", "Fixed in abcdef1"], arguments
+        end
+
         # ====================================
         # resolve_thread tests
         # ====================================

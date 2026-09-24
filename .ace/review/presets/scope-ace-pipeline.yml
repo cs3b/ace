@@ -1,0 +1,13 @@
+presets:
+  - code-valid
+description: "Review preparation, budgets, goals, feedback and product-specific configuration"
+file_patterns:
+  include:
+    - "ace-review/**"
+    - "ace-review/.ace-defaults/**"
+    - "ace-support-core/**"
+    - "ace-support-core/.ace-defaults/**"
+    - ".ace/review/**"
+    - ".ace/bundle/**"
+    - ".ace-tasks/**"
+    - ".agents/**"
