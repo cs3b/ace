@@ -25,7 +25,6 @@ module Ace
 
           # Parse identifier using ace-git
           parsed = Ace::Git::Github::PrIdentifier.parse(pr_identifier)
-          gh_format = parsed.gh_format
 
           # Build message
           short_sha = commit_sha.to_s[0..6]
@@ -37,7 +36,7 @@ module Ace
           # Post comment using gh CLI
           result = Ace::Git::Github::CliExecutor.execute(
             "pr",
-            ["comment", gh_format, "--body", body],
+            ["comment", *parsed.cli_target_args, "--body", body],
             timeout: timeout
           )
 

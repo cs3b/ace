@@ -1,5 +1,5 @@
 name: implement-with-pr
-description: Implement a task, create PR, and iterate through review cycles with releases
+description: Implement a task, create PR, and review until the current PR passes
 
 matches:
   - "work on task * and create PR"
@@ -8,7 +8,6 @@ matches:
 
 parameters:
   taskref: { required: true }
-  review_cycles: { required: false, default: 3 }
 
 steps:
   - name: onboard
@@ -29,11 +28,7 @@ steps:
     note: "Initial version bump (usually minor)"
   - name: create-pr
     required: true
-  - name: review-cycle
-    repeat: "{{review_cycles}}"
-    context: fork
-    sub_steps: [review-pr, apply-feedback, release, create-retro]
-    note: "Each cycle uses preset_progression from composition rules (1: code-valid, 2: code-fit, 3: code-shine)"
+    instructions_template: "Create the pull request with --draft; keep it draft until the review completion rule is met."
   - name: reorganize-commits
     required: false
   - name: push-to-remote
@@ -41,12 +36,19 @@ steps:
   - name: record-demo
     required: false
     note: "Record demos for modified packages with tapes; skip if no tapes or VHS unavailable"
+  - name: review-pr
+    required: true
+    workflow: wfi://review/pr
+    note: "Verify and fix findings; rerun affected scopes until a fresh integration review passes on the current head"
   - name: update-pr-desc
-    required: false
+    required: true
+  - name: mark-pr-ready
+    required: true
+    note: "Only after review completion rule and PR description update"
 
 customization_hints:
   - "Skip onboard if already onboarded in a previous assignment"
   - "Add security-audit for security-sensitive changes"
-  - "Reduce review cycles to 1 for simple changes"
+  - "Use focused review scopes for simple changes; completion follows the shared round rule"
   - "Skip reorganize-commits if commit history is already clean"
   - "Skip record-demo if VHS is not available or no tape files exist"

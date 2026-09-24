@@ -60,6 +60,8 @@ module Ace
           option :pr_comments, type: :boolean, desc: "Include PR comments as feedback source (default: true for --pr)"
           option :post_comment, type: :boolean, desc: "Post review as PR comment (requires --pr)"
           option :gh_timeout, type: :integer, desc: "Timeout for gh CLI operations in seconds (default: 30)"
+          option :evidence_session, type: :array, desc: "Include selected prior review sessions as context"
+          option :prepare_goals_brief, type: :boolean, desc: "Generate or reuse the shared goals brief for this PR and preset"
 
           # Standard options
           option :version, type: :boolean, desc: "Show version information"
@@ -73,7 +75,7 @@ module Ace
 
           def call(**cli_options)
             # Remove ace-support-cli specific keys (args is leftover arguments)
-            cli_options = cli_options.reject { |k, _| k == :args }
+            cli_options = cli_options.except(:args)
 
             if cli_options[:version]
               puts "ace-review #{Ace::Review::VERSION}"
@@ -90,6 +92,11 @@ module Ace
               return
             end
 
+            if cli_options[:prepare_goals_brief]
+              prepare_goals_brief(cli_options)
+              return
+            end
+
             # Type-convert numeric options (ace-support-cli returns strings, Thor converted to integers)
             cli_options[:gh_timeout] = cli_options[:gh_timeout]&.to_i if cli_options[:gh_timeout]
 
@@ -100,6 +107,16 @@ module Ace
           end
 
           private
+
+          def prepare_goals_brief(cli_options)
+            raise Ace::Support::Cli::Error.new("--pr is required for goals-brief preparation") unless cli_options[:pr]
+
+            options = Models::ReviewOptions.new(build_review_options(cli_options))
+            result = Organisms::ReviewManager.new.prepare_goals_brief(options)
+            raise Ace::Support::Cli::Error.new(result[:error]) unless result[:success]
+
+            puts "✓ Goals brief #{result[:cache_hit] ? "reused" : "generated"}: #{result[:path]}"
+          end
 
           def execute_review
             display_config_summary
@@ -168,10 +185,8 @@ module Ace
               validate_model_names(models)
               # Store in :models (array) not :model (expects string)
               options[:models] = models
-              options.delete(:model)
-            else
-              options.delete(:model)
             end
+            options.delete(:model)
           end
 
           def validate_model_names(models)
@@ -194,6 +209,9 @@ module Ace
               puts "✓ Review saved: #{result[:output_file]}"
             elsif result[:session_dir]
               puts "✓ Review session prepared: #{result[:session_dir]}"
+              if result[:budget]
+                puts "  Estimated complete input: #{result[:budget][:total_tokens]} / #{result[:budget][:input_limit]} tokens"
+              end
 
               # Display prompt files for ace-bundle workflow
               if result[:system_prompt_file] && result[:user_prompt_file]
@@ -295,7 +313,7 @@ module Ace
             puts
 
             # Header
-            puts format("%-20s %-50s %-10s", "Preset", "Description", "Source")
+            puts format("%-20s %-50s %-10s", *%w[Preset Description Source])
             puts "-" * 80
 
             # Load preset manager to get descriptions

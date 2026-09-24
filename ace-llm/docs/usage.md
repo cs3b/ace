@@ -149,6 +149,7 @@ Supported providers and levels:
 |----------|--------|
 | `claude` | `low`, `medium`, `high`, `xhigh` |
 | `codex` | `low`, `medium`, `high`, `xhigh` |
+| `pi` | `low`, `medium`, `high`, `xhigh`, `max` |
 
 Level configs are loaded from `.ace-defaults/llm/thinking/<provider>/<level>.yml` and can be overridden in `.ace/llm/thinking/`.
 

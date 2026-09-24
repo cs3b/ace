@@ -10,9 +10,12 @@ module Ace
       # - Qualified reference: "owner/repo#456"
       # - GitHub URL: "https://github.com/owner/repo/pull/789"
       module PrIdentifier
-        # Parsed PR identifier result. `gh_format` is the form accepted by
-        # `gh pr` commands.
-        ParseResult = Data.define(:number, :repo, :gh_format)
+        # `gh_format` is a stable identity; gh CLI requires --repo separately.
+        ParseResult = Data.define(:number, :repo, :gh_format) do
+          def cli_target_args
+            repo ? [number, "--repo", repo] : [number]
+          end
+        end
 
         # Maximum length for PR identifier to bound regex work
         MAX_IDENTIFIER_LENGTH = 256

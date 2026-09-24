@@ -31,5 +31,5 @@ steps:
 customization_hints:
   - "Add create-pr step if create_pr=true for documentation PRs"
   - "Add lint step for markdown linting"
-  - "Add review-cycle for critical documentation"
+  - "Add review-pr with wfi://review/pr for critical documentation PRs"
   - "Skip onboard if already in context"

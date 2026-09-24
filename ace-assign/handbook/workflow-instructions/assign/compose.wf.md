@@ -156,7 +156,7 @@ Include:
 Use AskUserQuestion when needed:
 - Accept as-is
 - Add/remove step
-- Adjust review cycles
+- Adjust review scope and reviewer preferences; do not cap unresolved review rounds
 - Provide custom changes
 
 Re-validate after edits.

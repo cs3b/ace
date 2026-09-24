@@ -22,7 +22,7 @@ module Ace
           gh_format = parsed.gh_format
 
           # Check PR state before posting
-          state_check = check_pr_state(gh_format)
+          state_check = check_pr_state(parsed)
           return state_check unless state_check[:success]
 
           # Format comment with metadata
@@ -39,7 +39,7 @@ module Ace
           end
 
           # Post comment via gh CLI
-          result = post_via_gh(gh_format, formatted_comment)
+          result = post_via_gh(parsed, formatted_comment)
 
           if result[:success]
             comment_url = extract_comment_url(result[:stdout], parsed.to_h)
@@ -66,13 +66,13 @@ module Ace
 
         # Check if PR is in a state that allows comments
         #
-        # @param gh_format [String] PR identifier in gh format
+        # @param parsed [Ace::Git::Github::PrIdentifier::ParseResult] Parsed PR target
         # @return [Hash] Result with :success or :error
-        def self.check_pr_state(gh_format)
+        def self.check_pr_state(parsed)
           # Fetch PR metadata
           result = Ace::Git::Github::CliExecutor.execute(
             "pr",
-            ["view", gh_format, "--json", "state,number"]
+            ["view", *parsed.cli_target_args, "--json", "state,number"]
           )
 
           unless result[:success]
@@ -161,10 +161,10 @@ module Ace
 
         # Post comment via gh CLI using a temp file for the body
         #
-        # @param gh_format [String] PR identifier in gh format
+        # @param parsed [Ace::Git::Github::PrIdentifier::ParseResult] Parsed PR target
         # @param comment_body [String] Comment content
         # @return [Hash] Result from gh CLI
-        def self.post_via_gh(gh_format, comment_body)
+        def self.post_via_gh(parsed, comment_body)
           # Write comment to temp file (gh pr comment reads from file)
           Tempfile.create(["review-comment", ".md"]) do |file|
             file.write(comment_body)
@@ -173,7 +173,7 @@ module Ace
             # Post using gh pr comment
             Ace::Git::Github::CliExecutor.execute(
               "pr",
-              ["comment", gh_format, "--body-file", file.path]
+              ["comment", *parsed.cli_target_args, "--body-file", file.path]
             )
           end
         end

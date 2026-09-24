@@ -163,6 +163,7 @@ module Ace
 
             # Add additional metadata (output_file is already set by executor)
             result[:duration] = duration.round(2)
+            result[:completed_at] = Time.now.utc.iso8601(6)
             result[:model_slug] = model_slug
 
             # Store result in thread-safe manner

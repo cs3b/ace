@@ -243,6 +243,27 @@ module Ace
             end
           end
         end
+
+        def test_qualified_pr_uses_explicit_repo_for_state_and_post
+          arguments = []
+          executor = lambda do |command, args, **_options|
+            arguments << [command, args]
+            if args.first == "view"
+              {success: true, stdout: '{"state":"OPEN","number":42}'}
+            else
+              {success: true, stdout: "https://github.com/owner/repo/pull/42#issuecomment-1"}
+            end
+          end
+
+          Ace::Git::Github::CliExecutor.stub :execute, executor do
+            result = GhCommentPoster.post_comment("owner/repo#42", "Review")
+            assert result[:success], result[:error]
+          end
+
+          assert_equal ["view", "42", "--repo", "owner/repo", "--json", "state,number"], arguments[0][1]
+          assert_equal ["comment", "42", "--repo", "owner/repo"], arguments[1][1].first(4)
+          assert_equal "--body-file", arguments[1][1][4]
+        end
       end
     end
   end

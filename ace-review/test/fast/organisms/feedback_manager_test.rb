@@ -73,6 +73,37 @@ class FeedbackManagerTest < AceReviewTest
     mock_synthesizer.verify
   end
 
+  def test_concurrent_extractions_publish_one_immutable_result
+    ready = Queue.new
+    release = Queue.new
+    synthesizer_class = Struct.new(:item, :ready, :release) do
+      def synthesize(**_options)
+        ready << true
+        release.pop
+        {success: true, items: [item], metadata: {}}
+      end
+    end
+    managers = %w[first second].map do |name|
+      item = create_test_item(id: name, title: "#{name} finding")
+      Ace::Review::Organisms::FeedbackManager.new(
+        synthesizer: synthesizer_class.new(item, ready, release)
+      )
+    end
+    workers = managers.map do |manager|
+      Thread.new do
+        manager.extract_and_save(report_paths: ["report.md"], base_path: @temp_dir)
+      end
+    end
+    2.times { ready.pop }
+    2.times { release << true }
+    results = workers.map(&:value)
+    assert_equal 1, results.count { |result| result[:success] }
+    assert_equal 1, results.count { |result| result[:error]&.include?("already has published findings") }
+    assert_equal 1, Dir.glob(File.join(@temp_dir, "feedback", "*.s.md")).length
+  ensure
+    workers&.each { |worker| worker.kill if worker.alive? }
+  end
+
   def test_extract_and_save_with_empty_reports
     mock_synthesizer = Minitest::Mock.new
     mock_synthesizer.expect(:synthesize, {
@@ -499,7 +530,8 @@ class FeedbackManagerTest < AceReviewTest
     # Create mock file writer that fails
     mock_writer = Minitest::Mock.new
     mock_writer.expect(:write, {success: false, error: "Permission denied"}) do |item, dir|
-      item.is_a?(Ace::Review::Models::FeedbackItem) && dir == feedback_dir
+      item.is_a?(Ace::Review::Models::FeedbackItem) && File.basename(dir) == "feedback" &&
+        dir.start_with?(@temp_dir)
     end
 
     mock_synthesizer = Minitest::Mock.new
@@ -570,12 +602,28 @@ class FeedbackManagerTest < AceReviewTest
       base_path: @temp_dir
     )
 
-    assert result[:success], "Should succeed with partial writes"
-    assert_equal 1, result[:items_count]
-    assert result[:warnings]
-    assert_match(/Disk full/, result[:warnings].first)
+    refute result[:success], "Partial finding persistence must not complete review feedback"
+    assert_equal 0, result[:items_count]
+    assert_empty result[:paths]
+    assert_match(/Disk full/, result[:error])
+    assert_empty Dir.glob(File.join(feedback_dir, "*.s.md"))
 
     mock_synthesizer.verify
+  end
+
+  def test_reextraction_cannot_replace_existing_session_findings
+    feedback_dir = File.join(@temp_dir, "feedback")
+    FileUtils.mkdir_p(feedback_dir)
+    old = File.join(feedback_dir, "old-finding.s.md")
+    File.write(old, "resolved finding")
+    synthesizer = Minitest::Mock.new
+    manager = Ace::Review::Organisms::FeedbackManager.new(synthesizer: synthesizer)
+
+    result = manager.extract_and_save(report_paths: ["/fake/report.md"], base_path: @temp_dir)
+    refute result[:success]
+    assert_match(/already has published findings/, result[:error])
+    assert_equal "resolved finding", File.read(old)
+    synthesizer.verify
   end
 
   # ============================================================================

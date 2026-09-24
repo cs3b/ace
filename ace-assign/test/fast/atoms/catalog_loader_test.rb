@@ -125,13 +125,9 @@ class CatalogLoaderTest < AceAssignTestCase
     assert_empty issues
   end
 
-  def test_validate_prerequisites_missing_required
-    selected = ["apply-feedback"]
-    issues = Ace::Assign::Atoms::CatalogLoader.validate_prerequisites(selected, @steps)
-
-    assert issues.length >= 1
-    prereq_names = issues.map { |i| i[:prerequisite] }
-    assert_includes prereq_names, "review-pr"
+  def test_apply_feedback_can_consume_non_pr_review_feedback
+    issues = Ace::Assign::Atoms::CatalogLoader.validate_prerequisites(["apply-feedback"], @steps)
+    assert_empty issues
   end
 
   def test_validate_prerequisites_no_recommended_missing

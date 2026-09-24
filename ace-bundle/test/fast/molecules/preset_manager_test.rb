@@ -45,6 +45,19 @@ class PresetManagerTest < AceTestCase
     end
   end
 
+  def test_used_preset_source_keeps_bytes_read_before_file_changes
+    with_temp_dir do
+      FileUtils.mkdir_p(".ace/bundle/presets")
+      path = File.expand_path(".ace/bundle/presets/test.md")
+      File.write(path, @preset_content)
+      manager = Ace::Bundle::Molecules::PresetManager.new
+      File.write(path, "changed after parsing")
+
+      assert manager.get_preset("test")
+      assert_equal [{path: path, content: @preset_content}], manager.used_source_snapshots
+    end
+  end
+
   def test_parses_frontmatter_correctly
     with_temp_dir do
       FileUtils.mkdir_p(".ace/bundle/presets")

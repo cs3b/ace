@@ -10,6 +10,49 @@ describe "CodexClient" do
     @client = Ace::LLM::Providers::CLI::CodexClient.new
   end
 
+  it "does not split a structured report at a filename containing codex" do
+    report = JSON.pretty_generate({"files" => [".ace/llm/presets/codex/review.yml"], "complete" => true})
+    status = Object.new
+    status.define_singleton_method(:success?) { true }
+    result = @client.send(:parse_codex_response, report, "", status, "Review", {})
+    assert_equal report, result[:text]
+  end
+
+  it "keeps a standalone codex line in a report without a CLI banner" do
+    report = "First finding\ncodex\nSecond finding"
+    status = Object.new
+    status.define_singleton_method(:success?) { true }
+    result = @client.send(:parse_codex_response, report, "", status, "Review", {})
+    assert_equal report, result[:text]
+  end
+
+  it "prefers Codex's last-message file over transcript markers" do
+    Dir.mktmpdir do |dir|
+      path = File.join(dir, "last.md")
+      File.write(path, "First finding\ncodex\nSecond finding\n")
+      status = Object.new
+      status.define_singleton_method(:success?) { true }
+      result = @client.send(:parse_codex_response, "OpenAI Codex v0.156.1\ncodex\ntranscript", "",
+        status, "Review", {last_message_file: path})
+      assert_equal "First finding\ncodex\nSecond finding", result[:text]
+    end
+  end
+
+  it "rejects an empty or missing requested final message instead of accepting a transcript" do
+    status = Object.new
+    status.define_singleton_method(:success?) { true }
+    Dir.mktmpdir do |dir|
+      path = File.join(dir, "last.md")
+      [path, File.join(dir, "missing.md")].each do |file|
+        File.write(file, "  \n") if file == path
+        assert_raises(Ace::LLM::ProviderError) do
+          @client.send(:parse_codex_response, "OpenAI Codex v0.156.1\ncodex\nincomplete", "",
+            status, "Review", {last_message_file: file})
+        end
+      end
+    end
+  end
+
   it "initializes with default model" do
     model = @client.instance_variable_get(:@model)
     assert_equal "gpt-5.6-terra", model
@@ -31,6 +74,38 @@ describe "CodexClient" do
         assert_equal id, cmd.fetch(cmd.index("--model") + 1)
         assert_includes cmd, "model_reasoning_effort=high"
       end
+    end
+  end
+
+  it "rejects non-interactive model overrides in CLI args" do
+    client = Ace::LLM::Providers::CLI::CodexClient.new(model: "gpt-6-sol")
+    [["-c", "model=gpt-6-astra"], ["-mgpt-6-astra"],
+      ["-cmodel=gpt-6-astra"], ["--config=model_provider=other"],
+      ["--profile", "other"], ["-c", "profiles.review.model=gpt-6-astra"]].each do |args|
+      assert_raises(Ace::LLM::ProviderError) do
+        client.send(:build_codex_command, "ping", {cli_args: args})
+      end
+    end
+  end
+
+  it "describes a non-interactive CLI argument conflict accurately" do
+    error = assert_raises(Ace::LLM::ProviderError) do
+      @client.send(:build_codex_command, "ping", {cli_args: ["--model", "other"]})
+    end
+    refute_match(/interactive mode/, error.message)
+  end
+
+  it "rejects interactive model overrides in CLI args" do
+    assert_raises(Ace::LLM::ProviderError) do
+      @client.send(:build_codex_interactive_command, "ping", {cli_args: ["-c", "model=other"]})
+    end
+  end
+
+  it "rejects a second non-interactive output-last-message destination" do
+    assert_raises(Ace::LLM::ProviderError) do
+      @client.send(:build_codex_command, "ping", {
+        last_message_file: "/tmp/owned.md", cli_args: ["--output-last-message", "/tmp/other.md"]
+      })
     end
   end
 
@@ -223,7 +298,7 @@ describe "CodexClient" do
               subprocess_env: {"ACE_TMUX_SESSION" => "fork-demo"}
             )
 
-            assert_includes invocation[:command], %{projects."#{trusted_path.gsub("\\", "\\\\").gsub("\"", "\\\"")}".trust_level="trusted"}
+            assert_includes invocation[:command], %(projects."#{trusted_path.gsub("\\", "\\\\").gsub("\"", "\\\"")}".trust_level="trusted")
           end
         end
       end
@@ -279,13 +354,212 @@ describe "CodexClient" do
   end
 
   describe "generate method" do
-    def stub_capture3(stdout:, stderr: "", success: true)
+    def stub_capture3(stdout:, stderr: "", success: true, last_message: nil)
       mock_status = Object.new
       mock_status.define_singleton_method(:success?) { success }
       mock_status.define_singleton_method(:exitstatus) { success ? 0 : 1 }
 
-      Ace::LLM::Providers::CLI::Molecules::SafeCapture.stub(:call, lambda { |*_args, **_kwargs| [stdout, stderr, mock_status] }) do
+      capture = lambda do |command, **_kwargs|
+        if last_message && (index = command.index("--output-last-message"))
+          File.write(command[index + 1], last_message)
+        end
+        [stdout, stderr, mock_status]
+      end
+      Ace::LLM::Providers::CLI::Molecules::SafeCapture.stub(:call, capture) do
         yield
+      end
+    end
+
+    it "does not accept a stale caller-provided final message file" do
+      Dir.mktmpdir do |dir|
+        requested = File.join(dir, "last.md")
+        File.write(requested, "old review")
+        @client.stub(:codex_available?, true) do
+          @client.stub(:codex_authenticated?, true) do
+            @client.stub(:resolve_skills_dir, nil) do
+              stub_capture3(stdout: "OpenAI Codex v0.156.1\ncodex\nincomplete") do
+                assert_raises(Ace::LLM::ProviderError) do
+                  @client.generate("Hi", last_message_file: requested)
+                end
+              end
+            end
+          end
+        end
+        refute File.exist?(requested)
+      end
+    end
+
+    it "keeps an existing diagnostic when command validation rejects CLI args" do
+      Dir.mktmpdir do |dir|
+        requested = File.join(dir, "last.md")
+        File.write(requested, "previous diagnostic")
+        @client.stub(:codex_available?, true) do
+          @client.stub(:codex_authenticated?, true) do
+            @client.stub(:resolve_skills_dir, nil) do
+              assert_raises(Ace::LLM::ProviderError) do
+                @client.generate("Hi", last_message_file: requested, cli_args: ["--model", "other"])
+              end
+            end
+          end
+        end
+        assert_equal "previous diagnostic", File.read(requested)
+      end
+    end
+
+    it "falls back to a tempfile when a stale caller file cannot be removed" do
+      Dir.mktmpdir do |dir|
+        requested = File.join(dir, "last.md")
+        File.write(requested, "stale review")
+        original_delete = File.method(:delete)
+        delete = lambda do |path|
+          raise Errno::EPERM, path if path == requested
+          original_delete.call(path)
+        end
+        capture = lambda do |_cmd, _prompt, options|
+          refute_equal requested, options[:last_message_file]
+          File.write(options[:last_message_file], "fresh review")
+          status = Object.new
+          status.define_singleton_method(:success?) { true }
+          ["transcript", "", status]
+        end
+        @client.stub(:codex_available?, true) do
+          @client.stub(:codex_authenticated?, true) do
+            @client.stub(:resolve_skills_dir, nil) do
+              File.stub(:delete, delete) do
+                @client.stub(:execute_codex_command, capture) do
+                  result = @client.generate("Hi", last_message_file: requested)
+                  assert_equal "fresh review", result[:text]
+                end
+              end
+            end
+          end
+        end
+      end
+    end
+
+    it "captures directly to the caller path so partial output survives a hard kill" do
+      Dir.mktmpdir do |dir|
+        requested = File.join(dir, "last.md")
+        File.write(requested, "stale")
+        capture = lambda do |_cmd, _prompt, options|
+          assert_equal requested, options[:last_message_file]
+          refute File.exist?(requested)
+          File.write(requested, "partial before hard kill")
+          raise Ace::LLM::ProviderError, "child stopped"
+        end
+        @client.stub(:codex_available?, true) do
+          @client.stub(:codex_authenticated?, true) do
+            @client.stub(:resolve_skills_dir, nil) do
+              @client.stub(:execute_codex_command, capture) do
+                assert_raises(Ace::LLM::ProviderError) { @client.generate("Hi", last_message_file: requested) }
+              end
+            end
+          end
+        end
+        assert_equal "partial before hard kill", File.read(requested)
+      end
+    end
+
+    it "resolves a relative caller path against the Codex working directory" do
+      Dir.mktmpdir do |dir|
+        requested = File.join(dir, "last.md")
+        @client.stub(:codex_available?, true) do
+          @client.stub(:codex_authenticated?, true) do
+            @client.stub(:resolve_skills_dir, nil) do
+              stub_capture3(stdout: "transcript", last_message: "completed") do
+                result = @client.generate("Hi", working_dir: dir, last_message_file: "last.md")
+                assert_equal "completed", result[:text]
+              end
+            end
+          end
+        end
+        assert_equal "completed", File.read(requested)
+      end
+    end
+
+    it "rejects a directory as the last-message destination without writing inside it" do
+      Dir.mktmpdir do |dir|
+        @client.stub(:codex_available?, true) do
+          @client.stub(:codex_authenticated?, true) do
+            error = assert_raises(Ace::LLM::ProviderError) do
+              @client.generate("Hi", last_message_file: dir)
+            end
+            assert_match(/must name a file/, error.message)
+          end
+        end
+        assert_empty Dir.children(dir)
+      end
+    end
+
+    it "keeps an old diagnostic if Codex is unavailable before execution" do
+      Dir.mktmpdir do |dir|
+        requested = File.join(dir, "last.md")
+        File.write(requested, "prior diagnostic")
+        @client.stub(:codex_available?, false) do
+          assert_raises(Ace::LLM::ProviderError) { @client.generate("Hi", last_message_file: requested) }
+        end
+        assert_equal "prior diagnostic", File.read(requested)
+      end
+    end
+
+    it "preserves a partial last message for stall diagnosis on timeout" do
+      Dir.mktmpdir do |dir|
+        requested = File.join(dir, "last.md")
+        timeout = lambda do |_cmd, _prompt, options|
+          File.write(options[:last_message_file], "partial diagnostic")
+          raise Ace::LLM::ProviderError, "Codex CLI timed out"
+        end
+        @client.stub(:codex_available?, true) do
+          @client.stub(:codex_authenticated?, true) do
+            @client.stub(:resolve_skills_dir, nil) do
+              @client.stub(:execute_codex_command, timeout) do
+                assert_raises(Ace::LLM::ProviderError) do
+                  @client.generate("Hi", last_message_file: requested)
+                end
+              end
+            end
+          end
+        end
+        assert_equal "partial diagnostic", File.read(requested)
+      end
+    end
+
+    it "preserves the timeout error when the partial-message destination is unwritable" do
+      Dir.mktmpdir do |dir|
+        requested = File.join(dir, "missing", "last.md")
+        timeout = lambda do |_cmd, _prompt, options|
+          File.write(options[:last_message_file], "partial diagnostic")
+          raise Ace::LLM::ProviderError, "Codex CLI timed out"
+        end
+        @client.stub(:codex_available?, true) do
+          @client.stub(:codex_authenticated?, true) do
+            @client.stub(:resolve_skills_dir, nil) do
+              @client.stub(:execute_codex_command, timeout) do
+                error = assert_raises(Ace::LLM::ProviderError) do
+                  @client.generate("Hi", last_message_file: requested)
+                end
+                assert_match(/timed out/, error.message)
+              end
+            end
+          end
+        end
+      end
+    end
+
+    it "keeps a completed response when its diagnostic destination is unwritable" do
+      Dir.mktmpdir do |dir|
+        requested = File.join(dir, "missing", "last.md")
+        @client.stub(:codex_available?, true) do
+          @client.stub(:codex_authenticated?, true) do
+            @client.stub(:resolve_skills_dir, nil) do
+              stub_capture3(stdout: "OpenAI Codex v0.156.1\ncodex\ntranscript", last_message: "Completed review") do
+                result = @client.generate("Hi", last_message_file: requested)
+                assert_equal "Completed review", result[:text]
+                assert_match(/No such file or directory/, result[:metadata][:last_message_copy_error])
+              end
+            end
+          end
+        end
       end
     end
 
@@ -299,7 +573,7 @@ describe "CodexClient" do
       @client.stub(:codex_available?, true) do
         @client.stub(:codex_authenticated?, true) do
           @client.stub(:resolve_skills_dir, nil) do
-            stub_capture3(stdout: codex_response) do
+            stub_capture3(stdout: codex_response, last_message: "Hello from Codex!") do
               result = @client.generate("Hi")
               assert_equal "Hello from Codex!", result[:text]
               assert_equal "codex", result[:metadata][:provider]
@@ -331,7 +605,7 @@ describe "CodexClient" do
       @client.stub(:codex_available?, true) do
         @client.stub(:codex_authenticated?, true) do
           @client.stub(:resolve_skills_dir, nil) do
-            stub_capture3(stdout: codex_response) do
+            stub_capture3(stdout: codex_response, last_message: "Test response") do
               result = @client.generate("Hi")
               assert_equal "Test response", result[:text]
               assert_kind_of Integer, result[:metadata][:total_tokens]
@@ -348,7 +622,7 @@ describe "CodexClient" do
       @client.stub(:codex_available?, true) do
         @client.stub(:codex_authenticated?, true) do
           @client.stub(:resolve_skills_dir, nil) do
-            stub_capture3(stdout: plain_text) do
+            stub_capture3(stdout: plain_text, last_message: plain_text) do
               result = @client.generate("Hi")
               assert_equal "Just plain text", result[:text]
             end
@@ -366,8 +640,9 @@ describe "CodexClient" do
       @client.stub(:codex_available?, true) do
         @client.stub(:codex_authenticated?, true) do
           @client.stub(:resolve_skills_dir, nil) do
-            Ace::LLM::Providers::CLI::Molecules::SafeCapture.stub(:call, lambda { |*_args, **kwargs|
+            Ace::LLM::Providers::CLI::Molecules::SafeCapture.stub(:call, lambda { |command, **kwargs|
               captured_kwargs = kwargs
+              File.write(command[command.index("--output-last-message") + 1], "ok")
               ["codex\nok\n", "", mock_status]
             }) do
               @client.generate("Hi", working_dir: "/tmp/e2e-sandbox")
@@ -388,8 +663,9 @@ describe "CodexClient" do
       @client.stub(:codex_available?, true) do
         @client.stub(:codex_authenticated?, true) do
           @client.stub(:resolve_skills_dir, nil) do
-            Ace::LLM::Providers::CLI::Molecules::SafeCapture.stub(:call, lambda { |*_args, **kwargs|
+            Ace::LLM::Providers::CLI::Molecules::SafeCapture.stub(:call, lambda { |command, **kwargs|
               captured_kwargs = kwargs
+              File.write(command[command.index("--output-last-message") + 1], "ok")
               ["codex\nok\n", "", mock_status]
             }) do
               @client.generate("Hi", subprocess_env: {"PROJECT_ROOT_PATH" => "/tmp/e2e-sandbox"})

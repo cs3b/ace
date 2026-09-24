@@ -97,7 +97,7 @@ class LlmExecutorTest < AceReviewTest
     captured_kwargs = nil
     query_stub = lambda do |_model, _prompt, **kwargs|
       captured_kwargs = kwargs
-      {text: "ok", metadata: {}, usage: {}}
+      {text: "ok", metadata: {finish_reason: "stop"}, execution: {status: "succeeded"}, usage: {}}
     end
 
     Ace::LLM::QueryInterface.stub(:query, query_stub) do
@@ -113,6 +113,65 @@ class LlmExecutorTest < AceReviewTest
     end
 
     assert_equal 900, captured_kwargs[:timeout]
+  end
+
+  def test_empty_model_output_is_not_a_completed_review
+    Ace::LLM::QueryInterface.stub(:query, {text: "  ", execution: {provider: "pi", model: "zai/glm-5.3"}}) do
+      result = @executor.execute(system_prompt: "system", user_prompt: "user",
+        model: "pi:glm5:max@ro", session_dir: @test_dir)
+
+      refute result[:success]
+      assert_match(/empty report/, result[:error])
+      assert_equal "zai/glm-5.3", result[:execution][:model]
+    end
+  end
+
+  def test_truncated_model_output_is_not_a_completed_review
+    response = {text: "Partial finding", metadata: {finish_reason: "length"},
+                execution: {provider: "pi", model: "zai/glm-5.3"}}
+    Ace::LLM::QueryInterface.stub(:query, response) do
+      result = @executor.execute(system_prompt: "system", user_prompt: "user",
+        model: "pi:glm5:max@ro", session_dir: @test_dir)
+
+      refute result[:success]
+      assert_match(/incomplete/, result[:error])
+      assert_equal "length", result[:metadata][:finish_reason]
+    end
+  end
+
+  def test_nonempty_report_without_terminal_receipt_is_not_completed
+    response = {text: "Plausible but partial review", metadata: {},
+                execution: {provider: "pi", model: "zai/glm-5.3", status: "succeeded"}}
+    Ace::LLM::QueryInterface.stub(:query, response) do
+      result = @executor.execute(system_prompt: "system", user_prompt: "user",
+        model: "pi:glm5:max@ro", session_dir: @test_dir)
+      refute result[:success]
+      assert_match(/incomplete/, result[:error])
+    end
+  end
+
+  def test_unknown_terminal_reason_is_not_a_completed_review
+    response = {text: "Partial finding", metadata: {finish_reason: "aborted"},
+                execution: {provider: "pi", model: "zai/glm-5.3"}}
+    Ace::LLM::QueryInterface.stub(:query, response) do
+      result = @executor.execute(system_prompt: "system", user_prompt: "user",
+        model: "pi:glm5:max@ro", session_dir: @test_dir)
+      refute result[:success]
+      assert_match(/aborted/, result[:error])
+    end
+  end
+
+  def test_string_keyed_truncation_and_incomplete_execution_are_rejected
+    [{metadata: {"finish_reason" => "length"}, execution: {status: "succeeded"}},
+      {metadata: {}, execution: {"status" => "incomplete"}}].each do |fields|
+      response = {text: "Partial finding"}.merge(fields)
+      Ace::LLM::QueryInterface.stub(:query, response) do
+        result = @executor.execute(system_prompt: "system", user_prompt: "user",
+          model: "pi:glm5:max@ro", session_dir: @test_dir)
+        refute result[:success]
+        assert_match(/incomplete/, result[:error])
+      end
+    end
   end
 
   private

@@ -3,6 +3,7 @@
 
 name: work-on-task-in-place
 description: Work on a task in the current checkout with reviewed, verified, scoped commit (no worktree, PR, or merge)
+# This local-only preset does not create a PR; the PR review workflow does not apply.
 
 parameters:
   taskrefs:

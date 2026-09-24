@@ -5,6 +5,44 @@ require_relative "../test_helper"
 module Ace
   module LLM
     class QueryInterfaceFallbackTest < AceLlmTestCase
+      def test_execution_identity_marks_truncated_responses_incomplete
+        response = {metadata: {finish_reason: "length"}}
+        identity = QueryInterface.send(:execution_identity, "pi", "zai/glm-5.3", nil, "max", response, {})
+        assert_equal "incomplete", identity[:status]
+      end
+
+      def test_execution_identity_requires_terminal_reason
+        missing = QueryInterface.send(:execution_identity, "pi", "zai/glm-5.3", nil, "max", {metadata: {}}, {})
+        stopped = QueryInterface.send(:execution_identity, "claude", "opus", nil, nil,
+          {metadata: {stop_reason: "end_turn"}}, {})
+        assert_equal "incomplete", missing[:status]
+        assert_equal "succeeded", stopped[:status]
+      end
+
+      def test_execution_identity_records_effective_reasoning_override
+        response = {metadata: {finish_reason: "success"}}
+        pi = QueryInterface.send(:execution_identity, "pi", "zai/glm-5.3", nil, "max", response,
+          {cli_args: ["--thinking", "high"]})
+        codex = QueryInterface.send(:execution_identity, "codex", "gpt-6-sol", nil, "high", response,
+          {cli_args: ["-c", "model_reasoning_effort=low"]})
+        assert_equal "high", pi[:thinking_level]
+        assert_equal "low", codex[:thinking_level]
+        assert_equal "succeeded", pi[:status]
+      end
+
+      def test_execution_identity_uses_executed_model_for_provider_only_fallback
+        response = {metadata: {model: "claude-sonnet-default", finish_reason: "success"}}
+        identity = QueryInterface.send(:execution_identity, "claude", nil, nil, nil, response, {})
+        assert_equal "claude-sonnet-default", identity[:model]
+      end
+
+      def test_execution_identity_ignores_invalid_pi_thinking_argument
+        response = {metadata: {finish_reason: "success"}}
+        identity = QueryInterface.send(:execution_identity, "pi", "zai/glm-5.3", nil, "high", response,
+          {cli_args: ["--thinking", "--no-extensions"]})
+        assert_equal "high", identity[:thinking_level]
+      end
+
       def test_query_executes_without_fallback_when_disabled
         # Set environment to disable fallback
         ENV["ACE_LLM_FALLBACK_ENABLED"] = "false"
@@ -251,6 +289,10 @@ module Ace
 
         assert_equal "ok", result[:text]
         assert_equal ["--gemini:gemini-2.5-flash-only"], gemini_client.received_options[:cli_args]
+        assert_equal "gemini", result.dig(:execution, :provider)
+        assert_equal "gemini-2.5-flash", result.dig(:execution, :model)
+        assert_nil result.dig(:execution, :thinking_level)
+        assert_equal "resolved_request", result.dig(:execution, :identity_source)
       end
 
       def test_execute_with_fallback_preserves_per_target_role_suffixes

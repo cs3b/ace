@@ -74,6 +74,7 @@ describe "PiClient" do
       assert_equal "pi", cmd[0]
       assert_includes cmd, "-p"
       assert_includes cmd, "--no-session"
+      assert_equal "json", cmd.fetch(cmd.index("--mode") + 1)
       assert_includes cmd, "--no-skills"
       assert cmd.any? { |arg| arg == "Test prompt" }
     end
@@ -86,6 +87,23 @@ describe "PiClient" do
       assert_includes cmd, "anthropic"
       assert_includes cmd, "--model"
       assert_includes cmd, "claude-opus-4-6"
+    end
+
+    it "preserves the resolved GLM model and max reasoning in native arguments" do
+      client = Ace::LLM::Providers::CLI::PiClient.new(model: "zai/glm-5.3")
+      cmd = client.send(:build_pi_command, "Review", {cli_args: ["--thinking", "max"]})
+      assert_equal "zai", cmd.fetch(cmd.index("--provider") + 1)
+      assert_equal "glm-5.3", cmd.fetch(cmd.index("--model") + 1)
+      assert_equal "max", cmd.fetch(cmd.index("--thinking") + 1)
+    end
+
+    it "rejects CLI model overrides that would falsify execution identity" do
+      client = Ace::LLM::Providers::CLI::PiClient.new(model: "zai/glm-5.3")
+      ["--mode", "--model", "--models"].each do |flag|
+        assert_raises(Ace::LLM::ProviderError) do
+          client.send(:build_pi_command, "Review", {cli_args: [flag, "other"]})
+        end
+      end
     end
 
     it "includes system prompt flag when system_prompt provided" do
@@ -111,7 +129,7 @@ describe "PiClient" do
         @client.stub(:resolve_skills_dir, nil) do
           Ace::LLM::Providers::CLI::Molecules::SafeCapture.stub(:call, lambda { |*_args, **kwargs|
             captured_kwargs = kwargs
-            ["ok", "", mock_status]
+            ["{\"type\":\"agent_end\",\"messages\":[{\"content\":[{\"type\":\"text\",\"text\":\"ok\"}]}]}\n{\"type\":\"agent_settled\"}\n", "", mock_status]
           }) do
             @client.generate("Hi", working_dir: "/tmp/e2e-sandbox")
           end
@@ -123,6 +141,15 @@ describe "PiClient" do
   end
 
   describe "build_interactive_invocation" do
+    it "rejects interactive provider and model overrides" do
+      client = Ace::LLM::Providers::CLI::PiClient.new(model: "zai/glm-5.3")
+      ["--provider", "--model", "--models"].each do |flag|
+        assert_raises(Ace::LLM::ProviderError) do
+          client.send(:build_pi_interactive_command, "Review", {cli_args: [flag, "other"]})
+        end
+      end
+    end
+
     it "builds interactive pi command with translated skill syntax" do
       @client.stub(:pi_available?, true) do
         @client.stub(:resolve_skills_dir, "/tmp/skills") do
@@ -152,22 +179,22 @@ describe "PiClient" do
       assert_equal "gemini-2.5-pro", model
     end
 
-    it "returns nil pair for nil input" do
-      provider, model = @client.send(:split_provider_model, nil)
-      assert_nil provider
-      assert_nil model
-    end
-
-    it "returns nil pair for string without slash" do
-      provider, model = @client.send(:split_provider_model, "no-slash")
-      assert_nil provider
-      assert_nil model
+    it "rejects unresolved models instead of silently using the Pi default" do
+      [nil, "glm5:max", "no-slash", "/model", "provider/", ":openai/gpt"].each do |model|
+        assert_raises(Ace::LLM::ProviderError) { @client.send(:split_provider_model, model) }
+      end
     end
 
     it "handles nested provider with colon (openrouter:openai/model)" do
       provider, model = @client.send(:split_provider_model, "openrouter:openai/gpt-oss-120b")
       assert_equal "openrouter", provider
       assert_equal "openai/gpt-oss-120b", model
+    end
+
+    it "rejects nested selectors with an empty provider or model component" do
+      ["openrouter:/gpt", "openrouter:openai/"].each do |model|
+        assert_raises(Ace::LLM::ProviderError) { @client.send(:split_provider_model, model) }
+      end
     end
 
     it "handles standard format even when colon is present elsewhere" do
@@ -210,6 +237,8 @@ describe "PiClient" do
       # Default mode is plain text, but we detect NDJSON (starts with {"type":")
       ndjson_response = <<~NDJSON
         {"type":"message_end","message":{"content":[{"type":"text","text":"Hello from Pi!"}],"usage":{"input":10,"output":5}}}
+        {"type":"agent_end","messages":[]}
+        {"type":"agent_settled"}
       NDJSON
 
       @client.stub(:pi_available?, true) do
@@ -226,15 +255,13 @@ describe "PiClient" do
       end
     end
 
-    it "falls back to raw text when JSON parsing fails" do
+    it "rejects raw text while JSON mode is required" do
       raw_text = "This is plain text output"
 
       @client.stub(:pi_available?, true) do
         @client.stub(:resolve_skills_dir, nil) do
           stub_capture3(stdout: raw_text) do
-            result = @client.generate("Hi")
-            assert_equal "This is plain text output", result[:text]
-            assert_kind_of Integer, result[:metadata][:total_tokens]
+            assert_raises(Ace::LLM::ProviderError) { @client.generate("Hi") }
           end
         end
       end
@@ -266,15 +293,13 @@ describe "PiClient" do
       end
     end
 
-    it "builds synthetic metadata for plain text response" do
+    it "rejects a non-JSON response despite subprocess success" do
       plain_text = "Test response"
 
       @client.stub(:pi_available?, true) do
         @client.stub(:resolve_skills_dir, nil) do
           stub_capture3(stdout: plain_text) do
-            result = @client.generate("Hi")
-            assert_equal "Test response", result[:text]
-            assert_kind_of Integer, result[:metadata][:total_tokens]
+            assert_raises(Ace::LLM::ProviderError) { @client.generate("Hi") }
           end
         end
       end
@@ -286,6 +311,8 @@ describe "PiClient" do
         {"type":"content_block_delta","delta":{"type":"text","text":"Hello"}}
         {"type":"content_block_delta","delta":{"type":"text","text":" from Pi!"}}
         {"type":"message_end","message":{"content":[{"type":"text","text":"Hello from Pi!"}],"usage":{"input":10,"output":5}}}
+        {"type":"agent_end","messages":[]}
+        {"type":"agent_settled"}
       NDJSON
 
       @client.stub(:pi_available?, true) do
@@ -304,6 +331,7 @@ describe "PiClient" do
       ndjson_output = <<~NDJSON
         {"type":"agent_start","agent_id":"agent-123"}
         {"type":"agent_end","messages":[{"content":[{"type":"text","text":"Response text"}],"usage":{"input":8,"output":3}}]}
+        {"type":"agent_settled"}
       NDJSON
 
       @client.stub(:pi_available?, true) do
@@ -321,6 +349,8 @@ describe "PiClient" do
     it "extracts usage from NDJSON with normalized field names" do
       ndjson_output = <<~NDJSON
         {"type":"message_end","message":{"content":[{"type":"text","text":"Text"}],"usage":{"input":15,"output":7}}}
+        {"type":"agent_end","messages":[]}
+        {"type":"agent_settled"}
       NDJSON
 
       @client.stub(:pi_available?, true) do
@@ -336,28 +366,25 @@ describe "PiClient" do
       end
     end
 
-    it "falls back to plain text for non-NDJSON output" do
+    it "rejects a multiline non-NDJSON response" do
       plain_text = "This is plain text output\nNot NDJSON"
 
       @client.stub(:pi_available?, true) do
         @client.stub(:resolve_skills_dir, nil) do
           stub_capture3(stdout: plain_text) do
-            result = @client.generate("Hi")
-            assert_equal "This is plain text output\nNot NDJSON", result[:text]
+            assert_raises(Ace::LLM::ProviderError) { @client.generate("Hi") }
           end
         end
       end
     end
 
-    it "handles NDJSON parse errors gracefully" do
+    it "rejects malformed NDJSON instead of accepting it as a complete report" do
       invalid_ndjson = '{"type":"message_end"\nInvalid JSON line'
 
       @client.stub(:pi_available?, true) do
         @client.stub(:resolve_skills_dir, nil) do
           stub_capture3(stdout: invalid_ndjson) do
-            result = @client.generate("Hi")
-            # Falls back to treating as plain text
-            assert_equal invalid_ndjson.strip, result[:text]
+            assert_raises(Ace::LLM::ProviderError) { @client.generate("Hi") }
           end
         end
       end
@@ -365,39 +392,146 @@ describe "PiClient" do
   end
 
   describe "parse_ndjson" do
-    it "extracts text from message_end event" do
+    it "keeps only the final assistant turn" do
+      ndjson = <<~NDJSON
+        {"type":"message_end","message":{"role":"assistant","content":[{"type":"text","text":"First turn"}]}}
+        {"type":"message_end","message":{"role":"toolResult","content":[{"type":"text","text":"tool output"}]}}
+        {"type":"message_end","message":{"role":"assistant","content":[{"type":"text","text":"Final turn"}]}}
+        {"type":"agent_end","messages":[]}
+        {"type":"agent_settled"}
+      NDJSON
+      text, = @client.send(:parse_ndjson, ndjson)
+      assert_equal "Final turn", text
+    end
+
+    it "rejects a message_end without the terminal agent_end event" do
       ndjson = <<~NDJSON
         {"type":"message_end","message":{"content":[{"type":"text","text":"Hello"}]}}
       NDJSON
 
-      text, usage = @client.send(:parse_ndjson, ndjson)
-      assert_equal "Hello", text
-      assert_equal({}, usage)
+      assert_raises(Ace::LLM::ProviderError) { @client.send(:parse_ndjson, ndjson) }
+    end
+
+    it "rejects an agent_end without the final agent_settled event" do
+      ndjson = <<~NDJSON
+        {"type":"message_end","message":{"content":[{"type":"text","text":"Unsettled"}]}}
+        {"type":"agent_end","messages":[]}
+      NDJSON
+      error = assert_raises(Ace::LLM::ProviderError) { @client.send(:parse_ndjson, ndjson) }
+      assert_match(/agent_settled/, error.message)
+    end
+
+    it "accepts valid JSON with whitespace around the type separator" do
+      ndjson = <<~NDJSON
+        {"type": "message_end", "message": {"content": [{"type": "text", "text": "Complete"}]}}
+        {"type": "agent_end", "messages": []}
+        {"type": "agent_settled"}
+      NDJSON
+      status = Object.new
+      status.define_singleton_method(:success?) { true }
+      result = @client.send(:parse_pi_response, ndjson, "", status, "Review", {})
+      assert_equal "Complete", result[:text]
     end
 
     it "extracts usage from message_end event" do
       ndjson = <<~NDJSON
-        {"type":"message_end","message":{"content":[],"usage":{"input":5,"output":2}}}
+        {"type":"message_end","message":{"content":[{"type":"text","text":"Answer"}],"usage":{"input":5,"output":2}}}
+        {"type":"agent_end","messages":[]}
+        {"type":"agent_settled"}
       NDJSON
 
       text, usage = @client.send(:parse_ndjson, ndjson)
-      assert_equal "", text
+      assert_equal "Answer", text
       assert_equal({"input" => 5, "output" => 2}, usage)
+    end
+
+    it "rejects a successful terminal event without assistant text" do
+      assert_raises(Ace::LLM::ProviderError) do
+        @client.send(:parse_ndjson, "{\"type\":\"agent_end\",\"messages\":[]}")
+      end
     end
 
     it "extracts text from agent_end fallback" do
       ndjson = <<~NDJSON
         {"type":"agent_end","messages":[{"content":[{"type":"text","text":"Fallback text"}]}]}
+        {"type":"agent_settled"}
       NDJSON
 
       text, _ = @client.send(:parse_ndjson, ndjson)
       assert_equal "Fallback text", text
     end
 
-    it "returns plain text on JSON parse error" do
-      text, usage = @client.send(:parse_ndjson, "Not JSON at all")
-      assert_equal "Not JSON at all", text
-      assert_equal({}, usage)
+    it "propagates a terminal failure stop reason" do
+      ndjson = <<~NDJSON
+        {"type":"message_end","message":{"content":[{"type":"text","text":"Partial"}]}}
+        {"type":"agent_end","messages":[{"role":"assistant","content":[{"type":"text","text":"Partial"}],"stopReason":"error"}]}
+        {"type":"agent_settled"}
+      NDJSON
+      status = Object.new
+      status.define_singleton_method(:success?) { true }
+      result = @client.send(:parse_pi_response, ndjson, "", status, "Review", {})
+      assert_equal "error", result[:metadata][:finish_reason]
+    end
+
+    it "propagates a message-level truncation despite an empty agent_end" do
+      ndjson = <<~NDJSON
+        {"type":"message_end","message":{"content":[{"type":"text","text":"Partial review"}],"stopReason":"length"}}
+        {"type":"agent_end","messages":[]}
+        {"type":"agent_settled"}
+      NDJSON
+      status = Object.new
+      status.define_singleton_method(:success?) { true }
+      result = @client.send(:parse_pi_response, ndjson, "", status, "Review", {})
+      assert_equal "length", result[:metadata][:finish_reason]
+    end
+
+    it "keeps the final message_end reason when agent_end contains earlier text" do
+      ndjson = <<~NDJSON
+        {"type":"message_end","message":{"content":[{"type":"text","text":"Partial review"}],"stopReason":"length"}}
+        {"type":"agent_end","messages":[{"role":"assistant","content":[{"type":"text","text":"Earlier turn"}],"stopReason":"stop"},{"role":"assistant","content":[]}]}
+        {"type":"agent_settled"}
+      NDJSON
+      _, _, reason = @client.send(:parse_ndjson, ndjson)
+      assert_equal "length", reason
+    end
+
+    it "prioritizes a terminal error over message-level truncation" do
+      ndjson = <<~NDJSON
+        {"type":"message_end","message":{"content":[{"type":"text","text":"Partial review"}],"stopReason":"length"}}
+        {"type":"agent_end","messages":[{"role":"assistant","content":[{"type":"text","text":"Partial review"}],"stopReason":"error"}]}
+        {"type":"agent_settled"}
+      NDJSON
+      _, _, reason = @client.send(:parse_ndjson, ndjson)
+      assert_equal "error", reason
+    end
+
+    it "rejects an unfinished retry and keeps only the recovered run" do
+      retry_event = <<~NDJSON
+        {"type":"message_end","message":{"content":[{"type":"text","text":"Partial"}],"stopReason":"length"}}
+        {"type":"agent_end","willRetry":true,"messages":[]}
+      NDJSON
+      assert_raises(Ace::LLM::ProviderError) { @client.send(:parse_ndjson, retry_event) }
+
+      recovered = retry_event + <<~NDJSON
+        {"type":"message_end","message":{"content":[{"type":"text","text":"Complete"}],"stopReason":"stop"}}
+        {"type":"agent_end","willRetry":false,"messages":[]}
+        {"type":"agent_settled"}
+      NDJSON
+      text, _, reason = @client.send(:parse_ndjson, recovered)
+      assert_equal "Complete", text
+      assert_equal "stop", reason
+    end
+
+    it "rejects invalid JSON events" do
+      assert_raises(Ace::LLM::ProviderError) { @client.send(:parse_ndjson, "Not JSON at all") }
+    end
+  end
+
+  it "rejects empty plain-text output despite a successful subprocess" do
+    status = Object.new
+    status.define_singleton_method(:success?) { true }
+    assert_raises(Ace::LLM::ProviderError) do
+      @client.send(:parse_pi_response, "  \n", "", status, "Review", {})
     end
   end
 

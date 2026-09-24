@@ -2,6 +2,9 @@
 
 require_relative "../../test_helper"
 require "yaml"
+require "json"
+require "rexml/document"
+require "ace/support/nav"
 
 class BundleLoaderTest < AceTestCase
   # Normalize legacy top-level fixture style to section-based input so tests reflect
@@ -86,6 +89,86 @@ class BundleLoaderTest < AceTestCase
   end
 
   public
+
+  def test_markdown_xml_keeps_source_tags_inside_cdata
+    payload = "line one\n  </file>\n</sources>\n]]>\n"
+    sections = {
+      "sources" => {
+        title: "Sources",
+        _processed_files: [{path: "source.txt", content: payload}]
+      }
+    }
+    rendered = Ace::Bundle::Molecules::SectionFormatter.new.format_sections_only(sections)
+    document = REXML::Document.new(rendered[rendered.index("<sources>")..])
+    assert_equal payload, document.root.elements["file"].children.grep(REXML::CData).map(&:value).join
+  end
+
+  def test_markdown_xml_keeps_review_diff_bytes_contiguous
+    payload = "line one\n  </file>\n</sources>\n]]>\n"
+    sections = {
+      "changes" => {
+        title: "Changes",
+        _processed_diffs: [{range: "HEAD~1..HEAD", output: payload}]
+      }
+    }
+    rendered = Ace::Bundle::Molecules::SectionFormatter.new.format_sections_only(sections)
+    assert_includes rendered, payload
+  end
+
+  def test_markdown_xml_keeps_verbatim_file_bytes_contiguous
+    payload = "diff --git a/test b/test\n+]]>\n"
+    sections = {
+      "pr_changes" => {
+        title: "Pull Request Changes",
+        verbatim_files: true,
+        _processed_files: [{path: "pr-diff.patch", content: payload}]
+      }
+    }
+    rendered = Ace::Bundle::Molecules::SectionFormatter.new.format_sections_only(sections)
+    assert_includes rendered, payload
+  end
+
+  def test_normal_mode_keeps_top_level_files_with_base_and_embedded_sections
+    with_temp_dir do
+      File.write("base.md", "Base instructions")
+      File.write("source.md", "Source facts")
+      File.write("template.wf.md", <<~MARKDOWN)
+        ---
+        bundle:
+          base: ./base.md
+          embed_document_source: true
+          files:
+            - source.md
+          sections:
+            note:
+              content: Section notes
+        ---
+        Template body
+      MARKDOWN
+      bundle = Ace::Bundle::Organisms::BundleLoader.new.load_file(File.expand_path("template.wf.md"))
+      %w[Base Source Section].each { |word| assert_includes bundle.content, word }
+      base = bundle.source_files.find { |file| file[:path] == bundle.metadata[:base_path] }
+      assert_equal "Base instructions", base.fetch(:content)
+    end
+  end
+
+  def test_normal_mode_keeps_top_level_files_with_base_without_embedding
+    with_temp_dir do
+      File.write("base.md", "Base instructions")
+      File.write("source.md", "Source facts")
+      File.write("template.wf.md", <<~MARKDOWN)
+        ---
+        bundle:
+          base: ./base.md
+          files:
+            - source.md
+        ---
+      MARKDOWN
+      bundle = Ace::Bundle::Organisms::BundleLoader.new.load_file(File.expand_path("template.wf.md"))
+      assert_includes bundle.content, "Base instructions"
+      assert_includes bundle.content, "Source facts"
+    end
+  end
 
   def test_loads_preset_with_files
     with_temp_dir do
@@ -210,6 +293,637 @@ class BundleLoaderTest < AceTestCase
       assert hello_cmd
       assert hello_cmd[:success]
       assert_match(/Hello/, hello_cmd[:output])
+    end
+  end
+
+  def test_review_safe_mode_rejects_command_sources_before_execution
+    with_temp_dir do
+      marker = File.expand_path("executed.txt")
+      File.write("untrusted.wf.md", <<~MARKDOWN)
+        ---
+        bundle:
+          sections:
+            status:
+              commands:
+                - touch #{marker}
+        ---
+        Untrusted review input
+      MARKDOWN
+
+      loader = Ace::Bundle::Organisms::BundleLoader.new(allow_commands: false, allowed_root: Dir.pwd)
+      error = assert_raises(Ace::Bundle::Error) { loader.load_file(File.expand_path("untrusted.wf.md")) }
+      assert_match(/forbidden/, error.message)
+      refute File.exist?(marker)
+    end
+  end
+
+  def test_review_template_cannot_override_immutable_safety_options
+    with_temp_dir do
+      marker = File.expand_path("executed.txt")
+      File.write("untrusted.wf.md", <<~MARKDOWN)
+        ---
+        bundle:
+          params:
+            :allow_commands: true
+          sections:
+            status:
+              commands:
+                - touch #{marker}
+        ---
+        Untrusted review input
+      MARKDOWN
+
+      loader = Ace::Bundle::Organisms::BundleLoader.new(allow_commands: false, allowed_root: Dir.pwd)
+      error = assert_raises(Ace::Bundle::Error) { loader.load_file(File.expand_path("untrusted.wf.md")) }
+      assert_match(/cannot override safety options/, error.message)
+      refute File.exist?(marker)
+    end
+  end
+
+  def test_review_safe_mode_rejects_secondary_pr_and_git_diff_sources
+    with_temp_dir do
+      sources = {
+        "pr" => "pr: private/repo#42",
+        "diffs" => "diffs:\n  - origin/main...HEAD",
+        "section" => "sections:\n  extra_diff:\n    ranges:\n      - origin/main...HEAD"
+      }
+      sources.each do |name, config|
+        body = config.lines.map { |line| "  #{line.chomp}\n" }.join
+        File.write("#{name}.wf.md", "---\nbundle:\n#{body}---\nReview context\n")
+        loader = Ace::Bundle::Organisms::BundleLoader.new(allow_commands: false, allowed_root: Dir.pwd)
+        error = assert_raises(Ace::Bundle::Error) { loader.load_file(File.expand_path("#{name}.wf.md")) }
+        assert_match(/Secondary PR and Git diff sources/, error.message)
+      end
+    end
+  end
+
+  def test_review_safe_mode_rejects_absolute_traversal_and_symlink_file_sources
+    with_temp_dir do
+      outside_dir = Dir.mktmpdir("bundle-secret")
+      outside_file = File.join(outside_dir, "secret.md")
+      File.write(outside_file, "PRIVATE REVIEW SECRET")
+      File.symlink(outside_file, "linked-secret.md")
+      traversal = Pathname.new(outside_file).relative_path_from(Pathname.new(Dir.pwd)).to_s
+      loader = Ace::Bundle::Organisms::BundleLoader.new(allow_commands: false, allowed_root: Dir.pwd)
+      [outside_file, traversal, "linked-secret.md"].each do |source|
+        File.write("untrusted.wf.md", <<~MARKDOWN)
+          ---
+          bundle:
+            sections:
+              data:
+                files:
+                  - #{source}
+          ---
+          Untrusted review input
+        MARKDOWN
+        error = assert_raises(ArgumentError) { loader.load_file(File.expand_path("untrusted.wf.md")) }
+        assert_match(/outside allowed root/, error.message)
+      end
+      assert_raises(Ace::Bundle::Error) { loader.load_file(outside_file) }
+    ensure
+      FileUtils.remove_entry(outside_dir) if outside_dir && File.exist?(outside_dir)
+    end
+  end
+
+  def test_review_safe_mode_allows_only_installed_prompt_protocol_outside_consumer_root
+    with_temp_dir do
+      prompt = Ace::Support::Nav::Organisms::NavigationEngine.new.resolve("prompt://format/detailed")
+      refute_nil prompt
+      refute prompt.start_with?(Dir.pwd)
+      File.write("consumer.wf.md", <<~MARKDOWN)
+        ---
+        bundle:
+          sections:
+            format:
+              files:
+                - prompt://format/detailed
+        ---
+        Consumer review
+      MARKDOWN
+
+      loader = Ace::Bundle::Organisms::BundleLoader.new(allow_commands: false, allowed_root: Dir.pwd)
+      bundle = loader.load_file(File.expand_path("consumer.wf.md"))
+      assert bundle.sections.fetch("format").fetch(:_processed_files).any?
+
+      File.write("absolute.wf.md", <<~MARKDOWN)
+        ---
+        bundle:
+          sections:
+            format:
+              files:
+                - #{prompt}
+        ---
+        Consumer review
+      MARKDOWN
+      other_loader = Ace::Bundle::Organisms::BundleLoader.new(allow_commands: false, allowed_root: Dir.pwd)
+      assert_raises(ArgumentError) { other_loader.load_file(File.expand_path("absolute.wf.md")) }
+    end
+  end
+
+  def test_review_safe_mode_reports_missing_base_preset_and_protocol_file
+    with_temp_dir do
+      sources = {
+        "base" => "base: ./missing.md",
+        "preset" => "presets:\n  - nonexistent-review-preset",
+        "protocol" => "sections:\n  context:\n    files:\n      - prompt://missing-review-source"
+      }
+      sources.each do |kind, config|
+        body = config.lines.map { |line| "  #{line.chomp}\n" }.join
+        File.write("#{kind}.wf.md", "---\nbundle:\n#{body}---\nReview context\n")
+        loader = Ace::Bundle::Organisms::BundleLoader.new(allow_commands: false, allowed_root: Dir.pwd)
+        bundle = loader.load_file(File.expand_path("#{kind}.wf.md"))
+        assert bundle.metadata[:errors]&.any?, "#{kind} source must fail closed"
+      end
+    end
+  end
+
+  def test_review_safe_mode_preserves_base_file_provenance
+    with_temp_dir do
+      File.write("base.md", "Reviewed context")
+      File.write("base.wf.md", <<~MARKDOWN)
+        ---
+        bundle:
+          base: ./base.md
+          sections:
+            note:
+              content: Review note
+        ---
+        Review context
+      MARKDOWN
+
+      loader = Ace::Bundle::Organisms::BundleLoader.new(allow_commands: false, allowed_root: Dir.pwd)
+      bundle = loader.load_file(File.expand_path("base.wf.md"))
+      assert_equal File.expand_path("base.md"), File.expand_path(bundle.metadata.fetch(:base_path))
+    end
+  end
+
+  def test_review_safe_mode_keeps_base_snapshot_when_file_changes_before_merge
+    with_temp_dir do
+      File.write("base.md", "Original base bytes\n")
+      File.write("base.wf.md", <<~MARKDOWN)
+        ---
+        bundle:
+          base: ./base.md
+          sections:
+            note:
+              content: Review note
+        ---
+      MARKDOWN
+      loader = Ace::Bundle::Organisms::BundleLoader.new(allow_commands: false, allowed_root: Dir.pwd)
+      loaded = loader.load_file(File.expand_path("base.wf.md"))
+      File.write("base.md", "Later base bytes\n")
+      merged = loader.send(:merge_bundles, [loaded])
+      assert_includes merged.content, "Original base bytes"
+      refute_includes merged.content, "Later base bytes"
+      assert_equal "Original base bytes\n", merged.source_files.find { |file| File.basename(file[:path]) == "base.md" }[:content]
+    end
+  end
+
+  def test_review_safe_mode_renders_base_top_level_files_and_sections_together
+    with_temp_dir do
+      File.write("base.md", "Base contract")
+      File.write("top.md", "Top-level source")
+      File.write("combined.wf.md", <<~MARKDOWN)
+        ---
+        bundle:
+          base: ./base.md
+          files:
+            - top.md
+          sections:
+            note:
+              content: Section source
+        ---
+        Review context
+      MARKDOWN
+
+      loader = Ace::Bundle::Organisms::BundleLoader.new(allow_commands: false, allowed_root: Dir.pwd)
+      bundle = loader.load_file(File.expand_path("combined.wf.md"))
+      assert_includes bundle.content, "Base contract"
+      assert_includes bundle.content, "Top-level source"
+      assert_includes bundle.content, "Section source"
+      assert_equal %w[top.md base.md combined.wf.md], bundle.source_files.map { |file| File.basename(file[:path]) }
+    end
+  end
+
+  def test_review_safe_mode_reports_missing_base_from_preset
+    with_temp_dir do
+      FileUtils.mkdir_p(".ace/bundle/presets")
+      File.write(".ace/bundle/presets/missing-base.md", <<~MARKDOWN)
+        ---
+        bundle:
+          base: ./missing.md
+          sections:
+            note:
+              content: Review note
+        ---
+        Review preset
+      MARKDOWN
+      loader = Ace::Bundle::Organisms::BundleLoader.new(allow_commands: false, allowed_root: Dir.pwd)
+      bundle = loader.load_preset("missing-base")
+      assert bundle.metadata[:errors]&.any?
+      assert_match(/missing\.md/, bundle.metadata[:errors].join("; "))
+    end
+  end
+
+  def test_review_safe_mode_reports_missing_bare_base_filename
+    with_temp_dir do
+      File.write("missing-base.wf.md", <<~MARKDOWN)
+        ---
+        bundle:
+          base: missing.md
+          sections:
+            note:
+              content: Review note
+        ---
+      MARKDOWN
+      loader = Ace::Bundle::Organisms::BundleLoader.new(allow_commands: false, allowed_root: Dir.pwd)
+      bundle = loader.load_file(File.expand_path("missing-base.wf.md"))
+      assert_match(/missing\.md/, bundle.metadata.fetch(:errors).join("; "))
+      refute_includes bundle.content, "missing.md"
+    end
+  end
+
+  def test_review_safe_mode_renders_embedded_document_files_and_sections_without_base
+    with_temp_dir do
+      File.write("top.md", "Top-level source bytes")
+      File.write("embedded.wf.md", <<~MARKDOWN)
+        ---
+        bundle:
+          embed_document_source: true
+          files:
+            - top.md
+          sections:
+            note:
+              content: Section source
+        ---
+        Original document
+      MARKDOWN
+
+      loader = Ace::Bundle::Organisms::BundleLoader.new(allow_commands: false, allowed_root: Dir.pwd)
+      bundle = loader.load_file(File.expand_path("embedded.wf.md"))
+      assert_includes bundle.content, "Original document"
+      assert_includes bundle.content, "Top-level source bytes"
+      assert_includes bundle.content, "Section source"
+      assert_equal %w[top.md embedded.wf.md], bundle.source_files.map { |file| File.basename(file[:path]) }
+    end
+  end
+
+  def test_review_safe_mode_renders_embedded_file_once_without_sections
+    with_temp_dir do
+      File.write("top.md", "Unique top-level source bytes")
+      File.write("embedded.wf.md", <<~MARKDOWN)
+        ---
+        bundle:
+          embed_document_source: true
+          files:
+            - top.md
+        ---
+        Original document
+      MARKDOWN
+
+      loader = Ace::Bundle::Organisms::BundleLoader.new(allow_commands: false, allowed_root: Dir.pwd)
+      bundle = loader.load_file(File.expand_path("embedded.wf.md"))
+      assert_equal 1, bundle.content.scan("Unique top-level source bytes").length
+      assert_includes bundle.content, "Original document"
+    end
+  end
+
+  def test_review_safe_mode_reports_missing_literal_among_globs
+    with_temp_dir do
+      FileUtils.mkdir_p("docs")
+      File.write("docs/found.md", "Existing source")
+      File.write("mixed.wf.md", <<~MARKDOWN)
+        ---
+        bundle:
+          files:
+            - missing.md
+            - docs/*.md
+          sections:
+            sources:
+              files:
+                - missing-section.md
+                - docs/*.md
+        ---
+        Review context
+      MARKDOWN
+
+      loader = Ace::Bundle::Organisms::BundleLoader.new(allow_commands: false, allowed_root: Dir.pwd)
+      bundle = loader.load_file(File.expand_path("mixed.wf.md"))
+      assert_includes bundle.content, "Existing source"
+      assert_match(/missing\.md/, bundle.metadata.fetch(:errors).join("; "))
+      assert_match(/missing-section\.md/, bundle.metadata.fetch(:errors).join("; "))
+    end
+  end
+
+  def test_review_safe_mode_merge_keeps_each_rendered_top_level_source
+    with_temp_dir do
+      File.write("base.md", "Shared base source")
+      %w[first second].each do |name|
+        File.write("#{name}.md", "Source bytes for #{name}")
+        lines = ["---", "bundle:"]
+        lines << "  base: ./base.md" if name == "first"
+        lines.concat(["  files:", "    - #{name}.md", "---", "#{name} review context"])
+        File.write("#{name}.wf.md", "#{lines.join("\n")}\n")
+      end
+
+      loader = Ace::Bundle::Organisms::BundleLoader.new(allow_commands: false, allowed_root: Dir.pwd)
+      bundle = loader.load_multiple(%w[first second].map { |name| File.expand_path("#{name}.wf.md") })
+      %w[first second].each do |name|
+        assert_equal 1, bundle.content.scan("Source bytes for #{name}").length
+      end
+      assert_includes bundle.content, "Shared base source"
+      assert_equal %w[first.md base.md first.wf.md second.md second.wf.md], bundle.source_files.map { |file| File.basename(file[:path]) }
+
+      %w[xml yaml json].each do |format|
+        structured_loader = Ace::Bundle::Organisms::BundleLoader.new(
+          allow_commands: false, allowed_root: Dir.pwd, format: format
+        )
+        structured = structured_loader.load_multiple(%w[first second].map { |name| File.expand_path("#{name}.wf.md") })
+        assert_includes structured.content, "Source bytes for first", format
+        assert_includes structured.content, "Source bytes for second", format
+        parts = case format
+        when "json" then JSON.parse(structured.content).fetch("bundles")
+        when "yaml" then YAML.safe_load(structured.content).fetch("bundles")
+        when "xml"
+          REXML::Document.new(structured.content).get_elements("bundles/bundle").map(&:text)
+        end
+        assert_equal 2, parts.length
+        assert parts.first.include?("Source bytes for first")
+        assert parts.last.include?("Source bytes for second")
+      end
+    end
+  end
+
+  def test_review_safe_mode_merge_honors_json_template_format
+    with_temp_dir do
+      %w[first second].each do |name|
+        File.write("#{name}.wf.md", <<~MARKDOWN)
+          ---
+          bundle:
+            format: json
+            sections:
+              note:
+                content: #{name} review text
+          ---
+        MARKDOWN
+      end
+      loader = Ace::Bundle::Organisms::BundleLoader.new(allow_commands: false, allowed_root: Dir.pwd)
+      bundle = loader.load_multiple(%w[first second].map { |name| File.expand_path("#{name}.wf.md") })
+      parts = JSON.parse(bundle.content).fetch("bundles")
+      assert_equal 2, parts.length
+      assert parts.all? { |part| JSON.parse(part).fetch("sections").key?("note") }
+    end
+  end
+
+  def test_review_safe_mode_records_metadata_only_template_source
+    with_temp_dir do
+      content = "---\ndescription: Review instructions\n---\nFull instructions\n"
+      File.write("instructions.md", content)
+      loader = Ace::Bundle::Organisms::BundleLoader.new(allow_commands: false, allowed_root: Dir.pwd)
+      bundle = loader.load_file(File.expand_path("instructions.md"))
+      assert_equal content, bundle.content
+      assert_equal [{path: File.expand_path("instructions.md"), content: content}], bundle.source_files
+    end
+  end
+
+  def test_review_safe_mode_merge_preserves_processed_sections
+    with_temp_dir do
+      %w[first second].each do |name|
+        File.write("#{name}.md", "#{name} section source")
+        File.write("#{name}.wf.md", <<~MARKDOWN)
+          ---
+          bundle:
+            sections:
+              source:
+                files:
+                  - #{name}.md
+          ---
+        MARKDOWN
+      end
+      loader = Ace::Bundle::Organisms::BundleLoader.new(allow_commands: false, allowed_root: Dir.pwd)
+      direct = loader.load_file(File.expand_path("first.wf.md"))
+      assert_includes direct.source_files.map { |file| File.basename(file[:path]) }, "first.md"
+      first = loader.load_multiple([File.expand_path("first.wf.md")])
+      assert first.has_sections?
+      assert_equal ["source"], first.section_names
+
+      merged = loader.load_multiple(%w[first second].map { |name| File.expand_path("#{name}.wf.md") })
+      assert_equal ["1:source", "2:source"], merged.section_names
+      assert_equal "first section source", merged.get_section("1:source")[:_processed_files].first[:content]
+      assert_equal "second section source", merged.get_section("2:source")[:_processed_files].first[:content]
+    end
+  end
+
+  def test_review_safe_mode_records_plain_file_provenance
+    with_temp_dir do
+      File.write("plain.md", "Plain file source bytes")
+      loader = Ace::Bundle::Organisms::BundleLoader.new(allow_commands: false, allowed_root: Dir.pwd)
+      bundle = loader.load_multiple([File.expand_path("plain.md")])
+      assert_includes bundle.content, "Plain file source bytes"
+      assert_equal [File.expand_path("plain.md")], bundle.source_files.map { |file| file[:path] }
+      assert_equal "Plain file source bytes", bundle.source_files.first[:content]
+      assert_equal [File.expand_path("plain.md")], bundle.metadata[:sources]
+      assert_equal bundle.source_files, bundle.to_h.fetch(:source_files)
+    end
+  end
+
+  def test_review_safe_mode_rejects_referenced_preset_outside_project_root
+    with_temp_dir do
+      outside_dir = Dir.mktmpdir("bundle-preset-outside-")
+      File.write(File.join(outside_dir, "external.md"), <<~MARKDOWN)
+        ---
+        bundle:
+          sections:
+            note:
+              content: Unreviewed preset content
+        ---
+      MARKDOWN
+      File.write("consumer.wf.md", <<~MARKDOWN)
+        ---
+        bundle:
+          presets:
+            - external
+        ---
+        Consumer review
+      MARKDOWN
+
+      loader = Ace::Bundle::Organisms::BundleLoader.new(allow_commands: false, allowed_root: Dir.pwd)
+      loader.instance_variable_get(:@preset_manager).presets["external"] = {
+        name: "external", source_file: File.join(outside_dir, "external.md"),
+        bundle: {"sections" => {"note" => {"content" => "Unreviewed preset content"}}}, body: ""
+      }
+      assert_raises(Ace::Bundle::Error) { loader.load_file(File.expand_path("consumer.wf.md")) }
+    ensure
+      FileUtils.remove_entry(outside_dir) if outside_dir && File.exist?(outside_dir)
+    end
+  end
+
+  def test_review_safe_mode_merge_preserves_failed_input
+    with_temp_dir do
+      File.write("valid.md", "Valid review source")
+      loader = Ace::Bundle::Organisms::BundleLoader.new(allow_commands: false, allowed_root: Dir.pwd)
+      bundle = loader.load_multiple([File.expand_path("valid.md"), File.expand_path("missing.md")])
+      assert_includes bundle.content, "Valid review source"
+      assert_match(/missing\.md/, bundle.metadata.fetch(:errors).join("; "))
+    end
+  end
+
+  def test_review_safe_mode_multi_preset_records_all_sources
+    with_temp_dir do
+      %w[first second].each do |name|
+        create_preset(name, <<~MARKDOWN)
+          ---
+          bundle:
+            sections:
+              note:
+                content: #{name} preset content
+          ---
+        MARKDOWN
+      end
+      loader = Ace::Bundle::Organisms::BundleLoader.new(allow_commands: false, allowed_root: Dir.pwd)
+      bundle = loader.load_multiple_presets(%w[first second])
+      assert_equal %w[first.md second.md], bundle.metadata.fetch(:preset_source_files).map { |path| File.basename(path) }
+      assert_equal %w[first.md second.md], bundle.metadata.fetch(:preset_sources).map { |source| File.basename(source[:path]) }
+      assert_includes bundle.content, "first preset content"
+      assert_includes bundle.content, "second preset content"
+    end
+  end
+
+  def test_review_safe_mode_single_preset_records_section_files_and_only_its_own_preset
+    with_temp_dir do
+      File.write("section.md", "Section source")
+      create_preset("first", <<~MARKDOWN)
+        ---
+        bundle:
+          sections:
+            note:
+              content: First content
+        ---
+      MARKDOWN
+      create_preset("second", <<~MARKDOWN)
+        ---
+        bundle:
+          sections:
+            note:
+              files:
+                - section.md
+        ---
+      MARKDOWN
+
+      loader = Ace::Bundle::Organisms::BundleLoader.new(allow_commands: false, allowed_root: Dir.pwd)
+      loader.load_preset("first")
+      second = loader.load_preset("second")
+
+      assert_equal ["second.md"], second.metadata.fetch(:preset_source_files).map { |path| File.basename(path) }
+      assert_equal ["second.md"], second.metadata.fetch(:preset_sources).map { |source| File.basename(source[:path]) }
+      assert_equal ["section.md"], second.source_files.map { |file| File.basename(file[:path]) }
+      assert_equal "Section source", second.source_files.first[:content]
+    end
+  end
+
+  def test_review_safe_mode_multi_preset_paths_honor_explicit_format
+    with_temp_dir do
+      create_preset("json-format", <<~MARKDOWN)
+        ---
+        bundle:
+          params:
+            format: json
+          sections:
+            note:
+              content: Review note
+        ---
+      MARKDOWN
+      loader = Ace::Bundle::Organisms::BundleLoader.new(allow_commands: false, allowed_root: Dir.pwd)
+      single = loader.load_preset("json-format")
+      assert JSON.parse(single.content)
+
+      [loader.load_multiple_presets(["json-format"]), loader.load_multiple_inputs(["json-format"], [])].each do |merged|
+        payloads = JSON.parse(merged.content).fetch("bundles")
+        assert_equal 1, payloads.length
+        assert JSON.parse(payloads.first).dig("sections", "note")
+      end
+    end
+  end
+
+  def test_review_safe_mode_returns_missing_literal_error_without_raising
+    with_temp_dir do
+      File.write("missing-file.wf.md", <<~MARKDOWN)
+        ---
+        bundle:
+          files:
+            - missing.md
+        ---
+        Review context
+      MARKDOWN
+      loader = Ace::Bundle::Organisms::BundleLoader.new(allow_commands: false, allowed_root: Dir.pwd)
+      bundle = loader.load_file(File.expand_path("missing-file.wf.md"))
+      assert_match(/missing\.md/, bundle.metadata.fetch(:errors).join("; "))
+    end
+  end
+
+  def test_review_safe_mode_embedded_preset_keeps_base_and_body
+    with_temp_dir do
+      File.write("base.md", "Required base content")
+      create_preset("base-body", <<~MARKDOWN)
+        ---
+        bundle:
+          base: ./base.md
+          embed_document_source: true
+          sections:
+            note:
+              content: Section content
+        ---
+        Preset body content
+      MARKDOWN
+      loader = Ace::Bundle::Organisms::BundleLoader.new(allow_commands: false, allowed_root: Dir.pwd)
+      bundle = loader.load_preset("base-body")
+      assert_includes bundle.content, "Required base content"
+      assert_includes bundle.content, "Preset body content"
+      assert_equal File.expand_path("base.md"), File.expand_path(bundle.metadata.fetch(:base_path))
+    end
+  end
+
+  def test_review_safe_mode_never_runs_model_backed_compression
+    with_temp_dir do
+      File.write("source.md", "Uncompressed review source")
+      File.write("compressed.wf.md", <<~MARKDOWN)
+        ---
+        bundle:
+          sections:
+            sources:
+              files:
+                - source.md
+        ---
+        Review context
+      MARKDOWN
+      loader = Ace::Bundle::Organisms::BundleLoader.new(
+        allow_commands: false, allowed_root: Dir.pwd, compressor: "on",
+        compressor_mode: "agent", compressor_source_scope: "per-source"
+      )
+      Ace::Bundle::Molecules::SectionCompressor.stub(:new, ->(*) { flunk "review compression ran" }) do
+        bundle = loader.load_file(File.expand_path("compressed.wf.md"))
+        assert_includes bundle.content, "Uncompressed review source"
+        refute bundle.metadata[:compressed]
+      end
+    end
+  end
+
+  def test_review_safe_mode_reports_unmatched_required_glob
+    with_temp_dir do
+      File.write("unmatched.wf.md", <<~MARKDOWN)
+        ---
+        bundle:
+          sections:
+            requirements:
+              files:
+                - docs/requirements/**/*.md
+        ---
+        Review context
+      MARKDOWN
+      loader = Ace::Bundle::Organisms::BundleLoader.new(allow_commands: false, allowed_root: Dir.pwd)
+      bundle = loader.load_file(File.expand_path("unmatched.wf.md"))
+      assert_includes bundle.metadata.fetch(:errors).join("; "),
+        "unmatched required file pattern: docs/requirements/**/*.md"
     end
   end
 
@@ -435,6 +1149,7 @@ class BundleLoaderTest < AceTestCase
     with_temp_dir do
       # Create sample file
       File.write("test.md", "Test content")
+      File.write("included.md", "Included content")
 
       # Create template file WITH embed_document_source: false
       File.write("prompt.md", <<~MARKDOWN
@@ -443,6 +1158,8 @@ class BundleLoaderTest < AceTestCase
           embed_document_source: false
           files:
             - test.md
+          include:
+            - included.md
         ---
         This is the prompt content
       MARKDOWN
@@ -456,6 +1173,8 @@ class BundleLoaderTest < AceTestCase
       refute context.content.include?("This is the prompt content"), "Should not embed source content when disabled"
       # Files should still be included in formatted output but not embedded separately
       assert context.content.include?("Test content"), "Should still show file content in formatted output"
+      assert_equal %w[included.md test.md], context.source_files.map { |file| File.basename(file[:path]) }.sort
+      assert_equal ["Included content", "Test content"], context.source_files.map { |file| file[:content] }.sort
     end
   end
 

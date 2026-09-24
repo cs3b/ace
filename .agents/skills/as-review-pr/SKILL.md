@@ -1,6 +1,6 @@
 ---
 name: as-review-pr
-description: Review PR and Plan Feedback
+description: Review PR through verified findings and converging rounds
 user-invocable: true
 allowed-tools:
 - Bash(ace-review:*)
@@ -13,7 +13,7 @@ source: ace-review
 assign:
   steps:
   - name: review-pr
-    description: Review code changes for correctness, style, and best practices
+    description: Review and resolve PR feedback through converging rounds
     prerequisites:
     - name: create-pr
       strength: required
@@ -23,14 +23,11 @@ assign:
     consumes:
     - pull-request
     when_to_skip:
-    - No code changes since last review
-    - Changes are trivial (typo fix, config update)
+    - No PR exists yet
     effort: medium
     tags:
     - review
     - quality
-    context:
-      default: fork
 skill:
   kind: workflow
   execution:

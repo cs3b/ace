@@ -254,6 +254,7 @@ PATH
     ace-review (0.54.2)
       ace-b36ts (~> 0.14)
       ace-bundle (~> 0.43)
+      ace-compressor (~> 0.25)
       ace-git (~> 0.24)
       ace-git-github (~> 0.1)
       ace-llm (~> 0.39)

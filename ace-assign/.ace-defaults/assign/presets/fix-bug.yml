@@ -8,10 +8,6 @@ parameters:
   taskref:
     required: true
     description: Task reference for the bug fix (e.g., 123 or 256.01)
-  review_cycles:
-    required: false
-    default: 1
-    description: Number of review cycles to perform
 
 steps:
   - name: onboard
@@ -44,23 +40,25 @@ steps:
     skill: as-github-pr-create
     instructions:
       - Create a pull request for the bug fix.
+      - Create it as a draft with --draft; mark it ready only after the review completion rule is met.
       - Include reference to the bug/task in the PR description.
 
-  - name: review-cycle-1
-    skill: as-review-pr
-    context: fork
+  - name: review-pr
+    workflow: wfi://review/pr
     instructions:
-      - "First: onboard yourself using /as-onboard skill to load project context."
-      - Review the bug fix code.
-      - Focus on correctness and edge cases.
+      - "Follow wfi://review/pr: minimum 3 completed PR rounds, last 2 without confirmed P0/P1. Include integration within those rounds."
+      - "Verify findings, fix concrete defects, and run appropriate tests. Record rounds and dispositions; commits do not reset counters."
 
-  - name: apply-feedback-1
-    skill: as-review-apply-feedback
+  - name: update-pr-desc
+    workflow: wfi://github/pr/update
     instructions:
-      - Apply feedback from the review.
-      - Commit changes with descriptive messages.
+      - "Record the review rounds, actual reviewers, findings and tests in the PR description before marking it ready."
+
+  - name: mark-pr-ready
+    instructions:
+      - "After review completes and appropriate tests pass, run `gh pr ready` on the draft PR."
 
 customization_hints:
   - "Add fix-tests after verify-test-suite if failures found"
   - "Add security-audit for security-related fixes"
-  - "Increase review cycles for critical fixes"
+  - "Use more focused scopes for critical fixes; continue until important findings are resolved"

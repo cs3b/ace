@@ -25,7 +25,6 @@ unit-coverage-reviewed:
   - test/fast/commands/feedback/resolve_test.rb
   - test/fast/commands/feedback/skip_test.rb
   - test/fast/molecules/preset_manager_test.rb
-  - test/fast/molecules/context_extractor_test.rb
   - test/fast/molecules/context_composer_test.rb
   - test/fast/molecules/subject_extractor_test.rb
   - test/fast/molecules/subject_strategy_test.rb

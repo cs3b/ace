@@ -8,7 +8,7 @@ module Ace
     module Molecules
       # RoleResolver maps role names to an available concrete selector.
       class RoleResolver
-        THINKING_LEVELS = %w[low medium high xhigh].freeze
+        THINKING_LEVELS = %w[low medium high xhigh max].freeze
 
         def initialize(registry: nil, configuration: nil)
           @registry = registry || ClientRegistry.new

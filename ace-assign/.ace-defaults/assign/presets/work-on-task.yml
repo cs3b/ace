@@ -1,11 +1,11 @@
-# Unified task workflow: single or multi-task implement → release → PR → review cycles → reorganize → push
+# Unified task workflow: implement → release → draft PR → review rounds → ready
 # Usage: /as-assign-prepare work-on-task --taskref 123
 #        /as-assign-prepare work-on-task --taskrefs 148,149,150
 #        /as-assign-prepare work-on-task --taskrefs 148-152
 #        /as-assign-prepare work-on-task --taskrefs "240.*"
 
 name: work-on-task
-description: Work on one or more tasks with PR, review cycles, release, and clean history
+description: Work on one or more tasks with PR, iterative review, release, and clean history
 
 parameters:
   taskrefs:
@@ -51,40 +51,8 @@ steps:
     workflow: wfi://github/pr/create
     instructions:
       - "Create a pull request summarizing batch tasks: {{taskrefs}}."
+      - "Create it as a draft with --draft; mark it ready only after the review completion rule is met."
       - "Capture the PR number for the downstream review and PR-update steps."
-
-  - name: review-valid-1
-    number: "040"
-    context: fork
-    sub_steps: [review-pr, apply-feedback, release]
-    instructions:
-      - Execute the valid review cycle via child steps.
-      - "Child review-pr: use preset code-valid."
-      - "Focus: correctness — bugs, logic errors, missing functionality, broken contracts."
-      - "Child apply-feedback: apply medium+ priority review findings and commit."
-      - "Child release: follow `ace-bundle wfi://release/publish` to publish patch-level updates for modified packages touched by valid-cycle fixes and update both package and root CHANGELOGs."
-
-  - name: review-fit-1
-    number: "070"
-    context: fork
-    sub_steps: [review-pr, apply-feedback, release]
-    instructions:
-      - Execute the fit review cycle via child steps.
-      - "Child review-pr: use preset code-fit."
-      - "Focus: quality — performance, architecture, standards, test coverage."
-      - "Child apply-feedback: apply fit-cycle findings and commit."
-      - "Child release: follow `ace-bundle wfi://release/publish` to publish patch-level updates for modified packages touched by fit-cycle fixes and update both package and root CHANGELOGs."
-
-  - name: review-shine-1
-    number: "100"
-    context: fork
-    sub_steps: [review-pr, apply-feedback, release]
-    instructions:
-      - Execute the shine review cycle via child steps.
-      - "Child review-pr: use preset code-shine."
-      - "Focus: polish — simplification, naming, documentation (non-blocking suggestions)."
-      - "Child apply-feedback: apply worthwhile shine-cycle findings and commit."
-      - "Child release: follow `ace-bundle wfi://release/publish` to publish patch-level updates for modified packages touched by shine-cycle fixes and update both package and root CHANGELOGs."
 
   - name: reorganize-commits
     number: "130"
@@ -128,16 +96,6 @@ steps:
       - "  4. Fix and retry: if the cause is a fixable config/env issue (wrong font, missing fixture, bad path), fix it and retry"
       - "  5. Only skip if the failure is truly unfixable (tool not installed, no tapes exist, hardware dependency)"
 
-  - name: update-pr-desc
-    number: "150"
-    context: fork
-    workflow: wfi://github/pr/update
-    instructions:
-      - "Update the PR description with the final batch summary for: {{taskrefs}}."
-      - "CRITICAL: The File Changes section must contain the complete, untruncated grouped-stats output from `ace-git diff`. Paste it verbatim — never summarize or abbreviate."
-      - "Include final release/version information and the key completed components when applicable."
-      - "Make sure the PR description reflects the post-review final state."
-
   - name: mark-tasks-done
     number: "155"
     workflow: wfi://task/update
@@ -158,6 +116,28 @@ steps:
       - "Create a retrospective for the batch work on: {{taskrefs}}."
       - "Capture what went well, what could improve, and action items across the batch."
       - "Focus on process learnings, not just task outcomes."
+
+  - name: review-pr
+    number: "170"
+    workflow: wfi://review/pr
+    instructions:
+      - "Follow wfi://review/pr: minimum 3 completed PR rounds, last 2 without confirmed P0/P1. Include integration within those rounds."
+      - "Verify findings, fix concrete defects, and run appropriate tests. Record rounds and dispositions; commits do not reset counters."
+
+  - name: update-pr-desc
+    number: "180"
+    context: fork
+    workflow: wfi://github/pr/update
+    instructions:
+      - "Update the PR description with the final batch summary for: {{taskrefs}}."
+      - "CRITICAL: The File Changes section must contain the complete, untruncated grouped-stats output from `ace-git diff`. Paste it verbatim — never summarize or abbreviate."
+      - "Include final release/version information and the key completed components when applicable."
+      - "Make sure the PR description reflects the post-review final state."
+
+  - name: mark-pr-ready
+    number: "190"
+    instructions:
+      - "After review completes and appropriate tests pass, run `gh pr ready` on the draft PR."
 
 expansion:
   batch-parent:

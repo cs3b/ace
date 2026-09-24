@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   removed `--full-auto` flag with explicit `--sandbox read-only` (ro) and
   `--sandbox workspace-write` (rw); `yolo` keeps
   `--dangerously-bypass-approvals-and-sandbox`.
+- Preserve resolved provider, model, preset and reasoning metadata for the executed request, including fallback targets.
+- Accept `max` reasoning in selectors and Pi reasoning configuration.
 
 ## [0.39.2] - 2026-09-13
 

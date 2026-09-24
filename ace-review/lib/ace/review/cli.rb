@@ -16,6 +16,7 @@ module Ace
       # Separator for array options that won't conflict with internal commas
       # ASCII Unit Separator (0x1F) is designed for separating fields
       ARRAY_SEPARATOR = "\x1F"
+      CONTEXT_FLAGS = %w[--evidence-session].freeze
 
       # Pre-process array options to work around ace-support-cli limitation
       #
@@ -31,6 +32,7 @@ module Ace
         i = 0
         accumulated_subject = []
         accumulated_model = []
+        accumulated_context = Hash.new { |hash, key| hash[key] = [] }
 
         while i < args.length
           arg = args[i]
@@ -51,6 +53,15 @@ module Ace
             next
           end
 
+          CONTEXT_FLAGS.each do |flag|
+            next unless arg == flag || arg.start_with?("#{flag}=")
+
+            accumulated_context[flag] << extract_flag_value(arg, args, i)
+            i = skip_to_next_arg(args, i)
+            break
+          end
+          next if CONTEXT_FLAGS.any? { |flag| arg == flag || arg.start_with?("#{flag}=") }
+
           result << arg
           i += 1
         end
@@ -59,6 +70,9 @@ module Ace
         result.insert(0, "--model", accumulated_model.join(",")) unless accumulated_model.empty?
         # Subject uses ARRAY_SEPARATOR to preserve internal commas (e.g., files:a.rb,b.rb)
         result.insert(0, "--subject", accumulated_subject.join(ARRAY_SEPARATOR)) unless accumulated_subject.empty?
+        accumulated_context.each do |flag, values|
+          result.insert(0, flag, values.join(ARRAY_SEPARATOR)) unless values.empty?
+        end
 
         result
       end
@@ -85,7 +99,9 @@ module Ace
       # @param index [Integer] Current index
       # @return [Integer] Next index to process
       def self.skip_to_next_arg(args, index)
-        if args[index].include?("=") || (index + 1 < args.length && !args[index + 1].start_with?("--"))
+        if args[index].include?("=")
+          index + 1
+        elsif index + 1 < args.length && !args[index + 1].start_with?("--")
           index + 2
         else
           index + 1

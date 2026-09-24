@@ -35,7 +35,7 @@ Deterministic coverage lives in `test/fast/` and `test/feat/`. Scenario assets s
 
 ## How It Works
 
-1. Select a model -- by alias, `provider:model`, with a thinking level suffix (`:low`/`:medium`/`:high`), or an `@preset` -- and submit a prompt.
+1. Select a model -- by alias, `provider:model`, with a configured thinking level suffix (`:low`/`:medium`/`:high`/`:xhigh`/`:max`), or an `@preset` -- and submit a prompt.
 2. The provider router resolves the target through [ace-llm-providers-cli](../ace-llm-providers-cli) adapters, applying fallback and retry rules from the [config cascade](../ace-support-config).
 3. The response is returned as text, markdown, or JSON with optional token usage metadata.
 
@@ -43,7 +43,7 @@ Deterministic coverage lives in `test/fast/` and `test/feat/`. Scenario assets s
 
 **Switch providers with aliases** - use short names like `gflash`, `sonnet`, `opus` instead of full `provider:model` notation. Aliases resolve through versioned YAML in [`.ace-defaults/`](docs/usage.md).
 
-**Control reasoning depth** - append a thinking level (`codex:gpt:high`, `claude:sonnet:low`) to tune reasoning budgets. Supported CLI providers: `claude`, `codex` (levels: `low`, `medium`, `high`, `xhigh`).
+**Control reasoning depth** - append a thinking level (`codex:gpt:high`, `claude:sonnet:low`, `pi:glm5:max`) to tune reasoning budgets. Supported CLI providers: `claude`, `codex` (`low`, `medium`, `high`, `xhigh`) and `pi` (including `max`). Each provider/level pair requires a matching thinking configuration.
 
 **Run preset-driven prompts** - apply execution profiles with `@preset` or `--preset`. Built-in presets for CLI providers: `@ro` (read-only), `@rw` (read-write), `@yolo` (full autonomy). Supported by: `claude`, `codex`, `gemini`, `opencode`, `pi`, `agy`.
 

@@ -2,11 +2,14 @@
 
 require_relative "../../test_helper"
 require "ace/llm/molecules/provider_model_parser"
+require "ace/test_support/config_helpers"
 
 module Ace
   module LLM
     module Molecules
       class ProviderModelParserTest < AceLlmTestCase
+        include Ace::TestSupport::ConfigHelpers
+
         StubAliasResolver = Struct.new(:resolved) do
           def resolve(input)
             return input if resolved.nil?
@@ -138,6 +141,25 @@ module Ace
 
             assert result.valid?
             assert_equal "ro", result.preset
+          end
+        end
+
+        def test_parse_max_reasoning_keeps_model_separate
+          registry = StubRegistry.new(["pi"], {"pi" => ["zai/glm-5.3"]})
+          resolver = StubAliasResolver.new({"pi:glm5:max" => "pi:zai/glm-5.3:max", "pi:glm5" => "pi:zai/glm-5.3"})
+          parser = ProviderModelParser.new(alias_resolver: resolver, registry: registry)
+          Ace::LLM.stub(:configuration, StubConfiguration.new([], ["pi"])) do
+            result = parser.parse("pi:glm5:max")
+            assert result.valid?, result.error
+            assert_equal "max", result.thinking_level
+            assert_equal "zai/glm-5.3", result.model
+          end
+        end
+
+        def test_pi_xhigh_reasoning_has_an_executable_preset
+          with_real_config do
+            config = Ace::LLM::Molecules::ThinkingLevelLoader.load_for_provider("pi", "xhigh")
+            assert_equal ["--thinking", "xhigh"], config["cli_args"]
           end
         end
 

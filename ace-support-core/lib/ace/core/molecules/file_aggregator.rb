@@ -13,6 +13,8 @@ module Ace
           @max_size = options[:max_size] || Atoms::FileReader::MAX_FILE_SIZE
           @base_dir = options[:base_dir] || Ace::Support::Fs::Molecules::ProjectRootFinder.find_or_current
           @exclude_patterns = options[:exclude] || []
+          @allowed_root = File.realpath(options[:allowed_root]) if options[:allowed_root]
+          @allowed_paths = Array(options[:allowed_paths])
         end
 
         # Aggregate files from patterns
@@ -142,6 +144,10 @@ module Ace
           # Make path relative to base directory for display
           display_path = make_relative_path(resolved_path)
 
+          if @allowed_root && !inside_allowed_root?(resolved_path)
+            raise ArgumentError, "File outside allowed root: #{display_path}"
+          end
+
           # Check if file is readable
           unless Atoms::FileReader.readable?(resolved_path)
             result[:errors] << "File not readable: #{display_path}"
@@ -173,6 +179,14 @@ module Ace
             result[:errors] << "Failed to read #{display_path}: #{read_result[:error]}"
             result[:stats][:error_count] += 1
           end
+        end
+
+        def inside_allowed_root?(path)
+          real_path = File.realpath(path)
+          real_path == @allowed_root || real_path.start_with?("#{@allowed_root}#{File::SEPARATOR}") ||
+            @allowed_paths.include?(real_path)
+        rescue Errno::ENOENT, Errno::EACCES
+          false
         end
 
         # Make path relative to base directory

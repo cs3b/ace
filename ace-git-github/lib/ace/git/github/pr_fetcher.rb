@@ -59,7 +59,7 @@ module Ace
 
             validate_identifier_characters(parsed.gh_format)
 
-            result = CliExecutor.execute("pr", ["diff", parsed.gh_format], timeout: timeout, runner: runner)
+            result = CliExecutor.execute("pr", ["diff", *parsed.cli_target_args], timeout: timeout, runner: runner)
 
             if result[:success]
               {
@@ -86,7 +86,7 @@ module Ace
             validate_identifier_characters(parsed.gh_format)
 
             result = CliExecutor.execute(
-              "pr", ["view", parsed.gh_format, "--json", PR_FIELDS.join(",")],
+              "pr", ["view", *parsed.cli_target_args, "--json", PR_FIELDS.join(",")],
               timeout: timeout, runner: runner
             )
 

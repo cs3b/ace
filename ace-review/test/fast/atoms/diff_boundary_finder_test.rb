@@ -50,6 +50,19 @@ class DiffBoundaryFinderTest < AceReviewTest
     assert_includes result[0][:content], "class Foo"
   end
 
+  def test_parse_quoted_rename_and_git_octal_path
+    diff = "diff --git \"a/apps/admin/caf\\303\\251 old.ts\" \"b/apps/web/caf\\303\\251 new.ts\"\n" \
+      "similarity index 88%\nrename from apps/admin/café old.ts\nrename to apps/web/café new.ts\n"
+
+    result = @finder.parse(diff)
+
+    assert_equal 1, result.size
+    assert_equal "apps/admin/café old.ts", result.first[:old_path]
+    assert_equal "apps/web/café new.ts", result.first[:path]
+    assert_equal :renamed, result.first[:change_type]
+    assert_equal 1, @finder.file_count(diff)
+  end
+
   def test_parse_multiple_file_diffs
     diff = <<~DIFF
       diff --git a/lib/foo.rb b/lib/foo.rb
@@ -133,7 +146,7 @@ class DiffBoundaryFinderTest < AceReviewTest
     assert_equal 1, result.length
     # Uses b/ side (destination path) for renamed files
     assert_equal "lib/new_name.rb", result[0][:path]
-    assert_equal :modified, result[0][:change_type]
+    assert_equal :renamed, result[0][:change_type]
   end
 
   def test_parse_preserves_complete_diff_content
@@ -232,6 +245,10 @@ class DiffBoundaryFinderTest < AceReviewTest
   end
 
   # group_by_directory tests
+  def test_file_count_does_not_parse_malformed_headers
+    assert_equal 1, @finder.file_count("diff --git malformed header\n")
+  end
+
   def test_group_by_directory_groups_correctly
     blocks = [
       {path: "lib/atoms/foo.rb", content: "...", lines: 10, change_type: :modified},

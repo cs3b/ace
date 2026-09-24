@@ -27,7 +27,7 @@ module Ace
 
           # Fetch diff with retry logic
           result = Ace::Review::Atoms::RetryWithBackoff.execute(options) do
-            Ace::Git::Github::CliExecutor.execute("pr", ["diff", gh_format], timeout: timeout)
+            Ace::Git::Github::CliExecutor.execute("pr", ["diff", *parsed.cli_target_args], timeout: timeout)
           end
 
           if result[:success]
@@ -69,10 +69,10 @@ module Ace
           timeout = options[:timeout] || 30
 
           # Fetch metadata as JSON
-          fields = "number,state,isDraft,title,body,author,headRefName,baseRefName,url"
+          fields = "number,state,isDraft,title,body,author,headRefName,headRefOid,baseRefName,baseRefOid,url,changedFiles"
 
           result = Ace::Review::Atoms::RetryWithBackoff.execute(options) do
-            Ace::Git::Github::CliExecutor.execute("pr", ["view", gh_format, "--json", fields], timeout: timeout)
+            Ace::Git::Github::CliExecutor.execute("pr", ["view", *parsed.cli_target_args, "--json", fields], timeout: timeout)
           end
 
           if result[:success]
@@ -101,26 +101,68 @@ module Ace
           }
         end
 
-        # Fetch both diff and metadata in one call
+        # Fetch a diff bracketed by stable PR metadata. The diff endpoint uses
+        # the mutable PR ref, so a head/base change during retrieval must not
+        # be attributed to the later SHA pair.
         #
         # @param pr_identifier [String] PR identifier
         # @param options [Hash] Fetch options
         # @return [Hash] Result with :success, :diff, :metadata, :error
         def self.fetch_pr(pr_identifier, options = {})
-          # Fetch diff and metadata
-          diff_result = fetch_diff(pr_identifier, options)
-          return diff_result unless diff_result[:success]
+          2.times do
+            before = fetch_metadata(pr_identifier, options)
+            return before unless before[:success]
 
-          metadata_result = fetch_metadata(pr_identifier, options)
-          return metadata_result unless metadata_result[:success]
+            diff_result = fetch_diff(pr_identifier, options)
+            return diff_result unless diff_result[:success]
 
-          {
-            success: true,
-            diff: diff_result[:diff],
-            metadata: metadata_result[:metadata],
-            identifier: diff_result[:identifier],
-            parsed: diff_result[:parsed]
-          }
+            inventory = fetch_file_inventory(before[:metadata], options)
+            return inventory unless inventory[:success]
+
+            after = fetch_metadata(pr_identifier, options)
+            return after unless after[:success]
+
+            if %w[headRefOid baseRefOid].all? { |key| before[:metadata][key] == after[:metadata][key] }
+              metadata = after[:metadata].merge("files" => inventory[:files])
+              return {
+                success: true,
+                diff: diff_result[:diff],
+                metadata: metadata,
+                identifier: diff_result[:identifier],
+                parsed: diff_result[:parsed]
+              }
+            end
+          end
+
+          {success: false, error: "PR head/base changed while fetching diff; retry review on the current SHA"}
+        end
+
+        def self.fetch_file_inventory(metadata, options = {})
+          match = metadata["url"].to_s.match(%r{\Ahttps://github\.com/([^/]+/[^/]+)/pull/(\d+)\z})
+          return {success: false, error: "Cannot identify GitHub repository for PR file inventory"} unless match
+
+          endpoint = "repos/#{match[1]}/pulls/#{match[2]}/files?per_page=100"
+          result = Ace::Review::Atoms::RetryWithBackoff.execute(options) do
+            Ace::Git::Github::CliExecutor.execute("api", [endpoint, "--paginate", "--jq", "[.[].filename]"],
+              timeout: options[:timeout] || 30)
+          end
+          return {success: false, error: "Failed to fetch PR file inventory: #{result[:stderr]}"} unless result[:success]
+
+          pages = result[:stdout].lines.map { |line| JSON.parse(line) }
+          unless pages.any? && pages.all? { |page| page.is_a?(Array) }
+            return {success: false, error: "Invalid PR file inventory response"}
+          end
+
+          files = pages.flatten(1)
+          unless files.all? { |file| file.is_a?(String) }
+            return {success: false, error: "Invalid PR file inventory entry"}
+          end
+
+          {success: true, files: files.map { |file| {"path" => file} }}
+        rescue JSON::ParserError => e
+          {success: false, error: "Invalid PR file inventory JSON: #{e.message}"}
+        rescue Ace::Review::Errors::GhNetworkError => e
+          {success: false, error: "Failed to fetch PR file inventory: #{e.message}"}
         end
 
         # Handle fetch errors and return appropriate error response
@@ -158,6 +200,7 @@ module Ace
         # @return [Hash] Result with :success, :diff, :fallback
         def self.fetch_local_diff_fallback(pr_identifier, options = {})
           temp_ref = nil
+          base_temp_ref = nil
 
           # Fetch PR metadata to get base branch and PR number
           metadata_result = fetch_metadata(pr_identifier, options)
@@ -168,11 +211,21 @@ module Ace
             }
           end
 
-          base_ref = metadata_result[:metadata]["baseRefName"]
+          base_oid = metadata_result[:metadata]["baseRefOid"]
+          head_oid = metadata_result[:metadata]["headRefOid"]
+          unless [base_oid, head_oid].all? { |oid| oid.to_s.match?(/\A[0-9a-f]{40}\z/) }
+            return {success: false, error: "Cannot fall back to local diff without exact PR head/base SHAs"}
+          end
           pull_number = metadata_result[:metadata]["number"] || metadata_result.dig(:parsed, "number")
           temp_ref = "refs/ace/review/pr-#{pull_number}-#{Process.pid}"
+          base_temp_ref = "#{temp_ref}-base"
+          # A qualified PR can belong to a different repository from cwd.
+          # Fetch both immutable revisions from that repository, never from
+          # the caller's unrelated origin.
+          repo = Ace::Git::Github::PrIdentifier.parse(pr_identifier).repo
+          remote = repo ? "https://github.com/#{repo}.git" : "origin"
 
-          fetch_result = run_local_command("git", "fetch", "--no-tags", "origin",
+          fetch_result = run_local_command("git", "fetch", "--no-tags", remote,
             "+refs/pull/#{pull_number}/head:#{temp_ref}")
           unless fetch_result[:success]
             return {
@@ -181,8 +234,18 @@ module Ace
             }
           end
 
+          fetched_head = run_local_command("git", "rev-parse", temp_ref)
+          unless fetched_head[:success] && fetched_head[:stdout].strip == head_oid
+            return {success: false, error: "Fetched PR head differs from reviewed head SHA"}
+          end
+
+          base_fetch = run_local_command("git", "fetch", "--no-tags", remote, "+#{base_oid}:#{base_temp_ref}")
+          unless base_fetch[:success]
+            return {success: false, error: "Cannot fetch reviewed base SHA #{base_oid}: #{base_fetch[:stderr]}"}
+          end
+
           # Find merge base
-          merge_base_result = run_local_command("git", "merge-base", "origin/#{base_ref}", temp_ref)
+          merge_base_result = run_local_command("git", "merge-base", base_temp_ref, temp_ref)
           unless merge_base_result[:success]
             return {
               success: false,
@@ -210,6 +273,7 @@ module Ace
           }
         ensure
           delete_temp_ref(temp_ref) if temp_ref
+          delete_temp_ref(base_temp_ref) if base_temp_ref
         end
 
         # Execute a local command and return structured result

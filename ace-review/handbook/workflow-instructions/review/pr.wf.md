@@ -1,284 +1,50 @@
 ---
 doc-type: workflow
-title: Review PR and Plan Feedback Workflow
-purpose: Review PR and plan feedback application with comment resolution
+title: Review PR in converging rounds
+purpose: Review a PR, verify concrete findings and finish after two clean rounds
 ace-docs:
-  last-updated: 2026-03-18
-  last-checked: 2026-03-21
+  last-updated: 2026-09-24
+  last-checked: 2026-09-24
 ---
 
-# Review PR and Plan Feedback Workflow
+# Review PR
 
-## Goal
+## Goal and completion rule
 
-Review a GitHub Pull Request using ace-review, verify feedback items, and create a plan for applying the feedback. When feedback comes from PR comments, resolve those comments after implementing fixes.
+The agent runs this workflow; ACE executes individual reviews. Complete at least **3 rounds for the PR**, with the **last 2 consecutive rounds free of confirmed P0/P1 (Critical/High)**. An unresolved earlier P0/P1 remains blocking even if another reviewer does not mention it. A confirmed P0/P1 resets the clean-round streak. There is no additional final review after this rule is satisfied.
 
-## Arguments
+One round covers the PR's needed scope, including cross-module integration. A large round can use several coherent module sessions; modules do not have separate round counters. A round counts only after the needed reports have completed and the agent has verified their findings. Failed providers and incomplete reports do not count as clean rounds.
 
-- `$ARGUMENTS`: Optional PR number and/or additional flags (e.g., `123`, `--preset code-deep`, `123 --preset security`)
+Use at least one available reviewer per needed scope. Prefer the project's configured models, but preferences are not an allowlist. Honor the user's current provider/model restrictions. Record actual provider, model, reasoning and completion status. A zero process exit code alone is not a completed review.
 
-## Instructions
+## 1. Choose and prepare the scope
 
-### Step 1: Determine PR Number
+Identify the PR from the argument or `gh pr view`. Read its goal, current requirements, relevant ADRs and changed-file list. Use the smallest set of presets covering the change. Small coherent PRs can be reviewed whole; split large inputs by high-level module or functional lens, not arbitrary file chunks. Include needed contracts and code when reviewing tests and include integration behavior when modules interact.
 
-If `$ARGUMENTS` contains a PR number, use it. Otherwise, detect the current PR:
+Use `ace-review --pr <number> --preset <preset> --dry-run` to inspect the selected/omitted files, complete prompt and budget. Context and instructions each have a 30k ceiling; total input has a 128k ceiling. Change scope if too large; do not silently truncate or claim omitted code was reviewed. Generated files may use an appropriate deterministic check, recorded in the round summary, without a separate certification system.
 
-```bash
-gh pr view --json number -q '.number'
-```
+For presets with a goals brief, `--prepare-goals-brief` generates or reuses the shared summary. Its cache follows source content and instructions, not review-round state. Architectural foundations should receive design review before implementation.
 
-**Connection error retry**: If PR number detection fails due to a transient connection error (socket hangup, DNS timeout, connection reset), wait 30 seconds and retry up to 2 times. Only treat authentication errors (401/403) and not-found errors (404) as immediate failures.
+## 2. Run a round and verify findings
 
-### Step 2: Run PR Review
+Run `ace-review --pr <number> --preset <preset> --auto-execute` for the needed scopes. Pass selected previous sessions with `--evidence-session <path>` when useful. Earlier commit SHAs are expected: prior reports provide context and dispositions, not current-code certificates. Supply a short summary of fixes and outstanding issues through the preset context when it is more useful than full reports.
 
-**Always use `--pr` flag.** Append any additional parameters from `$ARGUMENTS`:
+First-round review looks for concrete defects against the agreed requirements. Subsequent rounds check fixes, regressions, unresolved issues and the integration affected by changes. They may report newly evidenced defects, but should not redesign the solution or reopen a closed finding without new evidence.
 
-```bash
-# If PR number provided in arguments:
-ace-review --pr <pr-number> [additional-flags]
+Verify reports against code and requirements. Use `ace-review-feedback list --session <path>`, `show`, `verify` and `resolve` to preserve findings and dispositions. Distinguish defects, architectural decisions and optional improvements. A single reviewer's valid finding matters; do not discard it for lack of consensus. Severity is verified by the agent, not accepted just because the model assigned it.
 
-# If no PR number, use detected PR:
-ace-review --pr $(gh pr view --json number -q '.number') [additional-flags]
-```
+Fix confirmed P0/P1 and run appropriate tests. Verify P2 and lower findings, fix those within the task or defer with rationale; they do not independently require another round. Do not expand the PR to implement speculative improvements. If the same blocker recurs without an effective fix, diagnose the cause or request the needed product/architecture decision instead of repeating the same review.
 
-**Examples:**
-- `ace-bundle wfi://review/pr` with `123` → `ace-review --pr 123`
-- `ace-bundle wfi://review/pr` with `--preset code-deep` → `ace-review --pr <current-pr> --preset code-deep`
-- `ace-bundle wfi://review/pr` with `123 --preset security` → `ace-review --pr 123 --preset security`
+## 3. Record progress and finish
 
-**Important for Claude Code**: Run with 15-minute timeout (900000ms) and wait for completion inline (not background). Review typically takes 3-5 minutes.
+Keep a short `rounds.md` in the existing PR review artifacts under `.ace-local/review/`: completed round number, report paths and scopes, confirmed P0/P1, dispositions, tests, open blockers and consecutive clean rounds. Preserve this record across agent restarts. Commits, squash and rebase do not reset the total or clean-round counters. Report SHAs are diagnostic; materially changed code receives the relevant review, not an automatic restart of every scope.
 
-#### Execution Guard (Mandatory)
+Examples:
 
-- Completion is defined by **process exit** (success or failure), not by partial output.
-- Do **not** treat temporary silence/no new output as completion.
-- Do **not** run any Step 3+ commands until Step 2 process exit is confirmed.
-- If 15-minute timeout (900000ms) is reached, report timeout and last observed output, then stop dependent steps.
+- P1 → clean → clean: finish after round 3.
+- clean → clean → clean: finish after round 3.
+- P1 → clean → P1 → clean → clean: finish after round 5.
+- An incomplete attempt does not increment either counter and cannot hide an outstanding blocker.
+- A round that finds a confirmed P1 is not clean even if it is fixed immediately afterward.
 
-Wait for the review process to exit. Note the session directory path from the output.
-
-The review includes:
-- LLM model reviews (e.g., `review-gemini.md`, `review-gpt4.md`)
-- Developer feedback from PR comments (`review-dev-feedback.md`) - if the PR has comments
-- Feedback items in `feedback/` directory
-
-### Step 3: List Feedback Items
-
-List the feedback items extracted from the review:
-
-```bash
-ace-review-feedback list --status draft
-```
-
-**Precondition**: Run this step only after Step 2 process exit is confirmed.
-
-When session ambiguity is possible, use explicit session path from Step 2:
-
-```bash
-ace-review-feedback list --status draft --session <session-dir-from-step-2>
-```
-
-This shows all draft feedback items with their IDs, severity, summaries, and sources (LLM or Developer).
-
-#### Understanding Feedback Context
-
-Feedback items are **session-scoped**. The `feedback list` command discovers items based on:
-1. Explicit `--session <path>` flag (if provided)
-2. `.ace-review-session` cache file in current directory (auto-created after reviews)
-
-If `feedback list` returns empty after a review, first verify Step 2 process completion.
-The session may not be linked to current context.
-Use `ace-review-feedback list --session <session-dir>` to list from a specific session:
-
-```bash
-# List feedback from a specific session (path shown in review output)
-ace-review-feedback list --session .ace-local/review/sessions/review-8p2pk3
-```
-
-### Step 4: Verify Each Feedback Item
-
-For each feedback item (prioritize Critical and High severity):
-
-```bash
-# Read the finding details
-ace-review-feedback show {id}
-```
-
-**Note which items come from Developer Feedback** - these are from PR comments and should be resolved after implementation.
-
-**Then verify in the codebase:**
-
-1. **Check the claim** - Use grep/read to verify the issue exists:
-   - If claim is "X doesn't exist" → `grep -rn "class X" lib/`
-   - If claim is "method missing" → check the actual file
-   - If claim is "file not deleted" → `ls path/to/file`
-
-2. **Mark the verification result:**
-
-   ```bash
-   # If issue is confirmed (valid finding)
-   ace-review-feedback verify {id} --valid --research "Confirmed: issue exists at line X"
-
-   # If issue is not real (false positive)
-   ace-review-feedback verify {id} --invalid --research "False positive: handled by Y"
-   ```
-
-3. **Categorization guide:**
-
-   | Result | Command | When |
-   |--------|---------|------|
-   | ✅ VALID | `--valid` | Issue confirmed in code |
-   | ❌ INVALID | `--invalid` | **False positive** - claim is factually incorrect |
-   | ✅ DONE | `feedback resolve {id}` | Already fixed in this PR |
-   | ⏭️ SKIP | `verify --skip --research "Design: ..."` | **Correct finding**, but not being fixed |
-   | 📋 DEFER | `verify --skip --research "Tracked in task XXX"` | Important, but not this PR (create task first) |
-
-   **Key distinction:**
-   - `verify --invalid`: The finding is **wrong** (false positive)
-     - "Code doesn't exist" → Actually exists
-     - "Missing validation" → Exists elsewhere
-     - "Fails in CI" → Doesn't run in CI
-   - `verify --skip`: The finding is **correct**, but you're not fixing it
-     - Design decision: Intentional choice
-     - Deferred: Tracking in separate task
-
-   **Before skipping**: Always verify the issue still exists by reading the code. Never skip with "out of scope" - either it's a design decision or it should be tracked in a task.
-
-**Example verification:**
-```bash
-# Claim: "TaskPatternExtractor is undefined"
-grep -rn "class TaskPatternExtractor" ace-git/lib/
-# Result: Found at ace-git/lib/ace/git/atoms/task_pattern_extractor.rb:10
-ace-review-feedback verify {id} --invalid --research "Class exists at ace-git/lib/ace/git/atoms/task_pattern_extractor.rb:10"
-```
-
-**Skip verification for:**
-- Low priority items (verify only if time permits)
-- Documentation-only suggestions
-- Style/formatting recommendations
-- Developer Feedback items (these are human-verified)
-
-### Step 5: List Pending Items
-
-After verification, list items ready to work on:
-
-```bash
-ace-review-feedback list --status pending
-```
-
-This shows only verified valid items that need fixing.
-
-### Step 6: Apply Priority Threshold
-
-**Default behavior**: Implement **Medium and higher** severity items (skip Low).
-
-This means:
-- 🔴 Critical → Implement
-- 🟡 High → Implement
-- 🟢 Medium → Implement
-- 🔵 Low → Skip (unless explicitly requested)
-
-### Step 7: Implement Fixes
-
-**CRITICAL: Every fix MUST be marked as resolved before moving to next item.**
-
-For each pending item:
-
-1. **Read the full details:**
-   ```bash
-   ace-review-feedback show {id}
-   ```
-
-2. **Implement the fix** based on the recommendation
-
-3. **IMMEDIATELY mark as resolved** (do NOT skip this step):
-   ```bash
-   ace-review-feedback resolve {id} --resolution "Fixed: <description>"
-   ```
-
-4. **Commit the fix** with a clear message referencing the feedback item
-
-5. **Note the commit SHA** for PR comment resolution (if from Developer Feedback)
-
-⚠️ **Never leave a fixed item as "pending"** - this breaks feedback tracking.
-
-### Step 8: Handle Not-Applicable Items
-
-Before skipping, complete the verification checklist:
-
-1. **Read the code** - Does the issue actually still exist?
-2. **Check current changes** - Was this already fixed in this PR?
-3. **Consider effort** - Is this a quick win (< 5 min) that should just be done?
-
-For items that won't be fixed in this PR:
-
-```bash
-# Design decision - intentionally this way
-ace-review-feedback verify {id} --skip --research "Design: uses polling for simplicity"
-
-# Important but deferred - ALWAYS create/reference a task
-ace-review-feedback verify {id} --skip --research "Tracked in task 253"
-```
-
-**Never skip with "out of scope"** - either:
-- It's a design decision (explain why)
-- It needs a follow-up task (create one and reference it)
-
-### Step 9: Resolve PR Comments (for Developer Feedback items)
-
-After implementing fixes for items sourced from **Developer Feedback**:
-
-1. **Reply to the PR with commit reference**:
-   ```bash
-   gh pr comment $ARGUMENTS --body "Fixed in $(git rev-parse --short HEAD)"
-   ```
-
-2. **Resolve review threads** (if feedback was from a review thread with a thread ID):
-   ```bash
-   # For review threads (PRRT_xxx IDs from review-dev-feedback.md)
-   gh api graphql -f query='
-     mutation {
-       resolveReviewThread(input: {threadId: "PRRT_xxx"}) {
-         thread { isResolved }
-       }
-     }
-   '
-   ```
-
-Note: The thread IDs are included in `review-dev-feedback.md` in the format `(thread: PRRT_xxx)` or `(comment: IC_xxx)`.
-
-### Comment Resolution Summary
-
-| Feedback Source | Resolution Action |
-|-----------------|-------------------|
-| LLM Review | No action needed (not a PR comment) |
-| Developer Feedback (issue comment) | Reply with commit reference |
-| Developer Feedback (review thread) | Reply with commit reference AND resolve thread |
-
-## Quick Reference
-
-```bash
-# Feedback commands
-ace-review-feedback list                      # All feedback
-ace-review-feedback list --status draft       # Unverified items
-ace-review-feedback list --status pending     # Verified valid items
-ace-review-feedback list --session <path>     # From specific session
-ace-review-feedback show {id}                 # Full item details
-ace-review-feedback verify {id} --valid       # Mark as valid
-ace-review-feedback verify {id} --invalid     # Mark as false positive
-ace-review-feedback verify {id} --skip        # Mark as skipped
-ace-review-feedback resolve {id}              # Mark as fixed
-
-# PR comment resolution
-gh pr comment $PR --body "Fixed in $(git rev-parse --short HEAD)"
-```
-
-## Output / Success Criteria
-
-- [ ] PR review completed with feedback items
-- [ ] Feedback items verified (Critical/High priority)
-- [ ] False positives marked as invalid
-- [ ] Confirmed items implemented
-- [ ] PR comments addressed with commit references
-- [ ] Review threads resolved (if applicable)
-- [ ] All items marked as resolved or skipped
+After the completion rule is met and changes have appropriate test results, update the PR description with actual reviewers, scopes, fixes, deferred findings and limitations, then mark the draft ready. Do not run a separate integration or SHA gate. Keep formal merge checks at merge time. Do not merge without explicit user authorization, post replies to people or resolve their threads without authorization. Do not make optional code changes after completion that would unnecessarily reopen review.

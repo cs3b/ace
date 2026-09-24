@@ -10,7 +10,7 @@ module Ace
       # ProviderModelParser handles parsing and validation of provider:model syntax
       # for the unified LLM query interface.
       class ProviderModelParser
-        THINKING_LEVELS = %w[low medium high xhigh].freeze
+        THINKING_LEVELS = %w[low medium high xhigh max].freeze
 
         # Result object for parsed provider:model combinations.
         ParseResult = Struct.new(:provider, :model, :preset, :thinking_level, :valid, :error,

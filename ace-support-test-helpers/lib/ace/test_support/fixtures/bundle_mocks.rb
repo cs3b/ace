@@ -152,7 +152,7 @@ module Ace
 
           original_method_holder[:load_file] = Ace::Bundle.method(:load_file) if Ace::Bundle.respond_to?(:load_file)
 
-          Ace::Bundle.define_singleton_method(:load_file) do |path|
+          Ace::Bundle.define_singleton_method(:load_file) do |path, _options = {}|
             BundleMocks.mock_load_file_result(path)
           end
 

@@ -1,0 +1,11 @@
+presets:
+  - code-valid
+description: "Cross-module contracts and regression risks within a review round"
+review_role: integration
+instructions:
+  bundle:
+    sections:
+      integration_focus:
+        title: "Integration Review Focus"
+        files:
+          - "prompt://focus/phase/integration"

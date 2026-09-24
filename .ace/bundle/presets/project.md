@@ -32,15 +32,6 @@ bundle:
       files:
         - docs/tools.md
 
-    project_status:
-      title: Project Status
-      compressor_mode: exact
-      commands:
-        - pwd
-        - date
-        - ace-git status
-        - ace-task status
-
 ---
 
 # Project Context
