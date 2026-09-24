@@ -131,6 +131,28 @@ module Ace
             end
           end
 
+          def test_poll_quarantines_empty_files_and_the_channel_survives
+            with_hermes_dir do |folder|
+              notifier, lines = collector
+              box, = build_box(folder, notifier: notifier)
+              write_file(File.join(folder, "empty-1.json"), "")
+              message_file(folder, "ok-1", question_payload(id: "ok-1"))
+
+              result = box.poll
+
+              assert_equal 1, result.messages.length
+              assert_equal "ok-1", result.messages.first.id
+              assert_equal 1, result.quarantined.length
+              assert result.quarantined.first.reason.include?("not valid JSON")
+              assert File.exist?(File.join(folder, ".quarantine", "empty-1.json"))
+              assert lines.any? { |l| l.include?("quarantined") }
+
+              second = box.poll
+              assert_equal 1, second.messages.length
+              assert_empty second.quarantined
+            end
+          end
+
           def test_ack_deletes_the_file_and_is_idempotent
             with_hermes_dir do |folder|
               box, = build_box(folder)

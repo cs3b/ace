@@ -170,9 +170,12 @@ module Ace
           end
 
           # Read at most MAX_BYTES + 1 bytes so an oversized file fails
-          # the size gate without reading the whole file.
+          # the size gate without reading the whole file. An empty file
+          # reads as "" (File.read with an explicit length returns nil at
+          # EOF) so the empty payload still fails the formats gate and is
+          # quarantined instead of crashing the poll loop.
           def read_capped(path)
-            File.read(path, Molecules::HermesContract::MAX_BYTES + 1)
+            File.read(path, Molecules::HermesContract::MAX_BYTES + 1) || ""
           end
 
           def quarantine(path, id, reason)

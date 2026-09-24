@@ -26,6 +26,11 @@ module Ace
             assert_match(/UTF-8/, error.message)
           end
 
+          def test_rejects_empty_payload
+            error = assert_raises(InvalidMessageError) { HermesFormats.decode!("") }
+            assert_match(/not valid JSON/, error.message)
+          end
+
           def test_rejects_bad_json_and_non_objects
             error = assert_raises(InvalidMessageError) { HermesFormats.decode!("{nope") }
             assert_match(/not valid JSON/, error.message)
