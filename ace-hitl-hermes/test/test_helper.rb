@@ -17,20 +17,28 @@ class AceHermesTestCase < AceTestCase
     Dir.mktmpdir("ace-hitl-hermes") do |tmp|
       folder = File.join(tmp, name)
       FileUtils.mkdir_p(folder)
+      # The folder contract requires a non-world-writable folder; make
+      # the fixture compliant regardless of the environment's umask
+      # (CI containers run with umask 0000).
+      File.chmod(0o750, folder)
       yield folder
     end
   end
 
-  # A registry + box over a real temp folder named `name`.
+  # A registry + box over a real temp folder named `name`. The box pins
+  # a NON-ROOT euid by default: production resolves Process.euid, but CI
+  # containers run as root and the no-root write guard would shadow the
+  # behavior actually under test. Tests for the guard itself override
+  # this with euid 0.
   def build_box(folder, name: File.basename(folder), machine: "lab01",
-    notifier: nil, id_generator: -> { SecureRandom.hex(6) }, euid_provider: nil)
+    notifier: nil, id_generator: -> { SecureRandom.hex(6) }, euid_provider: -> { 4242 })
     registry = Ace::Hitl::Hermes::Molecules::HermesChannels::Registry.new
     registry.register(name, machine: machine, folder: folder)
     box = Ace::Hitl::Hermes::Organisms::HermesBox.new(
       channel: name, registry: registry,
       id_generator: id_generator,
       notifier: notifier,
-      euid_provider: euid_provider || -> { Process.euid }
+      euid_provider: euid_provider
     )
     [box, registry]
   end

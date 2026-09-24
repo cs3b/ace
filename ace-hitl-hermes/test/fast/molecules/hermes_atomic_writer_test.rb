@@ -10,7 +10,9 @@ module Ace
           def test_writes_atomically_with_contract_permissions
             with_hermes_dir do |folder|
               final = File.join(folder, "m1.json")
-              result = HermesAtomicWriter.write(final, %({"id":"m1"}))
+              result = HermesAtomicWriter.write(
+                final, %({"id":"m1"}), euid_provider: -> { 4242 }
+              )
 
               assert_equal final, result
               assert_equal %({"id":"m1"}), File.read(final)
@@ -37,7 +39,7 @@ module Ace
               write_file(final, "original")
 
               error = assert_raises(CollisionError) do
-                HermesAtomicWriter.write(final, "replacement")
+                HermesAtomicWriter.write(final, "replacement", euid_provider: -> { 4242 })
               end
               assert_match(/already exists/, error.message)
               assert_equal "original", File.read(final)
@@ -51,7 +53,9 @@ module Ace
               Dir.mkdir(world)
               File.chmod(0o777, world)
               error = assert_raises(ContractError) do
-                HermesAtomicWriter.write(File.join(world, "m1.json"), "x")
+                HermesAtomicWriter.write(
+                  File.join(world, "m1.json"), "x", euid_provider: -> { 4242 }
+                )
               end
               assert_match(/world-writable/, error.message)
             end

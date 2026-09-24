@@ -25,7 +25,7 @@ module Ace
             end
           end
 
-          def test_verify_folder_fails_closed_on_missing_non_dir_unwritable_world_writable
+          def test_verify_folder_fails_closed_on_missing_non_dir_and_world_writable
             with_hermes_dir do |tmp|
               missing = File.join(tmp, "nope")
               error = assert_raises(ContractError) { HermesContract.verify_folder!(missing) }
@@ -35,19 +35,26 @@ module Ace
               error = assert_raises(ContractError) { HermesContract.verify_folder!(file) }
               assert_match(/not a directory/, error.message)
 
-              ro = File.join(tmp, "ro")
-              Dir.mkdir(ro)
-              File.chmod(0o555, ro)
-              error = assert_raises(ContractError) do
-                HermesContract.verify_folder!(File.join(tmp, "ro"))
-              end
-              assert_match(/not writable/, error.message)
-
               world = File.join(tmp, "world")
               Dir.mkdir(world)
               File.chmod(0o777, world)
               error = assert_raises(ContractError) { HermesContract.verify_folder!(world) }
               assert_match(/world-writable/, error.message)
+            end
+          end
+
+          def test_verify_folder_rejects_unwritable_folders_for_non_root
+            if Process.euid.zero?
+              skip "File.writable? is always true for root; the unwritable-folder " \
+                   "rejection is untestable in a root container"
+            end
+
+            with_hermes_dir do |tmp|
+              ro = File.join(tmp, "ro")
+              Dir.mkdir(ro)
+              File.chmod(0o555, ro)
+              error = assert_raises(ContractError) { HermesContract.verify_folder!(ro) }
+              assert_match(/not writable/, error.message)
             end
           end
 
