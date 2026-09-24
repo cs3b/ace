@@ -27,6 +27,23 @@ module Ace
             end
           end
 
+          def test_modes_are_forced_regardless_of_umask
+            with_hermes_dir do |folder|
+              old_umask = File.umask(0o077)
+              begin
+                path = message_file(folder, "bad-1", {"broken" => true})
+
+                dest = HermesQuarantine.move(folder, path, reason: "umask")
+
+                assert_equal 0o750, (File.stat(File.join(folder, ".quarantine")).mode & 0o777)
+                assert_equal 0o640,
+                  (File.stat("#{dest}#{HermesContract::REASON_EXT}").mode & 0o777)
+              ensure
+                File.umask(old_umask)
+              end
+            end
+          end
+
           def test_name_collisions_get_numeric_suffixes
             with_hermes_dir do |folder|
               first = message_file(folder, "bad-1", {"n" => 1})

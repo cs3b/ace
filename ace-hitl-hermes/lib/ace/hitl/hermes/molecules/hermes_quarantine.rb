@@ -20,6 +20,10 @@ module Ace
             quarantine_dir = HermesContract.quarantine_path(folder)
             unless File.directory?(quarantine_dir)
               Dir.mkdir(quarantine_dir, HermesContract::QUARANTINE_DIR_MODE)
+              # Modes are FORCED, not inherited from the umask (mirrors
+              # HermesAtomicWriter): the pinned 0750 dir contract holds
+              # under any umask.
+              File.chmod(HermesContract::QUARANTINE_DIR_MODE, quarantine_dir)
             end
 
             base = File.basename(path)
@@ -30,12 +34,15 @@ module Ace
               dest = File.join(quarantine_dir, "#{base}.#{suffix}")
             end
 
+            sidecar_path = "#{dest}#{HermesContract::REASON_EXT}"
             File.rename(path, dest)
-            File.open("#{dest}#{HermesContract::REASON_EXT}",
+            File.open(sidecar_path,
               File::WRONLY | File::CREAT | File::EXCL,
               HermesContract::FILE_MODE) do |sidecar|
               sidecar.write("#{now.call.utc.strftime('%Y-%m-%dT%H:%M:%SZ')} #{reason}\n")
             end
+            # The open-mode is umask-sensitive; force the pinned 0640.
+            File.chmod(HermesContract::FILE_MODE, sidecar_path)
             dest
           end
         end
