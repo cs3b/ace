@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.57.0] - 2026-09-24
+
 ### Changed
 
 - Delegate PR review rounds to the shared review workflow instead of duplicating fixed cycles in assignments.

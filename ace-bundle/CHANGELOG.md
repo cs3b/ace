@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.44.0] - 2026-09-24
+
 ### Changed
 
 - Make review-safe bundles reject command and external diff sources before execution, preserve source snapshots for coverage checks, and fail when required context is incomplete.

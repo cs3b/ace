@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.34.1] - 2026-09-24
+
 ### Fixed
 
 - Preserve completed Codex responses when copying the optional last-message diagnostic fails, and handle Pi retry streams without accepting partial output.
