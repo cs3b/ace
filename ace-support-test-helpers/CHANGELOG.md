@@ -13,7 +13,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Accept bundle loader options in shared test mocks.
 
-
 ## [0.14.4] - 2026-09-02
 
 ### Technical

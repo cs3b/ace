@@ -13,7 +13,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Restrict file aggregation to an allowed root and explicit trusted paths for review context.
 
-
 ## [0.31.1] - 2026-09-02
 
 ### Technical
