@@ -21,7 +21,7 @@ All notable changes to this project will be documented in this file.
 - **ace-git-github v0.1.2**: Added `IssueSync.available?` availability probe (gh installed and authenticated) for best-effort GitHub sync.
 - **ace-review v0.55.0**: Added scoped, complete PR review inputs with prompt budgets and cached goal briefs.
 - **ace-support-core v0.32.0**: Added allowed-root and explicit-path bounds for file aggregation.
-
+- **ace-hitl-hermes v0.1.0**: New folder-as-interface HITL transport plugin package (spec 8wm.t.vs1) owning the channel registry, notification texts, and message formats for the shared lab <-> hermes folder: folder contract `ace.hitl.hermes.folder/v1` + message schema `ace.hitl.hermes.message/v1` (JSON Schema asset shipped), `<id>.json` message files with `<machine>/<folder>/<id>` addresses, fail-closed filename/token validation, UTF-8 + 64 KiB bounds, atomic 0640 tmp+rename writes with forced modes, quarantine for invalid files with reason sidecars, deletion-as-ACK, redelivery identity checks, bounded collision and undeleted-file retry policies, and a producer-side fail-closed validation gate.
 - **ace-git-github v0.1.0**: New GitHub provider package implementing the forge-neutral ace-git provider contract, owning all `gh` CLI invocation, output parsing, authentication verification, and issue synchronization moved out of the ace-git core, with normalized evidence translation and the shared classified failure taxonomy.
 - **ace-git-forgejo v0.1.0**: New Forgejo provider package implementing the same provider contract with `fj` CLI invocation, minimal-style output parsing, per-host authentication verification, and classified failures; ad-hoc curl fallbacks are strictly excluded.
 
