@@ -46,12 +46,12 @@ Gem::Specification.new do |spec|
   # Runtime dependencies
   spec.add_dependency "ace-support-cli", "~> 0.6"
   spec.add_dependency "ace-support-config", "~> 0.18"
-  spec.add_dependency "ace-support-core", "~> 0.31" # For FileAggregator, OutputFormatter, etc.
+  spec.add_dependency "ace-support-core", "~> 0.32" # For FileAggregator, OutputFormatter, etc.
   spec.add_dependency "ace-support-fs", "~> 0.3" # For ProjectRootFinder
   # ace-git: Centralized Git/GitHub operations (diffs, PR metadata, branch info)
   # Replaces internal GitExtractor, PrIdentifierParser, GhPrExecutor (removed in v0.20.0)
   spec.add_dependency "ace-git", "~> 0.24"
-  spec.add_dependency "ace-git-github", "~> 0.1" # PR bundle diffs via the GitHub provider
+  spec.add_dependency "ace-git-github", "~> 0.1.1" # PR bundle diffs via the GitHub provider
   spec.add_dependency "ace-support-nav", "~> 0.28" # For in-process protocol resolution (wfi://, guide://, etc.)
   spec.add_dependency "ace-compressor", "~> 0.25" # For --compress option (section content compression)
 

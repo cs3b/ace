@@ -6,6 +6,8 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+- **ace-llm v0.40.0**: Records resolved execution identity and accepts Pi max reasoning.
+
 - **ace-git-github v0.1.1**: Passes qualified repository and PR number correctly to GitHub CLI.
 - **ace-llm-providers-cli v0.34.1**: Corrects Pi/Codex completion parsing and read-only Pi execution.
 - **ace-support-test-helpers v0.14.5**: Keeps bundle test mocks compatible with loader options.
@@ -15,14 +17,14 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 - **ace-review v0.55.0**: Added scoped, complete PR review inputs with prompt budgets and cached goal briefs.
-- **ace-bundle v0.44.0**: Added safe source snapshots and byte-preserving rendering for selected review context.
-- **ace-llm v0.40.0**: Added resolved execution identity and Pi max reasoning support.
 - **ace-support-core v0.32.0**: Added allowed-root and explicit-path bounds for file aggregation.
 
 - **ace-git-github v0.1.0**: New GitHub provider package implementing the forge-neutral ace-git provider contract, owning all `gh` CLI invocation, output parsing, authentication verification, and issue synchronization moved out of the ace-git core, with normalized evidence translation and the shared classified failure taxonomy.
 - **ace-git-forgejo v0.1.0**: New Forgejo provider package implementing the same provider contract with `fj` CLI invocation, minimal-style output parsing, per-host authentication verification, and classified failures; ad-hoc curl fallbacks are strictly excluded.
 
 ### Changed
+
+- **ace-bundle v0.44.0**: Preserves source snapshots and exact bytes in review context.
 
 - **ace-assign v0.57.0**: Uses one agent-led PR review workflow and moves draft PRs to ready after verified rounds.
 

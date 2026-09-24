@@ -26,10 +26,10 @@ PATH
     ace-bundle (0.44.0)
       ace-compressor (~> 0.25)
       ace-git (~> 0.24)
-      ace-git-github (~> 0.1)
+      ace-git-github (~> 0.1.1)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)
-      ace-support-core (~> 0.31)
+      ace-support-core (~> 0.32)
       ace-support-fs (~> 0.3)
       ace-support-nav (~> 0.28)
 
@@ -195,7 +195,7 @@ PATH
   remote: ace-llm-providers-cli
   specs:
     ace-llm-providers-cli (0.34.1)
-      ace-llm (~> 0.39)
+      ace-llm (~> 0.40)
 
 PATH
   remote: ace-llm
@@ -253,14 +253,14 @@ PATH
   specs:
     ace-review (0.55.0)
       ace-b36ts (~> 0.14)
-      ace-bundle (~> 0.43)
+      ace-bundle (~> 0.44)
       ace-compressor (~> 0.25)
       ace-git (~> 0.24)
-      ace-git-github (~> 0.1)
-      ace-llm (~> 0.39)
+      ace-git-github (~> 0.1.1)
+      ace-llm (~> 0.40)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)
-      ace-support-core (~> 0.31)
+      ace-support-core (~> 0.32)
       ace-support-nav (~> 0.28)
       ace-task (~> 0.37)
 
