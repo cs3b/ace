@@ -59,6 +59,8 @@ module Ace
               assert_empty tmp_leftovers(folder)
               retry_line = lines.find { |l| l.include?("retry 1/3 (collision)") }
               assert retry_line, "expected a collision retry notification, got: #{lines}"
+              assert_equal "hermes: lab01/#{File.basename(folder)}/fixed-id retry 1/3 (collision)",
+                retry_line
             end
           end
 

@@ -82,7 +82,7 @@ module Ace
                   raise
                 end
 
-                notify(:retry_scheduled, address(id), attempt: attempts,
+                notify(:retry_scheduled, address(message.id), attempt: attempts,
                   max_attempts: Molecules::HermesRetryPolicy::DEFAULT_MAX_ATTEMPTS,
                   policy: "collision")
                 id = nil # force a fresh id on the next iteration
