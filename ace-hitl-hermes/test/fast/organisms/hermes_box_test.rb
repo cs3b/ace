@@ -201,6 +201,29 @@ module Ace
             end
           end
 
+          def test_publish_rejects_invalid_producer_input_before_any_write
+            with_hermes_dir do |folder|
+              box, = build_box(folder)
+
+              assert_raises(ContractError) do
+                box.publish(kind: :answer, id: "a-1", body: "ok",
+                  sender: "../escape", timestamp: ANSWER_TS)
+              end
+              assert_raises(InvalidMessageError) do
+                box.publish(kind: :answer, id: "a-2", body: "ok",
+                  sender: "captain", timestamp: "24-09-2026 10:05:00")
+              end
+              assert_raises(InvalidMessageError) do
+                box.publish(kind: :question, id: "q-9", body: "   ",
+                  sender: "agent-7", timestamp: QUESTION_TS)
+              end
+
+              assert_empty Dir.children(folder).select { |n| n.end_with?(".json") }
+              assert_empty tmp_leftovers(folder)
+              refute File.exist?(File.join(folder, ".quarantine"))
+            end
+          end
+
           def test_publish_with_explicit_correlated_id_never_renames_on_collision
             with_hermes_dir do |folder|
               box, = build_box(folder)

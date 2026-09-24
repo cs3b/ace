@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "json"
 require "securerandom"
 require_relative "../molecules/hermes_contract"
 require_relative "../molecules/hermes_formats"
@@ -58,6 +59,14 @@ module Ace
               message = build_message(
                 kind: kind, id: id || @id_generator.call,
                 sender: sender, timestamp: timestamp, body: body
+              )
+              # Producer fail-closed gate: the envelope must survive the
+              # exact validation its consumers apply BEFORE any disk
+              # write, so a schema-violating payload can never be
+              # published (and then terminally quarantined by its own
+              # poll) with no producer feedback.
+              Molecules::HermesMessage.from_hash(
+                JSON.parse(message.to_json), filename_id: message.id
               )
               begin
                 Molecules::HermesAtomicWriter.write(
