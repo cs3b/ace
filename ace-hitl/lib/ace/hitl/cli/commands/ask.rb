@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "ace/support/cli"
+require_relative "../../lifecycle"
 require_relative "../../atoms/hitl_effect_validator"
 require_relative "../../providers/providers"
 

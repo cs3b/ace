@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Generic HITL request lifecycle (spec 8wm.t.y21, M1 migration from lab-config lab-hitl)**: the generic core now lives natively in the gem under `Ace::Hitl::Lifecycle` — request store (`create`/`pending`/`states`/`deliver`/`consume`/`cancel`), kinds + OTP/secret-shape answer gates, 0400 requester-owned answer relay, 0440 merge-on-write public projection under a per-request `flock`, no time-based expiry (W651: only an answer, its consumption, or an explicit audited `cancel` ends a request), requester-declared effect callbacks executed AS THE REQUESTER (exec-argv with `{answer}`, fullmatch regex gate, bounded timeout, redacted root-only effects log, deduped escalation with `callback-ok`/`callback-escalated` projection states and the pending+escalated duty projection), and the Overseer reverse-address surface (`overseer-send`/`overseer-pending`/`overseer-ack`: bounded, type-tagged `[decyzja]`/`[pytanie]`/`[info]`, no SHA/Work/Attempt/task IDs). New CLI commands: `deliver`, `consume`, `cancel`, `pending`, `states`, `duty`, `overseer-send`, `overseer-pending`, `overseer-ack` (machine output: one JSON line). Store root: `ACE_HITL_STORE_ROOT` (default `/run/lab/hitl`); Overseer channel root: `ACE_HITL_OVERSEER_CHANNEL_ROOT` (default `/lab/state/overseer-channel`).
+- **Binding policy seam**: the generic store requires a fail-closed `Lifecycle::Binding` policy; provider=lab supplies `Providers::Lab::DaemonBinding`, the minimal client of the lab daemon's read-only `hitl_binding` socket op (Work/Attempt binding authority stays lab-side, per audit 8wl.t.gad.6). Escalation spooling stays behind the store's `escalation_sink` seam (the wake/`lab_control` glue stays lab-config).
+
+### Changed
+- **provider=lab `ask` creates the relay request through the native lifecycle store** (binding + effect declared in-process). The external-binary transport `Providers::Lab::Transport` is DELETED (pre-1.0; supersedes the 8wm.t.vrz §7 re-homing); the orphan-event `ProviderUnavailableError` contract is preserved. File and record formats stay byte-compatible with the deployed lab consumers.
+
+### Removed
+- `Providers::Lab::Transport` and the `ACE_HITL_LAB_BIN` selection: the relay request path no longer shells out to an external binary.
+
+### Added
 - **Provider adapter interface + provider=lab contract (spec 8wm.t.vrz)**: `ace-hitl ask` dispatches through the `Ace::Hitl::Providers` registry (selection: `--provider` flag → `ACE_HITL_PROVIDER` env → `lab`). The ask performs the local-event + transport send in ONE operation and captures the asker's reverse address fail-closed from the herdr environment (`HERDR_SESSION` / `HERDR_PANE`; versioned schema `ace.hitl.ref/v1`), persisting `provider`, `ref_schema`, `ref_session`, `ref_pane` alongside the existing `lab_request_*` fields. Pinned error model: `UnknownProviderError`, `InvalidRefError` (fail closed before any event or transport state), `ProviderUnavailableError` (transport failure; orphan event id message preserved), `UnsupportedOperationError` (`deliver(ref, answer)` lands with ace-herdr push delivery 8wm.t.vs0 + provider=lab integration 8wm.t.vs2; `wait` remains the pane-less CLI path outside the adapter).
 
 ### Changed
