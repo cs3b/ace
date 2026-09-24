@@ -6,14 +6,25 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+- **ace-git-github v0.1.1**: Passes qualified repository and PR number correctly to GitHub CLI.
+- **ace-llm-providers-cli v0.34.1**: Corrects Pi/Codex completion parsing and read-only Pi execution.
+- **ace-support-test-helpers v0.14.5**: Keeps bundle test mocks compatible with loader options.
+
 - **ace-git-forgejo (unreleased fix)**: Aligned the Forgejo provider with the real `fj` v0.6.0 CLI per independent PR #26 review: strip Unicode bidi isolate/pop-directional marks (U+2066–U+2069 and friends) that real minimal-style output wraps around dynamic fields so PR/issue/repo views parse and URL evidence stays clean, drop the nonexistent `fj pr search --limit` flag (client-side cap after newest-first sort), and probe CLI presence with `fj version` instead of the rejected `fj --version`, keeping classified `ProviderCliMissingError` semantics. Captured real `fj` outputs as test fixtures.
 
 ### Added
+
+- **ace-review v0.55.0**: Added scoped, complete PR review inputs with prompt budgets and cached goal briefs.
+- **ace-bundle v0.44.0**: Added safe source snapshots and byte-preserving rendering for selected review context.
+- **ace-llm v0.40.0**: Added resolved execution identity and Pi max reasoning support.
+- **ace-support-core v0.32.0**: Added allowed-root and explicit-path bounds for file aggregation.
 
 - **ace-git-github v0.1.0**: New GitHub provider package implementing the forge-neutral ace-git provider contract, owning all `gh` CLI invocation, output parsing, authentication verification, and issue synchronization moved out of the ace-git core, with normalized evidence translation and the shared classified failure taxonomy.
 - **ace-git-forgejo v0.1.0**: New Forgejo provider package implementing the same provider contract with `fj` CLI invocation, minimal-style output parsing, per-host authentication verification, and classified failures; ad-hoc curl fallbacks are strictly excluded.
 
 ### Changed
+
+- **ace-assign v0.57.0**: Uses one agent-led PR review workflow and moves draft PRs to ready after verified rounds.
 
 - **ace-git v0.24.0**: Decoupled local Git from forge behavior. Added the `ServerRegistry` (named servers, one explicit default, deterministic remote-URL matching), the `Providers` registry and `Providers::Base` contract, normalized evidence types, and the full classified failure taxonomy. Status PR enrichment now routes through the provider contract and stays purely local without configuration. Removed all `gh` execution, GitHub-specific parsing, the `ace-git pr` CLI command, and hardcoded GitHub gemspec URLs (pre-1.0 replacement; consumers migrate to the provider packages in subsequent chunks).
 - **ace-bundle, ace-git-worktree, ace-review, ace-task v0.37+**: Repointed PR/issue lookups from the removed ace-git core molecules to the new `ace-git-github` owner classes (mechanical call-site updates ahead of the dedicated consumer-migration chunks).

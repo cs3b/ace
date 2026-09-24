@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.55.0] - 2026-09-24
+
 ### Added
 
 - Scope complete PR diff blocks by module/lens and enforce 30k context, 30k instructions and 128k complete-input budgets without silent truncation.

@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.40.0] - 2026-09-24
+
 ### Fixed
 
 - Update Codex CLI presets for the new `codex exec` interface: replace the
