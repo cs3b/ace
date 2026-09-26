@@ -20,7 +20,11 @@ module Ace
         OUTCOME_OK = "callback-ok"
         OUTCOME_ESCALATED = "callback-escalated"
 
-        DeclarationError = Class.new(StandardError)
+        # A Lifecycle::Error so every lifecycle caller's typed rescue
+        # (notably the provider seam's orphan-event ask wrapper) catches
+        # declaration violations instead of a raw backtrace escaping to
+        # the CLI (review F-R1 on W696).
+        DeclarationError = Class.new(Lifecycle::Error)
 
         module_function
 

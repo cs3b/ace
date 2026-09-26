@@ -307,6 +307,37 @@ class HitlAskCliTest < AceHitlTestCase
     end
   end
 
+  def test_ask_cwd_less_effect_declaration_fails_typed_with_orphan_event
+    with_hitl_dir do |root|
+      with_cli_root(root) do
+        with_ask_env do
+          result = run_cli([
+            "ask", "No cwd?",
+            "--work", "W685",
+            "--attempt", "A-a73ebdaeb811210d51e0251e",
+            "--effect-arg", "/bin/false"
+          ])
+
+          # The declaration error is a Lifecycle::Error (review F-R1 on
+          # W696): the typed provider surface — clean failure with the
+          # orphan local event reported — never a raw backtrace.
+          assert_equal 1, result[:exit_code]
+          assert_match(/--effect-cwd is required/, result[:stderr])
+          orphan_id = result[:stderr][/HITL event (\S+) was created/, 1]
+          refute_nil orphan_id, "error must surface the orphan local event id"
+          assert_match(/never bound to a Lab request \(orphan\)/, result[:stderr])
+          refute_match(/\.rb:\d+/, result[:stderr])
+          assert_empty Dir.children(File.join(@store_root, "requests"))
+
+          manager = Ace::Hitl::Organisms::HitlManager.new(root_dir: root)
+          event = manager.show(orphan_id)[:event]
+          refute_nil event, "orphan event stays inspectable"
+          assert_nil event.metadata["lab_request_id"]
+        end
+      end
+    end
+  end
+
   def test_ask_requires_work_and_attempt
     with_hitl_dir do |root|
       with_cli_root(root) do

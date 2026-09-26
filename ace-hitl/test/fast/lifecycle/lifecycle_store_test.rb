@@ -540,6 +540,32 @@ class LifecycleStoreTest < AceHitlTestCase
     end
   end
 
+  def test_escalation_survives_consume_in_the_public_projection
+    with_lifecycle_root do |root|
+      store = make_store(root: root, identity: unprivileged_identity)
+      root_store = make_store(root: root, identity: root_identity)
+
+      store.create(**request_args(effect: {
+        match: nil, effect_args: ["/bin/false"], effect_cwd: root, effect_timeout: 30
+      }))
+      root_store.deliver("hitl001", stdin_reader("the-answer"))
+      assert_equal "callback-escalated", public_effect_state(root)
+      duty = Ace::Hitl::Lifecycle::Duty.project(root_store)
+      assert_equal ["hitl001"], duty["escalated"].map { |record| record["id"] }
+
+      # Consuming the answer is a lifecycle write: it must merge over
+      # the projection instead of replacing it, or the escalation
+      # would vanish from duty exactly when the answer is consumed
+      # (review F-R2 on W696).
+      store.consume("hitl001", timeout: 1)
+      record = JSON.parse(File.read(File.join(root, "public", "hitl001.json")))
+      assert_equal "consumed", record["state"]
+      assert_equal "callback-escalated", record["effect_state"]
+      duty = Ace::Hitl::Lifecycle::Duty.project(root_store)
+      assert_equal ["hitl001"], duty["escalated"].map { |entry| entry["id"] }
+    end
+  end
+
   def test_root_only_operations_reject_unprivileged_callers
     with_lifecycle_root do |root|
       store = make_store(root: root, identity: unprivileged_identity)

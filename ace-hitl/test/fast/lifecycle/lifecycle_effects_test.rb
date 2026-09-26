@@ -340,6 +340,14 @@ class LifecycleEffectsTest < AceHitlTestCase
   end
 
   def test_cwd_less_declaration_is_rejected_at_declaration_time
+    # The declaration error sits inside the lifecycle error taxonomy:
+    # typed rescues (Providers::Lab#ask orphan-event wrapper) catch it
+    # instead of a raw backtrace escaping to the CLI (review F-R1 on
+    # W696).
+    assert_operator(
+      Ace::Hitl::Lifecycle::Effects::DeclarationError, :<,
+      Ace::Hitl::Lifecycle::Error
+    )
     with_lifecycle_root do |root|
       store = make_store(root: root, identity: unprivileged_identity)
       [nil, ""].each do |missing_cwd|

@@ -331,9 +331,12 @@ module Ace
           public_dir.join("#{safe_id(request_id)}.json")
         end
 
-        # The public lifecycle projection: merge-on-write (audit fields
-        # merge into the base record), 0440, owner = requester,
-        # group = the control group. Never carries answer content.
+        # The public lifecycle projection: merge-on-write — every write
+        # merges over the existing projection (state, timestamps and
+        # audit fields win; effect/escalation fields recorded by an
+        # earlier write survive every later lifecycle write, review
+        # F-R2 on W696), 0440, owner = requester, group = the control
+        # group. Never carries answer content.
         def update_public(value, state, audit: nil)
           request_id = safe_id(value["id"].to_s)
           public = {
@@ -349,6 +352,8 @@ module Ace
           }
           public["effect_state"] = value["effect_state"] if value["effect_state"]
           public.update(audit) if audit
+          existing = AtomicJson.read(public_path(request_id))
+          public = existing.merge(public) if existing.is_a?(Hash)
           ownership = ownership_for(value)
           AtomicJson.call(
             public_path(request_id), public,
