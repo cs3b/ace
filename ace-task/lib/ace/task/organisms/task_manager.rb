@@ -143,8 +143,11 @@ module Ace
 
           # Apply field updates if any
           has_field_updates = [set, add, remove].any? { |h| h && !h.empty? }
-          desired_issue = extract_desired_github_issue(task, set: set, remove: remove)
-          ensure_github_issue_linkable!(desired_issue, previous_task: task) if desired_issue
+          # Ownership validation only when the github_issue link itself is being set;
+          # unrelated updates (moves, status edits) must not require GitHub access.
+          if set&.key?("github_issue") && set["github_issue"].to_i.positive?
+            ensure_github_issue_linkable!(set["github_issue"].to_i, previous_task: task)
+          end
           if has_field_updates
             Ace::Support::Items::Molecules::FieldUpdater.update(
               task.file_path, set: set, add: add, remove: remove
@@ -461,14 +464,6 @@ module Ace
           return nil unless issue_id.to_i.positive?
 
           issue_id.to_i
-        end
-
-        def extract_desired_github_issue(task, set:, remove:)
-          return nil if set&.key?("github_issue") && !set["github_issue"].to_i.positive?
-          return set["github_issue"].to_i if set&.key?("github_issue") && set["github_issue"].to_i.positive?
-          return nil if Array(remove&.keys).map(&:to_s).include?("github_issue")
-
-          linked_issue_id(task)
         end
 
         def ensure_github_issue_linkable!(github_issue, previous_task: nil)

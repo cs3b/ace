@@ -6,6 +6,7 @@ require_relative "task/version"
 require "ace/support/items"
 require "ace/b36ts"
 require "ace/git"
+require "ace/git/github"
 
 # Atoms
 require_relative "task/atoms/task_id_formatter"
