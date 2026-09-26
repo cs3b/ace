@@ -143,11 +143,8 @@ module Ace
 
           # Apply field updates if any
           has_field_updates = [set, add, remove].any? { |h| h && !h.empty? }
-          # Ownership validation only when the github_issue link itself is being set;
-          # unrelated updates (moves, status edits) must not require GitHub access.
-          if set&.key?("github_issue") && set["github_issue"].to_i.positive?
-            ensure_github_issue_linkable!(set["github_issue"].to_i, previous_task: task)
-          end
+          desired_issue = extract_desired_github_issue(task, set: set, remove: remove)
+          ensure_github_issue_linkable!(desired_issue, previous_task: task) if desired_issue
           if has_field_updates
             Ace::Support::Items::Molecules::FieldUpdater.update(
               task.file_path, set: set, add: add, remove: remove
@@ -230,11 +227,12 @@ module Ace
           created_subtask
         end
 
-        def github_sync(ref: nil, all: false)
-          raise ArgumentError, "Provide --all or a task reference" if !all && (ref.nil? || ref.strip.empty?)
+        def github_sync(ref: nil, all: false, pending: false)
+          raise ArgumentError, "Provide --all or a task reference" if !all && !pending && (ref.nil? || ref.strip.empty?)
 
-          if all
+          if all || pending
             tasks = list(in_folder: "all")
+            tasks = tasks.select { |t| t.metadata["github_sync_pending"] } if pending
             linked_tasks = tasks.select { |t| linked_issue_id(t) }
             results = linked_tasks.map { |task| sync_linked_issues_for(task, reason: "manual-sync") }
             return summarize_manual_sync_results(results, skipped: tasks.length - linked_tasks.length)
@@ -466,6 +464,14 @@ module Ace
           issue_id.to_i
         end
 
+        def extract_desired_github_issue(task, set:, remove:)
+          return nil if set&.key?("github_issue") && !set["github_issue"].to_i.positive?
+          return set["github_issue"].to_i if set&.key?("github_issue") && set["github_issue"].to_i.positive?
+          return nil if Array(remove&.keys).map(&:to_s).include?("github_issue")
+
+          linked_issue_id(task)
+        end
+
         def ensure_github_issue_linkable!(github_issue, previous_task: nil)
           return unless github_issue
 
@@ -477,11 +483,41 @@ module Ace
           return sync_result_for(task: task, issues: issue_ids, success: true, reason: reason) if issue_ids.empty?
 
           adapter = Molecules::GithubIssueSyncAdapter.new
+          unless adapter.available?
+            mark_github_sync_pending(task)
+            @last_update_note = "GitHub sync skipped (gh unavailable); flagged for 'ace-task github-sync --pending'"
+            return sync_result_for(task: task, issues: issue_ids, success: true, reason: reason).merge(offline: true)
+          end
+
           adapter.sync_task(task: task, reason: reason, previous_task: previous_task)
+          clear_github_sync_pending(task)
           sync_result_for(task: task, issues: issue_ids, success: true, reason: reason)
         rescue StandardError => e
-          @last_update_note = "GitHub sync warning for task #{task&.id}: #{e.message}"
+          mark_github_sync_pending(task)
+          @last_update_note = "GitHub sync warning for task #{task&.id}: #{e.message}; flagged for 'ace-task github-sync --pending'"
           sync_result_for(task: task, issues: issue_ids, success: false, reason: reason, error: e.message)
+        end
+
+        # Flag the task so the missed GitHub sync survives offline work and can be
+        # replayed with 'ace-task github-sync --pending'.
+        def mark_github_sync_pending(task)
+          return unless task&.file_path && File.exist?(task.file_path)
+
+          Ace::Support::Items::Molecules::FieldUpdater.update(
+            task.file_path, set: {"github_sync_pending" => true}
+          )
+        rescue StandardError
+          nil
+        end
+
+        def clear_github_sync_pending(task)
+          return unless task&.file_path && File.exist?(task.file_path)
+
+          Ace::Support::Items::Molecules::FieldUpdater.update(
+            task.file_path, set: {"github_sync_pending" => nil}
+          )
+        rescue StandardError
+          nil
         end
 
         def sync_result_for(task:, issues:, success:, reason:, error: nil)
@@ -503,9 +539,12 @@ module Ace
             }
           end
 
+          pending = results.count { |result| result[:offline] }
+
           {
-            synced: results.length - failures.length,
+            synced: results.length - failures.length - pending,
             failed: failures.length,
+            pending: pending,
             skipped: skipped,
             failures: failures
           }

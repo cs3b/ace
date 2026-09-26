@@ -4,17 +4,29 @@ module Ace
   module Task
     module Molecules
       # Bridges ace-task lifecycle events to reusable ace-git issue sync primitives.
+      # GitHub sync is best-effort: when gh is unavailable, operations no-op and
+      # callers record the pending sync on the task instead.
       class GithubIssueSyncAdapter
         UNAVAILABLE_MESSAGE = "GitHub issue sync primitives are unavailable. " \
-          "Complete dependency task 8r4.t.ilo.2 or update ace-git."
+          "Update ace-git-github to a version providing them."
 
         CANDIDATE_INTEGRATIONS = [
           ["Ace::Git::Github::IssueSync", :validate_link!],
           ["Ace::Git::Github::IssueSync", :sync_task]
         ].freeze
 
+        # True when GitHub sync should run: the integration resolves and reports
+        # gh as installed and authenticated.
+        def available?
+          receiver, = resolve_integration(:sync_task)
+          return false unless receiver
+
+          receiver.respond_to?(:available?) ? receiver.available? : false
+        end
+
         def validate_link!(issue_id:, previous_task: nil)
           return unless issue_id.to_i.positive?
+          return unless available?
 
           receiver, method_name = resolve_integration(:validate_link!)
           raise UNAVAILABLE_MESSAGE unless receiver && method_name
@@ -31,7 +43,8 @@ module Ace
           current_issue_ids = [task.metadata["github_issue"]].compact.map(&:to_i).uniq
           previous_issue_ids = [previous_task&.metadata&.[]("github_issue")].compact.map(&:to_i).uniq
           issue_ids = (current_issue_ids + previous_issue_ids).uniq
-          return {synced: 0, issues: []} if issue_ids.empty?
+          return {synced: 0, issues: []} if issue_ids.empty? || !available?
+
 
           receiver, method_name = resolve_integration(:sync_task)
           raise UNAVAILABLE_MESSAGE unless receiver && method_name

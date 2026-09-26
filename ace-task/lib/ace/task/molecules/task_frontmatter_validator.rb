@@ -136,15 +136,22 @@ module Ace
 
           def validate_github_fields(frontmatter, file_path, issues)
             linked = frontmatter["github_issue"]
-            return if linked.nil?
-
-            unless linked.is_a?(Integer) && linked.positive?
+            unless linked.nil? || (linked.is_a?(Integer) && linked.positive?)
               issues << {
                 type: :error,
                 message: "Invalid GitHub issue ID '#{linked}' in github_issue (expected positive integer)",
                 location: file_path
               }
             end
+
+            pending = frontmatter["github_sync_pending"]
+            return if pending.nil? || pending == true || pending == false
+
+            issues << {
+              type: :error,
+              message: "Invalid github_sync_pending value (expected boolean)",
+              location: file_path
+            }
           end
         end
       end

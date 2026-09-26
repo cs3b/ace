@@ -234,6 +234,8 @@ class TaskManagerTest < AceTaskTestCase
     sync_calls = []
     fake_sync = Object.new
     fake_sync.define_singleton_method(:validate_link!) { |**_payload| }
+    fake_sync.define_singleton_method(:available?) { true }
+    fake_sync.define_singleton_method(:available?) { true }
     fake_sync.define_singleton_method(:sync_task) do |**payload|
       sync_calls << payload
       {synced: 1}
@@ -261,6 +263,8 @@ class TaskManagerTest < AceTaskTestCase
     sync_calls = []
     fake_sync = Object.new
     fake_sync.define_singleton_method(:validate_link!) { |**_payload| }
+    fake_sync.define_singleton_method(:available?) { true }
+    fake_sync.define_singleton_method(:available?) { true }
     fake_sync.define_singleton_method(:sync_task) do |**payload|
       sync_calls << payload
       {synced: 1}
@@ -331,6 +335,8 @@ class TaskManagerTest < AceTaskTestCase
     sync_calls = []
     fake_sync = Object.new
     fake_sync.define_singleton_method(:validate_link!) { |**_payload| }
+    fake_sync.define_singleton_method(:available?) { true }
+    fake_sync.define_singleton_method(:available?) { true }
     fake_sync.define_singleton_method(:sync_task) do |**payload|
       sync_calls << payload
       {synced: 1}
@@ -349,6 +355,8 @@ class TaskManagerTest < AceTaskTestCase
     sync_calls = []
     fake_sync = Object.new
     fake_sync.define_singleton_method(:validate_link!) { |**_payload| }
+    fake_sync.define_singleton_method(:available?) { true }
+    fake_sync.define_singleton_method(:available?) { true }
     fake_sync.define_singleton_method(:sync_task) do |**payload|
       sync_calls << payload
       {synced: 1}
@@ -371,6 +379,8 @@ class TaskManagerTest < AceTaskTestCase
     calls = 0
     fake_sync = Object.new
     fake_sync.define_singleton_method(:validate_link!) { |**_payload| }
+    fake_sync.define_singleton_method(:available?) { true }
+    fake_sync.define_singleton_method(:available?) { true }
     fake_sync.define_singleton_method(:sync_task) do |**payload|
       calls += 1
       raise "gh unavailable for #{payload[:task]&.id}" if calls == 2
@@ -395,6 +405,8 @@ class TaskManagerTest < AceTaskTestCase
   def test_create_records_sync_warning_instead_of_raising
     fake_sync = Object.new
     fake_sync.define_singleton_method(:validate_link!) { |**_payload| }
+    fake_sync.define_singleton_method(:available?) { true }
+    fake_sync.define_singleton_method(:available?) { true }
     fake_sync.define_singleton_method(:sync_task) do |**_payload|
       raise "gh unavailable"
     end
@@ -413,6 +425,8 @@ class TaskManagerTest < AceTaskTestCase
     sync_calls = []
     fake_sync = Object.new
     fake_sync.define_singleton_method(:validate_link!) { |**_payload| }
+    fake_sync.define_singleton_method(:available?) { true }
+    fake_sync.define_singleton_method(:available?) { true }
     fake_sync.define_singleton_method(:sync_task) do |**payload|
       sync_calls << payload
       {synced: 1}
@@ -427,5 +441,85 @@ class TaskManagerTest < AceTaskTestCase
     assert_equal 1, sync_calls.length
     assert_equal "update", sync_calls.first[:reason]
     assert_equal 276, sync_calls.first[:previous_task].metadata["github_issue"]
+  end
+
+  # --- offline github sync (pending outbox) ---
+
+  def test_offline_github_sync_flags_task_pending_and_skips_call
+    sync_calls = []
+    fake_sync = Object.new
+    fake_sync.define_singleton_method(:available?) { false }
+    fake_sync.define_singleton_method(:validate_link!) { |**_payload| }
+    fake_sync.define_singleton_method(:sync_task) do |**payload|
+      sync_calls << payload
+      {synced: 1}
+    end
+
+    task = nil
+    Ace::Task::Molecules::GithubIssueSyncAdapter.stub(:new, fake_sync) do
+      task = @manager.create("Linked task", github_issue: 276)
+      @manager.update(task.id, move_to: "archive")
+    end
+
+    assert_empty sync_calls
+    assert_match(/github-sync --pending/, @manager.last_update_note)
+    moved = @manager.show(task.id)
+    assert_match(/github_sync_pending: true/, File.read(moved.file_path))
+
+    replay = @manager.github_sync(pending: true)
+    assert_equal 0, replay[:synced]
+    assert_equal 1, replay[:pending]
+    assert_empty sync_calls
+  end
+
+  def test_github_sync_pending_replays_flagged_tasks_and_clears_flag
+    sync_calls = []
+    offline_sync = Object.new
+    offline_sync.define_singleton_method(:available?) { false }
+    offline_sync.define_singleton_method(:validate_link!) { |**_payload| }
+    offline_sync.define_singleton_method(:sync_task) { |**_payload| {synced: 1} }
+
+    task = nil
+    Ace::Task::Molecules::GithubIssueSyncAdapter.stub(:new, offline_sync) do
+      task = @manager.create("Linked task", github_issue: 276)
+    end
+
+    online_sync = Object.new
+    online_sync.define_singleton_method(:available?) { true }
+    online_sync.define_singleton_method(:validate_link!) { |**_payload| }
+    online_sync.define_singleton_method(:sync_task) do |**payload|
+      sync_calls << payload
+      {synced: 1}
+    end
+
+    result = nil
+    Ace::Task::Molecules::GithubIssueSyncAdapter.stub(:new, online_sync) do
+      result = @manager.github_sync(pending: true)
+    end
+
+    assert_equal 1, result[:synced]
+    assert_equal 1, sync_calls.length
+    refute_match(/github_sync_pending: true/, File.read(task.file_path))
+  end
+
+  def test_github_sync_pending_with_nothing_pending_syncs_nothing
+    sync_calls = []
+    fake_sync = Object.new
+    fake_sync.define_singleton_method(:available?) { true }
+    fake_sync.define_singleton_method(:validate_link!) { |**_payload| }
+    fake_sync.define_singleton_method(:available?) { true }
+    fake_sync.define_singleton_method(:sync_task) do |**payload|
+      sync_calls << payload
+      {synced: 1}
+    end
+
+    result = nil
+    Ace::Task::Molecules::GithubIssueSyncAdapter.stub(:new, fake_sync) do
+      @manager.create("Plain task")
+      result = @manager.github_sync(pending: true)
+    end
+
+    assert_equal 0, result[:synced]
+    assert_empty sync_calls
   end
 end

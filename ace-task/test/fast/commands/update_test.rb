@@ -274,6 +274,7 @@ class UpdateCommandTest < AceTaskTestCase
     sync_calls = []
     fake_sync = Object.new
     fake_sync.define_singleton_method(:validate_link!) { |**_payload| }
+    fake_sync.define_singleton_method(:available?) { true }
     fake_sync.define_singleton_method(:sync_task) do |**payload|
       sync_calls << payload
       {synced: 1}

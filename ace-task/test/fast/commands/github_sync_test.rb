@@ -14,7 +14,7 @@ class GithubSyncCommandTest < AceTaskTestCase
 
   def test_sync_single_task
     fake_manager = Object.new
-    fake_manager.define_singleton_method(:github_sync) do |ref:, all:|
+    fake_manager.define_singleton_method(:github_sync) do |ref:, all:, pending:|
       raise "unexpected all=true" if all
       raise "unexpected ref" unless ref == "q7w"
 
@@ -31,7 +31,7 @@ class GithubSyncCommandTest < AceTaskTestCase
 
   def test_sync_all
     fake_manager = Object.new
-    fake_manager.define_singleton_method(:github_sync) do |ref:, all:|
+    fake_manager.define_singleton_method(:github_sync) do |ref:, all:, pending:|
       raise "unexpected ref" unless ref.nil?
       raise "expected all=true" unless all
 
@@ -48,7 +48,7 @@ class GithubSyncCommandTest < AceTaskTestCase
 
   def test_raises_when_sync_has_failures
     fake_manager = Object.new
-    fake_manager.define_singleton_method(:github_sync) do |ref:, all:|
+    fake_manager.define_singleton_method(:github_sync) do |ref:, all:, pending:|
       raise "unexpected all=true" if all
       raise "unexpected ref" unless ref == "q7w"
 
@@ -73,5 +73,23 @@ class GithubSyncCommandTest < AceTaskTestCase
     assert_equal "", stdout
     assert_match(/GitHub sync failed for 8pp\.t\.q7w: gh auth failed/, stderr)
     assert_match(/GitHub sync incomplete/, err.message)
+  end
+
+  def test_sync_pending
+    fake_manager = Object.new
+    fake_manager.define_singleton_method(:github_sync) do |ref:, all:, pending:|
+      raise "unexpected ref" unless ref.nil?
+      raise "expected pending=true" unless pending
+      raise "expected all=false" if all
+
+      {synced: 0, failed: 0, skipped: 1, failures: []}
+    end
+
+    output = nil
+    Ace::Task::Organisms::TaskManager.stub(:new, fake_manager) do
+      output = capture_io { Ace::Task::TaskCLI.start(["github-sync", "--pending"]) }.first
+    end
+
+    assert_match(/No pending GitHub syncs/, output)
   end
 end

@@ -16,25 +16,27 @@ module Ace
 
           example [
             "q7w                         # Sync one task",
-            "--all                       # Sync all linked tasks"
+            "--all                       # Sync all linked tasks",
+            "--pending                   # Replay tasks flagged with github_sync_pending (offline sync)"
           ]
 
           argument :ref, required: false, desc: "Task reference (full ID, short ref, or suffix)"
           option :all, type: :boolean, aliases: %w[-a], desc: "Sync all linked tasks"
+          option :pending, type: :boolean, desc: "Sync only tasks flagged with github_sync_pending"
 
           option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
           option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
           option :debug, type: :boolean, aliases: %w[-d], desc: "Show debug output"
 
           def call(ref: nil, **options)
-            all = options[:all]
+            all = options[:all] || options[:pending]
 
             if !all && (ref.nil? || ref.strip.empty?)
               raise Ace::Support::Cli::Error.new("Provide a task reference or use --all")
             end
 
             manager = Ace::Task::Organisms::TaskManager.new
-            result = manager.github_sync(ref: ref, all: all)
+            result = manager.github_sync(ref: ref, all: options[:all], pending: options[:pending])
             raise Ace::Support::Cli::Error.new("Task '#{ref}' not found") if result.nil?
             print_failures(result[:failures])
 
@@ -42,8 +44,14 @@ module Ace
               raise Ace::Support::Cli::Error.new(
                 "GitHub sync incomplete: synced #{result[:synced]}, failed #{result[:failed]}, skipped #{result[:skipped]}"
               )
+            elsif options[:pending] && result[:synced].to_i.zero? && result[:pending].to_i.zero?
+              puts "No pending GitHub syncs"
             elsif all
               puts "GitHub sync complete: synced #{result[:synced]} linked task(s), skipped #{result[:skipped]} task(s)"
+              pending = result[:pending].to_i
+              warn "gh unavailable: #{pending} task(s) remain flagged for github-sync --pending" if pending.positive?
+            elsif result[:pending].to_i.positive?
+              puts "GitHub sync skipped (gh unavailable); flagged for github-sync --pending"
             elsif result[:synced].positive?
               puts "GitHub sync complete: #{result[:task_id]}"
             else
