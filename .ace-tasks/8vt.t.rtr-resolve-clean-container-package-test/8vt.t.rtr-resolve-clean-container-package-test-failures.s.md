@@ -135,3 +135,7 @@ Coordinate the resolution of the four baseline package test defects discovered i
 - Overseer meta task: `8vc.t.m21` (Work W401)
 - CI Delivery Work: W400 / Forgejo PR #4 (Run 15 evidence)
 - Subtasks: `8vt.t.rtr.0`, `8vt.t.rtr.1`, `8vt.t.rtr.2`, `8vt.t.rtr.3`
+
+## Settlement note
+
+SUPERSEDED: clean-environment verification is owned by the tested publisher + ship-test (git archive | tar -x) in the review gate; the CI environment no longer exists. Closed per top-overseer audit addendum 2026-09-27.
