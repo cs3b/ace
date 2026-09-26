@@ -501,20 +501,29 @@ module Ace
                 resolver.resolve_file(["docs/config.yml", "docs/config.yaml"])
               end
 
-              # Benchmark with sufficient iterations for CI stability
-              iterations = 100
-              namespace_start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-              iterations.times { resolver.resolve_namespace("docs") }
-              namespace_time = Process.clock_gettime(Process::CLOCK_MONOTONIC) - namespace_start
-
-              resolve_file_start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-              iterations.times { resolver.resolve_file(["docs/config.yml", "docs/config.yaml"]) }
-              resolve_file_time = Process.clock_gettime(Process::CLOCK_MONOTONIC) - resolve_file_start
+              # Wall-clock spans only ever measure noise upward: a GC pause or
+              # scheduler preemption inflates one span but not the other. Compare
+              # the best (minimum) span of several rounds per side instead of a
+              # single span so the ratio reflects steady-state cost.
+              namespace_time = best_span_time { resolver.resolve_namespace("docs") }
+              resolve_file_time = best_span_time { resolver.resolve_file(["docs/config.yml", "docs/config.yaml"]) }
 
               assert namespace_time < resolve_file_time * ACCEPTABLE_OVERHEAD_MULTIPLIER,
                 "resolve_namespace should have minimal overhead (< #{ACCEPTABLE_OVERHEAD_MULTIPLIER}x). " \
                 "Got: namespace=#{namespace_time.round(4)}s, resolve_file=#{resolve_file_time.round(4)}s"
             end
+          end
+
+          BENCH_ITERATIONS = 100
+          BENCH_ROUNDS = 5
+
+          def best_span_time(iterations: BENCH_ITERATIONS, rounds: BENCH_ROUNDS)
+            Array.new(rounds) do
+              GC.start
+              start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+              iterations.times { yield }
+              Process.clock_gettime(Process::CLOCK_MONOTONIC) - start
+            end.min
           end
 
           # === resolve_type tests ===
