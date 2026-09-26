@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.37.5] - 2026-09-26
+
+### Added
+- Best-effort GitHub sync: updates run without `gh`; offline updates flag tasks with `github_sync_pending` frontmatter, and `ace-task github-sync --pending` replays the missed issue syncs once gh is installed and authenticated.
+- gh availability gate (`IssueSync.available?` via ace-git-github): ownership validation and post-update issue sync run only when gh is installed and authenticated, restoring full checks when it is.
+
+### Fixed
+- Require the declared `ace-git-github` dependency so updates and archive moves of tasks with linked GitHub issues no longer fail with "GitHub issue sync primitives are unavailable".
 
 ## [0.37.4] - 2026-09-02
 
