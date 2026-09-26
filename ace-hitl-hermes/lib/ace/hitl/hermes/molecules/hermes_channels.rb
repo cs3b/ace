@@ -11,7 +11,7 @@ module Ace
           # `folder` is the absolute directory path; the message address
           # is `<machine>/<name>/<id>` where `<name>` is the channel (and
           # folder basename) token.
-          Channel = Struct.new(:name, :machine, :folder, keyword_init: true) do
+          Channel = Struct.new(:name, :machine, :folder) do
             def path
               folder
             end
@@ -58,7 +58,7 @@ module Ace
               channel = @channels[name]
               unless channel
                 raise UnknownChannelError,
-                  "unknown hermes channel #{name.inspect} (available: #{available.join(', ')})"
+                  "unknown hermes channel #{name.inspect} (available: #{available.join(", ")})"
               end
               channel
             end

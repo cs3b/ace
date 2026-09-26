@@ -24,29 +24,27 @@ module Ace
           # Builds the notification line for an event. Unknown events fail
           # closed so a typo cannot silently drop notifications.
           def emit(event, address:, **details)
-            line =
-              case event.to_s
-              when "question_received"
-                "hermes: question #{address} received"
-              when "answer_written"
-                "hermes: answer #{address} written"
-              when "delivered"
-                "hermes: #{address} delivered"
-              when "acked"
-                "hermes: #{address} acked (file deleted)"
-              when "quarantined"
-                "hermes: #{address} quarantined (#{details[:reason]})"
-              when "retry_scheduled"
-                "hermes: #{address} retry #{details[:attempt]}/#{details[:max_attempts]} " \
-                  "(#{details[:policy]})"
-              when "retry_exhausted"
-                "hermes: #{address} retries exhausted (#{details[:reason]})"
-              else
-                raise ContractError,
-                  "unknown hermes notification event #{event.inspect} " \
-                  "(known: #{EVENTS.join(', ')})"
-              end
-            line
+            case event.to_s
+            when "question_received"
+              "hermes: question #{address} received"
+            when "answer_written"
+              "hermes: answer #{address} written"
+            when "delivered"
+              "hermes: #{address} delivered"
+            when "acked"
+              "hermes: #{address} acked (file deleted)"
+            when "quarantined"
+              "hermes: #{address} quarantined (#{details[:reason]})"
+            when "retry_scheduled"
+              "hermes: #{address} retry #{details[:attempt]}/#{details[:max_attempts]} " \
+                "(#{details[:policy]})"
+            when "retry_exhausted"
+              "hermes: #{address} retries exhausted (#{details[:reason]})"
+            else
+              raise ContractError,
+                "unknown hermes notification event #{event.inspect} " \
+                "(known: #{EVENTS.join(", ")})"
+            end
           end
         end
       end

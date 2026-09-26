@@ -21,8 +21,8 @@ module Ace
         # (redelivery identity). The Box is role-agnostic: the hermes
         # side polls for questions, the lab side (labd) polls for answers.
         class HermesBox
-          QuarantinedFile = Struct.new(:path, :reason, keyword_init: true)
-          PollResult = Struct.new(:messages, :quarantined, keyword_init: true)
+          QuarantinedFile = Struct.new(:path, :reason)
+          PollResult = Struct.new(:messages, :quarantined)
 
           attr_reader :channel
 

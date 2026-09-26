@@ -15,7 +15,7 @@ module Ace
 
           def test_rejects_traversal_dots_empties_and_oversize
             ["", "  ", ".hidden", "-lead", "_lead", ":lead", "a/b", "../x",
-             "a b", "x\ny", ("k" * 65), nil, 42, :"sym"].each do |token|
+              "a b", "x\ny", ("k" * 65), nil, 42, :sym].each do |token|
               refute HermesTokens.valid?(token), "expected #{token.inspect} to be invalid"
             end
           end

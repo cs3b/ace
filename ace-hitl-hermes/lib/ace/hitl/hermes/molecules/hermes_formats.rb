@@ -49,7 +49,7 @@ module Ace
             unless SUPPORTED.include?(schema)
               raise UnknownFormatError,
                 "unsupported message schema #{schema.inspect} (supported: " \
-                "#{SUPPORTED.join(', ')})"
+                "#{SUPPORTED.join(", ")})"
             end
 
             hash

@@ -39,7 +39,7 @@ module Ace
             File.open(sidecar_path,
               File::WRONLY | File::CREAT | File::EXCL,
               HermesContract::FILE_MODE) do |sidecar|
-              sidecar.write("#{now.call.utc.strftime('%Y-%m-%dT%H:%M:%SZ')} #{reason}\n")
+              sidecar.write("#{now.call.utc.strftime("%Y-%m-%dT%H:%M:%SZ")} #{reason}\n")
             end
             # The open-mode is umask-sensitive; force the pinned 0640.
             File.chmod(HermesContract::FILE_MODE, sidecar_path)

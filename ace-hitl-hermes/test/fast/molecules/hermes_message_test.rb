@@ -96,7 +96,7 @@ module Ace
 
           def test_timestamps_are_strict_utc_iso8601
             ["2026-09-24 10:00:00", "2026-09-24T10:00:00+02:00",
-             "2026-13-01T10:00:00Z", nil, 123].each do |bad|
+              "2026-13-01T10:00:00Z", nil, 123].each do |bad|
               payload = answer_payload(received_at: bad)
               error = assert_raises(InvalidMessageError) { HermesMessage.from_hash(payload) }
               assert_match(/received_at/, error.message)

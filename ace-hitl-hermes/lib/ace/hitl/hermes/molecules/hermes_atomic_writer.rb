@@ -43,7 +43,7 @@ module Ace
               end
               File.chmod(HermesContract::FILE_MODE, tmp_path)
               File.rename(tmp_path, final_path)
-            rescue StandardError
+            rescue
               File.delete(tmp_path) if File.exist?(tmp_path)
               raise
             end

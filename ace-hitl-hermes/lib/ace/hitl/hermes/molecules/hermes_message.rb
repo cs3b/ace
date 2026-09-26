@@ -14,7 +14,7 @@ module Ace
         # every violated rule. The Captain's answer file shape is exactly
         # {schema, id, kind: "answer", answer, sender, received_at}.
         class HermesMessage
-          TIMESTAMP_PATTERN = /\A\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z\z/.freeze
+          TIMESTAMP_PATTERN = /\A\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z\z/
           KINDS = %w[question answer].freeze
 
           EXPECTED_FIELDS = {
@@ -46,7 +46,7 @@ module Ace
             kind_name = hash["kind"]
             unless KINDS.include?(kind_name)
               raise InvalidMessageError,
-                "message kind must be one of #{KINDS.join(', ')} (got #{kind_name.inspect})"
+                "message kind must be one of #{KINDS.join(", ")} (got #{kind_name.inspect})"
             end
 
             expected = EXPECTED_FIELDS.fetch(kind_name)
@@ -55,8 +55,8 @@ module Ace
             unless missing.empty? && extra.empty?
               raise InvalidMessageError,
                 "message fields violate schema #{HermesContract::MESSAGE_SCHEMA} " \
-                "(missing: #{missing.join(', ') || 'none'}; " \
-                "unexpected: #{extra.join(', ') || 'none'})"
+                "(missing: #{missing.join(", ") || "none"}; " \
+                "unexpected: #{extra.join(", ") || "none"})"
             end
 
             id = Atoms::HermesTokens.validate!(hash["id"], "message id")
@@ -67,13 +67,13 @@ module Ace
 
             sender = Atoms::HermesTokens.validate!(hash["sender"], "sender")
 
-            body_field = kind_name == "question" ? "question" : "answer"
+            body_field = (kind_name == "question") ? "question" : "answer"
             body = hash[body_field]
             unless body.is_a?(String) && !body.strip.empty?
               raise InvalidMessageError, "message #{body_field} must be a non-empty string"
             end
 
-            timestamp_field = kind_name == "question" ? "created_at" : "received_at"
+            timestamp_field = (kind_name == "question") ? "created_at" : "received_at"
             timestamp = validate_timestamp!(hash[timestamp_field], timestamp_field)
 
             new(

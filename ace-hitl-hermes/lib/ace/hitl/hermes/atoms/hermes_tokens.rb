@@ -9,7 +9,7 @@ module Ace
         # names, machine names. Path-traversal safe: no separators, no
         # leading dot, bounded length.
         module HermesTokens
-          PATTERN = /\A[A-Za-z0-9][A-Za-z0-9._:-]{0,63}\z/.freeze
+          PATTERN = /\A[A-Za-z0-9][A-Za-z0-9._:-]{0,63}\z/
 
           module_function
 

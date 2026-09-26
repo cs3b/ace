@@ -54,7 +54,7 @@ module Ace
           end
 
           def file_name(id)
-            "#{Atoms::HermesTokens.validate!(id, 'message id')}#{MESSAGE_EXT}"
+            "#{Atoms::HermesTokens.validate!(id, "message id")}#{MESSAGE_EXT}"
           end
 
           # `<token>.json` -> id token; anything else is not a message file.
