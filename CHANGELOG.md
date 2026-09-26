@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 
 - **ace-llm v0.40.0**: Records resolved execution identity and accepts Pi max reasoning.
+- **ace-task v0.37.5**: Loads its declared `ace-git-github` dependency, so updates and archive moves of tasks with linked GitHub issues no longer fail with "GitHub issue sync primitives are unavailable".
 
 - **ace-git-github v0.1.1**: Passes qualified repository and PR number correctly to GitHub CLI.
 - **ace-llm-providers-cli v0.34.1**: Corrects Pi/Codex completion parsing and read-only Pi execution.
@@ -16,6 +17,8 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- **ace-task v0.37.5**: GitHub sync is best-effort — offline updates flag tasks with `github_sync_pending`, and `ace-task github-sync --pending` replays missed issue syncs once gh is installed and authenticated.
+- **ace-git-github v0.1.2**: Added `IssueSync.available?` availability probe (gh installed and authenticated) for best-effort GitHub sync.
 - **ace-review v0.55.0**: Added scoped, complete PR review inputs with prompt budgets and cached goal briefs.
 - **ace-support-core v0.32.0**: Added allowed-root and explicit-path bounds for file aggregation.
 

@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-09-26
+
+### Added
+- `IssueSync.available?` probe: true when the `gh` CLI is installed and authenticated, letting callers treat GitHub sync as best-effort.
+
 ## [0.1.1] - 2026-09-24
 
 ### Fixed

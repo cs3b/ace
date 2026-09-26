@@ -86,7 +86,7 @@ PATH
 PATH
   remote: ace-git-github
   specs:
-    ace-git-github (0.1.1)
+    ace-git-github (0.1.2)
       ace-git (~> 0.24)
 
 PATH
@@ -354,7 +354,7 @@ PATH
 PATH
   remote: ace-task
   specs:
-    ace-task (0.37.4)
+    ace-task (0.37.5)
       ace-b36ts (~> 0.14)
       ace-git (~> 0.24)
       ace-git-github (~> 0.1)
