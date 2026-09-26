@@ -339,6 +339,25 @@ class LifecycleEffectsTest < AceHitlTestCase
     end
   end
 
+  def test_cwd_less_declaration_is_rejected_at_declaration_time
+    with_lifecycle_root do |root|
+      store = make_store(root: root, identity: unprivileged_identity)
+      [nil, ""].each do |missing_cwd|
+        error = assert_raises(Ace::Hitl::Lifecycle::Effects::DeclarationError) do
+          store.create(**request_args(effect: {
+            match: nil, effect_args: ["/bin/true"], effect_cwd: missing_cwd, effect_timeout: 30
+          }))
+        end
+        assert_match(/--effect-cwd is required/, error.message)
+      end
+      # The typed rejection happens at the declaration boundary: nothing
+      # is persisted, so a cwd-less callback can never reach answer time
+      # as a misleading Errno::ENOENT escalation (review F-A on W696).
+      assert_empty Dir.children(File.join(root, "requests"))
+      assert_empty Dir.children(File.join(root, "public"))
+    end
+  end
+
   def test_effect_declaration_is_persisted_verbatim_in_the_deployed_shape
     with_lifecycle_root do |root|
       store = make_store(root: root, identity: unprivileged_identity)

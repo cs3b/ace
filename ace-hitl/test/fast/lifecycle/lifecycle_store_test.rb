@@ -504,6 +504,42 @@ class LifecycleStoreTest < AceHitlTestCase
     end
   end
 
+  def test_reused_request_id_starts_clean_from_the_previous_incarnation
+    with_lifecycle_root do |root|
+      store = make_store(root: root, identity: unprivileged_identity)
+      root_store = make_store(root: root, identity: root_identity)
+
+      # First incarnation: its callback escalates, then the request is
+      # consumed (terminal, artifacts kept by design).
+      store.create(**request_args(effect: {
+        match: nil, effect_args: ["/bin/false"], effect_cwd: root, effect_timeout: 30
+      }))
+      root_store.deliver("hitl001", stdin_reader("first"))
+      store.consume("hitl001", timeout: 1)
+      assert_equal "escalated", effects_log(root)["attempts"][0]["outcome"]
+
+      # Reuse the exact same id: the new incarnation must not inherit
+      # the stale public projection or the stale effects log (review
+      # F-B on W696).
+      store.create(**request_args(effect: {
+        match: nil, effect_args: ["/bin/true"], effect_cwd: root, effect_timeout: 30
+      }))
+      refute_path_exists File.join(root, "effects", "hitl001.json")
+      public_record = JSON.parse(File.read(File.join(root, "public", "hitl001.json")))
+      assert_equal "created", public_record["state"]
+      refute public_record.key?("effect_state")
+
+      # The second incarnation runs on a genuinely fresh log: exactly
+      # one new attempt, no inherited escalation marker.
+      root_store.deliver("hitl001", stdin_reader("second"))
+      log = effects_log(root)
+      assert_equal 1, log["attempts"].length
+      assert_equal "ok", log["attempts"][0]["outcome"]
+      assert_nil log["escalated"]
+      assert_equal "callback-ok", public_effect_state(root)
+    end
+  end
+
   def test_root_only_operations_reject_unprivileged_callers
     with_lifecycle_root do |root|
       store = make_store(root: root, identity: unprivileged_identity)
@@ -524,6 +560,14 @@ class LifecycleStoreTest < AceHitlTestCase
 
   def public_state(root)
     JSON.parse(File.read(File.join(root, "public", "hitl001.json")))["state"]
+  end
+
+  def public_effect_state(root)
+    JSON.parse(File.read(File.join(root, "public", "hitl001.json")))["effect_state"]
+  end
+
+  def effects_log(root)
+    JSON.parse(File.read(File.join(root, "effects", "hitl001.json")))
   end
 
   def find_transition(ownership, dir_suffix)

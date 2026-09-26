@@ -30,6 +30,14 @@ module Ace
         def validate_declaration!(effect)
           match = effect[:match]&.to_s
           cwd = (effect[:cwd] || effect[:effect_cwd])&.to_s
+          # cwd is a required declaration field (spec §5: {argv:, cwd:,
+          # match:, timeout_s:}). A cwd-less declaration would otherwise
+          # pass validation and fail at answer time as a misleading
+          # Errno::ENOENT spawn escalation (review F-A on W696).
+          if cwd.nil? || cwd.strip.empty?
+            raise DeclarationError,
+              "--effect-cwd is required for an effect callback (absolute path to an existing directory)"
+          end
           Atoms::HitlEffectValidator.validate!(
             match: match,
             effect_args: Array(effect[:effect_args] || effect[:argv]).map(&:to_s),

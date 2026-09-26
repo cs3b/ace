@@ -126,6 +126,11 @@ module Ace
           raise StateError, "HITL request already exists" if request_path.exist?
 
           ensure_layout!
+          # A reused id starts clean: the public projection and the
+          # root-only effects log of a consumed/cancelled predecessor
+          # must not leak into the new incarnation (review F-B on W696).
+          public_path(request_id).unlink if public_path(request_id).exist?
+          effects_dir.join("#{request_id}.json").unlink if effects_dir.join("#{request_id}.json").exist?
           begin
             # link(2) is the create-once commit point: rename(2) would
             # silently let a concurrent duplicate-id create overwrite the

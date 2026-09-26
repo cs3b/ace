@@ -68,7 +68,7 @@ class LabProviderTest < AceHitlTestCase
         ref: ref,
         work: "W685",
         attempt: "A-a73ebdaeb811210d51e0251e",
-        effect: {match: nil, effect_args: ["/bin/false"], effect_cwd: nil, effect_timeout: nil}
+        effect: {match: nil, effect_args: ["/bin/false"], effect_cwd: tmp, effect_timeout: nil}
       )
 
       manager = Ace::Hitl::Organisms::HitlManager.new(root_dir: tmp)
