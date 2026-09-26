@@ -29,6 +29,13 @@ class AddCommandTest < AceAssignTestCase
     ]
   }.freeze
 
+  TEST_BASE_MATCH_PRESET = {
+    "name" => "test-base-match",
+    "steps" => [
+      {"name" => "review-fit-1", "instructions" => "Review cycle"}
+    ]
+  }.freeze
+
   TEST_TASK_TOKENS_PRESET = {
     "name" => "test-task-tokens",
     "expansion" => {
@@ -115,7 +122,9 @@ class AddCommandTest < AceAssignTestCase
       output = capture_io do
         command = Ace::Assign::CLI::Commands::Add.new
         with_fast_command_executor(command, cache_base: cache_dir) do
-          command.call(step: "review-fit", preset: "work-on-task", after: "010")
+          with_preset_loader_stubs("test-base-match" => TEST_BASE_MATCH_PRESET) do
+            command.call(step: "review-fit", preset: "test-base-match", after: "010")
+          end
         end
       end
 
@@ -299,7 +308,7 @@ class AddCommandTest < AceAssignTestCase
       error = assert_raises(Ace::Assign::StepErrors::NotFound) do
         command = Ace::Assign::CLI::Commands::Add.new
         with_fast_command_executor(command, cache_base: cache_dir) do
-          command.call(step: "review-fit", preset: "work-on-task", after: "999")
+          command.call(step: "review-pr", preset: "work-on-task", after: "999")
         end
       end
 
