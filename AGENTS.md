@@ -29,6 +29,12 @@ See `docs/tools.md#agent-engineering-practices` for expanded day-to-day agent pr
 - Tests: always `ace-test` / `ace-test-suite` — never `bundle exec rake test` or raw `bundle exec ruby` for package tests.
 - Project context: `ace-bundle project` (do not duplicate it in responses).
 
+## Merge policy (Captain's decision, 2026-09-27)
+
+- The merge gate is EXECUTED tests plus an independent reviewer verdict.
+- CI status is ADVISORY, not a merge blocker: red CI merged to main is a signal to repair, never a stop. "We run test - we merge - done."
+- CI hardening work (e.g. non-root runner users) lands as advisory improvement and never gates delivery.
+
 ## Hard rules
 
 - Run `ace-*` commands directly. Do not pipe, redirect, or post-process their output; when they print a path, read that file. Do not create extra capture files for `ace-*` output unless the user asks.
