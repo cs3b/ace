@@ -158,7 +158,16 @@ module Ace
               raise Lifecycle::BindingError, "HITL Attempt records are unavailable"
             end
 
-            reply = JSON.parse(line)
+            begin
+              reply = JSON.parse(line)
+            rescue JSON::ParserError
+              # A non-JSON reply is daemon unavailability, never a raw
+              # parse error escaping to the caller (review F3 on W696):
+              # it fails closed exactly like a short reply, so the ask
+              # path surfaces the orphan event and deliver cancels
+              # liveness instead of crashing.
+              raise Lifecycle::BindingError, "HITL Attempt records are unavailable"
+            end
             raise Lifecycle::BindingError, "HITL Attempt records are unavailable" unless reply.is_a?(Hash)
             if reply["ok"] != true
               error = reply["error"].to_s.strip

@@ -23,8 +23,11 @@ module Ace
         module_function
 
         # mode is an Integer permission bits value; ownership nil keeps
-        # the current identity.
-        def call(path, value, mode:, ownership: nil, ownership_strategy: DEFAULT_OWNERSHIP)
+        # the current identity. exclusive commits with link(2) instead of
+        # rename(2), so an existing destination raises Errno::EEXIST
+        # instead of being silently replaced (create-once writes).
+        def call(path, value, mode:, ownership: nil, ownership_strategy: DEFAULT_OWNERSHIP,
+          exclusive: false)
           path = Pathname.new(path)
           path.parent.mkpath
           temporary = path.parent.join(".#{path.basename}.tmp.#{$PROCESS_ID}")
@@ -50,7 +53,11 @@ module Ace
           end
           File.chmod(mode, temporary)
           ownership_strategy.chown(temporary, ownership)
-          File.rename(temporary, path)
+          if exclusive
+            File.link(temporary, path)
+          else
+            File.rename(temporary, path)
+          end
         ensure
           temporary.unlink if temporary&.exist?
         end

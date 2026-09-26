@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "securerandom"
+require "fileutils"
 require_relative "errors"
 require_relative "identity"
 require_relative "atomic_json"
@@ -26,6 +27,18 @@ module Ace
         ANSWER_MODE = 0o400
         REQUEST_MODE = 0o600
         CONSUME_POLL_SECONDS = 1
+
+        # Pinned directory modes (spec §2): everything 0700 except the
+        # public projection (0755). Enforced umask-proof at first create
+        # (review F6 on W696).
+        ROOT_MODE = 0o700
+        DIR_MODES = {
+          "requests" => 0o700,
+          "secrets" => 0o700,
+          "answers" => 0o700,
+          "public" => 0o755,
+          "effects" => 0o700
+        }.freeze
 
         DEFAULT_ADMIN_USER = "lab-admin"
         DEFAULT_GROUP = "lab-control"
@@ -112,7 +125,16 @@ module Ace
           request_path = requests_dir.join("#{request_id}.json")
           raise StateError, "HITL request already exists" if request_path.exist?
 
-          AtomicJson.call(request_path, value, mode: REQUEST_MODE, ownership_strategy: @ownership)
+          ensure_layout!
+          begin
+            # link(2) is the create-once commit point: rename(2) would
+            # silently let a concurrent duplicate-id create overwrite the
+            # winner (review F8 on W696).
+            AtomicJson.call(request_path, value, mode: REQUEST_MODE,
+              ownership_strategy: @ownership, exclusive: true)
+          rescue Errno::EEXIST
+            raise StateError, "HITL request already exists"
+          end
           update_public(value, "created")
           {
             "id" => request_id,
@@ -137,10 +159,18 @@ module Ace
               requester_gate!(value)
               verify_active!(value)
               answer = read_answer(value)
-            end
-            if answer
+              unless answer
+                next
+              end
+
+              # The terminal transition commits under the same per-request
+              # flock as deliver/cancel (spec §3): a concurrent cancel
+              # must not interleave between reading the answer and
+              # removing the request (review F5 on W696).
               update_public(value, "consumed")
               remove_request(value, keep_public: true)
+            end
+            if answer
               return {
                 "id" => request_id,
                 "work" => value["work"],
@@ -149,6 +179,7 @@ module Ace
                 "sensitive" => value["sensitive"] == true
               }
             end
+
             break if deadline && Time.now.to_i > deadline
 
             sleep(@poll_seconds)
@@ -276,6 +307,21 @@ module Ace
           requests_dir.join("#{safe_id(request_id)}.json")
         end
 
+        # Provision the store layout with the pinned directory modes
+        # (spec §2; review F6 on W696). mkdir(2) bakes in the process
+        # umask, so every directory is chmod'd explicitly after mkdir —
+        # the same umask-proof pattern as the atomic writer.
+        def ensure_layout!
+          FileUtils.mkdir_p(@root)
+          File.chmod(ROOT_MODE, @root)
+          DIR_MODES.each do |name, mode|
+            dir = @root.join(name)
+            FileUtils.mkdir_p(dir)
+            File.chmod(mode, dir)
+          end
+          nil
+        end
+
         def public_path(request_id)
           public_dir.join("#{safe_id(request_id)}.json")
         end
@@ -314,14 +360,20 @@ module Ace
         end
 
         # The per-request flock: the transaction boundary shared with
-        # deliver/consume/cancel and the lab-side stop protocol.
+        # deliver/consume/cancel and the lab-side stop protocol. A record
+        # that vanished under a concurrent cancel is a StateError, never
+        # a raw Errno escape (review F5 on W696).
         def with_request_lock(request_id)
           path = request_path(request_id)
-          File.open(path, "r") do |file|
-            file.flock(File::LOCK_EX)
-            yield path
-          ensure
-            file.flock(File::LOCK_UN)
+          begin
+            File.open(path, "r") do |file|
+              file.flock(File::LOCK_EX)
+              yield path
+            ensure
+              file.flock(File::LOCK_UN)
+            end
+          rescue Errno::ENOENT
+            raise StateError, "unknown or invalid HITL request"
           end
         end
 

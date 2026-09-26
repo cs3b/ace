@@ -3,7 +3,6 @@
 require "test_helper"
 require "socket"
 require "json"
-require "etc"
 
 # Test successor of HitlAskCliTest (spec 8wm.t.y21 §10): `ace-hitl ask`
 # creates the local event and the NATIVE relay request through the
@@ -13,8 +12,18 @@ class HitlAskCliTest < AceHitlTestCase
   HITL_EVENT_LINE = /HITL event: (\S+)/
   LAB_REQUEST_LINE = /Lab request: (\S+)/
 
+  # The requester identity is pinned through the spec-sanctioned test
+  # seam (Lifecycle::Identity, spec §2): these CLI tests must not depend
+  # on the OS login name — an OS user literally named `lab-admin` (the
+  # store's default admin) would skip binding validation entirely and
+  # flip the binding-dependent expectations (review F4 on W696).
+  REQUESTER = "lab-asker"
+
   def setup
     super
+    @original_username = Ace::Hitl::Lifecycle::Identity.method(:username)
+    Ace::Hitl::Lifecycle::Identity.define_singleton_method(:username) { REQUESTER }
+    @raw_reply = nil
     @scratch = Dir.mktmpdir("ace-hitl-ask")
     @store_root = File.join(@scratch, "store")
     %w[requests secrets answers public effects].each do |dir|
@@ -27,6 +36,7 @@ class HitlAskCliTest < AceHitlTestCase
   end
 
   def teardown
+    Ace::Hitl::Lifecycle::Identity.define_singleton_method(:username, @original_username)
     @server.exit
     @listener.close
     FileUtils.remove_entry(@scratch) if @scratch && File.exist?(@scratch)
@@ -39,7 +49,7 @@ class HitlAskCliTest < AceHitlTestCase
       line = conn.gets("\n")
       query = line ? JSON.parse(line) : {}
       @queries << query
-      conn.write(JSON.generate(ok_binding_reply(query)) + "\n")
+      conn.write(@raw_reply || JSON.generate(ok_binding_reply(query)) + "\n")
       conn.close
     end
   rescue
@@ -68,7 +78,7 @@ class HitlAskCliTest < AceHitlTestCase
           "work" => query["work"],
           "project" => "ace",
           "state" => "working",
-          "unix_user" => Etc.getpwuid(Process.uid).name,
+          "unix_user" => REQUESTER,
           "owner" => "",
           "execution" => "container",
           "herdr" => {"session" => "lab", "pane_id" => "s1:pA", "terminal_id" => "t-1"},
@@ -205,6 +215,24 @@ class HitlAskCliTest < AceHitlTestCase
           assert_match(/HERDR_PANE is required/, result[:stderr])
           assert_empty Dir.children(File.join(@store_root, "requests"))
           assert_empty @queries
+        end
+      end
+    end
+  end
+
+  def test_non_json_binding_reply_fails_closed_and_surfaces_orphan_event
+    with_hitl_dir do |root|
+      with_cli_root(root) do
+        @raw_reply = "this is not json"
+        with_ask_env do
+          result = run_cli(["ask", "Garbled daemon?", "--work", "W685", "--attempt", "A-a73ebdaeb811210d51e0251e"])
+
+          assert_equal 1, result[:exit_code]
+          assert_match(/HITL Attempt records are unavailable/, result[:stderr])
+          orphan_id = result[:stderr][/HITL event (\S+) was created/, 1]
+          refute_nil orphan_id, "error must surface the orphan local event id"
+          assert_match(/never bound to a Lab request \(orphan\)/, result[:stderr])
+          assert_empty Dir.children(File.join(@store_root, "requests"))
         end
       end
     end

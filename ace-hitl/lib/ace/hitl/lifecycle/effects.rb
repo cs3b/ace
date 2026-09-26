@@ -55,7 +55,7 @@ module Ace
         # Executed inside deliver's locked critical section, after the
         # answer is relayed. Exactly one attempt; failure escalates once.
         def run(store, value, answer, requester_uid:, requester_gid:, identity: Identity,
-          spawner: Process)
+          spawner: Process, group_dropper: nil)
           declaration = value["effect"]
           return nil unless declaration.is_a?(Hash) && Array(declaration["argv"]).any?
 
@@ -74,7 +74,21 @@ module Ace
           }
           if match_ok
             start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-            status, timed_out = execute(declaration, answer, requester_uid, requester_gid, spawner)
+            begin
+              status, timed_out = execute(
+                declaration, answer, requester_uid, requester_gid, spawner,
+                group_dropper: group_dropper
+              )
+            rescue SystemCallError => e
+              # A spawn/wait failure (missing binary, non-executable
+              # argv, EPERM) must never escape deliver AFTER the answer
+              # was relayed: the operator signal would be silently lost.
+              # It is an escalation outcome exactly like a timeout or a
+              # nonzero exit (spec §5; review F2 on W696).
+              attempt["error"] = e.class.name
+              status = nil
+              timed_out = false
+            end
             attempt["timed_out"] = timed_out
             attempt["exit_status"] = status
             attempt["duration_s"] = (Process.clock_gettime(Process::CLOCK_MONOTONIC) - start).round(3)
@@ -137,36 +151,61 @@ module Ace
 
         # Exec-style spawn, never a shell. {answer} substitutes once per
         # element as a plain string replace. Output is discarded
-        # (redaction). Returns [exit_status, timed_out].
-        def execute(declaration, answer, requester_uid, requester_gid, spawner = Process)
+        # (redaction). Process.spawn applies only setgid/setuid, so the
+        # supplementary-group drop happens around the spawn window (see
+        # drop_child_groups) and the forked child inherits the dropped
+        # list. Returns [exit_status, timed_out].
+        def execute(declaration, answer, requester_uid, requester_gid, spawner = Process,
+          group_dropper: nil)
+          group_dropper ||= method(:drop_child_groups)
           argv = declaration["argv"].map { |element| element.gsub("{answer}", answer) }
           timeout = declaration["timeout_s"] || DEFAULT_TIMEOUT_S
           deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + timeout
-          pid = spawner.spawn(
-            *argv,
-            chdir: declaration["cwd"],
-            gid: requester_gid,
-            uid: requester_uid,
-            out: File::NULL,
-            err: File::NULL
-          )
-          timed_out = false
           status = nil
-          loop do
-            _, status = spawner.waitpid2(pid, Process::WNOHANG)
-            break if status
+          timed_out = false
+          group_dropper.call(requester_gid) do
+            pid = spawner.spawn(
+              *argv,
+              chdir: declaration["cwd"],
+              gid: requester_gid,
+              uid: requester_uid,
+              out: File::NULL,
+              err: File::NULL
+            )
+            loop do
+              _, status = spawner.waitpid2(pid, Process::WNOHANG)
+              break if status
 
-            if Process.clock_gettime(Process::CLOCK_MONOTONIC) > deadline
-              timed_out = true
-              spawner.kill("TERM", pid)
-              sleep_after_terminate
-              spawner.kill("KILL", pid)
-              _, status = spawner.waitpid2(pid)
-              break
+              if Process.clock_gettime(Process::CLOCK_MONOTONIC) > deadline
+                timed_out = true
+                spawner.kill("TERM", pid)
+                sleep_after_terminate
+                spawner.kill("KILL", pid)
+                _, status = spawner.waitpid2(pid)
+                break
+              end
+              sleep 0.05
             end
-            sleep 0.05
           end
           [status&.exitstatus, timed_out]
+        end
+
+        # Supplementary-group isolation for the effect child (spec §5;
+        # review F7 on W696): spawn has no groups hook, so root swaps the
+        # process supplementary list for exactly the requester's group
+        # for the duration of the block and restores it afterwards; the
+        # child inherits the dropped list. A non-root process has nothing
+        # to drop and would hit EPERM, so it yields unchanged.
+        def drop_child_groups(gid)
+          return yield unless Process.euid.zero?
+
+          previous = Process.groups
+          Process::Sys.setgroups([gid])
+          begin
+            yield
+          ensure
+            Process::Sys.setgroups(previous)
+          end
         end
 
         def sleep_after_terminate

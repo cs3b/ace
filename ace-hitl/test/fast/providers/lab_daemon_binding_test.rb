@@ -3,6 +3,7 @@
 require "test_helper"
 require "socket"
 require "json"
+require "support/lifecycle_fixtures"
 
 # Test successors of lab-config tests/test_hitl.py binding rows (M1
 # audit brief 8wm.t.y21 §1): the provider=lab binding client speaks the
@@ -11,12 +12,15 @@ require "json"
 # fail-closed interpretation of the daemon projection. The daemon-side
 # W647 authority itself stays lab-config.
 class LabDaemonBindingTest < AceHitlTestCase
+  include LifecycleFixtures
+
   WORK = "W500"
   ATTEMPT = "A-#{"a" * 24}"
 
   def setup
     @path = File.join(Dir.mktmpdir("ace-hitl-labd"), "labd.sock")
     @queries = []
+    @raw_reply = nil
     @reply = ->(_query) { ok_reply }
     @listener = UNIXServer.new(@path)
     @thread = Thread.new { serve }
@@ -38,7 +42,7 @@ class LabDaemonBindingTest < AceHitlTestCase
         query = JSON.parse(line) if line
         @queries << query
         reply = @reply.call(query)
-        socket.write(JSON.generate(reply) + "\n")
+        socket.write(@raw_reply || JSON.generate(reply) + "\n")
         socket.close
       end
     end
@@ -187,6 +191,35 @@ class LabDaemonBindingTest < AceHitlTestCase
       binding.require_active(work: WORK, attempt: ATTEMPT)
     end
     assert_match(/unavailable/, error.message)
+  end
+
+  def test_non_json_reply_fails_closed
+    @raw_reply = "this is not json"
+    error = assert_raises(Ace::Hitl::Lifecycle::BindingError) do
+      binding.require_active(work: WORK, attempt: ATTEMPT)
+    end
+    assert_match(/unavailable/, error.message)
+  end
+
+  def test_deliver_cancels_liveness_when_the_daemon_reply_is_not_json
+    @raw_reply = "this is not json"
+    with_lifecycle_root do |root|
+      daemon = Ace::Hitl::Providers::Lab::DaemonBinding.new(socket_path: path)
+      # The requester is the store's admin user, so create skips the
+      # (unanswerable) binding validation; deliver must still re-verify
+      # liveness and fail closed.
+      store = make_store(root: root, binding: daemon)
+      store.create(**request_args)
+
+      error = assert_raises(Ace::Hitl::Lifecycle::BindingError) do
+        make_store(root: root,
+          identity: LifecycleFixtures::TestIdentity.new(username: "lab-admin", root: true),
+          binding: daemon).deliver("hitl001", stdin_reader("approved"))
+      end
+      assert_match(/unavailable/, error.message)
+      assert_equal "cancelled", JSON.parse(File.read(File.join(root, "public", "hitl001.json")))["state"]
+      assert_empty Dir.children(File.join(root, "requests"))
+    end
   end
 
   def test_require_active_rejects_terminal_attempt

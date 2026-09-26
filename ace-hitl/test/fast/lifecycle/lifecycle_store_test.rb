@@ -253,6 +253,78 @@ class LifecycleStoreTest < AceHitlTestCase
     end
   end
 
+  def test_consume_commits_the_terminal_transition_under_the_request_lock
+    with_lifecycle_root do |root|
+      request_path = File.join(root, "requests", "hitl001.json")
+      store = make_store(root: root, identity: unprivileged_identity)
+      store.create(**request_args)
+      make_store(root: root, identity: root_identity).deliver("hitl001", stdin_reader("approved"))
+
+      # Probe the per-request flock inside the terminal transition: a
+      # non-blocking exclusive acquisition must FAIL while consume holds
+      # the lock (review F5 on W696).
+      lock_held = []
+      consumer = make_store(root: root, identity: unprivileged_identity)
+      consumer.define_singleton_method(:update_public) do |value, state, audit: nil|
+        File.open(request_path, "r") do |probe|
+          denied = probe.flock(File::LOCK_EX | File::LOCK_NB) == false
+          probe.flock(File::LOCK_UN) unless denied
+          lock_held << denied
+        end
+        super(value, state, audit: audit)
+      end
+      consumer.define_singleton_method(:remove_request) do |value, keep_public: false|
+        File.open(request_path, "r") do |probe|
+          denied = probe.flock(File::LOCK_EX | File::LOCK_NB) == false
+          probe.flock(File::LOCK_UN) unless denied
+          lock_held << denied
+        end
+        super(value, keep_public: keep_public)
+      end
+
+      consumed = consumer.consume("hitl001", timeout: 1)
+
+      assert_equal "approved", consumed["answer"]
+      assert_equal [true, true], lock_held,
+        "the consumed transition and the removal must commit under the flock"
+      assert_equal "consumed", JSON.parse(File.read(File.join(root, "public", "hitl001.json")))["state"]
+      assert_empty Dir.children(File.join(root, "requests"))
+    end
+  end
+
+  def test_lock_on_vanished_record_fails_closed_as_state_error
+    with_lifecycle_root do |root|
+      store = make_store(root: root, identity: unprivileged_identity)
+
+      error = assert_raises(Ace::Hitl::Lifecycle::StateError) do
+        store.send(:with_request_lock, "absent1") {}
+      end
+      assert_match(/unknown or invalid HITL request/, error.message)
+    end
+  end
+
+  def test_create_provisions_the_store_layout_with_pinned_modes
+    Dir.mktmpdir("ace-hitl-provision") do |tmp|
+      root = File.join(tmp, "store")
+      previous = File.umask(0o000)
+      begin
+        store = make_store(root: root, identity: unprivileged_identity)
+        store.create(**request_args)
+      ensure
+        File.umask(previous)
+      end
+
+      # The modes are pinned by spec §2 regardless of the creating
+      # process umask (review F6 on W696).
+      assert_equal 0o700, File.stat(root).mode & 0o777
+      assert_equal 0o755, File.stat(File.join(root, "public")).mode & 0o777
+      %w[requests secrets answers effects].each do |name|
+        assert_equal 0o700, File.stat(File.join(root, name)).mode & 0o777, name
+      end
+      assert_path_exists File.join(root, "requests", "hitl001.json")
+    end
+  end
+
   def test_cancel_preserves_exact_attempt_reference
     with_lifecycle_root do |root|
       store = make_store(root: root, identity: unprivileged_identity)

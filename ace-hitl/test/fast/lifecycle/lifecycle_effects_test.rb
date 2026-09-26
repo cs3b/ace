@@ -169,6 +169,95 @@ class LifecycleEffectsTest < AceHitlTestCase
     end
   end
 
+  def test_spawn_failure_escalates_and_deliver_completes
+    with_lifecycle_root do |root|
+      sink_calls = []
+      store = make_store(root: root, identity: unprivileged_identity)
+      store.create(**request_args(effect: {
+        match: nil, effect_args: ["/definitely/absent/hitl-callback"], effect_cwd: root, effect_timeout: 30
+      }))
+      root_store = make_store(root: root, identity: root_identity)
+      root_store.escalation_sink = lambda do |**kwargs|
+        sink_calls << kwargs
+      end
+
+      delivered = root_store.deliver("hitl001", stdin_reader("approved"))
+
+      # The answer is ALWAYS relayed; the spawn failure is recorded as a
+      # deduped escalation outcome instead of crashing deliver (review
+      # F2 on W696).
+      assert_equal true, delivered["delivered"]
+      assert_equal "approved", File.read(File.join(root, "answers", "hitl001.answer"))
+      assert_equal "callback-escalated", public_effect_state(root)
+      log = effects_log(root)
+      assert_equal "escalated", log["attempts"][0]["outcome"]
+      assert_equal "Errno::ENOENT", log["attempts"][0]["error"]
+      assert_equal 1, sink_calls.length
+      assert_equal "hitl001", sink_calls[0][:request_id]
+    end
+  end
+
+  def test_non_executable_callback_escalates_and_deliver_completes
+    with_lifecycle_root do |root|
+      store = make_store(root: root, identity: unprivileged_identity)
+      script = File.join(root, "callback.sh")
+      File.write(script, "#!/bin/sh\nexit 0\n")
+      File.chmod(0o644, script)
+      store.create(**request_args(effect: {
+        match: nil, effect_args: [script], effect_cwd: root, effect_timeout: 30
+      }))
+
+      delivered = make_store(root: root, identity: root_identity).deliver("hitl001", stdin_reader("approved"))
+
+      assert_equal true, delivered["delivered"]
+      assert_equal "approved", File.read(File.join(root, "answers", "hitl001.answer"))
+      assert_equal "callback-escalated", public_effect_state(root)
+      log = effects_log(root)
+      assert_equal "escalated", log["attempts"][0]["outcome"]
+      assert_equal "Errno::EACCES", log["attempts"][0]["error"]
+    end
+  end
+
+  def test_child_spawn_happens_inside_the_dropped_groups_window
+    with_lifecycle_root do |root|
+      dropped = []
+      fake_spawner = Object.new
+      exited = Object.new
+      exited.define_singleton_method(:exitstatus) { 0 }
+      fake_spawner.define_singleton_method(:spawn) do |*_argv, **_options|
+        99_999
+      end
+      fake_spawner.define_singleton_method(:waitpid2) do |*_args|
+        [nil, exited]
+      end
+      dropper = Object.new
+      dropper.define_singleton_method(:call) do |gid, &block|
+        dropped << gid
+        block.call
+      end
+
+      store = make_store(root: root, identity: unprivileged_identity)
+      store.create(**request_args(effect: {
+        match: nil, effect_args: ["/bin/true"], effect_cwd: root, effect_timeout: 30
+      }))
+      Ace::Hitl::Lifecycle::Effects.run(
+        store,
+        JSON.parse(File.read(File.join(root, "requests", "hitl001.json"))),
+        "the-answer",
+        requester_uid: 1234,
+        requester_gid: 966,
+        identity: LifecycleFixtures::TestIdentity.new(username: "lab-admin", root: true),
+        spawner: fake_spawner,
+        group_dropper: dropper
+      )
+
+      # The supplementary-group drop wraps the spawn window itself: the
+      # forked child inherits the dropped list (review F7 on W696).
+      assert_equal [966], dropped
+      assert_equal "callback-ok", public_effect_state(root)
+    end
+  end
+
   def test_non_root_executor_facing_foreign_requester_fails_closed
     with_lifecycle_root do |root|
       store = make_store(root: root, identity: unprivileged_identity)
