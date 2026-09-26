@@ -1,6 +1,6 @@
 ---
 id: 8ro.t.0ve
-status: in-progress
+status: done
 priority: medium
 created_at: "2026-04-25 00:34:53"
 estimate: TBD
@@ -158,3 +158,7 @@ ace-assign watch --assignment 8abcd1 --root 010 --poll-interval 300
 - `ace-assign/lib/ace/assign/cli/commands/assignment_target.rb`
 - `ace-assign/lib/ace/assign/cli/commands/fork_run.rb`
 - `ace-assign/test/e2e/TS-ASSIGN-003-operations/scenario.yml`
+
+## Settlement note
+
+Settled: continuation ops (bind/result/reconcile) live in the lab runtime. Zombie closed during 2026-09-27 hygiene audit.

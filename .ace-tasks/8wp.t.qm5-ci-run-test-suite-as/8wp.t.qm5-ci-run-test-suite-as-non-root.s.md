@@ -1,6 +1,6 @@
 ---
 id: 8wp.t.qm5
-status: pending
+status: in_progress
 needs_review: false
 priority: high
 created_at: "2026-09-26 17:44:36"

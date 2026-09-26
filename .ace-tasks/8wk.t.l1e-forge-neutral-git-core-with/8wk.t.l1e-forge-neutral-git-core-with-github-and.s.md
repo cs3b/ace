@@ -1,7 +1,7 @@
 ---
 id: 8wk.t.l1e
 title: Forge-neutral Git core with GitHub and Forgejo providers
-status: in-progress
+status: done
 priority: high
 created_at: "2026-09-21 14:01:33"
 estimate: large
@@ -185,3 +185,7 @@ Promoted from `status: draft`, `needs_review: true` to `status: pending`, `needs
 The task specification is fully reviewed, aligned with overseer authority `8vu.t.l2d` and subtasks `.0`–`.2`, validated with live executed preflight evidence, and clean under `ace-task doctor`. Ready for builder Work scheduling.
 
 
+
+## Settlement note
+
+Settled: forge-neutral git core merged; Forgejo+GitHub providers in daily use. Zombie closed during 2026-09-27 hygiene audit.

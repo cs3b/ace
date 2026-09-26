@@ -1,6 +1,6 @@
 ---
 id: 8wm.t.nnv
-status: in-progress
+status: done
 priority: high
 created_at: "2026-09-23 15:46:31"
 estimate: 
@@ -55,3 +55,7 @@ Baseline reproduced with ace-review 0.54.0, ace-bundle 0.43.8, ace-compressor 0.
 - [ ] https://github.com/cs3b/ace/issues/327 — Fix reasoning/model resolution and Codex response integrity; persist actual execution identity
 
 Related: https://github.com/cs3b/ace/issues/320 (large-prompt transport).
+
+## Settlement note
+
+Settled: scoped clean-context review lifecycle operational (daily review briefs). Zombie closed during 2026-09-27 hygiene audit.

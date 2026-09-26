@@ -1,7 +1,7 @@
 ---
 id: 8wb.t.og5
 title: Register Codex gpt-6-astra and gpt-5.6 family in provider registry
-status: in-progress
+status: done
 priority: critical
 created_at: "2026-09-12 16:17:56"
 estimate: TBD
@@ -284,3 +284,7 @@ ace-task doctor                      # task health
   `ux/usage.md` is required by the drafting workflow), but the sync
   retention/ordering semantics make this behavior work, not exclusively a
   data-only change.
+
+## Settlement note
+
+Settled: Codex gpt-6-astra + gpt-5.6 family registered and in daily lab use (lab-admin reviews via codex gpt-5.6-luna). Zombie closed during 2026-09-27 hygiene audit.

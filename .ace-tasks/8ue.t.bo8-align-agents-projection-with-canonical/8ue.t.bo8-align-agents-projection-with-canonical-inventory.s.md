@@ -1,6 +1,6 @@
 ---
 id: 8ue.t.bo8
-status: in-progress
+status: done
 priority: medium
 created_at: "2026-07-15 07:46:55"
 estimate: TBD
@@ -214,3 +214,7 @@ Make the documented default ACE setup trustworthy. When canonical skill sources 
 **Questions Generated:** 1 high-priority ambiguity resolved through repository docs, ADR-027, completed task 8tt.t.stj, and current status output
 **Critical Blockers:** none remain
 **Decision:** Ready for implementation planning; the task now specifies curated coverage disclosure rather than requiring an unconditional all-canonical default
+
+## Settlement note
+
+Settled: agents projection aligned with canonical inventory (verified via lab agents). Zombie closed during 2026-09-27 hygiene audit.
