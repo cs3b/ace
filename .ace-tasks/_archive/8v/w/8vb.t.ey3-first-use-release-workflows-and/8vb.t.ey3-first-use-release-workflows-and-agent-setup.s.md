@@ -12,6 +12,7 @@ bundle:
   files: [docs/quick-start.md, docs/tools.md, ace-handbook/handbook/skills/as-release/SKILL.md, ace-bundle/test/feat/workflow_resolution_test.rb]
   commands: [ace-bundle wfi://release/local, ace-task show 8vb.t.ey3]
 needs_review: false
+github_sync_pending: true
 ---
 
 # First-use release workflows and agent setup

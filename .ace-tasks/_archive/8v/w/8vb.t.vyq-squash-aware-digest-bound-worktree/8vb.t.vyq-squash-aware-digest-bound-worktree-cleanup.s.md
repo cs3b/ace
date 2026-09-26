@@ -11,6 +11,7 @@ bundle:
   presets: [project]
   files: [ace-git-worktree/lib/ace/git/worktree/cli.rb, ace-git-worktree/lib/ace/git/worktree/configuration.rb, ace-git-worktree/lib/ace/git/worktree/molecules/worktree_lister.rb, ace-git-worktree/lib/ace/git/worktree/molecules/worktree_remover.rb, ace-git-worktree/lib/ace/git/worktree/models/worktree_info.rb, ace-git/lib/ace/git/molecules/pr_metadata_fetcher.rb, ace-git/lib/ace/git/molecules/gh_cli_executor.rb, ace-git-worktree/handbook/workflow-instructions/git/worktree-manage.wf.md, ace-git-worktree/docs/usage.md, ace-git-worktree/test/fast/molecules/worktree_lister_test.rb, ace-git-worktree/test/feat/worktree_manager_contract_test.rb, ace-git-worktree/test/e2e/TS-WORKTREE-002-task-aware/TC-007-remove-and-cleanup.runner.md]
   commands: [ace-git-worktree list --format json, ace-git-worktree prune --dry-run, ace-test ace-git-worktree all]
+github_sync_pending: true
 ---
 
 # Squash-aware digest-bound worktree cleanup

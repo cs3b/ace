@@ -12,6 +12,7 @@ bundle:
   files: [ace-git-worktree/lib/ace/git/worktree/organisms/task_worktree_orchestrator.rb, ace-git-worktree/lib/ace/git/worktree/molecules/task_committer.rb, ace-git-worktree/lib/ace/git/worktree/molecules/task_status_updater.rb, ace-git-worktree/lib/ace/git/worktree/molecules/hook_executor.rb, ace-git-worktree/lib/ace/git/worktree/configuration.rb, ace-git-worktree/.ace-defaults/git/worktree.yml, ace-git-worktree/test/fast/molecules/task_pusher_test.rb, ace-git-worktree/test/fast/organisms/task_worktree_orchestrator_test.rb, ace-git-worktree/test/feat/subtask_workflow_test.rb, ace-git-worktree/test/e2e/TS-WORKTREE-002-task-aware/TC-002-create-task-worktree.runner.md]
   commands: [ace-git-worktree create --task 8vb.t.vz8 --dry-run, ace-test ace-git-worktree all, ace-test-suite --target fast]
 needs_review: false
+github_sync_pending: true
 ---
 
 # Scope task bookkeeping commits to ACE-owned paths

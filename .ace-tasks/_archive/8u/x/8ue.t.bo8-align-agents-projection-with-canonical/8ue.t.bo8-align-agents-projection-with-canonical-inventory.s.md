@@ -18,6 +18,7 @@ worktree:
   created_at: "2026-07-15 09:54:15"
   updated_at: "2026-07-15 09:54:15"
   target_branch: main
+github_sync_pending: true
 ---
 
 # Align agents projection with canonical inventory

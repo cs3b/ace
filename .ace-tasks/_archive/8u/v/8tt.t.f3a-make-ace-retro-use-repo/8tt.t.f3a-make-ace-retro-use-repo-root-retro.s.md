@@ -7,6 +7,7 @@ estimate: TBD
 dependencies: []
 tags: []
 github_issue: 305
+github_sync_pending: true
 ---
 
 # Make ace-retro use repo-root retro workspace consistently

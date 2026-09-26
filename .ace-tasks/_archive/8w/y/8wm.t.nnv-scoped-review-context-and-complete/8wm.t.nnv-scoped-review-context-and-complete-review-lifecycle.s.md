@@ -7,6 +7,7 @@ estimate:
 dependencies: []
 tags: []
 github_issue: 321
+github_sync_pending: true
 ---
 
 # Scoped, budget-aware context and complete review lifecycle

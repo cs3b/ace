@@ -12,6 +12,7 @@ bundle:
   files: [docs/quick-start.md]
   commands: []
 needs_review: false
+github_sync_pending: true
 ---
 
 # Add application capability packages to default quick start
