@@ -14,7 +14,7 @@ module Ace
         # every violated rule. The Captain's answer file shape is exactly
         # {schema, id, kind: "answer", answer, sender, received_at}.
         class HermesMessage
-          TIMESTAMP_PATTERN = /\A\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z\z/
+          TIMESTAMP_PATTERN = /\A(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})Z\z/
           KINDS = %w[question answer].freeze
 
           EXPECTED_FIELDS = {
@@ -43,6 +43,15 @@ module Ace
           # Fail-closed parse of an already-decoded envelope Hash.
           # `filename_id` (when given) must equal the payload id.
           def self.from_hash(hash, filename_id: nil)
+            # Defense-in-depth format gate (the Box always decodes via
+            # HermesFormats first): from_hash is public, so it pins the
+            # schema value itself instead of trusting its caller.
+            unless hash["schema"] == HermesContract::MESSAGE_SCHEMA
+              raise UnknownFormatError,
+                "unsupported message schema #{hash["schema"].inspect} (supported: " \
+                "#{HermesContract::MESSAGE_SCHEMA})"
+            end
+
             kind_name = hash["kind"]
             unless KINDS.include?(kind_name)
               raise InvalidMessageError,
@@ -55,8 +64,8 @@ module Ace
             unless missing.empty? && extra.empty?
               raise InvalidMessageError,
                 "message fields violate schema #{HermesContract::MESSAGE_SCHEMA} " \
-                "(missing: #{missing.join(", ") || "none"}; " \
-                "unexpected: #{extra.join(", ") || "none"})"
+                "(missing: #{missing.empty? ? "none" : missing.join(", ")}; " \
+                "unexpected: #{extra.empty? ? "none" : extra.join(", ")})"
             end
 
             id = Atoms::HermesTokens.validate!(hash["id"], "message id")
@@ -84,18 +93,32 @@ module Ace
           end
 
           def self.validate_timestamp!(value, field)
-            unless value.is_a?(String) && value.match?(TIMESTAMP_PATTERN)
+            match = value.is_a?(String) && TIMESTAMP_PATTERN.match(value)
+            unless match
               raise InvalidMessageError,
                 "message #{field} must be UTC ISO-8601 YYYY-MM-DDTHH:MM:SSZ " \
                 "(got #{value.inspect})"
             end
 
             begin
-              Time.iso8601(value)
+              parsed = Time.iso8601(value)
             rescue ArgumentError
               raise InvalidMessageError,
                 "message #{field} is not a real calendar timestamp: #{value.inspect}"
             end
+
+            # Time.iso8601 silently rolls impossible components (Feb 30,
+            # Apr 31, hour 24) over into the next real instant; the
+            # contract requires the literal calendar date/time, so the
+            # parsed value must round-trip to the source components.
+            source = match.captures.map(&:to_i)
+            round_trip = [parsed.year, parsed.month, parsed.day,
+              parsed.hour, parsed.min, parsed.sec]
+            unless round_trip == source
+              raise InvalidMessageError,
+                "message #{field} is not a real calendar timestamp: #{value.inspect}"
+            end
+
             value
           end
 

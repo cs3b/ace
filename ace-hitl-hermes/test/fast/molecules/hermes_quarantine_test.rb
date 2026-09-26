@@ -57,6 +57,20 @@ module Ace
               assert File.exist?(dest2)
             end
           end
+
+          def test_refuses_root_fail_closed
+            with_hermes_dir do |folder|
+              path = message_file(folder, "bad-1", {"broken" => true})
+
+              error = assert_raises(RootUserError) do
+                HermesQuarantine.move(folder, path, reason: "root",
+                  euid_provider: -> { 0 })
+              end
+              assert_match(/without root/, error.message)
+              assert File.exist?(path)
+              refute File.exist?(File.join(folder, ".quarantine"))
+            end
+          end
         end
       end
     end

@@ -129,8 +129,14 @@ module Ace
           end
 
           # Deletion is the ACK; idempotent (an absent file reports
-          # :already_acked, never an error).
+          # :already_acked, never an error). The delete is a folder write,
+          # so the no-root gate applies exactly like on publish.
           def ack(id)
+            if @euid_provider.call.zero?
+              raise RootUserError,
+                "hermes writes without root: refusing ack deletion as euid 0 " \
+                "(#{Molecules::HermesContract.message_path(@channel.folder, id)})"
+            end
             Molecules::HermesContract.verify_folder!(@channel.folder)
             path = Molecules::HermesContract.message_path(@channel.folder, id)
             if File.exist?(path)
@@ -189,7 +195,8 @@ module Ace
 
           def quarantine(path, id, reason)
             quarantined = Molecules::HermesQuarantine.move(
-              @channel.folder, path, reason: reason
+              @channel.folder, path, reason: reason,
+              euid_provider: @euid_provider
             )
             notify(:quarantined, address(id), reason: reason)
             QuarantinedFile.new(path: quarantined, reason: reason)

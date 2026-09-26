@@ -10,13 +10,21 @@ module Ace
         # Quarantine for invalid message files (spec 8wm.t.vs1 §7): the
         # file is moved atomically into <folder>/.quarantine/ (0750) with
         # a <name>.reason.txt sidecar (0640). Quarantined content is never
-        # rewritten, re-validated, or delivered.
+        # rewritten, re-validated, or delivered. Like every hermes write
+        # path, running as root is refused fail closed.
         module HermesQuarantine
           module_function
 
           # Moves `path` (inside `folder`) into the quarantine directory
           # and writes the reason sidecar. Returns the quarantined path.
-          def move(folder, path, reason:, now: -> { Time.now })
+          def move(folder, path, reason:, now: -> { Time.now },
+            euid_provider: -> { Process.euid })
+            if euid_provider.call.zero?
+              raise RootUserError,
+                "hermes writes without root: refusing quarantine move as euid 0 " \
+                "(#{path})"
+            end
+
             quarantine_dir = HermesContract.quarantine_path(folder)
             unless File.directory?(quarantine_dir)
               Dir.mkdir(quarantine_dir, HermesContract::QUARANTINE_DIR_MODE)

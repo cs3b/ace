@@ -77,6 +77,15 @@ module Ace
             assert_match(/kind must be one of/, error.message)
           end
 
+          def test_schema_value_is_pinned_fail_closed
+            [nil, "ace.hitl.hermes.message/v2", "other.format/v1", 42].each do |bad|
+              payload = answer_payload
+              payload["schema"] = bad
+              error = assert_raises(UnknownFormatError) { HermesMessage.from_hash(payload) }
+              assert_match(/unsupported message schema/, error.message)
+            end
+          end
+
           def test_body_must_be_non_empty_string
             [nil, "", "   ", 42].each do |bad|
               payload = answer_payload(answer: bad)
@@ -103,6 +112,33 @@ module Ace
             end
             assert_equal ANSWER_TS,
               HermesMessage.from_hash(answer_payload).timestamp
+          end
+
+          def test_timestamps_must_be_real_calendar_dates_and_times
+            ["2026-02-30T10:00:00Z", "2026-04-31T10:00:00Z",
+              "2026-01-01T24:00:00Z", "2026-09-31T10:00:00Z"].each do |rolled|
+              payload = answer_payload(received_at: rolled)
+              error = assert_raises(InvalidMessageError) { HermesMessage.from_hash(payload) }
+              assert_match(/not a real calendar timestamp/, error.message)
+            end
+          end
+
+          def test_leap_day_is_a_real_calendar_date
+            payload = answer_payload(received_at: "2028-02-29T10:00:00Z")
+            assert_equal "2028-02-29T10:00:00Z",
+              HermesMessage.from_hash(payload).timestamp
+          end
+
+          def test_field_violation_reports_none_for_the_empty_side
+            payload = answer_payload
+            payload["extra"] = "nope"
+            error = assert_raises(InvalidMessageError) { HermesMessage.from_hash(payload) }
+            assert_match(/missing: none; unexpected: extra/, error.message)
+
+            payload = answer_payload
+            payload.delete("received_at")
+            error = assert_raises(InvalidMessageError) { HermesMessage.from_hash(payload) }
+            assert_match(/missing: received_at; unexpected: none/, error.message)
           end
         end
       end

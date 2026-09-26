@@ -166,6 +166,37 @@ module Ace
             end
           end
 
+          def test_poll_reads_as_root_but_quarantine_refuses_fail_closed
+            with_hermes_dir do |folder|
+              box, = build_box(folder, euid_provider: -> { 0 })
+              message_file(folder, "ok-1", answer_payload(id: "ok-1"))
+
+              # Reading is not writing: a valid-message poll needs no root
+              # refusal (spec §4 gates the plugin's writes, not its reads).
+              result = box.poll
+              assert_equal 1, result.messages.length
+              assert_empty result.quarantined
+
+              # Quarantine (mkdir + rename + sidecar) IS a write: refused.
+              write_file(File.join(folder, "bad-1.json"), "{not json")
+              error = assert_raises(RootUserError) { box.poll }
+              assert_match(/without root/, error.message)
+              assert File.exist?(File.join(folder, "bad-1.json"))
+              refute File.exist?(File.join(folder, ".quarantine"))
+            end
+          end
+
+          def test_ack_refuses_root_fail_closed
+            with_hermes_dir do |folder|
+              box, = build_box(folder, euid_provider: -> { 0 })
+              message_file(folder, "q-1", question_payload)
+
+              error = assert_raises(RootUserError) { box.ack("q-1") }
+              assert_match(/without root/, error.message)
+              assert File.exist?(File.join(folder, "q-1.json"))
+            end
+          end
+
           def test_age_is_the_retry_clock_and_nil_after_ack
             with_hermes_dir do |folder|
               box, = build_box(folder)
