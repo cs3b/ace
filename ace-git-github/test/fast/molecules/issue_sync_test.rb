@@ -4,6 +4,26 @@ require "test_helper"
 require "ace/git/github/issue_sync"
 
 class GithubIssueSyncTest < AceGitGithubTestCase
+  def test_available_when_cli_installed_and_authenticated
+    Ace::Git::Github::CliExecutor.stub(:authenticated?, true) do
+      assert Ace::Git::Github::IssueSync.available?
+    end
+  end
+
+  def test_unavailable_when_cli_not_authenticated
+    Ace::Git::Github::CliExecutor.stub(:authenticated?, false) do
+      refute Ace::Git::Github::IssueSync.available?
+    end
+  end
+
+  def test_unavailable_when_cli_missing
+    Ace::Git::Github::CliExecutor.stub(
+      :execute_simple,
+      lambda { |*_args| raise Ace::Git::ProviderCliMissingError, "gh missing" }
+    ) do
+      refute Ace::Git::Github::IssueSync.available?
+    end
+  end
   def test_sync_task_creates_sticky_comment_and_label
     commands = []
     executor = lambda do |subcommand, args, **_opts|

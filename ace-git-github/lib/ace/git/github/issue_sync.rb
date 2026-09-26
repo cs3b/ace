@@ -14,6 +14,12 @@ module Ace
         TRACKED_LABEL = "ace:tracked"
         TERMINAL_STATUSES = %w[done completed shipped closed cancelled skipped archived].freeze
 
+        # True when GitHub sync can run: the gh CLI is installed and authenticated.
+        # GitHub sync is best-effort; callers skip it silently when this is false.
+        def self.available?
+          CliExecutor.authenticated?
+        end
+
         def self.sync_task(task_id:, task_title:, task_status:, task_path:, issue_ids:, reason:, previous: nil,
           current_issue_ids: nil)
           current_ids = if current_issue_ids.nil?
