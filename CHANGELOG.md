@@ -33,6 +33,7 @@ All notable changes to this project will be documented in this file.
 
 - **ace-git v0.24.0**: Decoupled local Git from forge behavior. Added the `ServerRegistry` (named servers, one explicit default, deterministic remote-URL matching), the `Providers` registry and `Providers::Base` contract, normalized evidence types, and the full classified failure taxonomy. Status PR enrichment now routes through the provider contract and stays purely local without configuration. Removed all `gh` execution, GitHub-specific parsing, the `ace-git pr` CLI command, and hardcoded GitHub gemspec URLs (pre-1.0 replacement; consumers migrate to the provider packages in subsequent chunks).
 - **ace-bundle, ace-git-worktree, ace-review, ace-task v0.37+**: Repointed PR/issue lookups from the removed ace-git core molecules to the new `ace-git-github` owner classes (mechanical call-site updates ahead of the dedicated consumer-migration chunks).
+- **ace-git-worktree v0.23.0**: Ships the ace-git 0.24 compatibility — PR lookups via the `ace-git-github` provider, gemspec floors `ace-git ~> 0.24` and `ace-git-github ~> 0.1.1` — fixing the require-time LoadError that made released 0.22.1 incompatible with ace-git 0.24 and blocked adopting ace-review 0.55.0.
 
 ### Fixed
 
