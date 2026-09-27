@@ -184,6 +184,88 @@ module Ace
             assert_match(/--pane is required/, error.message)
           end
 
+          # --- wait: output mode -----------------------------------------------
+
+          def test_wait_output_converts_seconds_to_ms_and_passes_pattern
+            cmd = Wait.new(executor: @executor)
+
+            capture_io do
+              cmd.call(pane: "p5", for: "output", pattern: "done", until: nil, timeout: 15, quiet: nil)
+            end
+
+            call = @executor.calls_of(:pane_wait_output).first
+            assert_equal(
+              {pane: "p5", pattern: "done", source: "recent", lines: nil, timeout_ms: 15_000},
+              call[:args]
+            )
+          end
+
+          def test_wait_output_reports_matched_json
+            cmd = Wait.new(executor: @executor)
+
+            out, = capture_io do
+              cmd.call(pane: "p5", for: "output", pattern: "done", until: nil, timeout: 5, quiet: nil)
+            end
+
+            parsed = JSON.parse(out)
+            assert_equal "p5", parsed["pane"]
+            assert parsed["matched"]
+          end
+
+          def test_wait_agent_mode_unchanged_by_output_options
+            cmd = Wait.new(executor: @executor)
+
+            out, = capture_io do
+              cmd.call(pane: "p5", for: "agent", pattern: nil, until: "done", timeout: 5, quiet: nil)
+            end
+
+            assert_match(/"state":"ready"/, out)
+            assert_empty @executor.calls_of(:pane_wait_output)
+          end
+
+          def test_wait_output_requires_pattern
+            cmd = Wait.new(executor: @executor)
+
+            error = assert_raises(Ace::Support::Cli::Error) do
+              cmd.call(pane: "p5", for: "output", pattern: nil, until: nil, timeout: nil, quiet: nil)
+            end
+
+            assert_match(/requires --pattern/, error.message)
+          end
+
+          def test_wait_output_rejects_until
+            cmd = Wait.new(executor: @executor)
+
+            error = assert_raises(Ace::Support::Cli::Error) do
+              cmd.call(pane: "p5", for: "output", pattern: "x", until: "done", timeout: nil, quiet: nil)
+            end
+
+            assert_match(/--until requires --for agent/, error.message)
+          end
+
+          def test_wait_agent_rejects_pattern
+            cmd = Wait.new(executor: @executor)
+
+            error = assert_raises(Ace::Support::Cli::Error) do
+              cmd.call(pane: "p5", for: "agent", pattern: "x", until: nil, timeout: nil, quiet: nil)
+            end
+
+            assert_match(/--pattern requires --for output/, error.message)
+          end
+
+          def test_wait_timeout_error_is_cli_error
+            @executor = HerdrTestHelper::FakeExecutor.new(outcomes: {
+              pane_wait_output: Ace::Herdr::WaitTimeoutError.new("timeout: no match")
+            })
+            cmd = Wait.new(executor: @executor)
+
+            error = assert_raises(Ace::Support::Cli::Error) do
+              cmd.call(pane: "p5", for: "output", pattern: "x", until: nil, timeout: 1, quiet: nil)
+            end
+
+            assert_match(/timeout/, error.message)
+          end
+
           # --- close -------------------------------------------------------------
 
           def test_close_renames_and_closes

@@ -9,6 +9,7 @@ require_relative "cli/commands/wait"
 require_relative "cli/commands/close"
 require_relative "cli/commands/list"
 require_relative "cli/commands/send"
+require_relative "cli/commands/capture"
 
 module Ace
   module Herdr
@@ -24,6 +25,7 @@ module Ace
         ["dispatch", "Start an agent in one command: tab + agent + prompt"],
         ["list", "List live panes, tabs, or workspaces as one JSON line"],
         ["send", "Send a command, raw text, or named keys to a pane"],
+        ["capture", "Print recent pane output as raw text"],
         ["wait", "Wait for an agent to reach a state"],
         ["close", "Rename and/or close a finished agent pane"]
       ].freeze
@@ -52,6 +54,7 @@ module Ace
       register "dispatch", CLI::Commands::Dispatch.new
       register "list", CLI::Commands::List.new
       register "send", CLI::Commands::Send.new
+      register "capture", CLI::Commands::Capture.new
       register "wait", CLI::Commands::Wait.new
       register "close", CLI::Commands::Close.new
 

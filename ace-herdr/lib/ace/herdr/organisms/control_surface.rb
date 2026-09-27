@@ -52,6 +52,22 @@ module Ace
             .map { |row| normalize_workspace(row) }
         end
 
+        # --- capture ------------------------------------------------------------
+
+        # Raw pane text (visible screen or recent history); no JSON wrapping
+        def capture(pane:, source: "recent", lines: DEFAULT_LINES)
+          @executor.pane_read(pane, source: source, lines: lines).stdout
+        end
+
+        # --- wait: output -------------------------------------------------------
+
+        # Waits for pane output containing a literal pattern. herdr checks
+        # existing content immediately, then polls; timeout fails closed.
+        def wait_output(pane:, pattern:, timeout_ms:)
+          @executor.pane_wait_output(pane, pattern: pattern, timeout_ms: timeout_ms)
+          true
+        end
+
         private
 
         # --- send: validation -------------------------------------------------

@@ -57,6 +57,7 @@ module Ace
             Ace::Hitl::Providers::ProviderUnavailableError,
             Ace::Herdr::ValidationError,
             Ace::Herdr::TargetResolutionError,
+            Ace::Herdr::WaitTimeoutError,
             Ace::Herdr::ExecutorError => e
             raise Ace::Support::Cli::Error, e.message
           end

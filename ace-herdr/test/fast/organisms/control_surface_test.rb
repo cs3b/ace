@@ -239,6 +239,47 @@ module Ace
           end
         end
 
+        # --- capture / wait: output ---------------------------------------------
+
+        def test_capture_returns_raw_stdout_without_json_wrapping
+          @executor = HerdrTestHelper::FakeExecutor.new(outcomes: {
+            pane_read: Molecules::ExecutionResult.new(
+              stdout: "plain text\nexit 0", stderr: "", success: true, exit_code: 0
+            )
+          })
+          @control = ControlSurface.new(executor: @executor)
+
+          assert_equal "plain text\nexit 0", @control.capture(pane: "p1")
+        end
+
+        def test_capture_passes_source_and_lines
+          @control.capture(pane: "p1", source: "visible", lines: 10)
+
+          call = @executor.calls_of(:pane_read).first
+          assert_equal({pane: "p1", source: "visible", lines: 10}, call[:args])
+        end
+
+        def test_wait_output_delegates_pattern_and_timeout_ms
+          @control.wait_output(pane: "p1", pattern: "done", timeout_ms: 2500)
+
+          call = @executor.calls_of(:pane_wait_output).first
+          assert_equal(
+            {pane: "p1", pattern: "done", source: "recent", lines: nil, timeout_ms: 2500},
+            call[:args]
+          )
+        end
+
+        def test_wait_output_timeout_propagates
+          @executor = HerdrTestHelper::FakeExecutor.new(outcomes: {
+            pane_wait_output: Ace::Herdr::WaitTimeoutError.new("timeout: no match")
+          })
+          @control = ControlSurface.new(executor: @executor)
+
+          assert_raises(WaitTimeoutError) do
+            @control.wait_output(pane: "p1", pattern: "nope", timeout_ms: 100)
+          end
+        end
+
         # --- list -----------------------------------------------------------
 
         def test_list_panes_normalizes_native_rows
