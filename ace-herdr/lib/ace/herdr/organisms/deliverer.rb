@@ -148,29 +148,27 @@ module Ace
         def probe_agent(ref, record, kind, label)
           attempt = 0
           loop do
-            begin
-              @executor.agent_get(ref.pane)
-              return Outcome.present(record)
-            rescue PaneNotFoundError => e
-              return Outcome.terminal(terminal(ref, record, e, action: "probe"))
-            rescue AgentNotFoundError
-              return bootstrap_and_wait(ref, record, kind, label)
-            rescue ExecutorError => e
-              attempt += 1
-              exhausted = attempt >= @max_attempts
-              record = record.append_event(
-                state: exhausted ? "retryable" : "pending",
-                detail: {action: "probe", attempt: attempt, outcome: e.class.name,
-                         error: e.message},
-                timestamp: now
-              )
-              persist(record)
-              if exhausted
-                return Outcome.terminal(DeliverResult(ref: ref, state: :retryable))
-              end
-
-              @clock.call(backoff_for(attempt))
+            @executor.agent_get(ref.pane)
+            return Outcome.present(record)
+          rescue PaneNotFoundError => e
+            return Outcome.terminal(terminal(ref, record, e, action: "probe"))
+          rescue AgentNotFoundError
+            return bootstrap_and_wait(ref, record, kind, label)
+          rescue ExecutorError => e
+            attempt += 1
+            exhausted = attempt >= @max_attempts
+            record = record.append_event(
+              state: exhausted ? "retryable" : "pending",
+              detail: {action: "probe", attempt: attempt, outcome: e.class.name,
+                       error: e.message},
+              timestamp: now
+            )
+            persist(record)
+            if exhausted
+              return Outcome.terminal(DeliverResult(ref: ref, state: :retryable))
             end
+
+            @clock.call(backoff_for(attempt))
           end
         end
 
