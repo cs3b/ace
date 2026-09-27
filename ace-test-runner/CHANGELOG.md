@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.26.0] - 2026-09-27
+
+### Added
+- Provider, contract, and core test targets for the new ace-git-github and ace-git-forgejo packages.
+
+### Fixed
+- Lifecycle test target coverage from the W696 HITL lifecycle migration review findings.
 
 ## [0.25.8] - 2026-09-02
 
