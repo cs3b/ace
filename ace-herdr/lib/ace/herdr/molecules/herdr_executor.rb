@@ -104,7 +104,7 @@ module Ace
           when "timeout" then AgentNotReadyError.new(message)
           else
             CommandError.new(
-              "herdr command failed (exit #{result.exit_code}): #{cmd.join(' ')} " \
+              "herdr command failed (exit #{result.exit_code}): #{cmd.join(" ")} " \
               "#{message || result.stderr}".strip
             )
           end

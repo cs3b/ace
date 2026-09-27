@@ -62,7 +62,7 @@ module Ace
 
         # Return a copy with a history entry appended (no attempt counted);
         # used for non-prompt events such as bootstrap actions
-        def append_event(state: nil, detail:, timestamp:)
+        def append_event(detail:, timestamp:, state: nil)
           self.class.new(
             event_id: event_id, session: session, pane: pane,
             answer_digest: answer_digest, state: state || self.state,

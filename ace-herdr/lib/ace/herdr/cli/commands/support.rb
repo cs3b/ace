@@ -39,7 +39,7 @@ module Ace
 
           # Answer/prompt content from a file or stdin
           def read_content(path, what:)
-            return STDIN.read if path.nil? || path.empty?
+            return $stdin.read if path.nil? || path.empty?
 
             File.read(path)
           rescue Errno::ENOENT

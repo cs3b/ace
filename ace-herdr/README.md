@@ -14,6 +14,8 @@
 
 > Works with: Claude Code, Codex CLI, OpenCode, Gemini CLI, pi-agent, and more.
 
+[Usage Guide](docs/usage.md)
+
 `ace-herdr` is to herdr what `ace-tmux` is to tmux: a deterministic, zero-token wrapper over the `herdr` CLI. It implements the ace-hitl push-delivery contract — `deliver(ref, answer)` maps to `herdr agent prompt <pane>`, bootstrapping the agent first (`herdr agent start`) when the pane has none, so an answer is never lost — and adds one-command agent dispatch, noiseless monitoring, and closure on top.
 
 ## How It Works

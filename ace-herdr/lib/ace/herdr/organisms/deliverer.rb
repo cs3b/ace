@@ -158,7 +158,13 @@ module Ace
             rescue ExecutorError => e
               terminal = !e.retryable?
               exhausted = !terminal && attempt >= @max_attempts
-              state = terminal ? "failed" : (exhausted ? "retryable" : "pending")
+              state = if terminal
+                "failed"
+              elsif exhausted
+                "retryable"
+              else
+                "pending"
+              end
               record = record.record_attempt(
                 state: state,
                 detail: {action: "prompt", outcome: e.class.name, error: e.message},
