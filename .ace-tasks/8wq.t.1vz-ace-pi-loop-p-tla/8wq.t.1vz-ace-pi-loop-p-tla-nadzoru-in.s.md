@@ -1,6 +1,6 @@
 ---
 id: 8wq.t.1vz
-status: pending
+status: in-progress
 priority: high
 created_at: "2026-09-27 01:15:32"
 estimate: TBD
