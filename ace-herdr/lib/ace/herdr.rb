@@ -29,6 +29,7 @@ require_relative "herdr/molecules/herdr_executor"
 require_relative "herdr/molecules/delivery_record_store"
 require_relative "herdr/organisms/deliverer"
 require_relative "herdr/organisms/dispatcher"
+require_relative "herdr/organisms/control_surface"
 require_relative "herdr/cli"
 
 module Ace
