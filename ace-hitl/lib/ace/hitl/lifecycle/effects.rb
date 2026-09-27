@@ -176,11 +176,21 @@ module Ace
           status = nil
           timed_out = false
           group_dropper.call(requester_gid) do
+            # [cmd, cmd] forces exec/argv semantics: a single-element
+            # argv would otherwise be handed to a shell as a command
+            # string (review 8wq2ztu2 on PR#336), and a substituted
+            # answer must never become shell syntax.
+            #
+            # pgroup: true makes the child a process group leader so the
+            # timeout can signal its whole group (review 8wq2zttw on
+            # PR#336).
             pid = spawner.spawn(
-              *argv,
+              [argv.first, argv.first],
+              *argv.drop(1),
               chdir: declaration["cwd"],
               gid: requester_gid,
               uid: requester_uid,
+              pgroup: true,
               out: File::NULL,
               err: File::NULL
             )
@@ -190,9 +200,21 @@ module Ace
 
               if Process.clock_gettime(Process::CLOCK_MONOTONIC) > deadline
                 timed_out = true
-                spawner.kill("TERM", pid)
+                # -pid addresses the process group: a callback that
+                # forked leaves no descendants running after the
+                # timeout. ESRCH means the group is already gone; macOS
+                # additionally raises EPERM when signaling a group whose
+                # only remaining members are zombies — both are fine,
+                # the direct child is reaped by the wait below.
+                begin
+                  spawner.kill("TERM", -pid)
+                rescue Errno::ESRCH, Errno::EPERM
+                end
                 sleep_after_terminate
-                spawner.kill("KILL", pid)
+                begin
+                  spawner.kill("KILL", -pid)
+                rescue Errno::ESRCH, Errno::EPERM
+                end
                 _, status = spawner.waitpid2(pid)
                 break
               end

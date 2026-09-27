@@ -311,7 +311,10 @@ class LifecycleEffectsTest < AceHitlTestCase
       )
 
       argv, options = spawned[0]
-      assert_equal ["/bin/true"], argv
+      # The [cmd, argv0] form forces exec/argv semantics: a bare
+      # single-element argv would run through a shell (review 8wq2ztu2
+      # on PR#336).
+      assert_equal [["/bin/true", "/bin/true"]], argv
       assert_equal 1234, options[:uid]
       assert_equal 966, options[:gid]
       assert_equal root, options[:chdir]
