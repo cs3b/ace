@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.56.0] - 2026-09-27
+
 ### Added
 
 - Delta review rounds for PRs: `--delta <head>` reviews only the diff since an explicit reference head, and bare `--delta` auto-resolves the reference from the most recent prior session of the same PR (recorded via `diff_manifest.head_sha`/`delta_reference_head` in session metadata). Prior-session findings are carried forward as evidence; a non-ancestor reference (rewritten history), missing prior sessions, and oversized deltas refuse with actionable messages instead of silently reviewing everything.
