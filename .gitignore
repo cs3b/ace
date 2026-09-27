@@ -4,6 +4,7 @@ doc-dependencies*
 .env
 .coding-agent/.env
 .coding-agent/.env.sample
+.zcode/
 node_modules
 .lint*.md
 
