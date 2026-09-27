@@ -1,21 +1,14 @@
 ---
 id: 8wq.t.k84
-status: draft
+status: in-progress
 priority: high
 created_at: "2026-09-27 13:29:01"
 estimate: TBD
 dependencies: [8wm.t.vs0]
 tags: [ace-herdr, ace-tmux, parity, cli]
 bundle:
-  presets: ["project"]
-  files:
-    - ace-tmux/lib/ace/tmux/cli.rb
-    - ace-tmux/lib/ace/tmux/organisms/control_surface.rb
-    - ace-tmux/lib/ace/tmux/molecules/preset_loader.rb
-    - ace-herdr/lib/ace/herdr/cli.rb
-    - ace-herdr/lib/ace/herdr/molecules/herdr_executor.rb
-    - ace-herdr/docs/usage.md
-    - .ace-tasks/8wm.t.vs0-ace-herdr-push-delivery-agent/8wm.t.vs0-ace-herdr-push-delivery-agent-bootstrap-deliver.s.md
+  presets: [project]
+  files: [ace-tmux/lib/ace/tmux/cli.rb, ace-tmux/lib/ace/tmux/organisms/control_surface.rb, ace-tmux/lib/ace/tmux/molecules/preset_loader.rb, ace-herdr/lib/ace/herdr/cli.rb, ace-herdr/lib/ace/herdr/molecules/herdr_executor.rb, ace-herdr/docs/usage.md, .ace-tasks/8wm.t.vs0-ace-herdr-push-delivery-agent/8wm.t.vs0-ace-herdr-push-delivery-agent-bootstrap-deliver.s.md]
   commands: []
 ---
 
@@ -140,20 +133,20 @@ ace-herdr --list-presets [workspaces|tabs]
 
 ### Success Criteria
 
-- [ ] **Intent coverage**: every parity-matrix common intent (list ×3 scopes, send ×3 modes, capture, wait output) is runnable via an `ace-herdr` command with the ace-tmux flag vocabulary.
-- [ ] **Agent-aware send**: text sent to a plain pane uses pane transport; the same flags against an agent pane use agent-prompt semantics — both observable in output `sent` field and covered by tests.
-- [ ] **Preset cascade**: gem defaults deep-merged with project `.ace/herdr/` overrides; `--list-presets` reflects the merged set.
-- [ ] **Failure paths**: unknown target, unavailable binary, blocked agent, unknown preset each produce the specified errors.
-- [ ] **No regressions**: `deliver`/`dispatch`/`wait`(agent)/`close` behavior and output unchanged; whole-package suite green.
-- [ ] **Published parity table**: `docs/usage.md` gains the tmux-intent ↔ herdr-command mapping table.
+- [x] **Intent coverage**: every parity-matrix common intent (list ×3 scopes, send ×3 modes, capture, wait output) is runnable via an `ace-herdr` command with the ace-tmux flag vocabulary.
+- [x] **Agent-aware send**: text sent to a plain pane uses pane transport; the same flags against an agent pane use agent-prompt semantics — both observable in output `sent` field and covered by tests.
+- [x] **Preset cascade**: gem defaults deep-merged with project `.ace/herdr/` overrides; `--list-presets` reflects the merged set.
+- [x] **Failure paths**: unknown target, unavailable binary, blocked agent, unknown preset each produce the specified errors.
+- [x] **No regressions**: `deliver`/`dispatch`/`wait`(agent)/`close` behavior and output unchanged; whole-package suite green.
+- [x] **Published parity table**: `docs/usage.md` gains the tmux-intent ↔ herdr-command mapping table.
 
 ### Validation Questions
 
-- [ ] **Requirement Clarity**: confirm this task absorbs the "wrapper" half of 8wq.t.1w0 (rescoped to tidy-only) — no duplicate wrapper work.
-- [ ] **Agent trailing-Enter rule**: on agent panes a trailing `--key Enter` is dropped (reported in output) to guarantee exactly-one submission — confirm drop-and-report is preferred over erroring out. Default: drop-and-report.
-- [ ] **Output format**: confirm JSON-lines stance (intent parity, not format parity); flag if consumers need `--format table`.
-- [ ] **Preset naming**: `workspaces`/`tabs` (herdr-native) vs `sessions`/`windows` (tmux-parity naming) — default herdr-native.
-- [ ] **Success Definition**: is `api snapshot` acceptable as the backing call for `list`, or must each scope use its dedicated subcommand?
+- [x] **Requirement Clarity**: confirm this task absorbs the "wrapper" half of 8wq.t.1w0 (rescoped to tidy-only) — no duplicate wrapper work.
+- [x] **Agent trailing-Enter rule**: on agent panes a trailing `--key Enter` is dropped (reported in output) to guarantee exactly-one submission — confirm drop-and-report is preferred over erroring out. Default: drop-and-report.
+- [x] **Output format**: confirm JSON-lines stance (intent parity, not format parity); flag if consumers need `--format table`.
+- [x] **Preset naming**: `workspaces`/`tabs` (herdr-native) vs `sessions`/`windows` (tmux-parity naming) — default herdr-native.
+- [x] **Success Definition**: is `api snapshot` acceptable as the backing call for `list`, or must each scope use its dedicated subcommand?
 
 ### Vertical Slice Decomposition (Task/Subtask Model)
 
@@ -165,19 +158,19 @@ ace-herdr --list-presets [workspaces|tabs]
 ### Verification Plan
 
 #### Unit / Component Validation
-- [ ] Per-intent scenarios via fake executor (vs0 pattern): argv construction, JSON shape, target resolution.
-- [ ] Agent-aware routing: plain pane vs agent pane with identical flags.
-- [ ] Preset cascade: defaults + override deep-merge; unknown nested preset fails closed.
+- [x] Per-intent scenarios via fake executor (vs0 pattern): argv construction, JSON shape, target resolution.
+- [x] Agent-aware routing: plain pane vs agent pane with identical flags.
+- [x] Preset cascade: defaults + override deep-merge; unknown nested preset fails closed.
 
 #### Integration / E2E Validation (if cross-boundary behavior exists)
-- [ ] Live-herdr smoke of each new command (manual/scripted; full e2e scenarios remain a declared follow-up).
+- [x] Live-herdr smoke of each new command (manual/scripted; full e2e scenarios remain a declared follow-up).
 
 #### Failure / Invalid-Path Validation
-- [ ] `pane_not_found`, unavailable binary, `agent_blocked`, unknown preset — one per command family.
+- [x] `pane_not_found`, unavailable binary, `agent_blocked`, unknown preset — one per command family.
 
 #### Verification Commands
-- [ ] `ace-test ace-herdr` — whole package green (single-file mode unsupported).
-- [ ] `ace-herdr --list-presets` after adding a project preset — merged set listed.
+- [x] `ace-test ace-herdr` -- whole package green (single-file mode unsupported).
+- [x] `ace-herdr --list-presets` after adding a project preset — merged set listed.
 
 ## Objective
 
