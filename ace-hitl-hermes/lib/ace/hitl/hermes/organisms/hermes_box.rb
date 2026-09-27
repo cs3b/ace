@@ -60,18 +60,22 @@ module Ace
                 kind: kind, id: id || @id_generator.call,
                 sender: sender, timestamp: timestamp, body: body
               )
-              # Producer fail-closed gate: the envelope must survive the
-              # exact validation its consumers apply BEFORE any disk
-              # write, so a schema-violating payload can never be
-              # published (and then terminally quarantined by its own
-              # poll) with no producer feedback.
+              # Producer fail-closed gate: the exact BYTES about to be
+              # written must survive the consumers' decode gate (UTF-8 +
+              # 64 KiB cap + schema id), and the decoded envelope must
+              # satisfy the exact message contract, BEFORE any disk
+              # write - so an envelope its own poll would terminally
+              # quarantine can never be published (review 8wq2zttx on
+              # PR#336).
+              envelope = message.to_json
+              Molecules::HermesFormats.decode!(envelope)
               Molecules::HermesMessage.from_hash(
-                JSON.parse(message.to_json), filename_id: message.id
+                JSON.parse(envelope), filename_id: message.id
               )
               begin
                 Molecules::HermesAtomicWriter.write(
                   Molecules::HermesContract.message_path(@channel.folder, message.id),
-                  message.to_json,
+                  envelope,
                   euid_provider: @euid_provider
                 )
               rescue CollisionError
