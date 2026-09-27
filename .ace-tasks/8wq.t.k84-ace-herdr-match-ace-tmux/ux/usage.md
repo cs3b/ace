@@ -22,7 +22,7 @@ ace-herdr list --panes
 
 ### Scenario 2: Agent-aware send — same flags, correct transport
 
-**Goal**: One `send` vocabulary works for plain panes and agent panes; herdr's blocked/stalled semantics protect agent panes.
+**Goal**: One `send` vocabulary works for plain panes and agent panes; herdr's blocked/stalled semantics protect agent panes; mixed msg+key sequences submit exactly once.
 
 ```bash
 ace-herdr send --cmd 'bundle exec rake test' --pane w1:p1
@@ -31,6 +31,12 @@ ace-herdr send --cmd 'bundle exec rake test' --pane w1:p1
 ace-herdr send --cmd 'continue with the plan' --pane w1:p2   # pane hosts a live agent
 # {"pane":"w1:p2","sent":"prompt"}
 # If the agent is blocked: CLI error carrying agent_blocked, non-zero exit.
+
+ace-herdr send --pane w1:p1 --msg 'done: 8wq.t.k86' --key Enter   # callback form, plain pane
+# {"pane":"w1:p1","sent":"msg+key"}
+
+ace-herdr send --pane w1:p2 --msg 'done: 8wq.t.k86' --key Enter   # callback form, agent pane
+# {"pane":"w1:p2","sent":"prompt","dropped_keys":["Enter"]}
 ```
 
 ### Scenario 3: Capture then wait for output

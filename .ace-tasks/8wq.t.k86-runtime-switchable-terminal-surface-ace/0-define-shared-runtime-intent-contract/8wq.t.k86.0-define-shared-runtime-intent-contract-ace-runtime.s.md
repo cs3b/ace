@@ -45,7 +45,10 @@ speculative operations):
 4. select/focus window/tab
 5. send: command text (submit), raw text, named keys — to a pane target
 6. capture recent pane output (lines-bounded)
-7. wait: output pattern (timeout) or agent readiness
+7. wait: output pattern (timeout), agent readiness, or lifecycle condition
+   — the full set ace-tmux consumers rely on today: `window-exists`,
+   `window-active` (focused), `pane-exists`, `pane-exited` (the pane's
+   process has exited; demo directives depend on all four)
 8. close/kill window/tab by name
 9. list windows/tabs and panes
 10. window/tab name sanitization (shared naming policy)
@@ -74,19 +77,23 @@ runtime.send_keys(pane:, keys:)
 runtime.capture(pane:, lines: 40)      # => text
 runtime.wait_output(pane:, pattern:, timeout:)
 runtime.wait_agent(pane:, states:, timeout:)
+runtime.wait_lifecycle(condition:, target:, timeout:)
+                                       # window-exists|window-active|pane-exists|pane-exited
 runtime.close_window(window:)
 runtime.list_windows / runtime.list_panes(window:)
 Ace::Runtime.sanitize_name(name)       # shared naming policy
 ```
 
-**Error Handling:** `UnknownRuntimeError` (with available list), `TargetNotFoundError`, `RuntimeUnavailableError`, `SendRejectedError` (e.g. agent blocked) — all subclass one contract error.
+**Error Handling:** `UnknownRuntimeError` (with available list), `TargetNotFoundError`, `RuntimeUnavailableError`, `SendRejectedError` (pre-send rejection, e.g. agent blocked — terminal), `SendStalledError` (submission accepted but the target did not start processing — OUTCOME UNCERTAIN, callers must not auto-resend), `WaitTimeoutError` (a wait exceeded its deadline) — all subclass one contract error. Timeout units at the contract level are SECONDS (adapters convert to native units).
+
+**Contract CLI:** the gem ships one thin agent-facing passthrough — `ace-runtime send (--cmd TEXT | --msg TEXT... | --key NAME...) --pane TARGET` — resolving the configured runtime and delegating with exactly the send semantics above. This is the runtime-neutral callback command (decision 2026-09-27, Captain: assign's Fork Callback Rule prescribes it instead of `ace-tmux send`). No other CLI surface.
 
 **Edge Cases:** `detect` inside neither runtime returns nil (callers fall back headless, matching assign's `auto` today); ensure_window with an existing name is idempotent by name.
 
 ### Success Criteria
 
-- [ ] Contract gem publishes the 11-op API + error model; adapters are duck-typed (no dependency on either adapter gem).
-- [ ] Shared contract-test suite exists and is documented as the acceptance bar for any adapter (shared-examples pattern).
+- [ ] Contract gem publishes the 11-op API (op 7 covering output, agent, and the four lifecycle conditions) + error model incl. `WaitTimeoutError`/`SendStalledError` + the `ace-runtime send` passthrough; adapters are duck-typed (no dependency on either adapter gem).
+- [ ] Shared contract-test suite exists and is documented as the acceptance bar for any adapter (shared-examples pattern), covering all wait conditions and the send error triad (rejected / stalled / timeout).
 - [ ] Resolution: explicit name, unknown name (fail closed, available list), auto-detection both-runtimes (tmux wins, documented).
 
 ### Validation Questions
@@ -142,3 +149,8 @@ equal partner instead of a side gem.
 - Parent: 8wq.t.k86
 - Precedent: ace-hitl provider registry
 - Requirements oracle: consumer call sites in bundle.files
+- Decisions (Captain, 2026-09-27): adapters live INSIDE the wrapper gems
+  (ace-tmux/ace-herdr gain a dependency on ace-runtime; no gem renames —
+  wrapper product identity stays, ADR-033 stability rationale); the
+  contract ships the `ace-runtime send` neutral passthrough for the Fork
+  Callback Rule.

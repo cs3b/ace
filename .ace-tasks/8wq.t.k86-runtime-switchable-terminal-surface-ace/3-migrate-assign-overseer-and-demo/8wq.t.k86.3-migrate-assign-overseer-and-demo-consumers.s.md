@@ -45,11 +45,15 @@ bundle:
    via the contract; the work-on flow text stops saying "tmux window"
    where it means "terminal window".
 3. **ace-demo**: demo YAML directives (`wait`, `send`) resolve through the
-   contract; `attach`/`detach` stay tmux-local (human-facing, per k86.0
-   validation default).
+   contract — including the four lifecycle wait conditions demo uses
+   today (`window-exists`, `window-active`, `pane-exists`, `pane-exited`),
+   which must behave identically on both adapters; `attach`/`detach` stay
+   tmux-local (human-facing, per k86.0 validation default).
 4. **Fork Callback Rule** (`assign/drive.wf.md`): the prescribed literal
-   `ace-tmux send ...` becomes the runtime-neutral send command; the rule
-   keeps its "use the tool directly, don't invent wrappers" intent.
+   `ace-tmux send ...` becomes the contract's neutral passthrough
+   `ace-runtime send --pane "$ACE_ASSIGN_CALLBACK_PANE" --msg "..." --key Enter`
+   (decision 2026-09-27, Captain); the rule keeps its "use the tool
+   directly, don't invent wrappers" intent.
 5. **Env propagation**: `ACE_TMUX_SESSION`-style propagation becomes
    runtime-neutral (contract context carries it; herdr children already
    receive `HERDR_*`).
@@ -63,9 +67,10 @@ bundle:
 # .ace/assign/config.yml:  execution.launch_mode: herdr
 # .ace/overseer/config.yml: runtime: herdr + window_presets: {"work-on-task": work-on-task}
 
-# Agent-facing callback rule becomes runtime-neutral, e.g.:
-#   ace-herdr send --pane "$ACE_ASSIGN_CALLBACK_PANE" --msg "..." --key Enter   # when runtime=herdr
-#   ace-tmux send --pane "$ACE_ASSIGN_CALLBACK_PANE" --msg "..." --key Enter   # when runtime=tmux (unchanged)
+# Agent-facing callback rule becomes ONE neutral command (contract CLI):
+#   ace-runtime send --pane "$ACE_ASSIGN_CALLBACK_PANE" --msg "..." --key Enter
+#   (routes to the configured runtime; mixed --msg/--key sequencing and
+#    agent-pane semantics per the k84 send contract)
 ```
 
 **Error Handling:** requested runtime unavailable → explicit error (assign `auto` → headless fallback, unchanged); unknown runtime value → fail closed at config resolution with the available list.
@@ -82,8 +87,8 @@ bundle:
 
 ### Validation Questions
 
-- [ ] Callback command in drive.wf.md: teach both command forms (runtime-conditional) or introduce one CLI shim (e.g. contract-provided `ace-runtime send`)? Default: document both forms — no new CLI surface without need.
 - [ ] Should `auto` prefer herdr when both runtimes are live (lab reality) instead of tmux? Default: tmux first (existing behavior), explicit config overrides.
+- [ ] Callback rollout: switch drive.wf.md to `ace-runtime send` in this task (chosen default) — confirm the neutral command is acceptable for every fork context (headless forks have no pane; rule already conditions on callback being requested).
 
 ### Vertical Slice Decomposition (Task/Subtask Model)
 
@@ -97,6 +102,7 @@ bundle:
 #### Unit / Component Validation
 - [ ] Launch-mode resolution matrix: auto/headless/tmux/herdr × detected runtime (existing assign tests extended).
 - [ ] Overseer window-open/prune via contract on both runtimes (fake adapters).
+- [ ] Demo wait directives: all four lifecycle conditions pass against BOTH adapters (shared contract examples — regression preservation).
 
 #### Integration / E2E Validation (if cross-boundary behavior exists)
 - [ ] `runtime: herdr`: fork run --callback round-trip on live herdr (or scripted equivalent); overseer work-on opens herdr tab.

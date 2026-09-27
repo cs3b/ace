@@ -82,8 +82,20 @@ available through `ace-herdr`, backed by the native herdr capability
 ace-herdr list [--panes|--tabs|--workspaces] [--workspace ID] [--quiet]
 # {"panes":[{"id":"w1:p1","tab":"w1:t1","workspace":"w1","title":...},...]}
 
-ace-herdr send (--cmd TEXT | --msg TEXT... | --key NAME...) --pane ID [--quiet]
+ace-herdr send (--cmd TEXT | (--msg TEXT... [--key NAME...])) --pane ID [--quiet]
 # {"pane":"w1:p3","sent":"cmd"} — agent pane: {"pane":...,"sent":"prompt"}
+#
+# Combination semantics (matches ace-tmux send, the parity oracle):
+# - --cmd is a complete submission (text + Enter) and is EXCLUSIVE of
+#   --msg/--key.
+# - --msg (repeatable) and --key (repeatable) combine; items are sent in
+#   declaration order; a trailing Enter via --key submits the sequence —
+#   exactly ONE submission per invocation.
+#   Callback form: ace-herdr send --pane P --msg "done: 8wq.t.k86" --key Enter
+# - Agent-pane routing: --cmd and the concatenated --msg texts become ONE
+#   agent prompt (the prompt submits itself); a trailing Enter --key after
+#   an agent prompt is NOT forwarded (would double-submit) — reported in
+#   output as {"sent":"prompt","dropped_keys":["Enter"]} for observability.
 
 ace-herdr capture --pane ID [--lines N] [--source visible|recent]
 # raw pane text on stdout
@@ -101,9 +113,11 @@ ace-herdr --list-presets [workspaces|tabs]
 - herdr binary/socket unavailable: explicit CLI error, no partial output.
 - Unknown preset: CLI error listing available presets (ace-tmux `--list-presets` parity).
 - `send` to a blocked agent: terminal CLI error carrying `agent_blocked` (never silently dropped).
+- `send --cmd` combined with `--msg`/`--key`: usage error before any transport call (fail closed, nothing sent).
 
 **Edge Cases:**
-- Repeatable `--msg`/`--key` sent in declaration order (ace-tmux parity).
+- Repeatable `--msg`/`--key` sent in declaration order (ace-tmux parity); exactly one submission per invocation on both plain and agent panes.
+- Mixed callback sequence on an agent pane: msgs → single prompt; trailing Enter dropped and reported (no double submission).
 - `capture` on an agent pane: `--source visible` shows the agent screen; text routing rules do not apply (read-only).
 - Empty workspace (`list --panes` with no panes): success with empty array, not an error (explicit empty state).
 - Preset referencing a missing nested preset: fail closed with the missing name.
@@ -120,6 +134,7 @@ ace-herdr --list-presets [workspaces|tabs]
 ### Validation Questions
 
 - [ ] **Requirement Clarity**: confirm this task absorbs the "wrapper" half of 8wq.t.1w0 (rescoped to tidy-only) — no duplicate wrapper work.
+- [ ] **Agent trailing-Enter rule**: on agent panes a trailing `--key Enter` is dropped (reported in output) to guarantee exactly-one submission — confirm drop-and-report is preferred over erroring out. Default: drop-and-report.
 - [ ] **Output format**: confirm JSON-lines stance (intent parity, not format parity); flag if consumers need `--format table`.
 - [ ] **Preset naming**: `workspaces`/`tabs` (herdr-native) vs `sessions`/`windows` (tmux-parity naming) — default herdr-native.
 - [ ] **Success Definition**: is `api snapshot` acceptable as the backing call for `list`, or must each scope use its dedicated subcommand?
