@@ -46,11 +46,26 @@ Then prepare every artifact:
 Prepare mode asks RubyGems to validate the configured credential, refreshes the
 pending snapshot, and builds every missing artifact. It does not require an OTP
 and never calls `gem push`. A failure stops before publication and retains all
-artifacts.
+artifacts. It also records the resolved queue in
+`.ace-local/rubygems-publish/pending-queue.yml`, so the later live run with no
+gem names publishes exactly the prepared set.
 
 ## OTP HITL Handoff
 
 Only after prepare succeeds, use exactly one of these paths. Do not mix them.
+
+### Interactive prompt (default)
+
+On an operator terminal the simplest path is the built-in silent prompt:
+
+```bash
+.ace-bin/ace-rubygems-publish --interactive
+```
+
+The publisher reads the OTP with no echo straight from the terminal right
+before the push burst; the value never touches argv, env dumps, or shell
+history. `--interactive` requires a terminal on stdin and refuses to run under
+agents or CI.
 
 ### Secure Lab broker
 
@@ -82,6 +97,19 @@ ace-hitl create "RubyGems OTP environment ready" \
 The persisted HITL answer is readiness only. The operator configures
 `GEM_HOST_OTP_CODE` out of band in the resumed publisher process environment;
 the OTP never enters Telegram, chat, or ACE HITL on this path.
+
+### Inline OTP (operator override)
+
+```bash
+.ace-bin/ace-rubygems-publish --otp <value>
+```
+
+The owner has approved passing short-lived OTP values inline. The value is
+visible in `ps` output and shell history, which is acceptable only because a
+RubyGems OTP expires within roughly a minute of issue; prefer `--interactive`.
+The publisher still never writes the value into its own output, errors, or
+reports, and long-lived secrets (API keys, PATs, passwords, private keys,
+recovery codes) remain forbidden in argv and chat.
 
 ## Live Publish
 

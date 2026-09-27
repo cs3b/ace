@@ -14,6 +14,7 @@ require "open3"
 require "pathname"
 require "rubygems"
 require "rubygems/package"
+require "yaml"
 
 ROOT = Pathname.new(__FILE__).dirname.parent.realpath
 MAX_CONCURRENCY = 5
@@ -21,6 +22,7 @@ PROBE_GEM = "ace-support-core"
 NON_OTP_ENV = {"GEM_HOST_OTP_CODE" => nil}.freeze
 NON_SECRET_ENV = {"GEM_HOST_API_KEY" => nil, "GEM_HOST_OTP_CODE" => nil}.freeze
 OTP_PATTERN = /\A[[:alnum:]]{6,8}\z/
+MANIFEST = ROOT.join(".ace-local/rubygems-publish/pending-queue.yml")
 
 def usage
   <<~USAGE
@@ -28,28 +30,41 @@ def usage
       ace-rubygems-publish - publish pending ace-* gems to RubyGems.org in dependency order
 
     SYNOPSIS
-      .ace-bin/ace-rubygems-publish [OPTIONS] [gem-name...]
       .ace-bin/ace-rubygems-publish --prepare [gem-name...]
+      .ace-bin/ace-rubygems-publish --interactive [gem-name...]
+      .ace-bin/ace-rubygems-publish --otp <value> [gem-name...]
+      GEM_HOST_OTP_CODE=<otp> .ace-bin/ace-rubygems-publish [gem-name...]
       .ace-bin/ace-rubygems-publish --dry-run [gem-name...]
 
     ARGUMENTS
       [gem-name...]  Restrict the queue to these gems. Their pending ace-* runtime
                      dependencies are included automatically so the dependency
-                     order stays publishable.
+                     order stays publishable. With NO gem names the queue is the
+                     prepared manifest from the last --prepare (or, when absent,
+                     every gem pending on RubyGems).
 
     OPTIONS
       --dry-run      Print the publish queue (order, waves, versions, artifacts)
                      without building, pushing, or consuming an OTP.
       --prepare      Validate credentials and build the full pending queue, but do
-                     not require an OTP or push. Run this before requesting an OTP.
+                     not require an OTP or push. Run this before requesting an OTP;
+                     it records the queue in .ace-local/rubygems-publish/pending-queue.yml
+                     so the later live run publishes exactly the prepared set.
+      --interactive  Prompt for the one-time password silently (no echo) right
+                     before the push burst. Requires an interactive terminal;
+                     the OTP never touches argv, env dumps, or shell history.
+      --otp <value>  Use <value> as the one-time password. NOTE: argv values are
+                     visible to `ps` and shell history — acceptable for short-lived
+                     OTPs; prefer --interactive or the environment variable.
       --help, -h     Show this help.
 
     CREDENTIALS
       GEM_HOST_API_KEY must be set and non-empty in this shell (it is validated
       against RubyGems before anything is pushed), or ~/.gem/credentials must exist.
-      GEM_HOST_OTP_CODE must contain a 6-8 character one-time password in live mode.
-      Both variables are inherited by RubyGems and are never copied into command
-      arguments or output. Note: a mise.toml entry like
+      The one-time password comes from (in order): --otp <value>, the --interactive
+      prompt, or GEM_HOST_OTP_CODE; it must be 6-8 alphanumeric characters.
+      Credentials and the OTP are inherited by RubyGems and are never copied into
+      command arguments or output by this script. Note: a mise.toml entry like
       GEM_HOST_API_KEY = { value = "{{env.GEM_HOST_API_KEY}}" }
       resolves EMPTY unless the calling shell already exports the key.
 
@@ -62,8 +77,9 @@ def usage
 
     EXAMPLES
       .ace-bin/ace-rubygems-publish --dry-run
-      .ace-bin/ace-rubygems-publish --prepare
-      GEM_HOST_OTP_CODE=<otp> .ace-bin/ace-rubygems-publish
+      .ace-bin/ace-rubygems-publish --prepare                 # build + record queue
+      .ace-bin/ace-rubygems-publish --interactive             # one command: prompts OTP
+      .ace-bin/ace-rubygems-publish --otp 123456              # inline (argv-visible)
       GEM_HOST_OTP_CODE=<otp> .ace-bin/ace-rubygems-publish ace-support-core ace-support-cli
   USAGE
 end
@@ -112,11 +128,31 @@ rescue SystemCallError
   abort!("Could not run RubyGems to verify configured credentials; nothing was pushed")
 end
 
-def validate_otp!
-  otp = ENV["GEM_HOST_OTP_CODE"]
+def validate_otp!(otp)
   return if otp&.match?(OTP_PATTERN)
 
-  abort!("GEM_HOST_OTP_CODE is missing or invalid; expected 6-8 alphanumeric characters")
+  abort!("No valid OTP. Pass --otp <value>, rerun with --interactive, or set GEM_HOST_OTP_CODE " \
+    "(6-8 alphanumeric characters)")
+end
+
+def prompt_for_otp
+  require "io/console"
+  unless STDIN.tty?
+    abort!("--interactive needs a terminal on stdin; use --otp <value> or GEM_HOST_OTP_CODE instead")
+  end
+
+  otp = STDIN.getpass("RubyGems OTP (#{OTP_WINDOW_HINT}): ").to_s.strip
+  abort!("No OTP entered") if otp.empty?
+  otp
+end
+
+OTP_WINDOW_HINT = "valid ~30-45s"
+
+def resolve_otp!(interactive:, otp_arg:)
+  return otp_arg if otp_arg
+  return prompt_for_otp if interactive
+
+  ENV["GEM_HOST_OTP_CODE"]
 end
 
 # --- discovery ---------------------------------------------------------------
@@ -277,6 +313,47 @@ def print_queue(queue, total_waves, mode)
   puts
 end
 
+# --- prepared queue manifest -------------------------------------------------
+
+def save_manifest!(queue)
+  MANIFEST.dirname.mkpath
+  File.write(MANIFEST, YAML.dump(
+    "recorded_at" => Time.now.utc.strftime("%Y-%m-%dT%H:%M:%SZ"),
+    "queue" => queue.map { |item| {name: item[:name], version: item[:version], wave: item[:wave], artifact: item[:artifact]} }
+  ))
+rescue StandardError => e
+  abort!("Could not record the prepared queue manifest (#{e.message}); nothing was pushed")
+end
+
+# Returns the prepared queue when the manifest matches the current tree, nil
+# when there is no manifest, and aborts when the manifest is stale (the local
+# version of a recorded gem changed since --prepare).
+def manifest_queue(specs)
+  return nil unless MANIFEST.file?
+
+  recorded = begin
+    YAML.safe_load_file(MANIFEST, permitted_classes: [], aliases: false)
+  rescue StandardError => e
+    abort!("Prepared queue manifest is unreadable (#{e.message}) — rerun --prepare")
+  end
+  items = recorded.is_a?(Hash) ? recorded["queue"] : nil
+  unless items.is_a?(Array) && !items.empty?
+    abort!("Prepared queue manifest is empty or invalid — rerun --prepare")
+  end
+
+  items.each do |item|
+    name = item["name"]
+    entry = specs[name]
+    if entry.nil? || entry[:spec].version.to_s != item["version"]
+      abort!("Prepared queue is stale: #{name} #{item["version"]} does not match the current tree — rerun --prepare")
+    end
+  end
+
+  items.map do |item|
+    {name: item["name"], version: item["version"], wave: item["wave"].to_i, artifact: item["artifact"]}
+  end
+end
+
 # --- build -------------------------------------------------------------------
 
 def validate_artifact!(item)
@@ -360,7 +437,7 @@ def publish!(queue)
         puts "Stopped after failure. Remaining unpublished artifacts kept on disk:"
         remaining.each { |item| puts "  #{item[:artifact].sub("#{ROOT}/", "")}" }
         if results[:otp_rejected].any?
-          puts "Set a FRESH GEM_HOST_OTP_CODE and rerun to resume."
+          puts "OTP rejected or expired — rerun with a FRESH OTP (via --interactive, --otp, or GEM_HOST_OTP_CODE) to resume."
         end
         exit 1
       end
@@ -382,11 +459,30 @@ end
 
 dry_run = ARGV.delete("--dry-run")
 prepare = ARGV.delete("--prepare")
+interactive = ARGV.delete("--interactive")
+otp_arg = nil
+if (index = ARGV.index("--otp"))
+  ARGV.delete_at(index)
+  otp_arg = ARGV.delete_at(index)
+  abort!("--otp requires a 6-8 alphanumeric value") unless otp_arg&.match?(OTP_PATTERN)
+elsif (inline = ARGV.find { |arg| arg.start_with?("--otp=") })
+  ARGV.delete(inline)
+  otp_arg = inline.split("=", 2).last
+  abort!("--otp requires a 6-8 alphanumeric value") unless otp_arg&.match?(OTP_PATTERN)
+end
 abort!("Choose either --dry-run or --prepare, not both") if dry_run && prepare
+abort!("--interactive has nothing to push in --dry-run or --prepare mode") if interactive && (dry_run || prepare)
+abort!("--otp is not needed for --dry-run or --prepare (they never push)") if otp_arg && (dry_run || prepare)
 abort!("Unknown option: #{ARGV.grep(/\A--/).join(", ")}\n\n#{usage}") if ARGV.any?(/\A--/)
-abort!("OTP values are forbidden in command arguments; use GEM_HOST_OTP_CODE") if ARGV.any? { |arg| arg.match?(OTP_PATTERN) }
+bare_otp = ARGV.select { |arg| arg.match?(OTP_PATTERN) }
+unless bare_otp.empty?
+  abort!("Refusing bare OTP-looking argument(s): #{bare_otp.join(", ")} — pass it with --otp <value> instead")
+end
 
 gems_filter = ARGV
+# No gem names: the live run publishes exactly the prepared queue from the
+# last --prepare; --dry-run keeps planning against a fresh remote snapshot.
+use_manifest = gems_filter.empty? && !dry_run
 
 # Credentials first: fail fast before any slow work or OTP consumption.
 unless dry_run
@@ -394,12 +490,21 @@ unless dry_run
   probe_credentials!
 end
 
-puts "Resolving publish queue..."
 specs = load_local_specs
-graph = internal_runtime_deps(specs)
-levels = dependency_levels(graph)
-remote_versions = fetch_remote_versions
-queue, skipped_published = build_queue(specs, graph, levels, remote_versions, gems_filter)
+queue = nil
+skipped_published = []
+prepared = use_manifest ? manifest_queue(specs) : nil
+
+if prepared
+  queue = prepared
+  puts "Using prepared queue from #{MANIFEST.sub("#{ROOT}/", "")}"
+else
+  puts "Resolving publish queue..."
+  graph = internal_runtime_deps(specs)
+  levels = dependency_levels(graph)
+  remote_versions = fetch_remote_versions
+  queue, skipped_published = build_queue(specs, graph, levels, remote_versions, gems_filter)
+end
 
 skipped_published.each do |name|
   puts "⊘ #{name} #{specs.fetch(name)[:spec].version} already published on RubyGems"
@@ -424,11 +529,14 @@ exit 0 if dry_run
 
 build_artifacts!(specs, queue)
 if prepare
-  puts "Prepared all artifacts. Set GEM_HOST_OTP_CODE through the approved secret environment and rerun without --prepare."
+  save_manifest!(queue)
+  puts "Prepared all artifacts. Publish with: .ace-bin/ace-rubygems-publish --interactive"
   exit 0
 end
 
-validate_otp!
+otp = resolve_otp!(interactive: interactive, otp_arg: otp_arg)
+validate_otp!(otp)
+ENV["GEM_HOST_OTP_CODE"] = otp
 publish!(queue)
 
 puts
