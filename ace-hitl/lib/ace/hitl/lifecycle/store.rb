@@ -121,16 +121,12 @@ module Ace
           }
           Effects.validate_declaration!(effect) if effect
           value["effect"] = Effects.normalized_declaration(effect) if effect
+          value["incarnation"] = SecureRandom.hex(8)
 
           request_path = requests_dir.join("#{request_id}.json")
           raise StateError, "HITL request already exists" if request_path.exist?
 
           ensure_layout!
-          # A reused id starts clean: the public projection and the
-          # root-only effects log of a consumed/cancelled predecessor
-          # must not leak into the new incarnation (review F-B on W696).
-          public_path(request_id).unlink if public_path(request_id).exist?
-          effects_dir.join("#{request_id}.json").unlink if effects_dir.join("#{request_id}.json").exist?
           begin
             # link(2) is the create-once commit point: rename(2) would
             # silently let a concurrent duplicate-id create overwrite the
@@ -140,10 +136,10 @@ module Ace
           rescue Errno::EEXIST
             raise StateError, "HITL request already exists"
           end
-          update_public(value, "created")
+          initialize_projection!(value)
           {
             "id" => request_id,
-            "work" => work,
+            "work" => value["work"],
             "attempt" => attempt,
             "requested" => true
           }
@@ -362,6 +358,7 @@ module Ace
             "created_at" => Integer(value["created_at"]),
             "updated_at" => Time.now.to_i
           }
+          public["incarnation"] = value["incarnation"] if value["incarnation"]
           public["effect_state"] = value["effect_state"] if value["effect_state"]
           public.update(audit) if audit
           existing = AtomicJson.read(public_path(request_id))
@@ -397,6 +394,28 @@ module Ace
           rescue Errno::ENOENT
             raise StateError, "unknown or invalid HITL request"
           end
+        end
+
+        # First projection of a fresh incarnation, run under the same
+        # per-request flock every transition uses (review 8wq2zttv on
+        # PR#336). The projection-and-effects cleanup of a consumed or
+        # cancelled predecessor happens here, keyed by the incarnation
+        # token: a predecessor's artifacts never leak into the new
+        # incarnation (review F-B on W696), and a broker that won the
+        # lock first and already delivered can never be regressed to
+        # "created" — a current-incarnation projection is left untouched.
+        def initialize_projection!(value)
+          request_id = safe_id(value["id"].to_s)
+          with_request_lock(request_id) do
+            current = AtomicJson.read(public_path(request_id))
+            predecessor = current.nil? || current["incarnation"] != value["incarnation"]
+            if predecessor
+              public_path(request_id).unlink if public_path(request_id).exist?
+              effects_dir.join("#{request_id}.json").unlink if effects_dir.join("#{request_id}.json").exist?
+              update_public(value, "created")
+            end
+          end
+          nil
         end
 
         def load_request(request_id)
