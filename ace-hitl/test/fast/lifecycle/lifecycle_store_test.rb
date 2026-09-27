@@ -509,10 +509,13 @@ class LifecycleStoreTest < AceHitlTestCase
       store = make_store(root: root, identity: unprivileged_identity)
       root_store = make_store(root: root, identity: root_identity)
 
+      # These argvs go through a real spawn: RbConfig.ruby is the one
+      # executable guaranteed on every dev host (/bin/true and /bin/false
+      # are Linux-only paths; on macOS they escalate as Errno::ENOENT).
       # First incarnation: its callback escalates, then the request is
       # consumed (terminal, artifacts kept by design).
       store.create(**request_args(effect: {
-        match: nil, effect_args: ["/bin/false"], effect_cwd: root, effect_timeout: 30
+        match: nil, effect_args: [RbConfig.ruby, "-e", "exit 1"], effect_cwd: root, effect_timeout: 30
       }))
       root_store.deliver("hitl001", stdin_reader("first"))
       store.consume("hitl001", timeout: 1)
@@ -522,7 +525,7 @@ class LifecycleStoreTest < AceHitlTestCase
       # the stale public projection or the stale effects log (review
       # F-B on W696).
       store.create(**request_args(effect: {
-        match: nil, effect_args: ["/bin/true"], effect_cwd: root, effect_timeout: 30
+        match: nil, effect_args: [RbConfig.ruby, "-e", "exit 0"], effect_cwd: root, effect_timeout: 30
       }))
       refute_path_exists File.join(root, "effects", "hitl001.json")
       public_record = JSON.parse(File.read(File.join(root, "public", "hitl001.json")))
@@ -546,7 +549,7 @@ class LifecycleStoreTest < AceHitlTestCase
       root_store = make_store(root: root, identity: root_identity)
 
       store.create(**request_args(effect: {
-        match: nil, effect_args: ["/bin/false"], effect_cwd: root, effect_timeout: 30
+        match: nil, effect_args: [RbConfig.ruby, "-e", "exit 1"], effect_cwd: root, effect_timeout: 30
       }))
       root_store.deliver("hitl001", stdin_reader("the-answer"))
       assert_equal "callback-escalated", public_effect_state(root)
