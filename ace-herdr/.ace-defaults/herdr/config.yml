@@ -1,0 +1,20 @@
+# ace-herdr default configuration
+# Override in ~/.ace/herdr/config.yml or .ace/herdr/config.yml
+
+# Agent kind used when bootstrapping a pane without an agent
+# (herdr agent start --kind)
+default_agent_kind: pi
+
+# Push delivery retries; deterministic fixed backoff, no jitter
+delivery:
+  max_attempts: 3
+  backoff_seconds: [1, 2, 4]
+
+# Timeouts in seconds
+timeouts:
+  agent_start: 60
+  prompt: 30
+  wait: 30
+
+# Delivery record root (ADR-029 short-name layout), relative to project root
+deliveries_dir: .ace-local/herdr/deliveries
