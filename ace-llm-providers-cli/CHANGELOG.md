@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.35.1] - 2026-09-27
+
+### Technical
+- Compare Agy working directory using realpath in tests.
+
 ## [0.35.0] - 2026-09-27
 
 ### Changed

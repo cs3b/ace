@@ -4,6 +4,10 @@ All notable changes to ace-handbook-integration-claude will be documented in thi
 
 ## [Unreleased]
 
+## [0.3.12] - 2026-09-27
+
+### Technical
+- Raised the `ace-handbook` dependency floor to `~> 0.32`.
 
 ## [0.3.11] - 2026-09-02
 

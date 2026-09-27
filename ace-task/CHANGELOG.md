@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.37.6] - 2026-09-27
+
+### Technical
+- Stub the GitHub sync adapter during pending replay in tests.
+
 ## [0.37.5] - 2026-09-26
 
 ### Added

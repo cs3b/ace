@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.44.1] - 2026-09-27
+
+### Technical
+- Enforce new gem dependency floors for review safety in the gemspec.
+
 ## [0.44.0] - 2026-09-24
 
 ### Changed

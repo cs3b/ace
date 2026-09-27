@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.57.1] - 2026-09-27
+
+### Technical
+- Stop depending on the removed review-fit preset step in tests.
+
 ## [0.57.0] - 2026-09-24
 
 ### Changed
