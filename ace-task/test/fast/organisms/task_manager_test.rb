@@ -466,7 +466,10 @@ class TaskManagerTest < AceTaskTestCase
     moved = @manager.show(task.id)
     assert_match(/github_sync_pending: true/, File.read(moved.file_path))
 
-    replay = @manager.github_sync(pending: true)
+    replay = nil
+    Ace::Task::Molecules::GithubIssueSyncAdapter.stub(:new, fake_sync) do
+      replay = @manager.github_sync(pending: true)
+    end
     assert_equal 0, replay[:synced]
     assert_equal 1, replay[:pending]
     assert_empty sync_calls
