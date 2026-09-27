@@ -1,13 +1,13 @@
 ---
 id: 8wq.t.1qb.2
-status: draft
+status: done
 priority: medium
 created_at: "2026-09-27 01:09:58"
 estimate: TBD
 dependencies: []
 bundle:
-  presets: ["project"]
-  files: [".ace-tasks/8wq.t.1qb-improve-ace-review-round-efficiency/8wq.t.1qb-improve-ace-review-round-efficiency-and-usage.s.md", "ace-review/lib/ace/review/molecules/subject_strategy.rb", "ace-review/.ace-defaults/review/config.yml"]
+  presets: [project]
+  files: [.ace-tasks/8wq.t.1qb-improve-ace-review-round-efficiency/8wq.t.1qb-improve-ace-review-round-efficiency-and-usage.s.md, ace-review/lib/ace/review/molecules/subject_strategy.rb, ace-review/.ace-defaults/review/config.yml]
   commands: []
 tags: [ace-review, diff-subject]
 parent: 8wq.t.1qb
