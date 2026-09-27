@@ -42,7 +42,7 @@ module Ace
                 cli_error("--source must be visible or recent")
               end
               control = Organisms::ControlSurface.new(executor: executor)
-              puts control.capture(
+              print control.capture(
                 pane: options.fetch(:pane), source: source,
                 lines: options[:lines] || Organisms::ControlSurface::DEFAULT_LINES
               )

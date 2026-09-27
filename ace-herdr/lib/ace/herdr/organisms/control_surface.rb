@@ -129,7 +129,10 @@ module Ace
           inherited_cwd = expand_cwd(cwd || resolved["cwd"])
 
           created_tabs = tabs.map do |tab|
-            instantiate_tab(tab, workspace_id: workspace_id, inherited_cwd: inherited_cwd)
+            instantiate_tab(
+              tab, workspace_id: workspace_id,
+              inherited_cwd: inherited_cwd, cli_cwd: expand_cwd(cwd)
+            )
           end
 
           # herdr seeds every new workspace with an initial tab; the preset's
@@ -147,7 +150,10 @@ module Ace
           workspace_id = resolve_workspace_id(workspace_id)
           resolved = resolve_tab_preset(preset_name)
           preflight_tab!(resolved)
-          instantiate_tab(resolved, workspace_id: workspace_id, inherited_cwd: expand_cwd(cwd))
+          instantiate_tab(
+            resolved, workspace_id: workspace_id,
+            inherited_cwd: nil, cli_cwd: expand_cwd(cwd)
+          )
         end
 
         # Unknown-preset CLI error listing the available names
@@ -181,8 +187,8 @@ module Ace
         # --- presets: workspace/tab instantiation ---------------------------------
 
         # Static layout validation before any herdr call: panes declared,
-        # every non-root pane placed by exactly one split, every split
-        # direction known, and every split reference resolvable
+        # every split well-formed with a target that is already placed at
+        # its position, and every non-root pane placed by exactly one split
         def preflight_tab!(tab_spec)
           label = tab_spec["label"]
           pane_specs = Array(tab_spec["panes"])
@@ -190,6 +196,26 @@ module Ace
           return if pane_specs.length == 1 && Array(tab_spec["splits"]).empty?
 
           splits = Array(tab_spec["splits"])
+          root_label = pane_specs.first["label"]
+          placed_labels = [root_label].compact
+
+          splits.each do |split|
+            unless split["pane"] && pane_specs.drop(1).any? { |spec| spec["label"] == split["pane"] }
+              raise ValidationError,
+                "Preset tab '#{label}': splits entry must name a declared non-root pane " \
+                "(pane: <label>), got '#{split['pane']}'"
+            end
+
+            target = split["target"] || root_label
+            unless target.nil? || placed_labels.include?(target)
+              raise ValidationError,
+                "Preset tab '#{label}': splits entry targets pane '#{target}' before it is placed " \
+                "(order splits so each target is created by an earlier split or is the root pane)"
+            end
+            normalize_direction(split["direction"])
+            placed_labels << split["pane"]
+          end
+
           pane_specs.drop(1).each_with_index do |spec, index|
             key = spec["label"] || "panes[#{index + 1}]"
             unless splits.any? { |split| split["pane"] == spec["label"] }
@@ -201,24 +227,18 @@ module Ace
 
           duplicates = splits.map { |split| split["pane"] }
             .tally.select { |_label, count| count > 1 }.keys
-          unless duplicates.empty?
-            raise ValidationError,
-              "Preset tab '#{label}': panes placed by multiple splits: #{duplicates.join(', ')}"
-          end
+          return unless duplicates.any?
 
-          splits.each do |split|
-            normalize_direction(split["direction"])
-            next if split["target"].nil? || pane_specs.any? { |spec| spec["label"] == split["target"] }
-
-            raise ValidationError,
-              "Preset tab '#{label}': splits entry targets unknown pane '#{split['target']}'"
-          end
+          raise ValidationError,
+            "Preset tab '#{label}': panes placed by multiple splits: #{duplicates.join(', ')}"
         end
 
         # Layout first (tab + splits in declared order), then pane commands,
         # then agents (readiness-gated by agent start; vs0 bootstrap order)
-        def instantiate_tab(tab_spec, workspace_id:, inherited_cwd:)
-          tab_cwd = expand_cwd(tab_spec["cwd"]) || inherited_cwd
+        def instantiate_tab(tab_spec, workspace_id:, inherited_cwd:, cli_cwd: nil)
+          # cwd precedence: CLI --cwd beats the preset tab cwd, which beats
+          # the inherited workspace root cwd
+          tab_cwd = cli_cwd || expand_cwd(tab_spec["cwd"]) || inherited_cwd
           tab_json = @executor.tab_create(
             workspace_id: workspace_id,
             label: tab_spec["label"],
@@ -258,7 +278,16 @@ module Ace
 
           splits.each do |split|
             spec = pane_spec_for(pane_specs, split["pane"])
-            target = by_label[split["target"]] || placed[0]
+            target_label = split["target"] || pane_specs.first["label"]
+            target =
+              if target_label
+                by_label.fetch(target_label) do
+                  raise ValidationError,
+                    "Preset splits entry targets unknown pane '#{target_label}'"
+                end
+              else
+                placed[0]
+              end
             direction = normalize_direction(split["direction"])
             new_id = dig_value(
               @executor.pane_split(

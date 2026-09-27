@@ -244,12 +244,12 @@ module Ace
         def test_capture_returns_raw_stdout_without_json_wrapping
           @executor = HerdrTestHelper::FakeExecutor.new(outcomes: {
             pane_read: Molecules::ExecutionResult.new(
-              stdout: "plain text\nexit 0", stderr: "", success: true, exit_code: 0
+              stdout: "\n  plain text\nexit 0\n\n", stderr: "", success: true, exit_code: 0
             )
           })
           @control = ControlSurface.new(executor: @executor)
 
-          assert_equal "plain text\nexit 0", @control.capture(pane: "p1")
+          assert_equal "\n  plain text\nexit 0\n\n", @control.capture(pane: "p1")
         end
 
         def test_capture_passes_source_and_lines
@@ -408,6 +408,96 @@ module Ace
 
           assert_equal "/tab", executor.calls_of(:tab_create).first[:args][:cwd]
           assert_equal "/pane", executor.calls_of(:pane_split).first[:args][:cwd]
+        end
+
+        def test_cli_cwd_beats_preset_tab_and_root_cwd
+          executor = creation_executor(
+            workspace_create: json_result(result: {workspace: {workspace_id: "w2"}, root_pane: {pane_id: "w2:p1"}})
+          )
+          preset = {
+            "label" => "dev", "cwd" => "/root",
+            "tabs" => [{
+              "label" => "work", "cwd" => "/tab",
+              "panes" => [{"label" => "shell"}, {"label" => "agent", "cwd" => "/pane"}],
+              "splits" => [{"direction" => "right", "pane" => "agent"}]
+            }]
+          }
+          control = creation_control(executor, "workspaces" => {"dev" => preset}, "tabs" => {})
+
+          control.create_workspace("dev", cwd: "/cli")
+
+          assert_equal "/cli", executor.calls_of(:workspace_create).first[:args][:cwd]
+          assert_equal "/cli", executor.calls_of(:tab_create).first[:args][:cwd]
+          assert_equal "/pane", executor.calls_of(:pane_split).first[:args][:cwd]
+        end
+
+        def test_cli_cwd_beats_tab_cwd_for_standalone_tab
+          executor = creation_executor
+          preset = {"label" => "agent", "cwd" => "/tab", "panes" => [{"label" => "agent"}]}
+          control = creation_control(executor, "workspaces" => {}, "tabs" => {"agent" => preset})
+
+          with_env("HERDR_WORKSPACE_ID" => "w1") do
+            control.create_tab("agent", cwd: "/cli")
+          end
+
+          assert_equal "/cli", executor.calls_of(:tab_create).first[:args][:cwd]
+        end
+
+        def test_split_targeting_not_yet_placed_pane_fails_preflight
+          executor = HerdrTestHelper::FakeExecutor.new
+          preset = {
+            "label" => "dev",
+            "tabs" => [{
+              "label" => "work",
+              "panes" => [{"label" => "shell"}, {"label" => "a"}, {"label" => "b"}],
+              "splits" => [
+                {"direction" => "right", "target" => "b", "pane" => "a"},
+                {"direction" => "down", "pane" => "b"}
+              ]
+            }]
+          }
+          control = creation_control(executor, "workspaces" => {"dev" => preset}, "tabs" => {})
+
+          error = assert_raises(ValidationError) { control.create_workspace("dev") }
+
+          assert_match(/targets pane 'b' before it is placed/, error.message)
+          assert_empty executor.calls
+        end
+
+        def test_split_pane_naming_the_root_pane_fails_preflight
+          executor = HerdrTestHelper::FakeExecutor.new
+          preset = {
+            "label" => "dev",
+            "tabs" => [{
+              "label" => "work",
+              "panes" => [{"label" => "shell"}, {"label" => "agent"}],
+              "splits" => [{"direction" => "right", "pane" => "shell"}]
+            }]
+          }
+          control = creation_control(executor, "workspaces" => {"dev" => preset}, "tabs" => {})
+
+          error = assert_raises(ValidationError) { control.create_workspace("dev") }
+
+          assert_match(/must name a declared non-root pane/, error.message)
+          assert_empty executor.calls
+        end
+
+        def test_split_without_a_declared_pane_fails_preflight
+          executor = HerdrTestHelper::FakeExecutor.new
+          preset = {
+            "label" => "dev",
+            "tabs" => [{
+              "label" => "work",
+              "panes" => [{"label" => "shell"}, {"label" => "agent"}],
+              "splits" => [{"direction" => "right"}]
+            }]
+          }
+          control = creation_control(executor, "workspaces" => {"dev" => preset}, "tabs" => {})
+
+          error = assert_raises(ValidationError) { control.create_workspace("dev") }
+
+          assert_match(/must name a declared non-root pane/, error.message)
+          assert_empty executor.calls
         end
 
         def test_pane_commands_run_after_layout

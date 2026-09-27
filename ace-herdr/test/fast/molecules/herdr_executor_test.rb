@@ -24,6 +24,11 @@ module Ace
             @commands << cmd
             @results.shift || ExecutionResult.new(stdout: "{}", stderr: "", success: true, exit_code: 0)
           end
+
+          def run_raw_stdout(cmd)
+            @commands << cmd
+            @results.shift || ExecutionResult.new(stdout: "", stderr: "", success: true, exit_code: 0)
+          end
         end
 
         def error_result(code, message = "boom")
@@ -199,6 +204,15 @@ module Ace
             ["herdr", "pane", "read", "p5", "--source", "visible", "--lines", "20"],
             executor.commands.first
           )
+        end
+
+        def test_pane_read_preserves_stdout_verbatim
+          raw = "\n  pane text\n\nlast\n"
+          executor = StubbedExecutor.new(results: [
+            ExecutionResult.new(stdout: raw, stderr: "", success: true, exit_code: 0)
+          ])
+
+          assert_equal raw, executor.pane_read("p5").stdout
         end
 
         def test_pane_wait_output_builds_expected_argv

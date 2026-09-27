@@ -104,11 +104,12 @@ module Ace
           run!([@binary, "agent", "send-keys", pane, *keys])
         end
 
-        # Read pane terminal output as raw text (capture)
+        # Read pane terminal output as raw text (capture). The raw runner
+        # keeps stdout verbatim — no trimming of leading/trailing blank lines
         def pane_read(pane, source: "recent", lines: nil)
           cmd = [@binary, "pane", "read", pane, "--source", source]
           cmd += ["--lines", lines.to_s] if lines
-          run!(cmd)
+          run_raw(cmd)
         end
 
         # Wait for pane output containing a literal pattern. herdr checks
@@ -160,10 +161,29 @@ module Ace
           result
         end
 
+        # Like run!, but stdout is preserved verbatim (no strip) — for
+        # commands whose output is content (pane read/capture)
+        def run_raw(cmd)
+          result = run_raw_stdout(cmd)
+          raise classify(result, cmd) unless result.success?
+
+          result
+        end
+
         def run(cmd)
           stdout, stderr, status = Open3.capture3(*cmd)
           ExecutionResult.new(
             stdout: stdout.strip, stderr: stderr.strip,
+            success: status.success?, exit_code: status.exitstatus || -1
+          )
+        rescue Errno::ENOENT
+          raise ExecutorUnavailableError, "herdr CLI not found on PATH: #{@binary}"
+        end
+
+        def run_raw_stdout(cmd)
+          stdout, stderr, status = Open3.capture3(*cmd)
+          ExecutionResult.new(
+            stdout: stdout, stderr: stderr.strip,
             success: status.success?, exit_code: status.exitstatus || -1
           )
         rescue Errno::ENOENT

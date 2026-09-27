@@ -11,10 +11,10 @@ module Ace
             @executor = HerdrTestHelper::FakeExecutor.new
           end
 
-          def test_prints_raw_pane_text
+          def test_prints_raw_pane_text_verbatim
             @executor = HerdrTestHelper::FakeExecutor.new(outcomes: {
               pane_read: Molecules::ExecutionResult.new(
-                stdout: "build succeeded\nexit 0", stderr: "", success: true, exit_code: 0
+                stdout: "\n  build succeeded\nexit 0\n\n", stderr: "", success: true, exit_code: 0
               )
             })
             cmd = Capture.new(executor: @executor)
@@ -23,7 +23,7 @@ module Ace
               cmd.call(pane: "p5", lines: nil, source: nil)
             end
 
-            assert_equal "build succeeded\nexit 0\n", out
+            assert_equal "\n  build succeeded\nexit 0\n\n", out
           end
 
           def test_defaults_to_recent_source_and_40_lines
