@@ -49,7 +49,6 @@ require_relative "review/molecules/feedback_synthesizer"
 require_relative "review/molecules/subject_filter"
 require_relative "review/molecules/delta_resolver"
 require_relative "review/molecules/exempt_paths"
-require_relative "review/molecules/subject_strategy"
 require_relative "review/molecules/pr_task_spec_resolver"
 require_relative "review/molecules/goals_brief"
 
