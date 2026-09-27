@@ -7,7 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.32.0] - 2026-09-27
+
 ### Added
+- Provider manifests may declare an optional `prompts_dir`; `ace-handbook sync` now projects canonical prompt templates from `ace-handbook-integration-*` packages (`handbook/prompts/*.md`) into that directory (idempotent writes; prunes only stale files carrying an `ace-handbook-integration-*` provenance marker, leaving user-authored templates untouched). Sync summary output gains a `; prompts <dir> (N prompts, U updated, R removed)` segment when a provider projects prompts.
 - Shipped `wfi://handbook/manage-overrides` (with paired skill `as-handbook-manage-overrides`): canonical override documentation covering all overridable surfaces (workflows, cookbooks, guides), the source-priority resolution rule, skills' non-overridability ("override the workflow the skill calls"), the `.agents/` sync-projection status, and planted-competitor verification probes.
 
 ### Changed
