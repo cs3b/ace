@@ -20,6 +20,11 @@ module Ace
       # boundary the lab-side stop protocol uses.
       class Store
         MAX_ANSWER = 4096
+        # IO#read(limit) is byte-oriented, so the character limit is
+        # enforced on a decoded string with this separate byte bound
+        # (review 8wq2zttz on PR#336); 4 bytes per character is the
+        # UTF-8 worst case.
+        MAX_ANSWER_BYTES = MAX_ANSWER * 4
         MAX_PLAN_QUESTION = 240
         MAX_OPTIONS = 8
         MAX_OPTION = 80
@@ -484,7 +489,18 @@ module Ace
         end
 
         def read_bounded_answer(reader)
-          answer = reader.call(MAX_ANSWER + 1).to_s.strip
+          raw = reader.call(MAX_ANSWER_BYTES + 1).to_s
+          if raw.bytesize > MAX_ANSWER_BYTES
+            raise AnswerError, "answer exceeds #{MAX_ANSWER_BYTES} bytes"
+          end
+
+          # The documented 1-4096 bound is on CHARACTERS: decode UTF-8
+          # before measuring, so a valid multibyte answer is not
+          # rejected for its byte length (review 8wq2zttz on PR#336).
+          answer = raw.dup.force_encoding(Encoding::UTF_8)
+          raise AnswerError, "answer must be valid UTF-8" unless answer.valid_encoding?
+
+          answer = answer.strip
           if answer.empty? || answer.length > MAX_ANSWER || answer.include?("\u0000")
             raise AnswerError, "answer must contain 1-#{MAX_ANSWER} characters"
           end
