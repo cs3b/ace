@@ -9,41 +9,73 @@ require "fileutils"
 require "yaml"
 
 module HerdrTestHelper
-  # FakeExecutor records herdr commands without executing them.
-  # Responses are keyed by the subcommand head (e.g. "agent prompt")
-  # and may be fixed values or callables receiving the argv array.
+  # FakeExecutor records herdr commands without executing them. Outcomes are
+  # keyed by executor operation (e.g. :agent_get, :agent_prompt) and may be:
+  # an ExecutionResult (success), an Exception (raised), or a Proc receiving
+  # the keyword args. Default outcome is success.
   class FakeExecutor
-    attr_reader :commands
+    attr_reader :calls
 
-    def initialize(responses: {})
-      @commands = []
-      @responses = responses
+    def initialize(outcomes: {})
+      @calls = []
+      @outcomes = outcomes
     end
 
-    def run(cmd)
-      @commands << cmd
-      response = @responses[response_key(cmd)]
-      response = response.call(cmd) if response.respond_to?(:call)
-      response || default_result
+    def agent_get(pane)
+      call(:agent_get, pane: pane)
     end
 
-    # Commands with a given subcommand head, in order
-    def commands_for(head)
-      @commands.select { |cmd| cmd[0, head.split(" ").length] == head.split(" ") }
+    def agent_start(name:, kind:, pane:, timeout_ms:)
+      call(:agent_start, name: name, kind: kind, pane: pane, timeout_ms: timeout_ms)
+    end
+
+    def agent_prompt(pane:, text:)
+      call(:agent_prompt, pane: pane, text: text)
+    end
+
+    def agent_wait(pane:, until_states:, timeout_ms:)
+      call(:agent_wait, pane: pane, until_states: until_states, timeout_ms: timeout_ms)
+    end
+
+    def pane_run(pane, command)
+      call(:pane_run, pane: pane, command: command)
+    end
+
+    def pane_rename(pane, label)
+      call(:pane_rename, pane: pane, label: label)
+    end
+
+    def pane_close(pane)
+      call(:pane_close, pane: pane)
+    end
+
+    def pane_current
+      call(:pane_current)
+    end
+
+    def tab_create(workspace_id:, label:, cwd: nil)
+      call(:tab_create, workspace_id: workspace_id, label: label, cwd: cwd)
+    end
+
+    # All invocations of one operation, in order
+    def calls_of(operation)
+      @calls.select { |c| c[:operation] == operation }
     end
 
     private
 
-    def response_key(cmd)
-      case cmd.first
-      when "agent" then cmd.take(2).join(" ")
-      else cmd.first
-      end
+    def call(operation, args = {})
+      @calls << {operation: operation, args: args}
+      outcome = @outcomes[operation]
+      outcome = outcome.call(args) if outcome.respond_to?(:call)
+      raise outcome if outcome.is_a?(Exception)
+
+      outcome || success
     end
 
-    def default_result
+    def success
       Ace::Herdr::Molecules::ExecutionResult.new(
-        stdout: "", stderr: "", success: true, exit_code: 0
+        stdout: "{}", stderr: "", success: true, exit_code: 0
       )
     end
   end
@@ -55,6 +87,11 @@ module HerdrTestHelper
     yield
   ensure
     saved.each { |k, v| ENV[k] = v }
+  end
+
+  # Build an ace-hitl Ref from session/pane
+  def make_ref(session = "ws-1", pane = "%5")
+    Ace::Hitl::Providers::Ref.new(session: session, pane: pane)
   end
 end
 

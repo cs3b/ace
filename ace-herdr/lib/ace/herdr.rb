@@ -15,7 +15,20 @@ module Ace
 
     # Raised when a bounded wait exceeds its timeout
     class WaitTimeoutError < Error; end
+  end
+end
 
+# Executor error hierarchy (subclasses Ace::Herdr::Error)
+require_relative "herdr/errors"
+
+# Load all ace-herdr components
+require_relative "herdr/atoms/answer_digest"
+require_relative "herdr/models/delivery_record"
+require_relative "herdr/molecules/herdr_executor"
+require_relative "herdr/molecules/delivery_record_store"
+
+module Ace
+  module Herdr
     # Returns the gem root directory
     # @return [String] Path to the gem root directory
     def self.gem_root
