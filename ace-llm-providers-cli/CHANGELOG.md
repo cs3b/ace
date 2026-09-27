@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.35.0] - 2026-09-27
+
 ### Changed
 
 - Pi client reports measured per-model token usage — input, output, cached (`cacheRead`) and total (`totalTokens`) — instead of character-based estimates. When the CLI supplies no usage, the session records an explicit `usage_status: unavailable` (with the pi version when known) and no fabricated token counts; measured zeros are preserved and absent fields stay absent.
