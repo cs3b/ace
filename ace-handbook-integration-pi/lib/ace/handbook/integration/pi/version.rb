@@ -4,7 +4,7 @@ module Ace
   module Handbook
     module Integration
       module Pi
-        VERSION = "0.3.11"
+        VERSION = "0.4.0"
       end
     end
   end

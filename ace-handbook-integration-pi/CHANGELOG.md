@@ -4,6 +4,8 @@ All notable changes to ace-handbook-integration-pi will be documented in this fi
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-09-27
+
 ### Added
 - Provider manifest now declares `prompts_dir: .pi/prompts`; canonical pi prompt templates from `handbook/prompts/` project there via `ace-handbook sync`.
 - Shipped the canonical `loop` prompt template: the ACE overseer loop running in-process inside a pi session (`/loop`), cycling the task backlog through the `as-task-work` discipline with executed-evidence stop conditions. Projected to `.pi/prompts/loop.md`.
