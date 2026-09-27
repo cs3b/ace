@@ -122,15 +122,22 @@ module Ace
             cwd: expand_cwd(cwd || resolved["cwd"]),
             focus: resolved["focus"]
           )
-          workspace_id = dig_value(result.parsed_json, %w[result workspace workspace_id]) ||
+          parsed = result.parsed_json
+          workspace_id = dig_value(parsed, %w[result workspace workspace_id]) ||
             raise(TargetResolutionError,
               "could not read the new workspace id from herdr workspace create output")
           inherited_cwd = expand_cwd(cwd || resolved["cwd"])
 
-          {
-            workspace: workspace_id,
-            tabs: tabs.map { |tab| instantiate_tab(tab, workspace_id: workspace_id, inherited_cwd: inherited_cwd) }
-          }
+          created_tabs = tabs.map do |tab|
+            instantiate_tab(tab, workspace_id: workspace_id, inherited_cwd: inherited_cwd)
+          end
+
+          # herdr seeds every new workspace with an initial tab; the preset's
+          # declared tabs replace it
+          native_tab_id = dig_value(parsed, %w[result tab tab_id])
+          @executor.tab_close(native_tab_id) if native_tab_id && tabs.any?
+
+          {workspace: workspace_id, tabs: created_tabs}
         end
 
         # Create a tab from a preset (tmux `window` analogue) in the given

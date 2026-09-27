@@ -241,6 +241,14 @@ module Ace
           assert_equal ["herdr", "workspace", "create", "--label", "dev"], executor.commands.first
         end
 
+        def test_tab_close_builds_expected_argv
+          executor = StubbedExecutor.new
+
+          executor.tab_close("w1:t1")
+
+          assert_equal ["herdr", "tab", "close", "w1:t1"], executor.commands.first
+        end
+
         def test_tab_create_accepts_focus
           executor = StubbedExecutor.new
 

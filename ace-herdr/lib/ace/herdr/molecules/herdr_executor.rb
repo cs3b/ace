@@ -130,6 +130,12 @@ module Ace
           run!(cmd)
         end
 
+        # Close a tab (used to drop the native initial tab of a created
+        # workspace once the preset's declared tabs exist)
+        def tab_close(tab_id)
+          run!([@binary, "tab", "close", tab_id])
+        end
+
         # Split a pane (direction: right|down); herdr reports the new pane
         def pane_split(pane:, direction:, cwd: nil, ratio: nil, focus: nil)
           cmd = [@binary, "pane", "split", "--pane", pane, "--direction", direction]

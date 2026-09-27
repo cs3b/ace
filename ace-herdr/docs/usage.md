@@ -177,7 +177,7 @@ panes:
       name: task-agent
 ```
 
-Creation is deterministic and ordered: the workspace is created first, then tabs/panes in declared order (root pane from `tab create`, further panes from `pane split`, panes renamed to their labels), then pane `command`s run, then declared agents start readiness-gated (`agent start` blocks until the pane is interactive; vs0 bootstrap order: reverse address exported into the pane shell, agent start, optional prompt). All layouts are validated before any herdr call -- an unplaced pane, a duplicate split placement, an unknown split target, or an unknown direction fails closed and creates nothing.
+Creation is deterministic and ordered: the workspace is created first, then tabs/panes in declared order (root pane from `tab create`, further panes from `pane split`, panes renamed to their labels), then pane `command`s run, then declared agents start readiness-gated (`agent start` blocks until the pane is interactive; vs0 bootstrap order: reverse address exported into the pane shell, agent start, optional prompt). herdr seeds every new workspace with an initial tab; once the preset's declared tabs exist that seeded tab is closed, so only declared tabs remain (a preset with no `tabs:` keeps the seeded one). All layouts are validated before any herdr call -- an unplaced pane, a duplicate split placement, an unknown split target, or an unknown direction fails closed and creates nothing.
 
 Output: `{"workspace":"w2","tabs":[{"tab":"w2:t1","panes":["w2:p1","w2:p2"],"commands":1,"agents":["development-agent"]}]}`; the tab command reports the single tab object. `--cwd` overrides the resolved root/tab cwd (CLI > tab > root > pane inheritance).
 

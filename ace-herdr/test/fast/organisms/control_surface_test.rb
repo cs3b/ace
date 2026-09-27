@@ -366,7 +366,7 @@ module Ace
           operations = executor.calls.map { |call| call[:operation] }
           assert_equal(
             %i[workspace_create tab_create pane_rename pane_split pane_rename
-               pane_run agent_start agent_prompt],
+               pane_run agent_start agent_prompt tab_close],
             operations
           )
         end
@@ -493,6 +493,33 @@ module Ace
 
           assert_match(/available: dev/, error.message)
           assert_empty executor.calls
+        end
+
+        def test_create_workspace_closes_the_native_initial_tab
+          executor = creation_executor(
+            workspace_create: json_result(
+              result: {workspace: {workspace_id: "w2"}, tab: {tab_id: "w2:t1"}, root_pane: {pane_id: "w2:p1"}}
+            )
+          )
+          control = creation_control(executor, "workspaces" => {"dev" => workspace_with_agent_tab}, "tabs" => {})
+
+          control.create_workspace("dev")
+
+          assert_equal({tab_id: "w2:t1"}, executor.calls_of(:tab_close).first[:args])
+        end
+
+        def test_create_workspace_keeps_native_tab_when_no_tabs_declared
+          executor = creation_executor(
+            workspace_create: json_result(
+              result: {workspace: {workspace_id: "w2"}, tab: {tab_id: "w2:t1"}, root_pane: {pane_id: "w2:p1"}}
+            )
+          )
+          control = creation_control(executor, "workspaces" => {"dev" => {"label" => "bare"}}, "tabs" => {})
+
+          result = control.create_workspace("dev")
+
+          assert_equal({workspace: "w2", tabs: []}, result)
+          assert_empty executor.calls_of(:tab_close)
         end
 
         def test_create_tab_resolves_workspace_from_env_and_reports_payload

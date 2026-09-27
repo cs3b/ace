@@ -100,6 +100,10 @@ module HerdrTestHelper
       call(:workspace_create, label: label, cwd: cwd, focus: focus)
     end
 
+    def tab_close(tab_id)
+      call(:tab_close, tab_id: tab_id)
+    end
+
     def pane_split(pane:, direction:, cwd: nil, ratio: nil, focus: nil)
       call(:pane_split, pane: pane, direction: direction, cwd: cwd, ratio: ratio, focus: focus)
     end
