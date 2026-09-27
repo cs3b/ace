@@ -29,6 +29,8 @@ For presets with a goals brief, `--prepare-goals-brief` generates or reuses the 
 
 Run `ace-review --pr <number> --preset <preset> --auto-execute` for the needed scopes. Pass selected previous sessions with `--evidence-session <path>` when useful. Earlier commit SHAs are expected: prior reports provide context and dispositions, not current-code certificates. Supply a short summary of fixes and outstanding issues through the preset context when it is more useful than full reports.
 
+Round N+1 does not need to re-review unchanged code. `--delta` scopes the round to the diff since the reference head recorded by the most recent prior session of that PR (`--delta <head>` names an explicit reference), carries its findings forward as evidence, and completes as a zero-model no-op session when the delta is empty. When the project config declares `exempt_paths` and a delta touches only those paths, the round is recorded as a review-exempt no-op; mixed deltas review only the non-exempt part. Full rounds are never converted into no-ops by exempt paths.
+
 First-round review looks for concrete defects against the agreed requirements. Subsequent rounds check fixes, regressions, unresolved issues and the integration affected by changes. They may report newly evidenced defects, but should not redesign the solution or reopen a closed finding without new evidence.
 
 Verify reports against code and requirements. Use `ace-review-feedback list --session <path>`, `show`, `verify` and `resolve` to preserve findings and dispositions. Distinguish defects, architectural decisions and optional improvements. A single reviewer's valid finding matters; do not discard it for lack of consensus. Severity is verified by the agent, not accepted just because the model assigned it.
