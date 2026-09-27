@@ -24,9 +24,12 @@ require_relative "herdr/errors"
 # Load all ace-herdr components
 require_relative "herdr/atoms/answer_digest"
 require_relative "herdr/models/delivery_record"
+require_relative "herdr/models/dispatch_outcome"
 require_relative "herdr/molecules/herdr_executor"
 require_relative "herdr/molecules/delivery_record_store"
 require_relative "herdr/organisms/deliverer"
+require_relative "herdr/organisms/dispatcher"
+require_relative "herdr/cli"
 
 module Ace
   module Herdr
