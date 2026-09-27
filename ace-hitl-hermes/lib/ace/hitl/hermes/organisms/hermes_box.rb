@@ -112,17 +112,39 @@ module Ace
               next if id.nil? # dotfiles, tmp leftovers, foreign names
 
               path = File.join(@channel.folder, name)
-              next unless File.file?(path)
-
+              # Opened with O_NOFOLLOW and verified regular on the open
+              # descriptor: a top-level symlink must never be followed -
+              # it could import content from outside the channel or
+              # reverse a quarantine's terminal state (review 8wq2ztu3
+              # on PR#336).
               begin
-                bytes = read_capped(path)
-                hash = Molecules::HermesFormats.decode!(bytes)
-                message = Molecules::HermesMessage.from_hash(hash, filename_id: id)
+                file = File.open(path, File::RDONLY | File::NOFOLLOW)
               rescue Errno::ENOENT
                 next # concurrently acked between listing and reading
+              rescue Errno::ELOOP
+                quarantined << quarantine(path, id, "message file is a symlink")
+                next
+              end
+
+              begin
+                begin
+                  regular = file.stat.file?
+                rescue Errno::ENOENT
+                  next # concurrently acked after the open
+                end
+                unless regular
+                  quarantined << quarantine(path, id, "message file is not a regular file")
+                  next
+                end
+
+                bytes = file.read(Molecules::HermesContract::MAX_BYTES + 1) || ""
+                hash = Molecules::HermesFormats.decode!(bytes)
+                message = Molecules::HermesMessage.from_hash(hash, filename_id: id)
               rescue Error => e
                 quarantined << quarantine(path, id, e.message)
                 next
+              ensure
+                file.close
               end
 
               notify(:question_received, address(message.id)) if message.question?
