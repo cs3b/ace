@@ -319,34 +319,38 @@ def save_manifest!(queue)
   MANIFEST.dirname.mkpath
   File.write(MANIFEST, YAML.dump(
     "recorded_at" => Time.now.utc.strftime("%Y-%m-%dT%H:%M:%SZ"),
-    "queue" => queue.map { |item| {name: item[:name], version: item[:version], wave: item[:wave], artifact: item[:artifact]} }
+    "queue" => queue.map { |item| {"name" => item[:name], "version" => item[:version], "wave" => item[:wave], "artifact" => item[:artifact]} }
   ))
 rescue StandardError => e
   abort!("Could not record the prepared queue manifest (#{e.message}); nothing was pushed")
 end
 
-# Returns the prepared queue when the manifest matches the current tree, nil
-# when there is no manifest, and aborts when the manifest is stale (the local
-# version of a recorded gem changed since --prepare).
+# Returns the prepared queue when the manifest matches the current tree. Any
+# problem (missing, unreadable, invalid, stale) degrades to nil with a
+# warning so the live run falls back to a fresh remote snapshot instead of
+# blocking the release.
 def manifest_queue(specs)
   return nil unless MANIFEST.file?
 
   recorded = begin
     YAML.safe_load_file(MANIFEST, permitted_classes: [], aliases: false)
   rescue StandardError => e
-    abort!("Prepared queue manifest is unreadable (#{e.message}) — rerun --prepare")
+    warn "⚠ Prepared queue manifest unreadable (#{e.message}) — resolving fresh"
+    return nil
   end
   items = recorded.is_a?(Hash) ? recorded["queue"] : nil
   unless items.is_a?(Array) && !items.empty?
-    abort!("Prepared queue manifest is empty or invalid — rerun --prepare")
+    warn "⚠ Prepared queue manifest empty or invalid — resolving fresh"
+    return nil
   end
 
   items.each do |item|
     name = item["name"]
     entry = specs[name]
-    if entry.nil? || entry[:spec].version.to_s != item["version"]
-      abort!("Prepared queue is stale: #{name} #{item["version"]} does not match the current tree — rerun --prepare")
-    end
+    next if entry && entry[:spec].version.to_s == item["version"]
+
+    warn "⚠ Prepared queue stale: #{name} #{item["version"]} does not match the current tree — resolving fresh"
+    return nil
   end
 
   items.map do |item|
