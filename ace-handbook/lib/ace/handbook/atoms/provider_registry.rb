@@ -34,6 +34,10 @@ module Ace
           manifest(provider).fetch("output_dir")
         end
 
+        def prompts_dir(provider)
+          manifest(provider)["prompts_dir"]
+        end
+
         def manifests
           @manifests ||= begin
             all_paths = local_manifest_paths + installed_manifest_paths

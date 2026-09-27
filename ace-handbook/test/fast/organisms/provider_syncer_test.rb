@@ -16,6 +16,10 @@ class Ace::Handbook::Organisms::ProviderSyncerTest < Minitest::Test
     def output_dir(provider)
       provider_manifests.fetch(provider.to_s).fetch("output_dir")
     end
+
+    def prompts_dir(provider)
+      provider_manifests.fetch(provider.to_s)["prompts_dir"]
+    end
   end
 
   def setup
@@ -175,6 +179,50 @@ class Ace::Handbook::Organisms::ProviderSyncerTest < Minitest::Test
 
     refute Dir.exist?(stale_dir)
     assert_equal 1, result[:removed_entries]
+  end
+
+  def test_sync_projects_prompt_templates_into_prompts_dir
+    create_provider_manifest("pi", ".pi/skills", prompts_dir: ".pi/prompts")
+    create_prompt_template("pi", "loop", source: "ace-handbook-integration-pi")
+
+    result = syncer.sync(provider: "pi").first
+
+    projected = File.join(@tmpdir, ".pi", "prompts", "loop.md")
+    assert_equal ".pi/prompts", result.fetch(:relative_prompts_dir)
+    assert_equal 1, result.fetch(:projected_prompts)
+    assert_equal 1, result.fetch(:updated_prompt_files)
+    assert_equal 0, result.fetch(:removed_prompt_entries)
+    assert_includes File.read(projected), "source: ace-handbook-integration-pi"
+
+    second = syncer.sync(provider: "pi").first
+    assert_equal 1, second.fetch(:projected_prompts)
+    assert_equal 0, second.fetch(:updated_prompt_files)
+    assert_equal 0, second.fetch(:removed_prompt_entries)
+  end
+
+  def test_sync_prunes_only_stale_ace_marked_prompt_templates
+    create_provider_manifest("pi", ".pi/skills", prompts_dir: ".pi/prompts")
+    create_prompt_template("pi", "loop", source: "ace-handbook-integration-pi")
+    prompts_dir = File.join(@tmpdir, ".pi", "prompts")
+    FileUtils.mkdir_p(prompts_dir)
+    File.write(File.join(prompts_dir, "retired-loop.md"), "---\nsource: ace-handbook-integration-pi\n---\nold body")
+    File.write(File.join(prompts_dir, "user-own.md"), "---\ndescription: mine\n---\nkeep me")
+
+    result = syncer.sync(provider: "pi").first
+
+    assert_equal 1, result.fetch(:removed_prompt_entries)
+    refute File.exist?(File.join(prompts_dir, "retired-loop.md"))
+    assert File.exist?(File.join(prompts_dir, "user-own.md"))
+    assert File.exist?(File.join(prompts_dir, "loop.md"))
+  end
+
+  def test_sync_skips_prompt_projection_without_prompts_dir
+    create_prompt_template("codex", "loop", source: "ace-handbook-integration-codex")
+
+    result = syncer.sync(provider: "codex").first
+
+    refute result.key?(:relative_prompts_dir)
+    refute Dir.exist?(File.join(@tmpdir, ".codex", "prompts"))
   end
 
   def test_all_provider_projections_are_consistent_and_idempotent
@@ -446,8 +494,13 @@ class Ace::Handbook::Organisms::ProviderSyncerTest < Minitest::Test
   def syncer
     @syncer ||= Ace::Handbook::Organisms::ProviderSyncer.new(
       project_root: @tmpdir,
+      prompt_inventory: hermetic_prompt_inventory,
       config: {}
     )
+  end
+
+  def hermetic_prompt_inventory
+    Ace::Handbook::Organisms::PromptTemplateInventory.new(project_root: @tmpdir, gem_roots: [])
   end
 
   def agents_only_syncer
@@ -464,13 +517,26 @@ class Ace::Handbook::Organisms::ProviderSyncerTest < Minitest::Test
     %w[agents claude codex gemini opencode pi]
   end
 
-  def create_provider_manifest(provider, output_dir)
+  def create_provider_manifest(provider, output_dir, prompts_dir: nil)
     dir = File.join(@tmpdir, "ace-handbook-integration-#{provider}", ".ace-defaults", "handbook", "providers")
     FileUtils.mkdir_p(dir)
-    File.write(File.join(dir, "#{provider}.yml"), <<~YML)
-      provider: #{provider}
-      output_dir: #{output_dir}
-    YML
+    manifest = "provider: #{provider}\noutput_dir: #{output_dir}\n"
+    manifest += "prompts_dir: #{prompts_dir}\n" if prompts_dir
+    File.write(File.join(dir, "#{provider}.yml"), manifest)
+  end
+
+  def create_prompt_template(provider, name, source:)
+    dir = File.join(@tmpdir, "ace-handbook-integration-#{provider}", "handbook", "prompts")
+    FileUtils.mkdir_p(dir)
+    File.write(File.join(dir, "#{name}.md"), <<~MD)
+      ---
+      description: Test prompt #{name}
+      argument-hint: "[focus]"
+      source: #{source}
+      ---
+
+      Body of #{name} for #{provider}.
+    MD
   end
 
   def create_handbook_provider_manifest(provider, output_dir)

@@ -52,6 +52,27 @@ class Ace::Handbook::CLI::Commands::SyncTest < Minitest::Test
     assert_includes stdout, "note: only 'ace-handbook' skills were discovered."
   end
 
+  def test_outputs_prompts_summary_when_provider_projects_prompts
+    syncer = stub_syncer(
+      provider: "pi",
+      relative_output_dir: ".pi/skills",
+      projected_skills: 4,
+      updated_files: 1,
+      removed_entries: 0,
+      source_breakdown: {"ace-handbook" => 4},
+      relative_prompts_dir: ".pi/prompts",
+      projected_prompts: 1,
+      updated_prompt_files: 0,
+      removed_prompt_entries: 0
+    )
+    command = Ace::Handbook::CLI::Commands::Sync.new(syncer: syncer)
+
+    stdout, = capture_io { command.call }
+
+    assert_includes stdout, "synced pi -> .pi/skills (4 skills, 1 updated, 0 removed)"
+    assert_includes stdout, "; prompts .pi/prompts (1 prompts, 0 updated, 0 removed)"
+  end
+
   def test_quiet_suppresses_sync_summary_output
     syncer = stub_syncer(
       {

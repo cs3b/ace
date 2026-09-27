@@ -16,6 +16,10 @@ class Ace::Handbook::Organisms::StatusCollectorTest < Minitest::Test
       manifest(provider).fetch("output_dir")
     end
 
+    def prompts_dir(provider)
+      manifest(provider)["prompts_dir"]
+    end
+
     def manifest(provider)
       provider_manifests.fetch(provider.to_s)
     end

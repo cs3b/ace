@@ -1,22 +1,27 @@
 # frozen_string_literal: true
 
 require "fileutils"
+require "yaml"
 
 module Ace
   module Handbook
     module Organisms
       class ProviderSyncer
-        attr_reader :project_root, :registry, :inventory, :config
+        PROJECTION_SOURCE_PREFIX = "ace-handbook-integration-"
+
+        attr_reader :project_root, :registry, :inventory, :prompt_inventory, :config
 
         def initialize(
           project_root: Ace::Handbook.project_root,
           registry: nil,
           inventory: nil,
+          prompt_inventory: nil,
           config: nil
         )
           @project_root = project_root
           @registry = registry || Atoms::ProviderRegistry.new(project_root: project_root)
           @inventory = inventory || SkillInventory.new(project_root: project_root)
+          @prompt_inventory = prompt_inventory || PromptTemplateInventory.new(project_root: project_root)
           @config = config || Ace::Handbook.config.resolve_namespace("handbook").to_h
         end
 
@@ -31,6 +36,14 @@ module Ace
         private
 
         def sync_provider(provider, skills:, source_breakdown:)
+          skills_result = sync_skills(provider, skills: skills, source_breakdown: source_breakdown)
+          prompts_result = sync_prompts(provider)
+          return skills_result if prompts_result.nil?
+
+          skills_result.merge(prompts_result)
+        end
+
+        def sync_skills(provider, skills:, source_breakdown:)
           output_dir = File.join(project_root, registry.output_dir(provider))
           prepare_output_dir(output_dir)
 
@@ -61,6 +74,35 @@ module Ace
             updated_files: updated_files,
             removed_entries: removed_entries,
             source_breakdown: source_breakdown
+          }
+        end
+
+        def sync_prompts(provider)
+          prompts_dir = registry.prompts_dir(provider)
+          return nil if prompts_dir.nil? || prompts_dir.to_s.empty?
+
+          output_dir = File.join(project_root, prompts_dir)
+          FileUtils.mkdir_p(output_dir)
+
+          expected = {}
+          updated_files = 0
+
+          prompt_inventory.for_provider(provider).each do |template|
+            output_path = File.join(output_dir, "#{template.name}.md")
+            expected[template.name] = output_path
+            next if File.exist?(output_path) && File.read(output_path) == template.content
+
+            File.write(output_path, template.content)
+            updated_files += 1
+          end
+
+          removed_entries = prune_stale_prompt_files(output_dir, expected.keys)
+
+          {
+            relative_prompts_dir: prompts_dir,
+            projected_prompts: expected.size,
+            updated_prompt_files: updated_files,
+            removed_prompt_entries: removed_entries
           }
         end
 
@@ -127,6 +169,28 @@ module Ace
           stale = existing.reject { |path| expected_skill_names.include?(File.basename(path)) }
           stale.each { |path| FileUtils.rm_rf(path) }
           stale.size
+        end
+
+        # The prompts dir is shared with user-authored templates, so only files
+        # carrying an ACE integration provenance marker are ever pruned.
+        def prune_stale_prompt_files(output_dir, expected_template_names)
+          stale = Dir.glob(File.join(output_dir, "*.md")).reject do |path|
+            expected_template_names.include?(File.basename(path, ".md"))
+          end.select do |path|
+            template_source(path).start_with?(PROJECTION_SOURCE_PREFIX)
+          end
+          stale.each { |path| FileUtils.rm(path) }
+          stale.size
+        end
+
+        def template_source(path)
+          match = File.read(path).match(/\A---\s*\n(.*?)\n---/m)
+          return "" unless match
+
+          frontmatter = YAML.safe_load(match[1], permitted_classes: [Date, Time], aliases: true)
+          frontmatter.is_a?(Hash) ? frontmatter["source"].to_s : ""
+        rescue StandardError
+          ""
         end
       end
     end

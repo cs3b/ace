@@ -22,9 +22,11 @@ module Ace
             return if quiet
 
             results.each do |result|
-              puts "synced #{result[:provider]} -> #{result[:relative_output_dir]} " \
-                   "(#{result[:projected_skills]} skills, #{result[:updated_files]} updated, " \
-                   "#{result[:removed_entries]} removed)"
+              line = "synced #{result[:provider]} -> #{result[:relative_output_dir]} " \
+                     "(#{result[:projected_skills]} skills, #{result[:updated_files]} updated, " \
+                     "#{result[:removed_entries]} removed)"
+              line += format_prompts_summary(result) if result.key?(:relative_prompts_dir)
+              puts line
             end
             print_inventory_summary(results)
           rescue => e
@@ -32,6 +34,12 @@ module Ace
           end
 
           private
+
+          def format_prompts_summary(result)
+            "; prompts #{result[:relative_prompts_dir]} " \
+              "(#{result[:projected_prompts]} prompts, #{result[:updated_prompt_files]} updated, " \
+              "#{result[:removed_prompt_entries]} removed)"
+          end
 
           def print_inventory_summary(results)
             source_breakdown = results.first&.fetch(:source_breakdown, {})

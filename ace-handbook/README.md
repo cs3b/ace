@@ -36,7 +36,7 @@
 
 **Integrate with resource discovery and context loading** - pair with [ace-nav](../ace-support-nav) for workflow and resource discovery, [ace-bundle](../ace-bundle) for loading complete workflow instructions, and provider integrations (`ace-handbook-integration-*`) that can project canonical handbook skills into harness-native folders on request.
 
-**Sync and inspect skill projections** - run `ace-handbook sync` to project canonical skills into `.agents/skills/` by default, or use `ace-handbook sync --provider PROVIDER` for harness-native folders such as `.codex/skills/`.
+**Sync and inspect skill projections** - run `ace-handbook sync` to project canonical skills into `.agents/skills/` by default, or use `ace-handbook sync --provider PROVIDER` for harness-native folders such as `.codex/skills/`. Providers whose manifest also declares `prompts_dir` additionally receive canonical prompt templates from the matching integration package's `handbook/prompts/*.md` (projected flat into that directory; user-authored templates without an `ace-handbook-integration-*` provenance marker are never pruned).
 
 **Extend handbook content in normal projects** - put project-specific workflows, guides, cookbooks, templates, and skills under `.ace-handbook/` and discover them with protocol URLs (`wfi://`, `guide://`, `cookbook://`, `tmpl://`, `skill://`). See [Usage Guide](docs/usage.md) for path conventions.
 
