@@ -46,8 +46,16 @@ bundle:
    `window-exists` → `tab get` succeeds; `window-active` → the tab is
    the focused one (`tab get`/`api snapshot` state); `pane-exists` →
    `pane get` succeeds; `pane-exited` → positive process-exit evidence
-   (`pane process-info`) or the pane is gone after being observed open.
-   Polling is adapter-side within the contract timeout (s → ms).
+   (`pane process-info`) or the pane is gone. Polling is adapter-side
+   within the contract timeout (s → ms). **`pane_not_found` is
+   condition-specific, never a blanket error inside waits**:
+   - `pane-exists` + initially absent → keep polling until timeout
+     (supports wait-for-creation), then `WaitTimeoutError`;
+   - `pane-exited` + absent → SUCCESS (the target state "no live
+     process in that pane" is already true), whether initially or after
+     being observed open;
+   - `pane_not_found` outside waits (send/capture/context) →
+     `TargetNotFoundError` as usual.
 4. **Send/wait error mapping** (contract error model): `agent_blocked` →
    `SendRejectedError` (terminal); `agent_prompt_stalled` →
    `SendStalledError` (outcome uncertain — never auto-resend);
@@ -67,7 +75,7 @@ Ace::Runtime.resolve("herdr")
 # Contract session ≡ herdr workspace; contract window ≡ herdr tab.
 ```
 
-**Error Handling:** per the mapping above (`agent_blocked` → `SendRejectedError`; `agent_prompt_stalled` → `SendStalledError`, no auto-resend; `timeout` → `WaitTimeoutError`; `pane_not_found` → `TargetNotFoundError`; unavailable → `RuntimeUnavailableError`). Contract timeouts are seconds; the adapter converts to herdr milliseconds.
+**Error Handling:** per the mapping above (`agent_blocked` → `SendRejectedError`; `agent_prompt_stalled` → `SendStalledError`, no auto-resend; `timeout` → `WaitTimeoutError`; `pane_not_found` → condition-specific per lifecycle waits, else `TargetNotFoundError`; unavailable → `RuntimeUnavailableError`). Contract timeouts are seconds; the adapter converts to herdr milliseconds.
 
 **Edge Cases:** caller outside herdr + explicit `runtime: herdr` → context detection reports not-in-runtime; consumers decide fallback (assign → headless, per its rules). Both-runtimes live: contract detection order (tmux first) already decided in 8wq.t.k86.0.
 
@@ -81,7 +89,8 @@ Ace::Runtime.resolve("herdr")
 
 - [ ] prepare_pane keep-alive: herdr panes persist by default (no `remain-on-exit` equivalent) — confirm the contract's "pane stays alive after command exit" is natively satisfied (expected: yes).
 - [ ] ensure_window preset support: are k84 tab presets sufficient for assign's fork-window needs (no preset = plain tab)? Default: yes.
-- [ ] pane-exited semantics: confirm live whether herdr keeps a pane after its process exits (mapping: process-info evidence) or closes it (mapping: pane-gone-after-open). Either satisfies the contract; pick and test the real one.
+- [ ] pane-exited initial absence: defined as SUCCESS (state-based: "no live process" already true). Alternative: fail-closed TargetNotFoundError to catch pane-id typos. Default: state-based success; confirm at review.
+- [ ] pane-exited mechanics: confirm live whether herdr keeps a pane after its process exits (process-info evidence) or closes it (pane-gone). Either satisfies the mapping; test the real one.
 
 ### Vertical Slice Decomposition (Task/Subtask Model)
 
@@ -95,6 +104,7 @@ Ace::Runtime.resolve("herdr")
 #### Unit / Component Validation
 - [ ] Shared contract tests vs herdr adapter (fake executor).
 - [ ] Agent-aware routing + error mapping matrix (blocked/stalled/timeout).
+- [ ] Lifecycle transition tests: pane absent→appears (pane-exists poll-then-success); open→gone (pane-exited success); absent at start (pane-exited immediate success; pane-exists polls to WaitTimeoutError).
 
 #### Integration / E2E Validation (if cross-boundary behavior exists)
 - [ ] Manual live-herdr smoke: ensure_window + send_command + wait_agent round-trip.
