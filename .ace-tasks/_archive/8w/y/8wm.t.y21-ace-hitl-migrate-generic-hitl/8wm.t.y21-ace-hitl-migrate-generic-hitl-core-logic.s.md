@@ -1,6 +1,6 @@
 ---
 id: 8wm.t.y21
-status: in_progress
+status: done
 priority: high
 created_at: "2026-09-23 22:42:16"
 estimate: 
