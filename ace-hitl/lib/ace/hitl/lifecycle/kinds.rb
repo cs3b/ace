@@ -1,0 +1,57 @@
+# frozen_string_literal: true
+
+module Ace
+  module Hitl
+    module Lifecycle
+      # Request kinds and the secret/OTP answer gates (port of the
+      # migrated kind model; spec 8wm.t.y21 §4).
+      module Kinds
+        ALL = %w[
+          text choice confirm secret review
+          question decision verification otp
+        ].freeze
+        SECRET = %w[otp].freeze
+
+        REQUEST_ID = /\A[A-Za-z0-9_-]{6,64}\z/
+        WORK_ID = /\AW[0-9]+\z/
+        ATTEMPT_ID = /\AA-[0-9a-f]{24}\z/
+        SAFE_LABEL = /\A[A-Za-z0-9_. -]{1,48}\z/
+        OTP_ANSWER = /\A[0-9]{6}\z/
+
+        # Secret-shape scrubbing: tokens that must never enter a
+        # non-OTP answer or a channel message.
+        SECRET_SHAPED = Regexp.new(
+          "(?:github_pat_[A-Za-z0-9_]+|gh[pousr]_[A-Za-z0-9]+|" \
+          "sk-[A-Za-z0-9_-]{20,}|-----BEGIN [A-Z ]+PRIVATE KEY-----|" \
+          "\\b(?:otp|token|secret|password)\\s*[:=]\\s*\\S+|" \
+          "\\b[0-9]{6}\\b)",
+          Regexp::IGNORECASE
+        ).freeze
+
+        class << self
+          def secret?(kind)
+            SECRET.include?(kind.to_s)
+          end
+
+          def valid?(kind)
+            ALL.include?(kind.to_s)
+          end
+
+          # The deliver/consume answer gate (port of check_answer):
+          # OTP answers must be exactly six ASCII digits; every other
+          # kind rejects secret-shaped content before persistence.
+          def check_answer!(kind, answer)
+            if secret?(kind)
+              unless OTP_ANSWER.match?(answer)
+                raise AnswerError, "OTP answer must be exactly six ASCII digits"
+              end
+            elsif SECRET_SHAPED.match?(answer)
+              raise AnswerError, "secret-shaped content is forbidden in HITL answers"
+            end
+            nil
+          end
+        end
+      end
+    end
+  end
+end

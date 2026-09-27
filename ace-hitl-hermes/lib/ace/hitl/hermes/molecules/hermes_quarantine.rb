@@ -1,0 +1,60 @@
+# frozen_string_literal: true
+
+require "fileutils"
+require_relative "hermes_contract"
+
+module Ace
+  module Hitl
+    module Hermes
+      module Molecules
+        # Quarantine for invalid message files (spec 8wm.t.vs1 §7): the
+        # file is moved atomically into <folder>/.quarantine/ (0750) with
+        # a <name>.reason.txt sidecar (0640). Quarantined content is never
+        # rewritten, re-validated, or delivered. Like every hermes write
+        # path, running as root is refused fail closed.
+        module HermesQuarantine
+          module_function
+
+          # Moves `path` (inside `folder`) into the quarantine directory
+          # and writes the reason sidecar. Returns the quarantined path.
+          def move(folder, path, reason:, now: -> { Time.now },
+            euid_provider: -> { Process.euid })
+            if euid_provider.call.zero?
+              raise RootUserError,
+                "hermes writes without root: refusing quarantine move as euid 0 " \
+                "(#{path})"
+            end
+
+            quarantine_dir = HermesContract.quarantine_path(folder)
+            unless File.directory?(quarantine_dir)
+              Dir.mkdir(quarantine_dir, HermesContract::QUARANTINE_DIR_MODE)
+              # Modes are FORCED, not inherited from the umask (mirrors
+              # HermesAtomicWriter): the pinned 0750 dir contract holds
+              # under any umask.
+              File.chmod(HermesContract::QUARANTINE_DIR_MODE, quarantine_dir)
+            end
+
+            base = File.basename(path)
+            dest = File.join(quarantine_dir, base)
+            suffix = 0
+            while File.exist?(dest)
+              suffix += 1
+              dest = File.join(quarantine_dir, "#{base}.#{suffix}")
+            end
+
+            sidecar_path = "#{dest}#{HermesContract::REASON_EXT}"
+            File.rename(path, dest)
+            File.open(sidecar_path,
+              File::WRONLY | File::CREAT | File::EXCL,
+              HermesContract::FILE_MODE) do |sidecar|
+              sidecar.write("#{now.call.utc.strftime("%Y-%m-%dT%H:%M:%SZ")} #{reason}\n")
+            end
+            # The open-mode is umask-sensitive; force the pinned 0640.
+            File.chmod(HermesContract::FILE_MODE, sidecar_path)
+            dest
+          end
+        end
+      end
+    end
+  end
+end

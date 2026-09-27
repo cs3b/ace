@@ -9,7 +9,17 @@ class NoDirectLabHitlGuardTest < AceHitlTestCase
   FORBIDDEN_MARKERS = [
     "lab-hitl",            # transport binary name / argv strings
     "LabRequestSubmitter", # legacy class name must not survive anywhere else
-    "ACE_HITL_LAB_BIN"     # transport binary selection
+    "ACE_HITL_LAB_BIN",    # transport binary selection
+    "Lab::Transport"       # deleted external-binary transport
+  ].freeze
+
+  LIFECYCLE_FORBIDDEN_MARKERS = [
+    "lab-hitl",
+    "Providers",
+    "herdr",
+    "telegram",
+    "ACE_HITL_LAB_BIN",
+    "LAB_ATTEMPT_ID" # attempt ids flow through the API, never env reads in the core
   ].freeze
 
   def test_agent_facing_code_has_zero_direct_lab_transport_references
@@ -22,12 +32,30 @@ class NoDirectLabHitlGuardTest < AceHitlTestCase
 
       body = File.read(path)
       marker = FORBIDDEN_MARKERS.find { |needle| body.include?(needle) }
-      offenders << "#{path.sub("#{lib_dir}/", '')} (#{marker})" if marker
+      offenders << "#{path.sub("#{lib_dir}/", "")} (#{marker})" if marker
     end
 
     assert_empty offenders,
       "agent-facing ace-hitl code must not reference the lab transport directly " \
-      "(allowed only under lib/ace/hitl/providers/): #{offenders.join(', ')}"
+      "(allowed only under lib/ace/hitl/providers/): #{offenders.join(", ")}"
+  end
+
+  # The generic lifecycle (spec 8wm.t.y21 §1) is provider-agnostic: no
+  # lab references, no provider coupling — the provider consumes IT.
+  def test_lifecycle_namespace_stays_provider_agnostic
+    lib_dir = File.expand_path("../../../lib", __dir__)
+    lifecycle_dir = File.join(lib_dir, "ace", "hitl", "lifecycle")
+    offenders = []
+
+    Dir.glob(File.join(lifecycle_dir, "**", "*.rb")).sort.each do |path|
+      body = File.read(path)
+      marker = LIFECYCLE_FORBIDDEN_MARKERS.find { |needle| body.include?(needle) }
+      offenders << "#{path.sub("#{lib_dir}/", "")} (#{marker})" if marker
+    end
+
+    assert_empty offenders,
+      "the generic lifecycle must stay provider-agnostic " \
+      "(lab coupling lives only in the provider seams): #{offenders.join(", ")}"
   end
 
   def test_ask_command_dispatches_through_the_providers_registry

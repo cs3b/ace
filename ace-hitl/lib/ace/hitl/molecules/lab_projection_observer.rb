@@ -17,6 +17,14 @@ module Ace
       # callback-ok / callback-escalated). Both fields are observed here.
       class LabProjectionObserver
         DEFAULT_PUBLIC_DIR = "/run/lab/hitl/public"
+        # Read-side override for waiters. The lifecycle store writes the
+        # projection under ACE_HITL_STORE_ROOT/public — the same deployed
+        # default directory. The two env vars overlap by default: the
+        # store root owns the WRITE side (and the store's other
+        # directories), this one only redirects WHERE WAITERS READ the
+        # public projection from (e.g. a host that mounts the projection
+        # read-only). Keep them pointing at the same directory unless a
+        # projection relay is deliberately placed in between.
         PUBLIC_DIR_ENV = "ACE_HITL_LAB_PUBLIC_DIR"
 
         # Lifecycle (`state`) terminal values: the answer was delivered to
