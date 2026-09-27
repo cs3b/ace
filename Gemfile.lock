@@ -1,7 +1,7 @@
 PATH
   remote: ace-assign
   specs:
-    ace-assign (0.57.0)
+    ace-assign (0.57.1)
       ace-b36ts (~> 0.14)
       ace-llm (~> 0.39)
       ace-support-cli (~> 0.6)
@@ -23,7 +23,7 @@ PATH
 PATH
   remote: ace-bundle
   specs:
-    ace-bundle (0.44.0)
+    ace-bundle (0.44.1)
       ace-compressor (~> 0.25)
       ace-git (~> 0.24)
       ace-git-github (~> 0.1.1)
@@ -122,25 +122,25 @@ PATH
 PATH
   remote: ace-handbook-integration-claude
   specs:
-    ace-handbook-integration-claude (0.3.11)
+    ace-handbook-integration-claude (0.3.12)
       ace-handbook (~> 0.32)
 
 PATH
   remote: ace-handbook-integration-codex
   specs:
-    ace-handbook-integration-codex (0.3.11)
+    ace-handbook-integration-codex (0.3.12)
       ace-handbook (~> 0.32)
 
 PATH
   remote: ace-handbook-integration-gemini
   specs:
-    ace-handbook-integration-gemini (0.3.10)
+    ace-handbook-integration-gemini (0.3.11)
       ace-handbook (~> 0.32)
 
 PATH
   remote: ace-handbook-integration-opencode
   specs:
-    ace-handbook-integration-opencode (0.3.10)
+    ace-handbook-integration-opencode (0.3.11)
       ace-handbook (~> 0.32)
 
 PATH
@@ -199,7 +199,7 @@ PATH
 PATH
   remote: ace-llm-providers-cli
   specs:
-    ace-llm-providers-cli (0.35.0)
+    ace-llm-providers-cli (0.35.1)
       ace-llm (~> 0.41)
 
 PATH
@@ -295,7 +295,7 @@ PATH
 PATH
   remote: ace-support-config
   specs:
-    ace-support-config (0.18.1)
+    ace-support-config (0.18.2)
       ace-support-fs (~> 0.3)
 
 PATH
@@ -343,7 +343,7 @@ PATH
 PATH
   remote: ace-support-nav
   specs:
-    ace-support-nav (0.28.6)
+    ace-support-nav (0.28.7)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)
       ace-support-core (~> 0.31)
@@ -359,7 +359,7 @@ PATH
 PATH
   remote: ace-task
   specs:
-    ace-task (0.37.5)
+    ace-task (0.37.6)
       ace-b36ts (~> 0.14)
       ace-git (~> 0.24)
       ace-git-github (~> 0.1)
@@ -383,7 +383,7 @@ PATH
 PATH
   remote: ace-test-runner
   specs:
-    ace-test-runner (0.25.8)
+    ace-test-runner (0.26.0)
       ace-b36ts (~> 0.14)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)
