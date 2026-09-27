@@ -22,11 +22,13 @@
     "question": {
       "type": "string",
       "minLength": 1,
+      "pattern": "\\S",
       "description": "Required for kind=question; non-empty after strip."
     },
     "answer": {
       "type": "string",
       "minLength": 1,
+      "pattern": "\\S",
       "description": "Required for kind=answer (the Captain's answer); non-empty after strip."
     },
     "created_at": {
@@ -56,7 +58,13 @@
           "const": "question"
         }
       },
-      "required": ["question", "created_at"]
+      "required": ["question", "created_at"],
+      "not": {
+        "anyOf": [
+          { "required": ["answer"] },
+          { "required": ["received_at"] }
+        ]
+      }
     },
     {
       "properties": {
@@ -64,7 +72,13 @@
           "const": "answer"
         }
       },
-      "required": ["answer", "received_at"]
+      "required": ["answer", "received_at"],
+      "not": {
+        "anyOf": [
+          { "required": ["question"] },
+          { "required": ["created_at"] }
+        ]
+      }
     }
   ]
 }
