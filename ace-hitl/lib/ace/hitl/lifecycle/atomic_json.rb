@@ -2,6 +2,7 @@
 
 require "json"
 require "fileutils"
+require "securerandom"
 
 module Ace
   module Hitl
@@ -30,7 +31,12 @@ module Ace
           exclusive: false)
           path = Pathname.new(path)
           path.parent.mkpath
-          temporary = path.parent.join(".#{path.basename}.tmp.#{$PROCESS_ID}")
+          # The random suffix makes the temporary unique per invocation:
+          # a fixed pid-based name lets a competing writer's cleanup
+          # delete our in-flight temporary and fail both writes (review
+          # 8wq2zttt on PR#336). Cleanup only ever touches this call's
+          # own file.
+          temporary = path.parent.join(".#{path.basename}.tmp.#{$PROCESS_ID}.#{SecureRandom.hex(4)}")
           flags = File::WRONLY | File::CREAT | File::EXCL | File::NOFOLLOW
           fd = IO.sysopen(temporary, flags, mode)
           begin

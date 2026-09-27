@@ -465,7 +465,10 @@ module Ace
         # temporary; the content never appears in any projection or log.
         def write_answer(value, answer, requester_uid, requester_gid)
           destination = answer_path(value)
-          temporary = destination.parent.join(".#{safe_id(value["id"])}.#{$PROCESS_ID}")
+          # Random suffix: the temporary must be unique per invocation so
+          # a competing writer's cleanup can never delete it (review
+          # 8wq2zttt on PR#336).
+          temporary = destination.parent.join(".#{safe_id(value["id"])}.#{$PROCESS_ID}.#{SecureRandom.hex(4)}")
           flags = File::WRONLY | File::CREAT | File::EXCL | File::NOFOLLOW
           fd = IO.sysopen(temporary, flags, ANSWER_MODE)
           begin
