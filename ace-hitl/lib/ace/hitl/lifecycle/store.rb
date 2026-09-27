@@ -196,21 +196,25 @@ module Ace
         # cancellation (W651). Time never cancels anything.
         def cancel(id, reason: "")
           request_id = safe_id(id)
-          value = load_request(request_id)
-          unless @identity.root? || @identity.username == value["requester"].to_s
-            raise PermissionError, "only the requesting role can cancel this request"
-          end
           cancelled_by = @identity.username
           audit = {"cancelled_by" => cancelled_by, "reason" => reason.to_s.strip.empty? ? "unspecified" : reason.to_s.strip}
+          locked_value = nil
           with_request_lock(request_id) do
             value = load_request(request_id)
+            # Ownership is re-checked against the LOCKED record: an
+            # unlocked check would race a concurrent recreate of the id
+            # (review 8wq2zttu on PR#336).
+            unless @identity.root? || @identity.username == value["requester"].to_s
+              raise PermissionError, "only the requesting role can cancel this request"
+            end
             update_public(value, "cancelled", audit: audit)
             remove_request(value, keep_public: true)
+            locked_value = value
           end
           {
             "id" => request_id,
-            "work" => value["work"],
-            "attempt" => value["attempt"],
+            "work" => locked_value["work"],
+            "attempt" => locked_value["attempt"],
             "cancelled" => true,
             "cancelled_by" => cancelled_by,
             "reason" => audit["reason"]
@@ -234,8 +238,16 @@ module Ace
           answer = read_bounded_answer(answer_reader)
           Kinds.check_answer!(value["kind"].to_s, answer)
           requester_uid, requester_gid = @identity.user_ids(value["requester"])
+          # Snapshot of the incarnation the unlocked checks and the
+          # dropped credentials were derived from: a concurrent
+          # cancel+recreate may replace the record before this broker
+          # takes the lock (review 8wq2zttu on PR#336).
+          incarnation = [value["created_at"], value["kind"], value["sensitive"], value["requester"]]
           with_request_lock(request_id) do
             value = load_request(request_id)
+            if [value["created_at"], value["kind"], value["sensitive"], value["requester"]] != incarnation
+              raise StateError, "HITL request was cancelled and recreated while the answer was read"
+            end
             raise StateError, "HITL request already has an answer" if answer_path(value).exist?
             begin
               binding.require_active(work: value["work"], attempt: value["attempt"])
