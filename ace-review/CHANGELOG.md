@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Delta review rounds for PRs: `--delta <head>` reviews only the diff since an explicit reference head, and bare `--delta` auto-resolves the reference from the most recent prior session of the same PR (recorded via `diff_manifest.head_sha`/`delta_reference_head` in session metadata). Prior-session findings are carried forward as evidence; a non-ancestor reference (rewritten history), missing prior sessions, and oversized deltas refuse with actionable messages instead of silently reviewing everything.
+- Review-exempt paths: `exempt_paths` config globs. A delta round touching only exempt paths is recorded as a no-op session with zero model calls (paths and matching patterns enumerated in the report); mixed rounds review only the non-exempt part; full rounds exclude exempt paths from the subject and list them. Patterns that match every path are refused at config load.
+
+### Removed
+
+- The unwired subject strategy surface (`SubjectStrategy`, full/chunked/adaptive strategies, `UnknownStrategyError`, and the commented `subject_strategy` config block). Oversized diffs keep failing with the explicit budget-vs-actual refusal; delta scoping is the intended answer for large PRs (ADR-024: no documented-but-unreachable configuration).
+
+### Changed
+
+- Review session usage records now reflect measured provider tokens: `LlmExecutor`/multi-model metadata record `usage` derived from provider metadata (with `usage_source` no longer pinned to "unavailable"), and no-op delta rounds record zero model calls.
+
 ## [0.55.0] - 2026-09-24
 
 ### Added

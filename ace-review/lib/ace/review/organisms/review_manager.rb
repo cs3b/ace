@@ -52,6 +52,10 @@ module Ace
           content_result = extract_review_content(config_result[:config], options)
           return content_result unless content_result[:success]
 
+          # A no-op round (empty delta, or a fully review-exempt delta) is
+          # recorded without composing prompts or calling any model.
+          return save_noop_round(session_dir, options, config_result[:config], content_result) if content_result[:noop]
+
           # Step 4: Compose prompts via ace-bundle
           prompt_result = compose_review_prompt(
             config_result[:config],
@@ -189,11 +193,21 @@ module Ace
           # Merge options with config
           options.merge_config(config)
 
+          # Review-exempt paths are validated at config load, naming the offender
+          if (exempt_error = Molecules::ExemptPaths.validate!(config[:exempt_paths]))
+            return {success: false,
+                    error: "Invalid exempt_paths in review config for preset '#{preset_name}': #{exempt_error}"}
+          end
+
           {success: true, config: config}
         end
 
         # Step 2: Extract subject and context
         def extract_review_content(config, options)
+          if options.delta_requested? && !options.pr_review?
+            return {success: false, error: "--delta requires --pr <identifier>"}
+          end
+
           # Handle PR mode
           if options.pr_review?
             return extract_pr_content(options.pr, config, options)
@@ -274,6 +288,8 @@ module Ace
 
         # Extract PR content (diff and metadata)
         def extract_pr_content(pr_identifier, config, options)
+          return extract_pr_delta_content(pr_identifier, config, options) if options.delta_requested?
+
           # Fetch PR diff and metadata
           fetch_options = options.gh_timeout ? {timeout: options.gh_timeout} : {}
           result = Ace::Review::Molecules::GhPrFetcher.fetch_pr(pr_identifier, fetch_options)
@@ -296,6 +312,8 @@ module Ace
               inventory.length == changed_files && inventory.map { |item| item["path"] }.sort == diff_files.sort
             return {success: false, error: "PR file inventory does not match the fetched diff; review input may be incomplete"}
           end
+          scoped = apply_exempt_paths(scoped, config)
+          return scoped unless scoped[:success]
           scoped[:manifest][:pr_file_inventory_verified] = true
           scoped[:manifest][:head_sha] = result[:metadata]["headRefOid"]
           scoped[:manifest][:base_branch_sha] = result[:metadata]["baseRefOid"]
@@ -339,6 +357,200 @@ module Ace
             pr_metadata: result[:metadata],
             diff_manifest: scoped[:manifest]
           }
+        end
+
+        # Extract PR content for a delta round: only the diff between a reference
+        # head (explicit, or auto-resolved from the most recent prior session of
+        # this PR) and the current head. Fails closed on missing sessions, rewritten
+        # history, or oversized deltas. An empty delta returns a no-op round marker.
+        def extract_pr_delta_content(pr_identifier, config, options)
+          fetch_options = options.gh_timeout ? {timeout: options.gh_timeout} : {}
+          metadata_result = Molecules::GhPrFetcher.fetch_metadata(pr_identifier, fetch_options)
+          return {success: false, error: metadata_result[:error]} unless metadata_result[:success]
+
+          metadata = metadata_result[:metadata]
+          unless %w[headRefOid baseRefOid].all? { |key| metadata[key].to_s.match?(/\A[0-9a-f]{40}\z/) }
+            return {success: false, error: "Delta review requires exact head/base SHAs"}
+          end
+
+          inventory = Molecules::GhPrFetcher.fetch_file_inventory(metadata, fetch_options)
+          return {success: false, error: inventory[:error]} unless inventory[:success]
+          metadata["files"] = inventory[:files]
+
+          delta = Molecules::DeltaResolver.resolve(options.delta, metadata, project_root: @project_root || Dir.pwd)
+          return {success: false, error: delta[:error]} unless delta[:success]
+
+          options.pr_metadata = metadata
+          # Carry the reference session's findings forward as evidence; an explicit
+          # --evidence-session still merges on top.
+          if delta[:session_dir]
+            options.evidence_sessions = [delta[:session_dir], *options.evidence_sessions].uniq
+          end
+
+          manifest = {
+            head_sha: metadata["headRefOid"],
+            delta_reference_head: delta[:reference_head],
+            delta_base_head: metadata["headRefOid"],
+            delta_reference_source: delta[:source].to_s,
+            delta_scope: "delta since #{delta[:reference_head]}"
+          }
+
+          if delta[:diff].empty?
+            return {success: true, noop: true, noop_reason: :empty_delta,
+                    subject: "", context: nil, cache_dir: options.session_dir || create_cache_directory,
+                    pr_metadata: metadata, delta: delta, diff_manifest: manifest}
+          end
+
+          scoped = Molecules::DiffScope.select(delta[:diff], config[:file_patterns],
+            groups: config[:file_pattern_groups])
+          return scoped unless scoped[:success]
+
+          # Exempt-path acceptance applies to delta rounds: a delta whose files
+          # are all review-exempt is recorded as a no-op without model calls.
+          if Array(config[:exempt_paths]).any?
+            classification = Molecules::ExemptPaths.classify(scoped[:manifest][:selected_files], config[:exempt_paths])
+            if classification[:non_exempt].empty?
+              return {success: true, noop: true, noop_reason: :exempt_delta,
+                      noop_scope: "delta touches only review-exempt paths (#{classification[:exempt].join(", ")}) " \
+                        "matching patterns (#{Array(config[:exempt_paths]).join(", ")})",
+                      subject: "", context: nil, cache_dir: options.session_dir || create_cache_directory,
+                      pr_metadata: metadata, delta: delta,
+                      diff_manifest: manifest.merge(scoped[:manifest]).merge(
+                        exempt_files: classification[:exempt],
+                        exempt_patterns: Array(config[:exempt_paths]))}
+            end
+
+            scoped = apply_exempt_paths(scoped, config)
+            return scoped unless scoped[:success]
+          end
+
+          # The selected delta alone can still exceed the whole-prompt ceiling.
+          diff_tokens = (Atoms::TokenEstimator.estimate(scoped[:diff]) * Atoms::PromptBudget::ESTIMATE_SAFETY_FACTOR).ceil
+          if diff_tokens > Atoms::PromptBudget::DEFAULT_INPUT_LIMIT
+            return {success: false, error: "Review packet exceeds budget: selected delta alone ~#{diff_tokens} tokens exceeds #{Atoms::PromptBudget::DEFAULT_INPUT_LIMIT}; review the delta in coherent module/lens scopes"}
+          end
+
+          {
+            success: true,
+            subject: scoped[:diff],
+            context: format_pr_metadata(metadata),
+            cache_dir: options.session_dir || create_cache_directory,
+            pr_metadata: metadata,
+            delta: delta,
+            diff_manifest: manifest.merge(scoped[:manifest])
+          }
+        end
+
+        # Record a no-op round (empty or fully review-exempt delta) as a complete
+        # session: metadata + report, zero model calls. Prior findings are carried
+        # forward as evidence; unreadable evidence is stated, never pretended.
+        def save_noop_round(session_dir, options, config, content)
+          review_data = {
+            preset: options.preset,
+            review_role: config[:review_role],
+            pr_url: options.pr_metadata&.dig("url"),
+            evidence_sessions: options.evidence_sessions,
+            model: nil,
+            context: content[:context],
+            subject: content[:subject],
+            diff_manifest: content[:diff_manifest],
+            noop: true,
+            noop_reason: content[:noop_reason],
+            delta: content[:delta]
+          }
+
+          metadata = create_metadata(review_data).merge(
+            "noop_round" => true,
+            "noop_reason" => content[:noop_reason].to_s,
+            "delta" => content[:delta] ? {
+              "reference_head" => content[:delta][:reference_head],
+              "reference_source" => content[:delta][:source].to_s
+            } : nil
+          )
+          File.write(File.join(session_dir, "metadata.yml"), YAML.dump(metadata))
+
+          File.write(File.join(session_dir, "review.md"), render_noop_report(options, content))
+
+          {
+            success: true,
+            session_dir: session_dir,
+            output_file: File.join(session_dir, "review.md"),
+            noop: true,
+            message: "No-op review round recorded in #{session_dir} (no model calls)"
+          }
+        end
+
+        def render_noop_report(options, content)
+          delta = content[:delta]
+          lines = []
+          lines << "---"
+          lines << "noop_round: true"
+          lines << "noop_reason: #{content[:noop_reason]}"
+          if delta
+            lines << "delta_reference_head: #{delta[:reference_head]}"
+            lines << "delta_reference_source: #{delta[:source]}"
+          end
+          lines << "pr_url: #{options.pr_metadata&.dig("url")}"
+          lines << "timestamp: #{Time.now.iso8601}"
+          lines << "---"
+          lines << ""
+          lines << "# No-op review round"
+          lines << ""
+          if content[:noop_reason] == :empty_delta && delta
+            lines << "Scope: delta since `#{delta[:reference_head]}` — the delta is empty; there is no change to review."
+          else
+            lines << "Scope: #{content[:noop_scope] || "no-op"}."
+          end
+          lines << ""
+          lines << "Verdict: no new findings. This round is clean only if no carried-forward Critical/High finding remains unresolved."
+          lines << ""
+          if Array(options.evidence_sessions).any?
+            evidence = Molecules::ReviewEvidence.build(session_dirs: options.evidence_sessions,
+              pr_metadata: options.pr_metadata || {})
+            if evidence[:success]
+              lines << "## Carried-forward findings"
+              lines << ""
+              lines << evidence[:content]
+            else
+              lines << "## Evidence not carried forward"
+              lines << ""
+              lines << "Prior session evidence could not be read (#{evidence[:error]}); this round did NOT carry findings forward."
+            end
+          else
+            lines << "## Evidence not carried forward"
+            lines << ""
+            lines << "No prior session was available to carry findings forward."
+          end
+          lines.join("\n")
+        end
+
+        # Drop review-exempt paths from a scoped diff. Matching paths are removed
+        # from the subject and enumerated in the manifest, in every round type.
+        # A full round whose files are all exempt is refused: full rounds are
+        # explicit operator intent, and an empty subject cannot be reviewed.
+        def apply_exempt_paths(scoped, config)
+          patterns = Array(config[:exempt_paths])
+          return scoped if patterns.empty?
+
+          classification = Molecules::ExemptPaths.classify(scoped[:manifest][:selected_files], patterns)
+          return scoped if classification[:exempt].empty?
+
+          exempt_set = classification[:exempt]
+          blocks = Atoms::DiffBoundaryFinder.parse(scoped[:diff]).reject { |block| exempt_set.include?(block[:path]) }
+
+          if blocks.empty?
+            return {success: false,
+                    error: "Every changed file is review-exempt (#{exempt_set.join(", ")}, patterns: #{patterns.join(", ")}); " \
+                      "a full round cannot review an empty subject — use a delta round for exempt acceptance"}
+          end
+
+          manifest = scoped[:manifest].merge(
+            exempt_files: classification[:exempt],
+            exempt_patterns: patterns,
+            selected_files: blocks.map { |block| block[:path] },
+            selected_sha256: Digest::SHA256.hexdigest(blocks.map { |block| block[:content] }.join)
+          )
+          {success: true, diff: blocks.map { |block| block[:content] }.join, manifest: manifest}
         end
 
         # Format PR metadata for context

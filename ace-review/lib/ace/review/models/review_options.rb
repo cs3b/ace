@@ -12,6 +12,7 @@ module Ace
           :pr, :post_comment, :pr_metadata, :gh_timeout,
           :pr_comments, :pr_comment_data,
           :evidence_sessions,
+          :delta,
           :no_feedback, :feedback_model,
           :list_presets, :list_prompts, :help
 
@@ -60,6 +61,10 @@ module Ace
           @pr_comment_data = nil  # Populated during execution
           @evidence_sessions = Array(hash[:evidence_session]).flat_map { |value| value.to_s.split("\x1F") }.reject(&:empty?)
 
+          # Delta round: nil = not requested, :auto = resolve reference from prior
+          # sessions, otherwise the explicit reference head
+          @delta = hash[:delta]
+
           # Feedback extraction options
           @no_feedback = hash[:no_feedback] || false
           @feedback_model = hash[:feedback_model]
@@ -87,6 +92,11 @@ module Ace
         # Check if this is a PR review
         def pr_review?
           !pr.nil? && !pr.to_s.strip.empty?
+        end
+
+        # Check if a delta round was requested (--delta, with or without a head)
+        def delta_requested?
+          !delta.nil?
         end
 
         # Check if comment posting should be triggered (includes dry-run preview)

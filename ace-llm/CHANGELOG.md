@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Query results now derive the top-level `usage` record from provider metadata token counts (model, input/output/cached/total). Absent counts stay absent; a measured zero cache read is kept so cost models can distinguish "no cache" from "unknown". Sessions no longer report "usage unavailable" when the provider supplied tokens.
+
 ## [0.40.0] - 2026-09-24
 
 ### Fixed
