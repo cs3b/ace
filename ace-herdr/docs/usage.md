@@ -1,7 +1,7 @@
 ---
 doc-type: user
 title: ace-herdr Usage
-purpose: Full CLI and configuration reference for ace-herdr push delivery and agent bootstrap.
+purpose: Full CLI and configuration reference for ace-herdr: push delivery, agent bootstrap, and the terminal-control surface (list, send, capture, wait, presets).
 ace-docs:
   last-updated: 2026-09-27
   last-checked: 2026-09-27
@@ -9,27 +9,179 @@ ace-docs:
 
 # Usage
 
-`ace-herdr` is a zero-token wrapper over the `herdr` CLI. It implements the ace-hitl push-delivery contract — `deliver(ref, answer)` -> `herdr agent prompt <pane>` — and adds one-command agent dispatch, noiseless waiting, and pane closure. No LLM is consulted anywhere in the gem.
+`ace-herdr` is a zero-token wrapper over the `herdr` CLI. It implements the ace-hitl push-delivery contract -- `deliver(ref, answer)` -> `herdr agent prompt <pane>` -- one-command agent dispatch, noiseless waiting and pane closure, plus the terminal-control intents known from `ace-tmux`: `list`, `send`, `capture`, output waits, and preset-driven workspace/tab creation. No LLM is consulted anywhere in the gem.
 
 ## Command Surface
 
 - `ace-herdr deliver [OPTIONS]`
 - `ace-herdr dispatch [OPTIONS]`
-- `ace-herdr wait [OPTIONS]`
+- `ace-herdr list [--panes|--tabs|--workspaces] [--workspace ID] [--quiet]`
+- `ace-herdr send [--cmd TEXT] [--msg TEXT...] [--key NAME...] --pane ID [--quiet]`
+- `ace-herdr capture --pane ID [--lines N] [--source visible|recent]`
+- `ace-herdr wait --pane ID (--for output --pattern PATTERN | --for agent [--until ...]) [--timeout S] [--quiet]`
 - `ace-herdr close [OPTIONS]`
+- `ace-herdr workspace <preset> [--cwd PATH] [--quiet]`
+- `ace-herdr tab <preset> [--workspace ID] [--cwd PATH] [--quiet]`
+- `ace-herdr --list-presets [workspaces|tabs]`
 
-## The delivery contract
+## Output policy
 
-`ace-hitl ask` captures the asker's reverse address fail-closed from the environment (`HERDR_SESSION` / `HERDR_PANE`, schema `ace.hitl.ref/v1`). `ace-herdr deliver` pushes an answer back to that address:
+Control commands print exactly one deterministic JSON line on stdout; `--quiet` suppresses it. Failures surface herdr's machine error codes in the CLI error message (for example `pane_not_found: pane w9:p1 not found`) and exit non-zero. The one exception is `capture`, which prints raw pane text without any JSON wrapping.
 
-1. A write-ahead delivery record carrying the full answer is persisted under `.ace-local/herdr/deliveries/<event-id>.json` (mode 0600, atomic rename) before any herdr contact, so a crash can never lose the answer. A crashed run is recovered with `--resume <event-id>`.
-2. Delivery is idempotent per event id and serialized by a per-event lock: concurrent deliveries prompt once. Re-delivering identical content after a `delivered` record short-circuits without contacting herdr; different content or a different destination for the same event id fails closed.
-3. If the target pane has no agent, one is bootstrapped (`herdr agent start`), the reverse address is exported into the pane shell (`export HERDR_SESSION=... HERDR_PANE=...`; values are token-validated and shell-escaped), and delivery waits for the agent to become idle before prompting.
-4. Transient failures (readiness timeout, `agent_prompt_stalled`, socket/binary unavailability — at the probe as well as the prompt) persist their history and report `retryable` within `delivery.max_attempts`.
-5. Terminal failures (`agent_blocked` pre-send rejection, missing pane, agent start failure) report `failed` immediately with the error persisted in the record history.
-6. An interrupted run whose last recorded event is a prompt submission without an outcome is ambiguous: the answer may already have been delivered. Re-running reports `failed` ("previous run crashed after submitting") instead of silently resending.
+herdr *sessions* (server persistence) are intentionally not exposed; the tmux session analogue is the herdr **workspace**.
 
-Result states follow the ace-hitl contract (spec 8wm.t.vrz §1.2): `delivered`, `retryable` (safe to re-push identical content), `failed` (terminal).
+## tmux-intent ↔ herdr-command parity
+
+Every common terminal-control intent available through `ace-tmux` is available through `ace-herdr` (herdr 0.9.1). Parity is of INTENT and FLAG VOCABULARY, not byte-format: ace-herdr keeps one-line JSON where ace-tmux renders human tables.
+
+| ace-tmux intent | ace-herdr command | Native herdr call |
+|---|---|---|
+| `list` (panes) | `list` / `list --panes` | `pane list` |
+| `list --windows` | `list --tabs` | `tab list` |
+| `list --sessions` | `list --workspaces` | `workspace list` |
+| `send --cmd` | `send --cmd` | `pane run` (plain) / `agent prompt` (agent pane) |
+| `send --msg` / `--key` | `send --msg` / `--key` | `pane send-text` / `pane send-keys`; `agent prompt` / `agent send-keys` |
+| `capture` | `capture` | `pane read` |
+| `wait --for output` | `wait --for output --pattern` | `pane wait-output` |
+| `wait --for agent` | `wait --until` (agent state) | `agent wait` |
+| `start <preset>` | `workspace <preset>` | `workspace create` + tabs/panes |
+| `window <preset>` | `tab <preset>` | `tab create` + splits |
+| `--list-presets` | `--list-presets` | -- (config cascade) |
+| `attach` / `detach` | ❌ out of scope | human-facing; no automation equivalent |
+| layout strings / `select-layout` | ❌ out of scope | herdr has split/resize only |
+
+## `ace-herdr list`
+
+Inspect live state. Panes are the default scope; `--workspace <id>` scopes panes and tabs.
+
+```bash
+ace-herdr list                          # panes across all workspaces
+ace-herdr list --workspace w1           # panes in one workspace
+ace-herdr list --tabs --workspace w1    # tabs in one workspace
+ace-herdr list --workspaces             # workspaces
+```
+
+Output: `{"panes":[{"id":"w1:p1","tab":"w1:t1","workspace":"w1","title":"~","cwd":"/tmp","focused":true,"agent_status":"idle"},...]}` -- `{"tabs":[{id, workspace, title, number, pane_count, focused}...]}` for `--tabs`, `{"workspaces":[{id, title, number, tab_count, pane_count, focused}...]}` for `--workspaces`. Empty results are a success with an empty array, never an error.
+
+## `ace-herdr send`
+
+Send a command, raw text, or named keys. Input reaches the pane in **declaration order** (an intentional divergence from ace-tmux's msgs-then-keys; order is expressive here, so it is preserved, not normalized). At least one input token is required -- none is a usage error before any transport call.
+
+```bash
+ace-herdr send --pane p5 --cmd 'bundle exec rake test'
+ace-herdr send --pane p5 --msg 'continue with option 2' --key Enter
+ace-herdr send --pane p5 --key Esc --cmd 'reset'     # rejected -- see rules
+ace-herdr send --pane p5 --key enter
+```
+
+### Plain pane (raw input, declaration order)
+
+- `--cmd TEXT` is exactly one `pane run` submission (text + Enter). It must be declared before every `--key`; trailing keys are sent after the submission (post-submission keystrokes such as `y`/`n` confirmations). Leading keys (`--key Esc --cmd run`) are rejected before any transport call.
+- `--msg a --msg b` types raw text without submitting, concatenated in order.
+- `--key K...` sends named keys in order; each `enter` submits pending text.
+- `--cmd` combined with `--msg` is a usage error before any transport call (fail closed, nothing sent).
+- Multi-Enter sequences submit per Enter.
+- Output: `{"pane":"p5","sent":"cmd"}` for command-led sends, `"text"` for message-led sends, `"keys"` for key-only sends.
+
+### Agent pane (prompt semantics)
+
+When the target pane hosts a live agent (`herdr agent get`), the same flags route to agent transport -- replacing ace-tmux's INTERACTIVE_CLI_COMMANDS/busy-pattern heuristics with native agent state:
+
+- `--cmd T`, or concatenated `--msg` texts (joined with newlines), becomes **one** agent prompt that submits itself -- message-only input submits once on an agent pane (intended divergence from plain panes).
+- At most one trailing `--key Enter` is dropped and reported: `{"pane":"p5","sent":"prompt","dropped_keys":["Enter"]}` -- this guarantees exactly-one submission instead of erroring.
+- `--key`-only sequences go to `agent send-keys` (`esc`, `ctrl+c`, ...); at most one `enter` total.
+- Submission is gated natively: a blocked agent rejects pre-send with a CLI error carrying `agent_blocked` (never silently dropped); a stalled prompt surfaces `agent_prompt_stalled`.
+- Rejected before transport: keys interleaved between or after messages other than the single trailing `enter`; multiple `enter` keys; `--cmd` with non-Enter keys; `--cmd` combined with `--msg`.
+
+## `ace-herdr capture`
+
+Print pane content as raw text (no JSON wrapping). Read-only -- agent routing rules do not apply.
+
+```bash
+ace-herdr capture --pane p5                     # last 40 lines of history
+ace-herdr capture --pane p5 --lines 40 --source recent
+ace-herdr capture --pane p5 --source visible    # the agent screen
+```
+
+## `ace-herdr wait`
+
+Wait for an agent state or matching pane output.
+
+```bash
+ace-herdr wait --pane p5                                  # agent: idle, done, or blocked
+ace-herdr wait --pane p5 --until done --timeout 120       # agent: one state
+ace-herdr wait --pane p5 --for output --pattern 'tests? OK' --timeout 30
+```
+
+- Agent form (default; unchanged): `--until idle,working,blocked,done,unknown`, output `{"pane":"p5","state":"ready"}`.
+- Output form: `--for output --pattern PATTERN` (literal substring, matching ace-tmux's observable contract). herdr checks existing pane content immediately, then polls; `--timeout` is seconds (gem converts to milliseconds). Output `{"pane":"p5","matched":true}`; a timeout is a CLI error (non-zero exit).
+- The modes are mutually exclusive: `--pattern` requires `--for output`; `--until` requires the agent form.
+
+## `ace-herdr workspace` / `ace-herdr tab` (presets)
+
+Declare a workspace or tab layout in YAML and create it in one command -- `workspace <preset>` mirrors `ace-tmux start`, `tab <preset>` mirrors `ace-tmux window`.
+
+```bash
+ace-herdr workspace development
+ace-herdr workspace development --cwd /path/to/project
+ace-herdr tab agent --workspace w1
+ace-herdr --list-presets               # merged inventory, both types
+ace-herdr --list-presets workspaces
+```
+
+### Preset cascade (ADR-022)
+
+Presets load nearest-wins and the `--list-presets` inventory reflects the merged set:
+
+1. project `.ace/herdr/{workspaces,tabs}/*.yml` (highest)
+2. user `~/.ace/herdr/{workspaces,tabs}/*.yml`
+3. gem `.ace-defaults/herdr/{workspaces,tabs}/*.yml` -- ships `workspaces/development.yml` and `tabs/agent.yml`
+
+A project file with the same name overrides a gem/user file; names unique to a level still appear in the merged listing.
+
+### Schema
+
+```yaml
+# .ace/herdr/workspaces/development.yml
+label: development          # workspace label (defaults to the preset name)
+cwd: /workspace/project     # root cwd (tab/panes inherit; ~ expands)
+focus: true                 # pass --focus to workspace create
+tabs:
+  - preset: agent           # a tab may inherit a tab preset (recursive; overlay wins)
+    label: work             # ...and override any field
+  - label: editor
+    cwd: /workspace/project # tab cwd overrides the root cwd
+    focus: false
+    panes:
+      - label: shell        # the FIRST pane is the tab's root pane
+      - label: agent
+        cwd: /workspace/project
+        agent:              # declares an agent pane
+          kind: pi          # default: config default_agent_kind
+          name: development-agent
+          prompt: Review the current task.
+    splits:                 # every pane after the first must be placed by a split
+      - direction: right    # herdr-native right|down; horizontal|vertical accepted
+        target: shell       # pane label to split from (default: the root pane)
+        pane: agent         # the declared pane placed by this split
+        ratio: 0.5
+```
+
+```yaml
+# .ace/herdr/tabs/agent.yml -- a tab preset uses the tab-level fields directly
+label: agent
+panes:
+  - label: agent
+    agent:
+      kind: pi
+      name: task-agent
+```
+
+Creation is deterministic and ordered: the workspace is created first, then tabs/panes in declared order (root pane from `tab create`, further panes from `pane split`, panes renamed to their labels), then pane `command`s run, then declared agents start readiness-gated (`agent start` blocks until the pane is interactive; vs0 bootstrap order: reverse address exported into the pane shell, agent start, optional prompt). All layouts are validated before any herdr call -- an unplaced pane, a duplicate split placement, an unknown split target, or an unknown direction fails closed and creates nothing.
+
+Output: `{"workspace":"w2","tabs":[{"tab":"w2:t1","panes":["w2:p1","w2:p2"],"commands":1,"agents":["development-agent"]}]}`; the tab command reports the single tab object. `--cwd` overrides the resolved root/tab cwd (CLI > tab > root > pane inheritance).
+
+Unknown preset: CLI error listing the available names (ace-tmux `--list-presets` parity), for example `Error: Unknown workspace preset 'nope' (available: development)`.
 
 ## `ace-herdr deliver`
 
@@ -50,6 +202,19 @@ Options: `--session`, `--pane` (default: `HERDR_SESSION` / `HERDR_PANE`), `--eve
 
 Output: one JSON line `{"ref":{...},"state":"delivered|retryable|failed"}`. Exit code is non-zero unless the state is `delivered`.
 
+### The delivery contract
+
+`ace-hitl ask` captures the asker's reverse address fail-closed from the environment (`HERDR_SESSION` / `HERDR_PANE`, schema `ace.hitl.ref/v1`). `ace-herdr deliver` pushes an answer back to that address:
+
+1. A write-ahead delivery record carrying the full answer is persisted under `.ace-local/herdr/deliveries/<event-id>.json` (mode 0600, atomic rename) before any herdr contact, so a crash can never lose the answer. A crashed run is recovered with `--resume <event-id>`.
+2. Delivery is idempotent per event id and serialized by a per-event lock: concurrent deliveries prompt once. Re-delivering identical content after a `delivered` record short-circuits without contacting herdr; different content or a different destination for the same event id fails closed.
+3. If the target pane has no agent, one is bootstrapped (`herdr agent start`), the reverse address is exported into the pane shell (`export HERDR_SESSION=... HERDR_PANE=...`; values are token-validated and shell-escaped), and delivery waits for the agent to become idle before prompting.
+4. Transient failures (readiness timeout, `agent_prompt_stalled`, socket/binary unavailability -- at the probe as well as the prompt) persist their history and report `retryable` within `delivery.max_attempts`.
+5. Terminal failures (`agent_blocked` pre-send rejection, missing pane, agent start failure) report `failed` immediately with the error persisted in the record history.
+6. An interrupted run whose last recorded event is a prompt submission without an outcome is ambiguous: the answer may already have been delivered. Re-running reports `failed` ("previous run crashed after submitting") instead of silently resending.
+
+Result states follow the ace-hitl contract (spec 8wm.t.vrz §1.2): `delivered`, `retryable` (safe to re-push identical content), `failed` (terminal).
+
 ## `ace-herdr dispatch`
 
 Start an agent in one command: tab + `herdr agent start` + prompt, all with deterministic defaults.
@@ -63,15 +228,6 @@ ace-herdr dispatch --label 8wm.t.vs0 --no-prompt
 Defaults: the caller's herdr workspace (flag `--workspace` > `HERDR_WORKSPACE_ID` > `herdr pane current`), the label as agent and pane name, the prompt from `--prompt-file` or stdin (`--no-prompt` skips submission). The new agent's environment receives `HERDR_SESSION` (workspace id) and `HERDR_PANE` (pane id) so its own `ace-hitl ask` calls carry a working reverse address.
 
 Output: one JSON line `{"workspace":...,"pane":...,"agent":...,"kind":...,"tab_created":...,"prompted":...}`.
-
-## `ace-herdr wait`
-
-Wait for an agent to reach a state without scraping pane output.
-
-```bash
-ace-herdr wait --pane p5                      # idle, done, or blocked
-ace-herdr wait --pane p5 --until done --timeout 120
-```
 
 ## `ace-herdr close`
 
@@ -87,14 +243,14 @@ ace-herdr close --pane p5 --keep --rename wip # rename only
 Defaults (`.ace-defaults/herdr/config.yml`), overridable in `~/.ace/herdr/config.yml` or `.ace/herdr/config.yml`:
 
 ```yaml
-default_agent_kind: pi          # herdr agent kind used for bootstrap/dispatch
+default_agent_kind: pi          # herdr agent kind used for bootstrap/dispatch/preset agents
 delivery:
   max_attempts: 3               # prompt attempts per delivery sequence
   backoff_seconds: [1, 2, 4]    # fixed deterministic backoff, no jitter
 timeouts:
-  agent_start: 60               # seconds to interactive readiness
+  agent_start: 60               # seconds to interactive readiness (also preset agents)
   prompt: 30
-  wait: 30                      # readiness gate / ace-herdr wait
+  wait: 30                      # readiness gate / ace-herdr wait (both wait modes)
 deliveries_dir: .ace-local/herdr/deliveries
 ```
 
@@ -102,14 +258,15 @@ deliveries_dir: .ace-local/herdr/deliveries
 
 Records are JSON, one file per event id under `deliveries_dir` (relative to the working directory, mode 0600): event id, reverse address, SHA-256 answer digest, the full answer (so a crash never loses content), state (`pending` / `delivered` / `retryable` / `failed`), attempt count, and an append-only history of bootstrap, readiness, and prompt events with errors. Records are written atomically and guarded by a per-event lock. Re-running `deliver` with the same event id and content resumes or short-circuits; with different content or a different destination it fails closed.
 
-## Exit codes
+## Error semantics
 
-Commands raise a CLI error (non-zero exit) for: invalid or missing reverse address, unreadable answer/prompt files, unresolvable workspace, herdr command failures, and delivery outcomes other than `delivered`. `0` means success (or a `ready` wait).
+Commands raise a CLI error (non-zero exit) carrying herdr's machine code where one exists:
 
-## Testing
+- Unknown pane/tab/workspace: `pane_not_found: ...`, `tab_not_found: ...`, `workspace_not_found: ...`
+- herdr binary or socket unavailable: explicit CLI error, no partial output
+- Blocked agent: `agent_blocked: ...` (terminal -- never silently dropped); stalled prompt: `agent_prompt_stalled: ...` (transient)
+- Output wait timeout: `timeout: ...`
+- Unknown preset: usage error listing the available preset names
+- Invalid send shapes: usage error **before any transport call** (nothing is sent)
 
-```bash
-ace-test ace-herdr
-```
-
-Fast tests only; the herdr binary is faked at the executor seam. An end-to-end scenario against a live herdr is tracked as a follow-up.
+Exit `0` means success (including an explicit empty `list` result or a satisfied wait).
