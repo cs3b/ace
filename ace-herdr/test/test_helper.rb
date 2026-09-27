@@ -60,8 +60,48 @@ module HerdrTestHelper
       call(:pane_current)
     end
 
-    def tab_create(workspace_id:, label:, cwd: nil)
-      call(:tab_create, workspace_id: workspace_id, label: label, cwd: cwd)
+    def tab_create(workspace_id:, label:, cwd: nil, focus: nil)
+      call(:tab_create, workspace_id: workspace_id, label: label, cwd: cwd, focus: focus)
+    end
+
+    def workspace_list
+      call(:workspace_list)
+    end
+
+    def tab_list(workspace_id: nil)
+      call(:tab_list, workspace_id: workspace_id)
+    end
+
+    def pane_list(workspace_id: nil)
+      call(:pane_list, workspace_id: workspace_id)
+    end
+
+    def pane_send_text(pane, text)
+      call(:pane_send_text, pane: pane, text: text)
+    end
+
+    def pane_send_keys(pane, keys)
+      call(:pane_send_keys, pane: pane, keys: keys)
+    end
+
+    def agent_send_keys(pane, keys)
+      call(:agent_send_keys, pane: pane, keys: keys)
+    end
+
+    def pane_read(pane, source: "recent", lines: nil)
+      call(:pane_read, pane: pane, source: source, lines: lines)
+    end
+
+    def pane_wait_output(pane, pattern:, source: "recent", lines: nil, timeout_ms: nil)
+      call(:pane_wait_output, pane: pane, pattern: pattern, source: source, lines: lines, timeout_ms: timeout_ms)
+    end
+
+    def workspace_create(label:, cwd: nil, focus: nil)
+      call(:workspace_create, label: label, cwd: cwd, focus: focus)
+    end
+
+    def pane_split(pane:, direction:, cwd: nil, ratio: nil, focus: nil)
+      call(:pane_split, pane: pane, direction: direction, cwd: cwd, ratio: ratio, focus: focus)
     end
 
     # All invocations of one operation, in order

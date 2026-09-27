@@ -25,6 +25,12 @@ module Ace
     # Target pane does not exist (pane_not_found)
     class PaneNotFoundError < ExecutorError; end
 
+    # Target tab does not exist (tab_not_found)
+    class TabNotFoundError < ExecutorError; end
+
+    # Target workspace does not exist (workspace_not_found)
+    class WorkspaceNotFoundError < ExecutorError; end
+
     # No agent detected in the target pane
     class AgentNotFoundError < ExecutorError; end
 
