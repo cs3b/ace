@@ -24,6 +24,7 @@ patterns:
   providers: "test/{fast/,}providers/**/*_test.rb"
   contract: "test/{fast/,}contract/**/*_test.rb"
   core: "test/{fast/,}core/**/*_test.rb"
+  lifecycle: "test/{fast/,}lifecycle/**/*_test.rb"
   edge: "test/{fast/,}edge/**/*_test.rb"
   feat_tests: "test/feat/**/*_test.rb"
 
@@ -43,6 +44,7 @@ targets:
     - providers
     - contract
     - core
+    - lifecycle
   feat:
     - feat_tests
     - edge

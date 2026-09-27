@@ -109,7 +109,7 @@ ace-hitl update abc123 --answer "close the assignment" --resume
 operation: it creates the local HITL event, forwards the question through
 the provider transport bound to the event via `--ace-hitl-id`, and prints
 both ids. Effect declarations are validated client-side (exact bounds)
-and passed through verbatim; the lab tool remains the authority.
+and passed through verbatim into the native relay request store.
 
 ```bash
 ace-hitl ask "Proceed with deploy?" \
@@ -135,7 +135,7 @@ ace-hitl ask "Proceed with deploy?" \
   `lab_request_effect: declared|none` so `wait` can apply the right
   terminal semantics.
 - The answer is always relayed unchanged; consumption stays on the
-  operator side via the lab relay tool.
+  operator side via `ace-hitl consume`.
 - If the transport send fails after the local event was created, the
   error surfaces the event id as an orphan (created but never bound to a
   relay request); inspect it with `ace-hitl show <id>` and delete or
@@ -143,6 +143,63 @@ ace-hitl ask "Proceed with deploy?" \
 - `deliver(ref, answer)` — pushing the answer back to the asker's pane —
   is declared by the adapter interface; provider `lab` reports it as
   unsupported until the ace-herdr push-delivery integration lands.
+
+## Relay Lifecycle (Generic HITL Request Store)
+
+The generic relay request lifecycle is native to the gem
+(`Ace::Hitl::Lifecycle`; migration spec 8wm.t.y21). Requests are
+file-backed, never expire on a timer, and every terminal transition
+shares one per-request lock. The store root is `ACE_HITL_STORE_ROOT`
+(default `/run/lab/hitl`); the Overseer channel root is
+`ACE_HITL_OVERSEER_CHANNEL_ROOT` (default `/lab/state/overseer-channel`).
+Machine output is one JSON line.
+
+Operator/broker side (host-broker operations are root-only):
+
+```bash
+ace-hitl pending                    # answerable requests
+ace-hitl states                     # all public lifecycle projections
+ace-hitl duty                       # pending + escalated projection
+ace-hitl deliver hitl-0a1b2c3d4e5f6708 <<< "approved"
+```
+
+`deliver` reads the answer from stdin, relays it unchanged (0400,
+owner = requester) into `secrets/` for OTP kinds or `answers/` for
+everything else, re-verifies attempt liveness under the request lock,
+and then executes the declared effect callback AS THE REQUESTER:
+exec-style argv (never a shell), `{answer}` substituted once per
+element, optional fullmatch regex gate, bounded timeout, attempts
+logged redacted in the root-only effects log, and one deduped
+escalation with `effect_state: callback-escalated` in the public
+projection on failure (`callback-ok` on success).
+
+Requester side:
+
+```bash
+ace-hitl consume hitl-0a1b2c3d4e5f6708
+ace-hitl consume hitl-0a1b2c3d4e5f6708 --timeout 600
+ace-hitl cancel hitl-0a1b2c3d4e5f6708 --reason "operator stopped the work"
+```
+
+A consume timeout bounds ONLY the local wait — the request stays
+pending and answerable. Cancel is the ONLY way to abandon a request;
+it records `cancelled_by` and the `reason` in the public projection,
+and a late answer fails closed.
+
+Overseer reverse address (bounded, type-tagged responses):
+
+```bash
+ace-hitl overseer-send --reply-to 321 <<< "[decyzja] Rekomendacja: A."
+ace-hitl overseer-pending
+ace-hitl overseer-ack msg-0123456789abcdef
+```
+
+Responses are 1..1200 characters and must open with a type tag
+(`[decyzja]`, `[pytanie]`, or `[info]`); full SHAs, Work/Attempt/task
+IDs, or the word "SHA" are rejected. `overseer-send` is the overseer
+user's operation; `overseer-pending`/`overseer-ack` are host-broker
+(root) operations used by the transport to drain and acknowledge
+relayed responses.
 
 ## Wait (Polling Default)
 
@@ -169,7 +226,7 @@ callback-ok / callback-escalated). Terminal semantics are effect-aware:
 - The event's `lab_request_state` records the effective state, so it
   never claims plain `answer-delivered` while an effect outcome exists.
 
-Relay consumption stays on the operator side via the lab relay tool.
+Relay consumption stays on the operator side via `ace-hitl consume`.
 `wait` is the pane-less script path: agents with a herdr pane ask
 through the provider adapter and receive answers delivered back to
 their pane.
