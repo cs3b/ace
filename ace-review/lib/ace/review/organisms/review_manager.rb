@@ -193,6 +193,12 @@ module Ace
           # Merge options with config
           options.merge_config(config)
 
+          # Review-exempt paths are validated at config load, naming the offender
+          if (exempt_error = Molecules::ExemptPaths.validate!(config[:exempt_paths]))
+            return {success: false,
+                    error: "Invalid exempt_paths in review config for preset '#{preset_name}': #{exempt_error}"}
+          end
+
           {success: true, config: config}
         end
 
@@ -306,6 +312,8 @@ module Ace
               inventory.length == changed_files && inventory.map { |item| item["path"] }.sort == diff_files.sort
             return {success: false, error: "PR file inventory does not match the fetched diff; review input may be incomplete"}
           end
+          scoped = apply_exempt_paths(scoped, config)
+          return scoped unless scoped[:success]
           scoped[:manifest][:pr_file_inventory_verified] = true
           scoped[:manifest][:head_sha] = result[:metadata]["headRefOid"]
           scoped[:manifest][:base_branch_sha] = result[:metadata]["baseRefOid"]
@@ -396,6 +404,25 @@ module Ace
           scoped = Molecules::DiffScope.select(delta[:diff], config[:file_patterns],
             groups: config[:file_pattern_groups])
           return scoped unless scoped[:success]
+
+          # Exempt-path acceptance applies to delta rounds: a delta whose files
+          # are all review-exempt is recorded as a no-op without model calls.
+          if Array(config[:exempt_paths]).any?
+            classification = Molecules::ExemptPaths.classify(scoped[:manifest][:selected_files], config[:exempt_paths])
+            if classification[:non_exempt].empty?
+              return {success: true, noop: true, noop_reason: :exempt_delta,
+                      noop_scope: "delta touches only review-exempt paths (#{classification[:exempt].join(", ")}) " \
+                        "matching patterns (#{Array(config[:exempt_paths]).join(", ")})",
+                      subject: "", context: nil, cache_dir: options.session_dir || create_cache_directory,
+                      pr_metadata: metadata, delta: delta,
+                      diff_manifest: manifest.merge(scoped[:manifest]).merge(
+                        exempt_files: classification[:exempt],
+                        exempt_patterns: Array(config[:exempt_paths]))}
+            end
+
+            scoped = apply_exempt_paths(scoped, config)
+            return scoped unless scoped[:success]
+          end
 
           # The selected delta alone can still exceed the whole-prompt ceiling.
           diff_tokens = (Atoms::TokenEstimator.estimate(scoped[:diff]) * Atoms::PromptBudget::ESTIMATE_SAFETY_FACTOR).ceil
@@ -495,6 +522,35 @@ module Ace
             lines << "No prior session was available to carry findings forward."
           end
           lines.join("\n")
+        end
+
+        # Drop review-exempt paths from a scoped diff. Matching paths are removed
+        # from the subject and enumerated in the manifest, in every round type.
+        # A full round whose files are all exempt is refused: full rounds are
+        # explicit operator intent, and an empty subject cannot be reviewed.
+        def apply_exempt_paths(scoped, config)
+          patterns = Array(config[:exempt_paths])
+          return scoped if patterns.empty?
+
+          classification = Molecules::ExemptPaths.classify(scoped[:manifest][:selected_files], patterns)
+          return scoped if classification[:exempt].empty?
+
+          exempt_set = classification[:exempt]
+          blocks = Atoms::DiffBoundaryFinder.parse(scoped[:diff]).reject { |block| exempt_set.include?(block[:path]) }
+
+          if blocks.empty?
+            return {success: false,
+                    error: "Every changed file is review-exempt (#{exempt_set.join(", ")}, patterns: #{patterns.join(", ")}); " \
+                      "a full round cannot review an empty subject — use a delta round for exempt acceptance"}
+          end
+
+          manifest = scoped[:manifest].merge(
+            exempt_files: classification[:exempt],
+            exempt_patterns: patterns,
+            selected_files: blocks.map { |block| block[:path] },
+            selected_sha256: Digest::SHA256.hexdigest(blocks.map { |block| block[:content] }.join)
+          )
+          {success: true, diff: blocks.map { |block| block[:content] }.join, manifest: manifest}
         end
 
         # Format PR metadata for context

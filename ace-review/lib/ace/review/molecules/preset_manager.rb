@@ -110,6 +110,7 @@ module Ace
             reviewers: preset["reviewers"],
             file_patterns: preset["file_patterns"],
             file_pattern_groups: preset["file_pattern_groups"],
+            exempt_paths: preset["exempt_paths"],
             budget: preset["budget"],
             goals_brief: preset["goals_brief"],
             review_role: preset["review_role"] || "scope",

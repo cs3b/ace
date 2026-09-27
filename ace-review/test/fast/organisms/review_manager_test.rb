@@ -2434,6 +2434,7 @@ class ReviewManagerTest < AceReviewTest
     out, _ = Open3.capture2("git", "rev-parse", "HEAD", chdir: @test_dir)
     @delta_c1 = out.strip
     File.write(File.join(@test_dir, "a.txt"), "one\ntwo\n")
+    File.write(File.join(@test_dir, "b.txt"), "new file\n")
     git.call("add", ".")
     git.call("commit", "-q", "-m", "c2")
     out, _ = Open3.capture2("git", "rev-parse", "HEAD", chdir: @test_dir)
@@ -2480,7 +2481,7 @@ class ReviewManagerTest < AceReviewTest
 
   def test_extract_pr_delta_content_scopes_subject_to_delta_diff
     setup_delta_repo
-    prior = write_delta_prior_session(@delta_c1)
+    write_delta_prior_session(@delta_c1)
     config = {}
     options = Ace::Review::Models::ReviewOptions.new(pr: "7", delta: @delta_c1)
 
@@ -2546,5 +2547,144 @@ class ReviewManagerTest < AceReviewTest
 
     refute result[:success]
     assert_match(/--delta requires --pr/, result[:error])
+  end
+
+  # ---- Exempt-path scopes (8wq.t.1qb.1) ----
+
+  def test_exempt_paths_are_excluded_from_full_round_subject
+    diff = <<~DIFF
+      diff --git a/lib/keep.rb b/lib/keep.rb
+      index 111..222 100644
+      --- a/lib/keep.rb
+      +++ b/lib/keep.rb
+      @@ -1 +1 @@
+      -old
+      +new
+      diff --git a/docs/generated.md b/docs/generated.md
+      index 333..444 100644
+      --- a/docs/generated.md
+      +++ b/docs/generated.md
+      @@ -1 +1 @@
+      -stale
+      +fresh
+    DIFF
+    metadata = pr_metadata_with_files(
+      "headRefOid" => ("a" * 40), "baseRefOid" => ("b" * 40),
+      "changedFiles" => 2, "files" => [{"path" => "lib/keep.rb"}, {"path" => "docs/generated.md"}]
+    )
+    options = Ace::Review::Models::ReviewOptions.new(pr: "42")
+
+    result = nil
+    Ace::Review::Molecules::GhPrFetcher.stub(:fetch_pr,
+      {success: true, diff: diff, metadata: metadata}) do
+      result = @manager.send(:extract_pr_content, "42", {exempt_paths: ["docs/**"]}, options)
+    end
+
+    assert result[:success], result[:error].to_s
+    assert_includes result[:subject], "lib/keep.rb"
+    refute_includes result[:subject], "docs/generated.md"
+    assert_equal ["docs/generated.md"], result[:diff_manifest][:exempt_files]
+    assert_equal ["docs/**"], result[:diff_manifest][:exempt_patterns]
+  end
+
+  def test_full_round_with_only_exempt_paths_is_refused_not_noop
+    diff = <<~DIFF
+      diff --git a/CHANGELOG.md b/CHANGELOG.md
+      index 111..222 100644
+      --- a/CHANGELOG.md
+      +++ b/CHANGELOG.md
+      @@ -1 +1 @@
+      -old
+      +new
+    DIFF
+    metadata = pr_metadata_with_files(
+      "headRefOid" => ("a" * 40), "baseRefOid" => ("b" * 40),
+      "changedFiles" => 1, "files" => [{"path" => "CHANGELOG.md"}]
+    )
+
+    result = nil
+    Ace::Review::Molecules::GhPrFetcher.stub(:fetch_pr,
+      {success: true, diff: diff, metadata: metadata}) do
+      result = @manager.send(:extract_pr_content, "42", {exempt_paths: ["CHANGELOG.md"]},
+        Ace::Review::Models::ReviewOptions.new(pr: "42"))
+    end
+
+    refute result[:success]
+    assert_match(/Every changed file is review-exempt/, result[:error])
+    assert_match(/CHANGELOG\.md/, result[:error])
+  end
+
+  def test_fully_exempt_delta_becomes_noop_session_without_model_calls
+    setup_delta_repo
+    write_delta_prior_session(@delta_c1)
+    create_test_preset("exempt-delta", <<~YAML)
+      description: "Preset with exempt paths for delta acceptance"
+      instructions:
+        base: "prompt://base/system"
+      exempt_paths:
+        - "*.txt"
+    YAML
+    options = Ace::Review::Models::ReviewOptions.new(pr: "7", delta: :auto, preset: "exempt-delta")
+
+    result = nil
+    stub_delta_fetchers(delta_pr_metadata) do
+      result = @manager.execute_review(options)
+    end
+
+    assert result[:success], result[:error].to_s
+    assert result[:noop]
+    report = File.read(File.join(result[:session_dir], "review.md"))
+    assert_includes report, "review-exempt"
+    assert_includes report, "a.txt"
+    assert_includes report, "*.txt"
+    refute File.file?(File.join(result[:session_dir], "user.prompt.md"))
+  end
+
+  def test_mixed_exempt_delta_reviews_non_exempt_paths_only
+    setup_delta_repo
+    write_delta_prior_session(@delta_c1)
+    options = Ace::Review::Models::ReviewOptions.new(pr: "7", delta: @delta_c1)
+    config = {exempt_paths: ["b.txt"]}
+
+    result = nil
+    stub_delta_fetchers(delta_pr_metadata) do
+      result = @manager.send(:extract_pr_delta_content, "7", config, options)
+    end
+
+    assert result[:success], result[:error].to_s
+    refute result[:noop]
+    assert_includes result[:subject], "a.txt"
+    refute_includes result[:subject], "b.txt"
+    assert_equal ["b.txt"], result[:diff_manifest][:exempt_files]
+    assert_equal ["b.txt"], result[:diff_manifest][:exempt_patterns]
+  end
+
+  def test_overly_broad_exempt_path_refuses_at_config_load
+    create_test_preset("exempt-broad", <<~YAML)
+      description: "Preset with an overly broad exempt path"
+      instructions:
+        base: "prompt://base/system"
+      exempt_paths:
+        - "**"
+    YAML
+    options = Ace::Review::Models::ReviewOptions.new(preset: "exempt-broad")
+
+    result = @manager.send(:prepare_review_config, options)
+
+    refute result[:success]
+    assert_match(/Invalid exempt_paths.*'\*\*'/m, result[:error])
+  end
+
+  def pr_metadata_with_files(hash)
+    {
+      "number" => 42,
+      "url" => "https://github.com/example/repo/pull/42",
+      "title" => "PR",
+      "state" => "OPEN",
+      "isDraft" => false,
+      "author" => {"login" => "someone"},
+      "baseRefName" => "main",
+      "headRefName" => "feature"
+    }.merge(hash)
   end
 end
