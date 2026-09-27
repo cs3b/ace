@@ -1,5 +1,8 @@
 # frozen_string_literal: true
 
+require "shellwords"
+require "ace/hitl"
+
 module Ace
   module Herdr
     module Organisms
@@ -42,12 +45,18 @@ module Ace
           tab_created = false
 
           workspace_id = resolve_workspace(workspace_id)
+          validate_token!(workspace_id, "workspace")
           unless pane
             pane = create_tab(workspace_id, label, cwd)
             tab_created = true
           end
+          validate_token!(pane, "pane")
 
-          @executor.pane_run(pane, "export HERDR_SESSION=#{workspace_id} HERDR_PANE=#{pane}")
+          @executor.pane_run(
+            pane,
+            "export HERDR_SESSION=#{Shellwords.escape(workspace_id)} " \
+            "HERDR_PANE=#{Shellwords.escape(pane)}"
+          )
           @executor.agent_start(
             name: label, kind: kind, pane: pane, timeout_ms: @agent_start_timeout_ms
           )
@@ -87,6 +96,15 @@ module Ace
             raise(TargetResolutionError,
               "could not read the new pane id from herdr tab create output " \
               "(pass --pane with an existing pane instead)")
+        end
+
+        # Values reach a pane shell via the export line; only tokens may pass
+        def validate_token!(value, what)
+          return value if value.is_a?(String) && value.match?(Ace::Hitl::Providers::Ref::TOKEN_PATTERN)
+
+          raise ValidationError,
+            "#{what} contains invalid characters " \
+            "(allowed: letters, digits, '.', '_', ':', '-')"
         end
 
         def from_json(json, keys)

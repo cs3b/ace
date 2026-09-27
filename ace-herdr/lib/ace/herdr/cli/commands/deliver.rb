@@ -32,6 +32,7 @@ module Ace
           option :kind, type: :string, desc: "Agent kind used when bootstrapping (default: config default_agent_kind)"
           option :label, type: :string, desc: "Agent name used when bootstrapping (default: event id)"
           option :answer_file, type: :string, desc: "Answer file (default: stdin)"
+          option :resume, type: :string, desc: "Event id to re-deliver from the stored record (crash recovery)"
 
           def initialize(executor: nil)
             @executor = executor
@@ -39,11 +40,18 @@ module Ace
 
           def call(**options)
             translate_errors do
-              ref = resolve_ref(options[:session], options[:pane])
-              answer = read_content(options[:answer_file], what: "answer")
               deliverer = Organisms::Deliverer.from_config(
                 executor: executor, deliveries_dir: deliveries_dir, config: config
               )
+              if options[:resume]
+                result = deliverer.resume(options[:resume], kind: options[:kind], label: options[:label])
+                puts JSON.generate(ref: result.ref.to_h, state: result.state.to_s, resumed: true)
+                cli_error("delivery did not complete (state: #{result.state})") unless result.state == :delivered
+                return
+              end
+
+              ref = resolve_ref(options[:session], options[:pane])
+              answer = read_content(options[:answer_file], what: "answer")
               result = deliverer.deliver(
                 ref, answer,
                 event_id: options[:event_id], kind: options[:kind], label: options[:label]

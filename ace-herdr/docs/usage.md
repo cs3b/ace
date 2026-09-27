@@ -22,11 +22,12 @@ ace-docs:
 
 `ace-hitl ask` captures the asker's reverse address fail-closed from the environment (`HERDR_SESSION` / `HERDR_PANE`, schema `ace.hitl.ref/v1`). `ace-herdr deliver` pushes an answer back to that address:
 
-1. A write-ahead delivery record is persisted under `.ace-local/herdr/deliveries/<event-id>.json` before any herdr contact, so a crash can never lose the answer.
-2. Delivery is idempotent per event id. Re-delivering identical content after a `:delivered` record short-circuits without contacting herdr; different content for the same event id fails closed.
-3. If the target pane has no agent, one is bootstrapped (`herdr agent start`), the reverse address is exported into the pane shell (`export HERDR_SESSION=... HERDR_PANE=...`), and delivery waits for the agent to become idle before prompting.
-4. Transient failures (`agent_prompt_stalled`, socket/binary unavailability) retry with a fixed deterministic backoff up to `delivery.max_attempts`; exhausted attempts report `retryable`.
+1. A write-ahead delivery record carrying the full answer is persisted under `.ace-local/herdr/deliveries/<event-id>.json` (mode 0600, atomic rename) before any herdr contact, so a crash can never lose the answer. A crashed run is recovered with `--resume <event-id>`.
+2. Delivery is idempotent per event id and serialized by a per-event lock: concurrent deliveries prompt once. Re-delivering identical content after a `delivered` record short-circuits without contacting herdr; different content or a different destination for the same event id fails closed.
+3. If the target pane has no agent, one is bootstrapped (`herdr agent start`), the reverse address is exported into the pane shell (`export HERDR_SESSION=... HERDR_PANE=...`; values are token-validated and shell-escaped), and delivery waits for the agent to become idle before prompting.
+4. Transient failures (readiness timeout, `agent_prompt_stalled`, socket/binary unavailability — at the probe as well as the prompt) persist their history and report `retryable` within `delivery.max_attempts`.
 5. Terminal failures (`agent_blocked` pre-send rejection, missing pane, agent start failure) report `failed` immediately with the error persisted in the record history.
+6. An interrupted run whose last recorded event is a prompt submission without an outcome is ambiguous: the answer may already have been delivered. Re-running reports `failed` ("previous run crashed after submitting") instead of silently resending.
 
 Result states follow the ace-hitl contract (spec 8wm.t.vrz §1.2): `delivered`, `retryable` (safe to re-push identical content), `failed` (terminal).
 
@@ -45,7 +46,7 @@ echo 'the answer' | ace-herdr deliver
 ace-herdr deliver --session ws-1 --pane p5 --kind codex --label 8wm.t.vs0 --answer-file a.md
 ```
 
-Options: `--session`, `--pane` (default: `HERDR_SESSION` / `HERDR_PANE`), `--event-id` (default: derived from the ref and content digest), `--kind`, `--label`, `--answer-file` (default: stdin).
+Options: `--session`, `--pane` (default: `HERDR_SESSION` / `HERDR_PANE`), `--event-id` (default: derived from the ref and content digest), `--kind`, `--label`, `--answer-file` (default: stdin), `--resume <event-id>` (re-deliver the stored answer from the record; no ref or answer input needed).
 
 Output: one JSON line `{"ref":{...},"state":"delivered|retryable|failed"}`. Exit code is non-zero unless the state is `delivered`.
 
@@ -99,7 +100,7 @@ deliveries_dir: .ace-local/herdr/deliveries
 
 ## Delivery records
 
-Records are JSON, one file per event id under `deliveries_dir` (relative to the working directory): event id, reverse address, SHA-256 answer digest, state (`pending` / `delivered` / `retryable` / `failed`), attempt count, and an append-only history of bootstrap, readiness, and prompt events with errors. Records are written atomically. Re-running `deliver` with the same event id and content resumes or short-circuits; with different content it fails closed.
+Records are JSON, one file per event id under `deliveries_dir` (relative to the working directory, mode 0600): event id, reverse address, SHA-256 answer digest, the full answer (so a crash never loses content), state (`pending` / `delivered` / `retryable` / `failed`), attempt count, and an append-only history of bootstrap, readiness, and prompt events with errors. Records are written atomically and guarded by a per-event lock. Re-running `deliver` with the same event id and content resumes or short-circuits; with different content or a different destination it fails closed.
 
 ## Exit codes
 

@@ -38,7 +38,7 @@ module Ace
                 .split(",").map(&:strip).reject(&:empty?)
               timeout_seconds =
                 options[:timeout] || (config.dig("timeouts", "wait") || 30)
-              @executor.agent_wait(
+              executor.agent_wait(
                 pane: options.fetch(:pane), until_states: until_states,
                 timeout_ms: timeout_seconds * 1000
               )

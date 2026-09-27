@@ -36,11 +36,11 @@ module Ace
               renamed = false
               closed = false
               if options[:rename]
-                @executor.pane_rename(options.fetch(:pane), options[:rename])
+                executor.pane_rename(options.fetch(:pane), options[:rename])
                 renamed = true
               end
               unless options[:keep]
-                @executor.pane_close(options.fetch(:pane))
+                executor.pane_close(options.fetch(:pane))
                 closed = true
               end
               puts JSON.generate(pane: options.fetch(:pane), renamed: renamed, closed: closed)

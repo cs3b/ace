@@ -22,6 +22,40 @@ module Ace
             path
           end
 
+          # --- default construction (CLI registration path) ------------------
+
+          def test_all_commands_build_real_executor_by_default
+            [Deliver, Dispatch, Wait, Close].each do |command_class|
+              assert_instance_of Molecules::HerdrExecutor, command_class.new.send(:executor)
+            end
+          end
+
+          def test_deliver_resume_redelivers_stored_answer_without_ref
+            cmd = Deliver.new(executor: @executor)
+            answer_path = write_file("a.md", "stored answer")
+            capture_io do
+              cmd.call(
+                session: "ws-1", pane: "p5", event_id: "evt-resume",
+                kind: nil, label: nil, answer_file: answer_path, resume: nil
+              )
+            end
+
+            out, = capture_io do
+              with_env("HERDR_SESSION" => nil, "HERDR_PANE" => nil) do
+                cmd.call(
+                  session: nil, pane: nil, event_id: nil, kind: nil,
+                  label: nil, answer_file: nil, resume: "evt-resume"
+                )
+              end
+            end
+
+            parsed = JSON.parse(out)
+            assert parsed["resumed"]
+            assert_equal "delivered", parsed["state"]
+          ensure
+            FileUtils.rm_f(Dir.glob(".ace-local/herdr/deliveries/evt-resume*"))
+          end
+
           # --- deliver -------------------------------------------------------
 
           def test_deliver_outputs_state_and_succeeds

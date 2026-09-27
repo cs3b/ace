@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "shellwords"
 require "time"
 require "ace/hitl"
 
@@ -13,15 +14,20 @@ module Ace
       #
       # Guarantees:
       # - Idempotent per event id: a delivered record short-circuits
-      #   identical content; different content for the same id fails closed.
-      # - The answer is never lost: a write-ahead record is persisted before
-      #   the first herdr contact and after every event and attempt.
+      #   identical content; different content or a different destination
+      #   for the same id fails closed.
+      # - The answer is never lost: the record carries the full answer and
+      #   is persisted before the first herdr contact (0600, atomic) and
+      #   around every attempt; a crashed run can be resumed with #resume.
+      # - Concurrent deliveries of one event serialize on a per-event lock.
+      # - An ambiguous crash window (prompt submitted, outcome not yet
+      #   persisted) is reported as :failed instead of silently resending.
       # - A pane without an agent is bootstrapped (herdr agent start) with
       #   the reverse address exported into the pane shell, then gated on
       #   readiness before the prompt is submitted.
-      # - Transient failures back off on a fixed deterministic schedule
-      #   within retry limits; terminal failures are persisted in the record
-      #   and reported via the :failed state.
+      # - Transient failures (probe or prompt) persist their history and
+      #   return :retryable within retry limits; terminal failures return
+      #   :failed with the error persisted in the record.
       class Deliverer
         READY_STATES = %w[idle].freeze
 
@@ -65,37 +71,82 @@ module Ace
         #   (default: the event id)
         # @return [Ace::Hitl::Providers::DeliverResult]
         # @raise [Ace::Hitl::Providers::InvalidRefError] invalid reverse address
-        # @raise [ValidationError] event id/content conflict (fail closed)
+        # @raise [ValidationError] event id, destination or content conflict
         def deliver(ref, answer, event_id: nil, kind: nil, label: nil)
           ref = coerce_ref(ref)
+          raise ValidationError, "answer is required" if answer.to_s.empty?
+
           digest = Ace::Herdr::Atoms::AnswerDigest.call(answer)
           event_id = normalize_event_id(event_id, ref, digest)
 
-          record = Molecules::DeliveryRecordStore.load(@deliveries_dir, event_id)
-          if record
-            if record.answer_digest != digest
-              raise ValidationError,
-                "event #{event_id} was already delivered with different content " \
-                "(idempotency conflict; fail closed)"
-            end
-            return DeliverResult(ref: ref, state: :delivered) if record.delivered?
+          Molecules::DeliveryRecordStore.with_lock(@deliveries_dir, event_id) do
+            record = Molecules::DeliveryRecordStore.load(@deliveries_dir, event_id)
+            validate_existing_record(record, ref, digest) if record
+            record ||= Models::DeliveryRecord.new(
+              event_id: event_id, session: ref.session, pane: ref.pane,
+              answer_digest: digest, answer: answer
+            )
+            deliver_locked(ref, answer, record, kind, label)
           end
-          record ||= new_record(event_id, ref, digest)
-          persist(record)
+        end
 
-          deliver_with_bootstrap(ref, answer, record, kind, label, event_id)
+        # Re-deliver from the persisted record after a crash. The answer and
+        # destination come from the record; no fresh content is needed.
+        # @return [Ace::Hitl::Providers::DeliverResult]
+        # @raise [ValidationError] no recoverable record for the event id
+        def resume(event_id, kind: nil, label: nil)
+          Molecules::DeliveryRecordStore.with_lock(@deliveries_dir, event_id) do
+            record = Molecules::DeliveryRecordStore.load(@deliveries_dir, event_id)
+            if record.nil? || record.answer.to_s.empty?
+              raise ValidationError,
+                "no recoverable answer stored for event #{event_id.inspect}"
+            end
+
+            ref = Ace::Hitl::Providers::Ref.new(session: record.session, pane: record.pane)
+            deliver_locked(ref, record.answer, record, kind, label)
+          end
         end
 
         private
 
-        def deliver_with_bootstrap(ref, answer, record, kind, label, event_id)
+        def deliver_locked(ref, answer, record, kind, label)
+          if record.delivered?
+            return DeliverResult(ref: ref, state: :delivered)
+          end
+          if record.ambiguous_submission?
+            # The previous run may have already pushed this answer; resending
+            # could duplicate it, so report instead of acting.
+            record = record.append_event(
+              state: "failed",
+              detail: {action: "reconcile", outcome: "ambiguous",
+                       error: "previous run crashed after submitting; resolve manually"},
+              timestamp: now
+            )
+            persist(record)
+            return DeliverResult(ref: ref, state: :failed)
+          end
+          persist(record) if record.attempts.zero? && record.history.empty?
+
+          deliver_with_bootstrap(ref, answer, record, kind, label)
+        end
+
+        def deliver_with_bootstrap(ref, answer, record, kind, label)
+          outcome = probe_agent(ref, record, kind, label)
+          return outcome.result if outcome.terminal?
+
+          push_prompt(ref, answer, outcome.record)
+        end
+
+        # Probe the pane and bootstrap a missing agent. Returns a terminal
+        # outcome carrying the final DeliverResult, or the record to prompt.
+        def probe_agent(ref, record, kind, label)
           begin
             @executor.agent_get(ref.pane)
           rescue PaneNotFoundError => e
-            return terminal(ref, record, e, action: "probe")
+            return Outcome.terminal(terminal(ref, record, e, action: "probe"))
           rescue AgentNotFoundError
-            record, result = bootstrap(ref, record, kind, label, event_id)
-            return result if result
+            record, result = bootstrap(ref, record, kind, label)
+            return Outcome.terminal(result) if result
 
             begin
               @executor.agent_wait(
@@ -110,23 +161,34 @@ module Ace
                 timestamp: now
               )
               persist(record)
-              return DeliverResult(ref: ref, state: :retryable)
+              return Outcome.terminal(DeliverResult(ref: ref, state: :retryable))
             end
+            return Outcome.bootstrapped(record)
+          rescue ExecutorError => e
+            # Transient probe failure (socket/binary unavailable): the
+            # contract requires a result, not an exception.
+            record = record.append_event(
+              state: "retryable",
+              detail: {action: "probe", outcome: e.class.name, error: e.message},
+              timestamp: now
+            )
+            persist(record)
+            return Outcome.terminal(DeliverResult(ref: ref, state: :retryable))
           end
-
-          push_prompt(ref, answer, record)
+          Outcome.present(record)
         end
 
         # Bootstrap a missing agent. Returns [record, non-nil result] when
         # bootstrapping terminates the delivery, [record, nil] on success.
         # Bootstrap failures are terminal: an immediate retry cannot heal a
         # broken pane, so the failure is reported and persisted.
-        def bootstrap(ref, record, kind, label, event_id)
-          export = "export HERDR_SESSION=#{ref.session} HERDR_PANE=#{ref.pane}"
+        def bootstrap(ref, record, kind, label)
+          export = "export HERDR_SESSION=#{Shellwords.escape(ref.session)} " \
+            "HERDR_PANE=#{Shellwords.escape(ref.pane)}"
           begin
             @executor.pane_run(ref.pane, export)
             @executor.agent_start(
-              name: label || event_id, kind: kind || @default_agent_kind,
+              name: label || record.event_id, kind: kind || @default_agent_kind,
               pane: ref.pane, timeout_ms: @agent_start_timeout_ms
             )
           rescue ExecutorError => e
@@ -141,11 +203,18 @@ module Ace
           [record, nil]
         end
 
-        # Prompt with retry limits and fixed deterministic backoff
+        # Prompt with retry limits and fixed deterministic backoff. Each
+        # attempt is written ahead (outcome "submitting") so an interrupted
+        # run never silently duplicates the submission.
         def push_prompt(ref, answer, record)
           attempt = 0
           loop do
             attempt += 1
+            record = record.append_event(
+              detail: {action: "prompt", outcome: "submitting"},
+              timestamp: now
+            )
+            persist(record)
             begin
               @executor.agent_prompt(pane: ref.pane, text: answer)
               record = record.record_attempt(
@@ -179,6 +248,16 @@ module Ace
 
               @clock.call(backoff_for(attempt))
             end
+          end
+        end
+
+        # Fail closed when an existing record conflicts with this delivery
+        def validate_existing_record(record, ref, digest)
+          if record.answer_digest != digest || record.session != ref.session ||
+              record.pane != ref.pane
+            raise ValidationError,
+              "event #{record.event_id} was already used for a different " \
+              "answer or destination (idempotency conflict; fail closed)"
           end
         end
 
@@ -232,13 +311,6 @@ module Ace
           token
         end
 
-        def new_record(event_id, ref, digest)
-          Models::DeliveryRecord.new(
-            event_id: event_id, session: ref.session, pane: ref.pane,
-            answer_digest: digest
-          )
-        end
-
         def now
           Time.now.utc.iso8601
         end
@@ -246,6 +318,25 @@ module Ace
         # Contract result type from ace-hitl (spec 8wm.t.vrz §1.2)
         def DeliverResult(ref:, state:)
           Ace::Hitl::Providers::DeliverResult.new(ref: ref, state: state)
+        end
+
+        # Probe/bootstrap phase outcome for deliver_with_bootstrap
+        class Outcome
+          attr_reader :record, :result
+
+          def initialize(record:, result: nil, terminal: false, bootstrapped: false)
+            @record = record
+            @result = result
+            @terminal = terminal
+            @bootstrapped = bootstrapped
+          end
+
+          def self.present(record) = new(record: record)
+          def self.bootstrapped(record) = new(record: record, bootstrapped: true)
+          def self.terminal(result) = new(record: nil, result: result, terminal: true)
+
+          def terminal? = @terminal
+          def bootstrapped? = @bootstrapped
         end
       end
     end

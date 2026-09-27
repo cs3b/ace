@@ -117,6 +117,29 @@ module Ace
           assert_match(/--pane/, error.message)
         end
 
+        def test_dispatch_rejects_workspace_with_shell_metacharacters
+          error = assert_raises(ValidationError) do
+            @dispatcher.dispatch(
+              label: "a1", prompt: "x",
+              workspace_id: "ws-1; touch /tmp/pwned #", pane: "p3"
+            )
+          end
+
+          assert_match(/invalid characters/, error.message)
+          assert_empty @executor.calls_of(:pane_run)
+        end
+
+        def test_dispatch_rejects_pane_with_shell_metacharacters
+          error = assert_raises(ValidationError) do
+            @dispatcher.dispatch(
+              label: "a1", prompt: "x", workspace_id: "ws-1", pane: "p3; rm -rf /"
+            )
+          end
+
+          assert_match(/invalid characters/, error.message)
+          assert_empty @executor.calls_of(:pane_run)
+        end
+
         private
 
         def build_dispatcher
