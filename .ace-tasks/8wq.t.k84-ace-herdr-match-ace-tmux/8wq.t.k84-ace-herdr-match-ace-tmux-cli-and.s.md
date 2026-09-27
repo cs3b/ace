@@ -82,35 +82,32 @@ available through `ace-herdr`, backed by the native herdr capability
 ace-herdr list [--panes|--tabs|--workspaces] [--workspace ID] [--quiet]
 # {"panes":[{"id":"w1:p1","tab":"w1:t1","workspace":"w1","title":...},...]}
 
-ace-herdr send (--cmd TEXT | --msg TEXT...) [--key NAME...] --pane ID [--quiet]
+ace-herdr send [--cmd TEXT] [--msg TEXT...] [--key NAME...] --pane ID [--quiet]
+# At least one input required (keys-only valid); none = usage error
+# before any transport call.
 # {"pane":"w1:p3","sent":"cmd"} — agent pane: {"pane":...,"sent":"prompt"}
 #
-# Supported-input matrix (both pane kinds; violations = usage error BEFORE
-# any transport call):
-#   --cmd T            submit T as one command (exactly one submission);
-#                      optional trailing --key sent AFTER submission
-#                      (post-submission keystrokes, e.g. y/n confirmation)
-#   --msg a [-msg b]   raw text, concatenated in declaration order,
-#                      NO submission by itself
-#   --key K...         keystrokes; keys-only sequences are valid
-#                      (e.g. --key Esc); each Enter submits pending text
-#   callback form      --msg "..." --key Enter  (exactly one submission —
-#                      the guaranteed shape consumers rely on)
+# --- PLAIN PANE (raw input, delivered in DECLARATION ORDER —          ---
+# --- intentional, more expressive than ace-tmux's msgs-then-keys;    ---
+# --- documented divergence, not a parity claim)                      ---
+#   --cmd T          T + Enter (exactly one submission); trailing
+#                    --key sent AFTER submission (post-submission
+#                    keystrokes, e.g. y/n confirmation)
+#   --msg a --msg b  raw text, concatenated in order, NO submission
+#   --key K...       keystrokes; each Enter submits pending text
+#   guaranteed shapes (exactly one submission): --cmd alone; callback
+#   form --msg "..." --key Enter. Multi-Enter sequences submit per Enter.
 #
-# Plain pane: items are delivered in DECLARATION ORDER (intentional,
-# more expressive than ace-tmux's messages-then-keys batch — documented
-# divergence, not a parity claim). Submission count = number of Enter
-# keys; the exactly-once guarantee applies to --cmd alone and the
-# callback form, not to arbitrary multi-Enter sequences.
-#
-# Agent pane routing (prompt semantics, agent_blocked pre-send rejection):
-#   supported: --cmd T, or concatenated --msg texts, each as ONE agent
-#     prompt, with AT MOST one trailing --key Enter (dropped + reported:
-#     {"sent":"prompt","dropped_keys":["Enter"]} — the prompt submits
-#     itself); keys-only sequences go to agent send-keys (Esc, ctrl+c...).
+# --- AGENT PANE (prompt semantics; agent_blocked pre-send rejection) ---
+#   --cmd T, or concatenated --msg texts  → ONE agent prompt that
+#     submits itself — message-only input SUBMITS once on agent panes
+#     (intended divergence from plain panes)
+#   at most one trailing --key Enter → dropped + reported:
+#     {"sent":"prompt","dropped_keys":["Enter"]}
+#   --key-only sequences → agent send-keys (Esc, ctrl+c, ...)
 #   rejected before transport: keys interleaved between/after messages
-#     other than the single trailing Enter; multiple Enter keys;
-#     --cmd combined with --msg.
+#     other than the single trailing Enter; multiple Enters; --cmd with
+#     non-Enter keys; --cmd combined with --msg
 
 ace-herdr capture --pane ID [--lines N] [--source visible|recent]
 # raw pane text on stdout
@@ -131,9 +128,9 @@ ace-herdr --list-presets [workspaces|tabs]
 - `send --cmd` combined with `--msg`: usage error before any transport call (fail closed, nothing sent).
 
 **Edge Cases:**
-- `--msg` alone types text without submitting (no implicit Enter) — same as ace-tmux raw text.
+- `--msg` alone: types without submitting on a plain pane; submits once (prompt) on an agent pane — per the two rule sets above.
 - `--key`-only sequences valid on both pane kinds (plain: pane send-keys; agent: agent send-keys).
-- Multi-Enter sequences on a plain pane submit per Enter (intentional); on an agent pane they are rejected (agent routing supports only the single-prompt shapes).
+- Multi-Enter sequences: plain pane submits per Enter (intentional); agent pane rejects (single-prompt shapes only).
 - Mixed callback sequence on an agent pane: msgs → single prompt; trailing Enter dropped and reported (no double submission).
 - `capture` on an agent pane: `--source visible` shows the agent screen; text routing rules do not apply (read-only).
 - Empty workspace (`list --panes` with no panes): success with empty array, not an error (explicit empty state).

@@ -43,17 +43,24 @@ speculative operations):
 2. ensure named window/tab rooted at a path, with layout preset (idempotent)
 3. prepare pane (split when needed, stays alive after command exit)
 4. select/focus window/tab
-5. send: `send(pane:, command:, messages:, keys:)` — one normative
-   matrix for ALL adapters: `command` submits once (trailing keys =
-   post-submission keystrokes); `messages` concatenate in order with no
-   implicit submission; keys-only sequences valid; each Enter key
-   submits pending text; the guaranteed shapes are `command` alone and
-   the callback form `messages + single trailing Enter` (exactly one
-   submission). Agent-aware adapters (herdr) route text to agent-prompt
-   semantics: messages/command become ONE prompt, at most one trailing
-   Enter is dropped+reported, keys-only go to agent keys, and any other
-   interleaving is rejected before transport. Adapters without agent
-   awareness (tmux) deliver the same matrix as raw input.
+5. send: `send(pane:, command: nil, items: [])` where `items` is an
+   ORDERED list of `{message: String} | {key: String}` — the only shape
+   that preserves message/key interleaving. `command` is the submit-once
+   shape (`--cmd`). One normative matrix for ALL adapters:
+   - Plain-pane adapters deliver items in order: messages are raw text
+     (no implicit submission), keys are keystrokes, each Enter submits
+     pending text; trailing keys after `command` are post-submission
+     keystrokes. Guaranteed shapes: `command` alone and
+     `messages + single trailing Enter` (exactly one submission).
+   - Agent-aware adapters (herdr) map text to agent-prompt semantics:
+     `command` or the concatenated messages become ONE prompt that
+     submits itself (so message-only input DOES submit once on agent
+     panes — intended divergence from plain panes); at most one trailing
+     Enter is dropped+reported; keys-only sequences go to agent keys;
+     every other interleaving (keys between messages, multiple Enters,
+     `command` with non-Enter keys, `command` mixed with messages) is
+     rejected before any transport call.
+   - An invocation with no send content at all is a usage error on both.
 6. capture recent pane output (lines-bounded)
 7. wait: output pattern (timeout), agent readiness, or lifecycle condition
    — the full set ace-tmux consumers rely on today: `window-exists`,
@@ -81,14 +88,16 @@ runtime.context                        # => {in_runtime:, session:, window:, pan
 runtime.ensure_window(name:, root:, preset: nil)  # idempotent; returns target
 runtime.prepare_pane(window:)          # returns pane handle
 runtime.focus(window:)
-runtime.send(pane:, command: nil, messages: [], keys: [])
-                                       # the full send matrix incl. agent-aware
-                                       # routing and the callback form; the
-                                       # granular ops below are convenience
-                                       # equivalents of its common shapes
+runtime.send(pane:, command: nil, items: [])
+                                       # items: ORDERED {message:}|{key:}
+                                       # entries — preserves interleaving;
+                                       # the full send matrix incl. agent
+                                       # routing and the callback form.
+                                       # The granular ops below are
+                                       # convenience shapes of it.
 runtime.send_command(pane:, command:)  # == send(command:)
-runtime.send_text(pane:, text:)        # == send(messages: [text])
-runtime.send_keys(pane:, keys:)        # == send(keys:)
+runtime.send_text(pane:, text:)        # == send(items: [{message: text}])
+runtime.send_keys(pane:, keys:)        # == send(items: keys.map { {key: _1} })
 runtime.capture(pane:, lines: 40)      # => text
 runtime.wait_output(pane:, pattern:, timeout:)
 runtime.wait_agent(pane:, states:, timeout:)
@@ -101,7 +110,7 @@ Ace::Runtime.sanitize_name(name)       # shared naming policy
 
 **Error Handling:** `UnknownRuntimeError` (with available list), `TargetNotFoundError`, `RuntimeUnavailableError`, `SendRejectedError` (pre-send rejection, e.g. agent blocked — terminal), `SendStalledError` (submission accepted but the target did not start processing — OUTCOME UNCERTAIN, callers must not auto-resend), `WaitTimeoutError` (a wait exceeded its deadline) — all subclass one contract error. Timeout units at the contract level are SECONDS (adapters convert to native units).
 
-**Contract CLI:** the gem ships one thin agent-facing passthrough — `ace-runtime send (--cmd TEXT | --msg TEXT...) [--key NAME...] --pane TARGET` — resolving the configured runtime and delegating to `runtime.send` with exactly the matrix semantics defined there (plain-pane declaration order; agent-pane single-prompt shapes with single trailing Enter dropped+reported; keys-only valid; unsupported agent sequences rejected before transport). This is the runtime-neutral callback command (decision 2026-09-27, Captain: assign's Fork Callback Rule prescribes it instead of `ace-tmux send`). No other CLI surface. The contract test suite MUST include: the callback form (`--msg ... --key Enter`) submits exactly once on BOTH adapters.
+**Contract CLI:** the gem ships one thin agent-facing passthrough — `ace-runtime send [--cmd TEXT] [--msg TEXT...] [--key NAME...] --pane TARGET`, at least one input required (keys-only valid; none = usage error before transport) — resolving the configured runtime and delegating to `runtime.send` with the matrix semantics above (plain-pane ordered delivery; agent-pane single-prompt shapes). This is the runtime-neutral callback command (decision 2026-09-27, Captain: assign's Fork Callback Rule prescribes it instead of `ace-tmux send`). No other CLI surface. The contract test suite MUST include: the callback form (`--msg ... --key Enter`) submits exactly once on BOTH adapters; interleaved items (`msg, key, msg`) deliver distinctly on plain panes and are rejected before any send on agent panes.
 
 **Edge Cases:** `detect` inside neither runtime returns nil (callers fall back headless, matching assign's `auto` today); ensure_window with an existing name is idempotent by name.
 
