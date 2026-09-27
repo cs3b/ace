@@ -1,5 +1,12 @@
 # frozen_string_literal: true
 
+# Resolve monorepo dependencies from workspace sources, not installed gems
+# (the installed ace-hitl may lag the in-repo version).
+%w[ace-hitl ace-support-config ace-support-core].each do |pkg|
+  lib = File.expand_path("../../#{pkg}/lib", __dir__)
+  $LOAD_PATH.unshift(lib) if Dir.exist?(lib)
+end
+
 require "ace/herdr"
 require "ace/hitl"
 
@@ -89,8 +96,8 @@ module HerdrTestHelper
     saved.each { |k, v| ENV[k] = v }
   end
 
-  # Build an ace-hitl Ref from session/pane
-  def make_ref(session = "ws-1", pane = "%5")
+  # Build an ace-hitl Ref from session/pane (values must satisfy Ref::TOKEN_PATTERN)
+  def make_ref(session = "ws-1", pane = "p5")
     Ace::Hitl::Providers::Ref.new(session: session, pane: pane)
   end
 end

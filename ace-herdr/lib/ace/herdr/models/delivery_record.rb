@@ -60,17 +60,30 @@ module Ace
           state == "delivered"
         end
 
+        # Return a copy with a history entry appended (no attempt counted);
+        # used for non-prompt events such as bootstrap actions
+        def append_event(state: nil, detail:, timestamp:)
+          self.class.new(
+            event_id: event_id, session: session, pane: pane,
+            answer_digest: answer_digest, state: state || self.state,
+            attempts: attempts,
+            history: history + [detail.merge("at" => timestamp)],
+            created_at: created_at || timestamp, updated_at: timestamp
+          )
+        end
+
         # Return a copy advanced to the next attempt with a history entry
         # @param state [String] resulting state after the attempt
         # @param detail [Hash] attempt detail (action, outcome, error)
         # @param timestamp [String] RFC 3339 timestamp of the transition
         def record_attempt(state:, detail:, timestamp:)
+          appended = append_event(state: state, detail: detail, timestamp: timestamp)
           self.class.new(
             event_id: event_id, session: session, pane: pane,
             answer_digest: answer_digest, state: state,
             attempts: attempts + 1,
-            history: history + [detail.merge("at" => timestamp)],
-            created_at: created_at || timestamp, updated_at: timestamp
+            history: appended.history,
+            created_at: appended.created_at, updated_at: appended.updated_at
           )
         end
       end
