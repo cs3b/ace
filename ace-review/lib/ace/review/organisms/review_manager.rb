@@ -52,6 +52,10 @@ module Ace
           content_result = extract_review_content(config_result[:config], options)
           return content_result unless content_result[:success]
 
+          # A no-op round (empty delta, or a fully review-exempt delta) is
+          # recorded without composing prompts or calling any model.
+          return save_noop_round(session_dir, options, config_result[:config], content_result) if content_result[:noop]
+
           # Step 4: Compose prompts via ace-bundle
           prompt_result = compose_review_prompt(
             config_result[:config],
@@ -194,6 +198,10 @@ module Ace
 
         # Step 2: Extract subject and context
         def extract_review_content(config, options)
+          if options.delta_requested? && !options.pr_review?
+            return {success: false, error: "--delta requires --pr <identifier>"}
+          end
+
           # Handle PR mode
           if options.pr_review?
             return extract_pr_content(options.pr, config, options)
@@ -274,6 +282,8 @@ module Ace
 
         # Extract PR content (diff and metadata)
         def extract_pr_content(pr_identifier, config, options)
+          return extract_pr_delta_content(pr_identifier, config, options) if options.delta_requested?
+
           # Fetch PR diff and metadata
           fetch_options = options.gh_timeout ? {timeout: options.gh_timeout} : {}
           result = Ace::Review::Molecules::GhPrFetcher.fetch_pr(pr_identifier, fetch_options)
@@ -339,6 +349,152 @@ module Ace
             pr_metadata: result[:metadata],
             diff_manifest: scoped[:manifest]
           }
+        end
+
+        # Extract PR content for a delta round: only the diff between a reference
+        # head (explicit, or auto-resolved from the most recent prior session of
+        # this PR) and the current head. Fails closed on missing sessions, rewritten
+        # history, or oversized deltas. An empty delta returns a no-op round marker.
+        def extract_pr_delta_content(pr_identifier, config, options)
+          fetch_options = options.gh_timeout ? {timeout: options.gh_timeout} : {}
+          metadata_result = Molecules::GhPrFetcher.fetch_metadata(pr_identifier, fetch_options)
+          return {success: false, error: metadata_result[:error]} unless metadata_result[:success]
+
+          metadata = metadata_result[:metadata]
+          unless %w[headRefOid baseRefOid].all? { |key| metadata[key].to_s.match?(/\A[0-9a-f]{40}\z/) }
+            return {success: false, error: "Delta review requires exact head/base SHAs"}
+          end
+
+          inventory = Molecules::GhPrFetcher.fetch_file_inventory(metadata, fetch_options)
+          return {success: false, error: inventory[:error]} unless inventory[:success]
+          metadata["files"] = inventory[:files]
+
+          delta = Molecules::DeltaResolver.resolve(options.delta, metadata, project_root: @project_root || Dir.pwd)
+          return {success: false, error: delta[:error]} unless delta[:success]
+
+          options.pr_metadata = metadata
+          # Carry the reference session's findings forward as evidence; an explicit
+          # --evidence-session still merges on top.
+          if delta[:session_dir]
+            options.evidence_sessions = [delta[:session_dir], *options.evidence_sessions].uniq
+          end
+
+          manifest = {
+            head_sha: metadata["headRefOid"],
+            delta_reference_head: delta[:reference_head],
+            delta_base_head: metadata["headRefOid"],
+            delta_reference_source: delta[:source].to_s,
+            delta_scope: "delta since #{delta[:reference_head]}"
+          }
+
+          if delta[:diff].empty?
+            return {success: true, noop: true, noop_reason: :empty_delta,
+                    subject: "", context: nil, cache_dir: options.session_dir || create_cache_directory,
+                    pr_metadata: metadata, delta: delta, diff_manifest: manifest}
+          end
+
+          scoped = Molecules::DiffScope.select(delta[:diff], config[:file_patterns],
+            groups: config[:file_pattern_groups])
+          return scoped unless scoped[:success]
+
+          # The selected delta alone can still exceed the whole-prompt ceiling.
+          diff_tokens = (Atoms::TokenEstimator.estimate(scoped[:diff]) * Atoms::PromptBudget::ESTIMATE_SAFETY_FACTOR).ceil
+          if diff_tokens > Atoms::PromptBudget::DEFAULT_INPUT_LIMIT
+            return {success: false, error: "Review packet exceeds budget: selected delta alone ~#{diff_tokens} tokens exceeds #{Atoms::PromptBudget::DEFAULT_INPUT_LIMIT}; review the delta in coherent module/lens scopes"}
+          end
+
+          {
+            success: true,
+            subject: scoped[:diff],
+            context: format_pr_metadata(metadata),
+            cache_dir: options.session_dir || create_cache_directory,
+            pr_metadata: metadata,
+            delta: delta,
+            diff_manifest: manifest.merge(scoped[:manifest])
+          }
+        end
+
+        # Record a no-op round (empty or fully review-exempt delta) as a complete
+        # session: metadata + report, zero model calls. Prior findings are carried
+        # forward as evidence; unreadable evidence is stated, never pretended.
+        def save_noop_round(session_dir, options, config, content)
+          review_data = {
+            preset: options.preset,
+            review_role: config[:review_role],
+            pr_url: options.pr_metadata&.dig("url"),
+            evidence_sessions: options.evidence_sessions,
+            model: nil,
+            context: content[:context],
+            subject: content[:subject],
+            diff_manifest: content[:diff_manifest],
+            noop: true,
+            noop_reason: content[:noop_reason],
+            delta: content[:delta]
+          }
+
+          metadata = create_metadata(review_data).merge(
+            "noop_round" => true,
+            "noop_reason" => content[:noop_reason].to_s,
+            "delta" => content[:delta] ? {
+              "reference_head" => content[:delta][:reference_head],
+              "reference_source" => content[:delta][:source].to_s
+            } : nil
+          )
+          File.write(File.join(session_dir, "metadata.yml"), YAML.dump(metadata))
+
+          File.write(File.join(session_dir, "review.md"), render_noop_report(options, content))
+
+          {
+            success: true,
+            session_dir: session_dir,
+            output_file: File.join(session_dir, "review.md"),
+            noop: true,
+            message: "No-op review round recorded in #{session_dir} (no model calls)"
+          }
+        end
+
+        def render_noop_report(options, content)
+          delta = content[:delta]
+          lines = []
+          lines << "---"
+          lines << "noop_round: true"
+          lines << "noop_reason: #{content[:noop_reason]}"
+          if delta
+            lines << "delta_reference_head: #{delta[:reference_head]}"
+            lines << "delta_reference_source: #{delta[:source]}"
+          end
+          lines << "pr_url: #{options.pr_metadata&.dig("url")}"
+          lines << "timestamp: #{Time.now.iso8601}"
+          lines << "---"
+          lines << ""
+          lines << "# No-op review round"
+          lines << ""
+          if content[:noop_reason] == :empty_delta && delta
+            lines << "Scope: delta since `#{delta[:reference_head]}` — the delta is empty; there is no change to review."
+          else
+            lines << "Scope: #{content[:noop_scope] || "no-op"}."
+          end
+          lines << ""
+          lines << "Verdict: no new findings. This round is clean only if no carried-forward Critical/High finding remains unresolved."
+          lines << ""
+          if Array(options.evidence_sessions).any?
+            evidence = Molecules::ReviewEvidence.build(session_dirs: options.evidence_sessions,
+              pr_metadata: options.pr_metadata || {})
+            if evidence[:success]
+              lines << "## Carried-forward findings"
+              lines << ""
+              lines << evidence[:content]
+            else
+              lines << "## Evidence not carried forward"
+              lines << ""
+              lines << "Prior session evidence could not be read (#{evidence[:error]}); this round did NOT carry findings forward."
+            end
+          else
+            lines << "## Evidence not carried forward"
+            lines << ""
+            lines << "No prior session was available to carry findings forward."
+          end
+          lines.join("\n")
         end
 
         # Format PR metadata for context
