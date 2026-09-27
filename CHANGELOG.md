@@ -27,7 +27,9 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
-- **ace-review (unreleased, 8wq.t.1qb)**: Cheaper review rounds and honest usage. Delta rounds (`ace-review --pr <id> --delta [head>`) scope a round to changes since a prior reviewed head with carried-forward evidence, empty and fully review-exempt deltas (`exempt_paths` config) complete as no-op sessions with zero model calls, the unwired subject chunk strategies are removed in favor of the explicit oversized-diff refusal (ADR-024), and session usage records reflect measured provider tokens instead of estimates.
+- **ace-review v0.56.0** (8wq.t.1qb): Cheaper review rounds and honest usage. Delta rounds (`ace-review --pr <id> --delta [head>`) scope a round to changes since a prior reviewed head with carried-forward evidence, empty and fully review-exempt deltas (`exempt_paths` config) complete as no-op sessions with zero model calls, the unwired subject chunk strategies are removed in favor of the explicit oversized-diff refusal (ADR-024), and session usage records reflect measured provider tokens instead of estimates.
+- **ace-llm v0.41.0**: Derives the top-level `usage` record from provider metadata token counts; absent counts stay absent and measured zero cache reads are preserved.
+- **ace-llm-providers-cli v0.35.0**: Reports measured per-model pi token usage (input/output/cached/total) with an explicit `usage_status: unavailable` state instead of character-based estimates.
 
 - **ace-bundle v0.44.0**: Preserves source snapshots and exact bytes in review context.
 
