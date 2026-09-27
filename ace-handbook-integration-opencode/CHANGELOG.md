@@ -7,7 +7,7 @@ All notable changes to ace-handbook-integration-opencode will be documented in t
 ## [0.3.11] - 2026-09-27
 
 ### Technical
-- Bump the ace-handbook-integration-pi dependency floor to 0.4.0.
+- Raised the `ace-handbook` dependency floor to `~> 0.32`.
 
 ## [0.3.10] - 2026-09-02
 
