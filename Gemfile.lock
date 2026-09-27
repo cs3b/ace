@@ -159,6 +159,15 @@ PATH
       ace-support-nav (~> 0.28)
 
 PATH
+  remote: ace-herdr
+  specs:
+    ace-herdr (0.1.0)
+      ace-hitl (~> 0.10)
+      ace-support-cli (~> 0.6)
+      ace-support-config (~> 0.18)
+      ace-support-core (~> 0.31)
+
+PATH
   remote: ace-hitl-hermes
   specs:
     ace-hitl-hermes (0.1.0)
@@ -535,6 +544,7 @@ DEPENDENCIES
   ace-handbook-integration-gemini!
   ace-handbook-integration-opencode!
   ace-handbook-integration-pi!
+  ace-herdr!
   ace-hitl!
   ace-hitl-hermes!
   ace-idea!
