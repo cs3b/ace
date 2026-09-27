@@ -61,9 +61,88 @@ module Ace
         end
 
         # Create a tab in a workspace with a label and optional cwd
-        def tab_create(workspace_id:, label:, cwd: nil)
+        def tab_create(workspace_id:, label:, cwd: nil, focus: nil)
           cmd = [@binary, "tab", "create", "--workspace", workspace_id, "--label", label]
           cmd += ["--cwd", cwd] if cwd
+          cmd += ["--focus"] if focus
+          run!(cmd)
+        end
+
+        # --- terminal-control surface (spec 8wq.t.k84) -----------------------
+
+        # List workspaces (tmux sessions analogue)
+        def workspace_list
+          run!([@binary, "workspace", "list"])
+        end
+
+        # List tabs, optionally scoped to a workspace (tmux windows analogue)
+        def tab_list(workspace_id: nil)
+          cmd = [@binary, "tab", "list"]
+          cmd += ["--workspace", workspace_id] if workspace_id
+          run!(cmd)
+        end
+
+        # List panes, optionally scoped to a workspace
+        def pane_list(workspace_id: nil)
+          cmd = [@binary, "pane", "list"]
+          cmd += ["--workspace", workspace_id] if workspace_id
+          run!(cmd)
+        end
+
+        # Send literal text to a pane without submitting
+        def pane_send_text(pane, text)
+          run!([@binary, "pane", "send-text", pane, text])
+        end
+
+        # Send named keys to a pane, in order
+        def pane_send_keys(pane, keys)
+          run!([@binary, "pane", "send-keys", pane, *keys])
+        end
+
+        # Send named keys to the agent in a pane, in order
+        def agent_send_keys(pane, keys)
+          run!([@binary, "agent", "send-keys", pane, *keys])
+        end
+
+        # Read pane terminal output as raw text (capture). The raw runner
+        # keeps stdout verbatim — no trimming of leading/trailing blank lines
+        def pane_read(pane, source: "recent", lines: nil)
+          cmd = [@binary, "pane", "read", pane, "--source", source]
+          cmd += ["--lines", lines.to_s] if lines
+          run_raw(cmd)
+        end
+
+        # Wait for pane output containing a literal pattern. herdr checks
+        # existing content immediately, then polls; timeout fails closed.
+        def pane_wait_output(pane, pattern:, source: "recent", lines: nil, timeout_ms: nil)
+          cmd = [@binary, "pane", "wait-output", pane, "--match", pattern, "--source", source]
+          cmd += ["--lines", lines.to_s] if lines
+          cmd += ["--timeout", timeout_ms.to_s] if timeout_ms
+          run!(cmd)
+        rescue AgentNotReadyError => e
+          raise WaitTimeoutError, e.message
+        end
+
+        # Create a workspace with a label and optional cwd/focus
+        def workspace_create(label:, cwd: nil, focus: nil)
+          cmd = [@binary, "workspace", "create", "--label", label]
+          cmd += ["--cwd", cwd] if cwd
+          cmd += ["--focus"] if focus
+          run!(cmd)
+        end
+
+        # Close a tab (used to drop the native initial tab of a created
+        # workspace once the preset's declared tabs exist)
+        def tab_close(tab_id)
+          run!([@binary, "tab", "close", tab_id])
+        end
+
+        # Split a pane (direction: right|down); herdr reports the new pane
+        def pane_split(pane:, direction:, cwd: nil, ratio: nil, focus: nil)
+          cmd = [@binary, "pane", "split", "--pane", pane, "--direction", direction]
+          cmd += ["--cwd", cwd] if cwd
+          cmd += ["--ratio", ratio.to_s] if ratio
+          cmd += ["--focus"] if focus
           run!(cmd)
         end
 
@@ -82,6 +161,15 @@ module Ace
           result
         end
 
+        # Like run!, but stdout is preserved verbatim (no strip) — for
+        # commands whose output is content (pane read/capture)
+        def run_raw(cmd)
+          result = run_raw_stdout(cmd)
+          raise classify(result, cmd) unless result.success?
+
+          result
+        end
+
         def run(cmd)
           stdout, stderr, status = Open3.capture3(*cmd)
           ExecutionResult.new(
@@ -92,22 +180,39 @@ module Ace
           raise ExecutorUnavailableError, "herdr CLI not found on PATH: #{@binary}"
         end
 
+        def run_raw_stdout(cmd)
+          stdout, stderr, status = Open3.capture3(*cmd)
+          ExecutionResult.new(
+            stdout: stdout, stderr: stderr.strip,
+            success: status.success?, exit_code: status.exitstatus || -1
+          )
+        rescue Errno::ENOENT
+          raise ExecutorUnavailableError, "herdr CLI not found on PATH: #{@binary}"
+        end
+
         # Map a failed result to a typed error from herdr's error codes
-        # (JSON: {"error":{"code":...,"message":...}})
+        # (JSON: {"error":{"code":...,"message":...}}). The native machine
+        # code is kept in the message so CLI failures carry it.
         def classify(result, cmd)
           code, message = error_code(result)
           case code
-          when "agent_blocked" then AgentBlockedError.new(message)
-          when "agent_prompt_stalled" then AgentNotReadyError.new(message)
-          when "pane_not_found" then PaneNotFoundError.new(message)
-          when "agent_not_found" then AgentNotFoundError.new(message)
-          when "timeout" then AgentNotReadyError.new(message)
+          when "agent_blocked" then AgentBlockedError.new(tag_code(code, message))
+          when "agent_prompt_stalled" then AgentNotReadyError.new(tag_code(code, message))
+          when "pane_not_found" then PaneNotFoundError.new(tag_code(code, message))
+          when "agent_not_found" then AgentNotFoundError.new(tag_code(code, message))
+          when "tab_not_found" then TabNotFoundError.new(tag_code(code, message))
+          when "workspace_not_found" then WorkspaceNotFoundError.new(tag_code(code, message))
+          when "timeout" then AgentNotReadyError.new(tag_code(code, message))
           else
             CommandError.new(
               "herdr command failed (exit #{result.exit_code}): #{cmd.join(" ")} " \
               "#{message || result.stderr}".strip
             )
           end
+        end
+
+        def tag_code(code, message)
+          "#{code}: #{message}"
         end
 
         def error_code(result)
