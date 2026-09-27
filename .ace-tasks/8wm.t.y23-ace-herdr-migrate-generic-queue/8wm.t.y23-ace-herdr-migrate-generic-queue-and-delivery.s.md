@@ -7,6 +7,7 @@ estimate:
 dependencies: [8wm.t.vs0]
 needs_review: false
 tags: [ace-herdr, migration, queue, delivery, lab-config, gad]
+position: 6o0003
 ---
 
 # ace-herdr: migrate generic queue and delivery logic from lab-config

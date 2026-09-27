@@ -6,7 +6,9 @@ created_at: "2026-09-20 21:03:46"
 estimate: 
 dependencies: []
 tags: [handbook, nav, overrides, polish]
+position: 6o000e
 ---
+
 # Clarify guide-override discovery wording and the priority-5 source phrasing in manage-overrides
 
 Follow-up to 8wg.t.tjv (delivered via W669/PR #24): the independent

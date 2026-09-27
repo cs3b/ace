@@ -4,9 +4,10 @@ status: pending
 priority: high
 created_at: "2026-09-23 21:11:12"
 estimate: TBD
-dependencies: [8wm.t.vs0, 8wm.t.vs1]
+dependencies: [8wm.t.vs0, 8wm.t.vs1, 8wq.t.34i]
 needs_review: false
 tags: [ace-hitl, integration, lab, hermes]
+position: 6o0005
 ---
 
 # Integration: provider=lab uses A2 push delivery + A3 folder contract (single source-of-truth spec)

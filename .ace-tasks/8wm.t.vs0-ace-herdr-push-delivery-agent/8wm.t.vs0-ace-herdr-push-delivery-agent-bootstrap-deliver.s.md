@@ -7,6 +7,7 @@ estimate: TBD
 dependencies: [8wm.t.vrz]
 needs_review: false
 tags: [ace-herdr, hitl, delivery, bootstrap]
+position: 6o0000
 ---
 
 # ace-herdr: push delivery + agent bootstrap (deliver -> prompt <pane>)

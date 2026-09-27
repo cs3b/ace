@@ -7,6 +7,7 @@ estimate: TBD
 dependencies: [8wm.t.vs2]
 needs_review: false
 tags: [ace-hitl, pilot, release, rubygems]
+position: 6o0007
 ---
 
 # Pilot: next ACE release exclusively via ace-hitl ask + tested publisher (OTP as HITL answer)

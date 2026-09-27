@@ -6,7 +6,7 @@ created_at: "2026-09-27 01:15:41"
 estimate: TBD
 dependencies: []
 tags: [ace-lab, adresowanie]
-position: 6o0004
+position: 6o000a
 ---
 
 # ace-lab adresowanie po ID

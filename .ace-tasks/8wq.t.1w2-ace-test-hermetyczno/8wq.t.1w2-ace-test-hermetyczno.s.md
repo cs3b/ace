@@ -6,7 +6,7 @@ created_at: "2026-09-27 01:15:38"
 estimate: TBD
 dependencies: []
 tags: [ace-test, hermetyczność]
-position: 6o0003
+position: 6o0009
 ---
 
 # ace-test hermetyczność

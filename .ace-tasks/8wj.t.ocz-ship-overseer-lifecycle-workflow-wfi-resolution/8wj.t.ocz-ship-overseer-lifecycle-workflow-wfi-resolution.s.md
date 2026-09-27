@@ -1,6 +1,6 @@
 ---
 id: 8wj.t.ocz
-title: Ship overseer lifecycle workflow so wfi://overseer resolves for gem consumers
+title: "Ship overseer lifecycle workflow so wfi://overseer resolves for gem consumers"
 status: pending
 priority: medium
 created_at: "2026-09-20 16:15:48"
@@ -8,6 +8,7 @@ estimate: medium
 dependencies: []
 tags: [ace-overseer, workflow-instructions, nav, packaging]
 needs_review: false
+position: 6o000c
 ---
 
 # Ship overseer lifecycle workflow so wfi://overseer resolves for gem consumers

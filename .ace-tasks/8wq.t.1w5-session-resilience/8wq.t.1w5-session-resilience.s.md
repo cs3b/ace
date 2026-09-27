@@ -6,7 +6,7 @@ created_at: "2026-09-27 01:15:43"
 estimate: TBD
 dependencies: []
 tags: [session, resilience]
-position: 6o0005
+position: 6o000b
 ---
 
 # session resilience

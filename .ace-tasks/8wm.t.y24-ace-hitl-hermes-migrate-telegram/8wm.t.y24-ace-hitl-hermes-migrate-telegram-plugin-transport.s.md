@@ -7,6 +7,7 @@ estimate:
 dependencies: [8wm.t.vs1]
 needs_review: false
 tags: [ace-hitl-hermes, migration, telegram, plugin, lab-config, gad]
+position: 6o0008
 ---
 
 # ace-hitl-hermes: migrate Telegram plugin transport logic from lab-config
