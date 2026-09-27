@@ -17,6 +17,228 @@ module Ace
           )
         end
 
+        # agent_get raising agent_not_found proves a plain pane
+        def plain_control
+          executor = HerdrTestHelper::FakeExecutor.new(outcomes: {
+            agent_get: Ace::Herdr::AgentNotFoundError.new("agent_not_found: no agent")
+          })
+          [ControlSurface.new(executor: executor), executor]
+        end
+
+        def tokens_from(*pairs)
+          pairs.map { |type, value| {type: type, value: value} }
+        end
+
+        # --- send: plain pane --------------------------------------------------
+
+        def test_plain_cmd_submits_via_pane_run
+          control, executor = plain_control
+
+          result = control.send_input(pane: "p1", tokens: tokens_from([:cmd, "ls -la"]))
+
+          assert_equal({pane: "p1", sent: "cmd"}, result)
+          assert_equal({pane: "p1", command: "ls -la"}, executor.calls_of(:pane_run).first[:args])
+          assert_empty executor.calls_of(:pane_send_keys)
+        end
+
+        def test_plain_cmd_with_trailing_keys_sends_keys_after_submission
+          control, executor = plain_control
+
+          result = control.send_input(pane: "p1", tokens: tokens_from([:cmd, "y"], [:key, "enter"]))
+
+          assert_equal({pane: "p1", sent: "cmd"}, result)
+          assert_equal({pane: "p1", keys: ["enter"]}, executor.calls_of(:pane_send_keys).first[:args])
+        end
+
+        def test_plain_msgs_type_without_submitting
+          control, executor = plain_control
+
+          result = control.send_input(pane: "p1", tokens: tokens_from([:msg, "line one"], [:msg, "line two"]))
+
+          assert_equal({pane: "p1", sent: "text"}, result)
+          assert_equal 2, executor.calls_of(:pane_send_text).length
+          assert_empty executor.calls_of(:pane_send_keys)
+        end
+
+        def test_plain_interleaved_msgs_and_keys_preserve_declaration_order
+          control, executor = plain_control
+          tokens = tokens_from([:msg, "a"], [:key, "esc"], [:msg, "b"], [:key, "enter"])
+
+          control.send_input(pane: "p1", tokens: tokens)
+
+          assert_equal(
+            %i[pane_send_text pane_send_keys pane_send_text pane_send_keys],
+            executor.calls.map { |call| call[:operation] }.reject { |op| op == :agent_get }
+          )
+        end
+
+        def test_plain_keys_only_sends_each_key
+          control, executor = plain_control
+
+          result = control.send_input(pane: "p1", tokens: tokens_from([:key, "esc"], [:key, "enter"]))
+
+          assert_equal({pane: "p1", sent: "keys"}, result)
+          assert_equal(
+            [{pane: "p1", keys: ["esc"]}, {pane: "p1", keys: ["enter"]}],
+            executor.calls_of(:pane_send_keys).map { |call| call[:args] }
+          )
+        end
+
+        def test_plain_multiple_enters_submit_per_enter
+          control, _executor = plain_control
+
+          result = control.send_input(pane: "p1", tokens: tokens_from([:msg, "a"], [:key, "enter"], [:msg, "b"], [:key, "enter"]))
+
+          assert_equal({pane: "p1", sent: "text"}, result)
+        end
+
+        # --- send: rejected shapes fail before any transport -------------------
+
+        def test_empty_input_rejected_before_transport
+          control, executor = plain_control
+
+          error = assert_raises(ValidationError) { control.send_input(pane: "p1", tokens: []) }
+
+          assert_match(/at least one/, error.message)
+          assert_empty executor.calls
+        end
+
+        def test_blank_token_rejected_before_transport
+          control, executor = plain_control
+
+          assert_raises(ValidationError) { control.send_input(pane: "p1", tokens: tokens_from([:cmd, "   "])) }
+
+          assert_empty executor.calls
+        end
+
+        def test_cmd_with_msg_rejected_before_transport
+          control, executor = plain_control
+
+          error = assert_raises(ValidationError) do
+            control.send_input(pane: "p1", tokens: tokens_from([:cmd, "ls"], [:msg, "x"]))
+          end
+
+          assert_match(/either --cmd or --msg/, error.message)
+          assert_empty executor.calls
+        end
+
+        def test_double_cmd_rejected_before_transport
+          control, executor = plain_control
+
+          assert_raises(ValidationError) do
+            control.send_input(pane: "p1", tokens: tokens_from([:cmd, "a"], [:cmd, "b"]))
+          end
+
+          assert_empty executor.calls
+        end
+
+        def test_key_before_cmd_rejected_before_transport
+          control, executor = plain_control
+
+          error = assert_raises(ValidationError) do
+            control.send_input(pane: "p1", tokens: tokens_from([:key, "esc"], [:cmd, "run"]))
+          end
+
+          assert_match(/after --cmd/, error.message)
+          assert_empty executor.calls
+        end
+
+        # --- send: agent pane ---------------------------------------------------
+
+        def test_agent_cmd_becomes_one_self_submitting_prompt
+          result = @control.send_input(pane: "p1", tokens: tokens_from([:cmd, "review it"]))
+
+          assert_equal({pane: "p1", sent: "prompt"}, result)
+          assert_equal(
+            {pane: "p1", text: "review it"},
+            @executor.calls_of(:agent_prompt).first[:args]
+          )
+        end
+
+        def test_agent_msgs_become_one_newline_joined_prompt
+          result = @control.send_input(pane: "p1", tokens: tokens_from([:msg, "line one"], [:msg, "line two"]))
+
+          assert_equal({pane: "p1", sent: "prompt"}, result)
+          assert_equal({pane: "p1", text: "line one\nline two"}, @executor.calls_of(:agent_prompt).first[:args])
+        end
+
+        def test_agent_trailing_enter_dropped_and_reported
+          result = @control.send_input(pane: "p1", tokens: tokens_from([:msg, "hello"], [:key, "Enter"]))
+
+          assert_equal({pane: "p1", sent: "prompt", dropped_keys: ["Enter"]}, result)
+          assert_equal 1, @executor.calls_of(:agent_prompt).length
+          assert_empty @executor.calls_of(:agent_send_keys)
+        end
+
+        def test_agent_cmd_with_trailing_enter_dropped_and_reported
+          result = @control.send_input(pane: "p1", tokens: tokens_from([:cmd, "go"], [:key, "enter"]))
+
+          assert_equal({pane: "p1", sent: "prompt", dropped_keys: ["Enter"]}, result)
+        end
+
+        def test_agent_keys_only_route_to_agent_transport
+          result = @control.send_input(pane: "p1", tokens: tokens_from([:key, "esc"], [:key, "ctrl+c"]))
+
+          assert_equal({pane: "p1", sent: "keys"}, result)
+          assert_equal({pane: "p1", keys: %w[esc ctrl+c]}, @executor.calls_of(:agent_send_keys).first[:args])
+        end
+
+        def test_agent_cmd_with_non_enter_key_rejected_before_transport
+          error = assert_raises(ValidationError) do
+            @control.send_input(pane: "p1", tokens: tokens_from([:cmd, "go"], [:key, "esc"]))
+          end
+
+          assert_match(/at most one trailing/, error.message)
+          assert_empty @executor.calls_of(:agent_prompt)
+        end
+
+        def test_agent_msgs_with_non_enter_key_rejected_before_transport
+          assert_raises(ValidationError) do
+            @control.send_input(pane: "p1", tokens: tokens_from([:msg, "hello"], [:key, "esc"]))
+          end
+
+          assert_empty @executor.calls_of(:agent_prompt)
+        end
+
+        def test_agent_enter_between_msgs_rejected
+          error = assert_raises(ValidationError) do
+            @control.send_input(pane: "p1", tokens: tokens_from([:msg, "a"], [:key, "Enter"], [:msg, "b"]))
+          end
+
+          assert_match(/must trail the text/, error.message)
+          assert_empty @executor.calls_of(:agent_prompt)
+        end
+
+        def test_agent_multiple_enters_rejected
+          assert_raises(ValidationError) do
+            @control.send_input(pane: "p1", tokens: tokens_from([:key, "enter"], [:key, "enter"]))
+          end
+
+          assert_empty @executor.calls_of(:agent_send_keys)
+        end
+
+        def test_agent_blocked_propagates_from_prompt
+          @executor = HerdrTestHelper::FakeExecutor.new(outcomes: {
+            agent_prompt: Ace::Herdr::AgentBlockedError.new("agent_blocked: busy")
+          })
+          @control = ControlSurface.new(executor: @executor)
+
+          assert_raises(AgentBlockedError) do
+            @control.send_input(pane: "p1", tokens: tokens_from([:cmd, "go"]))
+          end
+        end
+
+        def test_probe_failure_other_than_missing_agent_propagates
+          @executor = HerdrTestHelper::FakeExecutor.new(outcomes: {
+            agent_get: Ace::Herdr::CommandError.new("herdr command failed (exit 1)")
+          })
+          @control = ControlSurface.new(executor: @executor)
+
+          assert_raises(CommandError) do
+            @control.send_input(pane: "p1", tokens: tokens_from([:cmd, "go"]))
+          end
+        end
+
         # --- list -----------------------------------------------------------
 
         def test_list_panes_normalizes_native_rows

@@ -8,6 +8,7 @@ require_relative "cli/commands/dispatch"
 require_relative "cli/commands/wait"
 require_relative "cli/commands/close"
 require_relative "cli/commands/list"
+require_relative "cli/commands/send"
 
 module Ace
   module Herdr
@@ -22,6 +23,7 @@ module Ace
         ["deliver", "Push an answer to an agent pane (ace-hitl delivery contract)"],
         ["dispatch", "Start an agent in one command: tab + agent + prompt"],
         ["list", "List live panes, tabs, or workspaces as one JSON line"],
+        ["send", "Send a command, raw text, or named keys to a pane"],
         ["wait", "Wait for an agent to reach a state"],
         ["close", "Rename and/or close a finished agent pane"]
       ].freeze
@@ -31,6 +33,8 @@ module Ace
         "echo 'the answer' | ace-herdr deliver --pane p5",
         "ace-herdr dispatch --label 8wm.t.vs0 --kind pi --prompt-file prompt.md",
         "ace-herdr list --workspace w1",
+        "ace-herdr send --pane p5 --cmd 'bundle exec rake test'",
+        "ace-herdr send --pane p5 --msg 'continue' --key Enter",
         "ace-herdr wait --pane p5 --until done --timeout 120",
         "ace-herdr close --pane p5 --rename done"
       ].freeze
@@ -47,6 +51,7 @@ module Ace
       register "deliver", CLI::Commands::Deliver.new
       register "dispatch", CLI::Commands::Dispatch.new
       register "list", CLI::Commands::List.new
+      register "send", CLI::Commands::Send.new
       register "wait", CLI::Commands::Wait.new
       register "close", CLI::Commands::Close.new
 
