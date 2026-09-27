@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "shellwords"
+
 module Ace
   module Herdr
     module Organisms
@@ -11,9 +13,34 @@ module Ace
       class ControlSurface
         DEFAULT_LINES = 40
         ENTER_KEY = /\Aenter\z/i
+        # Preset split directions: herdr-native right/down plus the tmux-ish
+        # horizontal/vertical aliases
+        DIRECTIONS = {
+          "right" => "right", "down" => "down",
+          "horizontal" => "right", "vertical" => "down"
+        }.freeze
+        WORKSPACE_KEYS = %w[workspace_id workspaceId].freeze
 
-        def initialize(executor: Molecules::HerdrExecutor.new)
+        def initialize(
+          executor: Molecules::HerdrExecutor.new,
+          preset_loader: Molecules::PresetLoader.new,
+          default_agent_kind: "pi",
+          agent_start_timeout_ms: 60_000
+        )
           @executor = executor
+          @preset_loader = preset_loader
+          @default_agent_kind = default_agent_kind
+          @agent_start_timeout_ms = agent_start_timeout_ms
+        end
+
+        # Config-driven construction (mirrors Dispatcher.from_config)
+        def self.from_config(executor:, config: {})
+          timeouts = config["timeouts"] || {}
+          new(
+            executor: executor,
+            default_agent_kind: config["default_agent_kind"] || "pi",
+            agent_start_timeout_ms: (timeouts["agent_start"] || 60) * 1000
+          )
         end
 
         # --- send -------------------------------------------------------------
@@ -68,7 +95,289 @@ module Ace
           true
         end
 
+        # --- presets ------------------------------------------------------------
+
+        # Merged preset inventory across the cascade, optionally scoped
+        def list_presets(type: nil)
+          return @preset_loader.list_all unless type
+
+          unless Molecules::PresetLoader::PRESET_TYPES.include?(type)
+            raise ValidationError,
+              "Unknown preset type '#{type}' (available: #{Molecules::PresetLoader::PRESET_TYPES.join(', ')})"
+          end
+
+          {type => @preset_loader.list(type)}
+        end
+
+        # Create a workspace from a preset (tmux `start` analogue); --cwd
+        # overrides the resolved root/tab cwd. All tab layouts are validated
+        # before any herdr call so a broken preset creates nothing.
+        def create_workspace(preset_name, cwd: nil)
+          resolved = resolve_workspace_preset(preset_name)
+          tabs = Array(resolved["tabs"])
+          tabs.each { |tab| preflight_tab!(tab) }
+
+          result = @executor.workspace_create(
+            label: resolved["label"] || preset_name,
+            cwd: expand_cwd(cwd || resolved["cwd"]),
+            focus: resolved["focus"]
+          )
+          workspace_id = dig_value(result.parsed_json, %w[result workspace workspace_id]) ||
+            raise(TargetResolutionError,
+              "could not read the new workspace id from herdr workspace create output")
+          inherited_cwd = expand_cwd(cwd || resolved["cwd"])
+
+          {
+            workspace: workspace_id,
+            tabs: tabs.map { |tab| instantiate_tab(tab, workspace_id: workspace_id, inherited_cwd: inherited_cwd) }
+          }
+        end
+
+        # Create a tab from a preset (tmux `window` analogue) in the given
+        # or resolved workspace; --cwd overrides the resolved tab cwd. The
+        # layout is validated before the tab is created.
+        def create_tab(preset_name, workspace_id: nil, cwd: nil)
+          workspace_id = resolve_workspace_id(workspace_id)
+          resolved = resolve_tab_preset(preset_name)
+          preflight_tab!(resolved)
+          instantiate_tab(resolved, workspace_id: workspace_id, inherited_cwd: expand_cwd(cwd))
+        end
+
+        # Unknown-preset CLI error listing the available names
+        def unknown_preset!(type, name)
+          available = @preset_loader.list(type)
+          listing = available.empty? ? "none available" : "available: #{available.join(', ')}"
+          noun = type == "tabs" ? "tab" : "workspace"
+          raise ValidationError, "Unknown #{noun} preset '#{name}' (#{listing})"
+        end
+
         private
+
+        # --- presets: resolution -------------------------------------------------
+
+        def resolve_workspace_preset(name)
+          raw = @preset_loader.load("workspaces", name)
+          unknown_preset!("workspaces", name) if raw.nil?
+          Molecules::PresetResolver.resolve_workspace(
+            raw,
+            workspace_lookup: @preset_loader.to_lookup("workspaces"),
+            tab_lookup: @preset_loader.to_lookup("tabs")
+          )
+        end
+
+        def resolve_tab_preset(name)
+          raw = @preset_loader.load("tabs", name)
+          unknown_preset!("tabs", name) if raw.nil?
+          Molecules::PresetResolver.resolve_tab(raw, tab_lookup: @preset_loader.to_lookup("tabs"))
+        end
+
+        # --- presets: workspace/tab instantiation ---------------------------------
+
+        # Static layout validation before any herdr call: panes declared,
+        # every non-root pane placed by exactly one split, every split
+        # direction known, and every split reference resolvable
+        def preflight_tab!(tab_spec)
+          label = tab_spec["label"]
+          pane_specs = Array(tab_spec["panes"])
+          raise ValidationError, "Preset tab '#{label}' declares no panes" if pane_specs.empty?
+          return if pane_specs.length == 1 && Array(tab_spec["splits"]).empty?
+
+          splits = Array(tab_spec["splits"])
+          pane_specs.drop(1).each_with_index do |spec, index|
+            key = spec["label"] || "panes[#{index + 1}]"
+            unless splits.any? { |split| split["pane"] == spec["label"] }
+              raise ValidationError,
+                "Preset tab '#{label}': pane '#{key}' is not placed " \
+                "(add a splits entry with pane: '#{key}')"
+            end
+          end
+
+          duplicates = splits.map { |split| split["pane"] }
+            .tally.select { |_label, count| count > 1 }.keys
+          unless duplicates.empty?
+            raise ValidationError,
+              "Preset tab '#{label}': panes placed by multiple splits: #{duplicates.join(', ')}"
+          end
+
+          splits.each do |split|
+            normalize_direction(split["direction"])
+            next if split["target"].nil? || pane_specs.any? { |spec| spec["label"] == split["target"] }
+
+            raise ValidationError,
+              "Preset tab '#{label}': splits entry targets unknown pane '#{split['target']}'"
+          end
+        end
+
+        # Layout first (tab + splits in declared order), then pane commands,
+        # then agents (readiness-gated by agent start; vs0 bootstrap order)
+        def instantiate_tab(tab_spec, workspace_id:, inherited_cwd:)
+          tab_cwd = expand_cwd(tab_spec["cwd"]) || inherited_cwd
+          tab_json = @executor.tab_create(
+            workspace_id: workspace_id,
+            label: tab_spec["label"],
+            cwd: tab_cwd,
+            focus: tab_spec["focus"]
+          ).parsed_json
+          tab_id = dig_value(tab_json, %w[result tab tab_id]) ||
+            raise(TargetResolutionError, "could not read the new tab id from herdr tab create output")
+
+          pane_specs = Array(tab_spec["panes"])
+          root_pane_id = dig_value(tab_json, %w[result root_pane pane_id]) ||
+            raise(TargetResolutionError, "could not read the root pane id from herdr tab create output")
+          placed = place_panes(tab_spec, pane_specs, tab_cwd, root_pane_id)
+
+          commands = run_pane_commands(placed)
+          agents = start_pane_agents(placed, workspace_id: workspace_id)
+
+          {
+            tab: tab_id,
+            panes: placed.map { |pane| pane[:id] },
+            commands: commands,
+            agents: agents
+          }
+        end
+
+        # A pane spec: {"label" =>, "cwd" =>, "command" =>, "agent" =>};
+        # the first declared pane is the tab's root pane, every further pane
+        # must be placed by a splits entry
+        def place_panes(tab_spec, pane_specs, inherited_cwd, root_pane_id)
+          root_spec = pane_specs.first
+          placed = [{spec: root_spec, id: root_pane_id, cwd: pane_cwd(root_spec, inherited_cwd)}]
+          rename_pane(root_pane_id, root_spec["label"]) if root_spec["label"]
+          by_label = {}
+          by_label[root_spec["label"]] = placed[0] if root_spec["label"]
+
+          splits = Array(tab_spec["splits"])
+
+          splits.each do |split|
+            spec = pane_spec_for(pane_specs, split["pane"])
+            target = by_label[split["target"]] || placed[0]
+            direction = normalize_direction(split["direction"])
+            new_id = dig_value(
+              @executor.pane_split(
+                pane: target[:id], direction: direction,
+                cwd: pane_cwd(spec, inherited_cwd),
+                ratio: split["ratio"], focus: split["focus"]
+              ).parsed_json,
+              %w[result pane pane_id]
+            ) || raise(TargetResolutionError, "could not read the new pane id from herdr pane split output")
+            rename_pane(new_id, spec["label"]) if spec["label"]
+            entry = {spec: spec, id: new_id, cwd: pane_cwd(spec, inherited_cwd)}
+            placed << entry
+            by_label[spec["label"]] = entry if spec["label"]
+          end
+
+          placed
+        end
+
+        def pane_spec_for(pane_specs, label)
+          return pane_specs.first if label.nil?
+
+          pane_specs.find { |spec| spec["label"] == label } ||
+            raise(ValidationError, "Preset splits entry references unknown pane '#{label}'")
+        end
+
+        def normalize_direction(direction)
+          mapped = DIRECTIONS[direction.to_s]
+          return mapped if mapped
+
+          raise ValidationError,
+            "Unknown split direction '#{direction}' (available: #{DIRECTIONS.keys.join(', ')})"
+        end
+
+        def pane_cwd(spec, inherited_cwd)
+          expand_cwd(spec["cwd"] || inherited_cwd)
+        end
+
+        def expand_cwd(path)
+          return nil if path.nil? || path.to_s.empty?
+
+          File.expand_path(path)
+        end
+
+        def rename_pane(pane_id, label)
+          @executor.pane_rename(pane_id, label)
+        end
+
+        def run_pane_commands(placed)
+          placed.count do |pane|
+            command = pane[:spec]["command"]
+            next false if command.nil? || command.to_s.empty?
+
+            @executor.pane_run(pane[:id], command)
+            true
+          end
+        end
+
+        # vs0 bootstrap order: export the reverse address, start the agent
+        # (native readiness gate), then submit the declared prompt
+        def start_pane_agents(placed, workspace_id:)
+          placed.filter_map do |pane|
+            agent = pane[:spec]["agent"]
+            next nil unless agent.is_a?(Hash)
+
+            pane_id = pane[:id]
+            name = agent["name"] || pane[:spec]["label"] || "agent"
+            @executor.pane_run(
+              pane_id,
+              "export HERDR_SESSION=#{Shellwords.escape(workspace_id.to_s)} " \
+              "HERDR_PANE=#{Shellwords.escape(pane_id)}"
+            )
+            @executor.agent_start(
+              name: name, kind: agent["kind"] || @default_agent_kind,
+              pane: pane_id, timeout_ms: @agent_start_timeout_ms
+            )
+            prompt = agent["prompt"].to_s
+            @executor.agent_prompt(pane: pane_id, text: prompt) unless prompt.empty?
+            name
+          end
+        end
+
+        # Caller's workspace wins by default: explicit flag, then the herdr
+        # environment of the calling pane, then the pane current projection
+        # (same policy as Dispatcher)
+        def resolve_workspace_id(workspace_id)
+          return workspace_id if workspace_id
+
+          env = ENV["HERDR_WORKSPACE_ID"].to_s
+          return env unless env.empty?
+
+          json = @executor.pane_current.parsed_json
+          find_value(json, WORKSPACE_KEYS) ||
+            raise(TargetResolutionError,
+              "cannot resolve the caller's herdr workspace " \
+              "(pass --workspace, run inside a herdr pane, or start herdr)")
+        end
+
+        def dig_value(json, path)
+          current = json
+          path.each do |key|
+            return nil unless current.is_a?(Hash)
+
+            current = current[key]
+          end
+          current.is_a?(String) && !current.empty? ? current : nil
+        end
+
+        # Recursive search mirroring the Dispatcher's tolerant extraction of
+        # ids from native responses (native shapes nest under result.*)
+        def find_value(json, keys)
+          case json
+          when Hash
+            keys.each { |key| return json[key] if json[key].is_a?(String) && !json[key].empty? }
+            json.each_value do |value|
+              found = find_value(value, keys)
+              return found if found
+            end
+            nil
+          when Array
+            json.each do |value|
+              found = find_value(value, keys)
+              return found if found
+            end
+            nil
+          end
+        end
 
         # --- send: validation -------------------------------------------------
 

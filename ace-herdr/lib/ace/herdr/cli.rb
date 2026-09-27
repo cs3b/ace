@@ -10,6 +10,9 @@ require_relative "cli/commands/close"
 require_relative "cli/commands/list"
 require_relative "cli/commands/send"
 require_relative "cli/commands/capture"
+require_relative "cli/commands/workspace"
+require_relative "cli/commands/tab"
+require_relative "cli/commands/list_presets"
 
 module Ace
   module Herdr
@@ -26,8 +29,11 @@ module Ace
         ["list", "List live panes, tabs, or workspaces as one JSON line"],
         ["send", "Send a command, raw text, or named keys to a pane"],
         ["capture", "Print recent pane output as raw text"],
-        ["wait", "Wait for an agent to reach a state"],
-        ["close", "Rename and/or close a finished agent pane"]
+        ["wait", "Wait for an agent state or matching pane output"],
+        ["close", "Rename and/or close a finished agent pane"],
+        ["workspace", "Create a workspace from a preset"],
+        ["tab", "Create a tab from a preset"],
+        ["--list-presets", "List available workspace/tab presets"]
       ].freeze
 
       HELP_EXAMPLES = [
@@ -37,7 +43,11 @@ module Ace
         "ace-herdr list --workspace w1",
         "ace-herdr send --pane p5 --cmd 'bundle exec rake test'",
         "ace-herdr send --pane p5 --msg 'continue' --key Enter",
-        "ace-herdr wait --pane p5 --until done --timeout 120",
+        "ace-herdr capture --pane p5 --lines 40",
+        "ace-herdr wait --pane p5 --for output --pattern done --timeout 30",
+        "ace-herdr workspace development",
+        "ace-herdr tab agent --workspace w1",
+        "ace-herdr --list-presets",
         "ace-herdr close --pane p5 --rename done"
       ].freeze
 
@@ -57,6 +67,9 @@ module Ace
       register "capture", CLI::Commands::Capture.new
       register "wait", CLI::Commands::Wait.new
       register "close", CLI::Commands::Close.new
+      register "workspace", CLI::Commands::Workspace.new
+      register "tab", CLI::Commands::Tab.new
+      register "--list-presets", CLI::Commands::ListPresets.new
 
       # Register version command
       version_cmd = Ace::Support::Cli::VersionCommand.build(
