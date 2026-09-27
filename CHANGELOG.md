@@ -27,6 +27,8 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+- **ace-review (unreleased, 8wq.t.1qb)**: Cheaper review rounds and honest usage. Delta rounds (`ace-review --pr <id> --delta [head>`) scope a round to changes since a prior reviewed head with carried-forward evidence, empty and fully review-exempt deltas (`exempt_paths` config) complete as no-op sessions with zero model calls, the unwired subject chunk strategies are removed in favor of the explicit oversized-diff refusal (ADR-024), and session usage records reflect measured provider tokens instead of estimates.
+
 - **ace-bundle v0.44.0**: Preserves source snapshots and exact bytes in review context.
 
 - **ace-assign v0.57.0**: Uses one agent-led PR review workflow and moves draft PRs to ready after verified rounds.
