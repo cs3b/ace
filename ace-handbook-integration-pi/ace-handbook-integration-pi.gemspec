@@ -20,7 +20,7 @@ Gem::Specification.new do |spec|
   spec.metadata["homepage_uri"] = spec.homepage
   spec.metadata["source_code_uri"] = "#{spec.homepage}/tree/main/ace-handbook-integration-pi/"
   spec.metadata["changelog_uri"] = "#{spec.homepage}/blob/main/ace-handbook-integration-pi/CHANGELOG.md"
-  spec.files = Dir.glob(%w[lib/**/* .ace-defaults/**/* *.md LICENSE Rakefile]).select { |f| File.file?(f) }
+  spec.files = Dir.glob(%w[lib/**/* handbook/**/* .ace-defaults/**/* *.md LICENSE Rakefile]).select { |f| File.file?(f) }
   spec.bindir = "exe"
   spec.executables = []
   spec.require_paths = ["lib"]

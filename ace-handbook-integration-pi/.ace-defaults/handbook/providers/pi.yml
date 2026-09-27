@@ -1,2 +1,3 @@
 provider: pi
 output_dir: .pi/skills
+prompts_dir: .pi/prompts
