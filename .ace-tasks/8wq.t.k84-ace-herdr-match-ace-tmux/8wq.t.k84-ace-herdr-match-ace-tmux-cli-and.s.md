@@ -90,9 +90,11 @@ ace-herdr send [--cmd TEXT] [--msg TEXT...] [--key NAME...] --pane ID [--quiet]
 # --- PLAIN PANE (raw input, delivered in DECLARATION ORDER —          ---
 # --- intentional, more expressive than ace-tmux's msgs-then-keys;    ---
 # --- documented divergence, not a parity claim)                      ---
-#   --cmd T          T + Enter (exactly one submission); trailing
-#                    --key sent AFTER submission (post-submission
-#                    keystrokes, e.g. y/n confirmation)
+#   --cmd T          T + Enter (exactly one submission); --cmd must be
+#                    declared BEFORE every key; trailing --key sent
+#                    AFTER submission (post-submission keystrokes,
+#                    e.g. y/n confirmation); leading keys (--key Esc
+#                    --cmd run) = usage error before any transport call
 #   --msg a --msg b  raw text, concatenated in order, NO submission
 #   --key K...       keystrokes; each Enter submits pending text
 #   guaranteed shapes (exactly one submission): --cmd alone; callback

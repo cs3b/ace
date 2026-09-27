@@ -46,7 +46,10 @@ speculative operations):
 5. send: `send(pane:, command: nil, items: [])` where `items` is an
    ORDERED list of `{message: String} | {key: String}` — the only shape
    that preserves message/key interleaving. `command` is the submit-once
-   shape (`--cmd`). One normative matrix for ALL adapters:
+   shape (`--cmd`) and MUST be declared before every key: when `command`
+   is present, `items` holds exclusively post-command keys; leading keys
+   (`--key Esc --cmd run`) are a usage error before any transport call.
+   One normative matrix for ALL adapters:
    - Plain-pane adapters deliver items in order: messages are raw text
      (no implicit submission), keys are keystrokes, each Enter submits
      pending text; trailing keys after `command` are post-submission
@@ -91,8 +94,9 @@ runtime.focus(window:)
 runtime.send(pane:, command: nil, items: [])
                                        # items: ORDERED {message:}|{key:}
                                        # entries — preserves interleaving;
-                                       # the full send matrix incl. agent
-                                       # routing and the callback form.
+                                       # when command is present, items are
+                                       # exclusively trailing (post-command)
+                                       # keys; leading keys are invalid.
                                        # The granular ops below are
                                        # convenience shapes of it.
 runtime.send_command(pane:, command:)  # == send(command:)
