@@ -548,9 +548,59 @@ describe "PiClient" do
       assert_equal({"input_tokens" => 10, "output_tokens" => 5}, result)
     end
 
+    it "maps cacheRead and totalTokens, keeping measured zeros" do
+      usage = {"input" => 1479, "output" => 3, "cacheRead" => 0, "cacheWrite" => 0, "reasoning" => 0, "totalTokens" => 1482}
+      result = @client.send(:normalize_usage, usage)
+      assert_equal({"input_tokens" => 1479, "output_tokens" => 3, "cached_tokens" => 0, "total_tokens" => 1482}, result)
+    end
+
+    it "keeps absent cache and total fields absent" do
+      usage = {"input" => 10, "output" => 5}
+      result = @client.send(:normalize_usage, usage)
+      refute result.key?("cached_tokens")
+      refute result.key?("total_tokens")
+    end
+
     it "returns empty hash for nil usage" do
       result = @client.send(:normalize_usage, nil)
       assert_equal({}, result)
+    end
+  end
+
+  describe "measured usage metadata" do
+    it "records measured tokens and never estimates when the CLI supplies usage" do
+      status = Object.new
+      status.define_singleton_method(:success?) { true }
+      ndjson = <<~NDJSON
+        {"type":"message_end","message":{"role":"assistant","content":[{"type":"text","text":"Answer"}],"usage":{"input":1479,"output":3,"cacheRead":64,"totalTokens":1482},"stopReason":"stop"}}
+        {"type":"agent_end","willRetry":false,"messages":[]}
+        {"type":"agent_settled"}
+      NDJSON
+
+      result = @client.send(:parse_pi_response, ndjson, "", status, "Review prompt", {})
+      metadata = result[:metadata]
+      assert_equal 1479, metadata[:input_tokens]
+      assert_equal 3, metadata[:output_tokens]
+      assert_equal 64, metadata[:cached_tokens]
+      assert_equal 1482, metadata[:total_tokens]
+      assert_equal "measured", metadata[:usage_status]
+    end
+
+    it "records an explicit unavailable state with no invented numbers" do
+      status = Object.new
+      status.define_singleton_method(:success?) { true }
+      ndjson = <<~NDJSON
+        {"type":"message_end","message":{"role":"assistant","content":[{"type":"text","text":"Answer"}],"stopReason":"stop"}}
+        {"type":"agent_end","willRetry":false,"messages":[]}
+        {"type":"agent_settled"}
+      NDJSON
+
+      result = @client.send(:parse_pi_response, ndjson, "", status, "A" * 40_000, {})
+      metadata = result[:metadata]
+      assert_equal "unavailable", metadata[:usage_status]
+      refute metadata.key?(:input_tokens)
+      refute metadata.key?(:output_tokens)
+      refute metadata.key?(:total_tokens)
     end
   end
 

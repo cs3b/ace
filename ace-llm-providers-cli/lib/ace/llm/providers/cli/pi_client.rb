@@ -297,21 +297,48 @@ module Ace
             }
           end
 
+          # Measured usage only. When the pi CLI supplies usage the token counts
+          # are recorded as-is (cached 0 means "no cache read", distinct from
+          # absent); when it does not, tokens are absent entirely and the
+          # session records an explicit "unavailable" state — never an estimate.
           def build_metadata(response, text, prompt, options)
             usage = response["usage"] || {}
 
-            prompt_tokens = usage["input_tokens"] || (prompt.to_s.length / 4).round
-            output_tokens = usage["output_tokens"] || (text.length / 4).round
-
-            {
+            metadata = {
               provider: "pi",
               model: @model || DEFAULT_MODEL,
-              input_tokens: prompt_tokens,
-              output_tokens: output_tokens,
-              total_tokens: prompt_tokens + output_tokens,
               finish_reason: response["finish_reason"] || "success",
               timestamp: Time.now.utc.iso8601
             }
+
+            if usage["input_tokens"] || usage["output_tokens"]
+              metadata[:input_tokens] = usage["input_tokens"] unless usage["input_tokens"].nil?
+              metadata[:output_tokens] = usage["output_tokens"] unless usage["output_tokens"].nil?
+              metadata[:cached_tokens] = usage["cached_tokens"] if usage.key?("cached_tokens")
+              metadata[:total_tokens] = usage["total_tokens"] ||
+                (usage["input_tokens"].to_i + usage["output_tokens"].to_i)
+              metadata[:usage_status] = "measured"
+            else
+              metadata[:usage_status] = "unavailable"
+              version = pi_version
+              metadata[:pi_version] = version if version
+            end
+
+            metadata
+          end
+
+          # Best-effort pi CLI version for the usage-unavailable record. Runs
+          # outside SafeCapture (a bare --version probe) and is memoized per
+          # instance so retries don't re-spawn the process.
+          def pi_version
+            return @pi_version if defined?(@pi_version)
+
+            @pi_version = begin
+              stdout, _stderr, status = Open3.capture3("pi", "--version")
+              status.success? ? stdout.strip : nil
+            rescue StandardError
+              nil
+            end
           end
 
           # Parse NDJSON output from Pi CLI when --mode json is used.
@@ -385,7 +412,10 @@ module Ace
           end
 
           # Normalize Pi usage field names to our standard format.
-          # Pi uses "input"/"output", we normalize to "input_tokens"/"output_tokens".
+          # Pi reports input/output/cacheRead/cacheWrite/totalTokens on the
+          # assistant message; we map them to *_tokens keys. A measured zero
+          # cacheRead is kept (distinguishing "no cache" from "unknown"); a
+          # missing key stays missing.
           #
           # @param usage [Hash] Raw usage hash from Pi response
           # @return [Hash] Normalized usage hash
@@ -393,7 +423,9 @@ module Ace
             return {} unless usage
             {
               "input_tokens" => usage["input"] || usage["input_tokens"],
-              "output_tokens" => usage["output"] || usage["output_tokens"]
+              "output_tokens" => usage["output"] || usage["output_tokens"],
+              "cached_tokens" => (usage["cacheRead"] if usage.key?("cacheRead")),
+              "total_tokens" => (usage["totalTokens"] if usage.key?("totalTokens"))
             }.compact
           end
 
