@@ -1,0 +1,11 @@
+# Default tab preset: one pane hosting a pi agent (no initial prompt;
+# add `prompt:` under agent to submit one at creation).
+#
+# Override in ~/.ace/herdr/tabs/ or .ace/herdr/tabs/
+# (project wins; see ace-herdr docs/usage.md for the full schema).
+label: agent
+panes:
+  - label: agent
+    agent:
+      kind: pi
+      name: task-agent
