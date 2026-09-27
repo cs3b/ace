@@ -48,7 +48,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "ace-support-core", "~> 0.31"
   spec.add_dependency "ace-support-config", "~> 0.18"
   spec.add_dependency "ace-git", "~> 0.24"
-  spec.add_dependency "ace-git-github", "~> 0.1" # PR lookups via the GitHub provider
+  spec.add_dependency "ace-git-github", "~> 0.1.1" # PR lookups via the GitHub provider; 0.1.1 passes cross-repository PR arguments correctly
   spec.add_dependency "ace-task", "~> 0.37"
 
   # Development dependencies are managed in the root Gemfile

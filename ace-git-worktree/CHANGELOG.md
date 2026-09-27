@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [0.23.0] - 2026-09-27
+
+### Changed
+- PR lookups now go through the `ace-git-github` provider (`Ace::Git::Github::PrFetcher`) instead of the `PrMetadataFetcher` molecule removed from the ace-git 0.24 core; provider failures surface as classified `Provider*Error`s instead of the removed `Gh*Error` classes.
+- Raised the `ace-git` dependency floor to `~> 0.24` and added `ace-git-github ~> 0.1.1` (cross-repository PR argument fix). Resolves the require-time `LoadError` (`ace/git/molecules/pr_metadata_fetcher`) that made released 0.22.1 incompatible with ace-git 0.24 and blocked adopting ace-review 0.55.0.
 ## [0.22.1] - 2026-09-02
 
 ### Technical
