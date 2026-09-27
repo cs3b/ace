@@ -253,11 +253,17 @@ module Ace
           assert_equal 0o600, mode
         end
 
-        def test_resume_redelivers_stored_answer_after_crash
-          @executor = HerdrTestHelper::FakeExecutor.new
-          build_deliverer.deliver(make_ref, "stored answer", event_id: "evt-13")
+        def test_resume_redelivers_stored_answer_from_pending_record
+          record = Models::DeliveryRecord.new(
+            event_id: "evt-13", session: "ws-1", pane: "p5",
+            answer_digest: Ace::Herdr::Atoms::AnswerDigest.call("stored answer"),
+            answer: "stored answer", state: "retryable"
+          )
+          Molecules::DeliveryRecordStore.save(record, @dir)
+          @executor = HerdrTestHelper::FakeExecutor.new # fresh: nothing delivered yet
+          deliverer = build_deliverer
 
-          result = build_deliverer.resume("evt-13")
+          result = deliverer.resume("evt-13")
 
           assert_equal :delivered, result.state
           prompt = @executor.calls_of(:agent_prompt).first
@@ -270,7 +276,13 @@ module Ace
           assert_match(/no recoverable answer/, error.message)
         end
 
-        def test_ambiguous_crash_window_is_reported_not_resent
+        def test_resume_rejects_traversal_event_ids
+          error = assert_raises(ValidationError) { @deliverer.resume("./../outside") }
+
+          assert_match(/event id may only contain/, error.message)
+        end
+
+        def test_repeated_recovery_of_ambiguous_submission_never_resends
           record = Models::DeliveryRecord.new(
             event_id: "evt-14", session: "ws-1", pane: "p5",
             answer_digest: Ace::Herdr::Atoms::AnswerDigest.call("a"), answer: "a"
@@ -281,11 +293,30 @@ module Ace
           )
           Molecules::DeliveryRecordStore.save(record, @dir)
 
-          result = @deliverer.deliver(make_ref, "a", event_id: "evt-14")
+          first = @deliverer.resume("evt-14")
+          second = @deliverer.resume("evt-14")
+
+          assert_equal :failed, first.state
+          assert_equal :failed, second.state
+          assert_empty @executor.calls_of(:agent_prompt)
+        end
+
+        def test_ambiguous_crash_window_is_reported_not_resent
+          record = Models::DeliveryRecord.new(
+            event_id: "evt-14b", session: "ws-1", pane: "p5",
+            answer_digest: Ace::Herdr::Atoms::AnswerDigest.call("a"), answer: "a"
+          )
+          record = record.record_attempt(
+            state: "pending", detail: {action: "prompt", outcome: "submitting"},
+            timestamp: "t0"
+          )
+          Molecules::DeliveryRecordStore.save(record, @dir)
+
+          result = @deliverer.deliver(make_ref, "a", event_id: "evt-14b")
 
           assert_equal :failed, result.state
           assert_empty @executor.calls_of(:agent_prompt)
-          loaded = Molecules::DeliveryRecordStore.load(@dir, "evt-14")
+          loaded = Molecules::DeliveryRecordStore.load(@dir, "evt-14b")
           assert_equal "failed", loaded.state
           assert_match(/crashed after submitting/, loaded.history.last["error"])
         end
@@ -314,6 +345,37 @@ module Ace
           loaded = Molecules::DeliveryRecordStore.load(@dir, "evt-16")
           assert_equal "retryable", loaded.state
           assert_equal "probe", loaded.history.last["action"]
+        end
+
+        def test_transient_probe_failure_retries_within_limits_then_recovers
+          probe_calls = 0
+          @executor = HerdrTestHelper::FakeExecutor.new(outcomes: {
+            agent_get: lambda { |args|
+              probe_calls += 1
+              next true if probe_calls >= 2
+
+              raise Ace::Herdr::ExecutorUnavailableError, "socket down"
+            }
+          })
+
+          result = build_deliverer.deliver(make_ref, "answer", event_id: "evt-17")
+
+          assert_equal :delivered, result.state
+          assert_equal [1], @slept # one backoff between the two probes
+          assert_equal 1, @executor.calls_of(:agent_prompt).length
+        end
+
+        def test_failed_record_is_terminal_across_invocations
+          @executor = HerdrTestHelper::FakeExecutor.new(outcomes: {
+            agent_get: Ace::Herdr::PaneNotFoundError.new("gone")
+          })
+          first = build_deliverer.deliver(make_ref, "answer", event_id: "evt-18")
+          @executor = HerdrTestHelper::FakeExecutor.new
+          second = build_deliverer.deliver(make_ref, "answer", event_id: "evt-18")
+
+          assert_equal :failed, first.state
+          assert_equal :failed, second.state
+          assert_empty @executor.calls # terminal records are never re-probed
         end
       end
     end

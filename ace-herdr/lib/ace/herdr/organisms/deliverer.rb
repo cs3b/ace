@@ -95,6 +95,7 @@ module Ace
         # @return [Ace::Hitl::Providers::DeliverResult]
         # @raise [ValidationError] no recoverable record for the event id
         def resume(event_id, kind: nil, label: nil)
+          validate_event_id!(event_id)
           Molecules::DeliveryRecordStore.with_lock(@deliveries_dir, event_id) do
             record = Molecules::DeliveryRecordStore.load(@deliveries_dir, event_id)
             if record.nil? || record.answer.to_s.empty?
@@ -112,6 +113,10 @@ module Ace
         def deliver_locked(ref, answer, record, kind, label)
           if record.delivered?
             return DeliverResult(ref: ref, state: :delivered)
+          end
+          if record.state == "failed"
+            # Terminal: retrying would need a new event id, never a resend
+            return DeliverResult(ref: ref, state: :failed)
           end
           if record.ambiguous_submission?
             # The previous run may have already pushed this answer; resending
@@ -139,50 +144,41 @@ module Ace
 
         # Probe the pane and bootstrap a missing agent. Returns a terminal
         # outcome carrying the final DeliverResult, or the record to prompt.
+        # Transient probe failures retry within the configured limits.
         def probe_agent(ref, record, kind, label)
-          begin
-            @executor.agent_get(ref.pane)
-          rescue PaneNotFoundError => e
-            return Outcome.terminal(terminal(ref, record, e, action: "probe"))
-          rescue AgentNotFoundError
-            record, result = bootstrap(ref, record, kind, label)
-            return Outcome.terminal(result) if result
-
+          attempt = 0
+          loop do
             begin
-              @executor.agent_wait(
-                pane: ref.pane, until_states: READY_STATES,
-                timeout_ms: @readiness_timeout_ms
-              )
+              @executor.agent_get(ref.pane)
+              return Outcome.present(record)
+            rescue PaneNotFoundError => e
+              return Outcome.terminal(terminal(ref, record, e, action: "probe"))
+            rescue AgentNotFoundError
+              return bootstrap_and_wait(ref, record, kind, label)
             rescue ExecutorError => e
-              # Started but not yet ready: do not prompt; safe to retry later
+              attempt += 1
+              exhausted = attempt >= @max_attempts
               record = record.append_event(
-                state: "retryable",
-                detail: {action: "readiness", outcome: "timeout", error: e.message},
+                state: exhausted ? "retryable" : "pending",
+                detail: {action: "probe", attempt: attempt, outcome: e.class.name,
+                         error: e.message},
                 timestamp: now
               )
               persist(record)
-              return Outcome.terminal(DeliverResult(ref: ref, state: :retryable))
+              if exhausted
+                return Outcome.terminal(DeliverResult(ref: ref, state: :retryable))
+              end
+
+              @clock.call(backoff_for(attempt))
             end
-            return Outcome.bootstrapped(record)
-          rescue ExecutorError => e
-            # Transient probe failure (socket/binary unavailable): the
-            # contract requires a result, not an exception.
-            record = record.append_event(
-              state: "retryable",
-              detail: {action: "probe", outcome: e.class.name, error: e.message},
-              timestamp: now
-            )
-            persist(record)
-            return Outcome.terminal(DeliverResult(ref: ref, state: :retryable))
           end
-          Outcome.present(record)
         end
 
-        # Bootstrap a missing agent. Returns [record, non-nil result] when
-        # bootstrapping terminates the delivery, [record, nil] on success.
-        # Bootstrap failures are terminal: an immediate retry cannot heal a
-        # broken pane, so the failure is reported and persisted.
-        def bootstrap(ref, record, kind, label)
+        # Bootstrap a missing agent, then gate on readiness. Returns a
+        # terminal outcome when bootstrapping or readiness terminates the
+        # delivery; otherwise the record to prompt. Bootstrap failures are
+        # terminal: an immediate retry cannot heal a broken pane.
+        def bootstrap_and_wait(ref, record, kind, label)
           export = "export HERDR_SESSION=#{Shellwords.escape(ref.session)} " \
             "HERDR_PANE=#{Shellwords.escape(ref.pane)}"
           begin
@@ -192,7 +188,7 @@ module Ace
               pane: ref.pane, timeout_ms: @agent_start_timeout_ms
             )
           rescue ExecutorError => e
-            return [record, terminal(ref, record, e, action: "bootstrap")]
+            return Outcome.terminal(terminal(ref, record, e, action: "bootstrap"))
           end
 
           record = record.append_event(
@@ -200,7 +196,23 @@ module Ace
             timestamp: now
           )
           persist(record)
-          [record, nil]
+
+          begin
+            @executor.agent_wait(
+              pane: ref.pane, until_states: READY_STATES,
+              timeout_ms: @readiness_timeout_ms
+            )
+          rescue ExecutorError => e
+            # Started but not yet ready: do not prompt; safe to retry later
+            record = record.append_event(
+              state: "retryable",
+              detail: {action: "readiness", outcome: "timeout", error: e.message},
+              timestamp: now
+            )
+            persist(record)
+            return Outcome.terminal(DeliverResult(ref: ref, state: :retryable))
+          end
+          Outcome.present(record)
         end
 
         # Prompt with retry limits and fixed deterministic backoff. Each
@@ -296,11 +308,15 @@ module Ace
         end
 
         def normalize_event_id(event_id, ref, digest)
-          unless event_id
-            seed = Ace::Herdr::Atoms::AnswerDigest.call("ref:#{ref.session}/#{ref.pane}:#{digest}")
-            return "ans-#{seed[0, 24]}"
-          end
+          return validate_event_id!(event_id) if event_id
 
+          seed = Ace::Herdr::Atoms::AnswerDigest.call("ref:#{ref.session}/#{ref.pane}:#{digest}")
+          "ans-#{seed[0, 24]}"
+        end
+
+        # Event ids become record file names and lock names; only tokens may
+        # pass (also blocks path traversal via resume)
+        def validate_event_id!(event_id)
           token = event_id.to_s
           unless token.match?(Ace::Hitl::Providers::Ref::TOKEN_PATTERN)
             raise ValidationError,
