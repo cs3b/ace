@@ -170,7 +170,10 @@ module Ace
         def execute(declaration, answer, requester_uid, requester_gid, spawner = Process,
           group_dropper: nil)
           group_dropper ||= method(:drop_child_groups)
-          argv = declaration["argv"].map { |element| element.gsub("{answer}", answer) }
+          # Block form: the answer is inserted literally. The
+          # replacement-string form would interpret backslash sequences
+          # in the answer as backreferences (review 8wq2ztty on PR#336).
+          argv = declaration["argv"].map { |element| element.gsub("{answer}") { answer } }
           timeout = declaration["timeout_s"] || DEFAULT_TIMEOUT_S
           deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + timeout
           status = nil
