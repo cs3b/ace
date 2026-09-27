@@ -67,3 +67,6 @@ _current
 /ace_bundle_output.md
 /project_context.md
 /bundle_version.txt
+
+# ZCode local state (plans, session artifacts)
+.zcode/

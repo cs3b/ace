@@ -34,6 +34,8 @@ module Ace
             "--preset code-pr             # PR code review",
             "--preset security --auto-execute  # Run and apply fixes",
             "--pr 123                      # Review by PR number",
+            "--pr 123 --delta             # Delta round since the most recent prior session's head",
+            "--pr 123 --delta <head>      # Delta round since an explicit reviewed head",
             "--preset code --subject diff:HEAD~3 --subject files:docs/**/*.md",
             "--preset security --dry-run   # Preview without executing"
           ]
@@ -61,6 +63,8 @@ module Ace
           option :post_comment, type: :boolean, desc: "Post review as PR comment (requires --pr)"
           option :gh_timeout, type: :integer, desc: "Timeout for gh CLI operations in seconds (default: 30)"
           option :evidence_session, type: :array, desc: "Include selected prior review sessions as context"
+          option :delta, type: :string, optional_value: true,
+            desc: "Delta round for --pr: review only changes since a reference head (explicit head, or bare --delta to auto-resolve from the most recent prior session for this PR)"
           option :prepare_goals_brief, type: :boolean, desc: "Generate or reuse the shared goals brief for this PR and preset"
 
           # Standard options
@@ -145,11 +149,22 @@ module Ace
             # Handle repeatable options
             process_subjects(options)
             process_models(options)
+            process_delta(options)
 
             # Set defaults
             options[:save_session] = true unless options.key?(:save_session)
 
             options
+          end
+
+          # Normalize --delta: bare flag or empty value means auto-resolve the
+          # reference head from prior sessions (:auto); a value is the explicit head
+          def process_delta(options)
+            return unless options.key?(:delta)
+
+            value = options[:delta]
+            value = value.to_s.strip if value.is_a?(String)
+            options[:delta] = (value.nil? || value == "") ? :auto : value
           end
 
           def process_subjects(options)

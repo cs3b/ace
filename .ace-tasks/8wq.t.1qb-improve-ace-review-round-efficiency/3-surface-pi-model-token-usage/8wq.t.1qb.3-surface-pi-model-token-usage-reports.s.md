@@ -1,13 +1,13 @@
 ---
 id: 8wq.t.1qb.3
-status: draft
+status: done
 priority: medium
 created_at: "2026-09-27 01:09:58"
 estimate: TBD
 dependencies: []
 bundle:
-  presets: ["project"]
-  files: [".ace-tasks/8wq.t.1qb-improve-ace-review-round-efficiency/8wq.t.1qb-improve-ace-review-round-efficiency-and-usage.s.md"]
+  presets: [project]
+  files: [.ace-tasks/8wq.t.1qb-improve-ace-review-round-efficiency/8wq.t.1qb-improve-ace-review-round-efficiency-and-usage.s.md]
   commands: []
 tags: [ace-review, ace-llm, observability, pi]
 parent: 8wq.t.1qb

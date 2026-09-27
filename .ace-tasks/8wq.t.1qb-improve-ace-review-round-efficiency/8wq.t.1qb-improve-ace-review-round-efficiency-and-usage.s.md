@@ -1,12 +1,12 @@
 ---
 id: 8wq.t.1qb
-status: draft
+status: in-progress
 priority: medium
 created_at: "2026-09-27 01:09:15"
 estimate: TBD
 dependencies: []
 bundle:
-  presets: ["project"]
+  presets: [project]
   files: []
   commands: []
 tags: [ace-review, review-rounds, observability]

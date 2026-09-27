@@ -27,10 +27,8 @@ unit-coverage-reviewed:
   - test/fast/molecules/preset_manager_test.rb
   - test/fast/molecules/context_composer_test.rb
   - test/fast/molecules/subject_extractor_test.rb
-  - test/fast/molecules/subject_strategy_test.rb
   - test/fast/molecules/pr_task_spec_resolver_test.rb
   - test/fast/organisms/review_manager_test.rb
-  - test/feat/adaptive_strategy_integration_test.rb
   - test/feat/performance_regression_test.rb
 
 requires:

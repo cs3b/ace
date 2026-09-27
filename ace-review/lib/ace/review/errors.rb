@@ -138,9 +138,6 @@ module Ace
 
       # Raised when context composition fails
       class ContextComposerError < Error; end
-
-      # Raised when an unknown review strategy is requested
-      class UnknownStrategyError < Error; end
     end
   end
 end

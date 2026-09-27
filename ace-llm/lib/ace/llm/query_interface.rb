@@ -153,7 +153,7 @@ module Ace
           thinking_level: response.fetch(:execution, {}).fetch(:thinking_level, parse_result.thinking_level),
           execution: response[:execution],
           requested_selector: provider_model,
-          usage: response[:usage],
+          usage: build_usage(response[:metadata]),
           metadata: response[:metadata]
         }
 
@@ -181,6 +181,27 @@ module Ace
       end
 
       private
+
+      # Derive the measured usage record from client metadata. Providers hand
+      # token counts to session recording through metadata keys; absent counts
+      # stay absent (never zero) so cost models can tell "no cache" from
+      # "unknown". Returns nil when the client reported no token counts at all.
+      def self.build_usage(metadata)
+        meta = metadata.is_a?(Hash) ? metadata : {}
+        input = meta[:input_tokens] || meta["input_tokens"]
+        output = meta[:output_tokens] || meta["output_tokens"]
+        return nil if input.nil? && output.nil?
+
+        usage = {model: meta[:model] || meta["model"]}
+        usage[:input_tokens] = input unless input.nil?
+        usage[:output_tokens] = output unless output.nil?
+        cached = meta[:cached_tokens] || meta["cached_tokens"]
+        usage[:cached_tokens] = cached unless cached.nil?
+        total = meta[:total_tokens] || meta["total_tokens"]
+        usage[:total_tokens] = total.nil? ? (input.to_i + output.to_i) : total
+        usage
+      end
+      private_class_method :build_usage
 
       def self.resolve_preset_name(suffix_preset, explicit_preset)
         suffix = suffix_preset&.to_s&.strip
