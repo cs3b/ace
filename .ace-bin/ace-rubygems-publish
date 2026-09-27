@@ -480,7 +480,7 @@ abort!("--otp is not needed for --dry-run or --prepare (they never push)") if ot
 abort!("Unknown option: #{ARGV.grep(/\A--/).join(", ")}\n\n#{usage}") if ARGV.any?(/\A--/)
 bare_otp = ARGV.select { |arg| arg.match?(OTP_PATTERN) }
 unless bare_otp.empty?
-  abort!("Refusing bare OTP-looking argument(s): #{bare_otp.join(", ")} — pass it with --otp <value> instead")
+  abort!("Refusing #{bare_otp.size} bare OTP-looking argument(s) — pass it with --otp <value> instead")
 end
 
 gems_filter = ARGV
