@@ -88,7 +88,8 @@ bundle:
 ### Validation Questions
 
 - [ ] Should `auto` prefer herdr when both runtimes are live (lab reality) instead of tmux? Default: tmux first (existing behavior), explicit config overrides.
-- [ ] Callback rollout: switch drive.wf.md to `ace-runtime send` in this task (chosen default) — confirm the neutral command is acceptable for every fork context (headless forks have no pane; rule already conditions on callback being requested).
+- [ ] Should `auto` prefer herdr when both runtimes are live (lab reality) instead of tmux? Default: tmux first (existing behavior), explicit config overrides.
+- [x] Callback rollout: switch drive.wf.md to `ace-runtime send` in this task — CONFIRMED by Captain 2026-09-27 (neutral CLI chosen over both-forms docs and env injection).
 
 ### Vertical Slice Decomposition (Task/Subtask Model)
 

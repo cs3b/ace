@@ -177,8 +177,8 @@ equal partner instead of a side gem.
 - Parent: 8wq.t.k86
 - Precedent: ace-hitl provider registry
 - Requirements oracle: consumer call sites in bundle.files
-- Decisions (Captain, 2026-09-27): adapters live INSIDE the wrapper gems
-  (ace-tmux/ace-herdr gain a dependency on ace-runtime; no gem renames —
-  wrapper product identity stays, ADR-033 stability rationale); the
-  contract ships the `ace-runtime send` neutral passthrough for the Fork
-  Callback Rule.
+- Decisions (Captain, 2026-09-27; re-confirmed same day): adapters live
+  INSIDE the wrapper gems (ace-tmux/ace-herdr gain a dependency on
+  ace-runtime; no gem renames — wrapper product identity stays, ADR-033
+  stability rationale); the contract ships the `ace-runtime send` neutral
+  passthrough for the Fork Callback Rule.
