@@ -8,9 +8,11 @@ require "fileutils"
 require "yaml"
 
 module TestHelper
-  # Create a temporary directory structure for testing
+  # Create a temporary directory structure for testing.
+  # Resolved through any /var -> /private/var symlink so path assertions
+  # match the physical cwd the engine sees under Dir.chdir.
   def create_temp_ace_directory
-    Dir.mktmpdir("ace_nav_test")
+    File.realpath(Dir.mktmpdir("ace_nav_test"))
   end
 
   # Clean up temporary directory
