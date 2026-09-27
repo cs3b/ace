@@ -160,7 +160,7 @@ describe "AgyClient" do
           subprocess_command_prefix: [RbConfig.ruby, "-e", fake_agy, "--"]
         )
 
-        assert_equal working_dir, result[:text]
+        assert_equal File.realpath(working_dir), result[:text]
       end
     end
   end
