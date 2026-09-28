@@ -51,6 +51,9 @@ module Ace
         ensure
           # Restore original directory if we changed it
           Dir.chdir(@original_dir) if @package_dir && Dir.pwd != @original_dir
+
+          # The fixture environment (and its temp root) belongs to this run only
+          @fixture_environment&.cleanup
         end
 
         def run_with_package_context
@@ -62,6 +65,8 @@ module Ace
           if @package_dir
             puts "Running tests in #{File.basename(@package_dir)}..."
           end
+
+          report_fixture_environment if @configuration.verbose
 
           # Check if sequential target execution should be used
           if should_execute_sequentially?
@@ -179,6 +184,16 @@ module Ace
           @pattern_resolver = Molecules::PatternResolver.new(@configuration)
           @test_detector = Atoms::TestDetector.new(patterns: @configuration.patterns)
 
+          # Hermetic fixture environment: every test child (subprocess or in-process)
+          # is launched from the sanitized allowlisted environment with fixture-owned
+          # HOME/XDG directories. Ambient LAB_*/ACE_*/provider/user configuration
+          # never reaches deterministic tests.
+          @environment_policy = Models::EnvironmentPolicy.from_config(@configuration.environment)
+          @fixture_environment = Molecules::FixtureEnvironment.new(
+            policy: @environment_policy,
+            parent_env: ENV.to_h
+          ).build
+
           # Use SmartTestExecutor for intelligent subprocess/direct execution choice
           require_relative "../molecules/smart_test_executor"
           force_mode = if @options[:direct]
@@ -188,7 +203,8 @@ module Ace
           end
           @test_executor = Molecules::SmartTestExecutor.new(
             timeout: @configuration.timeout,
-            force_mode: force_mode
+            force_mode: force_mode,
+            launch_env: @fixture_environment.env
           )
           @result_parser = Atoms::ResultParser.new
           @failure_analyzer = Molecules::FailureAnalyzer.new
@@ -367,8 +383,17 @@ module Ace
             profile: options[:profile],
             execution: config_with_options.execution || {},
             files: options[:files],
-            run_in_single_batch: options[:run_in_single_batch]
+            run_in_single_batch: options[:run_in_single_batch],
+            environment: config_with_options.environment
           )
+        end
+
+        # Verbose diagnostics on stderr: fixture root and override key names only.
+        # Override values (potentially credential-like) are never printed.
+        def report_fixture_environment
+          warn "fixture home: #{@fixture_environment.root}"
+          override_names = @environment_policy.overrides.keys.join(", ")
+          warn "fixture overrides: #{override_names.empty? ? "none" : override_names}"
         end
 
         def validate_configuration!

@@ -9,7 +9,7 @@ module Ace
           :verbose, :filter, :fix_deprecations, :patterns,
           :timeout, :parallel, :color, :per_file, :targets,
           :target, :config_path, :failure_limits, :profile,
-          :execution, :files, :run_in_single_batch
+          :execution, :files, :run_in_single_batch, :environment
 
         def initialize(attributes = {})
           @format = attributes[:format] || "progress"  # Default to per-test progress
@@ -32,6 +32,7 @@ module Ace
           @execution = attributes[:execution] || {}
           @files = attributes[:files]  # Specific files to test (overrides target/patterns)
           @run_in_single_batch = attributes[:run_in_single_batch] || false
+          @environment = attributes[:environment] || {}  # Hermetic fixture environment configuration
         end
 
         def valid_format?
@@ -94,7 +95,8 @@ module Ace
             profile: profile,
             execution: execution,
             files: files,
-            run_in_single_batch: run_in_single_batch
+            run_in_single_batch: run_in_single_batch,
+            environment: environment
           }
         end
 

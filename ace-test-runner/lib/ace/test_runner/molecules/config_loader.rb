@@ -149,6 +149,7 @@ module Ace
           config[:defaults] ||= {}
           config[:failure_limits] ||= {}
           config[:execution] ||= {}
+          config[:environment] ||= {}
 
           config
         end

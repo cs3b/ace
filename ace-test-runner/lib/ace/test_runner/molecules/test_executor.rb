@@ -9,9 +9,10 @@ module Ace
     module Molecules
       # Executes test commands and captures output
       class TestExecutor
-        def initialize(command_builder: nil, timeout: nil)
+        def initialize(command_builder: nil, timeout: nil, launch_env:)
           @command_builder = command_builder || Atoms::CommandBuilder.new
           @timeout = timeout  # In seconds, nil = no timeout
+          @launch_env = launch_env  # Hermetic fixture environment for every child
         end
 
         def execute_tests(files, options = {})
@@ -32,16 +33,10 @@ module Ace
           stderr = ""
           status = nil
 
-          # Set environment to prevent Minitest autorun at_exit hook
-          # Also strip assignment context vars to prevent tests from resolving to wrong assignments
-          # Inherit parent environment and override specific vars (nil unsets at exec time)
-          env = ENV.to_h.merge({
-            "MT_NO_AUTORUN" => "1",
-            "ACE_ASSIGN_ID" => nil,
-            "ACE_ASSIGN_FORK_ROOT" => nil
-          })
-
-          # Remove MT_NO_AUTORUN=1 from command if it's there
+          # Launch from the hermetic fixture environment: ambient LAB_*, ACE_*,
+          # provider and user configuration never reaches the test child.
+          # MT_NO_AUTORUN is part of the fixture environment.
+          env = @launch_env
           command = command.sub(/^MT_NO_AUTORUN=1\s+/, "")
 
           begin

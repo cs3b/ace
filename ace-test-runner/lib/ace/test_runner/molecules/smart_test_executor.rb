@@ -9,9 +9,9 @@ module Ace
     module Molecules
       # Intelligently chooses between subprocess and in-process execution based on test type
       class SmartTestExecutor
-        def initialize(command_builder: nil, timeout: nil, force_mode: nil)
-          @subprocess_executor = TestExecutor.new(command_builder: command_builder, timeout: timeout)
-          @in_process_runner = InProcessRunner.new(timeout: timeout)
+        def initialize(command_builder: nil, timeout: nil, force_mode: nil, launch_env:)
+          @subprocess_executor = TestExecutor.new(command_builder: command_builder, timeout: timeout, launch_env: launch_env)
+          @in_process_runner = InProcessRunner.new(timeout: timeout, launch_env: launch_env)
           @test_type_detector = Atoms::TestTypeDetector.new
           @force_mode = force_mode  # :subprocess, :direct, or nil for auto
         end

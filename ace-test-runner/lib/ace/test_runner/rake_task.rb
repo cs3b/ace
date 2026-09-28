@@ -40,17 +40,20 @@ module Ace
         # Build ace-test command
         command = build_command
 
-        # Execute ace-test with sanitized environment
-        # Strip assignment context vars to prevent tests from resolving to wrong assignments
         puts command if verbose
-        env = ENV.to_h.merge({
-          "ACE_ASSIGN_ID" => nil,
-          "ACE_ASSIGN_FORK_ROOT" => nil
-        })
-        success = system(env, command)
+
+        # Launch ace-test from a hermetic fixture environment: ambient LAB_*,
+        # ACE_*/provider and user configuration never reaches the test run.
+        fixture_environment = Molecules::FixtureEnvironment.new(
+          policy: Models::EnvironmentPolicy.new,
+          parent_env: ENV.to_h
+        ).build
+        success = system(fixture_environment.env, command)
 
         # Exit with proper code for CI/CD
         exit(1) unless success
+      ensure
+        fixture_environment&.cleanup
       end
 
       def build_command

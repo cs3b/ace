@@ -10,8 +10,10 @@ module Ace
       # Runs tests directly in the current Ruby process without spawning subprocesses
       # This provides significantly faster execution for unit tests that don't need isolation
       class InProcessRunner
-        def initialize(timeout: nil)
+        def initialize(timeout: nil, launch_env:)
           @timeout = timeout
+          @launch_env = launch_env  # Hermetic fixture environment applied for the test run
+          @saved_env = nil
         end
 
         def execute_tests(files, options = {})
@@ -27,15 +29,16 @@ module Ace
 
           # Store original verbose setting
           original_verbose = $VERBOSE
-          original_mt_no_autorun = ENV["MT_NO_AUTORUN"]
 
           begin
             $stdout = stdout_io
             $stderr = stderr_io
             $VERBOSE = nil if options[:suppress_warnings]
 
-            # Prevent Minitest from auto-running
-            ENV["MT_NO_AUTORUN"] = "1"
+            # Apply the hermetic fixture environment for the duration of the run:
+            # test code reads sanitized, fixture-owned environment state, and any
+            # subprocess the tests spawn inherits the same hermetic environment.
+            apply_launch_env
 
             # Add test directory to load path if not already there
             test_dir = File.expand_path("test")
@@ -145,12 +148,9 @@ module Ace
             $stderr = original_stderr
             $VERBOSE = original_verbose
 
-            # Restore original MT_NO_AUTORUN value
-            if original_mt_no_autorun
-              ENV["MT_NO_AUTORUN"] = original_mt_no_autorun
-            else
-              ENV.delete("MT_NO_AUTORUN")
-            end
+            # Restore the exact parent environment, including keys removed or
+            # added by test code during the run
+            restore_launch_env
           end
 
           end_time = Time.now
@@ -194,6 +194,23 @@ module Ace
         end
 
         private
+
+        # Swap the process environment to the hermetic fixture environment.
+        # Keys absent from the fixture environment (ambient configuration,
+        # credentials) are removed for the duration of the run.
+        def apply_launch_env
+          @saved_env = ENV.to_h
+          @launch_env.each { |key, value| ENV[key] = value }
+          (@saved_env.keys - @launch_env.keys).each { |key| ENV.delete(key) }
+        end
+
+        def restore_launch_env
+          return unless @saved_env
+
+          ENV.clear
+          @saved_env.each { |key, value| ENV[key] = value }
+          @saved_env = nil
+        end
 
         def empty_result
           {

@@ -10,10 +10,12 @@ module Ace
       class ProcessMonitor
         attr_reader :processes, :max_parallel
 
-        def initialize(max_parallel = 10, package_timeout: nil, termination_grace_period: 1.0, clock: nil)
+        def initialize(max_parallel = 10, package_timeout: nil, termination_grace_period: 1.0, clock: nil,
+          environment_policy: Models::EnvironmentPolicy.new)
           @max_parallel = max_parallel
           @package_timeout = package_timeout
           @termination_grace_period = termination_grace_period
+          @environment_policy = environment_policy
           @clock = clock || -> { Time.now }
           @processes = {}
           @queue = []
@@ -31,14 +33,14 @@ module Ace
           # Build command
           cmd = build_command(package, test_options)
 
-          # Start the process
-          # Strip assignment context vars to prevent tests from resolving to wrong assignments
-          env = ENV.to_h.merge({
-            "ACE_ASSIGN_ID" => nil,
-            "ACE_ASSIGN_FORK_ROOT" => nil
-          })
+          # Launch each package from its own hermetic fixture environment so
+          # parallel workers never share (or leak) ambient Lab/ACE/user state.
+          fixture_environment = Molecules::FixtureEnvironment.new(
+            policy: @environment_policy,
+            parent_env: ENV.to_h
+          ).build
           start_time = now
-          stdin, stdout, stderr, thread = Open3.popen3(env, *cmd, chdir: package["path"], pgroup: true)
+          stdin, stdout, stderr, thread = Open3.popen3(fixture_environment.env, *cmd, chdir: package["path"], pgroup: true)
 
           @processes[package["name"]] = {
             package: package,
@@ -48,6 +50,7 @@ module Ace
             stdin: stdin,
             start_time: start_time,
             callback: callback,
+            fixture_environment: fixture_environment,
             output: +"",
             stderr_output: +"",
             report_root: test_options["report_dir"],
@@ -99,6 +102,7 @@ module Ace
               collect_remaining_output(process_info)
               results = build_results(process_info, elapsed, exit_status)
               close_streams(process_info)
+              process_info[:fixture_environment]&.cleanup
 
               # Final callback
               if callback
@@ -164,6 +168,7 @@ module Ace
             end
 
             close_streams(process_info)
+            process_info[:fixture_environment]&.cleanup
           end
 
           @processes.clear

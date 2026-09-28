@@ -147,6 +147,11 @@ module Ace
               raise Ace::Support::Cli::Error.new(e.message)
             end
 
+            # Label the execution mode: package tests are always deterministic
+            # (hermetic fixture environment). Live integration runs only through
+            # the E2E entrypoints with explicit target configuration.
+            display_deterministic_mode(test_options)
+
             # Run tests with special exit! handling for Minitest compatibility
             run_tests_with_exit_handling(test_options)
           rescue Ace::TestRunner::Error => e
@@ -309,6 +314,12 @@ module Ace
             # Note: We cannot use exit! here and return the exit code instead.
             # The exe file wrapper will handle the exit! call.
             exit_code
+          end
+
+          def display_deterministic_mode(options)
+            return if options[:quiet]
+
+            puts "Test mode: deterministic (hermetic environment)"
           end
 
           def display_config_summary(options)

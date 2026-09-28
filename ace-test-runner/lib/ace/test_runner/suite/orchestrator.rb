@@ -28,6 +28,8 @@ module Ace
 
         def run
           validate_packages!
+          puts "Test mode: deterministic (hermetic environment)"
+
           test_options = (@config.dig("test_suite", "test_options") || {}).dup
           report_root = normalize_report_root(test_options["report_dir"])
           test_options["report_dir"] = report_root if report_root
@@ -35,7 +37,8 @@ module Ace
           display_manager = create_display_manager
           process_monitor = ProcessMonitor.new(
             @config.dig("test_suite", "max_parallel") || 10,
-            package_timeout: @config.dig("test_suite", "timeout")
+            package_timeout: @config.dig("test_suite", "timeout"),
+            environment_policy: environment_policy
           )
 
           # Enrich packages with historical duration data for scheduling
@@ -88,6 +91,12 @@ module Ace
         end
 
         private
+
+        # Hermetic environment policy from suite configuration
+        # (test_suite.environment: preserve/overrides/require).
+        def environment_policy
+          Models::EnvironmentPolicy.from_config(@config.dig("test_suite", "environment"))
+        end
 
         def validate_packages!
           @packages.each do |package|
