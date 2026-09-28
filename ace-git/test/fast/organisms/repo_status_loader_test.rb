@@ -88,7 +88,10 @@ class RepoStatusLoaderTest < AceGitTestCase
       author: "lab-builder",
       url: "#{SERVER.url}/pulls/#{number}",
       draft: false,
-      merged_at: merged_at
+      merged_at: merged_at,
+      head_repository_url: SERVER.url,
+      base_repository_url: SERVER.url,
+      merge_commit_sha: nil
     )
   end
 
