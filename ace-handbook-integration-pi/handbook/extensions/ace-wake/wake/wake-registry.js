@@ -42,10 +42,6 @@ export class WakeRegistry {
   #retained;
   /** @private @type {boolean} */
   #dispatchPending;
-  /** @private @type {Timeout | undefined} */
-  #dispatchReleaseTimer;
-  /** @private @type {number} */
-  #dispatchWindowMs;
 
   /** @private @type {{retained: Array<{prefix: string, name: string, message: string}>, stranded: Array<[string, string]>} | undefined} */
   #reconcileBatch;
@@ -60,7 +56,7 @@ export class WakeRegistry {
    * @param {object} ports.status
    * @param {import("./wake-dispatcher.js").WakeDispatcher} ports.dispatcher
    */
-  constructor({ loops, watches, state, status, dispatcher, dispatchWindowMs = 250 }) {
+  constructor({ loops, watches, state, status, dispatcher }) {
     this.#loops = loops;
     this.#watches = watches;
     this.#state = state;
@@ -74,10 +70,6 @@ export class WakeRegistry {
     this.#retained = new Map();
     /** @private @type {boolean} */
     this.#dispatchPending = false;
-    /** @private @type {Timeout | undefined} */
-    this.#dispatchReleaseTimer;
-    /** @private @type {number} */
-    this.#dispatchWindowMs = dispatchWindowMs;
   }
 
   /**
@@ -290,7 +282,6 @@ export class WakeRegistry {
     this.#resuming = false;
     this.#retaining = false;
     this.#dispatchPending = false;
-    clearTimeout(this.#dispatchReleaseTimer);
     this.#reconcileBatch = {
       retained: [...this.#retained.values()],
       stranded: this.#dispatcher.pendingEntries(),
@@ -298,6 +289,8 @@ export class WakeRegistry {
     this.#retained.clear();
     this.#dispatcher.settleAll();
     this.flushRetained();
+    this.#watches.flushDirty((watch) => this.#fire(WATCH_SOURCE_PREFIX, watch.name, watch.message));
+    this.#refreshStatus();
   }
 
   /**
@@ -395,24 +388,20 @@ export class WakeRegistry {
   }
 
   #closeDispatchWindow() {
-    clearTimeout(this.#dispatchReleaseTimer);
     this.#dispatchPending = false;
     this.#drainRetained();
   }
 
+
   #markDispatchInFlight() {
+    // The dispatch stays in flight until a lifecycle transition confirms
+    // delivery: agent_start proves the prompt entered a run (concurrent
+    // sends queue safely as follow-ups from then on), and any settlement
+    // proves the host accepts prompts again. Pi's void sendUserMessage API
+    // reports failures only asynchronously, so elapsed time can never be
+    // the signal — isIdle() is also true while a submitted prompt waits in
+    // asynchronous startup hooks.
     this.#dispatchPending = true;
-    clearTimeout(this.#dispatchReleaseTimer);
-    this.#dispatchReleaseTimer = setTimeout(() => {
-      // The transition window expired. Pi reports send failures only
-      // asynchronously, and isIdle() is also true while a submitted prompt
-      // waits in asynchronous startup hooks — so expiry must not treat the
-      // attempt as rejected. It only closes the serialization window;
-      // pending markers resolve at the next settlement boundary.
-      this.#dispatchPending = false;
-      this.#refreshStatus();
-    }, this.#dispatchWindowMs);
-    this.#dispatchReleaseTimer.unref?.();
   }
 
   /**
@@ -420,7 +409,6 @@ export class WakeRegistry {
    * so the serialization window closes and retained wakes drain immediately.
    */
   noteRunStarted() {
-    clearTimeout(this.#dispatchReleaseTimer);
     this.#dispatchPending = false;
     this.#drainRetained();
   }

@@ -416,15 +416,14 @@ describe("ace-wake delivery", () => {
 
   it("preserves same-source coalescing across a slow startup window expiry", async () => {
     const host = createFakeHost();
-    const session = await startSession(host, { dispatchWindowMs: 10 });
+    const session = await startSession(host);
     await host.runCommand("loop", "add heartbeat --interval 10 --message check in");
 
-    // The first tick dispatches; the serialization window expires while the
-    // prompt is still in asynchronous startup (isIdle() is true there too,
-    // so expiry must not treat the attempt as rejected).
+    // The first tick dispatches; the in-flight marker holds until a run
+    // starts (agent_start) or a settlement, so a second tick during slow
+    // startup stays coalesced instead of racing the first prompt.
     host.clock.advance(10_000);
     assert.equal(host.sends.length, 1);
-    await new Promise((resolve) => setTimeout(resolve, 30));
 
     host.clock.advance(10_000);
     assert.equal(host.sends.length, 1, "subsequent ticks stay coalesced behind the starting prompt");
@@ -435,7 +434,7 @@ describe("ace-wake delivery", () => {
     const host = createFakeHost();
     host.setFile("/fake/project/a.txt", { mtimeMs: 1, size: 1 });
     host.setFile("/fake/project/b.txt", { mtimeMs: 1, size: 1 });
-    const session = await startSession(host, { dispatchWindowMs: 10 });
+    const session = await startSession(host);
     await host.runCommand("watch", "add a --path a.txt --message a changed");
     await host.runCommand("watch", "add b --path b.txt --message b changed");
 
@@ -447,15 +446,11 @@ describe("ace-wake delivery", () => {
     assert.equal(host.sends.length, 0, "wakes during compaction are retained");
 
     await session.compacted("manual");
-    // Dirty watches deliver one per settlement boundary (each wake's own run
-    // produces the next boundary), so the two changes arrive serialized.
+    // The resume boundary delivers the first dirty watch (serialized one per
+    // boundary); the second delivers at the next settlement.
+    assert.equal(host.sends.length, 1, "the first stranded change delivers at the resume boundary");
     await session.settle();
-    assert.equal(host.sends.length, 1, "the first stranded change delivers at the boundary");
-    // The transition window from the first delivery expires (a real run
-    // closes it earlier via agent_start).
-    await new Promise((resolve) => setTimeout(resolve, 30));
-    await session.settle();
-    assert.equal(host.sends.length, 2, "the second stranded change delivers at the next boundary");
+    assert.equal(host.sends.length, 2, "the second stranded change delivers at the settlement boundary");
 
     const texts = host.sends.map((send) => send.text);
     assert.ok(texts.some((text) => text.includes("watch:a")));
