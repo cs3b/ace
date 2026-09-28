@@ -62,7 +62,7 @@ class PullRequestCheckoutPreparerTest < Minitest::Test
     in_git_sandbox do
       result = @preparer.prepare(evidence(head_url: @base_repo))
       assert result[:success], result[:error]
-      assert_equal "FETCH_HEAD", result[:local_ref]
+      assert_equal @feature_sha, result[:local_ref], "local_ref must be the immutable verified SHA"
       assert_equal @feature_sha, result[:sha]
       assert_equal "origin/feature/x", result[:remote_tracking]
     end
@@ -72,7 +72,7 @@ class PullRequestCheckoutPreparerTest < Minitest::Test
     in_git_sandbox do
       result = @preparer.prepare(evidence(head_url: @fork_repo))
       assert result[:success], result[:error]
-      assert_equal "FETCH_HEAD", result[:local_ref]
+      assert_equal @feature_sha, result[:local_ref], "local_ref must be the immutable verified SHA"
       assert_equal @feature_sha, result[:sha]
       assert_nil result[:remote_tracking], "URL fetches must not create remote-tracking refs"
     end

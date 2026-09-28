@@ -70,6 +70,13 @@ module Ace
           normalize_pr(data, server.name)
         end
 
+        # @return [String] HOST/OWNER/REPO for the resolved server; appended
+        #   to every data/mutation command so a `--server` selection can never
+        #   be silently retargeted to the checkout's repository.
+        def repo_target
+          @repo_target ||= Ace::Git::Atoms::ServerUrl.normalize(server.url)
+        end
+
         # @return [ProviderPullRequest, nil] evidence for the branch's PR
         def pull_request_for_branch(branch:)
           candidates = recent_pull_requests(limit: 30)
@@ -81,13 +88,13 @@ module Ace
 
         # @return [String] unified diff text for the pull request
         def pull_request_diff(number:)
-          result = PrFetcher.fetch_diff(number.to_s, timeout: timeout, runner: runner)
+          result = PrFetcher.fetch_diff(number.to_s, timeout: timeout, runner: runner, repo: repo_target)
           result[:diff]
         end
 
         # @return [Array<ProviderPullRequest>] recent PRs, newest first
         def recent_pull_requests(limit:)
-          result = PrFetcher.fetch_all_prs(limit: limit, timeout: timeout, runner: runner)
+          result = PrFetcher.fetch_all_prs(limit: limit, timeout: timeout, runner: runner, repo: repo_target)
           result[:prs]
             .map { |pr| normalize_pr(pr, server.name) }
             .sort_by { |pr| -pr.number.to_i }
@@ -216,7 +223,7 @@ module Ace
         # request may have mutated the forge, so callers must reconcile by
         # exact identity instead of retrying blindly.
         def send_mutation(args, ambiguous:, identity: nil)
-          result = CliExecutor.execute(args.first, args[1..] || [], timeout: timeout, runner: runner)
+          result = CliExecutor.execute(args.first, (args[1..] || []) + ["--repo", repo_target], timeout: timeout, runner: runner)
           return result if result[:success]
 
           classify_failure(result[:stderr], context: args.join(" "))
@@ -269,8 +276,9 @@ module Ace
         end
 
         # Run a `gh` command expecting JSON output; classify all failures.
+        # Every command is bound to the resolved server repository.
         def gh_json(args)
-          result = CliExecutor.execute(args.first, args[1..] || [], timeout: timeout, runner: runner)
+          result = CliExecutor.execute(args.first, (args[1..] || []) + ["--repo", repo_target], timeout: timeout, runner: runner)
           unless result[:success]
             classify_failure(result[:stderr], context: args.join(" "))
           end

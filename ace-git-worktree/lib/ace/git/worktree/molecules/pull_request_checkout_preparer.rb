@@ -25,8 +25,8 @@ module Ace
           #
           # @param evidence [Ace::Git::ProviderPullRequest] normalized PR evidence
           # @return [Hash] {success:, local_ref:, sha:, remote_tracking:, error:}
-          #   `local_ref` is a ref suitable for `git worktree add`; the branch
-          #   head was verified to equal evidence.head_sha.
+          #   `local_ref` is the exact verified commit SHA (immutable), safe
+          #   for `git worktree add` even if later fetches move FETCH_HEAD.
           def prepare(evidence)
             head_url = evidence.head_repository_url
             head_ref = evidence.head_ref
@@ -55,7 +55,9 @@ module Ace
 
             {
               success: true,
-              local_ref: "FETCH_HEAD",
+              # The immutable verified SHA, not FETCH_HEAD: a later fetch must
+              # never be able to change what the worktree is created from.
+              local_ref: sha,
               sha: sha,
               remote_tracking: local_remote ? "#{local_remote}/#{head_ref}" : nil,
               error: nil

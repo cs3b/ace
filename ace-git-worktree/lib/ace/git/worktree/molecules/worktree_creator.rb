@@ -155,12 +155,19 @@ module Ace
                 configure_push_for_worktree(worktree_path, local_branch_name, remote_tracking)
               end
 
+              # Bind the reported tracking ref as the branch's real upstream so
+              # `@{upstream}` resolves; advisory when the tracking ref is not a
+              # local remote-tracking ref (fork URL fetches).
+              upstream = remote_tracking ? set_and_verify_upstream(local_branch_name, remote_tracking) : nil
+
               # Success - return worktree information
               {
                 success: true,
                 worktree_path: worktree_path,
                 branch: local_branch_name,
                 tracking: remote_tracking,
+                upstream: upstream,
+                warnings: remote_tracking && !upstream ? ["Could not set upstream to #{remote_tracking}"] : nil,
                 directory_name: directory_name,
                 pr_number: pr_data[:number],
                 pr_title: pr_data[:title],
@@ -762,6 +769,31 @@ module Ace
               git_root: git_root,
               error: nil
             }
+          end
+
+          # Set and verify upstream for a PR worktree branch.
+          #
+          # @param local_branch [String] the worktree's local branch
+          # @param remote_tracking [String] e.g. "origin/feature"
+          # @return [String, nil] the verified upstream, or nil when it could
+          #   not be established (advisory)
+          def set_and_verify_upstream(local_branch, remote_tracking)
+            require_relative "../atoms/git_command"
+
+            exists = Atoms::GitCommand.execute(
+              "show-ref", "--verify", "--quiet", "refs/remotes/#{remote_tracking}", timeout: 5
+            )
+            return nil unless exists[:success]
+
+            result = Atoms::GitCommand.execute(
+              "branch", "--set-upstream-to=#{remote_tracking}", local_branch, timeout: 10
+            )
+            return nil unless result[:success]
+
+            verify = Atoms::GitCommand.execute(
+              "rev-parse", "--abbrev-ref", "#{local_branch}@{upstream}", timeout: 5
+            )
+            verify[:success] && verify[:output].to_s.strip == remote_tracking ? remote_tracking : nil
           end
 
           # Format PR name using template

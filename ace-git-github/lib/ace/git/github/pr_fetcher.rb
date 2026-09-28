@@ -53,13 +53,15 @@ module Ace
           # @param timeout [Integer] Timeout in seconds
           # @param runner [Proc, nil] injectable command runner for tests
           # @return [Hash] Result with :success, :diff, :identifier, :source
-          def fetch_diff(identifier, timeout: Ace::Git.network_timeout, runner: nil)
+          def fetch_diff(identifier, timeout: Ace::Git.network_timeout, runner: nil, repo: nil)
             parsed = PrIdentifier.parse(identifier)
             raise ArgumentError, "Invalid PR identifier: #{identifier}" if parsed.nil?
 
             validate_identifier_characters(parsed.gh_format)
 
-            result = CliExecutor.execute("pr", ["diff", *parsed.cli_target_args], timeout: timeout, runner: runner)
+            args = ["diff", *parsed.cli_target_args]
+            args += ["--repo", repo] if repo
+            result = CliExecutor.execute("pr", args, timeout: timeout, runner: runner)
 
             if result[:success]
               {
@@ -182,9 +184,11 @@ module Ace
           # @param timeout [Integer] Timeout in seconds
           # @param runner [Proc, nil] injectable command runner for tests
           # @return [Hash] Result with :success, :prs array, or :error
-          def fetch_all_prs(limit: 15, timeout: Ace::Git.network_timeout, runner: nil)
+          def fetch_all_prs(limit: 15, timeout: Ace::Git.network_timeout, runner: nil, repo: nil)
+            args = ["list", "--state", "all", "--limit", limit.to_s, "--json", LIST_FIELDS]
+            args += ["--repo", repo] if repo
             result = CliExecutor.execute(
-              "pr", ["list", "--state", "all", "--limit", limit.to_s, "--json", LIST_FIELDS],
+              "pr", args,
               timeout: timeout, runner: runner
             )
 

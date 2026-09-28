@@ -389,7 +389,7 @@ class CreateCommandTest < Minitest::Test
   end
 
   def successful_checkout
-    {success: true, local_ref: "FETCH_HEAD", remote_tracking: nil, sha: "a" * 40, error: nil}
+    {success: true, local_ref: ("a" * 40), remote_tracking: nil, sha: "a" * 40, error: nil}
   end
 
   def stub_pr_pipeline(evidence, checkout: successful_checkout, resolve_error: nil, selection: nil)

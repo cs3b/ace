@@ -25,7 +25,7 @@ module Github
 
     def test_pull_request_for_branch_prefers_open_over_merged
       runner = scripted_runner(
-        "gh pr list --state all --limit 30 --json #{LIST_FIELDS}" => {
+        "gh pr list --state all --limit 30 --json #{LIST_FIELDS} --repo github.example.com/owner/repo" => {
           success: true,
           stdout: [evidence(90, "MERGED", "feature"), evidence(91, "OPEN", "feature")].to_json,
           stderr: "", exit_code: 0
@@ -39,7 +39,7 @@ module Github
 
     def test_issue_normalizes_state_and_author
       runner = scripted_runner(
-        "gh issue view 9 --json number,title,state,author,url" => {
+        "gh issue view 9 --json number,title,state,author,url --repo github.example.com/owner/repo" => {
           success: true,
           stdout: {"number" => 9, "title" => "Broken diff", "state" => "CLOSED", "author" => {"login" => "lab"}, "url" => "https://github.example.com/owner/repo/issues/9"}.to_json,
           stderr: "", exit_code: 0

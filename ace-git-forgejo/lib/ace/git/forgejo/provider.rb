@@ -155,6 +155,16 @@ module Ace
         #
         # @return [ProviderMutationReceipt] idempotency :created/:existing
         def create_pull_request(head_ref:, head_repository_url:, base_ref:, expected_head:, title:, body: nil, draft: true)
+          # `fj pr create` operates on the checkout's repository and cannot
+          # encode an explicit fork head; refusing before any command (even
+          # lookups) beats creating the wrong PR.
+          unless Ace::Git::Atoms::ServerUrl.match?(head_repository_url, server.url)
+            raise Ace::Git::ProviderUnsupportedCapabilityError,
+              "Forgejo CLI (fj) pr create cannot target head repository " \
+              "#{head_repository_url} (resolved server repository: #{server.url}); " \
+              "run from the fork checkout or use the forge web UI"
+          end
+
           matches = find_open_pull_requests(
             head_repository_url: head_repository_url, head_ref: head_ref,
             base_repository_url: server.url, base_ref: base_ref
@@ -179,13 +189,15 @@ module Ace
           receipt(:create, created, :created)
         end
 
+        # `fj pr edit` takes one field subcommand per invocation (title|body),
+        # so multi-field updates are separate commands with final evidence
+        # fetched only after every field update succeeded.
+        #
         # @return [ProviderMutationReceipt] operation :update
         def update_pull_request(number:, expected_head:, title: nil, body: nil)
           verify_expected_head!(fetch_pr(number), expected_head)
-          args = ["pr", "edit", number.to_s]
-          args += ["title", title] if title
-          args += ["body", body] if body
-          send_mutation(args, ambiguous: false)
+          send_mutation(["pr", "edit", number.to_s, "title", title], ambiguous: false) if title
+          send_mutation(["pr", "edit", number.to_s, "body", body], ambiguous: false) if body
           receipt(:update, fetch_pr(number), nil)
         end
 

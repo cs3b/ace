@@ -340,17 +340,63 @@ class WorktreeCreatorTest < Minitest::Test
           success: true,
           worktree_path: File.join(@temp_dir, "ace-pr-26"),
           branch: "pr-26",
-          start_point: "FETCH_HEAD",
+          start_point: "a" * 40,
           git_root: @temp_dir,
           error: nil
         }) do
-          result = @creator.create_for_pr(pr_data, config, source_ref: "FETCH_HEAD")
+          result = @creator.create_for_pr(pr_data, config, source_ref: "a" * 40)
 
           assert result[:success]
           assert_equal "pr-26", result[:branch]
           assert_nil result[:tracking]
           assert_equal 26, result[:pr_number]
           assert_equal "Add authentication feature", result[:pr_title]
+        end
+      end
+    end
+  end
+
+  def test_create_for_pr_sets_and_verifies_upstream_when_tracking
+    pr_data = {number: 26, title: "Test PR", head_branch: "feature/test", base_branch: "main"}
+    config = mock_pr_config(@temp_dir)
+
+    @creator.stub(:detect_git_root, @temp_dir) do
+      @creator.stub(:validate_worktree_path, {valid: true, error: nil}) do
+        @creator.stub(:create_worktree, {
+          success: true, worktree_path: File.join(@temp_dir, "ace-pr-26"),
+          branch: "pr-26", start_point: "a" * 40, git_root: @temp_dir, error: nil
+        }) do
+          @creator.stub(:configure_push_for_worktree, nil) do
+            @creator.stub(:set_and_verify_upstream, "origin/feature/test") do
+              result = @creator.create_for_pr(
+                pr_data, config, source_ref: "a" * 40, remote_tracking: "origin/feature/test"
+              )
+              assert result[:success]
+              assert_equal "origin/feature/test", result[:upstream]
+            end
+          end
+        end
+      end
+    end
+  end
+
+  def test_create_for_pr_reports_warning_when_upstream_unavailable
+    pr_data = {number: 26, title: "Test PR", head_branch: "feature/test", base_branch: "main"}
+    config = mock_pr_config(@temp_dir)
+
+    @creator.stub(:detect_git_root, @temp_dir) do
+      @creator.stub(:validate_worktree_path, {valid: true, error: nil}) do
+        @creator.stub(:create_worktree, {
+          success: true, worktree_path: File.join(@temp_dir, "ace-pr-26"),
+          branch: "pr-26", start_point: "a" * 40, git_root: @temp_dir, error: nil
+        }) do
+          # Fork URL fetches have no remote-tracking ref: upstream stays unset
+          # and the report carries an advisory warning instead of a fake ref.
+          @creator.stub(:set_and_verify_upstream, nil) do
+            result = @creator.create_for_pr(pr_data, config, source_ref: "a" * 40)
+            assert result[:success]
+            assert_nil result[:upstream]
+          end
         end
       end
     end
@@ -382,7 +428,7 @@ class WorktreeCreatorTest < Minitest::Test
           success: true,
           worktree_path: File.join(@temp_dir, "ace-pr-26"),
           branch: "pr-26",
-          start_point: "FETCH_HEAD",
+          start_point: "a" * 40,
           git_root: @temp_dir,
           error: nil
         }) do
@@ -391,7 +437,7 @@ class WorktreeCreatorTest < Minitest::Test
             configured << [path, local, remote]
           }) do
             result = @creator.create_for_pr(
-              pr_data, config, source_ref: "FETCH_HEAD", remote_tracking: "origin/feature/auth"
+              pr_data, config, source_ref: "a" * 40, remote_tracking: "origin/feature/auth"
             )
 
             assert result[:success]
@@ -435,7 +481,7 @@ class WorktreeCreatorTest < Minitest::Test
       @creator.stub(:validate_worktree_path, {valid: true, error: nil}) do
         # Mock worktree creation failure
         @creator.stub(:create_worktree, {success: false, error: "git worktree failed"}) do
-          result = @creator.create_for_pr(pr_data, config, source_ref: "FETCH_HEAD")
+          result = @creator.create_for_pr(pr_data, config, source_ref: "a" * 40)
 
           refute result[:success]
           assert_match(/git worktree failed/, result[:error])

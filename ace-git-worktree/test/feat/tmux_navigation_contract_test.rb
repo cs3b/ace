@@ -77,7 +77,7 @@ class CreateCommandTmuxContractTest < Minitest::Test
       head_repository_url: "https://forge.example.com/o/r",
       base_repository_url: "https://forge.example.com/o/r", merge_commit_sha: nil
     )
-    checkout = {success: true, local_ref: "FETCH_HEAD", remote_tracking: nil, sha: "a" * 40, error: nil}
+    checkout = {success: true, local_ref: "a" * 40, remote_tracking: nil, sha: "a" * 40, error: nil}
 
     fake_resolver = Object.new
     fake_resolver.define_singleton_method(:resolve) { |_num| {server: nil, evidence: evidence} }

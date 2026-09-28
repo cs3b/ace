@@ -99,6 +99,31 @@ class ForgejoProviderPullRequestLifecycleContractTest < AceGitForgejoTestCase
     }
   end
 
+  def test_lifecycle_create_refuses_fork_head_before_any_mutation
+    provider = build_provider(scripted_runner({}))
+    error = assert_raises(Ace::Git::ProviderUnsupportedCapabilityError) do
+      provider.create_pull_request(
+        head_repository_url: "#{CONTRACT::SERVER_URL.gsub("forge.example.com", "other.example.com")}/fork",
+        head_ref: "feature/x", base_ref: "main", expected_head: SHA, title: "Ship it"
+      )
+    end
+    assert_match(/cannot target head repository/i, error.message)
+  end
+
+  def test_lifecycle_update_splits_title_and_body_into_separate_commands
+    runner = scripted_runner(
+      VIEW_25 => ok(pr_view_text(25, "Open", "feature/x", "main")),
+      COMMITS_25 => ok("commit #{SHA}\n"),
+      "fj pr edit 25 title New title" => ok(""),
+      "fj pr edit 25 body New body" => ok("")
+    )
+    receipt = build_provider(runner).update_pull_request(
+      number: 25, expected_head: SHA, title: "New title", body: "New body"
+    )
+    assert_equal :update, receipt.operation
+    assert_equal SHA, receipt.pull_request.head_sha
+  end
+
   private
 
   def ok(stdout)
@@ -118,4 +143,5 @@ class ForgejoProviderPullRequestLifecycleContractTest < AceGitForgejoTestCase
       From `#{head_ref}` into `#{base_ref}`
     VIEW
   end
+
 end
