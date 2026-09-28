@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
-require "bundler/setup"
+# No bundler/setup here: the ace-test process has already activated gems
+# from the installed set, and bundler would abort when the workspace
+# lockfile version differs (e.g. unpublished ace-support-cli bumps).
 require "minitest/autorun"
 require "minitest/pride"
 
