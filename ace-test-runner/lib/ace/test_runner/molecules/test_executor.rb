@@ -35,6 +35,8 @@ module Ace
 
           # Launch from the hermetic fixture environment: ambient LAB_*, ACE_*,
           # provider and user configuration never reaches the test child.
+          # unsetenv_others makes the fixture environment the entire child
+          # environment (Process.spawn merges onto the parent by default).
           # MT_NO_AUTORUN is part of the fixture environment.
           env = @launch_env
           command = command.sub(/^MT_NO_AUTORUN=1\s+/, "")
@@ -42,10 +44,10 @@ module Ace
           begin
             if @timeout
               Timeout.timeout(@timeout) do
-                stdout, stderr, status = Open3.capture3(env, command)
+                stdout, stderr, status = Open3.capture3(env, command, unsetenv_others: true)
               end
             else
-              stdout, stderr, status = Open3.capture3(env, command)
+              stdout, stderr, status = Open3.capture3(env, command, unsetenv_others: true)
             end
           rescue Timeout::Error
             stderr = "Test execution timed out after #{@timeout} seconds"

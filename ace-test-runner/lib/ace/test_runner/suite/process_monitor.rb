@@ -40,7 +40,9 @@ module Ace
             parent_env: ENV.to_h
           ).build
           start_time = now
-          stdin, stdout, stderr, thread = Open3.popen3(fixture_environment.env, *cmd, chdir: package["path"], pgroup: true)
+          stdin, stdout, stderr, thread = Open3.popen3(
+            fixture_environment.env, *cmd, chdir: package["path"], pgroup: true, unsetenv_others: true
+          )
 
           @processes[package["name"]] = {
             package: package,
@@ -185,7 +187,10 @@ module Ace
         private
 
         def build_command(package, options)
-          cmd_parts = ["ace-test"]
+          # Resolve ace-test co-located with this ace-test-runner so suite
+          # children always run the matching runner version instead of an
+          # ambient PATH selection (deterministic under bundler/shim PATHs).
+          cmd_parts = [ace_test_executable]
 
           # Suite package execution intentionally bypasses grouped mode so each
           # package runs its full target scope as one batch under suite orchestration.
@@ -210,6 +215,10 @@ module Ace
           cmd_parts << target if target && !target.to_s.empty?
 
           cmd_parts
+        end
+
+        def ace_test_executable
+          File.expand_path("../../../../exe/ace-test", __dir__)
         end
 
         def now

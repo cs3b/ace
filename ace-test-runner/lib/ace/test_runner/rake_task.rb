@@ -48,7 +48,9 @@ module Ace
           policy: Models::EnvironmentPolicy.new,
           parent_env: ENV.to_h
         ).build
-        success = system(fixture_environment.env, command)
+        # unsetenv_others makes the fixture environment the entire child
+        # environment (system merges onto the parent by default).
+        success = system(fixture_environment.env, command, unsetenv_others: true)
 
         # Exit with proper code for CI/CD
         exit(1) unless success
