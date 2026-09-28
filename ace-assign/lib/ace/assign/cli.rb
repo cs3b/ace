@@ -32,6 +32,7 @@ require_relative "atoms/assignment_scope"
 
 # Molecules
 require_relative "molecules/assignment_manager"
+require_relative "molecules/attempt_store"
 require_relative "molecules/assignment_discoverer"
 require_relative "molecules/queue_scanner"
 require_relative "molecules/step_writer"
