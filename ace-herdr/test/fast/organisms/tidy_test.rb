@@ -366,19 +366,21 @@ module Ace
         end
 
         def test_apply_rechecks_eligibility_under_the_event_lock
-          # Another writer lands a state change while tidy waits for the
-          # lock: the lock-guarded reload must see it and refuse to archive
+          # The competing writer lands its state change while holding the
+          # event lock, before tidy's reload runs: a reload outside the lock
+          # would observe the stale delivered record and archive the
+          # replacement — the assertions below pin the lock ordering
           save_record(record("evt-old", state: "delivered", updated_at: (CUTOFF_7D - 60).iso8601))
           replaced = record("evt-old", state: "retryable", updated_at: NOW.iso8601)
           racing_store = Object.new
           racing_store.define_singleton_method(:list_records) { |*args| Molecules::DeliveryRecordStore.list_records(*args) }
-          racing_store.define_singleton_method(:with_lock) do |*args, &block|
-            Molecules::DeliveryRecordStore.with_lock(*args, &block)
+          racing_store.define_singleton_method(:with_lock) do |dir, event_id, &block|
+            Molecules::DeliveryRecordStore.with_lock(dir, event_id) do
+              Molecules::DeliveryRecordStore.save(replaced, dir) # writer wins the lock first
+              block.call
+            end
           end
-          racing_store.define_singleton_method(:load_revalidated) do |dir, event_id|
-            Molecules::DeliveryRecordStore.save(replaced, dir) # writer lands before the reload
-            Molecules::DeliveryRecordStore.load_revalidated(dir, event_id)
-          end
+          racing_store.define_singleton_method(:load_revalidated) { |*args| Molecules::DeliveryRecordStore.load_revalidated(*args) }
           racing_store.define_singleton_method(:archive) { |*args| Molecules::DeliveryRecordStore.archive(*args) }
 
           report = Tidy.new(
