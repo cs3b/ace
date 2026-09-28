@@ -80,7 +80,7 @@ PATH
 PATH
   remote: ace-git-forgejo
   specs:
-    ace-git-forgejo (0.1.0)
+    ace-git-forgejo (0.1.1)
       ace-git (~> 0.24)
 
 PATH
