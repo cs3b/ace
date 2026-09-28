@@ -54,6 +54,50 @@ module Ace
         def lock_path(deliveries_dir, event_id)
           File.join(deliveries_dir, ".#{event_id}.lock")
         end
+
+        # --- tidy (spec 8wq.t.1w0) -------------------------------------------
+
+        # Enumerate the top-level delivery records, sorted by event id.
+        # Lock files, temp files, and the archive directory are ignored;
+        # a malformed or unreadable file yields an entry with record: nil
+        # (reported as preserved, never removed).
+        # @return [Array<{event_id: String, record: Models::DeliveryRecord, nil}>]
+        def list_records(deliveries_dir)
+          return [] unless Dir.exist?(deliveries_dir)
+
+          Dir.children(deliveries_dir).sort.filter_map do |name|
+            next nil unless record_file?(File.join(deliveries_dir, name))
+            next nil unless name.end_with?(".json")
+
+            {event_id: name.delete_suffix(".json"),
+             record: Models::DeliveryRecord.from_json(File.read(File.join(deliveries_dir, name)))}
+          rescue JSON::ParserError, ArgumentError
+            {event_id: name.delete_suffix(".json"), record: nil}
+          rescue Errno::ENOENT
+            nil # vanished between listing and read: nothing to preserve
+          end
+        end
+
+        # Archive directory for retired delivered records (inside the
+        # deliveries dir so a same-filesystem rename stays atomic)
+        def archive_dir(deliveries_dir)
+          File.join(deliveries_dir, "archive")
+        end
+
+        # Atomically move one record file into the archive directory
+        # (rename preserves the 0600 mode). Callers must hold the per-event
+        # lock and re-check eligibility under it.
+        # @return [String] the archive path the record was moved to
+        def archive(deliveries_dir, event_id)
+          dest = File.join(archive_dir(deliveries_dir), "#{event_id}.json")
+          FileUtils.mkdir_p(archive_dir(deliveries_dir))
+          File.rename(path_for(deliveries_dir, event_id), dest)
+          dest
+        end
+
+        def record_file?(path)
+          File.file?(path) && !File.basename(path).start_with?(".")
+        end
       end
     end
   end
