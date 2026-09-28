@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Durable assignment attempts: `ace-assign attempt start|status|finish|reconcile` bind an immutable attempt ID to an assignment step/subtree, project, boundary-derived actor identity, and `base_head`, with a `reserved -> running -> succeeded/failed/stopped/uncertain` lifecycle and conservative reconciliation of interruptions (no automatic replay of merge/publish/deploy).
+- Managed attempts journal accepted execution evidence to the configured evidence Git ref (default `refs/ace/execution`) through an isolated audit checkout with flock serialization and expected-old-value `git update-ref` compare-and-swap; `refs/ace/execution` never advances the deliverable candidate branch.
+- Structured execution receipts: verifiable artifact digests, executed checks, executed independent reviewer verdicts for the exact current head, and rejection of credentials/terminal output in accepted evidence.
+- `ace-assign status` (JSON) now includes the active attempt, `base_head`, `candidate_head`, `evidence_git_ref`, `journal_commit`, and unresolved effects.
+
+### Changed
+- BREAKING: delivery evidence is derived exclusively from accepted, current-head journal receipts. The previous interpretation that a current `.ace-local/review`/`.ace-local/release` report plus hardcoded `terminal` feedback authorizes merge is removed; `merge_decision` is now `authorized` or `approval-required` (never `report-only`). Existing `EvidenceCalculator` consumers must read evidence from attempts.
+- BREAKING: taskless assignments persist attempts locally (`recovery_mode: local_only`), never claim Git-backed recovery, and cannot record external effects until attached to a source task.
+- New `attempt` error family exits with code 5 (conflict, rejected receipt, unauthorized identity, unavailable evidence, illegal attempt state).
+
 ## [0.57.1] - 2026-09-27
 
 ### Technical
