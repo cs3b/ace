@@ -205,12 +205,7 @@ module Ace
           # written before a later validation error would be unowned and wedge
           # every retry).
           output_paths = expected.each_with_object({}) do |(relative_path, source_path), map|
-            output_path = safe_projection_path(output_dir, relative_path)
-            if output_path.nil?
-              raise StandardError,
-                    "cannot project #{relative_path} into #{extensions_dir}: a symlinked path component would escape the projection directory"
-            end
-            map[relative_path] = output_path
+            map[relative_path] = validate_projection_destination(output_dir, relative_path, extensions_dir)
           end
 
           output_paths.each do |relative_path, output_path|
@@ -244,8 +239,37 @@ module Ace
             next if candidate.nil? || !File.exist?(candidate)
 
             raise StandardError,
-                  "refusing to overwrite existing file #{candidate}; it is not claimed by a valid projection receipt (missing, symlinked, or corrupt receipts claim nothing). Move or remove the file — or repair or remove #{File.join(output_dir, EXTENSION_RECEIPT_NAME)} — then rerun `ace-handbook sync`."
+              "refusing to overwrite existing file #{candidate}; it is not claimed by a valid projection receipt " \
+              "(missing, symlinked, or corrupt receipts claim nothing). Move or remove the file — or repair or remove " \
+              "#{File.join(output_dir, EXTENSION_RECEIPT_NAME)} — then rerun `ace-handbook sync`."
           end
+        end
+
+        # Resolve and fully validate a destination before any file is
+        # written: every ancestor must be a directory or creatable (no
+        # regular files, no symlinks), so a mid-copy failure can never leave
+        # a half-installed projection that wedges retries.
+        def validate_projection_destination(output_dir, relative_path, extensions_dir)
+          segments = relative_path.split(File::SEPARATOR)
+          if segments.empty? || segments.any? { |segment| segment.empty? || segment == "." || segment == ".." }
+            raise StandardError, "cannot project #{relative_path.inspect}: invalid destination path"
+          end
+
+          current = Pathname.new(File.realpath(output_dir))
+          segments.each do |segment|
+            current = current.join(segment)
+            if File.symlink?(current.to_s)
+              raise StandardError,
+                "cannot project #{relative_path} into #{extensions_dir}: a symlinked path component would escape the projection directory"
+            end
+            if !current.directory? && File.exist?(current.to_s) && segments.last != segment
+              raise StandardError,
+                "cannot project #{relative_path} into #{extensions_dir}: #{current} exists and is not a directory"
+            end
+          end
+          current.to_s
+        rescue Errno::ENOENT
+          raise StandardError, "cannot project #{relative_path} into #{extensions_dir}: projection directory vanished"
         end
 
         def extension_source_files(source_dir)
@@ -253,8 +277,8 @@ module Ace
 
           source_root = Pathname.new(source_dir)
           Dir.glob(File.join(source_dir, "**", "*"))
-             .select { |path| File.file?(path) }
-             .to_h { |path| [Pathname.new(path).relative_path_from(source_root).to_s, path] }
+            .select { |path| File.file?(path) }
+            .to_h { |path| [Pathname.new(path).relative_path_from(source_root).to_s, path] }
         end
 
         def prune_stale_extension_files(output_dir, expected_relative_paths, provider)
@@ -363,7 +387,7 @@ module Ace
 
           frontmatter = YAML.safe_load(match[1], permitted_classes: [Date, Time], aliases: true)
           frontmatter.is_a?(Hash) ? frontmatter["source"].to_s : ""
-        rescue StandardError
+        rescue
           ""
         end
       end

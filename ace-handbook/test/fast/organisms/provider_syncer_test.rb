@@ -426,6 +426,27 @@ class Ace::Handbook::Organisms::ProviderSyncerTest < Minitest::Test
     assert File.exist?(File.join(extensions_dir, "ace-wake", "z", "index.js"))
   end
 
+  def test_failed_projection_recovers_after_removing_blocking_ancestor_file
+    create_provider_manifest("pi", ".pi/skills", extensions_dir: ".pi/extensions")
+    create_extension_asset("pi", "ace-wake/a.js", "// a" + "\n")
+    create_extension_asset("pi", "ace-wake/z/index.js", "// z" + "\n")
+    extensions_dir = File.join(@tmpdir, ".pi", "extensions")
+    FileUtils.mkdir_p(File.join(extensions_dir, "ace-wake"))
+    File.write(File.join(extensions_dir, "ace-wake", "z"), "blocking file")
+
+    error = assert_raises(StandardError) { syncer.sync(provider: "pi") }
+
+    assert_includes error.message, "exists and is not a directory"
+    refute File.exist?(File.join(extensions_dir, "ace-wake", "a.js")),
+      "a failed projection must not leave partially installed files behind"
+
+    FileUtils.rm_f(File.join(extensions_dir, "ace-wake", "z"))
+    result = syncer.sync(provider: "pi").first
+    assert_equal 2, result.fetch(:projected_extensions)
+    assert File.exist?(File.join(extensions_dir, "ace-wake", "a.js"))
+    assert File.exist?(File.join(extensions_dir, "ace-wake", "z", "index.js"))
+  end
+
   def test_sync_rejects_receipt_paths_through_symlinked_components
     create_provider_manifest("pi", ".pi/skills", extensions_dir: ".pi/extensions")
     create_extension_asset("pi", "ace-wake.mjs", "// current\n")
