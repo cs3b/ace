@@ -43,9 +43,12 @@ require_relative "molecules/tmux_control_surface_runner"
 require_relative "molecules/preset_inferrer"
 require_relative "molecules/evidence_calculator"
 require_relative "molecules/evidence_journal"
+require_relative "molecules/execution_identity_resolver"
+require_relative "molecules/receipt_verifier"
 
 # Organisms
 require_relative "organisms/assignment_executor"
+require_relative "organisms/attempt_coordinator"
 
 # Commands
 require_relative "cli/commands/create"
