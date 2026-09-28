@@ -347,6 +347,29 @@ class Ace::Handbook::Organisms::ProviderSyncerTest < Minitest::Test
     assert File.exist?(File.join(extensions_dir, "ace-wake.mjs"))
   end
 
+  def test_sync_never_writes_through_a_symlinked_receipt
+    create_provider_manifest("pi", ".pi/skills", extensions_dir: ".pi/extensions")
+    create_extension_asset("pi", "ace-wake.mjs", "// current\n")
+
+    syncer.sync(provider: "pi")
+    extensions_dir = File.join(@tmpdir, ".pi", "extensions")
+    outside = File.join(@tmpdir, "outside")
+    FileUtils.mkdir_p(outside)
+    victim = File.join(outside, "victim.txt")
+    File.write(victim, "precious content")
+    receipt_path = File.join(extensions_dir, ".ace-handbook-projection.json")
+    FileUtils.rm_f(receipt_path)
+    FileUtils.ln_s(victim, receipt_path)
+
+    syncer.sync(provider: "pi")
+
+    assert_equal "precious content", File.read(victim), "the receipt write must truncate the symlink target"
+    assert File.file?(receipt_path), "the receipt must exist after sync"
+    refute File.symlink?(receipt_path), "the receipt write must replace the symlink, not follow it"
+    receipt = JSON.parse(File.read(receipt_path))
+    assert_equal ["ace-wake.mjs"], receipt.fetch("files")
+  end
+
   def test_sync_rejects_receipt_paths_through_symlinked_components
     create_provider_manifest("pi", ".pi/skills", extensions_dir: ".pi/extensions")
     create_extension_asset("pi", "ace-wake.mjs", "// current\n")

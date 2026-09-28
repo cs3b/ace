@@ -189,7 +189,13 @@ module Ace
           FileUtils.mkdir_p(output_dir)
 
           receipt = read_projection_receipt(output_dir)
-          owned_paths = receipt.nil? ? [] : receipt.fetch("files", [])
+          receipt_path = File.join(output_dir, EXTENSION_RECEIPT_NAME)
+          # A present-but-unreadable receipt (symlink, corrupt JSON) still
+          # claims ownership of the expected paths — the projection happened
+          # and the atomic receipt write below takes the path back. Only an
+          # absent receipt leaves destination files unowned.
+          receipt_present = File.symlink?(receipt_path) || File.file?(receipt_path)
+          owned_paths = receipt&.fetch("files", []) || (receipt_present ? expected.keys : [])
           reject_unowned_collisions(output_dir, expected.keys, owned_paths)
 
           removed_entries = prune_stale_extension_files(output_dir, expected.keys)
@@ -286,6 +292,7 @@ module Ace
 
         def read_projection_receipt(output_dir)
           receipt_path = File.join(output_dir, EXTENSION_RECEIPT_NAME)
+          return nil if File.symlink?(receipt_path)
           return nil unless File.file?(receipt_path)
 
           receipt = JSON.parse(File.read(receipt_path))
@@ -297,10 +304,18 @@ module Ace
         end
 
         def write_projection_receipt(output_dir, provider, relative_paths)
-          File.write(File.join(output_dir, EXTENSION_RECEIPT_NAME), JSON.pretty_generate(
+          receipt_path = File.join(output_dir, EXTENSION_RECEIPT_NAME)
+          # Write to a sibling temp file and rename over the receipt path:
+          # rename replaces an existing symlink at the destination instead of
+          # truncating whatever it points at.
+          temp_path = File.join(output_dir, "#{EXTENSION_RECEIPT_NAME}.tmp-#{Process.pid}")
+          File.write(temp_path, JSON.pretty_generate(
             "source" => "#{PROJECTION_SOURCE_PREFIX}#{provider}",
             "files" => relative_paths.sort
           ))
+          File.rename(temp_path, receipt_path)
+        ensure
+          FileUtils.rm_f(temp_path) if defined?(temp_path) && temp_path && File.exist?(temp_path)
         end
 
         def remove_empty_parent_dirs(dir, stop_dir)
