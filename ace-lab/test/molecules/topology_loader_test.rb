@@ -36,9 +36,11 @@ module Molecules
 
     def test_rejects_duplicate_stable_ids
       config = topology_config
-      config["topology"]["services"] << config["topology"]["agents"].first.merge(
-        "endpoint" => {"kind" => "http", "url" => "https://x"}, "role" => nil
-      )
+      config["topology"]["services"] << {
+        "id" => "atlas-planner", "project" => "atlas", "capabilities" => ["search"],
+        "endpoint" => {"kind" => "http", "url" => "https://x.example"},
+        "binding" => {"kind" => "service"}
+      }
 
       error = assert_raises(Ace::Lab::InvalidConfigurationError) do
         Ace::Lab::Molecules::TopologyLoader.new(config).load

@@ -272,3 +272,47 @@ module Atoms
     end
   end
 end
+
+module Atoms
+  class TopologySchemaBindingKindTest < Minitest::Test
+    def test_rejects_agent_binding_kind_mismatch
+      config = topology_config
+      config["topology"]["agents"].first["binding"]["kind"] = "service"
+
+      error = assert_raises(Ace::Lab::InvalidConfigurationError) do
+        Ace::Lab::Atoms::TopologySchema.normalize!(config)
+      end
+      assert_includes error.message, "topology.agents[0].binding.kind must be one of: runtime"
+    end
+
+    def test_rejects_unsupported_agent_binding_kind
+      config = topology_config
+      config["topology"]["agents"].first["binding"]["kind"] = "unsupported-runtime"
+
+      error = assert_raises(Ace::Lab::InvalidConfigurationError) do
+        Ace::Lab::Atoms::TopologySchema.normalize!(config)
+      end
+      assert_includes error.message, "topology.agents[0].binding.kind must be one of: runtime"
+    end
+
+    def test_rejects_service_binding_kind_runtime
+      config = topology_config
+      config["topology"]["services"].first["binding"]["kind"] = "runtime"
+
+      error = assert_raises(Ace::Lab::InvalidConfigurationError) do
+        Ace::Lab::Atoms::TopologySchema.normalize!(config)
+      end
+      assert_includes error.message, "topology.services[0].binding.kind must be one of: service"
+    end
+
+    def test_rejects_out_of_range_endpoint_ports
+      config = topology_config
+      config["topology"]["services"].first["endpoint"]["url"] = "https://search.example.internal:99999/query"
+
+      error = assert_raises(Ace::Lab::InvalidConfigurationError) do
+        Ace::Lab::Atoms::TopologySchema.normalize!(config)
+      end
+      assert_includes error.message, "endpoint.url must be an absolute http(s) URL with a host and a valid port"
+    end
+  end
+end

@@ -157,5 +157,95 @@ module Organisms
         end
       end
     end
+
+    def with_authorization_file(path)
+      previous = ENV[Ace::Lab::AUTHORIZATION_ENV]
+      ENV[Ace::Lab::AUTHORIZATION_ENV] = path
+      yield
+    ensure
+      ENV[Ace::Lab::AUTHORIZATION_ENV] = previous
+    end
+
+    def write_lab_config(root, content)
+      config_dir = File.join(root, ".ace", "lab")
+      FileUtils.mkdir_p(config_dir)
+      File.write(File.join(config_dir, "config.yml"), YAML.dump(content))
+    end
+
+    def deployment_config(with_authorization: true)
+      config = topology_config
+      config.delete("authorization") unless with_authorization
+      config
+    end
+
+    def test_cascade_authorization_sections_are_rejected
+      Dir.mktmpdir do |project|
+        write_lab_config(project, deployment_config) # includes authorization
+
+        Ace::Lab.reset_config!
+        begin
+          Dir.chdir(project) do
+            result = Ace::Lab::Organisms::TopologyService.from_config.projects
+
+            # A caller-writable cascade tier must never define grants; the
+            # error points operators at the trusted channel (review F3)
+            refute_predicate result, :ok?
+            assert_equal "invalid_configuration", result.error_code
+            assert_match(/grants come from the trusted file/, result.message)
+            assert_match(/remove the authorization section/, result.message)
+          end
+        ensure
+          Ace::Lab.reset_config!
+        end
+      end
+    end
+
+    def test_grants_come_from_the_trusted_authorization_file
+      Dir.mktmpdir do |project|
+        Dir.mktmpdir do |trusted_dir|
+          write_lab_config(project, deployment_config(with_authorization: false))
+          trusted_path = File.join(trusted_dir, "authorization.yml")
+          File.write(trusted_path, YAML.dump({
+            "principals" => {
+              Ace::Lab::Molecules::CallerAuthorizer.local_identity.first => {"projects" => %w[atlas borealis]}
+            }
+          }))
+
+          Ace::Lab.reset_config!
+          begin
+            with_authorization_file(trusted_path) do
+              Dir.chdir(project) do
+                result = Ace::Lab::Organisms::TopologyService.from_config.projects
+
+                assert_predicate result, :ok?
+                assert_equal %w[atlas borealis], result.data["projects"].map { |p| p["id"] }
+              end
+            end
+          ensure
+            Ace::Lab.reset_config!
+          end
+        end
+      end
+    end
+
+    def test_without_a_trusted_file_nobody_is_authorized
+      Dir.mktmpdir do |project|
+        write_lab_config(project, deployment_config(with_authorization: false))
+
+        Ace::Lab.reset_config!
+        begin
+          with_authorization_file("/nonexistent/lab/authorization.yml") do
+            Dir.chdir(project) do
+              result = Ace::Lab::Organisms::TopologyService.from_config.projects
+
+              refute_predicate result, :ok?
+              assert_equal "unauthorized", result.error_code
+            end
+          end
+        ensure
+          Ace::Lab.reset_config!
+        end
+      end
+    end
   end
 end

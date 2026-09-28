@@ -80,14 +80,10 @@ Example:
 
 Schema version 1, resolved through the ADR-022 cascade (project `.ace/lab/`
 over user `~/.ace/lab/` over gem defaults; gem defaults are an empty, safe
-topology):
+topology). Cascade documents carry **topology only**:
 
 ```yaml
 schema_version: 1
-authorization:
-  principals:
-    "<verified-local-uid>":   # passwd username or numeric uid of the caller
-      projects: ["atlas"]
 topology:
   projects:
     - id: atlas               # globally unique across all entries
@@ -98,7 +94,7 @@ topology:
       role: planner
       capabilities: [planning]  # non-empty; normalized (stripped, lowercased)
       binding:
-        kind: runtime
+        kind: runtime           # agents bind to runtimes, services to services
         state: active           # routeable only when active
         instance_id: i1         # runtime identity fact
         attested_instance_id: i1  # must equal instance_id to be fresh
@@ -106,18 +102,35 @@ topology:
     - id: atlas-search
       project: atlas
       capabilities: [search]
-      default_for: [search]     # disambiguates multi-candidate routing
+      default_for: [search]     # exactly one default may win among candidates
       endpoint:
-        kind: http
+        kind: http              # http or https
         url: "https://search.example.internal/query?token=secret"  # stored, never published
       binding: { kind: service, state: active, instance_id: i2, attested_instance_id: i2 }
 ```
 
+### Authorization grants
+
+Grants never live in the cascade: project and user documents are
+caller-writable, so an `authorization` section there is rejected as
+`invalid_configuration`. Grants come from a single trusted,
+deployment-controlled file — selected by `ACE_LAB_AUTHORIZATION_FILE`,
+default `/etc/lab/ace-lab/authorization.yml` (owned by the `lab-config`
+deployment):
+
+```yaml
+principals:
+  "<verified-local-uid>":     # passwd username or numeric uid of the caller
+    projects: ["atlas"]
+```
+
+A missing trusted file means nobody is authorized (fail closed).
+
 Validation rejects duplicate IDs (globally unique across projects, agents,
 services), unknown project references, malformed capabilities, defaults for
-undeclared capabilities, unusable endpoints (absolute http(s) URL with a
-host; `endpoint.kind` is `http` or `https`), and principals referencing
-unknown projects.
+undeclared capabilities, unusable endpoints (absolute http(s) URL with a host
+and a port in 1–65535; `endpoint.kind` is `http` or `https`), unsupported
+binding kinds, and principals referencing unknown projects.
 
 **Error messages are value-free by design:** validation runs before
 authorization, so messages use positional field locations

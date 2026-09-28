@@ -22,6 +22,10 @@ module Ace
       module TopologySchema
         SCHEMA_VERSION = 1
         ENDPOINT_KINDS = %w[http https].freeze
+        # Bindings are entry-typed: agents run in runtimes, services are
+        # service endpoints (review round 4, F1)
+        AGENT_BINDING_KINDS = %w[runtime].freeze
+        SERVICE_BINDING_KINDS = %w[service].freeze
 
         class << self
           # Validate and normalize the full lab configuration
@@ -45,6 +49,18 @@ module Ace
               "authorization" => authorization,
               "topology" => topology
             }
+          end
+
+          # Validate and normalize a standalone authorization document
+          # against known project IDs (used by the narrowing grant merge,
+          # review round 4, F3)
+          #
+          # @param authorization [Hash, nil]
+          # @param topology [Hash] normalized topology
+          # @return [Hash] normalized authorization
+          # @raise [Ace::Lab::InvalidConfigurationError]
+          def normalize_authorization!(authorization, topology)
+            normalized_authorization(authorization, topology)
           end
 
           private
@@ -90,7 +106,7 @@ module Ace
               "label" => optional_string(entry["label"], "#{context}.label"),
               "role" => require_non_empty(entry["role"], "#{context}.role must be a non-empty string"),
               "capabilities" => normalize_capabilities(entry["capabilities"], "#{context}.capabilities"),
-              "binding" => normalize_binding(entry["binding"], "#{context}.binding")
+              "binding" => normalize_binding(entry["binding"], "#{context}.binding", AGENT_BINDING_KINDS)
             }
           end
 
@@ -108,7 +124,7 @@ module Ace
               "capabilities" => capabilities,
               "default_for" => normalize_default_for(entry["default_for"], "#{context}.default_for", capabilities),
               "endpoint" => normalize_endpoint(entry["endpoint"], "#{context}.endpoint"),
-              "binding" => normalize_binding(entry["binding"], "#{context}.binding")
+              "binding" => normalize_binding(entry["binding"], "#{context}.binding", SERVICE_BINDING_KINDS)
             }
           end
 
@@ -224,22 +240,30 @@ module Ace
 
           # A malformed endpoint must fail configuration loading, never
           # become a routing candidate with an empty public identity
-          # (review round 2, R1)
+          # (review round 2, R1). Port bounds included: Ruby's URI parser
+          # accepts out-of-range ports (review round 4, F2).
           def validate_endpoint_url(url, context)
             uri = URI.parse(url)
-            usable = (uri.is_a?(URI::HTTP) || uri.is_a?(URI::HTTPS)) && uri.host && !uri.host.empty?
-            raise invalid("#{context}.url must be an absolute http(s) URL with a host") unless usable
+            usable = (uri.is_a?(URI::HTTP) || uri.is_a?(URI::HTTPS)) &&
+              uri.host && !uri.host.empty? &&
+              uri.port.is_a?(Integer) && (1..65_535).cover?(uri.port)
+            raise invalid("#{context}.url must be an absolute http(s) URL with a host and a valid port") unless usable
           rescue URI::Error, ArgumentError
-            raise invalid("#{context}.url must be an absolute http(s) URL with a host")
+            raise invalid("#{context}.url must be an absolute http(s) URL with a host and a valid port")
           end
 
-          def normalize_binding(value, context)
+          def normalize_binding(value, context, allowed_kinds)
             unless value.is_a?(Hash)
               raise invalid("#{context} must be a mapping")
             end
 
+            kind = require_non_empty(value["kind"], "#{context}.kind must be a non-empty string").downcase
+            unless allowed_kinds.include?(kind)
+              raise invalid("#{context}.kind must be one of: #{allowed_kinds.join(", ")}")
+            end
+
             {
-              "kind" => require_non_empty(value["kind"], "#{context}.kind must be a non-empty string"),
+              "kind" => kind,
               "state" => optional_string(value["state"], "#{context}.state")&.downcase,
               "instance_id" => optional_string(value["instance_id"], "#{context}.instance_id"),
               "attested_instance_id" => optional_string(value["attested_instance_id"], "#{context}.attested_instance_id")

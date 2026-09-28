@@ -69,9 +69,25 @@ module Ace
           return [@loader.load, @authorizer] if @loader
 
           @dependencies ||= begin
-            normalized = Atoms::TopologySchema.normalize!(@config || Ace::Lab.config)
+            config = @config || Ace::Lab.config
+            normalized = Atoms::TopologySchema.normalize!(config)
+            grants = if @config
+              # Explicitly injected configuration is a trusted in-process
+              # input (API use and fixtures)
+              normalized["authorization"]["principals"]
+            else
+              # Cascade path: grants come only from the trusted deployment-
+              # controlled document; cascade tiers can never define or expand
+              # authorization (review round 4, F3)
+              Molecules::GrantResolver.resolve(
+                documents: Ace::Lab.cascade_documents,
+                topology: normalized["topology"],
+                trusted_path: Ace::Lab.authorization_path
+              )["principals"]
+            end
+
             loader = Molecules::TopologyLoader.new(normalized)
-            authorizer = Molecules::CallerAuthorizer.new(principals: normalized["authorization"]["principals"])
+            authorizer = Molecules::CallerAuthorizer.new(principals: grants)
             [loader.load, authorizer]
           end
         end

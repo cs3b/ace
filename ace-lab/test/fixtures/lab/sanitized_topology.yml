@@ -3,13 +3,10 @@
 # Safe placeholders shaped like the deployed lab-config topology, with
 # deliberately secret-bearing endpoint values so redaction tests can prove
 # tokens, userinfo, query parameters, and fragments never reach public output.
-# No value here is a real credential.
+# No value here is a real credential. Authorization grants do not live in
+# cascade documents — see test/commands/fresh_install_test.rb for the trusted
+# grants file.
 schema_version: 1
-
-authorization:
-  principals:
-    operator:
-      projects: [atlas, borealis]
 
 topology:
   projects:

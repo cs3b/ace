@@ -21,6 +21,7 @@ require_relative "lab/models/topology_entry"
 require_relative "lab/models/query_result"
 require_relative "lab/molecules/topology_loader"
 require_relative "lab/molecules/caller_authorizer"
+require_relative "lab/molecules/grant_resolver"
 require_relative "lab/molecules/inventory_query"
 require_relative "lab/molecules/exact_resolver"
 require_relative "lab/molecules/capability_router"
@@ -67,6 +68,17 @@ module Ace
     # Same discovery the cascade resolver performs for this namespace
     LAB_FILE_PATTERNS = ["lab/config.yml", "lab/config.yaml"].freeze
 
+    # Authorization grants live in a trusted, deployment-controlled file —
+    # never in the caller-writable configuration cascade (review round 4, F3)
+    AUTHORIZATION_ENV = "ACE_LAB_AUTHORIZATION_FILE"
+    DEFAULT_AUTHORIZATION_PATH = "/etc/lab/ace-lab/authorization.yml"
+
+    # Path of the trusted authorization grants document
+    # @return [String]
+    def self.authorization_path
+      ENV[AUTHORIZATION_ENV] || DEFAULT_AUTHORIZATION_PATH
+    end
+
     # Load configuration using Ace::Support::Config cascade.
     # Load failures raise InvalidConfigurationError (classified by the query
     # boundary) — silently falling back to empty defaults would misreport
@@ -74,7 +86,7 @@ module Ace
     # @return [Hash] Merged configuration
     # @raise [Ace::Lab::InvalidConfigurationError]
     def self.load_config
-      validate_document_roots!
+      cascade_documents
 
       resolver = Ace::Support::Config.create(
         config_dir: ".ace",
@@ -93,11 +105,18 @@ module Ace
     end
     private_class_method :load_config
 
-    # Cascade merging treats a non-mapping document as an empty overlay, so a
-    # malformed root (e.g. a YAML array) would be silently ignored. Validate
-    # every discovered document before merging (review round 3, F1).
-    # Messages carry the file path — never parsed content.
-    def self.validate_document_roots!
+    # The individual cascade documents for this namespace, same discovery the
+    # resolver performs, each validated before use. Cascade merging treats a
+    # non-mapping document as an empty overlay, so a malformed root (e.g. a
+    # YAML array) would be silently ignored (review round 3, F1). Messages
+    # carry the file path — never parsed content.
+    #
+    # Exposed because authorization grants need per-tier documents: a
+    # caller-writable tier must never be able to EXPAND grants (review
+    # round 4, F3), which the merged view cannot express.
+    #
+    # @return [Array<Hash>] {path:, document:, defaults:}
+    def self.cascade_documents
       finder = Ace::Support::Config::Molecules::ConfigFinder.new(
         config_dir: ".ace",
         defaults_dir: ".ace-defaults",
@@ -105,7 +124,7 @@ module Ace
         file_patterns: LAB_FILE_PATTERNS
       )
 
-      finder.find_all.select(&:exists).each do |cascade_path|
+      finder.find_all.select(&:exists).map do |cascade_path|
         path = cascade_path.path
         document = begin
           require "yaml"
@@ -113,11 +132,12 @@ module Ace
         rescue
           raise InvalidConfigurationError, "invalid lab configuration: #{path} could not be parsed as YAML"
         end
-        next if document.nil? || document.is_a?(Hash)
+        unless document.nil? || document.is_a?(Hash)
+          raise InvalidConfigurationError, "invalid lab configuration: #{path} must contain a YAML mapping"
+        end
 
-        raise InvalidConfigurationError, "invalid lab configuration: #{path} must contain a YAML mapping"
+        {path: path, document: document || {}, defaults: path.start_with?(gem_root)}
       end
     end
-    private_class_method :validate_document_roots!
   end
 end

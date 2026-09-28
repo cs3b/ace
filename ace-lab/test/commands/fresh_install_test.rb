@@ -18,17 +18,19 @@ module Ace
             Dir.mktmpdir do |tmp|
               gem_home = File.join(tmp, "gems")
               project_dir = File.join(tmp, "project")
+              trusted_path = File.join(tmp, "authorization.yml")
               gem_file = build_gem
               begin
                 install_gem(gem_file, gem_home)
-                write_authorized_config(project_dir)
+                write_topology_config(project_dir)
+                write_trusted_grants(trusted_path)
                 bin = File.join(gem_home, "bin", "ace-lab")
                 assert File.exist?(bin), "installed gem must ship the ace-lab executable"
 
                 refute_packaged_lab_dependency(gem_home)
-                refute_workspace_code(gem_home, project_dir)
+                refute_workspace_code(gem_home, project_dir, trusted_path)
 
-                env = launch_env(gem_home, project_dir)
+                env = launch_env(gem_home, project_dir, trusted_path)
                 verify_resolve(env, bin, project_dir)
                 verify_route(env, bin, project_dir)
                 verify_pane_replacement_keeps_stable_id(env, bin, project_dir)
@@ -64,13 +66,15 @@ module Ace
           # Environment for the installed CLI: only the variables the process
           # needs — inherited workspace/bundler state is dropped entirely
           # (review R5). GEM_PATH keeps the system gem dir as dependency
-          # fallback; HOME points at the fresh project.
-          def launch_env(gem_home, project_dir)
+          # fallback; HOME points at the fresh project; grants come from the
+          # trusted authorization file (review round 4, F3).
+          def launch_env(gem_home, project_dir, trusted_path)
             {
               "PATH" => ENV["PATH"],
               "HOME" => project_dir,
               "GEM_HOME" => gem_home,
-              "GEM_PATH" => "#{gem_home}#{File::PATH_SEPARATOR}#{system_gem_dir}"
+              "GEM_PATH" => "#{gem_home}#{File::PATH_SEPARATOR}#{system_gem_dir}",
+              Ace::Lab::AUTHORIZATION_ENV => trusted_path
             }
           end
 
@@ -92,15 +96,20 @@ module Ace
             @system_gem_dir
           end
 
-          def write_authorized_config(project_dir)
+          # The deployed topology document carries no grants; authorization
+          # lives in the trusted file (review round 4, F3)
+          def write_topology_config(project_dir)
             config = YAML.load_file(File.join(package_dir, "test", "fixtures", "lab", "sanitized_topology.yml"))
-            principal = Etc.getpwuid(Process.uid)&.name || Process.uid.to_s
-            config["authorization"]["principals"] = {
-              principal => {"projects" => %w[atlas borealis]}
-            }
             config_dir = File.join(project_dir, ".ace", "lab")
             FileUtils.mkdir_p(config_dir)
             File.write(File.join(config_dir, "config.yml"), YAML.dump(config))
+          end
+
+          def write_trusted_grants(trusted_path)
+            principal = Etc.getpwuid(Process.uid)&.name || Process.uid.to_s
+            File.write(trusted_path, YAML.dump({
+              "principals" => {principal => {"projects" => %w[atlas borealis]}}
+            }))
           end
 
           def refute_packaged_lab_dependency(gem_home)
@@ -115,10 +124,10 @@ module Ace
 
           # The installed gem — not the workspace — must serve the commands:
           # probe which copy of ace-lab a launch-env process actually loads
-          def refute_workspace_code(gem_home, project_dir)
+          def refute_workspace_code(gem_home, project_dir, trusted_path)
             probe = 'require "ace/lab"; puts Gem.loaded_specs["ace-lab"].full_gem_path'
-            out, err, status = Open3.capture3(launch_env(gem_home, project_dir), RbConfig.ruby, "-e", probe,
-              unsetenv_others: true, chdir: project_dir)
+            out, err, status = Open3.capture3(launch_env(gem_home, project_dir, trusted_path), RbConfig.ruby,
+              "-e", probe, unsetenv_others: true, chdir: project_dir)
             flunk("installed-gem probe failed: #{err}") unless status.success?
 
             # realpath: macOS tmpdir may report /var vs /private/var prefixes

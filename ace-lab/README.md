@@ -16,13 +16,13 @@ work, and never guesses transient pane or session identifiers.
 
 Configure topology via the ADR-022 cascade (`~/.ace/lab/config.yml` or
 `.ace/lab/config.yml`; deployed values are owned by the `lab-config`
-repository):
+repository). Authorization grants live in a separate trusted,
+deployment-controlled file — `ACE_LAB_AUTHORIZATION_FILE` (default
+`/etc/lab/ace-lab/authorization.yml`) — never in the caller-writable cascade:
 
 ```yaml
+# .ace/lab/config.yml — topology only
 schema_version: 1
-authorization:
-  principals:
-    "<verified-local-uid>": { projects: ["atlas"] }
 topology:
   projects:
     - { id: atlas, label: Atlas platform }
@@ -39,6 +39,12 @@ topology:
       default_for: [search]
       endpoint: { kind: http, url: "https://search.example.internal/query?token=secret" }
       binding: { kind: service, state: active, instance_id: i2, attested_instance_id: i2 }
+```
+
+```yaml
+# trusted grants file (deployment-owned)
+principals:
+  "<verified-local-uid>": { projects: ["atlas"] }
 ```
 
 Query it:

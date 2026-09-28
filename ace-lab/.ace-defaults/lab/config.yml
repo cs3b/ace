@@ -1,14 +1,18 @@
 # ace-lab default configuration
 # Override in ~/.ace/lab/config.yml or .ace/lab/config.yml
 #
-# Deployed topology and authorization values are owned by the lab-config
-# repository; this default ships a deliberately empty, safe structure so a
-# fresh install resolves to "no topology" instead of guessed values.
+# Deployed topology values are owned by the lab-config repository; this
+# default ships a deliberately empty, safe structure so a fresh install
+# resolves to "no topology" instead of guessed values.
 #
-# Schema (version 1):
-#   authorization:
-#     principals:
-#       "<verified-local-uid>": { projects: ["project-id"] }
+# AUTHORIZATION GRANTS DO NOT LIVE HERE. Caller-writable cascade documents
+# must never define who may see what (review round 4, F3). Grants come from
+# the trusted deployment-controlled file selected by ACE_LAB_AUTHORIZATION_FILE
+# (default /etc/lab/ace-lab/authorization.yml):
+#
+#   { "principals": { "<verified-local-uid>": { "projects": ["project-id"] } } }
+#
+# Topology schema (version 1):
 #   topology:
 #     projects:
 #       - { id: project-id, label: Display name }
@@ -29,9 +33,6 @@
 #                    attested_instance_id: iid }
 
 schema_version: 1
-
-authorization:
-  principals: {}
 
 topology:
   projects: []
