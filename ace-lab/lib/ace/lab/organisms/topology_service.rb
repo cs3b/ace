@@ -43,6 +43,13 @@ module Ace
           query { |index| Molecules::ExactResolver.new(index: index, authorizer: @authorizer).resolve(id) }
         end
 
+        def route(project:, capability:)
+          query do |index|
+            Molecules::CapabilityRouter.new(index: index, authorizer: @authorizer)
+              .route(project: project, capability: capability)
+          end
+        end
+
         private
 
         # Run a query against the validated index; configuration violations

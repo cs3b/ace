@@ -23,6 +23,7 @@ require_relative "lab/molecules/topology_loader"
 require_relative "lab/molecules/caller_authorizer"
 require_relative "lab/molecules/inventory_query"
 require_relative "lab/molecules/exact_resolver"
+require_relative "lab/molecules/capability_router"
 require_relative "lab/organisms/topology_service"
 require_relative "lab/cli"
 

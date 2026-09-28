@@ -35,6 +35,17 @@ module Organisms
       assert_equal "unauthorized", result.error_code
     end
 
+    def test_routes_capability_through_authorized_default
+      service = Ace::Lab::Organisms::TopologyService.from_config(
+        config_for_local_identity(projects: ["atlas"])
+      )
+
+      result = service.route(project: "atlas", capability: "search")
+
+      assert_predicate result, :ok?
+      assert_equal "atlas-search", result.data["entry"]["id"]
+    end
+
     def test_invalid_configuration_is_a_classified_result
       broken = topology_config
       broken["topology"]["agents"].first["project"] = "ghost"
