@@ -9,9 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Added an explicit Lab runtime adapter for listing projects and agents, preparing and dispatching Works, forwarding prompts over stdin, starting exact-head reviews, and stopping workers.
+- Added installed-consumer probe coverage: the suite builds the current gem artifacts, installs them into an isolated consumer environment (fresh gem home, unrelated cwd, sanitized HOME), and proves `ace-nav resolve wfi://overseer` and `ace-bundle wfi://overseer` succeed from packaged content only, with a registration-removal fixture proving the probe detects masking.
 
 ### Changed
 - Kept tmux as the default runtime while allowing `work-on`, `status`, and dry-run `prune` to delegate through the system-owned `/usr/local/bin/lab` boundary.
+- Strengthened the overseer prune-safety contract: migrated-work preservation now requires a declared, verified destination plus tree/artifact or patch equivalence (the subject-only successor search is gone), plus a positive executed no-active-writer check from overseer/assignment/Lab status; ambiguity preserves.
 
 
 ## [0.16.0] - 2026-09-20
