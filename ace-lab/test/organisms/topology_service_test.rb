@@ -112,5 +112,50 @@ module Organisms
         end
       end
     end
+
+    def test_non_mapping_project_document_is_rejected_not_ignored
+      Dir.mktmpdir do |dir|
+        config_dir = File.join(dir, ".ace", "lab")
+        FileUtils.mkdir_p(config_dir)
+        File.write(File.join(config_dir, "config.yml"), "- broken")
+
+        Ace::Lab.reset_config!
+        begin
+          Dir.chdir(dir) do
+            result = Ace::Lab::Organisms::TopologyService.from_config.projects
+
+            # A non-mapping document must fail configuration loading, never
+            # merge as a silent empty overlay (review round 3, F1)
+            refute_predicate result, :ok?
+            assert_equal "invalid_configuration", result.error_code
+            assert_match(/must contain a YAML mapping/, result.message)
+          end
+        ensure
+          Ace::Lab.reset_config!
+        end
+      end
+    end
+
+    def test_load_error_messages_never_expose_configuration_content
+      Dir.mktmpdir do |dir|
+        config_dir = File.join(dir, ".ace", "lab")
+        FileUtils.mkdir_p(config_dir)
+        File.write(File.join(config_dir, "config.yml"), "secret: *private_token_canary")
+
+        Ace::Lab.reset_config!
+        begin
+          Dir.chdir(dir) do
+            result = Ace::Lab::Organisms::TopologyService.from_config.projects
+
+            refute_predicate result, :ok?
+            assert_equal "invalid_configuration", result.error_code
+            # Parser text may quote anchors/values; the public message must not
+            refute_includes result.message, "private_token_canary"
+          end
+        ensure
+          Ace::Lab.reset_config!
+        end
+      end
+    end
   end
 end

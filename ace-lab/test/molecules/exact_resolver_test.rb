@@ -47,15 +47,23 @@ module Molecules
       assert_nil result.data
     end
 
-    def test_unauthorized_entry_discloses_no_project
-      result = resolver_for("intern").resolve("atlas-planner")
+    def test_hidden_and_nonexistent_ids_are_indistinguishable
+      hidden = resolver_for("intern").resolve("atlas-planner")
+      unknown = resolver_for("intern").resolve("no-such-id")
 
-      # The configured project is topology the caller cannot see; the error
-      # names nothing beyond the ID the caller itself supplied (review R6)
-      refute_predicate result, :ok?
-      assert_equal "unauthorized", result.error_code
-      refute_includes result.message, "project"
-      assert_empty result.context.reject { |key, _| key.to_s == "id" }
+      # A caller able to distinguish hidden from nonexistent entries could
+      # probe private topology; both classify missing identically (review F3)
+      assert_equal "missing", hidden.error_code
+      assert_equal unknown.error_code, hidden.error_code
+      assert_equal unknown.message.sub("no-such-id", "atlas-planner"), hidden.message
+      assert_nil hidden.data
+    end
+
+    def test_unauthorized_project_id_is_missing_not_unauthorized
+      result = resolver_for("intern").resolve("atlas")
+
+      assert_equal "missing", result.error_code
+      assert_nil result.data
     end
 
     def test_project_id_resolves_for_authorized_caller
@@ -63,12 +71,6 @@ module Molecules
 
       assert_predicate result, :ok?
       assert_equal "atlas", result.data["entry"]["id"]
-    end
-
-    def test_project_id_unauthorized_for_caller_without_principal
-      result = resolver_for("intern").resolve("atlas")
-
-      assert_equal "unauthorized", result.error_code
     end
   end
 end

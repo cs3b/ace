@@ -64,6 +64,9 @@ module Ace
 
     @config_mutex = Mutex.new
 
+    # Same discovery the cascade resolver performs for this namespace
+    LAB_FILE_PATTERNS = ["lab/config.yml", "lab/config.yaml"].freeze
+
     # Load configuration using Ace::Support::Config cascade.
     # Load failures raise InvalidConfigurationError (classified by the query
     # boundary) — silently falling back to empty defaults would misreport
@@ -71,6 +74,8 @@ module Ace
     # @return [Hash] Merged configuration
     # @raise [Ace::Lab::InvalidConfigurationError]
     def self.load_config
+      validate_document_roots!
+
       resolver = Ace::Support::Config.create(
         config_dir: ".ace",
         defaults_dir: ".ace-defaults",
@@ -81,8 +86,38 @@ module Ace
     rescue Ace::Lab::InvalidConfigurationError
       raise
     rescue => e
-      raise InvalidConfigurationError, "invalid lab configuration: #{e.class}: #{e.message}"
+      # Fixed diagnostic only: the underlying exception message may quote
+      # configuration content, which must never surface pre-authorization
+      # (review round 3, F2)
+      raise InvalidConfigurationError, "invalid lab configuration: could not load deployed configuration (#{e.class})"
     end
     private_class_method :load_config
+
+    # Cascade merging treats a non-mapping document as an empty overlay, so a
+    # malformed root (e.g. a YAML array) would be silently ignored. Validate
+    # every discovered document before merging (review round 3, F1).
+    # Messages carry the file path — never parsed content.
+    def self.validate_document_roots!
+      finder = Ace::Support::Config::Molecules::ConfigFinder.new(
+        config_dir: ".ace",
+        defaults_dir: ".ace-defaults",
+        gem_path: gem_root,
+        file_patterns: LAB_FILE_PATTERNS
+      )
+
+      finder.find_all.select(&:exists).each do |cascade_path|
+        path = cascade_path.path
+        document = begin
+          require "yaml"
+          YAML.safe_load_file(path, permitted_classes: [Date], aliases: true)
+        rescue
+          raise InvalidConfigurationError, "invalid lab configuration: #{path} could not be parsed as YAML"
+        end
+        next if document.nil? || document.is_a?(Hash)
+
+        raise InvalidConfigurationError, "invalid lab configuration: #{path} must contain a YAML mapping"
+      end
+    end
+    private_class_method :validate_document_roots!
   end
 end
