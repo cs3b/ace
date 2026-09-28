@@ -99,6 +99,52 @@ module Ace
           matches.first
         end
 
+        # Resolve exactly one server for an operation from CLI-style selection.
+        #
+        # @param server_name [String, Symbol, nil] explicit configured server name
+        # @param use_default [Boolean] resolve the configured default server
+        # @param remote_name [String, nil] remote used when nothing is selected
+        # @return [ResolvedServer]
+        # @raise [ConfigError] when explicit selection and default conflict
+        # @raise [UnknownServerNameError, NoDefaultServerConfiguredError,
+        #   MultipleDefaultServersError, AmbiguousRemoteError] per resolution
+        def resolve_for(server_name: nil, use_default: false, remote_name: nil)
+          if server_name && use_default
+            raise ConfigError,
+              "Server selection is ambiguous: an explicit server ('#{server_name}') and " \
+              "the default-server request are mutually exclusive"
+          end
+
+          if server_name
+            resolve(server_name)
+          elsif use_default
+            resolve_default
+          else
+            resolve_remote(remote_name)
+          end
+        end
+
+        # Configured servers whose URL matches the repository URL exactly.
+        #
+        # @param repository_url [String] repository URL in any supported shape
+        # @return [Array<ResolvedServer>] matching servers (may be empty)
+        def matching_servers(repository_url)
+          entries.map(&:server).select { |server| Atoms::ServerUrl.match?(server.url, repository_url) }
+        end
+
+        # Configured servers whose repository path equals `owner/repo`
+        # (any host). Never assumes a forge hostname.
+        #
+        # @param owner_repo [String] "owner/repo"
+        # @return [Array<ResolvedServer>] matching servers (may be empty)
+        def servers_for_owner_repo(owner_repo)
+          wanted = owner_repo.to_s.downcase
+          entries.map(&:server).select do |server|
+            path = Atoms::ServerUrl.normalize(server.url).to_s.split("/", 2)[1]
+            path == wanted
+          end
+        end
+
         private
 
         # Validated configured entries, in configuration order.

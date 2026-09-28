@@ -195,6 +195,7 @@ end
 # Require ATOM architecture components
 require_relative "git/atoms/command_executor"
 require_relative "git/atoms/server_url"
+require_relative "git/atoms/pr_reference"
 require_relative "git/atoms/pr_identifier"
 require_relative "git/atoms/pattern_filter"
 require_relative "git/atoms/diff_parser"
