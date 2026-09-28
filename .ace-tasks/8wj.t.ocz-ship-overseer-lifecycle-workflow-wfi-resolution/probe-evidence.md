@@ -68,3 +68,9 @@ Tested gem versions are the worktree source versions listed above. The suite ins
 2. **High — workflow contract not enforced by pruner code** (out of scope here, filed as follow-up `8wr.t.t8j`): the spec scopes this task to discoverability/packaging with public command semantics unchanged, so the `prune --force` enforcement gap became a new pending task rather than silent drift.
 
 Post-fix verification: `ace-test ace-overseer all` → 177 tests, 690 assertions, 0 failures (8wrt84).
+
+## Pull request
+
+PR **#342** (`8wj-t-ocz-overseer-wfi-packaging` → `main`, 8 commits, rebased onto `origin/main` after the worktree branch was found to carry 5 unrelated parallel-task commits): https://github.com/cs3b/ace/pull/342
+
+Second independent review pass at PR level (`ace-review --preset code-valid --pr 342`, codex): same single High finding (pruner enforcement, tracked as `8wr.t.t8j`); no new findings — code quality, architecture, documentation, security, refactoring all clean. Merge decision follows the Captain's merge policy (executed tests + independent reviewer verdict both present).
