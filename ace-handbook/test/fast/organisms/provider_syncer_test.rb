@@ -384,6 +384,24 @@ class Ace::Handbook::Organisms::ProviderSyncerTest < Minitest::Test
     assert_equal "\"user content\"", File.read(File.join(extensions_dir, "ace-wake", "index.js"))
   end
 
+  def test_sync_ignores_receipts_from_a_foreign_source
+    create_provider_manifest("pi", ".pi/skills", extensions_dir: ".pi/extensions")
+    create_extension_asset("pi", "ace-wake/index.js", "export const v = 1;\n")
+    extensions_dir = File.join(@tmpdir, ".pi", "extensions")
+    FileUtils.mkdir_p(File.join(extensions_dir, "ace-wake"))
+    File.write(File.join(extensions_dir, "ace-wake", "index.js"), "\"user content\"")
+    File.write(File.join(extensions_dir, ".ace-handbook-projection.json"), JSON.generate(
+      "source" => "different-projector",
+      "files" => ["ace-wake/index.js"]
+    ))
+
+    error = assert_raises(StandardError) { syncer.sync(provider: "pi") }
+
+    assert_includes error.message, "refusing to overwrite"
+    assert_equal "\"user content\"", File.read(File.join(extensions_dir, "ace-wake", "index.js")),
+                 "a foreign receipt must not authorize overwrites"
+  end
+
   def test_sync_rejects_receipt_paths_through_symlinked_components
     create_provider_manifest("pi", ".pi/skills", extensions_dir: ".pi/extensions")
     create_extension_asset("pi", "ace-wake.mjs", "// current\n")

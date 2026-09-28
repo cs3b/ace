@@ -189,7 +189,7 @@ module Ace
           output_dir = File.join(project_root, extensions_dir)
           FileUtils.mkdir_p(output_dir)
 
-          receipt = read_projection_receipt(output_dir)
+          receipt = read_projection_receipt(output_dir, provider)
           # Ownership requires a valid receipt from this projection explicitly
           # listing the path. A missing, symlinked, or corrupt receipt leaves
           # ownership unknown: any conflicting destination file is refused so
@@ -197,7 +197,7 @@ module Ace
           owned_paths = receipt&.fetch("files", []) || []
           reject_unowned_collisions(output_dir, expected.keys, owned_paths)
 
-          removed_entries = prune_stale_extension_files(output_dir, expected.keys)
+          removed_entries = prune_stale_extension_files(output_dir, expected.keys, provider)
           updated_files = 0
 
           expected.each do |relative_path, source_path|
@@ -249,8 +249,8 @@ module Ace
              .to_h { |path| [Pathname.new(path).relative_path_from(source_root).to_s, path] }
         end
 
-        def prune_stale_extension_files(output_dir, expected_relative_paths)
-          receipt = read_projection_receipt(output_dir)
+        def prune_stale_extension_files(output_dir, expected_relative_paths, provider)
+          receipt = read_projection_receipt(output_dir, provider)
           return 0 if receipt.nil?
 
           stale = receipt.fetch("files", []) - expected_relative_paths
@@ -289,13 +289,17 @@ module Ace
           nil
         end
 
-        def read_projection_receipt(output_dir)
+        def read_projection_receipt(output_dir, provider)
           receipt_path = File.join(output_dir, EXTENSION_RECEIPT_NAME)
           return nil if File.symlink?(receipt_path)
           return nil unless File.file?(receipt_path)
 
           receipt = JSON.parse(File.read(receipt_path))
           return nil unless receipt.is_a?(Hash) && receipt["files"].is_a?(Array)
+          # A receipt from another projector (or without provenance) claims
+          # nothing: only our own source marker authorizes overwrites and
+          # pruning.
+          return nil unless receipt["source"] == "#{PROJECTION_SOURCE_PREFIX}#{provider}"
 
           receipt
         rescue JSON::ParserError
