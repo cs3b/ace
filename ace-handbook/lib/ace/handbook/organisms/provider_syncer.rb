@@ -3,6 +3,7 @@
 require "fileutils"
 require "json"
 require "pathname"
+require "tempfile"
 require "yaml"
 
 module Ace
@@ -303,17 +304,22 @@ module Ace
 
         def write_projection_receipt(output_dir, provider, relative_paths)
           receipt_path = File.join(output_dir, EXTENSION_RECEIPT_NAME)
-          # Write to a sibling temp file and rename over the receipt path:
-          # rename replaces an existing symlink at the destination instead of
-          # truncating whatever it points at.
-          temp_path = File.join(output_dir, "#{EXTENSION_RECEIPT_NAME}.tmp-#{Process.pid}")
-          File.write(temp_path, JSON.pretty_generate(
-            "source" => "#{PROJECTION_SOURCE_PREFIX}#{provider}",
-            "files" => relative_paths.sort
-          ))
-          File.rename(temp_path, receipt_path)
-        ensure
-          FileUtils.rm_f(temp_path) if defined?(temp_path) && temp_path && File.exist?(temp_path)
+          # Create the temp file exclusively in the destination directory: a
+          # predictable, plainly-opened temp path could follow a planted
+          # symlink and truncate a file outside the projection. The rename
+          # then replaces any symlink at the receipt path itself.
+          temp = Tempfile.create([".ace-handbook-projection", ".tmp"], output_dir)
+          begin
+            temp.write(JSON.pretty_generate(
+              "source" => "#{PROJECTION_SOURCE_PREFIX}#{provider}",
+              "files" => relative_paths.sort
+            ))
+            temp.close
+            File.rename(temp.path, receipt_path)
+          ensure
+            temp.close
+            FileUtils.rm_f(temp.path)
+          end
         end
 
         def remove_empty_parent_dirs(dir, stop_dir)
