@@ -146,13 +146,13 @@ PATH
 PATH
   remote: ace-handbook-integration-pi
   specs:
-    ace-handbook-integration-pi (0.4.0)
-      ace-handbook (~> 0.32)
+    ace-handbook-integration-pi (0.5.0)
+      ace-handbook (~> 0.33)
 
 PATH
   remote: ace-handbook
   specs:
-    ace-handbook (0.32.0)
+    ace-handbook (0.33.0)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)
       ace-support-core (~> 0.31)
