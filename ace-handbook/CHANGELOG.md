@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.33.0] - 2026-09-28
+
+### Added
+- Provider manifests may declare an optional `extensions_dir`; `ace-handbook sync` now projects extension assets from `ace-handbook-integration-*` packages (`handbook/extensions/**`) into that directory (idempotent copies; prunes only stale paths recorded in the `.ace-handbook-projection.json` receipt, leaving user-authored extensions untouched). Sync summary output gains a `; extensions <dir> (N files, U updated, R removed)` segment when a provider projects extensions. `ProviderRegistry` exposes `extensions_dir(provider)` and `package_root(provider)`.
+
 ## [0.32.0] - 2026-09-27
 
 ### Added
