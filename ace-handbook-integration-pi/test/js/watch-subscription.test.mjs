@@ -8,7 +8,7 @@ import {
   createWatchPort,
   nodeStatFn,
   nodeWatchFactory,
-} from "../../handbook/extensions/wake/watch-subscription.js";
+} from "../../handbook/extensions/ace-wake/wake/watch-subscription.js";
 import { createFakeHost } from "./fake-pi-host.mjs";
 
 const WATCHED = "/fake/project/dep.txt";
@@ -155,6 +155,31 @@ describe("createWatchPort", () => {
 });
 
 describe("nodeWatchFactory on the real filesystem", { timeout: 20_000 }, () => {
+  it("rejects existing files whose contents are not readable", () => {
+    if (process.platform === "win32") {
+      return; // POSIX permission bits do not apply.
+    }
+    const tmp = nodeFs.mkdtempSync(nodePath.join(nodeOs.tmpdir(), "wake-mode-"));
+    const target = nodePath.join(tmp, "secret.txt");
+    nodeFs.writeFileSync(target, "contents");
+    nodeFs.chmodSync(target, 0o000);
+
+    const port = createWatchPort({
+      watchFactory: nodeWatchFactory,
+      statFn: nodeStatFn,
+      baseDir: tmp,
+    });
+
+    assert.throws(
+      () => port.start({ kind: "watch", name: "secret", path: target, message: "m" }, () => {}),
+      /path is not readable/,
+      "stat metadata alone must not pass validation when the file cannot be read",
+    );
+
+    nodeFs.chmodSync(target, 0o644);
+    nodeFs.rmSync(tmp, { recursive: true, force: true });
+  });
+
   it("keeps waking across atomic replacement of the watched file", async () => {
     const tmp = nodeFs.mkdtempSync(nodePath.join(nodeOs.tmpdir(), "wake-atomic-"));
     const target = nodePath.join(tmp, "state.json");

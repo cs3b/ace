@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { createLoopPort } from "../../handbook/extensions/wake/loop-subscription.js";
+import { createLoopPort } from "../../handbook/extensions/ace-wake/wake/loop-subscription.js";
 import { createFakeHost } from "./fake-pi-host.mjs";
 
 describe("createLoopPort", () => {

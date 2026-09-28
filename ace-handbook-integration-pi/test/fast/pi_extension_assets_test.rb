@@ -16,23 +16,24 @@ class Ace::Handbook::Integration::PiExtensionAssetsTest < Minitest::Test
   def test_extension_entrypoint_and_modules_ship_in_the_gem
     gem_files = gemspec_file_list
 
-    assert_includes gem_files, "handbook/extensions/ace-wake.js"
-    assert_includes gem_files, "handbook/extensions/package.json"
-    assert_includes gem_files, "handbook/extensions/wake/types.js"
-    assert_includes gem_files, "handbook/extensions/wake/wake-dispatcher.js"
-    assert_includes gem_files, "handbook/extensions/wake/wake-registry.js"
-    assert_includes gem_files, "handbook/extensions/wake/loop-subscription.js"
-    assert_includes gem_files, "handbook/extensions/wake/watch-subscription.js"
-    assert_includes gem_files, "handbook/extensions/wake/wake-command-parser.js"
+    assert_includes gem_files, "handbook/extensions/ace-wake/index.js"
+    assert_includes gem_files, "handbook/extensions/ace-wake/package.json"
+    assert_includes gem_files, "handbook/extensions/ace-wake/wake/types.js"
+    assert_includes gem_files, "handbook/extensions/ace-wake/wake/wake-dispatcher.js"
+    assert_includes gem_files, "handbook/extensions/ace-wake/wake/wake-registry.js"
+    assert_includes gem_files, "handbook/extensions/ace-wake/wake/loop-subscription.js"
+    assert_includes gem_files, "handbook/extensions/ace-wake/wake/watch-subscription.js"
+    assert_includes gem_files, "handbook/extensions/ace-wake/wake/wake-command-parser.js"
     assert gem_files.grep(%r{^test/js/}).empty?, "test assets must not ship in the gem"
   end
 
-  def test_extension_entrypoint_uses_the_auto_discoverable_js_extension
-    # Pi's extension discovery only accepts .ts and .js entrypoints; a .mjs
-    # entrypoint would never load unless explicitly passed.
-    assert File.file?(File.join(@package_root, "handbook", "extensions", "ace-wake.js"))
-    refute File.file?(File.join(@package_root, "handbook", "extensions", "ace-wake.mjs"))
-    entry = File.read(File.join(@package_root, "handbook", "extensions", "ace-wake.js"))
+  def test_extension_entrypoint_is_a_discoverable_subdirectory_index
+    # Pi's extension discovery accepts direct .ts/.js files and subdirectories
+    # containing an index.js/index.ts; a .mjs entrypoint would never load
+    # unless explicitly passed.
+    assert File.file?(File.join(@package_root, "handbook", "extensions", "ace-wake", "index.js"))
+    refute File.file?(File.join(@package_root, "handbook", "extensions", "ace-wake", "index.mjs"))
+    entry = File.read(File.join(@package_root, "handbook", "extensions", "ace-wake", "index.js"))
 
     imports = entry.scan(/import\s+[^"']*["']([^"']+)["']/).flatten
     offenders = imports.reject { |name| name.start_with?(".", "node:") }

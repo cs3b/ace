@@ -196,12 +196,15 @@ export function nodeWatchFactory(path, handlers) {
 }
 
 /**
- * Default statFn over node:fs.statSync.
+ * Default statFn over node:fs. Checks read access explicitly: stat metadata
+ * alone is readable for files whose contents are not (mode 000), and a watch
+ * on an unreadable file could never deliver meaningful wakes.
  *
  * @param {string} path
  * @returns {{mtimeMs: number, size: number}}
  */
 export function nodeStatFn(path) {
+  nodeFs.accessSync(path, nodeFs.constants.R_OK);
   const stats = nodeFs.statSync(path);
   return { mtimeMs: stats.mtimeMs, size: stats.size };
 }

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import { createFakeHost } from "./fake-pi-host.mjs";
-import aceWakeFactory from "../../handbook/extensions/ace-wake.js";
+import aceWakeFactory from "../../handbook/extensions/ace-wake/index.js";
 
 const HOST_PORTS = ["setIntervalFn", "clearIntervalFn", "watchFactory", "statFn"];
 
@@ -55,8 +55,6 @@ async function startSession(host) {
       await found[1]({ type: "session_start", reason: "reload" }, host.commandContext);
     },
     settle: () => handlerFor("agent_settled")({ type: "agent_settled" }, host.commandContext),
-    agentStart: () => handlerFor("agent_start")({ type: "agent_start" }, host.commandContext),
-    agentEnd: () => handlerFor("agent_end")({ type: "agent_end" }, host.commandContext),
     shutdown: () => handlerFor("session_shutdown")({ type: "session_shutdown" }, host.commandContext),
   };
 }
@@ -173,30 +171,26 @@ describe("ace-wake commands", () => {
 });
 
 describe("ace-wake delivery", () => {
-  it("wakes an idle agent directly through a queued user message", async () => {
-    const host = createFakeHost();
-    await startSession(host);
-    await host.runCommand("loop", "add heartbeat --interval 10 --message check in");
-
-    host.setIdle(true);
-    host.clock.advance(10_000);
-
-    assert.equal(host.sends.length, 1);
-    const send = host.assertIdleDelivery("text:0");
-    assert.equal(send.text, "[ace-wake loop:heartbeat] check in");
-  });
-
-  it("wakes a busy agent with a queued follow-up that never interrupts", async () => {
+  it("always delivers wakes as queued follow-ups", async () => {
     const host = createFakeHost();
     const session = await startSession(host);
     await host.runCommand("loop", "add heartbeat --interval 10 --message check in");
 
-    await session.agentStart();
+    // Follow-up delivery runs immediately when idle and queues behind any
+    // active run otherwise; the constant shape leaves no window that could
+    // send a direct message Pi would reject.
     host.clock.advance(10_000);
 
     assert.equal(host.sends.length, 1);
-    host.assertFollowUpDelivery("text:0");
-    await session.agentEnd();
+    const send = host.assertFollowUpDelivery("text:0");
+    assert.equal(send.text, "[ace-wake loop:heartbeat] check in");
+
+    host.clock.advance(10_000);
+    assert.equal(host.sends.length, 1, "same-source wakes coalesce while one is pending");
+
+    await session.settle();
+    host.clock.advance(10_000);
+    assert.equal(host.sends.length, 2, "after settlement the source wakes again");
   });
 
   it("coalesces same-source wakes while one is queued and keeps distinct sources", async () => {
@@ -206,7 +200,6 @@ describe("ace-wake delivery", () => {
     await host.runCommand("loop", "add heartbeat --interval 10 --message loop wake");
     await host.runCommand("watch", "add dep --path dep.txt --message watch wake");
 
-    await session.agentStart();
     host.clock.advance(10_000);
     host.setFile("/fake/project/dep.txt", { mtimeMs: 2, size: 2 });
     host.triggerWatch("/fake/project/dep.txt");

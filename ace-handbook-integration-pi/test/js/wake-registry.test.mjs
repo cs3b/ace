@@ -1,10 +1,10 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { WakeDispatcher } from "../../handbook/extensions/wake/wake-dispatcher.js";
+import { WakeDispatcher } from "../../handbook/extensions/ace-wake/wake/wake-dispatcher.js";
 import {
   MAX_WAKE_MESSAGE_CHARS,
-} from "../../handbook/extensions/wake/types.js";
+} from "../../handbook/extensions/ace-wake/wake/types.js";
 import {
   MAX_INTERVAL_SECONDS,
   WakeRegistry,
@@ -13,7 +13,7 @@ import {
   requireMessage,
   requireName,
   watchSourceKey,
-} from "../../handbook/extensions/wake/wake-registry.js";
+} from "../../handbook/extensions/ace-wake/wake/wake-registry.js";
 import { createFakeHost } from "./fake-pi-host.mjs";
 
 function buildRegistry(host, overrides = {}) {

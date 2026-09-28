@@ -23,7 +23,7 @@
 
 **Run the in-process overseer loop with `/work-backlog`** - the canonical `handbook/prompts/work-backlog.md` template projects to `.pi/prompts/work-backlog.md` (`ace-handbook sync --provider pi`), giving pi a slash command that cycles the task backlog (select → execute via `as-task-work` → verify → report) inside the pi session itself - no tmux windows or external orchestrator.
 
-**Wake idle agents with `/loop` timers and `/watch` file subscriptions** - the bundled ace-wake extension (projected to `.pi/extensions/ace-wake.js`) queues bounded wake messages to the live agent through `sendUserMessage` only. Wakes coalesce per source, busy agents receive queued follow-ups instead of interruptions, definitions survive reload/restart with exactly-once re-registration, and there is no cron, systemd, or external heartbeat dependency. See [docs/usage.md](docs/usage.md).
+**Wake idle agents with `/loop` timers and `/watch` file subscriptions** - the bundled ace-wake extension (projected to `.pi/extensions/ace-wake/index.js`) queues bounded wake messages to the live agent through `sendUserMessage` only. Wakes coalesce per source, busy agents receive queued follow-ups instead of interruptions, definitions survive reload/restart with exactly-once re-registration, and there is no cron, systemd, or external heartbeat dependency. See [docs/usage.md](docs/usage.md).
 
 **Keep provider updates constrained** - update projection assets inside this package instead of canonical definitions, keeping changes isolated from [ace-handbook](../ace-handbook).
 

@@ -43,13 +43,13 @@ const STATUS_KEY = "ace-wake";
  * @param {object} [ports] Injectable host ports for deterministic tests.
  */
 export default function (pi, ports = {}) {
-  /** @type {{registry: WakeRegistry, agentActive: boolean} | undefined} */
+  /** @type {{registry: WakeRegistry} | undefined} */
   let runtime;
 
   const getRuntime = () => runtime;
   const bindRuntime = (ctx) => {
     runtime?.registry.dispose();
-    runtime = { registry: createRegistry(pi, ctx, ports, getRuntime), agentActive: false };
+    runtime = { registry: createRegistry(pi, ctx, ports) };
     runtime.registry.reconcile();
   };
 
@@ -83,29 +83,15 @@ export default function (pi, ports = {}) {
     runtime?.registry.settleAll();
   });
 
-  // ctx.isIdle() only tracks model streaming — it reports idle while a tool
-  // executes mid-run. Track actual run activity so wakes during tool
-  // execution queue as follow-ups instead of starting a parallel turn.
-  pi.on("agent_start", async () => {
-    if (runtime) {
-      runtime.agentActive = true;
-    }
-  });
-  pi.on("agent_end", async () => {
-    if (runtime) {
-      runtime.agentActive = false;
-    }
-  });
-
   pi.on("session_shutdown", async () => {
     runtime?.registry.dispose();
     runtime = undefined;
   });
 }
 
-function createRegistry(pi, ctx, ports, getRuntime) {
+function createRegistry(pi, ctx, ports) {
   const dispatcher = new WakeDispatcher({
-    deliver: (sourceKey, text) => deliverWake(getRuntime(), pi, ctx, sourceKey, text),
+    deliver: (sourceKey, text) => deliverWake(pi, ctx, sourceKey, text),
   });
   /** The registry is created after its watch port, so deactivation hooks go
    * through this holder once it exists. */
@@ -130,34 +116,19 @@ function createRegistry(pi, ctx, ports, getRuntime) {
 }
 
 /**
- * Queue-only delivery. An agent with no run in flight receives the wake
- * directly (it triggers a turn); a busy agent — streaming or executing a
- * tool, or holding queued messages — receives a queued follow-up that never
- * interrupts the in-flight operation.
+ * Queue-only delivery, always as a queued follow-up. Pi runs a follow-up
+ * immediately when nothing is in flight and queues it behind any active run
+ * otherwise, so no window — between runs, during a tool, or while earlier
+ * wakes are queued — can drop a wake or interrupt an in-flight operation.
  */
-function deliverWake(runtime, pi, ctx, sourceKey, text) {
+function deliverWake(pi, ctx, sourceKey, text) {
   const message = `[ace-wake ${sourceKey}] ${text}`;
   try {
-    if (isBusy(runtime, ctx)) {
-      pi.sendUserMessage(message, { deliverAs: "followUp" });
-    } else {
-      pi.sendUserMessage(message);
-    }
+    pi.sendUserMessage(message, { deliverAs: "followUp" });
     return true;
   } catch {
     // A stale context (session replaced/reloaded) or a rejecting host must
     // not crash the timer callback; the next session_start rebinds.
-    return false;
-  }
-}
-
-function isBusy(runtime, ctx) {
-  if (runtime?.agentActive) {
-    return true;
-  }
-  try {
-    return ctx.hasPendingMessages();
-  } catch {
     return false;
   }
 }

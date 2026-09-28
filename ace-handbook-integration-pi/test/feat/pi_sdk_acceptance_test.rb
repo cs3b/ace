@@ -5,7 +5,7 @@ require_relative "../test_helper"
 
 # Installed-extension acceptance: projects the package through the real
 # ProviderSyncer into a throwaway project and runs the JavaScript acceptance
-# suite against the projected .pi/extensions/ace-wake.js inside the real Pi
+# suite against the projected .pi/extensions/ace-wake/index.js inside the real Pi
 # SDK runtime (no external timer or service).
 class Ace::Handbook::Integration::PiSdkAcceptanceTest < Minitest::Test
   def test_projected_extension_wakes_agents_through_real_pi_runtime
@@ -26,7 +26,7 @@ class Ace::Handbook::Integration::PiSdkAcceptanceTest < Minitest::Test
       result = syncer.sync(provider: "pi").first
       assert_equal 8, result.fetch(:projected_extensions)
 
-      projected_entry = File.join(project_root, ".pi", "extensions", "ace-wake.js")
+      projected_entry = File.join(project_root, ".pi", "extensions", "ace-wake", "index.js")
       assert File.file?(projected_entry), "sync must project the extension entrypoint"
 
       stdout, stderr, status = Open3.capture3(

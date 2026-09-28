@@ -3,7 +3,7 @@
 // Requires PI_PKG_ROOT (pi-coding-agent package dir) and EXT_PATH (a
 // projected ace-wake.js). The Ruby suite projects the package via
 // ProviderSyncer and invokes this suite against the projected
-// .pi/extensions/ace-wake.js, proving the installed artifact — not the
+// .pi/extensions/ace-wake/index.js, proving the installed artifact — not the
 // source tree — wakes idle and busy agents through queued user messages
 // with no external timer or service.
 import * as assert from "node:assert/strict";
@@ -104,9 +104,9 @@ async function startWakeSession({ script = [], extraFactories = [], extraTools =
   if (autoDiscover) {
     // Project the extension the way `ace-handbook sync` would so discovery
     // must find it from the project directory on its own.
-    fs.cpSync(path.dirname(EXT_PATH), path.join(cwd, ".pi", "extensions"), { recursive: true });
-    if (!fs.existsSync(path.join(cwd, ".pi", "extensions", "ace-wake.js"))) {
-      throw new Error("projection for auto-discovery is missing ace-wake.js");
+    fs.cpSync(path.dirname(EXT_PATH), path.join(cwd, ".pi", "extensions", "ace-wake"), { recursive: true });
+    if (!fs.existsSync(path.join(cwd, ".pi", "extensions", "ace-wake", "index.js"))) {
+      throw new Error("projection for auto-discovery is missing ace-wake/index.js");
     }
   }
 
