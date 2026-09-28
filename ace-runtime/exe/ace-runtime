@@ -1,0 +1,17 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "bundler/setup"
+require "ace/runtime"
+
+# No args → show help
+args = ARGV.empty? ? ["--help"] : ARGV
+
+# Start CLI with exception-based exit code handling (per ADR-023)
+begin
+  exit_code = Ace::Runtime::CLI.start(args)
+  exit(exit_code) if exit_code.is_a?(Integer) && exit_code.nonzero?
+rescue Ace::Support::Cli::Error => e
+  warn e.message
+  exit(e.exit_code)
+end

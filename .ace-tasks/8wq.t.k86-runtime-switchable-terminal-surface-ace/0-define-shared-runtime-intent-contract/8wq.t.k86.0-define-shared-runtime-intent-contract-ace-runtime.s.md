@@ -1,6 +1,6 @@
 ---
 id: 8wq.t.k86.0
-status: in-progress
+status: done
 priority: medium
 created_at: "2026-09-27 13:29:29"
 estimate: TBD
@@ -123,9 +123,9 @@ Ace::Runtime.sanitize_name(name)       # shared naming policy
 
 ### Success Criteria
 
-- [ ] Contract gem publishes the 11-op API (op 7 covering output, agent, and the four lifecycle conditions) + error model incl. `WaitTimeoutError`/`SendStalledError` + the `ace-runtime send` passthrough; adapters are duck-typed (no dependency on either adapter gem).
-- [ ] Shared contract-test suite exists and is documented as the acceptance bar for any adapter (shared-examples pattern), covering all wait conditions and the send error triad (rejected / stalled / timeout).
-- [ ] Resolution: explicit name, unknown name (fail closed, available list), auto-detection both-runtimes (tmux wins, documented).
+- [x] Contract gem publishes the 11-op API (op 7 covering output, agent, and the four lifecycle conditions) + error model incl. `WaitTimeoutError`/`SendStalledError` + the `ace-runtime send` passthrough; adapters are duck-typed (no dependency on either adapter gem).
+- [x] Shared contract-test suite exists and is documented as the acceptance bar for any adapter (shared-examples pattern), covering all wait conditions and the send error triad (rejected / stalled / timeout).
+- [x] Resolution: explicit name, unknown name (fail closed, available list), auto-detection both-runtimes (tmux wins, documented).
 
 ### Reviewed Decisions (2026-09-28)
 
@@ -147,15 +147,15 @@ Ace::Runtime.sanitize_name(name)       # shared naming policy
 ### Verification Plan
 
 #### Unit / Component Validation
-- [ ] Registry: resolve/detect/unknown-name matrix.
-- [ ] Contract tests compile and run against a reference fake adapter.
+- [x] Registry: resolve/detect/unknown-name matrix.
+- [x] Contract tests compile and run against a reference fake adapter.
 
 #### Failure / Invalid-Path Validation
-- [ ] Unknown runtime name → fail closed with available list.
-- [ ] detect in neither runtime → nil, no exception.
+- [x] Unknown runtime name → fail closed with available list.
+- [x] detect in neither runtime → nil, no exception.
 
 #### Verification Commands
-- [ ] `ace-test ace-runtime` green.
+- [x] `ace-test ace-runtime` green.
 
 ## Objective
 

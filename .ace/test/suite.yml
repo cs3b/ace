@@ -230,6 +230,16 @@ test_suite:
       group: tools
       priority: 2
 
+    - name: ace-lab
+      path: ace-lab
+      group: tools
+      priority: 2
+
+    - name: ace-runtime
+      path: ace-runtime
+      group: tools
+      priority: 2
+
     - name: ace-test-runner-e2e
       path: ace-test-runner-e2e
       group: tools

@@ -287,6 +287,14 @@ PATH
       ace-task (~> 0.37)
 
 PATH
+  remote: ace-runtime
+  specs:
+    ace-runtime (0.1.0)
+      ace-support-cli (~> 0.6)
+      ace-support-config (~> 0.18)
+      ace-support-core (~> 0.31)
+
+PATH
   remote: ace-search
   specs:
     ace-search (0.26.6)
@@ -564,6 +572,7 @@ DEPENDENCIES
   ace-prompt-prep!
   ace-retro!
   ace-review!
+  ace-runtime!
   ace-search!
   ace-sim!
   ace-support-cli!
