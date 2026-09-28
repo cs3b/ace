@@ -20,6 +20,7 @@ This document describes the exit codes returned by the `ace-assign` CLI.
 | 2 | Assignment error | No active assignment or assignment not found |
 | 3 | Configuration not found | Config file does not exist |
 | 4 | Step not found | Referencing a step that does not exist |
+| 5 | Attempt error | Attempt conflict, rejected receipt, unauthorized identity, unavailable evidence, or illegal attempt state |
 
 ## Exit Code Details
 
@@ -54,6 +55,15 @@ A required configuration file could not be found:
 The requested step reference does not exist in the target assignment:
 - `retry` with unknown step number
 - Commands that target a specific missing step
+
+### Exit Code 5: Attempt Error
+An attempt, receipt, identity, or evidence problem rejected the operation:
+- `attempt start` with a conflicting binding for an owned subtree
+- `attempt finish`/`attempt reconcile` with a receipt that fails verification (wrong binding, stale head, digest mismatch, self-approval, forbidden fields)
+- Worker-identity attempts to accept a succeeded verdict
+- Unknown or missing execution-boundary identity
+- Reconciling a terminal attempt, or resolving uncertainty without a receipt
+- Unavailable or unwritable evidence storage blocking a managed effect
 
 ## See Also
 

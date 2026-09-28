@@ -7,6 +7,10 @@ require "minitest/autorun"
 require "ace/test_support"
 require "fileutils"
 require "tmpdir"
+require "digest"
+require "json"
+require "socket"
+require "etc"
 
 class AceAssignTestCase < AceTestCase
   def setup
@@ -127,5 +131,77 @@ class AceAssignTestCase < AceTestCase
     report_path = File.join(dir, "report.md")
     File.write(report_path, content)
     report_path
+  end
+
+  # Attempt CLI environment: a temp assignment cache plus an isolated
+  # candidate git repo wired through PROJECT_ROOT_PATH. Yields
+  # [cache_dir, repo].
+  def with_attempt_cli_env
+    with_temp_cache do |cache_dir|
+      repo = File.join(cache_dir, "candidate")
+      FileUtils.mkdir_p(repo)
+      git_in(repo, "init", "-b", "main")
+      git_in(repo, "config", "user.name", "test")
+      git_in(repo, "config", "user.email", "test@example.com")
+      File.write(File.join(repo, "work.txt"), "candidate work\n")
+      git_in(repo, "add", "work.txt")
+      git_in(repo, "commit", "-m", "candidate base")
+
+      previous_root = ENV["PROJECT_ROOT_PATH"]
+      previous_cache = Ace::Assign.config["cache_dir"]
+      previous_dir = Dir.pwd
+      ENV["PROJECT_ROOT_PATH"] = repo
+      Ace::Assign.config["cache_dir"] = cache_dir
+      # PROJECT_ROOT_PATH is honored only when the working directory lies
+      # within it, so run the block from inside the candidate repo.
+      Dir.chdir(repo)
+      begin
+        yield cache_dir, repo
+      ensure
+        Dir.chdir(previous_dir)
+        if previous_root.nil?
+          ENV.delete("PROJECT_ROOT_PATH")
+        else
+          ENV["PROJECT_ROOT_PATH"] = previous_root
+        end
+        Ace::Assign.config["cache_dir"] = previous_cache
+        Ace::Assign.reset_config!
+      end
+    end
+  end
+
+  def git_in(dir, *argv)
+    require "open3"
+    out, stderr, status = Open3.capture3("git", *argv, chdir: dir, stdin_data: "")
+    flunk "git #{argv.join(' ')} failed: #{stderr}" unless status.success?
+    out.strip
+  end
+
+  # Build a verifiable receipt JSON for an attempt against the candidate repo.
+  def write_attempt_receipt(cache_dir, repo, attempt, overrides = {})
+    artifact = "receipt-artifact-#{attempt.attempt_id}.txt"
+    File.write(File.join(repo, artifact), "execution evidence artifact")
+    data = {
+      "attempt_id" => attempt.attempt_id,
+      "assignment_id" => attempt.binding.assignment_id,
+      "project_id" => attempt.binding.project_id,
+      "scope" => attempt.binding.scope,
+      "operation" => "implement",
+      "producer" => {
+        "actor" => Etc.getlogin || "test-operator",
+        "role" => "coordinator",
+        "runtime" => "local:#{Socket.gethostname}"
+      },
+      "head" => git_in(repo, "rev-parse", "HEAD"),
+      "verdict" => "succeeded",
+      "artifacts" => [{
+        "path" => artifact,
+        "sha256" => Digest::SHA256.hexdigest("execution evidence artifact")
+      }],
+      "checks" => [{"name" => "ace-test", "verdict" => "passed"}]
+    }.merge(overrides)
+    path = File.join(cache_dir, "receipt-#{attempt.attempt_id}-#{rand(10_000)}.json")
+    File.write(path, JSON.generate(data))
+    path
   end
 end

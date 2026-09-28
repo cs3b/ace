@@ -7,61 +7,53 @@ require "ace/support/fs"
 module Ace
   module Assign
     module Molecules
-      # Computes exact-head evidence receipts and canonical decision digests for assignment delivery.
+      # Computes delivery evidence for an assignment from accepted,
+      # current-head execution evidence.
+      #
+      # Decisions are derived exclusively from accepted receipts recorded in
+      # the evidence journal (managed attempts) or the durable attempt store
+      # (taskless attempts). Report files on disk, exit codes, and prose never
+      # establish review or merge authorization, and no feedback state is
+      # hardcoded: an attempt that may have completed without a durable
+      # receipt yields `uncertain`, never success.
       class EvidenceCalculator
-        def self.calculate(pr_number: nil, auto_merge: false)
-          new.calculate(pr_number: pr_number, auto_merge: auto_merge)
+        def self.calculate(pr_number: nil, auto_merge: false, assignment_id: nil)
+          new.calculate(pr_number: pr_number, auto_merge: auto_merge, assignment_id: assignment_id)
         end
 
-        def calculate(pr_number: nil, auto_merge: false)
-          root = Ace::Support::Fs::Molecules::ProjectRootFinder.find_or_current
+        # @param cache_base [String, nil] Assignment cache base (default config)
+        # @param repo_root [String, nil] Candidate repository root (default project root)
+        # @param journal [EvidenceJournal, nil] Evidence journal (default built lazily)
+        def initialize(cache_base: nil, repo_root: nil, journal: nil)
+          @cache_base = cache_base
+          @repo_root = repo_root || Ace::Support::Fs::Molecules::ProjectRootFinder.find_or_current
+          @journal = journal
+        end
 
-          if pr_number.nil?
-            pr_output, s = Open3.capture2("ace-git", "pr", "--format", "json", chdir: root)
-            if s.success?
-              begin
-                require "json"
-                pr_data = JSON.parse(pr_output)
-                pr_number = pr_data["number"]
-              rescue StandardError
-              end
-            end
+        def calculate(pr_number: nil, auto_merge: false, assignment_id: nil)
+          head, tree, changed_scope_digest = git_facts
+          assignment = find_assignment(assignment_id)
+          attempts = assignment ? attempts_for(assignment) : []
+          receipts = assignment ? accepted_receipts(assignment) : []
+
+          review_receipt = receipt_currency(receipts, "review", head)
+          release_receipt = receipt_currency(receipts, "release", head)
+          unresolved_effects = collect_unresolved_effects(attempts)
+          feedback_state = derive_feedback_state(attempts, receipts, head, unresolved_effects)
+
+          # Authorization requires managed evidence, settled work (no active
+          # attempts), no unresolved effects, and a current independent
+          # review verdict. Taskless assignments never authorize merges.
+          merge_decision = if auto_merge && assignment&.managed? &&
+              review_receipt == "current" && unresolved_effects.empty? && attempts.none?(&:active?)
+            "authorized"
+          else
+            "approval-required"
           end
 
-          head, _s = Open3.capture2("git", "rev-parse", "HEAD", chdir: root)
-          head = head.to_s.strip
-
-          tree, _s = Open3.capture2("git", "rev-parse", "HEAD^{tree}", chdir: root)
-          tree = tree.to_s.strip
-
-          diff_output, _s = Open3.capture2("git", "diff", "HEAD", chdir: root)
-          changed_scope_digest = Digest::SHA256.hexdigest(diff_output.to_s)
-
-          review_receipt = evaluate_review_receipt(root, head)
-          release_receipt = evaluate_release_receipt(root, head)
-          feedback_state = "terminal"
-
-          merge_decision = evaluate_merge_decision(
-            auto_merge: auto_merge,
-            review_receipt: review_receipt,
-            release_receipt: release_receipt,
-            feedback_state: feedback_state
-          )
-
-          canonical_payload = [
-            pr_number || "none",
-            head,
-            tree,
-            changed_scope_digest,
-            review_receipt,
-            release_receipt,
-            feedback_state,
-            merge_decision
-          ].join(":")
-
-          decision_digest = Digest::SHA256.hexdigest(canonical_payload)
-
-          {
+          latest = attempts.first
+          active = attempts.find(&:active?)
+          evidence = {
             pr: pr_number || "none",
             head: head,
             tree: tree,
@@ -70,63 +62,124 @@ module Ace
             release_receipt: release_receipt,
             feedback_state: feedback_state,
             merge_decision: merge_decision,
-            decision_digest: decision_digest
+            decision_digest: nil,
+            attempt: latest ? attempt_summary(latest, active: active) : nil,
+            base_head: latest&.binding&.base_head,
+            candidate_head: latest&.candidate_head,
+            evidence_git_ref: evidence_git_ref(assignment),
+            journal_commit: latest&.journal_commit,
+            unresolved_effects: unresolved_effects
           }
+          evidence[:decision_digest] = Digest::SHA256.hexdigest(
+            Atoms::EvidenceDigest.canonical_json(evidence)
+          )
+          evidence
         end
 
         private
 
-        def evaluate_review_receipt(root, current_head)
-          session_dir = File.join(root, ".ace-local", "review", "sessions")
-          return "missing" unless Dir.exist?(session_dir)
+        def git_facts
+          head, _s = Open3.capture2("git", "rev-parse", "HEAD", chdir: @repo_root, stdin_data: "")
+          tree, _s = Open3.capture2("git", "rev-parse", "HEAD^{tree}", chdir: @repo_root, stdin_data: "")
+          diff_output, _s = Open3.capture2("git", "diff", "HEAD", chdir: @repo_root, stdin_data: "")
 
-          reviews = Dir.glob(File.join(session_dir, "*", "metadata.yml"))
-          return "missing" if reviews.empty?
-
-          latest = reviews.max_by { |f| File.mtime(f) }
-          session_dir = File.dirname(latest)
-          
-          # Review must actually be executed, not just prepared
-          return "missing" unless File.exist?(File.join(session_dir, "report.md")) || File.exist?(File.join(session_dir, "report.json"))
-          
-          begin
-            require "yaml"
-            metadata = YAML.safe_load_file(latest, permitted_classes: [Time, Date]) || {}
-            return "stale" unless metadata["head"] == current_head
-          rescue StandardError
-            return "missing"
-          end
-
-          "current"
+          [head.to_s.strip, tree.to_s.strip, Digest::SHA256.hexdigest(diff_output.to_s)]
         end
 
-        def evaluate_release_receipt(root, current_head)
-          session_dir = File.join(root, ".ace-local", "release", "sessions")
-          return "missing" unless Dir.exist?(session_dir)
-
-          releases = Dir.glob(File.join(session_dir, "*", "metadata.yml"))
-          return "missing" if releases.empty?
-
-          latest = releases.max_by { |f| File.mtime(f) }
-          begin
-            require "yaml"
-            metadata = YAML.safe_load_file(latest, permitted_classes: [Time, Date]) || {}
-            return "stale" unless metadata["head"] == current_head
-          rescue StandardError
-            return "missing"
-          end
-
-          "current"
+        def find_assignment(assignment_id)
+          manager = Molecules::AssignmentManager.new(cache_base: @cache_base)
+          assignment_id ? manager.load(assignment_id) : manager.find_active
         end
 
-        def evaluate_merge_decision(auto_merge:, review_receipt:, release_receipt:, feedback_state:)
-          return "report-only" unless auto_merge
+        def store
+          @store ||= Molecules::AssignmentManager.new(cache_base: @cache_base).attempt_store
+        end
 
-          if review_receipt == "current" && release_receipt == "current" && feedback_state == "terminal"
-            "authorized"
-          else
-            "approval-required"
+        def journal
+          @journal ||= Molecules::EvidenceJournal.new(repo_root: @repo_root)
+        end
+
+        # Attempt state for evidence decisions. Managed assignments treat the
+        # journal as authoritative: ALL journal-derived attempts (including
+        # terminal states) replace local records with the same ID, so a crash
+        # between journaling and the local save cannot leave stale open state.
+        def attempts_for(assignment)
+          attempts = store.list(assignment.id)
+          return attempts unless assignment.managed?
+
+          journal_by_id = {}
+          journal.derived_attempts(assignment.id).each { |attempt| journal_by_id[attempt.attempt_id] = attempt }
+          merged = attempts.map { |attempt| journal_by_id.delete(attempt.attempt_id) || attempt }
+          merged + journal_by_id.values
+        end
+
+        # Accepted receipts for evidence currency. Managed assignments use
+        # journal receipts only — the journal is the authority; local records
+        # are disposable projections.
+        def accepted_receipts(assignment)
+          if assignment.managed?
+            return journal.accepted_receipts(assignment.id).uniq { |receipt| receipt["digest"] }
           end
+
+          store.list(assignment.id).flat_map(&:accepted_receipts)
+            .uniq { |receipt| receipt["digest"] }
+        end
+
+        # Currency against the current head. Review approval requires an
+        # executed independent reviewer verdict; receipts were verified at
+        # acceptance and the independence guard is re-checked here defensively
+        # (a review receipt without a reviewer verdict is not review evidence
+        # at all).
+        def receipt_currency(receipts, operation, head)
+          succeeded = receipts.select do |receipt|
+            next false unless receipt["operation"] == operation && receipt["verdict"] == "succeeded"
+            next false if operation == "review" && receipt.dig("review", "reviewer", "actor").nil?
+
+            true
+          end
+
+          current = succeeded.any? { |receipt| receipt["head"] == head }
+
+          return "missing" if succeeded.empty?
+          return "current" if current
+
+          "stale"
+        end
+
+        def collect_unresolved_effects(attempts)
+          attempts.flat_map { |attempt| attempt.unresolved_effects.map { |effect| effect["operation"] } }
+            .concat(attempts.select(&:uncertain?).map { |attempt| "#{attempt.attempt_id}:uncertain" })
+            .uniq
+        end
+
+        # Feedback is derived: uncertain evidence wins, active attempts keep
+        # the loop open, accepted current-head evidence closes it.
+        def derive_feedback_state(attempts, receipts, head, unresolved_effects)
+          return "unknown" if attempts.empty? && receipts.empty?
+
+          return "uncertain" if unresolved_effects.any?
+
+          return "terminal" if attempts.none?(&:active?) && receipts.any? do |receipt|
+            receipt["verdict"] == "succeeded" && receipt["head"] == head
+          end
+
+          "open"
+        end
+
+        def attempt_summary(attempt, active: nil)
+          {
+            "attempt_id" => attempt.attempt_id,
+            "state" => attempt.state,
+            "scope" => attempt.binding.scope,
+            "recovery_mode" => attempt.recovery_mode,
+            "active" => active ? active.attempt_id == attempt.attempt_id : false
+          }
+        end
+
+        def evidence_git_ref(assignment)
+          return nil unless assignment&.managed?
+
+          journal.ref
         end
       end
     end

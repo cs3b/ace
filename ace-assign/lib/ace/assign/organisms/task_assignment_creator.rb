@@ -54,7 +54,7 @@ module Ace
             steps: steps
           )
 
-          result = @executor.start(job_path)
+          result = @executor.start(job_path, task_id: primary_ref)
           result.merge(
             skipped_terminal: skipped_terminal,
             primary_ref: primary_ref,

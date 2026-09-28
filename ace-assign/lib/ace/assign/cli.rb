@@ -9,6 +9,10 @@ require_relative "models/assignment"
 require_relative "models/step"
 require_relative "models/queue_state"
 require_relative "models/assignment_info"
+require_relative "models/attempt_binding"
+require_relative "models/attempt"
+require_relative "models/execution_receipt"
+require_relative "models/evidence_event"
 
 # Atoms
 require_relative "atoms/step_numbering"
@@ -22,9 +26,13 @@ require_relative "atoms/catalog_loader"
 require_relative "atoms/composition_rules"
 require_relative "atoms/assign_frontmatter_parser"
 require_relative "atoms/tree_formatter"
+require_relative "atoms/attempt_state_machine"
+require_relative "atoms/evidence_digest"
+require_relative "atoms/assignment_scope"
 
 # Molecules
 require_relative "molecules/assignment_manager"
+require_relative "molecules/attempt_store"
 require_relative "molecules/assignment_discoverer"
 require_relative "molecules/queue_scanner"
 require_relative "molecules/step_writer"
@@ -34,9 +42,14 @@ require_relative "molecules/fork_session_launcher"
 require_relative "molecules/tmux_control_surface_runner"
 require_relative "molecules/preset_inferrer"
 require_relative "molecules/evidence_calculator"
+require_relative "molecules/evidence_journal"
+require_relative "molecules/execution_identity_resolver"
+require_relative "molecules/receipt_verifier"
+require_relative "molecules/attempt_reconciler"
 
 # Organisms
 require_relative "organisms/assignment_executor"
+require_relative "organisms/attempt_coordinator"
 
 # Commands
 require_relative "cli/commands/create"
@@ -52,6 +65,11 @@ require_relative "cli/commands/list"
 require_relative "cli/commands/select"
 require_relative "cli/commands/fork_run"
 require_relative "cli/commands/fork_session"
+require_relative "cli/commands/attempt/base"
+require_relative "cli/commands/attempt/start"
+require_relative "cli/commands/attempt/status"
+require_relative "cli/commands/attempt/finish"
+require_relative "cli/commands/attempt/reconcile"
 
 module Ace
   module Assign
@@ -73,7 +91,11 @@ module Ace
         ["retry", "Retry failed step"],
         ["list", "List all assignments"],
         ["select", "Select active assignment"],
-        ["fork-run", "Run subtree in forked process"]
+        ["fork-run", "Run subtree in forked process"],
+        ["attempt start", "Start a scoped attempt for an assignment step"],
+        ["attempt status", "Show attempt status for an assignment"],
+        ["attempt finish", "Finish an attempt with a structured execution receipt"],
+        ["attempt reconcile", "Reconcile an interrupted or uncertain attempt"]
       ].freeze
 
       HELP_EXAMPLES = [
@@ -83,7 +105,9 @@ module Ace
         "ace-assign start                      # Start next workable step",
         "ace-assign finish --message done.md    # Complete active step",
         "cat report.md | ace-assign finish     # Complete step via stdin",
-        "ace-assign fork-run 010.01            # Run subtree in subprocess"
+        "ace-assign fork-run 010.01            # Run subtree in subprocess",
+        "ace-assign attempt start --assignment ID --step 010 --project ID",
+        "ace-assign attempt finish --attempt ID --receipt receipt.json"
       ].freeze
 
       # Captured command exit code from last run
@@ -131,6 +155,10 @@ module Ace
       register "select", wrap_command(Commands::Select)
       register "fork-run", wrap_command(Commands::ForkRun)
       register "fork-session", wrap_command(Commands::ForkSession)
+      register "attempt start", wrap_command(Commands::Attempt::Start)
+      register "attempt status", wrap_command(Commands::Attempt::Status)
+      register "attempt finish", wrap_command(Commands::Attempt::Finish)
+      register "attempt reconcile", wrap_command(Commands::Attempt::Reconcile)
 
       # Register version command
       version_cmd = Ace::Support::Cli::VersionCommand.build(

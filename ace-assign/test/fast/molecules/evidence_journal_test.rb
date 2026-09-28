@@ -1,0 +1,252 @@
+# frozen_string_literal: true
+
+require_relative "../../test_helper"
+require "json"
+require "open3"
+require "fileutils"
+
+module Ace
+  module Assign
+    class EvidenceJournalTest < AceAssignTestCase
+      REF = "refs/ace/execution"
+
+      def with_temp_cache_dir
+        dir = nil
+        with_temp_cache { |cache_dir| dir = cache_dir }
+        dir
+      end
+
+      def build_event(type:, attempt_id:, payload:, previous_digest: nil, recorded_at: Time.now.utc)
+        Models::EvidenceEvent.build(
+          type: type,
+          attempt_id: attempt_id,
+          payload: payload,
+          previous_digest: previous_digest,
+          recorded_at: recorded_at
+        )
+      end
+
+      def init_repo(repo)
+        FileUtils.mkdir_p(repo)
+        git(repo, "init", "-b", "main")
+        git(repo, "config", "user.name", "test")
+        git(repo, "config", "user.email", "test@example.com")
+        File.write(File.join(repo, "README.md"), "candidate work\n")
+        git(repo, "add", "README.md")
+        git(repo, "commit", "-m", "candidate base")
+        git(repo, "rev-parse", "HEAD").strip
+      end
+
+      def git(dir, *argv)
+        out, stderr, status = Open3.capture3("git", *argv, chdir: dir, stdin_data: "")
+        flunk "git #{argv.join(' ')} failed: #{stderr}" unless status.success?
+        out
+      end
+
+      def test_append_seeds_ref_journals_events_and_leaves_candidate_head_unchanged
+        with_temp_cache do |cache_dir|
+          repo = File.join(cache_dir, "repo")
+          candidate_head = init_repo(repo)
+          journal = Molecules::EvidenceJournal.new(repo_root: repo, ref: REF, checkout_root: File.join(cache_dir, "co"))
+
+          event = build_event(type: "intent", attempt_id: "atj0001", payload: {"operation" => "implement"})
+          commit = journal.append(assignment_id: "8wrja", attempt_id: "atj0001", events: [event])
+
+          assert_equal commit, journal.ref_value
+          refute_equal candidate_head, journal.ref_value
+          assert_equal candidate_head, git(repo, "rev-parse", "HEAD").strip
+
+          events = journal.read_events("8wrja")
+          assert_equal 1, events.size
+          assert_equal "intent", events.first["type"]
+          assert_equal "atj0001", events.first["attempt_id"]
+          assert Models::EvidenceEvent.valid?(events.first)
+        end
+      end
+
+      def test_append_twice_advances_ref_and_keeps_both_batches
+        with_temp_cache do |cache_dir|
+          repo = File.join(cache_dir, "repo")
+          init_repo(repo)
+          journal = Molecules::EvidenceJournal.new(repo_root: repo, ref: REF, checkout_root: File.join(cache_dir, "co"))
+
+          first = build_event(type: "intent", attempt_id: "atj0002", payload: {"operation" => "implement"})
+          journal.append(assignment_id: "8wrjb", attempt_id: "atj0002", events: [first])
+          second = build_event(
+            type: "receipt_accepted",
+            attempt_id: "atj0002",
+            payload: {"receipt" => {"digest" => "abc", "operation" => "implement", "verdict" => "succeeded"}},
+            previous_digest: first["digest"]
+          )
+          journal.append(assignment_id: "8wrjb", attempt_id: "atj0002", events: [second])
+
+          events = journal.read_events("8wrjb")
+          assert_equal %w[intent receipt_accepted], events.map { |e| e["type"] }
+          assert Models::EvidenceEvent.chain_valid?(events)
+
+          receipts = journal.accepted_receipts("8wrjb")
+          assert_equal 1, receipts.size
+          assert_equal "implement", receipts.first["operation"]
+        end
+      end
+
+      def test_duplicate_append_is_a_no_op_on_the_ref
+        with_temp_cache do |cache_dir|
+          repo = File.join(cache_dir, "repo")
+          init_repo(repo)
+          journal = Molecules::EvidenceJournal.new(repo_root: repo, ref: REF, checkout_root: File.join(cache_dir, "co"))
+
+          event = build_event(type: "intent", attempt_id: "atj0003", payload: {"operation" => "review"})
+          journal.append(assignment_id: "8wrjc", attempt_id: "atj0003", events: [event])
+          value_before = journal.ref_value
+
+          journal.append(assignment_id: "8wrjc", attempt_id: "atj0003", events: [event])
+
+          assert_equal value_before, journal.ref_value
+          assert_equal 1, journal.read_events("8wrjc").size
+        end
+      end
+
+      def test_events_survive_checkout_loss_and_reload_from_ref
+        with_temp_cache do |cache_dir|
+          repo = File.join(cache_dir, "repo")
+          init_repo(repo)
+          checkout_root = File.join(cache_dir, "co")
+          journal = Molecules::EvidenceJournal.new(repo_root: repo, ref: REF, checkout_root: checkout_root)
+
+          event = build_event(type: "intent", attempt_id: "atj0004", payload: {"operation" => "verify"})
+          journal.append(assignment_id: "8wrjd", attempt_id: "atj0004", events: [event])
+
+          # Simulate a lost terminal session: the disposable checkout vanishes.
+          FileUtils.rm_rf(checkout_root)
+
+          reloaded = Molecules::EvidenceJournal.new(repo_root: repo, ref: REF, checkout_root: checkout_root)
+          events = reloaded.read_events("8wrjd")
+          assert_equal 1, events.size
+          assert_equal "verify", events.first["payload"]["operation"]
+        end
+      end
+
+      def test_cas_conflict_replays_on_top_of_competing_writer
+        with_temp_cache do |cache_dir|
+          repo = File.join(cache_dir, "repo")
+          init_repo(repo)
+          checkout_root = File.join(cache_dir, "co")
+          journal = Molecules::EvidenceJournal.new(repo_root: repo, ref: REF, checkout_root: checkout_root)
+
+          event = build_event(type: "intent", attempt_id: "atj0005", payload: {"operation" => "merge"})
+          original = Molecules::EvidenceJournal.instance_method(:update_ref_cas)
+          calls = 0
+          rival_appended = false
+
+          journal.stub(:update_ref_cas, lambda { |new_commit, expected_old|
+            calls += 1
+            if calls == 1
+              # A competing writer on another machine advances the same ref
+              # between our read and our compare-and-swap.
+              unless rival_appended
+                rival_event = build_event(type: "intent", attempt_id: "atrival", payload: {"operation" => "publish"})
+                rival = Molecules::EvidenceJournal.new(
+                  repo_root: repo, ref: REF, checkout_root: File.join(cache_dir, "rival-co")
+                )
+                rival.append(assignment_id: "8wrjrival", attempt_id: "atrival", events: [rival_event])
+                rival_appended = true
+              end
+              false
+            else
+              original.bind(journal).call(new_commit, expected_old)
+            end
+          }) do
+            journal.append(assignment_id: "8wrje", attempt_id: "atj0005", events: [event])
+          end
+
+          assert_equal 1, journal.read_events("8wrje").size
+          assert_equal 1, journal.read_events("8wrjrival").size
+          assert_equal 2, Dir.glob(File.join(checkout_root, "journal", "execution", "*", "events", "*.json")).size
+        end
+      end
+
+      def test_events_are_ordered_by_digest_chain_not_filename
+        with_temp_cache do |cache_dir|
+          repo = File.join(cache_dir, "repo")
+          init_repo(repo)
+          journal = Molecules::EvidenceJournal.new(repo_root: repo, ref: REF, checkout_root: File.join(cache_dir, "co"))
+
+          same_second = Time.utc(2026, 9, 28, 12, 0, 0)
+          intent = build_event(type: "intent", attempt_id: "atchn01", payload: {"scope" => "010"}, recorded_at: same_second)
+          journal.append(assignment_id: "8wrchn", attempt_id: "atchn01", events: [intent])
+
+          transition = build_event(
+            type: "transition", attempt_id: "atchn01", payload: {"from" => "running", "to" => "uncertain"},
+            previous_digest: intent["digest"], recorded_at: same_second
+          )
+          journal.append(assignment_id: "8wrchn", attempt_id: "atchn01", events: [transition])
+
+          # Same second as the transition; filename sort would place the
+          # reconciliation BEFORE the transition ("r" < "t").
+          reconciliation = build_event(
+            type: "reconciliation", attempt_id: "atchn01",
+            payload: {"resolution" => "succeeded", "receipt_digest" => "abc"},
+            previous_digest: transition["digest"], recorded_at: same_second
+          )
+          journal.append(assignment_id: "8wrchn", attempt_id: "atchn01", events: [reconciliation])
+
+          events = journal.read_events("8wrchn")
+          assert_equal %w[intent transition reconciliation], events.map { |e| e["type"] }
+          assert Models::EvidenceEvent.chain_valid?(events)
+        end
+      end
+
+      def test_unavailable_repo_fails_closed
+        with_temp_cache do |cache_dir|
+          journal = Molecules::EvidenceJournal.new(
+            repo_root: File.join(cache_dir, "not-a-repo"),
+            ref: REF,
+            checkout_root: File.join(cache_dir, "co")
+          )
+
+          refute journal.available?
+          event = build_event(type: "intent", attempt_id: "atj0006", payload: {"operation" => "review"})
+          error = assert_raises(AttemptErrors::EvidenceUnavailable) do
+            journal.append(assignment_id: "8wrjf", attempt_id: "atj0006", events: [event])
+          end
+          assert_equal 5, error.exit_code
+        end
+      end
+
+      def test_cas_conflict_stderr_is_retryable_not_fatal
+        journal = Molecules::EvidenceJournal.new(repo_root: Dir.pwd, ref: REF, checkout_root: File.join(with_temp_cache_dir, "co"))
+
+        conflict = "fatal: cannot lock ref 'refs/ace/execution': is at 1111111 but expected 2222222"
+        refute journal.send(:git_broken?, conflict)
+        assert journal.send(:git_broken?, "fatal: could not read from remote repository")
+        refute journal.send(:git_broken?, "")
+      end
+
+      def test_journal_discovers_assignment_ids_from_the_ref
+        with_temp_cache do |cache_dir|
+          repo = File.join(cache_dir, "repo")
+          init_repo(repo)
+          journal = Molecules::EvidenceJournal.new(repo_root: repo, ref: REF, checkout_root: File.join(cache_dir, "co"))
+
+          event = build_event(type: "intent", attempt_id: "ataidi1", payload: {"scope" => "010"})
+          journal.append(assignment_id: "8wraids", attempt_id: "ataidi1", events: [event])
+
+          FileUtils.rm_rf(cache_dir) if false
+          assert_includes journal.assignment_ids, "8wraids"
+        end
+      end
+
+      def test_read_events_empty_when_ref_missing
+        with_temp_cache do |cache_dir|
+          repo = File.join(cache_dir, "repo")
+          init_repo(repo)
+          journal = Molecules::EvidenceJournal.new(repo_root: repo, ref: REF, checkout_root: File.join(cache_dir, "co"))
+
+          assert_empty journal.read_events("8wrjg")
+          assert_nil journal.ref_value
+        end
+      end
+    end
+  end
+end

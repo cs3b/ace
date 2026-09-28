@@ -56,8 +56,12 @@ module Ace
         #
         # @param config_path [String] Path to job.yaml config
         # @param parent_id [String, nil] Parent assignment ID for hierarchy linking
+        # @param task_id [String, nil] Source task ID attaching this assignment
+        #   (also read from the job's assignment.task_id); nil = taskless
+        # @param project_id [String, nil] Project ID (also read from the job's
+        #   assignment.project_id)
         # @return [Hash] Result with assignment and first step
-        def start(config_path, parent_id: nil)
+        def start(config_path, parent_id: nil, task_id: nil, project_id: nil)
           raise ConfigErrors::NotFound, "Config file not found: #{config_path}" unless File.exist?(config_path)
 
           config = YAML.safe_load_file(config_path, permitted_classes: [Time, Date])
@@ -74,12 +78,14 @@ module Ace
           steps_config = expand_sub_steps(steps_config)
           steps_config = materialize_skill_backed_steps(steps_config)
 
-          # Create assignment
+          # Create assignment; explicit args win over job config keys
           assignment = assignment_manager.create(
             name: assignment_config["name"] || File.basename(config_path, ".yaml"),
             description: assignment_config["description"],
             source_config: config_path,
-            parent: parent_id
+            parent: parent_id,
+            task_id: task_id || assignment_config["task_id"],
+            project_id: project_id || assignment_config["project_id"]
           )
 
           # Create initial step files

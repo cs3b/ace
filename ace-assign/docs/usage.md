@@ -85,6 +85,38 @@ ace-assign add --step review-pr --after 100 --child
 ace-assign add --yaml .ace-local/assign/jobs/add-task.yml --after 010 --child
 ```
 
+## Attempt Evidence
+
+Execution evidence lives in assignment attempts, not in reports. An attempt binds an immutable ID to an assignment, step/subtree scope, project, boundary-derived actor/role/runtime, source task, and `base_head`; the deliverable `candidate_head` is pinned only when accepted evidence is submitted, and the evidence journal commit is tracked separately from both.
+
+### Attempt lifecycle
+
+```bash
+ace-assign attempt start --assignment ASSIGNMENT --step STEP --project PROJECT
+ace-assign attempt status --assignment ASSIGNMENT --format json
+ace-assign attempt finish --attempt ATTEMPT --receipt receipt.json
+ace-assign attempt reconcile --attempt ATTEMPT --receipt receipt.json
+```
+
+- `attempt start` returns a JSON projection of the attempt (ID, state, binding facts, evidence references, digests). A repeated identical start returns the same attempt; a conflicting start exits 5 without launching a second writer.
+- `attempt status` exposes only state, binding, references, and digests -- never credentials or receipt bytes.
+- `attempt finish` accepts a structured receipt: operation, attributed producer, exact tested/reviewed head, verdict, artifact paths with SHA-256 digests, executed checks, and -- for review operations -- an executed independent reviewer verdict for that head.
+- `attempt reconcile` classifies interrupted attempts (`stopped` before process start, `uncertain` when an effect cannot be proven either way, still `running` only for verifiably live processes) and resolves uncertainty only against a verified receipt attributed to the recorded execution boundary. Merge, publish, and deploy effects are never replayed automatically.
+
+### State machine
+
+`reserved -> running -> succeeded | failed | stopped | uncertain`; reconciliation may resolve `uncertain -> succeeded | failed`. Terminal attempts accept no new effects, and accepted history is append-only.
+
+### Evidence storage and recovery modes
+
+- Task-attached (managed) attempts journal accepted evidence to the configured evidence Git ref (default `refs/ace/execution`) through an isolated, disposable audit checkout, outside the deliverable candidate branch. Journal commits never advance or exempt the reviewed candidate.
+- Taskless assignments persist attempts under `.ace-local/assign` with `recovery_mode: local_only`. This path never claims Git-backed recovery and cannot record external effects (`merge`, `publish`, `deploy`, `release`); attach the assignment to a source task before managed delivery.
+- Actor identity always comes from the execution boundary (OS login for local use, or the trusted service executor's identity). Unknown identity fails closed; flags never grant identity or authority.
+
+### status integration
+
+`ace-assign status --format json` includes the active attempt, `base_head`, `candidate_head`, `evidence_git_ref`, `journal_commit`, and unresolved effects. Feedback state is derived from accepted current-head evidence: `terminal` (accepted evidence at the current head), `open` (attempts without a terminal outcome), `uncertain` (unresolved interruptions), or `unknown` (no attempts). Merge authorization requires an executed independent review verdict for the current head plus an independent release receipt when relevant; report files, exit codes, and prose never authorize a merge.
+
 ## Commands
 
 ### `ace-assign create`

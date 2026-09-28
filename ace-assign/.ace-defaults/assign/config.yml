@@ -28,6 +28,19 @@ execution:
   timeout: 1800
   launch_mode: auto # auto | headless | tmux
 
+# Attempt evidence persistence (managed attempts)
+attempt:
+  # Dedicated Git ref holding accepted execution evidence, outside the
+  # deliverable candidate branch; journal paths are execution/<assignment-id>/
+  evidence_git_ref: "refs/ace/execution"
+  # Disposable isolated audit checkout root (relative to project root)
+  evidence_checkout_root: ".ace-local/assign/evidence-checkout"
+  # Trusted execution-boundary identity adapter: local (interactive
+  # coordinator) or service (identity supplied by a trusted service executor
+  # via service_identity_env). Unknown identity fails closed.
+  identity_adapter: "local"
+  service_identity_env: "ACE_ASSIGN_SERVICE_IDENTITY"
+
 # Subtree execution behavior
 subtree:
   pre_commit_review: true

@@ -657,20 +657,70 @@ Follow the instructions directly, performing the described work:
 
 ### 4. External Action Rule (Attempt-First)
 
-For external-facing steps (for example PR/review/release/push/update lifecycle steps):
+Every external-facing step (implement, verify, review, merge, publish, deploy, release) runs inside a scoped attempt. The attempt -- not the report and not exit status -- is the delivery record.
 
-- Attempt the step command(s) first.
-- If blocked, capture concrete evidence:
+**Step 1: Start the attempt before executing the step.** Actor identity is derived from the execution boundary; never pass actor flags.
 
-  - command attempted
-  - exact error output
-  - why the step cannot proceed
+```bash
+ATTEMPT_JSON=$(ace-assign attempt start --assignment "$ASSIGNMENT_ID" --step "$STEP_NUMBER" --project "$PROJECT_ID")
+echo "$ATTEMPT_JSON"
+```
 
-- Mark step failed with evidence (do not report synthetic completion).
+- A repeated identical start returns the same attempt; a conflicting start fails (exit 5). Never launch a second writer for an owned subtree.
+- `base_head` is captured exactly once at start. Record the `attempt_id`.
+
+**Step 2: Execute the step command(s).** If blocked, capture concrete evidence:
+
+- command attempted
+- exact error output
+- why the step cannot proceed
+
+Mark the step failed with evidence (do not report synthetic completion):
 
 ```bash
 ace-assign fail --message "Command failed: <cmd>. Error: <exact stderr>" --assignment "$ASSIGNMENT_TARGET"
 ```
+
+**Step 3: Submit a structured receipt -- never prose -- to close the attempt.**
+
+```bash
+cat > /tmp/attempt-receipt.json << 'EOF'
+{
+  "attempt_id": "<ATTEMPT_ID>",
+  "assignment_id": "<ASSIGNMENT_ID>",
+  "project_id": "<PROJECT_ID>",
+  "scope": "<STEP_NUMBER>",
+  "operation": "implement",
+  "producer": {"actor": "<boundary-actor>", "role": "worker", "runtime": "<boundary-runtime>"},
+  "head": "<exact tested/reviewed HEAD sha>",
+  "verdict": "succeeded",
+  "artifacts": [{"path": "report.md", "sha256": "<sha256>"}],
+  "checks": [{"name": "ace-test", "verdict": "passed"}],
+  "review": {"reviewer": {"actor": "<independent-reviewer>", "runtime": "<reviewer-runtime>"}, "verdict": "approved", "head": "<same HEAD sha>"}
+}
+EOF
+
+ace-assign attempt finish --attempt "$ATTEMPT_ID" --receipt /tmp/attempt-receipt.json
+```
+
+Receipt rules enforced by the coordinator:
+
+- `succeeded` verdicts require verifiable artifact digests, passing checks, and trusted coordinator/service authority; worker runtimes may submit attributable results but cannot self-approve.
+- Review approval requires an executed independent reviewer verdict for the exact current head; same author/reviewer and report-only existence are rejected.
+- Receipts carrying credentials, environment dumps, or terminal output are rejected outright.
+- External effects (`merge`, `publish`, `deploy`, `release`) additionally require an accepted independent review receipt for the current head. Taskless assignments cannot record external effects.
+
+**Step 4: Handle interruptions by classifying and reconciling -- never by assuming.**
+
+```bash
+ace-assign attempt status --assignment "$ASSIGNMENT_ID" --format json
+ace-assign attempt reconcile --attempt "$ATTEMPT_ID"
+ace-assign attempt reconcile --attempt "$ATTEMPT_ID" --receipt /tmp/attempt-receipt.json
+```
+
+- A lost receipt after a possible effect is `uncertain`; it resolves only against a verified receipt attributed to the recorded execution boundary.
+- Running attempts stay running only while their recorded process is verifiably live; anything else becomes `stopped` or `uncertain`.
+- Never replay `merge`, `publish`, or `deploy` automatically. Reconciliation records evidence; it never re-executes effects.
 
 ### Human-in-the-Loop (HITL) Stall Protocol
 
@@ -717,7 +767,7 @@ For a blocked step:
 
 ### 5. Write Report (Only After Real Execution)
 
-After completing the step work, write a brief report summarizing what was accomplished:
+After the attempt accepted a receipt (or the step was failed with evidence), write a brief report summarizing what was accomplished. The report advances the queue; the accepted attempt receipt carries the delivery evidence:
 
 ```bash
 # Write report content to a temp file
@@ -736,6 +786,12 @@ EOF
 # Submit report to advance the queue
 ace-assign finish --message /tmp/step-report.md --assignment "$ASSIGNMENT_TARGET"
 ```
+
+Prohibited:
+
+- Advancing a step when its attempt has no accepted receipt (or recorded failure evidence).
+- Treating a written report, exit 0, or prose as proof of completion. Check `ace-assign attempt status --assignment "$ASSIGNMENT_ID" --format json` for accepted evidence and unresolved effects.
+- Reporting `uncertain` attempts as complete; reconcile them first.
 
 ### 6. Verify State Transition (Required)
 

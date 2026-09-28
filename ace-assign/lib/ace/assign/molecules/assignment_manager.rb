@@ -23,8 +23,10 @@ module Ace
         # @param description [String, nil] Assignment description
         # @param source_config [String] Path to source config file
         # @param parent [String, nil] Parent assignment ID for hierarchy linking
+        # @param task_id [String, nil] Source task ID attachment (nil = taskless)
+        # @param project_id [String, nil] Project ID the assignment executes in
         # @return [Models::Assignment] Created assignment
-        def create(name:, source_config:, description: nil, parent: nil)
+        def create(name:, source_config:, description: nil, parent: nil, task_id: nil, project_id: nil)
           # Ensure cache base directory exists before generate_assignment_id
           FileUtils.mkdir_p(@cache_base)
 
@@ -46,7 +48,9 @@ module Ace
             updated_at: now,
             source_config: source_config,
             cache_dir: cache_dir,
-            parent: parent
+            parent: parent,
+            task_id: task_id,
+            project_id: project_id
           )
 
           # Write assignment.yaml
@@ -175,7 +179,9 @@ module Ace
             updated_at: Time.now.utc,
             source_config: assignment.source_config,
             cache_dir: assignment.cache_dir,
-            parent: assignment.parent
+            parent: assignment.parent,
+            task_id: assignment.task_id,
+            project_id: assignment.project_id
           )
 
           write_assignment_file(updated)
@@ -184,6 +190,32 @@ module Ace
           update_latest_symlink(assignment.id)
 
           updated
+        end
+
+        # The attempt store sharing this manager's cache base. The store is
+        # the single authority for attempt records and subtree ownership;
+        # assignment metadata never carries attempt history.
+        #
+        # @return [Molecules::AttemptStore] Attempt store
+        def attempt_store
+          @attempt_store ||= Molecules::AttemptStore.new(cache_base: @cache_base)
+        end
+
+        # Assignment-scoped lookup of the active attempt for a scope.
+        #
+        # @param assignment_id [String] Assignment ID
+        # @param scope [String] Step/subtree scope
+        # @return [Models::Attempt, nil] Active attempt or nil
+        def active_attempt(assignment_id, scope)
+          attempt_store.active(assignment_id, scope)
+        end
+
+        # All attempts recorded for an assignment.
+        #
+        # @param assignment_id [String] Assignment ID
+        # @return [Array<Models::Attempt>] Persisted attempts
+        def attempts(assignment_id)
+          attempt_store.list(assignment_id)
         end
 
         # List all assignments

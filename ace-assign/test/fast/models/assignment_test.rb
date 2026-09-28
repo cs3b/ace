@@ -150,4 +150,47 @@ class AssignmentTest < AceAssignTestCase
 
     assert_nil assignment.parent
   end
+
+  def test_task_and_project_attachment_survive_roundtrip
+    now = Time.utc(2026, 1, 28, 12, 0, 0)
+    assignment = Ace::Assign::Models::Assignment.new(
+      id: "abc123",
+      name: "task-linked",
+      created_at: now,
+      source_config: "job.yaml",
+      task_id: "8wr.t.qjl",
+      project_id: "ace"
+    )
+
+    assert assignment.managed?
+    assert_equal "8wr.t.qjl", assignment.task_id
+    assert_equal "ace", assignment.project_id
+
+    restored = Ace::Assign::Models::Assignment.from_h(assignment.to_h, cache_dir: "/tmp/test")
+    assert_equal "8wr.t.qjl", restored.task_id
+    assert_equal "ace", restored.project_id
+    assert restored.managed?
+  end
+
+  def test_taskless_assignment_is_not_managed
+    now = Time.utc(2026, 1, 28, 12, 0, 0)
+    taskless = Ace::Assign::Models::Assignment.new(
+      id: "def456",
+      name: "taskless",
+      created_at: now,
+      source_config: "job.yaml"
+    )
+
+    refute taskless.managed?
+
+    blank = Ace::Assign::Models::Assignment.new(
+      id: "ghi789",
+      name: "blank-task",
+      created_at: now,
+      source_config: "job.yaml",
+      task_id: "  "
+    )
+
+    refute blank.managed?
+  end
 end
