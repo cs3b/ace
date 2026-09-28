@@ -25,6 +25,7 @@ module Ace
               gem_file = build_gem(tmp)
               begin
                 install_gem(gem_file, gem_home)
+                install_workspace_dependencies(tmp, gem_home)
                 write_topology_config(project_dir)
                 bin = File.join(gem_home, "bin", "ace-lab")
                 assert File.exist?(bin), "installed gem must ship the ace-lab executable"
@@ -60,10 +61,26 @@ module Ace
             gem_path
           end
 
+          # ACE workspace dependencies are built from this checkout and
+          # installed into the isolated GEM_HOME: a clean vendor-bundle
+          # checkout has no globally installed ace-* gems to fall back on
+          # (review round 13, F1)
+          def install_workspace_dependencies(tmpdir, gem_home)
+            %w[ace-support-core ace-support-config ace-support-cli].each do |name|
+              package = File.expand_path("../#{name}", package_dir)
+              gem_path = File.join(tmpdir, "#{name}.gem")
+              out, err, status = Open3.capture3("gem", "build", "#{name}.gemspec", "--output", gem_path,
+                chdir: package)
+              flunk("#{name} build failed: #{err} #{out}") unless status.success?
+
+              install_gem(gem_path, gem_home)
+            end
+          end
+
           def install_gem(gem_file, gem_home)
             install_env = clean_env.merge(
               "GEM_HOME" => gem_home,
-              "GEM_PATH" => "#{gem_home}#{File::PATH_SEPARATOR}#{system_gem_dir}"
+              "GEM_PATH" => "#{gem_home}#{File::PATH_SEPARATOR}#{fallback_gem_dir}"
             )
             out, err, status = Open3.capture3(install_env, "gem", "install", "--local", "--no-document",
               "--ignore-dependencies", "--install-dir", gem_home, gem_file)
@@ -72,9 +89,11 @@ module Ace
 
           # Environment for the installed CLI: only the variables the process
           # needs — inherited workspace/bundler state is dropped entirely
-          # (review R5). GEM_PATH keeps the system gem dir as dependency
-          # fallback; HOME points at the fresh project. There is deliberately
-          # no caller-controllable grants override (review round 5, F1).
+          # (review R5). ACE dependencies come from the isolated GEM_HOME
+          # (workspace-built); the system gem dir remains fallback for
+          # third-party gems only (dry-cli etc.). HOME points at the fresh
+          # project. There is deliberately no caller-controllable grants
+          # override (review round 5, F1).
           def launch_env(gem_home, project_dir)
             {
               "PATH" => ENV["PATH"],
@@ -83,7 +102,7 @@ module Ace
               # which breaks YAML parsing of non-ASCII configuration
               "LANG" => ENV["LANG"] || "en_US.UTF-8",
               "GEM_HOME" => gem_home,
-              "GEM_PATH" => "#{gem_home}#{File::PATH_SEPARATOR}#{system_gem_dir}"
+              "GEM_PATH" => "#{gem_home}#{File::PATH_SEPARATOR}#{fallback_gem_dir}"
             }
           end
 
@@ -95,14 +114,13 @@ module Ace
             ENV.to_h.reject { |key, _| key.start_with?("BUNDLE") || key == "RUBYOPT" }
           end
 
-          def system_gem_dir
-            @system_gem_dir ||= [Gem.default_dir, Gem.user_dir].compact.find do |dir|
-              Dir.exist?(File.join(dir, "gems")) &&
-                !Dir.glob(File.join(dir, "gems", "ace-support-core-*")).empty?
+          def fallback_gem_dir
+            @fallback_gem_dir ||= [Gem.default_dir, Gem.user_dir].compact.find do |dir|
+              Dir.exist?(File.join(dir, "gems"))
             end
-            flunk("ace-support-core not found in any system gem dir; cannot isolate install") unless @system_gem_dir
+            flunk("no system gem dir found for third-party dependency fallback") unless @fallback_gem_dir
 
-            @system_gem_dir
+            @fallback_gem_dir
           end
 
           # The deployed topology document carries no grants; authorization
