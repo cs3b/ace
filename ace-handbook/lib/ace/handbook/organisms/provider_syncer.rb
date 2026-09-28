@@ -211,13 +211,18 @@ module Ace
           end
 
           newly_created = []
+          saved_originals = {}
+          failed_prunes = []
           begin
             output_paths.each do |relative_path, output_path|
               source_path = expected.fetch(relative_path)
               FileUtils.mkdir_p(File.dirname(output_path))
               created = !File.exist?(output_path)
               # Register before copying: a copy that fails partway (disk
-              # exhaustion) must still roll back the partial file.
+              # exhaustion) must still roll back the partial file. Overwritten
+              # files are receipt-owned, so rollback restores their previous
+              # content instead of deleting them.
+              saved_originals[output_path] = File.binread(output_path) unless created
               newly_created << output_path if created
               next if !created && FileUtils.compare_file(source_path, output_path)
 
@@ -225,13 +230,22 @@ module Ace
               updated_files += 1
             end
 
-            write_projection_receipt(output_dir, provider, expected.keys)
+            removed_entries = prune_stale_extension_files(output_dir, stale_paths, failed_prunes)
+            # Stale files whose removal failed keep their ownership until a
+            # later sync manages to delete them.
+            write_projection_receipt(output_dir, provider, expected.keys + failed_prunes)
           rescue
-            # Roll back files this sync created so a retry never finds its own
-            # partial installation standing in the way as an unowned
-            # collision. Overwritten files were receipt-owned and stay.
+            # Roll back so a retry never finds its own partial installation
+            # standing in the way as an unowned collision, and restore the
+            # previous content of overwritten files — the previous
+            # installation must stay complete and loadable.
             newly_created.each do |path|
               FileUtils.rm_f(path)
+            rescue
+              nil
+            end
+            saved_originals.each do |path, content|
+              File.binwrite(path, content)
             rescue
               nil
             end
@@ -240,8 +254,6 @@ module Ace
             end
             raise
           end
-
-          removed_entries = prune_stale_extension_files(output_dir, stale_paths)
 
           {
             relative_extensions_dir: extensions_dir,
@@ -314,7 +326,7 @@ module Ace
             .to_h { |path| [Pathname.new(path).relative_path_from(source_root).to_s, path] }
         end
 
-        def prune_stale_extension_files(output_dir, stale_relative_paths)
+        def prune_stale_extension_files(output_dir, stale_relative_paths, failed_prunes)
           stale = stale_relative_paths
           removed = 0
           stale.each do |relative_path|
@@ -322,9 +334,15 @@ module Ace
             next if contained.nil?
             next unless File.file?(contained)
 
-            FileUtils.rm(contained)
-            removed += 1
-            remove_empty_parent_dirs(File.dirname(contained), output_dir)
+            begin
+              FileUtils.rm(contained)
+              removed += 1
+              remove_empty_parent_dirs(File.dirname(contained), output_dir)
+            rescue
+              # Keep ownership of the undeletable file: the next sync retries
+              # the removal instead of forgetting the file belongs to ACE.
+              failed_prunes << relative_path
+            end
           end
           removed
         end
