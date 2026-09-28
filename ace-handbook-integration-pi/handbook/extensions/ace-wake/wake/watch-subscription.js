@@ -3,12 +3,35 @@ import * as nodePath from "node:path";
 import { WakeError } from "./types.js";
 
 /**
+ * Resolve a configured watch path to the filesystem target: relative paths
+ * resolve against `baseDir`, and an existing symlinked path resolves to its
+ * target so directory events match the watched file's real name.
+ *
+ * @param {string} baseDir
+ * @param {string} path
+ * @returns {string}
+ */
+export function canonicalizeWatchPath(baseDir, path) {
+  const resolved = nodePath.resolve(baseDir, path);
+  try {
+    return nodeFs.realpathSync(resolved);
+  } catch {
+    // A nonexistent path cannot be canonicalized; stat validation in start()
+    // reports the visible error instead.
+    return resolved;
+  }
+}
+
+/**
  * Watch subscription port owning native filesystem watcher handles.
  *
- * start() resolves the configured path to a canonical absolute path (relative
- * paths resolve against `baseDir`), validates readable metadata, and records
- * a baseline fingerprint. Only later fingerprint changes wake the agent, so
- * registering a watch never produces an initial wake.
+ * start() resolves the configured path to a canonical absolute target (relative
+ * paths resolve against `baseDir`; symlinks resolve to their target), validates
+ * readable metadata, and records a baseline fingerprint. Only later fingerprint
+ * changes wake the agent, so registering a watch never produces an initial
+ * wake. When a wake coalesces into one already queued, the fingerprint stays
+ * at the previously delivered state: the queued wake covers the change, and a
+ * further change queues a fresh follow-up after settlement.
  *
  * A watcher runtime error (path deleted, permission lost) closes the handle,
  * marks the subscription inactive with a visible error via the injected
@@ -21,10 +44,11 @@ import { WakeError } from "./types.js";
  * @param {(path: string, handlers: {onChange: () => void, onError: (error: Error) => void}) => {close: () => void}} ports.watchFactory
  * @param {(path: string) => {mtimeMs: number, size: number}} ports.statFn
  * @param {string} [ports.baseDir] Resolution base for relative watch paths.
+ * @param {(baseDir: string, path: string) => string} [ports.canonicalizeFn] Path canonicalization; defaults to resolve + realpath.
  * @param {() => void} [ports.onDeactivate] Invoked when a subscription leaves
  *   the active state so callers can refresh visible status.
  * @returns {{
- *   start: (definition: import("./types.js").WatchDefinition, onWake: (definition: import("./types.js").WatchDefinition) => void) => string,
+ *   start: (definition: import("./types.js").WatchDefinition, onWake: (definition: import("./types.js").WatchDefinition) => {delivered: boolean, reason?: string} | undefined) => string,
  *   stop: (name: string) => void,
  *   stopAll: () => void,
  *   fail: (name: string, message: string) => void,
@@ -32,7 +56,7 @@ import { WakeError } from "./types.js";
  *   activeCount: () => number,
  * }}
  */
-export function createWatchPort({ watchFactory, statFn, baseDir = process.cwd(), onDeactivate }) {
+export function createWatchPort({ watchFactory, statFn, baseDir = process.cwd(), canonicalizeFn = canonicalizeWatchPath, onDeactivate }) {
   /** @type {Map<string, {watcher: {close: () => void}, canonicalPath: string, fingerprint: string}>} */
   const active = new Map();
   /** @type {Map<string, string>} */
@@ -46,7 +70,7 @@ export function createWatchPort({ watchFactory, statFn, baseDir = process.cwd(),
       stopExisting(definition.name);
       errors.delete(definition.name);
 
-      const canonicalPath = nodePath.resolve(baseDir, definition.path);
+      const canonicalPath = canonicalizeFn(baseDir, definition.path);
       const baseline = readBaseline(canonicalPath);
       const fingerprint = fingerprintOf(baseline);
       const watcher = watchFactory(canonicalPath, {
@@ -59,8 +83,14 @@ export function createWatchPort({ watchFactory, statFn, baseDir = process.cwd(),
           if (next === active.get(definition.name)?.fingerprint) {
             return;
           }
+          const outcome = onWake(definition);
+          if (outcome && outcome.delivered === false && outcome.reason === "coalesced") {
+            // The queued wake already covers this change; keep the delivered
+            // fingerprint so a later change queues a fresh follow-up instead
+            // of being silently absorbed.
+            return;
+          }
           active.get(definition.name).fingerprint = next;
-          onWake(definition);
         },
         onError: (error) => {
           deactivate(definition.name, describeError(error));

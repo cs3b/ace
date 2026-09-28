@@ -108,7 +108,8 @@ describe("WakeDispatcher", () => {
     dispatcher.wake("loop:big", "x".repeat(MAX_WAKE_MESSAGE_CHARS + 100));
 
     assert.equal(delivered[0], "spaced");
-    assert.equal(delivered[1].length, MAX_WAKE_MESSAGE_CHARS + "… [ace-wake: message truncated]".length);
+    assert.equal(delivered[1].length, MAX_WAKE_MESSAGE_CHARS, "the truncation marker fits inside the bound");
+    assert.match(delivered[1], /\[ace-wake: message truncated\]$/);
   });
 
   it("settleAll clears every source", () => {
@@ -128,6 +129,8 @@ describe("wake validation", () => {
     assert.throws(() => requireName("", "loop"), /name must not be empty/);
     assert.throws(() => requireName("  ", "watch"), /name must not be empty/);
     assert.throws(() => requireName("has space", "loop"), /must not contain whitespace/);
+    assert.throws(() => requireName("x".repeat(65), "loop"), /at most 64 characters/);
+    assert.equal(requireName("x".repeat(64), "watch"), "x".repeat(64));
   });
 
   it("rejects invalid intervals with a clear message", () => {

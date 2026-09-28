@@ -25,6 +25,7 @@ import { createWatchPort, nodeStatFn, nodeWatchFactory } from "./wake/watch-subs
 import {
   SESSION_ENTRY_TYPE,
   WakeError,
+  boundMessage,
 } from "./wake/types.js";
 import { WakeRegistry } from "./wake/wake-registry.js";
 
@@ -120,9 +121,10 @@ function createRegistry(pi, ctx, ports) {
  * immediately when nothing is in flight and queues it behind any active run
  * otherwise, so no window — between runs, during a tool, or while earlier
  * wakes are queued — can drop a wake or interrupt an in-flight operation.
+ * The complete rendered message (source prefix included) is bounded.
  */
 function deliverWake(pi, ctx, sourceKey, text) {
-  const message = `[ace-wake ${sourceKey}] ${text}`;
+  const message = boundMessage(`[ace-wake ${sourceKey}] ${text}`);
   try {
     pi.sendUserMessage(message, { deliverAs: "followUp" });
     return true;

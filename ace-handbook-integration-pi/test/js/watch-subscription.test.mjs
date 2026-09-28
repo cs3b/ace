@@ -9,6 +9,7 @@ import {
   nodeStatFn,
   nodeWatchFactory,
 } from "../../handbook/extensions/ace-wake/wake/watch-subscription.js";
+import { WakeDispatcher } from "../../handbook/extensions/ace-wake/wake/wake-dispatcher.js";
 import { createFakeHost } from "./fake-pi-host.mjs";
 
 const WATCHED = "/fake/project/dep.txt";
@@ -92,6 +93,41 @@ describe("createWatchPort", () => {
     assert.equal(wakes.length, 0);
   });
 
+  it("keeps the delivered fingerprint when a wake coalesces so the change is not lost", () => {
+    const host = createFakeHost();
+    const dispatcher = new WakeDispatcher({ deliver: () => true });
+    const port = createWatchPort({
+      watchFactory: host.watchFactory,
+      statFn: host.statFn,
+      baseDir: "/fake/project",
+    });
+    host.setFile(WATCHED, { mtimeMs: 100, size: 10 });
+    port.start(
+      { kind: "watch", name: "dep", path: WATCHED, message: "changed" },
+      () => dispatcher.wake("watch:dep", "changed"),
+    );
+
+    // Delivered change advances the baseline.
+    host.setFile(WATCHED, { mtimeMs: 200, size: 12 });
+    host.triggerWatch(WATCHED);
+    assert.equal(dispatcher.pending.has("watch:dep"), true);
+
+    // A second change whose wake coalesces must NOT advance the fingerprint:
+    // the queued wake covers it, so after settlement a duplicate directory
+    // event for the same state still wakes instead of being silently lost.
+    host.setFile(WATCHED, { mtimeMs: 300, size: 14 });
+    host.triggerWatch(WATCHED);
+
+    dispatcher.settle("watch:dep");
+    host.triggerWatch(WATCHED);
+
+    assert.equal(host.watcherCount(), 1);
+    assert.equal(port.errorOf("dep"), undefined);
+    // The second change eventually produced its own wake: the fingerprint
+    // advanced past the coalesced state (visible as a fresh pending wake).
+    assert.equal(dispatcher.pending.has("watch:dep"), true);
+  });
+
   it("deactivates on watcher runtime errors without retrying", () => {
     const host = createFakeHost();
     const { port, wakes } = startWatch(host);
@@ -155,6 +191,34 @@ describe("createWatchPort", () => {
 });
 
 describe("nodeWatchFactory on the real filesystem", { timeout: 20_000 }, () => {
+  it("resolves symlinked watch paths to their filesystem target", async () => {
+    const tmp = nodeFs.mkdtempSync(nodePath.join(nodeOs.tmpdir(), "wake-symlink-"));
+    const realFile = nodePath.join(tmp, "real.txt");
+    const link = nodePath.join(tmp, "link.txt");
+    nodeFs.writeFileSync(realFile, "version-1");
+    nodeFs.symlinkSync(realFile, link);
+
+    const port = createWatchPort({
+      watchFactory: nodeWatchFactory,
+      statFn: nodeStatFn,
+      baseDir: tmp,
+    });
+    const wakes = [];
+    const canonical = port.start(
+      { kind: "watch", name: "via-link", path: link, message: "m" },
+      () => wakes.push(1),
+    );
+
+    assert.equal(canonical, nodeFs.realpathSync(realFile), "the canonical path must be the symlink target");
+
+    nodeFs.writeFileSync(realFile, "version-2 with more content");
+    await waitFor(() => wakes.length === 1, { timeoutMs: 10_000 });
+    assert.equal(wakes.length, 1, "writes to the symlink target must wake");
+
+    port.stopAll();
+    nodeFs.rmSync(tmp, { recursive: true, force: true });
+  });
+
   it("rejects existing files whose contents are not readable", () => {
     if (process.platform === "win32") {
       return; // POSIX permission bits do not apply.

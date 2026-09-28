@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import { createFakeHost } from "./fake-pi-host.mjs";
+import { MAX_WAKE_MESSAGE_CHARS } from "../../handbook/extensions/ace-wake/wake/types.js";
 import aceWakeFactory from "../../handbook/extensions/ace-wake/index.js";
 
 const HOST_PORTS = ["setIntervalFn", "clearIntervalFn", "watchFactory", "statFn"];
@@ -191,6 +192,23 @@ describe("ace-wake delivery", () => {
     await session.settle();
     host.clock.advance(10_000);
     assert.equal(host.sends.length, 2, "after settlement the source wakes again");
+  });
+
+  it("bounds the complete rendered wake message including the source prefix", async () => {
+    const host = createFakeHost();
+    await startSession(host);
+    const longMessage = "y".repeat(MAX_WAKE_MESSAGE_CHARS + 500);
+
+    await host.runCommand("loop", `add big --interval 10 --message ${longMessage}`);
+    host.clock.advance(10_000);
+
+    assert.equal(host.sends.length, 1);
+    assert.equal(
+      host.sends[0].text.length,
+      MAX_WAKE_MESSAGE_CHARS,
+      "the composed message, prefix and truncation marker included, must not exceed the bound",
+    );
+    await host.runCommand("loop", "remove big");
   });
 
   it("coalesces same-source wakes while one is queued and keeps distinct sources", async () => {

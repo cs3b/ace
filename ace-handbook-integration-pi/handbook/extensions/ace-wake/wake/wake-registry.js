@@ -1,5 +1,6 @@
 import {
   LOOP_SOURCE_PREFIX,
+  MAX_NAME_CHARS,
   WATCH_SOURCE_PREFIX,
   WakeError,
 } from "./types.js";
@@ -215,8 +216,9 @@ export class WakeRegistry {
 
   #fire(sourcePrefix, name, message) {
     try {
-      this.#dispatcher.wake(`${sourcePrefix}${name}`, message);
+      const outcome = this.#dispatcher.wake(`${sourcePrefix}${name}`, message);
       this.#refreshStatus();
+      return outcome;
     } catch {
       // Timer and watcher callbacks can outlive their host context (session
       // replacement, reload, or disposal invalidates the captured context
@@ -226,6 +228,7 @@ export class WakeRegistry {
       // re-registers them.
       this.#loops.stopAll();
       this.#watches.stopAll();
+      return { delivered: false, reason: "stale" };
     }
   }
 
@@ -265,6 +268,9 @@ export function requireName(value, kind) {
   }
   if (/\s/.test(name)) {
     throw new WakeError(`${kind} name must not contain whitespace`);
+  }
+  if (name.length > MAX_NAME_CHARS) {
+    throw new WakeError(`${kind} name must be at most ${MAX_NAME_CHARS} characters, got ${name.length}`);
   }
   return name;
 }

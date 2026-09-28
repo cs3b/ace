@@ -16,6 +16,9 @@ export const WATCH_SOURCE_PREFIX = "watch:";
 /** Hard upper bound for a delivered wake message, in characters. */
 export const MAX_WAKE_MESSAGE_CHARS = 4000;
 
+/** Upper bound for a subscription name, in characters. */
+export const MAX_NAME_CHARS = 64;
+
 /** customType used for pi.appendEntry persistence of wake definitions. */
 export const SESSION_ENTRY_TYPE = "ace-wake";
 
@@ -59,15 +62,17 @@ export class WakeError extends Error {
 }
 
 /**
- * Truncate a wake message to the bounded length, marking the cut.
+ * Truncate a message to the bounded length, reserving space for the
+ * truncation marker so the delivered message never exceeds the bound.
  *
  * @param {string} text
  * @returns {string}
  */
 export function boundMessage(text) {
   const trimmed = text.trim();
+  const marker = "… [ace-wake: message truncated]";
   if (trimmed.length <= MAX_WAKE_MESSAGE_CHARS) {
     return trimmed;
   }
-  return `${trimmed.slice(0, MAX_WAKE_MESSAGE_CHARS)}… [ace-wake: message truncated]`;
+  return `${trimmed.slice(0, MAX_WAKE_MESSAGE_CHARS - marker.length)}${marker}`;
 }
