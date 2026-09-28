@@ -60,6 +60,10 @@ module HerdrTestHelper
       call(:pane_current)
     end
 
+    def pane_process_info(pane)
+      call(:pane_process_info, pane: pane)
+    end
+
     def tab_create(workspace_id:, label:, cwd: nil, focus: nil)
       call(:tab_create, workspace_id: workspace_id, label: label, cwd: cwd, focus: focus)
     end

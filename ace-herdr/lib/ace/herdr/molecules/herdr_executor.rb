@@ -60,6 +60,11 @@ module Ace
           run!([@binary, "pane", "current", "--current"])
         end
 
+        # Inspect a pane's processes (positive proof of process exit for tidy)
+        def pane_process_info(pane)
+          run!([@binary, "pane", "process-info", "--pane", pane])
+        end
+
         # Create a tab in a workspace with a label and optional cwd
         def tab_create(workspace_id:, label:, cwd: nil, focus: nil)
           cmd = [@binary, "tab", "create", "--workspace", workspace_id, "--label", label]

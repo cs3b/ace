@@ -299,6 +299,20 @@ module Ace
           )
         end
 
+        def test_pane_process_info_builds_expected_argv
+          executor = StubbedExecutor.new
+
+          executor.pane_process_info("w5:p1")
+
+          assert_equal ["herdr", "pane", "process-info", "--pane", "w5:p1"], executor.commands.first
+        end
+
+        def test_pane_process_info_maps_missing_pane_to_terminal_error
+          executor = StubbedExecutor.new(results: [error_result("pane_not_found", "pane not found")])
+
+          assert_raises(PaneNotFoundError) { executor.pane_process_info("w5:p1") }
+        end
+
         def test_tab_not_found_maps_to_terminal_error
           executor = StubbedExecutor.new(results: [error_result("tab_not_found", "tab nope not found")])
 
