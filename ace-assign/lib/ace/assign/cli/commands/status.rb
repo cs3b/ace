@@ -132,12 +132,32 @@ module Ace
             lines = []
             lines.concat(compact_summary_lines(view.assignment, view.scoped_state, view.active_steps, view.next_step))
 
+            if (attempt_line = compact_attempt_line(view.assignment.id))
+              lines.insert(1, attempt_line)
+            end
+
             unless target.assignment_id
               other_line = compact_other_assignments_line(view.assignment.id, include_completed: include_completed)
               lines << other_line if other_line
             end
 
             puts lines.take(10).join("\n")
+          end
+
+          # Active attempt summary projected from the coordinator authority.
+          def compact_attempt_line(assignment_id)
+            projection = Organisms::AttemptCoordinator.new.status(assignment_id)
+            return nil unless projection
+
+            base = projection["base_head"].to_s[0, 7]
+            candidate = projection["candidate_head"].to_s[0, 7]
+            line = "Attempt: #{projection['attempt_id']} #{projection['state']}"
+            line += " | base:#{base}" unless base.to_s.empty?
+            line += " | cand:#{candidate.empty? ? 'none' : candidate}"
+            line += " | unresolved: #{projection['unresolved_effects'].join(',')}" if projection["unresolved_effects"].any?
+            line
+          rescue Ace::Assign::Error, Ace::Support::Cli::Error
+            nil
           end
 
           def compact_summary_lines(assignment, state, active_steps, next_step)

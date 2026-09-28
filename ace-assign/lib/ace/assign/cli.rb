@@ -65,6 +65,11 @@ require_relative "cli/commands/list"
 require_relative "cli/commands/select"
 require_relative "cli/commands/fork_run"
 require_relative "cli/commands/fork_session"
+require_relative "cli/commands/attempt/base"
+require_relative "cli/commands/attempt/start"
+require_relative "cli/commands/attempt/status"
+require_relative "cli/commands/attempt/finish"
+require_relative "cli/commands/attempt/reconcile"
 
 module Ace
   module Assign
@@ -86,7 +91,11 @@ module Ace
         ["retry", "Retry failed step"],
         ["list", "List all assignments"],
         ["select", "Select active assignment"],
-        ["fork-run", "Run subtree in forked process"]
+        ["fork-run", "Run subtree in forked process"],
+        ["attempt start", "Start a scoped attempt for an assignment step"],
+        ["attempt status", "Show attempt status for an assignment"],
+        ["attempt finish", "Finish an attempt with a structured execution receipt"],
+        ["attempt reconcile", "Reconcile an interrupted or uncertain attempt"]
       ].freeze
 
       HELP_EXAMPLES = [
@@ -96,7 +105,9 @@ module Ace
         "ace-assign start                      # Start next workable step",
         "ace-assign finish --message done.md    # Complete active step",
         "cat report.md | ace-assign finish     # Complete step via stdin",
-        "ace-assign fork-run 010.01            # Run subtree in subprocess"
+        "ace-assign fork-run 010.01            # Run subtree in subprocess",
+        "ace-assign attempt start --assignment ID --step 010 --project ID",
+        "ace-assign attempt finish --attempt ID --receipt receipt.json"
       ].freeze
 
       # Captured command exit code from last run
@@ -144,6 +155,10 @@ module Ace
       register "select", wrap_command(Commands::Select)
       register "fork-run", wrap_command(Commands::ForkRun)
       register "fork-session", wrap_command(Commands::ForkSession)
+      register "attempt start", wrap_command(Commands::Attempt::Start)
+      register "attempt status", wrap_command(Commands::Attempt::Status)
+      register "attempt finish", wrap_command(Commands::Attempt::Finish)
+      register "attempt reconcile", wrap_command(Commands::Attempt::Reconcile)
 
       # Register version command
       version_cmd = Ace::Support::Cli::VersionCommand.build(
