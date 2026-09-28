@@ -23,7 +23,9 @@ class OverseerWorkflowContractTest < AceOverseerTestCase
     assert_includes workflow_content,
       "git -C <successor-repo> merge-base --is-ancestor <dest-ref> <dest-branch>"
     assert_includes workflow_content,
-      "git range-diff <base>...<work-head> <base>...<dest-range>"
+      "git -C <successor-repo> fetch <source-repo> <source-base> <work-head>"
+    assert_includes workflow_content,
+      "<source-base>...<work-head> <dest-base>...<dest-ref>"
     assert_includes workflow_content, "A described or remembered proof is never sufficient"
     assert_includes workflow_content, "blocks the prune"
     assert_includes workflow_content, "never silently drop"

@@ -124,11 +124,14 @@ candidate:
             = "$(git rev-parse '<work-head>^{tree}')"
           ```
 
-      - Patch equivalence -- the same changes, commit-for-commit or
-        range-for-range:
+      - Patch equivalence -- the same changes, compared inside the
+        successor repository. Fetch the source proof refs first and
+        range-diff with separate source and destination bases:
 
           ```bash
-          git range-diff <base>...<work-head> <base>...<dest-range>
+          git -C <successor-repo> fetch <source-repo> <source-base> <work-head>
+          git -C <successor-repo> range-diff \
+            <source-base>...<work-head> <dest-base>...<dest-ref>
           ```
 
           with no substantive differences; or diff the normalized patches
