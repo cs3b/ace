@@ -202,3 +202,63 @@ module Molecules
     end
   end
 end
+
+module Molecules
+  class GrantResolverLinuxSymlinkTest < Minitest::Test
+    def topology
+      Ace::Lab::Atoms::TopologySchema.normalize!(topology_config)["topology"]
+    end
+
+    FakeStat = Struct.new(:symlink?, :directory?, :uid, :mode)
+
+    def test_root_owned_linux_style_symlink_is_accepted
+      # Linux symlinks always report mode 0777 and cannot be changed; a
+      # root-owned deployment symlink must be accepted on ownership alone
+      # (review round 9, F1)
+      path = "/etc/lab/ace-lab/authorization.yml"
+      target = "/etc/lab/ace-lab/grants.real.yml"
+      dir_stat = FakeStat.new(false, true, 0, 0o755)
+      link_stat = FakeStat.new(true, false, 0, 0o777)
+      file_stat = FakeStat.new(false, false, 0, 0o600)
+      content = YAML.dump({"principals" => {"operator" => {"projects" => ["atlas"]}}})
+      fake_io = Struct.new(:stat, :read, :close).new(file_stat, content, nil)
+      real_readlink = File.method(:readlink)
+
+      File.stub :lstat, ->(candidate) {
+        case candidate.to_s
+        when path then link_stat
+        when target then file_stat
+        else dir_stat
+        end
+      } do
+        File.stub :readlink, ->(candidate) { (candidate.to_s == path) ? target : real_readlink.call(candidate) } do
+          File.stub :open, ->(_candidate, _flags) { fake_io } do
+            grants = Ace::Lab::Molecules::GrantResolver.resolve(
+              documents: [], topology: topology, trusted_path: path
+            )
+
+            assert_equal ["atlas"], grants.dig("principals", "operator", "projects")
+          end
+        end
+      end
+    end
+
+    def test_user_owned_linux_style_symlink_is_rejected
+      # Ownership alone is the symlink criterion: a user-owned 0777 symlink
+      # is still a caller-controlled redirect (review round 9, F1)
+      path = "/etc/lab/ace-lab/authorization.yml"
+      dir_stat = FakeStat.new(false, true, 0, 0o755)
+      user_link_stat = FakeStat.new(true, false, Process.uid, 0o777)
+
+      File.stub :lstat, ->(candidate) { (candidate.to_s == path) ? user_link_stat : dir_stat } do
+        error = assert_raises(Ace::Lab::InvalidConfigurationError) do
+          Ace::Lab::Molecules::GrantResolver.resolve(
+            documents: [], topology: topology, trusted_path: path
+          )
+        end
+
+        assert_match(/failed the deployment ownership verification/, error.message)
+      end
+    end
+  end
+end

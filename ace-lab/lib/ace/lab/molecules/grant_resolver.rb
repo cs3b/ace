@@ -85,9 +85,11 @@ module Ace
           end
 
           # Walk the ORIGINAL path component by component. Symlinks are
-          # followed only when the link itself is root-owned and not
-          # group/world-writable (a caller-writable redirect is rejected);
-          # intermediate directories must be real, root-owned directories.
+          # followed only when the link itself is root-owned (a caller-writable
+          # redirect is rejected); symlink permission bits are ignored because
+          # Linux symlinks always report 0777 and cannot be changed
+          # (review round 9, F1). Intermediate directories must be real,
+          # root-owned directories; the opened file is re-verified via fstat.
           # @return [String, nil] verified file path, or nil when absent
           def verified_resolve(path)
             remaining = path.split(File::SEPARATOR).reject(&:empty?)
@@ -106,7 +108,7 @@ module Ace
               if stat.symlink?
                 hops += 1
                 raise Ace::Lab::InvalidConfigurationError, verify_error(path) if hops > MAX_SYMLINK_HOPS
-                raise Ace::Lab::InvalidConfigurationError, verify_error(path) unless secure_file_stat?(stat)
+                raise Ace::Lab::InvalidConfigurationError, verify_error(path) unless stat.uid.zero?
 
                 target = File.readlink(candidate)
                 target_components = target.split(File::SEPARATOR).reject(&:empty?)
