@@ -221,6 +221,7 @@ require_relative "git/molecules/git_status_fetcher"
 
 require_relative "git/organisms/diff_orchestrator"
 require_relative "git/organisms/repo_status_loader"
+require_relative "git/organisms/pull_request_lifecycle"
 require_relative "git/resolved_server"
 require_relative "git/server_registry"
 require_relative "git/providers/base"
