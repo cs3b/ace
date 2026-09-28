@@ -176,6 +176,20 @@ function createRegistry(pi, ctx, ports) {
     status: statusPort(ctx),
     dispatcher,
     dispatchRecoveryMs: ports.dispatchRecoveryMs,
+    isHostQueued: () => {
+      try {
+        return ctx.hasPendingMessages();
+      } catch {
+        return true;
+      }
+    },
+    isHostIdle: () => {
+      try {
+        return ctx.isIdle();
+      } catch {
+        return false;
+      }
+    },
   });
   registry = built;
   return built;

@@ -414,13 +414,12 @@ describe("ace-wake delivery", () => {
     assert.equal(host.sends.length, 3, "the source may wake again after the agent settled");
   });
 
-  it("surfaces unresolved delivery and reconciles at the next settlement", async () => {
+  it("re-attempts unacknowledged loop wakes after the recovery window", async () => {
     const host = createFakeHost();
     // The fake host accepts the send synchronously (like Pi's void API) but
     // rejects it in async preflight: nothing enters Pi's message queue and
-    // no lifecycle event ever fires. Recovery cannot distinguish this from
-    // a slow startup, so it only surfaces the state; the next settlement
-    // reconciles.
+    // no lifecycle event ever fires. Wake semantics prefer redelivery over
+    // loss, so recovery releases the attempt and the next tick re-sends.
     const session = await startSession(host, { dispatchRecoveryMs: 20 });
     await host.runCommand("loop", "add heartbeat --interval 10 --message check in");
     await host.runCommand("loop", "add other --interval 10 --message other wake");
@@ -430,13 +429,9 @@ describe("ace-wake delivery", () => {
 
     await new Promise((resolve) => setTimeout(resolve, 40));
     host.clock.advance(10_000);
-    assert.equal(host.sends.length, 1, "no replay while delivery is unresolved — coalescing holds");
+    assert.ok(host.sends.length >= 2, "ticks re-attempt after the recovery window");
 
-    // Any settlement (e.g. the user conversing) reconciles: the next tick
-    // delivers.
     await session.settle();
-    host.clock.advance(10_000);
-    assert.ok(host.sends.length >= 2, "ticks deliver again after the reconciling settlement");
   });
 
   it("does not duplicate a queued follow-up while a run outlasts the recovery window", async () => {
@@ -445,8 +440,8 @@ describe("ace-wake delivery", () => {
     await host.runCommand("loop", "add heartbeat --interval 10 --message check in");
 
     // The wake queues as a follow-up and the run keeps going well past the
-    // recovery window: the queued wake is legitimate and must not be
-    // invalidated.
+    // recovery window: the queued wake is legitimate (Pi holds it in its
+    // queue) and must not be invalidated.
     host.setIdle(false);
     host.clock.advance(10_000);
     host.setPendingMessages(true);
@@ -480,19 +475,18 @@ describe("ace-wake delivery", () => {
     await session.settle();
   });
 
-  it("preserves same-source coalescing across a slow startup window expiry", async () => {
+  it("keeps same-source repeats coalesced while a dispatch is in flight", async () => {
     const host = createFakeHost();
     const session = await startSession(host);
     await host.runCommand("loop", "add heartbeat --interval 10 --message check in");
 
-    // The first tick dispatches; the in-flight marker holds until a run
-    // starts (agent_start) or a settlement, so a second tick during slow
-    // startup stays coalesced instead of racing the first prompt.
+    // The first tick dispatches; until a run start or settlement confirms
+    // the attempt, same-source repeats coalesce behind it.
     host.clock.advance(10_000);
     assert.equal(host.sends.length, 1);
 
     host.clock.advance(10_000);
-    assert.equal(host.sends.length, 1, "subsequent ticks stay coalesced behind the starting prompt");
+    assert.equal(host.sends.length, 1, "the repeat coalesces behind the in-flight dispatch");
     await session.settle();
   });
 

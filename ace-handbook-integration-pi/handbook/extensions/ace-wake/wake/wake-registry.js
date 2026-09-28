@@ -50,6 +50,12 @@ export class WakeRegistry {
   #recoveryTimer;
   /** @private @type {boolean} */
   #deliveryUnresolved;
+  /** @private @type {Set<string>} */
+  #inFlightWatchNames;
+  /** @private @type {(() => boolean) | undefined} */
+  #isHostQueued;
+  /** @private @type {(() => boolean) | undefined} */
+  #isHostIdle;
   /** @private @type {boolean} */
   #disposed;
 
@@ -66,7 +72,7 @@ export class WakeRegistry {
    * @param {object} ports.status
    * @param {import("./wake-dispatcher.js").WakeDispatcher} ports.dispatcher
    */
-  constructor({ loops, watches, state, status, dispatcher, dispatchRecoveryMs = 5000 }) {
+  constructor({ loops, watches, state, status, dispatcher, dispatchRecoveryMs = 5000, isHostQueued, isHostIdle }) {
     this.#loops = loops;
     this.#watches = watches;
     this.#state = state;
@@ -86,6 +92,12 @@ export class WakeRegistry {
     this.#dispatchRecoveryMs = dispatchRecoveryMs;
     /** @private @type {boolean} */
     this.#deliveryUnresolved = false;
+    /** @private @type {Set<string>} */
+    this.#inFlightWatchNames = new Set();
+    /** @private @type {(() => boolean) | undefined} */
+    this.#isHostQueued = isHostQueued;
+    /** @private @type {(() => boolean) | undefined} */
+    this.#isHostIdle = isHostIdle;
     /** @private @type {boolean} */
     this.#disposed = false;
   }
@@ -408,12 +420,25 @@ export class WakeRegistry {
       return { delivered: false, reason: "serialized" };
     }
     const outcome = this.#dispatcher.wake(sourceKey, message);
-    // Only an accepted dispatch holds the idle-to-running transition; a
-    // refused one must not serialize the sources behind it.
     if (outcome.delivered) {
+      if (sourcePrefix === WATCH_SOURCE_PREFIX) {
+        this.#inFlightWatchNames.add(name);
+      }
       this.#markDispatchInFlight();
     }
     return outcome;
+  }
+
+  /**
+   * An unacknowledged watch attempt must not read as delivered: revert its
+   * fingerprint to the last delivered state and mark it dirty so the next
+   * settlement re-fires the change.
+   */
+  #revertInFlightWatchAttempts() {
+    for (const name of this.#inFlightWatchNames) {
+      this.#watches.revertToDelivered(name);
+    }
+    this.#inFlightWatchNames.clear();
   }
 
   #closeDispatchWindow() {
@@ -429,6 +454,7 @@ export class WakeRegistry {
    */
   noteRunStarted() {
     this.#deliveryUnresolved = false;
+    this.#inFlightWatchNames.clear();
     this.#dispatchPending = false;
     this.#drainRetained();
   }
@@ -447,28 +473,52 @@ export class WakeRegistry {
   /**
    * Recovery for attempts no lifecycle transition ever acknowledged: Pi's
    * void sendUserMessage API reports preflight failures (no model, broken
-   * authentication) only asynchronously, and isIdle() is also true while a
-   * submitted prompt waits in long asynchronous startup hooks — so no timer
-   * can distinguish a rejected attempt from an unresolved one. Recovery
-   * therefore only surfaces the unresolved state on the status surface and
-   * leaves every marker untouched: coalescing is preserved, and the next
-   * lifecycle boundary (agent_start, agent_settled, compaction resume)
-   * reconciles delivery.
+   * authentication) only asynchronously, and no signal distinguishes a
+   * rejected attempt from one whose startup hooks are slow. Wake semantics
+   * prefer redelivery over loss — a duplicate is a repeated bounded message
+   * the agent can ignore, a lost duty wake is a silent miss — so recovery
+   * releases the in-flight state: serialization opens, pending markers
+   * clear, and watch changes re-fire from their latest state at the next
+   * settlement. Retry cadence stays bounded by the recovery window.
    */
   recoverUnacknowledgedDispatch() {
-    if (this.#disposed || !this.#dispatchPending || this.#deliveryUnresolved) {
+    if (this.#disposed || !this.#dispatchPending) {
       return;
     }
-    this.#deliveryUnresolved = true;
+    let queued = true;
+    let idle = false;
+    try {
+      // The discriminators the void API still provides: an accepted wake
+      // sits in Pi's queue (pendingMessages true) until processing consumes
+      // it, and while anything runs the context is not idle. Both signals
+      // must agree that nothing is queued and nothing is running before an
+      // attempt is treated as rejected — an empty queue during active
+      // processing is a consumed follow-up, and an idle context during
+      // asynchronous startup hooks is an unresolved submission.
+      queued = this.#isHostQueued?.() ?? true;
+      idle = this.#isHostIdle?.() ?? false;
+    } catch {
+      queued = true;
+      idle = false;
+    }
+    if (queued || !idle) {
+      // Legitimate: queued for later or actively processing. Re-check after
+      // another window; the run's own settlement settles the marker.
+      this.#scheduleRecovery();
+      return;
+    }
+    this.#dispatchPending = false;
+    this.#dispatcher.settleAll();
+    this.#revertInFlightWatchAttempts();
+    this.#watches.flushDirty((watch) => this.#fire(WATCH_SOURCE_PREFIX, watch.name, watch.message));
     this.#refreshStatus();
+    // The next dispatch re-arms the window; recovery re-evaluates then.
   }
 
-  /** Clear the unresolved marker once a lifecycle boundary reconciled. */
-  markDeliveryResolved() {
-    if (this.#deliveryUnresolved) {
-      this.#deliveryUnresolved = false;
-      this.#refreshStatus();
-    }
+  #scheduleRecovery() {
+    clearTimeout(this.#dispatchRecoveryTimer);
+    this.#dispatchRecoveryTimer = setTimeout(() => this.recoverUnacknowledgedDispatch(), this.#dispatchRecoveryMs);
+    this.#dispatchRecoveryTimer.unref?.();
   }
 
   #drainRetained() {
