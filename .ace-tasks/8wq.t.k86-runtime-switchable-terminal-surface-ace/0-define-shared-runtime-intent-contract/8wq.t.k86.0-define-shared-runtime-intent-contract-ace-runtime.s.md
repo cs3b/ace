@@ -1,6 +1,6 @@
 ---
 id: 8wq.t.k86.0
-status: draft
+status: in-progress
 priority: medium
 created_at: "2026-09-27 13:29:29"
 estimate: TBD
@@ -8,14 +8,11 @@ dependencies: []
 tags: [ace-runtime, contract]
 parent: 8wq.t.k86
 bundle:
-  presets: ["project"]
-  files:
-    - ace-tmux/lib/ace/tmux/organisms/control_surface.rb
-    - ace-assign/lib/ace/assign/molecules/tmux_control_surface_runner.rb
-    - ace-assign/lib/ace/assign/molecules/fork_session_launcher.rb
-    - ace-overseer/lib/ace/overseer/molecules/tmux_window_opener.rb
-    - ace-hitl/lib/ace/hitl/providers/providers.rb
+  presets: [project]
+  files: [ace-tmux/lib/ace/tmux/organisms/control_surface.rb, ace-assign/lib/ace/assign/molecules/tmux_control_surface_runner.rb, ace-assign/lib/ace/assign/molecules/fork_session_launcher.rb, ace-overseer/lib/ace/overseer/molecules/tmux_window_opener.rb, ace-hitl/lib/ace/hitl/providers/providers.rb]
   commands: []
+needs_review: false
+title: Define shared runtime intent contract (ace-runtime gem)
 ---
 
 # Define shared runtime intent contract (ace-runtime gem)
@@ -75,7 +72,7 @@ speculative operations):
 11. typed error model (target-not-found, runtime-unavailable, send-rejected)
 
 Selection behavior: explicit config name > auto-detection from environment
-(`TMUX` / `HERDR_ENV`); both live → tmux (existing default), documented.
+(`TMUX` / `HERDR_SESSION/HERDR_PANE`); both live → tmux (existing default), documented.
 Target identity: opaque handles only — the contract never predicts or
 formats pane ids (tmux `%id` and herdr `w1:p1` stay adapter-internal).
 
@@ -114,9 +111,9 @@ Ace::Runtime.sanitize_name(name)       # shared naming policy
 
 **Error Handling:** `UnknownRuntimeError` (with available list), `TargetNotFoundError`, `RuntimeUnavailableError`, `SendRejectedError` (pre-send rejection, e.g. agent blocked — terminal), `SendStalledError` (submission accepted but the target did not start processing — OUTCOME UNCERTAIN, callers must not auto-resend), `WaitTimeoutError` (a wait exceeded its deadline) — all subclass one contract error. Timeout units at the contract level are SECONDS (adapters convert to native units).
 
-**Contract CLI:** the gem ships one thin agent-facing passthrough — `ace-runtime send [--cmd TEXT] [--msg TEXT...] [--key NAME...] --pane TARGET`, at least one input required (keys-only valid; none = usage error before transport) — resolving the configured runtime and delegating to `runtime.send` with the matrix semantics above (plain-pane ordered delivery; agent-pane single-prompt shapes). This is the runtime-neutral callback command (decision 2026-09-27, Captain: assign's Fork Callback Rule prescribes it instead of `ace-tmux send`). No other CLI surface. The contract test suite MUST include: the callback form (`--msg ... --key Enter`) submits exactly once on BOTH adapters; interleaved items (`msg, key, msg`) deliver distinctly on plain panes and are rejected before any send on agent panes.
+**Contract CLI:** the gem ships one thin agent-facing passthrough — `ace-runtime send [--runtime tmux|herdr] [--cmd TEXT] [--msg TEXT...] [--key NAME...] --pane TARGET`, at least one input required (keys-only valid; none = usage error before transport) — resolving the configured runtime and delegating to `runtime.send` with the matrix semantics above (plain-pane ordered delivery; agent-pane single-prompt shapes). This is the runtime-neutral callback command (decision 2026-09-27, Captain: assign's Fork Callback Rule prescribes it instead of `ace-tmux send`). No other CLI surface. The contract test suite MUST include: the callback form (`--msg ... --key Enter`) submits exactly once on BOTH adapters; interleaved items (`msg, key, msg`) deliver distinctly on plain panes and are rejected before any send on agent panes.
 
-**Edge Cases:** `detect` inside neither runtime returns nil (callers fall back headless, matching assign's `auto` today); ensure_window with an existing name is idempotent by name.
+**Edge Cases:** `detect` inside neither runtime returns nil (assign auto selects headless; overseer reports missing runtime context); ensure_window with an existing name is idempotent by name.
 
 ### Success Criteria
 
@@ -124,10 +121,15 @@ Ace::Runtime.sanitize_name(name)       # shared naming policy
 - [ ] Shared contract-test suite exists and is documented as the acceptance bar for any adapter (shared-examples pattern), covering all wait conditions and the send error triad (rejected / stalled / timeout).
 - [ ] Resolution: explicit name, unknown name (fail closed, available list), auto-detection both-runtimes (tmux wins, documented).
 
-### Validation Questions
+### Reviewed Decisions (2026-09-28)
 
-- [ ] Gem name `ace-runtime` (vs `ace-support-runtime`) — default `ace-runtime` per ADR-015 focused-gem precedent.
-- [ ] Do demo `attach`/`detach` directives belong in the contract (human-facing, tmux-only today)? Default: out — demo keeps them tmux-local until needed.
+- Contract package is ace-runtime. Adapters live inside existing ace-tmux/ace-herdr; no renamed adapter gems. Consumer gemspecs install those wrappers as adapter dependencies; neutral code must not call runtime-native APIs directly. This corrects the contradictory earlier demand for installed in-wrapper adapters but no wrapper dependency.
+- Callback is ace-runtime send. Per-consumer configuration keys are retained except tmux_window_presets becomes window_presets with no legacy alias. Explicit runtime wins; auto detects tmux first if both are live; Lab configuration explicitly chooses herdr.
+- Auto-detection is side-effect-free and uses TMUX/ACE_TMUX_SESSION or HERDR_SESSION plus HERDR_PANE (HERDR_WORKSPACE_ID may refine context). The earlier HERDR_ENV assumption was unsupported. Adapter operations verify runtime availability/current context; explicit unavailable herdr errors, never silently becomes headless. Only assign auto outside any runtime selects headless.
+- Tmux readiness uses documented output-stability heuristic; Herdr uses native agent state. Generic status text names the selected runtime. Demo attach/detach stays tmux-local with explicit unsupported error under herdr.
+- k86.3 owns terminal paths in ace-git-worktree and E2E runners before Lab acceptance. qk0 separately removes the old runtime=lab engine and changes role coordination.
+- Pane-exited is a runtime observation, not assignment success or safe prune evidence: disappearance satisfies that wait, but accepted outcome/process-tree termination still require separate receipts. Positive preservation gates remain mandatory.
+- Pane preparation must yield a writable live shell/agent target retained after a submitted command exits; adapter may create/prepare that target using native APIs. Bare command panes may disappear and do not satisfy preparation. Installed tests must verify both runtimes; no assertion of untested Herdr behavior.
 
 ### Vertical Slice Decomposition (Task/Subtask Model)
 
@@ -182,3 +184,13 @@ equal partner instead of a side gem.
   ace-runtime; no gem renames — wrapper product identity stays, ADR-033
   stability rationale); the contract ships the `ace-runtime send` neutral
   passthrough for the Fork Callback Rule.
+
+## Lab-readiness review scope (2026-09-28)
+
+This draft retains the existing detailed send/wait contract and the Captain's adapter-location and callback decisions. No runtime code is changed in this spec pass. Review must check all four child specs before parent promotion. Executed tests and independent current-head verdict gate implementation delivery; CI is advisory. Earlier text is preserved in history/pre-lab-spec-review.md only for provenance.
+
+### Callback resolution and wait observations
+
+The neutral CLI accepts optional --runtime tmux|herdr. Resolution: explicit flag > inherited ACE_RUNTIME > configured runtime > detect. Consumer forks set ACE_RUNTIME and target context to the caller backend. Missing explicit backend/adapter fails clearly without resend or silent switch. Runtime objects remain backend-specific while their return identity is opaque.
+
+ensure_window identity is scoped by the resolved session/workspace plus normalized name; same-name windows in another workspace are not reused. Conflicting existing root/preset is an explicit conflict rather than silently returning the wrong worktree. wait_lifecycle reports the condition only, never authorizes completion/prune.
