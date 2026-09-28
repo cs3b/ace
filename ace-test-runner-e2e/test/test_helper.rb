@@ -1,5 +1,12 @@
 # frozen_string_literal: true
 
+# Deterministic project-root discovery: the hermetic suite strips the
+# mise-injected ambient PROJECT_ROOT_PATH, and the marker-walk fallback
+# stops at this package's Rakefile, hiding the repo .ace/llm config from
+# the config cascade (role: resolution). Pin the workspace root so
+# behavior is identical standalone and under ace-test-suite.
+ENV["PROJECT_ROOT_PATH"] = File.expand_path("../..", __dir__)
+
 $LOAD_PATH.unshift File.expand_path("../lib", __dir__)
 
 # Add dependencies to load path for monorepo development
