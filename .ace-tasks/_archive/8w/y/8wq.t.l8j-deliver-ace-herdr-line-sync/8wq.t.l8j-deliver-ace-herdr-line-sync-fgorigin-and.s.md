@@ -1,7 +1,7 @@
 ---
 id: 8wq.t.l8j
 status: done
-priority: high
+priority: critical
 created_at: "2026-09-27 14:09:30"
 estimate: TBD
 dependencies: [8wm.t.vs0]
@@ -10,6 +10,7 @@ bundle:
   presets: [project]
   files: [ace-herdr/CHANGELOG.md, ace-herdr/ace-herdr.gemspec]
   commands: []
+position: 6o0000
 ---
 
 # Deliver ace-herdr line: sync fg/origin and publish ace-herdr 0.1.0
