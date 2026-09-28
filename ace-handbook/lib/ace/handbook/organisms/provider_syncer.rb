@@ -214,10 +214,12 @@ module Ace
               source_path = expected.fetch(relative_path)
               FileUtils.mkdir_p(File.dirname(output_path))
               created = !File.exist?(output_path)
+              # Register before copying: a copy that fails partway (disk
+              # exhaustion) must still roll back the partial file.
+              newly_created << output_path if created
               next if !created && FileUtils.compare_file(source_path, output_path)
 
               FileUtils.cp(source_path, output_path)
-              newly_created << output_path if created
               updated_files += 1
             end
 
