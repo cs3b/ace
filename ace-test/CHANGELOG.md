@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.4] - 2026-09-28
+
+### Technical
+- Documented hermetic package test execution: package tests run through `ace-test-runner`, which owns execution isolation; fixture-specific values come from runner configuration and live integration stays opt-in via E2E entrypoints.
 
 ## [0.7.3] - 2026-09-02
 
