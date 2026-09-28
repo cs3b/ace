@@ -21,7 +21,7 @@ module Ace
           })
 
           assert_includes command, "--run-in-single-batch"
-          assert_equal ["ace-test", "--run-in-single-batch", "--format", "progress", "--no-save", "--fail-fast", "--no-color", "--report-dir", "/tmp/reports/sample"], command
+          assert_equal [monitor.send(:ace_test_executable), "--run-in-single-batch", "--format", "progress", "--no-save", "--fail-fast", "--no-color", "--report-dir", "/tmp/reports/sample"], command
         end
 
         class FakeProcessMonitor < ProcessMonitor
@@ -109,7 +109,7 @@ module Ace
 
           command = monitor.send(:build_command, package, options)
 
-          assert_equal "ace-test", command.first
+          assert_equal monitor.send(:ace_test_executable), command.first
           assert_equal "feat", command.last
         end
 
