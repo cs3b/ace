@@ -282,10 +282,19 @@ module Ace
               raise StandardError,
                 "cannot project #{relative_path} into #{extensions_dir}: a symlinked path component would escape the projection directory"
             end
-            if !current.directory? && File.exist?(current.to_s) && segments.last != segment
+            next if segments.last == segment
+
+            if !current.directory? && File.exist?(current.to_s)
               raise StandardError,
                 "cannot project #{relative_path} into #{extensions_dir}: #{current} exists and is not a directory"
             end
+          end
+          if File.directory?(current.to_s)
+            # Receipt ownership of a path never authorizes writing through a
+            # directory planted at that path — cp would reinterpret the
+            # destination as a container and overwrite unowned content.
+            raise StandardError,
+              "cannot project #{relative_path} into #{extensions_dir}: #{current} exists and is a directory"
           end
           current.to_s
         rescue Errno::ENOENT
