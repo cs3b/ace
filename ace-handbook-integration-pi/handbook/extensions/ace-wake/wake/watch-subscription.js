@@ -83,6 +83,11 @@ export function createWatchPort({ watchFactory, statFn, baseDir = process.cwd(),
       const watcher = watchFactory(canonicalPath, {
         onChange: () => handleChange(definition, onWake),
         onError: (error) => {
+          // A callback from a removed registration must never touch its
+          // replacement.
+          if (active.get(definition.name)?.definition !== definition) {
+            return;
+          }
           deactivate(definition.name, describeError(error));
         },
       });
@@ -173,7 +178,9 @@ export function createWatchPort({ watchFactory, statFn, baseDir = process.cwd(),
   /** Shared change path for watcher callbacks and the reconcile pass. */
   function handleChange(definition, onWake) {
     const entry = active.get(definition.name);
-    if (entry === undefined) {
+    // A callback from a removed registration must never touch its
+    // replacement: ignore obsolete subscriptions entirely.
+    if (entry === undefined || entry.definition !== definition) {
       return;
     }
     const current = readBaselineOrError(entry.canonicalPath, definition.name);

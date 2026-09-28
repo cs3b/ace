@@ -120,6 +120,7 @@ function createRegistry(pi, ctx, ports) {
       watchFactory: ports.watchFactory ?? nodeWatchFactory,
       statFn: ports.statFn ?? nodeStatFn,
       baseDir: ctx.cwd,
+      scheduleReconcile: ports.scheduleReconcile,
       onDeactivate: () => registry?.refreshStatus(),
     }),
     state: sessionStatePort(pi, ctx),

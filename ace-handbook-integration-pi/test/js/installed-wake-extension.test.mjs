@@ -292,6 +292,62 @@ describe("ace-wake delivery", () => {
     await session.settle();
   });
 
+  it("reconciles a stranded watch wake after compaction without a new filesystem event", async () => {
+    const host = createFakeHost();
+    const session = await startSession(host);
+    host.setFile("/fake/project/dep.txt", { mtimeMs: 1, size: 1 });
+    await host.runCommand("watch", "add dep --path dep.txt --message watch wake");
+
+    // The watch wake dispatches into the pre-compaction rejection window:
+    // pending, never consumed, and not dirty (the change was fingerprinted).
+    host.setFile("/fake/project/dep.txt", { mtimeMs: 2, size: 2 });
+    host.triggerWatch("/fake/project/dep.txt");
+    assert.equal(host.sends.length, 1);
+
+    await session.compactFailed();
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    assert.equal(host.sends.length, 2, "the stranded watch wake must re-dispatch after compaction");
+    await session.settle();
+  });
+
+  it("does not deliver a removed subscription's message through its replacement", async () => {
+    const host = createFakeHost();
+    const reconciles = [];
+    const hostPorts = {
+      setIntervalFn: host.setIntervalFn,
+      clearIntervalFn: host.clearIntervalFn,
+      watchFactory: host.watchFactory,
+      statFn: host.statFn,
+      scheduleReconcile: (reconcile) => reconciles.push(reconcile),
+    };
+    const events = [];
+    host.pi.on = (event, handler) => {
+      events.push([event, handler]);
+      return () => {};
+    };
+    aceWakeFactory(host.pi, hostPorts);
+    const start = events.find(([name]) => name === "session_start");
+    await start[1]({ type: "session_start", reason: "startup" }, host.commandContext);
+
+    host.setFile("/fake/project/dep.txt", { mtimeMs: 1, size: 1 });
+    await host.runCommand("watch", "add dep --path dep.txt --message old message");
+    const staleReconcile = reconciles.at(-1);
+
+    // Remove and re-add with a new message before the old reconcile runs.
+    await host.runCommand("watch", "remove dep");
+    host.setFile("/fake/project/dep.txt", { mtimeMs: 2, size: 2 });
+    await host.runCommand("watch", "add dep --path dep.txt --message new message");
+    host.setFile("/fake/project/dep.txt", { mtimeMs: 3, size: 3 });
+
+    staleReconcile();
+    assert.equal(host.sends.length, 0, "the stale reconcile must not deliver or suppress anything");
+
+    // The replacement's own reconcile delivers the new message.
+    reconciles.at(-1)();
+    assert.equal(host.sends.length, 1);
+    assert.match(host.sends[0].text, /new message/);
+  });
+
   it("does not flush a retained wake for a subscription removed while delivery is paused", async () => {
     const host = createFakeHost();
     const session = await startSession(host);

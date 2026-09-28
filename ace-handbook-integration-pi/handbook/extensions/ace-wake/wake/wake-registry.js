@@ -256,17 +256,15 @@ export class WakeRegistry {
   /**
    * Reconcile a delivery boundary that bypasses the normal settlement signal
    * (manual compaction rejects prompts asynchronously and never emits
-   * agent_settled): pending markers are stale at this point — their wakes
-   * were rejected or consumed without acknowledgement — so retained wakes and
-   * stranded loop attempts go out fresh. Watches are excluded here: their
-   * changes are reconciled fingerprint-aware by flushDirty.
+   * agent_settled): every pending marker is stale at this point — its wake
+   * was rejected or consumed without acknowledgement — so retained wakes and
+   * all stranded attempts go out fresh. Changes absorbed before dispatch
+   * (coalesced) are reconciled separately by flushDirty.
    */
   flushRetained() {
     const retained = [...this.#retained.values()];
-    const strandedLoops = this.#dispatcher
-      .pendingEntries()
-      .filter(([sourceKey]) => sourceKey.startsWith(LOOP_SOURCE_PREFIX));
-    if (retained.length === 0 && strandedLoops.length === 0) {
+    const stranded = this.#dispatcher.pendingEntries();
+    if (retained.length === 0 && stranded.length === 0) {
       return;
     }
     this.#dispatcher.settleAll();
@@ -274,7 +272,7 @@ export class WakeRegistry {
     for (const wake of retained) {
       this.#fire(wake.prefix, wake.name, wake.message);
     }
-    for (const [sourceKey, text] of strandedLoops) {
+    for (const [sourceKey, text] of stranded) {
       this.#dispatcher.wake(sourceKey, text);
     }
     this.#refreshStatus();
