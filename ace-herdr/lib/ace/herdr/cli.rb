@@ -7,6 +7,7 @@ require_relative "cli/commands/deliver"
 require_relative "cli/commands/dispatch"
 require_relative "cli/commands/wait"
 require_relative "cli/commands/close"
+require_relative "cli/commands/tidy"
 require_relative "cli/commands/list"
 require_relative "cli/commands/send"
 require_relative "cli/commands/capture"
@@ -31,6 +32,7 @@ module Ace
         ["capture", "Print recent pane output as raw text"],
         ["wait", "Wait for an agent state or matching pane output"],
         ["close", "Rename and/or close a finished agent pane"],
+        ["tidy", "Report cleanable panes/delivery records; close and archive with --apply"],
         ["workspace", "Create a workspace from a preset"],
         ["tab", "Create a tab from a preset"],
         ["--list-presets", "List available workspace/tab presets"]
@@ -48,7 +50,8 @@ module Ace
         "ace-herdr workspace development",
         "ace-herdr tab agent --workspace w1",
         "ace-herdr --list-presets",
-        "ace-herdr close --pane p5 --rename done"
+        "ace-herdr close --pane p5 --rename done",
+        "ace-herdr tidy --apply"
       ].freeze
 
       # Start the CLI
@@ -67,6 +70,7 @@ module Ace
       register "capture", CLI::Commands::Capture.new
       register "wait", CLI::Commands::Wait.new
       register "close", CLI::Commands::Close.new
+      register "tidy", CLI::Commands::Tidy.new
       register "workspace", CLI::Commands::Workspace.new
       register "tab", CLI::Commands::Tab.new
       register "--list-presets", CLI::Commands::ListPresets.new
