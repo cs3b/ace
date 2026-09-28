@@ -109,3 +109,58 @@ ace-test-suite --config .ace/test/suite.yml --timeout 1200
 - For suite E2E coverage, prefer explicit config + target (`--config .ace/test/suite.yml`, optional `--target fast`) rather than fallback command branching.
 - Explicit test files (`.rb` and `file.rb:line`) override target selection.
 - Package defaults and user config are merged with CLI options.
+
+## Hermetic Environment Contract
+
+`ace-test` and `ace-test-suite` are deterministic by default. Every test child — serial, parallel, nested, in-process, and suite workers — is launched from a minimal documented environment instead of the invoking environment. Output labels the mode: `Test mode: deterministic (hermetic environment)`.
+
+### Preserved keys
+
+Only these parent keys survive into test children:
+
+| Key | Purpose |
+|-----|---------|
+| `PATH` | Ruby/toolchain command lookup |
+| `LANG`, `LC_ALL` | Locale |
+| `TMPDIR`, `TMP`, `TEMP` | Temporary directories |
+
+### Replaced keys
+
+| Key | Replacement |
+|-----|-------------|
+| `HOME` | Test-owned fixture home under a temporary root |
+| `XDG_CONFIG_HOME` | `<fixture home>/.config` |
+| `XDG_CACHE_HOME` | `<fixture home>/.cache` |
+| `XDG_DATA_HOME` | `<fixture home>/.local/share` |
+
+The runner also sets `MT_NO_AUTORUN=1` for test children.
+
+### Blocked configuration
+
+All other parent environment is dropped, including ambient `LAB_*` sockets and selectors, `ACE_*` runtime/provider configuration, provider credentials (`ANTHROPIC_*`, `OPENAI_*`, `GEMINI_*`, `AWS_*`, and similar), Bundler/Gem project-selection variables, proxy variables, and language-injection variables (`RUBYOPT`, `RUBYLIB`, `PYTHONPATH`, ...). A live endpoint, provider, or Lab socket is never selected implicitly; a live Lab socket on the host cannot switch a deterministic run into live mode.
+
+### Fixture overrides
+
+Tests that need specific values supply them explicitly through runner configuration (project `.ace/test/runner.yml`):
+
+```yaml
+version: 1
+environment:
+  preserve:            # extra allowlisted keys beyond the table above
+    - MY_TOOLCHAIN_KEY
+  overrides:           # applied after sanitization; wins over preserved values
+    MY_ENDPOINT: "http://127.0.0.1:1"
+  require:             # must be non-empty after overrides, else setup error
+    - MY_ENDPOINT
+```
+
+- `preserve` cannot un-block a blocked key; blocked ambient configuration is an error, never permission.
+- `require` failures are deterministic setup errors naming the missing key and the deterministic mode — values are never echoed.
+- Credential-like override values are redacted in verbose diagnostics (fixture root and override key names only).
+
+### Guarantees
+
+- The invoking shell, the runner process environment, the real `HOME`, installed configuration, and service state are never mutated. In-process (`--direct`) execution applies the fixture environment for the duration of the run and restores the parent environment exactly afterwards.
+- Fixture cleanup owns only the temporary root the runner created for the run.
+- `ace-test-suite` gives each package its own fixture environment (parallel workers never share one) and launches `ace-test` co-located with the suite itself, so package runs use the matching runner version rather than an ambient PATH selection.
+- Live integration stays opt-in through the E2E entrypoints (`ace-test-e2e`) with explicit target configuration.

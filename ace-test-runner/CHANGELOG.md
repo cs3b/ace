@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Hermetic test environments by default: deterministic `ace-test` and `ace-test-suite` runs launch every test child (serial, parallel, nested, in-process, suite workers) from a documented minimal environment allowlist with fixture-owned `HOME`/XDG directories, never inheriting ambient `LAB_*`, ACE/runtime/provider, or user configuration.
+- Fixture override configuration (`environment.preserve`/`overrides`/`require` in runner or suite configuration) with deterministic setup errors naming missing keys without exposing values.
+- Deterministic/live mode labeling in CLI output; live integration remains opt-in through E2E entrypoints.
+
+### Fixed
+- Test subprocess launching used environment merging, so ambient `LAB_*`/`ACE_*`/provider variables leaked into test children; child environments are now the hermetic fixture environment exactly (`unsetenv_others`).
+- `ace-test-suite` resolves `ace-test` co-located with the suite itself instead of an ambient PATH selection.
+
 ## [0.26.0] - 2026-09-27
 
 ### Added

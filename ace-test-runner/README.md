@@ -26,6 +26,17 @@
 2. Execute the matching tests with failure-oriented output and optional profiling of the slowest cases.
 3. Persist structured run reports for historical debugging and searchable triage across runs.
 
+## Hermetic by Default
+
+Package tests are deterministic: every test child starts from a documented minimal environment, never from ambient `LAB_*`, ACE/runtime/provider configuration, or user configuration. Output labels the mode (`Test mode: deterministic (hermetic environment)`). Live integration remains opt-in through the E2E entrypoints with explicit target configuration.
+
+- Preserved from the parent: `PATH`, `LANG`, `LC_ALL`, `TMPDIR`, `TMP`, `TEMP`.
+- Replaced with test-owned fixture directories: `HOME`, `XDG_CONFIG_HOME`, `XDG_CACHE_HOME`, `XDG_DATA_HOME`.
+- Everything else (ambient Lab/runtime sockets, provider credentials, proxy and project-selection variables) never reaches tests.
+- Fixture-specific values are supplied explicitly through runner configuration (`environment.overrides` in `.ace/test/runner.yml`); required values that are missing produce a setup error naming the key. The invoking environment is never mutated.
+
+See the [usage guide](docs/usage.md#hermetic-environment-contract) for the full contract and configuration examples.
+
 ## Use Cases
 
 **Run package tests from anywhere in the monorepo** - execute [`ace-test [package]`](docs/usage.md) by name without changing directories, keeping outputs consistent across local and CI environments.
