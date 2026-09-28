@@ -35,6 +35,7 @@ module Ace
                 env = launch_env(gem_home, project_dir)
                 verify_resolve_contract(env, bin, project_dir)
                 verify_route_contract(env, bin, project_dir)
+                verify_broken_topology_classified(env, bin, project_dir)
               ensure
                 FileUtils.rm_f(gem_file)
               end
@@ -140,10 +141,12 @@ module Ace
           # The installed CLI reads the host's real /etc/lab grants file,
           # which this test cannot control — on a deployed machine the
           # queries legitimately succeed, on a bare machine they fail
-          # closed (review round 11, F1). Assert the host-independent
-          # contracts instead: exactly one JSON document, exit status
-          # correlated with the classified status, redaction guarantees,
-          # and — on an authorized host — the full success payload.
+          # closed (review round 11, F1). Our fixture topology is valid, so
+          # `invalid_configuration` here would mean the installed package
+          # rejects every configuration — never acceptable (review round
+          # 12, F1). Exactly one JSON document, exit status correlated with
+          # the classified status, redaction guarantees, and on an
+          # authorized host the full success payload.
           def verify_resolve_contract(env, bin, project_dir)
             out, _, status = run_cli(env, bin, project_dir, "resolve", "--id", "atlas-planner", "--format", "json")
             verify_envelope_contract(out, status)
@@ -160,6 +163,26 @@ module Ace
             assert_equal "atlas-search", parsed.dig("data", "entry", "id")
           end
 
+          # A deliberately broken topology document must classify through the
+          # installed CLI — proving the pipeline still rejects bad
+          # configuration (deterministic: schema validation precedes grants)
+          def verify_broken_topology_classified(env, bin, project_dir)
+            config_path = File.join(project_dir, ".ace", "lab", "config.yml")
+            original = File.read(config_path)
+            broken = YAML.load_file(config_path)
+            broken["topology"]["projects"] << {"id" => "atlas"}
+            File.write(config_path, YAML.dump(broken))
+
+            out, _, status = run_cli(env, bin, project_dir, "resolve", "--id", "atlas-planner", "--format", "json")
+            refute status.success?, "broken topology must fail closed: #{out}"
+
+            parsed = JSON.parse(out)
+            assert_equal "error", parsed["status"]
+            assert_equal "invalid_configuration", parsed.dig("error", "code")
+          ensure
+            File.write(config_path, original) if original
+          end
+
           def verify_envelope_contract(out, status)
             assert_equal 1, out.lines.length, "exactly one deterministic JSON document, got: #{out}"
 
@@ -169,7 +192,10 @@ module Ace
               assert status.success?, "ok envelope must exit 0: #{out}"
             when "error"
               refute status.success?, "error envelope must exit non-zero: #{out}"
-              assert_includes %w[missing unauthorized invalid_configuration], parsed.dig("error", "code")
+              # Our fixture topology is valid, so invalid_configuration would
+              # mean the installed package rejects every configuration — a
+              # regression that must fail this test (review round 12, F1)
+              assert_includes %w[missing unauthorized], parsed.dig("error", "code")
             else
               flunk "unexpected envelope status: #{out}"
             end
