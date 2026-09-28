@@ -1,5 +1,12 @@
 # frozen_string_literal: true
 
+# Deterministic project-root discovery: the hermetic suite strips the
+# mise-injected ambient PROJECT_ROOT_PATH, and the marker-walk fallback
+# stops at this package's Rakefile, collapsing canonical skill/workflow
+# discovery to the package dir. Pin the workspace root so discovery
+# behaves identically standalone and under ace-test-suite.
+ENV["PROJECT_ROOT_PATH"] = File.expand_path("../..", __dir__)
+
 $LOAD_PATH.unshift File.expand_path("../lib", __dir__)
 require "ace/assign"
 
