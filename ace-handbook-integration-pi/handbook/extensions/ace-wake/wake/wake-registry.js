@@ -40,6 +40,12 @@ export class WakeRegistry {
   #resuming;
   /** @private @type {Map<string, {prefix: string, name: string, message: string}>} */
   #retained;
+  /** @private @type {boolean} */
+  #dispatchPending;
+  /** @private @type {Timeout | undefined} */
+  #dispatchReleaseTimer;
+  /** @private @type {number} */
+  #dispatchWindowMs;
   /** @private @type {{retained: Array<{prefix: string, name: string, message: string}>, stranded: Array<[string, string]>} | undefined} */
   #reconcileBatch;
   /** @private @type {import("./types.js").WakeSnapshot | undefined} */
@@ -53,7 +59,7 @@ export class WakeRegistry {
    * @param {object} ports.status
    * @param {import("./wake-dispatcher.js").WakeDispatcher} ports.dispatcher
    */
-  constructor({ loops, watches, state, status, dispatcher }) {
+  constructor({ loops, watches, state, status, dispatcher, dispatchWindowMs = 250 }) {
     this.#loops = loops;
     this.#watches = watches;
     this.#state = state;
@@ -61,8 +67,16 @@ export class WakeRegistry {
     this.#dispatcher = dispatcher;
     /** @private @type {boolean} */
     this.#retaining = false;
+    /** @private @type {boolean} */
+    this.#resuming = false;
     /** @private @type {Map<string, {prefix: string, name: string, message: string}>} */
     this.#retained = new Map();
+    /** @private @type {boolean} */
+    this.#dispatchPending = false;
+    /** @private @type {Timeout | undefined} */
+    this.#dispatchReleaseTimer;
+    /** @private @type {number} */
+    this.#dispatchWindowMs = dispatchWindowMs;
   }
 
   /**
@@ -236,6 +250,7 @@ export class WakeRegistry {
       this.completeResume();
     } else {
       this.#dispatcher.settleAll();
+      this.#closeDispatchWindow();
     }
     this.#watches.flushDirty((watch) => this.#fire(WATCH_SOURCE_PREFIX, watch.name, watch.message));
     this.#refreshStatus();
@@ -345,7 +360,60 @@ export class WakeRegistry {
       this.#retained.set(`${sourcePrefix}${name}`, { prefix: sourcePrefix, name, message });
       return { delivered: false, reason: "retained" };
     }
-    return this.#dispatcher.wake(`${sourcePrefix}${name}`, message);
+    const sourceKey = `${sourcePrefix}${name}`;
+    if (this.#dispatcher.isPending(sourceKey)) {
+      // Same-source repeats coalesce regardless of the transition window.
+      return { delivered: false, reason: "coalesced" };
+    }
+    if (this.#dispatchPending) {
+      // A previous wake is still crossing the idle-to-running transition;
+      // Pi rejects concurrent prompts asynchronously, so this source waits
+      // to enter the follow-up queue safely (agent_start) or until the
+      // transition window expires.
+      this.#retained.set(`${sourcePrefix}${name}`, { prefix: sourcePrefix, name, message });
+      return { delivered: false, reason: "serialized" };
+    }
+    const outcome = this.#dispatcher.wake(`${sourcePrefix}${name}`, message);
+    this.#markDispatchInFlight();
+    return outcome;
+  }
+
+  #closeDispatchWindow() {
+    clearTimeout(this.#dispatchReleaseTimer);
+    this.#dispatchPending = false;
+    this.#drainRetained();
+  }
+
+  #markDispatchInFlight() {
+    this.#dispatchPending = true;
+    clearTimeout(this.#dispatchReleaseTimer);
+    this.#dispatchReleaseTimer = setTimeout(() => {
+      this.#dispatchPending = false;
+      this.#drainRetained();
+    }, this.#dispatchWindowMs);
+    this.#dispatchReleaseTimer.unref?.();
+  }
+
+  /**
+   * The host started a run: concurrent sends now queue safely as follow-ups,
+   * so the serialization window closes and retained wakes drain immediately.
+   */
+  noteRunStarted() {
+    clearTimeout(this.#dispatchReleaseTimer);
+    this.#dispatchPending = false;
+    this.#drainRetained();
+  }
+
+  #drainRetained() {
+    const entries = [...this.#retained.values()];
+    this.#retained.clear();
+    for (const wake of entries) {
+      try {
+        this.#dispatcher.wake(`${wake.prefix}${wake.name}`, wake.message);
+      } catch {
+        // Draining must never crash the releasing callback.
+      }
+    }
   }
 
   #persist() {

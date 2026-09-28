@@ -9,89 +9,133 @@ import { WakeError } from "./types.js";
  *   list
  *   remove NAME
  *
- * The message is the trailing argument and may contain spaces or quoted
- * text. Flag values accept both "--flag value" and "--flag=value".
+ * Parsing is token-based: quoted values (including values that contain text
+ * resembling options, e.g. --path "logs/--message.txt") stay single tokens,
+ * and option names match exactly, so "--message-prefix" never satisfies
+ * "--message". Unquoted message text may span the remaining tokens.
  *
  * @param {string} kind "loop" or "watch", used for error text only.
  * @param {string} input Raw argument string after the command name.
- * @returns {{subcommand: string, name?: string, flags: Record<string, string>}}
+ * @returns {{subcommand: string, name?: string, flags: Record<string, string>, message?: string}}
  */
 export function parseWakeCommand(kind, input) {
-  const raw = (input ?? "").trim();
-  const [subcommand, ...rest] = raw.split(/\s+/).filter(Boolean);
+  const tokens = tokenize((input ?? "").trim());
+  const subcommand = tokens[0]?.text;
   if (!subcommand) {
     throw new WakeError(usage(kind));
   }
 
   if (subcommand === "list") {
-    if (rest.length > 0) {
+    if (tokens.length > 1) {
       throw new WakeError(`${kind} list takes no arguments`);
     }
     return { subcommand };
   }
 
   if (subcommand === "remove") {
-    if (rest.length !== 1) {
+    if (tokens.length !== 2) {
       throw new WakeError(`usage: /${kind} remove NAME`);
     }
-    return { subcommand, name: rest[0] };
+    return { subcommand, name: tokens[1].text };
   }
 
   if (subcommand !== "add") {
     throw new WakeError(`unknown ${kind} subcommand: ${subcommand}; ${usage(kind)}`);
   }
 
-  if (rest.length === 0) {
+  if (tokens.length < 2) {
     throw new WakeError(usage(kind));
   }
 
-  const name = rest[0];
-  const subIndex = raw.indexOf(subcommand);
-  const nameIndex = raw.indexOf(name, subIndex + subcommand.length);
-  const tail = raw.slice(nameIndex + name.length);
-  const message = takeTrailingValue(tail, "message");
-  const withoutMessage = message === undefined ? tail : tail.slice(0, tail.lastIndexOf(`--message`));
-  const flags = {};
-  for (const flag of kind === "loop" ? ["interval"] : ["path"]) {
-    const value = takeFlagValue(withoutMessage, flag);
-    if (value !== undefined) {
-      flags[flag] = value;
-    }
-  }
+  const name = tokens[1].text;
+  const { flags, message } = parseFlags(kind, tokens.slice(2));
 
   return { subcommand, name, flags, message };
 }
 
 function usage(kind) {
   if (kind === "loop") {
-    return 'usage: /loop add NAME --interval SECONDS --message TEXT | /loop list | /loop remove NAME';
+    return "usage: /loop add NAME --interval SECONDS --message TEXT | /loop list | /loop remove NAME";
   }
-  return 'usage: /watch add NAME --path PATH --message TEXT | /watch list | /watch remove NAME';
+  return "usage: /watch add NAME --path PATH --message TEXT | /watch list | /watch remove NAME";
 }
 
-function takeTrailingValue(raw, flag) {
-  const token = `--${flag}`;
-  const index = raw.indexOf(token);
-  if (index === -1) {
-    return undefined;
+/**
+ * Split an argument string into tokens: quoted spans become single tokens
+ * (quotes stripped, backslash escapes honored); everything else splits on
+ * whitespace.
+ *
+ * @param {string} raw
+ * @returns {Array<{text: string, quoted: boolean}>}
+ */
+function tokenize(raw) {
+  const tokens = [];
+  const pattern = /"((?:[^"\\]|\\.)*)"|'((?:[^'\\]|\\.)*)'|(\S+)/g;
+  let match;
+  while ((match = pattern.exec(raw)) !== null) {
+    if (match[1] !== undefined) {
+      tokens.push({ text: unfoldEscapes(match[1]), quoted: true });
+    } else if (match[2] !== undefined) {
+      tokens.push({ text: unfoldEscapes(match[2]), quoted: true });
+    } else {
+      tokens.push({ text: match[3], quoted: false });
+    }
   }
-  let value = raw.slice(index + token.length).trim();
-  if (value.startsWith("=")) {
-    value = value.slice(1).trim();
-  }
-  return stripQuotes(value);
+  return tokens;
 }
 
-function takeFlagValue(raw, flag) {
-  // Quoted values match before the bare token so paths with spaces survive;
-  // the quote characters are stripped afterwards.
-  const match = raw.match(new RegExp(`--${flag}(?:=|\\s+)("(?:[^"\\\\]|\\\\.)*"|'(?:[^'\\\\]|\\\\.)*'|\\S+)`));
-  return match ? stripQuotes(match[1]) : undefined;
+function unfoldEscapes(value) {
+  return value.replace(/\\(.)/g, "$1");
 }
 
-function stripQuotes(value) {
-  if (value.length >= 2 && ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'")))) {
-    return value.slice(1, -1);
+/**
+ * Extract --flag value pairs and the trailing message from add-tokens.
+ * Option names match exactly; an unquoted --message value spans all
+ * remaining tokens (joined with single spaces) since it is documented last.
+ *
+ * @param {string} kind
+ * @param {Array<{text: string, quoted: boolean}>} tokens
+ */
+function parseFlags(kind, tokens) {
+  const valueFlags = kind === "loop" ? ["interval", "message"] : ["path", "message"];
+  const flags = {};
+  let message;
+  let index = 0;
+  while (index < tokens.length) {
+    const token = tokens[index];
+    if (!token.text.startsWith("--") || token.quoted) {
+      index += 1;
+      continue;
+    }
+    const [flagName, inlineValue] = token.text.slice(2).split(/=(.*)/s, 2);
+    if (!valueFlags.includes(flagName)) {
+      index += 1;
+      continue;
+    }
+    if (inlineValue !== undefined) {
+      if (flagName === "message") {
+        message = inlineValue;
+      } else {
+        flags[flagName] = inlineValue;
+      }
+      index += 1;
+      continue;
+    }
+    if (flagName === "message") {
+      const rest = tokens.slice(index + 1);
+      if (rest.length === 0) {
+        throw new WakeError("message must not be empty");
+      }
+      message = rest.map((token_) => token_.text).join(" ");
+      index = tokens.length;
+      continue;
+    }
+    const value = tokens[index + 1];
+    if (value === undefined) {
+      throw new WakeError(`${flagName} requires a value`);
+    }
+    flags[flagName] = value.text;
+    index += 2;
   }
-  return value;
+  return { flags, message };
 }

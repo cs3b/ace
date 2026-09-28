@@ -383,23 +383,31 @@ describe("ace-wake delivery", () => {
     assert.equal(host.sends.length, 0, "removal must cancel the retained wake");
   });
 
-  it("coalesces same-source wakes while one is queued and keeps distinct sources", async () => {
+  it("serializes concurrent distinct sources across the delivery transition", async () => {
     const host = createFakeHost();
     const session = await startSession(host);
     host.setFile("/fake/project/dep.txt", { mtimeMs: 1, size: 1 });
     await host.runCommand("loop", "add heartbeat --interval 10 --message loop wake");
     await host.runCommand("watch", "add dep --path dep.txt --message watch wake");
 
+    // The loop wake crosses the idle-to-running transition; the watch wake
+    // arriving inside that window is serialized, not sent concurrently.
     host.clock.advance(10_000);
     host.setFile("/fake/project/dep.txt", { mtimeMs: 2, size: 2 });
     host.triggerWatch("/fake/project/dep.txt");
     host.setFile("/fake/project/dep.txt", { mtimeMs: 3, size: 3 });
     host.triggerWatch("/fake/project/dep.txt");
 
-    assert.equal(host.sends.length, 2, "one loop wake + one coalesced watch wake");
+    assert.equal(host.sends.length, 1, "only the first wake crosses the transition window");
     assert.match(host.sends[0].text, /loop:heartbeat/);
+
+    // Settlement closes the window: the serialized watch wake drains (its
+    // absorbed repeat stays coalesced), and later changes wake normally.
+    await session.settle();
+    assert.equal(host.sends.length, 2);
     assert.match(host.sends[1].text, /watch:dep/);
 
+    // The drained wake's own turn settles, then the next change wakes again.
     await session.settle();
     host.setFile("/fake/project/dep.txt", { mtimeMs: 4, size: 4 });
     host.triggerWatch("/fake/project/dep.txt");

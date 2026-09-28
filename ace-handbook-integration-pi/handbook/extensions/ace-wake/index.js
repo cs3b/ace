@@ -78,6 +78,13 @@ export default function (pi, ports = {}) {
     bindRuntime(ctx);
   });
 
+  // A run has begun: wakes dispatched concurrently during the idle-to-running
+  // transition can now enter the follow-up queue safely, so the registry
+  // drains anything it serialized.
+  pi.on("agent_start", async () => {
+    runtime?.registry.noteRunStarted();
+  });
+
   // The agent consumed every queued continuation; same-source wakes may
   // deliver again. Watches whose change was absorbed by a pending wake are
   // re-checked so no change is lost without a new filesystem event.
@@ -122,10 +129,11 @@ export default function (pi, ports = {}) {
    */
   function scheduleManualCompactionFlush(ctx) {
     const pollMs = 100;
-    const maxAttempts = 50;
-    let attempts = 0;
+    // Bound the poll to the session that scheduled it: a rebind or shutdown
+    // replaces the registry, and the old poll must not flush the new one.
+    const registry = runtime.registry;
     const attempt = () => {
-      if (!runtime) {
+      if (runtime?.registry !== registry) {
         return;
       }
       let idle;
@@ -135,11 +143,7 @@ export default function (pi, ports = {}) {
         return; // Stale context: session_start rebinds.
       }
       if (idle) {
-        runtime.registry.completeResume();
-        return;
-      }
-      attempts += 1;
-      if (attempts >= maxAttempts) {
+        registry.completeResume();
         return;
       }
       const timer = setTimeout(attempt, pollMs);
@@ -171,6 +175,7 @@ function createRegistry(pi, ctx, ports) {
     state: sessionStatePort(pi, ctx),
     status: statusPort(ctx),
     dispatcher,
+    dispatchWindowMs: ports.dispatchWindowMs,
   });
   registry = built;
   return built;
