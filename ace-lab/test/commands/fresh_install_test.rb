@@ -64,16 +64,32 @@ module Ace
           # ACE workspace dependencies are built from this checkout and
           # installed into the isolated GEM_HOME: a clean vendor-bundle
           # checkout has no globally installed ace-* gems to fall back on
-          # (review round 13, F1)
+          # (review round 13, F1). Transitive workspace dependencies are
+          # resolved from the gemspecs, so nothing is missed (review
+          # round 14, F1: ace-support-fs).
           def install_workspace_dependencies(tmpdir, gem_home)
-            %w[ace-support-core ace-support-config ace-support-cli].each do |name|
+            installed = {}
+            queue = %w[ace-support-core ace-support-config ace-support-cli]
+
+            until queue.empty?
+              name = queue.shift
+              next if installed[name]
+
               package = File.expand_path("../#{name}", package_dir)
+              flunk("workspace package missing: #{package}") unless File.exist?(File.join(package, "#{name}.gemspec"))
+
               gem_path = File.join(tmpdir, "#{name}.gem")
               out, err, status = Open3.capture3("gem", "build", "#{name}.gemspec", "--output", gem_path,
                 chdir: package)
               flunk("#{name} build failed: #{err} #{out}") unless status.success?
 
               install_gem(gem_path, gem_home)
+              installed[name] = true
+
+              spec = Gem::Specification.load(File.join(package, "#{name}.gemspec"))
+              spec.runtime_dependencies.each do |dependency|
+                queue << dependency.name if dependency.name.start_with?("ace-")
+              end
             end
           end
 
