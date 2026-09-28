@@ -120,7 +120,7 @@ module Ace
       normalized = normalize_keys(git_section)
 
       # Copy top-level settings
-      %w[default_branch remote verbose timeout network_timeout servers].each do |key|
+      %w[default_branch remote verbose timeout network_timeout servers providers].each do |key|
         config[key] = normalized[key] if normalized.key?(key)
       end
 

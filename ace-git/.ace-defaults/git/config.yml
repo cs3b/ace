@@ -27,6 +27,11 @@ git:
   #     provider: github
   #     url: https://github.example.com/owner/repo
 
+  # Provider packages required on first use (library names under ace/git/*).
+  # Both shipped provider gems are loaded by default; remove entries for
+  # providers you do not use.
+  providers: [github, forgejo]
+
   # Status command settings
   status:
     commits_limit: 3      # Number of recent commits to show
