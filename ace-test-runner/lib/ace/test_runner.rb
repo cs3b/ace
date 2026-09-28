@@ -15,6 +15,12 @@ require "time"
 
 require_relative "test_runner/version"
 
+module Ace
+  module TestRunner
+    class Error < StandardError; end
+  end
+end
+
 # CLI and commands
 require_relative "test_runner/cli"
 
@@ -23,6 +29,7 @@ require_relative "test_runner/models/test_result"
 require_relative "test_runner/models/test_failure"
 require_relative "test_runner/models/test_configuration"
 require_relative "test_runner/models/test_report"
+require_relative "test_runner/models/environment_policy"
 
 # Atoms - Basic utilities (always needed)
 require_relative "test_runner/atoms/test_detector"
@@ -32,8 +39,10 @@ require_relative "test_runner/atoms/timestamp_generator"
 require_relative "test_runner/atoms/lazy_loader"
 require_relative "test_runner/atoms/report_path_resolver"
 require_relative "test_runner/atoms/report_directory_resolver"
+require_relative "test_runner/atoms/environment_sanitizer"
 
 # Molecules - Core operations (always needed for basic test running)
+require_relative "test_runner/molecules/fixture_environment"
 require_relative "test_runner/molecules/test_executor"
 require_relative "test_runner/molecules/failure_analyzer"
 require_relative "test_runner/molecules/report_storage"
@@ -54,8 +63,6 @@ require_relative "test_runner/organisms/report_generator"
 
 module Ace
   module TestRunner
-    class Error < StandardError; end
-
     # Define module namespaces
     module Commands; end
 
