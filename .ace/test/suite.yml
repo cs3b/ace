@@ -190,6 +190,11 @@ test_suite:
       group: foundation
       priority: 2
 
+    - name: ace-herdr
+      path: ace-herdr
+      group: foundation
+      priority: 2
+
     - name: ace-overseer
       path: ace-overseer
       group: tools
