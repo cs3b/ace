@@ -13,6 +13,10 @@ end
 
 # Load all ace-lab components
 require_relative "lab/atoms/topology_schema"
+require_relative "lab/models/runtime_binding"
+require_relative "lab/models/topology_entry"
+require_relative "lab/models/query_result"
+require_relative "lab/molecules/topology_loader"
 require_relative "lab/cli"
 end
 

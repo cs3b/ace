@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "../../lab"
-
 module Ace
   module Lab
     module Atoms
