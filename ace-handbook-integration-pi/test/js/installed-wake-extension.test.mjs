@@ -17,13 +17,13 @@ function portsOf(host) {
  * session_start. The fake host's deterministic ports are injected through the
  * factory's optional second argument.
  */
-async function startSession(host) {
+async function startSession(host, extraPorts = {}) {
   const events = [];
   host.pi.on = (event, handler) => {
     events.push([event, handler]);
     return () => {};
   };
-  aceWakeFactory(host.pi, portsOf(host));
+  aceWakeFactory(host.pi, { ...portsOf(host), ...extraPorts });
 
   const handlerFor = (event) => {
     const found = events.find(([name]) => name === event);
@@ -51,7 +51,7 @@ async function startSession(host) {
         reloadEvents.push([event, handler]);
         return () => {};
       };
-      aceWakeFactory(host.pi, portsOf(host));
+      aceWakeFactory(host.pi, { ...portsOf(host), ...extraPorts });
       const found = reloadEvents.find(([name]) => name === "session_start");
       await found[1]({ type: "session_start", reason: "reload" }, host.commandContext);
     },
@@ -412,6 +412,41 @@ describe("ace-wake delivery", () => {
     host.setFile("/fake/project/dep.txt", { mtimeMs: 4, size: 4 });
     host.triggerWatch("/fake/project/dep.txt");
     assert.equal(host.sends.length, 3, "the source may wake again after the agent settled");
+  });
+
+  it("reconciles an unacknowledged wake when the transition window expires", async () => {
+    const host = createFakeHost();
+    const session = await startSession(host, { dispatchWindowMs: 10 });
+    host.setFile("/fake/project/dep.txt", { mtimeMs: 1, size: 1 });
+    await host.runCommand("watch", "add dep --path dep.txt --message watch wake");
+
+    // The wake dispatches, but the host never starts a run for it (async
+    // rejection): when the window expires the fingerprint reverts, and the
+    // next settlement re-fires the change without a new filesystem event.
+    host.setFile("/fake/project/dep.txt", { mtimeMs: 2, size: 2 });
+    host.triggerWatch("/fake/project/dep.txt");
+    assert.equal(host.sends.length, 1);
+
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    await session.settle();
+    assert.equal(host.sends.length, 2, "the unacknowledged wake must reconcile at settlement");
+    assert.match(host.sends[1].text, /watch:dep/);
+  });
+
+  it("clears an unacknowledged loop wake at window expiry so the next tick re-attempts", async () => {
+    const host = createFakeHost();
+    const session = await startSession(host, { dispatchWindowMs: 10 });
+    await host.runCommand("loop", "add heartbeat --interval 10 --message check in");
+
+    // First tick dispatches and is rejected asynchronously; the window
+    // expires and clears the pending marker.
+    host.clock.advance(10_000);
+    assert.equal(host.sends.length, 1);
+    await new Promise((resolve) => setTimeout(resolve, 30));
+
+    host.clock.advance(10_000);
+    assert.equal(host.sends.length, 2, "the next tick must not stay coalesced behind the rejected attempt");
+    await session.settle();
   });
 
   it("/loop remove stops future wakes", async () => {

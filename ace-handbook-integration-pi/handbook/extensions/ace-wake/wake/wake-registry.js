@@ -388,8 +388,16 @@ export class WakeRegistry {
     this.#dispatchPending = true;
     clearTimeout(this.#dispatchReleaseTimer);
     this.#dispatchReleaseTimer = setTimeout(() => {
+      // The transition window expired without a run starting: the wake was
+      // rejected asynchronously (Pi's void sendUserMessage API reports
+      // failures only via emitError). Reconcile instead of leaving it
+      // stranded: watch fingerprints revert so settlement re-fires their
+      // change, loop pendings clear so the next tick re-attempts, and
+      // serialized sources stay retained until a run starts.
       this.#dispatchPending = false;
-      this.#drainRetained();
+      this.#watches.markDispatchUnacknowledged();
+      this.#dispatcher.settleAll();
+      this.#refreshStatus();
     }, this.#dispatchWindowMs);
     this.#dispatchReleaseTimer.unref?.();
   }

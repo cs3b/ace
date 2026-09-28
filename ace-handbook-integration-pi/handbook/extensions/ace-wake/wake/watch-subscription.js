@@ -64,7 +64,7 @@ export function canonicalizeWatchPath(baseDir, path) {
 const RECONCILE_DELAY_MS = 500;
 
 export function createWatchPort({ watchFactory, statFn, baseDir = process.cwd(), canonicalizeFn = canonicalizeWatchPath, scheduleReconcile = defaultScheduleReconcile, onDeactivate }) {
-  /** @type {Map<string, {watcher: {close: () => void}, canonicalPath: string, definition: import("./types.js").WatchDefinition, fingerprint: string, dirty: boolean}>} */
+  /** @type {Map<string, {watcher: {close: () => void}, canonicalPath: string, definition: import("./types.js").WatchDefinition, fingerprint: string, previousFingerprint: string, dirty: boolean}>} */
   const active = new Map();
   /** @type {Map<string, string>} */
   const errors = new Map();
@@ -92,7 +92,7 @@ export function createWatchPort({ watchFactory, statFn, baseDir = process.cwd(),
         },
       });
 
-      active.set(definition.name, { watcher, canonicalPath, definition, fingerprint, dirty: false });
+      active.set(definition.name, { watcher, canonicalPath, definition, fingerprint, previousFingerprint: fingerprint, dirty: false });
       // Close the registration gap: a change between baseline capture and
       // watcher effectiveness produces no callback, so re-stat once.
       scheduleReconcile(() => handleChange(definition, onWake));
@@ -158,6 +158,19 @@ export function createWatchPort({ watchFactory, statFn, baseDir = process.cwd(),
       return errors.get(name);
     },
 
+    /**
+     * Mark every active subscription's last dispatch as unacknowledged: the
+     * host never started the run, so the wake was rejected and its fingerprint
+     * must revert to the last delivered state. flushDirty() then re-fires the
+     * change at the next settlement.
+     */
+    markDispatchUnacknowledged() {
+      for (const entry of active.values()) {
+        entry.fingerprint = entry.previousFingerprint;
+        entry.dirty = true;
+      }
+    },
+
     activeCount() {
       return active.size;
     },
@@ -192,13 +205,15 @@ export function createWatchPort({ watchFactory, statFn, baseDir = process.cwd(),
       return;
     }
     const outcome = onWake(definition);
-    if (outcome && outcome.delivered === false && outcome.reason === "coalesced") {
-      // The queued wake already covers this change, but the change itself is
-      // undelivered: mark the subscription dirty so flushDirty() re-checks it
-      // once the agent settles — without needing another filesystem event.
+    if (outcome && outcome.delivered === false) {
+      // Coalesced (a queued wake covers this change) or serialized (held back
+      // by the dispatch transition window): the change itself is undelivered,
+      // so mark the subscription dirty — flushDirty() re-checks it once the
+      // agent settles, without needing another filesystem event.
       entry.dirty = true;
       return;
     }
+    entry.previousFingerprint = entry.fingerprint;
     entry.fingerprint = next;
     entry.dirty = false;
   }
