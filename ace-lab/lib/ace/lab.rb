@@ -7,18 +7,21 @@ module Ace
   module Lab
     class Error < StandardError; end
 
-# Raised when topology configuration violates the schema contract
-class InvalidConfigurationError < Error; end
+    # Raised when topology configuration violates the schema contract
+    class InvalidConfigurationError < Error; end
+  end
 end
 
 # Load all ace-lab components
 require_relative "lab/atoms/topology_schema"
+require_relative "lab/atoms/binding_freshness"
+require_relative "lab/atoms/public_projection"
 require_relative "lab/models/runtime_binding"
 require_relative "lab/models/topology_entry"
 require_relative "lab/models/query_result"
 require_relative "lab/molecules/topology_loader"
+require_relative "lab/molecules/caller_authorizer"
 require_relative "lab/cli"
-end
 
 module Ace
   module Lab
