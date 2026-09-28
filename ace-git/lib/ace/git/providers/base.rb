@@ -201,6 +201,20 @@ module Ace
         # Command runner: injected fake or nil (implementations use their own
         # executor when nil).
         attr_reader :runner
+
+        # Shared lifecycle guard: refuse when the live head differs from the
+        # caller's expected head. Providers must use this so the classified
+        # failure shape stays identical across forges.
+        def verify_expected_head!(pull_request, expected_head)
+          unless pull_request.head_sha.is_a?(String) && !pull_request.head_sha.empty?
+            raise ProviderMalformedOutputError,
+              "Provider evidence for PR ##{pull_request.number} is missing the exact head SHA"
+          end
+          return pull_request if pull_request.head_sha == expected_head
+
+          raise ProviderExpectedHeadConflictError,
+            "PR ##{pull_request.number} head changed: expected #{expected_head}, found #{pull_request.head_sha}"
+        end
       end
     end
   end
