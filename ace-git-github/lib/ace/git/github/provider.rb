@@ -234,16 +234,10 @@ module Ace
           "#{head_repository_url}@#{head_ref} -> #{server.url}@#{base_ref}"
         end
 
-        # Refuse when the live head differs from the caller's expected head.
+        # Refuse when the live head differs from the caller's expected head
+        # (shared guard from Providers::Base).
         def verify_head!(pr, expected_head)
-          unless pr.head_sha.is_a?(String) && !pr.head_sha.empty?
-            raise Ace::Git::ProviderMalformedOutputError,
-              "Provider evidence for PR ##{pr.number} is missing the exact head SHA"
-          end
-          return pr if pr.head_sha == expected_head
-
-          raise Ace::Git::ProviderExpectedHeadConflictError,
-            "PR ##{pr.number} head changed: expected #{expected_head}, found #{pr.head_sha}"
+          verify_expected_head!(pr, expected_head)
         end
 
         # `gh` head selector: "user:branch" for fork sources, plain ref for
