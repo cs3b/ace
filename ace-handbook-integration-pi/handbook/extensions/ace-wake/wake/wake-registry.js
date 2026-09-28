@@ -36,6 +36,8 @@ export class WakeRegistry {
   #dispatcher;
   /** @private @type {boolean} */
   #retaining;
+  /** @private @type {boolean} */
+  #resuming;
   /** @private @type {Map<string, {prefix: string, name: string, message: string}>} */
   #retained;
   /** @private @type {{retained: Array<{prefix: string, name: string, message: string}>, stranded: Array<[string, string]>} | undefined} */
@@ -124,6 +126,7 @@ export class WakeRegistry {
     this.#loops.stop(name);
     this.#dispatcher.settle(loopSourceKey(name));
     this.#retained.delete(loopSourceKey(name));
+    this.#dropFromReconcileBatch(loopSourceKey(name));
     this.#persist();
     return removed;
   }
@@ -138,6 +141,7 @@ export class WakeRegistry {
     this.#watches.stop(name);
     this.#dispatcher.settle(watchSourceKey(name));
     this.#retained.delete(watchSourceKey(name));
+    this.#dropFromReconcileBatch(watchSourceKey(name));
     this.#persist();
     return removed;
   }
@@ -225,49 +229,63 @@ export class WakeRegistry {
    * needing another filesystem event.
    */
   settleAll() {
-    this.#dispatcher.settleAll();
-    this.flushRetained();
+    // A settlement is proof the host accepts prompts again; a manual
+    // compaction that is still resuming completes its boundary here so the
+    // stranded attempts reconcile instead of being silently cleared.
+    if (this.#resuming) {
+      this.completeResume();
+    } else {
+      this.#dispatcher.settleAll();
+    }
     this.#watches.flushDirty((watch) => this.#fire(WATCH_SOURCE_PREFIX, watch.name, watch.message));
     this.#refreshStatus();
   }
 
   /**
    * Retain wakes instead of dispatching while the host cannot accept them
-   * (manual compaction rejects sendUserMessage asynchronously, which would
-   * otherwise strand the source pending forever — compaction never emits
-   * agent_settled).
+   * (manual compaction rejects sendUserMessage asynchronously — before, during,
+   * and after the compaction events — which would otherwise strand the source
+   * pending forever, since manual compaction never emits agent_settled).
    */
   pauseDelivery() {
     this.#retaining = true;
   }
 
   /**
-   * Exit retention when the host reports compaction finished. Pi clears its
-   * manual-compaction state right after the session_compact emission, so the
-   * retained wakes flush from a deferred macrotask — submitting them from
-   * inside the event would still be rejected. agent_settled flushes too,
-   * covering the post-compaction run continuation.
+   * Mark the compaction events as finished. Pi may still reject prompts while
+   * later session_compact handlers complete, so retention stays on and the
+   * boundary is taken by completeResume() — either when the readiness poll
+   * observes an idle context or at the next settlement.
    */
   resumeDelivery() {
+    this.#resuming = true;
+  }
+
+  /**
+   * Take the resume boundary atomically: every pending marker and retained
+   * wake at this moment is reconciled in one batch, and delivery returns to
+   * normal. Idempotent — without a pending boundary it is a no-op.
+   */
+  completeResume() {
+    if (!this.#resuming) {
+      return;
+    }
+    this.#resuming = false;
     this.#retaining = false;
-    // Capture the reconciliation batch at the resume boundary: every pending
-    // marker at this moment is stale (rejected in the pre-compaction window
-    // or consumed without acknowledgement), while wakes queued afterwards are
-    // legitimate and must never be replayed by a later flush.
     this.#reconcileBatch = {
       retained: [...this.#retained.values()],
       stranded: this.#dispatcher.pendingEntries(),
     };
     this.#retained.clear();
     this.#dispatcher.settleAll();
+    this.flushRetained();
   }
 
   /**
    * Dispatch the reconciliation batch captured at the last resume boundary:
    * retained wakes plus stranded pre-boundary attempts. Consumed exactly
    * once — later calls are no-ops, so a flush can never replay wakes that
-   * were legitimately re-queued after the boundary. Called by the adapter's
-   * readiness-poll after manual compaction and by agent_settled.
+   * were legitimately re-queued after the boundary.
    */
   flushRetained() {
     const batch = this.#reconcileBatch;
@@ -282,6 +300,21 @@ export class WakeRegistry {
       this.#dispatcher.wake(sourceKey, text);
     }
     this.#refreshStatus();
+  }
+
+  /**
+   * A removed subscription's wake must never fire from a pending resume
+   * batch, so removal strips it from the reconciliation boundary.
+   *
+   * @param {string} sourceKey
+   */
+  #dropFromReconcileBatch(sourceKey) {
+    const batch = this.#reconcileBatch;
+    if (!batch) {
+      return;
+    }
+    batch.retained = batch.retained.filter((wake) => `${wake.prefix}${wake.name}` !== sourceKey);
+    batch.stranded = batch.stranded.filter(([key]) => key !== sourceKey);
   }
 
   /** Load persisted definitions from the session state port. */

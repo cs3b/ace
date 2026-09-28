@@ -135,7 +135,7 @@ export default function (pi, ports = {}) {
         return; // Stale context: session_start rebinds.
       }
       if (idle) {
-        runtime.registry.flushRetained();
+        runtime.registry.completeResume();
         return;
       }
       attempts += 1;
