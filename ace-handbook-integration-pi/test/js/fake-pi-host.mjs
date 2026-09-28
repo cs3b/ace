@@ -252,6 +252,7 @@ export function createFakeHost() {
       },
     },
     cwd: "/fake/project",
+    model: { provider: "fake", id: "fake-model" },
     isIdle: () => idle,
     hasUI: true,
     hasPendingMessages: () => host.pendingMessages,

@@ -383,7 +383,11 @@ export class WakeRegistry {
       return { delivered: false, reason: "serialized" };
     }
     const outcome = this.#dispatcher.wake(sourceKey, message);
-    this.#markDispatchInFlight();
+    // Only an accepted dispatch holds the idle-to-running transition; a
+    // refused one must not serialize the sources behind it.
+    if (outcome.delivered) {
+      this.#markDispatchInFlight();
+    }
     return outcome;
   }
 

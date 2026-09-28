@@ -414,6 +414,23 @@ describe("ace-wake delivery", () => {
     assert.equal(host.sends.length, 3, "the source may wake again after the agent settled");
   });
 
+  it("recovers when the host has no model and stops blocking later ticks", async () => {
+    const host = createFakeHost();
+    const session = await startSession(host);
+    await host.runCommand("loop", "add heartbeat --interval 10 --message check in");
+
+    // Without a selected model Pi rejects prompts asynchronously; the wake
+    // must be refused (not marked pending) so recovery needs no settlement.
+    host.commandContext.model = undefined;
+    host.clock.advance(10_000);
+    assert.equal(host.sends.length, 0);
+
+    host.commandContext.model = { provider: "wake-test", id: "wake-model" };
+    host.clock.advance(10_000);
+    assert.equal(host.sends.length, 1, "the next tick delivers once a model exists");
+    await session.settle();
+  });
+
   it("preserves same-source coalescing across a slow startup window expiry", async () => {
     const host = createFakeHost();
     const session = await startSession(host);

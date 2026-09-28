@@ -197,6 +197,13 @@ function createRegistry(pi, ctx, ports) {
 function deliverWake(pi, ctx, sourceKey, text) {
   const message = boundMessage(`[ace-wake ${sourceKey}] ${text}`);
   try {
+    // Known synchronous preflight: without a selected model Pi rejects the
+    // prompt asynchronously and no lifecycle event ever acknowledges it, so
+    // the wake is refused here and the next tick re-attempts instead of
+    // coalescing behind a stranded pending marker.
+    if (!ctx.model) {
+      return false;
+    }
     pi.sendUserMessage(message, { deliverAs: "followUp" });
     return true;
   } catch {
