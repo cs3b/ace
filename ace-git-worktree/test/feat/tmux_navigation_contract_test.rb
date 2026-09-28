@@ -70,6 +70,20 @@ class CreateCommandTmuxContractTest < Minitest::Test
     original_tmux = ENV["TMUX"]
     ENV.delete("TMUX")
 
+    evidence = Ace::Git::ProviderPullRequest.new(
+      server_name: "forgejo-lab", number: 26, title: "Add authentication feature",
+      state: :open, head_ref: "feature/auth", base_ref: "main", head_sha: "a" * 40,
+      author: "dev", url: nil, draft: true, merged_at: nil,
+      head_repository_url: "https://forge.example.com/o/r",
+      base_repository_url: "https://forge.example.com/o/r", merge_commit_sha: nil
+    )
+    checkout = {success: true, local_ref: "FETCH_HEAD", remote_tracking: nil, sha: "a" * 40, error: nil}
+
+    fake_resolver = Object.new
+    fake_resolver.define_singleton_method(:resolve) { |_num| {server: nil, evidence: evidence} }
+    fake_preparer = Object.new
+    fake_preparer.define_singleton_method(:prepare) { |_e| checkout }
+
     mock_worktree_manager = Minitest::Mock.new
     mock_worktree_manager.expect(:create_pr, {
       success: true,
@@ -77,31 +91,17 @@ class CreateCommandTmuxContractTest < Minitest::Test
       pr_title: "Add authentication feature",
       worktree_path: "/path/to/worktree",
       branch: "pr-26",
-      tracking: "origin/feature/auth",
+      tracking: nil,
       directory_name: "ace-pr-26"
-    }, [Integer, Hash, Hash])
+    }, [evidence, checkout, Hash])
 
-    fake_metadata = {
-      success: true,
-      metadata: {
-        "number" => 26,
-        "title" => "Add authentication feature",
-        "headRefName" => "feature/auth",
-        "baseRefName" => "main",
-        "isCrossRepository" => false,
-        "headRepositoryOwner" => {"login" => "owner"}
-      }
-    }
-
-    Ace::Git::Github::PrFetcher.stub(:installed?, true) do
-      Ace::Git::Github::PrFetcher.stub(:authenticated?, true) do
-        Ace::Git::Github::PrFetcher.stub(:fetch_metadata, fake_metadata) do
-          command = Ace::Git::Worktree::Commands::CreateCommand.new(manager: mock_worktree_manager)
-          Kernel.stub(:exec, ->(*args) { Kernel.system(*args) }) do
-            command.stub(:tmux_enabled?, true) do
-              result = command.run(["--pr", "26"])
-              assert_equal 0, result
-            end
+    Ace::Git::Worktree::Molecules::PullRequestEvidenceResolver.stub(:new, ->(**_kw) { fake_resolver }) do
+      Ace::Git::Worktree::Molecules::PullRequestCheckoutPreparer.stub(:new, ->(**_kw) { fake_preparer }) do
+        command = Ace::Git::Worktree::Commands::CreateCommand.new(manager: mock_worktree_manager)
+        Kernel.stub(:exec, ->(*args) { Kernel.system(*args) }) do
+          command.stub(:tmux_enabled?, true) do
+            result = command.run(["--pr", "26"])
+            assert_equal 0, result
           end
         end
       end

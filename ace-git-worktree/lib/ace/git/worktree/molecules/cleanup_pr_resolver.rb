@@ -2,117 +2,164 @@
 
 require "json"
 require "open3"
-require "ace/git/github"
-require "ace/git/github/pr_fetcher"
+require "ace/git"
 
 module Ace
   module Git
     module Worktree
       module Molecules
-        # Resolves PR evidence for candidate branches to prove safe squash-merge cleanup.
+        # Resolves PR evidence for candidate branches through the registered
+        # forge provider to prove safe merge cleanup.
+        #
+        # Only confirmed remote merge evidence (:merged) can prove removal;
+        # object states (:no_pr, :open, :closed_unmerged) and transport
+        # failures (:offline, :authentication_error, :malformed) always
+        # retain the candidate. Local ancestry proof is handled by the
+        # reporter before this resolver is consulted.
         class CleanupPrResolver
-          def initialize(target:, target_sha:, offline: false)
+          # @param target [String] base ref the PR must have targeted
+          # @param target_sha [String] commit SHA of the target
+          # @param offline [Boolean] skip provider evidence entirely
+          # @param server_name [String, nil] explicit server selection
+          # @param use_default [Boolean] resolve the configured default server
+          # @param remote_name [String, nil] remote used for fallback resolution
+          # @param timeout [Integer, nil] provider timeout
+          # @param runner [Proc, nil] injectable provider runner (tests)
+          def initialize(target:, target_sha:, offline: false, server_name: nil, use_default: false,
+            remote_name: nil, timeout: nil, runner: nil)
             @target = target
             @target_sha = target_sha
             @offline = offline
-            
-            # Cache gh availability to avoid repeated checks
-            @gh_available = Ace::Git::Github::PrFetcher.installed? &&
-                            Ace::Git::Github::PrFetcher.authenticated?
+            @selection = {server_name: server_name, use_default: use_default, remote_name: remote_name}
+            @timeout = timeout
+            @runner = runner
           end
 
-          # Classify a candidate branch with GitHub PR evidence.
+          # Classify a candidate branch with provider PR evidence.
           #
-          # @param branch [String] The branch name (e.g. "feature")
-          # @param candidate_sha [String] The commit SHA of the candidate
-          # @return [Hash] Proof classification result
+          # @param branch [String] the branch name (e.g. "feature")
+          # @param candidate_sha [String] the commit SHA of the candidate
+          # @return [Hash] proof classification; :status is one of
+          #   Ace::Git::CLEANUP_PROOF_STATUSES
           def classify(branch, candidate_sha)
-            return offline_result unless @gh_available && !@offline
+            return unproven_result(:no_pr, "provider_disabled") if @offline
 
-            prs = fetch_merged_prs_for_branch(branch)
-            return unproven_result if prs.nil? || prs.empty?
+            evidence = fetch_merged_evidence(branch)
+            return failure_result(evidence) if evidence.is_a?(Hash) # transport failure marker
 
-            # Find a PR that targets the configured base and is actually reachable
-            valid_pr = prs.find do |pr|
-              pr["baseRefName"] == @target && 
-              pr["state"] == "MERGED" && 
-              pr["mergeCommit"] && 
-              pr["mergeCommit"]["oid"] &&
-              ancestor?(pr["mergeCommit"]["oid"], @target_sha)
-            end
+            return unproven_result(:no_pr) unless evidence
+            return unproven_result(:open) if evidence.state == :open
+            return unproven_result(:closed_unmerged) if evidence.state == :closed
+            return unproven_result(:no_pr, "state_unavailable") unless evidence.state == :merged
+            return unproven_result(:merged, "merge_commit_unavailable") unless evidence.merge_commit_sha
+            return unproven_result(:merged, "merge_commit_unreachable") unless ancestor?(evidence.merge_commit_sha, @target_sha)
 
-            return ambiguous_result(prs) if prs.length > 1 && !valid_pr
-            return unproven_result unless valid_pr
-
-            merge_commit_sha = valid_pr["mergeCommit"]["oid"]
-            pr_head_sha = valid_pr["headRefOid"]
+            merge_commit_sha = evidence.merge_commit_sha
+            pr_head_sha = evidence.head_sha
 
             if candidate_sha == pr_head_sha
-              {
-                proof: "exact_merged_pr_head",
-                pr: valid_pr["number"],
-                candidate_head: candidate_sha,
-                merged_head: pr_head_sha,
-                merge_commit: merge_commit_sha,
-                target_reachable: true,
-                path_type_mode_match: true,
-                provider_status: "available",
-                action: "remove"
-              }
+              proof_result(evidence, "exact_merged_pr_head", candidate_sha, pr_head_sha, merge_commit_sha)
             elsif patch_equivalent?(candidate_sha, merge_commit_sha)
-              {
-                proof: "stable_patch_equivalence",
-                pr: valid_pr["number"],
-                candidate_head: candidate_sha,
-                merged_head: pr_head_sha,
-                merge_commit: merge_commit_sha,
-                target_reachable: true,
-                path_type_mode_match: true,
-                provider_status: "available",
-                action: "remove"
-              }
+              proof_result(evidence, "stable_patch_equivalence", candidate_sha, pr_head_sha, merge_commit_sha)
             else
               {
-                proof: "none",
-                pr: valid_pr["number"],
+                status: :merged,
+                proof: nil,
+                pr: evidence.number,
+                pr_url: evidence.url,
                 candidate_head: candidate_sha,
                 merged_head: pr_head_sha,
                 merge_commit: merge_commit_sha,
                 target_reachable: true,
-                path_type_mode_match: false,
                 provider_status: "available",
                 action: "retain",
                 retention_reason: "patch_mismatch"
               }
             end
-          rescue Ace::Git::ProviderCliMissingError, Ace::Git::ProviderAuthenticationError, Ace::Git::TimeoutError
-            # Provider failure degradation
-            offline_result("unavailable")
           end
 
           private
 
-          def fetch_merged_prs_for_branch(branch)
-            # Use `gh pr list --head <branch> --state merged` to find the exact PR
-            cmd = [
-              "gh", "pr", "list", "--state", "merged", "--head", branch,
-              "--json", "number,state,headRefOid,mergeCommit,baseRefName"
-            ]
-            
-            # Using Open3 directly to avoid circular dependencies if we don't want to augment ace-git too heavily for just this
-            # but we can rely on LC_ALL=C for safety.
-            env = {"LC_ALL" => "C"}
-            out, err, status = Open3.capture3(env, *cmd)
-            
-            return nil unless status.success?
-            
-            JSON.parse(out)
-          rescue JSON::ParserError, Errno::ENOENT
-            nil
+          # Fetch the merged PR evidence for a branch, or a failure marker
+          # hash {:failure_status => ...} on classified transport failures.
+          def fetch_merged_evidence(branch)
+            provider = resolve_provider
+            return {failure_status: :offline} unless provider
+
+            provider.pull_request_for_branch(branch: branch)
+          rescue Ace::Git::ProviderAuthenticationError
+            {failure_status: :authentication_error}
+          rescue Ace::Git::ProviderMalformedOutputError
+            {failure_status: :malformed}
+          rescue Ace::Git::Error
+            {failure_status: :offline}
+          end
+
+          # Resolve the provider lazily, once per resolver. Unresolvable
+          # server selection (no config, ambiguous remote, missing provider)
+          # means no provider evidence is available.
+          def resolve_provider
+            return @provider if defined?(@provider)
+
+            @provider = begin
+              server = Ace::Git::ServerRegistry.resolve_for(**@selection)
+              Ace::Git::Providers.for(server, timeout: @timeout, runner: @runner)
+            rescue Ace::Git::Error
+              nil
+            end
+          end
+
+          def proof_result(evidence, proof, candidate_sha, pr_head_sha, merge_commit_sha)
+            {
+              status: :merged,
+              proof: proof,
+              pr: evidence.number,
+              pr_url: evidence.url,
+              candidate_head: candidate_sha,
+              merged_head: pr_head_sha,
+              merge_commit: merge_commit_sha,
+              target_reachable: true,
+              provider_status: "available",
+              action: "remove",
+              retention_reason: nil
+            }
+          end
+
+          def unproven_result(status, reason = "ancestry_unproven")
+            {
+              status: status,
+              proof: nil,
+              pr: nil,
+              pr_url: nil,
+              candidate_head: nil,
+              merged_head: nil,
+              merge_commit: nil,
+              target_reachable: "unknown",
+              provider_status: "available",
+              action: "retain",
+              retention_reason: reason
+            }
+          end
+
+          def failure_result(marker)
+            status = marker[:failure_status]
+            {
+              status: status,
+              proof: nil,
+              pr: nil,
+              pr_url: nil,
+              candidate_head: nil,
+              merged_head: nil,
+              merge_commit: nil,
+              target_reachable: "unknown",
+              provider_status: status.to_s,
+              action: "retain",
+              retention_reason: "provider_evidence_unavailable"
+            }
           end
 
           def ancestor?(candidate, target)
-            out, status = Open3.capture2("git", "merge-base", "--is-ancestor", candidate, target)
+            _out, status = Open3.capture2("git", "merge-base", "--is-ancestor", candidate, target)
             status.success?
           end
 
@@ -122,7 +169,7 @@ module Ace
             base, status = Open3.capture2("git", "merge-base", candidate_sha, @target_sha)
             return false unless status.success?
             base = base.strip
-            
+
             # Candidate inventory: path, type, mode changes
             cand_inv = tree_diff_inventory(base, candidate_sha)
             return false unless cand_inv
@@ -136,9 +183,8 @@ module Ace
           end
 
           def tree_diff_inventory(tree_a, tree_b)
-            # git diff-tree -r --name-status or raw mode
-            # using raw mode to get exact mode and type
-            # :100644 100644 e69de29bb2d1d6434b8b29ae775ad8c2e48c5391 0000000000000000000000000000000000000000 M  file
+            # git diff-tree -r raw mode carries exact mode and type information
+            # :100644 100644 e69de29... 000000... M  file
             out, status = Open3.capture2("git", "diff-tree", "-r", "--no-commit-id", tree_a, tree_b)
             return nil unless status.success?
 
@@ -146,66 +192,19 @@ module Ace
             out.each_line do |line|
               # Format: :src_mode dst_mode src_sha dst_sha status\tpath
               parts = line.strip.split("\t", 2)
+              next if parts.length < 2
+
               meta = parts[0].split(" ")
               path = parts[1]
-              
-              dst_mode = meta[1]
-              dst_sha = meta[3]
-              status_char = meta[4]
-              
+
               inventory[path] = {
-                mode: dst_mode,
-                sha: dst_sha,
-                status: status_char[0] # handle R100 etc by taking first char
+                mode: meta[1],
+                sha: meta[3],
+                status: meta[4][0] # handle R100 etc by taking first char
               }
             end
-            
+
             inventory
-          end
-
-          def offline_result(status = "offline")
-            {
-              proof: "none",
-              pr: nil,
-              candidate_head: nil,
-              merged_head: nil,
-              merge_commit: nil,
-              target_reachable: "unknown",
-              path_type_mode_match: "unknown",
-              provider_status: status,
-              action: "retain",
-              retention_reason: "ancestry_unproven"
-            }
-          end
-
-          def unproven_result
-            {
-              proof: "none",
-              pr: nil,
-              candidate_head: nil,
-              merged_head: nil,
-              merge_commit: nil,
-              target_reachable: "unknown",
-              path_type_mode_match: "unknown",
-              provider_status: "available",
-              action: "retain",
-              retention_reason: "ancestry_unproven"
-            }
-          end
-
-          def ambiguous_result(prs)
-            {
-              proof: "none",
-              pr: nil,
-              candidate_head: nil,
-              merged_head: nil,
-              merge_commit: nil,
-              target_reachable: "unknown",
-              path_type_mode_match: "unknown",
-              provider_status: "ambiguous",
-              action: "retain",
-              retention_reason: "ambiguous_prs"
-            }
           end
         end
       end

@@ -335,24 +335,70 @@ class WorktreeCreatorTest < Minitest::Test
     @creator.stub(:detect_git_root, @temp_dir) do
       # Mock path validation
       @creator.stub(:validate_worktree_path, {valid: true, error: nil}) do
-        # Mock fetch
-        @creator.stub(:fetch_remote_branch, {success: true, error: nil}) do
-          # Mock worktree creation
-          @creator.stub(:create_worktree_with_tracking, {
-            success: true,
-            worktree_path: File.join(@temp_dir, "ace-pr-26"),
-            branch: "pr-26",
-            tracking: "origin/feature/auth",
-            git_root: @temp_dir,
-            error: nil
+        # Mock worktree creation from the verified source ref
+        @creator.stub(:create_worktree, {
+          success: true,
+          worktree_path: File.join(@temp_dir, "ace-pr-26"),
+          branch: "pr-26",
+          start_point: "FETCH_HEAD",
+          git_root: @temp_dir,
+          error: nil
+        }) do
+          result = @creator.create_for_pr(pr_data, config, source_ref: "FETCH_HEAD")
+
+          assert result[:success]
+          assert_equal "pr-26", result[:branch]
+          assert_nil result[:tracking]
+          assert_equal 26, result[:pr_number]
+          assert_equal "Add authentication feature", result[:pr_title]
+        end
+      end
+    end
+  end
+
+  def test_create_for_pr_requires_verified_source_ref
+    pr_data = {number: 26, title: "Test", head_branch: "test", base_branch: "main"}
+    config = mock_pr_config(@temp_dir)
+
+    result = @creator.create_for_pr(pr_data, config)
+
+    refute result[:success]
+    assert_match(/Verified source ref is required/, result[:error])
+  end
+
+  def test_create_for_pr_with_remote_tracking
+    pr_data = {
+      number: 26,
+      title: "Add authentication feature",
+      head_branch: "feature/auth",
+      base_branch: "main"
+    }
+
+    config = mock_pr_config(@temp_dir)
+
+    @creator.stub(:detect_git_root, @temp_dir) do
+      @creator.stub(:validate_worktree_path, {valid: true, error: nil}) do
+        @creator.stub(:create_worktree, {
+          success: true,
+          worktree_path: File.join(@temp_dir, "ace-pr-26"),
+          branch: "pr-26",
+          start_point: "FETCH_HEAD",
+          git_root: @temp_dir,
+          error: nil
+        }) do
+          configured = []
+          @creator.stub(:configure_push_for_worktree, lambda { |path, local, remote|
+            configured << [path, local, remote]
           }) do
-            result = @creator.create_for_pr(pr_data, config)
+            result = @creator.create_for_pr(
+              pr_data, config, source_ref: "FETCH_HEAD", remote_tracking: "origin/feature/auth"
+            )
 
             assert result[:success]
-            assert_equal "pr-26", result[:branch]
             assert_equal "origin/feature/auth", result[:tracking]
-            assert_equal 26, result[:pr_number]
-            assert_equal "Add authentication feature", result[:pr_title]
+            assert_equal 1, configured.length
+            assert_equal "pr-26", configured[0][1]
+            assert_equal "origin/feature/auth", configured[0][2]
           end
         end
       end
@@ -375,7 +421,7 @@ class WorktreeCreatorTest < Minitest::Test
     assert_match(/Configuration is required/, result[:error])
   end
 
-  def test_create_for_pr_fetch_failure
+  def test_create_for_pr_worktree_failure
     pr_data = {
       number: 26,
       title: "Test PR",
@@ -387,12 +433,12 @@ class WorktreeCreatorTest < Minitest::Test
 
     @creator.stub(:detect_git_root, @temp_dir) do
       @creator.stub(:validate_worktree_path, {valid: true, error: nil}) do
-        # Mock fetch failure
-        @creator.stub(:fetch_remote_branch, {success: false, error: "Network error"}) do
-          result = @creator.create_for_pr(pr_data, config)
+        # Mock worktree creation failure
+        @creator.stub(:create_worktree, {success: false, error: "git worktree failed"}) do
+          result = @creator.create_for_pr(pr_data, config, source_ref: "FETCH_HEAD")
 
           refute result[:success]
-          assert_match(/Network error/, result[:error])
+          assert_match(/git worktree failed/, result[:error])
         end
       end
     end

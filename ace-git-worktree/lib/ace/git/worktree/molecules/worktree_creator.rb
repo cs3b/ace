@@ -103,20 +103,27 @@ module Ace
             end
           end
 
-          # Create a worktree for a Pull Request
+          # Create a worktree for a Pull Request from an already-verified
+          # source ref (see PullRequestCheckoutPreparer).
           #
-          # @param pr_data [Hash] PR data hash from PrFetcher
+          # @param pr_data [Hash] normalized PR data: :number, :title,
+          #   :head_branch, :base_branch
           # @param config [WorktreeConfig] Worktree configuration
           # @param git_root [String, nil] Git repository root (auto-detected if nil)
+          # @param source_ref [String, nil] verified local ref (e.g. FETCH_HEAD)
+          #   the PR head was proven against; required
+          # @param remote_tracking [String, nil] "remote/branch" tracking ref
+          #   when the source is reachable via a configured local remote
           # @return [Hash] Result with :success, :worktree_path, :branch, :error
           #
           # @example
           #   pr_data = { number: 26, title: "Add feature", head_branch: "feature/auth", base_branch: "main" }
-          #   result = creator.create_for_pr(pr_data, config)
-          #   # => { success: true, worktree_path: "/project/.ace-wt/pr-26", branch: "pr-26", tracking: "origin/feature/auth" }
-          def create_for_pr(pr_data, config, git_root: nil)
+          #   result = creator.create_for_pr(pr_data, config, source_ref: "FETCH_HEAD")
+          #   # => { success: true, worktree_path: ".../ace-pr-26", branch: "pr-26-add-feature", tracking: nil }
+          def create_for_pr(pr_data, config, git_root: nil, source_ref: nil, remote_tracking: nil)
             return error_result("PR data is required") unless pr_data
             return error_result("Configuration is required") unless config
+            return error_result("Verified source ref is required for PR checkout") if source_ref.nil? || source_ref.empty?
 
             begin
               # Determine git repository root
@@ -125,7 +132,6 @@ module Ace
 
               # Get PR-specific configuration (fallback to defaults)
               pr_config = config.pr_config || {}
-              remote_name = pr_config[:remote_name] || "origin"
               directory_format = pr_config[:directory_format] || "ace-pr-{number}"
               branch_format = pr_config[:branch_format] || "pr-{number}-{slug}"
 
@@ -140,27 +146,21 @@ module Ace
               validation = validate_worktree_path(worktree_path, git_root)
               return error_result(validation[:error]) unless validation[:valid]
 
-              # Fetch the remote branch
-              head_branch = pr_data[:head_branch]
-              fetch_result = fetch_remote_branch(remote_name, head_branch, git_root)
-              return error_result(fetch_result[:error]) unless fetch_result[:success]
-
-              # Create worktree with remote tracking
-              result = create_worktree_with_tracking(
-                worktree_path,
-                local_branch_name,
-                "#{remote_name}/#{head_branch}",
-                git_root,
-                configure_push: config.configure_push_for_mismatch?
-              )
+              # Create the worktree from the proven source ref
+              result = create_worktree(worktree_path, local_branch_name, git_root, start_point: source_ref)
               return result unless result[:success]
+
+              # Configure push behavior when tracking a differently-named branch
+              if remote_tracking && local_branch_name != extract_remote_branch_name(remote_tracking)
+                configure_push_for_worktree(worktree_path, local_branch_name, remote_tracking)
+              end
 
               # Success - return worktree information
               {
                 success: true,
                 worktree_path: worktree_path,
                 branch: local_branch_name,
-                tracking: "#{remote_name}/#{head_branch}",
+                tracking: remote_tracking,
                 directory_name: directory_name,
                 pr_number: pr_data[:number],
                 pr_title: pr_data[:title],
