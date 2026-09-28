@@ -36,7 +36,7 @@ module Ace
           option :in, type: :string, aliases: %w[-i], desc: "Filter by folder (next=root only [default], all=everything, maybe, archive)"
           option :root, type: :string, aliases: %w[-r], desc: "Override root path (subpath within tasks root)"
           option :filter, type: :array, aliases: %w[-f], desc: "Filter by key:value (repeatable, supports key:a|b and key:!value)"
-          option :sort, type: :string, aliases: %w[-S], desc: "Sort order: smart (default), id, priority, created"
+          option :sort, type: :string, aliases: %w[-S], desc: "Sort order: smart (default, dependency-aware), id, priority, created"
 
           option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
           option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
@@ -63,7 +63,8 @@ module Ace
 
             puts Ace::Task::Molecules::TaskDisplayFormatter.format_list(
               tasks, total_count: manager.last_list_total,
-              global_folder_stats: manager.last_folder_counts
+              global_folder_stats: manager.last_folder_counts,
+              cycle_ids: manager.last_list_cycle_ids
             )
           end
         end

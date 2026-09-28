@@ -113,8 +113,9 @@ module Ace
         # @param tasks [Array<Models::Task>] Tasks to format
         # @param total_count [Integer, nil] Total items before folder filtering
         # @param global_folder_stats [Hash, nil] Folder name → count hash from full scan
+        # @param cycle_ids [Array<String>] Dependency-cycle task ids to mark
         # @return [String] Formatted list output
-        def self.format_list(tasks, total_count: nil, global_folder_stats: nil)
+        def self.format_list(tasks, total_count: nil, global_folder_stats: nil, cycle_ids: [])
           stats_line = format_stats_line(
             tasks,
             total_count: total_count,
@@ -124,7 +125,7 @@ module Ace
           body = if tasks.empty?
             "No tasks found."
           else
-            tasks.map { |task| format_list_item(task) }.join("\n")
+            tasks.map { |task| format_list_item(task, cycle_ids: cycle_ids) }.join("\n")
           end
 
           "#{body}\n\n#{stats_line}"
@@ -203,7 +204,7 @@ module Ace
         private_class_method :format_up_next_section, :format_recently_done_section
 
         # Format a single task as a compact list item.
-        def self.format_list_item(task)
+        def self.format_list_item(task, cycle_ids: [])
           c = Ace::Support::Items::Atoms::AnsiColors
           status_sym = colored_status_sym(task.status)
           priority_sym = PRIORITY_LABELS[task.priority] || ""
@@ -219,8 +220,9 @@ module Ace
           subtask_str = task.has_subtasks? ? c.colorize(" \u203a#{task.subtasks.length}", c::DIM) : ""
           tags_str = (task.tags && task.tags.any?) ? c.colorize(" [#{task.tags.join(", ")}]", c::DIM) : ""
           folder_str = task.special_folder ? c.colorize(" (#{task.special_folder})", c::DIM) : ""
+          cycle_str = cycle_ids.include?(task.id) ? c.colorize(" \u21BAcycle", c::DIM) : ""
 
-          "#{status_sym} #{priority_prefix}#{id_str}  #{task.title}#{subtask_str}#{tags_str}#{folder_str}"
+          "#{status_sym} #{priority_prefix}#{id_str}  #{task.title}#{subtask_str}#{tags_str}#{folder_str}#{cycle_str}"
         end
 
         private_class_method :format_list_item

@@ -110,9 +110,41 @@ class ListCommandTest < AceTaskTestCase
     assert_match(/Tasks: ○ 1 • 1 of 2/, output)
   end
 
+  def test_list_smart_sort_orders_dependency_before_dependent
+    create_fixture_task("8pp.t.bbb", "Blocked dependent", priority: "high", dependencies: ["8pp.t.q7w"])
+
+    output = capture_io do
+      Ace::Task::TaskCLI.start(["list"])
+    end.first
+
+    assert_match(/8pp\.t\.q7w.*8pp\.t\.bbb/m, output)
+  end
+
+  def test_list_marks_dependency_cycles
+    create_fixture_task("8pp.t.ccc", "Cycle first", dependencies: ["8pp.t.ddd"])
+    create_fixture_task("8pp.t.ddd", "Cycle second", dependencies: ["8pp.t.ccc"])
+
+    output = capture_io do
+      Ace::Task::TaskCLI.start(["list"])
+    end.first
+
+    assert_equal 2, output.scan("\u21BAcycle").length
+  end
+
+  def test_list_literal_priority_sort_keeps_dependent_first
+    create_fixture_task("8pp.t.bbb", "Blocked dependent", priority: "high", dependencies: ["8pp.t.q7w"])
+
+    output = capture_io do
+      Ace::Task::TaskCLI.start(["list", "--sort", "priority"])
+    end.first
+
+    assert_match(/8pp\.t\.bbb.*8pp\.t\.q7w/m, output)
+    refute_includes output, "\u21BAcycle"
+  end
+
   private
 
-  def create_fixture_task(id, title, status: "pending", priority: "medium", tags: [], root: nil)
+  def create_fixture_task(id, title, status: "pending", priority: "medium", tags: [], dependencies: [], root: nil)
     slug = title.downcase.gsub(/[^a-z0-9]+/, "-").gsub(/-+$/, "")
     dir_name = "#{id}-#{slug}"
     base = root || @tasks_dir
@@ -126,11 +158,17 @@ class ListCommandTest < AceTaskTestCase
       ""
     end
 
+    deps_yaml = if dependencies.any?
+      "\ndependencies:\n" + dependencies.map { |d| "  - #{d}" }.join("\n")
+    else
+      ""
+    end
+
     content = <<~CONTENT
       ---
       id: #{id}
       status: #{status}
-      priority: #{priority}#{tags_yaml}
+      priority: #{priority}#{tags_yaml}#{deps_yaml}
       ---
 
       # #{title}

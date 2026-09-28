@@ -130,6 +130,65 @@ class TaskManagerTest < AceTaskTestCase
     assert_equal "High priority", tasks.first.title
   end
 
+  # --- dependency-aware smart sort ---
+
+  def test_list_smart_sort_orders_dependent_after_its_dependency
+    dependent = @manager.create("Blocked dependent", priority: "high")
+    dependency = @manager.create("Dependency root")
+    @manager.update(dependent.id, add: {"dependencies" => dependency.id})
+
+    tasks = @manager.list
+
+    assert_equal [dependency.id, dependent.id], tasks.map(&:id)
+    assert_empty @manager.last_list_cycle_ids
+  end
+
+  def test_list_smart_sort_keeps_task_with_archived_dependency_ready
+    dependency = @manager.create("Soon archived")
+    @manager.update(dependency.id, move_to: "archive")
+    filler = @manager.create("Low priority filler", priority: "low")
+    dependent = @manager.create("Ready dependent", priority: "high")
+    @manager.update(dependent.id, add: {"dependencies" => dependency.id})
+
+    tasks = @manager.list
+
+    assert_equal [dependent.id, filler.id], tasks.map(&:id)
+  end
+
+  def test_list_smart_sort_with_missing_dependency_stays_listed_in_tail
+    filler = @manager.create("Listed filler", priority: "low")
+    orphan = @manager.create("Orphan dependent", priority: "high", dependencies: ["zzz.t.nope"])
+
+    tasks = @manager.list
+
+    assert_equal 2, tasks.length
+    assert_equal [filler.id, orphan.id], tasks.map(&:id)
+    assert_empty @manager.last_list_cycle_ids
+  end
+
+  def test_list_smart_sort_reports_dependency_cycles
+    first = @manager.create("Cycle first")
+    second = @manager.create("Cycle second")
+    @manager.update(first.id, add: {"dependencies" => second.id})
+    @manager.update(second.id, add: {"dependencies" => first.id})
+
+    tasks = @manager.list
+
+    assert_equal tasks.map(&:id).sort, @manager.last_list_cycle_ids.sort
+    assert_equal 2, @manager.last_list_cycle_ids.length
+  end
+
+  def test_list_literal_sorts_ignore_dependencies
+    dependent = @manager.create("High priority dependent", priority: "high")
+    dependency = @manager.create("Pending dependency")
+    @manager.update(dependent.id, add: {"dependencies" => dependency.id})
+
+    assert_equal [dependent.id, dependency.id], @manager.list(sort: "priority").map(&:id)
+    assert_equal [dependent.id, dependency.id], @manager.list(sort: "id").map(&:id)
+    assert_equal [dependent.id, dependency.id], @manager.list(sort: "created").map(&:id)
+    assert_equal [dependency.id, dependent.id], @manager.list(sort: "smart").map(&:id)
+  end
+
   # --- update ---
 
   def test_update_sets_fields

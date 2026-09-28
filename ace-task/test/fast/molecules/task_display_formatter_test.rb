@@ -195,6 +195,20 @@ class TaskDisplayFormatterTest < AceTaskTestCase
     assert_includes output, "›1"
   end
 
+  def test_format_list_marks_cycle_tasks
+    tasks = [build_task, build_task(id: "8pp.t.r8x", title: "Other task")]
+    output = Ace::Task::Molecules::TaskDisplayFormatter.format_list(tasks, cycle_ids: ["8pp.t.q7w"])
+
+    assert_equal 1, output.scan("\u21BAcycle").length
+    assert_match(/Fix login bug.*\u21BAcycle/m, output)
+  end
+
+  def test_format_list_without_cycle_ids_renders_no_marker
+    output = Ace::Task::Molecules::TaskDisplayFormatter.format_list([build_task])
+
+    refute_includes output, "\u21BAcycle"
+  end
+
   def test_format_unknown_status_defaults_to_circle
     task = build_task(status: "unknown-status")
     output = Ace::Task::Molecules::TaskDisplayFormatter.format(task)

@@ -103,6 +103,18 @@ class TaskScannerTest < AceTaskTestCase
     assert_nil results.first.special_folder
   end
 
+  def test_scan_in_folder_exposes_full_scan_results
+    create_task_folder("8pp.t.q7w-fix-login")
+    maybe_dir = File.join(@tmpdir, "_maybe")
+    FileUtils.mkdir_p(maybe_dir)
+    create_task_in_dir(maybe_dir, "8pp.t.r8x-maybe-task")
+
+    scanner = Ace::Task::Molecules::TaskScanner.new(@tmpdir)
+    scanner.scan_in_folder("next")
+
+    assert_equal 2, scanner.last_scan_results.length
+  end
+
   def test_scan_in_folder_all_returns_everything
     create_task_folder("8pp.t.q7w-fix-login")
     maybe_dir = File.join(@tmpdir, "_maybe")

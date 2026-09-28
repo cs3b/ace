@@ -19,7 +19,7 @@ module Ace
         CREATE_RETRY_LIMIT = 3
         class CreateRetriesExhaustedError < StandardError; end
 
-        attr_reader :last_list_total, :last_folder_counts
+        attr_reader :last_list_total, :last_folder_counts, :last_list_cycle_ids
 
         # @param root_dir [String, nil] Override root directory for tasks
         # @param config [Hash, nil] Override configuration
@@ -27,6 +27,8 @@ module Ace
           @config = config || load_config
           @root_dir = root_dir || resolve_root_dir
           @last_update_note = nil
+          @last_list_cycle_ids = []
+          @last_scan_results = []
         end
 
         attr_reader :last_update_note
@@ -94,13 +96,15 @@ module Ace
         # @param in_folder [String, nil] Filter by special folder (default: "next" = root items only)
         # @param tags [Array<String>] Filter by tags (any match)
         # @param filters [Array<String>, nil] Generic filter strings
-        # @param sort [String] Sort order: "smart", "id", "priority", "created" (default: "smart")
+        # @param sort [String] Sort order: "smart" (default, dependency-aware), "id", "priority", "created"
         # @return [Array<Models::Task>] List of tasks
         def list(status: nil, in_folder: "next", tags: [], filters: nil, sort: "smart")
           scanner = Molecules::TaskScanner.new(@root_dir)
           scan_results = scanner.scan_in_folder(in_folder)
           @last_list_total = scanner.last_scan_total
           @last_folder_counts = scanner.last_folder_counts
+          @last_scan_results = scanner.last_scan_results
+          @last_list_cycle_ids = []
 
           loader = Molecules::TaskLoader.new
           tasks = scan_results.filter_map do |sr|
@@ -293,11 +297,36 @@ module Ace
         end
 
         def smart_sort(tasks)
-          Ace::Support::Items::Molecules::SmartSorter.sort(
+          result = Molecules::DependencyAwareSmartSorter.sort(
             tasks,
             score_fn: method(:compute_task_score),
-            pin_accessor: ->(t) { t.metadata&.dig("position") }
+            pin_accessor: ->(t) { t.metadata&.dig("position") },
+            external_statuses: external_dep_statuses(tasks)
           )
+          @last_list_cycle_ids = result.cycle_ids
+          result.tasks
+        end
+
+        # Load statuses for dependency references pointing outside the current
+        # listing (e.g. archived tasks), so smart sort can classify them as
+        # satisfied or unmet.
+        def external_dep_statuses(tasks)
+          listed_ids = {}
+          tasks.each { |t| listed_ids[t.id] = true }
+          external_ids = tasks.flat_map { |t| Array(t.dependencies) }.uniq - listed_ids.keys
+          return {} if external_ids.empty?
+
+          by_id = {}
+          @last_scan_results.each { |sr| by_id[sr.id] = sr }
+
+          loader = Molecules::TaskLoader.new
+          external_ids.each_with_object({}) do |dep_id, statuses|
+            scan_result = by_id[dep_id]
+            next unless scan_result
+
+            dep = loader.load(scan_result.dir_path, id: scan_result.id, special_folder: scan_result.special_folder)
+            statuses[dep_id] = [dep.status, dep.special_folder] if dep
+          end
         end
 
         def compute_task_score(task)
