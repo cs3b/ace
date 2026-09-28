@@ -47,14 +47,15 @@ module Ace
         # Interpret `pane process-info`. herdr serializes
         # `foreground_processes` with serde skip_serializing_if (v0.9.1
         # schema/panes.rs), so within a well-formed process_info object an
-        # absent or empty list IS the process-exit proof; anything alive
-        # appears as a non-empty array.
+        # OMITTED key is the process-exit proof; an explicit null or any
+        # non-array value is malformed evidence and preserves. Anything
+        # alive appears as a non-empty array.
         def process_evidence(executor, pane)
           info = dug_value(executor.pane_process_info(pane).parsed_json, "result", "process_info")
           return :unknown unless info.is_a?(Hash)
 
           processes = info["foreground_processes"]
-          return :unknown unless processes.nil? || processes.is_a?(Array)
+          return :unknown if info.key?("foreground_processes") && !processes.is_a?(Array)
 
           processes.to_a.empty? ? :process_exited : :active
         rescue PaneNotFoundError

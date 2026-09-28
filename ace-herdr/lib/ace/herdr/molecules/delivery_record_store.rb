@@ -17,13 +17,26 @@ module Ace
         #   the archive copy when the live record is gone — delivery
         #   idempotency (identical short-circuit, conflict fail-closed) must
         #   survive tidy archival
+        # @raise on malformed/unreadable content (fail closed: callers must
+        #   not treat a corrupt record as absent)
         def load(deliveries_dir, event_id)
-          path = path_for(deliveries_dir, event_id)
-          archived = File.join(archive_dir(deliveries_dir), "#{event_id}.json")
-          path = archived if !File.exist?(path) && File.exist?(archived)
-          return nil unless File.exist?(path)
+          path = resolve_record_path(deliveries_dir, event_id)
+          return nil unless path
 
           Models::DeliveryRecord.from_json(File.read(path))
+        end
+
+        # Tidy's lock-guarded revalidation load: like load, but a malformed
+        # or unreadable record decodes as :unreadable instead of raising
+        # (reported as preserved, never archived on unprovable evidence)
+        # @return [Models::DeliveryRecord, nil, :unreadable]
+        def load_revalidated(deliveries_dir, event_id)
+          path = resolve_record_path(deliveries_dir, event_id)
+          return nil unless path
+
+          Models::DeliveryRecord.from_h(JSON.parse(File.read(path)))
+        rescue JSON::ParserError, ArgumentError, TypeError, NoMethodError, Errno::EACCES
+          :unreadable
         end
 
         # @return [String] path the record was written to
@@ -109,6 +122,15 @@ module Ace
 
         def record_file?(path)
           File.file?(path) && !File.basename(path).start_with?(".")
+        end
+
+        # Live record path, falling back to the archive copy
+        def resolve_record_path(deliveries_dir, event_id)
+          live = path_for(deliveries_dir, event_id)
+          return live if File.exist?(live)
+
+          archived = File.join(archive_dir(deliveries_dir), "#{event_id}.json")
+          File.exist?(archived) ? archived : nil
         end
 
         # Decode a record file fail-closed: anything that is not a decodable

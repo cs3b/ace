@@ -328,6 +328,70 @@ module Ace
           assert_equal ["evt-b"], report[:deliveries][:archived].map { |e| e[:event_id] }
         end
 
+        def test_apply_preserves_non_object_json_turned_candidate_and_continues
+          save_record(record("evt-a", state: "delivered", updated_at: (CUTOFF_7D - 60).iso8601))
+          save_record(record("evt-b", state: "delivered", updated_at: (CUTOFF_7D - 120).iso8601))
+          probe_calls = 0
+          executor = HerdrTestHelper::FakeExecutor.new(outcomes: {
+            pane_list: pane_list_result(%w[w5:p2]),
+            agent_get: proc {
+              probe_calls += 1
+              File.write(File.join(@dir, "evt-a.json"), "null") if probe_calls == 2
+              agent_result("done")
+            }
+          })
+
+          report = tidy(executor).run(apply: true)
+
+          assert_equal [{id: "w5:p2"}], report[:panes][:closed]
+          assert_equal [{event_id: "evt-a", reason: "unreadable"}], report[:deliveries][:preserved]
+          assert_equal ["evt-b"], report[:deliveries][:archived].map { |e| e[:event_id] }
+        end
+
+        def test_discovery_preserves_non_object_json_files
+          File.write(File.join(@dir, "evt-null.json"), "null")
+          File.write(File.join(@dir, "evt-arr.json"), "[1,2]")
+          save_record(record("evt-ok", state: "delivered", updated_at: (CUTOFF_7D - 60).iso8601))
+
+          report = tidy(HerdrTestHelper::FakeExecutor.new).run
+
+          assert_equal ["evt-ok"], report[:deliveries][:candidates].map { |e| e[:event_id] }
+          assert_equal(
+            [
+              {event_id: "evt-arr", reason: "unreadable"},
+              {event_id: "evt-null", reason: "unreadable"}
+            ],
+            report[:deliveries][:preserved]
+          )
+        end
+
+        def test_apply_rechecks_eligibility_under_the_event_lock
+          # Another writer lands a state change while tidy waits for the
+          # lock: the lock-guarded reload must see it and refuse to archive
+          save_record(record("evt-old", state: "delivered", updated_at: (CUTOFF_7D - 60).iso8601))
+          replaced = record("evt-old", state: "retryable", updated_at: NOW.iso8601)
+          racing_store = Object.new
+          racing_store.define_singleton_method(:list_records) { |*args| Molecules::DeliveryRecordStore.list_records(*args) }
+          racing_store.define_singleton_method(:with_lock) do |*args, &block|
+            Molecules::DeliveryRecordStore.with_lock(*args, &block)
+          end
+          racing_store.define_singleton_method(:load_revalidated) do |dir, event_id|
+            Molecules::DeliveryRecordStore.save(replaced, dir) # writer lands before the reload
+            Molecules::DeliveryRecordStore.load_revalidated(dir, event_id)
+          end
+          racing_store.define_singleton_method(:archive) { |*args| Molecules::DeliveryRecordStore.archive(*args) }
+
+          report = Tidy.new(
+            executor: HerdrTestHelper::FakeExecutor.new,
+            record_store: racing_store, deliveries_dir: @dir,
+            retention_days: Tidy::DEFAULT_RETENTION_DAYS, clock: @clock
+          ).run(apply: true)
+
+          assert_equal [], report[:deliveries][:archived]
+          assert_equal [{event_id: "evt-old", reason: "changed"}], report[:deliveries][:preserved]
+          assert_equal "retryable", Molecules::DeliveryRecordStore.load(@dir, "evt-old").state
+        end
+
         def test_apply_tolerates_record_archived_concurrently_after_discovery
           save_record(record("evt-old", state: "delivered", updated_at: (CUTOFF_7D - 60).iso8601))
           probe_calls = 0

@@ -133,6 +133,17 @@ module Ace
           assert_equal :unknown, evidence
         end
 
+        def test_explicit_null_foreground_processes_preserve
+          _, evidence = probe(
+            agent_get: AgentNotFoundError.new("agent_not_found: gone"),
+            pane_process_info: native_result(result: {
+              process_info: {"foreground_processes" => nil, "pane_id" => "w5:p1"}
+            })
+          )
+
+          assert_equal :unknown, evidence
+        end
+
         def test_vanished_pane_reports_gone
           outcomes = {
             agent_get: PaneNotFoundError.new("pane_not_found: gone"),

@@ -126,33 +126,27 @@ module Ace
           end
         end
 
-        # Re-load each candidate under its per-event lock and archive only
-        # when it still proves eligible; a changed, vanished, or unreadable
-        # record stays in place and is reported as preserved
+        # For each candidate: reload, re-check eligibility, and archive —
+        # all inside the per-event lock, so a record changed by another
+        # writer is re-evaluated, never archived on a stale snapshot. A
+        # vanished or unreadable record stays in place and is reported.
         def archive_deliveries!(report)
           report[:deliveries][:candidates].each do |candidate|
             event_id = candidate[:event_id]
-            fresh =
-              begin
-                @record_store.load(@deliveries_dir, event_id)
-              rescue JSON::ParserError, ArgumentError, Errno::EACCES
-                :unreadable
-              end
-            if fresh == :unreadable
-              report[:deliveries][:preserved] << {event_id: event_id, reason: "unreadable"}
-              next
-            end
-
-            archive_path = nil
+            outcome = nil
             @record_store.with_lock(@deliveries_dir, event_id) do
-              next unless fresh&.delivered? && older_than_retention?(fresh)
-
-              archive_path = @record_store.archive(@deliveries_dir, event_id)
+              fresh = @record_store.load_revalidated(@deliveries_dir, event_id)
+              if fresh == :unreadable
+                outcome = {reason: "unreadable"}
+              elsif fresh&.delivered? && older_than_retention?(fresh)
+                outcome = {archive_path: @record_store.archive(@deliveries_dir, event_id)}
+              end
             end
-            if archive_path
-              report[:deliveries][:archived] << {event_id: event_id, archive_path: archive_path}
+            if outcome&.key?(:archive_path)
+              report[:deliveries][:archived] << {event_id: event_id, archive_path: outcome[:archive_path]}
             else
-              report[:deliveries][:preserved] << {event_id: event_id, reason: "changed"}
+              reason = outcome && outcome[:reason]
+              report[:deliveries][:preserved] << {event_id: event_id, reason: reason || "changed"}
             end
           end
         end
