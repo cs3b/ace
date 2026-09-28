@@ -56,9 +56,9 @@ async function startSession(host) {
       await found[1]({ type: "session_start", reason: "reload" }, host.commandContext);
     },
     settle: () => handlerFor("agent_settled")({ type: "agent_settled" }, host.commandContext),
-    beforeCompact: () => handlerFor("session_before_compact")({ type: "session_before_compact" }, host.commandContext),
-    compacted: () => handlerFor("session_compact")({ type: "session_compact", trigger: "manual" }, host.commandContext),
-    compactFailed: () => handlerFor("session_compact_failed")({ type: "session_compact_failed", trigger: "manual" }, host.commandContext),
+    beforeCompact: (reason = "manual") => handlerFor("session_before_compact")({ type: "session_before_compact", reason }, host.commandContext),
+    compacted: (reason = "manual") => handlerFor("session_compact")({ type: "session_compact", reason, trigger: "manual" }, host.commandContext),
+    compactFailed: (reason = "manual") => handlerFor("session_compact_failed")({ type: "session_compact_failed", reason, trigger: "manual" }, host.commandContext),
     shutdown: () => handlerFor("session_shutdown")({ type: "session_shutdown" }, host.commandContext),
   };
 }
@@ -271,6 +271,27 @@ describe("ace-wake delivery", () => {
     await session.compactFailed();
     await new Promise((resolve) => setTimeout(resolve, 20));
     assert.equal(host.sends.length, 1, "retained wakes flush after failed compaction too");
+  });
+
+  it("leaves pending wakes untouched across automatic compaction", async () => {
+    const host = createFakeHost();
+    const session = await startSession(host);
+    host.setFile("/fake/project/dep.txt", { mtimeMs: 1, size: 1 });
+    await host.runCommand("watch", "add dep --path dep.txt --message watch wake");
+
+    // The wake is pending (its turn is executing) when automatic compaction
+    // (context threshold) fires mid-run: retention must not kick in and the
+    // flush must not replay the already accepted wake.
+    host.setFile("/fake/project/dep.txt", { mtimeMs: 2, size: 2 });
+    host.triggerWatch("/fake/project/dep.txt");
+    assert.equal(host.sends.length, 1);
+
+    await session.beforeCompact("threshold");
+    await session.compacted("threshold");
+    await new Promise((resolve) => setTimeout(resolve, 20));
+
+    assert.equal(host.sends.length, 1, "automatic compaction must not replay the accepted wake");
+    await session.settle();
   });
 
   it("reconciles a timer wake stranded by the pre-compaction rejection window", async () => {

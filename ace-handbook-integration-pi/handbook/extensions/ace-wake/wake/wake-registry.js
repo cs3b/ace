@@ -38,6 +38,8 @@ export class WakeRegistry {
   #retaining;
   /** @private @type {Map<string, {prefix: string, name: string, message: string}>} */
   #retained;
+  /** @private @type {{retained: Array<{prefix: string, name: string, message: string}>, stranded: Array<[string, string]>} | undefined} */
+  #reconcileBatch;
   /** @private @type {import("./types.js").WakeSnapshot | undefined} */
   #loaded;
 
@@ -210,6 +212,7 @@ export class WakeRegistry {
   dispose() {
     this.#retaining = false;
     this.#retained.clear();
+    this.#reconcileBatch = undefined;
     this.#loops.stopAll();
     this.#watches.stopAll();
     this.#status.render([]);
@@ -247,32 +250,35 @@ export class WakeRegistry {
    */
   resumeDelivery() {
     this.#retaining = false;
-    const timer = setTimeout(() => this.flushRetained(), 0);
-    // Never hold the host process open on the extension's behalf.
-    timer.unref?.();
-    return timer;
+    // Capture the reconciliation batch at the resume boundary: every pending
+    // marker at this moment is stale (rejected in the pre-compaction window
+    // or consumed without acknowledgement), while wakes queued afterwards are
+    // legitimate and must never be replayed by a later flush.
+    this.#reconcileBatch = {
+      retained: [...this.#retained.values()],
+      stranded: this.#dispatcher.pendingEntries(),
+    };
+    this.#retained.clear();
+    this.#dispatcher.settleAll();
   }
 
   /**
-   * Reconcile a delivery boundary that bypasses the normal settlement signal
-   * (manual compaction rejects prompts asynchronously and never emits
-   * agent_settled): every pending marker is stale at this point — its wake
-   * was rejected or consumed without acknowledgement — so retained wakes and
-   * all stranded attempts go out fresh. Changes absorbed before dispatch
-   * (coalesced) are reconciled separately by flushDirty.
+   * Dispatch the reconciliation batch captured at the last resume boundary:
+   * retained wakes plus stranded pre-boundary attempts. Consumed exactly
+   * once — later calls are no-ops, so a flush can never replay wakes that
+   * were legitimately re-queued after the boundary. Called by the adapter's
+   * readiness-poll after manual compaction and by agent_settled.
    */
   flushRetained() {
-    const retained = [...this.#retained.values()];
-    const stranded = this.#dispatcher.pendingEntries();
-    if (retained.length === 0 && stranded.length === 0) {
+    const batch = this.#reconcileBatch;
+    if (!batch || (batch.retained.length === 0 && batch.stranded.length === 0)) {
       return;
     }
-    this.#dispatcher.settleAll();
-    this.#retained.clear();
-    for (const wake of retained) {
+    this.#reconcileBatch = undefined;
+    for (const wake of batch.retained) {
       this.#fire(wake.prefix, wake.name, wake.message);
     }
-    for (const [sourceKey, text] of stranded) {
+    for (const [sourceKey, text] of batch.stranded) {
       this.#dispatcher.wake(sourceKey, text);
     }
     this.#refreshStatus();

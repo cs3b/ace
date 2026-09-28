@@ -85,23 +85,68 @@ export default function (pi, ports = {}) {
     runtime?.registry.settleAll();
   });
 
-  // Manual compaction rejects sendUserMessage asynchronously and never emits
-  // agent_settled, so wakes arriving during compaction are retained locally
-  // and flushed when compaction completes or fails.
-  pi.on("session_before_compact", async () => {
-    runtime?.registry.pauseDelivery();
+  // Manual compaction rejects sendUserMessage asynchronously (before, during,
+  // and briefly after the compaction events) and never emits agent_settled:
+  // wakes are retained while it runs and flushed once the context is actually
+  // idle again. Automatic compaction happens inside a run whose pending wakes
+  // stay legitimately queued, so it is left untouched.
+  pi.on("session_before_compact", async (event) => {
+    if (event.reason === "manual") {
+      runtime?.registry.pauseDelivery();
+    }
   });
-  pi.on("session_compact", async () => {
-    runtime?.registry.resumeDelivery();
+  pi.on("session_compact", async (event, ctx) => {
+    if (event.reason === "manual") {
+      runtime?.registry.resumeDelivery();
+      scheduleManualCompactionFlush(ctx);
+    }
   });
-  pi.on("session_compact_failed", async () => {
-    runtime?.registry.resumeDelivery();
+  pi.on("session_compact_failed", async (event, ctx) => {
+    if (event.reason === "manual") {
+      runtime?.registry.resumeDelivery();
+      scheduleManualCompactionFlush(ctx);
+    }
   });
 
   pi.on("session_shutdown", async () => {
     runtime?.registry.dispose();
     runtime = undefined;
   });
+
+  /**
+   * Poll until the host context is genuinely idle (no run, no compaction) and
+   * then flush retained wakes. A single deferred callback is not enough: other
+   * session_compact handlers may await asynchronous work while Pi still rejects
+   * prompts. Bounded polling covers the idle-after-compaction case; a run that
+   * continues after compaction flushes via agent_settled instead.
+   */
+  function scheduleManualCompactionFlush(ctx) {
+    const pollMs = 100;
+    const maxAttempts = 50;
+    let attempts = 0;
+    const attempt = () => {
+      if (!runtime) {
+        return;
+      }
+      let idle;
+      try {
+        idle = ctx.isIdle();
+      } catch {
+        return; // Stale context: session_start rebinds.
+      }
+      if (idle) {
+        runtime.registry.flushRetained();
+        return;
+      }
+      attempts += 1;
+      if (attempts >= maxAttempts) {
+        return;
+      }
+      const timer = setTimeout(attempt, pollMs);
+      timer.unref?.();
+    };
+    attempt();
+  }
 }
 
 function createRegistry(pi, ctx, ports) {
