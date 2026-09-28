@@ -22,6 +22,7 @@ require_relative "test_support/fixtures/http_mocks"  # Shared HTTP mocks for LLM
 require_relative "test_support/fixtures/prompt_helpers"  # Shared prompt stubbing helpers
 require_relative "test_support/fixtures/test_runner_mocks"  # Shared test runner mocks
 require_relative "test_support/provider_contract"  # Provider contract parity suite for forge provider gems
+require_relative "test_support/pull_request_lifecycle_contract"  # PR lifecycle contract parity suite
 
 # Configure Minitest reporters by default
 Minitest::Reporters.use! Minitest::Reporters::SpecReporter.new
