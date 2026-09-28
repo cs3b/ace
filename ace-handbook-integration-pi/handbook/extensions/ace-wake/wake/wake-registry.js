@@ -435,9 +435,10 @@ export class WakeRegistry {
    * settlement re-fires the change.
    */
   #revertInFlightWatchAttempts() {
-    for (const name of this.#inFlightWatchNames) {
-      this.#watches.revertToDelivered(name);
+    if (this.#inFlightWatchNames.size === 0) {
+      return;
     }
+    this.#watches.revertToDelivered([...this.#inFlightWatchNames]);
     this.#inFlightWatchNames.clear();
   }
 
@@ -512,7 +513,6 @@ export class WakeRegistry {
     this.#revertInFlightWatchAttempts();
     this.#watches.flushDirty((watch) => this.#fire(WATCH_SOURCE_PREFIX, watch.name, watch.message));
     this.#refreshStatus();
-    // The next dispatch re-arms the window; recovery re-evaluates then.
   }
 
   #scheduleRecovery() {
