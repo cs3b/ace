@@ -414,26 +414,29 @@ describe("ace-wake delivery", () => {
     assert.equal(host.sends.length, 3, "the source may wake again after the agent settled");
   });
 
-  it("recovers delivery when an accepted wake is rejected without any lifecycle event", async () => {
+  it("surfaces unresolved delivery and reconciles at the next settlement", async () => {
     const host = createFakeHost();
     // The fake host accepts the send synchronously (like Pi's void API) but
     // rejects it in async preflight: nothing enters Pi's message queue and
-    // no lifecycle event ever fires.
+    // no lifecycle event ever fires. Recovery cannot distinguish this from
+    // a slow startup, so it only surfaces the state; the next settlement
+    // reconciles.
     const session = await startSession(host, { dispatchRecoveryMs: 20 });
     await host.runCommand("loop", "add heartbeat --interval 10 --message check in");
     await host.runCommand("loop", "add other --interval 10 --message other wake");
 
     host.clock.advance(10_000);
     assert.equal(host.sends.length, 1, "the first wake dispatches");
-    host.setPendingMessages(false);
 
-    // Recovery window expires: the unacknowledged attempts' markers clear,
-    // so later wakes re-attempt immediately.
     await new Promise((resolve) => setTimeout(resolve, 40));
     host.clock.advance(10_000);
-    assert.ok(host.sends.length >= 2, "subsequent wakes re-attempt after recovery");
+    assert.equal(host.sends.length, 1, "no replay while delivery is unresolved — coalescing holds");
 
+    // Any settlement (e.g. the user conversing) reconciles: the next tick
+    // delivers.
     await session.settle();
+    host.clock.advance(10_000);
+    assert.ok(host.sends.length >= 2, "ticks deliver again after the reconciling settlement");
   });
 
   it("does not duplicate a queued follow-up while a run outlasts the recovery window", async () => {

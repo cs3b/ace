@@ -46,10 +46,10 @@ export class WakeRegistry {
   #dispatchRecoveryTimer;
   /** @private @type {number} */
   #dispatchRecoveryMs;
-  /** @private @type {(() => boolean) | undefined} */
-  #isHostIdle;
-  /** @private @type {(() => boolean) | undefined} */
-  #isHostQueued;
+  /** @private @type {Timeout | undefined} */
+  #recoveryTimer;
+  /** @private @type {boolean} */
+  #deliveryUnresolved;
   /** @private @type {boolean} */
   #disposed;
 
@@ -66,7 +66,7 @@ export class WakeRegistry {
    * @param {object} ports.status
    * @param {import("./wake-dispatcher.js").WakeDispatcher} ports.dispatcher
    */
-  constructor({ loops, watches, state, status, dispatcher, dispatchRecoveryMs = 5000, isHostIdle, isHostQueued }) {
+  constructor({ loops, watches, state, status, dispatcher, dispatchRecoveryMs = 5000 }) {
     this.#loops = loops;
     this.#watches = watches;
     this.#state = state;
@@ -84,10 +84,8 @@ export class WakeRegistry {
     this.#dispatchRecoveryTimer;
     /** @private @type {number} */
     this.#dispatchRecoveryMs = dispatchRecoveryMs;
-    /** @private @type {(() => boolean) | undefined} */
-    this.#isHostIdle = isHostIdle;
-    /** @private @type {(() => boolean) | undefined} */
-    this.#isHostQueued = isHostQueued;
+    /** @private @type {boolean} */
+    this.#deliveryUnresolved = false;
     /** @private @type {boolean} */
     this.#disposed = false;
   }
@@ -244,8 +242,9 @@ export class WakeRegistry {
     this.#retaining = false;
     this.#resuming = false;
     this.#disposed = true;
+    this.#deliveryUnresolved = false;
     this.#dispatchPending = false;
-    clearTimeout(this.#dispatchRecoveryTimer);
+    clearTimeout(this.#recoveryTimer);
     this.#retained.clear();
     this.#reconcileBatch = undefined;
     this.#loops.stopAll();
@@ -263,6 +262,7 @@ export class WakeRegistry {
     // A settlement is proof the host accepts prompts again; a manual
     // compaction that is still resuming completes its boundary here so the
     // stranded attempts reconcile instead of being silently cleared.
+    this.#deliveryUnresolved = false;
     if (this.#resuming) {
       this.completeResume();
     } else {
@@ -428,6 +428,7 @@ export class WakeRegistry {
    * so the serialization window closes and retained wakes drain immediately.
    */
   noteRunStarted() {
+    this.#deliveryUnresolved = false;
     this.#dispatchPending = false;
     this.#drainRetained();
   }
@@ -438,59 +439,36 @@ export class WakeRegistry {
     // sends queue safely as follow-ups from then on), and any settlement
     // proves the host accepts prompts again.
     this.#dispatchPending = true;
-    this.#scheduleRecovery();
+    clearTimeout(this.#recoveryTimer);
+    this.#recoveryTimer = setTimeout(() => this.recoverUnacknowledgedDispatch(), this.#dispatchRecoveryMs);
+    this.#recoveryTimer.unref?.();
   }
 
   /**
    * Recovery for attempts no lifecycle transition ever acknowledged: Pi's
    * void sendUserMessage API reports preflight failures (no model, broken
-   * authentication) only asynchronously, so an in-flight marker with no
-   * agent_start after the recovery window is presumed dead. Coalescing and
-   * serialization markers clear, letting the natural triggers (the next
-   * tick, the next file change) re-attempt at a bounded rate instead of
-   * stranding delivery permanently.
+   * authentication) only asynchronously, and isIdle() is also true while a
+   * submitted prompt waits in long asynchronous startup hooks — so no timer
+   * can distinguish a rejected attempt from an unresolved one. Recovery
+   * therefore only surfaces the unresolved state on the status surface and
+   * leaves every marker untouched: coalescing is preserved, and the next
+   * lifecycle boundary (agent_start, agent_settled, compaction resume)
+   * reconciles delivery.
    */
   recoverUnacknowledgedDispatch() {
-    if (this.#disposed || !this.#dispatchPending) {
+    if (this.#disposed || !this.#dispatchPending || this.#deliveryUnresolved) {
       return;
     }
-    let queued = true;
-    let idle = false;
-    try {
-      // The discriminators the void API still provides: a wake Pi accepted
-      // sits in its queue (pendingMessages true) until processing begins, and
-      // while anything is running the context is not idle. Only an idle
-      // context with an empty queue proves the attempt died in preflight —
-      // an empty queue during active processing is a consumed follow-up.
-      queued = this.#isHostQueued?.() ?? true;
-      idle = this.#isHostIdle?.() ?? false;
-    } catch {
-      queued = true;
-      idle = false;
-    }
-    if (queued || !idle) {
-      // Accepted (queued or being processed): the pending marker is
-      // legitimate. Re-check after another window; agent_settled settles it.
-      this.#scheduleRecovery();
-      return;
-    }
-
-    // Idle with nothing queued: the attempt died in preflight. Release the
-    // coalescing marker and revert exactly the stranded watch fingerprints
-    // so the next natural trigger re-fires their change — bounded retry, no
-    // loss, and previously settled deliveries stay untouched.
-    const strandedKeys = this.#dispatcher.pendingEntries().map(([sourceKey]) => sourceKey);
-    this.#dispatchPending = false;
-    this.#dispatcher.settleAll();
-    this.#watches.markDispatchUnacknowledged(strandedKeys);
-    this.#watches.flushDirty((watch) => this.#fire(WATCH_SOURCE_PREFIX, watch.name, watch.message));
+    this.#deliveryUnresolved = true;
     this.#refreshStatus();
   }
 
-  #scheduleRecovery() {
-    clearTimeout(this.#dispatchRecoveryTimer);
-    this.#dispatchRecoveryTimer = setTimeout(() => this.recoverUnacknowledgedDispatch(), this.#dispatchRecoveryMs);
-    this.#dispatchRecoveryTimer.unref?.();
+  /** Clear the unresolved marker once a lifecycle boundary reconciled. */
+  markDeliveryResolved() {
+    if (this.#deliveryUnresolved) {
+      this.#deliveryUnresolved = false;
+      this.#refreshStatus();
+    }
   }
 
   #drainRetained() {
