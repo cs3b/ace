@@ -361,13 +361,27 @@ class Ace::Handbook::Organisms::ProviderSyncerTest < Minitest::Test
     FileUtils.rm_f(receipt_path)
     FileUtils.ln_s(victim, receipt_path)
 
-    syncer.sync(provider: "pi")
+    # An unreadable receipt claims nothing, so the projection refuses rather
+    # than guessing ownership — and never writes through the symlink.
+    error = assert_raises(StandardError) { syncer.sync(provider: "pi") }
 
+    assert_includes error.message, "refusing to overwrite"
     assert_equal "precious content", File.read(victim), "the receipt write must truncate the symlink target"
-    assert File.file?(receipt_path), "the receipt must exist after sync"
-    refute File.symlink?(receipt_path), "the receipt write must replace the symlink, not follow it"
-    receipt = JSON.parse(File.read(receipt_path))
-    assert_equal ["ace-wake.mjs"], receipt.fetch("files")
+    assert File.symlink?(receipt_path), "the refused sync must leave the receipt untouched"
+  end
+
+  def test_sync_refuses_conflicting_writes_when_the_receipt_is_corrupt
+    create_provider_manifest("pi", ".pi/skills", extensions_dir: ".pi/extensions")
+    create_extension_asset("pi", "ace-wake/index.js", "export const v = 1;\n")
+    extensions_dir = File.join(@tmpdir, ".pi", "extensions")
+    FileUtils.mkdir_p(File.join(extensions_dir, "ace-wake"))
+    File.write(File.join(extensions_dir, "ace-wake", "index.js"), "\"user content\"")
+    File.write(File.join(extensions_dir, ".ace-handbook-projection.json"), "{ not json")
+
+    error = assert_raises(StandardError) { syncer.sync(provider: "pi") }
+
+    assert_includes error.message, "refusing to overwrite"
+    assert_equal "\"user content\"", File.read(File.join(extensions_dir, "ace-wake", "index.js"))
   end
 
   def test_sync_rejects_receipt_paths_through_symlinked_components
@@ -402,7 +416,7 @@ class Ace::Handbook::Organisms::ProviderSyncerTest < Minitest::Test
     error = assert_raises(StandardError) { syncer.sync(provider: "pi") }
 
     assert_includes error.message, "refusing to overwrite"
-    assert_includes error.message, "not part of this package's projection receipt"
+    assert_includes error.message, "not claimed by a valid projection receipt"
     assert_equal "{\"dependencies\": {\"user-pkg\": \"1.0.0\"}}\n", File.read(File.join(extensions_dir, "ace-wake", "package.json"))
   end
 

@@ -189,13 +189,11 @@ module Ace
           FileUtils.mkdir_p(output_dir)
 
           receipt = read_projection_receipt(output_dir)
-          receipt_path = File.join(output_dir, EXTENSION_RECEIPT_NAME)
-          # A present-but-unreadable receipt (symlink, corrupt JSON) still
-          # claims ownership of the expected paths — the projection happened
-          # and the atomic receipt write below takes the path back. Only an
-          # absent receipt leaves destination files unowned.
-          receipt_present = File.symlink?(receipt_path) || File.file?(receipt_path)
-          owned_paths = receipt&.fetch("files", []) || (receipt_present ? expected.keys : [])
+          # Ownership requires a valid receipt from this projection explicitly
+          # listing the path. A missing, symlinked, or corrupt receipt leaves
+          # ownership unknown: any conflicting destination file is refused so
+          # user-authored extensions can never be overwritten on a guess.
+          owned_paths = receipt&.fetch("files", []) || []
           reject_unowned_collisions(output_dir, expected.keys, owned_paths)
 
           removed_entries = prune_stale_extension_files(output_dir, expected.keys)
@@ -237,7 +235,7 @@ module Ace
             next if candidate.nil? || !File.exist?(candidate)
 
             raise StandardError,
-                  "refusing to overwrite existing file #{candidate}; it is not part of this package's projection receipt. Move or remove it, then rerun `ace-handbook sync`."
+                  "refusing to overwrite existing file #{candidate}; it is not claimed by a valid projection receipt (missing, symlinked, or corrupt receipts claim nothing). Move or remove the file — or repair or remove #{File.join(output_dir, EXTENSION_RECEIPT_NAME)} — then rerun `ace-handbook sync`."
           end
         end
 
