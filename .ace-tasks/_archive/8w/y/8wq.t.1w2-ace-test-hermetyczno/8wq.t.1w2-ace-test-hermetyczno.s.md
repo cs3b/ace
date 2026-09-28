@@ -1,6 +1,6 @@
 ---
 id: 8wq.t.1w2
-status: in-progress
+status: done
 priority: high
 created_at: "2026-09-27 01:15:38"
 estimate: TBD
@@ -37,9 +37,9 @@ Existing `ace-test PACKAGE [all]` and `ace-test-suite` become hermetic by defaul
 
 ### Success Criteria and Verification Plan
 
-- [ ] SC1: Run the same fixture suite under clean env and poisoned LAB_*/ACE/runtime vars/home config; results and selected endpoints match and no live connection occurs.
-- [ ] SC2: Verify fixture-specific environment survives, parent environment is unchanged, parallel/nested subprocess paths share isolation.
-- [ ] SC3: Run `ace-test ace-test all`, affected runner suites and `ace-test-suite`; no package test via raw bundle exec ruby/rake.
+- [x] SC1: Run the same fixture suite under clean env and poisoned LAB_*/ACE/runtime vars/home config; results and selected endpoints match and no live connection occurs.
+- [x] SC2: Verify fixture-specific environment survives, parent environment is unchanged, parallel/nested subprocess paths share isolation.
+- [x] SC3: Run `ace-test ace-test all`, affected runner suites and `ace-test-suite`; no package test via raw bundle exec ruby/rake.
 
 ### Scope and Ownership
 
