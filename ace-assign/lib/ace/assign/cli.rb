@@ -9,6 +9,10 @@ require_relative "models/assignment"
 require_relative "models/step"
 require_relative "models/queue_state"
 require_relative "models/assignment_info"
+require_relative "models/attempt_binding"
+require_relative "models/attempt"
+require_relative "models/execution_receipt"
+require_relative "models/evidence_event"
 
 # Atoms
 require_relative "atoms/step_numbering"
@@ -22,6 +26,9 @@ require_relative "atoms/catalog_loader"
 require_relative "atoms/composition_rules"
 require_relative "atoms/assign_frontmatter_parser"
 require_relative "atoms/tree_formatter"
+require_relative "atoms/attempt_state_machine"
+require_relative "atoms/evidence_digest"
+require_relative "atoms/assignment_scope"
 
 # Molecules
 require_relative "molecules/assignment_manager"

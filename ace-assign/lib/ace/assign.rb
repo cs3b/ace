@@ -60,6 +60,62 @@ module Ace
       class InvalidState < Error; end
     end
 
+    # Attempt/evidence-related errors (exit code 5)
+    module AttemptErrors
+      class InvalidTransition < Error
+        def initialize(message = "Illegal attempt state transition")
+          super(message, exit_code: 5)
+        end
+      end
+
+      class InvalidScope < Error
+        def initialize(message = "Invalid attempt scope")
+          super(message, exit_code: 5)
+        end
+      end
+
+      # Duplicate start with a conflicting binding for an owned subtree
+      class Conflict < Error
+        def initialize(message = "Conflicting active attempt for scope")
+          super(message, exit_code: 5)
+        end
+      end
+
+      class NotFound < Error
+        def initialize(message = "Attempt not found")
+          super(message, exit_code: 5)
+        end
+      end
+
+      # Untrusted or unknown execution identity; authority fails closed
+      class UnauthorizedIdentity < Error
+        def initialize(message = "Unknown or unauthorized execution identity")
+          super(message, exit_code: 5)
+        end
+      end
+
+      # Receipt failed verification (binding, head, digest, artifacts, review)
+      class ReceiptRejected < Error
+        def initialize(message = "Receipt rejected")
+          super(message, exit_code: 5)
+        end
+      end
+
+      # Attempt state forbids the requested effect (terminal, uncertain, blocked)
+      class InvalidState < Error
+        def initialize(message = "Attempt state forbids the requested operation")
+          super(message, exit_code: 5)
+        end
+      end
+
+      # Evidence storage is missing or unwritable; external effects are blocked
+      class EvidenceUnavailable < Error
+        def initialize(message = "Evidence storage unavailable")
+          super(message, exit_code: 5)
+        end
+      end
+    end
+
     # Define module namespaces
     module Commands; end
 
