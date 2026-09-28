@@ -68,7 +68,8 @@ module Ace
             existing = @store.active(assignment_id, scope) ||
               journal_actives.find { |attempt| Atoms::AssignmentScope.equal?(attempt.binding.scope, scope) }
             if existing
-              if existing.binding.project_id == project && existing.binding.task_id == assignment.task_id
+              if existing.binding.project_id == project && existing.binding.task_id == assignment.task_id &&
+                  existing.binding.actor == identity.actor && existing.binding.role == identity.role
                 return existing
               end
 
@@ -96,6 +97,7 @@ module Ace
                 events: events
               )
               attempt = attempt.with(journal_commit: commit)
+              attempt = yield_lost_ownership_race(attempt, assignment_id, scope)
             else
               attempt = attempt.with(events: events)
             end
@@ -185,6 +187,11 @@ module Ace
               recover_managed_attempt(probe.binding.assignment_id, attempt_id)
             raise AttemptErrors::NotFound, "Attempt '#{attempt_id}' not found" unless attempt
 
+            derived = ensure_journal_consistent!(attempt, allow_uncertain: true) if attempt.managed?
+            # The journal is authoritative for managed attempts: uncertainty
+            # journaled after the local save drives reconciliation.
+            attempt = attempt.with(state: derived.state) if derived&.state == "uncertain" && attempt.state == "running"
+
             if attempt.terminal?
               raise AttemptErrors::InvalidState, "Attempt #{attempt_id} is terminal; accepted history is immutable"
             end
@@ -225,22 +232,10 @@ module Ace
         end
 
         # Active attempts derived from the authoritative journal, used when
-        # the local record may be missing (lost or wiped cache). Reconstructs
-        # bindings from recorded intent/process_start facts.
+        # the local record may be missing (lost or wiped cache). Derivation
+        # lives in the journal (owner of attempt-state interpretation).
         def active_journal_attempts(assignment)
-          events = journal_for.read_events(assignment.id)
-          by_attempt = events.group_by { |event| event["attempt_id"] }
-          by_attempt.delete(nil)
-
-          by_attempt.filter_map do |attempt_id, attempt_events|
-            intent = attempt_events.find { |event| event["type"] == "intent" }
-            next unless intent
-
-            state = derive_journal_state(attempt_events)
-            next if %w[succeeded failed stopped].include?(state)
-
-            recover_attempt_from_events(assignment.id, attempt_id, intent["payload"], attempt_events, state)
-          end
+          journal_for.active_attempts(assignment.id)
         end
 
         # Recover a managed attempt from the journal when the local record is
@@ -253,89 +248,48 @@ module Ace
           assignments.each do |assignment|
             next unless assignment.managed?
 
-            attempt = attempt_from_journal(assignment, attempt_id)
+            attempt = journal_for.derived_attempts(assignment.id).find { |candidate| candidate.attempt_id == attempt_id }
             return attempt if attempt
           end
 
           nil
         end
 
-        def attempt_from_journal(assignment, attempt_id)
-          events = journal_for.read_events(assignment.id)
-          attempt_events = events.select { |event| event["attempt_id"] == attempt_id }
-          intent = attempt_events.find { |event| event["type"] == "intent" }
-          return nil unless intent
-
-          state = derive_journal_state(attempt_events)
-          recovered = recover_attempt_from_events(assignment.id, attempt_id, intent["payload"], attempt_events, state)
-          return recovered if %w[running uncertain].include?(state)
-
-          Models::Attempt.new(binding: recovered.binding, state: state, journal_commit: journal_for.ref_value)
-        end
-
         # The journal is authoritative for managed attempts: a crash after a
         # journaled terminal/uncertain event but before the local save must
         # not admit contradictory transitions.
-        def ensure_journal_consistent!(attempt)
-          events = journal_for.read_events(attempt.binding.assignment_id)
-            .select { |event| event["attempt_id"] == attempt.attempt_id }
-          return if events.empty?
+        def ensure_journal_consistent!(attempt, allow_uncertain: false)
+          derived = journal_for.derived_attempts(attempt.binding.assignment_id)
+            .find { |candidate| candidate.attempt_id == attempt.attempt_id }
+          return if derived.nil?
 
-          journal_state = derive_journal_state(events)
+          journal_state = derived.state
           if %w[succeeded failed stopped].include?(journal_state)
             raise AttemptErrors::InvalidState,
               "Journal shows attempt #{attempt.attempt_id} is #{journal_state}; accepted history is immutable"
           end
-          return unless journal_state == "uncertain" && !attempt.uncertain?
+          return derived if allow_uncertain || journal_state != "uncertain" || attempt.uncertain?
 
           raise AttemptErrors::InvalidState,
             "Journal shows attempt #{attempt.attempt_id} is uncertain; reconcile before finishing"
         end
 
-        def derive_journal_state(events)
-          state = "running"
-          events.each do |event|
-            case event["type"]
-            when "receipt_accepted"
-              state = event.dig("payload", "receipt", "verdict") || state
-            when "transition"
-              state = event.dig("payload", "to") || state
-            when "reconciliation"
-              state = event.dig("payload", "resolution") || state
-            end
+        # After appending our start events, revalidate ownership: a
+        # coordinator with a separate cache directory may have claimed the
+        # same scope between our read and our append (journal CAS replay
+        # merges both). The loser records a stopped transition and refuses.
+        def yield_lost_ownership_race(attempt, assignment_id, scope)
+          rival = journal_for.active_attempts(assignment_id).find do |other|
+            other.attempt_id != attempt.attempt_id && scopes_overlap?(other.binding.scope, scope)
           end
-          state
-        end
+          return attempt if rival.nil?
 
-        def recover_attempt_from_events(assignment_id, attempt_id, intent_payload, events, state)
-          process_start = events.reverse.find { |event| event["type"] == "process_start" }
-          binding = Models::AttemptBinding.new(
-            attempt_id: attempt_id,
-            assignment_id: assignment_id,
-            scope: intent_payload["scope"],
-            project_id: intent_payload["project_id"],
-            task_id: intent_payload["task_id"],
-            actor: process_start&.dig("payload", "actor") || "recovered",
-            role: process_start&.dig("payload", "role") || "coordinator",
-            runtime: process_start&.dig("payload", "runtime") || "recovered",
-            base_head: intent_payload["base_head"],
-            evidence_git_ref: journal_for.ref,
-            created_at: parse_event_time(intent_payload["recorded_at"])
-          )
-          Models::Attempt.new(
-            binding: binding,
-            state: state,
-            journal_commit: journal_for.ref_value
-          )
-        end
-
-        def parse_event_time(value)
-          return Time.now.utc if value.nil?
-
-          require "time"
-          Time.parse(value)
-        rescue ArgumentError
-          Time.now.utc
+          stopped = append_events(attempt, [transition_event(attempt, "stopped", "lost ownership race to #{rival.attempt_id}")])
+          stopped = stopped.transition("stopped")
+          @store.save(stopped)
+          raise AttemptErrors::Conflict,
+            "Active attempt #{rival.attempt_id} owns overlapping scope #{rival.binding.scope} on #{assignment_id}; " \
+            "our start #{attempt.attempt_id} was recorded stopped without executing"
         end
 
         # Conservative classification of a running attempt after interruption.
@@ -403,8 +357,7 @@ module Ace
             payload: {"resolution" => receipt.verdict, "receipt_digest" => receipt.digest},
             previous_digest: last_event_digest(attempt)
           )
-          attempt = append_events(attempt, [reconciliation])
-          accept(attempt, receipt, live_head)
+          accept(attempt, receipt, live_head, [reconciliation])
         end
 
         def transition_event(attempt, to, reason)
@@ -478,14 +431,15 @@ module Ace
           attempt
         end
 
-        def accept(attempt, receipt, live_head)
+        def accept(attempt, receipt, live_head, pre_events = [])
+          previous = pre_events.last&.dig("digest") || last_event_digest(attempt)
           event = Models::EvidenceEvent.build(
             type: "receipt_accepted",
             attempt_id: attempt.attempt_id,
             payload: {"receipt" => receipt.to_h},
-            previous_digest: last_event_digest(attempt)
+            previous_digest: previous
           )
-          attempt = append_events(attempt, [event])
+          attempt = append_events(attempt, pre_events + [event])
 
           receipts = attempt.accepted_receipts + [receipt.to_h]
           effects = attempt.effects

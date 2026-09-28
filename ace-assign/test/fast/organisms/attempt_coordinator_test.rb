@@ -135,6 +135,95 @@ module Ace
         assert_equal first.attempt_id, second.attempt_id
       end
 
+      def test_repeated_start_from_different_actor_conflicts
+        coordinator = build_coordinator
+        assignment = create_assignment
+
+        coordinator.start(assignment_id: assignment.id, step: "010", project_id: "ace")
+
+        other = Molecules::ExecutionIdentityResolver::Identity.new(
+          actor: "someone-else", role: "coordinator", runtime: "local:elsewhere", adapter: "local"
+        )
+        error = assert_raises(AttemptErrors::Conflict) do
+          coordinator.start(assignment_id: assignment.id, step: "010", project_id: "ace", identity: other)
+        end
+        assert_includes error.message, "already owns"
+      end
+
+      def test_reconcile_validates_journal_state_before_resolving
+        coordinator = build_coordinator
+        assignment = create_assignment
+        attempt = coordinator.start(assignment_id: assignment.id, step: "010", project_id: "ace")
+        coordinator.finish(attempt_id: attempt.attempt_id, receipt_path: build_receipt(attempt))
+
+        # Crash window: local record regressed to uncertain after the journal
+        # already accepted the succeeded receipt.
+        coordinator.store.save(Models::Attempt.new(binding: attempt.binding, state: "uncertain"))
+
+        error = assert_raises(AttemptErrors::InvalidState) do
+          coordinator.reconcile(attempt_id: attempt.attempt_id)
+        end
+        assert_includes error.message, "Journal shows"
+      end
+
+      def test_managed_reconcile_chains_resolution_and_receipt_in_one_commit
+        coordinator = build_coordinator
+        assignment = create_assignment
+        attempt = coordinator.start(assignment_id: assignment.id, step: "010", project_id: "ace")
+
+        transition = Models::EvidenceEvent.build(
+          type: "transition",
+          attempt_id: attempt.attempt_id,
+          payload: {"from" => "running", "to" => "uncertain", "reason" => "interrupted"}
+        )
+        journal = Molecules::EvidenceJournal.new(
+          repo_root: @repo, ref: "refs/ace/execution", checkout_root: File.join(@cache_dir, "evidence-co")
+        )
+        journal.append(assignment_id: assignment.id, attempt_id: attempt.attempt_id, events: [transition])
+
+        receipt = build_receipt(attempt, "producer" => {"actor" => "mc", "role" => "coordinator", "runtime" => "local:test"})
+        reconciled = coordinator.reconcile(attempt_id: attempt.attempt_id, receipt_path: receipt)
+        assert_equal "succeeded", reconciled.state
+
+        events = journal.read_events(assignment.id)
+        types = events.map { |event| event["type"] }
+        reconciliation_index = types.index("reconciliation")
+        refute_nil reconciliation_index
+        assert_equal "receipt_accepted", types[reconciliation_index + 1]
+        assert_equal events[reconciliation_index]["digest"], events[reconciliation_index + 1]["previous_digest"]
+      end
+
+      def test_lost_ownership_race_records_stopped_and_conflicts
+        coordinator = build_coordinator
+        assignment = create_assignment
+        ours = coordinator.start(assignment_id: assignment.id, step: "010", project_id: "ace")
+
+        rival = Molecules::ExecutionIdentityResolver::Identity.new(
+          actor: "rival", role: "service", runtime: "herdr:rival", adapter: "service"
+        )
+        rival_binding = Models::AttemptBinding.new(
+          attempt_id: "atrival9", assignment_id: assignment.id, scope: "010.01", project_id: "ace",
+          actor: rival.actor, role: rival.role, runtime: rival.runtime, base_head: ours.binding.base_head,
+          task_id: "8wr.t.qjl", created_at: Time.now.utc
+        )
+        rival_intent = Models::EvidenceEvent.build(type: "intent", attempt_id: "atrival9", payload: {
+          "assignment_id" => assignment.id, "scope" => "010.01", "project_id" => "ace",
+          "task_id" => "8wr.t.qjl", "base_head" => ours.binding.base_head
+        })
+        @journal = Molecules::EvidenceJournal.new(
+          repo_root: @repo, ref: "refs/ace/execution", checkout_root: File.join(@cache_dir, "evidence-co")
+        )
+        @journal.append(assignment_id: assignment.id, attempt_id: "atrival9", events: [rival_intent])
+
+        error = assert_raises(AttemptErrors::Conflict) do
+          coordinator.send(:yield_lost_ownership_race, ours, assignment.id, "010")
+        end
+        assert_includes error.message, "recorded stopped without executing"
+
+        journal_state = @journal.derived_attempts(assignment.id).find { |a| a.attempt_id == ours.attempt_id }
+        assert_equal "stopped", journal_state.state
+      end
+
       def test_conflicting_start_cannot_launch_second_writer
         coordinator = build_coordinator
         assignment = create_assignment
@@ -421,7 +510,7 @@ module Ace
         error = assert_raises(AttemptErrors::InvalidState) do
           coordinator.reconcile(attempt_id: attempt.attempt_id)
         end
-        assert_includes error.message, "terminal"
+        assert_includes error.message, "immutable"
       end
 
       private

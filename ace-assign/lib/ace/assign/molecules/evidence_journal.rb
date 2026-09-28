@@ -113,8 +113,93 @@ module Ace
         def accepted_receipts(assignment_id)
           read_events(assignment_id)
             .select { |event| event["type"] == "receipt_accepted" }
-            .map { |event| event["payload"]["receipt"] }
+            .map { |event| event.dig("payload", "receipt") }
             .compact
+        end
+
+        # All attempts derivable from the journal, reconstructed from intent
+        # and process_start facts with journal-authoritative state. The
+        # journal is the owner of attempt-state interpretation.
+        #
+        # @param assignment_id [String] Assignment ID
+        # @return [Array<Models::Attempt>] Derived attempts
+        def derived_attempts(assignment_id)
+          events = read_events(assignment_id)
+          by_attempt = events.group_by { |event| event["attempt_id"] }
+          by_attempt.delete(nil)
+
+          by_attempt.filter_map do |attempt_id, attempt_events|
+            intent = attempt_events.find { |event| event["type"] == "intent" }
+            next unless intent
+
+            state = derive_state(attempt_events)
+            next if state.nil?
+
+            build_attempt(assignment_id, attempt_id, intent["payload"], attempt_events, state)
+          end
+        end
+
+        # Non-terminal attempts derived from the journal.
+        #
+        # @param assignment_id [String] Assignment ID
+        # @return [Array<Models::Attempt>] Active attempts
+        def active_attempts(assignment_id)
+          derived_attempts(assignment_id).reject(&:terminal?)
+        end
+
+        private
+
+        # Latest lifecycle state implied by the events, or nil when the
+        # events do not describe a full attempt (intent missing).
+        def derive_state(events)
+          return nil unless events.any? { |event| event["type"] == "intent" }
+
+          state = "running"
+          events.each do |event|
+            case event["type"]
+            when "receipt_accepted"
+              state = event.dig("payload", "receipt", "verdict") || state
+            when "transition"
+              state = event.dig("payload", "to") || state
+            when "reconciliation"
+              state = event.dig("payload", "resolution") || state
+            end
+          end
+          state
+        end
+
+        def build_attempt(assignment_id, attempt_id, intent_payload, events, state)
+          process_start = events.reverse.find do |event|
+            event["type"] == "process_start" && event["attempt_id"] == attempt_id
+          end
+          binding = Models::AttemptBinding.new(
+            attempt_id: attempt_id,
+            assignment_id: assignment_id,
+            scope: intent_payload["scope"],
+            project_id: intent_payload["project_id"],
+            task_id: intent_payload["task_id"],
+            actor: process_start&.dig("payload", "actor") || "recovered",
+            role: process_start&.dig("payload", "role") || "coordinator",
+            runtime: process_start&.dig("payload", "runtime") || "recovered",
+            base_head: intent_payload["base_head"],
+            evidence_git_ref: ref,
+            created_at: parse_event_time(intent_time(events, attempt_id))
+          )
+          Models::Attempt.new(binding: binding, state: state, journal_commit: ref_value)
+        end
+
+        def intent_time(events, attempt_id)
+          intent = events.find { |event| event["type"] == "intent" && event["attempt_id"] == attempt_id }
+          intent&.dig("recorded_at")
+        end
+
+        def parse_event_time(value)
+          return Time.now.utc if value.nil?
+
+          require "time"
+          Time.parse(value)
+        rescue ArgumentError
+          Time.now.utc
         end
 
         private

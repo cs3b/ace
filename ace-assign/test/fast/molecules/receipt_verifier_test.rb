@@ -201,6 +201,14 @@ module Ace
         verify_raises(data) { |e| assert_includes e.message, "approved" }
       end
 
+      def test_supplied_digest_must_match_canonical_payload
+        File.write(File.join(@repo_root, "review-artifact.md"), "reviewed deliverable")
+        data = review_receipt_data
+        data["digest"] = "0" * 64
+
+        verify_raises(data) { |e| assert_includes e.message, "digest mismatch" }
+      end
+
       def test_external_effect_operations_are_classified
         verifier = Molecules::ReceiptVerifier.new
 

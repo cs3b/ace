@@ -33,8 +33,8 @@ module Ace
         def calculate(pr_number: nil, auto_merge: false, assignment_id: nil)
           head, tree, changed_scope_digest = git_facts
           assignment = find_assignment(assignment_id)
-          attempts = assignment ? store.list(assignment.id) : []
-          receipts = assignment ? accepted_receipts(assignment, attempts) : []
+          attempts = assignment ? attempts_for(assignment) : []
+          receipts = assignment ? accepted_receipts(assignment) : []
 
           review_receipt = receipt_currency(receipts, "review", head)
           release_receipt = receipt_currency(receipts, "release", head)
@@ -99,12 +99,30 @@ module Ace
           @journal ||= Molecules::EvidenceJournal.new(repo_root: @repo_root)
         end
 
-        # Accepted receipts span the managed journal and the durable local
-        # attempt records, deduplicated by digest.
-        def accepted_receipts(assignment, attempts)
-          receipts = attempts.flat_map(&:accepted_receipts)
-          receipts += journal.accepted_receipts(assignment.id) if assignment.managed?
-          receipts.uniq { |receipt| receipt["digest"] }
+        # Attempt state for evidence decisions. Managed assignments treat the
+        # journal as authoritative: journal-derived attempts replace local
+        # records with the same ID, and journal-only attempts (lost cache)
+        # still count as active/unresolved.
+        def attempts_for(assignment)
+          attempts = store.list(assignment.id)
+          return attempts unless assignment.managed?
+
+          journal_by_id = {}
+          journal.active_attempts(assignment.id).each { |attempt| journal_by_id[attempt.attempt_id] = attempt }
+          merged = attempts.map { |attempt| journal_by_id.delete(attempt.attempt_id) || attempt }
+          merged + journal_by_id.values
+        end
+
+        # Accepted receipts for evidence currency. Managed assignments use
+        # journal receipts only — the journal is the authority; local records
+        # are disposable projections.
+        def accepted_receipts(assignment)
+          if assignment.managed?
+            return journal.accepted_receipts(assignment.id).uniq { |receipt| receipt["digest"] }
+          end
+
+          store.list(assignment.id).flat_map(&:accepted_receipts)
+            .uniq { |receipt| receipt["digest"] }
         end
 
         # Currency against the current head. Review approval requires an

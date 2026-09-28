@@ -56,7 +56,10 @@ module Ace
           verify_checks(data)
           verify_review(data)
 
-          Models::ExecutionReceipt.from_h(data.merge("recorded_at" => Time.now.utc))
+          receipt = Models::ExecutionReceipt.from_h(data.merge("recorded_at" => Time.now.utc))
+          verify_digest(receipt)
+
+          receipt
         end
         # @param operation [String] Receipt operation
         # @return [Boolean] True when the operation acts outside the repository
@@ -155,6 +158,14 @@ module Ace
             reject("check missing name") if check["name"].to_s.strip.empty?
             reject("check #{check['name']} did not pass") if check["verdict"].to_s != "passed" && data["verdict"] == "succeeded"
           end
+        end
+
+        # A caller-supplied digest must equal the canonical digest of the
+        # receipt payload; arbitrary or all-zero digests are rejected.
+        def verify_digest(receipt)
+          return if receipt.digest == Atoms::EvidenceDigest.digest(receipt.digest_payload)
+
+          reject("receipt digest mismatch: supplied digest does not match the canonical payload")
         end
 
         # Review receipts need an executed, independent reviewer verdict for

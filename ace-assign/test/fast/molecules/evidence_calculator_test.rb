@@ -153,20 +153,20 @@ module Ace
         assignment = create_assignment
         attempt = coordinator.start(assignment_id: assignment.id, step: "010", project_id: "ace")
 
-        uncertain = Models::Attempt.new(
-          binding: attempt.binding,
-          state: "uncertain",
-          candidate_head: attempt.candidate_head,
-          journal_commit: attempt.journal_commit,
-          effects: [{"operation" => "merge", "intent_recorded_at" => Time.now.utc.iso8601}]
+        # Uncertainty is journaled: the journal is authoritative for managed
+        # attempts, so a local-only state change does not count.
+        transition = Models::EvidenceEvent.build(
+          type: "transition",
+          attempt_id: attempt.attempt_id,
+          payload: {"from" => "running", "to" => "uncertain", "reason" => "effect completion cannot be proven"}
         )
-        coordinator.store.save(uncertain)
+        @journal.append(assignment_id: assignment.id, attempt_id: attempt.attempt_id, events: [transition])
 
         evidence = calculate(auto_merge: true)
 
         assert_equal "uncertain", evidence[:feedback_state]
         assert_equal "approval-required", evidence[:merge_decision]
-        assert_includes evidence[:unresolved_effects], "merge"
+        assert_includes evidence[:unresolved_effects].join(" "), "uncertain"
         assert_equal "uncertain", evidence[:attempt]["state"]
       end
 
