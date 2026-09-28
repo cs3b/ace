@@ -28,10 +28,14 @@ module Ace
         end
 
         # Build the fixture environment. Returns self for chaining.
+        # A failed build cleans up the temporary root it created before raising.
         def build
           @root = @root_factory.call("ace-test-fixture-")
           @env = build_environment
           self
+        rescue StandardError
+          cleanup
+          raise
         end
 
         # Remove the test-owned fixture root. Safe to call multiple times.

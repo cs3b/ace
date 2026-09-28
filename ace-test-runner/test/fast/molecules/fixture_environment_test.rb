@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "test_helper"
+require "tmpdir"
 
 class FixtureEnvironmentTest < Minitest::Test
   def setup
@@ -103,6 +104,23 @@ class FixtureEnvironmentTest < Minitest::Test
 
     assert_nil @fixture.root
     refute Dir.exist?(root)
+  end
+
+  def test_failed_build_cleans_up_the_created_root
+    Dir.mktmpdir do |watch_dir|
+      before = Dir.children(watch_dir).sort
+      policy = Ace::TestRunner::Models::EnvironmentPolicy.from_config("require" => ["MISSING_KEY"])
+      fixture = Ace::TestRunner::Molecules::FixtureEnvironment.new(
+        policy: policy,
+        parent_env: @parent_env,
+        root_factory: ->(prefix) { Dir.mktmpdir(prefix, watch_dir) }
+      )
+
+      assert_raises(Ace::TestRunner::EnvironmentSetupError) { fixture.build }
+
+      assert_nil fixture.root
+      assert_equal before, Dir.children(watch_dir).sort
+    end
   end
 
   private
