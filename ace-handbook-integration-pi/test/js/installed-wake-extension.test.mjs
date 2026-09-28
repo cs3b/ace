@@ -414,6 +414,26 @@ describe("ace-wake delivery", () => {
     assert.equal(host.sends.length, 3, "the source may wake again after the agent settled");
   });
 
+  it("recovers delivery when an accepted wake is rejected without any lifecycle event", async () => {
+    const host = createFakeHost();
+    // The fake host accepts the send synchronously (like Pi's void API) but
+    // never starts a run for it — the async preflight rejection is invisible.
+    const session = await startSession(host, { dispatchRecoveryMs: 20 });
+    await host.runCommand("loop", "add heartbeat --interval 10 --message check in");
+    await host.runCommand("loop", "add other --interval 10 --message other wake");
+
+    host.clock.advance(10_000);
+    assert.equal(host.sends.length, 1, "the first wake dispatches");
+
+    // Recovery window expires: the unacknowledged attempt's coalescing and
+    // serialization markers clear, so later wakes re-attempt immediately.
+    await new Promise((resolve) => setTimeout(resolve, 40));
+    host.clock.advance(10_000);
+    assert.ok(host.sends.length >= 2, "subsequent wakes re-attempt after recovery");
+
+    await session.settle();
+  });
+
   it("recovers when the host has no model and stops blocking later ticks", async () => {
     const host = createFakeHost();
     const session = await startSession(host);

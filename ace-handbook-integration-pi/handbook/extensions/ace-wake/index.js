@@ -175,6 +175,7 @@ function createRegistry(pi, ctx, ports) {
     state: sessionStatePort(pi, ctx),
     status: statusPort(ctx),
     dispatcher,
+    dispatchRecoveryMs: ports.dispatchRecoveryMs,
     isHostIdle: () => {
       try {
         return ctx.isIdle();

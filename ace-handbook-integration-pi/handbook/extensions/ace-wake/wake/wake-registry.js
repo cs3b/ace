@@ -42,6 +42,10 @@ export class WakeRegistry {
   #retained;
   /** @private @type {boolean} */
   #dispatchPending;
+  /** @private @type {Timeout | undefined} */
+  #dispatchRecoveryTimer;
+  /** @private @type {number} */
+  #dispatchRecoveryMs;
 
   /** @private @type {{retained: Array<{prefix: string, name: string, message: string}>, stranded: Array<[string, string]>} | undefined} */
   #reconcileBatch;
@@ -56,7 +60,7 @@ export class WakeRegistry {
    * @param {object} ports.status
    * @param {import("./wake-dispatcher.js").WakeDispatcher} ports.dispatcher
    */
-  constructor({ loops, watches, state, status, dispatcher }) {
+  constructor({ loops, watches, state, status, dispatcher, dispatchRecoveryMs = 5000 }) {
     this.#loops = loops;
     this.#watches = watches;
     this.#state = state;
@@ -70,6 +74,10 @@ export class WakeRegistry {
     this.#retained = new Map();
     /** @private @type {boolean} */
     this.#dispatchPending = false;
+    /** @private @type {Timeout | undefined} */
+    this.#dispatchRecoveryTimer;
+    /** @private @type {number} */
+    this.#dispatchRecoveryMs = dispatchRecoveryMs;
   }
 
   /**
@@ -281,6 +289,7 @@ export class WakeRegistry {
     }
     this.#resuming = false;
     this.#retaining = false;
+    clearTimeout(this.#dispatchRecoveryTimer);
     this.#dispatchPending = false;
     this.#reconcileBatch = {
       retained: [...this.#retained.values()],
@@ -392,6 +401,7 @@ export class WakeRegistry {
   }
 
   #closeDispatchWindow() {
+    clearTimeout(this.#dispatchRecoveryTimer);
     this.#dispatchPending = false;
     this.#drainRetained();
   }
@@ -401,11 +411,29 @@ export class WakeRegistry {
     // The dispatch stays in flight until a lifecycle transition confirms
     // delivery: agent_start proves the prompt entered a run (concurrent
     // sends queue safely as follow-ups from then on), and any settlement
-    // proves the host accepts prompts again. Pi's void sendUserMessage API
-    // reports failures only asynchronously, so elapsed time can never be
-    // the signal — isIdle() is also true while a submitted prompt waits in
-    // asynchronous startup hooks.
+    // proves the host accepts prompts again.
     this.#dispatchPending = true;
+    clearTimeout(this.#dispatchRecoveryTimer);
+    this.#dispatchRecoveryTimer = setTimeout(() => this.recoverUnacknowledgedDispatch(), this.#dispatchRecoveryMs);
+    this.#dispatchRecoveryTimer.unref?.();
+  }
+
+  /**
+   * Recovery for attempts no lifecycle transition ever acknowledged: Pi's
+   * void sendUserMessage API reports preflight failures (no model, broken
+   * authentication) only asynchronously, so an in-flight marker with no
+   * agent_start after the recovery window is presumed dead. Coalescing and
+   * serialization markers clear, letting the natural triggers (the next
+   * tick, the next file change) re-attempt at a bounded rate instead of
+   * stranding delivery permanently.
+   */
+  recoverUnacknowledgedDispatch() {
+    if (!this.#dispatchPending) {
+      return;
+    }
+    this.#dispatchPending = false;
+    this.#dispatcher.settleAll();
+    this.#refreshStatus();
   }
 
   /**
@@ -413,6 +441,7 @@ export class WakeRegistry {
    * so the serialization window closes and retained wakes drain immediately.
    */
   noteRunStarted() {
+    clearTimeout(this.#dispatchRecoveryTimer);
     this.#dispatchPending = false;
     this.#drainRetained();
   }
