@@ -167,8 +167,12 @@ export function createWatchPort({ watchFactory, statFn, baseDir = process.cwd(),
      * the change at the next settlement — no loss, and no duplicate for
      * wakes that were genuinely consumed.
      */
-    markDispatchUnacknowledged() {
-      for (const entry of active.values()) {
+    markDispatchUnacknowledged(sourceKeys) {
+      const stranded = new Set(sourceKeys);
+      for (const [name, entry] of active.entries()) {
+        if (!stranded.has(`watch:${name}`)) {
+          continue;
+        }
         entry.fingerprint = entry.previousFingerprint;
         entry.dirty = true;
       }

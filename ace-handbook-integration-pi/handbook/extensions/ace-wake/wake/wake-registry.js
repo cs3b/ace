@@ -242,6 +242,10 @@ export class WakeRegistry {
   /** Dispose all runtime handles; persisted definitions remain for reload. */
   dispose() {
     this.#retaining = false;
+    this.#resuming = false;
+    this.#disposed = true;
+    this.#dispatchPending = false;
+    clearTimeout(this.#dispatchRecoveryTimer);
     this.#retained.clear();
     this.#reconcileBatch = undefined;
     this.#loops.stopAll();
@@ -419,6 +423,15 @@ export class WakeRegistry {
   }
 
 
+  /**
+   * The host started a run: concurrent sends now queue safely as follow-ups,
+   * so the serialization window closes and retained wakes drain immediately.
+   */
+  noteRunStarted() {
+    this.#dispatchPending = false;
+    this.#drainRetained();
+  }
+
   #markDispatchInFlight() {
     // The dispatch stays in flight until a lifecycle transition confirms
     // delivery: agent_start proves the prompt entered a run (concurrent
@@ -458,11 +471,13 @@ export class WakeRegistry {
     }
 
     // Idle with nothing queued: the attempt died in preflight. Release the
-    // coalescing marker and revert watch fingerprints so the next natural
-    // trigger re-fires the change — bounded retry, no loss, no duplicates.
+    // coalescing marker and revert exactly the stranded watch fingerprints
+    // so the next natural trigger re-fires their change — bounded retry, no
+    // loss, and previously settled deliveries stay untouched.
+    const strandedKeys = this.#dispatcher.pendingEntries().map(([sourceKey]) => sourceKey);
     this.#dispatchPending = false;
     this.#dispatcher.settleAll();
-    this.#watches.markDispatchUnacknowledged();
+    this.#watches.markDispatchUnacknowledged(strandedKeys);
     this.#watches.flushDirty((watch) => this.#fire(WATCH_SOURCE_PREFIX, watch.name, watch.message));
     this.#refreshStatus();
   }
