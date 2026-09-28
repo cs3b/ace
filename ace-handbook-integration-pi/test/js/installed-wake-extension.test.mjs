@@ -434,6 +434,28 @@ describe("ace-wake delivery", () => {
     await session.settle();
   });
 
+  it("does not duplicate a queued follow-up while a run outlasts the recovery window", async () => {
+    const host = createFakeHost();
+    const session = await startSession(host, { dispatchRecoveryMs: 20 });
+    await host.runCommand("loop", "add heartbeat --interval 10 --message check in");
+
+    // The wake queues as a follow-up and the run keeps going well past the
+    // recovery window: the queued wake is legitimate and must not be
+    // invalidated.
+    host.setIdle(false);
+    host.clock.advance(10_000);
+    assert.equal(host.sends.length, 1);
+    await new Promise((resolve) => setTimeout(resolve, 60));
+    host.clock.advance(10_000);
+    assert.equal(host.sends.length, 1, "the queued wake stays pending while the run is active");
+
+    // The run finishes; the queued wake is consumed normally.
+    host.setIdle(true);
+    await session.settle();
+    host.clock.advance(10_000);
+    assert.equal(host.sends.length, 2, "delivery resumes normally after the run");
+  });
+
   it("recovers when the host has no model and stops blocking later ticks", async () => {
     const host = createFakeHost();
     const session = await startSession(host);

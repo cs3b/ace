@@ -46,6 +46,8 @@ export class WakeRegistry {
   #dispatchRecoveryTimer;
   /** @private @type {number} */
   #dispatchRecoveryMs;
+  /** @private @type {(() => boolean) | undefined} */
+  #isHostIdle;
 
   /** @private @type {{retained: Array<{prefix: string, name: string, message: string}>, stranded: Array<[string, string]>} | undefined} */
   #reconcileBatch;
@@ -60,7 +62,7 @@ export class WakeRegistry {
    * @param {object} ports.status
    * @param {import("./wake-dispatcher.js").WakeDispatcher} ports.dispatcher
    */
-  constructor({ loops, watches, state, status, dispatcher, dispatchRecoveryMs = 5000 }) {
+  constructor({ loops, watches, state, status, dispatcher, dispatchRecoveryMs = 5000, isHostIdle }) {
     this.#loops = loops;
     this.#watches = watches;
     this.#state = state;
@@ -78,6 +80,8 @@ export class WakeRegistry {
     this.#dispatchRecoveryTimer;
     /** @private @type {number} */
     this.#dispatchRecoveryMs = dispatchRecoveryMs;
+    /** @private @type {(() => boolean) | undefined} */
+    this.#isHostIdle = isHostIdle;
   }
 
   /**
@@ -429,6 +433,20 @@ export class WakeRegistry {
    */
   recoverUnacknowledgedDispatch() {
     if (!this.#dispatchPending) {
+      return;
+    }
+    let idle = false;
+    try {
+      idle = this.#isHostIdle?.() ?? true;
+    } catch {
+      idle = false;
+    }
+    if (!idle) {
+      // A run is active: the pending wake is a legitimately queued follow-up
+      // that settles with that run. Re-check after another window.
+      clearTimeout(this.#dispatchRecoveryTimer);
+      this.#dispatchRecoveryTimer = setTimeout(() => this.recoverUnacknowledgedDispatch(), this.#dispatchRecoveryMs);
+      this.#dispatchRecoveryTimer.unref?.();
       return;
     }
     this.#dispatchPending = false;
