@@ -23,14 +23,16 @@ module Ace
           @kind = kind
           # Defensive copies: public projections expose these strings, and a
           # mutated shared string would corrupt the stable-ID/index invariant
-          # or freshness facts (review round 15, F1)
+          # or routing facts — element-wise freezing included, since
+          # containers alone leave their string values mutable
+          # (review rounds 15-16, F1)
           @id = id.dup.freeze
           @project = project && project.dup.freeze
           @label = label && label.dup.freeze
           @role = role && role.dup.freeze
-          @capabilities = capabilities.map(&:dup).freeze
-          @default_for = default_for.map(&:dup).freeze
-          @endpoint = endpoint && endpoint.transform_values(&:dup).freeze
+          @capabilities = capabilities.map { |value| value.dup.freeze }.freeze
+          @default_for = default_for.map { |value| value.dup.freeze }.freeze
+          @endpoint = endpoint && endpoint.transform_values { |value| value.dup.freeze }.freeze
           @binding = binding
           freeze
         end
