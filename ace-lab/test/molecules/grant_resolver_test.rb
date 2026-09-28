@@ -45,18 +45,17 @@ module Molecules
       # A root-owned 0600 file passes ownership verification but cannot be
       # opened by an ordinary caller; the EACCES must classify, not escape
       # (review round 6, F2)
-      root_owned_dir = Struct.new(:directory?, :uid, :mode).new(true, 0, 0o755)
+      secure_element = Struct.new(:symlink?, :directory?, :uid, :mode).new(false, true, 0, 0o755)
+      secure_file = Struct.new(:symlink?, :directory?, :uid, :mode).new(false, false, 0, 0o600)
       path = "/etc/lab/ace-lab/authorization.yml"
 
-      File.stub :realpath, path do
-        File.stub :lstat, root_owned_dir do
-          File.stub :open, ->(*_args) { raise Errno::EACCES } do
-            error = assert_raises(Ace::Lab::InvalidConfigurationError) do
-              resolve(trusted_path: path)
-            end
-
-            assert_match(/failed the deployment ownership verification/, error.message)
+      File.stub :lstat, ->(candidate) { candidate.to_s.end_with?("authorization.yml") ? secure_file : secure_element } do
+        File.stub :open, ->(*_args) { raise Errno::EACCES } do
+          error = assert_raises(Ace::Lab::InvalidConfigurationError) do
+            resolve(trusted_path: path)
           end
+
+          assert_match(/failed the deployment ownership verification/, error.message)
         end
       end
     end
@@ -81,21 +80,24 @@ module Molecules
       assert_empty grants["principals"]
     end
 
-    def test_parse_rejects_unknown_project_references
-      assert_raises(Ace::Lab::InvalidConfigurationError) do
-        Ace::Lab::Molecules::GrantResolver.send(
-          :parse_grants,
-          YAML.dump({"principals" => {"operator" => {"projects" => ["ghost"]}}}),
-          "/etc/lab/ace-lab/authorization.yml", topology
-        )
-      end
+    def test_parse_keeps_grants_for_projects_absent_from_local_topology
+      # The grants file is machine-global; referenced projects need not
+      # exist in this directory's topology — such grants simply never
+      # match at query time (review round 8, F1)
+      grants = Ace::Lab::Molecules::GrantResolver.send(
+        :parse_grants,
+        YAML.dump({"principals" => {"operator" => {"projects" => %w[atlas ghost]}}}),
+        "/etc/lab/ace-lab/authorization.yml"
+      )
+
+      assert_equal %w[atlas ghost], grants.dig("principals", "operator", "projects")
     end
 
     def test_parse_never_leaks_unparseable_content
       error = assert_raises(Ace::Lab::InvalidConfigurationError) do
         Ace::Lab::Molecules::GrantResolver.send(
           :parse_grants, "secret: *private_token_canary",
-          "/etc/lab/ace-lab/authorization.yml", topology
+          "/etc/lab/ace-lab/authorization.yml"
         )
       end
 
@@ -107,7 +109,7 @@ module Molecules
     def test_parse_rejects_non_mapping_documents
       error = assert_raises(Ace::Lab::InvalidConfigurationError) do
         Ace::Lab::Molecules::GrantResolver.send(
-          :parse_grants, "- broken", "/etc/lab/ace-lab/authorization.yml", topology
+          :parse_grants, "- broken", "/etc/lab/ace-lab/authorization.yml"
         )
       end
 
@@ -122,23 +124,80 @@ module Molecules
       Ace::Lab::Atoms::TopologySchema.normalize!(topology_config)["topology"]
     end
 
-    def test_lstat_race_during_verification_fails_closed_classified
-      # A directory disappearing or changing permissions between realpath
-      # and lstat must classify, never raise past the query boundary
-      # (review round 7, F2)
-      path = File.join(Dir.mktmpdir, "authorization.yml")
-      File.write(path, YAML.dump({"principals" => {}}))
+    def test_lstat_permission_race_fails_closed_classified
+      # A directory changing permissions between traversal steps must
+      # classify, never raise past the query boundary (review round 7, F2)
+      path = "/etc/lab/ace-lab/authorization.yml"
 
-      File.stub :realpath, path do
-        File.stub :lstat, ->(_dir) { raise Errno::ENOENT } do
+      File.stub :lstat, ->(_candidate) { raise Errno::EACCES } do
+        error = assert_raises(Ace::Lab::InvalidConfigurationError) do
+          Ace::Lab::Molecules::GrantResolver.resolve(
+            documents: [], topology: topology, trusted_path: path
+          )
+        end
+
+        assert_match(/failed the deployment ownership verification/, error.message)
+      end
+    end
+  end
+end
+
+module Molecules
+  class GrantResolverSymlinkTest < Minitest::Test
+    def topology
+      Ace::Lab::Atoms::TopologySchema.normalize!(topology_config)["topology"]
+    end
+
+    def test_caller_writable_symlink_redirect_is_rejected
+      # A symlink inside a caller-owned directory must fail ownership
+      # verification even when it points at a root-owned file — following
+      # the canonicalized target without verifying the original path would
+      # let callers pick trusted content (review round 8, F2)
+      Dir.mktmpdir do |dir|
+        link = File.join(dir, "authorization.yml")
+        File.symlink("/etc/hosts", link)
+        secure_element = Struct.new(:symlink?, :directory?, :uid, :mode).new(false, true, 0, 0o755)
+        real_lstat = File.method(:lstat)
+
+        # Parent chain simulates the deployment-owned prefix; the link
+        # itself is lstat-ed for real (user-owned symlink -> rejected)
+        File.stub :lstat, ->(candidate) { (candidate.to_s == link) ? real_lstat.call(candidate) : secure_element } do
           error = assert_raises(Ace::Lab::InvalidConfigurationError) do
             Ace::Lab::Molecules::GrantResolver.resolve(
-              documents: [], topology: topology, trusted_path: path
+              documents: [], topology: topology, trusted_path: link
             )
           end
 
           assert_match(/failed the deployment ownership verification/, error.message)
         end
+      end
+    end
+
+    def test_missing_file_under_deployment_owned_chain_is_absent_grants
+      secure_element = Struct.new(:symlink?, :directory?, :uid, :mode).new(false, true, 0, 0o755)
+      path = "/etc/lab/ace-lab/authorization.yml"
+
+      File.stub :lstat, ->(candidate) { candidate.to_s.end_with?("authorization.yml") ? raise(Errno::ENOENT) : secure_element } do
+        grants = Ace::Lab::Molecules::GrantResolver.resolve(
+          documents: [], topology: topology, trusted_path: path
+        )
+
+        assert_empty grants["principals"]
+      end
+    end
+
+    def test_user_owned_directory_chain_fails_verification
+      Dir.mktmpdir do |dir|
+        path = File.join(dir, "authorization.yml")
+        File.write(path, YAML.dump({"principals" => {}}))
+
+        error = assert_raises(Ace::Lab::InvalidConfigurationError) do
+          Ace::Lab::Molecules::GrantResolver.resolve(
+            documents: [], topology: topology, trusted_path: path
+          )
+        end
+
+        assert_match(/failed the deployment ownership verification/, error.message)
       end
     end
   end

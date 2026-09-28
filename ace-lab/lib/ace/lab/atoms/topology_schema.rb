@@ -51,18 +51,6 @@ module Ace
             }
           end
 
-          # Validate and normalize a standalone authorization document
-          # against known project IDs (used by the narrowing grant merge,
-          # review round 4, F3)
-          #
-          # @param authorization [Hash, nil]
-          # @param topology [Hash] normalized topology
-          # @return [Hash] normalized authorization
-          # @raise [Ace::Lab::InvalidConfigurationError]
-          def normalize_authorization!(authorization, topology)
-            normalized_authorization(authorization, topology)
-          end
-
           private
 
           def normalized_topology(raw)
