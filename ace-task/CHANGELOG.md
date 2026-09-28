@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.38.0] - 2026-09-28
+
 ### Added
 - Dependency-aware `--sort=smart` for `ace-task list`: ready tasks (dependencies done or archived, or the task itself done/archived) list first under the existing priority/position ordering; tasks with unmet dependencies follow in a topological tail ordered by fewest dependency hops to readiness; dependency cycles render last with a `↺cycle` marker instead of hiding. Missing dependency references stay unmet and never crash listing; `id`, `priority`, and `created` sorts are unchanged.
 
