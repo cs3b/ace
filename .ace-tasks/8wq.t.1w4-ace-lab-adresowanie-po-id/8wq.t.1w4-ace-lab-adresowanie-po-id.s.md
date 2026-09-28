@@ -37,9 +37,9 @@ An agent resolves an intended project, agent or service from configured topology
 
 ### Success Criteria and Verification Plan
 
-- [ ] SC1: Configuration tests cover duplicate IDs, missing project, stale binding and multiple capable services.
-- [ ] SC2: CLI inventory/resolve/route runs from a fresh install using sanitized Lab fixture config; changing pane identity leaves stable agent ID unchanged.
-- [ ] SC3: Run `ace-test ace-lab all` once implemented; package/install tests prove topology is usable without /usr/local/bin/lab.
+- [x] SC1: Configuration tests cover duplicate IDs, missing project, stale binding and multiple capable services.
+- [x] SC2: CLI inventory/resolve/route runs from a fresh install using sanitized Lab fixture config; changing pane identity leaves stable agent ID unchanged.
+- [x] SC3: Run `ace-test ace-lab all` once implemented; package/install tests prove topology is usable without /usr/local/bin/lab.
 
 ### Scope and Ownership
 
