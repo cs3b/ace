@@ -18,7 +18,14 @@ module Ace
         # @param config [Hash, nil] pre-supplied configuration to normalize
         # @param loader [Molecules::TopologyLoader, nil] injected loader
         # @param authorizer [Molecules::CallerAuthorizer, nil] injected authorizer
+        # @raise [ArgumentError] when only one of loader/authorizer is
+        #   injected — partial injection would silently mix collaborators
+        #   (subject review: honor independently injected collaborators)
         def initialize(config: nil, loader: nil, authorizer: nil)
+          if loader.nil? != authorizer.nil?
+            raise ArgumentError, "loader and authorizer must be injected together or both omitted"
+          end
+
           @config = config
           @loader = loader
           @authorizer = authorizer

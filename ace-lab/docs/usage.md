@@ -127,13 +127,21 @@ principals:
     projects: ["atlas"]
 ```
 
+The grants file is machine-global: it is validated structurally only, so a
+principal may reference projects absent from the current directory's
+topology. Such grants are valid but never match a locally configured
+project. All-digit principal keys are matched as uids only — an all-digit
+passwd username is authorized solely through its uid, so it can never
+consume a different account's numeric-uid grant.
+
 A missing trusted file means nobody is authorized (fail closed).
 
-Validation rejects duplicate IDs (globally unique across projects, agents,
-services), unknown project references, malformed capabilities, defaults for
-undeclared capabilities, unusable endpoints (absolute http(s) URL with a host
-and a port in 1–65535; `endpoint.kind` is `http` or `https`), unsupported
-binding kinds, and principals referencing unknown projects.
+Validation of the topology cascade rejects duplicate IDs (globally unique
+across projects, agents, services), unknown project references, malformed
+capabilities, defaults for undeclared capabilities, unusable endpoints
+(absolute http(s) URL with a host and a port in 1–65535; `endpoint.kind` is
+`http` or `https`), unsupported binding kinds, and principals referencing
+unknown projects.
 
 **Error messages are value-free by design:** validation runs before
 authorization, so messages use positional field locations

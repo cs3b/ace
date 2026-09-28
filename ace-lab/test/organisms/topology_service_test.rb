@@ -284,3 +284,23 @@ module Organisms
     end
   end
 end
+
+module Organisms
+  class TopologyServiceInjectionTest < Minitest::Test
+    def test_partial_collaborator_injection_is_rejected
+      loader = Ace::Lab::Molecules::TopologyLoader.new(topology_config)
+      authorizer = Ace::Lab::Molecules::CallerAuthorizer.new(identity: %w[operator])
+
+      assert_raises(ArgumentError) do
+        Ace::Lab::Organisms::TopologyService.new(loader: loader)
+      end
+      assert_raises(ArgumentError) do
+        Ace::Lab::Organisms::TopologyService.new(authorizer: authorizer)
+      end
+
+      # Both together remain valid
+      service = Ace::Lab::Organisms::TopologyService.new(loader: loader, authorizer: authorizer)
+      assert_predicate service.resolve(id: "atlas-planner"), :ok?
+    end
+  end
+end
