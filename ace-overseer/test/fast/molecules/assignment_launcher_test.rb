@@ -45,7 +45,7 @@ class AssignmentLauncherTest < AceOverseerTestCase
       @start_calls = []
     end
 
-    def start(job_path)
+    def start(job_path, *args, **kwargs)
       @start_calls << job_path
       {
         assignment: FakeAssignment.new("abc123"),
