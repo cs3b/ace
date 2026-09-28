@@ -121,6 +121,7 @@ export class WakeRegistry {
     const removed = removeByName(this.#snapshot.loops, name, "loop");
     this.#loops.stop(name);
     this.#dispatcher.settle(loopSourceKey(name));
+    this.#retained.delete(loopSourceKey(name));
     this.#persist();
     return removed;
   }
@@ -134,6 +135,7 @@ export class WakeRegistry {
     const removed = removeByName(this.#snapshot.watches, name, "watch");
     this.#watches.stop(name);
     this.#dispatcher.settle(watchSourceKey(name));
+    this.#retained.delete(watchSourceKey(name));
     this.#persist();
     return removed;
   }
@@ -221,6 +223,7 @@ export class WakeRegistry {
    */
   settleAll() {
     this.#dispatcher.settleAll();
+    this.flushRetained();
     this.#watches.flushDirty((watch) => this.#fire(WATCH_SOURCE_PREFIX, watch.name, watch.message));
     this.#refreshStatus();
   }
@@ -236,12 +239,30 @@ export class WakeRegistry {
   }
 
   /**
-   * Resume delivery: pending markers from before the pause are stale (their
-   * wakes were rejected or consumed without a settlement signal), so they are
-   * cleared and every retained wake is dispatched fresh.
+   * Exit retention when the host reports compaction finished. Pi clears its
+   * manual-compaction state right after the session_compact emission, so the
+   * retained wakes flush from a deferred macrotask — submitting them from
+   * inside the event would still be rejected. agent_settled flushes too,
+   * covering the post-compaction run continuation.
    */
   resumeDelivery() {
     this.#retaining = false;
+    const timer = setTimeout(() => this.flushRetained(), 0);
+    // Never hold the host process open on the extension's behalf.
+    timer.unref?.();
+    return timer;
+  }
+
+  /**
+   * Dispatch every retained wake: pending markers are stale at flush time
+   * (their wakes were rejected or consumed without a settlement signal), so
+   * they are cleared and the retained wakes go out fresh. Idempotent — a
+   * flush with nothing retained is a no-op.
+   */
+  flushRetained() {
+    if (this.#retained.size === 0) {
+      return;
+    }
     this.#dispatcher.settleAll();
     const retained = [...this.#retained.values()];
     this.#retained.clear();

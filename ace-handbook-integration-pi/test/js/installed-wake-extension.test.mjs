@@ -235,7 +235,7 @@ describe("ace-wake delivery", () => {
     assert.match(host.sends[1].text, /watch:dep/);
   });
 
-  it("retains wakes during compaction and flushes them when compaction ends", async () => {
+  it("retains wakes during compaction and flushes them after compaction state clears", async () => {
     const host = createFakeHost();
     const session = await startSession(host);
     await host.runCommand("loop", "add heartbeat --interval 10 --message check in");
@@ -246,6 +246,9 @@ describe("ace-wake delivery", () => {
     assert.equal(host.sends.length, 0, "wakes during compaction are retained, not dispatched");
 
     await session.compacted();
+    // Pi clears its compaction state after the session_compact emission; the
+    // flush is deferred to a macrotask so it lands once sends are accepted.
+    await new Promise((resolve) => setTimeout(resolve, 20));
     assert.equal(host.sends.length, 1, "the retained wake flushes after compaction");
     host.assertFollowUpDelivery("text:0");
 
@@ -266,7 +269,22 @@ describe("ace-wake delivery", () => {
     assert.equal(host.sends.length, 0);
 
     await session.compactFailed();
+    await new Promise((resolve) => setTimeout(resolve, 20));
     assert.equal(host.sends.length, 1, "retained wakes flush after failed compaction too");
+  });
+
+  it("does not flush a retained wake for a subscription removed while delivery is paused", async () => {
+    const host = createFakeHost();
+    const session = await startSession(host);
+    await host.runCommand("loop", "add heartbeat --interval 10 --message check in");
+
+    await session.beforeCompact();
+    host.clock.advance(10_000);
+    await host.runCommand("loop", "remove heartbeat");
+
+    await session.compactFailed();
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    assert.equal(host.sends.length, 0, "removal must cancel the retained wake");
   });
 
   it("coalesces same-source wakes while one is queued and keeps distinct sources", async () => {
