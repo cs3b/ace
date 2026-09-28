@@ -455,16 +455,21 @@ export class WakeRegistry {
       return;
     }
     let queued = true;
+    let idle = false;
     try {
-      // The discriminator the void API still provides: a wake Pi accepted is
-      // in its queue (pendingMessages true) until its run consumes it; a
-      // rejected attempt never enters the queue (pendingMessages false).
+      // The discriminators the void API still provides: a wake Pi accepted
+      // sits in its queue (pendingMessages true) until processing begins, and
+      // while anything is running the context is not idle. Only an idle
+      // context with an empty queue proves the attempt died in preflight —
+      // an empty queue during active processing is a consumed follow-up.
       queued = this.#isHostQueued?.() ?? true;
+      idle = this.#isHostIdle?.() ?? false;
     } catch {
       queued = true;
+      idle = false;
     }
-    if (queued) {
-      // Accepted and still queued or running: the pending marker is
+    if (queued || !idle) {
+      // Accepted (queued or being processed): the pending marker is
       // legitimate. Re-check after another window; agent_settled settles it.
       this.#scheduleRecovery();
       return;
