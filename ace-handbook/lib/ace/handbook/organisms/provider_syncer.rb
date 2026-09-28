@@ -188,11 +188,20 @@ module Ace
           output_dir = File.join(project_root, extensions_dir)
           FileUtils.mkdir_p(output_dir)
 
+          receipt = read_projection_receipt(output_dir)
+          owned_paths = receipt.nil? ? [] : receipt.fetch("files", [])
+          reject_unowned_collisions(output_dir, expected.keys, owned_paths)
+
           removed_entries = prune_stale_extension_files(output_dir, expected.keys)
           updated_files = 0
 
           expected.each do |relative_path, source_path|
-            output_path = File.join(output_dir, relative_path)
+            output_path = safe_projection_path(output_dir, relative_path)
+            if output_path.nil?
+              raise StandardError,
+                    "cannot project #{relative_path} into #{extensions_dir}: a symlinked path component would escape the projection directory"
+            end
+
             FileUtils.mkdir_p(File.dirname(output_path))
             next if File.exist?(output_path) && FileUtils.compare_file(source_path, output_path)
 
@@ -208,6 +217,22 @@ module Ace
             updated_extension_files: updated_files,
             removed_extension_entries: removed_entries
           }
+        end
+
+        # The destination directory may hold user-authored extensions, so a
+        # destination file that exists before the first ACE projection (or one
+        # the receipt does not own) is never overwritten: the sync fails with
+        # a visible error instead of destroying user files.
+        def reject_unowned_collisions(output_dir, expected_relative_paths, owned_paths)
+          expected_relative_paths.each do |relative_path|
+            next if owned_paths.include?(relative_path)
+
+            candidate = safe_projection_path(output_dir, relative_path)
+            next if candidate.nil? || !File.exist?(candidate)
+
+            raise StandardError,
+                  "refusing to overwrite existing file #{candidate}; it is not part of this package's projection receipt. Move or remove it, then rerun `ace-handbook sync`."
+          end
         end
 
         def extension_source_files(source_dir)
@@ -226,7 +251,7 @@ module Ace
           stale = receipt.fetch("files", []) - expected_relative_paths
           removed = 0
           stale.each do |relative_path|
-            contained = contained_projection_path(output_dir, relative_path)
+            contained = safe_projection_path(output_dir, relative_path)
             next if contained.nil?
             next unless File.file?(contained)
 
@@ -237,19 +262,26 @@ module Ace
           removed
         end
 
-        # Receipt files are projected data, so treat them as untrusted: only
-        # plain relative paths that resolve inside output_dir may be pruned.
-        def contained_projection_path(output_dir, relative_path)
+        # Receipt files are projected data, so treat them as untrusted, and
+        # destination paths are resolved on the real filesystem: only plain
+        # relative paths whose every component stays inside output_dir — with
+        # no symlinked component, which could point anywhere — may be written
+        # or pruned.
+        def safe_projection_path(output_dir, relative_path)
           return nil unless relative_path.is_a?(String)
           return nil if relative_path.include?("\0")
-          return nil if Pathname.new(relative_path).absolute?
 
-          root = Pathname.new(output_dir)
-          candidate = root.join(relative_path).cleanpath
-          return nil if candidate == root
-          return nil unless candidate.descend.include?(root)
+          segments = relative_path.split(File::SEPARATOR)
+          return nil if segments.empty? || segments.any? { |segment| segment.empty? || segment == "." || segment == ".." }
 
-          candidate.to_s
+          current = Pathname.new(File.realpath(output_dir))
+          segments.each do |segment|
+            current = current.join(segment)
+            return nil if File.symlink?(current.to_s)
+          end
+          current.to_s
+        rescue Errno::ENOENT
+          nil
         end
 
         def read_projection_receipt(output_dir)
