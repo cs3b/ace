@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.58.0] - 2026-09-28
+
 ### Added
 - Durable assignment attempts: `ace-assign attempt start|status|finish|reconcile` bind an immutable attempt ID to an assignment step/subtree, project, boundary-derived actor identity, and `base_head`, with a `reserved -> running -> succeeded/failed/stopped/uncertain` lifecycle and conservative reconciliation of interruptions (no automatic replay of merge/publish/deploy).
 - Managed attempts journal accepted execution evidence to the configured evidence Git ref (default `refs/ace/execution`) through an isolated audit checkout with flock serialization and expected-old-value `git update-ref` compare-and-swap; `refs/ace/execution` never advances the deliverable candidate branch.
