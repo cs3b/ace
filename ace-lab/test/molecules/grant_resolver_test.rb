@@ -41,6 +41,26 @@ module Molecules
       assert_match(/must be owned by root and not writable by group or others/, error.message)
     end
 
+    def test_unreadable_trusted_file_fails_closed_classified
+      # A root-owned 0600 file passes ownership verification but cannot be
+      # opened by an ordinary caller; the EACCES must classify, not escape
+      # (review round 6, F2)
+      root_owned_dir = Struct.new(:directory?, :uid, :mode).new(true, 0, 0o755)
+      path = "/etc/lab/ace-lab/authorization.yml"
+
+      File.stub :realpath, path do
+        File.stub :lstat, root_owned_dir do
+          File.stub :open, ->(*_args) { raise Errno::EACCES } do
+            error = assert_raises(Ace::Lab::InvalidConfigurationError) do
+              resolve(trusted_path: path)
+            end
+
+            assert_match(/could not be read; failing closed/, error.message)
+          end
+        end
+      end
+    end
+
     def test_authorization_sections_in_cascade_documents_are_rejected
       error = assert_raises(Ace::Lab::InvalidConfigurationError) do
         resolve(documents: [cascade_doc(authorization: {"principals" => {}})])

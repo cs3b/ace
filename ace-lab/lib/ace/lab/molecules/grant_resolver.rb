@@ -46,28 +46,37 @@ module Ace
           # Read the grants document only after proving the deployment owns
           # the storage: every directory on the real path and the file itself
           # must be root-owned and not group/world-writable, and the file is
-          # opened with O_NOFOLLOW then re-verified via fstat.
+          # opened with O_NOFOLLOW then re-verified via fstat. Genuine
+          # absence is nil (nobody authorized); every other filesystem
+          # failure classifies fail-closed (review round 6, F2).
           # @return [String, nil] file content, or nil when absent
           def read_verified(path)
             real = begin
               File.realpath(path)
-            rescue
+            rescue Errno::ENOENT
               return nil
+            rescue
+              raise Ace::Lab::InvalidConfigurationError, verify_error(path)
             end
 
             verify_path_ownership!(real, path)
 
-            io = File.open(real, File::RDONLY | File::NOFOLLOW)
             begin
-              stat = io.stat
-              raise Ace::Lab::InvalidConfigurationError, verify_error(path) unless secure_file_stat?(stat)
+              io = File.open(real, File::RDONLY | File::NOFOLLOW)
+              begin
+                raise Ace::Lab::InvalidConfigurationError, verify_error(path) unless secure_file_stat?(io.stat)
 
-              io.read
-            ensure
-              io.close
+                io.read
+              ensure
+                io.close
+              end
+            rescue Ace::Lab::InvalidConfigurationError
+              raise
+            rescue
+              raise Ace::Lab::InvalidConfigurationError,
+                "invalid lab configuration: trusted authorization file #{path} could not be read; " \
+                "failing closed"
             end
-          rescue Errno::ELOOP, Errno::EPERM
-            raise Ace::Lab::InvalidConfigurationError, verify_error(path)
           end
 
           def verify_path_ownership!(real, display_path)

@@ -65,31 +65,32 @@ module Ace
           Models::QueryResult.failure("invalid_configuration", e.message)
         end
 
+        # Dependencies are derived fresh for EVERY query: nothing is
+        # memoized, so revoking deployment grants revokes access on the next
+        # query even for a reused service instance (review round 6, F1).
         def dependencies
           return [@loader.load, @authorizer] if @loader
 
-          @dependencies ||= begin
-            config = @config || Ace::Lab.config
-            normalized = Atoms::TopologySchema.normalize!(config)
-            grants = if @config
-              # Explicitly injected configuration is a trusted in-process
-              # input (API use and fixtures)
-              normalized["authorization"]["principals"]
-            else
-              # Cascade path: grants come only from the trusted deployment-
-              # controlled document; cascade tiers can never define or expand
-              # authorization (review round 4, F3)
-              Molecules::GrantResolver.resolve(
-                documents: Ace::Lab.cascade_documents,
-                topology: normalized["topology"],
-                trusted_path: Ace::Lab.authorization_path
-              )["principals"]
-            end
-
-            loader = Molecules::TopologyLoader.new(normalized)
-            authorizer = Molecules::CallerAuthorizer.new(principals: grants)
-            [loader.load, authorizer]
+          config = @config || Ace::Lab.config
+          normalized = Atoms::TopologySchema.normalize!(config)
+          grants = if @config
+            # Explicitly injected configuration is a trusted in-process
+            # input (API use and fixtures)
+            normalized["authorization"]["principals"]
+          else
+            # Cascade path: grants come only from the trusted deployment-
+            # controlled document, re-read and re-verified per query; cascade
+            # tiers can never define or expand authorization (review round 4, F3)
+            Molecules::GrantResolver.resolve(
+              documents: Ace::Lab.cascade_documents,
+              topology: normalized["topology"],
+              trusted_path: Ace::Lab.authorization_path
+            )["principals"]
           end
+
+          loader = Molecules::TopologyLoader.new(normalized)
+          authorizer = Molecules::CallerAuthorizer.new(principals: grants)
+          [loader.load, authorizer]
         end
       end
     end

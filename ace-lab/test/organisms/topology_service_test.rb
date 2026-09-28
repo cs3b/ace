@@ -241,6 +241,23 @@ module Organisms
       end
     end
 
+    def test_grant_revocation_applies_to_reused_service
+      config = authorized_for_local(topology_config)
+      service = Ace::Lab::Organisms::TopologyService.from_config(config)
+
+      assert_predicate service.projects, :ok?
+
+      # Revoke the deployment grants; the SAME service instance must deny
+      # on the next query — grants are re-derived per query, never cached
+      # (review round 6, F1)
+      config["authorization"]["principals"] = {}
+
+      revoked = service.projects
+
+      refute_predicate revoked, :ok?
+      assert_equal "unauthorized", revoked.error_code
+    end
+
     def test_replaced_process_keeps_stable_id_until_reattested
       service = Ace::Lab::Organisms::TopologyService.from_config(authorized_for_local(topology_config))
 
