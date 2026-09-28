@@ -79,9 +79,23 @@ export default function (pi, ports = {}) {
   });
 
   // The agent consumed every queued continuation; same-source wakes may
-  // deliver again.
+  // deliver again. Watches whose change was absorbed by a pending wake are
+  // re-checked so no change is lost without a new filesystem event.
   pi.on("agent_settled", async () => {
     runtime?.registry.settleAll();
+  });
+
+  // Manual compaction rejects sendUserMessage asynchronously and never emits
+  // agent_settled, so wakes arriving during compaction are retained locally
+  // and flushed when compaction completes or fails.
+  pi.on("session_before_compact", async () => {
+    runtime?.registry.pauseDelivery();
+  });
+  pi.on("session_compact", async () => {
+    runtime?.registry.resumeDelivery();
+  });
+  pi.on("session_compact_failed", async () => {
+    runtime?.registry.resumeDelivery();
   });
 
   pi.on("session_shutdown", async () => {

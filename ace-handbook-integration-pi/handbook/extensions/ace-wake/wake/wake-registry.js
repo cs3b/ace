@@ -34,6 +34,10 @@ export class WakeRegistry {
   #status;
   /** @private @type {import("./wake-dispatcher.js").WakeDispatcher} */
   #dispatcher;
+  /** @private @type {boolean} */
+  #retaining;
+  /** @private @type {Map<string, {prefix: string, name: string, message: string}>} */
+  #retained;
   /** @private @type {import("./types.js").WakeSnapshot | undefined} */
   #loaded;
 
@@ -51,6 +55,10 @@ export class WakeRegistry {
     this.#state = state;
     this.#status = status;
     this.#dispatcher = dispatcher;
+    /** @private @type {boolean} */
+    this.#retaining = false;
+    /** @private @type {Map<string, {prefix: string, name: string, message: string}>} */
+    this.#retained = new Map();
   }
 
   /**
@@ -198,14 +206,48 @@ export class WakeRegistry {
 
   /** Dispose all runtime handles; persisted definitions remain for reload. */
   dispose() {
+    this.#retaining = false;
+    this.#retained.clear();
     this.#loops.stopAll();
     this.#watches.stopAll();
     this.#status.render([]);
   }
 
-  /** Clear pending wake markers after the agent fully settled. */
+  /**
+   * Clear pending wake markers after the agent fully settled, then re-check
+   * watches whose change was absorbed by a pending wake: their state still
+   * differs from the last delivered fingerprint, so they wake again without
+   * needing another filesystem event.
+   */
   settleAll() {
     this.#dispatcher.settleAll();
+    this.#watches.flushDirty((watch) => this.#fire(WATCH_SOURCE_PREFIX, watch.name, watch.message));
+    this.#refreshStatus();
+  }
+
+  /**
+   * Retain wakes instead of dispatching while the host cannot accept them
+   * (manual compaction rejects sendUserMessage asynchronously, which would
+   * otherwise strand the source pending forever — compaction never emits
+   * agent_settled).
+   */
+  pauseDelivery() {
+    this.#retaining = true;
+  }
+
+  /**
+   * Resume delivery: pending markers from before the pause are stale (their
+   * wakes were rejected or consumed without a settlement signal), so they are
+   * cleared and every retained wake is dispatched fresh.
+   */
+  resumeDelivery() {
+    this.#retaining = false;
+    this.#dispatcher.settleAll();
+    const retained = [...this.#retained.values()];
+    this.#retained.clear();
+    for (const wake of retained) {
+      this.#fire(wake.prefix, wake.name, wake.message);
+    }
     this.#refreshStatus();
   }
 
@@ -216,7 +258,7 @@ export class WakeRegistry {
 
   #fire(sourcePrefix, name, message) {
     try {
-      const outcome = this.#dispatcher.wake(`${sourcePrefix}${name}`, message);
+      const outcome = this.#dispatch(sourcePrefix, name, message);
       this.#refreshStatus();
       return outcome;
     } catch {
@@ -230,6 +272,14 @@ export class WakeRegistry {
       this.#watches.stopAll();
       return { delivered: false, reason: "stale" };
     }
+  }
+
+  #dispatch(sourcePrefix, name, message) {
+    if (this.#retaining) {
+      this.#retained.set(`${sourcePrefix}${name}`, { prefix: sourcePrefix, name, message });
+      return { delivered: false, reason: "retained" };
+    }
+    return this.#dispatcher.wake(`${sourcePrefix}${name}`, message);
   }
 
   #persist() {

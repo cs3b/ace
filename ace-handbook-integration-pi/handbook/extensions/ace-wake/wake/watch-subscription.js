@@ -57,7 +57,7 @@ export function canonicalizeWatchPath(baseDir, path) {
  * }}
  */
 export function createWatchPort({ watchFactory, statFn, baseDir = process.cwd(), canonicalizeFn = canonicalizeWatchPath, onDeactivate }) {
-  /** @type {Map<string, {watcher: {close: () => void}, canonicalPath: string, fingerprint: string}>} */
+  /** @type {Map<string, {watcher: {close: () => void}, canonicalPath: string, definition: import("./types.js").WatchDefinition, fingerprint: string, dirty: boolean}>} */
   const active = new Map();
   /** @type {Map<string, string>} */
   const errors = new Map();
@@ -85,19 +85,28 @@ export function createWatchPort({ watchFactory, statFn, baseDir = process.cwd(),
           }
           const outcome = onWake(definition);
           if (outcome && outcome.delivered === false && outcome.reason === "coalesced") {
-            // The queued wake already covers this change; keep the delivered
-            // fingerprint so a later change queues a fresh follow-up instead
-            // of being silently absorbed.
+            // The queued wake already covers this change, but the change
+            // itself is undelivered: mark the subscription dirty so
+            // flushDirty() re-checks it once the agent settles — without
+            // needing another filesystem event.
+            const entry = active.get(definition.name);
+            if (entry) {
+              entry.dirty = true;
+            }
             return;
           }
-          active.get(definition.name).fingerprint = next;
+          const entry = active.get(definition.name);
+          if (entry) {
+            entry.fingerprint = next;
+            entry.dirty = false;
+          }
         },
         onError: (error) => {
           deactivate(definition.name, describeError(error));
         },
       });
 
-      active.set(definition.name, { watcher, canonicalPath, fingerprint });
+      active.set(definition.name, { watcher, canonicalPath, definition, fingerprint, dirty: false });
       return canonicalPath;
     },
 
@@ -111,6 +120,37 @@ export function createWatchPort({ watchFactory, statFn, baseDir = process.cwd(),
         stopExisting(name);
       }
       errors.clear();
+    },
+
+    /**
+     * Re-check subscriptions whose change was absorbed by a pending wake.
+     * Called after the agent settles (pending markers cleared): a subscription
+     * whose current state still differs from its last delivered fingerprint
+     * fires a fresh wake — no new filesystem event required.
+     *
+     * @param {(definition: import("./types.js").WatchDefinition) => {delivered: boolean, reason?: string} | undefined} onWake
+     */
+    flushDirty(onWake) {
+      for (const entry of active.values()) {
+        if (!entry.dirty) {
+          continue;
+        }
+        entry.dirty = false;
+        const current = readBaselineOrError(entry.canonicalPath, entry.definition.name);
+        if (current === undefined) {
+          continue;
+        }
+        const next = fingerprintOf(current);
+        if (next === entry.fingerprint) {
+          continue;
+        }
+        entry.fingerprint = next;
+        try {
+          onWake(entry.definition);
+        } catch {
+          // Wake dispatch must never break the flush loop.
+        }
+      }
     },
 
     /**

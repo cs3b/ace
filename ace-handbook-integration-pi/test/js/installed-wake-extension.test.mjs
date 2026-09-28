@@ -56,6 +56,9 @@ async function startSession(host) {
       await found[1]({ type: "session_start", reason: "reload" }, host.commandContext);
     },
     settle: () => handlerFor("agent_settled")({ type: "agent_settled" }, host.commandContext),
+    beforeCompact: () => handlerFor("session_before_compact")({ type: "session_before_compact" }, host.commandContext),
+    compacted: () => handlerFor("session_compact")({ type: "session_compact", trigger: "manual" }, host.commandContext),
+    compactFailed: () => handlerFor("session_compact_failed")({ type: "session_compact_failed", trigger: "manual" }, host.commandContext),
     shutdown: () => handlerFor("session_shutdown")({ type: "session_shutdown" }, host.commandContext),
   };
 }
@@ -209,6 +212,61 @@ describe("ace-wake delivery", () => {
       "the composed message, prefix and truncation marker included, must not exceed the bound",
     );
     await host.runCommand("loop", "remove big");
+  });
+
+  it("re-delivers a watch change absorbed by a pending wake after settlement", async () => {
+    const host = createFakeHost();
+    const session = await startSession(host);
+    host.setFile("/fake/project/dep.txt", { mtimeMs: 1, size: 1 });
+    await host.runCommand("watch", "add dep --path dep.txt --message watch wake");
+
+    // First change wakes; second change during the wake's run coalesces.
+    host.setFile("/fake/project/dep.txt", { mtimeMs: 2, size: 2 });
+    host.triggerWatch("/fake/project/dep.txt");
+    assert.equal(host.sends.length, 1);
+    host.setFile("/fake/project/dep.txt", { mtimeMs: 3, size: 3 });
+    host.triggerWatch("/fake/project/dep.txt");
+    assert.equal(host.sends.length, 1, "the second change coalesces into the pending wake");
+
+    // Settlement re-checks dirty watches: the absorbed change wakes again
+    // without any further filesystem event.
+    await session.settle();
+    assert.equal(host.sends.length, 2, "the absorbed change must wake after settlement");
+    assert.match(host.sends[1].text, /watch:dep/);
+  });
+
+  it("retains wakes during compaction and flushes them when compaction ends", async () => {
+    const host = createFakeHost();
+    const session = await startSession(host);
+    await host.runCommand("loop", "add heartbeat --interval 10 --message check in");
+
+    await session.beforeCompact();
+    host.clock.advance(10_000);
+    host.clock.advance(10_000);
+    assert.equal(host.sends.length, 0, "wakes during compaction are retained, not dispatched");
+
+    await session.compacted();
+    assert.equal(host.sends.length, 1, "the retained wake flushes after compaction");
+    host.assertFollowUpDelivery("text:0");
+
+    // The flushed wake runs and settles like any other; the next tick wakes
+    // normally: nothing is stranded pending.
+    await session.settle();
+    host.clock.advance(10_000);
+    assert.equal(host.sends.length, 2);
+  });
+
+  it("flushes retained wakes when compaction fails", async () => {
+    const host = createFakeHost();
+    const session = await startSession(host);
+    await host.runCommand("loop", "add heartbeat --interval 10 --message check in");
+
+    await session.beforeCompact();
+    host.clock.advance(10_000);
+    assert.equal(host.sends.length, 0);
+
+    await session.compactFailed();
+    assert.equal(host.sends.length, 1, "retained wakes flush after failed compaction too");
   });
 
   it("coalesces same-source wakes while one is queued and keeps distinct sources", async () => {
