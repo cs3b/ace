@@ -2572,7 +2572,9 @@ class ReviewManagerTest < AceReviewTest
       "headRefOid" => ("a" * 40), "baseRefOid" => ("b" * 40),
       "changedFiles" => 2, "files" => [{"path" => "lib/keep.rb"}, {"path" => "docs/generated.md"}]
     )
-    options = Ace::Review::Models::ReviewOptions.new(pr: "42")
+    # pr_comments disabled: comment fetching would call the real gh CLI and
+    # fail under hermetic environments without ambient credentials
+    options = Ace::Review::Models::ReviewOptions.new(pr: "42", pr_comments: false)
 
     result = nil
     Ace::Review::Molecules::GhPrFetcher.stub(:fetch_pr,
