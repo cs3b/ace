@@ -70,3 +70,39 @@ module Molecules
     end
   end
 end
+
+module Molecules
+  class InventoryQueryAbsentProjectTest < Minitest::Test
+    def query_with_grant_for_absent_project
+      # Trusted grants files are only structurally validated, so a grant for
+      # "ghost" (absent from local topology) is a legal configuration state
+      authorizer = Ace::Lab::Molecules::CallerAuthorizer.new(
+        principals: {"operator" => {"projects" => %w[atlas borealis ghost]}},
+        identity: ["operator"]
+      )
+      Ace::Lab::Molecules::InventoryQuery.new(
+        index: Ace::Lab::Molecules::TopologyLoader.new(topology_config).load,
+        authorizer: authorizer
+      )
+    end
+
+    def test_granted_but_absent_project_is_missing_not_empty
+      # Machine-wide grants may name projects without local topology;
+      # unknown identity is an error, never a valid empty inventory
+      # (review round 17, F1)
+      %i[agents services].each do |method|
+        result = query_with_grant_for_absent_project.public_send(method, project: "ghost")
+
+        refute_predicate result, :ok?
+        assert_equal "missing", result.error_code
+      end
+    end
+
+    def test_existing_project_with_no_entries_is_a_valid_empty_inventory
+      result = query_with_grant_for_absent_project.agents(project: "borealis")
+
+      assert_predicate result, :ok?
+      assert_empty result.data["agents"]
+    end
+  end
+end
