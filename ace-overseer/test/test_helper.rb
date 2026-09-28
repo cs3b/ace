@@ -5,6 +5,7 @@ $LOAD_PATH.unshift File.expand_path("../lib", __dir__)
 %w[
   ace-assign
   ace-git
+  ace-git-github
   ace-git-worktree
   ace-task
   ace-tmux
