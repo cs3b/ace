@@ -14,13 +14,23 @@ module Ace
         # Identity strings of the verified local process owner: the passwd
         # username and the numeric uid, either of which may be configured.
         def self.local_identity
-          uid = Process.uid
-          name = begin
-            Etc.getpwuid(uid)&.name
+          username = begin
+            Etc.getpwuid(Process.uid)&.name
           rescue
             nil
           end
-          [name, uid.to_s].compact.uniq
+          matchable_identities(username, Process.uid)
+        end
+
+        # Usernames and numeric-uid grant keys share one namespace in the
+        # grants file. An all-digit username is matchable only via its uid so
+        # it can never collide with a different user's numeric-uid grant
+        # (subject review: separate caller identity principal namespaces).
+        def self.matchable_identities(username, uid)
+          identities = []
+          identities << username if username && username !~ /\A\d+\z/
+          identities << uid.to_s
+          identities.uniq
         end
 
         # @param principals [Hash] authorization.principals from normalized config
