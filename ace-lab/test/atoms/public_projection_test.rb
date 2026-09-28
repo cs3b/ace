@@ -71,11 +71,15 @@ module Atoms
     end
 
     def test_unparseable_endpoint_projects_no_url
-      config = topology_config
-      config["topology"]["services"].first["endpoint"]["url"] = "::not a url::"
-      index = Ace::Lab::Molecules::TopologyLoader.new(config).load
+      # Schema validation rejects malformed URLs before loading; this guards
+      # the defensive projection path for entries built outside the loader
+      entry = Ace::Lab::Models::TopologyEntry.service(
+        "id" => "atlas-search", "project" => "atlas", "capabilities" => ["search"],
+        "default_for" => [], "endpoint" => {"kind" => "http", "url" => "::not a url::"},
+        "binding" => {"kind" => "service"}
+      )
 
-      projected = Ace::Lab::Atoms::PublicProjection.service(index.lookup("atlas-search"))
+      projected = Ace::Lab::Atoms::PublicProjection.service(entry)
 
       assert_nil projected["binding"]["endpoint"]["url"]
     end

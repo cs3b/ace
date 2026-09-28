@@ -115,7 +115,15 @@ topology:
 
 Validation rejects duplicate IDs (globally unique across projects, agents,
 services), unknown project references, malformed capabilities, defaults for
-undeclared capabilities, and principals referencing unknown projects.
+undeclared capabilities, unusable endpoints (absolute http(s) URL with a
+host; `endpoint.kind` is `http` or `https`), and principals referencing
+unknown projects.
+
+**Error messages are value-free by design:** validation runs before
+authorization, so messages use positional field locations
+(`topology.agents[0].project references an unknown project`) and never echo
+configured IDs, project names, or principal names — configuration defects
+cannot disclose topology to unauthorized callers.
 
 **Ownership:** deployed topology and authorization values are maintained by
 the `lab-config` repository (`8wl.t.gad`). `ace-lab` defines the schema and

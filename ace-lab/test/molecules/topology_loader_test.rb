@@ -43,7 +43,7 @@ module Molecules
       error = assert_raises(Ace::Lab::InvalidConfigurationError) do
         Ace::Lab::Molecules::TopologyLoader.new(config).load
       end
-      assert_match(/duplicate id/, error.message)
+      assert_match(/duplicate stable id/, error.message)
     end
 
     def test_rejects_missing_project_reference
