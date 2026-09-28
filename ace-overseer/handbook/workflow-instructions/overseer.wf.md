@@ -6,8 +6,8 @@ doc-type: workflow
 title: Overseer Workflow
 purpose: Binding process contract for the overseer lifecycle (work-on, status, prune) with executed-check contracts for prune safety and status truth.
 ace-docs:
-  last-updated: '2026-09-20'
-  last-checked: '2026-09-20'
+  last-updated: '2026-09-28'
+  last-checked: '2026-09-28'
 ---
 
 # Overseer Workflow
@@ -84,7 +84,8 @@ ace-overseer prune --yes
 #### Prune safety (non-negotiable executed check)
 
 Prune/removal of a worktree or branch happens **only after an executed
-preservation proof** for every commit that would be removed:
+preservation proof plus an executed no-active-writer check** for every
+candidate:
 
 1. Prove the work is already merged into its base:
 
@@ -92,35 +93,83 @@ preservation proof** for every commit that would be removed:
    git merge-base --is-ancestor <work-head> <base>
    ```
 
-   Exit code 0 proves every commit on the work branch is contained in the base.
+   Exit code 0 proves every commit on the work branch is contained in the
+   base.
 
-2. If the work was migrated elsewhere (squash-merge, cherry-pick, hand-off),
-   prove the copy exists with a subject-level search in the successor
-   repository:
+2. If the work was migrated elsewhere (squash-merge, cherry-pick,
+   hand-off), preservation requires a **declared, verified destination**
+   plus content equivalence. A matching commit subject is never sufficient
+   proof:
+
+   1. Declare the destination concretely: successor repository plus
+      branch/PR/commit that received the work.
+   2. Verify the destination actually accepted the work, executed in this
+      session:
+
+      ```bash
+      git -C <successor-repo> merge-base --is-ancestor <dest-ref> <dest-branch>
+      ```
+
+      rc=0 proves the destination landed on the declared branch (or read
+      the merged/accepted state from the forge hosting the PR).
+
+   3. Prove the destination carries the same work by content, not by
+      name. Pass with exactly one of:
+
+      - Tree/artifact equivalence -- the squashed result is the same
+        content:
+
+          ```bash
+          test "$(git -C <successor-repo> rev-parse '<dest-ref>^{tree}')" \
+            = "$(git rev-parse '<work-head>^{tree}')"
+          ```
+
+      - Patch equivalence -- the same changes, commit-for-commit or
+        range-for-range:
+
+          ```bash
+          git range-diff <base>...<work-head> <base>...<dest-range>
+          ```
+
+          with no substantive differences; or diff the normalized patches
+          (`git show --format=` output of each side) and require an empty
+          diff.
+
+   4. Ambiguity preserves: conflicting hashes, an unverifiable destination,
+      or a failed equivalence check means no proof -- block the prune per
+      step 5.
+
+3. Prove no active writer before destruction, executed in this session
+   against the authoritative lifecycle state:
 
    ```bash
-   git -C <successor-repo> log --all --grep "<subject>"
+   ace-overseer status --format json
    ```
 
-   The search must return the commit(s) carrying the work. No output means no
-   proof.
+   For assignment-backed candidates also check `ace-assign status`; for Lab
+   runtime candidates check `ace-overseer status --runtime lab`. A running
+   assignment, an in-flight Lab work, or any unaccounted writer blocks the
+   prune. Missing or unreadable lifecycle state counts as an active writer
+   -- preserve.
 
-3. A described or remembered proof is never sufficient -- run the command and
-   observe the result in this session.
+4. A described or remembered proof is never sufficient -- run the commands
+   and observe the results in this session.
 
-4. Any commit without a proven copy **blocks the prune** for that worktree.
-   Report the blocked candidate (ref, head SHA, missing proof) to the operator;
-   never silently drop it and never force past a failed proof.
+5. Any commit without a proven copy, any failed or ambiguous equivalence,
+   or any active-writer evidence **blocks the prune** for that worktree.
+   Report the blocked candidate (ref, head SHA, missing proof) to the
+   operator; never silently drop it and never force past a failed proof.
+   Preserve on ambiguity.
 
 ## Non-Negotiable Contracts Summary
 
-| Contract     | Claim                             | Executed proof                                                                                                                                                            |
-|--------------|-----------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Prune safety | "The work is preserved"           | `git merge-base --is-ancestor <work-head> <base>` (rc=0), or `git -C <successor-repo> log --all --grep "<subject>"` returning the migrated commit                          |
-| Status truth | "The task is blocked on the owner" | An executable non-secret check run in this session; stale tasks closed/corrected in the same change                                                                       |
+| Contract     | Claim | Executed proof |
+|--------------|-------|----------------|
+| Prune safety | "The work is preserved and nothing is actively writing" | `git merge-base --is-ancestor <work-head> <base>` (rc=0), or verified destination + tree/artifact or patch equivalence; plus `ace-overseer status --format json` (assignment/Lab status where applicable) showing no active writer |
+| Status truth | "The task is blocked on the owner" | An executable non-secret check run in this session; stale tasks closed/corrected in the same change |
 
 ## Success Criteria
 
 - Work starts only through `ace-overseer work-on` (or the Lab-runtime equivalent), never through ad-hoc manual worktree provisioning.
 - Every status review re-verified pending owner-blocked tasks with an executed check and corrected stale state in the same change.
-- Every pruned worktree/branch had an executed preservation proof; candidates without proof were reported as blocked, not removed.
+- Every pruned worktree/branch had an executed preservation proof (ancestor containment, or a verified destination with tree/artifact or patch equivalence) and an executed no-active-writer check; candidates without complete proof were reported as blocked, not removed.
