@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "open3"
-require "etc"
 require_relative "../test_helper"
 
 module Ace
@@ -9,31 +8,32 @@ module Ace
     module CLI
       module Commands
         # SC2/SC3 (spec 8wq.t.1w4): the packaged gem installs into an isolated
-        # GEM_HOME and serves inventory/resolve/route from a fresh project
-        # using the sanitized fixture — proving the topology CLI works from an
-        # installed gem with no /usr/local/bin/lab dependency, no workspace
-        # code leakage, and no leaked endpoint secrets.
+        # GEM_HOME and serves the packaged CLI from a fresh project using the
+        # sanitized fixture — proving the installed gem works with no
+        # /usr/local/bin/lab dependency, no workspace code leakage, and no
+        # leaked endpoint secrets. Without a deployment grants file the CLI
+        # fails closed with a classified unauthorized result, which still
+        # proves the full configuration load and validation pipeline ran.
+        # Authorized query behavior is covered in-process at the service and
+        # command level (the root-owned grants file is not writable in tests).
         class FreshInstallTest < Minitest::Test
           def test_fresh_install_serves_topology_without_lab_binary
             Dir.mktmpdir do |tmp|
               gem_home = File.join(tmp, "gems")
               project_dir = File.join(tmp, "project")
-              trusted_path = File.join(tmp, "authorization.yml")
               gem_file = build_gem
               begin
                 install_gem(gem_file, gem_home)
                 write_topology_config(project_dir)
-                write_trusted_grants(trusted_path)
                 bin = File.join(gem_home, "bin", "ace-lab")
                 assert File.exist?(bin), "installed gem must ship the ace-lab executable"
 
                 refute_packaged_lab_dependency(gem_home)
-                refute_workspace_code(gem_home, project_dir, trusted_path)
+                refute_workspace_code(gem_home, project_dir)
 
-                env = launch_env(gem_home, project_dir, trusted_path)
-                verify_resolve(env, bin, project_dir)
-                verify_route(env, bin, project_dir)
-                verify_pane_replacement_keeps_stable_id(env, bin, project_dir)
+                env = launch_env(gem_home, project_dir)
+                verify_resolve_fails_closed(env, bin, project_dir)
+                verify_route_fails_closed(env, bin, project_dir)
               ensure
                 FileUtils.rm_f(gem_file)
               end
@@ -66,15 +66,17 @@ module Ace
           # Environment for the installed CLI: only the variables the process
           # needs — inherited workspace/bundler state is dropped entirely
           # (review R5). GEM_PATH keeps the system gem dir as dependency
-          # fallback; HOME points at the fresh project; grants come from the
-          # trusted authorization file (review round 4, F3).
-          def launch_env(gem_home, project_dir, trusted_path)
+          # fallback; HOME points at the fresh project. There is deliberately
+          # no caller-controllable grants override (review round 5, F1).
+          def launch_env(gem_home, project_dir)
             {
               "PATH" => ENV["PATH"],
               "HOME" => project_dir,
+              # UTF-8 locale: a stripped environment defaults to US-ASCII,
+              # which breaks YAML parsing of non-ASCII configuration
+              "LANG" => ENV["LANG"] || "en_US.UTF-8",
               "GEM_HOME" => gem_home,
-              "GEM_PATH" => "#{gem_home}#{File::PATH_SEPARATOR}#{system_gem_dir}",
-              Ace::Lab::AUTHORIZATION_ENV => trusted_path
+              "GEM_PATH" => "#{gem_home}#{File::PATH_SEPARATOR}#{system_gem_dir}"
             }
           end
 
@@ -97,19 +99,12 @@ module Ace
           end
 
           # The deployed topology document carries no grants; authorization
-          # lives in the trusted file (review round 4, F3)
+          # lives in the deployment-owned trusted file (review rounds 4-5)
           def write_topology_config(project_dir)
             config = YAML.load_file(File.join(package_dir, "test", "fixtures", "lab", "sanitized_topology.yml"))
             config_dir = File.join(project_dir, ".ace", "lab")
             FileUtils.mkdir_p(config_dir)
             File.write(File.join(config_dir, "config.yml"), YAML.dump(config))
-          end
-
-          def write_trusted_grants(trusted_path)
-            principal = Etc.getpwuid(Process.uid)&.name || Process.uid.to_s
-            File.write(trusted_path, YAML.dump({
-              "principals" => {principal => {"projects" => %w[atlas borealis]}}
-            }))
           end
 
           def refute_packaged_lab_dependency(gem_home)
@@ -124,9 +119,9 @@ module Ace
 
           # The installed gem — not the workspace — must serve the commands:
           # probe which copy of ace-lab a launch-env process actually loads
-          def refute_workspace_code(gem_home, project_dir, trusted_path)
+          def refute_workspace_code(gem_home, project_dir)
             probe = 'require "ace/lab"; puts Gem.loaded_specs["ace-lab"].full_gem_path'
-            out, err, status = Open3.capture3(launch_env(gem_home, project_dir, trusted_path), RbConfig.ruby,
+            out, err, status = Open3.capture3(launch_env(gem_home, project_dir), RbConfig.ruby,
               "-e", probe, unsetenv_others: true, chdir: project_dir)
             flunk("installed-gem probe failed: #{err}") unless status.success?
 
@@ -136,47 +131,30 @@ module Ace
               "installed gem must be loaded from #{gem_home}, got: #{loaded}"
           end
 
-          def verify_resolve(env, bin, project_dir)
-            out, err, status = run_cli(env, bin, project_dir, "resolve", "--id", "atlas-planner", "--format", "json")
-            assert status.success?, "resolve failed: #{err}"
+          # Without deployment grants the installed CLI fails closed with one
+          # classified document — proving the packaged binary, cascade load,
+          # schema validation, and error contract all work. Hidden and
+          # nonexistent IDs are indistinguishable (missing), so an
+          # unauthorized resolve classifies missing, never leaking whether
+          # the entry exists (review round 3, F3).
+          def verify_resolve_fails_closed(env, bin, project_dir)
+            out, _, status = run_cli(env, bin, project_dir, "resolve", "--id", "atlas-planner", "--format", "json")
+            refute status.success?, "resolve must fail closed without deployment grants: #{out}"
 
             parsed = JSON.parse(out)
-            assert_equal "ok", parsed["status"]
-            assert_equal "atlas-planner", parsed["data"]["entry"]["id"]
+            assert_equal "error", parsed["status"]
+            assert_equal "missing", parsed.dig("error", "code")
             refute_includes out, "secret"
             refute_includes out, "token"
           end
 
-          def verify_route(env, bin, project_dir)
-            out, err, status = run_cli(env, bin, project_dir, "route", "--project", "atlas",
+          def verify_route_fails_closed(env, bin, project_dir)
+            out, _, status = run_cli(env, bin, project_dir, "route", "--project", "atlas",
               "--capability", "search", "--format", "json")
-            assert status.success?, "route failed: #{err}"
+            refute status.success?, "route must fail closed without deployment grants: #{out}"
 
             parsed = JSON.parse(out)
-            assert_equal "atlas-search", parsed["data"]["entry"]["id"]
-          end
-
-          # SC2: changing pane identity leaves the stable agent ID unchanged;
-          # the replaced binding is stale until re-attested, then available
-          def verify_pane_replacement_keeps_stable_id(env, bin, project_dir)
-            project_config = File.join(project_dir, ".ace", "lab", "config.yml")
-            config = YAML.load_file(project_config)
-            binding = config["topology"]["agents"].first["binding"]
-
-            binding["instance_id"] = "pane-replaced-9"
-            File.write(project_config, YAML.dump(config))
-            out, = run_cli(env, bin, project_dir, "resolve", "--id", "atlas-planner", "--format", "json")
-            parsed = JSON.parse(out)
-            assert_equal "stale", parsed.dig("error", "code")
-            assert_equal "atlas-planner", parsed.dig("error", "id")
-
-            binding["attested_instance_id"] = "pane-replaced-9"
-            File.write(project_config, YAML.dump(config))
-            out, = run_cli(env, bin, project_dir, "resolve", "--id", "atlas-planner", "--format", "json")
-            parsed = JSON.parse(out)
-            assert_equal "ok", parsed["status"]
-            assert_equal "atlas-planner", parsed.dig("data", "entry", "id")
-            assert_equal "available", parsed.dig("data", "entry", "binding", "state")
+            assert_equal "unauthorized", parsed.dig("error", "code")
           end
         end
       end

@@ -113,10 +113,13 @@ topology:
 
 Grants never live in the cascade: project and user documents are
 caller-writable, so an `authorization` section there is rejected as
-`invalid_configuration`. Grants come from a single trusted,
-deployment-controlled file — selected by `ACE_LAB_AUTHORIZATION_FILE`,
-default `/etc/lab/ace-lab/authorization.yml` (owned by the `lab-config`
-deployment):
+`invalid_configuration`. Grants come from a single deployment-controlled
+file at the **fixed path** `/etc/lab/ace-lab/authorization.yml` (installed
+by the `lab-config` deployment). The location is not caller-selectable —
+there is no flag or environment override. At every query the tool verifies
+the file and every directory on its real path are root-owned and not
+group/world-writable, and opens the file `O_NOFOLLOW`; any failed
+verification fails closed:
 
 ```yaml
 principals:

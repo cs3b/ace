@@ -7,8 +7,9 @@
 #
 # AUTHORIZATION GRANTS DO NOT LIVE HERE. Caller-writable cascade documents
 # must never define who may see what (review round 4, F3). Grants come from
-# the trusted deployment-controlled file selected by ACE_LAB_AUTHORIZATION_FILE
-# (default /etc/lab/ace-lab/authorization.yml):
+# the single deployment-controlled file /etc/lab/ace-lab/authorization.yml —
+# a fixed path; the file and every directory on its real path must be
+# root-owned and not group/world-writable, or queries fail closed:
 #
 #   { "principals": { "<verified-local-uid>": { "projects": ["project-id"] } } }
 #

@@ -8,16 +8,9 @@ module Molecules
       Ace::Lab::Atoms::TopologySchema.normalize!(topology_config)["topology"]
     end
 
-    def resolve(documents: [], trusted: nil)
-      path = nil
-      if trusted
-        path = File.join(Dir.mktmpdir, "authorization.yml")
-        File.write(path, YAML.dump(trusted))
-      end
-      path ||= "/nonexistent/lab/authorization.yml"
-
+    def resolve(documents: [], trusted_path: "/nonexistent/lab/authorization.yml")
       Ace::Lab::Molecules::GrantResolver.resolve(
-        documents: documents, topology: topology, trusted_path: path
+        documents: documents, topology: topology, trusted_path: trusted_path
       )
     end
 
@@ -33,20 +26,19 @@ module Molecules
       assert_empty grants["principals"]
     end
 
-    def test_trusted_document_grants_its_identities
-      grants = resolve(trusted: {"principals" => {
-        "operator" => {"projects" => %w[atlas borealis]}
-      }})
+    def test_caller_writable_trusted_file_fails_ownership_verification
+      # A user-owned grants file must be rejected even when it contains a
+      # syntactically valid self-grant (review round 5, F1)
+      path = File.join(Dir.mktmpdir, "authorization.yml")
+      File.write(path, YAML.dump({"principals" => {
+        Process.uid.to_s => {"projects" => %w[atlas borealis]}
+      }}))
 
-      assert_equal %w[atlas borealis], grants.dig("principals", "operator", "projects")
-    end
-
-    def test_trusted_grants_must_reference_known_projects
-      assert_raises(Ace::Lab::InvalidConfigurationError) do
-        resolve(trusted: {"principals" => {
-          "operator" => {"projects" => ["ghost"]}
-        }})
+      error = assert_raises(Ace::Lab::InvalidConfigurationError) do
+        resolve(trusted_path: path)
       end
+
+      assert_match(/must be owned by root and not writable by group or others/, error.message)
     end
 
     def test_authorization_sections_in_cascade_documents_are_rejected
@@ -61,20 +53,29 @@ module Molecules
 
     def test_defaults_documents_may_carry_legacy_authorization_without_rejection
       grants = resolve(
-        documents: [cascade_doc(defaults: true, authorization: {"principals" => {}})],
-        trusted: {"principals" => {"operator" => {"projects" => ["atlas"]}}}
+        documents: [cascade_doc(defaults: true, authorization: {"principals" => {}})]
       )
 
-      assert_equal ["atlas"], grants.dig("principals", "operator", "projects")
+      # No trusted document: defaults are exempt from the cascade rejection
+      # but never grant anything
+      assert_empty grants["principals"]
     end
 
-    def test_unparseable_trusted_document_fails_configuration
-      path = File.join(Dir.mktmpdir, "authorization.yml")
-      File.write(path, "secret: *private_token_canary")
+    def test_parse_rejects_unknown_project_references
+      assert_raises(Ace::Lab::InvalidConfigurationError) do
+        Ace::Lab::Molecules::GrantResolver.send(
+          :parse_grants,
+          YAML.dump({"principals" => {"operator" => {"projects" => ["ghost"]}}}),
+          "/etc/lab/ace-lab/authorization.yml", topology
+        )
+      end
+    end
 
+    def test_parse_never_leaks_unparseable_content
       error = assert_raises(Ace::Lab::InvalidConfigurationError) do
-        Ace::Lab::Molecules::GrantResolver.resolve(
-          documents: [], topology: topology, trusted_path: path
+        Ace::Lab::Molecules::GrantResolver.send(
+          :parse_grants, "secret: *private_token_canary",
+          "/etc/lab/ace-lab/authorization.yml", topology
         )
       end
 
@@ -83,13 +84,10 @@ module Molecules
       assert_match(/could not be parsed as YAML/, error.message)
     end
 
-    def test_non_mapping_trusted_document_fails_configuration
-      path = File.join(Dir.mktmpdir, "authorization.yml")
-      File.write(path, "- broken")
-
+    def test_parse_rejects_non_mapping_documents
       error = assert_raises(Ace::Lab::InvalidConfigurationError) do
-        Ace::Lab::Molecules::GrantResolver.resolve(
-          documents: [], topology: topology, trusted_path: path
+        Ace::Lab::Molecules::GrantResolver.send(
+          :parse_grants, "- broken", "/etc/lab/ace-lab/authorization.yml", topology
         )
       end
 

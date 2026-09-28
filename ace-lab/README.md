@@ -16,9 +16,10 @@ work, and never guesses transient pane or session identifiers.
 
 Configure topology via the ADR-022 cascade (`~/.ace/lab/config.yml` or
 `.ace/lab/config.yml`; deployed values are owned by the `lab-config`
-repository). Authorization grants live in a separate trusted,
-deployment-controlled file — `ACE_LAB_AUTHORIZATION_FILE` (default
-`/etc/lab/ace-lab/authorization.yml`) — never in the caller-writable cascade:
+repository). Authorization grants live in a separate deployment-controlled
+file at the fixed path `/etc/lab/ace-lab/authorization.yml` — root-owned and
+not group/world-writable, verified at every query — never in the
+caller-writable cascade and never at a caller-selected location:
 
 ```yaml
 # .ace/lab/config.yml — topology only

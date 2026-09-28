@@ -158,14 +158,6 @@ module Organisms
       end
     end
 
-    def with_authorization_file(path)
-      previous = ENV[Ace::Lab::AUTHORIZATION_ENV]
-      ENV[Ace::Lab::AUTHORIZATION_ENV] = path
-      yield
-    ensure
-      ENV[Ace::Lab::AUTHORIZATION_ENV] = previous
-    end
-
     def write_lab_config(root, content)
       config_dir = File.join(root, ".ace", "lab")
       FileUtils.mkdir_p(config_dir)
@@ -200,30 +192,31 @@ module Organisms
       end
     end
 
-    def test_grants_come_from_the_trusted_authorization_file
+    def test_grants_wire_from_the_trusted_authorization_seam
       Dir.mktmpdir do |project|
-        Dir.mktmpdir do |trusted_dir|
-          write_lab_config(project, deployment_config(with_authorization: false))
-          trusted_path = File.join(trusted_dir, "authorization.yml")
-          File.write(trusted_path, YAML.dump({
-            "principals" => {
-              Ace::Lab::Molecules::CallerAuthorizer.local_identity.first => {"projects" => %w[atlas borealis]}
-            }
-          }))
+        write_lab_config(project, deployment_config(with_authorization: false))
 
-          Ace::Lab.reset_config!
-          begin
-            with_authorization_file(trusted_path) do
-              Dir.chdir(project) do
+        Ace::Lab.reset_config!
+        begin
+          Dir.chdir(project) do
+            # The production trust boundary (fixed root-owned file) is not
+            # exercisable in tests; this stubs the seam to prove the service
+            # wires resolver grants into caller authorization. Resolver
+            # internals, including ownership verification, have their own
+            # tests. (review round 5, F1)
+            Ace::Lab.stub :authorization_path, "/etc/lab/ace-lab/authorization.yml" do
+              Ace::Lab::Molecules::GrantResolver.stub :resolve, {"principals" => {
+                Ace::Lab::Molecules::CallerAuthorizer.local_identity.first => {"projects" => %w[atlas borealis]}
+              }} do
                 result = Ace::Lab::Organisms::TopologyService.from_config.projects
 
                 assert_predicate result, :ok?
                 assert_equal %w[atlas borealis], result.data["projects"].map { |p| p["id"] }
               end
             end
-          ensure
-            Ace::Lab.reset_config!
           end
+        ensure
+          Ace::Lab.reset_config!
         end
       end
     end
@@ -234,7 +227,7 @@ module Organisms
 
         Ace::Lab.reset_config!
         begin
-          with_authorization_file("/nonexistent/lab/authorization.yml") do
+          Ace::Lab.stub :authorization_path, "/nonexistent/lab/authorization.yml" do
             Dir.chdir(project) do
               result = Ace::Lab::Organisms::TopologyService.from_config.projects
 
@@ -246,6 +239,30 @@ module Organisms
           Ace::Lab.reset_config!
         end
       end
+    end
+
+    def test_replaced_process_keeps_stable_id_until_reattested
+      service = Ace::Lab::Organisms::TopologyService.from_config(authorized_for_local(topology_config))
+
+      fresh = service.resolve(id: "atlas-planner")
+      assert_equal "atlas-planner", fresh.data["entry"]["id"]
+      assert_equal "available", fresh.data["entry"]["binding"]["state"]
+
+      replaced = authorized_for_local(topology_config)
+      replaced["topology"]["agents"].first["binding"]["instance_id"] = "pane-replaced-9"
+      stale = Ace::Lab::Organisms::TopologyService.from_config(replaced).resolve(id: "atlas-planner")
+      assert_equal "stale", stale.error_code
+      assert_equal "atlas-planner", stale.context[:id] || stale.context["id"]
+
+      reattested = authorized_for_local(topology_config)
+      binding_config = reattested["topology"]["agents"].first["binding"]
+      binding_config["instance_id"] = "pane-replaced-9"
+      binding_config["attested_instance_id"] = "pane-replaced-9"
+      recovered = Ace::Lab::Organisms::TopologyService.from_config(reattested).resolve(id: "atlas-planner")
+
+      # SC2: pane identity replacement never changes the stable agent ID
+      assert_equal "atlas-planner", recovered.data["entry"]["id"]
+      assert_equal "available", recovered.data["entry"]["binding"]["state"]
     end
   end
 end

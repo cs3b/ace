@@ -68,15 +68,19 @@ module Ace
     # Same discovery the cascade resolver performs for this namespace
     LAB_FILE_PATTERNS = ["lab/config.yml", "lab/config.yaml"].freeze
 
-    # Authorization grants live in a trusted, deployment-controlled file —
-    # never in the caller-writable configuration cascade (review round 4, F3)
-    AUTHORIZATION_ENV = "ACE_LAB_AUTHORIZATION_FILE"
-    DEFAULT_AUTHORIZATION_PATH = "/etc/lab/ace-lab/authorization.yml"
+    # Authorization grants live in a single deployment-controlled file at a
+    # FIXED path — never in the caller-writable configuration cascade and
+    # never at a caller-selected location (review rounds 4-5, F3/F1). The
+    # file must be root-owned and not group/world-writable, including every
+    # directory on its real path; GrantResolver verifies and fails closed.
+    AUTHORIZATION_PATH = "/etc/lab/ace-lab/authorization.yml"
 
-    # Path of the trusted authorization grants document
+    # Path of the trusted authorization grants document. A method (not a
+    # bare constant reference) so tests can stub the seam without any
+    # caller-controllable production override.
     # @return [String]
     def self.authorization_path
-      ENV[AUTHORIZATION_ENV] || DEFAULT_AUTHORIZATION_PATH
+      AUTHORIZATION_PATH
     end
 
     # Load configuration using Ace::Support::Config cascade.
