@@ -1,15 +1,15 @@
 ---
 doc-type: user
 title: ace-herdr Usage
-purpose: Full CLI and configuration reference for ace-herdr: push delivery, agent bootstrap, and the terminal-control surface (list, send, capture, wait, presets).
+purpose: Full CLI and configuration reference for ace-herdr: push delivery, agent bootstrap, the terminal-control surface (list, send, capture, wait, presets), and tidy cleanup.
 ace-docs:
-  last-updated: 2026-09-27
-  last-checked: 2026-09-27
+  last-updated: 2026-09-28
+  last-checked: 2026-09-28
 ---
 
 # Usage
 
-`ace-herdr` is a zero-token wrapper over the `herdr` CLI. It implements the ace-hitl push-delivery contract -- `deliver(ref, answer)` -> `herdr agent prompt <pane>` -- one-command agent dispatch, noiseless waiting and pane closure, plus the terminal-control intents known from `ace-tmux`: `list`, `send`, `capture`, output waits, and preset-driven workspace/tab creation. No LLM is consulted anywhere in the gem.
+`ace-herdr` is a zero-token wrapper over the `herdr` CLI. It implements the ace-hitl push-delivery contract -- `deliver(ref, answer)` -> `herdr agent prompt <pane>` -- one-command agent dispatch, noiseless waiting and pane closure, the terminal-control intents known from `ace-tmux` (`list`, `send`, `capture`, output waits, preset-driven workspace/tab creation), and dry-run-first cleanup of finished panes and delivery records (`tidy`). No LLM is consulted anywhere in the gem.
 
 ## Command Surface
 
@@ -20,6 +20,7 @@ ace-docs:
 - `ace-herdr capture --pane ID [--lines N] [--source visible|recent]`
 - `ace-herdr wait --pane ID (--for output --pattern PATTERN | --for agent [--until ...]) [--timeout S] [--quiet]`
 - `ace-herdr close [OPTIONS]`
+- `ace-herdr tidy [--apply] [--quiet]`
 - `ace-herdr workspace <preset> [--cwd PATH] [--quiet]`
 - `ace-herdr tab <preset> [--workspace ID] [--cwd PATH] [--quiet]`
 - `ace-herdr --list-presets [workspaces|tabs]`
@@ -238,6 +239,37 @@ ace-herdr close --pane p5 --rename done       # rename, then close
 ace-herdr close --pane p5 --keep --rename wip # rename only
 ```
 
+## `ace-herdr tidy`
+
+Report cleanable agent panes and delivery records as one deterministic JSON line; **dry run by default** -- nothing is closed, moved, or removed without `--apply`.
+
+```bash
+ace-herdr tidy            # dry run: report candidates, zero side effects
+ace-herdr tidy --apply    # close eligible panes, archive old delivered records
+ace-herdr tidy --quiet    # suppress the report
+```
+
+Output: `{"apply":false,"retention_days":7,"panes":{"candidates":[...],"preserved":[...],"closed":[...],"excluded":[...]},"deliveries":{"candidates":[...],"protected":[...],"archived":[...],"preserved":[...]}}`. Entries are ordered by pane id / event id; every bucket is always present (an explicit empty array means "nothing to do", never an error).
+
+### Pane closure: positive evidence only
+
+A pane qualifies as a `candidate` solely on positive completion evidence:
+
+- the agent in the pane was **observed** in state `done` (`agent get`), or
+- the pane has **no foreground process** (`pane process-info` reports an empty process list).
+
+`unknown` or unreadable evidence is preserve-only: `unknown` status, a missing field, a malformed response, or a probe failure puts the pane in `preserved` with the reason (`active` / `unknown` / `unreadable`) -- no proof is never treated as dead. Panes whose process could not be read are reported, not closed.
+
+With `--apply`, every candidate is **re-probed immediately before mutation**: only a second positive reading closes it (rename to `done`, then close -- the `close` semantics). A candidate that revived in between (`idle`/`working`) or whose fresh probe turned uncertain or failed is moved to `excluded` with the reason and never mutated. A pane that vanished in the meantime is `excluded` as `gone` -- there is nothing left to close.
+
+### Delivery record retention
+
+Delivered records under `deliveries_dir` whose `updated_at` is **strictly older** than `tidy.delivered_retention_days` (default 7; an exact-threshold record stays) become `candidates`; with `--apply` they are atomically moved to `deliveries_dir/archive/<event-id>.json` (mode 0600 preserved) and reported in `archived` with the archive path. Age parsing is RFC 3339 only; a delivered record with a missing or invalid `updated_at` is `preserved` (`invalid_updated_at`), never guessed.
+
+`pending`, `retryable`, and `failed` records are **never touched** (they are audit/recovery state) and are listed in `protected`. Malformed or unreadable record files are `preserved` as `unreadable`, never removed. Lock files, temp files, and the archive directory itself are ignored. Before each archival the record is re-loaded under its per-event lock: a record that changed after discovery (no longer delivered or no longer old enough) is left in place and reported as `preserved` (`changed`).
+
+Errors: if the herdr runtime is unreachable, `tidy` fails with an explicit CLI error before reporting anything (no partial report, no mutation). No LLM is consulted anywhere; the report costs zero tokens.
+
 ## Configuration
 
 Defaults (`.ace-defaults/herdr/config.yml`), overridable in `~/.ace/herdr/config.yml` or `.ace/herdr/config.yml`:
@@ -252,6 +284,8 @@ timeouts:
   prompt: 30
   wait: 30                      # readiness gate / ace-herdr wait (both wait modes)
 deliveries_dir: .ace-local/herdr/deliveries
+tidy:
+  delivered_retention_days: 7   # archive delivered records strictly older than this (tidy)
 ```
 
 ## Delivery records
