@@ -194,6 +194,14 @@ PATH
       ace-support-items (~> 0.15)
 
 PATH
+  remote: ace-lab
+  specs:
+    ace-lab (0.1.0)
+      ace-support-cli (~> 0.6)
+      ace-support-config (~> 0.18)
+      ace-support-core (~> 0.31)
+
+PATH
   remote: ace-lint
   specs:
     ace-lint (0.30.10)
@@ -548,6 +556,7 @@ DEPENDENCIES
   ace-hitl!
   ace-hitl-hermes!
   ace-idea!
+  ace-lab!
   ace-lint!
   ace-llm!
   ace-llm-providers-cli!

@@ -1,0 +1,39 @@
+# ace-lab default configuration
+# Override in ~/.ace/lab/config.yml or .ace/lab/config.yml
+#
+# Deployed topology and authorization values are owned by the lab-config
+# repository; this default ships a deliberately empty, safe structure so a
+# fresh install resolves to "no topology" instead of guessed values.
+#
+# Schema (version 1):
+#   authorization:
+#     principals:
+#       "<verified-local-uid>": { projects: ["project-id"] }
+#   topology:
+#     projects:
+#       - { id: project-id, label: Display name }
+#     agents:
+#       - id: agent-id
+#         project: project-id
+#         role: planner
+#         capabilities: ["planning"]
+#         binding: { kind: runtime, state: active, instance_id: iid,
+#                    attested_instance_id: iid }
+#     services:
+#       - id: service-id
+#         project: project-id
+#         capabilities: ["search"]
+#         default_for: ["search"]
+#         endpoint: { kind: http, url: "https://service.example/internal" }
+#         binding: { kind: service, state: active, instance_id: iid,
+#                    attested_instance_id: iid }
+
+schema_version: 1
+
+authorization:
+  principals: {}
+
+topology:
+  projects: []
+  agents: []
+  services: []
