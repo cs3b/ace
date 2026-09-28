@@ -38,6 +38,15 @@ module Ace
           manifest(provider)["prompts_dir"]
         end
 
+        def extensions_dir(provider)
+          manifest(provider)["extensions_dir"]
+        end
+
+        def package_root(provider)
+          manifest_dir = File.dirname(manifest(provider).fetch("_manifest_path"))
+          File.expand_path("../../..", manifest_dir)
+        end
+
         def manifests
           @manifests ||= begin
             all_paths = local_manifest_paths + installed_manifest_paths

@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 require "fileutils"
+require "json"
+require "pathname"
 require "yaml"
 
 module Ace
@@ -8,6 +10,7 @@ module Ace
     module Organisms
       class ProviderSyncer
         PROJECTION_SOURCE_PREFIX = "ace-handbook-integration-"
+        EXTENSION_RECEIPT_NAME = ".ace-handbook-projection.json"
 
         attr_reader :project_root, :registry, :inventory, :prompt_inventory, :config
 
@@ -36,11 +39,12 @@ module Ace
         private
 
         def sync_provider(provider, skills:, source_breakdown:)
-          skills_result = sync_skills(provider, skills: skills, source_breakdown: source_breakdown)
+          result = sync_skills(provider, skills: skills, source_breakdown: source_breakdown)
           prompts_result = sync_prompts(provider)
-          return skills_result if prompts_result.nil?
-
-          skills_result.merge(prompts_result)
+          result = result.merge(prompts_result) unless prompts_result.nil?
+          extensions_result = sync_extensions(provider)
+          result = result.merge(extensions_result) unless extensions_result.nil?
+          result
         end
 
         def sync_skills(provider, skills:, source_breakdown:)
@@ -169,6 +173,89 @@ module Ace
           stale = existing.reject { |path| expected_skill_names.include?(File.basename(path)) }
           stale.each { |path| FileUtils.rm_rf(path) }
           stale.size
+        end
+
+        # Extension assets project from a package's handbook/extensions/ tree
+        # into the provider manifest's extensions_dir. The target directory may
+        # hold user-authored extensions, so pruning is receipt-based: only files
+        # recorded in the projection receipt from a previous sync are removed.
+        def sync_extensions(provider)
+          extensions_dir = registry.extensions_dir(provider)
+          return nil if extensions_dir.nil? || extensions_dir.to_s.empty?
+
+          source_dir = File.join(registry.package_root(provider), "handbook", "extensions")
+          expected = extension_source_files(source_dir)
+          output_dir = File.join(project_root, extensions_dir)
+          FileUtils.mkdir_p(output_dir)
+
+          removed_entries = prune_stale_extension_files(output_dir, expected.keys)
+          updated_files = 0
+
+          expected.each do |relative_path, source_path|
+            output_path = File.join(output_dir, relative_path)
+            FileUtils.mkdir_p(File.dirname(output_path))
+            next if File.exist?(output_path) && FileUtils.compare_file(source_path, output_path)
+
+            FileUtils.cp(source_path, output_path)
+            updated_files += 1
+          end
+
+          write_projection_receipt(output_dir, provider, expected.keys)
+
+          {
+            relative_extensions_dir: extensions_dir,
+            projected_extensions: expected.size,
+            updated_extension_files: updated_files,
+            removed_extension_entries: removed_entries
+          }
+        end
+
+        def extension_source_files(source_dir)
+          return {} unless Dir.exist?(source_dir)
+
+          source_root = Pathname.new(source_dir)
+          Dir.glob(File.join(source_dir, "**", "*"))
+             .select { |path| File.file?(path) }
+             .to_h { |path| [Pathname.new(path).relative_path_from(source_root).to_s, path] }
+        end
+
+        def prune_stale_extension_files(output_dir, expected_relative_paths)
+          receipt = read_projection_receipt(output_dir)
+          return 0 if receipt.nil?
+
+          stale = receipt.fetch("files", []) - expected_relative_paths
+          stale.each do |relative_path|
+            path = File.join(output_dir, relative_path)
+            FileUtils.rm(path) if File.file?(path)
+            remove_empty_parent_dirs(File.dirname(path), output_dir)
+          end
+          stale.size
+        end
+
+        def read_projection_receipt(output_dir)
+          receipt_path = File.join(output_dir, EXTENSION_RECEIPT_NAME)
+          return nil unless File.file?(receipt_path)
+
+          receipt = JSON.parse(File.read(receipt_path))
+          return nil unless receipt.is_a?(Hash) && receipt["files"].is_a?(Array)
+
+          receipt
+        rescue JSON::ParserError
+          nil
+        end
+
+        def write_projection_receipt(output_dir, provider, relative_paths)
+          File.write(File.join(output_dir, EXTENSION_RECEIPT_NAME), JSON.pretty_generate(
+            "source" => "#{PROJECTION_SOURCE_PREFIX}#{provider}",
+            "files" => relative_paths.sort
+          ))
+        end
+
+        def remove_empty_parent_dirs(dir, stop_dir)
+          until dir == stop_dir
+            FileUtils.rmdir(dir)
+            dir = File.dirname(dir)
+          end
         end
 
         # The prompts dir is shared with user-authored templates, so only files

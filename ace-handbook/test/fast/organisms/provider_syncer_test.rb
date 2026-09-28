@@ -20,6 +20,14 @@ class Ace::Handbook::Organisms::ProviderSyncerTest < Minitest::Test
     def prompts_dir(provider)
       provider_manifests.fetch(provider.to_s)["prompts_dir"]
     end
+
+    def extensions_dir(provider)
+      provider_manifests.fetch(provider.to_s)["extensions_dir"]
+    end
+
+    def package_root(provider)
+      File.join("/fake-packages", "ace-handbook-integration-#{provider}")
+    end
   end
 
   def setup
@@ -223,6 +231,88 @@ class Ace::Handbook::Organisms::ProviderSyncerTest < Minitest::Test
 
     refute result.key?(:relative_prompts_dir)
     refute Dir.exist?(File.join(@tmpdir, ".codex", "prompts"))
+  end
+
+  def test_sync_projects_extension_assets_into_extensions_dir
+    create_provider_manifest("pi", ".pi/skills", extensions_dir: ".pi/extensions")
+    create_extension_asset("pi", "ace-wake.mjs", "// wake entrypoint\nexport default () => {};\n")
+    create_extension_asset("pi", "wake/helper.mjs", "export const tick = () => 1;\n")
+
+    result = syncer.sync(provider: "pi").first
+
+    assert_equal ".pi/extensions", result.fetch(:relative_extensions_dir)
+    assert_equal 2, result.fetch(:projected_extensions)
+    assert_equal 2, result.fetch(:updated_extension_files)
+    assert_equal 0, result.fetch(:removed_extension_entries)
+    assert_equal "// wake entrypoint\nexport default () => {};\n", File.read(File.join(@tmpdir, ".pi", "extensions", "ace-wake.mjs"))
+    assert File.exist?(File.join(@tmpdir, ".pi", "extensions", "wake", "helper.mjs"))
+
+    receipt = JSON.parse(File.read(File.join(@tmpdir, ".pi", "extensions", ".ace-handbook-projection.json")))
+    assert_equal "ace-handbook-integration-pi", receipt.fetch("source")
+    assert_equal ["ace-wake.mjs", "wake/helper.mjs"], receipt.fetch("files").sort
+
+    second = syncer.sync(provider: "pi").first
+    assert_equal 2, second.fetch(:projected_extensions)
+    assert_equal 0, second.fetch(:updated_extension_files)
+    assert_equal 0, second.fetch(:removed_extension_entries)
+  end
+
+  def test_sync_updates_changed_extension_assets
+    create_provider_manifest("pi", ".pi/skills", extensions_dir: ".pi/extensions")
+    create_extension_asset("pi", "ace-wake.mjs", "export const version = 1;\n")
+
+    syncer.sync(provider: "pi")
+    create_extension_asset("pi", "ace-wake.mjs", "export const version = 2;\n")
+
+    result = syncer.sync(provider: "pi").first
+
+    assert_equal 1, result.fetch(:updated_extension_files)
+    assert_equal "export const version = 2;\n", File.read(File.join(@tmpdir, ".pi", "extensions", "ace-wake.mjs"))
+  end
+
+  def test_sync_prunes_only_receipt_recorded_extension_files
+    create_provider_manifest("pi", ".pi/skills", extensions_dir: ".pi/extensions")
+    create_extension_asset("pi", "ace-wake.mjs", "// current\n")
+
+    syncer.sync(provider: "pi")
+    extensions_dir = File.join(@tmpdir, ".pi", "extensions")
+    stale_dir = File.join(extensions_dir, "wake")
+    FileUtils.mkdir_p(stale_dir)
+    File.write(File.join(stale_dir, "retired.mjs"), "// retired\n")
+    File.write(File.join(extensions_dir, "user-own.mjs"), "// user extension\n")
+    receipt = JSON.parse(File.read(File.join(extensions_dir, ".ace-handbook-projection.json")))
+    receipt["files"] << "wake/retired.mjs"
+    File.write(File.join(extensions_dir, ".ace-handbook-projection.json"), JSON.generate(receipt))
+
+    result = syncer.sync(provider: "pi").first
+
+    assert_equal 1, result.fetch(:removed_extension_entries)
+    refute File.exist?(File.join(stale_dir, "retired.mjs"))
+    refute Dir.exist?(stale_dir)
+    assert File.exist?(File.join(extensions_dir, "user-own.mjs"))
+    assert File.exist?(File.join(extensions_dir, "ace-wake.mjs"))
+  end
+
+  def test_sync_never_prunes_extensions_without_receipt
+    create_provider_manifest("pi", ".pi/skills", extensions_dir: ".pi/extensions")
+    create_extension_asset("pi", "ace-wake.mjs", "// current\n")
+    extensions_dir = File.join(@tmpdir, ".pi", "extensions")
+    FileUtils.mkdir_p(extensions_dir)
+    File.write(File.join(extensions_dir, "pre-existing.mjs"), "// unknown origin\n")
+
+    result = syncer.sync(provider: "pi").first
+
+    assert_equal 0, result.fetch(:removed_extension_entries)
+    assert File.exist?(File.join(extensions_dir, "pre-existing.mjs"))
+  end
+
+  def test_sync_skips_extension_projection_without_extensions_dir
+    create_extension_asset("codex", "ace-wake.mjs", "// codex extension\n")
+
+    result = syncer.sync(provider: "codex").first
+
+    refute result.key?(:relative_extensions_dir)
+    refute Dir.exist?(File.join(@tmpdir, ".codex", "extensions"))
   end
 
   def test_all_provider_projections_are_consistent_and_idempotent
@@ -517,12 +607,19 @@ class Ace::Handbook::Organisms::ProviderSyncerTest < Minitest::Test
     %w[agents claude codex gemini opencode pi]
   end
 
-  def create_provider_manifest(provider, output_dir, prompts_dir: nil)
+  def create_provider_manifest(provider, output_dir, prompts_dir: nil, extensions_dir: nil)
     dir = File.join(@tmpdir, "ace-handbook-integration-#{provider}", ".ace-defaults", "handbook", "providers")
     FileUtils.mkdir_p(dir)
     manifest = "provider: #{provider}\noutput_dir: #{output_dir}\n"
     manifest += "prompts_dir: #{prompts_dir}\n" if prompts_dir
+    manifest += "extensions_dir: #{extensions_dir}\n" if extensions_dir
     File.write(File.join(dir, "#{provider}.yml"), manifest)
+  end
+
+  def create_extension_asset(provider, relative_path, content)
+    path = File.join(@tmpdir, "ace-handbook-integration-#{provider}", "handbook", "extensions", relative_path)
+    FileUtils.mkdir_p(File.dirname(path))
+    File.write(path, content)
   end
 
   def create_prompt_template(provider, name, source:)
