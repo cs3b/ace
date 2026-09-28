@@ -48,6 +48,10 @@ export class WakeRegistry {
   #dispatchRecoveryMs;
   /** @private @type {(() => boolean) | undefined} */
   #isHostIdle;
+  /** @private @type {(() => boolean) | undefined} */
+  #isHostQueued;
+  /** @private @type {boolean} */
+  #disposed;
 
   /** @private @type {{retained: Array<{prefix: string, name: string, message: string}>, stranded: Array<[string, string]>} | undefined} */
   #reconcileBatch;
@@ -62,7 +66,7 @@ export class WakeRegistry {
    * @param {object} ports.status
    * @param {import("./wake-dispatcher.js").WakeDispatcher} ports.dispatcher
    */
-  constructor({ loops, watches, state, status, dispatcher, dispatchRecoveryMs = 5000, isHostIdle }) {
+  constructor({ loops, watches, state, status, dispatcher, dispatchRecoveryMs = 5000, isHostIdle, isHostQueued }) {
     this.#loops = loops;
     this.#watches = watches;
     this.#state = state;
@@ -82,6 +86,10 @@ export class WakeRegistry {
     this.#dispatchRecoveryMs = dispatchRecoveryMs;
     /** @private @type {(() => boolean) | undefined} */
     this.#isHostIdle = isHostIdle;
+    /** @private @type {(() => boolean) | undefined} */
+    this.#isHostQueued = isHostQueued;
+    /** @private @type {boolean} */
+    this.#disposed = false;
   }
 
   /**
@@ -417,9 +425,7 @@ export class WakeRegistry {
     // sends queue safely as follow-ups from then on), and any settlement
     // proves the host accepts prompts again.
     this.#dispatchPending = true;
-    clearTimeout(this.#dispatchRecoveryTimer);
-    this.#dispatchRecoveryTimer = setTimeout(() => this.recoverUnacknowledgedDispatch(), this.#dispatchRecoveryMs);
-    this.#dispatchRecoveryTimer.unref?.();
+    this.#scheduleRecovery();
   }
 
   /**
@@ -432,36 +438,39 @@ export class WakeRegistry {
    * stranding delivery permanently.
    */
   recoverUnacknowledgedDispatch() {
-    if (!this.#dispatchPending) {
+    if (this.#disposed || !this.#dispatchPending) {
       return;
     }
-    let idle = false;
+    let queued = true;
     try {
-      idle = this.#isHostIdle?.() ?? true;
+      // The discriminator the void API still provides: a wake Pi accepted is
+      // in its queue (pendingMessages true) until its run consumes it; a
+      // rejected attempt never enters the queue (pendingMessages false).
+      queued = this.#isHostQueued?.() ?? true;
     } catch {
-      idle = false;
+      queued = true;
     }
-    if (!idle) {
-      // A run is active: the pending wake is a legitimately queued follow-up
-      // that settles with that run. Re-check after another window.
-      clearTimeout(this.#dispatchRecoveryTimer);
-      this.#dispatchRecoveryTimer = setTimeout(() => this.recoverUnacknowledgedDispatch(), this.#dispatchRecoveryMs);
-      this.#dispatchRecoveryTimer.unref?.();
+    if (queued) {
+      // Accepted and still queued or running: the pending marker is
+      // legitimate. Re-check after another window; agent_settled settles it.
+      this.#scheduleRecovery();
       return;
     }
+
+    // Idle with nothing queued: the attempt died in preflight. Release the
+    // coalescing marker and revert watch fingerprints so the next natural
+    // trigger re-fires the change — bounded retry, no loss, no duplicates.
     this.#dispatchPending = false;
     this.#dispatcher.settleAll();
+    this.#watches.markDispatchUnacknowledged();
+    this.#watches.flushDirty((watch) => this.#fire(WATCH_SOURCE_PREFIX, watch.name, watch.message));
     this.#refreshStatus();
   }
 
-  /**
-   * The host started a run: concurrent sends now queue safely as follow-ups,
-   * so the serialization window closes and retained wakes drain immediately.
-   */
-  noteRunStarted() {
+  #scheduleRecovery() {
     clearTimeout(this.#dispatchRecoveryTimer);
-    this.#dispatchPending = false;
-    this.#drainRetained();
+    this.#dispatchRecoveryTimer = setTimeout(() => this.recoverUnacknowledgedDispatch(), this.#dispatchRecoveryMs);
+    this.#dispatchRecoveryTimer.unref?.();
   }
 
   #drainRetained() {

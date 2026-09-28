@@ -161,6 +161,20 @@ export function createWatchPort({ watchFactory, statFn, baseDir = process.cwd(),
     },
 
     /**
+     * A dispatch attempt was never acknowledged (Pi rejected it in async
+     * preflight without any lifecycle event): revert each subscription to
+     * its last delivered state and mark it dirty, so flushDirty() re-fires
+     * the change at the next settlement — no loss, and no duplicate for
+     * wakes that were genuinely consumed.
+     */
+    markDispatchUnacknowledged() {
+      for (const entry of active.values()) {
+        entry.fingerprint = entry.previousFingerprint;
+        entry.dirty = true;
+      }
+    },
+
+    /**
      * Record a visible inactive-error state for a subscription without a
      * native handle (used by reconciliation for watches that cannot restart).
      *

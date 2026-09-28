@@ -183,6 +183,13 @@ function createRegistry(pi, ctx, ports) {
         return false;
       }
     },
+    isHostQueued: () => {
+      try {
+        return ctx.hasPendingMessages();
+      } catch {
+        return true;
+      }
+    },
   });
   registry = built;
   return built;

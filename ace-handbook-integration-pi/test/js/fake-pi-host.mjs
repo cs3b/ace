@@ -78,6 +78,11 @@ export function createFakeHost() {
       host.agentActive = value;
     },
 
+    /** Models Pi's queue state: an accepted wake sits in pendingMessages. */
+    setPendingMessages(value) {
+      host.pendingMessages = value;
+    },
+
     agentActive: false,
 
     pendingMessages: false,

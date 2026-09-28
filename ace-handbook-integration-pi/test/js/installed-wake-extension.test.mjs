@@ -417,16 +417,18 @@ describe("ace-wake delivery", () => {
   it("recovers delivery when an accepted wake is rejected without any lifecycle event", async () => {
     const host = createFakeHost();
     // The fake host accepts the send synchronously (like Pi's void API) but
-    // never starts a run for it — the async preflight rejection is invisible.
+    // rejects it in async preflight: nothing enters Pi's message queue and
+    // no lifecycle event ever fires.
     const session = await startSession(host, { dispatchRecoveryMs: 20 });
     await host.runCommand("loop", "add heartbeat --interval 10 --message check in");
     await host.runCommand("loop", "add other --interval 10 --message other wake");
 
     host.clock.advance(10_000);
     assert.equal(host.sends.length, 1, "the first wake dispatches");
+    host.setPendingMessages(false);
 
-    // Recovery window expires: the unacknowledged attempt's coalescing and
-    // serialization markers clear, so later wakes re-attempt immediately.
+    // Recovery window expires: the unacknowledged attempts' markers clear,
+    // so later wakes re-attempt immediately.
     await new Promise((resolve) => setTimeout(resolve, 40));
     host.clock.advance(10_000);
     assert.ok(host.sends.length >= 2, "subsequent wakes re-attempt after recovery");
@@ -444,6 +446,7 @@ describe("ace-wake delivery", () => {
     // invalidated.
     host.setIdle(false);
     host.clock.advance(10_000);
+    host.setPendingMessages(true);
     assert.equal(host.sends.length, 1);
     await new Promise((resolve) => setTimeout(resolve, 60));
     host.clock.advance(10_000);
@@ -451,6 +454,7 @@ describe("ace-wake delivery", () => {
 
     // The run finishes; the queued wake is consumed normally.
     host.setIdle(true);
+    host.setPendingMessages(false);
     await session.settle();
     host.clock.advance(10_000);
     assert.equal(host.sends.length, 2, "delivery resumes normally after the run");
