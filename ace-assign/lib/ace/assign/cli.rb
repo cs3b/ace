@@ -42,6 +42,7 @@ require_relative "molecules/fork_session_launcher"
 require_relative "molecules/tmux_control_surface_runner"
 require_relative "molecules/preset_inferrer"
 require_relative "molecules/evidence_calculator"
+require_relative "molecules/evidence_journal"
 
 # Organisms
 require_relative "organisms/assignment_executor"
