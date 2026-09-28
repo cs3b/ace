@@ -23,11 +23,12 @@ gem install ace-git
 
 ## Command Overview
 
-`ace-git` ships four commands:
+`ace-git` ships the following commands:
 
 - `diff` for filtered or formatted git diffs
 - `status` for repository context and PR activity
 - `branch` for current branch and tracking state
+- `pr` for the forge-neutral pull request lifecycle (`show`, `create`, `update`, `ready`, `merge`)
 - `version` for the installed package version
 
 `ace-git` with no arguments shows help. Git range shorthand such as `HEAD~5..HEAD` routes to `diff`.
@@ -153,6 +154,51 @@ ace-git branch --format json
 
 **Options:**
 - `--format, -f` - Output format: `text` (default), `json`
+
+### `ace-git pr`
+
+Forge-neutral pull request lifecycle over the configured forge servers
+(`git.servers`). Every subcommand accepts `--server NAME` / `--default-server`
+(mutually exclusive; with neither, the configured repository remote is
+resolved) and `--format json`. Server, provider, and the exact head SHA are
+part of every result; failures are classified and exit nonzero.
+
+```bash
+# Show normalized PR evidence (number, owner/repo#number, or URL)
+ace-git pr show 25
+ace-git pr show cs3b/ace#25 --format json
+ace-git pr show https://forge.example.com/cs3b/ace/pull/25 --server forgejo-lab
+
+# Create (or reconcile to) a draft PR for a pushed branch.
+# The pushed head SHA is proven against the PR; draft is the default.
+ace-git pr create --head feature --base main \
+  --expected-head "$(git rev-parse HEAD)" \
+  --title "Add feature" --body-file /tmp/body.md --format json
+
+# Fork PRs name the source repository explicitly; the base repository is
+# always the selected configured server. No fork inference happens.
+ace-git pr create --head feature --head-repo https://forge.example.com/fork/ace \
+  --base main --expected-head SHA --title "Fork PR" --draft
+
+# Update title/body after head verification
+ace-git pr update 25 --expected-head SHA --title "New title" --body-file /tmp/body.md
+
+# Mark a draft ready (provider capability; unsupported providers fail classified)
+ace-git pr ready 25 --expected-head SHA
+
+# Merge with provider-side expected-head enforcement; no default method
+ace-git pr merge 25 --expected-head SHA --method squash
+```
+
+**Behavior guarantees:**
+- Create is idempotent: one exact open base/head match returns the existing
+  PR (`idempotency: existing`); multiple matches are a conflict.
+- `merge` requires the provider to enforce `--expected-head` atomically;
+  providers without that capability return an unsupported-capability failure
+  instead of racing.
+- A create request whose outcome is unknown (transport failure after send)
+  reports an unknown outcome with the exact identity to reconcile; it never
+  retries automatically.
 
 ### `ace-git version`
 

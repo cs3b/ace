@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Forge-neutral `ace-git pr` lifecycle CLI: `show`, `create`, `update`, `ready`, `merge`
+  with `--server` / `--default-server` selection and `--format json`.
+- Provider contract for PR lifecycle mutations (exact base/head identity,
+  idempotent create reconciliation, expected-head enforcement, unknown-outcome
+  classification) on `Ace::Git::Providers::Base`.
+- Normalized evidence types: PR provenance fields (`head_repository_url`,
+  `base_repository_url`, `merge_commit_sha`), `ProviderPullRequestIdentity`,
+  `ProviderMutationReceipt`, `ProviderCleanupProof` with the cleanup proof
+  status vocabulary.
+- Classified lifecycle failures: identity mismatch, conflicting exact matches,
+  expected-head conflict, unsupported capability, unknown mutation outcome.
+- Server selection helpers `ServerRegistry.resolve_for`, `matching_servers`,
+  and `servers_for_owner_repo`; `PrReference` atom for `NUMBER`,
+  `owner/repo#NUMBER`, and URL identifiers.
+- Config-driven provider loading via `git.providers` (default: both shipped
+  provider gems).
+
+### Changed
+- PR identifiers now validate repository identity against the resolved server;
+  mismatches fail before any mutation. `owner/repo#NUMBER` requires exactly one
+  configured matching server and never assumes github.com.
+
+
 ## [0.24.0] - 2026-09-21
 
 ### Added
