@@ -1,0 +1,7 @@
+# ace-runtime default configuration
+# Override in ~/.ace/runtime/config.yml or .ace/runtime/config.yml
+
+# Terminal runtime used by ace-runtime send when neither --runtime nor
+# ACE_RUNTIME is set. Leave null for auto-detection from the environment;
+# tmux wins when both tmux and herdr environments are live.
+runtime: null
