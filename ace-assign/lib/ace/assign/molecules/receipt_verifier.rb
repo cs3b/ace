@@ -55,7 +55,6 @@ module Ace
 
           Models::ExecutionReceipt.from_h(data.merge("recorded_at" => Time.now.utc))
         end
-
         # @param operation [String] Receipt operation
         # @return [Boolean] True when the operation acts outside the repository
         def external_effect?(operation)
@@ -126,12 +125,15 @@ module Ace
             recorded = artifact["sha256"].to_s
             reject("artifact missing path or sha256") if path.empty? || recorded.empty?
 
+            expanded = begin
+              File.expand_path(path, File.realpath(repo_root))
+            rescue Errno::ENOENT, Errno::EACCES
+              nil
+            end
+            reject("artifact file not found: #{path}") if expanded.nil? || !File.exist?(expanded)
+
             resolved = safe_resolve(repo_root, path)
             reject("artifact path escapes project root: #{path}") if resolved.nil?
-
-            unless File.exist?(resolved)
-              reject("artifact file not found: #{path}")
-            end
 
             actual = Digest::SHA256.hexdigest(File.read(resolved))
             reject("artifact digest mismatch for #{path}") unless actual == recorded
@@ -141,6 +143,9 @@ module Ace
         def verify_checks(data)
           checks = data["checks"] || []
           reject_unless(checks.is_a?(Array), "checks must be an array")
+          if data["verdict"] == "succeeded" && checks.empty?
+            reject("succeeded verdict requires at least one executed check")
+          end
 
           checks.each do |check|
             reject_unless(check.is_a?(Hash), "check entries must be objects")
@@ -150,10 +155,17 @@ module Ace
         end
 
         # Review receipts need an executed, independent reviewer verdict for
-        # exactly the tested head — a report existing is not approval.
+        # exactly the tested head — a report existing is not approval, and a
+        # review receipt without a reviewer verdict is not evidence.
         def verify_review(data)
           review = data["review"]
-          return if review.nil?
+          if review.nil?
+            if data["operation"] == REVIEW_OPERATION && data["verdict"] == "succeeded"
+              reject("review receipt requires an executed independent reviewer verdict")
+            end
+
+            return
+          end
 
           reject_unless(review.is_a?(Hash), "review must be an object")
           reviewer = review["reviewer"]
@@ -170,14 +182,20 @@ module Ace
           end
         end
 
-        # Resolve a project-relative path, rejecting traversal and symlink
-        # escapes; returns nil when the path leaves the root.
+        # Resolve a project-relative artifact path to its real location,
+        # rejecting traversal and symlink escapes (an in-repo symlink must
+        # not smuggle in an external file); returns nil when the path leaves
+        # the root.
         def safe_resolve(repo_root, path)
           root = File.realpath(repo_root)
           candidate = File.expand_path(path, root)
           return nil unless candidate == root || candidate.start_with?(root + File::SEPARATOR)
+          return nil unless File.exist?(candidate)
 
-          candidate
+          resolved = File.realpath(candidate)
+          return nil unless resolved == root || resolved.start_with?(root + File::SEPARATOR)
+
+          resolved
         rescue Errno::ENOENT, Errno::EACCES
           nil
         end

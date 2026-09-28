@@ -324,6 +324,34 @@ class StatusCommandTest < AceAssignTestCase
     end
   end
 
+  def test_status_json_evidence_reflects_the_displayed_assignment
+    with_temp_cache do |cache_dir|
+      manager = Ace::Assign::Molecules::AssignmentManager.new(cache_base: cache_dir)
+      shown = manager.create(name: "shown", source_config: "job.yaml", task_id: "148")
+      other = manager.create(name: "other", source_config: "job.yaml", task_id: "149")
+      Ace::Assign.config["cache_dir"] = cache_dir
+
+      attempt_binding = Ace::Assign::Models::AttemptBinding.new(
+        attempt_id: "atusa01", assignment_id: shown.id, scope: "010", project_id: "ace",
+        actor: "mc", role: "coordinator", runtime: "local:test", base_head: "base123head",
+        task_id: "148", created_at: Time.now.utc
+      )
+      attempt = Ace::Assign::Models::Attempt.new(binding: attempt_binding, state: "running")
+      manager.attempt_store.save(attempt)
+      manager.attempt_store.with_lock(shown.id) { manager.attempt_store.claim(shown.id, "010", attempt) }
+
+      payload = JSON.parse(capture_status_command(cache_base: cache_dir, format: "json", assignment: shown.id).first)
+      assert_equal "atusa01", payload.dig("attempt", "attempt_id")
+      assert_equal "base123head", payload["base_head"]
+
+      other_payload = JSON.parse(capture_status_command(cache_base: cache_dir, format: "json", assignment: other.id).first)
+      assert_nil other_payload["attempt"]
+      assert_nil other_payload["base_head"]
+    ensure
+      Ace::Assign.reset_config!
+    end
+  end
+
   def test_status_json_with_scope_uses_scope_root_fork_provider_for_next_step
     with_temp_cache do |cache_dir|
       steps = [

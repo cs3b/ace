@@ -67,16 +67,20 @@ module Ace
         private
 
         def start_event(attempt)
-          events_for(attempt).reverse.find { |event| event["type"] == "process_start" }
+          events_for(attempt).reverse.find do |event|
+            event["type"] == "process_start" && event["attempt_id"] == attempt.attempt_id
+          end
         end
 
         def events_for(attempt)
-          if attempt.managed?
+          events = if attempt.managed?
             (@journal || Molecules::EvidenceJournal.new(repo_root: Dir.pwd))
               .read_events(attempt.binding.assignment_id)
           else
             attempt.events
           end
+          # Only this attempt's events define its execution boundary.
+          events.select { |event| event["attempt_id"] == attempt.attempt_id }
         end
       end
     end

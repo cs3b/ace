@@ -33,7 +33,9 @@ module Ace
           state: "running"
         )
         with_temp_cache do |cache_dir|
-          @repo_root = cache_dir
+          @outside_root = cache_dir
+          @repo_root = File.join(cache_dir, "repo")
+          FileUtils.mkdir_p(@repo_root)
         end
       end
 
@@ -59,6 +61,7 @@ module Ace
           "operation" => "review",
           "verdict" => "succeeded",
           "artifacts" => [{"path" => "review-artifact.md", "sha256" => Digest::SHA256.hexdigest("reviewed deliverable")}],
+          "checks" => [{"name" => "review-executed", "verdict" => "passed"}],
           "review" => {
             "reviewer" => {"actor" => "codex-reviewer", "runtime" => "codex:r1"},
             "verdict" => "approved",
@@ -124,22 +127,48 @@ module Ace
       def test_succeeded_verdict_requires_verifiable_artifact_digest
         File.write(File.join(@repo_root, "report.md"), "evidence body")
         digest = Digest::SHA256.hexdigest("evidence body")
+        checks = [{"name" => "ace-test", "verdict" => "passed"}]
         good = [{"path" => "report.md", "sha256" => digest}]
 
-        receipt = verify(build_receipt_data("verdict" => "succeeded", "artifacts" => good))
+        receipt = verify(build_receipt_data("verdict" => "succeeded", "artifacts" => good, "checks" => checks))
         assert_equal "succeeded", receipt.verdict
 
-        verify_raises(build_receipt_data("verdict" => "succeeded", "artifacts" => [{"path" => "report.md", "sha256" => "0" * 64}])) do |e|
+        verify_raises(build_receipt_data("verdict" => "succeeded", "artifacts" => [{"path" => "report.md", "sha256" => "0" * 64}], "checks" => checks)) do |e|
           assert_includes e.message, "digest mismatch"
         end
 
-        verify_raises(build_receipt_data("verdict" => "succeeded", "artifacts" => [{"path" => "report-missing.md", "sha256" => digest}])) do |e|
+        verify_raises(build_receipt_data("verdict" => "succeeded", "artifacts" => [{"path" => "report-missing.md", "sha256" => digest}], "checks" => checks)) do |e|
           assert_includes e.message, "not found"
         end
 
-        verify_raises(build_receipt_data("verdict" => "succeeded", "artifacts" => [{"path" => "../../etc/passwd", "sha256" => digest}])) do |e|
+        verify_raises(build_receipt_data("verdict" => "succeeded", "artifacts" => [{"path" => "../../etc/passwd", "sha256" => digest}], "checks" => checks)) do |e|
+          assert_includes e.message, "not found"
+        end
+      end
+
+      def test_symlinked_artifact_pointing_outside_the_root_is_rejected
+        File.write(File.join(@outside_root, "secret.txt"), "external secret")
+        File.symlink(File.join(@outside_root, "secret.txt"), File.join(@repo_root, "leak.md"))
+        digest = Digest::SHA256.hexdigest("external secret")
+
+        verify_raises(build_receipt_data(
+          "verdict" => "succeeded",
+          "artifacts" => [{"path" => "leak.md", "sha256" => digest}],
+          "checks" => [{"name" => "ace-test", "verdict" => "passed"}]
+        )) do |e|
           assert_includes e.message, "escapes"
         end
+      end
+
+      def test_succeeded_verdict_requires_executed_checks
+        File.write(File.join(@repo_root, "report.md"), "evidence body")
+        data = build_receipt_data(
+          "verdict" => "succeeded",
+          "artifacts" => [{"path" => "report.md", "sha256" => Digest::SHA256.hexdigest("evidence body")}],
+          "checks" => []
+        )
+
+        verify_raises(data) { |e| assert_includes e.message, "executed check" }
       end
 
       def test_failing_check_rejects_succeeded_verdict

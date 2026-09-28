@@ -62,6 +62,22 @@ module Ace
         assert_equal :uncertain, reconciler.classify(build_attempt(events: [process_start]))
       end
 
+      def test_events_from_other_attempts_are_ignored
+        dead = Process.spawn("true")
+        Process.wait(dead)
+        foreign = Models::EvidenceEvent.build(
+          type: "process_start", attempt_id: "atother", payload: {"runtime" => "foreign:r", "pid" => Process.pid}
+        )
+        own = Models::EvidenceEvent.build(
+          type: "process_start", attempt_id: "atrec01", payload: {"runtime" => "own:r", "pid" => dead}
+        )
+        reconciler = build_reconciler
+        attempt = build_attempt(events: [foreign, own])
+
+        assert_equal "own:r", reconciler.recorded_runtime(attempt)
+        assert_equal :uncertain, reconciler.classify(attempt)
+      end
+
       def test_recorded_runtime_exposes_execution_boundary
         process_start = Models::EvidenceEvent.build(
           type: "process_start",

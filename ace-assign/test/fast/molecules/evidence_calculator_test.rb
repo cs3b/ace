@@ -185,6 +185,34 @@ module Ace
         assert_equal "local_only", evidence[:attempt]["recovery_mode"]
       end
 
+      def test_review_receipt_without_reviewer_verdict_is_not_current
+        coordinator = build_coordinator
+        assignment = create_assignment
+        attempt = coordinator.start(assignment_id: assignment.id, step: "010", project_id: "ace")
+        head = git(@repo, "rev-parse", "HEAD")
+
+        forged = Models::ExecutionReceipt.from_h(
+          "attempt_id" => attempt.attempt_id,
+          "assignment_id" => assignment.id,
+          "project_id" => "ace",
+          "scope" => "010",
+          "operation" => "review",
+          "producer" => {"actor" => "fork-1", "role" => "worker", "runtime" => "fork:1"},
+          "head" => head,
+          "verdict" => "succeeded"
+        )
+        coordinator.store.save(Models::Attempt.new(
+          binding: attempt.binding,
+          state: "succeeded",
+          accepted_receipts: [forged.to_h]
+        ))
+
+        evidence = calculate(auto_merge: true)
+
+        assert_equal "missing", evidence[:review_receipt]
+        assert_equal "approval-required", evidence[:merge_decision]
+      end
+
       def test_merge_decision_is_never_report_only
         evidence = calculate(auto_merge: false)
 

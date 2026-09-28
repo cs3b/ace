@@ -40,14 +40,17 @@ module Ace
         # Start a scoped attempt for an assignment.
         #
         # A repeated identical start returns the existing active attempt; a
-        # conflicting binding raises {AttemptErrors::Conflict} without ever
-        # launching a second writer.
+        # conflicting or scope-overlapping binding raises
+        # {AttemptErrors::Conflict} without ever launching a second writer.
+        # Active attempts are resolved from the local store AND, for managed
+        # assignments, from the authoritative journal, so a lost local record
+        # cannot admit a competing writer.
         #
         # @param assignment_id [String] Assignment ID
         # @param step [String] Step/subtree scope
         # @param project_id [String] Project the attempt executes in
         # @param identity [ExecutionIdentityResolver::Identity, nil] Resolved when nil
-        # @return [Models::Attempt] Active attempt (reused or newly reserved)
+        # @return [Models::Attempt] Active attempt (reused, recovered, or newly reserved)
         def start(assignment_id:, step:, project_id:, identity: nil)
           assignment = @manager.load(assignment_id)
           raise AssignmentErrors::NotFound, "Assignment '#{assignment_id}' not found" unless assignment
@@ -58,11 +61,12 @@ module Ace
 
           identity ||= @identity_resolver.resolve
           base_head = candidate_head!
-          attempt_id = Ace::B36ts.now
-          events = start_events(assignment_id, assignment, scope, project, identity, base_head, attempt_id)
 
           @store.with_lock(assignment_id) do
-            existing = @store.active(assignment_id, scope)
+            journal_actives = assignment.managed? ? active_journal_attempts(assignment) : []
+
+            existing = @store.active(assignment_id, scope) ||
+              journal_actives.find { |attempt| Atoms::AssignmentScope.equal?(attempt.binding.scope, scope) }
             if existing
               if existing.binding.project_id == project && existing.binding.task_id == assignment.task_id
                 return existing
@@ -73,6 +77,17 @@ module Ace
                 "(project #{existing.binding.project_id}); refusing to launch a second writer"
             end
 
+            active_scopes = @store.list(assignment_id).select(&:active?).map(&:binding)
+            active_scopes.concat(journal_actives.map(&:binding))
+            blocker = active_scopes.find { |binding| scopes_overlap?(binding.scope, scope) }
+            if blocker
+              raise AttemptErrors::Conflict,
+                "Active attempt scope #{blocker.scope} overlaps requested scope #{scope} on #{assignment_id}; " \
+                "refusing overlapping writers"
+            end
+
+            attempt_id = unique_attempt_id(assignment_id, journal_actives.map(&:attempt_id))
+            events = start_events(assignment_id, assignment, scope, project, identity, base_head, attempt_id)
             attempt = reserve(assignment, scope, project, identity, base_head, attempt_id)
             if attempt.managed?
               commit = journal_for.append(
@@ -99,34 +114,40 @@ module Ace
         # @return [Models::Attempt] Updated attempt
         def finish(attempt_id:, receipt_path:, identity: nil)
           data = read_receipt_file(receipt_path)
-          attempt = @store.load(data["assignment_id"].to_s, attempt_id)
-          raise AttemptErrors::NotFound, "Attempt '#{attempt_id}' not found" unless attempt
+          assignment_id = data["assignment_id"].to_s
 
-          raise AttemptErrors::InvalidState, "Attempt #{attempt_id} is terminal; accepted history is immutable" if attempt.terminal?
-          raise AttemptErrors::InvalidState, "Attempt #{attempt_id} is uncertain; reconcile before finishing" if attempt.uncertain?
+          # Serialize load-validate-accept so concurrent finishes observe one
+          # consistent state and cannot persist contradictory terminal outcomes.
+          @store.with_lock(assignment_id) do
+            attempt = @store.load(assignment_id, attempt_id) || recover_managed_attempt(assignment_id, attempt_id)
+            raise AttemptErrors::NotFound, "Attempt '#{attempt_id}' not found" unless attempt
 
-          identity ||= @identity_resolver.resolve
-          live_head = candidate_head!
+            raise AttemptErrors::InvalidState, "Attempt #{attempt_id} is terminal; accepted history is immutable" if attempt.terminal?
+            raise AttemptErrors::InvalidState, "Attempt #{attempt_id} is uncertain; reconcile before finishing" if attempt.uncertain?
 
-          attempt = invalidate_stale_candidate(attempt, live_head)
+            identity ||= @identity_resolver.resolve
+            live_head = candidate_head!
 
-          receipt = @verifier.verify!(
-            data,
-            attempt: attempt,
-            identity: identity,
-            live_head: live_head,
-            repo_root: @repo_root
-          )
-          if @verifier.external_effect?(receipt.operation)
-            unless attempt.managed?
-              raise AttemptErrors::InvalidState,
-                "Taskless attempts cannot record external effects without managed evidence"
+            attempt = invalidate_stale_candidate(attempt, live_head)
+
+            receipt = @verifier.verify!(
+              data,
+              attempt: attempt,
+              identity: identity,
+              live_head: live_head,
+              repo_root: @repo_root
+            )
+            if @verifier.external_effect?(receipt.operation)
+              unless attempt.managed?
+                raise AttemptErrors::InvalidState,
+                  "Taskless attempts cannot record external effects without managed evidence"
+              end
+
+              require_review_evidence(attempt, live_head)
             end
 
-            require_review_evidence(attempt, live_head)
+            accept(attempt, receipt, live_head)
           end
-
-          accept(attempt, receipt, live_head)
         end
 
         # Active-attempt projection for status surfaces.
@@ -155,20 +176,147 @@ module Ace
         # @param identity [ExecutionIdentityResolver::Identity, nil] Resolved when nil
         # @return [Models::Attempt] Updated attempt
         def reconcile(attempt_id:, receipt_path: nil, identity: nil)
-          attempt = @store.find(attempt_id)
-          raise AttemptErrors::NotFound, "Attempt '#{attempt_id}' not found" unless attempt
+          probe = @store.find(attempt_id) || recover_managed_attempt(nil, attempt_id)
+          raise AttemptErrors::NotFound, "Attempt '#{attempt_id}' not found" unless probe
 
-          if attempt.terminal?
-            raise AttemptErrors::InvalidState, "Attempt #{attempt_id} is terminal; accepted history is immutable"
+          @store.with_lock(probe.binding.assignment_id) do
+            attempt = @store.load(probe.binding.assignment_id, attempt_id) ||
+              recover_managed_attempt(probe.binding.assignment_id, attempt_id)
+            raise AttemptErrors::NotFound, "Attempt '#{attempt_id}' not found" unless attempt
+
+            if attempt.terminal?
+              raise AttemptErrors::InvalidState, "Attempt #{attempt_id} is terminal; accepted history is immutable"
+            end
+
+            return classify_running(attempt) if attempt.state == "running"
+
+            identity ||= @identity_resolver.resolve
+            resolve_uncertain(attempt, receipt_path, identity)
           end
-
-          return classify_running(attempt) if attempt.state == "running"
-
-          identity ||= @identity_resolver.resolve
-          resolve_uncertain(attempt, receipt_path, identity)
         end
 
         private
+
+        # Attempt IDs must be unique per assignment: records and journal
+        # events are keyed by them. Allocation happens under the assignment
+        # lock and also avoids IDs already present in the journal.
+        def unique_attempt_id(assignment_id, taken_ids = [])
+          taken = taken_ids.dup
+          base = Ace::B36ts.now
+          suffix = 0
+          100.times do
+            candidate = suffix.zero? ? base : "#{base}#{suffix.to_s(36)}"
+            taken << candidate unless taken.include?(candidate)
+            return candidate if @store.load(assignment_id, candidate).nil?
+
+            suffix += 1
+          end
+
+          raise Error, "Failed to generate a unique attempt ID for #{assignment_id} after 100 attempts"
+        end
+
+        # Ancestors and descendants overlap: an active attempt for 010 owns
+        # its 010.01 subtree, and vice versa.
+        def scopes_overlap?(left, right)
+          return true if Atoms::AssignmentScope.equal?(left, right)
+
+          left.start_with?("#{right}.") || right.start_with?("#{left}.")
+        end
+
+        # Active attempts derived from the authoritative journal, used when
+        # the local record may be missing (lost or wiped cache). Reconstructs
+        # bindings from recorded intent/process_start facts.
+        def active_journal_attempts(assignment)
+          events = journal_for.read_events(assignment.id)
+          by_attempt = events.group_by { |event| event["attempt_id"] }
+          by_attempt.delete(nil)
+
+          by_attempt.filter_map do |attempt_id, attempt_events|
+            intent = attempt_events.find { |event| event["type"] == "intent" }
+            next unless intent
+
+            state = derive_journal_state(attempt_events)
+            next if %w[succeeded failed stopped].include?(state)
+
+            recover_attempt_from_events(assignment.id, attempt_id, intent["payload"], attempt_events, state)
+          end
+        end
+
+        # Recover a single managed attempt by ID from the journal; nil when
+        # the journal shows no such (non-terminal) attempt.
+        def recover_managed_attempt(assignment_id, attempt_id)
+          candidates = if assignment_id
+            [@manager.load(assignment_id)].compact
+          else
+            # Attempt ID alone: scan recent assignments via the store.
+            []
+          end
+
+          candidates.each do |assignment|
+            next unless assignment.managed?
+
+            events = journal_for.read_events(assignment.id)
+            attempt_events = events.select { |event| event["attempt_id"] == attempt_id }
+            intent = attempt_events.find { |event| event["type"] == "intent" }
+            next unless intent
+
+            state = derive_journal_state(attempt_events)
+            attempt = recover_attempt_from_events(
+              assignment.id, attempt_id, intent["payload"], attempt_events, state
+            )
+            return attempt if state == "running" || state == "uncertain"
+
+            return Models::Attempt.new(binding: attempt.binding, state: state, journal_commit: journal_for.ref_value)
+          end
+
+          nil
+        end
+
+        def derive_journal_state(events)
+          state = "running"
+          events.each do |event|
+            case event["type"]
+            when "receipt_accepted"
+              state = event.dig("payload", "receipt", "verdict") || state
+            when "transition"
+              state = event.dig("payload", "to") || state
+            when "reconciliation"
+              state = event.dig("payload", "resolution") || state
+            end
+          end
+          state
+        end
+
+        def recover_attempt_from_events(assignment_id, attempt_id, intent_payload, events, state)
+          process_start = events.reverse.find { |event| event["type"] == "process_start" }
+          binding = Models::AttemptBinding.new(
+            attempt_id: attempt_id,
+            assignment_id: assignment_id,
+            scope: intent_payload["scope"],
+            project_id: intent_payload["project_id"],
+            task_id: intent_payload["task_id"],
+            actor: process_start&.dig("payload", "actor") || "recovered",
+            role: process_start&.dig("payload", "role") || "coordinator",
+            runtime: process_start&.dig("payload", "runtime") || "recovered",
+            base_head: intent_payload["base_head"],
+            evidence_git_ref: journal_for.ref,
+            created_at: parse_event_time(intent_payload["recorded_at"])
+          )
+          Models::Attempt.new(
+            binding: binding,
+            state: state,
+            journal_commit: journal_for.ref_value
+          )
+        end
+
+        def parse_event_time(value)
+          return Time.now.utc if value.nil?
+
+          require "time"
+          Time.parse(value)
+        rescue ArgumentError
+          Time.now.utc
+        end
 
         # Conservative classification of a running attempt after interruption.
         def classify_running(attempt)

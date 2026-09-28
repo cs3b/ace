@@ -88,7 +88,10 @@ module Ace
             preset_name = Ace::Assign::Molecules::PresetInferrer.infer_from_assignment(assignment)
             auto_merge = true if preset_name && preset_name.start_with?("work-on-task-auto-merge")
 
-            evidence = Ace::Assign::Molecules::EvidenceCalculator.calculate(auto_merge: auto_merge)
+            evidence = Ace::Assign::Molecules::EvidenceCalculator.calculate(
+              auto_merge: auto_merge,
+              assignment_id: assignment.id
+            )
 
             payload = {
               assignment: {

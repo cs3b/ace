@@ -446,6 +446,100 @@ module Ace
         coordinator.store.save(forced)
         forced
       end
+
+      def test_attempt_ids_are_unique_under_clock_resolution_collisions
+        coordinator = build_coordinator
+        assignment = create_assignment
+
+        Ace::B36ts.stub(:now, -> { "atsame1" }) do
+          first = coordinator.start(assignment_id: assignment.id, step: "010", project_id: "ace")
+          second = coordinator.start(assignment_id: assignment.id, step: "020", project_id: "ace")
+
+          refute_equal first.attempt_id, second.attempt_id
+          assert coordinator.store.load(assignment.id, first.attempt_id)
+          assert coordinator.store.load(assignment.id, second.attempt_id)
+        end
+      end
+
+      def test_concurrent_finishes_cannot_persist_contradictory_terminal_outcomes
+        coordinator = build_coordinator
+        assignment = create_assignment
+        attempt = coordinator.start(assignment_id: assignment.id, step: "010", project_id: "ace")
+
+        succeeded_receipt = build_receipt(attempt)
+        failed_receipt = build_receipt(attempt, "verdict" => "failed")
+
+        errors = []
+        threads = [succeeded_receipt, failed_receipt].map do |receipt|
+          Thread.new do
+            coordinator.finish(attempt_id: attempt.attempt_id, receipt_path: receipt)
+          rescue Ace::Assign::Error => e
+            errors << e
+          end
+        end
+        threads.each(&:join)
+
+        final = coordinator.store.load(assignment.id, attempt.attempt_id)
+        assert final.terminal?
+        assert_equal 1, final.accepted_receipts.size
+        assert_equal 1, errors.size
+      end
+
+      def test_managed_start_recovers_active_attempt_from_journal_after_local_loss
+        coordinator = build_coordinator
+        assignment = create_assignment
+        attempt = coordinator.start(assignment_id: assignment.id, step: "010", project_id: "ace")
+
+        # Simulate a wiped local cache while the journal survives.
+        FileUtils.rm_rf(File.join(@cache_dir, assignment.id, "attempts"))
+
+        recovered = coordinator.start(assignment_id: assignment.id, step: "010", project_id: "ace")
+
+        assert_equal attempt.attempt_id, recovered.attempt_id
+        assert_equal "running", recovered.state
+        assert_equal "010", recovered.binding.scope
+        assert_equal "ace", recovered.binding.project_id
+        refute_nil recovered.journal_commit
+      end
+
+      def test_journal_backed_attempt_blocks_conflicting_writer_after_local_loss
+        coordinator = build_coordinator
+        assignment = create_assignment
+        coordinator.start(assignment_id: assignment.id, step: "010", project_id: "ace")
+
+        FileUtils.rm_rf(File.join(@cache_dir, assignment.id, "attempts"))
+
+        error = assert_raises(AttemptErrors::Conflict) do
+          coordinator.start(assignment_id: assignment.id, step: "010", project_id: "other-project")
+        end
+        assert_includes error.message, "already owns"
+      end
+
+      def test_overlapping_subtree_scopes_cannot_create_competing_writers
+        coordinator = build_coordinator
+        assignment = create_assignment
+
+        coordinator.start(assignment_id: assignment.id, step: "010", project_id: "ace")
+
+        %w[010.01 010.01.02 0].each do |overlapping|
+          error = assert_raises(AttemptErrors::Conflict) do
+            coordinator.start(assignment_id: assignment.id, step: overlapping, project_id: "ace")
+          end
+          assert_includes error.message, "overlaps"
+        end
+      end
+
+      def test_ancestor_scope_cannot_start_under_active_descendant_owner
+        coordinator = build_coordinator
+        assignment = create_assignment
+
+        coordinator.start(assignment_id: assignment.id, step: "010.01", project_id: "ace")
+
+        error = assert_raises(AttemptErrors::Conflict) do
+          coordinator.start(assignment_id: assignment.id, step: "010", project_id: "ace")
+        end
+        assert_includes error.message, "overlaps"
+      end
     end
   end
 end

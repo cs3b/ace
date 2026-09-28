@@ -35,10 +35,11 @@ class CreateCommandTest < AceAssignTestCase
   end
 
   class FakeExecutor
-    attr_reader :path
+    attr_reader :path, :task_id
 
-    def start(path)
+    def start(path, task_id: nil, project_id: nil)
       @path = path
+      @task_id = task_id
       assignment = Struct.new(:name, :id, :cache_dir, :source_config).new(
         "work-on-task-230",
         "8qqgyk",

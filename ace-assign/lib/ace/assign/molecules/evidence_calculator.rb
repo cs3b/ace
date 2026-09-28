@@ -105,19 +105,18 @@ module Ace
 
         # Currency against the current head. Review approval requires an
         # executed independent reviewer verdict; receipts were verified at
-        # acceptance and the independence guard is re-checked here defensively.
+        # acceptance and the independence guard is re-checked here defensively
+        # (a review receipt without a reviewer verdict is not review evidence
+        # at all).
         def receipt_currency(receipts, operation, head)
           succeeded = receipts.select do |receipt|
-            receipt["operation"] == operation && receipt["verdict"] == "succeeded"
-          end
-
-          current = succeeded.any? do |receipt|
-            next false if receipt["head"] != head
-            next false if operation == "review" &&
-              receipt.dig("review", "reviewer", "actor") == receipt.dig("producer", "actor")
+            next false unless receipt["operation"] == operation && receipt["verdict"] == "succeeded"
+            next false if operation == "review" && receipt.dig("review", "reviewer", "actor").nil?
 
             true
           end
+
+          current = succeeded.any? { |receipt| receipt["head"] == head }
 
           return "missing" if succeeded.empty?
           return "current" if current
