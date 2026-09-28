@@ -224,12 +224,32 @@ module Ace
           return 0 if receipt.nil?
 
           stale = receipt.fetch("files", []) - expected_relative_paths
+          removed = 0
           stale.each do |relative_path|
-            path = File.join(output_dir, relative_path)
-            FileUtils.rm(path) if File.file?(path)
-            remove_empty_parent_dirs(File.dirname(path), output_dir)
+            contained = contained_projection_path(output_dir, relative_path)
+            next if contained.nil?
+            next unless File.file?(contained)
+
+            FileUtils.rm(contained)
+            removed += 1
+            remove_empty_parent_dirs(File.dirname(contained), output_dir)
           end
-          stale.size
+          removed
+        end
+
+        # Receipt files are projected data, so treat them as untrusted: only
+        # plain relative paths that resolve inside output_dir may be pruned.
+        def contained_projection_path(output_dir, relative_path)
+          return nil unless relative_path.is_a?(String)
+          return nil if relative_path.include?("\0")
+          return nil if Pathname.new(relative_path).absolute?
+
+          root = Pathname.new(output_dir)
+          candidate = root.join(relative_path).cleanpath
+          return nil if candidate == root
+          return nil unless candidate.descend.include?(root)
+
+          candidate.to_s
         end
 
         def read_projection_receipt(output_dir)
@@ -256,6 +276,10 @@ module Ace
             FileUtils.rmdir(dir)
             dir = File.dirname(dir)
           end
+        rescue Errno::ENOTEMPTY, Errno::ENOENT
+          # Surviving siblings (or a vanished ancestor) stop the ascent; the
+          # sync must continue writing remaining assets and the receipt.
+          nil
         end
 
         # The prompts dir is shared with user-authored templates, so only files

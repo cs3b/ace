@@ -306,6 +306,47 @@ class Ace::Handbook::Organisms::ProviderSyncerTest < Minitest::Test
     assert File.exist?(File.join(extensions_dir, "pre-existing.mjs"))
   end
 
+  def test_sync_prunes_stale_file_even_when_sibling_directory_keeps_files
+    create_provider_manifest("pi", ".pi/skills", extensions_dir: ".pi/extensions")
+    create_extension_asset("pi", "ace-wake.mjs", "// current\n")
+
+    syncer.sync(provider: "pi")
+    extensions_dir = File.join(@tmpdir, ".pi", "extensions")
+    FileUtils.mkdir_p(File.join(extensions_dir, "wake"))
+    File.write(File.join(extensions_dir, "wake", "retired.mjs"), "// retired\n")
+    File.write(File.join(extensions_dir, "wake", "keeper.mjs"), "// kept\n")
+    receipt = JSON.parse(File.read(File.join(extensions_dir, ".ace-handbook-projection.json")))
+    receipt["files"] << "wake/retired.mjs"
+    File.write(File.join(extensions_dir, ".ace-handbook-projection.json"), JSON.generate(receipt))
+
+    result = syncer.sync(provider: "pi").first
+
+    assert_equal 1, result.fetch(:removed_extension_entries)
+    refute File.exist?(File.join(extensions_dir, "wake", "retired.mjs"))
+    assert File.exist?(File.join(extensions_dir, "wake", "keeper.mjs"))
+    assert_equal 0, result.fetch(:updated_extension_files), "sync must complete after partial pruning"
+    assert File.exist?(File.join(extensions_dir, "ace-wake.mjs"))
+  end
+
+  def test_sync_ignores_receipt_paths_outside_the_projection_directory
+    create_provider_manifest("pi", ".pi/skills", extensions_dir: ".pi/extensions")
+    create_extension_asset("pi", "ace-wake.mjs", "// current\n")
+
+    syncer.sync(provider: "pi")
+    extensions_dir = File.join(@tmpdir, ".pi", "extensions")
+    victim = File.join(@tmpdir, ".pi", "victim.txt")
+    File.write(victim, "do not delete")
+    receipt = JSON.parse(File.read(File.join(extensions_dir, ".ace-handbook-projection.json")))
+    receipt["files"] += ["../victim.txt", "/etc/hostname", "sub/../../escape.txt"]
+    File.write(File.join(extensions_dir, ".ace-handbook-projection.json"), JSON.generate(receipt))
+
+    result = syncer.sync(provider: "pi").first
+
+    assert File.exist?(victim), "receipt traversal must never delete outside the projection dir"
+    assert_equal 0, result.fetch(:removed_extension_entries), "traversal entries are never removed"
+    assert File.exist?(File.join(extensions_dir, "ace-wake.mjs"))
+  end
+
   def test_sync_skips_extension_projection_without_extensions_dir
     create_extension_asset("codex", "ace-wake.mjs", "// codex extension\n")
 
