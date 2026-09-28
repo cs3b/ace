@@ -10,6 +10,7 @@ require "tmpdir"
 require "digest"
 require "json"
 require "socket"
+require "etc"
 
 class AceAssignTestCase < AceTestCase
   def setup
@@ -187,7 +188,7 @@ class AceAssignTestCase < AceTestCase
       "scope" => attempt.binding.scope,
       "operation" => "implement",
       "producer" => {
-        "actor" => ENV["USER"].to_s,
+        "actor" => Etc.getlogin || "test-operator",
         "role" => "coordinator",
         "runtime" => "local:#{Socket.gethostname}"
       },
