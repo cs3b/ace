@@ -30,28 +30,16 @@ module Ace
 
             validate_options(options)
 
-            reporter = Molecules::CleanupReporter.new(
-              target: options[:target],
-              remote: options[:remote],
-              offline: options[:offline]
-            )
-
-            result = reporter.report
+            result = build_reporter(options).report
 
             if result[:success]
               if options[:apply]
-                applier = Molecules::CleanupApplier.new(result, options[:approved_digest])
-                apply_result = applier.apply
+                apply_result = apply_fresh_report(options)
 
                 if apply_result[:success]
-                  # Strict rescan
-                  final_reporter = Molecules::CleanupReporter.new(
-                    target: options[:target],
-                    remote: options[:remote],
-                    offline: options[:offline]
-                  )
-                  final_result = final_reporter.report
-                  
+                  # Strict rescan with the same selection
+                  final_result = build_reporter(options).report
+
                   if final_result[:success]
                     # Check require_only_target if needed
                     if options[:require_only_target] && has_non_target_state?(final_result)
@@ -59,7 +47,7 @@ module Ace
                       display_result(final_result, options)
                       return 1
                     end
-                    
+
                     display_apply_result(apply_result, final_result, options)
                     return 0
                   else
@@ -93,6 +81,35 @@ module Ace
             1
           end
 
+          private
+
+          # Build a reporter with the command's server selection; --remote
+          # stays a local Git remote name and is never forge selection.
+          def build_reporter(options)
+            Molecules::CleanupReporter.new(
+              target: options[:target],
+              remote: options[:remote],
+              offline: options[:offline],
+              server_name: options[:server],
+              use_default: options[:default_server] == true,
+              remote_name: options[:remote]
+            )
+          end
+
+          # Recompute the complete report immediately before apply; approval
+          # is bound to the reviewed digest over the exact evidence. Any
+          # drift (repo state, server identity, PR/head proof) invalidates
+          # the approved digest and refuses the apply.
+          def apply_fresh_report(options)
+            fresh = build_reporter(options).report
+            unless fresh[:success]
+              return {success: false, error: "Report recomputation failed before apply: #{fresh[:error]}", ledger: [], partial_failure: false}
+            end
+
+            applier = Molecules::CleanupApplier.new(fresh, options[:approved_digest])
+            applier.apply
+          end
+
           # Show help
           #
           # @return [Integer] Exit code
@@ -103,8 +120,10 @@ module Ace
 
               OPTIONS
                 --target <ref>      Target ref for ancestry proof (required)
-                --remote <name>     Remote name (default: origin)
-                --offline           Skip remote evidence refresh
+                --remote <name>     Local Git remote name (default: origin); never forge selection
+                --server <name>     Named configured forge server for PR proof
+                --default-server    Use the configured default forge server
+                --offline           Skip remote evidence refresh and provider proof
                 --apply             Apply a reviewed plan
                 --approved-digest <sha256>   Approved plan digest to apply
                 --require-only-target        Fail if final rescan has retained non-target state
@@ -128,12 +147,11 @@ module Ace
             0
           end
 
-          private
-
           def parse_arguments(args)
             options = {
               target: nil, remote: "origin", offline: false, format: "table", help: false,
-              apply: false, approved_digest: nil, require_only_target: false
+              apply: false, approved_digest: nil, require_only_target: false,
+              server: nil, default_server: false
             }
             i = 0
             while i < args.length
@@ -146,6 +164,11 @@ module Ace
                 options[:remote] = args[i]
               when "--offline"
                 options[:offline] = true
+              when "--server"
+                i += 1
+                options[:server] = args[i]
+              when "--default-server"
+                options[:default_server] = true
               when "--apply"
                 options[:apply] = true
               when "--approved-digest"
@@ -169,16 +192,17 @@ module Ace
           def validate_options(options)
             raise ArgumentError, "--target is required" unless options[:target]
             raise ArgumentError, "--remote is required" unless options[:remote]
+            raise ArgumentError, "--server and --default-server are mutually exclusive" if options[:server] && options[:default_server]
 
             valid_formats = %w[table json]
             unless valid_formats.include?(options[:format])
               raise ArgumentError, "Invalid format '#{options[:format]}'. Use: #{valid_formats.join(", ")}"
             end
-            
+
             if options[:apply] && !options[:approved_digest]
               raise ArgumentError, "--approved-digest is required when --apply is used"
             end
-            
+
             if options[:approved_digest] && !options[:apply]
               raise ArgumentError, "--apply is required when --approved-digest is used"
             end

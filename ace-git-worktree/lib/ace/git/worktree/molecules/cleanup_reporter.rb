@@ -19,12 +19,22 @@ module Ace
           SCHEMA_VERSION = "1.0"
 
           # @param target [String] Target ref (e.g. "main", "origin/main")
-          # @param remote [String] Remote name (e.g. "origin")
+          # @param remote [String] Remote name (e.g. "origin"); identifies the
+          #   local Git remote, never the forge
           # @param offline [Boolean] Skip remote refresh
-          def initialize(target:, remote: "origin", offline: false)
+          # @param server_name [String, nil] explicit forge server selection
+          # @param use_default [Boolean] resolve the configured default server
+          # @param remote_name [String, nil] remote used for fallback resolution
+          # @param timeout [Integer, nil] provider timeout
+          # @param runner [Proc, nil] injectable provider runner (tests)
+          def initialize(target:, remote: "origin", offline: false, server_name: nil, use_default: false,
+            remote_name: nil, timeout: nil, runner: nil)
             @target = target
             @remote = remote
             @offline = offline
+            @selection = {server_name: server_name, use_default: use_default, remote_name: remote_name}
+            @timeout = timeout
+            @runner = runner
           end
 
           # Build complete cleanup report.
@@ -46,7 +56,11 @@ module Ace
             local_refs = inventory_local_refs
             remote_refs = inventory_remote_refs
 
-            pr_resolver = CleanupPrResolver.new(target: @target, target_sha: target_sha, offline: @offline)
+            pr_resolver = CleanupPrResolver.new(
+              target: @target, target_sha: target_sha, offline: @offline,
+              server_name: @selection[:server_name], use_default: @selection[:use_default],
+              remote_name: @selection[:remote_name], timeout: @timeout, runner: @runner
+            )
 
             # Classify each item
             classify_worktrees(worktrees, target_sha, pr_resolver)
@@ -56,8 +70,12 @@ module Ace
             # Build ordered action plan
             actions = build_action_plan(worktrees, local_refs, remote_refs)
 
-            # Compute canonical digest
-            plan_digest = compute_plan_digest(worktrees, local_refs, remote_refs, actions, target_sha)
+            # The resolved server identity binds provider proof to the plan;
+            # changed server configuration invalidates approval.
+            server = server_identity_hash(pr_resolver)
+
+            # Compute canonical digest (server/PR/head evidence included)
+            plan_digest = compute_plan_digest(worktrees, local_refs, remote_refs, actions, target_sha, server)
 
             {
               success: true,
@@ -65,6 +83,7 @@ module Ace
               repository: common_dir,
               target: {ref: @target, sha: target_sha},
               remote: {name: @remote, sha: remote_sha},
+              server: server,
               refresh: @offline ? {status: "offline"} : (refresh_result || {status: "skipped"}),
               worktrees: worktrees,
               local_refs: local_refs,
@@ -378,16 +397,35 @@ module Ace
 
           # --- Canonical digest ---
 
-          def compute_plan_digest(worktrees, local_refs, remote_refs, actions, target_sha)
+          # Resolved server identity for the report/digest; nil when no
+          # provider was resolvable (local ancestry proof only).
+          def server_identity_hash(pr_resolver)
+            server = pr_resolver.resolved_server
+            return nil unless server
+
+            {name: server.name, provider: server.provider.to_s, url: server.url}
+          end
+
+          def compute_plan_digest(worktrees, local_refs, remote_refs, actions, target_sha, server)
             canonical = {
+              schema_version: SCHEMA_VERSION,
               target_sha: target_sha,
-              worktrees: worktrees.sort_by { |wt| wt[:path] }.map { |wt| [wt[:path], wt[:sha], wt[:action]] },
-              local_refs: local_refs.sort_by { |r| r[:name] }.map { |r| [r[:name], r[:sha], r[:action]] },
-              remote_refs: remote_refs.sort_by { |r| r[:name] }.map { |r| [r[:name], r[:sha], r[:action]] },
+              server: server,
+              worktrees: worktrees.sort_by { |wt| wt[:path] }.map { |wt| proof_tuple(wt[:path], wt) },
+              local_refs: local_refs.sort_by { |r| r[:name] }.map { |r| proof_tuple(r[:name], r) },
+              remote_refs: remote_refs.sort_by { |r| r[:name] }.map { |r| proof_tuple(r[:name], r) },
               actions: actions.map { |a| [a[:type], a[:target], a[:sha]] }
             }
 
             Digest::SHA256.hexdigest(JSON.generate(canonical))
+          end
+
+          # One canonical entry per item: identity, decision, and the full
+          # provider proof that justified it.
+          def proof_tuple(identity, item)
+            proof = item[:pr_proof]
+            [identity, item[:sha], item[:action], item[:ancestry],
+             proof ? [proof[:status], proof[:pr], proof[:merged_head], proof[:merge_commit]] : nil]
           end
         end
       end

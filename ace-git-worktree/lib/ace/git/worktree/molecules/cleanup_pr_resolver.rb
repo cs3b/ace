@@ -35,6 +35,13 @@ module Ace
             @runner = runner
           end
 
+          # @return [Ace::Git::ResolvedServer, nil] the server resolved for
+          #   provider evidence; nil when unresolvable (local proof only)
+          def resolved_server
+            resolve_provider
+            @resolved_server
+          end
+
           # Classify a candidate branch with provider PR evidence.
           #
           # @param branch [String] the branch name (e.g. "feature")
@@ -103,8 +110,10 @@ module Ace
 
             @provider = begin
               server = Ace::Git::ServerRegistry.resolve_for(**@selection)
+              @resolved_server = server
               Ace::Git::Providers.for(server, timeout: @timeout, runner: @runner)
             rescue Ace::Git::Error
+              @resolved_server = nil
               nil
             end
           end

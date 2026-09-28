@@ -184,6 +184,42 @@ class CleanupReporterTest < Minitest::Test
     end
   end
 
+  def test_changed_provider_proof_invalidates_digest
+    # Same inventory, different provider proof (no_pr vs confirmed merged):
+    # the approved digest must change because the proof is part of consent.
+    def report_with_proof(status, pr, merged_head)
+      @reporter.stub(:resolve_common_dir, "/repo/.git") do
+        @reporter.stub(:resolve_ref, ->(ref) { ref == "main" ? "abc123" : nil }) do
+          @reporter.stub(:inventory_worktrees, [worktree_entry("/repo/wt1", "wt1", "aaa111")]) do
+            @reporter.stub(:inventory_local_refs, []) do
+              @reporter.stub(:inventory_remote_refs, []) do
+                @reporter.stub(:ancestor?, ->(_candidate, _target) { false }) do
+                  mock_resolver = Object.new
+                  mock_resolver.define_singleton_method(:classify) do |_branch, _sha|
+                    {status: status, proof: status == :merged ? "exact_merged_pr_head" : nil,
+                     pr: pr, pr_url: nil, candidate_head: nil, merged_head: merged_head,
+                     merge_commit: status == :merged ? "m1" : nil, target_reachable: status == :merged,
+                     provider_status: "available",
+                     action: status == :merged ? "remove" : "retain",
+                     retention_reason: status == :merged ? nil : "ancestry_unproven"}
+                  end
+                  mock_resolver.define_singleton_method(:resolved_server) { nil }
+                  Ace::Git::Worktree::Molecules::CleanupPrResolver.stub :new, mock_resolver do
+                    @reporter.report[:plan_digest]
+                  end
+                end
+              end
+            end
+          end
+        end
+      end
+    end
+
+    digest_no_pr = report_with_proof(:no_pr, nil, nil)
+    digest_merged = report_with_proof(:merged, 25, "head1")
+    refute_equal digest_no_pr, digest_merged, "changed provider proof must invalidate the approved digest"
+  end
+
   def test_different_state_produces_different_digest
     digest1 = nil
     stub_successful_report(
@@ -255,17 +291,22 @@ class CleanupReporterTest < Minitest::Test
                 mock_resolver = Object.new
                 def mock_resolver.classify(branch, sha)
                   {
-                    proof: "none",
+                    status: :offline,
+                    proof: nil,
                     pr: nil,
+                    pr_url: nil,
                     candidate_head: nil,
                     merged_head: nil,
                     merge_commit: nil,
                     target_reachable: "unknown",
-                    path_type_mode_match: "unknown",
                     provider_status: "offline",
                     action: "retain",
                     retention_reason: "ancestry_unproven"
                   }
+                end
+
+                def mock_resolver.resolved_server
+                  nil
                 end
                 
                 Ace::Git::Worktree::Molecules::CleanupPrResolver.stub :new, mock_resolver do
