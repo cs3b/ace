@@ -78,8 +78,8 @@ module Ace
           end
 
           def flag_indices(flags)
-            ARGV.each_index.select do |index|
-              token = ARGV[index]
+            Ace::Runtime::CLI.last_invocation_args.each_index.select do |index|
+              token = Ace::Runtime::CLI.last_invocation_args[index]
               flags.any? { |flag| token == flag || token.start_with?("#{flag}=") }
             end
           end

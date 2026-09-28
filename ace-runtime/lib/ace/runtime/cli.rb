@@ -32,7 +32,15 @@ module Ace
       # @param args [Array<String>] Command-line arguments
       # @return [Integer] Exit code (0 for success, non-zero for failure)
       def self.start(args)
+        @last_invocation_args = args
         Ace::Support::Cli::Runner.new(self).call(args: args)
+      end
+
+      # Raw arguments of the current invocation. The send command reads
+      # these for flag declaration order (--cmd before every --key);
+      # falls back to ARGV when the CLI was not started through #start.
+      def self.last_invocation_args
+        @last_invocation_args || ARGV
       end
 
       # Register commands
