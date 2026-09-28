@@ -20,13 +20,24 @@ class LabProviderTest < AceHitlTestCase
         FileUtils.mkdir_p(File.join(tmp, dir))
       end
       store = make_store(root: tmp, identity: root_identity)
-      provider = Ace::Hitl::Providers::Lab.new(store: store)
+      provider = Ace::Hitl::Providers::Lab.new(store: store, manager: pinned_manager(tmp))
       yield provider, tmp, store
     end
   end
 
   def root_identity
     LifecycleFixtures::TestIdentity.new(username: "lab-admin", root: true)
+  end
+
+  # Manager pinned to the tmp store root: the absolute config root_dir
+  # keeps create/show on tmp regardless of ambient worktree discovery
+  # (which diverges under the hermetic suite and would otherwise leak
+  # events into the real repo's .ace-local/hitl).
+  def pinned_manager(root)
+    Ace::Hitl::Organisms::HitlManager.new(
+      root_dir: root,
+      config: {"hitl" => {"root_dir" => root}}
+    )
   end
 
   def test_ask_creates_event_and_relay_request_and_persists_contract_fields
@@ -47,7 +58,7 @@ class LabProviderTest < AceHitlTestCase
       assert_equal result.event_id, record["ace_hitl_id"]
       assert_path_exists File.join(tmp, "public", "#{result.request_id}.json")
 
-      manager = Ace::Hitl::Organisms::HitlManager.new(root_dir: tmp)
+      manager = pinned_manager(tmp)
       event = manager.show(result.event_id)[:event]
       assert_equal "Proceed with deploy?", event.questions.first
       assert_equal result.request_id, event.metadata["lab_request_id"]
@@ -71,7 +82,7 @@ class LabProviderTest < AceHitlTestCase
         effect: {match: nil, effect_args: ["/bin/false"], effect_cwd: tmp, effect_timeout: nil}
       )
 
-      manager = Ace::Hitl::Organisms::HitlManager.new(root_dir: tmp)
+      manager = pinned_manager(tmp)
       event = manager.show(result.event_id)[:event]
       assert_equal "Ship without tests?", event.title
       assert_equal "declared", event.metadata["lab_request_effect"]
@@ -87,7 +98,7 @@ class LabProviderTest < AceHitlTestCase
     Dir.mktmpdir("ace-hitl-provider") do |tmp|
       %w[requests secrets answers public effects].each { |dir| FileUtils.mkdir_p(File.join(tmp, dir)) }
       store = make_store(root: tmp, identity: root_identity, binding: binding)
-      provider = Ace::Hitl::Providers::Lab.new(store: store)
+      provider = Ace::Hitl::Providers::Lab.new(store: store, manager: pinned_manager(tmp))
 
       error = assert_raises(Ace::Hitl::Providers::ProviderUnavailableError) do
         provider.ask(
@@ -102,7 +113,7 @@ class LabProviderTest < AceHitlTestCase
       orphan_id = error.message[/HITL event (\S+) was created/, 1]
       refute_nil orphan_id, "error must surface the orphan local event id"
 
-      manager = Ace::Hitl::Organisms::HitlManager.new(root_dir: tmp)
+      manager = pinned_manager(tmp)
       event = manager.show(orphan_id)[:event]
       refute_nil event, "orphan event stays inspectable"
       assert_nil event.metadata["lab_request_id"]
