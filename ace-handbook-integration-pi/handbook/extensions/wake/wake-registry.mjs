@@ -90,10 +90,10 @@ export class WakeRegistry {
     }
 
     const definition = { kind: "watch", name, path, message };
-    // The watch port validates readability and takes its baseline inside
-    // start(), so an unreadable or invalid path fails the command loudly
-    // before anything is persisted.
-    this.#watches.start(
+    // The watch port validates readability, takes its baseline, and resolves
+    // the configured path to a canonical absolute path — an unreadable or
+    // invalid path fails the command loudly before anything is persisted.
+    definition.path = this.#watches.start(
       definition,
       () => this.#fire(WATCH_SOURCE_PREFIX, name, definition.message),
     );
