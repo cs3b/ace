@@ -61,6 +61,7 @@ module Ace
             end
 
             grants_provisioned = false
+            created_grant_dirs = []
 
             Dir.mktmpdir do |tmp|
               gem_home = File.join(tmp, "gems")
@@ -73,10 +74,22 @@ module Ace
                 bin = File.join(gem_home, "bin", "ace-lab")
 
                 principal = Etc.getpwuid(Process.uid)&.name || Process.uid.to_s
-                FileUtils.mkdir_p(File.dirname(Ace::Lab::AUTHORIZATION_PATH))
+                grants_dir = File.dirname(Ace::Lab::AUTHORIZATION_PATH)
+                # Track directories this test creates so cleanup removes only
+                # those (and only while empty); explicit modes defeat umask-000
+                # which would make the fixture group/world writable and fail
+                # ownership verification (subject review, low)
+                missing_dir = grants_dir
+                until File.exist?(missing_dir)
+                  created_grant_dirs.unshift(missing_dir)
+                  missing_dir = File.dirname(missing_dir)
+                end
+                FileUtils.mkdir_p(grants_dir)
+                created_grant_dirs.each { |dir| File.chmod(0o755, dir) }
                 File.write(Ace::Lab::AUTHORIZATION_PATH, YAML.dump({
                   "principals" => {principal => {"projects" => %w[atlas borealis]}}
                 }))
+                File.chmod(0o644, Ace::Lab::AUTHORIZATION_PATH)
                 grants_provisioned = true
 
                 env = launch_env(gem_home, project_dir)
@@ -112,8 +125,14 @@ module Ace
                 assert_equal "atlas-search", JSON.parse(out).dig("data", "entry", "id")
               ensure
                 FileUtils.rm_f(gem_file)
-                # Remove only grants this test provisioned (subject review, high)
+                # Remove only grants and directories this test provisioned
+                # (subject review, high + low)
                 FileUtils.rm_f(Ace::Lab::AUTHORIZATION_PATH) if grants_provisioned
+                created_grant_dirs.each do |dir|
+                  FileUtils.rmdir(dir)
+                rescue Errno::ENOTEMPTY, Errno::ENOENT
+                  nil
+                end
               end
             end
           end
