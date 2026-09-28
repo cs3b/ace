@@ -190,7 +190,7 @@ module Ace
 
       require_relative "worktree/molecules/config_loader"
       require_relative "worktree/molecules/task_fetcher"
-      require_relative "worktree/molecules/pr_creator"
+      require_relative "worktree/molecules/pull_request_creator"
       require_relative "worktree/molecules/pull_request_evidence_resolver"
       require_relative "worktree/molecules/pull_request_checkout_preparer"
       require_relative "worktree/molecules/task_committer"

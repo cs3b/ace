@@ -389,6 +389,8 @@ module Ace
               push_remote: options[:push_remote],
               commit_message: options[:commit_message],
               target_branch: options[:target_branch],
+              server: options[:server],
+              default_server: options[:default_server],
               no_mise_trust: options[:no_mise_trust],
               force: options[:force]
             }.compact

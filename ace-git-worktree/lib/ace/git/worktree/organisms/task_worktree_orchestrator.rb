@@ -31,7 +31,6 @@ module Ace
             @task_committer = Molecules::TaskCommitter.new(project_root: project_root)
             @task_pusher = Molecules::TaskPusher.new
             @worktree_creator = Molecules::WorktreeCreator.new
-            @pr_creator = Molecules::PrCreator.new
             @parent_task_resolver = Molecules::ParentTaskResolver.new(project_root: project_root)
           end
 
@@ -861,14 +860,14 @@ module Ace
             result[:success] && result[:output]&.include?(branch)
           end
 
-          # Create draft PR for task
+          # Create draft PR for task through the forge-neutral provider contract.
           #
-          # Creates a draft PR targeting the source branch (start_point) from which
-          # the worktree branch was created.
+          # The exact pushed head SHA is proven to the provider (expected_head);
+          # PR identity is never inferred from branch names alone.
           #
           # @param task_data [Hash] Task data hash from ace-task
           # @param worktree_result [Hash] Worktree creation result with :branch, :start_point
-          # @param options [Hash] Options (may include :source for base branch override)
+          # @param options [Hash] Options (may include :source, :server, :default_server)
           # @return [Hash] Result with :success, :pr_number, :pr_url, :existing, :error
           def create_pr_for_task(task_data, worktree_result, options)
             branch = worktree_result[:branch]
@@ -880,12 +879,47 @@ module Ace
             # Resolve base branch - handle SHA vs branch name
             base = resolve_pr_base(start_point, options)
 
-            # Create draft PR
-            @pr_creator.create_draft(
+            push_remote = options[:push_remote] || @config.push_remote || "origin"
+            creator = Molecules::PullRequestCreator.new(
+              server_name: options[:server],
+              use_default: options[:default_server] == true,
+              remote_name: push_remote
+            )
+            creator.create_draft(
               branch: branch,
               base: base,
-              title: title
+              title: title,
+              expected_head: pushed_branch_sha(branch, worktree_result[:worktree_path]),
+              head_repository_url: remote_url(push_remote)
             )
+          end
+
+          # Exact SHA of the pushed worktree branch, proven locally before any
+          # provider call.
+          #
+          # @param branch [String] worktree branch name
+          # @param worktree_path [String, nil] worktree directory to resolve in
+          # @return [String] branch head SHA
+          def pushed_branch_sha(branch, worktree_path)
+            result = if worktree_path && Dir.exist?(worktree_path)
+              Dir.chdir(worktree_path) do
+                Atoms::GitCommand.execute("rev-parse", "--verify", "#{branch}^{commit}", timeout: 10)
+              end
+            else
+              Atoms::GitCommand.execute("rev-parse", "--verify", "#{branch}^{commit}", timeout: 10)
+            end
+            return result[:output].to_s.strip if result[:success]
+
+            raise Ace::Git::Error, "Cannot prove pushed head SHA for branch '#{branch}': #{result[:error]}"
+          end
+
+          # Local URL of a configured git remote (no network).
+          #
+          # @param remote [String] remote name
+          # @return [String, nil] remote URL
+          def remote_url(remote)
+            result = Atoms::GitCommand.execute("remote", "get-url", remote, timeout: 10)
+            result[:success] ? result[:output].to_s.strip : nil
           end
 
           # Resolve PR base branch from start_point
