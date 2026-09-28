@@ -197,7 +197,9 @@ module Ace
           owned_paths = receipt&.fetch("files", []) || []
           reject_unowned_collisions(output_dir, expected.keys, owned_paths)
 
-          removed_entries = prune_stale_extension_files(output_dir, expected.keys, provider)
+          # Pruning happens only after the replacement projection committed:
+          # a failed upgrade must leave the previous installation usable.
+          stale_paths = receipt&.fetch("files", [])&.-(expected.keys) || []
           updated_files = 0
 
           # Resolve and validate every destination before writing anything: a
@@ -238,6 +240,8 @@ module Ace
             end
             raise
           end
+
+          removed_entries = prune_stale_extension_files(output_dir, stale_paths)
 
           {
             relative_extensions_dir: extensions_dir,
@@ -310,11 +314,8 @@ module Ace
             .to_h { |path| [Pathname.new(path).relative_path_from(source_root).to_s, path] }
         end
 
-        def prune_stale_extension_files(output_dir, expected_relative_paths, provider)
-          receipt = read_projection_receipt(output_dir, provider)
-          return 0 if receipt.nil?
-
-          stale = receipt.fetch("files", []) - expected_relative_paths
+        def prune_stale_extension_files(output_dir, stale_relative_paths)
+          stale = stale_relative_paths
           removed = 0
           stale.each do |relative_path|
             contained = safe_projection_path(output_dir, relative_path)
