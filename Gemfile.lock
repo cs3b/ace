@@ -400,7 +400,7 @@ PATH
 PATH
   remote: ace-test-runner
   specs:
-    ace-test-runner (0.26.0)
+    ace-test-runner (0.27.0)
       ace-b36ts (~> 0.14)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)
@@ -413,7 +413,7 @@ PATH
 PATH
   remote: ace-test
   specs:
-    ace-test (0.7.3)
+    ace-test (0.7.4)
 
 PATH
   remote: ace-tmux
