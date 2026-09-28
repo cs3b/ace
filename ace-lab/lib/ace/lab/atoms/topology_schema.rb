@@ -52,7 +52,7 @@ module Ace
 
             ensure_globally_unique!(projects, agents, services)
 
-            { "projects" => projects, "agents" => agents, "services" => services }
+            {"projects" => projects, "agents" => agents, "services" => services}
           end
 
           def normalized_project(entry)
@@ -60,7 +60,7 @@ module Ace
 
             {
               "id" => require_id(entry["id"], "project"),
-              "label" => optional_string(entry["label"], "project #{entry['id'].inspect} label")
+              "label" => optional_string(entry["label"], "project #{entry["id"].inspect} label")
             }
           end
 
@@ -132,10 +132,10 @@ module Ace
 
                 project
               end
-              out[name] = { "projects" => allowed.uniq }
+              out[name] = {"projects" => allowed.uniq}
             end
 
-            { "principals" => principals }
+            {"principals" => principals}
           end
 
           def require_id(value, kind)

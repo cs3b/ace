@@ -12,6 +12,7 @@ begin
   exit_code = Ace::Lab::CLI.start(args)
   exit(exit_code) if exit_code.is_a?(Integer) && exit_code.nonzero?
 rescue Ace::Support::Cli::Error => e
-  warn e.to_s
+  # e.to_s carries the documented "Error: " prefix (Ace::Support::Cli::Error)
+  warn e.to_s # standard:disable Lint/RedundantStringCoercion
   exit(e.exit_code)
 end

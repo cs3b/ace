@@ -59,7 +59,7 @@ module Atoms
       ])
 
       %w[token secret auth_file fragment inst-search inst-planner pane session
-         q? /lab /etc].each do |forbidden|
+        q? /lab /etc].each do |forbidden|
         refute_includes public_json, forbidden, "public output leaked #{forbidden.inspect}"
       end
     end

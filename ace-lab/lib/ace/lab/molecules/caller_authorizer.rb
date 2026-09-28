@@ -17,7 +17,7 @@ module Ace
           uid = Process.uid
           name = begin
             Etc.getpwuid(uid)&.name
-          rescue StandardError
+          rescue
             nil
           end
           [name, uid.to_s].compact.uniq

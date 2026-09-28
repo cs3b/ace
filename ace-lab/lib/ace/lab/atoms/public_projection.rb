@@ -87,7 +87,7 @@ module Ace
             return nil unless uri.is_a?(URI::HTTP) || uri.is_a?(URI::HTTPS)
             return nil if uri.host.nil? || uri.host.empty?
 
-            uri.port == uri.default_port ? "#{uri.scheme}://#{uri.host}" : "#{uri.scheme}://#{uri.host}:#{uri.port}"
+            (uri.port == uri.default_port) ? "#{uri.scheme}://#{uri.host}" : "#{uri.scheme}://#{uri.host}:#{uri.port}"
           rescue URI::Error, ArgumentError
             nil
           end

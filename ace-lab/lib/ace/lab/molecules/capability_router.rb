@@ -17,9 +17,11 @@ module Ace
         end
 
         def route(project:, capability:)
-          return Models::QueryResult.failure(
-            "unauthorized", "caller is not authorized for project #{project.inspect}", project: project
-          ) unless @authorizer.authorized?(project)
+          unless @authorizer.authorized?(project)
+            return Models::QueryResult.failure(
+              "unauthorized", "caller is not authorized for project #{project.inspect}", project: project
+            )
+          end
 
           capability = normalize_capability(capability)
           candidates = @index.services.select do |service|
