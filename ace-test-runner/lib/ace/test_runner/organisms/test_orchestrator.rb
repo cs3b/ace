@@ -187,8 +187,9 @@ module Ace
           # Hermetic fixture environment: every test child (subprocess or in-process)
           # is launched from the sanitized allowlisted environment with fixture-owned
           # HOME/XDG directories. Ambient LAB_*/ACE_*/provider/user configuration
-          # never reaches deterministic tests.
-          @environment_policy = Models::EnvironmentPolicy.from_config(@configuration.environment)
+          # never reaches deterministic tests. Suite-level fixture configuration is
+          # merged under this package's own runner configuration (specific wins).
+          @environment_policy = build_environment_policy
           @fixture_environment = Molecules::FixtureEnvironment.new(
             policy: @environment_policy,
             parent_env: ENV.to_h
@@ -394,6 +395,16 @@ module Ace
           warn "fixture home: #{@fixture_environment.root}"
           override_names = @environment_policy.overrides.keys.join(", ")
           warn "fixture overrides: #{override_names.empty? ? "none" : override_names}"
+        end
+
+        # Package policy from runner configuration, merged with suite-level
+        # fixture configuration propagated by ace-test-suite (specific wins).
+        def build_environment_policy
+          policy = Models::EnvironmentPolicy.from_config(@configuration.environment)
+          channel = ENV[Models::EnvironmentPolicy::SUITE_CHANNEL_KEY]
+          return policy unless channel
+
+          Models::EnvironmentPolicy.from_channel(channel).merge_with(policy)
         end
 
         def validate_configuration!

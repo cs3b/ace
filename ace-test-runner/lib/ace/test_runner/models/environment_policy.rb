@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "json"
+
 module Ace
   module TestRunner
     # Deterministic setup failure: names the missing or invalid key, never its value.
@@ -17,6 +19,12 @@ module Ace
       # credentials, sockets, proxy and project-selection variables - never reaches
       # a deterministic test child.
       class EnvironmentPolicy
+        # Runner-internal channel for ace-test-suite to propagate its suite-level
+        # fixture configuration into package workers. Consumed by the runner when
+        # building the package policy; never passed to test children (the blocked
+        # ACE_ prefix keeps it out of every sanitized child environment).
+        SUITE_CHANNEL_KEY = "ACE_TEST_FIXTURE_ENVIRONMENT"
+
         # Toolchain/process keys preserved from the parent environment.
         PRESERVED_KEYS = %w[PATH LANG LC_ALL TMPDIR TMP TEMP].freeze
 
@@ -66,6 +74,33 @@ module Ace
             preserved_keys: PRESERVED_KEYS + Array(normalized[:preserve]),
             overrides: normalized[:overrides] || {},
             required_keys: Array(normalized[:require])
+          )
+        end
+
+        # Build a policy from the suite propagation channel payload.
+        def self.from_channel(raw)
+          from_config(JSON.parse(raw, symbolize_names: true))
+        rescue JSON::ParserError => e
+          raise EnvironmentSetupError, "Invalid #{SUITE_CHANNEL_KEY} payload: #{e.message}"
+        end
+
+        # Combine this (broader, e.g. suite-level) policy with a more specific one
+        # (e.g. package runner configuration). Specific overrides win; preserve and
+        # require lists union.
+        def merge_with(more_specific)
+          self.class.new(
+            preserved_keys: (preserved_keys + more_specific.preserved_keys).uniq,
+            overrides: overrides.merge(more_specific.overrides),
+            required_keys: (required_keys + more_specific.required_keys).uniq
+          )
+        end
+
+        # Channel payload for propagating this policy's configuration extras.
+        def channel_payload
+          JSON.generate(
+            overrides: overrides,
+            require: required_keys,
+            preserve: preserved_keys - PRESERVED_KEYS
           )
         end
 

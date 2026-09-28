@@ -15,6 +15,7 @@ require "fileutils"
 # never be mutated.
 class HermeticEnvironmentTest < Minitest::Test
   PROBE_ENDPOINT = "http://127.0.0.1:1"
+  SUITE_ENDPOINT = "http://127.0.0.2:1"
 
   def setup
     @original_dir = Dir.pwd
@@ -69,8 +70,10 @@ class HermeticEnvironmentTest < Minitest::Test
 
   def test_suite_runs_parallel_packages_with_distinct_hermetic_fixture_homes
     Dir.mktmpdir do |root|
-      probe_a = build_probe_package(root, "probe-a")
-      probe_b = build_probe_package(root, "probe-b")
+      # Suite-level fixture overrides must propagate to package tests: the
+      # probes require SUITE_ENDPOINT, which only suite.yml provides.
+      probe_a = build_probe_package(root, "probe-a", extra_require: ["SUITE_ENDPOINT"])
+      probe_b = build_probe_package(root, "probe-b", extra_require: ["SUITE_ENDPOINT"])
       write_suite_config(root, [probe_a, probe_b])
 
       env = poisoned_env
@@ -141,7 +144,7 @@ class HermeticEnvironmentTest < Minitest::Test
     [stdout + stderr, status]
   end
 
-  def build_probe_package(root, name, require_missing_token: false)
+  def build_probe_package(root, name, require_missing_token: false, extra_require: [])
     package = File.join(root, name)
     FileUtils.mkdir_p(File.join(package, "test", "atoms"))
     FileUtils.mkdir_p(File.join(package, ".ace", "test"))
@@ -151,7 +154,7 @@ class HermeticEnvironmentTest < Minitest::Test
       gem "minitest"
     GEM
 
-    File.write(File.join(package, ".ace", "test", "runner.yml"), probe_runner_config(require_missing_token))
+    File.write(File.join(package, ".ace", "test", "runner.yml"), probe_runner_config(require_missing_token, extra_require))
 
     File.write(File.join(package, "test", "atoms", "probe_test.rb"), <<~RUBY)
       require "minitest/autorun"
@@ -185,7 +188,7 @@ class HermeticEnvironmentTest < Minitest::Test
     package
   end
 
-  def probe_runner_config(require_missing_token)
+  def probe_runner_config(require_missing_token, extra_require = [])
     if require_missing_token
       <<~YAML
         version: 1
@@ -193,12 +196,13 @@ class HermeticEnvironmentTest < Minitest::Test
           require: [PROBE_TOKEN]
       YAML
     else
+      required = (["PROBE_ENDPOINT"] + extra_require).join(", ")
       <<~YAML
         version: 1
         environment:
           overrides:
             PROBE_ENDPOINT: "#{PROBE_ENDPOINT}"
-          require: [PROBE_ENDPOINT]
+          require: [#{required}]
       YAML
     end
   end
@@ -218,7 +222,10 @@ class HermeticEnvironmentTest < Minitest::Test
       "  test_options:",
       "    format: progress",
       "    save_reports: true",
-      "    report_dir: reports"
+      "    report_dir: reports",
+      "  environment:",
+      "    overrides:",
+      "      SUITE_ENDPOINT: \"#{SUITE_ENDPOINT}\""
     ].join("\n")
     File.write(File.join(root, ".ace", "test", "suite.yml"), yaml + "\n")
   end

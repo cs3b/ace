@@ -79,4 +79,44 @@ class EnvironmentPolicyTest < Minitest::Test
     assert_equal "[redacted]", policy.redacted_value("PROBE_SOCKET", "/tmp/probe.sock")
     assert_equal "http://127.0.0.1:1", policy.redacted_value("PROBE_MODE_ONLY", "http://127.0.0.1:1")
   end
+
+  def test_merge_with_prefers_specific_overrides_and_unions_lists
+    suite = Ace::TestRunner::Models::EnvironmentPolicy.from_config(
+      "preserve" => ["SUITE_TOOL_KEY"],
+      "overrides" => {"SHARED_ENDPOINT" => "http://suite:1", "SUITE_ONLY" => "suite"},
+      "require" => ["SHARED_ENDPOINT"]
+    )
+    package = Ace::TestRunner::Models::EnvironmentPolicy.from_config(
+      "overrides" => {"SHARED_ENDPOINT" => "http://package:1"}
+    )
+
+    merged = suite.merge_with(package)
+
+    assert_equal "http://package:1", merged.overrides["SHARED_ENDPOINT"]
+    assert_equal "suite", merged.overrides["SUITE_ONLY"]
+    assert merged.preserved_key?("SUITE_TOOL_KEY")
+    assert_equal %w[SHARED_ENDPOINT], merged.required_keys
+  end
+
+  def test_channel_payload_round_trips_through_from_channel
+    policy = Ace::TestRunner::Models::EnvironmentPolicy.from_config(
+      "preserve" => ["EXTRA_KEY"],
+      "overrides" => {"PROBE_ENDPOINT" => "http://127.0.0.1:1"},
+      "require" => ["PROBE_ENDPOINT"]
+    )
+
+    restored = Ace::TestRunner::Models::EnvironmentPolicy.from_channel(policy.channel_payload)
+
+    assert_equal policy.overrides, restored.overrides
+    assert_equal policy.required_keys, restored.required_keys
+    assert restored.preserved_key?("EXTRA_KEY")
+  end
+
+  def test_invalid_channel_payload_is_a_setup_error
+    error = assert_raises(Ace::TestRunner::EnvironmentSetupError) do
+      Ace::TestRunner::Models::EnvironmentPolicy.from_channel("{not json")
+    end
+
+    assert_includes error.message, Ace::TestRunner::Models::EnvironmentPolicy::SUITE_CHANNEL_KEY
+  end
 end

@@ -35,10 +35,16 @@ module Ace
 
           # Launch each package from its own hermetic fixture environment so
           # parallel workers never share (or leak) ambient Lab/ACE/user state.
+          # Suite-level fixture configuration propagates to the package worker
+          # through the runner-internal channel; the worker merges it under its
+          # own runner configuration and the channel never reaches test children.
           fixture_environment = Molecules::FixtureEnvironment.new(
             policy: @environment_policy,
             parent_env: ENV.to_h
           ).build
+          fixture_environment.env[Models::EnvironmentPolicy::SUITE_CHANNEL_KEY] =
+            @environment_policy.channel_payload
+
           start_time = now
           stdin, stdout, stderr, thread = Open3.popen3(
             fixture_environment.env, *cmd, chdir: package["path"], pgroup: true, unsetenv_others: true

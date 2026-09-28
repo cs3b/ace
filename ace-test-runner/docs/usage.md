@@ -155,6 +155,7 @@ environment:
 ```
 
 - `preserve` cannot un-block a blocked key; blocked ambient configuration is an error, never permission.
+- `ace-test-suite` propagates its `test_suite.environment` overrides and requirements to every package worker; package-level runner configuration is more specific and wins for the same key.
 - `require` failures are deterministic setup errors naming the missing key and the deterministic mode — values are never echoed.
 - Credential-like override values are redacted in verbose diagnostics (fixture root and override key names only).
 
