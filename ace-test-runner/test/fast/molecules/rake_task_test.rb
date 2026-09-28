@@ -45,6 +45,15 @@ class Ace::TestRunner::RakeTaskTest < Minitest::Test
     assert_equal "Custom test task", task.description
   end
 
+  def test_loads_in_fresh_process_without_runner_preloaded
+    require "open3"
+
+    code = 'require "ace/test_runner/rake_task"; Ace::TestRunner::RakeTask.new(:load_probe)'
+    output, status = Open3.capture2e(RbConfig.ruby, "-e", code)
+
+    assert status.success?, "fresh-process load failed:\n#{output}"
+  end
+
   def test_accepts_configuration_block
     task = Ace::TestRunner::RakeTask.new do |t|
       t.verbose = true

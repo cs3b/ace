@@ -3,6 +3,11 @@
 require "rake"
 require "rake/tasklib"
 
+# Rakefiles load this file directly in a fresh process; load the runner
+# namespace explicitly (models, molecules, atoms, error classes) instead of
+# relying on another entrypoint having required it first.
+require_relative "../test_runner"
+
 module Ace
   module TestRunner
     # Custom Rake task that uses ace-test instead of standard Minitest runner
