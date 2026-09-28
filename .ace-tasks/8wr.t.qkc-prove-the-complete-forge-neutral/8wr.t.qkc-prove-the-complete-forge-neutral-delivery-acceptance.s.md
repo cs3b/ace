@@ -1,0 +1,58 @@
+---
+id: 8wr.t.qkc
+status: pending
+priority: high
+created_at: "2026-09-28 17:42:36"
+estimate: TBD
+dependencies: [8wr.t.qk1, 8wr.t.qkb]
+tags: [lab-readiness]
+bundle:
+  presets: [project]
+  files: [.ace-tasks/8wr.t.qk1-complete-forge-neutral-worktree-review/8wr.t.qk1-complete-forge-neutral-worktree-review-and-task.s.md, .ace-tasks/8wr.t.qkb-run-assignment-delivery-workflows-through/8wr.t.qkb-run-assignment-delivery-workflows-through-named-forge.s.md, .ace-tasks/_archive/8w/y/8wk.t.l1e-forge-neutral-git-core-with/8wk.t.l1e-forge-neutral-git-core-with-github-and.s.md, .ace-tasks/8wr.t.qjl-persist-assignment-attempts-and-exact/8wr.t.qjl-persist-assignment-attempts-and-exact-execution.s.md, .ace-tasks/8wr.t.qkc-prove-the-complete-forge-neutral/ux/usage.md]
+  commands: []
+needs_review: false
+position: 6o000j
+---
+
+# Prove the complete forge-neutral delivery acceptance matrix
+
+## Outcome and ownership
+
+Maintainers receive one executable acceptance matrix proving the delivered core/providers and all migrated consumers work across local-only Git, GitHub, default Forgejo and another named Forgejo. It identifies exact code/package versions, executed scenarios and independent review. lab-overseer l2d.8 verifies this receipt; it does not own or rerun this matrix. lab-config gad uses the accepted receipt as one condition for the next full Lab test.
+
+## Inputs and public artifact contract
+
+Input: delivered qk1/qkb artifacts and their exact SHAs/versions, fresh installed package environment, scoped disposable repositories on each required provider and explicit test-operation scope. Required endpoints are configured named servers; no inferred production targets, credentials in fixtures or provider bypass. This task supplies executable acceptance scenario assets through existing test tooling plus `acceptance/matrix.md` beside the task; no new CLI/framework.
+
+Each matrix row records scenario ID, selected server/provider/repository, task/assignment/attempt where relevant, expected result, observed result, tested head/version, exact command, exit status, artifact path and review reference. Provider/local not-applicable cells are explicit, never passed. Missing/skipped required rows block acceptance. Secrets never appear in artifacts.
+
+## Required rows
+
+| Behavior | Local-only | GitHub / default Forgejo / named Forgejo |
+|---|---|---|
+| Git / task / review isolation | No provider config, CLIs, credentials or network | Named/default/remote resolution and exact identity |
+| Worktree PR lifecycle | Local branch/task no-PR path | PR checkout; task draft create; fork and canonical provenance; preview/apply evidence |
+| Review lifecycle | Local subject and dry-run | Diff/comments/checks; exact-head verdict; opt-in post; advertised unsupported features |
+| Task issue lifecycle | Local CRUD and hierarchy | Link/repeat/sync/close/reopen/clear; pending recovery; ownership conflict |
+| Assignment delivery | Local recipe | Draft/review/ready/authorized merge; exact qjl evidence; restart reconciliation |
+| Workflow installation | Resolve final sources from fresh external cwd | One canonical workflow, role handoffs, merge/release separation |
+
+Every remote column includes unknown server/provider, invalid default, ambiguous/mismatched remote or URL, missing binary, authentication failure, offline state, malformed output, absent object and head change. Mutating rows include lost-response reconciliation; merge must have server-side expected-head enforcement or report unsupported rather than unsafe success. CI failure alone is advisory; actual test/reviewer/head failures block. An unsupported required merge capability is a failed acceptance row and must be repaired in its provider owner; it is never a permitted skip. Provider-specific unsupported optional features are explicitly recorded and must not be required by the common delivery scenario.
+
+## Coupling closure
+
+Inventory source, config, package dependencies, commands, URLs and active handbook/skills for ace-git-worktree, ace-review, ace-task, ace-assign and canonical workflows. Classify every direct gh/fj/GitHub match as provider-owned execution, non-operational metadata/history, or defect. Defects return to the exact qk1/qkb child and block this task; no new duplicate implementation owner and no unexplained match accepted. Confirm removed GitHub-specific interfaces and Python lab/labd paths are absent from the final active delivery route.
+
+## Verification sequence and failure behavior
+
+1. Run each modified package through `ace-test PACKAGE all` and the monorepo `ace-test-suite`, preserving actual reports and exact head.
+2. Run deterministic integration cases against real temporary Git and controlled provider IO, including all failure paths and unknown outcomes.
+3. Install the exact delivered packages into a clean isolated environment and execute the required real-provider success paths on explicitly scoped disposable endpoints, then verify fetched receipts against remote state. Test-only credentials stay scoped/out of artifacts.
+4. Obtain independent review of exact tested changes and the completed row/coupling inventory. Compare task IDs/versions/SHAs across receipts; contradictions are failures, not documentation cleanup.
+5. Re-run only impacted rows after fixes and reconcile the final set to one coherent delivered version combination. Record retained valid evidence explicitly; never mix stale review heads into a newer delivery claim.
+
+No endpoint availability or authority means an unexecuted row, not a pass. Preserve evidence and report the exact missing endpoint/scope. No blanket disabled test, package test stub or report exit 0 can replace the row. Re-reading/revalidating unchanged evidence is idempotent. A changed head invalidates affected evidence and requires rerun/review.
+
+## Completion and boundaries
+
+All required rows executed and verified, coupling inventory fully classified, exact installed versions/SHAs retained and independent verdict present. The receipt identifies acceptance for lab-overseer l2d.8 and lab-config gad, with no implication that the full Lab system test already passed. Single verification slice, advisory size: large. No production release, uncontrolled cleanup, service redesign, new task engine or bypass of authorization. Tests cannot send privileged production operations under the guise of fixture setup. No unresolved product questions; live infrastructure prerequisites are explicit execution inputs.

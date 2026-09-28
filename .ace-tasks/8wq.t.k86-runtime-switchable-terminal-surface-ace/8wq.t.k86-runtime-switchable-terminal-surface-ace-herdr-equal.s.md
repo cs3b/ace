@@ -1,26 +1,18 @@
 ---
 id: 8wq.t.k86
-status: draft
+status: pending
 priority: high
 created_at: "2026-09-27 13:29:05"
 estimate: TBD
 dependencies: [8wq.t.k84, 8wm.t.vs0]
 tags: [ace-runtime, ace-tmux, ace-herdr, assign, overseer, demo]
 bundle:
-  presets: ["project"]
-  files:
-    - ace-assign/lib/ace/assign/molecules/tmux_control_surface_runner.rb
-    - ace-assign/lib/ace/assign/molecules/fork_session_launcher.rb
-    - ace-assign/handbook/workflow-instructions/assign/drive.wf.md
-    - ace-overseer/lib/ace/overseer/molecules/tmux_window_opener.rb
-    - ace-overseer/lib/ace/overseer/organisms/work_on_orchestrator.rb
-    - ace-overseer/lib/ace/overseer/organisms/prune_orchestrator.rb
-    - ace-overseer/.ace-defaults/overseer/config.yml
-    - ace-demo/lib/ace/demo/molecules/tmux_directive_executor.rb
-    - ace-tmux/lib/ace/tmux/organisms/control_surface.rb
-    - ace-herdr/docs/usage.md
-    - .ace-tasks/8wq.t.k84-ace-herdr-match-ace-tmux/8wq.t.k84-ace-herdr-match-ace-tmux-cli-and.s.md
+  presets: [project]
+  files: [ace-assign/lib/ace/assign/molecules/tmux_control_surface_runner.rb, ace-assign/lib/ace/assign/molecules/fork_session_launcher.rb, ace-assign/handbook/workflow-instructions/assign/drive.wf.md, ace-overseer/lib/ace/overseer/molecules/tmux_window_opener.rb, ace-overseer/lib/ace/overseer/organisms/work_on_orchestrator.rb, ace-overseer/lib/ace/overseer/organisms/prune_orchestrator.rb, ace-overseer/.ace-defaults/overseer/config.yml, ace-demo/lib/ace/demo/molecules/tmux_directive_executor.rb, ace-tmux/lib/ace/tmux/organisms/control_surface.rb, ace-herdr/docs/usage.md, .ace-tasks/_archive/8w/y/8wq.t.k84-ace-herdr-match-ace-tmux/8wq.t.k84-ace-herdr-match-ace-tmux-cli-and.s.md]
   commands: []
+needs_review: false
+title: "Runtime-switchable terminal surface: ace-herdr equal partner to ace-tmux"
+position: 6o0002
 ---
 
 # Runtime-switchable terminal surface: ace-herdr equal partner to ace-tmux
@@ -68,7 +60,7 @@ task family:
    detected live runtime), overseer's `tmux_window_presets` becomes a
    runtime-neutral preset key, demo directives resolve through the
    contract. Consumer gemspecs depend on the contract gem + adapters,
-   not on ace-tmux directly.
+   using adapter registration only, never direct tmux APIs.
 4. Agent-facing workflow text follows suit: the assign Fork Callback Rule
    prescribes the runtime-neutral send command; the env contract
    (`ACE_TMUX_SESSION` today) gets a herdr counterpart derived from
@@ -79,9 +71,9 @@ task family:
 ```bash
 # Configuration (per consumer, ADR-022 cascade)
 # ace-assign: execution.launch_mode: auto|headless|tmux|herdr   (auto detects)
-# ace-overseer: runtime: tmux|herdr + window_presets (runtime-neutral)
+# ace-overseer: runtime: tmux|herdr|auto + window_presets (runtime-neutral)
 # Contract gem registry: adapters registered for "tmux" and "herdr";
-# selection order: explicit config > auto-detection (TMUX / HERDR_ENV)
+# selection order: explicit config > auto-detection (TMUX / HERDR_SESSION/HERDR_PANE)
 
 # Agent-facing (drive.wf.md Fork Callback Rule becomes):
 #   <runtime-neutral send command> --pane "$ACE_ASSIGN_CALLBACK_PANE" --msg "..." --key Enter
@@ -89,28 +81,31 @@ task family:
 
 **Error Handling:**
 - Unknown runtime name in config: fail closed at resolution with the available list (ace-hitl provider parity).
-- Requested runtime unavailable (binary/socket missing): explicit error naming the runtime and the fallback rule (`auto` falls back to headless for assign, matching today's tmux behavior).
+- Requested runtime unavailable (binary/socket missing): explicit error naming the runtime; a detected-but-unavailable backend never falls back. Only assign auto with no detected runtime selects headless.
 - Contract operations raise typed contract errors; adapters map runtime-native errors into them.
 
 **Edge Cases:**
 - `auto` with both runtimes live: tmux wins today (existing behavior); explicit config overrides — documented default.
-- Idempotent ensure-window under both runtimes: same name → same target, no duplicates.
+- Idempotent ensure-window under both runtimes: same normalized name within the resolved session/workspace → same target, no duplicates; conflicting root/preset errors.
 - herdr pane ids are opaque handles; the contract never predicts them (tmux `%id` habit must not leak into the contract).
 
 ### Success Criteria
 
 - [ ] **Equal partnership**: with `runtime: herdr`, fork-run-with-callback, overseer work-on window opening, and demo wait/send directives all function against herdr end-to-end.
 - [ ] **Zero tmux regression**: with `runtime: tmux` (and for assign, `launch_mode: tmux|auto`), existing behavior is unchanged — the full existing consumer test suites stay green.
-- [ ] **Decoupled gemspecs**: ace-assign, ace-overseer, and ace-demo no longer depend on `ace-tmux` directly; they depend on the contract (+ adapters as appropriate).
+- [ ] **Decoupled gemspecs**: ace-assign, ace-overseer, and ace-demo depend on ace-runtime plus existing wrapper gems for installed adapters; no direct tmux API calls remain.
 - [ ] **Neutral contract**: neither adapter gem depends on the other; contract tests run against BOTH adapters (shared examples, ace-hitl provider-test pattern).
 - [ ] **Workflow text updated**: the Fork Callback Rule prescribes no runtime-specific command.
 
-### Validation Questions
+### Reviewed Decisions (2026-09-28)
 
-- [ ] **Requirement Clarity**: contract home confirmed as new gem `ace-runtime` (decision record in draft; veto window open until review).
-- [ ] **Consumer set**: ace-git-worktree (binary-probe, `start`/`window` shell-outs) and e2e runners (raw tmux) — migrate now or follow-up? Default: follow-up.
-- [ ] **Selection key**: one shared `runtime:` key across consumers vs per-consumer keys (`execution.launch_mode` for assign)? Default: per-consumer keys preserved, mapping onto the shared registry.
-- [ ] **Success Definition**: does "equal partner" require the overseer status-pane phrase ("Herdr status pane") to become config-driven?
+- Contract package is ace-runtime. Adapters live inside existing ace-tmux/ace-herdr; no renamed adapter gems. Consumer gemspecs install those wrappers as adapter dependencies; neutral code must not call runtime-native APIs directly. This corrects the contradictory earlier demand for installed in-wrapper adapters but no wrapper dependency.
+- Callback is ace-runtime send. Per-consumer configuration keys are retained except tmux_window_presets becomes window_presets with no legacy alias. Explicit runtime wins; auto detects tmux first if both are live; Lab configuration explicitly chooses herdr.
+- Auto-detection is side-effect-free and uses TMUX/ACE_TMUX_SESSION or HERDR_SESSION plus HERDR_PANE (HERDR_WORKSPACE_ID may refine context). The earlier HERDR_ENV assumption was unsupported. Adapter operations verify runtime availability/current context; explicit unavailable herdr errors, never silently becomes headless. Only assign auto outside any runtime selects headless.
+- Tmux readiness uses documented output-stability heuristic; Herdr uses native agent state. Generic status text names the selected runtime. Demo attach/detach stays tmux-local with explicit unsupported error under herdr.
+- k86.3 owns terminal paths in ace-git-worktree and E2E runners before Lab acceptance. qk0 separately removes the old runtime=lab engine and changes role coordination.
+- Pane-exited is a runtime observation, not assignment success or safe prune evidence: disappearance satisfies that wait, but accepted outcome/process-tree termination still require separate receipts. Positive preservation gates remain mandatory.
+- Pane preparation must yield a writable live shell/agent target retained after a submitted command exits; adapter may create/prepare that target using native APIs. Bare command panes may disappear and do not satisfy preparation. Installed tests must verify both runtimes; no assertion of untested Herdr behavior.
 
 ### Vertical Slice Decomposition (Task/Subtask Model)
 
@@ -130,7 +125,7 @@ task family:
 - [ ] `runtime: tmux` regression: existing consumer suites green.
 
 #### Failure / Invalid-Path Validation
-- [ ] herdr selected but binary unavailable: explicit error (assign `auto` falls back headless, documented).
+- [ ] herdr selected but binary unavailable: explicit error, including auto when that backend was detected; headless only when no backend was detected.
 - [ ] Unknown runtime key: fail closed with available list.
 
 #### Verification Commands
@@ -178,8 +173,7 @@ is referenced in ace-overseer today).
 
 ## Out of Scope
 
-- ❌ **e2e runner raw tmux** (`ace-test-runner-e2e` setup_executor) and overseer e2e scenario updates — follow-up once runtime selection lands.
-- ❌ **ace-git-worktree migration** (currently binary-probes `ace-tmux start/window`) — follow-up; default stays tmux.
+- Included before Lab acceptance: terminal setup in ace-test-runner-e2e, retained overseer/runtime scenarios and ace-git-worktree terminal shell-outs migrate in k86.3. Human-only demo attach/detach remains explicitly tmux-local.
 - ❌ **HITL delivery/queue concerns** — 8wm.t.y23 / 8wm.t.vs2 own those (coordinate, do not supersede).
 - ❌ **Intent parity work itself** — 8wq.t.k84 delivers the herdr surface this family builds on.
 
@@ -189,3 +183,7 @@ is referenced in ace-overseer today).
 - Consumer operation inventory + config key map (research 2026-09-27, this session)
 - Precedent: ace-hitl provider registry (`ace-hitl/lib/ace/hitl/providers/providers.rb`)
 - Layer-ownership doctrine: docs/tools.md#agent-engineering-practices
+
+## Lab-readiness review scope (2026-09-28)
+
+This draft retains the existing detailed send/wait contract and the Captain's adapter-location and callback decisions. No runtime code is changed in this spec pass. Review must check all four child specs before parent promotion. Executed tests and independent current-head verdict gate implementation delivery; CI is advisory. Earlier text is preserved in history/pre-lab-spec-review.md only for provenance.

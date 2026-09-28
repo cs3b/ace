@@ -4,94 +4,62 @@ status: pending
 priority: high
 created_at: "2026-09-23 22:42:16"
 estimate: 
-dependencies: [8wm.t.vs0]
+dependencies: [8wm.t.vs0, 8wr.t.qjl]
 needs_review: false
 tags: [ace-herdr, migration, queue, delivery, lab-config, gad]
-position: 6o0003
+position: 6o0008
 bundle:
-  presets: ["project"]
-  files:
-    - ace-herdr/lib/ace/herdr/molecules/herdr_executor.rb
-    - ace-herdr/lib/ace/herdr/organisms/deliverer.rb
-    - ace-herdr/lib/ace/herdr/organisms/control_surface.rb
-    - ace-herdr/lib/ace/herdr/molecules/delivery_record_store.rb
-    - ace-herdr/lib/ace/herdr/models/delivery_record.rb
-    - ace-herdr/docs/usage.md
+  presets: [project]
+  files: [ace-herdr/lib/ace/herdr/organisms/deliverer.rb, ace-herdr/lib/ace/herdr/molecules/delivery_record_store.rb, ace-herdr/lib/ace/herdr/models/delivery_record.rb, ace-herdr/lib/ace/herdr/molecules/herdr_executor.rb]
   commands: []
+title: Deliver durable agent inbox messages once across recovery
 ---
 
-# ace-herdr: migrate generic queue and delivery logic from lab-config
+# Deliver durable agent inbox messages once across recovery
 
-## Provenance (Kapitan goals reminder 2026-09-23)
+## Behavioral Specification
 
-Brief migracyjny z audytu warstwowego `8wl.t.gad.6` §3 (lab-config).
-Delegacja: CO, nie JAK. Kolejność twarda: migracje zielone **przed**
-koszem `8wl.t.gad.3` (usuwanie plików źródłowych w lab-config).
+### User Experience
 
-## MIGRUJ → ace-herdr
+An accepted inbox message reaches the intended live agent once, or exposes an attributable delivery uncertainty that can be reconciled.
 
-- Trwała kolejka inbox/wake (z `lab-hitl.py`): enqueue/claim/mark/bind/
-  reconcile, broker-generations, rekordy transportu z digestem payloadu,
-  immutable bind, fail-closed uncertain, reconciliation
-  consumed/superseded z dowodem niekonsumpcji.
-- Z `lab-hitl-broker.py` (odzysk przed koszem):
-  - rozpoznanie celu doręczenia: pane→thread identity dla codex/pi
-    (agent_session, terminal_id, live identity probe);
-  - dyscyplina bind-then-send-once (brak resend, pre-send retry vs
-    uncertain, fail-closed-unresolved, recovery orphaned claim);
-  - komendy kolejek provider-native (codex queue / klient pi).
-- Protokół kolejki provider-native: `pi-overseer-queue.ts`,
-  `pi-operator-queue.ts` (endpointy TS, digest-bound, idle vs followUp,
-  identity probe), `pi-overseer-queue-client.py` (klient CLI).
-- Testy-następcy: `tests/test_native_queue_transport.py` (negatywy
-  transport/bind/reconcile), logika `test_broker_pane_resolution.py`
-  (pane→thread).
+### Expected Behavior
 
-## ZOSTAJE w lab-config (domena laba — NIE migrować)
+- Move generic enqueue/claim/bind/deliver/reconcile semantics and Codex/Pi identity/native queue integration from lab-config into ace-herdr. Build on vs0 DeliveryRecord/Store rather than adding competing idempotency state.
+- Bind event ID + payload digest + intended attempt to verified runtime session/pane/terminal/agent identity before submitting. A changed target identity requires explicit reconciliation; reused pane numbers cannot inherit messages.
+- Retry only failures proven to precede submission. A crash after claim with ambiguous submission, or native stalled result, stays uncertain. Resume reconciles consumed/superseded with positive proof, never guesses from age.
+- One per-message claim owner/generation prevents duplicate dispatch. Idle agents receive a wake; busy agents receive the native follow-up queue form. Delivery errors remain discoverable by the supervisor.
+- Expose delivery receipts linked to assignment attempts; the message transport does not decide task completion or grant effect authorization.
+- Only transport is migrated here. Root-broker domain capabilities do NOT disappear because this task passes; their successor is ace:qjx plus lab-config:gad.b, and deletion belongs gad.3.
 
-- `lab_root_broker.py` (operacje domenowe catalog/registry/forgejo/
-  integrator/promote-runtime/restart labd) — ginie z gad.3 bez migracji.
+### Interface Contract
 
-## Reality Check (review 2026-09-28, post-vs0+k84)
+Extend existing `ace-herdr deliver`/delivery-record public surface with explicit queue and reconciliation operations: `ace-herdr inbox enqueue --event ID --attempt ID --ref FILE --file PAYLOAD`, `ace-herdr inbox status --event ID --format json`, `ace-herdr inbox deliver --event ID`, `ace-herdr inbox reconcile --event ID --receipt FILE`. Binding refs use existing herdr reverse-address shape; inputs never carry authority by themselves.
 
-Zweryfikowane względem rzeczywistości na dzień 2026-09-28:
+### Success Criteria and Verification Plan
 
-- **Źródła wciąż istnieją**: lab-config @ Forgejo HEAD `230b395`
-  ("retro: labd deletion map") — wszystkie 8 plików z listy MIGRUJ
-  obecne (`lab-hitl.py`, `lab-hitl-broker.py`, `pi-overseer-queue.ts`,
-  `pi-operator-queue.ts`, `pi-overseer-queue-client.py`,
-  `tests/test_native_queue_transport.py`,
-  `tests/test_broker_pane_resolution.py`, `lab_root_broker.py`).
-  `8wl.t.gad.3` (kosz) **jeszcze nie ruszył** — ale ostatni commit w
-  lab-config to mapa migracji/delecji, więc twarda kolejność
-  (migracje zielone przed koszem) jest realnym zegarem, nie formalnością.
-  lab-config NIE jest sklonowany w workspace ace — plan/implimentacja
-  zaczyna od shallow clone (np. do `/tmp/` lub `~/Ps/lab-config`).
-- **Warstwa docelowa teraz konkretna** (spec powstał 2026-09-23, przed
-  dostarczeniem vs0/k84):
-  - vs0 dostarczył `Deliverer` + `DeliveryRecord`/`DeliveryRecordStore`
-    (idempotencja per event id, write-ahead rekordy 0600 pod
-    `.ace-local/herdr/deliveries/`, `--resume`, ambiguous-crash
-    reporting) — kolejka inbox/wake ma na tym budować, nie dublować
-    per-event idempotencji.
-  - k84 dostarczył `HerdrExecutor` (wyłączny seam argv do herdr, typed
-    errors z machine codes) + `ControlSurface` (agent-aware routing,
-    `agent get`/`agent prompt`/`agent_status` z listy pane'ów) —
-    pane→thread identity resolution podpina się pod executor probe
-    (`agent get`/`agent explain`), nie pod raw herdr calls.
-  - Tożsamości natywnie dostępne w JSON herdr: `terminal_id`,
-    `agent_status` (panes), HERDR_SESSION/HERDR_PANE eksportowane przez
-    dispatcher/tidy bootstrap — reverse address już działa.
-- **Delegacja bez zmian**: nadal CO-nie-JAK; pełną spec behavioralną
-  robi pipeline architekta (sekcja Pipeline), tą sekcją tylko
-  dokumentujemy stan świata na start.
+- [ ] SC1: Port observable scenarios from lab-config tests/test_native_queue_transport.py and test_broker_pane_resolution.py: spoofed identity, digest mismatch, concurrent claim, orphan claim, pre-send rejection vs post-send uncertainty.
+- [ ] SC2: Native Codex/Pi delivery acceptance covers idle/busy and requester restart; prove one delivered prompt or a visible uncertain result without duplicate text.
+- [ ] SC3: Run `ace-test ace-herdr all`; installed migration E2E must run without migrated Python transport files.
 
-## Bramka końcowa
+### Scope and Ownership
 
-Scenariusz E2E z `8wl.t.gad.2` przechodzi na artefaktach ace-** bez
-plików lab-config z listy MIGRUJ.
+Owner: **ace-herdr**. Consumers and boundaries are named above. Code layout belongs to JIT planning. This review pass authorizes specification changes only, not implementation or deployment.
 
-## Pipeline
+### Vertical Slice Decomposition
 
-Pełny pipeline architekta: spec przez buildera, kod przez buildera,
-review z executed checks, merge, release testowanym publisherem.
+Single end-to-end capability slice; size: large. Prerequisites: `8wm.t.vs0`, `8wr.t.qjl`. Canonical cross-repository program: lab-config:`8wl.t.gad`. External acceptance gates are explicit references, not unresolved local dependency IDs.
+
+### Decisions and Defaults
+
+No unresolved product choice is delegated to the implementer. Unknown identity/authority is an error, never permission or success. Executed tests plus independent current-head review gate delivery; CI is advisory. Spec readiness is not proof of installed behavior.
+
+### Provenance and Invalidated Assumptions
+
+Rewrites original migration brief. Invalidated: lab_root_broker.py can be deleted without migrating its domain operations; a folder watcher is not their replacement. lab-config checkout is available locally; no clone assumption.
+
+Earlier text is retained in `history/pre-lab-spec-review.md` as non-normative history. The approved 2026-09-28 specification supersedes conflicting earlier requirements. Draft until independent review accepts this revision.
+
+### Usage and Review Evidence
+
+Public scenarios: `ux/usage.md`. Record independent review before promotion.

@@ -1,6 +1,6 @@
 ---
 id: 8wq.t.k86.2
-status: draft
+status: pending
 priority: medium
 created_at: "2026-09-27 13:29:29"
 estimate: TBD
@@ -9,8 +9,10 @@ tags: [ace-herdr, adapter]
 parent: 8wq.t.k86
 bundle:
   presets: [project]
-  files: [ace-herdr/lib/ace/herdr/molecules/herdr_executor.rb, ace-herdr/lib/ace/herdr/organisms/dispatcher.rb, ace-herdr/docs/usage.md, .ace-tasks/8wq.t.k84-ace-herdr-match-ace-tmux/8wq.t.k84-ace-herdr-match-ace-tmux-cli-and.s.md]
+  files: [ace-herdr/lib/ace/herdr/molecules/herdr_executor.rb, ace-herdr/lib/ace/herdr/organisms/dispatcher.rb, ace-herdr/docs/usage.md, .ace-tasks/_archive/8w/y/8wq.t.k84-ace-herdr-match-ace-tmux/8wq.t.k84-ace-herdr-match-ace-tmux-cli-and.s.md]
   commands: []
+needs_review: false
+title: Implement herdr adapter agent-aware intents
 ---
 
 # Implement herdr adapter agent-aware intents
@@ -31,7 +33,7 @@ bundle:
 ### Expected Behavior
 
 1. All 11 contract operations implemented over the k84 surface:
-   context detection (`HERDR_ENV`/`HERDR_*` env, `pane current`),
+   context detection (`HERDR_SESSION/HERDR_PANE`/`HERDR_*` env, `pane current`),
    ensure_window → idempotent tab create (by label, in the caller's
    workspace by default), prepare_pane → `pane split` (+ keep-alive
    semantics per herdr model), focus → `tab focus`, send → `pane run`/
@@ -77,7 +79,7 @@ Ace::Runtime.resolve("herdr")
 
 **Error Handling:** per the mapping above (`agent_blocked` → `SendRejectedError`; `agent_prompt_stalled` → `SendStalledError`, no auto-resend; `timeout` → `WaitTimeoutError`; `pane_not_found` → condition-specific per lifecycle waits, else `TargetNotFoundError`; unavailable → `RuntimeUnavailableError`). Contract timeouts are seconds; the adapter converts to herdr milliseconds.
 
-**Edge Cases:** caller outside herdr + explicit `runtime: herdr` → context detection reports not-in-runtime; consumers decide fallback (assign → headless, per its rules). Both-runtimes live: contract detection order (tmux first) already decided in 8wq.t.k86.0.
+**Edge Cases:** caller outside herdr + explicit `runtime: herdr` → context detection reports not-in-runtime; explicit selection fails with missing-context/unavailable error; only assign auto outside all runtimes may choose headless. Both-runtimes live: contract detection order (tmux first) already decided in 8wq.t.k86.0.
 
 ### Success Criteria
 
@@ -85,12 +87,15 @@ Ace::Runtime.resolve("herdr")
 - [ ] Agent-aware behavior preserved: wait_agent uses native states; blocked sends rejected — asserted in tests.
 - [ ] No tmux-ism leaks: no `%`-style targets, no TMUX env reads in the adapter.
 
-### Validation Questions
+### Reviewed Decisions (2026-09-28)
 
-- [ ] prepare_pane keep-alive: herdr panes persist by default (no `remain-on-exit` equivalent) — confirm the contract's "pane stays alive after command exit" is natively satisfied (expected: yes).
-- [ ] ensure_window preset support: are k84 tab presets sufficient for assign's fork-window needs (no preset = plain tab)? Default: yes.
-- [ ] pane-exited initial absence: defined as SUCCESS (state-based: "no live process" already true). Alternative: fail-closed TargetNotFoundError to catch pane-id typos. Default: state-based success; confirm at review.
-- [ ] pane-exited mechanics: confirm live whether herdr keeps a pane after its process exits (process-info evidence) or closes it (pane-gone). Either satisfies the mapping; test the real one.
+- Contract package is ace-runtime. Adapters live inside existing ace-tmux/ace-herdr; no renamed adapter gems. Consumer gemspecs install those wrappers as adapter dependencies; neutral code must not call runtime-native APIs directly. This corrects the contradictory earlier demand for installed in-wrapper adapters but no wrapper dependency.
+- Callback is ace-runtime send. Per-consumer configuration keys are retained except tmux_window_presets becomes window_presets with no legacy alias. Explicit runtime wins; auto detects tmux first if both are live; Lab configuration explicitly chooses herdr.
+- Auto-detection is side-effect-free and uses TMUX/ACE_TMUX_SESSION or HERDR_SESSION plus HERDR_PANE (HERDR_WORKSPACE_ID may refine context). The earlier HERDR_ENV assumption was unsupported. Adapter operations verify runtime availability/current context; explicit unavailable herdr errors, never silently becomes headless. Only assign auto outside any runtime selects headless.
+- Tmux readiness uses documented output-stability heuristic; Herdr uses native agent state. Generic status text names the selected runtime. Demo attach/detach stays tmux-local with explicit unsupported error under herdr.
+- k86.3 owns terminal paths in ace-git-worktree and E2E runners before Lab acceptance. qk0 separately removes the old runtime=lab engine and changes role coordination.
+- Pane-exited is a runtime observation, not assignment success or safe prune evidence: disappearance satisfies that wait, but accepted outcome/process-tree termination still require separate receipts. Positive preservation gates remain mandatory.
+- Pane preparation must yield a writable live shell/agent target retained after a submitted command exits; adapter may create/prepare that target using native APIs. Bare command panes may disappear and do not satisfy preparation. Installed tests must verify both runtimes; no assertion of untested Herdr behavior.
 
 ### Vertical Slice Decomposition (Task/Subtask Model)
 
@@ -140,3 +145,7 @@ herdr is an equal partner, and the enabler for consumer migration
 ## References
 
 - Parent: 8wq.t.k86; contract: 8wq.t.k86.0; parity surface: 8wq.t.k84
+
+## Lab-readiness review scope (2026-09-28)
+
+This draft retains the existing detailed send/wait contract and the Captain's adapter-location and callback decisions. No runtime code is changed in this spec pass. Review must check all four child specs before parent promotion. Executed tests and independent current-head verdict gate implementation delivery; CI is advisory. Earlier text is preserved in history/pre-lab-spec-review.md only for provenance.

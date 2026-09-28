@@ -1,0 +1,1091 @@
+{
+  "reviewer": "independent agent /root/spec_reviewer",
+  "verdict": "APPROVE_SPECIFICATIONS",
+  "reviewed_at_utc": "2026-09-28T18:01:49.101087+00:00",
+  "normalization": "Only top-level status, needs_review and position frontmatter lines removed. IDs, dependencies, bundle, title, all body text and usage preserved. Raw SHA also recorded. No implementation/live acceptance implied.",
+  "bundle_missing": [],
+  "dependency_graphs": {
+    "ace": {
+      "records": 1102,
+      "cycles": []
+    },
+    "lab-config": {
+      "records": 53,
+      "cycles": []
+    },
+    "lab-overseer": {
+      "records": 13,
+      "cycles": []
+    }
+  },
+  "tasks": [
+    {
+      "repo": "ace",
+      "id": "8wj.t.ocz",
+      "dependencies": [],
+      "files": [
+        {
+          "path": "/Users/mc/Ps/ace/.ace-tasks/8wj.t.ocz-ship-overseer-lifecycle-workflow-wfi-resolution/8wj.t.ocz-ship-overseer-lifecycle-workflow-wfi-resolution.s.md",
+          "normalized_sha256": "252b8468bf98eb2f55d4762d714cedd222e79d747ad15f2e95a04c2d34397149",
+          "raw_sha256": "05c6dbec60c6ba31ce5ab6c0a723368b8c5e52fe192e3ba8758e289658fb393d"
+        },
+        {
+          "path": "/Users/mc/Ps/ace/.ace-tasks/8wj.t.ocz-ship-overseer-lifecycle-workflow-wfi-resolution/ux/usage.md",
+          "sha256": "f3b9b012ed7429d52f23113d2af26b3b417b811c4ef247341708d4ad2a52057d"
+        }
+      ]
+    },
+    {
+      "repo": "ace",
+      "id": "8wm.t.vs2",
+      "dependencies": [
+        "8wq.t.34i",
+        "8wm.t.y23",
+        "8wm.t.y24",
+        "8wm.t.vs0",
+        "8wm.t.vs1",
+        "8wr.t.qjy"
+      ],
+      "files": [
+        {
+          "path": "/Users/mc/Ps/ace/.ace-tasks/8wm.t.vs2-integration-provider-lab-uses-a2/8wm.t.vs2-integration-provider-lab-uses-a2-push-delivery.s.md",
+          "normalized_sha256": "7269cf147cc37637fbe9dcc5ceb14c88a428918f6f3ca1256bba46d0c13debab",
+          "raw_sha256": "272485d5a66a6c4e2edc51b7a0386e556e0990e92d481e3d300f9918044c35e2"
+        },
+        {
+          "path": "/Users/mc/Ps/ace/.ace-tasks/8wm.t.vs2-integration-provider-lab-uses-a2/ux/usage.md",
+          "sha256": "a91ff3a5662ed6aab7a10cd5e611f8313c4f7fe2f5cc8b51762621da26ff208a"
+        }
+      ]
+    },
+    {
+      "repo": "ace",
+      "id": "8wm.t.vs3",
+      "dependencies": [
+        "8wm.t.vs2",
+        "8wr.t.qjx",
+        "8wr.t.qkb"
+      ],
+      "files": [
+        {
+          "path": "/Users/mc/Ps/ace/.ace-tasks/8wm.t.vs3-pilot-next-ace-release-exclusively/8wm.t.vs3-pilot-next-ace-release-exclusively-via-ace.s.md",
+          "normalized_sha256": "4df65e06fa723f560811a8319081716b87e138ad1d25fb8356a3ba719cc45726",
+          "raw_sha256": "a3b183a32408f9433352d14cf72da46cd469a043039a3dcf603662f6609eaa52"
+        },
+        {
+          "path": "/Users/mc/Ps/ace/.ace-tasks/8wm.t.vs3-pilot-next-ace-release-exclusively/ux/usage.md",
+          "sha256": "df8073661fb359e7627e8916ec1544889cf2ea1a569c4a023ad3788207bdfbaa"
+        }
+      ]
+    },
+    {
+      "repo": "ace",
+      "id": "8wm.t.y23",
+      "dependencies": [
+        "8wm.t.vs0",
+        "8wr.t.qjl"
+      ],
+      "files": [
+        {
+          "path": "/Users/mc/Ps/ace/.ace-tasks/8wm.t.y23-ace-herdr-migrate-generic-queue/8wm.t.y23-ace-herdr-migrate-generic-queue-and-delivery.s.md",
+          "normalized_sha256": "399ce16c393f352b8ca1d5a9e23434fa9f8ef30ccef3f1106342ddb883b604bc",
+          "raw_sha256": "32135cc31525534a05c2f46c1527a14e2d609399a25be42dd3b929f7f6454d94"
+        },
+        {
+          "path": "/Users/mc/Ps/ace/.ace-tasks/8wm.t.y23-ace-herdr-migrate-generic-queue/ux/usage.md",
+          "sha256": "f58c6b36801f4146446d1219705fc331d27800a3b5c57ccc331a9026d5d97078"
+        }
+      ]
+    },
+    {
+      "repo": "ace",
+      "id": "8wm.t.y24",
+      "dependencies": [
+        "8wm.t.vs1",
+        "8wq.t.34i"
+      ],
+      "files": [
+        {
+          "path": "/Users/mc/Ps/ace/.ace-tasks/8wm.t.y24-ace-hitl-hermes-migrate-telegram/8wm.t.y24-ace-hitl-hermes-migrate-telegram-plugin-transport.s.md",
+          "normalized_sha256": "010d24db9af7948eb94e5879b7b06ebc0911b8f70fb5a94f8bfdf7a8d50c8a2a",
+          "raw_sha256": "54c21d08c0b96fa74cd4d56ae70caa94932af9ca8d46f3280dfb07c281001bb0"
+        },
+        {
+          "path": "/Users/mc/Ps/ace/.ace-tasks/8wm.t.y24-ace-hitl-hermes-migrate-telegram/ux/usage.md",
+          "sha256": "33179966ec14fedde385ac5a5adbfdaf9226e7d4aa7f5864df002b3720343ef5"
+        }
+      ]
+    },
+    {
+      "repo": "ace",
+      "id": "8wq.t.1w2",
+      "dependencies": [],
+      "files": [
+        {
+          "path": "/Users/mc/Ps/ace/.ace-tasks/8wq.t.1w2-ace-test-hermetyczno/8wq.t.1w2-ace-test-hermetyczno.s.md",
+          "normalized_sha256": "f038d6d922280f05982ed7deb1b6805822a5f3188fa9db72de8e0d9e37612cb4",
+          "raw_sha256": "5d7a647bd8bac468b548d804f058b7bcb32dc80244916a60b0e3b03766248e5d"
+        },
+        {
+          "path": "/Users/mc/Ps/ace/.ace-tasks/8wq.t.1w2-ace-test-hermetyczno/ux/usage.md",
+          "sha256": "53d8cb7956d22b1d0762b805ec47e12e0ea5a0c0a9e65e1da9b79c4bba1f5f48"
+        }
+      ]
+    },
+    {
+      "repo": "ace",
+      "id": "8wq.t.1w4",
+      "dependencies": [],
+      "files": [
+        {
+          "path": "/Users/mc/Ps/ace/.ace-tasks/8wq.t.1w4-ace-lab-adresowanie-po-id/8wq.t.1w4-ace-lab-adresowanie-po-id.s.md",
+          "normalized_sha256": "7368f1df7e09df3ca01060cce5f112641c66da66e1fed13bb7155a8d021781be",
+          "raw_sha256": "2a9439bf4539c4f35215978f0c0fb2f99e75737ffa58d9219201467c49d1c137"
+        },
+        {
+          "path": "/Users/mc/Ps/ace/.ace-tasks/8wq.t.1w4-ace-lab-adresowanie-po-id/ux/usage.md",
+          "sha256": "201ce8c73eda1870b52d0f244908cd8ee78fbe842b35b6d82ac79b35b6b0dc65"
+        }
+      ]
+    },
+    {
+      "repo": "ace",
+      "id": "8wq.t.1w5",
+      "dependencies": [
+        "8wr.t.qjl",
+        "8wq.t.k86",
+        "8wm.t.y23"
+      ],
+      "files": [
+        {
+          "path": "/Users/mc/Ps/ace/.ace-tasks/8wq.t.1w5-session-resilience/8wq.t.1w5-session-resilience.s.md",
+          "normalized_sha256": "957028aba4adb30b263d0f397b3dd1ba4e5957d9a75c47eff9417b383e0742df",
+          "raw_sha256": "d63b7d15dde8fce6c179ee77808dc0a95ecda70113a4492ba29a0c522c8b5855"
+        },
+        {
+          "path": "/Users/mc/Ps/ace/.ace-tasks/8wq.t.1w5-session-resilience/ux/usage.md",
+          "sha256": "c235aa748f806aa29ab181eda1c24b10abe1d0e5ae7b65e311257f30b3df26af"
+        }
+      ]
+    },
+    {
+      "repo": "ace",
+      "id": "8wq.t.34i",
+      "dependencies": [
+        "8wr.t.qjl",
+        "8wr.t.qjx"
+      ],
+      "files": [
+        {
+          "path": "/Users/mc/Ps/ace/.ace-tasks/8wq.t.34i-privileged-store-boundary-for-ace/8wq.t.34i-privileged-store-boundary-for-ace-hitl-lifecycle.s.md",
+          "normalized_sha256": "fb12d5e10d1bc8013fd30ba950c1eaf42a4c5e751eb5e2960165757fcd2cbae5",
+          "raw_sha256": "dc831f379f4e25287440a9246ebb2d5b1f1fe6b81687614e1d8a91f9e5aced26"
+        },
+        {
+          "path": "/Users/mc/Ps/ace/.ace-tasks/8wq.t.34i-privileged-store-boundary-for-ace/ux/usage.md",
+          "sha256": "3558ef337d101796da25b829001e5f943cf440691faed9df07e273b99963c931"
+        }
+      ]
+    },
+    {
+      "repo": "ace",
+      "id": "8wq.t.k86",
+      "dependencies": [
+        "8wq.t.k84",
+        "8wm.t.vs0"
+      ],
+      "files": [
+        {
+          "path": "/Users/mc/Ps/ace/.ace-tasks/8wq.t.k86-runtime-switchable-terminal-surface-ace/8wq.t.k86-runtime-switchable-terminal-surface-ace-herdr-equal.s.md",
+          "normalized_sha256": "b2ea00d90c4443a074b00b32a8c73e2521bd6881f57b96e9081d9d2e344c6fb8",
+          "raw_sha256": "e4a3af5979a75bd37c4da21b5fa781a3966f762dd4205a1eb8ede6f938400948"
+        },
+        {
+          "path": "/Users/mc/Ps/ace/.ace-tasks/8wq.t.k86-runtime-switchable-terminal-surface-ace/ux/usage.md",
+          "sha256": "910b377c92dbebac76850d1ff699e88a963515ab021e9169f37b1715e52e01d8"
+        }
+      ]
+    },
+    {
+      "repo": "ace",
+      "id": "8wq.t.k86.0",
+      "dependencies": [],
+      "files": [
+        {
+          "path": "/Users/mc/Ps/ace/.ace-tasks/8wq.t.k86-runtime-switchable-terminal-surface-ace/0-define-shared-runtime-intent-contract/8wq.t.k86.0-define-shared-runtime-intent-contract-ace-runtime.s.md",
+          "normalized_sha256": "3b596b7c022d58548ffe4f0bfd80ded5a0d9a5224966e3c3da341322cc37ad2d",
+          "raw_sha256": "621a3cf96a6a7f289f7f9d86546fe491d287d4410a9499e0a22b626f1b58730f"
+        },
+        {
+          "path": "/Users/mc/Ps/ace/.ace-tasks/8wq.t.k86-runtime-switchable-terminal-surface-ace/0-define-shared-runtime-intent-contract/ux/usage.md",
+          "sha256": "f5256b6e463074132fddd0f098f375943feb2453cedaa4efbc1772bc4f9efa38"
+        }
+      ]
+    },
+    {
+      "repo": "ace",
+      "id": "8wq.t.k86.1",
+      "dependencies": [
+        "8wq.t.k86.0"
+      ],
+      "files": [
+        {
+          "path": "/Users/mc/Ps/ace/.ace-tasks/8wq.t.k86-runtime-switchable-terminal-surface-ace/1-implement-tmux-adapter-over-existing/8wq.t.k86.1-implement-tmux-adapter-over-existing-apis.s.md",
+          "normalized_sha256": "3227d21a03f64c415111aa1675cdf031f26f538699862dbbf4f231f39fa46fd5",
+          "raw_sha256": "1e5d16d3792b19d00027f3c5a6cf05825051782b6c27aa200018eaaa2c332954"
+        },
+        {
+          "path": "/Users/mc/Ps/ace/.ace-tasks/8wq.t.k86-runtime-switchable-terminal-surface-ace/1-implement-tmux-adapter-over-existing/ux/usage.md",
+          "sha256": "0fb9f7c8e8319bfb683a8fe97575fbea90ba8d23183e99544e9996559bacac58"
+        }
+      ]
+    },
+    {
+      "repo": "ace",
+      "id": "8wq.t.k86.2",
+      "dependencies": [
+        "8wq.t.k86.0",
+        "8wq.t.k84"
+      ],
+      "files": [
+        {
+          "path": "/Users/mc/Ps/ace/.ace-tasks/8wq.t.k86-runtime-switchable-terminal-surface-ace/2-implement-herdr-adapter-agent-aware/8wq.t.k86.2-implement-herdr-adapter-agent-aware-intents.s.md",
+          "normalized_sha256": "f31c1576fffe4f5c6408fcc0fcb845d24d8b253106b3669c92f56f7d91fb7333",
+          "raw_sha256": "eacf48a3b5d32d8ba648563af0fb9c71680376c07174ebf2a70b23c1ff700296"
+        },
+        {
+          "path": "/Users/mc/Ps/ace/.ace-tasks/8wq.t.k86-runtime-switchable-terminal-surface-ace/2-implement-herdr-adapter-agent-aware/ux/usage.md",
+          "sha256": "bc9eb270602932820c93780e65a9b1e9bb99253e01a02ca545a425ad258f1f38"
+        }
+      ]
+    },
+    {
+      "repo": "ace",
+      "id": "8wq.t.k86.3",
+      "dependencies": [
+        "8wq.t.k86.1",
+        "8wq.t.k86.2"
+      ],
+      "files": [
+        {
+          "path": "/Users/mc/Ps/ace/.ace-tasks/8wq.t.k86-runtime-switchable-terminal-surface-ace/3-migrate-assign-overseer-and-demo/8wq.t.k86.3-migrate-assign-overseer-and-demo-consumers.s.md",
+          "normalized_sha256": "f64acaac288e775e5105a4904d3be9e862146f5e0f2ba95d53af7d20415fcc57",
+          "raw_sha256": "229c5d3b8d3cd2f063c8a627fed5de049c065c6f804a72bd7b2dcb3c41de5af9"
+        },
+        {
+          "path": "/Users/mc/Ps/ace/.ace-tasks/8wq.t.k86-runtime-switchable-terminal-surface-ace/3-migrate-assign-overseer-and-demo/ux/usage.md",
+          "sha256": "544a1b995f4f8a61a175ab64a2e6d80ca4377f7b08d060d55cc1d65412825f71"
+        }
+      ]
+    },
+    {
+      "repo": "ace",
+      "id": "8wr.t.qjl",
+      "dependencies": [],
+      "files": [
+        {
+          "path": "/Users/mc/Ps/ace/.ace-tasks/8wr.t.qjl-persist-assignment-attempts-and-exact/8wr.t.qjl-persist-assignment-attempts-and-exact-execution.s.md",
+          "normalized_sha256": "c409c6e9cd5ef5530aa1ef0e6cc28be666e3e8fedf07b7422afdd4819686f1f0",
+          "raw_sha256": "077d51337f82bf964e31d07a45d308bbdf32296adaf71340900178c790fe1a3a"
+        },
+        {
+          "path": "/Users/mc/Ps/ace/.ace-tasks/8wr.t.qjl-persist-assignment-attempts-and-exact/ux/usage.md",
+          "sha256": "b9e3a2f9b4d7260ebafe9d53900d0110f90fdfe230c63e4913d394b4e6572c7d"
+        }
+      ]
+    },
+    {
+      "repo": "ace",
+      "id": "8wr.t.qjx",
+      "dependencies": [
+        "8wq.t.1w4",
+        "8wr.t.qjl"
+      ],
+      "files": [
+        {
+          "path": "/Users/mc/Ps/ace/.ace-tasks/8wr.t.qjx-route-scoped-role-services-with/8wr.t.qjx-route-scoped-role-services-with-verifiable-execution.s.md",
+          "normalized_sha256": "5e6e74618741f1699ecbe35f56e2f0a8c181709a71d27c5b163c5cff65d4cd6b",
+          "raw_sha256": "d094ac70660b67572eab3f345e89affcf81b607d73a505fe20531c30cee53051"
+        },
+        {
+          "path": "/Users/mc/Ps/ace/.ace-tasks/8wr.t.qjx-route-scoped-role-services-with/ux/usage.md",
+          "sha256": "10078b715d59e98b7409898f5d79842a7b57d007d6dec38a66138f5c078c1e0f"
+        }
+      ]
+    },
+    {
+      "repo": "ace",
+      "id": "8wr.t.qjy",
+      "dependencies": [],
+      "files": [
+        {
+          "path": "/Users/mc/Ps/ace/.ace-tasks/8wr.t.qjy-wake-pi-agents-through-in/8wr.t.qjy-wake-pi-agents-through-in-process-loops.s.md",
+          "normalized_sha256": "2c2816837ec64cf144767b93c7bc8a44caf0596277bee49f48855b962862a068",
+          "raw_sha256": "1499b573c01173eea5e4b9c8113e1b0b9dbae510549f8009e054f2a7aeb6b1b6"
+        },
+        {
+          "path": "/Users/mc/Ps/ace/.ace-tasks/8wr.t.qjy-wake-pi-agents-through-in/ux/usage.md",
+          "sha256": "f6858658f9674c73f2172707e1fecf71cb360d2edd4743c349f9695b93d37539"
+        }
+      ]
+    },
+    {
+      "repo": "ace",
+      "id": "8wr.t.qjz",
+      "dependencies": [
+        "8wm.t.vs2",
+        "8wr.t.qjx",
+        "8wr.t.qjy"
+      ],
+      "files": [
+        {
+          "path": "/Users/mc/Ps/ace/.ace-tasks/8wr.t.qjz-resolve-second-commander-proposals-with/8wr.t.qjz-resolve-second-commander-proposals-with-a-sixteen.s.md",
+          "normalized_sha256": "b514833ecb7566a559a73d6cd0f057b161d05cd49fa9c7da1882084d5804cf2c",
+          "raw_sha256": "587bb565a8ad7b55c7c7ce1357024ed06f4cefdc79adf9e12c864e11696be26d"
+        },
+        {
+          "path": "/Users/mc/Ps/ace/.ace-tasks/8wr.t.qjz-resolve-second-commander-proposals-with/ux/usage.md",
+          "sha256": "2f2afe93295576bba7187c5dbd8e654ec835631bc512bfdf05baaca2db319163"
+        }
+      ]
+    },
+    {
+      "repo": "ace",
+      "id": "8wr.t.qk0",
+      "dependencies": [
+        "8wq.t.k86",
+        "8wr.t.qjl",
+        "8wr.t.qjx",
+        "8wr.t.qjy",
+        "8wq.t.1w5",
+        "8wm.t.vs2",
+        "8wr.t.qjz"
+      ],
+      "files": [
+        {
+          "path": "/Users/mc/Ps/ace/.ace-tasks/8wr.t.qk0-coordinate-responsive-overseer-roles-without/8wr.t.qk0-coordinate-responsive-overseer-roles-without-the.s.md",
+          "normalized_sha256": "b83c40438520007377befc1d4cb88adb5bd1800fc1a96fc82d3bb2e239aee0b4",
+          "raw_sha256": "c7c41239854bd4608f9d661bb3497d2c3263e008858590e54e56c70233a003b5"
+        },
+        {
+          "path": "/Users/mc/Ps/ace/.ace-tasks/8wr.t.qk0-coordinate-responsive-overseer-roles-without/ux/usage.md",
+          "sha256": "6133f83d3f45bc71aeb6f41ccf5fe9a890fde792ac42361c9b73adb9aebda1e5"
+        }
+      ]
+    },
+    {
+      "repo": "ace",
+      "id": "8wr.t.qk1",
+      "dependencies": [
+        "8wk.t.l1e"
+      ],
+      "files": [
+        {
+          "path": "/Users/mc/Ps/ace/.ace-tasks/8wr.t.qk1-complete-forge-neutral-worktree-review/8wr.t.qk1-complete-forge-neutral-worktree-review-and-task.s.md",
+          "normalized_sha256": "8899fc9383d475035ed6022ef9476b59bf12c87ac1bc22ffcfb44714c675aea0",
+          "raw_sha256": "e131c0c83010d8a11bb7d71b305affa84970c38de20b01175a714b28832a91aa"
+        },
+        {
+          "path": "/Users/mc/Ps/ace/.ace-tasks/8wr.t.qk1-complete-forge-neutral-worktree-review/ux/usage.md",
+          "sha256": "0cba28627f8b518b4e815d99546c0cb8f2a3db43453396528f162da27c4318e9"
+        }
+      ]
+    },
+    {
+      "repo": "ace",
+      "id": "8wr.t.qk1.0",
+      "dependencies": [
+        "8wk.t.l1e"
+      ],
+      "files": [
+        {
+          "path": "/Users/mc/Ps/ace/.ace-tasks/8wr.t.qk1-complete-forge-neutral-worktree-review/0-use-named-forge-providers-for/8wr.t.qk1.0-use-named-forge-providers-for-worktree-pr.s.md",
+          "normalized_sha256": "27c126eb31386da301a01bb6f3fd9ba2112df0fb2d87a6043192ad85c18d1575",
+          "raw_sha256": "16bfa99ca533e1b018dc6ffc58dec5979551f1278ad867858508fc8fa75d7c50"
+        },
+        {
+          "path": "/Users/mc/Ps/ace/.ace-tasks/8wr.t.qk1-complete-forge-neutral-worktree-review/0-use-named-forge-providers-for/ux/usage.md",
+          "sha256": "800552cb36298f37167c4590727a83e322a4c5af9fba9eb89db2fe54e3b14541"
+        }
+      ]
+    },
+    {
+      "repo": "ace",
+      "id": "8wr.t.qk1.1",
+      "dependencies": [
+        "8wr.t.qk1.0"
+      ],
+      "files": [
+        {
+          "path": "/Users/mc/Ps/ace/.ace-tasks/8wr.t.qk1-complete-forge-neutral-worktree-review/1-use-named-forge-providers-for/8wr.t.qk1.1-use-named-forge-providers-for-review-lifecycle.s.md",
+          "normalized_sha256": "dd75a4b3d4f4494d48094abd6eb16b7a1fc01bbc7e18fca2bf3b61faca1b6382",
+          "raw_sha256": "8c113eaade3f4eb3d783cd13937f3cff21f86973b532ca5b17b27666b35cf225"
+        },
+        {
+          "path": "/Users/mc/Ps/ace/.ace-tasks/8wr.t.qk1-complete-forge-neutral-worktree-review/1-use-named-forge-providers-for/ux/usage.md",
+          "sha256": "b8305bb0eaec37e348834759572e50cdfdab71e990eea504e893dc19a9b230ce"
+        }
+      ]
+    },
+    {
+      "repo": "ace",
+      "id": "8wr.t.qk1.2",
+      "dependencies": [
+        "8wr.t.qk1.0"
+      ],
+      "files": [
+        {
+          "path": "/Users/mc/Ps/ace/.ace-tasks/8wr.t.qk1-complete-forge-neutral-worktree-review/2-use-named-forge-providers-for/8wr.t.qk1.2-use-named-forge-providers-for-task-issue.s.md",
+          "normalized_sha256": "dbdd49940a41f6d6528a89c02ae271063dbff4af587ce91c36c80748e0775bb0",
+          "raw_sha256": "811364423ef61202e0c04e06c84b8740460f1d9efc7234c78e7a0c87429baa73"
+        },
+        {
+          "path": "/Users/mc/Ps/ace/.ace-tasks/8wr.t.qk1-complete-forge-neutral-worktree-review/2-use-named-forge-providers-for/ux/usage.md",
+          "sha256": "30dff677328df88b371f42b5020fac032490e7a426a1e15e1d727c668b1140d4"
+        }
+      ]
+    },
+    {
+      "repo": "ace",
+      "id": "8wr.t.qkb",
+      "dependencies": [
+        "8wr.t.qk1",
+        "8wr.t.qjl"
+      ],
+      "files": [
+        {
+          "path": "/Users/mc/Ps/ace/.ace-tasks/8wr.t.qkb-run-assignment-delivery-workflows-through/8wr.t.qkb-run-assignment-delivery-workflows-through-named-forge.s.md",
+          "normalized_sha256": "cf70fdd9b973c27ead453a757233d6473583ecb76df38928a0ffccca1d4d1302",
+          "raw_sha256": "935f82e8f172b1e85621929fd8ff2c54bcb0747cf0ea87c9a49865d90d8facbb"
+        },
+        {
+          "path": "/Users/mc/Ps/ace/.ace-tasks/8wr.t.qkb-run-assignment-delivery-workflows-through/ux/usage.md",
+          "sha256": "450709ecfc0633979c7ed0950905f19fd6309443b564a59df455947d76fb583a"
+        }
+      ]
+    },
+    {
+      "repo": "ace",
+      "id": "8wr.t.qkb.0",
+      "dependencies": [
+        "8wr.t.qk1",
+        "8wr.t.qjl"
+      ],
+      "files": [
+        {
+          "path": "/Users/mc/Ps/ace/.ace-tasks/8wr.t.qkb-run-assignment-delivery-workflows-through/0-make-assignment-delivery-evidence-provider/8wr.t.qkb.0-make-assignment-delivery-evidence-provider-neutral.s.md",
+          "normalized_sha256": "fd227bc6acef127c7c801cb28935515618833e3cfa10f53c09855990f118c07e",
+          "raw_sha256": "adf1e15912b2770b26ce44091bea975c11ee407d181d273a2f91b055f15b5e0e"
+        },
+        {
+          "path": "/Users/mc/Ps/ace/.ace-tasks/8wr.t.qkb-run-assignment-delivery-workflows-through/0-make-assignment-delivery-evidence-provider/ux/usage.md",
+          "sha256": "8608d0e820788cdeb0bfc0cc2665cd6651605203d81572c9fbe1774c56b31329"
+        }
+      ]
+    },
+    {
+      "repo": "ace",
+      "id": "8wr.t.qkb.1",
+      "dependencies": [
+        "8wr.t.qkb.0",
+        "8wr.t.qk0",
+        "8wr.t.qjx",
+        "8wr.t.qjz"
+      ],
+      "files": [
+        {
+          "path": "/Users/mc/Ps/ace/.ace-tasks/8wr.t.qkb-run-assignment-delivery-workflows-through/1-align-canonical-delivery-workflows-with/8wr.t.qkb.1-align-canonical-delivery-workflows-with-forge-neutral.s.md",
+          "normalized_sha256": "d481bd1fcd9b7f8390ea946f9c80a99ca0875c58fb9e42c33e75bb50eb22119a",
+          "raw_sha256": "1d72532143a188aa91c356a8644110934dd584718d82afc95a5ad6e434170b2b"
+        },
+        {
+          "path": "/Users/mc/Ps/ace/.ace-tasks/8wr.t.qkb-run-assignment-delivery-workflows-through/1-align-canonical-delivery-workflows-with/ux/usage.md",
+          "sha256": "753accee0d8457145d195c1536ac014fe002a2138e94df3b52e58713717c2828"
+        }
+      ]
+    },
+    {
+      "repo": "ace",
+      "id": "8wr.t.qkc",
+      "dependencies": [
+        "8wr.t.qk1",
+        "8wr.t.qkb"
+      ],
+      "files": [
+        {
+          "path": "/Users/mc/Ps/ace/.ace-tasks/8wr.t.qkc-prove-the-complete-forge-neutral/8wr.t.qkc-prove-the-complete-forge-neutral-delivery-acceptance.s.md",
+          "normalized_sha256": "3aabb4e04cc8e7032247e696e9e1d408ce44f0171389ef719be8c97ba740d376",
+          "raw_sha256": "907feb527808fd55ca232519e457040021d177e16f8cbf726229a60c8a446a2d"
+        },
+        {
+          "path": "/Users/mc/Ps/ace/.ace-tasks/8wr.t.qkc-prove-the-complete-forge-neutral/ux/usage.md",
+          "sha256": "8eb7fea5353f4d5eb933fa60394e1ffbf65fd8d80ef38e5f4cbbdbc0e893e721"
+        }
+      ]
+    },
+    {
+      "repo": "lab-config",
+      "id": "8wl.t.gad",
+      "dependencies": [],
+      "files": [
+        {
+          "path": "/Users/mc/Ps/lab-config/.ace-tasks/8wl.t.gad-hitl-program-master-plan-how/8wl.t.gad-hitl-program-master-plan-how-the-whole.s.md",
+          "normalized_sha256": "0c1218a6ce9d800726d4f2303ad033998112e1c668a152a4cd3c12d758f578b1",
+          "raw_sha256": "df121e8bad94709d0201835340d3763773c762f922b2cb2faa4c40e4982b0c02",
+          "pre_promotion_normalized_sha256": "f2c6deba8a42af1c10a0b7b19592fe0d23d0aa2250dca12852df3c63b06ff445"
+        }
+      ]
+    },
+    {
+      "repo": "lab-config",
+      "id": "8wl.t.gad.0",
+      "dependencies": [],
+      "files": [
+        {
+          "path": "/Users/mc/Ps/lab-config/.ace-tasks/8wl.t.gad-hitl-program-master-plan-how/0-hitl-folder-adresowy-w-labd/8wl.t.gad.0-hitl-folder-adresowy-w-labd.s.md",
+          "normalized_sha256": "646de5abfe5e5cd3816079bf625e31b5a46112a5d36e8b8c64199422c49de81e",
+          "raw_sha256": "e1c1e424411d10c5b8daaa2bf327f741002e56ee012c0a38c67d4070d76c77a0"
+        }
+      ]
+    },
+    {
+      "repo": "lab-config",
+      "id": "8wl.t.gad.1",
+      "dependencies": [],
+      "files": [
+        {
+          "path": "/Users/mc/Ps/lab-config/.ace-tasks/8wl.t.gad-hitl-program-master-plan-how/1-hitl-monta-folderu-adresowego-do/8wl.t.gad.1-hitl-monta-folderu-adresowego-do.s.md",
+          "normalized_sha256": "87ae3636d90104d5cbd27204e9a5f6dade323b602b6a68f31e30b2e6c8303970",
+          "raw_sha256": "81b9b528f66172153381b86a7f6e82771a175536156ef3cad1cd13e0e95cecee"
+        }
+      ]
+    },
+    {
+      "repo": "lab-config",
+      "id": "8wl.t.gad.2",
+      "dependencies": [
+        "8wl.t.gad.a",
+        "8wl.t.gad.b",
+        "8wl.t.gad.5",
+        "8wl.t.gad.8",
+        "8wl.t.gad.9",
+        "8wm.t.nfe"
+      ],
+      "files": [
+        {
+          "path": "/Users/mc/Ps/lab-config/.ace-tasks/8wl.t.gad-hitl-program-master-plan-how/2-hitl-e2e-na-prawdziwej-infrastrukturze/8wl.t.gad.2-hitl-e2e-na-prawdziwej-infrastrukturze.s.md",
+          "normalized_sha256": "0a54d7350a9a47960649d5a1e945a0592ca70c573665cd72ecedc661023de7b5",
+          "raw_sha256": "5d372fdf371390ca6b04f6f6b246be8adfa205a182bb319927b1be47c4383ca2",
+          "pre_promotion_normalized_sha256": "f8e8f6bef6b0a98d7feb036e1bd8ac4c0302bd28193e47a056f2bafcce90a421"
+        }
+      ]
+    },
+    {
+      "repo": "lab-config",
+      "id": "8wl.t.gad.3",
+      "dependencies": [
+        "8wl.t.gad.2"
+      ],
+      "files": [
+        {
+          "path": "/Users/mc/Ps/lab-config/.ace-tasks/8wl.t.gad-hitl-program-master-plan-how/3-hitl-kosz-us-ug-hostowych/8wl.t.gad.3-hitl-kosz-us-ug-hostowych.s.md",
+          "normalized_sha256": "893bb0e0ac9e17856edda37003453d93dd9f5023bee03007890301a796d4175a",
+          "raw_sha256": "a5febc41bb0f5cf621fb9822ab31bd562a074e4bb87da5d80a62e4e1d15f087a",
+          "pre_promotion_normalized_sha256": "080b0fd4cdd4b1e32352ad1e87325c336b177549bc1ff6eef2d74130f95c15fd"
+        },
+        {
+          "path": "/Users/mc/Ps/lab-config/.ace-tasks/8wl.t.gad-hitl-program-master-plan-how/3-hitl-kosz-us-ug-hostowych/ux/usage.md",
+          "sha256": "65729f2ed0cb3ad96d49945eae363fe9eed802e0098ee861a3c6206d5ba3676d"
+        }
+      ]
+    },
+    {
+      "repo": "lab-config",
+      "id": "8wl.t.gad.4",
+      "dependencies": [
+        "8wl.t.gad.3"
+      ],
+      "files": [
+        {
+          "path": "/Users/mc/Ps/lab-config/.ace-tasks/8wl.t.gad-hitl-program-master-plan-how/4-hitl-dokumentacja-nowej-architektury-jako/8wl.t.gad.4-hitl-dokumentacja-nowej-architektury-jako.s.md",
+          "normalized_sha256": "ee93f72a2bad638d24793261239a80e4f4a1e9352b20277da3cabf38e6dcb7cc",
+          "raw_sha256": "a1163297c95bb2d65cc1f380bcaa3e87395b06f9d59c4dce1a22665b816be1e8",
+          "pre_promotion_normalized_sha256": "06559bd5590fb7dab1c448d76a5f2a340ee670c4464c0d61d58170bd5a2935a9"
+        }
+      ]
+    },
+    {
+      "repo": "lab-config",
+      "id": "8wl.t.gad.5",
+      "dependencies": [],
+      "files": [
+        {
+          "path": "/Users/mc/Ps/lab-config/.ace-tasks/8wl.t.gad-hitl-program-master-plan-how/5-overseer-odr-bne-instrukcje-r/8wl.t.gad.5-overseer-odr-bne-instrukcje-r.s.md",
+          "normalized_sha256": "a292844c03356f6bc3876a51e74b094d034479868c61d64aa7e5e786cc633cb4",
+          "raw_sha256": "f978a5ebc33d7184c4427209db607d6346497071e43e2ef67054593b83259496",
+          "pre_promotion_normalized_sha256": "b4f64eea96f489c70d267c2b8c7bca45d9acea825936c5870a5ca0e95900e532"
+        },
+        {
+          "path": "/Users/mc/Ps/lab-config/.ace-tasks/8wl.t.gad-hitl-program-master-plan-how/5-overseer-odr-bne-instrukcje-r/ux/usage.md",
+          "sha256": "36014925c3255a677f0bd4388ded48a1528f23585137bc54affa63c6b7c470d6"
+        }
+      ]
+    },
+    {
+      "repo": "lab-config",
+      "id": "8wl.t.gad.6",
+      "dependencies": [],
+      "files": [
+        {
+          "path": "/Users/mc/Ps/lab-config/.ace-tasks/8wl.t.gad-hitl-program-master-plan-how/6-audit-warstwowy-ktory-python-w/8wl.t.gad.6-audit-warstwowy-ktory-python-w.s.md",
+          "normalized_sha256": "eb79903f59c34c5732010ab36b8a05457d6f8aa996b8224a91f85fcc177fc161",
+          "raw_sha256": "9c9a4ad57989ab0dab4e031cf8586b72b9d8efb2d236029520ba396a00715e61"
+        }
+      ]
+    },
+    {
+      "repo": "lab-config",
+      "id": "8wl.t.gad.7",
+      "dependencies": [],
+      "files": [
+        {
+          "path": "/Users/mc/Ps/lab-config/.ace-tasks/8wl.t.gad-hitl-program-master-plan-how/7-brief-ace-ace-herdr-ergonomiczny/8wl.t.gad.7-brief-ace-ace-herdr-ergonomiczny.s.md",
+          "normalized_sha256": "ed428149f0c4e5e8a3f74c7e01f34559d9f263d9db7da7f066a724e06ba66d7c",
+          "raw_sha256": "4799466fda4ede4e2fcc5d723a4a48a644147bbdb95126a032e0468e529e2f42"
+        }
+      ]
+    },
+    {
+      "repo": "lab-config",
+      "id": "8wl.t.gad.8",
+      "dependencies": [],
+      "files": [
+        {
+          "path": "/Users/mc/Ps/lab-config/.ace-tasks/8wl.t.gad-hitl-program-master-plan-how/8-brief-ace-ace-lab-zero/8wl.t.gad.8-brief-ace-ace-lab-zero.s.md",
+          "normalized_sha256": "b253dba8e35e040a51759e255779392ee8c972c774b6b832f959255a9eb2e6b3",
+          "raw_sha256": "5ca2f9ada25786041d471aff41cb8506cdcbafeb50168f2e82e604fce0177395",
+          "pre_promotion_normalized_sha256": "5ceecf6f4b79d2c5bf325b6f05aba17ce04f7659597e1eb33fc1bdda659194eb"
+        },
+        {
+          "path": "/Users/mc/Ps/lab-config/.ace-tasks/8wl.t.gad-hitl-program-master-plan-how/8-brief-ace-ace-lab-zero/ux/usage.md",
+          "sha256": "c4a4a2221aa863d708d8c1dd845c781d3f4b2bc7c014603acce7724e2a04cfaa"
+        }
+      ]
+    },
+    {
+      "repo": "lab-config",
+      "id": "8wl.t.gad.9",
+      "dependencies": [],
+      "files": [
+        {
+          "path": "/Users/mc/Ps/lab-config/.ace-tasks/8wl.t.gad-hitl-program-master-plan-how/9-brief-ace-ace-pi-pakiet/8wl.t.gad.9-brief-ace-ace-pi-pakiet.s.md",
+          "normalized_sha256": "93a9286308f1871bd1b3186d62bd423783f12feaf302dd103ab8e1bb13234e17",
+          "raw_sha256": "01794cf6d125f75fbb3915e07ef13ea540ca9f126852c1d6998b17fd29ce9b62",
+          "pre_promotion_normalized_sha256": "5a389796f4b8dbdd15fa9b1644a0f3d01156d4e52c03754b6846090815f65cad"
+        },
+        {
+          "path": "/Users/mc/Ps/lab-config/.ace-tasks/8wl.t.gad-hitl-program-master-plan-how/9-brief-ace-ace-pi-pakiet/ux/usage.md",
+          "sha256": "10a9c21bb8b760f7ba5dbb6820b09e50bbfe0f48bf82b2419a14039e1aa5e07e"
+        }
+      ]
+    },
+    {
+      "repo": "lab-config",
+      "id": "8wl.t.gad.a",
+      "dependencies": [
+        "8wl.t.gad.b",
+        "8wl.t.gad.5",
+        "8wl.t.gad.8",
+        "8wl.t.gad.9"
+      ],
+      "files": [
+        {
+          "path": "/Users/mc/Ps/lab-config/.ace-tasks/8wl.t.gad-hitl-program-master-plan-how/a-a-side-gemy-0100100-skladanie/8wl.t.gad.a-a-side-gemy-0100100-skladanie.s.md",
+          "normalized_sha256": "f14d716c39a8d6377e9a2592167fc3dc7a9ecd829d480252a47791003dabf778",
+          "raw_sha256": "077f7d4891517ca98cee103d42536cfb5a37648e8f6ed13d4094f79a671ed61e",
+          "pre_promotion_normalized_sha256": "b5df135617a2d800eeb49d7776cea35e0bd89018d70d5026c37ed68cea2d70ec"
+        }
+      ]
+    },
+    {
+      "repo": "lab-config",
+      "id": "8wl.t.gad.b",
+      "dependencies": [],
+      "files": [
+        {
+          "path": "/Users/mc/Ps/lab-config/.ace-tasks/8wl.t.gad-hitl-program-master-plan-how/b-lab-scoped-service-executors-and/8wl.t.gad.b-lab-scoped-service-executors-and-privileged-operation.s.md",
+          "normalized_sha256": "ba1541ad689990f49130baa90da47c305b53bc64a7eba9da67a786ba18752e28",
+          "raw_sha256": "d9aef137569c3c8389213d8151a8035cf3257188df6250c1c714ac0971cddca2",
+          "pre_promotion_normalized_sha256": "92570b4a9c498cd6c116399f897956892f59c143d5928186e2eb237e31757c46"
+        },
+        {
+          "path": "/Users/mc/Ps/lab-config/.ace-tasks/8wl.t.gad-hitl-program-master-plan-how/b-lab-scoped-service-executors-and/ux/usage.md",
+          "sha256": "d7a0edabb09e30c94da840acbcdd62051c17a4584ce82d09561397f618766cb5"
+        }
+      ]
+    },
+    {
+      "repo": "lab-config",
+      "id": "8wl.t.gae",
+      "dependencies": [
+        "8wm.t.nfe",
+        "8wl.t.gad.4"
+      ],
+      "files": [
+        {
+          "path": "/Users/mc/Ps/lab-config/.ace-tasks/8wl.t.gae-lab-follow-ups-surfaced-during/8wl.t.gae-lab-follow-ups-surfaced-during-the-2026.s.md",
+          "normalized_sha256": "a32bf0cdc502fdc1d65d1b2d0e1d3362c7ac756689b74eada0b9639ed303a224",
+          "raw_sha256": "cdb2e86a12626b4ed6bfc2535e13d9bb4f1436f589d144d38cd33ab142b86a87",
+          "pre_promotion_normalized_sha256": "5268c3edad06670cce26788489d717d21a721a0de44a86488effe720c1f461a9"
+        }
+      ]
+    },
+    {
+      "repo": "lab-config",
+      "id": "8wm.t.nfe",
+      "dependencies": [
+        "8wl.t.gad.5",
+        "8wl.t.gad.8",
+        "8wl.t.gad.9",
+        "8wl.t.gad.b"
+      ],
+      "files": [
+        {
+          "path": "/Users/mc/Ps/lab-config/.ace-tasks/8wm.t.nfe-scoped-overseer-fleet-per-project/8wm.t.nfe-scoped-overseer-fleet-per-project-agents-chartered.s.md",
+          "normalized_sha256": "7bc7d27e77ce95c59e1c4ea35c4ba8cde5bee6c5ad400f1924f9fdd2b7e08791",
+          "raw_sha256": "c59e12db20b590832d1e6477d6318991d933fe5624c8504d8ae481bcb6254064",
+          "pre_promotion_normalized_sha256": "e8de78c12de667e7b1c2d40435700124acef9c61679651674cc954da63a9adce"
+        },
+        {
+          "path": "/Users/mc/Ps/lab-config/.ace-tasks/8wm.t.nfe-scoped-overseer-fleet-per-project/ux/usage.md",
+          "sha256": "d680b687b0362a0ab81bff1c13f298b8999edad93eb1f3423779501b199daec4"
+        }
+      ]
+    },
+    {
+      "repo": "lab-config",
+      "id": "8wn.t.shk",
+      "dependencies": [],
+      "files": [
+        {
+          "path": "/Users/mc/Ps/lab-config/.ace-tasks/8wn.t.shk-labd-4904-twin-predykat-w/8wn.t.shk-labd-4904-twin-predykat-w-review-report.s.md",
+          "normalized_sha256": "0a06ceb7094fa4abe1934e3f33757f950ccb62d6eabda434bffe5bfbbbd60f92",
+          "raw_sha256": "c740e1573d853c19fa754a531d0cec2a260f4529e919bf88a1ed71891fb3f675"
+        }
+      ]
+    },
+    {
+      "repo": "lab-config",
+      "id": "8wp.t.sdx",
+      "dependencies": [],
+      "files": [
+        {
+          "path": "/Users/mc/Ps/lab-config/.ace-tasks/8wp.t.sdx-labd-spin-pollhup-na-martwym/8wp.t.sdx-labd-spin-pollhup-na-martwym-pty-pane.s.md",
+          "normalized_sha256": "7d2c8052d8147d5a9de639ef526fe89888b71a503234ecd29166611e3b8831f4",
+          "raw_sha256": "5167b006e6d23fb64f07f7f4c3369acfc6d8f9a7bf497881a445491ad1fd9bb6"
+        }
+      ]
+    },
+    {
+      "repo": "lab-overseer",
+      "id": "8vu.t.l2d",
+      "dependencies": [],
+      "files": [
+        {
+          "path": "/Users/mc/Ps/lab-overseer/.ace-tasks/8vu.t.l2d-make-ace-forge-neutral-across/8vu.t.l2d-make-ace-forge-neutral-across-git-and.s.md",
+          "normalized_sha256": "7396b2daeb352e18c74704d55b344391526e0dfcd9b2966474db0fb20813b247",
+          "raw_sha256": "97dc56e2a60fc3587baaba19da55004815e1dc02fcee0f17f840dfeaf9f9101e"
+        },
+        {
+          "path": "/Users/mc/Ps/lab-overseer/.ace-tasks/8vu.t.l2d-make-ace-forge-neutral-across/ux/usage.md",
+          "sha256": "a102c9a40c6e5125856bfea5ac2439e7351fe7a8692ceb589b2d4e9e510ed99f"
+        }
+      ]
+    },
+    {
+      "repo": "lab-overseer",
+      "id": "8vu.t.l2d.0",
+      "dependencies": [],
+      "files": [
+        {
+          "path": "/Users/mc/Ps/lab-overseer/.ace-tasks/8vu.t.l2d-make-ace-forge-neutral-across/0-define-provider-neutral-git-and/8vu.t.l2d.0-define-provider-neutral-git-and-server-resolution.s.md",
+          "normalized_sha256": "4a8eb46984084ef88e5a8718caac87556a08bd5f8b9ec592f3c630f75e79b1da",
+          "raw_sha256": "5e5c720e1fef7d06623cb13709dcdf16756119f65c3bd34c0b7c15f93634edee"
+        }
+      ]
+    },
+    {
+      "repo": "lab-overseer",
+      "id": "8vu.t.l2d.1",
+      "dependencies": [],
+      "files": [
+        {
+          "path": "/Users/mc/Ps/lab-overseer/.ace-tasks/8vu.t.l2d-make-ace-forge-neutral-across/1-provide-github-behavior-through-ace/8vu.t.l2d.1-provide-github-behavior-through-ace-git-github.s.md",
+          "normalized_sha256": "9d009eeea4479e41d4f3034469d43e056200b399cfee1b8e7e98ae784b38b296",
+          "raw_sha256": "fb657ac30fdff0e1689be0af8c069e7087c536b1bb40c55922bfb6f9a270eaf9"
+        }
+      ]
+    },
+    {
+      "repo": "lab-overseer",
+      "id": "8vu.t.l2d.2",
+      "dependencies": [],
+      "files": [
+        {
+          "path": "/Users/mc/Ps/lab-overseer/.ace-tasks/8vu.t.l2d-make-ace-forge-neutral-across/2-provide-forgejo-behavior-through-ace/8vu.t.l2d.2-provide-forgejo-behavior-through-ace-git-forgejo.s.md",
+          "normalized_sha256": "b96da579e6a265b66d588b8c0432f613b484f4caab8656bfc46594d2df9744fe",
+          "raw_sha256": "405cd9b4df221281a093a871ed3a087bbbaf00d609e6606a80a29cc053d09c18"
+        }
+      ]
+    },
+    {
+      "repo": "lab-overseer",
+      "id": "8vu.t.l2d.3",
+      "dependencies": [],
+      "files": [
+        {
+          "path": "/Users/mc/Ps/lab-overseer/.ace-tasks/8vu.t.l2d-make-ace-forge-neutral-across/3-migrate-worktree-pr-lifecycle-across/8vu.t.l2d.3-migrate-worktree-pr-lifecycle-across-providers.s.md",
+          "normalized_sha256": "a2d0bbc3a81add5413553e3f005eef1dbbfbc840c333ae0e6fb23d18c39e8c17",
+          "raw_sha256": "be3ec4fa96e968b6c6f77f08e07d263af42e9baf36fc1b9b3c84b7e41854c19b"
+        },
+        {
+          "path": "/Users/mc/Ps/lab-overseer/.ace-tasks/8vu.t.l2d-make-ace-forge-neutral-across/3-migrate-worktree-pr-lifecycle-across/ux/usage.md",
+          "sha256": "50745911ea1a5306bff2d36f0a7b73518a5e5769ffa1bf636fc8f1cf9d6ce508"
+        }
+      ]
+    },
+    {
+      "repo": "lab-overseer",
+      "id": "8vu.t.l2d.4",
+      "dependencies": [],
+      "files": [
+        {
+          "path": "/Users/mc/Ps/lab-overseer/.ace-tasks/8vu.t.l2d-make-ace-forge-neutral-across/4-migrate-review-lifecycle-across-providers/8vu.t.l2d.4-migrate-review-lifecycle-across-providers.s.md",
+          "normalized_sha256": "754ce7d293380e9439213f65e50d32a938434edfaab5237ba3ebbb9c47cc24c8",
+          "raw_sha256": "bf2438aa30b294c03aab75eb52f786be9cf1331799377c18e01f227ce1831c0c"
+        },
+        {
+          "path": "/Users/mc/Ps/lab-overseer/.ace-tasks/8vu.t.l2d-make-ace-forge-neutral-across/4-migrate-review-lifecycle-across-providers/ux/usage.md",
+          "sha256": "dd93a3821e213c4bdc74da92e31c6243898e89b384dd86ec6c48d30800294ba6"
+        }
+      ]
+    },
+    {
+      "repo": "lab-overseer",
+      "id": "8vu.t.l2d.5",
+      "dependencies": [],
+      "files": [
+        {
+          "path": "/Users/mc/Ps/lab-overseer/.ace-tasks/8vu.t.l2d-make-ace-forge-neutral-across/5-migrate-task-lifecycle-across-providers/8vu.t.l2d.5-migrate-task-lifecycle-across-providers.s.md",
+          "normalized_sha256": "da8328456fd290620e633c8bb3ea72022da8984a443c9cdc566c68fa752090c5",
+          "raw_sha256": "e09a1e2eb04ab14dd206c34eb4055f120a724bfa5a46c6611f6666b9a841aed2"
+        },
+        {
+          "path": "/Users/mc/Ps/lab-overseer/.ace-tasks/8vu.t.l2d-make-ace-forge-neutral-across/5-migrate-task-lifecycle-across-providers/ux/usage.md",
+          "sha256": "f7d8b1ae5e58ef985cc77258c01d308fe5baa480a9fda3c7fae7302767fac633"
+        }
+      ]
+    },
+    {
+      "repo": "lab-overseer",
+      "id": "8vu.t.l2d.6",
+      "dependencies": [
+        "8vu.t.l2d.3",
+        "8vu.t.l2d.4",
+        "8vu.t.l2d.5"
+      ],
+      "files": [
+        {
+          "path": "/Users/mc/Ps/lab-overseer/.ace-tasks/8vu.t.l2d-make-ace-forge-neutral-across/6-migrate-assignment-execution-across-providers/8vu.t.l2d.6-migrate-assignment-execution-across-providers.s.md",
+          "normalized_sha256": "18547026c95fa5da002d6db45c69931dce1d38b068dbbc5c063d5017015532d7",
+          "raw_sha256": "b4747807a54e95efc5c9e51eede08f16fdd2b7c111fde46ae8f2c0ff76ce1b83"
+        },
+        {
+          "path": "/Users/mc/Ps/lab-overseer/.ace-tasks/8vu.t.l2d-make-ace-forge-neutral-across/6-migrate-assignment-execution-across-providers/ux/usage.md",
+          "sha256": "570f52e1647a82fa59d1a317b0d317518f1bc9f7462eac295c86412ca71e4655"
+        }
+      ]
+    },
+    {
+      "repo": "lab-overseer",
+      "id": "8vu.t.l2d.7",
+      "dependencies": [
+        "8vu.t.l2d.6"
+      ],
+      "files": [
+        {
+          "path": "/Users/mc/Ps/lab-overseer/.ace-tasks/8vu.t.l2d-make-ace-forge-neutral-across/7-migrate-canonical-delivery-workflows/8vu.t.l2d.7-migrate-canonical-delivery-workflows.s.md",
+          "normalized_sha256": "68ba30c28b23d75b5be2d41f105fda7d426aa4868f796a1cb7d381ef08424f15",
+          "raw_sha256": "921d8a8bae35d108443afb9457270150ee982b69b07a2c69de06d863b4d99dd6"
+        },
+        {
+          "path": "/Users/mc/Ps/lab-overseer/.ace-tasks/8vu.t.l2d-make-ace-forge-neutral-across/7-migrate-canonical-delivery-workflows/ux/usage.md",
+          "sha256": "64675897eb4cb5573b40fcc4dcd6068e6c3a5c0550417caaceef92d87f02e2c0"
+        }
+      ]
+    },
+    {
+      "repo": "lab-overseer",
+      "id": "8vu.t.l2d.8",
+      "dependencies": [
+        "8vu.t.l2d.3",
+        "8vu.t.l2d.4",
+        "8vu.t.l2d.5",
+        "8vu.t.l2d.6",
+        "8vu.t.l2d.7"
+      ],
+      "files": [
+        {
+          "path": "/Users/mc/Ps/lab-overseer/.ace-tasks/8vu.t.l2d-make-ace-forge-neutral-across/8-prove-the-forge-neutral-delivery/8vu.t.l2d.8-prove-the-forge-neutral-delivery-matrix.s.md",
+          "normalized_sha256": "1fd31e0df285d8b0b010a97d597649a017c8edb6878321ad8bdbdfc36d22550f",
+          "raw_sha256": "05f85ee18f2aaf4193bec8f42a3ecf5507d1a57ba704149d0236fff7afd6dff2"
+        },
+        {
+          "path": "/Users/mc/Ps/lab-overseer/.ace-tasks/8vu.t.l2d-make-ace-forge-neutral-across/8-prove-the-forge-neutral-delivery/ux/usage.md",
+          "sha256": "4920f885faf5d15768b3863dc7d9269245aa7b1a48fa66d02aaa3299ecbd3193"
+        }
+      ]
+    },
+    {
+      "repo": "lab-overseer",
+      "id": "8wl.t.gc0",
+      "dependencies": [],
+      "files": [
+        {
+          "path": "/Users/mc/Ps/lab-overseer/.ace-tasks/8wl.t.gc0-charter-amendment-standing-ace-hitl/8wl.t.gc0-charter-amendment-standing-ace-hitl-duty-escalation.s.md",
+          "normalized_sha256": "23a3b79dc4bb87d11639e21895f8f65a5edf22bb03dd0c312cb9a24a694730ea",
+          "raw_sha256": "d44bb21ec1ab4afd5c7ed0d2b9a4754995e0b3897ba82b5141ef316e87997742"
+        },
+        {
+          "path": "/Users/mc/Ps/lab-overseer/.ace-tasks/8wl.t.gc0-charter-amendment-standing-ace-hitl/ux/usage.md",
+          "sha256": "35e709b8b4a91e886c08f8cc9beae4f9cc35ee266f6472af89f05a774c44d15a"
+        }
+      ]
+    }
+  ],
+  "program_artifacts": [
+    {
+      "path": "/Users/mc/Ps/ace/.ace-tasks/lab-readiness-2026-09-28.md",
+      "sha256": "2ed097ac00c643c64821fd0e386d2161b946456192ae13f9510d621d64969a6f",
+      "verdict": "APPROVE"
+    }
+  ],
+  "post_promotion_verification": {
+    "verified_at_utc": "2026-09-28T18:05:39.538886+00:00",
+    "prior_manifest_sha256": "6cbdac876b17777687ba969e3cc04898265978125943a1b03221396055524d7f",
+    "verdict": "APPROVE_UNCHANGED",
+    "proof": "All 11 changed lab-config normalized hashes exactly reconstruct to prior reviewed hashes by restoring only title double-quotes and one blank line before bundle (also before title in gad.b). Thus bodies/dependencies/bundle/metadata values are unchanged. ACE/lab-overseer normalized hashes and all usage/index hashes unchanged.",
+    "equivalence": [
+      {
+        "id": "8wl.t.gad",
+        "hash_matches_prior": [
+          {
+            "quote_title": true,
+            "blank_before_title": 0,
+            "blank_before_bundle": 1
+          }
+        ]
+      },
+      {
+        "id": "8wl.t.gad.2",
+        "hash_matches_prior": [
+          {
+            "quote_title": true,
+            "blank_before_title": 0,
+            "blank_before_bundle": 1
+          }
+        ]
+      },
+      {
+        "id": "8wl.t.gad.3",
+        "hash_matches_prior": [
+          {
+            "quote_title": true,
+            "blank_before_title": 0,
+            "blank_before_bundle": 1
+          }
+        ]
+      },
+      {
+        "id": "8wl.t.gad.4",
+        "hash_matches_prior": [
+          {
+            "quote_title": true,
+            "blank_before_title": 0,
+            "blank_before_bundle": 1
+          }
+        ]
+      },
+      {
+        "id": "8wl.t.gad.5",
+        "hash_matches_prior": [
+          {
+            "quote_title": true,
+            "blank_before_title": 0,
+            "blank_before_bundle": 1
+          }
+        ]
+      },
+      {
+        "id": "8wl.t.gad.8",
+        "hash_matches_prior": [
+          {
+            "quote_title": true,
+            "blank_before_title": 0,
+            "blank_before_bundle": 1
+          }
+        ]
+      },
+      {
+        "id": "8wl.t.gad.9",
+        "hash_matches_prior": [
+          {
+            "quote_title": true,
+            "blank_before_title": 0,
+            "blank_before_bundle": 1
+          }
+        ]
+      },
+      {
+        "id": "8wl.t.gad.a",
+        "hash_matches_prior": [
+          {
+            "quote_title": true,
+            "blank_before_title": 0,
+            "blank_before_bundle": 1
+          }
+        ]
+      },
+      {
+        "id": "8wl.t.gad.b",
+        "hash_matches_prior": [
+          {
+            "quote_title": true,
+            "blank_before_title": 1,
+            "blank_before_bundle": 1
+          }
+        ]
+      },
+      {
+        "id": "8wl.t.gae",
+        "hash_matches_prior": [
+          {
+            "quote_title": true,
+            "blank_before_title": 0,
+            "blank_before_bundle": 1
+          }
+        ]
+      },
+      {
+        "id": "8wm.t.nfe",
+        "hash_matches_prior": [
+          {
+            "quote_title": true,
+            "blank_before_title": 0,
+            "blank_before_bundle": 1
+          }
+        ]
+      }
+    ]
+  }
+}

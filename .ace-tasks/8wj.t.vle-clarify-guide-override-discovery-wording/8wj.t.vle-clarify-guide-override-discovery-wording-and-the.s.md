@@ -6,7 +6,7 @@ created_at: "2026-09-20 21:03:46"
 estimate: 
 dependencies: []
 tags: [handbook, nav, overrides, polish]
-position: 6o000e
+position: 6o000m
 ---
 
 # Clarify guide-override discovery wording and the priority-5 source phrasing in manage-overrides

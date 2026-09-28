@@ -1,52 +1,23 @@
-# Runtime-Switchable Terminal Surface - Draft Usage
+# Runtime acceptance scenarios — 8wq.t.k86
 
-## API Surface
+Target contract; implementation evidence is collected later. See this task and k86.0 for the ordered send matrix and typed error model.
 
-- [ ] CLI (no new commands by default; consumers gain config, not flags)
-- [x] Developer API (Ace::Runtime contract consumed by assign/overseer/demo)
-- [ ] Agent API (drive.wf.md callback rule text changes)
-- [x] Configuration (execution.launch_mode gains herdr; overseer runtime key)
+## Select backend and callback once
 
-## Usage Scenarios
+`ace-overseer work-on --task TASK --runtime herdr`
 
-### Scenario 1: fork run with callback on herdr
+Expected: a tab at the task worktree through the Herdr adapter. Consumer fork inherits ACE_RUNTIME=herdr and its exact caller target.
 
-**Goal**: An agent launches a fork assignment from a herdr pane and the callback lands back in the caller's pane.
+`ace-runtime send --runtime herdr --pane TARGET --msg "completed" --key Enter`
 
-```bash
-# .ace/assign/config.yml → execution.launch_mode: herdr   (or auto inside herdr)
-ace-assign fork run 8wq.t.k86 --provider codex --callback
+Expected: one submission to an agent pane; exactly one trailing Enter is suppressed/reported. With --runtime tmux the plain-pane callback submits once too. Flag > inherited ACE_RUNTIME > runtime config > detect resolves callbacks.
 
-# Expected: fork agent starts in a herdr tab rooted at the fork worktree;
-# completion callback is sent to the caller's pane (contract context);
-# session metadata records launch_mode: herdr + runtime-neutral pane refs.
-```
+## Reject uncertainty without automatic retry
 
-### Scenario 2: work-on opens a herdr tab
+An unavailable explicitly selected or auto-detected backend returns RuntimeUnavailableError. Only assign auto with no detected runtime selects headless. SendRejectedError means pre-send rejection; SendStalledError means possible submission and prohibits automatic resend.
 
-**Goal**: Overseer work-on provisions the worktree and opens the work window in the configured runtime.
+## Wait and lifecycle evidence
 
-```bash
-# .ace/overseer/config.yml → runtime: herdr + window_presets: {"work-on-task": work-on-task}
-ace-overseer work-on 8wq.t.k84
+`Ace::Runtime.resolve("herdr").wait_lifecycle(condition: "pane-exited", target: target, timeout: 10)`
 
-# Expected: herdr tab opens rooted at the task worktree (tmux path: unchanged when runtime: tmux).
-```
-
-### Scenario 3: Error path — herdr configured but unavailable
-
-**Goal**: Explicit failure (or documented fallback), never a silent no-op.
-
-```bash
-# execution.launch_mode: herdr, herdr binary missing
-ace-assign fork run 8wq.t.k86
-
-# Expected output:
-# Error: runtime 'herdr' unavailable (herdr CLI not found) — exit non-zero
-# With launch_mode: auto → falls back to headless with a notice (existing behavior).
-```
-
-## Notes for Implementer
-
-- Full usage documentation to be completed during work-on-task step using `wfi://docs/update-usage`
-- Regression gate: `runtime: tmux` must be behavior-identical to today
+Expected: positive observation of exit/absence satisfies the wait. It does not prove assignment success or preservation for prune. Adapter contract examples test all four lifecycle conditions on both backends; live acceptance confirms actual Herdr behavior.

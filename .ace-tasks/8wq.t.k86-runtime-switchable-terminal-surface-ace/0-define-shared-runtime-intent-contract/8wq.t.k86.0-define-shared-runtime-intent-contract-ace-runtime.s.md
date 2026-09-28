@@ -13,6 +13,12 @@ bundle:
   commands: []
 needs_review: false
 title: Define shared runtime intent contract (ace-runtime gem)
+worktree:
+  branch: k86.0-define-shared-runtime-intent-contract-ace-runtime-gem
+  path: .ace-wt/ace-t.k86.0
+  created_at: "2026-09-28 20:02:54"
+  updated_at: "2026-09-28 20:02:54"
+  target_branch: main
 ---
 
 # Define shared runtime intent contract (ace-runtime gem)
