@@ -64,7 +64,10 @@ module Ace
 
       def focus(window:)
         guard_available!
-        fixture.focus_window(Atoms::NameSanitizer.call(window))
+        name = Atoms::NameSanitizer.call(window)
+        raise TargetNotFoundError, "no window '#{name}'" unless fixture.window_exists?(name)
+
+        fixture.focus_window(name)
       end
 
       # --- op 5: send (central matrix lives in SendContract) ---
@@ -108,6 +111,9 @@ module Ace
       end
 
       def wait_agent(pane:, states:, timeout:)
+        guard_available!
+        raise TargetNotFoundError, "no pane '#{pane}'" unless fixture.pane_exists?(pane)
+
         wanted = Array(states).map(&:to_s)
         wait_until(timeout: timeout, condition: "agent", target: pane) do
           wanted.include?(fixture.agent_state(pane).to_s)
@@ -115,6 +121,7 @@ module Ace
       end
 
       def wait_lifecycle(condition:, target:, timeout:)
+        guard_available!
         unless Atoms::SendContract::LIFECYCLE_CONDITIONS.include?(condition.to_s)
           raise ArgumentError,
             "unknown lifecycle condition '#{condition}' (expected one of: " \
@@ -130,18 +137,25 @@ module Ace
 
       def close_window(window:)
         guard_available!
-        fixture.kill_window(Atoms::NameSanitizer.call(window))
+        name = Atoms::NameSanitizer.call(window)
+        raise TargetNotFoundError, "no window '#{name}'" unless fixture.window_exists?(name)
+
+        fixture.kill_window(name)
       end
 
       # --- op 9: listing ---
 
       def list_windows
+        guard_available!
+
         fixture.windows.map do |name, info|
           {name: name, active: info[:focused]}
         end
       end
 
       def list_panes(window:)
+        guard_available!
+
         info = fixture.window_info(window)
         return [] unless info
 

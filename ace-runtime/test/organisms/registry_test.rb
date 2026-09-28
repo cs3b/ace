@@ -98,6 +98,30 @@ module Ace
 
         assert_equal [], error.available
       end
+
+      def test_broken_installed_entrypoint_raises_load_error_not_unknown_runtime
+        entrypoint_dir = Dir.mktmpdir("ace_runtime_broken")
+        adapters_dir = File.join(entrypoint_dir, "ace", "runtime", "adapters")
+        FileUtils.mkdir_p(adapters_dir)
+        File.write(File.join(adapters_dir, "brokentest.rb"), <<~RUBY)
+          require "definitely_missing_dependency_xyz"
+        RUBY
+
+        Ace::Runtime.reset_registry!
+        $LOAD_PATH.unshift(entrypoint_dir)
+        begin
+          error = assert_raises(LoadError) do
+            Ace::Runtime.resolve("brokentest")
+          end
+
+          assert_match(/definitely_missing_dependency_xyz/, error.message)
+        ensure
+          $LOAD_PATH.delete(entrypoint_dir)
+          Ace::Runtime.reset_registry!
+        end
+      ensure
+        FileUtils.remove_entry(entrypoint_dir) if entrypoint_dir && Dir.exist?(entrypoint_dir)
+      end
     end
   end
 end

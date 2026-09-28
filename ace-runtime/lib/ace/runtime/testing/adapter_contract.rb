@@ -24,9 +24,11 @@ module Ace
         WAIT_TIMEOUT = 0.05
 
         def setup
+          super
           @contract_fixture = build_fixture
           @contract_adapter = build_adapter(@contract_fixture)
           @contract_pane = nil
+          @contract_setup_op_count = nil
         end
 
         attr_reader :contract_fixture, :contract_adapter
@@ -308,13 +310,42 @@ module Ace
 
         # --- error model ---
 
-        def test_unavailable_runtime_raises_runtime_unavailable
+        # Targeted operations must translate native "missing target"
+        # failures into the typed contract error; a leaked fixture or
+        # native error class fails the acceptance bar.
+        def test_missing_targets_raise_target_not_found_on_targeted_operations
+          prepare_target!
+
+          assert_raises(TargetNotFoundError) { adapter.focus(window: "no-such-window") }
+          assert_raises(TargetNotFoundError) { adapter.close_window(window: "no-such-window") }
+          assert_raises(TargetNotFoundError) { adapter.prepare_pane(window: "no-such-window") }
+          assert_raises(TargetNotFoundError) { adapter.send(pane: "%999", command: "run", items: []) }
+          assert_raises(TargetNotFoundError) { adapter.send_text(pane: "%999", text: "hi") }
+          assert_raises(TargetNotFoundError) { adapter.send_keys(pane: "%999", keys: ["C-c"]) }
+          assert_raises(TargetNotFoundError) { adapter.capture(pane: "%999", lines: 10) }
+          assert_raises(TargetNotFoundError) { adapter.wait_output(pane: "%999", pattern: "x", timeout: WAIT_TIMEOUT) }
+          assert_raises(TargetNotFoundError) { adapter.wait_agent(pane: "%999", states: ["idle"], timeout: WAIT_TIMEOUT) }
+        end
+
+        # Listing an absent window is an empty set (poll-friendly), but
+        # every transport operation must fail typed when the runtime is
+        # unreachable — never silently succeed or leak a native error.
+        def test_unavailable_runtime_raises_runtime_unavailable_on_transport_operations
           prepare_target!
           fixture.unavailable = true
 
-          assert_raises(RuntimeUnavailableError) do
-            adapter.capture(pane: "%1", lines: 10)
-          end
+          assert_raises(RuntimeUnavailableError) { adapter.ensure_window(name: "other", root: "/tmp/other") }
+          assert_raises(RuntimeUnavailableError) { adapter.prepare_pane(window: "work") }
+          assert_raises(RuntimeUnavailableError) { adapter.focus(window: "work") }
+          assert_raises(RuntimeUnavailableError) { adapter.send(pane: @contract_pane, command: "run", items: []) }
+          assert_raises(RuntimeUnavailableError) { adapter.send_command(pane: @contract_pane, command: "run") }
+          assert_raises(RuntimeUnavailableError) { adapter.capture(pane: @contract_pane, lines: 10) }
+          assert_raises(RuntimeUnavailableError) { adapter.wait_output(pane: @contract_pane, pattern: "x", timeout: WAIT_TIMEOUT) }
+          assert_raises(RuntimeUnavailableError) { adapter.wait_agent(pane: @contract_pane, states: ["idle"], timeout: WAIT_TIMEOUT) }
+          assert_raises(RuntimeUnavailableError) { adapter.wait_lifecycle(condition: "window-exists", target: "work", timeout: WAIT_TIMEOUT) }
+          assert_raises(RuntimeUnavailableError) { adapter.close_window(window: "work") }
+          assert_raises(RuntimeUnavailableError) { adapter.list_windows }
+          assert_raises(RuntimeUnavailableError) { adapter.list_panes(window: "work") }
         end
 
         def test_stalled_send_raises_send_stalled_error_and_is_never_auto_resent

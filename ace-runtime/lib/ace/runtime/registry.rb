@@ -51,14 +51,17 @@ module Ace
       # Convention: adapter packages ship a lib/ace/runtime/adapters/<name>.rb
       # entrypoint that calls Ace::Runtime.register. It is attempted
       # lazily on first resolve so the contract gem keeps no dependency
-      # on either adapter package; a LoadError simply means the adapter
-      # is not installed.
+      # on either adapter package. Only a missing entrypoint counts as
+      # "not installed"; a LoadError raised INSIDE an installed
+      # entrypoint (for example its own missing dependency) propagates
+      # so a broken adapter is never misreported as unknown.
       def load_adapter_entrypoint(name)
         return unless name.match?(NAME_PATTERN)
 
-        require format(ADAPTER_ENTRYPOINT_FORMAT, name)
-      rescue LoadError
-        nil
+        entrypoint = format(ADAPTER_ENTRYPOINT_FORMAT, name)
+        require entrypoint
+      rescue LoadError => e
+        raise unless e.path == entrypoint
       end
     end
   end
