@@ -208,16 +208,34 @@ module Ace
             map[relative_path] = validate_projection_destination(output_dir, relative_path, extensions_dir)
           end
 
-          output_paths.each do |relative_path, output_path|
-            source_path = expected.fetch(relative_path)
-            FileUtils.mkdir_p(File.dirname(output_path))
-            next if File.exist?(output_path) && FileUtils.compare_file(source_path, output_path)
+          newly_created = []
+          begin
+            output_paths.each do |relative_path, output_path|
+              source_path = expected.fetch(relative_path)
+              FileUtils.mkdir_p(File.dirname(output_path))
+              created = !File.exist?(output_path)
+              next if !created && FileUtils.compare_file(source_path, output_path)
 
-            FileUtils.cp(source_path, output_path)
-            updated_files += 1
+              FileUtils.cp(source_path, output_path)
+              newly_created << output_path if created
+              updated_files += 1
+            end
+
+            write_projection_receipt(output_dir, provider, expected.keys)
+          rescue
+            # Roll back files this sync created so a retry never finds its own
+            # partial installation standing in the way as an unowned
+            # collision. Overwritten files were receipt-owned and stay.
+            newly_created.each do |path|
+              FileUtils.rm_f(path)
+            rescue
+              nil
+            end
+            newly_created.each do |path|
+              remove_empty_parent_dirs(File.dirname(path), output_dir)
+            end
+            raise
           end
-
-          write_projection_receipt(output_dir, provider, expected.keys)
 
           {
             relative_extensions_dir: extensions_dir,

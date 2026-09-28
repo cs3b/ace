@@ -447,6 +447,27 @@ class Ace::Handbook::Organisms::ProviderSyncerTest < Minitest::Test
     assert File.exist?(File.join(extensions_dir, "ace-wake", "z", "index.js"))
   end
 
+  def test_mid_copy_failure_rolls_back_and_retry_succeeds
+    create_provider_manifest("pi", ".pi/skills", extensions_dir: ".pi/extensions")
+    create_extension_asset("pi", "ace-wake/a.js", "// a" + "\n")
+    create_extension_asset("pi", "ace-wake/z/b.js", "// b" + "\n")
+    extensions_dir = File.join(@tmpdir, ".pi", "extensions")
+    # A directory named b.js makes the second copy fail (EISDIR).
+    FileUtils.mkdir_p(File.join(extensions_dir, "ace-wake", "z", "b.js"))
+
+    error = assert_raises(StandardError) { syncer.sync(provider: "pi") }
+
+    refute File.exist?(File.join(extensions_dir, "ace-wake", "a.js")),
+           "newly created files must roll back when a later copy fails"
+
+    # After the obstruction is removed, the retry succeeds cleanly.
+    FileUtils.rm_rf(File.join(extensions_dir, "ace-wake", "z"))
+    result = syncer.sync(provider: "pi").first
+    assert_equal 2, result.fetch(:projected_extensions)
+    assert File.exist?(File.join(extensions_dir, "ace-wake", "a.js"))
+    assert File.exist?(File.join(extensions_dir, "ace-wake", "z", "b.js"))
+  end
+
   def test_sync_rejects_receipt_paths_through_symlinked_components
     create_provider_manifest("pi", ".pi/skills", extensions_dir: ".pi/extensions")
     create_extension_asset("pi", "ace-wake.mjs", "// current\n")
