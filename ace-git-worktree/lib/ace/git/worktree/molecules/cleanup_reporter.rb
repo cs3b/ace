@@ -305,7 +305,7 @@ module Ace
                 wt[:ancestry] = "ancestor"
                 wt[:action] = "remove"
               else
-                # Try GitHub PR evidence
+                # Try provider PR evidence
                 proof_result = pr_resolver.classify(wt[:branch], wt[:sha])
                 if proof_result[:action] == "remove"
                   wt[:ancestry] = proof_result[:proof]
@@ -330,7 +330,7 @@ module Ace
                 ref[:ancestry] = "ancestor"
                 ref[:action] = "remove"
               else
-                # Try GitHub PR evidence
+                # Try provider PR evidence
                 # Only local refs and remote-tracking refs have meaningful branch names for PR lookup
                 branch_name = kind == "remote" ? ref[:short_name] : ref[:name]
                 proof_result = pr_resolver.classify(branch_name, ref[:sha])

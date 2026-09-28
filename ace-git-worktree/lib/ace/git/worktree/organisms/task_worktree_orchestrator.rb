@@ -982,7 +982,7 @@ module Ace
           # Add started_at timestamp to task file IN WORKTREE
           #
           # This creates an initial commit in the worktree branch, enabling PR creation
-          # (GitHub requires at least one commit difference between branches for a PR).
+          # (Forges require at least one commit difference between branches for a PR).
           #
           # @param task_data [Hash] Task data hash from ace-task
           # @param worktree_result [Hash] Worktree creation result with :worktree_path

@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Forge-neutral PR worktree checkout: the exact declared source
+  repository/ref is fetched and its head SHA verified against normalized PR
+  evidence before any worktree is created (fork and canonical sources are
+  equally valid).
+- `--server` / `--default-server` selection for PR creation, task-PR
+  creation, and cleanup; `--remote` remains a local Git remote name only.
+- Task PR creation proves the pushed branch head SHA to the provider
+  (`expected_head`); PR identity is never inferred from branch names.
+- Cleanup report digests now bind the resolved server identity and each
+  item's provider proof (status, PR, proven head, merge commit); `--apply`
+  recomputes the full report immediately before executing and refuses any
+  drift from the approved digest.
+
+### Removed
+- Direct GitHub coupling from worktree correctness paths: `ace/git/github`
+  requires, `Github::PrFetcher` usage, `gh` CLI checks and troubleshooting,
+  the raw gh-based `PrCreator` molecule, and the `ace-git-github` gemspec
+  dependency. Provider execution lives behind the neutral ace-git provider
+  contract.
+
+
 
 ## [0.23.0] - 2026-09-27
 
