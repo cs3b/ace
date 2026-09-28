@@ -48,11 +48,19 @@ module Ace
           # deployment grants at the fixed production path, which only root
           # can provision. Gated behind an explicit opt-in so it never
           # mutates a developer machine; skipped elsewhere (review round 15, F2).
+          # Never touches pre-existing deployment grants: the test refuses to
+          # run when the grants file already exists and removes only a file
+          # it created itself (subject review, high).
           def test_installed_cli_succeeds_with_controlled_grants
             unless Process.uid.zero? && ENV["ACE_LAB_TEST_SYSTEM_GRANTS"] == "1"
               skip "requires root plus ACE_LAB_TEST_SYSTEM_GRANTS=1 on a disposable host to " \
                    "provision #{Ace::Lab::AUTHORIZATION_PATH}"
             end
+            if File.exist?(Ace::Lab::AUTHORIZATION_PATH)
+              skip "#{Ace::Lab::AUTHORIZATION_PATH} already exists; refusing to overwrite deployment grants"
+            end
+
+            grants_provisioned = false
 
             Dir.mktmpdir do |tmp|
               gem_home = File.join(tmp, "gems")
@@ -69,6 +77,7 @@ module Ace
                 File.write(Ace::Lab::AUTHORIZATION_PATH, YAML.dump({
                   "principals" => {principal => {"projects" => %w[atlas borealis]}}
                 }))
+                grants_provisioned = true
 
                 env = launch_env(gem_home, project_dir)
                 out, err, status = run_cli(env, bin, project_dir, "resolve", "--id", "atlas-planner",
@@ -103,7 +112,8 @@ module Ace
                 assert_equal "atlas-search", JSON.parse(out).dig("data", "entry", "id")
               ensure
                 FileUtils.rm_f(gem_file)
-                FileUtils.rm_f(Ace::Lab::AUTHORIZATION_PATH)
+                # Remove only grants this test provisioned (subject review, high)
+                FileUtils.rm_f(Ace::Lab::AUTHORIZATION_PATH) if grants_provisioned
               end
             end
           end
