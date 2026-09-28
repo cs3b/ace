@@ -81,7 +81,12 @@ class CliArgumentParserTest < Minitest::Test
     ace_search_dir = File.join(@project_root, "ace-search")
     Dir.chdir(ace_search_dir) do
       argv = [ace_bundle_atom_test_path]
-      parser = Ace::TestRunner::Molecules::CliArgumentParser.new(argv)
+      # Pin the resolver to the mono root: cwd-based discovery from a sibling
+      # package stops at that package's own Rakefile marker.
+      parser = Ace::TestRunner::Molecules::CliArgumentParser.new(
+        argv,
+        package_resolver: Ace::TestRunner::Molecules::PackageResolver.new(project_root: @project_root)
+      )
       result = parser.parse
 
       assert result[:package_dir]&.end_with?("ace-bundle")

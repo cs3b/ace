@@ -48,9 +48,16 @@ module TestHelper
   end
 
   # Find the mono-repo root directory.
-  # Delegates to the shared ProjectRootFinder to avoid reimplementing root detection logic.
+  #
+  # Resolved from this file's location so hermetic test children never depend
+  # on ambient PROJECT_ROOT_PATH or the invoking process working directory.
+  # Falls back to marker-based discovery outside the mono-repo layout.
   # @return [String] Absolute path to mono-repo root
   def find_mono_repo_root
+    mono_root = File.expand_path("../..", __dir__)
+    gemspec = File.join(mono_root, "ace-test-runner", "ace-test-runner.gemspec")
+    return mono_root if File.file?(gemspec)
+
     Ace::Support::Fs::Molecules::ProjectRootFinder.find
   end
 end
