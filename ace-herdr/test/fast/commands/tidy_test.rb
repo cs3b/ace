@@ -36,8 +36,14 @@ module Ace
             Tidy.new(executor: executor, config: cfg)
           end
 
+          # The command reads the real clock; freeze it so record ages stay
+          # deterministic no matter when the suite runs
+          def run_cmd(cmd, **options)
+            Time.stub(:now, NOW) { capture_io { cmd.call(**options) } }
+          end
+
           def test_default_invocation_emits_dry_run_json
-            out, = capture_io { cmd.call(apply: nil, quiet: nil) }
+            out, = run_cmd(cmd, apply: nil, quiet: nil)
 
             parsed = JSON.parse(out)
             assert_equal false, parsed["apply"]
@@ -61,7 +67,7 @@ module Ace
             }
             executor = HerdrTestHelper::FakeExecutor.new(outcomes: outcomes)
 
-            out, = capture_io { cmd(executor: executor).call(apply: true, quiet: nil) }
+            out, = run_cmd(cmd(executor: executor), apply: true, quiet: nil)
 
             parsed = JSON.parse(out)
             assert_equal true, parsed["apply"]
@@ -74,7 +80,7 @@ module Ace
             Molecules::DeliveryRecordStore.save(delivered("evt-fail", state: "failed"), store_dir)
             Molecules::DeliveryRecordStore.save(delivered("evt-new"), store_dir)
 
-            out, = capture_io { cmd.call(apply: true, quiet: nil) }
+            out, = run_cmd(cmd, apply: true, quiet: nil)
 
             parsed = JSON.parse(out)
             assert_equal [], parsed["deliveries"]["archived"]
@@ -82,7 +88,7 @@ module Ace
           end
 
           def test_quiet_suppresses_output
-            out, = capture_io { cmd.call(apply: nil, quiet: true) }
+            out, = run_cmd(cmd, apply: nil, quiet: true)
 
             assert_equal "", out
           end
@@ -93,7 +99,7 @@ module Ace
             })
 
             error = assert_raises(Ace::Support::Cli::Error) do
-              cmd(executor: executor).call(apply: nil, quiet: nil)
+              run_cmd(cmd(executor: executor), apply: nil, quiet: nil)
             end
 
             assert_match(/herdr CLI not found/, error.message)
@@ -104,7 +110,7 @@ module Ace
             Molecules::DeliveryRecordStore.save(delivered("evt-3d", updated_at: (NOW - 3 * 86_400).iso8601), store_dir)
             Molecules::DeliveryRecordStore.save(delivered("evt-1h", updated_at: (NOW - 3600).iso8601), store_dir)
 
-            out, = capture_io { cmd(cfg: config(retention_days: 1)).call(apply: true, quiet: nil) }
+            out, = run_cmd(cmd(cfg: config(retention_days: 1)), apply: true, quiet: nil)
 
             parsed = JSON.parse(out)
             assert_equal 1, parsed["retention_days"]
@@ -113,7 +119,7 @@ module Ace
 
           def test_invalid_retention_value_surfaces_cli_error
             error = assert_raises(Ace::Support::Cli::Error) do
-              cmd(cfg: config(retention_days: "week")).call(apply: nil, quiet: nil)
+              run_cmd(cmd(cfg: config(retention_days: "week")), apply: nil, quiet: nil)
             end
 
             assert_match(/non-negative integer/, error.message)

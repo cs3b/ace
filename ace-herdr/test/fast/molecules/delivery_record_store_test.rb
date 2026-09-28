@@ -102,6 +102,30 @@ module Ace
           assert_nil entries.first[:record]
         end
 
+        def test_list_survives_non_object_json_as_unreadable
+          File.write(File.join(@dir, "evt-null.json"), "null")
+          File.write(File.join(@dir, "evt-arr.json"), "[1,2]")
+
+          entries = DeliveryRecordStore.list_records(@dir)
+
+          assert_equal %w[evt-arr evt-null], entries.map { |e| e[:event_id] }
+          assert entries.all? { |e| e[:record].nil? }
+        end
+
+        def test_list_survives_permission_denied_file_as_unreadable
+          skip "readable as root" if Process.euid.zero?
+
+          path = File.join(@dir, "evt-denied.json")
+          File.write(path, "{}")
+          File.chmod(0o000, path)
+
+          entries = DeliveryRecordStore.list_records(@dir)
+
+          assert_nil entries.first[:record]
+        ensure
+          File.chmod(0o600, path) if path && File.exist?(path)
+        end
+
         def test_archive_moves_record_into_archive_dir
           DeliveryRecordStore.save(@record, @dir)
 
@@ -109,8 +133,27 @@ module Ace
 
           assert_equal File.join(@dir, "archive", "evt-1.json"), dest
           assert File.exist?(dest)
-          assert_nil DeliveryRecordStore.load(@dir, "evt-1")
+          refute File.exist?(DeliveryRecordStore.path_for(@dir, "evt-1"))
           assert_equal ["archive"], Dir.children(@dir).sort
+        end
+
+        def test_load_falls_back_to_archived_record
+          DeliveryRecordStore.save(@record, @dir)
+          DeliveryRecordStore.archive(@dir, "evt-1")
+
+          loaded = DeliveryRecordStore.load(@dir, "evt-1")
+
+          assert_equal @record.to_h, loaded.to_h
+        end
+
+        def test_archive_is_idempotent_for_already_archived_event
+          DeliveryRecordStore.save(@record, @dir)
+          first = DeliveryRecordStore.archive(@dir, "evt-1")
+
+          second = DeliveryRecordStore.archive(@dir, "evt-1")
+
+          assert_equal first, second
+          assert File.exist?(first)
         end
 
         def test_archive_preserves_file_mode

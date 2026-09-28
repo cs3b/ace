@@ -127,14 +127,24 @@ module Ace
         end
 
         # Re-load each candidate under its per-event lock and archive only
-        # when it still proves eligible; a changed or vanished record stays
-        # in place and is reported as preserved
+        # when it still proves eligible; a changed, vanished, or unreadable
+        # record stays in place and is reported as preserved
         def archive_deliveries!(report)
           report[:deliveries][:candidates].each do |candidate|
             event_id = candidate[:event_id]
+            fresh =
+              begin
+                @record_store.load(@deliveries_dir, event_id)
+              rescue JSON::ParserError, ArgumentError, Errno::EACCES
+                :unreadable
+              end
+            if fresh == :unreadable
+              report[:deliveries][:preserved] << {event_id: event_id, reason: "unreadable"}
+              next
+            end
+
             archive_path = nil
             @record_store.with_lock(@deliveries_dir, event_id) do
-              fresh = @record_store.load(@deliveries_dir, event_id)
               next unless fresh&.delivered? && older_than_retention?(fresh)
 
               archive_path = @record_store.archive(@deliveries_dir, event_id)

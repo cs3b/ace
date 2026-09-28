@@ -100,19 +100,34 @@ module Ace
           assert_equal :active, evidence
         end
 
-        def test_missing_process_fields_preserve
+        def test_missing_process_info_object_preserves
           _, evidence = probe(
             agent_get: AgentNotFoundError.new("agent_not_found: gone"),
-            pane_process_info: native_result(result: {process_info: {"pane_id" => "w5:p1"}})
+            pane_process_info: native_result(result: {nope: true})
           )
 
           assert_equal :unknown, evidence
         end
 
-        def test_malformed_process_response_preserves
+        # Native empty serialization: herdr omits foreground_processes when
+        # empty (serde skip_serializing_if, v0.9.1 schema/panes.rs)
+        def test_absent_foreground_processes_is_the_native_exit_proof
           _, evidence = probe(
             agent_get: AgentNotFoundError.new("agent_not_found: gone"),
-            pane_process_info: native_result({nope: true})
+            pane_process_info: native_result(result: {
+              process_info: {"pane_id" => "w5:p1", "shell_pid" => 96849}
+            })
+          )
+
+          assert_equal :process_exited, evidence
+        end
+
+        def test_non_array_foreground_processes_preserve
+          _, evidence = probe(
+            agent_get: AgentNotFoundError.new("agent_not_found: gone"),
+            pane_process_info: native_result(result: {
+              process_info: {"foreground_processes" => "fish", "pane_id" => "w5:p1"}
+            })
           )
 
           assert_equal :unknown, evidence

@@ -110,6 +110,31 @@ module Ace
           assert_match(/different answer or destination/, error.message)
         end
 
+        # tidy archives delivered records; delivery idempotency must survive
+        # that (spec 8wq.t.1w0 review: the archive copy stays authoritative)
+        def test_duplicate_delivery_short_circuits_after_tidy_archival
+          @deliverer.deliver(make_ref, "answer", event_id: "evt-5c")
+          Molecules::DeliveryRecordStore.archive(@dir, "evt-5c")
+          @executor = HerdrTestHelper::FakeExecutor.new # fresh: any contact would be a dup
+          deliverer = build_deliverer
+
+          result = deliverer.deliver(make_ref, "answer", event_id: "evt-5c")
+
+          assert_equal :delivered, result.state
+          assert_empty @executor.calls
+        end
+
+        def test_conflicting_content_fails_closed_after_tidy_archival
+          @deliverer.deliver(make_ref, "answer", event_id: "evt-5d")
+          Molecules::DeliveryRecordStore.archive(@dir, "evt-5d")
+
+          error = assert_raises(ValidationError) do
+            @deliverer.deliver(make_ref, "DIFFERENT", event_id: "evt-5d")
+          end
+
+          assert_match(/different answer or destination/, error.message)
+        end
+
         def test_conflicting_destination_for_same_event_fails_closed
           @deliverer.deliver(make_ref("ws-1", "p5"), "answer", event_id: "evt-5b")
 

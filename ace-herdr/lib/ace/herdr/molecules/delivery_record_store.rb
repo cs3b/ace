@@ -13,9 +13,14 @@ module Ace
       module DeliveryRecordStore
         module_function
 
-        # @return [Models::DeliveryRecord, nil]
+        # @return [Models::DeliveryRecord, nil] the record, falling back to
+        #   the archive copy when the live record is gone — delivery
+        #   idempotency (identical short-circuit, conflict fail-closed) must
+        #   survive tidy archival
         def load(deliveries_dir, event_id)
           path = path_for(deliveries_dir, event_id)
+          archived = File.join(archive_dir(deliveries_dir), "#{event_id}.json")
+          path = archived if !File.exist?(path) && File.exist?(archived)
           return nil unless File.exist?(path)
 
           Models::DeliveryRecord.from_json(File.read(path))
@@ -66,15 +71,19 @@ module Ace
           return [] unless Dir.exist?(deliveries_dir)
 
           Dir.children(deliveries_dir).sort.filter_map do |name|
-            next nil unless record_file?(File.join(deliveries_dir, name))
             next nil unless name.end_with?(".json")
+            next nil unless record_file?(File.join(deliveries_dir, name))
 
-            {event_id: name.delete_suffix(".json"),
-             record: Models::DeliveryRecord.from_json(File.read(File.join(deliveries_dir, name)))}
-          rescue JSON::ParserError, ArgumentError
-            {event_id: name.delete_suffix(".json"), record: nil}
-          rescue Errno::ENOENT
-            nil # vanished between listing and read: nothing to preserve
+            event_id = name.delete_suffix(".json")
+            record =
+              begin
+                read_record(File.join(deliveries_dir, name))
+              rescue Errno::EACCES
+                nil # unreadable: reported as preserved, never removed
+              rescue Errno::ENOENT
+                next nil # vanished between listing and read: nothing to preserve
+              end
+            {event_id: event_id, record: record}
           end
         end
 
@@ -86,10 +95,13 @@ module Ace
 
         # Atomically move one record file into the archive directory
         # (rename preserves the 0600 mode). Callers must hold the per-event
-        # lock and re-check eligibility under it.
-        # @return [String] the archive path the record was moved to
+        # lock and re-check eligibility under it. Idempotent: an already
+        # archived event just reports its archive path.
+        # @return [String] the archive path the record lives at
         def archive(deliveries_dir, event_id)
           dest = File.join(archive_dir(deliveries_dir), "#{event_id}.json")
+          return dest if !File.exist?(path_for(deliveries_dir, event_id)) && File.exist?(dest)
+
           FileUtils.mkdir_p(archive_dir(deliveries_dir))
           File.rename(path_for(deliveries_dir, event_id), dest)
           dest
@@ -97,6 +109,18 @@ module Ace
 
         def record_file?(path)
           File.file?(path) && !File.basename(path).start_with?(".")
+        end
+
+        # Decode a record file fail-closed: anything that is not a decodable
+        # delivery record (malformed JSON, non-object JSON, unknown state)
+        # reads as nil (preserved/unreadable), never raises
+        def read_record(path)
+          parsed = JSON.parse(File.read(path))
+          return nil unless parsed.is_a?(Hash)
+
+          Models::DeliveryRecord.from_h(parsed)
+        rescue JSON::ParserError, ArgumentError
+          nil
         end
       end
     end
