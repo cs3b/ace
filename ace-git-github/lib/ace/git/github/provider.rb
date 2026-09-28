@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "json"
+require "uri"
 
 module Ace
   module Git
@@ -25,7 +26,7 @@ module Ace
           "skipping" => :skipped
         }.freeze
 
-        PR_FIELDS = "number,state,isDraft,title,author,headRefName,baseRefName,url,headRefOid,mergeCommit,mergedAt"
+        PR_FIELDS = "number,state,isDraft,title,author,headRefName,baseRefName,url,headRefOid,mergeCommit,mergedAt,headRepositoryOwner,headRepository"
         LIST_FIELDS = PrFetcher::LIST_FIELDS
         REPO_FIELDS = "nameWithOwner,defaultBranchRef,url"
         ISSUE_FIELDS = "number,title,state,author,url"
@@ -152,8 +153,29 @@ module Ace
             author: normalize_author(data["author"]),
             url: data["url"],
             draft: data["isDraft"],
-            merged_at: merged_at_of(data)
+            merged_at: merged_at_of(data),
+            head_repository_url: head_repository_url_of(data),
+            base_repository_url: server.url,
+            merge_commit_sha: data.dig("mergeCommit", "oid")
           )
+        end
+
+        # Source repository URL for the PR head: the fork's owner/name against
+        # the server host for cross-repository PRs, the configured repository
+        # otherwise. Never inferred beyond what `gh` reported.
+        def head_repository_url_of(data)
+          owner = data.dig("headRepositoryOwner", "login")
+          name = data.dig("headRepository", "name")
+          return server.url if owner.nil? || name.nil?
+
+          "#{server_host_root}/#{owner}/#{name}"
+        end
+
+        def server_host_root
+          @server_host_root ||= begin
+            uri = URI.parse(server.url.to_s)
+            "#{uri.scheme || "https"}://#{uri.host}#{":#{uri.port}" if uri.port && uri.port != uri.default_port}"
+          end
         end
 
         def merged_at_of(data)

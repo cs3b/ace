@@ -172,8 +172,28 @@ module Ace
             author: parsed[:author],
             url: pr_url(parsed[:number]),
             draft: nil,
-            merged_at: nil
+            merged_at: nil,
+            head_repository_url: head_repository_url_of(parsed),
+            base_repository_url: server.url,
+            merge_commit_sha: nil
           )
+        end
+
+        # Source repository URL for the PR head: forks are reported by the
+        # `From `owner/repo:branch`` segment and live on the same host as the
+        # base repository; canonical PRs use the configured repository.
+        def head_repository_url_of(parsed)
+          repo = parsed[:head_repository]
+          return server.url if repo.nil? || repo.empty?
+
+          "#{server_host_root}/#{repo}"
+        end
+
+        def server_host_root
+          @server_host_root ||= begin
+            uri = URI.parse(server.url.to_s)
+            "#{uri.scheme || "https"}://#{uri.host}#{":#{uri.port}" if uri.port && uri.port != uri.default_port}"
+          end
         end
 
         def normalize_search_entry(entry)
@@ -188,7 +208,10 @@ module Ace
             author: entry[:author],
             url: pr_url(entry[:number]),
             draft: nil,
-            merged_at: nil
+            merged_at: nil,
+            head_repository_url: nil,
+            base_repository_url: nil,
+            merge_commit_sha: nil
           )
         end
 

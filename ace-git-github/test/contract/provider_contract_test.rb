@@ -10,7 +10,7 @@ class GithubProviderContractTest < AceGitGithubTestCase
 
   SERVER = Ace::Git::ResolvedServer.new(name: "forge-server", provider: :github, url: "https://github.example.com/owner/repo")
 
-  PR_FIELDS = "number,state,isDraft,title,author,headRefName,baseRefName,url,headRefOid,mergeCommit,mergedAt"
+  PR_FIELDS = "number,state,isDraft,title,author,headRefName,baseRefName,url,headRefOid,mergeCommit,mergedAt,headRepositoryOwner,headRepository"
   LIST_FIELDS = Ace::Git::Github::PrFetcher::LIST_FIELDS
 
   def build_provider(runner)
