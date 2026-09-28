@@ -5,7 +5,7 @@ All notable changes to `ace-herdr` will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.1.0] - 2026-09-27
 
 ### Added
 - `ace-herdr tidy` (spec 8wq.t.1w0): dry-run-by-default cleanup of finished agent panes and delivery records. Pane closure requires positive completion evidence only (observed `done` agent state, or a pane whose native `pane process-info` shows no live foreground process — herdr omits `foreground_processes` when empty) re-confirmed by a fresh probe immediately before the rename-to-`done`-then-close mutation; revived or uncertain candidates are excluded and never mutated. Delivered records strictly older than the new `tidy.delivered_retention_days` config key (default 7) are atomically archived to `deliveries_dir/archive/` after a lock-guarded reload re-proves eligibility; `pending`/`retryable`/`failed` and unreadable records are never touched, an unreadable record encountered during apply is preserved and reported instead of aborting. Archival never breaks delivery idempotency (`deliver`/`--resume` consult the archive copy, so identical re-delivery still short-circuits and conflicts still fail closed). Deterministic one-line JSON report with explicit empty states; an unreachable herdr runtime fails with an explicit error and no partial report.
