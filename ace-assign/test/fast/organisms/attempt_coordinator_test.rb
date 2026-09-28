@@ -193,6 +193,22 @@ module Ace
         assert_equal events[reconciliation_index]["digest"], events[reconciliation_index + 1]["previous_digest"]
       end
 
+      def test_reconcile_recovers_from_journal_after_full_cache_loss
+        coordinator = build_coordinator
+        assignment = create_assignment
+        attempt = coordinator.start(assignment_id: assignment.id, step: "010", project_id: "ace")
+
+        # Entire assignment cache entry vanishes; only the journal remains.
+        FileUtils.rm_rf(File.join(@cache_dir, assignment.id))
+
+        error = assert_raises(AttemptErrors::InvalidState) do
+          coordinator.reconcile(attempt_id: attempt.attempt_id)
+        end
+        # The journal-recorded process (this test process) is live, so
+        # recovery succeeds and classification refuses — not NotFound.
+        assert_includes error.message, "live"
+      end
+
       def test_lost_ownership_race_records_stopped_and_conflicts
         coordinator = build_coordinator
         assignment = create_assignment

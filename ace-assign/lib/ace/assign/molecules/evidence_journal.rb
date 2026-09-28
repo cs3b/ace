@@ -147,6 +147,24 @@ module Ace
           derived_attempts(assignment_id).reject(&:terminal?)
         end
 
+        # Assignment IDs present in the journal, discovered from the evidence
+        # ref itself (works even when the local assignment cache is gone).
+        #
+        # @return [Array<String>] Assignment IDs with journal evidence
+        def assignment_ids
+          value = ref_value
+          return [] if value.nil?
+
+          with_lock do
+            ensure_checkout!
+            sync_checkout(value)
+            Dir.glob(File.join(checkout_dir, "execution", "*"))
+              .select { |path| File.directory?(path) }
+              .map { |path| File.basename(path) }
+              .sort
+          end
+        end
+
         private
 
         # Latest lifecycle state implied by the events, or nil when the
@@ -172,6 +190,10 @@ module Ace
           process_start = events.reverse.find do |event|
             event["type"] == "process_start" && event["attempt_id"] == attempt_id
           end
+          candidate_head = events.select { |event| event["type"] == "receipt_accepted" }
+            .map { |event| event.dig("payload", "receipt", "head") }
+            .compact
+            .first
           binding = Models::AttemptBinding.new(
             attempt_id: attempt_id,
             assignment_id: assignment_id,
@@ -185,7 +207,12 @@ module Ace
             evidence_git_ref: ref,
             created_at: parse_event_time(intent_time(events, attempt_id))
           )
-          Models::Attempt.new(binding: binding, state: state, journal_commit: ref_value)
+          Models::Attempt.new(
+            binding: binding,
+            state: state,
+            candidate_head: candidate_head,
+            journal_commit: ref_value
+          )
         end
 
         def intent_time(events, attempt_id)
@@ -371,12 +398,14 @@ module Ace
           git(*argv)[2].success?
         end
 
-        # Distinguish "ref missing" (normal, quiet, no stderr) from a broken
-        # repository or ref store.
+        # Distinguish "ref missing" (normal, quiet, no stderr) and expected
+        # compare-and-swap conflicts (retryable) from a broken repository or
+        # ref store.
         def git_broken?(stderr)
           message = stderr.to_s.strip
           return false if message.empty?
           return false if message.include?("unknown revision") || message.include?("not a valid ref")
+          return false if message.include?("cannot lock ref") || message.include?("but expected")
 
           true
         end

@@ -10,6 +10,12 @@ module Ace
     class EvidenceJournalTest < AceAssignTestCase
       REF = "refs/ace/execution"
 
+      def with_temp_cache_dir
+        dir = nil
+        with_temp_cache { |cache_dir| dir = cache_dir }
+        dir
+      end
+
       def build_event(type:, attempt_id:, payload:, previous_digest: nil, recorded_at: Time.now.utc)
         Models::EvidenceEvent.build(
           type: type,
@@ -205,6 +211,29 @@ module Ace
             journal.append(assignment_id: "8wrjf", attempt_id: "atj0006", events: [event])
           end
           assert_equal 5, error.exit_code
+        end
+      end
+
+      def test_cas_conflict_stderr_is_retryable_not_fatal
+        journal = Molecules::EvidenceJournal.new(repo_root: Dir.pwd, ref: REF, checkout_root: File.join(with_temp_cache_dir, "co"))
+
+        conflict = "fatal: cannot lock ref 'refs/ace/execution': is at 1111111 but expected 2222222"
+        refute journal.send(:git_broken?, conflict)
+        assert journal.send(:git_broken?, "fatal: could not read from remote repository")
+        refute journal.send(:git_broken?, "")
+      end
+
+      def test_journal_discovers_assignment_ids_from_the_ref
+        with_temp_cache do |cache_dir|
+          repo = File.join(cache_dir, "repo")
+          init_repo(repo)
+          journal = Molecules::EvidenceJournal.new(repo_root: repo, ref: REF, checkout_root: File.join(cache_dir, "co"))
+
+          event = build_event(type: "intent", attempt_id: "ataidi1", payload: {"scope" => "010"})
+          journal.append(assignment_id: "8wraids", attempt_id: "ataidi1", events: [event])
+
+          FileUtils.rm_rf(cache_dir) if false
+          assert_includes journal.assignment_ids, "8wraids"
         end
       end
 

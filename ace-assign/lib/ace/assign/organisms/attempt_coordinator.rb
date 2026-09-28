@@ -240,15 +240,23 @@ module Ace
 
         # Recover a managed attempt from the journal when the local record is
         # missing. With an assignment ID only that journal is consulted;
-        # without one, all managed assignments are scanned (reconcile receives
-        # only the attempt ID).
+        # without one, assignment IDs are discovered from the evidence ref
+        # itself, so a fully lost cache still reconciles.
         def recover_managed_attempt(assignment_id, attempt_id)
-          assignments = assignment_id ? [@manager.load(assignment_id)].compact : @manager.list
+          if assignment_id
+            assignment = @manager.load(assignment_id)
+            # A surviving taskless record never consults the journal; a lost
+            # record falls through to journal evidence (only managed attempts
+            # are journaled).
+            return nil if assignment && !assignment.managed?
 
-          assignments.each do |assignment|
-            next unless assignment.managed?
+            return journal_for.derived_attempts(assignment_id)
+              .find { |candidate| candidate.attempt_id == attempt_id }
+          end
 
-            attempt = journal_for.derived_attempts(assignment.id).find { |candidate| candidate.attempt_id == attempt_id }
+          journal_for.assignment_ids.each do |journal_assignment_id|
+            attempt = journal_for.derived_attempts(journal_assignment_id)
+              .find { |candidate| candidate.attempt_id == attempt_id }
             return attempt if attempt
           end
 

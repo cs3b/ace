@@ -100,15 +100,15 @@ module Ace
         end
 
         # Attempt state for evidence decisions. Managed assignments treat the
-        # journal as authoritative: journal-derived attempts replace local
-        # records with the same ID, and journal-only attempts (lost cache)
-        # still count as active/unresolved.
+        # journal as authoritative: ALL journal-derived attempts (including
+        # terminal states) replace local records with the same ID, so a crash
+        # between journaling and the local save cannot leave stale open state.
         def attempts_for(assignment)
           attempts = store.list(assignment.id)
           return attempts unless assignment.managed?
 
           journal_by_id = {}
-          journal.active_attempts(assignment.id).each { |attempt| journal_by_id[attempt.attempt_id] = attempt }
+          journal.derived_attempts(assignment.id).each { |attempt| journal_by_id[attempt.attempt_id] = attempt }
           merged = attempts.map { |attempt| journal_by_id.delete(attempt.attempt_id) || attempt }
           merged + journal_by_id.values
         end

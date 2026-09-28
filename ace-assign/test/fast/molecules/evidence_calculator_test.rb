@@ -214,6 +214,22 @@ module Ace
         assert_equal "approval-required", evidence[:merge_decision]
       end
 
+      def test_journal_terminal_state_replaces_stale_local_running_record
+        coordinator = build_coordinator
+        assignment = create_assignment
+        attempt = coordinator.start(assignment_id: assignment.id, step: "010", project_id: "ace")
+        accept_receipt(coordinator, attempt, "review", reviewer: "codex")
+
+        # Crash window: local record regressed to running after journaling.
+        coordinator.store.save(Models::Attempt.new(binding: attempt.binding, state: "running"))
+
+        evidence = calculate(auto_merge: true)
+
+        assert_equal "terminal", evidence[:feedback_state]
+        assert_equal "authorized", evidence[:merge_decision]
+        assert_equal "succeeded", evidence[:attempt]["state"]
+      end
+
       def test_review_receipt_without_reviewer_verdict_is_not_current
         coordinator = build_coordinator
         assignment = create_assignment
