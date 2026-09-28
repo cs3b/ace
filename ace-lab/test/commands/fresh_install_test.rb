@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "open3"
+require "etc"
 require_relative "../test_helper"
 
 module Ace
@@ -39,6 +40,70 @@ module Ace
                 verify_broken_topology_classified(env, bin, project_dir)
               ensure
                 FileUtils.rm_f(gem_file)
+              end
+            end
+          end
+
+          # SC2 success behavior through the real installed binary requires
+          # deployment grants at the fixed production path, which only root
+          # can provision. Gated behind an explicit opt-in so it never
+          # mutates a developer machine; skipped elsewhere (review round 15, F2).
+          def test_installed_cli_succeeds_with_controlled_grants
+            unless Process.uid.zero? && ENV["ACE_LAB_TEST_SYSTEM_GRANTS"] == "1"
+              skip "requires root plus ACE_LAB_TEST_SYSTEM_GRANTS=1 on a disposable host to " \
+                   "provision #{Ace::Lab::AUTHORIZATION_PATH}"
+            end
+
+            Dir.mktmpdir do |tmp|
+              gem_home = File.join(tmp, "gems")
+              project_dir = File.join(tmp, "project")
+              gem_file = build_gem(tmp)
+              begin
+                install_gem(gem_file, gem_home)
+                install_workspace_dependencies(tmp, gem_home)
+                write_topology_config(project_dir)
+                bin = File.join(gem_home, "bin", "ace-lab")
+
+                principal = Etc.getpwuid(Process.uid)&.name || Process.uid.to_s
+                FileUtils.mkdir_p(File.dirname(Ace::Lab::AUTHORIZATION_PATH))
+                File.write(Ace::Lab::AUTHORIZATION_PATH, YAML.dump({
+                  "principals" => {principal => {"projects" => %w[atlas borealis]}}
+                }))
+
+                env = launch_env(gem_home, project_dir)
+                out, err, status = run_cli(env, bin, project_dir, "resolve", "--id", "atlas-planner",
+                  "--format", "json")
+                assert status.success?, "resolve must succeed with controlled grants: #{err} #{out}"
+                parsed = JSON.parse(out)
+                assert_equal "ok", parsed["status"]
+                assert_equal "atlas-planner", parsed.dig("data", "entry", "id")
+                assert_equal "available", parsed.dig("data", "entry", "binding", "state")
+
+                # Pane replacement through the installed binary: stale until
+                # re-attested, stable ID unchanged
+                project_config = File.join(project_dir, ".ace", "lab", "config.yml")
+                config = YAML.load_file(project_config)
+                config["topology"]["agents"].first["binding"]["instance_id"] = "pane-replaced-9"
+                File.write(project_config, YAML.dump(config))
+                out, = run_cli(env, bin, project_dir, "resolve", "--id", "atlas-planner", "--format", "json")
+                assert_equal "stale", JSON.parse(out).dig("error", "code")
+
+                config = YAML.load_file(project_config)
+                binding_config = config["topology"]["agents"].first["binding"]
+                binding_config["attested_instance_id"] = "pane-replaced-9"
+                File.write(project_config, YAML.dump(config))
+                out, _, status = run_cli(env, bin, project_dir, "resolve", "--id", "atlas-planner",
+                  "--format", "json")
+                assert status.success?, "re-attested resolve must succeed: #{out}"
+                assert_equal "atlas-planner", JSON.parse(out).dig("data", "entry", "id")
+
+                out, _, status = run_cli(env, bin, project_dir, "route", "--project", "atlas",
+                  "--capability", "search", "--format", "json")
+                assert status.success?, "route must succeed with controlled grants: #{out}"
+                assert_equal "atlas-search", JSON.parse(out).dig("data", "entry", "id")
+              ensure
+                FileUtils.rm_f(gem_file)
+                FileUtils.rm_f(Ace::Lab::AUTHORIZATION_PATH)
               end
             end
           end

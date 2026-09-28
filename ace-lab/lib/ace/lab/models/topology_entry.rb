@@ -21,13 +21,16 @@ module Ace
           end
 
           @kind = kind
-          @id = id
-          @project = project
-          @label = label
-          @role = role
-          @capabilities = capabilities.dup.freeze
-          @default_for = default_for.dup.freeze
-          @endpoint = endpoint && endpoint.dup.freeze
+          # Defensive copies: public projections expose these strings, and a
+          # mutated shared string would corrupt the stable-ID/index invariant
+          # or freshness facts (review round 15, F1)
+          @id = id.dup.freeze
+          @project = project && project.dup.freeze
+          @label = label && label.dup.freeze
+          @role = role && role.dup.freeze
+          @capabilities = capabilities.map(&:dup).freeze
+          @default_for = default_for.map(&:dup).freeze
+          @endpoint = endpoint && endpoint.transform_values(&:dup).freeze
           @binding = binding
           freeze
         end
