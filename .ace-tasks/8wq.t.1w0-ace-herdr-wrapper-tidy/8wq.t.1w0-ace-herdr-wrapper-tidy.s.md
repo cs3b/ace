@@ -1,6 +1,6 @@
 ---
 id: 8wq.t.1w0
-status: pending
+status: in-progress
 priority: medium
 created_at: "2026-09-27 01:15:35"
 estimate: TBD
@@ -8,14 +8,8 @@ dependencies: [8wm.t.vs0]
 tags: [ace-herdr, tidy]
 position: 6o0002
 bundle:
-  presets: ["project"]
-  files:
-    - ace-herdr/lib/ace/herdr/molecules/herdr_executor.rb
-    - ace-herdr/lib/ace/herdr/organisms/control_surface.rb
-    - ace-herdr/lib/ace/herdr/molecules/delivery_record_store.rb
-    - ace-herdr/lib/ace/herdr/models/delivery_record.rb
-    - ace-herdr/lib/ace/herdr/cli/commands/close.rb
-    - ace-herdr/docs/usage.md
+  presets: [project]
+  files: [ace-herdr/lib/ace/herdr/molecules/herdr_executor.rb, ace-herdr/lib/ace/herdr/organisms/control_surface.rb, ace-herdr/lib/ace/herdr/molecules/delivery_record_store.rb, ace-herdr/lib/ace/herdr/models/delivery_record.rb, ace-herdr/lib/ace/herdr/cli/commands/close.rb, ace-herdr/docs/usage.md]
   commands: []
 ---
 
@@ -59,16 +53,16 @@ sobie NIE jest warunkiem zamknięcia pane'u.
 
 ## Kryteria sukcesu
 
-- [ ] `ace-herdr tidy` (dry-run) raportuje kandydatów do sprzątania
+- [x] `ace-herdr tidy` (dry-run) raportuje kandydatów do sprzątania
       (pane'y + rekordy) z zerowym efektem ubocznym; kandydaci
       niepewni (`unknown`, brak odczytu) widoczni jako preserve.
-- [ ] `--apply` zamyka wyłącznie pane'y z dowodem zakończenia
+- [x] `--apply` zamyka wyłącznie pane'y z dowodem zakończenia
       potwierdzonym re-walidacją; failed/retryable rekordy chronione
       bez flagi nadpisującej; delivered starsze niż próg (7d domyślnie)
       archiwizowane.
-- [ ] Test: kandydat, który ożył między discovery a apply, NIE jest
+- [x] Test: kandydat, który ożył między discovery a apply, NIE jest
       zamykany (raport go wyklucza).
-- [ ] Ścieżki błędów: brak runtime herdr → jawny błąd; brak kandydatów →
+- [x] Ścieżki błędów: brak runtime herdr → jawny błąd; brak kandydatów →
       pusty, jawny stan (nie błąd).
 
 ## Implementation Context (review 2026-09-28, post-8wq.t.k84)
