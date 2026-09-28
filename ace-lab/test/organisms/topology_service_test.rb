@@ -299,7 +299,10 @@ module Organisms
       end
 
       # Both together remain valid
-      service = Ace::Lab::Organisms::TopologyService.new(loader: loader, authorizer: authorizer)
+      authorized = Ace::Lab::Molecules::CallerAuthorizer.new(
+        principals: topology_config["authorization"]["principals"], identity: %w[operator]
+      )
+      service = Ace::Lab::Organisms::TopologyService.new(loader: loader, authorizer: authorized)
       assert_predicate service.resolve(id: "atlas-planner"), :ok?
     end
   end
