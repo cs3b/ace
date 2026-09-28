@@ -176,6 +176,13 @@ function createRegistry(pi, ctx, ports) {
     status: statusPort(ctx),
     dispatcher,
     dispatchWindowMs: ports.dispatchWindowMs,
+    isHostIdle: () => {
+      try {
+        return ctx.isIdle();
+      } catch {
+        return false;
+      }
+    },
   });
   registry = built;
   return built;

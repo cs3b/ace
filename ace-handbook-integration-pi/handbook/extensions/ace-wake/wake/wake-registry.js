@@ -46,6 +46,8 @@ export class WakeRegistry {
   #dispatchReleaseTimer;
   /** @private @type {number} */
   #dispatchWindowMs;
+  /** @private @type {(() => boolean) | undefined} */
+  #isHostIdle;
   /** @private @type {{retained: Array<{prefix: string, name: string, message: string}>, stranded: Array<[string, string]>} | undefined} */
   #reconcileBatch;
   /** @private @type {import("./types.js").WakeSnapshot | undefined} */
@@ -59,7 +61,7 @@ export class WakeRegistry {
    * @param {object} ports.status
    * @param {import("./wake-dispatcher.js").WakeDispatcher} ports.dispatcher
    */
-  constructor({ loops, watches, state, status, dispatcher, dispatchWindowMs = 250 }) {
+  constructor({ loops, watches, state, status, dispatcher, dispatchWindowMs = 250, isHostIdle }) {
     this.#loops = loops;
     this.#watches = watches;
     this.#state = state;
@@ -77,6 +79,8 @@ export class WakeRegistry {
     this.#dispatchReleaseTimer;
     /** @private @type {number} */
     this.#dispatchWindowMs = dispatchWindowMs;
+    /** @private @type {(() => boolean) | undefined} */
+    this.#isHostIdle = isHostIdle;
   }
 
   /**
@@ -252,6 +256,7 @@ export class WakeRegistry {
       this.#dispatcher.settleAll();
       this.#closeDispatchWindow();
     }
+    this.#drainRetained();
     this.#watches.flushDirty((watch) => this.#fire(WATCH_SOURCE_PREFIX, watch.name, watch.message));
     this.#refreshStatus();
   }
@@ -388,15 +393,23 @@ export class WakeRegistry {
     this.#dispatchPending = true;
     clearTimeout(this.#dispatchReleaseTimer);
     this.#dispatchReleaseTimer = setTimeout(() => {
-      // The transition window expired without a run starting: the wake was
-      // rejected asynchronously (Pi's void sendUserMessage API reports
-      // failures only via emitError). Reconcile instead of leaving it
-      // stranded: watch fingerprints revert so settlement re-fires their
-      // change, loop pendings clear so the next tick re-attempts, and
-      // serialized sources stay retained until a run starts.
+      // The transition window expired. Reconcile only when no run is active:
+      // an idle host means the wake was rejected asynchronously (Pi's void
+      // sendUserMessage API reports failures only via emitError) — watch
+      // fingerprints revert so settlement re-fires their change, loop
+      // pendings clear so the next tick re-attempts. While a run is active a
+      // pending wake is a legitimately queued follow-up and must stay.
+      let idle = false;
+      try {
+        idle = this.#isHostIdle?.() ?? false;
+      } catch {
+        idle = false;
+      }
       this.#dispatchPending = false;
-      this.#watches.markDispatchUnacknowledged();
-      this.#dispatcher.settleAll();
+      if (idle) {
+        this.#watches.markDispatchUnacknowledged();
+        this.#dispatcher.settleAll();
+      }
       this.#refreshStatus();
     }, this.#dispatchWindowMs);
     this.#dispatchReleaseTimer.unref?.();
