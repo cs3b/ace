@@ -46,24 +46,13 @@ module Ace
     # Load ace-lab configuration using the ADR-022 cascade.
     # Deployed topology lives in .ace/lab/config.yml (project) or
     # ~/.ace/lab/config.yml (user); gem defaults are an empty, safe topology.
-    # Thread-safe: uses mutex for initialization
+    # Deliberately NOT memoized: binding facts (attestations) change on disk,
+    # and a long-lived consumer must never keep serving replaced bindings
+    # from a cached document (review round 7, F1). Cascade reads are small.
     # @return [Hash] Merged configuration hash with defaults
     def self.config
-      return @config if defined?(@config) && @config
-
-      @config_mutex.synchronize do
-        @config ||= load_config
-      end
+      load_config
     end
-
-    # Reset config cache (useful for testing)
-    def self.reset_config!
-      @config_mutex.synchronize do
-        @config = nil
-      end
-    end
-
-    @config_mutex = Mutex.new
 
     # Same discovery the cascade resolver performs for this namespace
     LAB_FILE_PATTERNS = ["lab/config.yml", "lab/config.yaml"].freeze

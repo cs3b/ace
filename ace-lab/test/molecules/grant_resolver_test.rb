@@ -38,7 +38,7 @@ module Molecules
         resolve(trusted_path: path)
       end
 
-      assert_match(/must be owned by root and not writable by group or others/, error.message)
+      assert_match(/failed the deployment ownership verification/, error.message)
     end
 
     def test_unreadable_trusted_file_fails_closed_classified
@@ -55,7 +55,7 @@ module Molecules
               resolve(trusted_path: path)
             end
 
-            assert_match(/could not be read; failing closed/, error.message)
+            assert_match(/failed the deployment ownership verification/, error.message)
           end
         end
       end
@@ -112,6 +112,34 @@ module Molecules
       end
 
       assert_match(/must contain a YAML mapping/, error.message)
+    end
+  end
+end
+
+module Molecules
+  class GrantResolverRaceTest < Minitest::Test
+    def topology
+      Ace::Lab::Atoms::TopologySchema.normalize!(topology_config)["topology"]
+    end
+
+    def test_lstat_race_during_verification_fails_closed_classified
+      # A directory disappearing or changing permissions between realpath
+      # and lstat must classify, never raise past the query boundary
+      # (review round 7, F2)
+      path = File.join(Dir.mktmpdir, "authorization.yml")
+      File.write(path, YAML.dump({"principals" => {}}))
+
+      File.stub :realpath, path do
+        File.stub :lstat, ->(_dir) { raise Errno::ENOENT } do
+          error = assert_raises(Ace::Lab::InvalidConfigurationError) do
+            Ace::Lab::Molecules::GrantResolver.resolve(
+              documents: [], topology: topology, trusted_path: path
+            )
+          end
+
+          assert_match(/failed the deployment ownership verification/, error.message)
+        end
+      end
     end
   end
 end

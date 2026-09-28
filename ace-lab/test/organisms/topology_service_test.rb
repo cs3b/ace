@@ -97,18 +97,13 @@ module Organisms
         FileUtils.mkdir_p(config_dir)
         File.write(File.join(config_dir, "config.yml"), "schema_version: [")
 
-        Ace::Lab.reset_config!
-        begin
-          Dir.chdir(dir) do
-            result = Ace::Lab::Organisms::TopologyService.from_config.projects
+        Dir.chdir(dir) do
+          result = Ace::Lab::Organisms::TopologyService.from_config.projects
 
-            # Broken deployed config must report invalid_configuration, never
-            # degrade to an empty-topology authorization denial (review R4)
-            refute_predicate result, :ok?
-            assert_equal "invalid_configuration", result.error_code
-          end
-        ensure
-          Ace::Lab.reset_config!
+          # Broken deployed config must report invalid_configuration, never
+          # degrade to an empty-topology authorization denial (review R4)
+          refute_predicate result, :ok?
+          assert_equal "invalid_configuration", result.error_code
         end
       end
     end
@@ -119,19 +114,14 @@ module Organisms
         FileUtils.mkdir_p(config_dir)
         File.write(File.join(config_dir, "config.yml"), "- broken")
 
-        Ace::Lab.reset_config!
-        begin
-          Dir.chdir(dir) do
-            result = Ace::Lab::Organisms::TopologyService.from_config.projects
+        Dir.chdir(dir) do
+          result = Ace::Lab::Organisms::TopologyService.from_config.projects
 
-            # A non-mapping document must fail configuration loading, never
-            # merge as a silent empty overlay (review round 3, F1)
-            refute_predicate result, :ok?
-            assert_equal "invalid_configuration", result.error_code
-            assert_match(/must contain a YAML mapping/, result.message)
-          end
-        ensure
-          Ace::Lab.reset_config!
+          # A non-mapping document must fail configuration loading, never
+          # merge as a silent empty overlay (review round 3, F1)
+          refute_predicate result, :ok?
+          assert_equal "invalid_configuration", result.error_code
+          assert_match(/must contain a YAML mapping/, result.message)
         end
       end
     end
@@ -142,18 +132,13 @@ module Organisms
         FileUtils.mkdir_p(config_dir)
         File.write(File.join(config_dir, "config.yml"), "secret: *private_token_canary")
 
-        Ace::Lab.reset_config!
-        begin
-          Dir.chdir(dir) do
-            result = Ace::Lab::Organisms::TopologyService.from_config.projects
+        Dir.chdir(dir) do
+          result = Ace::Lab::Organisms::TopologyService.from_config.projects
 
-            refute_predicate result, :ok?
-            assert_equal "invalid_configuration", result.error_code
-            # Parser text may quote anchors/values; the public message must not
-            refute_includes result.message, "private_token_canary"
-          end
-        ensure
-          Ace::Lab.reset_config!
+          refute_predicate result, :ok?
+          assert_equal "invalid_configuration", result.error_code
+          # Parser text may quote anchors/values; the public message must not
+          refute_includes result.message, "private_token_canary"
         end
       end
     end
@@ -174,20 +159,15 @@ module Organisms
       Dir.mktmpdir do |project|
         write_lab_config(project, deployment_config) # includes authorization
 
-        Ace::Lab.reset_config!
-        begin
-          Dir.chdir(project) do
-            result = Ace::Lab::Organisms::TopologyService.from_config.projects
+        Dir.chdir(project) do
+          result = Ace::Lab::Organisms::TopologyService.from_config.projects
 
-            # A caller-writable cascade tier must never define grants; the
-            # error points operators at the trusted channel (review F3)
-            refute_predicate result, :ok?
-            assert_equal "invalid_configuration", result.error_code
-            assert_match(/grants come from the trusted file/, result.message)
-            assert_match(/remove the authorization section/, result.message)
-          end
-        ensure
-          Ace::Lab.reset_config!
+          # A caller-writable cascade tier must never define grants; the
+          # error points operators at the trusted channel (review F3)
+          refute_predicate result, :ok?
+          assert_equal "invalid_configuration", result.error_code
+          assert_match(/grants come from the trusted file/, result.message)
+          assert_match(/remove the authorization section/, result.message)
         end
       end
     end
@@ -196,27 +176,22 @@ module Organisms
       Dir.mktmpdir do |project|
         write_lab_config(project, deployment_config(with_authorization: false))
 
-        Ace::Lab.reset_config!
-        begin
-          Dir.chdir(project) do
-            # The production trust boundary (fixed root-owned file) is not
-            # exercisable in tests; this stubs the seam to prove the service
-            # wires resolver grants into caller authorization. Resolver
-            # internals, including ownership verification, have their own
-            # tests. (review round 5, F1)
-            Ace::Lab.stub :authorization_path, "/etc/lab/ace-lab/authorization.yml" do
-              Ace::Lab::Molecules::GrantResolver.stub :resolve, {"principals" => {
-                Ace::Lab::Molecules::CallerAuthorizer.local_identity.first => {"projects" => %w[atlas borealis]}
-              }} do
-                result = Ace::Lab::Organisms::TopologyService.from_config.projects
+        Dir.chdir(project) do
+          # The production trust boundary (fixed root-owned file) is not
+          # exercisable in tests; this stubs the seam to prove the service
+          # wires resolver grants into caller authorization. Resolver
+          # internals, including ownership verification, have their own
+          # tests. (review round 5, F1)
+          Ace::Lab.stub :authorization_path, "/etc/lab/ace-lab/authorization.yml" do
+            Ace::Lab::Molecules::GrantResolver.stub :resolve, {"principals" => {
+              Ace::Lab::Molecules::CallerAuthorizer.local_identity.first => {"projects" => %w[atlas borealis]}
+            }} do
+              result = Ace::Lab::Organisms::TopologyService.from_config.projects
 
-                assert_predicate result, :ok?
-                assert_equal %w[atlas borealis], result.data["projects"].map { |p| p["id"] }
-              end
+              assert_predicate result, :ok?
+              assert_equal %w[atlas borealis], result.data["projects"].map { |p| p["id"] }
             end
           end
-        ensure
-          Ace::Lab.reset_config!
         end
       end
     end
@@ -225,18 +200,44 @@ module Organisms
       Dir.mktmpdir do |project|
         write_lab_config(project, deployment_config(with_authorization: false))
 
-        Ace::Lab.reset_config!
-        begin
-          Ace::Lab.stub :authorization_path, "/nonexistent/lab/authorization.yml" do
-            Dir.chdir(project) do
-              result = Ace::Lab::Organisms::TopologyService.from_config.projects
+        Ace::Lab.stub :authorization_path, "/nonexistent/lab/authorization.yml" do
+          Dir.chdir(project) do
+            result = Ace::Lab::Organisms::TopologyService.from_config.projects
 
-              refute_predicate result, :ok?
-              assert_equal "unauthorized", result.error_code
+            refute_predicate result, :ok?
+            assert_equal "unauthorized", result.error_code
+          end
+        end
+      end
+    end
+
+    def test_on_disk_topology_updates_apply_without_cache_invalidation
+      Dir.mktmpdir do |project|
+        write_lab_config(project, deployment_config(with_authorization: false))
+        identity = Ace::Lab::Molecules::CallerAuthorizer.local_identity.first
+
+        Ace::Lab.stub :authorization_path, "/nonexistent/lab/authorization.yml" do
+          Ace::Lab::Molecules::GrantResolver.stub :resolve, {"principals" => {
+            identity => {"projects" => ["atlas"]}
+          }} do
+            Dir.chdir(project) do
+              service = Ace::Lab::Organisms::TopologyService.from_config
+
+              fresh = service.resolve(id: "atlas-planner")
+              assert_equal "available", fresh.data["entry"]["binding"]["state"]
+
+              # Replace the process binding on disk; the SAME service must
+              # serve the new facts — no cache invalidation call exists
+              # (review round 7, F1)
+              changed = deployment_config(with_authorization: false)
+              changed["topology"]["agents"].first["binding"]["instance_id"] = "pane-replaced-9"
+              write_lab_config(project, changed)
+
+              stale = service.resolve(id: "atlas-planner")
+
+              assert_equal "stale", stale.error_code
             end
           end
-        ensure
-          Ace::Lab.reset_config!
         end
       end
     end

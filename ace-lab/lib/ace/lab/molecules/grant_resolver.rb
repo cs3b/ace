@@ -39,8 +39,9 @@ module Ace
           private
 
           def verify_error(path)
-            "invalid lab configuration: trusted authorization file #{path} must be owned by root " \
-              "and not writable by group or others, including every directory on its real path"
+            "invalid lab configuration: trusted authorization file #{path} failed the deployment " \
+              "ownership verification or could not be read; failing closed " \
+              "(required: root-owned, not group/world-writable, including every directory on its real path)"
           end
 
           # Read the grants document only after proving the deployment owns
@@ -48,7 +49,8 @@ module Ace
           # must be root-owned and not group/world-writable, and the file is
           # opened with O_NOFOLLOW then re-verified via fstat. Genuine
           # absence is nil (nobody authorized); every other filesystem
-          # failure classifies fail-closed (review round 6, F2).
+          # failure — including races between realpath, lstat, and open —
+          # classifies fail-closed (review rounds 6-7, F2).
           # @return [String, nil] file content, or nil when absent
           def read_verified(path)
             real = begin
@@ -59,9 +61,9 @@ module Ace
               raise Ace::Lab::InvalidConfigurationError, verify_error(path)
             end
 
-            verify_path_ownership!(real, path)
-
             begin
+              verify_path_ownership!(real, path)
+
               io = File.open(real, File::RDONLY | File::NOFOLLOW)
               begin
                 raise Ace::Lab::InvalidConfigurationError, verify_error(path) unless secure_file_stat?(io.stat)
@@ -73,9 +75,7 @@ module Ace
             rescue Ace::Lab::InvalidConfigurationError
               raise
             rescue
-              raise Ace::Lab::InvalidConfigurationError,
-                "invalid lab configuration: trusted authorization file #{path} could not be read; " \
-                "failing closed"
+              raise Ace::Lab::InvalidConfigurationError, verify_error(path)
             end
           end
 
