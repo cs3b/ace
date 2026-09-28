@@ -1,0 +1,58 @@
+# frozen_string_literal: true
+
+require_relative "../test_helper"
+
+module Organisms
+  class TopologyServiceTest < Minitest::Test
+    def config_for_local_identity(projects: %w[atlas borealis])
+      config = topology_config
+      config["authorization"]["principals"] = {
+        Ace::Lab::Molecules::CallerAuthorizer.local_identity.first => {"projects" => projects}
+      }
+      config
+    end
+
+    def test_from_config_authorizes_the_verified_local_identity
+      result = Ace::Lab::Organisms::TopologyService.from_config(config_for_local_identity).projects
+
+      assert_predicate result, :ok?
+      assert_equal %w[atlas borealis], result.data["projects"].map { |p| p["id"] }
+    end
+
+    def test_resolve_routes_through_authorized_exact_resolution
+      result = Ace::Lab::Organisms::TopologyService.from_config(
+        config_for_local_identity(projects: ["atlas"])
+      ).resolve(id: "atlas-planner")
+
+      assert_predicate result, :ok?
+      assert_equal "atlas-planner", result.data["entry"]["id"]
+    end
+
+    def test_local_identity_outside_principals_is_unauthorized
+      result = Ace::Lab::Organisms::TopologyService.from_config(topology_config).projects
+
+      refute_predicate result, :ok?
+      assert_equal "unauthorized", result.error_code
+    end
+
+    def test_invalid_configuration_is_a_classified_result
+      broken = topology_config
+      broken["topology"]["agents"].first["project"] = "ghost"
+
+      result = Ace::Lab::Organisms::TopologyService.from_config(broken).projects
+
+      refute_predicate result, :ok?
+      assert_equal "invalid_configuration", result.error_code
+      assert_match(/unknown project/, result.message)
+    end
+
+    def test_invalid_configuration_classifies_every_command
+      broken = topology_config
+      broken["topology"]["services"].first["capabilities"] = []
+
+      service = Ace::Lab::Organisms::TopologyService.from_config(broken)
+      refute_predicate service.resolve(id: "atlas-planner"), :ok?
+      refute_predicate service.agents(project: "atlas"), :ok?
+    end
+  end
+end

@@ -17,6 +17,16 @@ require "yaml"
 require "json"
 
 module LabTestHelper
+  # Rekey authorization principals to the verified local process identity so
+  # services built through TopologyService.from_config authorize this process
+  def authorized_for_local(config, projects = nil)
+    projects ||= config["topology"]["projects"].map { |p| p["id"] }
+    config["authorization"]["principals"] = {
+      Ace::Lab::Molecules::CallerAuthorizer.local_identity.first => {"projects" => projects}
+    }
+    config
+  end
+
   # Valid multi-project topology used as a base by query-level tests. Tests
   # deep-modify a dup of this hash; never mutate it in place.
   def topology_config

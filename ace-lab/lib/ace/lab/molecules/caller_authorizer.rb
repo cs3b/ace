@@ -40,14 +40,12 @@ module Ace
           end.uniq
         end
 
-        # @return [Boolean] true when the caller may see the project
-        def authorized?(project_id)
-          authorized_project_ids.include?(project_id)
-        end
+        # @return [Boolean] true when the caller may see the project; without
+        #   an argument, true when the caller may see anything at all
+        def authorized?(project_id = nil)
+          return authorized_project_ids.any? if project_id.nil?
 
-        # @return [Boolean] true when the caller may see anything at all
-        def authorized?
-          !authorized_project_ids.empty?
+          authorized_project_ids.include?(project_id)
         end
       end
     end
