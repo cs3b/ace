@@ -58,3 +58,7 @@ ace-test ace-test all
 ## Note on execution
 
 For the actual CLI for running tests, use `ace-test-runner` (not part of this package).
+
+## Hermetic test execution
+
+`ace-test` and `ace-test-suite` (owned by [ace-test-runner](../ace-test-runner)) run package tests hermetically by default: test children start from a documented minimal environment with fixture-owned `HOME`/XDG directories, so results never depend on ambient Lab environment variables, sockets, or user configuration. Fixture-specific values are declared through runner configuration (`environment.overrides` in `.ace/test/runner.yml`), and live integration remains opt-in through the E2E entrypoints with explicit target configuration. See the [runner contract](../ace-test-runner/docs/usage.md) for the preserved-key allowlist, blocked categories, and setup-error semantics.

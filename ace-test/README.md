@@ -43,6 +43,8 @@ This package is **fast-only** in the ACE testing model.
 - Deterministic coverage lives under `test/fast/`.
 - This migration does not introduce `test/feat/` or `test/e2e/` for this package.
 
+Package tests run through [ace-test-runner](../ace-test-runner), which is the owner of execution isolation: `ace-test` and `ace-test-suite` are hermetic by default, so test behavior never depends on ambient Lab environment, sockets, or user configuration. Fixture-specific values are supplied through runner configuration; live integration stays opt-in through the E2E entrypoints.
+
 Verification commands:
 
 - `ace-test ace-test`
