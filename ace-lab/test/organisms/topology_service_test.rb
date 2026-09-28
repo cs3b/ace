@@ -65,5 +65,52 @@ module Organisms
       refute_predicate service.resolve(id: "atlas-planner"), :ok?
       refute_predicate service.agents(project: "atlas"), :ok?
     end
+
+    def test_principal_with_empty_policy_denies_without_crashing
+      config = topology_config
+      config["authorization"]["principals"] = {
+        Ace::Lab::Molecules::CallerAuthorizer.local_identity.first => {}
+      }
+
+      result = Ace::Lab::Organisms::TopologyService.from_config(config).projects
+
+      refute_predicate result, :ok?
+      assert_equal "unauthorized", result.error_code
+    end
+
+    def test_padded_principal_names_normalize_before_authorization
+      config = topology_config
+      identity = Ace::Lab::Molecules::CallerAuthorizer.local_identity.first
+      config["authorization"]["principals"] = {
+        " #{identity} " => {"projects" => ["atlas"]}
+      }
+
+      result = Ace::Lab::Organisms::TopologyService.from_config(config).projects
+
+      assert_predicate result, :ok?
+      assert_equal %w[atlas], result.data["projects"].map { |p| p["id"] }
+    end
+
+    def test_malformed_deployed_yaml_classifies_not_falls_back
+      Dir.mktmpdir do |dir|
+        config_dir = File.join(dir, ".ace", "lab")
+        FileUtils.mkdir_p(config_dir)
+        File.write(File.join(config_dir, "config.yml"), "schema_version: [")
+
+        Ace::Lab.reset_config!
+        begin
+          Dir.chdir(dir) do
+            result = Ace::Lab::Organisms::TopologyService.from_config.projects
+
+            # Broken deployed config must report invalid_configuration, never
+            # degrade to an empty-topology authorization denial (review R4)
+            refute_predicate result, :ok?
+            assert_equal "invalid_configuration", result.error_code
+          end
+        ensure
+          Ace::Lab.reset_config!
+        end
+      end
+    end
   end
 end

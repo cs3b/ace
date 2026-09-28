@@ -45,10 +45,10 @@ module Ace
             raise invalid("topology must be a mapping") unless raw.nil? || raw.is_a?(Hash)
 
             raw ||= {}
-            projects = raw["projects"].to_a.map { |entry| normalized_project(entry) }
+            projects = require_array(raw["projects"], "topology.projects").map { |entry| normalized_project(entry) }
             project_ids = projects.map { |p| p["id"] }
-            agents = raw["agents"].to_a.map { |entry| normalized_agent(entry, project_ids) }
-            services = raw["services"].to_a.map { |entry| normalized_service(entry, project_ids) }
+            agents = require_array(raw["agents"], "topology.agents").map { |entry| normalized_agent(entry, project_ids) }
+            services = require_array(raw["services"], "topology.services").map { |entry| normalized_service(entry, project_ids) }
 
             ensure_globally_unique!(projects, agents, services)
 
@@ -125,7 +125,8 @@ module Ace
               name = require_non_empty(principal, "authorization principal name")
               raise invalid("authorization policy for principal #{name.inspect} must be a mapping") unless policy.is_a?(Hash)
 
-              allowed = policy["projects"].to_a.map do |project|
+              allowed = require_array(policy["projects"],
+                "authorization projects for principal #{name.inspect}").map do |project|
                 unless project_ids.include?(project)
                   raise invalid("principal #{name.inspect} references unknown project #{project.inspect}")
                 end
@@ -140,6 +141,15 @@ module Ace
 
           def require_id(value, kind)
             require_non_empty(value, "#{kind} id")
+          end
+
+          # Malformed collections must classify as invalid_configuration, not
+          # crash with NoMethodError/TypeError mid-iteration (review R2)
+          def require_array(value, what)
+            return [] if value.nil?
+            raise invalid("#{what} must be an array") unless value.is_a?(Array)
+
+            value
           end
 
           def require_project_ref(value, context, project_ids)

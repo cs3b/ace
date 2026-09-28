@@ -64,8 +64,12 @@ module Ace
 
     @config_mutex = Mutex.new
 
-    # Load configuration using Ace::Support::Config cascade
+    # Load configuration using Ace::Support::Config cascade.
+    # Load failures raise InvalidConfigurationError (classified by the query
+    # boundary) — silently falling back to empty defaults would misreport
+    # broken deployed configuration as an authorization denial (review R4).
     # @return [Hash] Merged configuration
+    # @raise [Ace::Lab::InvalidConfigurationError]
     def self.load_config
       resolver = Ace::Support::Config.create(
         config_dir: ".ace",
@@ -74,23 +78,11 @@ module Ace
       )
 
       resolver.resolve_namespace("lab").data
+    rescue Ace::Lab::InvalidConfigurationError
+      raise
     rescue => e
-      warn "ace-lab: Could not load config: #{e.class} - #{e.message}" if debug?
-      load_gem_defaults_fallback
+      raise InvalidConfigurationError, "invalid lab configuration: #{e.class}: #{e.message}"
     end
     private_class_method :load_config
-
-    # Load gem defaults directly as fallback
-    # @return [Hash] Defaults hash or empty hash
-    def self.load_gem_defaults_fallback
-      defaults_path = File.join(gem_root, ".ace-defaults", "lab", "config.yml")
-      return {} unless File.exist?(defaults_path)
-
-      require "yaml"
-      YAML.safe_load_file(defaults_path, permitted_classes: [Date], aliases: true) || {}
-    rescue
-      {}
-    end
-    private_class_method :load_gem_defaults_fallback
   end
 end

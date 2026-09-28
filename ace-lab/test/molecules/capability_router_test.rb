@@ -48,6 +48,18 @@ module Molecules
       assert_equal "atlas-search", result.data["entry"]["id"]
     end
 
+    def test_conflicting_defaults_are_ambiguous_not_first_wins
+      config = topology_config
+      config["topology"]["services"].first["default_for"] = ["search"]
+      config["topology"]["services"][1]["default_for"] = ["search"]
+
+      result = router_for("operator", config).route(project: "atlas", capability: "search")
+
+      # Two configured defaults are a configuration conflict, not a silent
+      # preference for whichever entry comes first (review R1)
+      assert_equal "ambiguous", result.error_code
+    end
+
     def test_stale_candidates_are_not_routed
       config = topology_config
       config["topology"]["services"].first["binding"]["state"] = "inactive"

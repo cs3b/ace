@@ -26,9 +26,11 @@ module Ace
             )
           end
           if !entry.project? && !@authorizer.authorized?(entry.project)
+            # No project disclosure: the configured project is topology the
+            # caller is not authorized to see (review R6). The requested ID
+            # is echoed because the caller supplied it.
             return Models::QueryResult.failure(
-              "unauthorized", "caller is not authorized for project #{entry.project.inspect}",
-              id: id, project: entry.project
+              "unauthorized", "caller is not authorized to resolve stable ID #{id.inspect}", id: id
             )
           end
 

@@ -6,8 +6,8 @@ module Ace
       # Project-local capability routing (spec 8wq.t.1w4). Candidates are
       # configured capable services of the requested project with fresh
       # bindings — never services from another project, never stale entries.
-      # Exactly one candidate routes directly; several require a configured
-      # default; otherwise the result is classified ambiguous.
+      # Exactly one candidate routes directly; several require exactly one
+      # configured default; otherwise the result is classified ambiguous.
       class CapabilityRouter
         # @param index [Molecules::TopologyIndex]
         # @param authorizer [Molecules::CallerAuthorizer]
@@ -42,14 +42,16 @@ module Ace
             return Models::QueryResult.ok("entry" => Atoms::PublicProjection.service(candidates.first))
           end
 
-          selected = candidates.find { |service| service.default_for.include?(capability) }
-          if selected
-            Models::QueryResult.ok("entry" => Atoms::PublicProjection.service(selected))
+          # Conflicting defaults are not a preference: exactly one configured
+          # default may win, several classify ambiguous (review R1)
+          defaults = candidates.select { |service| service.default_for.include?(capability) }
+          if defaults.length == 1
+            Models::QueryResult.ok("entry" => Atoms::PublicProjection.service(defaults.first))
           else
             Models::QueryResult.failure(
               "ambiguous",
               "multiple capable services in project #{project.inspect} for capability #{capability.inspect}: " \
-                "#{candidates.map(&:id).join(", ")}; configure default_for to disambiguate",
+                "#{candidates.map(&:id).join(", ")}; configure default_for on exactly one to disambiguate",
               project: project, capability: capability
             )
           end

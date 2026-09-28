@@ -47,12 +47,15 @@ module Molecules
       assert_nil result.data
     end
 
-    def test_unauthorized_project_entry_is_unauthorized
+    def test_unauthorized_entry_discloses_no_project
       result = resolver_for("intern").resolve("atlas-planner")
 
+      # The configured project is topology the caller cannot see; the error
+      # names nothing beyond the ID the caller itself supplied (review R6)
       refute_predicate result, :ok?
       assert_equal "unauthorized", result.error_code
-      assert_nil result.data
+      refute_includes result.message, "project"
+      assert_empty result.context.reject { |key, _| key.to_s == "id" }
     end
 
     def test_project_id_resolves_for_authorized_caller

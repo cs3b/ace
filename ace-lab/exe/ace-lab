@@ -1,13 +1,14 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-require "bundler/setup"
 require "ace/lab"
 
 # No args -> show help
 args = ARGV.empty? ? ["--help"] : ARGV
 
-# Start CLI with exception-based exit code handling (per ADR-023)
+# Start CLI with exception-based exit code handling (per ADR-023).
+# No bundler/setup here: an installed gem must run without a Gemfile;
+# use `bundle exec` in development to resolve workspace sources.
 begin
   exit_code = Ace::Lab::CLI.start(args)
   exit(exit_code) if exit_code.is_a?(Integer) && exit_code.nonzero?

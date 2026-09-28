@@ -190,5 +190,37 @@ module Atoms
       assert_nil binding["instance_id"]
       assert_nil binding["attested_instance_id"]
     end
+
+    def test_malformed_topology_collections_classify_as_invalid_configuration
+      %w[projects agents services].each do |key|
+        config = topology_config
+        config["topology"][key] = (key == "projects") ? "atlas" : 42
+
+        error = assert_raises(Ace::Lab::InvalidConfigurationError) do
+          Ace::Lab::Atoms::TopologySchema.normalize!(config)
+        end
+        assert_match(/topology\.#{key} must be an array/, error.message)
+      end
+    end
+
+    def test_malformed_collection_hashes_are_rejected_not_converted
+      config = topology_config
+      config["topology"]["agents"] = {"id" => "sneaky"}
+
+      error = assert_raises(Ace::Lab::InvalidConfigurationError) do
+        Ace::Lab::Atoms::TopologySchema.normalize!(config)
+      end
+      assert_match(/topology\.agents must be an array/, error.message)
+    end
+
+    def test_malformed_principal_projects_classify_as_invalid_configuration
+      config = topology_config
+      config["authorization"]["principals"]["operator"]["projects"] = "atlas"
+
+      error = assert_raises(Ace::Lab::InvalidConfigurationError) do
+        Ace::Lab::Atoms::TopologySchema.normalize!(config)
+      end
+      assert_match(/authorization projects for principal "operator" must be an array/, error.message)
+    end
   end
 end
