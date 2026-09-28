@@ -122,6 +122,7 @@ module Ace
             attempt = @store.load(assignment_id, attempt_id) || recover_managed_attempt(assignment_id, attempt_id)
             raise AttemptErrors::NotFound, "Attempt '#{attempt_id}' not found" unless attempt
 
+            ensure_journal_consistent!(attempt) if attempt.managed?
             raise AttemptErrors::InvalidState, "Attempt #{attempt_id} is terminal; accepted history is immutable" if attempt.terminal?
             raise AttemptErrors::InvalidState, "Attempt #{attempt_id} is uncertain; reconcile before finishing" if attempt.uncertain?
 
@@ -197,19 +198,19 @@ module Ace
 
         private
 
-        # Attempt IDs must be unique per assignment: records and journal
-        # events are keyed by them. Allocation happens under the assignment
-        # lock and also avoids IDs already present in the journal.
+        # Attempt IDs must be unique per assignment AND globally: records,
+        # journal events, and reconciliation lookups key on them. Allocation
+        # runs under the assignment lock, avoids journal-known IDs, and
+        # claims the ID atomically in the cross-assignment registry.
         def unique_attempt_id(assignment_id, taken_ids = [])
-          taken = taken_ids.dup
           base = Ace::B36ts.now
           suffix = 0
           100.times do
             candidate = suffix.zero? ? base : "#{base}#{suffix.to_s(36)}"
-            taken << candidate unless taken.include?(candidate)
-            return candidate if @store.load(assignment_id, candidate).nil?
-
             suffix += 1
+            next if taken_ids.include?(candidate)
+            next unless @store.load(assignment_id, candidate).nil?
+            return candidate if @store.reserve_id(candidate)
           end
 
           raise Error, "Failed to generate a unique attempt ID for #{assignment_id} after 100 attempts"
@@ -242,34 +243,53 @@ module Ace
           end
         end
 
-        # Recover a single managed attempt by ID from the journal; nil when
-        # the journal shows no such (non-terminal) attempt.
+        # Recover a managed attempt from the journal when the local record is
+        # missing. With an assignment ID only that journal is consulted;
+        # without one, all managed assignments are scanned (reconcile receives
+        # only the attempt ID).
         def recover_managed_attempt(assignment_id, attempt_id)
-          candidates = if assignment_id
-            [@manager.load(assignment_id)].compact
-          else
-            # Attempt ID alone: scan recent assignments via the store.
-            []
-          end
+          assignments = assignment_id ? [@manager.load(assignment_id)].compact : @manager.list
 
-          candidates.each do |assignment|
+          assignments.each do |assignment|
             next unless assignment.managed?
 
-            events = journal_for.read_events(assignment.id)
-            attempt_events = events.select { |event| event["attempt_id"] == attempt_id }
-            intent = attempt_events.find { |event| event["type"] == "intent" }
-            next unless intent
-
-            state = derive_journal_state(attempt_events)
-            attempt = recover_attempt_from_events(
-              assignment.id, attempt_id, intent["payload"], attempt_events, state
-            )
-            return attempt if state == "running" || state == "uncertain"
-
-            return Models::Attempt.new(binding: attempt.binding, state: state, journal_commit: journal_for.ref_value)
+            attempt = attempt_from_journal(assignment, attempt_id)
+            return attempt if attempt
           end
 
           nil
+        end
+
+        def attempt_from_journal(assignment, attempt_id)
+          events = journal_for.read_events(assignment.id)
+          attempt_events = events.select { |event| event["attempt_id"] == attempt_id }
+          intent = attempt_events.find { |event| event["type"] == "intent" }
+          return nil unless intent
+
+          state = derive_journal_state(attempt_events)
+          recovered = recover_attempt_from_events(assignment.id, attempt_id, intent["payload"], attempt_events, state)
+          return recovered if %w[running uncertain].include?(state)
+
+          Models::Attempt.new(binding: recovered.binding, state: state, journal_commit: journal_for.ref_value)
+        end
+
+        # The journal is authoritative for managed attempts: a crash after a
+        # journaled terminal/uncertain event but before the local save must
+        # not admit contradictory transitions.
+        def ensure_journal_consistent!(attempt)
+          events = journal_for.read_events(attempt.binding.assignment_id)
+            .select { |event| event["attempt_id"] == attempt.attempt_id }
+          return if events.empty?
+
+          journal_state = derive_journal_state(events)
+          if %w[succeeded failed stopped].include?(journal_state)
+            raise AttemptErrors::InvalidState,
+              "Journal shows attempt #{attempt.attempt_id} is #{journal_state}; accepted history is immutable"
+          end
+          return unless journal_state == "uncertain" && !attempt.uncertain?
+
+          raise AttemptErrors::InvalidState,
+            "Journal shows attempt #{attempt.attempt_id} is uncertain; reconcile before finishing"
         end
 
         def derive_journal_state(events)

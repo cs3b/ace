@@ -87,7 +87,9 @@ module Ace
           end
         end
 
-        # Read all journal events recorded for an assignment.
+        # Read all journal events recorded for an assignment, ordered by the
+        # digest chain (never by filename: same-second events sort
+        # alphabetically, which can invert lifecycle order).
         #
         # @param assignment_id [String] Assignment ID
         # @return [Array<Hash>] Parsed events in journal order
@@ -98,7 +100,7 @@ module Ace
           with_lock do
             ensure_checkout!
             sync_checkout(value)
-            event_files(assignment_id).map { |path| JSON.parse(File.read(path)) }
+            order_by_chain(event_files(assignment_id).map { |path| JSON.parse(File.read(path)) })
           end
         rescue JSON::ParserError => e
           raise AttemptErrors::EvidenceUnavailable, "Corrupt journal event for #{assignment_id}: #{e.message}"
@@ -119,6 +121,38 @@ module Ace
 
         def event_files(assignment_id)
           Dir.glob(File.join(checkout_dir, "execution", assignment_id, "events", "*.json")).sort
+        end
+
+        # Order events by following previous_digest links from chain roots;
+        # orphaned events (unknown predecessor) keep filename order after the
+        # resolved chains.
+        def order_by_chain(events)
+          by_digest = {}
+          events.each { |event| by_digest[event["digest"]] = event }
+
+          next_of = {}
+          events.each do |event|
+            previous = event["previous_digest"]
+            next_of[previous] = event if previous && by_digest.key?(previous)
+          end
+
+          roots = events.reject do |event|
+            previous = event["previous_digest"]
+            previous && by_digest.key?(previous)
+          end
+
+          ordered = []
+          visited = {}
+          roots.each do |root|
+            cursor = root
+            while cursor && !visited[cursor["digest"]]
+              visited[cursor["digest"]] = true
+              ordered << cursor
+              cursor = next_of[cursor["digest"]]
+            end
+          end
+
+          ordered + events.reject { |event| visited[event["digest"]] }
         end
 
         def event_filename(event)
@@ -197,12 +231,17 @@ module Ace
         end
 
         # Seed the evidence ref with an empty-tree commit so a worktree can
-        # attach before any real evidence exists.
+        # attach before any real evidence exists. The create is a
+        # compare-and-swap against the zero SHA: a writer that loses the
+        # race keeps the winner's ref instead of resetting it.
         def seed_ref
           empty_tree = git!("mktree").first
           seed = git!("-c", "user.name=ace-assign", "-c", "user.email=ace-assign@localhost",
             "commit-tree", empty_tree, "-m", "seed: ace-assign execution evidence").first
-          git!("update-ref", @ref, seed)
+          _out, stderr, status = git("update-ref", @ref, seed, "0" * 40)
+          return if status.success?
+
+          raise AttemptErrors::EvidenceUnavailable, "Cannot seed evidence ref #{@ref}: #{stderr}" if git_broken?(stderr)
         end
 
         def detached_worktree_at?(path)

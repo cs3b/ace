@@ -150,6 +150,16 @@ module Ace
         end
       end
 
+      def test_reserve_id_is_atomic_across_assignments
+        with_temp_cache do |cache_dir|
+          store = Molecules::AttemptStore.new(cache_base: cache_dir)
+
+          assert store.reserve_id("atrsv01")
+          refute store.reserve_id("atrsv01")
+          assert store.reserve_id("atrsv02")
+        end
+      end
+
       def test_taskless_attempt_reports_local_only_recovery
         with_temp_cache do |cache_dir|
           store = Molecules::AttemptStore.new(cache_base: cache_dir)

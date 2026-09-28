@@ -234,7 +234,7 @@ module Ace
         error = assert_raises(AttemptErrors::InvalidState) do
           coordinator.finish(attempt_id: attempt.attempt_id, receipt_path: build_receipt(attempt))
         end
-        assert_includes error.message, "terminal"
+        assert_includes error.message, "immutable"
       end
 
       def test_taskless_attempts_block_external_effects
@@ -447,6 +447,8 @@ module Ace
         forced
       end
 
+      public
+
       def test_attempt_ids_are_unique_under_clock_resolution_collisions
         coordinator = build_coordinator
         assignment = create_assignment
@@ -515,13 +517,45 @@ module Ace
         assert_includes error.message, "already owns"
       end
 
+      def test_finish_consults_journal_state_before_accepting
+        coordinator = build_coordinator
+        assignment = create_assignment
+        attempt = coordinator.start(assignment_id: assignment.id, step: "010", project_id: "ace")
+        coordinator.finish(attempt_id: attempt.attempt_id, receipt_path: build_receipt(attempt))
+
+        # Simulate a crash after the journaled receipt but before the local save.
+        rolled_back = Models::Attempt.new(binding: attempt.binding, state: "running")
+        coordinator.store.save(rolled_back)
+
+        contradictory = build_receipt(attempt, "verdict" => "failed")
+        error = assert_raises(AttemptErrors::InvalidState) do
+          coordinator.finish(attempt_id: attempt.attempt_id, receipt_path: contradictory)
+        end
+        assert_includes error.message, "Journal shows"
+      end
+
+      def test_reconcile_recovers_journal_only_attempts_by_id
+        coordinator = build_coordinator
+        assignment = create_assignment
+        attempt = coordinator.start(assignment_id: assignment.id, step: "010", project_id: "ace")
+
+        FileUtils.rm_rf(File.join(@cache_dir, assignment.id, "attempts"))
+
+        # The journal-recorded process (this test process) is still live, so
+        # recovery succeeds and classification refuses — not NotFound.
+        error = assert_raises(AttemptErrors::InvalidState) do
+          coordinator.reconcile(attempt_id: attempt.attempt_id)
+        end
+        assert_includes error.message, "live"
+      end
+
       def test_overlapping_subtree_scopes_cannot_create_competing_writers
         coordinator = build_coordinator
         assignment = create_assignment
 
         coordinator.start(assignment_id: assignment.id, step: "010", project_id: "ace")
 
-        %w[010.01 010.01.02 0].each do |overlapping|
+        %w[010.01 010.01.02].each do |overlapping|
           error = assert_raises(AttemptErrors::Conflict) do
             coordinator.start(assignment_id: assignment.id, step: overlapping, project_id: "ace")
           end

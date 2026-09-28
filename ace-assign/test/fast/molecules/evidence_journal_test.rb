@@ -160,6 +160,37 @@ module Ace
         end
       end
 
+      def test_events_are_ordered_by_digest_chain_not_filename
+        with_temp_cache do |cache_dir|
+          repo = File.join(cache_dir, "repo")
+          init_repo(repo)
+          journal = Molecules::EvidenceJournal.new(repo_root: repo, ref: REF, checkout_root: File.join(cache_dir, "co"))
+
+          same_second = Time.utc(2026, 9, 28, 12, 0, 0)
+          intent = build_event(type: "intent", attempt_id: "atchn01", payload: {"scope" => "010"}, recorded_at: same_second)
+          journal.append(assignment_id: "8wrchn", attempt_id: "atchn01", events: [intent])
+
+          transition = build_event(
+            type: "transition", attempt_id: "atchn01", payload: {"from" => "running", "to" => "uncertain"},
+            previous_digest: intent["digest"], recorded_at: same_second
+          )
+          journal.append(assignment_id: "8wrchn", attempt_id: "atchn01", events: [transition])
+
+          # Same second as the transition; filename sort would place the
+          # reconciliation BEFORE the transition ("r" < "t").
+          reconciliation = build_event(
+            type: "reconciliation", attempt_id: "atchn01",
+            payload: {"resolution" => "succeeded", "receipt_digest" => "abc"},
+            previous_digest: transition["digest"], recorded_at: same_second
+          )
+          journal.append(assignment_id: "8wrchn", attempt_id: "atchn01", events: [reconciliation])
+
+          events = journal.read_events("8wrchn")
+          assert_equal %w[intent transition reconciliation], events.map { |e| e["type"] }
+          assert Models::EvidenceEvent.chain_valid?(events)
+        end
+      end
+
       def test_unavailable_repo_fails_closed
         with_temp_cache do |cache_dir|
           journal = Molecules::EvidenceJournal.new(

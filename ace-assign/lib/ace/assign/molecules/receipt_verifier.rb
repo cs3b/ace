@@ -44,6 +44,9 @@ module Ace
           required = %w[attempt_id assignment_id project_id scope operation producer head verdict]
           missing = required.select { |key| data[key].nil? || data[key].to_s.strip.empty? }
           reject("missing required fields: #{missing.join(', ')}") unless missing.empty?
+          unless Models::ExecutionReceipt::VERDICTS.include?(data["verdict"].to_s)
+            reject("unsupported verdict '#{data['verdict']}': must be one of #{Models::ExecutionReceipt::VERDICTS.join(', ')}")
+          end
 
           verify_binding(data, attempt)
           verify_producer(data)

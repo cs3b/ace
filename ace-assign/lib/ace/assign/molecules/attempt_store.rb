@@ -122,6 +122,20 @@ module Ace
           nil
         end
 
+        # Atomically reserve an attempt ID across all assignments
+        # (mkdir-based EEXIST check). Returns false when already taken.
+        #
+        # @param attempt_id [String] Candidate ID
+        # @return [Boolean] True when newly reserved
+        def reserve_id(attempt_id)
+          registry = File.join(@cache_base, ".attempt-ids")
+          FileUtils.mkdir_p(registry)
+          Dir.mkdir(File.join(registry, attempt_id))
+          true
+        rescue Errno::EEXIST
+          false
+        end
+
         # Locate an attempt record by ID across all assignments (used by
         # reconcile, which receives only the attempt ID).
         #

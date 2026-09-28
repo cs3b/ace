@@ -111,7 +111,7 @@ module Ace
           end
 
           assert_equal 5, error.exit_code
-          assert_includes error.message, "terminal"
+          assert_includes error.message, "immutable"
         end
       end
     end

@@ -185,6 +185,35 @@ module Ace
         assert_equal "local_only", evidence[:attempt]["recovery_mode"]
       end
 
+      def test_taskless_assignments_never_authorize_merge
+        coordinator = build_coordinator
+        assignment = create_assignment(managed: false)
+        attempt = coordinator.start(assignment_id: assignment.id, step: "010", project_id: "ace")
+        accept_receipt(coordinator, attempt, "review", reviewer: "codex")
+
+        evidence = calculate(auto_merge: true)
+
+        assert_equal "current", evidence[:review_receipt]
+        assert_equal "approval-required", evidence[:merge_decision]
+      end
+
+      def test_active_attempts_block_authorization_and_keep_feedback_open
+        coordinator = build_coordinator
+        assignment = create_assignment
+        review_attempt = coordinator.start(assignment_id: assignment.id, step: "010", project_id: "ace")
+        accept_receipt(coordinator, review_attempt, "review", reviewer: "codex")
+
+        # A new attempt (next unit of work) is running against the same head.
+        followup = coordinator.start(assignment_id: assignment.id, step: "010.01", project_id: "ace")
+        refute_nil followup
+
+        evidence = calculate(auto_merge: true)
+
+        assert_equal "current", evidence[:review_receipt]
+        assert_equal "open", evidence[:feedback_state]
+        assert_equal "approval-required", evidence[:merge_decision]
+      end
+
       def test_review_receipt_without_reviewer_verdict_is_not_current
         coordinator = build_coordinator
         assignment = create_assignment

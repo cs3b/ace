@@ -41,7 +41,11 @@ module Ace
           unresolved_effects = collect_unresolved_effects(attempts)
           feedback_state = derive_feedback_state(attempts, receipts, head, unresolved_effects)
 
-          merge_decision = if auto_merge && review_receipt == "current" && unresolved_effects.empty?
+          # Authorization requires managed evidence, settled work (no active
+          # attempts), no unresolved effects, and a current independent
+          # review verdict. Taskless assignments never authorize merges.
+          merge_decision = if auto_merge && assignment&.managed? &&
+              review_receipt == "current" && unresolved_effects.empty? && attempts.none?(&:active?)
             "authorized"
           else
             "approval-required"
@@ -130,14 +134,14 @@ module Ace
             .uniq
         end
 
-        # Feedback is derived: uncertain evidence wins, accepted current-head
-        # evidence closes the loop, anything else stays open.
+        # Feedback is derived: uncertain evidence wins, active attempts keep
+        # the loop open, accepted current-head evidence closes it.
         def derive_feedback_state(attempts, receipts, head, unresolved_effects)
           return "unknown" if attempts.empty? && receipts.empty?
 
           return "uncertain" if unresolved_effects.any?
 
-          return "terminal" if receipts.any? do |receipt|
+          return "terminal" if attempts.none?(&:active?) && receipts.any? do |receipt|
             receipt["verdict"] == "succeeded" && receipt["head"] == head
           end
 
