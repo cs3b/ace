@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
-require "bundler/setup"
+# No bundler/setup: the ace-test process has already activated gems from
+# the installed set, and bundler would abort on workspace/installed
+# version skew (same reason test_helper.rb omits it).
 require_relative "../../lib/ace/support/markdown"
 require "tempfile"
 
