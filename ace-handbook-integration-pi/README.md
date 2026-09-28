@@ -21,7 +21,7 @@
 
 **Consume canonical skills from PI tooling** - keep provider-specific behavior while preserving shared semantics, so agents running under pi-agent get the same skill intent as any other provider.
 
-**Run the in-process overseer loop with `/loop`** - the canonical `handbook/prompts/loop.md` template projects to `.pi/prompts/loop.md` (`ace-handbook sync --provider pi`), giving pi a slash command that cycles the task backlog (select → execute via `as-task-work` → verify → report) inside the pi session itself - no tmux windows or external orchestrator.
+**Run the in-process overseer loop with `/work-backlog`** - the canonical `handbook/prompts/work-backlog.md` template projects to `.pi/prompts/work-backlog.md` (`ace-handbook sync --provider pi`), giving pi a slash command that cycles the task backlog (select → execute via `as-task-work` → verify → report) inside the pi session itself - no tmux windows or external orchestrator.
 
 **Keep provider updates constrained** - update projection assets inside this package instead of canonical definitions, keeping changes isolated from [ace-handbook](../ace-handbook).
 
