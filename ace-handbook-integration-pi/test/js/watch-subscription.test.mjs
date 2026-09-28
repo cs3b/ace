@@ -1,7 +1,14 @@
-import assert from "node:assert/strict";
+import * as assert from "node:assert/strict";
+import * as nodeFs from "node:fs";
+import * as nodeOs from "node:os";
+import * as nodePath from "node:path";
 import { describe, it } from "node:test";
 
-import { createWatchPort } from "../../handbook/extensions/wake/watch-subscription.mjs";
+import {
+  createWatchPort,
+  nodeStatFn,
+  nodeWatchFactory,
+} from "../../handbook/extensions/wake/watch-subscription.js";
 import { createFakeHost } from "./fake-pi-host.mjs";
 
 const WATCHED = "/fake/project/dep.txt";
@@ -125,4 +132,81 @@ describe("createWatchPort", () => {
     assert.equal(port.errorOf("dep"), undefined);
     assert.equal(port.activeCount(), 0);
   });
+
+  it("invokes the onDeactivate hook when a runtime error deactivates a watch", () => {
+    const host = createFakeHost();
+    let deactivations = 0;
+    const port = createWatchPort({
+      watchFactory: host.watchFactory,
+      statFn: host.statFn,
+      baseDir: "/fake/project",
+      onDeactivate: () => {
+        deactivations += 1;
+      },
+    });
+    host.setFile(WATCHED, { mtimeMs: 1, size: 1 });
+    port.start({ kind: "watch", name: "dep", path: WATCHED, message: "m" }, () => {});
+
+    host.setFile(WATCHED, { missing: true });
+    host.triggerWatch(WATCHED);
+
+    assert.equal(deactivations, 1, "callers must learn about deactivation to refresh status");
+  });
 });
+
+describe("nodeWatchFactory on the real filesystem", { timeout: 20_000 }, () => {
+  it("keeps waking across atomic replacement of the watched file", async () => {
+    const tmp = nodeFs.mkdtempSync(nodePath.join(nodeOs.tmpdir(), "wake-atomic-"));
+    const target = nodePath.join(tmp, "state.json");
+    nodeFs.writeFileSync(target, "version-1");
+
+    const port = createWatchPort({
+      watchFactory: nodeWatchFactory,
+      statFn: nodeStatFn,
+      baseDir: tmp,
+    });
+    const wakes = [];
+    port.start({ kind: "watch", name: "state", path: target, message: "m" }, () => wakes.push(1));
+
+    const replace = (content) => {
+      const temp = nodePath.join(tmp, `state.json.tmp-${Date.now()}`);
+      nodeFs.writeFileSync(temp, content);
+      nodeFs.renameSync(temp, target);
+    };
+
+    // Direct in-place write.
+    replace("version-2");
+    await waitFor(() => wakes.length === 1);
+    assert.equal(wakes.length, 1, "in-place change must wake");
+
+    // Atomic replacement: a second rename after the first must still wake,
+    // proving the subscription did not stay attached to the original inode.
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    replace("version-3 with different content length");
+    await waitFor(() => wakes.length === 2, { timeoutMs: 10_000 });
+    assert.equal(wakes.length, 2, "atomic replacement must not detach the watch");
+
+    // An unrelated sibling event must not wake.
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    nodeFs.writeFileSync(nodePath.join(tmp, "unrelated.txt"), "noise");
+    await new Promise((resolve) => setTimeout(resolve, 700));
+    assert.equal(wakes.length, 2, "sibling events in the directory must be filtered out");
+
+    port.stopAll();
+    nodeFs.rmSync(tmp, { recursive: true, force: true });
+  });
+});
+
+function waitFor(predicate, { timeoutMs = 10_000, stepMs = 100 } = {}) {
+  return new Promise((resolve) => {
+    const deadline = Date.now() + timeoutMs;
+    const check = () => {
+      if (predicate() || Date.now() > deadline) {
+        resolve(predicate());
+        return;
+      }
+      setTimeout(check, stepMs);
+    };
+    check();
+  });
+}

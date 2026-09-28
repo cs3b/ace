@@ -2,7 +2,7 @@ import {
   LOOP_SOURCE_PREFIX,
   WATCH_SOURCE_PREFIX,
   WakeError,
-} from "./types.mjs";
+} from "./types.js";
 
 /**
  * Session-owned store of named loop and watch subscriptions.
@@ -31,9 +31,9 @@ export class WakeRegistry {
   #state;
   /** @private @type {object} */
   #status;
-  /** @private @type {import("./wake-dispatcher.mjs").WakeDispatcher} */
+  /** @private @type {import("./wake-dispatcher.js").WakeDispatcher} */
   #dispatcher;
-  /** @private @type {import("./types.mjs").WakeSnapshot | undefined} */
+  /** @private @type {import("./types.js").WakeSnapshot | undefined} */
   #loaded;
 
   /**
@@ -42,7 +42,7 @@ export class WakeRegistry {
    * @param {object} ports.watches
    * @param {object} ports.state
    * @param {object} ports.status
-   * @param {import("./wake-dispatcher.mjs").WakeDispatcher} ports.dispatcher
+   * @param {import("./wake-dispatcher.js").WakeDispatcher} ports.dispatcher
    */
   constructor({ loops, watches, state, status, dispatcher }) {
     this.#loops = loops;
@@ -56,7 +56,7 @@ export class WakeRegistry {
    * Register a named recurring timer.
    *
    * @param {{name: string, intervalSeconds: number, message: string}} input
-   * @returns {import("./types.mjs").LoopDefinition}
+   * @returns {import("./types.js").LoopDefinition}
    */
   addLoop(input) {
     const name = requireName(input.name, "loop");
@@ -78,7 +78,7 @@ export class WakeRegistry {
    * Register a named filesystem watch.
    *
    * @param {{name: string, path: string, message: string}} input
-   * @returns {import("./types.mjs").WatchDefinition}
+   * @returns {import("./types.js").WatchDefinition}
    */
   addWatch(input) {
     const name = requireName(input.name, "watch");
@@ -162,7 +162,9 @@ export class WakeRegistry {
   /**
    * Re-register exactly one native handle per persisted definition. Prior
    * handles are disposed first, so reload or restart never duplicates timers
-   * and never replays missed ticks.
+   * and never replays missed ticks. A subscription that fails to restart
+   * (e.g. its watched path vanished) records a visible inactive-error state
+   * and never blocks the remaining subscriptions.
    */
   reconcile() {
     this.#loops.stopAll();
@@ -172,11 +174,24 @@ export class WakeRegistry {
       this.#loops.start(loop, () => this.#fire(LOOP_SOURCE_PREFIX, loop.name, loop.message));
     }
     for (const watch of this.#snapshot.watches) {
-      this.#watches.start(
-        watch,
-        () => this.#fire(WATCH_SOURCE_PREFIX, watch.name, watch.message),
-      );
+      try {
+        this.#watches.start(
+          watch,
+          () => this.#fire(WATCH_SOURCE_PREFIX, watch.name, watch.message),
+        );
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        this.#watches.fail(watch.name, `could not restart watch: ${message}`);
+      }
     }
+    this.#refreshStatus();
+  }
+
+  /**
+   * Re-render the visible subscription status; ports invoke this when runtime
+   * state changes outside a registry call (e.g. a watch deactivates itself).
+   */
+  refreshStatus() {
     this.#refreshStatus();
   }
 
@@ -255,6 +270,15 @@ export function requireName(value, kind) {
 }
 
 /**
+ * Largest interval the host timer layer supports: node:timers clamps delays
+ * above 2^31 - 1 milliseconds down to 1 millisecond, which would turn an
+ * over-large interval into a wake storm, so it is rejected instead.
+ *
+ * @constant {number}
+ */
+export const MAX_INTERVAL_SECONDS = (2 ** 31 - 1) / 1000;
+
+/**
  * @param {unknown} value
  * @returns {number}
  */
@@ -262,6 +286,9 @@ export function requireInterval(value) {
   const interval = typeof value === "string" ? Number(value) : value;
   if (typeof interval !== "number" || !Number.isFinite(interval) || interval <= 0) {
     throw new WakeError(`interval must be a finite number of seconds greater than 0, got ${JSON.stringify(value ?? null)}`);
+  }
+  if (interval > MAX_INTERVAL_SECONDS) {
+    throw new WakeError(`interval must be at most ${MAX_INTERVAL_SECONDS} seconds (~24.9 days), got ${JSON.stringify(value)}`);
   }
   return interval;
 }

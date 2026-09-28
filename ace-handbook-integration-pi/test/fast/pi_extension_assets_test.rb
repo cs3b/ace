@@ -16,21 +16,26 @@ class Ace::Handbook::Integration::PiExtensionAssetsTest < Minitest::Test
   def test_extension_entrypoint_and_modules_ship_in_the_gem
     gem_files = gemspec_file_list
 
-    assert_includes gem_files, "handbook/extensions/ace-wake.mjs"
-    assert_includes gem_files, "handbook/extensions/wake/types.mjs"
-    assert_includes gem_files, "handbook/extensions/wake/wake-dispatcher.mjs"
-    assert_includes gem_files, "handbook/extensions/wake/wake-registry.mjs"
-    assert_includes gem_files, "handbook/extensions/wake/loop-subscription.mjs"
-    assert_includes gem_files, "handbook/extensions/wake/watch-subscription.mjs"
-    assert_includes gem_files, "handbook/extensions/wake/wake-command-parser.mjs"
+    assert_includes gem_files, "handbook/extensions/ace-wake.js"
+    assert_includes gem_files, "handbook/extensions/package.json"
+    assert_includes gem_files, "handbook/extensions/wake/types.js"
+    assert_includes gem_files, "handbook/extensions/wake/wake-dispatcher.js"
+    assert_includes gem_files, "handbook/extensions/wake/wake-registry.js"
+    assert_includes gem_files, "handbook/extensions/wake/loop-subscription.js"
+    assert_includes gem_files, "handbook/extensions/wake/watch-subscription.js"
+    assert_includes gem_files, "handbook/extensions/wake/wake-command-parser.js"
     assert gem_files.grep(%r{^test/js/}).empty?, "test assets must not ship in the gem"
   end
 
-  def test_extension_entrypoint_declares_no_runtime_dependencies_beyond_node_builtins
-    entry = File.read(File.join(@package_root, "handbook", "extensions", "ace-wake.mjs"))
-    modules = entry.scan(/(?:^|\n)\s*import[^"']*["']([^"']+)["']/).flatten
+  def test_extension_entrypoint_uses_the_auto_discoverable_js_extension
+    # Pi's extension discovery only accepts .ts and .js entrypoints; a .mjs
+    # entrypoint would never load unless explicitly passed.
+    assert File.file?(File.join(@package_root, "handbook", "extensions", "ace-wake.js"))
+    refute File.file?(File.join(@package_root, "handbook", "extensions", "ace-wake.mjs"))
+    entry = File.read(File.join(@package_root, "handbook", "extensions", "ace-wake.js"))
 
-    offenders = modules.reject { |name| name.start_with?(".", "node:") }
+    imports = entry.scan(/import\s+[^"']*["']([^"']+)["']/).flatten
+    offenders = imports.reject { |name| name.start_with?(".", "node:") }
     assert_empty offenders, "the extension must rely only on relative modules and node builtins"
   end
 

@@ -9,7 +9,7 @@
  * @param {(callback: () => void, ms: number) => unknown} ports.setIntervalFn
  * @param {(handle: unknown) => void} ports.clearIntervalFn
  * @returns {{
- *   start: (definition: import("./types.mjs").LoopDefinition, onTick: (definition: import("./types.mjs").LoopDefinition) => void) => void,
+ *   start: (definition: import("./types.js").LoopDefinition, onTick: (definition: import("./types.js").LoopDefinition) => void) => void,
  *   stop: (name: string) => void,
  *   stopAll: () => void,
  *   errorOf: (name: string) => string | undefined,

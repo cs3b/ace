@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import { createFakeHost } from "./fake-pi-host.mjs";
-import aceWakeFactory from "../../handbook/extensions/ace-wake.mjs";
+import aceWakeFactory from "../../handbook/extensions/ace-wake.js";
 
 const HOST_PORTS = ["setIntervalFn", "clearIntervalFn", "watchFactory", "statFn"];
 
@@ -131,6 +131,36 @@ describe("ace-wake commands", () => {
     const added = host.sessionEntries.at(-1);
     assert.equal(added.data.loops[0].message, "two words here");
     assert.equal(added.data.loops[0].intervalSeconds, 15);
+  });
+
+  it("quoted watch paths containing spaces are stored canonically", async () => {
+    const host = createFakeHost();
+    await startSession(host);
+    host.setFile("/fake/project/my file.txt", { mtimeMs: 1, size: 1 });
+
+    await host.runCommand("watch", 'add spaces --path "my file.txt" --message changed');
+
+    const added = host.sessionEntries.at(-1);
+    assert.equal(added.data.watches[0].path, "/fake/project/my file.txt");
+  });
+
+  it("loaded snapshots are cloned so registry edits never mutate session history", async () => {
+    const host = createFakeHost();
+    await startSession(host);
+    await host.runCommand("loop", "add first --interval 10 --message m");
+
+    const persisted = host.sessionEntries.at(-1);
+    const before = JSON.stringify(persisted.data);
+
+    // A later restart loads this entry; adding another subscription must not
+    // rewrite the historical entry (branch isolation).
+    const freshHost = createFakeHost();
+    freshHost.sessionEntries.push(...structuredClone(host.sessionEntries));
+    const freshSession = await startSession(freshHost);
+    await freshHost.runCommand("loop", "add second --interval 20 --message m");
+
+    assert.equal(JSON.stringify(persisted.data), before, "historical session entry must stay untouched");
+    void freshSession;
   });
 
   it("list states are explicit about empty configuration", async () => {

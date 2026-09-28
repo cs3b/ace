@@ -7,7 +7,7 @@ All notable changes to ace-handbook-integration-pi will be documented in this fi
 ## [0.5.0] - 2026-09-28
 
 ### Added
-- Shipped the **ace-wake** Pi extension (`handbook/extensions/ace-wake.mjs`, projected to `.pi/extensions/`): session-scoped `/loop` timers and `/watch` file subscriptions that wake the live agent through queued `sendUserMessage` messages only. Wakes are bounded, source-prefixed, coalesce per source while one is queued, and reach busy agents as queued follow-ups that never interrupt an in-flight tool operation. Definitions persist as session entries and reconcile exactly once per session start, reload, or branch switch with no missed-tick replay. No cron, systemd, or external heartbeat dependency.
+- Shipped the **ace-wake** Pi extension (`handbook/extensions/ace-wake.js`, projected to `.pi/extensions/`): session-scoped `/loop` timers and `/watch` file subscriptions that wake the live agent through queued `sendUserMessage` messages only. Wakes are bounded, source-prefixed, coalesce per source while one is queued, and reach busy agents as queued follow-ups that never interrupt an in-flight tool operation. Definitions persist as session entries and reconcile exactly once per session start, reload, or branch switch with no missed-tick replay. No cron, systemd, or external heartbeat dependency.
 - Provider manifest now declares `extensions_dir: .pi/extensions`; `ace-handbook sync` projects extension assets and prunes stale projected files via a projection receipt without touching user-authored extensions.
 
 ### Changed

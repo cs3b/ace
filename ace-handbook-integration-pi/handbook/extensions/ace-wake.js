@@ -18,15 +18,15 @@
 
 import { clearInterval, setInterval } from "node:timers";
 
-import { WakeDispatcher } from "./wake/wake-dispatcher.mjs";
-import { parseWakeCommand } from "./wake/wake-command-parser.mjs";
-import { createLoopPort } from "./wake/loop-subscription.mjs";
-import { createWatchPort, nodeStatFn, nodeWatchFactory } from "./wake/watch-subscription.mjs";
+import { WakeDispatcher } from "./wake/wake-dispatcher.js";
+import { parseWakeCommand } from "./wake/wake-command-parser.js";
+import { createLoopPort } from "./wake/loop-subscription.js";
+import { createWatchPort, nodeStatFn, nodeWatchFactory } from "./wake/watch-subscription.js";
 import {
   SESSION_ENTRY_TYPE,
   WakeError,
-} from "./wake/types.mjs";
-import { WakeRegistry } from "./wake/wake-registry.mjs";
+} from "./wake/types.js";
+import { WakeRegistry } from "./wake/wake-registry.js";
 
 const STATUS_KEY = "ace-wake";
 
@@ -107,7 +107,10 @@ function createRegistry(pi, ctx, ports, getRuntime) {
   const dispatcher = new WakeDispatcher({
     deliver: (sourceKey, text) => deliverWake(getRuntime(), pi, ctx, sourceKey, text),
   });
-  return new WakeRegistry({
+  /** The registry is created after its watch port, so deactivation hooks go
+   * through this holder once it exists. */
+  let registry;
+  const built = new WakeRegistry({
     loops: createLoopPort({
       setIntervalFn: ports.setIntervalFn ?? ((callback, ms) => setInterval(callback, ms)),
       clearIntervalFn: ports.clearIntervalFn ?? ((handle) => clearInterval(handle)),
@@ -116,11 +119,14 @@ function createRegistry(pi, ctx, ports, getRuntime) {
       watchFactory: ports.watchFactory ?? nodeWatchFactory,
       statFn: ports.statFn ?? nodeStatFn,
       baseDir: ctx.cwd,
+      onDeactivate: () => registry?.refreshStatus(),
     }),
     state: sessionStatePort(pi, ctx),
     status: statusPort(ctx),
     dispatcher,
   });
+  registry = built;
+  return built;
 }
 
 /**
@@ -165,7 +171,10 @@ function sessionStatePort(pi, ctx) {
           snapshot = entry.data;
         }
       }
-      return snapshot ?? { loops: [], watches: [] };
+      // getBranch() returns the stored entries themselves; cloning keeps
+      // registry mutations from rewriting historical session entries, which
+      // would leak later edits back into branched-away history.
+      return snapshot ? structuredClone(snapshot) : { loops: [], watches: [] };
     },
     save(snapshot) {
       pi.appendEntry(SESSION_ENTRY_TYPE, snapshot);

@@ -93,14 +93,21 @@ export function createFakeHost() {
 
     commands,
 
-    /** Fire the filesystem change callback of a registered watcher. */
-    triggerWatch(name) {
-      watchers.get(name).onChange();
+    /** Fire the filesystem change callback of the watcher covering path.
+     * The production watchFactory watches the target's parent directory, so
+     * the fake resolves the watcher through the directory too. */
+    triggerWatch(path) {
+      watcherFor(path).onChange();
     },
 
     /** Fail a registered watcher the way node:fs.watch reports runtime errors. */
-    failWatch(name, message) {
-      watchers.get(name).onError(new Error(message));
+    failWatch(path, message) {
+      watcherFor(path).onError(new Error(message));
+    },
+
+    /** The directory watchFactory callbacks receive for a watched file. */
+    watchedDir(path) {
+      return path.slice(0, path.lastIndexOf("/"));
     },
 
     watcherCount() {
@@ -158,6 +165,14 @@ export function createFakeHost() {
   };
 
   // Port: filesystem watcher factory used by the watch subscription.
+  function watcherFor(path) {
+    const watcher = watchers.get(path) ?? watchers.get(path.slice(0, path.lastIndexOf("/")));
+    if (!watcher) {
+      throw new Error(`no watcher registered covering ${path}`);
+    }
+    return watcher;
+  }
+
   const watchFactory = (path, handlers) => {
     const id = nextWatcherId++;
     watchers.set(path, {

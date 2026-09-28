@@ -1,18 +1,19 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { WakeDispatcher } from "../../handbook/extensions/wake/wake-dispatcher.mjs";
+import { WakeDispatcher } from "../../handbook/extensions/wake/wake-dispatcher.js";
 import {
   MAX_WAKE_MESSAGE_CHARS,
-} from "../../handbook/extensions/wake/types.mjs";
+} from "../../handbook/extensions/wake/types.js";
 import {
+  MAX_INTERVAL_SECONDS,
   WakeRegistry,
   loopSourceKey,
   requireInterval,
   requireMessage,
   requireName,
   watchSourceKey,
-} from "../../handbook/extensions/wake/wake-registry.mjs";
+} from "../../handbook/extensions/wake/wake-registry.js";
 import { createFakeHost } from "./fake-pi-host.mjs";
 
 function buildRegistry(host, overrides = {}) {
@@ -135,6 +136,12 @@ describe("wake validation", () => {
     assert.throws(() => requireInterval("abc"), /finite number/);
     assert.throws(() => requireInterval(Number.POSITIVE_INFINITY), /finite number/);
     assert.throws(() => requireInterval(undefined), /finite number/);
+    assert.throws(
+      () => requireInterval(Number.MAX_SAFE_INTEGER),
+      /at most .* seconds/,
+      "intervals beyond the host timer clamp must fail instead of becoming 1ms wake storms",
+    );
+    assert.equal(MAX_INTERVAL_SECONDS, (2 ** 31 - 1) / 1000);
     assert.equal(requireInterval("30"), 30);
     assert.equal(requireInterval(1.5), 1.5);
   });
@@ -328,6 +335,43 @@ describe("WakeRegistry watches", () => {
     assert.equal(stopCalls, 0);
     assert.equal(entries[0].error, "ENOENT: path vanished");
     assert.equal(entries[0].pending, false);
+  });
+
+  it("reconcile isolates a failing watch so other watches still restart", () => {
+    const host = createFakeHost();
+    const failures = new Map();
+    const startedNames = [];
+    const statusRenders = [];
+    const registry = new WakeRegistry({
+      loops: { start: () => {}, stop: () => {}, stopAll: () => {}, errorOf: () => undefined },
+      watches: {
+        start: (definition) => {
+          if (definition.name === "ghost") {
+            throw new Error("ENOENT: stat ghost.txt");
+          }
+          startedNames.push(definition.name);
+        },
+        stop: () => {},
+        stopAll: () => {},
+        fail: (name, message) => failures.set(name, message),
+        errorOf: (name) => failures.get(name),
+      },
+      state: { load: () => ({ loops: [], watches: [
+        { kind: "watch", name: "ghost", path: "/tmp/ghost.txt", message: "m" },
+        { kind: "watch", name: "alive", path: "/tmp/alive.txt", message: "m" },
+      ] }), save: () => {} },
+      status: { render: (entries) => statusRenders.push(entries) },
+      dispatcher: new WakeDispatcher({ deliver: () => true }),
+    });
+
+    registry.reconcile();
+
+    assert.deepEqual(startedNames, ["alive"], "a failed watch must not block later subscriptions");
+    assert.match(failures.get("ghost") ?? "", /could not restart watch.*ENOENT/);
+    const listed = registry.list();
+    assert.match(listed.find((entry) => entry.name === "ghost").error, /could not restart watch/);
+    assert.equal(listed.find((entry) => entry.name === "alive").error, undefined);
+    assert.equal(statusRenders.length, 1, "status must render even when a watch failed to restart");
   });
 });
 

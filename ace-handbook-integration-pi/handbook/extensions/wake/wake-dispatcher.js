@@ -1,4 +1,4 @@
-import { boundMessage } from "./types.mjs";
+import { boundMessage } from "./types.js";
 
 /**
  * Delivers wake messages with per-source coalescing.

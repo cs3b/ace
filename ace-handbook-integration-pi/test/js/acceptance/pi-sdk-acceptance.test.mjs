@@ -1,9 +1,9 @@
 // Installed-extension acceptance for ace-wake on the real Pi runtime.
 //
 // Requires PI_PKG_ROOT (pi-coding-agent package dir) and EXT_PATH (a
-// projected ace-wake.mjs). The Ruby suite projects the package via
+// projected ace-wake.js). The Ruby suite projects the package via
 // ProviderSyncer and invokes this suite against the projected
-// .pi/extensions/ace-wake.mjs, proving the installed artifact — not the
+// .pi/extensions/ace-wake.js, proving the installed artifact — not the
 // source tree — wakes idle and busy agents through queued user messages
 // with no external timer or service.
 import * as assert from "node:assert/strict";
@@ -18,7 +18,7 @@ const EXT_PATH = process.env.EXT_PATH;
 
 if (!PI_PKG_ROOT || !EXT_PATH) {
   throw new Error(
-    "pi-sdk-acceptance requires PI_PKG_ROOT (pi-coding-agent package dir) and EXT_PATH (projected ace-wake.mjs)",
+    "pi-sdk-acceptance requires PI_PKG_ROOT (pi-coding-agent package dir) and EXT_PATH (projected ace-wake.js)",
   );
 }
 
@@ -73,7 +73,15 @@ function streamHandler(script) {
  * Start a hermetic SDK session with the projected ace-wake extension loaded
  * the way pi loads project extensions.
  */
-async function startWakeSession({ script = [], extraFactories = [], extraTools = [] } = {}) {
+/**
+ * Start a hermetic SDK session with the projected ace-wake extension loaded
+ * the way pi loads project extensions.
+ *
+ * `autoDiscover` omits additionalExtensionPaths so discovery must find the
+ * extension from the project `.pi/extensions/` directory on its own — the
+ * installed behavior a real `pi` session relies on.
+ */
+async function startWakeSession({ script = [], extraFactories = [], extraTools = [], autoDiscover = false } = {}) {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "wake-accept-"));
   const cwd = path.join(tmp, "project");
   const agentDir = path.join(tmp, "agent");
@@ -93,10 +101,19 @@ async function startWakeSession({ script = [], extraFactories = [], extraTools =
     }),
   );
 
+  if (autoDiscover) {
+    // Project the extension the way `ace-handbook sync` would so discovery
+    // must find it from the project directory on its own.
+    fs.cpSync(path.dirname(EXT_PATH), path.join(cwd, ".pi", "extensions"), { recursive: true });
+    if (!fs.existsSync(path.join(cwd, ".pi", "extensions", "ace-wake.js"))) {
+      throw new Error("projection for auto-discovery is missing ace-wake.js");
+    }
+  }
+
   const resourceLoader = new DefaultResourceLoader({
     cwd,
     agentDir,
-    additionalExtensionPaths: [EXT_PATH],
+    additionalExtensionPaths: autoDiscover ? [] : [EXT_PATH],
     extensionFactories: [...extraFactories],
   });
   await resourceLoader.reload();
@@ -168,6 +185,22 @@ function lastWakeMessage(session) {
 }
 
 describe("ace-wake installed acceptance", { timeout: 90_000 }, () => {
+  it("is discovered automatically from the projected project directory", async () => {
+    const { session, cleanup } = await startWakeSession({ autoDiscover: true });
+    try {
+      // No additionalExtensionPaths: if pi's discovery did not load the
+      // projected .pi/extensions entrypoint, "/loop add" would become an
+      // ordinary user message and no wake would ever fire.
+      await session.prompt("/loop add auto --interval 1 --message auto tick");
+
+      const wake = await waitFor(() => wakeTexts(session).find((text) => text.includes("loop:auto")));
+      assert.ok(wake, "the projected extension must be auto-discovered without an explicit path");
+      assert.equal(wake, "[ace-wake loop:auto] auto tick");
+    } finally {
+      cleanup();
+    }
+  });
+
   it("wakes an idle agent when the timer fires and the agent answers", async () => {
     const { session, cleanup } = await startWakeSession();
     try {

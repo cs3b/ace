@@ -1,4 +1,4 @@
-import { WakeError } from "./types.mjs";
+import { WakeError } from "./types.js";
 
 /**
  * Parse the argument string of a /loop or /watch command.
@@ -83,7 +83,9 @@ function takeTrailingValue(raw, flag) {
 }
 
 function takeFlagValue(raw, flag) {
-  const match = raw.match(new RegExp(`--${flag}(?:=|\\s+)(\\S+)`));
+  // Quoted values match before the bare token so paths with spaces survive;
+  // the quote characters are stripped afterwards.
+  const match = raw.match(new RegExp(`--${flag}(?:=|\\s+)("(?:[^"\\\\]|\\\\.)*"|'(?:[^'\\\\]|\\\\.)*'|\\S+)`));
   return match ? stripQuotes(match[1]) : undefined;
 }
 
