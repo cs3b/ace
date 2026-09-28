@@ -59,3 +59,12 @@ This proves the probe detects masking: a project-local or user-level registratio
 - `overseer_workflow_contract_test` (updated: verified destination + tree/artifact or patch equivalence, no-active-writer gate, ambiguity preservation, explicit rejection of subject-only `log --all --grep` / "subject-level search" proofs)
 
 Tested gem versions are the worktree source versions listed above. The suite installs the closure itself, so evidence is reproducible from a clean checkout.
+
+## Independent review outcome (STEP-07)
+
+`ace-review --preset code-valid --subject diff:HEAD~5` (codex; gemini provider failed — known-broken CLI, per project history). Two findings:
+
+1. **Medium — cross-repository patch equivalence** (fixed in `470acfde9`): the original `range-diff` command could not compare work across the declared successor repository. The workflow now fetches the source proof refs into the successor repository and range-diffs with separate source and destination bases; the contract test locks the corrected command.
+2. **High — workflow contract not enforced by pruner code** (out of scope here, filed as follow-up `8wr.t.t8j`): the spec scopes this task to discoverability/packaging with public command semantics unchanged, so the `prune --force` enforcement gap became a new pending task rather than silent drift.
+
+Post-fix verification: `ace-test ace-overseer all` → 177 tests, 690 assertions, 0 failures (8wrt84).
