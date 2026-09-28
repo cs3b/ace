@@ -21,7 +21,7 @@ module Ace
             Dir.mktmpdir do |tmp|
               gem_home = File.join(tmp, "gems")
               project_dir = File.join(tmp, "project")
-              gem_file = build_gem
+              gem_file = build_gem(tmp)
               begin
                 install_gem(gem_file, gem_home)
                 write_topology_config(project_dir)
@@ -46,11 +46,16 @@ module Ace
             File.expand_path("../..", __dir__)
           end
 
-          def build_gem
-            out, err, status = Open3.capture3("gem", "build", "ace-lab.gemspec", chdir: package_dir)
+          # Build to an explicit path inside the test's temporary directory:
+          # globbing the package dir could select a stale archive and the
+          # cleanup could delete an unrelated artifact (review round 10, F1)
+          def build_gem(tmpdir)
+            gem_path = File.join(tmpdir, "ace-lab-#{VERSION}.gem")
+            out, err, status = Open3.capture3("gem", "build", "ace-lab.gemspec", "--output", gem_path,
+              chdir: package_dir)
             flunk("gem build failed: #{err} #{out}") unless status.success?
 
-            Dir.glob(File.join(package_dir, "ace-lab-*.gem")).first
+            gem_path
           end
 
           def install_gem(gem_file, gem_home)
