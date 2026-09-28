@@ -122,6 +122,19 @@ module Ace
           nil
         end
 
+        # Locate an attempt record by ID across all assignments (used by
+        # reconcile, which receives only the attempt ID).
+        #
+        # @param attempt_id [String] Attempt ID
+        # @return [Models::Attempt, nil] Attempt or nil
+        def find(attempt_id)
+          path = Dir.glob(File.join(@cache_base, "*", "attempts", "records", "#{attempt_id}.json")).first
+          return nil unless path
+
+          assignment_id = File.basename(File.dirname(File.dirname(File.dirname(path))))
+          load(assignment_id, attempt_id)
+        end
+
         # All attempt records for an assignment, newest first. Ties (records
         # serialized within the same second) break deterministically by
         # attempt ID.

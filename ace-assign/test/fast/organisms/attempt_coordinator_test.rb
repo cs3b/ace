@@ -302,6 +302,150 @@ module Ace
         assert projection["journal_commit"]
         assert_nil projection["candidate_head"]
       end
+
+      def test_reconcile_running_attempt_without_process_start_becomes_stopped
+        coordinator = build_coordinator
+        assignment = create_assignment(managed: false)
+        attempt = coordinator.start(assignment_id: assignment.id, step: "010", project_id: "ace")
+
+        intent_only = [Models::EvidenceEvent.build(
+          type: "intent", attempt_id: attempt.attempt_id, payload: {"scope" => "010"}
+        )]
+        rewrite_events(coordinator, attempt, intent_only)
+
+        reconciled = coordinator.reconcile(attempt_id: attempt.attempt_id)
+
+        assert_equal "stopped", reconciled.state
+        assert_nil coordinator.store.active(assignment.id, "010")
+      end
+
+      def test_reconcile_running_attempt_with_dead_process_becomes_uncertain
+        coordinator = build_coordinator
+        assignment = create_assignment(managed: false)
+        attempt = coordinator.start(assignment_id: assignment.id, step: "010", project_id: "ace")
+
+        dead = Process.spawn("true")
+        Process.wait(dead)
+        events = [
+          Models::EvidenceEvent.build(type: "intent", attempt_id: attempt.attempt_id, payload: {"scope" => "010"}),
+          Models::EvidenceEvent.build(
+            type: "process_start",
+            attempt_id: attempt.attempt_id,
+            payload: {"runtime" => "local:test", "pid" => dead},
+            previous_digest: nil
+          )
+        ]
+        rewrite_events(coordinator, attempt, events)
+
+        reconciled = coordinator.reconcile(attempt_id: attempt.attempt_id)
+
+        assert_equal "uncertain", reconciled.state
+        refute_nil coordinator.store.active(assignment.id, "010")
+      end
+
+      def test_reconcile_refuses_verifiably_live_process
+        coordinator = build_coordinator
+        assignment = create_assignment(managed: false)
+        attempt = coordinator.start(assignment_id: assignment.id, step: "010", project_id: "ace")
+
+        child = Process.spawn("sleep", "10")
+        begin
+          events = [
+            Models::EvidenceEvent.build(type: "intent", attempt_id: attempt.attempt_id, payload: {"scope" => "010"}),
+            Models::EvidenceEvent.build(
+              type: "process_start",
+              attempt_id: attempt.attempt_id,
+              payload: {"runtime" => "local:test", "pid" => child}
+            )
+          ]
+          rewrite_events(coordinator, attempt, events)
+
+          error = assert_raises(AttemptErrors::InvalidState) do
+            coordinator.reconcile(attempt_id: attempt.attempt_id)
+          end
+          assert_includes error.message, "live"
+        ensure
+          Process.kill("TERM", child)
+          Process.wait(child)
+        end
+      end
+
+      def test_reconcile_uncertain_without_receipt_never_resolves
+        coordinator = build_coordinator
+        assignment = create_assignment(managed: false)
+        attempt = coordinator.start(assignment_id: assignment.id, step: "010", project_id: "ace")
+        force_state(coordinator, attempt, "uncertain")
+
+        error = assert_raises(AttemptErrors::InvalidState) do
+          coordinator.reconcile(attempt_id: attempt.attempt_id)
+        end
+        assert_includes error.message, "receipt"
+
+        assert_equal "uncertain", coordinator.store.find(attempt.attempt_id).state
+      end
+
+      def test_reconcile_uncertain_resolves_with_boundary_attributed_receipt
+        coordinator = build_coordinator
+        assignment = create_assignment(managed: false)
+        attempt = coordinator.start(assignment_id: assignment.id, step: "010", project_id: "ace")
+        force_state(coordinator, attempt, "uncertain")
+
+        receipt = build_receipt(attempt, "producer" => {"actor" => "mc", "role" => "coordinator", "runtime" => "local:test"})
+        reconciled = coordinator.reconcile(attempt_id: attempt.attempt_id, receipt_path: receipt)
+
+        assert_equal "succeeded", reconciled.state
+        assert coordinator.store.find(attempt.attempt_id).terminal?
+        assert_nil coordinator.store.active(assignment.id, "010")
+      end
+
+      def test_reconcile_rejects_receipt_from_unrecorded_boundary
+        coordinator = build_coordinator
+        assignment = create_assignment(managed: false)
+        attempt = coordinator.start(assignment_id: assignment.id, step: "010", project_id: "ace")
+        force_state(coordinator, attempt, "uncertain")
+
+        receipt = build_receipt(attempt, "producer" => {"actor" => "someone-else", "role" => "worker", "runtime" => "fork:9"})
+
+        error = assert_raises(AttemptErrors::ReceiptRejected) do
+          coordinator.reconcile(attempt_id: attempt.attempt_id, receipt_path: receipt)
+        end
+        assert_includes error.message, "execution boundary"
+      end
+
+      def test_reconcile_refuses_terminal_attempts
+        coordinator = build_coordinator
+        assignment = create_assignment
+        attempt = coordinator.start(assignment_id: assignment.id, step: "010", project_id: "ace")
+        coordinator.finish(attempt_id: attempt.attempt_id, receipt_path: build_receipt(attempt))
+
+        error = assert_raises(AttemptErrors::InvalidState) do
+          coordinator.reconcile(attempt_id: attempt.attempt_id)
+        end
+        assert_includes error.message, "terminal"
+      end
+
+      private
+
+      def rewrite_events(coordinator, attempt, events)
+        rewritten = Models::Attempt.new(
+          binding: attempt.binding,
+          state: attempt.state,
+          events: events
+        )
+        coordinator.store.save(rewritten)
+        rewritten
+      end
+
+      def force_state(coordinator, attempt, state)
+        forced = Models::Attempt.new(
+          binding: attempt.binding,
+          state: state,
+          journal_commit: attempt.journal_commit,
+          events: attempt.events
+        )
+        coordinator.store.save(forced)
+        forced
+      end
     end
   end
 end

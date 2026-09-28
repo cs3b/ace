@@ -45,6 +45,7 @@ require_relative "molecules/evidence_calculator"
 require_relative "molecules/evidence_journal"
 require_relative "molecules/execution_identity_resolver"
 require_relative "molecules/receipt_verifier"
+require_relative "molecules/attempt_reconciler"
 
 # Organisms
 require_relative "organisms/assignment_executor"

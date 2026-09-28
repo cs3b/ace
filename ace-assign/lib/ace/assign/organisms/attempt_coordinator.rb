@@ -141,10 +141,118 @@ module Ace
           attempt.projection
         end
 
+        # Reconcile an interrupted attempt.
+        #
+        # Running attempts are classified conservatively (stopped before
+        # process start, uncertain when an effect cannot be proven either
+        # way, still running only for verifiably live processes). Uncertain
+        # attempts resolve only against a verified receipt attributed to the
+        # recorded execution boundary. Reconciliation never replays merge,
+        # publish, or deploy effects.
+        #
+        # @param attempt_id [String] Attempt ID
+        # @param receipt_path [String, nil] Receipt JSON for resolving uncertainty
+        # @param identity [ExecutionIdentityResolver::Identity, nil] Resolved when nil
+        # @return [Models::Attempt] Updated attempt
+        def reconcile(attempt_id:, receipt_path: nil, identity: nil)
+          attempt = @store.find(attempt_id)
+          raise AttemptErrors::NotFound, "Attempt '#{attempt_id}' not found" unless attempt
+
+          if attempt.terminal?
+            raise AttemptErrors::InvalidState, "Attempt #{attempt_id} is terminal; accepted history is immutable"
+          end
+
+          return classify_running(attempt) if attempt.state == "running"
+
+          identity ||= @identity_resolver.resolve
+          resolve_uncertain(attempt, receipt_path, identity)
+        end
+
         private
 
-        def reserve(assignment, scope, project, identity, base_head, attempt_id)
-          binding = Models::AttemptBinding.new(
+        # Conservative classification of a running attempt after interruption.
+        def classify_running(attempt)
+          case reconciler.classify(attempt)
+          when :live
+            raise AttemptErrors::InvalidState,
+              "Attempt #{attempt.attempt_id} process is verifiably live; reconcile after it exits"
+          when :stopped
+            attempt = append_events(attempt, [transition_event(attempt, "stopped", "interrupted before process start")])
+            attempt = attempt.transition("stopped")
+            @store.save(attempt)
+            @store.release(attempt.binding.assignment_id, attempt.binding.scope, attempt.attempt_id)
+            attempt
+          else
+            attempt = append_events(attempt, [transition_event(attempt, "uncertain", "effect completion cannot be proven or excluded")])
+            attempt = attempt.transition("uncertain")
+            @store.save(attempt)
+            attempt
+          end
+        end
+
+        # Resolve an uncertain attempt against a verified, boundary-attributed
+        # receipt. Never resolves by assumption.
+        def resolve_uncertain(attempt, receipt_path, identity)
+          unless attempt.uncertain?
+            raise AttemptErrors::InvalidState,
+              "Attempt #{attempt.attempt_id} is #{attempt.state}; reconciliation targets uncertain attempts"
+          end
+          unless receipt_path
+            raise AttemptErrors::InvalidState,
+              "Reconciliation requires --receipt FILE; uncertain attempts are never resolved by assumption"
+          end
+
+          data = read_receipt_file(receipt_path)
+          live_head = candidate_head!
+          attempt = invalidate_stale_candidate(attempt, live_head)
+
+          recorded = reconciler.recorded_runtime(attempt)
+          unless data.dig("producer", "runtime") == recorded
+            raise AttemptErrors::ReceiptRejected,
+              "Receipt runtime #{data.dig('producer', 'runtime').inspect} does not match the recorded " \
+              "execution boundary #{recorded.inspect}"
+          end
+
+          receipt = @verifier.verify!(
+            data,
+            attempt: attempt,
+            identity: identity,
+            live_head: live_head,
+            repo_root: @repo_root
+          )
+          if @verifier.external_effect?(receipt.operation)
+            unless attempt.managed?
+              raise AttemptErrors::InvalidState,
+                "Taskless attempts cannot record external effects without managed evidence"
+            end
+
+            require_review_evidence(attempt, live_head)
+          end
+
+          reconciliation = Models::EvidenceEvent.build(
+            type: "reconciliation",
+            attempt_id: attempt.attempt_id,
+            payload: {"resolution" => receipt.verdict, "receipt_digest" => receipt.digest},
+            previous_digest: last_event_digest(attempt)
+          )
+          attempt = append_events(attempt, [reconciliation])
+          accept(attempt, receipt, live_head)
+        end
+
+        def transition_event(attempt, to, reason)
+          Models::EvidenceEvent.build(
+            type: "transition",
+            attempt_id: attempt.attempt_id,
+            payload: {"from" => attempt.state, "to" => to, "reason" => reason},
+            previous_digest: last_event_digest(attempt)
+          )
+        end
+
+        def reconciler
+          @reconciler ||= Molecules::AttemptReconciler.new(journal: journal_for, verifier: @verifier)
+        end
+
+        def reserve(assignment, scope, project, identity, base_head, attempt_id)          binding = Models::AttemptBinding.new(
             attempt_id: attempt_id,
             assignment_id: assignment.id,
             scope: scope,
@@ -175,7 +283,12 @@ module Ace
           process_start = Models::EvidenceEvent.build(
             type: "process_start",
             attempt_id: attempt_id,
-            payload: {"actor" => identity.actor, "role" => identity.role, "runtime" => identity.runtime},
+            payload: {
+              "actor" => identity.actor,
+              "role" => identity.role,
+              "runtime" => identity.runtime,
+              "pid" => Process.pid
+            },
             previous_digest: intent["digest"]
           )
           [intent, process_start]
