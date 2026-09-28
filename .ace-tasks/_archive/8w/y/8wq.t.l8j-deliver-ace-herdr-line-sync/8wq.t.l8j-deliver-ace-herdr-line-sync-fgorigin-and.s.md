@@ -1,6 +1,6 @@
 ---
 id: 8wq.t.l8j
-status: pending
+status: done
 priority: high
 created_at: "2026-09-27 14:09:30"
 estimate: TBD
@@ -8,9 +8,7 @@ dependencies: [8wm.t.vs0]
 tags: [release, ace-herdr, deploy, rubygems]
 bundle:
   presets: [project]
-  files:
-    - ace-herdr/CHANGELOG.md
-    - ace-herdr/ace-herdr.gemspec
+  files: [ace-herdr/CHANGELOG.md, ace-herdr/ace-herdr.gemspec]
   commands: []
 ---
 
@@ -41,10 +39,10 @@ deploy is different task". This task owns that tail.
 
 ## Kryteria sukcesu
 
-- [ ] `git log fg/main..main` empty; `git log origin/main..main` empty.
-- [ ] `gem list -r ace-herdr` (or install proof) shows 0.1.0.
-- [ ] CHANGELOG has no `[Unreleased]` block; version 0.1.0 dated.
-- [ ] Proof artifact recorded (safe / lag-detected + --full-index pass).
+- [x] `git log fg/main..main` empty; `git log origin/main..main` empty.
+- [x] `gem list -r ace-herdr` (or install proof) shows 0.1.0.
+- [x] CHANGELOG has no `[Unreleased]` block; version 0.1.0 dated.
+- [x] Proof artifact recorded (safe / lag-detected + --full-index pass).
 
 ## Out of scope
 
