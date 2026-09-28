@@ -75,7 +75,7 @@ module Atoms
       error = assert_raises(Ace::Lab::InvalidConfigurationError) do
         Ace::Lab::Atoms::TopologySchema.normalize!(config)
       end
-      assert_match(/duplicate id "atlas-planner".*agents and services/, error.message)
+      assert_includes error.message, "duplicate stable id: topology.agents[0] and topology.services[3] define the same id"
     end
 
     def test_rejects_duplicate_ids_within_one_category
@@ -85,7 +85,7 @@ module Atoms
       error = assert_raises(Ace::Lab::InvalidConfigurationError) do
         Ace::Lab::Atoms::TopologySchema.normalize!(config)
       end
-      assert_match(/duplicate id "atlas" defined in projects and projects/, error.message)
+      assert_includes error.message, "duplicate stable id: topology.projects[0] and topology.projects[2] define the same id"
     end
 
     def test_rejects_agent_referencing_missing_project
@@ -95,7 +95,7 @@ module Atoms
       error = assert_raises(Ace::Lab::InvalidConfigurationError) do
         Ace::Lab::Atoms::TopologySchema.normalize!(config)
       end
-      assert_match(/agent "atlas-planner" references unknown project "ghost"/, error.message)
+      assert_includes error.message, "topology.agents[0].project references an unknown project"
     end
 
     def test_rejects_service_referencing_missing_project
@@ -105,7 +105,7 @@ module Atoms
       error = assert_raises(Ace::Lab::InvalidConfigurationError) do
         Ace::Lab::Atoms::TopologySchema.normalize!(config)
       end
-      assert_match(/service "atlas-search" references unknown project "ghost"/, error.message)
+      assert_includes error.message, "topology.services[0].project references an unknown project"
     end
 
     def test_rejects_empty_capabilities
@@ -125,7 +125,7 @@ module Atoms
       error = assert_raises(Ace::Lab::InvalidConfigurationError) do
         Ace::Lab::Atoms::TopologySchema.normalize!(config)
       end
-      assert_match(/capability must be a non-empty string/, error.message)
+      assert_match(/capabilities entry must be a non-empty string/, error.message)
     end
 
     def test_rejects_default_for_capability_not_declared
@@ -135,7 +135,7 @@ module Atoms
       error = assert_raises(Ace::Lab::InvalidConfigurationError) do
         Ace::Lab::Atoms::TopologySchema.normalize!(config)
       end
-      assert_match(/defaults for capability "indexing" it does not declare/, error.message)
+      assert_match(/default_for entry does not match a declared capability/, error.message)
     end
 
     def test_rejects_service_without_endpoint
@@ -175,7 +175,7 @@ module Atoms
       error = assert_raises(Ace::Lab::InvalidConfigurationError) do
         Ace::Lab::Atoms::TopologySchema.normalize!(config)
       end
-      assert_match(/principal "operator" references unknown project "ghost"/, error.message)
+      assert_includes error.message, "authorization.principals[0].projects[2] references an unknown project"
     end
 
     def test_allows_binding_with_missing_attestation_fields
@@ -189,6 +189,130 @@ module Atoms
       assert_nil binding["state"]
       assert_nil binding["instance_id"]
       assert_nil binding["attested_instance_id"]
+    end
+
+    def test_malformed_topology_collections_classify_as_invalid_configuration
+      %w[projects agents services].each do |key|
+        config = topology_config
+        config["topology"][key] = (key == "projects") ? "atlas" : 42
+
+        error = assert_raises(Ace::Lab::InvalidConfigurationError) do
+          Ace::Lab::Atoms::TopologySchema.normalize!(config)
+        end
+        assert_match(/topology\.#{key} must be an array/, error.message)
+      end
+    end
+
+    def test_malformed_collection_hashes_are_rejected_not_converted
+      config = topology_config
+      config["topology"]["agents"] = {"id" => "sneaky"}
+
+      error = assert_raises(Ace::Lab::InvalidConfigurationError) do
+        Ace::Lab::Atoms::TopologySchema.normalize!(config)
+      end
+      assert_match(/topology\.agents must be an array/, error.message)
+    end
+
+    def test_malformed_principal_projects_classify_as_invalid_configuration
+      config = topology_config
+      config["authorization"]["principals"]["operator"]["projects"] = "atlas"
+
+      error = assert_raises(Ace::Lab::InvalidConfigurationError) do
+        Ace::Lab::Atoms::TopologySchema.normalize!(config)
+      end
+      assert_includes error.message, "authorization.principals[0].projects must be an array"
+    end
+  end
+end
+
+module Atoms
+  class TopologySchemaEndpointTest < Minitest::Test
+    def config_with_endpoint_url(url)
+      config = topology_config
+      config["topology"]["services"].first["endpoint"]["url"] = url
+      config
+    end
+
+    def test_rejects_unparseable_endpoint_urls
+      error = assert_raises(Ace::Lab::InvalidConfigurationError) do
+        Ace::Lab::Atoms::TopologySchema.normalize!(config_with_endpoint_url("::not a url::"))
+      end
+      assert_match(/topology\.services\[0\]\.endpoint\.url must be an absolute http\(s\) URL with a host/, error.message)
+    end
+
+    def test_rejects_non_http_schemes
+      assert_raises(Ace::Lab::InvalidConfigurationError) do
+        Ace::Lab::Atoms::TopologySchema.normalize!(config_with_endpoint_url("ftp://search.example.internal"))
+      end
+    end
+
+    def test_rejects_urls_without_a_host
+      assert_raises(Ace::Lab::InvalidConfigurationError) do
+        Ace::Lab::Atoms::TopologySchema.normalize!(config_with_endpoint_url("https:///path-only"))
+      end
+    end
+
+    def test_rejects_unsupported_endpoint_kinds
+      config = topology_config
+      config["topology"]["services"].first["endpoint"] = {"kind" => "grpc", "url" => "https://x.example"}
+
+      error = assert_raises(Ace::Lab::InvalidConfigurationError) do
+        Ace::Lab::Atoms::TopologySchema.normalize!(config)
+      end
+      assert_match(/endpoint\.kind must be one of: http, https/, error.message)
+    end
+
+    def test_normalizes_endpoint_kind_case
+      config = topology_config
+      config["topology"]["services"].first["endpoint"]["kind"] = " HTTPS "
+
+      normalized = Ace::Lab::Atoms::TopologySchema.normalize!(config)
+
+      assert_equal "https", normalized["topology"]["services"].first["endpoint"]["kind"]
+    end
+  end
+end
+
+module Atoms
+  class TopologySchemaBindingKindTest < Minitest::Test
+    def test_rejects_agent_binding_kind_mismatch
+      config = topology_config
+      config["topology"]["agents"].first["binding"]["kind"] = "service"
+
+      error = assert_raises(Ace::Lab::InvalidConfigurationError) do
+        Ace::Lab::Atoms::TopologySchema.normalize!(config)
+      end
+      assert_includes error.message, "topology.agents[0].binding.kind must be one of: runtime"
+    end
+
+    def test_rejects_unsupported_agent_binding_kind
+      config = topology_config
+      config["topology"]["agents"].first["binding"]["kind"] = "unsupported-runtime"
+
+      error = assert_raises(Ace::Lab::InvalidConfigurationError) do
+        Ace::Lab::Atoms::TopologySchema.normalize!(config)
+      end
+      assert_includes error.message, "topology.agents[0].binding.kind must be one of: runtime"
+    end
+
+    def test_rejects_service_binding_kind_runtime
+      config = topology_config
+      config["topology"]["services"].first["binding"]["kind"] = "runtime"
+
+      error = assert_raises(Ace::Lab::InvalidConfigurationError) do
+        Ace::Lab::Atoms::TopologySchema.normalize!(config)
+      end
+      assert_includes error.message, "topology.services[0].binding.kind must be one of: service"
+    end
+
+    def test_rejects_out_of_range_endpoint_ports
+      config = topology_config
+      config["topology"]["services"].first["endpoint"]["url"] = "https://search.example.internal:99999/query"
+
+      error = assert_raises(Ace::Lab::InvalidConfigurationError) do
+        Ace::Lab::Atoms::TopologySchema.normalize!(config)
+      end
+      assert_includes error.message, "endpoint.url must be an absolute http(s) URL with a host and a valid port"
     end
   end
 end

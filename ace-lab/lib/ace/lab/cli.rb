@@ -3,6 +3,11 @@
 require "ace/support/cli"
 require "ace/core"
 require_relative "../lab"
+require_relative "cli/commands/projects"
+require_relative "cli/commands/agents"
+require_relative "cli/commands/services"
+require_relative "cli/commands/resolve"
+require_relative "cli/commands/route"
 
 module Ace
   module Lab
@@ -13,7 +18,13 @@ module Ace
       PROGRAM_NAME = "ace-lab"
 
       # Application commands with descriptions (for help output)
-      REGISTERED_COMMANDS = [].freeze
+      REGISTERED_COMMANDS = [
+        ["projects", "List lab projects visible to the verified caller"],
+        ["agents", "List lab agents in a project by stable ID"],
+        ["services", "List lab services in a project by stable ID"],
+        ["resolve", "Resolve one lab entry by exact stable ID"],
+        ["route", "Select a configured capable service in a project"]
+      ].freeze
 
       HELP_EXAMPLES = [
         "ace-lab projects --format json",
@@ -29,6 +40,13 @@ module Ace
       def self.start(args)
         Ace::Support::Cli::Runner.new(self).call(args: args)
       end
+
+      # Register application commands
+      register "projects", CLI::Commands::Projects.new
+      register "agents", CLI::Commands::Agents.new
+      register "services", CLI::Commands::Services.new
+      register "resolve", CLI::Commands::Resolve.new
+      register "route", CLI::Commands::Route.new
 
       # Register version command
       version_cmd = Ace::Support::Cli::VersionCommand.build(

@@ -37,7 +37,7 @@ module Ace
         end
 
         def ok?
-          !error_code.nil? ? false : true
+          (!error_code.nil?) ? false : true
         end
 
         def envelope

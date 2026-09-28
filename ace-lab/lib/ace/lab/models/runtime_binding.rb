@@ -13,10 +13,13 @@ module Ace
         attr_reader :kind, :state, :instance_id, :attested_instance_id
 
         def initialize(kind:, state: nil, instance_id: nil, attested_instance_id: nil)
-          @kind = kind
-          @state = state
-          @instance_id = instance_id
-          @attested_instance_id = attested_instance_id
+          # Defensive frozen copies: these strings feed the freshness facts,
+          # and a mutated shared string could turn a stale binding fresh
+          # despite the frozen model (review round 15, F1)
+          @kind = kind.dup.freeze
+          @state = state && state.dup.freeze
+          @instance_id = instance_id && instance_id.dup.freeze
+          @attested_instance_id = attested_instance_id && attested_instance_id.dup.freeze
           freeze
         end
 

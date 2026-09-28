@@ -69,3 +69,70 @@ module Models
     end
   end
 end
+
+module Models
+  class TopologyEntryImmutabilityTest < Minitest::Test
+    def index
+      @index ||= Ace::Lab::Molecules::TopologyLoader.new(topology_config).load
+    end
+
+    def test_projected_values_cannot_mutate_indexed_entries
+      projected = Ace::Lab::Atoms::PublicProjection.agent(index.lookup("atlas-planner"))
+
+      # Public projections share the model's defensively frozen strings; a
+      # mutation attempt must raise, never corrupt the index key
+      # (review round 15, F1)
+      assert_raises(FrozenError) { projected["id"].replace("changed") }
+      assert_equal "atlas-planner", index.lookup("atlas-planner").id
+      assert_equal "atlas-planner", index.lookup("atlas-planner").id
+    end
+
+    def test_binding_strings_cannot_mutate_freshness_facts
+      binding = index.lookup("atlas-planner").binding
+
+      assert_raises(FrozenError) { binding.instance_id.replace("tampered") }
+      assert_equal "inst-planner-1", binding.instance_id
+      assert_equal "inst-planner-1", binding.attested_instance_id
+    end
+
+    def test_capability_arrays_cannot_mutate_routing
+      entry = index.lookup("atlas-search")
+
+      assert_raises(FrozenError) { entry.capabilities << "index" }
+      refute entry.capable_of?("index")
+    end
+  end
+end
+
+module Models
+  class TopologyEntryStringImmutabilityTest < Minitest::Test
+    def index
+      @index ||= Ace::Lab::Molecules::TopologyLoader.new(topology_config).load
+    end
+
+    def test_projected_capability_strings_cannot_mutate_routing
+      projected = Ace::Lab::Atoms::PublicProjection.service(index.lookup("atlas-search"))
+
+      assert_raises(FrozenError) { projected["capabilities"].first.replace("publish") }
+      assert_raises(FrozenError) { projected["default_for"].first.replace("index") }
+
+      # Routing facts unchanged through the reused index
+      router = Ace::Lab::Molecules::CapabilityRouter.new(
+        index: index,
+        authorizer: Ace::Lab::Molecules::CallerAuthorizer.new(
+          principals: topology_config["authorization"]["principals"], identity: %w[operator]
+        )
+      )
+      result = router.route(project: "atlas", capability: "publish")
+
+      assert_equal "missing", result.error_code
+    end
+
+    def test_endpoint_values_cannot_mutate_projection
+      projected = Ace::Lab::Atoms::PublicProjection.service(index.lookup("atlas-search"))
+
+      assert_raises(FrozenError) { projected["binding"]["endpoint"]["kind"].replace("ftp") }
+      assert_equal "http", projected["binding"]["endpoint"]["kind"]
+    end
+  end
+end

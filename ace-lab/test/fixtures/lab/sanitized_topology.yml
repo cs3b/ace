@@ -1,0 +1,71 @@
+# Sanitized Lab topology fixture (spec 8wq.t.1w4, SC2/SC3).
+#
+# Safe placeholders shaped like the deployed lab-config topology, with
+# deliberately secret-bearing endpoint values so redaction tests can prove
+# tokens, userinfo, query parameters, and fragments never reach public output.
+# No value here is a real credential. Authorization grants do not live in
+# cascade documents — see test/commands/fresh_install_test.rb for the trusted
+# grants file.
+schema_version: 1
+
+topology:
+  projects:
+    - id: atlas
+      label: Atlas platform
+    - id: borealis
+
+  agents:
+    - id: atlas-planner
+      project: atlas
+      role: planner
+      capabilities: [planning]
+      binding:
+        kind: runtime
+        state: active
+        instance_id: inst-planner-1
+        attested_instance_id: inst-planner-1
+    - id: atlas-coder
+      project: atlas
+      role: coder
+      capabilities: [coding, planning]
+      binding:
+        kind: runtime
+        state: active
+        instance_id: inst-coder-2
+        attested_instance_id: inst-coder-2
+
+  services:
+    - id: atlas-search
+      project: atlas
+      capabilities: [search]
+      default_for: [search]
+      endpoint:
+        kind: http
+        url: "https://svc:token-one@search.example.internal:8443/lab/query?token=secret-one&auth_file=/etc/lab/search.auth#fragment"
+      binding:
+        kind: service
+        state: active
+        instance_id: inst-search-1
+        attested_instance_id: inst-search-1
+    - id: atlas-index
+      project: atlas
+      capabilities: [search, index]
+      endpoint:
+        kind: http
+        url: "https://index.example.internal/lab?token=secret-two"
+      binding:
+        kind: service
+        state: active
+        instance_id: inst-index-1
+        attested_instance_id: inst-index-1
+    - id: borealis-search
+      project: borealis
+      capabilities: [search]
+      endpoint:
+        kind: http
+        url: "https://b-search.example.internal"
+      binding:
+        kind: service
+        state: active
+        instance_id: inst-bsearch-1
+        attested_instance_id: inst-bsearch-1
