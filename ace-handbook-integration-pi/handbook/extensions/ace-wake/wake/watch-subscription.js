@@ -124,21 +124,39 @@ export function createWatchPort({ watchFactory, statFn, baseDir = process.cwd(),
         if (!entry.dirty) {
           continue;
         }
-        entry.dirty = false;
         const current = readBaselineOrError(entry.canonicalPath, entry.definition.name);
         if (current === undefined) {
           continue;
         }
         const next = fingerprintOf(current);
         if (next === entry.fingerprint) {
+          entry.dirty = false;
           continue;
         }
-        entry.fingerprint = next;
-        try {
-          onWake(entry.definition);
-        } catch {
-          // Wake dispatch must never break the flush loop.
+        const outcome = onWake(entry.definition);
+        // The fingerprint advances only when the wake actually crossed —
+        // a deferred outcome stays dirty for the next settlement boundary.
+        if (outcome && outcome.delivered === false) {
+          entry.dirty = true;
+          continue;
         }
+        entry.previousFingerprint = entry.fingerprint;
+        entry.fingerprint = next;
+        entry.dirty = false;
+      }
+    },
+
+    /**
+     * Mark a subscription's latest change as undelivered so flushDirty()
+     * re-checks it at the next settlement boundary. Used when a wake is
+     * deferred by retention or the dispatch serialization window.
+     *
+     * @param {string} name
+     */
+    markDirty(name) {
+      const entry = active.get(name);
+      if (entry) {
+        entry.dirty = true;
       }
     },
 
@@ -156,19 +174,6 @@ export function createWatchPort({ watchFactory, statFn, baseDir = process.cwd(),
 
     errorOf(name) {
       return errors.get(name);
-    },
-
-    /**
-     * Mark every active subscription's last dispatch as unacknowledged: the
-     * host never started the run, so the wake was rejected and its fingerprint
-     * must revert to the last delivered state. flushDirty() then re-fires the
-     * change at the next settlement.
-     */
-    markDispatchUnacknowledged() {
-      for (const entry of active.values()) {
-        entry.fingerprint = entry.previousFingerprint;
-        entry.dirty = true;
-      }
     },
 
     activeCount() {

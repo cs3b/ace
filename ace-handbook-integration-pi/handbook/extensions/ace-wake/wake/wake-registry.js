@@ -46,8 +46,7 @@ export class WakeRegistry {
   #dispatchReleaseTimer;
   /** @private @type {number} */
   #dispatchWindowMs;
-  /** @private @type {(() => boolean) | undefined} */
-  #isHostIdle;
+
   /** @private @type {{retained: Array<{prefix: string, name: string, message: string}>, stranded: Array<[string, string]>} | undefined} */
   #reconcileBatch;
   /** @private @type {import("./types.js").WakeSnapshot | undefined} */
@@ -61,7 +60,7 @@ export class WakeRegistry {
    * @param {object} ports.status
    * @param {import("./wake-dispatcher.js").WakeDispatcher} ports.dispatcher
    */
-  constructor({ loops, watches, state, status, dispatcher, dispatchWindowMs = 250, isHostIdle }) {
+  constructor({ loops, watches, state, status, dispatcher, dispatchWindowMs = 250 }) {
     this.#loops = loops;
     this.#watches = watches;
     this.#state = state;
@@ -79,8 +78,6 @@ export class WakeRegistry {
     this.#dispatchReleaseTimer;
     /** @private @type {number} */
     this.#dispatchWindowMs = dispatchWindowMs;
-    /** @private @type {(() => boolean) | undefined} */
-    this.#isHostIdle = isHostIdle;
   }
 
   /**
@@ -292,6 +289,8 @@ export class WakeRegistry {
     }
     this.#resuming = false;
     this.#retaining = false;
+    this.#dispatchPending = false;
+    clearTimeout(this.#dispatchReleaseTimer);
     this.#reconcileBatch = {
       retained: [...this.#retained.values()],
       stranded: this.#dispatcher.pendingEntries(),
@@ -317,7 +316,10 @@ export class WakeRegistry {
       this.#fire(wake.prefix, wake.name, wake.message);
     }
     for (const [sourceKey, text] of batch.stranded) {
-      this.#dispatcher.wake(sourceKey, text);
+      // Replay through #dispatch so concurrent stranded sources serialize
+      // across the idle-to-running transition instead of racing it.
+      const separator = sourceKey.indexOf(":");
+      this.#dispatch(sourceKey.slice(0, separator + 1), sourceKey.slice(separator + 1), text);
     }
     this.#refreshStatus();
   }
@@ -361,24 +363,33 @@ export class WakeRegistry {
   }
 
   #dispatch(sourcePrefix, name, message) {
-    if (this.#retaining) {
-      this.#retained.set(`${sourcePrefix}${name}`, { prefix: sourcePrefix, name, message });
-      return { delivered: false, reason: "retained" };
-    }
     const sourceKey = `${sourcePrefix}${name}`;
     if (this.#dispatcher.isPending(sourceKey)) {
       // Same-source repeats coalesce regardless of the transition window.
       return { delivered: false, reason: "coalesced" };
+    }
+    const blocked = this.#retaining || this.#dispatchPending;
+    if (blocked && sourcePrefix === WATCH_SOURCE_PREFIX) {
+      // Watch changes must never queue as bare messages: marking the
+      // subscription dirty defers delivery to flushDirty(), which re-stats
+      // and wakes with the latest state at the next settlement boundary —
+      // no lost changes, no duplicate replays.
+      this.#watches.markDirty(name);
+      return { delivered: false, reason: "deferred" };
+    }
+    if (this.#retaining) {
+      this.#retained.set(sourceKey, { prefix: sourcePrefix, name, message });
+      return { delivered: false, reason: "retained" };
     }
     if (this.#dispatchPending) {
       // A previous wake is still crossing the idle-to-running transition;
       // Pi rejects concurrent prompts asynchronously, so this source waits
       // to enter the follow-up queue safely (agent_start) or until the
       // transition window expires.
-      this.#retained.set(`${sourcePrefix}${name}`, { prefix: sourcePrefix, name, message });
+      this.#retained.set(sourceKey, { prefix: sourcePrefix, name, message });
       return { delivered: false, reason: "serialized" };
     }
-    const outcome = this.#dispatcher.wake(`${sourcePrefix}${name}`, message);
+    const outcome = this.#dispatcher.wake(sourceKey, message);
     this.#markDispatchInFlight();
     return outcome;
   }
@@ -393,23 +404,12 @@ export class WakeRegistry {
     this.#dispatchPending = true;
     clearTimeout(this.#dispatchReleaseTimer);
     this.#dispatchReleaseTimer = setTimeout(() => {
-      // The transition window expired. Reconcile only when no run is active:
-      // an idle host means the wake was rejected asynchronously (Pi's void
-      // sendUserMessage API reports failures only via emitError) — watch
-      // fingerprints revert so settlement re-fires their change, loop
-      // pendings clear so the next tick re-attempts. While a run is active a
-      // pending wake is a legitimately queued follow-up and must stay.
-      let idle = false;
-      try {
-        idle = this.#isHostIdle?.() ?? false;
-      } catch {
-        idle = false;
-      }
+      // The transition window expired. Pi reports send failures only
+      // asynchronously, and isIdle() is also true while a submitted prompt
+      // waits in asynchronous startup hooks — so expiry must not treat the
+      // attempt as rejected. It only closes the serialization window;
+      // pending markers resolve at the next settlement boundary.
       this.#dispatchPending = false;
-      if (idle) {
-        this.#watches.markDispatchUnacknowledged();
-        this.#dispatcher.settleAll();
-      }
       this.#refreshStatus();
     }, this.#dispatchWindowMs);
     this.#dispatchReleaseTimer.unref?.();
