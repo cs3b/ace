@@ -40,3 +40,11 @@ Base: `main` (worktree branched from `02a9b7544`; main advanced independently to
 - Forgejo capability gaps are classified, not guessed: `fj` v0.6.0 (per the forgejo-cli wiki) has no `pr create --draft`, no ready command, and no merge expected-head flag — all three surface as `ProviderUnsupportedCapabilityError` / non-draft evidence, matching the spec's "unsupported capability, not an unsafe fallback".
 - `ace-git` gained `git.providers` config (default `[github, forgejo]`) so consumers no longer need direct provider-gem dependencies; provider packages register on require, lazily loaded on first resolution.
 - Local-only isolation caveat: the orchestrator-level guard asserts the forge seam (PR creator construction) rather than `ServerRegistry` constants, because the group test runner's load path resolves a stale installed `ace-git` for that specific test file (verified consistent under `bundle exec`).
+
+## Independent review (delivery gate)
+
+- Reviewer: `ace-review --preset code-valid --model codex:astra:high --subject pr:347` (session `.ace-local/review/sessions/review-8wru69`, 2026-09-28).
+- 6 findings (3 high, 3 medium); all 6 verified:
+  - **Fixed in `0d104f869`**: bind every `gh` data/mutation command to the resolved server repository via `--repo` (GitHub half of 8wruavkr); create worktrees from the exact verified SHA instead of mutable `FETCH_HEAD` (8wruavks); refuse Forgejo fork-head PR creation before any command (8wruavkt); split Forgejo title/body edits into separate `fj pr edit` subcommands (8wruavkv); set + verify the PR worktree upstream and report it (8wruavku).
+  - **Deferred to `8wr.t.uj0`**: Forgejo-side `fj` repository binding (no documented `--repo` on `fj pr` subcommands; needs the real surface on the lab) and authoritative Forgejo merge-commit proof (8wruavkw) — the conservative retain-without-proof behavior is the spec-mandated default.
+- Gate re-run after fixes: ace-git 542, ace-git-github 75, ace-git-forgejo 62, ace-git-worktree 536 — all green.
