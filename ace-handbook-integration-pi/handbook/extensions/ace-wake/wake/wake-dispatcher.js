@@ -10,13 +10,16 @@ import { boundMessage } from "./types.js";
  *
  * The adapter settles sources when Pi reports the agent fully settled, so a
  * busy agent receives at most one queued follow-up per source per run cycle.
+ * Pending entries keep their message text so a delivery boundary that never
+ * sees a settlement (e.g. manual compaction rejecting prompts without an
+ * extension-visible signal) can reconcile unacknowledged attempts.
  */
 export class WakeDispatcher {
   /** @private @type {(sourceKey: string, text: string) => boolean} */
   #deliver;
 
-  /** @private @type {Set<string>} */
-  pending = new Set();
+  /** @private @type {Map<string, string>} */
+  pending = new Map();
 
   /**
    * @param {object} ports
@@ -39,12 +42,13 @@ export class WakeDispatcher {
       return { delivered: false, reason: "coalesced" };
     }
 
-    const accepted = this.#deliver(sourceKey, boundMessage(text));
+    const bounded = boundMessage(text);
+    const accepted = this.#deliver(sourceKey, bounded);
     if (!accepted) {
       return { delivered: false, reason: "rejected" };
     }
 
-    this.pending.add(sourceKey);
+    this.pending.set(sourceKey, bounded);
     return { delivered: true };
   }
 
@@ -60,6 +64,16 @@ export class WakeDispatcher {
   /** Mark every source's queued wake as consumed (agent fully settled). */
   settleAll() {
     this.pending.clear();
+  }
+
+  /**
+   * Pending wake attempts as [sourceKey, text] pairs, for reconciliation at
+   * delivery boundaries that bypass the normal settlement signal.
+   *
+   * @returns {Array<[string, string]>}
+   */
+  pendingEntries() {
+    return [...this.pending.entries()];
   }
 
   /**

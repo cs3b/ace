@@ -273,6 +273,25 @@ describe("ace-wake delivery", () => {
     assert.equal(host.sends.length, 1, "retained wakes flush after failed compaction too");
   });
 
+  it("reconciles a timer wake stranded by the pre-compaction rejection window", async () => {
+    const host = createFakeHost();
+    const session = await startSession(host);
+    await host.runCommand("loop", "add heartbeat --interval 10 --message check in");
+
+    // The wake dispatches before any compaction event fires (Pi rejects
+    // prompts while resolving compaction authentication, before
+    // session_before_compact), so it is pending but never consumed.
+    host.clock.advance(10_000);
+    assert.equal(host.sends.length, 1);
+
+    // The compaction outcome reconciles unacknowledged attempts even though
+    // nothing was retained.
+    await session.compacted();
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    assert.equal(host.sends.length, 2, "the stranded attempt must re-dispatch after compaction");
+    await session.settle();
+  });
+
   it("does not flush a retained wake for a subscription removed while delivery is paused", async () => {
     const host = createFakeHost();
     const session = await startSession(host);

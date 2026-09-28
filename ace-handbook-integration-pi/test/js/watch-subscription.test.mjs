@@ -70,6 +70,30 @@ describe("createWatchPort", () => {
     assert.equal(wakes.length, 1);
   });
 
+  it("reconciles a change dropped during watcher initialization", () => {
+    const host = createFakeHost();
+    const reconciles = [];
+    const port = createWatchPort({
+      watchFactory: host.watchFactory,
+      statFn: host.statFn,
+      baseDir: "/fake/project",
+      scheduleReconcile: (reconcile) => reconciles.push(reconcile),
+    });
+    const wakes = [];
+    host.setFile(WATCHED, { mtimeMs: 100, size: 10 });
+    port.start({ kind: "watch", name: "dep", path: WATCHED, message: "changed" }, () => wakes.push(1));
+
+    // The change lands in the registration gap: the watcher never fires.
+    host.setFile(WATCHED, { mtimeMs: 200, size: 12 });
+    assert.equal(wakes.length, 0);
+
+    // The post-registration reconcile pass re-stats and catches the change.
+    assert.equal(reconciles.length, 1);
+    reconciles[0]();
+
+    assert.equal(wakes.length, 1, "the registration-gap change must wake via reconcile");
+  });
+
   it("ignores events that do not change the fingerprint", () => {
     const host = createFakeHost();
     const { wakes } = startWatch(host);
@@ -93,8 +117,7 @@ describe("createWatchPort", () => {
     assert.equal(wakes.length, 0);
   });
 
-  it("keeps the delivered fingerprint when a wake coalesces so the change is not lost", () => {
-    const host = createFakeHost();
+  it("keeps the delivered fingerprint when a wake coalesces so the change is not lost", () => {    const host = createFakeHost();
     const dispatcher = new WakeDispatcher({ deliver: () => true });
     const port = createWatchPort({
       watchFactory: host.watchFactory,

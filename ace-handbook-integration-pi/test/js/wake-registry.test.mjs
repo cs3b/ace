@@ -213,7 +213,7 @@ describe("WakeRegistry loops", () => {
     const host = createFakeHost();
     const { registry, dispatcher } = buildRegistry(host);
     registry.addLoop({ name: "heartbeat", intervalSeconds: 30, message: "check in" });
-    dispatcher.pending.add(loopSourceKey("heartbeat"));
+    dispatcher.pending.set(loopSourceKey("heartbeat"), "check in");
 
     const entries = registry.list();
 

@@ -45,6 +45,11 @@ export function canonicalizeWatchPath(baseDir, path) {
  * @param {(path: string) => {mtimeMs: number, size: number}} ports.statFn
  * @param {string} [ports.baseDir] Resolution base for relative watch paths.
  * @param {(baseDir: string, path: string) => string} [ports.canonicalizeFn] Path canonicalization; defaults to resolve + realpath.
+ * @param {(reconcile: () => void) => unknown} [ports.scheduleReconcile] Schedules
+ *   the post-registration reconcile pass. Native watcher initialization is
+ *   asynchronous on some platforms, so a change landing in the registration
+ *   gap may produce no callback; the reconcile re-stats once and wakes on a
+   * missed change. Defaults to a delayed macrotask.
  * @param {() => void} [ports.onDeactivate] Invoked when a subscription leaves
  *   the active state so callers can refresh visible status.
  * @returns {{
@@ -56,7 +61,9 @@ export function canonicalizeWatchPath(baseDir, path) {
  *   activeCount: () => number,
  * }}
  */
-export function createWatchPort({ watchFactory, statFn, baseDir = process.cwd(), canonicalizeFn = canonicalizeWatchPath, onDeactivate }) {
+const RECONCILE_DELAY_MS = 500;
+
+export function createWatchPort({ watchFactory, statFn, baseDir = process.cwd(), canonicalizeFn = canonicalizeWatchPath, scheduleReconcile = defaultScheduleReconcile, onDeactivate }) {
   /** @type {Map<string, {watcher: {close: () => void}, canonicalPath: string, definition: import("./types.js").WatchDefinition, fingerprint: string, dirty: boolean}>} */
   const active = new Map();
   /** @type {Map<string, string>} */
@@ -74,39 +81,16 @@ export function createWatchPort({ watchFactory, statFn, baseDir = process.cwd(),
       const baseline = readBaseline(canonicalPath);
       const fingerprint = fingerprintOf(baseline);
       const watcher = watchFactory(canonicalPath, {
-        onChange: () => {
-          const current = readBaselineOrError(canonicalPath, definition.name);
-          if (current === undefined) {
-            return;
-          }
-          const next = fingerprintOf(current);
-          if (next === active.get(definition.name)?.fingerprint) {
-            return;
-          }
-          const outcome = onWake(definition);
-          if (outcome && outcome.delivered === false && outcome.reason === "coalesced") {
-            // The queued wake already covers this change, but the change
-            // itself is undelivered: mark the subscription dirty so
-            // flushDirty() re-checks it once the agent settles — without
-            // needing another filesystem event.
-            const entry = active.get(definition.name);
-            if (entry) {
-              entry.dirty = true;
-            }
-            return;
-          }
-          const entry = active.get(definition.name);
-          if (entry) {
-            entry.fingerprint = next;
-            entry.dirty = false;
-          }
-        },
+        onChange: () => handleChange(definition, onWake),
         onError: (error) => {
           deactivate(definition.name, describeError(error));
         },
       });
 
       active.set(definition.name, { watcher, canonicalPath, definition, fingerprint, dirty: false });
+      // Close the registration gap: a change between baseline capture and
+      // watcher effectiveness produces no callback, so re-stat once.
+      scheduleReconcile(() => handleChange(definition, onWake));
       return canonicalPath;
     },
 
@@ -186,6 +170,32 @@ export function createWatchPort({ watchFactory, statFn, baseDir = process.cwd(),
     }
   }
 
+  /** Shared change path for watcher callbacks and the reconcile pass. */
+  function handleChange(definition, onWake) {
+    const entry = active.get(definition.name);
+    if (entry === undefined) {
+      return;
+    }
+    const current = readBaselineOrError(entry.canonicalPath, definition.name);
+    if (current === undefined) {
+      return;
+    }
+    const next = fingerprintOf(current);
+    if (next === entry.fingerprint) {
+      return;
+    }
+    const outcome = onWake(definition);
+    if (outcome && outcome.delivered === false && outcome.reason === "coalesced") {
+      // The queued wake already covers this change, but the change itself is
+      // undelivered: mark the subscription dirty so flushDirty() re-checks it
+      // once the agent settles — without needing another filesystem event.
+      entry.dirty = true;
+      return;
+    }
+    entry.fingerprint = next;
+    entry.dirty = false;
+  }
+
   function deactivate(name, message) {
     stopExisting(name);
     errors.set(name, message);
@@ -214,6 +224,18 @@ export function createWatchPort({ watchFactory, statFn, baseDir = process.cwd(),
       return undefined;
     }
   }
+}
+
+/**
+ * Default reconcile scheduler: a delayed macrotask after registration, timed
+ * to land once the native watcher is effective. Never holds the process open.
+ *
+ * @param {() => void} reconcile
+ */
+export function defaultScheduleReconcile(reconcile) {
+  const timer = setTimeout(reconcile, RECONCILE_DELAY_MS);
+  timer.unref?.();
+  return timer;
 }
 
 /**

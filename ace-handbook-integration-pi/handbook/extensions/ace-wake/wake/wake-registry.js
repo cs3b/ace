@@ -254,20 +254,28 @@ export class WakeRegistry {
   }
 
   /**
-   * Dispatch every retained wake: pending markers are stale at flush time
-   * (their wakes were rejected or consumed without a settlement signal), so
-   * they are cleared and the retained wakes go out fresh. Idempotent — a
-   * flush with nothing retained is a no-op.
+   * Reconcile a delivery boundary that bypasses the normal settlement signal
+   * (manual compaction rejects prompts asynchronously and never emits
+   * agent_settled): pending markers are stale at this point — their wakes
+   * were rejected or consumed without acknowledgement — so retained wakes and
+   * stranded loop attempts go out fresh. Watches are excluded here: their
+   * changes are reconciled fingerprint-aware by flushDirty.
    */
   flushRetained() {
-    if (this.#retained.size === 0) {
+    const retained = [...this.#retained.values()];
+    const strandedLoops = this.#dispatcher
+      .pendingEntries()
+      .filter(([sourceKey]) => sourceKey.startsWith(LOOP_SOURCE_PREFIX));
+    if (retained.length === 0 && strandedLoops.length === 0) {
       return;
     }
     this.#dispatcher.settleAll();
-    const retained = [...this.#retained.values()];
     this.#retained.clear();
     for (const wake of retained) {
       this.#fire(wake.prefix, wake.name, wake.message);
+    }
+    for (const [sourceKey, text] of strandedLoops) {
+      this.#dispatcher.wake(sourceKey, text);
     }
     this.#refreshStatus();
   }
