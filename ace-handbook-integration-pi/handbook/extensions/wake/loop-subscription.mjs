@@ -24,7 +24,10 @@ export function createLoopPort({ setIntervalFn, clearIntervalFn }) {
     start(definition, onTick) {
       stopExisting(definition.name);
       const milliseconds = definition.intervalSeconds * 1000;
-      handles.set(definition.name, setIntervalFn(() => onTick(definition), milliseconds));
+      const handle = setIntervalFn(() => onTick(definition), milliseconds);
+      // Never hold the host process open on the extension's behalf.
+      handle?.unref?.();
+      handles.set(definition.name, handle);
     },
 
     stop(name) {

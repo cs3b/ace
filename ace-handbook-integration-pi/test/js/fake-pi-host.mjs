@@ -73,6 +73,15 @@ export function createFakeHost() {
       return idle;
     },
 
+    /** Models the adapter's run-activity tracking (agent_start/agent_end). */
+    setAgentActive(value) {
+      host.agentActive = value;
+    },
+
+    agentActive: false,
+
+    pendingMessages: false,
+
     /** Simulate the agent consuming everything queued: clears busy runs. */
     settle: () => {},
 
@@ -230,6 +239,7 @@ export function createFakeHost() {
     cwd: "/fake/project",
     isIdle: () => idle,
     hasUI: true,
+    hasPendingMessages: () => host.pendingMessages,
     sessionManager: {
       getBranch: () => sessionEntries.map((entry) => ({ ...entry })),
     },

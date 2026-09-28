@@ -149,6 +149,8 @@ function describeError(error) {
 export function nodeWatchFactory(path, handlers) {
   const watcher = nodeFs.watch(path, { persistent: false }, () => handlers.onChange());
   watcher.on("error", (error) => handlers.onError(error));
+  // Never hold the host process open on the extension's behalf.
+  watcher.unref?.();
   return watcher;
 }
 

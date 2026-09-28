@@ -199,8 +199,19 @@ export class WakeRegistry {
   }
 
   #fire(sourcePrefix, name, message) {
-    this.#dispatcher.wake(`${sourcePrefix}${name}`, message);
-    this.#refreshStatus();
+    try {
+      this.#dispatcher.wake(`${sourcePrefix}${name}`, message);
+      this.#refreshStatus();
+    } catch {
+      // Timer and watcher callbacks can outlive their host context (session
+      // replacement, reload, or disposal invalidates the captured context
+      // without running session_shutdown). A stale context must never crash
+      // the callback, and a runtime that can no longer deliver should not
+      // keep ticking: defuse all handles until the next session_start
+      // re-registers them.
+      this.#loops.stopAll();
+      this.#watches.stopAll();
+    }
   }
 
   #persist() {

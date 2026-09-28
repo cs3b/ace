@@ -35,8 +35,16 @@ async function startSession(host) {
   await handlerFor("session_start")({ type: "session_start", reason: "startup" }, host.commandContext);
 
   return {
-    /** Simulate an extension reload: factory reruns, session_start(reason reload). */
+    /**
+     * Simulate an extension reload with real pi semantics: the old runtime
+     * receives session_shutdown(reason reload), then the factory reruns and
+     * session_start fires with reason "reload".
+     */
     reload: async () => {
+      const shutdown = events.find(([name]) => name === "session_shutdown");
+      if (shutdown) {
+        await shutdown[1]({ type: "session_shutdown", reason: "reload" }, host.commandContext);
+      }
       const reloadEvents = [];
       host.pi.on = (event, handler) => {
         reloadEvents.push([event, handler]);
@@ -47,6 +55,8 @@ async function startSession(host) {
       await found[1]({ type: "session_start", reason: "reload" }, host.commandContext);
     },
     settle: () => handlerFor("agent_settled")({ type: "agent_settled" }, host.commandContext),
+    agentStart: () => handlerFor("agent_start")({ type: "agent_start" }, host.commandContext),
+    agentEnd: () => handlerFor("agent_end")({ type: "agent_end" }, host.commandContext),
     shutdown: () => handlerFor("session_shutdown")({ type: "session_shutdown" }, host.commandContext),
   };
 }
@@ -148,14 +158,15 @@ describe("ace-wake delivery", () => {
 
   it("wakes a busy agent with a queued follow-up that never interrupts", async () => {
     const host = createFakeHost();
-    await startSession(host);
+    const session = await startSession(host);
     await host.runCommand("loop", "add heartbeat --interval 10 --message check in");
 
-    host.setIdle(false);
+    await session.agentStart();
     host.clock.advance(10_000);
 
     assert.equal(host.sends.length, 1);
     host.assertFollowUpDelivery("text:0");
+    await session.agentEnd();
   });
 
   it("coalesces same-source wakes while one is queued and keeps distinct sources", async () => {
@@ -165,7 +176,7 @@ describe("ace-wake delivery", () => {
     await host.runCommand("loop", "add heartbeat --interval 10 --message loop wake");
     await host.runCommand("watch", "add dep --path dep.txt --message watch wake");
 
-    host.setIdle(false);
+    await session.agentStart();
     host.clock.advance(10_000);
     host.setFile("/fake/project/dep.txt", { mtimeMs: 2, size: 2 });
     host.triggerWatch("/fake/project/dep.txt");

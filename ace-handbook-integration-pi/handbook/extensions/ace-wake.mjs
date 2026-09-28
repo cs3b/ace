@@ -30,29 +30,40 @@ import { WakeRegistry } from "./wake/wake-registry.mjs";
 
 const STATUS_KEY = "ace-wake";
 
-/** @type {{ports: object, registry: WakeRegistry} | undefined} */
-let runtime;
-
 /**
  * Extension factory. Pi calls it as `factory(pi)`; the optional second
  * argument exists so tests can inject deterministic clock, watcher, and
  * stat ports. Production defaults are real Node timers and fs.
  *
+ * All mutable state lives inside this factory closure: one extension runtime
+ * (one pi process, or one SDK session) owns exactly one state slot, and
+ * multiple runtimes in one process never share state.
+ *
  * @param {object} pi ExtensionAPI surface provided by Pi.
  * @param {object} [ports] Injectable host ports for deterministic tests.
  */
 export default function (pi, ports = {}) {
+  /** @type {{registry: WakeRegistry, agentActive: boolean} | undefined} */
+  let runtime;
+
+  const getRuntime = () => runtime;
+  const bindRuntime = (ctx) => {
+    runtime?.registry.dispose();
+    runtime = { registry: createRegistry(pi, ctx, ports, getRuntime), agentActive: false };
+    runtime.registry.reconcile();
+  };
+
   pi.registerCommand("loop", {
     description: "Manage named timer loops that wake this agent (add | list | remove)",
     handler: async (args, ctx) => {
-      await handleCommand(pi, ctx, "loop", args, ports);
+      await handleCommand(ctx, "loop", args, getRuntime, bindRuntime);
     },
   });
 
   pi.registerCommand("watch", {
     description: "Manage named file watches that wake this agent (add | list | remove)",
     handler: async (args, ctx) => {
-      await handleCommand(pi, ctx, "watch", args, ports);
+      await handleCommand(ctx, "watch", args, getRuntime, bindRuntime);
     },
   });
 
@@ -60,10 +71,10 @@ export default function (pi, ports = {}) {
   // session_tree covers branch switches. Reconciliation is idempotent, so a
   // reload re-registers each configured subscription exactly once.
   pi.on("session_start", async (_event, ctx) => {
-    resetRuntime(pi, ctx, ports);
+    bindRuntime(ctx);
   });
   pi.on("session_tree", async (_event, ctx) => {
-    resetRuntime(pi, ctx, ports);
+    bindRuntime(ctx);
   });
 
   // The agent consumed every queued continuation; same-source wakes may
@@ -72,21 +83,29 @@ export default function (pi, ports = {}) {
     runtime?.registry.settleAll();
   });
 
+  // ctx.isIdle() only tracks model streaming — it reports idle while a tool
+  // executes mid-run. Track actual run activity so wakes during tool
+  // execution queue as follow-ups instead of starting a parallel turn.
+  pi.on("agent_start", async () => {
+    if (runtime) {
+      runtime.agentActive = true;
+    }
+  });
+  pi.on("agent_end", async () => {
+    if (runtime) {
+      runtime.agentActive = false;
+    }
+  });
+
   pi.on("session_shutdown", async () => {
     runtime?.registry.dispose();
     runtime = undefined;
   });
 }
 
-function resetRuntime(pi, ctx, ports) {
-  runtime?.registry.dispose();
-  runtime = { ports, registry: createRegistry(pi, ctx, ports) };
-  runtime.registry.reconcile();
-}
-
-function createRegistry(pi, ctx, ports) {
+function createRegistry(pi, ctx, ports, getRuntime) {
   const dispatcher = new WakeDispatcher({
-    deliver: (sourceKey, text) => deliverWake(pi, ctx, sourceKey, text),
+    deliver: (sourceKey, text) => deliverWake(getRuntime(), pi, ctx, sourceKey, text),
   });
   return new WakeRegistry({
     loops: createLoopPort({
@@ -105,19 +124,33 @@ function createRegistry(pi, ctx, ports) {
 }
 
 /**
- * Queue-only delivery. Idle agents receive the wake directly (it triggers a
- * turn); busy agents receive a queued follow-up that never interrupts an
- * in-flight tool operation.
+ * Queue-only delivery. An agent with no run in flight receives the wake
+ * directly (it triggers a turn); a busy agent — streaming or executing a
+ * tool, or holding queued messages — receives a queued follow-up that never
+ * interrupts the in-flight operation.
  */
-function deliverWake(pi, ctx, sourceKey, text) {
+function deliverWake(runtime, pi, ctx, sourceKey, text) {
   const message = `[ace-wake ${sourceKey}] ${text}`;
   try {
-    if (ctx.isIdle()) {
-      pi.sendUserMessage(message);
-    } else {
+    if (isBusy(runtime, ctx)) {
       pi.sendUserMessage(message, { deliverAs: "followUp" });
+    } else {
+      pi.sendUserMessage(message);
     }
     return true;
+  } catch {
+    // A stale context (session replaced/reloaded) or a rejecting host must
+    // not crash the timer callback; the next session_start rebinds.
+    return false;
+  }
+}
+
+function isBusy(runtime, ctx) {
+  if (runtime?.agentActive) {
+    return true;
+  }
+  try {
+    return ctx.hasPendingMessages();
   } catch {
     return false;
   }
@@ -143,36 +176,45 @@ function sessionStatePort(pi, ctx) {
 function statusPort(ctx) {
   return {
     render(entries) {
-      if (!ctx.hasUI) {
-        return;
+      try {
+        // Every context access — including hasUI — throws once the context
+        // is stale after session replacement, reload, or disposal.
+        if (!ctx.hasUI) {
+          return;
+        }
+        if (entries.length === 0) {
+          ctx.ui.setStatus(STATUS_KEY, undefined);
+          return;
+        }
+        const parts = entries.map((entry) => {
+          const state = entry.error ? " error" : entry.pending ? " pending" : "";
+          return `${entry.kind} ${entry.name}${state} ${entry.detail}`;
+        });
+        ctx.ui.setStatus(STATUS_KEY, parts.join(" | "));
+      } catch {
+        // Stale context: skip the render; the next session_start rebinds.
       }
-      if (entries.length === 0) {
-        ctx.ui.setStatus(STATUS_KEY, undefined);
-        return;
-      }
-      const parts = entries.map((entry) => {
-        const state = entry.error ? " error" : entry.pending ? " pending" : "";
-        return `${entry.kind} ${entry.name}${state} ${entry.detail}`;
-      });
-      ctx.ui.setStatus(STATUS_KEY, parts.join(" | "));
     },
   };
 }
 
-async function handleCommand(pi, ctx, kind, args, ports) {
-  const wakeRuntime = runtime ?? bindRuntime(pi, ctx, ports);
+async function handleCommand(ctx, kind, args, getRuntime, bindRuntime) {
   try {
+    if (!getRuntime()) {
+      bindRuntime(ctx);
+    }
+    const registry = getRuntime().registry;
     const parsed = parseWakeCommand(kind, args);
     switch (parsed.subcommand) {
       case "add":
-        addSubscription(wakeRuntime.registry, kind, parsed);
+        addSubscription(registry, kind, parsed);
         notify(ctx, `${kind} "${parsed.name}" added`, "info");
         break;
       case "list":
-        notify(ctx, formatList(kind, wakeRuntime.registry.list()), "info");
+        notify(ctx, formatList(kind, registry.list()), "info");
         break;
       case "remove":
-        removeSubscription(wakeRuntime.registry, kind, parsed.name);
+        removeSubscription(registry, kind, parsed.name);
         notify(ctx, `${kind} "${parsed.name}" removed; no further wakes will fire`, "info");
         break;
       default:
@@ -181,11 +223,6 @@ async function handleCommand(pi, ctx, kind, args, ports) {
   } catch (error) {
     notify(ctx, error instanceof WakeError ? error.message : `${kind} failed: ${error.message}`, "error");
   }
-}
-
-function bindRuntime(pi, ctx, ports) {
-  resetRuntime(pi, ctx, ports);
-  return runtime;
 }
 
 function addSubscription(registry, kind, parsed) {
