@@ -190,7 +190,7 @@ class InstalledConsumerEnvironment
       "GEM_PATH" => gem_home,
       "GEM_SPEC_CACHE" => File.join(@root, "gem-spec-cache"),
       "TMPDIR" => File.join(@root, "tmp"),
-      "PATH" => "#{File.join(gem_home, 'bin')}:#{File.dirname(RbConfig.ruby)}:/usr/bin:/bin"
+      "PATH" => "#{File.join(gem_home, "bin")}:#{File.dirname(RbConfig.ruby)}:/usr/bin:/bin"
     }
   end
 
