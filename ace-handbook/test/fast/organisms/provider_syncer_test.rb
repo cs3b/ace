@@ -399,7 +399,31 @@ class Ace::Handbook::Organisms::ProviderSyncerTest < Minitest::Test
 
     assert_includes error.message, "refusing to overwrite"
     assert_equal "\"user content\"", File.read(File.join(extensions_dir, "ace-wake", "index.js")),
-                 "a foreign receipt must not authorize overwrites"
+      "a foreign receipt must not authorize overwrites"
+  end
+
+  def test_failed_projection_writes_nothing_and_retry_succeeds
+    create_provider_manifest("pi", ".pi/skills", extensions_dir: ".pi/extensions")
+    create_extension_asset("pi", "ace-wake/a.js", "// a" + "\n")
+    create_extension_asset("pi", "ace-wake/z/index.js", "// z" + "\n")
+    extensions_dir = File.join(@tmpdir, ".pi", "extensions")
+    outside = File.join(@tmpdir, "outside")
+    FileUtils.mkdir_p(outside)
+    FileUtils.mkdir_p(File.join(extensions_dir, "ace-wake"))
+    FileUtils.ln_s(outside, File.join(extensions_dir, "ace-wake", "z"))
+
+    error = assert_raises(StandardError) { syncer.sync(provider: "pi") }
+
+    assert_includes error.message, "symlinked path component"
+    refute File.exist?(File.join(extensions_dir, "ace-wake", "a.js")),
+      "a failed projection must not leave partially installed files behind"
+
+    # After the obstacle is removed, the retry succeeds without manual cleanup.
+    FileUtils.rm_f(File.join(extensions_dir, "ace-wake", "z"))
+    result = syncer.sync(provider: "pi").first
+    assert_equal 2, result.fetch(:projected_extensions)
+    assert File.exist?(File.join(extensions_dir, "ace-wake", "a.js"))
+    assert File.exist?(File.join(extensions_dir, "ace-wake", "z", "index.js"))
   end
 
   def test_sync_rejects_receipt_paths_through_symlinked_components

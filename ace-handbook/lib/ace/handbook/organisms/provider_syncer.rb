@@ -200,13 +200,21 @@ module Ace
           removed_entries = prune_stale_extension_files(output_dir, expected.keys, provider)
           updated_files = 0
 
-          expected.each do |relative_path, source_path|
+          # Resolve and validate every destination before writing anything: a
+          # failure mid-copy must never leave half a projection behind (files
+          # written before a later validation error would be unowned and wedge
+          # every retry).
+          output_paths = expected.each_with_object({}) do |(relative_path, source_path), map|
             output_path = safe_projection_path(output_dir, relative_path)
             if output_path.nil?
               raise StandardError,
                     "cannot project #{relative_path} into #{extensions_dir}: a symlinked path component would escape the projection directory"
             end
+            map[relative_path] = output_path
+          end
 
+          output_paths.each do |relative_path, output_path|
+            source_path = expected.fetch(relative_path)
             FileUtils.mkdir_p(File.dirname(output_path))
             next if File.exist?(output_path) && FileUtils.compare_file(source_path, output_path)
 
