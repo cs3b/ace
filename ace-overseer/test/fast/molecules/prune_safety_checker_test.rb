@@ -254,6 +254,7 @@ end
 
 def test_detached_head_yields_no_verified_branch
   _repo, worktree = build_worktree
+  worktree.git!("checkout", "-q", "--detach")
   detached_sha = worktree.rev("HEAD")
   context = build_context_with_branch(worktree_path: worktree.path, branch: detached_sha)
   checker = build_checker(worktree_path: worktree.path, context: context)
@@ -265,6 +266,30 @@ def test_detached_head_yields_no_verified_branch
   assert candidate.preserved
   assert_nil candidate.verified_branch
   assert_equal "p" * 40, candidate.verified_head
+end
+
+def test_hex_named_branch_is_not_mistaken_for_detached_head
+  repo = PruneGitFixtures::Repo.new(File.join(Dir.mktmpdir("prune-checker"), "hexrepo")).init
+  repo.write("base.txt", "base\n")
+  repo.commit("base")
+  hex_branch = "b" * 40
+  worktree = repo.add_worktree(File.join(repo.path, "..", "wt-hex"), nil)
+  worktree.git!("checkout", "-q", "-b", hex_branch)
+
+  checker = Ace::Overseer::Molecules::PruneSafetyChecker.new(
+    context_collector: FakeCollector.new(
+      build_context_with_branch(worktree_path: worktree.path, branch: hex_branch)
+    ),
+    task_loader_factory: -> { FakeTaskManager.new({status: "done"}) },
+    preservation_checker: StubPreservationChecker.new(preserved: true)
+  )
+
+  candidate = checker.check(
+    worktree_path: worktree.path, task_ref: "230", accepted_base: {branch: "main", head: "a" * 40}
+  )
+
+  assert candidate.preserved
+  assert_equal hex_branch, candidate.verified_branch
 end
 
   def test_no_accepted_base_blocks_preservation

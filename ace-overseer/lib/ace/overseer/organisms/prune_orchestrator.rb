@@ -142,12 +142,20 @@ module Ace
           if verified_head && head_now && head_now != verified_head
             return {success: false, error: "HEAD changed after recheck (#{head_now[0, 12]}); preserving"}
           end
-          # Compare identities directly, including a detached HEAD (nil
-          # branch): switching away after the recheck preserves the
-          # candidate instead of deleting the previously verified branch.
-          if verified_branch && branch_now != verified_branch
-            return {success: false,
-                    error: branch_now.to_s.empty? ? "worktree detached after recheck; preserving" : "branch switched to #{branch_now} after recheck; preserving"}
+          # Compare branch identities in BOTH directions, including nil: a
+          # detach after the recheck preserves the candidate instead of
+          # deleting the verified branch, and attaching after a detached
+          # recheck preserves the candidate instead of deleting a branch
+          # that was never proven.
+          if verified_branch != branch_now
+            detail = if verified_branch.nil?
+              "worktree attached to #{branch_now} after recheck"
+            elsif branch_now.to_s.empty?
+              "worktree detached after recheck"
+            else
+              "branch switched to #{branch_now} after recheck"
+            end
+            return {success: false, error: "#{detail}; preserving"}
           end
 
           repo = candidate_repo(candidate.worktree_path)
@@ -161,7 +169,9 @@ module Ace
           return remove_result unless remove_result[:success]
 
           close_tmux_window(candidate.worktree_path)
-          branch_result = delete_branch(repo, branch: verified_branch || branch_now, head: verified_head)
+          # Only the branch the recheck verified is deletable — never a
+          # freshly observed branch name.
+          branch_result = delete_branch(repo, branch: verified_branch, head: verified_head)
           return branch_result unless branch_result[:success]
 
           remove_result

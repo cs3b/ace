@@ -55,13 +55,11 @@ module Ace
           )
           # The HEAD and branch whose preservation was actually proven:
           # destructive boundaries downstream must use these identities,
-          # never a later re-read that was itself never proven. A detached
-          # HEAD has no branch to delete — the collector reports the commit
-          # SHA as the branch, which must never be treated as a ref name.
+          # never a later re-read that was itself never proven. Detachment
+          # comes from Git's symbolic HEAD state, not the branch name's
+          # shape — a 40-hex branch name is a real branch.
           verified_head = proof.preserved? ? proof.head : nil
-          verified_branch = if proof.preserved? && !detached_branch?(context.branch)
-            context.branch
-          end
+          verified_branch = proof.preserved? ? head_branch(worktree_path) : nil
 
           reasons = []
           reasons << "assignment not complete" unless assignment_complete
@@ -186,8 +184,18 @@ module Ace
           Models::PreservationProof.blocked("preservation proof failed: #{e.message}")
         end
 
-        def detached_branch?(branch)
-          branch.to_s.strip.empty? || branch.to_s.match?(/\A[0-9a-f]{40}\z/)
+        # The checked-out branch per Git's symbolic HEAD state; nil when
+        # detached (or unreadable — then there is no deletable ref).
+        def head_branch(worktree_path)
+          stdout, _stderr, status = Open3.capture3(
+            "git", "-C", worktree_path, "symbolic-ref", "-q", "HEAD"
+          )
+          return nil unless status.success?
+
+          branch = stdout.to_s.strip.sub(/\Arefs\/heads\//, "")
+          branch.empty? ? nil : branch
+        rescue
+          nil
         end
 
         def assign_cache_relative

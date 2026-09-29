@@ -249,10 +249,11 @@ end
 
 # A minimal checker double: always safe, verifies a configurable identity.
 class PruneSafetyCheckerDouble
-  attr_reader :proven_head
+  attr_reader :proven_head, :proven_branch
 
-  def initialize(proven_head:)
+  def initialize(proven_head:, proven_branch: "task-work")
     @proven_head = proven_head
+    @proven_branch = proven_branch
   end
 
   def check(worktree_path:, task_ref:, manifest_record: nil, accepted_base: nil)
@@ -265,7 +266,7 @@ class PruneSafetyCheckerDouble
       attempts_terminal: true,
       preserved: true,
       verified_head: proven_head,
-      verified_branch: "task-work",
+      verified_branch: proven_branch,
       reasons: []
     )
   end
