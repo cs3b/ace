@@ -183,6 +183,25 @@ class CleanupPrResolverTest < Minitest::Test
     end
   end
 
+  def test_fully_qualified_ref_targets_match_pr_base_branch
+    ["refs/heads/main", "refs/remotes/origin/main"].each do |target|
+      resolver = Ace::Git::Worktree::Molecules::CleanupPrResolver.new(
+        target: target, target_sha: "main123", offline: false,
+        server_name: "forgejo-lab", runner: ->(**_kw) { {success: true, stdout: "", stderr: "", exit_code: 0} }
+      )
+      resolver.stub(:git_remotes, ["origin"]) do
+        with_registered_provider(merged_evidence) do
+          resolver.stub(:ancestor?, true) do
+            result = resolver.classify("feature", "feat123")
+            assert_equal :merged, result[:status], target
+            assert_equal "remove", result[:action], target
+            assert_nil result[:retention_reason], target
+          end
+        end
+      end
+    end
+  end
+
   def test_slashed_branch_target_stays_strict_against_segment_base
     # A target branch that merely contains a slash is not a remote prefix:
     # base "x" must not satisfy target "feature/x".
