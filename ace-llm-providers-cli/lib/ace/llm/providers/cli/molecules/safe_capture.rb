@@ -152,8 +152,10 @@ module Ace
                   end
                   stdin.close
 
-                  out_reader = Thread.new { safe_read_stream(stdout) }
-                  err_reader = Thread.new { safe_read_stream(stderr) }
+                  partial_stdout = +""
+                  partial_stderr = +""
+                  out_reader = Thread.new { safe_read_stream(stdout, partial_stdout) }
+                  err_reader = Thread.new { safe_read_stream(stderr, partial_stderr) }
                   out_reader.report_on_exception = false
                   err_reader.report_on_exception = false
 
@@ -169,8 +171,8 @@ module Ace
 
                     return Models::CaptureResult.new(
                       outcome: Models::CaptureResult::OUTCOME_DEADLINE_EXCEEDED,
-                      stdout: drain_reader(out_reader, stdout),
-                      stderr: drain_reader(err_reader, stderr),
+                      stdout: drain_reader(out_reader, stdout, partial_stdout),
+                      stderr: drain_reader(err_reader, stderr, partial_stderr),
                       provider_name: provider_name,
                       invocation_id: invocation_id,
                       deadline_seconds: normalized_timeout,
@@ -232,24 +234,23 @@ module Ace
               # Pull whatever partial output a reader thread captured without
               # ever blocking past a short bound: a descendant outside the
               # killed process group can keep the pipe open indefinitely. The
-              # reader buffers incrementally, so its value keeps whatever was
-              # already read even when we must close the stream to unblock it.
-              def drain_reader(reader, io)
+              # buffer is caller-owned, so bytes already read survive even when
+              # the stream must be closed or the reader thread must be killed.
+              def drain_reader(reader, io, buffer)
                 if reader.join(2)
                   reader.value.to_s
                 else
                   io.close unless io.closed?
                   reader.join(1)
                   reader.kill if reader.alive?
-                  reader.value.to_s
+                  buffer.dup
                 end
               end
 
-              # Incrementally buffer stream output so already-read bytes
-              # survive even when the stream must be closed mid-read (a
-              # descendant outside the killed process group holding the pipe).
-              def safe_read_stream(io)
-                buffer = +""
+              # Incrementally buffer stream output into a caller-owned buffer so
+              # already-read bytes survive even when the stream must be closed
+              # mid-read or the reader thread must be killed.
+              def safe_read_stream(io, buffer)
                 loop do
                   chunk = io.read_nonblock(65_536, exception: false)
                   if chunk.nil?
