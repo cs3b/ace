@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.36.0] - 2026-09-29
+
+### Added
+- `Models::CaptureResult`: typed outcome of one subprocess capture (completed / deadline-exceeded / transport failure / spawn failure) carrying raw streams internally, plus exit status, signal, configured deadline, monotonic elapsed time, and an opaque invocation ID generated before spawn. Evidence leaves only as bounded, redacted excerpts.
+
+### Changed
+- `SafeCapture.call` returns a `CaptureResult` instead of a bare `[stdout, stderr, status]` tuple and no longer raises on deadline expiry; spawn failures (binary not found) become a typed outcome instead of a raw `Errno`. Process-group cleanup, partial-stream retention, and the Linux subreaper supervisor are preserved. Deadline measurement uses the monotonic clock.
+- All CLI provider clients (codex, codexoai, claude, claudeoai, gemini, pi, opencode, agy) consume the typed result and raise `ProviderError`s that carry structured execution evidence; provider-reported auth failures (pi 401) still surface as `AuthenticationError`.
+
 ## [0.35.2] - 2026-09-29
 
 ### Changed
