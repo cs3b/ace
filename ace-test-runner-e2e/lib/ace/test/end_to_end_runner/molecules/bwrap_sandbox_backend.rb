@@ -49,13 +49,19 @@ module Ace
 
           def prepared_env(base_env = {})
             env = stringify_keys(base_env)
-            STRIPPED_ENV_KEYS.each { |key| env.delete(key) }
+            # Empty strings clear inherited loader vars for children. A plain
+            # delete leaves the parent's value leaking through env-hash spawns,
+            # and nil-unset is unreliable once RubyGems auto-activation re-reads
+            # the ambient environment.
+            STRIPPED_ENV_KEYS.each { |key| env[key] = "" }
             env["PROJECT_ROOT_PATH"] = @sandbox_root
             env["ACE_E2E_SOURCE_ROOT"] ||= @source_root if @source_root
-            env["HOME"] = sandbox_home
-            env["TMPDIR"] = sandbox_tmp
-            env["XDG_RUNTIME_DIR"] = sandbox_runtime_dir
-            env["TMUX_TMPDIR"] ||= sandbox_runtime_dir
+            if self.class.supported?
+              env["HOME"] = sandbox_home
+              env["TMPDIR"] = sandbox_tmp
+              env["XDG_RUNTIME_DIR"] = sandbox_runtime_dir
+              env["TMUX_TMPDIR"] ||= sandbox_runtime_dir
+            end
             env["BUNDLE_GEMFILE"] ||= File.join(@sandbox_root, ".ace-local", "e2e-runtime", "Gemfile")
             env["ACE_CONFIG_PATH"] ||= File.join(@sandbox_root, ".ace")
             env["BUNDLE_APP_CONFIG"] ||= bundler_app_config

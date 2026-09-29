@@ -5,11 +5,14 @@ require_relative "../../test_helper"
 class BwrapSandboxBackendTest < Minitest::Test
   Backend = Ace::Test::EndToEndRunner::Molecules::BwrapSandboxBackend
 
-  def test_prepared_env_sets_private_runtime_paths
+  def test_prepared_env_sets_private_runtime_paths_in_bwrap_sandbox
     Dir.mktmpdir do |tmpdir|
       backend = Backend.new(sandbox_root: tmpdir, source_root: "/repo")
 
-      env = backend.prepared_env("CUSTOM" => "value")
+      env = nil
+      Backend.stub(:supported?, true) do
+        env = backend.prepared_env("CUSTOM" => "value")
+      end
 
       assert_equal File.expand_path(tmpdir), env["PROJECT_ROOT_PATH"]
       assert_equal "/repo", env["ACE_E2E_SOURCE_ROOT"]
@@ -22,6 +25,25 @@ class BwrapSandboxBackendTest < Minitest::Test
       assert_equal "#{File.expand_path(tmpdir)}.support/bundler/cache", env["BUNDLE_USER_CACHE"]
       assert_equal "#{File.expand_path(tmpdir)}.support/bundler/config", env["BUNDLE_USER_CONFIG"]
       assert_equal "#{File.expand_path(tmpdir)}/.ace-local/e2e-runtime/Gemfile", env["BUNDLE_GEMFILE"]
+      assert_equal "value", env["CUSTOM"]
+    end
+  end
+
+  def test_prepared_env_keeps_host_home_when_bwrap_unsupported
+    Dir.mktmpdir do |tmpdir|
+      backend = Backend.new(sandbox_root: tmpdir, source_root: "/repo")
+
+      env = nil
+      Backend.stub(:supported?, false) do
+        env = backend.prepared_env("CUSTOM" => "value")
+      end
+
+      refute env.key?("HOME")
+      refute env.key?("TMPDIR")
+      refute env.key?("XDG_RUNTIME_DIR")
+      refute env.key?("TMUX_TMPDIR")
+      assert_equal File.expand_path(tmpdir), env["PROJECT_ROOT_PATH"]
+      assert_equal "/repo", env["ACE_E2E_SOURCE_ROOT"]
       assert_equal "value", env["CUSTOM"]
     end
   end
@@ -40,8 +62,8 @@ class BwrapSandboxBackendTest < Minitest::Test
 
       assert_equal "/repo/Gemfile", env["BUNDLE_GEMFILE"]
       assert_equal "2.7.2", env["BUNDLER_VERSION"]
-      refute env.key?("RUBYOPT")
-      refute env.key?("RUBYLIB")
+      assert_equal "", env["RUBYOPT"]
+      assert_equal "", env["RUBYLIB"]
       assert_equal "yes", env["KEEP_ME"]
     end
   end
@@ -63,6 +85,27 @@ class BwrapSandboxBackendTest < Minitest::Test
       assert_equal "/sandbox/gems", env["GEM_HOME"]
       assert_equal "/sandbox/gems", env["GEM_PATH"]
       assert_equal "/sandbox/runtime", env["ACE_E2E_SANDBOX_RUNTIME_ROOT"]
+    end
+  end
+
+  def test_capture3_clears_stripped_loader_env_for_child
+    Dir.mktmpdir do |tmpdir|
+      backend = Backend.new(sandbox_root: tmpdir, source_root: "/repo")
+      old_rubylib = ENV["RUBYLIB"]
+      ENV["RUBYLIB"] = "/tmp/leaked-lib"
+      _out, err, _status = backend.capture3(
+        [RbConfig.ruby, "--disable-gems", "-e",
+         "warn ENV['RUBYLIB'].to_s.empty? ? 'CLEAN' : \"LEAK:#{ENV['RUBYLIB']}\""],
+        chdir: tmpdir
+      )
+      assert_includes err, "CLEAN"
+      refute_includes err, "LEAK"
+    ensure
+      if old_rubylib.nil?
+        ENV.delete("RUBYLIB")
+      else
+        ENV["RUBYLIB"] = old_rubylib
+      end
     end
   end
 

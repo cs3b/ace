@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.40.6] - 2026-09-29
+
+### Fixed
+- macOS E2E runs keep provider auth: sandbox HOME/TMPDIR/XDG_RUNTIME_DIR/TMUX_TMPDIR overrides now apply only when the bwrap sandbox is supported.
+- Prepared env clears RUBYOPT/RUBYLIB with empty strings so ambient loader variables cannot leak into runner/verifier children (plain delete does not unset through env-hash spawns, and nil-unset is unreliable once RubyGems re-reads the ambient environment).
+
+### Changed
+- Runner system prompt: scenario-prescribed isolation (for example `env -i` and direct executables) must be executed exactly as written.
+- Verifier system prompt: pre-created placeholder files are input contracts, not postcondition evidence.
+
+### Technical
+- Regression test proving a contaminated parent RUBYLIB cannot reach backend children.
 
 ## [0.40.5] - 2026-09-02
 

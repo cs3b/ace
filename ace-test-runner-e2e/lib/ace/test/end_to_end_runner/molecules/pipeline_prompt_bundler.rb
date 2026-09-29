@@ -17,7 +17,7 @@ module Ace
             Rules:
             - Execute each goal in order
             - Treat the initial working directory as SANDBOX_ROOT; if a goal needs commands in a created worktree, cd there for execution but keep any declared outcome artifacts under SANDBOX_ROOT/results
-            - Preserve the sandbox runtime environment; do not reset PATH, HOME, or other provided env vars
+            - Preserve the sandbox runtime environment for ACE tooling; do not reset PATH, HOME, or other provided env vars on your own initiative. When a goal prescribes its own isolation (for example `env -i` or direct executables for the tool under test), execute it exactly as written — do not drop `env -i` or substitute partial environment overrides
             - If `ACE_E2E_SANDBOX_RUNTIME_ROOT` is set, make sure command execution uses `$ACE_E2E_SANDBOX_RUNTIME_ROOT/bin` on PATH in the shell where you run scenario commands
             - Run `ace-*` commands directly; do not wrap them with `timeout`, `env -i`, or other execution wrappers that can change behavior or hide diagnostics
             - Do not bypass the public CLI with repo-local executables such as `./exe/ace-*`, `bin/ace-*`, or `ruby .../exe/ace-*`
@@ -41,6 +41,7 @@ module Ace
             - Treat declared artifacts and helper filenames as hints, not as the source of truth
             - If a helper file is missing or stale, inspect the sandbox directly before failing the goal
             - Use artifact mtimes to detect runner ordering mistakes; if postcondition captures are older than the primary command's stdout/stderr/exit, classify the goal as `runner-error` unless direct sandbox state proves a product failure after the command completed
+            - Pre-created placeholder files required by the goal contract are input contracts, not postcondition evidence; their emptiness or older mtimes never fails a goal on their own
             - Use read-only commands in the sandbox when they materially improve confidence (for example: git log/status/show, ls/find/cat)
             - Do not speculate beyond the provided sandbox evidence and runner observations
             - For each failed goal, include a category:
