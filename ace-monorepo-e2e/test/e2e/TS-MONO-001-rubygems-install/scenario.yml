@@ -51,10 +51,27 @@ setup:
         - ace-overseer
         - ace-review
         - ace-runtime
+        - ace-support-cli
         - ace-support-test-helpers
         - ace-task
         - ace-test
         - ace-test-runner
         - ace-test-runner-e2e
+        - name: ace-support-cli
+          supersedes: ["0.6.8"]
+        - name: ace-bundle
+          supersedes: ["0.44.1"]
+        - name: ace-review
+          supersedes: ["0.56.0"]
+        - name: ace-task
+          supersedes: ["0.38.0"]
+        - name: ace-llm
+          supersedes: ["0.41.1"]
+        - name: ace-llm-providers-cli
+          supersedes: ["0.35.2"]
+        - name: ace-test-runner
+          supersedes: ["0.27.0"]
+        - name: ace-test-runner-e2e
+          supersedes: ["0.40.6"]
   - agent-env:
       PROJECT_ROOT_PATH: .

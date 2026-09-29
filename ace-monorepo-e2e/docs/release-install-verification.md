@@ -40,15 +40,20 @@ session completes):
 ACE_E2E_SOURCE_ROOT=$PWD .ace-local/test-e2e/<run>/ace-monorepo-e2e/test/e2e/TS-MONO-001-rubygems-install/install_receipt.rb \
   finalize \
   --manifest .ace-local/test-e2e/<run>/results/tc/01/release-manifest.json \
+  --source-manifest .ace-local/release/installation-manifest.json \
   --normal .ace-local/test-e2e/<run>/results/tc/02 \
   --full-index .ace-local/test-e2e/<run>/results/tc/03 \
   --pipeline-report .ace-local/test-e2e/<run>-reports \
+  --results-root .ace-local/test-e2e/<run> \
   --out .ace-tasks/<task>/evidence/installation-acceptance.json
 ```
 
-`finalize` exits non-zero unless the exact-version acceptance passes and the
-pipeline completed (`status: pass`, no `uncertain_execution`). The emitted
-artifact is the immutable final verdict retained with the task evidence.
+`finalize` exits non-zero unless the exact-version acceptance passes, the
+sandbox manifest copy is byte-identical to the validated source manifest, the
+recorded classification agrees with the classification recomputed from the
+install exits, the runner-side acceptance artifact passes, and the pipeline
+completed (`status: pass`, no `uncertain_execution`). The emitted artifact is
+the immutable final verdict retained with the task evidence.
 
 ## Frozen Release Manifest
 

@@ -325,6 +325,53 @@ class InstallReceiptTest < AceMonorepoE2eTestCase
       verdict["findings"].inspect)
   end
 
+  def test_finalize_requires_pipeline_metadata
+    fixture = build_complete_fixture
+    results_root = write_results_root(fixture)
+
+    verdict = InstallReceipt.finalize(
+      manifest_path: @manifest_path,
+      mode_dirs: {"normal" => fixture[:normal], "full_index" => fixture[:full_index]},
+      pipeline_report_dir: File.join(@tmpdir, "absent-reports"),
+      results_root: results_root,
+      source_manifest: @manifest_path
+    )
+
+    assert_equal "fail", verdict["final"]
+    assert(verdict["findings"].any? { |finding| finding.include?("metadata.yml is missing") },
+      verdict["findings"].inspect)
+  end
+
+  def test_verify_rejects_consumer_gemfile_with_local_source
+    fixture = build_complete_fixture
+    gemfile = File.join(fixture[:normal], "consumer", "ace-bundle", "Gemfile")
+    File.write(gemfile, "source 'https://rubygems.org'\n\ngem 'ace-bundle', path: '/Users/mc/Ps/ace/ace-bundle'\n")
+
+    verdict = InstallReceipt.verify(
+      manifest_path: @manifest_path,
+      mode_dirs: {"normal" => fixture[:normal], "full_index" => fixture[:full_index]}
+    )
+
+    assert_equal "fail", verdict["acceptance"]
+    assert(verdict["findings"].any? { |finding| finding.include?("normal consumer ace-bundle") && finding.include?("not path/git sources") },
+      verdict["findings"].inspect)
+  end
+
+  def test_verify_rejects_consumer_lockfile_with_path_section
+    fixture = build_complete_fixture
+    lockfile = File.join(fixture[:full_index], "consumer", "ace-review", "Gemfile.lock")
+    File.write(lockfile, File.read(lockfile) + "\nPATH\n  remote: /Users/mc/Ps/ace/ace-review\n  specs:\n    ace-review (0.56.1)\n")
+
+    verdict = InstallReceipt.verify(
+      manifest_path: @manifest_path,
+      mode_dirs: {"normal" => fixture[:normal], "full_index" => fixture[:full_index]}
+    )
+
+    assert_equal "fail", verdict["acceptance"]
+    assert(verdict["findings"].any? { |finding| finding.include?("full_index consumer ace-review") && finding.include?("PATH sources") },
+      verdict["findings"].inspect)
+  end
+
   def test_finalize_rejects_wrapper_error_despite_zero_bundle_exits
     fixture = build_complete_fixture
     report_dir = File.join(@tmpdir, "reports")
@@ -339,7 +386,8 @@ class InstallReceiptTest < AceMonorepoE2eTestCase
       manifest_path: @manifest_path,
       mode_dirs: {"normal" => fixture[:normal], "full_index" => fixture[:full_index]},
       pipeline_report_dir: report_dir,
-      results_root: results_root
+      results_root: results_root,
+      source_manifest: @manifest_path
     )
 
     assert_equal "pass", verdict["acceptance"]
@@ -361,27 +409,38 @@ class InstallReceiptTest < AceMonorepoE2eTestCase
       manifest_path: @manifest_path,
       mode_dirs: {"normal" => fixture[:normal], "full_index" => fixture[:full_index]},
       pipeline_report_dir: report_dir,
-      results_root: results_root
+      results_root: results_root,
+      source_manifest: @manifest_path
     )
 
     assert_equal "pass", verdict["final"], verdict["findings"].inspect
     assert_equal "pass", verdict["pipeline_completion"]["status"]
     assert_equal "SAFE", verdict["results_reconciliation"]["recorded_classification"]
+    assert verdict["manifest_integrity"]["ok"]
   end
 
-  def test_finalize_requires_pipeline_metadata
+  def test_finalize_rejects_tampered_sandbox_manifest_copy
     fixture = build_complete_fixture
+    report_dir = File.join(@tmpdir, "reports")
     results_root = write_results_root(fixture)
+    FileUtils.mkdir_p(report_dir)
+    File.write(File.join(report_dir, "metadata.yml"), "status: pass\n")
+
+    tampered = File.join(@tmpdir, "source-manifest.json")
+    manifest = JSON.parse(File.read(@manifest_path))
+    manifest["packages"].delete_at(0)
+    File.write(tampered, JSON.pretty_generate(manifest))
 
     verdict = InstallReceipt.finalize(
       manifest_path: @manifest_path,
       mode_dirs: {"normal" => fixture[:normal], "full_index" => fixture[:full_index]},
-      pipeline_report_dir: File.join(@tmpdir, "absent-reports"),
-      results_root: results_root
+      pipeline_report_dir: report_dir,
+      results_root: results_root,
+      source_manifest: tampered
     )
 
     assert_equal "fail", verdict["final"]
-    assert(verdict["findings"].any? { |finding| finding.include?("metadata.yml is missing") },
+    assert(verdict["findings"].any? { |finding| finding.include?("sandbox manifest copy does not match") },
       verdict["findings"].inspect)
   end
 
@@ -396,7 +455,8 @@ class InstallReceiptTest < AceMonorepoE2eTestCase
       manifest_path: @manifest_path,
       mode_dirs: {"normal" => fixture[:normal], "full_index" => fixture[:full_index]},
       pipeline_report_dir: report_dir,
-      results_root: results_root
+      results_root: results_root,
+      source_manifest: @manifest_path
     )
 
     assert_equal "fail", verdict["final"]
@@ -415,12 +475,36 @@ class InstallReceiptTest < AceMonorepoE2eTestCase
       manifest_path: @manifest_path,
       mode_dirs: {"normal" => fixture[:normal], "full_index" => fixture[:full_index]},
       pipeline_report_dir: report_dir,
-      results_root: results_root
+      results_root: results_root,
+      source_manifest: @manifest_path
     )
 
     assert_equal "fail", verdict["final"]
     assert(verdict["findings"].any? { |finding| finding.include?("runner-side acceptance \"fail\" is not pass") },
       verdict["findings"].inspect)
+  end
+
+  def test_finalize_cli_documented_invocation_exits_zero_when_all_gates_pass
+    fixture = build_complete_fixture
+    report_dir = File.join(@tmpdir, "reports")
+    results_root = write_results_root(fixture)
+    FileUtils.mkdir_p(report_dir)
+    File.write(File.join(report_dir, "metadata.yml"), "status: pass\n")
+    out_path = File.join(@tmpdir, "installation-acceptance.json")
+    script = File.expand_path("../e2e/TS-MONO-001-rubygems-install/install_receipt.rb", __dir__)
+
+    system(RbConfig.ruby, script, "finalize",
+      "--manifest", @manifest_path,
+      "--source-manifest", @manifest_path,
+      "--normal", fixture[:normal],
+      "--full-index", fixture[:full_index],
+      "--pipeline-report", report_dir,
+      "--results-root", results_root,
+      "--out", out_path,
+      chdir: @tmpdir) or flunk("documented finalize invocation exited non-zero")
+
+    verdict = JSON.parse(File.read(out_path))
+    assert_equal "pass", verdict["final"]
   end
 
   private

@@ -9,6 +9,7 @@
 # acceptance artifact; `finalize` (host-side, after a completed pipeline)
 # adds the wrapper/pipeline completion gate and a final verdict.
 
+require "digest"
 require "fileutils"
 require "json"
 require "yaml"
@@ -153,19 +154,54 @@ module InstallReceipt
     }
   end
 
-  def finalize(manifest_path:, mode_dirs:, pipeline_report_dir:, consumers: DEFAULT_CONSUMERS, exits: {}, results_root: nil)
+  def finalize(manifest_path:, mode_dirs:, pipeline_report_dir:, consumers: DEFAULT_CONSUMERS, exits: {}, results_root: nil, source_manifest: nil)
     verdict = verify(manifest_path: manifest_path, mode_dirs: mode_dirs, consumers: consumers, exits: exits)
     pipeline = pipeline_completion(pipeline_report_dir)
     verdict["kind"] = "installation-acceptance"
     verdict["pipeline_completion"] = pipeline
     verdict["findings"].concat(pipeline["findings"])
 
+    manifest_integrity = verify_manifest_integrity(manifest_path, source_manifest)
+    verdict["manifest_integrity"] = manifest_integrity
+    verdict["findings"].concat(manifest_integrity["findings"])
+
     reconciliation = reconcile_results(verdict, results_root, exits: exits)
     verdict["results_reconciliation"] = reconciliation
     verdict["findings"].concat(reconciliation["findings"])
 
-    verdict["final"] = (verdict["acceptance"] == "pass" && pipeline["ok"] && reconciliation["ok"]) ? "pass" : "fail"
+    verdict["final"] = (verdict["acceptance"] == "pass" && pipeline["ok"] && reconciliation["ok"] && manifest_integrity["ok"]) ? "pass" : "fail"
     verdict
+  end
+
+  # The sandbox manifest copy must be byte-identical to the source manifest
+  # that setup validated — an out-of-band check against a file that lives
+  # outside the tamper surface of the sandbox results tree.
+  def verify_manifest_integrity(sandbox_manifest_path, source_manifest)
+    findings = []
+    if source_manifest.nil?
+      findings << "source manifest path is required to verify the sandbox copy"
+      return {"ok" => false, "findings" => findings}
+    end
+    unless File.file?(source_manifest)
+      findings << "source manifest is missing: #{source_manifest}"
+      return {"ok" => false, "findings" => findings}
+    end
+
+    source_digest = Digest::SHA256.file(source_manifest).hexdigest
+    sandbox_digest = File.file?(sandbox_manifest_path) ? Digest::SHA256.file(sandbox_manifest_path).hexdigest : nil
+    if sandbox_digest.nil?
+      findings << "sandbox manifest copy is missing: #{sandbox_manifest_path}"
+    elsif sandbox_digest != source_digest
+      findings << "sandbox manifest copy does not match the validated source manifest (#{sandbox_digest} != #{source_digest})"
+    end
+
+    {
+      "ok" => findings.empty?,
+      "source_manifest" => source_manifest,
+      "source_digest" => source_digest,
+      "sandbox_digest" => sandbox_digest,
+      "findings" => findings
+    }
   end
 
   # The final verdict must agree with the scenario's own artifacts: the
@@ -347,6 +383,8 @@ module InstallReceipt
       findings << "consumer Gemfile is missing: #{gemfile_path}"
     elsif gemfile.match?(/gem ['"]ace-git-github['"]/)
       findings << "consumer Gemfile must not reference ace-git-github directly"
+    elsif gemfile.match?(/path\s*[:=]|git\s*[:=]|github\s*[:=]/i)
+      findings << "consumer Gemfile must resolve from the registry, not path/git sources"
     else
       gem_entries = gemfile.scan(/^\s*gem\s+['"]([^'"]+)['"]/).flatten
       unless gem_entries == [name]
@@ -396,7 +434,15 @@ module InstallReceipt
 
     # The provider must come from the consumer's own published dependency
     # declaration, not from an unrelated Gemfile entry: the consumer's
-    # lockfile spec must declare ace-git-github as a dependency.
+    # lockfile spec must declare ace-git-github as a dependency, and the
+    # resolution must come from registry sources only.
+    if lockfile
+      lockfile["sections"].each_key do |section|
+        unless section == "GEM"
+          findings << "consumer lockfile resolves #{section} sources; only registry sources prove the published edge"
+        end
+      end
+    end
     if lockfile && provider_version && !lockfile_spec_declares_provider?(lockfile, name)
       findings << "#{name} lockfile spec does not declare ace-git-github as a dependency"
     end
@@ -549,13 +595,15 @@ if $PROGRAM_NAME == __FILE__
       opts.on("--full-index DIR") { |value| options[:full_index] = value }
       opts.on("--pipeline-report DIR") { |value| options[:pipeline_report] = value }
       opts.on("--results-root DIR") { |value| options[:results_root] = value }
+      opts.on("--source-manifest PATH") { |value| options[:source_manifest] = value }
       opts.on("--out PATH") { |value| options[:out] = value }
     end.parse!
     verdict = InstallReceipt.finalize(
       manifest_path: options[:manifest],
       mode_dirs: {"normal" => options[:normal], "full_index" => options[:full_index]},
       pipeline_report_dir: options[:pipeline_report],
-      results_root: options[:results_root]
+      results_root: options[:results_root],
+      source_manifest: options[:source_manifest]
     )
     File.write(options[:out], JSON.pretty_generate(verdict))
     exit(verdict["final"] == "pass" ? 0 : 1)
