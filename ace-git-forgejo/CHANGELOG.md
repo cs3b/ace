@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Selected-repository binding for every `fj` repository command: the
+  resolved server's host/owner/repository is validated once (malformed
+  selections raise `ConfigError` before any subprocess) and stamped onto
+  every call via `-H` plus qualified `owner/repo#N` ids or `-r owner/repo`,
+  so a named server selection can never be silently retargeted by cwd,
+  remotes, default login, or another checkout.
+- Capability table grounded in observed forgejo-cli v0.6.0 help/output
+  (upstream release binary, plus real-server read-only probes); operations
+  without an observed argv form and installed versions outside the observed
+  set refuse with `ProviderUnsupportedCapabilityError` before launch.
+- Returned-identity validation: PR/issue numbers and repository view
+  full-name/URL must agree with the selection or evidence fails closed
+  with `ProviderIdentityMismatchError`.
+
+### Changed
+- All `fj` subprocess launches now go through a two-path executor boundary:
+  an allowlisted control path (`fj version`, `fj auth list`) and the
+  repository boundary. Authentication compares `fj auth list` lines exactly
+  against the selected authority (substring hosts no longer count) and
+  scans both output streams (observed v0.6.0 prints "No logins." on stderr
+  with exit 0).
+- Unauthenticated-API failures are classified as authentication errors
+  (observed Lab text "Only signed in user is allowed to call APIs.").
+- `merge_commit_sha` stays empty: observed fj v0.6.0 exposes no
+  authoritative merge-commit field for a selected PR, so cleanup evidence
+  never claims one.
+
 ## [0.2.0] - 2026-09-28
 
 ### Added
