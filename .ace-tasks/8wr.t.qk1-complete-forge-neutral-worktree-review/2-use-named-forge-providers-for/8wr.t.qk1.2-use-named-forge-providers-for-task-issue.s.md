@@ -4,7 +4,7 @@ status: pending
 priority: high
 created_at: "2026-09-28 17:44:28"
 estimate: TBD
-dependencies: [8wr.t.qk1.0]
+dependencies: [8wr.t.qk1.0, 8wr.t.uj0]
 tags: [lab-readiness]
 parent: 8wr.t.qk1
 bundle:

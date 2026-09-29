@@ -1,0 +1,17 @@
+{
+  "task_id": "8ws.t.lq1.0",
+  "reviewer": "independent agent /root/closure_spec_review",
+  "date": "2026-09-29",
+  "verdict": "ready for pending; lq1 parent only after both children",
+  "source_head": "e45679c1e",
+  "spec_body_sha256": "21c67f66247013bbf2f33f86797a0fc930fc0fbd3fe05679b583a816abe8d71c",
+  "usage_sha256": "5540faaefbba25faa5a198e3ce6874fcc1a9bd8922817232182b9265f0d5a7eb",
+  "scope": "specification review, not implementation or executed test approval",
+  "remaining_blockers": [],
+  "resolved_findings": [
+    "Prune source baseline must itself be preserved; arbitrary partial/empty ranges cannot prove content.",
+    "Deletion exclusion survives removal and participates in supported start paths; lock inside deleted cache is insufficient.",
+    "Installation proof has explicit strict exact-version manifest input and checks both resolved and loaded versions.",
+    "Authoritative merge SHA may equal head; inferred/copied head is not authoritative proof."
+  ]
+}

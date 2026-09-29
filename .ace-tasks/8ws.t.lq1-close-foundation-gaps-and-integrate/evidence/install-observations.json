@@ -1,0 +1,41 @@
+{
+  "source_head": "e45679c1e",
+  "scope": "existing raw logs read; no rerun or live registry query",
+  "logs": [
+    {
+      "source": ".ace-local/test-e2e/8wskfgw-monorepo-e2e-ts001/results/tc/02/install.stdout",
+      "sha256": "84b0d8693a6cf8e09c024f20abf1779442cb9d91ba47653f7242daa24cccd38e",
+      "observed_lines": [
+        "Installing ace-git-github 0.1.2",
+        "Installing ace-test-runner 0.27.0",
+        "Installing ace-llm 0.41.0",
+        "Installing ace-llm-providers-cli 0.35.1",
+        "Installing ace-test-runner-e2e 0.40.5",
+        "Bundle complete! 48 Gemfile dependencies, 73 gems now installed."
+      ]
+    },
+    {
+      "source": ".ace-local/test-e2e/8wskfgw-monorepo-e2e-ts001/results/tc/03/fullindex.stdout",
+      "sha256": "20b53d4079ebc39bcf60c40f12569b857418fa992210a2ea4aca2d223fa558d4",
+      "observed_lines": [
+        "Installing ace-test-runner 0.27.0",
+        "Installing ace-git-github 0.1.2",
+        "Installing ace-llm 0.41.0",
+        "Installing ace-llm-providers-cli 0.35.1",
+        "Installing ace-test-runner-e2e 0.40.5",
+        "Bundle complete! 48 Gemfile dependencies, 73 gems now installed."
+      ]
+    },
+    {
+      "source": ".ace-local/test-e2e/8wskfgw-monorepo-e2e-ts001/results/tc/02/install.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "observed_exit": "0"
+    },
+    {
+      "source": ".ace-local/test-e2e/8wskfgw-monorepo-e2e-ts001/results/tc/03/fullindex.exit",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "observed_exit": "0"
+    }
+  ],
+  "note": "The raw logs also include ace-test 0.7.4; the earlier copied summary understated that point. No claim of final wrapper success."
+}

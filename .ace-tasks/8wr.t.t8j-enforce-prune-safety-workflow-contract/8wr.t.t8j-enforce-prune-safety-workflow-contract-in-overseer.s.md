@@ -3,51 +3,46 @@ id: 8wr.t.t8j
 status: pending
 priority: high
 created_at: "2026-09-28 19:29:30"
-estimate: medium
-dependencies: []
+estimate: large
+dependencies: [8wj.t.ocz, 8wr.t.qjl]
 tags: [ace-overseer, prune-safety, follow-up]
+needs_review: false
+title: Enforce preservation and writer checks before overseer prune
+bundle:
+  presets: [project]
+  files: [ace-overseer/lib/ace/overseer/cli/commands/prune.rb, ace-overseer/lib/ace/overseer/organisms/prune_orchestrator.rb, ace-overseer/lib/ace/overseer/molecules/prune_safety_checker.rb, ace-overseer/lib/ace/overseer/molecules/assignment_prune_safety_checker.rb, ace-overseer/lib/ace/overseer/molecules/lab_client.rb, ace-overseer/handbook/workflow-instructions/overseer.wf.md, ace-assign/lib/ace/assign.rb, ace-assign/lib/ace/assign/molecules/attempt_store.rb, ace-assign/lib/ace/assign/organisms/attempt_coordinator.rb, ace-assign/lib/ace/assign/molecules/assignment_manager.rb]
+  commands: []
 ---
-# Enforce prune-safety workflow contract in overseer prune orchestrator
 
-## Origin
+# Enforce preservation and writer checks before overseer prune
 
-Independent correctness review (codex, `ace-review --preset code-valid`) of task
-`8wj.t.ocz` (2026-09-28, finding 🔴 High): `8wj.t.ocz` strengthened the
-**workflow text** (`ace-overseer/handbook/workflow-instructions/overseer.wf.md`)
-so prune requires an executed preservation proof plus a no-active-writer check,
-but the **pruner code** does not enforce it. This task closes that gap.
+## Outcome and ownership
+ace-overseer enforces the prune workflow in its actual worktree, assignment and currently supported Lab paths. Every deletion needs current preservation evidence plus proof that no authoritative writer is active. Missing, failed or ambiguous evidence preserves the candidate. ocz delivered workflow packaging only; qk0 owns later removal of the legacy Lab path.
 
-## Behavioral Specification
+## Public contract
+Existing `bin/ace-overseer prune [targets...] --dry-run|--yes`, `--assignment ID`, `--runtime tmux|lab`, `--force`, `--quiet` and `--debug` remain with tightened behavior. Add optional `--preservation FILE` for declared cross-repository destinations. CLI help must no longer promise force removal of unsafe work.
 
-### Expected Behavior
+FILE is YAML with `version: 1` and `candidates: []`; each record has `worktree_path`, `source_repo`, `source_base`, `source_head`, `destination_repo`, `destination_base`, `destination_head`, `destination_branch`. Paths are local absolute repositories; revisions resolve to exact commits. Resolve paths/revisions once and show the resolved identities; duplicate/conflicting entries or entries not matching the selected worktree fail before apply. This file is a claim to verify, never authorization or an accepted proof by itself. An absent manifest allows ordinary ancestor proof; a migrated candidate without a verified destination is blocked. Nonexistent or self-destination data cannot prove preservation: same-repo distinct accepted branch is valid, source checkout/branch scheduled for deletion is not a surviving destination.
 
-- `ace-overseer prune` evaluates, per candidate, the same proofs the workflow
-  mandates: preservation (ancestor containment, or verified destination with
-  tree/artifact or patch equivalence) and no-active-writer (authoritative
-  overseer/assignment/Lab lifecycle state).
-- A missing, failed, or ambiguous proof blocks the candidate. `--force` must
-  NOT bypass preservation or active-writer blocks; it may only override
-  non-safety conveniences (e.g. dirty-tree confirmation), never the two
-  non-negotiable proofs.
-- Lab-runtime destruction delegates only after the in-flight Work check passes;
-  an in-flight Lab work blocks destruction.
+## Expected behavior
+- Ordinary worktrees: prove source HEAD is contained in the accepted surviving base, or verify declared destination HEAD is accepted on destination branch and compare complete trees or exact normalized source/destination patch ranges with their separate bases. Commit titles, PR reports, CI status, and range-diff exit zero without interpreted content are insufficient.
+- Patch-range claims must match authoritative source identity: source_repo is the candidate worktree's actual common repository, source_head equals its current HEAD, and source_base equals the immutable attempt/worktree creation baseline recorded independently of the manifest (qjl base_head where available). Verify ancestry and cover the entire resulting work range. Independently prove that source baseline itself is preserved on a surviving accepted ref; a recorded base_head may already contain unmerged work. If that baseline is not preserved, include all unpreserved ancestors/content in the proof, use complete-tree/HEAD ancestry proof, or block. The declared source base cannot discard unique pre-existing work. A missing independent baseline disables patch-range proof; use full-tree equality or ordinary accepted ancestry instead. Caller-selected empty/partial ranges are not evidence. Empty-range identity is accepted only when complete HEAD ancestry or full-tree equality independently proves preservation. Comparison covers added/deleted paths, modes, symlinks and binary content; patch-id equality or ignored whitespace alone is insufficient. Destination base/head must be accepted on the declared surviving destination branch and correspond to the actual transferred range.
+- Dirty tracked files and untracked files are work too: this slice blocks their deletion, even with --force. Preserve ignored runtime artifacts when authoritative lifecycle/evidence identifies them as required; do not assume all ignored content is disposable. The manifest covers committed content only. No archive/snapshot feature is introduced.
+- Reconcile task, assignment attempts and process/runtime identity. A completed queue label does not override running/uncertain attempts or a live writer. Unknown/unreadable lifecycle state blocks. Task done alone and an empty task lookup are not proof.
+- Assignment cleanup removes only disposable assignment cache after its durable attempt/effect evidence and required artifacts are verified outside the deletion target; never delete refs/ace/execution or its journal checkout. Unknown/pending effects, incomplete attempts or an active driver block removal. --force and --yes cannot override any such block.
+- Lab destruction must obtain current authoritative Work state and preservation evidence before delegation; no in-flight work, missing state, or undocumented safety of a Lab destroy command may pass. If the current Lab surface cannot supply the proof, report blocked. Do not build a replacement legacy engine.
+- Dry-run executes the same proof classification as apply but changes no worktrees, refs, assignment state, runtime windows or stale metadata. Proof-only scratch data may live under .ace-local; never fetch proof refs into shared worktrees. --force only suppresses an additional convenience confirmation for already safe candidates; it never overrides preservation, dirtiness, lifecycle or revalidation.
+- Apply recomputes proofs immediately before each destructive boundary and excludes a changed HEAD/destination, newly dirty checkout or newly active writer. Prevent writer startup racing deletion through lifecycle exclusion that survives removal of the target and is honored by every supported attempt/driver/runtime start path for that identity. A lock inside the deleted assignment/cache/worktree is insufficient: deleting/recreating its pathname can create a second lock inode. t8j owns the necessary narrowly scoped ace-assign/overseer start-and-delete protocol changes together; it must not create a second attempt authority. Hold exclusion from final evidence reads through completion/recording of removal. For external or legacy runtimes unable to participate, classify the path blocked/unsupported and preserve, rather than claiming a no-writer probe is atomic. A dry-run receipt is not reusable authorization.
+- Report each target, resolved HEAD and pass/blocked reason. Quiet suppresses progress, not failure signaling. Dry-run with classified blocked candidates exits 0; invalid input/probe errors exit nonzero. Apply exits nonzero if any selected candidate is blocked or removal fails; safe independent candidates may complete and get individual receipts. Empty automatic selection is a no-op; unmatched explicit targets are errors. Cancelled confirmation performs no deletion.
 
-### Interface Contract
+## Success criteria and verification
+- [ ] SC1: All paths enforce preservation and no-writer checks with --force/--yes/quiet; no deletion is invoked for missing/failed/ambiguous proof, unknown effects or dirty/untracked work.
+- [ ] SC2: Temporary source/successor repo fixtures cover ancestry, squash/cherry-pick with separate bases, false matching titles, self-destination, unaccepted destination and changed destination. Only exact accepted content passes.
+- [ ] SC3: Worktree HEAD changes or a writer starts after preview or after initial check: final apply preserves the candidate. Test coordination failure, stale runtime identity, and a concurrent attempt to recreate the removed cache/lock path; no second writer may enter during deletion. Prove a safe controlled path actually removes a candidate, not only that all paths can block.
+- [ ] SC4: Assignment cache removal preserves durable journal and artifacts; active/uncertain attempts block. Lab active/unknown Work state never invokes destroy. Safe no-writer path proves delegation when evidence is available.
+- [ ] SC5: Dry-run has no cleanup side effects; mixed batches and quiet emit the specified status. Test explicit missing target, bad manifest, no targets and user cancellation.
+- [ ] SC6: Execute bin/ace-test ace-overseer all, affected worktree/assign suites and bin/ace-test-suite; independent review of exact candidate. Workflow, help, packaged instructions and code agree. CI remains advisory.
 
-- Public CLI surface stays `ace-overseer prune [--dry-run|--yes] [targets...]`
-  plus existing flags. New findings surface in `--dry-run` output as blocked
-  candidates (ref, head SHA, missing proof kind).
-
-### Success Criteria and Verification Plan
-
-- [ ] SC1: Behavioral tests prove `--force` cannot bypass failed preservation or active-writer checks.
-- [ ] SC2: Behavioral tests prove Lab prune blocks an in-flight Work.
-- [ ] SC3: Patch-equivalence proof works across distinct source and successor repositories (fetch + separate bases, per overseer.wf.md).
-- [ ] SC4: `ace-test ace-overseer all` green; workflow contract test and pruner behavior agree (no drift between overseer.wf.md and prune_orchestrator).
-
-### Scope and Decisions
-
-Owner: ace-overseer prune path (`prune_orchestrator.rb`, `prune.rb` CLI,
-Lab client destruction path). Out of scope: workflow text changes (done in
-8wj.t.ocz), Lab-engine generic removal (qk0). Reference evidence:
-`.ace-tasks/8wj.t.ocz-ship-overseer-lifecycle-workflow-wfi-resolution/probe-evidence.md`.
+## Slice and review decisions
+One large safety enforcement slice. Producers: lifecycle/attempt evidence and accepted Git refs; consumers: overseer workflow, task/worktree cleanup and assignment cleanup. No automatic snapshot, new authorization policy or Lab engine expansion. Reference original independent High finding from ocz in history-before-2026-09-29.md.
+2026-09-29 source e45679c1e: forced unsafe candidates and `safe_to_prune? || force` still present. Prior dirty-tree convenience example invalidated because it could discard unpreserved work. Manifest semantics make cross-repository proof executable rather than an undocumented implementer decision. Draft pending independent spec review.
