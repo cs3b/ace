@@ -277,10 +277,21 @@ module Ace
         def execute_repository(operation, arguments)
           target = repository_target
           ensure_observed_version!
+          ensure_not_redirecting!(target)
           CliExecutor.execute_repository(
             target: target, operation: operation,
             arguments: arguments, timeout: timeout, runner: runner
           )
+        end
+
+        # Refuse before any subprocess when the readable fj configuration
+        # aliases the selected host to a different endpoint: `-H` cannot
+        # prevent that redirect, and returned-identity checks cannot see it.
+        def ensure_not_redirecting!(target)
+          return if @redirect_checked
+
+          RepositoryBinding.reject_selected_host_redirect!(target.host_url)
+          @redirect_checked = true
         end
 
         def operation_context(operation, arguments)

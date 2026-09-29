@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "json"
 require "uri"
 
 module Ace
@@ -24,13 +25,18 @@ module Ace
         # server URL; malformed selections fail with ConfigError before any
         # subprocess launch.
         class Target
-          attr_reader :host, :authority, :repo, :url
+          attr_reader :host, :authority, :host_url, :repo, :url
+
+          SUPPORTED_SCHEMES = ["http", "https"].freeze
 
           # @param server_url [String] resolved server URL (https://host/owner/repo)
-          # @raise [Ace::Git::ConfigError] when host or owner/repository is missing
+          # @raise [Ace::Git::ConfigError] when host, scheme, or owner/repository is missing
           def self.resolve(server_url)
             uri = URI.parse(server_url.to_s)
             raise_config_error!(server_url, "missing host") if uri.host.nil? || uri.host.empty?
+            unless SUPPORTED_SCHEMES.include?(uri.scheme.to_s.downcase)
+              raise_config_error!(server_url, "scheme must be http or https")
+            end
 
             authority = if uri.port && uri.port != uri.default_port
               "#{uri.host}:#{uri.port}"
@@ -44,9 +50,13 @@ module Ace
             end
 
             repo = "#{segments[0]}/#{segments[1]}"
+            # `fj -H` accepts a full URL and otherwise assumes HTTPS (observed
+            # v0.6.0); passing scheme + authority preserves the configured
+            # endpoint exactly.
+            host_url = "#{uri.scheme.downcase}://#{authority}"
             new(
-              host: uri.host, authority: authority, repo: repo,
-              url: "#{uri.scheme || "https"}://#{authority}/#{repo}"
+              host: uri.host, authority: authority, host_url: host_url,
+              repo: repo, url: "#{host_url}/#{repo}"
             )
           rescue URI::Error
             raise_config_error!(server_url, "unparseable URL")
@@ -58,9 +68,10 @@ module Ace
               "configure the server as scheme://host/owner/repository"
           end
 
-          def initialize(host:, authority:, repo:, url:)
+          def initialize(host:, authority:, host_url:, repo:, url:)
             @host = host
             @authority = authority
+            @host_url = host_url
             @repo = repo
             @url = url
           end
@@ -126,6 +137,64 @@ module Ace
                 "argv form for #{operation.inspect}; refusing to run it against #{target.repo}"
             end
             form.call(target, *arguments)
+          end
+
+          # Refuse to launch repository commands when the readable fj keys
+          # file contains an alias that redirects the selected host. fj
+          # v0.6.0 applies its `aliases` map to `-H` values (observed: an
+          # alias silently rewrites the endpoint), and no CLI command prints
+          # aliases, so ACE verifies the one configuration file it must
+          # agree with — read-only, never modified. An absent or unreadable
+          # keys file (other fj versions, moved storage) cannot be verified
+          # and is allowed; misdirected runtime requests still classify
+          # through the shared taxonomy.
+          #
+          # @param host_url [String] selected scheme://authority
+          # @param config_path [String, nil] explicit keys-file path (tests)
+          # @raise [Ace::Git::ConfigError] on a conflicting redirect
+          def reject_selected_host_redirect!(host_url, config_path: nil)
+            path = config_path || default_keys_path
+            return unless path && File.exist?(path)
+
+            data = JSON.parse(File.read(path))
+            aliases = data.is_a?(Hash) ? data["aliases"] : nil
+            return unless aliases.is_a?(Hash)
+
+            selected = strip_scheme(host_url)
+            redirect = aliases[selected] || aliases[host_url.to_s]
+            return if redirect.nil? || redirect.to_s.empty?
+
+            redirect_authority = strip_scheme(redirect)
+            return if redirect_authority.casecmp(selected).zero?
+
+            raise Ace::Git::ConfigError,
+              "fj configuration redirects selected host #{selected} to #{redirect} " \
+              "(#{path}); remove or fix the conflicting fj alias — ACE will not " \
+              "operate on a redirected endpoint"
+          rescue JSON::ParserError, IOError, SystemCallError
+            nil
+          end
+
+          # Observed forgejo-cli v0.6.0 keys-file locations (data_dir of the
+          # `directories` crate, plus the legacy Cyborus org path).
+          def default_keys_path
+            candidates = []
+            xdg = ENV["XDG_DATA_HOME"]
+            candidates << File.join(xdg, "forgejo-cli", "keys.json") if xdg && !xdg.empty?
+            home = Dir.home rescue nil
+            if home
+              candidates << File.join(home, ".local", "share", "forgejo-cli", "keys.json")
+              candidates << File.join(home, "Library", "Application Support", "forgejo-cli", "keys.json")
+              candidates << File.join(home, ".local", "share", "Cyborus", "forgejo-cli", "keys.json")
+              candidates << File.join(home, "Library", "Application Support", "Cyborus", "forgejo-cli", "keys.json")
+            end
+            candidates.find { |path| File.exist?(path) }
+          end
+
+          private
+
+          def strip_scheme(url)
+            url.to_s.sub(%r{\A[a-z][a-z0-9+.\-]*://}i, "").chomp("/")
           end
         end
       end

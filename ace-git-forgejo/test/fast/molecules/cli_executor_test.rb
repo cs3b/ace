@@ -23,7 +23,7 @@ module Forgejo
     def test_execute_repository_stamps_host_and_uses_observed_form
       runner = ->(args:, timeout: nil, env: nil) do
         assert_equal(
-          ["fj", "-H", "forge.example.com", "--style", "minimal", "pr", "view", "owner/repo#7"],
+          ["fj", "-H", "https://forge.example.com", "--style", "minimal", "pr", "view", "owner/repo#7"],
           args
         )
         assert_equal({"LC_ALL" => "C"}, env)

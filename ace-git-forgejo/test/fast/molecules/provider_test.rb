@@ -23,13 +23,13 @@ module Forgejo
     def test_pull_request_for_branch_prefers_newest_and_hydrates_evidence
       runner = scripted_runner(
         "fj version" => VERSION_OK,
-        "fj -H forge.example.com --style minimal pr search --state all -r owner/repo" => {
+        "fj -H https://forge.example.com --style minimal pr search --state all -r owner/repo" => {
           success: true, stdout: "2 pull requests\n#91: PR title 91 (by lab-builder)\n#90: PR title 90 (by lab-builder)\n", stderr: "", exit_code: 0
         },
-        "fj -H forge.example.com --style minimal pr view owner/repo#91" => {
+        "fj -H https://forge.example.com --style minimal pr view owner/repo#91" => {
           success: true, stdout: view(91, "Open", "feature"), stderr: "", exit_code: 0
         },
-        "fj -H forge.example.com --style minimal pr view owner/repo#91 commits" => {
+        "fj -H https://forge.example.com --style minimal pr view owner/repo#91 commits" => {
           success: true, stdout: "commit #{'a' * 40} (+3, -1)\n", stderr: "", exit_code: 0
         }
       )
@@ -46,13 +46,13 @@ module Forgejo
     def test_pull_request_for_branch_returns_nil_when_no_branch_matches
       runner = scripted_runner(
         "fj version" => VERSION_OK,
-        "fj -H forge.example.com --style minimal pr search --state all -r owner/repo" => {
+        "fj -H https://forge.example.com --style minimal pr search --state all -r owner/repo" => {
           success: true, stdout: "1 pull requests\n#90: PR title 90 (by lab-builder)\n", stderr: "", exit_code: 0
         },
-        "fj -H forge.example.com --style minimal pr view owner/repo#90" => {
+        "fj -H https://forge.example.com --style minimal pr view owner/repo#90" => {
           success: true, stdout: view(90, "Merged", "other-branch"), stderr: "", exit_code: 0
         },
-        "fj -H forge.example.com --style minimal pr view owner/repo#90 commits" => {
+        "fj -H https://forge.example.com --style minimal pr view owner/repo#90 commits" => {
           success: true, stdout: "commit #{'b' * 40}\n", stderr: "", exit_code: 0
         }
       )
@@ -63,7 +63,7 @@ module Forgejo
     def test_recent_pull_requests_caps_client_side_newest_first
       runner = scripted_runner(
         "fj version" => VERSION_OK,
-        "fj -H forge.example.com --style minimal pr search --state all -r owner/repo" => {
+        "fj -H https://forge.example.com --style minimal pr search --state all -r owner/repo" => {
           success: true, stdout: "3 pull requests\n#91: PR title 91 (by lab-builder)\n#90: PR title 90 (by lab-builder)\n#89: PR title 89 (by lab-builder)\n", stderr: "", exit_code: 0
         }
       )
@@ -79,10 +79,25 @@ module Forgejo
       assert_equal "forge.example.com", target.host
       assert_equal "owner/repo", target.repo
       assert_equal "owner/repo#25", target.qualified_ref(25)
+      assert_equal "https://forge.example.com", target.host_url
 
       ported = Ace::Git::ResolvedServer.new(name: "p", provider: :forgejo, url: "https://forge.example.com:3443/o/r")
       target = Ace::Git::Forgejo::Provider.new(server: ported).send(:repository_target)
       assert_equal "forge.example.com:3443", target.authority
+      assert_equal "https://forge.example.com:3443", target.host_url
+
+      # `-H` preserves an explicit http authority; fj assumes HTTPS for a
+      # bare host (observed v0.6.0), so the scheme must ride along.
+      local = Ace::Git::ResolvedServer.new(name: "l", provider: :forgejo, url: "http://forge.internal:3000/o/r")
+      target = Ace::Git::Forgejo::Provider.new(server: local).send(:repository_target)
+      assert_equal "http://forge.internal:3000", target.host_url
+    end
+
+    def test_unsupported_url_scheme_is_configuration_failure
+      weird = Ace::Git::ResolvedServer.new(name: "w", provider: :forgejo, url: "ftp://forge.example.com/o/r")
+      provider = Ace::Git::Forgejo::Provider.new(server: weird, runner: ->(**_kw) { flunk("no subprocess") })
+      error = assert_raises(Ace::Git::ConfigError) { provider.pull_request(number: 1) }
+      assert_match(/scheme must be http or https/, error.message)
     end
 
     def test_malformed_server_url_is_configuration_failure
@@ -94,7 +109,7 @@ module Forgejo
     def test_repository_evidence_url_falls_back_to_selected_target
       runner = scripted_runner(
         "fj version" => VERSION_OK,
-        "fj -H forge.example.com --style minimal repo view owner/repo" => {
+        "fj -H https://forge.example.com --style minimal repo view owner/repo" => {
           success: true, stdout: "owner/repo\n> Sample repository\n", stderr: "", exit_code: 0
         }
       )
@@ -106,14 +121,14 @@ module Forgejo
     def test_fork_pr_head_provenance_uses_server_host_root
       runner = scripted_runner(
         "fj version" => VERSION_OK,
-        "fj -H forge.example.com --style minimal pr view owner/repo#25" => {
+        "fj -H https://forge.example.com --style minimal pr view owner/repo#25" => {
           success: true, stdout: <<~VIEW, stderr: "", exit_code: 0
             Ship it #25
             By forker — Open — +1 -0
             From `forker/other:feature` into `main`
           VIEW
         },
-        "fj -H forge.example.com --style minimal pr view owner/repo#25 commits" => {
+        "fj -H https://forge.example.com --style minimal pr view owner/repo#25 commits" => {
           success: true, stdout: "commit #{'c' * 40}\n", stderr: "", exit_code: 0
         }
       )

@@ -29,7 +29,7 @@ module Forgejo
         assert_equal "fj", argv.first
         next if argv == %w[fj version] # control probe, host-scoped only
 
-        assert_equal ["-H", "other.example.com:3443"], argv[1, 2],
+        assert_equal ["-H", "https://other.example.com:3443"], argv[1, 2],
           "every subprocess must carry the selected authority"
         assert_nil argv.index("-C"), "cwd must never be used for targeting"
         assert_includes argv.join(" "), "lab-b/repo",
@@ -51,8 +51,8 @@ module Forgejo
       assert_equal "https://other.example.com:3443/lab-b/repo/pulls/7", pr_b.url
       views = commands.argvs.select { |argv| argv.include?("pr") && argv.include?("view") && argv.last.end_with?("#7") }
       assert_equal 2, views.length
-      assert_equal ["-H", "forge.example.com", "--style", "minimal", "pr", "view", "lab-a/repo#7"], views[0][1..]
-      assert_equal ["-H", "other.example.com:3443", "--style", "minimal", "pr", "view", "lab-b/repo#7"], views[1][1..]
+      assert_equal ["-H", "https://forge.example.com", "--style", "minimal", "pr", "view", "lab-a/repo#7"], views[0][1..]
+      assert_equal ["-H", "https://other.example.com:3443", "--style", "minimal", "pr", "view", "lab-b/repo#7"], views[1][1..]
     end
 
     def test_unobserved_cli_version_refuses_all_operations_with_zero_mutation_subprocesses
@@ -127,7 +127,7 @@ module Forgejo
     def test_conflicting_returned_identity_fails_closed
       commands = recording_runner(
         "fj version" => {success: true, stdout: "fj v0.6.0\n", stderr: "", exit_code: 0},
-        "fj -H forge.example.com --style minimal pr view lab-a/repo#7" => {
+        "fj -H https://forge.example.com --style minimal pr view lab-a/repo#7" => {
           success: true, stdout: view(99, "Open", "feature"), stderr: "", exit_code: 0
         }
       )
@@ -138,7 +138,7 @@ module Forgejo
 
       commands = recording_runner(
         "fj version" => {success: true, stdout: "fj v0.6.0\n", stderr: "", exit_code: 0},
-        "fj -H forge.example.com --style minimal repo view lab-a/repo" => {
+        "fj -H https://forge.example.com --style minimal repo view lab-a/repo" => {
           success: true, stdout: "other/other\nView online at https://forge.example.com/other/other\n", stderr: "", exit_code: 0
         }
       )
@@ -157,18 +157,18 @@ module Forgejo
         case key
         when "fj version"
           {success: true, stdout: "fj v0.6.0\n", stderr: "", exit_code: 0}
-        when "fj -H other.example.com:3443 --style minimal pr search --state open -r lab-b/repo"
+        when "fj -H https://other.example.com:3443 --style minimal pr search --state open -r lab-b/repo"
           searches += 1
           if searches == 1
             {success: true, stdout: "0 pull requests\n", stderr: "", exit_code: 0}
           else
             {success: true, stdout: "1 pull requests\n#7: Ship it (by lab-builder)\n", stderr: "", exit_code: 0}
           end
-        when "fj -H other.example.com:3443 pr create Ship it --head feature --base main -r lab-b/repo"
+        when "fj -H https://other.example.com:3443 pr create Ship it --head feature --base main -r lab-b/repo"
           {success: true, stdout: "", stderr: "", exit_code: 0}
-        when "fj -H other.example.com:3443 --style minimal pr view lab-b/repo#7"
+        when "fj -H https://other.example.com:3443 --style minimal pr view lab-b/repo#7"
           {success: true, stdout: view(7, "Open", "feature"), stderr: "", exit_code: 0}
-        when "fj -H other.example.com:3443 --style minimal pr view lab-b/repo#7 commits"
+        when "fj -H https://other.example.com:3443 --style minimal pr view lab-b/repo#7 commits"
           {success: true, stdout: "commit #{SHA} (+1, -0)\n", stderr: "", exit_code: 0}
         else
           flunk("Unexpected command in test: #{key}")
@@ -186,7 +186,7 @@ module Forgejo
       argvs.each do |argv|
         next if argv == %w[fj version] # control probe
 
-        assert_equal "other.example.com:3443", argv[2], "every subprocess targets the selected authority"
+        assert_equal "https://other.example.com:3443", argv[2], "every subprocess targets the selected authority"
       end
       assert_equal 1, argvs.count { |argv| argv.include?("create") }, "exactly one create, no automatic retry"
       assert_equal 2, argvs.count { |argv| argv.join(" ").include?("pr search") },
@@ -215,7 +215,57 @@ module Forgejo
       assert_empty commands.argvs, "refusals must classify before any repository subprocess"
     end
 
+    def test_conflicting_fj_alias_refuses_repository_operations
+      keys_path = File.join(Dir.tmpdir, "uj0-alias-test-#{Process.pid}-conflict.json")
+      File.write(keys_path, {
+        "hosts" => {}, "aliases" => {"other.example.com:3443" => "evil.example.test"}, "default_ssh" => []
+      }.to_json)
+      stub_keys_path(keys_path) do
+        commands = recording_runner(
+          "fj version" => {success: true, stdout: "fj v0.6.0\n", stderr: "", exit_code: 0}
+        )
+        provider = Ace::Git::Forgejo::Provider.new(server: LAB_B, runner: commands.recorder)
+        error = assert_raises(Ace::Git::ConfigError) { provider.pull_request(number: 7) }
+        assert_match(/redirects selected host other\.example\.com:3443/, error.message)
+        assert_match(/evil\.example\.test/, error.message)
+        assert_equal [["fj", "version"]], commands.argvs.uniq,
+          "alias conflict refuses before any repository subprocess"
+      end
+    ensure
+      File.delete(keys_path) if keys_path && File.exist?(keys_path)
+    end
+
+    def test_benign_alias_and_missing_keys_file_allow_operations
+      benign_path = File.join(Dir.tmpdir, "uj0-alias-test-#{Process.pid}-benign.json")
+      File.write(benign_path, {
+        "hosts" => {}, "aliases" => {"ssh.other.example.com" => "other.example.com:3443"}, "default_ssh" => []
+      }.to_json)
+      stub_keys_path(benign_path) do
+        commands = recording_runner(lab_b_fixtures)
+        provider = Ace::Git::Forgejo::Provider.new(server: LAB_B, runner: commands.recorder)
+        pr = provider.pull_request(number: 7)
+        assert_equal 7, pr.number
+      end
+
+      stub_keys_path(nil) do
+        commands = recording_runner(lab_b_fixtures)
+        provider = Ace::Git::Forgejo::Provider.new(server: LAB_B, runner: commands.recorder)
+        assert_equal 7, provider.pull_request(number: 7).number
+      end
+    ensure
+      File.delete(benign_path) if benign_path && File.exist?(benign_path)
+    end
+
     private
+
+    def stub_keys_path(path, &block)
+      Ace::Git::Forgejo::RepositoryBinding.singleton_class.send(:alias_method, :original_keys_path_lookup, :default_keys_path)
+      Ace::Git::Forgejo::RepositoryBinding.define_singleton_method(:default_keys_path) { path }
+      block.call
+    ensure
+      Ace::Git::Forgejo::RepositoryBinding.singleton_class.send(:alias_method, :default_keys_path, :original_keys_path_lookup)
+      Ace::Git::Forgejo::RepositoryBinding.singleton_class.send(:remove_method, :original_keys_path_lookup)
+    end
 
     def view(number, state, head_ref)
       # Real fj v0.6.0 minimal-style shape (em-dash byline, From segment).
@@ -227,7 +277,7 @@ module Forgejo
     end
 
     def lab_a_fixtures
-      prefix = "fj -H forge.example.com --style minimal"
+      prefix = "fj -H https://forge.example.com --style minimal"
       {
         "#{prefix} pr view lab-a/repo#7" => {success: true, stdout: view(7, "Open", "feature"), stderr: "", exit_code: 0},
         "#{prefix} pr view lab-a/repo#7 commits" => {success: true, stdout: "commit #{SHA} (+1, -0)\n", stderr: "", exit_code: 0}
@@ -235,12 +285,12 @@ module Forgejo
     end
 
     def lab_b_fixtures
-      prefix = "fj -H other.example.com:3443 --style minimal"
+      prefix = "fj -H https://other.example.com:3443 --style minimal"
       {
         "fj version" => {success: true, stdout: "fj v0.6.0\n", stderr: "", exit_code: 0},
         "#{prefix} pr view lab-b/repo#7" => {success: true, stdout: view(7, "Open", "feature"), stderr: "", exit_code: 0},
         "#{prefix} pr view lab-b/repo#7 commits" => {success: true, stdout: "commit #{SHA} (+1, -0)\n", stderr: "", exit_code: 0},
-        "fj -H other.example.com:3443 pr view lab-b/repo#7 diff" => {
+        "fj -H https://other.example.com:3443 pr view lab-b/repo#7 diff" => {
           success: true, stdout: "diff --git a/x b/x\n", stderr: "", exit_code: 0
         },
         "#{prefix} pr search --state all -r lab-b/repo" => {

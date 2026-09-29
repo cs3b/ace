@@ -59,12 +59,12 @@ class ForgejoProviderPullRequestLifecycleContractTest < AceGitForgejoTestCase
   end
 
   VERSION_KEY = "fj version"
-  SEARCH_KEY = "fj -H forge.example.com --style minimal pr search --state open -r owner/repo"
-  VIEW_25 = "fj -H forge.example.com --style minimal pr view owner/repo#25"
-  VIEW_26 = "fj -H forge.example.com --style minimal pr view owner/repo#26"
-  COMMITS_25 = "fj -H forge.example.com --style minimal pr view owner/repo#25 commits"
-  COMMITS_26 = "fj -H forge.example.com --style minimal pr view owner/repo#26 commits"
-  CREATE_KEY = "fj -H forge.example.com pr create Ship it --head feature/x --base main -r owner/repo"
+  SEARCH_KEY = "fj -H https://forge.example.com --style minimal pr search --state open -r owner/repo"
+  VIEW_25 = "fj -H https://forge.example.com --style minimal pr view owner/repo#25"
+  VIEW_26 = "fj -H https://forge.example.com --style minimal pr view owner/repo#26"
+  COMMITS_25 = "fj -H https://forge.example.com --style minimal pr view owner/repo#25 commits"
+  COMMITS_26 = "fj -H https://forge.example.com --style minimal pr view owner/repo#26 commits"
+  CREATE_KEY = "fj -H https://forge.example.com pr create Ship it --head feature/x --base main -r owner/repo"
 
   def scenario_responses
     @scenario_responses ||= {
@@ -105,7 +105,7 @@ class ForgejoProviderPullRequestLifecycleContractTest < AceGitForgejoTestCase
         VERSION_KEY => version_ok,
         VIEW_25 => ok(pr_view_text(25, "Open", "feature/x", "main")),
         COMMITS_25 => ok("commit #{SHA}\n"),
-        "fj -H forge.example.com pr edit owner/repo#25 title New title" => ok("")
+        "fj -H https://forge.example.com pr edit owner/repo#25 title New title" => ok("")
       },
       ready_unsupported: {},
       merge_unsupported: {}
@@ -128,8 +128,8 @@ class ForgejoProviderPullRequestLifecycleContractTest < AceGitForgejoTestCase
       VERSION_KEY => version_ok,
       VIEW_25 => ok(pr_view_text(25, "Open", "feature/x", "main")),
       COMMITS_25 => ok("commit #{SHA}\n"),
-      "fj -H forge.example.com pr edit owner/repo#25 title New title" => ok(""),
-      "fj -H forge.example.com pr edit owner/repo#25 body New body" => ok("")
+      "fj -H https://forge.example.com pr edit owner/repo#25 title New title" => ok(""),
+      "fj -H https://forge.example.com pr edit owner/repo#25 body New body" => ok("")
     )
     receipt = build_provider(runner).update_pull_request(
       number: 25, expected_head: SHA, title: "New title", body: "New body"
