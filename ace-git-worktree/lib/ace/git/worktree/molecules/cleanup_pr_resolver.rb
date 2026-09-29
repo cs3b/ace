@@ -145,16 +145,23 @@ module Ace
             nil
           end
 
-          # The branch the PR must have targeted: the target ref with a
-          # leading remote-tracking prefix removed (targets may be given as
-          # "main" or "origin/main"). A path segment only counts as a remote
-          # prefix when it names a configured git remote, so branch names
-          # that merely contain a slash stay strict.
+          # The branch the PR must have targeted. Targets arrive as bare
+          # branch names, remote-tracking refs ("origin/main",
+          # "refs/remotes/origin/main"), or local refs ("refs/heads/main");
+          # all of those forms name the same branch the PR base reports. A
+          # path segment only counts as a remote prefix when it names a
+          # configured git remote, so slashed branch names stay strict.
           def target_branch
-            return @target unless @target.to_s.include?("/")
-
-            prefix, rest = @target.to_s.split("/", 2)
-            git_remotes.include?(prefix) ? rest : @target
+            ref = @target.to_s
+            ref = ref.sub(%r{\Arefs/remotes/([^/]+)/}) do
+              git_remotes.include?(Regexp.last_match(1)) ? "" : Regexp.last_match(0)
+            end
+            ref = ref.sub(%r{\Arefs/heads/}, "")
+            if ref.include?("/")
+              prefix, rest = ref.split("/", 2)
+              ref = rest if git_remotes.include?(prefix)
+            end
+            ref
           end
 
           def git_remotes
