@@ -19,8 +19,8 @@ binstub startup.
 | artifact | 1.27 MB binary | needs Ruby 3.4 + bundle | needs Ruby 3.4 | needs Ruby 4.0 |
 
 The interpreter startup floor alone (`ruby -e ''`) costs ~10 MB RSS; the entire
-compiled CLI runs in less than that. Reproduce with `.ace-local/ace-aot/build.sh`,
-`.ace-local/ace-aot/conformance.sh`, `.ace-local/ace-aot/bench.sh`.
+compiled CLI runs in less than that. Reproduce with `.ace-bin/spinel-aot/build.sh`,
+`.ace-bin/spinel-aot/conformance.sh`, `.ace-bin/spinel-aot/bench.sh`.
 
 ## What the research found
 
@@ -39,7 +39,7 @@ identical responses on every push. Campfire passes its full suite this way.
 
 Spinel can't run ace's generic frameworks as-is, so the pilot wraps three layers:
 
-1. **Shims** (`.ace-local/ace-aot/shims/`): yaml-subset reader (nested maps/scalars/
+1. **Shims** (`.ace-bin/spinel-aot/shims/`): yaml-subset reader (nested maps/scalars/
    comments/lists — ace's real config surface), rubygems stub, timeout pass-through,
    Dir.glob reimplementation, standalone `CompactDate` (Date shim), OptionParser shim.
 2. **Glue** (`ace-b36ts/lib/ace/b36ts/glue.rb`, shared with CRuby): flat config cascade
