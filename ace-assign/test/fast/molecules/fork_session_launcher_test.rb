@@ -120,13 +120,29 @@ class ForkSessionLauncherTest < AceAssignTestCase
   end
 
   def build_launcher(config:, query_interface:, tmux_enabled: false, session: "dev", window: "task", pane: "%8", interactive_builder: nil,
-    tmux_runner: nil)
+    tmux_runner: nil, lifecycle_exclusion: nil)
     Ace::Assign::Molecules::ForkSessionLauncher.new(
       config: config,
       query_interface: query_interface,
       tmux_runner: tmux_runner || FakeTmuxRunner.new(enabled: tmux_enabled, session: session, window: window, pane: pane),
-      interactive_builder: interactive_builder
+      interactive_builder: interactive_builder,
+      lifecycle_exclusion: lifecycle_exclusion
     )
+  end
+
+  def test_launch_refuses_after_prune_recorded_removal
+    fake = FakeQueryInterface.new
+    config = {"execution" => {"provider" => "codex:gpt-5@yolo"}, "providers" => {}}
+    exclusion = Ace::Assign::Molecules::LifecycleExclusion.new(root: File.join(Dir.mktmpdir("fork-excl"), ".exclusion"))
+    exclusion.record_removed!(exclusion.assignment_key("abc123"))
+
+    launcher = build_launcher(config: config, query_interface: fake, lifecycle_exclusion: exclusion)
+
+    error = assert_raises(Ace::Assign::AttemptErrors::Conflict) do
+      launcher.launch(assignment_id: "abc123", fork_root: "010.01")
+    end
+    assert_includes error.message, "was pruned"
+    assert_empty fake.calls
   end
 
   def test_launch_uses_config_defaults_and_passes_scoped_assignment_argument

@@ -8,13 +8,14 @@ module Ace
         SUBTASK_PATTERN = /^[0-9a-z]{3}\.[a-z]\.[0-9a-z]{3}\.[a-z0-9]$/
 
         def initialize(worktree_provisioner: nil, tmux_window_opener: nil, assignment_launcher: nil,
-          task_loader: nil, config: nil, assignment_detector: nil)
+          task_loader: nil, config: nil, assignment_detector: nil, lifecycle_exclusion: nil)
           @worktree_provisioner = worktree_provisioner || Molecules::WorktreeProvisioner.new
           @tmux_window_opener = tmux_window_opener || Molecules::TmuxWindowOpener.new
           @task_manager = task_loader || Ace::Task::Organisms::TaskManager.new
           @assignment_launcher = assignment_launcher || Molecules::AssignmentLauncher.new(task_manager: @task_manager)
           @config = config || Ace::Overseer.config
           @assignment_detector = assignment_detector
+          @lifecycle_exclusion = lifecycle_exclusion
         end
 
         def call(task_ref:, task_refs: nil, cli_preset: nil, on_progress: nil)
@@ -48,57 +49,70 @@ module Ace
           primary_subtask_refs = extract_subtask_refs(primary_task)
           tmux_preset = @config.dig("tmux_window_presets", preset_name)
 
+          # Participate in prune exclusion for the whole start: provisioning,
+          # runtime window and assignment launch all hold the shared side of
+          # the task identity, so a worktree prune cannot interleave with a
+          # writer starting into the same task. Provisioning a fresh worktree
+          # for a task whose previous worktree was pruned clears the removed
+          # marker explicitly.
           progress.call("Provisioning worktree...")
-          worktree = @worktree_provisioner.provision(primary_ref)
-          if worktree[:created]
-            progress.call("Worktree created at #{worktree[:worktree_path]}")
-          else
-            progress.call("Worktree exists at #{worktree[:worktree_path]}")
-          end
+          outcome = nil
+          lifecycle_exclusion.with_shared(
+            lifecycle_exclusion.task_key(primary_ref), reset_removed: true
+          ) do
+            worktree = @worktree_provisioner.provision(primary_ref)
+            if worktree[:created]
+              progress.call("Worktree created at #{worktree[:worktree_path]}")
+            else
+              progress.call("Worktree exists at #{worktree[:worktree_path]}")
+            end
 
-          progress.call("Opening tmux window...")
-          @tmux_window_opener.open(
-            worktree_path: worktree[:worktree_path],
-            preset: tmux_preset
-          )
-
-          progress.call("Checking assignment status...")
-          existing = if @assignment_detector
-            @assignment_detector.call(worktree[:worktree_path])
-          else
-            existing_assignment(worktree[:worktree_path])
-          end
-          assignment_result = if existing
-            progress.call("Assignment already active: #{existing.dig("assignment", "id")}")
-            focused_step = existing.dig("focus_step", "number") || existing.dig("next_step", "number")
-            {
-              assignment_id: existing.dig("assignment", "id"),
-              first_step: focused_step,
-              created: false
-            }
-          else
-            progress.call("Launching assignment (preset: #{preset_name})...")
-            launched = @assignment_launcher.launch(
+            progress.call("Opening tmux window...")
+            @tmux_window_opener.open(
               worktree_path: worktree[:worktree_path],
-              preset_name: preset_name,
-              task_ref: primary_ref.to_s,
-              subtask_refs: primary_subtask_refs,
-              task_refs: expanded_taskrefs
+              preset: tmux_preset
             )
-            launched.merge(created: true)
+
+            progress.call("Checking assignment status...")
+            existing = if @assignment_detector
+              @assignment_detector.call(worktree[:worktree_path])
+            else
+              existing_assignment(worktree[:worktree_path])
+            end
+            assignment_result = if existing
+              progress.call("Assignment already active: #{existing.dig("assignment", "id")}")
+              focused_step = existing.dig("focus_step", "number") || existing.dig("next_step", "number")
+              {
+                assignment_id: existing.dig("assignment", "id"),
+                first_step: focused_step,
+                created: false
+              }
+            else
+              progress.call("Launching assignment (preset: #{preset_name})...")
+              launched = @assignment_launcher.launch(
+                worktree_path: worktree[:worktree_path],
+                preset_name: preset_name,
+                task_ref: primary_ref.to_s,
+                subtask_refs: primary_subtask_refs,
+                task_refs: expanded_taskrefs
+              )
+              launched.merge(created: true)
+            end
+
+            outcome = {
+              task_ref: primary_ref.to_s,
+              task_refs: expanded_taskrefs,
+              preset: preset_name,
+              worktree_path: worktree[:worktree_path],
+              branch: worktree[:branch],
+              worktree_created: worktree[:created],
+              assignment_id: assignment_result[:assignment_id],
+              first_step: assignment_result[:first_step],
+              assignment_created: assignment_result[:created]
+            }
           end
 
-          {
-            task_ref: primary_ref.to_s,
-            task_refs: expanded_taskrefs,
-            preset: preset_name,
-            worktree_path: worktree[:worktree_path],
-            branch: worktree[:branch],
-            worktree_created: worktree[:created],
-            assignment_id: assignment_result[:assignment_id],
-            first_step: assignment_result[:first_step],
-            assignment_created: assignment_result[:created]
-          }
+          outcome
         end
 
         private
@@ -109,6 +123,10 @@ module Ace
 
           active = subtasks.reject { |st| Ace::Task::Atoms::TaskValidationRules.terminal_status?(st.status.to_s) }
           active.any? ? active.map(&:id) : nil
+        end
+
+        def lifecycle_exclusion
+          @lifecycle_exclusion ||= Ace::Assign::Molecules::LifecycleExclusion.new
         end
 
         def normalize_requested_refs(task_ref, task_refs)

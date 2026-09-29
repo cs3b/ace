@@ -69,13 +69,30 @@ Arguments:
 Options:
 
 - `--assignment`, `-a`: prune a specific assignment by ID
-- `--force`, `-f`: force-remove unsafe worktrees
+- `--force`, `-f`: skip the interactive confirmation for already-safe candidates; never bypasses preservation, dirtiness, lifecycle or revalidation blocks
 - `--yes`, `-y`: skip interactive confirmation
-- `--dry-run`: list prune candidates only
-- `--runtime`: `tmux` (default) or `lab`; Lab accepts dry-run only and delegates destruction to the exact `lab work destroy WORK --confirm` command
-- `--quiet`, `-q`: suppress non-essential output
+- `--dry-run`: run the same proof classification as apply, changing no worktrees, refs, assignment state or metadata (a dry-run receipt is not reusable authorization)
+- `--preservation FILE`: YAML manifest (`version: 1`, `candidates:`) declaring cross-repository destinations for migrated work; a claim to verify, never proof by itself
+- `--runtime`: `tmux` (default) or `lab`
+- `--quiet`, `-q`: suppress progress output; blocked/failed results still print and signal through the exit code
 - `--debug`, `-d`: show debug output
 - `--help`, `-h`: show help
+
+### Prune safety (enforced)
+
+Every candidate is deleted only after executed proofs; missing, failed or
+ambiguous evidence preserves the candidate, and `--force`/`--yes` never
+override a block:
+
+- Preservation: source HEAD is contained in the surviving accepted base branch, or a declared destination is verified -- accepted on its surviving destination branch -- with full-tree equality or an exact content transition (paths, modes, symlinks, binary content) across separate bases. Patch-range proofs additionally require the independently recorded attempt baseline, and that baseline itself must survive on an accepted ref.
+
+- No active writer: recorded attempts must be terminal (active or uncertain attempts block; unreadable attempt state blocks); assignment/driver/start paths and prune share a durable exclusion that survives removal of the target, so no second writer can enter during deletion; dirty tracked or untracked files are work and block deletion, even with `--force`.
+
+- Assignment cache: cleanup removes only the assignment cache directory after the durable journal evidence (`refs/ace/execution`, never deleted) confirms every attempt terminal; the journal checkout is never removed.
+
+- Exit codes: dry-run always exits 0 (blocked candidates are listed); apply exits nonzero when any selected candidate is blocked or removal fails, while independent safe candidates still complete.
+
+- Unmatched explicit targets are errors; empty automatic selection is a no-op; cancelled confirmation deletes nothing.
 
 ## Example Flows
 
@@ -84,6 +101,25 @@ Start task work: `ace-overseer work-on --task 8q4.t.umu.1`.
 Check dashboard: `ace-overseer status`.
 
 Preview then prune: `ace-overseer prune --dry-run`, then `ace-overseer prune --yes`.
+
+Prune migrated work with a declared destination:
+
+```bash
+mkdir -p .ace-local/prune
+cat > .ace-local/prune/destinations.yml <<'YAML'
+version: 1
+candidates:
+  - worktree_path: /abs/path/.ace-wt/task.230
+    source_repo: /abs/path
+    source_base: <base-sha>
+    source_head: <head-sha>
+    destination_repo: /abs/successor
+    destination_base: <dest-base-sha>
+    destination_head: <accepted-head-sha>
+    destination_branch: refs/heads/main
+YAML
+ace-overseer prune task.230 --preservation .ace-local/prune/destinations.yml --dry-run
+```
 
 ## Lab Runtime
 
@@ -98,7 +134,7 @@ does not read Lab credentials and does not call Podman or Herdr directly.
 - `ace-overseer prompt --work WORK --file PATH`: forward prompt text from a file to the Work pane. Piped stdin is also supported; prompt text is never passed as a process argument.
 - `ace-overseer review --work WORK --pr NUMBER`: prepare an exact-head admin review checkout and pane.
 - `ace-overseer stop --work WORK`: stop the assigned process without destroying Work state.
-- `ace-overseer prune WORK... --runtime lab --dry-run`: preview exact Work destruction commands; rerun with `--yes` to delegate each destruction to Lab.
+- `ace-overseer prune WORK... --runtime lab --dry-run`: classify each Work -- documented terminal state, no in-flight work, and preservation data (`repo`/`head`/`branch`) provable in the hosted repository. Apply with `--yes` re-verifies state immediately before delegating each destruction to `lab work destroy WORK --confirm`; blocked Works are never destroyed and the run exits nonzero. The raw Lab CLI cannot make the state check and the destruction atomic, so this adapter reports the path unsupported and preserves the Work; only a Lab surface with an atomic guarded destroy delegates.
 
 Example:
 

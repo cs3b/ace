@@ -42,31 +42,46 @@ module Ace
           @interactive_builder = interactive_builder || Ace::LLM::Molecules::InteractiveCommandBuilder.new
         end
 
+        def initialize(config: nil, query_interface: Ace::LLM::QueryInterface, tmux_runner: nil, interactive_builder: nil,
+          lifecycle_exclusion: nil)
+          @config = config || Ace::Assign.config
+          @query_interface = query_interface
+          @tmux_runner = tmux_runner || TmuxControlSurfaceRunner.new
+          @interactive_builder = interactive_builder || Ace::LLM::Molecules::InteractiveCommandBuilder.new
+          @lifecycle_exclusion = lifecycle_exclusion
+        end
+
         def launch(assignment_id:, fork_root:, provider: nil, cli_args: nil, timeout: nil, cache_dir: nil, launch_mode: nil, callback_pane: nil)
           ensure_not_same_scoped_refork!(assignment_id: assignment_id, fork_root: fork_root)
           resolved_provider = provider || config.dig("execution", "provider") || DEFAULT_PROVIDER
           resolved_timeout = timeout || config.dig("execution", "timeout") || DEFAULT_TIMEOUT
           resolved_mode = resolve_launch_mode(launch_mode)
 
-          if resolved_mode == "tmux"
-            launch_tmux(
-              assignment_id: assignment_id,
-              fork_root: fork_root,
-              provider: resolved_provider,
-              cli_args: cli_args,
-              timeout: resolved_timeout,
-              cache_dir: cache_dir,
-              callback_pane: callback_pane
-            )
-          else
-            launch_provider_session(
-              assignment_id: assignment_id,
-              fork_root: fork_root,
-              provider: resolved_provider,
-              cli_args: cli_args,
-              timeout: resolved_timeout,
-              cache_dir: cache_dir
-            )
+          # Driver startup participates in prune exclusion: prune holds the
+          # exclusive side from final evidence reads through removal; a removed
+          # marker fails the launch closed instead of writing into a deleted
+          # assignment.
+          lifecycle_exclusion.with_shared(lifecycle_exclusion.assignment_key(assignment_id)) do
+            if resolved_mode == "tmux"
+              launch_tmux(
+                assignment_id: assignment_id,
+                fork_root: fork_root,
+                provider: resolved_provider,
+                cli_args: cli_args,
+                timeout: resolved_timeout,
+                cache_dir: cache_dir,
+                callback_pane: callback_pane
+              )
+            else
+              launch_provider_session(
+                assignment_id: assignment_id,
+                fork_root: fork_root,
+                provider: resolved_provider,
+                cli_args: cli_args,
+                timeout: resolved_timeout,
+                cache_dir: cache_dir
+              )
+            end
           end
         end
 
@@ -110,6 +125,10 @@ module Ace
         private
 
         attr_reader :config, :query_interface, :tmux_runner, :interactive_builder
+
+        def lifecycle_exclusion
+          @lifecycle_exclusion ||= Molecules::LifecycleExclusion.new
+        end
 
         def resolve_launch_mode(explicit_mode)
           mode = explicit_mode.to_s.strip

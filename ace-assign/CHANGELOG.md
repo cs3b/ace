@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.59.0] - 2026-09-29
+
+### Added
+- Durable lifecycle exclusion (`Ace::Assign::Molecules::LifecycleExclusion`): prune holds the exclusive side from final evidence reads through removal while every supported start path -- attempt registration, fork/driver session launch, and worktree provisioning -- holds the shared side. Locks live outside every deletion target (sandbox-aware cache base or the shared Git common dir) so they survive removal of the target, and a `removed` marker makes post-prune starts fail closed instead of recreating a deleted identity.
+
+### Changed
+- `AttemptCoordinator#start` and `ForkSessionLauncher#launch` now participate in the prune exclusion: a concurrent prune blocks new writers for the identity, and a start targeting a pruned assignment raises a conflict instead of writing into a recreated path.
+
 ## [0.58.0] - 2026-09-28
 
 ### Added
@@ -503,7 +511,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Unified dynamic step default instructions under a single `AssignmentExecutor::DEFAULT_DYNAMIC_STEP_INSTRUCTIONS` source.
 - Limited canonical batch expansion to explicit `workflow`, `skill`, or declared `sub_steps` inputs, preserving prior numbering behavior for plain flat batch inserts.
 - Updated usage, getting-started, and handbook docs to cover the new `add --from` workflow.
-- Updated `record-demo` step instructions to require diagnosis before skipping on failure — agents must check config, available fonts, and spike findings before reporting a non-blocking skip.
+- Updated `record-demo` step instructions to require diagnosis before skipping on failure -- agents must check config, available fonts, and spike findings before reporting a non-blocking skip.
 - Added `decision_notes.non_blocking_policy` to `record-demo` step catalog entry clarifying that "non-blocking" means "diagnose and retry before skipping," not "skip on first failure."
 
 ### Technical
@@ -959,7 +967,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.20.0] - 2026-03-05
 
 ### Added
-- Provider-specific session detection fallback in `ForkSessionLauncher` — when a provider doesn't return a native `session_id`, scans local session storage via `SessionFinder` to detect the forked session by prompt matching.
+- Provider-specific session detection fallback in `ForkSessionLauncher` -- when a provider doesn't return a native `session_id`, scans local session storage via `SessionFinder` to detect the forked session by prompt matching.
 - Session metadata file (`<root>-session.yml`) written for every fork run, capturing `session_id`, `provider`, `model`, and `completed_at` for traceability.
 - Stall error messages now include `Session: <id>` when session metadata is available, enabling direct trace to agent session.
 
@@ -1044,14 +1052,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.16.1] - 2026-03-04
 
 ### Fixed
-- Correct `.agents/skills` typo to `.agent/skills` in default config and `SkillAssignSourceResolver` — skill discovery now uses the canonical provider-neutral path
+- Correct `.agents/skills` typo to `.agent/skills` in default config and `SkillAssignSourceResolver` -- skill discovery now uses the canonical provider-neutral path
 
 ## [0.16.0] - 2026-03-04
 
 ### Added
-- New `onboard-base` catalog step — loads base project context via `ace-bundle project-base`
-- New `task-load` catalog step — loads task behavioral spec via `ace-bundle task://<taskref>`
-- Taskref placeholder substitution in catalog step descriptions — `<taskref>` in step descriptions is replaced with actual task reference during child instruction building
+- New `onboard-base` catalog step -- loads base project context via `ace-bundle project-base`
+- New `task-load` catalog step -- loads task behavioral spec via `ace-bundle task://<taskref>`
+- Taskref placeholder substitution in catalog step descriptions -- `<taskref>` in step descriptions is replaced with actual task reference during child instruction building
 
 ### Changed
 - Default assignment presets updated to use ace-task
@@ -1065,7 +1073,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.15.1] - 2026-03-01
 
 ### Added
-- Fork-run crash recovery protocol in drive workflow — detection, commit partial work, progress report, inject recovery steps, re-fork pattern for partial completion scenarios
+- Fork-run crash recovery protocol in drive workflow -- detection, commit partial work, progress report, inject recovery steps, re-fork pattern for partial completion scenarios
 
 ## [0.15.0] - 2026-02-28
 
@@ -1222,7 +1230,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.12.14] - 2026-02-22
 
 ### Added
-- Subtree guard step in drive workflow — driver reviews all fork report files before continuing to next step
+- Subtree guard step in drive workflow -- driver reviews all fork report files before continuing to next step
 - Report review instruction in split-subtree-root step template for fork context
 
 ## [0.12.13] - 2026-02-22
@@ -1295,13 +1303,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.12.1] - 2026-02-19
 
 ### Fixed
-- `reflect-verify-cycle` pair changed from `sequential` to `conditional` — prevents overriding optional strength of reflect-and-refactor
+- `reflect-verify-cycle` pair changed from `sequential` to `conditional` -- prevents overriding optional strength of reflect-and-refactor
 - Renamed `max_recursion` to `max_reruns` in replan config for clarity
 
 ## [0.12.0] - 2026-02-19
 
 ### Added
-- New `reflect-and-refactor` step in catalog — analyzes implementation against ATOM principles and executes targeted refactoring before PR creation
+- New `reflect-and-refactor` step in catalog -- analyzes implementation against ATOM principles and executes targeted refactoring before PR creation
 - Composition rules for reflect-and-refactor: ordering (after verify, before mark-done/release/retro), pairs (verify cycle, fix cycle, replan cycle), and conditional suggestion
 - `create-retro` step now consumes `findings-report` from reflect-and-refactor as recommended prerequisite
 - `implement-with-pr` recipe updated to include optional reflect-and-refactor step after work-on-task
@@ -1315,7 +1323,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- `assignment_state` now checks `completed` before `failed` — assignments where all steps are done/failed correctly report `:completed` instead of `:failed`
+- `assignment_state` now checks `completed` before `failed` -- assignments where all steps are done/failed correctly report `:completed` instead of `:failed`
 
 ### Added
 
@@ -1906,7 +1914,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- CLI `start` command crashes with positional argument (`ace-assign start job.yaml`) because `option :config` requires `--config` flag — renamed command to `create` with `argument :config`
+- CLI `start` command crashes with positional argument (`ace-assign start job.yaml`) because `option :config` requires `--config` flag -- renamed command to `create` with `argument :config`
 - `ace-bundle wfi://prepare-assignment` fails due to missing project-level wfi:// protocol registration
 
 ### Added

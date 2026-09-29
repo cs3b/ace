@@ -8,10 +8,17 @@ require "ace/git/worktree"
 require "ace/task"
 require "ace/tmux"
 
+module Ace
+  module Overseer
+    class Error < StandardError; end
+  end
+end
+
 require_relative "overseer/version"
 require_relative "overseer/models/work_context"
 require_relative "overseer/models/prune_candidate"
 require_relative "overseer/models/assignment_prune_candidate"
+require_relative "overseer/models/preservation_proof"
 require_relative "overseer/atoms/repo_guard"
 require_relative "overseer/atoms/preset_resolver"
 require_relative "overseer/atoms/status_formatter"
@@ -20,8 +27,11 @@ require_relative "overseer/molecules/lab_client"
 require_relative "overseer/molecules/tmux_window_opener"
 require_relative "overseer/molecules/assignment_launcher"
 require_relative "overseer/molecules/worktree_context_collector"
+require_relative "overseer/molecules/preservation_manifest"
+require_relative "overseer/molecules/git_preservation_checker"
 require_relative "overseer/molecules/prune_safety_checker"
 require_relative "overseer/molecules/assignment_prune_safety_checker"
+require_relative "overseer/molecules/lab_prune_safety_checker"
 require_relative "overseer/organisms/work_on_orchestrator"
 require_relative "overseer/organisms/status_collector"
 require_relative "overseer/organisms/prune_orchestrator"
@@ -29,8 +39,6 @@ require_relative "overseer/cli"
 
 module Ace
   module Overseer
-    class Error < StandardError; end
-
     @config_mutex = Mutex.new
     @gem_root_mutex = Mutex.new
 
