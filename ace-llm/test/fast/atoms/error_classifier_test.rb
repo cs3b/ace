@@ -214,6 +214,74 @@ module Ace
 
           Faraday::ClientError.new("HTTP #{status}", response)
         end
+
+        # SC2: classification keyed on structured evidence, not message prose
+        def evidence_error(outcome:, message: "boom", execution_began: true)
+          error = Ace::LLM::ProviderError.new(message)
+          error.execution_evidence = Ace::LLM::Models::ExecutionEvidence.new(
+            outcome: outcome,
+            invocation_id: "abcd1234",
+            exit_status: outcome == :nonzero_exit ? 2 : nil,
+            execution_began: execution_began
+          )
+          error
+        end
+
+        def test_nonzero_exit_mentioning_timeout_classifies_as_execution_incomplete
+          error = evidence_error(outcome: :nonzero_exit, message: "CLI failed: connection timed out")
+
+          assert_equal ErrorClassifier::EXECUTION_INCOMPLETE, ErrorClassifier.classify(error)
+          assert ErrorClassifier.execution_incomplete?(error)
+        end
+
+        def test_deadline_exceeded_evidence_classifies_as_execution_incomplete
+          error = evidence_error(outcome: :deadline_exceeded)
+
+          assert_equal ErrorClassifier::EXECUTION_INCOMPLETE, ErrorClassifier.classify(error)
+        end
+
+        def test_transport_failure_evidence_classifies_as_execution_incomplete
+          error = evidence_error(outcome: :transport_failure)
+
+          assert_equal ErrorClassifier::EXECUTION_INCOMPLETE, ErrorClassifier.classify(error)
+        end
+
+        def test_no_response_evidence_classifies_as_execution_incomplete
+          error = evidence_error(outcome: :no_response)
+
+          assert_equal ErrorClassifier::EXECUTION_INCOMPLETE, ErrorClassifier.classify(error)
+        end
+
+        def test_prose_timeout_without_evidence_keeps_legacy_classification
+          # API-provider errors carry no capture evidence; message-based
+          # classification stays as-is for them.
+          error = Ace::LLM::ProviderError.new("request timed out")
+
+          assert_equal ErrorClassifier::FALLBACK_IMMEDIATELY, ErrorClassifier.classify(error)
+        end
+
+        def test_spawn_failure_evidence_not_begun_falls_through_to_prose
+          error = evidence_error(outcome: :transport_failure, execution_began: false, message: "could not be started")
+
+          assert_equal ErrorClassifier::TERMINAL, ErrorClassifier.classify(error)
+          refute ErrorClassifier.execution_incomplete?(error)
+        end
+
+        def test_execution_evidence_for_accepts_serialized_hash
+          error = Ace::LLM::ProviderError.new("boom")
+          error.execution_evidence = {outcome: "nonzero_exit", exit_status: 3}
+
+          evidence = ErrorClassifier.execution_evidence_for(error)
+
+          assert_equal :nonzero_exit, evidence.outcome
+          assert_equal 3, evidence.exit_status
+        end
+
+        def test_execution_evidence_for_returns_nil_without_evidence
+          assert_nil ErrorClassifier.execution_evidence_for(StandardError.new("plain"))
+          error = Ace::LLM::ProviderError.new("no evidence")
+          assert_nil ErrorClassifier.execution_evidence_for(error)
+        end
       end
     end
   end

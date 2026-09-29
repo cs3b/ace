@@ -22,6 +22,8 @@ module Ace
           @visited_providers = Set.new
           @start_time = nil
           @last_failure_terminal = false
+          @last_execution_evidence = nil
+          @chain_aborted = false
         end
 
         # Execute a block with fallback support
@@ -35,6 +37,7 @@ module Ace
           @start_time = Time.now
           @primary_provider = primary_provider
           @visited_providers.clear
+          @chain_aborted = false
 
           # If fallback disabled, just execute with primary
           return yield(get_client(primary_provider, registry), primary_provider) if @config.disabled?
@@ -43,6 +46,7 @@ module Ace
           result = try_provider_with_retry(primary_provider, registry) do |client, provider_name|
             yield client, provider_name
           end
+          raise_incomplete_execution_error if @chain_aborted
           return result if result
 
           # Try fallback providers in order (per-provider chain or default)
@@ -61,6 +65,7 @@ module Ace
             result = try_provider_with_retry(fallback_provider, registry) do |client, provider_name|
               yield client, provider_name
             end
+            raise_incomplete_execution_error if @chain_aborted
             return result if result
           end
 
@@ -88,27 +93,50 @@ module Ace
             raise if error.is_a?(Ace::LLM::ConfigurationError) && provider_name != @primary_provider
             last_error = error
 
-            # Handle the error - returns :retry or :stop_and_fallback
+            # Handle the error - returns :retry, :stop_and_fallback, or :abort_chain
             action = handle_error(error, provider_name, attempts)
 
             if action == :retry
               attempts += 1
               next
-            else # :stop_and_fallback
+            else # :stop_and_fallback or :abort_chain
               return nil
             end
           end
+        end
+
+        # Raise the terminal error for a chain aborted by an incomplete
+        # execution. Carries the structured evidence so downstream consumers
+        # (E2E runner, reviewers) can reconcile the session without guessing.
+        def raise_incomplete_execution_error
+          evidence = @last_execution_evidence
+          message = +"Provider execution incomplete; remaining providers were not tried to avoid replaying CLI side effects."
+          message << " Evidence: #{evidence.summary}." if evidence
+          message << " Tried: #{@visited_providers.to_a.join(", ")}."
+          message << " Reconcile the session manually before rerunning this work."
+          error = Ace::LLM::ProviderError.new(message)
+          error.execution_evidence = evidence if evidence
+          raise error
         end
 
         # Handle error and determine retry/fallback strategy
         # @param error [Exception] The error that occurred
         # @param provider_name [String] Provider name
         # @param attempts [Integer] Current attempt number
-        # @return [Symbol] :retry to retry, :stop_and_fallback to move to next provider
+        # @return [Symbol] :retry to retry, :stop_and_fallback to move to next provider, :abort_chain to stop entirely
         def handle_error(error, provider_name, attempts)
           classification = Atoms::ErrorClassifier.classify(error)
 
           case classification
+          when Atoms::ErrorClassifier::EXECUTION_INCOMPLETE
+            # The provider process already ran; its session ended without a
+            # confirmed completion. Retrying or falling back would replay
+            # whatever side effects the session performed.
+            @last_failure_terminal = true
+            @last_execution_evidence = Atoms::ErrorClassifier.execution_evidence_for(error)
+            @chain_aborted = true
+            report_status("⚠ #{provider_name} execution incomplete (#{@last_execution_evidence&.summary}); not retrying or falling back to avoid replaying side effects")
+            :abort_chain
           when Atoms::ErrorClassifier::SKIP_TO_NEXT
             @last_failure_terminal = false
             report_status("⚠ #{provider_name} authentication failed, skipping...")
@@ -196,13 +224,16 @@ module Ace
         def build_exhaustion_error_message
           providers_tried = @visited_providers.to_a.join(", ")
 
-          msg = "All configured providers unavailable. "
-          msg += "Tried: #{providers_tried}. "
-          msg += "\nTry:\n"
-          msg += "  - Check provider status pages\n"
-          msg += "  - Configure additional providers\n"
-          msg += "  - Retry in a few minutes\n"
-          msg += "  - Run with --debug for detailed errors"
+          msg = +"All configured providers unavailable. "
+          msg << "Tried: #{providers_tried}. "
+          if (evidence = @last_execution_evidence)
+            msg << "\nLast execution evidence: #{evidence.summary}. "
+          end
+          msg << "\nTry:\n"
+          msg << "  - Check provider status pages\n"
+          msg << "  - Configure additional providers\n"
+          msg << "  - Retry in a few minutes\n"
+          msg << "  - Run with --debug for detailed errors"
           msg
         end
 
