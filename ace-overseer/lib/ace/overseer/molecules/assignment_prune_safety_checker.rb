@@ -102,8 +102,9 @@ module Ace
         end
 
         # The journal is the durable evidence outside the deletion target:
-        # managed cleanup requires it to exist and to agree that no attempt
-        # is active or uncertain.
+        # managed cleanup requires THIS assignment's journaled attempt
+        # history to exist and to agree that no attempt is active or
+        # uncertain (an empty journal carries no evidence at all).
         def journal_evidence(assignment_id)
           journal = @journal_factory.call
           ref_value = journal.ref_value
@@ -111,9 +112,14 @@ module Ace
             return [false, ["no durable evidence ref for managed assignment #{assignment_id}"]]
           end
 
+          derived = journal.derived_attempts(assignment_id)
+          if derived.empty?
+            return [false, ["no durable attempt evidence for managed assignment #{assignment_id} in the journal"]]
+          end
+
           terminal = true
           reasons = []
-          journal.derived_attempts(assignment_id).each do |attempt|
+          derived.each do |attempt|
             next unless attempt.active? || attempt.uncertain?
 
             terminal = false

@@ -30,6 +30,15 @@ module Ace
           raise Error, "Lab returned invalid JSON: #{error.message}"
         end
 
+        # Whether this surface can make the no-writer state check and the
+        # destruction one atomic operation. The raw CLI cannot: between
+        # `work status` and `work destroy` another writer may start. Prune
+        # treats the path as unsupported (preserve) unless the adapter
+        # guarantees atomicity.
+        def supports_atomic_destroy?
+          false
+        end
+
         # The authoritative status entry for one Work, or nil when the Work
         # is absent from the surface. Missing state is a blocking condition
         # for prune — never treated as safe.

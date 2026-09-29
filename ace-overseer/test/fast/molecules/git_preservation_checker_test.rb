@@ -315,6 +315,63 @@ class GitPreservationCheckerTest < AceOverseerTestCase
     assert_includes proof.reason, "empty-range"
   end
 
+def test_squash_with_unrelated_destination_content_preserves_by_transition
+  source, worktree = build_source
+  worktree.write("a.txt", "1\n")
+  worktree.commit("work one")
+  worktree.write("b.txt", "2\n")
+  worktree.commit("work two")
+  worktree.write("c.txt", "3\n")
+  worktree.commit("work three")
+  source_head = worktree.rev("HEAD")
+
+  successor = build_successor(source)
+  # Squash all three commits into one landing commit.
+  successor.git!("cherry-pick", "--no-commit", source_head + "~2")
+  successor.git!("cherry-pick", "--no-commit", source_head + "~1")
+  successor.git!("cherry-pick", "--no-commit", source_head)
+  successor.git!("commit", "-q", "-m", "squashed task work")
+  destination_head = successor.rev("HEAD")
+
+  record = build_record(source, worktree, successor,
+    destination_base: successor.rev("main"), destination_head: destination_head)
+  proof = @checker.proof(
+    worktree_path: worktree.path,
+    accepted_base: accepted_base_for(source),
+    manifest_record: record,
+    recorded_base: record.resolved_source_base,
+    candidate_branch: "task-work"
+  )
+
+  assert_predicate proof, :preserved?
+  assert_equal :content_transition, proof.method
+end
+
+def test_destination_on_the_candidate_branch_is_rejected
+  source, worktree = build_source
+  commit_work(worktree, {"feature.txt" => "1\n"})
+  source.checkout("main")
+  source.git!("merge", "--no-ff", "--no-edit", "-q", "task-work")
+
+  # Reset main so ancestry fails and the manifest path is exercised; the
+  # declared destination is the candidate's own branch (task-work).
+  source.git!("update-ref", "refs/heads/main", source.rev("main~1"))
+
+  record = build_record(source, worktree, source,
+    destination_base: worktree.rev("HEAD~1"), destination_head: worktree.rev("HEAD"),
+    destination_branch: "refs/heads/task-work")
+  proof = @checker.proof(
+    worktree_path: worktree.path,
+    accepted_base: {branch: "main", head: source.rev("main")},
+    manifest_record: record,
+    recorded_base: record.resolved_source_base,
+    candidate_branch: "task-work"
+  )
+
+  refute_predicate proof, :preserved?
+  assert_includes proof.reason, "scheduled for deletion"
+end
+
   def test_binary_modes_and_symlinks_compare_exactly
     source, worktree = build_source
     worktree.write("blob.bin", [0x00, 0xFF, 0x13, 0x37].pack("C*"))
@@ -388,7 +445,8 @@ class GitPreservationCheckerTest < AceOverseerTestCase
   private
 
   def build_record(source, worktree, successor, destination_base:, destination_head:,
-    source_repo: source.path, source_base: worktree.git!("merge-base", "main", "task-work"), source_head: nil)
+    source_repo: source.path, source_base: worktree.git!("merge-base", "main", "task-work"), source_head: nil,
+    destination_branch: "refs/heads/landing")
     worktree_path = File.realpath(worktree.path)
     source_repo_handle = source_repo == source.path ? source : PruneGitFixtures::Repo.new(source_repo)
     Ace::Overseer::Molecules::PreservationManifest::Record.new(
@@ -399,12 +457,12 @@ class GitPreservationCheckerTest < AceOverseerTestCase
       destination_repo: successor.path,
       destination_base: destination_base,
       destination_head: destination_head,
-      destination_branch: "refs/heads/landing",
+      destination_branch: destination_branch,
       resolved_source_base: source_repo_handle.rev(source_base),
       resolved_source_head: source_head || worktree.rev("HEAD"),
       resolved_destination_base: successor.rev(destination_base),
       resolved_destination_head: successor.rev(destination_head),
-      resolved_destination_branch_tip: successor.rev("refs/heads/landing")
+      resolved_destination_branch_tip: successor.rev(destination_branch)
     )
   end
 end

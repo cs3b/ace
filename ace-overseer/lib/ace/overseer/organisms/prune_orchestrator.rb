@@ -62,7 +62,6 @@ module Ace
           checked = selection.map do |worktree|
             check_candidate(worktree, manifest: manifest, accepted_base: accepted_base)
           end
-
           safe = checked.select(&:safe_to_prune?)
           unsafe = checked.reject(&:safe_to_prune?)
 
@@ -100,8 +99,12 @@ module Ace
 
           safe.each do |candidate|
             exclusion.with_exclusive(identity_key(candidate)) do
+              # Re-resolve the surviving base inside the exclusion: a base
+              # branch reset after preview must not authorize removal against
+              # its stale tip.
+              fresh_base = accepted_base_for([candidate_worktree(candidate)]) || accepted_base
               recheck = check_candidate(
-                candidate_worktree(candidate), manifest: manifest, accepted_base: accepted_base
+                candidate_worktree(candidate), manifest: manifest, accepted_base: fresh_base
               )
               unless recheck.safe_to_prune?
                 blocked << {candidate: candidate, reasons: recheck.reasons}
@@ -144,21 +147,25 @@ module Ace
           remove_result
         end
 
-        # The branch deletion boundary: the branch is deleted only when its
-        # tip still equals the HEAD whose preservation was just re-proven
-        # under this exclusion.
+        # The branch deletion boundary: the ref is deleted by compare-and-swap
+        # against the exact tip whose preservation was just re-proven under
+        # this exclusion — a branch advanced concurrently is preserved, not
+        # force-deleted.
         def delete_branch(repo, branch:, head:)
           return {success: true} if branch.nil? || branch.empty?
           return {success: true} if head.nil?
           return {success: false, error: "cannot resolve common repository for branch deletion"} if repo.nil?
 
-          tip = rev_parse(repo, "--verify", "refs/heads/#{branch}")
-          if tip.nil? || tip != head
-            return {success: false, error: "branch #{branch} changed after preview (tip #{tip ? tip[0, 12] : "missing"}); preserving"}
+          _out, status = Open3.capture2(
+            "git", "-C", repo, "update-ref", "-d", "refs/heads/#{branch}", head
+          )
+          if status.success?
+            {success: true}
+          else
+            tip = rev_parse(repo, "--verify", "refs/heads/#{branch}")
+            {success: false,
+             error: "branch #{branch} changed after preview (tip #{tip ? tip[0, 12] : "missing"}); preserving"}
           end
-
-          _out, status = Open3.capture2("git", "-C", repo, "branch", "-D", branch)
-          status.success? ? {success: true} : {success: false, error: "failed to delete branch #{branch}"}
         end
 
         def prune_assignment(assignment_id:, dry_run:, yes:, force:, input:, output:, on_progress:)
@@ -195,12 +202,15 @@ module Ace
               return {dry_run: false, assignment_candidate: recheck, pruned_assignments: [], blocked: true}
             end
 
-            exclusion.record_removed!(exclusion.assignment_key(assignment_id))
             deleted = @assignment_manager.delete(assignment_id)
+            # The removed marker records a completed deletion only: a failed
+            # delete must keep admitting starts against the surviving cache.
+            exclusion.record_removed!(exclusion.assignment_key(assignment_id)) if deleted
           end
 
           pruned = deleted ? [candidate] : []
-          {dry_run: false, assignment_candidate: candidate, pruned_assignments: pruned, blocked: false}
+          {dry_run: false, assignment_candidate: candidate, pruned_assignments: pruned,
+           blocked: false, deleted: deleted}
         end
 
         def print_assignment_candidate(candidate, output)

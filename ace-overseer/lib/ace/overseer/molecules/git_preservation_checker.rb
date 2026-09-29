@@ -65,8 +65,10 @@ module Ace
         #   destination (a claim; verified here)
         # @param recorded_base [String, nil] Independently recorded creation
         #   baseline (attempt base_head), outside the manifest
+        # @param candidate_branch [String, nil] The candidate's own branch,
+        #   scheduled for deletion with the worktree
         # @return [Models::PreservationProof]
-        def proof(worktree_path:, accepted_base:, manifest_record: nil, recorded_base: nil)
+        def proof(worktree_path:, accepted_base:, manifest_record: nil, recorded_base: nil, candidate_branch: nil)
           live_head = rev_parse(worktree_path, "--verify", "HEAD")
           return blocked("cannot resolve candidate HEAD") if live_head.nil?
 
@@ -80,7 +82,7 @@ module Ace
           return blocked("HEAD #{live_head[0, 12]} is not contained in accepted base " \
             "#{accepted_base[:branch]} (#{accepted_base[:head][0, 12]}) and no destination is declared") if manifest_record.nil?
 
-          proof_via_destination(worktree_path, live_head, accepted_base, manifest_record, recorded_base)
+          proof_via_destination(worktree_path, live_head, accepted_base, manifest_record, recorded_base, candidate_branch)
         end
 
         # Prove preservation for a static identity that has no local
@@ -106,9 +108,12 @@ module Ace
 
         private
 
-        def proof_via_destination(worktree_path, live_head, accepted_base, record, recorded_base)
+        def proof_via_destination(worktree_path, live_head, accepted_base, record, recorded_base, candidate_branch)
           identity_failure = verify_source_identity(worktree_path, live_head, record)
           return identity_failure if identity_failure
+
+          destination_failure = verify_destination_survival(record, candidate_branch)
+          return destination_failure if destination_failure
 
           acceptance_failure = verify_destination_acceptance(record)
           return acceptance_failure if acceptance_failure
@@ -172,6 +177,29 @@ module Ace
           recorded_base == record.resolved_source_base
         end
 
+        # A destination that is the candidate's own branch — or resolves to
+        # its tip — is scheduled for deletion with the worktree and cannot
+        # survive as the place the work was preserved.
+        def verify_destination_survival(record, candidate_branch)
+          return nil unless same_path?(record.source_repo, record.destination_repo)
+
+          branch_tip = rev_parse(record.destination_repo, "--verify", record.destination_branch)
+          candidate_tip = candidate_branch.to_s.empty? ? nil : rev_parse(
+            record.source_repo, "--verify", "refs/heads/#{candidate_branch}"
+          )
+          if branch_tip && candidate_tip && branch_tip == candidate_tip
+            return blocked("declared destination branch #{record.destination_branch} is the candidate's own " \
+              "branch scheduled for deletion and cannot be its surviving destination")
+          end
+
+          if !candidate_branch.to_s.empty? && record.destination_branch_name == candidate_branch
+            return blocked("declared destination branch #{record.destination_branch} is the candidate's own " \
+              "branch scheduled for deletion and cannot be its surviving destination")
+          end
+
+          nil
+        end
+
         def verify_destination_acceptance(record)
           branch_tip = rev_parse(record.destination_repo, "--verify", record.destination_branch)
           if branch_tip.nil?
@@ -192,8 +220,11 @@ module Ace
           nil
         end
 
-        # The declared ranges must be non-empty and correspond: a caller
-        # selected empty or truncated range is not evidence.
+        # The declared ranges must be non-empty: a caller selected empty or
+        # truncated range is not evidence. Content correspondence is proven
+        # by the exact transition comparison itself — a squash that lands
+        # the same content in fewer commits compares equal, a different
+        # content never does.
         def verify_range(record)
           source_range = commit_count(record.source_repo, record.resolved_source_base, record.resolved_source_head)
           destination_range = commit_count(
@@ -204,12 +235,7 @@ module Ace
           end
 
           if source_range.zero? || destination_range.zero?
-            return blocked("empty-range identity is not proof; full-tree equality or accepted ancestry required")
-          end
-
-          if source_range != destination_range
-            blocked("declared ranges transfer different commit counts " \
-              "(#{source_range} source vs #{destination_range} destination)")
+            blocked("empty-range identity is not proof; full-tree equality or accepted ancestry required")
           end
         end
 

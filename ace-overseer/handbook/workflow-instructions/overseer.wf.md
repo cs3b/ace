@@ -78,7 +78,7 @@ ace-overseer prune --yes
 ```
 
 - Targeted: `ace-overseer prune <task-ref|folder>...` or `ace-overseer prune --assignment <assignment-id>`
-- Lab runtime: `ace-overseer prune <work-id>... --runtime lab --dry-run`, rerun with `--yes` to delegate each destruction to Lab.
+- Lab runtime: `ace-overseer prune <work-id>... --runtime lab --dry-run`, rerun with `--yes` to delegate each destruction to Lab. The raw Lab CLI cannot make the no-writer check and the destruction atomic, so it is classified unsupported and preserved; only a Lab surface with an atomic guarded destroy delegates.
 
 #### Prune safety (non-negotiable executed check)
 

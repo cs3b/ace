@@ -616,6 +616,25 @@ class PruneOrchestratorTest < AceOverseerTestCase
     assert_empty mgr.delete_calls
   end
 
+def test_assignment_failed_delete_records_no_removal_and_reports_failure
+  candidate = build_assignment_candidate(id: "abc12", state: "completed", safe: true)
+  checker = FakeAssignmentPruneChecker.new(candidate)
+  mgr = FakeAssignmentManager.new(success: false)
+  exclusion = FakeExclusion.new
+
+  orchestrator = build_assignment_orchestrator(checker: checker, mgr: mgr, exclusion: exclusion)
+
+  result = orchestrator.call(
+    dry_run: false, yes: true, assignment_id: "abc12",
+    input: StringIO.new(""), output: StringIO.new
+  )
+
+  assert_empty result[:pruned_assignments]
+  assert_equal false, result[:deleted]
+  assert_empty exclusion.removed_keys, "a failed delete must not record removal"
+  assert_equal ["abc12"], mgr.delete_calls
+end
+
   def test_assignment_prune_abortable
     candidate = build_assignment_candidate(id: "abc12", state: "completed", safe: true)
     checker = FakeAssignmentPruneChecker.new(candidate)

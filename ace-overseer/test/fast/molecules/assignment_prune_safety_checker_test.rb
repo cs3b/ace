@@ -177,6 +177,16 @@ class AssignmentPruneSafetyCheckerTest < AceOverseerTestCase
     assert_includes candidate.reasons.join(" "), "no durable evidence ref"
   end
 
+def test_managed_assignment_with_empty_journal_blocks
+  journal = FakeJournal.new(ref_value: "e" * 40, attempts: [])
+  checker = build_checker(completed_info("148"), journal: journal)
+
+  candidate = checker.check(assignment_id: "abc12")
+
+  refute candidate.safe_to_prune?
+  assert_includes candidate.reasons.join(" "), "no durable attempt evidence"
+end
+
   def test_managed_assignment_journal_active_attempt_blocks
     journal = FakeJournal.new(
       ref_value: "e" * 40,
@@ -203,7 +213,10 @@ class AssignmentPruneSafetyCheckerTest < AceOverseerTestCase
   end
 
   def test_managed_assignment_with_terminal_evidence_passes
-    journal = FakeJournal.new(ref_value: "e" * 40, attempts: [])
+    journal = FakeJournal.new(
+      ref_value: "e" * 40,
+      attempts: [FakeAttempt.new(attempt_id: "at5", state: "succeeded")]
+    )
     checker = build_checker(completed_info("148"), journal: journal)
 
     candidate = checker.check(assignment_id: "abc12")

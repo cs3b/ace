@@ -36,9 +36,14 @@ class PruneCommandTest < AceOverseerTestCase
   class FakeLabClient
     attr_reader :calls
 
-    def initialize(entry: nil)
+    def initialize(entry: nil, atomic: true)
       @calls = []
       @entry = entry
+      @atomic = atomic
+    end
+
+    def supports_atomic_destroy?
+      @atomic
     end
 
     def call(*arguments, **options)
@@ -126,6 +131,23 @@ class PruneCommandTest < AceOverseerTestCase
     assert_includes output, "BLOCKED"
     assert_includes output, "active writer"
   end
+
+def test_lab_without_atomic_destroy_capability_blocks
+  client = FakeLabClient.new(entry: lab_entry, atomic: false)
+  command = lab_command(client)
+
+  output = capture_io do
+    command.call(runtime: "lab", targets: ["W321"], dry_run: true)
+  end.first
+  assert_includes output, "BLOCKED"
+  assert_includes output, "cannot make the no-writer check and destruction atomic"
+
+  error = assert_raises(Ace::Support::Cli::Error) do
+    capture_io { command.call(runtime: "lab", targets: ["W321"], dry_run: false, yes: true) }
+  end
+  assert_includes error.message, "1 lab work(s) blocked"
+  assert_empty client.calls
+end
 
   def test_lab_undocumented_preservation_blocks
     client = FakeLabClient.new(entry: {"id" => "W321", "state" => "completed"})
@@ -242,7 +264,7 @@ class PruneCommandTest < AceOverseerTestCase
     error = assert_raises(Ace::Support::Cli::Error) do
       capture_io { command.call(quiet: false, dry_run: false, yes: true, debug: false) }
     end
-    assert_includes error.message, "1 candidate(s) blocked or failed"
+    assert_includes error.message, "2 candidate(s) blocked or failed"
   end
 
   def test_apply_success_exits_zero

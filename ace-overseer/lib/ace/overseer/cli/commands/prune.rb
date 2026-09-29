@@ -64,6 +64,10 @@ module Ace
 
               raise Ace::Support::Cli::Error, "Assignment #{options[:assignment]} is blocked: " \
                 "#{result[:assignment_candidate].reasons.join(", ")}" if result[:blocked]
+              unless result[:pruned_assignments].any?
+                raise Ace::Support::Cli::Error, "Failed to remove assignment #{options[:assignment]}"
+              end
+
               return
             end
 
@@ -77,12 +81,12 @@ module Ace
 
             print_apply(result)
 
-            blocked_count = Array(result[:blocked]).length
-            failed_count = Array(result[:failed]).length
-            return if blocked_count.zero? && failed_count.zero?
+            blocked_count = Array(result[:unsafe]).length + Array(result[:blocked]).length +
+              Array(result[:failed]).length
+            return if blocked_count.zero?
 
             raise Ace::Support::Cli::Error,
-              "#{blocked_count + failed_count} candidate(s) blocked or failed; nothing unsafe was removed"
+              "#{blocked_count} candidate(s) blocked or failed; nothing unsafe was removed"
           rescue Ace::Overseer::Error => e
             raise Ace::Support::Cli::Error, e.message
           end
@@ -97,12 +101,24 @@ module Ace
             works = Array(options[:targets]).map(&:to_s)
             raise Ace::Support::Cli::Error, "provide at least one exact Lab Work ID to prune" if works.empty?
 
-            classifications = works.to_h do |work|
-              [work, @lab_safety_checker.check(
-                lab_client: @lab_client,
-                work_id: work,
-                preservation_proof: lab_preservation_proof(work)
-              )]
+            classifications = if atomic_destroy_supported?
+              works.to_h do |work|
+                [work, @lab_safety_checker.check(
+                  lab_client: @lab_client,
+                  work_id: work,
+                  preservation_proof: lab_preservation_proof(work)
+                )]
+              end
+            else
+              # The raw Lab surface cannot make the no-writer check and the
+              # destruction atomic; claiming a probe was safe would be a
+              # lie, so the whole path is unsupported and preserved.
+              unsupported = Molecules::LabPruneSafetyChecker::Classification.new(
+                safe?: false,
+                reason: "lab runtime cannot make the no-writer check and destruction atomic; " \
+                  "preserve the Work instead"
+              )
+              works.to_h { |work| [work, unsupported] }
             end
 
             if options[:dry_run]
@@ -145,6 +161,14 @@ module Ace
             return if blocked.empty?
 
             raise Ace::Support::Cli::Error, "#{blocked.length} lab work(s) blocked; nothing unsafe was destroyed"
+          end
+
+          # Delegation is only honest when the Lab surface itself can make
+          # the state check and the destruction atomic. The raw CLI adapter
+          # cannot, so it reports unsupported; adapters with an atomic
+          # guarded destroy opt in.
+          def atomic_destroy_supported?
+            @lab_client.respond_to?(:supports_atomic_destroy?) && @lab_client.supports_atomic_destroy?
           end
 
           # Preservation evidence for a Lab Work comes from the Work's own
@@ -232,6 +256,9 @@ module Ace
           def print_apply(result)
             result[:pruned].each do |candidate|
               puts "Removed worktree task.#{candidate.task_id}"
+            end
+            Array(result[:unsafe]).each do |candidate|
+              puts "Blocked: task.#{candidate.task_id}: #{candidate.reasons.join(", ")}"
             end
             Array(result[:blocked]).each do |entry|
               puts "Blocked after recheck: task.#{entry[:candidate].task_id}: #{entry[:reasons].join(", ")}"

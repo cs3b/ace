@@ -134,7 +134,7 @@ does not read Lab credentials and does not call Podman or Herdr directly.
 - `ace-overseer prompt --work WORK --file PATH`: forward prompt text from a file to the Work pane. Piped stdin is also supported; prompt text is never passed as a process argument.
 - `ace-overseer review --work WORK --pr NUMBER`: prepare an exact-head admin review checkout and pane.
 - `ace-overseer stop --work WORK`: stop the assigned process without destroying Work state.
-- `ace-overseer prune WORK... --runtime lab --dry-run`: classify each Work -- documented terminal state, no in-flight work, and preservation data (`repo`/`head`/`branch`) provable in the hosted repository. Apply with `--yes` re-verifies state immediately before delegating each destruction to `lab work destroy WORK --confirm`; blocked Works are never destroyed and the run exits nonzero.
+- `ace-overseer prune WORK... --runtime lab --dry-run`: classify each Work -- documented terminal state, no in-flight work, and preservation data (`repo`/`head`/`branch`) provable in the hosted repository. Apply with `--yes` re-verifies state immediately before delegating each destruction to `lab work destroy WORK --confirm`; blocked Works are never destroyed and the run exits nonzero. The raw Lab CLI cannot make the state check and the destruction atomic, so this adapter reports the path unsupported and preserves the Work; only a Lab surface with an atomic guarded destroy delegates.
 
 Example:
 

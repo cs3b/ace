@@ -181,6 +181,28 @@ class PrunePreservationIntegrationTest < AceOverseerTestCase
     assert File.directory?(@worktree.path), "changed candidate must be preserved"
   end
 
+def test_accepted_base_reset_between_preview_and_apply_blocks_the_candidate
+  commit_and_merge_work
+  manager = StaticManager.new([worktree_entry], repo_root: @repo.path)
+  orchestrator = build_orchestrator(manager)
+
+  preview = orchestrator.call(dry_run: true, yes: false, input: StringIO.new(""), output: StringIO.new)
+  assert_equal 1, preview[:safe].length, "preview must classify as safe"
+
+  # The accepted base is reset after preview: the stale tip must not
+  # authorize deletion inside the apply recheck.
+  @repo.git!("update-ref", "refs/heads/main", @repo.rev("main~1"))
+
+  result = orchestrator.call(dry_run: false, yes: true, input: StringIO.new(""), output: StringIO.new)
+
+  assert_empty result[:pruned]
+  assert_equal 1, result[:unsafe].length
+  assert_includes result[:unsafe].first.reasons.join(" "), "preservation not proven"
+  assert File.directory?(@worktree.path), "candidate must be preserved"
+  assert @repo.git!("branch", "--format=%(refname:short)").split("
+").include?("task-work")
+end
+
   def test_dry_run_changes_nothing
     commit_and_merge_work
     manager = StaticManager.new([worktree_entry], repo_root: @repo.path)

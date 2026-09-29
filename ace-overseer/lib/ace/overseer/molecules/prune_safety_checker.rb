@@ -50,7 +50,8 @@ module Ace
             worktree_path: worktree_path,
             accepted_base: accepted_base,
             manifest_record: manifest_record,
-            recorded_base: recorded_base
+            recorded_base: recorded_base,
+            candidate_branch: context.branch
           )
 
           reasons = []
@@ -160,14 +161,15 @@ module Ace
           [terminal, reasons, recorded_base]
         end
 
-        def preservation_proof(worktree_path:, accepted_base:, manifest_record:, recorded_base:)
+        def preservation_proof(worktree_path:, accepted_base:, manifest_record:, recorded_base:, candidate_branch: nil)
           return Models::PreservationProof.blocked("no surviving accepted base could be resolved") if accepted_base.nil?
 
           @preservation_checker.proof(
             worktree_path: worktree_path,
             accepted_base: accepted_base,
             manifest_record: manifest_record,
-            recorded_base: recorded_base
+            recorded_base: recorded_base,
+            candidate_branch: candidate_branch
           )
         rescue => e
           Models::PreservationProof.blocked("preservation proof failed: #{e.message}")
