@@ -47,3 +47,10 @@ conservatively retains Forgejo checkouts until `fj` exposes that field.
 The capability evidence and its provenance live in the
 `8wr.t.uj0` task folder (`evidence/fj-capabilities.md`).
 
+Endpoint fidelity: `-H` carries the selected `scheme://authority` (fj
+otherwise assumes HTTPS), and because fj v0.6.0 silently applies its
+keys-file `aliases` map to `-H`, the provider read-only checks the
+observed keys-file locations and refuses a repository command when an
+alias redirects the selected host — never modifying user fj
+configuration; an absent or unreadable keys file is allowed.
+
