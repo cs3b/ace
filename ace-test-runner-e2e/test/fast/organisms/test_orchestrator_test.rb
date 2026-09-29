@@ -453,8 +453,9 @@ class TestOrchestratorTest < Minitest::Test
           total: 5
       YAML
 
-      # Executor returns "error" status — metadata.yml should override
-      executor = StubExecutor.new(status: "error", summary: "Parse error")
+      # Executor completed with a non-error status — metadata.yml stays
+      # authoritative for counts and status of a completed run.
+      executor = StubExecutor.new(status: "fail", summary: "Parser disagreement")
       orchestrator = create_orchestrator(
         base_dir: tmpdir,
         provider: "claude:sonnet",
@@ -473,6 +474,41 @@ class TestOrchestratorTest < Minitest::Test
       assert_equal 0, results.first.failed_count
       assert_equal 5, results.first.total_count
       assert_match(/Result: .* PASS/, @output.string)
+    end
+  end
+
+  def test_cli_provider_error_result_is_not_upgraded_by_metadata_yml
+    Dir.mktmpdir do |tmpdir|
+      create_ts_test_package(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001])
+
+      # Retained metadata from an earlier completed run must not upgrade a
+      # fresh uncertain/errored execution to PASS.
+      agent_dir = File.join(tmpdir, ".ace-local", "test-e2e", "meta02-my-pkg-ts001-reports")
+      FileUtils.mkdir_p(agent_dir)
+      File.write(File.join(agent_dir, "metadata.yml"), <<~YAML)
+        status: "pass"
+        results:
+          passed: 5
+          failed: 0
+          total: 5
+      YAML
+
+      executor = StubExecutor.new(status: "error", summary: "Parse error")
+      orchestrator = create_orchestrator(
+        base_dir: tmpdir,
+        provider: "claude:sonnet",
+        timestamp_generator: -> { "meta02" },
+        executor: executor
+      )
+
+      results = orchestrator.run(
+        package: "my-pkg",
+        test_id: "TS-TEST-001",
+        output: @output
+      )
+
+      assert_equal "error", results.first.status
+      assert_equal agent_dir, results.first.report_dir
     end
   end
 

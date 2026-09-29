@@ -577,7 +577,78 @@ class FailureFinderTest < Minitest::Test
     end
   end
 
-  private
+def test_find_failures_by_scenario_excludes_uncertain_execution_scenarios
+  Dir.mktmpdir do |tmpdir|
+    create_metadata(tmpdir, "8p0001-lint-ts001-reports", {
+      "test-id" => "TS-LINT-001",
+      "package" => "ace-lint",
+      "status" => "error",
+      "failed_test_cases" => [],
+      "uncertain_execution" => true
+    })
+    create_metadata(tmpdir, "8p0002-secrets-ts001-reports", {
+      "test-id" => "TS-SECRETS-001",
+      "package" => "ace-git-secrets",
+      "status" => "fail",
+      "failed_test_cases" => ["TC-002"]
+    })
+
+    result = @finder.find_failures_by_scenario(
+      packages: ["ace-lint", "ace-git-secrets"],
+      base_dir: tmpdir
+    )
+
+    # The uncertain scenario is not auto-replayable: excluded from retry surface
+    refute_includes result.keys, "ace-lint"
+    assert_equal({"TS-SECRETS-001" => ["TC-002"]}, result["ace-git-secrets"])
+  end
+end
+
+def test_find_uncertain_scenarios_lists_uncertain_latest_runs
+  Dir.mktmpdir do |tmpdir|
+    create_metadata(tmpdir, "8p0001-lint-ts001-reports", {
+      "test-id" => "TS-LINT-001",
+      "package" => "ace-lint",
+      "status" => "error",
+      "uncertain_execution" => true
+    })
+    create_metadata(tmpdir, "8p0002-lint-ts002-reports", {
+      "test-id" => "TS-LINT-002",
+      "package" => "ace-lint",
+      "status" => "fail",
+      "failed_test_cases" => ["TC-001"]
+    })
+
+    result = @finder.find_uncertain_scenarios(packages: ["ace-lint"], base_dir: tmpdir)
+
+    assert_equal({"ace-lint" => ["TS-LINT-001"]}, result)
+  end
+end
+
+def test_uncertain_flag_on_older_run_does_not_mask_newer_clean_failure
+  Dir.mktmpdir do |tmpdir|
+    create_metadata(tmpdir, "8p0001-lint-ts001-reports", {
+      "test-id" => "TS-LINT-001",
+      "package" => "ace-lint",
+      "status" => "error",
+      "uncertain_execution" => true
+    })
+    # Newer run (higher timestamp prefix) failed deterministically
+    create_metadata(tmpdir, "8p0002-lint-ts001-reports", {
+      "test-id" => "TS-LINT-001",
+      "package" => "ace-lint",
+      "status" => "fail",
+      "failed_test_cases" => ["TC-001"]
+    })
+
+    result = @finder.find_failures_by_scenario(packages: ["ace-lint"], base_dir: tmpdir)
+
+    assert_equal({"TS-LINT-001" => ["TC-001"]}, result["ace-lint"])
+    assert_empty @finder.find_uncertain_scenarios(packages: ["ace-lint"], base_dir: tmpdir)
+  end
+end
+
+private
 
   # Helper to create a metadata.yml file in a report directory
   def create_metadata(base_dir, dir_name, data)

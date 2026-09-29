@@ -190,6 +190,15 @@ module Ace
               )
               return annotated unless retry_failures_once && suite_failed?(initial_results)
 
+              # Scenarios whose provider session ended uncertainly are excluded
+              # from replay by the failure finder; account for them explicitly
+              # so they stay visible failures instead of vanishing.
+              uncertain = orchestrator.uncertain_scenarios(packages: run_options[:packages])
+              unless uncertain.empty?
+                output.puts "#{uncertain.length} scenario(s) ended in uncertain execution and will not be retried (side effects are not replayed): #{uncertain.join(", ")}"
+                output.puts "Reconcile those sessions manually before rerunning them."
+              end
+
               output.puts "Retrying failed scenarios once..."
               retry_results = orchestrator.run(run_options.merge(only_failures: true))
               if retry_results[:total].zero?
@@ -198,12 +207,16 @@ module Ace
                 )
               end
 
+              retry_results = with_uncertain_accounting(retry_results, uncertain)
+
               flaky_scenarios = recovered_flaky_scenarios(initial_results, retry_results)
-              remaining_failures = failure_scenarios(retry_results)
+              remaining_failures = (failure_scenarios(retry_results) + uncertain).uniq.sort
               final_report_path = write_retry_summary_report(initial_results, retry_results)
               output.puts "Final Report: #{final_report_path}" if final_report_path
 
-              if remaining_failures.empty?
+              if (remaining_failures - uncertain).empty? && !uncertain.empty?
+                output.puts "All retried scenario(s) recovered; #{uncertain.length} uncertain scenario(s) still require reconciliation"
+              elsif remaining_failures.empty?
                 output.puts "#{flaky_scenarios.length} scenario(s) recovered on retry and were marked flaky"
               else
                 output.puts "#{remaining_failures.length} scenario(s) still failing after retry"
@@ -217,8 +230,21 @@ module Ace
                 remaining_failures: remaining_failures,
                 initial_report_path: initial_results[:report_path],
                 retry_report_path: retry_results[:report_path],
-                report_path: final_report_path || retry_results[:report_path]
+                report_path: final_report_path || retry_results[:report_path],
+                uncertain_scenarios: uncertain
               )
+            end
+
+            # Keep uncertain scenarios in the final tally. The retry pass does
+            # not run them (by design), so without this they would disappear
+            # from counts and a suite with uncertain sessions could exit 0.
+            def with_uncertain_accounting(retry_results, uncertain_ids)
+              return retry_results if uncertain_ids.empty?
+
+              tally = retry_results.dup
+              tally[:total] = tally[:total].to_i + uncertain_ids.size
+              tally[:errors] = tally[:errors].to_i + uncertain_ids.size
+              tally
             end
 
             def write_retry_summary_report(initial_results, retry_results)
