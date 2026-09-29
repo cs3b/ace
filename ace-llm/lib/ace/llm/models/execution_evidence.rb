@@ -26,7 +26,7 @@ module Ace
         # error messages. Matches are truncated to a short prefix so the
         # credential TYPE stays readable while the value is destroyed.
         SECRET_PATTERNS = [
-          /(?:bearer|authorization)\s*[:=]\s*[\w.\-+=\/]{8,}/i,
+          /(?:bearer|authorization|basic)\s*[:=]?\s*[\w.\-+=\/]{8,}/i,
           /(?:api[_-]?key|access[_-]?token|auth[_-]?token|refresh[_-]?token|client[_-]?secret|secret|password|passwd|pwd)\s*["']?\s*[:=]\s*["']?[\w.\-+=\/]{8,}/i,
           /sk-(?:proj-)?[A-Za-z0-9_\-]{16,}/,
           /gh[pousr]_[A-Za-z0-9_]{16,}/,

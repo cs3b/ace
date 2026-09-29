@@ -93,6 +93,16 @@ module Ace
           assert_includes evidence.stderr_excerpt, "auth failed for"
         end
 
+def test_redact_covers_authorization_header_with_bearer_scheme
+  evidence = ExecutionEvidence.new(
+    outcome: :nonzero_exit,
+    stdout_excerpt: "request failed: Authorization: Bearer opaqueToken1234567890"
+  )
+
+  refute_includes evidence.stdout_excerpt, "opaqueToken1234567890"
+  assert_includes evidence.stdout_excerpt, "[redacted]"
+end
+
         def test_redact_leaves_normal_output_untouched
           output = "Bundle complete! 48 Gemfile dependencies, 73 gems now installed."
 
