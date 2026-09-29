@@ -3,7 +3,11 @@
 ## Goal
 
 Run `bundle install` in an isolated sandbox and capture user-visible install
-outcomes as the primary evidence for normal-path viability.
+outcomes as the primary evidence for normal-path viability. Record
+machine-readable lockfile and activated-version receipts, plus isolated
+consumer-only resolutions that prove the released `ace-bundle`, `ace-review`,
+and `ace-task` dependency edges reach `ace-git-github` without a direct
+Gemfile entry.
 
 ## Workspace
 
@@ -33,6 +37,25 @@ proof_bundle() {
     BUNDLE_WITHOUT="" \
     GEM_HOME="$proof_case/.gem" \
     GEM_PATH="$proof_case/.gem" \
+    "$proof_ruby_root/bin/ruby" "$proof_ruby_root/bin/bundle" "$@"
+}
+consumer_bundle() {
+  consumer_dir="$1"
+  shift
+  env -i \
+    HOME="$HOME" \
+    PATH="$proof_ruby_root/bin:$PATH" \
+    PROJECT_ROOT_PATH="$PWD" \
+    BUNDLE_GEMFILE="$PWD/$consumer_dir/Gemfile" \
+    BUNDLE_APP_CONFIG="$consumer_dir/.bundle" \
+    BUNDLE_PATH="$consumer_dir/.bundle" \
+    BUNDLE_USER_HOME="$consumer_dir/bundler-home" \
+    BUNDLE_USER_CACHE="$consumer_dir/bundler-cache" \
+    BUNDLE_USER_CONFIG="$consumer_dir/bundler-config" \
+    BUNDLE_DISABLE_SHARED_GEMS=true \
+    BUNDLE_WITHOUT="" \
+    GEM_HOME="$consumer_dir/.gem" \
+    GEM_PATH="$consumer_dir/.gem" \
     "$proof_ruby_root/bin/ruby" "$proof_ruby_root/bin/bundle" "$@"
 }
 ```
@@ -110,10 +133,52 @@ EOF
 fi
 ```
 
+7. Record machine-readable version receipts for the installed graph. The
+   receipts — never console output — are the version oracle for acceptance:
+```bash
+receipt_script="$PWD/ace-monorepo-e2e/test/e2e/TS-MONO-001-rubygems-install/install_receipt.rb"
+if [ -s results/tc/02/Gemfile.lock ]; then
+  "$proof_ruby_root/bin/ruby" "$receipt_script" receipt \
+    --lockfile results/tc/02/Gemfile.lock \
+    --out results/tc/02/lockfile-receipt.json
+fi
+if [ "$(cat results/tc/02/install.exit)" = "0" ]; then
+  proof_bundle results/tc/02 exec ruby "$receipt_script" activated \
+    --out results/tc/02/install-receipt.json
+fi
+```
+
+8. Run the isolated consumer-only resolutions for `ace-bundle`, `ace-review`,
+   and `ace-task`. Each consumer Gemfile is generated from the frozen
+   manifest (`results/tc/01/release-manifest.json`) and names only that
+   consumer at its exact artifact version — no direct `ace-git-github`
+   entry — so the provider version can only come from the consumer's
+   published dependency edge:
+```bash
+for consumer in ace-bundle ace-review ace-task; do
+  consumer_dir="results/tc/02/consumer/$consumer"
+  rm -rf "$consumer_dir"
+  mkdir -p "$consumer_dir"
+  "$proof_ruby_root/bin/ruby" "$receipt_script" consumer-gemfile \
+    --manifest results/tc/01/release-manifest.json \
+    --name "$consumer" \
+    --out "$consumer_dir/Gemfile"
+  consumer_bundle "$consumer_dir" install \
+    > "$consumer_dir/install.stdout" 2> "$consumer_dir/install.stderr"
+  echo $? > "$consumer_dir/install.exit"
+  if [ "$(cat "$consumer_dir/install.exit")" = "0" ]; then
+    consumer_bundle "$consumer_dir" exec ruby "$receipt_script" activated \
+      --out "$consumer_dir/install-receipt.json"
+  fi
+done
+```
+
 ## Constraints
 
 - Do not use `--full-index` — that is tested in Goal 3.
 - Do not modify the Gemfile.
+- Do not edit `results/tc/01/release-manifest.json` or generate receipts by
+  hand; all receipts must come from `install_receipt.rb` runs.
 - Capture command output regardless of success or failure.
 - Do not weaken the isolation: keep `env -i`, the confined `results/tc/02/`
   paths, and the direct sandbox-Ruby executables exactly as prescribed.

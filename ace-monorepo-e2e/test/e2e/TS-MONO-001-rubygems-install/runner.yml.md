@@ -19,15 +19,19 @@ Required tools: bundle, mise, ruby
 Workspace root: (current directory)
 
 Execute each goal sequentially. Goals build on each other — TC-004 uses
-outcomes from TC-002 and TC-003 to classify the result.
+outcomes from TC-002 and TC-003 to classify the result and run the
+exact-version acceptance against the frozen release manifest.
 
 ## Rules
 
 - Setup ownership belongs to `scenario.yml`; the Gemfile is already generated in the sandbox
+- The frozen release manifest is already validated and copied to `results/tc/01/release-manifest.json` by setup
 - Execute each goal in order (1 through 4)
 - Save all artifacts to results/tc/{NN}/ directories as specified
 - Do not assign PASS/FAIL verdicts in runner output
 - Do not fabricate output — all artifacts must come from real command execution
+- Version receipts come only from `install_receipt.rb` runs; never hand-edit
+  receipts, the manifest, or acceptance JSON
 - If a goal fails, note the failure and continue to the next goal
 - After all goals, output a brief summary of what you produced for each goal
 

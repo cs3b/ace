@@ -1,0 +1,9 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    ace-git-github (0.2.0)
+
+PATH
+  remote: /Users/mc/Ps/ace/ace-git
+  specs:
+    ace-git (0.25.0)

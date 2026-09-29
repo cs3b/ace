@@ -3,7 +3,10 @@
 ## Goal
 
 Run `bundle install --full-index` in the sandbox with isolated install paths and
-capture user-visible fallback-path outcomes.
+capture user-visible fallback-path outcomes. Record machine-readable lockfile
+and activated-version receipts, plus isolated consumer-only resolutions
+matching the normal mode, so the full-index graph can be compared against the
+same frozen manifest.
 
 ## Workspace
 
@@ -33,6 +36,25 @@ proof_bundle() {
     BUNDLE_WITHOUT="" \
     GEM_HOME="$proof_case/.gem" \
     GEM_PATH="$proof_case/.gem" \
+    "$proof_ruby_root/bin/ruby" "$proof_ruby_root/bin/bundle" "$@"
+}
+consumer_bundle() {
+  consumer_dir="$1"
+  shift
+  env -i \
+    HOME="$HOME" \
+    PATH="$proof_ruby_root/bin:$PATH" \
+    PROJECT_ROOT_PATH="$PWD" \
+    BUNDLE_GEMFILE="$PWD/$consumer_dir/Gemfile" \
+    BUNDLE_APP_CONFIG="$consumer_dir/.bundle" \
+    BUNDLE_PATH="$consumer_dir/.bundle" \
+    BUNDLE_USER_HOME="$consumer_dir/bundler-home" \
+    BUNDLE_USER_CACHE="$consumer_dir/bundler-cache" \
+    BUNDLE_USER_CONFIG="$consumer_dir/bundler-config" \
+    BUNDLE_DISABLE_SHARED_GEMS=true \
+    BUNDLE_WITHOUT="" \
+    GEM_HOME="$consumer_dir/.gem" \
+    GEM_PATH="$consumer_dir/.gem" \
     "$proof_ruby_root/bin/ruby" "$proof_ruby_root/bin/bundle" "$@"
 }
 ```
@@ -104,10 +126,50 @@ EOF
 fi
 ```
 
+7. Record machine-readable version receipts for the installed graph. The
+   receipts — never console output — are the version oracle for acceptance:
+```bash
+receipt_script="$PWD/ace-monorepo-e2e/test/e2e/TS-MONO-001-rubygems-install/install_receipt.rb"
+if [ -s results/tc/03/Gemfile.lock ]; then
+  "$proof_ruby_root/bin/ruby" "$receipt_script" receipt \
+    --lockfile results/tc/03/Gemfile.lock \
+    --out results/tc/03/lockfile-receipt.json
+fi
+if [ "$(cat results/tc/03/fullindex.exit)" = "0" ]; then
+  proof_bundle results/tc/03 exec ruby "$receipt_script" activated \
+    --out results/tc/03/install-receipt.json
+fi
+```
+
+8. Run the isolated consumer-only resolutions for `ace-bundle`, `ace-review`,
+   and `ace-task`, matching the full-index mode. Each consumer Gemfile is
+   generated from the frozen manifest and names only that consumer at its
+   exact artifact version — no direct `ace-git-github` entry:
+```bash
+for consumer in ace-bundle ace-review ace-task; do
+  consumer_dir="results/tc/03/consumer/$consumer"
+  rm -rf "$consumer_dir"
+  mkdir -p "$consumer_dir"
+  "$proof_ruby_root/bin/ruby" "$receipt_script" consumer-gemfile \
+    --manifest results/tc/01/release-manifest.json \
+    --name "$consumer" \
+    --out "$consumer_dir/Gemfile"
+  consumer_bundle "$consumer_dir" install --full-index \
+    > "$consumer_dir/install.stdout" 2> "$consumer_dir/install.stderr"
+  echo $? > "$consumer_dir/install.exit"
+  if [ "$(cat "$consumer_dir/install.exit")" = "0" ]; then
+    consumer_bundle "$consumer_dir" exec ruby "$receipt_script" activated \
+      --out "$consumer_dir/install-receipt.json"
+  fi
+done
+```
+
 ## Constraints
 
 - Must use `--full-index` flag.
 - Do not modify the Gemfile.
+- Do not edit `results/tc/01/release-manifest.json` or generate receipts by
+  hand; all receipts must come from `install_receipt.rb` runs.
 - Capture command output regardless of success or failure.
 - Do not weaken the isolation: keep `env -i`, the confined `results/tc/03/`
   paths, and the direct sandbox-Ruby executables exactly as prescribed.

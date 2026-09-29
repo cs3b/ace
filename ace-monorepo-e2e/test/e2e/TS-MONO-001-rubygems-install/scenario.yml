@@ -8,10 +8,10 @@ cost-tier: deep
 tool-under-test: bundle
 
 sandbox-layout:
-  results/tc/01/: "Gem discovery from Gemfile (gem list, count)"
-  results/tc/02/: "Normal bundle install evidence (stdout, exit)"
-  results/tc/03/: "Full-index fallback evidence (stdout, exit)"
-  results/tc/04/: "Classification and proof artifact"
+  results/tc/01/: "Gem discovery from Gemfile (gem list, count) and the frozen release manifest copy"
+  results/tc/02/: "Normal bundle install evidence (stdout, exit, receipts, consumer-only resolutions)"
+  results/tc/03/: "Full-index fallback evidence (stdout, exit, receipts, consumer-only resolutions)"
+  results/tc/04/: "Classification, exact-version acceptance, and proof artifact"
 
 e2e-justification: >
   Verifying gem installation from RubyGems.org requires network access, a real
@@ -34,5 +34,7 @@ setup:
       echo "source 'https://rubygems.org'" > Gemfile
       echo "" >> Gemfile
       grep "^[[:space:]]*gem 'ace-" "${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}/Gemfile" | sed "s/, path:.*//" >> Gemfile
+  - release-manifest:
+      to: results/tc/01/release-manifest.json
   - agent-env:
       PROJECT_ROOT_PATH: .
