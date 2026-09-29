@@ -36,7 +36,7 @@ The reported approximately 230-second failure is a reproduction observation, not
 - [x] SC2: Deterministic provider fixtures cover long silent success within deadline, actual deadline expiry, transport disconnect, nonzero exit mentioning timeout, and exit-zero output containing timeout. Return the correct distinct outcome; preserve useful captured evidence.
 - [x] SC3: E2E runner and verifier consume the result correctly: incomplete/uncertain execution cannot become PASS or automatically replay effects; supported completion gets one final result and no spurious fallback.
 - [x] SC4: A focused authorized macOS CLI smoke run covers the former long quiet interval; no auth/HOME/environment isolation regression, and no changes to global user settings or installed gems.
-- [ ] SC5: Execute bin/ace-test ace-llm all, bin/ace-test ace-llm-providers-cli all, bin/ace-test ace-test-runner-e2e all and bin/ace-test-suite; exact candidate independent verdict. lq1.1 owns the complete published-install rerun.
+- [x] SC5: Execute bin/ace-test ace-llm all, bin/ace-test ace-llm-providers-cli all, bin/ace-test ace-test-runner-e2e all and bin/ace-test-suite; exact candidate independent verdict. lq1.1 owns the complete published-install rerun.
 
 ## Slice and boundaries
 One medium execution correctness slice, no publication or general provider fallback redesign. Success/failure typed data is internal; preserve existing public error classes unless review discovers a contract change and updates this spec first. The public behavior/agent protocol changes are described in ux/usage.md.
