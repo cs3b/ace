@@ -21,3 +21,5 @@ THE blocker task: what stops shipping Spinel-compiled ace CLIs to production tod
 **Distribution work needed:** codesign + notarization for mac-arm64; GH Actions matrix (ubuntu-24.04 x64/arm, macos-14 arm64); multiplexed busybox-style `ace` binary design (one artifact per platform); update story (no gem update); conformance harness integration into ace-test-runner so every compiled CLI is oracle-gated per release.
 
 **Verdict:** viable pilot (b36ts proves it), not yet a production channel. Re-evaluate per Spinel release — the blocker list shrinks fast upstream. Full detail: docs/research/spinel-aot-pilot.md.
+
+Research PR: cs3b/ace#350 (branch spinel-aot-pilot).
