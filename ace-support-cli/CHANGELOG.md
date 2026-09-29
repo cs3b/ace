@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.6.9] - 2026-09-29
+
 ### Fixed
 - CLI options without a declared default no longer materialize a `nil` key
   when the flag is absent: absent and bare optional-value flags are now
