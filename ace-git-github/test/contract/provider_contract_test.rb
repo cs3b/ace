@@ -33,7 +33,7 @@ class GithubProviderContractTest < AceGitGithubTestCase
         success: true, stdout: [{"name" => "test-suite", "state" => "SUCCESS", "bucket" => "pass"}].to_json,
         stderr: "", exit_code: 0
       },
-      "gh repo view --json nameWithOwner,defaultBranchRef,url --repo github.example.com/owner/repo" => {
+      "gh repo view github.example.com/owner/repo --json nameWithOwner,defaultBranchRef,url" => {
         success: true, stdout: {
           "nameWithOwner" => "owner/repo",
           "defaultBranchRef" => {"name" => "main"},

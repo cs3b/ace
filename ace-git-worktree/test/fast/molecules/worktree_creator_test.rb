@@ -356,6 +356,30 @@ class WorktreeCreatorTest < Minitest::Test
     end
   end
 
+  # Real-git integration coverage for upstream setup (no stubs).
+  def test_set_and_verify_upstream_with_real_git_repository
+    Dir.mktmpdir do |dir|
+      remote_repo = File.join(dir, "remote.git")
+      clone = File.join(dir, "clone")
+
+      system("git", "init", "--quiet", "--bare", "-b", "main", remote_repo) || flunk("git init --bare failed")
+      system("git", "clone", "--quiet", remote_repo, clone) || flunk("git clone failed")
+      File.write(File.join(clone, "f.txt"), "x\n")
+      git_in(clone, "add", ".")
+      git_in(clone, "-c", "user.email=t@example.com", "-c", "user.name=T", "commit", "--quiet", "-m", "init")
+      git_in(clone, "push", "--quiet", "origin", "main")
+      git_in(clone, "checkout", "--quiet", "-b", "feature/test")
+
+      creator = Ace::Git::Worktree::Molecules::WorktreeCreator.new
+      Dir.chdir(clone) do
+        upstream = creator.send(:set_and_verify_upstream, "feature/test", "origin/main")
+        assert_equal "origin/main", upstream
+        verify = `git rev-parse --abbrev-ref feature/test@{upstream} 2>/dev/null`.strip
+        assert_equal "origin/main", verify, "branch must have a real @{upstream} after setup"
+      end
+    end
+  end
+
   def test_create_for_pr_sets_and_verifies_upstream_when_tracking
     pr_data = {number: 26, title: "Test PR", head_branch: "feature/test", base_branch: "main"}
     config = mock_pr_config(@temp_dir)
@@ -390,12 +414,17 @@ class WorktreeCreatorTest < Minitest::Test
           success: true, worktree_path: File.join(@temp_dir, "ace-pr-26"),
           branch: "pr-26", start_point: "a" * 40, git_root: @temp_dir, error: nil
         }) do
-          # Fork URL fetches have no remote-tracking ref: upstream stays unset
-          # and the report carries an advisory warning instead of a fake ref.
-          @creator.stub(:set_and_verify_upstream, nil) do
-            result = @creator.create_for_pr(pr_data, config, source_ref: "a" * 40)
-            assert result[:success]
-            assert_nil result[:upstream]
+          # Upstream setup failed despite a tracking ref: the result carries
+          # an advisory warning instead of a fake upstream.
+          @creator.stub(:configure_push_for_worktree, nil) do
+            @creator.stub(:set_and_verify_upstream, nil) do
+              result = @creator.create_for_pr(
+                pr_data, config, source_ref: "a" * 40, remote_tracking: "origin/feature/test"
+              )
+              assert result[:success]
+              assert_nil result[:upstream]
+              assert_equal ["Could not set upstream to origin/feature/test"], result[:warnings]
+            end
           end
         end
       end
@@ -1275,4 +1304,9 @@ class WorktreeCreatorTest < Minitest::Test
     config.define_singleton_method(:format_branch) { |task_data| "081-fix-auth-bug" }
     config
   end
+  def git_in(dir, *args)
+    result = system("git", "-C", dir, *args)
+    flunk("git -C #{dir} #{args.join(" ")} failed") unless result
+  end
+
 end

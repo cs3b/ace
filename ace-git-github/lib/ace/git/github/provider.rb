@@ -123,7 +123,8 @@ module Ace
 
         # @return [ProviderRepository] normalized repository evidence
         def repository
-          output = gh_json(["repo", "view", "--json", REPO_FIELDS])
+          # `gh repo view` rejects `--repo`; the repository is positional.
+          output = gh_json(["repo", "view", repo_target, "--json", REPO_FIELDS], bind_repo: false)
           Ace::Git::ProviderRepository.new(
             server_name: server.name,
             full_name: output["nameWithOwner"],
@@ -276,9 +277,12 @@ module Ace
         end
 
         # Run a `gh` command expecting JSON output; classify all failures.
-        # Every command is bound to the resolved server repository.
-        def gh_json(args)
-          result = CliExecutor.execute(args.first, (args[1..] || []) + ["--repo", repo_target], timeout: timeout, runner: runner)
+        # Every command is bound to the resolved server repository via
+        # `--repo`, except commands that take the repository positionally.
+        def gh_json(args, bind_repo: true)
+          argv = args[1..] || []
+          argv += ["--repo", repo_target] if bind_repo
+          result = CliExecutor.execute(args.first, argv, timeout: timeout, runner: runner)
           unless result[:success]
             classify_failure(result[:stderr], context: args.join(" "))
           end
