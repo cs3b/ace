@@ -96,8 +96,12 @@ Compile-time refusals / codegen bugs hit by ace's codebase:
 
 Derived from the public CLI surface (cli/commands option declarations + ADR-022 dynamic
 configuration). Check = ported and conformance-verified; cross = not in the compiled
-binary (Ruby channel only). **Parity: 31 of 44 surface points (70%)** — the misses
-cluster in the split/count family, verbose/debug cosmetics, and legacy time parsing.
+binary (Ruby channel only).
+
+Run-over-run: **Run 1** (initial Gate A port) 27/44 (61%); **Run 2** (parity pass)
+31/44 (70%, +4: config default_format, decode --format iso/timestamp, decode
+--year-zero — each byte-identical to CRuby). Remaining 13 misses cluster in the
+split/count family, verbose/debug cosmetics, and legacy time parsing.
 
 | Surface | CRuby | Native | Notes |
 |---|---|---|---|
