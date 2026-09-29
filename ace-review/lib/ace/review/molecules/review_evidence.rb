@@ -21,7 +21,14 @@ module Ace
             if metadata["pr_url"] && metadata["pr_url"] != pr_metadata["url"]
               return {success: false, error: "#{dir} belongs to a different PR"}
             end
-            reports = Dir.glob(File.join(dir, "review-report-*.md"))
+            # Reviewer reports are written as review-report-<model>.md (Ruby API
+            # path) or review-<model>.md (CLI provider path); prompt/context and
+            # dev-feedback files are not reports.
+            reports = Dir.glob(File.join(dir, "review-*.md")).select do |path|
+              base = File.basename(path)
+              !base.end_with?(".prompt.md", ".context.md") &&
+                !%w[review-dev-feedback.md].include?(base)
+            end
             return {success: false, error: "No review report in #{dir}"} if reports.empty?
 
             lines += ["", "## #{File.basename(dir)} — #{metadata["preset"]}",

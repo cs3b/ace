@@ -27,6 +27,24 @@ class ReviewEvidenceTest < AceReviewTest
     refute_includes result[:content], "unrelated-history"
   end
 
+  def test_cli_provider_report_naming_is_accepted
+    dir = make_session("cli-named")
+    File.write(File.join(dir, "review-role-review-codex.md"), "CLI provider review body")
+    result = evidence(dir)
+    assert result[:success], result[:error]
+    assert_includes result[:content], "CLI provider review body"
+  end
+
+  def test_prompt_and_feedback_files_are_not_reports
+    dir = make_session("non-reports")
+    File.write(File.join(dir, "review-instructions.prompt.md"), "PROMPT-BODY-MARKER")
+    File.write(File.join(dir, "review-dev-feedback.md"), "DEV-FEEDBACK-BODY-MARKER")
+    result = evidence(dir)
+    assert result[:success], result[:error]
+    refute_includes result[:content], "PROMPT-BODY-MARKER"
+    refute_includes result[:content], "DEV-FEEDBACK-BODY-MARKER"
+  end
+
   def test_closed_findings_keep_their_claim_and_resolution
     dir = make_session("fixed")
     archive = File.join(dir, "feedback", "_archived")
