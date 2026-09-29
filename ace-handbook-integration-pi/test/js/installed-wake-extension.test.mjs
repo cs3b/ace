@@ -475,6 +475,51 @@ describe("ace-wake delivery", () => {
     await session.settle();
   });
 
+  it("retries a refused watch wake after a model is selected, without any further event", async () => {
+    const host = createFakeHost();
+    const session = await startSession(host, { dispatchRecoveryMs: 20 });
+    host.setFile("/fake/project/dep.txt", { mtimeMs: 1, size: 1 });
+    await host.runCommand("watch", "add dep --path dep.txt --message changed");
+
+    // Without a model the wake is refused; unlike a loop there is no next
+    // tick, so only the retry timer can deliver the change.
+    host.commandContext.model = undefined;
+    host.setFile("/fake/project/dep.txt", { mtimeMs: 2, size: 2 });
+    host.triggerWatch("/fake/project/dep.txt");
+    assert.equal(host.sends.length, 0);
+
+    host.commandContext.model = { provider: "wake-test", id: "wake-model" };
+    host.setIdle(false);
+    await new Promise((resolve) => setTimeout(resolve, 60));
+
+    assert.equal(host.sends.length, 1, "the retry timer delivers the change with no further event");
+    host.setIdle(true);
+    await session.settle();
+  });
+
+  it("delivers concurrent sources immediately while a run is already active", async () => {
+    const host = createFakeHost();
+    const session = await startSession(host);
+    await host.runCommand("loop", "add a --interval 10 --message a wake");
+    await host.runCommand("loop", "add b --interval 10 --message b wake");
+
+    // A run is already streaming: follow-up delivery is queue-safe, so both
+    // sources deliver without waiting for a settlement — no agent_start
+    // ever fires for follow-ups queued behind an active run.
+    host.setIdle(false);
+    host.clock.advance(10_000);
+
+    assert.equal(host.sends.length, 2, "both sources deliver into the active run");
+    assert.match(host.sends[0].text, /loop:a/);
+    assert.match(host.sends[1].text, /loop:b/);
+
+    // The run settles and consumes both queued wakes without replaying them.
+    host.setIdle(true);
+    host.setPendingMessages(false);
+    await session.settle();
+    assert.equal(host.sends.length, 2, "settlement must not replay the queued wakes");
+  });
+
   it("keeps same-source repeats coalesced while a dispatch is in flight", async () => {
     const host = createFakeHost();
     const session = await startSession(host);

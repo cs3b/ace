@@ -48,6 +48,8 @@ export class WakeRegistry {
   #dispatchRecoveryMs;
   /** @private @type {Timeout | undefined} */
   #recoveryTimer;
+  /** @private @type {Timeout | undefined} */
+  #dirtyRetryTimer;
   /** @private @type {boolean} */
   #deliveryUnresolved;
   /** @private @type {Set<string>} */
@@ -92,6 +94,8 @@ export class WakeRegistry {
     this.#dispatchRecoveryMs = dispatchRecoveryMs;
     /** @private @type {boolean} */
     this.#deliveryUnresolved = false;
+    /** @private @type {Timeout | undefined} */
+    this.#dirtyRetryTimer = undefined;
     /** @private @type {Set<string>} */
     this.#inFlightWatchNames = new Set();
     /** @private @type {(() => boolean) | undefined} */
@@ -257,6 +261,7 @@ export class WakeRegistry {
     this.#deliveryUnresolved = false;
     this.#dispatchPending = false;
     clearTimeout(this.#recoveryTimer);
+    clearTimeout(this.#dirtyRetryTimer);
     this.#retained.clear();
     this.#reconcileBatch = undefined;
     this.#loops.stopAll();
@@ -420,13 +425,71 @@ export class WakeRegistry {
       return { delivered: false, reason: "serialized" };
     }
     const outcome = this.#dispatcher.wake(sourceKey, message);
-    if (outcome.delivered) {
-      if (sourcePrefix === WATCH_SOURCE_PREFIX) {
-        this.#inFlightWatchNames.add(name);
+    if (!outcome.delivered) {
+      // A refused watch wake (no model selected, broken authentication) has
+      // no next tick, settlement, or lifecycle event to retry it: without a
+      // timer the change would wait for an unrelated filesystem event.
+      // Still-refused retries re-arm the timer when they fire.
+      if (sourcePrefix === WATCH_SOURCE_PREFIX && outcome.reason === "rejected") {
+        this.#scheduleDirtyWatchRetry();
       }
-      this.#markDispatchInFlight();
+      return outcome;
     }
+    if (this.#hostIsActive()) {
+      // A run is already active: deliverAs: "followUp" is queue-safe by Pi's
+      // contract, so no serialization window arms. The window exists only
+      // for the idle-to-running transition, where concurrent sends race
+      // Pi's asynchronous prompt preparation — and no agent_start ever
+      // fires for follow-ups queued behind an active run to close one.
+      // Unrelated sources deliver immediately instead of waiting for that
+      // run's settlement.
+      return outcome;
+    }
+    if (sourcePrefix === WATCH_SOURCE_PREFIX) {
+      this.#inFlightWatchNames.add(name);
+    }
+    this.#markDispatchInFlight();
     return outcome;
+  }
+
+  /**
+   * Whether the host reports a run already in progress. The serialization
+   * window guards only the idle-to-running transition; delivery into an
+   * active run is queue-safe and needs no window and no recovery tracking.
+   */
+  #hostIsActive() {
+    if (!this.#isHostIdle) {
+      return false;
+    }
+    try {
+      return !this.#isHostIdle();
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Bounded retry for watch changes whose dispatch was refused: loops retry
+   * on their next tick, but a watch has no future trigger of its own, so
+   * this timer is the only thing standing between a refused change and its
+   * delivery once the refusal cause clears (e.g. a model gets selected).
+   * One attempt per recovery window, deduplicated; disposal cancels it. No
+   * duplicate risk: a refused wake was never accepted, so its fingerprint
+   * never advanced and the retry is a first delivery, not a replay.
+   */
+  #scheduleDirtyWatchRetry() {
+    if (this.#disposed || this.#dirtyRetryTimer) {
+      return;
+    }
+    this.#dirtyRetryTimer = setTimeout(() => {
+      this.#dirtyRetryTimer = undefined;
+      if (this.#disposed) {
+        return;
+      }
+      this.#watches.flushDirty((watch) => this.#fire(WATCH_SOURCE_PREFIX, watch.name, watch.message));
+      this.#refreshStatus();
+    }, this.#dispatchRecoveryMs);
+    this.#dirtyRetryTimer.unref?.();
   }
 
   /**

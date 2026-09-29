@@ -25,9 +25,17 @@ The `ace-wake` extension runs inside the live Pi process. It lets an agent sleep
 ### Wake delivery semantics
 
 - **Idle agent:** the wake is sent as a user message and triggers a turn.
-- **Busy agent** (streaming or executing a tool): the wake is queued as a follow-up. It never interrupts an in-flight tool operation; user conversation stays responsive.
+- **Busy agent** (streaming or executing a tool): the wake is queued as a follow-up. It never interrupts an in-flight tool operation; user conversation stays responsive. Concurrent sources deliver into an active run immediately -- unrelated sources never wait for that run's settlement.
 - **Coalescing:** while one wake for a source is queued, repeated triggers of the same source coalesce into the pending wake. Different sources stay independent (`loop:NAME` and `watch:NAME` are distinct).
 - **Messages are bounded** and prefixed with their source, e.g. `[ace-wake loop:heartbeat] check the build`.
+
+### Recovery when delivery is unconfirmed
+
+Pi's `sendUserMessage` returns before delivery resolves, and some refusals (no model selected, failed authentication) never emit a lifecycle event. ace-wake resolves that ambiguity toward **redelivery over loss**: a duplicate is a repeated, bounded, source-prefixed message the agent can ignore, while a silently lost duty wake is a miss. The contract:
+
+- An attempt that Pi shows as neither queued nor running after a bounded recovery window is released and re-attempted from the latest state; retry cadence is one attempt per window, never a spin.
+- A watch change refused because no model is selected retries on the same bounded window and delivers as soon as a model exists -- no further filesystem event is needed. (Loops need no such timer: their next tick is a fresh attempt.)
+- Unconfirmed watch attempts revert to their last delivered fingerprint before replay, so a genuinely consumed wake is never duplicated, only refused ones are re-sent.
 
 ### Reloads, restarts, and errors
 
