@@ -13,15 +13,15 @@ class ContextLimitResolverTest < AceReviewTest
     assert_equal 200_000, @resolver.resolve("codex:gpt:high@ro")
   end
 
-  def test_resolve_preserves_explicit_legacy_model_limits
-    assert_equal 1_050_000, @resolver.resolve("codex:gpt-5.4:high@ro")
+  def test_resolve_preserves_explicit_model_target_without_limits
+    assert_equal 200_000, @resolver.resolve("codex:gpt-6-sol:high@ro")
   end
 
   def test_resolve_details_expands_role_before_lookup
     result = @resolver.resolve_details("role:review-codex")
 
     assert_equal "codex", result.provider
-    assert_equal "gpt-5.6-terra", result.model
+    assert_equal "gpt-6-sol", result.model
     assert_equal 200_000, result.context_limit
     assert_nil result.output_limit
     assert_equal :fallback, result.source
