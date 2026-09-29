@@ -133,7 +133,7 @@ describe "AgyClient" do
     @client.stub(:agy_available?, true) do
       Ace::LLM::Providers::CLI::Molecules::SafeCapture.stub(
         :call,
-        lambda { |*_args, **_kwargs| [response, "", success_status] }
+        lambda { |*_args, **_kwargs| build_capture(stdout: response, success: true, provider_name: "Antigravity") }
       ) do
         result = @client.generate("Hi")
         assert_equal "Hello from Antigravity", result[:text]
@@ -173,7 +173,7 @@ describe "AgyClient" do
       {"event":"result","result":{"conversation_id":"conv-123","status":"SUCCESS","response":"Hello world","usage":{"input_tokens":10,"output_tokens":4,"total_tokens":14}}}
     NDJSON
 
-    result = @client.send(:parse_agy_response, response, "", success_status, "Prompt")
+    result = @client.send(:parse_agy_response, build_capture(stdout: response), "Prompt")
     assert_equal "Hello world", result[:text]
     assert_equal "conv-123", result[:metadata][:conversation_id]
   end
@@ -187,14 +187,14 @@ describe "AgyClient" do
     }.to_json
 
     error = assert_raises(Ace::LLM::ProviderError) do
-      @client.send(:parse_agy_response, response, "", failure_status, "Prompt")
+      @client.send(:parse_agy_response, build_capture(stdout: response, success: false), "Prompt")
     end
 
     assert_includes error.message, "invalid model selection"
   end
 
   it "falls back to plain text output when JSON parsing fails" do
-    result = @client.send(:parse_agy_response, "plain text answer", "", success_status, "Prompt")
+    result = @client.send(:parse_agy_response, build_capture(stdout: "plain text answer"), "Prompt")
     assert_equal "plain text answer", result[:text]
     assert_equal "agy", result[:metadata][:provider]
   end

@@ -57,9 +57,10 @@ module Ace
             )
 
             cmd = build_agy_command(prompt, options)
-            stdout, stderr, status = execute_agy_command(cmd, working_dir: working_dir, options: options)
+            capture = execute_agy_command(cmd, working_dir: working_dir, options: options)
+            capture.raise_unless_success
 
-            parse_agy_response(stdout, stderr, status, prompt)
+            parse_agy_response(capture, prompt)
           rescue => e
             handle_agy_error(e)
           end
@@ -177,17 +178,18 @@ module Ace
             )
           end
 
-          def parse_agy_response(stdout, stderr, status, prompt)
-            response = if stream_json_output?(stdout)
-              parse_stream_json(stdout)
+          def parse_agy_response(capture, prompt)
+            response = if stream_json_output?(capture.stdout)
+              parse_stream_json(capture.stdout)
             else
-              parse_json_or_text(stdout)
+              parse_json_or_text(capture.stdout)
             end
 
             error_message = response["error"].to_s
-            run_status = response.fetch("status", status.success? ? "SUCCESS" : "ERROR")
-            if !status.success? || run_status != "SUCCESS"
-              raise Ace::LLM::ProviderError, build_failure_message(error_message, stderr, stdout, run_status)
+            run_status = response.fetch("status", "SUCCESS")
+            if run_status != "SUCCESS"
+              raise Ace::LLM::ProviderError,
+                build_failure_message(error_message, capture.stderr, capture.stdout, run_status)
             end
 
             text = extract_response_text(response)

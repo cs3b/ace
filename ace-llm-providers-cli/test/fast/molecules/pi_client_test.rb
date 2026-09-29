@@ -121,15 +121,12 @@ describe "PiClient" do
 
     it "passes working_dir to SafeCapture chdir" do
       captured_kwargs = nil
-      mock_status = Object.new
-      mock_status.define_singleton_method(:success?) { true }
-      mock_status.define_singleton_method(:exitstatus) { 0 }
 
       @client.stub(:pi_available?, true) do
         @client.stub(:resolve_skills_dir, nil) do
           Ace::LLM::Providers::CLI::Molecules::SafeCapture.stub(:call, lambda { |*_args, **kwargs|
             captured_kwargs = kwargs
-            ["{\"type\":\"agent_end\",\"messages\":[{\"content\":[{\"type\":\"text\",\"text\":\"ok\"}]}]}\n{\"type\":\"agent_settled\"}\n", "", mock_status]
+            build_capture(stdout: "{\"type\":\"agent_end\",\"messages\":[{\"content\":[{\"type\":\"text\",\"text\":\"ok\"}]}]}\n{\"type\":\"agent_settled\"}\n")
           }) do
             @client.generate("Hi", working_dir: "/tmp/e2e-sandbox")
           end
@@ -224,11 +221,9 @@ describe "PiClient" do
 
   describe "generate method" do
     def stub_capture3(stdout:, stderr: "", success: true)
-      mock_status = Object.new
-      mock_status.define_singleton_method(:success?) { success }
-      mock_status.define_singleton_method(:exitstatus) { success ? 0 : 1 }
-
-      Ace::LLM::Providers::CLI::Molecules::SafeCapture.stub(:call, lambda { |*_args, **_kwargs| [stdout, stderr, mock_status] }) do
+      Ace::LLM::Providers::CLI::Molecules::SafeCapture.stub(
+        :call, lambda { |*_args, **_kwargs| build_capture(stdout: stdout, stderr: stderr, success: success, provider_name: "Pi") }
+      ) do
         yield
       end
     end
@@ -427,9 +422,7 @@ describe "PiClient" do
         {"type": "agent_end", "messages": []}
         {"type": "agent_settled"}
       NDJSON
-      status = Object.new
-      status.define_singleton_method(:success?) { true }
-      result = @client.send(:parse_pi_response, ndjson, "", status, "Review", {})
+      result = @client.send(:parse_pi_response, build_capture(stdout: ndjson), "Review", {})
       assert_equal "Complete", result[:text]
     end
 
@@ -467,9 +460,7 @@ describe "PiClient" do
         {"type":"agent_end","messages":[{"role":"assistant","content":[{"type":"text","text":"Partial"}],"stopReason":"error"}]}
         {"type":"agent_settled"}
       NDJSON
-      status = Object.new
-      status.define_singleton_method(:success?) { true }
-      result = @client.send(:parse_pi_response, ndjson, "", status, "Review", {})
+      result = @client.send(:parse_pi_response, build_capture(stdout: ndjson), "Review", {})
       assert_equal "error", result[:metadata][:finish_reason]
     end
 
@@ -479,9 +470,7 @@ describe "PiClient" do
         {"type":"agent_end","messages":[]}
         {"type":"agent_settled"}
       NDJSON
-      status = Object.new
-      status.define_singleton_method(:success?) { true }
-      result = @client.send(:parse_pi_response, ndjson, "", status, "Review", {})
+      result = @client.send(:parse_pi_response, build_capture(stdout: ndjson), "Review", {})
       assert_equal "length", result[:metadata][:finish_reason]
     end
 
@@ -528,10 +517,8 @@ describe "PiClient" do
   end
 
   it "rejects empty plain-text output despite a successful subprocess" do
-    status = Object.new
-    status.define_singleton_method(:success?) { true }
     assert_raises(Ace::LLM::ProviderError) do
-      @client.send(:parse_pi_response, "  \n", "", status, "Review", {})
+      @client.send(:parse_pi_response, build_capture(stdout: "  \n"), "Review", {})
     end
   end
 
@@ -569,15 +556,13 @@ describe "PiClient" do
 
   describe "measured usage metadata" do
     it "records measured tokens and never estimates when the CLI supplies usage" do
-      status = Object.new
-      status.define_singleton_method(:success?) { true }
       ndjson = <<~NDJSON
         {"type":"message_end","message":{"role":"assistant","content":[{"type":"text","text":"Answer"}],"usage":{"input":1479,"output":3,"cacheRead":64,"totalTokens":1482},"stopReason":"stop"}}
         {"type":"agent_end","willRetry":false,"messages":[]}
         {"type":"agent_settled"}
       NDJSON
 
-      result = @client.send(:parse_pi_response, ndjson, "", status, "Review prompt", {})
+      result = @client.send(:parse_pi_response, build_capture(stdout: ndjson), "Review prompt", {})
       metadata = result[:metadata]
       assert_equal 1479, metadata[:input_tokens]
       assert_equal 3, metadata[:output_tokens]
@@ -587,15 +572,13 @@ describe "PiClient" do
     end
 
     it "records an explicit unavailable state with no invented numbers" do
-      status = Object.new
-      status.define_singleton_method(:success?) { true }
       ndjson = <<~NDJSON
         {"type":"message_end","message":{"role":"assistant","content":[{"type":"text","text":"Answer"}],"stopReason":"stop"}}
         {"type":"agent_end","willRetry":false,"messages":[]}
         {"type":"agent_settled"}
       NDJSON
 
-      result = @client.send(:parse_pi_response, ndjson, "", status, "A" * 40_000, {})
+      result = @client.send(:parse_pi_response, build_capture(stdout: ndjson), "A" * 40_000, {})
       metadata = result[:metadata]
       assert_equal "unavailable", metadata[:usage_status]
       refute metadata.key?(:input_tokens)

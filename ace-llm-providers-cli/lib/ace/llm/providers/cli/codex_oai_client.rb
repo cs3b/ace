@@ -58,9 +58,10 @@ module Ace
             prompt = rewrite_skill_commands(prompt, working_dir: working_dir)
 
             cmd = build_codex_oai_command(prompt, options, working_dir: working_dir)
-            stdout, stderr, status = execute_codex_command(cmd, prompt, options)
+            capture = execute_codex_command(cmd, prompt, options)
+            capture.raise_unless_success
 
-            parse_codex_response(stdout, stderr, status, prompt, options)
+            parse_codex_response(capture, prompt, options)
           rescue => e
             handle_codex_error(e)
           end
@@ -203,13 +204,13 @@ module Ace
             )
           end
 
-          def parse_codex_response(stdout, stderr, status, prompt, options)
-            unless status.success?
-              error_msg = stderr.empty? ? stdout : stderr
-              raise Ace::LLM::ProviderError, "Codex OAI CLI failed: #{error_msg}"
+          def parse_codex_response(capture, prompt, options)
+            unless capture.status.success?
+              error_msg = capture.stderr.empty? ? capture.stdout : capture.stderr
+              raise capture.provider_error("Codex OAI CLI failed: #{error_msg}")
             end
 
-            lines = stdout.split("\n")
+            lines = capture.stdout.split("\n")
             response_start = lines.find_index { |line| line.include?("codex") }
 
             if response_start && response_start < lines.length - 1
@@ -217,7 +218,7 @@ module Ace
               response_lines = response_lines.reject { |line| line.include?("tokens used") }
               text = response_lines.join("\n").strip
             else
-              text = stdout.strip
+              text = capture.stdout.strip
             end
 
             metadata = build_synthetic_metadata(text, prompt)

@@ -83,8 +83,9 @@ module Ace
               completed = false
               result = nil
               begin
-                stdout, stderr, status = execute_codex_command(cmd, prompt, execution_options)
-                result = parse_codex_response(stdout, stderr, status, prompt, execution_options)
+                capture = execute_codex_command(cmd, prompt, execution_options)
+                capture.raise_unless_success
+                result = parse_codex_response(capture, prompt, execution_options)
                 completed = true
                 result
               ensure
@@ -320,10 +321,10 @@ module Ace
             )
           end
 
-          def parse_codex_response(stdout, stderr, status, prompt, options)
-            unless status.success?
-              error_msg = stderr.empty? ? stdout : stderr
-              raise Ace::LLM::ProviderError, "Codex CLI failed: #{error_msg}"
+          def parse_codex_response(capture, prompt, options)
+            unless capture.status.success?
+              error_msg = capture.stderr.empty? ? capture.stdout : capture.stderr
+              raise capture.provider_error("Codex CLI failed: #{error_msg}")
             end
 
             # The native last-message file contains only the final response,
@@ -331,7 +332,11 @@ module Ace
             last_message_path = options[:last_message_file]
             if last_message_path
               text = File.file?(last_message_path) ? File.read(last_message_path).strip : ""
-              raise Ace::LLM::ProviderError, "Codex CLI produced no final message" if text.empty?
+              if text.empty?
+                raise capture.with_no_response_evidence(
+                  Ace::LLM::ProviderError.new("Codex CLI produced no final message")
+                )
+              end
 
               return {text: text, metadata: build_synthetic_metadata(text, prompt)}
             end
@@ -340,7 +345,7 @@ module Ace
             # only when a real CLI banner is present, not when report prose
             # happens to contain a standalone `codex` line.
             # Codex output includes metadata lines and the actual response
-            lines = stdout.split("\n")
+            lines = capture.stdout.split("\n")
 
             has_cli_banner = lines.first(20).any? { |line| line.start_with?("OpenAI Codex v") }
             response_start = lines.find_index { |line| line.strip == "codex" } if has_cli_banner
@@ -353,7 +358,7 @@ module Ace
               text = response_lines.join("\n").strip
             else
               # Fallback: use entire output if we can't parse the format
-              text = stdout.strip
+              text = capture.stdout.strip
             end
 
             # Build metadata

@@ -56,9 +56,10 @@ module Ace
             prompt = format_messages_as_prompt(messages)
 
             cmd = build_gemini_command(prompt, options)
-            stdout, stderr, status = execute_gemini_command(cmd, prompt, options)
+            capture = execute_gemini_command(cmd, prompt, options)
+            capture.raise_unless_success
 
-            parse_gemini_response(stdout, stderr, status, prompt, options)
+            parse_gemini_response(capture, prompt, options)
           end
 
           # List available Gemini models
@@ -274,15 +275,15 @@ module Ace
             )
           end
 
-          def parse_gemini_response(stdout, stderr, status, prompt, options)
-            unless status.success?
-              error_msg = stderr.empty? ? stdout : stderr
-              raise Ace::LLM::ProviderError, "Gemini CLI failed: #{error_msg}"
+          def parse_gemini_response(capture, prompt, options)
+            unless capture.status.success?
+              error_msg = capture.stderr.empty? ? capture.stdout : capture.stderr
+              raise capture.provider_error("Gemini CLI failed: #{error_msg}")
             end
 
             # Try to parse JSON output first
             begin
-              parsed = JSON.parse(stdout)
+              parsed = JSON.parse(capture.stdout)
 
               # Extract response text from parsed JSON
               # Gemini CLI JSON format: { "response": "...", "stats": { ... } }
@@ -292,14 +293,14 @@ module Ace
                 parsed["candidates"].first["content"] || parsed["candidates"].first["text"]
               else
                 # Fallback to raw output if JSON structure unexpected
-                stdout.strip
+                capture.stdout.strip
               end
 
               # Extract metadata from stats if available
               metadata = extract_metadata_from_json(parsed, prompt)
             rescue JSON::ParserError
               # Fallback to raw text output if JSON parsing fails
-              text = stdout.strip
+              text = capture.stdout.strip
               metadata = build_synthetic_metadata(text, prompt)
             end
 

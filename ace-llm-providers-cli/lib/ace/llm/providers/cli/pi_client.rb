@@ -57,9 +57,20 @@ module Ace
             full_prompt = rewrite_skill_commands(full_prompt, working_dir: working_dir)
 
             cmd = build_pi_command(full_prompt, options, system_prompt: system_prompt)
-            stdout, stderr, status = execute_pi_command(cmd, working_dir: working_dir, options: options)
+            capture = execute_pi_command(cmd, working_dir: working_dir, options: options)
+            begin
+              capture.raise_unless_success
+            rescue Ace::LLM::ProviderError
+              raise if !capture.status || capture.status.success?
 
-            parse_pi_response(stdout, stderr, status, full_prompt, options)
+              # 401 output means credentials, not a generic CLI failure —
+              # AuthenticationError classifies as skip-to-next-provider.
+              raise auth_error if captured_auth_failure?(capture)
+
+              raise
+            end
+
+            parse_pi_response(capture, full_prompt, options)
           rescue => e
             handle_pi_error(e)
           end
@@ -275,18 +286,31 @@ module Ace
             )
           end
 
-          def parse_pi_response(stdout, stderr, status, prompt, options)
-            unless status.success?
-              error_msg = stderr.empty? ? stdout : stderr
+          # 401/Unauthorized anywhere in captured output marks a credentials
+          # failure rather than a generic CLI error.
+          def captured_auth_failure?(capture)
+            output = "#{capture.stderr}\n#{capture.stdout}"
+            output.include?("401") || output.include?("Unauthorized")
+          end
 
-              if error_msg.include?("401") || error_msg.include?("Unauthorized")
+          def auth_error
+            Ace::LLM::AuthenticationError.new("Pi authentication failed. Run 'pi login' to configure credentials.")
+          end
+
+          def parse_pi_response(capture, prompt, options)
+            # Unreachable through generate (raise_unless_success precedes parse),
+            # kept for direct callers: auth failures stay AuthenticationError.
+            unless capture.status.success?
+              error_msg = capture.stderr.empty? ? capture.stdout : capture.stderr
+
+              if captured_auth_failure?(capture)
                 raise Ace::LLM::AuthenticationError, "Pi authentication failed. Run 'pi login' to configure credentials."
               end
 
-              raise Ace::LLM::ProviderError, "Pi CLI failed: #{error_msg}"
+              raise capture.provider_error("Pi CLI failed: #{error_msg}")
             end
 
-            text, usage, finish_reason = parse_ndjson(stdout)
+            text, usage, finish_reason = parse_ndjson(capture.stdout)
             response = {"usage" => normalize_usage(usage), "finish_reason" => finish_reason}
 
             metadata = build_metadata(response, text, prompt, options)

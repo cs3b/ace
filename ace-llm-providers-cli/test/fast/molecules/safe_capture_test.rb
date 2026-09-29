@@ -50,8 +50,8 @@ module Ace
 
             def test_deadline_exceeded_returns_typed_outcome_with_partial_output
               capture = SafeCapture.call(
-                ["ruby", "-e", "STDOUT.sync=true; STDOUT.puts('partial stdout'); STDERR.sync=true; STDERR.puts('partial stderr'); sleep 2"],
-                timeout: FAST_TIMEOUT,
+                ["ruby", "-e", "STDOUT.sync=true; STDOUT.puts('partial stdout'); STDERR.sync=true; STDERR.puts('partial stderr'); sleep 10"],
+                timeout: 1.5,
                 provider_name: "Test"
               )
 
@@ -60,8 +60,8 @@ module Ace
               assert_nil capture.status
               assert_includes capture.stdout, "partial stdout"
               assert_includes capture.stderr, "partial stderr"
-              assert_equal FAST_TIMEOUT, capture.deadline_seconds
-              assert capture.elapsed_seconds >= FAST_TIMEOUT
+              assert_equal 1.5, capture.deadline_seconds
+              assert capture.elapsed_seconds >= 1.5
               assert capture.execution_began?
             end
 

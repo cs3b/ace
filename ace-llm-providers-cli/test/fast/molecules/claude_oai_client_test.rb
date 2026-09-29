@@ -176,10 +176,7 @@ describe "ClaudeOaiClient" do
       fake_capture = lambda { |*_args, **kwargs|
         captured_env = kwargs[:env]
         captured_chdir = kwargs[:chdir]
-        mock_status = Object.new
-        mock_status.define_singleton_method(:success?) { true }
-        mock_status.define_singleton_method(:exitstatus) { 0 }
-        ['{"result":"ok"}', "", mock_status]
+        build_capture(stdout: '{"result":"ok"}')
       }
 
       Ace::LLM::Providers::CLI::Molecules::SafeCapture.stub(:call, fake_capture) do
@@ -242,11 +239,9 @@ describe "ClaudeOaiClient" do
 
   describe "generate method" do
     def stub_capture3(stdout:, stderr: "", success: true)
-      mock_status = Object.new
-      mock_status.define_singleton_method(:success?) { success }
-      mock_status.define_singleton_method(:exitstatus) { success ? 0 : 1 }
-
-      Ace::LLM::Providers::CLI::Molecules::SafeCapture.stub(:call, lambda { |*_args, **_kwargs| [stdout, stderr, mock_status] }) do
+      Ace::LLM::Providers::CLI::Molecules::SafeCapture.stub(
+        :call, lambda { |*_args, **_kwargs| build_capture(stdout: stdout, stderr: stderr, success: success, provider_name: "Claude OAI") }
+      ) do
         yield
       end
     end

@@ -156,8 +156,18 @@ module Ace
               when OUTCOME_SPAWN_FAILURE
                 "#{provider_name} CLI could not be started: #{spawn_error_class}"
               else
-                "#{provider_name} CLI failed with exit status #{exit_status}"
+                base = "#{provider_name} CLI failed with exit status #{exit_status}"
+                (detail = failure_detail) ? "#{base}: #{detail}" : base
               end
+            end
+
+            # First non-empty captured line, bounded — keeps actionable CLI
+            # diagnostics in the error without leaking full transcripts.
+            def failure_detail
+              source = [stderr, stdout].map { |stream| stream.to_s.lines.map(&:strip) }.flatten
+              detail = source.reject(&:empty?).first.to_s
+              detail = "#{detail[0, 300]}…[truncated]" if detail.length > 300
+              detail.empty? ? nil : detail
             end
 
             def spawn_error_class
