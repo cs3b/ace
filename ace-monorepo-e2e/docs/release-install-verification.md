@@ -34,10 +34,13 @@ classification proof and the machine-readable exact-version acceptance.
 
 The final machine-readable verdict is produced once the pipeline has finished
 (it gates on the report `metadata.yml`, which only exists after the runner
-session completes):
+session completes). Invoke the receipt script through Ruby (it is not
+installed as an executable), pass the same source manifest that was exported
+as `ACE_RELEASE_MANIFEST` for the run, and give `--out` a writable path (the
+directory is created when missing):
 
 ```bash
-ACE_E2E_SOURCE_ROOT=$PWD .ace-local/test-e2e/<run>/ace-monorepo-e2e/test/e2e/TS-MONO-001-rubygems-install/install_receipt.rb \
+ACE_E2E_SOURCE_ROOT=$PWD ruby .ace-local/test-e2e/<run>/ace-monorepo-e2e/test/e2e/TS-MONO-001-rubygems-install/install_receipt.rb \
   finalize \
   --manifest .ace-local/test-e2e/<run>/results/tc/01/release-manifest.json \
   --source-manifest .ace-local/release/installation-manifest.json \

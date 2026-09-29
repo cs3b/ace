@@ -454,7 +454,8 @@ def test_finalize_reports_findings_for_malformed_acceptance_artifact
   tc04 = File.join(results_root, "results", "tc", "04")
   File.write(File.join(tc04, "exact-version-acceptance.json"), "{not json")
   FileUtils.mkdir_p(report_dir)
-  File.write(File.join(report_dir, "metadata.yml"), "status: pass\n")
+  File.write(File.join(report_dir, "metadata.yml"), "run-id: reports\ntest-id: TS-MONO-001\nstatus: pass\n")
+
 
   verdict = InstallReceipt.finalize(
     manifest_path: @manifest_path,
@@ -468,15 +469,111 @@ def test_finalize_reports_findings_for_malformed_acceptance_artifact
   assert(verdict["findings"].any? { |finding| finding.include?("not valid JSON") }, verdict["findings"].inspect)
 end
 
+
+def test_verify_rejects_non_rubygems_remote
+  fixture = build_complete_fixture
+  path = File.join(fixture[:normal], "Gemfile.lock")
+  content = File.read(path).sub("https://rubygems.org/", "https://mirror.example.com/")
+  File.write(path, content)
+
+  verdict = InstallReceipt.verify(
+    manifest_path: @manifest_path,
+    mode_dirs: {"normal" => fixture[:normal], "full_index" => fixture[:full_index]}
+  )
+
+  assert_equal "fail", verdict["acceptance"]
+  assert(verdict["findings"].any? { |finding| finding.include?("non-rubygems.org remotes") },
+    verdict["findings"].inspect)
+end
+
+def test_verify_rejects_lockfile_receipt_disagreement
+  fixture = build_complete_fixture
+  receipt_path = File.join(fixture[:full_index], "lockfile-receipt.json")
+  receipt = JSON.parse(File.read(receipt_path))
+  receipt["packages"]["ace-overseer"] = "0.16.0"
+  File.write(receipt_path, JSON.pretty_generate(receipt))
+
+  verdict = InstallReceipt.verify(
+    manifest_path: @manifest_path,
+    mode_dirs: {"normal" => fixture[:normal], "full_index" => fixture[:full_index]}
+  )
+
+  assert_equal "fail", verdict["acceptance"]
+  assert(verdict["findings"].any? { |finding| finding.include?("lockfile receipt records ace-overseer") },
+    verdict["findings"].inspect)
+end
+
+def test_finalize_rejects_stale_pipeline_report
+  fixture = build_complete_fixture
+  report_dir = File.join(@tmpdir, "reports")
+  results_root = write_results_root(fixture)
+  FileUtils.mkdir_p(report_dir)
+  File.write(File.join(report_dir, "metadata.yml"), "run-id: stale-run-000\ntest-id: TS-MONO-001\nstatus: pass\n")
+
+  verdict = InstallReceipt.finalize(
+    manifest_path: @manifest_path,
+    mode_dirs: {"normal" => fixture[:normal], "full_index" => fixture[:full_index]},
+    pipeline_report_dir: report_dir,
+    results_root: results_root,
+    source_manifest: @manifest_path
+  )
+
+  assert_equal "fail", verdict["final"]
+  assert(verdict["findings"].any? { |finding| finding.include?("does not match the current run") },
+    verdict["findings"].inspect)
+end
+
+def test_finalize_rejects_acceptance_artifact_missing_coverage
+  fixture = build_complete_fixture
+  report_dir = File.join(@tmpdir, "reports")
+  results_root = write_results_root(fixture)
+  tc04 = File.join(results_root, "results", "tc", "04")
+  File.write(File.join(tc04, "exact-version-acceptance.json"), JSON.pretty_generate(
+    "schema_version" => 1,
+    "kind" => "exact-version-acceptance",
+    "acceptance" => "pass",
+    "findings" => []
+  ))
+  FileUtils.mkdir_p(report_dir)
+  File.write(File.join(report_dir, "metadata.yml"), "run-id: reports\ntest-id: TS-MONO-001\nstatus: pass\n")
+
+  verdict = InstallReceipt.finalize(
+    manifest_path: @manifest_path,
+    mode_dirs: {"normal" => fixture[:normal], "full_index" => fixture[:full_index]},
+    pipeline_report_dir: report_dir,
+    results_root: results_root,
+    source_manifest: @manifest_path
+  )
+
+  assert_equal "fail", verdict["final"]
+  assert(verdict["findings"].any? { |finding| finding.include?("package_count") }, verdict["findings"].inspect)
+  assert(verdict["findings"].any? { |finding| finding.include?("is missing normal package results") }, verdict["findings"].inspect)
+  assert(verdict["findings"].any? { |finding| finding.include?("consumer edge for ace-bundle") }, verdict["findings"].inspect)
+end
+
+def test_verify_records_finding_for_non_string_receipt_path
+  fixture = build_complete_fixture
+  receipt_path = File.join(fixture[:normal], "install-receipt.json")
+  receipt = JSON.parse(File.read(receipt_path))
+  receipt["packages"]["ace-git"]["path"] = {"bad" => true}
+  File.write(receipt_path, JSON.pretty_generate(receipt))
+
+  verdict = InstallReceipt.verify(
+    manifest_path: @manifest_path,
+    mode_dirs: {"normal" => fixture[:normal], "full_index" => fixture[:full_index]}
+  )
+
+  assert_equal "fail", verdict["acceptance"]
+  assert(verdict["findings"].any? { |finding| finding.include?("path must be a string") },
+    verdict["findings"].inspect)
+end
+
   def test_finalize_rejects_wrapper_error_despite_zero_bundle_exits
     fixture = build_complete_fixture
     report_dir = File.join(@tmpdir, "reports")
     results_root = write_results_root(fixture)
     FileUtils.mkdir_p(report_dir)
-    File.write(File.join(report_dir, "metadata.yml"), <<~YAML)
-      status: error
-      uncertain_execution: true
-    YAML
+    File.write(File.join(report_dir, "metadata.yml"), "run-id: reports\nstatus: error\nuncertain_execution: true\n")
 
     verdict = InstallReceipt.finalize(
       manifest_path: @manifest_path,
@@ -499,7 +596,8 @@ end
     report_dir = File.join(@tmpdir, "reports")
     results_root = write_results_root(fixture)
     FileUtils.mkdir_p(report_dir)
-    File.write(File.join(report_dir, "metadata.yml"), "status: pass\n")
+    File.write(File.join(report_dir, "metadata.yml"), "run-id: reports\ntest-id: TS-MONO-001\nstatus: pass\n")
+
 
     verdict = InstallReceipt.finalize(
       manifest_path: @manifest_path,
@@ -520,7 +618,8 @@ end
     report_dir = File.join(@tmpdir, "reports")
     results_root = write_results_root(fixture)
     FileUtils.mkdir_p(report_dir)
-    File.write(File.join(report_dir, "metadata.yml"), "status: pass\n")
+    File.write(File.join(report_dir, "metadata.yml"), "run-id: reports\ntest-id: TS-MONO-001\nstatus: pass\n")
+
 
     tampered = File.join(@tmpdir, "source-manifest.json")
     manifest = JSON.parse(File.read(@manifest_path))
@@ -545,7 +644,8 @@ end
     report_dir = File.join(@tmpdir, "reports")
     results_root = write_results_root(fixture, classification: "LAG_DETECTED")
     FileUtils.mkdir_p(report_dir)
-    File.write(File.join(report_dir, "metadata.yml"), "status: pass\n")
+    File.write(File.join(report_dir, "metadata.yml"), "run-id: reports\ntest-id: TS-MONO-001\nstatus: pass\n")
+
 
     verdict = InstallReceipt.finalize(
       manifest_path: @manifest_path,
@@ -565,7 +665,8 @@ end
     report_dir = File.join(@tmpdir, "reports")
     results_root = write_results_root(fixture, runner_acceptance: "fail")
     FileUtils.mkdir_p(report_dir)
-    File.write(File.join(report_dir, "metadata.yml"), "status: pass\n")
+    File.write(File.join(report_dir, "metadata.yml"), "run-id: reports\ntest-id: TS-MONO-001\nstatus: pass\n")
+
 
     verdict = InstallReceipt.finalize(
       manifest_path: @manifest_path,
@@ -585,8 +686,9 @@ end
     report_dir = File.join(@tmpdir, "reports")
     results_root = write_results_root(fixture)
     FileUtils.mkdir_p(report_dir)
-    File.write(File.join(report_dir, "metadata.yml"), "status: pass\n")
-    out_path = File.join(@tmpdir, "installation-acceptance.json")
+    File.write(File.join(report_dir, "metadata.yml"), "run-id: reports\ntest-id: TS-MONO-001\nstatus: pass\n")
+
+    out_path = File.join(@tmpdir, "evidence", "nested", "installation-acceptance.json")
     script = File.expand_path("../e2e/TS-MONO-001-rubygems-install/install_receipt.rb", __dir__)
 
     system(RbConfig.ruby, script, "finalize",
@@ -605,19 +707,30 @@ end
 
   private
 
-  def write_results_root(fixture, classification: "SAFE", runner_acceptance: "pass")
-    root = File.join(@tmpdir, "results-root")
-    tc04 = File.join(root, "results", "tc", "04")
-    FileUtils.mkdir_p(tc04)
-    File.write(File.join(tc04, "classification.txt"), "#{classification}\n")
-    File.write(File.join(tc04, "exact-version-acceptance.json"), JSON.pretty_generate({
-      "schema_version" => 1,
-      "kind" => "exact-version-acceptance",
-      "acceptance" => runner_acceptance,
-      "findings" => runner_acceptance == "pass" ? [] : ["fixture finding"]
-    }))
-    root
-  end
+def write_results_root(fixture, classification: "SAFE", runner_acceptance: "pass")
+  root = File.join(@tmpdir, "results-root")
+  tc04 = File.join(root, "results", "tc", "04")
+  FileUtils.mkdir_p(tc04)
+  File.write(File.join(tc04, "classification.txt"), "#{classification}\n")
+  File.write(File.join(tc04, "exact-version-acceptance.json"), JSON.pretty_generate(
+    "schema_version" => 1,
+    "kind" => "exact-version-acceptance",
+    "manifest" => {"path" => @manifest_path, "source_sha" => "a" * 40, "package_count" => MANIFEST_PACKAGES.size},
+    "modes" => %w[normal full_index].to_h do |mode|
+      [mode, {
+        "exit" => 0,
+        "packages" => MANIFEST_PACKAGES.keys.to_h { |name| [name, {"manifest_version" => MANIFEST_PACKAGES[name], "ok" => true, "findings" => []}] },
+        "findings" => []
+      }]
+    end,
+    "consumer_edges" => %w[normal full_index].to_h do |mode|
+      [mode, %w[ace-bundle ace-review ace-task].to_h { |consumer| [consumer, {"ok" => true, "findings" => []}] }]
+    end,
+    "acceptance" => runner_acceptance,
+    "findings" => runner_acceptance == "pass" ? [] : ["fixture finding"]
+  ))
+  root
+end
 
   def write_manifest
     File.write(@manifest_path, JSON.pretty_generate(
@@ -656,6 +769,10 @@ end
       FileUtils.mkdir_p([File.join(dir, ".bundle"), File.join(dir, ".gem")])
       write_lockfile(dir, lockfile_content)
       File.write(File.join(dir, dir == full_index ? "fullindex.exit" : "install.exit"), "0\n")
+      File.write(File.join(dir, "lockfile-receipt.json"), JSON.pretty_generate({
+        "kind" => "lockfile-receipt",
+        "packages" => MANIFEST_PACKAGES
+      }))
       File.write(File.join(dir, "install-receipt.json"), JSON.pretty_generate(receipt_content(dir)))
       %w[ace-bundle ace-review ace-task].each do |consumer|
         build_consumer(dir, consumer)

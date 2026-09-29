@@ -46,6 +46,7 @@ module InstallReceipt
     in_specs = false
     packages = {}
     all_versions = Hash.new { |h, k| h[k] = [] }
+    remotes = Hash.new { |h, k| h[k] = [] }
     sections_with_packages = Hash.new { |h, k| h[k] = [] }
 
     File.foreach(path) do |line|
@@ -56,6 +57,11 @@ module InstallReceipt
       end
       if line.match?(/\A\s+specs:\s*\z/)
         in_specs = true
+        next
+      end
+      remote = line.match(/\A\s+remote:\s*(\S+)/)
+      if remote && section
+        remotes[section] << remote[1]
         next
       end
       match = line.match(/\A    ([^\s(]+) \(([^)]+)\)/)
@@ -69,9 +75,25 @@ module InstallReceipt
     {
       "packages" => packages,
       "all_versions" => all_versions,
+      "remotes" => remotes,
       "sections" => sections_with_packages,
       "path" => path
     }
+  end
+
+  # The published graph proof is about rubygems.org specifically; any other
+  # GEM remote (mirror, local directory) does not prove public reachability.
+  RUBYGEMS_REMOTE = "https://rubygems.org/"
+
+  def registry_remote_findings(lockfile, label)
+    findings = []
+    remotes = lockfile["remotes"]["GEM"]
+    if remotes.empty?
+      findings << "#{label} lockfile GEM section declares no remote"
+    elsif remotes.any? { |remote| remote != RUBYGEMS_REMOTE }
+      findings << "#{label} lockfile uses non-rubygems.org remotes: #{remotes.uniq.reject { |r| r == RUBYGEMS_REMOTE }.join(", ")}"
+    end
+    findings
   end
 
   # Activated-spec receipt: requires the caller to run this script with the
@@ -237,6 +259,7 @@ module InstallReceipt
         end
       end
       if parsed
+        findings.concat(acceptance_artifact_findings(parsed, verdict))
         runner_acceptance = parsed["acceptance"]
         runner_findings = Array(parsed["findings"])
         findings << "runner-side acceptance #{runner_acceptance.inspect} is not pass" unless runner_acceptance == "pass"
@@ -269,6 +292,48 @@ module InstallReceipt
     end
   end
 
+  # The runner-side acceptance artifact must be a complete, well-formed
+  # verdict: an artifact with only an acceptance field must not pass this
+  # gate. Coverage is checked against the in-process verification of the
+  # same manifest.
+  def acceptance_artifact_findings(parsed, verdict)
+    findings = []
+    expected_names = verdict.dig("modes", "normal", "packages").keys || []
+    expected_consumers = (verdict.dig("consumer_edges", "normal") || {}).keys
+
+    unless parsed["schema_version"] == MANIFEST_SCHEMA_VERSION
+      findings << "acceptance artifact schema_version #{parsed["schema_version"].inspect} is not #{MANIFEST_SCHEMA_VERSION}"
+    end
+    unless parsed["kind"] == "exact-version-acceptance"
+      findings << "acceptance artifact kind #{parsed["kind"].inspect} is not exact-version-acceptance"
+    end
+
+    expected_count = verdict.dig("manifest", "package_count")
+    unless parsed.dig("manifest", "package_count") == expected_count
+      findings << "acceptance artifact package_count #{parsed.dig("manifest", "package_count").inspect} does not match #{expected_count}"
+    end
+
+    %w[normal full_index].each do |mode|
+      packages = parsed.dig("modes", mode, "packages")
+      if packages.nil?
+        findings << "acceptance artifact is missing #{mode} package results"
+      else
+        missing = expected_names - packages.keys
+        findings << "acceptance artifact #{mode} results do not cover: #{missing.join(", ")}" unless missing.empty?
+      end
+    end
+
+    expected_consumers.each do |consumer|
+      %w[normal full_index].each do |mode|
+        unless parsed.dig("consumer_edges", mode, consumer)
+          findings << "acceptance artifact is missing #{mode} consumer edge for #{consumer}"
+        end
+      end
+    end
+
+    findings
+  end
+
   def pipeline_completion(report_dir)
     metadata_path = File.join(report_dir, "metadata.yml")
     unless File.file?(metadata_path)
@@ -289,10 +354,22 @@ module InstallReceipt
     findings = []
     findings << "pipeline status is #{status.inspect}, not pass" unless status == "pass"
     findings << "pipeline marked uncertain_execution; side effects must not be replayed" if uncertain
+
+    # Bind the report to the current run: a stale passing report from an
+    # earlier run must not bless this run's receipts.
+    run_id = File.basename(report_dir).sub(/-reports\z/, "")
+    unless metadata["run-id"] == run_id
+      findings << "pipeline metadata run-id #{metadata["run-id"].inspect} does not match the current run #{run_id.inspect}"
+    end
+    if metadata["test-id"].nil? || metadata["test-id"].to_s.empty?
+      findings << "pipeline metadata records no test-id"
+    end
+
     {
       "ok" => findings.empty?,
       "status" => status,
       "uncertain_execution" => uncertain,
+      "run_id" => run_id,
       "findings" => findings
     }
   end
@@ -321,6 +398,24 @@ module InstallReceipt
       findings << e.message
       nil
     end
+
+    lockfile_receipt = begin
+      read_lockfile_receipt(File.join(dir, "lockfile-receipt.json"))
+    rescue ArgumentError => e
+      findings << "lockfile receipt: #{e.message}"
+      nil
+    end
+
+    if lockfile && lockfile_receipt
+      lockfile["all_versions"].each do |name, versions|
+        recorded = lockfile_receipt[name]
+        next if versions.include?(recorded)
+
+        findings << "lockfile receipt records #{name} #{recorded.inspect}, lockfile has #{versions.join(", ")}"
+      end
+    end
+
+    findings.concat(registry_remote_findings(lockfile, "normal-mode")) if lockfile
 
     isolation_dirs = [File.join(dir, ".gem"), File.join(dir, ".bundle")].map { |path| File.expand_path(path) }
     package_states = {}
@@ -463,13 +558,14 @@ module InstallReceipt
     # The provider must come from the consumer's own published dependency
     # declaration, not from an unrelated Gemfile entry: the consumer's
     # lockfile spec must declare ace-git-github as a dependency, and the
-    # resolution must come from registry sources only.
+    # resolution must come from the public registry only.
     if lockfile
       lockfile["sections"].each_key do |section|
         unless section == "GEM"
           findings << "consumer lockfile resolves #{section} sources; only registry sources prove the published edge"
         end
       end
+      findings.concat(registry_remote_findings(lockfile, "consumer #{name}"))
     end
     if lockfile && provider_version && !lockfile_spec_declares_provider?(lockfile, name)
       findings << "#{name} lockfile spec does not declare ace-git-github as a dependency"
@@ -523,11 +619,32 @@ module InstallReceipt
       unless entry.is_a?(Hash) && entry["version"].is_a?(String) && !entry["version"].empty?
         raise ArgumentError, "activated receipt entry #{name} must be an object with a version string: #{path}"
       end
+      unless entry["path"].nil? || entry["path"].is_a?(String)
+        raise ArgumentError, "activated receipt entry #{name} path must be a string: #{path}"
+      end
     end
 
     packages
   rescue JSON::ParserError => e
     raise ArgumentError, "activated receipt is not valid JSON: #{path} (#{e.message})"
+  end
+
+  def read_lockfile_receipt(path)
+    raise ArgumentError, "lockfile receipt is missing: #{path}" unless File.file?(path)
+
+    receipt = JSON.parse(File.read(path))
+    raise ArgumentError, "lockfile receipt must be a JSON object: #{path}" unless receipt.is_a?(Hash)
+
+    packages = receipt["packages"]
+    raise ArgumentError, "lockfile receipt has no packages object: #{path}" unless packages.is_a?(Hash)
+
+    packages.each do |name, version|
+      raise ArgumentError, "lockfile receipt entry #{name} must be a version string: #{path}" unless version.is_a?(String)
+    end
+
+    packages
+  rescue JSON::ParserError => e
+    raise ArgumentError, "lockfile receipt is not valid JSON: #{path} (#{e.message})"
   end
 
   def read_exit(path)
@@ -632,6 +749,7 @@ if $PROGRAM_NAME == __FILE__
       opts.on("--source-manifest PATH") { |value| options[:source_manifest] = value }
       opts.on("--out PATH") { |value| options[:out] = value }
     end.parse!
+    FileUtils.mkdir_p(File.dirname(File.expand_path(options[:out])))
     verdict = InstallReceipt.finalize(
       manifest_path: options[:manifest],
       mode_dirs: {"normal" => options[:normal], "full_index" => options[:full_index]},
