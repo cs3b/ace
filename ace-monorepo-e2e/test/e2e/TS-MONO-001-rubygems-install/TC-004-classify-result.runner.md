@@ -52,6 +52,13 @@ receipt_script="$PWD/ace-monorepo-e2e/test/e2e/TS-MONO-001-rubygems-install/inst
    - Exact-version acceptance outcome (the `acceptance` value and finding
      count from `results/tc/04/exact-version-acceptance.json`)
    - Operator guidance statement
+6. Record the finalize contract: the final machine-readable verdict combines
+   this acceptance artifact with the pipeline completion gate and is produced
+   by `install_receipt.rb finalize` after the run completes (it reads the
+   report `metadata.yml`, which only exists once the runner session has
+   finished). The runner's job here is to leave the finalize inputs intact:
+   `results/tc/01/release-manifest.json`, both mode directories, and
+   `results/tc/04/exact-version-acceptance.json`.
 
 ## Constraints
 

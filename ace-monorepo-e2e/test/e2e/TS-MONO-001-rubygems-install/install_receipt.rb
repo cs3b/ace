@@ -192,6 +192,7 @@ module InstallReceipt
 
     exit_code = read_exit(exit_file)
     findings << "install exit evidence is missing or non-numeric: #{exit_file}" if exit_code.nil?
+    findings << "install did not succeed (exit #{exit_code.inspect}); receipts may be stale" if exit_code && exit_code != 0
 
     lockfile = begin
       parse_lockfile(lockfile_path)
@@ -201,9 +202,9 @@ module InstallReceipt
     end
 
     receipt = begin
-      JSON.parse(File.read(receipt_path))
-    rescue StandardError
-      findings << "activated receipt is missing or unreadable: #{receipt_path}"
+      read_receipt(receipt_path)
+    rescue ArgumentError => e
+      findings << e.message
       nil
     end
 
@@ -277,6 +278,7 @@ module InstallReceipt
     gemfile_path = File.join(root, "Gemfile")
     lockfile_path = File.join(root, "Gemfile.lock")
     receipt_path = File.join(root, "install-receipt.json")
+    exit_file = File.join(root, "install.exit")
 
     provider_entry = manifest_versions["ace-git-github"]
     if provider_entry.nil?
@@ -291,6 +293,10 @@ module InstallReceipt
       findings << "consumer Gemfile must not reference ace-git-github directly"
     end
 
+    exit_code = read_exit(exit_file)
+    findings << "consumer install exit evidence is missing or non-numeric: #{exit_file}" if exit_code.nil?
+    findings << "consumer install did not succeed (exit #{exit_code.inspect})" if exit_code && exit_code != 0
+
     lockfile = begin
       parse_lockfile(lockfile_path)
     rescue ArgumentError => e
@@ -299,9 +305,9 @@ module InstallReceipt
     end
 
     receipt = begin
-      JSON.parse(File.read(receipt_path))
-    rescue StandardError
-      findings << "consumer activated receipt is missing or unreadable: #{receipt_path}"
+      read_receipt(receipt_path)
+    rescue ArgumentError => e
+      findings << e.message
       nil
     end
 
@@ -313,6 +319,13 @@ module InstallReceipt
       findings << "#{name} consumer resolved #{consumer_version}, manifest requires #{manifest_versions[name]&.dig("artifact_version")}"
     end
 
+    consumer_activated = receipt && receipt.dig(name, "version")
+    if consumer_activated.nil?
+      findings << "#{name} missing from consumer activated receipt"
+    elsif consumer_activated != manifest_versions[name]&.dig("artifact_version")
+      findings << "#{name} consumer activated #{consumer_activated}, manifest requires #{manifest_versions[name]&.dig("artifact_version")}"
+    end
+
     provider_version = lockfile && lockfile["packages"]["ace-git-github"]
     if provider_version.nil?
       findings << "ace-git-github not reached through #{name} dependency edge"
@@ -320,12 +333,35 @@ module InstallReceipt
       findings << "ace-git-github resolved #{provider_version} through #{name}, manifest requires #{provider_entry["artifact_version"]}"
     end
 
-    provider_path = receipt && receipt.dig("ace-git-github", "path")
-    if provider_path && !under_any?(provider_path, isolation_dirs)
-      findings << "ace-git-github loaded from #{provider_path} outside the isolated consumer directories"
+    provider_activated = receipt && receipt.dig("ace-git-github", "version")
+    if provider_activated.nil?
+      findings << "ace-git-github missing from consumer activated receipt"
+    elsif provider_activated != provider_entry["artifact_version"]
+      findings << "ace-git-github activated #{provider_activated} through #{name}, manifest requires #{provider_entry["artifact_version"]}"
+    end
+
+    [name, "ace-git-github"].each do |gem_name|
+      gem_path = receipt && receipt.dig(gem_name, "path")
+      if gem_path && !under_any?(gem_path, isolation_dirs)
+        findings << "#{gem_name} loaded from #{gem_path} outside the isolated consumer directories"
+      end
     end
 
     {"root" => root, "ok" => findings.empty?, "findings" => findings.uniq}
+  end
+
+  def read_receipt(path)
+    raise ArgumentError, "activated receipt is missing: #{path}" unless File.file?(path)
+
+    receipt = JSON.parse(File.read(path))
+    raise ArgumentError, "activated receipt must be a JSON object: #{path}" unless receipt.is_a?(Hash)
+
+    packages = receipt["packages"]
+    raise ArgumentError, "activated receipt has no packages object: #{path}" unless packages.is_a?(Hash)
+
+    packages
+  rescue JSON::ParserError => e
+    raise ArgumentError, "activated receipt is not valid JSON: #{path} (#{e.message})"
   end
 
   def read_exit(path)
@@ -337,10 +373,34 @@ module InstallReceipt
   end
 
   def under_any?(path, dirs)
-    expanded = File.expand_path(path)
+    expanded = real_path(path)
     dirs.any? do |dir|
-      expanded.start_with?(dir + File::SEPARATOR)
+      expanded.start_with?(real_path(dir) + File::SEPARATOR)
     end
+  end
+
+  # Symlink-resolving expansion: /tmp vs /private/tmp on macOS must not
+  # split otherwise-identical isolation prefixes. Paths may point into
+  # directories that do not exist (negative fixtures), so resolve the
+  # closest existing ancestor and append the unmatched remainder.
+  def real_path(path)
+    candidate = File.expand_path(path)
+    remainder = []
+    loop do
+      begin
+        return normalize_real(File.join(File.realpath(candidate), remainder))
+      rescue Errno::ENOENT
+        remainder.unshift(File.basename(candidate))
+        parent = File.dirname(candidate)
+        return candidate if parent == candidate
+
+        candidate = parent
+      end
+    end
+  end
+
+  def normalize_real(resolved)
+    resolved.sub(%r{/+\z}, "")
   end
 end
 

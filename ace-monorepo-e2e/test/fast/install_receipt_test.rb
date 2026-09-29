@@ -219,6 +219,66 @@ class InstallReceiptTest < AceMonorepoE2eTestCase
       verdict["findings"].inspect)
   end
 
+  def test_verify_rejects_failed_consumer_install
+    fixture = build_complete_fixture
+    File.write(File.join(fixture[:normal], "consumer", "ace-bundle", "install.exit"), "1\n")
+
+    verdict = InstallReceipt.verify(
+      manifest_path: @manifest_path,
+      mode_dirs: {"normal" => fixture[:normal], "full_index" => fixture[:full_index]}
+    )
+
+    assert_equal "fail", verdict["acceptance"]
+    assert(verdict["findings"].any? { |finding| finding.include?("normal consumer ace-bundle") && finding.include?("did not succeed (exit 1)") },
+      verdict["findings"].inspect)
+  end
+
+  def test_verify_rejects_failed_mode_install_despite_present_receipts
+    fixture = build_complete_fixture
+    File.write(File.join(fixture[:normal], "install.exit"), "1\n")
+
+    verdict = InstallReceipt.verify(
+      manifest_path: @manifest_path,
+      mode_dirs: {"normal" => fixture[:normal], "full_index" => fixture[:full_index]}
+    )
+
+    assert_equal "fail", verdict["acceptance"]
+    assert(verdict["findings"].any? { |finding| finding.start_with?("normal: ") && finding.include?("install did not succeed (exit 1)") },
+      verdict["findings"].inspect)
+  end
+
+  def test_verify_rejects_stale_activated_provider_in_consumer_edge
+    fixture = build_complete_fixture
+    root = File.join(fixture[:normal], "consumer", "ace-review")
+    receipt = JSON.parse(File.read(File.join(root, "install-receipt.json")))
+    receipt["packages"]["ace-git-github"]["version"] = "0.1.2"
+    File.write(File.join(root, "install-receipt.json"), JSON.pretty_generate(receipt))
+
+    verdict = InstallReceipt.verify(
+      manifest_path: @manifest_path,
+      mode_dirs: {"normal" => fixture[:normal], "full_index" => fixture[:full_index]}
+    )
+
+    assert_equal "fail", verdict["acceptance"]
+    assert(verdict["findings"].any? { |finding| finding.include?("normal consumer ace-review") && finding.include?("ace-git-github activated 0.1.2") },
+      verdict["findings"].inspect)
+  end
+
+  def test_verify_rejects_consumer_receipt_without_packages_object
+    fixture = build_complete_fixture
+    root = File.join(fixture[:full_index], "consumer", "ace-task")
+    File.write(File.join(root, "install-receipt.json"), JSON.pretty_generate({"ace-git-github" => {"version" => "0.2.0"}}))
+
+    verdict = InstallReceipt.verify(
+      manifest_path: @manifest_path,
+      mode_dirs: {"normal" => fixture[:normal], "full_index" => fixture[:full_index]}
+    )
+
+    assert_equal "fail", verdict["acceptance"]
+    assert(verdict["findings"].any? { |finding| finding.include?("full_index consumer ace-task") && finding.include?("no packages object") },
+      verdict["findings"].inspect)
+  end
+
   def test_finalize_rejects_wrapper_error_despite_zero_bundle_exits
     fixture = build_complete_fixture
     report_dir = File.join(@tmpdir, "reports")
@@ -330,8 +390,11 @@ class InstallReceiptTest < AceMonorepoE2eTestCase
     write_consumer_lockfile(root, consumer, "ace-git-github" => "0.2.0")
     File.write(File.join(root, "install.exit"), "0\n")
     File.write(File.join(root, "install-receipt.json"), JSON.pretty_generate({
-      "ace-git-github" => {"version" => "0.2.0", "path" => File.join(root, ".bundle", "gems", "ace-git-github-0.2.0")},
-      consumer => {"version" => MANIFEST_PACKAGES[consumer], "path" => File.join(root, ".bundle", "gems", "#{consumer}-#{MANIFEST_PACKAGES[consumer]}")}
+      "kind" => "activated-receipt",
+      "packages" => {
+        "ace-git-github" => {"version" => "0.2.0", "path" => File.join(root, ".bundle", "gems", "ace-git-github-0.2.0")},
+        consumer => {"version" => MANIFEST_PACKAGES[consumer], "path" => File.join(root, ".bundle", "gems", "#{consumer}-#{MANIFEST_PACKAGES[consumer]}")}
+      }
     }))
   end
 
@@ -379,9 +442,12 @@ class InstallReceiptTest < AceMonorepoE2eTestCase
   end
 
   def receipt_content(dir)
-    MANIFEST_PACKAGES.to_h do |name, version|
-      [name, {"version" => version, "path" => File.join(dir, ".bundle", "gems", "#{name}-#{version}")}]
-    end
+    {
+      "kind" => "activated-receipt",
+      "packages" => MANIFEST_PACKAGES.to_h do |name, version|
+        [name, {"version" => version, "path" => File.join(dir, ".bundle", "gems", "#{name}-#{version}")}]
+      end
+    }
   end
 
   def rewrite_receipt(dir, overrides)
@@ -389,9 +455,9 @@ class InstallReceiptTest < AceMonorepoE2eTestCase
     receipt = JSON.parse(File.read(path))
     overrides.each do |name, data|
       if data.nil?
-        receipt.delete(name)
+        receipt["packages"].delete(name)
       else
-        receipt[name].merge!(data)
+        receipt["packages"][name].merge!(data)
       end
     end
     File.write(path, JSON.pretty_generate(receipt))

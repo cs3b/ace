@@ -30,6 +30,26 @@ install, then full-index fallback, records lockfile/activated receipts and
 consumer-only dependency-edge resolutions for both modes, then writes a
 classification proof and the machine-readable exact-version acceptance.
 
+### Finalize (after the run completes)
+
+The final machine-readable verdict is produced once the pipeline has finished
+(it gates on the report `metadata.yml`, which only exists after the runner
+session completes):
+
+```bash
+ACE_E2E_SOURCE_ROOT=$PWD .ace-local/test-e2e/<run>/ace-monorepo-e2e/test/e2e/TS-MONO-001-rubygems-install/install_receipt.rb \
+  finalize \
+  --manifest .ace-local/test-e2e/<run>/results/tc/01/release-manifest.json \
+  --normal .ace-local/test-e2e/<run>/results/tc/02 \
+  --full-index .ace-local/test-e2e/<run>/results/tc/03 \
+  --pipeline-report .ace-local/test-e2e/<run>-reports \
+  --out .ace-tasks/<task>/evidence/installation-acceptance.json
+```
+
+`finalize` exits non-zero unless the exact-version acceptance passes and the
+pipeline completed (`status: pass`, no `uncertain_execution`). The emitted
+artifact is the immutable final verdict retained with the task evidence.
+
 ## Frozen Release Manifest
 
 Setup reads an exact-version manifest before any install can happen:
