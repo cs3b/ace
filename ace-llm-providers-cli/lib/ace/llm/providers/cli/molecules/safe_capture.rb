@@ -3,6 +3,8 @@
 require "open3"
 require "rbconfig"
 
+require_relative "../models/capture_result"
+
 module Ace
   module LLM
     module Providers
@@ -17,6 +19,10 @@ module Ace
           # Uses Open3.popen3 and, on Linux, a dedicated child-subreaper supervisor
           # so the complete command tree is terminated and reaped without thread
           # interruption or closed-stream races.
+          #
+          # Returns a typed Models::CaptureResult instead of a bare tuple so
+          # callers can distinguish completed runs from deadline expiry, transport
+          # failure, and spawn failure, and carry that evidence into errors.
           class SafeCapture
             # @param cmd [Array<String>] Command arguments
             # @param timeout [Integer] Timeout in seconds
@@ -26,80 +32,186 @@ module Ace
             # @param provider_name [String] Provider name for error messages
             # @param isolate_process_group [Boolean] Spawn subprocess in isolated process group
             # @param cleanup_group_on_exit [Boolean] Clean up descendants on success
-            # @return [Array(String, String, Process::Status)] [stdout, stderr, status]
-            # @raise [Ace::LLM::ProviderError] on timeout
+            # @return [Models::CaptureResult] typed capture outcome with raw streams
             def self.call(cmd, timeout:, stdin_data: nil, chdir: nil, env: nil, provider_name: "CLI",
               command_prefix: nil,
               isolate_process_group: true, cleanup_group_on_exit: true)
               normalized_timeout = normalize_timeout(timeout)
-              opts = {}
-              opts[:chdir] = chdir if chdir
-              opts[:pgroup] = true if isolate_process_group
+              invocation_id = Models::CaptureResult.next_invocation_id
+              started_at = Process.clock_gettime(Process::CLOCK_MONOTONIC)
 
-              full_cmd = Array(command_prefix) + cmd
-              supervised = isolate_process_group && cleanup_group_on_exit && RUBY_PLATFORM.include?("linux")
-              full_cmd = supervisor_command(full_cmd) if supervised
-              ready_reader, ready_writer = IO.pipe if supervised
-              opts[ready_writer.fileno] = ready_writer if supervised
-              spawn_env = env&.dup || {}
-              spawn_env["ACE_SAFE_CAPTURE_READY_FD"] = ready_writer.fileno.to_s if supervised
-              args = spawn_env.empty? ? full_cmd : [spawn_env, *full_cmd]
-
-              Open3.popen3(*args, **opts) do |stdin, stdout, stderr, wait_thr|
-                ready_writer&.close
-                ready_reader&.read(1)
-                ready_reader&.close
-
-                pid = wait_thr.pid
-                pgid = safe_getpgid(pid)
-                debug_log(provider_name, "spawn pid=#{pid} pgid=#{pgid || "n/a"}")
-
-                begin
-                  stdin.write(stdin_data) if stdin_data
-                rescue Errno::EPIPE
-                  # Subprocess exited before consuming stdin — continue to capture stderr for the real error
-                end
-                stdin.close
-
-                out_reader = Thread.new { safe_read_stream(stdout) }
-                err_reader = Thread.new { safe_read_stream(stderr) }
-                out_reader.report_on_exception = false
-                err_reader.report_on_exception = false
-
-                unless wait_thr.join(normalized_timeout)
-                  # Timeout: kill subprocess group (and descendants), then clean up
-                  terminate_subprocess_tree(
-                    pid: pid, pgid: pgid, provider_name: provider_name, supervised: supervised
-                  )
-                  unless wait_thr.join(5)
-                    terminate_group_or_pid("KILL", pid, pgid)
-                    wait_thr.join(5)
-                  end
-
-                  stdout.close unless stdout.closed?
-                  stderr.close unless stderr.closed?
-                  out_reader.join(1)
-                  err_reader.join(1)
-                  out_reader.kill if out_reader.alive?
-                  err_reader.kill if err_reader.alive?
-                  raise Ace::LLM::ProviderError,
-                    "#{provider_name} CLI execution timed out after #{normalized_timeout} seconds"
-                end
-
-                status = wait_thr.value
-                if isolate_process_group && cleanup_group_on_exit && !supervised
-                  terminate_descendants_after_success(pid: pid, pgid: pgid, provider_name: provider_name)
-                end
-
-                [out_reader.value, err_reader.value, status]
+              spawn_result = begin
+                spawn_subprocess(
+                  cmd, chdir: chdir, env: env, command_prefix: command_prefix,
+                  isolate_process_group: isolate_process_group,
+                  cleanup_group_on_exit: cleanup_group_on_exit
+                )
+              rescue SystemCallError => e
+                return spawn_failure_result(
+                  e, provider_name: provider_name, invocation_id: invocation_id,
+                  deadline_seconds: normalized_timeout, started_at: started_at
+                )
               end
-            ensure
-              ready_reader&.close unless ready_reader&.closed?
-              ready_writer&.close unless ready_writer&.closed?
+
+              begin
+                run_capture(
+                  spawn_result,
+                  provider_name: provider_name,
+                  stdin_data: stdin_data,
+                  isolate_process_group: isolate_process_group,
+                  cleanup_group_on_exit: cleanup_group_on_exit,
+                  normalized_timeout: normalized_timeout,
+                  invocation_id: invocation_id,
+                  started_at: started_at
+                )
+              rescue SystemCallError => e
+                # popen3 raises before the capture block runs when the command
+                # cannot be spawned (e.g. binary not found).
+                spawn_failure_result(
+                  e, provider_name: provider_name, invocation_id: invocation_id,
+                  deadline_seconds: normalized_timeout, started_at: started_at
+                )
+              ensure
+                spawn_result.close_setup_handles
+              end
             end
 
             class << self
               private
+
+              SpawnSetup = Struct.new(:args, :opts, :supervised, :ready_reader, :ready_writer, keyword_init: true) do
+                def supervised?
+                  supervised
+                end
+
+                def activate_streams
+                  ready_writer&.close
+                  ready_reader&.read(1)
+                  ready_reader&.close
+                end
+
+                def close_setup_handles
+                  [ready_reader, ready_writer].each do |io|
+                    next unless io
+
+                    io.close unless io.closed?
+                  end
+                end
+              end
+              private_constant :SpawnSetup
+
+              def spawn_failure_result(error, provider_name:, invocation_id:, deadline_seconds:, started_at:)
+                Models::CaptureResult.new(
+                  outcome: Models::CaptureResult::OUTCOME_SPAWN_FAILURE,
+                  provider_name: provider_name,
+                  invocation_id: invocation_id,
+                  deadline_seconds: deadline_seconds,
+                  elapsed_seconds: elapsed_since(started_at),
+                  spawn_error: error
+                )
+              end
+
+              def run_capture(spawn_result, provider_name:, stdin_data:, isolate_process_group:,
+                cleanup_group_on_exit:, normalized_timeout:, invocation_id:, started_at:)
+                Open3.popen3(*spawn_result.args, **spawn_result.opts) do |stdin, stdout, stderr, wait_thr|
+                  spawn_result.activate_streams
+
+                  pid = wait_thr.pid
+                  pgid = safe_getpgid(pid)
+                  debug_log(provider_name, "spawn pid=#{pid} pgid=#{pgid || "n/a"} invocation=#{invocation_id}")
+
+                  begin
+                    stdin.write(stdin_data) if stdin_data
+                  rescue Errno::EPIPE
+                    # Subprocess exited before consuming stdin — continue to capture stderr for the real error
+                  end
+                  stdin.close
+
+                  out_reader = Thread.new { safe_read_stream(stdout) }
+                  err_reader = Thread.new { safe_read_stream(stderr) }
+                  out_reader.report_on_exception = false
+                  err_reader.report_on_exception = false
+
+                  unless wait_thr.join(normalized_timeout)
+                    # Deadline exceeded: kill subprocess group (and descendants), retain partial streams
+                    terminate_subprocess_tree(
+                      pid: pid, pgid: pgid, provider_name: provider_name, supervised: spawn_result.supervised?
+                    )
+                    unless wait_thr.join(5)
+                      terminate_group_or_pid("KILL", pid, pgid)
+                      wait_thr.join(5)
+                    end
+
+                    return Models::CaptureResult.new(
+                      outcome: Models::CaptureResult::OUTCOME_DEADLINE_EXCEEDED,
+                      stdout: drain_reader(out_reader, stdout),
+                      stderr: drain_reader(err_reader, stderr),
+                      provider_name: provider_name,
+                      invocation_id: invocation_id,
+                      deadline_seconds: normalized_timeout,
+                      elapsed_seconds: elapsed_since(started_at)
+                    )
+                  end
+
+                  status = wait_thr.value
+                  if isolate_process_group && cleanup_group_on_exit && !spawn_result.supervised?
+                    terminate_descendants_after_success(pid: pid, pgid: pgid, provider_name: provider_name)
+                  end
+
+                  outcome = if status.exited?
+                    Models::CaptureResult::OUTCOME_COMPLETED
+                  else
+                    # Terminated by a signal we did not send: the session ended
+                    # abruptly rather than the CLI finishing on its own.
+                    Models::CaptureResult::OUTCOME_TRANSPORT_FAILURE
+                  end
+
+                  return Models::CaptureResult.new(
+                    outcome: outcome,
+                    stdout: out_reader.value.to_s,
+                    stderr: err_reader.value.to_s,
+                    status: status,
+                    provider_name: provider_name,
+                    invocation_id: invocation_id,
+                    deadline_seconds: normalized_timeout,
+                    elapsed_seconds: elapsed_since(started_at)
+                  )
+                end
+              end
+
+              def spawn_subprocess(cmd, chdir:, env:, command_prefix:, isolate_process_group:,
+                cleanup_group_on_exit:)
+                opts = {}
+                opts[:chdir] = chdir if chdir
+                opts[:pgroup] = true if isolate_process_group
+
+                full_cmd = Array(command_prefix) + cmd
+                supervised = isolate_process_group && cleanup_group_on_exit && RUBY_PLATFORM.include?("linux")
+                full_cmd = supervisor_command(full_cmd) if supervised
+                ready_reader, ready_writer = IO.pipe if supervised
+                opts[ready_writer.fileno] = ready_writer if supervised
+                spawn_env = env&.dup || {}
+                spawn_env["ACE_SAFE_CAPTURE_READY_FD"] = ready_writer.fileno.to_s if supervised
+                args = spawn_env.empty? ? full_cmd : [spawn_env, *full_cmd]
+
+                SpawnSetup.new(
+                  args: args,
+                  opts: opts,
+                  supervised: supervised,
+                  ready_reader: ready_reader,
+                  ready_writer: ready_writer
+                )
+              end
+
+              # Pull whatever partial output a reader thread captured, then close
+              # the stream and stop the reader (deadline cleanup path).
+              def drain_reader(reader, io)
+                partial = reader.value
+                io.close unless io.closed?
+                reader.join(1)
+                reader.kill if reader.alive?
+                partial.to_s
+              end
 
               def safe_read_stream(io)
                 io.read
@@ -117,6 +229,10 @@ module Ace
                 normalized_timeout
               rescue ArgumentError, TypeError
                 raise ArgumentError, "timeout must be a positive numeric value, got #{value.inspect}"
+              end
+
+              def elapsed_since(started_at)
+                Process.clock_gettime(Process::CLOCK_MONOTONIC) - started_at
               end
 
               def supervisor_command(command)
