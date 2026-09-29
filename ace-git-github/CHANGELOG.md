@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-09-28
+
+### Added
+- PR lifecycle mutations with atomic provider-side expected-head enforcement:
+  exact-match lookup (`find_open_pull_requests`), idempotent draft-create
+  reconciliation, expected-head merge via the gh match-head-commit flag,
+  head-verified update/ready.
+- Cross-repository PR provenance: head repository URL resolved from gh
+  evidence and returned in normalized PR evidence.
+- Classified lifecycle failures (conflicting matches, expected-head conflict,
+  unknown create outcome with reconciliation identity).
+
+### Changed
+- `gh pr view`/`list` JSON field sets extended with head-repository fields.
+
+
+### Added
+- PR lifecycle mutations with atomic provider-side expected-head enforcement:
+  exact-match lookup (`find_open_pull_requests`), idempotent draft-create
+  reconciliation, expected-head merge via the gh match-head-commit flag,
+  head-verified update/ready.
+- Cross-repository PR provenance: head repository URL resolved from gh
+  evidence and returned in normalized PR evidence.
+- Classified lifecycle failures (conflicting matches, expected-head conflict,
+  unknown create outcome with reconciliation identity).
+
+### Changed
+- `gh pr view`/`list` JSON field sets extended with head-repository fields.
+
+
 ## [0.1.2] - 2026-09-26
 
 ### Added

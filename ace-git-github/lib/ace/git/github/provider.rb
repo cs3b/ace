@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "json"
+require "uri"
 
 module Ace
   module Git
@@ -25,10 +26,13 @@ module Ace
           "skipping" => :skipped
         }.freeze
 
-        PR_FIELDS = "number,state,isDraft,title,author,headRefName,baseRefName,url,headRefOid,mergeCommit,mergedAt"
+        PR_FIELDS = "number,state,isDraft,title,author,headRefName,baseRefName,url,headRefOid,mergeCommit,mergedAt,headRepositoryOwner,headRepository"
         LIST_FIELDS = PrFetcher::LIST_FIELDS
         REPO_FIELDS = "nameWithOwner,defaultBranchRef,url"
         ISSUE_FIELDS = "number,title,state,author,url"
+
+        # Fields needed to match pull requests by exact base/head identity.
+        LIFECYCLE_LIST_FIELDS = "number,title,state,isDraft,author,headRefName,baseRefName,url,headRefOid,headRepositoryOwner,headRepository"
 
         class << self
           # Human-facing provider type name used in failure messages.
@@ -66,6 +70,13 @@ module Ace
           normalize_pr(data, server.name)
         end
 
+        # @return [String] HOST/OWNER/REPO for the resolved server; appended
+        #   to every data/mutation command so a `--server` selection can never
+        #   be silently retargeted to the checkout's repository.
+        def repo_target
+          @repo_target ||= Ace::Git::Atoms::ServerUrl.normalize(server.url)
+        end
+
         # @return [ProviderPullRequest, nil] evidence for the branch's PR
         def pull_request_for_branch(branch:)
           candidates = recent_pull_requests(limit: 30)
@@ -77,13 +88,13 @@ module Ace
 
         # @return [String] unified diff text for the pull request
         def pull_request_diff(number:)
-          result = PrFetcher.fetch_diff(number.to_s, timeout: timeout, runner: runner)
+          result = PrFetcher.fetch_diff(number.to_s, timeout: timeout, runner: runner, repo: repo_target)
           result[:diff]
         end
 
         # @return [Array<ProviderPullRequest>] recent PRs, newest first
         def recent_pull_requests(limit:)
-          result = PrFetcher.fetch_all_prs(limit: limit, timeout: timeout, runner: runner)
+          result = PrFetcher.fetch_all_prs(limit: limit, timeout: timeout, runner: runner, repo: repo_target)
           result[:prs]
             .map { |pr| normalize_pr(pr, server.name) }
             .sort_by { |pr| -pr.number.to_i }
@@ -112,7 +123,8 @@ module Ace
 
         # @return [ProviderRepository] normalized repository evidence
         def repository
-          output = gh_json(["repo", "view", "--json", REPO_FIELDS])
+          # `gh repo view` rejects `--repo`; the repository is positional.
+          output = gh_json(["repo", "view", repo_target, "--json", REPO_FIELDS], bind_repo: false)
           Ace::Git::ProviderRepository.new(
             server_name: server.name,
             full_name: output["nameWithOwner"],
@@ -121,13 +133,156 @@ module Ace
           )
         end
 
+        # ---- PR lifecycle mutations ----
+
+        # @return [Array<ProviderPullRequest>] open PRs matching the exact
+        #   base/head identity (head repository URL/ref plus base URL/ref)
+        def find_open_pull_requests(head_repository_url:, head_ref:, base_repository_url:, base_ref:)
+          require_base_on_server!(base_repository_url)
+          data = gh_json(["pr", "list", "--state", "open", "--limit", "200", "--json", LIFECYCLE_LIST_FIELDS])
+          data.filter_map { |entry| normalize_pr(entry, server.name) }
+            .select do |pr|
+              pr.head_ref == head_ref &&
+                pr.base_ref == base_ref &&
+                Ace::Git::Atoms::ServerUrl.match?(pr.head_repository_url, head_repository_url)
+            end
+        end
+
+        # Create a PR, reconciling to an exact open match first; proves the
+        # created/reconciled head against `expected_head`.
+        #
+        # @return [ProviderMutationReceipt] idempotency :created/:existing
+        def create_pull_request(head_ref:, head_repository_url:, base_ref:, expected_head:, title:, body: nil, draft: true)
+          matches = find_open_pull_requests(
+            head_repository_url: head_repository_url, head_ref: head_ref,
+            base_repository_url: server.url, base_ref: base_ref
+          )
+          if matches.size > 1
+            raise Ace::Git::ProviderConflictingMatchesError,
+              "Multiple open pull requests match #{head_repository_url}@#{head_ref} -> " \
+              "#{base_ref}: #{matches.map(&:number).join(", ")}; resolve the conflict first"
+          end
+          if matches.size == 1
+            existing = matches.first
+            return receipt(:create, verify_head!(existing, expected_head), :existing)
+          end
+
+          args = ["pr", "create", "--head", gh_head_arg(head_ref, head_repository_url), "--base", base_ref, "--title", title]
+          args += ["--body", body] if body
+          args << "--draft" if draft
+
+          result = send_mutation(args, ambiguous: true, identity: identity_text(head_repository_url, head_ref, base_ref))
+          number = result[:stdout].to_s.strip[%r{/pull/(\d+)\z}, 1]
+          unless number
+            raise Ace::Git::ProviderMalformedOutputError,
+              "gh pr create did not return a pull request URL: #{result[:stdout].to_s.strip}"
+          end
+
+          created = verify_head!(pull_request(number: number), expected_head)
+          receipt(:create, created, :created)
+        end
+
+        # @return [ProviderMutationReceipt] operation :update
+        def update_pull_request(number:, expected_head:, title: nil, body: nil)
+          verify_head!(pull_request(number: number), expected_head)
+          args = ["pr", "edit", number.to_s]
+          args += ["--title", title] if title
+          args += ["--body", body] if body
+          send_mutation(args, ambiguous: false)
+          receipt(:update, pull_request(number: number), nil)
+        end
+
+        # @return [ProviderMutationReceipt] operation :ready
+        def ready_pull_request(number:, expected_head:)
+          verify_head!(pull_request(number: number), expected_head)
+          send_mutation(["pr", "ready", number.to_s], ambiguous: false)
+          receipt(:ready, pull_request(number: number), nil)
+        end
+
+        # Merge with atomic provider-side expected-head enforcement via
+        # `gh pr merge --match-head-commit`.
+        #
+        # @return [ProviderMutationReceipt] operation :merge
+        def merge_pull_request(number:, expected_head:, method:)
+          unless %i[squash merge rebase].include?(method)
+            raise ArgumentError, "Invalid merge method #{method.inspect}"
+          end
+
+          send_mutation(
+            ["pr", "merge", number.to_s, "--#{method}", "--match-head-commit", expected_head],
+            ambiguous: false
+          )
+          receipt(:merge, pull_request(number: number), nil)
+        end
+
         private
 
         STATE_ORDER = {open: 0, merged: 1, closed: 2}.freeze
 
+        # Send one mutating `gh` command. When `ambiguous` is true (create),
+        # any transport-level failure is reported as an unknown outcome: the
+        # request may have mutated the forge, so callers must reconcile by
+        # exact identity instead of retrying blindly.
+        def send_mutation(args, ambiguous:, identity: nil)
+          result = CliExecutor.execute(args.first, (args[1..] || []) + ["--repo", repo_target], timeout: timeout, runner: runner)
+          return result if result[:success]
+
+          classify_failure(result[:stderr], context: args.join(" "))
+          result
+        rescue Ace::Git::ProviderUnreachableError => e
+          raise e unless ambiguous
+
+          raise Ace::Git::ProviderUnknownOutcomeError,
+            "PR create outcome unknown after transport failure (#{e.message}); " \
+            "reconcile by exact identity before repeating: #{identity}"
+        end
+
+        # Exact base/head identity text for reconciliation contexts.
+        def identity_text(head_repository_url, head_ref, base_ref)
+          "#{head_repository_url}@#{head_ref} -> #{server.url}@#{base_ref}"
+        end
+
+        # Refuse when the live head differs from the caller's expected head
+        # (shared guard from Providers::Base).
+        def verify_head!(pr, expected_head)
+          verify_expected_head!(pr, expected_head)
+        end
+
+        # `gh` head selector: "user:branch" for fork sources, plain ref for
+        # the base repository. The owner comes from the declared URL only.
+        def gh_head_arg(head_ref, head_repository_url)
+          return head_ref if head_repository_url.nil? ||
+            Ace::Git::Atoms::ServerUrl.match?(head_repository_url, server.url)
+
+          path = Ace::Git::Atoms::ServerUrl.normalize(head_repository_url).split("/", 2)[1]
+          owner = path.to_s.split("/").first
+          raise ArgumentError, "Cannot derive fork owner from #{head_repository_url}" if owner.nil? || owner.empty?
+
+          "#{owner}:#{head_ref}"
+        end
+
+        def require_base_on_server!(base_repository_url)
+          return if Ace::Git::Atoms::ServerUrl.match?(base_repository_url, server.url)
+
+          raise Ace::Git::ProviderUnsupportedCapabilityError,
+            "GitHub provider operates on the resolved server repository (#{server.url}); " \
+            "refusing base repository #{base_repository_url}"
+        end
+
+        def receipt(operation, pull_request, idempotency)
+          Ace::Git::ProviderMutationReceipt.new(
+            server_name: server.name, operation: operation,
+            pull_request: pull_request, idempotency: idempotency
+          )
+        end
+
         # Run a `gh` command expecting JSON output; classify all failures.
-        def gh_json(args)
-          result = CliExecutor.execute(args.first, args[1..] || [], timeout: timeout, runner: runner)
+        # Every command is bound to the resolved server repository via
+        # `--repo`, except commands that take the repository positionally.
+        def gh_json(args, bind_repo: true)
+          argv = args[1..] || []
+          argv += ["--repo", repo_target] if bind_repo
+          result = CliExecutor.execute(args.first, argv, timeout: timeout, runner: runner)
           unless result[:success]
             classify_failure(result[:stderr], context: args.join(" "))
           end
@@ -152,8 +307,29 @@ module Ace
             author: normalize_author(data["author"]),
             url: data["url"],
             draft: data["isDraft"],
-            merged_at: merged_at_of(data)
+            merged_at: merged_at_of(data),
+            head_repository_url: head_repository_url_of(data),
+            base_repository_url: server.url,
+            merge_commit_sha: data.dig("mergeCommit", "oid")
           )
+        end
+
+        # Source repository URL for the PR head: the fork's owner/name against
+        # the server host for cross-repository PRs, the configured repository
+        # otherwise. Never inferred beyond what `gh` reported.
+        def head_repository_url_of(data)
+          owner = data.dig("headRepositoryOwner", "login")
+          name = data.dig("headRepository", "name")
+          return server.url if owner.nil? || name.nil?
+
+          "#{server_host_root}/#{owner}/#{name}"
+        end
+
+        def server_host_root
+          @server_host_root ||= begin
+            uri = URI.parse(server.url.to_s)
+            "#{uri.scheme || "https"}://#{uri.host}#{":#{uri.port}" if uri.port && uri.port != uri.default_port}"
+          end
         end
 
         def merged_at_of(data)
@@ -184,6 +360,9 @@ module Ace
             raise Ace::Git::ProviderObjectNotFoundError, "Object not found: #{context}: #{message}"
           elsif message.match?(PrFetcher::AUTH_ERROR_PATTERN)
             raise Ace::Git::ProviderAuthenticationError, "Not authenticated with GitHub: #{message}"
+          elsif message.match?(/match[- ]head[- ]commit|head commit/i)
+            raise Ace::Git::ProviderExpectedHeadConflictError,
+              "GitHub refused the merge: pull request head does not match --match-head-commit (#{context}): #{message}"
           else
             raise Ace::Git::ProviderUnreachableError, "GitHub request failed (#{context}): #{message}"
           end

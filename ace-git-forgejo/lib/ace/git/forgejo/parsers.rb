@@ -29,7 +29,11 @@ module Ace
         #   By lab-builder - Merged - +252 -8
         #   From `owner/repo:head-branch` into `main`
         #
-        # @return [Hash, nil] {number:, title:, author:, state:, head_ref:, base_ref:}
+        # The `From` segment carries an optional `owner/repo:` prefix before
+        # the head branch; it is present only for fork (cross-repository)
+        # pull requests.
+        #
+        # @return [Hash, nil] {number:, title:, author:, state:, head_ref:, base_ref:, head_repository:}
         def self.parse_pr_view(text)
           lines = text.to_s.lines.map { |line| clean(line) }.reject(&:empty?)
           return nil if lines.empty?
@@ -44,7 +48,8 @@ module Ace
             author: nil,
             state: nil,
             head_ref: nil,
-            base_ref: nil
+            base_ref: nil,
+            head_repository: nil
           }
 
           byline = lines[1].to_s
@@ -54,9 +59,12 @@ module Ace
           end
 
           refs = lines.find { |line| line.start_with?("From ") }
-          if (match = refs.to_s.match(/\AFrom\s+`(?:[^`:]+:)?(?<head>[^`]+)`\s+into\s+`(?<base>[^`]+)`\z/))
+          if (match = refs.to_s.match(
+            /\AFrom\s+`(?:(?<repo>[^`:]+):)?(?<head>[^`]+)`\s+into\s+`(?<base>[^`]+)`\z/
+          ))
             info[:head_ref] = match[:head]
             info[:base_ref] = match[:base]
+            info[:head_repository] = match[:repo]
           end
 
           info

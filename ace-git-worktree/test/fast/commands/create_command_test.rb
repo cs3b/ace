@@ -376,154 +376,197 @@ class CreateCommandTest < Minitest::Test
     end
   end
 
-  # PR worktree creation tests using the GitHub provider PrFetcher
-  def test_run_with_pr_argument_success
-    # Mock gh CLI availability
-    Ace::Git::Github::PrFetcher.stub(:installed?, true) do
-      Ace::Git::Github::PrFetcher.stub(:authenticated?, true) do
-        # Mock PR metadata fetch
-        mock_metadata_result = {
-          success: true,
-          metadata: {
-            "number" => 26,
-            "title" => "Add authentication feature",
-            "headRefName" => "feature/auth",
-            "baseRefName" => "main",
-            "isCrossRepository" => false,
-            "headRepositoryOwner" => {"login" => "owner"}
-          }
-        }
-        Ace::Git::Github::PrFetcher.stub(:fetch_metadata, mock_metadata_result) do
-          # Mock worktree creation
-          mock_worktree_manager = Minitest::Mock.new
-          mock_worktree_manager.expect(:create_pr, {
-            success: true,
-            pr_number: 26,
-            pr_title: "Add authentication feature",
-            worktree_path: "/path/to/worktree",
-            branch: "pr-26",
-            tracking: "origin/feature/auth",
-            directory_name: "ace-pr-26"
-          }, [Integer, Hash, Hash])
+  # ---- PR worktree creation tests (forge-neutral provider pipeline) ----
 
-          command = Ace::Git::Worktree::Commands::CreateCommand.new(manager: mock_worktree_manager)
-          result = command.run(["--pr", "26"])
+  def pr_evidence(number: 26, title: "Add authentication feature", head_ref: "feature/auth",
+    base_ref: "main", head_repo: "https://forge.example.com/o/r", base_repo: "https://forge.example.com/o/r")
+    Ace::Git::ProviderPullRequest.new(
+      server_name: "forgejo-lab", number: number, title: title, state: :open,
+      head_ref: head_ref, base_ref: base_ref, head_sha: "a" * 40, author: "dev",
+      url: "#{base_repo}/pull/#{number}", draft: true, merged_at: nil,
+      head_repository_url: head_repo, base_repository_url: base_repo, merge_commit_sha: nil
+    )
+  end
 
-          assert_equal 0, result
-          mock_worktree_manager.verify
-        end
+  def successful_checkout
+    {success: true, local_ref: ("a" * 40), remote_tracking: nil, sha: "a" * 40, error: nil}
+  end
+
+  def stub_pr_pipeline(evidence, checkout: successful_checkout, resolve_error: nil, selection: nil)
+    fake_resolver = Object.new
+    fake_resolver.define_singleton_method(:resolve) do |number|
+      raise resolve_error if resolve_error
+
+      {server: nil, evidence: evidence}
+    end
+    selected_kwargs = nil
+    fake_resolver.define_singleton_method(:last_selection) { selected_kwargs }
+
+    fake_preparer = Object.new
+    fake_preparer.define_singleton_method(:prepare) { |_evidence| checkout }
+
+    resolver_class = Ace::Git::Worktree::Molecules::PullRequestEvidenceResolver
+    preparer_class = Ace::Git::Worktree::Molecules::PullRequestCheckoutPreparer
+
+    resolver_class.stub(:new, lambda { |**kwargs|
+      selected_kwargs = kwargs
+      fake_resolver
+    }) do
+      preparer_class.stub(:new, ->(**_kw) { fake_preparer }) do
+        yield fake_resolver
       end
     end
+  end
+
+  def test_run_with_pr_argument_success
+    evidence = pr_evidence
+    mock_worktree_manager = Minitest::Mock.new
+    mock_worktree_manager.expect(:create_pr, {
+      success: true,
+      pr_number: 26,
+      pr_title: "Add authentication feature",
+      worktree_path: "/path/to/worktree",
+      branch: "pr-26",
+      tracking: nil,
+      directory_name: "ace-pr-26"
+    }, [evidence, successful_checkout, Hash])
+
+    command = Ace::Git::Worktree::Commands::CreateCommand.new(manager: mock_worktree_manager)
+
+    stub_pr_pipeline(evidence) do
+      output = capture_io do
+        result = command.run(["--pr", "26"])
+        assert_equal 0, result
+      end.first
+
+      assert_match(/Source: #{Regexp.escape("https://forge.example.com/o/r@feature\/auth")}/, output)
+      assert_match(/head aaaaaaaa/, output)
+    end
+    mock_worktree_manager.verify
+  end
+
+  def test_run_with_pr_passes_server_selection_to_resolver
+    evidence = pr_evidence
+    mock_worktree_manager = Minitest::Mock.new
+    mock_worktree_manager.expect(:create_pr, {success: true, pr_number: 26}, [evidence, successful_checkout, Hash])
+    command = Ace::Git::Worktree::Commands::CreateCommand.new(manager: mock_worktree_manager)
+
+    stub_pr_pipeline(evidence) do |resolver|
+      capture_io do
+        command.run(["--pr", "26", "--server", "forgejo-lab"])
+      end
+      assert_equal "forgejo-lab", resolver.last_selection[:server_name]
+      refute resolver.last_selection[:use_default]
+    end
+    mock_worktree_manager.verify
   end
 
   def test_run_with_pr_fork_warning
-    # Mock gh CLI availability
-    Ace::Git::Github::PrFetcher.stub(:installed?, true) do
-      Ace::Git::Github::PrFetcher.stub(:authenticated?, true) do
-        # Mock PR metadata for a fork
-        mock_metadata_result = {
-          success: true,
-          metadata: {
-            "number" => 42,
-            "title" => "Fork contribution",
-            "headRefName" => "fix/issue",
-            "baseRefName" => "main",
-            "isCrossRepository" => true,
-            "headRepositoryOwner" => {"login" => "contributor"}
-          }
-        }
-        Ace::Git::Github::PrFetcher.stub(:fetch_metadata, mock_metadata_result) do
-          mock_worktree_manager = Minitest::Mock.new
-          mock_worktree_manager.expect(:create_pr, {
-            success: true,
-            pr_number: 42,
-            pr_title: "Fork contribution",
-            worktree_path: "/path/to/worktree",
-            branch: "pr-42",
-            tracking: "origin/fix/issue",
-            directory_name: "ace-pr-42"
-          }, [Integer, Hash, Hash])
+    evidence = pr_evidence(
+      number: 42, title: "Fork contribution", head_ref: "fix/issue",
+      head_repo: "https://forge.example.com/contributor/ace"
+    )
+    mock_worktree_manager = Minitest::Mock.new
+    mock_worktree_manager.expect(:create_pr, {
+      success: true, pr_number: 42, pr_title: "Fork contribution",
+      worktree_path: "/path/to/worktree", branch: "pr-42", directory_name: "ace-pr-42"
+    }, [evidence, successful_checkout, Hash])
 
-          command = Ace::Git::Worktree::Commands::CreateCommand.new(manager: mock_worktree_manager)
-          # Capture output to verify fork warning
-          output = capture_io do
-            result = command.run(["--pr", "42"])
-            assert_equal 0, result
-          end.first
+    command = Ace::Git::Worktree::Commands::CreateCommand.new(manager: mock_worktree_manager)
 
-          assert_match(/fork/, output.downcase)
-          assert_match(/contributor/, output)
-          mock_worktree_manager.verify
-        end
-      end
+    stub_pr_pipeline(evidence) do
+      output = capture_io do
+        result = command.run(["--pr", "42"])
+        assert_equal 0, result
+      end.first
+
+      assert_match(/fork/, output.downcase)
+      assert_match(/contributor\/ace/, output)
     end
+    mock_worktree_manager.verify
   end
 
   def test_run_with_pr_not_found_error
-    # Mock gh CLI availability
-    Ace::Git::Github::PrFetcher.stub(:installed?, true) do
-      Ace::Git::Github::PrFetcher.stub(:authenticated?, true) do
-        # Mock PR not found error
-        Ace::Git::Github::PrFetcher.stub(:fetch_metadata, ->(id, **_opts) {
-          raise Ace::Git::ProviderObjectNotFoundError, "PR not found: #{id}"
-        }) do
-          output = capture_io do
-            result = @command.run(["--pr", "99999"])
-            assert_equal 1, result
-          end.first
+    command = Ace::Git::Worktree::Commands::CreateCommand.new
 
-          assert_match(/PR not found/, output)
-          assert_match(/Suggestions/, output)
-        end
-      end
+    stub_pr_pipeline(nil, resolve_error: Ace::Git::ProviderObjectNotFoundError.new("PR not found: 99999")) do
+      output = capture_io do
+        result = command.run(["--pr", "99999"])
+        assert_equal 1, result
+      end.first
+
+      assert_match(/PR not found/, output)
     end
   end
 
   def test_run_with_pr_auth_error
-    # Mock gh CLI availability
-    Ace::Git::Github::PrFetcher.stub(:installed?, true) do
-      Ace::Git::Github::PrFetcher.stub(:authenticated?, true) do
-        # Mock auth error during fetch
-        Ace::Git::Github::PrFetcher.stub(:fetch_metadata, ->(*_args) {
-          raise Ace::Git::ProviderAuthenticationError, "Not authenticated with GitHub"
-        }) do
-          output = capture_io do
-            result = @command.run(["--pr", "26"])
-            assert_equal 1, result
-          end.first
+    command = Ace::Git::Worktree::Commands::CreateCommand.new
 
-          assert_match(/Not authenticated/, output)
-          assert_match(/gh auth status/, output)
-        end
-      end
-    end
-  end
-
-  def test_run_with_pr_gh_not_installed
-    # Mock gh CLI not installed
-    Ace::Git::Github::PrFetcher.stub(:installed?, false) do
+    stub_pr_pipeline(nil, resolve_error: Ace::Git::ProviderAuthenticationError.new("Not authenticated with forge")) do
       output = capture_io do
-        result = @command.run(["--pr", "26"])
+        result = command.run(["--pr", "26"])
         assert_equal 1, result
       end.first
 
-      assert_match(/gh CLI is required/, output)
+      assert_match(/Not authenticated/, output)
     end
   end
 
-  def test_run_with_pr_not_authenticated
-    # Mock gh CLI installed but not authenticated
-    Ace::Git::Github::PrFetcher.stub(:installed?, true) do
-      Ace::Git::Github::PrFetcher.stub(:authenticated?, false) do
-        output = capture_io do
-          result = @command.run(["--pr", "26"])
-          assert_equal 1, result
-        end.first
+  def test_run_with_pr_provider_unavailable
+    command = Ace::Git::Worktree::Commands::CreateCommand.new
 
-        assert_match(/not authenticated/, output.downcase)
-        assert_match(/gh auth login/, output)
+    stub_pr_pipeline(nil, resolve_error: Ace::Git::UnknownProviderError.new("No provider registered for type :fake")) do
+      output = capture_io do
+        result = command.run(["--pr", "26"])
+        assert_equal 1, result
+      end.first
+
+      assert_match(/No provider registered/, output)
+    end
+  end
+
+  def test_run_with_pr_unverified_checkout_fails_without_mutation
+    evidence = pr_evidence
+    command = Ace::Git::Worktree::Commands::CreateCommand.new
+
+    stub_pr_pipeline(evidence, checkout: {success: false, error: "Fetched head does not match PR evidence head"}) do
+      output = capture_io do
+        result = command.run(["--pr", "26"])
+        assert_equal 1, result
+      end.first
+
+      assert_match(/does not match PR evidence head/, output)
+    end
+  end
+
+  def test_run_with_pr_dry_run_skips_checkout_and_mutation
+    evidence = pr_evidence
+    mock_worktree_manager = Minitest::Mock.new
+    mock_worktree_manager.expect(:create_pr, {
+      success: true, pr_number: 26, pr_title: "Add authentication feature",
+      would_create: {worktree_path: "/path/ace-pr-26"}
+    }, [evidence, nil, Hash])
+
+    command = Ace::Git::Worktree::Commands::CreateCommand.new(manager: mock_worktree_manager)
+    preparer_called = false
+
+    fake_resolver = Object.new
+    fake_resolver.define_singleton_method(:resolve) { |_num| {server: nil, evidence: evidence} }
+    fake_preparer = Object.new
+    fake_preparer.define_singleton_method(:prepare) { |_e| preparer_called = true }
+
+    Ace::Git::Worktree::Molecules::PullRequestEvidenceResolver.stub(:new, ->(**_kw) { fake_resolver }) do
+      Ace::Git::Worktree::Molecules::PullRequestCheckoutPreparer.stub(:new, ->(**_kw) { fake_preparer }) do
+        output = capture_io do
+          result = command.run(["--pr", "26", "--dry-run"])
+          assert_equal 0, result
+        end.first
+        assert_match(/Dry run/, output)
       end
     end
+
+    refute preparer_called, "dry run must not fetch or verify the source ref"
+    mock_worktree_manager.verify
   end
 
   def test_run_with_invalid_pr_number
@@ -629,54 +672,34 @@ class CreateCommandTest < Minitest::Test
     original_tmux = ENV["TMUX"]
     ENV.delete("TMUX")
 
-    # Mock gh CLI availability and metadata
-    Ace::Git::Github::PrFetcher.stub(:installed?, true) do
-      Ace::Git::Github::PrFetcher.stub(:authenticated?, true) do
-        mock_metadata_result = {
-          success: true,
-          metadata: {
-            "number" => 26,
-            "title" => "Add authentication feature",
-            "headRefName" => "feature/auth",
-            "baseRefName" => "main",
-            "isCrossRepository" => false,
-            "headRepositoryOwner" => {"login" => "owner"}
-          }
-        }
-        Ace::Git::Github::PrFetcher.stub(:fetch_metadata, mock_metadata_result) do
-          # Mock PR worktree creation
-          mock_worktree_manager = Minitest::Mock.new
-          mock_worktree_manager.expect(:create_pr, {
-            success: true,
-            pr_number: 26,
-            pr_title: "Add authentication feature",
-            worktree_path: "/path/to/worktree",
-            branch: "pr-26",
-            tracking: "origin/feature/auth",
-            directory_name: "ace-pr-26"
-          }, [Integer, Hash, Hash])
+    evidence = pr_evidence
+    mock_worktree_manager = Minitest::Mock.new
+    mock_worktree_manager.expect(:create_pr, {
+      success: true, pr_number: 26, pr_title: "Add authentication feature",
+      worktree_path: "/path/to/worktree", branch: "pr-26",
+      tracking: nil, directory_name: "ace-pr-26"
+    }, [evidence, successful_checkout, Hash])
 
-          command = Ace::Git::Worktree::Commands::CreateCommand.new(manager: mock_worktree_manager)
+    command = Ace::Git::Worktree::Commands::CreateCommand.new(manager: mock_worktree_manager)
 
-          exec_called_with = nil
-          mock_exec = ->(*args) { exec_called_with = args }
+    exec_called_with = nil
+    mock_exec = ->(*args) { exec_called_with = args }
 
-          command.stub(:tmux_enabled?, true) do
-            command.stub(:ace_tmux_available?, true) do
-              Kernel.stub(:exec, mock_exec) do
-                capture_io do
-                  result = command.run(["--pr", "26"])
-                  assert_equal 0, result
-                end
-              end
+    stub_pr_pipeline(evidence) do
+      command.stub(:tmux_enabled?, true) do
+        command.stub(:ace_tmux_available?, true) do
+          Kernel.stub(:exec, mock_exec) do
+            capture_io do
+              result = command.run(["--pr", "26"])
+              assert_equal 0, result
             end
           end
-
-          assert_equal ["ace-tmux", "start", "--root", "/path/to/worktree"], exec_called_with
-          mock_worktree_manager.verify
         end
       end
     end
+
+    assert_equal ["ace-tmux", "start", "--root", "/path/to/worktree"], exec_called_with
+    mock_worktree_manager.verify
   ensure
     if original_tmux
       ENV["TMUX"] = original_tmux
@@ -732,54 +755,34 @@ class CreateCommandTest < Minitest::Test
     original_tmux = ENV["TMUX"]
     ENV["TMUX"] = "/tmp/tmux-1000,12345,0"
 
-    # Mock gh CLI availability and metadata
-    Ace::Git::Github::PrFetcher.stub(:installed?, true) do
-      Ace::Git::Github::PrFetcher.stub(:authenticated?, true) do
-        mock_metadata_result = {
-          success: true,
-          metadata: {
-            "number" => 26,
-            "title" => "Add authentication feature",
-            "headRefName" => "feature/auth",
-            "baseRefName" => "main",
-            "isCrossRepository" => false,
-            "headRepositoryOwner" => {"login" => "owner"}
-          }
-        }
-        Ace::Git::Github::PrFetcher.stub(:fetch_metadata, mock_metadata_result) do
-          # Mock PR worktree creation
-          mock_worktree_manager = Minitest::Mock.new
-          mock_worktree_manager.expect(:create_pr, {
-            success: true,
-            pr_number: 26,
-            pr_title: "Add authentication feature",
-            worktree_path: "/path/to/worktree",
-            branch: "pr-26",
-            tracking: "origin/feature/auth",
-            directory_name: "ace-pr-26"
-          }, [Integer, Hash, Hash])
+    evidence = pr_evidence
+    mock_worktree_manager = Minitest::Mock.new
+    mock_worktree_manager.expect(:create_pr, {
+      success: true, pr_number: 26, pr_title: "Add authentication feature",
+      worktree_path: "/path/to/worktree", branch: "pr-26",
+      tracking: nil, directory_name: "ace-pr-26"
+    }, [evidence, successful_checkout, Hash])
 
-          command = Ace::Git::Worktree::Commands::CreateCommand.new(manager: mock_worktree_manager)
+    command = Ace::Git::Worktree::Commands::CreateCommand.new(manager: mock_worktree_manager)
 
-          exec_called_with = nil
-          mock_exec = ->(*args) { exec_called_with = args }
+    exec_called_with = nil
+    mock_exec = ->(*args) { exec_called_with = args }
 
-          command.stub(:tmux_enabled?, true) do
-            command.stub(:ace_tmux_available?, true) do
-              Kernel.stub(:exec, mock_exec) do
-                capture_io do
-                  result = command.run(["--pr", "26"])
-                  assert_equal 0, result
-                end
-              end
+    stub_pr_pipeline(evidence) do
+      command.stub(:tmux_enabled?, true) do
+        command.stub(:ace_tmux_available?, true) do
+          Kernel.stub(:exec, mock_exec) do
+            capture_io do
+              result = command.run(["--pr", "26"])
+              assert_equal 0, result
             end
           end
-
-          assert_equal ["ace-tmux", "window", "--root", "/path/to/worktree"], exec_called_with
-          mock_worktree_manager.verify
         end
       end
     end
+
+    assert_equal ["ace-tmux", "window", "--root", "/path/to/worktree"], exec_called_with
+    mock_worktree_manager.verify
   ensure
     if original_tmux
       ENV["TMUX"] = original_tmux

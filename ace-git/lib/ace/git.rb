@@ -120,7 +120,7 @@ module Ace
       normalized = normalize_keys(git_section)
 
       # Copy top-level settings
-      %w[default_branch remote verbose timeout network_timeout servers].each do |key|
+      %w[default_branch remote verbose timeout network_timeout servers providers].each do |key|
         config[key] = normalized[key] if normalized.key?(key)
       end
 
@@ -195,6 +195,7 @@ end
 # Require ATOM architecture components
 require_relative "git/atoms/command_executor"
 require_relative "git/atoms/server_url"
+require_relative "git/atoms/pr_reference"
 require_relative "git/atoms/pr_identifier"
 require_relative "git/atoms/pattern_filter"
 require_relative "git/atoms/diff_parser"
@@ -220,6 +221,7 @@ require_relative "git/molecules/git_status_fetcher"
 
 require_relative "git/organisms/diff_orchestrator"
 require_relative "git/organisms/repo_status_loader"
+require_relative "git/organisms/pull_request_lifecycle"
 require_relative "git/resolved_server"
 require_relative "git/server_registry"
 require_relative "git/providers/base"

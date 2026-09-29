@@ -10,7 +10,7 @@ class GithubProviderContractTest < AceGitGithubTestCase
 
   SERVER = Ace::Git::ResolvedServer.new(name: "forge-server", provider: :github, url: "https://github.example.com/owner/repo")
 
-  PR_FIELDS = "number,state,isDraft,title,author,headRefName,baseRefName,url,headRefOid,mergeCommit,mergedAt"
+  PR_FIELDS = "number,state,isDraft,title,author,headRefName,baseRefName,url,headRefOid,mergeCommit,mergedAt,headRepositoryOwner,headRepository"
   LIST_FIELDS = Ace::Git::Github::PrFetcher::LIST_FIELDS
 
   def build_provider(runner)
@@ -21,19 +21,19 @@ class GithubProviderContractTest < AceGitGithubTestCase
     @ok_runner ||= scripted_runner(
       "gh --version" => {success: true, stdout: "gh version 2.63.0", stderr: "", exit_code: 0},
       "gh auth status" => {success: true, stdout: "", stderr: "ok", exit_code: 0},
-      "gh pr view 25 --json #{PR_FIELDS}" => {success: true, stdout: pr25_json.to_json, stderr: "", exit_code: 0},
-      "gh pr list --state all --limit 30 --json #{LIST_FIELDS}" => {
+      "gh pr view 25 --json #{PR_FIELDS} --repo github.example.com/owner/repo" => {success: true, stdout: pr25_json.to_json, stderr: "", exit_code: 0},
+      "gh pr list --state all --limit 30 --json #{LIST_FIELDS} --repo github.example.com/owner/repo" => {
         success: true, stdout: [pr25_list_json, pr31_json].to_json, stderr: "", exit_code: 0
       },
-      "gh pr diff 25" => {success: true, stdout: "diff --git a/lib/x.rb b/lib/x.rb\n+new line\n", stderr: "", exit_code: 0},
-      "gh issue view 9 --json number,title,state,author,url" => {
+      "gh pr diff 25 --repo github.example.com/owner/repo" => {success: true, stdout: "diff --git a/lib/x.rb b/lib/x.rb\n+new line\n", stderr: "", exit_code: 0},
+      "gh issue view 9 --json number,title,state,author,url --repo github.example.com/owner/repo" => {
         success: true, stdout: issue9_json.to_json, stderr: "", exit_code: 0
       },
-      "gh pr checks fc14c43d3660ac6c133959a6dec29603413f0e8a --json name,state,bucket" => {
+      "gh pr checks fc14c43d3660ac6c133959a6dec29603413f0e8a --json name,state,bucket --repo github.example.com/owner/repo" => {
         success: true, stdout: [{"name" => "test-suite", "state" => "SUCCESS", "bucket" => "pass"}].to_json,
         stderr: "", exit_code: 0
       },
-      "gh repo view --json nameWithOwner,defaultBranchRef,url" => {
+      "gh repo view github.example.com/owner/repo --json nameWithOwner,defaultBranchRef,url" => {
         success: true, stdout: {
           "nameWithOwner" => "owner/repo",
           "defaultBranchRef" => {"name" => "main"},
@@ -58,7 +58,7 @@ class GithubProviderContractTest < AceGitGithubTestCase
     scripted_runner(
       "gh --version" => {success: true, stdout: "gh version 2.63.0", stderr: "", exit_code: 0},
       "gh auth status" => {success: true, stdout: "", stderr: "ok", exit_code: 0},
-      "gh pr view 999 --json #{PR_FIELDS}" => ["Could not resolve to a PullRequest with the number 999", 1]
+      "gh pr view 999 --json #{PR_FIELDS} --repo github.example.com/owner/repo" => ["Could not resolve to a PullRequest with the number 999", 1]
     )
   end
 
@@ -66,7 +66,7 @@ class GithubProviderContractTest < AceGitGithubTestCase
     scripted_runner(
       "gh --version" => {success: true, stdout: "gh version 2.63.0", stderr: "", exit_code: 0},
       "gh auth status" => {success: true, stdout: "", stderr: "ok", exit_code: 0},
-      "gh pr view 25 --json #{PR_FIELDS}" => {success: true, stdout: "definitely not { json", stderr: "", exit_code: 0}
+      "gh pr view 25 --json #{PR_FIELDS} --repo github.example.com/owner/repo" => {success: true, stdout: "definitely not { json", stderr: "", exit_code: 0}
     )
   end
 
@@ -74,7 +74,7 @@ class GithubProviderContractTest < AceGitGithubTestCase
     scripted_runner(
       "gh --version" => {success: true, stdout: "gh version 2.63.0", stderr: "", exit_code: 0},
       "gh auth status" => {success: true, stdout: "", stderr: "ok", exit_code: 0},
-      "gh pr view 25 --json #{PR_FIELDS}" => ["network unreachable: cannot reach api.github.com", 1]
+      "gh pr view 25 --json #{PR_FIELDS} --repo github.example.com/owner/repo" => ["network unreachable: cannot reach api.github.com", 1]
     )
   end
 

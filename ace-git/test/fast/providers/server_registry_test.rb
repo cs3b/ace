@@ -179,5 +179,67 @@ module Providers
         end
       end
     end
+
+    def test_resolve_for_explicit_server_name
+      with_servers([
+        {"name" => "github-public", "provider" => "github", "url" => "https://git.example.com/owner/repo"},
+        {"name" => "forgejo-lab", "provider" => "forgejo", "url" => "https://forgejo.example.com/owner/repo"}
+      ]) do
+        resolved = Ace::Git::ServerRegistry.resolve_for(server_name: "forgejo-lab")
+        assert_equal "forgejo-lab", resolved.name
+      end
+    end
+
+    def test_resolve_for_default_server
+      with_servers([
+        {"name" => "forgejo-lab", "provider" => "forgejo", "url" => "https://forgejo.example.com/owner/repo", "default" => true}
+      ]) do
+        resolved = Ace::Git::ServerRegistry.resolve_for(use_default: true)
+        assert_equal "forgejo-lab", resolved.name
+      end
+    end
+
+    def test_resolve_for_rejects_conflicting_selection
+      with_servers([
+        {"name" => "forgejo-lab", "provider" => "forgejo", "url" => "https://forgejo.example.com/owner/repo", "default" => true}
+      ]) do
+        error = assert_raises(Ace::Git::ConfigError) do
+          Ace::Git::ServerRegistry.resolve_for(server_name: "forgejo-lab", use_default: true)
+        end
+        assert_match(/mutually exclusive/, error.message)
+      end
+    end
+
+    def test_resolve_for_falls_back_to_remote_without_selection
+      in_temp_repo do
+        system("git", "remote", "add", "origin", "https://forgejo.example.com/owner/repo.git")
+        with_servers([{"name" => "forgejo-lab", "provider" => "forgejo", "url" => "https://forgejo.example.com/owner/repo"}]) do
+          resolved = Ace::Git::ServerRegistry.resolve_for
+          assert_equal "forgejo-lab", resolved.name
+        end
+      end
+    end
+
+    def test_matching_servers_matches_repository_url_exactly
+      with_servers([
+        {"name" => "forgejo-lab", "provider" => "forgejo", "url" => "https://forgejo.example.com/owner/repo"},
+        {"name" => "github-public", "provider" => "github", "url" => "https://git.example.com/other/repo"}
+      ]) do
+        matches = Ace::Git::ServerRegistry.matching_servers("https://forgejo.example.com/owner/repo.git")
+        assert_equal ["forgejo-lab"], matches.map(&:name)
+        assert_empty Ace::Git::ServerRegistry.matching_servers("https://git.example.com/owner/repo")
+      end
+    end
+
+    def test_servers_for_owner_repo_matches_repository_path_on_any_host
+      with_servers([
+        {"name" => "forgejo-lab", "provider" => "forgejo", "url" => "https://forgejo.example.com/cs3b/ace"},
+        {"name" => "github-public", "provider" => "github", "url" => "https://git.example.com/other/repo"}
+      ]) do
+        matches = Ace::Git::ServerRegistry.servers_for_owner_repo("cs3b/ace")
+        assert_equal ["forgejo-lab"], matches.map(&:name)
+        assert_empty Ace::Git::ServerRegistry.servers_for_owner_repo("other/other")
+      end
+    end
   end
 end

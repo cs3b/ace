@@ -46,13 +46,7 @@ module Ace
         # @raise [ProviderMalformedOutputError] when `fj` output is unexpected
         # @raise [ProviderUnreachableError] when the endpoint is unreachable
         def pull_request(number:)
-          view = fj(["--style", "minimal", "pr", "view", number.to_s])
-          parsed = Parsers.parse_pr_view(view) ||
-            raise(Ace::Git::ProviderMalformedOutputError,
-              "Unrecognized `fj pr view #{number}` output; update the Forgejo provider parser")
-
-          parsed[:head_sha] = head_sha_of(number)
-          normalize_pr(parsed)
+          fetch_pr(number)
         end
 
         # @return [ProviderPullRequest, nil] evidence for the branch's PR
@@ -137,6 +131,95 @@ module Ace
           )
         end
 
+        # ---- PR lifecycle mutations ----
+
+        # @return [Array<ProviderPullRequest>] open PRs matching the exact
+        #   base/head identity, with head SHA provenance
+        def find_open_pull_requests(head_repository_url:, head_ref:, base_repository_url:, base_ref:)
+          require_base_on_server!(base_repository_url)
+          listing = fj(["--style", "minimal", "pr", "search", "--state", "open"])
+          Parsers.parse_search(listing).filter_map do |entry|
+            parsed = view_pr(entry[:number])
+            next unless parsed && parsed[:state] == :open
+            next unless parsed[:head_ref] == head_ref && parsed[:base_ref] == base_ref
+            next unless Ace::Git::Atoms::ServerUrl.match?(head_repository_url_of(parsed), head_repository_url)
+
+            with_head_sha(parsed)
+          end
+        end
+
+        # Create a PR via `fj pr create`, reconciling to an exact open match
+        # first and proving the resulting head against `expected_head`.
+        # `fj` cannot create draft PRs; the receipt reports the provider's
+        # real draft state.
+        #
+        # @return [ProviderMutationReceipt] idempotency :created/:existing
+        def create_pull_request(head_ref:, head_repository_url:, base_ref:, expected_head:, title:, body: nil, draft: true)
+          # `fj pr create` operates on the checkout's repository and cannot
+          # encode an explicit fork head; refusing before any command (even
+          # lookups) beats creating the wrong PR.
+          unless Ace::Git::Atoms::ServerUrl.match?(head_repository_url, server.url)
+            raise Ace::Git::ProviderUnsupportedCapabilityError,
+              "Forgejo CLI (fj) pr create cannot target head repository " \
+              "#{head_repository_url} (resolved server repository: #{server.url}); " \
+              "run from the fork checkout or use the forge web UI"
+          end
+
+          matches = find_open_pull_requests(
+            head_repository_url: head_repository_url, head_ref: head_ref,
+            base_repository_url: server.url, base_ref: base_ref
+          )
+          if matches.size > 1
+            raise Ace::Git::ProviderConflictingMatchesError,
+              "Multiple open pull requests match #{head_repository_url}@#{head_ref} -> " \
+              "#{base_ref}: #{matches.map(&:number).join(", ")}; resolve the conflict first"
+          end
+          if matches.size == 1
+            return receipt(:create, verify_expected_head!(matches.first, expected_head), :existing)
+          end
+
+          args = ["pr", "create", title, "--head", head_ref, "--base", base_ref]
+          args += ["--body", body] if body
+          send_mutation(args, ambiguous: true, identity: identity_text(head_repository_url, head_ref, base_ref))
+
+          created = reconcile_created(
+            head_repository_url: head_repository_url, head_ref: head_ref,
+            base_ref: base_ref, expected_head: expected_head
+          )
+          receipt(:create, created, :created)
+        end
+
+        # `fj pr edit` takes one field subcommand per invocation (title|body),
+        # so multi-field updates are separate commands with final evidence
+        # fetched only after every field update succeeded.
+        #
+        # @return [ProviderMutationReceipt] operation :update
+        def update_pull_request(number:, expected_head:, title: nil, body: nil)
+          verify_expected_head!(fetch_pr(number), expected_head)
+          send_mutation(["pr", "edit", number.to_s, "title", title], ambiguous: false) if title
+          send_mutation(["pr", "edit", number.to_s, "body", body], ambiguous: false) if body
+          receipt(:update, fetch_pr(number), nil)
+        end
+
+        # `fj` offers no draft-to-ready command; classified as an unsupported
+        # capability instead of guessing at provider behavior.
+        def ready_pull_request(number:, expected_head:)
+          raise Ace::Git::ProviderUnsupportedCapabilityError,
+            "Forgejo CLI (fj) cannot mark a draft pull request ready; use the forge web UI"
+        end
+
+        # `fj pr merge` cannot enforce an expected-head precondition
+        # atomically, so merging is refused rather than racing a stale head.
+        def merge_pull_request(number:, expected_head:, method:)
+          unless %i[squash merge rebase].include?(method)
+            raise ArgumentError, "Invalid merge method #{method.inspect}"
+          end
+
+          raise Ace::Git::ProviderUnsupportedCapabilityError,
+            "Forgejo CLI (fj) pr merge cannot enforce expected-head (#{expected_head}) " \
+            "atomically; refusing unsafe merge"
+        end
+
         private
 
         # Run one `fj` command, classifying every failure with the taxonomy.
@@ -144,15 +227,95 @@ module Ace
           result = CliExecutor.execute(args, timeout: timeout, runner: runner)
           return result[:stdout] if result[:success]
 
-          message = result[:stderr].to_s
+          classify_failure(result[:stderr], context: args.join(" "))
+        end
+
+        # Send one mutating `fj` command. When `ambiguous` is true (create),
+        # any transport-level failure becomes an unknown outcome: the request
+        # may have mutated the forge, so callers must reconcile by exact
+        # identity instead of retrying blindly.
+        def send_mutation(args, ambiguous:, identity: nil)
+          result = CliExecutor.execute(args, timeout: timeout, runner: runner)
+          return result if result[:success]
+
+          classify_failure(result[:stderr], context: args.join(" "))
+        rescue Ace::Git::ProviderUnreachableError => e
+          raise e unless ambiguous
+
+          raise Ace::Git::ProviderUnknownOutcomeError,
+            "PR create outcome unknown after transport failure (#{e.message}); " \
+            "reconcile by exact identity before repeating: #{identity}"
+        end
+
+        def classify_failure(message, context:)
+          message = message.to_s
           case message
           when /not found|does not exist|no pull request|no issue/i
-            raise Ace::Git::ProviderObjectNotFoundError, "Object not found (#{args.join(" ")}): #{message}"
+            raise Ace::Git::ProviderObjectNotFoundError, "Object not found (#{context}): #{message}"
           when /access denied|unauthorized|token/i
             raise Ace::Git::ProviderAuthenticationError, "Not authenticated with Forgejo: #{message}"
           else
-            raise Ace::Git::ProviderUnreachableError, "Forgejo request failed (#{args.join(" ")}): #{message}"
+            raise Ace::Git::ProviderUnreachableError, "Forgejo request failed (#{context}): #{message}"
           end
+        end
+
+        # Fetch one PR as normalized evidence with exact head SHA.
+        def fetch_pr(number)
+          with_head_sha(view_pr(number))
+        end
+
+        # Complete a parsed PR view with its exact head SHA evidence.
+        def with_head_sha(parsed)
+          parsed[:head_sha] = head_sha_of(parsed[:number])
+          normalize_pr(parsed)
+        end
+
+        # View one PR and parse its stable minimal-style output.
+        def view_pr(number)
+          view = fj(["--style", "minimal", "pr", "view", number.to_s])
+          Parsers.parse_pr_view(view) ||
+            raise(Ace::Git::ProviderMalformedOutputError,
+              "Unrecognized `fj pr view #{number}` output; update the Forgejo provider parser")
+        end
+
+        # Re-fetch and verify the PR created by an accepted create request.
+        def reconcile_created(head_repository_url:, head_ref:, base_ref:, expected_head:)
+          matches = find_open_pull_requests(
+            head_repository_url: head_repository_url, head_ref: head_ref,
+            base_repository_url: server.url, base_ref: base_ref
+          )
+          if matches.empty?
+            raise Ace::Git::ProviderUnknownOutcomeError,
+              "PR create accepted but no open pull request matches " \
+              "#{head_repository_url}@#{head_ref} -> #{server.url}@#{base_ref}; " \
+              "reconcile by exact identity before repeating"
+          end
+          if matches.size > 1
+            raise Ace::Git::ProviderConflictingMatchesError,
+              "Multiple open pull requests match #{head_repository_url}@#{head_ref} -> " \
+              "#{base_ref}: #{matches.map(&:number).join(", ")}; resolve the conflict first"
+          end
+
+          verify_expected_head!(matches.first, expected_head)
+        end
+
+        def require_base_on_server!(base_repository_url)
+          return if Ace::Git::Atoms::ServerUrl.match?(base_repository_url, server.url)
+
+          raise Ace::Git::ProviderUnsupportedCapabilityError,
+            "Forgejo provider operates on the resolved server repository (#{server.url}); " \
+            "refusing base repository #{base_repository_url}"
+        end
+
+        def identity_text(head_repository_url, head_ref, base_ref)
+          "#{head_repository_url}@#{head_ref} -> #{server.url}@#{base_ref}"
+        end
+
+        def receipt(operation, pull_request, idempotency)
+          Ace::Git::ProviderMutationReceipt.new(
+            server_name: server.name, operation: operation,
+            pull_request: pull_request, idempotency: idempotency
+          )
         end
 
         def head_sha_of(number)
@@ -172,8 +335,28 @@ module Ace
             author: parsed[:author],
             url: pr_url(parsed[:number]),
             draft: nil,
-            merged_at: nil
+            merged_at: nil,
+            head_repository_url: head_repository_url_of(parsed),
+            base_repository_url: server.url,
+            merge_commit_sha: nil
           )
+        end
+
+        # Source repository URL for the PR head: forks are reported by the
+        # `From `owner/repo:branch`` segment and live on the same host as the
+        # base repository; canonical PRs use the configured repository.
+        def head_repository_url_of(parsed)
+          repo = parsed[:head_repository]
+          return server.url if repo.nil? || repo.empty?
+
+          "#{server_host_root}/#{repo}"
+        end
+
+        def server_host_root
+          @server_host_root ||= begin
+            uri = URI.parse(server.url.to_s)
+            "#{uri.scheme || "https"}://#{uri.host}#{":#{uri.port}" if uri.port && uri.port != uri.default_port}"
+          end
         end
 
         def normalize_search_entry(entry)
@@ -188,7 +371,10 @@ module Ace
             author: entry[:author],
             url: pr_url(entry[:number]),
             draft: nil,
-            merged_at: nil
+            merged_at: nil,
+            head_repository_url: nil,
+            base_repository_url: nil,
+            merge_commit_sha: nil
           )
         end
 

@@ -76,12 +76,18 @@ Created task worktree and branch for 081
 
 ### Scenario 2: Review a Pull Request in Its Own Worktree
 
-**Goal:** Create a dedicated workspace for PR review or patching.
+**Goal:** Create a dedicated workspace for PR review or patching, on any
+configured forge (GitHub, default Forgejo, or a named Forgejo).
 
 **Commands:**
 
 ```bash
-ace-git-worktree create --pr 26
+# Preview provenance first (no mutation): source/base repositories, exact head
+ace-git-worktree create --pr 26 --server forgejo-lab --dry-run
+
+# Create the worktree; the declared source ref is fetched and its SHA is
+# verified against the PR evidence before anything is created
+ace-git-worktree create --pr 26 --server forgejo-lab
 ace-git-worktree list
 ```
 
@@ -187,6 +193,8 @@ ace-git-worktree create --task 081 --dry-run
 
 * `--task` - Task ID for a task-aware worktree
 * `--pr`, `--pull-request` - PR number for a PR-aware worktree
+* `--server <name>` - Named configured forge server for PR and task-PR operations
+* `--default-server` - Use the configured default forge server
 * `--from`, `-b` - Create from a specific local or remote branch
 * `--path` - Override the destination worktree path
 * `--source` - Override the git ref used as the start point
@@ -195,7 +203,8 @@ ace-git-worktree create --task 081 --dry-run
 * `--no-commit` - Skip committing task metadata changes
 * `--no-push` - Skip pushing task changes
 * `--no-upstream` - Skip pushing the new branch with upstream tracking
-* `--no-pr` - Skip automatic draft-PR creation when enabled
+* `--no-pr` - Skip automatic draft-PR creation; keeps task creation fully
+  local and provider-free
 * `--push-remote` - Override the remote used for task-related pushes
 * `--no-auto-navigate` - Stay in the current directory after creation
 * `--commit-message` - Use a custom commit message for task metadata updates
@@ -294,6 +303,42 @@ ace-git-worktree prune --cleanup-directories
 * `-q`, `--quiet` - Suppress non-essential output
 * `-v`, `--verbose` - Show verbose output
 * `-d`, `--debug` - Show debug output
+
+### `ace-git-worktree cleanup`
+
+Build a complete, deterministic, report-only cleanup inventory for merged
+worktrees and refs. Local ancestry is the first safe proof; provider PR
+evidence (from the selected forge server) proves candidates whose local
+ancestry is unproven. Unavailable or failed provider proof is never relabeled
+as merged.
+
+```bash
+ace-git-worktree cleanup --target main
+ace-git-worktree cleanup --target main --format json
+ace-git-worktree cleanup --target main --server forgejo-lab
+ace-git-worktree cleanup --target main --offline
+```
+
+**Options:**
+
+* `--target <ref>` - Target ref for ancestry proof (required)
+* `--remote <name>` - Local Git remote name (default: `origin`); never forge selection
+* `--server <name>` - Named configured forge server for PR proof
+* `--default-server` - Use the configured default forge server
+* `--offline` - Skip remote refresh and provider proof
+* `--format <type>` - Output format: `table` (default), `json`
+* `--apply` - Apply a reviewed plan (see below)
+* `--approved-digest <sha256>` - Digest of the reviewed plan; required with `--apply`
+* `--require-only-target` - Fail if the final rescan retains non-target state
+
+**Approval binding:** the report carries a canonical SHA-256 digest over the
+inventory, decisions, the resolved server identity, and each item's provider
+proof (status, PR number, proven head, merge commit). `--apply` recomputes
+the full report immediately before executing and refuses anything whose
+digest differs from the approved one — changed repo state, changed server
+configuration, or changed PR/head proof all invalidate consent. Only
+confirmed merged evidence permits remote-merge cleanup; `--force` does not
+exist and dirty, locked, and in-use worktrees are always retained.
 
 ### `ace-git-worktree bootstrap [IDENTIFIER]`
 
@@ -399,16 +444,23 @@ data is available.
 
 ### Problem: PR worktree creation fails
 
-**Symptom:** `create --pr` reports a GitHub or authentication error.
+**Symptom:** `create --pr` reports a classified provider error (missing
+provider CLI, unauthenticated, unreachable, or identity mismatch).
 
 **Solution:**
 
-```bash
-gh auth status
-gh auth login
-```
+1. Configure the forge server in `git.servers` (see `ace-git` docs) and
+   select it with `--server` / `--default-server`, or make the repository
+   remote resolvable.
+2. Install and authenticate the provider CLI for that server's provider
+   type (`gh` for GitHub, `fj` for Forgejo; check `gh auth status` or
+   `fj auth list`).
+3. Preview with `--dry-run` to inspect the exact source/base provenance
+   before creating anything.
 
-PR-based creation depends on `gh` being installed and authenticated.
+PR creation is forge-neutral: the exact declared source repository/ref is
+fetched and its head SHA is verified against the PR evidence. Failures never
+fall back to another provider.
 
 ### Problem: `switch` returns nothing useful
 

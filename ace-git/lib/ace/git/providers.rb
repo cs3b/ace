@@ -42,6 +42,12 @@ module Ace
 
         # Build the provider implementation for a resolved server.
         #
+        # Provider packages register themselves when required. On a miss, the
+        # provider libraries listed in the `git.providers` configuration are
+        # required once (mono-repo default: both shipped provider gems) and
+        # the registry is re-checked; a still-missing provider is a classified
+        # failure, never a fallback.
+        #
         # @param server [ResolvedServer] exactly-resolved server identity
         # @param timeout [Integer, nil] provider operation timeout in seconds
         # @param runner [Proc, nil] optional command runner injection for tests;
@@ -53,9 +59,13 @@ module Ace
           key = normalize_type(server.provider)
           provider_class = @mutex.synchronize { @registry[key] }
           unless provider_class
+            require_configured_providers
+            provider_class = @mutex.synchronize { @registry[key] }
+          end
+          unless provider_class
             raise UnknownProviderError,
               "No provider registered for type #{key.inspect} (server '#{server.name}'); " \
-              "install and require the provider package that owns #{key.inspect}"
+              "install the provider package that owns #{key.inspect} and list it in git.providers"
           end
 
           provider_class.new(server: server, timeout: timeout, runner: runner)
@@ -75,7 +85,10 @@ module Ace
 
         # Clear all registrations (test seam).
         def reset!
-          @mutex.synchronize { @registry.clear }
+          @mutex.synchronize do
+            @registry.clear
+            @required_configured = {}
+          end
         end
 
         private
@@ -85,6 +98,22 @@ module Ace
           raise ArgumentError, "Provider type must be a non-empty symbol or string" if normalized.empty?
 
           normalized.to_sym
+        end
+
+        # Require the provider libraries configured under `git.providers`
+        # (e.g. "github" -> ace/git/github). Load failures are ignored here;
+        # a missing provider surfaces as UnknownProviderError at resolution.
+        def require_configured_providers
+          @required_configured ||= {}
+          Array(Ace::Git.config["providers"]).each do |name|
+            library = name.to_s.strip.downcase
+            next if library.empty? || @required_configured[library]
+
+            require "ace/git/#{library}"
+            @required_configured[library] = true
+          rescue LoadError
+            @required_configured[library] = true
+          end
         end
       end
     end

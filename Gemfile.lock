@@ -26,7 +26,7 @@ PATH
     ace-bundle (0.44.1)
       ace-compressor (~> 0.25)
       ace-git (~> 0.24)
-      ace-git-github (~> 0.1.1)
+      ace-git-github (~> 0.2)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)
       ace-support-core (~> 0.32)
@@ -80,13 +80,13 @@ PATH
 PATH
   remote: ace-git-forgejo
   specs:
-    ace-git-forgejo (0.1.1)
+    ace-git-forgejo (0.2.0)
       ace-git (~> 0.24)
 
 PATH
   remote: ace-git-github
   specs:
-    ace-git-github (0.1.2)
+    ace-git-github (0.2.0)
       ace-git (~> 0.24)
 
 PATH
@@ -103,9 +103,8 @@ PATH
 PATH
   remote: ace-git-worktree
   specs:
-    ace-git-worktree (0.23.0)
+    ace-git-worktree (0.24.0)
       ace-git (~> 0.24)
-      ace-git-github (~> 0.1.1)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)
       ace-support-core (~> 0.31)
@@ -114,7 +113,7 @@ PATH
 PATH
   remote: ace-git
   specs:
-    ace-git (0.24.0)
+    ace-git (0.25.0)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)
       ace-support-core (~> 0.31)
@@ -278,7 +277,7 @@ PATH
       ace-bundle (~> 0.44)
       ace-compressor (~> 0.25)
       ace-git (~> 0.24)
-      ace-git-github (~> 0.1.1)
+      ace-git-github (~> 0.2)
       ace-llm (~> 0.41)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)
@@ -377,7 +376,7 @@ PATH
 PATH
   remote: ace-support-test-helpers
   specs:
-    ace-support-test-helpers (0.14.5)
+    ace-support-test-helpers (0.14.6)
       minitest (~> 5.20)
       minitest-reporters (~> 1.8)
 
@@ -387,7 +386,7 @@ PATH
     ace-task (0.38.0)
       ace-b36ts (~> 0.14)
       ace-git (~> 0.24)
-      ace-git-github (~> 0.1)
+      ace-git-github (~> 0.2)
       ace-support-cli (~> 0.6)
       ace-support-core (~> 0.31)
       ace-support-fs (~> 0.3)

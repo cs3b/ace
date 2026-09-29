@@ -18,7 +18,10 @@ class StatusTest < AceGitTestCase
       author: author,
       url: nil,
       draft: false,
-      merged_at: nil
+      merged_at: nil,
+      head_repository_url: "https://forge.example.com/owner/repo",
+      base_repository_url: "https://forge.example.com/owner/repo",
+      merge_commit_sha: nil
     )
   end
 

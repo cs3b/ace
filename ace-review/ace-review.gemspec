@@ -48,7 +48,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "ace-bundle", "~> 0.44"
   spec.add_dependency "ace-compressor", "~> 0.25"
   spec.add_dependency "ace-git", "~> 0.24"
-  spec.add_dependency "ace-git-github", "~> 0.1.1" # PR identifiers and gh execution via the GitHub provider
+  spec.add_dependency "ace-git-github", "~> 0.2" # PR identifiers and gh execution via the GitHub provider
   # Note: ace-git-diff dependency removed in v0.26.0 - functionality migrated to ace-git
   spec.add_dependency "ace-support-nav", "~> 0.28"
   spec.add_dependency "ace-llm", "~> 0.41"

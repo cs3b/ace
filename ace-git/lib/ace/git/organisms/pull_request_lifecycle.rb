@@ -1,0 +1,172 @@
+# frozen_string_literal: true
+
+require_relative "../atoms/pr_reference"
+
+module Ace
+  module Git
+    module Organisms
+      # Forge-neutral pull request lifecycle orchestration.
+      #
+      # Owns the shared policy for every `ace-git pr` operation: server
+      # selection (exactly once per operation), identifier-to-server identity
+      # validation, body-file loading, and normalized provider invocation.
+      # Provider-specific command construction and parsing stay in the
+      # provider packages; this class only sees normalized evidence.
+      #
+      # Selection rules (see the qk1 parent contract):
+      # - `--server NAME` and `--default-server` are mutually exclusive.
+      # - With neither, the configured repository remote is resolved through
+      #   ServerRegistry; a failed remote resolution never falls back to a
+      #   default.
+      # - A PR URL or `owner/repo#number` is accepted only when it matches a
+      #   configured server exactly; an explicit selection that contradicts
+      #   the identifier fails before any mutation.
+      class PullRequestLifecycle
+        MERGE_METHODS = %i[squash merge rebase].freeze
+
+        # @param server_name [String, Symbol, nil] explicit server selection
+        # @param use_default [Boolean] resolve the configured default server
+        # @param remote_name [String, nil] git remote used when nothing selected
+        # @param timeout [Integer, nil] provider operation timeout
+        # @param runner [Proc, nil] injectable provider command runner (tests)
+        def initialize(server_name: nil, use_default: false, remote_name: nil, timeout: nil, runner: nil)
+          @selection = {server_name: server_name, use_default: use_default, remote_name: remote_name}
+          @timeout = timeout
+          @runner = runner
+        end
+
+        # Fetch normalized evidence for one pull request.
+        #
+        # @param identifier [String, Integer] number, `owner/repo#n`, or URL
+        # @return [ProviderPullRequest]
+        def show(identifier)
+          reference = parse_identifier(identifier)
+          server = resolve_server_for(reference)
+          provider_for(server).pull_request(number: reference.number)
+        end
+
+        # Create (or reconcile to) a pull request for an exact base/head
+        # identity. There is no identifier: the selected server's repository
+        # is the base, `head_repository_url` names the source (defaults to
+        # the base repository; no fork inference).
+        #
+        # @return [ProviderMutationReceipt] idempotency :created/:existing
+        def create(head_ref:, base_ref:, expected_head:, title:, head_repository_url: nil,
+          body: nil, body_file: nil, draft: true)
+          body_text = body_file ? load_body(body_file) : body
+          server = resolve_selected_server
+          provider_for(server).create_pull_request(
+            head_ref: head_ref,
+            head_repository_url: head_repository_url || server.url,
+            base_ref: base_ref,
+            expected_head: expected_head,
+            title: title,
+            body: body_text,
+            draft: draft
+          )
+        end
+
+        # Update title/body after exact-head verification.
+        #
+        # @return [ProviderMutationReceipt]
+        def update(identifier, expected_head:, title: nil, body: nil, body_file: nil)
+          body_text = body_file ? load_body(body_file) : body
+          reference = parse_identifier(identifier)
+          server = resolve_server_for(reference)
+          provider_for(server).update_pull_request(
+            number: reference.number, expected_head: expected_head,
+            title: title, body: body_text
+          )
+        end
+
+        # Mark a draft pull request ready after exact-head verification.
+        #
+        # @return [ProviderMutationReceipt]
+        def ready(identifier, expected_head:)
+          reference = parse_identifier(identifier)
+          server = resolve_server_for(reference)
+          provider_for(server).ready_pull_request(number: reference.number, expected_head: expected_head)
+        end
+
+        # Merge with provider-side expected-head enforcement; no implicit
+        # merge method exists.
+        #
+        # @param method [Symbol, String] :squash, :merge, or :rebase
+        # @return [ProviderMutationReceipt]
+        def merge(identifier, expected_head:, method:)
+          normalized = method.to_s.strip.downcase.to_sym
+          unless MERGE_METHODS.include?(normalized)
+            raise ArgumentError, "Invalid merge method '#{method}'; use one of: #{MERGE_METHODS.join(", ")}"
+          end
+
+          reference = parse_identifier(identifier)
+          server = resolve_server_for(reference)
+          provider_for(server).merge_pull_request(
+            number: reference.number, expected_head: expected_head, method: normalized
+          )
+        end
+
+        private
+
+        def parse_identifier(identifier)
+          reference = Atoms::PrReference.parse(identifier)
+          raise ArgumentError, "Invalid PR identifier: #{identifier}" unless reference
+
+          reference
+        end
+
+        def resolve_selected_server
+          ServerRegistry.resolve_for(**@selection)
+        end
+
+        # Resolve exactly one server for a parsed reference, validating any
+        # explicit selection against the identifier's repository identity.
+        def resolve_server_for(reference)
+          return resolve_selected_server unless reference.repository_explicit?
+
+          candidates = if reference.repository_url
+            ServerRegistry.matching_servers(reference.repository_url)
+          else
+            ServerRegistry.servers_for_owner_repo(reference.owner_repo)
+          end
+
+          if @selection[:server_name] || @selection[:use_default]
+            selected = ServerRegistry.resolve_for(**@selection)
+            unless candidates.any? { |candidate| candidate.name == selected.name }
+              identity = reference.repository_url || reference.owner_repo
+              raise ProviderIdentityMismatchError,
+                "PR identifier (#{identity}) does not match the selected server '#{selected.name}'"
+            end
+
+            selected
+          elsif candidates.size == 1
+            candidates.first
+          elsif candidates.empty?
+            identity = reference.repository_url || reference.owner_repo
+            raise AmbiguousRemoteError,
+              "PR repository '#{identity}' matches no configured server (configured: " \
+              "#{ServerRegistry.servers.map(&:name).join(", ")})"
+          else
+            identity = reference.repository_url || reference.owner_repo
+            raise AmbiguousRemoteError,
+              "PR repository '#{identity}' matches multiple configured servers " \
+              "(#{candidates.map(&:name).join(", ")}); select one explicitly"
+          end
+        end
+
+        def provider_for(server)
+          Ace::Git::Providers.for(server, timeout: @timeout, runner: @runner)
+        end
+
+        def load_body(path)
+          raise ArgumentError, "--body-file is required" unless path
+          raise ArgumentError, "Body file not found: #{path}" unless File.file?(path)
+
+          File.read(path)
+        rescue SystemCallError => e
+          raise ArgumentError, "Cannot read body file #{path}: #{e.message}"
+        end
+      end
+    end
+  end
+end

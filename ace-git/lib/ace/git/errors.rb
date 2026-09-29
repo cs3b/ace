@@ -52,5 +52,31 @@ module Ace
 
     # The requested pull request, issue, branch, or commit does not exist.
     class ProviderObjectNotFoundError < Error; end
+
+    # ---- PR lifecycle mutation failures ----
+
+    # A supplied PR URL or repository identity does not match the resolved
+    # server (or the explicit selection contradicts the identifier). Detected
+    # before any mutation.
+    class ProviderIdentityMismatchError < Error; end
+
+    # More than one open pull request exactly matches the requested
+    # base/head identity, so no single object can be selected.
+    class ProviderConflictingMatchesError < Error; end
+
+    # The pull request head changed relative to the expected head SHA the
+    # caller supplied. The operation did not proceed (or the provider refused
+    # it atomically).
+    class ProviderExpectedHeadConflictError < Error; end
+
+    # The provider CLI cannot enforce a required precondition atomically
+    # (e.g. expected-head merge) or does not offer the requested operation.
+    # Never worked around with a check-then-act fallback.
+    class ProviderUnsupportedCapabilityError < Error; end
+
+    # A mutation request was sent but its outcome is unknown (e.g. transport
+    # failure after the send). Contains the exact base/head identity needed to
+    # reconcile by lookup; never retried automatically.
+    class ProviderUnknownOutcomeError < Error; end
   end
 end

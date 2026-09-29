@@ -121,25 +121,31 @@ module Ace
             end
           end
 
-          # Create a worktree for a Pull Request
+          # Create a worktree for a Pull Request from normalized evidence.
           #
-          # @param pr_number [Integer] PR number
-          # @param pr_data [Hash] PR data from Ace::Git::Github::PrFetcher
+          # @param evidence [Ace::Git::ProviderPullRequest] normalized PR
+          #   evidence with exact source/base provenance
+          # @param checkout [Hash, nil] verified checkout from
+          #   PullRequestCheckoutPreparer ({local_ref:, remote_tracking:});
+          #   nil is valid only for dry runs
           # @param options [Hash] Options for creation
           # @return [Hash] Creation result
           #
           # @example
           #   manager = WorktreeManager.new
-          #   pr_data = { number: 26, title: "Add feature", head_branch: "feature/auth" }
-          #   result = manager.create_pr(26, pr_data)
-          def create_pr(pr_number, pr_data, options = {})
-            return error_result("PR number is required") if pr_number.nil?
-            return error_result("PR data is required") if pr_data.nil?
+          #   checkout = preparer.prepare(evidence)
+          #   result = manager.create_pr(evidence, checkout)
+          def create_pr(evidence, checkout, options = {})
+            return error_result("PR evidence is required") if evidence.nil?
+
+            pr_number = evidence.number
+            pr_data = normalized_pr_data(evidence)
+            local_branch = preview_pr_branch(pr_data)
 
             # Check if worktree already exists for this PR's branch
-            head_branch = pr_data[:head_branch]
             existing = @worktree_lister.find_by_branch("pr-#{pr_number}") ||
-              @worktree_lister.find_by_branch(head_branch)
+              @worktree_lister.find_by_branch(local_branch) ||
+              @worktree_lister.find_by_branch(evidence.head_ref)
 
             if existing && !options[:force]
               return error_result("Worktree already exists at: #{existing.path}")
@@ -150,11 +156,15 @@ module Ace
               return dry_run_pr_creation(pr_number, pr_data, options)
             end
 
+            return error_result("Verified checkout is required for PR worktree creation") unless checkout
+
             # Create the worktree
             result = @worktree_creator.create_for_pr(
               pr_data,
               @config,
-              git_root: @project_root
+              git_root: @project_root,
+              source_ref: checkout[:local_ref],
+              remote_tracking: checkout[:remote_tracking]
             )
 
             if result[:success]
@@ -554,6 +564,40 @@ module Ace
 
           # Create error result
           #
+          # Convert normalized PR evidence into the internal pr_data naming
+          # format used by configuration templates.
+          #
+          # @param evidence [Ace::Git::ProviderPullRequest]
+          # @return [Hash] {number:, title:, head_branch:, base_branch:}
+          def normalized_pr_data(evidence)
+            {
+              number: evidence.number,
+              title: evidence.title,
+              head_branch: evidence.head_ref,
+              base_branch: evidence.base_ref
+            }
+          end
+
+          # Preview the configured local branch name for a PR worktree.
+          #
+          # @param pr_data [Hash] normalized PR data
+          # @return [String] formatted branch name
+          def preview_pr_branch(pr_data)
+            pr_config = @config.pr_config || {}
+            branch_format = pr_config[:branch_format] || "pr-{number}-{slug}"
+            require_relative "../atoms/slug_generator"
+
+            result = branch_format.dup
+            result.gsub!("{number}", pr_data[:number].to_s)
+            if pr_data[:title]
+              slug = Atoms::SlugGenerator.from_title(pr_data[:title])
+              result.gsub!("{slug}", slug)
+              result.gsub!("{title_slug}", slug)
+            end
+            result.gsub!("{base_branch}", pr_data[:base_branch].to_s) if pr_data[:base_branch]
+            result
+          end
+
           # Dry run PR worktree creation
           #
           # @param pr_number [Integer] PR number

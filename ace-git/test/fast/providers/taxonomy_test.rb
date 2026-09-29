@@ -17,7 +17,12 @@ module Errors
       Ace::Git::ProviderAuthenticationError,
       Ace::Git::ProviderUnreachableError,
       Ace::Git::ProviderMalformedOutputError,
-      Ace::Git::ProviderObjectNotFoundError
+      Ace::Git::ProviderObjectNotFoundError,
+      Ace::Git::ProviderIdentityMismatchError,
+      Ace::Git::ProviderConflictingMatchesError,
+      Ace::Git::ProviderExpectedHeadConflictError,
+      Ace::Git::ProviderUnsupportedCapabilityError,
+      Ace::Git::ProviderUnknownOutcomeError
     ].freeze
 
     def test_all_taxonomy_errors_inherit_from_ace_git_error

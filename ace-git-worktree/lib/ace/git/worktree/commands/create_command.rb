@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require "ace/git/github"
-
 module Ace
   module Git
     module Worktree
@@ -60,6 +58,7 @@ module Ace
           rescue Ace::Git::ProviderObjectNotFoundError,
             Ace::Git::ProviderAuthenticationError,
             Ace::Git::ProviderCliMissingError,
+            Ace::Git::ProviderIdentityMismatchError,
             Ace::Git::TimeoutError => e
             puts "Error: #{e.message}"
             1
@@ -88,9 +87,12 @@ module Ace
                                          Task ID formats: 081, task.081, v.0.9.0+081
 
               PR-AWARE CREATION:
-                  --pr <number>           Create worktree for a GitHub pull request
+                  --pr <number>           Create worktree for a pull request
                   --pull-request <number> (alias for --pr)
-                                         Requires gh CLI to be installed and authenticated
+                                         Requires a configured forge server and its
+                                         provider package; fetches the exact declared
+                                         source repository/ref and verifies the head
+                                         SHA against the PR evidence.
 
               BRANCH-AWARE CREATION:
                   -b <branch>             Create worktree from a branch (local or remote)
@@ -102,12 +104,14 @@ module Ace
                   --path <path>           Custom worktree path (default: from config)
                   --source <ref>          Git ref to use as branch start-point (default: current branch)
                                         Examples: main, origin/develop, HEAD~3, commit-sha
+                  --server <name>         Use the named configured forge server (PR mode)
+                  --default-server        Use the configured default forge server
                   --dry-run               Show what would be created without creating
                   --no-status-update      Skip marking task as in-progress (task mode only)
                   --no-commit             Skip committing task changes (task mode only)
                   --no-push               Skip pushing task changes to remote (task mode only)
                   --no-upstream           Skip pushing worktree branch with upstream tracking (task mode only)
-                  --no-pr                 Skip creating draft PR (task mode only)
+                  --no-pr                 Skip creating draft PR; keeps task creation local and provider-free
                   --no-bootstrap          Skip worktree bootstrap preparation
                   --push-remote <name>    Remote to push to (default: origin) (task mode only)
                   --no-auto-navigate      Stay in current directory (default: navigate to worktree)
@@ -122,8 +126,8 @@ module Ace
                   # Create task worktree based on main instead of current branch
                   ace-git-worktree create --task 081 --source main
 
-                  # Create PR worktree
-                  ace-git-worktree create --pr 26
+                  # Create PR worktree on a named forge server (no mutation)
+                  ace-git-worktree create --pr 26 --server forgejo-lab --dry-run
 
                   # Create worktree from remote branch
                   ace-git-worktree create -b origin/feature/auth
@@ -150,9 +154,10 @@ module Ace
                   - hooks.after_create: Commands to run after worktree creation
 
               REQUIREMENTS:
-                  PR-aware creation requires GitHub CLI (gh):
-                  - Install: brew install gh
-                  - Authenticate: gh auth login
+                  PR-aware creation requires a configured forge server
+                  (git.servers) and the provider package for its provider
+                  type. Task and branch creation are fully local and never
+                  touch a forge.
             HELP
             0
           end
@@ -170,6 +175,8 @@ module Ace
               branch: nil,
               path: nil,
               source: nil,
+              server: nil,
+              default_server: false,
               dry_run: false,
               no_status_update: false,
               no_commit: false,
@@ -205,6 +212,11 @@ module Ace
               when "--source"
                 i += 1
                 options[:source] = args[i]
+              when "--server"
+                i += 1
+                options[:server] = args[i]
+              when "--default-server"
+                options[:default_server] = true
               when "--dry-run"
                 options[:dry_run] = true
               when "--no-status-update"
@@ -377,6 +389,8 @@ module Ace
               push_remote: options[:push_remote],
               commit_message: options[:commit_message],
               target_branch: options[:target_branch],
+              server: options[:server],
+              default_server: options[:default_server],
               no_mise_trust: options[:no_mise_trust],
               force: options[:force]
             }.compact
@@ -410,7 +424,7 @@ module Ace
             end
           end
 
-          # Create a PR worktree
+          # Create a PR worktree from normalized provider evidence.
           #
           # @param options [Hash] Command options
           # @return [Integer] Exit code
@@ -434,47 +448,28 @@ module Ace
 
             puts "Creating worktree for PR ##{pr_number}..."
 
-            # Check gh CLI availability via the GitHub provider (ace-git-github)
-            unless Ace::Git::Github::PrFetcher.installed?
-              puts "Error: gh CLI is required for PR worktree creation."
-              puts
-              puts gh_not_available_message
-              return 1
-            end
-
-            unless Ace::Git::Github::PrFetcher.authenticated?
-              puts "Error: gh CLI is not authenticated."
-              puts
-              puts "Authenticate with: gh auth login"
-              return 1
-            end
-
-            # Fetch PR data
-            puts "Fetching PR information..."
             begin
-              result = Ace::Git::Github::PrFetcher.fetch_metadata(pr_number.to_s)
+              # Fetch normalized evidence through the selected forge server.
+              puts "Fetching PR information..."
+              resolver = Molecules::PullRequestEvidenceResolver.new(
+                server_name: options[:server],
+                use_default: options[:default_server] == true
+              )
+              resolved = resolver.resolve(pr_number)
+              evidence = resolved[:evidence]
 
-              unless result[:success]
-                puts "Error: #{result[:error]}"
-                return 1
+              display_pr_evidence(evidence)
+
+              # Fetch and verify the exact declared source (skipped for dry
+              # runs, which may read evidence but never create anything).
+              checkout = nil
+              unless options[:dry_run]
+                checkout = Molecules::PullRequestCheckoutPreparer.new.prepare(evidence)
+                unless checkout[:success]
+                  puts "Error: #{checkout[:error]}"
+                  return 1
+                end
               end
-
-              metadata = result[:metadata]
-
-              # Convert to pr_data format expected by worktree creator
-              pr_data = pr_data_from_metadata(metadata)
-
-              # Show PR details
-              puts "PR ##{pr_data[:number]}: #{pr_data[:title]}"
-              puts "Branch: #{pr_data[:head_branch]} -> #{pr_data[:base_branch]}"
-
-              # Warn about fork PRs
-              if pr_data[:is_cross_repository]
-                puts
-                puts "Warning: This PR is from a fork (#{pr_data[:head_repository_owner]})."
-                puts "You will not be able to push to the PR branch directly."
-              end
-              puts
 
               # Prepare creation options
               creation_options = {
@@ -485,7 +480,7 @@ module Ace
               }.compact
 
               # Create the worktree
-              result = @manager.create_pr(pr_number, pr_data, creation_options)
+              result = @manager.create_pr(evidence, checkout, creation_options)
 
               if result[:success]
                 display_pr_creation_result(result, options[:dry_run])
@@ -495,12 +490,28 @@ module Ace
                 display_warnings(result[:warnings]) if result[:warnings]
                 1
               end
-            rescue Ace::Git::ProviderObjectNotFoundError, Ace::Git::ProviderAuthenticationError,
-              Ace::Git::ProviderCliMissingError => e
-              # Let specific ace-git errors be handled by handle_pr_fetch_error
-              # Other errors will bubble up to the top-level rescue in run()
-              handle_pr_fetch_error(e, pr_number)
+            rescue Ace::Git::Error => e
+              puts "Error: #{e.message}"
+              puts "Debug: #{e.class}" if ENV["DEBUG"]
+              1
             end
+          end
+
+          # Display normalized PR evidence before checkout.
+          #
+          # @param evidence [Ace::Git::ProviderPullRequest] normalized evidence
+          def display_pr_evidence(evidence)
+            puts "PR ##{evidence.number}: #{evidence.title}"
+            puts "Branch: #{evidence.head_ref} -> #{evidence.base_ref}"
+            puts "Source: #{evidence.head_repository_url}@#{evidence.head_ref}" \
+              " (head #{evidence.head_sha.to_s[0, 8] || "unknown"})"
+            puts "Server: #{evidence.server_name}"
+
+            return unless evidence.head_repository_url != evidence.base_repository_url
+
+            puts
+            puts "Warning: This PR is from a fork (#{evidence.head_repository_url})."
+            puts "You will not be able to push to the PR branch directly."
           end
 
           # Create a branch worktree
@@ -865,104 +876,6 @@ module Ace
             system("which ace-tmux > /dev/null 2>&1")
           end
 
-          # Convert PR metadata from gh CLI to internal pr_data format
-          #
-          # Anti-corruption layer that translates gh CLI JSON output to internal format.
-          # This isolates worktree creation from gh CLI output structure changes.
-          #
-          # Expected metadata schema from the GitHub provider PrFetcher (via gh pr view --json):
-          #   {
-          #     "number" => Integer,
-          #     "title" => String,
-          #     "headRefName" => String (PR source branch),
-          #     "baseRefName" => String (PR target branch),
-          #     "isCrossRepository" => Boolean (true for fork PRs),
-          #     "headRepositoryOwner" => { "login" => String } (fork owner info)
-          #   }
-          #
-          # @param metadata [Hash] PR metadata from gh CLI
-          # @return [Hash] pr_data format expected by worktree creator
-          def pr_data_from_metadata(metadata)
-            {
-              number: metadata["number"],
-              title: metadata["title"],
-              head_branch: metadata["headRefName"],
-              base_branch: metadata["baseRefName"],
-              is_cross_repository: metadata["isCrossRepository"] || false,
-              head_repository_owner: metadata.dig("headRepositoryOwner", "login") || "unknown"
-            }
-          end
-
-          # Handle errors during PR metadata fetch
-          #
-          # @param error [Exception] The error that occurred
-          # @param pr_number [Integer] PR number for context in error messages
-          # @return [Integer] Exit code (always 1 for errors)
-          def handle_pr_fetch_error(error, pr_number)
-            case error
-            when Ace::Git::ProviderObjectNotFoundError
-              handle_pr_not_found(error, pr_number)
-            when Ace::Git::ProviderAuthenticationError
-              handle_gh_auth_error(error)
-            when Ace::Git::ProviderCliMissingError
-              handle_gh_not_installed(error)
-            else
-              handle_unknown_error(error)
-            end
-            1
-          end
-
-          # Handle PR not found error with helpful suggestions
-          def handle_pr_not_found(error, pr_number)
-            puts "Error: #{error.message}"
-            puts
-            puts "Suggestions:"
-            puts "  1. Verify the PR number is correct"
-            puts "  2. Check if the PR exists: gh pr view #{pr_number}"
-            puts "  3. Ensure you're in the correct repository"
-          end
-
-          # Handle GitHub authentication error with troubleshooting steps
-          def handle_gh_auth_error(error)
-            puts "Error: #{error.message}"
-            puts
-            puts "Troubleshooting:"
-            puts "  1. Verify GitHub authentication: gh auth status"
-            puts "  2. Re-authenticate if needed: gh auth login"
-            puts "  3. Check repository access permissions"
-          end
-
-          # Handle gh CLI not installed error with installation guidance
-          def handle_gh_not_installed(error)
-            puts "Error: #{error.message}"
-            puts
-            puts gh_not_available_message
-          end
-
-          # Handle unknown/unexpected errors with debug info
-          def handle_unknown_error(error)
-            puts "Error: #{error.message}"
-            if ENV["DEBUG"]
-              puts "Debug: #{error.class}"
-              puts "Debug: #{error.backtrace&.first}" if error.backtrace
-            end
-          end
-
-          # Get helpful error message when gh CLI is unavailable
-          #
-          # @return [String] User-friendly error message with installation guidance
-          def gh_not_available_message
-            <<~MESSAGE
-              gh CLI is required for PR worktrees but is not installed.
-
-              Install gh CLI:
-              - macOS: brew install gh
-              - Linux: See https://github.com/cli/cli#installation
-              - Windows: See https://github.com/cli/cli#installation
-
-              After installation, authenticate with: gh auth login
-            MESSAGE
-          end
         end
       end
     end

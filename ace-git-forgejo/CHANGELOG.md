@@ -5,7 +5,38 @@ All notable changes to ace-git-forgejo will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [0.2.0] - 2026-09-28
+
+### Added
+- PR lifecycle mutations matching the shared provider contract: exact-match
+  lookup via `fj pr search`, idempotent create reconciliation, head-verified
+  title/body updates.
+- Fork provenance: the `fj pr view` head-repository segment is parsed and
+  returned in normalized PR evidence.
+
+### Changed
+- `pr ready` and `pr merge` are classified unsupported capabilities: `fj`
+  offers no draft-to-ready command and cannot enforce an expected-head merge
+  precondition atomically, so both refuse instead of racing.
+- PR view parser captures the fork repository prefix of the `From` segment.
+
+### Added
+- PR lifecycle mutations matching the shared provider contract: exact-match
+  lookup via `fj pr search`, idempotent create reconciliation, head-verified
+  title/body updates.
+- Fork provenance: the `fj pr view` head-repository segment is parsed and
+  returned in normalized PR evidence.
+
+### Changed
+- `pr ready` and `pr merge` are classified unsupported capabilities: `fj`
+  offers no draft-to-ready command and cannot enforce an expected-head merge
+  precondition atomically, so both refuse instead of racing.
+- PR view parser captures the fork repository prefix of the `From` segment.
+
 ## [0.1.1] - 2026-09-28
+
 
 ### Fixed
 

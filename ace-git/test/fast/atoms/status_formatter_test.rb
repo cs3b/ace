@@ -16,7 +16,10 @@ class StatusFormatterTest < AceGitTestCase
       author: author,
       url: url,
       draft: draft,
-      merged_at: merged_at
+      merged_at: merged_at,
+      head_repository_url: "https://forge.example.com/owner/repo",
+      base_repository_url: "https://forge.example.com/owner/repo",
+      merge_commit_sha: nil
     )
   end
   def test_to_markdown_includes_header_and_position_section

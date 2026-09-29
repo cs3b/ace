@@ -6,6 +6,7 @@ require_relative "../git"
 require_relative "cli/commands/diff"
 require_relative "cli/commands/status"
 require_relative "cli/commands/branch"
+require_relative "cli/commands/pr"
 
 module Ace
   module Git
@@ -50,18 +51,25 @@ module Ace
       REGISTERED_COMMANDS = [
         ["diff", "Show filtered git diff output"],
         ["status", "Show repository status and PR context"],
-        ["branch", "Show current branch information"]
+        ["branch", "Show current branch information"],
+        ["pr", "Forge-neutral pull request lifecycle: show, create, update, ready, merge"]
       ].freeze
 
       HELP_EXAMPLES = [
         "ace-git diff --since 7d           # Changes from last week",
         "ace-git diff -p 'lib/**' -f summary  # Filtered summary",
-        "ace-git status --no-pr            # Quick status, skip network"
+        "ace-git status --no-pr            # Quick status, skip network",
+        "ace-git pr show 25 --format json  # Normalized PR evidence"
       ].freeze
 
       register "diff", Commands::Diff.new
       register "status", Commands::Status.new
       register "branch", Commands::Branch.new
+      register "pr show", Commands::Pr::Show.new
+      register "pr create", Commands::Pr::Create.new
+      register "pr update", Commands::Pr::Update.new
+      register "pr ready", Commands::Pr::Ready.new
+      register "pr merge", Commands::Pr::Merge.new
 
       version_cmd = Ace::Support::Cli::VersionCommand.build(
         gem_name: "ace-git",
