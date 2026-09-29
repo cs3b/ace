@@ -64,6 +64,7 @@ module Ace
             @repo = repo
             @url = url
           end
+          private_class_method :new
 
           # Qualified object id form accepted by `fj pr/issue view|edit` (v0.6.0).
           def qualified_ref(number)

@@ -48,6 +48,19 @@ module Forgejo
       assert_match(/validated selected Forgejo target/, error.message)
     end
 
+    def test_forged_target_cannot_bypass_validation
+      # Target construction is only reachable through Target.resolve, so a
+      # caller cannot fabricate inconsistent authority/repo/url values and
+      # launch repository commands against the wrong server.
+      error = assert_raises(NoMethodError) do
+        Ace::Git::Forgejo::RepositoryBinding::Target.new(
+          host: "evil.example.com", authority: "evil.example.com",
+          repo: "owner/repo", url: "https://forge.example.com/owner/repo"
+        )
+      end
+      assert_match(/private method/, error.message)
+    end
+
     def test_execute_repository_refuses_unobserved_operation_before_launch
       runner = ->(**_kw) { flunk("Unobserved operations must refuse before any subprocess") }
 
