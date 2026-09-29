@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.35.2] - 2026-09-29
+
+### Changed
+- Codex provider registry is v6-only: models gpt-6-sol (default), gpt-6-astra, gpt-6-luna; aliases sol/astra/luna plus convenience gpt/codex/mini → gpt-6-sol. Legacy gpt-5.x, terra, and spark entries and the stale limits block removed (ADR-024, no backward compatibility).
+
+### Technical
+- Tests updated for the v6 registry (catalog parity, client defaults, aliases, list_models).
+
 ## [0.35.1] - 2026-09-27
 
 ### Technical

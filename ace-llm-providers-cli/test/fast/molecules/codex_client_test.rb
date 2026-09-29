@@ -55,18 +55,17 @@ describe "CodexClient" do
 
   it "initializes with default model" do
     model = @client.instance_variable_get(:@model)
-    assert_equal "gpt-5.6-terra", model
+    assert_equal "gpt-6-sol", model
   end
 
   it "can be initialized with custom model" do
-    client = Ace::LLM::Providers::CLI::CodexClient.new(model: "gpt-5.4-mini")
+    client = Ace::LLM::Providers::CLI::CodexClient.new(model: "gpt-6-luna")
     model = client.instance_variable_get(:@model)
-    assert_equal "gpt-5.4-mini", model
+    assert_equal "gpt-6-luna", model
   end
 
   it "preserves exact models and reasoning arguments in both native command paths" do
-    ids = %w[gpt-6-astra gpt-5.6-sol gpt-5.6-terra gpt-5.6-luna gpt-5.3-chat-latest
-      gpt-5.3-codex gpt-5.3-codex-spark gpt-5.4 gpt-5.4-mini gpt-5.4-nano gpt-5.4-pro gpt-9]
+    ids = %w[gpt-6-sol gpt-6-astra gpt-6-luna gpt-9]
     ids.each do |id|
       client = Ace::LLM::Providers::CLI::CodexClient.new(model: id)
       %i[build_codex_command build_codex_interactive_command].each do |method|
@@ -131,10 +130,9 @@ describe "CodexClient" do
   it "can list models" do
     models = @client.list_models
     assert_kind_of Array, models
-    assert models.any? { |m| m[:id] == "gpt-5.3-codex" }
-    assert models.any? { |m| m[:id] == "gpt-5.3-codex-spark" }
-    assert models.any? { |m| m[:id] == "gpt-5.4" }
-    assert models.any? { |m| m[:id] == "gpt-5.4-mini" }
+    assert models.any? { |m| m[:id] == "gpt-6-sol" }
+    assert models.any? { |m| m[:id] == "gpt-6-astra" }
+    assert models.any? { |m| m[:id] == "gpt-6-luna" }
   end
 
   it "ships current codex aliases in provider defaults" do
@@ -144,9 +142,9 @@ describe "CodexClient" do
       aliases: true
     )
 
-    assert_equal "gpt-5.6-terra", config.dig("aliases", "model", "gpt")
-    assert_equal "gpt-5.6-terra", config.dig("aliases", "model", "codex")
-    assert_equal "gpt-5.6-luna", config.dig("aliases", "model", "mini")
+    assert_equal "gpt-6-sol", config.dig("aliases", "model", "gpt")
+    assert_equal "gpt-6-sol", config.dig("aliases", "model", "codex")
+    assert_equal "gpt-6-sol", config.dig("aliases", "model", "mini")
     refute_includes(config.fetch("models"), "gpt-5-mini")
     refute_includes(config.fetch("aliases").fetch("model").values, "gpt-5-mini")
   end
@@ -188,15 +186,15 @@ describe "CodexClient" do
       assert_equal "codex", cmd[0]
       assert_includes cmd, "exec"
       assert_includes cmd, "--model"
-      assert_includes cmd, "gpt-5.6-terra"
+      assert_includes cmd, "gpt-6-sol"
     end
 
     it "includes model flag when non-default model specified" do
-      client = Ace::LLM::Providers::CLI::CodexClient.new(model: "gpt-5.4-mini")
+      client = Ace::LLM::Providers::CLI::CodexClient.new(model: "gpt-6-luna")
       cmd = client.send(:build_codex_command, "Test prompt", {})
 
       assert_includes cmd, "--model"
-      assert_includes cmd, "gpt-5.4-mini"
+      assert_includes cmd, "gpt-6-luna"
     end
 
     it "includes --add-dir when in a git worktree" do
@@ -577,7 +575,7 @@ describe "CodexClient" do
               result = @client.generate("Hi")
               assert_equal "Hello from Codex!", result[:text]
               assert_equal "codex", result[:metadata][:provider]
-              assert_equal "gpt-5.6-terra", result[:metadata][:model]
+              assert_equal "gpt-6-sol", result[:metadata][:model]
             end
           end
         end

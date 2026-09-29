@@ -108,8 +108,8 @@ describe "CLI Providers" do
     it "can list models" do
       models = @client.list_models
       assert_kind_of Array, models
-      assert models.any? { |m| m[:id] == "gpt-5.4" }
-      assert models.any? { |m| m[:id] == "gpt-5.4-mini" }
+      assert models.any? { |m| m[:id] == "gpt-6-sol" }
+      assert models.any? { |m| m[:id] == "gpt-6-astra" }
     end
   end
 
