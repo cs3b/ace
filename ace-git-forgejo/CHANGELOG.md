@@ -7,17 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Fixed
-- Selected-host fidelity: `-H` now carries the selected `scheme://authority`
-  (fj assumes HTTPS for a bare host, so an http authority was silently
-  upgraded), non-http(s) server schemes are rejected as configuration
-  errors before any subprocess, and the provider refuses to launch
-  repository commands when the readable fj keys file aliases the selected
-  host to a different endpoint (read-only check; absent/unreadable keys
-  file is allowed, never modified).
-- Worktree cleanup provenance resolves fully qualified target refs
-  (`refs/heads/main`, `refs/remotes/origin/main`) to the PR base branch
-  before comparing, alongside bare and remote-prefixed forms.
+## [0.3.0] - 2026-09-29
 
 ### Added
 - Selected-repository binding for every `fj` repository command: the
@@ -46,6 +36,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `merge_commit_sha` stays empty: observed fj v0.6.0 exposes no
   authoritative merge-commit field for a selected PR, so cleanup evidence
   never claims one.
+
+### Fixed
+- Selected-host fidelity: `-H` now carries the selected `scheme://authority`
+  (fj assumes HTTPS for a bare host, so an http authority was silently
+  upgraded), non-http(s) server schemes are rejected as configuration
+  errors before any subprocess, and the provider refuses to launch
+  repository commands when the readable fj keys file aliases the selected
+  host to a different endpoint (read-only check; absent/unreadable keys
+  file is allowed, never modified).
 
 ## [0.2.0] - 2026-09-28
 

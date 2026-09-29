@@ -80,7 +80,7 @@ PATH
 PATH
   remote: ace-git-forgejo
   specs:
-    ace-git-forgejo (0.2.0)
+    ace-git-forgejo (0.3.0)
       ace-git (~> 0.24)
 
 PATH
@@ -103,7 +103,7 @@ PATH
 PATH
   remote: ace-git-worktree
   specs:
-    ace-git-worktree (0.24.0)
+    ace-git-worktree (0.24.1)
       ace-git (~> 0.24)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)
@@ -314,7 +314,7 @@ PATH
 PATH
   remote: ace-support-cli
   specs:
-    ace-support-cli (0.6.8)
+    ace-support-cli (0.6.9)
 
 PATH
   remote: ace-support-config
