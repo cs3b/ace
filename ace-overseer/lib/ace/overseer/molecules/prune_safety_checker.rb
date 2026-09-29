@@ -53,10 +53,11 @@ module Ace
             recorded_base: recorded_base,
             candidate_branch: context.branch
           )
-          # The HEAD whose preservation was actually proven: destructive
-          # boundaries downstream must use this identity, never a later
-          # re-read that was itself never proven.
-          verified_head = proof.preserved? ? proven_head(worktree_path, proof) : nil
+          # The HEAD and branch whose preservation was actually proven:
+          # destructive boundaries downstream must use these identities,
+          # never a later re-read that was itself never proven.
+          verified_head = proof.preserved? ? proof.head : nil
+          verified_branch = proof.preserved? ? context.branch : nil
 
           reasons = []
           reasons << "assignment not complete" unless assignment_complete
@@ -75,6 +76,7 @@ module Ace
             attempts_terminal: attempts_terminal && artifacts_safe,
             preserved: proof.preserved?,
             verified_head: verified_head,
+            verified_branch: verified_branch,
             reasons: reasons
           )
         end
@@ -178,11 +180,6 @@ module Ace
           )
         rescue => e
           Models::PreservationProof.blocked("preservation proof failed: #{e.message}")
-        end
-
-        # The HEAD whose preservation the proof actually verified.
-        def proven_head(_worktree_path, proof)
-          proof.head
         end
 
         def assign_cache_relative

@@ -153,6 +153,15 @@ class PreservationManifestTest < AceOverseerTestCase
     assert_includes e.message, "scheduled for deletion"
   end
 
+def test_rejects_commit_sha_as_destination_branch
+  record = base_record.merge("destination_branch" => @head)
+  path = write_manifest([record])
+  e = assert_raises(Ace::Overseer::Molecules::PreservationManifest::Invalid) do
+    Ace::Overseer::Molecules::PreservationManifest.load(path)
+  end
+  assert_includes e.message, "must name an existing branch ref"
+end
+
   def test_rejects_entries_not_matching_selected_worktrees
     FileUtils.mkdir_p(File.join(@tmp, "wt"))
     manifest = Ace::Overseer::Molecules::PreservationManifest.load(write_manifest([base_record]))

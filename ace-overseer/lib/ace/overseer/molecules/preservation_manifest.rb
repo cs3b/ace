@@ -128,8 +128,8 @@ module Ace
           record.resolved_source_head = resolve_revision(record.source_repo, record.source_head, "source_head", index, git_runner)
           record.resolved_destination_base = resolve_revision(record.destination_repo, record.destination_base, "destination_base", index, git_runner)
           record.resolved_destination_head = resolve_revision(record.destination_repo, record.destination_head, "destination_head", index, git_runner)
-          record.resolved_destination_branch_tip = resolve_revision(
-            record.destination_repo, record.destination_branch, "destination_branch", index, git_runner
+          record.resolved_destination_branch_tip = resolve_branch_tip(
+            record.destination_repo, record.destination_branch, index, git_runner
           )
           record
         end
@@ -167,6 +167,28 @@ module Ace
           stdout.to_s.strip
         end
         private_class_method :resolve_revision
+
+        # The destination must be an existing branch ref — never a raw SHA,
+        # which could name the candidate's own HEAD and masquerade as a
+        # surviving destination while prune deletes the only real branch.
+        def self.resolve_branch_tip(repo, branch, index, git_runner)
+          stdout, _stderr, status = git_runner.call(repo, "rev-parse", "--verify", "--quiet", branch.to_s)
+          unless status.success?
+            raise Invalid,
+              "Preservation manifest candidate #{index}: destination_branch `#{branch}` does not resolve in #{repo}"
+          end
+
+          full_name, _stderr, name_status = git_runner.call(repo, "rev-parse", "--symbolic-full-name", branch.to_s)
+          canonical = full_name.to_s.strip
+          if !name_status.success? || !canonical.start_with?("refs/heads/")
+            raise Invalid,
+              "Preservation manifest candidate #{index}: destination_branch `#{branch}` must name an existing " \
+              "branch ref (refs/heads/...)"
+          end
+
+          stdout.to_s.strip
+        end
+        private_class_method :resolve_branch_tip
 
         # @param records [Array<Record>] Parsed, resolved records
         def initialize(records)

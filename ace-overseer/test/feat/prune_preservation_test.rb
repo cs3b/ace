@@ -224,6 +224,53 @@ def test_unresolvable_base_after_preview_blocks_the_candidate
   assert File.directory?(@worktree.path), "candidate must be preserved"
 end
 
+def test_head_mismatch_after_recheck_preserves_worktree_and_branch
+  commit_and_merge_work
+  # A checker whose proven identity no longer matches the live worktree:
+  # the pre-removal binding guard must catch the drift and preserve both.
+  checker = PruneSafetyCheckerDouble.new(proven_head: "f" * 40)
+  orchestrator = Ace::Overseer::Organisms::PruneOrchestrator.new(
+    worktree_manager: StaticManager.new([worktree_entry], repo_root: @repo.path),
+    prune_checker: checker,
+    tmux_executor: FakeTmuxExecutor.new,
+    config: {},
+    lifecycle_exclusion: @exclusion
+  )
+
+  result = orchestrator.call(dry_run: false, yes: true, input: StringIO.new(""), output: StringIO.new)
+
+  assert_empty result[:pruned]
+  assert_equal 1, result[:failed].length
+  assert_includes result[:failed].first[:error], "preserving"
+  assert File.directory?(@worktree.path), "worktree must be preserved"
+  assert @repo.git!("branch", "--format=%(refname:short)").split("
+").include?("task-work")
+end
+
+# A minimal checker double: always safe, verifies a configurable identity.
+class PruneSafetyCheckerDouble
+  attr_reader :proven_head
+
+  def initialize(proven_head:)
+    @proven_head = proven_head
+  end
+
+  def check(worktree_path:, task_ref:, manifest_record: nil, accepted_base: nil)
+    Ace::Overseer::Models::PruneCandidate.new(
+      task_id: task_ref,
+      worktree_path: worktree_path,
+      assignment_complete: true,
+      task_done: true,
+      git_clean: true,
+      attempts_terminal: true,
+      preserved: true,
+      verified_head: proven_head,
+      verified_branch: "task-work",
+      reasons: []
+    )
+  end
+end
+
   def test_dry_run_changes_nothing
     commit_and_merge_work
     manager = StaticManager.new([worktree_entry], repo_root: @repo.path)

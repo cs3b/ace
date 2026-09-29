@@ -181,8 +181,15 @@ module Ace
         # for deletion with the worktree and cannot survive as the place the
         # work was preserved. Identity is by ref name, not tip: two distinct
         # refs may legitimately point at the same commit, and deleting the
-        # candidate ref leaves the other intact.
+        # candidate ref leaves the other intact. A destination must name a
+        # branch ref — a raw SHA can masquerade as a destination while prune
+        # deletes the only real branch.
         def verify_destination_survival(record, candidate_branch)
+          unless record.destination_branch.to_s.start_with?("refs/heads/")
+            return blocked("declared destination_branch #{record.destination_branch} must name a branch ref " \
+              "(refs/heads/...)")
+          end
+
           return nil unless same_path?(record.source_repo, record.destination_repo)
 
           if !candidate_branch.to_s.empty? && record.destination_branch_name == candidate_branch

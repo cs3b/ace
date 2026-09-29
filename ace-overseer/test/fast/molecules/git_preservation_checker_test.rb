@@ -397,6 +397,28 @@ def test_distinct_destination_branch_at_same_tip_is_accepted
   assert_equal proof.head, worktree.rev("HEAD")
 end
 
+def test_commit_sha_destination_branch_is_rejected
+  source, worktree = build_source
+  commit_work(worktree, {"feature.txt" => "1\n"})
+
+  successor = build_successor(source)
+  successor.git!("cherry-pick", worktree.rev("HEAD"))
+
+  record = build_record(source, worktree, successor,
+    destination_base: successor.rev("main"), destination_head: successor.rev("HEAD"),
+    destination_branch: worktree.rev("HEAD"))
+  proof = @checker.proof(
+    worktree_path: worktree.path,
+    accepted_base: accepted_base_for(source),
+    manifest_record: record,
+    recorded_base: record.resolved_source_base,
+    candidate_branch: "task-work"
+  )
+
+  refute_predicate proof, :preserved?
+  assert_includes proof.reason, "must name a branch ref"
+end
+
   def test_binary_modes_and_symlinks_compare_exactly
     source, worktree = build_source
     worktree.write("blob.bin", [0x00, 0xFF, 0x13, 0x37].pack("C*"))

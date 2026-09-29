@@ -113,7 +113,11 @@ module Ace
                 next
               end
 
-              removal = remove_worktree(candidate, verified_head: recheck.verified_head)
+              removal = remove_worktree(
+                candidate,
+                verified_head: recheck.verified_head,
+                verified_branch: recheck.verified_branch
+              )
               if removal[:success]
                 pruned << candidate
                 record_removed(candidate)
@@ -128,8 +132,20 @@ module Ace
           {pruned: pruned, failed: failed, blocked: blocked}
         end
 
-        def remove_worktree(candidate, verified_head:)
-          branch = candidate_branch(candidate.worktree_path)
+        def remove_worktree(candidate, verified_head:, verified_branch: nil)
+          # Bind both identities the recheck proved to the removal: a HEAD
+          # move or a branch switch after the recheck must not let the
+          # worktree disappear or an unproven ref be deleted. Unreadable
+          # identities are left to the removal itself, which fails closed.
+          head_now = candidate_head(candidate.worktree_path)
+          branch_now = candidate_branch(candidate.worktree_path)
+          if verified_head && head_now && head_now != verified_head
+            return {success: false, error: "HEAD changed after recheck (#{head_now[0, 12]}); preserving"}
+          end
+          if verified_branch && !branch_now.to_s.empty? && branch_now != verified_branch
+            return {success: false, error: "branch switched to #{branch_now} after recheck; preserving"}
+          end
+
           repo = candidate_repo(candidate.worktree_path)
 
           remove_result = @worktree_manager.remove(
@@ -141,7 +157,7 @@ module Ace
           return remove_result unless remove_result[:success]
 
           close_tmux_window(candidate.worktree_path)
-          branch_result = delete_branch(repo, branch: branch, head: verified_head)
+          branch_result = delete_branch(repo, branch: verified_branch || branch_now, head: verified_head)
           return branch_result unless branch_result[:success]
 
           remove_result
