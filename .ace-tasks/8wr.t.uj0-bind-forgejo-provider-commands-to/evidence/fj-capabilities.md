@@ -143,6 +143,31 @@ the same shapes, including fork `From lab-builder/ace:lab/W675-ace`
 segments — the Lab's fj produced output byte-compatible with upstream
 v0.6.0 observation.
 
+## Endpoint fidelity (astra review round, 2026-09-29)
+
+Probed with the same v0.6.0 binary after the astra review of
+`origin/main..main`:
+
+- **Aliases redirect `-H` (confirmed).** With `keys.json`
+  `aliases = {"codeberg.org": "127.0.0.1:9"}`, `fj -H codeberg.org repo
+  view …` requested `https://127.0.0.1:9/api/v1/…` — the `-H` host is
+  silently rewritten by the keys file (`src/keys.rs deref_alias`; aliases
+  are auto-created ssh-host→http-host pairs at login, so a redirecting
+  alias for the selected HTTP host means hand-edited config). No `fj`
+  command prints aliases (`auth list` prints only login keys), so the
+  provider now reads the keys file read-only at its observed v0.6.0
+  locations and refuses a conflicting alias (`ConfigError` before any
+  subprocess); absent/unreadable file → allowed (cannot verify).
+- **`-H` accepts a full URL and otherwise assumes HTTPS (confirmed).**
+  `-H https://codeberg.org repo view …` works; an http authority passed
+  bare would be upgraded to HTTPS — with `-H http://127.0.0.1:8999` fj
+  requested `http://127.0.0.1:8999/api/v1/repos/o/r` (scheme and port
+  preserved). The executor now passes `scheme://authority` so http forges
+  keep their endpoint.
+- **`auth list` prints authority-form lines** (`forge.internal:3000`)
+  from the keys file `hosts` map (keys are `host_name` strings); exit 0.
+  The exact-authority authentication comparison matches this format.
+
 ## Reproduction
 
 ```text
