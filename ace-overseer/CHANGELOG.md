@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [Unreleased]
+## [0.18.0] - 2026-09-29
 
 ### Added
 - Preservation manifest for prune: `ace-overseer prune --preservation FILE` accepts a strict `version: 1` YAML manifest declaring cross-repository destinations (source repo/base/head, destination repo/base/head/branch); entries are resolved to exact commits, and duplicate, self-destination, or unmatched entries fail before any apply action.
