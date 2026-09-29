@@ -192,6 +192,10 @@ module Ace
 
             unless result[:success]
               output.puts "Sandbox setup failed: #{result[:error]}"
+              # Teardown before raising: the caller's rescue fires before its
+              # local variable is assigned, so its ensure would skip cleanup
+              # of resources this executor already created (tmux sessions).
+              setup_executor.teardown
               raise SandboxSetupFailed, result[:error].to_s
             end
 

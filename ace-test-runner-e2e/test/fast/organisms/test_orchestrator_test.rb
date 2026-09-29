@@ -1468,6 +1468,7 @@ class TestOrchestratorTest < Minitest::Test
     Dir.mktmpdir do |tmpdir|
       create_ts_test_package_with_setup(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001])
 
+      torn_down = false
       setup_executor = Object.new
       setup_executor.define_singleton_method(:execute) do |setup_steps:, sandbox_dir:, fixture_source: nil, scenario_name: nil, run_id: nil, initial_env: {}, git_excludes: [], release_manifest_path: nil|
         {
@@ -1478,7 +1479,7 @@ class TestOrchestratorTest < Minitest::Test
           tmux_session: nil
         }
       end
-      setup_executor.define_singleton_method(:teardown) { nil }
+      setup_executor.define_singleton_method(:teardown) { torn_down = true }
 
       executor = RecordingExecutor.new
       orchestrator = create_orchestrator(
@@ -1496,6 +1497,7 @@ class TestOrchestratorTest < Minitest::Test
       assert_match(/Sandbox setup failed/, result.summary)
       assert_match(/release manifest is missing/, result.error)
       assert_empty executor.calls, "a failed setup must not hand the scenario to the LLM executor"
+      assert torn_down, "setup executor resources must be released when setup fails"
     end
   end
 
