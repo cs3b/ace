@@ -11,53 +11,80 @@ Save all output to `results/tc/02/`.
 
 ## Steps
 
-1. Ensure a clean local install surface and output workspace:
+1. Define the isolated proof environment once, before any install command.
+   It runs the dedicated sandbox Ruby's own bundler directly — never a
+   PATH-resolved or shim-resolved `bundle`:
+```bash
+proof_ruby_root="${ACE_E2E_SANDBOX_RUBY_ROOT:?}"
+proof_bundle() {
+  proof_case="$1"
+  shift
+  env -i \
+    HOME="$HOME" \
+    PATH="$proof_ruby_root/bin:$PATH" \
+    PROJECT_ROOT_PATH="$PWD" \
+    BUNDLE_GEMFILE="$PWD/Gemfile" \
+    BUNDLE_APP_CONFIG="$proof_case/.bundle" \
+    BUNDLE_PATH="$proof_case/.bundle" \
+    BUNDLE_USER_HOME="$proof_case/bundler-home" \
+    BUNDLE_USER_CACHE="$proof_case/bundler-cache" \
+    BUNDLE_USER_CONFIG="$proof_case/bundler-config" \
+    BUNDLE_DISABLE_SHARED_GEMS=true \
+    BUNDLE_WITHOUT="" \
+    GEM_HOME="$proof_case/.gem" \
+    GEM_PATH="$proof_case/.gem" \
+    "$proof_ruby_root/bin/ruby" "$proof_ruby_root/bin/bundle" "$@"
+}
+```
+   Execute the scenario-prescribed isolation exactly as written: do not drop
+   `env -i`, do not substitute partial environment overrides, and do not
+   replace the direct `$proof_ruby_root/bin` executables with PATH lookups.
+
+2. Ensure a clean local install surface and output workspace:
    - `rm -f Gemfile.lock`
-   - `rm -rf .bundle .gem results/tc/02/.bundle results/tc/02/.gem`
-   - `mkdir -p results/tc/02/.bundle results/tc/02/.gem`
-   - Pre-create declared artifacts so verifier input contracts are always present:
-   ```bash
-   : > results/tc/02/.bundle/config
-   : > results/tc/02/bundle-list.stdout
-   : > results/tc/02/bundle-list.stderr
-   : > results/tc/02/installed-ace-gems.txt
-   : > results/tc/02/Gemfile.lock
-   : > results/tc/02/install-summary.txt
-   ```
-2. Record the exact command contract used for execution:
+   - `rm -rf .bundle .gem results/tc/02`
+   - `mkdir -p results/tc/02/.bundle results/tc/02/.gem results/tc/02/bundler-home results/tc/02/bundler-cache`
+   - Pre-create the remaining verifier input contracts (placeholders are NOT
+     postcondition evidence; `bundler-config` must be an empty FILE — bundler
+     reads `BUNDLE_USER_CONFIG` as a file):
+```bash
+: > results/tc/02/install-summary.txt
+: > results/tc/02/bundler-config
+```
+
+3. Record the exact command contract used for execution:
 ```bash
 cat > results/tc/02/install-command.txt <<'EOF'
-env -i HOME="$HOME" PATH="$PATH" \
-  BUNDLE_GEMFILE="$PWD/Gemfile" \
-  BUNDLE_APP_CONFIG="$PWD/results/tc/02/.bundle/config" \
-  BUNDLE_PATH="$PWD/results/tc/02/.bundle" \
-  GEM_HOME="$PWD/results/tc/02/.gem" \
-  PROJECT_ROOT_PATH="$PWD" \
-  BUNDLE_WITHOUT="" \
-  bundle install
+proof_ruby_root="${ACE_E2E_SANDBOX_RUBY_ROOT:?}"
+proof_bundle() {
+  proof_case="$1"; shift
+  env -i HOME="$HOME" PATH="$proof_ruby_root/bin:$PATH" \
+    PROJECT_ROOT_PATH="$PWD" \
+    BUNDLE_GEMFILE="$PWD/Gemfile" \
+    BUNDLE_APP_CONFIG="$proof_case/.bundle" \
+    BUNDLE_PATH="$proof_case/.bundle" \
+    BUNDLE_USER_HOME="$proof_case/bundler-home" \
+    BUNDLE_USER_CACHE="$proof_case/bundler-cache" \
+    BUNDLE_USER_CONFIG="$proof_case/bundler-config" \
+    BUNDLE_DISABLE_SHARED_GEMS=true \
+    BUNDLE_WITHOUT="" \
+    GEM_HOME="$proof_case/.gem" \
+    GEM_PATH="$proof_case/.gem" \
+    "$proof_ruby_root/bin/ruby" "$proof_ruby_root/bin/bundle" "$@"
+}
+proof_bundle results/tc/02 install
 EOF
 ```
-3. Run `bundle install` in the sandbox root with isolated Bundler paths:
+
+4. Run `bundle install` with the isolated environment:
 ```bash
-env -i HOME="$HOME" PATH="$PATH" \
-  BUNDLE_GEMFILE="$PWD/Gemfile" \
-  BUNDLE_APP_CONFIG="$PWD/results/tc/02/.bundle/config" \
-  BUNDLE_PATH="$PWD/results/tc/02/.bundle" \
-  GEM_HOME="$PWD/results/tc/02/.gem" \
-  PROJECT_ROOT_PATH="$PWD" \
-  BUNDLE_WITHOUT="" \
-  bundle install > results/tc/02/install.stdout 2> results/tc/02/install.stderr
+proof_bundle results/tc/02 install > results/tc/02/install.stdout 2> results/tc/02/install.stderr
 echo $? > results/tc/02/install.exit
 ```
-4. If install succeeds, capture end-state evidence from the sandbox:
+
+5. If install succeeds, capture end-state evidence with the same environment:
    ```bash
-   env -i HOME="$HOME" PATH="$PATH" \
-     BUNDLE_GEMFILE="$PWD/Gemfile" \
-     BUNDLE_APP_CONFIG="$PWD/results/tc/02/.bundle/config" \
-     BUNDLE_PATH="$PWD/results/tc/02/.bundle" \
-     GEM_HOME="$PWD/results/tc/02/.gem" \
-     PROJECT_ROOT_PATH="$PWD" \
-     bundle list > results/tc/02/bundle-list.stdout 2> results/tc/02/bundle-list.stderr
+   proof_bundle results/tc/02 list > results/tc/02/bundle-list.stdout 2> results/tc/02/bundle-list.stderr
    rg '^\s*\* ace-' results/tc/02/bundle-list.stdout > results/tc/02/installed-ace-gems.txt
    if [ -f Gemfile.lock ]; then
      cp Gemfile.lock results/tc/02/Gemfile.lock
@@ -72,7 +99,8 @@ SUCCESS: bundle install completed in normal mode, but post-install bundle eviden
 EOF
    fi
    ```
-5. If install fails, write an explicit summary and preserve command output as evidence:
+
+6. If install fails, write an explicit summary and preserve command output as evidence:
 ```bash
 if [ "$(cat results/tc/02/install.exit)" != "0" ]; then
   cat > results/tc/02/install-summary.txt <<'EOF'
@@ -87,3 +115,5 @@ fi
 - Do not use `--full-index` — that is tested in Goal 3.
 - Do not modify the Gemfile.
 - Capture command output regardless of success or failure.
+- Do not weaken the isolation: keep `env -i`, the confined `results/tc/02/`
+  paths, and the direct sandbox-Ruby executables exactly as prescribed.

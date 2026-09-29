@@ -19,6 +19,7 @@ Validation order (impact-first):
 5. **Failure evidence** — If fallback exit is non-zero:
    - `results/tc/03/install-summary.txt` exists.
    - `results/tc/03/fullindex.stdout` or `results/tc/03/fullindex.stderr` contains actionable error details.
+6. **Placeholder rule** — Pre-created placeholder files (empty `install-summary.txt`, `Gemfile.lock`, `installed-ace-gems.txt`, `bundle-list.*`) are verifier input contracts, not postcondition evidence. On failure, ignore their contents and timestamps; never fail a goal solely because placeholders are empty or older than the command. Judge success end-state only from artifacts written after a successful install.
 
 ## Verdict
 
