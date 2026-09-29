@@ -193,10 +193,15 @@ module Ace
         private
 
         def build_command(package, options)
-          # Resolve ace-test co-located with this ace-test-runner so suite
-          # children always run the matching runner version instead of an
-          # ambient PATH selection (deterministic under bundler/shim PATHs).
-          cmd_parts = [ace_test_executable]
+          # Run the child with this suite's own Ruby binary and a bundler
+          # bootstrap: the hermetic fixture env blocks RUBYOPT/BUNDLE_/GEM_ and
+          # redirects HOME/XDG, so a PATH-resolved interpreter can fail through
+          # manager shims and children have no dependency surface beyond the
+          # Ruby install's default gem dir. -rbundler/setup makes bundler
+          # discover the checkout Gemfile by walking up from the package cwd,
+          # giving every child the same source-of-truth dependency set without
+          # ambient env or globally installed gems.
+          cmd_parts = [RbConfig.ruby, "-rbundler/setup", ace_test_executable]
 
           # Suite package execution intentionally bypasses grouped mode so each
           # package runs its full target scope as one batch under suite orchestration.

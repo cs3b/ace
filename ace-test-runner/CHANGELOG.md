@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.27.1] - 2026-09-29
+
+### Fixed
+- Suite children now launch with the suite's own Ruby binary plus `-rbundler/setup`, so bundler discovers the checkout Gemfile by walking up from each package directory. This gives hermetic children a deterministic source-of-truth dependency surface instead of silently relying on PATH-resolved interpreters (which can fail through manager shims under fixture HOME/XDG overrides) or on globally installed ace gems. Closes the runner-level workspace LOAD_PATH follow-up from the hermetic-tests line.
+
 ## [0.27.0] - 2026-09-28
 
 ### Added
