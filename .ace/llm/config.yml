@@ -13,39 +13,39 @@ llm:
   roles:
     # --- Reusable candidate lists ---
     _utility: &utility
-      - codex:mini
+      - codex:sol
       - gemini:flash-latest
       - claude:haiku
     _assign-worker: &assign-worker
-      - codex:gpt:medium@yolo
+      - codex:sol:medium@yolo
       - gemini:flash-latest@yolo
       - claude:sonnet:medium@yolo
 
     # --- Diagnostic ---
     doctor:
-      - codex:mini:low@yolo
+      - codex:sol:low@yolo
       - gemini:flash-latest@yolo
       - claude:haiku:low@yolo
 
     # --- Planning ---
     planner:
-      - codex:gpt:high@ro
+      - codex:sol:high@ro
       - gemini:pro-latest@ro
       - claude:opus:high@ro
 
     # --- Review ---
     review-default:
-      - codex:codex:medium@ro
+      - codex:sol:medium@ro
       - gemini:pro-latest@ro
       - claude:sonnet:medium@ro
     review-synthesizer:
-      - codex:gpt:low@ro
+      - codex:sol:low@ro
       - gemini:flash-latest@ro
       - claude:sonnet:medium@ro
     review-claude:
       - claude:opus:high@ro
     review-codex:
-      - codex:gpt:high@ro
+      - codex:sol:high@ro
     review-gemini:
       - gemini:pro-latest@ro
 
@@ -53,44 +53,44 @@ llm:
     assign-executor: *assign-worker
     assign-engineer: *assign-worker
     assign-orchestrator:
-      - codex:gpt:medium@yolo
+      - codex:sol:medium@yolo
       - gemini:pro-latest@yolo
       - claude:opus:medium@yolo
 
     # --- E2E testing ---
     e2e-runner:
-      - codex:mini:low@yolo
+      - codex:sol:low@yolo
       - gemini:flash-latest@yolo
       - claude:haiku:low@yolo
     e2e-verifier:
-      - codex:mini:low@ro
+      - codex:sol:low@ro
       - gemini:flash-latest@ro
       - claude:haiku:low@ro
     e2e-reporter:
-      - codex:mini:low@ro
+      - codex:sol:low@ro
       - gemini:flash-latest@ro
       - claude:haiku:low@ro
 
     # --- Utility ---
     prompt-enhance: *utility
     commit:
-      - codex:mini
+      - codex:sol
       - glite
     # *utility
     docs-analysis: *utility
     compressor: *utility
     idea-enhance:
-      - codex:mini@ro
+      - codex:sol@ro
       - gemini:flash-latest@ro
       - claude:haiku@ro
 
     # --- Simulation ---
     sim-primary:
-      - codex:mini@ro
+      - codex:sol@ro
       - gemini:flash-latest@ro
       - claude:haiku@ro
     sim-synthesis:
-      - codex:gpt:medium
+      - codex:sol:medium
       - gemini:pro-latest
       - claude:opus:medium
   fallback:
