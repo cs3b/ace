@@ -68,7 +68,9 @@ module Ace
             end
 
             argv = RepositoryBinding.argv_for(operation, target, arguments)
-            execute(["-H", target.authority] + argv, timeout: timeout, runner: runner)
+            # `-H` carries the full selected URL: fj otherwise assumes HTTPS,
+            # which would drop a configured http authority (observed v0.6.0).
+            execute(["-H", target.host_url] + argv, timeout: timeout, runner: runner)
           end
 
           # Probe whether the `fj` binary is installed and runnable.

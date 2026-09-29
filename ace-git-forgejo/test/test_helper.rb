@@ -11,11 +11,28 @@ class AceGitForgejoTestCase < AceTestCase
   def setup
     super
     Ace::Git.reset_config!
+    # Hermetic: no ambient fj keys file may influence the alias-conflict
+    # guard; dedicated tests override @default_keys_path_stub with a path.
+    RepositoryBindingStub.install(nil)
   end
 
   def teardown
+    RepositoryBindingStub.remove
     Ace::Git.reset_config!
     super
+  end
+
+  # Keeps the fj keys-file lookup pointing nowhere unless a test overrides it.
+  module RepositoryBindingStub
+    def self.install(path)
+      @original = Ace::Git::Forgejo::RepositoryBinding.method(:default_keys_path)
+      Ace::Git::Forgejo::RepositoryBinding.define_singleton_method(:default_keys_path) { path }
+    end
+
+    def self.remove
+      original = @original
+      Ace::Git::Forgejo::RepositoryBinding.define_singleton_method(:default_keys_path, original)
+    end
   end
 
   # Build a scripted runner from a hash of full-command => response.

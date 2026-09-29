@@ -21,25 +21,25 @@ class ForgejoProviderContractTest < AceGitForgejoTestCase
     @ok_runner ||= scripted_runner(
       "fj version" => version_ok,
       "fj auth list" => {success: true, stdout: "forgejo.example.com\n", stderr: "", exit_code: 0},
-      "fj -H forgejo.example.com --style minimal pr view owner/repo#25" => {success: true, stdout: pr25_view, stderr: "", exit_code: 0},
-      "fj -H forgejo.example.com --style minimal pr view owner/repo#25 commits" => {
+      "fj -H https://forgejo.example.com --style minimal pr view owner/repo#25" => {success: true, stdout: pr25_view, stderr: "", exit_code: 0},
+      "fj -H https://forgejo.example.com --style minimal pr view owner/repo#25 commits" => {
         success: true, stdout: "commit fc14c43d3660ac6c133959a6dec29603413f0e8a (+252, -8)\nAuthor: Lab Builder <lab-builder@lab.invalid>\n", stderr: "", exit_code: 0
       },
-      "fj -H forgejo.example.com --style minimal pr search --state all -r owner/repo" => {
+      "fj -H https://forgejo.example.com --style minimal pr search --state all -r owner/repo" => {
         success: true, stdout: "2 pull requests\n#31: Wire status to providers (by lab-builder)\n#25: Ship the provider contract (by lab-builder)\n", stderr: "", exit_code: 0
       },
-      "fj -H forgejo.example.com --style minimal pr view owner/repo#31" => {success: true, stdout: pr31_view, stderr: "", exit_code: 0},
-      "fj -H forgejo.example.com --style minimal pr view owner/repo#31 commits" => {
+      "fj -H https://forgejo.example.com --style minimal pr view owner/repo#31" => {success: true, stdout: pr31_view, stderr: "", exit_code: 0},
+      "fj -H https://forgejo.example.com --style minimal pr view owner/repo#31 commits" => {
         success: true, stdout: "commit a1b2c3d4e5f60718293a4b5c6d7e8f9012345678 (+12, -2)\nAuthor: Lab Builder <lab-builder@lab.invalid>\n", stderr: "", exit_code: 0
       },
-      "fj -H forgejo.example.com pr view owner/repo#25 diff" => {
+      "fj -H https://forgejo.example.com pr view owner/repo#25 diff" => {
         success: true, stdout: "diff --git a/lib/x.rb b/lib/x.rb\n+new line\n", stderr: "", exit_code: 0
       },
-      "fj -H forgejo.example.com --style minimal issue view owner/repo#9" => {success: true, stdout: issue9_view, stderr: "", exit_code: 0},
-      "fj -H forgejo.example.com --style minimal actions tasks -r owner/repo" => {
+      "fj -H https://forgejo.example.com --style minimal issue view owner/repo#9" => {success: true, stdout: issue9_view, stderr: "", exit_code: 0},
+      "fj -H https://forgejo.example.com --style minimal actions tasks -r owner/repo" => {
         success: true, stdout: "2 tasks\n#83 (fc14c43d3660ac6c133959a6dec29603413f0e8a) success test-suite 23s (push): subject\n", stderr: "", exit_code: 0
       },
-      "fj -H forgejo.example.com --style minimal repo view owner/repo" => {
+      "fj -H https://forgejo.example.com --style minimal repo view owner/repo" => {
         success: true, stdout: "owner/repo\n> Sample repository\nView online at https://forgejo.example.com/owner/repo\n", stderr: "", exit_code: 0
       }
     )
@@ -71,21 +71,21 @@ class ForgejoProviderContractTest < AceGitForgejoTestCase
   def not_found_runner
     scripted_runner(
       "fj version" => version_ok,
-      "fj -H forgejo.example.com --style minimal pr view owner/repo#999" => ["error: pull request does not exist", 1]
+      "fj -H https://forgejo.example.com --style minimal pr view owner/repo#999" => ["error: pull request does not exist", 1]
     )
   end
 
   def malformed_runner
     scripted_runner(
       "fj version" => version_ok,
-      "fj -H forgejo.example.com --style minimal pr view owner/repo#25" => {success: true, stdout: "unexpected output shape", stderr: "", exit_code: 0}
+      "fj -H https://forgejo.example.com --style minimal pr view owner/repo#25" => {success: true, stdout: "unexpected output shape", stderr: "", exit_code: 0}
     )
   end
 
   def unreachable_runner
     scripted_runner(
       "fj version" => version_ok,
-      "fj -H forgejo.example.com --style minimal pr view owner/repo#25" => ["fj: Forgejo request failed with HTTP 502", 1]
+      "fj -H https://forgejo.example.com --style minimal pr view owner/repo#25" => ["fj: Forgejo request failed with HTTP 502", 1]
     )
   end
 
