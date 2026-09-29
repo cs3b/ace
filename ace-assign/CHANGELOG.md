@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [Unreleased]
+## [0.59.0] - 2026-09-29
 
 ### Added
 - Durable lifecycle exclusion (`Ace::Assign::Molecules::LifecycleExclusion`): prune holds the exclusive side from final evidence reads through removal while every supported start path -- attempt registration, fork/driver session launch, and worktree provisioning -- holds the shared side. Locks live outside every deletion target (sandbox-aware cache base or the shared Git common dir) so they survive removal of the target, and a `removed` marker makes post-prune starts fail closed instead of recreating a deleted identity.
