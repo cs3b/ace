@@ -115,7 +115,7 @@ module Ace
             puts "  Short aliases for common provider:MODEL combinations:"
             puts "    gflash    → google:gemini-flash-latest"
             puts "    glite     → google:gemini-flash-lite-latest"
-            puts "    codex:gpt → codex:gpt-5.4"
+            puts "    codex:gpt → codex:gpt-6-sol"
             puts "    cc        → claude:sonnet"
             puts "    sonnet    → anthropic:claude-sonnet-4-5"
           end

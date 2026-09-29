@@ -28,21 +28,21 @@ module Ace
           assert_equal :provider_default, result.source
         end
 
-        def test_resolve_preserves_legacy_explicit_model_limits
-          result = @resolver.resolve("codex:gpt-5.4:high@ro")
+        def test_resolve_preserves_explicit_model_target_without_limits
+          result = @resolver.resolve("codex:gpt-6-sol:high@ro")
 
           assert_equal "codex", result.provider
-          assert_equal "gpt-5.4", result.model
-          assert_equal 1_050_000, result.context_limit
-          assert_equal 128_000, result.output_limit
-          assert_equal :model_override, result.source
-          assert_equal "codex:gpt-5.4:high@ro", result.original_target
+          assert_equal "gpt-6-sol", result.model
+          assert_equal 200_000, result.context_limit
+          assert_nil result.output_limit
+          assert_equal :fallback, result.source
+          assert_equal "codex:gpt-6-sol:high@ro", result.original_target
         end
 
         def test_resolve_expands_role_before_limit_lookup
           parsed = ProviderModelParser::ParseResult.new(
             "codex",
-            "gpt-5.4",
+            "gpt-6-astra",
             "ro",
             "high",
             true,
@@ -56,9 +56,9 @@ module Ace
           result = resolver.resolve("role:review-codex")
 
           assert_equal "codex", result.provider
-          assert_equal "gpt-5.4", result.model
-          assert_equal 1_050_000, result.context_limit
-          assert_equal :model_override, result.source
+          assert_equal "gpt-6-astra", result.model
+          assert_equal 200_000, result.context_limit
+          assert_equal :fallback, result.source
         end
 
         def test_resolve_returns_fallback_when_target_invalid

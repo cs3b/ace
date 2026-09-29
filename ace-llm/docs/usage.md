@@ -70,18 +70,14 @@ Common aliases in current defaults:
 | `gpro` | `google:pro` -> `google:gemini-2.5-pro` |
 | `gemini:flash-latest` | `gemini:gemini-3-flash-preview` |
 | `gemini:pro-latest` | `gemini:gemini-3.1-pro-preview` |
-| `codex`, `codex:gpt`, `codex:codex` | `codex:gpt-5.6-terra` |
+| `codex`, `codex:gpt`, `codex:codex`, `codex:mini` | `codex:gpt-6-sol` |
+| `codex:sol` | `codex:gpt-6-sol` |
 | `codex:astra` | `codex:gpt-6-astra` |
-| `codex:sol` | `codex:gpt-5.6-sol` |
-| `codex:terra` | `codex:gpt-5.6-terra` |
-| `codex:luna`, `codex:mini` | `codex:gpt-5.6-luna` |
-| `codex:spark` | `codex:gpt-5.3-codex-spark` |
+| `codex:luna` | `codex:gpt-6-luna` |
 | `agy` | `agy:gemini-3.5-flash-medium` |
 | `agy:flash` | `agy:gemini-3.5-flash-medium` |
 | `agy:flash-high` | `agy:gemini-3.7-flash-high` |
 | `agy:pro` | `agy:gemini-3.1-pro-high` |
-| `codex-gpt5` | `codex:gpt-5.4` |
-| `codex-mini` | `codex:gpt-5.4-mini` |
 | `sonnet` | `anthropic:s` -> `anthropic:claude-sonnet-4-5` |
 | `opus` | `anthropic:o` -> `anthropic:claude-opus-4-5` |
 | `haiku` | `anthropic:h` -> `anthropic:claude-haiku-4-5` |
@@ -108,7 +104,7 @@ when the recorded history proves they are new; preview alone never records that
 history. Unresolved offers remain visible on repeated sync. Codex sync reads its
 bundled native catalog and does not require models.dev or infer retirement from it.
 
-The four new entries omit unverified native numeric limits. ACE's limit resolver
+The v6 catalog entries (sol, astra, luna) omit unverified native numeric limits. ACE's limit resolver
 therefore reports its operational context fallback of 200,000 and no output limit;
 these are not official model limits. The existing `xhigh` preset still sends
 `model_reasoning_effort="high"`; it is an ACE compatibility setting, not native
@@ -140,7 +136,7 @@ Thinking levels control reasoning depth for CLI providers that support extended 
 ```bash
 ace-llm codex:gpt:high "Explain this architecture"
 ace-llm claude:sonnet:low "Quick summary"
-ace-llm codex:spark:medium@ro "Review this diff"
+ace-llm codex:luna:medium@ro "Review this diff"
 ```
 
 Supported providers and levels:

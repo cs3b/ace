@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.41.1] - 2026-09-29
+
+### Changed
+
+- Codex selector help now resolves `codex:gpt` to `gpt-6-sol` under the v6-only model catalog.
+
+### Technical
+
+- Docs: codex alias table, shortcut rows, and demo tape aligned to the gpt-6 sol/astra/luna policy (gpt-5.x, terra, and spark entries removed).
+- Tests: codex target and model-limit-resolver expectations updated to the v6 catalog.
+
 ## [0.41.0] - 2026-09-27
 
 ### Changed

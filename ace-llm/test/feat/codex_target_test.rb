@@ -6,8 +6,7 @@ require "ace/llm/molecules/model_limit_resolver"
 class CodexTargetTest < AceLlmTestCase
   include Ace::TestSupport::ConfigHelpers
 
-  IDS = %w[gpt-6-astra gpt-5.6-sol gpt-5.6-terra gpt-5.6-luna gpt-5.3-chat-latest
-    gpt-5.3-codex gpt-5.3-codex-spark gpt-5.4 gpt-5.4-mini gpt-5.4-nano gpt-5.4-pro gpt-9].freeze
+  IDS = %w[gpt-6-sol gpt-6-astra gpt-6-luna gpt-9].freeze
 
   def setup
     super
@@ -22,10 +21,10 @@ class CodexTargetTest < AceLlmTestCase
   end
 
   def test_named_generic_and_thinking_selectors_reach_requested_client
-    {"codex" => "gpt-5.6-terra", "codex:gpt" => "gpt-5.6-terra",
-     "codex:mini" => "gpt-5.6-luna", "codex:astra:high" => "gpt-6-astra",
-     "codex:sol:low" => "gpt-5.6-sol", "codex:terra:medium" => "gpt-5.6-terra",
-     "codex:luna:high" => "gpt-5.6-luna", "codex:spark" => "gpt-5.3-codex-spark"}.each do |selector, model|
+    {"codex" => "gpt-6-sol", "codex:gpt" => "gpt-6-sol",
+     "codex:mini" => "gpt-6-sol", "codex:astra:high" => "gpt-6-astra",
+     "codex:sol:low" => "gpt-6-sol", "codex:luna:medium" => "gpt-6-luna",
+     "codex:luna:high" => "gpt-6-luna"}.each do |selector, model|
       with_client do
         result = Ace::LLM::QueryInterface.query(selector, "ping", fallback: false)
         assert_equal model, result[:model]
@@ -40,7 +39,7 @@ class CodexTargetTest < AceLlmTestCase
       with_client(error: "native rejection: #{id}") do
         error = assert_raises(Ace::LLM::Error) do
           Ace::LLM::QueryInterface.query("codex:#{id}:medium", "ping",
-            fallback: true, fallback_providers: ["codex:terra"])
+            fallback: true, fallback_providers: ["codex:luna"])
         end
         assert_equal "native rejection: #{id}", error.message
         assert_equal [["codex", id]], @attempts
@@ -54,7 +53,7 @@ class CodexTargetTest < AceLlmTestCase
       with_client(error: "native unsupported effort") do
         assert_raises(Ace::LLM::Error) do
           Ace::LLM::QueryInterface.query("codex:astra:high", "ping",
-            fallback_providers: ["codex:terra"], **options)
+            fallback_providers: ["codex:luna"], **options)
         end
         assert_equal [["codex", options[:model] || "gpt-6-astra"]], @attempts
       end
@@ -74,7 +73,7 @@ class CodexTargetTest < AceLlmTestCase
   end
 
   def test_new_models_use_labeled_operational_fallback_not_inherited_old_limits
-    IDS.first(4).each do |id|
+    IDS.first(3).each do |id|
       result = Ace::LLM::Molecules::ModelLimitResolver.resolve("codex:#{id}")
       assert_equal id, result.model
       assert_equal :fallback, result.source
