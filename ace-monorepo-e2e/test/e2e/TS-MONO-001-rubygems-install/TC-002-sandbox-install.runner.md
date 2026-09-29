@@ -40,13 +40,13 @@ proof_bundle() {
     "$proof_ruby_root/bin/ruby" "$proof_ruby_root/bin/bundle" "$@"
 }
 consumer_bundle() {
-  consumer_dir="$1"
+  consumer_dir="$PWD/$1"
   shift
   env -i \
     HOME="$HOME" \
     PATH="$proof_ruby_root/bin:$PATH" \
     PROJECT_ROOT_PATH="$PWD" \
-    BUNDLE_GEMFILE="$PWD/$consumer_dir/Gemfile" \
+    BUNDLE_GEMFILE="$consumer_dir/Gemfile" \
     BUNDLE_APP_CONFIG="$consumer_dir/.bundle" \
     BUNDLE_PATH="$consumer_dir/.bundle" \
     BUNDLE_USER_HOME="$consumer_dir/bundler-home" \

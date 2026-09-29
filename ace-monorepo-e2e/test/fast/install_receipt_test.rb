@@ -372,6 +372,102 @@ class InstallReceiptTest < AceMonorepoE2eTestCase
       verdict["findings"].inspect)
   end
 
+
+def test_verify_rejects_superseded_version_in_duplicate_lockfile_entries
+  fixture = build_complete_fixture
+  path = File.join(fixture[:normal], "Gemfile.lock")
+  content = File.read(path)
+  content.sub!(/^    ace-test-runner \(0\.27\.1\)\n/, "    ace-test-runner (0.27.1)\n    ace-test-runner (0.27.0)\n")
+  File.write(path, content)
+
+  verdict = InstallReceipt.verify(
+    manifest_path: @manifest_path,
+    mode_dirs: {"normal" => fixture[:normal], "full_index" => fixture[:full_index]}
+  )
+
+  assert_equal "fail", verdict["acceptance"]
+  assert(verdict["findings"].any? { |finding| finding.include?("ace-test-runner 0.27.0 is superseded by 0.27.1 but still present") },
+    verdict["findings"].inspect)
+end
+
+def test_verify_records_finding_for_malformed_receipt_entries
+  fixture = build_complete_fixture
+  receipt_path = File.join(fixture[:normal], "install-receipt.json")
+  receipt = JSON.parse(File.read(receipt_path))
+  receipt["packages"]["ace-git"] = "0.25.0"
+  File.write(receipt_path, JSON.pretty_generate(receipt))
+
+  verdict = InstallReceipt.verify(
+    manifest_path: @manifest_path,
+    mode_dirs: {"normal" => fixture[:normal], "full_index" => fixture[:full_index]}
+  )
+
+  assert_equal "fail", verdict["acceptance"]
+  assert(verdict["findings"].any? { |finding| finding.include?("activated receipt entry ace-git must be an object") },
+    verdict["findings"].inspect)
+end
+
+def test_finalize_reports_findings_for_malformed_pipeline_metadata
+  fixture = build_complete_fixture
+  report_dir = File.join(@tmpdir, "reports")
+  results_root = write_results_root(fixture)
+  FileUtils.mkdir_p(report_dir)
+  File.write(File.join(report_dir, "metadata.yml"), "{{{ not yaml")
+
+  verdict = InstallReceipt.finalize(
+    manifest_path: @manifest_path,
+    mode_dirs: {"normal" => fixture[:normal], "full_index" => fixture[:full_index]},
+    pipeline_report_dir: report_dir,
+    results_root: results_root,
+    source_manifest: @manifest_path
+  )
+
+  assert_equal "fail", verdict["final"]
+  assert(verdict["findings"].any? { |finding| finding.include?("not parseable YAML") }, verdict["findings"].inspect)
+end
+
+def test_finalize_reports_findings_for_non_mapping_pipeline_metadata
+  fixture = build_complete_fixture
+  report_dir = File.join(@tmpdir, "reports")
+  results_root = write_results_root(fixture)
+  FileUtils.mkdir_p(report_dir)
+  File.write(File.join(report_dir, "metadata.yml"), "- just
+- a list
+")
+
+  verdict = InstallReceipt.finalize(
+    manifest_path: @manifest_path,
+    mode_dirs: {"normal" => fixture[:normal], "full_index" => fixture[:full_index]},
+    pipeline_report_dir: report_dir,
+    results_root: results_root,
+    source_manifest: @manifest_path
+  )
+
+  assert_equal "fail", verdict["final"]
+  assert(verdict["findings"].any? { |finding| finding.include?("not a mapping") }, verdict["findings"].inspect)
+end
+
+def test_finalize_reports_findings_for_malformed_acceptance_artifact
+  fixture = build_complete_fixture
+  report_dir = File.join(@tmpdir, "reports")
+  results_root = write_results_root(fixture)
+  tc04 = File.join(results_root, "results", "tc", "04")
+  File.write(File.join(tc04, "exact-version-acceptance.json"), "{not json")
+  FileUtils.mkdir_p(report_dir)
+  File.write(File.join(report_dir, "metadata.yml"), "status: pass\n")
+
+  verdict = InstallReceipt.finalize(
+    manifest_path: @manifest_path,
+    mode_dirs: {"normal" => fixture[:normal], "full_index" => fixture[:full_index]},
+    pipeline_report_dir: report_dir,
+    results_root: results_root,
+    source_manifest: @manifest_path
+  )
+
+  assert_equal "fail", verdict["final"]
+  assert(verdict["findings"].any? { |finding| finding.include?("not valid JSON") }, verdict["findings"].inspect)
+end
+
   def test_finalize_rejects_wrapper_error_despite_zero_bundle_exits
     fixture = build_complete_fixture
     report_dir = File.join(@tmpdir, "reports")
@@ -682,5 +778,22 @@ class InstallReceiptTest < AceMonorepoE2eTestCase
       end
     end
     File.write(path, content)
+  end
+end
+
+class InstallReceiptRunnerContractTest < AceMonorepoE2eTestCase
+  SCENARIO_DIR = File.expand_path("../e2e/TS-MONO-001-rubygems-install", __dir__)
+
+  def test_consumer_bundle_uses_absolute_bundler_paths
+    %w[TC-002-sandbox-install TC-003-fullindex-fallback].each do |tc|
+      content = File.read(File.join(SCENARIO_DIR, "#{tc}.runner.md"))
+      assert_includes content, 'consumer_dir="$PWD/$1"',
+        "#{tc} consumer_bundle must anchor paths at the sandbox root"
+      ["BUNDLE_GEMFILE", "BUNDLE_APP_CONFIG", "BUNDLE_PATH", "BUNDLE_USER_HOME",
+        "BUNDLE_USER_CACHE", "BUNDLE_USER_CONFIG", "GEM_HOME", "GEM_PATH"].each do |var|
+        assert_match(%r{#{var}="\$consumer_dir/}, content,
+          "#{tc} consumer_bundle #{var} must use the absolute consumer dir (relative paths double-nest under the Gemfile dir)")
+      end
+    end
   end
 end

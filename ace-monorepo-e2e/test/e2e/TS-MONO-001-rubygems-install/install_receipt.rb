@@ -45,6 +45,7 @@ module InstallReceipt
     section = nil
     in_specs = false
     packages = {}
+    all_versions = Hash.new { |h, k| h[k] = [] }
     sections_with_packages = Hash.new { |h, k| h[k] = [] }
 
     File.foreach(path) do |line|
@@ -61,11 +62,13 @@ module InstallReceipt
       next unless match && in_specs && section
 
       packages[match[1]] = match[2]
+      all_versions[match[1]] << match[2]
       sections_with_packages[section] << match[1]
     end
 
     {
       "packages" => packages,
+      "all_versions" => all_versions,
       "sections" => sections_with_packages,
       "path" => path
     }
@@ -221,12 +224,25 @@ module InstallReceipt
     acceptance_path = File.join(results_root, "results", "tc", "04", "exact-version-acceptance.json")
     runner_acceptance = nil
     if File.file?(acceptance_path)
-      parsed = JSON.parse(File.read(acceptance_path))
-      runner_acceptance = parsed["acceptance"]
-      runner_findings = Array(parsed["findings"])
-      findings << "runner-side acceptance #{runner_acceptance.inspect} is not pass" unless runner_acceptance == "pass"
-      unless runner_findings.empty?
-        findings << "runner-side acceptance still carries findings: #{runner_findings.first(5).join('; ')}"
+      begin
+        parsed = JSON.parse(File.read(acceptance_path))
+      rescue JSON::ParserError => e
+        parsed = nil
+        findings << "exact-version acceptance artifact is not valid JSON: #{e.message}"
+      end
+      if parsed
+        unless parsed.is_a?(Hash)
+          parsed = nil
+          findings << "exact-version acceptance artifact is not a JSON object"
+        end
+      end
+      if parsed
+        runner_acceptance = parsed["acceptance"]
+        runner_findings = Array(parsed["findings"])
+        findings << "runner-side acceptance #{runner_acceptance.inspect} is not pass" unless runner_acceptance == "pass"
+        unless runner_findings.empty?
+          findings << "runner-side acceptance still carries findings: #{runner_findings.first(5).join('; ')}"
+        end
       end
     else
       findings << "exact-version acceptance artifact is missing: #{acceptance_path}"
@@ -259,7 +275,15 @@ module InstallReceipt
       return {"ok" => false, "findings" => ["pipeline metadata.yml is missing: #{metadata_path}"]}
     end
 
-    metadata = YAML.safe_load_file(metadata_path, permitted_classes: [Date])
+    metadata = begin
+      YAML.safe_load_file(metadata_path, permitted_classes: [Date])
+    rescue StandardError => e
+      return {"ok" => false, "findings" => ["pipeline metadata.yml is not parseable YAML: #{e.message}"]}
+    end
+    unless metadata.is_a?(Hash)
+      return {"ok" => false, "findings" => ["pipeline metadata.yml is not a mapping"]}
+    end
+
     status = metadata["status"]
     uncertain = metadata["uncertain_execution"] == true
     findings = []
@@ -308,10 +332,12 @@ module InstallReceipt
         end
       end
 
-      lockfile["packages"].each do |name, version|
-        next unless version.match?(/\A[0-9a-f]{40}\z/)
+      lockfile["all_versions"].each do |name, versions|
+        versions.each do |version|
+          next unless version.match?(/\A[0-9a-f]{40}\z/)
 
-        findings << "lockfile entry #{name} looks like a source revision, not a released version"
+          findings << "lockfile entry #{name} looks like a source revision, not a released version"
+        end
       end
     end
 
@@ -319,6 +345,7 @@ module InstallReceipt
       state = {
         "manifest_version" => entry["artifact_version"],
         "lockfile_version" => lockfile && lockfile["packages"][name],
+        "lockfile_versions" => lockfile && lockfile["all_versions"][name],
         "activated_version" => receipt && receipt.dig(name, "version"),
         "activated_path" => receipt && receipt.dig(name, "path"),
         "supersedes" => entry["supersedes"] || []
@@ -357,7 +384,8 @@ module InstallReceipt
     end
 
     state["supersedes"].each do |old_version|
-      if [state["lockfile_version"], state["activated_version"]].include?(old_version)
+      observed = state["lockfile_versions"].to_a + [state["activated_version"]].compact
+      if observed.include?(old_version)
         findings << "#{name} #{old_version} is superseded by #{state["manifest_version"]} but still present"
       end
     end
@@ -490,6 +518,12 @@ module InstallReceipt
 
     packages = receipt["packages"]
     raise ArgumentError, "activated receipt has no packages object: #{path}" unless packages.is_a?(Hash)
+
+    packages.each do |name, entry|
+      unless entry.is_a?(Hash) && entry["version"].is_a?(String) && !entry["version"].empty?
+        raise ArgumentError, "activated receipt entry #{name} must be an object with a version string: #{path}"
+      end
+    end
 
     packages
   rescue JSON::ParserError => e
