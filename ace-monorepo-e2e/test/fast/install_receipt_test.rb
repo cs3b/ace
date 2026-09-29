@@ -17,7 +17,7 @@ class InstallReceiptTest < AceMonorepoE2eTestCase
   end
 
   def test_parse_lockfile_reads_registry_packages_and_ignores_dependencies
-    lockfile = write_lockfile("normal", <<~LOCK)
+    lockfile = write_lockfile(File.join(@tmpdir, "normal"), <<~LOCK)
       GEM
         remote: https://rubygems.org/
         specs:
@@ -44,7 +44,7 @@ class InstallReceiptTest < AceMonorepoE2eTestCase
   end
 
   def test_parse_lockfile_detects_path_and_git_sections
-    lockfile = write_lockfile("normal", <<~LOCK)
+    lockfile = write_lockfile(File.join(@tmpdir, "normal"), <<~LOCK)
       GEM
         remote: https://rubygems.org/
         specs:
