@@ -18,6 +18,7 @@ require_relative "llm/atoms/http_client"
 require_relative "llm/atoms/xdg_directory_resolver"
 require_relative "llm/atoms/error_classifier"
 
+require_relative "llm/models/execution_evidence"
 require_relative "llm/models/fallback_config"
 require_relative "llm/models/role_config"
 
@@ -51,7 +52,15 @@ require_relative "llm/cli"
 module Ace
   module LLM
     class Error < StandardError; end
-    class ProviderError < Error; end
+
+    # Provider failure carrying optional structured execution evidence
+    # (Ace::LLM::Models::ExecutionEvidence) about how the provider session
+    # actually ended. Evidence is attached at the subprocess boundary; absence
+    # keeps legacy message-based classification behavior.
+    class ProviderError < Error
+      attr_accessor :execution_evidence
+    end
+
     class ConfigurationError < Error; end
     class AuthenticationError < Error; end
 
