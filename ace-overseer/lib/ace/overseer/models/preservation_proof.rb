@@ -11,16 +11,17 @@ module Ace
       # failed or ambiguous evidence — is not preserved and carries the
       # blocking reason.
       class PreservationProof
-        attr_reader :method, :reason
+        attr_reader :method, :reason, :head
 
-        def initialize(preserved:, method: nil, reason: nil)
+        def initialize(preserved:, method: nil, reason: nil, head: nil)
           @preserved = preserved
           @method = method
           @reason = reason
+          @head = head
         end
 
-        def self.preserved(method)
-          new(preserved: true, method: method)
+        def self.preserved(method, head: nil)
+          new(preserved: true, method: method, head: head)
         end
 
         def self.blocked(reason)

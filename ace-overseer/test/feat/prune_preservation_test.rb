@@ -203,6 +203,27 @@ def test_accepted_base_reset_between_preview_and_apply_blocks_the_candidate
 ").include?("task-work")
 end
 
+def test_unresolvable_base_after_preview_blocks_the_candidate
+  commit_and_merge_work
+  manager = StaticManager.new([worktree_entry], repo_root: @repo.path)
+  orchestrator = build_orchestrator(manager)
+
+  preview = orchestrator.call(dry_run: true, yes: false, input: StringIO.new(""), output: StringIO.new)
+  assert_equal 1, preview[:safe].length, "preview must classify as safe"
+
+  # The main checkout detaches between preview and apply: the fresh base
+  # cannot be resolved, so the apply must block instead of reusing the
+  # stale pre-confirmation base.
+  @repo.git!("checkout", "-q", "--detach")
+
+  result = orchestrator.call(dry_run: false, yes: true, input: StringIO.new(""), output: StringIO.new)
+
+  assert_empty result[:pruned]
+  assert_equal 1, result[:unsafe].length
+  assert_includes result[:unsafe].first.reasons.join(" "), "no surviving accepted base"
+  assert File.directory?(@worktree.path), "candidate must be preserved"
+end
+
   def test_dry_run_changes_nothing
     commit_and_merge_work
     manager = StaticManager.new([worktree_entry], repo_root: @repo.path)

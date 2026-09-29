@@ -5,10 +5,10 @@ module Ace
     module Models
       class PruneCandidate
         attr_reader :task_id, :worktree_path, :assignment_complete, :task_done, :git_clean,
-          :attempts_terminal, :preserved, :reasons
+          :attempts_terminal, :preserved, :verified_head, :reasons
 
         def initialize(task_id:, worktree_path:, assignment_complete:, task_done:, git_clean:,
-          attempts_terminal: true, preserved: true, reasons: [])
+          attempts_terminal: true, preserved: true, verified_head: nil, reasons: [])
           @task_id = task_id.to_s.freeze
           @worktree_path = worktree_path.to_s.freeze
           @assignment_complete = assignment_complete
@@ -16,6 +16,7 @@ module Ace
           @git_clean = git_clean
           @attempts_terminal = attempts_terminal
           @preserved = preserved
+          @verified_head = verified_head
           @reasons = reasons.map(&:to_s).freeze
         end
 

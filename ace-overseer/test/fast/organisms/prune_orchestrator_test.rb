@@ -135,6 +135,7 @@ class PruneOrchestratorTest < AceOverseerTestCase
       git_clean: safe,
       attempts_terminal: safe,
       preserved: safe,
+      verified_head: safe ? ("h" * 40) : nil,
       reasons: reasons
     )
   end

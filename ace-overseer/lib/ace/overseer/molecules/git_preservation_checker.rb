@@ -77,7 +77,7 @@ module Ace
           end
 
           if ancestry?(worktree_path, live_head, accepted_base[:head])
-            return Models::PreservationProof.preserved(:accepted_ancestor)
+            return Models::PreservationProof.preserved(:accepted_ancestor, head: live_head)
           end
           return blocked("HEAD #{live_head[0, 12]} is not contained in accepted base " \
             "#{accepted_base[:branch]} (#{accepted_base[:head][0, 12]}) and no destination is declared") if manifest_record.nil?
@@ -167,7 +167,7 @@ module Ace
           end
 
           if source_tree == destination_tree
-            Models::PreservationProof.preserved(:tree_equality)
+            Models::PreservationProof.preserved(:tree_equality, head: record.resolved_source_head)
           end
         end
 
@@ -177,20 +177,13 @@ module Ace
           recorded_base == record.resolved_source_base
         end
 
-        # A destination that is the candidate's own branch — or resolves to
-        # its tip — is scheduled for deletion with the worktree and cannot
-        # survive as the place the work was preserved.
+        # A destination that IS the candidate's own branch ref is scheduled
+        # for deletion with the worktree and cannot survive as the place the
+        # work was preserved. Identity is by ref name, not tip: two distinct
+        # refs may legitimately point at the same commit, and deleting the
+        # candidate ref leaves the other intact.
         def verify_destination_survival(record, candidate_branch)
           return nil unless same_path?(record.source_repo, record.destination_repo)
-
-          branch_tip = rev_parse(record.destination_repo, "--verify", record.destination_branch)
-          candidate_tip = candidate_branch.to_s.empty? ? nil : rev_parse(
-            record.source_repo, "--verify", "refs/heads/#{candidate_branch}"
-          )
-          if branch_tip && candidate_tip && branch_tip == candidate_tip
-            return blocked("declared destination branch #{record.destination_branch} is the candidate's own " \
-              "branch scheduled for deletion and cannot be its surviving destination")
-          end
 
           if !candidate_branch.to_s.empty? && record.destination_branch_name == candidate_branch
             return blocked("declared destination branch #{record.destination_branch} is the candidate's own " \
@@ -253,7 +246,7 @@ module Ace
           end
 
           if source_transition == destination_transition
-            Models::PreservationProof.preserved(:content_transition)
+            Models::PreservationProof.preserved(:content_transition, head: record.resolved_source_head)
           else
             blocked("declared destination content differs from the source transition")
           end

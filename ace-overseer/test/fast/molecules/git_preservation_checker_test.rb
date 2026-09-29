@@ -372,6 +372,31 @@ def test_destination_on_the_candidate_branch_is_rejected
   assert_includes proof.reason, "scheduled for deletion"
 end
 
+def test_distinct_destination_branch_at_same_tip_is_accepted
+  source, worktree = build_source
+  commit_work(worktree, {"feature.txt" => "1\n"})
+  source.checkout("main")
+  source.git!("merge", "--no-ff", "--no-edit", "-q", "task-work")
+  # main was reset so ancestry fails; a DISTINCT landing ref shares the
+  # candidate tip. Deleting the candidate ref leaves landing intact.
+  source.git!("update-ref", "refs/heads/main", source.rev("main~1"))
+  source.branch("landing", worktree.rev("HEAD"))
+
+  record = build_record(source, worktree, source,
+    destination_base: worktree.rev("HEAD~1"), destination_head: worktree.rev("HEAD"),
+    destination_branch: "refs/heads/landing")
+  proof = @checker.proof(
+    worktree_path: worktree.path,
+    accepted_base: {branch: "main", head: source.rev("main")},
+    manifest_record: record,
+    recorded_base: record.resolved_source_base,
+    candidate_branch: "task-work"
+  )
+
+  assert_predicate proof, :preserved?
+  assert_equal proof.head, worktree.rev("HEAD")
+end
+
   def test_binary_modes_and_symlinks_compare_exactly
     source, worktree = build_source
     worktree.write("blob.bin", [0x00, 0xFF, 0x13, 0x37].pack("C*"))

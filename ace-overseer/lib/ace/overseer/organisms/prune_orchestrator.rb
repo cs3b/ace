@@ -101,8 +101,9 @@ module Ace
             exclusion.with_exclusive(identity_key(candidate)) do
               # Re-resolve the surviving base inside the exclusion: a base
               # branch reset after preview must not authorize removal against
-              # its stale tip.
-              fresh_base = accepted_base_for([candidate_worktree(candidate)]) || accepted_base
+              # its stale tip, and an unresolvable base cannot re-verify
+              # preservation at all.
+              fresh_base = accepted_base_for([candidate_worktree(candidate)])
               recheck = check_candidate(
                 candidate_worktree(candidate), manifest: manifest, accepted_base: fresh_base
               )
@@ -112,7 +113,7 @@ module Ace
                 next
               end
 
-              removal = remove_worktree(candidate)
+              removal = remove_worktree(candidate, verified_head: recheck.verified_head)
               if removal[:success]
                 pruned << candidate
                 record_removed(candidate)
@@ -127,8 +128,7 @@ module Ace
           {pruned: pruned, failed: failed, blocked: blocked}
         end
 
-        def remove_worktree(candidate)
-          head = candidate_head(candidate.worktree_path)
+        def remove_worktree(candidate, verified_head:)
           branch = candidate_branch(candidate.worktree_path)
           repo = candidate_repo(candidate.worktree_path)
 
@@ -141,19 +141,21 @@ module Ace
           return remove_result unless remove_result[:success]
 
           close_tmux_window(candidate.worktree_path)
-          branch_result = delete_branch(repo, branch: branch, head: head)
+          branch_result = delete_branch(repo, branch: branch, head: verified_head)
           return branch_result unless branch_result[:success]
 
           remove_result
         end
 
         # The branch deletion boundary: the ref is deleted by compare-and-swap
-        # against the exact tip whose preservation was just re-proven under
-        # this exclusion — a branch advanced concurrently is preserved, not
-        # force-deleted.
+        # against the exact HEAD whose preservation the recheck just proved —
+        # never a freshly re-read commit that was itself never proven, and a
+        # branch advanced concurrently is preserved, not force-deleted.
         def delete_branch(repo, branch:, head:)
           return {success: true} if branch.nil? || branch.empty?
-          return {success: true} if head.nil?
+          if head.nil?
+            return {success: false, error: "recheck did not verify a candidate HEAD; preserving branch #{branch}"}
+          end
           return {success: false, error: "cannot resolve common repository for branch deletion"} if repo.nil?
 
           _out, status = Open3.capture2(
