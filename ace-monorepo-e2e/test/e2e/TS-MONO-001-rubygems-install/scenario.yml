@@ -36,5 +36,25 @@ setup:
       grep "^[[:space:]]*gem 'ace-" "${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}/Gemfile" | sed "s/, path:.*//" >> Gemfile
   - release-manifest:
       to: results/tc/01/release-manifest.json
+      require:
+        - ace-assign
+        - ace-bundle
+        - ace-git
+        - ace-git-forgejo
+        - ace-git-github
+        - ace-git-worktree
+        - ace-handbook
+        - ace-handbook-integration-pi
+        - ace-lab
+        - ace-llm
+        - ace-llm-providers-cli
+        - ace-overseer
+        - ace-review
+        - ace-runtime
+        - ace-support-test-helpers
+        - ace-task
+        - ace-test
+        - ace-test-runner
+        - ace-test-runner-e2e
   - agent-env:
       PROJECT_ROOT_PATH: .

@@ -153,14 +153,68 @@ module InstallReceipt
     }
   end
 
-  def finalize(manifest_path:, mode_dirs:, pipeline_report_dir:, consumers: DEFAULT_CONSUMERS, exits: {})
+  def finalize(manifest_path:, mode_dirs:, pipeline_report_dir:, consumers: DEFAULT_CONSUMERS, exits: {}, results_root: nil)
     verdict = verify(manifest_path: manifest_path, mode_dirs: mode_dirs, consumers: consumers, exits: exits)
     pipeline = pipeline_completion(pipeline_report_dir)
     verdict["kind"] = "installation-acceptance"
     verdict["pipeline_completion"] = pipeline
-    verdict["final"] = (verdict["acceptance"] == "pass" && pipeline["ok"]) ? "pass" : "fail"
     verdict["findings"].concat(pipeline["findings"])
+
+    reconciliation = reconcile_results(verdict, results_root, exits: exits)
+    verdict["results_reconciliation"] = reconciliation
+    verdict["findings"].concat(reconciliation["findings"])
+
+    verdict["final"] = (verdict["acceptance"] == "pass" && pipeline["ok"] && reconciliation["ok"]) ? "pass" : "fail"
     verdict
+  end
+
+  # The final verdict must agree with the scenario's own artifacts: the
+  # TC-004 classification and the runner-side exact-version acceptance.
+  def reconcile_results(verdict, results_root, exits: {})
+    findings = []
+    if results_root.nil?
+      return {"ok" => false, "findings" => ["results root is required to reconcile scenario artifacts"]}
+    end
+
+    classification_path = File.join(results_root, "results", "tc", "04", "classification.txt")
+    recorded = File.file?(classification_path) ? File.read(classification_path).strip : nil
+    expected = expected_classification(verdict, exits: exits)
+    findings << "classification artifact is missing: #{classification_path}" if recorded.nil? || recorded.empty?
+    findings << "recorded classification #{recorded.inspect} disagrees with recomputed #{expected.inspect} (from install exits)" if !recorded.nil? && !recorded.empty? && recorded != expected
+
+    acceptance_path = File.join(results_root, "results", "tc", "04", "exact-version-acceptance.json")
+    runner_acceptance = nil
+    if File.file?(acceptance_path)
+      parsed = JSON.parse(File.read(acceptance_path))
+      runner_acceptance = parsed["acceptance"]
+      runner_findings = Array(parsed["findings"])
+      findings << "runner-side acceptance #{runner_acceptance.inspect} is not pass" unless runner_acceptance == "pass"
+      unless runner_findings.empty?
+        findings << "runner-side acceptance still carries findings: #{runner_findings.first(5).join('; ')}"
+      end
+    else
+      findings << "exact-version acceptance artifact is missing: #{acceptance_path}"
+    end
+
+    {
+      "ok" => findings.empty?,
+      "recorded_classification" => recorded,
+      "expected_classification" => expected,
+      "runner_acceptance" => runner_acceptance,
+      "findings" => findings
+    }
+  end
+
+  def expected_classification(verdict, exits: {})
+    normal = verdict.dig("modes", "normal", "exit")
+    full_index = verdict.dig("modes", "full_index", "exit")
+    if normal == 0
+      "SAFE"
+    elsif full_index == 0
+      "LAG_DETECTED"
+    else
+      "METADATA_BROKEN"
+    end
   end
 
   def pipeline_completion(report_dir)
@@ -260,7 +314,9 @@ module InstallReceipt
       findings << "#{name} activated #{state["activated_version"]}, manifest requires #{state["manifest_version"]}"
     end
 
-    if state["activated_path"] && !under_any?(state["activated_path"], isolation_dirs)
+    if state["activated_path"].nil? || state["activated_path"].to_s.empty?
+      findings << "#{name} activated receipt records no gem path"
+    elsif !under_any?(state["activated_path"], isolation_dirs)
       findings << "#{name} loaded from #{state["activated_path"]} outside the isolated gem directories"
     end
 
@@ -291,6 +347,11 @@ module InstallReceipt
       findings << "consumer Gemfile is missing: #{gemfile_path}"
     elsif gemfile.match?(/gem ['"]ace-git-github['"]/)
       findings << "consumer Gemfile must not reference ace-git-github directly"
+    else
+      gem_entries = gemfile.scan(/^\s*gem\s+['"]([^'"]+)['"]/).flatten
+      unless gem_entries == [name]
+        findings << "consumer Gemfile must name exactly the consumer #{name} as its only gem, got #{gem_entries.inspect}"
+      end
     end
 
     exit_code = read_exit(exit_file)
@@ -333,6 +394,13 @@ module InstallReceipt
       findings << "ace-git-github resolved #{provider_version} through #{name}, manifest requires #{provider_entry["artifact_version"]}"
     end
 
+    # The provider must come from the consumer's own published dependency
+    # declaration, not from an unrelated Gemfile entry: the consumer's
+    # lockfile spec must declare ace-git-github as a dependency.
+    if lockfile && provider_version && !lockfile_spec_declares_provider?(lockfile, name)
+      findings << "#{name} lockfile spec does not declare ace-git-github as a dependency"
+    end
+
     provider_activated = receipt && receipt.dig("ace-git-github", "version")
     if provider_activated.nil?
       findings << "ace-git-github missing from consumer activated receipt"
@@ -342,12 +410,30 @@ module InstallReceipt
 
     [name, "ace-git-github"].each do |gem_name|
       gem_path = receipt && receipt.dig(gem_name, "path")
-      if gem_path && !under_any?(gem_path, isolation_dirs)
+      if gem_path.nil? || gem_path.to_s.empty?
+        findings << "#{gem_name} consumer activated receipt records no gem path"
+      elsif !under_any?(gem_path, isolation_dirs)
         findings << "#{gem_name} loaded from #{gem_path} outside the isolated consumer directories"
       end
     end
 
     {"root" => root, "ok" => findings.empty?, "findings" => findings.uniq}
+  end
+
+  # In a lockfile, a package's dependency declarations are the six-space
+  # indented lines following its four-space `name (version)` entry.
+  def lockfile_spec_declares_provider?(lockfile, name)
+    content = File.read(lockfile["path"])
+    spec_header = /^    #{Regexp.escape(name)} \([^\n]+\)\n/
+    match = content.match(spec_header)
+    return false unless match
+
+    content[match.end(0)..].each_line do |line|
+      break unless line.start_with?("      ")
+
+      return true if line.match?(/\A\s+ace-git-github \(/)
+    end
+    false
   end
 
   def read_receipt(path)
@@ -462,12 +548,14 @@ if $PROGRAM_NAME == __FILE__
       opts.on("--normal DIR") { |value| options[:normal] = value }
       opts.on("--full-index DIR") { |value| options[:full_index] = value }
       opts.on("--pipeline-report DIR") { |value| options[:pipeline_report] = value }
+      opts.on("--results-root DIR") { |value| options[:results_root] = value }
       opts.on("--out PATH") { |value| options[:out] = value }
     end.parse!
     verdict = InstallReceipt.finalize(
       manifest_path: options[:manifest],
       mode_dirs: {"normal" => options[:normal], "full_index" => options[:full_index]},
-      pipeline_report_dir: options[:pipeline_report]
+      pipeline_report_dir: options[:pipeline_report],
+      results_root: options[:results_root]
     )
     File.write(options[:out], JSON.pretty_generate(verdict))
     exit(verdict["final"] == "pass" ? 0 : 1)

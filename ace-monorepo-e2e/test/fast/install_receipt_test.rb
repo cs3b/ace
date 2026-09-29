@@ -279,9 +279,56 @@ class InstallReceiptTest < AceMonorepoE2eTestCase
       verdict["findings"].inspect)
   end
 
+  def test_verify_rejects_consumer_gemfile_with_extra_gem_entries
+    fixture = build_complete_fixture
+    gemfile = File.join(fixture[:normal], "consumer", "ace-bundle", "Gemfile")
+    File.write(gemfile, "source 'https://rubygems.org'\n\ngem 'ace-bundle', '0.44.2'\ngem 'ace-git', '0.25.0'\n")
+
+    verdict = InstallReceipt.verify(
+      manifest_path: @manifest_path,
+      mode_dirs: {"normal" => fixture[:normal], "full_index" => fixture[:full_index]}
+    )
+
+    assert_equal "fail", verdict["acceptance"]
+    assert(verdict["findings"].any? { |finding| finding.include?("exactly the consumer ace-bundle as its only gem") },
+      verdict["findings"].inspect)
+  end
+
+  def test_verify_rejects_consumer_lockfile_without_published_provider_edge
+    fixture = build_complete_fixture
+    path = File.join(fixture[:full_index], "consumer", "ace-task", "Gemfile.lock")
+    content = File.read(path)
+    content = content.sub("      ace-git-github (~> 0.2)\n", "")
+    File.write(path, content)
+
+    verdict = InstallReceipt.verify(
+      manifest_path: @manifest_path,
+      mode_dirs: {"normal" => fixture[:normal], "full_index" => fixture[:full_index]}
+    )
+
+    assert_equal "fail", verdict["acceptance"]
+    assert(verdict["findings"].any? { |finding| finding.include?("full_index consumer ace-task") && finding.include?("does not declare ace-git-github") },
+      verdict["findings"].inspect)
+  end
+
+  def test_verify_rejects_receipts_missing_gem_paths
+    fixture = build_complete_fixture
+    rewrite_receipt(fixture[:full_index], "ace-git" => {"path" => ""})
+
+    verdict = InstallReceipt.verify(
+      manifest_path: @manifest_path,
+      mode_dirs: {"normal" => fixture[:normal], "full_index" => fixture[:full_index]}
+    )
+
+    assert_equal "fail", verdict["acceptance"]
+    assert(verdict["findings"].any? { |finding| finding.include?("full_index: ace-git activated receipt records no gem path") },
+      verdict["findings"].inspect)
+  end
+
   def test_finalize_rejects_wrapper_error_despite_zero_bundle_exits
     fixture = build_complete_fixture
     report_dir = File.join(@tmpdir, "reports")
+    results_root = write_results_root(fixture)
     FileUtils.mkdir_p(report_dir)
     File.write(File.join(report_dir, "metadata.yml"), <<~YAML)
       status: error
@@ -291,7 +338,8 @@ class InstallReceiptTest < AceMonorepoE2eTestCase
     verdict = InstallReceipt.finalize(
       manifest_path: @manifest_path,
       mode_dirs: {"normal" => fixture[:normal], "full_index" => fixture[:full_index]},
-      pipeline_report_dir: report_dir
+      pipeline_report_dir: report_dir,
+      results_root: results_root
     )
 
     assert_equal "pass", verdict["acceptance"]
@@ -305,26 +353,31 @@ class InstallReceiptTest < AceMonorepoE2eTestCase
   def test_finalize_passes_with_completed_pipeline_and_accepted_graph
     fixture = build_complete_fixture
     report_dir = File.join(@tmpdir, "reports")
+    results_root = write_results_root(fixture)
     FileUtils.mkdir_p(report_dir)
     File.write(File.join(report_dir, "metadata.yml"), "status: pass\n")
 
     verdict = InstallReceipt.finalize(
       manifest_path: @manifest_path,
       mode_dirs: {"normal" => fixture[:normal], "full_index" => fixture[:full_index]},
-      pipeline_report_dir: report_dir
+      pipeline_report_dir: report_dir,
+      results_root: results_root
     )
 
     assert_equal "pass", verdict["final"], verdict["findings"].inspect
     assert_equal "pass", verdict["pipeline_completion"]["status"]
+    assert_equal "SAFE", verdict["results_reconciliation"]["recorded_classification"]
   end
 
   def test_finalize_requires_pipeline_metadata
     fixture = build_complete_fixture
+    results_root = write_results_root(fixture)
 
     verdict = InstallReceipt.finalize(
       manifest_path: @manifest_path,
       mode_dirs: {"normal" => fixture[:normal], "full_index" => fixture[:full_index]},
-      pipeline_report_dir: File.join(@tmpdir, "absent-reports")
+      pipeline_report_dir: File.join(@tmpdir, "absent-reports"),
+      results_root: results_root
     )
 
     assert_equal "fail", verdict["final"]
@@ -332,7 +385,59 @@ class InstallReceiptTest < AceMonorepoE2eTestCase
       verdict["findings"].inspect)
   end
 
+  def test_finalize_rejects_classification_disagreement
+    fixture = build_complete_fixture
+    report_dir = File.join(@tmpdir, "reports")
+    results_root = write_results_root(fixture, classification: "LAG_DETECTED")
+    FileUtils.mkdir_p(report_dir)
+    File.write(File.join(report_dir, "metadata.yml"), "status: pass\n")
+
+    verdict = InstallReceipt.finalize(
+      manifest_path: @manifest_path,
+      mode_dirs: {"normal" => fixture[:normal], "full_index" => fixture[:full_index]},
+      pipeline_report_dir: report_dir,
+      results_root: results_root
+    )
+
+    assert_equal "fail", verdict["final"]
+    assert(verdict["findings"].any? { |finding| finding.include?("recorded classification \"LAG_DETECTED\" disagrees with recomputed \"SAFE\"") },
+      verdict["findings"].inspect)
+  end
+
+  def test_finalize_rejects_failing_runner_acceptance_artifact
+    fixture = build_complete_fixture
+    report_dir = File.join(@tmpdir, "reports")
+    results_root = write_results_root(fixture, runner_acceptance: "fail")
+    FileUtils.mkdir_p(report_dir)
+    File.write(File.join(report_dir, "metadata.yml"), "status: pass\n")
+
+    verdict = InstallReceipt.finalize(
+      manifest_path: @manifest_path,
+      mode_dirs: {"normal" => fixture[:normal], "full_index" => fixture[:full_index]},
+      pipeline_report_dir: report_dir,
+      results_root: results_root
+    )
+
+    assert_equal "fail", verdict["final"]
+    assert(verdict["findings"].any? { |finding| finding.include?("runner-side acceptance \"fail\" is not pass") },
+      verdict["findings"].inspect)
+  end
+
   private
+
+  def write_results_root(fixture, classification: "SAFE", runner_acceptance: "pass")
+    root = File.join(@tmpdir, "results-root")
+    tc04 = File.join(root, "results", "tc", "04")
+    FileUtils.mkdir_p(tc04)
+    File.write(File.join(tc04, "classification.txt"), "#{classification}\n")
+    File.write(File.join(tc04, "exact-version-acceptance.json"), JSON.pretty_generate({
+      "schema_version" => 1,
+      "kind" => "exact-version-acceptance",
+      "acceptance" => runner_acceptance,
+      "findings" => runner_acceptance == "pass" ? [] : ["fixture finding"]
+    }))
+    root
+  end
 
   def write_manifest
     File.write(@manifest_path, JSON.pretty_generate(
@@ -464,13 +569,15 @@ class InstallReceiptTest < AceMonorepoE2eTestCase
   end
 
   def write_consumer_lockfile(root, consumer, provider)
-    entries = ["    #{consumer} (#{MANIFEST_PACKAGES[consumer]})"]
-    entries << "    ace-git-github (#{provider["ace-git-github"]})" if provider["ace-git-github"]
+    entries = ["    #{consumer} (#{MANIFEST_PACKAGES[consumer]})", "      ace-git (~> 0.24)"]
+    entries << "      ace-git-github (~> 0.2)" if provider["ace-git-github"]
+    provider_line = provider["ace-git-github"] ? "    ace-git-github (#{provider["ace-git-github"]})" : nil
+    spec_lines = [entries.join("\n"), provider_line].compact.join("\n")
     File.write(File.join(root, "Gemfile.lock"), <<~LOCK)
       GEM
         remote: https://rubygems.org/
         specs:
-      #{entries.join("\n")}
+      #{spec_lines}
 
       DEPENDENCIES
         #{consumer}!
