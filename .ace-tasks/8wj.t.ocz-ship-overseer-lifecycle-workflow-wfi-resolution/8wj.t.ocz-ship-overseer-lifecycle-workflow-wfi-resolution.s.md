@@ -1,7 +1,7 @@
 ---
 id: 8wj.t.ocz
 title: Verify installed overseer workflow resolution and lifecycle contracts
-status: in-progress
+status: done
 priority: medium
 created_at: "2026-09-20 16:15:48"
 estimate: medium
