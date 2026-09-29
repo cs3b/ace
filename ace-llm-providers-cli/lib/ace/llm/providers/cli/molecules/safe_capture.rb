@@ -231,7 +231,9 @@ module Ace
 
               # Pull whatever partial output a reader thread captured without
               # ever blocking past a short bound: a descendant outside the
-              # killed process group can keep the pipe open indefinitely.
+              # killed process group can keep the pipe open indefinitely. The
+              # reader buffers incrementally, so its value keeps whatever was
+              # already read even when we must close the stream to unblock it.
               def drain_reader(reader, io)
                 if reader.join(2)
                   reader.value.to_s
@@ -239,7 +241,7 @@ module Ace
                   io.close unless io.closed?
                   reader.join(1)
                   reader.kill if reader.alive?
-                  ""
+                  reader.value.to_s
                 end
               end
 

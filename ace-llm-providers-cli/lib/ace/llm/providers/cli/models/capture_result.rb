@@ -129,9 +129,9 @@ module Ace
             # @param error [Ace::LLM::ProviderError]
             # @return [Ace::LLM::ProviderError]
             def with_no_response_evidence(error)
-              redacted = error.exception(
-                Ace::LLM::Models::ExecutionEvidence.redact(error.message.to_s)
-              )
+              message = Ace::LLM::Models::ExecutionEvidence.redact(error.message.to_s)
+              message = "#{message[0, MAX_MESSAGE_LENGTH]}…[truncated]" if message.length > MAX_MESSAGE_LENGTH
+              redacted = error.exception(message)
               evidence = Ace::LLM::Models::ExecutionEvidence.new(
                 outcome: :no_response,
                 invocation_id: invocation_id,
