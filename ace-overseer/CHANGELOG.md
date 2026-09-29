@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [Unreleased]
+
+### Added
+- Preservation manifest for prune: `ace-overseer prune --preservation FILE` accepts a strict `version: 1` YAML manifest declaring cross-repository destinations (source repo/base/head, destination repo/base/head/branch); entries are resolved to exact commits, and duplicate, self-destination, or unmatched entries fail before any apply action.
+- Git preservation proofs on the actual prune path: accepted-ancestor containment against the surviving base branch, or verified-destination proof by full-tree equality or exact path-by-path transition (paths, modes, symlinks, binary content) across separate bases. Patch-range proofs require the independently recorded attempt baseline (`base_head`), and the baseline itself must survive on an accepted ref; empty or truncated ranges are never proof.
+- Fail-closed Lab prune classification: `ace-overseer prune WORK --runtime lab` requires an authoritative terminal Work state plus preservation data (`repo`/`head`/`branch`) provable in the hosted repository; apply re-reads state immediately before `lab work destroy` and blocked Works are never destroyed.
+
+### Changed
+- BREAKING: `--force` no longer removes unsafe worktrees; it only skips the confirmation for already-safe candidates. Missing, failed or ambiguous preservation evidence, dirty tracked or untracked files, active or uncertain attempts, unreadable lifecycle state, and failed rechecks now always block deletion -- including under `--yes` and `--quiet`.
+- Prune preview is read-only (no stale-metadata mutation); apply holds a durable lifecycle exclusion shared with assignment/driver/work-on start paths from final evidence reads through removal, deletes the worktree without force or untracked suppression, and deletes the branch only after re-verifying its tip identity. Removal is recorded so later starts fail closed instead of recreating a deleted identity.
+- Assignment cache prune requires the durable evidence ref (`refs/ace/execution`, never deleted) to confirm every attempt terminal for managed assignments; only the assignment cache directory is removed.
+- Unmatched explicit prune targets are errors, apply exits nonzero when any candidate is blocked or removal fails (independent safe candidates still complete), quiet mode suppresses progress but never failure signaling, and dry-run performs the same proof classification with no cleanup side effects.
+
 ## [0.17.0] - 2026-09-29
 
 ### Added
@@ -380,7 +393,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.4.17] - 2026-03-02
 
 ### Changed
-- Replace `ace-taskflow` dependency with `ace-task` — migrate `WorkOnOrchestrator` and `PruneSafetyChecker` to use `Ace::Task::Organisms::TaskManager` API
+- Replace `ace-taskflow` dependency with `ace-task` -- migrate `WorkOnOrchestrator` and `PruneSafetyChecker` to use `Ace::Task::Organisms::TaskManager` API
 - Remove bare `require "ace/taskflow"` import, add `require "ace/task"`
 
 ## [0.4.16] - 2026-02-26
@@ -470,14 +483,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.4.2] - 2026-02-19
 
 ### Added
-- Orchestrator subtask expansion for `work-on-tasks` preset — when a task is an orchestrator with subtasks, `AssignmentLauncher` expands subtask refs into individual foreach steps (e.g., `work-on-272.01`, `work-on-272.02`) instead of a single `work-on-272` step
+- Orchestrator subtask expansion for `work-on-tasks` preset -- when a task is an orchestrator with subtasks, `AssignmentLauncher` expands subtask refs into individual foreach steps (e.g., `work-on-272.01`, `work-on-272.02`) instead of a single `work-on-272` step
 - `extract_subtask_refs` helper in `WorkOnOrchestrator` to extract subtask numbers from orchestrator task data
 - `subtask_refs:` keyword argument on `AssignmentLauncher#launch` for passing expanded subtask references
 
 ## [0.4.1] - 2026-02-19
 
 ### Added
-- `--watch` / `-w` option for `status` command — auto-refreshing dashboard with ANSI screen clear
+- `--watch` / `-w` option for `status` command -- auto-refreshing dashboard with ANSI screen clear
 - Two-tier refresh: fast interval (15s default) refreshes assignment data only, slow interval (5min default) does full git/PR refresh
 - `collect_assignments_only` method on `WorktreeContextCollector` for lightweight assignment-only collection with cached git data
 - `collect_quick` method on `StatusCollector` to reuse previous snapshot's git data while refreshing assignments
@@ -487,7 +500,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.4.0] - 2026-02-19
 
 ### Added
-- Progress bar visualization in assignment sub-rows — filled/empty bar segments alongside numeric counts
+- Progress bar visualization in assignment sub-rows -- filled/empty bar segments alongside numeric counts
 - Current step name display for running assignments (e.g., `implement` shown dimmed after progress)
 - Header row and separator line above hierarchical dashboard for column labeling
 - Blank line separators between location groups for visual breathing room
@@ -499,7 +512,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.3.1] - 2026-02-19
 
 ### Changed
-- Hierarchical status display — location header rows with assignment sub-rows replace flat single-row format
+- Hierarchical status display -- location header rows with assignment sub-rows replace flat single-row format
 - `WorkContext` model uses `assignments` array instead of singular `assignment_status` + `assignment_count`
 - `WorktreeContextCollector` loads all assignments via `AssignmentDiscoverer` instead of only active via `AssignmentExecutor`
 - `StatusFormatter` emits two row types: location header (basename + PR + Git) and indented assignment sub-rows (ID + name + state + progress)
@@ -513,7 +526,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.3.0] - 2026-02-19
 
 ### Added
-- Assignment-aware status display — main branch appears in `status` when it has active assignments
+- Assignment-aware status display -- main branch appears in `status` when it has active assignments
 - Assignment count shown in Assign column when location has multiple assignments (e.g., `abc12 (3)`)
 - `--assignment` / `-a` option for `prune` command to remove a specific assignment's cache directory
 - `AssignmentPruneCandidate` model for assignment-level prune safety checking
@@ -533,16 +546,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- `TmuxWindowOpener` delegates entirely to `ace-tmux window` CLI — no longer manages session names, window names, or presets
+- `TmuxWindowOpener` delegates entirely to `ace-tmux window` CLI -- no longer manages session names, window names, or presets
 - Remove `tmux_session_name`, `window_name_format`, and `window_preset` config options
-- Remove `WindowNameFormatter` atom — window naming is ace-tmux's responsibility
+- Remove `WindowNameFormatter` atom -- window naming is ace-tmux's responsibility
 - `PruneOrchestrator` uses worktree path basename for window cleanup instead of formatted names
 
 ## [0.2.16] - 2026-02-19
 
 ### Changed
 
-- `TmuxWindowOpener` no longer manages tmux sessions — delegates entirely to ace-tmux `WindowManager` for window creation, session detection, and dedup
+- `TmuxWindowOpener` no longer manages tmux sessions -- delegates entirely to ace-tmux `WindowManager` for window creation, session detection, and dedup
 
 ## [0.2.15] - 2026-02-19
 
@@ -559,7 +572,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.2.13] - 2026-02-19
 
 ### Added
-- Progress callbacks (`on_progress:`) for `work-on` and `prune` orchestrators — one-line status output per step
+- Progress callbacks (`on_progress:`) for `work-on` and `prune` orchestrators -- one-line status output per step
 - Prune now displays safe/skipped candidates with reasons before the "Continue?" confirmation prompt
 
 ### Changed
