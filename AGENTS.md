@@ -38,6 +38,7 @@ See `docs/tools.md#agent-engineering-practices` for expanded day-to-day agent pr
 ## Hard rules
 
 - Run `ace-*` commands directly. Do not pipe, redirect, or post-process their output; when they print a path, read that file. Do not create extra capture files for `ace-*` output unless the user asks.
+- Inside this repository, invoke ace tooling as `bin/ace-*` (or `bundle exec ace-*`), never bare `ace-*`. Agent shells do not activate mise, so bare commands resolve mise shims to the stale *installed* gems instead of this checkout's source (e.g. ace-review 0.54.0 instead of 0.56.0). The committed `bin/` binstubs pin `BUNDLE_GEMFILE` to this checkout; `mise.toml`'s `_.path` only applies in activated interactive shells.
 - Never reset or discard unrelated changes. Use path-scoped commits: `ace-git-commit <paths…>`.
 - Temp files: `.ace-local/<subfolder>/` or `/tmp/` — never the project root.
 - Skill-first: if a user names a skill or the task clearly matches one, load and follow it before ad-hoc work. Full planning/execution protocol: `docs/tools.md#agent-engineering-practices`.
