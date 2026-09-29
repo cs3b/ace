@@ -1,0 +1,64 @@
+[
+  {
+    "type": "failure",
+    "test_name": "test_update_documents_returns_count",
+    "test_class": null,
+    "message": "Expected: 2\nActual: 0",
+    "location": "/Users/mc/Ps/ace/ace-docs/test/fast/molecules/frontmatter_manager_test.rb:255",
+    "file_path": "/Users/mc/Ps/ace/ace-docs/test/fast/molecules/frontmatter_manager_test.rb",
+    "line_number": 255,
+    "backtrace": [],
+    "fix_suggestion": null,
+    "code_context": {
+      "file": "/Users/mc/Ps/ace/ace-docs/test/fast/molecules/frontmatter_manager_test.rb",
+      "center_line": 255,
+      "lines": {
+        "250": {
+          "content": "          doc1 = Models::Document.new(path: doc1_path)",
+          "highlighted": false
+        },
+        "251": {
+          "content": "          doc2 = Models::Document.new(path: doc2_path)",
+          "highlighted": false
+        },
+        "252": {
+          "content": "",
+          "highlighted": false
+        },
+        "253": {
+          "content": "          count = FrontmatterManager.update_documents([doc1, doc2], {\"last-updated\" => \"2025-11-01\"})",
+          "highlighted": false
+        },
+        "254": {
+          "content": "",
+          "highlighted": false
+        },
+        "255": {
+          "content": "          assert_equal 2, count",
+          "highlighted": true
+        },
+        "256": {
+          "content": "        end",
+          "highlighted": false
+        },
+        "257": {
+          "content": "",
+          "highlighted": false
+        },
+        "258": {
+          "content": "        private",
+          "highlighted": false
+        },
+        "259": {
+          "content": "",
+          "highlighted": false
+        },
+        "260": {
+          "content": "        def create_test_document(content)",
+          "highlighted": false
+        }
+      }
+    },
+    "stderr_warnings": "/Users/mc/Ps/ace/ace-support-test-helpers/lib/ace/test_support/performance_helpers.rb:3: warning: benchmark was loaded from the standard library, but will no longer be part of the default gems starting from Ruby 4.0.0.\nYou can add benchmark to your Gemfile or gemspec to silence this warning.\nNo analysis results returned.\nNo analysis results returned.\n"
+  }
+]

@@ -1,0 +1,15 @@
+[
+  {
+    "type": "error",
+    "test_name": "test_status_json_evidence_reflects_the_displayed_assignment",
+    "test_class": null,
+    "message": "Minitest::UnexpectedError:         Ace::Assign::AttemptErrors::EvidenceUnavailable: git worktree add --detach /Users/mc/Ps/ace/.ace-local/assign/evidence-checkout/journal 89e382b6eaf75fcf72fec4f91d2eb05bbbfe07a5 failed: Preparing worktree (detached HEAD 89e382b6e)\nfatal: '/Users/mc/Ps/ace/.ace-local/assign/evidence-checkout/journal' is a missing but already registered worktree;\nuse 'add -f' to override, or 'prune' or 'remove' to clear\nlib/ace/assign/molecules/evidence_journal.rb:391:in 'Ace::Assign::Molecules::EvidenceJournal#git!'\nlib/ace/assign/molecules/evidence_journal.rb:376:in 'Ace::Assign::Molecules::EvidenceJournal#sync_checkout'\nlib/ace/assign/molecules/evidence_journal.rb:102:in 'block in Ace::Assign::Molecules::EvidenceJournal#read_events'\nlib/ace/assign/molecules/evidence_journal.rb:325:in 'block in Ace::Assign::Molecules::EvidenceJournal#with_lock'\nlib/ace/assign/molecules/evidence_journal.rb:322:in 'IO.open'\nlib/ace/assign/molecules/evidence_journal.rb:322:in 'Ace::Assign::Molecules::EvidenceJournal#with_lock'\nlib/ace/assign/molecules/evidence_journal.rb:100:in 'Ace::Assign::Molecules::EvidenceJournal#read_events'\nlib/ace/assign/molecules/evidence_journal.rb:127:in 'Ace::Assign::Molecules::EvidenceJournal#derived_attempts'\nlib/ace/assign/molecules/evidence_calculator.rb:111:in 'Ace::Assign::Molecules::EvidenceCalculator#attempts_for'\nlib/ace/assign/molecules/evidence_calculator.rb:36:in 'Ace::Assign::Molecules::EvidenceCalculator#calculate'\nlib/ace/assign/molecules/evidence_calculator.rb:21:in 'Ace::Assign::Molecules::EvidenceCalculator.calculate'\nlib/ace/assign/cli/commands/status.rb:91:in 'Ace::Assign::CLI::Commands::Status#status_to_h'\nlib/ace/assign/cli/commands/status.rb:55:in 'Ace::Assign::CLI::Commands::Status#call'\ntest/fast/commands/status_command_test.rb:10:in 'block in StatusCommandTest#run_status_command'\ntest/test_helper.rb:104:in 'block in AceAssignTestCase#with_fast_command_executor'",
+    "location": null,
+    "file_path": null,
+    "line_number": null,
+    "backtrace": [],
+    "fix_suggestion": null,
+    "code_context": null,
+    "stderr_warnings": "/Users/mc/Ps/ace/ace-support-test-helpers/lib/ace/test_support/performance_helpers.rb:3: warning: benchmark was loaded from the standard library, but will no longer be part of the default gems starting from Ruby 4.0.0.\nYou can add benchmark to your Gemfile or gemspec to silence this warning.\n"
+  }
+]
