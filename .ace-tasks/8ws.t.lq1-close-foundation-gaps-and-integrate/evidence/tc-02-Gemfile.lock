@@ -1,0 +1,358 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    ace-assign (0.58.0)
+      ace-b36ts (~> 0.14)
+      ace-llm (~> 0.39)
+      ace-support-cli (~> 0.6)
+      ace-support-config (~> 0.18)
+      ace-support-core (~> 0.31)
+      ace-support-markdown (~> 0.3)
+      ace-support-nav (~> 0.28)
+      ace-task (~> 0.37)
+      ace-tmux (~> 0.17)
+    ace-b36ts (0.14.11)
+      ace-support-cli (~> 0.6)
+      ace-support-config (~> 0.18)
+      ace-support-core (~> 0.31)
+    ace-bundle (0.44.1)
+      ace-compressor (~> 0.25)
+      ace-git (~> 0.24)
+      ace-git-github (~> 0.1.1)
+      ace-support-cli (~> 0.6)
+      ace-support-config (~> 0.18)
+      ace-support-core (~> 0.32)
+      ace-support-fs (~> 0.3)
+      ace-support-nav (~> 0.28)
+    ace-compressor (0.25.5)
+      ace-support-cli (~> 0.6)
+      ace-support-config (~> 0.18)
+      ace-support-core (~> 0.31)
+    ace-demo (0.25.10)
+      ace-b36ts (~> 0.14)
+      ace-support-cli (~> 0.6)
+      ace-support-config (~> 0.18)
+      ace-support-core (~> 0.31)
+      ace-tmux (~> 0.17)
+    ace-docs (0.34.4)
+      ace-b36ts (~> 0.14)
+      ace-git (~> 0.23)
+      ace-llm (~> 0.39)
+      ace-support-cli (~> 0.6)
+      ace-support-config (~> 0.18)
+      ace-support-core (~> 0.31)
+      ace-support-markdown (~> 0.3)
+      colorize (~> 1.1)
+      fileutils (~> 1.8)
+      terminal-table (~> 3.0)
+      yaml (~> 0.4)
+    ace-git (0.25.0)
+      ace-support-cli (~> 0.6)
+      ace-support-config (~> 0.18)
+      ace-support-core (~> 0.31)
+    ace-git-commit (0.26.6)
+      ace-git (~> 0.23)
+      ace-llm (~> 0.39)
+      ace-support-cli (~> 0.6)
+      ace-support-config (~> 0.18)
+      ace-support-core (~> 0.31)
+    ace-git-forgejo (0.2.0)
+      ace-git (~> 0.24)
+    ace-git-github (0.1.2)
+      ace-git (~> 0.24)
+    ace-git-secrets (0.15.11)
+      ace-b36ts (~> 0.14)
+      ace-support-cli (~> 0.6)
+      ace-support-config (~> 0.18)
+      ace-support-core (~> 0.31)
+      faraday (~> 2.14)
+      faraday-retry (~> 2.4)
+    ace-git-worktree (0.24.0)
+      ace-git (~> 0.24)
+      ace-support-cli (~> 0.6)
+      ace-support-config (~> 0.18)
+      ace-support-core (~> 0.31)
+      ace-task (~> 0.37)
+    ace-handbook (0.33.0)
+      ace-support-cli (~> 0.6)
+      ace-support-config (~> 0.18)
+      ace-support-core (~> 0.31)
+      ace-support-nav (~> 0.28)
+    ace-handbook-integration-claude (0.3.12)
+      ace-handbook (~> 0.32)
+    ace-handbook-integration-codex (0.3.12)
+      ace-handbook (~> 0.32)
+    ace-handbook-integration-gemini (0.3.11)
+      ace-handbook (~> 0.32)
+    ace-handbook-integration-opencode (0.3.11)
+      ace-handbook (~> 0.32)
+    ace-handbook-integration-pi (0.5.0)
+      ace-handbook (~> 0.33)
+    ace-herdr (0.1.0)
+      ace-hitl (~> 0.10)
+      ace-support-cli (~> 0.6)
+      ace-support-config (~> 0.18)
+      ace-support-core (~> 0.31)
+    ace-hitl (0.10.0)
+      ace-b36ts (~> 0.14)
+      ace-support-cli (~> 0.6)
+      ace-support-config (~> 0.18)
+      ace-support-core (~> 0.31)
+      ace-support-fs (~> 0.3)
+      ace-support-items (~> 0.15)
+    ace-hitl-hermes (0.1.0)
+    ace-idea (0.21.6)
+      ace-b36ts (~> 0.14)
+      ace-support-cli (~> 0.6)
+      ace-support-core (~> 0.31)
+      ace-support-fs (~> 0.3)
+      ace-support-items (~> 0.15)
+    ace-lab (0.1.0)
+      ace-support-cli (~> 0.6)
+      ace-support-config (~> 0.18)
+      ace-support-core (~> 0.31)
+    ace-lint (0.30.10)
+      ace-b36ts (~> 0.14)
+      ace-support-cli (~> 0.6)
+      ace-support-config (~> 0.18)
+      ace-support-core (~> 0.31)
+      colorize (~> 1.1)
+      kramdown (~> 2.5)
+      kramdown-parser-gfm (~> 1.1)
+    ace-llm (0.41.0)
+      ace-support-cli (~> 0.6)
+      ace-support-config (~> 0.18)
+      ace-support-core (~> 0.31)
+      ace-support-models (~> 0.12)
+      addressable (~> 2.9)
+      faraday (~> 2.14)
+      kramdown (~> 2.5)
+      kramdown-parser-gfm (~> 1.1)
+    ace-llm-providers-cli (0.35.1)
+      ace-llm (~> 0.41)
+    ace-overseer (0.17.0)
+      ace-assign (~> 0.56)
+      ace-git (~> 0.23)
+      ace-git-worktree (~> 0.22)
+      ace-support-cli (~> 0.6)
+      ace-support-config (~> 0.18)
+      ace-support-core (~> 0.31)
+      ace-support-fs (~> 0.3)
+      ace-task (~> 0.37)
+      ace-tmux (~> 0.17)
+    ace-prompt-prep (0.25.10)
+      ace-b36ts (~> 0.14)
+      ace-bundle (~> 0.43)
+      ace-git (~> 0.23)
+      ace-llm (~> 0.39)
+      ace-support-cli (~> 0.6)
+      ace-support-config (~> 0.18)
+      ace-support-core (~> 0.31)
+      ace-support-nav (~> 0.28)
+      ace-task (~> 0.37)
+    ace-retro (0.18.8)
+      ace-b36ts (~> 0.14)
+      ace-support-cli (~> 0.6)
+      ace-support-core (~> 0.31)
+      ace-support-fs (~> 0.3)
+      ace-support-items (~> 0.15)
+    ace-review (0.56.0)
+      ace-b36ts (~> 0.14)
+      ace-bundle (~> 0.44)
+      ace-compressor (~> 0.25)
+      ace-git (~> 0.24)
+      ace-git-github (~> 0.1.1)
+      ace-llm (~> 0.41)
+      ace-support-cli (~> 0.6)
+      ace-support-config (~> 0.18)
+      ace-support-core (~> 0.32)
+      ace-support-nav (~> 0.28)
+      ace-task (~> 0.37)
+    ace-runtime (0.1.0)
+      ace-support-cli (~> 0.6)
+      ace-support-config (~> 0.18)
+      ace-support-core (~> 0.31)
+    ace-search (0.26.6)
+      ace-git (~> 0.23)
+      ace-support-cli (~> 0.6)
+      ace-support-config (~> 0.18)
+      ace-support-core (~> 0.31)
+    ace-sim (0.15.8)
+      ace-b36ts (~> 0.14)
+      ace-support-cli (~> 0.6)
+      ace-support-config (~> 0.18)
+      ace-support-core (~> 0.31)
+    ace-support-cli (0.6.8)
+    ace-support-config (0.18.2)
+      ace-support-fs (~> 0.3)
+    ace-support-core (0.32.0)
+      ace-support-cli (~> 0.6)
+      ace-support-config (~> 0.18)
+      ace-support-fs (~> 0.3)
+    ace-support-fs (0.3.4)
+    ace-support-items (0.15.13)
+      ace-b36ts (~> 0.14)
+      ace-support-core (~> 0.31)
+    ace-support-mac-clipboard (0.3.5)
+      ffi (~> 1.17)
+    ace-support-markdown (0.3.6)
+      kramdown (~> 2.5)
+      kramdown-parser-gfm (~> 1.1)
+    ace-support-models (0.12.4)
+      ace-support-cli (~> 0.6)
+      ace-support-core (~> 0.31)
+      faraday (~> 2.14)
+      faraday-retry (~> 2.4)
+    ace-support-nav (0.28.7)
+      ace-support-cli (~> 0.6)
+      ace-support-config (~> 0.18)
+      ace-support-core (~> 0.31)
+      ace-support-fs (~> 0.3)
+    ace-support-test-helpers (0.14.6)
+      minitest (~> 5.20)
+      minitest-reporters (~> 1.8)
+    ace-task (0.38.0)
+      ace-b36ts (~> 0.14)
+      ace-git (~> 0.24)
+      ace-git-github (~> 0.1)
+      ace-support-cli (~> 0.6)
+      ace-support-core (~> 0.31)
+      ace-support-fs (~> 0.3)
+      ace-support-items (~> 0.15)
+      ace-support-markdown (~> 0.3)
+    ace-test (0.7.4)
+    ace-test-runner (0.27.0)
+      ace-b36ts (~> 0.14)
+      ace-support-cli (~> 0.6)
+      ace-support-config (~> 0.18)
+      ace-support-core (~> 0.31)
+      ace-support-test-helpers (~> 0.14)
+      minitest (~> 5.0)
+      minitest-reporters (~> 1.8)
+      ostruct
+    ace-test-runner-e2e (0.40.5)
+      ace-b36ts (~> 0.14)
+      ace-llm (~> 0.39)
+      ace-support-cli (~> 0.6)
+      ace-support-config (~> 0.18)
+      ace-support-core (~> 0.31)
+      ace-support-test-helpers (~> 0.14)
+    ace-tmux (0.17.5)
+      ace-support-cli (~> 0.6)
+      ace-support-config (~> 0.18)
+      ace-support-core (~> 0.31)
+      ace-support-fs (~> 0.3)
+    addressable (2.9.0)
+      public_suffix (>= 2.0.2, < 8.0)
+    ansi (1.6.0)
+    builder (3.3.0)
+    colorize (1.1.0)
+    faraday (2.14.4)
+      faraday-net_http (>= 2.0, < 3.5)
+      json
+      logger
+    faraday-net_http (3.4.4)
+      net-http (~> 0.5)
+    faraday-retry (2.4.0)
+      faraday (~> 2.0)
+    ffi (1.17.4)
+    ffi (1.17.4-aarch64-linux-gnu)
+    ffi (1.17.4-aarch64-linux-musl)
+    ffi (1.17.4-arm-linux-gnu)
+    ffi (1.17.4-arm-linux-musl)
+    ffi (1.17.4-arm64-darwin)
+    ffi (1.17.4-x86-linux-gnu)
+    ffi (1.17.4-x86-linux-musl)
+    ffi (1.17.4-x86_64-darwin)
+    ffi (1.17.4-x86_64-linux-gnu)
+    ffi (1.17.4-x86_64-linux-musl)
+    fileutils (1.8.0)
+    json (3.0.2)
+    kramdown (2.5.2)
+      rexml (>= 3.4.4)
+    kramdown-parser-gfm (1.1.0)
+      kramdown (~> 2.0)
+    logger (1.7.0)
+    minitest (5.27.0)
+    minitest-reporters (1.8.0)
+      ansi
+      builder
+      minitest (>= 5.0, < 7)
+      ruby-progressbar
+    net-http (0.9.1)
+      uri (>= 0.11.1)
+    ostruct (0.6.3)
+    public_suffix (7.0.5)
+    rexml (3.4.4)
+    ruby-progressbar (1.13.0)
+    terminal-table (3.0.2)
+      unicode-display_width (>= 1.1.1, < 3)
+    unicode-display_width (2.6.0)
+    uri (1.1.1)
+    yaml (0.4.0)
+
+PLATFORMS
+  aarch64-linux-gnu
+  aarch64-linux-musl
+  arm-linux-gnu
+  arm-linux-musl
+  arm64-darwin
+  ruby
+  x86-linux-gnu
+  x86-linux-musl
+  x86_64-darwin
+  x86_64-linux-gnu
+  x86_64-linux-musl
+
+DEPENDENCIES
+  ace-assign
+  ace-b36ts
+  ace-bundle
+  ace-compressor
+  ace-demo
+  ace-docs
+  ace-git
+  ace-git-commit
+  ace-git-forgejo
+  ace-git-github
+  ace-git-secrets
+  ace-git-worktree
+  ace-handbook
+  ace-handbook-integration-claude
+  ace-handbook-integration-codex
+  ace-handbook-integration-gemini
+  ace-handbook-integration-opencode
+  ace-handbook-integration-pi
+  ace-herdr
+  ace-hitl
+  ace-hitl-hermes
+  ace-idea
+  ace-lab
+  ace-lint
+  ace-llm
+  ace-llm-providers-cli
+  ace-overseer
+  ace-prompt-prep
+  ace-retro
+  ace-review
+  ace-runtime
+  ace-search
+  ace-sim
+  ace-support-cli
+  ace-support-config
+  ace-support-core
+  ace-support-fs
+  ace-support-items
+  ace-support-mac-clipboard
+  ace-support-markdown
+  ace-support-models
+  ace-support-nav
+  ace-support-test-helpers
+  ace-task
+  ace-test
+  ace-test-runner
+  ace-test-runner-e2e
+  ace-tmux
+
+BUNDLED WITH
+   2.6.9
