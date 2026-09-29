@@ -214,6 +214,39 @@ class ReleaseManifestTest < Minitest::Test
     assert_match(/missing required package: ace-lab/, error.message)
   end
 
+  def test_validate_and_copy_enforces_required_supersession_declarations
+    payload = JSON.pretty_generate(valid_manifest)
+    File.write(@source, payload)
+    target = File.join(@tmpdir, "copy.json")
+
+    Ace::Test::EndToEndRunner::Molecules::ReleaseManifest.validate_and_copy(
+      source_path: @source, target_path: target,
+      required_packages: [{"name" => "ace-test-runner", "supersedes" => ["0.27.0"]}]
+    )
+    assert File.exist?(target)
+
+    error = assert_raises(invalid_manifest) do
+      Ace::Test::EndToEndRunner::Molecules::ReleaseManifest.validate_and_copy(
+        source_path: @source, target_path: target,
+        required_packages: [{"name" => "ace-test-runner", "supersedes" => ["0.26.9"]}]
+      )
+    end
+    assert_match(/does not declare that ace-test-runner 0.27.1 supersedes 0.26.9/, error.message)
+  end
+
+  def test_validate_and_copy_rejects_malformed_required_entries
+    payload = JSON.pretty_generate(valid_manifest)
+    File.write(@source, payload)
+    target = File.join(@tmpdir, "copy.json")
+
+    error = assert_raises(invalid_manifest) do
+      Ace::Test::EndToEndRunner::Molecules::ReleaseManifest.validate_and_copy(
+        source_path: @source, target_path: target, required_packages: [{"bogus" => true}]
+      )
+    end
+    assert_match(/unknown fields: bogus/, error.message)
+  end
+
   private
 
   def invalid_manifest

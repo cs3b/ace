@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "digest"
 require "fileutils"
 require "json"
 require "rubygems/version"
@@ -43,18 +44,28 @@ module Ace
           # Validate the manifest at +source_path+ and copy the exact bytes
           # to +target_path+, creating the target directory when needed.
           # +required_packages+ names the gems the calling scenario's proof
-          # depends on; the manifest must cover every one of them.
+          # depends on; the manifest must cover every one of them. Entries
+          # may be plain names or {name, supersedes} maps requiring an
+          # explicit supersession declaration. Returns the manifest digest
+          # (SHA256) so callers can verify later copies against it.
           # @raise [Invalid]
           def self.validate_and_copy(source_path:, target_path:, required_packages: nil)
             data = load_validated(source_path)
-            Array(required_packages).each do |name|
-              unless data["packages"].any? { |package| package["name"] == name }
-                raise Invalid, "release manifest is missing required package: #{name}"
-              end
+            entries = data["packages"].to_h { |package| [package["name"], package] }
+            Array(required_packages).each do |required|
+              name, supersedes = required_packages_entry(required)
+              entry = entries[name]
+              raise Invalid, "release manifest is missing required package: #{name}" unless entry
+
+              missing = Array(supersedes) - Array(entry["supersedes"])
+              next if missing.empty?
+
+              raise Invalid,
+                "release manifest does not declare that #{name} #{entry["artifact_version"]} supersedes #{missing.join(", ")}"
             end
             FileUtils.mkdir_p(File.dirname(target_path))
             FileUtils.cp(source_path, target_path)
-            target_path
+            Digest::SHA256.file(source_path).hexdigest
           end
 
           class << self
@@ -164,6 +175,23 @@ module Ace
               return if unknown.empty?
 
               raise Invalid, "#{label} has unknown fields: #{unknown.sort.join(", ")}"
+            end
+
+            def required_packages_entry(required)
+              case required
+              when String
+                [required, nil]
+              when Hash
+                reject_unknown_keys!(required, %w[name supersedes], "required package entry")
+                name = required["name"]
+                unless name.is_a?(String) && name.match?(GEM_NAME_PATTERN)
+                  raise Invalid, "required package entry has invalid ACE gem name: #{name.inspect}"
+                end
+
+                [name, required["supersedes"]]
+              else
+                raise Invalid, "required package entries must be names or {name, supersedes} maps"
+              end
             end
           end
         end
