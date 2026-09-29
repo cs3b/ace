@@ -250,7 +250,7 @@ class ProviderConfigReaderTest < AceModelsTestCase
     @reader.stub(:project_config_dir, nil) do
       @reader.stub(:user_config_dir, nil) do
         config = @reader.read_all.fetch("codex")
-        assert_equal "gpt-5.6-terra", config.fetch("models").first
+        assert_equal "gpt-6-sol", config.fetch("models").first
         assert_includes config.fetch("_source_file"), "ace-llm-providers-cli/.ace-defaults"
         assert_nil @reader.writable_config_directory
       end
@@ -267,7 +267,7 @@ class ProviderConfigReaderTest < AceModelsTestCase
             assert_equal ["project-pin"], @reader.read_all.fetch("codex")["models"]
             File.delete(File.join(project, "codex.yml"))
             assert_equal ["user-pin"], @reader.read_all.fetch("codex")["models"]
-            assert_equal "gpt-5.6-terra", @reader.bundled_config("codex")["models"].first
+            assert_equal "gpt-6-sol", @reader.bundled_config("codex")["models"].first
           end
         end
       end
