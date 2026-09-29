@@ -54,6 +54,13 @@ module Ace
           "assignment:#{assignment_id}"
         end
 
+        # Task identity is the canonical worktree identity: work-on derives
+        # the worktree path from the task ref, and prune candidates carry
+        # the same task id.
+        def task_key(task_id)
+          "task:#{task_id}"
+        end
+
         def worktree_key(worktree_path)
           canonical = begin
             File.realpath(worktree_path.to_s)
@@ -151,6 +158,8 @@ module Ace
           case key
           when /\Aassignment:/
             "Assignment #{identity} was pruned; refusing to start a writer on a removed identity"
+          when /\Atask:/
+            "Task #{identity} worktree was pruned; refusing to start a writer on a removed identity"
           else
             "Worktree #{identity} was pruned; refusing to start a writer on a removed identity"
           end
