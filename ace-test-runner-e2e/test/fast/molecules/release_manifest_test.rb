@@ -196,6 +196,24 @@ class ReleaseManifestTest < Minitest::Test
     refute File.exist?(target)
   end
 
+  def test_validate_and_copy_enforces_required_packages
+    payload = JSON.pretty_generate(valid_manifest)
+    File.write(@source, payload)
+    target = File.join(@tmpdir, "copy.json")
+
+    Ace::Test::EndToEndRunner::Molecules::ReleaseManifest.validate_and_copy(
+      source_path: @source, target_path: target, required_packages: %w[ace-git-github ace-test-runner]
+    )
+    assert File.exist?(target)
+
+    error = assert_raises(invalid_manifest) do
+      Ace::Test::EndToEndRunner::Molecules::ReleaseManifest.validate_and_copy(
+        source_path: @source, target_path: target, required_packages: %w[ace-git-github ace-lab]
+      )
+    end
+    assert_match(/missing required package: ace-lab/, error.message)
+  end
+
   private
 
   def invalid_manifest

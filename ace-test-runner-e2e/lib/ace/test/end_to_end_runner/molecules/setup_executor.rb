@@ -239,10 +239,12 @@ module Ace
             target = config.is_a?(Hash) ? config["to"] : config
             raise ArgumentError, "release-manifest step requires a target path" if target.to_s.strip.empty?
 
+            required = config.is_a?(Hash) ? Array(config["require"]) : []
             source = release_manifest_source(env)
             Molecules::ReleaseManifest.validate_and_copy(
               source_path: source,
-              target_path: File.join(sandbox_dir, target)
+              target_path: File.join(sandbox_dir, target),
+              required_packages: required
             )
           end
 

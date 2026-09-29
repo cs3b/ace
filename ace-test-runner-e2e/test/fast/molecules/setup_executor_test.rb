@@ -572,6 +572,23 @@ class SetupExecutorTest < Minitest::Test
     end
   end
 
+  def test_release_manifest_enforces_scenario_required_packages
+    Dir.mktmpdir do |tmpdir|
+      sandbox = File.join(tmpdir, "sandbox")
+      manifest = File.join(tmpdir, "installation-manifest.json")
+      File.write(manifest, JSON.generate(valid_release_manifest))
+
+      result = @executor.execute(
+        setup_steps: [{"release-manifest" => {"to" => "results/tc/01/release-manifest.json", "require" => ["ace-lab"]}}],
+        sandbox_dir: sandbox,
+        release_manifest_path: manifest
+      )
+
+      refute result[:success]
+      assert_match(/missing required package: ace-lab/, result[:error])
+    end
+  end
+
   def test_release_manifest_missing_input_fails
     Dir.mktmpdir do |sandbox|
       result = @executor.execute(

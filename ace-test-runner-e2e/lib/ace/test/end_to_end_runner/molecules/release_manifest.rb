@@ -42,9 +42,16 @@ module Ace
 
           # Validate the manifest at +source_path+ and copy the exact bytes
           # to +target_path+, creating the target directory when needed.
+          # +required_packages+ names the gems the calling scenario's proof
+          # depends on; the manifest must cover every one of them.
           # @raise [Invalid]
-          def self.validate_and_copy(source_path:, target_path:)
-            load_validated(source_path)
+          def self.validate_and_copy(source_path:, target_path:, required_packages: nil)
+            data = load_validated(source_path)
+            Array(required_packages).each do |name|
+              unless data["packages"].any? { |package| package["name"] == name }
+                raise Invalid, "release manifest is missing required package: #{name}"
+              end
+            end
             FileUtils.mkdir_p(File.dirname(target_path))
             FileUtils.cp(source_path, target_path)
             target_path
