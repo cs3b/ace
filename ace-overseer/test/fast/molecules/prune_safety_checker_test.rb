@@ -292,6 +292,19 @@ def test_hex_named_branch_is_not_mistaken_for_detached_head
   assert_equal hex_branch, candidate.verified_branch
 end
 
+
+  def test_proof_receives_the_symbolic_branch_read_before_it
+    _repo, worktree = build_worktree
+    checker = build_checker(worktree_path: worktree.path, context: build_context(worktree_path: worktree.path))
+
+    candidate = checker.check(
+      worktree_path: worktree.path, task_ref: "230", accepted_base: {branch: "main", head: "a" * 40}
+    )
+
+    assert_equal "task-work", checker.preservation_checker.last_proof_args[:candidate_branch]
+    assert_equal "task-work", candidate.verified_branch
+  end
+
   def test_no_accepted_base_blocks_preservation
     _repo, worktree = build_worktree
     checker = build_checker(worktree_path: worktree.path, context: build_context(worktree_path: worktree.path))

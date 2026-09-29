@@ -46,12 +46,16 @@ module Ace
           git_clean = git_clean_for_prune?(worktree_path)
           artifacts_safe, artifact_reasons = required_ignored_artifacts_safe?(worktree_path)
           attempts_terminal, attempt_reasons, recorded_base = attempts_evidence(worktree_path, context)
+          # One branch identity for the whole check: read before the proof,
+          # handed to the proof as the candidate's own branch, and verified
+          # downstream. A later read could name a switched-to destination.
+          branch_at_check = head_branch(worktree_path)
           proof = preservation_proof(
             worktree_path: worktree_path,
             accepted_base: accepted_base,
             manifest_record: manifest_record,
             recorded_base: recorded_base,
-            candidate_branch: context.branch
+            candidate_branch: branch_at_check
           )
           # The HEAD and branch whose preservation was actually proven:
           # destructive boundaries downstream must use these identities,
@@ -59,7 +63,7 @@ module Ace
           # comes from Git's symbolic HEAD state, not the branch name's
           # shape — a 40-hex branch name is a real branch.
           verified_head = proof.preserved? ? proof.head : nil
-          verified_branch = proof.preserved? ? head_branch(worktree_path) : nil
+          verified_branch = proof.preserved? ? branch_at_check : nil
 
           reasons = []
           reasons << "assignment not complete" unless assignment_complete
