@@ -5,6 +5,7 @@ doc-dependencies*
 .coding-agent/.env
 .coding-agent/.env.sample
 .zcode/
+.zcodeignore
 node_modules
 .lint*.md
 
