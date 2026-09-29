@@ -47,7 +47,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "ace-support-markdown", "~> 0.3"
   spec.add_dependency "ace-b36ts", "~> 0.14"
   spec.add_dependency "ace-git", "~> 0.24"
-  spec.add_dependency "ace-git-github", "~> 0.1" # Issue linkage sync via the GitHub provider
+  spec.add_dependency "ace-git-github", "~> 0.2" # Issue linkage sync via the GitHub provider
   spec.add_dependency "ace-support-cli", "~> 0.6"
 
   # Development dependencies managed in root Gemfile
