@@ -1,6 +1,6 @@
 ---
 id: 8wr.t.t8j
-status: pending
+status: in-progress
 priority: high
 created_at: "2026-09-28 19:29:30"
 estimate: large
