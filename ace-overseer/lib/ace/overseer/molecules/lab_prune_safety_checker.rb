@@ -23,14 +23,14 @@ module Ace
 
         # @param lab_client [LabClient] Lab surface adapter
         # @param work_id [String] Exact Lab Work ID
-        # @param preservation_proof [Models::PreservationProof, nil] Declared
-        #   destination proof for the Work's content
+        # @param preservation_proof [Models::PreservationProof, nil] Proof
+        #   built from the Work's documented preservation data
         # @return [Classification]
         def check(lab_client:, work_id:, preservation_proof: nil)
-          state = read_state(lab_client, work_id)
-          return classify(false, state) if state.is_a?(String)
+          entry = read_entry(lab_client, work_id)
+          return classify(false, entry) if entry.is_a?(String)
 
-          value = STATES_KEY.filter_map { |key| state[key] }.find { |entry| entry.is_a?(String) }
+          value = STATES_KEY.filter_map { |key| entry[key] }.find { |state| state.is_a?(String) }
           return classify(false, "lab state for #{work_id} is unreadable") if value.nil?
 
           normalized = value.strip.downcase
@@ -42,7 +42,7 @@ module Ace
 
           if preservation_proof.nil?
             return classify(false, "no preservation evidence for lab work #{work_id}; " \
-              "declare a verified destination via --preservation")
+              "the Lab surface does not document surviving repo/head/branch data")
           end
           unless preservation_proof.preserved?
             return classify(false, preservation_proof.reason)
@@ -53,13 +53,11 @@ module Ace
 
         private
 
-        def read_state(lab_client, work_id)
-          data = lab_client.call("work", "show", work_id)
-          return data if data.is_a?(Hash)
-
-          classify(false, "lab state for #{work_id} is not structured")
+        def read_entry(lab_client, work_id)
+          entry = lab_client.work_entry(work_id)
+          entry.nil? ? "lab work #{work_id} not found in authoritative status (missing state)" : entry
         rescue Ace::Overseer::Error => e
-          classify(false, "lab state for #{work_id} is unavailable: #{e.message}")
+          "lab state for #{work_id} is unavailable: #{e.message}"
         end
 
         def classify(safe, reason)

@@ -29,6 +29,18 @@ module Ace
         rescue JSON::ParserError => error
           raise Error, "Lab returned invalid JSON: #{error.message}"
         end
+
+        # The authoritative status entry for one Work, or nil when the Work
+        # is absent from the surface. Missing state is a blocking condition
+        # for prune — never treated as safe.
+        #
+        # @param work_id [String] Exact Lab Work ID
+        # @return [Hash, nil] Status entry or nil
+        def work_entry(work_id)
+          data = call("work", "status", "--json")
+          works = data.is_a?(Hash) ? Array(data["works"]) : []
+          works.find { |entry| entry.is_a?(Hash) && entry["id"].to_s == work_id.to_s }
+        end
       end
     end
   end

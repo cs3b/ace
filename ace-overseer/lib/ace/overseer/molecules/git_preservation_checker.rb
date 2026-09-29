@@ -83,6 +83,27 @@ module Ace
           proof_via_destination(worktree_path, live_head, accepted_base, manifest_record, recorded_base)
         end
 
+        # Prove preservation for a static identity that has no local
+        # checkout (e.g. a Lab Work documenting repo/head/branch): the head
+        # must be contained in the current tip of the surviving accepted
+        # base branch.
+        #
+        # @param repo [String] Repository root
+        # @param head [String] Commit whose preservation is in question
+        # @param accepted_base [Hash] `{branch:, head:}` surviving base
+        # @return [Models::PreservationProof]
+        def ancestry_proof(repo:, head:, accepted_base:)
+          if accepted_base.nil? || head.to_s.empty?
+            return blocked("cannot resolve an accepted surviving base to prove preservation")
+          end
+
+          if ancestry?(repo, head, accepted_base[:head])
+            Models::PreservationProof.preserved(:accepted_ancestor)
+          else
+            blocked("documented head #{head[0, 12]} is not contained in accepted base #{accepted_base[:branch]}")
+          end
+        end
+
         private
 
         def proof_via_destination(worktree_path, live_head, accepted_base, record, recorded_base)

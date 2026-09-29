@@ -7,24 +7,31 @@ module Ace
         class Prune < Ace::Support::Cli::Command
           include Ace::Support::Cli::Base
 
-          desc "Clean up completed task worktrees"
+          desc "Clean up completed task worktrees with executed preservation and no-writer proofs"
 
           argument :targets, required: false, type: :array, desc: "Task refs or folder names to prune"
 
           option :assignment, aliases: ["-a"], type: :string, desc: "Prune a specific assignment by ID"
-          option :force, aliases: ["-f"], type: :boolean, default: false, desc: "Force-remove unsafe worktrees"
+          option :force, aliases: ["-f"], type: :boolean, default: false,
+            desc: "Skip the confirmation prompt for already-safe candidates; never bypasses safety blocks"
           option :yes, aliases: ["-y"], type: :boolean, default: false, desc: "Skip confirmation"
-          option :dry_run, type: :boolean, default: false, desc: "Show candidates only"
-          option :quiet, aliases: ["-q"], type: :boolean, default: false, desc: "Suppress non-essential output"
+          option :dry_run, type: :boolean, default: false, desc: "Show candidates only (no cleanup side effects)"
+          option :quiet, aliases: ["-q"], type: :boolean, default: false,
+            desc: "Suppress progress output; failures still print and signal via exit code"
           option :debug, aliases: ["-d"], type: :boolean, default: false, desc: "Show debug output"
           option :runtime, default: "tmux", desc: "Runtime (tmux, lab)"
+          option :preservation, type: :string,
+            desc: "YAML manifest (version 1) declaring verified cross-repository destinations"
 
-          def initialize(orchestrator: nil, input: $stdin, output: $stdout, lab_client: nil)
+          def initialize(orchestrator: nil, input: $stdin, output: $stdout, lab_client: nil,
+            lab_safety_checker: nil, preservation_checker: nil)
             super()
             @orchestrator = orchestrator || Organisms::PruneOrchestrator.new
             @input = input
             @output = output
             @lab_client = lab_client || Molecules::LabClient.new
+            @lab_safety_checker = lab_safety_checker || Molecules::LabPruneSafetyChecker.new
+            @preservation_checker = preservation_checker || Molecules::GitPreservationChecker.new
           end
 
           def call(**options)
@@ -45,15 +52,18 @@ module Ace
               force: options[:force],
               targets: targets,
               assignment_id: options[:assignment],
+              preservation_manifest: options[:preservation],
               input: @input,
               output: @output,
               on_progress: progress
             )
 
-            return if options[:quiet]
-
             if options[:assignment]
               print_assignment_result(result)
+              return if options[:dry_run] || result[:aborted]
+
+              raise Ace::Support::Cli::Error, "Assignment #{options[:assignment]} is blocked: " \
+                "#{result[:assignment_candidate].reasons.join(", ")}" if result[:blocked]
               return
             end
 
@@ -62,14 +72,19 @@ module Ace
               return
             end
 
-            if result[:aborted]
-              puts "Prune aborted."
-              return
-            end
+            puts "Prune aborted." if result[:aborted]
+            return if result[:aborted]
 
             print_apply(result)
-          rescue => e
-            raise Ace::Support::Cli::Error.new(e.message)
+
+            blocked_count = Array(result[:blocked]).length
+            failed_count = Array(result[:failed]).length
+            return if blocked_count.zero? && failed_count.zero?
+
+            raise Ace::Support::Cli::Error,
+              "#{blocked_count + failed_count} candidate(s) blocked or failed; nothing unsafe was removed"
+          rescue Ace::Overseer::Error => e
+            raise Ace::Support::Cli::Error, e.message
           end
 
           private
@@ -77,22 +92,91 @@ module Ace
           def prune_lab(**options)
             raise Ace::Support::Cli::Error, "--assignment is not supported with Lab runtime; provide exact Work IDs" if options[:assignment]
             raise Ace::Support::Cli::Error, "--force is not supported with Lab runtime" if options[:force]
+            raise Ace::Support::Cli::Error, "--preservation is not supported with Lab runtime" if options[:preservation]
 
             works = Array(options[:targets]).map(&:to_s)
             raise Ace::Support::Cli::Error, "provide at least one exact Lab Work ID to prune" if works.empty?
 
-            if options[:dry_run]
-              return if options[:quiet]
+            classifications = works.to_h do |work|
+              [work, @lab_safety_checker.check(
+                lab_client: @lab_client,
+                work_id: work,
+                preservation_proof: lab_preservation_proof(work)
+              )]
+            end
 
-              works.each { |work| puts "Would destroy Lab Work #{work}: /usr/local/bin/lab work destroy #{work} --confirm" }
+            if options[:dry_run]
+              print_lab_dry_run(classifications)
               return
             end
 
             raise Ace::Support::Cli::Error, "Lab prune requires --yes after reviewing --dry-run" unless options[:yes]
 
+            blocked = []
+            destroyed = []
             works.each do |work|
+              classification = classifications[work]
+              unless classification.safe?
+                blocked << [work, classification.reason]
+                next
+              end
+
+              # Guarded delegation: re-read the authoritative state
+              # immediately before destroy; a changed state aborts.
+              recheck = @lab_safety_checker.check(
+                lab_client: @lab_client,
+                work_id: work,
+                preservation_proof: lab_preservation_proof(work)
+              )
+              unless recheck.safe?
+                blocked << [work, "state changed before destroy: #{recheck.reason}"]
+                next
+              end
+
               result = @lab_client.call("work", "destroy", work, "--confirm", json: false)
+              destroyed << work
               puts result unless options[:quiet]
+            end
+
+            blocked.each do |work, reason|
+              puts "Blocked: lab work #{work}: #{reason}"
+            end
+            puts "#{destroyed.length} lab work(s) destroyed." unless options[:quiet]
+            return if blocked.empty?
+
+            raise Ace::Support::Cli::Error, "#{blocked.length} lab work(s) blocked; nothing unsafe was destroyed"
+          end
+
+          # Preservation evidence for a Lab Work comes from the Work's own
+          # documented surviving identity (repo/head/branch). A surface that
+          # does not document it cannot prove preservation.
+          def lab_preservation_proof(work)
+            entry = @lab_client.work_entry(work)
+            return Models::PreservationProof.blocked("lab work #{work} not found in authoritative status") if entry.nil?
+
+            repo = entry["repo"].to_s
+            head = entry["head"].to_s
+            branch = entry["branch"].to_s
+            if repo.empty? || head.empty? || branch.empty? || !repo.start_with?("/")
+              return Models::PreservationProof.blocked(
+                "lab work #{work} does not document preservation data (repo/head/branch)"
+              )
+            end
+
+            accepted_base = @preservation_checker.accepted_base_for(repo)
+            @preservation_checker.ancestry_proof(repo: repo, head: head, accepted_base: accepted_base)
+          rescue Ace::Overseer::Error => e
+            Models::PreservationProof.blocked("lab preservation evidence unavailable: #{e.message}")
+          end
+
+          def print_lab_dry_run(classifications)
+            puts "Lab prune classification:"
+            classifications.each do |work, classification|
+              if classification.safe?
+                puts "  #{work}: safe (terminal, preserved, no in-flight work)"
+              else
+                puts "  #{work}: BLOCKED — #{classification.reason}"
+              end
             end
           end
 
@@ -112,6 +196,7 @@ module Ace
             end
 
             if result[:blocked]
+              puts "Blocked: assignment #{candidate.assignment_id}: #{candidate.reasons.join(", ")}"
               return
             end
 
@@ -124,26 +209,32 @@ module Ace
           end
 
           def print_dry_run(result)
-            forced = Array(result[:forced])
             puts "Candidates for cleanup:"
-            if result[:safe].empty? && forced.empty?
+            if result[:safe].empty?
               puts "  (none)"
             else
               result[:safe].each do |candidate|
                 puts "  task.#{candidate.task_id} - #{candidate.worktree_path}"
               end
-              forced.each do |candidate|
-                puts "  task.#{candidate.task_id} - #{candidate.worktree_path} [FORCE]"
+            end
+            if result[:unsafe].any?
+              puts "Blocked candidates:"
+              result[:unsafe].each do |candidate|
+                puts "  task.#{candidate.task_id} - #{candidate.worktree_path}"
+                candidate.reasons.each { |reason| puts "    - #{reason}" }
               end
             end
             puts
-            total = result[:safe].length + forced.length
-            puts "#{total} worktree(s) can be pruned."
+            puts "#{result[:safe].length} worktree(s) can be pruned; " \
+              "#{result[:unsafe].length} blocked."
           end
 
           def print_apply(result)
             result[:pruned].each do |candidate|
               puts "Removed worktree task.#{candidate.task_id}"
+            end
+            Array(result[:blocked]).each do |entry|
+              puts "Blocked after recheck: task.#{entry[:candidate].task_id}: #{entry[:reasons].join(", ")}"
             end
             result[:failed].each do |entry|
               puts "Failed to remove task.#{entry[:candidate].task_id}: #{entry[:error]}"
