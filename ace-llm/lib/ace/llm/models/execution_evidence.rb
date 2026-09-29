@@ -22,6 +22,33 @@ module Ace
 
         EXCERPT_LIMIT = 2000
 
+        # Credential shapes that must not survive into diagnostics, reports, or
+        # error messages. Matches are truncated to a short prefix so the
+        # credential TYPE stays readable while the value is destroyed.
+        SECRET_PATTERNS = [
+          /(?:bearer|authorization)\s*[:=]\s*[\w.\-+=\/]{8,}/i,
+          /(?:api[_-]?key|access[_-]?token|auth[_-]?token|refresh[_-]?token|client[_-]?secret|secret|password|passwd|pwd)\s*["']?\s*[:=]\s*["']?[\w.\-+=\/]{8,}/i,
+          /sk-(?:proj-)?[A-Za-z0-9_\-]{16,}/,
+          /gh[pousr]_[A-Za-z0-9_]{16,}/,
+          /AKIA[0-9A-Z]{16}/,
+          /xox[baprs]-[A-Za-z0-9\-]{10,}/,
+          /eyJ[A-Za-z0-9_\-]{20,}\.eyJ[A-Za-z0-9_\-]{20,}\.[A-Za-z0-9_\-]{10,}/
+        ].freeze
+
+        # Destroy credential values in captured diagnostics while keeping the
+        # surrounding text readable.
+        # @param text [String, nil]
+        # @return [String, nil]
+        def self.redact(text)
+          return text if text.nil?
+
+          redacted = text.to_s.dup
+          SECRET_PATTERNS.each do |pattern|
+            redacted = redacted.gsub(pattern) { |match| "#{match[0, 6]}…[redacted]" }
+          end
+          redacted
+        end
+
         attr_reader :outcome, :invocation_id, :provider_name, :deadline_seconds,
           :elapsed_seconds, :exit_status, :signal, :execution_began,
           :stdout_excerpt, :stderr_excerpt
@@ -145,7 +172,7 @@ module Ace
         def bounded_excerpt(text)
           return nil if text.nil?
 
-          excerpt = text.to_s
+          excerpt = self.class.redact(text.to_s)
           excerpt = "#{excerpt[0, EXCERPT_LIMIT]}…[truncated]" if excerpt.length > EXCERPT_LIMIT
           excerpt.freeze
         end

@@ -80,6 +80,24 @@ module Ace
           assert_nil ExecutionEvidence.from_h({"outcome" => "nonsense"})
           assert_nil ExecutionEvidence.from_h(nil)
         end
+
+        def test_excerpts_redact_credential_shapes
+          evidence = ExecutionEvidence.new(
+            outcome: :nonzero_exit,
+            stderr_excerpt: "auth failed for Bearer sk-proj-abcdefghij1234567890 with api_key=ApiKeySuperSecret99"
+          )
+
+          refute_includes evidence.stderr_excerpt, "sk-proj-abcdefghij1234567890"
+          refute_includes evidence.stderr_excerpt, "ApiKeySuperSecret99"
+          assert_includes evidence.stderr_excerpt, "[redacted]"
+          assert_includes evidence.stderr_excerpt, "auth failed for"
+        end
+
+        def test_redact_leaves_normal_output_untouched
+          output = "Bundle complete! 48 Gemfile dependencies, 73 gems now installed."
+
+          assert_equal output, ExecutionEvidence.redact(output)
+        end
       end
     end
   end
