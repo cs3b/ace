@@ -5,9 +5,10 @@ require_relative "../../../test_helper"
 
 class VersionCommandFactoryTest < AceSupportCliTestCase
   def test_build_outputs_name_and_version
-    command_class = Ace::Support::Cli::VersionCommand.build(gem_name: "ace-tool", version: "1.2.3")
+    command = Ace::Support::Cli::VersionCommand.build(gem_name: "ace-tool", version: "1.2.3")
 
-    stdout = capture_stdout { assert_equal 0, command_class.new.call }
+    # build returns a configured instance (AOT-safe: no Class.new)
+    stdout = capture_stdout { assert_equal 0, command.call }
     assert_equal "ace-tool 1.2.3\n", stdout
   end
 

@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "b36ts/version"
+require_relative "b36ts/glue"
 
 # Load ace-config for configuration cascade management
 require "ace/support/config"
