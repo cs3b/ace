@@ -39,7 +39,8 @@ module Ace
             ref: "refs/ace/execution",
             checkout_root: File.join(@cache_dir, "evidence-co")
           ),
-          identity_resolver: stub_resolver
+          identity_resolver: stub_resolver,
+          lifecycle_exclusion: Molecules::LifecycleExclusion.new(root: File.join(@cache_dir, ".exclusion"))
         )
       end
 
@@ -678,6 +679,19 @@ module Ace
           coordinator.start(assignment_id: assignment.id, step: "010", project_id: "ace")
         end
         assert_includes error.message, "overlaps"
+      end
+
+      def test_start_refuses_after_prune_recorded_removal
+        coordinator = build_coordinator
+        assignment = create_assignment
+
+        exclusion = Molecules::LifecycleExclusion.new(root: File.join(@cache_dir, ".exclusion"))
+        exclusion.record_removed!(exclusion.assignment_key(assignment.id))
+
+        error = assert_raises(AttemptErrors::Conflict) do
+          coordinator.start(assignment_id: assignment.id, step: "010", project_id: "ace")
+        end
+        assert_includes error.message, "was pruned"
       end
     end
   end

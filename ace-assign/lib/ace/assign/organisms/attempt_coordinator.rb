@@ -26,13 +26,15 @@ module Ace
         # @param journal [Molecules::EvidenceJournal, nil] Evidence journal (default built per repo)
         # @param identity_resolver [Molecules::ExecutionIdentityResolver, nil] Trust boundary
         # @param verifier [Molecules::ReceiptVerifier, nil] Receipt verifier
-        def initialize(cache_base: nil, repo_root: nil, journal: nil, identity_resolver: nil, verifier: nil)
+        def initialize(cache_base: nil, repo_root: nil, journal: nil, identity_resolver: nil, verifier: nil,
+          lifecycle_exclusion: nil)
           @manager = Molecules::AssignmentManager.new(cache_base: cache_base)
           @store = @manager.attempt_store
           @repo_root = repo_root || Ace::Support::Fs::Molecules::ProjectRootFinder.find_or_current
           @journal = journal
           @identity_resolver = identity_resolver || Molecules::ExecutionIdentityResolver.new
           @verifier = verifier || Molecules::ReceiptVerifier.new(identity_resolver: @identity_resolver)
+          @lifecycle_exclusion = lifecycle_exclusion
         end
 
         attr_reader :store
@@ -62,49 +64,54 @@ module Ace
           identity ||= @identity_resolver.resolve
           base_head = candidate_head!
 
-          @store.with_lock(assignment_id) do
-            journal_actives = assignment.managed? ? active_journal_attempts(assignment) : []
+          # Serialize writer registration against prune: prune holds the
+          # exclusive exclusion from its final evidence reads through removal;
+          # registration must not slip into a removed identity afterwards.
+          lifecycle_exclusion.with_shared(lifecycle_exclusion.assignment_key(assignment_id)) do
+            @store.with_lock(assignment_id) do
+              journal_actives = assignment.managed? ? active_journal_attempts(assignment) : []
 
-            existing = @store.active(assignment_id, scope) ||
-              journal_actives.find { |attempt| Atoms::AssignmentScope.equal?(attempt.binding.scope, scope) }
-            if existing
-              if existing.binding.project_id == project && existing.binding.task_id == assignment.task_id &&
-                  existing.binding.actor == identity.actor && existing.binding.role == identity.role
-                return existing
+              existing = @store.active(assignment_id, scope) ||
+                journal_actives.find { |attempt| Atoms::AssignmentScope.equal?(attempt.binding.scope, scope) }
+              if existing
+                if existing.binding.project_id == project && existing.binding.task_id == assignment.task_id &&
+                    existing.binding.actor == identity.actor && existing.binding.role == identity.role
+                  return existing
+                end
+
+                raise AttemptErrors::Conflict,
+                  "Active attempt #{existing.attempt_id} already owns #{assignment_id}@#{scope} " \
+                  "(project #{existing.binding.project_id}); refusing to launch a second writer"
               end
 
-              raise AttemptErrors::Conflict,
-                "Active attempt #{existing.attempt_id} already owns #{assignment_id}@#{scope} " \
-                "(project #{existing.binding.project_id}); refusing to launch a second writer"
-            end
+              active_scopes = @store.list(assignment_id).select(&:active?).map(&:binding)
+              active_scopes.concat(journal_actives.map(&:binding))
+              blocker = active_scopes.find { |binding| scopes_overlap?(binding.scope, scope) }
+              if blocker
+                raise AttemptErrors::Conflict,
+                  "Active attempt scope #{blocker.scope} overlaps requested scope #{scope} on #{assignment_id}; " \
+                  "refusing overlapping writers"
+              end
 
-            active_scopes = @store.list(assignment_id).select(&:active?).map(&:binding)
-            active_scopes.concat(journal_actives.map(&:binding))
-            blocker = active_scopes.find { |binding| scopes_overlap?(binding.scope, scope) }
-            if blocker
-              raise AttemptErrors::Conflict,
-                "Active attempt scope #{blocker.scope} overlaps requested scope #{scope} on #{assignment_id}; " \
-                "refusing overlapping writers"
-            end
+              attempt_id = unique_attempt_id(assignment_id, journal_actives.map(&:attempt_id))
+              events = start_events(assignment_id, assignment, scope, project, identity, base_head, attempt_id)
+              attempt = reserve(assignment, scope, project, identity, base_head, attempt_id)
+              if attempt.managed?
+                commit = journal_for.append(
+                  assignment_id: assignment_id,
+                  attempt_id: attempt.attempt_id,
+                  events: events
+                )
+                attempt = attempt.with(journal_commit: commit)
+                attempt = yield_lost_ownership_race(attempt, assignment_id, scope)
+              else
+                attempt = attempt.with(events: events)
+              end
 
-            attempt_id = unique_attempt_id(assignment_id, journal_actives.map(&:attempt_id))
-            events = start_events(assignment_id, assignment, scope, project, identity, base_head, attempt_id)
-            attempt = reserve(assignment, scope, project, identity, base_head, attempt_id)
-            if attempt.managed?
-              commit = journal_for.append(
-                assignment_id: assignment_id,
-                attempt_id: attempt.attempt_id,
-                events: events
-              )
-              attempt = attempt.with(journal_commit: commit)
-              attempt = yield_lost_ownership_race(attempt, assignment_id, scope)
-            else
-              attempt = attempt.with(events: events)
+              @store.save(attempt)
+              @store.claim(assignment_id, scope, attempt)
+              attempt
             end
-
-            @store.save(attempt)
-            @store.claim(assignment_id, scope, attempt)
-            attempt
           end
         end
 
@@ -529,6 +536,12 @@ module Ace
         def journal_for
           @journal ||= Molecules::EvidenceJournal.new(repo_root: @repo_root)
           @journal
+        end
+
+        # Prune/writer exclusion shared with overseer prune (durable, outside
+        # every deletion target).
+        def lifecycle_exclusion
+          @lifecycle_exclusion ||= Molecules::LifecycleExclusion.new(repo_root: @repo_root)
         end
 
         def candidate_head!
