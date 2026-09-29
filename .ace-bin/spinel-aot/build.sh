@@ -49,7 +49,7 @@ perl -pi -e 's/^require_relative "compact_id_encoder_api"\n//' \
   "$COPY/ace-b36ts/lib/ace/b36ts/atoms/compact_id_encoder.rb"
 
 cd "$WT"
-exec "$SPINEL" .ace-local/ace-aot/entry_b36ts.rb \
+exec "$SPINEL" .ace-bin/spinel-aot/entry_b36ts.rb \
   -I .ace-local/ace-aot/shims \
   -I "$COPY/ace-b36ts/lib" \
   -I "$COPY/ace-support-cli/lib" \

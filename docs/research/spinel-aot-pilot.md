@@ -92,6 +92,55 @@ Compile-time refusals / codegen bugs hit by ace's codebase:
 - **`respond_to?`/duck-typed registries can't type** → usage/registry lowered to
   concrete shapes.
 
+## Public CLI parity (native binary vs CRuby API)
+
+Derived from the public CLI surface (cli/commands option declarations + ADR-022 dynamic
+configuration). Check = ported and conformance-verified; cross = not in the compiled
+binary (Ruby channel only). **Parity: 31 of 44 surface points (70%)** — the misses
+cluster in the split/count family, verbose/debug cosmetics, and legacy time parsing.
+
+| Surface | CRuby | Native | Notes |
+|---|---|---|---|
+| **encode [TIMESTAMP]** | | | |
+| `now` | yes | yes | |
+| ISO-8601 (naive / Z / offset / date-only) | yes | yes | wall-clock field semantics matched |
+| legacy `YYYYMMDD-HHMMSS` | yes | no | CRuby Time.parse grammar |
+| full CRuby Time.parse grammar (RFC 2822, "6 Jan 2025", ...) | yes | no | ISO-8601 subset only |
+| `-f 2sec` / `month` / `week` / `day` / `40min` / `50ms` / `ms` | yes | yes (7/7) | byte-identical ids |
+| `-n, --count` | yes | no | rejected with pointer to Ruby channel |
+| `--split` (+ `--path-only`, `--json`) | yes | no | encoder math compiled; orchestration not wired |
+| `-y, --year-zero` | yes | yes | |
+| `-q, --quiet` | yes | yes | native output is always summary-free (equivalent to -q) |
+| non-quiet config summary block | yes | no | ConfigSummary display not ported |
+| `-v` / `-d` | yes | no | accepted, no effect |
+| `-h, --help` | yes | yes | compact text, not byte-identical |
+| **decode ID** | | | |
+| ID + format auto-detection | yes | yes | |
+| `-f readable` (default) | yes | yes | byte-identical |
+| `-f iso` | yes | yes | byte-identical |
+| `-f timestamp` | yes | yes | byte-identical |
+| `--split` (hierarchical path decoding) | yes | no | |
+| `-y, --year-zero` | yes | yes | |
+| `-q` / `-v` / `-d` | yes | yes / no / no | |
+| `-h, --help` | yes | yes | compact text |
+| **config** | | | |
+| plain output | yes | yes | byte-identical |
+| `--verbose` (sources, ranges) | yes | no | |
+| `-h, --help` | yes | yes | compact text |
+| **top-level** | | | |
+| `version` / `--version` | yes | yes | byte-identical |
+| `help` / `-h` | yes | yes | compact text |
+| unknown-command rejection | yes | yes | same rc; message wording differs |
+| **dynamic configuration (ADR-022 cascade)** | | | |
+| gem defaults file (`.ace-defaults/b36ts/config.yml`) | yes | yes | via yaml-subset shim |
+| user config (`~/.ace/b36ts/config.yml`) | yes | yes | |
+| project config (`.ace/b36ts/config.yml` in cwd) | yes | yes | |
+| project config discovered in parent directories | yes | no | upward traversal not ported |
+| `default_format` honored | yes | yes | fixed in this pass |
+| runtime overrides (`-y`, `-f`) | yes | yes | |
+| config validation (alphabet 36/unique, year_zero 1900-2100, known format) | yes | yes | shared validate_config! |
+| ace-config test_mode / mock hooks | yes | n/a | test-only, not public CLI |
+
 ## Distribution (3-target matrix, per Captain)
 
 | | gems today | AOT binaries |

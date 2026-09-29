@@ -169,6 +169,11 @@ module Ace
       def self.gem_root_for_b36ts
         File.expand_path("../../../..", __dir__)
       end
+
+      # Merged config for the compiled entry (defaults -> user -> project).
+      def self.entry_config
+        resolve_b36ts_config(gem_root_for_b36ts, b36ts_defaults, {})
+      end
     end
   end
 end
