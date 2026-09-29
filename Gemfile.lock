@@ -23,7 +23,7 @@ PATH
 PATH
   remote: ace-bundle
   specs:
-    ace-bundle (0.44.1)
+    ace-bundle (0.44.2)
       ace-compressor (~> 0.25)
       ace-git (~> 0.24)
       ace-git-github (~> 0.2)
@@ -383,7 +383,7 @@ PATH
 PATH
   remote: ace-task
   specs:
-    ace-task (0.38.0)
+    ace-task (0.38.1)
       ace-b36ts (~> 0.14)
       ace-git (~> 0.24)
       ace-git-github (~> 0.2)

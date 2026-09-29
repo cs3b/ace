@@ -6,6 +6,10 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+- **ace-bundle v0.44.2**: The released gemspec now declares `ace-git-github ~> 0.2`, matching the source constraint; published 0.44.1 metadata still pinned `~> 0.1.1`, which kept published installations resolving ace-git-github 0.1.2 and made the released 0.2.0 unreachable through dependency resolution.
+- **ace-task v0.38.1**: The released gemspec now declares `ace-git-github ~> 0.2`, matching the source constraint; published 0.38.0 metadata still pinned `~> 0.1.1` (same published-graph staleness as ace-bundle v0.44.2).
+- **ace-review v0.56.1**: Ships the `ace-git-github ~> 0.2` published constraint fix together with the full-vs-delta review round fix (previously published 0.56.0 metadata pinned `~> 0.1.1`).
+
 - **ace-llm v0.40.0**: Records resolved execution identity and accepts Pi max reasoning.
 - **ace-task v0.37.5**: Loads its declared `ace-git-github` dependency, so updates and archive moves of tasks with linked GitHub issues no longer fail with "GitHub issue sync primitives are unavailable".
 
@@ -30,6 +34,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+- **ace-test-runner-e2e v0.41.0**: Release-verification scenarios can declare a `release-manifest` setup action — the runner carries only the explicitly allowed `ACE_RELEASE_MANIFEST` host input into deterministic setup, which validates the strict schema-version-1 manifest and copies it into the sandbox before any install goal; a failed deterministic setup now aborts the scenario with an ERROR result instead of degrading to an LLM-driven sandbox.
 - **ace-review v0.56.0** (8wq.t.1qb): Cheaper review rounds and honest usage. Delta rounds (`ace-review --pr <id> --delta [head>`) scope a round to changes since a prior reviewed head with carried-forward evidence, empty and fully review-exempt deltas (`exempt_paths` config) complete as no-op sessions with zero model calls, the unwired subject chunk strategies are removed in favor of the explicit oversized-diff refusal (ADR-024), and session usage records reflect measured provider tokens instead of estimates.
 - **ace-llm v0.41.0**: Derives the top-level `usage` record from provider metadata token counts; absent counts stay absent and measured zero cache reads are preserved.
 - **ace-llm-providers-cli v0.35.0**: Reports measured per-model pi token usage (input/output/cached/total) with an explicit `usage_status: unavailable` state instead of character-based estimates.
