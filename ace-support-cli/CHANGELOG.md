@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+- CLI options without a declared default no longer materialize a `nil` key
+  when the flag is absent: absent and bare optional-value flags are now
+  distinguishable by callers (`--delta`-style flags had made every plain
+  review fail with "--delta requires --pr" since the key was always
+  present).
 
 ## [0.6.8] - 2026-09-02
 
