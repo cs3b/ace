@@ -181,7 +181,25 @@ module InstallReceipt
 
   def finalize(manifest_path:, mode_dirs:, pipeline_report_dir:, consumers: DEFAULT_CONSUMERS, exits: {}, results_root: nil, source_manifest: nil)
     verdict = verify(manifest_path: manifest_path, mode_dirs: mode_dirs, consumers: consumers, exits: exits)
-    pipeline = pipeline_completion(pipeline_report_dir)
+
+    # All finalization inputs must belong to one run: mode directories must
+    # be the results root's own tc/02 and tc/03 evidence.
+    run_binding_findings = []
+    if results_root
+      expected = {
+        "normal" => File.join(results_root, "results", "tc", "02"),
+        "full_index" => File.join(results_root, "results", "tc", "03")
+      }
+      expected.each do |mode, expected_dir|
+        actual = mode_dirs[mode]
+        next if actual && File.expand_path(actual) == File.expand_path(expected_dir)
+
+        run_binding_findings << "#{mode} directory #{actual.inspect} is not the results root's #{expected_dir.inspect}"
+      end
+    end
+    verdict["findings"].concat(run_binding_findings)
+
+    pipeline = pipeline_completion(pipeline_report_dir, results_root: results_root)
     verdict["kind"] = "installation-acceptance"
     verdict["pipeline_completion"] = pipeline
     verdict["findings"].concat(pipeline["findings"])
@@ -298,7 +316,7 @@ module InstallReceipt
   # same manifest.
   def acceptance_artifact_findings(parsed, verdict)
     findings = []
-    expected_names = verdict.dig("modes", "normal", "packages").keys || []
+    expected_names = (verdict.dig("modes", "normal", "packages") || {}).keys
     expected_consumers = (verdict.dig("consumer_edges", "normal") || {}).keys
 
     unless parsed["schema_version"] == MANIFEST_SCHEMA_VERSION
@@ -308,25 +326,65 @@ module InstallReceipt
       findings << "acceptance artifact kind #{parsed["kind"].inspect} is not exact-version-acceptance"
     end
 
-    expected_count = verdict.dig("manifest", "package_count")
-    unless parsed.dig("manifest", "package_count") == expected_count
-      findings << "acceptance artifact package_count #{parsed.dig("manifest", "package_count").inspect} does not match #{expected_count}"
+    manifest = parsed["manifest"].is_a?(Hash) ? parsed["manifest"] : nil
+    unless manifest
+      findings << "acceptance artifact manifest is not an object"
+    else
+      expected_count = verdict.dig("manifest", "package_count")
+      unless manifest["package_count"] == expected_count
+        findings << "acceptance artifact package_count #{manifest["package_count"].inspect} does not match #{expected_count}"
+      end
+    end
+
+    modes = parsed["modes"].is_a?(Hash) ? parsed["modes"] : nil
+    unless modes
+      findings << "acceptance artifact modes is not an object"
+      return findings
     end
 
     %w[normal full_index].each do |mode|
-      packages = parsed.dig("modes", mode, "packages")
+      mode_entry = modes[mode].is_a?(Hash) ? modes[mode] : nil
+      if mode_entry.nil?
+        findings << "acceptance artifact is missing #{mode} results"
+        next
+      end
+
+      packages = mode_entry["packages"].is_a?(Hash) ? mode_entry["packages"] : nil
       if packages.nil?
         findings << "acceptance artifact is missing #{mode} package results"
-      else
-        missing = expected_names - packages.keys
-        findings << "acceptance artifact #{mode} results do not cover: #{missing.join(", ")}" unless missing.empty?
+        next
       end
+
+      missing = expected_names - packages.keys
+      findings << "acceptance artifact #{mode} results do not cover: #{missing.join(", ")}" unless missing.empty?
+
+      # The recorded states must agree with this process's recomputation
+      # over the same receipts; a doctored or stale artifact fails here.
+      expected_packages = verdict.dig("modes", mode, "packages") || {}
+      packages.each do |name, state|
+        expected_state = expected_packages[name]
+        next unless expected_state.is_a?(Hash) && state.is_a?(Hash)
+
+        if state["manifest_version"] != expected_state["manifest_version"]
+          findings << "acceptance artifact #{mode} #{name} manifest_version #{state["manifest_version"].inspect} does not match recomputed #{expected_state["manifest_version"].inspect}"
+        end
+      end
+    end
+
+    consumer_edges = parsed["consumer_edges"].is_a?(Hash) ? parsed["consumer_edges"] : nil
+    unless consumer_edges
+      findings << "acceptance artifact consumer_edges is not an object"
+      return findings
     end
 
     expected_consumers.each do |consumer|
       %w[normal full_index].each do |mode|
-        unless parsed.dig("consumer_edges", mode, consumer)
+        mode_edges = consumer_edges[mode].is_a?(Hash) ? consumer_edges[mode] : nil
+        edge = mode_edges && mode_edges[consumer]
+        if edge.nil?
           findings << "acceptance artifact is missing #{mode} consumer edge for #{consumer}"
+        elsif edge.is_a?(Hash) && edge["ok"] == true && verdict.dig("consumer_edges", mode, consumer, "ok") == false
+          findings << "acceptance artifact #{mode} consumer edge for #{consumer} claims ok but the recomputed verdict disagrees"
         end
       end
     end
@@ -334,7 +392,7 @@ module InstallReceipt
     findings
   end
 
-  def pipeline_completion(report_dir)
+  def pipeline_completion(report_dir, results_root: nil)
     metadata_path = File.join(report_dir, "metadata.yml")
     unless File.file?(metadata_path)
       return {"ok" => false, "findings" => ["pipeline metadata.yml is missing: #{metadata_path}"]}
@@ -356,10 +414,14 @@ module InstallReceipt
     findings << "pipeline marked uncertain_execution; side effects must not be replayed" if uncertain
 
     # Bind the report to the current run: a stale passing report from an
-    # earlier run must not bless this run's receipts.
+    # earlier run must not bless this run's receipts. Both the report
+    # directory and the results root carry the run id in their basename.
     run_id = File.basename(report_dir).sub(/-reports\z/, "")
     unless metadata["run-id"] == run_id
       findings << "pipeline metadata run-id #{metadata["run-id"].inspect} does not match the current run #{run_id.inspect}"
+    end
+    if results_root && File.basename(results_root) != run_id
+      findings << "results root #{File.basename(results_root).inspect} does not belong to run #{run_id.inspect}"
     end
     if metadata["test-id"].nil? || metadata["test-id"].to_s.empty?
       findings << "pipeline metadata records no test-id"
@@ -408,6 +470,10 @@ module InstallReceipt
 
     if lockfile && lockfile_receipt
       lockfile["all_versions"].each do |name, versions|
+        # The receipt records only ace-* gems; non-ACE transitive
+        # dependencies are not part of the receipt contract.
+        next unless name.match?(ACE_PREFIX)
+
         recorded = lockfile_receipt[name]
         next if versions.include?(recorded)
 
@@ -553,6 +619,15 @@ module InstallReceipt
       findings << "ace-git-github not reached through #{name} dependency edge"
     elsif provider_version != provider_entry["artifact_version"]
       findings << "ace-git-github resolved #{provider_version} through #{name}, manifest requires #{provider_entry["artifact_version"]}"
+    end
+
+    # Any observed version of a superseded release is a finding, even when
+    # the required version is also present (last-entry-wins would hide it).
+    provider_entry["supersedes"].to_a.each do |old_version|
+      observed = (lockfile && lockfile.dig("all_versions", "ace-git-github")) || []
+      if observed.include?(old_version)
+        findings << "ace-git-github #{old_version} is superseded by #{provider_entry["artifact_version"]} but still present in the #{name} consumer lockfile"
+      end
     end
 
     # The provider must come from the consumer's own published dependency
