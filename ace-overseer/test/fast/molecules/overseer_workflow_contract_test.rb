@@ -21,10 +21,36 @@ class OverseerWorkflowContractTest < AceOverseerTestCase
     assert_includes workflow_content,
       "git merge-base --is-ancestor <work-head> <base>"
     assert_includes workflow_content,
-      'git -C <successor-repo> log --all --grep "<subject>"'
+      "git -C <successor-repo> merge-base --is-ancestor <dest-ref> <dest-branch>"
+    assert_includes workflow_content,
+      "git -C <successor-repo> fetch <source-repo> <source-base> <work-head>"
+    assert_includes workflow_content,
+      "<source-base>...<work-head> <dest-base>...<dest-ref>"
     assert_includes workflow_content, "A described or remembered proof is never sufficient"
     assert_includes workflow_content, "blocks the prune"
     assert_includes workflow_content, "never silently drop"
+  end
+
+  def test_migrated_work_requires_verified_destination_and_content_equivalence
+    assert_includes workflow_content, "declared, verified destination"
+    assert_includes workflow_content, "Tree/artifact equivalence"
+    assert_includes workflow_content, "Patch equivalence"
+    assert_includes workflow_content, "A matching commit subject is never sufficient"
+  end
+
+  def test_prune_requires_positive_no_active_writer_check
+    assert_includes workflow_content, "no-active-writer check"
+    assert_includes workflow_content, "ace-overseer status --format json"
+    assert_includes workflow_content, "ace-assign status"
+    assert_includes workflow_content, "Missing or unreadable lifecycle state counts as an active writer"
+  end
+
+  def test_prune_preserves_on_ambiguity_and_rejects_subject_only_proof
+    assert_includes workflow_content, "Preserve on ambiguity."
+    refute_includes workflow_content, "log --all --grep",
+      "subject-only successor search must not return as a preservation proof"
+    refute_includes workflow_content, "subject-level search",
+      "subject-only successor search must not return as a preservation proof"
   end
 
   def test_status_truth_contract_is_first_class_non_negotiable
