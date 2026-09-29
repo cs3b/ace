@@ -11,8 +11,10 @@ import { WakeError } from "./types.js";
  *
  * Parsing is token-based: quoted values (including values that contain text
  * resembling options, e.g. --path "logs/--message.txt") stay single tokens,
- * and option names match exactly, so "--message-prefix" never satisfies
- * "--message". Unquoted message text may span the remaining tokens.
+ * quoted spans embedded in --flag=value tokens (e.g. --message="check the
+ * build") keep their full value, and option names match exactly, so
+ * "--message-prefix" never satisfies "--message". Unquoted message text may
+ * span the remaining tokens; unterminated quotes are rejected.
  *
  * @param {string} kind "loop" or "watch", used for error text only.
  * @param {string} input Raw argument string after the command name.
@@ -61,31 +63,57 @@ function usage(kind) {
 }
 
 /**
- * Split an argument string into tokens: quoted spans become single tokens
- * (quotes stripped, backslash escapes honored); everything else splits on
- * whitespace.
+ * Split an argument string into tokens. A quote opens a quoted span only at
+ * the start of a token or immediately after `=` — so `--message="check the
+ * build"` and `--path="my file.txt"` keep their full values, while prose
+ * apostrophes mid-token (`don't`) stay literal. Inside a span, backslash
+ * escapes are honored and the span may contain whitespace and text
+ * resembling options; quotes are stripped. Unterminated spans are rejected
+ * instead of silently accepting the partial fragment.
  *
  * @param {string} raw
  * @returns {Array<{text: string, quoted: boolean}>}
  */
 function tokenize(raw) {
   const tokens = [];
-  const pattern = /"((?:[^"\\]|\\.)*)"|'((?:[^'\\]|\\.)*)'|(\S+)/g;
-  let match;
-  while ((match = pattern.exec(raw)) !== null) {
-    if (match[1] !== undefined) {
-      tokens.push({ text: unfoldEscapes(match[1]), quoted: true });
-    } else if (match[2] !== undefined) {
-      tokens.push({ text: unfoldEscapes(match[2]), quoted: true });
-    } else {
-      tokens.push({ text: match[3], quoted: false });
+  let index = 0;
+  while (index < raw.length) {
+    if (/\s/.test(raw[index])) {
+      index += 1;
+      continue;
     }
+    const tokenStart = index;
+    const leadingQuote = raw[tokenStart];
+    let text = "";
+    while (index < raw.length && !/\s/.test(raw[index])) {
+      const character = raw[index];
+      const opensSpan = (character === "\"" || character === "'")
+        && (index === tokenStart || raw[index - 1] === "=");
+      if (!opensSpan) {
+        text += character;
+        index += 1;
+        continue;
+      }
+      index += 1;
+      let value = "";
+      while (index < raw.length && raw[index] !== character) {
+        if (raw[index] === "\\" && index + 1 < raw.length) {
+          value += raw[index + 1];
+          index += 2;
+          continue;
+        }
+        value += raw[index];
+        index += 1;
+      }
+      if (index >= raw.length) {
+        throw new WakeError(`unterminated quoted value starting at position ${tokenStart}`);
+      }
+      index += 1;
+      text += value;
+    }
+    tokens.push({ text, quoted: leadingQuote === "\"" || leadingQuote === "'" });
   }
   return tokens;
-}
-
-function unfoldEscapes(value) {
-  return value.replace(/\\(.)/g, "$1");
 }
 
 /**

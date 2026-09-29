@@ -19,6 +19,7 @@ The `ace-wake` extension runs inside the live Pi process. It lets an agent sleep
 ```
 
 - Loop intervals must be finite numbers greater than zero; names must be unique per subscription kind; messages must not be empty. Invalid input fails with a visible error.
+- Flag values may be quoted either after the flag (`--message "check the build"`) or inline (`--message="check the build"`); quotes keep values with spaces whole, and an unterminated quote fails the command instead of storing a truncated value.
 - Watch paths are resolved to canonical absolute paths relative to the session working directory and validated for readability before the watch is stored. An unreadable path fails the command.
 - Active subscriptions appear in the status surface (`ace-wake` status key). `/loop remove NAME` / `/watch remove NAME` stop future wakes.
 

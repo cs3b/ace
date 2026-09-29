@@ -56,6 +56,7 @@ async function startSession(host, extraPorts = {}) {
       await found[1]({ type: "session_start", reason: "reload" }, host.commandContext);
     },
     settle: () => handlerFor("agent_settled")({ type: "agent_settled" }, host.commandContext),
+    agentStart: () => handlerFor("agent_start")({ type: "agent_start" }, host.commandContext),
     beforeCompact: (reason = "manual") => handlerFor("session_before_compact")({ type: "session_before_compact", reason }, host.commandContext),
     compacted: (reason = "manual") => handlerFor("session_compact")({ type: "session_compact", reason, trigger: "manual" }, host.commandContext),
     compactFailed: (reason = "manual") => handlerFor("session_compact_failed")({ type: "session_compact_failed", reason, trigger: "manual" }, host.commandContext),
@@ -133,6 +134,32 @@ describe("ace-wake commands", () => {
     const added = host.sessionEntries.at(-1);
     assert.equal(added.data.loops[0].message, "two words here");
     assert.equal(added.data.loops[0].intervalSeconds, 15);
+  });
+
+  it("quoted inline flag values keep their full value and unterminated quotes fail loudly", async () => {
+    const host = createFakeHost();
+    await startSession(host);
+
+    await host.runCommand("loop", 'add inline --interval=10 --message="check the build"');
+    const added = host.sessionEntries.at(-1);
+    assert.equal(added.data.loops[0].message, "check the build", "inline quoted values must not truncate");
+
+    host.setFile("/fake/project/my file.txt", { mtimeMs: 1, size: 1 });
+    await host.runCommand("watch", 'add spaced --path="my file.txt" --message=changed');
+    assert.equal(
+      host.sessionEntries.at(-1).data.watches[0].path,
+      "/fake/project/my file.txt",
+      "inline quoted paths must keep their spaces",
+    );
+
+    await host.runCommand("loop", 'add broken --interval=10 --message="never closes');
+    assert.equal(host.notifications.at(-1).type, "error");
+    assert.match(host.notifications.at(-1).message, /unterminated quoted value/);
+
+    // Prose apostrophes are not quote delimiters: messages stay literal.
+    await host.runCommand("loop", "add prose --interval 10 --message don't stop now");
+    const prose = host.sessionEntries.at(-1).data.loops.find((loop) => loop.name === "prose");
+    assert.equal(prose.message, "don't stop now");
   });
 
   it("quoted watch paths containing spaces are stored canonically", async () => {
@@ -381,6 +408,62 @@ describe("ace-wake delivery", () => {
     await session.compactFailed();
     await new Promise((resolve) => setTimeout(resolve, 20));
     assert.equal(host.sends.length, 0, "removal must cancel the retained wake");
+  });
+
+  it("flushes a watch deferred by the delivery window once the run starts", async () => {
+    const host = createFakeHost();
+    host.setFile("/fake/project/dep.txt", { mtimeMs: 1, size: 1 });
+    const session = await startSession(host);
+    await host.runCommand("loop", "add heartbeat --interval 10 --message loop wake");
+    await host.runCommand("watch", "add dep --path dep.txt --message watch wake");
+
+    // The loop wake crosses the idle-to-running transition; the watch change
+    // arriving inside that window defers as dirty instead of queueing.
+    host.clock.advance(10_000);
+    host.setFile("/fake/project/dep.txt", { mtimeMs: 2, size: 2 });
+    host.triggerWatch("/fake/project/dep.txt");
+    assert.equal(host.sends.length, 1, "only the loop wake has crossed so far");
+
+    // The run starts: follow-ups are queue-safe now, so the deferred watch
+    // delivers without waiting for a full settlement.
+    host.setIdle(false);
+    session.agentStart();
+    assert.equal(host.sends.length, 2, "the deferred watch queues once the run starts");
+    assert.match(host.sends[1].text, /watch:dep/);
+
+    host.setIdle(true);
+    await session.settle();
+  });
+
+  it("recovers every stranded watch wake after compaction, not only the first", async () => {
+    const host = createFakeHost();
+    host.setFile("/fake/project/a.txt", { mtimeMs: 1, size: 1 });
+    host.setFile("/fake/project/b.txt", { mtimeMs: 1, size: 1 });
+    const session = await startSession(host);
+    await host.runCommand("watch", "add a --path a.txt --message a changed");
+    await host.runCommand("watch", "add b --path b.txt --message b changed");
+
+    // Both wakes dispatch before compaction begins — a across the idle
+    // window, b into the active run — so both fingerprints advance and both
+    // attempts strand when compaction preflight rejects the sends.
+    host.setFile("/fake/project/a.txt", { mtimeMs: 2, size: 2 });
+    host.triggerWatch("/fake/project/a.txt");
+    host.setIdle(false);
+    host.setFile("/fake/project/b.txt", { mtimeMs: 2, size: 2 });
+    host.triggerWatch("/fake/project/b.txt");
+    assert.equal(host.sends.length, 2);
+
+    host.setIdle(true);
+    await session.beforeCompact();
+    await session.compactFailed();
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    assert.equal(host.sends.length, 3, "the first stranded watch re-fires at the resume boundary");
+
+    await session.settle();
+    assert.equal(host.sends.length, 4, "the second stranded watch re-fires at the settlement boundary");
+    const recovered = host.sends.slice(2).map((send) => send.text);
+    assert.ok(recovered.some((text) => text.includes("watch:a")));
+    assert.ok(recovered.some((text) => text.includes("watch:b")));
   });
 
   it("serializes concurrent distinct sources across the delivery transition", async () => {

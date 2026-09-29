@@ -324,9 +324,26 @@ export class WakeRegistry {
     this.#retaining = false;
     clearTimeout(this.#dispatchRecoveryTimer);
     this.#dispatchPending = false;
+    // A stranded watch attempt must not replay as a bare message: its
+    // fingerprint already advanced past a send compaction preflight rejected,
+    // so a replay deferred behind another source's dispatch window would
+    // later read as already delivered and flushDirty() would discard the
+    // change. Stranded watches instead revert to their last delivered
+    // fingerprint and go dirty — the watch reconciliation path preserves
+    // every change until delivery is confirmed.
+    const strandedWatches = [];
+    const strandedOthers = [];
+    for (const entry of this.#dispatcher.pendingEntries()) {
+      if (entry[0].startsWith(WATCH_SOURCE_PREFIX)) {
+        strandedWatches.push(entry[0].slice(WATCH_SOURCE_PREFIX.length));
+      } else {
+        strandedOthers.push(entry);
+      }
+    }
+    this.#watches.revertToDelivered(strandedWatches);
     this.#reconcileBatch = {
       retained: [...this.#retained.values()],
-      stranded: this.#dispatcher.pendingEntries(),
+      stranded: strandedOthers,
     };
     this.#retained.clear();
     this.#dispatcher.settleAll();
@@ -403,7 +420,12 @@ export class WakeRegistry {
       // Same-source repeats coalesce regardless of the transition window.
       return { delivered: false, reason: "coalesced" };
     }
-    const blocked = this.#retaining || this.#dispatchPending;
+    // The serialization window guards only the idle-to-running transition;
+    // once the host reports an active run it is stale (agent_start may never
+    // fire to close it — queued follow-ups do not re-emit it), so only
+    // retention keeps blocking delivery then.
+    const windowBlocked = this.#dispatchPending && !this.#hostIsActive();
+    const blocked = this.#retaining || windowBlocked;
     if (blocked && sourcePrefix === WATCH_SOURCE_PREFIX) {
       // Watch changes must never queue as bare messages: marking the
       // subscription dirty defers delivery to flushDirty(), which re-stats
@@ -416,7 +438,7 @@ export class WakeRegistry {
       this.#retained.set(sourceKey, { prefix: sourcePrefix, name, message });
       return { delivered: false, reason: "retained" };
     }
-    if (this.#dispatchPending) {
+    if (windowBlocked) {
       // A previous wake is still crossing the idle-to-running transition;
       // Pi rejects concurrent prompts asynchronously, so this source waits
       // to enter the follow-up queue safely (agent_start) or until the
@@ -515,12 +537,17 @@ export class WakeRegistry {
   /**
    * The host started a run: concurrent sends now queue safely as follow-ups,
    * so the serialization window closes and retained wakes drain immediately.
+   * Watches deferred by the closed window flush too — without a run to
+   * queue behind they would wait for a full settlement even though the
+   * follow-up queue is already safe.
    */
   noteRunStarted() {
     this.#deliveryUnresolved = false;
     this.#inFlightWatchNames.clear();
     this.#dispatchPending = false;
     this.#drainRetained();
+    this.#watches.flushDirty((watch) => this.#fire(WATCH_SOURCE_PREFIX, watch.name, watch.message));
+    this.#refreshStatus();
   }
 
   #markDispatchInFlight() {
