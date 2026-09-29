@@ -114,6 +114,35 @@ module Ace
           end
         end
 
+        # Hold the shared side on several identities at once (acquired in the
+        # given order, released in reverse — callers must use one consistent
+        # global order, task before assignment, to avoid deadlock). Fails
+        # closed when any identity was pruned.
+        def with_shared_multi(keys, reset_removed: false)
+          ordered = Array(keys).compact.reject { |key| key.to_s.empty? }.uniq
+          raise ArgumentError, "exclusion keys are required" if ordered.empty?
+
+          locks = ordered.map { |key| open_lock(key) }
+          begin
+            locks.each { |lock| lock.flock(File::LOCK_SH) }
+            ordered.each do |key|
+              if removed?(key)
+                unless reset_removed
+                  raise AttemptErrors::Conflict, removed_message(key)
+                end
+
+                clear_removed!(key)
+              end
+            end
+            yield
+          ensure
+            locks.reverse_each do |lock|
+              lock.flock(File::LOCK_UN)
+              lock.close
+            end
+          end
+        end
+
         # Record that the identity was removed. Call while holding the
         # exclusive side, BEFORE deleting the target.
         def record_removed!(key)

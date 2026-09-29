@@ -65,9 +65,16 @@ module Ace
           base_head = candidate_head!
 
           # Serialize writer registration against prune: prune holds the
-          # exclusive exclusion from its final evidence reads through removal;
-          # registration must not slip into a removed identity afterwards.
-          lifecycle_exclusion.with_shared(lifecycle_exclusion.assignment_key(assignment_id)) do
+          # exclusive exclusion from its final evidence reads through removal.
+          # A worktree-backed task identity shares the same protocol (task
+          # key first, then assignment key — the one consistent global
+          # order), so a worktree prune and an attempt start cannot interleave.
+          start_keys = []
+          unless assignment.task_id.to_s.strip.empty?
+            start_keys << lifecycle_exclusion.task_key(assignment.task_id)
+          end
+          start_keys << lifecycle_exclusion.assignment_key(assignment_id)
+          lifecycle_exclusion.with_shared_multi(start_keys) do
             @store.with_lock(assignment_id) do
               journal_actives = assignment.managed? ? active_journal_attempts(assignment) : []
 

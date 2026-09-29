@@ -94,6 +94,56 @@ class LifecycleExclusionTest < AceAssignTestCase
     refute @exclusion.removed?("assignment:abc12")
   end
 
+  def test_shared_multi_acquires_all_identities_in_order
+    acquired = []
+    @exclusion.with_shared_multi(["task:230", "assignment:abc12"]) do
+      acquired = [@exclusion.removed?("task:230"), @exclusion.removed?("assignment:abc12")]
+    end
+    assert_equal [false, false], acquired
+  end
+
+  def test_shared_multi_fails_when_any_identity_was_pruned
+    @exclusion.record_removed!("assignment:abc12")
+
+    error = assert_raises(Ace::Assign::AttemptErrors::Conflict) do
+      @exclusion.with_shared_multi(["task:230", "assignment:abc12"]) { flake "must not yield" }
+    end
+    assert_includes error.message, "abc12"
+    assert_includes error.message, "was pruned"
+  end
+
+  def test_shared_multi_reset_removed_clears_stale_markers
+    @exclusion.record_removed!("task:230")
+
+    @exclusion.with_shared_multi(["task:230", "assignment:abc12"], reset_removed: true) do
+      refute @exclusion.removed?("task:230")
+    end
+  end
+
+  def test_shared_multi_blocks_while_exclusive_held
+    held = Queue.new
+    release = Queue.new
+    holder = Thread.new do
+      @exclusion.with_exclusive("task:230") do
+        held << true
+        release.pop(timeout: 5)
+      end
+    end
+    assert_equal true, held.pop(timeout: 2)
+
+    result = Queue.new
+    contender = Thread.new do
+      @exclusion.with_shared_multi(["task:230", "assignment:abc12"]) { result << :entered }
+    end
+    sleep 0.2
+    assert result.empty?, "shared multi must wait while exclusive is held"
+
+    release << :done
+    holder.join
+    contender.join
+    assert_equal :entered, result.pop(timeout: 2)
+  end
+
   def test_default_root_prefers_cache_base_sandbox
     ENV["CACHE_BASE"] = @tmp
     root = Ace::Assign::Molecules::LifecycleExclusion.default_root

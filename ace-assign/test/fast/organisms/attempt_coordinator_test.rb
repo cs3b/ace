@@ -681,6 +681,41 @@ module Ace
         assert_includes error.message, "overlaps"
       end
 
+      class RecordingExclusion < Molecules::LifecycleExclusion
+        attr_reader :shared_multi_keys
+
+        def initialize(root:)
+          super(root: root)
+          @shared_multi_keys = []
+        end
+
+        def with_shared_multi(keys, **options)
+          @shared_multi_keys << keys
+          super
+        end
+      end
+
+      def test_start_shares_task_then_assignment_keys
+        assignment = create_assignment # managed: carries task_id 8wr.t.qjl
+        exclusion = RecordingExclusion.new(root: File.join(@cache_dir, ".exclusion"))
+        coordinator = Organisms::AttemptCoordinator.new(
+          cache_base: @cache_dir,
+          repo_root: @repo,
+          journal: Molecules::EvidenceJournal.new(
+            repo_root: @repo,
+            ref: "refs/ace/execution",
+            checkout_root: File.join(@cache_dir, "evidence-co")
+          ),
+          identity_resolver: stub_resolver,
+          lifecycle_exclusion: exclusion
+        )
+
+        coordinator.start(assignment_id: assignment.id, step: "010", project_id: "ace")
+
+        keys = exclusion.shared_multi_keys.first
+        assert_equal [exclusion.task_key("8wr.t.qjl"), exclusion.assignment_key(assignment.id)], keys
+      end
+
       def test_start_refuses_after_prune_recorded_removal
         coordinator = build_coordinator
         assignment = create_assignment
