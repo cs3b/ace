@@ -111,3 +111,49 @@ local git remote — still checkout-dependent (ambient), never used by ACE.
 - `-H` with a port-bearing authority and plain-http server URLs are untested
   against a real server (Lab is https/443); runtime failures classify as
   unreachable — recorded as a limitation, not worked around.
+
+## Read-only smoke probes (real binary, real server, exact bound argv)
+
+Executed in the container (`debian:stable-slim`, linux/arm64, empty
+throwaway `$HOME`, `ca-certificates` installed; no login configured):
+
+- `./fj -H codeberg.org --style minimal repo view forgejo-contrib/forgejo-cli`
+  → full name line + `View online at https://codeberg.org/...` (exit 0).
+- `./fj -H codeberg.org --style minimal pr search -r forgejo-contrib/forgejo-cli --state all`
+  → `30 pull requests` + newest-first `#N: title (by author)` entries.
+- `./fj -H codeberg.org --style minimal pr search ... --state open` → open subset.
+- `./fj -H codeberg.org --style minimal pr view forgejo-contrib/forgejo-cli#700`
+  → merged PR view (em-dash byline, `From Fluffinity/forgejo-cli:...` fork
+  segment, body, `0 comments`).
+- `... pr view ...#700 commits` → `commit 80c7e92efbaa...(+1, -0)` head SHA line.
+- `... pr view ...#700 diff` → raw unified diff.
+- `... issue view forgejo-contrib/forgejo-cli#5` → issue view layout.
+- `... pr status ...#700` / `...#711` → mergeability + CI checks, **no merge
+  SHA**; merged case panics in fj v0.6.0 (`$created_at` template bug).
+- `./fj -H codeberg.org --style minimal pr view 700` (bare number, no
+  checkout) → `Error: can't figure out what repo to access, try specifying
+  with `  {owner}/{repo}#700`` (exit 1) — proves ambient failure mode.
+- `./fj version` → stdout `fj v0.6.0` + update hint, exit 0.
+- `./fj auth list` (no logins) → stderr `No logins.`, exit 0.
+
+Corroboration: real **Lab** output captured during qk1.0 (2026-09-23,
+`ace-git-forgejo/test/fixtures/*.txt`: lab PR #26 view/commits, issue view,
+search listing, `cs3b/ace` repo view on `forgejo.tail6c0887.ts.net`) shows
+the same shapes, including fork `From lab-builder/ace:lab/W675-ace`
+segments — the Lab's fj produced output byte-compatible with upstream
+v0.6.0 observation.
+
+## Reproduction
+
+```text
+curl -L -o /tmp/uj0-fj/fj.tar.gz \
+  https://codeberg.org/forgejo-contrib/forgejo-cli/releases/download/v0.6.0/forgejo-cli-aarch64-linux.tar.gz
+tar xzf fj.tar.gz   # single `fj` binary
+docker run --rm --platform linux/arm64 -v /tmp/uj0-fj:/work -w /work \
+  debian:stable-slim sh -c 'export HOME=/tmp; apt-get update -qq && apt-get install -y -qq ca-certificates; ./fj version'
+```
+
+Lab smoke test (SC4, OPEN): with Lab credentials + installed `fj`, run
+`bin/ace-git pr show <PR> --server <NAME> --format json` from another
+checkout and compare returned identity to the selection; record redacted
+output here. Not replaceable by the codeberg probes or mocks.
