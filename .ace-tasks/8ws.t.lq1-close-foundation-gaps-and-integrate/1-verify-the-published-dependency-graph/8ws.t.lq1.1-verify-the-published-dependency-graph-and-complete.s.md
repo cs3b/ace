@@ -1,6 +1,6 @@
 ---
 id: 8ws.t.lq1.1
-status: pending
+status: in-progress
 priority: high
 created_at: "2026-09-29 14:29:08"
 estimate: medium
@@ -13,6 +13,12 @@ bundle:
   presets: [project]
   files: [ace-bundle/ace-bundle.gemspec, ace-review/ace-review.gemspec, ace-task/ace-task.gemspec, ace-monorepo-e2e/test/e2e/TS-MONO-001-rubygems-install/scenario.yml, ace-monorepo-e2e/test/e2e/TS-MONO-001-rubygems-install/TC-004-classify-result.verify.md, .ace-tasks/8ws.t.lq1-close-foundation-gaps-and-integrate/evidence/release-proof-2026-09-29.md, .ace-tasks/8ws.t.lq1-close-foundation-gaps-and-integrate/evidence/install-observations.json]
   commands: []
+worktree:
+  branch: lq1.1-verify-the-published-dependency-graph-and-complete-installation-proof
+  path: .ace-wt/ace-t.lq1.1
+  created_at: "2026-09-29 22:53:38"
+  updated_at: "2026-09-29 22:53:38"
+  target_branch: main
 ---
 
 # Verify the published dependency graph and complete installation proof
