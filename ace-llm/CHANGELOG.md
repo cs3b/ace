@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.42.0] - 2026-09-29
+
+### Added
+- `Ace::LLM::Models::ExecutionEvidence`: structured, immutable record of how a CLI provider execution actually ended (outcome kind, invocation correlation ID, configured deadline, monotonic elapsed time, exit status/signal, bounded output excerpts). `Ace::LLM::ProviderError` instances can now carry it via `execution_evidence`.
+
+### Changed
+- `ErrorClassifier` prefers structured execution evidence over error-message prose and returns the new `EXECUTION_INCOMPLETE` classification when a provider session began and then ended without a confirmed completion (deadline expiry, transport drop, nonzero exit, or clean exit without a final response). A nonzero exit whose stderr merely mentions "timeout" is no longer classified as a timeout; a successful response containing the word is unaffected.
+- `FallbackOrchestrator` aborts the whole chain (no retry, no fallback) on execution-incomplete failures — the provider process already ran, so replaying via another provider would repeat its side effects. The terminal error carries the evidence summary, the provider's own bounded diagnostic line, and the list of tried providers; all-providers-exhausted messages include the last execution evidence.
+
 ## [0.41.1] - 2026-09-29
 
 ### Changed
