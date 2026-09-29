@@ -55,9 +55,13 @@ module Ace
           )
           # The HEAD and branch whose preservation was actually proven:
           # destructive boundaries downstream must use these identities,
-          # never a later re-read that was itself never proven.
+          # never a later re-read that was itself never proven. A detached
+          # HEAD has no branch to delete — the collector reports the commit
+          # SHA as the branch, which must never be treated as a ref name.
           verified_head = proof.preserved? ? proof.head : nil
-          verified_branch = proof.preserved? ? context.branch : nil
+          verified_branch = if proof.preserved? && !detached_branch?(context.branch)
+            context.branch
+          end
 
           reasons = []
           reasons << "assignment not complete" unless assignment_complete
@@ -180,6 +184,10 @@ module Ace
           )
         rescue => e
           Models::PreservationProof.blocked("preservation proof failed: #{e.message}")
+        end
+
+        def detached_branch?(branch)
+          branch.to_s.strip.empty? || branch.to_s.match?(/\A[0-9a-f]{40}\z/)
         end
 
         def assign_cache_relative

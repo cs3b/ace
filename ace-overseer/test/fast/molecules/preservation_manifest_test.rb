@@ -154,7 +154,7 @@ class PreservationManifestTest < AceOverseerTestCase
   end
 
 def test_rejects_commit_sha_as_destination_branch
-  record = base_record.merge("destination_branch" => @head)
+  record = base_record.merge("destination_branch" => @successor.rev("HEAD"))
   path = write_manifest([record])
   e = assert_raises(Ace::Overseer::Molecules::PreservationManifest::Invalid) do
     Ace::Overseer::Molecules::PreservationManifest.load(path)

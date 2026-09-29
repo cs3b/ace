@@ -41,7 +41,7 @@ class PruneSafetyCheckerTest < AceOverseerTestCase
     def proof(**args)
       @last_proof_args = args
       if @preserved
-        Ace::Overseer::Models::PreservationProof.preserved(:accepted_ancestor)
+        Ace::Overseer::Models::PreservationProof.preserved(:accepted_ancestor, head: "p" * 40)
       else
         Ace::Overseer::Models::PreservationProof.blocked("HEAD not contained in accepted base")
       end
@@ -57,6 +57,16 @@ class PruneSafetyCheckerTest < AceOverseerTestCase
       git_status: {"clean" => true}
     )
   end
+
+def build_context_with_branch(worktree_path:, branch:, assignments: [{"assignment" => {"id" => "assign1", "state" => "completed"}}])
+  Ace::Overseer::Models::WorkContext.new(
+    task_id: "230",
+    worktree_path: worktree_path,
+    branch: branch,
+    assignments: assignments,
+    git_status: {"clean" => true}
+  )
+end
 
   def build_checker(worktree_path:, context:, preserved: true, attempts: [],
     attempt_store: nil, task_status: "done", recorded_base: "recordedbase" * 6)
@@ -241,6 +251,21 @@ class PruneSafetyCheckerTest < AceOverseerTestCase
     refute candidate.safe_to_prune?
     assert_includes candidate.reasons, "task not done"
   end
+
+def test_detached_head_yields_no_verified_branch
+  _repo, worktree = build_worktree
+  detached_sha = worktree.rev("HEAD")
+  context = build_context_with_branch(worktree_path: worktree.path, branch: detached_sha)
+  checker = build_checker(worktree_path: worktree.path, context: context)
+
+  candidate = checker.check(
+    worktree_path: worktree.path, task_ref: "230", accepted_base: {branch: "main", head: "a" * 40}
+  )
+
+  assert candidate.preserved
+  assert_nil candidate.verified_branch
+  assert_equal "p" * 40, candidate.verified_head
+end
 
   def test_no_accepted_base_blocks_preservation
     _repo, worktree = build_worktree

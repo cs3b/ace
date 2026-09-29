@@ -271,6 +271,54 @@ class PruneSafetyCheckerDouble
   end
 end
 
+def test_safe_detached_candidate_applies_without_branch_deletion
+  commit_and_merge_work
+  detached_sha = @worktree.rev("HEAD")
+  @worktree.git!("checkout", "-q", "--detach")
+
+  # The collector reports the commit SHA as the branch for a detached
+  # HEAD; the orchestrator must not treat that SHA as a ref to delete.
+  collector = Class.new(StaticCollector) do
+    def initialize(assignments, branch)
+      @branch = branch
+      super(assignments)
+    end
+
+    def collect(_worktree_path)
+      context = super
+      Ace::Overseer::Models::WorkContext.new(
+        task_id: context.task_id,
+        worktree_path: context.worktree_path,
+        branch: @branch,
+        assignments: context.assignments,
+        git_status: context.git_status
+      )
+    end
+  end
+  checker = Ace::Overseer::Molecules::PruneSafetyChecker.new(
+    context_collector: collector.new(
+      [{"assignment" => {"id" => "assign1", "state" => "completed"}}], detached_sha
+    ),
+    task_loader_factory: -> { StaticTaskManager.new }
+  )
+  orchestrator = Ace::Overseer::Organisms::PruneOrchestrator.new(
+    worktree_manager: StaticManager.new([worktree_entry], repo_root: @repo.path),
+    prune_checker: checker,
+    tmux_executor: FakeTmuxExecutor.new,
+    config: {},
+    lifecycle_exclusion: @exclusion
+  )
+
+  result = orchestrator.call(dry_run: false, yes: true, input: StringIO.new(""), output: StringIO.new)
+
+  assert_equal 1, result[:pruned].length, "a safe detached candidate must be removed with a receipt"
+  assert_empty result[:failed]
+  assert File.directory?(@worktree.path) == false, "worktree must be gone"
+  assert @repo.git!("branch", "--format=%(refname:short)").split("
+").include?("task-work"),
+    "a detached HEAD has no branch to delete; the branch survives"
+end
+
   def test_dry_run_changes_nothing
     commit_and_merge_work
     manager = StaticManager.new([worktree_entry], repo_root: @repo.path)

@@ -142,8 +142,12 @@ module Ace
           if verified_head && head_now && head_now != verified_head
             return {success: false, error: "HEAD changed after recheck (#{head_now[0, 12]}); preserving"}
           end
-          if verified_branch && !branch_now.to_s.empty? && branch_now != verified_branch
-            return {success: false, error: "branch switched to #{branch_now} after recheck; preserving"}
+          # Compare identities directly, including a detached HEAD (nil
+          # branch): switching away after the recheck preserves the
+          # candidate instead of deleting the previously verified branch.
+          if verified_branch && branch_now != verified_branch
+            return {success: false,
+                    error: branch_now.to_s.empty? ? "worktree detached after recheck; preserving" : "branch switched to #{branch_now} after recheck; preserving"}
           end
 
           repo = candidate_repo(candidate.worktree_path)
