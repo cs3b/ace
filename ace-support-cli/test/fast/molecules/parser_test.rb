@@ -19,6 +19,11 @@ class ParserTest < AceSupportCliTestCase
     option :capture, type: :string, default: false, optional_value: true
   end
 
+  class NoDefaultCaptureCommand < Ace::Support::Cli::Command
+    option :capture, type: :string, optional_value: true
+    option :count, type: :integer, required: true
+  end
+
   def setup
     @parser = Ace::Support::Cli::Parser.new(ParseCommand)
   end
@@ -63,6 +68,21 @@ class ParserTest < AceSupportCliTestCase
     parser = Ace::Support::Cli::Parser.new(OptionalOnlyCommand)
     parsed = parser.parse(["--capture"])
 
+    assert_nil parsed[:capture]
+  end
+
+  def test_absent_option_without_default_stays_absent
+    parser = Ace::Support::Cli::Parser.new(NoDefaultCaptureCommand)
+    parsed = parser.parse(["--count", "1"])
+
+    refute parsed.key?(:capture), "an absent flag without a declared default must not materialize a key"
+  end
+
+  def test_bare_optional_value_option_is_present_with_nil_value
+    parser = Ace::Support::Cli::Parser.new(NoDefaultCaptureCommand)
+    parsed = parser.parse(["--count", "1", "--capture"])
+
+    assert parsed.key?(:capture)
     assert_nil parsed[:capture]
   end
 

@@ -73,6 +73,12 @@ module Ace
 
         def build_defaults
           command_class.options.each_with_object({}) do |option, hash|
+            # Only declared defaults materialize a key: an option without a
+            # default must stay absent when the flag is not given, so callers
+            # can distinguish "flag absent" from "flag given with an optional
+            # (nil) value".
+            next if option.default.nil?
+
             hash[option.name] = duplicate_default(option.default)
           end
         end
