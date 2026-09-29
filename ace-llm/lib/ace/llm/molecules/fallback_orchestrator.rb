@@ -112,6 +112,9 @@ module Ace
           evidence = @last_execution_evidence
           message = +"Provider execution incomplete; remaining providers were not tried to avoid replaying CLI side effects."
           message << " Evidence: #{evidence.summary}." if evidence
+          if evidence && (detail = evidence.detail_line)
+            message << " Detail: #{detail}"
+          end
           message << " Tried: #{@visited_providers.to_a.join(", ")}."
           message << " Reconcile the session manually before rerunning this work."
           error = Ace::LLM::ProviderError.new(message)

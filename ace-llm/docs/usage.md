@@ -277,6 +277,30 @@ Active providers: <list>
 Run `ace-llm --list-providers` for available providers and configuration guidance.
 ```
 
+## CLI Provider Sessions and Outcome Classification
+
+CLI providers (codex, claude, gemini, pi, opencode, agy) run as subprocesses. Each
+capture records structured execution evidence -- outcome kind (completed,
+deadline-exceeded, transport failure, spawn failure), the provider's exit status or
+signal, the configured deadline, monotonic elapsed time, and an opaque invocation
+ID -- and attaches it to raised `Ace::LLM::ProviderError`s as bounded excerpts only
+(full streams stay internal; prompts and credentials never leave the process).
+
+Classification keys on that evidence, not on message text:
+
+- A session that completes within its deadline is a success, even if its tool output contains the word "timeout".
+- A nonzero exit is a nonzero exit, even if its stderr mentions "timeout".
+- A real deadline expiry reports the outcome with elapsed time, deadline, and retained partial output. Deadlines stay bounded; nothing raises them implicitly.
+
+A begun-but-unconfirmed session (deadline expiry, transport drop, nonzero exit, or
+a clean exit without a final response) is classified `EXECUTION_INCOMPLETE`: the
+fallback orchestrator aborts the chain instead of retrying or falling back, because
+another provider would replay whatever side effects the session performed. The
+terminal diagnostic names the evidence, the provider's own diagnostic line, and the
+providers tried; reconcile the session manually before rerunning the work. Failures
+known to occur before execution began (provider not installed, authentication) keep
+the established fallback behavior.
+
 ## Runtime Help
 
 ```bash

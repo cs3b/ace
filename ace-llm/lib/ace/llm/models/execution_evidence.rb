@@ -85,6 +85,20 @@ module Ace
           execution_began
         end
 
+        # First bounded diagnostic line from the captured streams, for
+        # actionable terminal messages. Prefers stderr; falls back to stdout.
+        # @return [String, nil]
+        def detail_line
+          source = [stderr_excerpt, stdout_excerpt].compact
+            .map { |stream| stream.lines.map(&:strip) }
+            .flatten
+            .reject(&:empty?)
+            .first.to_s
+          return nil if source.empty?
+
+          source.length > 300 ? "#{source[0, 300]}…[truncated]" : source
+        end
+
         # Human-readable one-line summary safe for reports and error messages.
         # @return [String]
         def summary
