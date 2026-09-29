@@ -39,25 +39,41 @@ module Ace
           # @return [Hash] Merged configuration
           # @raise [ArgumentError] If configuration values are invalid
           def resolve(overrides = {})
-            base_config = load_config
+            # Compiled builds (SPINEL defined by the AOT entry) use the
+            # flat glue cascade; the generic discovery organisms trip
+            # multiple Spinel codegen bugs (see pilot REPORT.md).
+            if defined?(SPINEL)
+              config = Ace::B36ts::Glue.resolve_b36ts_config(
+                gem_root, FALLBACK_DEFAULTS.to_a, overrides
+              )
+            else
+              base_config = load_config
 
-            # Apply runtime overrides (symbolize keys, skip nil values)
-            symbolized_overrides = {}
-            overrides.each do |key, value|
-              symbolized_overrides[key.to_sym] = value unless value.nil?
+              # Apply runtime overrides (symbolize keys, skip nil values)
+              symbolized_overrides = {}
+              overrides.each do |key, value|
+                symbolized_overrides[key.to_sym] = value unless value.nil?
+              end
+
+              # Merge base config with runtime overrides
+              config = Ace::Support::Config::Models::Config.wrap(
+                base_config,
+                symbolized_overrides,
+                source: "ace-b36ts"
+              )
             end
-
-            # Merge base config with runtime overrides
-            config = Ace::Support::Config::Models::Config.wrap(
-              base_config,
-              symbolized_overrides,
-              source: "ace-b36ts"
-            )
 
             # Validate the merged configuration
             validate_config!(config)
 
             config
+          end
+
+          # Gem root for defaults discovery (also used by the compiled
+          # glue cascade).
+          def gem_root
+            Gem.loaded_specs["ace-b36ts"]&.gem_dir ||
+              File.expand_path("../../../..", __dir__)
           end
 
           # Get the year_zero value from configuration

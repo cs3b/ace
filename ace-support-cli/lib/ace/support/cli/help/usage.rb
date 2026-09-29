@@ -42,12 +42,16 @@ module Ace
 
           def all_commands
             commands =
-              if registry.respond_to?(:commands)
+              if registry.is_a?(Ace::Support::Cli::Registry)
                 convert_commands_hash(registry.commands)
               elsif registry.is_a?(Hash)
                 convert_commands_hash(registry)
-              elsif registry.respond_to?(:to_h)
-                convert_commands_hash(registry.to_h)
+              elsif registry.respond_to?(:commands)
+                # duck registries (test mocks, embedded registries): the
+                # call goes through a helper so Spinel compiles it as
+                # polymorphic dispatch with a dynamic fallback instead of
+                # rejecting class-method dispatch outright
+                convert_commands_hash(duck_commands)
               elsif registry.respond_to?(:const_defined?) && registry.const_defined?(:REGISTERED_COMMANDS)
                 convert_registered_commands(registry.const_get(:REGISTERED_COMMANDS))
               else
@@ -57,8 +61,13 @@ module Ace
             commands.sort_by { |name, _| name }
           end
 
+          def duck_commands
+            registry.commands
+          end
+
           def convert_commands_hash(hash)
-            hash.map do |name, command|
+            pairs = hash.is_a?(Hash) ? hash : {}
+            pairs.map do |name, command|
               [name.to_s, {description: first_line(description(command)), hidden: hidden?(command)}]
             end
           end
