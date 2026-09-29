@@ -230,14 +230,14 @@ module Ace
               updated_files += 1
             end
 
-            removed_entries = prune_stale_extension_files(output_dir, stale_paths, failed_prunes)
+            removed_entries = prune_stale_extension_files(output_dir, stale_paths, failed_prunes, saved_originals)
             # Stale files whose removal failed keep their ownership until a
             # later sync manages to delete them.
             write_projection_receipt(output_dir, provider, expected.keys + failed_prunes)
           rescue
             # Roll back so a retry never finds its own partial installation
             # standing in the way as an unowned collision, and restore the
-            # previous content of overwritten files — the previous
+            # previous content of overwritten and pruned files — the previous
             # installation must stay complete and loadable.
             newly_created.each do |path|
               FileUtils.rm_f(path)
@@ -245,6 +245,12 @@ module Ace
               nil
             end
             saved_originals.each do |path, content|
+              # Pruned assets restore after pruning emptied and removed their
+              # directories; a path swapped to a symlink mid-sync is never
+              # written through.
+              next if File.symlink?(path)
+
+              FileUtils.mkdir_p(File.dirname(path))
               File.binwrite(path, content)
             rescue
               nil
@@ -326,7 +332,7 @@ module Ace
             .to_h { |path| [Pathname.new(path).relative_path_from(source_root).to_s, path] }
         end
 
-        def prune_stale_extension_files(output_dir, stale_relative_paths, failed_prunes)
+        def prune_stale_extension_files(output_dir, stale_relative_paths, failed_prunes, rollback_ledger)
           stale = stale_relative_paths
           removed = 0
           stale.each do |relative_path|
@@ -335,6 +341,11 @@ module Ace
             next unless File.file?(contained)
 
             begin
+              # Each pruned asset joins the rollback ledger before deletion:
+              # if publication later fails, restoring only overwritten files
+              # would leave the retained previous entrypoint importing a
+              # module that no longer exists.
+              rollback_ledger[contained] = File.binread(contained)
               FileUtils.rm(contained)
               removed += 1
               remove_empty_parent_dirs(File.dirname(contained), output_dir)

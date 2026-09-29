@@ -455,10 +455,10 @@ class Ace::Handbook::Organisms::ProviderSyncerTest < Minitest::Test
     # A directory named b.js makes the second copy fail (EISDIR).
     FileUtils.mkdir_p(File.join(extensions_dir, "ace-wake", "z", "b.js"))
 
-    error = assert_raises(StandardError) { syncer.sync(provider: "pi") }
+    assert_raises(StandardError) { syncer.sync(provider: "pi") }
 
     refute File.exist?(File.join(extensions_dir, "ace-wake", "a.js")),
-           "newly created files must roll back when a later copy fails"
+      "newly created files must roll back when a later copy fails"
 
     # After the obstruction is removed, the retry succeeds cleanly.
     FileUtils.rm_rf(File.join(extensions_dir, "ace-wake", "z"))
@@ -466,6 +466,53 @@ class Ace::Handbook::Organisms::ProviderSyncerTest < Minitest::Test
     assert_equal 2, result.fetch(:projected_extensions)
     assert File.exist?(File.join(extensions_dir, "ace-wake", "a.js"))
     assert File.exist?(File.join(extensions_dir, "ace-wake", "z", "b.js"))
+  end
+
+  def test_receipt_failure_after_pruning_restores_deleted_assets
+    create_provider_manifest("pi", ".pi/skills", extensions_dir: ".pi/extensions")
+    create_extension_asset("pi", "ace-wake/index.js", "import \"./old.js\";\n")
+    create_extension_asset("pi", "ace-wake/old.js", "// old module\n")
+
+    syncer.sync(provider: "pi")
+
+    # The upgrade drops old.js; receipt publication fails only after the
+    # stale module was already pruned.
+    create_extension_asset("pi", "ace-wake/index.js", "// new entrypoint\n")
+    remove_extension_asset("pi", "ace-wake/old.js")
+
+    syncer.stub(:write_projection_receipt, ->(*_args) { raise Errno::ENOSPC }) do
+      assert_raises(Errno::ENOSPC) { syncer.sync(provider: "pi") }
+    end
+
+    extensions_dir = File.join(@tmpdir, ".pi", "extensions")
+    assert_equal "// old module\n", File.read(File.join(extensions_dir, "ace-wake", "old.js")),
+      "pruned assets must come back when receipt publication fails"
+    assert_equal "import \"./old.js\";\n", File.read(File.join(extensions_dir, "ace-wake", "index.js")),
+      "the overwritten entrypoint must keep its previous content"
+
+    # The retry then completes the upgrade cleanly.
+    result = syncer.sync(provider: "pi").first
+    assert_equal 1, result.fetch(:removed_extension_entries)
+    refute File.exist?(File.join(extensions_dir, "ace-wake", "old.js"))
+    assert_equal "// new entrypoint\n", File.read(File.join(extensions_dir, "ace-wake", "index.js"))
+  end
+
+  def test_receipt_failure_after_pruning_restores_the_pruned_directory
+    create_provider_manifest("pi", ".pi/skills", extensions_dir: ".pi/extensions")
+    create_extension_asset("pi", "ace-wake/index.js", "// current\n")
+    create_extension_asset("pi", "ace-wake/nested/old.js", "// retired\n")
+
+    syncer.sync(provider: "pi")
+
+    remove_extension_asset("pi", "ace-wake/nested/old.js")
+
+    syncer.stub(:write_projection_receipt, ->(*_args) { raise Errno::ENOSPC }) do
+      assert_raises(Errno::ENOSPC) { syncer.sync(provider: "pi") }
+    end
+
+    extensions_dir = File.join(@tmpdir, ".pi", "extensions")
+    assert_equal "// retired\n", File.read(File.join(extensions_dir, "ace-wake", "nested", "old.js")),
+      "a pruned asset restores into its re-created directory"
   end
 
   def test_sync_rejects_receipt_paths_through_symlinked_components
@@ -830,6 +877,10 @@ class Ace::Handbook::Organisms::ProviderSyncerTest < Minitest::Test
     path = File.join(@tmpdir, "ace-handbook-integration-#{provider}", "handbook", "extensions", relative_path)
     FileUtils.mkdir_p(File.dirname(path))
     File.write(path, content)
+  end
+
+  def remove_extension_asset(provider, relative_path)
+    File.delete(File.join(@tmpdir, "ace-handbook-integration-#{provider}", "handbook", "extensions", relative_path))
   end
 
   def create_prompt_template(provider, name, source:)
