@@ -153,11 +153,9 @@ describe "GeminiClient" do
 
   describe "generate method" do
     def stub_capture3(stdout:, stderr: "", success: true)
-      mock_status = Object.new
-      mock_status.define_singleton_method(:success?) { success }
-      mock_status.define_singleton_method(:exitstatus) { success ? 0 : 1 }
-
-      Ace::LLM::Providers::CLI::Molecules::SafeCapture.stub(:call, lambda { |*_args, **_kwargs| [stdout, stderr, mock_status] }) do
+      Ace::LLM::Providers::CLI::Molecules::SafeCapture.stub(
+        :call, lambda { |*_args, **_kwargs| build_capture(stdout: stdout, stderr: stderr, success: success, provider_name: "Gemini") }
+      ) do
         yield
       end
     end
@@ -261,14 +259,11 @@ describe "GeminiClient" do
 
     it "passes resolved project root as subprocess chdir" do
       captured_kwargs = nil
-      mock_status = Object.new
-      mock_status.define_singleton_method(:success?) { true }
-      mock_status.define_singleton_method(:exitstatus) { 0 }
 
       @client.stub(:gemini_available?, true) do
         Ace::LLM::Providers::CLI::Molecules::SafeCapture.stub(:call, lambda { |*_args, **kwargs|
           captured_kwargs = kwargs
-          ['{"response":"ok"}', "", mock_status]
+          build_capture(stdout: '{"response":"ok"}')
         }) do
           @client.generate("Hi", working_dir: "/tmp/e2e-sandbox")
         end
@@ -279,14 +274,11 @@ describe "GeminiClient" do
 
     it "passes subprocess_env to SafeCapture env" do
       captured_kwargs = nil
-      mock_status = Object.new
-      mock_status.define_singleton_method(:success?) { true }
-      mock_status.define_singleton_method(:exitstatus) { 0 }
 
       @client.stub(:gemini_available?, true) do
         Ace::LLM::Providers::CLI::Molecules::SafeCapture.stub(:call, lambda { |*_args, **kwargs|
           captured_kwargs = kwargs
-          ['{"response":"ok"}', "", mock_status]
+          build_capture(stdout: '{"response":"ok"}')
         }) do
           @client.generate("Hi", subprocess_env: {"PROJECT_ROOT_PATH" => "/tmp/e2e-sandbox"})
         end
@@ -297,14 +289,11 @@ describe "GeminiClient" do
 
     it "passes subprocess_command_prefix to SafeCapture" do
       captured_kwargs = nil
-      mock_status = Object.new
-      mock_status.define_singleton_method(:success?) { true }
-      mock_status.define_singleton_method(:exitstatus) { 0 }
 
       @client.stub(:gemini_available?, true) do
         Ace::LLM::Providers::CLI::Molecules::SafeCapture.stub(:call, lambda { |*_args, **kwargs|
           captured_kwargs = kwargs
-          ['{"response":"ok"}', "", mock_status]
+          build_capture(stdout: '{"response":"ok"}')
         }) do
           @client.generate("Hi", subprocess_command_prefix: ["bwrap", "--"])
         end

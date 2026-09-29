@@ -292,6 +292,96 @@ class PipelineReportGeneratorTest < Minitest::Test
     end
   end
 
+  def test_generate_rejects_verdict_set_missing_selected_test_cases
+    Dir.mktmpdir do |tmpdir|
+      report_dir = File.join(tmpdir, "reports")
+      generator = ReportGenerator.new
+
+      # Verifier only emitted a verdict for TC-001 of the two selected cases
+      result = generator.generate(
+        scenario: build_scenario(tmpdir),
+        verifier_output: <<~OUT,
+          ### Goal 1 - Help Survey
+          - **Verdict**: **PASS**
+          - **Evidence**: results/tc/01/help.txt has encode/decode commands
+        OUT
+        report_dir: report_dir,
+        provider: "codex:sol",
+        started_at: Time.utc(2026, 9, 29, 10, 0, 0),
+        completed_at: Time.utc(2026, 9, 29, 10, 1, 0),
+        expected_test_case_ids: %w[TC-001 TC-002]
+      )
+
+      assert_equal "error", result.status
+      assert_equal true, result.metadata["incomplete_verdict_set"]
+      assert_match(/TC-002/, result.error)
+      refute_equal "pass", result.status
+
+      metadata = YAML.safe_load_file(File.join(report_dir, "metadata.yml"))
+      assert_equal "error", metadata["status"]
+    end
+  end
+
+  def test_generate_passes_when_verdict_set_covers_all_selected_test_cases
+    Dir.mktmpdir do |tmpdir|
+      report_dir = File.join(tmpdir, "reports")
+      generator = ReportGenerator.new
+
+      result = generator.generate(
+        scenario: build_scenario(tmpdir),
+        verifier_output: <<~OUT,
+          ### Goal 1 - Help Survey
+          - **Verdict**: **PASS**
+          - **Evidence**: ok
+
+          ### Goal 2 - Roundtrip
+          - **Verdict**: **PASS**
+          - **Evidence**: ok
+        OUT
+        report_dir: report_dir,
+        provider: "codex:sol",
+        started_at: Time.utc(2026, 9, 29, 10, 0, 0),
+        completed_at: Time.utc(2026, 9, 29, 10, 1, 0),
+        expected_test_case_ids: %w[TC-001 TC-002]
+      )
+
+      assert_equal "pass", result.status
+      assert_nil result.metadata["incomplete_verdict_set"]
+    end
+  end
+
+  def test_write_failure_report_persists_uncertain_execution_metadata
+    Dir.mktmpdir do |tmpdir|
+      report_dir = File.join(tmpdir, "reports")
+      generator = ReportGenerator.new
+
+      result = generator.write_failure_report(
+        scenario: build_scenario(tmpdir),
+        report_dir: report_dir,
+        provider: "codex:sol",
+        started_at: Time.utc(2026, 9, 29, 10, 0, 0),
+        completed_at: Time.utc(2026, 9, 29, 10, 1, 0),
+        error_message: "Ace::LLM::ProviderError: Codex CLI execution exceeded its 300.0s deadline",
+        failure_category: "runner-error",
+        metadata: {
+          "failure_phase" => "runner",
+          "uncertain_execution" => true,
+          "execution_evidence" => {"outcome" => "deadline_exceeded", "invocation_id" => "abcd1234"}
+        }
+      )
+
+      assert_equal "error", result.status
+      assert_equal true, result.metadata["uncertain_execution"]
+
+      metadata = YAML.safe_load_file(File.join(report_dir, "metadata.yml"))
+      assert_equal "error", metadata["status"]
+      assert_equal true, metadata["uncertain_execution"]
+      assert_equal "runner", metadata["failure_phase"]
+      assert_equal "runner-error", metadata["failure_category"]
+      assert_equal "deadline_exceeded", metadata["execution_evidence"]["outcome"]
+    end
+  end
+
   private
 
   def build_scenario(tmpdir)

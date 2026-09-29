@@ -222,6 +222,11 @@ module Ace
             metadata["works_for_end_user"] = result.metadata["works_for_end_user"] if result.metadata.key?("works_for_end_user")
             metadata["user_friction"] = result.metadata["user_friction"] if result.metadata.key?("user_friction")
             metadata["user_feedback"] = result.metadata["user_feedback"] if result.metadata.key?("user_feedback")
+            metadata["failure_category"] = result.metadata["failure_category"] if result.metadata.key?("failure_category")
+            metadata["failure_phase"] = result.metadata["failure_phase"] if result.metadata.key?("failure_phase")
+            metadata["uncertain_execution"] = result.metadata["uncertain_execution"] if result.metadata.key?("uncertain_execution")
+            metadata["execution_evidence"] = result.metadata["execution_evidence"] if result.metadata.key?("execution_evidence")
+            metadata["incomplete_verdict_set"] = result.metadata["incomplete_verdict_set"] if result.metadata.key?("incomplete_verdict_set")
 
             if test_case
               metadata["scenario-id"] = scenario.test_id

@@ -42,6 +42,7 @@ module Ace
           # @return [Models::TestResult]
           def execute(scenario:, cli_args:, sandbox_path:, report_dir:, env_vars: nil, test_cases: nil)
             started_at = Time.now
+            phase = :setup
             FileUtils.mkdir_p(report_dir)
             write_command_record(report_dir, "runner", provider: @provider, cli_args: cli_args)
             write_tc_manifests(report_dir, scenario, test_cases: test_cases)
@@ -72,6 +73,7 @@ module Ace
               test_cases: test_cases,
               artifact_contract: declared_artifact_contract(scenario, test_cases: test_cases)
             )
+            phase = :runner
             runner_response = run_llm(
               prompt_path: runner[:prompt_path],
               system_path: runner[:system_path],
@@ -101,6 +103,7 @@ module Ace
                 artifact_contract: artifact_contract,
                 repair_mode: true
               )
+              phase = :repair
               repair_response = run_llm(
                 prompt_path: repair_runner[:prompt_path],
                 system_path: repair_runner[:system_path],
@@ -126,6 +129,7 @@ module Ace
               artifact_contract: artifact_contract
             )
             write_command_record(report_dir, "verifier", provider: @verifier_provider, cli_args: cli_args)
+            phase = :verifier
             verifier_response = run_llm(
               prompt_path: verifier[:prompt_path],
               system_path: verifier[:system_path],
@@ -144,6 +148,7 @@ module Ace
               provider: @verifier_provider,
               started_at: started_at,
               completed_at: Time.now,
+              expected_test_case_ids: selected_test_case_ids(scenario, test_cases),
               metadata: base_metadata(
                 report_dir,
                 runner_observations: runner_observations,
@@ -160,8 +165,8 @@ module Ace
                 started_at: started_at || Time.now,
                 completed_at: Time.now,
                 error_message: "#{e.class}: #{e.message}",
-                failure_category: "runner-error",
-                metadata: base_metadata(report_dir)
+                failure_category: phase == :verifier ? "infrastructure-error" : "runner-error",
+                metadata: base_metadata(report_dir).merge(failure_evidence_metadata(e, phase))
               )
             rescue => write_error
               Models::TestResult.new(
@@ -286,6 +291,25 @@ module Ace
 
             wanted = test_cases.map { |value| value.to_s.upcase }
             Array(scenario.test_cases).select { |tc| wanted.include?(tc.tc_id.to_s.upcase) }
+          end
+
+          # TC ids the verifier must cover for the verdict set to be complete.
+          def selected_test_case_ids(scenario, test_cases)
+            select_test_cases(scenario, test_cases).map(&:tc_id)
+          end
+
+          # Structured failure metadata for the error report. When the failure
+          # carries execution evidence (the provider session began and ended
+          # without a confirmed completion), the scenario is marked uncertain:
+          # automatic retries must not replay its side effects.
+          def failure_evidence_metadata(error, phase)
+            metadata = {"failure_phase" => phase.to_s}
+            evidence = Ace::LLM::Atoms::ErrorClassifier.execution_evidence_for(error)
+            return metadata unless evidence
+
+            metadata["uncertain_execution"] = true if evidence.uncertain_execution?
+            metadata["execution_evidence"] = evidence.to_h
+            metadata
           end
 
           def base_metadata(report_dir, runner_observations: nil, artifact_contract: nil, initial_artifact_contract: nil)

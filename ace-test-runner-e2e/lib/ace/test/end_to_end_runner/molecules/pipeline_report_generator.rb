@@ -31,9 +31,12 @@ module Ace
           # @param provider [String]
           # @param started_at [Time]
           # @param completed_at [Time]
+          # @param expected_test_case_ids [Array<String>, nil] TC ids the verifier must cover
           # @return [Models::TestResult]
-          def generate(scenario:, verifier_output:, report_dir:, provider:, started_at:, completed_at:, metadata: {})
+          def generate(scenario:, verifier_output:, report_dir:, provider:, started_at:, completed_at:,
+            expected_test_case_ids: nil, metadata: {})
             parsed = parse_verifier_output(verifier_output, scenario)
+            parsed = enforce_verdict_completeness(parsed, expected_test_case_ids)
             merged_metadata = metadata.merge(parsed[:metadata] || {})
 
             result = Models::TestResult.new(
@@ -94,9 +97,30 @@ module Ace
             result.with_report_dir(report_dir)
           end
 
-          private
+        private
 
-          def parse_verifier_output(text, scenario)
+        # A passing verdict requires one valid verdict per selected test case.
+        # A verifier response covering only some of them stays an explicit
+        # ERROR — bundle output must never synthesize the missing verdicts.
+        def enforce_verdict_completeness(parsed, expected_test_case_ids)
+          expected = Array(expected_test_case_ids).map { |id| id.to_s.upcase }
+          return parsed if expected.empty? || parsed[:status] == "error"
+
+          verdict_ids = parsed[:test_cases].map { |tc| tc[:id].to_s.upcase }
+          missing = expected - verdict_ids
+          return parsed if missing.empty?
+
+          {
+            status: "error",
+            test_cases: parsed[:test_cases],
+            summary: "Incomplete verifier verdict set (#{verdict_ids.size}/#{expected.size} test cases)",
+            error: "Verifier response is missing verdicts for: #{missing.join(", ")}",
+            observations: parsed[:observations],
+            metadata: (parsed[:metadata] || {}).merge("incomplete_verdict_set" => true)
+          }
+        end
+
+        def parse_verifier_output(text, scenario)
             goals = parse_goal_sections(text, scenario)
             return build_result_from_goals(goals, text) unless goals.empty?
 

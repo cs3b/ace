@@ -60,15 +60,16 @@ module Ace
               working_dir: options[:working_dir],
               subprocess_env: subprocess_env
             )
-            stdout, stderr, status = execute_claude_command(
+            capture = execute_claude_command(
               cmd,
               prompt,
               subprocess_env: subprocess_env,
               working_dir: working_dir,
               subprocess_command_prefix: options[:subprocess_command_prefix]
             )
+            capture.raise_unless_success
 
-            parse_claude_response(stdout, stderr, status, prompt, options)
+            parse_claude_response(capture, prompt, options)
           rescue => e
             handle_claude_error(e)
           end
@@ -279,18 +280,20 @@ module Ace
             filtered
           end
 
-          def parse_claude_response(stdout, stderr, status, prompt, options)
-            unless status.success?
-              error_msg = stderr.empty? ? stdout : stderr
-              raise Ace::LLM::ProviderError, "Claude CLI failed: #{error_msg}"
+          def parse_claude_response(capture, prompt, options)
+            unless capture.status.success?
+              error_msg = capture.stderr.empty? ? capture.stdout : capture.stderr
+              raise capture.provider_error("Claude CLI failed: #{error_msg}")
             end
 
             begin
               # Allow duplicate keys to avoid warnings from Claude CLI output
               # Some versions of Claude CLI may return JSON with duplicate keys
-              response = JSON.parse(stdout, allow_duplicate_key: true)
+              response = JSON.parse(capture.stdout, allow_duplicate_key: true)
             rescue JSON::ParserError => e
-              raise Ace::LLM::ProviderError, "Failed to parse Claude response: #{e.message}"
+              raise capture.with_no_response_evidence(
+                Ace::LLM::ProviderError.new("Failed to parse Claude response: #{e.message}")
+              )
             end
 
             if response["is_error"]
@@ -301,7 +304,9 @@ module Ace
             text = extract_claude_text(response)
 
             if text.strip.empty?
-              raise Ace::LLM::ProviderError, build_response_error(response)
+              raise capture.with_no_response_evidence(
+                Ace::LLM::ProviderError.new(build_response_error(response))
+              )
             end
 
             # Build metadata

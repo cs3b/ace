@@ -470,6 +470,84 @@ module Ace
           end
         end
 
+        # SC3: a begun-but-unconfirmed CLI session must never be replayed
+        def test_deadline_exceeded_evidence_aborts_chain_without_fallback
+          config = Models::FallbackConfig.new(
+            retry_count: 2,
+            providers: ["anthropic"]
+          )
+          orchestrator = FallbackOrchestrator.new(
+            config: config,
+            status_callback: @status_callback
+          )
+
+          registry = MockRegistry.new
+          registry.add_client("codex", MockClient.new(errors: [evidence_error(:deadline_exceeded)]))
+          fallback_client = MockClient.new(response: "should never run")
+          registry.add_client("anthropic", fallback_client)
+
+          error = assert_raises(Ace::LLM::ProviderError) do
+            orchestrator.execute(primary_provider: "codex", registry: registry) do |client|
+              client.call
+            end
+          end
+
+          assert_match(/execution incomplete/, error.message)
+          assert_match(/deadline_exceeded/, error.message)
+          assert_match(/not tried to avoid replaying/, error.message)
+          assert_equal 0, fallback_client.call_count
+          assert_includes @status_messages.join, "execution incomplete"
+        end
+
+        def test_nonzero_exit_mentioning_timeout_does_not_replay_fallback
+          config = Models::FallbackConfig.new(
+            retry_count: 2,
+            providers: ["anthropic"]
+          )
+          orchestrator = FallbackOrchestrator.new(
+            config: config,
+            status_callback: @status_callback
+          )
+
+          registry = MockRegistry.new
+          registry.add_client("codex", MockClient.new(errors: [evidence_error(:nonzero_exit, exit_status: 2)]))
+          fallback_client = MockClient.new(response: "should never run")
+          registry.add_client("anthropic", fallback_client)
+
+          error = assert_raises(Ace::LLM::ProviderError) do
+            orchestrator.execute(primary_provider: "codex", registry: registry) do |client|
+              client.call
+            end
+          end
+
+          assert_match(/execution incomplete/, error.message)
+          assert_equal 0, fallback_client.call_count
+          refute_nil error.execution_evidence
+          assert_equal :nonzero_exit, error.execution_evidence.outcome
+        end
+
+        def test_spawn_failure_still_falls_back_to_next_provider
+          config = Models::FallbackConfig.new(
+            retry_count: 0,
+            providers: ["anthropic"]
+          )
+          orchestrator = FallbackOrchestrator.new(
+            config: config,
+            status_callback: @status_callback
+          )
+
+          registry = MockRegistry.new
+          # Missing binary: execution never began, so replay is safe
+          registry.add_client("codex", MockClient.new(errors: [evidence_error(:transport_failure, execution_began: false)]))
+          registry.add_client("anthropic", MockClient.new(response: "fallback success"))
+
+          result = orchestrator.execute(primary_provider: "codex", registry: registry) do |client|
+            client.call
+          end
+
+          assert_equal "fallback success", result
+        end
+
         private
 
         # Mock client for testing
@@ -535,6 +613,19 @@ module Ace
         def mock_server_error(status)
           response = {status: status, body: "Error"}
           Faraday::ServerError.new("Server error", response)
+        end
+
+        def evidence_error(outcome, exit_status: nil, execution_began: true)
+          error = Ace::LLM::ProviderError.new("CLI session ended")
+          error.execution_evidence = Ace::LLM::Models::ExecutionEvidence.new(
+            outcome: outcome,
+            invocation_id: "abcd1234",
+            deadline_seconds: 300,
+            elapsed_seconds: 300.1,
+            exit_status: exit_status,
+            execution_began: execution_began
+          )
+          error
         end
       end
     end

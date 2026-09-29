@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.41.0] - 2026-09-29
+
+### Changed
+- Pipeline verdict integrity: a passing report requires a completed verifier response covering every selected test case; an incomplete verdict set becomes an explicit ERROR (`incomplete_verdict_set`) instead of an inferred PASS.
+- Pipeline failures record `failure_phase`, `failure_category`, and structured execution evidence in the ERROR report; sessions whose provider process began and then ended without a confirmed completion are marked `uncertain_execution: true` in metadata.yml.
+- The full-suite automatic retry (retry-failures-once) excludes uncertain scenarios — their side effects are never replayed. They stay in the final tally as errors and are listed by `FailureFinder#find_uncertain_scenarios` for explicit reconciliation. Explicit single-run `--only-failures` keeps them runnable (deliberate human reconciliation).
+- `read_agent_result` (single and package runs) and the suite metadata reconcile keep a fresh pipeline ERROR authoritative: retained metadata.yml can no longer upgrade an errored execution to PASS.
+- Verifier failures report `infrastructure-error` (runner/repair failures keep `runner-error`).
+
 ## [0.40.6] - 2026-09-29
 
 ### Fixed

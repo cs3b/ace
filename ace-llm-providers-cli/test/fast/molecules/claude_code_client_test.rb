@@ -192,10 +192,7 @@ describe "ClaudeCodeClient" do
       fake_capture = lambda { |*_args, **kwargs|
         captured_env = kwargs[:env]
         captured_chdir = kwargs[:chdir]
-        mock_status = Object.new
-        mock_status.define_singleton_method(:success?) { true }
-        mock_status.define_singleton_method(:exitstatus) { 0 }
-        ['{"result":"ok"}', "", mock_status]
+        build_capture(stdout: '{"result":"ok"}')
       }
 
       Ace::LLM::Providers::CLI::Molecules::SafeCapture.stub(:call, fake_capture) do
@@ -247,16 +244,14 @@ describe "ClaudeCodeClient" do
       captured_subprocess_env = :not_called
       captured_command_prefix = :not_called
       messages = [{role: "user", content: "hello"}]
+      capture = build_capture(stdout: '{"result":"ok"}')
 
       @client.stub(:validate_claude_availability!, nil) do
         @client.define_singleton_method(:execute_claude_command) do |cmd, prompt, subprocess_env: nil, working_dir: nil,
           subprocess_command_prefix: nil|
           captured_subprocess_env = subprocess_env
           captured_command_prefix = subprocess_command_prefix
-          mock_status = Object.new
-          mock_status.define_singleton_method(:success?) { true }
-          mock_status.define_singleton_method(:exitstatus) { 0 }
-          ['{"result":"ok"}', "", mock_status]
+          capture
         end
 
         @client.generate(
@@ -289,12 +284,13 @@ describe "ClaudeCodeClient" do
       }.to_json
 
       error = assert_raises(Ace::LLM::ProviderError) do
-        @client.send(:parse_claude_response, stdout, "", success_status, "prompt", {})
+        @client.send(:parse_claude_response, build_capture(stdout: stdout), "prompt", {})
       end
 
       assert_includes error.message, "empty response"
       assert_includes error.message, "type=result"
       assert_includes error.message, "session_id=sess-123"
+      assert_equal :no_response, error.execution_evidence.outcome
     end
 
     it "extracts text from nested Claude result content" do
@@ -309,14 +305,7 @@ describe "ClaudeCodeClient" do
         }
       }.to_json
 
-      result = @client.send(
-        :parse_claude_response,
-        stdout,
-        "",
-        success_status,
-        "prompt",
-        {}
-      )
+      result = @client.send(:parse_claude_response, build_capture(stdout: stdout), "prompt", {})
 
       assert_equal "Nested response content", result[:text]
     end
@@ -332,7 +321,7 @@ describe "ClaudeCodeClient" do
       }.to_json
 
       error = assert_raises(Ace::LLM::ProviderError) do
-        @client.send(:parse_claude_response, stdout, "", success_status, "prompt", {})
+        @client.send(:parse_claude_response, build_capture(stdout: stdout), "prompt", {})
       end
 
       assert_includes error.message, "error payload"

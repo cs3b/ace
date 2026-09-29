@@ -487,11 +487,17 @@ module Ace
           # pass/fail status. The orchestrator's parsed response text may not
           # match, so we trust metadata.yml when present.
           #
+          # A fresh pipeline ERROR stays authoritative: retained metadata can
+          # clarify a completed run but must never upgrade an incomplete or
+          # errored execution to PASS.
+          #
           # @param scenario [Models::TestScenario] The test scenario
           # @param agent_dir [String] Path to agent report directory
           # @param fallback_result [Models::TestResult] Result to use if metadata unreadable
           # @return [Models::TestResult] Result with authoritative status
           def read_agent_result(scenario, agent_dir, fallback_result)
+            return fallback_result.with_report_dir(agent_dir) if fallback_result.status == "error"
+
             metadata_path = File.join(agent_dir, "metadata.yml")
             return fallback_result.with_report_dir(agent_dir) unless File.exist?(metadata_path)
 

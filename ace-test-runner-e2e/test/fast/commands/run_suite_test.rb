@@ -13,9 +13,14 @@ class RunSuiteTest < Minitest::Test
   class StubSuiteOrchestrator
     attr_reader :calls
 
-    def initialize(*responses)
+    def initialize(*responses, uncertain_scenarios: [])
       @responses = responses
       @calls = []
+      @uncertain_scenarios = uncertain_scenarios
+    end
+
+    def uncertain_scenarios(packages: nil)
+      @uncertain_scenarios
     end
 
     def run(options = {})
@@ -34,7 +39,86 @@ class RunSuiteTest < Minitest::Test
       @pruner = pruner
     end
 
-    private
+  def test_all_uncertain_failures_keep_suite_failing_without_retry_raise
+    Dir.mktmpdir do |tmpdir|
+      uncertain_dir = create_scenario_report(
+        tmpdir,
+        report_dir_name: "8rniq4-tmux-ts005-reports",
+        test_id: "TS-TMUX-005",
+        title: "ace-tmux Only Uncertain",
+        package: "ace-tmux",
+        status: "error",
+        failed: []
+      )
+      report_path = create_suite_report(tmpdir, "8rniq5-suite-report.md")
+      initial = suite_results_for("error", "TS-TMUX-005-tmux-only-uncertain", uncertain_dir, report_path)
+      initial[:packages]["ace-test"].first[:status] = "error"
+
+      orchestrator = StubSuiteOrchestrator.new(
+        initial,
+        {total: 0, passed: 0, failed: 0, errors: 0, packages: {}},
+        uncertain_scenarios: ["TS-TMUX-005"]
+      )
+      command = StubRunSuite.new(orchestrator)
+
+      error = assert_raises(Ace::Support::Cli::Error) do
+        Dir.chdir(tmpdir) { command.call(parallel: "0", quiet: true) }
+      end
+
+      # Still a failing suite (exit 1), but not the misleading "no failed
+      # scenarios" abort: the uncertain scenario is accounted for.
+      assert_match(/1 test\(s\) failed or errored after retry/, error.message)
+      assert_equal 2, orchestrator.calls.length
+      retry_call = orchestrator.calls.last
+      assert_equal false, retry_call[:include_uncertain_failures]
+    end
+  end
+
+  def test_retry_keeps_uncertain_scenarios_in_final_tally
+  Dir.mktmpdir do |tmpdir|
+    uncertain_dir = create_scenario_report(
+      tmpdir,
+      report_dir_name: "8rniq1-tmux-ts003-reports",
+      test_id: "TS-TMUX-003",
+      title: "ace-tmux Uncertain Execution",
+      package: "ace-tmux",
+      status: "error",
+      failed: []
+    )
+    report_path = create_suite_report(tmpdir, "8rniq2-suite-report.md")
+    initial = suite_results_for("error", "TS-TMUX-003-tmux-uncertain", uncertain_dir, report_path)
+    initial[:packages]["ace-test"].first[:status] = "error"
+
+    recovered_dir = create_scenario_report(
+      tmpdir,
+      report_dir_name: "8rniq3-tmux-ts004-reports",
+      test_id: "TS-TMUX-004",
+      title: "ace-tmux Recoverable Failure",
+      package: "ace-tmux",
+      status: "pass",
+      failed: []
+    )
+    retry_results = suite_results_for("pass", "TS-TMUX-004-tmux-recoverable", recovered_dir, report_path)
+
+    orchestrator = StubSuiteOrchestrator.new(initial, retry_results, uncertain_scenarios: ["TS-TMUX-003"])
+    command = StubRunSuite.new(orchestrator)
+
+    results = nil
+    error = assert_raises(Ace::Support::Cli::Error) do
+      results = Dir.chdir(tmpdir) { command.call(parallel: "0", quiet: false) }
+    end
+
+    # The uncertain scenario stays counted: suite must not exit 0
+    assert_match(/2 test\(s\) failed or errored after retry/, error.message)
+    assert_equal 3, results[:total]
+    assert_equal 1, results[:errors] - 1 + 1 # recovered pass + uncertain error
+    assert_equal 1, results[:passed]
+    assert_equal ["TS-TMUX-003"], results[:uncertain_scenarios]
+    assert_includes results[:remaining_failures], "TS-TMUX-003"
+  end
+end
+
+private
 
     def build_orchestrator(max_parallel:, output:, progress:)
       @orchestrator

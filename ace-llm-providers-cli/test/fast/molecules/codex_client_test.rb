@@ -12,17 +12,13 @@ describe "CodexClient" do
 
   it "does not split a structured report at a filename containing codex" do
     report = JSON.pretty_generate({"files" => [".ace/llm/presets/codex/review.yml"], "complete" => true})
-    status = Object.new
-    status.define_singleton_method(:success?) { true }
-    result = @client.send(:parse_codex_response, report, "", status, "Review", {})
+    result = @client.send(:parse_codex_response, build_capture(stdout: report), "Review", {})
     assert_equal report, result[:text]
   end
 
   it "keeps a standalone codex line in a report without a CLI banner" do
     report = "First finding\ncodex\nSecond finding"
-    status = Object.new
-    status.define_singleton_method(:success?) { true }
-    result = @client.send(:parse_codex_response, report, "", status, "Review", {})
+    result = @client.send(:parse_codex_response, build_capture(stdout: report), "Review", {})
     assert_equal report, result[:text]
   end
 
@@ -30,24 +26,20 @@ describe "CodexClient" do
     Dir.mktmpdir do |dir|
       path = File.join(dir, "last.md")
       File.write(path, "First finding\ncodex\nSecond finding\n")
-      status = Object.new
-      status.define_singleton_method(:success?) { true }
-      result = @client.send(:parse_codex_response, "OpenAI Codex v0.156.1\ncodex\ntranscript", "",
-        status, "Review", {last_message_file: path})
+      result = @client.send(:parse_codex_response,
+        build_capture(stdout: "OpenAI Codex v0.156.1\ncodex\ntranscript"), "Review", {last_message_file: path})
       assert_equal "First finding\ncodex\nSecond finding", result[:text]
     end
   end
 
   it "rejects an empty or missing requested final message instead of accepting a transcript" do
-    status = Object.new
-    status.define_singleton_method(:success?) { true }
     Dir.mktmpdir do |dir|
       path = File.join(dir, "last.md")
       [path, File.join(dir, "missing.md")].each do |file|
         File.write(file, "  \n") if file == path
         assert_raises(Ace::LLM::ProviderError) do
-          @client.send(:parse_codex_response, "OpenAI Codex v0.156.1\ncodex\nincomplete", "",
-            status, "Review", {last_message_file: file})
+          @client.send(:parse_codex_response,
+            build_capture(stdout: "OpenAI Codex v0.156.1\ncodex\nincomplete"), "Review", {last_message_file: file})
         end
       end
     end
@@ -353,15 +345,11 @@ describe "CodexClient" do
 
   describe "generate method" do
     def stub_capture3(stdout:, stderr: "", success: true, last_message: nil)
-      mock_status = Object.new
-      mock_status.define_singleton_method(:success?) { success }
-      mock_status.define_singleton_method(:exitstatus) { success ? 0 : 1 }
-
       capture = lambda do |command, **_kwargs|
         if last_message && (index = command.index("--output-last-message"))
           File.write(command[index + 1], last_message)
         end
-        [stdout, stderr, mock_status]
+        build_capture(stdout: stdout, stderr: stderr, success: success, provider_name: "Codex")
       end
       Ace::LLM::Providers::CLI::Molecules::SafeCapture.stub(:call, capture) do
         yield
@@ -416,9 +404,7 @@ describe "CodexClient" do
         capture = lambda do |_cmd, _prompt, options|
           refute_equal requested, options[:last_message_file]
           File.write(options[:last_message_file], "fresh review")
-          status = Object.new
-          status.define_singleton_method(:success?) { true }
-          ["transcript", "", status]
+          build_capture(stdout: "transcript")
         end
         @client.stub(:codex_available?, true) do
           @client.stub(:codex_authenticated?, true) do
@@ -641,7 +627,7 @@ describe "CodexClient" do
             Ace::LLM::Providers::CLI::Molecules::SafeCapture.stub(:call, lambda { |command, **kwargs|
               captured_kwargs = kwargs
               File.write(command[command.index("--output-last-message") + 1], "ok")
-              ["codex\nok\n", "", mock_status]
+              build_capture(stdout: "codex\nok\n")
             }) do
               @client.generate("Hi", working_dir: "/tmp/e2e-sandbox")
             end
@@ -664,7 +650,7 @@ describe "CodexClient" do
             Ace::LLM::Providers::CLI::Molecules::SafeCapture.stub(:call, lambda { |command, **kwargs|
               captured_kwargs = kwargs
               File.write(command[command.index("--output-last-message") + 1], "ok")
-              ["codex\nok\n", "", mock_status]
+              build_capture(stdout: "codex\nok\n")
             }) do
               @client.generate("Hi", subprocess_env: {"PROJECT_ROOT_PATH" => "/tmp/e2e-sandbox"})
             end

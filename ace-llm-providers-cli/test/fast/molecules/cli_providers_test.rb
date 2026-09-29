@@ -39,13 +39,12 @@ describe "CLI Providers" do
     end
 
     it "passes cli_args into the subprocess command" do
-      status = Struct.new(:success?).new(true)
       captured_cmd = nil
 
       @client.stub :validate_claude_availability!, true do
         command_stub = lambda do |cmd, prompt, subprocess_env: nil, working_dir: nil, subprocess_command_prefix: nil|
           captured_cmd = cmd
-          ['{"result":"ok","usage":{}}', "", status]
+          build_capture(stdout: '{"result":"ok","usage":{}}')
         end
 
         @client.stub :execute_claude_command, command_stub do
@@ -57,7 +56,6 @@ describe "CLI Providers" do
     end
 
     it "emits subprocess debug context when enabled" do
-      status = Struct.new(:success?).new(true)
       old_env = ENV["ACE_LLM_DEBUG_SUBPROCESS"]
       old_stderr = $stderr
       stderr_io = StringIO.new
@@ -65,7 +63,7 @@ describe "CLI Providers" do
       $stderr = stderr_io
 
       @client.stub :validate_claude_availability!, true do
-        Ace::LLM::Providers::CLI::Molecules::SafeCapture.stub :call, ['{"result":"ok","usage":{}}', "", status] do
+        Ace::LLM::Providers::CLI::Molecules::SafeCapture.stub :call, build_capture(stdout: '{"result":"ok","usage":{}}') do
           @client.generate([{role: "user", content: "hi"}], cli_args: "--verbose")
         end
       end

@@ -54,9 +54,10 @@ module Ace
             full_prompt = build_full_prompt(prompt, options)
 
             cmd = build_opencode_command_with_prompt(full_prompt, options)
-            stdout, stderr, status = execute_opencode_command(cmd, options: options)
+            capture = execute_opencode_command(cmd, options: options)
+            capture.raise_unless_success
 
-            parse_opencode_response(stdout, stderr, status, full_prompt, options)
+            parse_opencode_response(capture, full_prompt, options)
           rescue => e
             handle_opencode_error(e)
           end
@@ -211,25 +212,27 @@ module Ace
             )
           end
 
-          def parse_opencode_response(stdout, stderr, status, prompt, options)
-            unless status.success?
-              error_msg = stderr.empty? ? stdout : stderr
+          def parse_opencode_response(capture, prompt, options)
+            # Unreachable through generate (raise_unless_success precedes parse),
+            # kept for direct callers with clearer 400 diagnostics.
+            unless capture.status.success?
+              error_msg = capture.stderr.empty? ? capture.stdout : capture.stderr
 
               # Detect common error patterns for better error messages
               if error_msg.include?("400") || error_msg.include?("Bad Request")
                 raise Ace::LLM::ProviderError, "OpenCode API request failed (400 Bad Request). The model or prompt may be invalid."
               end
 
-              raise Ace::LLM::ProviderError, "OpenCode CLI failed: #{error_msg}"
+              raise capture.provider_error("OpenCode CLI failed: #{error_msg}")
             end
 
             begin
               # Try to parse as JSON first
-              response = JSON.parse(stdout)
+              response = JSON.parse(capture.stdout)
               text = response["result"] || response["text"] || response["response"] || ""
             rescue JSON::ParserError
               # Fall back to treating entire output as text
-              text = stdout.strip
+              text = capture.stdout.strip
               response = {}
             end
 

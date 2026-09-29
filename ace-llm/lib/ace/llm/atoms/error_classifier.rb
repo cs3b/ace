@@ -11,6 +11,11 @@ module Ace
         FALLBACK_IMMEDIATELY = :fallback_immediately
         SKIP_TO_NEXT = :skip_to_next
         TERMINAL = :terminal
+        # The provider process started but its session ended without a confirmed
+        # completion (deadline expiry, transport drop, nonzero exit, or a clean
+        # exit without a final response). Such sessions may have performed side
+        # effects — retries and fallback would replay them.
+        EXECUTION_INCOMPLETE = :execution_incomplete
 
         # Map HTTP status codes to classification
         STATUS_CLASSIFICATIONS = {
@@ -43,8 +48,13 @@ module Ace
 
         # Classify an error for retry/fallback decisions
         # @param error [Exception] The error to classify
-        # @return [Symbol] Classification type (RETRYABLE_WITH_BACKOFF, FALLBACK_IMMEDIATELY, SKIP_TO_NEXT, TERMINAL)
+        # @return [Symbol] Classification type (RETRYABLE_WITH_BACKOFF, FALLBACK_IMMEDIATELY, SKIP_TO_NEXT, TERMINAL, EXECUTION_INCOMPLETE)
         def self.classify(error)
+          # Structured capture evidence attached at the subprocess boundary
+          # outranks message prose: a nonzero exit whose stderr mentions
+          # "timeout" is a nonzero exit, not a deadline expiry.
+          return EXECUTION_INCOMPLETE if execution_incomplete?(error)
+
           case error
           when Ace::LLM::AuthenticationError
             SKIP_TO_NEXT
@@ -61,6 +71,31 @@ module Ace
             RETRYABLE_WITH_BACKOFF
           else
             TERMINAL
+          end
+        end
+
+        # True when the error carries structured evidence that the provider
+        # execution began and ended without a confirmed completion.
+        # @param error [Exception]
+        # @return [Boolean]
+        def self.execution_incomplete?(error)
+          evidence = execution_evidence_for(error)
+          evidence&.uncertain_execution? ? true : false
+        end
+
+        # Extract structured execution evidence from an error, accepting either
+        # an ExecutionEvidence instance or its serialized hash form.
+        # @param error [Exception]
+        # @return [Ace::LLM::Models::ExecutionEvidence, nil]
+        def self.execution_evidence_for(error)
+          return nil unless error.respond_to?(:execution_evidence)
+
+          evidence = error.execution_evidence
+          case evidence
+          when Ace::LLM::Models::ExecutionEvidence
+            evidence
+          when Hash
+            Ace::LLM::Models::ExecutionEvidence.from_h(evidence)
           end
         end
 

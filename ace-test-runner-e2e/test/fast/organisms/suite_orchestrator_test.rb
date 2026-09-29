@@ -44,7 +44,7 @@ class SuiteOrchestratorTest < Minitest::Test
       @failures_by_package.select { |k, _| packages.include?(k) }
     end
 
-    def find_failures_by_scenario(packages:, base_dir:)
+    def find_failures_by_scenario(packages:, base_dir:, include_uncertain: false)
       @failures_by_scenario.select { |k, _| packages.include?(k) }
     end
   end

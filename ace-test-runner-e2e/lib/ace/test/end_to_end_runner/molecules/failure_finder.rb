@@ -6,15 +6,23 @@ module Ace
   module Test
     module EndToEndRunner
       module Molecules
-        # Scans cache for failed test cases from previous E2E test runs
-        #
-        # Reads metadata.yml files from .ace-local/test-e2e/*-reports/ directories
-        # and extracts failed_test_cases arrays. Used by --only-failures CLI flag
-        # to re-run only tests that failed previously.
-        #
-        # Note: This is a Molecule (not an Atom) because it performs filesystem
-        # I/O via Dir.glob and YAML file reading.
-        class FailureFinder
+  # Scans cache for failed test cases from previous E2E test runs
+  #
+  # Reads metadata.yml files from .ace-local/test-e2e/*-reports/ directories
+  # and extracts failed_test_cases arrays. Used by --only-failures CLI flag
+  # to re-run only tests that failed previously.
+  #
+  # Scenarios whose most recent run ended in uncertain execution (the provider
+  # session began and then ended without a confirmed completion) are excluded
+  # from find_failures_by_scenario — the automatic retry surface — because
+  # re-running them would replay side effects. They are listed by
+  # find_uncertain_scenarios instead so callers can surface an actionable
+  # diagnostic. Explicit single-run --only-failures paths keep them included:
+  # invoking it is a deliberate human reconciliation decision.
+  #
+  # Note: This is a Molecule (not an Atom) because it performs filesystem
+  # I/O via Dir.glob and YAML file reading.
+  class FailureFinder
           CACHE_DIR = ".ace-local/test-e2e"
           METADATA_FILE = "metadata.yml"
           REPORTS_SUFFIX = "-reports"
@@ -81,11 +89,17 @@ module Ace
           # Like find_failures_by_package but preserves per-scenario granularity.
           # Callers can use this to re-run full failed scenarios.
           #
+          # By default, scenarios whose most recent run is marked
+          # uncertain_execution are excluded — replaying them would repeat
+          # unverified side effects. The explicit reconciliation path passes
+          # include_uncertain: true to select them deliberately.
+          #
           # @param packages [Array<String>] Package names to scan
           # @param base_dir [String] Base directory to search from (default: current dir)
+          # @param include_uncertain [Boolean] keep uncertain scenarios selectable
           # @return [Hash{String => Hash{String => Array<String>}}]
           #   Package name => { test-id => failed TC IDs }
-          def find_failures_by_scenario(packages:, base_dir: Dir.pwd)
+          def find_failures_by_scenario(packages:, base_dir: Dir.pwd, include_uncertain: false)
             metadata_files = discover_metadata_files(base_dir)
             return {} if metadata_files.empty?
 
@@ -96,12 +110,40 @@ module Ace
 
               scenario_failures = {}
               most_recent.each do |entry|
+                next if !include_uncertain && uncertain_execution?(entry[:data])
+
                 test_id = entry[:data]["test-id"]
                 failed_ids = extract_failed_test_cases(entry[:data])
                 scenario_failures[test_id] = failed_ids unless failed_ids.empty?
               end
 
               result[package] = scenario_failures unless scenario_failures.empty?
+            end
+            result
+          end
+
+          # Find scenarios whose most recent run ended in uncertain execution,
+          # grouped by package. These need manual reconciliation before rerun;
+          # they are excluded from find_failures_by_scenario.
+          #
+          # @param packages [Array<String>] Package names to scan
+          # @param base_dir [String] Base directory to search from (default: current dir)
+          # @return [Hash{String => Array<String>}] Package name => uncertain test-ids
+          def find_uncertain_scenarios(packages:, base_dir: Dir.pwd)
+            metadata_files = discover_metadata_files(base_dir)
+            return {} if metadata_files.empty?
+
+            result = {}
+            packages.each do |package|
+              package_metadata = filter_by_package(metadata_files, package)
+              most_recent = most_recent_per_test(package_metadata)
+
+              uncertain = most_recent
+                .select { |entry| uncertain_execution?(entry[:data]) }
+                .map { |entry| entry[:data]["test-id"] }
+                .sort
+
+              result[package] = uncertain unless uncertain.empty?
             end
             result
           end
@@ -167,6 +209,13 @@ module Ace
           # @return [Array<String>] Aggregated failed test case IDs
           def extract_all_failed_ids(entries)
             entries.flat_map { |entry| extract_failed_test_cases(entry[:data]) }.uniq
+          end
+
+          # True when the latest run of this scenario ended in uncertain
+          # execution (the provider session began and ended without a
+          # confirmed completion; side effects may have happened).
+          def uncertain_execution?(data)
+            data["uncertain_execution"] == true
           end
 
           # Extract failed test case IDs from a single metadata hash

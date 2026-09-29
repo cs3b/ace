@@ -55,6 +55,25 @@ module Ace
             @shared_runtime_root = nil
           end
 
+          # Scenarios whose most recent cached run ended in uncertain execution.
+          # They are excluded from automatic retry surfaces; callers must
+          # reconcile them manually.
+          #
+          # @param packages [Array<String>, nil] restrict to these packages
+          # @return [Array<String>] sorted test-ids with uncertain latest runs
+          def uncertain_scenarios(packages: nil)
+            names = packages ? packages.split(",").map(&:strip) : @discoverer.list_packages(base_dir: @base_dir)
+            return [] if names.empty?
+
+            @failure_finder.find_uncertain_scenarios(packages: names, base_dir: @base_dir)
+              .values
+              .flatten
+              .sort
+          rescue => e
+            warn "Warning: could not scan for uncertain scenarios: #{e.message}" if ENV["DEBUG"]
+            []
+          end
+
           # Run E2E tests across all packages
           #
           # @param options [Hash] Execution options
@@ -103,7 +122,9 @@ module Ace
             scenario_failures = nil
             if options[:only_failures]
               scenario_failures = @failure_finder.find_failures_by_scenario(
-                packages: packages, base_dir: @base_dir
+                packages: packages,
+                base_dir: @base_dir,
+                include_uncertain: options.fetch(:include_uncertain_failures, false)
               )
 
               if scenario_failures.empty?
@@ -574,6 +595,9 @@ module Ace
             metadata = YAML.safe_load_file(metadata_path, permitted_classes: [Date])
             status = metadata["status"]
             return result unless status
+            # Retained metadata must never upgrade a fresh pipeline ERROR to
+            # PASS — an error stays authoritative until explicitly reconciled.
+            return result if result[:status] == "error" && status == "pass"
 
             passed = metadata["tcs-passed"] || metadata.dig("results", "passed") || result[:passed_cases] || 0
             total = metadata["tcs-total"] || metadata.dig("results", "total") || result[:total_cases] || 0
