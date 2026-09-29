@@ -14,8 +14,11 @@ module Ace
         # Only confirmed remote merge evidence (:merged) can prove removal;
         # object states (:no_pr, :open, :closed_unmerged) and transport
         # failures (:offline, :authentication_error, :malformed) always
-        # retain the candidate. Local ancestry proof is handled by the
-        # reporter before this resolver is consulted.
+        # retain the candidate. Merge proof additionally requires the
+        # evidence's provenance (server, repository, branch, base) to agree
+        # with the resolved selection; incomplete or conflicting provenance
+        # retains. Local ancestry proof is handled by the reporter before
+        # this resolver is consulted.
         class CleanupPrResolver
           # @param target [String] base ref the PR must have targeted
           # @param target_sha [String] commit SHA of the target
@@ -57,7 +60,10 @@ module Ace
             return unproven_result(:no_pr) unless evidence
             return unproven_result(:open) if evidence.state == :open
             return unproven_result(:closed_unmerged) if evidence.state == :closed
-            return unproven_result(:no_pr, "state_unavailable") unless evidence.state == :merged
+            return unproven_result(:merged, "state_unavailable") unless evidence.state == :merged
+
+            problem = provenance_problem(evidence, branch)
+            return unproven_result(:merged, problem) if problem
             return unproven_result(:merged, "merge_commit_unavailable") unless evidence.merge_commit_sha
             return unproven_result(:merged, "merge_commit_unreachable") unless ancestor?(evidence.merge_commit_sha, @target_sha)
 
@@ -116,6 +122,27 @@ module Ace
               @resolved_server = nil
               nil
             end
+          end
+
+          # Merge proof may only remove a candidate whose evidence provably
+          # belongs to the resolved server and the candidate's branch/base.
+          # PR and branch identities are not globally unique: incomplete
+          # provenance cannot be verified and conflicting provenance means
+          # the evidence was routed from another repository — both retain.
+          # @return [String, nil] retention reason, or nil when provenance agrees
+          def provenance_problem(evidence, branch)
+            server = resolved_server
+            unless server && evidence.server_name && evidence.base_repository_url &&
+                evidence.head_ref && evidence.base_ref
+              return "provenance_incomplete"
+            end
+
+            return "provenance_conflict" unless evidence.server_name == server.name
+            return "provenance_conflict" unless Ace::Git::Atoms::ServerUrl.match?(evidence.base_repository_url, server.url)
+            return "provenance_conflict" unless evidence.head_ref == branch
+            return "provenance_conflict" unless evidence.base_ref == @target
+
+            nil
           end
 
           def proof_result(evidence, proof, candidate_sha, pr_head_sha, merge_commit_sha)

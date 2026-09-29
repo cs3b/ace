@@ -33,12 +33,13 @@ class CleanupPrResolverTest < Minitest::Test
     Ace::Git::Providers.reset!
   end
 
-  def merged_evidence(number: 101, head_sha: "feat123", merge_commit_sha: "merge456", state: :merged, url: nil)
+  def merged_evidence(number: 101, head_sha: "feat123", merge_commit_sha: "merge456", state: :merged, url: nil,
+    head_ref: "feature", base_ref: "main", base_repository_url: "https://forge.example.com/o/r", server_name: "forgejo-lab")
     Ace::Git::ProviderPullRequest.new(
-      server_name: "forgejo-lab", number: number, title: "t", state: state,
-      head_ref: "feature", base_ref: "main", head_sha: head_sha, author: "u",
+      server_name: server_name, number: number, title: "t", state: state,
+      head_ref: head_ref, base_ref: base_ref, head_sha: head_sha, author: "u",
       url: url, draft: false, merged_at: nil, head_repository_url: nil,
-      base_repository_url: nil, merge_commit_sha: merge_commit_sha
+      base_repository_url: base_repository_url, merge_commit_sha: merge_commit_sha
     )
   end
 
@@ -106,6 +107,61 @@ class CleanupPrResolverTest < Minitest::Test
       result = @resolver.classify("feature", "feat123")
       assert_equal :open, result[:status]
       assert_equal "retain", result[:action]
+    end
+  end
+
+  def test_wrong_repository_provenance_retains_despite_identical_numbers
+    # Same branch name, same PR number, different repository: the evidence
+    # was routed from another forge repository and must never prove removal.
+    with_registered_provider(merged_evidence(base_repository_url: "https://other.example.com/o/r")) do
+      @resolver.stub(:ancestor?, true) do
+        result = @resolver.classify("feature", "feat123")
+        assert_equal :merged, result[:status]
+        assert_equal "provenance_conflict", result[:retention_reason]
+        assert_equal "retain", result[:action]
+        assert_nil result[:proof]
+      end
+    end
+  end
+
+  def test_incomplete_provenance_retains_candidate
+    with_registered_provider(merged_evidence(base_repository_url: nil)) do
+      @resolver.stub(:ancestor?, true) do
+        result = @resolver.classify("feature", "feat123")
+        assert_equal :merged, result[:status]
+        assert_equal "provenance_incomplete", result[:retention_reason]
+        assert_equal "retain", result[:action]
+      end
+    end
+  end
+
+  def test_branch_mismatch_retains_candidate
+    with_registered_provider(merged_evidence(head_ref: "other-branch")) do
+      @resolver.stub(:ancestor?, true) do
+        result = @resolver.classify("feature", "feat123")
+        assert_equal "provenance_conflict", result[:retention_reason]
+        assert_equal "retain", result[:action]
+      end
+    end
+  end
+
+  def test_base_ref_mismatch_retains_candidate
+    with_registered_provider(merged_evidence(base_ref: "release")) do
+      @resolver.stub(:ancestor?, true) do
+        result = @resolver.classify("feature", "feat123")
+        assert_equal "provenance_conflict", result[:retention_reason]
+        assert_equal "retain", result[:action]
+      end
+    end
+  end
+
+  def test_server_name_mismatch_retains_candidate
+    with_registered_provider(merged_evidence(server_name: "other-server")) do
+      @resolver.stub(:ancestor?, true) do
+        result = @resolver.classify("feature", "feat123")
+        assert_equal "provenance_conflict", result[:retention_reason]
+        assert_equal "retain", result[:action]
+      end
     end
   end
 
