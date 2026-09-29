@@ -24,6 +24,8 @@ module Ace
             OUTCOME_TRANSPORT_FAILURE = :transport_failure
             OUTCOME_SPAWN_FAILURE = :spawn_failure
 
+            MAX_MESSAGE_LENGTH = 2000
+
             # Generate the correlation ID for an invocation before spawning.
             # @return [String] opaque 8-character ID
             def self.next_invocation_id
@@ -100,9 +102,13 @@ module Ace
             end
 
             # Build the ProviderError describing this outcome, with evidence attached.
+            # Explicit caller messages can embed raw CLI output, so they are
+            # redacted and bounded here — never trusted as-is.
             # @return [Ace::LLM::ProviderError]
             def provider_error(message = nil)
-              error = Ace::LLM::ProviderError.new(message || default_error_message)
+              text = Ace::LLM::Models::ExecutionEvidence.redact(message || default_error_message)
+              text = "#{text[0, MAX_MESSAGE_LENGTH]}…[truncated]" if text.length > MAX_MESSAGE_LENGTH
+              error = Ace::LLM::ProviderError.new(text)
               error.execution_evidence = execution_evidence
               error
             end
@@ -118,10 +124,14 @@ module Ace
 
             # Attach "session ended without a final response" evidence to an error
             # raised while parsing a completed (exit-zero) capture — e.g. a CLI
-            # that exited cleanly but produced no final message.
+            # that exited cleanly but produced no final message. The message is
+            # redacted before being carried forward.
             # @param error [Ace::LLM::ProviderError]
             # @return [Ace::LLM::ProviderError]
             def with_no_response_evidence(error)
+              redacted = error.exception(
+                Ace::LLM::Models::ExecutionEvidence.redact(error.message.to_s)
+              )
               evidence = Ace::LLM::Models::ExecutionEvidence.new(
                 outcome: :no_response,
                 invocation_id: invocation_id,
@@ -133,8 +143,8 @@ module Ace
                 stdout_excerpt: stdout,
                 stderr_excerpt: stderr
               )
-              error.execution_evidence ||= evidence
-              error
+              redacted.execution_evidence ||= evidence
+              redacted
             end
 
             private

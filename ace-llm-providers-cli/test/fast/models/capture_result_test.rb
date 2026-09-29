@@ -108,6 +108,33 @@ module Ace
               assert_match(/Codex CLI failed with exit status 9/, exit_failure.provider_error.message)
             end
 
+def test_provider_error_redacts_and_bounds_explicit_messages
+  result = CaptureResult.new(
+    outcome: CaptureResult::OUTCOME_COMPLETED,
+    status: failed_status(1),
+    stderr: "",
+    provider_name: "Codex"
+  )
+  raw = "Codex CLI failed: Authorization: Bearer opaqueToken1234567890 #{"x" * 3000}"
+  error = result.provider_error(raw)
+
+  refute_includes error.message, "opaqueToken1234567890"
+  assert_includes error.message, "[redacted]"
+  assert_operator error.message.length, :<=, 2050
+end
+
+def test_with_no_response_evidence_redacts_message
+  result = CaptureResult.new(
+    outcome: CaptureResult::OUTCOME_COMPLETED,
+    status: success_status
+  )
+  error = result.with_no_response_evidence(
+    Ace::LLM::ProviderError.new("no final message: Bearer opaqueToken1234567890")
+  )
+
+  refute_includes error.message, "opaqueToken1234567890"
+end
+
             def test_raise_unless_success_passes_through_success
               result = CaptureResult.new(
                 outcome: CaptureResult::OUTCOME_COMPLETED,

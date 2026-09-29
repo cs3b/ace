@@ -243,10 +243,24 @@ module Ace
                 end
               end
 
+              # Incrementally buffer stream output so already-read bytes
+              # survive even when the stream must be closed mid-read (a
+              # descendant outside the killed process group holding the pipe).
               def safe_read_stream(io)
-                io.read
-              rescue IOError
-                ""
+                buffer = +""
+                loop do
+                  chunk = io.read_nonblock(65_536, exception: false)
+                  if chunk.nil?
+                    break # EOF
+                  elsif chunk == :wait_readable
+                    IO.select([io])
+                    next
+                  end
+                  buffer << chunk
+                end
+                buffer
+              rescue IOError, SystemCallError
+                buffer
               end
 
               def normalize_timeout(value)
