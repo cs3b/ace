@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.56.1] - 2026-09-29
+
+### Fixed
+- A full PR review round is no longer mistaken for a delta round. dry-cli yields
+  nil for an absent `--delta` and for a bare valueless `--delta`, and both were
+  normalized to auto-resolution — so the first-ever review of any new PR failed
+  with "No prior review session records a head". Nil now stays a full round;
+  auto-resolution is the explicit `--delta auto` value (explicit heads unchanged).
+
 ## [0.56.0] - 2026-09-27
 
 ### Added

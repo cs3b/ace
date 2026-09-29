@@ -64,7 +64,7 @@ module Ace
           option :gh_timeout, type: :integer, desc: "Timeout for gh CLI operations in seconds (default: 30)"
           option :evidence_session, type: :array, desc: "Include selected prior review sessions as context"
           option :delta, type: :string, optional_value: true,
-            desc: "Delta round for --pr: review only changes since a reference head (explicit head, or bare --delta to auto-resolve from the most recent prior session for this PR)"
+            desc: "Delta round for --pr: review only changes since a reference head (explicit head, or `auto` to auto-resolve from the most recent prior session for this PR); omit for a full round"
           option :prepare_goals_brief, type: :boolean, desc: "Generate or reuse the shared goals brief for this PR and preset"
 
           # Standard options
@@ -157,14 +157,23 @@ module Ace
             options
           end
 
-          # Normalize --delta: bare flag or empty value means auto-resolve the
-          # reference head from prior sessions (:auto); a value is the explicit head
+          # Normalize --delta: the explicit value "auto" resolves the reference
+          # head from prior sessions (:auto); any other value is the head itself.
+          # dry-cli cannot distinguish an absent --delta from a bare one (both
+          # arrive as nil), and a full round must never be mistaken for a delta
+          # round — so nil stays a full round and auto-resolution is spelled out.
           def process_delta(options)
             return unless options.key?(:delta)
 
             value = options[:delta]
             value = value.to_s.strip if value.is_a?(String)
-            options[:delta] = (value.nil? || value == "") ? :auto : value
+            options[:delta] = if value.nil? || value.empty?
+              nil
+            elsif value.casecmp("auto").zero?
+              :auto
+            else
+              value
+            end
           end
 
           def process_subjects(options)
