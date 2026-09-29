@@ -79,15 +79,30 @@ module Ace
             class << self
               private
 
-              SpawnSetup = Struct.new(:args, :opts, :supervised, :ready_reader, :ready_writer, keyword_init: true) do
+              SpawnSetup = Struct.new(:args, :opts, :supervised, :ready_reader, :ready_writer, :readiness,
+                keyword_init: true) do
                 def supervised?
                   supervised
                 end
 
+                # Read the supervisor's readiness message (small, bounded; the
+                # supervisor closes the pipe after writing). "1" means the child
+                # group spawned; "S<detail>" reports a child spawn failure.
                 def activate_streams
                   ready_writer&.close
-                  ready_reader&.read(1)
+                  self.readiness = ready_reader&.read
                   ready_reader&.close
+                end
+
+                # StandardError describing a supervisor-reported child spawn
+                # failure, or nil when the child group started normally.
+                def child_spawn_failure
+                  return nil if supervised != true || readiness.nil.
+
+                  message = readiness.to_s
+                  return nil unless message.start_with?("S")
+
+                  StandardError.new("child process failed to start: #{message[1..].strip}")
                 end
 
                 def close_setup_handles
@@ -115,6 +130,16 @@ module Ace
                 cleanup_group_on_exit:, normalized_timeout:, invocation_id:, started_at:)
                 Open3.popen3(*spawn_result.args, **spawn_result.opts) do |stdin, stdout, stderr, wait_thr|
                   spawn_result.activate_streams
+                  if (spawn_failure = spawn_result.child_spawn_failure)
+                    return Models::CaptureResult.new(
+                      outcome: Models::CaptureResult::OUTCOME_SPAWN_FAILURE,
+                      provider_name: provider_name,
+                      invocation_id: invocation_id,
+                      deadline_seconds: normalized_timeout,
+                      elapsed_seconds: elapsed_since(started_at),
+                      spawn_error: spawn_failure
+                    )
+                  end
 
                   pid = wait_thr.pid
                   pgid = safe_getpgid(pid)
@@ -199,18 +224,23 @@ module Ace
                   opts: opts,
                   supervised: supervised,
                   ready_reader: ready_reader,
-                  ready_writer: ready_writer
+                  ready_writer: ready_writer,
+                  readiness: nil
                 )
               end
 
-              # Pull whatever partial output a reader thread captured, then close
-              # the stream and stop the reader (deadline cleanup path).
+              # Pull whatever partial output a reader thread captured without
+              # ever blocking past a short bound: a descendant outside the
+              # killed process group can keep the pipe open indefinitely.
               def drain_reader(reader, io)
-                partial = reader.value
-                io.close unless io.closed?
-                reader.join(1)
-                reader.kill if reader.alive?
-                partial.to_s
+                if reader.join(2)
+                  reader.value.to_s
+                else
+                  io.close unless io.closed?
+                  reader.join(1)
+                  reader.kill if reader.alive?
+                  ""
+                end
               end
 
               def safe_read_stream(io)

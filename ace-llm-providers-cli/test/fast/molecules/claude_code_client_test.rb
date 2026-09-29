@@ -290,6 +290,7 @@ describe "ClaudeCodeClient" do
       assert_includes error.message, "empty response"
       assert_includes error.message, "type=result"
       assert_includes error.message, "session_id=sess-123"
+      assert_equal :no_response, error.execution_evidence.outcome
     end
 
     it "extracts text from nested Claude result content" do

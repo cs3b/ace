@@ -304,7 +304,9 @@ module Ace
             text = extract_claude_text(response)
 
             if text.strip.empty?
-              raise Ace::LLM::ProviderError, build_response_error(response)
+              raise capture.with_no_response_evidence(
+                Ace::LLM::ProviderError.new(build_response_error(response))
+              )
             end
 
             # Build metadata

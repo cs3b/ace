@@ -311,6 +311,13 @@ module Ace
             end
 
             text, usage, finish_reason = parse_ndjson(capture.stdout)
+            if text.to_s.strip.empty?
+              # Clean exit without a final response: an incomplete session,
+              # not a completed answer.
+              raise capture.with_no_response_evidence(
+                Ace::LLM::ProviderError.new("Pi CLI produced no final message")
+              )
+            end
             response = {"usage" => normalize_usage(usage), "finish_reason" => finish_reason}
 
             metadata = build_metadata(response, text, prompt, options)

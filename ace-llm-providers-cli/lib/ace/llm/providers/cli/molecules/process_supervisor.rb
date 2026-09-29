@@ -17,7 +17,15 @@ module Ace
             def run(command)
               enable_child_subreaper
               ready_fd = Integer(ENV.delete("ACE_SAFE_CAPTURE_READY_FD"))
-              command_pid = Process.spawn(*command, pgroup: true, ready_fd => :close)
+              command_pid = begin
+                Process.spawn(*command, pgroup: true, ready_fd => :close)
+              rescue StandardError => e
+                # The child never started: tell the capture through the
+                # readiness pipe so it records a spawn failure, not an
+                # executed (nonzero-exit) child session.
+                report_spawn_failure(ready_fd, e)
+                raise
+              end
               command_pgid = command_pid
               IO.for_fd(ready_fd).tap { |io| io.write("1"); io.close }
 
@@ -28,6 +36,15 @@ module Ace
               reap_group(command_pgid)
 
               exit(status.exitstatus || 128 + status.termsig)
+            end
+
+            def report_spawn_failure(ready_fd, error)
+              IO.for_fd(ready_fd).tap do |io|
+                io.write("S#{error.class.name}: #{error.message}")
+                io.close
+              end
+            rescue SystemCallError, IOError
+              nil
             end
 
             def enable_child_subreaper

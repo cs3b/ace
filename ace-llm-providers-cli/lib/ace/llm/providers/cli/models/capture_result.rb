@@ -161,11 +161,13 @@ module Ace
               end
             end
 
-            # First non-empty captured line, bounded — keeps actionable CLI
-            # diagnostics in the error without leaking full transcripts.
+            # First non-empty captured line, bounded and redacted — keeps
+            # actionable CLI diagnostics in the error without leaking
+            # transcripts or credentials.
             def failure_detail
               source = [stderr, stdout].map { |stream| stream.to_s.lines.map(&:strip) }.flatten
               detail = source.reject(&:empty?).first.to_s
+              detail = Ace::LLM::Models::ExecutionEvidence.redact(detail)
               detail = "#{detail[0, 300]}…[truncated]" if detail.length > 300
               detail.empty? ? nil : detail
             end
