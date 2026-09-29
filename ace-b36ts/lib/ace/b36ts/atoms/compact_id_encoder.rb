@@ -716,11 +716,18 @@ module Ace
             encode_with_format(t, format: fmt, year_zero: year_zero, alphabet: alphabet)
           end
 
-          def decode_cli(compact_id, format, year_zero, alphabet)
-            fmt = format.to_sym
+          def decode_cli(compact_id, id_format, year_zero, out_format, alphabet)
+            fmt = id_format.to_sym
             fmt = detect_format(compact_id, alphabet: alphabet) if fmt == :auto
             t = decode_with_format(compact_id, format: fmt, year_zero: year_zero, alphabet: alphabet)
-            t.strftime("%Y-%m-%d %H:%M:%S UTC")
+            out = out_format.to_sym
+            if out == :iso
+              t.iso8601
+            elsif out == :timestamp
+              t.strftime("%Y%m%d-%H%M%S")
+            else
+              t.strftime("%Y-%m-%d %H:%M:%S UTC")
+            end
           end
 
           # Mirrors EncodeCommand#parse_time for the supported subset

@@ -75,11 +75,14 @@ def show_command_help(command)
     puts "  ace-b36ts decode ID [OPTIONS]"
     puts ""
     puts "OPTIONS"
+    puts "  --format=VALUE, -f                Output format (readable, iso, timestamp)"
+    puts "  --year-zero=VALUE, -y             Base year for decoding (default: 2000)"
     puts "  --[no-]quiet, -q                  Suppress non-essential output"
     puts "  --help, -h                        Show this help"
     puts ""
     puts "EXAMPLES"
     puts "  $ ace-b36ts decode 8c5ir0                    # Decode to timestamp (auto-detects format)"
+    puts "  $ ace-b36ts decode 8c5ir0 --format iso       # Decode to ISO format"
   when "config"
     puts "NAME"
     puts "  ace-b36ts config - Show current configuration"
@@ -148,9 +151,12 @@ end
 begin
   case command
   when "encode"
+    cfg = Ace::B36ts::Glue.entry_config
     fmt = options[:format]
+    fmt = cfg[:default_format].to_s if fmt.nil? && !cfg[:default_format].nil?
     fmt = "2sec" if fmt.nil?
     yz = options[:year_zero]
+    yz = cfg[:year_zero].to_i if yz.nil? && !cfg[:year_zero].nil?
     yz = 2000 if yz.nil?
     if options[:count].nil? && options[:split].nil?
         id = Ace::B36ts::Atoms::CompactIdEncoder.encode_cli(positional[0], fmt.to_s, yz, Ace::B36ts::Atoms::CompactIdEncoder::DEFAULT_ALPHABET)
@@ -160,7 +166,13 @@ begin
     warn "native binary: --count/--split not supported in Gate A"
     exit(1)
   when "decode"
-    puts Ace::B36ts::Atoms::CompactIdEncoder.decode_cli(positional[0], "auto", 2000, Ace::B36ts::Atoms::CompactIdEncoder::DEFAULT_ALPHABET)
+    cfg = Ace::B36ts::Glue.entry_config
+    yz = options[:year_zero]
+    yz = cfg[:year_zero].to_i if yz.nil? && !cfg[:year_zero].nil?
+    yz = 2000 if yz.nil?
+    out_fmt = options[:format]
+    out_fmt = "readable" if out_fmt.nil?
+    puts Ace::B36ts::Atoms::CompactIdEncoder.decode_cli(positional[0], "auto", yz, out_fmt, Ace::B36ts::Atoms::CompactIdEncoder::DEFAULT_ALPHABET)
     exit(0)
   when "config"
     Ace::B36ts::Glue.show_b36ts_config
