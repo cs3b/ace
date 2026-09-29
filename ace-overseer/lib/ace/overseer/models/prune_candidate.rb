@@ -4,19 +4,23 @@ module Ace
   module Overseer
     module Models
       class PruneCandidate
-        attr_reader :task_id, :worktree_path, :assignment_complete, :task_done, :git_clean, :reasons
+        attr_reader :task_id, :worktree_path, :assignment_complete, :task_done, :git_clean,
+          :attempts_terminal, :preserved, :reasons
 
-        def initialize(task_id:, worktree_path:, assignment_complete:, task_done:, git_clean:, reasons: [])
+        def initialize(task_id:, worktree_path:, assignment_complete:, task_done:, git_clean:,
+          attempts_terminal: true, preserved: true, reasons: [])
           @task_id = task_id.to_s.freeze
           @worktree_path = worktree_path.to_s.freeze
           @assignment_complete = assignment_complete
           @task_done = task_done
           @git_clean = git_clean
+          @attempts_terminal = attempts_terminal
+          @preserved = preserved
           @reasons = reasons.map(&:to_s).freeze
         end
 
         def safe_to_prune?
-          assignment_complete && task_done && git_clean
+          assignment_complete && task_done && git_clean && attempts_terminal && preserved
         end
 
         def to_h
@@ -26,6 +30,8 @@ module Ace
             assignment_complete: assignment_complete,
             task_done: task_done,
             git_clean: git_clean,
+            attempts_terminal: attempts_terminal,
+            preserved: preserved,
             reasons: reasons,
             safe_to_prune: safe_to_prune?
           }

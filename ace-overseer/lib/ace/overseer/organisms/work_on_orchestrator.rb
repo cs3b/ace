@@ -8,13 +8,14 @@ module Ace
         SUBTASK_PATTERN = /^[0-9a-z]{3}\.[a-z]\.[0-9a-z]{3}\.[a-z0-9]$/
 
         def initialize(worktree_provisioner: nil, tmux_window_opener: nil, assignment_launcher: nil,
-          task_loader: nil, config: nil, assignment_detector: nil)
+          task_loader: nil, config: nil, assignment_detector: nil, lifecycle_exclusion: nil)
           @worktree_provisioner = worktree_provisioner || Molecules::WorktreeProvisioner.new
           @tmux_window_opener = tmux_window_opener || Molecules::TmuxWindowOpener.new
           @task_manager = task_loader || Ace::Task::Organisms::TaskManager.new
           @assignment_launcher = assignment_launcher || Molecules::AssignmentLauncher.new(task_manager: @task_manager)
           @config = config || Ace::Overseer.config
           @assignment_detector = assignment_detector
+          @lifecycle_exclusion = lifecycle_exclusion
         end
 
         def call(task_ref:, task_refs: nil, cli_preset: nil, on_progress: nil)
@@ -48,8 +49,16 @@ module Ace
           primary_subtask_refs = extract_subtask_refs(primary_task)
           tmux_preset = @config.dig("tmux_window_presets", preset_name)
 
+          # Participate in prune exclusion: prune holds the exclusive side
+          # from final evidence through removal; provisioning a fresh
+          # worktree for a task whose previous worktree was pruned clears
+          # the removed marker explicitly.
           progress.call("Provisioning worktree...")
-          worktree = @worktree_provisioner.provision(primary_ref)
+          worktree = lifecycle_exclusion.with_shared(
+            lifecycle_exclusion.task_key(primary_ref), reset_removed: true
+          ) do
+            @worktree_provisioner.provision(primary_ref)
+          end
           if worktree[:created]
             progress.call("Worktree created at #{worktree[:worktree_path]}")
           else
@@ -109,6 +118,10 @@ module Ace
 
           active = subtasks.reject { |st| Ace::Task::Atoms::TaskValidationRules.terminal_status?(st.status.to_s) }
           active.any? ? active.map(&:id) : nil
+        end
+
+        def lifecycle_exclusion
+          @lifecycle_exclusion ||= Ace::Assign::Molecules::LifecycleExclusion.new
         end
 
         def normalize_requested_refs(task_ref, task_refs)
