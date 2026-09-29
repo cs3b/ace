@@ -3,6 +3,7 @@
 require "ace/git"
 
 require_relative "forgejo/version"
+require_relative "forgejo/repository_binding"
 require_relative "forgejo/cli_executor"
 require_relative "forgejo/pr_identifier"
 require_relative "forgejo/parsers"
