@@ -2,6 +2,8 @@
 
 require_relative "../../test_helper"
 
+require "json"
+
 class SetupExecutorTest < Minitest::Test
   FakeStatus = Struct.new(:exitstatus) do
     def success?
@@ -498,7 +500,102 @@ class SetupExecutorTest < Minitest::Test
     end
   end
 
+  def test_release_manifest_copies_explicit_input_into_sandbox
+    Dir.mktmpdir do |tmpdir|
+      sandbox = File.join(tmpdir, "sandbox")
+      manifest = File.join(tmpdir, "installation-manifest.json")
+      File.write(manifest, JSON.generate(valid_release_manifest))
+
+      result = @executor.execute(
+        setup_steps: [{"release-manifest" => {"to" => "results/tc/01/release-manifest.json"}}],
+        sandbox_dir: sandbox,
+        release_manifest_path: manifest
+      )
+
+      assert result[:success]
+      assert_equal File.read(manifest), File.read(File.join(sandbox, "results/tc/01/release-manifest.json"))
+    end
+  end
+
+  def test_release_manifest_defaults_to_source_root_path
+    Dir.mktmpdir do |tmpdir|
+      sandbox = File.join(tmpdir, "sandbox")
+      source_root = File.join(tmpdir, "source")
+      manifest_dir = File.join(source_root, ".ace-local", "release")
+      FileUtils.mkdir_p([sandbox, manifest_dir])
+      manifest = File.join(manifest_dir, "installation-manifest.json")
+      File.write(manifest, JSON.generate(valid_release_manifest))
+
+      result = @executor.execute(
+        setup_steps: [{"release-manifest" => {"to" => "results/tc/01/release-manifest.json"}}],
+        sandbox_dir: sandbox,
+        initial_env: {"ACE_E2E_SOURCE_ROOT" => source_root}
+      )
+
+      assert result[:success]
+      assert_equal File.read(manifest), File.read(File.join(sandbox, "results/tc/01/release-manifest.json"))
+    end
+  end
+
+  def test_release_manifest_rejects_relative_explicit_path
+    Dir.mktmpdir do |sandbox|
+      result = @executor.execute(
+        setup_steps: [{"release-manifest" => {"to" => "results/tc/01/release-manifest.json"}}],
+        sandbox_dir: sandbox,
+        release_manifest_path: "relative/manifest.json"
+      )
+
+      refute result[:success]
+      assert_match(/absolute JSON file path/, result[:error])
+    end
+  end
+
+  def test_release_manifest_failure_skips_later_steps
+    Dir.mktmpdir do |tmpdir|
+      sandbox = File.join(tmpdir, "sandbox")
+      manifest = File.join(tmpdir, "installation-manifest.json")
+      File.write(manifest, JSON.generate(valid_release_manifest.merge("schema_version" => 9)))
+
+      result = @executor.execute(
+        setup_steps: [
+          {"release-manifest" => {"to" => "results/tc/01/release-manifest.json"}},
+          {"run" => "echo installed > install-attempted.txt"}
+        ],
+        sandbox_dir: sandbox,
+        release_manifest_path: manifest
+      )
+
+      refute result[:success]
+      assert_match(/unsupported schema_version/, result[:error])
+      refute File.exist?(File.join(sandbox, "install-attempted.txt")),
+        "no step after a failed release-manifest validation may run"
+    end
+  end
+
+  def test_release_manifest_missing_input_fails
+    Dir.mktmpdir do |sandbox|
+      result = @executor.execute(
+        setup_steps: [{"release-manifest" => {"to" => "results/tc/01/release-manifest.json"}}],
+        sandbox_dir: sandbox,
+        release_manifest_path: File.join(sandbox, "absent.json")
+      )
+
+      refute result[:success]
+      assert_match(/missing/, result[:error])
+    end
+  end
+
   private
+
+  def valid_release_manifest
+    {
+      "schema_version" => 1,
+      "source_sha" => "a" * 40,
+      "packages" => [
+        {"name" => "ace-git-github", "artifact_version" => "0.2.0", "source_sha" => "b" * 40}
+      ]
+    }
+  end
 
   def build_tmux_executor(command_calls:, system_calls: [], time_source: -> { Time.now.to_i })
     Ace::Test::EndToEndRunner::Molecules::SetupExecutor.new(

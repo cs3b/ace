@@ -937,7 +937,7 @@ class TestOrchestratorTest < Minitest::Test
 
       received = {}
       setup_executor = Object.new
-      setup_executor.define_singleton_method(:execute) do |setup_steps:, sandbox_dir:, fixture_source: nil, scenario_name: nil, run_id: nil, initial_env: {}, git_excludes: []|
+      setup_executor.define_singleton_method(:execute) do |setup_steps:, sandbox_dir:, fixture_source: nil, scenario_name: nil, run_id: nil, initial_env: {}, git_excludes: [], release_manifest_path: nil|
         received[:git_excludes] = git_excludes
         {
           success: true,
@@ -979,7 +979,7 @@ class TestOrchestratorTest < Minitest::Test
 
       received = {}
       setup_executor = Object.new
-      setup_executor.define_singleton_method(:execute) do |setup_steps:, sandbox_dir:, fixture_source: nil, scenario_name: nil, run_id: nil, initial_env: {}, git_excludes: []|
+      setup_executor.define_singleton_method(:execute) do |setup_steps:, sandbox_dir:, fixture_source: nil, scenario_name: nil, run_id: nil, initial_env: {}, git_excludes: [], release_manifest_path: nil|
         received[:git_excludes] = git_excludes
         {
           success: true,
@@ -1021,7 +1021,7 @@ class TestOrchestratorTest < Minitest::Test
 
       received = {}
       setup_executor = Object.new
-      setup_executor.define_singleton_method(:execute) do |setup_steps:, sandbox_dir:, fixture_source: nil, scenario_name: nil, run_id: nil, initial_env: {}, git_excludes: []|
+      setup_executor.define_singleton_method(:execute) do |setup_steps:, sandbox_dir:, fixture_source: nil, scenario_name: nil, run_id: nil, initial_env: {}, git_excludes: [], release_manifest_path: nil|
         received[:git_excludes] = git_excludes
         {
           success: true,
@@ -1062,7 +1062,7 @@ class TestOrchestratorTest < Minitest::Test
 
       received = {}
       setup_executor = Object.new
-      setup_executor.define_singleton_method(:execute) do |setup_steps:, sandbox_dir:, fixture_source: nil, scenario_name: nil, run_id: nil, initial_env: {}, git_excludes: []|
+      setup_executor.define_singleton_method(:execute) do |setup_steps:, sandbox_dir:, fixture_source: nil, scenario_name: nil, run_id: nil, initial_env: {}, git_excludes: [], release_manifest_path: nil|
         received[:setup_steps] = setup_steps
         received[:run_id] = run_id
         received[:scenario_name] = scenario_name
@@ -1325,7 +1325,7 @@ class TestOrchestratorTest < Minitest::Test
 
   def fixture_copying_setup_executor(source_root:)
     Object.new.tap do |setup_executor|
-      setup_executor.define_singleton_method(:execute) do |setup_steps:, sandbox_dir:, fixture_source: nil, scenario_name: nil, run_id: nil, initial_env: {}, git_excludes: []|
+      setup_executor.define_singleton_method(:execute) do |setup_steps:, sandbox_dir:, fixture_source: nil, scenario_name: nil, run_id: nil, initial_env: {}, git_excludes: [], release_manifest_path: nil|
         FileUtils.mkdir_p(sandbox_dir)
         if fixture_source && Dir.exist?(fixture_source)
           Dir.children(fixture_source).each do |entry|
@@ -1380,9 +1380,128 @@ class TestOrchestratorTest < Minitest::Test
     end
   end
 
+  class RecordingExecutor
+    attr_reader :calls
+
+    def initialize
+      @calls = []
+    end
+
+    def execute(scenario, cli_args: nil, run_id: nil, test_cases: nil, sandbox_path: nil, env_vars: nil, report_dir: nil)
+      @calls << {scenario: scenario.test_id, sandbox_path: sandbox_path}
+      TestResult.new(
+        test_id: scenario.test_id,
+        status: "pass",
+        test_cases: [],
+        summary: "executed",
+        started_at: Time.now,
+        completed_at: Time.now + 1
+      )
+    end
+  end
+
+  def test_setup_receives_explicit_release_manifest_input
+    Dir.mktmpdir do |tmpdir|
+      create_ts_test_package_with_setup(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001])
+
+      received = {}
+      setup_executor = Object.new
+      setup_executor.define_singleton_method(:execute) do |setup_steps:, sandbox_dir:, fixture_source: nil, scenario_name: nil, run_id: nil, initial_env: {}, git_excludes: [], release_manifest_path: nil|
+        received[:release_manifest_path] = release_manifest_path
+        {
+          success: true,
+          steps_completed: setup_steps.length,
+          error: nil,
+          env: initial_env.merge("PROJECT_ROOT_PATH" => "."),
+          tmux_session: nil
+        }
+      end
+      setup_executor.define_singleton_method(:teardown) { nil }
+
+      orchestrator = create_orchestrator(
+        base_dir: tmpdir,
+        provider: "claude:sonnet",
+        setup_executor_factory: ->(sandbox_backend: nil) { setup_executor },
+        release_manifest_input: "/tmp/frozen/installation-manifest.json"
+      )
+
+      orchestrator.run(package: "my-pkg", test_id: "TS-TEST-001", output: @output)
+
+      assert_equal "/tmp/frozen/installation-manifest.json", received[:release_manifest_path]
+    end
+  end
+
+  def test_setup_manifest_input_honors_allowlisted_env_key
+    Dir.mktmpdir do |tmpdir|
+      create_ts_test_package_with_setup(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001])
+
+      received = {}
+      setup_executor = Object.new
+      setup_executor.define_singleton_method(:execute) do |setup_steps:, sandbox_dir:, fixture_source: nil, scenario_name: nil, run_id: nil, initial_env: {}, git_excludes: [], release_manifest_path: nil|
+        received[:release_manifest_path] = release_manifest_path
+        {
+          success: true,
+          steps_completed: setup_steps.length,
+          error: nil,
+          env: initial_env.merge("PROJECT_ROOT_PATH" => "."),
+          tmux_session: nil
+        }
+      end
+      setup_executor.define_singleton_method(:teardown) { nil }
+
+      ENV["ACE_RELEASE_MANIFEST"] = "/tmp/from-env/installation-manifest.json"
+      orchestrator = create_orchestrator(
+        base_dir: tmpdir,
+        provider: "claude:sonnet",
+        setup_executor_factory: ->(sandbox_backend: nil) { setup_executor }
+      )
+
+      orchestrator.run(package: "my-pkg", test_id: "TS-TEST-001", output: @output)
+
+      assert_equal "/tmp/from-env/installation-manifest.json", received[:release_manifest_path]
+    ensure
+      ENV.delete("ACE_RELEASE_MANIFEST")
+    end
+  end
+
+  def test_setup_failure_returns_error_result_and_skips_scenario_execution
+    Dir.mktmpdir do |tmpdir|
+      create_ts_test_package_with_setup(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001])
+
+      setup_executor = Object.new
+      setup_executor.define_singleton_method(:execute) do |setup_steps:, sandbox_dir:, fixture_source: nil, scenario_name: nil, run_id: nil, initial_env: {}, git_excludes: [], release_manifest_path: nil|
+        {
+          success: false,
+          steps_completed: 0,
+          error: "release manifest is missing: /tmp/frozen/installation-manifest.json",
+          env: initial_env,
+          tmux_session: nil
+        }
+      end
+      setup_executor.define_singleton_method(:teardown) { nil }
+
+      executor = RecordingExecutor.new
+      orchestrator = create_orchestrator(
+        base_dir: tmpdir,
+        provider: "claude:sonnet",
+        executor: executor,
+        setup_executor_factory: ->(sandbox_backend: nil) { setup_executor }
+      )
+
+      results = orchestrator.run(package: "my-pkg", test_id: "TS-TEST-001", output: @output)
+
+      assert_equal 1, results.size
+      result = results.first
+      assert_equal "error", result.status
+      assert_match(/Sandbox setup failed/, result.summary)
+      assert_match(/release manifest is missing/, result.error)
+      assert_empty executor.calls, "a failed setup must not hand the scenario to the LLM executor"
+    end
+  end
+
   def create_orchestrator(base_dir: nil, timestamp_generator: nil, executor: nil, provider: nil, parallel: nil,
     suite_report_writer: nil, report_writer: nil, integration_runner: nil, discoverer: nil,
-    scenario_loader: nil, setup_executor_factory: nil, runtime_builder: nil)
+    scenario_loader: nil, setup_executor_factory: nil, runtime_builder: nil, release_manifest_input: nil)
     base = base_dir || File.expand_path("../../../..", __dir__)
     TestOrchestrator.new(
       provider: provider || "test:stub",
@@ -1397,7 +1516,8 @@ class TestOrchestratorTest < Minitest::Test
       report_writer: report_writer || StubReportWriter.new,
       suite_report_writer: suite_report_writer || StubSuiteReportWriter.new,
       setup_executor_factory: setup_executor_factory,
-      runtime_builder: runtime_builder || StubRuntimeBuilder.new
+      runtime_builder: runtime_builder || StubRuntimeBuilder.new,
+      release_manifest_input: release_manifest_input
     )
   end
 

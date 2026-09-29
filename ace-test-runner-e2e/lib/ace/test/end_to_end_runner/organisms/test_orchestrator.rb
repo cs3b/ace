@@ -23,6 +23,11 @@ module Ace
         #
         # For API providers: orchestrator writes reports as before.
         class TestOrchestrator
+          # Raised when deterministic sandbox setup fails. The scenario must
+          # not be handed to the LLM afterwards: no goal (and therefore no
+          # install command) may run from a failed setup.
+          class SandboxSetupFailed < StandardError; end
+
           # @param provider [String] LLM provider:model string
           # @param timeout [Integer] Request timeout per test in seconds
           # @param parallel [Integer] Number of tests to run in parallel
@@ -30,10 +35,12 @@ module Ace
           # @param timestamp_generator [#call] Callable that returns a timestamp string
           # @param executor [#execute] Injectable test executor (for testing)
           # @param progress [Boolean] Enable animated progress display
+          # @param release_manifest_input [String, nil] Explicit release manifest path; when nil,
+          #   the single allow-listed host input ACE_RELEASE_MANIFEST is honored.
           def initialize(provider: nil, timeout: nil, parallel: nil, base_dir: nil, timestamp_generator: nil,
             executor: nil, progress: false, discoverer: nil, integration_runner: nil,
             scenario_loader: nil, report_writer: nil, suite_report_writer: nil,
-            setup_executor_factory: nil, runtime_builder: nil)
+            setup_executor_factory: nil, runtime_builder: nil, release_manifest_input: nil)
             config = Molecules::ConfigLoader.load
             @provider = provider || config.dig("execution", "runner_provider") ||
               config.dig("execution", "provider") || "claude:sonnet"
@@ -42,6 +49,9 @@ module Ace
             @base_dir = base_dir || Dir.pwd
             @timestamp_generator = timestamp_generator || method(:default_timestamp)
             @progress = progress
+            @release_manifest_input = sanitize_release_manifest_input(
+              release_manifest_input || ENV["ACE_RELEASE_MANIFEST"]
+            )
             @discoverer = discoverer || Molecules::TestDiscoverer.new
             @integration_runner = integration_runner || Molecules::IntegrationRunner.new(base_dir: @base_dir)
             @loader = scenario_loader || Molecules::ScenarioLoader.new
@@ -176,13 +186,13 @@ module Ace
                 scenario,
                 protocol_packages,
                 setup_steps: setup_steps
-              )
+              ),
+              release_manifest_path: @release_manifest_input
             )
 
             unless result[:success]
-              output.puts "Warning: sandbox setup failed: #{result[:error]}"
-              setup_executor.teardown
-              return [nil, nil, nil]
+              output.puts "Sandbox setup failed: #{result[:error]}"
+              raise SandboxSetupFailed, result[:error].to_s
             end
 
             env = result[:env]
@@ -214,6 +224,23 @@ module Ace
             steps.any? do |step|
               step.is_a?(Hash) && step["run"].to_s.include?(fragment)
             end
+          end
+
+          def sanitize_release_manifest_input(raw)
+            value = raw.to_s.strip
+            value.empty? ? nil : value
+          end
+
+          def setup_failed_result(scenario, error_message)
+            Models::TestResult.new(
+              test_id: scenario.test_id,
+              status: "error",
+              test_cases: [],
+              summary: "Sandbox setup failed",
+              error: error_message,
+              started_at: Time.now,
+              completed_at: Time.now
+            )
           end
 
           def sandbox_support_git_excludes(scenario, protocol_packages, setup_steps:)
@@ -265,11 +292,20 @@ module Ace
 
             run_id = cli_provider? ? timestamp : nil
             # When report_dir is provided, derive sandbox path from it (strip -reports suffix)
-            if report_dir
-              sandbox_path = report_dir.sub(/-reports\z/, "")
-              sandbox_path, env_vars, setup_executor = setup_sandbox_if_ts(scenario, timestamp, output) unless Dir.exist?(sandbox_path)
-            else
-              sandbox_path, env_vars, setup_executor = setup_sandbox_if_ts(scenario, timestamp, output)
+            begin
+              if report_dir
+                sandbox_path = report_dir.sub(/-reports\z/, "")
+                sandbox_path, env_vars, setup_executor = setup_sandbox_if_ts(scenario, timestamp, output) unless Dir.exist?(sandbox_path)
+              else
+                sandbox_path, env_vars, setup_executor = setup_sandbox_if_ts(scenario, timestamp, output)
+              end
+            rescue SandboxSetupFailed => e
+              # A failed deterministic setup must never degrade into an
+              # LLM-driven run: no goal executes, so no install can happen.
+              result = setup_failed_result(scenario, e.message)
+              display.show_single_result(result)
+              output.puts "Error: #{e.message}"
+              return [result]
             end
             result = execute_scenario(
               scenario,
@@ -393,6 +429,11 @@ module Ace
                         env_vars: env_vars,
                         verify: verify
                       )
+                    rescue SandboxSetupFailed => e
+                      # A failed deterministic setup must never degrade into
+                      # an LLM-driven run: no goal executes, so no install
+                      # can happen.
+                      result = setup_failed_result(scenario, e.message)
                     ensure
                       setup_executor&.teardown
                     end

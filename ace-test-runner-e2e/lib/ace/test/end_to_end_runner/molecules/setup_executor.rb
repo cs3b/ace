@@ -4,6 +4,8 @@ require "fileutils"
 require "open3"
 require "shellwords"
 
+require_relative "release_manifest"
+
 module Ace
   module Test
     module EndToEndRunner
@@ -12,7 +14,8 @@ module Ace
         #
         # Processes the setup array from scenario.yml, running each action
         # via Ruby system calls (no LLM involved). Supports: git-init,
-        # copy-fixtures, run, write-file, agent-env, and tmux-session actions.
+        # copy-fixtures, run, write-file, agent-env, tmux-session, and
+        # release-manifest actions.
         #
         # Note: This is a Molecule because it performs filesystem I/O and
         # system calls via Open3 and FileUtils.
@@ -23,6 +26,7 @@ module Ace
           RESERVED_ENV_KEYS = Molecules::SandboxRuntimeBuilder::RESERVED_ENV_KEYS + %w[
             PATH HOME TMPDIR XDG_RUNTIME_DIR TMUX_TMPDIR ACE_TMUX_SESSION
           ]
+          RELEASE_MANIFEST_DEFAULT_PATH = File.join(".ace-local", "release", "installation-manifest.json")
 
           def initialize(command_runner: nil, system_runner: nil, time_source: nil, sandbox_backend: nil)
             @command_runner = command_runner || method(:capture3)
@@ -38,9 +42,12 @@ module Ace
           # @param fixture_source [String, nil] Path to the fixtures/ directory
           # @param scenario_name [String, nil] Test ID for tmux session naming (e.g., "TS-OVERSEER-001")
           # @param run_id [String, nil] Unique run ID for deterministic tmux session naming
+          # @param release_manifest_path [String, nil] Explicit absolute manifest path carried
+          #   from the invoking process (ACE_RELEASE_MANIFEST). When nil, the release-manifest
+          #   step falls back to the default path under ACE_E2E_SOURCE_ROOT.
           # @return [Hash] Result with :success, :steps_completed, :error, :env, :tmux_session keys
           def execute(setup_steps:, sandbox_dir:, fixture_source: nil, scenario_name: nil, run_id: nil, initial_env: {},
-            git_excludes: [])
+            git_excludes: [], release_manifest_path: nil)
             FileUtils.mkdir_p(sandbox_dir)
             env = if @sandbox_backend
               @sandbox_backend.prepared_env(initial_env.dup)
@@ -48,6 +55,7 @@ module Ace
               initial_env.dup
             end
             @git_excludes = normalize_git_excludes(git_excludes)
+            @release_manifest_input = release_manifest_path
             steps_completed = 0
             @tmux_session = nil
             @scenario_name = scenario_name
@@ -129,6 +137,8 @@ module Ace
               handle_env(value, env)
             when "tmux-session"
               handle_tmux_session(env, value)
+            when "release-manifest"
+              handle_release_manifest(value, sandbox_dir, env)
             else
               raise ArgumentError, "Unknown setup step type: #{key.inspect}"
             end
@@ -217,6 +227,42 @@ module Ace
 
               env[key] = v.to_s
             end
+          end
+
+          # Validate the frozen release manifest and copy its exact bytes into
+          # the sandbox. The source is the explicitly allowed input carried
+          # from the invoking process (ACE_RELEASE_MANIFEST, absolute path);
+          # without it, the default path under ACE_E2E_SOURCE_ROOT is used.
+          # Any missing, unreadable, malformed, or conflicting manifest raises
+          # here so setup fails before any install goal can run.
+          def handle_release_manifest(config, sandbox_dir, env)
+            target = config.is_a?(Hash) ? config["to"] : config
+            raise ArgumentError, "release-manifest step requires a target path" if target.to_s.strip.empty?
+
+            source = release_manifest_source(env)
+            Molecules::ReleaseManifest.validate_and_copy(
+              source_path: source,
+              target_path: File.join(sandbox_dir, target)
+            )
+          end
+
+          def release_manifest_source(env)
+            explicit = @release_manifest_input.to_s.strip
+            if explicit.empty?
+              source_root = env["ACE_E2E_SOURCE_ROOT"].to_s.strip
+              if source_root.empty?
+                raise Molecules::ReleaseManifest::Invalid,
+                  "no release manifest input and no ACE_E2E_SOURCE_ROOT to derive the default path"
+              end
+              return File.join(source_root, RELEASE_MANIFEST_DEFAULT_PATH)
+            end
+
+            unless explicit.start_with?("/")
+              raise Molecules::ReleaseManifest::Invalid,
+                "ACE_RELEASE_MANIFEST must be an absolute JSON file path, got: #{explicit}"
+            end
+
+            explicit
           end
 
           # Merge custom env vars with the process environment
