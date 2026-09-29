@@ -89,14 +89,17 @@ module Ace
           # Like find_failures_by_package but preserves per-scenario granularity.
           # Callers can use this to re-run full failed scenarios.
           #
-          # Scenarios whose latest run is marked uncertain_execution are
-          # excluded — replaying them would repeat unverified side effects.
+          # By default, scenarios whose most recent run is marked
+          # uncertain_execution are excluded — replaying them would repeat
+          # unverified side effects. The explicit reconciliation path passes
+          # include_uncertain: true to select them deliberately.
           #
           # @param packages [Array<String>] Package names to scan
           # @param base_dir [String] Base directory to search from (default: current dir)
+          # @param include_uncertain [Boolean] keep uncertain scenarios selectable
           # @return [Hash{String => Hash{String => Array<String>}}]
           #   Package name => { test-id => failed TC IDs }
-          def find_failures_by_scenario(packages:, base_dir: Dir.pwd)
+          def find_failures_by_scenario(packages:, base_dir: Dir.pwd, include_uncertain: false)
             metadata_files = discover_metadata_files(base_dir)
             return {} if metadata_files.empty?
 
@@ -107,7 +110,7 @@ module Ace
 
               scenario_failures = {}
               most_recent.each do |entry|
-                next if uncertain_execution?(entry[:data])
+                next if !include_uncertain && uncertain_execution?(entry[:data])
 
                 test_id = entry[:data]["test-id"]
                 failed_ids = extract_failed_test_cases(entry[:data])

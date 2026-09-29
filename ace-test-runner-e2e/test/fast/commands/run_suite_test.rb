@@ -39,6 +39,41 @@ class RunSuiteTest < Minitest::Test
       @pruner = pruner
     end
 
+  def test_all_uncertain_failures_keep_suite_failing_without_retry_raise
+    Dir.mktmpdir do |tmpdir|
+      uncertain_dir = create_scenario_report(
+        tmpdir,
+        report_dir_name: "8rniq4-tmux-ts005-reports",
+        test_id: "TS-TMUX-005",
+        title: "ace-tmux Only Uncertain",
+        package: "ace-tmux",
+        status: "error",
+        failed: []
+      )
+      report_path = create_suite_report(tmpdir, "8rniq5-suite-report.md")
+      initial = suite_results_for("error", "TS-TMUX-005-tmux-only-uncertain", uncertain_dir, report_path)
+      initial[:packages]["ace-test"].first[:status] = "error"
+
+      orchestrator = StubSuiteOrchestrator.new(
+        initial,
+        {total: 0, passed: 0, failed: 0, errors: 0, packages: {}},
+        uncertain_scenarios: ["TS-TMUX-005"]
+      )
+      command = StubRunSuite.new(orchestrator)
+
+      error = assert_raises(Ace::Support::Cli::Error) do
+        Dir.chdir(tmpdir) { command.call(parallel: "0", quiet: true) }
+      end
+
+      # Still a failing suite (exit 1), but not the misleading "no failed
+      # scenarios" abort: the uncertain scenario is accounted for.
+      assert_match(/1 test\(s\) failed or errored after retry/, error.message)
+      assert_equal 2, orchestrator.calls.length
+      retry_call = orchestrator.calls.last
+      assert_equal false, retry_call[:include_uncertain_failures]
+    end
+  end
+
   def test_retry_keeps_uncertain_scenarios_in_final_tally
   Dir.mktmpdir do |tmpdir|
     uncertain_dir = create_scenario_report(

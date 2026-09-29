@@ -122,7 +122,9 @@ module Ace
             scenario_failures = nil
             if options[:only_failures]
               scenario_failures = @failure_finder.find_failures_by_scenario(
-                packages: packages, base_dir: @base_dir
+                packages: packages,
+                base_dir: @base_dir,
+                include_uncertain: options.fetch(:include_uncertain_failures, false)
               )
 
               if scenario_failures.empty?

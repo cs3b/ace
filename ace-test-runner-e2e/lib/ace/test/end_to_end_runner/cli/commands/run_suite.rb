@@ -116,7 +116,11 @@ module Ace
                 timeout: options[:timeout],
                 tags: tags,
                 exclude_tags: exclude_tags,
-                verify: options[:verify]
+                verify: options[:verify],
+                # An explicit --only-failures run is deliberate human
+                # reconciliation: uncertain scenarios stay selectable there.
+                # The automatic retry pass below always excludes them.
+                include_uncertain_failures: only_failures
               }
 
               results = run_suite_with_retry(
@@ -200,8 +204,10 @@ module Ace
               end
 
               output.puts "Retrying failed scenarios once..."
-              retry_results = orchestrator.run(run_options.merge(only_failures: true))
-              if retry_results[:total].zero?
+              retry_results = orchestrator.run(
+                run_options.merge(only_failures: true, include_uncertain_failures: false)
+              )
+              if retry_results[:total].zero? && uncertain.empty?
                 raise Ace::Support::Cli::Error.new(
                   "Retry pass found no failed test scenarios from attempt 1; aborting instead of silently passing"
                 )
