@@ -4,13 +4,16 @@ require "test_helper"
 
 # PR-lifecycle contract parity suite for the Forgejo provider.
 # Shares identical assertions with ace-git-github via
-# Ace::TestSupport::PullRequestLifecycleContract; fixtures are `fj`-shaped.
+# Ace::TestSupport::PullRequestLifecycleContract; fixtures are `fj`-shaped
+# and every command is bound to the selected repository.
 class ForgejoProviderPullRequestLifecycleContractTest < AceGitForgejoTestCase
   include Ace::TestSupport::PullRequestLifecycleContract
 
   CONTRACT = Ace::TestSupport::PullRequestLifecycleContract
   SERVER = Ace::Git::ResolvedServer.new(name: "forge-server", provider: :forgejo, url: CONTRACT::SERVER_URL)
   SHA = CONTRACT::HEAD_SHA
+  HOST = "forge.example.com"
+  REPO = "owner/repo"
 
   def build_provider(runner)
     Ace::Git::Forgejo::Provider.new(server: SERVER, runner: runner)
@@ -38,10 +41,12 @@ class ForgejoProviderPullRequestLifecycleContractTest < AceGitForgejoTestCase
     lambda do |args:, timeout: nil, env: nil|
       key = args.join(" ")
       case key
+      when VERSION_KEY
+        ok("fj v0.6.0\n")
       when SEARCH_KEY
         searches += 1
         ok(search_listing(searches > 1 ? [25] : []))
-      when "fj pr create Ship it --head feature/x --base main"
+      when CREATE_KEY
         ok("")
       when VIEW_25
         ok(pr_view_text(25, "Open", "feature/x", "main"))
@@ -53,20 +58,24 @@ class ForgejoProviderPullRequestLifecycleContractTest < AceGitForgejoTestCase
     end
   end
 
-  SEARCH_KEY = "fj --style minimal pr search --state open"
-  VIEW_25 = "fj --style minimal pr view 25"
-  VIEW_26 = "fj --style minimal pr view 26"
-  COMMITS_25 = "fj --style minimal pr view 25 commits"
-  COMMITS_26 = "fj --style minimal pr view 26 commits"
+  VERSION_KEY = "fj version"
+  SEARCH_KEY = "fj -H forge.example.com --style minimal pr search --state open -r owner/repo"
+  VIEW_25 = "fj -H forge.example.com --style minimal pr view owner/repo#25"
+  VIEW_26 = "fj -H forge.example.com --style minimal pr view owner/repo#26"
+  COMMITS_25 = "fj -H forge.example.com --style minimal pr view owner/repo#25 commits"
+  COMMITS_26 = "fj -H forge.example.com --style minimal pr view owner/repo#26 commits"
+  CREATE_KEY = "fj -H forge.example.com pr create Ship it --head feature/x --base main -r owner/repo"
 
   def scenario_responses
     @scenario_responses ||= {
       find_single: {
+        VERSION_KEY => version_ok,
         SEARCH_KEY => ok(search_listing([25])),
         VIEW_25 => ok(pr_view_text(25, "Open", "feature/x", "main")),
         COMMITS_25 => ok("commit #{SHA}\nAuthor: lab-builder\n Subject: ship\n")
       },
       find_multi: {
+        VERSION_KEY => version_ok,
         SEARCH_KEY => ok(search_listing([25, 26])),
         VIEW_25 => ok(pr_view_text(25, "Open", "feature/x", "main")),
         VIEW_26 => ok(pr_view_text(26, "Open", "feature/x", "main")),
@@ -75,24 +84,28 @@ class ForgejoProviderPullRequestLifecycleContractTest < AceGitForgejoTestCase
       },
       create_new: {},
       create_existing: {
+        VERSION_KEY => version_ok,
         SEARCH_KEY => ok(search_listing([25])),
         VIEW_25 => ok(pr_view_text(25, "Open", "feature/x", "main")),
         COMMITS_25 => ok("commit #{SHA}\n")
       },
       create_unknown: {
+        VERSION_KEY => version_ok,
         SEARCH_KEY => ok(search_listing([])),
-        "fj pr create Ship it --head feature/x --base main" => [
+        CREATE_KEY => [
           "dial tcp: connect: connection refused", 1
         ]
       },
       update_stale: {
+        VERSION_KEY => version_ok,
         VIEW_25 => ok(pr_view_text(25, "Open", "feature/x", "main")),
         COMMITS_25 => ok("commit #{SHA}\n")
       },
       update_ok: {
+        VERSION_KEY => version_ok,
         VIEW_25 => ok(pr_view_text(25, "Open", "feature/x", "main")),
         COMMITS_25 => ok("commit #{SHA}\n"),
-        "fj pr edit 25 title New title" => ok("")
+        "fj -H forge.example.com pr edit owner/repo#25 title New title" => ok("")
       },
       ready_unsupported: {},
       merge_unsupported: {}
@@ -112,10 +125,11 @@ class ForgejoProviderPullRequestLifecycleContractTest < AceGitForgejoTestCase
 
   def test_lifecycle_update_splits_title_and_body_into_separate_commands
     runner = scripted_runner(
+      VERSION_KEY => version_ok,
       VIEW_25 => ok(pr_view_text(25, "Open", "feature/x", "main")),
       COMMITS_25 => ok("commit #{SHA}\n"),
-      "fj pr edit 25 title New title" => ok(""),
-      "fj pr edit 25 body New body" => ok("")
+      "fj -H forge.example.com pr edit owner/repo#25 title New title" => ok(""),
+      "fj -H forge.example.com pr edit owner/repo#25 body New body" => ok("")
     )
     receipt = build_provider(runner).update_pull_request(
       number: 25, expected_head: SHA, title: "New title", body: "New body"
@@ -125,6 +139,10 @@ class ForgejoProviderPullRequestLifecycleContractTest < AceGitForgejoTestCase
   end
 
   private
+
+  def version_ok
+    {success: true, stdout: "fj v0.6.0\n", stderr: "", exit_code: 0}
+  end
 
   def ok(stdout)
     {success: true, stdout: stdout, stderr: "", exit_code: 0}
@@ -139,7 +157,7 @@ class ForgejoProviderPullRequestLifecycleContractTest < AceGitForgejoTestCase
   def pr_view_text(number, state, head_ref, base_ref)
     <<~VIEW
       Ship it ##{number}
-      By lab-builder - #{state} - +10 -2
+      By lab-builder — #{state} — +10 -2
       From `#{head_ref}` into `#{base_ref}`
     VIEW
   end
