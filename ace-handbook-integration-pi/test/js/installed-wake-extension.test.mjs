@@ -1,0 +1,722 @@
+import assert from "node:assert/strict";
+import { describe, it } from "node:test";
+
+import { createFakeHost } from "./fake-pi-host.mjs";
+import { MAX_WAKE_MESSAGE_CHARS } from "../../handbook/extensions/ace-wake/wake/types.js";
+import aceWakeFactory from "../../handbook/extensions/ace-wake/index.js";
+
+const HOST_PORTS = ["setIntervalFn", "clearIntervalFn", "watchFactory", "statFn"];
+
+function portsOf(host) {
+  return Object.fromEntries(HOST_PORTS.map((name) => [name, host[name]]));
+}
+
+/**
+ * Load the adapter the way Pi would: run the default-exported factory with a
+ * fake extension API, capture the lifecycle handlers it registered, then fire
+ * session_start. The fake host's deterministic ports are injected through the
+ * factory's optional second argument.
+ */
+async function startSession(host, extraPorts = {}) {
+  const events = [];
+  host.pi.on = (event, handler) => {
+    events.push([event, handler]);
+    return () => {};
+  };
+  aceWakeFactory(host.pi, { ...portsOf(host), ...extraPorts });
+
+  const handlerFor = (event) => {
+    const found = events.find(([name]) => name === event);
+    if (!found) {
+      throw new Error(`extension did not register ${event}`);
+    }
+    return found[1];
+  };
+
+  await handlerFor("session_start")({ type: "session_start", reason: "startup" }, host.commandContext);
+
+  return {
+    /**
+     * Simulate an extension reload with real pi semantics: the old runtime
+     * receives session_shutdown(reason reload), then the factory reruns and
+     * session_start fires with reason "reload".
+     */
+    reload: async () => {
+      const shutdown = events.find(([name]) => name === "session_shutdown");
+      if (shutdown) {
+        await shutdown[1]({ type: "session_shutdown", reason: "reload" }, host.commandContext);
+      }
+      const reloadEvents = [];
+      host.pi.on = (event, handler) => {
+        reloadEvents.push([event, handler]);
+        return () => {};
+      };
+      aceWakeFactory(host.pi, { ...portsOf(host), ...extraPorts });
+      const found = reloadEvents.find(([name]) => name === "session_start");
+      await found[1]({ type: "session_start", reason: "reload" }, host.commandContext);
+    },
+    settle: () => handlerFor("agent_settled")({ type: "agent_settled" }, host.commandContext),
+    agentStart: () => handlerFor("agent_start")({ type: "agent_start" }, host.commandContext),
+    beforeCompact: (reason = "manual") => handlerFor("session_before_compact")({ type: "session_before_compact", reason }, host.commandContext),
+    compacted: (reason = "manual") => handlerFor("session_compact")({ type: "session_compact", reason, trigger: "manual" }, host.commandContext),
+    compactFailed: (reason = "manual") => handlerFor("session_compact_failed")({ type: "session_compact_failed", reason, trigger: "manual" }, host.commandContext),
+    shutdown: () => handlerFor("session_shutdown")({ type: "session_shutdown" }, host.commandContext),
+  };
+}
+
+describe("ace-wake commands", () => {
+  it("registers /loop and /watch", async () => {
+    const host = createFakeHost();
+    await startSession(host);
+
+    assert.ok(host.commands.has("loop"));
+    assert.ok(host.commands.has("watch"));
+    assert.match(host.commands.get("loop").description, /timer loops/);
+    assert.match(host.commands.get("watch").description, /file watches/);
+  });
+
+  it("/loop add validates, persists a session entry, and /loop list reports it", async () => {
+    const host = createFakeHost();
+    await startSession(host);
+
+    await host.runCommand("loop", "add heartbeat --interval 30 --message check the build");
+
+    const added = host.sessionEntries.at(-1);
+    assert.equal(added.customType, "ace-wake");
+    assert.deepEqual(added.data.loops, [
+      { kind: "loop", name: "heartbeat", intervalSeconds: 30, message: "check the build" },
+    ]);
+
+    await host.runCommand("loop", "list");
+    const listed = host.notifications.at(-1);
+    assert.equal(listed.type, "info");
+    assert.match(listed.message, /heartbeat — 30s/);
+  });
+
+  it("rejects invalid intervals, duplicate names, and unknown names with clear errors", async () => {
+    const host = createFakeHost();
+    await startSession(host);
+
+    await host.runCommand("loop", "add bad --interval 0 --message x");
+    assert.equal(host.notifications.at(-1).type, "error");
+    assert.match(host.notifications.at(-1).message, /greater than 0/);
+
+    await host.runCommand("loop", "add ok --interval 5 --message x");
+    await host.runCommand("loop", "add ok --interval 9 --message y");
+    assert.match(host.notifications.at(-1).message, /loop "ok" already exists/);
+
+    await host.runCommand("loop", "remove ghost");
+    assert.match(host.notifications.at(-1).message, /unknown loop: ghost/);
+  });
+
+  it("/watch add requires a readable path and stores the canonical path", async () => {
+    const host = createFakeHost();
+    await startSession(host);
+
+    await host.runCommand("watch", "add dep --path missing.txt --message changed");
+    assert.match(host.notifications.at(-1).message, /path is not readable/);
+    assert.equal(host.sessionEntries.length, 0, "failed adds must not persist");
+
+    host.setFile("/fake/project/dep.txt", { mtimeMs: 1, size: 1 });
+    await host.runCommand("watch", "add dep --path dep.txt --message changed");
+    const added = host.sessionEntries.at(-1);
+    assert.deepEqual(added.data.watches, [
+      { kind: "watch", name: "dep", path: "/fake/project/dep.txt", message: "changed" },
+    ]);
+  });
+
+  it("quoted messages and --flag=value forms parse", async () => {
+    const host = createFakeHost();
+    await startSession(host);
+
+    await host.runCommand("loop", 'add quoted --interval=15 --message "two words here"');
+
+    const added = host.sessionEntries.at(-1);
+    assert.equal(added.data.loops[0].message, "two words here");
+    assert.equal(added.data.loops[0].intervalSeconds, 15);
+  });
+
+  it("quoted inline flag values keep their full value and unterminated quotes fail loudly", async () => {
+    const host = createFakeHost();
+    await startSession(host);
+
+    await host.runCommand("loop", 'add inline --interval=10 --message="check the build"');
+    const added = host.sessionEntries.at(-1);
+    assert.equal(added.data.loops[0].message, "check the build", "inline quoted values must not truncate");
+
+    host.setFile("/fake/project/my file.txt", { mtimeMs: 1, size: 1 });
+    await host.runCommand("watch", 'add spaced --path="my file.txt" --message=changed');
+    assert.equal(
+      host.sessionEntries.at(-1).data.watches[0].path,
+      "/fake/project/my file.txt",
+      "inline quoted paths must keep their spaces",
+    );
+
+    await host.runCommand("loop", 'add broken --interval=10 --message="never closes');
+    assert.equal(host.notifications.at(-1).type, "error");
+    assert.match(host.notifications.at(-1).message, /unterminated quoted value/);
+
+    // Prose apostrophes are not quote delimiters: messages stay literal.
+    await host.runCommand("loop", "add prose --interval 10 --message don't stop now");
+    const prose = host.sessionEntries.at(-1).data.loops.find((loop) => loop.name === "prose");
+    assert.equal(prose.message, "don't stop now");
+  });
+
+  it("quoted watch paths containing spaces are stored canonically", async () => {
+    const host = createFakeHost();
+    await startSession(host);
+    host.setFile("/fake/project/my file.txt", { mtimeMs: 1, size: 1 });
+
+    await host.runCommand("watch", 'add spaces --path "my file.txt" --message changed');
+
+    const added = host.sessionEntries.at(-1);
+    assert.equal(added.data.watches[0].path, "/fake/project/my file.txt");
+  });
+
+  it("loaded snapshots are cloned so registry edits never mutate session history", async () => {
+    const host = createFakeHost();
+    await startSession(host);
+    await host.runCommand("loop", "add first --interval 10 --message m");
+
+    const persisted = host.sessionEntries.at(-1);
+    const before = JSON.stringify(persisted.data);
+
+    // A later restart loads this entry; adding another subscription must not
+    // rewrite the historical entry (branch isolation).
+    const freshHost = createFakeHost();
+    freshHost.sessionEntries.push(...structuredClone(host.sessionEntries));
+    const freshSession = await startSession(freshHost);
+    await freshHost.runCommand("loop", "add second --interval 20 --message m");
+
+    assert.equal(JSON.stringify(persisted.data), before, "historical session entry must stay untouched");
+    void freshSession;
+  });
+
+  it("list states are explicit about empty configuration", async () => {
+    const host = createFakeHost();
+    await startSession(host);
+
+    await host.runCommand("watch", "list");
+    assert.match(host.notifications.at(-1).message, /no watches configured/);
+  });
+});
+
+describe("ace-wake delivery", () => {
+  it("always delivers wakes as queued follow-ups", async () => {
+    const host = createFakeHost();
+    const session = await startSession(host);
+    await host.runCommand("loop", "add heartbeat --interval 10 --message check in");
+
+    // Follow-up delivery runs immediately when idle and queues behind any
+    // active run otherwise; the constant shape leaves no window that could
+    // send a direct message Pi would reject.
+    host.clock.advance(10_000);
+
+    assert.equal(host.sends.length, 1);
+    const send = host.assertFollowUpDelivery("text:0");
+    assert.equal(send.text, "[ace-wake loop:heartbeat] check in");
+
+    host.clock.advance(10_000);
+    assert.equal(host.sends.length, 1, "same-source wakes coalesce while one is pending");
+
+    await session.settle();
+    host.clock.advance(10_000);
+    assert.equal(host.sends.length, 2, "after settlement the source wakes again");
+  });
+
+  it("bounds the complete rendered wake message including the source prefix", async () => {
+    const host = createFakeHost();
+    await startSession(host);
+    const longMessage = "y".repeat(MAX_WAKE_MESSAGE_CHARS + 500);
+
+    await host.runCommand("loop", `add big --interval 10 --message ${longMessage}`);
+    host.clock.advance(10_000);
+
+    assert.equal(host.sends.length, 1);
+    assert.equal(
+      host.sends[0].text.length,
+      MAX_WAKE_MESSAGE_CHARS,
+      "the composed message, prefix and truncation marker included, must not exceed the bound",
+    );
+    await host.runCommand("loop", "remove big");
+  });
+
+  it("re-delivers a watch change absorbed by a pending wake after settlement", async () => {
+    const host = createFakeHost();
+    const session = await startSession(host);
+    host.setFile("/fake/project/dep.txt", { mtimeMs: 1, size: 1 });
+    await host.runCommand("watch", "add dep --path dep.txt --message watch wake");
+
+    // First change wakes; second change during the wake's run coalesces.
+    host.setFile("/fake/project/dep.txt", { mtimeMs: 2, size: 2 });
+    host.triggerWatch("/fake/project/dep.txt");
+    assert.equal(host.sends.length, 1);
+    host.setFile("/fake/project/dep.txt", { mtimeMs: 3, size: 3 });
+    host.triggerWatch("/fake/project/dep.txt");
+    assert.equal(host.sends.length, 1, "the second change coalesces into the pending wake");
+
+    // Settlement re-checks dirty watches: the absorbed change wakes again
+    // without any further filesystem event.
+    await session.settle();
+    assert.equal(host.sends.length, 2, "the absorbed change must wake after settlement");
+    assert.match(host.sends[1].text, /watch:dep/);
+  });
+
+  it("retains wakes during compaction and flushes them after compaction state clears", async () => {
+    const host = createFakeHost();
+    const session = await startSession(host);
+    await host.runCommand("loop", "add heartbeat --interval 10 --message check in");
+
+    await session.beforeCompact();
+    host.clock.advance(10_000);
+    host.clock.advance(10_000);
+    assert.equal(host.sends.length, 0, "wakes during compaction are retained, not dispatched");
+
+    await session.compacted();
+    // Pi clears its compaction state after the session_compact emission; the
+    // flush is deferred to a macrotask so it lands once sends are accepted.
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    assert.equal(host.sends.length, 1, "the retained wake flushes after compaction");
+    host.assertFollowUpDelivery("text:0");
+
+    // The flushed wake runs and settles like any other; the next tick wakes
+    // normally: nothing is stranded pending.
+    await session.settle();
+    host.clock.advance(10_000);
+    assert.equal(host.sends.length, 2);
+  });
+
+  it("flushes retained wakes when compaction fails", async () => {
+    const host = createFakeHost();
+    const session = await startSession(host);
+    await host.runCommand("loop", "add heartbeat --interval 10 --message check in");
+
+    await session.beforeCompact();
+    host.clock.advance(10_000);
+    assert.equal(host.sends.length, 0);
+
+    await session.compactFailed();
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    assert.equal(host.sends.length, 1, "retained wakes flush after failed compaction too");
+  });
+
+  it("leaves pending wakes untouched across automatic compaction", async () => {
+    const host = createFakeHost();
+    const session = await startSession(host);
+    host.setFile("/fake/project/dep.txt", { mtimeMs: 1, size: 1 });
+    await host.runCommand("watch", "add dep --path dep.txt --message watch wake");
+
+    // The wake is pending (its turn is executing) when automatic compaction
+    // (context threshold) fires mid-run: retention must not kick in and the
+    // flush must not replay the already accepted wake.
+    host.setFile("/fake/project/dep.txt", { mtimeMs: 2, size: 2 });
+    host.triggerWatch("/fake/project/dep.txt");
+    assert.equal(host.sends.length, 1);
+
+    await session.beforeCompact("threshold");
+    await session.compacted("threshold");
+    await new Promise((resolve) => setTimeout(resolve, 20));
+
+    assert.equal(host.sends.length, 1, "automatic compaction must not replay the accepted wake");
+    await session.settle();
+  });
+
+  it("reconciles a timer wake stranded by the pre-compaction rejection window", async () => {
+    const host = createFakeHost();
+    const session = await startSession(host);
+    await host.runCommand("loop", "add heartbeat --interval 10 --message check in");
+
+    // The wake dispatches before any compaction event fires (Pi rejects
+    // prompts while resolving compaction authentication, before
+    // session_before_compact), so it is pending but never consumed.
+    host.clock.advance(10_000);
+    assert.equal(host.sends.length, 1);
+
+    // The compaction outcome reconciles unacknowledged attempts even though
+    // nothing was retained.
+    await session.compacted();
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    assert.equal(host.sends.length, 2, "the stranded attempt must re-dispatch after compaction");
+    await session.settle();
+  });
+
+  it("reconciles a stranded watch wake after compaction without a new filesystem event", async () => {
+    const host = createFakeHost();
+    const session = await startSession(host);
+    host.setFile("/fake/project/dep.txt", { mtimeMs: 1, size: 1 });
+    await host.runCommand("watch", "add dep --path dep.txt --message watch wake");
+
+    // The watch wake dispatches into the pre-compaction rejection window:
+    // pending, never consumed, and not dirty (the change was fingerprinted).
+    host.setFile("/fake/project/dep.txt", { mtimeMs: 2, size: 2 });
+    host.triggerWatch("/fake/project/dep.txt");
+    assert.equal(host.sends.length, 1);
+
+    await session.compactFailed();
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    assert.equal(host.sends.length, 2, "the stranded watch wake must re-dispatch after compaction");
+    await session.settle();
+  });
+
+  it("does not deliver a removed subscription's message through its replacement", async () => {
+    const host = createFakeHost();
+    const reconciles = [];
+    const hostPorts = {
+      setIntervalFn: host.setIntervalFn,
+      clearIntervalFn: host.clearIntervalFn,
+      watchFactory: host.watchFactory,
+      statFn: host.statFn,
+      scheduleReconcile: (reconcile) => reconciles.push(reconcile),
+    };
+    const events = [];
+    host.pi.on = (event, handler) => {
+      events.push([event, handler]);
+      return () => {};
+    };
+    aceWakeFactory(host.pi, hostPorts);
+    const start = events.find(([name]) => name === "session_start");
+    await start[1]({ type: "session_start", reason: "startup" }, host.commandContext);
+
+    host.setFile("/fake/project/dep.txt", { mtimeMs: 1, size: 1 });
+    await host.runCommand("watch", "add dep --path dep.txt --message old message");
+    const staleReconcile = reconciles.at(-1);
+
+    // Remove and re-add with a new message before the old reconcile runs.
+    await host.runCommand("watch", "remove dep");
+    host.setFile("/fake/project/dep.txt", { mtimeMs: 2, size: 2 });
+    await host.runCommand("watch", "add dep --path dep.txt --message new message");
+    host.setFile("/fake/project/dep.txt", { mtimeMs: 3, size: 3 });
+
+    staleReconcile();
+    assert.equal(host.sends.length, 0, "the stale reconcile must not deliver or suppress anything");
+
+    // The replacement's own reconcile delivers the new message.
+    reconciles.at(-1)();
+    assert.equal(host.sends.length, 1);
+    assert.match(host.sends[0].text, /new message/);
+  });
+
+  it("does not flush a retained wake for a subscription removed while delivery is paused", async () => {
+    const host = createFakeHost();
+    const session = await startSession(host);
+    await host.runCommand("loop", "add heartbeat --interval 10 --message check in");
+
+    await session.beforeCompact();
+    host.clock.advance(10_000);
+    await host.runCommand("loop", "remove heartbeat");
+
+    await session.compactFailed();
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    assert.equal(host.sends.length, 0, "removal must cancel the retained wake");
+  });
+
+  it("flushes a watch deferred by the delivery window once the run starts", async () => {
+    const host = createFakeHost();
+    host.setFile("/fake/project/dep.txt", { mtimeMs: 1, size: 1 });
+    const session = await startSession(host);
+    await host.runCommand("loop", "add heartbeat --interval 10 --message loop wake");
+    await host.runCommand("watch", "add dep --path dep.txt --message watch wake");
+
+    // The loop wake crosses the idle-to-running transition; the watch change
+    // arriving inside that window defers as dirty instead of queueing.
+    host.clock.advance(10_000);
+    host.setFile("/fake/project/dep.txt", { mtimeMs: 2, size: 2 });
+    host.triggerWatch("/fake/project/dep.txt");
+    assert.equal(host.sends.length, 1, "only the loop wake has crossed so far");
+
+    // The run starts: follow-ups are queue-safe now, so the deferred watch
+    // delivers without waiting for a full settlement.
+    host.setIdle(false);
+    session.agentStart();
+    assert.equal(host.sends.length, 2, "the deferred watch queues once the run starts");
+    assert.match(host.sends[1].text, /watch:dep/);
+
+    host.setIdle(true);
+    await session.settle();
+  });
+
+  it("recovers every stranded watch wake after compaction, not only the first", async () => {
+    const host = createFakeHost();
+    host.setFile("/fake/project/a.txt", { mtimeMs: 1, size: 1 });
+    host.setFile("/fake/project/b.txt", { mtimeMs: 1, size: 1 });
+    const session = await startSession(host);
+    await host.runCommand("watch", "add a --path a.txt --message a changed");
+    await host.runCommand("watch", "add b --path b.txt --message b changed");
+
+    // Both wakes dispatch before compaction begins — a across the idle
+    // window, b into the active run — so both fingerprints advance and both
+    // attempts strand when compaction preflight rejects the sends.
+    host.setFile("/fake/project/a.txt", { mtimeMs: 2, size: 2 });
+    host.triggerWatch("/fake/project/a.txt");
+    host.setIdle(false);
+    host.setFile("/fake/project/b.txt", { mtimeMs: 2, size: 2 });
+    host.triggerWatch("/fake/project/b.txt");
+    assert.equal(host.sends.length, 2);
+
+    host.setIdle(true);
+    await session.beforeCompact();
+    await session.compactFailed();
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    assert.equal(host.sends.length, 3, "the first stranded watch re-fires at the resume boundary");
+
+    await session.settle();
+    assert.equal(host.sends.length, 4, "the second stranded watch re-fires at the settlement boundary");
+    const recovered = host.sends.slice(2).map((send) => send.text);
+    assert.ok(recovered.some((text) => text.includes("watch:a")));
+    assert.ok(recovered.some((text) => text.includes("watch:b")));
+  });
+
+  it("serializes concurrent distinct sources across the delivery transition", async () => {
+    const host = createFakeHost();
+    const session = await startSession(host);
+    host.setFile("/fake/project/dep.txt", { mtimeMs: 1, size: 1 });
+    await host.runCommand("loop", "add heartbeat --interval 10 --message loop wake");
+    await host.runCommand("watch", "add dep --path dep.txt --message watch wake");
+
+    // The loop wake crosses the idle-to-running transition; the watch wake
+    // arriving inside that window is serialized, not sent concurrently.
+    host.clock.advance(10_000);
+    host.setFile("/fake/project/dep.txt", { mtimeMs: 2, size: 2 });
+    host.triggerWatch("/fake/project/dep.txt");
+    host.setFile("/fake/project/dep.txt", { mtimeMs: 3, size: 3 });
+    host.triggerWatch("/fake/project/dep.txt");
+
+    assert.equal(host.sends.length, 1, "only the first wake crosses the transition window");
+    assert.match(host.sends[0].text, /loop:heartbeat/);
+
+    // Settlement closes the window: the serialized watch wake drains (its
+    // absorbed repeat stays coalesced), and later changes wake normally.
+    await session.settle();
+    assert.equal(host.sends.length, 2);
+    assert.match(host.sends[1].text, /watch:dep/);
+
+    // The drained wake's own turn settles, then the next change wakes again.
+    await session.settle();
+    host.setFile("/fake/project/dep.txt", { mtimeMs: 4, size: 4 });
+    host.triggerWatch("/fake/project/dep.txt");
+    assert.equal(host.sends.length, 3, "the source may wake again after the agent settled");
+  });
+
+  it("re-attempts unacknowledged loop wakes after the recovery window", async () => {
+    const host = createFakeHost();
+    // The fake host accepts the send synchronously (like Pi's void API) but
+    // rejects it in async preflight: nothing enters Pi's message queue and
+    // no lifecycle event ever fires. Wake semantics prefer redelivery over
+    // loss, so recovery releases the attempt and the next tick re-sends.
+    const session = await startSession(host, { dispatchRecoveryMs: 20 });
+    await host.runCommand("loop", "add heartbeat --interval 10 --message check in");
+    await host.runCommand("loop", "add other --interval 10 --message other wake");
+
+    host.clock.advance(10_000);
+    assert.equal(host.sends.length, 1, "the first wake dispatches");
+
+    await new Promise((resolve) => setTimeout(resolve, 40));
+    host.clock.advance(10_000);
+    assert.ok(host.sends.length >= 2, "ticks re-attempt after the recovery window");
+
+    await session.settle();
+  });
+
+  it("does not duplicate a queued follow-up while a run outlasts the recovery window", async () => {
+    const host = createFakeHost();
+    const session = await startSession(host, { dispatchRecoveryMs: 20 });
+    await host.runCommand("loop", "add heartbeat --interval 10 --message check in");
+
+    // The wake queues as a follow-up and the run keeps going well past the
+    // recovery window: the queued wake is legitimate (Pi holds it in its
+    // queue) and must not be invalidated.
+    host.setIdle(false);
+    host.clock.advance(10_000);
+    host.setPendingMessages(true);
+    assert.equal(host.sends.length, 1);
+    await new Promise((resolve) => setTimeout(resolve, 60));
+    host.clock.advance(10_000);
+    assert.equal(host.sends.length, 1, "the queued wake stays pending while the run is active");
+
+    // The run finishes; the queued wake is consumed normally.
+    host.setIdle(true);
+    host.setPendingMessages(false);
+    await session.settle();
+    host.clock.advance(10_000);
+    assert.equal(host.sends.length, 2, "delivery resumes normally after the run");
+  });
+
+  it("recovers when the host has no model and stops blocking later ticks", async () => {
+    const host = createFakeHost();
+    const session = await startSession(host);
+    await host.runCommand("loop", "add heartbeat --interval 10 --message check in");
+
+    // Without a selected model Pi rejects prompts asynchronously; the wake
+    // must be refused (not marked pending) so recovery needs no settlement.
+    host.commandContext.model = undefined;
+    host.clock.advance(10_000);
+    assert.equal(host.sends.length, 0);
+
+    host.commandContext.model = { provider: "wake-test", id: "wake-model" };
+    host.clock.advance(10_000);
+    assert.equal(host.sends.length, 1, "the next tick delivers once a model exists");
+    await session.settle();
+  });
+
+  it("retries a refused watch wake after a model is selected, without any further event", async () => {
+    const host = createFakeHost();
+    const session = await startSession(host, { dispatchRecoveryMs: 20 });
+    host.setFile("/fake/project/dep.txt", { mtimeMs: 1, size: 1 });
+    await host.runCommand("watch", "add dep --path dep.txt --message changed");
+
+    // Without a model the wake is refused; unlike a loop there is no next
+    // tick, so only the retry timer can deliver the change.
+    host.commandContext.model = undefined;
+    host.setFile("/fake/project/dep.txt", { mtimeMs: 2, size: 2 });
+    host.triggerWatch("/fake/project/dep.txt");
+    assert.equal(host.sends.length, 0);
+
+    host.commandContext.model = { provider: "wake-test", id: "wake-model" };
+    host.setIdle(false);
+    await new Promise((resolve) => setTimeout(resolve, 60));
+
+    assert.equal(host.sends.length, 1, "the retry timer delivers the change with no further event");
+    host.setIdle(true);
+    await session.settle();
+  });
+
+  it("delivers concurrent sources immediately while a run is already active", async () => {
+    const host = createFakeHost();
+    const session = await startSession(host);
+    await host.runCommand("loop", "add a --interval 10 --message a wake");
+    await host.runCommand("loop", "add b --interval 10 --message b wake");
+
+    // A run is already streaming: follow-up delivery is queue-safe, so both
+    // sources deliver without waiting for a settlement — no agent_start
+    // ever fires for follow-ups queued behind an active run.
+    host.setIdle(false);
+    host.clock.advance(10_000);
+
+    assert.equal(host.sends.length, 2, "both sources deliver into the active run");
+    assert.match(host.sends[0].text, /loop:a/);
+    assert.match(host.sends[1].text, /loop:b/);
+
+    // The run settles and consumes both queued wakes without replaying them.
+    host.setIdle(true);
+    host.setPendingMessages(false);
+    await session.settle();
+    assert.equal(host.sends.length, 2, "settlement must not replay the queued wakes");
+  });
+
+  it("keeps same-source repeats coalesced while a dispatch is in flight", async () => {
+    const host = createFakeHost();
+    const session = await startSession(host);
+    await host.runCommand("loop", "add heartbeat --interval 10 --message check in");
+
+    // The first tick dispatches; until a run start or settlement confirms
+    // the attempt, same-source repeats coalesce behind it.
+    host.clock.advance(10_000);
+    assert.equal(host.sends.length, 1);
+
+    host.clock.advance(10_000);
+    assert.equal(host.sends.length, 1, "the repeat coalesces behind the in-flight dispatch");
+    await session.settle();
+  });
+
+  it("replays multiple stranded watch wakes serialized after compaction", async () => {
+    const host = createFakeHost();
+    host.setFile("/fake/project/a.txt", { mtimeMs: 1, size: 1 });
+    host.setFile("/fake/project/b.txt", { mtimeMs: 1, size: 1 });
+    const session = await startSession(host);
+    await host.runCommand("watch", "add a --path a.txt --message a changed");
+    await host.runCommand("watch", "add b --path b.txt --message b changed");
+
+    await session.beforeCompact("manual");
+    host.setFile("/fake/project/a.txt", { mtimeMs: 2, size: 2 });
+    host.triggerWatch("/fake/project/a.txt");
+    host.setFile("/fake/project/b.txt", { mtimeMs: 2, size: 2 });
+    host.triggerWatch("/fake/project/b.txt");
+    assert.equal(host.sends.length, 0, "wakes during compaction are retained");
+
+    await session.compacted("manual");
+    // The resume boundary delivers the first dirty watch (serialized one per
+    // boundary); the second delivers at the next settlement.
+    assert.equal(host.sends.length, 1, "the first stranded change delivers at the resume boundary");
+    await session.settle();
+    assert.equal(host.sends.length, 2, "the second stranded change delivers at the settlement boundary");
+
+    const texts = host.sends.map((send) => send.text);
+    assert.ok(texts.some((text) => text.includes("watch:a")));
+    assert.ok(texts.some((text) => text.includes("watch:b")));
+  });
+
+  it("/loop remove stops future wakes", async () => {
+    const host = createFakeHost();
+    await startSession(host);
+    await host.runCommand("loop", "add heartbeat --interval 10 --message m");
+
+    host.clock.advance(10_000);
+    assert.equal(host.sends.length, 1);
+    await host.runCommand("loop", "remove heartbeat");
+    host.resetSends();
+
+    host.setIdle(true);
+    host.clock.advance(60_000);
+
+    assert.equal(host.sends.length, 0);
+  });
+});
+
+describe("ace-wake session lifecycle", () => {
+  it("restart reconciles persisted definitions without flooding missed ticks", async () => {
+    const host = createFakeHost();
+    await startSession(host);
+    await host.runCommand("loop", "add heartbeat --interval 10 --message m");
+
+    const freshHost = createFakeHost();
+    freshHost.sessionEntries.push(...structuredClone(host.sessionEntries));
+    await startSession(freshHost);
+
+    assert.equal(freshHost.sends.length, 0, "reconciliation itself wakes nobody");
+    freshHost.clock.advance(9999);
+    assert.equal(freshHost.sends.length, 0, "elapsed wall-clock time is not replayed");
+    freshHost.clock.advance(1);
+    assert.equal(freshHost.sends.length, 1, "the next full interval wakes exactly once");
+  });
+
+  it("reload re-registers each subscription exactly once", async () => {
+    const host = createFakeHost();
+    const session = await startSession(host);
+    await host.runCommand("loop", "add heartbeat --interval 10 --message m");
+
+    await session.reload();
+    host.clock.advance(10_000);
+
+    const loopWakes = host.sends.filter((send) => send.text.includes("loop:heartbeat"));
+    assert.equal(loopWakes.length, 1, "reload must not duplicate timers");
+  });
+
+  it("session shutdown disposes all handles", async () => {
+    const host = createFakeHost();
+    const session = await startSession(host);
+    await host.runCommand("loop", "add heartbeat --interval 10 --message m");
+
+    await session.shutdown();
+    host.setIdle(true);
+    host.clock.advance(60_000);
+
+    assert.equal(host.sends.length, 0);
+  });
+
+  it("shows active subscriptions in the status surface and clears it when empty", async () => {
+    const host = createFakeHost();
+    await startSession(host);
+
+    await host.runCommand("loop", "add heartbeat --interval 30 --message m");
+    const rendered = host.statusRenders.find((render) => render.key === "ace-wake");
+    assert.ok(rendered, "status surface must show active subscriptions");
+    assert.match(rendered.text, /loop heartbeat 30s/);
+
+    await host.runCommand("loop", "remove heartbeat");
+    assert.equal(
+      host.statusRenders.find((render) => render.key === "ace-wake"),
+      undefined,
+      "status cleared when no subscriptions remain",
+    );
+  });
+});

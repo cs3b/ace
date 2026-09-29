@@ -26,6 +26,7 @@ module Ace
                      "(#{result[:projected_skills]} skills, #{result[:updated_files]} updated, " \
                      "#{result[:removed_entries]} removed)"
               line += format_prompts_summary(result) if result.key?(:relative_prompts_dir)
+              line += format_extensions_summary(result) if result.key?(:relative_extensions_dir)
               puts line
             end
             print_inventory_summary(results)
@@ -39,6 +40,12 @@ module Ace
             "; prompts #{result[:relative_prompts_dir]} " \
               "(#{result[:projected_prompts]} prompts, #{result[:updated_prompt_files]} updated, " \
               "#{result[:removed_prompt_entries]} removed)"
+          end
+
+          def format_extensions_summary(result)
+            "; extensions #{result[:relative_extensions_dir]} " \
+              "(#{result[:projected_extensions]} files, #{result[:updated_extension_files]} updated, " \
+              "#{result[:removed_extension_entries]} removed)"
           end
 
           def print_inventory_summary(results)

@@ -4,6 +4,17 @@ All notable changes to ace-handbook-integration-pi will be documented in this fi
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-09-28
+
+### Added
+- Shipped the **ace-wake** Pi extension (`handbook/extensions/ace-wake/index.js`, projected to `.pi/extensions/`): session-scoped `/loop` timers and `/watch` file subscriptions that wake the live agent through queued `sendUserMessage` messages only. Wakes are bounded, source-prefixed, coalesce per source while one is queued, and reach busy agents as queued follow-ups that never interrupt an in-flight tool operation. Concurrent sources deliver into an active run immediately (serialization guards only the idle-to-running transition). Delivery ambiguities from Pi's void `sendUserMessage` resolve toward redelivery over loss: unconfirmed attempts re-fire on a bounded recovery window, and watch changes refused while no model is selected retry on that window without needing another filesystem event. Definitions persist as session entries and reconcile exactly once per session start, reload, or branch switch with no missed-tick replay. No cron, systemd, or external heartbeat dependency.
+- Provider manifest now declares `extensions_dir: .pi/extensions`; `ace-handbook sync` projects extension assets and prunes stale projected files via a projection receipt without touching user-authored extensions.
+- Command flags accept quoted values both after the flag (`--message "check the build"`) and inline (`--message="check the build"`); an unterminated quote fails the command instead of storing a truncated value, while prose apostrophes mid-token stay literal.
+
+### Changed
+- Renamed the backlog-running prompt from `/loop` to `/work-backlog` (template `handbook/prompts/work-backlog.md`) so the timer command owns the `/loop` name. Behavior unchanged; no alias is provided.
+- Package verification now includes the JavaScript wake suite (run on the installed Node runtime) and an installed-extension acceptance scenario inside the real Pi SDK runtime (`test/feat/`).
+
 ## [0.4.0] - 2026-09-27
 
 ### Added

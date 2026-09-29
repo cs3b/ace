@@ -21,7 +21,9 @@
 
 **Consume canonical skills from PI tooling** - keep provider-specific behavior while preserving shared semantics, so agents running under pi-agent get the same skill intent as any other provider.
 
-**Run the in-process overseer loop with `/loop`** - the canonical `handbook/prompts/loop.md` template projects to `.pi/prompts/loop.md` (`ace-handbook sync --provider pi`), giving pi a slash command that cycles the task backlog (select → execute via `as-task-work` → verify → report) inside the pi session itself - no tmux windows or external orchestrator.
+**Run the in-process overseer loop with `/work-backlog`** - the canonical `handbook/prompts/work-backlog.md` template projects to `.pi/prompts/work-backlog.md` (`ace-handbook sync --provider pi`), giving pi a slash command that cycles the task backlog (select → execute via `as-task-work` → verify → report) inside the pi session itself - no tmux windows or external orchestrator.
+
+**Wake idle agents with `/loop` timers and `/watch` file subscriptions** - the bundled ace-wake extension (projected to `.pi/extensions/ace-wake/index.js`) queues bounded wake messages to the live agent through `sendUserMessage` only. Wakes coalesce per source, busy agents receive queued follow-ups instead of interruptions, definitions survive reload/restart with exactly-once re-registration, and there is no cron, systemd, or external heartbeat dependency. See [docs/usage.md](docs/usage.md).
 
 **Keep provider updates constrained** - update projection assets inside this package instead of canonical definitions, keeping changes isolated from [ace-handbook](../ace-handbook).
 
@@ -29,10 +31,11 @@
 
 ## Testing
 
-This package is **fast-only** in the ACE testing model.
+This package ships fast tests plus one installed-extension acceptance level.
 
-- Deterministic test coverage lives under `test/fast/`.
-- This migration does not introduce `test/feat/` or `test/e2e/` for this package.
+- Deterministic coverage (including the JavaScript wake suite run via Node) lives under `test/fast/` and `test/js/`.
+- `test/feat/` runs the ace-wake acceptance scenario against the projected extension inside the real Pi SDK runtime; it requires the `pi` CLI and Node.
+- This package does not introduce `test/e2e/`.
 
 Verification commands:
 

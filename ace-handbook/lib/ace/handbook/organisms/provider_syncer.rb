@@ -1,6 +1,9 @@
 # frozen_string_literal: true
 
 require "fileutils"
+require "json"
+require "pathname"
+require "tempfile"
 require "yaml"
 
 module Ace
@@ -8,6 +11,7 @@ module Ace
     module Organisms
       class ProviderSyncer
         PROJECTION_SOURCE_PREFIX = "ace-handbook-integration-"
+        EXTENSION_RECEIPT_NAME = ".ace-handbook-projection.json"
 
         attr_reader :project_root, :registry, :inventory, :prompt_inventory, :config
 
@@ -36,11 +40,12 @@ module Ace
         private
 
         def sync_provider(provider, skills:, source_breakdown:)
-          skills_result = sync_skills(provider, skills: skills, source_breakdown: source_breakdown)
+          result = sync_skills(provider, skills: skills, source_breakdown: source_breakdown)
           prompts_result = sync_prompts(provider)
-          return skills_result if prompts_result.nil?
-
-          skills_result.merge(prompts_result)
+          result = result.merge(prompts_result) unless prompts_result.nil?
+          extensions_result = sync_extensions(provider)
+          result = result.merge(extensions_result) unless extensions_result.nil?
+          result
         end
 
         def sync_skills(provider, skills:, source_breakdown:)
@@ -171,6 +176,258 @@ module Ace
           stale.size
         end
 
+        # Extension assets project from a package's handbook/extensions/ tree
+        # into the provider manifest's extensions_dir. The target directory may
+        # hold user-authored extensions, so pruning is receipt-based: only files
+        # recorded in the projection receipt from a previous sync are removed.
+        def sync_extensions(provider)
+          extensions_dir = registry.extensions_dir(provider)
+          return nil if extensions_dir.nil? || extensions_dir.to_s.empty?
+
+          source_dir = File.join(registry.package_root(provider), "handbook", "extensions")
+          expected = extension_source_files(source_dir)
+          output_dir = File.join(project_root, extensions_dir)
+          FileUtils.mkdir_p(output_dir)
+
+          receipt = read_projection_receipt(output_dir, provider)
+          # Ownership requires a valid receipt from this projection explicitly
+          # listing the path. A missing, symlinked, or corrupt receipt leaves
+          # ownership unknown: any conflicting destination file is refused so
+          # user-authored extensions can never be overwritten on a guess.
+          owned_paths = receipt&.fetch("files", []) || []
+          reject_unowned_collisions(output_dir, expected.keys, owned_paths)
+
+          # Pruning happens only after the replacement projection committed:
+          # a failed upgrade must leave the previous installation usable.
+          stale_paths = receipt&.fetch("files", [])&.-(expected.keys) || []
+          updated_files = 0
+
+          # Resolve and validate every destination before writing anything: a
+          # failure mid-copy must never leave half a projection behind (files
+          # written before a later validation error would be unowned and wedge
+          # every retry).
+          output_paths = expected.each_with_object({}) do |(relative_path, source_path), map|
+            map[relative_path] = validate_projection_destination(output_dir, relative_path, extensions_dir)
+          end
+
+          newly_created = []
+          saved_originals = {}
+          failed_prunes = []
+          begin
+            output_paths.each do |relative_path, output_path|
+              source_path = expected.fetch(relative_path)
+              FileUtils.mkdir_p(File.dirname(output_path))
+              created = !File.exist?(output_path)
+              # Register before copying: a copy that fails partway (disk
+              # exhaustion) must still roll back the partial file. Overwritten
+              # files are receipt-owned, so rollback restores their previous
+              # content instead of deleting them.
+              saved_originals[output_path] = File.binread(output_path) unless created
+              newly_created << output_path if created
+              next if !created && FileUtils.compare_file(source_path, output_path)
+
+              FileUtils.cp(source_path, output_path)
+              updated_files += 1
+            end
+
+            removed_entries = prune_stale_extension_files(output_dir, stale_paths, failed_prunes, saved_originals)
+            # Stale files whose removal failed keep their ownership until a
+            # later sync manages to delete them.
+            write_projection_receipt(output_dir, provider, expected.keys + failed_prunes)
+          rescue
+            # Roll back so a retry never finds its own partial installation
+            # standing in the way as an unowned collision, and restore the
+            # previous content of overwritten and pruned files — the previous
+            # installation must stay complete and loadable.
+            newly_created.each do |path|
+              FileUtils.rm_f(path)
+            rescue
+              nil
+            end
+            saved_originals.each do |path, content|
+              # Pruned assets restore after pruning emptied and removed their
+              # directories; a path swapped to a symlink mid-sync is never
+              # written through.
+              next if File.symlink?(path)
+
+              FileUtils.mkdir_p(File.dirname(path))
+              File.binwrite(path, content)
+            rescue
+              nil
+            end
+            newly_created.each do |path|
+              remove_empty_parent_dirs(File.dirname(path), output_dir)
+            end
+            raise
+          end
+
+          {
+            relative_extensions_dir: extensions_dir,
+            projected_extensions: expected.size,
+            updated_extension_files: updated_files,
+            removed_extension_entries: removed_entries
+          }
+        end
+
+        # The destination directory may hold user-authored extensions, so a
+        # destination file that exists before the first ACE projection (or one
+        # the receipt does not own) is never overwritten: the sync fails with
+        # a visible error instead of destroying user files.
+        def reject_unowned_collisions(output_dir, expected_relative_paths, owned_paths)
+          expected_relative_paths.each do |relative_path|
+            next if owned_paths.include?(relative_path)
+
+            candidate = safe_projection_path(output_dir, relative_path)
+            next if candidate.nil? || !File.exist?(candidate)
+
+            raise StandardError,
+              "refusing to overwrite existing file #{candidate}; it is not claimed by a valid projection receipt " \
+              "(missing, symlinked, or corrupt receipts claim nothing). Move or remove the file — or repair or remove " \
+              "#{File.join(output_dir, EXTENSION_RECEIPT_NAME)} — then rerun `ace-handbook sync`."
+          end
+        end
+
+        # Resolve and fully validate a destination before any file is
+        # written: every ancestor must be a directory or creatable (no
+        # regular files, no symlinks), so a mid-copy failure can never leave
+        # a half-installed projection that wedges retries.
+        def validate_projection_destination(output_dir, relative_path, extensions_dir)
+          segments = relative_path.split(File::SEPARATOR)
+          if segments.empty? || segments.any? { |segment| segment.empty? || segment == "." || segment == ".." }
+            raise StandardError, "cannot project #{relative_path.inspect}: invalid destination path"
+          end
+
+          current = Pathname.new(File.realpath(output_dir))
+          segments.each do |segment|
+            current = current.join(segment)
+            if File.symlink?(current.to_s)
+              raise StandardError,
+                "cannot project #{relative_path} into #{extensions_dir}: a symlinked path component would escape the projection directory"
+            end
+            next if segments.last == segment
+
+            if !current.directory? && File.exist?(current.to_s)
+              raise StandardError,
+                "cannot project #{relative_path} into #{extensions_dir}: #{current} exists and is not a directory"
+            end
+          end
+          if File.directory?(current.to_s)
+            # Receipt ownership of a path never authorizes writing through a
+            # directory planted at that path — cp would reinterpret the
+            # destination as a container and overwrite unowned content.
+            raise StandardError,
+              "cannot project #{relative_path} into #{extensions_dir}: #{current} exists and is a directory"
+          end
+          current.to_s
+        rescue Errno::ENOENT
+          raise StandardError, "cannot project #{relative_path} into #{extensions_dir}: projection directory vanished"
+        end
+
+        def extension_source_files(source_dir)
+          return {} unless Dir.exist?(source_dir)
+
+          source_root = Pathname.new(source_dir)
+          Dir.glob(File.join(source_dir, "**", "*"))
+            .select { |path| File.file?(path) }
+            .to_h { |path| [Pathname.new(path).relative_path_from(source_root).to_s, path] }
+        end
+
+        def prune_stale_extension_files(output_dir, stale_relative_paths, failed_prunes, rollback_ledger)
+          stale = stale_relative_paths
+          removed = 0
+          stale.each do |relative_path|
+            contained = safe_projection_path(output_dir, relative_path)
+            next if contained.nil?
+            next unless File.file?(contained)
+
+            begin
+              # Each pruned asset joins the rollback ledger before deletion:
+              # if publication later fails, restoring only overwritten files
+              # would leave the retained previous entrypoint importing a
+              # module that no longer exists.
+              rollback_ledger[contained] = File.binread(contained)
+              FileUtils.rm(contained)
+              removed += 1
+              remove_empty_parent_dirs(File.dirname(contained), output_dir)
+            rescue
+              # Keep ownership of the undeletable file: the next sync retries
+              # the removal instead of forgetting the file belongs to ACE.
+              failed_prunes << relative_path
+            end
+          end
+          removed
+        end
+
+        # Receipt files are projected data, so treat them as untrusted, and
+        # destination paths are resolved on the real filesystem: only plain
+        # relative paths whose every component stays inside output_dir — with
+        # no symlinked component, which could point anywhere — may be written
+        # or pruned.
+        def safe_projection_path(output_dir, relative_path)
+          return nil unless relative_path.is_a?(String)
+          return nil if relative_path.include?("\0")
+
+          segments = relative_path.split(File::SEPARATOR)
+          return nil if segments.empty? || segments.any? { |segment| segment.empty? || segment == "." || segment == ".." }
+
+          current = Pathname.new(File.realpath(output_dir))
+          segments.each do |segment|
+            current = current.join(segment)
+            return nil if File.symlink?(current.to_s)
+          end
+          current.to_s
+        rescue Errno::ENOENT
+          nil
+        end
+
+        def read_projection_receipt(output_dir, provider)
+          receipt_path = File.join(output_dir, EXTENSION_RECEIPT_NAME)
+          return nil if File.symlink?(receipt_path)
+          return nil unless File.file?(receipt_path)
+
+          receipt = JSON.parse(File.read(receipt_path))
+          return nil unless receipt.is_a?(Hash) && receipt["files"].is_a?(Array)
+          # A receipt from another projector (or without provenance) claims
+          # nothing: only our own source marker authorizes overwrites and
+          # pruning.
+          return nil unless receipt["source"] == "#{PROJECTION_SOURCE_PREFIX}#{provider}"
+
+          receipt
+        rescue JSON::ParserError
+          nil
+        end
+
+        def write_projection_receipt(output_dir, provider, relative_paths)
+          receipt_path = File.join(output_dir, EXTENSION_RECEIPT_NAME)
+          # Create the temp file exclusively in the destination directory: a
+          # predictable, plainly-opened temp path could follow a planted
+          # symlink and truncate a file outside the projection. The rename
+          # then replaces any symlink at the receipt path itself.
+          temp = Tempfile.create([".ace-handbook-projection", ".tmp"], output_dir)
+          begin
+            temp.write(JSON.pretty_generate(
+              "source" => "#{PROJECTION_SOURCE_PREFIX}#{provider}",
+              "files" => relative_paths.sort
+            ))
+            temp.close
+            File.rename(temp.path, receipt_path)
+          ensure
+            temp.close
+            FileUtils.rm_f(temp.path)
+          end
+        end
+
+        def remove_empty_parent_dirs(dir, stop_dir)
+          until dir == stop_dir
+            FileUtils.rmdir(dir)
+            dir = File.dirname(dir)
+          end
+        rescue Errno::ENOTEMPTY, Errno::ENOENT
+          # Surviving siblings (or a vanished ancestor) stop the ascent; the
+          # sync must continue writing remaining assets and the receipt.
+          nil
+        end
+
         # The prompts dir is shared with user-authored templates, so only files
         # carrying an ACE integration provenance marker are ever pruned.
         def prune_stale_prompt_files(output_dir, expected_template_names)
@@ -189,7 +446,7 @@ module Ace
 
           frontmatter = YAML.safe_load(match[1], permitted_classes: [Date, Time], aliases: true)
           frontmatter.is_a?(Hash) ? frontmatter["source"].to_s : ""
-        rescue StandardError
+        rescue
           ""
         end
       end

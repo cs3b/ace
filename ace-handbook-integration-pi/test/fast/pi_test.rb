@@ -17,12 +17,12 @@ class Ace::Handbook::Integration::PiTest < Minitest::Test
     assert_equal ".pi/prompts", manifest.fetch("prompts_dir")
   end
 
-  def test_canonical_loop_prompt_template_is_complete
-    template_path = File.expand_path("../../handbook/prompts/loop.md", __dir__)
+  def test_canonical_work_backlog_prompt_template_is_complete
+    template_path = File.expand_path("../../handbook/prompts/work-backlog.md", __dir__)
     content = File.read(template_path)
     match = content.match(/\A---\s*\n(.*?)\n---\s*\n?(.*)\z/m)
 
-    refute_nil match, "loop.md must carry frontmatter"
+    refute_nil match, "work-backlog.md must carry frontmatter"
     frontmatter = YAML.safe_load(match[1], permitted_classes: [Date, Time], aliases: true)
 
     assert_equal "ace-handbook-integration-pi", frontmatter.fetch("source")
@@ -38,7 +38,7 @@ class Ace::Handbook::Integration::PiTest < Minitest::Test
     assert_includes body, "ace-task update"
   end
 
-  def test_loop_template_projects_through_handbook_sync
+  def test_work_backlog_template_projects_through_handbook_sync
     Dir.mktmpdir do |tmpdir|
       integration_root = File.expand_path("../..", __dir__)
       manifest_dir = File.join(tmpdir, "ace-handbook-integration-pi")
@@ -47,9 +47,9 @@ class Ace::Handbook::Integration::PiTest < Minitest::Test
 
       inventory = Ace::Handbook::Organisms::PromptTemplateInventory.new(project_root: tmpdir, gem_roots: [])
       templates = inventory.for_provider("pi")
-      template = templates.find { |candidate| candidate.name == "loop" }
+      template = templates.find { |candidate| candidate.name == "work-backlog" }
 
-      refute_nil template, "loop template must be discovered for the pi provider"
+      refute_nil template, "work-backlog template must be discovered for the pi provider"
       assert File.exist?(template.source_path)
     end
   end

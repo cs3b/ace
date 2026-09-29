@@ -20,6 +20,14 @@ class Ace::Handbook::Organisms::StatusCollectorTest < Minitest::Test
       manifest(provider)["prompts_dir"]
     end
 
+    def extensions_dir(provider)
+      manifest(provider)["extensions_dir"]
+    end
+
+    def package_root(provider)
+      File.join("/fake-packages", "ace-handbook-integration-#{provider}")
+    end
+
     def manifest(provider)
       provider_manifests.fetch(provider.to_s)
     end

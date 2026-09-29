@@ -20,6 +20,14 @@ class Ace::Handbook::Organisms::ProviderSyncerTest < Minitest::Test
     def prompts_dir(provider)
       provider_manifests.fetch(provider.to_s)["prompts_dir"]
     end
+
+    def extensions_dir(provider)
+      provider_manifests.fetch(provider.to_s)["extensions_dir"]
+    end
+
+    def package_root(provider)
+      File.join("/fake-packages", "ace-handbook-integration-#{provider}")
+    end
   end
 
   def setup
@@ -223,6 +231,345 @@ class Ace::Handbook::Organisms::ProviderSyncerTest < Minitest::Test
 
     refute result.key?(:relative_prompts_dir)
     refute Dir.exist?(File.join(@tmpdir, ".codex", "prompts"))
+  end
+
+  def test_sync_projects_extension_assets_into_extensions_dir
+    create_provider_manifest("pi", ".pi/skills", extensions_dir: ".pi/extensions")
+    create_extension_asset("pi", "ace-wake.mjs", "// wake entrypoint\nexport default () => {};\n")
+    create_extension_asset("pi", "wake/helper.mjs", "export const tick = () => 1;\n")
+
+    result = syncer.sync(provider: "pi").first
+
+    assert_equal ".pi/extensions", result.fetch(:relative_extensions_dir)
+    assert_equal 2, result.fetch(:projected_extensions)
+    assert_equal 2, result.fetch(:updated_extension_files)
+    assert_equal 0, result.fetch(:removed_extension_entries)
+    assert_equal "// wake entrypoint\nexport default () => {};\n", File.read(File.join(@tmpdir, ".pi", "extensions", "ace-wake.mjs"))
+    assert File.exist?(File.join(@tmpdir, ".pi", "extensions", "wake", "helper.mjs"))
+
+    receipt = JSON.parse(File.read(File.join(@tmpdir, ".pi", "extensions", ".ace-handbook-projection.json")))
+    assert_equal "ace-handbook-integration-pi", receipt.fetch("source")
+    assert_equal ["ace-wake.mjs", "wake/helper.mjs"], receipt.fetch("files").sort
+
+    second = syncer.sync(provider: "pi").first
+    assert_equal 2, second.fetch(:projected_extensions)
+    assert_equal 0, second.fetch(:updated_extension_files)
+    assert_equal 0, second.fetch(:removed_extension_entries)
+  end
+
+  def test_sync_updates_changed_extension_assets
+    create_provider_manifest("pi", ".pi/skills", extensions_dir: ".pi/extensions")
+    create_extension_asset("pi", "ace-wake.mjs", "export const version = 1;\n")
+
+    syncer.sync(provider: "pi")
+    create_extension_asset("pi", "ace-wake.mjs", "export const version = 2;\n")
+
+    result = syncer.sync(provider: "pi").first
+
+    assert_equal 1, result.fetch(:updated_extension_files)
+    assert_equal "export const version = 2;\n", File.read(File.join(@tmpdir, ".pi", "extensions", "ace-wake.mjs"))
+  end
+
+  def test_sync_prunes_only_receipt_recorded_extension_files
+    create_provider_manifest("pi", ".pi/skills", extensions_dir: ".pi/extensions")
+    create_extension_asset("pi", "ace-wake.mjs", "// current\n")
+
+    syncer.sync(provider: "pi")
+    extensions_dir = File.join(@tmpdir, ".pi", "extensions")
+    stale_dir = File.join(extensions_dir, "wake")
+    FileUtils.mkdir_p(stale_dir)
+    File.write(File.join(stale_dir, "retired.mjs"), "// retired\n")
+    File.write(File.join(extensions_dir, "user-own.mjs"), "// user extension\n")
+    receipt = JSON.parse(File.read(File.join(extensions_dir, ".ace-handbook-projection.json")))
+    receipt["files"] << "wake/retired.mjs"
+    File.write(File.join(extensions_dir, ".ace-handbook-projection.json"), JSON.generate(receipt))
+
+    result = syncer.sync(provider: "pi").first
+
+    assert_equal 1, result.fetch(:removed_extension_entries)
+    refute File.exist?(File.join(stale_dir, "retired.mjs"))
+    refute Dir.exist?(stale_dir)
+    assert File.exist?(File.join(extensions_dir, "user-own.mjs"))
+    assert File.exist?(File.join(extensions_dir, "ace-wake.mjs"))
+  end
+
+  def test_sync_never_prunes_extensions_without_receipt
+    create_provider_manifest("pi", ".pi/skills", extensions_dir: ".pi/extensions")
+    create_extension_asset("pi", "ace-wake.mjs", "// current\n")
+    extensions_dir = File.join(@tmpdir, ".pi", "extensions")
+    FileUtils.mkdir_p(extensions_dir)
+    File.write(File.join(extensions_dir, "pre-existing.mjs"), "// unknown origin\n")
+
+    result = syncer.sync(provider: "pi").first
+
+    assert_equal 0, result.fetch(:removed_extension_entries)
+    assert File.exist?(File.join(extensions_dir, "pre-existing.mjs"))
+  end
+
+  def test_sync_prunes_stale_file_even_when_sibling_directory_keeps_files
+    create_provider_manifest("pi", ".pi/skills", extensions_dir: ".pi/extensions")
+    create_extension_asset("pi", "ace-wake.mjs", "// current\n")
+
+    syncer.sync(provider: "pi")
+    extensions_dir = File.join(@tmpdir, ".pi", "extensions")
+    FileUtils.mkdir_p(File.join(extensions_dir, "wake"))
+    File.write(File.join(extensions_dir, "wake", "retired.mjs"), "// retired\n")
+    File.write(File.join(extensions_dir, "wake", "keeper.mjs"), "// kept\n")
+    receipt = JSON.parse(File.read(File.join(extensions_dir, ".ace-handbook-projection.json")))
+    receipt["files"] << "wake/retired.mjs"
+    File.write(File.join(extensions_dir, ".ace-handbook-projection.json"), JSON.generate(receipt))
+
+    result = syncer.sync(provider: "pi").first
+
+    assert_equal 1, result.fetch(:removed_extension_entries)
+    refute File.exist?(File.join(extensions_dir, "wake", "retired.mjs"))
+    assert File.exist?(File.join(extensions_dir, "wake", "keeper.mjs"))
+    assert_equal 0, result.fetch(:updated_extension_files), "sync must complete after partial pruning"
+    assert File.exist?(File.join(extensions_dir, "ace-wake.mjs"))
+  end
+
+  def test_sync_ignores_receipt_paths_outside_the_projection_directory
+    create_provider_manifest("pi", ".pi/skills", extensions_dir: ".pi/extensions")
+    create_extension_asset("pi", "ace-wake.mjs", "// current\n")
+
+    syncer.sync(provider: "pi")
+    extensions_dir = File.join(@tmpdir, ".pi", "extensions")
+    victim = File.join(@tmpdir, ".pi", "victim.txt")
+    File.write(victim, "do not delete")
+    receipt = JSON.parse(File.read(File.join(extensions_dir, ".ace-handbook-projection.json")))
+    receipt["files"] += ["../victim.txt", "/etc/hostname", "sub/../../escape.txt"]
+    File.write(File.join(extensions_dir, ".ace-handbook-projection.json"), JSON.generate(receipt))
+
+    result = syncer.sync(provider: "pi").first
+
+    assert File.exist?(victim), "receipt traversal must never delete outside the projection dir"
+    assert_equal 0, result.fetch(:removed_extension_entries), "traversal entries are never removed"
+    assert File.exist?(File.join(extensions_dir, "ace-wake.mjs"))
+  end
+
+  def test_sync_never_writes_through_a_symlinked_receipt
+    create_provider_manifest("pi", ".pi/skills", extensions_dir: ".pi/extensions")
+    create_extension_asset("pi", "ace-wake.mjs", "// current\n")
+
+    syncer.sync(provider: "pi")
+    extensions_dir = File.join(@tmpdir, ".pi", "extensions")
+    outside = File.join(@tmpdir, "outside")
+    FileUtils.mkdir_p(outside)
+    victim = File.join(outside, "victim.txt")
+    File.write(victim, "precious content")
+    receipt_path = File.join(extensions_dir, ".ace-handbook-projection.json")
+    FileUtils.rm_f(receipt_path)
+    FileUtils.ln_s(victim, receipt_path)
+
+    # An unreadable receipt claims nothing, so the projection refuses rather
+    # than guessing ownership — and never writes through the symlink.
+    error = assert_raises(StandardError) { syncer.sync(provider: "pi") }
+
+    assert_includes error.message, "refusing to overwrite"
+    assert_equal "precious content", File.read(victim), "the receipt write must truncate the symlink target"
+    assert File.symlink?(receipt_path), "the refused sync must leave the receipt untouched"
+  end
+
+  def test_sync_refuses_conflicting_writes_when_the_receipt_is_corrupt
+    create_provider_manifest("pi", ".pi/skills", extensions_dir: ".pi/extensions")
+    create_extension_asset("pi", "ace-wake/index.js", "export const v = 1;\n")
+    extensions_dir = File.join(@tmpdir, ".pi", "extensions")
+    FileUtils.mkdir_p(File.join(extensions_dir, "ace-wake"))
+    File.write(File.join(extensions_dir, "ace-wake", "index.js"), "\"user content\"")
+    File.write(File.join(extensions_dir, ".ace-handbook-projection.json"), "{ not json")
+
+    error = assert_raises(StandardError) { syncer.sync(provider: "pi") }
+
+    assert_includes error.message, "refusing to overwrite"
+    assert_equal "\"user content\"", File.read(File.join(extensions_dir, "ace-wake", "index.js"))
+  end
+
+  def test_sync_ignores_receipts_from_a_foreign_source
+    create_provider_manifest("pi", ".pi/skills", extensions_dir: ".pi/extensions")
+    create_extension_asset("pi", "ace-wake/index.js", "export const v = 1;\n")
+    extensions_dir = File.join(@tmpdir, ".pi", "extensions")
+    FileUtils.mkdir_p(File.join(extensions_dir, "ace-wake"))
+    File.write(File.join(extensions_dir, "ace-wake", "index.js"), "\"user content\"")
+    File.write(File.join(extensions_dir, ".ace-handbook-projection.json"), JSON.generate(
+      "source" => "different-projector",
+      "files" => ["ace-wake/index.js"]
+    ))
+
+    error = assert_raises(StandardError) { syncer.sync(provider: "pi") }
+
+    assert_includes error.message, "refusing to overwrite"
+    assert_equal "\"user content\"", File.read(File.join(extensions_dir, "ace-wake", "index.js")),
+      "a foreign receipt must not authorize overwrites"
+  end
+
+  def test_failed_projection_writes_nothing_and_retry_succeeds
+    create_provider_manifest("pi", ".pi/skills", extensions_dir: ".pi/extensions")
+    create_extension_asset("pi", "ace-wake/a.js", "// a" + "\n")
+    create_extension_asset("pi", "ace-wake/z/index.js", "// z" + "\n")
+    extensions_dir = File.join(@tmpdir, ".pi", "extensions")
+    outside = File.join(@tmpdir, "outside")
+    FileUtils.mkdir_p(outside)
+    FileUtils.mkdir_p(File.join(extensions_dir, "ace-wake"))
+    FileUtils.ln_s(outside, File.join(extensions_dir, "ace-wake", "z"))
+
+    error = assert_raises(StandardError) { syncer.sync(provider: "pi") }
+
+    assert_includes error.message, "symlinked path component"
+    refute File.exist?(File.join(extensions_dir, "ace-wake", "a.js")),
+      "a failed projection must not leave partially installed files behind"
+
+    # After the obstacle is removed, the retry succeeds without manual cleanup.
+    FileUtils.rm_f(File.join(extensions_dir, "ace-wake", "z"))
+    result = syncer.sync(provider: "pi").first
+    assert_equal 2, result.fetch(:projected_extensions)
+    assert File.exist?(File.join(extensions_dir, "ace-wake", "a.js"))
+    assert File.exist?(File.join(extensions_dir, "ace-wake", "z", "index.js"))
+  end
+
+  def test_failed_projection_recovers_after_removing_blocking_ancestor_file
+    create_provider_manifest("pi", ".pi/skills", extensions_dir: ".pi/extensions")
+    create_extension_asset("pi", "ace-wake/a.js", "// a" + "\n")
+    create_extension_asset("pi", "ace-wake/z/index.js", "// z" + "\n")
+    extensions_dir = File.join(@tmpdir, ".pi", "extensions")
+    FileUtils.mkdir_p(File.join(extensions_dir, "ace-wake"))
+    File.write(File.join(extensions_dir, "ace-wake", "z"), "blocking file")
+
+    error = assert_raises(StandardError) { syncer.sync(provider: "pi") }
+
+    assert_includes error.message, "exists and is not a directory"
+    refute File.exist?(File.join(extensions_dir, "ace-wake", "a.js")),
+      "a failed projection must not leave partially installed files behind"
+
+    FileUtils.rm_f(File.join(extensions_dir, "ace-wake", "z"))
+    result = syncer.sync(provider: "pi").first
+    assert_equal 2, result.fetch(:projected_extensions)
+    assert File.exist?(File.join(extensions_dir, "ace-wake", "a.js"))
+    assert File.exist?(File.join(extensions_dir, "ace-wake", "z", "index.js"))
+  end
+
+  def test_mid_copy_failure_rolls_back_and_retry_succeeds
+    create_provider_manifest("pi", ".pi/skills", extensions_dir: ".pi/extensions")
+    create_extension_asset("pi", "ace-wake/a.js", "// a" + "\n")
+    create_extension_asset("pi", "ace-wake/z/b.js", "// b" + "\n")
+    extensions_dir = File.join(@tmpdir, ".pi", "extensions")
+    # A directory named b.js makes the second copy fail (EISDIR).
+    FileUtils.mkdir_p(File.join(extensions_dir, "ace-wake", "z", "b.js"))
+
+    assert_raises(StandardError) { syncer.sync(provider: "pi") }
+
+    refute File.exist?(File.join(extensions_dir, "ace-wake", "a.js")),
+      "newly created files must roll back when a later copy fails"
+
+    # After the obstruction is removed, the retry succeeds cleanly.
+    FileUtils.rm_rf(File.join(extensions_dir, "ace-wake", "z"))
+    result = syncer.sync(provider: "pi").first
+    assert_equal 2, result.fetch(:projected_extensions)
+    assert File.exist?(File.join(extensions_dir, "ace-wake", "a.js"))
+    assert File.exist?(File.join(extensions_dir, "ace-wake", "z", "b.js"))
+  end
+
+  def test_receipt_failure_after_pruning_restores_deleted_assets
+    create_provider_manifest("pi", ".pi/skills", extensions_dir: ".pi/extensions")
+    create_extension_asset("pi", "ace-wake/index.js", "import \"./old.js\";\n")
+    create_extension_asset("pi", "ace-wake/old.js", "// old module\n")
+
+    syncer.sync(provider: "pi")
+
+    # The upgrade drops old.js; receipt publication fails only after the
+    # stale module was already pruned.
+    create_extension_asset("pi", "ace-wake/index.js", "// new entrypoint\n")
+    remove_extension_asset("pi", "ace-wake/old.js")
+
+    syncer.stub(:write_projection_receipt, ->(*_args) { raise Errno::ENOSPC }) do
+      assert_raises(Errno::ENOSPC) { syncer.sync(provider: "pi") }
+    end
+
+    extensions_dir = File.join(@tmpdir, ".pi", "extensions")
+    assert_equal "// old module\n", File.read(File.join(extensions_dir, "ace-wake", "old.js")),
+      "pruned assets must come back when receipt publication fails"
+    assert_equal "import \"./old.js\";\n", File.read(File.join(extensions_dir, "ace-wake", "index.js")),
+      "the overwritten entrypoint must keep its previous content"
+
+    # The retry then completes the upgrade cleanly.
+    result = syncer.sync(provider: "pi").first
+    assert_equal 1, result.fetch(:removed_extension_entries)
+    refute File.exist?(File.join(extensions_dir, "ace-wake", "old.js"))
+    assert_equal "// new entrypoint\n", File.read(File.join(extensions_dir, "ace-wake", "index.js"))
+  end
+
+  def test_receipt_failure_after_pruning_restores_the_pruned_directory
+    create_provider_manifest("pi", ".pi/skills", extensions_dir: ".pi/extensions")
+    create_extension_asset("pi", "ace-wake/index.js", "// current\n")
+    create_extension_asset("pi", "ace-wake/nested/old.js", "// retired\n")
+
+    syncer.sync(provider: "pi")
+
+    remove_extension_asset("pi", "ace-wake/nested/old.js")
+
+    syncer.stub(:write_projection_receipt, ->(*_args) { raise Errno::ENOSPC }) do
+      assert_raises(Errno::ENOSPC) { syncer.sync(provider: "pi") }
+    end
+
+    extensions_dir = File.join(@tmpdir, ".pi", "extensions")
+    assert_equal "// retired\n", File.read(File.join(extensions_dir, "ace-wake", "nested", "old.js")),
+      "a pruned asset restores into its re-created directory"
+  end
+
+  def test_sync_rejects_receipt_paths_through_symlinked_components
+    create_provider_manifest("pi", ".pi/skills", extensions_dir: ".pi/extensions")
+    create_extension_asset("pi", "ace-wake.mjs", "// current\n")
+
+    syncer.sync(provider: "pi")
+    extensions_dir = File.join(@tmpdir, ".pi", "extensions")
+    outside = File.join(@tmpdir, "outside")
+    FileUtils.mkdir_p(outside)
+    victim = File.join(outside, "victim.txt")
+    File.write(victim, "do not delete")
+    FileUtils.ln_s(outside, File.join(extensions_dir, "linked"))
+    receipt = JSON.parse(File.read(File.join(extensions_dir, ".ace-handbook-projection.json")))
+    receipt["files"] << "linked/victim.txt"
+    File.write(File.join(extensions_dir, ".ace-handbook-projection.json"), JSON.generate(receipt))
+
+    result = syncer.sync(provider: "pi").first
+
+    assert File.exist?(victim), "symlinked receipt components must never delete outside the projection dir"
+    assert_equal 0, result.fetch(:removed_extension_entries)
+    assert File.exist?(File.join(extensions_dir, "ace-wake.mjs"))
+  end
+
+  def test_sync_refuses_to_overwrite_unowned_destination_files
+    create_provider_manifest("pi", ".pi/skills", extensions_dir: ".pi/extensions")
+    create_extension_asset("pi", "ace-wake/package.json", "{\"type\": \"module\"}\n")
+    extensions_dir = File.join(@tmpdir, ".pi", "extensions")
+    FileUtils.mkdir_p(File.join(extensions_dir, "ace-wake"))
+    File.write(File.join(extensions_dir, "ace-wake", "package.json"), "{\"dependencies\": {\"user-pkg\": \"1.0.0\"}}\n")
+
+    error = assert_raises(StandardError) { syncer.sync(provider: "pi") }
+
+    assert_includes error.message, "refusing to overwrite"
+    assert_includes error.message, "not claimed by a valid projection receipt"
+    assert_equal "{\"dependencies\": {\"user-pkg\": \"1.0.0\"}}\n", File.read(File.join(extensions_dir, "ace-wake", "package.json"))
+  end
+
+  def test_sync_updates_owned_files_on_repeat_projections
+    create_provider_manifest("pi", ".pi/skills", extensions_dir: ".pi/extensions")
+    create_extension_asset("pi", "ace-wake/index.js", "export const v = 1;\n")
+
+    syncer.sync(provider: "pi")
+    create_extension_asset("pi", "ace-wake/index.js", "export const v = 2;\n")
+    result = syncer.sync(provider: "pi").first
+
+    assert_equal 1, result.fetch(:updated_extension_files), "receipt-owned files are updated freely"
+    assert_equal "export const v = 2;\n", File.read(File.join(@tmpdir, ".pi", "extensions", "ace-wake", "index.js"))
+  end
+
+  def test_sync_skips_extension_projection_without_extensions_dir
+    create_extension_asset("codex", "ace-wake.mjs", "// codex extension\n")
+
+    result = syncer.sync(provider: "codex").first
+
+    refute result.key?(:relative_extensions_dir)
+    refute Dir.exist?(File.join(@tmpdir, ".codex", "extensions"))
   end
 
   def test_all_provider_projections_are_consistent_and_idempotent
@@ -517,12 +864,23 @@ class Ace::Handbook::Organisms::ProviderSyncerTest < Minitest::Test
     %w[agents claude codex gemini opencode pi]
   end
 
-  def create_provider_manifest(provider, output_dir, prompts_dir: nil)
+  def create_provider_manifest(provider, output_dir, prompts_dir: nil, extensions_dir: nil)
     dir = File.join(@tmpdir, "ace-handbook-integration-#{provider}", ".ace-defaults", "handbook", "providers")
     FileUtils.mkdir_p(dir)
     manifest = "provider: #{provider}\noutput_dir: #{output_dir}\n"
     manifest += "prompts_dir: #{prompts_dir}\n" if prompts_dir
+    manifest += "extensions_dir: #{extensions_dir}\n" if extensions_dir
     File.write(File.join(dir, "#{provider}.yml"), manifest)
+  end
+
+  def create_extension_asset(provider, relative_path, content)
+    path = File.join(@tmpdir, "ace-handbook-integration-#{provider}", "handbook", "extensions", relative_path)
+    FileUtils.mkdir_p(File.dirname(path))
+    File.write(path, content)
+  end
+
+  def remove_extension_asset(provider, relative_path)
+    File.delete(File.join(@tmpdir, "ace-handbook-integration-#{provider}", "handbook", "extensions", relative_path))
   end
 
   def create_prompt_template(provider, name, source:)
