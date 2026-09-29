@@ -165,6 +165,42 @@ class CleanupPrResolverTest < Minitest::Test
     end
   end
 
+  def test_remote_prefixed_target_matches_pr_base_branch
+    # Documented reporter target shape "origin/main": the PR's base branch
+    # is "main", so the remote-tracking prefix must not read as a conflict.
+    resolver = Ace::Git::Worktree::Molecules::CleanupPrResolver.new(
+      target: "origin/main", target_sha: "main123", offline: false,
+      server_name: "forgejo-lab", runner: ->(**_kw) { {success: true, stdout: "", stderr: "", exit_code: 0} }
+    )
+    resolver.stub(:git_remotes, ["origin"]) do
+      with_registered_provider(merged_evidence) do
+        resolver.stub(:ancestor?, true) do
+          result = resolver.classify("feature", "feat123")
+          assert_equal :merged, result[:status]
+          assert_equal "remove", result[:action]
+        end
+      end
+    end
+  end
+
+  def test_slashed_branch_target_stays_strict_against_segment_base
+    # A target branch that merely contains a slash is not a remote prefix:
+    # base "x" must not satisfy target "feature/x".
+    resolver = Ace::Git::Worktree::Molecules::CleanupPrResolver.new(
+      target: "feature/x", target_sha: "main123", offline: false,
+      server_name: "forgejo-lab", runner: ->(**_kw) { {success: true, stdout: "", stderr: "", exit_code: 0} }
+    )
+    resolver.stub(:git_remotes, ["origin"]) do
+      with_registered_provider(merged_evidence(base_ref: "x")) do
+        resolver.stub(:ancestor?, true) do
+          result = resolver.classify("feature/x", "feat123")
+          assert_equal "provenance_conflict", result[:retention_reason]
+          assert_equal "retain", result[:action]
+        end
+      end
+    end
+  end
+
   def test_closed_unmerged_pr_retains_candidate
     with_registered_provider(merged_evidence(state: :closed)) do
       result = @resolver.classify("feature", "feat123")

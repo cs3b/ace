@@ -140,9 +140,28 @@ module Ace
             return "provenance_conflict" unless evidence.server_name == server.name
             return "provenance_conflict" unless Ace::Git::Atoms::ServerUrl.match?(evidence.base_repository_url, server.url)
             return "provenance_conflict" unless evidence.head_ref == branch
-            return "provenance_conflict" unless evidence.base_ref == @target
+            return "provenance_conflict" unless evidence.base_ref == target_branch
 
             nil
+          end
+
+          # The branch the PR must have targeted: the target ref with a
+          # leading remote-tracking prefix removed (targets may be given as
+          # "main" or "origin/main"). A path segment only counts as a remote
+          # prefix when it names a configured git remote, so branch names
+          # that merely contain a slash stay strict.
+          def target_branch
+            return @target unless @target.to_s.include?("/")
+
+            prefix, rest = @target.to_s.split("/", 2)
+            git_remotes.include?(prefix) ? rest : @target
+          end
+
+          def git_remotes
+            out, _status = Open3.capture2("git", "remote")
+            out.to_s.lines.map(&:strip).reject(&:empty?)
+          rescue StandardError
+            []
           end
 
           def proof_result(evidence, proof, candidate_sha, pr_head_sha, merge_commit_sha)
