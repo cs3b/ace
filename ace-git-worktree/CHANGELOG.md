@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.24.1] - 2026-09-29
+
+### Fixed
+- Cleanup merge proof requires PR evidence provenance (server, repository,
+  branch, base) to agree with the resolved selection; incomplete or
+  conflicting provenance retains the candidate, so identical branch/PR
+  numbers in different repositories can never cross-prove removal.
+- Cleanup targets resolve to the PR base branch across ref forms:
+  bare ("main"), remote-prefixed ("origin/main"), and fully qualified
+  ("refs/heads/main", "refs/remotes/origin/main").
+
 ## [0.24.0] - 2026-09-28
 
 ### Added
