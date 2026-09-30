@@ -340,12 +340,20 @@ module Ace
               if report_dir
                 sandbox_path = report_dir.sub(/-reports\z/, "")
                 state_file = File.join(report_dir, Molecules::SetupExecutor::SETUP_STATE_FILE)
-                state = Molecules::SetupExecutor.setup_state_for(
-                  state_file, sandbox_path, setup_steps: scenario.setup_steps
+                # Effective steps (including profile bootstrap) are what
+                # setup executed, so they are what retry state must match.
+                effective_steps = effective_setup_steps_for(scenario)
+                # Transient resources (tmux sessions) die with the first
+                # run's teardown; such scenarios always re-set-up on retry.
+                declares_transient = effective_steps.any? do |step|
+                  step == "tmux-session" || (step.is_a?(Hash) && step.key?("tmux-session"))
+                end
+                state = declares_transient ? nil : Molecules::SetupExecutor.setup_state_for(
+                  state_file, sandbox_path, setup_steps: effective_steps
                 )
                 if state && Molecules::SetupExecutor.revalidate_release_manifest(
                   state_file: state_file, sandbox_dir: sandbox_path, explicit: @release_manifest_input,
-                  setup_steps: scenario.setup_steps
+                  setup_steps: effective_steps
                 )
                   # A completed sandbox whose validated manifest still matches
                   # the current input is reused with its recorded environment.

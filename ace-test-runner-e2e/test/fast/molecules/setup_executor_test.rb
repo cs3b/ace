@@ -676,6 +676,41 @@ def test_execute_wipes_prior_goal_results
   end
 end
 
+def test_revalidate_allows_existing_regular_file_copy
+  Dir.mktmpdir do |tmpdir|
+    sandbox = File.join(tmpdir, "sandbox")
+    target_dir = File.join(sandbox, "results", "tc", "01")
+    FileUtils.mkdir_p(target_dir)
+    manifest = File.join(tmpdir, "manifest.json")
+    File.write(manifest, JSON.generate(valid_release_manifest))
+    # A previous run already copied the manifest to the target.
+    FileUtils.cp(manifest, File.join(target_dir, "release-manifest.json"))
+    state = File.join(tmpdir, "state.json")
+    File.write(state, JSON.generate({
+      "sandbox_dir" => sandbox,
+      "setup_steps" => [],
+      "release_manifest" => {"source" => manifest, "target" => "results/tc/01/release-manifest.json", "digest" => Digest::SHA256.file(manifest).hexdigest},
+      "env" => {"ACE_E2E_SOURCE_ROOT" => tmpdir}
+    }))
+
+    assert Ace::Test::EndToEndRunner::Molecules::SetupExecutor.revalidate_release_manifest(
+      state_file: state, sandbox_dir: sandbox, explicit: manifest
+    )
+  end
+end
+
+def test_validated_manifest_target_rejects_file_parent_component
+  Dir.mktmpdir do |tmpdir|
+    sandbox = File.join(tmpdir, "sandbox")
+    FileUtils.mkdir_p(sandbox)
+    File.write(File.join(sandbox, "blocker"), "x")
+
+    assert_nil Ace::Test::EndToEndRunner::Molecules::SetupExecutor.validated_manifest_target(
+      sandbox, "blocker/results/tc/01/release-manifest.json"
+    )
+  end
+end
+
   private
 
   def valid_release_manifest

@@ -278,7 +278,7 @@ module Ace
 
             required = config.is_a?(Hash) ? Array(config["require"]) : []
             source = release_manifest_source(env)
-            Molecules::ReleaseManifest.validate_and_copy(
+            digest = Molecules::ReleaseManifest.validate_and_copy(
               source_path: source,
               target_path: File.join(sandbox_dir, target),
               required_packages: required
@@ -286,7 +286,7 @@ module Ace
             @release_manifest_state = {
               "source" => File.expand_path(source),
               "target" => target,
-              "digest" => Digest::SHA256.file(source).hexdigest
+              "digest" => digest
             }
           end
 
@@ -319,18 +319,23 @@ module Ace
             # The manifest copy destination comes from trusted setup state,
             # but the runner controls the sandbox filesystem in between: a
             # symlinked path component could redirect the host-side write
-            # outside the sandbox. Every component below the sandbox root is
-            # checked and the write uses the fully resolved directory.
+            # outside the sandbox. Parent components must be real
+            # directories; the final component may be an existing regular
+            # file (the previous validated copy).
             def validated_manifest_target(sandbox_dir, target)
               sandbox_root = File.expand_path(sandbox_dir)
               relative = target.to_s.split("/")
               current = sandbox_root
-              relative.reject { |part| part.empty? || part == "." }.each do |part|
+              components = relative.reject { |part| part.empty? || part == "." }
+              components.each_with_index do |part, index|
                 current = File.join(current, part)
                 lstat = File.lstat(current)
                 return nil if lstat.symlink?
 
-                unless lstat.directory? || !File.exist?(current)
+                last = index == components.size - 1
+                if last
+                  return nil if lstat.directory?
+                elsif !lstat.directory?
                   return nil
                 end
               end

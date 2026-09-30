@@ -1454,7 +1454,11 @@ class TestOrchestratorTest < Minitest::Test
         JSON.generate({
           "completed_at" => Time.now.utc.iso8601,
           "sandbox_dir" => sandbox_path,
-          "setup_steps" => ["copy-fixtures", ["agent-env", {"PROJECT_ROOT_PATH" => "."}]],
+          "setup_steps" => [
+            ["run", "ace-config sync ace-llm-providers-cli"],
+            ["run", "ace-handbook sync"],
+            "copy-fixtures", ["agent-env", {"PROJECT_ROOT_PATH" => "."}]
+          ],
           "release_manifest" => nil,
           "env" => {"PROJECT_ROOT_PATH" => "."}
         })
