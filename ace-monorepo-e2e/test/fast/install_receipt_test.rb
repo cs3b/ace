@@ -740,6 +740,23 @@ def test_verify_rejects_consumer_receipt_lockfile_disagreement
     verdict["findings"].inspect)
 end
 
+def test_verify_requires_load_evidence_in_receipts
+  fixture = build_complete_fixture
+  root = File.join(fixture[:normal], "consumer", "ace-task")
+  receipt = JSON.parse(File.read(File.join(root, "install-receipt.json")))
+  receipt["packages"]["ace-git-github"].delete("required")
+  File.write(File.join(root, "install-receipt.json"), JSON.pretty_generate(receipt))
+
+  verdict = InstallReceipt.verify(
+    manifest_path: @manifest_path,
+    mode_dirs: {"normal" => fixture[:normal], "full_index" => fixture[:full_index]}
+  )
+
+  assert_equal "fail", verdict["acceptance"]
+  assert(verdict["findings"].any? { |finding| finding.include?("ace-git-github is not proven to load through the ace-task consumer graph") },
+    verdict["findings"].inspect)
+end
+
   def test_finalize_rejects_doctored_acceptance_artifact_states
     fixture = build_complete_fixture
     report_dir = File.join(@tmpdir, "run-reports")
@@ -1018,8 +1035,8 @@ end
     File.write(File.join(root, "install-receipt.json"), JSON.pretty_generate({
       "kind" => "activated-receipt",
       "packages" => {
-        "ace-git-github" => {"version" => "0.2.0", "path" => File.join(root, ".bundle", "gems", "ace-git-github-0.2.0")},
-        consumer => {"version" => MANIFEST_PACKAGES[consumer], "path" => File.join(root, ".bundle", "gems", "#{consumer}-#{MANIFEST_PACKAGES[consumer]}")}
+        "ace-git-github" => {"version" => "0.2.0", "path" => File.join(root, ".bundle", "gems", "ace-git-github-0.2.0"), "required" => true},
+        consumer => {"version" => MANIFEST_PACKAGES[consumer], "path" => File.join(root, ".bundle", "gems", "#{consumer}-#{MANIFEST_PACKAGES[consumer]}"), "required" => true}
       }
     }))
   end
@@ -1071,7 +1088,7 @@ end
     {
       "kind" => "activated-receipt",
       "packages" => MANIFEST_PACKAGES.to_h do |name, version|
-        [name, {"version" => version, "path" => File.join(dir, ".bundle", "gems", "#{name}-#{version}")}]
+        [name, {"version" => version, "path" => File.join(dir, ".bundle", "gems", "#{name}-#{version}"), "required" => true}]
       end
     }
   end
@@ -1128,11 +1145,11 @@ class InstallReceiptRunnerContractTest < AceMonorepoE2eTestCase
   def test_consumer_bundle_uses_absolute_bundler_paths
     %w[TC-002-sandbox-install TC-003-fullindex-fallback].each do |tc|
       content = File.read(File.join(SCENARIO_DIR, "#{tc}.runner.md"))
-      assert_includes content, 'consumer_dir="$PWD/$1"',
+      assert_includes content, 'bundle_case="$PWD/$1"',
         "#{tc} consumer_bundle must anchor paths at the sandbox root"
       ["BUNDLE_GEMFILE", "BUNDLE_APP_CONFIG", "BUNDLE_PATH", "BUNDLE_USER_HOME",
         "BUNDLE_USER_CACHE", "BUNDLE_USER_CONFIG", "GEM_HOME", "GEM_PATH"].each do |var|
-        assert_match(%r{#{var}="\$consumer_dir/}, content,
+        assert_match(%r{#{var}="\$bundle_case/}, content,
           "#{tc} consumer_bundle #{var} must use the absolute consumer dir (relative paths double-nest under the Gemfile dir)")
       end
     end

@@ -40,22 +40,23 @@ proof_bundle() {
     "$proof_ruby_root/bin/ruby" "$proof_ruby_root/bin/bundle" "$@"
 }
 consumer_bundle() {
-  consumer_dir="$PWD/$1"
+  # Function-local absolute path: the caller keeps its relative path.
+  bundle_case="$PWD/$1"
   shift
   env -i \
     HOME="$HOME" \
     PATH="$proof_ruby_root/bin:$PATH" \
     PROJECT_ROOT_PATH="$PWD" \
-    BUNDLE_GEMFILE="$consumer_dir/Gemfile" \
-    BUNDLE_APP_CONFIG="$consumer_dir/.bundle" \
-    BUNDLE_PATH="$consumer_dir/.bundle" \
-    BUNDLE_USER_HOME="$consumer_dir/bundler-home" \
-    BUNDLE_USER_CACHE="$consumer_dir/bundler-cache" \
-    BUNDLE_USER_CONFIG="$consumer_dir/bundler-config" \
+    BUNDLE_GEMFILE="$bundle_case/Gemfile" \
+    BUNDLE_APP_CONFIG="$bundle_case/.bundle" \
+    BUNDLE_PATH="$bundle_case/.bundle" \
+    BUNDLE_USER_HOME="$bundle_case/bundler-home" \
+    BUNDLE_USER_CACHE="$bundle_case/bundler-cache" \
+    BUNDLE_USER_CONFIG="$bundle_case/bundler-config" \
     BUNDLE_DISABLE_SHARED_GEMS=true \
     BUNDLE_WITHOUT="" \
-    GEM_HOME="$consumer_dir/.gem" \
-    GEM_PATH="$consumer_dir/.gem" \
+    GEM_HOME="$bundle_case/.gem" \
+    GEM_PATH="$bundle_case/.gem" \
     "$proof_ruby_root/bin/ruby" "$proof_ruby_root/bin/bundle" "$@"
 }
 ```

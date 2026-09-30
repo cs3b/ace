@@ -32,6 +32,12 @@ module InstallReceipt
     packages = data["packages"]
     raise ArgumentError, "manifest packages must be a nonempty array" unless packages.is_a?(Array) && !packages.empty?
 
+    packages.each_with_index do |entry, index|
+      unless entry.is_a?(Hash) && entry["name"].is_a?(String) && entry["artifact_version"].is_a?(String)
+        raise ArgumentError, "manifest package entry #{index} must be an object with name and artifact_version"
+      end
+    end
+
     data
   end
 
@@ -96,6 +102,23 @@ module InstallReceipt
     findings
   end
 
+  # Gem names are not always require paths (ace-bundle ships ace/bundle.rb),
+  # so the entry point is resolved against the spec's require paths.
+  def require_gem_entry(spec)
+    candidates = [
+      spec.name.to_s,
+      spec.name.to_s.tr("-", "/"),
+      spec.name.to_s.tr("-", "_")
+    ]
+    spec.require_paths.each do |require_path|
+      candidates.each do |candidate|
+        entry = File.join(spec.full_gem_path.to_s, require_path, "#{candidate}.rb")
+        return candidate if File.file?(entry)
+      end
+    end
+    nil
+  end
+
   # Activated-spec receipt: requires the caller to run this script with the
   # case environment under `bundle exec` (or -rbundler/setup) so
   # Bundler.load resolves against the case's isolated install. Each ACE gem
@@ -106,11 +129,16 @@ module InstallReceipt
 
     specs = Bundler.load.specs.select { |spec| spec.name.to_s.match?(ACE_PREFIX) }
     specs.to_h do |spec|
-      load_evidence = begin
-        require spec.name
-        {"required" => true}
-      rescue LoadError, StandardError => e
-        {"required" => false, "require_error" => "#{e.class}: #{e.message}"}
+      entry = require_gem_entry(spec)
+      load_evidence = if entry.nil?
+        {"required" => false, "require_error" => "no require path resolved for #{spec.name}"}
+      else
+        begin
+          require entry
+          {"required" => true, "entry" => entry}
+        rescue LoadError, StandardError => e
+          {"required" => false, "entry" => entry, "require_error" => "#{e.class}: #{e.message}"}
+        end
       end
       [spec.name.to_s, {
         "version" => spec.version.to_s,
@@ -613,9 +641,9 @@ module InstallReceipt
       findings << "#{name} activated #{state["activated_version"]}, manifest requires #{state["manifest_version"]}"
     end
 
-    if state["required"] == false
+    if state["activated_version"] && state["required"] != true
       error = state["require_error"] ? " (#{state["require_error"]})" : ""
-      findings << "#{name} failed to load in the isolated environment#{error}"
+      findings << "#{name} is not proven to load in the isolated environment#{error}"
     end
 
     if state["activated_path"].nil? || state["activated_path"].to_s.empty?
@@ -710,6 +738,10 @@ module InstallReceipt
       findings << "#{name} consumer activated #{consumer_activated}, manifest requires #{manifest_versions[name]&.dig("artifact_version")}"
     end
 
+    if consumer_activated && receipt.dig(name, "required") != true
+      findings << "#{name} is not proven to load in the isolated consumer environment"
+    end
+
     provider_version = lockfile && lockfile["packages"]["ace-git-github"]
     if provider_version.nil?
       findings << "ace-git-github not reached through #{name} dependency edge"
@@ -757,6 +789,10 @@ module InstallReceipt
     end
     if lockfile && provider_version && !lockfile_spec_declares_provider?(lockfile, name)
       findings << "#{name} lockfile spec does not declare ace-git-github as a dependency"
+    end
+
+    if (provider_receipt = receipt && receipt["ace-git-github"]).is_a?(Hash) && provider_receipt["required"] != true
+      findings << "ace-git-github is not proven to load through the #{name} consumer graph"
     end
 
     provider_activated = receipt && receipt.dig("ace-git-github", "version")
