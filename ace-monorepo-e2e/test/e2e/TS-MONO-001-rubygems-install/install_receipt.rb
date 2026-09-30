@@ -36,6 +36,10 @@ module InstallReceipt
       unless entry.is_a?(Hash) && entry["name"].is_a?(String) && entry["artifact_version"].is_a?(String)
         raise ArgumentError, "manifest package entry #{index} must be an object with name and artifact_version"
       end
+      supersedes = entry["supersedes"]
+      unless supersedes.nil? || (supersedes.is_a?(Array) && supersedes.all? { |v| v.is_a?(String) })
+        raise ArgumentError, "manifest package entry #{index} supersedes must be an array of version strings"
+      end
     end
 
     data
@@ -572,7 +576,10 @@ module InstallReceipt
     # earlier run must not bless this run's receipts. Both the report
     # directory and the results root carry the run id in their basename.
     run_id = File.basename(report_dir).sub(/-reports\z/, "")
-    unless metadata["run-id"] == run_id
+    metadata_run_id = metadata["run-id"].to_s
+    if metadata_run_id.empty?
+      findings << "pipeline metadata records no run-id"
+    elsif !run_id.end_with?(metadata_run_id)
       findings << "pipeline metadata run-id #{metadata["run-id"].inspect} does not match the current run #{run_id.inspect}"
     end
     if results_root && File.basename(results_root) != run_id
