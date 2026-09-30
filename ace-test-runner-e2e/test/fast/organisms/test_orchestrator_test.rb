@@ -1340,13 +1340,22 @@ class TestOrchestratorTest < Minitest::Test
       ]}))
       # Completed sandbox from a run against the ORIGINAL manifest. Retry
       # state lives host-side in the report directory, never in the sandbox.
+      # The fixture is fully reusable: only the manifest change may trigger
+      # fresh setup.
+      FileUtils.mkdir_p([report_dir, sandbox_path])
+      File.write(File.join(sandbox_path, "Gemfile"), "source 'https://rubygems.org'
+")
       digest = Digest::SHA256.file(manifest).hexdigest
-      FileUtils.mkdir_p(report_dir)
       File.write(
         File.join(report_dir, Ace::Test::EndToEndRunner::Molecules::SetupExecutor::SETUP_STATE_FILE),
         JSON.generate({
           "completed_at" => Time.now.utc.iso8601,
           "sandbox_dir" => sandbox_path,
+          "setup_steps" => [
+            ["run", "ace-config sync ace-llm-providers-cli"],
+            ["run", "ace-handbook sync"],
+            "copy-fixtures", ["agent-env", {"PROJECT_ROOT_PATH" => "."}]
+          ],
           "release_manifest" => {"source" => manifest, "target" => "results/tc/01/release-manifest.json", "digest" => digest},
           "env" => {"PROJECT_ROOT_PATH" => ".", "ACE_E2E_SOURCE_ROOT" => tmpdir}
         })
@@ -1492,85 +1501,6 @@ class TestOrchestratorTest < Minitest::Test
     end
   end
 
-  private
-
-  def fixture_copying_setup_executor(source_root:)
-    Object.new.tap do |setup_executor|
-      setup_executor.define_singleton_method(:execute) do |setup_steps:, sandbox_dir:, fixture_source: nil, scenario_name: nil, run_id: nil, initial_env: {}, git_excludes: [], release_manifest_path: nil, state_file: nil|
-        FileUtils.mkdir_p(sandbox_dir)
-        if fixture_source && Dir.exist?(fixture_source)
-          Dir.children(fixture_source).each do |entry|
-            FileUtils.cp_r(File.join(fixture_source, entry), File.join(sandbox_dir, entry))
-          end
-        end
-
-        env = initial_env.merge(
-          "PROJECT_ROOT_PATH" => File.expand_path(sandbox_dir),
-          "ACE_E2E_SOURCE_ROOT" => File.expand_path(source_root)
-        )
-
-        {
-          success: true,
-          steps_completed: setup_steps.length,
-          error: nil,
-          env: env,
-          tmux_session: nil
-        }
-      end
-      setup_executor.define_singleton_method(:teardown) { nil }
-    end
-  end
-
-  class StubRuntimeBuilder
-    def prepare(sandbox_root:, env:, tool_names: nil)
-      runtime_root = File.join(sandbox_root, ".ace-local", "e2e-runtime")
-      bin_root = File.join(runtime_root, "bin")
-      FileUtils.mkdir_p(bin_root)
-      write_shim(File.join(bin_root, "ace-config"))
-      write_shim(File.join(bin_root, "ace-handbook"))
-
-      {
-        runtime_root: runtime_root,
-        env: env.merge(
-          "PROJECT_ROOT_PATH" => File.expand_path(sandbox_root),
-          "ACE_E2E_SOURCE_ROOT" => env["ACE_E2E_SOURCE_ROOT"] || Dir.pwd,
-          "ACE_CONFIG_PATH" => File.join(sandbox_root, ".ace"),
-          "PATH" => [bin_root, ENV["PATH"].to_s].join(File::PATH_SEPARATOR)
-        )
-      }
-    end
-
-    private
-
-    def write_shim(path)
-      File.write(path, <<~SH)
-        #!/usr/bin/env bash
-        exit 0
-      SH
-      FileUtils.chmod(0o755, path)
-    end
-  end
-
-  class RecordingExecutor
-    attr_reader :calls
-
-    def initialize
-      @calls = []
-    end
-
-    def execute(scenario, cli_args: nil, run_id: nil, test_cases: nil, sandbox_path: nil, env_vars: nil, report_dir: nil)
-      @calls << {scenario: scenario.test_id, sandbox_path: sandbox_path}
-      TestResult.new(
-        test_id: scenario.test_id,
-        status: "pass",
-        test_cases: [],
-        summary: "executed",
-        started_at: Time.now,
-        completed_at: Time.now + 1
-      )
-    end
-  end
-
   def test_setup_receives_explicit_release_manifest_input
     Dir.mktmpdir do |tmpdir|
       create_ts_test_package_with_setup(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001])
@@ -1669,6 +1599,86 @@ class TestOrchestratorTest < Minitest::Test
       assert_match(/release manifest is missing/, result.error)
       assert_empty executor.calls, "a failed setup must not hand the scenario to the LLM executor"
       assert torn_down, "setup executor resources must be released when setup fails"
+    end
+  end
+
+
+  private
+
+  def fixture_copying_setup_executor(source_root:)
+    Object.new.tap do |setup_executor|
+      setup_executor.define_singleton_method(:execute) do |setup_steps:, sandbox_dir:, fixture_source: nil, scenario_name: nil, run_id: nil, initial_env: {}, git_excludes: [], release_manifest_path: nil, state_file: nil|
+        FileUtils.mkdir_p(sandbox_dir)
+        if fixture_source && Dir.exist?(fixture_source)
+          Dir.children(fixture_source).each do |entry|
+            FileUtils.cp_r(File.join(fixture_source, entry), File.join(sandbox_dir, entry))
+          end
+        end
+
+        env = initial_env.merge(
+          "PROJECT_ROOT_PATH" => File.expand_path(sandbox_dir),
+          "ACE_E2E_SOURCE_ROOT" => File.expand_path(source_root)
+        )
+
+        {
+          success: true,
+          steps_completed: setup_steps.length,
+          error: nil,
+          env: env,
+          tmux_session: nil
+        }
+      end
+      setup_executor.define_singleton_method(:teardown) { nil }
+    end
+  end
+
+  class StubRuntimeBuilder
+    def prepare(sandbox_root:, env:, tool_names: nil)
+      runtime_root = File.join(sandbox_root, ".ace-local", "e2e-runtime")
+      bin_root = File.join(runtime_root, "bin")
+      FileUtils.mkdir_p(bin_root)
+      write_shim(File.join(bin_root, "ace-config"))
+      write_shim(File.join(bin_root, "ace-handbook"))
+
+      {
+        runtime_root: runtime_root,
+        env: env.merge(
+          "PROJECT_ROOT_PATH" => File.expand_path(sandbox_root),
+          "ACE_E2E_SOURCE_ROOT" => env["ACE_E2E_SOURCE_ROOT"] || Dir.pwd,
+          "ACE_CONFIG_PATH" => File.join(sandbox_root, ".ace"),
+          "PATH" => [bin_root, ENV["PATH"].to_s].join(File::PATH_SEPARATOR)
+        )
+      }
+    end
+
+    private
+
+    def write_shim(path)
+      File.write(path, <<~SH)
+        #!/usr/bin/env bash
+        exit 0
+      SH
+      FileUtils.chmod(0o755, path)
+    end
+  end
+
+  class RecordingExecutor
+    attr_reader :calls
+
+    def initialize
+      @calls = []
+    end
+
+    def execute(scenario, cli_args: nil, run_id: nil, test_cases: nil, sandbox_path: nil, env_vars: nil, report_dir: nil)
+      @calls << {scenario: scenario.test_id, sandbox_path: sandbox_path}
+      TestResult.new(
+        test_id: scenario.test_id,
+        status: "pass",
+        test_cases: [],
+        summary: "executed",
+        started_at: Time.now,
+        completed_at: Time.now + 1
+      )
     end
   end
 

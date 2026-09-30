@@ -271,6 +271,23 @@ module Ace
             target
           end
 
+          # SandboxPackageCopy.prepare leaves an existing package copy in
+          # place; a retry against an existing sandbox must never execute a
+          # stale copy of the runner assets.
+          def refresh_package_copy(sandbox_path, scenario)
+            package_source = File.join(@base_dir, scenario.package.to_s)
+            return unless File.directory?(package_source)
+
+            package_target = sandbox_child(sandbox_path, scenario.package)
+            return unless package_target
+
+            FileUtils.rm_rf(package_target)
+            Ace::TestSupport::SandboxPackageCopy.new(source_root: @base_dir).prepare(
+              package_name: scenario.package,
+              sandbox_root: sandbox_path
+            )
+          end
+
           def setup_failed_result(scenario, error_message)
             Models::TestResult.new(
               test_id: scenario.test_id,
@@ -376,22 +393,12 @@ module Ace
                     end
                   end
                   if reusable
-                    package_source = File.join(@base_dir, scenario.package.to_s)
-                    if File.directory?(package_source)
-                      package_target = sandbox_child(sandbox_path, scenario.package)
-                      if package_target
-                        FileUtils.rm_rf(package_target)
-                        Ace::TestSupport::SandboxPackageCopy.new(source_root: @base_dir).prepare(
-                          package_name: scenario.package,
-                          sandbox_root: sandbox_path
-                        )
-                      end
-                    end
+                    refresh_package_copy(sandbox_path, scenario)
                     # Prior goal evidence stays (a single-goal retry may need
                     # it), but the prior completion record is invalidated: a
                     # retry that fails before rewriting metadata can never be
                     # blessed by the previous attempt's pass.
-                    FileUtils.rm_f(File.join(state_file, "..", "metadata.yml"))
+                    FileUtils.rm_f(File.join(File.dirname(state_file), "metadata.yml"))
                     reusable = Molecules::SetupExecutor.revalidate_release_manifest(
                       state_file: state_file, sandbox_dir: sandbox_path, explicit: @release_manifest_input,
                       setup_steps: effective_steps
@@ -399,6 +406,7 @@ module Ace
                   end
 
                   unless reusable
+                    refresh_package_copy(sandbox_path, scenario)
                     sandbox_path, env_vars, setup_executor = setup_sandbox_if_ts(
                       scenario, timestamp, output,
                       sandbox_dir_override: sandbox_path, state_file: state_file
