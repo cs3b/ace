@@ -711,6 +711,19 @@ def test_validated_manifest_target_rejects_file_parent_component
   end
 end
 
+def test_validated_manifest_target_rejects_dangling_symlink_component
+  Dir.mktmpdir do |tmpdir|
+    sandbox = File.join(tmpdir, "sandbox")
+    outside = File.join(tmpdir, "outside")
+    FileUtils.mkdir_p([File.join(sandbox, "results", "tc"), outside])
+    File.symlink(outside, File.join(sandbox, "results", "tc", "01"))
+
+    assert_nil Ace::Test::EndToEndRunner::Molecules::SetupExecutor.validated_manifest_target(
+      sandbox, "results/tc/01/release-manifest.json"
+    )
+  end
+end
+
   private
 
   def valid_release_manifest

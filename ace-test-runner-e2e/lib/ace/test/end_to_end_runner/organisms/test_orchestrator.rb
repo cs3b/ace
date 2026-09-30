@@ -378,10 +378,10 @@ module Ace
                   end
                 end
               else
-                # The first run records retry state under its computed report
-                # directory so a later --report-dir retry can find it.
-                sandbox_path = report_dir_for(scenario, timestamp)
-                state_file = File.join(sandbox_path + "-reports", Molecules::SetupExecutor::SETUP_STATE_FILE)
+                # The first run records retry state under its report directory;
+                # the sandbox itself lives next to it without the -reports suffix.
+                sandbox_path = report_dir_for(scenario, timestamp).sub(/-reports\z/, "")
+                state_file = File.join(report_dir_for(scenario, timestamp), Molecules::SetupExecutor::SETUP_STATE_FILE)
                 sandbox_path, env_vars, setup_executor = setup_sandbox_if_ts(
                   scenario, timestamp, output,
                   sandbox_dir_override: sandbox_path, state_file: state_file

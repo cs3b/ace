@@ -335,12 +335,18 @@ module Ace
               components = relative.reject { |part| part.empty? || part == "." }
               components.each_with_index do |part, index|
                 current = File.join(current, part)
-                # Components that do not exist yet are created fresh under
-                # the sandbox root by mkdir_p; only existing entries can be
-                # symlinks or wrong node types.
-                next unless File.exist?(current)
-
-                lstat = File.lstat(current)
+                # lstat every component: File.exist? follows symlinks, so a
+                # dangling symlink would slip past an existence check and the
+                # write would create its target outside the sandbox. ENOENT
+                # means the component is genuinely absent (created fresh by
+                # mkdir_p); any other stat failure rejects reuse.
+                lstat = begin
+                  File.lstat(current)
+                rescue Errno::ENOENT
+                  next
+                rescue SystemCallError
+                  return nil
+                end
                 return nil if lstat.symlink?
 
                 last = index == components.size - 1
