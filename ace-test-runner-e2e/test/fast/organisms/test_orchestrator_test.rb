@@ -1449,6 +1449,8 @@ class TestOrchestratorTest < Minitest::Test
       report_dir = File.join(tmpdir, ".ace-local", "test-e2e", "TS-TEST-001-test-run00-reports")
       sandbox_path = report_dir.sub(/-reports\z/, "")
       FileUtils.mkdir_p(report_dir)
+      FileUtils.mkdir_p(sandbox_path)
+      File.write(File.join(sandbox_path, "Gemfile"), "source 'https://rubygems.org'\n")
       File.write(
         File.join(report_dir, Ace::Test::EndToEndRunner::Molecules::SetupExecutor::SETUP_STATE_FILE),
         JSON.generate({

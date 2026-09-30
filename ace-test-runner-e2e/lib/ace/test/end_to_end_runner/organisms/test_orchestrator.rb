@@ -351,14 +351,30 @@ module Ace
                 state = declares_transient ? nil : Molecules::SetupExecutor.setup_state_for(
                   state_file, sandbox_path, setup_steps: effective_steps
                 )
-                if state && Molecules::SetupExecutor.revalidate_release_manifest(
-                  state_file: state_file, sandbox_dir: sandbox_path, explicit: @release_manifest_input,
-                  setup_steps: effective_steps
-                )
-                  # A completed sandbox whose validated manifest still matches
-                  # the current input is reused with its recorded environment.
+                if state
+                  # A completed sandbox whose recorded environment and
+                  # essential outputs are intact may be reused. Prior goal
+                  # evidence never survives a reuse: results are cleared and
+                  # the validated manifest copy restored by revalidation.
                   env_vars = restored_sandbox_env(state)
-                  unless env_vars
+                  reusable = env_vars && File.file?(File.join(sandbox_path, "Gemfile"))
+                  if reusable
+                    package_source = File.join(@base_dir, scenario.package.to_s)
+                    if File.directory?(package_source)
+                      FileUtils.rm_rf(File.join(sandbox_path, scenario.package.to_s))
+                      Ace::TestSupport::SandboxPackageCopy.new(source_root: @base_dir).prepare(
+                        package_name: scenario.package,
+                        sandbox_root: sandbox_path
+                      )
+                    end
+                    FileUtils.rm_rf(File.join(sandbox_path, "results"))
+                    reusable = Molecules::SetupExecutor.revalidate_release_manifest(
+                      state_file: state_file, sandbox_dir: sandbox_path, explicit: @release_manifest_input,
+                      setup_steps: effective_steps
+                    )
+                  end
+
+                  unless reusable
                     sandbox_path, env_vars, setup_executor = setup_sandbox_if_ts(
                       scenario, timestamp, output,
                       sandbox_dir_override: sandbox_path, state_file: state_file
