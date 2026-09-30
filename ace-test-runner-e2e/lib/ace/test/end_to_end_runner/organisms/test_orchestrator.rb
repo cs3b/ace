@@ -387,7 +387,11 @@ module Ace
                         )
                       end
                     end
-                    FileUtils.rm_rf(File.join(sandbox_path, "results"))
+                    # Prior goal evidence stays (a single-goal retry may need
+                    # it), but the prior completion record is invalidated: a
+                    # retry that fails before rewriting metadata can never be
+                    # blessed by the previous attempt's pass.
+                    FileUtils.rm_f(File.join(state_file, "..", "metadata.yml"))
                     reusable = Molecules::SetupExecutor.revalidate_release_manifest(
                       state_file: state_file, sandbox_dir: sandbox_path, explicit: @release_manifest_input,
                       setup_steps: effective_steps

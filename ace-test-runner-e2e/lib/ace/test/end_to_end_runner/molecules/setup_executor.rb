@@ -69,7 +69,12 @@ module Ace
             FileUtils.mkdir_p(sandbox_dir)
             # A rerun invalidates any earlier success up front: state is
             # recreated only after every step and the persisted env succeed.
-            FileUtils.rm_f(state_file) if state_file
+            if state_file
+              FileUtils.rm_f(state_file)
+              # The prior attempt's completion record must never bless a
+              # retried run that fails before rewriting it.
+              FileUtils.rm_f(File.join(File.dirname(state_file), "metadata.yml"))
+            end
             # Prior-attempt goal evidence must never survive into a retried
             # run: the goals rebuild results/ from scratch.
             FileUtils.rm_rf(File.join(sandbox_dir, "results"))
@@ -340,6 +345,9 @@ module Ace
             # file (the previous validated copy).
             def validated_manifest_target(sandbox_dir, target)
               sandbox_root = File.expand_path(sandbox_dir)
+              # A symlinked sandbox root would redirect every confinement
+              # check below it.
+              return nil if File.lstat(sandbox_root).symlink?
               relative = target.to_s.split("/")
               current = sandbox_root
               components = relative.reject { |part| part.empty? || part == "." }
