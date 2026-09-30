@@ -382,7 +382,13 @@ module Ace
                   FileUtils.rm_f(File.join(report_dir, ".host-pipeline-complete.json"))
                   FileUtils.rm_f(File.join(report_dir, ".host-pipeline-failed.json"))
                   FileUtils.rm_f(File.join(report_dir, "metadata.yml"))
-                  env_vars = Molecules::SetupExecutor.build_reuse_env(state["env"])
+                  # Transient-resource scenarios and full retries re-setup in
+                  # a FRESH sandbox: rerunning idempotence-sensitive steps
+                  # (initial commits) or trusting prior package/Gemfile state
+                  # in a used sandbox is not safe.
+                  fresh_sandbox_for_retry = declares_transient ||
+                    (test_cases.nil? || test_cases.empty?)
+                  env_vars = fresh_sandbox_for_retry ? nil : Molecules::SetupExecutor.build_reuse_env(state["env"])
                   reusable = env_vars && File.file?(File.join(sandbox_path, "Gemfile"))
                   if reusable
                     # The sandbox Gemfile is derived from the source root's:
@@ -400,10 +406,6 @@ module Ace
                   end
                   if reusable
                     refresh_package_copy(sandbox_path, scenario)
-                    # A full retry (no test-case filter) must not inherit the
-                    # previous attempt's goal evidence; an explicit partial
-                    # retry (e.g. TC-004 only) keeps it for classification.
-                    FileUtils.rm_rf(File.join(sandbox_path, "results")) if test_cases.nil? || test_cases.empty?
                     reusable = Molecules::SetupExecutor.revalidate_release_manifest(
                       state_file: state_file, sandbox_dir: sandbox_path, explicit: @release_manifest_input,
                       setup_steps: effective_steps
@@ -411,6 +413,11 @@ module Ace
                   end
 
                   unless reusable
+                    # Full retries and transient-resource scenarios start from
+                    # a pristine sandbox: no prior attempt state survives.
+                    if fresh_sandbox_for_retry && Dir.exist?(sandbox_path)
+                      FileUtils.rm_rf(sandbox_path)
+                    end
                     refresh_package_copy(sandbox_path, scenario)
                     sandbox_path, env_vars, setup_executor = setup_sandbox_if_ts(
                       scenario, timestamp, output,

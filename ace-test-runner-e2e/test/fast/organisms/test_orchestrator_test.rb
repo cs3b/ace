@@ -1492,12 +1492,13 @@ class TestOrchestratorTest < Minitest::Test
       orchestrator.run(
         package: "my-pkg",
         test_id: "TS-TEST-001",
+        test_cases: %w[TC-001],
         report_dir: report_dir,
         output: @output
       )
 
       assert_equal 0, setup_calls,
-        "a completed sandbox must be reused without rerunning setup"
+        "a completed sandbox must be reused without rerunning setup for filtered retries"
     end
   end
 
