@@ -436,17 +436,15 @@ module Ace
               true
             end
 
-            # Retry reuse rebuilds the live environment from the CURRENT
-            # process (permitted keys only) and overlays the recorded sandbox
-            # runtime paths, so ambient secrets are never restored from the
-            # state file while the runtime contract still holds.
+            # Retry reuse rebuilds the environment from the allow-listed
+            # runtime keys only (same boundary as initial setup), overlaid
+            # with the recorded sandbox runtime paths. Host secrets — even
+            # ones present in the current process — never reach the runner.
             def build_reuse_env(state_env)
-              live = ENV.to_h.reject do |key, _value|
-                AMBIENT_TMUX_ENV_VARS.include?(key) || STRIPPED_ENV_KEYS.include?(key) ||
-                  BUNDLER_ENV_PREFIXES.any? { |prefix| key.start_with?(prefix) } ||
-                  key == "ACE_RELEASE_MANIFEST"
+              (PERSISTED_ENV_KEYS | %w[HOME PATH TMPDIR]).each_with_object({}) do |key, env|
+                value = state_env[key]
+                env[key] = value unless value.nil?
               end
-              live.merge(state_env || {})
             end
 
             def release_manifest_source_for(env, explicit)
