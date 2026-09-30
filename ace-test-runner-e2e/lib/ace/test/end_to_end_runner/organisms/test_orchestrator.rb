@@ -263,7 +263,17 @@ module Ace
           def owned_sandbox_path?(sandbox_path)
             cache_root = File.expand_path(File.join(@base_dir, ".ace-local", "test-e2e"))
             expanded = File.expand_path(sandbox_path)
-            expanded.start_with?(cache_root + File::SEPARATOR)
+            # A symlinked sandbox (or ancestor) could redirect rm_rf outside
+            # the cache; resolve what exists before the containment check.
+            resolved = begin
+              File.realpath(expanded)
+            rescue Errno::ENOENT, Errno::ENOTDIR
+              nearest = expanded
+              nearest = File.dirname(nearest) until nearest == "/" || File.exist?(nearest)
+              File.join(File.realpath(nearest), expanded.delete_prefix(nearest))
+            end
+            real_cache_root = File.realpath(cache_root)
+            resolved.start_with?(real_cache_root + File::SEPARATOR)
           end
 
           # Deletion targets derived from scenario data must stay immediate
@@ -429,7 +439,7 @@ module Ace
                     # directories; prerequisite goals' evidence is retained
                     # for classification.
                     Array(test_cases).each do |tc_id|
-                      FileUtils.rm_rf(File.join(sandbox_path, "results", "tc", tc_id.delete_prefix("TC-").rjust(2, "0")))
+                      FileUtils.rm_rf(File.join(sandbox_path, "results", "tc", format("%02d", tc_id.delete_prefix("TC-").to_i)))
                     end
                     reusable = Molecules::SetupExecutor.revalidate_release_manifest(
                       state_file: state_file, sandbox_dir: sandbox_path, explicit: @release_manifest_input,
@@ -462,10 +472,14 @@ module Ace
                   # escaped manifest target) forces a fresh deterministic
                   # setup against the retry's own sandbox path. When setup is
                   # inapplicable (returns nils), the derived path stays.
-                  # The prior attempt's records are invalidated first.
+                  # The prior attempt's records are invalidated first, and the
+                  # sandbox itself is recreated: rerunning deterministic setup
+                  # in a used sandbox (existing git repo, prior goal changes)
+                  # is not safe.
                   FileUtils.rm_f(File.join(report_dir, ".host-pipeline-complete.json"))
                   FileUtils.rm_f(File.join(report_dir, ".host-pipeline-failed.json"))
                   FileUtils.rm_f(File.join(report_dir, "metadata.yml"))
+                  FileUtils.rm_rf(sandbox_path) if Dir.exist?(sandbox_path)
                   refresh_package_copy(sandbox_path, scenario)
                   new_path, new_env, setup_executor = setup_sandbox_if_ts(
                     scenario, timestamp, output,
