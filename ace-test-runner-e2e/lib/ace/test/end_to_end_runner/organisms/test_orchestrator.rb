@@ -262,6 +262,7 @@ module Ace
           # inside the runner-owned e2e cache root.
           def owned_sandbox_path?(sandbox_path)
             cache_root = File.expand_path(File.join(@base_dir, ".ace-local", "test-e2e"))
+            FileUtils.mkdir_p(cache_root)
             expanded = File.expand_path(sandbox_path)
             # A symlinked sandbox (or ancestor) could redirect rm_rf outside
             # the cache; resolve what exists before the containment check.
