@@ -180,7 +180,21 @@ module InstallReceipt
   end
 
   def finalize(manifest_path:, mode_dirs:, pipeline_report_dir:, consumers: DEFAULT_CONSUMERS, exits: {}, results_root: nil, source_manifest: nil)
-    verdict = verify(manifest_path: manifest_path, mode_dirs: mode_dirs, consumers: consumers, exits: exits)
+    begin
+      verdict = verify(manifest_path: manifest_path, mode_dirs: mode_dirs, consumers: consumers, exits: exits)
+    rescue ArgumentError, JSON::ParserError => e
+      # A malformed manifest or unreadable evidence must still produce the
+      # machine-readable failure verdict.
+      verdict = {
+        "schema_version" => MANIFEST_SCHEMA_VERSION,
+        "kind" => "installation-acceptance",
+        "manifest" => {"path" => manifest_path, "source_sha" => nil, "package_count" => nil},
+        "modes" => {},
+        "consumer_edges" => {},
+        "acceptance" => "fail",
+        "findings" => ["verification could not run: #{e.message}"]
+      }
+    end
 
     # All finalization inputs must belong to one run: the manifest must be
     # the results root's own validated copy, and the mode directories must
@@ -377,7 +391,12 @@ module InstallReceipt
       end
       packages.each do |name, state|
         expected_state = expected_packages[name]
-        next unless expected_state.is_a?(Hash) && state.is_a?(Hash)
+        next unless expected_state.is_a?(Hash)
+
+        unless state.is_a?(Hash)
+          findings << "acceptance artifact #{mode} #{name} state is not an object"
+          next
+        end
 
         %w[manifest_version lockfile_version activated_version].each do |field|
           unless state.key?(field)
@@ -403,7 +422,9 @@ module InstallReceipt
         edge = mode_edges && mode_edges[consumer]
         if edge.nil?
           findings << "acceptance artifact is missing #{mode} consumer edge for #{consumer}"
-        elsif edge.is_a?(Hash)
+        elsif !edge.is_a?(Hash)
+          findings << "acceptance artifact #{mode} consumer edge for #{consumer} is not an object"
+        else
           recomputed_edge = verdict.dig("consumer_edges", mode, consumer) || {}
           recomputed_findings = Array(recomputed_edge["findings"])
           if edge["ok"] == true && recomputed_edge["ok"] == false
@@ -750,6 +771,22 @@ module InstallReceipt
         findings << "#{gem_name} consumer activated receipt records no gem path"
       elsif !under_any?(gem_path, isolation_dirs)
         findings << "#{gem_name} loaded from #{gem_path} outside the isolated consumer directories"
+      end
+    end
+
+    # Isolation applies to every activated ACE gem in the consumer graph,
+    # not just the consumer and the provider.
+    if receipt
+      receipt.each do |gem_name, data|
+        next unless gem_name.match?(ACE_PREFIX)
+        next if gem_name == name || gem_name == "ace-git-github"
+
+        gem_path = data["path"]
+        if gem_path.nil? || gem_path.to_s.empty?
+          findings << "#{gem_name} consumer activated receipt records no gem path"
+        elsif !under_any?(gem_path, isolation_dirs)
+          findings << "#{gem_name} loaded from #{gem_path} outside the isolated consumer directories"
+        end
       end
     end
 
