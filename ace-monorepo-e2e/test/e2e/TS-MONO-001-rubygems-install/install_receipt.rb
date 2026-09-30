@@ -280,7 +280,10 @@ module InstallReceipt
       nil
     end
     recorded_manifest = setup_state && setup_state["release_manifest"].is_a?(Hash) ? setup_state["release_manifest"] : nil
-    if recorded_manifest && recorded_manifest["source"]
+    if recorded_manifest.nil? || recorded_manifest["source"].nil? || recorded_manifest["digest"].nil?
+      (verdict["findings"] ||= []) << "setup state does not record the validated release manifest source and digest"
+      source_manifest = nil
+    else
       expanded_source = source_manifest && File.expand_path(source_manifest)
       unless expanded_source == File.expand_path(recorded_manifest["source"])
         (verdict["findings"] ||= []) << "source manifest #{source_manifest.inspect} is not the setup-recorded #{recorded_manifest["source"].inspect}"
@@ -470,6 +473,12 @@ module InstallReceipt
           next if state[field] == expected_state[field]
 
           findings << "acceptance artifact #{mode} #{name} #{field} #{state[field].inspect} does not match recomputed #{expected_state[field].inspect}"
+        end
+
+        recorded_findings = Array(state["findings"])
+        recomputed_findings = Array(expected_state["findings"])
+        if recorded_findings.empty? != recomputed_findings.empty?
+          findings << "acceptance artifact #{mode} #{name} findings presence disagrees with the recomputed verdict"
         end
       end
     end

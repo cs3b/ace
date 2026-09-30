@@ -455,6 +455,7 @@ class InstallReceiptTest < AceMonorepoE2eTestCase
     File.write(File.join(tc04, "exact-version-acceptance.json"), "{not json")
     FileUtils.mkdir_p(report_dir)
     File.write(File.join(report_dir, "metadata.yml"), "run-id: run\ntest-id: TS-MONO-001\nstatus: pass\ntcs-total: 4\ntcs-passed: 4\n")
+    write_setup_state(report_dir, @manifest_path)
 
 
     verdict = InstallReceipt.finalize(
@@ -508,7 +509,9 @@ class InstallReceiptTest < AceMonorepoE2eTestCase
     report_dir = File.join(@tmpdir, "run-reports")
     results_root = write_results_root(fixture)
     FileUtils.mkdir_p(report_dir)
-    File.write(File.join(report_dir, "metadata.yml"), "run-id: stale-run-000\ntest-id: TS-MONO-001\nstatus: pass\n")
+    File.write(File.join(report_dir, "metadata.yml"), "run-id: stale-run-000\ntest-id: TS-MONO-001\nstatus: pass\ntcs-total: 4\ntcs-passed: 4\n")
+    write_setup_state(report_dir, @manifest_path)
+    write_setup_state(report_dir, @manifest_path)
 
     verdict = InstallReceipt.finalize(
       manifest_path: File.join(results_root, "results", "tc", "01", "release-manifest.json"),
@@ -536,6 +539,7 @@ class InstallReceiptTest < AceMonorepoE2eTestCase
     ))
     FileUtils.mkdir_p(report_dir)
     File.write(File.join(report_dir, "metadata.yml"), "run-id: run\ntest-id: TS-MONO-001\nstatus: pass\ntcs-total: 4\ntcs-passed: 4\n")
+    write_setup_state(report_dir, @manifest_path)
 
     verdict = InstallReceipt.finalize(
       manifest_path: File.join(results_root, "results", "tc", "01", "release-manifest.json"),
@@ -630,6 +634,7 @@ def test_finalize_rejects_contradictory_recorded_versions_and_exits
   File.write(File.join(tc04, "exact-version-acceptance.json"), JSON.pretty_generate(artifact))
   FileUtils.mkdir_p(report_dir)
   File.write(File.join(report_dir, "metadata.yml"), "run-id: run\ntest-id: TS-MONO-001\nstatus: pass\ntcs-total: 4\ntcs-passed: 4\n")
+    write_setup_state(report_dir, @manifest_path)
 
   verdict = InstallReceipt.finalize(
     manifest_path: File.join(results_root, "results", "tc", "01", "release-manifest.json"),
@@ -685,6 +690,7 @@ def test_finalize_rejects_manifest_outside_the_results_root
   results_root = write_results_root(fixture)
   FileUtils.mkdir_p(report_dir)
   File.write(File.join(report_dir, "metadata.yml"), "run-id: run\ntest-id: TS-MONO-001\nstatus: pass\ntcs-total: 4\ntcs-passed: 4\n")
+    write_setup_state(report_dir, @manifest_path)
 
   verdict = InstallReceipt.finalize(
     manifest_path: @manifest_path,
@@ -709,6 +715,7 @@ def test_finalize_rejects_runner_artifact_from_another_freeze
   File.write(File.join(tc04, "exact-version-acceptance.json"), JSON.pretty_generate(artifact))
   FileUtils.mkdir_p(report_dir)
   File.write(File.join(report_dir, "metadata.yml"), "run-id: run\ntest-id: TS-MONO-001\nstatus: pass\ntcs-total: 4\ntcs-passed: 4\n")
+    write_setup_state(report_dir, @manifest_path)
 
   verdict = InstallReceipt.finalize(
     manifest_path: File.join(results_root, "results", "tc", "01", "release-manifest.json"),
@@ -817,6 +824,7 @@ end
     File.write(File.join(tc04, "exact-version-acceptance.json"), JSON.pretty_generate(artifact))
     FileUtils.mkdir_p(report_dir)
     File.write(File.join(report_dir, "metadata.yml"), "run-id: run\ntest-id: TS-MONO-001\nstatus: pass\ntcs-total: 4\ntcs-passed: 4\n")
+    write_setup_state(report_dir, @manifest_path)
 
     verdict = InstallReceipt.finalize(
       manifest_path: File.join(results_root, "results", "tc", "01", "release-manifest.json"),
@@ -854,6 +862,7 @@ end
       results_root = write_results_root(fixture)
       FileUtils.mkdir_p(report_dir)
       File.write(File.join(report_dir, "metadata.yml"), "run-id: run\nstatus: error\nuncertain_execution: true\n")
+    write_setup_state(report_dir, @manifest_path)
 
       verdict = InstallReceipt.finalize(
         manifest_path: File.join(results_root, "results", "tc", "01", "release-manifest.json"),
@@ -877,6 +886,7 @@ end
       results_root = write_results_root(fixture)
       FileUtils.mkdir_p(report_dir)
       File.write(File.join(report_dir, "metadata.yml"), "run-id: run\ntest-id: TS-MONO-001\nstatus: pass\ntcs-total: 4\ntcs-passed: 4\n")
+    write_setup_state(report_dir, @manifest_path)
 
 
       verdict = InstallReceipt.finalize(
@@ -899,19 +909,21 @@ end
       results_root = write_results_root(fixture)
       FileUtils.mkdir_p(report_dir)
       File.write(File.join(report_dir, "metadata.yml"), "run-id: run\ntest-id: TS-MONO-001\nstatus: pass\ntcs-total: 4\ntcs-passed: 4\n")
+    write_setup_state(report_dir, @manifest_path)
 
 
-      tampered = File.join(@tmpdir, "source-manifest.json")
+      # Tamper the recorded source after setup: the sandbox copy still holds
+      # the original bytes, so integrity must catch the divergence.
       manifest = JSON.parse(File.read(@manifest_path))
       manifest["packages"].delete_at(0)
-      File.write(tampered, JSON.pretty_generate(manifest))
+      File.write(@manifest_path, JSON.pretty_generate(manifest))
 
       verdict = InstallReceipt.finalize(
         manifest_path: File.join(results_root, "results", "tc", "01", "release-manifest.json"),
         mode_dirs: {"normal" => fixture[:normal], "full_index" => fixture[:full_index]},
         pipeline_report_dir: report_dir,
         results_root: results_root,
-        source_manifest: tampered
+        source_manifest: @manifest_path
       )
 
       assert_equal "fail", verdict["final"]
@@ -925,6 +937,7 @@ end
       results_root = write_results_root(fixture, classification: "LAG_DETECTED")
       FileUtils.mkdir_p(report_dir)
       File.write(File.join(report_dir, "metadata.yml"), "run-id: run\ntest-id: TS-MONO-001\nstatus: pass\ntcs-total: 4\ntcs-passed: 4\n")
+    write_setup_state(report_dir, @manifest_path)
 
 
       verdict = InstallReceipt.finalize(
@@ -946,6 +959,7 @@ end
       results_root = write_results_root(fixture, runner_acceptance: "fail")
       FileUtils.mkdir_p(report_dir)
       File.write(File.join(report_dir, "metadata.yml"), "run-id: run\ntest-id: TS-MONO-001\nstatus: pass\ntcs-total: 4\ntcs-passed: 4\n")
+    write_setup_state(report_dir, @manifest_path)
 
 
       verdict = InstallReceipt.finalize(
@@ -967,6 +981,7 @@ end
       results_root = write_results_root(fixture)
       FileUtils.mkdir_p(report_dir)
       File.write(File.join(report_dir, "metadata.yml"), "run-id: run\ntest-id: TS-MONO-001\nstatus: pass\ntcs-total: 4\ntcs-passed: 4\n")
+    write_setup_state(report_dir, @manifest_path)
 
       out_path = File.join(@tmpdir, "evidence", "nested", "installation-acceptance.json")
       script = File.expand_path("../e2e/TS-MONO-001-rubygems-install/install_receipt.rb", __dir__)
@@ -1017,6 +1032,20 @@ def write_results_root(fixture, classification: "SAFE", runner_acceptance: "pass
     "findings" => runner_acceptance == "pass" ? [] : ["fixture finding"]
   ))
   run_root
+end
+
+def write_setup_state(report_dir, manifest_path)
+  FileUtils.mkdir_p(report_dir)
+  File.write(File.join(report_dir, ".ace-e2e-setup-state.json"), JSON.generate({
+    "completed_at" => Time.now.utc.iso8601,
+    "sandbox_dir" => report_dir.sub(/-reports\z/, ""),
+    "release_manifest" => {
+      "source" => File.expand_path(manifest_path),
+      "target" => "results/tc/01/release-manifest.json",
+      "digest" => Digest::SHA256.file(manifest_path).hexdigest
+    },
+    "env" => {}
+  }))
 end
 
   def write_manifest
