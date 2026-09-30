@@ -98,13 +98,24 @@ module InstallReceipt
 
   # Activated-spec receipt: requires the caller to run this script with the
   # case environment under `bundle exec` (or -rbundler/setup) so
-  # Bundler.load resolves against the case's isolated install.
+  # Bundler.load resolves against the case's isolated install. Each ACE gem
+  # is actually required, so the receipt records loaded evidence — not just
+  # resolved specs.
   def activated_receipt
     raise "Bundler is not loaded; run under `bundle exec` or -rbundler/setup" unless defined?(Bundler)
 
     specs = Bundler.load.specs.select { |spec| spec.name.to_s.match?(ACE_PREFIX) }
     specs.to_h do |spec|
-      [spec.name.to_s, {"version" => spec.version.to_s, "path" => spec.full_gem_path.to_s}]
+      load_evidence = begin
+        require spec.name
+        {"required" => true}
+      rescue LoadError, StandardError => e
+        {"required" => false, "require_error" => "#{e.class}: #{e.message}"}
+      end
+      [spec.name.to_s, {
+        "version" => spec.version.to_s,
+        "path" => spec.full_gem_path.to_s
+      }.merge(load_evidence)]
     end
   end
 
@@ -182,7 +193,7 @@ module InstallReceipt
   def finalize(manifest_path:, mode_dirs:, pipeline_report_dir:, consumers: DEFAULT_CONSUMERS, exits: {}, results_root: nil, source_manifest: nil)
     begin
       verdict = verify(manifest_path: manifest_path, mode_dirs: mode_dirs, consumers: consumers, exits: exits)
-    rescue ArgumentError, JSON::ParserError => e
+    rescue ArgumentError, JSON::ParserError, SystemCallError => e
       # A malformed manifest or unreadable evidence must still produce the
       # machine-readable failure verdict.
       verdict = {
@@ -572,6 +583,7 @@ module InstallReceipt
         "lockfile_versions" => lockfile && lockfile["all_versions"][name],
         "activated_version" => receipt && receipt.dig(name, "version"),
         "activated_path" => receipt && receipt.dig(name, "path"),
+        "required" => receipt && receipt.dig(name, "required"),
         "supersedes" => entry["supersedes"] || []
       }
       state["findings"] = mode_entry_findings(state, name, isolation_dirs)
@@ -599,6 +611,11 @@ module InstallReceipt
       findings << "#{name} missing from activated receipt"
     elsif state["activated_version"] != state["manifest_version"]
       findings << "#{name} activated #{state["activated_version"]}, manifest requires #{state["manifest_version"]}"
+    end
+
+    if state["required"] == false
+      error = state["require_error"] ? " (#{state["require_error"]})" : ""
+      findings << "#{name} failed to load in the isolated environment#{error}"
     end
 
     if state["activated_path"].nil? || state["activated_path"].to_s.empty?
