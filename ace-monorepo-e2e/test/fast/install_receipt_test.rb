@@ -811,6 +811,28 @@ def test_require_gem_entry_returns_nil_without_any_layout
   end
 end
 
+def test_finalize_rejects_missing_host_completion_record
+  fixture = build_complete_fixture
+  report_dir = File.join(@tmpdir, "run-reports")
+  results_root = write_results_root(fixture)
+  write_setup_state(report_dir, @manifest_path)
+  File.write(File.join(report_dir, "metadata.yml"), "run-id: run\ntest-id: TS-MONO-001\nstatus: pass\ntcs-total: 4\ntcs-passed: 4\n")
+  File.delete(File.join(report_dir, ".host-pipeline-complete.json"))
+
+  verdict = InstallReceipt.finalize(
+    manifest_path: File.join(results_root, "results", "tc", "01", "release-manifest.json"),
+    mode_dirs: {"normal" => fixture[:normal], "full_index" => fixture[:full_index]},
+    pipeline_report_dir: report_dir,
+    results_root: results_root,
+    source_manifest: @manifest_path
+  )
+
+  assert_equal "fail", verdict["final"]
+  assert(verdict["findings"].any? { |finding| finding.include?("host pipeline completion record is missing") },
+    verdict["findings"].inspect)
+end
+
+
   def test_finalize_rejects_doctored_acceptance_artifact_states
     fixture = build_complete_fixture
     report_dir = File.join(@tmpdir, "run-reports")
@@ -1036,6 +1058,9 @@ end
 
 def write_setup_state(report_dir, manifest_path)
   FileUtils.mkdir_p(report_dir)
+  File.write(File.join(report_dir, ".host-pipeline-complete.json"), JSON.generate({
+    "scenario" => "TS-MONO-001", "completed_at" => Time.now.utc.iso8601
+  }))
   File.write(File.join(report_dir, ".ace-e2e-setup-state.json"), JSON.generate({
     "completed_at" => Time.now.utc.iso8601,
     "sandbox_dir" => report_dir.sub(/-reports\z/, ""),

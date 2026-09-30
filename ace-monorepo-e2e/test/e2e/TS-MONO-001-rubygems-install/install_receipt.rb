@@ -556,9 +556,18 @@ module InstallReceipt
       return {"ok" => false, "findings" => ["pipeline metadata.yml is not a mapping"]}
     end
 
+    # metadata.yml is runner-writable and cannot prove the pipeline finished:
+    # the host-side completion record is authoritative. Its absence — or the
+    # presence of an explicit failure record — fails the gate regardless of
+    # what metadata says.
+    findings = []
+    complete_path = File.join(report_dir, ".host-pipeline-complete.json")
+    failed_path = File.join(report_dir, ".host-pipeline-failed.json")
+    findings << "host pipeline completion record is missing: #{complete_path}" unless File.file?(complete_path)
+    findings << "host pipeline failure record present: #{failed_path}" if File.file?(failed_path)
+
     status = metadata["status"]
     uncertain = metadata["uncertain_execution"] == true
-    findings = []
     findings << "pipeline status is #{status.inspect}, not pass" unless status == "pass"
     findings << "pipeline marked uncertain_execution; side effects must not be replayed" if uncertain
 
@@ -649,11 +658,15 @@ module InstallReceipt
     # activated ACE gem must be in the lockfile, and every lockfile ACE gem
     # must be activated.
     if lockfile && receipt
-      lockfile["all_versions"].each do |name, _versions|
+      lockfile["all_versions"].each do |name, versions|
         next unless name.match?(ACE_PREFIX)
-        next if receipt.key?(name)
 
-        findings << "#{name} in the lockfile but missing from the activated receipt"
+        activated = receipt[name]
+        if activated.nil?
+          findings << "#{name} in the lockfile but missing from the activated receipt"
+        elsif activated.is_a?(Hash) && activated["version"] != versions.last
+          findings << "#{name} activated #{activated["version"].inspect} but the lockfile resolved #{versions.last.inspect}"
+        end
       end
       receipt.each_key do |name|
         next if lockfile["all_versions"].key?(name)
