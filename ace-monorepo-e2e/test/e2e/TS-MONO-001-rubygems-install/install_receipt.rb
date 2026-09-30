@@ -645,6 +645,23 @@ module InstallReceipt
       end
     end
 
+    # The three views of the graph must agree in both directions: every
+    # activated ACE gem must be in the lockfile, and every lockfile ACE gem
+    # must be activated.
+    if lockfile && receipt
+      lockfile["all_versions"].each do |name, _versions|
+        next unless name.match?(ACE_PREFIX)
+        next if receipt.key?(name)
+
+        findings << "#{name} in the lockfile but missing from the activated receipt"
+      end
+      receipt.each_key do |name|
+        next if lockfile["all_versions"].key?(name)
+
+        findings << "#{name} activated but missing from the lockfile"
+      end
+    end
+
     findings.concat(registry_remote_findings(lockfile, "normal-mode")) if lockfile
 
     isolation_dirs = [File.join(dir, ".gem"), File.join(dir, ".bundle")].map { |path| File.expand_path(path) }
