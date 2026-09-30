@@ -39,7 +39,7 @@ class ReleaseManifestTest < Minitest::Test
     end
     assert_match(/not readable/, error.message)
   ensure
-    File.chmod(0o644, @source)
+    File.chmod(0o644, @source) if File.exist?(@source)
   end
 
   def test_empty_file_fails

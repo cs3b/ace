@@ -554,7 +554,11 @@ module Ace
                     )
                   else
                     begin
-                      sandbox_path, env_vars, setup_executor = setup_sandbox_if_ts(scenario, run_id || timestamp, output)
+                      run_report_dir = report_dir_for(scenario, run_id || timestamp)
+                      sandbox_path, env_vars, setup_executor = setup_sandbox_if_ts(
+                        scenario, run_id || timestamp, output,
+                        state_file: File.join(run_report_dir, Molecules::SetupExecutor::SETUP_STATE_FILE)
+                      )
                       result = execute_scenario(
                         scenario,
                         cli_args: cli_args,
