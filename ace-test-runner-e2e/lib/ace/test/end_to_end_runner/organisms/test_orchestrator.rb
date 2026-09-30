@@ -235,6 +235,11 @@ module Ace
             value.empty? ? nil : value
           end
 
+          def setup_completed?(sandbox_path)
+            Dir.exist?(sandbox_path) &&
+              File.exist?(File.join(sandbox_path, Molecules::SetupExecutor::SETUP_COMPLETE_MARKER))
+          end
+
           def setup_failed_result(scenario, error_message)
             Models::TestResult.new(
               test_id: scenario.test_id,
@@ -299,7 +304,12 @@ module Ace
             begin
               if report_dir
                 sandbox_path = report_dir.sub(/-reports\z/, "")
-                sandbox_path, env_vars, setup_executor = setup_sandbox_if_ts(scenario, timestamp, output) unless Dir.exist?(sandbox_path)
+                unless setup_completed?(sandbox_path)
+                  # A sandbox without the setup-complete marker was left by a
+                  # failed setup; rerun the deterministic setup so gates like
+                  # release-manifest validation cannot be skipped on retry.
+                  sandbox_path, env_vars, setup_executor = setup_sandbox_if_ts(scenario, timestamp, output)
+                end
               else
                 sandbox_path, env_vars, setup_executor = setup_sandbox_if_ts(scenario, timestamp, output)
               end

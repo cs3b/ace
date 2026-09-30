@@ -3,6 +3,7 @@
 require "fileutils"
 require "open3"
 require "shellwords"
+require "time"
 
 require_relative "release_manifest"
 
@@ -27,6 +28,11 @@ module Ace
             PATH HOME TMPDIR XDG_RUNTIME_DIR TMUX_TMPDIR ACE_TMUX_SESSION
           ]
           RELEASE_MANIFEST_DEFAULT_PATH = File.join(".ace-local", "release", "installation-manifest.json")
+          # Written only after every setup step succeeded. Sandboxes without
+          # this marker were left by a failed setup and must not be reused:
+          # a retry would skip the deterministic gate (e.g. release-manifest
+          # validation) entirely.
+          SETUP_COMPLETE_MARKER = ".ace-e2e-setup-complete"
 
           def initialize(command_runner: nil, system_runner: nil, time_source: nil, sandbox_backend: nil)
             @command_runner = command_runner || method(:capture3)
@@ -66,6 +72,7 @@ module Ace
               execute_step(step, sandbox_dir, env, fixture_source)
               steps_completed += 1
             end
+            File.write(File.join(sandbox_dir, SETUP_COMPLETE_MARKER), "#{Time.now.utc.iso8601}\n")
 
             {
               success: true,

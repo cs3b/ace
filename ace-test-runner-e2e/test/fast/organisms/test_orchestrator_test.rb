@@ -1321,6 +1321,84 @@ class TestOrchestratorTest < Minitest::Test
     end
   end
 
+  def test_report_dir_retry_reruns_setup_after_failed_setup
+    Dir.mktmpdir do |tmpdir|
+      create_ts_test_package_with_setup(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001])
+      report_dir = File.join(tmpdir, ".ace-local", "test-e2e", "TS-TEST-001-test-run00-reports")
+      sandbox_path = report_dir.sub(/-reports\z/, "")
+      # A sandbox left behind by a previously FAILED setup: no completion marker.
+      FileUtils.mkdir_p(sandbox_path)
+
+      setup_calls = 0
+      setup_executor = Object.new
+      setup_executor.define_singleton_method(:execute) do |setup_steps:, sandbox_dir:, fixture_source: nil, scenario_name: nil, run_id: nil, initial_env: {}, git_excludes: [], release_manifest_path: nil|
+        setup_calls += 1
+        File.write(File.join(sandbox_dir, Ace::Test::EndToEndRunner::Molecules::SetupExecutor::SETUP_COMPLETE_MARKER), "ok\n")
+        {
+          success: true,
+          steps_completed: setup_steps.length,
+          error: nil,
+          env: initial_env.merge("PROJECT_ROOT_PATH" => "."),
+          tmux_session: nil
+        }
+      end
+      setup_executor.define_singleton_method(:teardown) { nil }
+
+      orchestrator = create_orchestrator(
+        base_dir: tmpdir,
+        provider: "claude:sonnet",
+        setup_executor_factory: ->(sandbox_backend: nil) { setup_executor }
+      )
+
+      orchestrator.run(
+        package: "my-pkg",
+        test_id: "TS-TEST-001",
+        report_dir: report_dir,
+        output: @output
+      )
+
+      assert_equal 1, setup_calls,
+        "a sandbox without the setup-complete marker must be re-set-up, never reused"
+    end
+  end
+
+  def test_report_dir_retry_skips_setup_for_completed_sandbox
+    Dir.mktmpdir do |tmpdir|
+      create_ts_test_package_with_setup(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001])
+      report_dir = File.join(tmpdir, ".ace-local", "test-e2e", "TS-TEST-001-test-run00-reports")
+      sandbox_path = report_dir.sub(/-reports\z/, "")
+      FileUtils.mkdir_p(sandbox_path)
+      File.write(
+        File.join(sandbox_path, Ace::Test::EndToEndRunner::Molecules::SetupExecutor::SETUP_COMPLETE_MARKER),
+        "ok\n"
+      )
+
+      setup_calls = 0
+      setup_executor = Object.new
+      setup_executor.define_singleton_method(:execute) do |**|
+        setup_calls += 1
+        {success: true, steps_completed: 0, error: nil, env: {}, tmux_session: nil}
+      end
+      setup_executor.define_singleton_method(:teardown) { nil }
+
+      orchestrator = create_orchestrator(
+        base_dir: tmpdir,
+        provider: "claude:sonnet",
+        setup_executor_factory: ->(sandbox_backend: nil) { setup_executor }
+      )
+
+      orchestrator.run(
+        package: "my-pkg",
+        test_id: "TS-TEST-001",
+        report_dir: report_dir,
+        output: @output
+      )
+
+      assert_equal 0, setup_calls,
+        "a completed sandbox must be reused without rerunning setup"
+    end
+  end
+
   private
 
   def fixture_copying_setup_executor(source_root:)
