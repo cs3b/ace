@@ -102,19 +102,21 @@ module InstallReceipt
     findings
   end
 
-  # Gem names are not always require paths (ace-bundle ships ace/bundle.rb),
-  # so the entry point is resolved against the spec's require paths.
+  # Gem names are not reliable require paths (ace-bundle ships ace/bundle.rb,
+  # ace-test-runner-e2e ships ace/test/end_to_end_runner.rb). ACE gems follow
+  # the version-file convention, so the entry point is the require path of
+  # the file that declares the gem's own VERSION constant.
   def require_gem_entry(spec)
-    candidates = [
-      spec.name.to_s,
-      spec.name.to_s.tr("-", "/"),
-      spec.name.to_s.tr("-", "_")
-    ]
     spec.require_paths.each do |require_path|
-      candidates.each do |candidate|
-        entry = File.join(spec.full_gem_path.to_s, require_path, "#{candidate}.rb")
-        return candidate if File.file?(entry)
+      lib_root = File.join(spec.full_gem_path.to_s, require_path)
+      pattern = /VERSION\s*=\s*["']#{Regexp.escape(spec.version.to_s)}["']/
+      entry_file = Dir.glob(File.join(lib_root, "**", "*.rb")).find do |file|
+        File.file?(file) && File.read(file).match?(pattern)
       end
+      next unless entry_file
+
+      entry = entry_file.delete_prefix(lib_root).delete_prefix("/").delete_suffix(".rb")
+      return entry
     end
     nil
   end

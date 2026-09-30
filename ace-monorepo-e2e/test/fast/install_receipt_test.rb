@@ -757,6 +757,40 @@ def test_verify_requires_load_evidence_in_receipts
     verdict["findings"].inspect)
 end
 
+def test_require_gem_entry_resolves_real_gem_layouts
+  layouts = {
+    "ace-bundle" => "ace/bundle",
+    "ace-test-runner" => "ace/test_runner",
+    "ace-test-runner-e2e" => "ace/test/end_to_end_runner",
+    "ace-support-test-helpers" => "ace/test_support"
+  }
+  layouts.each do |gem_name, expected_entry|
+    Dir.mktmpdir do |gem_dir|
+      entry_file = File.join(gem_dir, "lib", expected_entry + ".rb")
+      FileUtils.mkdir_p(File.dirname(entry_file))
+      version_line = "VERSION = \"1.2.3\""
+      File.write(entry_file, version_line + "
+")
+      spec = Struct.new(:name, :version, :full_gem_path, :require_paths).new(
+        gem_name, Gem::Version.new("1.2.3"), gem_dir, ["lib"]
+      )
+
+      assert_equal expected_entry, InstallReceipt.require_gem_entry(spec),
+        gem_name + " must resolve its real entry point"
+    end
+  end
+end
+
+def test_require_gem_entry_returns_nil_without_any_layout
+  Dir.mktmpdir do |gem_dir|
+    spec = Struct.new(:name, :version, :full_gem_path, :require_paths).new(
+      "ace-nothing", Gem::Version.new("0.0.1"), gem_dir, ["lib"]
+    )
+
+    assert_nil InstallReceipt.require_gem_entry(spec)
+  end
+end
+
   def test_finalize_rejects_doctored_acceptance_artifact_states
     fixture = build_complete_fixture
     report_dir = File.join(@tmpdir, "run-reports")
