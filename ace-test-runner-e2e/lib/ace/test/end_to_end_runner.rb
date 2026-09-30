@@ -20,6 +20,7 @@ require_relative "end_to_end_runner/atoms/display_helpers"
 
 # Molecules
 require_relative "end_to_end_runner/molecules/fixture_copier"
+require_relative "end_to_end_runner/molecules/release_manifest"
 require_relative "end_to_end_runner/molecules/scenario_loader"
 require_relative "end_to_end_runner/molecules/bwrap_sandbox_backend"
 require_relative "end_to_end_runner/molecules/sandbox_runtime_builder"

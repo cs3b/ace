@@ -8,10 +8,10 @@ cost-tier: deep
 tool-under-test: bundle
 
 sandbox-layout:
-  results/tc/01/: "Gem discovery from Gemfile (gem list, count)"
-  results/tc/02/: "Normal bundle install evidence (stdout, exit)"
-  results/tc/03/: "Full-index fallback evidence (stdout, exit)"
-  results/tc/04/: "Classification and proof artifact"
+  results/tc/01/: "Gem discovery from Gemfile (gem list, count) and the frozen release manifest copy"
+  results/tc/02/: "Normal bundle install evidence (stdout, exit, receipts, consumer-only resolutions)"
+  results/tc/03/: "Full-index fallback evidence (stdout, exit, receipts, consumer-only resolutions)"
+  results/tc/04/: "Classification, exact-version acceptance, and proof artifact"
 
 e2e-justification: >
   Verifying gem installation from RubyGems.org requires network access, a real
@@ -34,5 +34,45 @@ setup:
       echo "source 'https://rubygems.org'" > Gemfile
       echo "" >> Gemfile
       grep "^[[:space:]]*gem 'ace-" "${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}/Gemfile" | sed "s/, path:.*//" >> Gemfile
+  - release-manifest:
+      to: results/tc/01/release-manifest.json
+      require:
+        - ace-assign
+        - ace-bundle
+        - ace-git
+        - ace-git-forgejo
+        - name: ace-git-github
+          supersedes: ["0.1.2"]
+        - ace-git-worktree
+        - ace-handbook
+        - ace-handbook-integration-pi
+        - ace-lab
+        - ace-llm
+        - ace-llm-providers-cli
+        - ace-overseer
+        - ace-review
+        - ace-runtime
+        - ace-support-cli
+        - ace-support-test-helpers
+        - ace-task
+        - ace-test
+        - ace-test-runner
+        - ace-test-runner-e2e
+        - name: ace-support-cli
+          supersedes: ["0.6.8"]
+        - name: ace-bundle
+          supersedes: ["0.44.1"]
+        - name: ace-review
+          supersedes: ["0.56.0"]
+        - name: ace-task
+          supersedes: ["0.38.0"]
+        - name: ace-llm
+          supersedes: ["0.41.1"]
+        - name: ace-llm-providers-cli
+          supersedes: ["0.35.2"]
+        - name: ace-test-runner
+          supersedes: ["0.27.0"]
+        - name: ace-test-runner-e2e
+          supersedes: ["0.40.6"]
   - agent-env:
       PROJECT_ROOT_PATH: .

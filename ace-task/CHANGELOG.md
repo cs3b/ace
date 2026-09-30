@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.38.1] - 2026-09-29
+
+### Fixed
+- The released gemspec now declares `ace-git-github ~> 0.2`, matching the source
+  constraint: the previously published 0.38.0 metadata still pinned `~> 0.1.1`,
+  which kept published installations resolving ace-git-github 0.1.2 and made
+  the released 0.2.0 unreachable through dependency resolution.
+
 ## [0.38.0] - 2026-09-28
 
 ### Added

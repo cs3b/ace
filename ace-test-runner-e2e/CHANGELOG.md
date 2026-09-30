@@ -15,6 +15,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The full-suite automatic retry (retry-failures-once) excludes uncertain scenarios — their side effects are never replayed. They stay in the final tally as errors and are listed by `FailureFinder#find_uncertain_scenarios` for explicit reconciliation. Explicit single-run `--only-failures` keeps them runnable (deliberate human reconciliation).
 - `read_agent_result` (single and package runs) and the suite metadata reconcile keep a fresh pipeline ERROR authoritative: retained metadata.yml can no longer upgrade an errored execution to PASS.
 - Verifier failures report `infrastructure-error` (runner/repair failures keep `runner-error`).
+- TS-MONO-001-style scenarios can declare a `release-manifest` setup action: the runner
+  carries only the explicitly allowed `ACE_RELEASE_MANIFEST` host input (absolute path,
+  defaulting to the source root) into deterministic setup, which validates the strict
+  schema-version-1 manifest and copies its exact bytes into the sandbox before any
+  install goal can run. Invalid or missing input fails setup, and a failed deterministic
+  setup now aborts the scenario with an ERROR result instead of degrading to an
+  LLM-driven sandbox.
 
 ## [0.40.6] - 2026-09-29
 

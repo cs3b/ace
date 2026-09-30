@@ -44,6 +44,10 @@ module Ace
             started_at = Time.now
             phase = :setup
             FileUtils.mkdir_p(report_dir)
+            # A retry in the same report directory must start with neither
+            # terminal marker present: only this attempt's outcome may remain.
+            FileUtils.rm_f(File.join(report_dir, ".host-pipeline-complete.json"))
+            FileUtils.rm_f(File.join(report_dir, ".host-pipeline-failed.json"))
             write_command_record(report_dir, "runner", provider: @provider, cli_args: cli_args)
             write_tc_manifests(report_dir, scenario, test_cases: test_cases)
 
@@ -141,7 +145,7 @@ module Ace
               fallback: query_fallback_for(@verifier_provider)
             )
 
-            @report_generator.generate(
+            report = @report_generator.generate(
               scenario: scenario,
               verifier_output: verifier_response[:text],
               report_dir: report_dir,
@@ -156,8 +160,26 @@ module Ace
                 initial_artifact_contract: initial_artifact_contract
               )
             )
+            # Host-side completion record, written after the report: the
+            # runner-writable metadata.yml alone cannot prove the pipeline
+            # finished. A rescue below never writes this file.
+            File.write(File.join(report_dir, ".host-pipeline-complete.json"), JSON.generate({
+              "scenario" => scenario.test_id,
+              "runner_provider" => @provider,
+              "verifier_provider" => @verifier_provider,
+              "completed_at" => Time.now.utc.iso8601
+            }))
+            report
           rescue => e
             begin
+              # A failed pipeline leaves an explicit failure record instead of
+              # a completion record; finalization treats absence as failure.
+              File.write(File.join(report_dir, ".host-pipeline-failed.json"), JSON.generate({
+                "scenario" => scenario.test_id,
+                "failure_phase" => phase.to_s,
+                "error" => "#{e.class}: #{e.message}",
+                "completed_at" => Time.now.utc.iso8601
+              }))
               @report_generator.write_failure_report(
                 scenario: scenario,
                 report_dir: report_dir,

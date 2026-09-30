@@ -2,6 +2,7 @@
 
 require "fileutils"
 require "date"
+require "json"
 require "yaml"
 require "ace/b36ts"
 require "ace/test_support/sandbox_package_copy"
@@ -23,6 +24,11 @@ module Ace
         #
         # For API providers: orchestrator writes reports as before.
         class TestOrchestrator
+          # Raised when deterministic sandbox setup fails. The scenario must
+          # not be handed to the LLM afterwards: no goal (and therefore no
+          # install command) may run from a failed setup.
+          class SandboxSetupFailed < StandardError; end
+
           # @param provider [String] LLM provider:model string
           # @param timeout [Integer] Request timeout per test in seconds
           # @param parallel [Integer] Number of tests to run in parallel
@@ -30,10 +36,12 @@ module Ace
           # @param timestamp_generator [#call] Callable that returns a timestamp string
           # @param executor [#execute] Injectable test executor (for testing)
           # @param progress [Boolean] Enable animated progress display
+          # @param release_manifest_input [String, nil] Explicit release manifest path; when nil,
+          #   the single allow-listed host input ACE_RELEASE_MANIFEST is honored.
           def initialize(provider: nil, timeout: nil, parallel: nil, base_dir: nil, timestamp_generator: nil,
             executor: nil, progress: false, discoverer: nil, integration_runner: nil,
             scenario_loader: nil, report_writer: nil, suite_report_writer: nil,
-            setup_executor_factory: nil, runtime_builder: nil)
+            setup_executor_factory: nil, runtime_builder: nil, release_manifest_input: nil)
             config = Molecules::ConfigLoader.load
             @provider = provider || config.dig("execution", "runner_provider") ||
               config.dig("execution", "provider") || "claude:sonnet"
@@ -42,6 +50,9 @@ module Ace
             @base_dir = base_dir || Dir.pwd
             @timestamp_generator = timestamp_generator || method(:default_timestamp)
             @progress = progress
+            @release_manifest_input = sanitize_release_manifest_input(
+              release_manifest_input || ENV["ACE_RELEASE_MANIFEST"]
+            )
             @discoverer = discoverer || Molecules::TestDiscoverer.new
             @integration_runner = integration_runner || Molecules::IntegrationRunner.new(base_dir: @base_dir)
             @loader = scenario_loader || Molecules::ScenarioLoader.new
@@ -128,11 +139,15 @@ module Ace
           # @param scenario [Models::TestScenario] The test scenario
           # @param timestamp [String] Timestamp for sandbox directory naming
           # @param output [IO] Output stream for progress messages
+          # @param sandbox_dir_override [String, nil] Explicit sandbox directory (used by
+          #   report-dir retries so setup and execution share one sandbox path)
+          # @param state_file [String, nil] Host-side retry-state path (report directory)
           # @return [Array(String, Hash, SetupExecutor)] [sandbox_path, env_vars, setup_executor] or [nil, nil, nil]
-          def setup_sandbox_if_ts(scenario, timestamp, output)
+          def setup_sandbox_if_ts(scenario, timestamp, output, sandbox_dir_override: nil, state_file: nil)
             return [nil, nil, nil] unless cli_provider? && scenario.setup_steps.any?
 
-            sandbox_dir = File.join(@base_dir, ".ace-local", "test-e2e", scenario.dir_name(timestamp))
+            sandbox_dir = sandbox_dir_override ||
+              File.join(@base_dir, ".ace-local", "test-e2e", scenario.dir_name(timestamp))
             setup_steps = effective_setup_steps_for(scenario)
             package_copy = Ace::TestSupport::SandboxPackageCopy.new(source_root: @base_dir)
             package_source = File.join(@base_dir, scenario.package.to_s)
@@ -176,13 +191,18 @@ module Ace
                 scenario,
                 protocol_packages,
                 setup_steps: setup_steps
-              )
+              ),
+              release_manifest_path: @release_manifest_input,
+              state_file: state_file
             )
 
             unless result[:success]
-              output.puts "Warning: sandbox setup failed: #{result[:error]}"
+              output.puts "Sandbox setup failed: #{result[:error]}"
+              # Teardown before raising: the caller's rescue fires before its
+              # local variable is assigned, so its ensure would skip cleanup
+              # of resources this executor already created (tmux sessions).
               setup_executor.teardown
-              return [nil, nil, nil]
+              raise SandboxSetupFailed, result[:error].to_s
             end
 
             env = result[:env]
@@ -214,6 +234,89 @@ module Ace
             steps.any? do |step|
               step.is_a?(Hash) && step["run"].to_s.include?(fragment)
             end
+          end
+
+          def sanitize_release_manifest_input(raw)
+            value = raw.to_s.strip
+            value.empty? ? nil : value
+          end
+
+          # Reuse of a completed sandbox restores the environment recorded by
+          # the original setup, so later pipeline phases see the same env
+          # contract (PROJECT_ROOT_PATH, source root, manifest inputs).
+
+          # TS-MONO-001-style scenarios depend on deterministic setup gates
+          # (release-manifest validation) that only the CLI-provider pipeline
+          # runs. An API-provider run must not execute them at all.
+          def assert_deterministic_gate_supported!(scenario)
+            has_manifest_gate = scenario.setup_steps.any? do |step|
+              step.is_a?(Hash) && step.key?("release-manifest")
+            end
+            return unless has_manifest_gate && !cli_provider?
+
+            raise SandboxSetupFailed,
+              "#{scenario.test_id} requires a CLI provider: its release-manifest gate runs in deterministic setup"
+          end
+
+          # rm_rf targets derived from user input (--report-dir) must stay
+          # inside the runner-owned e2e cache root.
+          def owned_sandbox_path?(sandbox_path)
+            cache_root = File.expand_path(File.join(@base_dir, ".ace-local", "test-e2e"))
+            FileUtils.mkdir_p(cache_root)
+            expanded = File.expand_path(sandbox_path)
+            # A symlinked sandbox (or ancestor) could redirect rm_rf outside
+            # the cache; resolve what exists before the containment check.
+            resolved = begin
+              File.realpath(expanded)
+            rescue Errno::ENOENT, Errno::ENOTDIR
+              nearest = expanded
+              nearest = File.dirname(nearest) until nearest == "/" || File.exist?(nearest)
+              File.join(File.realpath(nearest), expanded.delete_prefix(nearest))
+            end
+            real_cache_root = File.realpath(cache_root)
+            resolved.start_with?(real_cache_root + File::SEPARATOR)
+          end
+
+          # Deletion targets derived from scenario data must stay immediate
+          # children of the sandbox: a package value like "../.." must never
+          # reach FileUtils.rm_rf.
+          def sandbox_child(sandbox_path, name)
+            return nil unless name.to_s.match?(/\A[A-Za-z0-9._-]+\z/)
+            return nil if name.to_s.start_with?(".", "-")
+
+            target = File.join(File.expand_path(sandbox_path), name.to_s)
+            return nil unless File.dirname(target) == File.expand_path(sandbox_path)
+
+            target
+          end
+
+          # SandboxPackageCopy.prepare leaves an existing package copy in
+          # place; a retry against an existing sandbox must never execute a
+          # stale copy of the runner assets.
+          def refresh_package_copy(sandbox_path, scenario)
+            package_source = File.join(@base_dir, scenario.package.to_s)
+            return unless File.directory?(package_source)
+
+            package_target = sandbox_child(sandbox_path, scenario.package)
+            return unless package_target
+
+            FileUtils.rm_rf(package_target)
+            Ace::TestSupport::SandboxPackageCopy.new(source_root: @base_dir).prepare(
+              package_name: scenario.package,
+              sandbox_root: sandbox_path
+            )
+          end
+
+          def setup_failed_result(scenario, error_message)
+            Models::TestResult.new(
+              test_id: scenario.test_id,
+              status: "error",
+              test_cases: [],
+              summary: "Sandbox setup failed",
+              error: error_message,
+              started_at: Time.now,
+              completed_at: Time.now
+            )
           end
 
           def sandbox_support_git_excludes(scenario, protocol_packages, setup_steps:)
@@ -256,6 +359,13 @@ module Ace
             scenario = @loader.load(File.dirname(file))
             display = build_display_manager([scenario], output)
             setup_executor = nil
+            begin
+              assert_deterministic_gate_supported!(scenario)
+            rescue SandboxSetupFailed => e
+              result = setup_failed_result(scenario, e.message)
+              display.show_single_result(result)
+              return [result]
+            end
 
             output.puts "Running E2E test: #{scenario.test_id} (#{scenario.package})"
             if test_cases
@@ -265,11 +375,138 @@ module Ace
 
             run_id = cli_provider? ? timestamp : nil
             # When report_dir is provided, derive sandbox path from it (strip -reports suffix)
-            if report_dir
-              sandbox_path = report_dir.sub(/-reports\z/, "")
-              sandbox_path, env_vars, setup_executor = setup_sandbox_if_ts(scenario, timestamp, output) unless Dir.exist?(sandbox_path)
-            else
-              sandbox_path, env_vars, setup_executor = setup_sandbox_if_ts(scenario, timestamp, output)
+            begin
+              if report_dir
+                sandbox_path = report_dir.sub(/-reports\z/, "")
+                # Every filesystem mutation below (refresh_package_copy's
+                # rm_rf, sandbox recreation) requires a runner-owned sandbox;
+                # reject anything else before touching the filesystem.
+                unless owned_sandbox_path?(sandbox_path)
+                  result = setup_failed_result(
+                    scenario,
+                    "report directory must live under the runner-owned .ace-local/test-e2e cache: #{report_dir}"
+                  )
+                  display.show_single_result(result)
+                  return [result]
+                end
+                state_file = File.join(report_dir, Molecules::SetupExecutor::SETUP_STATE_FILE)
+                # Effective steps (including profile bootstrap) are what
+                # setup executed, so they are what retry state must match.
+                effective_steps = effective_setup_steps_for(scenario)
+                # Transient resources (tmux sessions) die with the first
+                # run's teardown; such scenarios always re-set-up on retry.
+                declares_transient = effective_steps.any? do |step|
+                  step == "tmux-session" || (step.is_a?(Hash) && step.key?("tmux-session"))
+                end
+                state = declares_transient ? nil : Molecules::SetupExecutor.setup_state_for(
+                  state_file, sandbox_path, setup_steps: effective_steps
+                )
+                if state
+                  # A completed sandbox whose recorded environment and
+                  # essential outputs are intact may be reused. Prior goal
+                  # evidence never survives a reuse: results are cleared and
+                  # the validated manifest copy restored by revalidation.
+                  # The prior attempt's terminal markers and completion
+                  # record are invalidated FIRST: if any later retry step
+                  # fails, the run is an ERROR, never the previous pass.
+                  FileUtils.rm_f(File.join(report_dir, ".host-pipeline-complete.json"))
+                  FileUtils.rm_f(File.join(report_dir, ".host-pipeline-failed.json"))
+                  FileUtils.rm_f(File.join(report_dir, "metadata.yml"))
+                  # Transient-resource scenarios and full retries re-setup in
+                  # a FRESH sandbox: rerunning idempotence-sensitive steps
+                  # (initial commits) or trusting prior package/Gemfile state
+                  # in a used sandbox is not safe.
+                  fresh_sandbox_for_retry = declares_transient ||
+                    (test_cases.nil? || test_cases.empty?)
+                  env_vars = fresh_sandbox_for_retry ? nil : Molecules::SetupExecutor.build_reuse_env(state["env"])
+                  reusable = env_vars && File.file?(File.join(sandbox_path, "Gemfile"))
+                  if reusable
+                    # The sandbox Gemfile is derived from the source root's:
+                    # a changed root Gemfile (or a tampered copy) forces a
+                    # fresh setup.
+                    gemfile_state = state["gemfile"]
+                    if gemfile_state.is_a?(Hash) && gemfile_state["source_digest"]
+                      source_root = gemfile_state["source_root"].to_s
+                      root_gemfile = source_root.empty? ? nil : File.join(source_root, "Gemfile")
+                      generated_gemfile = File.join(sandbox_path, "Gemfile")
+                      reusable = root_gemfile && File.file?(root_gemfile) &&
+                        Digest::SHA256.file(root_gemfile).hexdigest == gemfile_state["source_digest"] &&
+                        Digest::SHA256.file(generated_gemfile).hexdigest == gemfile_state["generated_digest"]
+                    end
+                  end
+                  if reusable
+                    refresh_package_copy(sandbox_path, scenario)
+                    # A filtered retry clears only its selected goals' result
+                    # directories; prerequisite goals' evidence is retained
+                    # for classification.
+                    Array(test_cases).each do |tc_id|
+                      FileUtils.rm_rf(File.join(sandbox_path, "results", "tc", format("%02d", tc_id.delete_prefix("TC-").to_i)))
+                    end
+                    reusable = Molecules::SetupExecutor.revalidate_release_manifest(
+                      state_file: state_file, sandbox_dir: sandbox_path, explicit: @release_manifest_input,
+                      setup_steps: effective_steps
+                    )
+                  end
+
+                  unless reusable
+                    # Every non-reused run starts from a pristine sandbox: no
+                    # prior attempt state (evidence, git repo, tmux, runtime)
+                    # survives into a fresh deterministic setup. The deletion
+                    # target must be a runner-owned directory under the e2e
+                    # cache root; an unrestricted --report-dir value must
+                    # never reach rm_rf.
+                    if owned_sandbox_path?(sandbox_path)
+                      FileUtils.rm_rf(sandbox_path)
+                    else
+                      return [setup_failed_result(
+                        scenario,
+                        "report directory must live under the runner-owned .ace-local/test-e2e cache: #{report_dir}"
+                      )]
+                    end
+                    sandbox_path, env_vars, setup_executor = setup_sandbox_if_ts(
+                      scenario, timestamp, output,
+                      sandbox_dir_override: sandbox_path, state_file: state_file
+                    )
+                  end
+                else
+                  # No usable retry state (failed setup, changed manifest, or
+                  # escaped manifest target) forces a fresh deterministic
+                  # setup against the retry's own sandbox path. When setup is
+                  # inapplicable (returns nils), the derived path stays.
+                  # The prior attempt's records are invalidated first, and the
+                  # sandbox itself is recreated: rerunning deterministic setup
+                  # in a used sandbox (existing git repo, prior goal changes)
+                  # is not safe.
+                  FileUtils.rm_f(File.join(report_dir, ".host-pipeline-complete.json"))
+                  FileUtils.rm_f(File.join(report_dir, ".host-pipeline-failed.json"))
+                  FileUtils.rm_f(File.join(report_dir, "metadata.yml"))
+                  FileUtils.rm_rf(sandbox_path) if Dir.exist?(sandbox_path)
+                  refresh_package_copy(sandbox_path, scenario)
+                  new_path, new_env, setup_executor = setup_sandbox_if_ts(
+                    scenario, timestamp, output,
+                    sandbox_dir_override: sandbox_path, state_file: state_file
+                  )
+                  if new_path
+                    sandbox_path, env_vars = new_path, new_env
+                  end
+                end
+              else
+                # The first run records retry state under its report directory;
+                # the sandbox itself lives next to it without the -reports suffix.
+                sandbox_path = report_dir_for(scenario, timestamp).sub(/-reports\z/, "")
+                state_file = File.join(report_dir_for(scenario, timestamp), Molecules::SetupExecutor::SETUP_STATE_FILE)
+                sandbox_path, env_vars, setup_executor = setup_sandbox_if_ts(
+                  scenario, timestamp, output,
+                  sandbox_dir_override: sandbox_path, state_file: state_file
+                )
+              end
+            rescue SandboxSetupFailed => e
+              # A failed deterministic setup must never degrade into an
+              # LLM-driven run: no goal executes, so no install can happen.
+              result = setup_failed_result(scenario, e.message)
+              display.show_single_result(result)
+              output.puts "Error: #{e.message}"
+              return [result]
             end
             result = execute_scenario(
               scenario,
@@ -329,6 +566,19 @@ module Ace
 
             # Load scenarios upfront for titles and report generation
             scenarios = files.map { |f| @loader.load(File.dirname(f)) }
+            # API providers cannot run deterministic setup gates: those
+            # scenarios get an explicit error while ungated ones still run.
+            gate_blocked = {}
+            unless cli_provider?
+              scenarios.each_with_index do |scenario, index|
+                next unless scenario.setup_steps.any? { |step| step.is_a?(Hash) && step.key?("release-manifest") }
+
+                gate_blocked[index] = setup_failed_result(
+                  scenario,
+                  "#{scenario.test_id} requires a CLI provider: its release-manifest gate runs in deterministic setup"
+                )
+              end
+            end
 
             display = build_display_manager(scenarios, output)
             display.initialize_display
@@ -337,11 +587,15 @@ module Ace
             run_ids = cli_provider? ? generate_timestamps(scenarios.size) : Array.new(scenarios.size)
 
             queue = Queue.new
-            scenarios.each_with_index { |scenario, index| queue << [index, scenario, run_ids[index]] }
+            scenarios.each_with_index do |scenario, index|
+              queue << [index, scenario, run_ids[index]] unless gate_blocked.key?(index)
+            end
 
             results = Array.new(files.size)
+            gate_blocked.each { |index, result| results[index] = result }
             mutex = Mutex.new
             completed = 0
+            gate_blocked.size.times { completed += 1 }
 
             thread_count = [@parallel, files.size].min
             done = false
@@ -383,7 +637,11 @@ module Ace
                     )
                   else
                     begin
-                      sandbox_path, env_vars, setup_executor = setup_sandbox_if_ts(scenario, run_id || timestamp, output)
+                      run_report_dir = report_dir_for(scenario, run_id || timestamp)
+                      sandbox_path, env_vars, setup_executor = setup_sandbox_if_ts(
+                        scenario, run_id || timestamp, output,
+                        state_file: File.join(run_report_dir, Molecules::SetupExecutor::SETUP_STATE_FILE)
+                      )
                       result = execute_scenario(
                         scenario,
                         cli_args: cli_args,
@@ -393,6 +651,11 @@ module Ace
                         env_vars: env_vars,
                         verify: verify
                       )
+                    rescue SandboxSetupFailed => e
+                      # A failed deterministic setup must never degrade into
+                      # an LLM-driven run: no goal executes, so no install
+                      # can happen.
+                      result = setup_failed_result(scenario, e.message)
                     ensure
                       setup_executor&.teardown
                     end
@@ -540,12 +803,16 @@ module Ace
           def missing_agent_report_result(scenario, expected_dir, fallback_result)
             return fallback_result.with_report_dir(expected_dir) if fallback_result.status == "skip"
 
+            # Preserve any recorded setup/execution failure: a missing report
+            # directory must not mask why the run went wrong.
+            inherited = fallback_result.error.to_s.strip
             Models::TestResult.new(
               test_id: scenario.test_id,
               status: "error",
               test_cases: fallback_result.test_cases,
               summary: "Missing CLI report directory",
-              error: "Expected report directory was not created: #{expected_dir}",
+              error: inherited.empty? ? "Expected report directory was not created: #{expected_dir}" :
+                "#{inherited} (expected report directory was not created: #{expected_dir})",
               started_at: fallback_result.started_at,
               completed_at: fallback_result.completed_at,
               report_dir: expected_dir

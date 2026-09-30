@@ -2,6 +2,9 @@
 
 require_relative "../../test_helper"
 
+require "digest"
+require "json"
+
 class SetupExecutorTest < Minitest::Test
   FakeStatus = Struct.new(:exitstatus) do
     def success?
@@ -498,7 +501,240 @@ class SetupExecutorTest < Minitest::Test
     end
   end
 
+  def test_release_manifest_copies_explicit_input_into_sandbox
+    Dir.mktmpdir do |tmpdir|
+      sandbox = File.join(tmpdir, "sandbox")
+      manifest = File.join(tmpdir, "installation-manifest.json")
+      File.write(manifest, JSON.generate(valid_release_manifest))
+
+      result = @executor.execute(
+        setup_steps: [{"release-manifest" => {"to" => "results/tc/01/release-manifest.json"}}],
+        sandbox_dir: sandbox,
+        release_manifest_path: manifest
+      )
+
+      assert result[:success]
+      assert_equal File.read(manifest), File.read(File.join(sandbox, "results/tc/01/release-manifest.json"))
+    end
+  end
+
+  def test_release_manifest_defaults_to_source_root_path
+    Dir.mktmpdir do |tmpdir|
+      sandbox = File.join(tmpdir, "sandbox")
+      source_root = File.join(tmpdir, "source")
+      manifest_dir = File.join(source_root, ".ace-local", "release")
+      FileUtils.mkdir_p([sandbox, manifest_dir])
+      manifest = File.join(manifest_dir, "installation-manifest.json")
+      File.write(manifest, JSON.generate(valid_release_manifest))
+
+      result = @executor.execute(
+        setup_steps: [{"release-manifest" => {"to" => "results/tc/01/release-manifest.json"}}],
+        sandbox_dir: sandbox,
+        initial_env: {"ACE_E2E_SOURCE_ROOT" => source_root}
+      )
+
+      assert result[:success]
+      assert_equal File.read(manifest), File.read(File.join(sandbox, "results/tc/01/release-manifest.json"))
+    end
+  end
+
+  def test_release_manifest_rejects_relative_explicit_path
+    Dir.mktmpdir do |sandbox|
+      result = @executor.execute(
+        setup_steps: [{"release-manifest" => {"to" => "results/tc/01/release-manifest.json"}}],
+        sandbox_dir: sandbox,
+        release_manifest_path: "relative/manifest.json"
+      )
+
+      refute result[:success]
+      assert_match(/absolute JSON file path/, result[:error])
+    end
+  end
+
+  def test_release_manifest_failure_skips_later_steps
+    Dir.mktmpdir do |tmpdir|
+      sandbox = File.join(tmpdir, "sandbox")
+      manifest = File.join(tmpdir, "installation-manifest.json")
+      File.write(manifest, JSON.generate(valid_release_manifest.merge("schema_version" => 9)))
+
+      result = @executor.execute(
+        setup_steps: [
+          {"release-manifest" => {"to" => "results/tc/01/release-manifest.json"}},
+          {"run" => "echo installed > install-attempted.txt"}
+        ],
+        sandbox_dir: sandbox,
+        release_manifest_path: manifest
+      )
+
+      refute result[:success]
+      assert_match(/unsupported schema_version/, result[:error])
+      refute File.exist?(File.join(sandbox, "install-attempted.txt")),
+        "no step after a failed release-manifest validation may run"
+    end
+  end
+
+  def test_release_manifest_enforces_scenario_required_packages
+    Dir.mktmpdir do |tmpdir|
+      sandbox = File.join(tmpdir, "sandbox")
+      manifest = File.join(tmpdir, "installation-manifest.json")
+      File.write(manifest, JSON.generate(valid_release_manifest))
+
+      result = @executor.execute(
+        setup_steps: [{"release-manifest" => {"to" => "results/tc/01/release-manifest.json", "require" => ["ace-lab"]}}],
+        sandbox_dir: sandbox,
+        release_manifest_path: manifest
+      )
+
+      refute result[:success]
+      assert_match(/missing required package: ace-lab/, result[:error])
+    end
+  end
+
+  def test_release_manifest_missing_input_fails
+    Dir.mktmpdir do |sandbox|
+      result = @executor.execute(
+        setup_steps: [{"release-manifest" => {"to" => "results/tc/01/release-manifest.json"}}],
+        sandbox_dir: sandbox,
+        release_manifest_path: File.join(sandbox, "absent.json")
+      )
+
+      refute result[:success]
+      assert_match(/missing/, result[:error])
+    end
+  end
+
+def test_revalidate_rejects_escaped_or_symlinked_manifest_targets
+  Dir.mktmpdir do |tmpdir|
+    sandbox = File.join(tmpdir, "sandbox")
+    outside = File.join(tmpdir, "outside")
+    FileUtils.mkdir_p([File.join(sandbox, "results", "tc", "01"), outside])
+    manifest = File.join(tmpdir, "manifest.json")
+    File.write(manifest, JSON.generate(valid_release_manifest))
+    digest = Digest::SHA256.file(manifest).hexdigest
+
+    escaped_state = File.join(tmpdir, "escaped-state.json")
+    File.write(escaped_state, JSON.generate({
+      "sandbox_dir" => sandbox,
+      "setup_steps" => [],
+      "release_manifest" => {"source" => manifest, "target" => "../../outside/manifest.json", "digest" => digest},
+      "env" => {"ACE_E2E_SOURCE_ROOT" => tmpdir}
+    }))
+    refute Ace::Test::EndToEndRunner::Molecules::SetupExecutor.revalidate_release_manifest(
+      state_file: escaped_state, sandbox_dir: sandbox, explicit: manifest
+    )
+    refute File.exist?(File.join(outside, "manifest.json"))
+
+    symlink_state = File.join(tmpdir, "symlink-state.json")
+    File.write(symlink_state, JSON.generate({
+      "sandbox_dir" => sandbox,
+      "setup_steps" => [],
+      "release_manifest" => {"source" => manifest, "target" => "results/tc/01/release-manifest.json", "digest" => digest},
+      "env" => {"ACE_E2E_SOURCE_ROOT" => tmpdir}
+    }))
+    FileUtils.rm_rf(File.join(sandbox, "results", "tc", "01"))
+    File.symlink(outside, File.join(sandbox, "results", "tc", "01"))
+
+    refute Ace::Test::EndToEndRunner::Molecules::SetupExecutor.revalidate_release_manifest(
+      state_file: symlink_state, sandbox_dir: sandbox, explicit: manifest
+    )
+    refute File.exist?(File.join(outside, "release-manifest.json"))
+  end
+end
+
+def test_revalidate_requires_matching_setup_steps
+  Dir.mktmpdir do |tmpdir|
+    sandbox = File.join(tmpdir, "sandbox")
+    FileUtils.mkdir_p(sandbox)
+    state = File.join(tmpdir, "state.json")
+    File.write(state, JSON.generate({
+      "sandbox_dir" => sandbox,
+      "setup_steps" => ["copy-fixtures"],
+      "release_manifest" => nil,
+      "env" => {}
+    }))
+
+    refute Ace::Test::EndToEndRunner::Molecules::SetupExecutor.setup_state_for(
+      state, sandbox, setup_steps: ["git-init"]
+    )
+    assert Ace::Test::EndToEndRunner::Molecules::SetupExecutor.setup_state_for(
+      state, sandbox, setup_steps: ["copy-fixtures"]
+    )
+  end
+end
+
+def test_execute_wipes_prior_goal_results
+  Dir.mktmpdir do |sandbox|
+    stale = File.join(sandbox, "results", "tc", "02")
+    FileUtils.mkdir_p(stale)
+    File.write(File.join(stale, "install.exit"), "0\n")
+
+    result = @executor.execute(setup_steps: [], sandbox_dir: sandbox)
+
+    assert result[:success]
+    refute Dir.exist?(File.join(sandbox, "results")),
+      "prior-attempt goal evidence must not survive into a retried run"
+  end
+end
+
+def test_revalidate_allows_existing_regular_file_copy
+  Dir.mktmpdir do |tmpdir|
+    sandbox = File.join(tmpdir, "sandbox")
+    target_dir = File.join(sandbox, "results", "tc", "01")
+    FileUtils.mkdir_p(target_dir)
+    manifest = File.join(tmpdir, "manifest.json")
+    File.write(manifest, JSON.generate(valid_release_manifest))
+    # A previous run already copied the manifest to the target.
+    FileUtils.cp(manifest, File.join(target_dir, "release-manifest.json"))
+    state = File.join(tmpdir, "state.json")
+    File.write(state, JSON.generate({
+      "sandbox_dir" => sandbox,
+      "setup_steps" => [],
+      "release_manifest" => {"source" => manifest, "target" => "results/tc/01/release-manifest.json", "digest" => Digest::SHA256.file(manifest).hexdigest},
+      "env" => {"ACE_E2E_SOURCE_ROOT" => tmpdir}
+    }))
+
+    assert Ace::Test::EndToEndRunner::Molecules::SetupExecutor.revalidate_release_manifest(
+      state_file: state, sandbox_dir: sandbox, explicit: manifest
+    )
+  end
+end
+
+def test_validated_manifest_target_rejects_file_parent_component
+  Dir.mktmpdir do |tmpdir|
+    sandbox = File.join(tmpdir, "sandbox")
+    FileUtils.mkdir_p(sandbox)
+    File.write(File.join(sandbox, "blocker"), "x")
+
+    assert_nil Ace::Test::EndToEndRunner::Molecules::SetupExecutor.validated_manifest_target(
+      sandbox, "blocker/results/tc/01/release-manifest.json"
+    )
+  end
+end
+
+def test_validated_manifest_target_rejects_dangling_symlink_component
+  Dir.mktmpdir do |tmpdir|
+    sandbox = File.join(tmpdir, "sandbox")
+    outside = File.join(tmpdir, "outside")
+    FileUtils.mkdir_p([File.join(sandbox, "results", "tc"), outside])
+    File.symlink(outside, File.join(sandbox, "results", "tc", "01"))
+
+    assert_nil Ace::Test::EndToEndRunner::Molecules::SetupExecutor.validated_manifest_target(
+      sandbox, "results/tc/01/release-manifest.json"
+    )
+  end
+end
+
   private
+
+  def valid_release_manifest
+    {
+      "schema_version" => 1,
+      "source_sha" => "a" * 40,
+      "packages" => [
+        {"name" => "ace-git-github", "artifact_version" => "0.2.0", "source_sha" => "b" * 40}
+      ]
+    }
+  end
 
   def build_tmux_executor(command_calls:, system_calls: [], time_source: -> { Time.now.to_i })
     Ace::Test::EndToEndRunner::Molecules::SetupExecutor.new(
