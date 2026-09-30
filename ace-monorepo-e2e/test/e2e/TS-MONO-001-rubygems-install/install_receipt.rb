@@ -728,6 +728,22 @@ module InstallReceipt
       findings << "ace-git-github activated #{provider_activated} through #{name}, manifest requires #{provider_entry["artifact_version"]}"
     end
 
+    # Transitive ACE packages must agree between the consumer's lockfile and
+    # its activated receipt: an edge cannot be ok while a package activated a
+    # different version than the graph resolved.
+    if lockfile && receipt
+      receipt.each do |name_activated, data|
+        next unless name_activated.match?(ACE_PREFIX)
+
+        locked = lockfile["packages"][name_activated]
+        if locked.nil?
+          findings << "#{name_activated} activated in the #{name} consumer graph but missing from its lockfile"
+        elsif locked != data["version"]
+          findings << "#{name_activated} activated #{data["version"]} but the #{name} consumer lockfile resolved #{locked}"
+        end
+      end
+    end
+
     [name, "ace-git-github"].each do |gem_name|
       gem_path = receipt && receipt.dig(gem_name, "path")
       if gem_path.nil? || gem_path.to_s.empty?

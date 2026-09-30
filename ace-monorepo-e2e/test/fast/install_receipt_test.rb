@@ -723,6 +723,23 @@ def test_finalize_rejects_runner_artifact_from_another_freeze
     verdict["findings"].inspect)
 end
 
+def test_verify_rejects_consumer_receipt_lockfile_disagreement
+  fixture = build_complete_fixture
+  root = File.join(fixture[:normal], "consumer", "ace-bundle")
+  receipt = JSON.parse(File.read(File.join(root, "install-receipt.json")))
+  receipt["packages"]["ace-git"] = {"version" => "0.24.0", "path" => File.join(root, ".bundle", "gems", "ace-git-0.24.0")}
+  File.write(File.join(root, "install-receipt.json"), JSON.pretty_generate(receipt))
+
+  verdict = InstallReceipt.verify(
+    manifest_path: @manifest_path,
+    mode_dirs: {"normal" => fixture[:normal], "full_index" => fixture[:full_index]}
+  )
+
+  assert_equal "fail", verdict["acceptance"]
+  assert(verdict["findings"].any? { |finding| finding.include?("ace-git activated in the ace-bundle consumer graph but missing from its lockfile") },
+    verdict["findings"].inspect)
+end
+
   def test_finalize_rejects_doctored_acceptance_artifact_states
     fixture = build_complete_fixture
     report_dir = File.join(@tmpdir, "run-reports")
