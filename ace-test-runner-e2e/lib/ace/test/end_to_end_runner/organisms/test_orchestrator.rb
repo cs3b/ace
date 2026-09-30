@@ -367,14 +367,25 @@ module Ace
                 else
                   # No usable retry state (failed setup, changed manifest, or
                   # escaped manifest target) forces a fresh deterministic
-                  # setup against the retry's own sandbox path.
-                  sandbox_path, env_vars, setup_executor = setup_sandbox_if_ts(
+                  # setup against the retry's own sandbox path. When setup is
+                  # inapplicable (returns nils), the derived path stays.
+                  new_path, new_env, setup_executor = setup_sandbox_if_ts(
                     scenario, timestamp, output,
                     sandbox_dir_override: sandbox_path, state_file: state_file
                   )
+                  if new_path
+                    sandbox_path, env_vars = new_path, new_env
+                  end
                 end
               else
-                sandbox_path, env_vars, setup_executor = setup_sandbox_if_ts(scenario, timestamp, output)
+                # The first run records retry state under its computed report
+                # directory so a later --report-dir retry can find it.
+                sandbox_path = report_dir_for(scenario, timestamp)
+                state_file = File.join(sandbox_path + "-reports", Molecules::SetupExecutor::SETUP_STATE_FILE)
+                sandbox_path, env_vars, setup_executor = setup_sandbox_if_ts(
+                  scenario, timestamp, output,
+                  sandbox_dir_override: sandbox_path, state_file: state_file
+                )
               end
             rescue SandboxSetupFailed => e
               # A failed deterministic setup must never degrade into an

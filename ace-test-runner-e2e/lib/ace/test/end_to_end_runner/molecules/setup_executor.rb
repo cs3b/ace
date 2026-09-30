@@ -278,9 +278,15 @@ module Ace
 
             required = config.is_a?(Hash) ? Array(config["require"]) : []
             source = release_manifest_source(env)
+            # The scenario declares the destination; the copy itself is still
+            # confined to the sandbox with no symlinked path components.
+            target_path = self.class.validated_manifest_target(sandbox_dir, target)
+            raise ArgumentError, "release-manifest target escapes the sandbox: #{target}" unless target_path
+
+            FileUtils.mkdir_p(File.dirname(target_path))
             digest = Molecules::ReleaseManifest.validate_and_copy(
               source_path: source,
-              target_path: File.join(sandbox_dir, target),
+              target_path: target_path,
               required_packages: required
             )
             @release_manifest_state = {
@@ -329,6 +335,11 @@ module Ace
               components = relative.reject { |part| part.empty? || part == "." }
               components.each_with_index do |part, index|
                 current = File.join(current, part)
+                # Components that do not exist yet are created fresh under
+                # the sandbox root by mkdir_p; only existing entries can be
+                # symlinks or wrong node types.
+                next unless File.exist?(current)
+
                 lstat = File.lstat(current)
                 return nil if lstat.symlink?
 
