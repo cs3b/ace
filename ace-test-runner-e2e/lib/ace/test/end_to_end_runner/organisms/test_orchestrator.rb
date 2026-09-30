@@ -406,6 +406,12 @@ module Ace
                   end
                   if reusable
                     refresh_package_copy(sandbox_path, scenario)
+                    # A filtered retry clears only its selected goals' result
+                    # directories; prerequisite goals' evidence is retained
+                    # for classification.
+                    Array(test_cases).each do |tc_id|
+                      FileUtils.rm_rf(File.join(sandbox_path, "results", "tc", tc_id.delete_prefix("TC-")))
+                    end
                     reusable = Molecules::SetupExecutor.revalidate_release_manifest(
                       state_file: state_file, sandbox_dir: sandbox_path, explicit: @release_manifest_input,
                       setup_steps: effective_steps
@@ -413,12 +419,10 @@ module Ace
                   end
 
                   unless reusable
-                    # Full retries and transient-resource scenarios start from
-                    # a pristine sandbox: no prior attempt state survives.
-                    if fresh_sandbox_for_retry && Dir.exist?(sandbox_path)
-                      FileUtils.rm_rf(sandbox_path)
-                    end
-                    refresh_package_copy(sandbox_path, scenario)
+                    # Every non-reused run starts from a pristine sandbox: no
+                    # prior attempt state (evidence, git repo, tmux, runtime)
+                    # survives into a fresh deterministic setup.
+                    FileUtils.rm_rf(sandbox_path) if Dir.exist?(sandbox_path)
                     sandbox_path, env_vars, setup_executor = setup_sandbox_if_ts(
                       scenario, timestamp, output,
                       sandbox_dir_override: sandbox_path, state_file: state_file

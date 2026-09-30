@@ -467,21 +467,6 @@ module Ace
             end
           end
 
-          # The runner subprocess environment is allow-listed: only the
-          # sandbox runtime contract and scenario inputs pass through. The
-          # host process environment (which can carry credentials) does not.
-          def sandboxed_environment(env)
-            allowlisted = PERSISTED_ENV_KEYS.each_with_object({}) do |key, acc|
-              value = env[key]
-              acc[key] = value unless value.nil?
-            end
-            scenario_inputs = env.reject do |key, _value|
-              PERSISTED_ENV_KEYS.include?(key) || RESERVED_ENV_KEYS.include?(key)
-            end.select do |key, value|
-              key.start_with?("ACE_E2E_SCENARIO_") && value.is_a?(String)
-            end
-            allowlisted.merge(scenario_inputs)
-          end
 
           # Merge custom env vars with the process environment
           #
