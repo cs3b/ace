@@ -1,6 +1,9 @@
 # frozen_string_literal: true
 
 require_relative "../../test_helper"
+
+require "digest"
+require "json"
 require "stringio"
 
 class TestOrchestratorTest < Minitest::Test
@@ -1321,6 +1324,81 @@ class TestOrchestratorTest < Minitest::Test
     end
   end
 
+  def test_report_dir_retry_reruns_setup_when_manifest_input_changed
+    Dir.mktmpdir do |tmpdir|
+      create_ts_test_package_with_setup(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001])
+      report_dir = File.join(tmpdir, ".ace-local", "test-e2e", "TS-TEST-001-test-run00-reports")
+      sandbox_path = report_dir.sub(/-reports\z/, "")
+      FileUtils.mkdir_p(sandbox_path)
+      manifest = File.join(tmpdir, "installation-manifest.json")
+      File.write(manifest, JSON.generate({"schema_version" => 1, "source_sha" => "a" * 40, "packages" => [
+        {"name" => "ace-git-github", "artifact_version" => "0.2.0", "source_sha" => "b" * 40}
+      ]}))
+      changed = File.join(tmpdir, "changed-manifest.json")
+      File.write(changed, JSON.generate({"schema_version" => 1, "source_sha" => "c" * 40, "packages" => [
+        {"name" => "ace-git-github", "artifact_version" => "0.3.0", "source_sha" => "d" * 40}
+      ]}))
+      # Completed sandbox from a run against the ORIGINAL manifest.
+      digest = Digest::SHA256.file(manifest).hexdigest
+      File.write(
+        File.join(sandbox_path, Ace::Test::EndToEndRunner::Molecules::SetupExecutor::SETUP_COMPLETE_MARKER),
+        JSON.generate({"completed_at" => Time.now.utc.iso8601,
+                       "release_manifest" => {"source" => manifest, "target" => "results/tc/01/release-manifest.json", "digest" => digest}})
+      )
+      File.write(
+        File.join(sandbox_path, Ace::Test::EndToEndRunner::Molecules::SetupExecutor::SETUP_ENV_FILE),
+        JSON.generate({"PROJECT_ROOT_PATH" => ".", "ACE_E2E_SOURCE_ROOT" => tmpdir})
+      )
+
+      setup_calls = 0
+      setup_executor = Object.new
+      setup_executor.define_singleton_method(:execute) do |**|
+        setup_calls += 1
+        {success: true, steps_completed: 1, error: nil, env: {"PROJECT_ROOT_PATH" => "."}, tmux_session: nil}
+      end
+      setup_executor.define_singleton_method(:teardown) { nil }
+
+      orchestrator = create_orchestrator(
+        base_dir: tmpdir,
+        provider: "claude:sonnet",
+        setup_executor_factory: ->(sandbox_backend: nil) { setup_executor },
+        release_manifest_input: changed
+      )
+
+      orchestrator.run(
+        package: "my-pkg",
+        test_id: "TS-TEST-001",
+        report_dir: report_dir,
+        output: @output
+      )
+
+      assert_equal 1, setup_calls,
+        "a changed manifest input must force a fresh deterministic setup"
+    end
+  end
+
+  def test_setup_persists_only_sandbox_runtime_environment
+    Dir.mktmpdir do |sandbox|
+      original = ENV["ACE_E2E_TEST_SECRET_PROBE"]
+      ENV["ACE_E2E_TEST_SECRET_PROBE"] = "super-secret-token"
+
+      executor = Ace::Test::EndToEndRunner::Molecules::SetupExecutor.new
+      result = executor.execute(
+        setup_steps: [],
+        sandbox_dir: sandbox,
+        initial_env: {"ACE_E2E_SOURCE_ROOT" => "/tmp/source"}
+      )
+
+      assert result[:success]
+      persisted = JSON.parse(File.read(File.join(sandbox, Ace::Test::EndToEndRunner::Molecules::SetupExecutor::SETUP_ENV_FILE)))
+      refute persisted.key?("ACE_E2E_TEST_SECRET_PROBE"),
+        "host environment variables must never be persisted into the sandbox"
+      assert_equal "/tmp/source", persisted["ACE_E2E_SOURCE_ROOT"]
+    ensure
+      original ? ENV["ACE_E2E_TEST_SECRET_PROBE"] = original : ENV.delete("ACE_E2E_TEST_SECRET_PROBE")
+    end
+  end
+
   def test_report_dir_retry_reruns_setup_after_failed_setup
     Dir.mktmpdir do |tmpdir|
       create_ts_test_package_with_setup(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001])
@@ -1370,7 +1448,7 @@ class TestOrchestratorTest < Minitest::Test
       FileUtils.mkdir_p(sandbox_path)
       File.write(
         File.join(sandbox_path, Ace::Test::EndToEndRunner::Molecules::SetupExecutor::SETUP_COMPLETE_MARKER),
-        "ok\n"
+        JSON.generate({"completed_at" => Time.now.utc.iso8601, "release_manifest" => nil})
       )
       File.write(
         File.join(sandbox_path, Ace::Test::EndToEndRunner::Molecules::SetupExecutor::SETUP_ENV_FILE),

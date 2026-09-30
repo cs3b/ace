@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "digest"
 require "fileutils"
 require "json"
 require "open3"
@@ -34,7 +35,15 @@ module Ace
           # a retry would skip the deterministic gate (e.g. release-manifest
           # validation) entirely.
           SETUP_COMPLETE_MARKER = ".ace-e2e-setup-complete"
-      SETUP_ENV_FILE = ".ace-e2e-setup-env.json"
+          SETUP_ENV_FILE = ".ace-e2e-setup-env.json"
+          # Only the sandbox runtime contract is persisted for reuse. The
+          # merged setup environment inherits the host process environment,
+          # which can carry secrets that must never land in a sandbox file.
+          PERSISTED_ENV_KEYS = (
+            Molecules::SandboxRuntimeBuilder::RESERVED_ENV_KEYS + %w[
+              PATH ACE_E2E_SANDBOX_RUNTIME_ROOT ACE_E2E_SANDBOX_RUBY_VERSION ACE_E2E_SANDBOX_RUBY_ROOT
+            ]
+          ).freeze
 
           def initialize(command_runner: nil, system_runner: nil, time_source: nil, sandbox_backend: nil)
             @command_runner = command_runner || method(:capture3)
@@ -64,6 +73,7 @@ module Ace
             end
             @git_excludes = normalize_git_excludes(git_excludes)
             @release_manifest_input = release_manifest_path
+            @release_manifest_state = nil
             steps_completed = 0
             @tmux_session = nil
             @scenario_name = scenario_name
@@ -74,14 +84,19 @@ module Ace
               execute_step(step, sandbox_dir, env, fixture_source)
               steps_completed += 1
             end
-            File.write(File.join(sandbox_dir, SETUP_COMPLETE_MARKER), "#{Time.now.utc.iso8601}\n")
-            File.write(File.join(sandbox_dir, SETUP_ENV_FILE), JSON.generate(merged_environment(env)))
+            merged = merged_environment(env)
+            File.write(File.join(sandbox_dir, SETUP_COMPLETE_MARKER), JSON.generate({
+              "completed_at" => Time.now.utc.iso8601,
+              "release_manifest" => @release_manifest_state
+            }))
+            persisted = merged.slice(*PERSISTED_ENV_KEYS).compact
+            File.write(File.join(sandbox_dir, SETUP_ENV_FILE), JSON.generate(persisted))
 
             {
               success: true,
               steps_completed: steps_completed,
               error: nil,
-              env: merged_environment(env),
+              env: merged,
               tmux_session: @tmux_session
             }
           rescue => e
@@ -256,25 +271,75 @@ module Ace
               target_path: File.join(sandbox_dir, target),
               required_packages: required
             )
+            @release_manifest_state = {
+              "source" => File.expand_path(source),
+              "target" => target,
+              "digest" => Digest::SHA256.file(source).hexdigest
+            }
           end
 
           def release_manifest_source(env)
-            explicit = @release_manifest_input.to_s.strip
-            if explicit.empty?
-              source_root = env["ACE_E2E_SOURCE_ROOT"].to_s.strip
-              if source_root.empty?
-                raise Molecules::ReleaseManifest::Invalid,
-                  "no release manifest input and no ACE_E2E_SOURCE_ROOT to derive the default path"
+            self.class.release_manifest_source_for(env, @release_manifest_input)
+          end
+
+          class << self
+            # Revalidate the current manifest input against a completed
+            # sandbox before it is reused: the validated copy in the sandbox
+            # must still match the invoking process's manifest. Returns true
+            # when reuse may proceed (no manifest state recorded, or the
+            # current input validates to the same digest); false when the
+            # sandbox must be set up again.
+            def revalidate_release_manifest(sandbox_dir:, explicit: nil)
+              state_path = File.join(sandbox_dir, SETUP_COMPLETE_MARKER)
+              return true unless File.file?(state_path)
+
+              state = JSON.parse(File.read(state_path))
+              recorded = state.is_a?(Hash) ? state["release_manifest"] : nil
+              return true if recorded.nil?
+
+              env = begin
+                JSON.parse(File.read(File.join(sandbox_dir, SETUP_ENV_FILE)))
+              rescue StandardError
+                {}
               end
-              return File.join(source_root, RELEASE_MANIFEST_DEFAULT_PATH)
+              source = begin
+                release_manifest_source_for(env, explicit)
+              rescue Molecules::ReleaseManifest::Invalid
+                return false
+              end
+              digest = begin
+                Digest::SHA256.file(source).hexdigest
+              rescue SystemCallError
+                return false
+              end
+
+              return false unless digest == recorded["digest"]
+
+              target_path = File.join(sandbox_dir, recorded["target"])
+              FileUtils.cp(source, target_path)
+              true
+            rescue JSON::ParserError, SystemCallError
+              false
             end
 
-            unless explicit.start_with?("/")
-              raise Molecules::ReleaseManifest::Invalid,
-                "ACE_RELEASE_MANIFEST must be an absolute JSON file path, got: #{explicit}"
-            end
+            def release_manifest_source_for(env, explicit)
+              explicit = explicit.to_s.strip
+              if explicit.empty?
+                source_root = env["ACE_E2E_SOURCE_ROOT"].to_s.strip
+                if source_root.empty?
+                  raise Molecules::ReleaseManifest::Invalid,
+                    "no release manifest input and no ACE_E2E_SOURCE_ROOT to derive the default path"
+                end
+                return File.join(source_root, RELEASE_MANIFEST_DEFAULT_PATH)
+              end
 
-            explicit
+              unless explicit.start_with?("/")
+                raise Molecules::ReleaseManifest::Invalid,
+                  "ACE_RELEASE_MANIFEST must be an absolute JSON file path, got: #{explicit}"
+              end
+
+              explicit
+            end
           end
 
           # Merge custom env vars with the process environment

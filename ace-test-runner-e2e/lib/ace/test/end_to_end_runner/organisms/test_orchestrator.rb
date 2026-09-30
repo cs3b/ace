@@ -139,11 +139,14 @@ module Ace
           # @param scenario [Models::TestScenario] The test scenario
           # @param timestamp [String] Timestamp for sandbox directory naming
           # @param output [IO] Output stream for progress messages
+          # @param sandbox_dir_override [String, nil] Explicit sandbox directory (used by
+          #   report-dir retries so setup and execution share one sandbox path)
           # @return [Array(String, Hash, SetupExecutor)] [sandbox_path, env_vars, setup_executor] or [nil, nil, nil]
-          def setup_sandbox_if_ts(scenario, timestamp, output)
+          def setup_sandbox_if_ts(scenario, timestamp, output, sandbox_dir_override: nil)
             return [nil, nil, nil] unless cli_provider? && scenario.setup_steps.any?
 
-            sandbox_dir = File.join(@base_dir, ".ace-local", "test-e2e", scenario.dir_name(timestamp))
+            sandbox_dir = sandbox_dir_override ||
+              File.join(@base_dir, ".ace-local", "test-e2e", scenario.dir_name(timestamp))
             setup_steps = effective_setup_steps_for(scenario)
             package_copy = Ace::TestSupport::SandboxPackageCopy.new(source_root: @base_dir)
             package_source = File.join(@base_dir, scenario.package.to_s)
@@ -321,16 +324,25 @@ module Ace
             begin
               if report_dir
                 sandbox_path = report_dir.sub(/-reports\z/, "")
-                if setup_completed?(sandbox_path)
-                  # A completed sandbox is reused with its recorded
-                  # environment; a failed-setup sandbox (no marker) is
-                  # re-set-up so deterministic gates cannot be skipped.
+                if setup_completed?(sandbox_path) &&
+                    Molecules::SetupExecutor.revalidate_release_manifest(
+                      sandbox_dir: sandbox_path, explicit: @release_manifest_input
+                    )
+                  # A completed sandbox whose validated manifest still matches
+                  # the current input is reused with its recorded environment.
                   env_vars = restored_sandbox_env(sandbox_path)
                   unless env_vars
-                    sandbox_path, env_vars, setup_executor = setup_sandbox_if_ts(scenario, timestamp, output)
+                    sandbox_path, env_vars, setup_executor = setup_sandbox_if_ts(
+                      scenario, timestamp, output, sandbox_dir_override: sandbox_path
+                    )
                   end
                 else
-                  sandbox_path, env_vars, setup_executor = setup_sandbox_if_ts(scenario, timestamp, output)
+                  # A failed-setup sandbox (no marker), a changed manifest, or
+                  # an unrestorable environment forces a fresh deterministic
+                  # setup against the retry's own sandbox path.
+                  sandbox_path, env_vars, setup_executor = setup_sandbox_if_ts(
+                    scenario, timestamp, output, sandbox_dir_override: sandbox_path
+                  )
                 end
               else
                 sandbox_path, env_vars, setup_executor = setup_sandbox_if_ts(scenario, timestamp, output)
@@ -617,12 +629,16 @@ module Ace
           def missing_agent_report_result(scenario, expected_dir, fallback_result)
             return fallback_result.with_report_dir(expected_dir) if fallback_result.status == "skip"
 
+            # Preserve any recorded setup/execution failure: a missing report
+            # directory must not mask why the run went wrong.
+            inherited = fallback_result.error.to_s.strip
             Models::TestResult.new(
               test_id: scenario.test_id,
               status: "error",
               test_cases: fallback_result.test_cases,
               summary: "Missing CLI report directory",
-              error: "Expected report directory was not created: #{expected_dir}",
+              error: inherited.empty? ? "Expected report directory was not created: #{expected_dir}" :
+                "#{inherited} (expected report directory was not created: #{expected_dir})",
               started_at: fallback_result.started_at,
               completed_at: fallback_result.completed_at,
               report_dir: expected_dir
