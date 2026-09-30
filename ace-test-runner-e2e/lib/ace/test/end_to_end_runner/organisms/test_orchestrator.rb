@@ -376,6 +376,12 @@ module Ace
                   # essential outputs are intact may be reused. Prior goal
                   # evidence never survives a reuse: results are cleared and
                   # the validated manifest copy restored by revalidation.
+                  # The prior attempt's terminal markers and completion
+                  # record are invalidated FIRST: if any later retry step
+                  # fails, the run is an ERROR, never the previous pass.
+                  FileUtils.rm_f(File.join(report_dir, ".host-pipeline-complete.json"))
+                  FileUtils.rm_f(File.join(report_dir, ".host-pipeline-failed.json"))
+                  FileUtils.rm_f(File.join(report_dir, "metadata.yml"))
                   env_vars = Molecules::SetupExecutor.build_reuse_env(state["env"])
                   reusable = env_vars && File.file?(File.join(sandbox_path, "Gemfile"))
                   if reusable
@@ -397,11 +403,7 @@ module Ace
                     # A full retry (no test-case filter) must not inherit the
                     # previous attempt's goal evidence; an explicit partial
                     # retry (e.g. TC-004 only) keeps it for classification.
-                    # Either way the prior completion record is invalidated: a
-                    # retry that fails before rewriting metadata can never be
-                    # blessed by the previous attempt's pass.
                     FileUtils.rm_rf(File.join(sandbox_path, "results")) if test_cases.nil? || test_cases.empty?
-                    FileUtils.rm_f(File.join(File.dirname(state_file), "metadata.yml"))
                     reusable = Molecules::SetupExecutor.revalidate_release_manifest(
                       state_file: state_file, sandbox_dir: sandbox_path, explicit: @release_manifest_input,
                       setup_steps: effective_steps
@@ -420,6 +422,10 @@ module Ace
                   # escaped manifest target) forces a fresh deterministic
                   # setup against the retry's own sandbox path. When setup is
                   # inapplicable (returns nils), the derived path stays.
+                  # The prior attempt's records are invalidated first.
+                  FileUtils.rm_f(File.join(report_dir, ".host-pipeline-complete.json"))
+                  FileUtils.rm_f(File.join(report_dir, ".host-pipeline-failed.json"))
+                  FileUtils.rm_f(File.join(report_dir, "metadata.yml"))
                   refresh_package_copy(sandbox_path, scenario)
                   new_path, new_env, setup_executor = setup_sandbox_if_ts(
                     scenario, timestamp, output,

@@ -66,6 +66,13 @@ module Ace
           # @return [Hash] Result with :success, :steps_completed, :error, :env, :tmux_session keys
           def execute(setup_steps:, sandbox_dir:, fixture_source: nil, scenario_name: nil, run_id: nil, initial_env: {},
             git_excludes: [], release_manifest_path: nil, state_file: nil)
+            # Initialized before any filesystem operation: an early failure
+            # must reach the rescue as a clean setup failure, not as a
+            # secondary error from nil state.
+            env = {}
+            steps_completed = 0
+            @tmux_session = nil
+            @teardown_env = nil
             FileUtils.mkdir_p(sandbox_dir)
             # A rerun invalidates any earlier success up front: state is
             # recreated only after every step and the persisted env succeed.
