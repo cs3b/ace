@@ -1075,7 +1075,7 @@ module InstallReceipt
     loop do
       begin
         return normalize_real(File.join(File.realpath(candidate), remainder))
-      rescue Errno::ENOENT
+      rescue Errno::ENOENT, Errno::ENOTDIR, Errno::EACCES
         remainder.unshift(File.basename(candidate))
         parent = File.dirname(candidate)
         return candidate if parent == candidate
