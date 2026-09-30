@@ -182,10 +182,16 @@ module InstallReceipt
   def finalize(manifest_path:, mode_dirs:, pipeline_report_dir:, consumers: DEFAULT_CONSUMERS, exits: {}, results_root: nil, source_manifest: nil)
     verdict = verify(manifest_path: manifest_path, mode_dirs: mode_dirs, consumers: consumers, exits: exits)
 
-    # All finalization inputs must belong to one run: mode directories must
-    # be the results root's own tc/02 and tc/03 evidence.
+    # All finalization inputs must belong to one run: the manifest must be
+    # the results root's own validated copy, and the mode directories must
+    # be that root's tc/02 and tc/03 evidence.
     run_binding_findings = []
     if results_root
+      expected_manifest = File.join(results_root, "results", "tc", "01", "release-manifest.json")
+      unless File.expand_path(manifest_path.to_s) == File.expand_path(expected_manifest)
+        run_binding_findings << "manifest #{manifest_path.inspect} is not the results root's #{expected_manifest.inspect}"
+      end
+
       expected = {
         "normal" => File.join(results_root, "results", "tc", "02"),
         "full_index" => File.join(results_root, "results", "tc", "03")
@@ -212,7 +218,8 @@ module InstallReceipt
     verdict["results_reconciliation"] = reconciliation
     verdict["findings"].concat(reconciliation["findings"])
 
-    verdict["final"] = (verdict["acceptance"] == "pass" && pipeline["ok"] && reconciliation["ok"] && manifest_integrity["ok"]) ? "pass" : "fail"
+    run_binding_ok = run_binding_findings.empty?
+    verdict["final"] = (verdict["acceptance"] == "pass" && run_binding_ok && pipeline["ok"] && reconciliation["ok"] && manifest_integrity["ok"]) ? "pass" : "fail"
     verdict
   end
 
@@ -334,6 +341,10 @@ module InstallReceipt
       unless manifest["package_count"] == expected_count
         findings << "acceptance artifact package_count #{manifest["package_count"].inspect} does not match #{expected_count}"
       end
+      expected_sha = verdict.dig("manifest", "source_sha")
+      unless manifest["source_sha"] == expected_sha
+        findings << "acceptance artifact source_sha #{manifest["source_sha"].inspect} does not match the verified manifest freeze #{expected_sha.inspect}"
+      end
     end
 
     modes = parsed["modes"].is_a?(Hash) ? parsed["modes"] : nil
@@ -369,10 +380,13 @@ module InstallReceipt
         next unless expected_state.is_a?(Hash) && state.is_a?(Hash)
 
         %w[manifest_version lockfile_version activated_version].each do |field|
-          recorded = state.is_a?(Hash) ? state[field] : nil
-          next if recorded.nil? || recorded == expected_state[field]
+          unless state.key?(field)
+            findings << "acceptance artifact #{mode} #{name} does not record #{field}"
+            next
+          end
+          next if state[field] == expected_state[field]
 
-          findings << "acceptance artifact #{mode} #{name} #{field} #{recorded.inspect} does not match recomputed #{expected_state[field].inspect}"
+          findings << "acceptance artifact #{mode} #{name} #{field} #{state[field].inspect} does not match recomputed #{expected_state[field].inspect}"
         end
       end
     end
@@ -391,15 +405,21 @@ module InstallReceipt
           findings << "acceptance artifact is missing #{mode} consumer edge for #{consumer}"
         elsif edge.is_a?(Hash)
           recomputed_edge = verdict.dig("consumer_edges", mode, consumer) || {}
+          recomputed_findings = Array(recomputed_edge["findings"])
           if edge["ok"] == true && recomputed_edge["ok"] == false
             findings << "acceptance artifact #{mode} consumer edge for #{consumer} claims ok but the recomputed verdict disagrees"
           end
           if edge["ok"] == true && !Array(edge["findings"]).empty?
             findings << "acceptance artifact #{mode} consumer edge for #{consumer} claims ok while recording findings"
           end
+          if edge["ok"] == false && recomputed_edge["ok"] == true
+            findings << "acceptance artifact #{mode} consumer edge for #{consumer} claims failed but the recomputed verdict passes"
+          end
+          if edge["ok"] == false && Array(edge["findings"]).empty?
+            findings << "acceptance artifact #{mode} consumer edge for #{consumer} claims failed without recording findings"
+          end
           recorded = Array(edge["findings"])
-          recomputed = Array(recomputed_edge["findings"])
-          if recorded.empty? != recomputed.empty?
+          if recorded.empty? != recomputed_findings.empty?
             findings << "acceptance artifact #{mode} consumer edge for #{consumer} findings presence disagrees with the recomputed verdict"
           end
         end
@@ -573,6 +593,12 @@ module InstallReceipt
       end
     end
 
+    (state["lockfile_versions"] || []).each do |observed|
+      next if observed == state["manifest_version"]
+
+      findings << "#{name} #{observed} is not the manifest version #{state["manifest_version"]} in the lockfile"
+    end
+
     findings
   end
 
@@ -659,10 +685,13 @@ module InstallReceipt
     # graph may still resolve a superseded transitive release.
     if lockfile
       manifest_versions.each_value do |entry|
-        entry["supersedes"].to_a.each do |old_version|
-          if lockfile.dig("all_versions", entry["name"]).to_a.include?(old_version)
-            findings << "#{entry["name"]} #{old_version} is superseded by #{entry["artifact_version"]} but still present in the #{name} consumer lockfile"
-          end
+        # Every observed entry must be the exact manifest version: a lockfile
+        # carrying both the required and any other (even unlisted) version
+        # does not prove a single coherent resolution.
+        lockfile.dig("all_versions", entry["name"]).to_a.each do |observed|
+          next if observed == entry["artifact_version"]
+
+          findings << "#{entry["name"]} #{observed} is not the manifest version #{entry["artifact_version"]} in the #{name} consumer lockfile"
         end
       end
     end
@@ -712,7 +741,12 @@ module InstallReceipt
   end
 
   # In a lockfile, a package's dependency declarations are the six-space
-  # indented lines following its four-space `name (version)` entry.
+  # indented lines following its four-space `name (version)` entry. The
+  # provider requirement must be the source constraint: a widened published
+  # requirement would resolve 0.2.x without proving the consumer's release
+  # actually declares it.
+  EXPECTED_PROVIDER_REQUIREMENT = "~> 0.2"
+
   def lockfile_spec_declares_provider?(lockfile, name)
     content = File.read(lockfile["path"])
     spec_header = /^    #{Regexp.escape(name)} \([^\n]+\)\n/
@@ -722,7 +756,10 @@ module InstallReceipt
     content[match.end(0)..].each_line do |line|
       break unless line.start_with?("      ")
 
-      return true if line.match?(/\A\s+ace-git-github \(/)
+      requirement = line.match(/\A\s+ace-git-github \(([^)]+)\)/)
+      next unless requirement
+
+      return requirement[1] == EXPECTED_PROVIDER_REQUIREMENT
     end
     false
   end

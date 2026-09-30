@@ -330,7 +330,7 @@ class InstallReceiptTest < AceMonorepoE2eTestCase
     results_root = write_results_root(fixture)
 
     verdict = InstallReceipt.finalize(
-      manifest_path: @manifest_path,
+      manifest_path: File.join(results_root, "results", "tc", "01", "release-manifest.json"),
       mode_dirs: {"normal" => fixture[:normal], "full_index" => fixture[:full_index]},
       pipeline_report_dir: File.join(@tmpdir, "absent-reports"),
       results_root: results_root,
@@ -415,7 +415,7 @@ class InstallReceiptTest < AceMonorepoE2eTestCase
     File.write(File.join(report_dir, "metadata.yml"), "{{{ not yaml")
 
     verdict = InstallReceipt.finalize(
-      manifest_path: @manifest_path,
+      manifest_path: File.join(results_root, "results", "tc", "01", "release-manifest.json"),
       mode_dirs: {"normal" => fixture[:normal], "full_index" => fixture[:full_index]},
       pipeline_report_dir: report_dir,
       results_root: results_root,
@@ -436,7 +436,7 @@ class InstallReceiptTest < AceMonorepoE2eTestCase
   ")
 
     verdict = InstallReceipt.finalize(
-      manifest_path: @manifest_path,
+      manifest_path: File.join(results_root, "results", "tc", "01", "release-manifest.json"),
       mode_dirs: {"normal" => fixture[:normal], "full_index" => fixture[:full_index]},
       pipeline_report_dir: report_dir,
       results_root: results_root,
@@ -458,7 +458,7 @@ class InstallReceiptTest < AceMonorepoE2eTestCase
 
 
     verdict = InstallReceipt.finalize(
-      manifest_path: @manifest_path,
+      manifest_path: File.join(results_root, "results", "tc", "01", "release-manifest.json"),
       mode_dirs: {"normal" => fixture[:normal], "full_index" => fixture[:full_index]},
       pipeline_report_dir: report_dir,
       results_root: results_root,
@@ -511,7 +511,7 @@ class InstallReceiptTest < AceMonorepoE2eTestCase
     File.write(File.join(report_dir, "metadata.yml"), "run-id: stale-run-000\ntest-id: TS-MONO-001\nstatus: pass\n")
 
     verdict = InstallReceipt.finalize(
-      manifest_path: @manifest_path,
+      manifest_path: File.join(results_root, "results", "tc", "01", "release-manifest.json"),
       mode_dirs: {"normal" => fixture[:normal], "full_index" => fixture[:full_index]},
       pipeline_report_dir: report_dir,
       results_root: results_root,
@@ -538,7 +538,7 @@ class InstallReceiptTest < AceMonorepoE2eTestCase
     File.write(File.join(report_dir, "metadata.yml"), "run-id: run\ntest-id: TS-MONO-001\nstatus: pass\n")
 
     verdict = InstallReceipt.finalize(
-      manifest_path: @manifest_path,
+      manifest_path: File.join(results_root, "results", "tc", "01", "release-manifest.json"),
       mode_dirs: {"normal" => fixture[:normal], "full_index" => fixture[:full_index]},
       pipeline_report_dir: report_dir,
       results_root: results_root,
@@ -563,7 +563,7 @@ def test_verify_rejects_superseded_provider_in_duplicate_consumer_entries
   )
 
   assert_equal "fail", verdict["acceptance"]
-  assert(verdict["findings"].any? { |finding| finding.include?("ace-git-github 0.1.2 is superseded by 0.2.0 but still present in the ace-bundle consumer lockfile") },
+  assert(verdict["findings"].any? { |finding| finding.include?("ace-git-github 0.1.2 is not the manifest version 0.2.0 in the ace-bundle consumer lockfile") },
     verdict["findings"].inspect)
 end
 
@@ -580,7 +580,7 @@ def test_verify_rejects_superseded_transitive_gem_in_consumer_lockfile
   )
 
   assert_equal "fail", verdict["acceptance"]
-  assert(verdict["findings"].any? { |finding| finding.include?("ace-bundle 0.44.1 is superseded by 0.44.2 but still present in the ace-bundle consumer lockfile") },
+  assert(verdict["findings"].any? { |finding| finding.include?("ace-bundle 0.44.1 is not the manifest version 0.44.2 in the ace-bundle consumer lockfile") },
     verdict["findings"].inspect)
 end
 
@@ -607,7 +607,7 @@ def test_finalize_rejects_mismatched_test_id
   File.write(File.join(report_dir, "metadata.yml"), "run-id: run\ntest-id: TS-OTHER-009\nstatus: pass\n")
 
   verdict = InstallReceipt.finalize(
-    manifest_path: @manifest_path,
+    manifest_path: File.join(results_root, "results", "tc", "01", "release-manifest.json"),
     mode_dirs: {"normal" => fixture[:normal], "full_index" => fixture[:full_index]},
     pipeline_report_dir: report_dir,
     results_root: results_root,
@@ -632,7 +632,7 @@ def test_finalize_rejects_contradictory_recorded_versions_and_exits
   File.write(File.join(report_dir, "metadata.yml"), "run-id: run\ntest-id: TS-MONO-001\nstatus: pass\n")
 
   verdict = InstallReceipt.finalize(
-    manifest_path: @manifest_path,
+    manifest_path: File.join(results_root, "results", "tc", "01", "release-manifest.json"),
     mode_dirs: {"normal" => fixture[:normal], "full_index" => fixture[:full_index]},
     pipeline_report_dir: report_dir,
     results_root: results_root,
@@ -643,6 +643,83 @@ def test_finalize_rejects_contradictory_recorded_versions_and_exits
   assert(verdict["findings"].any? { |finding| finding.include?("normal exit 1 does not match recomputed 0") },
     verdict["findings"].inspect)
   assert(verdict["findings"].any? { |finding| finding.include?("full_index ace-git lockfile_version \"0.24.0\" does not match recomputed \"0.25.0\"") },
+    verdict["findings"].inspect)
+end
+
+def test_verify_rejects_widened_published_provider_requirement
+  fixture = build_complete_fixture
+  path = File.join(fixture[:normal], "consumer", "ace-review", "Gemfile.lock")
+  content = File.read(path).sub("      ace-git-github (~> 0.2)", "      ace-git-github (~> 0.1)")
+  File.write(path, content)
+
+  verdict = InstallReceipt.verify(
+    manifest_path: @manifest_path,
+    mode_dirs: {"normal" => fixture[:normal], "full_index" => fixture[:full_index]}
+  )
+
+  assert_equal "fail", verdict["acceptance"]
+  assert(verdict["findings"].any? { |finding| finding.include?("normal consumer ace-review") && finding.include?("does not declare ace-git-github") },
+    verdict["findings"].inspect)
+end
+
+def test_verify_rejects_unlisted_older_version_in_main_lockfile
+  fixture = build_complete_fixture
+  path = File.join(fixture[:full_index], "Gemfile.lock")
+  content = File.read(path)
+  content.sub!(/^    ace-git \(0\.25\.0\)$/, "    ace-git (0.25.0)\n    ace-git (0.24.0)")
+  File.write(path, content)
+
+  verdict = InstallReceipt.verify(
+    manifest_path: @manifest_path,
+    mode_dirs: {"normal" => fixture[:normal], "full_index" => fixture[:full_index]}
+  )
+
+  assert_equal "fail", verdict["acceptance"]
+  assert(verdict["findings"].any? { |finding| finding.include?("full_index: ace-git 0.24.0 is not the manifest version 0.25.0 in the lockfile") },
+    verdict["findings"].inspect)
+end
+
+def test_finalize_rejects_manifest_outside_the_results_root
+  fixture = build_complete_fixture
+  report_dir = File.join(@tmpdir, "run-reports")
+  results_root = write_results_root(fixture)
+  FileUtils.mkdir_p(report_dir)
+  File.write(File.join(report_dir, "metadata.yml"), "run-id: run\ntest-id: TS-MONO-001\nstatus: pass\n")
+
+  verdict = InstallReceipt.finalize(
+    manifest_path: @manifest_path,
+    mode_dirs: {"normal" => fixture[:normal], "full_index" => fixture[:full_index]},
+    pipeline_report_dir: report_dir,
+    results_root: results_root,
+    source_manifest: @manifest_path
+  )
+
+  assert_equal "fail", verdict["final"]
+  assert(verdict["findings"].any? { |finding| finding.include?("is not the results root\x27s") },
+    verdict["findings"].inspect)
+end
+
+def test_finalize_rejects_runner_artifact_from_another_freeze
+  fixture = build_complete_fixture
+  report_dir = File.join(@tmpdir, "run-reports")
+  results_root = write_results_root(fixture)
+  tc04 = File.join(results_root, "results", "tc", "04")
+  artifact = JSON.parse(File.read(File.join(tc04, "exact-version-acceptance.json")))
+  artifact["manifest"]["source_sha"] = "f" * 40
+  File.write(File.join(tc04, "exact-version-acceptance.json"), JSON.pretty_generate(artifact))
+  FileUtils.mkdir_p(report_dir)
+  File.write(File.join(report_dir, "metadata.yml"), "run-id: run\ntest-id: TS-MONO-001\nstatus: pass\n")
+
+  verdict = InstallReceipt.finalize(
+    manifest_path: File.join(results_root, "results", "tc", "01", "release-manifest.json"),
+    mode_dirs: {"normal" => fixture[:normal], "full_index" => fixture[:full_index]},
+    pipeline_report_dir: report_dir,
+    results_root: results_root,
+    source_manifest: @manifest_path
+  )
+
+  assert_equal "fail", verdict["final"]
+  assert(verdict["findings"].any? { |finding| finding.include?("does not match the verified manifest freeze") },
     verdict["findings"].inspect)
 end
 
@@ -661,7 +738,7 @@ end
     File.write(File.join(report_dir, "metadata.yml"), "run-id: run\ntest-id: TS-MONO-001\nstatus: pass\n")
 
     verdict = InstallReceipt.finalize(
-      manifest_path: @manifest_path,
+      manifest_path: File.join(results_root, "results", "tc", "01", "release-manifest.json"),
       mode_dirs: {"normal" => fixture[:normal], "full_index" => fixture[:full_index]},
       pipeline_report_dir: report_dir,
       results_root: results_root,
@@ -698,7 +775,7 @@ end
       File.write(File.join(report_dir, "metadata.yml"), "run-id: run\nstatus: error\nuncertain_execution: true\n")
 
       verdict = InstallReceipt.finalize(
-        manifest_path: @manifest_path,
+        manifest_path: File.join(results_root, "results", "tc", "01", "release-manifest.json"),
         mode_dirs: {"normal" => fixture[:normal], "full_index" => fixture[:full_index]},
         pipeline_report_dir: report_dir,
         results_root: results_root,
@@ -722,7 +799,7 @@ end
 
 
       verdict = InstallReceipt.finalize(
-        manifest_path: @manifest_path,
+        manifest_path: File.join(results_root, "results", "tc", "01", "release-manifest.json"),
         mode_dirs: {"normal" => fixture[:normal], "full_index" => fixture[:full_index]},
         pipeline_report_dir: report_dir,
         results_root: results_root,
@@ -749,7 +826,7 @@ end
       File.write(tampered, JSON.pretty_generate(manifest))
 
       verdict = InstallReceipt.finalize(
-        manifest_path: @manifest_path,
+        manifest_path: File.join(results_root, "results", "tc", "01", "release-manifest.json"),
         mode_dirs: {"normal" => fixture[:normal], "full_index" => fixture[:full_index]},
         pipeline_report_dir: report_dir,
         results_root: results_root,
@@ -770,7 +847,7 @@ end
 
 
       verdict = InstallReceipt.finalize(
-        manifest_path: @manifest_path,
+        manifest_path: File.join(results_root, "results", "tc", "01", "release-manifest.json"),
         mode_dirs: {"normal" => fixture[:normal], "full_index" => fixture[:full_index]},
         pipeline_report_dir: report_dir,
         results_root: results_root,
@@ -791,7 +868,7 @@ end
 
 
       verdict = InstallReceipt.finalize(
-        manifest_path: @manifest_path,
+        manifest_path: File.join(results_root, "results", "tc", "01", "release-manifest.json"),
         mode_dirs: {"normal" => fixture[:normal], "full_index" => fixture[:full_index]},
         pipeline_report_dir: report_dir,
         results_root: results_root,
@@ -814,7 +891,7 @@ end
       script = File.expand_path("../e2e/TS-MONO-001-rubygems-install/install_receipt.rb", __dir__)
 
       system(RbConfig.ruby, script, "finalize",
-        "--manifest", @manifest_path,
+        "--manifest", File.join(results_root, "results", "tc", "01", "release-manifest.json"),
         "--source-manifest", @manifest_path,
         "--normal", fixture[:normal],
         "--full-index", fixture[:full_index],
@@ -833,15 +910,21 @@ def write_results_root(fixture, classification: "SAFE", runner_acceptance: "pass
   run_root = fixture[:run_root]
   tc04 = File.join(run_root, "results", "tc", "04")
   FileUtils.mkdir_p(tc04)
+  manifest_copy = File.join(run_root, "results", "tc", "01", "release-manifest.json")
+  FileUtils.mkdir_p(File.dirname(manifest_copy))
+  FileUtils.cp(@manifest_path, manifest_copy)
   File.write(File.join(run_root, "results", "tc", "04", "classification.txt"), "#{classification}\n")
   File.write(File.join(tc04, "exact-version-acceptance.json"), JSON.pretty_generate(
     "schema_version" => 1,
     "kind" => "exact-version-acceptance",
-    "manifest" => {"path" => @manifest_path, "source_sha" => "a" * 40, "package_count" => MANIFEST_PACKAGES.size},
+    "manifest" => {"path" => manifest_copy, "source_sha" => "a" * 40, "package_count" => MANIFEST_PACKAGES.size},
     "modes" => %w[normal full_index].to_h do |mode|
       [mode, {
         "exit" => 0,
-        "packages" => MANIFEST_PACKAGES.keys.to_h { |name| [name, {"manifest_version" => MANIFEST_PACKAGES[name], "ok" => true, "findings" => []}] },
+        "packages" => MANIFEST_PACKAGES.keys.to_h { |name|
+          [name, {"manifest_version" => MANIFEST_PACKAGES[name], "lockfile_version" => MANIFEST_PACKAGES[name],
+                  "activated_version" => MANIFEST_PACKAGES[name], "ok" => true, "findings" => []}]
+        },
         "findings" => []
       }]
     end,
