@@ -394,10 +394,13 @@ module Ace
                   end
                   if reusable
                     refresh_package_copy(sandbox_path, scenario)
-                    # Prior goal evidence stays (a single-goal retry may need
-                    # it), but the prior completion record is invalidated: a
+                    # A full retry (no test-case filter) must not inherit the
+                    # previous attempt's goal evidence; an explicit partial
+                    # retry (e.g. TC-004 only) keeps it for classification.
+                    # Either way the prior completion record is invalidated: a
                     # retry that fails before rewriting metadata can never be
                     # blessed by the previous attempt's pass.
+                    FileUtils.rm_rf(File.join(sandbox_path, "results")) if test_cases.nil? || test_cases.empty?
                     FileUtils.rm_f(File.join(File.dirname(state_file), "metadata.yml"))
                     reusable = Molecules::SetupExecutor.revalidate_release_manifest(
                       state_file: state_file, sandbox_dir: sandbox_path, explicit: @release_manifest_input,

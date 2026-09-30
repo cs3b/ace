@@ -44,6 +44,10 @@ module Ace
             started_at = Time.now
             phase = :setup
             FileUtils.mkdir_p(report_dir)
+            # A retry in the same report directory must start with neither
+            # terminal marker present: only this attempt's outcome may remain.
+            FileUtils.rm_f(File.join(report_dir, ".host-pipeline-complete.json"))
+            FileUtils.rm_f(File.join(report_dir, ".host-pipeline-failed.json"))
             write_command_record(report_dir, "runner", provider: @provider, cli_args: cli_args)
             write_tc_manifests(report_dir, scenario, test_cases: test_cases)
 
