@@ -55,7 +55,9 @@ module InstallReceipt
     section = nil
     in_specs = false
     packages = {}
-    all_versions = Hash.new { |h, k| h[k] = [] }
+    # Plain hashes: a mutating default block would materialize keys when
+    # callers probe absent entries, turning probes into false evidence.
+    all_versions = {}
     remotes = Hash.new { |h, k| h[k] = [] }
     sections_with_packages = Hash.new { |h, k| h[k] = [] }
 
@@ -78,7 +80,7 @@ module InstallReceipt
       next unless match && in_specs && section
 
       packages[match[1]] = match[2]
-      all_versions[match[1]] << match[2]
+      (all_versions[match[1]] ||= []) << match[2]
       sections_with_packages[section] << match[1]
     end
 
@@ -535,6 +537,18 @@ module InstallReceipt
       end
     end
 
+    %w[normal full_index].each do |mode|
+      mode_entry = (parsed["modes"] || {})[mode]
+      next unless mode_entry.is_a?(Hash)
+
+      recomputed_mode = verdict.dig("modes", mode) || {}
+      recorded_mode_findings = Array(mode_entry["findings"])
+      recomputed_mode_findings = Array(recomputed_mode["findings"])
+      if recorded_mode_findings.empty? != recomputed_mode_findings.empty?
+        findings << "acceptance artifact #{mode} findings presence disagrees with the recomputed verdict"
+      end
+    end
+
     findings
   end
 
@@ -866,7 +880,7 @@ module InstallReceipt
         # Every observed entry must be the exact manifest version: a lockfile
         # carrying both the required and any other (even unlisted) version
         # does not prove a single coherent resolution.
-        lockfile.dig("all_versions", entry["name"]).to_a.each do |observed|
+        all_versions_for(lockfile, entry["name"]).each do |observed|
           next if observed == entry["artifact_version"]
 
           findings << "#{entry["name"]} #{observed} is not the manifest version #{entry["artifact_version"]} in the #{name} consumer lockfile"
@@ -914,6 +928,16 @@ module InstallReceipt
     # its activated receipt: an edge cannot be ok while a package activated a
     # different version than the graph resolved.
     if lockfile && receipt
+      lockfile["all_versions"].each do |name_locked, locked_versions|
+        next unless name_locked.match?(ACE_PREFIX)
+
+        activated = receipt[name_locked]
+        if activated.nil?
+          findings << "#{name_locked} in the #{name} consumer lockfile but missing from its activated receipt"
+        elsif activated["version"] != locked_versions.last
+          findings << "#{name_locked} activated #{activated["version"].inspect} but the #{name} consumer lockfile resolved #{locked_versions.last.inspect}"
+        end
+      end
       receipt.each do |name_activated, data|
         next unless name_activated.match?(ACE_PREFIX)
 
@@ -1017,6 +1041,13 @@ module InstallReceipt
     packages
   rescue JSON::ParserError => e
     raise ArgumentError, "lockfile receipt is not valid JSON: #{path} (#{e.message})"
+  end
+
+  def all_versions_for(lockfile, name)
+    return [] unless lockfile
+
+    versions = lockfile["all_versions"][name]
+    versions.is_a?(Array) ? versions : []
   end
 
   def read_exit(path)
