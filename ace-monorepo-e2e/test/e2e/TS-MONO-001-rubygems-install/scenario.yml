@@ -41,7 +41,8 @@ setup:
         - ace-bundle
         - ace-git
         - ace-git-forgejo
-        - ace-git-github
+        - name: ace-git-github
+          supersedes: ["0.1.2"]
         - ace-git-worktree
         - ace-handbook
         - ace-handbook-integration-pi

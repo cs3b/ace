@@ -764,20 +764,33 @@ def test_require_gem_entry_resolves_real_gem_layouts
     "ace-test-runner-e2e" => "ace/test/end_to_end_runner",
     "ace-support-test-helpers" => "ace/test_support"
   }
-  layouts.each do |gem_name, expected_entry|
+  layouts.each do |gem_name, entry|
     Dir.mktmpdir do |gem_dir|
-      entry_file = File.join(gem_dir, "lib", expected_entry + ".rb")
-      FileUtils.mkdir_p(File.dirname(entry_file))
-      version_line = "VERSION = \"1.2.3\""
-      File.write(entry_file, version_line + "
-")
+      version_file = File.join(gem_dir, "lib", entry, "version.rb")
+      FileUtils.mkdir_p(File.dirname(version_file))
+      File.write(version_file, "VERSION = \"1.2.3\"\n")
+      entry_file = File.join(gem_dir, "lib", entry + ".rb")
+      File.write(entry_file, "module #{gem_name.split("-").map(&:capitalize).join}; end\n")
       spec = Struct.new(:name, :version, :full_gem_path, :require_paths).new(
         gem_name, Gem::Version.new("1.2.3"), gem_dir, ["lib"]
       )
 
-      assert_equal expected_entry, InstallReceipt.require_gem_entry(spec),
-        gem_name + " must resolve its real entry point"
+      assert_equal entry, InstallReceipt.require_gem_entry(spec),
+        gem_name + " must resolve its namespace entry point"
     end
+  end
+end
+
+def test_require_gem_entry_requires_the_entry_not_just_the_version_file
+  Dir.mktmpdir do |gem_dir|
+    version_file = File.join(gem_dir, "lib", "ace", "bundle", "version.rb")
+    FileUtils.mkdir_p(File.dirname(version_file))
+    File.write(version_file, "VERSION = \"1.2.3\"\n")
+    spec = Struct.new(:name, :version, :full_gem_path, :require_paths).new(
+      "ace-bundle", Gem::Version.new("1.2.3"), gem_dir, ["lib"]
+    )
+
+    assert_nil InstallReceipt.require_gem_entry(spec)
   end
 end
 
