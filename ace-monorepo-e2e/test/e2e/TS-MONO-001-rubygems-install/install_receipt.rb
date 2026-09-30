@@ -519,6 +519,16 @@ module InstallReceipt
     findings << "pipeline status is #{status.inspect}, not pass" unless status == "pass"
     findings << "pipeline marked uncertain_execution; side effects must not be replayed" if uncertain
 
+    # A partial retry (e.g. only TC-004 rerun) must not produce a full
+    # installation verdict: every goal of this scenario must have passed.
+    total = metadata["tcs-total"]
+    passed = metadata["tcs-passed"]
+    if total.nil? || passed.nil?
+      findings << "pipeline metadata records no goal counts (tcs-total/tcs-passed)"
+    elsif total != 4 || passed != 4
+      findings << "pipeline completed #{passed.inspect}/#{total.inspect} goals; all 4 goals are required for a full installation verdict"
+    end
+
     # Bind the report to the current run: a stale passing report from an
     # earlier run must not bless this run's receipts. Both the report
     # directory and the results root carry the run id in their basename.
@@ -623,6 +633,22 @@ module InstallReceipt
       state["findings"] = mode_entry_findings(state, name, isolation_dirs)
       package_states[name] = state
       findings.concat(state["findings"])
+    end
+
+    # The generated Gemfile can install ACE gems beyond the manifest set;
+    # isolation applies to every activated ACE gem in the graph.
+    if receipt
+      receipt.each do |gem_name, data|
+        next unless gem_name.match?(ACE_PREFIX)
+        next if package_states.key?(gem_name)
+
+        gem_path = data.is_a?(Hash) && data["path"]
+        if gem_path.nil? || gem_path.to_s.empty?
+          findings << "#{gem_name} activated receipt records no gem path"
+        elsif !under_any?(gem_path, isolation_dirs)
+          findings << "#{gem_name} loaded from #{gem_path} outside the isolated gem directories"
+        end
+      end
     end
 
     {
