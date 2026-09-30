@@ -567,6 +567,85 @@ def test_verify_rejects_superseded_provider_in_duplicate_consumer_entries
     verdict["findings"].inspect)
 end
 
+def test_verify_rejects_superseded_transitive_gem_in_consumer_lockfile
+  fixture = build_complete_fixture
+  path = File.join(fixture[:normal], "consumer", "ace-bundle", "Gemfile.lock")
+  content = File.read(path)
+  content.sub!(/^    ace-bundle \(0\.44\.2\)$/, "    ace-bundle (0.44.2)\n    ace-bundle (0.44.1)")
+  File.write(path, content)
+
+  verdict = InstallReceipt.verify(
+    manifest_path: @manifest_path,
+    mode_dirs: {"normal" => fixture[:normal], "full_index" => fixture[:full_index]}
+  )
+
+  assert_equal "fail", verdict["acceptance"]
+  assert(verdict["findings"].any? { |finding| finding.include?("ace-bundle 0.44.1 is superseded by 0.44.2 but still present in the ace-bundle consumer lockfile") },
+    verdict["findings"].inspect)
+end
+
+def test_verify_rejects_broad_consumer_version_requirement
+  fixture = build_complete_fixture
+  gemfile = File.join(fixture[:normal], "consumer", "ace-review", "Gemfile")
+  File.write(gemfile, "source 'https://rubygems.org'\n\ngem 'ace-review', '~> 0.56'\n")
+
+  verdict = InstallReceipt.verify(
+    manifest_path: @manifest_path,
+    mode_dirs: {"normal" => fixture[:normal], "full_index" => fixture[:full_index]}
+  )
+
+  assert_equal "fail", verdict["acceptance"]
+  assert(verdict["findings"].any? { |finding| finding.include?("must pin ace-review at the exact manifest version") },
+    verdict["findings"].inspect)
+end
+
+def test_finalize_rejects_mismatched_test_id
+  fixture = build_complete_fixture
+  report_dir = File.join(@tmpdir, "run-reports")
+  results_root = write_results_root(fixture)
+  FileUtils.mkdir_p(report_dir)
+  File.write(File.join(report_dir, "metadata.yml"), "run-id: run\ntest-id: TS-OTHER-009\nstatus: pass\n")
+
+  verdict = InstallReceipt.finalize(
+    manifest_path: @manifest_path,
+    mode_dirs: {"normal" => fixture[:normal], "full_index" => fixture[:full_index]},
+    pipeline_report_dir: report_dir,
+    results_root: results_root,
+    source_manifest: @manifest_path
+  )
+
+  assert_equal "fail", verdict["final"]
+  assert(verdict["findings"].any? { |finding| finding.include?("test-id \"TS-OTHER-009\" is not TS-MONO-001") },
+    verdict["findings"].inspect)
+end
+
+def test_finalize_rejects_contradictory_recorded_versions_and_exits
+  fixture = build_complete_fixture
+  report_dir = File.join(@tmpdir, "run-reports")
+  results_root = write_results_root(fixture)
+  tc04 = File.join(results_root, "results", "tc", "04")
+  artifact = JSON.parse(File.read(File.join(tc04, "exact-version-acceptance.json")))
+  artifact["modes"]["normal"]["exit"] = 1
+  artifact["modes"]["full_index"]["packages"]["ace-git"]["lockfile_version"] = "0.24.0"
+  File.write(File.join(tc04, "exact-version-acceptance.json"), JSON.pretty_generate(artifact))
+  FileUtils.mkdir_p(report_dir)
+  File.write(File.join(report_dir, "metadata.yml"), "run-id: run\ntest-id: TS-MONO-001\nstatus: pass\n")
+
+  verdict = InstallReceipt.finalize(
+    manifest_path: @manifest_path,
+    mode_dirs: {"normal" => fixture[:normal], "full_index" => fixture[:full_index]},
+    pipeline_report_dir: report_dir,
+    results_root: results_root,
+    source_manifest: @manifest_path
+  )
+
+  assert_equal "fail", verdict["final"]
+  assert(verdict["findings"].any? { |finding| finding.include?("normal exit 1 does not match recomputed 0") },
+    verdict["findings"].inspect)
+  assert(verdict["findings"].any? { |finding| finding.include?("full_index ace-git lockfile_version \"0.24.0\" does not match recomputed \"0.25.0\"") },
+    verdict["findings"].inspect)
+end
+
   def test_finalize_rejects_doctored_acceptance_artifact_states
     fixture = build_complete_fixture
     report_dir = File.join(@tmpdir, "run-reports")

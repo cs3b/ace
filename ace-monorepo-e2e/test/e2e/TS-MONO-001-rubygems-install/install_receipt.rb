@@ -361,12 +361,18 @@ module InstallReceipt
       # The recorded states must agree with this process's recomputation
       # over the same receipts; a doctored or stale artifact fails here.
       expected_packages = verdict.dig("modes", mode, "packages") || {}
+      if mode_entry["exit"] != verdict.dig("modes", mode, "exit")
+        findings << "acceptance artifact #{mode} exit #{mode_entry["exit"].inspect} does not match recomputed #{verdict.dig("modes", mode, "exit").inspect}"
+      end
       packages.each do |name, state|
         expected_state = expected_packages[name]
         next unless expected_state.is_a?(Hash) && state.is_a?(Hash)
 
-        if state["manifest_version"] != expected_state["manifest_version"]
-          findings << "acceptance artifact #{mode} #{name} manifest_version #{state["manifest_version"].inspect} does not match recomputed #{expected_state["manifest_version"].inspect}"
+        %w[manifest_version lockfile_version activated_version].each do |field|
+          recorded = state.is_a?(Hash) ? state[field] : nil
+          next if recorded.nil? || recorded == expected_state[field]
+
+          findings << "acceptance artifact #{mode} #{name} #{field} #{recorded.inspect} does not match recomputed #{expected_state[field].inspect}"
         end
       end
     end
@@ -383,14 +389,28 @@ module InstallReceipt
         edge = mode_edges && mode_edges[consumer]
         if edge.nil?
           findings << "acceptance artifact is missing #{mode} consumer edge for #{consumer}"
-        elsif edge.is_a?(Hash) && edge["ok"] == true && verdict.dig("consumer_edges", mode, consumer, "ok") == false
-          findings << "acceptance artifact #{mode} consumer edge for #{consumer} claims ok but the recomputed verdict disagrees"
+        elsif edge.is_a?(Hash)
+          recomputed_edge = verdict.dig("consumer_edges", mode, consumer) || {}
+          if edge["ok"] == true && recomputed_edge["ok"] == false
+            findings << "acceptance artifact #{mode} consumer edge for #{consumer} claims ok but the recomputed verdict disagrees"
+          end
+          if edge["ok"] == true && !Array(edge["findings"]).empty?
+            findings << "acceptance artifact #{mode} consumer edge for #{consumer} claims ok while recording findings"
+          end
+          recorded = Array(edge["findings"])
+          recomputed = Array(recomputed_edge["findings"])
+          if recorded.empty? != recomputed.empty?
+            findings << "acceptance artifact #{mode} consumer edge for #{consumer} findings presence disagrees with the recomputed verdict"
+          end
         end
       end
     end
 
     findings
   end
+
+  # The final verdict certifies this scenario's run only.
+  EXPECTED_TEST_ID = "TS-MONO-001"
 
   def pipeline_completion(report_dir, results_root: nil)
     metadata_path = File.join(report_dir, "metadata.yml")
@@ -425,6 +445,8 @@ module InstallReceipt
     end
     if metadata["test-id"].nil? || metadata["test-id"].to_s.empty?
       findings << "pipeline metadata records no test-id"
+    elsif metadata["test-id"] != EXPECTED_TEST_ID
+      findings << "pipeline metadata test-id #{metadata["test-id"].inspect} is not #{EXPECTED_TEST_ID}"
     end
 
     {
@@ -579,6 +601,16 @@ module InstallReceipt
       unless gem_entries == [name]
         findings << "consumer Gemfile must name exactly the consumer #{name} as its only gem, got #{gem_entries.inspect}"
       end
+
+      # The pin must be the exact manifest version: a broad requirement
+      # only proves Bundler happened to select the right release.
+      expected_pin = manifest_versions[name] && manifest_versions[name]["artifact_version"]
+      requirement = gemfile.match(/^\s*gem\s+['"]#{Regexp.escape(name.to_s)}['"]\s*(?:,\s*['"]([^'"]+)['"])?/)
+      if requirement.nil?
+        findings << "consumer Gemfile does not declare #{name}"
+      elsif requirement[1] != expected_pin
+        findings << "consumer Gemfile must pin #{name} at the exact manifest version #{expected_pin.inspect}, got #{requirement[1].inspect}"
+      end
     end
 
     exit_code = read_exit(exit_file)
@@ -623,10 +655,24 @@ module InstallReceipt
 
     # Any observed version of a superseded release is a finding, even when
     # the required version is also present (last-entry-wins would hide it).
-    provider_entry["supersedes"].to_a.each do |old_version|
-      observed = (lockfile && lockfile.dig("all_versions", "ace-git-github")) || []
-      if observed.include?(old_version)
-        findings << "ace-git-github #{old_version} is superseded by #{provider_entry["artifact_version"]} but still present in the #{name} consumer lockfile"
+    # This covers every manifest package, not just the provider: a consumer
+    # graph may still resolve a superseded transitive release.
+    if lockfile
+      manifest_versions.each_value do |entry|
+        entry["supersedes"].to_a.each do |old_version|
+          if lockfile.dig("all_versions", entry["name"]).to_a.include?(old_version)
+            findings << "#{entry["name"]} #{old_version} is superseded by #{entry["artifact_version"]} but still present in the #{name} consumer lockfile"
+          end
+        end
+      end
+    end
+    if receipt
+      manifest_versions.each_value do |entry|
+        entry["supersedes"].to_a.each do |old_version|
+          if receipt.dig(entry["name"], "version") == old_version
+            findings << "#{entry["name"]} #{old_version} is superseded by #{entry["artifact_version"]} but still present in the #{name} consumer activated receipt"
+          end
+        end
       end
     end
 
