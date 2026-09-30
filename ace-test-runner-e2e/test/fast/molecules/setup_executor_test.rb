@@ -2,6 +2,7 @@
 
 require_relative "../../test_helper"
 
+require "digest"
 require "json"
 
 class SetupExecutorTest < Minitest::Test
@@ -601,6 +602,79 @@ class SetupExecutorTest < Minitest::Test
       assert_match(/missing/, result[:error])
     end
   end
+
+def test_revalidate_rejects_escaped_or_symlinked_manifest_targets
+  Dir.mktmpdir do |tmpdir|
+    sandbox = File.join(tmpdir, "sandbox")
+    outside = File.join(tmpdir, "outside")
+    FileUtils.mkdir_p([File.join(sandbox, "results", "tc", "01"), outside])
+    manifest = File.join(tmpdir, "manifest.json")
+    File.write(manifest, JSON.generate(valid_release_manifest))
+    digest = Digest::SHA256.file(manifest).hexdigest
+
+    escaped_state = File.join(tmpdir, "escaped-state.json")
+    File.write(escaped_state, JSON.generate({
+      "sandbox_dir" => sandbox,
+      "setup_steps" => [],
+      "release_manifest" => {"source" => manifest, "target" => "../../outside/manifest.json", "digest" => digest},
+      "env" => {"ACE_E2E_SOURCE_ROOT" => tmpdir}
+    }))
+    refute Ace::Test::EndToEndRunner::Molecules::SetupExecutor.revalidate_release_manifest(
+      state_file: escaped_state, sandbox_dir: sandbox, explicit: manifest
+    )
+    refute File.exist?(File.join(outside, "manifest.json"))
+
+    symlink_state = File.join(tmpdir, "symlink-state.json")
+    File.write(symlink_state, JSON.generate({
+      "sandbox_dir" => sandbox,
+      "setup_steps" => [],
+      "release_manifest" => {"source" => manifest, "target" => "results/tc/01/release-manifest.json", "digest" => digest},
+      "env" => {"ACE_E2E_SOURCE_ROOT" => tmpdir}
+    }))
+    FileUtils.rm_rf(File.join(sandbox, "results", "tc", "01"))
+    File.symlink(outside, File.join(sandbox, "results", "tc", "01"))
+
+    refute Ace::Test::EndToEndRunner::Molecules::SetupExecutor.revalidate_release_manifest(
+      state_file: symlink_state, sandbox_dir: sandbox, explicit: manifest
+    )
+    refute File.exist?(File.join(outside, "release-manifest.json"))
+  end
+end
+
+def test_revalidate_requires_matching_setup_steps
+  Dir.mktmpdir do |tmpdir|
+    sandbox = File.join(tmpdir, "sandbox")
+    FileUtils.mkdir_p(sandbox)
+    state = File.join(tmpdir, "state.json")
+    File.write(state, JSON.generate({
+      "sandbox_dir" => sandbox,
+      "setup_steps" => ["copy-fixtures"],
+      "release_manifest" => nil,
+      "env" => {}
+    }))
+
+    refute Ace::Test::EndToEndRunner::Molecules::SetupExecutor.setup_state_for(
+      state, sandbox, setup_steps: ["git-init"]
+    )
+    assert Ace::Test::EndToEndRunner::Molecules::SetupExecutor.setup_state_for(
+      state, sandbox, setup_steps: ["copy-fixtures"]
+    )
+  end
+end
+
+def test_execute_wipes_prior_goal_results
+  Dir.mktmpdir do |sandbox|
+    stale = File.join(sandbox, "results", "tc", "02")
+    FileUtils.mkdir_p(stale)
+    File.write(File.join(stale, "install.exit"), "0\n")
+
+    result = @executor.execute(setup_steps: [], sandbox_dir: sandbox)
+
+    assert result[:success]
+    refute Dir.exist?(File.join(sandbox, "results")),
+      "prior-attempt goal evidence must not survive into a retried run"
+  end
+end
 
   private
 

@@ -70,6 +70,9 @@ module Ace
             # A rerun invalidates any earlier success up front: state is
             # recreated only after every step and the persisted env succeed.
             FileUtils.rm_f(state_file) if state_file
+            # Prior-attempt goal evidence must never survive into a retried
+            # run: the goals rebuild results/ from scratch.
+            FileUtils.rm_rf(File.join(sandbox_dir, "results"))
             env = if @sandbox_backend
               @sandbox_backend.prepared_env(initial_env.dup)
             else
@@ -95,6 +98,7 @@ module Ace
               File.write(state_file, JSON.generate({
                 "completed_at" => Time.now.utc.iso8601,
                 "sandbox_dir" => sandbox_dir,
+                "setup_steps" => self.class.normalize_state_steps(setup_steps),
                 "release_manifest" => @release_manifest_state,
                 "env" => persisted
               }))
@@ -292,17 +296,49 @@ module Ace
 
           class << self
             # Retry state for a completed setup. Returns nil when there is no
-            # usable state (no file, unreadable, or from another sandbox).
-            def setup_state_for(state_file, sandbox_dir)
+            # usable state (no file, unreadable, from another sandbox, or
+            # recorded for different setup steps).
+            def setup_state_for(state_file, sandbox_dir, setup_steps: nil)
               return nil unless state_file && File.file?(state_file)
 
               state = JSON.parse(File.read(state_file))
               return nil unless state.is_a?(Hash)
               return nil unless state["sandbox_dir"] &&
                 File.expand_path(state["sandbox_dir"]) == File.expand_path(sandbox_dir)
+              return nil if setup_steps && state["setup_steps"] != normalize_state_steps(setup_steps)
 
               state
             rescue JSON::ParserError, SystemCallError
+              nil
+            end
+
+            def normalize_state_steps(setup_steps)
+              Array(setup_steps).map { |step| step.is_a?(Hash) ? [step.keys.first, step.values.first] : step }
+            end
+
+            # The manifest copy destination comes from trusted setup state,
+            # but the runner controls the sandbox filesystem in between: a
+            # symlinked path component could redirect the host-side write
+            # outside the sandbox. Every component below the sandbox root is
+            # checked and the write uses the fully resolved directory.
+            def validated_manifest_target(sandbox_dir, target)
+              sandbox_root = File.expand_path(sandbox_dir)
+              relative = target.to_s.split("/")
+              current = sandbox_root
+              relative.reject { |part| part.empty? || part == "." }.each do |part|
+                current = File.join(current, part)
+                lstat = File.lstat(current)
+                return nil if lstat.symlink?
+
+                unless lstat.directory? || !File.exist?(current)
+                  return nil
+                end
+              end
+              resolved = File.expand_path(current)
+              return nil unless resolved.start_with?(sandbox_root + File::SEPARATOR)
+
+              resolved
+            rescue SystemCallError
               nil
             end
 
@@ -312,18 +348,15 @@ module Ace
             # when reuse may proceed (no manifest gate recorded, or the
             # current input hashes to the recorded digest); false when the
             # sandbox must be set up again.
-            def revalidate_release_manifest(state_file:, sandbox_dir:, explicit: nil)
-              state = setup_state_for(state_file, sandbox_dir)
+            def revalidate_release_manifest(state_file:, sandbox_dir:, explicit: nil, setup_steps: nil)
+              state = setup_state_for(state_file, sandbox_dir, setup_steps: setup_steps)
               return false unless state
 
               recorded = state["release_manifest"]
               return true if recorded.nil?
 
-              # The copy target comes from trusted setup state and must stay
-              # inside the sandbox; an escaped path rejects reuse outright.
-              target_path = File.expand_path(File.join(sandbox_dir, recorded["target"].to_s))
-              sandbox_root = File.expand_path(sandbox_dir)
-              return false unless target_path.start_with?(sandbox_root + File::SEPARATOR)
+              target_path = validated_manifest_target(sandbox_dir, recorded["target"])
+              return false unless target_path
 
               source = begin
                 release_manifest_source_for(state["env"] || {}, explicit)

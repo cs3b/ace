@@ -340,9 +340,12 @@ module Ace
               if report_dir
                 sandbox_path = report_dir.sub(/-reports\z/, "")
                 state_file = File.join(report_dir, Molecules::SetupExecutor::SETUP_STATE_FILE)
-                state = Molecules::SetupExecutor.setup_state_for(state_file, sandbox_path)
+                state = Molecules::SetupExecutor.setup_state_for(
+                  state_file, sandbox_path, setup_steps: scenario.setup_steps
+                )
                 if state && Molecules::SetupExecutor.revalidate_release_manifest(
-                  state_file: state_file, sandbox_dir: sandbox_path, explicit: @release_manifest_input
+                  state_file: state_file, sandbox_dir: sandbox_path, explicit: @release_manifest_input,
+                  setup_steps: scenario.setup_steps
                 )
                   # A completed sandbox whose validated manifest still matches
                   # the current input is reused with its recorded environment.
