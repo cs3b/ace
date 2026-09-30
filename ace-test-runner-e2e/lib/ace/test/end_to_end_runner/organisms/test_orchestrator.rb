@@ -367,6 +367,17 @@ module Ace
             begin
               if report_dir
                 sandbox_path = report_dir.sub(/-reports\z/, "")
+                # Every filesystem mutation below (refresh_package_copy's
+                # rm_rf, sandbox recreation) requires a runner-owned sandbox;
+                # reject anything else before touching the filesystem.
+                unless owned_sandbox_path?(sandbox_path)
+                  result = setup_failed_result(
+                    scenario,
+                    "report directory must live under the runner-owned .ace-local/test-e2e cache: #{report_dir}"
+                  )
+                  display.show_single_result(result)
+                  return [result]
+                end
                 state_file = File.join(report_dir, Molecules::SetupExecutor::SETUP_STATE_FILE)
                 # Effective steps (including profile bootstrap) are what
                 # setup executed, so they are what retry state must match.
@@ -418,7 +429,7 @@ module Ace
                     # directories; prerequisite goals' evidence is retained
                     # for classification.
                     Array(test_cases).each do |tc_id|
-                      FileUtils.rm_rf(File.join(sandbox_path, "results", "tc", tc_id.delete_prefix("TC-")))
+                      FileUtils.rm_rf(File.join(sandbox_path, "results", "tc", tc_id.delete_prefix("TC-").rjust(2, "0")))
                     end
                     reusable = Molecules::SetupExecutor.revalidate_release_manifest(
                       state_file: state_file, sandbox_dir: sandbox_path, explicit: @release_manifest_input,
