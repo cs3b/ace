@@ -30,15 +30,14 @@ module Ace
             PATH HOME TMPDIR XDG_RUNTIME_DIR TMUX_TMPDIR ACE_TMUX_SESSION
           ]
           RELEASE_MANIFEST_DEFAULT_PATH = File.join(".ace-local", "release", "installation-manifest.json")
-          # Written only after every setup step succeeded. Sandboxes without
-          # this marker were left by a failed setup and must not be reused:
-          # a retry would skip the deterministic gate (e.g. release-manifest
-          # validation) entirely.
-          SETUP_COMPLETE_MARKER = ".ace-e2e-setup-complete"
-          SETUP_ENV_FILE = ".ace-e2e-setup-env.json"
+          # Retry trust state lives in the report directory — host-side,
+          # outside the runner-writable sandbox. A marker inside the sandbox
+          # would let a compromised runner forge reuse state, redirect
+          # manifest copies outside the sandbox, or skip revalidation.
+          SETUP_STATE_FILE = ".ace-e2e-setup-state.json"
           # Only the sandbox runtime contract is persisted for reuse. The
           # merged setup environment inherits the host process environment,
-          # which can carry secrets that must never land in a sandbox file.
+          # which can carry secrets that must never land in a state file.
           PERSISTED_ENV_KEYS = (
             Molecules::SandboxRuntimeBuilder::RESERVED_ENV_KEYS + %w[
               PATH ACE_E2E_SANDBOX_RUNTIME_ROOT ACE_E2E_SANDBOX_RUBY_VERSION ACE_E2E_SANDBOX_RUBY_ROOT
@@ -62,10 +61,15 @@ module Ace
           # @param release_manifest_path [String, nil] Explicit absolute manifest path carried
           #   from the invoking process (ACE_RELEASE_MANIFEST). When nil, the release-manifest
           #   step falls back to the default path under ACE_E2E_SOURCE_ROOT.
+          # @param state_file [String, nil] Host-side path (report directory) for retry
+          #   state. When nil, no retry state is recorded and the sandbox is never reused.
           # @return [Hash] Result with :success, :steps_completed, :error, :env, :tmux_session keys
           def execute(setup_steps:, sandbox_dir:, fixture_source: nil, scenario_name: nil, run_id: nil, initial_env: {},
-            git_excludes: [], release_manifest_path: nil)
+            git_excludes: [], release_manifest_path: nil, state_file: nil)
             FileUtils.mkdir_p(sandbox_dir)
+            # A rerun invalidates any earlier success up front: state is
+            # recreated only after every step and the persisted env succeed.
+            FileUtils.rm_f(state_file) if state_file
             env = if @sandbox_backend
               @sandbox_backend.prepared_env(initial_env.dup)
             else
@@ -85,12 +89,16 @@ module Ace
               steps_completed += 1
             end
             merged = merged_environment(env)
-            File.write(File.join(sandbox_dir, SETUP_COMPLETE_MARKER), JSON.generate({
-              "completed_at" => Time.now.utc.iso8601,
-              "release_manifest" => @release_manifest_state
-            }))
-            persisted = merged.slice(*PERSISTED_ENV_KEYS).compact
-            File.write(File.join(sandbox_dir, SETUP_ENV_FILE), JSON.generate(persisted))
+            if state_file
+              FileUtils.mkdir_p(File.dirname(state_file))
+              persisted = merged.slice(*PERSISTED_ENV_KEYS).compact
+              File.write(state_file, JSON.generate({
+                "completed_at" => Time.now.utc.iso8601,
+                "sandbox_dir" => sandbox_dir,
+                "release_manifest" => @release_manifest_state,
+                "env" => persisted
+              }))
+            end
 
             {
               success: true,
@@ -283,43 +291,58 @@ module Ace
           end
 
           class << self
+            # Retry state for a completed setup. Returns nil when there is no
+            # usable state (no file, unreadable, or from another sandbox).
+            def setup_state_for(state_file, sandbox_dir)
+              return nil unless state_file && File.file?(state_file)
+
+              state = JSON.parse(File.read(state_file))
+              return nil unless state.is_a?(Hash)
+              return nil unless state["sandbox_dir"] &&
+                File.expand_path(state["sandbox_dir"]) == File.expand_path(sandbox_dir)
+
+              state
+            rescue JSON::ParserError, SystemCallError
+              nil
+            end
+
             # Revalidate the current manifest input against a completed
             # sandbox before it is reused: the validated copy in the sandbox
             # must still match the invoking process's manifest. Returns true
-            # when reuse may proceed (no manifest state recorded, or the
-            # current input validates to the same digest); false when the
+            # when reuse may proceed (no manifest gate recorded, or the
+            # current input hashes to the recorded digest); false when the
             # sandbox must be set up again.
-            def revalidate_release_manifest(sandbox_dir:, explicit: nil)
-              state_path = File.join(sandbox_dir, SETUP_COMPLETE_MARKER)
-              return true unless File.file?(state_path)
+            def revalidate_release_manifest(state_file:, sandbox_dir:, explicit: nil)
+              state = setup_state_for(state_file, sandbox_dir)
+              return false unless state
 
-              state = JSON.parse(File.read(state_path))
-              recorded = state.is_a?(Hash) ? state["release_manifest"] : nil
+              recorded = state["release_manifest"]
               return true if recorded.nil?
 
-              env = begin
-                JSON.parse(File.read(File.join(sandbox_dir, SETUP_ENV_FILE)))
-              rescue StandardError
-                {}
-              end
+              # The copy target comes from trusted setup state and must stay
+              # inside the sandbox; an escaped path rejects reuse outright.
+              target_path = File.expand_path(File.join(sandbox_dir, recorded["target"].to_s))
+              sandbox_root = File.expand_path(sandbox_dir)
+              return false unless target_path.start_with?(sandbox_root + File::SEPARATOR)
+
               source = begin
-                release_manifest_source_for(env, explicit)
+                release_manifest_source_for(state["env"] || {}, explicit)
               rescue Molecules::ReleaseManifest::Invalid
                 return false
               end
-              digest = begin
-                Digest::SHA256.file(source).hexdigest
+
+              # Read once: the digest check and the copy must see the same
+              # bytes even if the source changes mid-revalidation.
+              raw = begin
+                File.binread(source)
               rescue SystemCallError
                 return false
               end
+              return false if Digest::SHA256.hexdigest(raw) != recorded["digest"]
 
-              return false unless digest == recorded["digest"]
-
-              target_path = File.join(sandbox_dir, recorded["target"])
-              FileUtils.cp(source, target_path)
+              FileUtils.mkdir_p(File.dirname(target_path))
+              File.binwrite(target_path, raw)
               true
-            rescue JSON::ParserError, SystemCallError
-              false
             end
 
             def release_manifest_source_for(env, explicit)

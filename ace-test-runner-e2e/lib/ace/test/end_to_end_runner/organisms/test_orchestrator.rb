@@ -141,8 +141,9 @@ module Ace
           # @param output [IO] Output stream for progress messages
           # @param sandbox_dir_override [String, nil] Explicit sandbox directory (used by
           #   report-dir retries so setup and execution share one sandbox path)
+          # @param state_file [String, nil] Host-side retry-state path (report directory)
           # @return [Array(String, Hash, SetupExecutor)] [sandbox_path, env_vars, setup_executor] or [nil, nil, nil]
-          def setup_sandbox_if_ts(scenario, timestamp, output, sandbox_dir_override: nil)
+          def setup_sandbox_if_ts(scenario, timestamp, output, sandbox_dir_override: nil, state_file: nil)
             return [nil, nil, nil] unless cli_provider? && scenario.setup_steps.any?
 
             sandbox_dir = sandbox_dir_override ||
@@ -191,7 +192,8 @@ module Ace
                 protocol_packages,
                 setup_steps: setup_steps
               ),
-              release_manifest_path: @release_manifest_input
+              release_manifest_path: @release_manifest_input,
+              state_file: state_file
             )
 
             unless result[:success]
@@ -239,25 +241,31 @@ module Ace
             value.empty? ? nil : value
           end
 
-          def setup_completed?(sandbox_path)
-            Dir.exist?(sandbox_path) &&
-              File.exist?(File.join(sandbox_path, Molecules::SetupExecutor::SETUP_COMPLETE_MARKER))
-          end
-
           # Reuse of a completed sandbox restores the environment recorded by
           # the original setup, so later pipeline phases see the same env
           # contract (PROJECT_ROOT_PATH, source root, manifest inputs).
-          def restored_sandbox_env(sandbox_path)
-            env_path = File.join(sandbox_path, Molecules::SetupExecutor::SETUP_ENV_FILE)
-            env = JSON.parse(File.read(env_path))
-            return nil unless env.is_a?(Hash)
+          def restored_sandbox_env(state)
+            env = state["env"]
+            return nil unless env.is_a?(Hash) && !env.empty?
 
+            env = env.dup
             if env["PROJECT_ROOT_PATH"] && !env["PROJECT_ROOT_PATH"].start_with?("/")
-              env["PROJECT_ROOT_PATH"] = File.expand_path(env["PROJECT_ROOT_PATH"], sandbox_path)
+              env["PROJECT_ROOT_PATH"] = File.expand_path(env["PROJECT_ROOT_PATH"], state["sandbox_dir"])
             end
             env
-          rescue StandardError
-            nil
+          end
+
+          # TS-MONO-001-style scenarios depend on deterministic setup gates
+          # (release-manifest validation) that only the CLI-provider pipeline
+          # runs. An API-provider run must not execute them at all.
+          def assert_deterministic_gate_supported!(scenario)
+            has_manifest_gate = scenario.setup_steps.any? do |step|
+              step.is_a?(Hash) && step.key?("release-manifest")
+            end
+            return unless has_manifest_gate && !cli_provider?
+
+            raise SandboxSetupFailed,
+              "#{scenario.test_id} requires a CLI provider: its release-manifest gate runs in deterministic setup"
           end
 
           def setup_failed_result(scenario, error_message)
@@ -312,6 +320,13 @@ module Ace
             scenario = @loader.load(File.dirname(file))
             display = build_display_manager([scenario], output)
             setup_executor = nil
+            begin
+              assert_deterministic_gate_supported!(scenario)
+            rescue SandboxSetupFailed => e
+              result = setup_failed_result(scenario, e.message)
+              display.show_single_result(result)
+              return [result]
+            end
 
             output.puts "Running E2E test: #{scenario.test_id} (#{scenario.package})"
             if test_cases
@@ -324,24 +339,27 @@ module Ace
             begin
               if report_dir
                 sandbox_path = report_dir.sub(/-reports\z/, "")
-                if setup_completed?(sandbox_path) &&
-                    Molecules::SetupExecutor.revalidate_release_manifest(
-                      sandbox_dir: sandbox_path, explicit: @release_manifest_input
-                    )
+                state_file = File.join(report_dir, Molecules::SetupExecutor::SETUP_STATE_FILE)
+                state = Molecules::SetupExecutor.setup_state_for(state_file, sandbox_path)
+                if state && Molecules::SetupExecutor.revalidate_release_manifest(
+                  state_file: state_file, sandbox_dir: sandbox_path, explicit: @release_manifest_input
+                )
                   # A completed sandbox whose validated manifest still matches
                   # the current input is reused with its recorded environment.
-                  env_vars = restored_sandbox_env(sandbox_path)
+                  env_vars = restored_sandbox_env(state)
                   unless env_vars
                     sandbox_path, env_vars, setup_executor = setup_sandbox_if_ts(
-                      scenario, timestamp, output, sandbox_dir_override: sandbox_path
+                      scenario, timestamp, output,
+                      sandbox_dir_override: sandbox_path, state_file: state_file
                     )
                   end
                 else
-                  # A failed-setup sandbox (no marker), a changed manifest, or
-                  # an unrestorable environment forces a fresh deterministic
+                  # No usable retry state (failed setup, changed manifest, or
+                  # escaped manifest target) forces a fresh deterministic
                   # setup against the retry's own sandbox path.
                   sandbox_path, env_vars, setup_executor = setup_sandbox_if_ts(
-                    scenario, timestamp, output, sandbox_dir_override: sandbox_path
+                    scenario, timestamp, output,
+                    sandbox_dir_override: sandbox_path, state_file: state_file
                   )
                 end
               else
@@ -413,6 +431,17 @@ module Ace
 
             # Load scenarios upfront for titles and report generation
             scenarios = files.map { |f| @loader.load(File.dirname(f)) }
+            unless cli_provider?
+              gated = scenarios.find do |scenario|
+                scenario.setup_steps.any? { |step| step.is_a?(Hash) && step.key?("release-manifest") }
+              end
+              if gated
+                return [setup_failed_result(
+                  gated,
+                  "#{gated.test_id} requires a CLI provider: its release-manifest gate runs in deterministic setup"
+                )]
+              end
+            end
 
             display = build_display_manager(scenarios, output)
             display.initialize_display

@@ -46,11 +46,14 @@ module Ace
           # +required_packages+ names the gems the calling scenario's proof
           # depends on; the manifest must cover every one of them. Entries
           # may be plain names or {name, supersedes} maps requiring an
-          # explicit supersession declaration. Returns the manifest digest
-          # (SHA256) so callers can verify later copies against it.
+          # explicit supersession declaration. The buffer is read once so
+          # the validated content, the written copy, and the returned digest
+          # are the same bytes even if the source file changes mid-flight.
           # @raise [Invalid]
           def self.validate_and_copy(source_path:, target_path:, required_packages: nil)
-            data = load_validated(source_path)
+            raw = read_source(source_path)
+            data = parse_buffer(raw, source_path)
+            validate_schema!(data)
             entries = data["packages"].to_h { |package| [package["name"], package] }
             Array(required_packages).each do |required|
               name, supersedes = required_packages_entry(required)
@@ -64,26 +67,34 @@ module Ace
                 "release manifest does not declare that #{name} #{entry["artifact_version"]} supersedes #{missing.join(", ")}"
             end
             FileUtils.mkdir_p(File.dirname(target_path))
-            FileUtils.cp(source_path, target_path)
-            Digest::SHA256.file(source_path).hexdigest
+            File.binwrite(target_path, raw)
+            Digest::SHA256.hexdigest(raw)
           end
 
           class << self
             private
 
-            def parse_json(path)
+            def read_source(path)
               raise Invalid, "release manifest is missing: #{path}" unless File.file?(path)
               raise Invalid, "release manifest is not readable: #{path}" unless File.readable?(path)
 
-              raw = File.read(path)
+              raw = File.binread(path)
               raise Invalid, "release manifest is empty: #{path}" if raw.strip.empty?
 
+              raw
+            end
+
+            def parse_buffer(raw, path)
               data = JSON.parse(raw)
               raise Invalid, "release manifest must be a JSON object: #{path}" unless data.is_a?(Hash)
 
               data
             rescue JSON::ParserError => e
               raise Invalid, "release manifest is not valid JSON: #{path} (#{e.message})"
+            end
+
+            def parse_json(path)
+              parse_buffer(read_source(path), path)
             end
 
             def validate_schema!(data)

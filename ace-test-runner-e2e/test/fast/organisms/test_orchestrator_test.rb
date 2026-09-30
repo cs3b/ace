@@ -940,7 +940,7 @@ class TestOrchestratorTest < Minitest::Test
 
       received = {}
       setup_executor = Object.new
-      setup_executor.define_singleton_method(:execute) do |setup_steps:, sandbox_dir:, fixture_source: nil, scenario_name: nil, run_id: nil, initial_env: {}, git_excludes: [], release_manifest_path: nil|
+      setup_executor.define_singleton_method(:execute) do |setup_steps:, sandbox_dir:, fixture_source: nil, scenario_name: nil, run_id: nil, initial_env: {}, git_excludes: [], release_manifest_path: nil, state_file: nil|
         received[:git_excludes] = git_excludes
         {
           success: true,
@@ -982,7 +982,7 @@ class TestOrchestratorTest < Minitest::Test
 
       received = {}
       setup_executor = Object.new
-      setup_executor.define_singleton_method(:execute) do |setup_steps:, sandbox_dir:, fixture_source: nil, scenario_name: nil, run_id: nil, initial_env: {}, git_excludes: [], release_manifest_path: nil|
+      setup_executor.define_singleton_method(:execute) do |setup_steps:, sandbox_dir:, fixture_source: nil, scenario_name: nil, run_id: nil, initial_env: {}, git_excludes: [], release_manifest_path: nil, state_file: nil|
         received[:git_excludes] = git_excludes
         {
           success: true,
@@ -1024,7 +1024,7 @@ class TestOrchestratorTest < Minitest::Test
 
       received = {}
       setup_executor = Object.new
-      setup_executor.define_singleton_method(:execute) do |setup_steps:, sandbox_dir:, fixture_source: nil, scenario_name: nil, run_id: nil, initial_env: {}, git_excludes: [], release_manifest_path: nil|
+      setup_executor.define_singleton_method(:execute) do |setup_steps:, sandbox_dir:, fixture_source: nil, scenario_name: nil, run_id: nil, initial_env: {}, git_excludes: [], release_manifest_path: nil, state_file: nil|
         received[:git_excludes] = git_excludes
         {
           success: true,
@@ -1065,7 +1065,7 @@ class TestOrchestratorTest < Minitest::Test
 
       received = {}
       setup_executor = Object.new
-      setup_executor.define_singleton_method(:execute) do |setup_steps:, sandbox_dir:, fixture_source: nil, scenario_name: nil, run_id: nil, initial_env: {}, git_excludes: [], release_manifest_path: nil|
+      setup_executor.define_singleton_method(:execute) do |setup_steps:, sandbox_dir:, fixture_source: nil, scenario_name: nil, run_id: nil, initial_env: {}, git_excludes: [], release_manifest_path: nil, state_file: nil|
         received[:setup_steps] = setup_steps
         received[:run_id] = run_id
         received[:scenario_name] = scenario_name
@@ -1338,16 +1338,18 @@ class TestOrchestratorTest < Minitest::Test
       File.write(changed, JSON.generate({"schema_version" => 1, "source_sha" => "c" * 40, "packages" => [
         {"name" => "ace-git-github", "artifact_version" => "0.3.0", "source_sha" => "d" * 40}
       ]}))
-      # Completed sandbox from a run against the ORIGINAL manifest.
+      # Completed sandbox from a run against the ORIGINAL manifest. Retry
+      # state lives host-side in the report directory, never in the sandbox.
       digest = Digest::SHA256.file(manifest).hexdigest
+      FileUtils.mkdir_p(report_dir)
       File.write(
-        File.join(sandbox_path, Ace::Test::EndToEndRunner::Molecules::SetupExecutor::SETUP_COMPLETE_MARKER),
-        JSON.generate({"completed_at" => Time.now.utc.iso8601,
-                       "release_manifest" => {"source" => manifest, "target" => "results/tc/01/release-manifest.json", "digest" => digest}})
-      )
-      File.write(
-        File.join(sandbox_path, Ace::Test::EndToEndRunner::Molecules::SetupExecutor::SETUP_ENV_FILE),
-        JSON.generate({"PROJECT_ROOT_PATH" => ".", "ACE_E2E_SOURCE_ROOT" => tmpdir})
+        File.join(report_dir, Ace::Test::EndToEndRunner::Molecules::SetupExecutor::SETUP_STATE_FILE),
+        JSON.generate({
+          "completed_at" => Time.now.utc.iso8601,
+          "sandbox_dir" => sandbox_path,
+          "release_manifest" => {"source" => manifest, "target" => "results/tc/01/release-manifest.json", "digest" => digest},
+          "env" => {"PROJECT_ROOT_PATH" => ".", "ACE_E2E_SOURCE_ROOT" => tmpdir}
+        })
       )
 
       setup_calls = 0
@@ -1383,14 +1385,16 @@ class TestOrchestratorTest < Minitest::Test
       ENV["ACE_E2E_TEST_SECRET_PROBE"] = "super-secret-token"
 
       executor = Ace::Test::EndToEndRunner::Molecules::SetupExecutor.new
+      state_file = File.join(sandbox, "state.json")
       result = executor.execute(
         setup_steps: [],
         sandbox_dir: sandbox,
-        initial_env: {"ACE_E2E_SOURCE_ROOT" => "/tmp/source"}
+        initial_env: {"ACE_E2E_SOURCE_ROOT" => "/tmp/source"},
+        state_file: state_file
       )
 
       assert result[:success]
-      persisted = JSON.parse(File.read(File.join(sandbox, Ace::Test::EndToEndRunner::Molecules::SetupExecutor::SETUP_ENV_FILE)))
+      persisted = JSON.parse(File.read(state_file))["env"]
       refute persisted.key?("ACE_E2E_TEST_SECRET_PROBE"),
         "host environment variables must never be persisted into the sandbox"
       assert_equal "/tmp/source", persisted["ACE_E2E_SOURCE_ROOT"]
@@ -1409,10 +1413,9 @@ class TestOrchestratorTest < Minitest::Test
 
       setup_calls = 0
       setup_executor = Object.new
-      setup_executor.define_singleton_method(:execute) do |setup_steps:, sandbox_dir:, fixture_source: nil, scenario_name: nil, run_id: nil, initial_env: {}, git_excludes: [], release_manifest_path: nil|
+      setup_executor.define_singleton_method(:execute) do |setup_steps:, sandbox_dir:, fixture_source: nil, scenario_name: nil, run_id: nil, initial_env: {}, git_excludes: [], release_manifest_path: nil, state_file: nil|
         setup_calls += 1
-        File.write(File.join(sandbox_dir, Ace::Test::EndToEndRunner::Molecules::SetupExecutor::SETUP_COMPLETE_MARKER), "ok\n")
-        {
+          {
           success: true,
           steps_completed: setup_steps.length,
           error: nil,
@@ -1436,7 +1439,7 @@ class TestOrchestratorTest < Minitest::Test
       )
 
       assert_equal 1, setup_calls,
-        "a sandbox without the setup-complete marker must be re-set-up, never reused"
+        "a sandbox without usable retry state must be re-set-up, never reused"
     end
   end
 
@@ -1445,14 +1448,15 @@ class TestOrchestratorTest < Minitest::Test
       create_ts_test_package_with_setup(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001])
       report_dir = File.join(tmpdir, ".ace-local", "test-e2e", "TS-TEST-001-test-run00-reports")
       sandbox_path = report_dir.sub(/-reports\z/, "")
-      FileUtils.mkdir_p(sandbox_path)
+      FileUtils.mkdir_p(report_dir)
       File.write(
-        File.join(sandbox_path, Ace::Test::EndToEndRunner::Molecules::SetupExecutor::SETUP_COMPLETE_MARKER),
-        JSON.generate({"completed_at" => Time.now.utc.iso8601, "release_manifest" => nil})
-      )
-      File.write(
-        File.join(sandbox_path, Ace::Test::EndToEndRunner::Molecules::SetupExecutor::SETUP_ENV_FILE),
-        JSON.generate({"PROJECT_ROOT_PATH" => "."})
+        File.join(report_dir, Ace::Test::EndToEndRunner::Molecules::SetupExecutor::SETUP_STATE_FILE),
+        JSON.generate({
+          "completed_at" => Time.now.utc.iso8601,
+          "sandbox_dir" => sandbox_path,
+          "release_manifest" => nil,
+          "env" => {"PROJECT_ROOT_PATH" => "."}
+        })
       )
 
       setup_calls = 0
@@ -1485,7 +1489,7 @@ class TestOrchestratorTest < Minitest::Test
 
   def fixture_copying_setup_executor(source_root:)
     Object.new.tap do |setup_executor|
-      setup_executor.define_singleton_method(:execute) do |setup_steps:, sandbox_dir:, fixture_source: nil, scenario_name: nil, run_id: nil, initial_env: {}, git_excludes: [], release_manifest_path: nil|
+      setup_executor.define_singleton_method(:execute) do |setup_steps:, sandbox_dir:, fixture_source: nil, scenario_name: nil, run_id: nil, initial_env: {}, git_excludes: [], release_manifest_path: nil, state_file: nil|
         FileUtils.mkdir_p(sandbox_dir)
         if fixture_source && Dir.exist?(fixture_source)
           Dir.children(fixture_source).each do |entry|
@@ -1566,7 +1570,7 @@ class TestOrchestratorTest < Minitest::Test
 
       received = {}
       setup_executor = Object.new
-      setup_executor.define_singleton_method(:execute) do |setup_steps:, sandbox_dir:, fixture_source: nil, scenario_name: nil, run_id: nil, initial_env: {}, git_excludes: [], release_manifest_path: nil|
+      setup_executor.define_singleton_method(:execute) do |setup_steps:, sandbox_dir:, fixture_source: nil, scenario_name: nil, run_id: nil, initial_env: {}, git_excludes: [], release_manifest_path: nil, state_file: nil|
         received[:release_manifest_path] = release_manifest_path
         {
           success: true,
@@ -1597,7 +1601,7 @@ class TestOrchestratorTest < Minitest::Test
 
       received = {}
       setup_executor = Object.new
-      setup_executor.define_singleton_method(:execute) do |setup_steps:, sandbox_dir:, fixture_source: nil, scenario_name: nil, run_id: nil, initial_env: {}, git_excludes: [], release_manifest_path: nil|
+      setup_executor.define_singleton_method(:execute) do |setup_steps:, sandbox_dir:, fixture_source: nil, scenario_name: nil, run_id: nil, initial_env: {}, git_excludes: [], release_manifest_path: nil, state_file: nil|
         received[:release_manifest_path] = release_manifest_path
         {
           success: true,
@@ -1630,7 +1634,7 @@ class TestOrchestratorTest < Minitest::Test
 
       torn_down = false
       setup_executor = Object.new
-      setup_executor.define_singleton_method(:execute) do |setup_steps:, sandbox_dir:, fixture_source: nil, scenario_name: nil, run_id: nil, initial_env: {}, git_excludes: [], release_manifest_path: nil|
+      setup_executor.define_singleton_method(:execute) do |setup_steps:, sandbox_dir:, fixture_source: nil, scenario_name: nil, run_id: nil, initial_env: {}, git_excludes: [], release_manifest_path: nil, state_file: nil|
         {
           success: false,
           steps_completed: 0,
