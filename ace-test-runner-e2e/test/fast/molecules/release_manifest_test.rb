@@ -29,6 +29,8 @@ class ReleaseManifestTest < Minitest::Test
   end
 
   def test_unreadable_file_fails
+    skip "permission bits do not restrict root" if Process.uid.zero?
+
     write_manifest(valid_manifest)
     File.chmod(0o000, @source)
 

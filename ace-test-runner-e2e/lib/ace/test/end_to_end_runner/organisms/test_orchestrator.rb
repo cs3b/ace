@@ -2,6 +2,7 @@
 
 require "fileutils"
 require "date"
+require "json"
 require "yaml"
 require "ace/b36ts"
 require "ace/test_support/sandbox_package_copy"
@@ -240,6 +241,22 @@ module Ace
               File.exist?(File.join(sandbox_path, Molecules::SetupExecutor::SETUP_COMPLETE_MARKER))
           end
 
+          # Reuse of a completed sandbox restores the environment recorded by
+          # the original setup, so later pipeline phases see the same env
+          # contract (PROJECT_ROOT_PATH, source root, manifest inputs).
+          def restored_sandbox_env(sandbox_path)
+            env_path = File.join(sandbox_path, Molecules::SetupExecutor::SETUP_ENV_FILE)
+            env = JSON.parse(File.read(env_path))
+            return nil unless env.is_a?(Hash)
+
+            if env["PROJECT_ROOT_PATH"] && !env["PROJECT_ROOT_PATH"].start_with?("/")
+              env["PROJECT_ROOT_PATH"] = File.expand_path(env["PROJECT_ROOT_PATH"], sandbox_path)
+            end
+            env
+          rescue StandardError
+            nil
+          end
+
           def setup_failed_result(scenario, error_message)
             Models::TestResult.new(
               test_id: scenario.test_id,
@@ -304,10 +321,15 @@ module Ace
             begin
               if report_dir
                 sandbox_path = report_dir.sub(/-reports\z/, "")
-                unless setup_completed?(sandbox_path)
-                  # A sandbox without the setup-complete marker was left by a
-                  # failed setup; rerun the deterministic setup so gates like
-                  # release-manifest validation cannot be skipped on retry.
+                if setup_completed?(sandbox_path)
+                  # A completed sandbox is reused with its recorded
+                  # environment; a failed-setup sandbox (no marker) is
+                  # re-set-up so deterministic gates cannot be skipped.
+                  env_vars = restored_sandbox_env(sandbox_path)
+                  unless env_vars
+                    sandbox_path, env_vars, setup_executor = setup_sandbox_if_ts(scenario, timestamp, output)
+                  end
+                else
                   sandbox_path, env_vars, setup_executor = setup_sandbox_if_ts(scenario, timestamp, output)
                 end
               else

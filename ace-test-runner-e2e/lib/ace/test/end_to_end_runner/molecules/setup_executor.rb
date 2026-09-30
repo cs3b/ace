@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "fileutils"
+require "json"
 require "open3"
 require "shellwords"
 require "time"
@@ -33,6 +34,7 @@ module Ace
           # a retry would skip the deterministic gate (e.g. release-manifest
           # validation) entirely.
           SETUP_COMPLETE_MARKER = ".ace-e2e-setup-complete"
+      SETUP_ENV_FILE = ".ace-e2e-setup-env.json"
 
           def initialize(command_runner: nil, system_runner: nil, time_source: nil, sandbox_backend: nil)
             @command_runner = command_runner || method(:capture3)
@@ -73,6 +75,7 @@ module Ace
               steps_completed += 1
             end
             File.write(File.join(sandbox_dir, SETUP_COMPLETE_MARKER), "#{Time.now.utc.iso8601}\n")
+            File.write(File.join(sandbox_dir, SETUP_ENV_FILE), JSON.generate(merged_environment(env)))
 
             {
               success: true,

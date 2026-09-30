@@ -1372,6 +1372,10 @@ class TestOrchestratorTest < Minitest::Test
         File.join(sandbox_path, Ace::Test::EndToEndRunner::Molecules::SetupExecutor::SETUP_COMPLETE_MARKER),
         "ok\n"
       )
+      File.write(
+        File.join(sandbox_path, Ace::Test::EndToEndRunner::Molecules::SetupExecutor::SETUP_ENV_FILE),
+        JSON.generate({"PROJECT_ROOT_PATH" => "."})
+      )
 
       setup_calls = 0
       setup_executor = Object.new
