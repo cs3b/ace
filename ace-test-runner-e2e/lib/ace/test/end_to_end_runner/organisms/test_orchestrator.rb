@@ -417,6 +417,7 @@ module Ace
                   # escaped manifest target) forces a fresh deterministic
                   # setup against the retry's own sandbox path. When setup is
                   # inapplicable (returns nils), the derived path stays.
+                  refresh_package_copy(sandbox_path, scenario)
                   new_path, new_env, setup_executor = setup_sandbox_if_ts(
                     scenario, timestamp, output,
                     sandbox_dir_override: sandbox_path, state_file: state_file

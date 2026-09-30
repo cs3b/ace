@@ -100,6 +100,12 @@ module Ace
             if state_file
               FileUtils.mkdir_p(File.dirname(state_file))
               persisted = merged.slice(*PERSISTED_ENV_KEYS).compact
+              # The live value may be relative (agent-env PROJECT_ROOT_PATH: .);
+              # the persisted contract must be absolute so a reused sandbox is
+              # recognized as prepared by the pipeline.
+              if persisted["PROJECT_ROOT_PATH"] && !persisted["PROJECT_ROOT_PATH"].start_with?("/")
+                persisted["PROJECT_ROOT_PATH"] = File.expand_path(persisted["PROJECT_ROOT_PATH"], sandbox_dir)
+              end
               generated_gemfile = File.join(sandbox_dir, "Gemfile")
               source_root = env["ACE_E2E_SOURCE_ROOT"].to_s
               source_gemfile = source_root.empty? ? nil : File.join(source_root, "Gemfile")
