@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.44.2] - 2026-09-29
+
+### Fixed
+- The released gemspec now declares `ace-git-github ~> 0.2`, matching the source
+  constraint: the previously published 0.44.1 metadata still pinned `~> 0.1.1`,
+  which kept published installations resolving ace-git-github 0.1.2 and made
+  the released 0.2.0 unreachable through dependency resolution.
+
 ## [0.44.1] - 2026-09-27
 
 ### Technical

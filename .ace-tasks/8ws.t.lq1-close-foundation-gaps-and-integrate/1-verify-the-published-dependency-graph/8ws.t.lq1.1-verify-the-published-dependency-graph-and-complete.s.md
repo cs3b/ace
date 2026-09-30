@@ -1,6 +1,6 @@
 ---
 id: 8ws.t.lq1.1
-status: pending
+status: in-progress
 priority: high
 created_at: "2026-09-29 14:29:08"
 estimate: medium

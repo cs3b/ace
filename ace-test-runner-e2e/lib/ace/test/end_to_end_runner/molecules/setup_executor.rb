@@ -1,8 +1,13 @@
 # frozen_string_literal: true
 
+require "digest"
 require "fileutils"
+require "json"
 require "open3"
 require "shellwords"
+require "time"
+
+require_relative "release_manifest"
 
 module Ace
   module Test
@@ -12,7 +17,8 @@ module Ace
         #
         # Processes the setup array from scenario.yml, running each action
         # via Ruby system calls (no LLM involved). Supports: git-init,
-        # copy-fixtures, run, write-file, agent-env, and tmux-session actions.
+        # copy-fixtures, run, write-file, agent-env, tmux-session, and
+        # release-manifest actions.
         #
         # Note: This is a Molecule because it performs filesystem I/O and
         # system calls via Open3 and FileUtils.
@@ -23,6 +29,20 @@ module Ace
           RESERVED_ENV_KEYS = Molecules::SandboxRuntimeBuilder::RESERVED_ENV_KEYS + %w[
             PATH HOME TMPDIR XDG_RUNTIME_DIR TMUX_TMPDIR ACE_TMUX_SESSION
           ]
+          RELEASE_MANIFEST_DEFAULT_PATH = File.join(".ace-local", "release", "installation-manifest.json")
+          # Retry trust state lives in the report directory — host-side,
+          # outside the runner-writable sandbox. A marker inside the sandbox
+          # would let a compromised runner forge reuse state, redirect
+          # manifest copies outside the sandbox, or skip revalidation.
+          SETUP_STATE_FILE = ".ace-e2e-setup-state.json"
+          # Only the sandbox runtime contract is persisted for reuse. The
+          # merged setup environment inherits the host process environment,
+          # which can carry secrets that must never land in a state file.
+          PERSISTED_ENV_KEYS = (
+            Molecules::SandboxRuntimeBuilder::RESERVED_ENV_KEYS + %w[
+              PATH ACE_E2E_SANDBOX_RUNTIME_ROOT ACE_E2E_SANDBOX_RUBY_VERSION ACE_E2E_SANDBOX_RUBY_ROOT
+            ]
+          ).freeze
 
           def initialize(command_runner: nil, system_runner: nil, time_source: nil, sandbox_backend: nil)
             @command_runner = command_runner || method(:capture3)
@@ -38,16 +58,41 @@ module Ace
           # @param fixture_source [String, nil] Path to the fixtures/ directory
           # @param scenario_name [String, nil] Test ID for tmux session naming (e.g., "TS-OVERSEER-001")
           # @param run_id [String, nil] Unique run ID for deterministic tmux session naming
+          # @param release_manifest_path [String, nil] Explicit absolute manifest path carried
+          #   from the invoking process (ACE_RELEASE_MANIFEST). When nil, the release-manifest
+          #   step falls back to the default path under ACE_E2E_SOURCE_ROOT.
+          # @param state_file [String, nil] Host-side path (report directory) for retry
+          #   state. When nil, no retry state is recorded and the sandbox is never reused.
           # @return [Hash] Result with :success, :steps_completed, :error, :env, :tmux_session keys
           def execute(setup_steps:, sandbox_dir:, fixture_source: nil, scenario_name: nil, run_id: nil, initial_env: {},
-            git_excludes: [])
+            git_excludes: [], release_manifest_path: nil, state_file: nil)
+            # Initialized before any filesystem operation: an early failure
+            # must reach the rescue as a clean setup failure, not as a
+            # secondary error from nil state.
+            env = {}
+            steps_completed = 0
+            @tmux_session = nil
+            @teardown_env = nil
             FileUtils.mkdir_p(sandbox_dir)
+            # A rerun invalidates any earlier success up front: state is
+            # recreated only after every step and the persisted env succeed.
+            if state_file
+              FileUtils.rm_f(state_file)
+              # The prior attempt's completion record must never bless a
+              # retried run that fails before rewriting it.
+              FileUtils.rm_f(File.join(File.dirname(state_file), "metadata.yml"))
+            end
+            # Prior-attempt goal evidence must never survive into a retried
+            # run: the goals rebuild results/ from scratch.
+            FileUtils.rm_rf(File.join(sandbox_dir, "results"))
             env = if @sandbox_backend
               @sandbox_backend.prepared_env(initial_env.dup)
             else
               initial_env.dup
             end
             @git_excludes = normalize_git_excludes(git_excludes)
+            @release_manifest_input = release_manifest_path
+            @release_manifest_state = nil
             steps_completed = 0
             @tmux_session = nil
             @scenario_name = scenario_name
@@ -58,12 +103,40 @@ module Ace
               execute_step(step, sandbox_dir, env, fixture_source)
               steps_completed += 1
             end
+            merged = merged_environment(env)
+            if state_file
+              FileUtils.mkdir_p(File.dirname(state_file))
+              persisted = merged.slice(*PERSISTED_ENV_KEYS).compact
+              # The live value may be relative (agent-env PROJECT_ROOT_PATH: .);
+              # the persisted contract must be absolute so a reused sandbox is
+              # recognized as prepared by the pipeline.
+              if persisted["PROJECT_ROOT_PATH"] && !persisted["PROJECT_ROOT_PATH"].start_with?("/")
+                persisted["PROJECT_ROOT_PATH"] = File.expand_path(persisted["PROJECT_ROOT_PATH"], sandbox_dir)
+              end
+              generated_gemfile = File.join(sandbox_dir, "Gemfile")
+              source_root = env["ACE_E2E_SOURCE_ROOT"].to_s
+              source_gemfile = source_root.empty? ? nil : File.join(source_root, "Gemfile")
+              File.write(state_file, JSON.generate({
+                "completed_at" => Time.now.utc.iso8601,
+                "sandbox_dir" => sandbox_dir,
+                "setup_steps" => self.class.normalize_state_steps(setup_steps),
+                "release_manifest" => @release_manifest_state,
+                "env" => persisted,
+                "gemfile" => {
+                  # The sandbox Gemfile is derived from the source root's
+                  # Gemfile; a retry must regenerate it when either changes.
+                  "source_root" => source_root,
+                  "source_digest" => source_gemfile && File.file?(source_gemfile) ? Digest::SHA256.file(source_gemfile).hexdigest : nil,
+                  "generated_digest" => File.file?(generated_gemfile) ? Digest::SHA256.file(generated_gemfile).hexdigest : nil
+                }
+              }))
+            end
 
             {
               success: true,
               steps_completed: steps_completed,
               error: nil,
-              env: merged_environment(env),
+              env: merged,
               tmux_session: @tmux_session
             }
           rescue => e
@@ -129,6 +202,8 @@ module Ace
               handle_env(value, env)
             when "tmux-session"
               handle_tmux_session(env, value)
+            when "release-manifest"
+              handle_release_manifest(value, sandbox_dir, env)
             else
               raise ArgumentError, "Unknown setup step type: #{key.inspect}"
             end
@@ -218,6 +293,180 @@ module Ace
               env[key] = v.to_s
             end
           end
+
+          # Validate the frozen release manifest and copy its exact bytes into
+          # the sandbox. The source is the explicitly allowed input carried
+          # from the invoking process (ACE_RELEASE_MANIFEST, absolute path);
+          # without it, the default path under ACE_E2E_SOURCE_ROOT is used.
+          # Any missing, unreadable, malformed, or conflicting manifest raises
+          # here so setup fails before any install goal can run.
+          def handle_release_manifest(config, sandbox_dir, env)
+            target = config.is_a?(Hash) ? config["to"] : config
+            raise ArgumentError, "release-manifest step requires a target path" if target.to_s.strip.empty?
+
+            required = config.is_a?(Hash) ? Array(config["require"]) : []
+            source = release_manifest_source(env)
+            # The scenario declares the destination; the copy itself is still
+            # confined to the sandbox with no symlinked path components.
+            target_path = self.class.validated_manifest_target(sandbox_dir, target)
+            raise ArgumentError, "release-manifest target escapes the sandbox: #{target}" unless target_path
+
+            FileUtils.mkdir_p(File.dirname(target_path))
+            digest = Molecules::ReleaseManifest.validate_and_copy(
+              source_path: source,
+              target_path: target_path,
+              required_packages: required
+            )
+            @release_manifest_state = {
+              "source" => File.expand_path(source),
+              "target" => target,
+              "digest" => digest
+            }
+          end
+
+          def release_manifest_source(env)
+            self.class.release_manifest_source_for(env, @release_manifest_input)
+          end
+
+          class << self
+            # Retry state for a completed setup. Returns nil when there is no
+            # usable state (no file, unreadable, from another sandbox, or
+            # recorded for different setup steps).
+            def setup_state_for(state_file, sandbox_dir, setup_steps: nil)
+              return nil unless state_file && File.file?(state_file)
+
+              state = JSON.parse(File.read(state_file))
+              return nil unless state.is_a?(Hash)
+              return nil unless state["sandbox_dir"] &&
+                File.expand_path(state["sandbox_dir"]) == File.expand_path(sandbox_dir)
+              return nil if setup_steps && state["setup_steps"] != normalize_state_steps(setup_steps)
+
+              state
+            rescue JSON::ParserError, SystemCallError
+              nil
+            end
+
+            def normalize_state_steps(setup_steps)
+              Array(setup_steps).map { |step| step.is_a?(Hash) ? [step.keys.first, step.values.first] : step }
+            end
+
+            # The manifest copy destination comes from trusted setup state,
+            # but the runner controls the sandbox filesystem in between: a
+            # symlinked path component could redirect the host-side write
+            # outside the sandbox. Parent components must be real
+            # directories; the final component may be an existing regular
+            # file (the previous validated copy).
+            def validated_manifest_target(sandbox_dir, target)
+              sandbox_root = File.expand_path(sandbox_dir)
+              # A symlinked sandbox root would redirect every confinement
+              # check below it.
+              return nil if File.lstat(sandbox_root).symlink?
+              relative = target.to_s.split("/")
+              current = sandbox_root
+              components = relative.reject { |part| part.empty? || part == "." }
+              components.each_with_index do |part, index|
+                current = File.join(current, part)
+                # lstat every component: File.exist? follows symlinks, so a
+                # dangling symlink would slip past an existence check and the
+                # write would create its target outside the sandbox. ENOENT
+                # means the component is genuinely absent (created fresh by
+                # mkdir_p); any other stat failure rejects reuse.
+                lstat = begin
+                  File.lstat(current)
+                rescue Errno::ENOENT
+                  next
+                rescue SystemCallError
+                  return nil
+                end
+                return nil if lstat.symlink?
+
+                last = index == components.size - 1
+                if last
+                  return nil if lstat.directory?
+                elsif !lstat.directory?
+                  return nil
+                end
+              end
+              resolved = File.expand_path(current)
+              return nil unless resolved.start_with?(sandbox_root + File::SEPARATOR)
+
+              resolved
+            rescue SystemCallError
+              nil
+            end
+
+            # Revalidate the current manifest input against a completed
+            # sandbox before it is reused: the validated copy in the sandbox
+            # must still match the invoking process's manifest. Returns true
+            # when reuse may proceed (no manifest gate recorded, or the
+            # current input hashes to the recorded digest); false when the
+            # sandbox must be set up again.
+            def revalidate_release_manifest(state_file:, sandbox_dir:, explicit: nil, setup_steps: nil)
+              state = setup_state_for(state_file, sandbox_dir, setup_steps: setup_steps)
+              return false unless state
+
+              recorded = state["release_manifest"]
+              return true if recorded.nil?
+
+              target_path = validated_manifest_target(sandbox_dir, recorded["target"])
+              return false unless target_path
+
+              source = begin
+                release_manifest_source_for(state["env"] || {}, explicit)
+              rescue Molecules::ReleaseManifest::Invalid
+                return false
+              end
+
+              # The source path itself must be the recorded one: an identical
+              # copy at a different path would be rejected by finalization's
+              # recorded-source binding, so reuse must not accept it either.
+              return false unless File.expand_path(source) == File.expand_path(recorded["source"].to_s)
+
+              # Read once: the digest check and the copy must see the same
+              # bytes even if the source changes mid-revalidation.
+              raw = begin
+                File.binread(source)
+              rescue SystemCallError
+                return false
+              end
+              return false if Digest::SHA256.hexdigest(raw) != recorded["digest"]
+
+              FileUtils.mkdir_p(File.dirname(target_path))
+              File.binwrite(target_path, raw)
+              true
+            end
+
+            # Retry reuse rebuilds the environment from the allow-listed
+            # runtime keys only (same boundary as initial setup), overlaid
+            # with the recorded sandbox runtime paths. Host secrets — even
+            # ones present in the current process — never reach the runner.
+            def build_reuse_env(state_env)
+              (PERSISTED_ENV_KEYS | %w[HOME PATH TMPDIR]).each_with_object({}) do |key, env|
+                value = state_env[key]
+                env[key] = value unless value.nil?
+              end
+            end
+
+            def release_manifest_source_for(env, explicit)
+              explicit = explicit.to_s.strip
+              if explicit.empty?
+                source_root = env["ACE_E2E_SOURCE_ROOT"].to_s.strip
+                if source_root.empty?
+                  raise Molecules::ReleaseManifest::Invalid,
+                    "no release manifest input and no ACE_E2E_SOURCE_ROOT to derive the default path"
+                end
+                return File.join(source_root, RELEASE_MANIFEST_DEFAULT_PATH)
+              end
+
+              unless explicit.start_with?("/")
+                raise Molecules::ReleaseManifest::Invalid,
+                  "ACE_RELEASE_MANIFEST must be an absolute JSON file path, got: #{explicit}"
+              end
+
+              explicit
+            end
+          end
+
 
           # Merge custom env vars with the process environment
           #

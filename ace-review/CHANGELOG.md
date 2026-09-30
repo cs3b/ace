@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   normalized to auto-resolution — so the first-ever review of any new PR failed
   with "No prior review session records a head". Nil now stays a full round;
   auto-resolution is the explicit `--delta auto` value (explicit heads unchanged).
+- The released gemspec now declares `ace-git-github ~> 0.2`, matching the source
+  constraint: the previously published 0.56.0 metadata still pinned `~> 0.1.1`,
+  which kept published installations resolving ace-git-github 0.1.2 and made
+  the released 0.2.0 unreachable through dependency resolution.
 
 ## [0.56.0] - 2026-09-27
 
