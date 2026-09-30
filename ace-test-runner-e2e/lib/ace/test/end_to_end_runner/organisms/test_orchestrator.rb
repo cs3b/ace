@@ -359,6 +359,20 @@ module Ace
                   env_vars = restored_sandbox_env(state)
                   reusable = env_vars && File.file?(File.join(sandbox_path, "Gemfile"))
                   if reusable
+                    # The sandbox Gemfile is derived from the source root's:
+                    # a changed root Gemfile (or a tampered copy) forces a
+                    # fresh setup.
+                    gemfile_state = state["gemfile"]
+                    if gemfile_state.is_a?(Hash) && gemfile_state["source_digest"]
+                      source_root = gemfile_state["source_root"].to_s
+                      root_gemfile = source_root.empty? ? nil : File.join(source_root, "Gemfile")
+                      generated_gemfile = File.join(sandbox_path, "Gemfile")
+                      reusable = root_gemfile && File.file?(root_gemfile) &&
+                        Digest::SHA256.file(root_gemfile).hexdigest == gemfile_state["source_digest"] &&
+                        Digest::SHA256.file(generated_gemfile).hexdigest == gemfile_state["generated_digest"]
+                    end
+                  end
+                  if reusable
                     package_source = File.join(@base_dir, scenario.package.to_s)
                     if File.directory?(package_source)
                       FileUtils.rm_rf(File.join(sandbox_path, scenario.package.to_s))

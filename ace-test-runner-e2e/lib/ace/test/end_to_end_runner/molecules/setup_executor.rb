@@ -95,12 +95,22 @@ module Ace
             if state_file
               FileUtils.mkdir_p(File.dirname(state_file))
               persisted = merged.slice(*PERSISTED_ENV_KEYS).compact
+              generated_gemfile = File.join(sandbox_dir, "Gemfile")
+              source_root = env["ACE_E2E_SOURCE_ROOT"].to_s
+              source_gemfile = source_root.empty? ? nil : File.join(source_root, "Gemfile")
               File.write(state_file, JSON.generate({
                 "completed_at" => Time.now.utc.iso8601,
                 "sandbox_dir" => sandbox_dir,
                 "setup_steps" => self.class.normalize_state_steps(setup_steps),
                 "release_manifest" => @release_manifest_state,
-                "env" => persisted
+                "env" => persisted,
+                "gemfile" => {
+                  # The sandbox Gemfile is derived from the source root's
+                  # Gemfile; a retry must regenerate it when either changes.
+                  "source_root" => source_root,
+                  "source_digest" => source_gemfile && File.file?(source_gemfile) ? Digest::SHA256.file(source_gemfile).hexdigest : nil,
+                  "generated_digest" => File.file?(generated_gemfile) ? Digest::SHA256.file(generated_gemfile).hexdigest : nil
+                }
               }))
             end
 
@@ -398,6 +408,19 @@ module Ace
               FileUtils.mkdir_p(File.dirname(target_path))
               File.binwrite(target_path, raw)
               true
+            end
+
+            # Retry reuse rebuilds the live environment from the CURRENT
+            # process (permitted keys only) and overlays the recorded sandbox
+            # runtime paths, so ambient secrets are never restored from the
+            # state file while the runtime contract still holds.
+            def build_reuse_env(state_env)
+              live = ENV.to_h.reject do |key, _value|
+                AMBIENT_TMUX_ENV_VARS.include?(key) || STRIPPED_ENV_KEYS.include?(key) ||
+                  BUNDLER_ENV_PREFIXES.any? { |prefix| key.start_with?(prefix) } ||
+                  key == "ACE_RELEASE_MANIFEST"
+              end
+              live.merge(state_env || {})
             end
 
             def release_manifest_source_for(env, explicit)
