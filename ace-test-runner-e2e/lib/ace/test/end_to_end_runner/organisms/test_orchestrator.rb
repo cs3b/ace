@@ -442,15 +442,17 @@ module Ace
 
             # Load scenarios upfront for titles and report generation
             scenarios = files.map { |f| @loader.load(File.dirname(f)) }
+            # API providers cannot run deterministic setup gates: those
+            # scenarios get an explicit error while ungated ones still run.
+            gate_blocked = {}
             unless cli_provider?
-              gated = scenarios.find do |scenario|
-                scenario.setup_steps.any? { |step| step.is_a?(Hash) && step.key?("release-manifest") }
-              end
-              if gated
-                return [setup_failed_result(
-                  gated,
-                  "#{gated.test_id} requires a CLI provider: its release-manifest gate runs in deterministic setup"
-                )]
+              scenarios.each_with_index do |scenario, index|
+                next unless scenario.setup_steps.any? { |step| step.is_a?(Hash) && step.key?("release-manifest") }
+
+                gate_blocked[index] = setup_failed_result(
+                  scenario,
+                  "#{scenario.test_id} requires a CLI provider: its release-manifest gate runs in deterministic setup"
+                )
               end
             end
 
@@ -461,11 +463,15 @@ module Ace
             run_ids = cli_provider? ? generate_timestamps(scenarios.size) : Array.new(scenarios.size)
 
             queue = Queue.new
-            scenarios.each_with_index { |scenario, index| queue << [index, scenario, run_ids[index]] }
+            scenarios.each_with_index do |scenario, index|
+              queue << [index, scenario, run_ids[index]] unless gate_blocked.key?(index)
+            end
 
             results = Array.new(files.size)
+            gate_blocked.each { |index, result| results[index] = result }
             mutex = Mutex.new
             completed = 0
+            gate_blocked.size.times { completed += 1 }
 
             thread_count = [@parallel, files.size].min
             done = false
