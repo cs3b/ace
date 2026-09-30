@@ -396,6 +396,11 @@ module Ace
                 return false
               end
 
+              # The source path itself must be the recorded one: an identical
+              # copy at a different path would be rejected by finalization's
+              # recorded-source binding, so reuse must not accept it either.
+              return false unless File.expand_path(source) == File.expand_path(recorded["source"].to_s)
+
               # Read once: the digest check and the copy must see the same
               # bytes even if the source changes mid-revalidation.
               raw = begin
