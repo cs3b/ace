@@ -292,6 +292,15 @@ module InstallReceipt
     end
 
     manifest_integrity = verify_manifest_integrity(manifest_path, source_manifest)
+    if manifest_integrity["ok"] && recorded_manifest
+      # Current bytes matching each other is not enough: both must still be
+      # the bytes setup validated.
+      recorded_digest = recorded_manifest["digest"]
+      unless manifest_integrity["source_digest"] == recorded_digest && manifest_integrity["sandbox_digest"] == recorded_digest
+        manifest_integrity["ok"] = false
+        manifest_integrity["findings"] << "current manifest bytes do not match the digest setup validated (#{recorded_digest})"
+      end
+    end
     verdict["manifest_integrity"] = manifest_integrity
     verdict["findings"].concat(manifest_integrity["findings"])
 
