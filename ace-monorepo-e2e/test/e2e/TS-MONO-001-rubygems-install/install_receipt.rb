@@ -269,6 +269,25 @@ module InstallReceipt
     verdict["pipeline_completion"] = pipeline
     verdict["findings"].concat(pipeline["findings"])
 
+    # The source manifest must be the one recorded by host-side setup
+    # state: an alternate file that happens to match bytes is not the
+    # validated input.
+    state_file = File.join(pipeline_report_dir.to_s, ".ace-e2e-setup-state.json")
+    setup_state = begin
+      raw = File.file?(state_file) ? JSON.parse(File.read(state_file)) : nil
+      raw.is_a?(Hash) ? raw : nil
+    rescue StandardError
+      nil
+    end
+    recorded_manifest = setup_state && setup_state["release_manifest"].is_a?(Hash) ? setup_state["release_manifest"] : nil
+    if recorded_manifest && recorded_manifest["source"]
+      expanded_source = source_manifest && File.expand_path(source_manifest)
+      unless expanded_source == File.expand_path(recorded_manifest["source"])
+        (verdict["findings"] ||= []) << "source manifest #{source_manifest.inspect} is not the setup-recorded #{recorded_manifest["source"].inspect}"
+        source_manifest = nil
+      end
+    end
+
     manifest_integrity = verify_manifest_integrity(manifest_path, source_manifest)
     verdict["manifest_integrity"] = manifest_integrity
     verdict["findings"].concat(manifest_integrity["findings"])
@@ -443,7 +462,7 @@ module InstallReceipt
           next
         end
 
-        %w[manifest_version lockfile_version activated_version].each do |field|
+        %w[manifest_version lockfile_version activated_version required activated_path].each do |field|
           unless state.key?(field)
             findings << "acceptance artifact #{mode} #{name} does not record #{field}"
             next
@@ -469,6 +488,8 @@ module InstallReceipt
           findings << "acceptance artifact is missing #{mode} consumer edge for #{consumer}"
         elsif !edge.is_a?(Hash)
           findings << "acceptance artifact #{mode} consumer edge for #{consumer} is not an object"
+        elsif !edge.key?("ok") || !edge.key?("findings")
+          findings << "acceptance artifact #{mode} consumer edge for #{consumer} must record ok and findings"
         else
           recomputed_edge = verdict.dig("consumer_edges", mode, consumer) || {}
           recomputed_findings = Array(recomputed_edge["findings"])

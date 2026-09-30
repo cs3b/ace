@@ -1004,7 +1004,8 @@ def write_results_root(fixture, classification: "SAFE", runner_acceptance: "pass
         "exit" => 0,
         "packages" => MANIFEST_PACKAGES.keys.to_h { |name|
           [name, {"manifest_version" => MANIFEST_PACKAGES[name], "lockfile_version" => MANIFEST_PACKAGES[name],
-                  "activated_version" => MANIFEST_PACKAGES[name], "ok" => true, "findings" => []}]
+                  "activated_version" => MANIFEST_PACKAGES[name], "required" => true,
+                  "activated_path" => File.join(fixture[mode == "normal" ? :normal : :full_index], ".bundle", "gems", "#{name}-#{MANIFEST_PACKAGES[name]}"), "ok" => true, "findings" => []}]
         },
         "findings" => []
       }]
