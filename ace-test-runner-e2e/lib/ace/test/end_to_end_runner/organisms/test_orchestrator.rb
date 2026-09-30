@@ -258,6 +258,14 @@ module Ace
               "#{scenario.test_id} requires a CLI provider: its release-manifest gate runs in deterministic setup"
           end
 
+          # rm_rf targets derived from user input (--report-dir) must stay
+          # inside the runner-owned e2e cache root.
+          def owned_sandbox_path?(sandbox_path)
+            cache_root = File.expand_path(File.join(@base_dir, ".ace-local", "test-e2e"))
+            expanded = File.expand_path(sandbox_path)
+            expanded.start_with?(cache_root + File::SEPARATOR)
+          end
+
           # Deletion targets derived from scenario data must stay immediate
           # children of the sandbox: a package value like "../.." must never
           # reach FileUtils.rm_rf.
@@ -421,8 +429,18 @@ module Ace
                   unless reusable
                     # Every non-reused run starts from a pristine sandbox: no
                     # prior attempt state (evidence, git repo, tmux, runtime)
-                    # survives into a fresh deterministic setup.
-                    FileUtils.rm_rf(sandbox_path) if Dir.exist?(sandbox_path)
+                    # survives into a fresh deterministic setup. The deletion
+                    # target must be a runner-owned directory under the e2e
+                    # cache root; an unrestricted --report-dir value must
+                    # never reach rm_rf.
+                    if owned_sandbox_path?(sandbox_path)
+                      FileUtils.rm_rf(sandbox_path)
+                    else
+                      return [setup_failed_result(
+                        scenario,
+                        "report directory must live under the runner-owned .ace-local/test-e2e cache: #{report_dir}"
+                      )]
+                    end
                     sandbox_path, env_vars, setup_executor = setup_sandbox_if_ts(
                       scenario, timestamp, output,
                       sandbox_dir_override: sandbox_path, state_file: state_file
