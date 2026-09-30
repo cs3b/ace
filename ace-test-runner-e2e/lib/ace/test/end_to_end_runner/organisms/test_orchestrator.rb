@@ -244,16 +244,6 @@ module Ace
           # Reuse of a completed sandbox restores the environment recorded by
           # the original setup, so later pipeline phases see the same env
           # contract (PROJECT_ROOT_PATH, source root, manifest inputs).
-          def restored_sandbox_env(state)
-            env = state["env"]
-            return nil unless env.is_a?(Hash) && !env.empty?
-
-            env = env.dup
-            if env["PROJECT_ROOT_PATH"] && !env["PROJECT_ROOT_PATH"].start_with?("/")
-              env["PROJECT_ROOT_PATH"] = File.expand_path(env["PROJECT_ROOT_PATH"], state["sandbox_dir"])
-            end
-            env
-          end
 
           # TS-MONO-001-style scenarios depend on deterministic setup gates
           # (release-manifest validation) that only the CLI-provider pipeline
@@ -266,6 +256,19 @@ module Ace
 
             raise SandboxSetupFailed,
               "#{scenario.test_id} requires a CLI provider: its release-manifest gate runs in deterministic setup"
+          end
+
+          # Deletion targets derived from scenario data must stay immediate
+          # children of the sandbox: a package value like "../.." must never
+          # reach FileUtils.rm_rf.
+          def sandbox_child(sandbox_path, name)
+            return nil unless name.to_s.match?(/\A[A-Za-z0-9._-]+\z/)
+            return nil if name.to_s.start_with?(".", "-")
+
+            target = File.join(File.expand_path(sandbox_path), name.to_s)
+            return nil unless File.dirname(target) == File.expand_path(sandbox_path)
+
+            target
           end
 
           def setup_failed_result(scenario, error_message)
@@ -356,7 +359,7 @@ module Ace
                   # essential outputs are intact may be reused. Prior goal
                   # evidence never survives a reuse: results are cleared and
                   # the validated manifest copy restored by revalidation.
-                  env_vars = restored_sandbox_env(state)
+                  env_vars = Molecules::SetupExecutor.build_reuse_env(state["env"])
                   reusable = env_vars && File.file?(File.join(sandbox_path, "Gemfile"))
                   if reusable
                     # The sandbox Gemfile is derived from the source root's:
@@ -375,11 +378,14 @@ module Ace
                   if reusable
                     package_source = File.join(@base_dir, scenario.package.to_s)
                     if File.directory?(package_source)
-                      FileUtils.rm_rf(File.join(sandbox_path, scenario.package.to_s))
-                      Ace::TestSupport::SandboxPackageCopy.new(source_root: @base_dir).prepare(
-                        package_name: scenario.package,
-                        sandbox_root: sandbox_path
-                      )
+                      package_target = sandbox_child(sandbox_path, scenario.package)
+                      if package_target
+                        FileUtils.rm_rf(package_target)
+                        Ace::TestSupport::SandboxPackageCopy.new(source_root: @base_dir).prepare(
+                          package_name: scenario.package,
+                          sandbox_root: sandbox_path
+                        )
+                      end
                     end
                     FileUtils.rm_rf(File.join(sandbox_path, "results"))
                     reusable = Molecules::SetupExecutor.revalidate_release_manifest(
