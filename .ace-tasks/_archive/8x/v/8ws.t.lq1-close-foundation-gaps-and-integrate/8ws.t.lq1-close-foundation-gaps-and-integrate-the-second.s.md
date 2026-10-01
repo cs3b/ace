@@ -1,6 +1,6 @@
 ---
 id: 8ws.t.lq1
-status: pending
+status: done
 priority: high
 created_at: "2026-09-29 14:28:56"
 estimate: large
