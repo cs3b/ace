@@ -24,7 +24,7 @@ Create campaign contract/projection atoms, campaign store/evidence molecules, ca
 - [x] step_02: Source evidence, pinned partial rounds, append-only assessments, current-head/base validity and acceptance. Anchor: SC1-SC4, claim authority and findings. Depends: step_01. Verify: bin/ace-test ace-review organisms.
 - [x] step_03: Public CLI modes, existing review preservation, dry-run/replay/restart/concurrency cases. Anchor: SC6 and CLI input and operating modes. Depends: step_02. Verify: bin/ace-test ace-review all.
 - [x] step_04: Campaign result consumption by assignment receipt authority. Anchor: SC5 and evidence binding. Depends: step_03. Verify: bin/ace-test ace-assign all.
-- [ ] step_05: Packaged usage, workflow adoption, criterion-mapped report and final verification/commits. Anchor: Verification Plan and acceptance mapping. Depends: step_04. Verify: bin/ace-test ace-review all; bin/ace-test ace-assign all; bin/ace-test-suite.
+- [x] step_05: Packaged usage, workflow adoption, criterion-mapped report and final verification/commits. Anchor: Verification Plan and acceptance mapping. Depends: step_04. Verify: bin/ace-test ace-review all; bin/ace-test ace-assign all; bin/ace-test-suite.
 
 ## Test Plan
 
@@ -67,3 +67,8 @@ A resolved High in a partial round must reset convergence even if a different ro
 ## Round-13 canonical identity and empty-diff correction
 
 Normalize supported GitHub repository/PR identities before lookup, including trailing slash and case; validate declared repository against parsed PR before normalization. At the existing local full-scope Git boundary, reject a tree-equivalent or same-revision diff at pinning, collection and current validation. Controlled integration positives must use a real candidate change relative to base, including the H2 comparison, rather than an empty base=head fixture. These strengthen canonical identity and no-op rejection within R1.
+
+
+## Final verification
+
+Implementation source `bcb627d86`: review all 994 / 3,152 assertions (four skips), assign all 751 / 2,749 assertions (no skips), default suite all 50 packages 10,479 / 31,189 assertions (24 skips), no failures/errors. Executed independent `codex:sol:high@ro` review round 14 found no verified issues. Report SHA256 `c555f00bada2261b1f67bbc1cc9fa00caa2da04e2e0d6992b00fc68238829049`. SC1-SC6 and step_05 are complete; exact artifacts, methods, prior failures and ownership limits are in implementation-report.md. No production changes follow this source. Task lifecycle stays in-progress for final delivery; there is no active ace-assign assignment.
