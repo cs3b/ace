@@ -45,16 +45,20 @@ class CampaignCommandTest < AceReviewTest
     campaign = start_campaign
     assert_raises(ArgumentError) do
       campaign_manager.session_binding(campaign["campaign_id"], round_id: "round-1", scope: "full",
-        preset: "code-valid", head: @head, base: @base)
+        preset: "code-valid", head: @head, base: @base, subjects: ["diff:#{@base}..#{@head}"])
     end
     input = round_input(1)
     campaign_manager.record_round(campaign["campaign_id"], input)
     binding = campaign_manager.session_binding(campaign["campaign_id"], round_id: "round-1", scope: "full",
-      preset: "code-valid", head: @head, base: @base)
+      preset: "code-valid", head: @head, base: @base, subjects: ["diff:#{@base}..#{@head}"])
     assert_equal campaign["campaign_id"], binding["campaign_id"]
     assert_raises(ArgumentError) do
       campaign_manager.session_binding(campaign["campaign_id"], round_id: "round-1", scope: "full",
-        preset: "wrong", head: @head, base: @base)
+        preset: "code-valid", head: @head, base: @base, subjects: ["files:unrelated.md"])
+    end
+    assert_raises(ArgumentError) do
+      campaign_manager.session_binding(campaign["campaign_id"], round_id: "round-1", scope: "full",
+        preset: "wrong", head: @head, base: @base, subjects: ["diff:#{@base}..#{@head}"])
     end
   end
 end

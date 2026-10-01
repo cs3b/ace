@@ -2,10 +2,12 @@
 require_relative "../test_helper"
 require "ace/review"
 require_relative "../../../ace-review/test/campaign_fixtures"
+require_relative "../../../ace-review/test/campaign_assignment_fixtures"
 
 # Actual coordinator, managed assignment and evidence-ref publication.
 class CampaignReceiptTest < AceAssignTestCase
   include CampaignFixtures
+  include CampaignAssignmentFixtures
 
   def setup
     super
@@ -76,6 +78,25 @@ class CampaignReceiptTest < AceAssignTestCase
     assert_equal before, finished.candidate_head
     refute_nil finished.journal_commit
     assert_equal @campaign["campaign_id"], finished.accepted_receipts.last["campaign"]["id"]
+  end
+
+  def test_read_only_check_evidence_recovers_from_journal_and_rejects_unknown_digest
+    result = JSON.parse(File.read(File.join(@test_dir, @result_path)))
+    ref = result["rounds"].last["approval"]["checks"].first["receipt"]
+    missing_cache = File.join(@test_dir, ".ace-local/missing-cache")
+    missing_checkout = File.join(@test_dir, ".ace-local/missing-audit-checkout")
+    coordinator = Ace::Assign::Organisms::AttemptCoordinator.new(repo_root: @test_dir, cache_base: missing_cache,
+      journal: Ace::Assign::Molecules::EvidenceJournal.new(repo_root: @test_dir, checkout_root: missing_checkout))
+    before = git_in(@test_dir, "rev-parse", "HEAD")
+    proof = coordinator.evidence(attempt_id: ref["attempt_id"], receipt_digest: ref["digest"])
+    assert_equal @head, proof["head"]
+    assert_equal ref["digest"], proof["receipt_digest"]
+    assert_equal before, git_in(@test_dir, "rev-parse", "HEAD")
+    refute File.exist?(missing_cache)
+    refute File.exist?(missing_checkout)
+    assert_raises(Ace::Assign::AttemptErrors::ReceiptRejected) do
+      coordinator.evidence(attempt_id: ref["attempt_id"], receipt_digest: "0" * 64)
+    end
   end
 
   def test_stale_snapshot_and_attribution_cannot_bypass_receipt_checks

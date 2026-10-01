@@ -47,6 +47,24 @@ module Ace
           %w[subject contract_identity contract policy inherited_findings assessments attempts rounds head_transitions].each do |key|
             raise Atoms::CampaignContract::Invalid, "corrupt campaign #{id}: missing #{key}" unless record.key?(key)
           end
+          contract = Atoms::CampaignContract
+          contract.subject!(record["subject"])
+          contract.string!(record["contract"], "stored requirements")
+          unless Digest::SHA256.hexdigest(record["contract"]) == record["contract_identity"]
+            raise contract::Invalid, "corrupt campaign #{id}: requirements digest mismatch"
+          end
+          contract.policy!(record["policy"])
+          %w[inherited_findings assessments attempts rounds head_transitions].each do |key|
+            unless record[key].is_a?(Array) && record[key].all? { |entry| entry.is_a?(Hash) }
+              raise contract::Invalid, "corrupt campaign #{id}: invalid #{key} records"
+            end
+          end
+          (record["attempts"] + record["rounds"]).each do |attempt|
+            unless attempt["binding"].is_a?(Hash) && attempt["sessions"].is_a?(Array) &&
+                attempt["sessions"].all? { |session| session.is_a?(Hash) } && attempt["assessments"].is_a?(Array)
+              raise contract::Invalid, "corrupt campaign #{id}: invalid round/attempt binding"
+            end
+          end
           record
         rescue JSON::ParserError, KeyError, TypeError => e
           raise Atoms::CampaignContract::Invalid, "corrupt campaign #{id}: #{e.message}"

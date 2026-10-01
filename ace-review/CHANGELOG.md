@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- `ace-review campaign start|status|record-round|finish`: durable campaign identity, frozen policy/contracts, linked successors and atomic checksummed history. Completed rounds and clean streak survive head changes while current acceptance requires intact scoped reports, verified feedback, independent approval and passing executed checks.
+- `ace-review campaign start|status|record-round|finish`: durable campaign identity, frozen policy/contracts, linked successors and atomic checksummed history. Completed rounds and clean streak survive head changes while current acceptance requires intact evidence for all counted rounds, verified feedback, independent approval and passing checks backed by coordinator-accepted execution receipts.
 - Bind existing review collection with `--campaign`, `--campaign-round` and `--campaign-scope`; incomplete/no-op/failed attempts do not advance round counters. Replay is idempotent and conflicting writes fail.
 - Packaged campaign usage and assignment receipt integration through the existing coordinator authority.
 

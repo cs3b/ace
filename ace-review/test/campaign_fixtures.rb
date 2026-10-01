@@ -14,7 +14,7 @@ module CampaignFixtures
 
   def campaign_manager
     Ace::Review::Organisms::CampaignManager.new(repo_root: @test_dir,
-      revisions: ->(ref, *_args) { ref == "HEAD" ? @head : @base })
+      revisions: ->(ref, *_args) { ref == "HEAD" ? @head : @base }, check_evidence: fixture_check_evidence)
   end
 
   def start_campaign(scopes: ["full"])
@@ -23,7 +23,7 @@ module CampaignFixtures
 
   def round_input(round, scopes: ["full"], attempt: nil)
     {"attempt_id" => attempt || "attempt-#{round}", "round_id" => "round-#{round}", "head" => @head,
-      "base" => @base, "required_scopes" => scopes, "scope_identity" => scopes.to_h { |s| [s, "code-valid"] },
+      "base" => @base, "required_scopes" => scopes, "scope_identity" => scopes.to_h { |s| [s, {"preset" => "code-valid", "subjects" => ["diff:#{@base}..#{@head}"]}] },
       "sessions" => [], "dispositions" => []}
   end
 
@@ -46,7 +46,7 @@ module CampaignFixtures
     File.write(report, "Substantive fixture review: checked candidate, contract and scope; no remaining defects.")
     binding = {"campaign_id" => campaign["campaign_id"], "contract_identity" => campaign["contract_identity"],
       "subject" => campaign_subject, "round_id" => input["round_id"], "scope" => scope,
-      "head" => input["head"], "base" => input["base"], "scope_identity" => "code-valid"}
+      "head" => input["head"], "base" => input["base"], "scope_identity" => input["scope_identity"][scope]}
     metadata = {"preset" => "code-valid", "campaign_binding" => binding, "noop_round" => noop,
       "models" => noop ? [] : [{"status" => failed ? "failed" : "success", "completed_at" => Time.now.utc.iso8601,
         "execution" => {"status" => failed ? "failed" : "succeeded", "provider" => "fixture", "model" => "reviewer"},
@@ -68,6 +68,29 @@ module CampaignFixtures
     dir
   end
 
+  def fixture_check_evidence
+    lambda do |ref, head:, name:|
+      proof = (@accepted_checks || {})[ref["digest"]]
+      unless proof && proof["head"] == head && proof["checks"].any? { |c| c["name"] == name && c["verdict"] == "passed" }
+        raise Ace::Review::Atoms::CampaignContract::Invalid, "fixture coordinator did not accept check evidence"
+      end
+      proof["artifacts"].each do |artifact|
+        unless artifact_ref(artifact["path"]) == artifact
+          raise Ace::Review::Atoms::CampaignContract::Invalid, "accepted check artifact changed"
+        end
+      end
+      proof
+    end
+  end
+
+  def accepted_check_reference(check_path)
+    proof = {"head" => @head, "checks" => [{"name" => "tests", "verdict" => "passed"}],
+      "artifacts" => [artifact_ref(check_path)]}
+    digest = Ace::Review::Atoms::CampaignContract.digest(proof)
+    (@accepted_checks ||= {})[digest] = proof
+    {"attempt_id" => "accepted-test", "digest" => digest}
+  end
+
   def add_campaign_approval(campaign, input, producer: "worker")
     check_path = ".ace-local/check-#{input['round_id']}.json"
     File.write(File.join(@test_dir, check_path), JSON.generate("name" => "tests", "head" => input["head"],
@@ -79,7 +102,7 @@ module CampaignFixtures
     approval = {"head" => input["head"], "base" => input["base"], "contract_identity" => campaign["contract_identity"],
       "required_scopes" => input["required_scopes"], "verdict" => "approved", "producer" => producer,
       "reviewer" => "reviewer", "reports" => reports,
-      "checks" => [{"name" => "tests", "verdict" => "passed", "artifact" => artifact_ref(check_path)}]}
+      "checks" => [{"name" => "tests", "verdict" => "passed", "receipt" => accepted_check_reference(check_path)}]}
     File.write(File.join(@test_dir, approval_path), JSON.generate(approval))
     input["approval"] = artifact_ref(approval_path)
   end

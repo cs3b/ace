@@ -31,7 +31,7 @@ For an existing GitHub subject use `{"repository":"https://github.com/owner/repo
 
 ## Pin and collect a round
 
-Before collection, record a pin with empty sessions and dispositions. `attempt_id` identifies one immutable recording submission; `round_id` identifies the logical round. Use a new attempt ID for partial progress and completion. Required scopes must equal the frozen policy scopes. Each scope identity names the review preset selected before collection.
+Before collection, record a pin with empty sessions and dispositions. `attempt_id` identifies one immutable recording submission; `round_id` identifies the logical round. Use a new attempt ID for partial progress and completion. Required scopes must equal the frozen policy scopes. Each scope identity pins the review preset and explicit subject selectors before collection. Collection must use those exact selectors.
 
 ```json
 {
@@ -40,13 +40,13 @@ Before collection, record a pin with empty sessions and dispositions. `attempt_i
   "head": "EXACT_REVIEWED_HEAD_SHA",
   "base": "EXACT_REVIEWED_BASE_SHA",
   "required_scopes": ["full"],
-  "scope_identity": {"full": "code-valid"},
+  "scope_identity": {"full": {"preset":"code-valid","subjects":["diff:EXACT_BASE_SHA..EXACT_HEAD_SHA"]}},
   "sessions": [],
   "dispositions": []
 }
 ```
 
-Replace the SHA placeholders with exact Git revisions. For local campaigns, the first round fixes the base; a new head does not change that base. PR collection uses the fetched PR head/base. Candidate code must be committed before campaign collection or acceptance.
+Replace the SHA placeholders with exact Git revisions. For local campaigns, the first round fixes the base; a new head does not change that base. For PR scopes pin `subjects: ["pr:owner/repo#42"]`; PR collection uses the fetched PR head/base. Candidate code must be committed before campaign collection or acceptance.
 
 ```sh
 ace-review campaign record-round CAMPAIGN_ID --input .ace-local/campaign-input/pin.json
@@ -69,7 +69,7 @@ Submit a new attempt ID with all reports needed for the round. Metadata, reports
   "head": "EXACT_REVIEWED_HEAD_SHA",
   "base": "EXACT_REVIEWED_BASE_SHA",
   "required_scopes": ["full"],
-  "scope_identity": {"full": "code-valid"},
+  "scope_identity": {"full": {"preset":"code-valid","subjects":["diff:EXACT_BASE_SHA..EXACT_HEAD_SHA"]}},
   "sessions": [{"scope":"full","metadata":{
     "path":".ace-local/review/sessions/review-SESSION/metadata.yml",
     "sha256":"METADATA_SHA256"
@@ -108,13 +108,13 @@ The final round may reference an explicit approval artifact with `approval: {"pa
   "contract_identity":"FROZEN_CONTRACT_SHA256",
   "required_scopes":["full"],
   "reports":[{"path":"SESSION/review-report-MODEL.md","sha256":"REPORT_SHA256"}],
-  "checks":[{"name":"tests","verdict":"passed","artifact":{
-    "path":".ace-local/campaign-input/tests.json","sha256":"CHECK_SHA256"
+  "checks":[{"name":"tests","verdict":"passed","receipt":{
+    "attempt_id":"ACCEPTED_CHECK_ATTEMPT_ID","digest":"ACCEPTED_RECEIPT_SHA256"
   }}]
 }
 ```
 
-Producer and reviewer must differ. Reviewer identity must match the actual completed execution model in the referenced session; approvals must cover every required scope. A check artifact is JSON recording `name`, `head`, `status: "succeeded"`, `exit_code: 0`, and nonempty `completed_at` from the executed check. Creating arbitrary report/check files or passing exit zero alone is insufficient; execution metadata, scope binding, artifact integrity and approval all undergo validation. Local artifacts do not protect against an operator rewriting every source record; assignment authority and authenticated execution boundaries remain owned by ace-assign.
+Producer and reviewer must differ. Reviewer identity must match the actual completed execution model in the referenced session; approvals must cover every required scope. Required checks refer to a succeeded execution receipt already accepted by the ace-assign coordinator. Run the check under an existing assignment attempt and submit its attributable result, current head, check outcomes and checksummed artifacts through `ace-assign attempt finish`. Use the accepted attempt ID and receipt digest here. A self-authored check JSON file is insufficient. Campaign recording and acceptance consult the read-only `ace-assign attempt evidence --attempt ID --receipt-digest DIGEST --format json` boundary, which revalidates current head and source artifacts against accepted history. Retain `ace-assign` alongside `ace-review` for this qjl evidence capability; unavailable authority blocks acceptance explicitly. Campaign commands never run the check for you or create a second execution journal. Authenticated producer/reviewer attribution and execution acceptance remain owned by ace-assign.
 
 ```sh
 ace-review campaign finish CAMPAIGN_ID --format json
@@ -136,7 +136,7 @@ The receipt retains ordinary attempt/assignment/project/scope binding, producer,
 
 ## Restart, contract changes and failures
 
-Campaign authority lives in `.ace-local/review/campaigns/`; retain this directory and source evidence across process/context restarts. Records are serialized with a lock and replaced atomically with checksums. Losing/corrupting evidence makes it unavailable; it does not manufacture a clean round. These records are durable local artifacts, not a second assignment execution journal.
+Campaign authority lives in `.ace-local/review/campaigns/`; retain this directory and source evidence across process/context restarts. Records are serialized with a lock and replaced atomically with checksums. Losing/corrupting evidence from any retained counted round or assessment makes it unavailable; historical counters remain diagnostic and do not manufacture acceptance. These records are durable local artifacts, not a second assignment execution journal.
 
 Start with changed requirements and `--reason "Requirement X changed"` to create a linked successor; `--predecessor ID` selects it explicitly. Same subject/requirements/policy starts reuse one campaign, including concurrently. Conflicting policy for an existing contract fails rather than rewriting history.
 

@@ -30,6 +30,10 @@ Create campaign contract/projection atoms, campaign store/evidence molecules, ca
 
 See adjacent test-plan.md. Use real temporary files and repositories for persistence and receipt integration, pure fixtures for atoms, and fresh public CLI processes for restart and JSON behavior. No paid-provider readiness claim.
 
+## Review-driven owner-layer correction
+
+Independent review at 2092c08ce confirmed three High findings: historical report loss was not checked, preset-only scope binding allowed an unrelated subject, and local check JSON had no acceptance authority. Re-plan: pin scope subject selectors alongside presets and verify the collected subject configuration; validate every retained counted artifact; expose read-only accepted check evidence through ace-assign's existing coordinator and journal owner, consumed by ace-review rather than adding an execution journal or accepting caller-authored check claims. Journal reads must inspect immutable Git objects without creating audit checkouts. Scope of the task remains R1; no execution runner, forge adapter or R3 policy engine is added.
+
 ## Risk Assessment
 
 Primary risk: accepting caller claims or stale artifacts as current evidence. Mitigate with source completion/digest validation, feedback provenance, immutable bindings, distinct producer/reviewer, executed-check artifacts and independent receipt validation. Validate negative controls alongside success. Rollback is path-scoped revert of these commits; no persistent external effect is performed.

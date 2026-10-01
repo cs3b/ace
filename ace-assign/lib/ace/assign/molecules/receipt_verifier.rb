@@ -63,6 +63,13 @@ module Ace
 
           receipt
         end
+        # Recheck the source artifacts/checks of an already accepted receipt.
+        def verify_check_evidence!(data, live_head:, repo_root:)
+          verify_head(data, live_head)
+          verify_artifacts(data, repo_root)
+          verify_checks(data)
+        end
+
         # @param operation [String] Receipt operation
         # @return [Boolean] True when the operation acts outside the repository
         def external_effect?(operation)

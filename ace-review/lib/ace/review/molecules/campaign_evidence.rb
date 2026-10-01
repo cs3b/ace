@@ -7,6 +7,7 @@ require "digest"
 require "json"
 require_relative "../atoms/campaign_contract"
 require_relative "feedback_file_reader"
+require_relative "campaign_check_evidence"
 
 module Ace
   module Review
@@ -17,8 +18,9 @@ module Ace
       class CampaignEvidence
         Contract = Atoms::CampaignContract
 
-        def initialize(repo_root:)
+        def initialize(repo_root:, check_evidence: nil)
           @repo_root = File.realpath(repo_root)
+          @check_evidence = check_evidence || CampaignCheckEvidence.new(repo_root: @repo_root)
         end
 
         def artifact(reference)
@@ -55,7 +57,7 @@ module Ace
             "subject" => record["subject"], "round_id" => binding["round_id"], "scope" => scope,
             "head" => binding["head"], "base" => binding["base"],
             "scope_identity" => binding["scope_identity"][scope]}
-          unless metadata["campaign_binding"] == expected && metadata["preset"] == expected["scope_identity"]
+          unless metadata["campaign_binding"] == expected && metadata["preset"] == expected["scope_identity"]["preset"]
             raise Contract::Invalid, "session campaign/contract/scope/head/base identity mismatch"
           end
           refs = [metadata_ref]
@@ -159,14 +161,8 @@ module Ace
             Contract.object!(check, "check")
             Contract.string!(check["name"], "check name")
             raise Contract::Invalid, "check did not pass" unless check["verdict"] == "passed"
-            check_path, ref = artifact(check.fetch("artifact"))
-            execution = JSON.parse(File.read(check_path))
-            unless execution.is_a?(Hash) && execution["name"] == check["name"] &&
-                execution["head"] == binding["head"] && execution["exit_code"] == 0 &&
-                execution["status"] == "succeeded" && !execution["completed_at"].to_s.empty?
-              raise Contract::Invalid, "check artifact lacks completed passing execution for the reviewed head"
-            end
-            check_refs << ref
+            accepted = @check_evidence.call(check.fetch("receipt"), head: binding["head"], name: check["name"])
+            check_refs.concat(accepted.fetch("artifacts"))
           end
           unless (record["policy"]["required_checks"] - checks.map { |c| c["name"] }).empty?
             raise Contract::Invalid, "missing required checks"

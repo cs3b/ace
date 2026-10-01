@@ -179,6 +179,41 @@ module Ace
           attempt.projection
         end
 
+        # Read accepted check evidence without transitions, locks, cache writes
+        # or audit checkout creation. Managed history comes from the Git ref.
+        def evidence(attempt_id:, receipt_digest:)
+          unless attempt_id.to_s.match?(/\A[a-zA-Z0-9][a-zA-Z0-9_.-]{0,127}\z/) &&
+              receipt_digest.to_s.match?(/\A[0-9a-f]{64}\z/)
+            raise AttemptErrors::ReceiptRejected, "Invalid attempt ID or receipt digest"
+          end
+          attempt = @store.find(attempt_id) || recover_managed_attempt(nil, attempt_id)
+          raise AttemptErrors::NotFound, "Attempt #{attempt_id} not found" unless attempt
+          if attempt.managed?
+            attempt = recover_managed_attempt(attempt.binding.assignment_id, attempt_id)
+          end
+          raise AttemptErrors::ReceiptRejected, "No succeeded accepted attempt" unless attempt&.state == "succeeded"
+          accepted = attempt.managed? ? journal_for.accepted_receipts(attempt.binding.assignment_id) : attempt.accepted_receipts
+          data = accepted.find { |r| r["attempt_id"] == attempt_id && r["digest"] == receipt_digest }
+          raise AttemptErrors::ReceiptRejected, "Receipt was not accepted by coordinator" unless data
+          if data["campaign"] || data["operation"] == "review" || @verifier.external_effect?(data["operation"])
+            raise AttemptErrors::ReceiptRejected, "Check evidence must be an executed check operation"
+          end
+          receipt = Models::ExecutionReceipt.from_h(data)
+          unless receipt.digest == Atoms::EvidenceDigest.digest(receipt.digest_payload)
+            raise AttemptErrors::ReceiptRejected, "Accepted receipt digest is corrupt"
+          end
+          live_head = candidate_head!
+          unless data["verdict"] == "succeeded" && data["head"] == live_head && attempt.candidate_head == live_head
+            raise AttemptErrors::ReceiptRejected, "Accepted check evidence is stale or unsuccessful"
+          end
+          @verifier.verify_check_evidence!(data, live_head: live_head, repo_root: @repo_root)
+          {"attempt_id" => attempt_id, "receipt_digest" => receipt_digest, "head" => live_head,
+           "operation" => data["operation"], "checks" => data["checks"], "producer" => data["producer"],
+           "artifacts" => data["artifacts"], "assignment_id" => data["assignment_id"],
+           "project_id" => data["project_id"], "scope" => data["scope"],
+           "evidence_git_ref" => attempt.binding.evidence_git_ref, "journal_commit" => attempt.journal_commit}
+        end
+
         # Reconcile an interrupted attempt.
         #
         # Running attempts are classified conservatively (stopped before

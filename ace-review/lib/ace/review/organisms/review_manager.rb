@@ -1198,7 +1198,8 @@ module Ace
           base = options.pr_metadata&.dig("baseRefOid") ||
             manager.collection_base(options.campaign, round_id: options.campaign_round)
           manager.session_binding(options.campaign, round_id: options.campaign_round, scope: options.campaign_scope,
-            preset: options.preset, head: head, base: base, pr_url: options.pr_metadata&.dig("url"))
+            preset: options.preset, head: head, base: base, pr_url: options.pr_metadata&.dig("url"),
+            subjects: options.subject)
         rescue Atoms::CampaignContract::Invalid => e
           raise Errors::BundleProcessingError, e.message
         end
@@ -1515,7 +1516,7 @@ module Ace
             "usage" => result[:usage],
             "requested_selector" => result[:requested_selector],
             "execution" => result[:execution],
-            "output_file" => output_path,
+            "output_file" => output_path && File.basename(output_path),
             "report_sha256" => ((output_path && File.file?(output_path)) ? Digest::SHA256.file(output_path).hexdigest : nil),
             "prompt_sha256" => prompt_hashes(session_dir),
             "model_info" => result[:model_info],

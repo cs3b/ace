@@ -3,10 +3,12 @@ require "test_helper"
 require "open3"
 require "rbconfig"
 require_relative "../campaign_fixtures"
+require_relative "../campaign_assignment_fixtures"
 
 # Fresh processes and real Git exercise the public entrypoint and restart contract.
 class CampaignCLITest < AceReviewTest
   include CampaignFixtures
+  include CampaignAssignmentFixtures
 
   def git(*args)
     out, err, status = Open3.capture3("git", *args, chdir: @test_dir)
