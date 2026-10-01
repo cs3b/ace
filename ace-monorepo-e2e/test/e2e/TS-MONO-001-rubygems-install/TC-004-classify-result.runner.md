@@ -34,7 +34,7 @@ Save all output to `results/tc/04/`.
 ```bash
 proof_ruby_root="${ACE_E2E_SANDBOX_RUBY_ROOT:?}"
 receipt_script="$PWD/ace-monorepo-e2e/test/e2e/TS-MONO-001-rubygems-install/install_receipt.rb"
-"$proof_ruby_root/bin/ruby" "$receipt_script" verify \
+LANG="${ACE_E2E_LANG:-C.UTF-8}" "$proof_ruby_root/bin/ruby" "$receipt_script" verify \
   --manifest results/tc/01/release-manifest.json \
   --normal results/tc/02 \
   --full-index results/tc/03 \

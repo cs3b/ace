@@ -61,7 +61,7 @@ module InstallReceipt
     remotes = Hash.new { |h, k| h[k] = [] }
     sections_with_packages = Hash.new { |h, k| h[k] = [] }
 
-    File.foreach(path) do |line|
+    File.foreach(path, mode: "r:UTF-8", invalid: :replace, undef: :replace) do |line|
       if line.match?(/\A[A-Z][A-Z ]*\s*\z/)
         section = line.strip
         in_specs = false
@@ -120,7 +120,7 @@ module InstallReceipt
       lib_root = File.join(spec.full_gem_path.to_s, require_path)
       pattern = /VERSION\s*=\s*["']#{Regexp.escape(spec.version.to_s)}["']/
       version_file = Dir.glob(File.join(lib_root, "**", "*.rb")).find do |file|
-        File.file?(file) && File.read(file).match?(pattern)
+        File.file?(file) && utf8_read(file).match?(pattern)
       end
       next unless version_file
 
@@ -986,7 +986,7 @@ module InstallReceipt
   EXPECTED_PROVIDER_REQUIREMENT = "~> 0.2"
 
   def lockfile_spec_declares_provider?(lockfile, name)
-    content = File.read(lockfile["path"])
+    content = utf8_read(lockfile["path"])
     spec_header = /^    #{Regexp.escape(name)} \([^\n]+\)\n/
     match = content.match(spec_header)
     return false unless match
@@ -1049,6 +1049,14 @@ module InstallReceipt
     versions = lockfile["all_versions"][name]
     versions.is_a?(Array) ? versions : []
   end
+
+
+# Sandbox goals run under `env -i` (no locale), where Ruby default
+# external encoding is US-ASCII; reading arbitrary gem/lockfile content
+# then raises on the first non-ASCII byte. Force UTF-8 with replacement.
+def utf8_read(path)
+  File.read(path, mode: "r:UTF-8", invalid: :replace, undef: :replace)
+end
 
   def read_exit(path)
     return nil unless File.file?(path)

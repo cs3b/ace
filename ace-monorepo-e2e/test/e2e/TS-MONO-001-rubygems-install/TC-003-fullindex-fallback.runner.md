@@ -24,6 +24,7 @@ proof_bundle() {
   shift
   env -i \
     HOME="$HOME" \
+    LANG="${ACE_E2E_LANG:-C.UTF-8}" \
     PATH="$proof_ruby_root/bin:$PATH" \
     PROJECT_ROOT_PATH="$PWD" \
     BUNDLE_GEMFILE="$PWD/Gemfile" \
@@ -44,6 +45,7 @@ consumer_bundle() {
   shift
   env -i \
     HOME="$HOME" \
+    LANG="${ACE_E2E_LANG:-C.UTF-8}" \
     PATH="$proof_ruby_root/bin:$PATH" \
     PROJECT_ROOT_PATH="$PWD" \
     BUNDLE_GEMFILE="$bundle_case/Gemfile" \
