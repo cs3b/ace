@@ -382,7 +382,7 @@ module Ace
 
         def current_revisions(record)
           if @live_git && record["subject"]["pr"]
-            metadata = Molecules::GhPrFetcher.fetch_metadata(record["subject"]["pr"])
+            metadata = fetch_pr_metadata(record["subject"]["pr"])
             raise Contract::Invalid, metadata[:error] unless metadata[:success]
             value = metadata[:metadata]
             validate_repository(record, value["url"])
@@ -392,6 +392,13 @@ module Ace
           head, base = @revisions.call("HEAD"), @revisions.call("base", record)
           validate_local_commits(record, head, base) if base
           [head, base]
+        end
+
+        def fetch_pr_metadata(pr)
+          Molecules::GhPrFetcher.fetch_metadata(pr)
+        rescue Errors::GhCliNotInstalledError, Errors::GhAuthenticationError,
+          Ace::Git::ProviderCliMissingError, Ace::Git::ProviderAuthenticationError => e
+          raise Contract::Invalid, "PR source unavailable: #{e.message}"
         end
 
         def clean_candidate?

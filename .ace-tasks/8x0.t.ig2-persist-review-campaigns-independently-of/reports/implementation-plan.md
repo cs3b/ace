@@ -57,3 +57,8 @@ The source-based round-9 check also found that unavailable live revisions could 
 ## Round-10 independent approval authority
 
 Confirm collection proves executed reports but does not prove an approved reviewer verdict. Require an accepted ordinary ace-assign review receipt, bound to head, report artifacts, producer and actual reviewer, before a campaign approval can certify acceptance. Extend the existing read-only evidence boundary with review-approval purpose; prevent campaign-bearing receipts from certifying their own source approval. Preserve historical approval authority through explicit recorded-head validation, while current approval still requires live-head proof. Add rejecting-report/caller-approval controls and real consumer evidence tests. No verdict text heuristic, new runner or second journal.
+
+
+## Round-12 projection and source boundary correction
+
+A resolved High in a partial round must reset convergence even if a different round completes next. Derive the clean streak in append order across every accepted attempt; only completed clean rounds increment it. The recorded per-round clean flags and total rounds remain unchanged. Convert provider missing-CLI/authentication exceptions to the campaign source-invalid boundary, so public start/status/finish emit blocked JSON. These are corrections within the existing convergence and public error contract, without a new runner or policy mode.

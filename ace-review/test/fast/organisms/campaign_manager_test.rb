@@ -264,7 +264,7 @@ class CampaignManagerTest < AceReviewTest
     refute blocked["accepted"]
     refute blocked["evidence"]["valid"]
     assert_equal 3, blocked["completed_rounds"]
-    assert_equal 3, blocked["clean_streak"]
+    assert_equal 0, blocked["clean_streak"]
     assert_empty blocked["open_findings"]
     partial["attempt_id"] = "complete-later"
     make_campaign_session(campaign, partial, scope: "two")
@@ -491,6 +491,52 @@ class CampaignManagerTest < AceReviewTest
     assert complete["accepted"], complete["reasons"].inspect
     assert_equal 4, complete["completed_rounds"]
     assert_equal 3, complete["clean_streak"]
+  end
+
+  def test_partial_resolved_high_resets_convergence_even_when_a_different_round_completes
+    scopes = %w[one two]
+    campaign = start_campaign(scopes: scopes)
+    3.times do |n|
+      input = round_input(n, scopes: scopes)
+      scopes.each { |scope| make_campaign_session(campaign, input, scope: scope) }
+      add_campaign_approval(campaign, input) if n == 2
+      campaign_manager.record_round(campaign["campaign_id"], input)
+    end
+    assert campaign_manager.finish(campaign["campaign_id"])["accepted"]
+    input = round_input("unfinished", scopes: scopes)
+    make_campaign_session(campaign, input, scope: "one", finding: {"status" => "done", "resolution" => "Repaired"})
+    partial = campaign_manager.record_round(campaign["campaign_id"], input)
+    assert_equal 3, partial["completed_rounds"]
+    assert_equal 0, partial["clean_streak"]
+    refute partial["search_converged"]
+    refute partial["accepted"]
+    2.times do |n|
+      input = round_input("different-#{n}", scopes: scopes)
+      scopes.each { |scope| make_campaign_session(campaign, input, scope: scope) }
+      add_campaign_approval(campaign, input)
+      result = campaign_manager.record_round(campaign["campaign_id"], input)
+      assert_equal n + 1, result["clean_streak"]
+      assert_equal n == 1, result["accepted"]
+      assert_equal result["clean_streak"], campaign_manager.status(campaign["campaign_id"])["clean_streak"]
+    end
+    assert_equal 5, campaign_manager.finish(campaign["campaign_id"])["completed_rounds"]
+  end
+
+  def test_pr_source_exceptions_produce_blocked_start_status_and_finish
+    manager = Ace::Review::Organisms::CampaignManager.new(repo_root: @test_dir)
+    subject = {"repository" => "https://github.com/owner/repo", "pr" => "owner/repo#42"}
+    [Ace::Review::Errors::GhCliNotInstalledError.new, Ace::Review::Errors::GhAuthenticationError.new,
+      Ace::Git::ProviderCliMissingError.new("github"), Ace::Git::ProviderAuthenticationError.new("github")].each do |failure|
+      Ace::Review::Molecules::GhPrFetcher.stub(:fetch_metadata, ->(*) { raise failure }) do
+        campaign = manager.start(subject: subject, contract: "requirements", policy: campaign_policy)
+        [campaign, manager.status(campaign["campaign_id"]), manager.finish(campaign["campaign_id"])].each do |result|
+          refute JSON.parse(JSON.generate(result))["accepted"]
+          assert result["reasons"].any? { |reason| reason.include?("PR source unavailable") }
+          assert_equal false, result["evidence"]["valid"]
+          assert_equal 0, result["completed_rounds"]
+        end
+      end
+    end
   end
 
 end
