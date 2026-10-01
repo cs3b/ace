@@ -43,3 +43,24 @@ Run `bin/ace-test ace-docs test/fast/molecules/frontmatter_manager_test.rb`, the
 Fixture replacement and forced-GC bulk update passed 15 tests / 55 assertions at `.ace-local/test/reports/docs/8x0vwu/report.md`. Related all-target docs tests passed 213 / 579 at `.ace-local/test/reports/docs/8x0vxe/report.md`. No product behavior or assertion was weakened. The repair is prepared as ace-docs 0.34.5.
 
 The first delivery monorepo run also timed out in ace-assign at the configured 120-second package limit while owning all-target suites and a real model review were running concurrently. Prior retained all-target evidence shows assignment feature coverage alone took 372 seconds; it is not the fast suite. Rerun the default fast monorepo suite without overlapping owning suites before deciding whether any timeout/configuration repair is required. Keep the 120-second guard unchanged unless independent evidence establishes a real performance defect.
+
+
+# Delivery cleanup timing analysis
+
+## Failure Analysis Report
+
+| Failure | Category | Evidence | Fix target / layer | Primary candidate file | Do-not-touch boundaries | Confidence | Disconfirming check |
+|---|---|---|---|---|---|---|---|
+| SafeCaptureTest success/deadline background descendant cleanup | test-infrastructure | `.ace-local/test/reports/llm-providers-cli/8x0w2x/report.md` reports two immediate Process.kill(0) liveness failures under the default parallel suite. Both recorded PIDs are absent on subsequent ps inspection. The unchanged isolated file passes 23 / 73 at `.ace-local/test/reports/llm-providers-cli/8x0w41/report.md`. On non-Linux platforms production sends TERM/KILL and cannot waitpid non-child descendants (ECHILD); signal delivery does not make an immediate liveness sample a reliable exit test. This same race has recurred across earlier full-suite runs. | Bounded test process-liveness observation / test code | ace-llm-providers-cli/test/fast/molecules/safe_capture_test.rb | Keep product cleanup, child-tree expectations and timeout outcome assertions unchanged. A live five-second child must fail the short check. | High | Negative control must reject a deliberately live process; actual cleanup must finish within 0.5 seconds, well before the fixture's natural five-second exit |
+
+## Fix Decisions
+
+Replace only the instantaneous descendant assertions with a monotonic bounded wait for the same Process.kill(0) absence predicate. Preserve strict failure if the process remains live. Add a live-child negative control with a short timeout; kill and reap that owned child in ensure. No new product fallback or timeout increase.
+
+### Execution Plan Input
+
+Run the targeted SafeCapture file, the provider package suite and the default monorepo suite. Require zero failures/errors, including the live-child negative control. Prepare a provider package patch release for the fixture repair, then collect a current-head whole-PR round before approval.
+
+### Provider Fix Execution Summary
+
+The bounded exit observation and live-child negative control pass 24 / 74 at `.ace-local/test/reports/llm-providers-cli/8x0w8b/report.md`. Prepared local patch version 0.36.1. The later default suite passed ace-assign fast in 73.61 seconds, so its 120-second guard remains unchanged. The two failed historical monorepo runs remain failed receipts; final checks require a fresh successful run.

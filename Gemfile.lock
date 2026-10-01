@@ -216,7 +216,7 @@ PATH
 PATH
   remote: ace-llm-providers-cli
   specs:
-    ace-llm-providers-cli (0.36.0)
+    ace-llm-providers-cli (0.36.1)
       ace-llm (~> 0.42)
 
 PATH

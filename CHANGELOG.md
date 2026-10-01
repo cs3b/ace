@@ -62,6 +62,8 @@ All notable changes to this project will be documented in this file.
 
 ### Technical
 
+- **ace-llm-providers-cli v0.36.1**: Stabilize asynchronous descendant-exit observations without weakening cleanup checks; a live-child negative control enforces the bounded wait.
+
 - **ace-docs v0.34.5**: Retain frontmatter test fixtures through garbage collection; keep the two-document bulk-update check deterministic.
 
 - Dependency-following patch release after ace-assign 0.60: `ace-overseer v0.18.1`.
