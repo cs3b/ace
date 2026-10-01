@@ -163,9 +163,32 @@ module Ace
             match ? match[1].upcase : nil
           end
 
+          # Bundler machinery (installed gem trees, compact-index caches,
+          # config, shared-gem dirs) is install plumbing, not verifier
+          # evidence: `--full-index` alone pulls a ~97MB compact index, which
+          # previously got inlined into the verifier prompt whole.
+          BUNDLER_MACHINE_SEGMENTS = %w[
+            .bundle .gem bundler-cache bundler-home bundler-config
+            compact_index specifications cache bin
+          ].freeze
+          MAX_ARTIFACT_FILE_BYTES = 256 * 1024
+          MAX_ARTIFACT_CONTENT_BYTES = 2 * 1024 * 1024
+
+          def artifact_evidence?(relative_path)
+            return false if relative_path.start_with?(".bundle/", ".gem/")
+
+            BUNDLER_MACHINE_SEGMENTS.none? do |segment|
+              relative_path.include?("/#{segment}/") || relative_path.start_with?("#{segment}/")
+            end
+          end
+
           def build_artifact_section(sandbox_path)
             sandbox_path = File.expand_path(sandbox_path)
-            files = Dir.glob(File.join(sandbox_path, "results", "**", "*")).select { |f| File.file?(f) }.sort
+            files = Dir.glob(File.join(sandbox_path, "results", "**", "*"))
+              .select { |f| File.file?(f) }
+              .map { |f| File.expand_path(f) }
+              .select { |f| artifact_evidence?(relative_path(f, sandbox_path)) }
+              .sort
             tree_entries = files.map { |f| relative_path(f, sandbox_path) }
 
             parts = []
@@ -186,12 +209,21 @@ module Ace
             parts << "## File contents"
             parts << ""
 
+            content_budget = MAX_ARTIFACT_CONTENT_BYTES
             files.each do |file|
+              size = File.size(file)
+              body = if size <= MAX_ARTIFACT_FILE_BYTES
+                safe_read(file)
+              else
+                "#{safe_read(file, MAX_ARTIFACT_FILE_BYTES)}\n... [truncated, #{size} bytes total]"
+              end
+              content_budget -= body.bytesize
               parts << "### `#{relative_path(file, sandbox_path)}`"
               parts << "```"
-              parts << safe_read(file)
+              parts << body
               parts << "```"
               parts << ""
+              break if content_budget <= 0
             end
 
             parts.join("\n").rstrip
@@ -324,8 +356,9 @@ module Ace
             File.expand_path(path).sub("#{File.expand_path(root)}/", "")
           end
 
-          def safe_read(path)
-            File.binread(path).encode("UTF-8", invalid: :replace, undef: :replace, replace: "?")
+          def safe_read(path, limit = nil)
+            raw = limit ? File.binread(path, limit) : File.binread(path)
+            raw.encode("UTF-8", invalid: :replace, undef: :replace, replace: "?")
           end
         end
       end
