@@ -181,22 +181,32 @@ module Ace
 
         # Read accepted check evidence without transitions, locks, cache writes
         # or audit checkout creation. Managed history comes from the Git ref.
-        def evidence(attempt_id:, receipt_digest:)
+        def evidence(attempt_id:, receipt_digest:, kind: "check", check_name: "tests")
+          unless %w[check review-collection].include?(kind) && check_name.is_a?(String) && !check_name.strip.empty?
+            raise AttemptErrors::ReceiptRejected, "Invalid evidence kind or check name"
+          end
           unless attempt_id.to_s.match?(/\A[a-zA-Z0-9][a-zA-Z0-9_.-]{0,127}\z/) &&
               receipt_digest.to_s.match?(/\A[0-9a-f]{64}\z/)
             raise AttemptErrors::ReceiptRejected, "Invalid attempt ID or receipt digest"
           end
           attempt = @store.find(attempt_id) || recover_managed_attempt(nil, attempt_id)
           raise AttemptErrors::NotFound, "Attempt #{attempt_id} not found" unless attempt
-          if attempt.managed?
-            attempt = recover_managed_attempt(attempt.binding.assignment_id, attempt_id)
-          end
+          raise AttemptErrors::ReceiptRejected, "Execution evidence requires managed immutable journal history" unless attempt.managed?
+          attempt = recover_managed_attempt(attempt.binding.assignment_id, attempt_id)
           raise AttemptErrors::ReceiptRejected, "No succeeded accepted attempt" unless attempt&.state == "succeeded"
-          accepted = attempt.managed? ? journal_for.accepted_receipts(attempt.binding.assignment_id) : attempt.accepted_receipts
+          accepted = journal_for.accepted_receipts(attempt.binding.assignment_id)
           data = accepted.find { |r| r["attempt_id"] == attempt_id && r["digest"] == receipt_digest }
           raise AttemptErrors::ReceiptRejected, "Receipt was not accepted by coordinator" unless data
-          if data["campaign"] || data["operation"] == "review" || @verifier.external_effect?(data["operation"])
-            raise AttemptErrors::ReceiptRejected, "Check evidence must be an executed check operation"
+          if kind == "check" && (%w[review review-collect].include?(data["operation"]) || @verifier.external_effect?(data["operation"]))
+            raise AttemptErrors::ReceiptRejected, "Review or external-effect operations cannot be check evidence"
+          end
+          expected_operation = kind == "review-collection" ? "review-collect" : (check_name == "tests" ? "test" : check_name)
+          unless data["campaign"].nil? && data["operation"] == expected_operation
+            raise AttemptErrors::ReceiptRejected, "Accepted receipt operation does not prove #{kind}: #{expected_operation}"
+          end
+          required_check = kind == "review-collection" ? "review-execution" : check_name
+          unless Array(data["checks"]).any? { |check| check["name"] == required_check && check["verdict"] == "passed" }
+            raise AttemptErrors::ReceiptRejected, "Accepted receipt does not prove the required check #{required_check}"
           end
           receipt = Models::ExecutionReceipt.from_h(data)
           unless receipt.digest == Atoms::EvidenceDigest.digest(receipt.digest_payload)
@@ -206,8 +216,8 @@ module Ace
           unless data["verdict"] == "succeeded" && data["head"] == live_head && attempt.candidate_head == live_head
             raise AttemptErrors::ReceiptRejected, "Accepted check evidence is stale or unsuccessful"
           end
-          @verifier.verify_check_evidence!(data, live_head: live_head, repo_root: @repo_root)
-          {"attempt_id" => attempt_id, "receipt_digest" => receipt_digest, "head" => live_head,
+          @verifier.verify_accepted_evidence!(data, live_head: live_head, repo_root: @repo_root)
+          {"attempt_id" => attempt_id, "receipt_digest" => receipt_digest, "head" => live_head, "kind" => kind,
            "operation" => data["operation"], "checks" => data["checks"], "producer" => data["producer"],
            "artifacts" => data["artifacts"], "assignment_id" => data["assignment_id"],
            "project_id" => data["project_id"], "scope" => data["scope"],

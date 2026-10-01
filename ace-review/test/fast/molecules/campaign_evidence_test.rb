@@ -24,6 +24,7 @@ class CampaignEvidenceTest < AceReviewTest
     manager = Ace::Review::Organisms::ReviewManager.new(project_root: @test_dir)
     manager.send(:save_ruby_api_metadata, dir, result)
     input["sessions"][0]["metadata"] = artifact_ref(File.join(dir, "metadata.yml"))
+    accept_review_session(input, dir)
     result = campaign_manager.record_round(campaign["campaign_id"], input)
     assert_equal 1, result["completed_rounds"]
     assert_equal 1, result["counters"]["provider_calls"]

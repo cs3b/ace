@@ -16,8 +16,9 @@ module Ace
 
             def call(**options)
               run(options) do |manager|
+                policy = options[:policy] ? Atoms::CampaignContract.policy!(read_json(options[:policy])) : nil
                 manager.start(subject: read_json(options[:subject]), contract: File.read(options[:contract]),
-                  profile: options[:profile], policy: options[:policy] && read_json(options[:policy]),
+                  profile: options[:profile], policy: policy,
                   predecessor: options[:predecessor], reason: options[:reason], dry_run: options[:dry_run])
               end
               0

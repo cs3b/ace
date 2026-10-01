@@ -16,10 +16,10 @@ module Ace
         Contract = Atoms::CampaignContract
         attr_reader :store
 
-        def initialize(repo_root: Dir.pwd, store: nil, revisions: nil, check_evidence: nil)
+        def initialize(repo_root: Dir.pwd, store: nil, revisions: nil, check_evidence: nil, review_evidence: nil)
           @repo_root = File.realpath(repo_root)
           @store = store || Molecules::CampaignStore.new(root: File.join(@repo_root, ".ace-local/review/campaigns"))
-          @evidence = Molecules::CampaignEvidence.new(repo_root: @repo_root, check_evidence: check_evidence)
+          @evidence = Molecules::CampaignEvidence.new(repo_root: @repo_root, check_evidence: check_evidence, review_evidence: review_evidence)
           @live_git = revisions.nil?
           @revisions = revisions || method(:git_revision)
         end
@@ -27,8 +27,8 @@ module Ace
         def start(subject:, contract:, profile: "delivery", policy: nil, predecessor: nil, reason: nil, dry_run: false)
           subject = Contract.subject!(subject)
           Contract.string!(contract, "requirements contract")
-          effective = policy || Ace::Review.get("campaign", "profiles", profile)
-          raise Contract::Invalid, "unsupported campaign profile #{profile}" unless effective
+          effective = policy.nil? ? Ace::Review.get("campaign", "profiles", profile) : policy
+          raise Contract::Invalid, "unsupported campaign profile #{profile}" if policy.nil? && effective.nil?
           effective = Contract.policy!(effective)
           validate_repository({"subject" => subject}, pr_url_for(subject))
           identity = Digest::SHA256.hexdigest(contract)
@@ -307,11 +307,14 @@ module Ace
               (attempt["approval"] ? [attempt["approval"]["artifact"]] + attempt["approval"]["artifacts"] : [])
           end + (record["assessments"] + record["inherited_findings"]).map { |finding| finding["artifact"] }
           available, error = @evidence.available?(refs)
-          if round && round["approval"] && available
+          if round && available && round["binding"]["head"] == head
             begin
-              rechecked = @evidence.approval(round["approval"]["artifact"], record: record,
-                binding: round["binding"], sessions: round["sessions"])
-              raise Contract::Invalid, "accepted approval evidence changed" unless rechecked == round["approval"]
+              round["sessions"].each { |session| @evidence.verify_session_authority(session, head: round["binding"]["head"]) }
+              if round["approval"]
+                rechecked = @evidence.approval(round["approval"]["artifact"], record: record,
+                  binding: round["binding"], sessions: round["sessions"])
+                raise Contract::Invalid, "accepted approval evidence changed" unless rechecked == round["approval"]
+              end
             rescue Contract::Invalid => e
               available = false
               error = e.message
@@ -385,13 +388,10 @@ module Ace
         end
 
         def git_revision(ref, record = nil)
-          # Local campaigns pin base to the first round. PR campaigns consult
-          # only the existing GitHub adapter, with no hidden forge fallback.
+          # Local base is the latest explicit committed pin. PR revisions use
+          # the existing provider adapter in current_revisions.
           if ref == "base"
-            return record["attempts"].first&.dig("binding", "base") || @revisions.call("HEAD") unless record["subject"]["pr"]
-            metadata = Molecules::GhPrFetcher.fetch_metadata(record["subject"]["pr"])
-            raise Contract::Invalid, metadata[:error] unless metadata[:success]
-            return metadata[:metadata]["baseRefOid"]
+            return record["attempts"].last&.dig("binding", "base") || @revisions.call("HEAD")
           end
           out, status = Open3.capture2("git", "rev-parse", "HEAD", chdir: @repo_root, err: File::NULL)
           raise Contract::Invalid, "live repository HEAD unavailable" unless status.success?

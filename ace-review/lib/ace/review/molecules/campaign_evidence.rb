@@ -7,7 +7,7 @@ require "digest"
 require "json"
 require_relative "../atoms/campaign_contract"
 require_relative "feedback_file_reader"
-require_relative "campaign_check_evidence"
+require_relative "campaign_execution_evidence"
 
 module Ace
   module Review
@@ -18,9 +18,11 @@ module Ace
       class CampaignEvidence
         Contract = Atoms::CampaignContract
 
-        def initialize(repo_root:, check_evidence: nil)
+        def initialize(repo_root:, check_evidence: nil, review_evidence: nil)
           @repo_root = File.realpath(repo_root)
-          @check_evidence = check_evidence || CampaignCheckEvidence.new(repo_root: @repo_root)
+          authority = CampaignExecutionEvidence.new(repo_root: @repo_root)
+          @check_evidence = check_evidence || authority.method(:check)
+          @review_evidence = review_evidence || authority.method(:review)
         end
 
         def artifact(reference)
@@ -112,7 +114,8 @@ module Ace
             end
           end
           completed &&= extracted
-          {"path" => dir.delete_prefix(@repo_root + File::SEPARATOR), "scope" => scope,
+          proof = completed ? @review_evidence.call(input.fetch("receipt"), head: binding["head"], artifacts: refs) : nil
+          {"receipt" => input["receipt"], "execution_proof" => proof, "path" => dir.delete_prefix(@repo_root + File::SEPARATOR), "scope" => scope,
            "completed" => completed, "provider_calls" => entries.size,
            "report_files" => reports.size, "reports" => reports, "artifacts" => refs,
            "findings" => findings}
@@ -135,6 +138,10 @@ module Ace
              "artifact" => reference(path), "priority" => item.priority, "status" => item.status,
              "title" => item.title, "research" => item.research, "resolution" => item.resolution}
           end
+        end
+
+        def verify_session_authority(session, head:)
+          @review_evidence.call(session.fetch("receipt"), head: head, artifacts: session.fetch("artifacts"))
         end
 
         def resolution(previous)

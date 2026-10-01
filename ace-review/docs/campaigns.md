@@ -46,7 +46,7 @@ Before collection, record a pin with empty sessions and dispositions. `attempt_i
 }
 ```
 
-Replace the SHA placeholders with exact Git revisions. For local campaigns, the first round fixes the base; a new head does not change that base. For PR scopes pin `subjects: ["pr:owner/repo#42"]`; PR collection uses the fetched PR head/base. A delta scope additionally pins `delta_reference_head` to an exact SHA in its scope identity and collects with `--delta SHA`; a delta cannot satisfy a scope pinned without that reference. Candidate code must be committed before campaign collection or acceptance.
+Replace the SHA placeholders with exact Git revisions. For local campaigns, the latest explicit round pin defines the current base; changing that pin invalidates older-base evidence while preserving history. Both revisions must exist as Git commits. For PR scopes pin `subjects: ["pr:owner/repo#42"]`; PR collection uses the fetched PR head/base. A delta scope additionally pins `delta_reference_head` to an exact SHA in its scope identity and collects with `--delta SHA`; a delta cannot satisfy a scope pinned without that reference. Candidate code must be committed before campaign collection or acceptance.
 
 ```sh
 ace-review campaign record-round CAMPAIGN_ID --input .ace-local/campaign-input/pin.json
@@ -73,13 +73,15 @@ Submit a new attempt ID with all reports needed for the round. Metadata, reports
   "sessions": [{"scope":"full","metadata":{
     "path":".ace-local/review/sessions/review-SESSION/metadata.yml",
     "sha256":"METADATA_SHA256"
-  }}],
+  }, "receipt":{"attempt_id":"ACCEPTED_COLLECTION_ATTEMPT_ID","digest":"ACCEPTED_COLLECTION_RECEIPT_SHA256"}}],
   "dispositions": [{
     "source_id":".ace-local/review/sessions/review-SESSION#FEEDBACK_ID",
     "reason":"Verified claim against the requirements and regression test."
   }]
 }
 ```
+
+Each completed session requires an immutable execution receipt already accepted by ace-assign's coordinator. Collect the real review under an existing managed assignment attempt, then submit a normal succeeded receipt with `operation: "review-collect"`, a passed `review-execution` check, live head and checksummed artifacts covering `metadata.yml`, the report files, both prompts, and `llm_metadata.yml` for a single-model execution. This attests successful collection, including a report containing blocking findings; it does not approve the candidate. Record its accepted attempt ID/digest in the session's `receipt` field. Collection metadata alone, a check receipt, or a receipt from a different session cannot count as executed review. Campaign commands read this proof through `ace-assign attempt evidence --kind review-collection`; they never create execution attempts or a second journal. The trusted coordinator must validate actual execution and its artifacts before accepting the collection receipt. Evidence queries read accepted receipts from the managed immutable Git journal; editable attempt caches and unmanaged histories cannot certify execution.
 
 Use `dispositions: []` for a session with no findings. Every source finding needs exactly one disposition. Source status derives the disposition: pending/skip stays open, done is resolved, invalid is invalid. A confirmed High/Critical makes the round non-clean even if already resolved. The same rule applies to a High/Critical observed during partial coverage. Earlier findings remain open when absent from later reports. A confirmed High/Critical in a later partial round invalidates the earlier approval even if resolved; complete that round and collect the required subsequent clean reviews.
 
@@ -94,7 +96,7 @@ Expected: complete coverage increments `completed_rounds` once. Identical replay
 
 ## Current approval and finish
 
-Delivery defaults are three completed rounds and two consecutive rounds without confirmed High/Critical. The default scope is `full` and required check name is `tests`. Configure `campaign.profiles.delivery` in `.ace/review/config.yml`, or supply `start --policy FILE` with exactly `revision`, `minimum_rounds`, `clean_rounds`, `required_scopes`, `required_checks`. The campaign freezes that revision and policy. R1 does not implement discovery profiles, round caps, automatic retries or escalation.
+Delivery defaults are three completed rounds and two consecutive rounds without confirmed High/Critical. The default scope is `full` and required check name is `tests`. Configure `campaign.profiles.delivery` in `.ace/review/config.yml`, or supply `start --policy FILE` with exactly `revision`, `minimum_rounds`, `clean_rounds`, `required_scopes`, `required_checks`. Explicit false/null or otherwise malformed policy files fail instead of selecting defaults. The campaign freezes that revision and policy. R1 does not implement discovery profiles, round caps, automatic retries or escalation.
 
 The final round may reference an explicit approval artifact with `approval: {"path": ..., "sha256": ...}`. An approval is a verified local assessment of executed reports, not assignment approval. It must contain:
 
@@ -114,7 +116,7 @@ The final round may reference an explicit approval artifact with `approval: {"pa
 }
 ```
 
-Producer and reviewer must differ. Reviewer identity must match the actual completed execution model in the referenced session; approvals must cover every required scope. Required checks refer to a succeeded execution receipt already accepted by the ace-assign coordinator. Run the check under an existing assignment attempt and submit its attributable result, current head, check outcomes and checksummed artifacts through `ace-assign attempt finish`. Use the accepted attempt ID and receipt digest here. A self-authored check JSON file is insufficient. Campaign recording and acceptance consult the read-only `ace-assign attempt evidence --attempt ID --receipt-digest DIGEST --format json` boundary, which revalidates current head and source artifacts against accepted history. Retain `ace-assign` alongside `ace-review` for this qjl evidence capability; unavailable authority blocks acceptance explicitly. Campaign commands never run the check for you or create a second execution journal. Authenticated producer/reviewer attribution and execution acceptance remain owned by ace-assign.
+Producer and reviewer must differ. Reviewer identity must match the actual completed execution model in the referenced session; approvals must cover every required scope. Required checks refer to a succeeded execution receipt already accepted by the ace-assign coordinator. The receipt operation must match the check: `tests` requires `test`; other explicit check names require the same operation name. An unrelated operation claiming a passed tests field is rejected. Run the check under an existing managed assignment attempt and submit its attributable result, current head, check outcomes and checksummed artifacts through `ace-assign attempt finish`. Use the accepted attempt ID and receipt digest here. A self-authored check JSON file is insufficient. Campaign recording and acceptance consult the read-only `ace-assign attempt evidence --attempt ID --receipt-digest DIGEST --format json --kind check --check-name tests` boundary, which revalidates current head and source artifacts against accepted history. Retain `ace-assign` alongside `ace-review` for this qjl evidence capability; unavailable authority blocks acceptance explicitly. Campaign commands never run the check for you or create a second execution journal. Authenticated producer/reviewer attribution and execution acceptance remain owned by ace-assign.
 
 ```sh
 ace-review campaign finish CAMPAIGN_ID --format json
