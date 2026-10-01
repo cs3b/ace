@@ -249,9 +249,10 @@ module Ace
             revision_error = e.message
           end
           round = record["rounds"].last
-          refs = record["rounds"].flat_map { |r| r["sessions"].flat_map { |session| session["artifacts"] } } +
-            (record["assessments"] + record["inherited_findings"]).map { |f| f["artifact"] } +
-            (round && round["approval"] ? [round["approval"]["artifact"]] + round["approval"]["artifacts"] : [])
+          refs = record["attempts"].flat_map do |attempt|
+            attempt["sessions"].flat_map { |session| session["artifacts"] } +
+              (attempt["approval"] ? [attempt["approval"]["artifact"]] + attempt["approval"]["artifacts"] : [])
+          end + (record["assessments"] + record["inherited_findings"]).map { |finding| finding["artifact"] }
           available, error = @evidence.available?(refs)
           if round && round["approval"] && available
             begin
