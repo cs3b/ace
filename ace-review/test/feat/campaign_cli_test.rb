@@ -133,4 +133,35 @@ class CampaignCLITest < AceReviewTest
     assert status.success?, err
     assert_equal id, same["campaign_id"]
   end
+  def test_collection_excludes_untracked_tool_artifacts_but_detects_candidate_changes_without_gitignore
+    git("init", "-b", "main")
+    git("config", "user.name", "test")
+    git("config", "user.email", "test@example.com")
+    FileUtils.mkdir_p(".ace-local")
+    File.write(".ace-local/tracked-source.rb", "puts :tracked\n")
+    File.write("candidate.rb", "puts :candidate\n")
+    git("add", "candidate.rb", ".ace-local/tracked-source.rb")
+    git("commit", "-m", "candidate")
+    @head = @base = git("rev-parse", "HEAD")
+    manager = Ace::Review::Organisms::CampaignManager.new(repo_root: @test_dir)
+    campaign = manager.start(subject: campaign_subject, contract: "Frozen requirements", policy: campaign_policy)
+    manager.record_round(campaign["campaign_id"], round_input(1))
+    FileUtils.mkdir_p(".ace-local/campaign-input")
+    File.write(".ace-local/campaign-input/round.json", JSON.generate(round_input(1)))
+    args = {round_id: "round-1", scope: "full", preset: "code-valid", head: @head, base: @base,
+      subjects: ["diff:#{@base}..#{@head}"]}
+    binding = manager.session_binding(campaign["campaign_id"], **args)
+    assert_equal campaign["campaign_id"], binding["campaign_id"]
+    File.write("new-source.rb", "puts :untracked\n")
+    assert_raises(ArgumentError) { manager.session_binding(campaign["campaign_id"], **args) }
+    File.delete("new-source.rb")
+    File.write("candidate.rb", "puts :changed\n")
+    assert_raises(ArgumentError) { manager.session_binding(campaign["campaign_id"], **args) }
+    File.write("candidate.rb", "puts :candidate\n")
+    File.write(".ace-local/tracked-source.rb", "puts :changed\n")
+    assert_raises(ArgumentError) { manager.session_binding(campaign["campaign_id"], **args) }
+    git("add", ".ace-local/tracked-source.rb")
+    assert_raises(ArgumentError) { manager.session_binding(campaign["campaign_id"], **args) }
+  end
+
 end

@@ -339,4 +339,42 @@ class CampaignManagerTest < AceReviewTest
     refute campaign_manager.status(campaign["campaign_id"])["accepted"]
   end
 
+  def test_empty_later_resolution_cannot_reuse_approval_without_completed_current_coverage
+    campaign = start_campaign
+    first = round_input(1)
+    dir = make_campaign_session(campaign, first, finding: {})
+    finding = campaign_manager.record_round(campaign["campaign_id"], first)["open_findings"].first
+    [2, 3].each do |n|
+      input = round_input(n)
+      make_campaign_session(campaign, input)
+      add_campaign_approval(campaign, input) if n == 3
+      campaign_manager.record_round(campaign["campaign_id"], input)
+    end
+    converged = campaign_manager.status(campaign["campaign_id"])
+    assert converged["search_converged"]
+    assert_equal 2, converged["clean_streak"]
+    refute converged["accepted"]
+    source_path = File.join(@test_dir, dir, "feedback/finding.s.md")
+    item = YAML.safe_load_file(source_path)
+    item["status"] = "done"
+    item["resolution"] = "Regression verifies the repaired invariant."
+    File.write(source_path, "---\n#{YAML.dump(item).delete_prefix("---\n")}---\n")
+    resolution = round_input(4)
+    resolution["dispositions"] << {"source_id" => finding["source_id"], "reason" => "Verified earlier repair."}
+    blocked = campaign_manager.record_round(campaign["campaign_id"], resolution)
+    assert_empty blocked["open_findings"]
+    assert_equal 3, blocked["completed_rounds"]
+    assert_equal 2, blocked["clean_streak"]
+    refute blocked["accepted"]
+    refute blocked["evidence"]["valid"]
+    assert_includes blocked["reasons"], "later High/Critical assessment requires a completed current review"
+    complete = round_input(4, attempt: "complete-after-resolution")
+    make_campaign_session(campaign, complete)
+    add_campaign_approval(campaign, complete)
+    accepted = campaign_manager.record_round(campaign["campaign_id"], complete)
+    assert accepted["accepted"], accepted["reasons"].inspect
+    assert_equal 4, accepted["completed_rounds"]
+    assert_equal 3, accepted["clean_streak"]
+  end
+
 end
