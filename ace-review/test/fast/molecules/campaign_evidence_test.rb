@@ -56,6 +56,44 @@ class CampaignEvidenceTest < AceReviewTest
     assert_raises(ArgumentError) { campaign_manager.record_round(campaign["campaign_id"], forged) }
   end
 
+  def test_only_explicit_successful_model_status_can_complete_a_round
+    campaign = start_campaign
+    [nil, "pending", "running"].each_with_index do |status, n|
+      input = round_input(n)
+      dir = make_campaign_session(campaign, input)
+      path = File.join(@test_dir, dir, "metadata.yml")
+      metadata = YAML.safe_load_file(path)
+      metadata["head"] = @head
+      metadata["models"].first["status"] = status
+      # Keep successful execution, report and extraction intact; reaccept the
+      # changed artifact so rejection cannot come from a stale checksum.
+      File.write(path, YAML.dump(metadata))
+      input["sessions"].first["metadata"] = artifact_ref(File.join(dir, "metadata.yml"))
+      accept_review_session(input, dir)
+      assert_raises(ArgumentError) { campaign_manager.record_round(campaign["campaign_id"], input) }
+      result = campaign_manager.status(campaign["campaign_id"])
+      assert_equal 0, result["completed_rounds"]
+      assert_equal 0, result["clean_streak"]
+    end
+  end
+
+  def test_missing_or_conflicting_recorded_head_cannot_count_valid_collection
+    campaign = start_campaign
+    [nil, "c" * 40].each_with_index do |head, n|
+      input = round_input(n)
+      dir = make_campaign_session(campaign, input)
+      path = File.join(@test_dir, dir, "metadata.yml")
+      metadata = YAML.safe_load_file(path)
+      metadata["head"] = head
+      File.write(path, YAML.dump(metadata))
+      input["sessions"].first["metadata"] = artifact_ref(File.join(dir, "metadata.yml"))
+      accept_review_session(input, dir)
+      error = assert_raises(ArgumentError) { campaign_manager.record_round(campaign["campaign_id"], input) }
+      assert_match(/recorded head/, error.message)
+      assert_equal 0, campaign_manager.status(campaign["campaign_id"])["completed_rounds"]
+    end
+  end
+
   def test_symlink_escape_is_rejected_even_with_matching_bytes
     File.write(File.join(@test_dir, "inside"), "artifact")
     Dir.mktmpdir do |outside|

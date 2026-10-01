@@ -64,3 +64,8 @@ Run the targeted SafeCapture file, the provider package suite and the default mo
 ### Provider Fix Execution Summary
 
 The bounded exit observation and live-child negative control pass 24 / 74 at `.ace-local/test/reports/llm-providers-cli/8x0w8b/report.md`. Prepared local patch version 0.36.1. The later default suite passed ace-assign fast in 73.61 seconds, so its 120-second guard remains unchanged. The two failed historical monorepo runs remain failed receipts; final checks require a fresh successful run.
+
+
+## Approval audit regressions
+
+Actual independent gpt-6-sol whole-input audit found a High completion-status defect and Medium recorded-head omission. These are product defects in CampaignEvidence, not flaky tests. The final negative controls fail both cases against original source at `review/8x0wn6` (two failures, zero errors), then pass 10 / 58 at `review/8x0wmz` with explicit success and recorded-head matching. Every mutated metadata artifact is reaccepted, so stale receipt checksums cannot supply the rejection. The earlier draft status control used an empty extraction report inventory and errored before the intended boundary; it was corrected to retain the genuine report inventory before the red/green proof. No accepted historical test result is relabeled as a check for the repaired candidate.
