@@ -30,6 +30,7 @@ Gem::Specification.new do |spec|
   spec.files = Dir.glob(%w[
     lib/**/*
     handbook/**/*
+    docs/**/*
     exe/*
     .ace-defaults/**/*
     *.md

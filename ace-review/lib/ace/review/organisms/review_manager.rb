@@ -454,6 +454,7 @@ module Ace
             context: content[:context],
             subject: content[:subject],
             diff_manifest: content[:diff_manifest],
+            campaign_binding: campaign_binding_for(options, content),
             noop: true,
             noop_reason: content[:noop_reason],
             delta: content[:delta]
@@ -1180,6 +1181,28 @@ module Ace
           {rendered_sha256: Digest::SHA256.hexdigest(bundle.content), sources: sections}
         end
 
+        def campaign_binding_for(options, content)
+          values = [options.campaign, options.campaign_round, options.campaign_scope]
+          return nil if values.all?(&:nil?)
+          unless values.all? { |value| value.is_a?(String) && !value.empty? }
+            raise Errors::BundleProcessingError, "--campaign, --campaign-round and --campaign-scope are required together"
+          end
+          root = @project_root || Ace::Support::Fs::Molecules::ProjectRootFinder.find_or_current
+          manager = CampaignManager.new(repo_root: root)
+          head = options.pr_metadata&.dig("headRefOid")
+          unless head
+            out, status = Open3.capture2("git", "rev-parse", "HEAD", chdir: root, err: File::NULL)
+            raise Errors::BundleProcessingError, "Cannot bind campaign to live HEAD" unless status.success?
+            head = out.strip
+          end
+          base = options.pr_metadata&.dig("baseRefOid") ||
+            manager.collection_base(options.campaign, round_id: options.campaign_round)
+          manager.session_binding(options.campaign, round_id: options.campaign_round, scope: options.campaign_scope,
+            preset: options.preset, head: head, base: base, pr_url: options.pr_metadata&.dig("url"))
+        rescue Atoms::CampaignContract::Invalid => e
+          raise Errors::BundleProcessingError, e.message
+        end
+
         # Build the complete review data structure
         def build_review_data(options, config, content, prompt_result, cache_dir, eligible_models = nil)
           # v0.13.0 architecture: only supports system/user prompt format
@@ -1187,6 +1210,7 @@ module Ace
 
           review_data = {
             preset: options.preset,
+            campaign_binding: campaign_binding_for(options, content),
             config: config,
             subject: content[:subject],
             diff_manifest: content[:diff_manifest],
@@ -1306,6 +1330,7 @@ module Ace
 
             response
           else
+            save_ruby_api_metadata(session_dir, result)
             # Enhanced error information from Ruby API
             error_result = result.dup
             if result[:error_type]
@@ -1328,9 +1353,9 @@ module Ace
             session_dir: session_dir
           )
 
+          save_multi_model_metadata(session_dir, result, review_data)
           if result[:success]
             # Save metadata for all models
-            save_multi_model_metadata(session_dir, result, review_data)
 
             # For multi-model, we don't copy to a single release location
             # Each model has its own output file already in session_dir
@@ -1462,6 +1487,7 @@ module Ace
           {
             "timestamp" => Time.now.iso8601(6),
             "preset" => review_data[:preset],
+            "campaign_binding" => review_data[:campaign_binding],
             "review_role" => review_data[:review_role] || "scope",
             "pr_url" => review_data[:pr_url],
             "evidence_sessions" => Array(review_data[:evidence_sessions]).map { |dir| File.expand_path(dir) },
@@ -1485,6 +1511,7 @@ module Ace
           metadata_content = {
             "timestamp" => Time.now.iso8601(6),
             "completed_at" => Time.now.utc.iso8601(6),
+            "status" => result[:success] ? "success" : "failed",
             "usage" => result[:usage],
             "requested_selector" => result[:requested_selector],
             "execution" => result[:execution],

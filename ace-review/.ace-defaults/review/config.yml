@@ -71,3 +71,13 @@ feedback:
 
 # Review presets - load from .ace/review/presets/*.yml
 # Individual preset files provide better organization and shareability
+
+# Campaign persistence snapshots this policy; changing config never rewrites history.
+campaign:
+  profiles:
+    delivery:
+      revision: delivery-v1
+      minimum_rounds: 3
+      clean_rounds: 2
+      required_scopes: [full]
+      required_checks: [tests]
