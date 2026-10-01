@@ -38,9 +38,26 @@ module Ace
         end
 
         def read(id)
+          read_record(id, index: identity_index)
+        end
+
+        def registered_id?(id)
+          identity_index["subjects"].values.any? { |entry| entry["campaign_ids"].include?(id) }
+        end
+
+        def records(subject:)
+          index = identity_index
+          entry = index["subjects"][Atoms::CampaignContract.digest(subject)]
+          return [] unless entry
+          entry.fetch("campaign_ids").map { |id| read_record(id, index: index) }
+        end
+
+        private def read_record(id, index:)
+          identity = index["subjects"].values.find { |entry| entry["campaign_ids"].include?(id) }
+          raise Atoms::CampaignContract::Invalid, "unknown indexed campaign #{id}" unless identity
           envelope = JSON.parse(File.read(path(id)))
           record = envelope.fetch("record")
-          unless record.is_a?(Hash) && record["id"] == id &&
+          unless record.is_a?(Hash) && record["id"] == id && record["subject"] == identity["subject"] &&
               envelope["sha256"] == Atoms::CampaignContract.digest(record)
             raise Atoms::CampaignContract::Invalid, "corrupt campaign #{id}: identity or checksum mismatch"
           end
@@ -71,12 +88,9 @@ module Ace
         rescue JSON::ParserError, KeyError, TypeError => e
           raise Atoms::CampaignContract::Invalid, "corrupt campaign #{id}: #{e.message}"
         rescue Errno::ENOENT
-          raise Atoms::CampaignContract::Invalid, "unknown campaign #{id}"
+          raise Atoms::CampaignContract::Invalid, "indexed campaign #{id} unavailable; restore its retained campaign record"
         end
 
-        def records
-          Dir.glob(File.join(root, "*.json")).sort.map { |file| read(File.basename(file, ".json")) }
-        end
 
         # Feedback status changes through its owner lifecycle. Keep the exact
         # verified source bytes so later resolutions cannot erase history.
@@ -106,10 +120,58 @@ module Ace
         end
 
         def write(record)
+          contract = Atoms::CampaignContract
           destination = path(record.fetch("id"))
-          content = JSON.pretty_generate("record" => record, "sha256" => Atoms::CampaignContract.digest(record))
+          subject = contract.subject!(record.fetch("subject"))
+          raise contract::Invalid, "noncanonical campaign subject" unless subject == record["subject"]
+          index = identity_index
+          key = contract.digest(subject)
+          owner = index["subjects"].values.find { |entry| entry["campaign_ids"].include?(record["id"]) }
+          raise contract::Invalid, "campaign ID belongs to another subject" if owner && owner["subject"] != subject
+          unless owner
+            entry = index["subjects"][key] ||= {"subject" => subject, "campaign_ids" => []}
+            entry["campaign_ids"] << record["id"]
+            # Publish the identity first: interrupted creation cannot erase history.
+            persist(File.join(root, ".identity-index.json"), "index" => index, "sha256" => contract.digest(index))
+          end
+          persist(destination, "record" => record, "sha256" => contract.digest(record))
+        end
+
+        private
+
+        def identity_index
+          contract = Atoms::CampaignContract
+          index_path = File.join(root, ".identity-index.json")
+          files = Dir.glob(File.join(root, "*.json")).map { |file| File.basename(file, ".json") }
+          unless File.file?(index_path)
+            raise contract::Invalid, "campaign identity index unavailable; restore retained index" unless files.empty?
+            return {"version" => 1, "subjects" => {}}
+          end
+          envelope = JSON.parse(File.read(index_path))
+          index = envelope.fetch("index")
+          unless index.is_a?(Hash) && index["version"] == 1 && index["subjects"].is_a?(Hash) &&
+              envelope["sha256"] == contract.digest(index)
+            raise contract::Invalid, "corrupt campaign identity index"
+          end
+          ids = []
+          index["subjects"].each do |key, entry|
+            unless entry.is_a?(Hash) && contract.subject!(entry["subject"]) == entry["subject"] &&
+                key == contract.digest(entry["subject"]) && entry["campaign_ids"].is_a?(Array) && !entry["campaign_ids"].empty?
+              raise contract::Invalid, "corrupt campaign identity index entry"
+            end
+            entry["campaign_ids"].each { |id| contract.id!(id, "indexed campaign ID"); ids << id }
+          end
+          unless ids.uniq == ids && (files - ids).empty?
+            raise contract::Invalid, "duplicate or unregistered campaign identity; restore retained index"
+          end
+          index
+        rescue JSON::ParserError, KeyError, TypeError => e
+          raise contract::Invalid, "corrupt campaign identity index: #{e.message}"
+        end
+
+        def persist(destination, envelope)
           Tempfile.create([".campaign-", ".tmp"], root) do |file|
-            file.write(content)
+            file.write(JSON.pretty_generate(envelope))
             file.flush
             file.fsync
             File.rename(file.path, destination)

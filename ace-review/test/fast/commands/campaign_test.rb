@@ -137,4 +137,57 @@ class CampaignCommandTest < AceReviewTest
     end
   end
 
+  def test_pr_collection_rejects_checkout_mismatch_before_binding
+    manager = campaign_manager
+    campaign = manager.start(subject: {"repository" => "https://github.com/owner/repo", "pr" => "owner/repo#42"},
+      contract: "requirements", policy: campaign_policy)
+    input = round_input(1)
+    input["scope_identity"]["full"]["subjects"] = ["pr:owner/repo#42"]
+    manager.record_round(campaign["campaign_id"], input)
+    args = {round_id: "round-1", scope: "full", preset: "code-valid", head: @head, base: @base,
+      pr_url: "https://github.com/owner/repo/pull/42", diff_manifest: full_pr_manifest}
+    mismatched = Ace::Review::Organisms::CampaignManager.new(repo_root: @test_dir,
+      revisions: ->(ref, *) { ref == "HEAD" ? "c" * 40 : @base })
+    error = assert_raises(ArgumentError) { mismatched.session_binding(campaign["campaign_id"], **args) }
+    assert_match(/checkout HEAD to match fetched PR head/, error.message)
+    assert_equal @head, manager.session_binding(campaign["campaign_id"], **args)["head"]
+    assert_equal 0, manager.status(campaign["campaign_id"])["completed_rounds"]
+  end
+
+  def test_campaign_pr_pipeline_stops_before_model_but_unbound_pr_still_executes
+    owner = campaign_manager
+    campaign = owner.start(subject: {"repository" => "https://github.com/owner/repo", "pr" => "owner/repo#42"},
+      contract: "requirements", policy: campaign_policy)
+    input = round_input(1)
+    input["scope_identity"]["full"]["subjects"] = ["pr:owner/repo#42"]
+    owner.record_round(campaign["campaign_id"], input)
+    mismatched = Ace::Review::Organisms::CampaignManager.new(repo_root: @test_dir,
+      revisions: ->(ref, *) { ref == "HEAD" ? "c" * 40 : @base })
+    runner = Ace::Review::Organisms::ReviewManager.new(project_root: @test_dir)
+    metadata = {"headRefOid" => @head, "baseRefOid" => @base, "url" => "https://github.com/owner/repo/pull/42"}
+    options = {preset: "code-valid", model: "codex:sol", auto_execute: true, pr_metadata: metadata,
+      campaign: campaign["campaign_id"], campaign_round: "round-1", campaign_scope: "full"}
+    content = {success: true, subject: "full PR patch", pr_metadata: metadata, diff_manifest: full_pr_manifest}
+    executions = 0
+    execute = ->(*) { executions += 1; {success: true} }
+    runner.stub(:prepare_review_config, {success: true, config: {models: ["codex:sol"]}}) do
+      runner.stub(:extract_review_content, content) do
+        runner.stub(:compose_review_prompt, {success: true, system_prompt: "Review", user_prompt: "Patch"}) do
+          runner.stub(:save_session_files, nil) do
+            runner.stub(:execute_with_llm, execute) do
+              Ace::Review::Organisms::CampaignManager.stub(:new, mismatched) do
+                error = assert_raises(Ace::Review::Errors::BundleProcessingError) { runner.execute_review(options) }
+                assert_match(/checkout HEAD to match fetched PR head/, error.message)
+                assert_equal 0, executions
+                assert runner.execute_review(options.merge(campaign: nil, campaign_round: nil, campaign_scope: nil))[:success]
+                assert_equal 1, executions
+              end
+            end
+          end
+        end
+      end
+    end
+    assert_equal 0, owner.status(campaign["campaign_id"])["completed_rounds"]
+  end
+
 end

@@ -33,7 +33,7 @@ module Ace
           validate_repository({"subject" => subject}, pr_url_for(subject))
           identity = Digest::SHA256.hexdigest(contract)
           store.transaction(dry_run: dry_run) do
-            records = store.records
+            records = store.records(subject: subject)
             earlier = records.select { |r| r["subject"] == subject }
             active = earlier.find do |r|
               !r["successor"] && earlier.none? { |candidate| candidate["predecessor"] == r["id"] }
@@ -59,7 +59,7 @@ module Ace
             elsif predecessor
               raise Contract::Invalid, "unknown predecessor"
             end
-            id = allocate_id(records)
+            id = allocate_id
             raise Contract::Invalid, "self-referential predecessor" if predecessor == id
             record = {"id" => id, "subject" => subject, "contract_identity" => identity, "contract" => contract,
               "policy" => effective, "profile" => profile, "created_at" => Time.now.utc.iso8601(6),
@@ -186,6 +186,9 @@ module Ace
             unless binding["required_scopes"].include?(scope) && binding["scope_identity"].dig(scope, "preset") == preset &&
                 binding["head"] == head && binding["base"] == base
               raise Contract::Invalid, "review does not match pinned scope/preset/head/base"
+            end
+            if record["subject"]["pr"] && @revisions.call("HEAD") != head
+              raise Contract::Invalid, "campaign PR collection requires checkout HEAD to match fetched PR head"
             end
             actual_subjects = record["subject"]["pr"] ? ["pr:#{record['subject']['pr']}"] : Array(subjects)
             unless actual_subjects == binding["scope_identity"][scope]["subjects"]
@@ -458,9 +461,9 @@ module Ace
           end
         end
 
-        def allocate_id(records)
+        def allocate_id
           value = Ace::B36ts.encode(Time.now)
-          value = (value.to_i(36) + 1).to_s(36).rjust(6, "0") while records.any? { |r| r["id"] == value }
+          value = (value.to_i(36) + 1).to_s(36).rjust(6, "0") while store.registered_id?(value)
           value
         end
       end
