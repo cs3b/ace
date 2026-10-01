@@ -243,8 +243,11 @@ class CampaignReceiptTest < AceAssignTestCase
     result = JSON.parse(File.read(File.join(@test_dir, @result_path)))
     # Retain collection history while losing the later approval/check acceptances.
     collection = result["rounds"].last["sessions"].first["receipt"]
-    collection_proof = @check_coordinator.evidence(attempt_id: collection["attempt_id"], receipt_digest: collection["digest"], kind: "review-collection")
-    git_in(@test_dir, "update-ref", "refs/ace/execution", collection_proof["journal_commit"])
+    git_in(@test_dir, "update-ref", "refs/ace/execution", @accepted_receipt_journal_commits.fetch(collection["digest"]))
+    approval_ref = result["rounds"].last["approval"]["receipt"]
+    assert_raises(Ace::Assign::AttemptErrors::ReceiptRejected) do
+      @check_coordinator.evidence(attempt_id: approval_ref["attempt_id"], receipt_digest: approval_ref["digest"], kind: "review-approval")
+    end
     refute campaign_manager.finish(@campaign["campaign_id"])["accepted"]
     assert_raises(Ace::Assign::AttemptErrors::ReceiptRejected) do
       @coordinator.finish(attempt_id: attempt.attempt_id, receipt_path: receipt(attempt))

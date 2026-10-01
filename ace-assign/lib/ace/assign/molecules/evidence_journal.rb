@@ -159,10 +159,9 @@ module Ace
           value = ref_value
           return [] if value.nil?
 
-          paths, stderr, status = git("ls-tree", "--name-only", "#{value}:execution")
+          paths, stderr, status = git("ls-tree", "-d", "--name-only", value, "--", "execution/")
           raise AttemptErrors::EvidenceUnavailable, "Cannot discover journal assignments: #{stderr}" unless status.success?
-          paths.lines.map(&:strip).sort
-
+          paths.lines.map { |path| path.strip.delete_prefix("execution/") }.sort
         end
 
         private

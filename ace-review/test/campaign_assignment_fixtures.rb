@@ -38,6 +38,8 @@ module CampaignAssignmentFixtures
     path = File.join(@test_dir, ".ace-local/check-receipt.json")
     File.write(path, JSON.generate(data))
     accepted = @check_coordinator.finish(attempt_id: attempt.attempt_id, receipt_path: path, identity: identity)
-    {"attempt_id" => accepted.attempt_id, "digest" => accepted.accepted_receipts.last["digest"]}
+    digest = accepted.accepted_receipts.last["digest"]
+    (@accepted_receipt_journal_commits ||= {})[digest] = accepted.journal_commit
+    {"attempt_id" => accepted.attempt_id, "digest" => digest}
   end
 end
