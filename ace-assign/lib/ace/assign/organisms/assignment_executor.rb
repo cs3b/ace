@@ -114,7 +114,9 @@ module Ace
             updated_at: assignment.updated_at,
             source_config: archived_path,
             cache_dir: assignment.cache_dir,
-            parent: assignment.parent
+            parent: assignment.parent,
+            task_id: assignment.task_id,
+            project_id: assignment.project_id
           )
           assignment_manager.update(assignment)
 

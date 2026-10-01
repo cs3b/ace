@@ -4,7 +4,7 @@
 
 ace-review owns durable campaigns with frozen requirements/policy, pinned scope subjects, append-only findings and logical rounds, atomic locked persistence, and separate historical convergence/current acceptance. Existing review and feedback entrypoints remain primary. ace-assign consumes campaign results through its receipt verifier and supplies read-only accepted check, review-collection and independent approval proof through its existing coordinator/journal authority.
 
-Worktree: `.ace-wt/codex-t-ig2-review-campaigns`; branch `codex/t-ig2-review-campaigns`; baseline `28c62024b`. The direct skill invocation has no active ace-assign assignment; tests create isolated real assignments to exercise the consumer boundary. Task remains in-progress because final delivery owns completion/archive. The branch is published as draft PR https://github.com/cs3b/ace/pull/354. Local release preparation and formal campaign delivery are in progress; no merge, deployment or RubyGems publication has been performed.
+Worktree: `.ace-wt/codex-t-ig2-review-campaigns`; branch `codex/t-ig2-review-campaigns`; baseline `28c62024b`. The direct skill invocation has no active ace-assign assignment; tests create isolated real assignments to exercise the consumer boundary. Task is done and archived by the final delivery workflow. The branch is published as draft PR https://github.com/cs3b/ace/pull/354. Local releases ace-review 0.57.0, ace-assign 0.60.0 and dependency follower ace-overseer 0.18.1 are prepared; formal campaign delivery is in progress; no merge, deployment or RubyGems publication has been performed.
 
 ## Final verification
 
@@ -191,3 +191,9 @@ Source `bcb627d86` received a clean executed independent review in round 14: no 
 ## Completion
 
 SC1-SC6 are checked based on the executed cases and final-source results above. Source remains `bcb627d86`, followed only by report/checklist bookkeeping. The direct work skill has no active ace-assign assignment. The branch was pushed and draft PR #354 was created after this implementation verification. Task lifecycle completion, local releases and formal campaign acceptance are tracked separately in final delivery; no merge or RubyGems publication has been performed.
+
+## Formal delivery preparation
+
+PR: https://github.com/cs3b/ace/pull/354. Local release versions and the retrospective are committed; the task is done and archived. Public managed assignment creation exposed a real binding-loss defect: source-config archival rebuilt an assignment without task/project attachment. The reconstruction now preserves those fields. A regression tests both YAML attachment and explicit input precedence through persisted reload. This repair is included in ace-assign 0.60.0 and final formal review/tests.
+
+The obsolete delivery instruction names a nonexistent `code-deep` preset. The available `code-fit` preset covers architecture, security, performance and test quality and is used for the deep review lens. Whole-PR dry-run fits the complete-input budget. Manual source reviews remain context only; managed campaign collections, approval and checks are final delivery authority.
