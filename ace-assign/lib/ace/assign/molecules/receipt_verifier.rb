@@ -68,6 +68,7 @@ module Ace
           verify_head(data, live_head)
           verify_artifacts(data, repo_root)
           verify_checks(data)
+          verify_review(data)
         end
 
         # @param operation [String] Receipt operation

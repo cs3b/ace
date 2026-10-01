@@ -98,7 +98,7 @@ Expected: complete coverage increments `completed_rounds` once. Identical replay
 
 Delivery defaults are three completed rounds and two consecutive rounds without confirmed High/Critical. The default scope is `full` and required check name is `tests`. Configure `campaign.profiles.delivery` in `.ace/review/config.yml`, or supply `start --policy FILE` with exactly `revision`, `minimum_rounds`, `clean_rounds`, `required_scopes`, `required_checks`. Explicit false/null or otherwise malformed policy files fail instead of selecting defaults. The campaign freezes that revision and policy. R1 does not implement discovery profiles, round caps, automatic retries or escalation.
 
-The final round may reference an explicit approval artifact with `approval: {"path": ..., "sha256": ...}`. An approval is a verified local assessment of executed reports, not assignment approval. It must contain:
+The final round may reference an explicit approval artifact with `approval: {"path": ..., "sha256": ...}`. An approval binds an independently approved executed review already accepted by the assignment coordinator. Caller-written approval JSON alone cannot supply the verdict. It must contain:
 
 ```json
 {
@@ -110,11 +110,14 @@ The final round may reference an explicit approval artifact with `approval: {"pa
   "contract_identity":"FROZEN_CONTRACT_SHA256",
   "required_scopes":["full"],
   "reports":[{"path":"SESSION/review-report-MODEL.md","sha256":"REPORT_SHA256"}],
+  "receipt":{"attempt_id":"ACCEPTED_REVIEW_APPROVAL_ATTEMPT_ID","digest":"ACCEPTED_RECEIPT_SHA256"},
   "checks":[{"name":"tests","verdict":"passed","receipt":{
     "attempt_id":"ACCEPTED_CHECK_ATTEMPT_ID","digest":"ACCEPTED_RECEIPT_SHA256"
   }}]
 }
 ```
+
+The approval `receipt` refers to an ordinary managed `operation: "review"` receipt with an executed `review.verdict: "approved"`, the same exact head, producer/reviewer actors and checksummed report artifacts. Submit that attributable outcome through the existing coordinator after the independent reviewer actually approves. Do not include a campaign result in this source receipt; campaign consumption happens afterward. The read-only `attempt evidence --kind review-approval` boundary revalidates its accepted authority. A collection receipt certifies execution even when its report rejects the candidate; it cannot certify approval. Every retained approval remains authority-backed across head changes through explicit historical validation.
 
 Producer and reviewer must differ. Reviewer identity must match the actual completed execution model in the referenced session; approvals must cover every required scope. Required checks refer to a succeeded execution receipt already accepted by the ace-assign coordinator. The receipt operation must match the check: `tests` requires `test`; other explicit check names require the same operation name. An unrelated operation claiming a passed tests field is rejected. Run the check under an existing managed assignment attempt and submit its attributable result, current head, check outcomes and checksummed artifacts through `ace-assign attempt finish`. Use the accepted attempt ID and receipt digest here. A self-authored check JSON file is insufficient. Campaign recording and acceptance consult the read-only `ace-assign attempt evidence --attempt ID --receipt-digest DIGEST --format json --kind check --check-name tests` boundary, which revalidates current head and source artifacts against accepted history. Retain `ace-assign` alongside `ace-review` for this qjl evidence capability; unavailable authority blocks acceptance explicitly. Campaign commands never run the check for you or create a second execution journal. Authenticated producer/reviewer attribution and execution acceptance remain owned by ace-assign.
 

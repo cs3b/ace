@@ -116,4 +116,48 @@ class CampaignEvidenceTest < AceReviewTest
     assert_equal 1, campaign_manager.record_round(campaign["campaign_id"], input)["completed_rounds"]
   end
 
+  def test_rejecting_report_and_collection_proof_cannot_supply_independent_approval
+    campaign = start_campaign
+    input = round_input(1)
+    dir = make_campaign_session(campaign, input)
+    report = File.join(dir, "review-report-reviewer.md")
+    File.write(File.join(@test_dir, report), "Verdict: rejected. Candidate must not be accepted.\n")
+    accept_review_session(input, dir)
+    add_campaign_approval(campaign, input)
+    path = File.join(@test_dir, input["approval"]["path"])
+    original = JSON.parse(File.read(path))
+    [nil, input["sessions"].first["receipt"], {"attempt_id" => "invented", "digest" => "f" * 64}].each do |receipt|
+      forged = original.merge("receipt" => receipt)
+      File.write(path, JSON.generate(forged))
+      input["approval"] = artifact_ref(input["approval"]["path"])
+      assert_raises(ArgumentError) { campaign_manager.record_round(campaign["campaign_id"], input) }
+      result = campaign_manager.status(campaign["campaign_id"])
+      refute result["accepted"]
+      assert_equal 0, result["completed_rounds"]
+    end
+  end
+
+  def test_retained_approval_authority_is_required_after_new_head_and_approval
+    campaign = start_campaign
+    old_receipt = nil
+    3.times do |n|
+      input = round_input(n)
+      make_campaign_session(campaign, input)
+      add_campaign_approval(campaign, input) if n > 0
+      old_receipt = JSON.parse(File.read(File.join(@test_dir, input["approval"]["path"]))).fetch("receipt") if n == 1
+      campaign_manager.record_round(campaign["campaign_id"], input)
+    end
+    assert campaign_manager.finish(campaign["campaign_id"])["accepted"]
+    @head = "c" * 40
+    input = round_input(3)
+    make_campaign_session(campaign, input)
+    add_campaign_approval(campaign, input)
+    assert campaign_manager.record_round(campaign["campaign_id"], input)["accepted"]
+    @accepted_approvals.delete(old_receipt["digest"])
+    result = campaign_manager.finish(campaign["campaign_id"])
+    refute result["accepted"]
+    assert_equal 4, result["completed_rounds"]
+    assert_equal 4, result["clean_streak"]
+  end
+
 end

@@ -94,6 +94,26 @@ class CampaignCLITest < AceReviewTest
         assert status.success?, err
         assert_equal 0, unchanged["completed_rounds"]
       end
+      if n == 2
+        approval_path = input["approval"]["path"]
+        approval_bytes = File.binread(approval_path)
+        approval = JSON.parse(approval_bytes)
+        [nil, input["sessions"].first["receipt"], control_check].each do |invalid_authority|
+          approval["receipt"] = invalid_authority
+          File.write(approval_path, JSON.generate(approval))
+          input["approval"] = artifact_ref(approval_path)
+          File.write("round.json", JSON.generate(input))
+          rejected_approval, _, status = cli("campaign", "record-round", id, "--input", "round.json")
+          refute status.success?
+          refute rejected_approval["accepted"]
+          blocked, _, status = cli("campaign", "finish", id)
+          refute status.success?
+          refute blocked["accepted"]
+          assert_equal 2, blocked["completed_rounds"]
+        end
+        File.binwrite(approval_path, approval_bytes)
+        input["approval"] = artifact_ref(approval_path)
+      end
       File.write("round.json", JSON.generate(input))
       recorded, err, status = cli("campaign", "record-round", id, "--input", "round.json", "--quiet")
       assert status.success?, err

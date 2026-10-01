@@ -29,6 +29,16 @@ module Ace
           data
         end
 
+        def approval(reference, head:, artifacts:, producer:, reviewer:, historical: false)
+          data = read(reference, head: head, kind: "review-approval", historical: historical)
+          unless data.dig("producer", "actor") == producer && data.dig("review", "reviewer", "actor") == reviewer &&
+              data.dig("review", "verdict") == "approved" && data.dig("review", "head") == head &&
+              (artifacts - Array(data["artifacts"])).empty?
+            raise Atoms::CampaignContract::Invalid, "accepted review approval does not bind verdict, actors and reports"
+          end
+          data
+        end
+
         private
 
         def read(reference, head:, kind:, check_name: "tests", historical: false)

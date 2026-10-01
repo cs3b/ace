@@ -182,12 +182,12 @@ module Ace
         # Read accepted check evidence without transitions, locks, cache writes
         # or audit checkout creation. Managed history comes from the Git ref.
         def evidence(attempt_id:, receipt_digest:, kind: "check", check_name: "tests", historical_head: nil)
-          unless %w[check review-collection].include?(kind) && check_name.is_a?(String) && !check_name.strip.empty?
+          unless %w[check review-collection review-approval].include?(kind) && check_name.is_a?(String) && !check_name.strip.empty?
             raise AttemptErrors::ReceiptRejected, "Invalid evidence kind or check name"
           end
-          if !historical_head.nil? && (kind != "review-collection" || !historical_head.is_a?(String) ||
+          if !historical_head.nil? && (!%w[review-collection review-approval].include?(kind) || !historical_head.is_a?(String) ||
               !historical_head.match?(/\A[0-9a-f]{40,64}\z/))
-            raise AttemptErrors::ReceiptRejected, "Historical evidence requires review-collection and an exact recorded head"
+            raise AttemptErrors::ReceiptRejected, "Historical evidence requires review collection/approval and an exact recorded head"
           end
           unless attempt_id.to_s.match?(/\A[a-zA-Z0-9][a-zA-Z0-9_.-]{0,127}\z/) &&
               receipt_digest.to_s.match?(/\A[0-9a-f]{64}\z/)
@@ -204,12 +204,16 @@ module Ace
           if kind == "check" && (%w[review review-collect].include?(data["operation"]) || @verifier.external_effect?(data["operation"]))
             raise AttemptErrors::ReceiptRejected, "Review or external-effect operations cannot be check evidence"
           end
-          expected_operation = kind == "review-collection" ? "review-collect" : (check_name == "tests" ? "test" : check_name)
+          expected_operation = case kind
+          when "review-collection" then "review-collect"
+          when "review-approval" then "review"
+          else check_name == "tests" ? "test" : check_name
+          end
           unless data["campaign"].nil? && data["operation"] == expected_operation
             raise AttemptErrors::ReceiptRejected, "Accepted receipt operation does not prove #{kind}: #{expected_operation}"
           end
           required_check = kind == "review-collection" ? "review-execution" : check_name
-          unless Array(data["checks"]).any? { |check| check["name"] == required_check && check["verdict"] == "passed" }
+          unless kind == "review-approval" || Array(data["checks"]).any? { |check| check["name"] == required_check && check["verdict"] == "passed" }
             raise AttemptErrors::ReceiptRejected, "Accepted receipt does not prove the required check #{required_check}"
           end
           receipt = Models::ExecutionReceipt.from_h(data)
@@ -223,7 +227,7 @@ module Ace
           @verifier.verify_accepted_evidence!(data, live_head: evidence_head, repo_root: @repo_root)
           {"attempt_id" => attempt_id, "receipt_digest" => receipt_digest, "head" => evidence_head, "kind" => kind,
            "historical" => !historical_head.nil?,
-           "operation" => data["operation"], "checks" => data["checks"], "producer" => data["producer"],
+           "operation" => data["operation"], "checks" => data["checks"], "producer" => data["producer"], "review" => data["review"],
            "artifacts" => data["artifacts"], "assignment_id" => data["assignment_id"],
            "project_id" => data["project_id"], "scope" => data["scope"],
            "evidence_git_ref" => attempt.binding.evidence_git_ref, "journal_commit" => attempt.journal_commit}

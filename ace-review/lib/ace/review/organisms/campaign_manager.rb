@@ -16,10 +16,10 @@ module Ace
         Contract = Atoms::CampaignContract
         attr_reader :store
 
-        def initialize(repo_root: Dir.pwd, store: nil, revisions: nil, check_evidence: nil, review_evidence: nil)
+        def initialize(repo_root: Dir.pwd, store: nil, revisions: nil, check_evidence: nil, review_evidence: nil, approval_evidence: nil)
           @repo_root = File.realpath(repo_root)
           @store = store || Molecules::CampaignStore.new(root: File.join(@repo_root, ".ace-local/review/campaigns"))
-          @evidence = Molecules::CampaignEvidence.new(repo_root: @repo_root, check_evidence: check_evidence, review_evidence: review_evidence)
+          @evidence = Molecules::CampaignEvidence.new(repo_root: @repo_root, check_evidence: check_evidence, review_evidence: review_evidence, approval_evidence: approval_evidence)
           @live_git = revisions.nil?
           @revisions = revisions || method(:git_revision)
         end
@@ -320,6 +320,11 @@ module Ace
                     attempt["binding"]["head"] != head
                   @evidence.verify_session_authority(session, head: attempt["binding"]["head"], historical: historical)
                 end
+              end
+              record["attempts"].each do |attempt|
+                next unless attempt["approval"]
+                next if round && attempt["attempt_id"] == round["attempt_id"] && attempt["binding"]["head"] == head
+                @evidence.verify_approval_authority(attempt["approval"], historical: true)
               end
               if round && round["binding"]["head"] == head && round["approval"]
                 rechecked = @evidence.approval(round["approval"]["artifact"], record: record,

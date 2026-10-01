@@ -210,4 +210,47 @@ class CampaignReceiptTest < AceAssignTestCase
     assert_empty @coordinator.store.find(attempt.attempt_id).accepted_receipts
   end
 
+  def test_independent_approval_proof_binds_report_actors_and_verdict
+    result = campaign_manager.status(@campaign["campaign_id"])
+    approval = result["rounds"].last["approval"]
+    ref = approval["receipt"]
+    proof = @check_coordinator.evidence(attempt_id: ref["attempt_id"], receipt_digest: ref["digest"], kind: "review-approval")
+    assert_equal "approved", proof.dig("review", "verdict")
+    assert_equal approval["reviewer"], proof.dig("review", "reviewer", "actor")
+    boundary = Ace::Review::Molecules::CampaignExecutionEvidence.new(repo_root: @test_dir)
+    args = {head: @head, artifacts: approval["reports"], producer: approval["producer"], reviewer: approval["reviewer"]}
+    assert_equal ref["digest"], boundary.approval(ref, **args)["receipt_digest"]
+    [{producer: "other"}, {reviewer: "other"}, {artifacts: [artifact_ref(@result_path)]}].each do |wrong_binding|
+      assert_raises(ArgumentError) { boundary.approval(ref, **args.merge(wrong_binding)) }
+    end
+    collection_ref = result["rounds"].last["sessions"].first["receipt"]
+    assert_raises(Ace::Assign::AttemptErrors::ReceiptRejected) do
+      @check_coordinator.evidence(attempt_id: collection_ref["attempt_id"], receipt_digest: collection_ref["digest"], kind: "review-approval")
+    end
+    File.write(File.join(@test_dir, "candidate.rb"), "puts :changed\n")
+    git_in(@test_dir, "add", "candidate.rb")
+    git_in(@test_dir, "commit", "-m", "new head")
+    assert_raises(Ace::Assign::AttemptErrors::ReceiptRejected) do
+      @check_coordinator.evidence(attempt_id: ref["attempt_id"], receipt_digest: ref["digest"], kind: "review-approval")
+    end
+    assert @check_coordinator.evidence(attempt_id: ref["attempt_id"], receipt_digest: ref["digest"],
+      kind: "review-approval", historical_head: @head)["historical"]
+  end
+
+  def test_consumer_rejects_saved_acceptance_when_independent_approval_authority_is_lost
+    attempt = start_attempt
+    before = git_in(@test_dir, "rev-parse", "HEAD")
+    result = JSON.parse(File.read(File.join(@test_dir, @result_path)))
+    # Retain collection history while losing the later approval/check acceptances.
+    collection = result["rounds"].last["sessions"].first["receipt"]
+    collection_proof = @check_coordinator.evidence(attempt_id: collection["attempt_id"], receipt_digest: collection["digest"], kind: "review-collection")
+    git_in(@test_dir, "update-ref", "refs/ace/execution", collection_proof["journal_commit"])
+    refute campaign_manager.finish(@campaign["campaign_id"])["accepted"]
+    assert_raises(Ace::Assign::AttemptErrors::ReceiptRejected) do
+      @coordinator.finish(attempt_id: attempt.attempt_id, receipt_path: receipt(attempt))
+    end
+    assert_equal "running", @coordinator.store.find(attempt.attempt_id).state
+    assert_equal before, git_in(@test_dir, "rev-parse", "HEAD")
+  end
+
 end

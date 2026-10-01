@@ -14,7 +14,7 @@ module CampaignFixtures
 
   def campaign_manager
     Ace::Review::Organisms::CampaignManager.new(repo_root: @test_dir,
-      revisions: ->(ref, *_args) { ref == "HEAD" ? @head : @base }, check_evidence: fixture_check_evidence, review_evidence: fixture_review_evidence)
+      revisions: ->(ref, *_args) { ref == "HEAD" ? @head : @base }, check_evidence: fixture_check_evidence, review_evidence: fixture_review_evidence, approval_evidence: fixture_approval_evidence)
   end
 
   def start_campaign(scopes: ["full"])
@@ -116,6 +116,28 @@ module CampaignFixtures
     end
   end
 
+  def accepted_approval_reference(reports:, producer:, reviewer:)
+    proof = {"head" => @head, "artifacts" => reports, "producer" => producer, "reviewer" => reviewer}
+    digest = Ace::Review::Atoms::CampaignContract.digest(proof)
+    (@accepted_approvals ||= {})[digest] = proof
+    {"attempt_id" => "accepted-approval", "digest" => digest}
+  end
+
+  def fixture_approval_evidence
+    lambda do |ref, head:, artifacts:, producer:, reviewer:, historical: false|
+      Ace::Review::Atoms::CampaignContract.object!(ref, "accepted approval receipt")
+      proof = (@accepted_approvals || {})[ref["digest"]]
+      unless proof && proof["head"] == head && proof["producer"] == producer && proof["reviewer"] == reviewer &&
+          (artifacts - proof["artifacts"]).empty?
+        raise Ace::Review::Atoms::CampaignContract::Invalid, "fixture coordinator did not accept independent approval"
+      end
+      proof["artifacts"].each do |artifact|
+        raise Ace::Review::Atoms::CampaignContract::Invalid, "accepted approval artifact changed" unless artifact_ref(artifact["path"]) == artifact
+      end
+      proof
+    end
+  end
+
   def fixture_check_evidence
     lambda do |ref, head:, name:|
       proof = (@accepted_checks || {})[ref["digest"]]
@@ -150,6 +172,7 @@ module CampaignFixtures
     approval = {"head" => input["head"], "base" => input["base"], "contract_identity" => campaign["contract_identity"],
       "required_scopes" => input["required_scopes"], "verdict" => "approved", "producer" => producer,
       "reviewer" => "reviewer", "reports" => reports,
+      "receipt" => accepted_approval_reference(reports: reports, producer: producer, reviewer: "reviewer"),
       "checks" => [{"name" => "tests", "verdict" => "passed", "receipt" => accepted_check_reference(check_path)}]}
     File.write(File.join(@test_dir, approval_path), JSON.generate(approval))
     input["approval"] = artifact_ref(approval_path)
