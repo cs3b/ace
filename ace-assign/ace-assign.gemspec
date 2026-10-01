@@ -46,7 +46,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "ace-b36ts", "~> 0.14"
   spec.add_dependency "ace-support-markdown", "~> 0.3"
   spec.add_dependency "ace-llm", "~> 0.39"
-  spec.add_dependency "ace-review", "~> 0.56"
+  spec.add_dependency "ace-review", "~> 0.57"
   spec.add_dependency "ace-task", "~> 0.37"
   spec.add_dependency "ace-tmux", "~> 0.17"
 

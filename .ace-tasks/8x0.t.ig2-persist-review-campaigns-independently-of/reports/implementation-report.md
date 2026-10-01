@@ -4,7 +4,7 @@
 
 ace-review owns durable campaigns with frozen requirements/policy, pinned scope subjects, append-only findings and logical rounds, atomic locked persistence, and separate historical convergence/current acceptance. Existing review and feedback entrypoints remain primary. ace-assign consumes campaign results through its receipt verifier and supplies read-only accepted check, review-collection and independent approval proof through its existing coordinator/journal authority.
 
-Worktree: `.ace-wt/codex-t-ig2-review-campaigns`; branch `codex/t-ig2-review-campaigns`; baseline `28c62024b`. The direct skill invocation has no active ace-assign assignment; tests create isolated real assignments to exercise the consumer boundary. Task remains in-progress because final delivery owns completion/archive. No merge, PR publication, deployment, release or paid-provider acceptance experiment was performed.
+Worktree: `.ace-wt/codex-t-ig2-review-campaigns`; branch `codex/t-ig2-review-campaigns`; baseline `28c62024b`. The direct skill invocation has no active ace-assign assignment; tests create isolated real assignments to exercise the consumer boundary. Task remains in-progress because final delivery owns completion/archive. The branch is published as draft PR https://github.com/cs3b/ace/pull/354. Local release preparation and formal campaign delivery are in progress; no merge, deployment or RubyGems publication has been performed.
 
 ## Final verification
 
@@ -190,4 +190,4 @@ Source `bcb627d86` received a clean executed independent review in round 14: no 
 
 ## Completion
 
-SC1-SC6 are checked based on the executed cases and final-source results above. Source remains `bcb627d86`, followed only by report/checklist bookkeeping. The direct work skill has no active ace-assign assignment. Task remains in-progress for final delivery; no PR was created, branch pushed, merge performed or release published.
+SC1-SC6 are checked based on the executed cases and final-source results above. Source remains `bcb627d86`, followed only by report/checklist bookkeeping. The direct work skill has no active ace-assign assignment. The branch was pushed and draft PR #354 was created after this implementation verification. Task lifecycle completion, local releases and formal campaign acceptance are tracked separately in final delivery; no merge or RubyGems publication has been performed.
