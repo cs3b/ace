@@ -358,6 +358,16 @@ def manifest_queue(specs)
   end
 end
 
+# Returns the prepared queue minus versions RubyGems already reports, plus
+# the names skipped as already published.
+def filter_prepared_queue(prepared, remote_versions)
+  skipped = prepared
+    .select { |item| remote_versions[item[:name]] && Gem::Version.new(item[:version]) <= Gem::Version.new(remote_versions[item[:name]]) }
+    .map { |item| item[:name] }.sort
+  queue = prepared.reject { |item| skipped.include?(item[:name]) }
+  [queue, skipped]
+end
+
 # --- build -------------------------------------------------------------------
 
 def validate_artifact!(item)
@@ -500,7 +510,13 @@ skipped_published = []
 prepared = use_manifest ? manifest_queue(specs) : nil
 
 if prepared
-  queue = prepared
+  # The prepared queue is a static plan from --prepare time. Refresh the
+  # remote snapshot and drop versions RubyGems already has, so a repeat
+  # run does not spend OTP-window time on doomed duplicate pushes. The
+  # snapshot can itself be CDN-lagged; the authoritative backstop remains
+  # RubyGems's duplicate-push rejection at push time.
+  remote_versions = fetch_remote_versions
+  queue, skipped_published = filter_prepared_queue(prepared, remote_versions)
   puts "Using prepared queue from #{MANIFEST.sub("#{ROOT}/", "")}"
 else
   puts "Resolving publish queue..."
@@ -544,6 +560,5 @@ ENV["GEM_HOST_OTP_CODE"] = otp
 publish!(queue)
 
 puts
-published = queue.size
-puts "Published: #{published}  Waves: #{total_waves} × ≤#{MAX_CONCURRENCY} concurrent  Mode: live"
+puts "Published: #{results[:published].size}  Skipped (already published): #{results[:already_published].size}  Waves: #{total_waves} × ≤#{MAX_CONCURRENCY} concurrent  Mode: live"
 puts "Next step: run `ace-test-e2e ace-monorepo-e2e TS-MONO-001` to verify installation propagation."
