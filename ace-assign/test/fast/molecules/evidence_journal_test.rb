@@ -237,6 +237,31 @@ module Ace
         end
       end
 
+      def test_seed_only_ref_reports_absent_attempt_without_recreating_cache_or_checkout
+        with_temp_cache do |cache_dir|
+          repo = File.join(cache_dir, "repo")
+          candidate_head = init_repo(repo)
+          checkout = File.join(cache_dir, "co")
+          journal = Molecules::EvidenceJournal.new(repo_root: repo, ref: REF, checkout_root: checkout)
+          # Reproduce the crash window after seed publication, before the first event.
+          journal.send(:seed_ref)
+          seed = journal.ref_value
+          attempt_cache = File.join(cache_dir, "lost-cache")
+          FileUtils.mkdir_p(attempt_cache)
+          FileUtils.rm_rf(attempt_cache)
+          assert_empty journal.assignment_ids
+          coordinator = Organisms::AttemptCoordinator.new(repo_root: repo, cache_base: attempt_cache, journal: journal)
+          error = assert_raises(AttemptErrors::NotFound) do
+            coordinator.evidence(attempt_id: "absent", receipt_digest: "a" * 64)
+          end
+          assert_includes error.message, "not found"
+          refute File.exist?(attempt_cache)
+          refute File.exist?(checkout)
+          assert_equal seed, journal.ref_value
+          assert_equal candidate_head, git(repo, "rev-parse", "HEAD").strip
+        end
+      end
+
       def test_read_events_empty_when_ref_missing
         with_temp_cache do |cache_dir|
           repo = File.join(cache_dir, "repo")

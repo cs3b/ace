@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Cache-free evidence lookup handles a seed-only journal ref without creating a checkout or treating an absent attempt as a corrupt journal.
+
 ### Added
 - `attempt evidence --kind review-approval` validates accepted independent approval separately from collection; retained collection/approval receipts support explicit historical-head validation without granting current check authority.
 - Bind campaign check names to accepted executed operations and review collection to accepted `review-collect` artifacts, through `attempt evidence` purpose checks.
