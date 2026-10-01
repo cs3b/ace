@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.60.0] - 2026-10-01
 
 ### Fixed
+- Preserve task/project attachment when the public assignment creation path archives its source configuration, so managed attempts retain immutable journal authority.
 - Cache-free evidence lookup handles a seed-only journal ref without creating a checkout or treating an absent attempt as a corrupt journal.
 
 ### Added

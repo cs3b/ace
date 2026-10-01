@@ -36,6 +36,31 @@ class AssignmentExecutorTest < AceAssignTestCase
     end
   end
 
+  def test_start_preserves_managed_binding_when_archiving_source_config
+    with_temp_cache do |cache_dir|
+      config_path = create_test_config(cache_dir)
+      config = YAML.safe_load_file(config_path)
+      config["assignment"]["task_id"] = "8x0.t.ig2"
+      config["assignment"]["project_id"] = "ace"
+      File.write(config_path, YAML.dump(config))
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      result = executor.start(config_path)
+
+      assert result[:assignment].managed?
+      assert_equal "8x0.t.ig2", result[:assignment].task_id
+      assert_equal "ace", result[:assignment].project_id
+      reloaded = executor.status[:assignment]
+      assert reloaded.managed?
+      assert_equal "8x0.t.ig2", reloaded.task_id
+      assert_equal "ace", reloaded.project_id
+
+      File.write(config_path, YAML.dump(config))
+      explicit = executor.start(config_path, task_id: "8wr.t.qjl", project_id: "other")
+      assert_equal "8wr.t.qjl", explicit[:assignment].task_id
+      assert_equal "other", executor.status[:assignment].project_id
+    end
+  end
+
   def test_status_returns_current_state
     with_temp_cache do |cache_dir|
       config_path = create_test_config(cache_dir)
