@@ -23,6 +23,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Independent approval binds an accepted ordinary review receipt to the exact head, producer/reviewer and reports; caller approval JSON or collection evidence cannot grant acceptance. Retained approvals remain authority-backed across head drift.
 - Packaged campaign usage and assignment receipt integration through the existing coordinator authority.
 
+### Technical
+
+- Approval rejection coverage first validates accepted session evidence and then asserts rejection at approval authority, preventing stale checksums from making the negative control pass early.
+
 ## [0.56.1] - 2026-09-29
 
 ### Fixed
