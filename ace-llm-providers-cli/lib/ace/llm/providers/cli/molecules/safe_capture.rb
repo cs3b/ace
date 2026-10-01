@@ -243,7 +243,9 @@ module Ace
                   io.close unless io.closed?
                   reader.join(1)
                   reader.kill if reader.alive?
-                  buffer.dup
+                  # The reader may have been killed mid-chunk; finalize the
+                  # partial buffer with the same UTF-8 scrubbing contract.
+                  buffer.dup.force_encoding(Encoding::UTF_8).scrub!
                 end
               end
 
@@ -261,6 +263,12 @@ module Ace
                   end
                   buffer << chunk
                 end
+                # Pipes yield raw bytes; CLI output can contain non-UTF-8
+                # fragments. Finalize as valid UTF-8 (invalid bytes become
+                # replacement characters) so downstream prompt concatenation
+                # cannot raise Encoding::CompatibilityError.
+                buffer.force_encoding(Encoding::UTF_8)
+                buffer.scrub!
                 buffer
               rescue IOError, SystemCallError
                 buffer
