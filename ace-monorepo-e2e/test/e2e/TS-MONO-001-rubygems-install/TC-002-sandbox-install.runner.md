@@ -174,7 +174,27 @@ for consumer in ace-bundle ace-review ace-task; do
 done
 ```
 
+## Declared consumer receipt contract (verifier input)
+
+The consumer-only resolutions produce exactly these verifier-consumed
+artifacts (three consumers x Gemfile, install exit, lockfile, activated
+receipt):
+
+- `results/tc/02/consumer/ace-bundle/Gemfile`
+- `results/tc/02/consumer/ace-bundle/install.exit`
+- `results/tc/02/consumer/ace-bundle/Gemfile.lock`
+- `results/tc/02/consumer/ace-bundle/install-receipt.json`
+- `results/tc/02/consumer/ace-review/Gemfile`
+- `results/tc/02/consumer/ace-review/install.exit`
+- `results/tc/02/consumer/ace-review/Gemfile.lock`
+- `results/tc/02/consumer/ace-review/install-receipt.json`
+- `results/tc/02/consumer/ace-task/Gemfile`
+- `results/tc/02/consumer/ace-task/install.exit`
+- `results/tc/02/consumer/ace-task/Gemfile.lock`
+- `results/tc/02/consumer/ace-task/install-receipt.json`
+
 ## Constraints
+
 
 - Do not use `--full-index` — that is tested in Goal 3.
 - Do not modify the Gemfile.

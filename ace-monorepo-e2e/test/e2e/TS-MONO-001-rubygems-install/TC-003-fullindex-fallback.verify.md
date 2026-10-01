@@ -17,9 +17,9 @@ Validation order (impact-first):
    - `results/tc/03/installed-ace-gems.txt` exists and includes at least one `ace-*` entry, and `results/tc/03/Gemfile.lock` exists and contains at least one `ace-` gem dependency,
    - `results/tc/03/lockfile-receipt.json` and `results/tc/03/install-receipt.json` exist, parse as JSON, and the activated receipt's package paths point inside `results/tc/03/.gem` or `results/tc/03/.bundle` (no host/source paths).
 5. **Consumer-only dependency edges** — For each of `ace-bundle`, `ace-review`, `ace-task`:
-   - `results/tc/03/consumer/<name>/Gemfile` exists, names only that consumer, and contains no direct `ace-git-github` entry,
-   - `results/tc/03/consumer/<name>/install.exit` exists and is numeric,
-   - when that exit is `0`: `results/tc/03/consumer/<name>/Gemfile.lock` resolves `ace-git-github`, and `results/tc/03/consumer/<name>/install-receipt.json` exists.
+   - `results/tc/03/consumer/ace-bundle/Gemfile` exists, names only that consumer (ace-bundle), and contains no direct `ace-git-github` entry; `results/tc/03/consumer/ace-bundle/install.exit` exists and is numeric; when that exit is `0`: `results/tc/03/consumer/ace-bundle/Gemfile.lock` resolves `ace-git-github`, and `results/tc/03/consumer/ace-bundle/install-receipt.json` exists.
+   - `results/tc/03/consumer/ace-review/Gemfile` exists, names only that consumer (ace-review), and contains no direct `ace-git-github` entry; `results/tc/03/consumer/ace-review/install.exit` exists and is numeric; when that exit is `0`: `results/tc/03/consumer/ace-review/Gemfile.lock` resolves `ace-git-github`, and `results/tc/03/consumer/ace-review/install-receipt.json` exists.
+   - `results/tc/03/consumer/ace-task/Gemfile` exists, names only that consumer (ace-task), and contains no direct `ace-git-github` entry; `results/tc/03/consumer/ace-task/install.exit` exists and is numeric; when that exit is `0`: `results/tc/03/consumer/ace-task/Gemfile.lock` resolves `ace-git-github`, and `results/tc/03/consumer/ace-task/install-receipt.json` exists.
 6. **Failure evidence** — If fallback exit is non-zero:
    - `results/tc/03/install-summary.txt` exists.
    - `results/tc/03/fullindex.stdout` or `results/tc/03/fullindex.stderr` contains actionable error details.
