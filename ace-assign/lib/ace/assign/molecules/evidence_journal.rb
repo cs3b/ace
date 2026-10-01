@@ -97,11 +97,15 @@ module Ace
           value = ref_value
           return [] if value.nil?
 
-          with_lock do
-            ensure_checkout!
-            sync_checkout(value)
-            order_by_chain(event_files(assignment_id).map { |path| JSON.parse(File.read(path)) })
+          paths, stderr, status = git("ls-tree", "-r", "--name-only", value, "--",
+            "execution/#{assignment_id}/events/")
+          raise AttemptErrors::EvidenceUnavailable, "Cannot read journal events: #{stderr}" unless status.success?
+          events = paths.lines.map(&:strip).select { |path| path.end_with?(".json") }.map do |path|
+            content, error, read_status = git("show", "#{value}:#{path}")
+            raise AttemptErrors::EvidenceUnavailable, "Cannot read journal event: #{error}" unless read_status.success?
+            JSON.parse(content)
           end
+          order_by_chain(events)
         rescue JSON::ParserError => e
           raise AttemptErrors::EvidenceUnavailable, "Corrupt journal event for #{assignment_id}: #{e.message}"
         end
@@ -155,14 +159,10 @@ module Ace
           value = ref_value
           return [] if value.nil?
 
-          with_lock do
-            ensure_checkout!
-            sync_checkout(value)
-            Dir.glob(File.join(checkout_dir, "execution", "*"))
-              .select { |path| File.directory?(path) }
-              .map { |path| File.basename(path) }
-              .sort
-          end
+          paths, stderr, status = git("ls-tree", "--name-only", "#{value}:execution")
+          raise AttemptErrors::EvidenceUnavailable, "Cannot discover journal assignments: #{stderr}" unless status.success?
+          paths.lines.map(&:strip).sort
+
         end
 
         private

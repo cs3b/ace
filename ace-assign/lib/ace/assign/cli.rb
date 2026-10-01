@@ -71,6 +71,7 @@ require_relative "cli/commands/attempt/start"
 require_relative "cli/commands/attempt/status"
 require_relative "cli/commands/attempt/finish"
 require_relative "cli/commands/attempt/reconcile"
+require_relative "cli/commands/attempt/evidence"
 
 module Ace
   module Assign
@@ -95,6 +96,7 @@ module Ace
         ["fork-run", "Run subtree in forked process"],
         ["attempt start", "Start a scoped attempt for an assignment step"],
         ["attempt status", "Show attempt status for an assignment"],
+        ["attempt evidence", "Read accepted current-head check evidence"],
         ["attempt finish", "Finish an attempt with a structured execution receipt"],
         ["attempt reconcile", "Reconcile an interrupted or uncertain attempt"]
       ].freeze
@@ -158,6 +160,7 @@ module Ace
       register "fork-session", wrap_command(Commands::ForkSession)
       register "attempt start", wrap_command(Commands::Attempt::Start)
       register "attempt status", wrap_command(Commands::Attempt::Status)
+      register "attempt evidence", wrap_command(Commands::Attempt::Evidence)
       register "attempt finish", wrap_command(Commands::Attempt::Finish)
       register "attempt reconcile", wrap_command(Commands::Attempt::Reconcile)
 

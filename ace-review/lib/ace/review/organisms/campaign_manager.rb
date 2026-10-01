@@ -16,10 +16,10 @@ module Ace
         Contract = Atoms::CampaignContract
         attr_reader :store
 
-        def initialize(repo_root: Dir.pwd, store: nil, revisions: nil)
+        def initialize(repo_root: Dir.pwd, store: nil, revisions: nil, check_evidence: nil)
           @repo_root = File.realpath(repo_root)
           @store = store || Molecules::CampaignStore.new(root: File.join(@repo_root, ".ace-local/review/campaigns"))
-          @evidence = Molecules::CampaignEvidence.new(repo_root: @repo_root)
+          @evidence = Molecules::CampaignEvidence.new(repo_root: @repo_root, check_evidence: check_evidence)
           @live_git = revisions.nil?
           @revisions = revisions || method(:git_revision)
         end
@@ -157,7 +157,7 @@ module Ace
           attempt["binding"]["base"]
         end
 
-        def session_binding(id, round_id:, scope:, preset:, head:, base:, pr_url: nil)
+        def session_binding(id, round_id:, scope:, preset:, head:, base:, pr_url: nil, subjects: nil)
           store.transaction(dry_run: true) do
             record = store.read(id)
             attempt = record["attempts"].find { |a| a["round_id"] == round_id }
@@ -166,14 +166,18 @@ module Ace
             if record["rounds"].any? { |r| r["round_id"] == round_id }
               raise Contract::Invalid, "round #{round_id} already completed"
             end
-            unless binding["required_scopes"].include?(scope) && binding["scope_identity"][scope] == preset &&
+            unless binding["required_scopes"].include?(scope) && binding["scope_identity"].dig(scope, "preset") == preset &&
                 binding["head"] == head && binding["base"] == base
               raise Contract::Invalid, "review does not match pinned scope/preset/head/base"
+            end
+            actual_subjects = record["subject"]["pr"] ? ["pr:#{record['subject']['pr']}"] : Array(subjects)
+            unless actual_subjects == binding["scope_identity"][scope]["subjects"]
+              raise Contract::Invalid, "collected subject differs from pinned scope input"
             end
             validate_repository(record, pr_url)
             raise Contract::Invalid, "campaign collection requires committed candidate code" unless clean_candidate?
             {"campaign_id" => id, "contract_identity" => record["contract_identity"], "subject" => record["subject"],
-             "round_id" => round_id, "scope" => scope, "head" => head, "base" => base, "scope_identity" => preset}
+             "round_id" => round_id, "scope" => scope, "head" => head, "base" => base, "scope_identity" => binding["scope_identity"][scope]}
           end
         end
 
@@ -185,8 +189,13 @@ module Ace
             raise Contract::Invalid, "round must pin every required policy scope"
           end
           scopes = Contract.object!(input["scope_identity"], "scope_identity")
-          unless scopes.keys.sort == required.sort && scopes.values.all? { |s| s.is_a?(String) && !s.strip.empty? }
-            raise Contract::Invalid, "scope_identity must pin a preset for every required scope"
+          unless scopes.keys.sort == required.sort && scopes.values.all? { |s| s.is_a?(Hash) }
+            raise Contract::Invalid, "scope_identity must pin preset and subjects for every required scope"
+          end
+          scopes.each_value do |scope|
+            raise Contract::Invalid, "unknown scope identity fields" unless (scope.keys - %w[preset subjects]).empty?
+            Contract.string!(scope["preset"], "scope preset")
+            Contract.strings!(scope["subjects"], "scope subjects")
           end
           {"round_id" => input["round_id"], "head" => Contract.sha!(input["head"], "head"),
            "base" => Contract.sha!(input["base"], "base"), "required_scopes" => required,
@@ -240,14 +249,20 @@ module Ace
             revision_error = e.message
           end
           round = record["rounds"].last
-          refs = if round
-            round["sessions"].flat_map { |s| s["artifacts"] } +
-              round["assessments"].map { |f| f["artifact"] } +
-              (round["approval"] ? [round["approval"]["artifact"]] + round["approval"]["artifacts"] : [])
-          else
-            []
-          end
+          refs = record["rounds"].flat_map { |r| r["sessions"].flat_map { |session| session["artifacts"] } } +
+            (record["assessments"] + record["inherited_findings"]).map { |f| f["artifact"] } +
+            (round && round["approval"] ? [round["approval"]["artifact"]] + round["approval"]["artifacts"] : [])
           available, error = @evidence.available?(refs)
+          if round && round["approval"] && available
+            begin
+              rechecked = @evidence.approval(round["approval"]["artifact"], record: record,
+                binding: round["binding"], sessions: round["sessions"])
+              raise Contract::Invalid, "accepted approval evidence changed" unless rechecked == round["approval"]
+            rescue Contract::Invalid => e
+              available = false
+              error = e.message
+            end
+          end
           source_head = round&.dig("binding", "head")
           source_base = round&.dig("binding", "base")
           current_evidence = !!round && available && head && base && source_head == head && source_base == base &&
@@ -275,6 +290,14 @@ module Ace
         end
 
         def current_revisions(record)
+          if @live_git && record["subject"]["pr"]
+            metadata = Molecules::GhPrFetcher.fetch_metadata(record["subject"]["pr"])
+            raise Contract::Invalid, metadata[:error] unless metadata[:success]
+            value = metadata[:metadata]
+            validate_repository(record, value["url"])
+            return [Contract.sha!(value["headRefOid"], "live PR head"),
+              Contract.sha!(value["baseRefOid"], "live PR base")]
+          end
           [@revisions.call("HEAD"), @revisions.call("base", record)]
         end
 

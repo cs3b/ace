@@ -116,6 +116,23 @@ class CampaignManagerTest < AceReviewTest
     end
   end
 
+  def test_missing_earlier_counted_report_blocks_acceptance_without_erasing_rounds
+    campaign = start_campaign
+    3.times do |n|
+      input = round_input(n)
+      make_campaign_session(campaign, input)
+      add_campaign_approval(campaign, input) if n == 2
+      campaign_manager.record_round(campaign["campaign_id"], input)
+    end
+    result = campaign_manager.finish(campaign["campaign_id"])
+    assert result["accepted"]
+    File.delete(File.join(@test_dir, result["rounds"].first["sessions"].first["reports"].first["artifact"]["path"]))
+    result = campaign_manager.status(campaign["campaign_id"])
+    refute result["accepted"]
+    assert_equal 3, result["completed_rounds"]
+    assert_equal 3, result["clean_streak"]
+  end
+
   def test_contract_successor_retains_findings_and_same_contract_reuses_identity
     campaign = start_campaign
     input = round_input(1)
@@ -153,6 +170,26 @@ class CampaignManagerTest < AceReviewTest
     make_campaign_session(campaign, bad, finding: {"status" => "draft"})
     assert_raises(ArgumentError) { campaign_manager.record_round(campaign["campaign_id"], bad) }
     assert_equal 0, campaign_manager.status(campaign["campaign_id"])["completed_rounds"]
+  end
+
+  def test_pr_status_uses_live_provider_head_and_unavailable_source_stays_blocked
+    manager = Ace::Review::Organisms::CampaignManager.new(repo_root: @test_dir)
+    subject = {"repository" => "https://github.com/owner/repo", "pr" => "owner/repo#42"}
+    metadata = {success: true, metadata: {"url" => "https://github.com/owner/repo/pull/42",
+      "headRefOid" => "c" * 40, "baseRefOid" => @base}}
+    campaign = Ace::Review::Molecules::GhPrFetcher.stub(:fetch_metadata, metadata) do
+      manager.start(subject: subject, contract: "requirements", policy: campaign_policy)
+    end
+    assert_equal "c" * 40, campaign["evidence"]["current_head"]
+    status = Ace::Review::Molecules::GhPrFetcher.stub(:fetch_metadata, {success: false, error: "source unavailable"}) do
+      manager.status(campaign["campaign_id"])
+    end
+    refute status["accepted"]
+    assert_includes status["reasons"], "source unavailable"
+    assert_raises(ArgumentError) do
+      manager.start(subject: subject.merge("repository" => "https://forge.invalid/owner/repo"),
+        contract: "requirements", policy: campaign_policy)
+    end
   end
 
   def test_concurrent_start_record_and_dry_run_preserve_single_history
