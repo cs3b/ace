@@ -1,0 +1,61 @@
+{
+  "capturedOn": "2026-10-01",
+  "sourceRepository": "cs3b/st-nervus-chat",
+  "sourceArtifactAvailability": "Original ignored evidence is local to the Nervus checkout; hashes identify the inspected bytes. The accompanying source-evidence.md preserves the factual digest and reproduction recipes for fresh ACE sessions. These source files are not represented as published or portable executable probes.",
+  "sources": [
+    {
+      "repositoryRelativePath": ".ace-local/review/comparison-175-176/REVIEW.md",
+      "sha256": "4527fa3d9ea0cd2bd70d76a452ccf39ff101f1595e419704d5fd09bb3b68d90f",
+      "bytes": 34789,
+      "purpose": "Independent A/B contract, comparison and adversarial analysis"
+    },
+    {
+      "repositoryRelativePath": ".ace-local/review/comparison-175-176/review-findings-matrix.md",
+      "sha256": "134c264481262f15a90545155f1001442d399798c59ed676d41fb101d4cbb28d",
+      "bytes": 22499,
+      "purpose": "Deduplicated historical finding families"
+    },
+    {
+      "repositoryRelativePath": ".ace-local/review/comparison-175-176/review-catalog.json",
+      "sha256": "83d96a3892a26adb4ba416b89713eef6c8db90b419fec525bacd44cb0428a0e3",
+      "bytes": 253281,
+      "purpose": "120 historical report records, not campaign rounds"
+    },
+    {
+      "repositoryRelativePath": ".ace-local/review/candidate-c/REVIEW.md",
+      "sha256": "16ddb64c42310a205ab8eef713d8af372ddc14aa862dfe54fd723126b24f2e80",
+      "bytes": 24481,
+      "purpose": "Final independent C review"
+    },
+    {
+      "repositoryRelativePath": ".ace-local/review/candidate-c/review-status.json",
+      "sha256": "577bdaff8a1f30cee9e3e1b00695894c131d19cacb922ac8af4b7934c5210275",
+      "bytes": 4417,
+      "purpose": "C final head, fixed findings and release summary"
+    },
+    {
+      "repositoryRelativePath": ".ace-local/review/candidate-c/process-summary.json",
+      "sha256": "a5c6ef368e807d2b7de142c542e59c9e93f5641b6ecc94ed7a35e7359c268010",
+      "bytes": 1113,
+      "purpose": "Observed compaction and process counts"
+    },
+    {
+      "repositoryRelativePath": ".ace-local/review/candidate-c/probe-results.json",
+      "sha256": "42b106db1075af970f25949c3196c3d5b40b283bec57eb6f88161eaa9168e4a6",
+      "bytes": 14888,
+      "purpose": "Physical/application probe results"
+    },
+    {
+      "repositoryRelativePath": ".ace-local/review/candidate-c/runner-results.json",
+      "sha256": "fab3affa216fb3eab66b00cb168645781dd34e56e3eb88b39b6a7848ee29e029",
+      "bytes": 5180,
+      "purpose": "Runner probe results"
+    },
+    {
+      "repositoryRelativePath": ".ace-local/review/candidate-c/exit-results.json",
+      "sha256": "47a04e9c54cbdee3f905df0b24e82719672472abde1dab28a489aabf5a2148cd",
+      "bytes": 4672,
+      "purpose": "Final exit/warning controls"
+    }
+  ]
+}
