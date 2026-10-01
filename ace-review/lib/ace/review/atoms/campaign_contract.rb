@@ -86,7 +86,16 @@ module Ace
             parsed = Ace::Git::Atoms::PrIdentifier.parse(string!(pr, "pr"))
             raise Invalid, "PR must include repository identity (owner/repo#number)" unless parsed&.repo
             raise Invalid, "PR number must be positive" unless parsed.number.to_i.positive?
-            {"repository" => repository, "pr" => "#{parsed.repo}##{parsed.number.to_i}"}
+            repository = repository.delete_suffix("/")
+            repo = parsed.repo
+            if repository.start_with?("https://github.com/")
+              unless repository.delete_prefix("https://github.com/").casecmp?(repo)
+                raise Invalid, "PR repository identity does not match the declared repository"
+              end
+              repo = repo.downcase
+              repository = "https://github.com/#{repo}"
+            end
+            {"repository" => repository, "pr" => "#{repo}##{parsed.number.to_i}"}
           else
             {"repository" => repository, "local_candidate_id" => id!(local, "local_candidate_id")}
           end

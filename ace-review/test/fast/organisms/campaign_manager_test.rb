@@ -209,7 +209,7 @@ class CampaignManagerTest < AceReviewTest
   def test_pr_status_uses_live_provider_head_and_unavailable_source_stays_blocked
     manager = Ace::Review::Organisms::CampaignManager.new(repo_root: @test_dir)
     subject = {"repository" => "https://github.com/owner/repo", "pr" => "owner/repo#42"}
-    metadata = {success: true, metadata: {"url" => "https://github.com/owner/repo/pull/42",
+    metadata = {success: true, metadata: {"url" => "https://github.com/Owner/Repo/pull/42",
       "headRefOid" => "c" * 40, "baseRefOid" => @base}}
     campaign = Ace::Review::Molecules::GhPrFetcher.stub(:fetch_metadata, metadata) do
       manager.start(subject: subject, contract: "requirements", policy: campaign_policy)
@@ -536,6 +536,23 @@ class CampaignManagerTest < AceReviewTest
           assert_equal 0, result["completed_rounds"]
         end
       end
+    end
+  end
+
+  def test_equivalent_github_repository_spellings_reuse_history_and_unresolved_findings
+    subject = {"repository" => "https://github.com/owner/repo", "pr" => "owner/repo#42"}
+    campaign = campaign_manager.start(subject: subject, contract: "requirements", policy: campaign_policy)
+    input = round_input(1)
+    input["scope_identity"]["full"]["subjects"] = ["pr:owner/repo#42"]
+    make_campaign_session(campaign, input, finding: {})
+    campaign_manager.record_round(campaign["campaign_id"], input)
+    [subject.merge("repository" => "https://github.com/owner/repo/"),
+      {"repository" => "https://github.com/Owner/Repo/", "pr" => "Owner/Repo#42"}].each do |equivalent|
+      resumed = campaign_manager.start(subject: equivalent, contract: "requirements", policy: campaign_policy)
+      assert_equal campaign["campaign_id"], resumed["campaign_id"]
+      assert_equal 1, resumed["completed_rounds"]
+      assert_equal "high", resumed["open_findings"].first["priority"]
+      refute resumed["accepted"]
     end
   end
 

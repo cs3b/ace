@@ -18,10 +18,14 @@ class CampaignReceiptTest < AceAssignTestCase
     git_in(@test_dir, "config", "user.name", "test")
     git_in(@test_dir, "config", "user.email", "test@example.com")
     File.write(File.join(@test_dir, ".gitignore"), ".ace-local/\n")
-    File.write(File.join(@test_dir, "candidate.rb"), "puts :candidate\n")
+    File.write(File.join(@test_dir, "candidate.rb"), "puts :base\n")
     git_in(@test_dir, "add", ".gitignore", "candidate.rb")
+    git_in(@test_dir, "commit", "-m", "base")
+    @base = git_in(@test_dir, "rev-parse", "HEAD")
+    File.write(File.join(@test_dir, "candidate.rb"), "puts :candidate\n")
+    git_in(@test_dir, "add", "candidate.rb")
     git_in(@test_dir, "commit", "-m", "candidate")
-    @head = @base = git_in(@test_dir, "rev-parse", "HEAD")
+    @head = git_in(@test_dir, "rev-parse", "HEAD")
     @campaign = start_campaign
     3.times do |n|
       input = round_input(n)

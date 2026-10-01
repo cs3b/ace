@@ -25,7 +25,7 @@ ace-review campaign start --subject .ace-local/campaign-input/subject.json \
 ace-review campaign status CAMPAIGN_ID --format json
 ```
 
-Expected: dry-run emits `dry_run: true` without creating campaign state. Start emits a `campaign_id`, the requirements content digest and a policy snapshot. Initial status has zero completed rounds and `accepted: false`. In this repository use `bin/ace-review` for every invocation.
+Expected: dry-run emits `dry_run: true` without creating campaign state. GitHub repository case and a trailing slash normalize to the same repository/PR identity and reuse the same findings/history. Start emits a `campaign_id`, the requirements content digest and a policy snapshot. Initial status has zero completed rounds and `accepted: false`. In this repository use `bin/ace-review` for every invocation.
 
 For an existing GitHub subject use `{"repository":"https://github.com/owner/repo","pr":"owner/repo#42"}`. The identity format is provider-neutral; collection currently supports the existing local and GitHub sources. An unavailable forge adapter is an explicit error. Local repository identity is `local:` followed by its real checkout path; different local candidates use different `local_candidate_id` values.
 
@@ -46,7 +46,7 @@ Before collection, record a pin with empty sessions and dispositions. `attempt_i
 }
 ```
 
-Replace the SHA placeholders with exact Git revisions. For local campaigns, the latest explicit round pin defines the current base; changing that pin invalidates older-base evidence while preserving history. Both revisions must exist as Git commits. For PR scopes pin `subjects: ["pr:owner/repo#42"]`; PR collection uses the fetched PR head/base. The reserved `full` scope always covers the whole PR. For delta collection, freeze an explicit `delta` scope in the policy; that scope additionally pins `delta_reference_head` to an exact SHA in its scope identity and collects with `--delta SHA`; a delta cannot satisfy a scope pinned without that reference. Candidate code must be committed before campaign collection or acceptance. Untracked artifacts under the ACE-private `.ace-local/` directory do not dirty the candidate, even without a gitignore entry. Tracked changes there and tracked or untracked source changes elsewhere still block collection and acceptance.
+Replace the SHA placeholders with exact Git revisions. For local campaigns, the latest explicit round pin defines the current base; changing that pin invalidates older-base evidence while preserving history. Both revisions must exist as Git commits. A local `full` scope must contain a nonempty Git diff; equal revisions or distinct commits with identical trees are rejected at pinning, collection and acceptance. For PR scopes pin `subjects: ["pr:owner/repo#42"]`; PR collection uses the fetched PR head/base. The reserved `full` scope always covers the whole PR. For delta collection, freeze an explicit `delta` scope in the policy; that scope additionally pins `delta_reference_head` to an exact SHA in its scope identity and collects with `--delta SHA`; a delta cannot satisfy a scope pinned without that reference. Candidate code must be committed before campaign collection or acceptance. Untracked artifacts under the ACE-private `.ace-local/` directory do not dirty the candidate, even without a gitignore entry. Tracked changes there and tracked or untracked source changes elsewhere still block collection and acceptance.
 
 ```sh
 ace-review campaign record-round CAMPAIGN_ID --input .ace-local/campaign-input/pin.json

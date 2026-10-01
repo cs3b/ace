@@ -48,7 +48,9 @@ module Ace
             raise Atoms::CampaignContract::Invalid, "corrupt campaign #{id}: missing #{key}" unless record.key?(key)
           end
           contract = Atoms::CampaignContract
-          contract.subject!(record["subject"])
+          unless contract.subject!(record["subject"]) == record["subject"]
+            raise contract::Invalid, "corrupt campaign #{id}: noncanonical subject identity"
+          end
           contract.string!(record["contract"], "stored requirements")
           unless Digest::SHA256.hexdigest(record["contract"]) == record["contract_identity"]
             raise contract::Invalid, "corrupt campaign #{id}: requirements digest mismatch"

@@ -94,6 +94,7 @@ module Ace
             raise Contract::Invalid, "campaign contract is superseded" if successor_for(record)
             binding = round_binding(input, record)
             validate_local_commits(record, binding["head"], binding["base"])
+            validate_local_full_diff(record, binding["head"], binding["base"])
             attempts = record["attempts"].select { |a| a["round_id"] == round_id }
             if attempts.any? { |a| a["binding"] != binding }
               raise Contract::Invalid, "round #{round_id} has conflicting pinned head/base/scopes/policy"
@@ -195,6 +196,7 @@ module Ace
               Contract.full_pr_coverage!(diff_manifest, head: head, base: base, delta_reference_head: delta_reference_head)
             end
             validate_repository(record, pr_url)
+            validate_local_full_diff(record, head, base)
             raise Contract::Invalid, "campaign collection requires committed candidate code" unless clean_candidate?
             {"campaign_id" => id, "contract_identity" => record["contract_identity"], "subject" => record["subject"],
              "round_id" => round_id, "scope" => scope, "head" => head, "base" => base, "scope_identity" => binding["scope_identity"][scope]}
@@ -380,6 +382,15 @@ module Ace
           end
         end
 
+        def validate_local_full_diff(record, head, base)
+          return unless @live_git && record["subject"]["local_candidate_id"] &&
+            record["policy"]["required_scopes"].include?("full")
+          _, stderr, status = Open3.capture3("git", "diff", "--quiet", "--no-ext-diff", "--no-textconv",
+            base, head, "--", chdir: @repo_root)
+          raise Contract::Invalid, "local full scope cannot review an empty Git diff" if status.exitstatus == 0
+          raise Contract::Invalid, "local full diff unavailable: #{stderr.strip}" unless status.exitstatus == 1
+        end
+
         def current_revisions(record)
           if @live_git && record["subject"]["pr"]
             metadata = fetch_pr_metadata(record["subject"]["pr"])
@@ -390,7 +401,10 @@ module Ace
               Contract.sha!(value["baseRefOid"], "live PR base")]
           end
           head, base = @revisions.call("HEAD"), @revisions.call("base", record)
-          validate_local_commits(record, head, base) if base
+          if base
+            validate_local_commits(record, head, base)
+            validate_local_full_diff(record, head, base)
+          end
           [head, base]
         end
 
@@ -434,7 +448,7 @@ module Ace
             parsed = Ace::Git::Atoms::PrIdentifier.parse(subject["pr"])
             expected = "#{subject['repository'].delete_suffix('/')}/pull/#{parsed.number}"
             unless subject["repository"].delete_prefix("https://github.com/").delete_suffix("/") == parsed.repo &&
-                pr_url == expected
+                pr_url.is_a?(String) && pr_url.downcase == expected
               raise Contract::Invalid, "PR session belongs to a different repository or PR"
             end
           else
