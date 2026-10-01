@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Partial High/Critical observations reset convergence across logical round IDs; a different completed round cannot reuse the preceding clean streak.
+- Missing GitHub CLI/authentication produces blocked campaign JSON instead of an uncaught source exception.
+
 ### Added
 
 - `ace-review campaign start|status|record-round|finish`: durable campaign identity, frozen policy/contracts, linked successors and atomic checksummed history. Completed rounds and clean streak survive head changes while current acceptance requires intact evidence for all counted rounds, verified feedback, independent approval and passing checks backed by coordinator-accepted execution receipts.

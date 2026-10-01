@@ -118,4 +118,23 @@ class CampaignCommandTest < AceReviewTest
     assert_equal 0, manager.status(campaign["campaign_id"])["completed_rounds"]
   end
 
+  def test_pr_source_failure_modes_preserve_parseable_public_json
+    File.write("subject.json", JSON.generate("repository" => "https://github.com/owner/repo", "pr" => "owner/repo#42"))
+    File.write("contract.md", "requirements")
+    [Ace::Review::Errors::GhCliNotInstalledError.new, Ace::Review::Errors::GhAuthenticationError.new].each do |failure|
+      Ace::Review::Molecules::GhPrFetcher.stub(:fetch_metadata, ->(*) { raise failure }) do
+        started = JSON.parse(command(%w[campaign start --subject subject.json --contract contract.md]))
+        refute started["accepted"]
+        assert started["reasons"].any? { |reason| reason.include?("PR source unavailable") }
+        id = started["campaign_id"]
+        status = JSON.parse(command(["campaign", "status", id, "--format", "json"]))
+        refute status["accepted"]
+        output, = capture_io do
+          assert_raises(Ace::Support::Cli::Error) { Ace::Review::CLI.start(["campaign", "finish", id, "--format", "json"]) }
+        end
+        refute JSON.parse(output)["accepted"]
+      end
+    end
+  end
+
 end

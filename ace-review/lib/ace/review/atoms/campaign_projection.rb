@@ -10,9 +10,20 @@ module Ace
           findings = record.fetch("inherited_findings").to_h { |finding| [finding.fetch("id"), finding] }
           record.fetch("assessments").each { |finding| findings[finding.fetch("id")] = finding }
           open = findings.values.select { |finding| %w[open reopened].include?(finding["disposition"]) }
-          streak = rounds.reverse.take_while { |round| round["clean"] }.size
           policy = record.fetch("policy")
           attempts = record.fetch("attempts")
+          completed = rounds.to_h { |round| [round.fetch("attempt_id"), round] }
+          streak = 0
+          attempts.each do |attempt|
+            # A verified blocker resets convergence when observed, even if its
+            # logical round never completes or a different round completes next.
+            if attempt.fetch("assessments").any? { |finding| finding["observed_in_round"] &&
+                %w[high critical].include?(finding["priority"]) && finding["disposition"] != "invalid" }
+              streak = 0
+            end
+            round = completed[attempt.fetch("attempt_id")]
+            streak = round["clean"] ? streak + 1 : 0 if round
+          end
           sessions = attempts.flat_map { |attempt| attempt.fetch("sessions") }.uniq { |session| session["path"] }
           {"campaign_id" => record.fetch("id"), "subject" => record.fetch("subject"),
            "contract_identity" => record.fetch("contract_identity"), "effective_policy" => policy,
