@@ -133,6 +133,36 @@ class CampaignManagerTest < AceReviewTest
     assert_equal 3, result["clean_streak"]
   end
 
+  def test_partial_attempt_and_earlier_approval_sources_remain_required_after_convergence
+    campaign = start_campaign(scopes: %w[one two])
+    3.times do |n|
+      input = round_input(n, scopes: %w[one two])
+      %w[one two].each { |scope| make_campaign_session(campaign, input, scope: scope) }
+      add_campaign_approval(campaign, input) if n == 0 || n == 2
+      campaign_manager.record_round(campaign["campaign_id"], input)
+    end
+    partial = round_input(3, scopes: %w[one two])
+    make_campaign_session(campaign, partial, scope: "one")
+    campaign_manager.record_round(campaign["campaign_id"], partial)
+    result = campaign_manager.finish(campaign["campaign_id"])
+    assert result["accepted"], result["reasons"].inspect
+    partial_report = result["attempts"].last["sessions"].first["reports"].first["artifact"]["path"]
+    earlier_approval = result["rounds"].first["approval"]["artifact"]["path"]
+    [partial_report, earlier_approval].each do |relative|
+      path = File.join(@test_dir, relative)
+      bytes = File.binread(path)
+      File.delete(path)
+      blocked = campaign_manager.finish(campaign["campaign_id"])
+      refute blocked["accepted"]
+      refute blocked["evidence"]["available"]
+      assert_equal 3, blocked["completed_rounds"]
+      assert_equal 3, blocked["clean_streak"]
+      assert_equal result["counters"], blocked["counters"]
+      File.binwrite(path, bytes)
+      assert campaign_manager.status(campaign["campaign_id"])["accepted"]
+    end
+  end
+
   def test_contract_successor_retains_findings_and_same_contract_reuses_identity
     campaign = start_campaign
     input = round_input(1)
