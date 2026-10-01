@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-02
+
 ### Added
 - `Ace::Herdr::Organisms::RuntimeAdapter` and the lazy `ace/runtime/adapters/herdr` entrypoint implement the shared ace-runtime intent contract. It preserves native agent prompt and wait semantics, polls all four lifecycle observations, and maps Herdr failures to contract errors. Native tab and pane probes support context, focus, and retained pane preparation. The packaged shared adapter contract suite runs against a Herdr-shaped fake executor.
 

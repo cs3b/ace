@@ -24,6 +24,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 - **ace-tmux v0.18.0**: Added the shared ace-runtime tmux adapter with typed window, pane, send, capture, and wait operations over the existing control surface.
+- **ace-herdr v0.2.0**: Added the `ace-runtime` Herdr adapter with workspace/tab mapping, native agent prompt and wait semantics, all lifecycle observations, typed error mapping, and shared contract tests.
 
 - **ace-review v0.57.0**: Durable review campaigns retain verified findings and convergence across commits; current acceptance requires independent approval and passing checks backed by accepted execution receipts.
 - **ace-assign v0.60.0**: Validates campaign results and exposes read-only managed check, review-collection and review-approval authority, including explicit historical review evidence.
