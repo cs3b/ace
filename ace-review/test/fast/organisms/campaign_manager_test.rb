@@ -429,6 +429,8 @@ class CampaignManagerTest < AceReviewTest
     assert status["active_contract"]
     assert_equal intact["campaign_id"], status["campaign_id"]
     assert campaign_manager.finish(intact["campaign_id"])["accepted"]
+    reused = campaign_manager.start(subject: subject, contract: "Frozen requirements", policy: campaign_policy)
+    assert_equal intact["campaign_id"], reused["campaign_id"]
   end
 
   def test_interrupted_successor_publication_keeps_predecessor_superseded
@@ -594,6 +596,23 @@ class CampaignManagerTest < AceReviewTest
       assert_equal "high", resumed["open_findings"].first["priority"]
       refute resumed["accepted"]
     end
+  end
+
+  def test_first_record_deletion_cannot_reset_findings
+    manager = campaign_manager
+    campaign = start_campaign
+    input = round_input(1)
+    make_campaign_session(campaign, input, finding: {})
+    manager.record_round(campaign["campaign_id"], input)
+    path = manager.store.path(campaign["campaign_id"])
+    trusted = File.binread(path)
+    File.delete(path)
+    assert_raises(ArgumentError) { start_campaign }
+    assert_empty Dir.glob(File.join(manager.store.root, "*.json"))
+    File.binwrite(path, trusted)
+    restored = start_campaign
+    assert_equal campaign["campaign_id"], restored["campaign_id"]
+    assert_equal 1, restored["open_findings"].size
   end
 
 end

@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Retain a checksummed subject identity index before publishing campaign records, preventing first-record deletion or interrupted creation from resetting history. Subject-scoped lookup isolates unrelated record corruption.
+- Reject campaign-bound PR collection from a different checkout head before executing a model.
 - Require an explicitly successful model entry and matching runner-recorded head before campaign completion; incomplete execution or conflicting metadata cannot count.
 
 - Canonical GitHub repository identities reuse campaign history across trailing slashes and repository case. Local full scope rejects empty Git diffs, including distinct commits with identical trees.

@@ -27,8 +27,7 @@ class CampaignStoreTest < AceReviewTest
     store.transaction { store.write(malformed) }
     assert_raises(ArgumentError) { store.read("abcdef") }
     noncanonical = record.merge("subject" => {"repository" => "https://github.com/Owner/Repo/", "pr" => "Owner/Repo#42"})
-    store.transaction { store.write(noncanonical) }
-    assert_raises(ArgumentError) { store.read("abcdef") }
+    assert_raises(ArgumentError) { store.transaction { store.write(noncanonical) } }
   end
 
   def test_dry_run_does_not_create_storage
@@ -52,4 +51,60 @@ class CampaignStoreTest < AceReviewTest
     threads.each(&:value)
     assert_equal (0..7).to_a, store.read("abcdef")["head_transitions"].map { |entry| entry["head"].to_i }.sort
   end
+  def test_missing_record_and_index_preserve_history_failure
+    store = Store.new(root: File.join(@test_dir, "campaigns"))
+    store.transaction { store.write(record) }
+    File.delete(store.path("abcdef"))
+    error = assert_raises(ArgumentError) { store.records(subject: record["subject"]) }
+    assert_match(/indexed campaign.*unavailable/, error.message)
+    store.transaction { store.write(record) }
+    assert_equal [record], store.records(subject: record["subject"])
+    File.delete(File.join(store.root, ".identity-index.json"))
+    assert_raises(ArgumentError) { store.records(subject: record["subject"]) }
+    assert_raises(ArgumentError) { store.transaction { store.write(record) } }
+  end
+
+  def test_subject_lookup_does_not_read_unrelated_corrupt_or_missing_records
+    store = Store.new(root: File.join(@test_dir, "campaigns"))
+    other = record.merge("id" => "bcdefg", "subject" => record["subject"].merge("local_candidate_id" => "other"))
+    store.transaction { store.write(record); store.write(other) }
+    File.write(store.path("abcdef"), "corrupt")
+    assert_equal [other], store.records(subject: other["subject"])
+    assert_raises(ArgumentError) { store.records(subject: record["subject"]) }
+    File.delete(store.path("abcdef"))
+    assert_equal [other], store.records(subject: other["subject"])
+    assert store.registered_id?("abcdef")
+  end
+
+  def test_interrupted_first_publication_retains_identity
+    store = Store.new(root: File.join(@test_dir, "campaigns"))
+    original = store.method(:persist)
+    store.define_singleton_method(:persist) do |destination, envelope|
+      raise IOError, "interrupted record write" if destination.end_with?("/abcdef.json")
+      original.call(destination, envelope)
+    end
+    assert_raises(IOError) { store.transaction { store.write(record) } }
+    assert File.file?(File.join(store.root, ".identity-index.json"))
+    restarted = Store.new(root: store.root)
+    assert_raises(ArgumentError) { restarted.records(subject: record["subject"]) }
+    assert restarted.registered_id?("abcdef")
+  end
+
+  def test_corrupt_index_and_unregistered_records_fail_closed
+    store = Store.new(root: File.join(@test_dir, "campaigns"))
+    store.transaction { store.write(record) }
+    path = File.join(store.root, ".identity-index.json")
+    trusted = File.read(path)
+    envelope = JSON.parse(trusted)
+    envelope["index"]["version"] = 2
+    File.write(path, JSON.generate(envelope))
+    assert_raises(ArgumentError) { store.read("abcdef") }
+    envelope["sha256"] = Ace::Review::Atoms::CampaignContract.digest(envelope["index"])
+    File.write(path, JSON.generate(envelope))
+    assert_raises(ArgumentError) { store.read("abcdef") }
+    File.write(path, trusted)
+    File.write(store.path("bcdefg"), File.read(store.path("abcdef")))
+    assert_raises(ArgumentError) { store.records(subject: record["subject"]) }
+  end
+
 end
