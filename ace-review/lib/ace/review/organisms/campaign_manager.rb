@@ -45,7 +45,7 @@ module Ace
             if same
               raise Contract::Invalid, "conflicting policy for existing subject/contract" unless same["policy"] == effective
               raise Contract::Invalid, "conflicting predecessor" if predecessor && same["predecessor"] != predecessor
-              next projection(same)
+              next projection(same).merge("dry_run" => dry_run)
             end
             previous = predecessor ? store.read(predecessor) : active
             inherited = []
@@ -236,6 +236,9 @@ module Ace
 
         def assess(input, sessions, record)
           raise Contract::Invalid, "dispositions must be an array" unless input.is_a?(Array)
+          if sessions.any? { |session| !session["completed"] && !session["findings"].empty? }
+            raise Contract::Invalid, "finding assessments require completed accepted review collection"
+          end
           source = sessions.flat_map { |s| s["findings"] }.map { |finding| finding.merge("observed_in_round" => true) }
           previous = Atoms::CampaignProjection.build(record)["findings"].to_h { |f| [f["id"], f] }
           input.each do |assessment|
@@ -331,12 +334,14 @@ module Ace
           source_head = round&.dig("binding", "head")
           source_base = round&.dig("binding", "base")
           later_attempts = round ? record["attempts"].drop_while { |a| a["attempt_id"] != round["attempt_id"] }.drop(1) : []
+          blocker_ids = (record["assessments"] + record["inherited_findings"]).select do |finding|
+            %w[high critical].include?(finding["priority"]) && finding["disposition"] != "invalid"
+          end.map { |finding| finding["id"] }
           later_blocker_update = later_attempts.flat_map { |attempt| attempt["assessments"] }.any? do |finding|
-            %w[high critical].include?(finding["priority"]) &&
-              (finding["observed_in_round"] ? finding["disposition"] != "invalid" : true)
+            blocker_ids.include?(finding["id"])
           end
-          current_evidence = !!round && available && head && base && source_head == head && source_base == base &&
-            clean_candidate? && !later_blocker_update
+          current_evidence = !!(round && available && head && base && source_head == head && source_base == base &&
+            clean_candidate? && !later_blocker_update)
           blockers = result["open_findings"].select { |f| %w[critical high].include?(f["priority"]) }
           reasons = []
           reasons << revision_error if revision_error

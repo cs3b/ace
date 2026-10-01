@@ -41,6 +41,12 @@ class CampaignCLITest < AceReviewTest
     campaign, err, status = cli(*args)
     assert status.success?, err
     id = campaign["campaign_id"]
+    campaign_bytes = File.binread(".ace-local/review/campaigns/#{id}.json")
+    reused_preview, err, status = cli(*args, "--dry-run")
+    assert status.success?, err
+    assert reused_preview["dry_run"]
+    assert_equal id, reused_preview["campaign_id"]
+    assert_equal campaign_bytes, File.binread(".ace-local/review/campaigns/#{id}.json")
     %w[false null].each do |invalid_policy|
       File.write(".ace-local/policy.json", invalid_policy)
       rejected_policy, _, status = cli(*args, "--policy", ".ace-local/policy.json")
