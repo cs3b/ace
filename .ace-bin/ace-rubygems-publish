@@ -557,7 +557,7 @@ end
 otp = resolve_otp!(interactive: interactive, otp_arg: otp_arg)
 validate_otp!(otp)
 ENV["GEM_HOST_OTP_CODE"] = otp
-publish!(queue)
+results = publish!(queue)
 
 puts
 puts "Published: #{results[:published].size}  Skipped (already published): #{results[:already_published].size}  Waves: #{total_waves} × ≤#{MAX_CONCURRENCY} concurrent  Mode: live"
