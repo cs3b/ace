@@ -223,6 +223,7 @@ module Ace
               raise Contract::Invalid, "diff scope must use the exact pinned base and head"
             end
             if scope.key?("delta_reference_head")
+              raise Contract::Invalid, "full scope cannot use a delta reference" if scope_id == "full"
               raise Contract::Invalid, "delta scope requires a PR subject" unless record["subject"]["pr"]
               Contract.sha!(scope["delta_reference_head"], "delta reference head")
             end
@@ -323,18 +324,19 @@ module Ace
           source_head = round&.dig("binding", "head")
           source_base = round&.dig("binding", "base")
           later_attempts = round ? record["attempts"].drop_while { |a| a["attempt_id"] != round["attempt_id"] }.drop(1) : []
-          later_high = later_attempts.flat_map { |attempt| attempt["assessments"] }.any? do |finding|
-            finding["observed_in_round"] && %w[high critical].include?(finding["priority"]) && finding["disposition"] != "invalid"
+          later_blocker_update = later_attempts.flat_map { |attempt| attempt["assessments"] }.any? do |finding|
+            %w[high critical].include?(finding["priority"]) &&
+              (finding["observed_in_round"] ? finding["disposition"] != "invalid" : true)
           end
           current_evidence = !!round && available && head && base && source_head == head && source_base == base &&
-            clean_candidate? && !later_high
+            clean_candidate? && !later_blocker_update
           blockers = result["open_findings"].select { |f| %w[critical high].include?(f["priority"]) }
           reasons = []
           reasons << revision_error if revision_error
           reasons << "campaign contract superseded by #{successor}" if successor
           reasons << "search has not converged" unless result["search_converged"]
           reasons << "unresolved High/Critical findings" unless blockers.empty?
-          reasons << "later confirmed High/Critical requires a completed current review" if later_high
+          reasons << "later High/Critical assessment requires a completed current review" if later_blocker_update
           reasons << (error || "review evidence is stale or incomplete") unless current_evidence
           reasons << "independent current-head approval and executed required checks missing" unless round&.dig("approval")
           result.merge("active_contract" => successor.nil?, "superseded_by" => successor, "evidence" => {"valid" => current_evidence, "available" => available,
@@ -377,8 +379,9 @@ module Ace
 
         def clean_candidate?
           return true unless @live_git
-          out, status = Open3.capture2("git", "status", "--porcelain", chdir: @repo_root, err: File::NULL)
-          status.success? && out.strip.empty?
+          out, status = Open3.capture2("git", "status", "--porcelain", "-z", "--untracked-files=all",
+            chdir: @repo_root, err: File::NULL)
+          status.success? && out.split("\0").all? { |entry| entry.start_with?("?? .ace-local/") }
         end
 
         def pr_url_for(subject)

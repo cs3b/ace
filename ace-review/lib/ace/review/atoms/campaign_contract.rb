@@ -65,11 +65,8 @@ module Ace
               manifest["raw_sha256"] == manifest["selected_sha256"]
             raise Invalid, "full PR scope requires complete unfiltered diff coverage"
           end
-          if delta_reference_head
-            unless manifest["delta_reference_head"] == delta_reference_head && manifest["delta_base_head"] == head
-              raise Invalid, "full PR delta manifest differs from pinned revisions"
-            end
-          elsif manifest["pr_file_inventory_verified"] != true || manifest["base_branch_sha"] != base
+          raise Invalid, "full PR scope cannot use a delta reference" if delta_reference_head || manifest["delta_reference_head"]
+          if manifest["pr_file_inventory_verified"] != true || manifest["base_branch_sha"] != base
             raise Invalid, "full PR scope requires verified current head/base inventory"
           end
           manifest
