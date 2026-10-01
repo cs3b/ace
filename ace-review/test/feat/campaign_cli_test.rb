@@ -47,6 +47,12 @@ class CampaignCLITest < AceReviewTest
     File.write("round.json", JSON.generate(fabricated))
     rejected, _, status = cli("campaign", "record-round", id, "--input", "round.json")
     refute status.success?
+    assert_includes rejected["error"], "full scope requires"
+    fabricated["attempt_id"] = "unknown-base"
+    fabricated["scope_identity"]["full"]["subjects"] = ["diff:#{fabricated['base']}..#{@head}"]
+    File.write("round.json", JSON.generate(fabricated))
+    rejected, _, status = cli("campaign", "record-round", id, "--input", "round.json")
+    refute status.success?
     assert_includes rejected["error"], "not an available Git commit"
     unchanged, err, status = cli("campaign", "status", id)
     assert status.success?, err
