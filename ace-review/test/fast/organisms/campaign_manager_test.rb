@@ -269,4 +269,74 @@ class CampaignManagerTest < AceReviewTest
     assert campaign_manager.finish(campaign["campaign_id"])["accepted"]
   end
 
+  def test_superseded_contract_preserves_history_but_cannot_regain_acceptance
+    campaign = start_campaign
+    3.times do |n|
+      input = round_input(n)
+      make_campaign_session(campaign, input)
+      add_campaign_approval(campaign, input) if n == 2
+      campaign_manager.record_round(campaign["campaign_id"], input)
+    end
+    assert campaign_manager.finish(campaign["campaign_id"])["accepted"]
+    successor = campaign_manager.start(subject: campaign_subject, contract: "Changed requirement",
+      policy: campaign_policy, reason: "Requirement changed")
+    old = campaign_manager.finish(campaign["campaign_id"])
+    refute old["accepted"]
+    refute old["active_contract"]
+    assert_equal successor["campaign_id"], old["superseded_by"]
+    assert_equal 3, old["completed_rounds"]
+    assert_raises(ArgumentError) { campaign_manager.record_round(campaign["campaign_id"], round_input(4)) }
+    File.delete(campaign_manager.store.path(successor["campaign_id"]))
+    refute campaign_manager.status(campaign["campaign_id"])["accepted"]
+  end
+
+  def test_conflicting_occurrences_cannot_share_one_canonical_finding_in_a_submission
+    campaign = start_campaign(scopes: %w[one two])
+    initial = round_input(1, scopes: %w[one two])
+    make_campaign_session(campaign, initial, scope: "one", finding: {})
+    make_campaign_session(campaign, initial, scope: "two")
+    known = campaign_manager.record_round(campaign["campaign_id"], initial)["open_findings"].first["id"]
+    later = round_input(2, scopes: %w[one two])
+    make_campaign_session(campaign, later, scope: "one", finding: {})
+    make_campaign_session(campaign, later, scope: "two", finding: {"status" => "done", "resolution" => "Fixed"})
+    later["dispositions"].each { |assessment| assessment["finding_id"] = known }
+    assert_raises(ArgumentError) { campaign_manager.record_round(campaign["campaign_id"], later) }
+    state = campaign_manager.status(campaign["campaign_id"])
+    assert_equal 1, state["completed_rounds"]
+    assert_equal known, state["open_findings"].first["id"]
+  end
+
+  def test_existing_feedback_resolution_is_append_only_and_does_not_reuse_old_scope_coverage
+    campaign = start_campaign
+    first = round_input(1)
+    dir = make_campaign_session(campaign, first, finding: {})
+    initial = campaign_manager.record_round(campaign["campaign_id"], first)
+    finding = initial["open_findings"].first
+    snapshot = File.join(@test_dir, finding["artifact"]["path"])
+    old_bytes = File.binread(snapshot)
+    source_path = File.join(@test_dir, dir, "feedback/finding.s.md")
+    item = YAML.safe_load_file(source_path)
+    item["status"] = "done"
+    item["resolution"] = "Regression verifies the repaired invariant."
+    File.write(source_path, "---\n#{YAML.dump(item).delete_prefix("---\n")}---\n")
+    assert_equal old_bytes, File.binread(snapshot)
+    assert campaign_manager.status(campaign["campaign_id"])["evidence"]["available"]
+    second = round_input(2)
+    make_campaign_session(campaign, second)
+    second["dispositions"] << {"source_id" => finding["source_id"], "reason" => "Verified earlier repair."}
+    corrected = campaign_manager.record_round(campaign["campaign_id"], second)
+    assert_empty corrected["open_findings"]
+    assert_equal 2, corrected["completed_rounds"]
+    assert_equal 1, corrected["clean_streak"]
+    assert_equal 2, corrected["counters"]["provider_calls"]
+    assert_equal old_bytes, File.binread(snapshot)
+    assert_equal 2, campaign_manager.store.read(campaign["campaign_id"])["assessments"].size
+    third = round_input(3)
+    make_campaign_session(campaign, third)
+    add_campaign_approval(campaign, third)
+    assert campaign_manager.record_round(campaign["campaign_id"], third)["accepted"]
+    File.delete(snapshot)
+    refute campaign_manager.status(campaign["campaign_id"])["accepted"]
+  end
+
 end

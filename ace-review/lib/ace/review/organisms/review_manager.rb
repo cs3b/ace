@@ -1199,7 +1199,8 @@ module Ace
             manager.collection_base(options.campaign, round_id: options.campaign_round)
           manager.session_binding(options.campaign, round_id: options.campaign_round, scope: options.campaign_scope,
             preset: options.preset, head: head, base: base, pr_url: options.pr_metadata&.dig("url"),
-            subjects: options.subject, delta_reference_head: content.dig(:delta, :reference_head))
+            subjects: options.subject, delta_reference_head: content.dig(:delta, :reference_head),
+            diff_manifest: content[:diff_manifest], noop: content[:noop] == true)
         rescue Atoms::CampaignContract::Invalid => e
           raise Errors::BundleProcessingError, e.message
         end

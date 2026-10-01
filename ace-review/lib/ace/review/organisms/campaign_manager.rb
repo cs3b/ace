@@ -50,7 +50,7 @@ module Ace
             inherited = []
             if previous
               raise Contract::Invalid, "predecessor has incompatible subject" unless previous["subject"] == subject
-              if earlier.any? { |candidate| candidate["predecessor"] == previous["id"] }
+              if previous["successor"] || earlier.any? { |candidate| candidate["predecessor"] == previous["id"] }
                 raise Contract::Invalid, "predecessor already has a successor; select the active contract"
               end
               Contract.string!(reason, "contract successor reason")
@@ -65,7 +65,13 @@ module Ace
               "predecessor" => previous&.dig("id"), "successor_reason" => reason,
               "inherited_findings" => inherited, "assessments" => [], "attempts" => [], "rounds" => [],
               "head_transitions" => []}
-            store.write(record) unless dry_run
+            unless dry_run
+              store.write(record)
+              if previous
+                previous["successor"] = id
+                store.write(previous)
+              end
+            end
             projection(record).merge("dry_run" => dry_run)
           end
         end
@@ -84,6 +90,7 @@ module Ace
               raise Contract::Invalid, "conflicting replay of attempt #{attempt_id}" unless prior["input_digest"] == digest
               next projection(record).merge("replayed" => true, "recorded_complete" => prior["completed"])
             end
+            raise Contract::Invalid, "campaign contract is superseded" if successor_for(record)
             binding = round_binding(input, record)
             validate_local_commits(record, binding["head"], binding["base"])
             attempts = record["attempts"].select { |a| a["round_id"] == round_id }
@@ -108,6 +115,10 @@ module Ace
             assessments = assess(input["dispositions"], sessions, record)
             approval = input["approval"] && @evidence.approval(input["approval"], record: record,
               binding: binding, sessions: sessions)
+            assessments.each do |finding|
+              finding["source_artifact"] = finding["artifact"]
+              finding["artifact"] = store.snapshot_finding(finding["artifact"], repo_root: @repo_root, dry_run: dry_run)
+            end
             attempt = {"attempt_id" => attempt_id, "round_id" => round_id, "input_digest" => digest,
               "binding" => binding, "sessions" => sessions, "assessments" => assessments,
               "approval" => approval, "completed" => complete, "recorded_at" => Time.now.utc.iso8601(6)}
@@ -118,7 +129,7 @@ module Ace
             observe(record, binding["head"], binding["base"])
             if complete
               round_assessments = record["attempts"].select { |a| a["round_id"] == round_id }.flat_map { |a| a["assessments"] }
-              confirmed = round_assessments.any? { |f| %w[high critical].include?(f["priority"]) &&
+              confirmed = round_assessments.any? { |f| f["observed_in_round"] && %w[high critical].include?(f["priority"]) &&
                 f["disposition"] != "invalid" }
               round = attempt.merge("clean" => !confirmed, "policy" => record["policy"])
               record["rounds"] << round
@@ -158,9 +169,10 @@ module Ace
           attempt["binding"]["base"]
         end
 
-        def session_binding(id, round_id:, scope:, preset:, head:, base:, pr_url: nil, subjects: nil, delta_reference_head: nil)
+        def session_binding(id, round_id:, scope:, preset:, head:, base:, pr_url: nil, subjects: nil, delta_reference_head: nil, diff_manifest: nil, noop: false)
           store.transaction(dry_run: true) do
             record = store.read(id)
+            raise Contract::Invalid, "campaign contract is superseded" if successor_for(record)
             attempt = record["attempts"].find { |a| a["round_id"] == round_id }
             raise Contract::Invalid, "pin round #{round_id} with record-round before collecting reports" unless attempt
             binding = attempt["binding"]
@@ -177,6 +189,9 @@ module Ace
             end
             unless binding["scope_identity"][scope]["delta_reference_head"] == delta_reference_head
               raise Contract::Invalid, "collected delta reference differs from pinned scope input"
+            end
+            if record["subject"]["pr"] && scope == "full" && !noop
+              Contract.full_pr_coverage!(diff_manifest, head: head, base: base, delta_reference_head: delta_reference_head)
             end
             validate_repository(record, pr_url)
             raise Contract::Invalid, "campaign collection requires committed candidate code" unless clean_candidate?
@@ -219,18 +234,36 @@ module Ace
 
         def assess(input, sessions, record)
           raise Contract::Invalid, "dispositions must be an array" unless input.is_a?(Array)
-          source = sessions.flat_map { |s| s["findings"] }
+          source = sessions.flat_map { |s| s["findings"] }.map { |finding| finding.merge("observed_in_round" => true) }
+          previous = Atoms::CampaignProjection.build(record)["findings"].to_h { |f| [f["id"], f] }
           input.each do |assessment|
             Contract.object!(assessment, "assessment")
             Contract.string!(assessment["source_id"], "assessment source ID")
           end
+          current_ids = source.map { |finding| finding["source_id"] }
+          input.reject { |assessment| current_ids.include?(assessment["source_id"]) }.each do |assessment|
+            known = previous.values.find { |finding| finding["source_id"] == assessment["source_id"] }
+            unless known && %w[open reopened].include?(known["disposition"])
+              raise Contract::Invalid, "external disposition must resolve a known open finding"
+            end
+            if assessment["finding_id"] && assessment["finding_id"] != known["id"]
+              raise Contract::Invalid, "earlier resolution targets a different canonical finding"
+            end
+            source << @evidence.resolution(known).merge("canonical_id" => known["id"])
+          end
           if input.map { |a| a["source_id"] }.sort != source.map { |f| f["source_id"] }.sort
             raise Contract::Invalid, "every source finding requires exactly one verified disposition"
           end
-          previous = Atoms::CampaignProjection.build(record)["findings"].to_h { |f| [f["id"], f] }
+          canonical_ids = input.map do |assessment|
+            finding = source.find { |item| item["source_id"] == assessment["source_id"] }
+            assessment["finding_id"] || finding["canonical_id"] || assessment["source_id"]
+          end
+          unless canonical_ids.uniq == canonical_ids
+            raise Contract::Invalid, "one submission cannot assess a canonical finding more than once"
+          end
           input.map do |assessment|
             finding = source.find { |f| f["source_id"] == assessment["source_id"] }
-            canonical = assessment["finding_id"] || finding["source_id"]
+            canonical = assessment["finding_id"] || finding["canonical_id"] || finding["source_id"]
             Contract.string!(canonical, "finding ID")
             disposition = case finding["status"]
             when "invalid" then "invalid"
@@ -254,8 +287,13 @@ module Ace
           end
         end
 
+        def successor_for(record)
+          record["successor"] || store.records.find { |candidate| candidate["predecessor"] == record["id"] }&.dig("id")
+        end
+
         def projection(record, current: nil)
           result = Atoms::CampaignProjection.build(record)
+          successor = successor_for(record)
           revision_error = nil
           begin
             head, base = current || current_revisions(record)
@@ -283,25 +321,26 @@ module Ace
           source_base = round&.dig("binding", "base")
           later_attempts = round ? record["attempts"].drop_while { |a| a["attempt_id"] != round["attempt_id"] }.drop(1) : []
           later_high = later_attempts.flat_map { |attempt| attempt["assessments"] }.any? do |finding|
-            %w[high critical].include?(finding["priority"]) && finding["disposition"] != "invalid"
+            finding["observed_in_round"] && %w[high critical].include?(finding["priority"]) && finding["disposition"] != "invalid"
           end
           current_evidence = !!round && available && head && base && source_head == head && source_base == base &&
             clean_candidate? && !later_high
           blockers = result["open_findings"].select { |f| %w[critical high].include?(f["priority"]) }
           reasons = []
           reasons << revision_error if revision_error
+          reasons << "campaign contract superseded by #{successor}" if successor
           reasons << "search has not converged" unless result["search_converged"]
           reasons << "unresolved High/Critical findings" unless blockers.empty?
           reasons << "later confirmed High/Critical requires a completed current review" if later_high
           reasons << (error || "review evidence is stale or incomplete") unless current_evidence
           reasons << "independent current-head approval and executed required checks missing" unless round&.dig("approval")
-          result.merge("evidence" => {"valid" => current_evidence, "available" => available,
+          result.merge("active_contract" => successor.nil?, "superseded_by" => successor, "evidence" => {"valid" => current_evidence, "available" => available,
             "source_head" => source_head, "current_head" => head, "source_base" => source_base,
             "current_base" => base, "reason" => error || revision_error}, "accepted" => reasons.empty?, "reasons" => reasons,
             "result_identity" => Contract.digest({"campaign_id" => record["id"],
               "contract_identity" => record["contract_identity"], "policy" => record["policy"],
               "attempts" => record["attempts"], "assessments" => record["assessments"],
-              "current_head" => head, "current_base" => base}))
+              "current_head" => head, "current_base" => base, "successor" => successor}))
         end
 
         def observe(record, head, base)

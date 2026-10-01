@@ -119,4 +119,16 @@ class CampaignReceiptTest < AceAssignTestCase
     end
     assert_equal "running", @coordinator.store.find(attempt.attempt_id).state
   end
+  def test_superseded_campaign_result_is_rejected_by_the_receipt_owner
+    attempt = start_attempt
+    successor = campaign_manager.start(subject: campaign_subject, contract: "Changed requirement",
+      policy: campaign_policy, reason: "Requirements changed")
+    refute successor["accepted"]
+    assert_raises(Ace::Assign::AttemptErrors::ReceiptRejected) do
+      @coordinator.finish(attempt_id: attempt.attempt_id, receipt_path: receipt(attempt))
+    end
+    assert_equal "running", @coordinator.store.find(attempt.attempt_id).state
+    assert_equal @head, git_in(@test_dir, "rev-parse", "HEAD")
+  end
+
 end

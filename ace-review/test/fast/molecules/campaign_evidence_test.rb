@@ -96,4 +96,23 @@ class CampaignEvidenceTest < AceReviewTest
     assert_equal 0, campaign_manager.status(campaign["campaign_id"])["completed_rounds"]
   end
 
+  def test_full_pr_recording_rechecks_collected_manifest
+    campaign = campaign_manager.start(subject: {"repository" => "https://github.com/owner/repo", "pr" => "owner/repo#42"},
+      contract: "requirements", policy: campaign_policy)
+    input = round_input(1)
+    input["scope_identity"]["full"]["subjects"] = ["pr:owner/repo#42"]
+    dir = make_campaign_session(campaign, input)
+    path = File.join(@test_dir, dir, "metadata.yml")
+    original = File.read(path)
+    metadata = YAML.safe_load(original)
+    metadata["diff_manifest"]["excluded_files"] = ["two.rb"]
+    File.write(path, YAML.dump(metadata))
+    input["sessions"].first["metadata"] = artifact_ref(File.join(dir, "metadata.yml"))
+    assert_raises(ArgumentError) { campaign_manager.record_round(campaign["campaign_id"], input) }
+    assert_equal 0, campaign_manager.status(campaign["campaign_id"])["completed_rounds"]
+    File.write(path, original)
+    input["sessions"].first["metadata"] = artifact_ref(File.join(dir, "metadata.yml"))
+    assert_equal 1, campaign_manager.record_round(campaign["campaign_id"], input)["completed_rounds"]
+  end
+
 end
