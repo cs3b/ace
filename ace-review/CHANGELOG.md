@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.57.0] - 2026-10-01
+
 ### Fixed
 
 - Canonical GitHub repository identities reuse campaign history across trailing slashes and repository case. Local full scope rejects empty Git diffs, including distinct commits with identical trees.

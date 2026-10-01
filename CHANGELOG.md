@@ -21,6 +21,9 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- **ace-review v0.57.0**: Durable review campaigns retain verified findings and convergence across commits; current acceptance requires independent approval and passing checks backed by accepted execution receipts.
+- **ace-assign v0.60.0**: Validates campaign results and exposes read-only managed check, review-collection and review-approval authority, including explicit historical review evidence.
+
 - **ace-task v0.37.5**: GitHub sync is best-effort — offline updates flag tasks with `github_sync_pending`, and `ace-task github-sync --pending` replays missed issue syncs once gh is installed and authenticated.
 - **ace-git-github v0.1.2**: Added `IssueSync.available?` availability probe (gh installed and authenticated) for best-effort GitHub sync.
 - **ace-review v0.55.0**: Added scoped, complete PR review inputs with prompt budgets and cached goal briefs.
@@ -58,6 +61,8 @@ All notable changes to this project will be documented in this file.
 - **ace-llm-providers-cli v0.34.0**: Registered Codex Astra, Sol, Terra and Luna with Terra as the generic default and Luna as mini, retaining all existing explicit IDs, and derived Codex client defaults and model listings from provider configuration instead of a separate hardcoded catalog.
 
 ### Technical
+
+- Dependency-following patch release after ace-assign 0.60: `ace-overseer v0.18.1`.
 
 - **ace-review v0.54.2**: Updated Codex alias tests for Terra and unknown native limits, retaining explicit legacy-model limit coverage.
 

@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.1] - 2026-10-01
+
+### Technical
+- Follow the ace-assign 0.60 release line for durable review campaign evidence.
+
 ## [0.18.0] - 2026-09-29
 
 ### Added
