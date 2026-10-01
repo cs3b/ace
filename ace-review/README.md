@@ -56,3 +56,7 @@ ace-test-e2e ace-review
 
 ---
 [Getting Started](docs/getting-started.md) | [Usage Guide](docs/usage.md) | [Handbook - Skills, Agents, Templates](docs/handbook.md) | Part of [ACE](https://github.com/cs3b/ace)
+
+### Durable review campaigns
+
+Use `ace-review campaign start|status|record-round|finish` to retain review history independently of current-head evidence. See [campaign usage](docs/campaigns.md) for frozen contracts/policy, pinned scopes, restart/replay and assignment receipt consumption. Existing review and feedback commands remain primary operations.

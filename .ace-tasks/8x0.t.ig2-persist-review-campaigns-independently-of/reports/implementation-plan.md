@@ -20,10 +20,10 @@ Create campaign contract/projection atoms, campaign store/evidence molecules, ca
 
 ## Plan Checklist
 
-- [ ] step_01: Identity, frozen policy/contract, linked successors, durable store and counters. Anchor: task spec Expected Behavior and Readiness decisions. Depends: none. Verify: bin/ace-test ace-review atoms; bin/ace-test ace-review molecules.
-- [ ] step_02: Source evidence, pinned partial rounds, append-only assessments, current-head/base validity and acceptance. Anchor: SC1-SC4, claim authority and findings. Depends: step_01. Verify: bin/ace-test ace-review organisms.
-- [ ] step_03: Public CLI modes, existing review preservation, dry-run/replay/restart/concurrency cases. Anchor: SC6 and CLI input and operating modes. Depends: step_02. Verify: bin/ace-test ace-review all.
-- [ ] step_04: Campaign result consumption by assignment receipt authority. Anchor: SC5 and evidence binding. Depends: step_03. Verify: bin/ace-test ace-assign all.
+- [x] step_01: Identity, frozen policy/contract, linked successors, durable store and counters. Anchor: task spec Expected Behavior and Readiness decisions. Depends: none. Verify: bin/ace-test ace-review atoms; bin/ace-test ace-review molecules.
+- [x] step_02: Source evidence, pinned partial rounds, append-only assessments, current-head/base validity and acceptance. Anchor: SC1-SC4, claim authority and findings. Depends: step_01. Verify: bin/ace-test ace-review organisms.
+- [x] step_03: Public CLI modes, existing review preservation, dry-run/replay/restart/concurrency cases. Anchor: SC6 and CLI input and operating modes. Depends: step_02. Verify: bin/ace-test ace-review all.
+- [x] step_04: Campaign result consumption by assignment receipt authority. Anchor: SC5 and evidence binding. Depends: step_03. Verify: bin/ace-test ace-assign all.
 - [ ] step_05: Packaged usage, workflow adoption, criterion-mapped report and final verification/commits. Anchor: Verification Plan and acceptance mapping. Depends: step_04. Verify: bin/ace-test ace-review all; bin/ace-test ace-assign all; bin/ace-test-suite.
 
 ## Test Plan

@@ -77,6 +77,10 @@ module Ace
 
           attr_reader :options
 
+          option :campaign, desc: "Bind collection to a durable campaign ID (manage with ace-review campaign --help)"
+          option :campaign_round, desc: "Previously pinned campaign round ID"
+          option :campaign_scope, desc: "Required campaign scope ID"
+
           def call(**cli_options)
             # Remove ace-support-cli specific keys (args is leftover arguments)
             cli_options = cli_options.except(:args)

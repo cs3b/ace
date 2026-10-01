@@ -5,6 +5,7 @@ require "ace/core"
 require_relative "../review"
 # Commands
 require_relative "cli/commands/review"
+require_relative "cli/campaign_cli"
 
 module Ace
   module Review
@@ -112,6 +113,11 @@ module Ace
       #
       # @param args [Array<String>] Command-line arguments
       def self.start(args)
+        if args.first == "campaign"
+          return Ace::Support::Cli::Runner.new(CampaignCLI).call(args: args.drop(1))
+        end
+        args = preprocess_array_options(args)
+        args = ["--help"] if args.empty?
         Ace::Support::Cli::Runner.new(Commands::Review).call(args: args)
       end
     end
