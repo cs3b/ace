@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "source_sha": "e38b87fe6d049bc6eb98f8d081a013539c0bc397",
+  "packages": [
+    {"name": "ace-assign", "artifact_version": "0.58.0", "source_sha": "e5edf16ca5c587182b41f5cfa96fd808f38678ac"},
+    {"name": "ace-bundle", "artifact_version": "0.44.2", "source_sha": "e38b87fe6d049bc6eb98f8d081a013539c0bc397", "supersedes": ["0.44.1"]},
+    {"name": "ace-git", "artifact_version": "0.25.0", "source_sha": "9dcd3f6884cdf72c1862b29af8eaa20bfd4aeabf"},
+    {"name": "ace-git-forgejo", "artifact_version": "0.2.0", "source_sha": "a455a3afc6fea759109da1407c3012d1bcb0edac"},
+    {"name": "ace-git-github", "artifact_version": "0.2.0", "source_sha": "7113ef48c1dd5d85cc72aea2add6bc8960bdfb07", "supersedes": ["0.1.2"]},
+    {"name": "ace-git-worktree", "artifact_version": "0.24.0", "source_sha": "67bffde037aa543cc6961d05a60dee21ba9e78b0"},
+    {"name": "ace-handbook", "artifact_version": "0.33.0", "source_sha": "07631bbc68696d0066ae4f71051d270a406a6c99"},
+    {"name": "ace-handbook-integration-pi", "artifact_version": "0.5.0", "source_sha": "98e09992dea028db757b51339cc93c534ef81482"},
+    {"name": "ace-lab", "artifact_version": "0.1.0", "source_sha": "ceeb8b63630bbbfb08dba7ae1b90d246c86d51bd"},
+    {"name": "ace-llm", "artifact_version": "0.42.0", "source_sha": "e38b87fe6d049bc6eb98f8d081a013539c0bc397", "supersedes": ["0.41.1"]},
+    {"name": "ace-llm-providers-cli", "artifact_version": "0.36.0", "source_sha": "e38b87fe6d049bc6eb98f8d081a013539c0bc397", "supersedes": ["0.35.2"]},
+    {"name": "ace-overseer", "artifact_version": "0.17.0", "source_sha": "c0212f4162cd807245855147b83323fb29ef85d3"},
+    {"name": "ace-review", "artifact_version": "0.56.1", "source_sha": "e38b87fe6d049bc6eb98f8d081a013539c0bc397", "supersedes": ["0.56.0"]},
+    {"name": "ace-runtime", "artifact_version": "0.1.0", "source_sha": "24304a4d39418d1db26cd604817d52cf3f77afa5"},
+    {"name": "ace-support-cli", "artifact_version": "0.6.9", "source_sha": "e38b87fe6d049bc6eb98f8d081a013539c0bc397", "supersedes": ["0.6.8"]},
+    {"name": "ace-support-test-helpers", "artifact_version": "0.14.6", "source_sha": "2f7c8f8aa49309f8f1cf1f8b50ba393e83040ce5"},
+    {"name": "ace-task", "artifact_version": "0.38.1", "source_sha": "e38b87fe6d049bc6eb98f8d081a013539c0bc397", "supersedes": ["0.38.0"]},
+    {"name": "ace-test", "artifact_version": "0.7.4", "source_sha": "b6a8c1b7d793a529b675b47d567a706a72b9d1b0"},
+    {"name": "ace-test-runner", "artifact_version": "0.27.1", "source_sha": "96c445b8ad253796c01fc1ef89f4dfe6022c5749", "supersedes": ["0.27.0"]},
+    {"name": "ace-test-runner-e2e", "artifact_version": "0.41.0", "source_sha": "e38b87fe6d049bc6eb98f8d081a013539c0bc397", "supersedes": ["0.40.6"]}
+  ]
+}
