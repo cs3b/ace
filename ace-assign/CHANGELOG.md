@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Review receipts may consume a durable ace-review campaign result. The existing coordinator still validates authority, live head, independent reviewer, executed checks and artifact digests; stale or conflicting campaign snapshots are rejected.
+
 ## [0.59.0] - 2026-09-29
 
 ### Added

@@ -4,6 +4,7 @@ PATH
     ace-assign (0.59.0)
       ace-b36ts (~> 0.14)
       ace-llm (~> 0.39)
+      ace-review (~> 0.56)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)
       ace-support-core (~> 0.31)

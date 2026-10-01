@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "digest"
+require "json"
 
 module Ace
   module Assign
@@ -55,6 +56,7 @@ module Ace
           verify_artifacts(data, repo_root) if data["verdict"] == "succeeded"
           verify_checks(data)
           verify_review(data)
+          verify_campaign(data, repo_root: repo_root, live_head: live_head)
 
           receipt = Models::ExecutionReceipt.from_h(data.merge("recorded_at" => Time.now.utc))
           verify_digest(receipt)
@@ -194,6 +196,41 @@ module Ace
           unless review["head"] == data["head"]
             reject("review head #{review['head']} does not match receipt head #{data['head']}")
           end
+        end
+
+        # Consume ace-review's single campaign authority through the existing
+        # receipt boundary; a worker-supplied local result grants no authority.
+        def verify_campaign(data, repo_root:, live_head:)
+          campaign = data["campaign"]
+          return unless campaign
+          reject_unless(campaign.is_a?(Hash), "campaign must be an object")
+          reject("campaign result requires a succeeded review receipt") unless
+            data["operation"] == REVIEW_OPERATION && data["verdict"] == "succeeded"
+          reference = campaign["result"]
+          reject_unless(reference.is_a?(Hash), "campaign requires a result artifact reference")
+          unless Array(data["artifacts"]).include?(reference)
+            reject("campaign result must be included in verified receipt artifacts")
+          end
+          resolved = safe_resolve(repo_root, reference["path"].to_s)
+          reject("campaign result path escapes repository or is missing") unless resolved
+          result = JSON.parse(File.read(resolved))
+          reject_unless(result.is_a?(Hash), "campaign result must be an object")
+          require "ace/review"
+          current = Ace::Review::Organisms::CampaignManager.new(repo_root: repo_root).status(campaign["id"])
+          unless result["campaign_id"] == campaign["id"] && result["accepted"] == true &&
+              result["dry_run"] == false && current["accepted"] == true &&
+              result["result_identity"] == current["result_identity"] &&
+              result.dig("evidence", "current_head") == live_head && current.dig("evidence", "current_head") == live_head
+            reject("campaign result is stale, incomplete, blocked or does not match live authority")
+          end
+          approval = current["rounds"].last["approval"]
+          unless approval["producer"] == data.dig("producer", "actor") &&
+              approval["reviewer"] == data.dig("review", "reviewer", "actor") &&
+              approval["head"] == data["head"]
+            reject("campaign producer/reviewer attribution does not match independently validated receipt")
+          end
+        rescue JSON::ParserError, ArgumentError, TypeError, KeyError => e
+          reject("invalid campaign result: #{e.message}")
         end
 
         # Resolve a project-relative artifact path to its real location,
