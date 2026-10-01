@@ -250,6 +250,7 @@ module Ace
           doc1 = Models::Document.new(path: doc1_path)
           doc2 = Models::Document.new(path: doc2_path)
 
+          GC.start
           count = FrontmatterManager.update_documents([doc1, doc2], {"last-updated" => "2025-11-01"})
 
           assert_equal 2, count
@@ -258,7 +259,7 @@ module Ace
         private
 
         def create_test_document(content)
-          file = Tempfile.new(["test", ".md"], @test_dir)
+          file = Tempfile.create(["test", ".md"], @test_dir)
           file.write(content)
           file.close
           file.path
