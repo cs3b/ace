@@ -63,6 +63,9 @@ module Ace
           unless metadata["campaign_binding"] == expected && metadata["preset"] == expected["scope_identity"]["preset"]
             raise Contract::Invalid, "session campaign/contract/scope/head/base identity mismatch"
           end
+          unless metadata["head"] == binding["head"]
+            raise Contract::Invalid, "session recorded head does not match the pinned head"
+          end
           if record["subject"]["pr"] && scope == "full" && !metadata["noop_round"]
             Contract.full_pr_coverage!(metadata["diff_manifest"], head: binding["head"], base: binding["base"],
               delta_reference_head: binding["scope_identity"][scope]["delta_reference_head"])
@@ -81,7 +84,7 @@ module Ace
           entries.each do |entry|
             Contract.object!(entry, "model execution")
             execution = entry["execution"] || {}
-            complete = entry["status"] != "failed" && execution["status"] == "succeeded" &&
+            complete = entry["status"] == "success" && execution["status"] == "succeeded" &&
               !execution["provider"].to_s.empty? && !execution["model"].to_s.empty? &&
               !entry["completed_at"].to_s.empty?
             completed &&= complete

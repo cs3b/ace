@@ -56,7 +56,7 @@ module CampaignFixtures
     binding = {"campaign_id" => campaign["campaign_id"], "contract_identity" => campaign["contract_identity"],
       "subject" => campaign["subject"], "round_id" => input["round_id"], "scope" => scope,
       "head" => input["head"], "base" => input["base"], "scope_identity" => input["scope_identity"][scope]}
-    metadata = {"preset" => "code-valid", "campaign_binding" => binding, "noop_round" => noop,
+    metadata = {"preset" => "code-valid", "head" => @head, "campaign_binding" => binding, "noop_round" => noop,
       "models" => noop ? [] : [{"status" => failed ? "failed" : "success", "completed_at" => Time.now.utc.iso8601,
         "execution" => {"status" => failed ? "failed" : "succeeded", "provider" => "fixture", "model" => "reviewer"},
         "output_file" => File.basename(report), "report_sha256" => Digest::SHA256.file(report).hexdigest,
