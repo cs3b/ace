@@ -122,7 +122,17 @@ class CampaignEvidenceTest < AceReviewTest
     dir = make_campaign_session(campaign, input)
     report = File.join(dir, "review-report-reviewer.md")
     File.write(File.join(@test_dir, report), "Verdict: rejected. Candidate must not be accepted.\n")
+    metadata_path = File.join(dir, "metadata.yml")
+    metadata = YAML.safe_load_file(File.join(@test_dir, metadata_path))
+    report_sha = artifact_ref(report)["sha256"]
+    metadata["models"].first["report_sha256"] = report_sha
+    metadata["feedback_extraction"]["report_sha256"] = [report_sha]
+    File.write(File.join(@test_dir, metadata_path), YAML.dump(metadata))
+    input["sessions"].first["metadata"] = artifact_ref(metadata_path)
     accept_review_session(input, dir)
+    evidence = Ace::Review::Molecules::CampaignEvidence.new(repo_root: @test_dir,
+      review_evidence: fixture_review_evidence, approval_evidence: fixture_approval_evidence)
+    record = campaign_manager.store.read(campaign["campaign_id"])
     add_campaign_approval(campaign, input)
     path = File.join(@test_dir, input["approval"]["path"])
     original = JSON.parse(File.read(path))
@@ -130,7 +140,9 @@ class CampaignEvidenceTest < AceReviewTest
       forged = original.merge("receipt" => receipt)
       File.write(path, JSON.generate(forged))
       input["approval"] = artifact_ref(input["approval"]["path"])
-      assert_raises(ArgumentError) { campaign_manager.record_round(campaign["campaign_id"], input) }
+      assert evidence.session(input["sessions"].first, record: record, binding: input)["completed"]
+      error = assert_raises(ArgumentError) { campaign_manager.record_round(campaign["campaign_id"], input) }
+      assert_match(/accepted approval receipt|did not accept independent approval/, error.message)
       result = campaign_manager.status(campaign["campaign_id"])
       refute result["accepted"]
       assert_equal 0, result["completed_rounds"]
