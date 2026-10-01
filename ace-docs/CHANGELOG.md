@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.34.5] - 2026-10-01
+
+### Technical
+- Keep frontmatter test fixtures alive until directory teardown instead of allowing Tempfile finalizers to remove them during garbage collection. Bulk-update coverage forces GC and retains the original two-document assertion.
+
 
 ## [0.34.4] - 2026-09-02
 

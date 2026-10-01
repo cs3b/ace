@@ -21,3 +21,25 @@ The unchanged provider cleanup case passed again in full suites at `b863adff7`, 
 
 
 Final source `bcb627d86`: review all-target 994 / 3,152 assertions (four skips), assign all-target 751 / 2,749 assertions (no skips), and all 50 default-suite packages 10,479 / 31,189 assertions (24 skips) passed without failures/errors. Artifacts are `review/8x0qn6/report.md` and `assign/8x0qr9/report.md`. The provider product/test code remains unchanged. The authority-loss case now actually removes source approval before asserting blocked acceptance; different-round convergence cannot accept after one new clean review. All failure corrections are verified without reducing the protected checks.
+
+## Delivery docs fixture failure
+
+### Failure Analysis Report
+
+| Failure | Category | Evidence | Fix target / layer | Primary file | Do-not-touch boundaries | Confidence | Disconfirming check |
+|---|---|---|---|---|---|---|---|
+| FrontmatterManagerTest#test_update_documents_returns_count | test-defect | Monorepo artifact `.ace-local/test/reports/docs/8x0vuo/report.md`: expected 2, actual 1. Helper closes and drops a Tempfile.new object but returns its path. A standalone Ruby GC experiment deletes that path after GC.start, while Tempfile.create persists it. Isolated unchanged test file passes 15 / 55 at `.ace-local/test/reports/docs/8x0vvy/report.md`, consistent with nondeterministic GC. | Test fixture lifetime / test code | ace-docs/test/fast/molecules/frontmatter_manager_test.rb | Keep count == 2 and all product frontmatter/editor behavior unchanged | High | Force GC before bulk update with corrected fixture; both documents must still update |
+
+### Fix Decisions
+
+Use Tempfile.create to return an ordinary File without a deleting finalizer; the existing test-directory teardown remains the sole cleanup owner. Add GC.start before bulk update so the lifetime requirement is deterministic. This is the first and only docs failure in this run.
+
+### Execution Plan Input
+
+Run `bin/ace-test ace-docs test/fast/molecules/frontmatter_manager_test.rb`, then `bin/ace-test ace-docs all`, then the final default monorepo suite. Each must retain original behavior and have zero failures/errors. Prepare an ace-docs patch release for the test repair. Retain the failed full run; it cannot certify passing checks.
+
+### Docs Fix Execution Summary
+
+Fixture replacement and forced-GC bulk update passed 15 tests / 55 assertions at `.ace-local/test/reports/docs/8x0vwu/report.md`. Related all-target docs tests passed 213 / 579 at `.ace-local/test/reports/docs/8x0vxe/report.md`. No product behavior or assertion was weakened. The repair is prepared as ace-docs 0.34.5.
+
+The first delivery monorepo run also timed out in ace-assign at the configured 120-second package limit while owning all-target suites and a real model review were running concurrently. Prior retained all-target evidence shows assignment feature coverage alone took 372 seconds; it is not the fast suite. Rerun the default fast monorepo suite without overlapping owning suites before deciding whether any timeout/configuration repair is required. Keep the 120-second guard unchanged unless independent evidence establishes a real performance defect.
