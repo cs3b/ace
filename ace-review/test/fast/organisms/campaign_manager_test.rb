@@ -61,6 +61,10 @@ class CampaignManagerTest < AceReviewTest
     end
     result = campaign_manager.finish(campaign["campaign_id"])
     assert result["accepted"], result["reasons"].inspect
+    original_head = @head
+    @head = nil
+    assert_equal false, campaign_manager.status(campaign["campaign_id"])["evidence"]["valid"]
+    @head = original_head
     File.delete(File.join(@test_dir, result["rounds"].last["sessions"].first["reports"].first["artifact"]["path"]))
     result = campaign_manager.status(campaign["campaign_id"])
     refute result["accepted"]
@@ -230,6 +234,12 @@ class CampaignManagerTest < AceReviewTest
     campaigns = 4.times.map { Thread.new { start_campaign } }.map(&:value)
     assert_equal 1, campaigns.map { |c| c["campaign_id"] }.uniq.size
     campaign = campaigns.first
+    bytes = File.binread(campaign_manager.store.path(campaign["campaign_id"]))
+    reused_preview = campaign_manager.start(subject: campaign_subject, contract: "Frozen requirements",
+      policy: campaign_policy, dry_run: true)
+    assert reused_preview["dry_run"]
+    assert_equal campaign["campaign_id"], reused_preview["campaign_id"]
+    assert_equal bytes, File.binread(campaign_manager.store.path(campaign["campaign_id"]))
     input = round_input(1)
     make_campaign_session(campaign, input)
     results = 4.times.map { Thread.new { campaign_manager.record_round(campaign["campaign_id"], input) } }.map(&:value)
@@ -357,12 +367,14 @@ class CampaignManagerTest < AceReviewTest
     source_path = File.join(@test_dir, dir, "feedback/finding.s.md")
     item = YAML.safe_load_file(source_path)
     item["status"] = "done"
+    item["priority"] = "medium"
     item["resolution"] = "Regression verifies the repaired invariant."
     File.write(source_path, "---\n#{YAML.dump(item).delete_prefix("---\n")}---\n")
     resolution = round_input(4)
     resolution["dispositions"] << {"source_id" => finding["source_id"], "reason" => "Verified earlier repair."}
     blocked = campaign_manager.record_round(campaign["campaign_id"], resolution)
     assert_empty blocked["open_findings"]
+    assert_equal "medium", blocked["findings"].find { |f| f["id"] == finding["id"] }["priority"]
     assert_equal 3, blocked["completed_rounds"]
     assert_equal 2, blocked["clean_streak"]
     refute blocked["accepted"]
@@ -429,6 +441,56 @@ class CampaignManagerTest < AceReviewTest
       @accepted_reviews[ref["digest"]] = proof
       assert campaign_manager.status(campaign["campaign_id"])["accepted"]
     end
+  end
+
+  def test_incomplete_unaccepted_assessment_cannot_invalidate_prior_high_or_reuse_approval
+    scopes = %w[one two]
+    campaign = start_campaign(scopes: scopes)
+    known = nil
+    3.times do |n|
+      input = round_input(n, scopes: scopes)
+      make_campaign_session(campaign, input, scope: "one", finding: n.zero? ? {} : nil)
+      make_campaign_session(campaign, input, scope: "two")
+      add_campaign_approval(campaign, input) if n == 2
+      result = campaign_manager.record_round(campaign["campaign_id"], input)
+      known ||= result["open_findings"].first["id"]
+    end
+    attack = round_input(3, scopes: scopes)
+    campaign_manager.record_round(campaign["campaign_id"], attack)
+    before = campaign_manager.status(campaign["campaign_id"])
+    assert before["search_converged"]
+    refute before["accepted"]
+    dir = make_campaign_session(campaign, attack, scope: "one", finding: {"status" => "invalid"})
+    attack["dispositions"].first["finding_id"] = known
+    path = File.join(@test_dir, dir, "metadata.yml")
+    metadata = YAML.safe_load_file(path)
+    metadata["feedback_extraction"]["status"] = "failed"
+    File.write(path, YAML.dump(metadata))
+    attack["sessions"].first["metadata"] = artifact_ref(File.join(dir, "metadata.yml"))
+    attack["sessions"].first.delete("receipt")
+    assert_raises(ArgumentError) { campaign_manager.record_round(campaign["campaign_id"], attack) }
+    protected_state = campaign_manager.status(campaign["campaign_id"])
+    assert_equal before["counters"], protected_state["counters"]
+    assert_equal known, protected_state["open_findings"].first["id"]
+    refute protected_state["accepted"]
+    metadata["feedback_extraction"]["status"] = "succeeded"
+    File.write(path, YAML.dump(metadata))
+    attack["sessions"].first["metadata"] = artifact_ref(File.join(dir, "metadata.yml"))
+    accept_review_session(attack, dir)
+    attack["attempt_id"] = "accepted-partial-invalidation"
+    partial = campaign_manager.record_round(campaign["campaign_id"], attack)
+    assert_empty partial["open_findings"]
+    assert_equal 3, partial["completed_rounds"]
+    assert_equal 2, partial["clean_streak"]
+    refute partial["accepted"]
+    refute partial["evidence"]["valid"]
+    attack["attempt_id"] = "complete-current-invalidation"
+    make_campaign_session(campaign, attack, scope: "two")
+    add_campaign_approval(campaign, attack)
+    complete = campaign_manager.record_round(campaign["campaign_id"], attack)
+    assert complete["accepted"], complete["reasons"].inspect
+    assert_equal 4, complete["completed_rounds"]
+    assert_equal 3, complete["clean_streak"]
   end
 
 end
