@@ -377,4 +377,58 @@ class CampaignManagerTest < AceReviewTest
     assert_equal 3, accepted["clean_streak"]
   end
 
+  def test_return_to_earlier_requirements_creates_a_new_active_successor
+    a = start_campaign
+    first = round_input(1)
+    make_campaign_session(a, first, finding: {})
+    campaign_manager.record_round(a["campaign_id"], first)
+    b = campaign_manager.start(subject: campaign_subject, contract: "Changed requirements",
+      policy: campaign_policy, reason: "New behavior")
+    returned = campaign_manager.start(subject: campaign_subject, contract: "Frozen requirements",
+      policy: campaign_policy, reason: "Restore earlier behavior")
+    refute_equal a["campaign_id"], returned["campaign_id"]
+    assert_equal a["contract_identity"], returned["contract_identity"]
+    assert_equal b["campaign_id"], returned["predecessor"]
+    assert returned["active_contract"]
+    assert_equal 1, returned["open_findings"].size
+    assert_equal 0, returned["completed_rounds"]
+    assert_equal returned["campaign_id"], start_campaign["campaign_id"]
+    refute campaign_manager.status(a["campaign_id"])["active_contract"]
+    refute campaign_manager.status(b["campaign_id"])["active_contract"]
+    File.delete(campaign_manager.store.path(returned["campaign_id"]))
+    assert_raises(ArgumentError) { start_campaign }
+  end
+
+  def test_retained_earlier_and_partial_review_authority_remains_required_across_head_drift
+    campaign = start_campaign(scopes: %w[one two])
+    3.times do |n|
+      input = round_input(n, scopes: %w[one two])
+      %w[one two].each { |scope| make_campaign_session(campaign, input, scope: scope) }
+      add_campaign_approval(campaign, input) if n == 2
+      campaign_manager.record_round(campaign["campaign_id"], input)
+    end
+    partial = round_input(3, scopes: %w[one two])
+    make_campaign_session(campaign, partial, scope: "one")
+    initial = campaign_manager.record_round(campaign["campaign_id"], partial)
+    assert initial["accepted"]
+    historical_refs = [initial["attempts"].find { |a| a["completed"] }["sessions"].first["receipt"],
+      initial["attempts"].last["sessions"].first["receipt"]]
+    @head = "c" * 40
+    current = round_input(4, scopes: %w[one two])
+    %w[one two].each { |scope| make_campaign_session(campaign, current, scope: scope) }
+    add_campaign_approval(campaign, current)
+    accepted = campaign_manager.record_round(campaign["campaign_id"], current)
+    assert accepted["accepted"], accepted["reasons"].inspect
+    historical_refs.each do |ref|
+      proof = @accepted_reviews.delete(ref["digest"])
+      blocked = campaign_manager.status(campaign["campaign_id"])
+      refute blocked["accepted"]
+      refute blocked["evidence"]["available"]
+      assert_equal accepted["counters"], blocked["counters"]
+      assert_equal 4, blocked["completed_rounds"]
+      @accepted_reviews[ref["digest"]] = proof
+      assert campaign_manager.status(campaign["campaign_id"])["accepted"]
+    end
+  end
+
 end

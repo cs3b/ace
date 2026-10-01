@@ -107,6 +107,21 @@ ace-assign attempt reconcile --attempt ATTEMPT --receipt receipt.json
 
 `reserved -> running -> succeeded | failed | stopped | uncertain`; reconciliation may resolve `uncertain -> succeeded | failed`. Terminal attempts accept no new effects, and accepted history is append-only.
 
+### Read accepted execution authority
+
+`attempt evidence` reads a managed coordinator-accepted receipt from immutable journal history without transitions, cache writes, or audit checkout creation. Supply the accepted attempt ID and exact canonical receipt digest. The trusted local operator or OS-enforced service verifies the actual executed outcome before accepting its receipt; worker-authored success claims cannot accept themselves. This reader consumes that attestation and does not execute a test or model.
+
+```sh
+ace-assign attempt evidence --attempt ATTEMPT --receipt-digest SHA256 --format json \
+  --kind check --check-name tests
+ace-assign attempt evidence --attempt ATTEMPT --receipt-digest SHA256 --format json \
+  --kind review-collection
+ace-assign attempt evidence --attempt ATTEMPT --receipt-digest SHA256 --format json \
+  --kind review-collection --historical-head EXACT_RECORDED_HEAD
+```
+
+A check proof requires the live candidate head, intact accepted artifacts, and the matching executed operation: `tests` uses `test`, other explicit check names use that operation name. Review collection requires an accepted `review-collect` operation with a passed `review-execution` outcome and the retained metadata/report/prompt artifacts. Historical review validation exposes `historical: true` and the recorded head; it preserves accepted source authority across head drift and cannot certify live checks. Unknown receipts, changed artifacts, unaccepted/unmanaged history, wrong purposes and stale current queries fail closed. Retain the configured evidence ref alongside durable review campaigns.
+
 ### Evidence storage and recovery modes
 
 - Task-attached (managed) attempts journal accepted evidence to the configured evidence Git ref (default `refs/ace/execution`) through an isolated, disposable audit checkout, outside the deliverable candidate branch. Journal commits never advance or exempt the reviewed candidate.

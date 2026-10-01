@@ -156,4 +156,58 @@ class CampaignReceiptTest < AceAssignTestCase
     end
   end
 
+  def test_historical_review_proof_retains_authority_without_certifying_live_checks
+    result = campaign_manager.status(@campaign["campaign_id"])
+    ref = result["rounds"].first["sessions"].first["receipt"]
+    old_head = @head
+    assert_raises(Ace::Assign::AttemptErrors::ReceiptRejected) do
+      @check_coordinator.evidence(attempt_id: ref["attempt_id"], receipt_digest: ref["digest"],
+        kind: "review-collection", historical_head: false)
+    end
+    File.write(File.join(@test_dir, "candidate.rb"), "puts :changed\n")
+    git_in(@test_dir, "add", "candidate.rb")
+    git_in(@test_dir, "commit", "-m", "new head")
+    assert_raises(Ace::Assign::AttemptErrors::ReceiptRejected) do
+      @check_coordinator.evidence(attempt_id: ref["attempt_id"], receipt_digest: ref["digest"], kind: "review-collection")
+    end
+    proof = @check_coordinator.evidence(attempt_id: ref["attempt_id"], receipt_digest: ref["digest"],
+      kind: "review-collection", historical_head: old_head)
+    assert proof["historical"]
+    assert_equal old_head, proof["head"]
+    assert_raises(Ace::Assign::AttemptErrors::ReceiptRejected) do
+      @check_coordinator.evidence(attempt_id: ref["attempt_id"], receipt_digest: ref["digest"], historical_head: old_head)
+    end
+    assert_raises(Ace::Assign::AttemptErrors::ReceiptRejected) do
+      @check_coordinator.evidence(attempt_id: ref["attempt_id"], receipt_digest: ref["digest"],
+        kind: "review-collection", historical_head: "f" * 40)
+    end
+    journal_head = git_in(@test_dir, "rev-parse", "refs/ace/execution")
+    git_in(@test_dir, "update-ref", "-d", "refs/ace/execution")
+    assert_raises(Ace::Assign::AttemptErrors::ReceiptRejected) do
+      @check_coordinator.evidence(attempt_id: ref["attempt_id"], receipt_digest: ref["digest"],
+        kind: "review-collection", historical_head: old_head)
+    end
+    git_in(@test_dir, "update-ref", "refs/ace/execution", journal_head)
+    assert @check_coordinator.evidence(attempt_id: ref["attempt_id"], receipt_digest: ref["digest"],
+      kind: "review-collection", historical_head: old_head)["historical"]
+    refute_equal git_in(@test_dir, "rev-parse", "HEAD"), proof["head"]
+  end
+
+  def test_worker_authored_passed_check_cannot_become_accepted_execution_authority
+    attempt = start_attempt
+    path = receipt(attempt, "operation" => "test", "review" => nil, "campaign" => nil)
+    data = JSON.parse(File.read(path))
+    digest = Ace::Assign::Models::ExecutionReceipt.from_h(data).digest
+    worker = Ace::Assign::Molecules::ExecutionIdentityResolver::Identity.new(
+      actor: "worker", role: "worker", runtime: "fixture:worker", adapter: "service")
+    assert_raises(Ace::Assign::AttemptErrors::ReceiptRejected) do
+      @coordinator.finish(attempt_id: attempt.attempt_id, receipt_path: path, identity: worker)
+    end
+    assert_raises(Ace::Assign::AttemptErrors::ReceiptRejected) do
+      @coordinator.evidence(attempt_id: attempt.attempt_id, receipt_digest: digest)
+    end
+    assert_equal "running", @coordinator.store.find(attempt.attempt_id).state
+    assert_empty @coordinator.store.find(attempt.attempt_id).accepted_receipts
+  end
+
 end
