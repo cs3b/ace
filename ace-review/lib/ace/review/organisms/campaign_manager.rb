@@ -196,10 +196,17 @@ module Ace
           unless scopes.keys.sort == required.sort && scopes.values.all? { |s| s.is_a?(Hash) }
             raise Contract::Invalid, "scope_identity must pin preset and subjects for every required scope"
           end
-          scopes.each_value do |scope|
+          scopes.each do |scope_id, scope|
             raise Contract::Invalid, "unknown scope identity fields" unless (scope.keys - %w[preset subjects delta_reference_head]).empty?
             Contract.string!(scope["preset"], "scope preset")
-            Contract.strings!(scope["subjects"], "scope subjects")
+            subjects = Contract.strings!(scope["subjects"], "scope subjects")
+            expected_diff = "diff:#{input['base']}..#{input['head']}"
+            if scope_id == "full" && record["subject"]["local_candidate_id"] && subjects != [expected_diff]
+              raise Contract::Invalid, "local full scope requires the exact pinned diff selector"
+            end
+            if subjects.any? { |subject| subject.start_with?("diff:") && subject != expected_diff }
+              raise Contract::Invalid, "diff scope must use the exact pinned base and head"
+            end
             if scope.key?("delta_reference_head")
               raise Contract::Invalid, "delta scope requires a PR subject" unless record["subject"]["pr"]
               Contract.sha!(scope["delta_reference_head"], "delta reference head")
@@ -274,13 +281,18 @@ module Ace
           end
           source_head = round&.dig("binding", "head")
           source_base = round&.dig("binding", "base")
+          later_attempts = round ? record["attempts"].drop_while { |a| a["attempt_id"] != round["attempt_id"] }.drop(1) : []
+          later_high = later_attempts.flat_map { |attempt| attempt["assessments"] }.any? do |finding|
+            %w[high critical].include?(finding["priority"]) && finding["disposition"] != "invalid"
+          end
           current_evidence = !!round && available && head && base && source_head == head && source_base == base &&
-            clean_candidate?
+            clean_candidate? && !later_high
           blockers = result["open_findings"].select { |f| %w[critical high].include?(f["priority"]) }
           reasons = []
           reasons << revision_error if revision_error
           reasons << "search has not converged" unless result["search_converged"]
           reasons << "unresolved High/Critical findings" unless blockers.empty?
+          reasons << "later confirmed High/Critical requires a completed current review" if later_high
           reasons << (error || "review evidence is stale or incomplete") unless current_evidence
           reasons << "independent current-head approval and executed required checks missing" unless round&.dig("approval")
           result.merge("evidence" => {"valid" => current_evidence, "available" => available,

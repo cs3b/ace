@@ -239,4 +239,34 @@ class CampaignManagerTest < AceReviewTest
     assert_equal record, File.read(campaign_manager.store.path(campaign["campaign_id"]))
     assert preview["dry_run"]
   end
+  def test_later_partial_resolved_high_invalidates_earlier_approval_until_completed_reviews
+    campaign = start_campaign(scopes: %w[one two])
+    3.times do |n|
+      input = round_input(n, scopes: %w[one two])
+      %w[one two].each { |scope| make_campaign_session(campaign, input, scope: scope) }
+      add_campaign_approval(campaign, input) if n == 2
+      campaign_manager.record_round(campaign["campaign_id"], input)
+    end
+    assert campaign_manager.finish(campaign["campaign_id"])["accepted"]
+    partial = round_input(3, scopes: %w[one two])
+    make_campaign_session(campaign, partial, scope: "one", finding: {"status" => "done", "resolution" => "Fixed"})
+    blocked = campaign_manager.record_round(campaign["campaign_id"], partial)
+    refute blocked["accepted"]
+    refute blocked["evidence"]["valid"]
+    assert_equal 3, blocked["completed_rounds"]
+    assert_equal 3, blocked["clean_streak"]
+    assert_empty blocked["open_findings"]
+    partial["attempt_id"] = "complete-later"
+    make_campaign_session(campaign, partial, scope: "two")
+    complete = campaign_manager.record_round(campaign["campaign_id"], partial)
+    assert_equal 0, complete["clean_streak"]
+    [4, 5].each do |n|
+      input = round_input(n, scopes: %w[one two])
+      %w[one two].each { |scope| make_campaign_session(campaign, input, scope: scope) }
+      add_campaign_approval(campaign, input) if n == 5
+      campaign_manager.record_round(campaign["campaign_id"], input)
+    end
+    assert campaign_manager.finish(campaign["campaign_id"])["accepted"]
+  end
+
 end

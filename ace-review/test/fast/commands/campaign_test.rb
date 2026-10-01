@@ -49,6 +49,9 @@ class CampaignCommandTest < AceReviewTest
     end
     input = round_input(1)
     campaign_manager.record_round(campaign["campaign_id"], input)
+    conflicting_diff = round_input(2)
+    conflicting_diff["scope_identity"]["full"]["subjects"] = ["diff:#{@base}..#{'c' * 40}"]
+    assert_raises(ArgumentError) { campaign_manager.record_round(campaign["campaign_id"], conflicting_diff) }
     binding = campaign_manager.session_binding(campaign["campaign_id"], round_id: "round-1", scope: "full",
       preset: "code-valid", head: @head, base: @base, subjects: ["diff:#{@base}..#{@head}"])
     assert_equal campaign["campaign_id"], binding["campaign_id"]

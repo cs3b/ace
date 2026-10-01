@@ -62,7 +62,7 @@ module Ace
         #
         # @return [Hash] Digest payload
         def digest_payload
-          {
+          payload = {
             "attempt_id" => attempt_id,
             "assignment_id" => assignment_id,
             "project_id" => project_id,
@@ -73,9 +73,10 @@ module Ace
             "verdict" => verdict,
             "artifacts" => artifacts,
             "checks" => checks,
-            "review" => review,
-            "campaign" => campaign
+            "review" => review
           }
+          payload["campaign"] = campaign if campaign
+          payload
         end
 
         # Convert to a hash for serialization.

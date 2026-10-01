@@ -31,7 +31,7 @@ For an existing GitHub subject use `{"repository":"https://github.com/owner/repo
 
 ## Pin and collect a round
 
-Before collection, record a pin with empty sessions and dispositions. `attempt_id` identifies one immutable recording submission; `round_id` identifies the logical round. Use a new attempt ID for partial progress and completion. Required scopes must equal the frozen policy scopes. Each scope identity pins the review preset and explicit subject selectors before collection. Collection must use those exact selectors.
+Before collection, record a pin with empty sessions and dispositions. `attempt_id` identifies one immutable recording submission; `round_id` identifies the logical round. Use a new attempt ID for partial progress and completion. Required scopes must equal the frozen policy scopes. Each scope identity pins the review preset and explicit subject selectors before collection. Collection must use those exact selectors. The local `full` scope requires only the exact pinned diff selector; file subsets use explicit module scope IDs in the frozen policy.
 
 ```json
 {
@@ -81,7 +81,7 @@ Submit a new attempt ID with all reports needed for the round. Metadata, reports
 }
 ```
 
-Use `dispositions: []` for a session with no findings. Every source finding needs exactly one disposition. Source status derives the disposition: pending/skip stays open, done is resolved, invalid is invalid. A confirmed High/Critical makes the round non-clean even if already resolved. The same rule applies to a High/Critical observed during partial coverage. Earlier findings remain open when absent from later reports.
+Use `dispositions: []` for a session with no findings. Every source finding needs exactly one disposition. Source status derives the disposition: pending/skip stays open, done is resolved, invalid is invalid. A confirmed High/Critical makes the round non-clean even if already resolved. The same rule applies to a High/Critical observed during partial coverage. Earlier findings remain open when absent from later reports. A confirmed High/Critical in a later partial round invalidates the earlier approval even if resolved; complete that round and collect the required subsequent clean reviews.
 
 `finding_id` optionally links an assessment to an existing canonical finding. Reopening requires `disposition: "reopened"` and a new verified source occurrence; terminal feedback files are never forced back to pending. Corrections are appended to campaign history. A linked successor contract retains predecessor findings for explicit disposition.
 
