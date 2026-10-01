@@ -6,6 +6,8 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+- **RubyGems publisher**: Retain the push results before printing the final summary so successful dependency-wave publication exits cleanly instead of raising `NameError` after the gems are registered.
+
 - **ace-bundle v0.44.2**: The released gemspec now declares `ace-git-github ~> 0.2`, matching the source constraint; published 0.44.1 metadata still pinned `~> 0.1.1`, which kept published installations resolving ace-git-github 0.1.2 and made the released 0.2.0 unreachable through dependency resolution.
 - **ace-task v0.38.1**: The released gemspec now declares `ace-git-github ~> 0.2`, matching the source constraint; published 0.38.0 metadata still pinned `~> 0.1.1` (same published-graph staleness as ace-bundle v0.44.2).
 - **ace-review v0.56.1**: Ships the `ace-git-github ~> 0.2` published constraint fix together with the full-vs-delta review round fix (previously published 0.56.0 metadata pinned `~> 0.1.1`).

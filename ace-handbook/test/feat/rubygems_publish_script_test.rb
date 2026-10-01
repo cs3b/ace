@@ -101,6 +101,31 @@ module Ace
         end
       end
 
+      def test_prepared_dependency_waves_finish_with_summary_and_clean_exit
+        gems = {"ace-leaf-a" => [], "ace-leaf-b" => [], "ace-top" => ["ace-leaf-a", "ace-leaf-b"]}
+        with_fake_rubygems(credentials: true, gems: gems) do |env, context|
+          prepared, prepare_error, prepare_status = run_script(env, context, "--prepare")
+          assert prepare_status.success?, "prepare failed: #{prepare_error}"
+          assert_includes prepared, "Prepared all artifacts"
+          artifacts = File.readlines(context.build_log, chomp: true)
+          assert_equal 3, artifacts.size
+          env["GEM_HOST_OTP_CODE"] = SECRET
+
+          stdout, stderr, status = run_script(env, context)
+
+          assert status.success?, "publication failed after pushes: #{stderr}"
+          assert_equal "", stderr
+          assert_includes stdout, "Using prepared queue"
+          assert_includes stdout, "Published: 3  Skipped (already published): 0  Waves: 2"
+          assert_includes stdout, "Mode: live"
+          assert_includes stdout, "TS-MONO-001"
+          assert_equal 3, File.readlines(context.push_log).size
+          assert_equal artifacts, File.readlines(context.build_log, chomp: true), "prepared artifacts were rebuilt"
+          artifacts.each { |artifact| refute File.exist?(artifact), "published artifact retained" }
+          assert_secret_absent(stdout, stderr)
+        end
+      end
+
       def test_preconditions_fail_before_push_without_exposing_otp
         with_fake_rubygems(credentials: true) do |env, context|
           invalid_otp = "x" * 9
