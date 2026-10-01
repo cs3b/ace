@@ -10,9 +10,9 @@ module Ace
             desc "Read coordinator-accepted live execution or historical review authority"
             option :attempt, required: true, desc: "Accepted execution attempt ID"
             option :receipt_digest, required: true, desc: "Accepted receipt digest"
-            option :kind, default: "check", desc: "Evidence purpose: check or review-collection"
+            option :kind, default: "check", desc: "Evidence purpose: check, review-collection or review-approval"
             option :check_name, default: "tests", desc: "Required check name (tests binds operation test)"
-            option :historical_head, desc: "Recorded review-collection head for historical authority only"
+            option :historical_head, desc: "Recorded collection/approval head for historical authority only"
             option :format, default: "json", desc: "JSON evidence projection"
 
             def call(**options)

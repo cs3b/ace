@@ -118,9 +118,11 @@ ace-assign attempt evidence --attempt ATTEMPT --receipt-digest SHA256 --format j
   --kind review-collection
 ace-assign attempt evidence --attempt ATTEMPT --receipt-digest SHA256 --format json \
   --kind review-collection --historical-head EXACT_RECORDED_HEAD
+ace-assign attempt evidence --attempt ATTEMPT --receipt-digest SHA256 --format json \
+  --kind review-approval
 ```
 
-A check proof requires the live candidate head, intact accepted artifacts, and the matching executed operation: `tests` uses `test`, other explicit check names use that operation name. Review collection requires an accepted `review-collect` operation with a passed `review-execution` outcome and the retained metadata/report/prompt artifacts. Historical review validation exposes `historical: true` and the recorded head; it preserves accepted source authority across head drift and cannot certify live checks. Unknown receipts, changed artifacts, unaccepted/unmanaged history, wrong purposes and stale current queries fail closed. Retain the configured evidence ref alongside durable review campaigns.
+A check proof requires the live candidate head, intact accepted artifacts, and the matching executed operation: `tests` uses `test`, other explicit check names use that operation name. Review collection requires an accepted `review-collect` operation with a passed `review-execution` outcome and the retained metadata/report/prompt artifacts. Review approval requires an ordinary accepted `review` operation with the approved independent reviewer verdict, exact head and retained report artifacts; collection proof cannot substitute for approval. Both collection and approval support an exact `--historical-head`. Historical review validation exposes `historical: true` and the recorded head; it preserves accepted source authority across head drift and cannot certify live checks. Unknown receipts, changed artifacts, unaccepted/unmanaged history, wrong purposes and stale current queries fail closed. Retain the configured evidence ref alongside durable review campaigns.
 
 ### Evidence storage and recovery modes
 

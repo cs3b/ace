@@ -18,11 +18,12 @@ module Ace
       class CampaignEvidence
         Contract = Atoms::CampaignContract
 
-        def initialize(repo_root:, check_evidence: nil, review_evidence: nil)
+        def initialize(repo_root:, check_evidence: nil, review_evidence: nil, approval_evidence: nil)
           @repo_root = File.realpath(repo_root)
           authority = CampaignExecutionEvidence.new(repo_root: @repo_root)
           @check_evidence = check_evidence || authority.method(:check)
           @review_evidence = review_evidence || authority.method(:review)
+          @approval_evidence = approval_evidence || authority.method(:approval)
         end
 
         def artifact(reference)
@@ -144,6 +145,12 @@ module Ace
           @review_evidence.call(session.fetch("receipt"), head: head, artifacts: session.fetch("artifacts"), historical: historical)
         end
 
+        def verify_approval_authority(approval, historical: false)
+          @approval_evidence.call(approval.fetch("receipt"), head: approval.fetch("head"),
+            artifacts: approval.fetch("reports"), producer: approval.fetch("producer"),
+            reviewer: approval.fetch("reviewer"), historical: historical)
+        end
+
         def resolution(previous)
           directory = previous["source_id"].split("#", 2).first
           finding = feedback(File.expand_path(directory, @repo_root)).find do |source|
@@ -187,6 +194,9 @@ module Ace
           unless (binding["required_scopes"] - approved_scopes).empty?
             raise Contract::Invalid, "approval does not cover every required scope"
           end
+          approval_receipt = data.fetch("receipt")
+          @approval_evidence.call(approval_receipt, head: binding["head"], artifacts: review_refs,
+            producer: producer, reviewer: reviewer)
           checks = data["checks"]
           raise Contract::Invalid, "approval requires executed checks" unless checks.is_a?(Array) && !checks.empty?
           check_refs = []
@@ -200,7 +210,8 @@ module Ace
           unless (record["policy"]["required_checks"] - checks.map { |c| c["name"] }).empty?
             raise Contract::Invalid, "missing required checks"
           end
-          {"artifact" => normalized, "artifacts" => check_refs + review_refs, "producer" => producer,
+          {"artifact" => normalized, "artifacts" => check_refs + review_refs, "receipt" => approval_receipt,
+           "reports" => review_refs, "producer" => producer,
            "reviewer" => reviewer, "head" => binding["head"], "base" => binding["base"], "checks" => checks,
            "verdict" => "approved"}
         rescue JSON::ParserError, KeyError => e

@@ -13,7 +13,15 @@ module CampaignAssignmentFixtures
       checks: [{"name" => "review-execution", "verdict" => "passed"}])
   end
 
-  def accepted_execution_reference(operation:, artifacts:, checks: [])
+  def accepted_approval_reference(reports:, producer:, reviewer:)
+    accepted_execution_reference(operation: "review", artifacts: reports,
+      checks: [{"name" => "review-execution", "verdict" => "passed"}],
+      producer: {"actor" => producer, "role" => "worker", "runtime" => "fixture:worker"},
+      review: {"reviewer" => {"actor" => reviewer, "runtime" => "fixture:reviewer"},
+        "head" => @head, "verdict" => "approved"})
+  end
+
+  def accepted_execution_reference(operation:, artifacts:, checks: [], producer: nil, review: nil)
     cache = File.join(@test_dir, ".ace-local/assign")
     identity = Ace::Assign::Molecules::ExecutionIdentityResolver::Identity.new(
       actor: "test-coordinator", role: "coordinator", runtime: "local:test", adapter: "local")
@@ -24,7 +32,8 @@ module CampaignAssignmentFixtures
     attempt = @check_coordinator.start(assignment_id: @check_assignment.id, step: "010", project_id: "ace", identity: identity)
     data = {"attempt_id" => attempt.attempt_id, "assignment_id" => @check_assignment.id,
       "project_id" => "ace", "scope" => "010", "operation" => operation,
-      "producer" => {"actor" => "check-worker", "role" => "worker", "runtime" => "fixture:check"},
+      "producer" => producer || {"actor" => "check-worker", "role" => "worker", "runtime" => "fixture:check"},
+      "review" => review,
       "head" => @head, "verdict" => "succeeded", "artifacts" => artifacts, "checks" => checks}
     path = File.join(@test_dir, ".ace-local/check-receipt.json")
     File.write(path, JSON.generate(data))
