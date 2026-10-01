@@ -64,7 +64,7 @@ module Ace
           receipt
         end
         # Recheck the source artifacts/checks of an already accepted receipt.
-        def verify_check_evidence!(data, live_head:, repo_root:)
+        def verify_accepted_evidence!(data, live_head:, repo_root:)
           verify_head(data, live_head)
           verify_artifacts(data, repo_root)
           verify_checks(data)

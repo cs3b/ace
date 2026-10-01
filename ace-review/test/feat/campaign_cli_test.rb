@@ -41,6 +41,15 @@ class CampaignCLITest < AceReviewTest
     campaign, err, status = cli(*args)
     assert status.success?, err
     id = campaign["campaign_id"]
+    %w[false null].each do |invalid_policy|
+      File.write(".ace-local/policy.json", invalid_policy)
+      rejected_policy, _, status = cli(*args, "--policy", ".ace-local/policy.json")
+      refute status.success?
+      assert_includes rejected_policy["error"], "must be an object"
+    end
+    File.write(".ace-local/check-control.json", JSON.generate("name" => "tests", "head" => @head,
+      "status" => "succeeded", "exit_code" => 0))
+    control_check = accepted_check_reference(".ace-local/check-control.json")
     fabricated = round_input("invalid-base")
     fabricated["base"] = "f" * 40
     fabricated["scope_identity"]["full"]["subjects"] = ["files:candidate.rb"]
@@ -66,6 +75,19 @@ class CampaignCLITest < AceReviewTest
       input["attempt_id"] = "completed-#{n}"
       make_campaign_session(campaign, input)
       add_campaign_approval(campaign, input) if n == 2
+      if n == 0
+        forged = Marshal.load(Marshal.dump(input))
+        [nil, control_check].each do |invalid_authority|
+          forged["sessions"].first["receipt"] = invalid_authority
+          File.write("round.json", JSON.generate(forged))
+          rejected_session, _, status = cli("campaign", "record-round", id, "--input", "round.json")
+          refute status.success?
+          refute rejected_session["accepted"]
+        end
+        unchanged, err, status = cli("campaign", "status", id)
+        assert status.success?, err
+        assert_equal 0, unchanged["completed_rounds"]
+      end
       File.write("round.json", JSON.generate(input))
       recorded, err, status = cli("campaign", "record-round", id, "--input", "round.json", "--quiet")
       assert status.success?, err
@@ -88,6 +110,25 @@ class CampaignCLITest < AceReviewTest
     rejected, _, status = cli("campaign", "finish", id)
     refute status.success?
     refute rejected["accepted"]
+    @head = @base = git("rev-parse", "HEAD")
+    current = round_input(3)
+    File.write("round.json", JSON.generate(current))
+    _, err, status = cli("campaign", "record-round", id, "--input", "round.json")
+    assert status.success?, err
+    drifted, err, status = cli("campaign", "status", id)
+    assert status.success?, err
+    assert_equal @base, drifted["evidence"]["current_base"]
+    refute_equal @base, drifted["evidence"]["source_base"]
+    assert_equal 3, drifted["completed_rounds"]
+    current["attempt_id"] = "complete-h2"
+    make_campaign_session(campaign, current)
+    add_campaign_approval(campaign, current)
+    File.write("round.json", JSON.generate(current))
+    recorded, err, status = cli("campaign", "record-round", id, "--input", "round.json")
+    assert status.success?, err
+    assert_equal 4, recorded["completed_rounds"]
+    assert_equal 4, recorded["clean_streak"]
+    assert recorded["accepted"], recorded["reasons"].inspect
     same, err, status = cli(*args)
     assert status.success?, err
     assert_equal id, same["campaign_id"]

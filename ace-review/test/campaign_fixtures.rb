@@ -14,7 +14,7 @@ module CampaignFixtures
 
   def campaign_manager
     Ace::Review::Organisms::CampaignManager.new(repo_root: @test_dir,
-      revisions: ->(ref, *_args) { ref == "HEAD" ? @head : @base }, check_evidence: fixture_check_evidence)
+      revisions: ->(ref, *_args) { ref == "HEAD" ? @head : @base }, check_evidence: fixture_check_evidence, review_evidence: fixture_review_evidence)
   end
 
   def start_campaign(scopes: ["full"])
@@ -77,7 +77,43 @@ module CampaignFixtures
     metadata_file = File.join(dir, "metadata.yml")
     File.write(File.join(@test_dir, metadata_file), YAML.dump(metadata))
     input["sessions"] << {"scope" => scope, "metadata" => artifact_ref(metadata_file)}
+    accept_review_session(input, dir) unless noop || failed
     dir
+  end
+
+  def review_artifacts(dir)
+    paths = %w[metadata.yml system.prompt.md user.prompt.md].map { |name| File.join(dir, name) }
+    llm = File.join(dir, "llm_metadata.yml")
+    paths << llm if File.file?(File.join(@test_dir, llm))
+    paths.concat(Dir.glob(File.join(@test_dir, dir, "review-report-*.md")).map { |path| path.delete_prefix(@test_dir + "/") })
+    paths.map { |path| artifact_ref(path) }
+  end
+
+  def accepted_review_reference(dir)
+    proof = {"head" => @head, "artifacts" => review_artifacts(dir), "operation" => "review-collect"}
+    digest = Ace::Review::Atoms::CampaignContract.digest(proof)
+    (@accepted_reviews ||= {})[digest] = proof
+    {"attempt_id" => "accepted-review", "digest" => digest}
+  end
+
+  def accept_review_session(input, dir)
+    input["sessions"].find { |session| session["metadata"]["path"] == File.join(dir, "metadata.yml") }["receipt"] =
+      accepted_review_reference(dir)
+  end
+
+  def fixture_review_evidence
+    lambda do |ref, head:, artifacts:|
+      proof = (@accepted_reviews || {})[ref["digest"]]
+      unless proof && proof["head"] == head && (artifacts - proof["artifacts"]).empty?
+        raise Ace::Review::Atoms::CampaignContract::Invalid, "fixture coordinator did not accept review execution"
+      end
+      proof["artifacts"].each do |artifact|
+        unless artifact_ref(artifact["path"]) == artifact
+          raise Ace::Review::Atoms::CampaignContract::Invalid, "accepted review artifact changed"
+        end
+      end
+      proof
+    end
   end
 
   def fixture_check_evidence

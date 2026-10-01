@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Bind campaign check names to accepted executed operations and review collection to accepted `review-collect` artifacts, through `attempt evidence` purpose checks.
 
 - `ace-assign attempt evidence` exposes read-only coordinator-accepted current-head check proof. Journal reads use immutable Git objects without writing cache/audit checkout state.
 - Review receipts may consume a durable ace-review campaign result. The existing coordinator still validates authority, live head, independent reviewer, executed checks and artifact digests; stale or conflicting campaign snapshots are rejected.

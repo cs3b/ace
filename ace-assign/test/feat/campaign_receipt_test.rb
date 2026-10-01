@@ -131,4 +131,29 @@ class CampaignReceiptTest < AceAssignTestCase
     assert_equal @head, git_in(@test_dir, "rev-parse", "HEAD")
   end
 
+  def test_non_test_receipt_cannot_supply_tests_evidence
+    path = ".ace-local/unrelated-operation.json"
+    File.write(File.join(@test_dir, path), JSON.generate("operation" => "work", "head" => @head))
+    ref = accepted_execution_reference(operation: "work", artifacts: [artifact_ref(path)],
+      checks: [{"name" => "tests", "verdict" => "passed"}])
+    assert_raises(Ace::Assign::AttemptErrors::ReceiptRejected) do
+      @check_coordinator.evidence(attempt_id: ref["attempt_id"], receipt_digest: ref["digest"], kind: "check")
+    end
+    review_ref = campaign_manager.status(@campaign["campaign_id"])["rounds"].first["sessions"].first["receipt"]
+    assert_raises(Ace::Assign::AttemptErrors::ReceiptRejected) do
+      @check_coordinator.evidence(attempt_id: review_ref["attempt_id"], receipt_digest: review_ref["digest"], kind: "check")
+    end
+    unmanaged = Ace::Assign::Molecules::AssignmentManager.new(cache_base: @cache).create(
+      name: "unmanaged-check", source_config: "fixture", project_id: "ace")
+    local_attempt = @coordinator.start(assignment_id: unmanaged.id, step: "010", project_id: "ace")
+    refute local_attempt.managed?
+    finished = @coordinator.finish(attempt_id: local_attempt.attempt_id,
+      receipt_path: receipt(local_attempt, "assignment_id" => unmanaged.id, "operation" => "test",
+        "review" => nil, "campaign" => nil))
+    assert_equal "succeeded", finished.state
+    assert_raises(Ace::Assign::AttemptErrors::ReceiptRejected) do
+      @coordinator.evidence(attempt_id: local_attempt.attempt_id, receipt_digest: finished.accepted_receipts.last["digest"])
+    end
+  end
+
 end
