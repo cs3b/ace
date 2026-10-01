@@ -26,6 +26,9 @@ class CampaignStoreTest < AceReviewTest
     malformed = record.merge("rounds" => "corrupt")
     store.transaction { store.write(malformed) }
     assert_raises(ArgumentError) { store.read("abcdef") }
+    noncanonical = record.merge("subject" => {"repository" => "https://github.com/Owner/Repo/", "pr" => "Owner/Repo#42"})
+    store.transaction { store.write(noncanonical) }
+    assert_raises(ArgumentError) { store.read("abcdef") }
   end
 
   def test_dry_run_does_not_create_storage

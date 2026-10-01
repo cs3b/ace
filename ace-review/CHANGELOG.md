@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Canonical GitHub repository identities reuse campaign history across trailing slashes and repository case. Local full scope rejects empty Git diffs, including distinct commits with identical trees.
+
 - Partial High/Critical observations reset convergence across logical round IDs; a different completed round cannot reuse the preceding clean streak.
 - Missing GitHub CLI/authentication produces blocked campaign JSON instead of an uncaught source exception.
 

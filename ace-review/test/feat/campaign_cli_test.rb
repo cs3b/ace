@@ -27,10 +27,14 @@ class CampaignCLITest < AceReviewTest
     git("config", "user.name", "test")
     git("config", "user.email", "test@example.com")
     File.write(".gitignore", ".ace-local/\nsubject.json\ncontract.md\nround.json\n")
-    File.write("candidate.rb", "puts :candidate\n")
+    File.write("candidate.rb", "puts :base\n")
     git("add", ".gitignore", "candidate.rb")
+    git("commit", "-m", "base")
+    @base = git("rev-parse", "HEAD")
+    File.write("candidate.rb", "puts :candidate\n")
+    git("add", "candidate.rb")
     git("commit", "-m", "candidate")
-    @head = @base = git("rev-parse", "HEAD")
+    @head = git("rev-parse", "HEAD")
     File.write("subject.json", JSON.generate(campaign_subject))
     File.write("contract.md", "Frozen requirements")
     args = %w[campaign start --subject subject.json --contract contract.md --profile delivery]
@@ -52,6 +56,22 @@ class CampaignCLITest < AceReviewTest
       rejected_policy, _, status = cli(*args, "--policy", ".ace-local/policy.json")
       refute status.success?
       assert_includes rejected_policy["error"], "must be an object"
+    end
+    original_head = @head
+    git("commit", "--allow-empty", "-m", "same candidate tree")
+    @head = git("rev-parse", "HEAD")
+    [@head, original_head].each_with_index do |empty_base, n|
+      empty = round_input("empty-#{n}")
+      empty["base"] = empty_base
+      empty["scope_identity"]["full"]["subjects"] = ["diff:#{empty_base}..#{@head}"]
+      File.write("round.json", JSON.generate(empty))
+      rejected_empty, _, status = cli("campaign", "record-round", id, "--input", "round.json")
+      refute status.success?
+      assert_includes rejected_empty["error"], "empty Git diff"
+      unchanged, err, status = cli("campaign", "status", id)
+      assert status.success?, err
+      assert_equal 0, unchanged["completed_rounds"]
+      assert_equal 0, unchanged["counters"]["recording_attempts"]
     end
     File.write(".ace-local/check-control.json", JSON.generate("name" => "tests", "head" => @head,
       "status" => "succeeded", "exit_code" => 0))
@@ -136,7 +156,8 @@ class CampaignCLITest < AceReviewTest
     rejected, _, status = cli("campaign", "finish", id)
     refute status.success?
     refute rejected["accepted"]
-    @head = @base = git("rev-parse", "HEAD")
+    @base = @head
+    @head = git("rev-parse", "HEAD")
     current = round_input(3)
     File.write("round.json", JSON.generate(current))
     _, err, status = cli("campaign", "record-round", id, "--input", "round.json")
@@ -165,10 +186,14 @@ class CampaignCLITest < AceReviewTest
     git("config", "user.email", "test@example.com")
     FileUtils.mkdir_p(".ace-local")
     File.write(".ace-local/tracked-source.rb", "puts :tracked\n")
-    File.write("candidate.rb", "puts :candidate\n")
+    File.write("candidate.rb", "puts :base\n")
     git("add", "candidate.rb", ".ace-local/tracked-source.rb")
+    git("commit", "-m", "base")
+    @base = git("rev-parse", "HEAD")
+    File.write("candidate.rb", "puts :candidate\n")
+    git("add", "candidate.rb")
     git("commit", "-m", "candidate")
-    @head = @base = git("rev-parse", "HEAD")
+    @head = git("rev-parse", "HEAD")
     manager = Ace::Review::Organisms::CampaignManager.new(repo_root: @test_dir)
     campaign = manager.start(subject: campaign_subject, contract: "Frozen requirements", policy: campaign_policy)
     manager.record_round(campaign["campaign_id"], round_input(1))

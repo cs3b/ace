@@ -62,3 +62,8 @@ Confirm collection proves executed reports but does not prove an approved review
 ## Round-12 projection and source boundary correction
 
 A resolved High in a partial round must reset convergence even if a different round completes next. Derive the clean streak in append order across every accepted attempt; only completed clean rounds increment it. The recorded per-round clean flags and total rounds remain unchanged. Convert provider missing-CLI/authentication exceptions to the campaign source-invalid boundary, so public start/status/finish emit blocked JSON. These are corrections within the existing convergence and public error contract, without a new runner or policy mode.
+
+
+## Round-13 canonical identity and empty-diff correction
+
+Normalize supported GitHub repository/PR identities before lookup, including trailing slash and case; validate declared repository against parsed PR before normalization. At the existing local full-scope Git boundary, reject a tree-equivalent or same-revision diff at pinning, collection and current validation. Controlled integration positives must use a real candidate change relative to base, including the H2 comparison, rather than an empty base=head fixture. These strengthen canonical identity and no-op rejection within R1.

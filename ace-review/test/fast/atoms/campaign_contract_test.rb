@@ -11,6 +11,9 @@ class CampaignContractTest < AceReviewTest
       Contract.subject!({"repository" => "local:/repo", "local_candidate_id" => "candidate"}))
     assert_equal "owner/repo#42", Contract.subject!({"repository" => "https://example.com/owner/repo",
       "pr" => "owner/repo#042"})["pr"]
+    canonical = Contract.subject!({"repository" => "https://github.com/owner/repo", "pr" => "owner/repo#42"})
+    assert_equal canonical, Contract.subject!({"repository" => "https://github.com/Owner/Repo/", "pr" => "Owner/Repo#042"})
+    assert_raises(ArgumentError) { Contract.subject!({"repository" => "https://github.com/other/repo/", "pr" => "owner/repo#42"}) }
     assert_equal Contract.digest({"b" => 1, "a" => 2}), Contract.digest({"a" => 2, "b" => 1})
   end
 
