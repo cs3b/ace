@@ -97,6 +97,17 @@ module Ace
             end
           end
           findings = feedback(dir)
+          extraction = metadata["feedback_extraction"]
+          extracted = extraction.is_a?(Hash) && extraction["status"] == "succeeded"
+          if extracted
+            expected_ids = findings.map { |finding| finding["source_id"].split("#").last }.sort
+            unless extraction["finding_ids"].is_a?(Array) && extraction["finding_ids"].sort == expected_ids &&
+                extraction["report_sha256"].is_a?(Array) &&
+                extraction["report_sha256"].sort == reports.map { |report| report["artifact"]["sha256"] }.sort
+              raise Contract::Invalid, "feedback extraction inventory or reviewed reports changed"
+            end
+          end
+          completed &&= extracted
           {"path" => dir.delete_prefix(@repo_root + File::SEPARATOR), "scope" => scope,
            "completed" => completed, "provider_calls" => entries.size,
            "report_files" => reports.size, "reports" => reports, "artifacts" => refs,

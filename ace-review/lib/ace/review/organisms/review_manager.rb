@@ -1199,7 +1199,7 @@ module Ace
             manager.collection_base(options.campaign, round_id: options.campaign_round)
           manager.session_binding(options.campaign, round_id: options.campaign_round, scope: options.campaign_scope,
             preset: options.preset, head: head, base: base, pr_url: options.pr_metadata&.dig("url"),
-            subjects: options.subject)
+            subjects: options.subject, delta_reference_head: content.dig(:delta, :reference_head))
         rescue Atoms::CampaignContract::Invalid => e
           raise Errors::BundleProcessingError, e.message
         end
@@ -1323,6 +1323,8 @@ module Ace
               result, session_dir, review_data, options, model
             )
 
+            save_campaign_feedback_metadata(session_dir, feedback_result) if review_data[:campaign_binding]
+
             # Add feedback info to response if extraction succeeded
             if feedback_result && feedback_result[:success]
               response[:feedback_count] = feedback_result[:items_count]
@@ -1366,6 +1368,8 @@ module Ace
             if should_extract_feedback?(result, options)
               feedback_result = extract_feedback(result, session_dir, review_data, options)
             end
+
+            save_campaign_feedback_metadata(session_dir, feedback_result) if review_data[:campaign_binding]
 
             # Build multi-model success response
             build_multi_model_response(result, session_dir, feedback_result)
@@ -1625,6 +1629,32 @@ module Ace
           end
 
           response
+        end
+
+        # Persist the finding inventory only after the existing extractor
+        # completes; an absent directory cannot attest a zero-findings review.
+        def save_campaign_feedback_metadata(session_dir, result)
+          path = File.join(session_dir, "metadata.yml")
+          metadata = YAML.safe_load_file(path, permitted_classes: [Time, Date, Symbol])
+          return unless metadata["campaign_binding"]
+          extraction = {"status" => result ? "failed" : "skipped"}
+          if result && result[:success]
+            reader = Molecules::FeedbackFileReader.new
+            ids = Array(result[:paths]).map do |finding_path|
+              finding = reader.read(finding_path)
+              raise Errors::BundleProcessingError, finding[:error] unless finding[:success]
+              finding[:feedback_item].id
+            end
+            unless result[:items_count] == ids.size && ids.uniq.size == ids.size
+              raise Errors::BundleProcessingError, "feedback extraction inventory is incomplete"
+            end
+            entries = metadata["models"] || [YAML.safe_load_file(File.join(session_dir, "llm_metadata.yml"),
+              permitted_classes: [Time, Date, Symbol])]
+            digests = entries.map { |entry| entry["report_sha256"] }.compact
+            extraction = {"status" => "succeeded", "finding_ids" => ids, "report_sha256" => digests}
+          end
+          metadata["feedback_extraction"] = extraction
+          File.write(path, YAML.dump(metadata))
         end
 
         # Determine if feedback extraction should be triggered

@@ -62,6 +62,8 @@ module CampaignFixtures
       File.write(File.join(feedback, "finding.s.md"), "---\n#{YAML.dump(item).delete_prefix("---\n")}---\n")
       input["dispositions"] << {"source_id" => "#{dir}#finding", "reason" => "Verified fixture disposition"}
     end
+    metadata["feedback_extraction"] = {"status" => "succeeded", "finding_ids" => finding ? ["finding"] : [],
+      "report_sha256" => noop || failed ? [] : [Digest::SHA256.file(report).hexdigest]}
     metadata_file = File.join(dir, "metadata.yml")
     File.write(File.join(@test_dir, metadata_file), YAML.dump(metadata))
     input["sessions"] << {"scope" => scope, "metadata" => artifact_ref(metadata_file)}
