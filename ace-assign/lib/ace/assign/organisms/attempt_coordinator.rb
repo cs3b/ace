@@ -181,9 +181,13 @@ module Ace
 
         # Read accepted check evidence without transitions, locks, cache writes
         # or audit checkout creation. Managed history comes from the Git ref.
-        def evidence(attempt_id:, receipt_digest:, kind: "check", check_name: "tests")
+        def evidence(attempt_id:, receipt_digest:, kind: "check", check_name: "tests", historical_head: nil)
           unless %w[check review-collection].include?(kind) && check_name.is_a?(String) && !check_name.strip.empty?
             raise AttemptErrors::ReceiptRejected, "Invalid evidence kind or check name"
+          end
+          if !historical_head.nil? && (kind != "review-collection" || !historical_head.is_a?(String) ||
+              !historical_head.match?(/\A[0-9a-f]{40,64}\z/))
+            raise AttemptErrors::ReceiptRejected, "Historical evidence requires review-collection and an exact recorded head"
           end
           unless attempt_id.to_s.match?(/\A[a-zA-Z0-9][a-zA-Z0-9_.-]{0,127}\z/) &&
               receipt_digest.to_s.match?(/\A[0-9a-f]{64}\z/)
@@ -212,12 +216,13 @@ module Ace
           unless receipt.digest == Atoms::EvidenceDigest.digest(receipt.digest_payload)
             raise AttemptErrors::ReceiptRejected, "Accepted receipt digest is corrupt"
           end
-          live_head = candidate_head!
-          unless data["verdict"] == "succeeded" && data["head"] == live_head && attempt.candidate_head == live_head
-            raise AttemptErrors::ReceiptRejected, "Accepted check evidence is stale or unsuccessful"
+          evidence_head = historical_head || candidate_head!
+          unless data["verdict"] == "succeeded" && data["head"] == evidence_head && attempt.candidate_head == evidence_head
+            raise AttemptErrors::ReceiptRejected, "Accepted execution evidence is stale or unsuccessful"
           end
-          @verifier.verify_accepted_evidence!(data, live_head: live_head, repo_root: @repo_root)
-          {"attempt_id" => attempt_id, "receipt_digest" => receipt_digest, "head" => live_head, "kind" => kind,
+          @verifier.verify_accepted_evidence!(data, live_head: evidence_head, repo_root: @repo_root)
+          {"attempt_id" => attempt_id, "receipt_digest" => receipt_digest, "head" => evidence_head, "kind" => kind,
+           "historical" => !historical_head.nil?,
            "operation" => data["operation"], "checks" => data["checks"], "producer" => data["producer"],
            "artifacts" => data["artifacts"], "assignment_id" => data["assignment_id"],
            "project_id" => data["project_id"], "scope" => data["scope"],

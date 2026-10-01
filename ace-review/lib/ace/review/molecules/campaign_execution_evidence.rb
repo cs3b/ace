@@ -21,8 +21,8 @@ module Ace
           data
         end
 
-        def review(reference, head:, artifacts:)
-          data = read(reference, head: head, kind: "review-collection")
+        def review(reference, head:, artifacts:, historical: false)
+          data = read(reference, head: head, kind: "review-collection", historical: historical)
           unless (artifacts - Array(data["artifacts"])).empty?
             raise Atoms::CampaignContract::Invalid, "review receipt does not bind every session artifact"
           end
@@ -31,7 +31,7 @@ module Ace
 
         private
 
-        def read(reference, head:, kind:, check_name: "tests")
+        def read(reference, head:, kind:, check_name: "tests", historical: false)
           Atoms::CampaignContract.object!(reference, "accepted execution receipt")
           attempt = Atoms::CampaignContract.id!(reference["attempt_id"], "execution attempt ID")
           digest = reference["digest"]
@@ -48,14 +48,14 @@ module Ace
           else
             executable = File.join(spec.full_gem_path, "exe", "ace-assign")
           end
-          out, err, status = Open3.capture3(env, RbConfig.ruby, executable,
-            "attempt", "evidence", "--attempt", attempt, "--receipt-digest", digest, "--format", "json",
-            "--kind", kind, "--check-name", check_name,
-            chdir: @repo_root)
+          args = ["attempt", "evidence", "--attempt", attempt, "--receipt-digest", digest, "--format", "json",
+            "--kind", kind, "--check-name", check_name]
+          args.concat(["--historical-head", head]) if historical
+          out, err, status = Open3.capture3(env, RbConfig.ruby, executable, *args, chdir: @repo_root)
           raise Atoms::CampaignContract::Invalid, "accepted execution evidence unavailable: #{err.strip}" unless status.success?
           data = JSON.parse(out)
           unless data.is_a?(Hash) && data["attempt_id"] == attempt && data["receipt_digest"] == digest &&
-              data["head"] == head && data["kind"] == kind
+              data["head"] == head && data["kind"] == kind && data["historical"] == historical
             raise Atoms::CampaignContract::Invalid, "accepted execution receipt identity/head/kind mismatch"
           end
           data

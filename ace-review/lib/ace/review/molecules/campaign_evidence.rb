@@ -140,8 +140,8 @@ module Ace
           end
         end
 
-        def verify_session_authority(session, head:)
-          @review_evidence.call(session.fetch("receipt"), head: head, artifacts: session.fetch("artifacts"))
+        def verify_session_authority(session, head:, historical: false)
+          @review_evidence.call(session.fetch("receipt"), head: head, artifacts: session.fetch("artifacts"), historical: historical)
         end
 
         def resolution(previous)

@@ -102,7 +102,7 @@ module CampaignFixtures
   end
 
   def fixture_review_evidence
-    lambda do |ref, head:, artifacts:|
+    lambda do |ref, head:, artifacts:, historical: false|
       proof = (@accepted_reviews || {})[ref["digest"]]
       unless proof && proof["head"] == head && (artifacts - proof["artifacts"]).empty?
         raise Ace::Review::Atoms::CampaignContract::Invalid, "fixture coordinator did not accept review execution"

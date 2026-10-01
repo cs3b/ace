@@ -34,19 +34,20 @@ module Ace
           identity = Digest::SHA256.hexdigest(contract)
           store.transaction(dry_run: dry_run) do
             records = store.records
-            same = records.find { |r| r["subject"] == subject && r["contract_identity"] == identity }
+            earlier = records.select { |r| r["subject"] == subject }
+            active = earlier.find do |r|
+              !r["successor"] && earlier.none? { |candidate| candidate["predecessor"] == r["id"] }
+            end
+            if !earlier.empty? && !active
+              raise Contract::Invalid, "active contract unavailable; restore its retained campaign record"
+            end
+            same = active if active && active["contract_identity"] == identity
             if same
               raise Contract::Invalid, "conflicting policy for existing subject/contract" unless same["policy"] == effective
               raise Contract::Invalid, "conflicting predecessor" if predecessor && same["predecessor"] != predecessor
               next projection(same)
             end
-            earlier = records.select { |r| r["subject"] == subject }
-            previous = if predecessor
-              store.read(predecessor)
-            elsif !earlier.empty?
-              # A linear successor must follow the latest retained contract.
-              earlier.find { |r| earlier.none? { |candidate| candidate["predecessor"] == r["id"] } }
-            end
+            previous = predecessor ? store.read(predecessor) : active
             inherited = []
             if previous
               raise Contract::Invalid, "predecessor has incompatible subject" unless previous["subject"] == subject
@@ -308,10 +309,16 @@ module Ace
               (attempt["approval"] ? [attempt["approval"]["artifact"]] + attempt["approval"]["artifacts"] : [])
           end + (record["assessments"] + record["inherited_findings"]).map { |finding| finding["artifact"] }
           available, error = @evidence.available?(refs)
-          if round && available && round["binding"]["head"] == head
+          if available
             begin
-              round["sessions"].each { |session| @evidence.verify_session_authority(session, head: round["binding"]["head"]) }
-              if round["approval"]
+              record["attempts"].each do |attempt|
+                attempt["sessions"].select { |session| session["completed"] }.each do |session|
+                  historical = !round || attempt["attempt_id"] != round["attempt_id"] ||
+                    attempt["binding"]["head"] != head
+                  @evidence.verify_session_authority(session, head: attempt["binding"]["head"], historical: historical)
+                end
+              end
+              if round && round["binding"]["head"] == head && round["approval"]
                 rechecked = @evidence.approval(round["approval"]["artifact"], record: record,
                   binding: round["binding"], sessions: round["sessions"])
                 raise Contract::Invalid, "accepted approval evidence changed" unless rechecked == round["approval"]

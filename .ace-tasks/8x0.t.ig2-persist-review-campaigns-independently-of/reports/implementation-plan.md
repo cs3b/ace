@@ -41,3 +41,9 @@ Primary risk: accepting caller claims or stale artifacts as current evidence. Mi
 ## Freshness Summary
 
 Inspected current task spec and ux/usage.md; qjl spec/report; shared source-evidence.md; review/pr workflow; review CLI/options/manager/evidence/feedback reader and validator; assign receipt/coordinator/store models; package manifests and existing tests. All inputs are from source revision 28c62024b. Baselines: review 949 tests (4 skips), assign 740 tests, no failures/errors.
+
+## Round-8 authority and contract re-plan
+
+Confirm retained earlier/partial review receipts can become unavailable independently of local artifacts. Add an explicitly historical, read-only review-collection proof mode at ace-assign's existing evidence boundary and verify all retained completed sessions. Historical proof remains tied to its recorded head and cannot stand in for live checks. Confirm A → B → A incorrectly reuses superseded A: reuse only the active contract and link a new A successor to B.
+
+The reported Critical check concern assumes the trusted coordinator accepts an outcome without checking actual execution. That crosses the existing qjl trust boundary: the local operator or OS-enforced service is the acceptance authority, workers cannot accept succeeded, and qjl's implementation report explicitly assigns independently recorded process/producer attestations to service executors. R1 must consume accepted receipts rather than add a second execution runner or process-attestation system. Verify the worker/unaccepted negative at the public consumer boundary, document the trusted attestation boundary, and provide this evidence to the next reviewer. Do not add caller-authored exit JSON as a substitute for authority.
