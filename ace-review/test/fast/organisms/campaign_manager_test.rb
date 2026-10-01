@@ -411,6 +411,46 @@ class CampaignManagerTest < AceReviewTest
     assert_raises(ArgumentError) { start_campaign }
   end
 
+  def test_unrelated_corruption_does_not_block_existing_campaign_status_or_finish
+    damaged = start_campaign
+    subject = campaign_subject.merge("local_candidate_id" => "other-candidate")
+    intact = campaign_manager.start(subject: subject, contract: "Frozen requirements", policy: campaign_policy)
+    3.times do |n|
+      input = round_input(n)
+      make_campaign_session(intact, input)
+      add_campaign_approval(intact, input) if n == 2
+      campaign_manager.record_round(intact["campaign_id"], input)
+    end
+    assert campaign_manager.finish(intact["campaign_id"])["accepted"]
+    File.write(campaign_manager.store.path(damaged["campaign_id"]), "corrupt")
+
+    assert_raises(ArgumentError) { campaign_manager.status(damaged["campaign_id"]) }
+    status = campaign_manager.status(intact["campaign_id"])
+    assert status["active_contract"]
+    assert_equal intact["campaign_id"], status["campaign_id"]
+    assert campaign_manager.finish(intact["campaign_id"])["accepted"]
+  end
+
+  def test_interrupted_successor_publication_keeps_predecessor_superseded
+    manager = campaign_manager
+    predecessor = start_campaign
+    original_write = manager.store.method(:write)
+    manager.store.define_singleton_method(:write) do |record|
+      raise IOError, "interrupted successor publication" if record["predecessor"]
+      original_write.call(record)
+    end
+
+    assert_raises(IOError) do
+      manager.start(subject: campaign_subject, contract: "Changed requirements", policy: campaign_policy,
+        reason: "New behavior")
+    end
+    status = campaign_manager.status(predecessor["campaign_id"])
+    refute status["active_contract"]
+    refute status["accepted"]
+    refute campaign_manager.finish(predecessor["campaign_id"])["accepted"]
+    assert_raises(ArgumentError) { start_campaign }
+  end
+
   def test_retained_earlier_and_partial_review_authority_remains_required_across_head_drift
     campaign = start_campaign(scopes: %w[one two])
     3.times do |n|

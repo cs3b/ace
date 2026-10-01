@@ -67,11 +67,13 @@ module Ace
               "inherited_findings" => inherited, "assessments" => [], "attempts" => [], "rounds" => [],
               "head_transitions" => []}
             unless dry_run
-              store.write(record)
               if previous
+                # Publish supersession first: an interrupted successor write
+                # must leave the predecessor blocked, never newly acceptable.
                 previous["successor"] = id
                 store.write(previous)
               end
+              store.write(record)
             end
             projection(record).merge("dry_run" => dry_run)
           end
@@ -91,7 +93,7 @@ module Ace
               raise Contract::Invalid, "conflicting replay of attempt #{attempt_id}" unless prior["input_digest"] == digest
               next projection(record).merge("replayed" => true, "recorded_complete" => prior["completed"])
             end
-            raise Contract::Invalid, "campaign contract is superseded" if successor_for(record)
+            raise Contract::Invalid, "campaign contract is superseded" if record["successor"]
             binding = round_binding(input, record)
             validate_local_commits(record, binding["head"], binding["base"])
             validate_local_full_diff(record, binding["head"], binding["base"])
@@ -174,7 +176,7 @@ module Ace
         def session_binding(id, round_id:, scope:, preset:, head:, base:, pr_url: nil, subjects: nil, delta_reference_head: nil, diff_manifest: nil, noop: false)
           store.transaction(dry_run: true) do
             record = store.read(id)
-            raise Contract::Invalid, "campaign contract is superseded" if successor_for(record)
+            raise Contract::Invalid, "campaign contract is superseded" if record["successor"]
             attempt = record["attempts"].find { |a| a["round_id"] == round_id }
             raise Contract::Invalid, "pin round #{round_id} with record-round before collecting reports" unless attempt
             binding = attempt["binding"]
@@ -294,13 +296,9 @@ module Ace
           end
         end
 
-        def successor_for(record)
-          record["successor"] || store.records.find { |candidate| candidate["predecessor"] == record["id"] }&.dig("id")
-        end
-
         def projection(record, current: nil)
           result = Atoms::CampaignProjection.build(record)
-          successor = successor_for(record)
+          successor = record["successor"]
           revision_error = nil
           begin
             head, base = current || current_revisions(record)

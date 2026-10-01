@@ -286,7 +286,7 @@ module Ace
                 child_pid = wait_for_pid_file(pid_file)
                 @tracked_pids << child_pid
 
-                refute process_alive?(child_pid),
+                assert wait_for_process_exit(child_pid),
                   "background child PID #{child_pid} should be terminated (#{process_status(child_pid)})"
               end
             end
@@ -307,12 +307,31 @@ module Ace
                 child_pid = wait_for_pid_file(pid_file)
                 @tracked_pids << child_pid
 
-                refute process_alive?(child_pid),
+                assert wait_for_process_exit(child_pid),
                   "timed-out child PID #{child_pid} should be terminated (#{process_status(child_pid)})"
               end
             end
 
+            def test_exit_wait_does_not_accept_a_live_process
+              pid = Process.spawn("ruby", "-e", "sleep 5")
+              refute wait_for_process_exit(pid, timeout: 0.02)
+            ensure
+              if pid
+                Process.kill("KILL", pid)
+                Process.wait(pid)
+              end
+            end
+
             private
+
+            def wait_for_process_exit(pid, timeout: 0.5)
+              deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + timeout
+              while process_alive?(pid)
+                return false if Process.clock_gettime(Process::CLOCK_MONOTONIC) >= deadline
+                sleep 0.01
+              end
+              true
+            end
 
             def wait_for_pid_file(path, retries: 20, interval: 0.01)
               retries.times do

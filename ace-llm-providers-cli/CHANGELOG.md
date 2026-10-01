@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.36.1] - 2026-10-01
+
+### Technical
+- Observe descendant exit with a bounded monotonic wait in cleanup tests, retaining the process-absence predicate and adding a live-child negative control.
+
 ## [0.36.0] - 2026-09-29
 
 ### Added
