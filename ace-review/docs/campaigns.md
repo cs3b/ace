@@ -46,15 +46,15 @@ Before collection, record a pin with empty sessions and dispositions. `attempt_i
 }
 ```
 
-Replace the SHA placeholders with exact Git revisions. For local campaigns, the first round fixes the base; a new head does not change that base. For PR scopes pin `subjects: ["pr:owner/repo#42"]`; PR collection uses the fetched PR head/base. Candidate code must be committed before campaign collection or acceptance.
+Replace the SHA placeholders with exact Git revisions. For local campaigns, the first round fixes the base; a new head does not change that base. For PR scopes pin `subjects: ["pr:owner/repo#42"]`; PR collection uses the fetched PR head/base. A delta scope additionally pins `delta_reference_head` to an exact SHA in its scope identity and collects with `--delta SHA`; a delta cannot satisfy a scope pinned without that reference. Candidate code must be committed before campaign collection or acceptance.
 
 ```sh
 ace-review campaign record-round CAMPAIGN_ID --input .ace-local/campaign-input/pin.json
-ace-review --preset code-valid --subject diff:BASE..HEAD --auto-execute \
+ace-review --preset code-valid --subject diff:EXACT_BASE_SHA..EXACT_HEAD_SHA --auto-execute \
   --campaign CAMPAIGN_ID --campaign-round r1 --campaign-scope full
 ```
 
-Expected: the pin reports `recorded_complete: false`, then the existing review runner writes its ordinary session artifacts with the pinned campaign/contract/scope/head/base binding. Other review invocations, repeated model/subject/evidence flags and feedback commands retain their normal behavior. A zero-model no-op or failed/incomplete report cannot complete a campaign round.
+Expected: the pin reports `recorded_complete: false`, then the existing review runner writes its ordinary session artifacts with the pinned campaign/contract/scope/head/base binding. Other review invocations, repeated model/subject/evidence flags and feedback commands retain their normal behavior. A zero-model no-op, failed/incomplete report, or skipped/failed feedback extraction cannot complete a campaign round. Do not use `--no-feedback` for campaign collection. The runner records a successful extraction inventory, including explicit zero findings; deleting a listed finding invalidates the session. Local head/base values must name available Git commits.
 
 Verify findings with `ace-review-feedback verify --valid|--invalid --research ... --session SESSION`, and resolve repairs with `ace-review-feedback resolve --resolution ... --session SESSION`. Every feedback item must have substantive verification research; resolved items also need a resolution.
 
@@ -142,4 +142,4 @@ Start with changed requirements and `--reason "Requirement X changed"` to create
 
 `status` is read-only and exits successfully for known blocked/stale state. Unknown/corrupt campaigns fail. `start`, `record-round` and `finish` support `--dry-run` without state writes. JSON remains parseable with `--quiet`/`--verbose`; `--format text` supplies compact presentation. No force option bypasses evidence.
 
-Missing report: restore exact retained artifacts or collect a new pinned round. Incomplete scope: use a new attempt ID for the same pinned round with complete coverage. Changed head/base: preserve history and collect current evidence. Invalid/mixed identity: correct the explicit input; no source is silently redirected. Conflicting replay: keep the accepted submission and use a new logical round for new evidence.
+Missing retained report: restore the exact retained artifact at its recorded path; collecting a new round does not erase the missing source requirement. Incomplete scope: use a new attempt ID for the same pinned round with complete coverage. Changed head/base: preserve history and collect current evidence. Invalid/mixed identity: correct the explicit input; no source is silently redirected. Conflicting replay: keep the accepted submission and use a new logical round for new evidence.

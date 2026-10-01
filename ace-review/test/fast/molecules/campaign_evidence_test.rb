@@ -38,7 +38,8 @@ class CampaignEvidenceTest < AceReviewTest
     value["models"][0].delete("execution")
     File.write(path, YAML.dump(value))
     input["sessions"][0]["metadata"] = artifact_ref(File.join(dir, "metadata.yml"))
-    result = campaign_manager.record_round(campaign["campaign_id"], input)
+    assert_raises(ArgumentError) { campaign_manager.record_round(campaign["campaign_id"], input) }
+    result = campaign_manager.status(campaign["campaign_id"])
     assert_equal 0, result["completed_rounds"]
     assert_equal 0, result["clean_streak"]
     forged = round_input(2)
@@ -64,4 +65,35 @@ class CampaignEvidenceTest < AceReviewTest
       assert_raises(ArgumentError) { reader.artifact(artifact_ref("escape")) }
     end
   end
+  def test_skipped_failed_or_unrecorded_feedback_extraction_never_completes_a_round
+    campaign = start_campaign
+    [nil, {"status" => "skipped"}, {"status" => "failed"}].each_with_index do |extraction, n|
+      input = round_input(n)
+      dir = make_campaign_session(campaign, input)
+      path = File.join(@test_dir, dir, "metadata.yml")
+      metadata = YAML.safe_load_file(path)
+      metadata["feedback_extraction"] = extraction
+      File.write(path, YAML.dump(metadata))
+      input["sessions"].first["metadata"] = artifact_ref(File.join(dir, "metadata.yml"))
+      result = campaign_manager.record_round(campaign["campaign_id"], input)
+      assert_equal 0, result["completed_rounds"]
+      assert_equal 0, result["clean_streak"]
+    end
+  end
+
+  def test_extractor_manifest_accounts_for_every_finding_and_report
+    campaign = start_campaign
+    input = round_input(1)
+    dir = make_campaign_session(campaign, input, finding: {})
+    manager = Ace::Review::Organisms::ReviewManager.new(project_root: @test_dir)
+    finding = File.join(@test_dir, dir, "feedback/finding.s.md")
+    manager.send(:save_campaign_feedback_metadata, File.join(@test_dir, dir),
+      {success: true, items_count: 1, paths: [finding]})
+    File.delete(finding)
+    input["dispositions"] = []
+    input["sessions"].first["metadata"] = artifact_ref(File.join(dir, "metadata.yml"))
+    assert_raises(ArgumentError) { campaign_manager.record_round(campaign["campaign_id"], input) }
+    assert_equal 0, campaign_manager.status(campaign["campaign_id"])["completed_rounds"]
+  end
+
 end

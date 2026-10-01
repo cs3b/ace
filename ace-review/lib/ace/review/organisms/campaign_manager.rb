@@ -85,6 +85,7 @@ module Ace
               next projection(record).merge("replayed" => true, "recorded_complete" => prior["completed"])
             end
             binding = round_binding(input, record)
+            validate_local_commits(record, binding["head"], binding["base"])
             attempts = record["attempts"].select { |a| a["round_id"] == round_id }
             if attempts.any? { |a| a["binding"] != binding }
               raise Contract::Invalid, "round #{round_id} has conflicting pinned head/base/scopes/policy"
@@ -157,7 +158,7 @@ module Ace
           attempt["binding"]["base"]
         end
 
-        def session_binding(id, round_id:, scope:, preset:, head:, base:, pr_url: nil, subjects: nil)
+        def session_binding(id, round_id:, scope:, preset:, head:, base:, pr_url: nil, subjects: nil, delta_reference_head: nil)
           store.transaction(dry_run: true) do
             record = store.read(id)
             attempt = record["attempts"].find { |a| a["round_id"] == round_id }
@@ -173,6 +174,9 @@ module Ace
             actual_subjects = record["subject"]["pr"] ? ["pr:#{record['subject']['pr']}"] : Array(subjects)
             unless actual_subjects == binding["scope_identity"][scope]["subjects"]
               raise Contract::Invalid, "collected subject differs from pinned scope input"
+            end
+            unless binding["scope_identity"][scope]["delta_reference_head"] == delta_reference_head
+              raise Contract::Invalid, "collected delta reference differs from pinned scope input"
             end
             validate_repository(record, pr_url)
             raise Contract::Invalid, "campaign collection requires committed candidate code" unless clean_candidate?
@@ -193,9 +197,13 @@ module Ace
             raise Contract::Invalid, "scope_identity must pin preset and subjects for every required scope"
           end
           scopes.each_value do |scope|
-            raise Contract::Invalid, "unknown scope identity fields" unless (scope.keys - %w[preset subjects]).empty?
+            raise Contract::Invalid, "unknown scope identity fields" unless (scope.keys - %w[preset subjects delta_reference_head]).empty?
             Contract.string!(scope["preset"], "scope preset")
             Contract.strings!(scope["subjects"], "scope subjects")
+            if scope.key?("delta_reference_head")
+              raise Contract::Invalid, "delta scope requires a PR subject" unless record["subject"]["pr"]
+              Contract.sha!(scope["delta_reference_head"], "delta reference head")
+            end
           end
           {"round_id" => input["round_id"], "head" => Contract.sha!(input["head"], "head"),
            "base" => Contract.sha!(input["base"], "base"), "required_scopes" => required,
@@ -290,6 +298,15 @@ module Ace
           record["head_transitions"] << {"head" => head, "base" => base, "observed_at" => Time.now.utc.iso8601(6)}
         end
 
+        def validate_local_commits(record, head, base)
+          return unless @live_git && record["subject"]["local_candidate_id"]
+          [head, base].each do |revision|
+            _, status = Open3.capture2("git", "cat-file", "-e", "#{revision}^{commit}",
+              chdir: @repo_root, err: File::NULL)
+            raise Contract::Invalid, "local campaign revision is not an available Git commit: #{revision}" unless status.success?
+          end
+        end
+
         def current_revisions(record)
           if @live_git && record["subject"]["pr"]
             metadata = Molecules::GhPrFetcher.fetch_metadata(record["subject"]["pr"])
@@ -299,7 +316,9 @@ module Ace
             return [Contract.sha!(value["headRefOid"], "live PR head"),
               Contract.sha!(value["baseRefOid"], "live PR base")]
           end
-          [@revisions.call("HEAD"), @revisions.call("base", record)]
+          head, base = @revisions.call("HEAD"), @revisions.call("base", record)
+          validate_local_commits(record, head, base) if base
+          [head, base]
         end
 
         def clean_candidate?

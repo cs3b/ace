@@ -61,4 +61,29 @@ class CampaignCommandTest < AceReviewTest
         preset: "wrong", head: @head, base: @base, subjects: ["diff:#{@base}..#{@head}"])
     end
   end
+  def test_pr_delta_collection_requires_exact_pinned_reference
+    manager = campaign_manager
+    campaign = manager.start(subject: {"repository" => "https://github.com/owner/repo", "pr" => "owner/repo#42"},
+      contract: "requirements", policy: campaign_policy)
+    input = round_input(1)
+    input["scope_identity"]["full"]["subjects"] = ["pr:owner/repo#42"]
+    manager.record_round(campaign["campaign_id"], input)
+    args = {round_id: "round-1", scope: "full", preset: "code-valid", head: @head, base: @base,
+      pr_url: "https://github.com/owner/repo/pull/42"}
+    assert_raises(ArgumentError) do
+      manager.session_binding(campaign["campaign_id"], **args, delta_reference_head: "c" * 40)
+    end
+    delta = round_input(2)
+    delta["scope_identity"]["full"] = {"preset" => "code-valid", "subjects" => ["pr:owner/repo#42"],
+      "delta_reference_head" => "c" * 40}
+    manager.record_round(campaign["campaign_id"], delta)
+    args[:round_id] = "round-2"
+    assert_raises(ArgumentError) { manager.session_binding(campaign["campaign_id"], **args) }
+    assert_raises(ArgumentError) do
+      manager.session_binding(campaign["campaign_id"], **args, delta_reference_head: "d" * 40)
+    end
+    bound = manager.session_binding(campaign["campaign_id"], **args, delta_reference_head: "c" * 40)
+    assert_equal "c" * 40, bound["scope_identity"]["delta_reference_head"]
+  end
+
 end

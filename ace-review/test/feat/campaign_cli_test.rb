@@ -41,6 +41,16 @@ class CampaignCLITest < AceReviewTest
     campaign, err, status = cli(*args)
     assert status.success?, err
     id = campaign["campaign_id"]
+    fabricated = round_input("invalid-base")
+    fabricated["base"] = "f" * 40
+    fabricated["scope_identity"]["full"]["subjects"] = ["files:candidate.rb"]
+    File.write("round.json", JSON.generate(fabricated))
+    rejected, _, status = cli("campaign", "record-round", id, "--input", "round.json")
+    refute status.success?
+    assert_includes rejected["error"], "not an available Git commit"
+    unchanged, err, status = cli("campaign", "status", id)
+    assert status.success?, err
+    assert_equal 0, unchanged["counters"]["recording_attempts"]
     3.times do |n|
       input = round_input(n)
       File.write("round.json", JSON.generate(input))
