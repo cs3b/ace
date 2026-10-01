@@ -60,6 +60,10 @@ module Ace
           run!([@binary, "pane", "current", "--current"])
         end
 
+        def pane_get(pane)
+          run!([@binary, "pane", "get", pane])
+        end
+
         # Inspect a pane's processes (positive proof of process exit for tidy)
         def pane_process_info(pane)
           run!([@binary, "pane", "process-info", "--pane", pane])
@@ -71,6 +75,18 @@ module Ace
           cmd += ["--cwd", cwd] if cwd
           cmd += ["--focus"] if focus
           run!(cmd)
+        end
+
+        def tab_get(tab)
+          run!([@binary, "tab", "get", tab])
+        end
+
+        def tab_focus(tab)
+          run!([@binary, "tab", "focus", tab])
+        end
+
+        def api_snapshot
+          run!([@binary, "api", "snapshot"])
         end
 
         # --- terminal-control surface (spec 8wq.t.k84) -----------------------
@@ -200,6 +216,10 @@ module Ace
         # code is kept in the message so CLI failures carry it.
         def classify(result, cmd)
           code, message = error_code(result)
+          detail = message || result.stderr || result.stdout
+          if detail.to_s.match?(/no herdr server is running|cannot connect|connection refused|socket.*unavailable/i)
+            return ExecutorUnavailableError.new(detail)
+          end
           case code
           when "agent_blocked" then AgentBlockedError.new(tag_code(code, message))
           when "agent_prompt_stalled" then AgentNotReadyError.new(tag_code(code, message))
@@ -207,7 +227,7 @@ module Ace
           when "agent_not_found" then AgentNotFoundError.new(tag_code(code, message))
           when "tab_not_found" then TabNotFoundError.new(tag_code(code, message))
           when "workspace_not_found" then WorkspaceNotFoundError.new(tag_code(code, message))
-          when "timeout" then AgentNotReadyError.new(tag_code(code, message))
+          when "timeout" then ExecutorTimeoutError.new(tag_code(code, message))
           else
             CommandError.new(
               "herdr command failed (exit #{result.exit_code}): #{cmd.join(" ")} " \

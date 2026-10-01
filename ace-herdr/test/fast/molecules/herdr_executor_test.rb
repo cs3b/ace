@@ -307,6 +307,30 @@ module Ace
           assert_equal ["herdr", "pane", "process-info", "--pane", "w5:p1"], executor.commands.first
         end
 
+        def test_runtime_adapter_probes_build_expected_argv
+          executor = StubbedExecutor.new
+
+          executor.pane_get("w1:p1")
+          executor.tab_get("w1:t1")
+          executor.tab_focus("w1:t1")
+          executor.api_snapshot
+
+          assert_equal [
+            ["herdr", "pane", "get", "w1:p1"],
+            ["herdr", "tab", "get", "w1:t1"],
+            ["herdr", "tab", "focus", "w1:t1"],
+            ["herdr", "api", "snapshot"]
+          ], executor.commands
+        end
+
+        def test_socket_unavailable_maps_to_executor_unavailable
+          stderr = "no herdr server is running at /tmp/herdr.sock"
+          failed = Molecules::ExecutionResult.new(stdout: "", stderr: stderr, success: false, exit_code: 1)
+          executor = StubbedExecutor.new(results: [failed])
+
+          assert_raises(ExecutorUnavailableError) { executor.pane_get("w1:p1") }
+        end
+
         def test_pane_process_info_maps_missing_pane_to_terminal_error
           executor = StubbedExecutor.new(results: [error_result("pane_not_found", "pane not found")])
 

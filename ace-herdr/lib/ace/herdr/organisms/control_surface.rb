@@ -146,9 +146,10 @@ module Ace
         # Create a tab from a preset (tmux `window` analogue) in the given
         # or resolved workspace; --cwd overrides the resolved tab cwd. The
         # layout is validated before the tab is created.
-        def create_tab(preset_name, workspace_id: nil, cwd: nil)
+        def create_tab(preset_name, workspace_id: nil, cwd: nil, label: nil)
           workspace_id = resolve_workspace_id(workspace_id)
           resolved = resolve_tab_preset(preset_name)
+          resolved = resolved.merge("label" => label) if label
           preflight_tab!(resolved)
           instantiate_tab(
             resolved, workspace_id: workspace_id,

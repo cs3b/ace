@@ -3,8 +3,8 @@ doc-type: user
 title: ace-herdr Usage
 purpose: Full CLI and configuration reference for ace-herdr: push delivery, agent bootstrap, the terminal-control surface (list, send, capture, wait, presets), and tidy cleanup.
 ace-docs:
-  last-updated: 2026-09-28
-  last-checked: 2026-09-28
+  last-updated: 2026-10-02
+  last-checked: 2026-10-02
 ---
 
 # Usage
@@ -30,6 +30,16 @@ ace-docs:
 Control commands print exactly one deterministic JSON line on stdout; `--quiet` suppresses it. Failures surface herdr's machine error codes in the CLI error message (for example `pane_not_found: pane w9:p1 not found`) and exit non-zero. The one exception is `capture`, which prints raw pane text without any JSON wrapping.
 
 herdr *sessions* (server persistence) are intentionally not exposed; the tmux session analogue is the herdr **workspace**.
+
+## ace-runtime adapter
+
+Install `ace-herdr` alongside `ace-runtime`, then resolve the adapter with `Ace::Runtime.resolve("herdr")`. The contract's `session` is a Herdr **workspace**, `window` is a **tab**, and `pane` is an opaque Herdr pane ID. The adapter does not construct pane IDs. It locates the caller through `HERDR_SESSION` and `HERDR_PANE`, with `HERDR_WORKSPACE_ID` as an optional workspace hint, and reads the explicit pane with `pane get`. Outside Herdr, `context` reports `in_runtime: false`; operations requiring a caller workspace raise `Ace::Runtime::RuntimeUnavailableError`.
+
+The adapter implements `context`, `ensure_window`, `prepare_pane`, `focus`, ordered `send` and its convenience methods, `capture`, `wait_output`, `wait_agent`, `wait_lifecycle`, `close_window`, `list_windows`, and `list_panes`. `ensure_window` scopes the sanitized tab label to the caller workspace. It records the tab's root and preset under `.ace-local/herdr/runtime-tabs/` so later adapter instances can verify an idempotent request and reject a conflicting one. `prepare_pane` splits a retained shell target and returns the native pane ID after verifying it exists and has a shell process.
+
+Sends probe for a live agent. Plain panes receive raw text and keys in order; agent panes receive one self-submitting `agent prompt`, with one trailing Enter dropped and reported. Agent waits use native `agent wait` states (`idle`, `working`, `blocked`, `done`). Contract timeout values are seconds and are converted to Herdr milliseconds. Lifecycle waits observe `tab get`, focused tab state, `pane get`, and `pane process-info`; a missing pane keeps `pane-exists` waiting but immediately satisfies `pane-exited`. A pane with only its retained shell also satisfies `pane-exited` because no submitted foreground command remains. This observation does not prove assignment success or authorize cleanup.
+
+Native `agent_blocked` becomes `SendRejectedError`; `agent_prompt_stalled` becomes `SendStalledError` and must not be automatically resent. Native wait timeouts become `WaitTimeoutError`, missing targets become `TargetNotFoundError`, and an unavailable binary or socket becomes `RuntimeUnavailableError`.
 
 ## tmux-intent ↔ herdr-command parity
 
