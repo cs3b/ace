@@ -24,7 +24,7 @@ module Ace
         ].freeze
 
         attr_reader :attempt_id, :assignment_id, :project_id, :scope, :operation,
-          :producer, :head, :verdict, :artifacts, :checks, :review, :recorded_at, :digest
+          :producer, :head, :verdict, :artifacts, :checks, :review, :campaign, :recorded_at, :digest
 
         # @param attempt_id [String] Attempt the receipt belongs to
         # @param assignment_id [String] Owning assignment ID
@@ -40,7 +40,7 @@ module Ace
         # @param recorded_at [Time] Receipt creation time
         # @param digest [String, nil] Canonical digest (computed when nil)
         def initialize(attempt_id:, assignment_id:, project_id:, scope:, operation:, producer:, head:, verdict:,
-          artifacts: [], checks: [], review: nil, recorded_at:, digest: nil)
+          artifacts: [], checks: [], review: nil, campaign: nil, recorded_at:, digest: nil)
           @attempt_id = attempt_id
           @assignment_id = assignment_id
           @project_id = project_id
@@ -52,6 +52,7 @@ module Ace
           @artifacts = artifacts
           @checks = checks
           @review = review
+          @campaign = campaign
           @recorded_at = recorded_at
           @digest = digest || Atoms::EvidenceDigest.digest(digest_payload)
         end
@@ -72,7 +73,8 @@ module Ace
             "verdict" => verdict,
             "artifacts" => artifacts,
             "checks" => checks,
-            "review" => review
+            "review" => review,
+            "campaign" => campaign
           }
         end
 
@@ -102,6 +104,7 @@ module Ace
             artifacts: data["artifacts"] || [],
             checks: data["checks"] || [],
             review: data["review"],
+            campaign: data["campaign"],
             recorded_at: parse_time(data["recorded_at"]) || Time.now.utc,
             digest: data["digest"]
           )
