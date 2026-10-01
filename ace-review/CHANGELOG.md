@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Durable review campaign identity, frozen policy/contracts and atomic checksummed history storage.
+
 ## [0.56.1] - 2026-09-29
 
 ### Fixed
