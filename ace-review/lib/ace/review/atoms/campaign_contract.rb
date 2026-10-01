@@ -53,6 +53,28 @@ module Ace
           value
         end
 
+        # Full PR scopes reuse the collector's verified inventory. Filtering
+        # and exemptions belong to explicit module scopes, never the full label.
+        def self.full_pr_coverage!(manifest, head:, base:, delta_reference_head: nil)
+          object!(manifest, "full PR diff manifest")
+          manifest = manifest.transform_keys(&:to_s)
+          strings!(manifest["selected_files"], "selected PR files")
+          unless manifest["excluded_files"] == [] && Array(manifest["exempt_files"]).empty? &&
+              manifest["received_diff_accounted_for"] == true && manifest["head_sha"] == head &&
+              manifest["raw_sha256"].is_a?(String) && manifest["raw_sha256"].match?(/\A[0-9a-f]{64}\z/) &&
+              manifest["raw_sha256"] == manifest["selected_sha256"]
+            raise Invalid, "full PR scope requires complete unfiltered diff coverage"
+          end
+          if delta_reference_head
+            unless manifest["delta_reference_head"] == delta_reference_head && manifest["delta_base_head"] == head
+              raise Invalid, "full PR delta manifest differs from pinned revisions"
+            end
+          elsif manifest["pr_file_inventory_verified"] != true || manifest["base_branch_sha"] != base
+            raise Invalid, "full PR scope requires verified current head/base inventory"
+          end
+          manifest
+        end
+
         # Repository is an explicit canonical identity, independent of forge.
         # PR parsing reuses the provider-neutral owner/repo#number contract.
         def self.subject!(value)

@@ -81,12 +81,35 @@ class CampaignCommandTest < AceReviewTest
       "delta_reference_head" => "c" * 40}
     manager.record_round(campaign["campaign_id"], delta)
     args[:round_id] = "round-2"
+    args[:diff_manifest] = full_pr_manifest(delta: "c" * 40)
     assert_raises(ArgumentError) { manager.session_binding(campaign["campaign_id"], **args) }
     assert_raises(ArgumentError) do
       manager.session_binding(campaign["campaign_id"], **args, delta_reference_head: "d" * 40)
     end
     bound = manager.session_binding(campaign["campaign_id"], **args, delta_reference_head: "c" * 40)
     assert_equal "c" * 40, bound["scope_identity"]["delta_reference_head"]
+  end
+
+  def test_full_pr_collection_rejects_filtered_or_unverified_inventory
+    manager = campaign_manager
+    campaign = manager.start(subject: {"repository" => "https://github.com/owner/repo", "pr" => "owner/repo#42"},
+      contract: "requirements", policy: campaign_policy)
+    input = round_input(1)
+    input["scope_identity"]["full"]["subjects"] = ["pr:owner/repo#42"]
+    manager.record_round(campaign["campaign_id"], input)
+    args = {round_id: "round-1", scope: "full", preset: "code-valid", head: @head, base: @base,
+      pr_url: "https://github.com/owner/repo/pull/42"}
+    [nil, full_pr_manifest.merge("excluded_files" => ["two.rb"]),
+      full_pr_manifest.merge("exempt_files" => ["two.rb"]),
+      full_pr_manifest.merge("selected_sha256" => "e" * 64),
+      full_pr_manifest.merge("pr_file_inventory_verified" => false)].each do |manifest|
+      assert_raises(ArgumentError) do
+        manager.session_binding(campaign["campaign_id"], **args, diff_manifest: manifest)
+      end
+    end
+    binding = manager.session_binding(campaign["campaign_id"], **args, diff_manifest: full_pr_manifest)
+    assert_equal "full", binding["scope"]
+    assert_equal 0, manager.status(campaign["campaign_id"])["completed_rounds"]
   end
 
 end

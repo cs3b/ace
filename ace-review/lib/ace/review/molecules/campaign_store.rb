@@ -76,6 +76,33 @@ module Ace
           Dir.glob(File.join(root, "*.json")).sort.map { |file| read(File.basename(file, ".json")) }
         end
 
+        # Feedback status changes through its owner lifecycle. Keep the exact
+        # verified source bytes so later resolutions cannot erase history.
+        def snapshot_finding(reference, repo_root:, dry_run: false)
+          return reference if dry_run
+          source = File.expand_path(reference.fetch("path"), repo_root)
+          bytes = File.binread(source)
+          sha = Digest::SHA256.hexdigest(bytes)
+          raise Atoms::CampaignContract::Invalid, "finding source changed during recording" unless sha == reference["sha256"]
+          directory = File.join(root, "evidence")
+          FileUtils.mkdir_p(directory)
+          destination = File.join(directory, "#{sha}.s.md")
+          if File.exist?(destination)
+            unless Digest::SHA256.file(destination).hexdigest == sha
+              raise Atoms::CampaignContract::Invalid, "corrupt retained finding snapshot"
+            end
+          else
+            Tempfile.create([".finding-", ".tmp"], directory) do |file|
+              file.write(bytes)
+              file.flush
+              file.fsync
+              File.rename(file.path, destination)
+              File.open(directory, File::RDONLY, &:fsync)
+            end
+          end
+          {"path" => destination.delete_prefix(repo_root + File::SEPARATOR), "sha256" => sha}
+        end
+
         def write(record)
           destination = path(record.fetch("id"))
           content = JSON.pretty_generate("record" => record, "sha256" => Atoms::CampaignContract.digest(record))

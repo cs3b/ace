@@ -60,6 +60,10 @@ module Ace
           unless metadata["campaign_binding"] == expected && metadata["preset"] == expected["scope_identity"]["preset"]
             raise Contract::Invalid, "session campaign/contract/scope/head/base identity mismatch"
           end
+          if record["subject"]["pr"] && scope == "full" && !metadata["noop_round"]
+            Contract.full_pr_coverage!(metadata["diff_manifest"], head: binding["head"], base: binding["base"],
+              delta_reference_head: binding["scope_identity"][scope]["delta_reference_head"])
+          end
           refs = [metadata_ref]
           entries = if metadata["models"].is_a?(Array)
             metadata["models"]
@@ -131,6 +135,17 @@ module Ace
              "artifact" => reference(path), "priority" => item.priority, "status" => item.status,
              "title" => item.title, "research" => item.research, "resolution" => item.resolution}
           end
+        end
+
+        def resolution(previous)
+          directory = previous["source_id"].split("#", 2).first
+          finding = feedback(File.expand_path(directory, @repo_root)).find do |source|
+            source["source_id"] == previous["source_id"]
+          end
+          unless finding && %w[done invalid].include?(finding["status"])
+            raise Contract::Invalid, "earlier finding needs a verified terminal source disposition"
+          end
+          finding.merge("observed_in_round" => false)
         end
 
         def approval(reference, record:, binding:, sessions:)

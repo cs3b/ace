@@ -27,6 +27,15 @@ module CampaignFixtures
       "sessions" => [], "dispositions" => []}
   end
 
+  def full_pr_manifest(delta: nil)
+    manifest = {"selected_files" => %w[one.rb two.rb], "excluded_files" => [],
+      "raw_sha256" => "d" * 64, "selected_sha256" => "d" * 64,
+      "received_diff_accounted_for" => true, "head_sha" => @head,
+      "base_branch_sha" => @base, "pr_file_inventory_verified" => true}
+    manifest.merge!("delta_reference_head" => delta, "delta_base_head" => @head) if delta
+    manifest
+  end
+
   def artifact_ref(path)
     {"path" => path, "sha256" => Digest::SHA256.file(File.expand_path(path, @test_dir)).hexdigest}
   end
@@ -45,7 +54,7 @@ module CampaignFixtures
     report = File.join(full, "review-report-reviewer.md")
     File.write(report, "Substantive fixture review: checked candidate, contract and scope; no remaining defects.")
     binding = {"campaign_id" => campaign["campaign_id"], "contract_identity" => campaign["contract_identity"],
-      "subject" => campaign_subject, "round_id" => input["round_id"], "scope" => scope,
+      "subject" => campaign["subject"], "round_id" => input["round_id"], "scope" => scope,
       "head" => input["head"], "base" => input["base"], "scope_identity" => input["scope_identity"][scope]}
     metadata = {"preset" => "code-valid", "campaign_binding" => binding, "noop_round" => noop,
       "models" => noop ? [] : [{"status" => failed ? "failed" : "success", "completed_at" => Time.now.utc.iso8601,
@@ -62,6 +71,7 @@ module CampaignFixtures
       File.write(File.join(feedback, "finding.s.md"), "---\n#{YAML.dump(item).delete_prefix("---\n")}---\n")
       input["dispositions"] << {"source_id" => "#{dir}#finding", "reason" => "Verified fixture disposition"}
     end
+    metadata["diff_manifest"] = full_pr_manifest if campaign["subject"]["pr"]
     metadata["feedback_extraction"] = {"status" => "succeeded", "finding_ids" => finding ? ["finding"] : [],
       "report_sha256" => noop || failed ? [] : [Digest::SHA256.file(report).hexdigest]}
     metadata_file = File.join(dir, "metadata.yml")
