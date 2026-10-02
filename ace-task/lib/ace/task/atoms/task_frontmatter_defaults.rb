@@ -40,6 +40,9 @@ module Ace
           fm["tags"] = tags || []
           fm["parent"] = parent if parent
           fm["remote_issue"] = remote_issue if remote_issue
+          # Linked tasks start pending-sync in the same write that establishes
+          # the link; a crash before the first sync still replays via --pending.
+          fm["issue_sync_pending"] = true if remote_issue
           fm
         end
 

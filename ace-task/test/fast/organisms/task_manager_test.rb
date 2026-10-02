@@ -382,6 +382,16 @@ class TaskManagerTest < AceTaskTestCase
     end
   end
 
+  def test_offline_create_persists_pending_in_link_write
+    adapter = fake_issue_adapter { |task:| raise Ace::Git::ProviderUnreachableError, "offline" }
+    @manager.stub(:issue_adapter, adapter) do
+      task = @manager.create("Linked task", remote_issue: issue_identity)
+      reloaded = @manager.show(task.id)
+      assert_equal issue_identity, reloaded.metadata["remote_issue"]
+      assert reloaded.metadata["issue_sync_pending"]
+    end
+  end
+
   def test_bulk_sync_continues_after_failure
     adapter = fake_issue_adapter do |task:|
       raise Ace::Git::ProviderUnreachableError, "offline" if task.title == "First"
