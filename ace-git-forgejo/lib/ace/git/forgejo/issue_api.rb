@@ -5,6 +5,7 @@ require "net/http"
 require "openssl"
 require "uri"
 require_relative "repository_binding"
+require "ace/git/atoms/server_url"
 
 module Ace
   module Git
@@ -13,7 +14,9 @@ module Ace
       # Uses the same exact selected host and the token from fj's keys file.
       class IssueApi
         def initialize(server:, timeout:, runner: nil)
-          @target = RepositoryBinding::Target.resolve(server.url)
+          # Clone URLs may be SSH-style; the HTTP issue client always talks
+          # to the verified HTTPS web endpoint derived from that identity.
+          @target = RepositoryBinding::Target.resolve(Ace::Git::Atoms::ServerUrl.web_base(server.url))
           @timeout = timeout
           @runner = runner
         end
