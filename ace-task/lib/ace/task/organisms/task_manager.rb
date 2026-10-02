@@ -197,8 +197,11 @@ module Ace
           # each linked descendant, including descendants under an unlinked
           # parent — holds its identity lock across the pending writes, the
           # move, and the post-move syncs, so no replay can clear a pending
-          # flag against the pre-move path mid-relocation.
-          with_identity_locks(participant_identities(task)) do
+          # flag against the pre-move path mid-relocation. A subtask archive
+          # nests a parent update, so the parent's participants join the
+          # up-front sorted acquisition: every multi-lock path then follows
+          # one global order instead of child-then-parent hold-and-wait.
+          with_identity_locks(relocation_participants(task, move_to)) do
             if linked && sync_planned
               with_issue_identity_lock("task" => task.id) do
                 fresh = show(task.id) || task
@@ -368,6 +371,20 @@ module Ace
           end
 
           [nil, current_path, current_special, current_id]
+        end
+
+        # Every linked identity a relocation of this task touches: the task's
+        # own link plus each linked descendant's — extended with the parent's
+        # participants when the relocation is a subtask archive, whose nested
+        # parent update would otherwise acquire parent locks while holding
+        # this task's.
+        def relocation_participants(task, move_to)
+          participants = participant_identities(task)
+          if move_to && archive_move_for_subtask?(task, move_to)
+            parent = show(task.parent_id)
+            participants += participant_identities(parent) if parent
+          end
+          participants
         end
 
         # Every linked identity a relocation of this task touches: the task's
