@@ -76,7 +76,7 @@ module Ace
           writer = ->(ref, content) { write_evidence(repo, ref, content) }
           executor.define_singleton_method(:execute) do |operation:, request:, input:, **_|
             calls << [operation, request, input]
-            digest = writer.call("forge/receipt", "executor attested effect #{request["request_id"]}\n")
+            digest = writer.call("forge/receipt", "executor attested effect #{request["request_id"]} #{request["input_digest"]}\n")
             {"outcome" => "succeeded", "evidence" => [{"ref" => "forge/receipt", "sha256" => digest}],
              "executor_uid" => Process.uid}
           end
@@ -107,7 +107,7 @@ module Ace
           writer = ->(ref, content) { write_evidence(repo, ref, content) }
           executor.define_singleton_method(:execute) do |operation:, request:, input:, **_|
             calls += 1
-            digest = writer.call("forge/receipt", "executor attested effect #{request["request_id"]}\n")
+            digest = writer.call("forge/receipt", "executor attested effect #{request["request_id"]} #{request["input_digest"]}\n")
             {"outcome" => "succeeded", "evidence" => [{"ref" => "forge/receipt", "sha256" => digest}],
              "executor_uid" => Process.uid}
           end
@@ -138,7 +138,7 @@ module Ace
           executor = Object.new
           writer = ->(ref, content) { write_evidence(repo, ref, content) }
           executor.define_singleton_method(:execute) do |operation:, request:, input:, **_|
-            digest = writer.call("forge/receipt", "executor attested effect #{request["request_id"]}\n")
+            digest = writer.call("forge/receipt", "executor attested effect #{request["request_id"]} #{request["input_digest"]}\n")
             {"outcome" => "succeeded", "evidence" => [{"ref" => "forge/receipt", "sha256" => digest}],
              "executor_uid" => Process.uid}
           end
@@ -220,7 +220,7 @@ module Ace
             File.open(ARGV.fetch(0), "a") { |file| file.puts(request.fetch("request_id")) }
             evidence_path = File.join(ARGV.fetch(1), "fixture", "result")
             FileUtils.mkdir_p(File.dirname(evidence_path))
-            content = "executor attested effect \#{request.fetch("request_id")}\n"
+            content = "executor attested effect \#{request.fetch("request_id")} \#{request.fetch("input_digest")}\n"
             File.write(evidence_path, content)
             puts JSON.generate("request_id" => request.fetch("request_id"),
               "input_digest" => request.fetch("input_digest"), "outcome" => "succeeded",

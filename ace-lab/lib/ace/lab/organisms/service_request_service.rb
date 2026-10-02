@@ -9,8 +9,11 @@ module Ace
       # Coordinates the generic request contract. ace-assign owns the durable
       # claim and receipt; this class never writes evidence files directly.
       class ServiceRequestService
+        # Immutable request identity: a replay must match every field; the
+        # candidate head is deliberately absent because replays return the
+        # head recorded at claim time.
         SERVICE_REPLAY_FIELDS = %w[project_id operation input_digest assignment_id attempt_id
-          candidate_head target service_id authorization caller_uid].freeze
+          target authorization caller_uid request_id].freeze
 
         def initialize(topology: nil, policy: nil, coordinator: nil, executor: nil, repo_root: Dir.pwd)
           @topology = topology || TopologyService.from_config
@@ -30,6 +33,27 @@ module Ace
           route = @topology.route(project: project, capability: operation)
           return route.envelope unless route.ok?
           service_id = route.data.fetch("entry").fetch("id")
+          # An identical retry returns the stored outcome — with the head
+          # recorded at claim time — without re-checking attempt or policy:
+          # a completed request must survive attempt terminality,
+          # authorization expiry, and candidate-head advance. Any changed
+          # immutable field under the same request ID is a conflict, never a
+          # replay.
+          existing = @coordinator.service_request_status(request_id)
+          if existing
+            supplied = {"request_id" => request_id, "assignment_id" => assignment, "attempt_id" => attempt,
+                        "project_id" => project, "operation" => operation,
+                        "input_digest" => Atoms::ServiceInput.digest(input), "target" => target,
+                        "caller_uid" => Process.uid, "authorization" => authorization}
+            changed = SERVICE_REPLAY_FIELDS.find do |field|
+              existing[field] != supplied.fetch(field)
+            end
+            if changed
+              raise Ace::Assign::AttemptErrors::Conflict,
+                "Service request #{request_id} has different #{changed}"
+            end
+            return result(existing)
+          end
           trusted = Molecules::GrantResolver.trusted_document(Ace::Lab.authorization_path) unless @policy
           policy = @policy || Molecules::ServicePolicy.new(trusted)
           head = current_head
@@ -40,21 +64,6 @@ module Ace
           binding["authorization"] = authorization
           binding["service_id"] = service_id
           binding["caller_uid"] = Process.uid
-          # An identical retry returns the stored outcome without re-checking
-          # attempt or policy: a completed request must survive attempt
-          # terminality and authorization expiry. Any changed binding field
-          # under the same request ID is a conflict, never a replay.
-          existing = @coordinator.service_request_status(request_id)
-          if existing
-            changed = SERVICE_REPLAY_FIELDS.find do |field|
-              existing[field] != binding.fetch(field)
-            end
-            if changed
-              raise Ace::Assign::AttemptErrors::Conflict,
-                "Service request #{request_id} has different #{changed}"
-            end
-            return result(existing)
-          end
           validate_attempt!(binding)
           begin
             operation_policy = policy.operation!(operation, project: project, service_id: service_id)
