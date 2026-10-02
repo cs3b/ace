@@ -18,10 +18,14 @@ module Ace
           raise ArgumentError, "input file is missing" unless File.file?(path)
           # One handle bounds the read: a file replaced or grown between a
           # size check and a separate read cannot bypass the limit.
-          data = File.open(path, "rb") do |file|
-            content = file.read(MAX_BYTES + 1)
-            raise ArgumentError, "input exceeds #{MAX_BYTES} bytes" if content && content.bytesize > MAX_BYTES
-            JSON.parse(content.to_s)
+          begin
+            data = File.open(path, "rb") do |file|
+              content = file.read(MAX_BYTES + 1)
+              raise ArgumentError, "input exceeds #{MAX_BYTES} bytes" if content && content.bytesize > MAX_BYTES
+              JSON.parse(content.to_s)
+            end
+          rescue Errno::EACCES, Errno::EISDIR
+            raise ArgumentError, "input file is unreadable"
           end
           raise ArgumentError, "input must be a JSON object" unless data.is_a?(Hash)
           validate!(data)
