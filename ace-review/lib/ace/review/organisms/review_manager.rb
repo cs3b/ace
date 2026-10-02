@@ -1216,6 +1216,7 @@ module Ace
 
           review_data = {
             preset: options.preset,
+            pr_metadata: options.pr_metadata,
             campaign_binding: campaign_binding_for(options, content),
             config: config,
             subject: content[:subject],
@@ -1538,6 +1539,9 @@ module Ace
           root = @project_root || Ace::Support::Fs::Molecules::ProjectRootFinder.find_or_current
           head, _s = Open3.capture2("git", "rev-parse", "HEAD", chdir: root)
           tree, _s = Open3.capture2("git", "rev-parse", "HEAD^{tree}", chdir: root)
+          # For PR reviews the reviewed head is the provider-resolved PR
+          # head, not the local checkout; keep both identities distinct.
+          pr_head = review_data[:pr_metadata]&.fetch("headRefOid", nil)
 
           {
             "timestamp" => Time.now.iso8601(6),
@@ -1554,7 +1558,8 @@ module Ace
             "diff_manifest" => review_data[:diff_manifest],
             "source_manifest" => review_data[:source_manifest],
             "budget" => review_data[:budget],
-            "head" => head.to_s.strip,
+            "head" => pr_head || head.to_s.strip,
+            "checkout_sha" => head.to_s.strip,
             "tree" => tree.to_s.strip
           }
         end
