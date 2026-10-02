@@ -1389,8 +1389,15 @@ module Ace
           # Read review content
           review_content = File.read(review_file)
 
-          # Post comment
-          return {success: true, dry_run: true} if options.dry_run
+          # Dry-run prepares the exact comment body without posting; the
+          # response builder reads :preview.
+          if options.dry_run
+            preview = Molecules::PrProvider.format_comment(
+              review_content, preset: review_data[:preset], model: review_data[:model],
+              timestamp: File.mtime(review_file).utc.strftime("%Y-%m-%d %H:%M:%S UTC")
+            )
+            return {success: true, dry_run: true, preview: preview}
+          end
 
           head = options.pr_metadata&.fetch("headRefOid", nil)
           return {success: false, error: "Cannot post without an exact reviewed PR head"} unless head
