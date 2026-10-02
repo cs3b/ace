@@ -52,6 +52,16 @@ module Ace
           {success: false, error: "#{e.class.name.split('::').last}: #{e.message}"}
         end
 
+        # Exact-head PR metadata only (no diff, comments, or checks); the
+        # delta resolver needs identity and base provenance, never the
+        # whole diff.
+        def fetch_metadata(pr_identifier)
+          snapshot = @lifecycle.review_metadata_snapshot(pr_identifier)
+          {success: true, metadata: metadata_for(snapshot)}
+        rescue Ace::Git::Error, ArgumentError => e
+          {success: false, error: "#{e.class.name.split('::').last}: #{e.message}"}
+        end
+
         def post_comment(pr_identifier, expected_head:, content:, session_key:)
           correlation = Digest::SHA256.hexdigest(session_key.to_s)
           @lifecycle.post_review_comment(

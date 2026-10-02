@@ -41,6 +41,7 @@ class PrProviderTest < AceReviewTest
       assert_equal "a" * 40, result[:metadata]["headRefOid"]
       assert_equal "b" * 40, result[:metadata]["baseRefOid"]
     assert_equal "Please fix", result[:comments][:comments].first[:body]
+    end
   end
 
   def test_inline_comment_without_thread_id_is_not_presented_as_resolvable
@@ -103,7 +104,6 @@ class PrProviderTest < AceReviewTest
 
     assert_equal "Task: 8wr.t.qk1.1", result[:metadata]["body"]
   end
-end
 
   def test_provider_failure_is_not_empty_success
     lifecycle = Object.new

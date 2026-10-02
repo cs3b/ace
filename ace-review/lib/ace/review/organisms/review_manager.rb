@@ -363,7 +363,7 @@ module Ace
         # this PR) and the current head. Fails closed on missing sessions, rewritten
         # history, or oversized deltas. An empty delta returns a no-op round marker.
         def extract_pr_delta_content(pr_identifier, config, options)
-          metadata_result = pr_provider(options).fetch(pr_identifier, include_comments: false)
+          metadata_result = pr_provider(options).fetch_metadata(pr_identifier)
           return {success: false, error: metadata_result[:error]} unless metadata_result[:success]
 
           metadata = metadata_result[:metadata]
@@ -775,7 +775,10 @@ module Ace
             authority = item["authority"] || item[:authority]
             sha = (ref == "base") ? metadata["baseRefOid"] : metadata["headRefOid"]
             repository_url = metadata["repository_url"].to_s
-            url = "#{repository_url}/src/commit/#{sha}/#{URI::DEFAULT_PARSER.escape(path)}" unless repository_url.empty?
+            # Source routes differ per forge: GitHub serves blobs at /blob/,
+            # Forgejo at /src/commit/. Route on the resolved snapshot provider.
+            route = (metadata["provider"] == "github") ? "blob" : "src/commit"
+            url = "#{repository_url}/#{route}/#{sha}/#{URI::DEFAULT_PARSER.escape(path)}" unless repository_url.empty?
             {path: path, ref: ref, authority: authority,
              snapshot: source_at_ref(path, sha, metadata, session_dir), url: url}
           end

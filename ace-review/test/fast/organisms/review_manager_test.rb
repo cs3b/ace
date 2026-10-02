@@ -2719,6 +2719,7 @@ class ReviewManagerTest < AceReviewTest
       success: true, comments: [], reviews: [], review_threads: []
     })
     provider.define_singleton_method(:fetch) { |_identifier, **_kwargs| normalized }
+    provider.define_singleton_method(:fetch_metadata) { |_identifier| {success: true, metadata: result[:metadata]} }
     Ace::Review::Molecules::PrProvider.stub(:new, provider) { yield }
   end
 end
