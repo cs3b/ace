@@ -133,13 +133,18 @@ module Ace
           )
         end
 
+def pull_request_body(number:)
+  pull_request(number: number).body
+end
+
         def pull_request_review_evidence(number:, expected_head:)
           pr = verify_expected_head!(pull_request(number: number), expected_head)
+          threads = review_thread_index(pr)
           comments = gh_api_pages("issues/#{pr.number}/comments").map do |entry|
-            review_comment(entry, pr, expected_head)
+            review_comment(entry, pr, expected_head, threads)
           end
           inline = gh_api_pages("pulls/#{pr.number}/comments").map do |entry|
-            review_comment(entry, pr, expected_head)
+            review_comment(entry, pr, expected_head, threads)
           end
           reviews = gh_api_pages("pulls/#{pr.number}/reviews").map do |entry|
             review_entry(entry, pr, expected_head)
@@ -150,6 +155,62 @@ module Ace
             pr_number: pr.number, head_sha: expected_head,
             comments: comments + inline, reviews: reviews
           )
+        end
+
+        # Map REST comment database ids to their review thread (GraphQL id,
+        # resolution state). A truncated thread listing would silently
+        # understate resolution evidence, so pagination limits fail closed.
+        def review_thread_index(pr)
+          host, repository = Ace::Git::Atoms::ServerUrl.normalize(server.url).split("/", 2)
+          owner, name = repository.to_s.split("/", 2)
+          unless owner && name
+            raise Ace::Git::ConfigError, "Invalid selected GitHub repository #{server.url}"
+          end
+          query = <<~GRAPHQL
+            query($id: Int!) {
+              repository(owner: "#{owner}", name: "#{name}") {
+                pullRequest(number: $id) {
+                  reviewThreads(first: 100) {
+                    totalCount
+                    pageInfo { hasNextPage }
+                    nodes {
+                      id
+                      isResolved
+                      comments(first: 100) {
+                        pageInfo { hasNextPage }
+                        nodes { databaseId }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          GRAPHQL
+          pull_request_node = gh_graphql(query, id: pr.number).dig("data", "repository", "pullRequest")
+          threads = pull_request_node.is_a?(Hash) && pull_request_node["reviewThreads"]
+          unless threads.is_a?(Hash) && threads["totalCount"].is_a?(Integer) &&
+              threads["pageInfo"].is_a?(Hash) && threads["nodes"].is_a?(Array)
+            raise Ace::Git::ProviderMalformedOutputError, "Malformed GitHub review thread evidence"
+          end
+          if threads["pageInfo"]["hasNextPage"] == true || threads["totalCount"] > threads["nodes"].length
+            raise Ace::Git::ProviderMalformedOutputError, "Incomplete GitHub review thread evidence"
+          end
+          index = {}
+          threads["nodes"].each do |thread|
+            unless thread.is_a?(Hash) && thread["id"].is_a?(String) &&
+                thread["comments"].is_a?(Hash) && thread["comments"]["nodes"].is_a?(Array)
+              raise Ace::Git::ProviderMalformedOutputError, "Malformed GitHub review thread evidence"
+            end
+            if thread["comments"]["pageInfo"]["hasNextPage"] == true
+              raise Ace::Git::ProviderMalformedOutputError, "Incomplete GitHub review thread evidence"
+            end
+            resolved = thread["isResolved"] == true
+            thread["comments"]["nodes"].each do |comment|
+              next unless comment.is_a?(Hash) && comment["databaseId"].is_a?(Integer)
+              index[comment["databaseId"]] = [thread["id"], resolved]
+            end
+          end
+          index
         end
 
         def pull_request_review_details(number:)
@@ -204,6 +265,12 @@ module Ace
           unless statuses.is_a?(Array) && statuses.all? { |s| s.is_a?(Hash) && s["context"].is_a?(String) }
             raise Ace::Git::ProviderMalformedOutputError, "Malformed GitHub commit status evidence"
           end
+          total = data["total_count"]
+          # The combined status response reports the authoritative count; a
+          # shorter statuses array would silently understate evidence.
+          unless total.is_a?(Integer) && total <= statuses.length
+            raise Ace::Git::ProviderMalformedOutputError, "Incomplete GitHub commit status evidence"
+          end
           statuses.map do |status|
             Ace::Git::ProviderCheck.new(
               server_name: server.name, name: status["context"],
@@ -235,7 +302,15 @@ module Ace
             raise Ace::Git::ProviderConflictingMatchesError,
               "Multiple comments match review session #{correlation} on PR ##{pr.number}"
           end
-          return review_mutation(pr, expected_head, existing.first, :existing) if existing.one?
+if existing.one?
+  # A repeat reconciles only the exact session comment; a marker
+  # match with different content is a conflict, never our post.
+  sent = "#{body}\n\n#{marker}"
+  return review_mutation(pr, expected_head, existing.first, :existing) if existing.first.body == sent
+
+  raise Ace::Git::ProviderConflictingMatchesError,
+    "Review session #{correlation} comment exists on PR ##{pr.number} with different content"
+end
 
           verify_expected_head!(pull_request(number: pr.number), expected_head)
           begin
@@ -246,9 +321,9 @@ module Ace
               "session #{correlation}: #{e.message}; reconcile before repeating"
           end
           matches = matching_review_comments(pr, marker, expected_head)
-          unless matches.one?
+          unless matches.one? && matches.first.body == "#{body}\n\n#{marker}"
             raise Ace::Git::ProviderUnknownOutcomeError,
-              "PR comment sent but reconciliation found #{matches.length} matches for session #{correlation}"
+              "PR comment sent but reconciliation found #{matches.length} exact-content match(es) for session #{correlation}"
           end
           review_mutation(pr, expected_head, matches.first, :created)
         end
@@ -458,16 +533,17 @@ module Ace
           end
         end
 
-        def review_comment(entry, pr, head)
+        def review_comment(entry, pr, head, threads = {})
           unless entry.is_a?(Hash) && entry["id"] && entry["body"].is_a?(String) &&
               entry.dig("user", "login").is_a?(String)
             raise Ace::Git::ProviderMalformedOutputError, "Malformed GitHub PR comment evidence"
           end
+          thread_id, resolved = threads[entry["id"]] || [nil, nil]
           Ace::Git::ProviderReviewComment.new(
             server_name: server.name, repository_url: server.url, pr_number: pr.number,
             id: entry["id"], author: entry.dig("user", "login"), body: entry["body"],
             url: entry["html_url"], path: entry["path"], line: entry["line"],
-            head_sha: entry["commit_id"] || head, resolved: nil, thread_id: nil
+            head_sha: entry["commit_id"] || head, resolved: resolved, thread_id: thread_id
           )
         end
 

@@ -142,6 +142,17 @@ module Ace
           )
         end
 
+# The fj CLI surface omits the PR body; the repository-bound API
+# supplies it for review evidence. Malformed payloads fail closed.
+def pull_request_body(number:)
+  number = request_number!(number)
+  data = review_http.request(:get, "pulls/#{number}")
+  unless data.is_a?(Hash) && (data["body"].nil? || data["body"].is_a?(String))
+    raise Ace::Git::ProviderMalformedOutputError, "Malformed Forgejo PR body evidence"
+  end
+  data["body"]
+end
+
         def pull_request_review_evidence(number:, expected_head:)
           number = request_number!(number)
           verify_expected_head!(pull_request(number: number), expected_head)
@@ -207,8 +218,15 @@ module Ace
             raise Ace::Git::ProviderConflictingMatchesError,
               "Multiple comments match review session #{correlation} on PR ##{number}"
           end
-          return review_mutation(number, expected_head, existing.first, :existing) if existing.one?
+          if existing.one?
+            # A repeat reconciles only the exact session comment; a marker
+            # match with different content is a conflict, never our post.
+            sent = "#{body}\n\n#{marker}"
+            return review_mutation(number, expected_head, existing.first, :existing) if existing.first.body == sent
 
+            raise Ace::Git::ProviderConflictingMatchesError,
+              "Review session #{correlation} comment exists on PR ##{number} with different content"
+          end
           verify_expected_head!(pull_request(number: number), expected_head)
           begin
             review_http.request(:post, "issues/#{number}/comments", body: {body: "#{body}\n\n#{marker}"})
@@ -218,9 +236,9 @@ module Ace
               "session #{correlation}: #{e.message}; reconcile before repeating"
           end
           matches = matching_review_comments(number, marker, expected_head)
-          unless matches.one?
+          unless matches.one? && matches.first.body == "#{body}\n\n#{marker}"
             raise Ace::Git::ProviderUnknownOutcomeError,
-              "PR comment sent but reconciliation found #{matches.length} matches for session #{correlation}"
+              "PR comment sent but reconciliation found #{matches.length} exact-content match(es) for session #{correlation}"
           end
           review_mutation(number, expected_head, matches.first, :created)
         end

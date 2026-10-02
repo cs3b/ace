@@ -11,9 +11,15 @@ module Github
 
     def test_valid_empty_collection_preserves_identity
       calls = []
+      graphql = {
+        "data" => {"repository" => {"pullRequest" => {"reviewThreads" => {
+          "totalCount" => 0, "pageInfo" => {"hasNextPage" => false}, "nodes" => []
+        }}}}
+      }.to_json
       runner = lambda do |args:, **|
         calls << args
-        {success: true, stdout: "[[]]", stderr: "", exit_code: 0}
+        stdout = args.include?("graphql") ? graphql : "[[]]"
+        {success: true, stdout: stdout, stderr: "", exit_code: 0}
       end
       provider = Ace::Git::Github::Provider.new(server: SERVER, runner: runner)
       pr = Struct.new(:number, :head_sha, :state).new(42, HEAD, :open)
@@ -26,7 +32,8 @@ module Github
       assert_empty evidence.reviews
       assert_equal "named-github", evidence.server_name
       assert_equal HEAD, evidence.head_sha
-      assert_equal 3, calls.length
+      assert_equal 4, calls.length
+      assert calls.any? { |args| args.include?("graphql") }
       assert calls.all? { |args| args.include?("--hostname") && args.include?("github.example.com") }
     end
 

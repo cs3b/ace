@@ -45,7 +45,7 @@ class GithubCheckEvidenceTest < AceGitGithubTestCase
     runner = scripted_checks_runner(
       checks_payload: {"total_count" => 0, "check_runs" => []},
       status_payload: {
-        "state" => "success",
+        "state" => "success", "total_count" => 2,
         "statuses" => [
           {"context" => "ci/lab", "state" => "success", "target_url" => "https://ci.example.com/1"},
           {"context" => "docs", "state" => "pending", "target_url" => nil}
@@ -72,7 +72,7 @@ class GithubCheckEvidenceTest < AceGitGithubTestCase
         ]
       },
       status_payload: {
-        "state" => "failure",
+        "state" => "failure", "total_count" => 1,
         "statuses" => [{"context" => "ci/lab", "state" => "failure", "target_url" => nil}]
       }
     )
@@ -91,7 +91,7 @@ class GithubCheckEvidenceTest < AceGitGithubTestCase
         "total_count" => 101,
         "check_runs" => Array.new(100) { |i| {"name" => "check-#{i}", "status" => "COMPLETED", "conclusion" => "SUCCESS"} }
       },
-      status_payload: {"state" => "success", "statuses" => []}
+      status_payload: {"state" => "success", "total_count" => 0, "statuses" => []}
     )
 
     error = assert_raises(Ace::Git::ProviderMalformedOutputError) do
@@ -103,7 +103,7 @@ class GithubCheckEvidenceTest < AceGitGithubTestCase
   def test_missing_total_count_fails_closed
     runner = scripted_checks_runner(
       checks_payload: {"check_runs" => [{"name" => "test-suite", "status" => "COMPLETED", "conclusion" => "SUCCESS"}]},
-      status_payload: {"state" => "success", "statuses" => []}
+      status_payload: {"state" => "success", "total_count" => 0, "statuses" => []}
     )
 
     error = assert_raises(Ace::Git::ProviderMalformedOutputError) do
