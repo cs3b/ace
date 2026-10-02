@@ -1475,13 +1475,28 @@ module Ace
             File.rename(tmp_path, identity_path)
           end
 
-          receipt = pr_provider(options).post_comment(
+          # Pin posting to the server resolved during review: a remote
+          # change mid-review must not redirect the comment to another
+          # repository with the same number and head.
+          pinned_server = options.pr_metadata&.fetch("server_name", nil)
+          provider = pinned_server ? Molecules::PrProvider.new(server_name: pinned_server, timeout: options.provider_timeout) : pr_provider(options)
+          receipt = provider.post_comment(
             options.pr, expected_head: head,
             content: content,
             session_key: session_key
           )
           # Posted results retain the resolved identity the contract requires:
           # server, repository, PR number, and the exact guarded head.
+          # The posted identity must match the reviewed identity exactly.
+          reviewed_server = options.pr_metadata&.fetch("server_name", nil)
+          reviewed_repo = options.pr_metadata&.fetch("repository_url", nil)
+          reviewed_number = options.pr_metadata&.fetch("number", nil)
+          if (reviewed_server && receipt.comment.server_name != reviewed_server) ||
+             (reviewed_repo && receipt.comment.repository_url != reviewed_repo) ||
+             (reviewed_number && receipt.comment.pr_number != reviewed_number)
+            raise Ace::Git::ProviderIdentityMismatchError,
+              "Posted comment identity (#{receipt.comment.server_name}/#{receipt.comment.repository_url}##{receipt.comment.pr_number}) does not match the reviewed PR"
+          end
           {success: true, comment_url: receipt.comment.url, idempotency: receipt.idempotency,
            server_name: receipt.comment.server_name, repository_url: receipt.comment.repository_url,
            pr_number: receipt.comment.pr_number, head_sha: receipt.head_sha}
