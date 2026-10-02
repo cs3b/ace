@@ -127,10 +127,12 @@ module Ace
         # exact authorization reference is consumed by its first live claim:
         # a second request presenting the same operation/project/target
         # authorization is rejected instead of dispatching a duplicate effect.
-        def claim_service_request(binding, guard: nil)
+        # Dispatching callers claim directly as +uncertain+ so no commit
+        # window exists where a stranded claim reads as accepted.
+        def claim_service_request(binding, state: "accepted", guard: nil)
           guard ||= -> { authorization_conflict(binding) }
           update_service_request(binding.fetch("request_id"), expected: nil,
-            replacement: binding.merge("state" => "accepted", "claimed_at" => Time.now.utc.iso8601(9)),
+            replacement: binding.merge("state" => state, "claimed_at" => Time.now.utc.iso8601(9)),
             event_type: "service_claim", guard: guard)
         end
 

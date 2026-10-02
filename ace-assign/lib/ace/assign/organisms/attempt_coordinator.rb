@@ -58,7 +58,11 @@ module Ace
             raise AttemptErrors::ReceiptRejected, "Service request candidate head is stale"
           end
           require_review_evidence(attempt, head) if @verifier.external_effect?(binding["operation"])
-          journal_for.claim_service_request(binding, guard: -> { claim_guard(binding) })
+          # Dispatching claims record uncertain directly: the effect may
+          # happen as soon as the claim lands, and a crash before the
+          # executor response must leave uncertainty, not a stranded
+          # accepted state that a retry would return without dispatching.
+          journal_for.claim_service_request(binding, state: "uncertain", guard: -> { claim_guard(binding) })
         end
 
         # Rechecked against the authoritative ref for every locked claim
@@ -141,7 +145,7 @@ module Ace
           if request["transport"] == "local" && Process.uid != request["executor_uid"]
             raise AttemptErrors::ReceiptRejected, "Service receipt submitter is not the configured executor"
           end
-          verify_service_evidence!(receipt["evidence"], request)
+          verify_service_evidence!(receipt["evidence"], request, state)
         end
 
         def valid_service_evidence?(evidence)
@@ -154,10 +158,12 @@ module Ace
 
         # Evidence must live inside the candidate repository (symlinks
         # resolved), exist, match its digest, be owned by — and not writable
-        # by anyone but — the claimed executor identity, and postdate the
-        # claim: a caller cannot attest an effect with a file it selected,
-        # wrote, or reused from an earlier execution.
-        def verify_service_evidence!(evidence, request)
+        # by anyone but — the claimed executor identity, postdate the claim,
+        # and name the claimed request, input digest, and attested outcome: a
+        # caller cannot attest an effect with a file it selected, wrote, or
+        # reused from an earlier execution, nor record an outcome the
+        # executor did not attest.
+        def verify_service_evidence!(evidence, request, state)
           repo_root = File.realpath(@repo_root)
           claimed_at = parse_claimed_at(request)
           evidence.each do |item|
@@ -184,7 +190,7 @@ module Ace
             unless claimed_at.nil? || stat.mtime >= claimed_at
               raise AttemptErrors::ReceiptRejected, "Service receipt evidence predates the claim: #{ref}"
             end
-            unless evidence_bound_to_request?(real, request)
+            unless evidence_bound_to_request?(real, request, state)
               raise AttemptErrors::ReceiptRejected,
                 "Service receipt evidence does not bind the claimed request: #{ref}"
             end
@@ -194,12 +200,15 @@ module Ace
           end
         end
 
-        # The evidence artifact must name the claimed request and input
-        # digest: an unrelated executor-owned file cannot attest this effect.
-        def evidence_bound_to_request?(path, request)
+        # The evidence artifact must name the claimed request, input digest,
+        # and attested outcome: an unrelated executor-owned file cannot
+        # attest this effect, and its result cannot be recorded under
+        # another terminal state.
+        def evidence_bound_to_request?(path, request, state)
           content = File.read(path)
           content.include?(request.fetch("request_id")) &&
-            content.include?(request.fetch("input_digest"))
+            content.include?(request.fetch("input_digest")) &&
+            (%w[succeeded failed].include?(state) ? content.include?(state) : true)
         end
 
         def parse_claimed_at(request)
