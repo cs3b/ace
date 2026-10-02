@@ -77,10 +77,17 @@ module Ace
             )
             sync_started = false
             begin
+              result = nil
               with_issue_identity_lock(remote_issue) do
                 ensure_issue_not_linked_elsewhere!(remote_issue, exclude_id: created_task.id) if remote_issue
                 sync_started = true
-                sync_linked_issues_for(created_task, reason: "create")
+                result = sync_linked_issues_for(created_task, reason: "create")
+              end
+              if result[:success] == false && result[:error].to_s.start_with?("Ace::Git::ProviderIdentityMismatchError")
+                # Ownership was confirmed to have changed: the task must not
+                # survive as a second local claimant for the issue.
+                FileUtils.rm_rf(created_task.path)
+                raise Ace::Git::ProviderIdentityMismatchError, result[:error].to_s
               end
             rescue Ace::Git::ProviderUnreachableError
               # Offline sync retains the complete local link + pending flag:
@@ -369,11 +376,16 @@ module Ace
           )
           sync_started = false
           begin
+            result = nil
             with_issue_identity_lock(remote_issue) do
               ensure_issue_linkable!(remote_issue) if remote_issue
               ensure_issue_not_linked_elsewhere!(remote_issue, exclude_id: created_subtask.id) if remote_issue
               sync_started = true
-              sync_linked_issues_for(created_subtask, reason: "create")
+              result = sync_linked_issues_for(created_subtask, reason: "create")
+            end
+            if result[:success] == false && result[:error].to_s.start_with?("Ace::Git::ProviderIdentityMismatchError")
+              FileUtils.rm_rf(created_subtask.path)
+              raise Ace::Git::ProviderIdentityMismatchError, result[:error].to_s
             end
           rescue Ace::Git::ProviderUnreachableError
             raise
