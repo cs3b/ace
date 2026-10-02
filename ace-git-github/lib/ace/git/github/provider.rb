@@ -398,7 +398,7 @@ end
           end
           begin
             matches = matching_review_comments(pr, marker, expected_head)
-          rescue Ace::Git::ProviderUnreachableError => e
+          rescue Ace::Git::ProviderMalformedOutputError, Ace::Git::ProviderUnreachableError => e
             raise Ace::Git::ProviderUnknownOutcomeError,
               "PR comment sent but reconciliation read failed for session #{correlation}: #{e.message}; reconcile before repeating"
           end
@@ -481,6 +481,10 @@ end
           GRAPHQL
           begin
             resolved = gh_graphql(mutation, id: thread_id).dig("data", "resolveReviewThread", "thread")
+            raise Ace::Git::ProviderMalformedOutputError, "Missing thread confirmation" unless resolved.is_a?(Hash)
+          rescue Ace::Git::ProviderMalformedOutputError => e
+            raise Ace::Git::ProviderUnknownOutcomeError,
+              "Thread resolution sent but confirmation unreadable for #{server.name}/#{pr.number}, thread #{thread_id}: #{e.message}; reconcile before repeating"
           rescue Ace::Git::ProviderUnreachableError => e
             raise Ace::Git::ProviderUnknownOutcomeError,
               "Thread resolution outcome unknown for #{server.name}/#{pr.number}, " \

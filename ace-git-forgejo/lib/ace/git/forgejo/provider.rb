@@ -250,7 +250,7 @@ module Ace
           end
           begin
           matches = matching_review_comments(number, marker, expected_head)
-          rescue Ace::Git::ProviderUnreachableError => e
+          rescue Ace::Git::ProviderMalformedOutputError, Ace::Git::ProviderUnreachableError => e
             raise Ace::Git::ProviderUnknownOutcomeError,
               "PR comment sent but reconciliation read failed for session #{correlation}: #{e.message}; reconcile before repeating"
           end
