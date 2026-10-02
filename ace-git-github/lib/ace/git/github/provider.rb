@@ -463,8 +463,8 @@ end
                 "Comment update sent but verification read failed for comment #{comment_id}: #{e.message}; reconcile before repeating"
             end
             unless comment_belongs_to_pr?(updated, pr.number)
-              raise Ace::Git::ProviderIdentityMismatchError,
-                "Edited comment #{comment_id} does not belong to selected PR ##{pr.number}"
+              raise Ace::Git::ProviderUnknownOutcomeError,
+                "Comment update sent but edited comment #{comment_id} does not verify against PR ##{pr.number}; reconcile before repeating"
             end
           rescue Ace::Git::ProviderUnreachableError => e
             raise Ace::Git::ProviderUnknownOutcomeError,

@@ -304,8 +304,8 @@ module Ace
                 "Comment update sent but verification read failed for comment #{comment_id}: #{e.message}; reconcile before repeating"
             end
             unless updated.is_a?(Hash) && updated["issue_url"].to_s.end_with?("/#{number}")
-              raise Ace::Git::ProviderIdentityMismatchError,
-                "Edited comment #{comment_id} does not belong to selected PR ##{number}"
+              raise Ace::Git::ProviderUnknownOutcomeError,
+                "Comment update sent but edited comment #{comment_id} does not verify against PR ##{number}; reconcile before repeating"
             end
           rescue Ace::Git::ProviderUnreachableError => e
             raise Ace::Git::ProviderUnknownOutcomeError,
