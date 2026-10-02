@@ -602,12 +602,10 @@ class TaskManagerTest < AceTaskTestCase
     adapter.define_singleton_method(:validate_link!) { |**_args| true }
     adapter.define_singleton_method(:sync_task) do |task:, previous_task_id: nil, before_create: nil|
       if task.metadata["issue_sync_operation"] == "reconcile-create"
+        # Extended internal reads succeeded; the marker never appeared:
+        # authoritative absence.
         phases << :reconcile
-        reconcile_reads += 1
-        raise Ace::Git::ProviderUnreachableError, "marker still absent" if reconcile_reads < 2
-
-        phases << :reconciled
-        nil
+        raise Ace::Git::ProviderUnknownOutcomeError, "tracking comment create still unresolved"
       else
         phases << :create
         before_create&.call
@@ -650,6 +648,32 @@ class TaskManagerTest < AceTaskTestCase
     end
   end
 
+  def test_offline_reconcile_retains_creation_guard
+    adapter = Object.new
+    adapter.define_singleton_method(:validate_link!) { |**_args| true }
+    adapter.define_singleton_method(:sync_task) do |task:, **_|
+      if task.metadata["issue_sync_operation"] == "reconcile-create"
+        raise Ace::Git::ProviderUnreachableError, "forge offline"
+      end
+      raise Ace::Git::ProviderUnknownOutcomeError, "unknown send"
+    end
+    adapter.define_singleton_method(:clear_task) { |**_args| true }
+    @manager.stub(:issue_adapter, adapter) do
+      task = @manager.create("Linked task", remote_issue: issue_identity)
+      Ace::Support::Items::Molecules::FieldUpdater.update(
+        task.file_path, set: {"issue_sync_operation" => "reconcile-create"}
+      )
+      Ace::Task::Molecules::IssueLink.stub(:from_input, issue_identity) do
+        assert_raises(Ace::Git::ProviderUnreachableError) do
+          @manager.issue_link(task.id, issue: "276", server_name: "lab")
+        end
+      end
+      # The unreadable forge keeps the guard: pending replay may still adopt
+      # a slow commit, so the retry must not authorize a second create.
+      assert_equal "reconcile-create", @manager.show(task.id).metadata["issue_sync_operation"]
+    end
+  end
+
   def test_clear_rejects_unresolved_create_and_retry_recovers
     create_attempts = 0
     adapter = Object.new
@@ -657,8 +681,8 @@ class TaskManagerTest < AceTaskTestCase
     adapter.define_singleton_method(:sync_task) do |task:, previous_task_id: nil, **_|
       reconcile = task.metadata["issue_sync_operation"] == "reconcile-create"
       if reconcile
-        # The marker never committed: reconciliation stays unresolved.
-        raise Ace::Git::ProviderUnreachableError, "still unresolved"
+        # The marker never committed: authoritative absence after reads.
+        raise Ace::Git::ProviderUnknownOutcomeError, "tracking comment create still unresolved"
       end
       create_attempts += 1
     end
