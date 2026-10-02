@@ -70,7 +70,7 @@ module Ace
                 sleep(create_reconcile_interval(attempt))
                 false
               end
-              raise ProviderUnknownOutcomeError,
+              raise ProviderReconcileAbsenceError,
                 "Prior tracking comment create for issue ##{number} is still unresolved" unless resolved
             else
               mutate_and_reconcile(number, desired_body: desired_body) do
