@@ -593,6 +593,35 @@ class TaskManagerTest < AceTaskTestCase
     end
   end
 
+  def test_relocation_rejects_link_changed_under_the_participant_lock
+    adapter = fake_issue_adapter { |task:, **_| {success: true} }
+    @manager.stub(:issue_adapter, adapter) do
+      task = @manager.create("Linked task", remote_issue: issue_identity)
+      other_identity = issue_identity(279)
+      original_show = @manager.method(:show)
+      show_calls = 0
+      @manager.define_singleton_method(:show) do |ref|
+        shown = original_show.call(ref)
+        if shown&.id == task.id && (show_calls += 1) == 1
+          # The first in-lock reload is the deferred-write reload: it now
+          # names a different issue than the participant lock acquired.
+          duped = shown.dup
+          duped.define_singleton_method(:metadata) do
+            shown.metadata.merge("remote_issue" => other_identity)
+          end
+          next duped
+        end
+        shown
+      end
+      error = assert_raises(Ace::Git::ProviderIdentityMismatchError) do
+        @manager.update(task.id, move_to: "maybe")
+      end
+      assert_match(/link changed during update/, error.message)
+    ensure
+      @manager.define_singleton_method(:show, original_show)
+    end
+  end
+
   def test_update_sync_rejects_link_changed_under_the_lock
     adapter = fake_issue_adapter { |task:, **_| {success: true} }
     @manager.stub(:issue_adapter, adapter) do
