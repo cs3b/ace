@@ -568,6 +568,17 @@ module Ace
             )
             linked = show(ref)
             result = sync_linked_issues_for(linked, reason: "link")
+            if result[:success] == false &&
+                result[:error].to_s.start_with?("Ace::Git::ProviderIdentityMismatchError")
+              # Definitive pre-mutation rejection (sync validates ownership
+              # before touching the forge): roll back the freshly written
+              # mapping so no local claim survives for an issue this task
+              # never owned.
+              Ace::Support::Items::Molecules::FieldUpdater.update(
+                linked.file_path, set: {"remote_issue" => nil, "issue_sync_pending" => nil}
+              )
+              raise Ace::Git::ProviderIdentityMismatchError, result[:error].to_s
+            end
             raise Ace::Git::ProviderUnreachableError, result[:error] unless result[:success]
           end
 
