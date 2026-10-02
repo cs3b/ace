@@ -501,6 +501,50 @@ class TaskManagerTest < AceTaskTestCase
     end
   end
 
+  def test_orchestrator_conversion_syncs_linked_child_with_previous_id
+    captured = []
+    adapter = fake_issue_adapter do |task:, previous_task_id: nil|
+      captured << [task.id, previous_task_id]
+    end
+    @manager.stub(:issue_adapter, adapter) do
+      task = @manager.create("Linked task", remote_issue: issue_identity)
+      converted = @manager.update(task.id, move_as_child_of: "self")
+      # The first capture is the create-time sync; the second is the
+      # conversion sync targeting the child that retained the mapping.
+      assert_equal 2, captured.length
+      child_id, previous_id = captured.last
+      # update returns the converted child; it differs from the original task
+      refute_equal task.id, child_id
+      refute_equal converted.id, task.id
+      assert_equal task.id, previous_id
+      assert_equal issue_identity, @manager.show(child_id).metadata["remote_issue"]
+      refute @manager.show(child_id).metadata["issue_sync_pending"]
+    end
+  end
+
+  def test_same_link_retry_validates_persisted_previous_id
+    validate_calls = []
+    offline = true
+    adapter = fake_issue_adapter do |task:, **_|
+      raise Ace::Git::ProviderUnreachableError, "offline" if offline
+    end
+    adapter.define_singleton_method(:validate_link!) do |**args|
+      validate_calls << args.slice(:task_id, :previous_task_id)
+      true
+    end
+    @manager.stub(:issue_adapter, adapter) do
+      parent = @manager.create("Parent")
+      task = @manager.create("Linked task", remote_issue: issue_identity)
+      reparented = @manager.update(task.id, move_as_child_of: parent.id)
+      offline = false
+      Ace::Task::Molecules::IssueLink.stub(:from_input, issue_identity) do
+        @manager.issue_link(reparented.id, issue: "276", server_name: "lab")
+      end
+      # The retry must prove ownership against the persisted outgoing ID.
+      assert_equal({task_id: reparented.id, previous_task_id: task.id}, validate_calls.last)
+    end
+  end
+
   def test_bulk_sync_continues_after_failure
     adapter = fake_issue_adapter do |task:, **_|
       raise Ace::Git::ProviderUnreachableError, "offline" if task.title == "First"

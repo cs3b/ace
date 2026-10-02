@@ -11,9 +11,10 @@ module Ace
           @provider_factory = provider_factory
         end
 
-        def validate_link!(identity:, task_id: nil)
+        def validate_link!(identity:, task_id: nil, previous_task_id: nil)
           server = IssueLink.validate!(identity)
-          tracking(server).validate_link!(number: identity.fetch("number"), task_id: task_id)
+          tracking(server).validate_link!(number: identity.fetch("number"), task_id: task_id,
+            previous_task_id: previous_task_id)
         end
 
         def sync_task(task:, previous_task_id: nil)
