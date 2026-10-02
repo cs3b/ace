@@ -50,6 +50,12 @@ module Ace
           rest = text.sub(/\A[a-z][a-z0-9+.\-]*:\/\//i, "").sub(/\A[^\/\s]+@/, "")
           if scheme
             authority, _, path = rest.partition("/")
+          elsif text.match?(/\Assh:\/\//i)
+            # ssh:// URLs separate the authority (with optional port) by slash.
+            rest = text.sub(/\Assh:\/\//i, "").sub(/\A[^\/\s]+@/, "")
+            authority, _, path = rest.partition("/")
+            authority = authority.split(":").first.to_s
+            scheme = "https"
           else
             # scp-style "git@host:path" splits on the colon; ssh ports ride
             # that colon and are dropped from the web endpoint.
