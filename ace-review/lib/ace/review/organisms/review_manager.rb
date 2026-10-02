@@ -1414,7 +1414,9 @@ module Ace
             session_key = persisted["session_key"]
             content = persisted["body"]
           else
-            session_key = File.dirname(File.expand_path(review_file))
+            # The digest in the key keeps a changed review on its own
+            # session marker instead of conflicting with the old comment.
+            session_key = File.dirname(File.expand_path(review_file)) + ":" + review_digest
             content = Molecules::PrProvider.format_comment(
               review_content, preset: review_data[:preset], model: review_data[:model],
               # The timestamp is frozen to the review artifact so the same
