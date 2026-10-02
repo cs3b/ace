@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "digest"
+require "digest"
 require "fileutils"
 require "json"
 require "open3"
@@ -247,12 +249,23 @@ module Ace
           service_request_records.find do |other|
             next false if other["request_id"] == binding.fetch("request_id")
             next false if other["state"] == "rejected" && other["consumed"] == false
-            # A proven no-effect settlement frees the exact authorization.
-            next false if other["state"] == "failed-settled"
+            # A settled failure frees the exact authorization only while its
+            # no-effect evidence remains verifiable in the repository.
+            next false if other["state"] == "failed-settled" && settlement_evidence_intact?(other)
             other["authorization"] == authorization &&
               other["operation"] == binding.fetch("operation") &&
               other["project_id"] == binding.fetch("project_id") &&
               other["target"] == binding.fetch("target")
+          end
+        end
+
+        def settlement_evidence_intact?(record)
+          receipt = record["receipt"]
+          return false unless receipt.is_a?(Hash)
+          Array(receipt["evidence"]).all? do |item|
+            path = File.join(@repo_root, item["ref"].to_s)
+            File.file?(path) && !File.symlink?(path) &&
+              Digest::SHA256.file(path).hexdigest == item["sha256"]
           end
         end
 
