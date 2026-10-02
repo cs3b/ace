@@ -73,13 +73,20 @@ module Ace
         def paginate(suffix)
           page = 1
           entries = []
+          seen = []
           loop do
             batch = request(:get, "#{suffix}?page=#{page}&limit=50")
             unless batch.is_a?(Array)
               raise Ace::Git::ProviderMalformedOutputError, "Forgejo #{suffix} did not return a list"
             end
-            entries.concat(batch)
-            break if batch.length < 50
+            before = entries.length
+            # Stop when a page adds no new items (unique ids): instances
+            # may cap pages below the requested limit, so a short page alone
+            # does not prove the end of the collection.
+            fresh = batch.reject { |item| seen.include?(item["id"]) }
+            entries.concat(fresh)
+            fresh.each { |item| seen << item["id"] }
+            break if fresh.empty?
 
             page += 1
           end
