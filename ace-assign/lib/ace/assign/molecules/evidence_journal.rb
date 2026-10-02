@@ -127,10 +127,11 @@ module Ace
         # exact authorization reference is consumed by its first live claim:
         # a second request presenting the same operation/project/target
         # authorization is rejected instead of dispatching a duplicate effect.
-        def claim_service_request(binding)
+        def claim_service_request(binding, guard: nil)
+          guard ||= -> { authorization_conflict(binding) }
           update_service_request(binding.fetch("request_id"), expected: nil,
-            replacement: binding.merge("state" => "accepted"), event_type: "service_claim",
-            guard: -> { authorization_conflict(binding) })
+            replacement: binding.merge("state" => "accepted", "claimed_at" => Time.now.utc.iso8601(9)),
+            event_type: "service_claim", guard: guard)
         end
 
         # Reject a service request. A request not yet on file gets its
@@ -142,7 +143,7 @@ module Ace
           request_id = binding.fetch("request_id")
           existing = service_request(request_id)
           if existing
-            unless existing.except("state", "receipt", "reason") == binding.except("state", "receipt", "reason")
+            unless existing.except("state", "receipt", "reason", "claimed_at") == binding.except("state", "receipt", "reason", "claimed_at")
               raise AttemptErrors::Conflict, "Service request #{request_id} has different input"
             end
             return existing if existing["state"] == "rejected"
@@ -181,6 +182,24 @@ module Ace
         # Every service request recorded in this evidence ref, whatever the
         # owning assignment. Backs the journal-wide request-ID and
         # authorization-consumption checks.
+        # Another live request holding the same exact authorization for the
+        # same operation, project and target. Only requests that were born
+        # rejected (never claimed, never dispatched) leave the decision
+        # unconsumed: a withdrawn or failed claim keeps it consumed until
+        # attributable evidence proves the effect did not occur.
+        def authorization_conflict(binding)
+          authorization = binding["authorization"]
+          return nil unless authorization.is_a?(String) && !authorization.empty?
+          service_request_records.find do |other|
+            next false if other["request_id"] == binding.fetch("request_id")
+            next false if other["state"] == "rejected" && other["consumed"] == false
+            other["authorization"] == authorization &&
+              other["operation"] == binding.fetch("operation") &&
+              other["project_id"] == binding.fetch("project_id") &&
+              other["target"] == binding.fetch("target")
+          end
+        end
+
         def service_request_records
           value = ref_value
           return [] unless value
@@ -271,8 +290,8 @@ module Ace
               path = File.join(checkout_dir, service_request_path(request_id))
               existing = File.exist?(path) ? JSON.parse(File.read(path)) : nil
               if expected.nil? && existing
-                return existing if existing.except("state", "receipt", "reason") ==
-                  replacement.except("state", "receipt", "reason")
+                return existing if existing.except("state", "receipt", "reason", "claimed_at") ==
+                  replacement.except("state", "receipt", "reason", "claimed_at")
                 raise AttemptErrors::Conflict, "Service request #{request_id} has different input"
               end
               if expected && existing != expected
@@ -309,24 +328,6 @@ module Ace
 
         def service_request_path(request_id)
           "execution/requests/#{request_id}.json"
-        end
-
-        # Another live request holding the same exact authorization for the
-        # same operation, project and target. Only requests that were born
-        # rejected (never claimed, never dispatched) leave the decision
-        # unconsumed: a withdrawn or failed claim keeps it consumed until
-        # attributable evidence proves the effect did not occur.
-        def authorization_conflict(binding)
-          authorization = binding["authorization"]
-          return nil unless authorization.is_a?(String) && !authorization.empty?
-          service_request_records.find do |other|
-            next false if other["request_id"] == binding.fetch("request_id")
-            next false if other["state"] == "rejected" && other["consumed"] == false
-            other["authorization"] == authorization &&
-              other["operation"] == binding.fetch("operation") &&
-              other["project_id"] == binding.fetch("project_id") &&
-              other["target"] == binding.fetch("target")
-          end
         end
 
         def validate_request_id!(request_id)

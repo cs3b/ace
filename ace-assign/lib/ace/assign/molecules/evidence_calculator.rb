@@ -40,8 +40,12 @@ module Ace
           release_receipt = receipt_currency(receipts, "release", head)
           unresolved_effects = collect_unresolved_effects(attempts)
           if assignment&.managed?
+            # A rejected effect stays unresolved when its claim had been
+            # dispatched (authorization consumed): only attributable evidence
+            # that no effect occurred settles it, never the bare rejection.
             unresolved_effects.concat(journal.service_requests(assignment.id)
-              .select { |request| %w[accepted uncertain].include?(request["state"]) }
+              .select { |request| %w[accepted uncertain].include?(request["state"]) ||
+                (request["state"] == "rejected" && request["consumed"] != false) }
               .map { |request| "#{request['request_id']}:#{request['operation']}:#{request['state']}" })
             unresolved_effects.uniq!
           end

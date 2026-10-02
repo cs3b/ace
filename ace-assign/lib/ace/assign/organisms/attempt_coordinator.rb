@@ -46,7 +46,10 @@ module Ace
         attr_reader :store
 
         # Claim an external service effect before dispatch. Only a managed,
-        # active attempt for the exact project and candidate may own it.
+        # active attempt for the exact project and candidate may own it. The
+        # guard re-runs inside the journal lock per CAS attempt, so a
+        # terminal event landing between validation and commit still blocks
+        # the claim.
         def claim_service_request(binding)
           attempt = service_attempt(binding)
           head = candidate_head!
@@ -55,7 +58,19 @@ module Ace
             raise AttemptErrors::ReceiptRejected, "Service request candidate head is stale"
           end
           require_review_evidence(attempt, head) if @verifier.external_effect?(binding["operation"])
-          journal_for.claim_service_request(binding)
+          journal_for.claim_service_request(binding, guard: -> { claim_guard(binding) })
+        end
+
+        # Rechecked against the authoritative ref for every locked claim
+        # attempt: the attempt must still be journal-active and the exact
+        # authorization must still be unconsumed.
+        def claim_guard(binding)
+          derived = journal_for.derived_attempts(binding.fetch("assignment_id"))
+            .find { |candidate| candidate.attempt_id == binding.fetch("attempt_id") }
+          unless derived&.active?
+            raise AttemptErrors::ReceiptRejected, "Attempt is no longer active in the authoritative journal"
+          end
+          journal_for.authorization_conflict(binding)
         end
 
         def service_attempt(binding)
@@ -138,11 +153,13 @@ module Ace
         end
 
         # Evidence must live inside the candidate repository (symlinks
-        # resolved), exist, match its digest, and be owned by — and not
-        # writable by anyone but — the claimed executor identity; a caller
-        # cannot attest an effect with a file it selected or wrote.
+        # resolved), exist, match its digest, be owned by — and not writable
+        # by anyone but — the claimed executor identity, and postdate the
+        # claim: a caller cannot attest an effect with a file it selected,
+        # wrote, or reused from an earlier execution.
         def verify_service_evidence!(evidence, request)
           repo_root = File.realpath(@repo_root)
+          claimed_at = parse_claimed_at(request)
           evidence.each do |item|
             ref = item["ref"]
             unless Pathname.new(ref).relative?
@@ -164,10 +181,20 @@ module Ace
             unless stat.uid == request["executor_uid"] && (stat.mode & 0o022).zero?
               raise AttemptErrors::ReceiptRejected, "Service receipt evidence is not executor-owned: #{ref}"
             end
+            unless claimed_at.nil? || stat.mtime >= claimed_at
+              raise AttemptErrors::ReceiptRejected, "Service receipt evidence predates the claim: #{ref}"
+            end
             unless Digest::SHA256.file(real).hexdigest == item["sha256"]
               raise AttemptErrors::ReceiptRejected, "Service receipt evidence digest mismatch: #{ref}"
             end
           end
+        end
+
+        def parse_claimed_at(request)
+          return nil if request["claimed_at"].nil?
+          Time.iso8601(request["claimed_at"])
+        rescue ArgumentError
+          raise AttemptErrors::ReceiptRejected, "Service request has an invalid claim timestamp"
         end
 
         # Start a scoped attempt for an assignment.

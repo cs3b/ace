@@ -278,8 +278,8 @@ module Ace
                    "target" => {"resource" => "forge/repo"},
                    "candidate_head" => git(@repo, "rev-parse", "HEAD").strip,
                    "executor_uid" => Process.uid, "transport" => "unix"}
-        evidence = write_evidence("forge/receipt", "executor attested effect\n")
         coordinator.claim_service_request(binding)
+        evidence = write_evidence("forge/receipt", "executor attested effect\n")
         coordinator.transition_service_request("svc-receipt", state: "uncertain")
         receipt = binding.merge("outcome" => "succeeded", "executor_uid" => Process.uid,
           "evidence" => [{"ref" => "forge/receipt", "sha256" => evidence}])
@@ -304,8 +304,8 @@ module Ace
                    "target" => {"resource" => "forge/repo"},
                    "candidate_head" => git(@repo, "rev-parse", "HEAD").strip,
                    "executor_uid" => Process.uid, "transport" => "unix"}
-        digest = write_evidence("forge/provenance", "real effect artifact\n")
         coordinator.claim_service_request(binding)
+        digest = write_evidence("forge/provenance", "real effect artifact\n")
         coordinator.transition_service_request("svc-provenance", state: "uncertain")
 
         # A receipt from a different executor identity cannot complete the claim.
@@ -352,6 +352,36 @@ module Ace
         assert_includes error.message, "submitter"
 
         assert_equal "uncertain", coordinator.service_request_status("svc-provenance")["state"]
+      end
+
+      def test_service_receipt_evidence_cannot_be_reused_from_an_earlier_request
+        coordinator = build_coordinator
+        assignment = create_assignment
+        attempt = coordinator.start(assignment_id: assignment.id, step: "010", project_id: "ace")
+        base = {"assignment_id" => assignment.id, "attempt_id" => attempt.attempt_id,
+                "project_id" => "ace", "operation" => "forge-sync", "input_digest" => "a" * 64,
+                "target" => {"resource" => "forge/repo"},
+                "candidate_head" => git(@repo, "rev-parse", "HEAD").strip,
+                "executor_uid" => Process.uid, "transport" => "unix"}
+
+        first = base.merge("request_id" => "svc-first")
+        coordinator.claim_service_request(first)
+        digest = write_evidence("forge/attestation", "executor attested effect\n")
+        coordinator.transition_service_request("svc-first", state: "succeeded", receipt: first.merge(
+          "outcome" => "succeeded",
+          "evidence" => [{"ref" => "forge/attestation", "sha256" => digest}]))
+
+        # A second, later claim cannot attest its effect with the first
+        # request's evidence file: the artifact predates the new claim.
+        second = base.merge("request_id" => "svc-second", "input_digest" => "b" * 64)
+        coordinator.claim_service_request(second.merge("authorization" => "decision-2"))
+        coordinator.transition_service_request("svc-second", state: "uncertain")
+        reused = second.merge("outcome" => "succeeded",
+          "evidence" => [{"ref" => "forge/attestation", "sha256" => digest}])
+        error = assert_raises(AttemptErrors::ReceiptRejected) do
+          coordinator.transition_service_request("svc-second", state: "succeeded", receipt: reused)
+        end
+        assert_includes error.message, "predates the claim"
       end
 
       def test_repeated_start_from_different_actor_conflicts

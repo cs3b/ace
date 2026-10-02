@@ -143,7 +143,6 @@ module Ace
         assignment = create_assignment
         attempt = coordinator.start(assignment_id: assignment.id, step: "010", project_id: "ace")
         head = git(@repo, "rev-parse", "HEAD")
-        evidence_digest = write_evidence("forge/receipt", "executor attested effect\n")
         binding = {"request_id" => "svc-evidence", "assignment_id" => assignment.id,
                    "attempt_id" => attempt.attempt_id, "project_id" => "ace",
                    "operation" => "forge-sync", "input_digest" => "a" * 64,
@@ -151,6 +150,7 @@ module Ace
                    "candidate_head" => head, "executor_uid" => Process.uid,
                    "transport" => "local"}
         coordinator.claim_service_request(binding)
+        evidence_digest = write_evidence("forge/receipt", "executor attested effect\n")
         coordinator.transition_service_request("svc-evidence", state: "uncertain")
 
         evidence = calculate(auto_merge: true)
@@ -296,6 +296,26 @@ module Ace
         assert_includes %w[authorized approval-required], evidence[:merge_decision]
         refute_includes evidence.keys, :feedback_state_hardcoded
         assert_includes %w[terminal open uncertain unknown], evidence[:feedback_state]
+      end
+
+      def test_rejected_after_claim_stays_unresolved_for_merge_authorization
+        coordinator = build_coordinator
+        assignment = create_assignment
+        attempt = coordinator.start(assignment_id: assignment.id, step: "010", project_id: "ace")
+        head = git(@repo, "rev-parse", "HEAD")
+        binding = {"request_id" => "svc-rejected", "assignment_id" => assignment.id,
+                   "attempt_id" => attempt.attempt_id, "project_id" => "ace",
+                   "operation" => "forge-sync", "input_digest" => "a" * 64,
+                   "target" => {"resource" => "forge/repo"},
+                   "candidate_head" => head, "executor_uid" => Process.uid,
+                   "transport" => "unix"}
+        coordinator.claim_service_request(binding)
+        coordinator.transition_service_request("svc-rejected", state: "uncertain")
+        coordinator.transition_service_request("svc-rejected", state: "rejected")
+
+        evidence = calculate(auto_merge: true)
+        assert_includes evidence[:unresolved_effects], "svc-rejected:forge-sync:rejected"
+        assert_equal "approval-required", evidence[:merge_decision]
       end
     end
   end
