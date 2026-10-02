@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "tmpdir"
+
 require_relative "../molecules/task_config_loader"
 require_relative "../molecules/task_scanner"
 require_relative "../molecules/task_resolver"
