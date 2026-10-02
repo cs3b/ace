@@ -69,14 +69,15 @@ module Ace
 
         # Clear only the task's marker/comment and ACE label. Issue state is
         # intentionally untouched, even when it was changed by prior sync.
-        def clear(number:, task_id:)
+        def clear(number:, task_id:, previous_task_id: nil)
           snapshot = fetch(number)
           owners = owned_task_ids(snapshot)
           sticky = sticky_comment(snapshot)
           if sticky && owners.empty?
             raise ProviderMalformedOutputError, "Issue ##{number} has an ACE marker without a task owner"
           end
-          unless owners.empty? || owners == [task_id.to_s]
+          accepted = [task_id, previous_task_id].compact.map(&:to_s).uniq
+          unless owners.empty? || (!accepted.empty? && owners.all? { |owner| accepted.include?(owner) })
             raise ProviderIdentityMismatchError, "Issue ##{number} is owned by another ACE task"
           end
           if sticky
