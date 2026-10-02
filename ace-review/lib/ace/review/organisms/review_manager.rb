@@ -1399,8 +1399,18 @@ module Ace
           # artifact: a retry in a later run must reuse the exact identity
           # and content to reconcile the existing session comment.
           identity_path = File.join(File.dirname(File.expand_path(review_file)), "post-identity.yml")
-          if File.exist?(identity_path)
-            persisted = YAML.safe_load_file(identity_path, permitted_classes: [Time, Date])
+          review_digest = Digest::SHA256.file(review_file).hexdigest
+          persisted = File.exist?(identity_path) &&
+            begin
+              YAML.safe_load_file(identity_path, permitted_classes: [Time, Date])
+            rescue Psych::Exception
+              nil
+            end
+          # The persisted record is reusable only for the exact same PR,
+          # head, and review content; anything else starts a fresh identity.
+          if persisted && persisted["pr"] == options.pr.to_s &&
+              persisted["head"] == head && persisted["review_sha256"] == review_digest &&
+              persisted["session_key"].is_a?(String) && persisted["body"].is_a?(String)
             session_key = persisted["session_key"]
             content = persisted["body"]
           else
@@ -1411,7 +1421,10 @@ module Ace
               # artifact always formats the identical body.
               timestamp: File.mtime(review_file).utc.strftime("%Y-%m-%d %H:%M:%S UTC")
             )
-            File.write(identity_path, YAML.dump("session_key" => session_key, "body" => content))
+            File.write(identity_path, YAML.dump(
+              "session_key" => session_key, "body" => content,
+              "pr" => options.pr.to_s, "head" => head, "review_sha256" => review_digest
+            ))
           end
 
           receipt = pr_provider(options).post_comment(
