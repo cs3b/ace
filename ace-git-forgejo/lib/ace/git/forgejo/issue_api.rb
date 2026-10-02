@@ -148,7 +148,11 @@ module Ace
           error = case status.to_i
           when 401, 403 then Ace::Git::ProviderAuthenticationError
           when 404 then Ace::Git::ProviderObjectNotFoundError
-          when 409, 422 then Ace::Git::ProviderIdentityMismatchError
+          # A conflict on a mutation does not prove ownership was rejected
+          # before the write: earlier requests in the same sync may already
+          # have committed (e.g. the tracking comment). Uncertainty keeps the
+          # local recovery identity instead of deleting the task.
+          when 409, 422 then method == :get ? Ace::Git::ProviderIdentityMismatchError : Ace::Git::ProviderUnknownOutcomeError
           else method == :get ? Ace::Git::ProviderUnreachableError : Ace::Git::ProviderUnknownOutcomeError
           end
           raise error, "Forgejo issue #{method} #{path} returned HTTP #{status}"
