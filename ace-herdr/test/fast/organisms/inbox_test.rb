@@ -220,6 +220,19 @@ module Ace
           assert_nil Molecules::DeliveryRecordStore.load(@dir, @event)
         end
 
+        def test_malformed_probe_json_keeps_event_retryable
+          enqueue
+          @executor.pane = ["not", "an", "object"]
+
+          result = @inbox.deliver(event: @event)
+
+          assert_equal "queued", result["state"]
+          assert_match(/unavailable|unrecognized/, result["last_error"])
+          assert_empty @native.calls
+          record = Molecules::DeliveryRecordStore.load(@dir, @event)
+          assert_equal "queued", record.state
+        end
+
         def test_busy_agent_receives_one_native_queue_submission_even_with_concurrent_callers
           enqueue
           results = 2.times.map { Thread.new { @inbox.deliver(event: @event) } }.map(&:value)

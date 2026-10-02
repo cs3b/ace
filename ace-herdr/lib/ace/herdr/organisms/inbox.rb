@@ -325,7 +325,11 @@ module Ace
 
         def observe_target(expected_session, expected_pane)
           payload = @executor.pane_get(expected_pane).parsed_json
-          pane = payload.is_a?(Hash) && payload.dig("result", "pane")
+          # Shape-check each level: parseable but malformed probe JSON must
+          # fail as a validation error, never as a TypeError that would
+          # strand the event in claimed.
+          result = payload.is_a?(Hash) ? payload["result"] : nil
+          pane = result.is_a?(Hash) ? result["pane"] : nil
           raise ValidationError, "pane observation is unavailable" unless pane.is_a?(Hash)
           raise IdentityDriftError, "pane identity changed" unless pane["pane_id"] == expected_pane
           observed_session = pane["workspace_id"] || pane["session_id"]

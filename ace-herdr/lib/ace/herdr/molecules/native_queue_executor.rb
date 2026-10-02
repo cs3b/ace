@@ -41,10 +41,13 @@ module Ace
             timeout_s: @identity_timeout_s)
           raise ExecutorError, "Pi identity probe failed: #{result.stderr}" unless result.status.success?
 
-          JSON.parse(result.stdout).fetch("session_id")
+          identity = JSON.parse(result.stdout)
+          raise ExecutorError, "Pi identity probe returned invalid JSON" unless identity.is_a?(Hash)
+
+          identity.fetch("session_id")
         rescue Errno::ENOENT, Errno::EACCES => e
           raise ExecutorUnavailableError, e.message
-        rescue JSON::ParserError, KeyError
+        rescue JSON::ParserError, KeyError, TypeError
           raise ExecutorError, "Pi identity probe returned invalid JSON"
         rescue Timeout::Error
           raise ExecutorError, "Pi identity probe timed out"

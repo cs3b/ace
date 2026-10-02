@@ -20,6 +20,23 @@ module Ace
           end
         end
 
+        def test_failed_pane_get_raises_classified_error_before_observation
+          Dir.mktmpdir do |dir|
+            script = File.join(dir, "failing-herdr")
+            File.write(script, <<~SH)
+              #!/bin/sh
+              printf '%s\\n' '{"result":{"pane":{"pane_id":"p1"}}}'
+              exit 1
+            SH
+            File.chmod(0o755, script)
+            executor = HerdrExecutor.new(binary: script)
+
+            error = assert_raises(ExecutorError) { executor.pane_get("p1") }
+
+            assert_instance_of CommandError, error
+          end
+        end
+
         # Executor with the process boundary stubbed out: run/raise at the
         # Open3 seam so argv building and error classification are tested
         # without the herdr binary.

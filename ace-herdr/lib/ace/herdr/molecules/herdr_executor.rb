@@ -33,10 +33,13 @@ module Ace
         def pane_get(pane, timeout_s: DEFAULT_PROBE_TIMEOUT_S)
           result = BoundedProcess.call([@binary, "pane", "get", pane], stdin_data: "",
             timeout_s: timeout_s, output_limit: WAKE_OUTPUT_LIMIT)
-          ExecutionResult.new(
+          execution = ExecutionResult.new(
             stdout: result.stdout.strip, stderr: result.stderr.strip,
             success: result.status.success?, exit_code: result.status.exitstatus || -1
           )
+          raise classify(execution, [@binary, "pane", "get", pane]) unless execution.success?
+
+          execution
         rescue Timeout::Error
           raise AgentNotReadyError, "pane probe timed out after #{timeout_s}s"
         rescue Errno::ENOENT, Errno::EACCES
