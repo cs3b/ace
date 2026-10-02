@@ -124,6 +124,16 @@ ace-assign attempt evidence --attempt ATTEMPT --receipt-digest SHA256 --format j
 
 A check proof requires the live candidate head, intact accepted artifacts, and the matching executed operation: `tests` uses `test`, other explicit check names use that operation name. Review collection requires an accepted `review-collect` operation with a passed `review-execution` outcome and the retained metadata/report/prompt artifacts. Review approval requires an ordinary accepted `review` operation with the approved independent reviewer verdict, exact head and retained report artifacts; collection proof cannot substitute for approval. Both collection and approval support an exact `--historical-head`. Historical review validation exposes `historical: true` and the recorded head; it preserves accepted source authority across head drift and cannot certify live checks. Unknown receipts, changed artifacts, unaccepted/unmanaged history, wrong purposes and stale current queries fail closed. Retain the configured evidence ref alongside durable review campaigns.
 
+### Service effect claims
+
+External service operations (driven through `ace-lab service request`) claim their effect on the assignment journal before dispatch, so a retried or crashed request can never duplicate a side effect. The coordinator owns the trusted surface; callers never append journal events directly.
+
+- `Ace::Assign::Organisms::AttemptCoordinator#claim_service_request(binding)` records the claim and its attempt event atomically under a journal-wide request-ID index: the same request ID cannot be claimed twice, by another assignment, or against a stale candidate head. External-effect operations additionally require accepted review evidence at the current head, like `merge`.
+- `#service_request_status(request_id)` reads the authoritative claim state, including after local cache loss.
+- `#transition_service_request(request_id, state:, receipt:)` moves a claim to `succeeded` or `failed` only with a bound, non-secret receipt (exact request/attempt/project/operation/input digest/target fields, non-negative executor UID, and SHA-256 evidence references); rejected receipts never become approvals.
+- `#reject_service_request(binding, reason:)` durably records an auditable rejection without inventing a valid attempt.
+- Journal commits advance `journal_commit` only; they never change or authorize `candidate_head`, and `base_head` stays fixed at attempt start.
+
 ### Evidence storage and recovery modes
 
 - Task-attached (managed) attempts journal accepted evidence to the configured evidence Git ref (default `refs/ace/execution`) through an isolated, disposable audit checkout, outside the deliverable candidate branch. Journal commits never advance or exempt the reviewed candidate.
@@ -176,11 +186,14 @@ HITL stall behavior:
 - Canonical contract lives in `wfi://hitl` (`ace-hitl` package workflow).
 - If a step is failed with canonical message format `HITL: <id> <path>`, `ace-assign status` prints operator guidance with the matching `ace-hitl show <id>` command and available path hint.
 - Recommended resume flow:
+
   - `ace-hitl show <id>`
   - requester path (default): `ace-hitl wait <id>`
   - fallback path (when waiter inactive): `ace-hitl update <id> --answer "<decision>" --resume`
   - `ace-assign retry <failed-step> --assignment <assignment-id>`
+
 - Completion-attention flow:
+
   - When assignment work is complete but explicit user action is needed, create an approval HITL event (`kind=approval`) and include the resume instruction for `/as-assign-drive <assignment-id>`.
 
 ### `ace-assign step [STEP]`
@@ -284,6 +297,7 @@ Launch modes:
 - `headless`: force the existing provider subprocess path and never create tmux panes
 - `tmux`: require tmux context, create or reuse `<origin-window>-fs`, start a real interactive agent in a pane there via `ace-llm --interactive`, and send the scoped `/as-assign-drive <assignment>@<root>` handoff automatically. The fork window name uses the shared `ace-tmux` safe-name policy, so punctuation in the base window is replaced with `-`. Fork windows and panes are created detached, so the current tmux focus stays where the user left it.
 - `tmux`: require tmux context, create or reuse `<origin-window>-fs`, start a real interactive agent in a pane there via `ace-llm --interactive`, and send the scoped `/as-assign-drive <assignment>@<root>` handoff automatically
+
   - This mode consumes the shared `ace-tmux` runtime/control surface for tmux targeting, pane dispatch, and diagnostics.
   - The fork window name uses the shared `ace-tmux` safe-name policy, so punctuation in the base window is replaced with `-`.
   - Fork windows and panes are created detached, so the current tmux focus stays where the user left it.
@@ -355,6 +369,7 @@ When using preset-backed assignment creation (`ace-assign create --task ...`, `/
 - Terminal refs (`done`, `skipped`, `cancelled`) are skipped before queue expansion.
 - Mixed sets continue with remaining non-terminal refs and report skipped terminal refs.
 - If all requested refs are terminal, assignment creation stops with:
+
   - `All requested tasks are already terminal (done/skipped/cancelled): <refs>`
   - `No assignment created.`
 

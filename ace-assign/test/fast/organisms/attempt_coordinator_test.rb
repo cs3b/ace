@@ -136,6 +136,53 @@ module Ace
         assert_equal first.attempt_id, second.attempt_id
       end
 
+      def test_service_claim_requires_managed_exact_attempt_and_preserves_candidate
+        coordinator = build_coordinator
+        assignment = create_assignment
+        attempt = coordinator.start(assignment_id: assignment.id, step: "010", project_id: "ace")
+        head = git(@repo, "rev-parse", "HEAD").strip
+        binding = {"request_id" => "svc-1", "assignment_id" => assignment.id,
+                   "attempt_id" => attempt.attempt_id, "project_id" => "ace",
+                   "operation" => "forge-sync", "input_digest" => "a" * 64,
+                   "candidate_head" => head}
+
+        claimed = coordinator.claim_service_request(binding)
+        assert_equal "accepted", claimed["state"]
+        assert_equal "accepted", coordinator.service_request_status("svc-1")["state"]
+        assert_nil coordinator.store.find(attempt.attempt_id).candidate_head
+        assert_equal head, git(@repo, "rev-parse", "HEAD").strip
+        assert_raises(AttemptErrors::ReceiptRejected) do
+          coordinator.claim_service_request(binding.merge("project_id" => "other", "request_id" => "svc-2"))
+        end
+        assert_raises(AttemptErrors::ReceiptRejected) do
+          coordinator.claim_service_request(binding.merge("candidate_head" => "b" * 40, "request_id" => "svc-3"))
+        end
+      end
+
+      def test_service_effect_receipt_must_match_claim_before_terminal_transition
+        coordinator = build_coordinator
+        assignment = create_assignment
+        attempt = coordinator.start(assignment_id: assignment.id, step: "010", project_id: "ace")
+        binding = {"request_id" => "svc-receipt", "assignment_id" => assignment.id,
+                   "attempt_id" => attempt.attempt_id, "project_id" => "ace",
+                   "operation" => "forge-sync", "input_digest" => "a" * 64,
+                   "target" => {"resource" => "forge/repo"},
+                   "candidate_head" => git(@repo, "rev-parse", "HEAD").strip}
+        coordinator.claim_service_request(binding)
+        coordinator.transition_service_request("svc-receipt", state: "uncertain")
+        receipt = binding.merge("outcome" => "succeeded", "executor_uid" => Process.uid,
+          "evidence" => [{"ref" => "forge/receipt", "sha256" => "b" * 64}])
+
+        assert_raises(AttemptErrors::ReceiptRejected) do
+          coordinator.transition_service_request("svc-receipt", state: "succeeded",
+            receipt: receipt.merge("candidate_head" => "c" * 40))
+        end
+        assert_equal "uncertain", coordinator.service_request_status("svc-receipt")["state"]
+        accepted = coordinator.transition_service_request("svc-receipt", state: "succeeded", receipt: receipt)
+        assert_equal "succeeded", accepted["state"]
+        assert_equal receipt, accepted["receipt"]
+      end
+
       def test_repeated_start_from_different_actor_conflicts
         coordinator = build_coordinator
         assignment = create_assignment

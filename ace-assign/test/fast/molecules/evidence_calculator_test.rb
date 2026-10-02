@@ -131,6 +131,29 @@ module Ace
         refute_nil evidence[:candidate_head]
       end
 
+      def test_service_request_uncertainty_is_visible_in_assignment_evidence
+        coordinator = build_coordinator
+        assignment = create_assignment
+        attempt = coordinator.start(assignment_id: assignment.id, step: "010", project_id: "ace")
+        head = git(@repo, "rev-parse", "HEAD")
+        binding = {"request_id" => "svc-evidence", "assignment_id" => assignment.id,
+                   "attempt_id" => attempt.attempt_id, "project_id" => "ace",
+                   "operation" => "forge-sync", "input_digest" => "a" * 64,
+                   "target" => {"resource" => "forge/repo"},
+                   "candidate_head" => head}
+        coordinator.claim_service_request(binding)
+        coordinator.transition_service_request("svc-evidence", state: "uncertain")
+
+        evidence = calculate(auto_merge: true)
+        assert_includes evidence[:unresolved_effects], "svc-evidence:forge-sync:uncertain"
+        assert_equal "uncertain", evidence[:feedback_state]
+        assert_equal @journal.ref_value, evidence[:journal_commit]
+        coordinator.transition_service_request("svc-evidence", state: "succeeded",
+          receipt: binding.merge("outcome" => "succeeded", "executor_uid" => Process.uid,
+            "evidence" => [{"ref" => "forge/receipt", "sha256" => "b" * 64}]))
+        refute_includes calculate[:unresolved_effects], "svc-evidence:forge-sync:uncertain"
+      end
+
       def test_review_evidence_for_stale_head_never_authorizes
         coordinator = build_coordinator
         assignment = create_assignment

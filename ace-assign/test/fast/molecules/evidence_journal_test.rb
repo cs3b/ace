@@ -64,6 +64,51 @@ module Ace
         end
       end
 
+      def test_service_request_claim_is_idempotent_and_journal_backed
+        with_temp_cache do |cache_dir|
+          repo = File.join(cache_dir, "repo")
+          candidate_head = init_repo(repo)
+          root = File.join(cache_dir, "co")
+          journal = Molecules::EvidenceJournal.new(repo_root: repo, ref: REF, checkout_root: root)
+          binding = {"request_id" => "req-1", "assignment_id" => "assignment-1", "attempt_id" => "attempt-1",
+                     "project_id" => "ace", "operation" => "publish", "input_digest" => "a" * 64}
+
+          first = journal.claim_service_request(binding)
+          repeated = journal.claim_service_request(binding)
+          assert_equal "accepted", first["state"]
+          assert_equal first.reject { |key, _| key == "journal_commit" }, repeated
+          assert_equal 1, journal.read_events("assignment-1").size
+          assert_equal candidate_head, git(repo, "rev-parse", "HEAD").strip
+          assert_raises(AttemptErrors::Conflict) do
+            journal.claim_service_request(binding.merge("input_digest" => "b" * 64))
+          end
+
+          journal.transition_service_request("req-1", state: "uncertain")
+          journal.transition_service_request("req-1", state: "succeeded", receipt: {"evidence" => "ok"})
+          reloaded = Molecules::EvidenceJournal.new(repo_root: repo, ref: REF, checkout_root: root)
+          assert_equal "succeeded", reloaded.service_request("req-1")["state"]
+          assert_equal 3, reloaded.read_events("assignment-1").size
+          assert_raises(AttemptErrors::InvalidState) do
+            reloaded.transition_service_request("req-1", state: "failed")
+          end
+        end
+      end
+
+      def test_racing_duplicate_service_claims_create_one_intent
+        with_temp_cache do |cache_dir|
+          repo = File.join(cache_dir, "repo")
+          init_repo(repo)
+          journal = Molecules::EvidenceJournal.new(repo_root: repo, ref: REF,
+            checkout_root: File.join(cache_dir, "co"))
+          binding = {"request_id" => "race-1", "assignment_id" => "assignment-race",
+                     "attempt_id" => "attempt-race", "project_id" => "ace", "operation" => "forge-sync",
+                     "input_digest" => "a" * 64}
+          results = 2.times.map { Thread.new { journal.claim_service_request(binding) } }.map(&:value)
+          assert_equal %w[accepted accepted], results.map { |result| result["state"] }
+          assert_equal 1, journal.read_events("assignment-race").length
+        end
+      end
+
       def test_append_twice_advances_ref_and_keeps_both_batches
         with_temp_cache do |cache_dir|
           repo = File.join(cache_dir, "repo")

@@ -21,6 +21,10 @@ module Ace
       # to the candidate revision invalidates prior candidate authorization;
       # `journal_commit` is tracked separately from both.
       class AttemptCoordinator
+        SERVICE_RECEIPT_FIELDS = %w[assignment_id attempt_id candidate_head evidence executor_uid
+          input_digest operation outcome project_id request_id target].freeze
+        SERVICE_BINDING_FIELDS = %w[request_id assignment_id attempt_id project_id operation
+          input_digest target candidate_head].freeze
         # @param cache_base [String, nil] Assignment cache base
         # @param repo_root [String, nil] Candidate repository root (default: project root)
         # @param journal [Molecules::EvidenceJournal, nil] Evidence journal (default built per repo)
@@ -38,6 +42,74 @@ module Ace
         end
 
         attr_reader :store
+
+        # Claim an external service effect before dispatch. Only a managed,
+        # active attempt for the exact project and candidate may own it.
+        def claim_service_request(binding)
+          attempt = service_attempt(binding)
+          head = candidate_head!
+          valid_head = binding["candidate_head"] == head && [nil, head].include?(attempt.candidate_head)
+          unless valid_head
+            raise AttemptErrors::ReceiptRejected, "Service request candidate head is stale"
+          end
+          require_review_evidence(attempt, head) if @verifier.external_effect?(binding["operation"])
+          journal_for.claim_service_request(binding)
+        end
+
+        def service_attempt(binding)
+          attempt = @store.find(binding.fetch("attempt_id")) ||
+            recover_managed_attempt(binding.fetch("assignment_id"), binding.fetch("attempt_id"))
+          raise AttemptErrors::NotFound, "Attempt not found" unless attempt
+          unless attempt.managed? && attempt.active? &&
+              attempt.binding.assignment_id == binding["assignment_id"] &&
+              attempt.binding.project_id == binding["project_id"]
+            raise AttemptErrors::ReceiptRejected, "Service request does not match an active managed attempt"
+          end
+          attempt
+        end
+
+        def reject_service_request(binding, reason:)
+          service_attempt(binding)
+          journal_for.reject_service_request(binding, reason: reason)
+        end
+
+        def service_request_status(request_id)
+          journal_for.service_request(request_id)
+        end
+
+        def transition_service_request(request_id, state:, receipt: nil)
+          if %w[succeeded failed].include?(state)
+            request = journal_for.service_request(request_id)
+            raise AttemptErrors::NotFound, "Service request #{request_id} not found" unless request
+            validate_service_receipt!(request, state, receipt)
+          elsif receipt
+            raise AttemptErrors::ReceiptRejected, "Non-terminal service transition cannot carry a receipt"
+          end
+          journal_for.transition_service_request(request_id, state: state, receipt: receipt)
+        end
+
+        def validate_service_receipt!(request, state, receipt)
+          unless receipt.is_a?(Hash) && receipt.keys.sort == SERVICE_RECEIPT_FIELDS.sort
+            raise AttemptErrors::ReceiptRejected, "Service receipt has invalid fields"
+          end
+          SERVICE_BINDING_FIELDS.each do |key|
+            unless receipt[key] == request[key]
+              raise AttemptErrors::ReceiptRejected, "Service receipt does not match #{key}"
+            end
+          end
+          unless receipt["outcome"] == state && receipt["executor_uid"].is_a?(Integer) &&
+              receipt["executor_uid"] >= 0 && valid_service_evidence?(receipt["evidence"])
+            raise AttemptErrors::ReceiptRejected, "Service receipt has invalid executor or evidence"
+          end
+        end
+
+        def valid_service_evidence?(evidence)
+          evidence.is_a?(Array) && !evidence.empty? && evidence.all? do |item|
+            item.is_a?(Hash) && item.keys.sort == %w[ref sha256] &&
+              item["ref"].is_a?(String) && item["ref"].match?(/\A[a-zA-Z0-9_.:\/-]{1,256}\z/) &&
+              item["sha256"].is_a?(String) && item["sha256"].match?(/\A[0-9a-f]{64}\z/)
+          end
+        end
 
         # Start a scoped attempt for an assignment.
         #

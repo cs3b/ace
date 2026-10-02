@@ -121,6 +121,49 @@ module Ace
             .compact
         end
 
+        # Reserve a globally unique service request in the same evidence ref
+        # as its owning attempt. The request index and attempt event are one
+        # Git commit, so a ref race cannot admit two effects for one ID.
+        def claim_service_request(binding)
+          update_service_request(binding.fetch("request_id"), expected: nil,
+            replacement: binding.merge("state" => "accepted"), event_type: "service_claim")
+        end
+
+        def reject_service_request(binding, reason:)
+          update_service_request(binding.fetch("request_id"), expected: nil,
+            replacement: binding.merge("state" => "rejected", "reason" => reason), event_type: "service_claim")
+        end
+
+        def transition_service_request(request_id, state:, receipt: nil)
+          unless %w[succeeded failed uncertain rejected].include?(state)
+            raise ArgumentError, "invalid service request state"
+          end
+          current = service_request(request_id)
+          raise AttemptErrors::NotFound, "Service request #{request_id} not found" unless current
+          update_service_request(request_id, expected: current,
+            replacement: current.merge("state" => state, "receipt" => receipt),
+            event_type: "service_transition")
+        end
+
+        def service_request(request_id)
+          validate_request_id!(request_id)
+          value = ref_value
+          return nil unless value
+          out, stderr, status = git("show", "#{value}:#{service_request_path(request_id)}")
+          return JSON.parse(out) if status.success?
+          return nil if stderr.include?("does not exist") || stderr.include?("exists on disk")
+          raise AttemptErrors::EvidenceUnavailable, "Cannot read service request: #{stderr}"
+        rescue JSON::ParserError
+          raise AttemptErrors::EvidenceUnavailable, "Corrupt service request #{request_id}"
+        end
+
+        def service_requests(assignment_id)
+          request_ids = read_events(assignment_id)
+            .select { |event| event["type"] == "service_claim" }
+            .map { |event| event.dig("payload", "request_id") }.compact.uniq
+          request_ids.filter_map { |request_id| service_request(request_id) }
+        end
+
         # All attempts derivable from the journal, reconstructed from intent
         # and process_start facts with journal-authoritative state. The
         # journal is the owner of attempt-state interpretation.
@@ -161,10 +204,67 @@ module Ace
 
           paths, stderr, status = git("ls-tree", "-d", "--name-only", value, "--", "execution/")
           raise AttemptErrors::EvidenceUnavailable, "Cannot discover journal assignments: #{stderr}" unless status.success?
-          paths.lines.map { |path| path.strip.delete_prefix("execution/") }.sort
+          paths.lines.map { |path| path.strip.delete_prefix("execution/") }
+            .reject { |id| id == "requests" }.sort
         end
 
         private
+
+        def update_service_request(request_id, expected:, replacement:, event_type:)
+          validate_request_id!(request_id)
+          with_lock do
+            CAS_ATTEMPTS.times do
+              old = ref_value
+              ensure_checkout!
+              old = ref_value if old.nil?
+              sync_checkout(old)
+              path = File.join(checkout_dir, service_request_path(request_id))
+              existing = File.exist?(path) ? JSON.parse(File.read(path)) : nil
+              if expected.nil? && existing
+                return existing if existing.except("state", "receipt", "reason") ==
+                  replacement.except("state", "receipt", "reason")
+                raise AttemptErrors::Conflict, "Service request #{request_id} has different input"
+              end
+              if expected && existing != expected
+                raise AttemptErrors::Conflict, "Service request #{request_id} changed during transition"
+              end
+              if expected && %w[succeeded failed rejected].include?(existing["state"])
+                raise AttemptErrors::InvalidState, "Service request #{request_id} is terminal"
+              end
+
+              FileUtils.mkdir_p(File.dirname(path))
+              File.write(path, JSON.pretty_generate(replacement))
+              assignment_id = replacement.fetch("assignment_id")
+              attempt_id = replacement.fetch("attempt_id")
+              prior = read_events(assignment_id).reverse
+                .find { |entry| entry["attempt_id"] == attempt_id }&.fetch("digest")
+              payload = {"request_id" => request_id, "state" => replacement.fetch("state"),
+                         "input_digest" => replacement.fetch("input_digest"),
+                         "receipt_digest" => replacement["receipt"] &&
+                           Atoms::EvidenceDigest.digest(replacement["receipt"])}
+              event = Models::EvidenceEvent.build(type: event_type, attempt_id: attempt_id,
+                payload: payload, previous_digest: prior)
+              write_event_files(assignment_id, [event])
+              git!("-C", checkout_dir, "add", "--", service_request_path(request_id),
+                "execution/#{assignment_id}/events")
+              state = replacement.fetch("state")
+              git!("-C", checkout_dir, "-c", "user.name=ace-assign", "-c", "user.email=ace-assign@localhost",
+                "commit", "-m", "evidence: service request #{request_id} #{state}")
+              commit = git!("-C", checkout_dir, "rev-parse", "HEAD").first
+              return replacement.merge("journal_commit" => commit) if update_ref_cas(commit, old)
+            end
+            raise AttemptErrors::EvidenceUnavailable, "Service request ref stayed conflicting"
+          end
+        end
+
+        def service_request_path(request_id)
+          "execution/requests/#{request_id}.json"
+        end
+
+        def validate_request_id!(request_id)
+          return if request_id.is_a?(String) && request_id.match?(/\A[a-zA-Z0-9][a-zA-Z0-9_.-]{0,127}\z/)
+          raise ArgumentError, "invalid service request ID"
+        end
 
         # Latest lifecycle state implied by the events, or nil when the
         # events do not describe a full attempt (intent missing).

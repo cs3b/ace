@@ -39,6 +39,12 @@ module Ace
           review_receipt = receipt_currency(receipts, "review", head)
           release_receipt = receipt_currency(receipts, "release", head)
           unresolved_effects = collect_unresolved_effects(attempts)
+          if assignment&.managed?
+            unresolved_effects.concat(journal.service_requests(assignment.id)
+              .select { |request| %w[accepted uncertain].include?(request["state"]) }
+              .map { |request| "#{request['request_id']}:#{request['operation']}:#{request['state']}" })
+            unresolved_effects.uniq!
+          end
           feedback_state = derive_feedback_state(attempts, receipts, head, unresolved_effects)
 
           # Authorization requires managed evidence, settled work (no active
@@ -67,7 +73,7 @@ module Ace
             base_head: latest&.binding&.base_head,
             candidate_head: latest&.candidate_head,
             evidence_git_ref: evidence_git_ref(assignment),
-            journal_commit: latest&.journal_commit,
+            journal_commit: assignment&.managed? ? journal.ref_value : latest&.journal_commit,
             unresolved_effects: unresolved_effects
           }
           evidence[:decision_digest] = Digest::SHA256.hexdigest(

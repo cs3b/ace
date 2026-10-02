@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.61.0] - 2026-10-02
+
+### Added
+
+- Journal-backed service request claims, terminal receipts, and uncertainty
+  tracking. Assignment evidence now exposes unresolved service effects and
+  the latest evidence ref commit without changing the candidate head.
+
+### Fixed
+
+- Validate terminal service receipts against the exact claimed request and
+  executor evidence before accepting them in the assignment journal.
+
 ## [0.60.0] - 2026-10-01
 
 ### Fixed
