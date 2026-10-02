@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Task issue commands and workflow guidance now use forge-neutral `--issue` and `--default-server` options.
+- Raised minimum dependencies to the versions providing the issue tracking contract: ace-git ~> 0.26, ace-git-github ~> 0.3, ace-git-forgejo ~> 0.4.
 
 ## [0.38.1] - 2026-09-29
 
