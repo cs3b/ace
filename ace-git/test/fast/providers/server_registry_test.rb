@@ -236,7 +236,8 @@ module Providers
         {"name" => "forgejo-lab", "provider" => "forgejo", "url" => "http://forgejo.example.com/owner/repo"}
       ]) do
         assert_empty Ace::Git::ServerRegistry.matching_servers("https://forgejo.example.com/owner/repo")
-        assert_equal ["forgejo-lab"], Ace::Git::ServerRegistry.matching_servers("http://forgejo.example.com/owner/repo")
+        assert_equal ["forgejo-lab"],
+          Ace::Git::ServerRegistry.matching_servers("http://forgejo.example.com/owner/repo").map(&:name)
       end
     end
 
