@@ -160,11 +160,14 @@ module Ace
           comments = review_http.paginate("issues/#{number}/comments").map do |entry|
             review_comment(entry, number, expected_head)
           end
-          inline = review_http.paginate("pulls/#{number}/comments").map do |entry|
-            review_comment(entry, number, expected_head)
-          end
           reviews = review_http.paginate("pulls/#{number}/reviews").map do |entry|
             review_entry(entry, number, expected_head)
+          end
+          # Review comments live under each review, not at the PR level.
+          inline = reviews.flat_map do |review|
+            review_http.paginate("pulls/#{number}/reviews/#{review.id}/comments").map do |entry|
+              review_comment(entry, number, expected_head)
+            end
           end
           verify_expected_head!(pull_request(number: number), expected_head)
           Ace::Git::ProviderReviewEvidence.new(
@@ -267,9 +270,10 @@ module Ace
           comment_id = Integer(comment_id)
           verify_expected_head!(pull_request(number: number), expected_head)
           issue_matches = review_http.paginate("issues/#{number}/comments").select { |entry| entry["id"] == comment_id }
-          inline_matches = issue_matches.empty? ? review_http.paginate("pulls/#{number}/comments").select { |entry| entry["id"] == comment_id } : []
-          matches = issue_matches + inline_matches
-          update_route = issue_matches.any? ? "issues/comments/#{comment_id}" : "pulls/comments/#{comment_id}"
+          # Editing inline (review) comments is not part of the observed
+          # v0.6.0 `fj` surface: classify it explicitly as unsupported.
+          matches = issue_matches
+          update_route = "issues/comments/#{comment_id}"
           unless matches.one?
             raise Ace::Git::ProviderIdentityMismatchError,
               "Comment #{comment_id} does not belong to selected PR ##{number}"

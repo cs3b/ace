@@ -26,7 +26,8 @@ module Forgejo
       assert_empty evidence.reviews
       assert_equal "forge-lab", evidence.server_name
       assert_equal HEAD, evidence.head_sha
-      assert_equal 3, calls.length
+      # issues comments + reviews (empty reviews means no per-comment fetch)
+      assert_equal 2, calls.length
       assert calls.all? { |args| args[2].start_with?("https://forge.example.com/api/v1/repos/owner/repo/") }
     end
 

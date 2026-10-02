@@ -333,9 +333,19 @@ end
             raise Ace::Git::ProviderMalformedOutputError, "Malformed GitHub commit status evidence"
           end
           total = data["total_count"]
-          # The combined status response reports the authoritative count; a
-          # shorter statuses array would silently understate evidence.
-          unless total.is_a?(Integer) && total <= statuses.length
+          unless total.is_a?(Integer)
+            raise Ace::Git::ProviderMalformedOutputError, "Malformed GitHub commit status evidence"
+          end
+          # The combined view can cap its inline statuses array; the
+          # paginated statuses endpoint is the complete stream.
+          if total > statuses.length
+            statuses = gh_api("commits/#{head_sha}/statuses?per_page=100", paginate: true)
+            statuses = statuses.is_a?(Array) ? statuses.flat_map { |page| page.is_a?(Array) ? page : [page] } : [statuses]
+            unless statuses.all? { |st| st.is_a?(Hash) && st["context"].is_a?(String) }
+              raise Ace::Git::ProviderMalformedOutputError, "Malformed GitHub commit status evidence"
+            end
+          end
+          unless statuses.length == total
             raise Ace::Git::ProviderMalformedOutputError, "Incomplete GitHub commit status evidence"
           end
           statuses.map do |status|
