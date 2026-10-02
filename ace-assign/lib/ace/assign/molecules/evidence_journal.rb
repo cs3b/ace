@@ -267,11 +267,15 @@ module Ace
             path = File.expand_path(item["ref"].to_s, repo_root)
             real = begin
               File.realpath(path)
-            rescue Errno::ENOENT
+            rescue Errno::ENOENT, Errno::EACCES, Errno::ELOOP
               next false
             end
-            real.start_with?(repo_root + File::SEPARATOR) &&
-              Digest::SHA256.file(real).hexdigest == item["sha256"]
+            begin
+              real.start_with?(repo_root + File::SEPARATOR) &&
+                Digest::SHA256.file(real).hexdigest == item["sha256"]
+            rescue Errno::EACCES, Errno::ELOOP
+              false
+            end
           end
         end
 
