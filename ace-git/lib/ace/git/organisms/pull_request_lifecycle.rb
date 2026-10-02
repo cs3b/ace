@@ -58,6 +58,10 @@ module Ace
           after = provider.pull_request(number: reference.number)
           hydrated_body = provider.pull_request_body(number: reference.number)
           after = after.with(body: hydrated_body) unless hydrated_body.nil?
+          # Hydration is a remote read: re-verify identity after it so the
+          # metadata can never pair a newer body with a stale head.
+          verified = provider.pull_request(number: reference.number)
+          after = after.with(head_sha: verified.head_sha)
           # Body hydration and identity must agree with the base provenance
           # read before collection; a moved base invalidates the metadata.
           latest_details = provider.pull_request_review_details(number: reference.number)
