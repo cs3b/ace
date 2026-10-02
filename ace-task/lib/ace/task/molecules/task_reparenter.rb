@@ -76,7 +76,7 @@ module Ace
           end
 
           # Promoted descendants rebase from the standalone ID.
-          id_map = {}
+          id_map = {task.id => new_id}
           rewrite_descendants(new_dir, old_parent_id: task.id, new_parent_id: new_id, id_map: id_map)
           rewrite_dependency_references(id_map)
 

@@ -126,6 +126,30 @@ class TaskReparenterTest < AceTaskTestCase
     refute Dir.exist?(task_dir), "Original standalone dir should be moved"
   end
 
+  def test_promote_maps_dependency_on_promoted_task
+    parent_dir = create_task_dir("8pp.t.q7w", "target")
+    create_spec(parent_dir, "8pp.t.q7w-target", status: "pending")
+
+    parent2_dir = create_task_dir("8pp.t.q9w", "source")
+    create_spec(parent2_dir, "8pp.t.q9w-source", status: "pending")
+
+    subtask_dir = File.join(parent2_dir, "a-child")
+    FileUtils.mkdir_p(subtask_dir)
+    create_spec(subtask_dir, "8pp.t.q9w.a-child", id: "8pp.t.q9w.a", status: "pending", parent: "8pp.t.q9w")
+
+    dependent_dir = create_task_dir("8pp.t.q8w", "dependent")
+    spec_path = File.join(dependent_dir, "8pp.t.q8w-dependent.s.md")
+    File.write(spec_path, "---\nid: 8pp.t.q8w\nstatus: pending\npriority: medium\n" \
+      "created_at: 2026-01-01 00:00:00\ndependencies: [8pp.t.q9w.a]\ntags: []\n---\n\n# Dependent\n")
+
+    subtask = load_task(subtask_dir, "8pp.t.q9w.a")
+    reparenter = Ace::Task::Molecules::TaskReparenter.new(root_dir: @tasks_dir)
+    result = reparenter.reparent(subtask, target: "none", resolve_ref: ->(_) {})
+
+    updated = File.read(spec_path)
+    assert_match(/dependencies: \[#{Regexp.escape(result.id)}\]/, updated)
+  end
+
   def test_demote_rewrites_descendant_identities
     parent_dir = create_task_dir("8pp.t.q7w", "target")
     create_spec(parent_dir, "8pp.t.q7w-target", status: "pending")

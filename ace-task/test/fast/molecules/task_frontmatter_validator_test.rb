@@ -298,6 +298,26 @@ class TaskFrontmatterValidatorTest < AceTaskTestCase
     end
   end
 
+  def test_mixed_key_type_remote_issue_is_rejected_not_crashing
+    with_tasks_dir do |root|
+      file = write_task_file(root, "issue-mixed-keys", <<~CONTENT)
+        ---
+        id: 8pp.t.q7w
+        status: pending
+        title: Linked task
+        tags: []
+        created_at: 2026-02-28 12:00:00
+        remote_issue:
+          1: broken
+          server_name: lab
+        ---
+      CONTENT
+
+      issues = Validator.validate(file)
+      assert issues.any? { |i| i[:message].include?("remote_issue") && i[:type] == :error }
+    end
+  end
+
   def test_falsy_remote_issue_value_is_rejected
     with_tasks_dir do |root|
       file = write_task_file(root, "issue-falsy", <<~CONTENT)
