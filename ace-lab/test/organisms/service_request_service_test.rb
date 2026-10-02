@@ -122,6 +122,11 @@ module Ace
           replay = service.request(**args)
           assert_equal "succeeded", replay.dig("data", "outcome")
           assert_equal 1, calls
+
+          # A changed binding under the same request ID is a conflict, never
+          # a replay.
+          conflict = service.request(**args.merge(attempt: "other-attempt"))
+          assert_equal "conflict", conflict.dig("error", "code")
         end
       end
 

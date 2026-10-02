@@ -43,19 +43,19 @@ module Ace
           operation = {"project" => "ace", "service_id" => "executor", "argv" => [executable],
             "executor_uid" => Process.uid, "lease_expires_at" => (Time.now.utc + 3600).iso8601}
           receipt = Molecules::ServiceExecutor.new.execute(operation: operation, request: request,
-            input: {"target" => {"resource" => "release"}}, policy_loader: -> { policy_for(operation) },
+            input: {"target" => {"resource" => "release"}}, policy_loader: -> { policy_for(operation) }, head_loader: -> { request["candidate_head"] },
             authorization: "decision-1")
           assert_equal "succeeded", receipt["outcome"]
           assert_equal Process.uid, receipt["executor_uid"]
           wrong_uid = operation.merge("executor_uid" => Process.uid + 1)
           assert_raises(Ace::Lab::InvalidConfigurationError) do
             Molecules::ServiceExecutor.new.execute(operation: wrong_uid, request: request, input: {},
-              policy_loader: -> { policy_for(wrong_uid) }, authorization: "decision-1")
+              policy_loader: -> { policy_for(wrong_uid) }, head_loader: -> { request["candidate_head"] }, authorization: "decision-1")
           end
           expired = operation.merge("lease_expires_at" => (Time.now.utc - 1).iso8601)
           assert_raises(SecurityError) do
             Molecules::ServiceExecutor.new.execute(operation: expired, request: request, input: {},
-              policy_loader: -> { policy_for(expired) }, authorization: "decision-1")
+              policy_loader: -> { policy_for(expired) }, head_loader: -> { request["candidate_head"] }, authorization: "decision-1")
           end
         end
       end
@@ -80,7 +80,7 @@ module Ace
             "socket_path" => path, "executor_uid" => Process.uid,
             "lease_expires_at" => (Time.now.utc + 3600).iso8601}
           receipt = Molecules::ServiceExecutor.new.execute(operation: operation, request: request,
-            input: {"target" => {"resource" => "release"}}, policy_loader: -> { policy_for(operation) },
+            input: {"target" => {"resource" => "release"}}, policy_loader: -> { policy_for(operation) }, head_loader: -> { request["candidate_head"] },
             authorization: "decision-1")
           assert_equal "succeeded", receipt["outcome"]
           thread.join
@@ -105,11 +105,28 @@ module Ace
           end
           error = assert_raises(SecurityError) do
             Molecules::ServiceExecutor.new.execute(operation: operation, request: request,
-              input: {"target" => {"resource" => "release"}}, policy_loader: loader,
+              input: {"target" => {"resource" => "release"}}, policy_loader: loader, head_loader: -> { request["candidate_head"] },
               authorization: "decision-1")
           end
           assert_includes error.message, "not configured"
           assert_equal 1, calls
+        end
+      end
+
+      def test_candidate_head_is_revalidated_at_the_effect_boundary
+        Dir.mktmpdir do |dir|
+          executable = File.join(dir, "handler")
+          File.write(executable, "#!/usr/bin/env ruby\n")
+          File.chmod(0o700, executable)
+          operation = {"project" => "ace", "service_id" => "executor", "argv" => [executable],
+            "executor_uid" => Process.uid, "lease_expires_at" => (Time.now.utc + 3600).iso8601}
+          error = assert_raises(SecurityError) do
+            Molecules::ServiceExecutor.new.execute(operation: operation, request: request,
+              input: {"target" => {"resource" => "release"}},
+              policy_loader: -> { policy_for(operation) },
+              head_loader: -> { "c" * 40 }, authorization: "decision-1")
+          end
+          assert_includes error.message, "candidate head changed"
         end
       end
     end

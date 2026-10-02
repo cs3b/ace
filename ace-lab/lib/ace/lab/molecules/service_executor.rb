@@ -15,13 +15,18 @@ module Ace
       class ServiceExecutor
         # The trusted policy is reloaded through +policy_loader+ immediately
         # before the effect: a revocation or operation change after the claim
-        # must still stop dispatch.
-        def execute(operation:, request:, input:, policy_loader:, authorization:)
+        # must still stop dispatch. The candidate head is revalidated through
+        # +head_loader+ for the same reason: a concurrent commit must not let
+        # a stale reviewed candidate execute.
+        def execute(operation:, request:, input:, policy_loader:, authorization:, head_loader:)
           fresh = policy_loader.call
           current = fresh.operation!(request.fetch("operation"), project: request.fetch("project_id"),
             service_id: request.fetch("service_id"))
           raise SecurityError, "executor operation changed before dispatch" unless current == operation
           fresh.authorize!(authorization, request)
+          unless head_loader.call == request.fetch("candidate_head")
+            raise SecurityError, "candidate head changed before dispatch"
+          end
           if Time.iso8601(current.fetch("lease_expires_at")) <= Time.now.utc
             raise SecurityError, "executor lease has expired"
           end

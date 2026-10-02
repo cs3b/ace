@@ -9,6 +9,9 @@ module Ace
       # Coordinates the generic request contract. ace-assign owns the durable
       # claim and receipt; this class never writes evidence files directly.
       class ServiceRequestService
+        SERVICE_REPLAY_FIELDS = %w[project_id operation input_digest assignment_id attempt_id
+          candidate_head target service_id authorization caller_uid].freeze
+
         def initialize(topology: nil, policy: nil, coordinator: nil, executor: nil, repo_root: Dir.pwd)
           @topology = topology || TopologyService.from_config
           @policy = policy
@@ -39,11 +42,17 @@ module Ace
           binding["caller_uid"] = Process.uid
           # An identical retry returns the stored outcome without re-checking
           # attempt or policy: a completed request must survive attempt
-          # terminality and authorization expiry.
+          # terminality and authorization expiry. Any changed binding field
+          # under the same request ID is a conflict, never a replay.
           existing = @coordinator.service_request_status(request_id)
-          if existing && existing["project_id"] == project && existing["operation"] == operation &&
-              existing["input_digest"] == binding.fetch("input_digest") &&
-              existing["caller_uid"] == Process.uid
+          if existing
+            changed = SERVICE_REPLAY_FIELDS.find do |field|
+              existing[field] != binding.fetch(field)
+            end
+            if changed
+              raise Ace::Assign::AttemptErrors::Conflict,
+                "Service request #{request_id} has different #{changed}"
+            end
             return result(existing)
           end
           validate_attempt!(binding)
@@ -76,7 +85,8 @@ module Ace
           # The executor reloads the trusted policy from disk at the effect
           # boundary: a revocation after the claim must still stop dispatch.
           receipt = @executor.execute(operation: operation_policy, request: binding, input: input,
-            policy_loader: policy_loader, authorization: authorization)
+            policy_loader: policy_loader, authorization: authorization,
+            head_loader: -> { current_head })
           return result(@coordinator.service_request_status(request_id)) if receipt.nil?
 
           state = receipt.fetch("outcome")
