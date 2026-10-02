@@ -1137,18 +1137,31 @@ module Ace
         end
 
         def clear_issue_link_locked(task)
-          if task.metadata["issue_sync_operation"] == "reconcile-create"
-            # A tracking comment may still be committing forge-side; dropping
-            # the link now would orphan it. Reconcile comment ownership only -
-            # clear must never change issue state as a side effect.
-            issue_adapter.reconcile_comment(task: task)
+          # A tracking comment may still be committing forge-side: reconcile
+          # comment ownership before the clear — clear must never change
+          # issue state as a side effect. If reconciliation fails, the clear
+          # intent is persisted first (with the create guard remembered) so
+          # a pending replay completes the clear instead of silently
+          # restoring tracking.
+          reconcile_first = task.metadata["issue_sync_operation"] == "reconcile-create" ||
+            task.metadata["issue_sync_reconcile_create"] == true
+          if reconcile_first
+            begin
+              issue_adapter.reconcile_comment(task: task)
+            rescue StandardError
+              Ace::Support::Items::Molecules::FieldUpdater.update(task.file_path,
+                set: {"issue_sync_pending" => true, "issue_sync_operation" => "clear",
+                      "issue_sync_reconcile_create" => true})
+              raise
+            end
           end
           Ace::Support::Items::Molecules::FieldUpdater.update(task.file_path,
             set: {"issue_sync_pending" => true, "issue_sync_operation" => "clear"})
           issue_adapter.clear_task(task: task, previous_task_id: task.metadata["issue_sync_previous_id"])
           Ace::Support::Items::Molecules::FieldUpdater.update(task.file_path,
             set: {"remote_issue" => nil, "issue_sync_pending" => nil,
-                  "issue_sync_operation" => nil, "issue_sync_previous_id" => nil})
+                  "issue_sync_operation" => nil, "issue_sync_previous_id" => nil,
+                  "issue_sync_reconcile_create" => nil})
         end
 
         def sync_or_clear_linked_issue(task, reason:)

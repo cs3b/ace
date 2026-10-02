@@ -173,6 +173,11 @@ module Ace
               issues << {type: :error, message: "Invalid issue_sync_previous_id value (expected task ID string)",
                          location: file_path}
             end
+            reconcile_flag = frontmatter["issue_sync_reconcile_create"]
+            unless reconcile_flag.nil? || reconcile_flag == true
+              issues << {type: :error, message: "Invalid issue_sync_reconcile_create value (expected boolean)",
+                         location: file_path}
+            end
           end
         end
       end
