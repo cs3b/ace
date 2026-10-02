@@ -57,6 +57,11 @@ module Ace
           creator = Molecules::TaskCreator.new(root_dir: @root_dir, config: @config)
           attempts = 0
 
+          # Authoritative validation precedes the task write: an offline or
+          # conflicting link must not create a task artifact at all. Offline
+          # validation is the one accepted pre-write failure mode - the task
+          # is then created with the complete pending link for replay.
+          ensure_issue_linkable!(remote_issue) if remote_issue
           begin
             attempts += 1
             created_task = creator.create(
@@ -73,14 +78,13 @@ module Ace
             sync_started = false
             begin
               with_issue_identity_lock(remote_issue) do
-                ensure_issue_linkable!(remote_issue) if remote_issue
                 ensure_issue_not_linked_elsewhere!(remote_issue, exclude_id: created_task.id) if remote_issue
                 sync_started = true
                 sync_linked_issues_for(created_task, reason: "create")
               end
             rescue Ace::Git::ProviderUnreachableError
-              # Offline validation retains the complete local link + pending
-              # flag: offline replay is the spec-mandated recovery path.
+              # Offline sync retains the complete local link + pending flag:
+              # offline replay is the spec-mandated recovery path.
               raise
             rescue StandardError
               # Confirmed rejections (ownership conflict, unknown server) must
@@ -486,6 +490,15 @@ module Ace
               if task.metadata["issue_sync_operation"] == "clear"
                 raise Ace::Git::ProviderIdentityMismatchError,
                   "Task #{task.id} has a pending clear; complete it before linking again"
+              end
+              # A completed identical link (synced, no pending operations)
+              # is idempotent: return the current task without touching the
+              # forge. Guarded (reconcile-create) and pending-clear links
+              # keep the recovery paths below.
+              if task.metadata["issue_sync_pending"] != true &&
+                  task.metadata["issue_sync_operation"] != "clear" &&
+                  task.metadata["issue_sync_operation"] != "reconcile-create"
+                return show(ref)
               end
               # An explicit identical-link retry is the documented recovery
               # for a create that never committed. Reconcile first so a slow
