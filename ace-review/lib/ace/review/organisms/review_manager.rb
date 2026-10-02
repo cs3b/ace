@@ -134,11 +134,8 @@ module Ace
           config_result = prepare_review_config(options)
           return config_result unless config_result[:success]
 
-          metadata = Molecules::GhPrFetcher.fetch_metadata(options.pr)
+          metadata = pr_provider(options).fetch(options.pr, include_comments: false)
           return metadata unless metadata[:success]
-          inventory = Molecules::GhPrFetcher.fetch_file_inventory(metadata[:metadata])
-          return inventory unless inventory[:success]
-          metadata[:metadata]["files"] = inventory[:files]
 
           session_dir = File.join(@project_root || Dir.pwd, ".ace-local", "review", "goals-brief")
           FileUtils.mkdir_p(session_dir)
@@ -151,6 +148,13 @@ module Ace
         def ensure_review_options(options)
           return options if options.is_a?(Models::ReviewOptions)
           Models::ReviewOptions.new(options.is_a?(Hash) ? options : {})
+        end
+
+        def pr_provider(options)
+          Molecules::PrProvider.new(
+            server_name: options.server, use_default: options.default_server,
+            timeout: options.provider_timeout
+          )
         end
 
         # Step 1: Prepare and validate configuration
@@ -291,8 +295,8 @@ module Ace
           return extract_pr_delta_content(pr_identifier, config, options) if options.delta_requested?
 
           # Fetch PR diff and metadata
-          fetch_options = options.gh_timeout ? {timeout: options.gh_timeout} : {}
-          result = Ace::Review::Molecules::GhPrFetcher.fetch_pr(pr_identifier, fetch_options)
+          result = pr_provider(options).fetch(pr_identifier,
+            include_comments: options.include_pr_comments?)
 
           unless result[:success]
             return {success: false, error: result[:error]}
@@ -330,15 +334,10 @@ module Ace
 
           # Fetch PR comments if enabled
           if options.include_pr_comments?
-            comments_result = Ace::Review::Molecules::GhPrCommentFetcher.fetch(pr_identifier, fetch_options)
-            if comments_result[:success]
-              if Ace::Review::Molecules::GhPrCommentFetcher.has_comments?(comments_result)
-                options.pr_comment_data = comments_result
-              end
-            else
-              # Log warning but continue with review (comments are optional enhancement)
-              warn "Warning: Failed to fetch PR comments: #{comments_result[:error]}. " \
-                   "Review will proceed without developer feedback."
+            comments_result = result[:comments]
+            if comments_result[:comments].any? || comments_result[:reviews].any? ||
+                comments_result[:review_threads].any?
+              options.pr_comment_data = comments_result
             end
           end
 
@@ -364,8 +363,7 @@ module Ace
         # this PR) and the current head. Fails closed on missing sessions, rewritten
         # history, or oversized deltas. An empty delta returns a no-op round marker.
         def extract_pr_delta_content(pr_identifier, config, options)
-          fetch_options = options.gh_timeout ? {timeout: options.gh_timeout} : {}
-          metadata_result = Molecules::GhPrFetcher.fetch_metadata(pr_identifier, fetch_options)
+          metadata_result = pr_provider(options).fetch(pr_identifier, include_comments: false)
           return {success: false, error: metadata_result[:error]} unless metadata_result[:success]
 
           metadata = metadata_result[:metadata]
@@ -373,9 +371,6 @@ module Ace
             return {success: false, error: "Delta review requires exact head/base SHAs"}
           end
 
-          inventory = Molecules::GhPrFetcher.fetch_file_inventory(metadata, fetch_options)
-          return {success: false, error: inventory[:error]} unless inventory[:success]
-          metadata["files"] = inventory[:files]
 
           delta = Molecules::DeltaResolver.resolve(options.delta, metadata, project_root: @project_root || Dir.pwd)
           return {success: false, error: delta[:error]} unless delta[:success]
@@ -567,6 +562,8 @@ module Ace
           info += "- **Base branch SHA**: #{metadata["baseRefOid"]}\n"
           info += "- **Head**: #{metadata["headRefName"]}\n"
           info += "- **Head SHA**: #{metadata["headRefOid"]}\n"
+          info += "- **Forge server**: #{metadata["server_name"]}\n" if metadata["server_name"]
+          info += "- **Repository**: #{metadata["repository_url"]}\n" if metadata["repository_url"]
           info += "- **URL**: #{metadata["url"]}\n"
           info
         end
@@ -777,8 +774,8 @@ module Ace
             ref = item["ref"] || item[:ref]
             authority = item["authority"] || item[:authority]
             sha = (ref == "base") ? metadata["baseRefOid"] : metadata["headRefOid"]
-            repository_url = metadata["url"].to_s.sub(%r{/pull/\d+\z}, "")
-            url = "#{repository_url}/blob/#{sha}/#{URI::DEFAULT_PARSER.escape(path)}" if repository_url.start_with?("https://github.com/")
+            repository_url = metadata["repository_url"].to_s
+            url = "#{repository_url}/src/commit/#{sha}/#{URI::DEFAULT_PARSER.escape(path)}" unless repository_url.empty?
             {path: path, ref: ref, authority: authority,
              snapshot: source_at_ref(path, sha, metadata, session_dir), url: url}
           end
@@ -853,23 +850,11 @@ module Ace
 
           content, _error, show_status = Open3.capture3("git", "show", "#{sha}:#{relative}", chdir: root.strip)
           unless show_status.success?
-            match = metadata["url"].to_s.match(%r{\Ahttps://github\.com/([^/]+/[^/]+)/pull/\d+\z})
-            raise Errors::BundleProcessingError.new("Cannot identify repository for PR task spec at reviewed head") unless match
-
-            escaped = URI::DEFAULT_PARSER.escape(relative)
-            endpoint = "repos/#{match[1]}/contents/#{escaped}?ref=#{sha}"
-            fetched = Ace::Git::Github::CliExecutor.execute("api", [endpoint])
-            unless fetched[:success]
-              raise Errors::BundleProcessingError.new("Goals source is unavailable at reviewed ref #{sha}: #{fetched[:stderr]}")
-            end
             begin
-              payload = JSON.parse(fetched[:stdout])
-              unless payload.is_a?(Hash) && payload["encoding"] == "base64" && payload["content"].is_a?(String)
-                raise ArgumentError, "expected a base64 file response"
-              end
-              content = payload["content"].gsub(/\s/, "").unpack1("m0")
-            rescue JSON::ParserError, ArgumentError => e
-              raise Errors::BundleProcessingError.new("Goals source cannot be decoded at reviewed ref #{sha}: #{e.message}")
+              content = Molecules::PrProvider.new(server_name: metadata.fetch("server_name"))
+                .file_at_ref(metadata.fetch("number"), path: relative, ref: sha)
+            rescue Ace::Git::Error => e
+              raise Errors::BundleProcessingError.new("Goals source is unavailable at reviewed ref #{sha}: #{e.message}")
             end
           end
 
@@ -1253,7 +1238,7 @@ module Ace
             return typed_subject_config
           end
 
-          # Handle --pr flag (full PR mode with GhPrFetcher)
+          # Handle --pr flag with the resolved provider snapshot.
           if subject && !subject.empty? && options&.pr_review?
             pr_diff_path = File.join(session_dir, "pr-diff.patch")
             File.write(pr_diff_path, subject)
@@ -1263,7 +1248,7 @@ module Ace
                 "sections" => {
                   "pr_changes" => {
                     "title" => "Pull Request Changes",
-                    "description" => "Code changes from GitHub Pull Request",
+                    "description" => "Code changes from the selected pull request",
                     "files" => [pr_diff_path],
                     "verbatim_files" => true,
                     "max_size" => File.size(pr_diff_path)
@@ -1390,20 +1375,23 @@ module Ace
           # Read review content
           review_content = File.read(review_file)
 
-          # Prepare metadata for comment
-          metadata = {
-            preset: review_data[:preset],
-            model: review_data[:model],
-            timestamp: Time.now.utc.strftime("%Y-%m-%d %H:%M:%S UTC")
-          }
-
           # Post comment
-          Ace::Review::Molecules::GhCommentPoster.post_comment(
-            options.pr,
-            review_content,
-            metadata: metadata,
-            dry_run: options.dry_run
+          return {success: true, dry_run: true} if options.dry_run
+
+          head = options.pr_metadata&.fetch("headRefOid", nil)
+          return {success: false, error: "Cannot post without an exact reviewed PR head"} unless head
+
+          receipt = pr_provider(options).post_comment(
+            options.pr, expected_head: head,
+            content: Molecules::PrProvider.format_comment(
+              review_content, preset: review_data[:preset], model: review_data[:model],
+              timestamp: Time.now.utc.strftime("%Y-%m-%d %H:%M:%S UTC")
+            ),
+            session_key: File.dirname(File.expand_path(review_file))
           )
+          {success: true, comment_url: receipt.comment.url, idempotency: receipt.idempotency}
+        rescue Ace::Git::Error, ArgumentError => e
+          {success: false, error: "#{e.class.name.split('::').last}: #{e.message}"}
         end
 
         def save_session_files(session_dir, review_data)

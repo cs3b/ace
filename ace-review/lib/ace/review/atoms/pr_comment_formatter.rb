@@ -20,7 +20,7 @@ module Ace
 
         # Format comments data into markdown report
         #
-        # @param comments_data [Hash] Data from GhPrCommentFetcher
+        # @param comments_data [Hash] normalized provider comment data
         # @return [String] Formatted markdown report
         def self.format(comments_data)
           return nil unless comments_data && comments_data[:success]
@@ -144,7 +144,11 @@ module Ace
             line = thread[:line]
             thread_id = thread[:id]
             is_resolved = thread[:is_resolved]
-            status = is_resolved ? "Resolved" : "Unresolved"
+            status = case is_resolved
+            when true then "Resolved"
+            when false then "Unresolved"
+            else "Resolution unknown"
+            end
 
             # Header with file:line, thread ID, and status
             location = line ? "#{path}:#{line}" : path
@@ -256,7 +260,7 @@ module Ace
         # @param review_threads [Array<Hash>] Inline review threads
         # @return [Integer] Count of unresolved items
         def self.count_unresolved(comments, reviews, review_threads = [])
-          unresolved_threads = review_threads.count { |t| !t[:is_resolved] }
+          unresolved_threads = review_threads.count { |t| t[:is_resolved] == false }
           actionable_comments = comments.count { |c| actionable_comment?(c[:body]) }
           actionable_comments + reviews.count { |r| r[:state] == "CHANGES_REQUESTED" } + unresolved_threads
         end

@@ -38,7 +38,7 @@ This runs a code-focused review against your current branch diff and writes sess
 Run:
 
 ```bash
-ace-review --pr 123 --preset code-pr --auto-execute
+ace-review --pr 123 --preset code-valid --auto-execute
 ```
 
 Use `--post-comment` when you want to publish the review back to GitHub.

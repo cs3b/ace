@@ -29,7 +29,7 @@ ace-review [OPTIONS]
 
 | Option | Description |
 |--------|-------------|
-| `--preset` | Review preset: code, code-pr, security, performance, docs |
+| `--preset` | Review preset from the shipped catalog, such as code-valid, code-fit, integration, or docs |
 | `--pr` | Review GitHub PR (number, URL, or owner/repo#number) |
 | `--subject` | Subject config (repeatable): `diff:range`, `diff:range -- path`, `files:glob`, `preset:name` |
 | `--context` | Context config (preset name or YAML) |
@@ -43,7 +43,8 @@ ace-review [OPTIONS]
 |--------|-------------|
 | `--pr-comments` | Include PR comments as feedback source (default: true for --pr) |
 | `--post-comment` | Post review as PR comment (requires --pr) |
-| `--gh-timeout` | Timeout for gh CLI operations in seconds (default: 30) |
+| `--server` / `--default-server` | Select a configured forge server for a PR review |
+| `--provider-timeout` | Timeout for forge operations in seconds (default: 30) |
 
 ### Prompt Composition
 

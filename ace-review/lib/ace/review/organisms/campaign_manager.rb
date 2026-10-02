@@ -394,7 +394,7 @@ module Ace
 
         def current_revisions(record)
           if @live_git && record["subject"]["pr"]
-            metadata = fetch_pr_metadata(record["subject"]["pr"])
+            metadata = fetch_pr_metadata(record["subject"])
             raise Contract::Invalid, metadata[:error] unless metadata[:success]
             value = metadata[:metadata]
             validate_repository(record, value["url"])
@@ -409,11 +409,12 @@ module Ace
           [head, base]
         end
 
-        def fetch_pr_metadata(pr)
-          Molecules::GhPrFetcher.fetch_metadata(pr)
-        rescue Errors::GhCliNotInstalledError, Errors::GhAuthenticationError,
-          Ace::Git::ProviderCliMissingError, Ace::Git::ProviderAuthenticationError => e
-          raise Contract::Invalid, "PR source unavailable: #{e.message}"
+        def fetch_pr_metadata(subject)
+          server = configured_pr_server(subject["repository"])
+          result = Molecules::PrProvider.new(server_name: server.name).fetch(subject["pr"])
+          result[:success] ? result : result.merge(error: "PR source unavailable: #{result[:error]}")
+        rescue Ace::Git::Error, ArgumentError => e
+          {success: false, error: "PR source unavailable: #{e.message}"}
         end
 
         def clean_candidate?
@@ -426,7 +427,9 @@ module Ace
         def pr_url_for(subject)
           return nil unless subject["pr"]
           parsed = Ace::Git::Atoms::PrIdentifier.parse(subject["pr"])
-          "#{subject['repository'].delete_suffix('/')}/pull/#{parsed.number}"
+          server = configured_pr_server(subject["repository"])
+          suffix = (server.provider == :forgejo) ? "pulls" : "pull"
+          "#{server.url.delete_suffix('/')}/#{suffix}/#{parsed.number}"
         end
 
         def git_revision(ref, record = nil)
@@ -443,13 +446,13 @@ module Ace
         def validate_repository(record, pr_url)
           subject = record["subject"]
           if subject["pr"]
-            unless subject["repository"].start_with?("https://github.com/")
-              raise Contract::Invalid, "unsupported PR source; no configured adapter for #{subject['repository']}"
-            end
+            server = configured_pr_server(subject["repository"])
             parsed = Ace::Git::Atoms::PrIdentifier.parse(subject["pr"])
-            expected = "#{subject['repository'].delete_suffix('/')}/pull/#{parsed.number}"
-            unless subject["repository"].delete_prefix("https://github.com/").delete_suffix("/") == parsed.repo &&
-                pr_url.is_a?(String) && pr_url.downcase == expected
+            selected_repo = Ace::Git::Atoms::ServerUrl.normalize(server.url).split("/", 2)[1]
+            supplied = Ace::Git::Atoms::PrReference.parse(pr_url)
+            unless parsed.repo&.casecmp?(selected_repo) && supplied &&
+                supplied.number == parsed.number.to_i && supplied.repository_url ==
+                  Ace::Git::Atoms::ServerUrl.normalize(server.url)
               raise Contract::Invalid, "PR session belongs to a different repository or PR"
             end
           else
@@ -459,6 +462,15 @@ module Ace
               raise Contract::Invalid, "local repository identity must be local:#{@repo_root}"
             end
           end
+        end
+
+        def configured_pr_server(repository)
+          matches = Ace::Git::ServerRegistry.matching_servers(repository)
+          unless matches.one?
+            raise Contract::Invalid,
+              "PR repository #{repository} must match exactly one configured forge server"
+          end
+          matches.first
         end
 
         def allocate_id

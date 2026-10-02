@@ -10,6 +10,14 @@ class CampaignEvidenceTest < AceReviewTest
     super
     @head = "a" * 40
     @base = "b" * 40
+    Ace::Git.instance_variable_set(:@config, Ace::Git.config.merge(
+      "servers" => [{"name" => "public", "provider" => "github", "url" => "https://github.com/owner/repo"}]
+    ))
+  end
+
+  def teardown
+    Ace::Git.reset_config!
+    super
   end
 
   def test_real_single_runner_metadata_with_relative_session_path_is_consumable

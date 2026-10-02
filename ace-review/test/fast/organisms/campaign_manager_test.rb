@@ -9,6 +9,14 @@ class CampaignManagerTest < AceReviewTest
     super
     @head = "a" * 40
     @base = "b" * 40
+    Ace::Git.instance_variable_set(:@config, Ace::Git.config.merge(
+      "servers" => [{"name" => "public", "provider" => "github", "url" => "https://github.com/owner/repo"}]
+    ))
+  end
+
+  def teardown
+    Ace::Git.reset_config!
+    super
   end
 
   def test_history_survives_heads_restart_and_unresolved_high_absent_from_later_reviews
@@ -211,15 +219,15 @@ class CampaignManagerTest < AceReviewTest
     subject = {"repository" => "https://github.com/owner/repo", "pr" => "owner/repo#42"}
     metadata = {success: true, metadata: {"url" => "https://github.com/Owner/Repo/pull/42",
       "headRefOid" => "c" * 40, "baseRefOid" => @base}}
-    campaign = Ace::Review::Molecules::GhPrFetcher.stub(:fetch_metadata, metadata) do
+    campaign = with_pr_result(metadata) do
       manager.start(subject: subject, contract: "requirements", policy: campaign_policy)
     end
     assert_equal "c" * 40, campaign["evidence"]["current_head"]
-    status = Ace::Review::Molecules::GhPrFetcher.stub(:fetch_metadata, {success: false, error: "source unavailable"}) do
+    status = with_pr_result(success: false, error: "source unavailable") do
       manager.status(campaign["campaign_id"])
     end
     refute status["accepted"]
-    assert_includes status["reasons"], "source unavailable"
+    assert status["reasons"].any? { |reason| reason.include?("source unavailable") }
     assert_raises(ArgumentError) do
       manager.start(subject: subject.merge("repository" => "https://forge.invalid/owner/repo"),
         contract: "requirements", policy: campaign_policy)
@@ -567,9 +575,9 @@ class CampaignManagerTest < AceReviewTest
   def test_pr_source_exceptions_produce_blocked_start_status_and_finish
     manager = Ace::Review::Organisms::CampaignManager.new(repo_root: @test_dir)
     subject = {"repository" => "https://github.com/owner/repo", "pr" => "owner/repo#42"}
-    [Ace::Review::Errors::GhCliNotInstalledError.new, Ace::Review::Errors::GhAuthenticationError.new,
-      Ace::Git::ProviderCliMissingError.new("github"), Ace::Git::ProviderAuthenticationError.new("github")].each do |failure|
-      Ace::Review::Molecules::GhPrFetcher.stub(:fetch_metadata, ->(*) { raise failure }) do
+    [Ace::Git::ProviderCliMissingError.new("forge CLI"),
+      Ace::Git::ProviderAuthenticationError.new("forge login")].each do |failure|
+      with_pr_result(->(*) { raise failure }) do
         campaign = manager.start(subject: subject, contract: "requirements", policy: campaign_policy)
         [campaign, manager.status(campaign["campaign_id"]), manager.finish(campaign["campaign_id"])].each do |result|
           refute JSON.parse(JSON.generate(result))["accepted"]
@@ -613,6 +621,14 @@ class CampaignManagerTest < AceReviewTest
     restored = start_campaign
     assert_equal campaign["campaign_id"], restored["campaign_id"]
     assert_equal 1, restored["open_findings"].size
+  end
+
+  def with_pr_result(result)
+    provider = Object.new
+    provider.define_singleton_method(:fetch) do |_identifier|
+      result.respond_to?(:call) ? result.call : result
+    end
+    Ace::Review::Molecules::PrProvider.stub(:new, provider) { yield }
   end
 
 end

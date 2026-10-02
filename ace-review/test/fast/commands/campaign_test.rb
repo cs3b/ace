@@ -9,6 +9,14 @@ class CampaignCommandTest < AceReviewTest
     super
     @head = "a" * 40
     @base = "b" * 40
+    Ace::Git.instance_variable_set(:@config, Ace::Git.config.merge(
+      "servers" => [{"name" => "public", "provider" => "github", "url" => "https://github.com/owner/repo"}]
+    ))
+  end
+
+  def teardown
+    Ace::Git.reset_config!
+    super
   end
 
   def command(args)
@@ -121,8 +129,10 @@ class CampaignCommandTest < AceReviewTest
   def test_pr_source_failure_modes_preserve_parseable_public_json
     File.write("subject.json", JSON.generate("repository" => "https://github.com/owner/repo", "pr" => "owner/repo#42"))
     File.write("contract.md", "requirements")
-    [Ace::Review::Errors::GhCliNotInstalledError.new, Ace::Review::Errors::GhAuthenticationError.new].each do |failure|
-      Ace::Review::Molecules::GhPrFetcher.stub(:fetch_metadata, ->(*) { raise failure }) do
+    [Ace::Git::ProviderCliMissingError.new, Ace::Git::ProviderAuthenticationError.new].each do |failure|
+      provider = Object.new
+      provider.define_singleton_method(:fetch) { |_identifier| raise failure }
+      Ace::Review::Molecules::PrProvider.stub(:new, provider) do
         started = JSON.parse(command(%w[campaign start --subject subject.json --contract contract.md]))
         refute started["accepted"]
         assert started["reasons"].any? { |reason| reason.include?("PR source unavailable") }

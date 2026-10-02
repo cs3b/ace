@@ -9,7 +9,7 @@
 # context         - Default context preset (default: "project")
 # max_concurrent_models - Max parallel LLM queries for multi-model execution (default: 3)
 # auto_execute    - Auto-execute LLM query without confirmation (default: false)
-# gh_timeout      - Timeout for GitHub CLI operations in seconds (default: 30)
+# provider_timeout - Timeout for forge operations in seconds (default: 30)
 # gh_simple_timeout - Timeout for simple gh commands like --version, auth status (default: 10)
 # llm_timeout     - Timeout for LLM queries in seconds (default: 900)
 #
@@ -37,7 +37,7 @@ defaults:
   bundle: "project"
   max_concurrent_models: 3  # Max parallel LLM queries for multi-model execution
   auto_execute: false  # Set to true to auto-execute LLM query without confirmation
-  gh_timeout: 30  # Timeout for GitHub CLI operations in seconds
+  provider_timeout: 30  # Timeout for forge operations in seconds
   gh_simple_timeout: 10  # Timeout for simple gh commands (--version, auth status)
   llm_timeout: 900  # Timeout for LLM queries in seconds (15 minutes)
 

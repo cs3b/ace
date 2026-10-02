@@ -9,7 +9,8 @@ module Ace
           :prompt_base, :prompt_format, :prompt_focus, :add_focus,
           :prompt_guidelines, :model, :models, :dry_run, :verbose,
           :auto_execute, :save_session, :session_dir,
-          :pr, :post_comment, :pr_metadata, :gh_timeout,
+          :pr, :post_comment, :pr_metadata, :provider_timeout,
+          :server, :default_server,
           :pr_comments, :pr_comment_data,
           :evidence_sessions, :campaign, :campaign_round, :campaign_scope,
           :delta,
@@ -54,7 +55,9 @@ module Ace
           @pr = hash[:pr]
           @post_comment = hash[:post_comment] || false
           @pr_metadata = hash[:pr_metadata]
-          @gh_timeout = hash[:gh_timeout]
+          @provider_timeout = hash[:provider_timeout]
+          @server = hash[:server]
+          @default_server = hash[:default_server] || false
 
           # PR comment options
           @pr_comments = hash[:pr_comments]  # nil = use default, true/false = explicit
@@ -195,7 +198,7 @@ module Ace
             end
           end
 
-          @gh_timeout ||= config["gh_timeout"]
+          @provider_timeout ||= config["provider_timeout"]
 
           self
         end
