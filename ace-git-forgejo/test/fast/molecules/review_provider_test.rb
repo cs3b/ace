@@ -10,10 +10,19 @@ module Forgejo
     HEAD = "a" * 40
 
     def test_disabled_actions_yields_empty_checks
-      runner = ->(**) { {success: false, status: 1, stdout: "", stderr: "404 Not found", exit_code: 1} }
+      calls = []
+      runner = lambda do |args:, **|
+        calls << args
+        if args.join(" ").include?("actions")
+          {success: false, status: 1, stdout: "", stderr: "404 Not found", exit_code: 1}
+        else
+          {success: true, stdout: "fj v0.6.0\n", stderr: "", exit_code: 0}
+        end
+      end
       provider = Ace::Git::Forgejo::Provider.new(server: SERVER, runner: runner)
 
       assert_empty provider.checks(ref: "a" * 40)
+      assert calls.any? { |a| a.join(" ").include?("actions") }
     end
 
     def test_valid_empty_collection_preserves_identity
