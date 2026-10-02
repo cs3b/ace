@@ -19,8 +19,9 @@ module Ace
         # Short reference pattern: "t.q7w" → extract suffix "q7w"
         SHORT_REF_PATTERN = /^[a-z]\.([0-9a-z]{3})$/
 
-        # Subtask reference pattern: "8pp.t.q7w.a" (parent ID + dot + single char)
-        SUBTASK_REF_PATTERN = /^([0-9a-z]{3}\.[a-z]\.[0-9a-z]{3})\.([a-z0-9])$/
+        # Subtask reference pattern: "8pp.t.q7w.a" or nested "8pp.t.q7w.0.a"
+        # (parent ID + one or more dot-separated subtask chars)
+        SUBTASK_REF_PATTERN = /^([0-9a-z]{3}\.[a-z]\.[0-9a-z]{3}(?:\.[a-z0-9])*)\.([a-z0-9])$/
 
         # Short subtask reference: "q7w.a" or "t.q7w.a" (suffix + subtask char)
         SHORT_SUBTASK_REF_PATTERN = /^(?:[a-z]\.)?([0-9a-z]{3})\.([a-z0-9])$/
@@ -76,7 +77,17 @@ module Ace
         # Resolve a subtask reference by finding the parent's scan result,
         # then looking for the subtask folder within that parent's directory.
         def resolve_subtask(parent_id, subtask_char)
-          parent_result = @scan_results.find { |sr| sr.id == parent_id }
+          parent_result = if parent_id.count(".") >= 3
+            # Nested parent: resolve level by level from the base task.
+            base_id = parent_id.split(".")[0, 3].join(".")
+            nested_chars = parent_id.split(".")[3..]
+            current = resolve_subtask_chain(base_id, nested_chars)
+            return nil unless current
+
+            current
+          else
+            @scan_results.find { |sr| sr.id == parent_id }
+          end
           return nil unless parent_result
 
           subtask_id = "#{parent_id}.#{subtask_char}"
@@ -108,6 +119,23 @@ module Ace
           end
 
           nil
+        end
+
+        # Walk nested subtask chars from the base task, returning the final
+        # scan result (ids are rebuilt per level exactly like the folders).
+        def resolve_subtask_chain(base_id, nested_chars)
+          current = @scan_results.find { |sr| sr.id == base_id }
+          return nil unless current
+
+          current_id = base_id
+          nested_chars.each do |char|
+            next_level = resolve_subtask(current_id, char)
+            return nil unless next_level
+
+            current = next_level
+            current_id = next_level.id
+          end
+          current
         end
       end
     end

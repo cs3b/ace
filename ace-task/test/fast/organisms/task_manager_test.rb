@@ -542,6 +542,24 @@ class TaskManagerTest < AceTaskTestCase
     end
   end
 
+  def test_nested_subtask_refs_resolve_for_sync_and_clear
+    adapter = Object.new
+    adapter.define_singleton_method(:validate_link!) { |**_args| true }
+    adapter.define_singleton_method(:sync_task) { |task:, **_| nil }
+    adapter.define_singleton_method(:clear_task) { |**_args| nil }
+    adapter.define_singleton_method(:reconcile_comment) { |task:, **_| nil }
+    @manager.stub(:issue_adapter, adapter) do
+      parent = @manager.create("Parent")
+      child = @manager.create_subtask(parent.id, "Child")
+      grandchild = @manager.create_subtask(child.id, "Grandchild", remote_issue: issue_identity(9))
+      # A linked grandchild is manageable by its own reference.
+      result = @manager.issue_sync(ref: grandchild.id)
+      assert_equal 1, result[:synced]
+      @manager.issue_link(grandchild.id, clear: true)
+      refute @manager.show(grandchild.id).metadata["remote_issue"]
+    end
+  end
+
   def test_pending_replay_traverses_linked_grandchildren
     captured = []
     offline = true
