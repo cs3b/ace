@@ -885,8 +885,9 @@ module Ace
         end
 
         def issue_url(number)
-          base = repository_target.url.to_s.chomp("/")
-          "#{base}/issues/#{number}"
+          # Identity evidence comes from the web endpoint, not the clone URL
+          # (which may be SSH-style and is not a parseable web URL).
+          "#{Ace::Git::Atoms::ServerUrl.web_base(server.url)}/issues/#{number}"
         end
       end
     end
