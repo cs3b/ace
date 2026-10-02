@@ -413,13 +413,17 @@ module Ace
           end
 
           identity = Molecules::IssueLink.from_input(issue, server_name: server_name, use_default: use_default)
-          with_issue_identity_lock("task" => task.id) do
-            # Reload: a concurrent link may have changed this task's state
-            # while this call waited for the task transition lock.
-            task = show(ref) || task
-            current = linked_issue(task)
-            issue_link_locked(task, identity, current, ref: ref,
-              server_name: server_name, use_default: use_default)
+          # Lock order is issue-first everywhere; the task transition lock
+          # nests inside so concurrent link/clear/replay serialize.
+          with_issue_identity_lock(identity) do
+            with_issue_identity_lock("task" => task.id) do
+              # Reload: a concurrent link may have changed this task's state
+              # while this call waited for the locks.
+              task = show(ref) || task
+              current = linked_issue(task)
+              issue_link_locked(task, identity, current, ref: ref,
+                server_name: server_name, use_default: use_default)
+            end
           end
           show(ref)
         end
@@ -876,9 +880,11 @@ module Ace
         end
 
         def clear_issue_link(task)
-          with_issue_identity_lock("task" => task.id) do
-            fresh = show(task.id) || task
-            with_issue_identity_lock(linked_issue(fresh) || {}) do
+          # Lock order is issue-first everywhere (link, sync, clear) so
+          # concurrent clear and replay cannot deadlock on opposite orders.
+          with_issue_identity_lock(linked_issue(task) || {}) do
+            with_issue_identity_lock("task" => task.id) do
+              fresh = show(task.id) || task
               clear_issue_link_locked(fresh)
             end
           end
