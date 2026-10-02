@@ -50,8 +50,14 @@ module Ace
         if preset
           loader = Molecules::PresetLoader.new(gem_root: Ace::Tmux.gem_root)
           builder = Molecules::SessionBuilder.new(preset_loader: loader)
-          Organisms::WindowManager.new(executor: executor, session_builder: builder, tmux: tmux)
-            .add_window(preset, session: session, root: root, name: name)
+          begin
+            Organisms::WindowManager.new(executor: executor, session_builder: builder, tmux: tmux)
+              .add_window(preset, session: session, root: root, name: name)
+          rescue Ace::Tmux::Error
+            raise
+          rescue StandardError => e
+            raise Ace::Tmux::Error, "preset window creation failed: #{e.message}"
+          end
           id = window_info(name)[:id]
         else
           id = query(B.new_window(session, name: name, root: root, print_format: "\#{window_id}", tmux: tmux))
@@ -185,9 +191,10 @@ module Ace
         false
       end
 
-      # Shell-pane wait: a running command keeps mutating pane output, so a
-      # matching observed state only counts once the output has held still
-      # for the settle window (the documented output-stability heuristic).
+      # Shell-pane wait: a working observation matches immediately; a
+      # completion observation only counts once pane output has held
+      # still for the settle window (the documented output-stability
+      # heuristic) so a running command never reads as done.
       def poll_agent_states(pane, observable, interval:, timeout:)
         settle = [timeout.to_f / 2, 1.0].min
         deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + timeout.to_f
@@ -195,7 +202,10 @@ module Ace
         stable_since = nil
         loop do
           output = capture_output(pane, lines: 40)
-          if observable.include?(agent_state_from_output(output))
+          state = agent_state_from_output(output)
+          if observable.include?(state)
+            return true if state == "working"
+
             if output == previous_output
               stable_since ||= Process.clock_gettime(Process::CLOCK_MONOTONIC)
               return true if Process.clock_gettime(Process::CLOCK_MONOTONIC) - stable_since >= settle
@@ -243,7 +253,10 @@ module Ace
 
       def pane_exists?(pane)
         result = executor.capture(B.display_message_target(pane, "\#{pane_id}", tmux: tmux))
-        result.success? && !result.stdout.to_s.empty?
+        return false if !result.success? && result.stderr.to_s.match?(/can't find|no such|unknown target|not found/i)
+        raise Ace::Tmux::Error, result.stderr.to_s unless result.success?
+
+        !result.stdout.to_s.strip.empty?
       end
 
       def resolve_window!(window)

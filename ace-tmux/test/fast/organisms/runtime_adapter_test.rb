@@ -134,9 +134,9 @@ class TmuxRuntimeAdapterNativeTest < Minitest::Test
       when "display-message"
         case command[-1]
         when "\#{pane_current_path}" then "/tmp/work"
-        when "\#{pane_dead}"
+        when "\#{pane_dead}", "\#{pane_id}"
           if command[command.index("-t") + 1] == @pane && !@fail_pane_queries
-            "0"
+            command[-1] == "\#{pane_dead}" ? "0" : command[command.index("-t") + 1]
           else
             success = false
             stderr = @fail_pane_queries ? "server error" : "can't find pane"
@@ -355,6 +355,36 @@ class TmuxRuntimeAdapterNativeTest < Minitest::Test
 
     assert_raises(Ace::Tmux::WaitTimeoutError) do
       backend.wait_agent(pane: "%2", states: %w[idle], timeout: 0.3)
+    end
+  end
+
+  def test_native_wait_agent_returns_immediately_when_working_observed
+    surface = Object.new
+    ticks = 0
+    surface.define_singleton_method(:fetch_pane_profile) { |_pane| {interactive_cli: false} }
+    surface.define_singleton_method(:capture_recent_output) do |**_options|
+      ticks += 1
+      "esc to interrupt (#{ticks})\n"
+    end
+    backend = Ace::Tmux::NativeRuntimeBackend.new(
+      executor: @executor, env: {"ACE_TMUX_SESSION" => "main"}, surface: surface
+    )
+
+    assert backend.wait_agent(pane: "%2", states: %w[working], timeout: 0.3)
+  end
+
+  def test_native_pane_exists_query_failure_is_runtime_unavailable
+    @adapter.ensure_window(name: "work", root: "/tmp/work")
+    @executor.fail_pane_queries = true
+
+    assert_raises(Ace::Runtime::RuntimeUnavailableError) do
+      @adapter.wait_lifecycle(condition: "pane-exists", target: "%2", timeout: 1)
+    end
+  end
+
+  def test_native_preset_window_failure_maps_to_runtime_unavailable
+    assert_raises(Ace::Runtime::RuntimeUnavailableError) do
+      @adapter.ensure_window(name: "lab", root: "/tmp/lab", preset: "no-such-preset")
     end
   end
 
