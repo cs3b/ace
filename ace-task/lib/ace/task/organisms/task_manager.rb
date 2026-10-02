@@ -246,7 +246,9 @@ module Ace
                 .filter_map { |sr| loader.load(sr.dir_path, id: sr.id, special_folder: sr.special_folder) }
                 .find { |t| linked_issue(t) }
               if converted_child
-                sync_linked_issues_for(converted_child, reason: "reparent", previous_task: task)
+                with_issue_identity_lock(linked_issue(converted_child) || {}) do
+                  sync_linked_issues_for(converted_child, reason: "reparent", previous_task: task)
+                end
                 # Other linked descendants of the converted parent keep their
                 # identities; refresh their comments from the new layout too.
                 linked_descendants_of(reparented.path, reparented.id)
@@ -255,7 +257,9 @@ module Ace
                 return show_after_sync(converted_child) || converted_child
               end
             end
-            sync_linked_issues_for(reparented, reason: "reparent", previous_task: task)
+            with_issue_identity_lock(linked_issue(reparented) || {}) do
+              sync_linked_issues_for(reparented, reason: "reparent", previous_task: task)
+            end
             linked_descendants_of(reparented.path, reparented.id).each do |descendant|
               with_issue_identity_lock(linked_issue(descendant) || {}) do
                 fresh = show(descendant.id) || descendant
@@ -407,7 +411,7 @@ module Ace
           end
 
           identity = Molecules::IssueLink.from_input(issue, server_name: server_name, use_default: use_default)
-          with_issue_identity_lock("task-link-#{task.id}") do
+          with_issue_identity_lock("task" => task.id) do
             # Reload: a concurrent link may have changed this task's state
             # while this call waited for the task transition lock.
             task = show(ref) || task
@@ -870,8 +874,11 @@ module Ace
         end
 
         def clear_issue_link(task)
-          with_issue_identity_lock(linked_issue(task) || {}) do
-            clear_issue_link_locked(task)
+          with_issue_identity_lock("task" => task.id) do
+            fresh = show(task.id) || task
+            with_issue_identity_lock(linked_issue(fresh) || {}) do
+              clear_issue_link_locked(fresh)
+            end
           end
         end
 
