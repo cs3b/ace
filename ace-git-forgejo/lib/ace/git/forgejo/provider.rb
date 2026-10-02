@@ -125,6 +125,13 @@ module Ace
                 url: nil
               )
             end
+        rescue Ace::Git::ProviderObjectNotFoundError
+          # A repository with Actions disabled serves no tasks endpoint. The
+          # review flows resolve the repository binding and the PR before
+          # collecting checks, so a not-found here means CI is unavailable,
+          # not a missing repository; empty check evidence keeps the review
+          # collectable. Parse and transport failures still fail closed.
+          []
         end
 
         # @return [ProviderRepository] normalized repository evidence
