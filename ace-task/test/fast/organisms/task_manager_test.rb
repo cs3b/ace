@@ -805,6 +805,36 @@ class TaskManagerTest < AceTaskTestCase
     end
   end
 
+  def test_issue_identity_lock_serializes_operations
+    identity = issue_identity
+    key = identity.values_at("server_name", "provider", "repository_url", "number")
+      .map { |value| value.to_s.gsub(%r{[^\w.-]}, "_") }.join("--")
+    lock_path = File.join(Dir.tmpdir, "ace-task-issue-#{key}.lock")
+    marker = File.join(Dir.tmpdir, "\#{key}.held")
+    File.delete(marker) if File.exist?(marker)
+
+    child_pid = fork do
+      holder = File.open(lock_path, File::CREAT | File::RDWR)
+      holder.flock(File::LOCK_EX)
+      File.write(marker, "held")
+      sleep 0.3
+      holder.flock(File::LOCK_UN)
+      exit!(0)
+    end
+    deadline = Time.now + 5
+    sleep 0.05 until File.exist?(marker) || Time.now > deadline
+    assert File.exist?(marker), "child did not take the lock"
+
+    started = Time.now
+    entered = false
+    @manager.send(:with_issue_identity_lock, identity) { entered = true }
+    assert entered
+    # Cross-process flock conflicts, so the operation could only proceed
+    # after the child released - proving serialization by identity.
+    assert Time.now - started >= 0.2, "operation ran while the identity lock was held elsewhere"
+    Process.wait(child_pid)
+  end
+
   def test_bulk_sync_fails_for_pending_tasks_without_identity
     adapter = fake_issue_adapter { |task:, **_| raise Ace::Git::ProviderUnknownOutcomeError, "unknown" }
     @manager.stub(:issue_adapter, adapter) do
