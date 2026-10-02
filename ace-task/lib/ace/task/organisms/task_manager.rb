@@ -387,9 +387,11 @@ module Ace
               FileUtils.rm_rf(created_subtask.path)
               raise Ace::Git::ProviderIdentityMismatchError, result[:error].to_s
             end
-          rescue Ace::Git::ProviderUnreachableError
-            raise
           rescue StandardError
+            # Any pre-sync failure (unreachable validation included) must not
+            # leave an artifact claiming a link that was never validated; once
+            # sync has begun the remote marker may exist, so retain the task
+            # and its pending identity as the recovery record.
             FileUtils.rm_rf(created_subtask.path) unless sync_started
             raise
           end
