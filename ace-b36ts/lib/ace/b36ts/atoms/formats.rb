@@ -81,16 +81,17 @@ module Ace
           # @return [Time] Parsed time in UTC
           # @raise [ArgumentError] If format is invalid
           def parse_timestamp(value)
+            value = value.to_s
             unless timestamp?(value)
               raise ArgumentError, "Invalid timestamp format: #{value} (expected YYYYMMDD-HHMMSS)"
             end
 
-            year = value[0..3].to_i
-            month = value[4..5].to_i
-            day = value[6..7].to_i
-            hour = value[9..10].to_i
-            minute = value[11..12].to_i
-            second = value[13..14].to_i
+            year = value[0, 4].to_i
+            month = value[4, 2].to_i
+            day = value[6, 2].to_i
+            hour = value[9, 2].to_i
+            minute = value[11, 2].to_i
+            second = value[13, 2].to_i
 
             Time.utc(year, month, day, hour, minute, second)
           end

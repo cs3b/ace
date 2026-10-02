@@ -1071,7 +1071,7 @@ module Ace
               @doctor = doctor
               @io = io
               @targets = targets
-              @tty = io.respond_to?(:tty?) && io.tty?
+              @tty = false
               @line_count = 0
               @mutex = Mutex.new
             end
@@ -1389,7 +1389,7 @@ module Ace
             config_path = config_paths.find { |f| File.exist?(f) }
             return {} unless config_path
 
-            data = YAML.safe_load_file(config_path, permitted_classes: [Time, Date], aliases: true)
+            data = YAML.safe_load_file(config_path, permitted_classes: [], aliases: true)
             data&.dig("recommendation_acknowledgements") || {}
           rescue StandardError
             {}

@@ -97,13 +97,18 @@ module Ace
           end
 
           def extract_config(rule)
-            rule.each_with_object({}) do |(key, value), acc|
+            acc = {}
+            entries = rule.to_a
+            entries.each do |pair|
+              key = pair[0]
+              value = pair[1]
               # Skip internal metadata and glob
               next if key.to_s == "glob"
               next if key.to_s.start_with?("_")
 
               acc[key.to_s] = value
             end
+            acc
           end
 
           def match_flags(glob)

@@ -36,13 +36,23 @@ module Ace
             text = description(command)
             return nil if text.nil?
 
-            lines = text.to_s.strip.split("\n")
+            text_value = text.nil? ? "" : text.to_s
+            lines = text_value.strip.split("\n")
             return nil if lines.size <= 1
 
-            rest = lines.drop(1).drop_while { |line| line.strip.empty? }
-            return nil if rest.empty?
+            idx = 1
+            while idx < lines.length && lines[idx].strip.empty?
+              idx += 1
+            end
+            return nil if idx >= lines.length
 
-            "DESCRIPTION\n#{rest.map { |line| "  #{line.strip}" }.join("\n")}"
+            rendered = "  #{lines[idx].strip}"
+            idx += 1
+            while idx < lines.length
+              rendered = "#{rendered}\n  #{lines[idx].strip}"
+              idx += 1
+            end
+            "DESCRIPTION\n#{rendered}"
           end
 
           def self.section_subcommands(command)

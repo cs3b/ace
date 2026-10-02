@@ -20,15 +20,21 @@ module Ace
           end
 
           # Get configuration value by key path
+          # NOTE: loop instead of reduce-with-return — Spinel's codegen
+          # misboxes non-local returns from blocks.
           # @param keys [Array<String,Symbol>] Path to value
           # @return [Object] Value at path or nil
           def get(*keys)
-            keys = keys.flatten.map(&:to_s)
-            keys.reduce(data) do |current, key|
+            parts = keys.flatten.map(&:to_s)
+            current = data
+            i = 0
+            while i < parts.length
               return nil unless current.is_a?(Hash)
 
-              current[key]
+              current = current[parts[i]]
+              i += 1
             end
+            current
           end
 
           # Check if configuration has key path
@@ -71,7 +77,7 @@ module Ace
               array_strategy: merge_strategy
             )
 
-            self.class.new(
+            Models::Config.new(
               merged_data,
               source: "#{source}+merged",
               merge_strategy: merge_strategy
