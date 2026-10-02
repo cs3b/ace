@@ -99,4 +99,24 @@ class GithubIssueTrackingProviderTest < AceGitGithubTestCase
     provider.issue_tracking(number: 42)
     assert calls.any? { |argv| argv.any? { |arg| arg.to_s.start_with?("repos/owner/repo/") && !arg.to_s.include?("//") } }
   end
+
+  def test_issue_calls_strip_clone_suffix_with_trailing_slash
+    calls = []
+    runner = lambda do |args:, **_options|
+      calls << args
+      stdout = if args[1..2] == ["issue", "view"]
+        {"number" => 42, "title" => "Issue", "state" => "OPEN", "author" => nil,
+         "url" => "https://github.example.com/owner/repo/issues/42", "labels" => []}.to_json
+      else
+        "[[]]"
+      end
+      {success: true, stdout: stdout, stderr: "", exit_code: 0}
+    end
+    server = Ace::Git::ResolvedServer.new(name: "gh", provider: :github,
+      url: "https://github.example.com/owner/repo.git/")
+    provider = Ace::Git::Github::Provider.new(server: server, runner: runner)
+    provider.issue_tracking(number: 42)
+    assert calls.any? { |argv| argv.any? { |arg| arg.to_s == "repos/owner/repo/issues/42/comments" } }
+    refute calls.any? { |argv| argv.any? { |arg| arg.to_s.include?(".git") } }
+  end
 end
