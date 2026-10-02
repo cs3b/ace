@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.0] - 2026-10-02
+
+### Added
+- Added the `ace-runtime` tmux adapter, exposing window, pane, send, capture, wait, and listing intents through the shared runtime contract while retaining the existing `ace-tmux` control surface.
+
+### Fixed
+- Send adapter message text literally, classify missing pane targets, and use bounded polling plus output settling for agent completion waits.
+
 
 ## [0.17.5] - 2026-09-02
 

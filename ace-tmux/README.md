@@ -36,6 +36,8 @@
 
 **Control tmux through a shared ACE contract** - run `ace-tmux send`, `capture`, `wait`, `attach`, and `detach` when higher-level ACE tools or operators need live pane/session control without re-implementing tmux wrappers.
 
+The `ace-runtime` library can also resolve the tmux adapter with `Ace::Runtime.resolve("tmux")`. It keeps tmux targets and environment resolution inside this gem, and exposes the shared window, pane, send, capture, and wait methods to runtime-neutral callers. A named window is reused when its root and preset match; `prepare_pane` creates a retained shell pane when no prepared live pane exists.
+
 **Compose nested pane layouts in YAML** - use `direction` and nested pane containers to model custom split trees beyond tmux built-in layouts, keeping workspace structure version-controlled alongside your project.
 
 **Reuse presets through config cascade** - load project presets from `.ace/tmux/`, personal presets from `~/.ace/tmux/`, and gem defaults via `.ace-defaults/tmux/` with deep-merge behavior so teams share a baseline while individuals customize.
