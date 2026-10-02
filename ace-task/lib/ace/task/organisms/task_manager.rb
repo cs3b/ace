@@ -161,7 +161,11 @@ module Ace
           deferred_sync = clear_pending &&
             (move_to || move_as_child_of || (sync_relevant_keys & %w[title status]).any?)
           deferred_set = deferred_sync ? set.merge("issue_sync_pending" => true) : set
-          deferred_set = deferred_set.merge("issue_sync_previous_id" => task.id) if deferred_sync && move_as_child_of
+          # Chained reparents must keep the ORIGINAL pre-sync ID: the remote
+          # marker still names it regardless of intermediate local IDs.
+          deferred_set = deferred_set.merge(
+            "issue_sync_previous_id" => task.metadata["issue_sync_previous_id"] || task.id
+          ) if deferred_sync && move_as_child_of
           if has_field_updates || deferred_sync
             Ace::Support::Items::Molecules::FieldUpdater.update(
               task.file_path, set: deferred_set, add: add, remove: remove
