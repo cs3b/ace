@@ -9,6 +9,31 @@ module Forgejo
     )
     HEAD = "a" * 40
 
+    def test_checks_bind_tasks_to_reviewed_head_by_sha_prefix
+      ref = "fc14c43d3660ac6c133959a6dec29603413f0e8a"
+      tasks = [
+        "#83 (fc14c43d3) failure Test Summary 0s (push): subject",
+        "#82 (#{ref}) success Complete package suite 1m29s (pull_request): subject",
+        "#81 (aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa) success Other suite 5s (push): subject"
+      ]
+      output = "#{tasks.length} tasks\n#{tasks.join("\n")}\n"
+      runner = lambda do |args:, **|
+        if args.join(" ").include?("actions")
+          {success: true, stdout: output, stderr: "", exit_code: 0}
+        else
+          {success: true, stdout: "fj v0.6.0\n", stderr: "", exit_code: 0}
+        end
+      end
+      provider = Ace::Git::Forgejo::Provider.new(server: SERVER, runner: runner)
+
+      checks = provider.checks(ref: ref)
+
+      # Abbreviated and full SHAs that prefix the reviewed head bind; another
+      # head's task is excluded rather than misattributed.
+      assert_equal 2, checks.length
+      assert_equal ["Test Summary", "Complete package suite"], checks.map(&:name)
+    end
+
     def test_disabled_actions_yields_empty_checks
       calls = []
       runner = lambda do |args:, **|

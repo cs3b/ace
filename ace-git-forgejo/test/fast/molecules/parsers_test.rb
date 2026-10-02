@@ -74,13 +74,11 @@ module Forgejo
       assert_equal :success, checks[1][:state]
     end
 
-    def test_parse_actions_tasks_rejects_abbreviated_sha
-      error = assert_raises(Ace::Git::ProviderMalformedOutputError) do
-        Ace::Git::Forgejo::Parsers.parse_actions_tasks(
-          "1 tasks\n#83 (fc14c43d3) failure Test Summary 0s (push): subject\n"
-        )
-      end
-      assert_includes error.message, "Abbreviated SHA"
+    def test_parse_actions_tasks_tolerates_abbreviated_sha
+      tasks = "1 tasks\n#83 (fc14c43d3) failure Test Summary 0s (push): subject\n"
+      checks = Ace::Git::Forgejo::Parsers.parse_actions_tasks(tasks)
+      assert_equal 1, checks.length
+      assert_equal "fc14c43d3", checks[0][:sha]
     end
 
     def test_parse_actions_tasks_rejects_empty_output
