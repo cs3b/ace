@@ -39,3 +39,12 @@ Batch retro for 8wq.t.k86.2 (ace-runtime herdr adapter), run as assignment 8x0z2
 - **Quarantine suite-context-flaky tests** (ace-idea clipboard test, ace-test-runner hermetic LoadError) behind explicit environment gates, and raise or shard the per-package suite timeout for ace-assign/ace-review so full-suite runs are signal again.
 - **Document receipt artifact rules** (paths must exist inside the project; no URLs) next to the `attempt finish` usage docs to save the two failed submissions per new user.
 - **Consider surfacing archive-deferral as a first-class result** (`--move-to archive` → "deferred: N non-terminal siblings") rather than an Info line.
+
+## Addendum (2026-10-02): review-campaign outage and reviewer substitution
+
+The review-pr step consumed the entire 10-session review budget (binding policy) without completing a single campaign round:
+
+- **Root cause**: the `review-gemini` leg is dead machine-wide — Gemini CLI auth for individuals is deprecated (`IneligibleTierError`, migrate to Antigravity), and the folder-trust error masked it early on. `claude` is also dead (OAuth expired). Every campaign session that recorded a failed leg can never count: ace-review's campaign evidence validator (main commit 6a2c2cd4c) requires **all** configured legs to succeed, and the review runner deliberately disables role fallback (`fallback: false`).
+- **Compounding trap**: campaign round pins are immutable per head, collection receipts and evidence validation bind the live head, and recording requires a clean committed tree — so any fix commit between pin/collect/record kills the round. Seven of the eight sessions died to these two mechanisms, not to review findings.
+- **What landed anyway**: 19 findings verified across sessions (2 critical, 5 high) — unowned-tab closure protection (exact-id rollback via the new `TabMaterializationError`), authoritative workspace context, workspace+label identity locks, prepared-pane reuse and pointer records, contract error translation. Plus reviewer-infra fixes: `review-secondary` role on `zai:glm-4.7@ro` (working, API-based) wired into code-valid/code-fit, `zai/ro` preset, campaign workflow knowledge.
+- **Action item (urgent)**: re-auth gemini or migrate `review-gemini` roles project-wide to zai/agy; consider making the campaign validator accept sessions where at least one reviewer per scope completed (matching the review-pr workflow text) instead of requiring all legs.
