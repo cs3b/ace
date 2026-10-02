@@ -20,9 +20,10 @@ module Ace
         def initialize(topology: nil, policy: nil, coordinator: nil, executor: nil, repo_root: nil)
           @topology = topology || TopologyService.from_config
           @policy = policy
-          @coordinator = coordinator || Ace::Assign::Organisms::AttemptCoordinator.new(repo_root: repo_root)
-          @executor = executor || Molecules::ServiceExecutor.new
           @repo_root = repo_root || git_toplevel
+          @coordinator = coordinator ||
+            Ace::Assign::Organisms::AttemptCoordinator.new(repo_root: @repo_root)
+          @executor = executor || Molecules::ServiceExecutor.new
         end
 
         def request(project:, assignment:, attempt:, operation:, input_path:, authorization:, request_id:, dry_run: false)
