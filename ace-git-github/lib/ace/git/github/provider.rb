@@ -444,7 +444,7 @@ end
               "head #{expected_head}, comment #{comment_id}: #{e.message}"
           end
           begin
-            updated = gh_api_pages("issues/#{pr.number}/comments").find { |entry| entry["id"] == comment_id }
+            updated = gh_api_pages(update_route.start_with?("pulls/") ? update_route.sub("comments/", "#{pr.number}/comments/") : "issues/#{pr.number}/comments").find { |entry| entry["id"] == comment_id }
           rescue Ace::Git::ProviderUnreachableError => e
             raise Ace::Git::ProviderUnknownOutcomeError,
               "Comment update sent but verification read failed for comment #{comment_id}: #{e.message}; reconcile before repeating"

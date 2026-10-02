@@ -292,7 +292,7 @@ module Ace
               "head #{expected_head}, comment #{comment_id}: #{e.message}"
           end
           begin
-            updated = review_http.paginate("issues/#{number}/comments").find { |entry| entry["id"] == comment_id }
+            updated = review_http.paginate(update_route.start_with?("pulls/") ? update_route.sub("comments/", "#{number}/comments/") : "issues/#{number}/comments").find { |entry| entry["id"] == comment_id }
           rescue Ace::Git::ProviderUnreachableError => e
             raise Ace::Git::ProviderUnknownOutcomeError,
               "Comment update sent but verification read failed for comment #{comment_id}: #{e.message}; reconcile before repeating"
