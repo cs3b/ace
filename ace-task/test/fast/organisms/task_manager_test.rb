@@ -960,6 +960,13 @@ class TaskManagerTest < AceTaskTestCase
       @manager.send(:canonical_issue_key, variant)
   end
 
+  def test_canonical_issue_key_keeps_distinct_repositories_unambiguous
+    first = issue_identity(276).merge("repository_url" => "https://forge.example/a/b_c")
+    second = issue_identity(276).merge("repository_url" => "https://forge.example/a_b/c")
+    refute_equal @manager.send(:canonical_issue_key, first),
+      @manager.send(:canonical_issue_key, second)
+  end
+
   def test_subtask_archive_never_holds_child_lock_while_waiting_for_parent
     parent_identity = issue_identity(280)
     child_identity = issue_identity(282)
