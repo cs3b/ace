@@ -57,9 +57,9 @@ module Ace
           metadata = json_keys(YAML.safe_load_file(metadata_path, permitted_classes: [Time, Date, Symbol]))
           Contract.object!(metadata, "session metadata")
           expected = {"campaign_id" => record["id"], "contract_identity" => record["contract_identity"],
-            "subject" => record["subject"], "round_id" => binding["round_id"], "scope" => scope,
-            "head" => binding["head"], "base" => binding["base"],
-            "scope_identity" => binding["scope_identity"][scope]}
+                      "subject" => record["subject"], "round_id" => binding["round_id"], "scope" => scope,
+                      "head" => binding["head"], "base" => binding["base"],
+                      "scope_identity" => binding["scope_identity"][scope]}
           unless metadata["campaign_binding"] == expected && metadata["preset"] == expected["scope_identity"]["preset"]
             raise Contract::Invalid, "session campaign/contract/scope/head/base identity mismatch"
           end
@@ -87,7 +87,6 @@ module Ace
             complete = entry["status"] == "success" && execution["status"] == "succeeded" &&
               !execution["provider"].to_s.empty? && !execution["model"].to_s.empty? &&
               !entry["completed_at"].to_s.empty?
-            completed &&= complete
             next unless complete
             path = entry["output_file"].to_s
             raise Contract::Invalid, "completed execution has no report" if path.empty?
@@ -117,6 +116,10 @@ module Ace
               raise Contract::Invalid, "feedback extraction inventory or reviewed reports changed"
             end
           end
+          # One completed reviewer per needed scope suffices: a failed or
+          # incomplete provider entry does not count as a reviewer, but it
+          # does not invalidate the model executions that did complete.
+          completed &&= reports.any?
           completed &&= extracted
           proof = completed ? @review_evidence.call(input.fetch("receipt"), head: binding["head"], artifacts: refs) : nil
           {"receipt" => input["receipt"], "execution_proof" => proof, "path" => dir.delete_prefix(@repo_root + File::SEPARATOR), "scope" => scope,

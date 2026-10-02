@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.57.1] - 2026-10-02
+
+### Fixed
+
+- A failed or incomplete provider entry no longer invalidates a campaign session's completed reviewer executions; one completed reviewer per needed scope still completes the round.
+
+
 ## [0.57.0] - 2026-10-01
 
 ### Fixed

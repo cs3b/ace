@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 require "test_helper"
 require_relative "../../campaign_fixtures"
 
@@ -20,7 +21,7 @@ class CampaignEvidenceTest < AceReviewTest
     metadata.delete("models")
     File.write(metadata_path, YAML.dump(metadata))
     result = {success: true, output_file: File.join(dir, "review-report-reviewer.md"),
-      execution: {status: "succeeded", provider: "fixture", model: "reviewer"}}
+              execution: {status: "succeeded", provider: "fixture", model: "reviewer"}}
     manager = Ace::Review::Organisms::ReviewManager.new(project_root: @test_dir)
     manager.send(:save_ruby_api_metadata, dir, result)
     input["sessions"][0]["metadata"] = artifact_ref(File.join(dir, "metadata.yml"))
@@ -28,6 +29,27 @@ class CampaignEvidenceTest < AceReviewTest
     result = campaign_manager.record_round(campaign["campaign_id"], input)
     assert_equal 1, result["completed_rounds"]
     assert_equal 1, result["counters"]["provider_calls"]
+  end
+
+  def test_failed_provider_entry_does_not_invalidate_completed_reviewer
+    campaign = start_campaign
+    input = round_input(1)
+    dir = make_campaign_session(campaign, input)
+    path = File.join(@test_dir, dir, "metadata.yml")
+    metadata = YAML.safe_load_file(path)
+    # A provider failed before producing a report alongside the model that
+    # completed; the failed entry is not a reviewer and must not invalidate
+    # the execution that did complete.
+    failed = Marshal.load(Marshal.dump(metadata["models"].first))
+    failed.merge!("status" => "failed", "output_file" => nil, "report_sha256" => nil,
+      "execution" => {"status" => "failed", "provider" => "fixture", "model" => "broken"})
+    metadata["models"] << failed
+    File.write(path, YAML.dump(metadata))
+    input["sessions"][0]["metadata"] = artifact_ref(File.join(dir, "metadata.yml"))
+    accept_review_session(input, dir)
+    result = campaign_manager.record_round(campaign["campaign_id"], input)
+    assert_equal 1, result["completed_rounds"]
+    assert_equal 2, result["counters"]["provider_calls"]
   end
 
   def test_missing_execution_and_fabricated_approval_cannot_count_or_accept
@@ -104,6 +126,7 @@ class CampaignEvidenceTest < AceReviewTest
       assert_raises(ArgumentError) { reader.artifact(artifact_ref("escape")) }
     end
   end
+
   def test_skipped_failed_or_unrecorded_feedback_extraction_never_completes_a_round
     campaign = start_campaign
     [nil, {"status" => "skipped"}, {"status" => "failed"}].each_with_index do |extraction, n|
@@ -209,5 +232,4 @@ class CampaignEvidenceTest < AceReviewTest
     assert_equal 4, result["completed_rounds"]
     assert_equal 4, result["clean_streak"]
   end
-
 end
