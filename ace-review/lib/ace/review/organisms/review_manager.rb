@@ -444,6 +444,7 @@ module Ace
         def save_noop_round(session_dir, options, config, content)
           review_data = {
             preset: options.preset,
+            pr_metadata: options.pr_metadata,
             review_role: config[:review_role],
             pr_url: options.pr_metadata&.dig("url"),
             evidence_sessions: options.evidence_sessions,
