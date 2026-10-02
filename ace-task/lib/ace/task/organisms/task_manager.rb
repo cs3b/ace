@@ -70,16 +70,20 @@ module Ace
               estimate: estimate,
               remote_issue: remote_issue
             )
+            sync_started = false
             begin
               with_issue_identity_lock(remote_issue) do
                 ensure_issue_linkable!(remote_issue) if remote_issue
                 ensure_issue_not_linked_elsewhere!(remote_issue, exclude_id: created_task.id) if remote_issue
+                sync_started = true
                 sync_linked_issues_for(created_task, reason: "create")
               end
             rescue StandardError
-              # Rejected linked creation must not leave a task artifact that
-              # would become a second local claimant for the issue.
-              FileUtils.rm_rf(created_task.path)
+              # Pre-sync rejections (ownership conflict, unknown server) must
+              # not leave a second local claimant for the issue. Once sync has
+              # begun the remote marker may exist: retain the task and its
+              # pending identity as the recovery record instead of deleting it.
+              FileUtils.rm_rf(created_task.path) unless sync_started
               raise
             end
             show_after_sync(created_task) || created_task
@@ -336,14 +340,16 @@ module Ace
             estimate: estimate,
             remote_issue: remote_issue
           )
+          sync_started = false
           begin
             with_issue_identity_lock(remote_issue) do
               ensure_issue_linkable!(remote_issue) if remote_issue
               ensure_issue_not_linked_elsewhere!(remote_issue, exclude_id: created_subtask.id) if remote_issue
+              sync_started = true
               sync_linked_issues_for(created_subtask, reason: "create")
             end
           rescue StandardError
-            FileUtils.rm_rf(created_subtask.path)
+            FileUtils.rm_rf(created_subtask.path) unless sync_started
             raise
           end
           show_after_sync(created_subtask) || created_subtask
