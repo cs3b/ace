@@ -5,6 +5,10 @@ module Ace
     # Maps runtime intents onto the existing tmux executor and control surface.
     class NativeRuntimeBackend
       B = Atoms::TmuxCommandBuilder
+      # tmux target errors are phrased can't-find/unknown-target; bare "no
+      # such" also matches socket connection failures and must not classify
+      # as a missing target.
+      TARGET_ERROR_PATTERN = /can't find|unknown target|not found/i
       WINDOW_FORMAT = Organisms::ControlSurface::WINDOW_LIST_FORMAT
       PANE_FORMAT = Organisms::ControlSurface::PANE_LIST_FORMAT
 
@@ -72,7 +76,7 @@ module Ace
         result = executor.capture(B.list_panes(target, format: PANE_FORMAT, tmux: tmux))
         unless result.success?
           detail = result.stderr.to_s
-          raise Ace::Tmux::TargetResolutionError, "tmux target is unavailable" if detail.match?(/can't find|no such|unknown target|not found/i)
+          raise Ace::Tmux::TargetResolutionError, "tmux target is unavailable" if detail.match?(TARGET_ERROR_PATTERN)
 
           raise Ace::Tmux::Error, detail
         end
@@ -204,30 +208,25 @@ module Ace
       def poll_agent_states(pane, observable, interval:, timeout:)
         settle = [timeout.to_f / 2, 1.0].min
         deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + timeout.to_f
-        previous_output = nil
+        current_output = capture_output(pane, lines: 40)
         stable_since = nil
         loop do
-          output = capture_output(pane, lines: 40)
           now = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-          state = agent_state_from_output(output)
+          state = agent_state_from_output(current_output)
           if observable.include?(state)
-            return true if state == "working"
+            return true if state == "working" && now < deadline
 
-            if output == previous_output
-              stable_since ||= now
-              # The deadline bounds acceptance: a match confirmed only
-              # after it passes is a timeout, not a success.
-              return true if now < deadline && now - stable_since >= settle
-            else
-              stable_since = nil
-            end
+            stable_since ||= now
+            return true if now < deadline && now - stable_since >= settle
           else
             stable_since = nil
           end
-          previous_output = output
           raise Ace::Tmux::WaitTimeoutError if now >= deadline
 
           sleep(interval)
+          fresh_output = capture_output(pane, lines: 40)
+          stable_since = nil if fresh_output != current_output
+          current_output = fresh_output
         end
       end
 
@@ -236,7 +235,7 @@ module Ace
       # silent evidence of exit.
       def pane_exited?(target)
         result = executor.capture(B.display_message_target(target, "\#{pane_dead}", tmux: tmux))
-        return true if !result.success? && result.stderr.to_s.match?(/can't find|no such|unknown target|not found/i)
+        return true if !result.success? && result.stderr.to_s.match?(TARGET_ERROR_PATTERN)
         raise Ace::Tmux::Error, result.stderr.to_s unless result.success?
 
         result.stdout.to_s.strip == "1"
@@ -262,7 +261,7 @@ module Ace
 
       def pane_exists?(pane)
         result = executor.capture(B.display_message_target(pane, "\#{pane_id}", tmux: tmux))
-        return false if !result.success? && result.stderr.to_s.match?(/can't find|no such|unknown target|not found/i)
+        return false if !result.success? && result.stderr.to_s.match?(TARGET_ERROR_PATTERN)
         raise Ace::Tmux::Error, result.stderr.to_s unless result.success?
 
         !result.stdout.to_s.strip.empty?
@@ -287,7 +286,7 @@ module Ace
           value.empty? ? nil : value
         else
           detail = result.stderr.to_s
-          raise Ace::Tmux::TargetResolutionError, "tmux target is unavailable" if detail.match?(/can't find|no such|unknown target|not found/i)
+          raise Ace::Tmux::TargetResolutionError, "tmux target is unavailable" if detail.match?(TARGET_ERROR_PATTERN)
           # tmux exits non-zero with quiet output for an unset option.
           return nil if detail.strip.empty?
 
@@ -299,7 +298,7 @@ module Ace
         result = executor.capture(command)
         unless result.success?
           detail = result.stderr.to_s
-          raise Ace::Tmux::TargetResolutionError, "tmux target is unavailable" if detail.match?(/can't find|no such|unknown target|not found/i)
+          raise Ace::Tmux::TargetResolutionError, "tmux target is unavailable" if detail.match?(TARGET_ERROR_PATTERN)
 
           raise Ace::Tmux::Error, detail
         end
@@ -311,7 +310,7 @@ module Ace
         result = executor.capture(command)
         unless result.success?
           detail = result.stderr.to_s
-          raise Ace::Tmux::TargetResolutionError, "tmux target is unavailable" if detail.match?(/can't find|no such|unknown target|not found/i)
+          raise Ace::Tmux::TargetResolutionError, "tmux target is unavailable" if detail.match?(TARGET_ERROR_PATTERN)
 
           raise Ace::Tmux::Error, detail
         end

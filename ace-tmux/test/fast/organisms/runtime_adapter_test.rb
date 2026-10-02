@@ -100,6 +100,7 @@ class TmuxRuntimeAdapterNativeTest < Minitest::Test
   class FakeTmuxExecutor
     attr_reader :commands
     attr_accessor :available, :fail_pane_queries
+    attr_accessor :pane_query_error
 
     def initialize
       @commands = []
@@ -129,7 +130,7 @@ class TmuxRuntimeAdapterNativeTest < Minitest::Test
       when "show-options"
         if @fail_pane_queries
           success = false
-          stderr = "server error"
+          stderr = pane_query_error || "server error"
           ""
         else
           @options[[command[-2], command[-1]]].to_s
@@ -145,7 +146,7 @@ class TmuxRuntimeAdapterNativeTest < Minitest::Test
             command[-1] == "\#{pane_dead}" ? "0" : command[command.index("-t") + 1]
           else
             success = false
-            stderr = @fail_pane_queries ? "server error" : "can't find pane"
+            stderr = @fail_pane_queries ? (pane_query_error || "server error") : "can't find pane"
             ""
           end
         else ""
@@ -495,6 +496,20 @@ class TmuxRuntimeAdapterNativeTest < Minitest::Test
     backend = Ace::Tmux::NativeRuntimeBackend.new(executor: executor, env: {"ACE_TMUX_SESSION" => "main"})
 
     assert_raises(Ace::Tmux::Error) { backend.send(:option, "@1", "@ace_runtime_root") }
+  end
+
+  def test_native_socket_failure_is_never_a_missing_target
+    @adapter.ensure_window(name: "work", root: "/tmp/work")
+    @adapter.prepare_pane(window: "work")
+    @executor.fail_pane_queries = true
+    @executor.pane_query_error = "error connecting to /tmp/tmux-501/default: No such file or directory"
+
+    assert_raises(Ace::Runtime::RuntimeUnavailableError) do
+      @adapter.wait_lifecycle(condition: "pane-exited", target: "%2", timeout: 1)
+    end
+    assert_raises(Ace::Runtime::RuntimeUnavailableError) do
+      @adapter.list_panes(window: "work")
+    end
   end
 
   class NewlineShowOptionsExecutor < FakeTmuxExecutor

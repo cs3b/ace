@@ -140,12 +140,15 @@ module Ace
         duration = Float(timeout)
         deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + duration
         loop do
+          now = Process.clock_gettime(Process::CLOCK_MONOTONIC)
           observed = with_errors do
             backend.available!
             yield
           end
-          return true if observed
-          break if Process.clock_gettime(Process::CLOCK_MONOTONIC) >= deadline
+          # The deadline bounds acceptance: a match observed only after it
+          # passes is a timeout, not a success.
+          return true if observed && now < deadline
+          break if now >= deadline
 
           sleep([0.02, duration].min)
         end
