@@ -162,6 +162,10 @@ module Ace
           unless %w[succeeded failed uncertain rejected failed-settled].include?(state)
             raise ArgumentError, "invalid service request state"
           end
+          if state == "failed-settled" && receipt.nil?
+            raise AttemptErrors::ReceiptRejected,
+              "Service request #{request_id} settlement requires the validated no-effect receipt"
+          end
           current = service_request(request_id)
           raise AttemptErrors::NotFound, "Service request #{request_id} not found" unless current
           # failed-settled is the one evidence-validated exit from a terminal
@@ -202,6 +206,8 @@ module Ace
           service_request_records.find do |other|
             next false if other["request_id"] == binding.fetch("request_id")
             next false if other["state"] == "rejected" && other["consumed"] == false
+            # A proven no-effect settlement frees the exact authorization.
+            next false if other["state"] == "failed-settled"
             other["authorization"] == authorization &&
               other["operation"] == binding.fetch("operation") &&
               other["project_id"] == binding.fetch("project_id") &&

@@ -385,15 +385,29 @@ def test_failed_effect_settles_only_through_attributable_reconciliation
   end
   assert_includes error.message, "new attestation"
 
-  # A later, distinct no-effect attestation settles the failed effect.
+  # A second failure report without no-effect proof cannot settle.
+  plain = write_evidence("forge/failed-again", "ace-service-attestation request:#{binding["request_id"]} " \
+    "input:#{binding["input_digest"]} outcome:failed\n")
+  error = assert_raises(AttemptErrors::ReceiptRejected) do
+    coordinator.reconcile_service_failure("svc-failed", receipt: binding.merge(
+      "outcome" => "failed", "executor_uid" => Process.uid,
+      "evidence" => [{"ref" => "forge/failed-again", "sha256" => plain}]))
+  end
+  assert_includes error.message, "does not bind the claimed request"
+
+  # A later, distinct attestation carrying explicit no-effect proof settles.
   later = write_evidence("forge/no-effect", "ace-service-attestation request:#{binding["request_id"]} " \
-    "input:#{binding["input_digest"]} outcome:failed\n" \
-    "verified-no-effect: handler confirmed the operation never ran\n")
+    "input:#{binding["input_digest"]} outcome:failed no-effect:true\n")
   refute_equal digest, later
   coordinator.reconcile_service_failure("svc-failed", receipt: binding.merge(
     "outcome" => "failed", "executor_uid" => Process.uid,
     "evidence" => [{"ref" => "forge/no-effect", "sha256" => later}]))
   assert_equal "failed-settled", coordinator.service_request_status("svc-failed")["state"]
+
+  # A proven no-effect settlement frees the exact authorization: a fresh
+  # request with the same decision for the same target succeeds.
+  freed = coordinator.claim_service_request(binding.merge("request_id" => "svc-after-settle"))
+  assert_equal "uncertain", freed["state"]
 
   error = assert_raises(AttemptErrors::InvalidState) do
     coordinator.reconcile_service_failure("svc-failed", receipt: binding.merge(

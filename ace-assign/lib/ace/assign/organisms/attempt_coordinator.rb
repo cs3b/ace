@@ -134,7 +134,6 @@ module Ace
           unless request["state"] == "failed"
             raise AttemptErrors::InvalidState, "Only failed service requests can be reconciled"
           end
-          validate_service_receipt!(request, "failed", receipt)
           # The settlement must be a distinct, later executor attestation:
           # replaying the already-recorded failure receipt proves nothing
           # about whether the effect took place.
@@ -143,10 +142,11 @@ module Ace
             raise AttemptErrors::ReceiptRejected,
               "Service failure settlement requires a new attestation, not the recorded receipt"
           end
+          validate_service_receipt!(request, "failed", receipt, require_no_effect: true)
           journal_for.transition_service_request(request_id, state: "failed-settled", receipt: receipt)
         end
 
-        def validate_service_receipt!(request, state, receipt)
+        def validate_service_receipt!(request, state, receipt, require_no_effect: false)
           unless receipt.is_a?(Hash) && receipt.keys.sort == SERVICE_RECEIPT_FIELDS.sort
             raise AttemptErrors::ReceiptRejected, "Service receipt has invalid fields"
           end
@@ -167,7 +167,7 @@ module Ace
           if request["transport"] == "local" && Process.uid != request["executor_uid"]
             raise AttemptErrors::ReceiptRejected, "Service receipt submitter is not the configured executor"
           end
-          verify_service_evidence!(receipt["evidence"], request, state)
+          verify_service_evidence!(receipt["evidence"], request, state, require_no_effect: require_no_effect)
         end
 
         def valid_service_evidence?(evidence)
@@ -184,7 +184,7 @@ module Ace
         # structured attestation naming the claimed request, input digest,
         # and attested outcome. All checks read one open handle, so a swap
         # on a caller-writable path cannot mix files between checks.
-        def verify_service_evidence!(evidence, request, state)
+        def verify_service_evidence!(evidence, request, state, require_no_effect: false)
           repo_root = File.realpath(@repo_root)
           claimed_at = parse_claimed_at(request)
           evidence.each do |item|
@@ -214,7 +214,7 @@ module Ace
                 raise AttemptErrors::ReceiptRejected, "Service receipt evidence predates the claim: #{ref}"
               end
               content = file.read
-              unless attestation_line(content, request, state)
+              unless attestation_line(content, request, state, require_no_effect: require_no_effect)
                 raise AttemptErrors::ReceiptRejected,
                   "Service receipt evidence does not bind the claimed request: #{ref}"
               end
@@ -232,11 +232,13 @@ module Ace
         # exactly: an unrelated executor-owned file cannot attest this
         # effect, prose cannot substitute for the attested outcome, and its
         # result cannot be recorded under another terminal state.
-        def attestation_line(content, request, state)
+        def attestation_line(content, request, state, require_no_effect: false)
           attestation = /^ace-service-attestation request:#{Regexp.escape(request.fetch("request_id"))} \
-input:#{Regexp.escape(request.fetch("input_digest"))} outcome:(\S+)$/
+input:#{Regexp.escape(request.fetch("input_digest"))} outcome:(\S+)( no-effect:(\S+))?$/
           line = content.scan(attestation).first
-          line && (%w[succeeded failed].include?(state) ? line.first == state : true)
+          return false unless line
+          return false if require_no_effect && line[2] != "true"
+          %w[succeeded failed].include?(state) ? line.first == state : true
         end
 
         def parse_claimed_at(request)
