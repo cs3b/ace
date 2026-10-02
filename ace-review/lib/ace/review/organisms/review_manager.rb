@@ -1397,11 +1397,12 @@ module Ace
           review_content = File.read(review_file)
 
           # Dry-run prepares the exact comment body without posting; the
-          # response builder reads :preview.
+          # response builder reads :preview. The timestamp derives from the
+          # review digest — identical to what a real post would send.
           if options.dry_run
             preview = Molecules::PrProvider.format_comment(
               review_content, preset: review_data[:preset], model: review_data[:model],
-              timestamp: File.mtime(review_file).utc.strftime("%Y-%m-%d %H:%M:%S UTC")
+              timestamp: "review-#{Digest::SHA256.file(review_file).hexdigest[0, 12]}"
             )
             return {success: true, dry_run: true, preview: preview}
           end

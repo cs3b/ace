@@ -27,7 +27,16 @@ module Ace
 
           pr_number = comments_data[:pr_number]
           pr_title = comments_data[:pr_title]
-          comments = comments_data[:comments] || []
+          # Full provider evidence is preserved upstream; prompt feedback
+          # excludes bot posts, blank bodies, and our own session comments
+          # (they are not unresolved human feedback).
+          comments = (comments_data[:comments] || []).reject do |comment|
+            author = comment[:author].to_s
+            body = comment[:body].to_s
+            author.match?(/\b(bot|github-actions|ace-review)\b/i) ||
+              body.empty? ||
+              body.include?("ace-review-session:")
+          end
           reviews = comments_data[:reviews] || []
           review_threads = comments_data[:review_threads] || []
 
