@@ -113,8 +113,11 @@ module Ace
             output: output_file,
             format: "text",
             timeout: timeout || Ace::Review.get("defaults", "llm_timeout") || 300,
-            force: true,
-            fallback: false  # Disable ace-llm fallback - ace-review handles retries
+            force: true
+            # Fallback is config-driven (llm.fallback + role candidate
+            # chains): the reviewer position tries pi glm 5.3, then codex
+            # sol, then agy flash 3.8 — the round is good if even one
+            # returns, and the session records the winner only.
           )
 
           unless result[:text].is_a?(String) && !result[:text].strip.empty?
