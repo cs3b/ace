@@ -55,12 +55,17 @@ module Ace
           before = provider.pull_request(number: reference.number)
           head = required_head!(before)
           details = provider.pull_request_review_details(number: reference.number)
-          hydrated_body = provider.pull_request_body(number: reference.number)
+          body_before = provider.pull_request_body(number: reference.number)
           # Hydration is a remote read: build the metadata from the read that
-          # follows it, so identity and body can never come from different
-          # points in time.
+          # follows it, and re-read the body after — the task spec text lives
+          # in the body, so an edit between reads invalidates the collection.
           after = provider.pull_request(number: reference.number)
-          after = after.with(body: hydrated_body) if hydrated_body && after.body.to_s.empty?
+          body_after = provider.pull_request_body(number: reference.number)
+          if body_before != body_after
+            raise ProviderExpectedHeadConflictError,
+              "PR body changed while collecting review metadata; retry on the current head"
+          end
+          after = after.with(body: body_after) unless body_after.nil?
           # Body hydration and identity must agree with the base provenance
           # read before collection; a moved base invalidates the metadata.
           latest_details = provider.pull_request_review_details(number: reference.number)
@@ -108,9 +113,14 @@ module Ace
           # Hydration is itself a remote read: the final identity comes from
           # the read that follows it, so body and identity can never come
           # from different points in time.
-          hydrated_body = provider.pull_request_body(number: reference.number)
+          body_before = provider.pull_request_body(number: reference.number)
           after = provider.pull_request(number: reference.number)
-          after = after.with(body: hydrated_body) if hydrated_body && after.body.to_s.empty?
+          body_after = provider.pull_request_body(number: reference.number)
+          if body_before != body_after
+            raise ProviderExpectedHeadConflictError,
+              "PR body changed while collecting review evidence; retry on the current head"
+          end
+          after = after.with(body: body_after) unless body_after.nil?
           latest_details = provider.pull_request_review_details(number: reference.number)
           if after.head_sha != head || latest_details.base_sha != details.base_sha ||
               after.head_ref != before.head_ref || after.base_ref != before.base_ref ||
