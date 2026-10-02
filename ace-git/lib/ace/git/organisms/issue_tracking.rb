@@ -26,10 +26,10 @@ module Ace
             "Issue ##{number} is already owned by ACE task #{owners.join(', ')}"
         end
 
-        def sync(number:, task_id:, task_path:, task_status:)
+        def sync(number:, task_id:, task_link:, task_status:)
           snapshot = validate_link!(number: number, task_id: task_id)
           sticky = sticky_comment(snapshot)
-          desired_line = "Tracked in ace-task: [#{task_id}](#{task_path})"
+          desired_line = "Tracked in ace-task: [#{task_id}](#{task_link})"
           preserved = Array(sticky&.dig(:body).to_s.lines).map(&:rstrip).reject do |line|
             line == STICKY_MARKER || line.start_with?("Tracked in ace-task: ")
           end
@@ -69,10 +69,13 @@ module Ace
         def clear(number:, task_id:)
           snapshot = fetch(number)
           owners = owned_task_ids(snapshot)
+          sticky = sticky_comment(snapshot)
+          if sticky && owners.empty?
+            raise ProviderMalformedOutputError, "Issue ##{number} has an ACE marker without a task owner"
+          end
           unless owners.empty? || owners == [task_id.to_s]
             raise ProviderIdentityMismatchError, "Issue ##{number} is owned by another ACE task"
           end
-          sticky = sticky_comment(snapshot)
           if sticky
             preserved = sticky[:body].to_s.lines.map(&:rstrip).reject do |line|
               line == STICKY_MARKER || line.start_with?("Tracked in ace-task: ")
