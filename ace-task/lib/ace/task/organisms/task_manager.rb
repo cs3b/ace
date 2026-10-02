@@ -213,7 +213,10 @@ module Ace
               )
             end
             linked_descendants_of(current_path, current_id).each do |child|
-              sync_linked_issues_for(child, reason: "move")
+              with_issue_identity_lock(linked_issue(child) || {}) do
+                fresh = show(child.id) || child
+                sync_linked_issues_for(fresh, reason: "move") if linked_issue(fresh)
+              end
             end
           end
 
@@ -254,7 +257,10 @@ module Ace
             end
             sync_linked_issues_for(reparented, reason: "reparent", previous_task: task)
             linked_descendants_of(reparented.path, reparented.id).each do |descendant|
-              sync_linked_issues_for(descendant, reason: "reparent")
+              with_issue_identity_lock(linked_issue(descendant) || {}) do
+                fresh = show(descendant.id) || descendant
+                sync_linked_issues_for(fresh, reason: "reparent") if linked_issue(fresh)
+              end
             end
             return show_after_sync(reparented) || reparented
           end
@@ -401,6 +407,18 @@ module Ace
           end
 
           identity = Molecules::IssueLink.from_input(issue, server_name: server_name, use_default: use_default)
+          with_issue_identity_lock("task-link-#{task.id}") do
+            # Reload: a concurrent link may have changed this task's state
+            # while this call waited for the task transition lock.
+            task = show(ref) || task
+            current = linked_issue(task)
+            issue_link_locked(task, identity, current, ref: ref,
+              server_name: server_name, use_default: use_default)
+          end
+          show(ref)
+        end
+
+        def issue_link_locked(task, identity, current, ref:, server_name:, use_default:)
           if current
             if current == identity
               if task.metadata["issue_sync_operation"] == "clear"
@@ -430,9 +448,7 @@ module Ace
               end
               ensure_issue_linkable!(identity, task_id: task.id,
                 previous_task_id: task.metadata["issue_sync_previous_id"])
-              result = with_issue_identity_lock(identity) do
-                sync_linked_issues_for(task, reason: "link-retry")
-              end
+              result = sync_linked_issues_for(task, reason: "link-retry")
               raise Ace::Git::ProviderUnreachableError, result[:error] unless result[:success]
               return show(ref)
             end
