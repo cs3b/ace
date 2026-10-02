@@ -1386,9 +1386,12 @@ module Ace
 
           receipt = pr_provider(options).post_comment(
             options.pr, expected_head: head,
+            # The timestamp is frozen to the review artifact so a repeat
+            # after an uncertain outcome formats the exact same body and
+            # reconciles the existing session comment.
             content: Molecules::PrProvider.format_comment(
               review_content, preset: review_data[:preset], model: review_data[:model],
-              timestamp: Time.now.utc.strftime("%Y-%m-%d %H:%M:%S UTC")
+              timestamp: File.mtime(review_file).utc.strftime("%Y-%m-%d %H:%M:%S UTC")
             ),
             session_key: File.dirname(File.expand_path(review_file))
           )

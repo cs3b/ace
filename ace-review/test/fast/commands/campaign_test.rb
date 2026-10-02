@@ -132,6 +132,7 @@ class CampaignCommandTest < AceReviewTest
     [Ace::Git::ProviderCliMissingError.new, Ace::Git::ProviderAuthenticationError.new].each do |failure|
       provider = Object.new
       provider.define_singleton_method(:fetch) { |_identifier| raise failure }
+      provider.define_singleton_method(:fetch_metadata) { |_identifier| raise failure }
       Ace::Review::Molecules::PrProvider.stub(:new, provider) do
         started = JSON.parse(command(%w[campaign start --subject subject.json --contract contract.md]))
         refute started["accepted"]

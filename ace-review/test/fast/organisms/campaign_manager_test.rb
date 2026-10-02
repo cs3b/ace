@@ -628,6 +628,15 @@ class CampaignManagerTest < AceReviewTest
     provider.define_singleton_method(:fetch) do |_identifier|
       result.respond_to?(:call) ? result.call : result
     end
+    provider.define_singleton_method(:fetch_metadata) do |_identifier|
+      if result.respond_to?(:call)
+        result.call
+      elsif result[:success] == false
+        result
+      else
+        {success: true, metadata: result[:metadata]}
+      end
+    end
     Ace::Review::Molecules::PrProvider.stub(:new, provider) { yield }
   end
 

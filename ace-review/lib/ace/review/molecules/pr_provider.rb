@@ -120,12 +120,18 @@ module Ace
             {type: "issue_comment", id: comment.id, author: comment.author,
              body: comment.body, url: comment.url}
           end
-          threads = comments.select(&:path).map do |comment|
-            # Only a provider-supplied thread ID is resolvable; presenting a
-            # comment ID as one would advertise an unsupported resolution as
-            # supported. A nil id/resolved state is honest absence.
-            {id: comment.thread_id, path: comment.path, line: comment.line,
-             is_resolved: comment.resolved,
+          inline = comments.select(&:path)
+          # Comments sharing a provider thread id belong to one thread; a
+          # nil thread id stays an honest per-comment entry.
+          threads = inline.select(&:thread_id).group_by(&:thread_id).map do |id, members|
+            first = members.first
+            {id: id, path: first.path, line: first.line, is_resolved: first.resolved,
+             comments: members.map { |comment|
+               {id: comment.id, author: comment.author, body: comment.body, url: comment.url}
+             }}
+          end
+          threads += inline.reject(&:thread_id).map do |comment|
+            {id: nil, path: comment.path, line: comment.line, is_resolved: comment.resolved,
              comments: [{id: comment.id, author: comment.author, body: comment.body, url: comment.url}]}
           end
           reviews = snapshot.review_evidence.reviews.map do |review|

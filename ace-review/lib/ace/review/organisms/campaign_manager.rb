@@ -411,7 +411,9 @@ module Ace
 
         def fetch_pr_metadata(subject)
           server = configured_pr_server(subject["repository"])
-          result = Molecules::PrProvider.new(server_name: server.name).fetch(subject["pr"])
+          # Only head/base identity is consumed here; skip the full diff/
+          # comment/check inventory.
+          result = Molecules::PrProvider.new(server_name: server.name).fetch_metadata(subject["pr"])
           result[:success] ? result : result.merge(error: "PR source unavailable: #{result[:error]}")
         rescue Ace::Git::Error, ArgumentError => e
           {success: false, error: "PR source unavailable: #{e.message}"}
