@@ -31,7 +31,7 @@ module Ace
             File.chmod(0o755, script)
             executor = HerdrExecutor.new(binary: script)
 
-            error = assert_raises(ExecutorError) { executor.pane_get("p1") }
+            error = assert_raises(ExecutorError) { executor.pane_get_bounded("p1") }
 
             assert_instance_of CommandError, error
           end

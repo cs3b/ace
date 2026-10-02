@@ -23,7 +23,7 @@ module Ace
             @prompts = []
           end
 
-          def pane_get(_id)
+          def pane_get_bounded(_id)
             raise pane_get_error if pane_get_error
 
             Molecules::ExecutionResult.new(stdout: JSON.generate("result" => {"pane" => pane}),
@@ -181,7 +181,7 @@ module Ace
             executor = Molecules::HerdrExecutor.new(binary: script)
 
             error = assert_raises(AgentNotReadyError) do
-              executor.pane_get("p1", timeout_s: 1.0)
+              executor.pane_get_bounded("p1", timeout_s: 1.0)
             end
 
             assert_match(/timed out/, error.message)

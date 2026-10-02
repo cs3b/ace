@@ -25,12 +25,11 @@ module Ace
           run!([@binary, "agent", "get", pane])
         end
 
-        # Structured live pane observation; callers must verify all identity
-        # fields before using a native queue target. Bounded: the inbox holds
+        # Structured live pane observation for the inbox: the caller holds
         # its per-event lock across this probe, so a stalled herdr child is
         # killed at the deadline and the timeout classifies as a retryable
         # pre-submission failure.
-        def pane_get(pane, timeout_s: DEFAULT_PROBE_TIMEOUT_S)
+        def pane_get_bounded(pane, timeout_s: DEFAULT_PROBE_TIMEOUT_S)
           result = BoundedProcess.call([@binary, "pane", "get", pane], stdin_data: "",
             timeout_s: timeout_s, output_limit: WAKE_OUTPUT_LIMIT)
           execution = ExecutionResult.new(
@@ -114,6 +113,8 @@ module Ace
           run!([@binary, "pane", "current", "--current"])
         end
 
+        # Structured live pane observation; callers must verify all identity
+        # fields before using a native queue target.
         def pane_get(pane)
           run!([@binary, "pane", "get", pane])
         end

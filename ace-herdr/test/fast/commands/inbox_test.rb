@@ -12,7 +12,7 @@ module Ace
           THREAD = "0123abcd-0000-4000-8000-000000000001"
 
           class Executor
-            def pane_get(_pane)
+            def pane_get_bounded(_pane)
               Molecules::ExecutionResult.new(
                 stdout: JSON.generate("result" => {"pane" => {
                   "pane_id" => "p1", "workspace_id" => "ws1", "terminal_id" => "term-1",

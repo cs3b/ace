@@ -346,7 +346,7 @@ module Ace
         end
 
         def observe_target(expected_session, expected_pane, target: nil)
-          payload = @executor.pane_get(expected_pane).parsed_json
+          payload = @executor.pane_get_bounded(expected_pane).parsed_json
           # Shape-check each level: parseable but malformed probe JSON must
           # fail as a validation error, never as a TypeError that would
           # strand the event in claimed.
