@@ -32,8 +32,8 @@ module Ace
 
         # The forge server URL resolved by the lifecycle at construction;
         # posting compares it with the reviewed repository before mutating.
-        def resolved_server_url
-          @lifecycle.resolved_server_url
+        def resolved_server_url(pr_identifier)
+          @lifecycle.resolved_server_url(pr_identifier)
         end
 
         def initialize(server_name: nil, use_default: false, timeout: nil, runner: nil, lifecycle: nil)
