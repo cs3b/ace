@@ -94,8 +94,8 @@ module Ace
           return result[:diff] if result[:success]
           # API size-limit rejections (HTTP 406) fall back to a local git
           # diff at the exact reviewed head, never an approximation.
-          raise Ace::Git::ProviderObjectNotFoundError, "gh pr diff failed: #{result[:error]}" if result[:error].to_s.match?(PR_NOT_FOUND_PATTERN)
-          raise Ace::Git::ProviderAuthenticationError, result[:error].to_s if result[:error].to_s.match?(AUTH_ERROR_PATTERN)
+          raise Ace::Git::ProviderObjectNotFoundError, "gh pr diff failed: #{result[:error]}" if result[:error].to_s.match?(PrFetcher::PR_NOT_FOUND_PATTERN)
+          raise Ace::Git::ProviderAuthenticationError, result[:error].to_s if result[:error].to_s.match?(PrFetcher::AUTH_ERROR_PATTERN)
           if result[:error].to_s.match?(/\bHTTP 406\b|Not Acceptable|exceeded the maximum/)
             return local_diff_fallback(number)
           end
@@ -776,21 +776,31 @@ end
         # head ref from the selected host into a temp ref, verify the SHA
         # matches, and diff base..head locally.
         def local_diff_fallback(number)
-          pr = pull_request(number: number)
           base_oid = pull_request_review_details(number: number).base_sha
-          head_oid = pr.head_sha
+          head_oid = pull_request(number: number).head_sha
           host = Ace::Git::Atoms::ServerUrl.normalize(server.url).split("/", 2).first
-          temp_ref = "refs/ace/review/pr-#{number}-#{Process.pid}"
-          run_git("fetch", "--no-tags", "#{host}:#{repo_path}", "+refs/pull/#{number}/head:#{temp_ref}")
-          fetched = run_git("rev-parse", temp_ref).strip
-          unless fetched == head_oid
-            raise Ace::Git::ProviderMalformedOutputError,
-              "Local fallback fetched #{fetched[0, 12]} but the reviewed head is #{head_oid[0, 12]}"
+          remote = "#{host}:#{repo_path}"
+          head_ref = "refs/ace/review/pr-#{number}-#{Process.pid}"
+          base_ref = "#{head_ref}-base"
+          begin
+            run_git("fetch", "--no-tags", remote, "+refs/pull/#{number}/head:#{head_ref}")
+            fetched = run_git("rev-parse", head_ref).strip
+            unless fetched == head_oid
+              raise Ace::Git::ProviderMalformedOutputError,
+                "Local fallback fetched #{fetched[0, 12]} but the reviewed head is #{head_oid[0, 12]}"
+            end
+            # The base commit may not exist locally and a two-dot diff
+            # would include unrelated target-branch changes: fetch the
+            # exact base SHA and diff from the merge base.
+            run_git("fetch", "--no-tags", remote, "+#{base_oid}:#{base_ref}")
+            merge_base = run_git("merge-base", base_ref, head_ref).strip
+            diff = run_git("diff", "#{merge_base}..#{head_ref}")
+            raise Ace::Git::ProviderMalformedOutputError, "Local fallback produced an empty diff" if diff.strip.empty?
+            diff
+          ensure
+            run_git("update-ref", "-d", head_ref) rescue nil
+            run_git("update-ref", "-d", base_ref) rescue nil
           end
-          diff = run_git("diff", "#{base_oid}..#{head_oid}")
-          run_git("update-ref", "-d", temp_ref)
-          raise Ace::Git::ProviderMalformedOutputError, "Local fallback produced an empty diff" if diff.strip.empty?
-          diff
         end
 
         def repo_path
