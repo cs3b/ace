@@ -38,6 +38,30 @@ module Ace
           text.chomp("/").downcase
         end
 
+        # Derive the HTTP(S) web endpoint for a configured server URL.
+        # HTTPS/HTTP URLs keep their scheme and authority; SSH-style URLs
+        # (scp-style "git@host:path", "ssh://") map to https web endpoints.
+        #
+        # @param url [String] configured server URL
+        # @return [String] web base without trailing slash or .git suffix
+        def self.web_base(url)
+          text = url.to_s.strip
+          scheme = text[/\A(https?):\/\//i, 1]&.downcase
+          rest = text.sub(/\A[a-z][a-z0-9+.\-]*:\/\//i, "").sub(/\A[^\/\s]+@/, "")
+          if scheme
+            authority, _, path = rest.partition("/")
+          else
+            # scp-style "git@host:path" splits on the colon; ssh ports ride
+            # that colon and are dropped from the web endpoint.
+            authority, _, path = rest.partition(":")
+            authority = authority.split(":").first.to_s
+            path = path.sub(%r{\A\d+/}, "")
+            scheme = "https"
+          end
+          path = path.sub(%r{/+\z}, "").sub(/\.git\z/i, "")
+          "#{scheme}://#{authority}/#{path}"
+        end
+
         # Compare a configured server URL against a remote URL for identity.
         #
         # @param server_url [String] configured server base URL
