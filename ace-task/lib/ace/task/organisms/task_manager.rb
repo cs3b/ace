@@ -338,6 +338,12 @@ module Ace
           return nil unless task
 
           unless linked_issue(task)
+            if task.metadata["issue_sync_pending"]
+              # Inconsistent state: pending without a recovery identity is a
+              # failure, not a skip (the CLI must exit nonzero).
+              return {synced: 0, failed: 1, pending: 0, skipped: 0, task_id: task.id,
+                      failures: [{task_id: task.id, remote_issues: [], error: "Pending task has no remote_issue recovery identity"}]}
+            end
             return {synced: 0, failed: 0, pending: 0, skipped: 1, task_id: task.id, failures: []}
           end
 
@@ -734,12 +740,14 @@ module Ace
           clear_issue_sync_pending(task)
           sync_result_for(task: task, issues: [identity], success: true, reason: reason)
         rescue Ace::Git::ProviderUnknownOutcomeError => e
-          # The write may still commit forge-side: replays must reconcile the
-          # existing comment instead of issuing another create.
+          # Only an uncertain comment creation blocks a second POST; label or
+          # state updates are idempotent and need no create guard.
           mark_issue_sync_pending(task)
-          Ace::Support::Items::Molecules::FieldUpdater.update(
-            task.file_path, set: {"issue_sync_operation" => "reconcile-create"}
-          )
+          if reached_post
+            Ace::Support::Items::Molecules::FieldUpdater.update(
+              task.file_path, set: {"issue_sync_operation" => "reconcile-create"}
+            )
+          end
           @last_update_note = "Issue sync warning for task #{task&.id}: #{e.class}: #{e.message}; " \
             "flagged for 'ace-task issue-sync --pending'"
           sync_result_for(task: task, issues: [identity].compact, success: false,
@@ -784,10 +792,9 @@ module Ace
         def clear_issue_link(task)
           if task.metadata["issue_sync_operation"] == "reconcile-create"
             # A tracking comment may still be committing forge-side; dropping
-            # the link now would orphan it. Reconcile the create first; the
-            # clear only proceeds once the marker state is established.
-            result = sync_linked_issues_for(task, reason: "clear-reconcile")
-            raise Ace::Git::ProviderUnreachableError, result[:error] unless result[:success]
+            # the link now would orphan it. Reconcile comment ownership only -
+            # clear must never change issue state as a side effect.
+            issue_adapter.reconcile_comment(task: task)
           end
           Ace::Support::Items::Molecules::FieldUpdater.update(task.file_path,
             set: {"issue_sync_pending" => true, "issue_sync_operation" => "clear"})

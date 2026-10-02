@@ -343,6 +343,7 @@ class TaskManagerTest < AceTaskTestCase
     adapter.define_singleton_method(:validate_link!) { |**_args| true }
     adapter.define_singleton_method(:sync_task) { |**args| sync.call(**args) }
     adapter.define_singleton_method(:clear_task) { |**_args| true }
+    adapter.define_singleton_method(:reconcile_comment) { |**args| sync.call(**args) }
     adapter
   end
 
@@ -723,8 +724,9 @@ class TaskManagerTest < AceTaskTestCase
     state = :unknown_create
     adapter = Object.new
     adapter.define_singleton_method(:validate_link!) { |**_args| true }
-    adapter.define_singleton_method(:sync_task) do |task:, **_|
+    adapter.define_singleton_method(:sync_task) do |task:, before_create: nil, **_|
       if state == :unknown_create
+        before_create&.call
         state = :unreachable_reconcile
         raise Ace::Git::ProviderUnknownOutcomeError, "create send outcome unknown"
       end
@@ -765,6 +767,42 @@ class TaskManagerTest < AceTaskTestCase
     end
   end
 
+  def test_clear_after_uncertain_state_update_skips_reconcile
+    seen = []
+    adapter = fake_issue_adapter { |task:, **_| seen << :sync }
+    adapter.define_singleton_method(:reconcile_comment) do |task:, **_|
+      seen << :comment_only
+      nil
+    end
+    adapter.define_singleton_method(:clear_task) { |**_args| true }
+    @manager.stub(:issue_adapter, adapter) do
+      task = @manager.create("Linked task", remote_issue: issue_identity)
+      @manager.update(task.id, set: {"status" => "blocked"})
+      @manager.issue_link(task.id, clear: true)
+      # An uncertain label/state update does not arm the create guard, so the
+      # clear runs no lifecycle reconciliation at all - issue state untouched.
+      # The two syncs are the create-time and status-update syncs only.
+      assert_equal %i[sync sync], seen
+      refute @manager.show(task.id).metadata["remote_issue"]
+    end
+  end
+
+  def test_ref_sync_fails_for_pending_task_without_identity
+    adapter = fake_issue_adapter { |task:, **_| raise Ace::Git::ProviderUnknownOutcomeError, "unknown" }
+    @manager.stub(:issue_adapter, adapter) do
+      task = @manager.create("Linked task", remote_issue: issue_identity)
+      # Simulate the inconsistent state: pending without an identity.
+      task = @manager.show(task.id)
+      Ace::Support::Items::Molecules::FieldUpdater.update(
+        task.file_path, set: {"remote_issue" => nil}
+      )
+      result = @manager.issue_sync(ref: task.id)
+      assert_equal 1, result[:failed]
+      assert_equal 0, result[:skipped]
+      assert_match(/no remote_issue recovery identity/, result[:failures].first[:error])
+    end
+  end
+
   def test_clear_rejects_unresolved_create_and_retry_recovers
     create_attempts = 0
     adapter = Object.new
@@ -778,6 +816,9 @@ class TaskManagerTest < AceTaskTestCase
       create_attempts += 1
     end
     adapter.define_singleton_method(:clear_task) { |**_args| true }
+    adapter.define_singleton_method(:reconcile_comment) do |task:, **_|
+      raise Ace::Git::ProviderUnknownOutcomeError, "tracking comment create still unresolved"
+    end
     @manager.stub(:issue_adapter, adapter) do
       parent = @manager.create("Parent")
       task = @manager.create("Linked task", remote_issue: issue_identity)
@@ -793,8 +834,9 @@ class TaskManagerTest < AceTaskTestCase
       Ace::Support::Items::Molecules::FieldUpdater.update(
         task2.file_path, set: {"issue_sync_operation" => "reconcile-create"}
       )
-      # Clear during an unresolved create fails without dropping the link.
-      assert_raises(Ace::Git::ProviderUnreachableError) do
+      # Clear during an unresolved create fails (the reconciliation outcome
+      # surfaces) without dropping the link.
+      assert_raises(Ace::Git::ProviderUnknownOutcomeError) do
         @manager.issue_link(task2.id, clear: true)
       end
       assert_equal issue_identity, @manager.show(task2.id).metadata["remote_issue"]
