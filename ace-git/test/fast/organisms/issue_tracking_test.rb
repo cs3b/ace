@@ -126,6 +126,17 @@ class IssueTrackingTest < AceGitTestCase
     assert_includes @provider.labels, "ace:tracked"
   end
 
+  def test_sync_separates_marker_from_trailing_note_without_newline
+    @provider.comments << {id: 1, body: "Final note without newline<!-- ace-task:tracked -->\n" \
+      "Tracked in ace-task: [8pp.t.q7w](old.md)"}
+    @service.sync(number: 42, task_id: "8pp.t.q7w", task_link: "task.md", task_status: "pending")
+    body = @provider.comments.first[:body]
+    assert_includes body, "Final note without newline\n<!-- ace-task:tracked -->"
+    # Clear can then remove the marker and keep the note verbatim.
+    @service.clear(number: 42, task_id: "8pp.t.q7w")
+    assert_equal "Final note without newline\n", @provider.comments.first[:body]
+  end
+
   def test_sync_accepts_ownership_from_either_previous_or_current_id
     @provider.comments << {id: 1, body: "<!-- ace-task:tracked -->\nTracked in ace-task: [8pp.t.q7w.old](x.md)"}
     @service.sync(number: 42, task_id: "8pp.t.q7w.new", previous_task_id: "8pp.t.q7w.old",

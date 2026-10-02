@@ -35,11 +35,15 @@ module Ace
           sticky = sticky_comment(snapshot)
           desired_line = "Tracked in ace-task: [#{task_id}](#{task_link})"
           # Unrelated lines are preserved verbatim (including trailing
-          # whitespace); only ACE-owned lines are ever added or removed.
-          preserved = Array(sticky&.dig(:body).to_s.lines).reject do |line|
-            line.chomp == STICKY_MARKER || line.start_with?("Tracked in ace-task: ")
-          end
-          desired_body = "#{preserved.join}#{STICKY_MARKER}\n#{desired_line}"
+          # whitespace); only ACE-owned lines are ever added or removed. A
+          # marker concatenated onto a note line (historical layout) is
+          # stripped in place so clear can rebuild the body cleanly.
+          preserved = Array(sticky&.dig(:body).to_s.lines)
+            .reject { |line| line.chomp == STICKY_MARKER || line.start_with?("Tracked in ace-task: ") }
+            .map { |line| line.gsub(STICKY_MARKER, "") }
+          prefix = preserved.join
+          prefix += "\n" unless prefix.empty? || prefix.end_with?("\n")
+          desired_body = "#{prefix}#{STICKY_MARKER}\n#{desired_line}"
           if sticky.nil?
             mutate_and_reconcile(number, desired_body: desired_body) do
               @provider.create_issue_comment(number: number, body: desired_body)
