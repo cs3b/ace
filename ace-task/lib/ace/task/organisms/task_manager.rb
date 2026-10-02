@@ -52,6 +52,7 @@ module Ace
           remote_issue: nil
         )
           ensure_issue_linkable!(remote_issue) if remote_issue
+          ensure_issue_not_linked_elsewhere!(remote_issue) if remote_issue
           ensure_root_dir
           creator = Molecules::TaskCreator.new(root_dir: @root_dir, config: @config)
           attempts = 0
@@ -216,6 +217,7 @@ module Ace
           return nil unless parent
 
           ensure_issue_linkable!(remote_issue) if remote_issue
+          ensure_issue_not_linked_elsewhere!(remote_issue) if remote_issue
           subtask_creator = Molecules::SubtaskCreator.new(config: @config)
           created_subtask = subtask_creator.create(
             parent,
@@ -236,7 +238,7 @@ module Ace
           raise ArgumentError, "REF cannot be combined with --all or --pending" if ref && (all || pending)
 
           if all || pending
-            tasks = list(in_folder: "all")
+            tasks = all_tasks_including_subtasks
             tasks = tasks.select { |t| t.metadata["issue_sync_pending"] } if pending
             linked_tasks = tasks.select { |t| linked_issue(t) }
             results = linked_tasks.map { |task| sync_or_clear_linked_issue(task, reason: "manual-sync") }
@@ -290,6 +292,7 @@ module Ace
               "Task #{task.id} already links another issue; clear it before linking a different issue"
           end
           ensure_issue_linkable!(identity, task_id: task.id)
+          ensure_issue_not_linked_elsewhere!(identity, exclude_id: task.id)
           Ace::Support::Items::Molecules::FieldUpdater.update(task.file_path, set: {"remote_issue" => identity})
           linked = show(ref)
           result = sync_linked_issues_for(linked, reason: "link")
@@ -548,6 +551,44 @@ module Ace
 
         def ensure_issue_linkable!(identity, task_id: nil)
           issue_adapter.validate_link!(identity: identity, task_id: task_id)
+        end
+
+        # One task owns at most one exact issue: reject a second local task
+        # holding the same identity even when the first link is still pending
+        # and has therefore written no remote owner marker yet.
+        def ensure_issue_not_linked_elsewhere!(identity, exclude_id: nil)
+          target = identity.slice("server_name", "provider", "repository_url", "number")
+          all_tasks_including_subtasks.each do |task|
+            next if exclude_id && task.id == exclude_id.to_s
+
+            existing = task.metadata["remote_issue"]
+            next unless existing.is_a?(Hash) && (existing["number"] || existing[:number]).to_s == target["number"].to_s
+
+            held = {
+              "server_name" => (existing["server_name"] || existing[:server_name]).to_s,
+              "provider" => (existing["provider"] || existing[:provider]).to_s,
+              "repository_url" => (existing["repository_url"] || existing[:repository_url]).to_s,
+              "number" => (existing["number"] || existing[:number]).to_s
+            }
+            next unless held.values == target.values.map(&:to_s)
+
+            raise Ace::Git::ProviderIdentityMismatchError,
+              "Issue ##{target["number"]} on #{target["server_name"]} is already linked to task #{task.id}"
+          end
+        end
+
+        # Bulk issue sync must see linked subtasks too; TaskScanner#scan
+        # excludes subtask folders, which would hide deferred child replays.
+        def all_tasks_including_subtasks
+          scanner = Molecules::TaskScanner.new(@root_dir)
+          loader = Molecules::TaskLoader.new
+          scanner.scan.flat_map do |sr|
+            primary = loader.load(sr.dir_path, id: sr.id, special_folder: sr.special_folder)
+            subtasks = scanner.scan_subtasks(sr.dir_path, parent_id: sr.id).filter_map do |sub|
+              loader.load(sub.dir_path, id: sub.id, special_folder: sub.special_folder)
+            end
+            [primary] + subtasks
+          end.compact
         end
 
         def sync_linked_issues_for(task, reason:, previous_task: nil)

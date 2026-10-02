@@ -396,6 +396,38 @@ class TaskManagerTest < AceTaskTestCase
     end
   end
 
+  def test_bulk_sync_includes_linked_subtasks
+    synced = []
+    adapter = fake_issue_adapter { |task:| synced << task.id }
+    @manager.stub(:issue_adapter, adapter) do
+      parent = @manager.create("Parent")
+      child = @manager.create_subtask(parent.id, "Linked child", remote_issue: issue_identity(9))
+      result = @manager.issue_sync(all: true)
+      assert_equal 1, result[:synced]
+      assert_includes synced, child.id
+    end
+  end
+
+  def test_create_rejects_duplicate_local_link_to_same_issue
+    adapter = fake_issue_adapter { |task:| raise Ace::Git::ProviderUnreachableError, "offline" }
+    @manager.stub(:issue_adapter, adapter) do
+      @manager.create("First", remote_issue: issue_identity)
+      error = assert_raises(Ace::Git::ProviderIdentityMismatchError) do
+        @manager.create("Second", remote_issue: issue_identity)
+      end
+      assert_match(/already linked to task/, error.message)
+    end
+  end
+
+  def test_duplicate_local_link_guard_ignores_other_issues
+    adapter = fake_issue_adapter { |task:| }
+    @manager.stub(:issue_adapter, adapter) do
+      @manager.create("First", remote_issue: issue_identity)
+      second = @manager.create("Second", remote_issue: issue_identity(277))
+      assert_equal "Second", @manager.show(second.id).title
+    end
+  end
+
   def test_empty_pending_set_succeeds_with_zero_counts
     @manager.create("Local task")
     result = @manager.issue_sync(pending: true)

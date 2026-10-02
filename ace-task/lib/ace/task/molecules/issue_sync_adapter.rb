@@ -21,7 +21,7 @@ module Ace
           server = IssueLink.validate!(identity)
           tracking(server).sync(
             number: identity.fetch("number"), task_id: task.id,
-            task_path: safe_task_path(task), task_status: task.status
+            task_link: task_link(identity, task), task_status: task.status
           )
         end
 
@@ -43,6 +43,12 @@ module Ace
           relative.start_with?("../") ? path.basename.to_s : relative
         rescue ArgumentError
           path.basename.to_s
+        end
+
+        # A repository-relative path is not a resolvable link target inside a
+        # forge comment; build a web blob URL from the linked repository.
+        def task_link(identity, task)
+          "#{identity.fetch("repository_url").sub(%r{/+\z}, "").sub(%r{\.git\z}i, "")}/blob/HEAD/#{safe_task_path(task)}"
         end
       end
     end
