@@ -519,7 +519,7 @@ module Ace
           end
           Ace::Git::ProviderReview.new(
             server_name: server.name, repository_url: server.url, pr_number: number,
-            id: entry["id"], author: entry.dig("user", "login"), body: entry["body"],
+            id: entry["id"], author: reviewer, body: entry["body"],
             # Forgejo reports REQUEST_CHANGES; consumers count only the
             # canonical CHANGES_REQUESTED spelling.
             state: (entry["state"] == "REQUEST_CHANGES") ? "CHANGES_REQUESTED" : entry["state"],
