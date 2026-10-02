@@ -172,7 +172,7 @@ module Ace
                             "sha256" => Digest::SHA256.hexdigest(content)}],
             "executor_uid" => binding.fetch("executor_uid")
           })
-          @coordinator.reconcile_service_failure(request_id, receipt: receipt)
+          @coordinator.reconcile_service_no_effect(request_id, receipt: receipt)
         rescue Ace::Assign::AttemptErrors::InvalidState, Ace::Assign::AttemptErrors::ReceiptRejected,
                Ace::Assign::AttemptErrors::NotFound, Errno::ENOENT, Errno::EACCES
           nil

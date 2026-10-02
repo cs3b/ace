@@ -16,8 +16,13 @@ module Ace
 
         def self.load(path)
           raise ArgumentError, "input file is missing" unless File.file?(path)
-          raise ArgumentError, "input exceeds #{MAX_BYTES} bytes" if File.size(path) > MAX_BYTES
-          data = JSON.parse(File.read(path))
+          # One handle bounds the read: a file replaced or grown between a
+          # size check and a separate read cannot bypass the limit.
+          data = File.open(path, "rb") do |file|
+            content = file.read(MAX_BYTES + 1)
+            raise ArgumentError, "input exceeds #{MAX_BYTES} bytes" if content && content.bytesize > MAX_BYTES
+            JSON.parse(content.to_s)
+          end
           raise ArgumentError, "input must be a JSON object" unless data.is_a?(Hash)
           validate!(data)
           data
