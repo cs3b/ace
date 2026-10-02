@@ -379,7 +379,10 @@ end
           GRAPHQL
           thread = gh_graphql(query, id: thread_id).dig("data", "node")
           verify_review_thread!(thread, pr, expected_head)
-          return true if thread["isResolved"] == true
+          if thread["isResolved"] == true
+            verify_post_mutation_head!(pr, expected_head, "thread #{thread_id}")
+            return true
+          end
 
           verify_expected_head!(pull_request(number: number), expected_head)
           mutation = <<~GRAPHQL
@@ -400,6 +403,7 @@ end
           unless resolved["isResolved"] == true
             raise Ace::Git::ProviderMalformedOutputError, "GitHub did not confirm thread resolution"
           end
+          verify_post_mutation_head!(pr, expected_head, "thread #{thread_id}")
           true
         end
 
