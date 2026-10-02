@@ -476,7 +476,10 @@ module Ace
           Ace::Git::ProviderReviewComment.new(
             server_name: server.name, repository_url: server.url, pr_number: number,
             id: entry["id"], author: entry.dig("user", "login"), body: entry["body"],
-            url: entry["html_url"], path: entry["path"], line: entry["line"],
+            url: entry["html_url"], path: entry["path"],
+            # Forgejo supplies position/original_position rather than
+            # line; the positive side position is the normalized line.
+            line: entry["line"] || [entry["position"], entry["original_position"]].compact.reject { |v| !v.is_a?(Integer) || v <= 0 }.first,
             head_sha: entry["commit_id"] || head, resolved: entry.key?("resolver") ? !entry["resolver"].nil? : nil,
             thread_id: nil
           )

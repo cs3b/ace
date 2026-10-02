@@ -318,7 +318,14 @@ end
           end
           total = page_payloads.filter_map { |page| page["total_count"] }.last
           # The accumulated pages must account for every reported run; a
-          # shortfall would silently understate check evidence.
+          # shortfall would silently understate check evidence. GitHub
+      # caps the check-runs endpoint at the 1,000 most recent check
+      # suites, so a maxed-out page cannot be exhausted further and the
+      # snapshot is marked incomplete instead.
+          if total.is_a?(Integer) && total > runs.length && runs.length >= 1000
+            raise Ace::Git::ProviderMalformedOutputError,
+              "Incomplete GitHub PR check evidence: endpoint capped at the 1,000 most recent check suites"
+          end
           unless total.is_a?(Integer) && total <= runs.length
             raise Ace::Git::ProviderMalformedOutputError, "Incomplete GitHub PR check evidence"
           end
