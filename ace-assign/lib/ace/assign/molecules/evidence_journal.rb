@@ -123,14 +123,36 @@ module Ace
 
         # Reserve a globally unique service request in the same evidence ref
         # as its owning attempt. The request index and attempt event are one
-        # Git commit, so a ref race cannot admit two effects for one ID.
+        # Git commit, so a ref race cannot admit two effects for one ID. An
+        # exact authorization reference is consumed by its first live claim:
+        # a second request presenting the same operation/project/target
+        # authorization is rejected instead of dispatching a duplicate effect.
         def claim_service_request(binding)
+          conflict = authorization_conflict(binding)
+          if conflict
+            raise AttemptErrors::Conflict,
+              "Authorization reference already consumed by request #{conflict.fetch("request_id")}"
+          end
           update_service_request(binding.fetch("request_id"), expected: nil,
             replacement: binding.merge("state" => "accepted"), event_type: "service_claim")
         end
 
+        # Reject a service request. A request not yet on file gets its
+        # auditable rejection claim; an existing live claim transitions to
+        # rejected (which also frees any exact authorization it consumed).
         def reject_service_request(binding, reason:)
-          update_service_request(binding.fetch("request_id"), expected: nil,
+          request_id = binding.fetch("request_id")
+          existing = service_request(request_id)
+          if existing
+            unless existing.except("state", "receipt", "reason") == binding.except("state", "receipt", "reason")
+              raise AttemptErrors::Conflict, "Service request #{request_id} has different input"
+            end
+            return existing if existing["state"] == "rejected"
+            return update_service_request(request_id, expected: existing,
+              replacement: existing.merge("state" => "rejected", "reason" => reason),
+              event_type: "service_transition")
+          end
+          update_service_request(request_id, expected: nil,
             replacement: binding.merge("state" => "rejected", "reason" => reason), event_type: "service_claim")
         end
 
@@ -155,6 +177,25 @@ module Ace
           raise AttemptErrors::EvidenceUnavailable, "Cannot read service request: #{stderr}"
         rescue JSON::ParserError
           raise AttemptErrors::EvidenceUnavailable, "Corrupt service request #{request_id}"
+        end
+
+        # Every service request recorded in this evidence ref, whatever the
+        # owning assignment. Backs the journal-wide request-ID and
+        # authorization-consumption checks.
+        def service_request_records
+          value = ref_value
+          return [] unless value
+          paths, stderr, status = git("ls-tree", "-r", "--name-only", value, "--", "execution/requests/")
+          raise AttemptErrors::EvidenceUnavailable, "Cannot read service request index: #{stderr}" unless status.success?
+          paths.lines.map(&:strip).select { |path| path.end_with?(".json") }.filter_map do |path|
+            content, error, read_status = git("show", "#{value}:#{path}")
+            unless read_status.success?
+              raise AttemptErrors::EvidenceUnavailable, "Cannot read service request #{path}: #{error}"
+            end
+            JSON.parse(content)
+          end
+        rescue JSON::ParserError
+          raise AttemptErrors::EvidenceUnavailable, "Corrupt service request index"
         end
 
         def service_requests(assignment_id)
@@ -259,6 +300,22 @@ module Ace
 
         def service_request_path(request_id)
           "execution/requests/#{request_id}.json"
+        end
+
+        # Another live request holding the same exact authorization for the
+        # same operation, project and target. Rejected requests never count:
+        # a rejection does not consume the decision.
+        def authorization_conflict(binding)
+          authorization = binding["authorization"]
+          return nil unless authorization.is_a?(String) && !authorization.empty?
+          service_request_records.find do |other|
+            next false if other["request_id"] == binding.fetch("request_id")
+            next false if other["state"] == "rejected"
+            other["authorization"] == authorization &&
+              other["operation"] == binding.fetch("operation") &&
+              other["project_id"] == binding.fetch("project_id") &&
+              other["target"] == binding.fetch("target")
+          end
         end
 
         def validate_request_id!(request_id)
@@ -487,7 +544,7 @@ module Ace
         def git!(*argv)
           out, stderr, status = git(*argv)
           unless status.success?
-            raise AttemptErrors::EvidenceUnavailable, "git #{argv.join(' ')} failed: #{stderr}"
+            raise AttemptErrors::EvidenceUnavailable, "git #{argv.join(" ")} failed: #{stderr}"
           end
 
           [out, stderr, status]

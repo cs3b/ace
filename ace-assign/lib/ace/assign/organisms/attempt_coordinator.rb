@@ -1,7 +1,9 @@
 # frozen_string_literal: true
 
+require "digest"
 require "json"
 require "open3"
+require "pathname"
 
 module Ace
   module Assign
@@ -24,7 +26,7 @@ module Ace
         SERVICE_RECEIPT_FIELDS = %w[assignment_id attempt_id candidate_head evidence executor_uid
           input_digest operation outcome project_id request_id target].freeze
         SERVICE_BINDING_FIELDS = %w[request_id assignment_id attempt_id project_id operation
-          input_digest target candidate_head].freeze
+          input_digest target candidate_head executor_uid].freeze
         # @param cache_base [String, nil] Assignment cache base
         # @param repo_root [String, nil] Candidate repository root (default: project root)
         # @param journal [Molecules::EvidenceJournal, nil] Evidence journal (default built per repo)
@@ -57,8 +59,7 @@ module Ace
         end
 
         def service_attempt(binding)
-          attempt = @store.find(binding.fetch("attempt_id")) ||
-            recover_managed_attempt(binding.fetch("assignment_id"), binding.fetch("attempt_id"))
+          attempt = authoritative_attempt(binding)
           raise AttemptErrors::NotFound, "Attempt not found" unless attempt
           unless attempt.managed? && attempt.active? &&
               attempt.binding.assignment_id == binding["assignment_id"] &&
@@ -66,6 +67,22 @@ module Ace
             raise AttemptErrors::ReceiptRejected, "Service request does not match an active managed attempt"
           end
           attempt
+        end
+
+        # The authoritative journal wins for managed assignments: a stale
+        # local running record must never admit a claim after another
+        # coordinator recorded a terminal state.
+        def authoritative_attempt(binding)
+          assignment_id = binding.fetch("assignment_id")
+          assignment = @manager.load(assignment_id)
+          if assignment&.managed?
+            journal_for.derived_attempts(assignment_id)
+              .find { |candidate| candidate.attempt_id == binding.fetch("attempt_id") } ||
+              @store.find(binding.fetch("attempt_id"))
+          else
+            @store.find(binding.fetch("attempt_id")) ||
+              recover_managed_attempt(assignment_id, binding.fetch("attempt_id"))
+          end
         end
 
         def reject_service_request(binding, reason:)
@@ -101,6 +118,10 @@ module Ace
               receipt["executor_uid"] >= 0 && valid_service_evidence?(receipt["evidence"])
             raise AttemptErrors::ReceiptRejected, "Service receipt has invalid executor or evidence"
           end
+          unless receipt["executor_uid"] == request["executor_uid"]
+            raise AttemptErrors::ReceiptRejected, "Service receipt executor does not match the claimed executor"
+          end
+          verify_service_evidence!(receipt["evidence"])
         end
 
         def valid_service_evidence?(evidence)
@@ -109,6 +130,26 @@ module Ace
               item["ref"].is_a?(String) && item["ref"].match?(/\A[a-zA-Z0-9_.:\/-]{1,256}\z/) &&
               item["sha256"].is_a?(String) && item["sha256"].match?(/\A[0-9a-f]{64}\z/)
           end
+        end
+
+        # Evidence must exist and match its digest at acceptance time; a
+        # fabricated reference cannot attest a real effect.
+        def verify_service_evidence!(evidence)
+          evidence.each do |item|
+            path = resolve_evidence_path(item["ref"])
+            unless path
+              raise AttemptErrors::ReceiptRejected, "Service receipt evidence is unavailable: #{item["ref"]}"
+            end
+            unless Digest::SHA256.file(path).hexdigest == item["sha256"]
+              raise AttemptErrors::ReceiptRejected, "Service receipt evidence digest mismatch: #{item["ref"]}"
+            end
+          end
+        end
+
+        def resolve_evidence_path(ref)
+          candidates = [ref]
+          candidates << File.join(@repo_root, ref) unless Pathname.new(ref).absolute?
+          candidates.find { |path| File.file?(path) && File.readable?(path) }
         end
 
         # Start a scoped attempt for an assignment.
@@ -279,13 +320,14 @@ module Ace
           expected_operation = case kind
           when "review-collection" then "review-collect"
           when "review-approval" then "review"
-          else check_name == "tests" ? "test" : check_name
+          else (check_name == "tests") ? "test" : check_name
           end
           unless data["campaign"].nil? && data["operation"] == expected_operation
             raise AttemptErrors::ReceiptRejected, "Accepted receipt operation does not prove #{kind}: #{expected_operation}"
           end
-          required_check = kind == "review-collection" ? "review-execution" : check_name
-          unless kind == "review-approval" || Array(data["checks"]).any? { |check| check["name"] == required_check && check["verdict"] == "passed" }
+          required_check = (kind == "review-collection") ? "review-execution" : check_name
+          has_required_check = Array(data["checks"]).any? { |check| check["name"] == required_check && check["verdict"] == "passed" }
+          unless kind == "review-approval" || has_required_check
             raise AttemptErrors::ReceiptRejected, "Accepted receipt does not prove the required check #{required_check}"
           end
           receipt = Models::ExecutionReceipt.from_h(data)
@@ -391,7 +433,7 @@ module Ace
             return nil if assignment && !assignment.managed?
 
             return journal_for.derived_attempts(assignment_id)
-              .find { |candidate| candidate.attempt_id == attempt_id }
+                .find { |candidate| candidate.attempt_id == attempt_id }
           end
 
           journal_for.assignment_ids.each do |journal_assignment_id|
@@ -479,7 +521,7 @@ module Ace
           recorded = reconciler.recorded_runtime(attempt)
           unless data.dig("producer", "runtime") == recorded
             raise AttemptErrors::ReceiptRejected,
-              "Receipt runtime #{data.dig('producer', 'runtime').inspect} does not match the recorded " \
+              "Receipt runtime #{data.dig("producer", "runtime").inspect} does not match the recorded " \
               "execution boundary #{recorded.inspect}"
           end
 
@@ -521,7 +563,8 @@ module Ace
           @reconciler ||= Molecules::AttemptReconciler.new(journal: journal_for, verifier: @verifier)
         end
 
-        def reserve(assignment, scope, project, identity, base_head, attempt_id)          binding = Models::AttemptBinding.new(
+        def reserve(assignment, scope, project, identity, base_head, attempt_id)
+          binding = Models::AttemptBinding.new(
             attempt_id: attempt_id,
             assignment_id: assignment.id,
             scope: scope,

@@ -61,6 +61,13 @@ module Ace
         )
       end
 
+      def write_evidence(ref, content)
+        path = File.join(@repo, ref)
+        FileUtils.mkdir_p(File.dirname(path))
+        File.write(path, content)
+        Digest::SHA256.hexdigest(content)
+      end
+
       def accept_receipt(coordinator, attempt, operation, head: nil, reviewer: nil)
         artifact_path = File.join(@repo, "artifact-#{attempt.attempt_id}.txt")
         File.write(artifact_path, "evidence #{operation}")
@@ -136,11 +143,12 @@ module Ace
         assignment = create_assignment
         attempt = coordinator.start(assignment_id: assignment.id, step: "010", project_id: "ace")
         head = git(@repo, "rev-parse", "HEAD")
+        evidence_digest = write_evidence("forge/receipt", "executor attested effect\n")
         binding = {"request_id" => "svc-evidence", "assignment_id" => assignment.id,
                    "attempt_id" => attempt.attempt_id, "project_id" => "ace",
                    "operation" => "forge-sync", "input_digest" => "a" * 64,
                    "target" => {"resource" => "forge/repo"},
-                   "candidate_head" => head}
+                   "candidate_head" => head, "executor_uid" => Process.uid}
         coordinator.claim_service_request(binding)
         coordinator.transition_service_request("svc-evidence", state: "uncertain")
 
@@ -150,7 +158,7 @@ module Ace
         assert_equal @journal.ref_value, evidence[:journal_commit]
         coordinator.transition_service_request("svc-evidence", state: "succeeded",
           receipt: binding.merge("outcome" => "succeeded", "executor_uid" => Process.uid,
-            "evidence" => [{"ref" => "forge/receipt", "sha256" => "b" * 64}]))
+            "evidence" => [{"ref" => "forge/receipt", "sha256" => evidence_digest}]))
         refute_includes calculate[:unresolved_effects], "svc-evidence:forge-sync:uncertain"
       end
 

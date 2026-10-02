@@ -62,6 +62,13 @@ module Ace
         )
       end
 
+      def write_evidence(ref, content)
+        path = File.join(@repo, ref)
+        FileUtils.mkdir_p(File.dirname(path))
+        File.write(path, content)
+        Digest::SHA256.hexdigest(content)
+      end
+
       def build_receipt(attempt, overrides = {})
         artifact_path = File.join(@repo, "receipt-artifact.txt")
         File.write(artifact_path, "execution evidence artifact")
@@ -144,7 +151,7 @@ module Ace
         binding = {"request_id" => "svc-1", "assignment_id" => assignment.id,
                    "attempt_id" => attempt.attempt_id, "project_id" => "ace",
                    "operation" => "forge-sync", "input_digest" => "a" * 64,
-                   "candidate_head" => head}
+                   "candidate_head" => head, "executor_uid" => Process.uid}
 
         claimed = coordinator.claim_service_request(binding)
         assert_equal "accepted", claimed["state"]
@@ -159,6 +166,48 @@ module Ace
         end
       end
 
+      def test_claim_validates_authoritative_journal_state_over_stale_local_record
+        coordinator = build_coordinator
+        assignment = create_assignment
+        attempt = coordinator.start(assignment_id: assignment.id, step: "010", project_id: "ace")
+        head = git(@repo, "rev-parse", "HEAD").strip
+        coordinator.finish(attempt_id: attempt.attempt_id, receipt_path: build_receipt(attempt))
+
+        # Crash window: the local cache regressed to running after the
+        # journal already recorded the terminal succeeded state.
+        coordinator.store.save(Models::Attempt.new(binding: attempt.binding, state: "running"))
+
+        error = assert_raises(AttemptErrors::ReceiptRejected) do
+          coordinator.service_attempt({"request_id" => "svc-stale", "assignment_id" => assignment.id,
+            "attempt_id" => attempt.attempt_id, "project_id" => "ace", "operation" => "forge-sync",
+            "input_digest" => "a" * 64, "candidate_head" => head, "executor_uid" => Process.uid})
+        end
+        assert_includes error.message, "active managed attempt"
+      end
+
+      def test_exact_authorization_cannot_claim_two_live_requests
+        coordinator = build_coordinator
+        assignment = create_assignment
+        attempt = coordinator.start(assignment_id: assignment.id, step: "010", project_id: "ace")
+        head = git(@repo, "rev-parse", "HEAD").strip
+        base = {"assignment_id" => assignment.id, "attempt_id" => attempt.attempt_id,
+                "project_id" => "ace", "operation" => "forge-sync", "input_digest" => "a" * 64,
+                "target" => {"resource" => "forge/repo"}, "candidate_head" => head,
+                "executor_uid" => Process.uid, "authorization" => "decision-1"}
+        coordinator.claim_service_request(base.merge("request_id" => "svc-auth-1"))
+
+        error = assert_raises(AttemptErrors::Conflict) do
+          coordinator.claim_service_request(base.merge("request_id" => "svc-auth-2"))
+        end
+        assert_includes error.message, "already consumed by request svc-auth-1"
+
+        # A rejected request never consumes the decision.
+        coordinator.reject_service_request(base.merge("request_id" => "svc-auth-3"), reason: "policy_rejected")
+        coordinator.reject_service_request(base.merge("request_id" => "svc-auth-1"), reason: "withdrawn")
+        claimed = coordinator.claim_service_request(base.merge("request_id" => "svc-auth-2"))
+        assert_equal "accepted", claimed["state"]
+      end
+
       def test_service_effect_receipt_must_match_claim_before_terminal_transition
         coordinator = build_coordinator
         assignment = create_assignment
@@ -167,11 +216,13 @@ module Ace
                    "attempt_id" => attempt.attempt_id, "project_id" => "ace",
                    "operation" => "forge-sync", "input_digest" => "a" * 64,
                    "target" => {"resource" => "forge/repo"},
-                   "candidate_head" => git(@repo, "rev-parse", "HEAD").strip}
+                   "candidate_head" => git(@repo, "rev-parse", "HEAD").strip,
+                   "executor_uid" => Process.uid}
+        evidence = write_evidence("forge/receipt", "executor attested effect\n")
         coordinator.claim_service_request(binding)
         coordinator.transition_service_request("svc-receipt", state: "uncertain")
         receipt = binding.merge("outcome" => "succeeded", "executor_uid" => Process.uid,
-          "evidence" => [{"ref" => "forge/receipt", "sha256" => "b" * 64}])
+          "evidence" => [{"ref" => "forge/receipt", "sha256" => evidence}])
 
         assert_raises(AttemptErrors::ReceiptRejected) do
           coordinator.transition_service_request("svc-receipt", state: "succeeded",
@@ -181,6 +232,46 @@ module Ace
         accepted = coordinator.transition_service_request("svc-receipt", state: "succeeded", receipt: receipt)
         assert_equal "succeeded", accepted["state"]
         assert_equal receipt, accepted["receipt"]
+      end
+
+      def test_service_receipt_rejects_foreign_executor_and_unverifiable_evidence
+        coordinator = build_coordinator
+        assignment = create_assignment
+        attempt = coordinator.start(assignment_id: assignment.id, step: "010", project_id: "ace")
+        binding = {"request_id" => "svc-provenance", "assignment_id" => assignment.id,
+                   "attempt_id" => attempt.attempt_id, "project_id" => "ace",
+                   "operation" => "forge-sync", "input_digest" => "a" * 64,
+                   "target" => {"resource" => "forge/repo"},
+                   "candidate_head" => git(@repo, "rev-parse", "HEAD").strip,
+                   "executor_uid" => Process.uid}
+        digest = write_evidence("forge/provenance", "real effect artifact\n")
+        coordinator.claim_service_request(binding)
+        coordinator.transition_service_request("svc-provenance", state: "uncertain")
+
+        # A receipt from a different executor identity cannot complete the claim.
+        foreign = binding.merge("outcome" => "succeeded", "executor_uid" => Process.uid + 7,
+          "evidence" => [{"ref" => "forge/provenance", "sha256" => digest}])
+        error = assert_raises(AttemptErrors::ReceiptRejected) do
+          coordinator.transition_service_request("svc-provenance", state: "succeeded", receipt: foreign)
+        end
+        assert_includes error.message, "executor"
+
+        # Evidence references must exist and match their recorded digest.
+        missing = binding.merge("outcome" => "succeeded", "executor_uid" => Process.uid,
+          "evidence" => [{"ref" => "forge/missing", "sha256" => "d" * 64}])
+        error = assert_raises(AttemptErrors::ReceiptRejected) do
+          coordinator.transition_service_request("svc-provenance", state: "succeeded", receipt: missing)
+        end
+        assert_includes error.message, "unavailable"
+
+        forged = binding.merge("outcome" => "succeeded", "executor_uid" => Process.uid,
+          "evidence" => [{"ref" => "forge/provenance", "sha256" => "e" * 64}])
+        error = assert_raises(AttemptErrors::ReceiptRejected) do
+          coordinator.transition_service_request("svc-provenance", state: "succeeded", receipt: forged)
+        end
+        assert_includes error.message, "digest mismatch"
+
+        assert_equal "uncertain", coordinator.service_request_status("svc-provenance")["state"]
       end
 
       def test_repeated_start_from_different_actor_conflicts

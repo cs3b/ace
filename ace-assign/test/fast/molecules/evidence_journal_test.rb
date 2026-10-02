@@ -109,6 +109,39 @@ module Ace
         end
       end
 
+      def test_exact_authorization_is_consumed_by_first_live_claim
+        with_temp_cache do |cache_dir|
+          repo = File.join(cache_dir, "repo")
+          init_repo(repo)
+          journal = Molecules::EvidenceJournal.new(repo_root: repo, ref: REF,
+            checkout_root: File.join(cache_dir, "co"))
+          base = {"assignment_id" => "assignment-auth", "attempt_id" => "attempt-auth",
+                  "project_id" => "ace", "operation" => "publish", "input_digest" => "a" * 64,
+                  "target" => {"resource" => "gem/ace-assign"}, "authorization" => "decision-9"}
+          journal.claim_service_request(base.merge("request_id" => "auth-1"))
+
+          error = assert_raises(AttemptErrors::Conflict) do
+            journal.claim_service_request(base.merge("request_id" => "auth-2", "input_digest" => "b" * 64))
+          end
+          assert_includes error.message, "already consumed by request auth-1"
+
+          # A different operation or target under the same reference is a
+          # different exact proposal and does not conflict... the reference is
+          # exact-bound, so only operation+project+target equality consumes.
+          other_target = journal.claim_service_request(
+            base.merge("request_id" => "auth-3", "input_digest" => "c" * 64,
+              "target" => {"resource" => "gem/ace-lab"}))
+          assert_equal "accepted", other_target["state"]
+
+          # Rejections never consume: withdrawing the first claim frees the
+          # reference for a retry under a new request ID.
+          journal.reject_service_request(base.merge("request_id" => "auth-1"), reason: "withdrawn")
+          retried = journal.claim_service_request(base.merge("request_id" => "auth-4"))
+          assert_equal "accepted", retried["state"]
+          assert_equal 3, journal.service_request_records.size
+        end
+      end
+
       def test_append_twice_advances_ref_and_keeps_both_batches
         with_temp_cache do |cache_dir|
           repo = File.join(cache_dir, "repo")
