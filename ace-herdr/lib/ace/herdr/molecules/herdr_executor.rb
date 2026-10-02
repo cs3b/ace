@@ -14,6 +14,7 @@ module Ace
       class HerdrExecutor
         DEFAULT_BINARY = "herdr"
         WAKE_OUTPUT_LIMIT = 65_536
+        DEFAULT_PROBE_TIMEOUT_S = 60
 
         def initialize(binary: DEFAULT_BINARY)
           @binary = binary
@@ -25,9 +26,21 @@ module Ace
         end
 
         # Structured live pane observation; callers must verify all identity
-        # fields before using a native queue target.
-        def pane_get(pane)
-          run!([@binary, "pane", "get", pane])
+        # fields before using a native queue target. Bounded: the inbox holds
+        # its per-event lock across this probe, so a stalled herdr child is
+        # killed at the deadline and the timeout classifies as a retryable
+        # pre-submission failure.
+        def pane_get(pane, timeout_s: DEFAULT_PROBE_TIMEOUT_S)
+          result = BoundedProcess.call([@binary, "pane", "get", pane], stdin_data: "",
+            timeout_s: timeout_s, output_limit: WAKE_OUTPUT_LIMIT)
+          ExecutionResult.new(
+            stdout: result.stdout.strip, stderr: result.stderr.strip,
+            success: result.status.success?, exit_code: result.status.exitstatus || -1
+          )
+        rescue Timeout::Error
+          raise AgentNotReadyError, "pane probe timed out after #{timeout_s}s"
+        rescue Errno::ENOENT, Errno::EACCES
+          raise ExecutorUnavailableError, "herdr CLI not found or not executable: #{@binary}"
         end
 
         # Start an agent in a pane at an interactive shell prompt.

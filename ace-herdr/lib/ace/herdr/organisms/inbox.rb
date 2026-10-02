@@ -40,8 +40,15 @@ module Ace
           validate_id!(event, "event")
           validate_id!(attempt, "attempt")
           raise ValidationError, "trusted receipt public key is unavailable" unless @receipt_public_key
-          raise ValidationError, "payload is required" if payload.to_s.empty?
+          payload = payload.to_s
+          raise ValidationError, "payload is required" if payload.empty?
           raise ValidationError, "payload contains NUL" if payload.include?("\0")
+          # Callers may hand over binary-tagged bytes; persistence is JSON, so
+          # the payload must decode as UTF-8 regardless of its source tag.
+          payload = payload.dup.force_encoding(Encoding::UTF_8)
+          unless payload.valid_encoding?
+            raise ValidationError, "payload is not valid UTF-8 text"
+          end
 
           address = address_for(ref)
           digest = Digest::SHA256.hexdigest(payload)
@@ -138,20 +145,21 @@ module Ace
                 "claim_generation" => bound["claim_generation"],
                 "payload_sha256" => record.answer_digest, "binding" => binding,
                 "native_output" => result["stdout"]}
-              record = transition(record, "delivered", intent.merge("receipt" => receipt), "accepted")
-              save(record)
-              # The wake is a separate effect from the accepted submission: it
-              # is persisted as pending before being attempted so a crash or a
-              # transient failure can be recovered by a later deliver call
-              # without ever resubmitting the message.
+              # The wake is a separate effect from the accepted submission,
+              # but its DECISION rides the first delivered transition: a crash
+              # between saves must never leave the wake field missing (which
+              # later reads as pending) for a busy target.
               wake = if WAKE_STATUSES.include?(binding["agent_status"])
                 {"status" => "pending"}
               else
                 {"status" => "none", "reason" => "busy target uses the native queue form"}
               end
               record = transition(record, "delivered",
-                record.inbox.merge("wake" => wake), "wake-#{wake['status']}")
+                intent.merge("receipt" => receipt).merge("wake" => wake), "accepted")
               save(record)
+              # A pending wake is attempted after the decision is durable, so
+              # a crash or transient failure can be recovered by a later
+              # deliver call without ever resubmitting the message.
               record = attempt_wake(record, binding) if wake["status"] == "pending"
             else
               record = transition(record, "uncertain", intent.merge("last_error" => result["error"]),
@@ -378,6 +386,14 @@ module Ace
               record.inbox.merge("wake" => record.inbox.fetch("wake", {"status" => "pending"})
                 .merge("status" => "pending", "error" => e.message)),
               "wake-retry-blocked", e.message)
+            save(record)
+            return public_record(record)
+          end
+          unless WAKE_STATUSES.include?(binding["agent_status"])
+            # The live target works on its native queue; no prompt is owed.
+            record = transition(record, "delivered",
+              record.inbox.merge("wake" => {"status" => "none",
+                "reason" => "busy target uses the native queue form"}), "wake-none")
             save(record)
             return public_record(record)
           end

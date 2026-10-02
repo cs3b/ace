@@ -42,7 +42,7 @@ module Ace
 
           started = Process.clock_gettime(Process::CLOCK_MONOTONIC)
           assert_raises(Timeout::Error) do
-            BoundedProcess.call([script], timeout_s: 0.3)
+            BoundedProcess.call([script], timeout_s: 1.0)
           end
           elapsed = Process.clock_gettime(Process::CLOCK_MONOTONIC) - started
 

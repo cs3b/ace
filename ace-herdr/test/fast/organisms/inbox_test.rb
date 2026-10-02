@@ -173,6 +173,53 @@ module Ace
           assert_match(/expected a JSON object/, error.message)
         end
 
+        def test_stalled_pane_probe_times_out_as_retryable_pre_submission
+          Dir.mktmpdir do |dir|
+            script = File.join(dir, "stalled-herdr")
+            File.write(script, "#!/bin/sh\necho $$ > '#{dir}/child.pid'\nexec sleep 30\n")
+            File.chmod(0o755, script)
+            executor = Molecules::HerdrExecutor.new(binary: script)
+
+            error = assert_raises(AgentNotReadyError) do
+              executor.pane_get("p1", timeout_s: 0.3)
+            end
+
+            assert_match(/timed out/, error.message)
+            assert_predicate error, :retryable?
+            child_pid = File.read(File.join(dir, "child.pid")).to_i
+            assert_raises(Errno::ESRCH) { Process.kill(0, child_pid) }
+          end
+        end
+
+        def test_busy_target_wake_decision_survives_a_crash_before_wake_save
+          enqueue
+          @inbox.deliver(event: @event)
+          Molecules::DeliveryRecordStore.with_lock(@dir, @event) do
+            record = Molecules::DeliveryRecordStore.load(@dir, @event)
+            inbox = record.inbox.merge("wake" => nil).compact
+            Molecules::DeliveryRecordStore.save(record.advance_inbox(
+              state: "delivered", inbox: inbox, detail: {"action" => "accepted"},
+              timestamp: "2026-10-02T00:00:00Z"), @dir)
+          end
+
+          result = @inbox.deliver(event: @event)
+
+          assert_equal "delivered", result["state"]
+          assert_equal "none", result.dig("wake", "status")
+          assert_empty @executor.prompts
+          assert_equal 1, @native.calls.length
+        end
+
+        def test_invalid_utf8_payload_is_a_validation_error
+          error = assert_raises(ValidationError) do
+            @inbox.enqueue(event: @event, attempt: "att-1", ref: @ref,
+              payload: "bad \xFF byte".b)
+          end
+
+          assert_match(/not valid UTF-8/, error.message)
+          assert_nil Molecules::DeliveryRecordStore.load(@dir, @event)
+        end
+
         def test_busy_agent_receives_one_native_queue_submission_even_with_concurrent_callers
           enqueue
           results = 2.times.map { Thread.new { @inbox.deliver(event: @event) } }.map(&:value)
