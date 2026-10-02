@@ -175,8 +175,10 @@ module Ace
             nil
           end
 
-          # Observed forgejo-cli v0.6.0 keys-file locations (data_dir of the
-          # `directories` crate, plus the legacy Cyborus org path).
+          # Observed forgejo-cli keys-file locations (data_dir of the
+          # `directories` crate, plus the legacy Cyborus org path). On macOS
+          # the real CLI uses bundle-dir names: forgejo-cli.forgejo-cli
+          # (current) and Cyborus.forgejo-cli (legacy).
           def default_keys_path
             candidates = []
             xdg = ENV["XDG_DATA_HOME"]
@@ -184,8 +186,10 @@ module Ace
             home = Dir.home rescue nil
             if home
               candidates << File.join(home, ".local", "share", "forgejo-cli", "keys.json")
-              candidates << File.join(home, "Library", "Application Support", "forgejo-cli", "keys.json")
+              candidates << File.join(home, "Library", "Application Support", "forgejo-cli.forgejo-cli", "keys.json")
+              candidates << File.join(home, "Library", "Application Support", "Cyborus.forgejo-cli", "keys.json")
               candidates << File.join(home, ".local", "share", "Cyborus", "forgejo-cli", "keys.json")
+              candidates << File.join(home, "Library", "Application Support", "forgejo-cli", "keys.json")
               candidates << File.join(home, "Library", "Application Support", "Cyborus", "forgejo-cli", "keys.json")
             end
             candidates.find { |path| File.exist?(path) }
