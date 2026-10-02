@@ -38,6 +38,11 @@ module Ace
           # a conflict, never a replay.
           existing = @coordinator.service_request_status(request_id)
           if existing
+            # Current project visibility gates replays: a revoked grant must
+            # not expose stored receipts, though the old operation route and
+            # authorization decision do not need to remain active.
+            visibility = @topology.services(project: project)
+            return visibility.envelope unless visibility.ok?
             supplied = {"request_id" => request_id, "assignment_id" => assignment, "attempt_id" => attempt,
                         "project_id" => project, "operation" => operation,
                         "input_digest" => Atoms::ServiceInput.digest(input), "target" => target,

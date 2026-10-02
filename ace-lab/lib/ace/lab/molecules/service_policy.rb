@@ -45,6 +45,13 @@ module Ace
           expires_at = parse_time(operation["lease_expires_at"])
           raise SecurityError, "executor lease has expired" if expires_at <= Time.now.utc
           if operation["host_maintenance"] == true
+            # Maintenance executes a fixed updater outside the replaced
+            # deployment; a socket-only operation has no executable to place
+            # and cannot prove the maintenance boundary.
+            unless transport == "local"
+              raise Ace::Lab::InvalidConfigurationError,
+                "host maintenance requires a local executable transport"
+            end
             deployment = resolved_path(operation["deployment_root"].to_s)
             sink = resolved_path(operation["evidence_sink"].to_s)
             executable = resolved_path(operation.dig("argv", 0).to_s)
