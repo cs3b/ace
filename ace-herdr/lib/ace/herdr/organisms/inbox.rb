@@ -325,12 +325,15 @@ module Ace
           target = record.inbox["target"]
           binding = observe_target(target ? target["session"] : record.session,
             target ? target["pane"] : record.pane)
-          if binding["agent"] == "pi" && !PI_EVENT_ID.match?(record.event_id)
-            raise ValidationError, "Pi queue requires an inbox or wake event ID"
-          end
+          # Target drift is classified BEFORE agent-specific event id rules:
+          # a bound event whose pane changed agent (e.g. codex -> pi) must
+          # reconcile, not loop on a pre-send validation error.
           stable = %w[session pane terminal_id agent thread thread_kind]
           if target && !stable.all? { |key| target[key] == binding[key] }
             raise IdentityDriftError, "target identity changed since enqueue; reconciliation is required"
+          end
+          if binding["agent"] == "pi" && !PI_EVENT_ID.match?(record.event_id)
+            raise ValidationError, "Pi queue requires an inbox or wake event ID"
           end
           binding.merge("payload_sha256" => record.answer_digest)
         end

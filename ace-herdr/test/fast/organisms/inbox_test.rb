@@ -181,7 +181,7 @@ module Ace
             executor = Molecules::HerdrExecutor.new(binary: script)
 
             error = assert_raises(AgentNotReadyError) do
-              executor.pane_get("p1", timeout_s: 0.3)
+              executor.pane_get("p1", timeout_s: 1.0)
             end
 
             assert_match(/timed out/, error.message)
@@ -263,6 +263,22 @@ module Ace
 
           assert_match(/replacement pi target requires/, refusal)
           assert_equal "delivered", @inbox.status(event: event)["state"]
+        end
+
+        def test_agent_change_classifies_as_drift_not_validation_error
+          event = "evt-generic0000000000000002"
+          @event = event
+          enqueue
+          @native.result = {"accepted" => false, "pre_submit" => true, "error" => "missing executable"}
+          assert_equal "queued", @inbox.deliver(event: event)["state"]
+          @executor.pane["agent"] = "pi"
+          @executor.pane["agent_session"] = {"agent" => "pi", "kind" => "id", "value" => THREAD}
+
+          result = @inbox.deliver(event: event)
+
+          assert_equal "uncertain", result["state"]
+          assert_match(/target identity changed/, result["last_error"])
+          assert_equal 1, @native.calls.length
         end
 
         def test_busy_agent_receives_one_native_queue_submission_even_with_concurrent_callers
