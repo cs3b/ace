@@ -178,7 +178,7 @@ class TmuxCommandBuilderTest < Minitest::Test
 
   def test_capture_pane
     cmd = Builder.capture_pane("%1", lines: 12)
-    assert_equal ["tmux", "capture-pane", "-p", "-t", "%1", "-S", "-12", "-E", "-1"], cmd
+    assert_equal ["tmux", "capture-pane", "-p", "-t", "%1", "-S", "-12"], cmd
   end
 
   def test_capture_pane_visible

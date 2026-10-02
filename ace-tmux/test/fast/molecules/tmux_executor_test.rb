@@ -26,9 +26,15 @@ class TmuxExecutorTest < Minitest::Test
     result = @executor.capture(["echo", "hello"])
 
     assert_instance_of Ace::Tmux::Molecules::ExecutionResult, result
-    assert_equal "hello", result.stdout
+    assert_equal "hello\n", result.stdout
     assert result.success?
     assert_equal 0, result.exit_code
+  end
+
+  def test_capture_preserves_whitespace_in_stdout
+    result = @executor.capture(["printf", "  spaced  \n"])
+
+    assert_equal "  spaced  \n", result.stdout
   end
 
   def test_capture_returns_failure_for_bad_command

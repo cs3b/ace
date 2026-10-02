@@ -2,6 +2,7 @@
 
 require_relative "tmux/version"
 require "ace/support/config"
+require "ace/runtime"
 
 # Define error hierarchy before loading components (they reference these classes)
 module Ace
@@ -41,6 +42,8 @@ require_relative "tmux/molecules/wait_condition_validator"
 require_relative "tmux/organisms/control_surface"
 require_relative "tmux/organisms/session_manager"
 require_relative "tmux/organisms/window_manager"
+require_relative "tmux/native_runtime_backend"
+require_relative "tmux/runtime_adapter"
 require_relative "tmux/cli"
 
 module Ace

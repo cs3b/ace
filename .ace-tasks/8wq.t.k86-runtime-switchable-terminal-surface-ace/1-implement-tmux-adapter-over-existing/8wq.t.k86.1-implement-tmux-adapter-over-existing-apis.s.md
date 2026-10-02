@@ -1,6 +1,6 @@
 ---
 id: 8wq.t.k86.1
-status: pending
+status: done
 priority: medium
 created_at: "2026-09-27 13:29:29"
 estimate: TBD
@@ -57,9 +57,9 @@ Ace::Runtime.resolve("tmux")
 
 ### Success Criteria
 
-- [ ] Contract suite green against the tmux adapter (fake executor).
-- [ ] ace-tmux's own suite unchanged/green (adapter adds, does not modify).
-- [ ] No contract operation falls back to "not supported" (all 11 mapped).
+- [x] Contract suite green against the tmux adapter (fake executor).
+- [x] ace-tmux's own suite unchanged/green (adapter adds, does not modify).
+- [x] No contract operation falls back to "not supported" (all 11 mapped).
 
 ### Reviewed Decisions (2026-09-28)
 

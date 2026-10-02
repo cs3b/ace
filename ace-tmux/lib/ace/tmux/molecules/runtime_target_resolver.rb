@@ -191,13 +191,13 @@ module Ace
         end
 
         def parse_window_identity(line)
-          id, index, name, active = line.to_s.split("\t", 4)
-          return nil if [id, index, name].any? { |value| value.to_s.empty? }
+          id, index, name, active = line.to_s.chomp.split("\t", 4)
+          return nil if [id, index, name].any? { |value| value.to_s.strip.empty? }
 
           {
             id: id,
             index: index,
-            name: name,
+            name: name.to_s.strip,
             active: active == "1"
           }
         end

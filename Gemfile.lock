@@ -1,7 +1,7 @@
 PATH
   remote: ace-assign
   specs:
-    ace-assign (0.60.0)
+    ace-assign (0.60.1)
       ace-b36ts (~> 0.14)
       ace-llm (~> 0.39)
       ace-review (~> 0.57)
@@ -11,7 +11,7 @@ PATH
       ace-support-markdown (~> 0.3)
       ace-support-nav (~> 0.28)
       ace-task (~> 0.37)
-      ace-tmux (~> 0.17)
+      ace-tmux (~> 0.18)
 
 PATH
   remote: ace-b36ts
@@ -45,12 +45,12 @@ PATH
 PATH
   remote: ace-demo
   specs:
-    ace-demo (0.25.10)
+    ace-demo (0.25.11)
       ace-b36ts (~> 0.14)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)
       ace-support-core (~> 0.31)
-      ace-tmux (~> 0.17)
+      ace-tmux (~> 0.18)
 
 PATH
   remote: ace-docs
@@ -235,7 +235,7 @@ PATH
 PATH
   remote: ace-overseer
   specs:
-    ace-overseer (0.18.1)
+    ace-overseer (0.18.2)
       ace-assign (~> 0.60)
       ace-git (~> 0.23)
       ace-git-worktree (~> 0.22)
@@ -244,7 +244,7 @@ PATH
       ace-support-core (~> 0.31)
       ace-support-fs (~> 0.3)
       ace-task (~> 0.37)
-      ace-tmux (~> 0.17)
+      ace-tmux (~> 0.18)
 
 PATH
   remote: ace-prompt-prep
@@ -426,7 +426,8 @@ PATH
 PATH
   remote: ace-tmux
   specs:
-    ace-tmux (0.17.5)
+    ace-tmux (0.18.0)
+      ace-runtime (~> 0.1)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)
       ace-support-core (~> 0.31)

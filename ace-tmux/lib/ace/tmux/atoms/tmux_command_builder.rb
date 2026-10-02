@@ -211,7 +211,9 @@ module Ace
 
         def capture_pane(target, lines: 40, tmux: "tmux")
           start = -Integer(lines.to_i.abs)
-          [tmux, "capture-pane", "-p", "-t", target, "-S", start.to_s, "-E", "-1"]
+          # No -E: capture ends at the visible bottom. -E -1 would stop a
+          # line ABOVE the visible screen and exclude it entirely.
+          [tmux, "capture-pane", "-p", "-t", target, "-S", start.to_s]
         end
 
         def capture_pane_visible(target, start_line:, end_line:, include_alternate: false, tmux: "tmux")

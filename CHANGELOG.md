@@ -23,6 +23,8 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- **ace-tmux v0.18.0**: Added the shared ace-runtime tmux adapter with typed window, pane, send, capture, and wait operations over the existing control surface.
+
 - **ace-review v0.57.0**: Durable review campaigns retain verified findings and convergence across commits; current acceptance requires independent approval and passing checks backed by accepted execution receipts.
 - **ace-assign v0.60.0**: Validates campaign results and exposes read-only managed check, review-collection and review-approval authority, including explicit historical review evidence.
 
@@ -63,6 +65,8 @@ All notable changes to this project will be documented in this file.
 - **ace-llm-providers-cli v0.34.0**: Registered Codex Astra, Sol, Terra and Luna with Terra as the generic default and Luna as mini, retaining all existing explicit IDs, and derived Codex client defaults and model listings from provider configuration instead of a separate hardcoded catalog.
 
 ### Technical
+
+- Dependency-following patch releases for the ace-tmux 0.18 line: `ace-demo v0.25.11`, `ace-assign v0.60.1`, and `ace-overseer v0.18.2`.
 
 - **ace-llm-providers-cli v0.36.1**: Stabilize asynchronous descendant-exit observations without weakening cleanup checks; a live-child negative control enforces the bounded wait.
 
