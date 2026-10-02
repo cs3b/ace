@@ -94,7 +94,11 @@ module Ace
           end
 
           def call_runner(runner, command, timeout_seconds, stdin: nil)
-            runner.call(args: command, timeout: timeout_seconds, env: {"LC_ALL" => "C"}, stdin: stdin)
+            if stdin.nil?
+              runner.call(args: command, timeout: timeout_seconds, env: {"LC_ALL" => "C"})
+            else
+              runner.call(args: command, timeout: timeout_seconds, env: {"LC_ALL" => "C"}, stdin: stdin)
+            end
           rescue StandardError => e
             {success: false, stdout: "", stderr: e.message, exit_code: 1}
           end
