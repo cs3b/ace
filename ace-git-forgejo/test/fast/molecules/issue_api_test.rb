@@ -103,9 +103,9 @@ class ForgejoIssueApiTest < AceGitForgejoTestCase
 
   def test_provider_tracking_accepts_web_evidence_for_ssh_server
     runner = lambda do |args:, **_options|
-      stdout = if args[2].include?("/issues/42/comments?")
+      stdout = if args[2].include?("/issues/42/comments")
         "[]"
-      elsif args[2].include?("/issues/42?")
+      elsif args[2].end_with?("/issues/42")
         {"number" => 42, "title" => "Issue", "state" => "open",
          "html_url" => "https://forge.example.com/owner/repo/issues/42"}.to_json
       else
