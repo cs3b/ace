@@ -201,11 +201,14 @@ module Ace
         end
         assert_includes error.message, "already consumed by request svc-auth-1"
 
-        # A rejected request never consumes the decision.
+        # A born-rejected request never consumed the decision, but the
+        # withdrawn live claim keeps it consumed: the effect may have happened.
         coordinator.reject_service_request(base.merge("request_id" => "svc-auth-3"), reason: "policy_rejected")
         coordinator.reject_service_request(base.merge("request_id" => "svc-auth-1"), reason: "withdrawn")
-        claimed = coordinator.claim_service_request(base.merge("request_id" => "svc-auth-2"))
-        assert_equal "accepted", claimed["state"]
+        error = assert_raises(AttemptErrors::Conflict) do
+          coordinator.claim_service_request(base.merge("request_id" => "svc-auth-2"))
+        end
+        assert_includes error.message, "already consumed by request svc-auth-1"
       end
 
       def test_service_effect_receipt_must_match_claim_before_terminal_transition
@@ -217,7 +220,7 @@ module Ace
                    "operation" => "forge-sync", "input_digest" => "a" * 64,
                    "target" => {"resource" => "forge/repo"},
                    "candidate_head" => git(@repo, "rev-parse", "HEAD").strip,
-                   "executor_uid" => Process.uid}
+                   "executor_uid" => Process.uid, "transport" => "unix"}
         evidence = write_evidence("forge/receipt", "executor attested effect\n")
         coordinator.claim_service_request(binding)
         coordinator.transition_service_request("svc-receipt", state: "uncertain")
@@ -243,7 +246,7 @@ module Ace
                    "operation" => "forge-sync", "input_digest" => "a" * 64,
                    "target" => {"resource" => "forge/repo"},
                    "candidate_head" => git(@repo, "rev-parse", "HEAD").strip,
-                   "executor_uid" => Process.uid}
+                   "executor_uid" => Process.uid, "transport" => "unix"}
         digest = write_evidence("forge/provenance", "real effect artifact\n")
         coordinator.claim_service_request(binding)
         coordinator.transition_service_request("svc-provenance", state: "uncertain")
@@ -270,6 +273,26 @@ module Ace
           coordinator.transition_service_request("svc-provenance", state: "succeeded", receipt: forged)
         end
         assert_includes error.message, "digest mismatch"
+
+        # Evidence cannot point outside the repository.
+        outside = binding.merge("outcome" => "succeeded", "executor_uid" => Process.uid,
+          "evidence" => [{"ref" => "../outside", "sha256" => "f" * 64}])
+        error = assert_raises(AttemptErrors::ReceiptRejected) do
+          coordinator.transition_service_request("svc-provenance", state: "succeeded", receipt: outside)
+        end
+        assert_includes error.message, "inside the repository"
+
+        # Local-transport receipts must be submitted by the executor identity.
+        local_claim = binding.merge("request_id" => "svc-local", "transport" => "local",
+          "executor_uid" => Process.uid + 3)
+        coordinator.claim_service_request(local_claim)
+        coordinator.transition_service_request("svc-local", state: "uncertain")
+        local_receipt = local_claim.merge("outcome" => "succeeded",
+          "evidence" => [{"ref" => "forge/provenance", "sha256" => digest}])
+        error = assert_raises(AttemptErrors::ReceiptRejected) do
+          coordinator.transition_service_request("svc-local", state: "succeeded", receipt: local_receipt)
+        end
+        assert_includes error.message, "submitter"
 
         assert_equal "uncertain", coordinator.service_request_status("svc-provenance")["state"]
       end

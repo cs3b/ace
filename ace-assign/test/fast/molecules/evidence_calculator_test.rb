@@ -148,7 +148,8 @@ module Ace
                    "attempt_id" => attempt.attempt_id, "project_id" => "ace",
                    "operation" => "forge-sync", "input_digest" => "a" * 64,
                    "target" => {"resource" => "forge/repo"},
-                   "candidate_head" => head, "executor_uid" => Process.uid}
+                   "candidate_head" => head, "executor_uid" => Process.uid,
+                   "transport" => "local"}
         coordinator.claim_service_request(binding)
         coordinator.transition_service_request("svc-evidence", state: "uncertain")
 

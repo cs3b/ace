@@ -24,9 +24,9 @@ module Ace
       # `journal_commit` is tracked separately from both.
       class AttemptCoordinator
         SERVICE_RECEIPT_FIELDS = %w[assignment_id attempt_id candidate_head evidence executor_uid
-          input_digest operation outcome project_id request_id target].freeze
+          input_digest operation outcome project_id request_id target transport].freeze
         SERVICE_BINDING_FIELDS = %w[request_id assignment_id attempt_id project_id operation
-          input_digest target candidate_head executor_uid].freeze
+          input_digest target candidate_head executor_uid transport].freeze
         # @param cache_base [String, nil] Assignment cache base
         # @param repo_root [String, nil] Candidate repository root (default: project root)
         # @param journal [Molecules::EvidenceJournal, nil] Evidence journal (default built per repo)
@@ -121,7 +121,12 @@ module Ace
           unless receipt["executor_uid"] == request["executor_uid"]
             raise AttemptErrors::ReceiptRejected, "Service receipt executor does not match the claimed executor"
           end
-          verify_service_evidence!(receipt["evidence"])
+          # Local transport runs the executor in the submitting process, so
+          # the submitter must be the configured executor identity itself.
+          if request["transport"] == "local" && Process.uid != request["executor_uid"]
+            raise AttemptErrors::ReceiptRejected, "Service receipt submitter is not the configured executor"
+          end
+          verify_service_evidence!(receipt["evidence"], request)
         end
 
         def valid_service_evidence?(evidence)
@@ -132,24 +137,27 @@ module Ace
           end
         end
 
-        # Evidence must exist and match its digest at acceptance time; a
-        # fabricated reference cannot attest a real effect.
-        def verify_service_evidence!(evidence)
+        # Evidence must live inside the candidate repository, exist, match its
+        # digest, and be owned by the claimed executor identity; a caller
+        # cannot attest an effect with a file it selected or wrote.
+        def verify_service_evidence!(evidence, request)
+          repo_root = File.realpath(@repo_root)
           evidence.each do |item|
-            path = resolve_evidence_path(item["ref"])
-            unless path
-              raise AttemptErrors::ReceiptRejected, "Service receipt evidence is unavailable: #{item["ref"]}"
+            ref = item["ref"]
+            path = File.expand_path(ref, repo_root)
+            unless Pathname.new(ref).relative? && path.start_with?(repo_root + File::SEPARATOR)
+              raise AttemptErrors::ReceiptRejected, "Service receipt evidence must live inside the repository: #{ref}"
+            end
+            unless File.file?(path) && File.readable?(path)
+              raise AttemptErrors::ReceiptRejected, "Service receipt evidence is unavailable: #{ref}"
+            end
+            unless File.stat(path).uid == request["executor_uid"]
+              raise AttemptErrors::ReceiptRejected, "Service receipt evidence is not executor-owned: #{ref}"
             end
             unless Digest::SHA256.file(path).hexdigest == item["sha256"]
-              raise AttemptErrors::ReceiptRejected, "Service receipt evidence digest mismatch: #{item["ref"]}"
+              raise AttemptErrors::ReceiptRejected, "Service receipt evidence digest mismatch: #{ref}"
             end
           end
-        end
-
-        def resolve_evidence_path(ref)
-          candidates = [ref]
-          candidates << File.join(@repo_root, ref) unless Pathname.new(ref).absolute?
-          candidates.find { |path| File.file?(path) && File.readable?(path) }
         end
 
         # Start a scoped attempt for an assignment.

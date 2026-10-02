@@ -128,18 +128,16 @@ module Ace
         # a second request presenting the same operation/project/target
         # authorization is rejected instead of dispatching a duplicate effect.
         def claim_service_request(binding)
-          conflict = authorization_conflict(binding)
-          if conflict
-            raise AttemptErrors::Conflict,
-              "Authorization reference already consumed by request #{conflict.fetch("request_id")}"
-          end
           update_service_request(binding.fetch("request_id"), expected: nil,
-            replacement: binding.merge("state" => "accepted"), event_type: "service_claim")
+            replacement: binding.merge("state" => "accepted"), event_type: "service_claim",
+            guard: -> { authorization_conflict(binding) })
         end
 
         # Reject a service request. A request not yet on file gets its
-        # auditable rejection claim; an existing live claim transitions to
-        # rejected (which also frees any exact authorization it consumed).
+        # auditable rejection claim (which never consumed the authorization);
+        # an existing live claim transitions to rejected but stays consuming:
+        # only attributable evidence that the effect did not occur may free a
+        # dispatched authorization, never a bare rejection.
         def reject_service_request(binding, reason:)
           request_id = binding.fetch("request_id")
           existing = service_request(request_id)
@@ -153,7 +151,8 @@ module Ace
               event_type: "service_transition")
           end
           update_service_request(request_id, expected: nil,
-            replacement: binding.merge("state" => "rejected", "reason" => reason), event_type: "service_claim")
+            replacement: binding.merge("state" => "rejected", "reason" => reason, "consumed" => false),
+            event_type: "service_claim")
         end
 
         def transition_service_request(request_id, state:, receipt: nil)
@@ -251,7 +250,7 @@ module Ace
 
         private
 
-        def update_service_request(request_id, expected:, replacement:, event_type:)
+        def update_service_request(request_id, expected:, replacement:, event_type:, guard: nil)
           validate_request_id!(request_id)
           with_lock do
             CAS_ATTEMPTS.times do
@@ -259,6 +258,16 @@ module Ace
               ensure_checkout!
               old = ref_value if old.nil?
               sync_checkout(old)
+              # Guards (for example authorization consumption) re-run inside
+              # the lock against the ref being committed, so a racing claim
+              # cannot slip through between the check and the CAS.
+              if guard
+                conflict = guard.call
+                if conflict
+                  raise AttemptErrors::Conflict,
+                    "Authorization reference already consumed by request #{conflict.fetch("request_id")}"
+                end
+              end
               path = File.join(checkout_dir, service_request_path(request_id))
               existing = File.exist?(path) ? JSON.parse(File.read(path)) : nil
               if expected.nil? && existing
@@ -303,14 +312,16 @@ module Ace
         end
 
         # Another live request holding the same exact authorization for the
-        # same operation, project and target. Rejected requests never count:
-        # a rejection does not consume the decision.
+        # same operation, project and target. Only requests that were born
+        # rejected (never claimed, never dispatched) leave the decision
+        # unconsumed: a withdrawn or failed claim keeps it consumed until
+        # attributable evidence proves the effect did not occur.
         def authorization_conflict(binding)
           authorization = binding["authorization"]
           return nil unless authorization.is_a?(String) && !authorization.empty?
           service_request_records.find do |other|
             next false if other["request_id"] == binding.fetch("request_id")
-            next false if other["state"] == "rejected"
+            next false if other["state"] == "rejected" && other["consumed"] == false
             other["authorization"] == authorization &&
               other["operation"] == binding.fetch("operation") &&
               other["project_id"] == binding.fetch("project_id") &&

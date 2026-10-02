@@ -118,6 +118,10 @@ module Ace
           base = {"assignment_id" => "assignment-auth", "attempt_id" => "attempt-auth",
                   "project_id" => "ace", "operation" => "publish", "input_digest" => "a" * 64,
                   "target" => {"resource" => "gem/ace-assign"}, "authorization" => "decision-9"}
+
+          # A request born rejected never consumed the decision: a fresh
+          # claim for the same exact proposal succeeds.
+          journal.reject_service_request(base.merge("request_id" => "auth-0"), reason: "policy_rejected")
           journal.claim_service_request(base.merge("request_id" => "auth-1"))
 
           error = assert_raises(AttemptErrors::Conflict) do
@@ -125,19 +129,19 @@ module Ace
           end
           assert_includes error.message, "already consumed by request auth-1"
 
-          # A different operation or target under the same reference is a
-          # different exact proposal and does not conflict... the reference is
-          # exact-bound, so only operation+project+target equality consumes.
+          # A different target under the same reference is a different exact
+          # proposal and does not conflict.
           other_target = journal.claim_service_request(
             base.merge("request_id" => "auth-3", "input_digest" => "c" * 64,
               "target" => {"resource" => "gem/ace-lab"}))
           assert_equal "accepted", other_target["state"]
 
-          # Rejections never consume: withdrawing the first claim frees the
-          # reference for a retry under a new request ID.
+          # Withdrawing a dispatched claim never frees the decision: the
+          # effect may have happened even though the receipt was lost.
           journal.reject_service_request(base.merge("request_id" => "auth-1"), reason: "withdrawn")
-          retried = journal.claim_service_request(base.merge("request_id" => "auth-4"))
-          assert_equal "accepted", retried["state"]
+          assert_raises(AttemptErrors::Conflict) do
+            journal.claim_service_request(base.merge("request_id" => "auth-4"))
+          end
           assert_equal 3, journal.service_request_records.size
         end
       end
