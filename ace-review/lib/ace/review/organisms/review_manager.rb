@@ -1452,7 +1452,10 @@ module Ace
             # The digest in the key keeps a changed review on its own
             # session marker instead of conflicting with the old comment.
             session_key = File.dirname(File.expand_path(review_file)) + ":" + review_digest
-            content = formatted_body
+            content = Molecules::PrProvider.format_comment(
+              review_content, preset: review_data[:preset], model: review_data[:model],
+              timestamp: File.mtime(review_file).utc.strftime("%Y-%m-%d %H:%M:%S UTC")
+            )
             record = YAML.dump(
               "session_key" => session_key, "body" => content,
               "pr" => options.pr.to_s, "head" => head, "review_sha256" => review_digest,
