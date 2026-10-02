@@ -170,20 +170,28 @@ module Ace
           # require remote reconciliation (title/status/path/identity) count.
           # Reparents additionally persist the outgoing ID so replay can prove
           # ownership of a marker written under the previous task ID.
+          # The deferred decision is computed under the issue + task locks
+          # from reloaded state so a concurrent clear/link cannot leave a
+          # pending flag with no remote_issue target.
           sync_relevant_keys = [set, add, remove].compact.flat_map(&:keys).map(&:to_s)
-          linked = linked_issue(task)
-          deferred_sync = linked &&
-            (move_to || move_as_child_of || (sync_relevant_keys & %w[title status]).any?)
-          deferred_set = deferred_sync ? set.merge("issue_sync_pending" => true) : set
-          # Any linked ID change records the outgoing ID - including pending
-          # clears, whose remote marker still names the previous owner.
-          deferred_set = deferred_set.merge(
-            "issue_sync_previous_id" => task.metadata["issue_sync_previous_id"] || task.id
-          ) if deferred_sync && move_as_child_of
-          if has_field_updates || deferred_sync
-            Ace::Support::Items::Molecules::FieldUpdater.update(
-              task.file_path, set: deferred_set, add: add, remove: remove
-            )
+          sync_planned = move_to || move_as_child_of || (sync_relevant_keys & %w[title status]).any?
+          if has_field_updates || (linked_issue(task) && sync_planned)
+            with_issue_identity_lock(linked_issue(task) || {}) do
+              with_issue_identity_lock("task" => task.id) do
+                fresh = show(task.id) || task
+                linked = linked_issue(fresh)
+                deferred_sync = linked && fresh.metadata["issue_sync_operation"] != "clear" && sync_planned
+                deferred_set = deferred_sync ? set.merge("issue_sync_pending" => true) : set
+                deferred_set = deferred_set.merge(
+                  "issue_sync_previous_id" => fresh.metadata["issue_sync_previous_id"] || task.id
+                ) if deferred_sync && move_as_child_of
+                if has_field_updates || deferred_sync
+                  Ace::Support::Items::Molecules::FieldUpdater.update(
+                    fresh.file_path, set: deferred_set, add: add, remove: remove
+                  )
+                end
+              end
+            end
           end
 
           # Apply move if requested
@@ -405,9 +413,15 @@ module Ace
             return {synced: 0, failed: 0, pending: 0, skipped: 1, task_id: task.id, failures: []}
           end
 
-          result = with_issue_identity_lock(linked_issue(task)) do
+          locked_identity = linked_issue(task)
+          result = with_issue_identity_lock(locked_identity || {}) do
             fresh = show(task.id) || task
-            sync_or_clear_linked_issue(fresh, reason: "manual-sync")
+            if fresh && linked_issue(fresh) != locked_identity
+              return {synced: 0, failed: 1, pending: 0, skipped: 0, task_id: task.id,
+                      failures: [{task_id: task.id, remote_issues: [locked_identity].compact,
+                                  error: "Issue link changed during replay; retry the command"}]}
+            end
+            sync_or_clear_linked_issue(fresh || task, reason: "manual-sync")
           end
           summary = summarize_manual_sync_results([result], skipped: 0)
           summary.merge(task_id: task.id)
