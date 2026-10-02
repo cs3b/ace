@@ -76,6 +76,7 @@ module Ace
           inline_thread_count = review_threads.size
           reviewers = extract_reviewers(comments, reviews, review_threads)
           unresolved_count = count_unresolved(comments, reviews, review_threads)
+          unknown_resolution = review_threads.count { |t| t[:is_resolved].nil? }
 
           summary = "# Developer Feedback from PR ##{pr_number}\n\n"
           summary += "> #{pr_title}\n\n" if pr_title && !pr_title.empty?
@@ -83,6 +84,7 @@ module Ace
           summary += "- Total comments: #{total_comments}\n"
           summary += "- Inline code comments: #{inline_thread_count}\n" if inline_thread_count > 0
           summary += "- Unresolved items: #{unresolved_count}\n"
+          summary += "- Unknown-resolution threads: #{unknown_resolution}\n" if unknown_resolution > 0
           summary += "- Reviewers: #{reviewers.map { |r| "@#{r}" }.join(", ")}\n" if reviewers.any?
           summary
         end
