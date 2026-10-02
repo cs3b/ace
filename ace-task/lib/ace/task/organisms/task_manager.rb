@@ -363,6 +363,15 @@ module Ace
                 raise Ace::Git::ProviderIdentityMismatchError,
                   "Task #{task.id} has a pending clear; complete it before linking again"
               end
+              # An explicit identical-link retry is the documented recovery
+              # for a create that never committed: drop the reconcile-only
+              # guard so sync may create the missing marker again.
+              if task.metadata["issue_sync_operation"] == "reconcile-create"
+                Ace::Support::Items::Molecules::FieldUpdater.update(
+                  task.file_path, set: {"issue_sync_operation" => nil}
+                )
+                task = show(ref)
+              end
               ensure_issue_linkable!(identity, task_id: task.id,
                 previous_task_id: task.metadata["issue_sync_previous_id"])
               result = sync_linked_issues_for(task, reason: "link-retry")
@@ -728,6 +737,13 @@ module Ace
         end
 
         def clear_issue_link(task)
+          if task.metadata["issue_sync_operation"] == "reconcile-create"
+            # A tracking comment may still be committing forge-side; dropping
+            # the link now would orphan it. Reconcile the create first; the
+            # clear only proceeds once the marker state is established.
+            result = sync_linked_issues_for(task, reason: "clear-reconcile")
+            raise Ace::Git::ProviderUnreachableError, result[:error] unless result[:success]
+          end
           Ace::Support::Items::Molecules::FieldUpdater.update(task.file_path,
             set: {"issue_sync_pending" => true, "issue_sync_operation" => "clear"})
           issue_adapter.clear_task(task: task, previous_task_id: task.metadata["issue_sync_previous_id"])

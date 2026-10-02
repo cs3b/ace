@@ -561,6 +561,50 @@ class TaskManagerTest < AceTaskTestCase
     end
   end
 
+  def test_clear_rejects_unresolved_create_and_retry_recovers
+    create_attempts = 0
+    adapter = Object.new
+    adapter.define_singleton_method(:validate_link!) { |**_args| true }
+    adapter.define_singleton_method(:sync_task) do |task:, previous_task_id: nil|
+      reconcile = task.metadata["issue_sync_operation"] == "reconcile-create"
+      if reconcile
+        # The marker never committed: reconciliation stays unresolved.
+        raise Ace::Git::ProviderUnreachableError, "still unresolved"
+      end
+      create_attempts += 1
+    end
+    adapter.define_singleton_method(:clear_task) { |**_args| true }
+    @manager.stub(:issue_adapter, adapter) do
+      parent = @manager.create("Parent")
+      task = @manager.create("Linked task", remote_issue: issue_identity)
+      # First sync create ended unknown (flag set by the rescue path below).
+      task2 = nil
+      begin
+        @manager.update(task.id, set: {"status" => "blocked"})
+      rescue Ace::Git::ProviderUnreachableError
+        nil
+      end
+      # ...simulate the flagged state explicitly:
+      task2 = @manager.show(task.id)
+      Ace::Support::Items::Molecules::FieldUpdater.update(
+        task2.file_path, set: {"issue_sync_operation" => "reconcile-create"}
+      )
+      # Clear during an unresolved create fails without dropping the link.
+      assert_raises(Ace::Git::ProviderUnreachableError) do
+        @manager.issue_link(task2.id, clear: true)
+      end
+      assert_equal issue_identity, @manager.show(task2.id).metadata["remote_issue"]
+      # Explicit identical-link retry recovers: reconcile-only guard dropped,
+      # sync creates the missing marker, link stays intact.
+      before_retry = create_attempts
+      Ace::Task::Molecules::IssueLink.stub(:from_input, issue_identity) do
+        linked = @manager.issue_link(task2.id, issue: "276", server_name: "lab")
+        refute linked.metadata["issue_sync_operation"]
+      end
+      assert_equal before_retry + 1, create_attempts
+    end
+  end
+
   def test_orchestrator_conversion_syncs_linked_child_with_previous_id
     captured = []
     adapter = fake_issue_adapter do |task:, previous_task_id: nil|
