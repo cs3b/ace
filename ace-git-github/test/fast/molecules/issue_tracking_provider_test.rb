@@ -81,6 +81,16 @@ class GithubIssueTrackingProviderTest < AceGitGithubTestCase
     refute calls.any? { |argv| argv.include?("forge.example") && !argv.include?("forge.example:8443") }
   end
 
+  def test_issue_evidence_rejects_number_mismatch_in_url
+    runner = lambda do |args:, **_options|
+      {success: true, status: 200,
+       stdout: {"number" => 42, "title" => "Issue", "state" => "OPEN", "author" => nil,
+                "url" => "https://github.example.com/owner/repo/issues/43", "labels" => []}.to_json}
+    end
+    provider = Ace::Git::Github::Provider.new(server: SERVER, runner: runner)
+    assert_raises(Ace::Git::ProviderIdentityMismatchError) { provider.issue_tracking(number: 42) }
+  end
+
   def test_issue_evidence_rejects_scheme_mismatch
     calls = []
     runner = lambda do |args:, **_options|
