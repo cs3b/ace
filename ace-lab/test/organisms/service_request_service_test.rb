@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "../test_helper"
+require "digest"
 require "open3"
 
 module Ace
@@ -10,6 +11,13 @@ module Ace
         out, err, status = Open3.capture3("git", *args, chdir: dir)
         raise "git failed: #{err}" unless status.success?
         out.strip
+      end
+
+      def write_evidence(repo, ref, content)
+        path = File.join(repo, ref)
+        FileUtils.mkdir_p(File.dirname(path))
+        File.write(path, content)
+        Digest::SHA256.hexdigest(content)
       end
 
       def setup_fixture(dir)
@@ -63,11 +71,12 @@ module Ace
       def test_request_is_journaled_once_and_dry_run_has_no_effect
         Dir.mktmpdir do |dir|
           repo, topology, coordinator, policy, input_path, assignment, attempt = setup_fixture(dir)
+          digest = write_evidence(repo, "forge/receipt", "executor attested effect\n")
           executor = Object.new
           calls = []
           executor.define_singleton_method(:execute) do |operation:, request:, input:, **_|
             calls << [operation, request, input]
-            {"outcome" => "succeeded", "evidence" => [{"ref" => "forge/receipt", "sha256" => "a" * 64}],
+            {"outcome" => "succeeded", "evidence" => [{"ref" => "forge/receipt", "sha256" => digest}],
              "executor_uid" => Process.uid}
           end
           service = Organisms::ServiceRequestService.new(topology: topology, policy: policy,
@@ -86,6 +95,27 @@ module Ace
           assert_equal 1, calls.size
           assert_equal "succeeded", service.status(request_id: "request-1").dig("data", "outcome")
           assert_equal "succeeded", coordinator.service_request_status("request-1")["state"]
+        end
+      end
+
+      def test_duplicate_authorization_under_new_request_id_conflicts
+        Dir.mktmpdir do |dir|
+          repo, topology, coordinator, policy, input_path, assignment, attempt = setup_fixture(dir)
+          digest = write_evidence(repo, "forge/receipt", "executor attested effect\n")
+          executor = Object.new
+          executor.define_singleton_method(:execute) do |operation:, request:, input:, **_|
+            {"outcome" => "succeeded", "evidence" => [{"ref" => "forge/receipt", "sha256" => digest}],
+             "executor_uid" => Process.uid}
+          end
+          service = Organisms::ServiceRequestService.new(topology: topology, policy: policy,
+            coordinator: coordinator, executor: executor, repo_root: repo)
+          base = {project: "atlas", assignment: assignment.id, attempt: attempt.attempt_id,
+            operation: "forge-sync", input_path: input_path, authorization: "decision-1"}
+
+          assert_equal "succeeded", service.request(**base, request_id: "request-1").dig("data", "outcome")
+          conflict = service.request(**base, request_id: "request-2")
+          assert_equal "conflict", conflict.dig("error", "code")
+          assert_includes conflict.dig("error", "message"), "already consumed"
         end
       end
 
@@ -143,16 +173,17 @@ module Ace
       def test_local_executor_uses_os_identity_and_fixed_argv_once
         Dir.mktmpdir do |dir|
           repo, topology, coordinator, _policy, input_path, assignment, attempt = setup_fixture(dir)
+          digest = write_evidence(repo, "fixture/result", "executor attested effect\n")
           executable = File.join(dir, "executor")
           count_path = File.join(dir, "invocations")
-          File.write(executable, <<~'RUBY')
+          File.write(executable, <<~RUBY)
             #!/usr/bin/env ruby
             require "json"
             request = JSON.parse(STDIN.read).fetch("request")
             File.open(ARGV.fetch(0), "a") { |file| file.puts(request.fetch("request_id")) }
             puts JSON.generate("request_id" => request.fetch("request_id"),
               "input_digest" => request.fetch("input_digest"), "outcome" => "succeeded",
-              "evidence" => [{"ref" => "fixture/result", "sha256" => "a" * 64}])
+              "evidence" => [{"ref" => "fixture/result", "sha256" => "#{digest}"}])
           RUBY
           File.chmod(0o700, executable)
           input = JSON.parse(File.read(input_path))

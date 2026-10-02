@@ -13,12 +13,16 @@ module Ace
       # Domain handlers receive structured JSON on stdin and return a small
       # receipt; their stdout/stderr are never journaled or returned to callers.
       class ServiceExecutor
-        def execute(operation:, request:, input:, policy:, authorization:)
-          current = policy.operation!(request.fetch("operation"), project: request.fetch("project_id"),
+        # The trusted policy is reloaded through +policy_loader+ immediately
+        # before the effect: a revocation or operation change after the claim
+        # must still stop dispatch.
+        def execute(operation:, request:, input:, policy_loader:, authorization:)
+          fresh = policy_loader.call
+          current = fresh.operation!(request.fetch("operation"), project: request.fetch("project_id"),
             service_id: request.fetch("service_id"))
           raise SecurityError, "executor operation changed before dispatch" unless current == operation
-          policy.authorize!(authorization, request)
-          if Time.iso8601(operation.fetch("lease_expires_at")) <= Time.now.utc
+          fresh.authorize!(authorization, request)
+          if Time.iso8601(current.fetch("lease_expires_at")) <= Time.now.utc
             raise SecurityError, "executor lease has expired"
           end
           out = if operation.fetch("transport", "local") == "unix"
@@ -30,7 +34,7 @@ module Ace
           response = JSON.parse(out)
           return nil unless valid_response?(response, request)
           {"outcome" => response.fetch("outcome"), "evidence" => response.fetch("evidence"),
-           "executor_uid" => operation.fetch("executor_uid")}
+           "executor_uid" => current.fetch("executor_uid")}
         rescue JSON::ParserError, Errno::ENOENT, Errno::EACCES, Errno::ECONNREFUSED, EOFError, Timeout::Error
           nil
         end

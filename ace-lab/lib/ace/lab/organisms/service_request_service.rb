@@ -45,6 +45,9 @@ module Ace
             @coordinator.reject_service_request(binding, reason: "policy_rejected") unless dry_run
             raise
           end
+          # The trusted policy owns executor identity; the journaled claim
+          # binds it so only that executor can later complete the receipt.
+          binding["executor_uid"] = operation_policy.fetch("executor_uid")
 
           if dry_run
             preview = {"outcome" => "accepted", "dry_run" => true, "request_id" => request_id,
@@ -59,8 +62,10 @@ module Ace
           # From here, a crash or lost executor response must not authorize a
           # replay. Record uncertainty before invoking an external process.
           @coordinator.transition_service_request(request_id, state: "uncertain")
+          # The executor reloads the trusted policy from disk at the effect
+          # boundary: a revocation after the claim must still stop dispatch.
           receipt = @executor.execute(operation: operation_policy, request: binding, input: input,
-            policy: policy, authorization: authorization)
+            policy_loader: policy_loader, authorization: authorization)
           return result(@coordinator.service_request_status(request_id)) if receipt.nil?
 
           state = receipt.fetch("outcome")
@@ -96,6 +101,14 @@ module Ace
         end
 
         private
+
+        def policy_loader
+          if @policy
+            -> { @policy }
+          else
+            -> { Molecules::ServicePolicy.new(Molecules::GrantResolver.trusted_document(Ace::Lab.authorization_path)) }
+          end
+        end
 
         def validate_attempt!(binding)
           attempt = @coordinator.service_attempt(binding)
