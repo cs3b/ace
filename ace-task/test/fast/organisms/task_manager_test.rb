@@ -476,6 +476,51 @@ class TaskManagerTest < AceTaskTestCase
     end
   end
 
+  def test_failed_clear_reconcile_persists_intent_and_replay_clears
+    calls = []
+    fail_reconcile = true
+    adapter = Object.new
+    adapter.define_singleton_method(:validate_link!) { |**_args| true }
+    adapter.define_singleton_method(:sync_task) do |task:, before_create: nil, **_|
+      before_create&.call
+      calls << :sync
+    end
+    adapter.define_singleton_method(:reconcile_comment) do |task:, **_|
+      raise Ace::Git::ProviderUnreachableError, "forge offline" if fail_reconcile
+
+      calls << :reconcile
+    end
+    adapter.define_singleton_method(:clear_task) do |task:, previous_task_id: nil, **_|
+      calls << :clear
+    end
+    @manager.stub(:issue_adapter, adapter) do
+      task = @manager.create("Guarded task", remote_issue: issue_identity)
+      Ace::Support::Items::Molecules::FieldUpdater.update(
+        task.file_path, set: {"issue_sync_operation" => "reconcile-create"}
+      )
+
+      # The clear fails during reconciliation — but the clear intent must
+      # survive so a pending replay cannot silently restore tracking.
+      assert_raises(Ace::Git::ProviderUnreachableError) do
+        @manager.issue_link(task.id, clear: true)
+      end
+      fresh = @manager.show(task.id)
+      assert_equal "clear", fresh.metadata["issue_sync_operation"]
+      assert fresh.metadata["issue_sync_reconcile_create"]
+      assert fresh.metadata["issue_sync_pending"]
+
+      # The pending retry reconciles first, then clears the link without
+      # changing issue state.
+      fail_reconcile = false
+      @manager.issue_sync(pending: true)
+      fresh = @manager.show(task.id)
+      refute fresh.metadata["remote_issue"]
+      refute fresh.metadata["issue_sync_pending"]
+      refute fresh.metadata["issue_sync_reconcile_create"]
+      assert_equal [:sync, :reconcile, :clear], calls
+    end
+  end
+
   def test_pending_replay_uses_persisted_previous_id
     captured = []
     offline = true
@@ -1140,8 +1185,9 @@ class TaskManagerTest < AceTaskTestCase
     end
   end
 
-  def test_clear_rejects_unresolved_create_and_retry_recovers
+  def test_clear_rejects_unresolved_create_and_replay_completes_clear
     create_attempts = 0
+    reconcile_ok = false
     adapter = Object.new
     adapter.define_singleton_method(:validate_link!) { |**_args| true }
     adapter.define_singleton_method(:sync_task) do |task:, previous_task_id: nil, **_|
@@ -1154,7 +1200,7 @@ class TaskManagerTest < AceTaskTestCase
     end
     adapter.define_singleton_method(:clear_task) { |**_args| true }
     adapter.define_singleton_method(:reconcile_comment) do |task:, **_|
-      raise Ace::Git::ProviderUnknownOutcomeError, "tracking comment create still unresolved"
+      raise Ace::Git::ProviderUnknownOutcomeError, "tracking comment create still unresolved" unless reconcile_ok
     end
     @manager.stub(:issue_adapter, adapter) do
       parent = @manager.create("Parent")
@@ -1172,19 +1218,34 @@ class TaskManagerTest < AceTaskTestCase
         task2.file_path, set: {"issue_sync_operation" => "reconcile-create"}
       )
       # Clear during an unresolved create fails (the reconciliation outcome
-      # surfaces) without dropping the link.
+      # surfaces) without dropping the link — and the clear intent is
+      # persisted so replay completes the clear instead of restoring.
       assert_raises(Ace::Git::ProviderUnknownOutcomeError) do
         @manager.issue_link(task2.id, clear: true)
       end
-      assert_equal issue_identity, @manager.show(task2.id).metadata["remote_issue"]
-      # Explicit identical-link retry recovers: reconcile-only guard dropped,
-      # sync creates the missing marker, link stays intact.
-      before_retry = create_attempts
+      cleared = @manager.show(task2.id)
+      assert_equal issue_identity, cleared.metadata["remote_issue"]
+      assert_equal "clear", cleared.metadata["issue_sync_operation"]
+      assert cleared.metadata["issue_sync_reconcile_create"]
+      # An identical-link retry must not silently undo the requested clear.
+      assert_raises(Ace::Git::ProviderIdentityMismatchError) do
+        Ace::Task::Molecules::IssueLink.stub(:from_input, issue_identity) do
+          @manager.issue_link(task2.id, issue: "276", server_name: "lab")
+        end
+      end
+      # The pending replay reconciles the unresolved create first, then
+      # completes the clear.
+      reconcile_ok = true
+      @manager.issue_sync(pending: true)
+      cleared = @manager.show(task2.id)
+      refute cleared.metadata["remote_issue"]
+      refute cleared.metadata["issue_sync_pending"]
+      refute cleared.metadata["issue_sync_reconcile_create"]
+      # Re-linking after the completed clear works.
       Ace::Task::Molecules::IssueLink.stub(:from_input, issue_identity) do
         linked = @manager.issue_link(task2.id, issue: "276", server_name: "lab")
-        refute linked.metadata["issue_sync_operation"]
+        assert_equal issue_identity, linked.metadata["remote_issue"]
       end
-      assert_equal before_retry + 1, create_attempts
     end
   end
 
