@@ -637,14 +637,26 @@ class TaskManagerTest < AceTaskTestCase
       parent = @manager.create("Parent")
       child = @manager.create_subtask(parent.id, "Linked child", remote_issue: issue_identity(9))
       first = @manager.update(parent.id, move_as_child_of: target.id)
-      demoted_child_id = nil
-      spec = Dir.glob(File.join(@manager.root_dir, "**", "*.s.md"))
-        .find { |file| File.read(file).include?("issue_sync_previous_id") }
-      demoted_child_id = File.basename(spec, ".s.md").sub(/\A.*-/, "")
-      second = @manager.update("#{first.id}.0", move_as_child_of: target.id) rescue nil
-      content = File.read(spec)
-      # The ORIGINAL outgoing ID survives the second offline reparent.
+      # Locate the linked child's spec under the demoted parent.
+      child_spec = Dir.glob(File.join(@manager.root_dir, "**", "*.s.md"))
+        .find { |file| File.basename(file).start_with?("#{first.id}.0-") }
+      assert child_spec, "expected the linked child under the demoted parent"
+      content = File.read(child_spec)
       assert_match(/issue_sync_previous_id: #{Regexp.escape(child.id)}/, content)
+      assert_match(/issue_sync_pending: true/, content)
+
+      # A deeper chained reparent is driven through the reparenter (depth-3
+      # refs are not resolvable by update); the identity rewrite it performs
+      # must preserve the recorded outgoing owner ID.
+      loader = Ace::Task::Molecules::TaskLoader.new
+      child_dir = File.dirname(child_spec)
+      demoted = loader.load(child_dir, id: "#{first.id}.0")
+      second = Ace::Task::Molecules::TaskReparenter.new(root_dir: @manager.root_dir)
+        .reparent(demoted, target: target.id, resolve_ref: ->(r) { @manager.show(r) })
+      rewritten = File.read(Dir.glob(File.join(second.path, "**", "*.s.md"))
+        .find { |file| File.basename(file).start_with?("#{second.id}-") })
+      assert_match(/issue_sync_previous_id: #{Regexp.escape(child.id)}/, rewritten)
+      assert_match(/issue_sync_pending: true/, rewritten)
     end
   end
 
