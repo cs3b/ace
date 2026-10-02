@@ -262,6 +262,14 @@ module Ace
                   fresh.metadata["issue_sync_operation"] == "clear"
                 next show_after_sync(updated_task) || updated_task
               end
+              # The lock was acquired for the pre-reload identity: a
+              # concurrent re-link must not have this update sync the new
+              # issue under the old issue's lock.
+              locked_identity = linked_issue(updated_task)
+              if locked_identity.is_a?(Hash) && linked_issue(fresh) != locked_identity
+                raise Ace::Git::ProviderIdentityMismatchError,
+                  "Task #{updated_task.id} link changed during update; retry the command"
+              end
               result = sync_linked_issues_for(fresh, reason: "update", previous_task: task)
               if result[:success] == false &&
                   result[:error].to_s.start_with?("Ace::Git::ProviderIdentityMismatchError")
@@ -1138,26 +1146,18 @@ module Ace
         end
 
         def clear_issue_link_locked(task)
-          # A tracking comment may still be committing forge-side: reconcile
-          # comment ownership before the clear — clear must never change
-          # issue state as a side effect. If reconciliation fails, the clear
-          # intent is persisted first (with the create guard remembered) so
-          # a pending replay completes the clear instead of silently
-          # restoring tracking.
+          # Persist the clear intent (retaining the create guard) before any
+          # forge call: a stop after reconciliation mutated the remote must
+          # still replay as a clear, never silently restore tracking.
           reconcile_first = task.metadata["issue_sync_operation"] == "reconcile-create" ||
             task.metadata["issue_sync_reconcile_create"] == true
-          if reconcile_first
-            begin
-              issue_adapter.reconcile_comment(task: task)
-            rescue StandardError
-              Ace::Support::Items::Molecules::FieldUpdater.update(task.file_path,
-                set: {"issue_sync_pending" => true, "issue_sync_operation" => "clear",
-                      "issue_sync_reconcile_create" => true})
-              raise
-            end
-          end
           Ace::Support::Items::Molecules::FieldUpdater.update(task.file_path,
-            set: {"issue_sync_pending" => true, "issue_sync_operation" => "clear"})
+            set: {"issue_sync_pending" => true, "issue_sync_operation" => "clear",
+                  "issue_sync_reconcile_create" => (true if reconcile_first)})
+          # A tracking comment may still be committing forge-side: reconcile
+          # comment ownership before the clear — clear must never change
+          # issue state as a side effect.
+          issue_adapter.reconcile_comment(task: task) if reconcile_first
           issue_adapter.clear_task(task: task, previous_task_id: task.metadata["issue_sync_previous_id"])
           Ace::Support::Items::Molecules::FieldUpdater.update(task.file_path,
             set: {"remote_issue" => nil, "issue_sync_pending" => nil,

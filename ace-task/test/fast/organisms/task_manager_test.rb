@@ -521,6 +521,66 @@ class TaskManagerTest < AceTaskTestCase
     end
   end
 
+  def test_clear_intent_is_persisted_before_reconciliation_runs
+    sequence = []
+    recorder = Module.new do
+      define_method(:update) do |*args, **kwargs|
+        sequence << :write
+        super(*args, **kwargs)
+      end
+    end
+    Ace::Support::Items::Molecules::FieldUpdater.singleton_class.prepend(recorder)
+    adapter = fake_issue_adapter { |task:, **_| sequence << :sync }
+    adapter.define_singleton_method(:reconcile_comment) do |task:, **_|
+      sequence << :reconcile
+    end
+    adapter.define_singleton_method(:clear_task) do |task:, previous_task_id: nil, **_|
+      sequence << :clear
+    end
+    @manager.stub(:issue_adapter, adapter) do
+      task = @manager.create("Guarded task", remote_issue: issue_identity)
+      Ace::Support::Items::Molecules::FieldUpdater.update(
+        task.file_path, set: {"issue_sync_operation" => "reconcile-create"}
+      )
+      sequence.clear
+      @manager.issue_link(task.id, clear: true)
+      # The intent write lands before reconciliation touches the remote, so
+      # a stop mid-reconciliation still replays as a clear.
+      assert_equal :write, sequence.first
+      assert sequence.index(:write) < sequence.index(:reconcile)
+      assert_includes sequence, :clear
+    end
+  end
+
+  def test_update_sync_rejects_link_changed_under_the_lock
+    adapter = fake_issue_adapter { |task:, **_| {success: true} }
+    @manager.stub(:issue_adapter, adapter) do
+      task = @manager.create("Linked task", remote_issue: issue_identity)
+      other_identity = issue_identity(279)
+      original_show = @manager.method(:show)
+      show_calls = 0
+      @manager.define_singleton_method(:show) do |ref|
+        shown = original_show.call(ref)
+        if shown&.id == task.id && (show_calls += 1) == 2
+          # The second reload is the tail's in-lock reload: it now names a
+          # different issue than the lock acquired.
+          duped = shown.dup
+          duped.define_singleton_method(:metadata) do
+            shown.metadata.merge("remote_issue" => other_identity)
+          end
+          next duped
+        end
+        shown
+      end
+      error = assert_raises(Ace::Git::ProviderIdentityMismatchError) do
+        @manager.update(task.id, set: {"status" => "blocked"})
+      end
+      assert_match(/link changed during update/, error.message)
+    ensure
+      @manager.define_singleton_method(:show, original_show)
+    end
+  end
+
   def test_pending_replay_uses_persisted_previous_id
     captured = []
     offline = true
