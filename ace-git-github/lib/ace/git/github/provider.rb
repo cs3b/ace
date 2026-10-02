@@ -161,14 +161,7 @@ module Ace
         end
 
         def add_issue_label(number:, label:)
-          issue_api("POST", "issues/#{number}/labels", fields: ["labels[]=#{label}"])
-        rescue Ace::Git::ProviderObjectNotFoundError, Ace::Git::ProviderUnknownOutcomeError => e
-          raise unless e.message.match?(/label/i) && e.message.match?(/does not exist|not found/i)
-
-          # Fresh repositories lack the tracking label; create it on demand so
-          # linking cannot commit a tracking comment it could never label
-          # (mirrors the Forgejo provider), then attach exactly once.
-          create_repo_label(label)
+          ensure_repo_label(label)
           issue_api("POST", "issues/#{number}/labels", fields: ["labels[]=#{label}"])
         end
 
@@ -182,13 +175,32 @@ module Ace
           issue_api("PATCH", "issues/#{number}", fields: ["state=#{state}"])
         end
 
-        # A concurrent creator produces GitHub's already_exists error, which
-        # is exactly the ensured state; any other failure keeps its
-        # classification.
-        def create_repo_label(label)
-          issue_api("POST", "labels", fields: ["name=#{label}", "color=0e8a16"])
-        rescue Ace::Git::ProviderObjectNotFoundError, Ace::Git::ProviderUnknownOutcomeError => e
-          raise unless e.message.match?(/already[_ ]exists/i)
+        # Fresh repositories lack the tracking label: look it up and create
+        # it on demand BEFORE attaching, so linking cannot commit a tracking
+        # comment it could never label (mirrors the Forgejo provider). A
+        # concurrent creator surfaces as a failed create whose re-list
+        # confirms the ensured state; any other lookup/create failure still
+        # surfaces through the attach call.
+        def ensure_repo_label(label)
+          uri = URI.parse(Ace::Git::Atoms::ServerUrl.web_base(server.url))
+          owner_repo = uri.path.sub(%r{\A/}, "").chomp("/").sub(/\.git\z/, "")
+          hostname = forge_hostname(uri)
+          return if label_exists?(owner_repo, hostname, label)
+
+          CliExecutor.execute("api", ["repos/#{owner_repo}/labels", "--hostname", hostname,
+            "--method", "POST", "--raw-field", "name=#{label}", "--raw-field", "color=0e8a16"],
+            timeout: timeout, runner: runner)
+          label_exists?(owner_repo, hostname, label)
+        end
+
+        def label_exists?(owner_repo, hostname, label)
+          result = CliExecutor.execute("api", ["repos/#{owner_repo}/labels?per_page=100", "--hostname", hostname,
+            "--paginate", "--slurp", "--jq", ".[].name"], timeout: timeout, runner: runner)
+          return false unless result[:success]
+
+          result[:stdout].to_s.lines.map(&:strip).include?(label)
+        rescue Ace::Git::Error
+          false
         end
 
         # @return [Array<ProviderCheck>] normalized check evidence for a ref
