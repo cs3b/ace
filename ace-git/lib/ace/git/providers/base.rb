@@ -111,6 +111,12 @@ module Ace
           raise NotImplementedError, "Providers must implement #{self.class}#pull_request_review_evidence"
         end
 
+        # The PR description text when the provider can supply it; nil stays
+        # an honest absence for providers whose CLI surface omits the body.
+        def pull_request_body(number:)
+          nil
+        end
+
         # The exact base SHA and complete file inventory used to prove that a
         # review diff has not been silently truncated.
         def pull_request_review_details(number:)

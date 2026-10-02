@@ -45,6 +45,35 @@ module Ace
           provider_for(server).pull_request(number: reference.number)
         end
 
+        # Exact-head PR metadata without the diff/comment/check inventory.
+        # Delta resolution needs identity and base provenance only; pulling
+        # the full diff there would transfer it just to discard it.
+        def review_metadata_snapshot(identifier)
+          reference = parse_identifier(identifier)
+          server = resolve_server_for(reference)
+          provider = provider_for(server)
+          before = provider.pull_request(number: reference.number)
+          head = required_head!(before)
+          details = provider.pull_request_review_details(number: reference.number)
+          after = provider.pull_request(number: reference.number)
+          hydrated_body = provider.pull_request_body(number: reference.number)
+          after = after.with(body: hydrated_body) unless hydrated_body.nil?
+          if after.head_sha != head || after.head_ref != before.head_ref ||
+              after.base_ref != before.base_ref
+            raise ProviderExpectedHeadConflictError,
+              "PR head/base changed while collecting review metadata; retry on the current head"
+          end
+          ProviderReviewSnapshot.new(
+            provider: server.provider, pull_request: after,
+            base_sha: details.base_sha, files: details.files,
+            diff: nil, review_evidence: ProviderReviewEvidence.new(
+              server_name: server.name, repository_url: server.url,
+              pr_number: before.number, head_sha: head, comments: [], reviews: []
+            ),
+            checks: []
+          )
+        end
+
         # Collect one complete review packet under an exact head/base guard.
         # Provider failure is propagated; empty diff/comments remain valid
         # evidence only after the full inventory and second read agree.
@@ -70,6 +99,10 @@ module Ace
           checks = provider.pull_request_checks(number: reference.number, head_sha: head)
           after = provider.pull_request(number: reference.number)
           latest_details = provider.pull_request_review_details(number: reference.number)
+          # The CLI-parsed PR may omit the description; hydrate it from the
+          # provider's body capability when available (nil stays absence).
+          hydrated_body = provider.pull_request_body(number: reference.number)
+          after = after.with(body: hydrated_body) unless hydrated_body.nil?
           if after.head_sha != head || latest_details.base_sha != details.base_sha ||
               after.head_ref != before.head_ref || after.base_ref != before.base_ref ||
               after.head_repository_url != before.head_repository_url ||
