@@ -514,6 +514,26 @@ class TaskManagerTest < AceTaskTestCase
     end
   end
 
+  def test_pending_replay_traverses_linked_grandchildren
+    captured = []
+    offline = true
+    adapter = fake_issue_adapter do |task:, **_|
+      raise Ace::Git::ProviderUnreachableError, "offline" if offline
+
+      captured << task.id
+    end
+    @manager.stub(:issue_adapter, adapter) do
+      parent = @manager.create("Parent")
+      child = @manager.create_subtask(parent.id, "Child")
+      grandchild = @manager.create_subtask(child.id, "Grandchild", remote_issue: issue_identity(9))
+      offline = false
+      captured.clear
+      result = @manager.issue_sync(pending: true)
+      assert_equal 1, result[:synced]
+      assert_includes captured, grandchild.id
+    end
+  end
+
   def test_orchestrator_conversion_syncs_linked_child_with_previous_id
     captured = []
     adapter = fake_issue_adapter do |task:, previous_task_id: nil|

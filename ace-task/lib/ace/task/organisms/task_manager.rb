@@ -644,16 +644,18 @@ module Ace
 
         # Bulk issue sync must see linked subtasks too; TaskScanner#scan
         # excludes subtask folders, which would hide deferred child replays.
+        # Descendants are traversed recursively (grandchildren included).
         def all_tasks_including_subtasks
           scanner = Molecules::TaskScanner.new(@root_dir)
           loader = Molecules::TaskLoader.new
-          scanner.scan.flat_map do |sr|
-            primary = loader.load(sr.dir_path, id: sr.id, special_folder: sr.special_folder)
-            subtasks = scanner.scan_subtasks(sr.dir_path, parent_id: sr.id).filter_map do |sub|
-              loader.load(sub.dir_path, id: sub.id, special_folder: sub.special_folder)
+          collect = lambda do |path, id, special_folder|
+            primary = loader.load(path, id: id, special_folder: special_folder)
+            descendants = scanner.scan_subtasks(path, parent_id: id).flat_map do |sub|
+              collect.call(sub.dir_path, sub.id, sub.special_folder)
             end
-            [primary] + subtasks
-          end.compact
+            primary ? [primary] + descendants : descendants
+          end
+          scanner.scan.flat_map { |sr| collect.call(sr.dir_path, sr.id, sr.special_folder) }
         end
 
         def sync_linked_issues_for(task, reason:, previous_task: nil)
