@@ -2546,6 +2546,32 @@ class ReviewManagerTest < AceReviewTest
     assert_match(/--delta requires --pr/, result[:error])
   end
 
+  def test_delta_round_rejects_head_move_during_resolution
+    setup_delta_repo
+    write_delta_prior_session(@delta_c1)
+    config = {}
+    options = Ace::Review::Models::ReviewOptions.new(pr: "7", delta: @delta_c1)
+
+    calls = 0
+    base_metadata = delta_pr_metadata
+    provider = Object.new
+    provider.define_singleton_method(:fetch_metadata) do |_identifier|
+      calls += 1
+      metadata = base_metadata.dup
+      metadata["headRefOid"] = "f" * 40 if calls > 1
+      {success: true, metadata: metadata}
+    end
+
+    result = nil
+    Ace::Review::Molecules::PrProvider.stub(:new, provider) do
+      result = @manager.send(:extract_pr_delta_content, "7", config, options)
+    end
+
+    refute result[:success]
+    assert_match(/identity changed during delta resolution/, result[:error])
+    assert_equal 2, calls
+  end
+
   # ---- Exempt-path scopes (8wq.t.1qb.1) ----
 
   def test_exempt_paths_are_excluded_from_full_round_subject

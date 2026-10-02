@@ -376,6 +376,18 @@ module Ace
           delta = Molecules::DeltaResolver.resolve(options.delta, metadata, project_root: @project_root || Dir.pwd)
           return {success: false, error: delta[:error]} unless delta[:success]
 
+          # The snapshot above was read before resolution ran; re-read the
+          # provider metadata and compare identity so a head, base, or
+          # repository move during delta computation fails the round instead
+          # of certifying a delta against stale identity.
+          recheck_result = pr_provider(options).fetch_metadata(pr_identifier)
+          return {success: false, error: recheck_result[:error]} unless recheck_result[:success]
+          rechecked = recheck_result[:metadata]
+          identity_keys = %w[server_name provider repository_url number headRefOid baseRefOid]
+          if identity_keys.any? { |key| rechecked[key] != metadata[key] }
+            return {success: false, error: "PR identity changed during delta resolution; delta round rejected"}
+          end
+
           options.pr_metadata = metadata
           # Carry the reference session's findings forward as evidence; an explicit
           # --evidence-session still merges on top.
