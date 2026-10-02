@@ -45,6 +45,12 @@ module Ace
           # Build report sections
           frontmatter = build_frontmatter(comments_data)
           summary = build_summary(comments, reviews, review_threads, pr_number, pr_title)
+          # Apply the same bot filter to thread comments; threads left
+          # without human comments are omitted from feedback.
+          review_threads = review_threads.map do |thread|
+            filtered = thread.merge(comments: Array(thread[:comments]).reject { |c| c[:author].to_s.match?(/\b(bot|github-actions|ace-review)\b/i) })
+            filtered.merge(comments: filtered[:comments])
+          end.reject { |thread| Array(thread[:comments]).empty? }
           inline_section = build_inline_comments_section(review_threads)
           unresolved_section = build_unresolved_section(comments, reviews)
           resolved_section = build_resolved_section(reviews)
