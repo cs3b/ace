@@ -215,6 +215,14 @@ module Ace
             resolve_fn = ->(r) { show(r) }
             # Reload task from current path before reparenting (may have been field-updated)
             task_for_reparent = loader.load(current_path, id: task.id, special_folder: current_special)
+            # Demoting a parent relocates its descendants' files too; their
+            # issue comment links need the same pending-and-sync treatment.
+            moved_descendants = linked_descendants_of(current_path, current_id)
+            moved_descendants.each do |descendant|
+              Ace::Support::Items::Molecules::FieldUpdater.update(
+                descendant.file_path, set: {"issue_sync_pending" => true}
+              )
+            end
             reparented = reparenter.reparent(task_for_reparent, target: move_as_child_of, resolve_ref: resolve_fn)
             if linked_issue(task) && linked_issue(reparented).nil?
               # Orchestrator conversion: the linked spec became a child that
@@ -230,6 +238,9 @@ module Ace
               end
             end
             sync_linked_issues_for(reparented, reason: "reparent", previous_task: task)
+            linked_descendants_of(reparented.path, reparented.id).each do |descendant|
+              sync_linked_issues_for(descendant, reason: "reparent")
+            end
             return show_after_sync(reparented) || reparented
           end
 
@@ -679,6 +690,17 @@ module Ace
           issue_adapter.sync_task(task: task, previous_task_id: previous_id)
           clear_issue_sync_pending(task)
           sync_result_for(task: task, issues: [identity], success: true, reason: reason)
+        rescue Ace::Git::ProviderUnknownOutcomeError => e
+          # The write may still commit forge-side: replays must reconcile the
+          # existing comment instead of issuing another create.
+          mark_issue_sync_pending(task)
+          Ace::Support::Items::Molecules::FieldUpdater.update(
+            task.file_path, set: {"issue_sync_operation" => "reconcile-create"}
+          )
+          @last_update_note = "Issue sync warning for task #{task&.id}: #{e.class}: #{e.message}; " \
+            "flagged for 'ace-task issue-sync --pending'"
+          sync_result_for(task: task, issues: [identity].compact, success: false,
+            reason: reason, error: "#{e.class}: #{e.message}")
         rescue StandardError => e
           mark_issue_sync_pending(task)
           @last_update_note = "Issue sync warning for task #{task&.id}: #{e.class}: #{e.message}; " \
@@ -699,7 +721,9 @@ module Ace
           return unless task&.file_path && File.exist?(task.file_path)
 
           Ace::Support::Items::Molecules::FieldUpdater.update(
-            task.file_path, set: {"issue_sync_pending" => nil, "issue_sync_previous_id" => nil}
+            task.file_path,
+            set: {"issue_sync_pending" => nil, "issue_sync_previous_id" => nil,
+                  "issue_sync_operation" => nil}
           )
         end
 
