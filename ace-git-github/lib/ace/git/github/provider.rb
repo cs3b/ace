@@ -229,42 +229,47 @@ end
 
 # A thread's comment list may itself be paginated; follow its cursor
 # so resolution state covers every comment in the thread.
-def thread_comment_ids(thread_id, first_page)
-  cursor = nil
-  ids = []
-  comments_page = first_page
-  loop do
-    unless comments_page.is_a?(Hash) && comments_page["pageInfo"].is_a?(Hash) &&
-        [true, false].include?(comments_page["pageInfo"]["hasNextPage"]) &&
-        comments_page["nodes"].is_a?(Array)
-      raise Ace::Git::ProviderMalformedOutputError, "Malformed GitHub review thread evidence"
-    end
-    comments_page["nodes"].each do |comment|
-      unless comment.is_a?(Hash) && comment["databaseId"].is_a?(Integer)
-        raise Ace::Git::ProviderMalformedOutputError, "Malformed GitHub review thread evidence"
-      end
-      ids << comment["databaseId"]
-    end
-    break unless comments_page["pageInfo"]["hasNextPage"] == true
-    cursor = comments_page["pageInfo"]["endCursor"]
-    raise Ace::Git::ProviderMalformedOutputError,
-      "Incomplete GitHub review thread evidence" unless cursor.is_a?(String)
+        def thread_comment_ids(thread_id, first_page)
+          cursor = nil
+          ids = []
+          seen_cursors = {}
+          comments_page = first_page
+          loop do
+            unless comments_page.is_a?(Hash) && comments_page["pageInfo"].is_a?(Hash) &&
+                [true, false].include?(comments_page["pageInfo"]["hasNextPage"]) &&
+                comments_page["nodes"].is_a?(Array)
+              raise Ace::Git::ProviderMalformedOutputError, "Malformed GitHub review thread evidence"
+            end
+            comments_page["nodes"].each do |comment|
+              unless comment.is_a?(Hash) && comment["databaseId"].is_a?(Integer)
+                raise Ace::Git::ProviderMalformedOutputError, "Malformed GitHub review thread evidence"
+              end
+              ids << comment["databaseId"]
+            end
+            break unless comments_page["pageInfo"]["hasNextPage"] == true
+            cursor = comments_page["pageInfo"]["endCursor"]
+            raise Ace::Git::ProviderMalformedOutputError,
+              "Incomplete GitHub review thread evidence" unless cursor.is_a?(String)
+            raise Ace::Git::ProviderMalformedOutputError,
+              "GitHub review thread comment pagination repeated a cursor" if seen_cursors[cursor]
 
-    query = <<~GRAPHQL
-      query($id: ID!, $cursor: String) {
-        node(id: $id) {
-          ... on PullRequestReviewThread {
-            comments(first: 100, after: $cursor) {
-              pageInfo { hasNextPage endCursor }
-              nodes { databaseId }
-            }
-          }
-        }
-      }
-    GRAPHQL
-    node = gh_graphql(query, id: thread_id, cursor: cursor).dig("data", "node")
-    comments_page = node.is_a?(Hash) ? node["comments"] : nil
-  end
+            seen_cursors[cursor] = true
+
+            query = <<~GRAPHQL
+              query($id: ID!, $cursor: String) {
+                node(id: $id) {
+                  ... on PullRequestReviewThread {
+                    comments(first: 100, after: $cursor) {
+                      pageInfo { hasNextPage endCursor }
+                      nodes { databaseId }
+                    }
+                  }
+                }
+              }
+            GRAPHQL
+            node = gh_graphql(query, id: thread_id, cursor: cursor).dig("data", "node")
+            comments_page = node.is_a?(Hash) ? node["comments"] : nil
+          end
   ids
 end
 
@@ -383,6 +388,9 @@ end
           require_open_pr!(second)
           begin
             gh_api("issues/#{pr.number}/comments", method: :post, body: "#{body}\n\n#{marker}")
+          rescue Ace::Git::ProviderMalformedOutputError => e
+            raise Ace::Git::ProviderUnknownOutcomeError,
+              "PR comment sent but response unreadable for #{server.name}/#{pr.number}, head #{expected_head}, session #{correlation}: #{e.message}; reconcile before repeating"
           rescue Ace::Git::ProviderUnreachableError => e
             raise Ace::Git::ProviderUnknownOutcomeError,
               "PR comment outcome unknown for #{server.name}/#{pr.number}, head #{expected_head}, " \
@@ -419,6 +427,9 @@ end
           verify_expected_head!(pull_request(number: number), expected_head)
           begin
             gh_api("issues/comments/#{comment_id}", method: :patch, body: body)
+          rescue Ace::Git::ProviderMalformedOutputError => e
+            raise Ace::Git::ProviderUnknownOutcomeError,
+              "Comment update sent but response unreadable for #{server.name}/#{pr.number}, comment #{comment_id}: #{e.message}; reconcile before repeating"
           rescue Ace::Git::ProviderUnreachableError => e
             raise Ace::Git::ProviderUnknownOutcomeError,
               "Comment update outcome unknown for #{server.name}/#{pr.number}, " \

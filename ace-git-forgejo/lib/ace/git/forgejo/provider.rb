@@ -240,6 +240,9 @@ module Ace
           require_open_pr!(second)
           begin
             review_http.request(:post, "issues/#{number}/comments", body: {body: "#{body}\n\n#{marker}"})
+          rescue Ace::Git::ProviderMalformedOutputError => e
+            raise Ace::Git::ProviderUnknownOutcomeError,
+              "PR comment sent but response unreadable for #{server.name}/#{number}, head #{expected_head}, session #{correlation}: #{e.message}; reconcile before repeating"
           rescue Ace::Git::ProviderUnknownOutcomeError => e
             raise Ace::Git::ProviderUnknownOutcomeError,
               "PR comment outcome unknown for #{server.name}/#{number}, head #{expected_head}, " \
