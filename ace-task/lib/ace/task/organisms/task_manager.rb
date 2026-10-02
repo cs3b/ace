@@ -218,10 +218,14 @@ module Ace
                 linked_fresh = linked_issue(fresh)
                 deferred_sync = linked_fresh && fresh.metadata["issue_sync_operation"] != "clear" && sync_planned
                 deferred_set = deferred_sync ? set.merge("issue_sync_pending" => true) : set
+                # A pending clear also needs the outgoing ID: its replay must
+                # prove ownership of the marker written under the previous
+                # task ID, even though the clear defers the pending write.
+                outgoing_id_save = linked_fresh && move_as_child_of
                 deferred_set = deferred_set.merge(
                   "issue_sync_previous_id" => fresh.metadata["issue_sync_previous_id"] || task.id
-                ) if deferred_sync && move_as_child_of
-                if has_field_updates || deferred_sync
+                ) if (deferred_sync || outgoing_id_save) && move_as_child_of
+                if has_field_updates || deferred_sync || outgoing_id_save
                   Ace::Support::Items::Molecules::FieldUpdater.update(
                     fresh.file_path, set: deferred_set, add: add, remove: remove
                   )

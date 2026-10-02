@@ -458,6 +458,24 @@ class TaskManagerTest < AceTaskTestCase
     end
   end
 
+  def test_reparent_saves_previous_id_for_pending_clear
+    # A pending clear defers the pending write, but its replay still needs
+    # the outgoing ID to prove ownership of the marker written under the
+    # previous task ID.
+    adapter = fake_issue_adapter { |task:, **_| raise Ace::Git::ProviderUnreachableError, "offline" }
+    @manager.stub(:issue_adapter, adapter) do
+      parent = @manager.create("Parent")
+      task = @manager.create("Linked task", remote_issue: issue_identity)
+      Ace::Support::Items::Molecules::FieldUpdater.update(
+        task.file_path, set: {"issue_sync_operation" => "clear", "issue_sync_pending" => true}
+      )
+      reparented = @manager.update(task.id, move_as_child_of: parent.id)
+      reloaded = @manager.show(reparented.id)
+      assert_equal "clear", reloaded.metadata["issue_sync_operation"]
+      assert_equal task.id, reloaded.metadata["issue_sync_previous_id"]
+    end
+  end
+
   def test_pending_replay_uses_persisted_previous_id
     captured = []
     offline = true
