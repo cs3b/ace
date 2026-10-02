@@ -48,6 +48,9 @@ llm:
       - codex:sol:high@ro
     review-gemini:
       - gemini:pro-latest@ro
+      # gemini-cli auth for individuals is deprecated machine-wide; fall
+      # back to the working Antigravity CLI when the gemini leg fails
+      - agy@ro
 
     # --- Assignment ---
     assign-executor: *assign-worker
