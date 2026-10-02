@@ -124,4 +124,22 @@ class TaskResolverTest < AceTaskTestCase
       "---\nid: #{id}\nstatus: pending\n---\n\n# Fix Login\n")
     path
   end
+
+  def test_resolve_nested_subtask_reference
+    base = create_task_folder("8pp.t.q7w-parent")
+    child_dir = File.join(base, "0-child")
+    FileUtils.mkdir_p(child_dir)
+    File.write(File.join(child_dir, "8pp.t.q7w.0-child.s.md"),
+      "---\nid: 8pp.t.q7w.0\nstatus: pending\n---\n\n# Child\n")
+    deep_dir = File.join(child_dir, "a-deep")
+    FileUtils.mkdir_p(deep_dir)
+    deep_spec = File.join(deep_dir, "8pp.t.q7w.0.a-deep.s.md")
+    File.write(deep_spec, "---\nid: 8pp.t.q7w.0.a\nstatus: pending\n---\n\n# Deep\n")
+
+    results = Ace::Task::Molecules::TaskScanner.new(@tmpdir).scan_all
+    resolver = Ace::Task::Molecules::TaskResolver.new(results)
+    resolved = resolver.resolve("8pp.t.q7w.0.a")
+    assert_equal "8pp.t.q7w.0.a", resolved.id
+    assert_equal deep_spec, resolved.file_path
+  end
 end
