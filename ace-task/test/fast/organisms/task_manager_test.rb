@@ -514,6 +514,19 @@ class TaskManagerTest < AceTaskTestCase
     end
   end
 
+  def test_parent_move_syncs_linked_grandchild
+    captured = []
+    adapter = fake_issue_adapter { |task:, **_| captured << [task.id, task.metadata["issue_sync_pending"]] }
+    @manager.stub(:issue_adapter, adapter) do
+      parent = @manager.create("Parent")
+      child = @manager.create_subtask(parent.id, "Child")
+      grandchild = @manager.create_subtask(child.id, "Grandchild", remote_issue: issue_identity(9))
+      @manager.update(parent.id, move_to: "archive")
+      # The linked grandchild beneath the unlinked child is flagged and synced.
+      assert_includes captured, [grandchild.id, true]
+    end
+  end
+
   def test_pending_replay_traverses_linked_grandchildren
     captured = []
     offline = true
