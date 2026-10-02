@@ -501,6 +501,19 @@ class TaskManagerTest < AceTaskTestCase
     end
   end
 
+  def test_parent_move_syncs_linked_child
+    captured = []
+    adapter = fake_issue_adapter { |task:, **_| captured << [task.id, task.metadata["issue_sync_pending"]] }
+    @manager.stub(:issue_adapter, adapter) do
+      parent = @manager.create("Parent")
+      child = @manager.create_subtask(parent.id, "Linked child", remote_issue: issue_identity(9))
+      @manager.update(parent.id, move_to: "archive")
+      # The relocated child's sync observes the durable pending flag written
+      # before the move; verified sync then clears it.
+      assert_equal [child.id, true], captured.last
+    end
+  end
+
   def test_orchestrator_conversion_syncs_linked_child_with_previous_id
     captured = []
     adapter = fake_issue_adapter do |task:, previous_task_id: nil|
