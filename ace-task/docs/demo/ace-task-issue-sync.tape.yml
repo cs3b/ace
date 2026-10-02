@@ -1,8 +1,8 @@
 ---
-description: Showcase live GitHub issue sync from ace-task by creating, linking, and auto-closing a disposable issue
+description: Showcase named-forge task issue sync with a disposable GitHub issue
 tags:
 - ace-task
-- github-sync
+- issue-sync
 - docs
 - live-github
 settings:
@@ -18,8 +18,10 @@ scenes:
   commands:
   - type: git remote add origin https://github.com/cs3b/ace.git
     sleep: 2s
+  - type: "mkdir -p .ace/git && printf 'servers:\\n  - name: github-demo\\n    provider: github\\n    url: https://github.com/cs3b/ace\\n' > .ace/git/config.yml"
+    sleep: 2s
   - type: >-
-      export DEMO_ISSUE_URL=$(gh issue create -R cs3b/ace --title "demo: ace-task github-sync $(date -u +%Y%m%d%H%M%S)" --body "Disposable demo issue for ace-task GitHub sync recording.")
+      export DEMO_ISSUE_URL=$(gh issue create -R cs3b/ace --title "demo: ace-task issue-sync $(date -u +%Y%m%d%H%M%S)" --body "Disposable demo issue for ace-task issue sync recording.")
     sleep: 5s
   - type: export DEMO_ISSUE_NUMBER=${DEMO_ISSUE_URL##*/}
     sleep: 2s
@@ -30,10 +32,10 @@ scenes:
     sleep: 4s
 - name: Create a sandbox task linked to the issue
   commands:
-  - type: ace-task create "Demo GitHub sync task" --status pending --tags demo,github-sync --github-issue "$DEMO_ISSUE_NUMBER"
+  - type: ace-task create "Demo issue sync task" --status pending --tags demo,issue-sync --issue "$DEMO_ISSUE_NUMBER" --server github-demo
     sleep: 5s
   - type: >-
-      export DEMO_TASK_REF=$(ruby -e 'task = Dir.glob(".ace-tasks/**/*demo-github-sync-task*.s.md").first or abort("No demo task file found"); puts File.basename(File.dirname(task)).sub(/-.*/, "")')
+      export DEMO_TASK_REF=$(ruby -e 'task = Dir.glob(".ace-tasks/**/*demo-issue-sync-task*.s.md").first or abort("No demo task file found"); puts File.basename(File.dirname(task)).sub(/-.*/, "")')
     sleep: 2s
   - type: printf 'DEMO_TASK_REF=%s\n' "$DEMO_TASK_REF"
     sleep: 2s
@@ -56,7 +58,7 @@ verify:
   - DEMO_ISSUE_NUMBER
   - DEMO_TASK_REF
   forbid_output:
-  - GitHub sync warning
+  - Issue sync warning
   - "Task '' not found"
   - No demo task file found
   - HTTP 404

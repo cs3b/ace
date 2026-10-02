@@ -212,16 +212,19 @@ class CreateCommandTest < AceTaskTestCase
     refute commit_called, "Expected GitCommitter.commit NOT to be called during dry-run"
   end
 
-  def test_create_with_github_issue_persists_frontmatter
-    fake_sync = Object.new
-    def fake_sync.validate_link!(**_payload); end
-    def fake_sync.sync_task(**_payload)
-      {synced: 1}
-    end
-
-    Ace::Task::Molecules::GithubIssueSyncAdapter.stub(:new, fake_sync) do
-      capture_io do
-        Ace::Task::TaskCLI.start(["create", "Linked task", "--github-issue", "276"])
+  def test_create_with_issue_persists_complete_identity
+    identity = {"server_name" => "lab", "provider" => "forgejo",
+                "repository_url" => "https://forge.example/owner/repo", "number" => 276,
+                "url" => "https://forge.example/owner/repo/issues/276"}
+    manager = Ace::Task::Organisms::TaskManager.new
+    adapter = Object.new
+    adapter.define_singleton_method(:validate_link!) { |**_args| true }
+    adapter.define_singleton_method(:sync_task) { |**_args| true }
+    manager.stub(:issue_adapter, adapter) do
+      Ace::Task::Molecules::IssueLink.stub(:from_input, identity) do
+        Ace::Task::Organisms::TaskManager.stub(:new, manager) do
+          capture_io { Ace::Task::TaskCLI.start(["create", "Linked task", "--issue", "276"]) }
+        end
       end
     end
 
@@ -231,27 +234,29 @@ class CreateCommandTest < AceTaskTestCase
     spec_file = Dir.glob(File.join(task_dir, "*.s.md")).first
     content = File.read(spec_file)
 
-    assert_match(/github_issue: 276/, content)
+    assert_match(/remote_issue:/, content)
+    assert_match(/server_name: lab/, content)
+    assert_match(/number: 276/, content)
   end
 
-  def test_create_with_multiple_github_issue_flags_raises_error
+  def test_create_with_multiple_issue_flags_raises_error
     err = assert_raises(Ace::Support::Cli::Error) do
       capture_io do
-        Ace::Task::TaskCLI.start(["create", "Linked task", "--github-issue", "276", "--github-issue", "278"])
+        Ace::Task::TaskCLI.start(["create", "Linked task", "--issue", "276", "--issue", "278"])
       end
     end
 
-    assert_match(/Only one --github-issue may be provided/, err.message)
+    assert_match(/Only one --issue may be provided/, err.message)
   end
 
-  def test_create_with_invalid_github_issue_raises_error
+  def test_create_with_invalid_issue_raises_error
     err = assert_raises(Ace::Support::Cli::Error) do
       capture_io do
-        Ace::Task::TaskCLI.start(["create", "Bad issue", "--github-issue", "abc"])
+        Ace::Task::TaskCLI.start(["create", "Bad issue", "--issue", "abc"])
       end
     end
 
-    assert_match(/Invalid GitHub issue/, err.message)
+    assert_match(/Invalid issue identifier/, err.message)
   end
 
   def test_create_prints_sync_warning_note_when_present

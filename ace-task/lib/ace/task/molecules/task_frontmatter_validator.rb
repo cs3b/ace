@@ -110,7 +110,7 @@ module Ace
               issues << {type: :warning, message: "Title exceeds #{Atoms::TaskValidationRules::MAX_TITLE_LENGTH} characters (#{title.length} chars)", location: file_path}
             end
 
-            validate_github_fields(frontmatter, file_path, issues)
+            validate_issue_fields(frontmatter, file_path, issues)
           end
 
           def validate_recommended_fields(frontmatter, file_path, issues)
@@ -134,24 +134,33 @@ module Ace
             end
           end
 
-          def validate_github_fields(frontmatter, file_path, issues)
-            linked = frontmatter["github_issue"]
-            unless linked.nil? || (linked.is_a?(Integer) && linked.positive?)
-              issues << {
-                type: :error,
-                message: "Invalid GitHub issue ID '#{linked}' in github_issue (expected positive integer)",
-                location: file_path
-              }
+          def validate_issue_fields(frontmatter, file_path, issues)
+            %w[github_issue github_sync_pending].each do |key|
+              next unless frontmatter.key?(key)
+
+              issues << {type: :error, message: "Obsolete #{key}; use remote_issue/issue_sync_pending",
+                         location: file_path}
             end
-
-            pending = frontmatter["github_sync_pending"]
-            return if pending.nil? || pending == true || pending == false
-
-            issues << {
-              type: :error,
-              message: "Invalid github_sync_pending value (expected boolean)",
-              location: file_path
-            }
+            linked = frontmatter["remote_issue"]
+            if linked
+              valid = linked.is_a?(Hash) && linked.keys.sort ==
+                %w[number provider repository_url server_name url] &&
+                linked["number"].is_a?(Integer) && linked["number"].positive? &&
+                %w[server_name provider repository_url url].all? { |key| linked[key].is_a?(String) && !linked[key].empty? } &&
+                linked["url"] == "#{linked["repository_url"].sub(%r{/+\z}, "")}/issues/#{linked["number"]}"
+              unless valid
+                issues << {type: :error, message: "Invalid complete remote_issue identity", location: file_path}
+              end
+            end
+            pending = frontmatter["issue_sync_pending"]
+            unless pending.nil? || pending == true || pending == false
+              issues << {type: :error, message: "Invalid issue_sync_pending value (expected boolean)",
+                         location: file_path}
+            end
+            operation = frontmatter["issue_sync_operation"]
+            unless operation.nil? || (operation == "clear" && pending == true && linked)
+              issues << {type: :error, message: "Invalid issue_sync_operation", location: file_path}
+            end
           end
         end
       end
