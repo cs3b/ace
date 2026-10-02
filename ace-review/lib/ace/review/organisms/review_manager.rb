@@ -1420,15 +1420,15 @@ module Ace
           identity_head = head.to_s
           identity_server = options.pr_metadata&.fetch("server_name", nil).to_s
           identity_repo = options.pr_metadata&.fetch("repository_url", nil).to_s
-          # Format first: the body digest binds the identity to the exact
-          # comment that would be posted (preset/model included).
-          formatted_body = Molecules::PrProvider.format_comment(
-            review_content, preset: review_data[:preset], model: review_data[:model],
-            timestamp: File.mtime(review_file).utc.strftime("%Y-%m-%d %H:%M:%S UTC")
-          )
-          identity_body_digest = Digest::SHA256.hexdigest(formatted_body)
+          # The lookup key uses only values stable across reruns of the same
+          # review (PR identity, review content, preset, model) so a retry
+          # after a lost response finds the persisted body and marker before
+          # any new timestamp is generated.
+          identity_preset = review_data[:preset].to_s
+          identity_model = review_data[:model].to_s
           identity_key = Digest::SHA256.hexdigest(
-            [identity_server, identity_repo, identity_pr, identity_head, review_digest, identity_body_digest].join("\0")
+            [identity_server, identity_repo, identity_pr, identity_head, review_digest,
+             identity_preset, identity_model].join("\0")
           )
           identity_root = File.join(@project_root || Dir.pwd, ".ace-local/review/post-identity")
           FileUtils.mkdir_p(identity_root)
@@ -1444,7 +1444,7 @@ module Ace
           if persisted && persisted["pr"] == options.pr.to_s &&
               persisted["head"] == head && persisted["review_sha256"] == review_digest &&
               persisted["server_name"] == identity_server && persisted["repository_url"] == identity_repo &&
-              persisted["body_digest"] == identity_body_digest &&
+              persisted["preset"] == identity_preset && persisted["model"] == identity_model &&
               persisted["session_key"].is_a?(String) && persisted["body"].is_a?(String)
             session_key = persisted["session_key"]
             content = persisted["body"]
@@ -1457,7 +1457,7 @@ module Ace
               "session_key" => session_key, "body" => content,
               "pr" => options.pr.to_s, "head" => head, "review_sha256" => review_digest,
               "server_name" => identity_server, "repository_url" => identity_repo,
-              "body_digest" => identity_body_digest
+              "preset" => identity_preset, "model" => identity_model
             )
             tmp_path = "#{identity_path}.tmp-#{Process.pid}"
             File.write(tmp_path, record)
