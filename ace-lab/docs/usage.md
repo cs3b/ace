@@ -1,13 +1,14 @@
 # ace-lab usage
 
-Topology and routing CLI for the Lab. Resolves stable project, agent, and
-service IDs from configuration -- without knowing transient pane IDs or
-holding service credentials.
+Topology, routing, and scoped service requests for the Lab. Resolves stable
+project, agent, and service IDs without transient pane IDs or shared service
+credentials.
 
 ## Commands
 
-All commands accept `--format json` (the only supported format; anything else
-is rejected) and `-q/--quiet` (suppress stdout; exit semantics unchanged).
+Topology commands accept `--format json` (the only supported format) and
+`-q/--quiet`. Service status accepts `--format json`; service request always
+emits JSON.
 
 ### `ace-lab projects`
 
@@ -58,6 +59,68 @@ Select a configured capable service in the requested project.
 
 Routing never invokes the service and never grants credentials.
 
+### `ace-lab service request`
+
+**Goal:** Ask a configured service to perform one named operation for an
+active, task-attached assignment attempt. First create a JSON input file:
+
+```json
+{"target":{"resource":"release/1.2.3","artifact_digest":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},"arguments":{"version":"1.2.3"}}
+```
+
+Run a preview, then submit the exact request:
+
+```sh
+ace-lab service request --project atlas --assignment A --attempt ATT \
+  --operation publish --input release.json --authorization DECISION \
+  --request-id REQUEST --dry-run
+ace-lab service request --project atlas --assignment A --attempt ATT \
+  --operation publish --input release.json --authorization DECISION \
+  --request-id REQUEST
+```
+
+The preview reports `outcome: accepted` with `dry_run: true` and the selected
+service ID, target, and candidate head. It creates no request claim or effect.
+The second command returns `succeeded`, `failed`, or `uncertain` with a
+non-secret receipt when the executor confirms an outcome. A missing response
+leaves `uncertain` in the assignment evidence ref; do not retry with a new ID
+until the external outcome is reconciled. Repeating the same ID and input
+returns its stored state without dispatching again. A changed binding under
+the same ID is a `conflict` error.
+
+Input must be a JSON object of at most 64 KiB. `target.resource` is a stable
+resource ID; `target.artifact_digest`, when supplied, is a SHA-256 hex digest.
+Credential, password, secret, token, private-key, authorization, and env keys
+are rejected recursively. Operation arguments remain structured JSON sent to
+the executor; no caller-provided shell command or argv is accepted.
+
+| Option | Purpose |
+|--------|---------|
+| `--project` | Project stable ID |
+| `--assignment` | Assignment ID |
+| `--attempt` | Active managed attempt ID |
+| `--operation` | Configured named operation |
+| `--input` | Structured JSON file |
+| `--authorization` | Exact decision or configured automation reference |
+| `--request-id` | Idempotency key; use the same ID for retries/status |
+| `--dry-run` | Validate and show scope without an effect |
+
+### `ace-lab service status`
+
+```sh
+ace-lab service status --request REQUEST --format json
+```
+
+Expected output after a lost executor receipt:
+
+```json
+{"status":"ok","data":{"request_id":"REQUEST","outcome":"uncertain","state":"uncertain"}}
+```
+
+Only the original OS caller identity with project visibility can read the
+request. The authoritative state survives loss of the local assignment cache
+because it lives in the separate assignment evidence Git ref.
+
 ## Error semantics
 
 Errors are one deterministic JSON document on stdout plus a non-zero exit.
@@ -69,6 +132,10 @@ Errors are one deterministic JSON document on stdout plus a non-zero exit.
 | `stale` | Binding is inactive, unattested, or the instance identity was replaced |
 | `unauthorized` | Caller's verified local identity has no principal for the project |
 | `invalid_configuration` | Topology config violates the schema; message is actionable |
+| `invalid_input` | Service input or request ID is malformed |
+| `invalid_attempt` | Assignment attempt is absent, unmanaged, terminal, or has a stale candidate head |
+| `conflict` | Request ID is already bound to different input or scope |
+| `evidence_unavailable` | Assignment evidence ref cannot be written or read |
 
 Example:
 
@@ -115,7 +182,7 @@ Grants never live in the cascade: project and user documents are
 caller-writable, so an `authorization` section there is rejected as
 `invalid_configuration`. Grants come from a single deployment-controlled
 file at the **fixed path** `/etc/lab/ace-lab/authorization.yml` (installed
-by the `lab-config` deployment). The location is not caller-selectable —
+by the `lab-config` deployment). The location is not caller-selectable --
 there is no flag or environment override. At every query the tool verifies
 the file and every directory on its real path are root-owned and not
 group/world-writable, and opens the file `O_NOFOLLOW`; any failed
@@ -130,11 +197,50 @@ principals:
 The grants file is machine-global: it is validated structurally only, so a
 principal may reference projects absent from the current directory's
 topology. Such grants are valid but never match a locally configured
-project. All-digit principal keys are matched as uids only — an all-digit
+project. All-digit principal keys are matched as uids only -- an all-digit
 passwd username is authorized solely through its uid, so it can never
 consume a different account's numeric-uid grant.
 
 A missing trusted file means nobody is authorized (fail closed).
+
+### Trusted service policy
+
+The same deployment-owned file may contain `operations` and
+`authorizations`. An operation names one exact project and stable service ID,
+an executor OS UID, a valid lease, and either a fixed local argv or an absolute
+Unix socket path. The domain deployment owns actual handlers and credentials.
+The Unix service must authenticate the client's OS peer identity, validate
+the exact authorization and current lease itself, and return a structured
+receipt; ACE verifies the service peer UID before accepting that response.
+
+```yaml
+operations:
+  forge-sync:
+    project: atlas
+    service_id: atlas-sync
+    transport: unix
+    socket_path: /run/lab/atlas-sync.sock
+    executor_uid: 997
+    lease_expires_at: '2026-10-02T16:00:00Z'
+authorizations:
+  DECISION:
+    operation: forge-sync
+    project_id: atlas
+    assignment_id: A
+    attempt_id: ATT
+    input_digest: <sha256-of-canonical-json>
+    target: { resource: forge/repository, artifact_digest: null }
+    candidate_head: <exact-git-head>
+    caller_uid: 1000
+    expires_at: '2026-10-02T16:00:00Z'
+```
+
+The decision must match every listed field exactly and remain valid. A
+decision never supplies missing executor capability or credentials. For
+authenticated host maintenance, the policy also identifies an executable and
+evidence sink outside the deployment being replaced; its domain handler must
+enforce quiescence for all other product work. Environment `review-approval`
+is a named operation and never substitutes for an independent code review.
 
 Validation of the topology cascade rejects duplicate IDs (globally unique
 across projects, agents, services), unknown project references, malformed
@@ -146,7 +252,7 @@ unknown projects.
 **Error messages are value-free by design:** validation runs before
 authorization, so messages use positional field locations
 (`topology.agents[0].project references an unknown project`) and never echo
-configured IDs, project names, or principal names — configuration defects
+configured IDs, project names, or principal names -- configuration defects
 cannot disclose topology to unauthorized callers.
 
 **Ownership:** deployed topology and authorization values are maintained by
@@ -172,7 +278,7 @@ reads; it never provisions.
   classify it `stale` -- an explicit unavailable result, never a routeable
   answer.
 
-- No Works, assignment state, or scheduling. Service invocation belongs to
+- No Works or scheduling. Service request claims and receipts use
 
-  `8wr.t.qjx`; execution state to `8wr.t.qjl`. The Lab execution binary
+  `ace-assign`'s evidence journal. The Lab execution binary
   (`/usr/local/bin/lab`) is never invoked or required.

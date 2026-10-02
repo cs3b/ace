@@ -23,6 +23,11 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- **ace-assign v0.61.0**: Added journal-backed service request claims and
+  bound, verified receipts with conservative uncertainty after interrupted effects.
+- **ace-lab v0.2.0**: Added authorized `service request` and `service status`
+  commands with exact policy checks, fixed argv execution, and durable outcomes.
+
 - **ace-review v0.57.0**: Durable review campaigns retain verified findings and convergence across commits; current acceptance requires independent approval and passing checks backed by accepted execution receipts.
 - **ace-assign v0.60.0**: Validates campaign results and exposes read-only managed check, review-collection and review-approval authority, including explicit historical review evidence.
 
@@ -63,6 +68,8 @@ All notable changes to this project will be documented in this file.
 - **ace-llm-providers-cli v0.34.0**: Registered Codex Astra, Sol, Terra and Luna with Terra as the generic default and Luna as mini, retaining all existing explicit IDs, and derived Codex client defaults and model listings from provider configuration instead of a separate hardcoded catalog.
 
 ### Technical
+
+- Dependency-following patch release after ace-assign 0.61: `ace-overseer v0.18.2`.
 
 - **ace-llm-providers-cli v0.36.1**: Stabilize asynchronous descendant-exit observations without weakening cleanup checks; a live-child negative control enforces the bounded wait.
 

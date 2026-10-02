@@ -8,6 +8,7 @@ require_relative "cli/commands/agents"
 require_relative "cli/commands/services"
 require_relative "cli/commands/resolve"
 require_relative "cli/commands/route"
+require_relative "cli/commands/service"
 
 module Ace
   module Lab
@@ -23,7 +24,9 @@ module Ace
         ["agents", "List lab agents in a project by stable ID"],
         ["services", "List lab services in a project by stable ID"],
         ["resolve", "Resolve one lab entry by exact stable ID"],
-        ["route", "Select a configured capable service in a project"]
+        ["route", "Select a configured capable service in a project"],
+        ["service request", "Request one authorized service operation"],
+        ["service status", "Read a service request outcome"]
       ].freeze
 
       HELP_EXAMPLES = [
@@ -47,6 +50,8 @@ module Ace
       register "services", CLI::Commands::Services.new
       register "resolve", CLI::Commands::Resolve.new
       register "route", CLI::Commands::Route.new
+      register "service request", CLI::Commands::Service::Request.new
+      register "service status", CLI::Commands::Service::Status.new
 
       # Register version command
       version_cmd = Ace::Support::Cli::VersionCommand.build(

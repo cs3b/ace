@@ -37,6 +37,7 @@ module Ace
                 env = launch_env(gem_home, project_dir)
                 verify_resolve_contract(env, bin, project_dir)
                 verify_route_contract(env, bin, project_dir)
+                verify_service_contract(env, bin, project_dir)
                 verify_broken_topology_classified(env, bin, project_dir)
               ensure
                 FileUtils.rm_f(gem_file)
@@ -163,7 +164,8 @@ module Ace
           # round 14, F1: ace-support-fs).
           def install_workspace_dependencies(tmpdir, gem_home)
             installed = {}
-            queue = %w[ace-support-core ace-support-config ace-support-cli]
+            queue = Gem::Specification.load(File.join(package_dir, "ace-lab.gemspec"))
+              .runtime_dependencies.map(&:name).select { |name| name.start_with?("ace-") }
 
             until queue.empty?
               name = queue.shift
@@ -289,6 +291,22 @@ module Ace
             return unless parsed["status"] == "ok"
 
             assert_equal "atlas-search", parsed.dig("data", "entry", "id")
+          end
+
+          def verify_service_contract(env, bin, project_dir)
+            _, err, git_status = Open3.capture3("git", "init", "-b", "main", chdir: project_dir)
+            assert git_status.success?, "service status fixture needs a Git repository: #{err}"
+            out, _, status = run_cli(env, bin, project_dir, "service", "status", "--request", "unknown",
+              "--format", "json")
+            refute status.success?
+            assert_equal "missing", JSON.parse(out).dig("error", "code")
+
+            out, _, status = run_cli(env, bin, project_dir, "service", "request", "--project", "atlas",
+              "--assignment", "assignment", "--attempt", "attempt", "--operation", "publish",
+              "--input", File.join(project_dir, "absent.json"), "--authorization", "decision",
+              "--request-id", "request", "--dry-run")
+            refute status.success?
+            assert_equal "invalid_input", JSON.parse(out).dig("error", "code")
           end
 
           # A deliberately broken topology document must classify through the

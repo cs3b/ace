@@ -23,6 +23,22 @@ module Ace
         MAX_SYMLINK_HOPS = 8
 
         class << self
+          # Read the full deployment-owned policy for service execution.
+          # Topology remains a routing hint; it never supplies authority.
+          def trusted_document(path)
+            content = read_verified(path)
+            return {} if content.nil?
+            document = YAML.safe_load(content, permitted_classes: [Date], aliases: true)
+            unless document.is_a?(Hash)
+              raise Ace::Lab::InvalidConfigurationError,
+                "invalid lab configuration: trusted authorization file must contain a mapping"
+            end
+            document
+          rescue Psych::Exception
+            raise Ace::Lab::InvalidConfigurationError,
+              "invalid lab configuration: trusted authorization file could not be parsed"
+          end
+
           # @param documents [Array<Hash>] {path:, document:, defaults:}
           #   from Ace::Lab.cascade_documents
           # @param topology [Hash] normalized topology (project IDs)

@@ -1,12 +1,14 @@
 ## ace-lab
 
-Topology and routing CLI for the Lab: address projects, agents, and services
-by stable IDs. Part of ACE (Agentic Coding Environment).
+Topology, routing, and scoped service request CLI for the Lab. Part of ACE
+(Agentic Coding Environment).
 
 `ace-lab` answers one question -- *what is the stable ID of the project, agent,
 or service I mean, and what is it authorized and able to do?* -- from
-configuration alone. It never invokes Lab, never reads credentials, tracks no
-work, and never guesses transient pane or session identifiers.
+configuration. Topology queries never invoke a service. The `service`
+commands submit configured operations through a verified executor and use
+`ace-assign` for durable request evidence. No command hands credentials to
+the caller or guesses transient pane or session identifiers.
 
 ### Install
 
@@ -17,12 +19,12 @@ work, and never guesses transient pane or session identifiers.
 Configure topology via the ADR-022 cascade (`~/.ace/lab/config.yml` or
 `.ace/lab/config.yml`; deployed values are owned by the `lab-config`
 repository). Authorization grants live in a separate deployment-controlled
-file at the fixed path `/etc/lab/ace-lab/authorization.yml` — root-owned and
-not group/world-writable, verified at every query — never in the
+file at the fixed path `/etc/lab/ace-lab/authorization.yml` -- root-owned and
+not group/world-writable, verified at every query -- never in the
 caller-writable cascade and never at a caller-selected location:
 
 ```yaml
-# .ace/lab/config.yml — topology only
+# .ace/lab/config.yml -- topology only
 schema_version: 1
 topology:
   projects:
@@ -55,6 +57,17 @@ Query it:
     ace-lab services --project atlas --format json
     ace-lab resolve --id atlas-planner --format json
     ace-lab route --project atlas --capability search --format json
+
+Request a configured operation for an active, managed assignment attempt:
+
+    ace-lab service request --project atlas --assignment A --attempt ATT \
+      --operation publish --input release.json --authorization DECISION \
+      --request-id REQUEST --dry-run
+    ace-lab service status --request REQUEST --format json
+
+The trusted grants file may also contain exact `operations` and
+`authorizations` mappings. See [usage](docs/usage.md) for the request schema,
+executor transport, and uncertain-state recovery.
 
 Every command prints one deterministic JSON document:
 
@@ -92,19 +105,18 @@ Failures are classified: `missing`, `ambiguous`, `stale`, `unauthorized`,
   are `missing`; several equal candidates need a configured `default_for`, or
   the result is `ambiguous`. Another project's service is never picked.
 
-- **Read-only by contract.** No Lab invocation, no execution state, no
+- **Execution evidence is separate from topology.** `ace-lab service` uses a
 
-  scheduling, no credentials -- service invocation and execution state belong
-  to separate tools.
+  managed `ace-assign` attempt and its evidence ref. A lost executor receipt
+  remains uncertain and a repeated request ID never replays the effect.
 
 ### Non-goals
 
-`ace-lab` is not an execution-state engine. It does not invoke services
-(`8wr.t.qjx` owns the service contract), track Works or assignment state, or
-schedule anything. Deployed topology values are owned by `lab-config`
+`ace-lab` does not track Works or schedule anything. `ace-assign` owns attempt
+state; deployed operation handlers and topology values are owned by `lab-config`
 (`8wl.t.gad`); this package defines and validates the schema.
 
 ### Development
 
     bundle install
-    ace-test ace-lab        # or: bundle exec rake test from ace-lab/
+    bin/ace-test ace-lab all
