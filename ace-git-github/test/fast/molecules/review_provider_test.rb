@@ -16,7 +16,7 @@ module Github
         {success: true, stdout: "[[]]", stderr: "", exit_code: 0}
       end
       provider = Ace::Git::Github::Provider.new(server: SERVER, runner: runner)
-      pr = Struct.new(:number, :head_sha).new(42, HEAD)
+      pr = Struct.new(:number, :head_sha, :state).new(42, HEAD, :open)
 
       evidence = provider.stub(:pull_request, pr) do
         provider.pull_request_review_evidence(number: 42, expected_head: HEAD)
@@ -33,7 +33,7 @@ module Github
     def test_changed_head_prevents_collection
       provider = Ace::Git::Github::Provider.new(server: SERVER,
         runner: ->(**) { flunk("provider API must not be called") })
-      pr = Struct.new(:number, :head_sha).new(42, "b" * 40)
+      pr = Struct.new(:number, :head_sha, :state).new(42, "b" * 40, :open)
 
       assert_raises(Ace::Git::ProviderExpectedHeadConflictError) do
         provider.stub(:pull_request, pr) do
@@ -51,7 +51,7 @@ module Github
         {success: true, stdout: [[comment]].to_json, stderr: "", exit_code: 0}
       end
       provider = Ace::Git::Github::Provider.new(server: SERVER, runner: runner)
-      pr = Struct.new(:number, :head_sha).new(42, HEAD)
+      pr = Struct.new(:number, :head_sha, :state).new(42, HEAD, :open)
 
       receipt = provider.stub(:pull_request, pr) do
         provider.create_pull_request_comment(
@@ -71,7 +71,7 @@ module Github
         args.include?("POST") ? :timeout : {success: true, stdout: "[[]]", stderr: "", exit_code: 0}
       end
       provider = Ace::Git::Github::Provider.new(server: SERVER, runner: runner)
-      pr = Struct.new(:number, :head_sha).new(42, HEAD)
+      pr = Struct.new(:number, :head_sha, :state).new(42, HEAD, :open)
 
       error = assert_raises(Ace::Git::ProviderUnknownOutcomeError) do
         provider.stub(:pull_request, pr) do
@@ -91,7 +91,7 @@ module Github
         {success: true, stdout: "[[]]", stderr: "", exit_code: 0}
       end
       provider = Ace::Git::Github::Provider.new(server: SERVER, runner: runner)
-      pr = Struct.new(:number, :head_sha).new(42, HEAD)
+      pr = Struct.new(:number, :head_sha, :state).new(42, HEAD, :open)
       assert_raises(Ace::Git::ProviderIdentityMismatchError) do
         provider.stub(:pull_request, pr) do
           provider.update_pull_request_comment(number: 42, expected_head: HEAD, comment_id: 99, body: "edit")

@@ -16,7 +16,7 @@ module Forgejo
         {success: true, status: 200, stdout: "[]", stderr: "", exit_code: 0}
       end
       provider = Ace::Git::Forgejo::Provider.new(server: SERVER, runner: runner)
-      pr = Struct.new(:number, :head_sha).new(42, HEAD)
+      pr = Struct.new(:number, :head_sha, :state).new(42, HEAD, :open)
 
       evidence = provider.stub(:pull_request, pr) do
         provider.pull_request_review_evidence(number: 42, expected_head: HEAD)
@@ -33,7 +33,7 @@ module Forgejo
     def test_malformed_collection_is_failure
       runner = ->(**) { {success: true, status: 200, stdout: "{}", stderr: "", exit_code: 0} }
       provider = Ace::Git::Forgejo::Provider.new(server: SERVER, runner: runner)
-      pr = Struct.new(:number, :head_sha).new(42, HEAD)
+      pr = Struct.new(:number, :head_sha, :state).new(42, HEAD, :open)
 
       assert_raises(Ace::Git::ProviderMalformedOutputError) do
         provider.stub(:pull_request, pr) do
@@ -51,7 +51,7 @@ module Forgejo
         {success: true, status: 200, stdout: [comment].to_json, stderr: "", exit_code: 0}
       end
       provider = Ace::Git::Forgejo::Provider.new(server: SERVER, runner: runner)
-      pr = Struct.new(:number, :head_sha).new(42, HEAD)
+      pr = Struct.new(:number, :head_sha, :state).new(42, HEAD, :open)
 
       receipt = provider.stub(:pull_request, pr) do
         provider.create_pull_request_comment(
@@ -74,7 +74,7 @@ module Forgejo
         {success: true, status: 200, stdout: "[]", stderr: "", exit_code: 0}
       end
       provider = Ace::Git::Forgejo::Provider.new(server: SERVER, runner: runner)
-      pr = Struct.new(:number, :head_sha).new(42, HEAD)
+      pr = Struct.new(:number, :head_sha, :state).new(42, HEAD, :open)
 
       error = assert_raises(Ace::Git::ProviderUnknownOutcomeError) do
         provider.stub(:pull_request, pr) do
@@ -101,7 +101,7 @@ module Forgejo
         {success: true, status: 200, stdout: "[]", stderr: "", exit_code: 0}
       end
       provider = Ace::Git::Forgejo::Provider.new(server: SERVER, runner: runner)
-      pr = Struct.new(:number, :head_sha).new(42, HEAD)
+      pr = Struct.new(:number, :head_sha, :state).new(42, HEAD, :open)
       assert_raises(Ace::Git::ProviderIdentityMismatchError) do
         provider.stub(:pull_request, pr) do
           provider.update_pull_request_comment(number: 42, expected_head: HEAD, comment_id: 99, body: "edit")
