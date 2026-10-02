@@ -69,9 +69,15 @@ module Ace
 
       def panes_for(window)
         target = resolve_window!(window)
-        output = query(B.list_panes(target, format: PANE_FORMAT, tmux: tmux))
-        output.lines.filter_map do |line|
-          parts = line.chomp.split("\t", 9)
+        result = executor.capture(B.list_panes(target, format: PANE_FORMAT, tmux: tmux))
+        unless result.success?
+          detail = result.stderr.to_s
+          raise Ace::Tmux::TargetResolutionError, "tmux target is unavailable" if detail.match?(/can't find|no such|unknown target|not found/i)
+
+          raise Ace::Tmux::Error, detail
+        end
+        result.stdout.lines.filter_map do |line|
+          parts = line.chomp.split("\t", -1)
           next unless parts.length == 9
 
           pane = parts[1]

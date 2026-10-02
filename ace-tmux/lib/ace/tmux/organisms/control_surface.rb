@@ -235,7 +235,7 @@ module Ace
           result = executor.capture(
             Atoms::TmuxCommandBuilder.display_message_target(target.pane_target, '#{pane_dead}', tmux: tmux)
           )
-          !result.success? || result.stdout == "1"
+          !result.success? || result.stdout.to_s.strip == "1"
         rescue Ace::Tmux::TargetResolutionError
           true
         end

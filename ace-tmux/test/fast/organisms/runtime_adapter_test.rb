@@ -418,6 +418,36 @@ class TmuxRuntimeAdapterNativeTest < Minitest::Test
     assert_raises(Ace::Runtime::RuntimeUnavailableError) { adapter.list_windows }
   end
 
+  def test_native_pane_listing_preserves_empty_trailing_field
+    executor = EmptyPathPaneExecutor.new
+    adapter = Ace::Tmux::RuntimeAdapter.new(
+      backend: Ace::Tmux::NativeRuntimeBackend.new(executor: executor, env: {"ACE_TMUX_SESSION" => "main"})
+    )
+    adapter.ensure_window(name: "work", root: "/tmp/work")
+
+    entries = adapter.list_panes(window: "work")
+
+    assert_equal 1, entries.length
+    assert_equal "%2", entries.first[:pane]
+  end
+
+  class EmptyPathPaneExecutor < FakeTmuxExecutor
+    def initialize
+      super
+      @pane = "%2"
+    end
+
+    def capture(command)
+      result = super
+      if command[1] == "list-panes" && result.success?
+        return Ace::Tmux::Molecules::ExecutionResult.new(
+          stdout: "1\t%2\tmain\t@1\t1\twork\t0\tzsh\t\n", stderr: result.stderr, success: true, exit_code: 0
+        )
+      end
+      result
+    end
+  end
+
   def test_native_pane_exited_distinguishes_absence_from_query_failure
     @adapter.ensure_window(name: "work", root: "/tmp/work")
     pane = @adapter.prepare_pane(window: "work")

@@ -76,7 +76,7 @@ module Ace
 
           cmd = Atoms::TmuxCommandBuilder.display_message("#S", tmux: @tmux)
           result = @executor.capture(cmd)
-          result.success? ? result.stdout : nil
+          result.success? ? result.stdout.to_s.strip : nil
         end
 
         def setup_panes(window, window_target, base_root = nil)
