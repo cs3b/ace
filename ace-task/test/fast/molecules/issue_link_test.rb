@@ -109,6 +109,15 @@ class IssueLinkTest < AceTaskTestCase
     end
   end
 
+  def test_scheme_less_server_url_yields_valid_issue_url
+    server = OpenStruct.new(name: "lab", provider: "forgejo",
+      url: "forge.example.com/owner/repo")
+    Ace::Git::ServerRegistry.stub(:resolve_for, server) do
+      identity = Ace::Task::Molecules::IssueLink.from_input("42", server_name: "lab")
+      assert_equal "https://forge.example.com/owner/repo/issues/42", identity.fetch("url")
+    end
+  end
+
   def test_ambiguous_url_rejects_explicit_selection
     matches = [
       OpenStruct.new(name: "one", provider: "github", url: "https://github.example.com/owner/repo"),
