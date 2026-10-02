@@ -307,15 +307,18 @@ end
             raise Ace::Git::ProviderConflictingMatchesError,
               "Multiple comments match review session #{correlation} on PR ##{pr.number}"
           end
-if existing.one?
-  # A repeat reconciles only the exact session comment; a marker
-  # match with different content is a conflict, never our post.
-  sent = "#{body}\n\n#{marker}"
-  return review_mutation(pr, expected_head, existing.first, :existing) if existing.first.body == sent
+          if existing.one?
+            # A repeat reconciles only the exact session comment; a marker
+            # match with different content is a conflict, never our post.
+            sent = "#{body}\n\n#{marker}"
+            if existing.first.body == sent
+              verify_post_mutation_head!(pr, expected_head, correlation)
+              return review_mutation(pr, expected_head, existing.first, :existing)
+            end
 
-  raise Ace::Git::ProviderConflictingMatchesError,
-    "Review session #{correlation} comment exists on PR ##{pr.number} with different content"
-end
+            raise Ace::Git::ProviderConflictingMatchesError,
+              "Review session #{correlation} comment exists on PR ##{pr.number} with different content"
+          end
 
           verify_expected_head!(pull_request(number: pr.number), expected_head)
           begin

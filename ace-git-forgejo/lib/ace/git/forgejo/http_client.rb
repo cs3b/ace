@@ -71,15 +71,17 @@ module Ace
         def access_token!
           path = RepositoryBinding.default_keys_path
           data = path && JSON.parse(File.read(path))
-          login = data.is_a?(Hash) && data.fetch("hosts", {})[@target.host_url]
+          # fj stores credentials under the bare host (or host:port)
+          # authority, never the scheme-prefixed URL.
+          login = data.is_a?(Hash) && data.fetch("hosts", {})[@target.authority]
           token = login.is_a?(Hash) && login["token"]
           return token if token.is_a?(String) && !token.empty?
 
           raise Ace::Git::ProviderAuthenticationError,
-            "No fj token for selected host #{@target.host_url}; authenticate with fj first"
+            "No fj token for selected host #{@target.authority}; authenticate with fj first"
         rescue Errno::ENOENT, Errno::EACCES, JSON::ParserError
           raise Ace::Git::ProviderAuthenticationError,
-            "Cannot read fj authentication for selected host #{@target.host_url}"
+            "Cannot read fj authentication for selected host #{@target.authority}"
         end
 
         def classify_status!(status, method, path)

@@ -223,7 +223,10 @@ end
             # A repeat reconciles only the exact session comment; a marker
             # match with different content is a conflict, never our post.
             sent = "#{body}\n\n#{marker}"
-            return review_mutation(number, expected_head, existing.first, :existing) if existing.first.body == sent
+            if existing.first.body == sent
+              verify_post_mutation_head!(number, expected_head, correlation)
+              return review_mutation(number, expected_head, existing.first, :existing)
+            end
 
             raise Ace::Git::ProviderConflictingMatchesError,
               "Review session #{correlation} comment exists on PR ##{number} with different content"
