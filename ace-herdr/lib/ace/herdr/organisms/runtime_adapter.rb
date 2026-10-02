@@ -14,7 +14,7 @@ module Ace
         POLL_INTERVAL = 0.02
 
         def initialize(executor: Molecules::HerdrExecutor.new, env: ENV, clock: Process, sleeper: Kernel, surface: nil,
-          identity_dir: File.join(Dir.pwd, ".ace-local", "herdr", "runtime-tabs"))
+          identity_dir: nil)
           @executor = executor
           @env = env
           @clock = clock
@@ -44,7 +44,8 @@ module Ace
           with_errors do
             workspace = workspace_id!
             label = Runtime.sanitize_name(name)
-            with_identity_lock(workspace, label) do |path|
+            path = identity_path(root, workspace, label)
+            with_identity_lock(path) do
               existing = tabs(workspace).find { |tab| tab[:name] == label }
               if existing
                 verify_identity!(existing, root: root, preset: preset, path: path)
@@ -60,7 +61,7 @@ module Ace
               end
               raise TargetResolutionError, "tab create returned no tab id" if id.nil?
 
-              write_identity(path, id: id, root: canonical_root(root), preset: preset)
+              write_identity(identity_path(root, workspace, label), id: id, root: canonical_root(root), preset: preset)
               id
             end
           end
@@ -225,10 +226,16 @@ module Ace
           File.expand_path(root)
         end
 
-        def with_identity_lock(workspace, label)
-          FileUtils.mkdir_p(@identity_dir)
-          key = Digest::SHA256.hexdigest("#{workspace}\0#{label}")
-          path = File.join(@identity_dir, "#{key}.json")
+        # Identity records live under the requested root (not the adapter's
+        # working directory), so instances started from any cwd agree on
+        # the same provenance file for a workspace+label tab.
+        def identity_path(root, workspace, label)
+          base = @identity_dir || File.join(canonical_root(root), ".ace-local", "herdr", "runtime-tabs")
+          File.join(base, "#{Digest::SHA256.hexdigest("#{workspace}\0#{label}")}.json")
+        end
+
+        def with_identity_lock(path)
+          FileUtils.mkdir_p(File.dirname(path))
           File.open("#{path}.lock", File::RDWR | File::CREAT, 0o600) do |file|
             file.flock(File::LOCK_EX)
             yield path
@@ -304,15 +311,29 @@ module Ace
           false
         end
 
+        # Mirrors PaneTidyProbe.process_evidence semantics: herdr
+        # serializes `foreground_processes` with serde skip_serializing_if,
+        # so inside a well-formed result.process_info object an OMITTED key
+        # is the process-exit proof; an explicit null or non-array value is
+        # malformed evidence and stays inconclusive. Anything alive appears
+        # as a non-empty array; a list holding only the retained shell
+        # counts as exited (no submitted foreground command remains).
         def pane_exited?(target)
           return true unless pane_exists?(target)
 
-          info = @executor.pane_process_info(target).parsed_json
-          processes = find_array(info, "foreground_processes")
-          return false if processes.nil?
+          info = find_hash(@executor.pane_process_info(target).parsed_json, %w[result process_info])
+          return false unless info.is_a?(Hash)
+
+          processes = info["foreground_processes"]
+          return false if info.key?("foreground_processes") && !processes.is_a?(Array)
+
+          processes = Array(processes)
+          return true if processes.empty?
 
           shell_pid = find_value_of_type(info, "shell_pid", Integer)
-          processes.empty? || (shell_pid && processes.all? { |process| process.is_a?(Hash) && process["pid"] == shell_pid })
+          return false unless shell_pid
+
+          processes.all? { |process| process.is_a?(Hash) && process["pid"] == shell_pid }
         rescue PaneNotFoundError
           true
         end
@@ -328,12 +349,14 @@ module Ace
           nil
         end
 
-        def find_array(value, key)
-          return unless value.is_a?(Hash)
-          return value[key] if value[key].is_a?(Array)
+        # Pinned-path walk that fails closed: nil unless every hop resolves
+        def find_hash(value, keys)
+          keys.each do |key|
+            return nil unless value.is_a?(Hash)
 
-          value.each_value { |child| found = find_array(child, key); return found if found }
-          nil
+            value = value[key]
+          end
+          value
         end
 
         def find_value_of_type(value, key, type)

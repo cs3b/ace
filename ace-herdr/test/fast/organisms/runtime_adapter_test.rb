@@ -34,7 +34,7 @@ module Ace
               raise PaneNotFoundError, "pane_not_found" unless row
               result(result: {pane: row})
             },
-            pane_process_info: ->(_args) { result(result: {shell_pid: 42, foreground_processes: @processes}) },
+            pane_process_info: ->(_args) { result(result: {process_info: {shell_pid: 42, foreground_processes: @processes}}) },
             tab_get: ->(args) {
               raise TabNotFoundError, "tab_not_found" unless @tabs.any? { |row| row["tab_id"] == args[:tab] }
               result(result: {tab_id: args[:tab]})
@@ -202,17 +202,58 @@ module Ace
           assert adapter.wait_lifecycle(condition: "pane-exited", target: "opaque-pane", timeout: 0.05)
         end
 
-        def test_malformed_process_info_does_not_prove_exit
+        def test_omitted_foreground_processes_proves_exit_but_null_stays_inconclusive
           prepared_pane
           @executor = HerdrTestHelper::FakeExecutor.new(outcomes: {
             pane_get: result(result: {pane_id: "w1:p1"}),
+            # herdr omits foreground_processes via skip_serializing_if when
+            # the list is empty (PaneTidyProbe process-evidence semantics)
             pane_process_info: result(result: {process_info: {shell_pid: 42}})
+          })
+          adapter = RuntimeAdapter.new(executor: @executor, env: env, sleeper: FastSleeper.new,
+            identity_dir: @identity_dir)
+          assert adapter.wait_lifecycle(condition: "pane-exited", target: "w1:p1", timeout: 0.05)
+
+          @executor = HerdrTestHelper::FakeExecutor.new(outcomes: {
+            pane_get: result(result: {pane_id: "w1:p1"}),
+            pane_process_info: result(result: {process_info: {shell_pid: 42, foreground_processes: nil}})
           })
           adapter = RuntimeAdapter.new(executor: @executor, env: env, sleeper: FastSleeper.new,
             identity_dir: @identity_dir)
           assert_raises(Runtime::WaitTimeoutError) do
             adapter.wait_lifecycle(condition: "pane-exited", target: "w1:p1", timeout: 0.01)
           end
+        end
+
+        def test_malformed_process_info_does_not_prove_exit
+          prepared_pane
+          @executor = HerdrTestHelper::FakeExecutor.new(outcomes: {
+            pane_get: result(result: {pane_id: "w1:p1"}),
+            pane_process_info: result(result: {other: {shell_pid: 42, foreground_processes: []}})
+          })
+          adapter = RuntimeAdapter.new(executor: @executor, env: env, sleeper: FastSleeper.new,
+            identity_dir: @identity_dir)
+          assert_raises(Runtime::WaitTimeoutError) do
+            adapter.wait_lifecycle(condition: "pane-exited", target: "w1:p1", timeout: 0.01)
+          end
+        end
+
+        def test_identity_records_are_stable_across_working_directories
+          root = Dir.mktmpdir("herdr-adapter-root")
+          dir_a = Dir.mktmpdir("herdr-cwd-a")
+          dir_b = Dir.mktmpdir("herdr-cwd-b")
+          tab = nil
+          Dir.chdir(dir_a) do
+            adapter = RuntimeAdapter.new(executor: @executor, env: env, sleeper: FastSleeper.new)
+            tab = adapter.ensure_window(name: "work", root: root)
+          end
+          Dir.chdir(dir_b) do
+            adapter = RuntimeAdapter.new(executor: @executor, env: env, sleeper: FastSleeper.new)
+            assert_equal tab, adapter.ensure_window(name: "work", root: root)
+            assert_equal 1, @executor.calls_of(:tab_create).size
+          end
+        ensure
+          [root, dir_a, dir_b].each { |dir| FileUtils.remove_entry(dir) if dir && File.exist?(dir) }
         end
 
         def test_missing_target_and_unavailable_errors
