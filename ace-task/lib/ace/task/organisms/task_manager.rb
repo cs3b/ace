@@ -307,6 +307,7 @@ module Ace
           # Reload and return updated task
           updated_task = loader.load(current_path, id: current_id, special_folder: current_special)
           if sync_needed_after_update?(task, updated_task, set: set, add: add, remove: remove, move_to: move_to)
+            sync_failed_definitively = false
             with_issue_identity_lock(linked_issue(updated_task) || {}) do
               # Reload inside the lock: a concurrent clear may have removed
               # the link while this update waited; syncing the stale snapshot
@@ -316,8 +317,21 @@ module Ace
                   fresh.metadata["issue_sync_operation"] == "clear"
                 next show_after_sync(updated_task) || updated_task
               end
-              sync_linked_issues_for(fresh, reason: "update", previous_task: task)
+              begin
+                sync_linked_issues_for(fresh, reason: "update", previous_task: task)
+              rescue Ace::Git::ProviderIdentityMismatchError
+                # Rejection before any remote mutation (sync's validate_link!
+                # runs first): roll back the freshly written link metadata so
+                # no local mapping survives for an issue this task never
+                # owned.
+                Ace::Support::Items::Molecules::FieldUpdater.update(
+                  fresh.file_path,
+                  set: {"remote_issue" => nil, "issue_sync_pending" => nil}
+                )
+                sync_failed_definitively = true
+              end
             end
+            raise Ace::Git::ProviderIdentityMismatchError, "Issue link rejected during update sync" if sync_failed_definitively
             return show_after_sync(updated_task) || updated_task
           end
           updated_task
