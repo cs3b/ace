@@ -17,6 +17,11 @@ module Ace
       class NativeQueueExecutor
         DEFAULT_SUBMIT_TIMEOUT_S = 60
         DEFAULT_IDENTITY_TIMEOUT_S = 20
+        # Codex payloads ride in argv; a single argument beyond the OS
+        # per-argument limit fails at exec with E2BIG — before any client
+        # code ran — so the payload is bounded pre-launch and any E2BIG
+        # escape is classified as a proven pre-submission rejection.
+        MAX_ARG_PAYLOAD_BYTES = 65_536
 
         # runner: test seam. Callable (argv, stdin_data:, timeout_s:) ->
         # [stdout, stderr, status]. Defaults to the bounded runner.
@@ -48,6 +53,10 @@ module Ace
           if agent == "pi" && (payload.empty? || payload.bytesize > 65_536)
             return {"accepted" => false, "pre_submit" => true, "error" => "Pi payload must be 1..65536 bytes"}
           end
+          if agent == "codex" && payload.bytesize > MAX_ARG_PAYLOAD_BYTES
+            return {"accepted" => false, "pre_submit" => true,
+                    "error" => "Codex payload must be at most #{MAX_ARG_PAYLOAD_BYTES} bytes for argv delivery"}
+          end
           argv = if agent == "codex"
             [@codex, "queue", "--thread", thread, "--message", payload]
           elsif agent == "pi"
@@ -72,8 +81,9 @@ module Ace
             end
           end
           {"accepted" => true, "exit_code" => result.status.exitstatus, "stdout" => result.stdout.strip}
-        rescue Errno::ENOENT, Errno::EACCES => e
-          # The executable was not launched. No submission could have occurred.
+        rescue Errno::ENOENT, Errno::EACCES, Errno::E2BIG => e
+          # The executable never launched (or exec rejected the argv). No
+          # submission could have occurred, so this stays retryable.
           {"accepted" => false, "pre_submit" => true, "error" => e.message}
         rescue JSON::ParserError
           {"accepted" => false, "error" => "Pi queue returned invalid receipt JSON"}

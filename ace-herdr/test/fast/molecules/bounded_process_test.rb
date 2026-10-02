@@ -51,6 +51,27 @@ module Ace
           assert_raises(Errno::ESRCH) { Process.kill(0, child_pid) }
         end
 
+        def test_large_stdin_payload_to_nonreading_child_hits_deadline_without_blocking
+          pid_file = File.join(@dir, "child.pid")
+          script = File.join(@dir, "nonreader")
+          File.write(script, <<~SH)
+            #!/bin/sh
+            echo $$ > '#{pid_file}'
+            exec sleep 30
+          SH
+          FileUtils.chmod(0o755, script)
+
+          started = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+          assert_raises(Timeout::Error) do
+            BoundedProcess.call([script], stdin_data: "x" * 1_048_576, timeout_s: 1.0)
+          end
+          elapsed = Process.clock_gettime(Process::CLOCK_MONOTONIC) - started
+
+          assert_operator elapsed, :<, 5, "a full pipe must not block past the deadline"
+          child_pid = File.read(pid_file).to_i
+          assert_raises(Errno::ESRCH) { Process.kill(0, child_pid) }
+        end
+
         def test_oversized_output_is_truncated_and_reported
           result = BoundedProcess.call(["/bin/echo", "x" * 10_000], timeout_s: 5, output_limit: 1024)
 

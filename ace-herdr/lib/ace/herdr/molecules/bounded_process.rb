@@ -59,7 +59,12 @@ module Ace
               next if stdin_closed || !ready[1].to_a.include?(stdin)
 
               begin
-                sent += stdin.write(payload.byteslice(sent, payload.bytesize - sent))
+                # Nonblocking with partial writes: a child that stops reading
+                # must never trap us inside one large stdin.write; the loop
+                # re-checks the deadline between write attempts.
+                written = stdin.write_nonblock(payload.byteslice(sent, payload.bytesize - sent),
+                  exception: false)
+                sent += written if written != :wait_writable
               rescue Errno::EPIPE, IOError
                 sent = payload.bytesize
               end

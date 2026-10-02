@@ -95,6 +95,28 @@ module Ace
           refute result["accepted"]
         end
 
+        def test_codex_oversize_argv_payload_is_rejected_before_launch
+          result = @executor.submit(agent: "codex", thread: "thread-1", event_id: "inb-12345678",
+            digest: "a" * 64, payload: "x" * (NativeQueueExecutor::MAX_ARG_PAYLOAD_BYTES + 1))
+
+          assert result["pre_submit"]
+          refute result["accepted"]
+          assert_match(/at most/, result["error"])
+          assert_empty @calls
+        end
+
+        def test_e2big_at_spawn_is_a_pre_submission_rejection
+          runner = ->(*, **) { raise Errno::E2BIG, "argument list too long" }
+          executor = NativeQueueExecutor.new(codex: "codex", runner: runner)
+
+          result = executor.submit(agent: "codex", thread: "thread-1", event_id: "inb-12345678",
+            digest: "a" * 64, payload: "hello")
+
+          assert result["pre_submit"]
+          refute result["accepted"]
+          assert_match(/argument list too long/, result["error"])
+        end
+
         def test_stalled_real_process_is_killed_at_the_deadline
           pid_file = File.join(@dir, "child.pid")
           script = File.join(@dir, "stalling-codex")
