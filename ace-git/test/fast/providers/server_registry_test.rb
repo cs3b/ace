@@ -231,6 +231,15 @@ module Providers
       end
     end
 
+    def test_matching_servers_matches_https_url_against_ssh_clone_url
+      with_servers([
+        {"name" => "forgejo-lab", "provider" => "forgejo", "url" => "ssh://git@forgejo.example.com/owner/repo.git"}
+      ]) do
+        matches = Ace::Git::ServerRegistry.matching_servers("https://forgejo.example.com/owner/repo")
+        assert_equal ["forgejo-lab"], matches.map(&:name)
+      end
+    end
+
     def test_matching_servers_requires_url_scheme_to_match
       with_servers([
         {"name" => "forgejo-lab", "provider" => "forgejo", "url" => "http://forgejo.example.com/owner/repo"}
