@@ -30,6 +30,12 @@ module Ace
           MARKDOWN
         end
 
+        # The forge server URL resolved by the lifecycle at construction;
+        # posting compares it with the reviewed repository before mutating.
+        def resolved_server_url
+          @lifecycle.resolved_server_url
+        end
+
         def initialize(server_name: nil, use_default: false, timeout: nil, runner: nil, lifecycle: nil)
           @lifecycle = lifecycle || Ace::Git::Organisms::PullRequestLifecycle.new(
             server_name: server_name, use_default: use_default,
