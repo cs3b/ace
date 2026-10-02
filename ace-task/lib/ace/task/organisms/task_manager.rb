@@ -823,6 +823,7 @@ module Ace
           previous_id = task.metadata["issue_sync_previous_id"] || previous_task&.id
           reconcile_only = task.metadata["issue_sync_operation"] == "reconcile-create"
           reached_post = false
+          locked_identity = linked_issue(task)
           issue_adapter.sync_task(
             task: task, previous_task_id: previous_id,
             before_create: lambda do
@@ -833,6 +834,12 @@ module Ace
               )
             end
           )
+          # The caller holds the locked identity's lock; a link changed to a
+          # different issue mid-sync would have mutated B without its lock.
+          if locked_identity && linked_issue(task) != locked_identity
+            raise Ace::Git::ProviderIdentityMismatchError,
+              "Task #{task.id} link changed during sync; retry the command"
+          end
           clear_issue_sync_pending(task)
           sync_result_for(task: task, issues: [identity], success: true, reason: reason)
         rescue Ace::Git::ProviderUnknownOutcomeError => e
