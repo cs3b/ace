@@ -39,16 +39,7 @@ module Ace
           snapshot = validate_link!(number: number, task_id: task_id, previous_task_id: previous_task_id)
           sticky = sticky_comment(snapshot)
           desired_line = "Tracked in ace-task: [#{task_id}](#{task_link})"
-          # Unrelated lines are preserved verbatim (including trailing
-          # whitespace); only ACE-owned lines are ever added or removed. A
-          # marker concatenated onto a note line (historical layout) is
-          # stripped in place so clear can rebuild the body cleanly.
-          preserved = Array(sticky&.dig(:body).to_s.lines)
-            .reject { |line| line.chomp == STICKY_MARKER || line.start_with?("Tracked in ace-task: ") }
-            .map { |line| line.gsub(STICKY_MARKER, "") }
-          prefix = preserved.join
-          prefix += "\n" unless prefix.empty? || prefix.end_with?("\n")
-          desired_body = "#{prefix}#{STICKY_MARKER}\n#{desired_line}"
+          desired_body = compose_tracking_body(sticky&.dig(:body), desired_line)
           if sticky.nil?
             if create_pending
               # A prior create ended with an unknown outcome: this replay must
@@ -59,8 +50,17 @@ module Ace
                 break true if found&.[](:body) == desired_body
 
                 if found
-                  mutate_and_reconcile(number, desired_body: desired_body) do
-                    @provider.update_issue_comment(number: number, comment_id: found[:id], body: desired_body)
+                  # The marker that just appeared may belong to another task;
+                  # validate ownership before overwriting anything.
+                  owners = owned_task_ids(snapshot)
+                  accepted = [task_id, previous_task_id].compact.map(&:to_s).uniq
+                  unless owners.all? { |owner| accepted.include?(owner) }
+                    raise ProviderIdentityMismatchError,
+                      "Issue ##{number} is already owned by ACE task #{owners.join(', ')}"
+                  end
+                  reconciled_body = compose_tracking_body(found[:body], desired_line)
+                  mutate_and_reconcile(number, desired_body: reconciled_body) do
+                    @provider.update_issue_comment(number: number, comment_id: found[:id], body: reconciled_body)
                   end
                   break true
                 end
@@ -145,6 +145,19 @@ module Ace
         end
 
         private
+
+        # Unrelated lines are preserved verbatim (including trailing
+        # whitespace); only ACE-owned lines are ever added or removed. A
+        # marker concatenated onto a note line (historical layout) is
+        # stripped in place so clear can rebuild the body cleanly.
+        def compose_tracking_body(existing_body, desired_line)
+          preserved = existing_body.to_s.lines
+            .reject { |line| line.chomp == STICKY_MARKER || line.start_with?("Tracked in ace-task: ") }
+            .map { |line| line.gsub(STICKY_MARKER, "") }
+          prefix = preserved.join
+          prefix += "\n" unless prefix.empty? || prefix.end_with?("\n")
+          "#{prefix}#{STICKY_MARKER}\n#{desired_line}"
+        end
 
         def create_reconcile_interval(attempt)
           CREATE_RECONCILE_READ_INTERVAL_SECONDS * (attempt + 1)
