@@ -354,6 +354,9 @@ module Ace
           parent = show(parent_ref)
           return nil unless parent
 
+          # Authoritative validation precedes the write: the spec forbids
+          # leaving an unvalidated offline link after a failed command.
+          ensure_issue_linkable!(remote_issue) if remote_issue
           subtask_creator = Molecules::SubtaskCreator.new(config: @config)
           created_subtask = subtask_creator.create(
             parent,
