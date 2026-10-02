@@ -50,15 +50,18 @@ module Ace
                 break true if found&.[](:body) == desired_body
 
                 if found
-                  # The marker that just appeared may belong to another task;
-                  # validate ownership before overwriting anything.
+                  # The marker that just appeared may belong to another task
+                  # or be malformed; validate ownership before overwriting
+                  # anything (same guard as validate_link!).
                   owners = owned_task_ids(snapshot)
                   accepted = [task_id, previous_task_id].compact.map(&:to_s).uniq
-                  unless owners.all? { |owner| accepted.include?(owner) }
+                  if (found && owners.empty?) || !owners.all? { |owner| accepted.include?(owner) }
                     raise ProviderIdentityMismatchError,
                       "Issue ##{number} is already owned by ACE task #{owners.join(', ')}"
                   end
+                  desired_line = "Tracked in ace-task: [#{task_id}](#{task_link})"
                   reconciled_body = compose_tracking_body(found[:body], desired_line)
+                  desired_body = reconciled_body
                   mutate_and_reconcile(number, desired_body: reconciled_body) do
                     @provider.update_issue_comment(number: number, comment_id: found[:id], body: reconciled_body)
                   end
