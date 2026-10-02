@@ -8,7 +8,7 @@ module Github
     SERVER = Ace::Git::ResolvedServer.new(name: "forge", provider: :github, url: "https://github.example.com/owner/repo")
 
     LIST_FIELDS = Ace::Git::Github::PrFetcher::LIST_FIELDS
-    PR_FIELDS = "number,state,isDraft,title,author,headRefName,baseRefName,url,headRefOid,mergeCommit,mergedAt"
+    PR_FIELDS = "number,state,isDraft,title,body,author,headRefName,baseRefName,url,headRefOid,mergeCommit,mergedAt"
 
     def build_provider(runner)
       Ace::Git::Github::Provider.new(server: SERVER, runner: runner)

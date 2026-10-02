@@ -26,7 +26,7 @@ module Ace
           "skipping" => :skipped
         }.freeze
 
-        PR_FIELDS = "number,state,isDraft,title,author,headRefName,baseRefName,url,headRefOid,mergeCommit,mergedAt,headRepositoryOwner,headRepository"
+        PR_FIELDS = "number,state,isDraft,title,body,author,headRefName,baseRefName,url,headRefOid,mergeCommit,mergedAt,headRepositoryOwner,headRepository"
         LIST_FIELDS = PrFetcher::LIST_FIELDS
         REPO_FIELDS = "nameWithOwner,defaultBranchRef,url"
         ISSUE_FIELDS = "number,title,state,author,url"
@@ -177,12 +177,39 @@ module Ace
           unless runs.is_a?(Array) && runs.all? { |run| run.is_a?(Hash) && run["name"].is_a?(String) }
             raise Ace::Git::ProviderMalformedOutputError, "Malformed GitHub PR check evidence"
           end
-          runs.map do |run|
+          total = data["total_count"]
+          # The API returns at most per_page runs here; total_count above the
+          # fetched count means unfetched pages, which would silently
+          # understate check evidence. Fail closed instead of reporting a
+          # partial snapshot as complete.
+          unless total.is_a?(Integer) && total <= runs.length
+            raise Ace::Git::ProviderMalformedOutputError, "Incomplete GitHub PR check evidence"
+          end
+          checks = runs.map do |run|
             Ace::Git::ProviderCheck.new(
               server_name: server.name, name: run["name"],
               state: run["status"].to_s.downcase.to_sym,
               conclusion: run["conclusion"]&.downcase&.to_sym,
               url: run["html_url"]
+            )
+          end
+          checks + commit_statuses(head_sha)
+        end
+
+        # Combined commit statuses are a separate GitHub evidence stream from
+        # check runs; both must appear or the snapshot overstates success.
+        def commit_statuses(head_sha)
+          data = gh_api("commits/#{head_sha}/status")
+          statuses = data.is_a?(Hash) && data["statuses"]
+          unless statuses.is_a?(Array) && statuses.all? { |s| s.is_a?(Hash) && s["context"].is_a?(String) }
+            raise Ace::Git::ProviderMalformedOutputError, "Malformed GitHub commit status evidence"
+          end
+          statuses.map do |status|
+            Ace::Git::ProviderCheck.new(
+              server_name: server.name, name: status["context"],
+              state: status["state"].to_s.downcase.to_sym,
+              conclusion: nil,
+              url: status["target_url"]
             )
           end
         end
@@ -570,6 +597,7 @@ module Ace
             server_name: server_name,
             number: data["number"],
             title: data["title"],
+            body: data["body"],
             state: STATE_MAP.fetch(data["state"].to_s.upcase, data["state"].to_s.downcase.to_sym),
             head_ref: data["headRefName"],
             base_ref: data["baseRefName"],
