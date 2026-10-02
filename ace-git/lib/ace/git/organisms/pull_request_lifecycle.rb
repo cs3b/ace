@@ -289,6 +289,13 @@ module Ace
           end
         end
 
+        # The forge server URL for a PR identifier, resolved on demand
+      # through the shared registry (pure resolution, no mutation).
+        def resolved_server_url(identifier)
+          reference = parse_identifier(identifier)
+          resolve_server_for(reference).url
+        end
+
         def provider_for(server)
           @resolved_server_url = server.url
           Ace::Git::Providers.for(server, timeout: @timeout, runner: @runner)
