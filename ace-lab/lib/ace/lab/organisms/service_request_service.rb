@@ -17,12 +17,12 @@ module Ace
         SERVICE_REPLAY_FIELDS = %w[project_id operation input_digest assignment_id attempt_id
           target authorization caller_uid request_id].freeze
 
-        def initialize(topology: nil, policy: nil, coordinator: nil, executor: nil, repo_root: Dir.pwd)
+        def initialize(topology: nil, policy: nil, coordinator: nil, executor: nil, repo_root: nil)
           @topology = topology || TopologyService.from_config
           @policy = policy
           @coordinator = coordinator || Ace::Assign::Organisms::AttemptCoordinator.new(repo_root: repo_root)
           @executor = executor || Molecules::ServiceExecutor.new
-          @repo_root = repo_root
+          @repo_root = repo_root || Ace::Support::Fs::Molecules::ProjectRootFinder.find_or_current
         end
 
         def request(project:, assignment:, attempt:, operation:, input_path:, authorization:, request_id:, dry_run: false)
@@ -55,6 +55,12 @@ module Ace
             if changed
               raise Ace::Assign::AttemptErrors::Conflict,
                 "Service request #{request_id} has different #{changed}"
+            end
+            if dry_run
+              # A preview of an existing request still validates current
+              # eligibility and reports itself as a dry run.
+              @coordinator.request_eligible!(existing)
+              return {"status" => "ok", "data" => result(existing).fetch("data").merge("dry_run" => true)}
             end
             return result(existing)
           end

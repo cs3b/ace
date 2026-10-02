@@ -125,28 +125,32 @@ module Ace
         # components themselves via lstat — is resolved instead of failing;
         # a dangling symlink resolves through its own target chain rather
         # than hiding behind its parent.
-        def resolved_path(path)
+        MAX_SYMLINK_DEPTH = 16
+
+        def resolved_path(path, depth = 0)
+          raise Ace::Lab::InvalidConfigurationError, "trusted policy path has a symlink cycle" if depth > MAX_SYMLINK_DEPTH
           expanded = File.expand_path(path)
           candidate = expanded
           candidate = File.dirname(candidate) until candidate == "/" || lstat?(candidate)
           resolved = begin
             File.realpath(candidate)
           rescue Errno::ENOENT, Errno::EACCES, Errno::ELOOP
-            dangling_target(candidate) || candidate
+            dangling_target(candidate, depth) || candidate
           end
           return resolved unless resolved == candidate && lstat?(candidate) && File.symlink?(candidate)
-          dangling_target(candidate) || resolved
+          dangling_target(candidate, depth) || resolved
         rescue Errno::ENOENT, Errno::EACCES, Errno::ELOOP
           expanded
         end
 
         # Follow a dangling symlink's own target chain; nil when the link
         # cannot be resolved to any concrete location.
-        def dangling_target(link)
+        def dangling_target(link, depth = 0)
+          raise Ace::Lab::InvalidConfigurationError, "trusted policy path has a symlink cycle" if depth > MAX_SYMLINK_DEPTH
           target = File.readlink(link)
           target = File.expand_path(target, File.dirname(link)) unless Pathname.new(target).absolute?
-          resolved_path(target)
-        rescue Errno::ENOENT, Errno::EACCES, Errno::ELOOP
+          resolved_path(target, depth + 1)
+        rescue Errno::ENOENT, Errno::EACCES
           nil
         end
 
