@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.26.0] - 2026-10-02
+
+### Added
+- Forge-neutral issue tracking contract with named-server selection, normalized issue evidence, and classified provider failures.
+
 ## [0.25.0] - 2026-09-28
 
 ### Added
