@@ -121,7 +121,7 @@ module Ace
           elsif receipt
             raise AttemptErrors::ReceiptRejected, "Non-terminal service transition cannot carry a receipt"
           end
-          journal_for.transition_service_request(request_id, state: state, receipt: receipt)
+          journal_for.transition_service_request(request_id, state: state, receipt: receipt, validated: true)
         end
 
         # Settle a failed effect as "no effect occurred". The settlement is
@@ -134,6 +134,23 @@ module Ace
           unless request["state"] == "failed"
             raise AttemptErrors::InvalidState, "Only failed service requests can be reconciled"
           end
+          settle_no_effect(request_id, request, receipt)
+        end
+
+        # Settle an uncertain claim whose handler was never invoked (a
+        # pre-dispatch refusal observed by the trusted local service). Same
+        # evidence rules as a failure settlement: a distinct, executor-owned
+        # no-effect attestation bound to this request.
+        def reconcile_service_no_effect(request_id, receipt:)
+          request = journal_for.service_request(request_id)
+          raise AttemptErrors::NotFound, "Service request #{request_id} not found" unless request
+          unless request["state"] == "uncertain"
+            raise AttemptErrors::InvalidState, "Only uncertain service requests can settle as no-effect"
+          end
+          settle_no_effect(request_id, request, receipt)
+        end
+
+        def settle_no_effect(request_id, request, receipt)
           # The settlement must be a distinct, later executor attestation:
           # replaying the already-recorded failure receipt proves nothing
           # about whether the effect took place.
@@ -143,7 +160,8 @@ module Ace
               "Service failure settlement requires a new attestation, not the recorded receipt"
           end
           validate_service_receipt!(request, "failed", receipt, require_no_effect: true)
-          journal_for.transition_service_request(request_id, state: "failed-settled", receipt: receipt)
+          journal_for.transition_service_request(request_id, state: "failed-settled",
+            receipt: receipt, validated: true)
         end
 
         def validate_service_receipt!(request, state, receipt, require_no_effect: false)

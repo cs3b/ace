@@ -84,12 +84,18 @@ module Ace
           end
 
           journal.transition_service_request("req-1", state: "uncertain")
-          journal.transition_service_request("req-1", state: "succeeded", receipt: {"evidence" => "ok"})
+          # Terminal transitions require coordinator validation; a direct
+          # unvalidated write is refused at the journal boundary.
+          assert_raises(AttemptErrors::ReceiptRejected) do
+            journal.transition_service_request("req-1", state: "succeeded", receipt: {"evidence" => "ok"})
+          end
+          journal.transition_service_request("req-1", state: "succeeded", receipt: {"evidence" => "ok"},
+            validated: true)
           reloaded = Molecules::EvidenceJournal.new(repo_root: repo, ref: REF, checkout_root: root)
           assert_equal "succeeded", reloaded.service_request("req-1")["state"]
           assert_equal 3, reloaded.read_events("assignment-1").size
           assert_raises(AttemptErrors::InvalidState) do
-            reloaded.transition_service_request("req-1", state: "failed")
+            reloaded.transition_service_request("req-1", state: "failed", validated: true)
           end
         end
       end

@@ -158,9 +158,16 @@ module Ace
             event_type: "service_claim")
         end
 
-        def transition_service_request(request_id, state:, receipt: nil)
+        # Validated marks a settlement already checked by the coordinator;
+        # terminal writes without it (and without a bound receipt) are
+        # refused so direct journal callers cannot bypass evidence.
+        def transition_service_request(request_id, state:, receipt: nil, validated: false)
           unless %w[succeeded failed uncertain rejected failed-settled].include?(state)
             raise ArgumentError, "invalid service request state"
+          end
+          if %w[succeeded failed failed-settled].include?(state) && !validated
+            raise AttemptErrors::ReceiptRejected,
+              "Service request #{request_id} terminal transitions require coordinator validation"
           end
           if state == "failed-settled"
             evidence = receipt.is_a?(Hash) ? receipt["evidence"] : nil
