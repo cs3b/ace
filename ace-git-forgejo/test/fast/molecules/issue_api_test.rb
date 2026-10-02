@@ -56,6 +56,21 @@ class ForgejoIssueApiTest < AceGitForgejoTestCase
     assert_raises(Ace::Git::ProviderAuthenticationError) { api.issue(42) }
   end
 
+  def test_issue_lookup_resolves_web_endpoint_for_ssh_server
+    calls = []
+    runner = lambda do |args:, **_options|
+      calls << args[2]
+      {success: true, status: 200,
+       stdout: {"number" => 42, "title" => "Issue", "state" => "open",
+                "html_url" => "https://forge.example.com/owner/repo/issues/42"}.to_json}
+    end
+    server = Ace::Git::ResolvedServer.new(name: "lab", provider: :forgejo,
+      url: "ssh://git@forge.example.com/owner/repo.git")
+    api = Ace::Git::Forgejo::IssueApi.new(server: server, timeout: 5, runner: runner)
+    api.issue(42)
+    assert calls.any? { |path| path.include?("https://forge.example.com/api/v1/repos/owner/repo/issues/42") }
+  end
+
   def test_add_label_skips_org_request_when_repository_label_exists
     calls = []
     runner = lambda do |args:, **_options|
