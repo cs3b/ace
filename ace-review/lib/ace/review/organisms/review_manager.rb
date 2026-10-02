@@ -1406,7 +1406,11 @@ module Ace
             ),
             session_key: File.dirname(File.expand_path(review_file))
           )
-          {success: true, comment_url: receipt.comment.url, idempotency: receipt.idempotency}
+# Posted results retain the resolved identity the contract requires:
+# server, repository, PR number, and the exact guarded head.
+{success: true, comment_url: receipt.comment.url, idempotency: receipt.idempotency,
+ server_name: receipt.comment.server_name, repository_url: receipt.comment.repository_url,
+ pr_number: receipt.comment.pr_number, head_sha: receipt.head_sha}
         rescue Ace::Git::Error, ArgumentError => e
           {success: false, error: "#{e.class.name.split('::').last}: #{e.message}"}
         end
