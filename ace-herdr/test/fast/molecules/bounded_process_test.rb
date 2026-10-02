@@ -72,6 +72,30 @@ module Ace
           assert_raises(Errno::ESRCH) { Process.kill(0, child_pid) }
         end
 
+        def test_post_launch_io_error_kills_child_and_raises_post_launch_error
+          pid_file = File.join(@dir, "child.pid")
+          script = File.join(@dir, "sleeper")
+          File.write(script, <<~SH)
+            #!/bin/sh
+            echo $$ > '#{pid_file}'
+            exec sleep 30
+          SH
+          FileUtils.chmod(0o755, script)
+          offender = lambda do |*|
+            sleep 0.5 # let the child record its pid first
+            raise Errno::EIO, "injected pipe failure"
+          end
+          Molecules::BoundedProcess.stub(:run_loop, offender) do
+            error = assert_raises(Molecules::BoundedProcess::PostLaunchError) do
+              Molecules::BoundedProcess.call([script], timeout_s: 5)
+            end
+
+            assert_match(/post-launch/, error.message)
+          end
+          child_pid = File.read(pid_file).to_i
+          assert_raises(Errno::ESRCH) { Process.kill(0, child_pid) }
+        end
+
         def test_oversized_output_is_truncated_and_reported
           result = BoundedProcess.call(["/bin/echo", "x" * 10_000], timeout_s: 5, output_limit: 1024)
 

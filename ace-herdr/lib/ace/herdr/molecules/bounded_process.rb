@@ -40,7 +40,10 @@ module Ace
                 stdin_data: stdin_data, timeout_s: timeout_s, output_limit: output_limit)
             rescue SystemCallError => e
               # The child was already spawned: an I/O failure now cannot be
-              # rewound into a pre-launch classification.
+              # rewound into a pre-launch classification, and the child must
+              # not outlive the failure inside popen3's cleanup wait.
+              kill_group(waiter)
+              waiter.join
               raise PostLaunchError, e.message
             end
           end
