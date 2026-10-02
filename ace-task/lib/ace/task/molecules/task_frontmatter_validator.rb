@@ -147,7 +147,7 @@ module Ace
                 %w[number provider repository_url server_name url] &&
                 linked["number"].is_a?(Integer) && linked["number"].positive? &&
                 %w[server_name provider repository_url url].all? { |key| linked[key].is_a?(String) && !linked[key].empty? } &&
-                linked["url"] == "#{linked["repository_url"].sub(%r{/+\z}, "").sub(%r{\.git\z}i, "")}/issues/#{linked["number"]}"
+                linked["url"] == "#{Ace::Git::Atoms::ServerUrl.web_base(linked["repository_url"])}/issues/#{linked["number"]}"
               unless valid
                 issues << {type: :error, message: "Invalid complete remote_issue identity", location: file_path}
               end

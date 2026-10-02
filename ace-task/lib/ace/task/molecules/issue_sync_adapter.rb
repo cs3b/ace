@@ -67,7 +67,7 @@ module Ace
         # forge comment; build a web URL from the linked repository using the
         # provider's file-browse route (GitHub: /blob/, Forgejo: /src/branch/).
         def task_link(identity, task)
-          base = identity.fetch("repository_url").sub(%r{/+\z}, "").sub(%r{\.git\z}i, "")
+          base = Ace::Git::Atoms::ServerUrl.web_base(identity.fetch("repository_url"))
           path = safe_task_path(task)
           if identity.fetch("provider") == "github"
             "#{base}/blob/HEAD/#{path}"

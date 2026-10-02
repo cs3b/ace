@@ -30,13 +30,13 @@ module Ace
 
           if candidates
             raise Ace::Git::AmbiguousRemoteError, "Issue repository matches no configured server" if candidates.empty?
-            if selected
-              unless candidates.any? { |candidate| candidate.name == selected.name }
-                raise Ace::Git::ProviderIdentityMismatchError,
-                  "Issue identifier does not match selected server #{selected.name}"
-              end
-            elsif candidates.length != 1
-              raise Ace::Git::AmbiguousRemoteError, "Issue repository matches multiple configured servers"
+            # A URL input must resolve uniquely on its own; explicit selection
+            # filters but never disambiguates multiple matches.
+            raise Ace::Git::AmbiguousRemoteError,
+              "Issue repository matches multiple configured servers" if candidates.length != 1
+            if selected && candidates.first.name != selected.name
+              raise Ace::Git::ProviderIdentityMismatchError,
+                "Issue identifier does not match selected server #{selected.name}"
             end
             selected ||= candidates.first
           else
@@ -48,7 +48,7 @@ module Ace
             "provider" => selected.provider.to_s,
             "repository_url" => selected.url,
             "number" => number,
-            "url" => "#{selected.url.sub(%r{/+\z}, "").sub(%r{\.git\z}i, "")}/issues/#{number}"
+            "url" => "#{Ace::Git::Atoms::ServerUrl.web_base(selected.url)}/issues/#{number}"
           }
         end
 

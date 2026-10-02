@@ -2,6 +2,7 @@
 
 require "test_helper"
 require "ace/task/molecules/issue_link"
+require "ostruct"
 
 class IssueLinkTest < AceTaskTestCase
   def setup
@@ -81,6 +82,31 @@ class IssueLinkTest < AceTaskTestCase
   def test_partial_mapping_fails
     assert_raises(ArgumentError) do
       Ace::Task::Molecules::IssueLink.validate!({"number" => 42})
+    end
+  end
+
+  def test_web_url_derives_https_from_ssh_style_server
+    Ace::Git::ServerRegistry.stub(:resolve_for, OpenStruct.new(name: "gh", provider: "github",
+      url: "git@github.com:owner/repo.git")) do
+      identity = Ace::Task::Molecules::IssueLink.from_input("42", server_name: "gh")
+      assert_equal "https://github.com/owner/repo/issues/42", identity.fetch("url")
+      assert_equal "git@github.com:owner/repo.git", identity.fetch("repository_url")
+    end
+  end
+
+  def test_ambiguous_url_rejects_explicit_selection
+    matches = [
+      OpenStruct.new(name: "one", provider: "github", url: "https://github.example.com/owner/repo"),
+      OpenStruct.new(name: "two", provider: "github", url: "https://git.example.com/owner/repo")
+    ]
+    Ace::Git::ServerRegistry.stub(:matching_servers, matches) do
+      Ace::Git::ServerRegistry.stub(:resolve_for, matches.first) do
+        error = assert_raises(Ace::Git::AmbiguousRemoteError) do
+          Ace::Task::Molecules::IssueLink.from_input("https://github.example.com/owner/repo/issues/42",
+            server_name: "one")
+        end
+        assert_match(/multiple configured servers/, error.message)
+      end
     end
   end
 end
