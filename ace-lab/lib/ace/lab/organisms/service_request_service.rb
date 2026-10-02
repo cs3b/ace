@@ -30,15 +30,12 @@ module Ace
           end
           input = Atoms::ServiceInput.load(input_path)
           target = Atoms::ServiceInput.target(input)
-          route = @topology.route(project: project, capability: operation)
-          return route.envelope unless route.ok?
-          service_id = route.data.fetch("entry").fetch("id")
           # An identical retry returns the stored outcome — with the head
-          # recorded at claim time — without re-checking attempt or policy:
-          # a completed request must survive attempt terminality,
-          # authorization expiry, and candidate-head advance. Any changed
-          # immutable field under the same request ID is a conflict, never a
-          # replay.
+          # recorded at claim time — without re-checking attempt, policy, or
+          # routing: a completed request must survive attempt terminality,
+          # authorization expiry, routing changes, and candidate-head
+          # advance. Any changed immutable field under the same request ID is
+          # a conflict, never a replay.
           existing = @coordinator.service_request_status(request_id)
           if existing
             supplied = {"request_id" => request_id, "assignment_id" => assignment, "attempt_id" => attempt,
@@ -54,6 +51,9 @@ module Ace
             end
             return result(existing)
           end
+          route = @topology.route(project: project, capability: operation)
+          return route.envelope unless route.ok?
+          service_id = route.data.fetch("entry").fetch("id")
           trusted = Molecules::GrantResolver.trusted_document(Ace::Lab.authorization_path) unless @policy
           policy = @policy || Molecules::ServicePolicy.new(trusted)
           head = current_head
@@ -85,12 +85,12 @@ module Ace
             return {"status" => "ok", "data" => preview}
           end
 
+          # The claim itself records uncertain (dispatch intent): a crash
+          # after the claim leaves uncertainty, never a stranded accepted
+          # state that a retry would return without dispatching.
           claimed = @coordinator.claim_service_request(binding)
-          return result(claimed) unless claimed["state"] == "accepted" && claimed["journal_commit"]
+          return result(claimed) unless claimed["state"] == "uncertain" && claimed["journal_commit"]
 
-          # From here, a crash or lost executor response must not authorize a
-          # replay. Record uncertainty before invoking an external process.
-          @coordinator.transition_service_request(request_id, state: "uncertain")
           # The executor reloads the trusted policy from disk at the effect
           # boundary: a revocation after the claim must still stop dispatch.
           receipt = @executor.execute(operation: operation_policy, request: binding, input: input,
