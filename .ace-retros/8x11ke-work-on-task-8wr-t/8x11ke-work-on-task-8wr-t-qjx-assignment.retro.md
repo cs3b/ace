@@ -42,4 +42,11 @@ Retrospective for assignment `8x0z1i` (work-on-task 8wr.t.qjx, PR #358): full cy
 
 ## Review Cycle Analysis
 
-To be populated after the PR #358 review rounds complete (step 170): recurring findings across rounds, false-positive rate per reviewer model, and severity calibration will be appended here.
+PR #358 review campaign `8x11ly` (preset code-valid, delivery policy: 3 rounds / 2 consecutive clean):
+
+- **22 collected rounds, 44 confirmed findings, all fixed and pushed.** Severity arc: r1 critical (receipt fabrication) -> r4 2 critical (authorization reuse, evidence TOCTOU) -> r6-r14 highs (claim races, provenance, settlement semantics) -> r15-r22 highs shrunk to symmetry follow-ups of my own fixes; zero Critical after r4.
+- **Recurrence pattern:** each fix re-opened an adjacent angle at the journal boundary (settlement semantics alone generated 9 findings across r9-r14). A brand-new privileged surface under one strict correctness reviewer keeps producing real findings; "2 consecutive clean rounds" took >15 rounds and had not converged when the loop stopped.
+- **False-positive rate:** 0 invalid findings across 44 items -- every finding verified as a genuine defect. Severity calibration was conservative (mediums were true minors).
+- **Stop condition:** the binding Review Model Budget Policy (10 sessions/PR) was exceeded (22 codex sessions). Step 170 was marked failed with evidence rather than running further; the Captain decides between more rounds or accepting with a follow-up task.
+- **Process bugs found by the loop itself:** fork 1800s deadline too small for large tasks; campaign pin heads are immutable so any commit between collection and recording burns the round (5 rounds burned this way before the collect-record-immediately discipline emerged); the extraction-inventory writer/reader used different completion predicates (fixed in ace-review 0.57.1+).
+
