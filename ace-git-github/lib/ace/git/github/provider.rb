@@ -76,7 +76,12 @@ module Ace
         #   to every data/mutation command so a `--server` selection can never
         #   be silently retargeted to the checkout's repository.
         def repo_target
-          @repo_target ||= Ace::Git::Atoms::ServerUrl.normalize(server.url)
+          # Issue operations talk to the HTTPS web endpoint derived from the
+          # configured URL; a plain normalize would carry an SSH-style
+          # host:port into gh --hostname/--repo.
+          @repo_target ||= Ace::Git::Atoms::ServerUrl.normalize(
+            Ace::Git::Atoms::ServerUrl.web_base(server.url)
+          )
         end
 
         # @return [ProviderPullRequest, nil] evidence for the branch's PR
