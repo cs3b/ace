@@ -71,11 +71,12 @@ module Ace
       def test_request_is_journaled_once_and_dry_run_has_no_effect
         Dir.mktmpdir do |dir|
           repo, topology, coordinator, policy, input_path, assignment, attempt = setup_fixture(dir)
-          digest = write_evidence(repo, "forge/receipt", "executor attested effect\n")
           executor = Object.new
           calls = []
+          writer = ->(ref, content) { write_evidence(repo, ref, content) }
           executor.define_singleton_method(:execute) do |operation:, request:, input:, **_|
             calls << [operation, request, input]
+            digest = writer.call("forge/receipt", "executor attested effect #{request["request_id"]}\n")
             {"outcome" => "succeeded", "evidence" => [{"ref" => "forge/receipt", "sha256" => digest}],
              "executor_uid" => Process.uid}
           end
@@ -101,11 +102,12 @@ module Ace
       def test_completed_request_replays_outcome_after_authorization_expiry
         Dir.mktmpdir do |dir|
           repo, topology, coordinator, policy, input_path, assignment, attempt = setup_fixture(dir)
-          digest = write_evidence(repo, "forge/receipt", "executor attested effect\n")
           executor = Object.new
           calls = 0
+          writer = ->(ref, content) { write_evidence(repo, ref, content) }
           executor.define_singleton_method(:execute) do |operation:, request:, input:, **_|
             calls += 1
+            digest = writer.call("forge/receipt", "executor attested effect #{request["request_id"]}\n")
             {"outcome" => "succeeded", "evidence" => [{"ref" => "forge/receipt", "sha256" => digest}],
              "executor_uid" => Process.uid}
           end
@@ -133,9 +135,10 @@ module Ace
       def test_duplicate_authorization_under_new_request_id_conflicts
         Dir.mktmpdir do |dir|
           repo, topology, coordinator, policy, input_path, assignment, attempt = setup_fixture(dir)
-          digest = write_evidence(repo, "forge/receipt", "executor attested effect\n")
           executor = Object.new
+          writer = ->(ref, content) { write_evidence(repo, ref, content) }
           executor.define_singleton_method(:execute) do |operation:, request:, input:, **_|
+            digest = writer.call("forge/receipt", "executor attested effect #{request["request_id"]}\n")
             {"outcome" => "succeeded", "evidence" => [{"ref" => "forge/receipt", "sha256" => digest}],
              "executor_uid" => Process.uid}
           end
@@ -205,17 +208,23 @@ module Ace
       def test_local_executor_uses_os_identity_and_fixed_argv_once
         Dir.mktmpdir do |dir|
           repo, topology, coordinator, _policy, input_path, assignment, attempt = setup_fixture(dir)
-          digest = write_evidence(repo, "fixture/result", "executor attested effect\n")
           executable = File.join(dir, "executor")
           count_path = File.join(dir, "invocations")
           File.write(executable, <<~RUBY)
             #!/usr/bin/env ruby
             require "json"
-            request = JSON.parse(STDIN.read).fetch("request")
+            require "digest"
+            require "fileutils"
+            payload = JSON.parse(STDIN.read)
+            request = payload.fetch("request")
             File.open(ARGV.fetch(0), "a") { |file| file.puts(request.fetch("request_id")) }
+            evidence_path = File.join(ARGV.fetch(1), "fixture", "result")
+            FileUtils.mkdir_p(File.dirname(evidence_path))
+            content = "executor attested effect \#{request.fetch("request_id")}\n"
+            File.write(evidence_path, content)
             puts JSON.generate("request_id" => request.fetch("request_id"),
               "input_digest" => request.fetch("input_digest"), "outcome" => "succeeded",
-              "evidence" => [{"ref" => "fixture/result", "sha256" => "#{digest}"}])
+              "evidence" => [{"ref" => "fixture/result", "sha256" => Digest::SHA256.hexdigest(content)}])
           RUBY
           File.chmod(0o700, executable)
           input = JSON.parse(File.read(input_path))
@@ -224,7 +233,7 @@ module Ace
             "input_digest" => Atoms::ServiceInput.digest(input), "target" => Atoms::ServiceInput.target(input),
             "candidate_head" => git(repo, "rev-parse", "HEAD"), "caller_uid" => Process.uid}
           operation = {"project" => "atlas", "service_id" => "atlas-search", "transport" => "local",
-            "argv" => [executable, count_path], "executor_uid" => Process.uid,
+            "argv" => [executable, count_path, repo], "executor_uid" => Process.uid,
             "lease_expires_at" => (Time.now.utc + 3600).iso8601}
           policy = Molecules::ServicePolicy.new("operations" => {"forge-sync" => operation},
             "authorizations" => {"decision-1" => binding.merge("expires_at" => (Time.now.utc + 3600).iso8601)})

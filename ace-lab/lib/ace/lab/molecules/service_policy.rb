@@ -45,9 +45,9 @@ module Ace
           expires_at = parse_time(operation["lease_expires_at"])
           raise SecurityError, "executor lease has expired" if expires_at <= Time.now.utc
           if operation["host_maintenance"] == true
-            deployment = operation["deployment_root"].to_s
-            sink = operation["evidence_sink"].to_s
-            executable = operation.dig("argv", 0).to_s
+            deployment = resolved_path(operation["deployment_root"].to_s)
+            sink = resolved_path(operation["evidence_sink"].to_s)
+            executable = resolved_path(operation.dig("argv", 0).to_s)
             unless deployment.start_with?("/") && sink.start_with?("/") && executable.start_with?("/") &&
                 !inside?(executable, deployment) && !inside?(sink, deployment)
               raise Ace::Lab::InvalidConfigurationError,
@@ -88,6 +88,19 @@ module Ace
           expanded = File.expand_path(path)
           base = File.expand_path(root)
           expanded == base || expanded.start_with?(base + File::SEPARATOR)
+        end
+
+        # Resolve a configured path through symlinks so placement checks see
+        # the real location. Paths may not exist yet (an evidence sink is
+        # created on first use), so the deepest existing ancestor is
+        # resolved instead of failing.
+        def resolved_path(path)
+          expanded = File.expand_path(path)
+          candidate = expanded
+          candidate = File.dirname(candidate) until candidate == "/" || File.exist?(candidate)
+          File.realpath(candidate)
+        rescue Errno::ENOENT, Errno::EACCES, Errno::ELOOP
+          expanded
         end
 
         def parse_time(value)
