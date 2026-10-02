@@ -1411,8 +1411,13 @@ module Ace
           # The session key and formatted body persist beside the review
           # artifact: a retry in a later run must reuse the exact identity
           # and content to reconcile the existing session comment.
-          identity_path = File.join(File.dirname(File.expand_path(review_file)), "post-identity.yml")
+          # The identity store lives OUTSIDE the per-run session directory,
+          # keyed by the review artifact digest: a retry in any later run
+          # finds it; changed review content starts a fresh identity.
           review_digest = Digest::SHA256.file(review_file).hexdigest
+          identity_root = File.join(@project_root || Dir.pwd, ".ace-local/review/post-identity")
+          FileUtils.mkdir_p(identity_root)
+          identity_path = File.join(identity_root, "#{review_digest}.yml")
           persisted = File.exist?(identity_path) &&
             begin
               YAML.safe_load_file(identity_path, permitted_classes: [Time, Date])
