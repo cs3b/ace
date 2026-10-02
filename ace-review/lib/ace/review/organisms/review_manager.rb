@@ -1478,10 +1478,13 @@ module Ace
           else
             # The marker IS the identity key: deterministic for the same
             # identity even when the local record was lost, so the posted
-            # body and correlation always reconcile.
+            # body and correlation always reconcile. The body is formatted
+            # from the same stable content the digest hashes: embedding the
+            # timestamped frontmatter would make a rerun with identical
+            # review text report a content conflict after a lost record.
             session_key = identity_key
             content = Molecules::PrProvider.format_comment(
-              review_content, preset: review_data[:preset], model: review_data[:model],
+              stable_content, preset: review_data[:preset], model: review_data[:model],
               # Deterministic per identity: the review digest stands in
               # for the mtime so re-formatting after a lost record still
               # reconciles.
