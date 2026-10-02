@@ -291,7 +291,7 @@ end
           files = gh_api_pages("pulls/#{number}/files").map do |entry|
             entry.is_a?(Hash) && entry["filename"]
           end
-          unless data.is_a?(Hash) && data["number"] == number &&
+          unless data.is_a?(Hash) && data["base"].is_a?(Hash) && data["number"] == number &&
               data.dig("base", "sha").to_s.match?(/\A[0-9a-f]{40}\z/) &&
               data["changed_files"].is_a?(Integer) && data["changed_files"] == files.length &&
               files.all? { |path| path.is_a?(String) && !path.empty? }
@@ -441,10 +441,13 @@ end
           pr = verify_expected_head!(pull_request(number: number), expected_head)
           # Collected evidence includes issue and inline comments; the
           # update must locate the id in both and use the matching route.
-          issue_matches = gh_api_pages("issues/#{pr.number}/comments").select { |entry| entry["id"] == comment_id }
-          inline_matches = issue_matches.empty? ? gh_api_pages("pulls/#{pr.number}/comments").select { |entry| entry["id"] == comment_id } : []
-          matches = issue_matches + inline_matches
-          update_route = issue_matches.any? ? "issues/comments/#{comment_id}" : "pulls/comments/#{comment_id}"
+          # Inline (review) comments take precedence: if an id exists in
+          # both collections, editing must target the inline comment the
+          # reviewer thread actually references.
+          inline_matches = gh_api_pages("pulls/#{pr.number}/comments").select { |entry| entry["id"] == comment_id }
+          issue_matches = inline_matches.empty? ? gh_api_pages("issues/#{pr.number}/comments").select { |entry| entry["id"] == comment_id } : []
+          matches = inline_matches + issue_matches
+          update_route = inline_matches.any? ? "pulls/comments/#{comment_id}" : "issues/comments/#{comment_id}"
           unless matches.one?
             raise Ace::Git::ProviderIdentityMismatchError,
               "Comment #{comment_id} does not belong to selected PR ##{pr.number}"

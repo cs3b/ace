@@ -183,7 +183,7 @@ module Ace
           files = review_http.paginate("pulls/#{number}/files").map do |entry|
             entry.is_a?(Hash) && entry["filename"]
           end
-          unless data.is_a?(Hash) && data["number"] == number &&
+          unless data.is_a?(Hash) && data["base"].is_a?(Hash) && data["number"] == number &&
               data.dig("base", "sha").to_s.match?(/\A[0-9a-f]{40}\z/) &&
               data["changed_files"].is_a?(Integer) && data["changed_files"] == files.length &&
               files.all? { |path| path.is_a?(String) && !path.empty? }
@@ -271,7 +271,13 @@ module Ace
           verify_expected_head!(pull_request(number: number), expected_head)
           issue_matches = review_http.paginate("issues/#{number}/comments").select { |entry| entry["id"] == comment_id }
           # Editing inline (review) comments is not part of the observed
-          # v0.6.0 `fj` surface: classify it explicitly as unsupported.
+          # v0.6.0 `fj` surface: an id found only among inline comments is
+          # classified explicitly as unsupported rather than misrouted.
+          inline_matches = issue_matches.empty? ? review_http.paginate("pulls/#{number}/comments").select { |entry| entry["id"] == comment_id } : []
+          if issue_matches.empty? && inline_matches.one?
+            raise Ace::Git::ProviderUnsupportedCapabilityError,
+              "Editing inline review comments is unsupported by the observed fj v0.6.0 surface (comment #{comment_id})"
+          end
           matches = issue_matches
           update_route = "issues/comments/#{comment_id}"
           unless matches.one?
