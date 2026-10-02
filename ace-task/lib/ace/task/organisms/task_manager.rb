@@ -204,6 +204,19 @@ module Ace
             # Reload task from current path before reparenting (may have been field-updated)
             task_for_reparent = loader.load(current_path, id: task.id, special_folder: current_special)
             reparented = reparenter.reparent(task_for_reparent, target: move_as_child_of, resolve_ref: resolve_fn)
+            if linked_issue(task) && linked_issue(reparented).nil?
+              # Orchestrator conversion: the linked spec became a child that
+              # retains the remote_issue mapping (and the pending transfer
+              # metadata). Sync that child, not the newly created parent.
+              scanner = Molecules::TaskScanner.new(@root_dir)
+              converted_child = scanner.scan_subtasks(reparented.path, parent_id: reparented.id)
+                .filter_map { |sr| loader.load(sr.dir_path, id: sr.id, special_folder: sr.special_folder) }
+                .find { |t| linked_issue(t) }
+              if converted_child
+                sync_linked_issues_for(converted_child, reason: "reparent", previous_task: task)
+                return show_after_sync(converted_child) || converted_child
+              end
+            end
             sync_linked_issues_for(reparented, reason: "reparent", previous_task: task)
             return show_after_sync(reparented) || reparented
           end
@@ -308,7 +321,8 @@ module Ace
                 raise Ace::Git::ProviderIdentityMismatchError,
                   "Task #{task.id} has a pending clear; complete it before linking again"
               end
-              ensure_issue_linkable!(identity, task_id: task.id)
+              ensure_issue_linkable!(identity, task_id: task.id,
+                previous_task_id: task.metadata["issue_sync_previous_id"])
               result = sync_linked_issues_for(task, reason: "link-retry")
               raise Ace::Git::ProviderUnreachableError, result[:error] unless result[:success]
               return show(ref)
@@ -577,8 +591,8 @@ module Ace
           Molecules::IssueSyncAdapter.new
         end
 
-        def ensure_issue_linkable!(identity, task_id: nil)
-          issue_adapter.validate_link!(identity: identity, task_id: task_id)
+        def ensure_issue_linkable!(identity, task_id: nil, previous_task_id: nil)
+          issue_adapter.validate_link!(identity: identity, task_id: task_id, previous_task_id: previous_task_id)
         end
 
         # One task owns at most one exact issue: reject a second local task
