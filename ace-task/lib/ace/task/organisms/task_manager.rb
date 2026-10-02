@@ -177,6 +177,15 @@ module Ace
           current_special = task.special_folder
           current_id = task.id
           if move_to
+            # Relocating a parent moves its children's files too: their issue
+            # comments embed repo-relative links that just went stale. Flag
+            # linked descendants pending (crash-safe, written pre-move) and
+            # sync their comments from the post-move locations.
+            linked_subtasks_of(task.path, task.id).each do |child|
+              Ace::Support::Items::Molecules::FieldUpdater.update(
+                child.file_path, set: {"issue_sync_pending" => true}
+              )
+            end
             if archive_move_for_subtask?(task, move_to)
               result = handle_subtask_archive_move(task, loader)
               current_path = result[:path]
@@ -194,6 +203,9 @@ module Ace
               current_special = Ace::Support::Items::Atoms::SpecialFolderDetector.detect_in_path(
                 new_path, root: @root_dir
               )
+            end
+            linked_subtasks_of(current_path, current_id).each do |child|
+              sync_linked_issues_for(child, reason: "move")
             end
           end
 
@@ -242,6 +254,17 @@ module Ace
           return nil unless task
 
           show(task.id)
+        end
+
+        # Direct linked subtasks of a task directory (used to refresh their
+        # issue comment links after the parent directory relocates).
+        def linked_subtasks_of(path, id)
+          scanner = Molecules::TaskScanner.new(@root_dir)
+          loader = Molecules::TaskLoader.new
+          scanner.scan_subtasks(path, parent_id: id).filter_map do |sr|
+            child = loader.load(sr.dir_path, id: sr.id, special_folder: sr.special_folder)
+            child if child && linked_issue(child)
+          end
         end
 
         # Create a subtask within a parent task.
