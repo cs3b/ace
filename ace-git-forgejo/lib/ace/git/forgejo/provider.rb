@@ -165,9 +165,14 @@ module Ace
           end
           # Review comments live under each review, not at the PR level.
           inline = reviews.flat_map do |review|
-            review_http.paginate("pulls/#{number}/reviews/#{review.id}/comments").map do |entry|
-              review_comment(entry, number, expected_head)
+            # The per-review endpoint returns the complete list (no
+            # pagination); a repeated nonempty page would trip the loop
+            # guard, so fetch once and require an array.
+            entries = review_http.request(:get, "pulls/#{number}/reviews/#{review.id}/comments")
+            unless entries.is_a?(Array)
+              raise Ace::Git::ProviderMalformedOutputError, "Malformed Forgejo review comment evidence"
             end
+            entries.map { |entry| review_comment(entry, number, expected_head) }
           end
           verify_expected_head!(pull_request(number: number), expected_head)
           Ace::Git::ProviderReviewEvidence.new(
@@ -270,11 +275,11 @@ module Ace
           comment_id = Integer(comment_id)
           verify_expected_head!(pull_request(number: number), expected_head)
           issue_matches = review_http.paginate("issues/#{number}/comments").select { |entry| entry["id"] == comment_id }
-          # Editing inline (review) comments is not part of the observed
-          # v0.6.0 `fj` surface: an id found only among inline comments is
-          # classified explicitly as unsupported rather than misrouted.
-          inline_matches = issue_matches.empty? ? review_http.paginate("pulls/#{number}/comments").select { |entry| entry["id"] == comment_id } : []
-          if issue_matches.empty? && inline_matches.one?
+          # Inline ids live under individual reviews; locate them there
+          # so an unsupported edit is classified explicitly instead of
+          # being misread as not-belonging to this PR.
+          inline_found = issue_matches.empty? && review_comment_ids(number).include?(comment_id)
+          if inline_found
             raise Ace::Git::ProviderUnsupportedCapabilityError,
               "Editing inline review comments is unsupported by the observed fj v0.6.0 surface (comment #{comment_id})"
           end
@@ -475,6 +480,15 @@ module Ace
             head_sha: entry["commit_id"] || head, resolved: entry.key?("resolver") ? !entry["resolver"].nil? : nil,
             thread_id: nil
           )
+        end
+
+        # Collect inline (review) comment ids by walking each review.
+        def review_comment_ids(number)
+          review_http.paginate("pulls/#{number}/reviews").flat_map do |review|
+            entries = review_http.request(:get, "pulls/#{number}/reviews/#{review["id"]}/comments")
+            entries = [] unless entries.is_a?(Array)
+            entries.filter_map { |entry| entry["id"] if entry.is_a?(Hash) }
+          end
         end
 
         def review_entry(entry, number, head)
