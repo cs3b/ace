@@ -742,7 +742,7 @@ end
         end
 
         def matching_review_comments(pr, marker, head)
-          gh_api_pages("issues/#{pr.number}/comments").map do |entry|
+          gh_api_pages("issues/#{pr.number}/comments").filter_map do |entry|
             # Every row must be a valid comment; a row without a body
       # means malformed collection and must not hide our session post.
             unless entry.is_a?(Hash) && entry["body"].is_a?(String)

@@ -476,7 +476,7 @@ module Ace
         end
 
         def matching_review_comments(number, marker, expected_head)
-          review_http.paginate("issues/#{number}/comments").map do |entry|
+          review_http.paginate("issues/#{number}/comments").filter_map do |entry|
             unless entry.is_a?(Hash) && entry["body"].is_a?(String)
               raise Ace::Git::ProviderMalformedOutputError, "Malformed Forgejo PR comment collection"
             end

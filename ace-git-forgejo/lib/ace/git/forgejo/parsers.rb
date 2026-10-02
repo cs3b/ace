@@ -144,10 +144,15 @@ module Ace
               sha: match[:sha]
             }
           end
+          # Empty or whitespace-only output never reaches the in-loop header
+          # check; the contract requires the count header even for zero tasks,
+          # so fail closed instead of returning an empty task list.
+          raise Ace::Git::ProviderMalformedOutputError,
+            "Missing `fj actions tasks` count header" unless declared_count
           # A declared count that disagrees with the parsed rows means
           # truncated output; fail closed instead of accepting partial
           # check evidence.
-          if declared_count && declared_count != tasks.length
+          if declared_count != tasks.length
             raise Ace::Git::ProviderMalformedOutputError,
               "Incomplete `fj actions tasks` output: declared #{declared_count}, parsed #{tasks.length}"
           end

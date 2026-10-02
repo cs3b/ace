@@ -71,6 +71,22 @@ module Github
       assert calls.none? { |args| args.include?("POST") }
     end
 
+    def test_unrelated_comments_are_excluded_from_match_results
+      unrelated = {"id" => 5, "body" => "unrelated chatter", "user" => {"login" => "other"},
+                   "html_url" => "https://github.example.com/comment/5"}
+      ours = {"id" => 91, "body" => "Reviewed\n\n<!-- ace-review-session:session-1 -->",
+              "user" => {"login" => "reviewer"}, "html_url" => "https://github.example.com/comment/91"}
+      runner = ->(**) { {success: true, stdout: [[unrelated, ours]].to_json, stderr: "", exit_code: 0} }
+      provider = Ace::Git::Github::Provider.new(server: SERVER, runner: runner)
+      pr = Struct.new(:number, :head_sha, :state).new(42, HEAD, :open)
+
+      matches = provider.stub(:pull_request, pr) do
+        provider.send(:matching_review_comments, pr, "ace-review-session:session-1", HEAD)
+      end
+
+      assert_equal [91], matches.map(&:id)
+    end
+
     def test_post_timeout_is_unknown_and_cannot_auto_repeat
       calls = []
       runner = lambda do |args:, **|

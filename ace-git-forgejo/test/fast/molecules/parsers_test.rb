@@ -74,6 +74,19 @@ module Forgejo
       assert_equal :success, checks[1][:state]
     end
 
+    def test_parse_actions_tasks_rejects_empty_output
+      ["", "\n   \n"].each do |output|
+        error = assert_raises(Ace::Git::ProviderMalformedOutputError) do
+          Ace::Git::Forgejo::Parsers.parse_actions_tasks(output)
+        end
+        assert_includes error.message, "count header"
+      end
+    end
+
+    def test_parse_actions_tasks_accepts_zero_task_header
+      assert_equal [], Ace::Git::Forgejo::Parsers.parse_actions_tasks("0 tasks\n")
+    end
+
     def test_parse_repo_view_extracts_full_name_and_url
       view = "owner/repo\n> Sample repository\nView online at https://forge.example.com/owner/repo\n"
       parsed = Ace::Git::Forgejo::Parsers.parse_repo_view(view)

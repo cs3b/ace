@@ -70,6 +70,27 @@ module Forgejo
       assert calls.none? { |args| args[1] == "POST" }
     end
 
+    def test_unrelated_comments_are_excluded_from_match_results
+      unrelated = {"id" => 5, "body" => "unrelated chatter", "user" => {"login" => "other"},
+                   "html_url" => "https://forge.example.com/comment/5"}
+      ours = {"id" => 91, "body" => "Reviewed\n\n<!-- ace-review-session:session-1 -->",
+              "user" => {"login" => "reviewer"}, "html_url" => "https://forge.example.com/comment/91"}
+      calls = 0
+      runner = lambda do |args:, **|
+        calls += 1
+        page = calls == 1 ? [unrelated, ours] : []
+        {success: true, status: 200, stdout: page.to_json, stderr: "", exit_code: 0}
+      end
+      provider = Ace::Git::Forgejo::Provider.new(server: SERVER, runner: runner)
+      pr = Struct.new(:number, :head_sha, :state).new(42, HEAD, :open)
+
+      matches = provider.stub(:pull_request, pr) do
+        provider.send(:matching_review_comments, pr, "ace-review-session:session-1", HEAD)
+      end
+
+      assert_equal [91], matches.map(&:id)
+    end
+
     def test_post_timeout_is_unknown_and_cannot_auto_repeat
       calls = []
       runner = lambda do |args:, **|
