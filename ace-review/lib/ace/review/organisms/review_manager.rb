@@ -1420,8 +1420,9 @@ module Ace
           identity_head = head.to_s
           identity_server = options.pr_metadata&.fetch("server_name", nil).to_s
           identity_repo = options.pr_metadata&.fetch("repository_url", nil).to_s
+          identity_body_digest = Digest::SHA256.hexdigest(content)
           identity_key = Digest::SHA256.hexdigest(
-            [identity_server, identity_repo, identity_pr, identity_head, review_digest].join("\0")
+            [identity_server, identity_repo, identity_pr, identity_head, review_digest, identity_body_digest].join("\0")
           )
           identity_root = File.join(@project_root || Dir.pwd, ".ace-local/review/post-identity")
           FileUtils.mkdir_p(identity_root)
@@ -1437,6 +1438,7 @@ module Ace
           if persisted && persisted["pr"] == options.pr.to_s &&
               persisted["head"] == head && persisted["review_sha256"] == review_digest &&
               persisted["server_name"] == identity_server && persisted["repository_url"] == identity_repo &&
+              persisted["body_digest"] == identity_body_digest &&
               persisted["session_key"].is_a?(String) && persisted["body"].is_a?(String)
             session_key = persisted["session_key"]
             content = persisted["body"]
@@ -1453,7 +1455,8 @@ module Ace
             record = YAML.dump(
               "session_key" => session_key, "body" => content,
               "pr" => options.pr.to_s, "head" => head, "review_sha256" => review_digest,
-              "server_name" => identity_server, "repository_url" => identity_repo
+              "server_name" => identity_server, "repository_url" => identity_repo,
+              "body_digest" => identity_body_digest
             )
             tmp_path = "#{identity_path}.tmp-#{Process.pid}"
             File.write(tmp_path, record)
