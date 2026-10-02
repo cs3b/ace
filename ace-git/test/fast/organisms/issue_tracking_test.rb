@@ -137,6 +137,14 @@ class IssueTrackingTest < AceGitTestCase
     assert_equal "Final note without newline\n", @provider.comments.first[:body]
   end
 
+  def test_clear_removes_inline_marker_without_prior_sync
+    @provider.comments << {id: 1, body: "A historical note<!-- ace-task:tracked -->\n" \
+      "Tracked in ace-task: [8pp.t.q7w](old.md)"}
+    @service.clear(number: 42, task_id: "8pp.t.q7w")
+    assert_equal "A historical note\n", @provider.comments.first[:body]
+    refute_includes @provider.labels, "ace:tracked"
+  end
+
   def test_sync_accepts_ownership_from_either_previous_or_current_id
     @provider.comments << {id: 1, body: "<!-- ace-task:tracked -->\nTracked in ace-task: [8pp.t.q7w.old](x.md)"}
     @service.sync(number: 42, task_id: "8pp.t.q7w.new", previous_task_id: "8pp.t.q7w.old",
