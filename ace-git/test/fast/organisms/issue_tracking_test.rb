@@ -200,6 +200,20 @@ class IssueTrackingTest < AceGitTestCase
     assert_equal 1, provider.comments.length
   end
 
+  def test_before_create_fires_before_the_non_idempotent_post
+    events = []
+    provider = FakeProvider.new
+    provider.define_singleton_method(:create_issue_comment) do |number:, body:|
+      events << :post
+      calls << [:create, number]
+      comments << {id: comments.length + 1, body: body}
+    end
+    service = Ace::Git::Organisms::IssueTracking.new(provider: provider)
+    service.sync(number: 42, task_id: "8pp.t.q7w", task_link: "task.md", task_status: "pending",
+      before_create: -> { events << :guard })
+    assert_equal %i[guard post], events
+  end
+
   def test_unknown_create_reconciles_without_duplicate_after_delayed_commit
     provider = DelayedCreateProvider.new
     provider.arm_delayed_create
