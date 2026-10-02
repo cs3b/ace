@@ -19,6 +19,15 @@ module Ace
         THREAD_ID = /\A[0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}\z/
         THREAD_NAME = /\A[A-Za-z0-9][A-Za-z0-9._-]{3,127}\z/
         PI_PATH = /_([0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12})\.jsonl\z/
+        # Single validator for Pi queue event ids, shared by enqueue and
+        # delivery observation so the two sites can never disagree again.
+        PI_EVENT_ID = /\A(?:inb|wnk)-[a-z0-9-]{8,64}\z/
+        # Agent statuses herdr reports (pane observations use busy; agent wait
+        # also names working/blocked). Anything else — including an explicit
+        # "unknown" — is undetermined and stays a retryable pre-submission
+        # rejection.
+        AGENT_STATUSES = %w[idle busy working blocked done].freeze
+        WAKE_STATUSES = %w[idle done].freeze
 
         def initialize(executor:, native:, deliveries_dir:, receipt_public_key: nil)
           @executor = executor
@@ -43,10 +52,18 @@ module Ace
             end
 
             target = observe_target(address.session, address.pane)
-            if target["agent"] == "pi" && !/\A(?:inb|wnk)-/.match?(event)
+            if target["agent"] == "pi" && !PI_EVENT_ID.match?(event)
               raise ValidationError,
-                "Pi queue requires an inbox (inb-) or wake (wnk-) event id; " \
-                "the id is immutable once enqueued"
+                "Pi queue requires an inbox (inb-) or wake (wnk-) event id with at " \
+                "least 8 id characters; the id is immutable once enqueued"
+            end
+            payload_limit = target["agent"] == "pi" ?
+              Molecules::NativeQueueExecutor::PI_PAYLOAD_LIMIT_BYTES :
+              Molecules::NativeQueueExecutor::MAX_ARG_PAYLOAD_BYTES
+            if payload.bytesize > payload_limit
+              raise ValidationError,
+                "payload exceeds the #{target['agent']} native queue limit " \
+                "of #{payload_limit} bytes and could never be delivered"
             end
             record = Models::DeliveryRecord.new(
               event_id: event, session: address.session, pane: address.pane,
@@ -127,7 +144,7 @@ module Ace
               # is persisted as pending before being attempted so a crash or a
               # transient failure can be recovered by a later deliver call
               # without ever resubmitting the message.
-              wake = if %w[idle done].include?(binding["agent_status"])
+              wake = if WAKE_STATUSES.include?(binding["agent_status"])
                 {"status" => "pending"}
               else
                 {"status" => "none", "reason" => "busy target uses the native queue form"}
@@ -287,7 +304,7 @@ module Ace
           target = record.inbox["target"]
           binding = observe_target(target ? target["session"] : record.session,
             target ? target["pane"] : record.pane)
-          if binding["agent"] == "pi" && !/\A(?:inb|wnk)-[a-z0-9-]{8,64}\z/.match?(record.event_id)
+          if binding["agent"] == "pi" && !PI_EVENT_ID.match?(record.event_id)
             raise ValidationError, "Pi queue requires an inbox or wake event ID"
           end
           stable = %w[session pane terminal_id agent thread thread_kind]
@@ -326,7 +343,11 @@ module Ace
             raise IdentityDriftError, "live Pi session identity differs"
           end
           status = pane["agent_status"].to_s
-          raise ValidationError, "native agent status is unavailable" if status.empty?
+          unless AGENT_STATUSES.include?(status)
+            # An undetermined status cannot decide the wake form; fail the
+            # submission provably before the submission boundary (retryable).
+            raise ValidationError, "native agent status is unrecognized: #{status.inspect}"
+          end
           {"session" => expected_session, "pane" => expected_pane, "terminal_id" => terminal,
            "agent" => agent, "thread" => thread, "thread_kind" => kind,
            "agent_status" => status}

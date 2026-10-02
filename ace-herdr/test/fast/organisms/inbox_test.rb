@@ -104,6 +104,51 @@ module Ace
           end
         end
 
+        def test_unknown_agent_status_is_a_retryable_pre_submission_rejection
+          enqueue
+          @executor.pane["agent_status"] = "unknown"
+
+          result = @inbox.deliver(event: @event)
+
+          assert_equal "queued", result["state"]
+          assert_match(/unrecognized/, result["last_error"])
+          assert_empty @native.calls
+          @executor.pane["agent_status"] = "busy"
+          assert_equal "delivered", @inbox.deliver(event: @event)["state"]
+          assert_equal 1, @native.calls.length
+        end
+
+        def test_oversize_payload_is_rejected_at_enqueue_for_the_target_agent
+          @executor.pane["agent"] = "pi"
+          @executor.pane["agent_session"] = {"agent" => "pi", "kind" => "id", "value" => THREAD}
+          @event = "inb-bbbbbbbbbbbbbbbbbbbbbbbb"
+
+          error = assert_raises(ValidationError) do
+            @inbox.enqueue(event: @event, attempt: "att-1", ref: @ref, payload: "x" * 65_537)
+          end
+
+          assert_match(/never be delivered/, error.message)
+          assert_nil Molecules::DeliveryRecordStore.load(@dir, @event)
+          @executor.pane["agent"] = "codex"
+          @executor.pane["agent_session"] = {"agent" => "codex", "kind" => "id", "value" => THREAD}
+          error = assert_raises(ValidationError) do
+            @inbox.enqueue(event: @event, attempt: "att-1", ref: @ref, payload: "x" * 65_537)
+          end
+          assert_match(/never be delivered/, error.message)
+        end
+
+        def test_short_pi_event_id_is_rejected_by_the_shared_validator
+          @executor.pane["agent"] = "pi"
+          @executor.pane["agent_session"] = {"agent" => "pi", "kind" => "id", "value" => THREAD}
+
+          error = assert_raises(ValidationError) do
+            @inbox.enqueue(event: "inb-1", attempt: "att-1", ref: @ref, payload: "hello")
+          end
+
+          assert_match(/8 id characters/, error.message)
+          assert_nil Molecules::DeliveryRecordStore.load(@dir, "inb-1")
+        end
+
         def test_busy_agent_receives_one_native_queue_submission_even_with_concurrent_callers
           enqueue
           results = 2.times.map { Thread.new { @inbox.deliver(event: @event) } }.map(&:value)

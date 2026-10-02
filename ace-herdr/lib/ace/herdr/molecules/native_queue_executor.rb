@@ -22,6 +22,7 @@ module Ace
         # code ran — so the payload is bounded pre-launch and any E2BIG
         # escape is classified as a proven pre-submission rejection.
         MAX_ARG_PAYLOAD_BYTES = 65_536
+        PI_PAYLOAD_LIMIT_BYTES = 65_536
 
         # runner: test seam. Callable (argv, stdin_data:, timeout_s:) ->
         # [stdout, stderr, status]. Defaults to the bounded runner.
@@ -50,7 +51,7 @@ module Ace
         end
 
         def submit(agent:, thread:, event_id:, digest:, payload:)
-          if agent == "pi" && (payload.empty? || payload.bytesize > 65_536)
+          if agent == "pi" && (payload.empty? || payload.bytesize > PI_PAYLOAD_LIMIT_BYTES)
             return {"accepted" => false, "pre_submit" => true, "error" => "Pi payload must be 1..65536 bytes"}
           end
           if agent == "codex" && payload.bytesize > MAX_ARG_PAYLOAD_BYTES
