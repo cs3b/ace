@@ -162,7 +162,9 @@ module Ace
                          location: file_path}
             end
             operation = frontmatter["issue_sync_operation"]
-            unless operation.nil? || (operation == "clear" && pending == true && frontmatter["remote_issue"].is_a?(Hash))
+            valid_operation = operation.nil? ||
+              (%w[clear reconcile-create].include?(operation) && pending == true && frontmatter["remote_issue"].is_a?(Hash))
+            unless valid_operation
               issues << {type: :error, message: "Invalid issue_sync_operation", location: file_path}
             end
             previous_id = frontmatter["issue_sync_previous_id"]

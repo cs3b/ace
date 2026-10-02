@@ -514,6 +514,20 @@ class TaskManagerTest < AceTaskTestCase
     end
   end
 
+  def test_reparent_syncs_linked_descendants
+    captured = []
+    adapter = fake_issue_adapter { |task:, **_| captured << [task.id, task.metadata["issue_sync_pending"]] }
+    @manager.stub(:issue_adapter, adapter) do
+      target = @manager.create("Target")
+      parent = @manager.create("Parent")
+      child = @manager.create_subtask(parent.id, "Linked child", remote_issue: issue_identity(9))
+      @manager.update(parent.id, move_as_child_of: target.id)
+      # The demoted parent's linked child was flagged pre-move and synced
+      # from its new location.
+      assert_includes captured, [child.id, true]
+    end
+  end
+
   def test_parent_move_syncs_linked_grandchild
     captured = []
     adapter = fake_issue_adapter { |task:, **_| captured << [task.id, task.metadata["issue_sync_pending"]] }

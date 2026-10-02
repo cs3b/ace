@@ -30,7 +30,7 @@ class IssueSyncAdapterTest < AceTaskTestCase
 
       assert_equal({number: 42, task_id: task.id, previous_task_id: nil,
                     task_link: "https://forge.example/owner/repo/src/branch/HEAD/tasks/8pp.t.q7w/task.s.md",
-                    task_status: "pending"}, captured)
+                    task_status: "pending", create_pending: false}, captured)
     end
   end
 

@@ -23,7 +23,8 @@ module Ace
           tracking(server).sync(
             number: identity.fetch("number"), task_id: task.id,
             previous_task_id: previous_task_id,
-            task_link: task_link(identity, task), task_status: task.status
+            task_link: task_link(identity, task), task_status: task.status,
+            create_pending: task.metadata["issue_sync_operation"] == "reconcile-create"
           )
         end
 
