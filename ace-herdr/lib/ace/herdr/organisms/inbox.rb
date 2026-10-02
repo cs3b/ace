@@ -99,10 +99,17 @@ module Ace
             next retry_wake(record) if record.state == "delivered" && wake_pending?(record)
             next public_record(record) if %w[delivered completed uncertain].include?(record.state)
             unless record.state == "queued"
-              # A previous owner may have crashed after its claim. The
-              # submission boundary is unknown to a new process.
-              record = transition(record, "uncertain", record.inbox,
-                "orphan-claim", "claim owner ended before a receipt")
+              if record.inbox["submission_intent"]
+                # A previous owner crashed after saving submission intent:
+                # the submission boundary is unknown to a new process.
+                record = transition(record, "uncertain", record.inbox,
+                  "orphan-claim", "claim owner ended after submission intent")
+              else
+                # The claim was saved before any submission intent existed,
+                # so no submission could have started: provably pre-send.
+                record = transition(record, "queued", record.inbox.reject { |key, _| key == "claim_owner" },
+                  "claim-recovery", "claim owner ended before submission intent")
+              end
               save(record)
               next public_record(record)
             end

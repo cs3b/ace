@@ -420,7 +420,7 @@ module Ace
           assert_empty @native.calls
         end
 
-        def test_orphan_claim_and_native_failure_stay_uncertain_after_restart
+        def test_orphan_claim_without_intent_requeues_and_with_intent_stays_uncertain
           enqueue
           Molecules::DeliveryRecordStore.with_lock(@dir, @event) do
             record = Molecules::DeliveryRecordStore.load(@dir, @event)
@@ -428,16 +428,30 @@ module Ace
               inbox: record.inbox.merge("claim_owner" => "dead"), detail: {"action" => "claim"},
               timestamp: "2026-10-01T00:00:00Z"), @dir)
           end
-          assert_equal "uncertain", @inbox.deliver(event: @event)["state"]
-          assert_empty @native.calls
+          # Claim saved before any submission intent: provably pre-send.
+          assert_equal "queued", @inbox.deliver(event: @event)["state"]
+          @native.result = {"accepted" => true, "stdout" => "queued"}
+          assert_equal "delivered", @inbox.deliver(event: @event)["state"]
 
           @event = "inb-bbbbbbbbbbbbbbbbbbbbbbbb"
+          enqueue
+          Molecules::DeliveryRecordStore.with_lock(@dir, @event) do
+            record = Molecules::DeliveryRecordStore.load(@dir, @event)
+            Molecules::DeliveryRecordStore.save(record.advance_inbox(state: "claimed",
+              inbox: record.inbox.merge("claim_owner" => "dead", "submission_intent" => true),
+              detail: {"action" => "submit-intent"},
+              timestamp: "2026-10-01T00:00:00Z"), @dir)
+          end
+          # Claim saved after submission intent: the boundary is unknown.
+          assert_equal "uncertain", @inbox.deliver(event: @event)["state"]
+
+          @event = "inb-cccccccccccccccccccccccc"
           enqueue
           @native.result = {"accepted" => false, "error" => "agent_prompt_stalled"}
           assert_equal "uncertain", @inbox.deliver(event: @event)["state"]
           restarted = Inbox.new(executor: @executor, native: @native, deliveries_dir: @dir)
           assert_equal "uncertain", restarted.deliver(event: @event)["state"]
-          assert_equal 1, @native.calls.length
+          assert_equal 2, @native.calls.length
         end
 
         def test_pre_submission_missing_executable_can_retry

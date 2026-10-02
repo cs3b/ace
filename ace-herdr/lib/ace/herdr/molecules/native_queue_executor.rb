@@ -85,7 +85,7 @@ module Ace
             end
           end
           {"accepted" => true, "exit_code" => result.status.exitstatus, "stdout" => result.stdout.strip}
-        rescue Errno::ENOENT, Errno::EACCES, Errno::E2BIG => e
+        rescue Errno::ENOENT, Errno::EACCES, Errno::E2BIG, ExecutorUnavailableError => e
           # The executable never launched (or exec rejected the argv). No
           # submission could have occurred, so this stays retryable.
           {"accepted" => false, "pre_submit" => true, "error" => e.message}
@@ -104,6 +104,10 @@ module Ace
           end
 
           BoundedProcess.call(argv, stdin_data: stdin_data, timeout_s: timeout_s)
+        rescue SystemCallError => e
+          # popen3 raises spawn failures before the child exists, so no
+          # submission can have begun: proven pre-launch, retryable.
+          raise ExecutorUnavailableError, e.message
         end
       end
     end

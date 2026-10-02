@@ -42,7 +42,7 @@ module Ace
           execution
         rescue Timeout::Error
           raise AgentNotReadyError, "pane probe timed out after #{timeout_s}s"
-        rescue Errno::ENOENT, Errno::EACCES
+        rescue SystemCallError
           raise ExecutorUnavailableError, "herdr CLI not found or not executable: #{@binary}"
         end
 
@@ -81,7 +81,7 @@ module Ace
           execution
         rescue Timeout::Error
           raise AgentNotReadyError, "herdr wake timed out after #{timeout_ms}ms"
-        rescue Errno::ENOENT, Errno::EACCES => e
+        rescue SystemCallError => e
           raise ExecutorUnavailableError, e.message
         end
 
@@ -247,7 +247,7 @@ module Ace
             stdout: stdout.strip, stderr: stderr.strip,
             success: status.success?, exit_code: status.exitstatus || -1
           )
-        rescue Errno::ENOENT, Errno::EACCES
+        rescue SystemCallError
           raise ExecutorUnavailableError, "herdr CLI not found or not executable: #{@binary}"
         end
 
@@ -257,7 +257,7 @@ module Ace
             stdout: stdout, stderr: stderr.strip,
             success: status.success?, exit_code: status.exitstatus || -1
           )
-        rescue Errno::ENOENT, Errno::EACCES
+        rescue SystemCallError
           raise ExecutorUnavailableError, "herdr CLI not found or not executable: #{@binary}"
         end
 

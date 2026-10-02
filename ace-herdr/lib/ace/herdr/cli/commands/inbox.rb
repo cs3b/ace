@@ -57,7 +57,9 @@ module Ace
               end
               puts JSON.generate(result)
             end
-          rescue SystemCallError, JSON::ParserError => e
+          rescue JSON::ParserError, Errno::ENOENT => e
+            # Receipt/ref file problems are caller-input errors and surface
+            # as an observable refusal; persistence failures are not.
             if operation == "reconcile"
               puts JSON.generate(inbox.status(event: options[:event]).merge(
                 "reconciliation_refusal" => "invalid receipt: #{e.message}"))
