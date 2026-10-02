@@ -28,25 +28,23 @@ module Ace
         def context
           return {in_runtime: false, session: nil, window: nil, pane: nil} unless inside?
 
-          current = @executor.pane_get(@env["HERDR_PANE"]).parsed_json
-          native_workspace = find_value(current, %w[workspace_id workspaceId])
-          hint = @env["HERDR_WORKSPACE_ID"]
-          if hint && native_workspace && hint != native_workspace
-            raise Runtime::RuntimeUnavailableError,
-              "HERDR_WORKSPACE_ID '#{hint}' does not match the caller pane's workspace " \
-              "'#{native_workspace}'; clear the hint or reconnect the pane"
-          end
+          with_errors do
+            current = @executor.pane_get(@env["HERDR_PANE"]).parsed_json
+            native_workspace = find_value(current, %w[workspace_id workspaceId])
+            hint = @env["HERDR_WORKSPACE_ID"]
+            if hint && native_workspace && hint != native_workspace
+              raise Runtime::RuntimeUnavailableError,
+                "HERDR_WORKSPACE_ID '#{hint}' does not match the caller pane's workspace " \
+                "'#{native_workspace}'; clear the hint or reconnect the pane"
+            end
 
-          {
-            in_runtime: true,
-            session: native_workspace || hint,
-            window: find_value(current, %w[tab_id tabId]),
-            pane: @env["HERDR_PANE"] || find_value(current, %w[pane_id paneId])
-          }
-        rescue ExecutorUnavailableError => e
-          raise Runtime::RuntimeUnavailableError, e.message
-        rescue PaneNotFoundError => e
-          raise Runtime::TargetNotFoundError, e.message
+            {
+              in_runtime: true,
+              session: native_workspace || hint,
+              window: find_value(current, %w[tab_id tabId]),
+              pane: @env["HERDR_PANE"] || find_value(current, %w[pane_id paneId])
+            }
+          end
         end
 
         def ensure_window(name:, root:, preset: nil)
@@ -151,7 +149,8 @@ module Ace
         end
 
         def send(pane:, command: nil, items: [])
-          # Reject malformed shared shapes before probing the target.
+          # Reject malformed shared shapes before any delivery or mutation;
+          # the agent probe below is a native read, never a write.
           Runtime::Atoms::SendContract.normalize!(command: command, items: items, profile: :plain_pane)
           with_errors do
             agent = agent_pane?(pane)
@@ -371,9 +370,10 @@ module Ace
             # reuse this pane instead of splitting again.
             write_pointer_only(path, id: tab[:id], prepared_pane: pane_id)
           end
-        rescue Errno::ENOENT => e
-          # The pointer could not be persisted; surface it instead of
-          # silently losing prepared-pane reuse.
+        rescue StandardError => e
+          # The pointer is an optimization; losing it only costs a re-split.
+          # Warn and continue — provenance writes in ensure_window stay
+          # hard-fail, this one does not.
           warn "ace-herdr: could not persist prepared-pane record for '#{tab[:name]}': #{e.class}: #{e.message}"
           nil
         end
@@ -392,7 +392,7 @@ module Ace
           info = find_hash(@executor.pane_process_info(pane_id).parsed_json, %w[result process_info])
           return if info.is_a?(Hash) && find_value_of_type(info, "shell_pid", Integer)
 
-          raise Runtime::RuntimeUnavailableError, "prepared pane '#{pane_id}' has no retained shell"
+          raise Runtime::Error, "prepared pane '#{pane_id}' has no retained shell"
         end
 
         def write_identity(path, id:, root:, preset:, prepared_pane: nil)
