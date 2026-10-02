@@ -11,7 +11,6 @@ require_relative "../molecules/subtask_creator"
 require_relative "../molecules/task_reparenter"
 require_relative "../molecules/issue_link"
 require_relative "../atoms/task_validation_rules"
-
 module Ace
   module Task
     module Organisms
@@ -378,13 +377,27 @@ module Ace
             .filter_map { |child| linked_issue(child) }
         end
 
+        # Canonical lock/ownership key for an issue identity: provider plus
+        # web repository plus number. Aliased server names and SSH/HTTPS URL
+        # variants of one repository normalize to the same key; the stored
+        # link keeps the selected server name for replay authentication.
+        def canonical_issue_key(identity)
+          [
+            canonical_value(identity, "provider"),
+            Ace::Git::Atoms::ServerUrl.web_base(canonical_value(identity, "repository_url")),
+            canonical_value(identity, "number")
+          ].map { |entry| entry.gsub(%r{[^\w.-]}, "_") }.join("--")
+        end
+
+        def canonical_value(identity, key)
+          (identity[key] || identity[key.to_sym]).to_s
+        end
+
         # Acquire identity locks in one stable sorted order so concurrent
         # relocations cannot deadlock on opposite orders; nested acquisitions
         # of held identities are re-entrant no-ops.
         def with_identity_locks(identities, &block)
-          ordered = identities.compact.sort_by do |identity|
-            identity.values_at("server_name", "provider", "repository_url", "number").join("--")
-          end
+          ordered = identities.compact.sort_by { |identity| canonical_issue_key(identity) }
           return block.call if ordered.empty?
 
           with_issue_identity_lock(ordered.first) do
@@ -896,36 +909,37 @@ module Ace
 
         # One task owns at most one exact issue: reject a second local task
         # holding the same identity even when the first link is still pending
-        # and has therefore written no remote owner marker yet.
+        # and has therefore written no remote owner marker yet. Identity
+        # comparison is canonical (provider + web repository + number), so a
+        # second configured server name for the same repository cannot claim
+        # the issue across the marker's absence window.
         def ensure_issue_not_linked_elsewhere!(identity, exclude_id: nil)
-          target = identity.slice("server_name", "provider", "repository_url", "number")
+          target_key = canonical_issue_key(identity)
           all_tasks_including_subtasks.each do |task|
             next if exclude_id && task.id == exclude_id.to_s
 
             existing = task.metadata["remote_issue"]
-            next unless existing.is_a?(Hash) && (existing["number"] || existing[:number]).to_s == target["number"].to_s
-
-            held = {
-              "server_name" => (existing["server_name"] || existing[:server_name]).to_s,
-              "provider" => (existing["provider"] || existing[:provider]).to_s,
-              "repository_url" => (existing["repository_url"] || existing[:repository_url]).to_s,
-              "number" => (existing["number"] || existing[:number]).to_s
-            }
-            next unless held.values == target.values.map(&:to_s)
+            next unless existing.is_a?(Hash)
+            next unless canonical_issue_key(existing) == target_key
 
             raise Ace::Git::ProviderIdentityMismatchError,
-              "Issue ##{target["number"]} on #{target["server_name"]} is already linked to task #{task.id}"
+              "Issue ##{canonical_value(identity, 'number')} on " \
+                "#{canonical_value(identity, 'server_name')} is already linked to task #{task.id}"
           end
         end
 
-        # Serialize link operations per exact issue identity: ownership
+        # Serialize link operations per canonical issue identity: ownership
         # validation, the local write, and the remote marker creation must not
-        # interleave across processes, or two tasks can claim one issue.
+        # interleave across processes, or two tasks can claim one issue —
+        # including through two configured names for the same repository.
         def with_issue_identity_lock(identity)
           return yield unless identity.is_a?(Hash)
 
-          key = identity.values_at("server_name", "provider", "repository_url", "number")
-            .map { |value| value.to_s.gsub(%r{[^\w.-]}, "_") }.join("--")
+          key = if identity["task"]
+            "task-#{canonical_value(identity, 'task')}"
+          else
+            canonical_issue_key(identity)
+          end
           held = (Thread.current[:ace_task_identity_locks] ||= [])
           return yield if held.include?(key)
 
