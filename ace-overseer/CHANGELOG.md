@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.2] - 2026-10-02
+
+### Technical
+- Updated the ace-tmux dependency to the 0.18 adapter release line.
+
 ## [0.18.1] - 2026-10-01
 
 ### Technical
