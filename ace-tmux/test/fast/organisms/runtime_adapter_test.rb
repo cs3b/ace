@@ -478,6 +478,11 @@ class TmuxRuntimeAdapterNativeTest < Minitest::Test
     assert_equal sends_before, sends_after
   end
 
+  def test_native_wait_output_rejects_blank_pattern
+    assert_raises(ArgumentError) { @adapter.wait_output(pane: "%2", pattern: "", timeout: 1) }
+    assert_raises(ArgumentError) { @adapter.wait_output(pane: "%2", pattern: nil, timeout: 1) }
+  end
+
   class NewlineShowOptionsExecutor < FakeTmuxExecutor
     def capture(command)
       result = super

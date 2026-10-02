@@ -82,6 +82,8 @@ module Ace
       end
 
       def wait_output(pane:, pattern:, timeout:)
+        raise ArgumentError, "pattern must be present" if pattern.nil? || pattern.to_s.empty?
+
         wait_until(condition: "output", target: pane, timeout: timeout) do
           backend.capture_output(pane, lines: 40).include?(pattern.to_s)
         end
