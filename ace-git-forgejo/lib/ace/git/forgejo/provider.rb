@@ -235,7 +235,8 @@ end
             raise Ace::Git::ProviderConflictingMatchesError,
               "Review session #{correlation} comment exists on PR ##{number} with different content"
           end
-          verify_expected_head!(pull_request(number: number), expected_head)
+          second = verify_expected_head!(pull_request(number: number), expected_head)
+          require_open_pr!(second)
           begin
             review_http.request(:post, "issues/#{number}/comments", body: {body: "#{body}\n\n#{marker}"})
           rescue Ace::Git::ProviderUnknownOutcomeError => e

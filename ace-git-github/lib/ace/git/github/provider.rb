@@ -324,7 +324,8 @@ end
               "Review session #{correlation} comment exists on PR ##{pr.number} with different content"
           end
 
-          verify_expected_head!(pull_request(number: pr.number), expected_head)
+          second = verify_expected_head!(pull_request(number: pr.number), expected_head)
+          require_open_pr!(second)
           begin
             gh_api("issues/#{pr.number}/comments", method: :post, body: "#{body}\n\n#{marker}")
           rescue Ace::Git::ProviderUnreachableError => e
