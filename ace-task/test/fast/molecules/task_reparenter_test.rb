@@ -126,6 +126,33 @@ class TaskReparenterTest < AceTaskTestCase
     refute Dir.exist?(task_dir), "Original standalone dir should be moved"
   end
 
+  def test_demote_rewrites_descendant_identities
+    parent_dir = create_task_dir("8pp.t.q7w", "target")
+    create_spec(parent_dir, "8pp.t.q7w-target", status: "pending")
+
+    task_dir = create_task_dir("8pp.t.q9w", "moving-parent")
+    create_spec(task_dir, "8pp.t.q9w-moving-parent", status: "pending")
+
+    child_dir = File.join(task_dir, "a-linked-child")
+    FileUtils.mkdir_p(child_dir)
+    create_spec(child_dir, "8pp.t.q9w.a-linked-child", id: "8pp.t.q9w.a", status: "pending", parent: "8pp.t.q9w")
+
+    grandchild_dir = File.join(child_dir, "b-deep")
+    FileUtils.mkdir_p(grandchild_dir)
+    create_spec(grandchild_dir, "8pp.t.q9w.a.b-deep", id: "8pp.t.q9w.a.b", status: "pending", parent: "8pp.t.q9w.a")
+
+    task = load_task(task_dir, "8pp.t.q9w")
+    reparenter = Ace::Task::Molecules::TaskReparenter.new(root_dir: @tasks_dir)
+    result = reparenter.reparent(task, target: "8pp.t.q7w", resolve_ref: ->(ref) { load_task(parent_dir, "8pp.t.q7w") })
+
+    child_spec = File.read(File.join(result.path, "a-linked-child", "8pp.t.q7w.0.a-linked-child.s.md"))
+    assert_match(/id: 8pp\.t\.q7w\.0\.a\b/, child_spec)
+    assert_match(/parent: 8pp\.t\.q7w\.0/, child_spec)
+    grandchild_spec = File.read(File.join(result.path, "a-linked-child", "b-deep", "8pp.t.q7w.0.a.b-deep.s.md"))
+    assert_match(/id: 8pp\.t\.q7w\.0\.a\.b\b/, grandchild_spec)
+    assert_match(/parent: 8pp\.t\.q7w\.0\.a/, grandchild_spec)
+  end
+
   def test_demote_raises_for_missing_parent
     task_dir = create_task_dir("8pp.t.q7w", "task")
     create_spec(task_dir, "8pp.t.q7w-task", status: "pending")
