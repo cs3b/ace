@@ -82,7 +82,7 @@ module Ace
 
       def split_window(window)
         target = resolve_window!(window)
-        query(B.split_window(target, print_format: "\#{pane_id}", tmux: tmux))
+        query(B.split_window(target, root: window_info(window)[:root], print_format: "\#{pane_id}", tmux: tmux))
       end
 
       def set_keep_alive(pane, value)
@@ -279,7 +279,12 @@ module Ace
 
       def query(command)
         result = executor.capture(command)
-        raise Ace::Tmux::Error, result.stderr.to_s unless result.success?
+        unless result.success?
+          detail = result.stderr.to_s
+          raise Ace::Tmux::TargetResolutionError, "tmux target is unavailable" if detail.match?(/can't find|no such|unknown target|not found/i)
+
+          raise Ace::Tmux::Error, detail
+        end
 
         result.stdout.to_s.strip
       end

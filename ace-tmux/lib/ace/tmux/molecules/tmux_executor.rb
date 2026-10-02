@@ -18,8 +18,10 @@ module Ace
         # @return [ExecutionResult] Result with stdout, stderr, success?
         def capture(cmd)
           stdout, stderr, status = Open3.capture3(*with_socket_target(cmd))
+          # stdout stays raw: pane capture must preserve whitespace and the
+          # trailing newline; parsing callers trim at their own boundary.
           ExecutionResult.new(
-            stdout: stdout.strip,
+            stdout: stdout,
             stderr: stderr.strip,
             success: status.success?,
             exit_code: status.exitstatus

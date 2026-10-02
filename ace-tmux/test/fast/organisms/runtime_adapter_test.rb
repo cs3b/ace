@@ -388,6 +388,36 @@ class TmuxRuntimeAdapterNativeTest < Minitest::Test
     end
   end
 
+  def test_native_prepared_pane_splits_in_window_root
+    @adapter.ensure_window(name: "work", root: "/tmp/work")
+    @adapter.prepare_pane(window: "work")
+
+    split = @executor.commands.find { |command| command[1] == "split-window" }
+    refute_nil split
+    assert_includes split, "-c"
+    assert_equal "/tmp/work", split[split.index("-c") + 1]
+  end
+
+  def test_native_query_classifies_missing_target_and_server_failure
+    missing = Object.new
+    missing.define_singleton_method(:capture) do |_command|
+      Ace::Tmux::Molecules::ExecutionResult.new(stdout: "", stderr: "can't find session: main", success: false, exit_code: 1)
+    end
+    adapter = Ace::Tmux::RuntimeAdapter.new(
+      backend: Ace::Tmux::NativeRuntimeBackend.new(executor: missing, env: {"ACE_TMUX_SESSION" => "main"})
+    )
+    assert_raises(Ace::Runtime::TargetNotFoundError) { adapter.list_windows }
+
+    broken = Object.new
+    broken.define_singleton_method(:capture) do |_command|
+      Ace::Tmux::Molecules::ExecutionResult.new(stdout: "", stderr: "server exited unexpectedly", success: false, exit_code: 1)
+    end
+    adapter = Ace::Tmux::RuntimeAdapter.new(
+      backend: Ace::Tmux::NativeRuntimeBackend.new(executor: broken, env: {"ACE_TMUX_SESSION" => "main"})
+    )
+    assert_raises(Ace::Runtime::RuntimeUnavailableError) { adapter.list_windows }
+  end
+
   def test_native_pane_exited_distinguishes_absence_from_query_failure
     @adapter.ensure_window(name: "work", root: "/tmp/work")
     pane = @adapter.prepare_pane(window: "work")
