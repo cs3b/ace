@@ -126,7 +126,7 @@ module Ace
             exec sleep 30
           SH
           FileUtils.chmod(0o755, script)
-          executor = NativeQueueExecutor.new(codex: script, submit_timeout_s: 0.3)
+          executor = NativeQueueExecutor.new(codex: script, submit_timeout_s: 1.5)
 
           started = Process.clock_gettime(Process::CLOCK_MONOTONIC)
           result = executor.submit(agent: "codex", thread: "thread-1", event_id: "inb-12345678",

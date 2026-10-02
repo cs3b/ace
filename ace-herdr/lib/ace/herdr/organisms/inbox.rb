@@ -43,6 +43,11 @@ module Ace
             end
 
             target = observe_target(address.session, address.pane)
+            if target["agent"] == "pi" && !/\A(?:inb|wnk)-/.match?(event)
+              raise ValidationError,
+                "Pi queue requires an inbox (inb-) or wake (wnk-) event id; " \
+                "the id is immutable once enqueued"
+            end
             record = Models::DeliveryRecord.new(
               event_id: event, session: address.session, pane: address.pane,
               answer_digest: digest, answer: payload, state: "queued",
@@ -68,6 +73,7 @@ module Ace
           validate_id!(event, "event")
           with_event(event) do |record|
             raise ValidationError, "unknown inbox event: #{event}" unless record&.inbox
+            next retry_wake(record) if record.state == "delivered" && wake_pending?(record)
             next public_record(record) if %w[delivered completed uncertain].include?(record.state)
             unless record.state == "queued"
               # A previous owner may have crashed after its claim. The
@@ -117,13 +123,19 @@ module Ace
                 "native_output" => result["stdout"]}
               record = transition(record, "delivered", intent.merge("receipt" => receipt), "accepted")
               save(record)
-              if %w[idle done].include?(binding["agent_status"])
-                wake_error = wake_idle(binding)
-                if wake_error
-                  record = transition(record, "delivered", record.inbox.merge("wake_error" => wake_error),
-                    "wake-failed", wake_error)
-                end
+              # The wake is a separate effect from the accepted submission: it
+              # is persisted as pending before being attempted so a crash or a
+              # transient failure can be recovered by a later deliver call
+              # without ever resubmitting the message.
+              wake = if %w[idle done].include?(binding["agent_status"])
+                {"status" => "pending"}
+              else
+                {"status" => "none", "reason" => "busy target uses the native queue form"}
               end
+              record = transition(record, "delivered",
+                record.inbox.merge("wake" => wake), "wake-#{wake['status']}")
+              save(record)
+              record = attempt_wake(record, binding) if wake["status"] == "pending"
             else
               record = transition(record, "uncertain", intent.merge("last_error" => result["error"]),
                 "submission-uncertain", result["error"])
@@ -327,6 +339,46 @@ module Ace
           {"accepted" => false, "error" => e.message}
         end
 
+        # A delivered record still owes its idle wake after a crash (no wake
+        # entry) or a transient failure (status pending). Re-verify the live
+        # target first — identity drift demotes the event to uncertain — then
+        # retry the payload-free wake. The native payload is never resubmitted.
+        def retry_wake(record)
+          begin
+            binding = observe(record)
+          rescue IdentityDriftError => e
+            record = transition(record, "uncertain", record.inbox.merge("last_error" => e.message),
+              "identity-drift", e.message)
+            save(record)
+            return public_record(record)
+          rescue ExecutorError, ValidationError => e
+            record = transition(record, "delivered",
+              record.inbox.merge("wake" => record.inbox.fetch("wake", {"status" => "pending"})
+                .merge("status" => "pending", "error" => e.message)),
+              "wake-retry-blocked", e.message)
+            save(record)
+            return public_record(record)
+          end
+          public_record(attempt_wake(record, binding))
+        end
+
+        def wake_pending?(record)
+          wake = record.inbox["wake"]
+          wake.nil? || wake["status"] == "pending"
+        end
+
+        def attempt_wake(record, binding)
+          wake_error = wake_idle(binding)
+          wake = if wake_error
+            {"status" => "pending", "error" => wake_error}
+          else
+            {"status" => "sent"}
+          end
+          detail = wake_error ? "wake-failed" : "wake-sent"
+          transition(record, "delivered",
+            record.inbox.merge("wake" => wake).compact, detail, wake_error)
+        end
+
         def wake_idle(binding)
           @executor.agent_prompt_bounded(pane: binding["pane"],
             text: "Check your native queued messages.", timeout_ms: 10_000)
@@ -346,8 +398,8 @@ module Ace
            "target" => record.inbox["target"],
            "binding" => record.inbox["binding"], "receipt" => record.inbox["receipt"],
            "reconciliation" => record.inbox["reconciliation"],
-           "last_error" => record.inbox["last_error"],
-           "wake_error" => record.inbox["wake_error"]}
+           "wake" => record.inbox["wake"],
+           "last_error" => record.inbox["last_error"]}
         end
       end
     end

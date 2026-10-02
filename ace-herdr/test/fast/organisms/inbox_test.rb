@@ -131,12 +131,77 @@ module Ace
           result = @inbox.deliver(event: @event)
 
           assert_equal "delivered", result["state"]
-          assert_match(/wake process crashed/, result["wake_error"])
+          assert_equal "pending", result.dig("wake", "status")
+          assert_match(/wake process crashed/, result.dig("wake", "error"))
           assert_equal 1, @native.calls.length
           restarted = Inbox.new(executor: @executor, native: @native, deliveries_dir: @dir)
           assert_equal "delivered", restarted.status(event: @event)["state"]
-          assert_equal "delivered", restarted.deliver(event: @event)["state"]
+          @executor.prompt_error = nil
+
+          retried = restarted.deliver(event: @event)
+
+          assert_equal "delivered", retried["state"]
+          assert_equal "sent", retried.dig("wake", "status")
+          assert_equal [["p1", "Check your native queued messages."]], @executor.prompts
           assert_equal 1, @native.calls.length
+        end
+
+        def test_crash_before_wake_is_recovered_without_resubmission
+          @executor.pane["agent_status"] = "idle"
+          enqueue
+          @inbox.deliver(event: @event)
+          Molecules::DeliveryRecordStore.with_lock(@dir, @event) do
+            record = Molecules::DeliveryRecordStore.load(@dir, @event)
+            # Simulate a crash between the delivered save and the wake entry.
+            inbox = record.inbox.reject { |key, _| key == "wake" }
+            Molecules::DeliveryRecordStore.save(record.advance_inbox(
+              state: "delivered", inbox: inbox, detail: {"action" => "accepted"},
+              timestamp: "2026-10-02T00:00:00Z"), @dir)
+          end
+          @executor.prompts.clear
+
+          result = @inbox.deliver(event: @event)
+
+          assert_equal "delivered", result["state"]
+          assert_equal "sent", result.dig("wake", "status")
+          assert_equal [["p1", "Check your native queued messages."]], @executor.prompts
+          assert_equal 1, @native.calls.length
+        end
+
+        def test_wake_retry_with_identity_drift_requires_reconciliation
+          @executor.pane["agent_status"] = "idle"
+          @executor.prompt_error = RuntimeError.new("wake process crashed")
+          enqueue
+          @inbox.deliver(event: @event)
+          @executor.prompt_error = nil
+          @executor.pane["workspace_id"] = "other"
+
+          result = @inbox.deliver(event: @event)
+
+          assert_equal "uncertain", result["state"]
+          assert_match(/runtime session identity changed/, result["last_error"])
+          assert_equal 1, @native.calls.length
+        end
+
+        def test_busy_target_records_no_wake_debt
+          enqueue
+          result = @inbox.deliver(event: @event)
+
+          assert_equal "delivered", result["state"]
+          assert_equal "none", result.dig("wake", "status")
+          assert_empty @executor.prompts
+        end
+
+        def test_pi_target_rejects_non_inbox_event_ids_at_enqueue
+          @executor.pane["agent"] = "pi"
+          @executor.pane["agent_session"] = {"agent" => "pi", "kind" => "id", "value" => THREAD}
+
+          error = assert_raises(ValidationError) do
+            @inbox.enqueue(event: "evt-1", attempt: "att-1", ref: @ref, payload: "hello")
+          end
+
+          assert_match(/inb-.*wnk-/, error.message)
+          assert_nil Molecules::DeliveryRecordStore.load(@dir, "evt-1")
         end
 
         def test_spoofed_or_reused_pane_identity_never_submits
