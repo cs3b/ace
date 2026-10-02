@@ -530,7 +530,7 @@ end
             }
           GRAPHQL
           thread = gh_graphql(query, id: thread_id).dig("data", "node")
-          verify_review_thread!(thread, pr, expected_head)
+          verify_review_thread!(thread, pr, expected_head, thread_id: thread_id)
           if thread["isResolved"] == true
             verify_post_mutation_head!(pr, expected_head, "thread #{thread_id}")
             return true
@@ -556,7 +556,7 @@ end
               "head #{expected_head}, thread #{thread_id}: #{e.message}"
           end
           begin
-            verify_review_thread!(resolved, pr, expected_head)
+            verify_review_thread!(resolved, pr, expected_head, thread_id: thread_id)
           rescue Ace::Git::ProviderIdentityMismatchError, Ace::Git::ProviderMalformedOutputError, Ace::Git::ProviderExpectedHeadConflictError => e
             raise Ace::Git::ProviderUnknownOutcomeError,
               "Thread resolution sent but confirmation unreadable for #{server.name}/#{pr.number}, thread #{thread_id}: #{e.message}; reconcile before repeating"
@@ -662,12 +662,16 @@ end
             "Cannot post review comment to PR ##{pr.number} in #{pr.state} state"
         end
 
-        def verify_review_thread!(thread, pr, expected_head)
+        def verify_review_thread!(thread, pr, expected_head, thread_id: nil)
           unless thread.is_a?(Hash) && thread["id"] && thread["pullRequest"].is_a?(Hash) &&
               thread.dig("pullRequest", "number") == pr.number &&
               Ace::Git::Atoms::ServerUrl.match?(thread.dig("pullRequest", "repository", "url"), server.url)
             raise Ace::Git::ProviderIdentityMismatchError,
               "GitHub review thread does not belong to selected PR ##{pr.number}"
+          end
+          if thread_id && thread["id"] != thread_id
+            raise Ace::Git::ProviderIdentityMismatchError,
+              "GitHub returned thread #{thread["id"]} instead of #{thread_id}"
           end
           unless thread.dig("pullRequest", "headRefOid") == expected_head
             raise Ace::Git::ProviderExpectedHeadConflictError,
@@ -738,8 +742,13 @@ end
         end
 
         def matching_review_comments(pr, marker, head)
-          gh_api_pages("issues/#{pr.number}/comments").filter_map do |entry|
-            next unless entry.is_a?(Hash) && entry["body"].is_a?(String) && entry["body"].include?(marker)
+          gh_api_pages("issues/#{pr.number}/comments").map do |entry|
+            # Every row must be a valid comment; a row without a body
+      # means malformed collection and must not hide our session post.
+            unless entry.is_a?(Hash) && entry["body"].is_a?(String)
+              raise Ace::Git::ProviderMalformedOutputError, "Malformed GitHub PR comment collection"
+            end
+            next unless entry["body"].include?(marker)
 
             review_comment(entry, pr, head)
           end

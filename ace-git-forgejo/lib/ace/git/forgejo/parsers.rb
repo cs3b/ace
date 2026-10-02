@@ -119,11 +119,16 @@ module Ace
           tasks = []
           declared_count = nil
           text.to_s.lines.map { |line| clean(line) }.reject(&:empty?).each do |line|
-            # `fj` emits a leading "<n> tasks" count header before task lines.
+            # `fj` emits exactly one leading "<n> tasks" count header
+          # before task lines; require it (including 0 tasks).
             if (header = line.match(/\A(\d+) tasks?\z/i))
+              raise Ace::Git::ProviderMalformedOutputError,
+                "Duplicate `fj actions tasks` count header" if declared_count
               declared_count = header[1].to_i
               next
             end
+            raise Ace::Git::ProviderMalformedOutputError,
+              "Missing `fj actions tasks` count header" unless declared_count
 
             match = line.match(
               /\A#(?<task>\d+)\s+\((?<sha>[0-9a-f]+)\)\s+(?<state>\w+)\s+(?<name>.+?)\s+[\dhms.]+\s+\((?<event>[^)]+)\)/
