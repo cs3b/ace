@@ -157,12 +157,11 @@ module Ace
           # ownership of a marker written under the previous task ID.
           sync_relevant_keys = [set, add, remove].compact.flat_map(&:keys).map(&:to_s)
           linked = linked_issue(task)
-          clear_pending = linked && task.metadata["issue_sync_operation"] != "clear"
-          deferred_sync = clear_pending &&
+          deferred_sync = linked &&
             (move_to || move_as_child_of || (sync_relevant_keys & %w[title status]).any?)
           deferred_set = deferred_sync ? set.merge("issue_sync_pending" => true) : set
-          # Chained reparents must keep the ORIGINAL pre-sync ID: the remote
-          # marker still names it regardless of intermediate local IDs.
+          # Any linked ID change records the outgoing ID - including pending
+          # clears, whose remote marker still names the previous owner.
           deferred_set = deferred_set.merge(
             "issue_sync_previous_id" => task.metadata["issue_sync_previous_id"] || task.id
           ) if deferred_sync && move_as_child_of
