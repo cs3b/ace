@@ -552,6 +552,33 @@ class TaskManagerTest < AceTaskTestCase
     end
   end
 
+  def test_pending_clear_completes_when_guarded_create_never_committed
+    # Authoritative absence during a clear's reconciliation proves the
+    # guarded create never committed: there is no marker to remove, so the
+    # clear must complete instead of replaying the absence forever.
+    calls = []
+    adapter = Object.new
+    adapter.define_singleton_method(:validate_link!) { |**_args| true }
+    adapter.define_singleton_method(:sync_task) { |task:, before_create: nil, **_| calls << :sync }
+    adapter.define_singleton_method(:reconcile_comment) do |task:, **_|
+      calls << :reconcile
+      raise Ace::Git::ProviderReconcileAbsenceError, "tracking comment create still unresolved"
+    end
+    adapter.define_singleton_method(:clear_task) { |task:, previous_task_id: nil, **_| calls << :clear }
+    @manager.stub(:issue_adapter, adapter) do
+      task = @manager.create("Guarded task", remote_issue: issue_identity)
+      Ace::Support::Items::Molecules::FieldUpdater.update(
+        task.file_path, set: {"issue_sync_operation" => "reconcile-create"}
+      )
+      @manager.issue_link(task.id, clear: true)
+      fresh = @manager.show(task.id)
+      refute fresh.metadata["remote_issue"]
+      refute fresh.metadata["issue_sync_pending"]
+      refute fresh.metadata["issue_sync_reconcile_create"]
+      assert_includes calls, :clear
+    end
+  end
+
   def test_update_sync_rejects_link_changed_under_the_lock
     adapter = fake_issue_adapter { |task:, **_| {success: true} }
     @manager.stub(:issue_adapter, adapter) do

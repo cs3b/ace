@@ -1156,8 +1156,15 @@ module Ace
                   "issue_sync_reconcile_create" => (true if reconcile_first)})
           # A tracking comment may still be committing forge-side: reconcile
           # comment ownership before the clear — clear must never change
-          # issue state as a side effect.
-          issue_adapter.reconcile_comment(task: task) if reconcile_first
+          # issue state as a side effect. Authoritative absence (the guarded
+          # create never committed) means there is no marker to reconcile,
+          # so the clear proceeds; any other uncertainty retains the intent
+          # for replay.
+          begin
+            issue_adapter.reconcile_comment(task: task) if reconcile_first
+          rescue Ace::Git::ProviderReconcileAbsenceError
+            nil
+          end
           issue_adapter.clear_task(task: task, previous_task_id: task.metadata["issue_sync_previous_id"])
           Ace::Support::Items::Molecules::FieldUpdater.update(task.file_path,
             set: {"remote_issue" => nil, "issue_sync_pending" => nil,
