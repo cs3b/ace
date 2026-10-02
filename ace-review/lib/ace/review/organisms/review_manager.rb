@@ -1430,12 +1430,12 @@ module Ace
           # any new timestamp is generated.
           identity_preset = review_data[:preset].to_s
           identity_model = review_data[:model].to_s
-          # The marker is stable per PR identity + preset/model: regenerated
-          # review text keeps the same marker so a duplicate is impossible;
-      # changed content under that marker surfaces as a provider-side
-      # conflict requiring reconciliation.
+          # The identity includes the review artifact digest: a retry of
+          # the same artifact reuses the persisted marker (no duplicate),
+          # while a regenerated review for a later round is a new artifact
+          # and gets its own comment.
           identity_key = Digest::SHA256.hexdigest(
-            [identity_server, identity_repo, identity_pr, identity_head,
+            [identity_server, identity_repo, identity_pr, identity_head, review_digest,
              identity_preset, identity_model].join("\0")
           )
           identity_root = File.join(@project_root || Dir.pwd, ".ace-local/review/post-identity")
