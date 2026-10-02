@@ -2,7 +2,7 @@
 
 # Resolve monorepo dependencies from workspace sources, not installed gems
 # (the installed ace-hitl may lag the in-repo version).
-%w[ace-hitl ace-support-config ace-support-core].each do |pkg|
+%w[ace-hitl ace-runtime ace-support-config ace-support-core].each do |pkg|
   lib = File.expand_path("../../#{pkg}/lib", __dir__)
   $LOAD_PATH.unshift(lib) if Dir.exist?(lib)
 end
@@ -60,12 +60,28 @@ module HerdrTestHelper
       call(:pane_current)
     end
 
+    def pane_get(pane)
+      call(:pane_get, pane: pane)
+    end
+
     def pane_process_info(pane)
       call(:pane_process_info, pane: pane)
     end
 
     def tab_create(workspace_id:, label:, cwd: nil, focus: nil)
       call(:tab_create, workspace_id: workspace_id, label: label, cwd: cwd, focus: focus)
+    end
+
+    def tab_get(tab)
+      call(:tab_get, tab: tab)
+    end
+
+    def tab_focus(tab)
+      call(:tab_focus, tab: tab)
+    end
+
+    def api_snapshot
+      call(:api_snapshot)
     end
 
     def workspace_list

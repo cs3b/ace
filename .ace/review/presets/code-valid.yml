@@ -35,6 +35,8 @@ instructions:
 bundle: "project"
 
 models:
-  - role:review-codex
-  - role:review-gemini
+  # One reviewer position with fallback chain (see .ace/llm/config.yml):
+  # pi glm 5.3 -> codex sol -> agy flash 3.8; the round is good if even
+  # one returns. astra runs once per PR via role:review-astra.
+  - role:review-default
   # - role:review-claude

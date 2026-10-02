@@ -1,3 +1,9 @@
+# ace-llm configuration file
+# Reviewer policy (Captain, 2026-10-02): reviews run ONE reviewer position
+# with a fallback chain — pi glm 5.3 -> codex sol -> agy flash 3.8 — so the
+# round is good if even one returns. gemini is removed everywhere (individual
+# auth tier deprecated Google-side); one astra review per PR via review-astra.
+
 llm:
   providers:
     active:
@@ -5,7 +11,6 @@ llm:
       - opencode
       - pi
       - codex
-      - gemini
       - claude
       - openrouter
       - zai
@@ -14,61 +19,63 @@ llm:
     # --- Reusable candidate lists ---
     _utility: &utility
       - codex:sol
-      - gemini:flash-latest
+      - agy:gemini-3.8-flash-medium
       - claude:haiku
     _assign-worker: &assign-worker
       - codex:sol:medium@yolo
-      - gemini:flash-latest@yolo
+      - agy:gemini-3.8-flash-medium@yolo
       - claude:sonnet:medium@yolo
 
     # --- Diagnostic ---
     doctor:
       - codex:sol:low@yolo
-      - gemini:flash-latest@yolo
+      - agy:gemini-3.8-flash-medium@yolo
       - claude:haiku:low@yolo
 
     # --- Planning ---
     planner:
       - codex:sol:high@ro
-      - gemini:pro-latest@ro
+      - pi:zai/glm-5.3@ro
       - claude:opus:high@ro
 
     # --- Review ---
+    # Reviewer position with fallback chain: pi glm 5.3, then codex sol,
+    # then agy flash 3.8 — the round is good if even one returns.
     review-default:
-      - codex:sol:medium@ro
-      - gemini:pro-latest@ro
-      - claude:sonnet:medium@ro
+      - pi:zai/glm-5.3@ro
+      - codex:sol@ro
+      - agy:gemini-3.8-flash-medium@ro
     review-synthesizer:
       - codex:sol:low@ro
-      - gemini:flash-latest@ro
+      - agy:gemini-3.8-flash-medium@ro
       - claude:sonnet:medium@ro
-    review-claude:
-      - claude:opus:high@ro
     review-codex:
       - codex:sol:high@ro
-    review-gemini:
-      - gemini:pro-latest@ro
+    # Reserved: the single independent astra review for a PR (one session
+    # per PR), run explicitly by the delivery flow — not wired into presets.
+    review-astra:
+      - codex:astra@ro
 
     # --- Assignment ---
     assign-executor: *assign-worker
     assign-engineer: *assign-worker
     assign-orchestrator:
       - codex:sol:medium@yolo
-      - gemini:pro-latest@yolo
+      - pi:zai/glm-5.3@yolo
       - claude:opus:medium@yolo
 
     # --- E2E testing ---
     e2e-runner:
       - codex:sol:low@yolo
-      - gemini:flash-latest@yolo
+      - agy:gemini-3.8-flash-medium@yolo
       - claude:haiku:low@yolo
     e2e-verifier:
       - codex:sol:low@ro
-      - gemini:flash-latest@ro
+      - agy:gemini-3.8-flash-medium@ro
       - claude:haiku:low@ro
     e2e-reporter:
       - codex:sol:low@ro
-      - gemini:flash-latest@ro
+      - agy:gemini-3.8-flash-medium@ro
       - claude:haiku:low@ro
 
     # --- Utility ---
@@ -81,17 +88,17 @@ llm:
     compressor: *utility
     idea-enhance:
       - codex:sol@ro
-      - gemini:flash-latest@ro
+      - agy:gemini-3.8-flash-medium@ro
       - claude:haiku@ro
 
     # --- Simulation ---
     sim-primary:
       - codex:sol@ro
-      - gemini:flash-latest@ro
+      - agy:gemini-3.8-flash-medium@ro
       - claude:haiku@ro
     sim-synthesis:
       - codex:sol:medium
-      - gemini:pro-latest
+      - pi:zai/glm-5.3
       - claude:opus:medium
   fallback:
     enabled: true

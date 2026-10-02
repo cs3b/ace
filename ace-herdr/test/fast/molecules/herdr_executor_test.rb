@@ -110,6 +110,40 @@ module Ace
           assert_match(/exit 139/, error.message)
         end
 
+        def test_stdout_only_failure_detail_is_not_hidden_by_empty_stderr
+          executor = StubbedExecutor.new(results: [
+            ExecutionResult.new(stdout: "no herdr server is running", stderr: "", success: false, exit_code: 1)
+          ])
+
+          error = assert_raises(ExecutorUnavailableError) { executor.agent_get("p5") }
+
+          assert_match(/no herdr server is running/, error.message)
+        end
+
+        def test_plain_stdout_failure_detail_reaches_command_error
+          executor = StubbedExecutor.new(results: [
+            ExecutionResult.new(stdout: "boom", stderr: "", success: false, exit_code: 2)
+          ])
+
+          error = assert_raises(CommandError) { executor.agent_get("p5") }
+
+          assert_match(/boom/, error.message)
+        end
+
+        def test_structured_timeout_with_socket_phrase_stays_timeout
+          executor = StubbedExecutor.new(results: [
+            ExecutionResult.new(
+              stdout: JSON.generate({error: {code: "timeout", message: "connection refused during wait"}}),
+              stderr: "", success: false, exit_code: 1
+            )
+          ])
+
+          error = assert_raises(ExecutorTimeoutError) { executor.agent_wait(pane: "p5", until_states: ["idle"], timeout_ms: 10) }
+
+          refute error.is_a?(ExecutorUnavailableError)
+          assert_match(/connection refused/, error.message)
+        end
+
         def test_error_json_on_stderr_is_recognized
           executor = StubbedExecutor.new(results: [
             ExecutionResult.new(
@@ -305,6 +339,30 @@ module Ace
           executor.pane_process_info("w5:p1")
 
           assert_equal ["herdr", "pane", "process-info", "--pane", "w5:p1"], executor.commands.first
+        end
+
+        def test_runtime_adapter_probes_build_expected_argv
+          executor = StubbedExecutor.new
+
+          executor.pane_get("w1:p1")
+          executor.tab_get("w1:t1")
+          executor.tab_focus("w1:t1")
+          executor.api_snapshot
+
+          assert_equal [
+            ["herdr", "pane", "get", "w1:p1"],
+            ["herdr", "tab", "get", "w1:t1"],
+            ["herdr", "tab", "focus", "w1:t1"],
+            ["herdr", "api", "snapshot"]
+          ], executor.commands
+        end
+
+        def test_socket_unavailable_maps_to_executor_unavailable
+          stderr = "no herdr server is running at /tmp/herdr.sock"
+          failed = Molecules::ExecutionResult.new(stdout: "", stderr: stderr, success: false, exit_code: 1)
+          executor = StubbedExecutor.new(results: [failed])
+
+          assert_raises(ExecutorUnavailableError) { executor.pane_get("w1:p1") }
         end
 
         def test_pane_process_info_maps_missing_pane_to_terminal_error

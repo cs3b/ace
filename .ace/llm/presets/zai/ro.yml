@@ -1,0 +1,3 @@
+# Read-only review preset for the zai API provider. API calls carry no
+# approval modes; the preset exists so roles can target zai with @ro.
+timeout: 900

@@ -146,9 +146,10 @@ module Ace
         # Create a tab from a preset (tmux `window` analogue) in the given
         # or resolved workspace; --cwd overrides the resolved tab cwd. The
         # layout is validated before the tab is created.
-        def create_tab(preset_name, workspace_id: nil, cwd: nil)
+        def create_tab(preset_name, workspace_id: nil, cwd: nil, label: nil)
           workspace_id = resolve_workspace_id(workspace_id)
           resolved = resolve_tab_preset(preset_name)
+          resolved = resolved.merge("label" => label) if label
           preflight_tab!(resolved)
           instantiate_tab(
             resolved, workspace_id: workspace_id,
@@ -248,13 +249,20 @@ module Ace
           tab_id = dig_value(tab_json, %w[result tab tab_id]) ||
             raise(TargetResolutionError, "could not read the new tab id from herdr tab create output")
 
-          pane_specs = Array(tab_spec["panes"])
-          root_pane_id = dig_value(tab_json, %w[result root_pane pane_id]) ||
-            raise(TargetResolutionError, "could not read the root pane id from herdr tab create output")
-          placed = place_panes(tab_spec, pane_specs, tab_cwd, root_pane_id)
+          begin
+            pane_specs = Array(tab_spec["panes"])
+            root_pane_id = dig_value(tab_json, %w[result root_pane pane_id]) ||
+              raise(TargetResolutionError, "could not read the root pane id from herdr tab create output")
+            placed = place_panes(tab_spec, pane_specs, tab_cwd, root_pane_id)
 
-          commands = run_pane_commands(placed)
-          agents = start_pane_agents(placed, workspace_id: workspace_id)
+            commands = run_pane_commands(placed)
+            agents = start_pane_agents(placed, workspace_id: workspace_id)
+          rescue StandardError => e
+            # Surface the created tab id and the original error class so
+            # the owner can roll back exactly this tab and keep
+            # mapping-relevant semantics (e.g. AgentBlockedError).
+            raise TabMaterializationError.new(tab_id: tab_id, message: "#{e.class}: #{e.message}")
+          end
 
           {
             tab: tab_id,
@@ -386,33 +394,13 @@ module Ace
         end
 
         def dig_value(json, path)
-          current = json
-          path.each do |key|
-            return nil unless current.is_a?(Hash)
-
-            current = current[key]
-          end
-          current.is_a?(String) && !current.empty? ? current : nil
+          Atoms::JsonFind.dig_value(json, path)
         end
 
-        # Recursive search mirroring the Dispatcher's tolerant extraction of
-        # ids from native responses (native shapes nest under result.*)
+        # Tolerant extraction of ids from native responses (native shapes
+        # nest under result.*); shared atom, same semantics as Dispatcher.
         def find_value(json, keys)
-          case json
-          when Hash
-            keys.each { |key| return json[key] if json[key].is_a?(String) && !json[key].empty? }
-            json.each_value do |value|
-              found = find_value(value, keys)
-              return found if found
-            end
-            nil
-          when Array
-            json.each do |value|
-              found = find_value(value, keys)
-              return found if found
-            end
-            nil
-          end
+          Atoms::JsonFind.find_value(json, keys)
         end
 
         # --- send: validation -------------------------------------------------

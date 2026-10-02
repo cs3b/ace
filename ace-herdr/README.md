@@ -32,6 +32,7 @@
 - Dispatch a subagent in one command with deterministic defaults and no LLM decisions.
 - Wait for agent readiness or completion without scraping pane noise.
 - Close out finished agent panes (rename/close) and return their result.
+- Use Herdr through the shared `ace-runtime` Ruby intent API, with workspace/session and tab/window mapping handled by the adapter.
 
 ## Installation
 

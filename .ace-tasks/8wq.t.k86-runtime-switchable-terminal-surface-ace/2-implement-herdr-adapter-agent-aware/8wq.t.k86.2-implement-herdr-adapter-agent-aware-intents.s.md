@@ -1,6 +1,6 @@
 ---
 id: 8wq.t.k86.2
-status: pending
+status: done
 priority: medium
 created_at: "2026-09-27 13:29:29"
 estimate: TBD
@@ -83,9 +83,9 @@ Ace::Runtime.resolve("herdr")
 
 ### Success Criteria
 
-- [ ] Contract suite green against the herdr adapter (fake executor), including all four lifecycle wait conditions and the send error triad (rejected/stalled/timeout).
-- [ ] Agent-aware behavior preserved: wait_agent uses native states; blocked sends rejected — asserted in tests.
-- [ ] No tmux-ism leaks: no `%`-style targets, no TMUX env reads in the adapter.
+- [x] Contract suite green against the herdr adapter (fake executor), including all four lifecycle wait conditions and the send error triad (rejected/stalled/timeout).
+- [x] Agent-aware behavior preserved: wait_agent uses native states; blocked sends rejected — asserted in tests.
+- [x] No tmux-ism leaks: no `%`-style targets, no TMUX env reads in the adapter.
 
 ### Reviewed Decisions (2026-09-28)
 
@@ -107,15 +107,15 @@ Ace::Runtime.resolve("herdr")
 ### Verification Plan
 
 #### Unit / Component Validation
-- [ ] Shared contract tests vs herdr adapter (fake executor).
-- [ ] Agent-aware routing + error mapping matrix (blocked/stalled/timeout).
-- [ ] Lifecycle transition tests: pane absent→appears (pane-exists poll-then-success); open→gone (pane-exited success); absent at start (pane-exited immediate success; pane-exists polls to WaitTimeoutError).
+- [x] Shared contract tests vs herdr adapter (fake executor).
+- [x] Agent-aware routing + error mapping matrix (blocked/stalled/timeout).
+- [x] Lifecycle transition tests: pane absent→appears (pane-exists poll-then-success); open→gone (pane-exited success); absent at start (pane-exited immediate success; pane-exists polls to WaitTimeoutError).
 
 #### Integration / E2E Validation (if cross-boundary behavior exists)
 - [ ] Manual live-herdr smoke: ensure_window + send_command + wait_agent round-trip.
 
 #### Failure / Invalid-Path Validation
-- [ ] herdr unavailable → RuntimeUnavailableError; unknown pane → TargetNotFoundError.
+- [x] herdr unavailable → RuntimeUnavailableError; unknown pane → TargetNotFoundError.
 
 #### Verification Commands
 - [ ] `ace-test ace-herdr` green; contract suite green against adapter.
