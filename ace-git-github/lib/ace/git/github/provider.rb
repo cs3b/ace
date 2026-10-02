@@ -444,7 +444,13 @@ end
               "head #{expected_head}, comment #{comment_id}: #{e.message}"
           end
           begin
-            updated = gh_api_pages(update_route.start_with?("pulls/") ? update_route.sub("comments/", "#{pr.number}/comments/") : "issues/#{pr.number}/comments").find { |entry| entry["id"] == comment_id }
+            # Fetch the edited comment individually (both patch routes are
+            # valid GET item endpoints) and validate its PR identity.
+            updated = gh_api(update_route)
+            unless comment_belongs_to_pr?(updated, pr.number)
+              raise Ace::Git::ProviderIdentityMismatchError,
+                "Edited comment #{comment_id} does not belong to selected PR ##{pr.number}"
+            end
           rescue Ace::Git::ProviderUnreachableError => e
             raise Ace::Git::ProviderUnknownOutcomeError,
               "Comment update sent but verification read failed for comment #{comment_id}: #{e.message}; reconcile before repeating"
@@ -651,6 +657,14 @@ end
           raise Ace::Git::ProviderUnknownOutcomeError,
             "PR head moved during mutation for #{server.name}/##{pr.number} " \
             "(#{expected_head} -> #{current.head_sha}), session #{correlation}: reconcile before repeating"
+        end
+
+        # GitHub identity URLs end with the PR number for both comment kinds.
+        def comment_belongs_to_pr?(entry, number)
+          return false unless entry.is_a?(Hash)
+          issue_url = entry["issue_url"].to_s
+          pr_url = entry.dig("pull_request", "url").to_s
+          issue_url.end_with?("/issues/#{number}") || pr_url.end_with?("/pulls/#{number}")
         end
 
         def comment_marker(correlation)

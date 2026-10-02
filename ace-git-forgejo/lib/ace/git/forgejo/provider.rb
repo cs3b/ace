@@ -292,7 +292,12 @@ module Ace
               "head #{expected_head}, comment #{comment_id}: #{e.message}"
           end
           begin
-            updated = review_http.paginate(update_route.start_with?("pulls/") ? update_route.sub("comments/", "#{number}/comments/") : "issues/#{number}/comments").find { |entry| entry["id"] == comment_id }
+            # Fetch individually and validate the Forgejo issue identity.
+            updated = review_http.request(:get, update_route)
+            unless updated.is_a?(Hash) && updated["issue_url"].to_s.end_with?("/#{number}")
+              raise Ace::Git::ProviderIdentityMismatchError,
+                "Edited comment #{comment_id} does not belong to selected PR ##{number}"
+            end
           rescue Ace::Git::ProviderUnreachableError => e
             raise Ace::Git::ProviderUnknownOutcomeError,
               "Comment update sent but verification read failed for comment #{comment_id}: #{e.message}; reconcile before repeating"
