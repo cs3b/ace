@@ -51,8 +51,6 @@ module Ace
           estimate: nil,
           remote_issue: nil
         )
-          ensure_issue_linkable!(remote_issue) if remote_issue
-          ensure_issue_not_linked_elsewhere!(remote_issue) if remote_issue
           ensure_root_dir
           creator = Molecules::TaskCreator.new(root_dir: @root_dir, config: @config)
           attempts = 0
@@ -70,7 +68,11 @@ module Ace
               estimate: estimate,
               remote_issue: remote_issue
             )
-            sync_linked_issues_for(created_task, reason: "create")
+            with_issue_identity_lock(remote_issue) do
+              ensure_issue_linkable!(remote_issue) if remote_issue
+              ensure_issue_not_linked_elsewhere!(remote_issue, exclude_id: created_task.id) if remote_issue
+              sync_linked_issues_for(created_task, reason: "create")
+            end
             show_after_sync(created_task) || created_task
           rescue Molecules::TaskCreator::IdCollisionError
             retry if attempts < CREATE_RETRY_LIMIT
@@ -303,8 +305,6 @@ module Ace
           parent = show(parent_ref)
           return nil unless parent
 
-          ensure_issue_linkable!(remote_issue) if remote_issue
-          ensure_issue_not_linked_elsewhere!(remote_issue) if remote_issue
           subtask_creator = Molecules::SubtaskCreator.new(config: @config)
           created_subtask = subtask_creator.create(
             parent,
@@ -315,7 +315,11 @@ module Ace
             estimate: estimate,
             remote_issue: remote_issue
           )
-          sync_linked_issues_for(created_subtask, reason: "create")
+          with_issue_identity_lock(remote_issue) do
+            ensure_issue_linkable!(remote_issue) if remote_issue
+            ensure_issue_not_linked_elsewhere!(remote_issue, exclude_id: created_subtask.id) if remote_issue
+            sync_linked_issues_for(created_subtask, reason: "create")
+          end
           show_after_sync(created_subtask) || created_subtask
         end
 
@@ -408,16 +412,18 @@ module Ace
             raise Ace::Git::ProviderIdentityMismatchError,
               "Task #{task.id} already links another issue; clear it before linking a different issue"
           end
-          ensure_issue_linkable!(identity, task_id: task.id)
-          ensure_issue_not_linked_elsewhere!(identity, exclude_id: task.id)
-          Ace::Support::Items::Molecules::FieldUpdater.update(
-            task.file_path, set: {"remote_issue" => identity, "issue_sync_pending" => true}
-          )
-          linked = show(ref)
-          result = sync_linked_issues_for(linked, reason: "link")
-          raise Ace::Git::ProviderUnreachableError, result[:error] unless result[:success]
+          with_issue_identity_lock(identity) do
+            ensure_issue_linkable!(identity, task_id: task.id)
+            ensure_issue_not_linked_elsewhere!(identity, exclude_id: task.id)
+            Ace::Support::Items::Molecules::FieldUpdater.update(
+              task.file_path, set: {"remote_issue" => identity, "issue_sync_pending" => true}
+            )
+            linked = show(ref)
+            result = sync_linked_issues_for(linked, reason: "link")
+            raise Ace::Git::ProviderUnreachableError, result[:error] unless result[:success]
+          end
 
-          show_after_sync(linked) || linked
+          show_after_sync(show(ref) || task) || show(ref) || task
         end
 
         # Get the root directory.
@@ -693,6 +699,25 @@ module Ace
 
             raise Ace::Git::ProviderIdentityMismatchError,
               "Issue ##{target["number"]} on #{target["server_name"]} is already linked to task #{task.id}"
+          end
+        end
+
+        # Serialize link operations per exact issue identity: ownership
+        # validation, the local write, and the remote marker creation must not
+        # interleave across processes, or two tasks can claim one issue.
+        def with_issue_identity_lock(identity)
+          return yield unless identity.is_a?(Hash)
+
+          key = identity.values_at("server_name", "provider", "repository_url", "number")
+            .map { |value| value.to_s.gsub(%r{[^\w.-]}, "_") }.join("--")
+          lock_path = File.join(Dir.tmpdir, "ace-task-issue-#{key}.lock")
+          File.open(lock_path, File::CREAT | File::RDWR) do |lock|
+            lock.flock(File::LOCK_EX)
+            begin
+              yield
+            ensure
+              lock.flock(File::LOCK_UN)
+            end
           end
         end
 
