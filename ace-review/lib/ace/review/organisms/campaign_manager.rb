@@ -310,7 +310,16 @@ module Ace
             revision_error = e.message
           end
           round = record["rounds"].last
-          refs = record["attempts"].flat_map do |attempt|
+          # Availability re-hashing covers the current round's evidence plus
+          # every finding snapshot. Earlier rounds' sessions and approvals are
+          # validated by journal-backed historical authority reads instead:
+          # their working files legitimately age (feedback resolve archives
+          # and annotates finding files; test report `latest` paths move on),
+          # so hashing them here would permanently block finish for any
+          # campaign that resolved findings. Finding snapshots are
+          # content-addressed and must remain available.
+          current_attempt_ids = round ? [round["attempt_id"]] : []
+          refs = record["attempts"].select { |attempt| current_attempt_ids.include?(attempt["attempt_id"]) }.flat_map do |attempt|
             attempt["sessions"].flat_map { |session| session["artifacts"] } +
               (attempt["approval"] ? [attempt["approval"]["artifact"]] + attempt["approval"]["artifacts"] : [])
           end + (record["assessments"] + record["inherited_findings"]).map { |finding| finding["artifact"] }

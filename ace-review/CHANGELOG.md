@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.58.1] - 2026-10-02
+
+### Fixed
+- Campaign finish scopes availability re-hashing to the newest round's evidence and the content-addressed finding snapshots; earlier rounds validate through journal-backed historical authority reads, so resolving findings no longer permanently blocks finish.
+
+
 ## [0.58.0] - 2026-10-02
 
 ### Added
