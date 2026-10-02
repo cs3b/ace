@@ -399,6 +399,7 @@ end
           pr = verify_expected_head!(pull_request(number: number), expected_head)
           require_open_pr!(pr)
           marker = comment_marker(correlation)
+          with_session_lock(correlation) do
           existing = matching_review_comments(pr, marker, expected_head)
           if existing.length > 1
             raise Ace::Git::ProviderConflictingMatchesError,
@@ -441,6 +442,7 @@ end
           end
           verify_post_mutation_head!(pr, expected_head, correlation)
           review_mutation(pr, expected_head, matches.first, :created)
+          end
         end
 
         def update_pull_request_comment(number:, expected_head:, comment_id:, body:)
@@ -704,6 +706,17 @@ end
           # Review comments expose pull_request_url as a plain string.
           pr_url = (entry.dig("pull_request", "url") || entry["pull_request_url"]).to_s
           issue_url.end_with?("/issues/#{number}") || pr_url.end_with?("/pulls/#{number}")
+        end
+
+        # Serialize the read/post/reconcile sequence per session so two
+      # concurrent callers cannot both observe "no marker" and post.
+        def with_session_lock(correlation)
+          require "tmpdir"
+          lock_path = File.join(Dir.tmpdir, "ace-review-session-#{correlation}.lock")
+          File.open(lock_path, File::CREAT | File::RDWR, 0600) do |lock|
+            lock.flock(File::LOCK_EX)
+            yield
+          end
         end
 
         def comment_marker(correlation)

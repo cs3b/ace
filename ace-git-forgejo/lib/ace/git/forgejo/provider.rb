@@ -227,6 +227,7 @@ module Ace
           pr = verify_expected_head!(pull_request(number: number), expected_head)
           require_open_pr!(pr)
           marker = comment_marker(correlation)
+          with_session_lock(correlation) do
           existing = matching_review_comments(number, marker, expected_head)
           if existing.length > 1
             raise Ace::Git::ProviderConflictingMatchesError,
@@ -268,6 +269,7 @@ module Ace
           end
           verify_post_mutation_head!(number, expected_head, correlation)
           review_mutation(number, expected_head, matches.first, :created)
+          end
         end
 
         def update_pull_request_comment(number:, expected_head:, comment_id:, body:)
@@ -452,6 +454,17 @@ module Ace
       "PR head moved during mutation for #{server.name}/##{number} " \
       "(#{expected_head} -> #{current.head_sha}), session #{correlation}: reconcile before repeating"
   end
+
+        # Serialize the read/post/reconcile sequence per session so two
+      # concurrent callers cannot both observe "no marker" and post.
+        def with_session_lock(correlation)
+          require "tmpdir"
+          lock_path = File.join(Dir.tmpdir, "ace-review-session-#{correlation}.lock")
+          File.open(lock_path, File::CREAT | File::RDWR, 0600) do |lock|
+            lock.flock(File::LOCK_EX)
+            yield
+          end
+        end
 
         def comment_marker(correlation)
           unless correlation.to_s.match?(/\A[a-zA-Z0-9._:-]+\z/)
