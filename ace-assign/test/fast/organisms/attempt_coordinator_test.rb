@@ -185,6 +185,63 @@ module Ace
         assert_includes error.message, "active managed attempt"
       end
 
+      def test_managed_service_claim_requires_journal_derived_attempt
+        coordinator = build_coordinator
+        assignment = create_assignment
+        attempt = coordinator.start(assignment_id: assignment.id, step: "010", project_id: "ace")
+        head = git(@repo, "rev-parse", "HEAD").strip
+
+        # Evidence-ref loss: a coordinator facing an empty journal must fail
+        # closed even though the local cache still says the attempt is running.
+        orphan_coordinator = Organisms::AttemptCoordinator.new(
+          cache_base: @cache_dir,
+          repo_root: @repo,
+          journal: Molecules::EvidenceJournal.new(
+            repo_root: @repo,
+            ref: "refs/ace/lost",
+            checkout_root: File.join(@cache_dir, "evidence-lost")
+          ),
+          identity_resolver: stub_resolver,
+          lifecycle_exclusion: Molecules::LifecycleExclusion.new(root: File.join(@cache_dir, ".exclusion"))
+        )
+
+        error = assert_raises(AttemptErrors::NotFound) do
+          orphan_coordinator.claim_service_request({"request_id" => "svc-orphan", "assignment_id" => assignment.id,
+            "attempt_id" => attempt.attempt_id, "project_id" => "ace", "operation" => "forge-sync",
+            "input_digest" => "a" * 64, "candidate_head" => head, "executor_uid" => Process.uid,
+            "transport" => "unix"})
+        end
+        assert_includes error.message, "not found"
+      end
+
+      def test_service_receipt_evidence_symlink_outside_repo_is_rejected
+        coordinator = build_coordinator
+        assignment = create_assignment
+        attempt = coordinator.start(assignment_id: assignment.id, step: "010", project_id: "ace")
+        binding = {"request_id" => "svc-symlink", "assignment_id" => assignment.id,
+                   "attempt_id" => attempt.attempt_id, "project_id" => "ace",
+                   "operation" => "forge-sync", "input_digest" => "a" * 64,
+                   "target" => {"resource" => "forge/repo"},
+                   "candidate_head" => git(@repo, "rev-parse", "HEAD").strip,
+                   "executor_uid" => Process.uid, "transport" => "unix"}
+        Dir.mktmpdir do |outside|
+          secret = File.join(outside, "attestation")
+          File.write(secret, "executor attested effect\n")
+          link = File.join(@repo, "forge", "link")
+          FileUtils.mkdir_p(File.dirname(link))
+          File.symlink(secret, link)
+          coordinator.claim_service_request(binding)
+          coordinator.transition_service_request("svc-symlink", state: "uncertain")
+
+          receipt = binding.merge("outcome" => "succeeded",
+            "evidence" => [{"ref" => "forge/link", "sha256" => Digest::SHA256.hexdigest("executor attested effect\n")}])
+          error = assert_raises(AttemptErrors::ReceiptRejected) do
+            coordinator.transition_service_request("svc-symlink", state: "succeeded", receipt: receipt)
+          end
+          assert_includes error.message, "inside the repository"
+        end
+      end
+
       def test_exact_authorization_cannot_claim_two_live_requests
         coordinator = build_coordinator
         assignment = create_assignment

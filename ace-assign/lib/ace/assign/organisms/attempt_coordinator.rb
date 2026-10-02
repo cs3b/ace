@@ -69,16 +69,16 @@ module Ace
           attempt
         end
 
-        # The authoritative journal wins for managed assignments: a stale
-        # local running record must never admit a claim after another
-        # coordinator recorded a terminal state.
+        # The authoritative journal wins for managed assignments, and a
+        # managed service claim REQUIRES the journal-derived attempt: a lost
+        # or unavailable evidence ref fails closed instead of trusting a
+        # local cache record that the journal cannot corroborate.
         def authoritative_attempt(binding)
           assignment_id = binding.fetch("assignment_id")
           assignment = @manager.load(assignment_id)
           if assignment&.managed?
             journal_for.derived_attempts(assignment_id)
-              .find { |candidate| candidate.attempt_id == binding.fetch("attempt_id") } ||
-              @store.find(binding.fetch("attempt_id"))
+              .find { |candidate| candidate.attempt_id == binding.fetch("attempt_id") }
           else
             @store.find(binding.fetch("attempt_id")) ||
               recover_managed_attempt(assignment_id, binding.fetch("attempt_id"))
@@ -137,24 +137,34 @@ module Ace
           end
         end
 
-        # Evidence must live inside the candidate repository, exist, match its
-        # digest, and be owned by the claimed executor identity; a caller
+        # Evidence must live inside the candidate repository (symlinks
+        # resolved), exist, match its digest, and be owned by — and not
+        # writable by anyone but — the claimed executor identity; a caller
         # cannot attest an effect with a file it selected or wrote.
         def verify_service_evidence!(evidence, request)
           repo_root = File.realpath(@repo_root)
           evidence.each do |item|
             ref = item["ref"]
+            unless Pathname.new(ref).relative?
+              raise AttemptErrors::ReceiptRejected, "Service receipt evidence must be repository-relative: #{ref}"
+            end
             path = File.expand_path(ref, repo_root)
-            unless Pathname.new(ref).relative? && path.start_with?(repo_root + File::SEPARATOR)
+            unless path.start_with?(repo_root + File::SEPARATOR)
               raise AttemptErrors::ReceiptRejected, "Service receipt evidence must live inside the repository: #{ref}"
             end
-            unless File.file?(path) && File.readable?(path)
+            begin
+              real = File.realpath(path)
+            rescue Errno::ENOENT
               raise AttemptErrors::ReceiptRejected, "Service receipt evidence is unavailable: #{ref}"
             end
-            unless File.stat(path).uid == request["executor_uid"]
+            unless real.start_with?(repo_root + File::SEPARATOR)
+              raise AttemptErrors::ReceiptRejected, "Service receipt evidence must live inside the repository: #{ref}"
+            end
+            stat = File.stat(real)
+            unless stat.uid == request["executor_uid"] && (stat.mode & 0o022).zero?
               raise AttemptErrors::ReceiptRejected, "Service receipt evidence is not executor-owned: #{ref}"
             end
-            unless Digest::SHA256.file(path).hexdigest == item["sha256"]
+            unless Digest::SHA256.file(real).hexdigest == item["sha256"]
               raise AttemptErrors::ReceiptRejected, "Service receipt evidence digest mismatch: #{ref}"
             end
           end
