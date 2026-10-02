@@ -36,6 +36,7 @@ class TmuxRuntimeAdapterContractTest < Minitest::Test
     def press_key(pane, key) = fixture.press_key(pane, key)
     def capture_output(pane, lines:) = fixture.capture_output(pane, lines: lines)
     def agent_state(pane) = fixture.agent_state(pane)
+    def validate_key!(_key) = true
     def kill_window(window) = fixture.kill_window(window)
 
     def windows
@@ -98,7 +99,7 @@ end
 class TmuxRuntimeAdapterNativeTest < Minitest::Test
   class FakeTmuxExecutor
     attr_reader :commands
-    attr_accessor :available
+    attr_accessor :available, :fail_pane_queries
 
     def initialize
       @commands = []
@@ -106,6 +107,7 @@ class TmuxRuntimeAdapterNativeTest < Minitest::Test
       @pane = nil
       @options = {}
       @available = true
+      @fail_pane_queries = false
     end
 
     def tmux_available?(tmux: "tmux") = available
@@ -132,7 +134,14 @@ class TmuxRuntimeAdapterNativeTest < Minitest::Test
       when "display-message"
         case command[-1]
         when "\#{pane_current_path}" then "/tmp/work"
-        when "\#{pane_dead}" then "0"
+        when "\#{pane_dead}"
+          if command[command.index("-t") + 1] == @pane && !@fail_pane_queries
+            "0"
+          else
+            success = false
+            stderr = @fail_pane_queries ? "server error" : "can't find pane"
+            ""
+          end
         else ""
         end
       when "send-keys"
@@ -330,6 +339,53 @@ class TmuxRuntimeAdapterNativeTest < Minitest::Test
     assert_equal "main", context[:session]
     assert_equal "work", context[:window]
     assert_nil context[:pane]
+  end
+
+  def test_native_shell_wait_times_out_while_output_keeps_changing
+    surface = Object.new
+    ticks = 0
+    surface.define_singleton_method(:fetch_pane_profile) { |_pane| {interactive_cli: false} }
+    surface.define_singleton_method(:capture_recent_output) do |**_options|
+      ticks += 1
+      "tick #{ticks}\n"
+    end
+    backend = Ace::Tmux::NativeRuntimeBackend.new(
+      executor: @executor, env: {"ACE_TMUX_SESSION" => "main"}, surface: surface
+    )
+
+    assert_raises(Ace::Tmux::WaitTimeoutError) do
+      backend.wait_agent(pane: "%2", states: %w[idle], timeout: 0.3)
+    end
+  end
+
+  def test_native_pane_exited_distinguishes_absence_from_query_failure
+    @adapter.ensure_window(name: "work", root: "/tmp/work")
+    pane = @adapter.prepare_pane(window: "work")
+
+    error = assert_raises(Ace::Runtime::WaitTimeoutError) do
+      @adapter.wait_lifecycle(condition: "pane-exited", target: pane, timeout: 0.1)
+    end
+    assert_equal 0.1, error.timeout
+
+    assert @adapter.wait_lifecycle(condition: "pane-exited", target: "%999", timeout: 1)
+
+    @executor.fail_pane_queries = true
+    assert_raises(Ace::Runtime::RuntimeUnavailableError) do
+      @adapter.wait_lifecycle(condition: "pane-exited", target: pane, timeout: 1)
+    end
+  end
+
+  def test_native_send_rejects_unknown_key_before_transport
+    @adapter.ensure_window(name: "work", root: "/tmp/work")
+    @adapter.prepare_pane(window: "work")
+    sends_before = @executor.commands.count { |command| command[1] == "send-keys" }
+
+    assert_raises(Ace::Runtime::SendRejectedError) do
+      @adapter.send_keys(pane: "%2", keys: %w[C-z Z-z])
+    end
+
+    sends_after = @executor.commands.count { |command| command[1] == "send-keys" }
+    assert_equal sends_before, sends_after
   end
 
   class NewlineShowOptionsExecutor < FakeTmuxExecutor

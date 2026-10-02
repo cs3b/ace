@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Send adapter message text literally, classify missing pane targets, and use bounded polling plus output settling for agent completion waits.
 - Agent completion waits poll shell panes and any mixed requested states instead of requiring an interactive CLI pane, and `working` now matches immediately in mixed requests.
 - Window option reads use the window scope (`-w`) with trimmed values so idempotent `ensure_window` works across calls, shell-pane completion aliases resolve to the observable idle state, and context reporting no longer drops an explicit session when the pane cannot be resolved.
+- Shell-pane agent waits require pane output to hold still before reporting completion, `pane-exited` distinguishes absent panes from failed queries, and the full send key sequence is validated before any transport with ctrl-chord keys supported.
 
 
 ## [0.17.5] - 2026-09-02

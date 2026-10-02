@@ -112,7 +112,10 @@ module Ace
       end
 
       def agent_state(pane)
-        output = capture_output(pane, lines: 40)
+        agent_state_from_output(capture_output(pane, lines: 40))
+      end
+
+      def agent_state_from_output(output)
         busy = Organisms::ControlSurface::INTERACTIVE_BUSY_PATTERNS.any? { |pattern| output.match?(pattern) }
         busy ? "working" : "idle"
       end
@@ -138,14 +141,16 @@ module Ace
           )
         end
 
+        # Shell panes only ever observe idle/working, so completion
+        # aliases read as idle.
         observable = desired.flat_map { |state| %w[idle working].include?(state) ? [state] : %w[idle] }.uniq
-        deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + timeout.to_f
-        loop do
-          return true if observable.include?(agent_state(pane))
-          raise Ace::Tmux::WaitTimeoutError if Process.clock_gettime(Process::CLOCK_MONOTONIC) >= deadline
+        poll_agent_states(pane, observable, interval: interval, timeout: timeout)
+      end
 
-          sleep(interval)
-        end
+      def validate_key!(key)
+        Atoms::NamedKeyRegistry.normalize(key)
+      rescue Ace::Tmux::ValidationError => e
+        raise Ace::Runtime::SendRejectedError, e.message
       end
 
       def lifecycle?(condition, target)
@@ -153,7 +158,7 @@ module Ace
         when "window-exists" then !window_info(target).nil?
         when "window-active" then windows.any? { |entry| (entry[:name] == target || entry[:id] == target) && entry[:active] }
         when "pane-exists" then pane_exists?(target)
-        when "pane-exited" then !pane_exists?(target) || query(B.display_message_target(target, "\#{pane_dead}", tmux: tmux)) == "1"
+        when "pane-exited" then pane_exited?(target)
         end
       end
 
@@ -178,6 +183,44 @@ module Ace
         surface.send(:fetch_pane_profile, pane)[:interactive_cli]
       rescue Ace::Tmux::Error
         false
+      end
+
+      # Shell-pane wait: a running command keeps mutating pane output, so a
+      # matching observed state only counts once the output has held still
+      # for the settle window (the documented output-stability heuristic).
+      def poll_agent_states(pane, observable, interval:, timeout:)
+        settle = [timeout.to_f / 2, 1.0].min
+        deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + timeout.to_f
+        previous_output = nil
+        stable_since = nil
+        loop do
+          output = capture_output(pane, lines: 40)
+          if observable.include?(agent_state_from_output(output))
+            if output == previous_output
+              stable_since ||= Process.clock_gettime(Process::CLOCK_MONOTONIC)
+              return true if Process.clock_gettime(Process::CLOCK_MONOTONIC) - stable_since >= settle
+            else
+              stable_since = nil
+            end
+          else
+            stable_since = nil
+          end
+          previous_output = output
+          raise Ace::Tmux::WaitTimeoutError if Process.clock_gettime(Process::CLOCK_MONOTONIC) >= deadline
+
+          sleep(interval)
+        end
+      end
+
+      # Pane absence and a dead pane both satisfy the pane-exited
+      # observation; any other query failure is a runtime error, never
+      # silent evidence of exit.
+      def pane_exited?(target)
+        result = executor.capture(B.display_message_target(target, "\#{pane_dead}", tmux: tmux))
+        return true if !result.success? && result.stderr.to_s.match?(/can't find|no such|unknown target|not found/i)
+        raise Ace::Tmux::Error, result.stderr.to_s unless result.success?
+
+        result.stdout.to_s.strip == "1"
       end
 
       # A missing pane must not erase an explicitly available session or

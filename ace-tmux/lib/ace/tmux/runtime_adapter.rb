@@ -53,6 +53,9 @@ module Ace
 
       def send(pane:, command: nil, items: [])
         request = SEND.normalize!(command: command, items: items, profile: send_profile)
+        # Validate the whole key sequence before any transport call so a
+        # rejected key can never leave a partially delivered submission.
+        request.items.each { |item| backend.validate_key!(item[:key]) if item.key?(:key) }
         with_errors do
           backend.available!
           if request.command

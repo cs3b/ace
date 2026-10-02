@@ -24,9 +24,12 @@ module Ace
           raise Ace::Tmux::ValidationError, "Named key is required" if value.empty?
 
           normalized = KEYS[value.downcase]
-          raise Ace::Tmux::ValidationError, "Unsupported named key: #{key}" unless normalized
+          return normalized if normalized
 
-          normalized
+          chord = value.downcase[/\Ac-([a-z])\z/, 1]
+          return "C-#{chord.upcase}" if chord
+
+          raise Ace::Tmux::ValidationError, "Unsupported named key: #{key}"
         end
       end
     end
