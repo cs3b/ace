@@ -21,6 +21,9 @@ module Ace
       # `fj` failures are never hidden behind ad-hoc curl calls or silent
       # fallbacks.
       class Provider < Ace::Git::Providers::Base
+        # Fill color for repo labels created on demand by issue linking.
+        TRACKED_LABEL_COLOR = "0e8a16"
+
         class << self
           def display_name
             "Forgejo"
@@ -152,11 +155,7 @@ module Ace
         end
 
         def add_issue_label(number:, label:)
-          match = Array(issue_api.repository_labels(wanted: label)).find { |entry| entry["name"] == label }
-          unless match && match["id"].to_i.positive?
-            raise Ace::Git::ProviderObjectNotFoundError, "Forgejo label #{label.inspect} is not configured on #{server.url}"
-          end
-          issue_api.add_label(request_number!(number), match["id"])
+          issue_api.add_label(request_number!(number), ensure_repo_label_id(label))
         end
 
         def remove_issue_label(number:, label:)
@@ -164,6 +163,27 @@ module Ace
           return unless match
 
           issue_api.remove_label(request_number!(number), match.fetch("id"))
+        end
+
+        # Fresh repositories lack the tracking label; creating it on demand
+        # keeps issue linking from committing a tracking comment it could
+        # never label. A concurrent creator surfaces as an uncertain mutation
+        # outcome, which only means re-list and attach what appeared.
+        def ensure_repo_label_id(label)
+          match = Array(issue_api.repository_labels(wanted: label)).find { |entry| entry["name"] == label }
+          return match["id"] if match && match["id"].to_i.positive?
+
+          begin
+            issue_api.create_repo_label(name: label, color: TRACKED_LABEL_COLOR)
+          rescue Ace::Git::ProviderUnknownOutcomeError
+            nil
+          end
+          match = Array(issue_api.repository_labels(wanted: label)).find { |entry| entry["name"] == label }
+          unless match && match["id"].to_i.positive?
+            raise Ace::Git::ProviderObjectNotFoundError,
+              "Forgejo label #{label.inspect} could not be created or found on #{server.url}"
+          end
+          match["id"]
         end
 
         def set_issue_state(number:, state:)
