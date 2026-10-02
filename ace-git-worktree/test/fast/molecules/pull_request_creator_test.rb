@@ -28,7 +28,7 @@ class PullRequestCreatorTest < Minitest::Test
 
   def evidence(number: 31, head_sha: "c" * 40)
     Ace::Git::ProviderPullRequest.new(
-      server_name: "forgejo-lab", number: number, title: "t", state: :open,
+      server_name: "forgejo-lab", number: number, title: "t", body: nil, state: :open,
       head_ref: "081-fix", base_ref: "main", head_sha: head_sha, author: "u",
       url: "https://forge.example.com/o/r/pull/#{number}", draft: true, merged_at: nil,
       head_repository_url: "https://forge.example.com/o/r",

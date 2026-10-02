@@ -381,7 +381,7 @@ class CreateCommandTest < Minitest::Test
   def pr_evidence(number: 26, title: "Add authentication feature", head_ref: "feature/auth",
     base_ref: "main", head_repo: "https://forge.example.com/o/r", base_repo: "https://forge.example.com/o/r")
     Ace::Git::ProviderPullRequest.new(
-      server_name: "forgejo-lab", number: number, title: title, state: :open,
+      server_name: "forgejo-lab", number: number, title: title, body: nil, state: :open,
       head_ref: head_ref, base_ref: base_ref, head_sha: "a" * 40, author: "dev",
       url: "#{base_repo}/pull/#{number}", draft: true, merged_at: nil,
       head_repository_url: head_repo, base_repository_url: base_repo, merge_commit_sha: nil

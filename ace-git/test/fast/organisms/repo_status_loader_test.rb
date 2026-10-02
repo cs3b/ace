@@ -80,7 +80,7 @@ class RepoStatusLoaderTest < AceGitTestCase
     Ace::Git::ProviderPullRequest.new(
       server_name: SERVER.name,
       number: number,
-      title: "PR #{number}",
+      title: "PR #{number}", body: nil,
       state: state,
       head_ref: head_ref,
       base_ref: "main",

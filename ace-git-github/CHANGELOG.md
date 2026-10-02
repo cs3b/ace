@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-02
+
+### Added
+- Repository-bound GitHub PR comment and review retrieval, comment create/update, and thread resolution through the shared provider contract.
+- Correlation-based comment reconciliation after uncertain posts and explicit malformed or unsupported result classification.
+
+
 ## [0.2.0] - 2026-09-28
 
 ### Added

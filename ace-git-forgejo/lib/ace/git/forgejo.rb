@@ -7,6 +7,7 @@ require_relative "forgejo/repository_binding"
 require_relative "forgejo/cli_executor"
 require_relative "forgejo/pr_identifier"
 require_relative "forgejo/parsers"
+require_relative "forgejo/http_client"
 require_relative "forgejo/provider"
 
 module Ace

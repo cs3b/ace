@@ -116,18 +116,54 @@ module Ace
         #
         # @return [Array<Hash>] {name:, state:, sha:}
         def self.parse_actions_tasks(text)
-          text.to_s.lines.map { |line| clean(line) }.filter_map do |line|
-            match = line.match(
-              /\A#(?<task>\d+)\s+\((?<sha>[0-9a-f]+)\)\s+(?<state>\w+)\s+(?<name>.+?)\s+[\dhms.]+\s+\((?:push|pull_request|schedule)\)/
-            )
-            next nil unless match
+          tasks = []
+          declared_count = nil
+          text.to_s.lines.map { |line| clean(line) }.reject(&:empty?).each do |line|
+            # `fj` emits exactly one leading "<n> tasks" count header
+          # before task lines; require it (including 0 tasks).
+            if (header = line.match(/\A(\d+) tasks?\z/i))
+              raise Ace::Git::ProviderMalformedOutputError,
+                "Duplicate `fj actions tasks` count header" if declared_count
+              declared_count = header[1].to_i
+              next
+            end
+            raise Ace::Git::ProviderMalformedOutputError,
+              "Missing `fj actions tasks` count header" unless declared_count
 
-            {
+            match = line.match(
+              /\A#(?<task>\d+)\s+\((?<sha>[0-9a-f]+)\)\s+(?<state>\w+)\s+(?<name>.+?)\s+[\dhms.]+\s+\((?<event>[^)]+)\)/
+            )
+            # Any other nonempty line that cannot be parsed must not silently
+            # shrink check evidence; fail closed instead. The SHA may be
+            # abbreviated; the provider binds it to the reviewed head by
+            # prefix, so anything shorter than Git's conventional minimum
+            # abbreviation cannot establish commit identity and is rejected.
+            raise Ace::Git::ProviderMalformedOutputError,
+              "Unrecognized `fj actions tasks` output line: #{line[0, 80]}" unless match
+            unless match[:sha].length.between?(7, 40)
+              raise Ace::Git::ProviderMalformedOutputError,
+                "Unbindable `fj actions tasks` SHA (need 7-40 hex chars): #{match[:sha]}"
+            end
+
+            tasks << {
               name: match[:name],
               state: match[:state].downcase.to_sym,
               sha: match[:sha]
             }
           end
+          # Empty or whitespace-only output never reaches the in-loop header
+          # check; the contract requires the count header even for zero tasks,
+          # so fail closed instead of returning an empty task list.
+          raise Ace::Git::ProviderMalformedOutputError,
+            "Missing `fj actions tasks` count header" unless declared_count
+          # A declared count that disagrees with the parsed rows means
+          # truncated output; fail closed instead of accepting partial
+          # check evidence.
+          if declared_count != tasks.length
+            raise Ace::Git::ProviderMalformedOutputError,
+              "Incomplete `fj actions tasks` output: declared #{declared_count}, parsed #{tasks.length}"
+          end
+          tasks
         end
 
         # Parse `fj repo view` output.

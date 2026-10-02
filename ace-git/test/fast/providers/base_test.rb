@@ -62,7 +62,7 @@ module Providers
 
     def test_lifecycle_receipt_serializes_evidence_without_idempotency_for_non_create
       pr = Ace::Git::ProviderPullRequest.new(
-        server_name: "s", number: 7, title: "t", state: :open, head_ref: "f",
+        server_name: "s", number: 7, title: "t", state: :open, head_ref: "f", body: nil,
         base_ref: "main", head_sha: "a" * 40, author: "u", url: nil, draft: true,
         merged_at: nil, head_repository_url: "https://s.example.com/o/r",
         base_repository_url: "https://s.example.com/o/r", merge_commit_sha: nil

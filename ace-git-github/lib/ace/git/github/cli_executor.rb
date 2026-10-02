@@ -28,12 +28,12 @@ module Ace
           # @return [Hash] {success:, stdout:, stderr:, exit_code:}
           # @raise [Ace::Git::ProviderCliMissingError] when `gh` is missing
           # @raise [Ace::Git::ProviderUnreachableError] when the call times out
-          def execute(subcommand, args = [], timeout: nil, runner: nil)
+          def execute(subcommand, args = [], timeout: nil, runner: nil, stdin: nil)
             timeout_seconds = timeout || Ace::Git.network_timeout || DEFAULT_TIMEOUT
-            result = run_command([BINARY, subcommand] + args, timeout_seconds, runner)
+            result = run_command([BINARY, subcommand] + args, timeout_seconds, runner, stdin: stdin)
             if result == :timeout
               raise Ace::Git::ProviderUnreachableError,
-                "gh command timed out after #{timeout_seconds} seconds: #{([subcommand] + args).join(" ")}"
+                "gh command timed out after #{timeout_seconds} seconds: #{([subcommand] + args).join(" ")[0, 200]}"
             end
 
             result
@@ -80,11 +80,11 @@ module Ace
           # Run a full argument vector against `gh`.
           #
           # @return [Hash] result hash, or :timeout sentinel on timeout
-          def run_command(command, timeout_seconds, runner = nil)
+          def run_command(command, timeout_seconds, runner = nil, stdin: nil)
             if runner
-              call_runner(runner, command, timeout_seconds)
+              call_runner(runner, command, timeout_seconds, stdin: stdin)
             else
-              spawn_with_timeout(command, timeout_seconds)
+              spawn_with_timeout(command, timeout_seconds, stdin: stdin)
             end
           end
 
@@ -93,15 +93,19 @@ module Ace
             run_command([BINARY] + args, timeout_seconds, runner)
           end
 
-          def call_runner(runner, command, timeout_seconds)
-            runner.call(args: command, timeout: timeout_seconds, env: {"LC_ALL" => "C"})
+          def call_runner(runner, command, timeout_seconds, stdin: nil)
+            if stdin.nil?
+              runner.call(args: command, timeout: timeout_seconds, env: {"LC_ALL" => "C"})
+            else
+              runner.call(args: command, timeout: timeout_seconds, env: {"LC_ALL" => "C"}, stdin: stdin)
+            end
           rescue StandardError => e
             {success: false, stdout: "", stderr: e.message, exit_code: 1}
           end
 
-          def spawn_with_timeout(command, timeout_seconds)
+          def spawn_with_timeout(command, timeout_seconds, stdin: nil)
             stdout_str, stderr_str, status = Timeout.timeout(timeout_seconds) do
-              Open3.capture3({"LC_ALL" => "C"}, *command)
+              Open3.capture3({"LC_ALL" => "C"}, *command, stdin_data: stdin.to_s)
             end
 
             {

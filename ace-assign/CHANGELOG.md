@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.61.1] - 2026-10-02
+
+### Fixed
+- Historical evidence reads (`--historical-head`) validate acceptance from the append-only journal without re-hashing receipt artifacts, so campaigns that resolve findings mid-campaign (archiving and annotating the referenced files) can still finish; current-head reads keep full artifact re-verification.
+
+
 ## [0.61.0] - 2026-10-02
 
 ### Added

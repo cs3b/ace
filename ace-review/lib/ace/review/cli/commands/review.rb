@@ -16,10 +16,11 @@ module Ace
             Execute code review using presets or custom configuration
 
             Presets provide pre-configured review types with focused prompts:
-              code         → General code review
-              code-pr      → PR-focused code review
-              security     → Security-focused review
-              performance  → Performance-focused review
+              code-valid   → Code correctness review
+              code-fit     → Code design review
+              code-shine   → Code quality review
+              integration  → Integration review
+              spec         → Specification review
               docs         → Documentation review
 
             Configuration:
@@ -31,13 +32,13 @@ module Ace
           DESC
 
           example [
-            "--preset code-pr             # PR code review",
-            "--preset security --auto-execute  # Run and apply fixes",
+            "--preset code-valid --pr 123  # PR code review",
+            "--preset code-fit --auto-execute  # Run and apply fixes",
             "--pr 123                      # Review by PR number",
             "--pr 123 --delta             # Delta round since the most recent prior session's head",
             "--pr 123 --delta <head>      # Delta round since an explicit reviewed head",
-            "--preset code --subject diff:HEAD~3 --subject files:docs/**/*.md",
-            "--preset security --dry-run   # Preview without executing"
+            "--preset code-valid --subject diff:HEAD~3 --subject files:docs/**/*.md",
+            "--preset code-fit --dry-run   # Preview without executing"
           ]
 
           # Review configuration options
@@ -58,10 +59,12 @@ module Ace
           option :auto_execute, type: :boolean, default: nil, desc: "Execute LLM query automatically"
           option :save_session, type: :boolean, desc: "Save session files (default: true)"
           option :session_dir, type: :string, desc: "Custom session directory"
-          option :pr, type: :string, desc: "Review GitHub PR (number, URL, or owner/repo#number)"
+          option :pr, type: :string, desc: "Review PR (number, URL, or owner/repo#number)"
+          option :server, type: :string, desc: "Use the named configured forge server"
+          option :default_server, type: :boolean, desc: "Use the configured default forge server"
           option :pr_comments, type: :boolean, desc: "Include PR comments as feedback source (default: true for --pr)"
           option :post_comment, type: :boolean, desc: "Post review as PR comment (requires --pr)"
-          option :gh_timeout, type: :integer, desc: "Timeout for gh CLI operations in seconds (default: 30)"
+          option :provider_timeout, type: :integer, desc: "Timeout for forge operations in seconds (default: 30)"
           option :evidence_session, type: :array, desc: "Include selected prior review sessions as context"
           option :delta, type: :string, optional_value: true,
             desc: "Delta round for --pr: review only changes since a reference head (explicit head, or `auto` to auto-resolve from the most recent prior session for this PR); omit for a full round"
@@ -106,7 +109,9 @@ module Ace
             end
 
             # Type-convert numeric options (ace-support-cli returns strings, Thor converted to integers)
-            cli_options[:gh_timeout] = cli_options[:gh_timeout]&.to_i if cli_options[:gh_timeout]
+            if cli_options[:provider_timeout]
+              cli_options[:provider_timeout] = cli_options[:provider_timeout].to_i
+            end
 
             # Build and store options for testing compatibility
             @options = build_review_options(cli_options)

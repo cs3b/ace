@@ -20,23 +20,41 @@ module Ace
 
         # Format comments data into markdown report
         #
-        # @param comments_data [Hash] Data from GhPrCommentFetcher
+        # @param comments_data [Hash] normalized provider comment data
         # @return [String] Formatted markdown report
         def self.format(comments_data)
           return nil unless comments_data && comments_data[:success]
 
           pr_number = comments_data[:pr_number]
           pr_title = comments_data[:pr_title]
-          comments = comments_data[:comments] || []
-          reviews = comments_data[:reviews] || []
+          # Full provider evidence is preserved upstream; prompt feedback
+          # excludes bot posts, blank bodies, and our own session comments
+          # (they are not unresolved human feedback).
+          comments = (comments_data[:comments] || []).reject do |comment|
+            author = comment[:author].to_s
+            body = comment[:body].to_s
+            author.match?(/\b(bot|github-actions|ace-review)\b/i) ||
+              body.empty? ||
+              own_session_post?(body)
+          end
+          reviews = (comments_data[:reviews] || []).reject do |review|
+            review[:author].to_s.match?(/\b(bot|github-actions|ace-review)\b/i)
+          end
           review_threads = comments_data[:review_threads] || []
 
+          # Apply the same bot filter to thread comments; threads left
+          # without human comments are omitted from feedback (filtered
+          # before the summary so bot-only threads never inflate counts).
+          review_threads = review_threads.map do |thread|
+            filtered = thread.merge(comments: Array(thread[:comments]).reject { |c| c[:author].to_s.match?(/\b(bot|github-actions|ace-review)\b/i) })
+            filtered.merge(comments: filtered[:comments])
+          end.reject { |thread| Array(thread[:comments]).empty? }
           # Build report sections
           frontmatter = build_frontmatter(comments_data)
           summary = build_summary(comments, reviews, review_threads, pr_number, pr_title)
           inline_section = build_inline_comments_section(review_threads)
           unresolved_section = build_unresolved_section(comments, reviews)
-          resolved_section = build_resolved_section(reviews)
+          resolved_section = build_resolved_section(reviews, current_head: comments_data[:head_sha].to_s)
           comments_table = build_comments_table(comments, reviews)
 
           # Combine sections
@@ -76,6 +94,7 @@ module Ace
           inline_thread_count = review_threads.size
           reviewers = extract_reviewers(comments, reviews, review_threads)
           unresolved_count = count_unresolved(comments, reviews, review_threads)
+          unknown_resolution = review_threads.count { |t| t[:is_resolved].nil? }
 
           summary = "# Developer Feedback from PR ##{pr_number}\n\n"
           summary += "> #{pr_title}\n\n" if pr_title && !pr_title.empty?
@@ -83,6 +102,7 @@ module Ace
           summary += "- Total comments: #{total_comments}\n"
           summary += "- Inline code comments: #{inline_thread_count}\n" if inline_thread_count > 0
           summary += "- Unresolved items: #{unresolved_count}\n"
+          summary += "- Unknown-resolution threads: #{unknown_resolution}\n" if unknown_resolution > 0
           summary += "- Reviewers: #{reviewers.map { |r| "@#{r}" }.join(", ")}\n" if reviewers.any?
           summary
         end
@@ -144,7 +164,11 @@ module Ace
             line = thread[:line]
             thread_id = thread[:id]
             is_resolved = thread[:is_resolved]
-            status = is_resolved ? "Resolved" : "Unresolved"
+            status = case is_resolved
+            when true then "Resolved"
+            when false then "Unresolved"
+            else "Resolution unknown"
+            end
 
             # Header with file:line, thread ID, and status
             location = line ? "#{path}:#{line}" : path
@@ -167,13 +191,26 @@ module Ace
         # Build resolved feedback section
         #
         # @param reviews [Array<Hash>] Code reviews
+        # @param current_head [String] Reviewed PR head (empty when unknown)
         # @return [String, nil] Resolved section or nil if empty
-        def self.build_resolved_section(reviews)
+        def self.build_resolved_section(reviews, current_head: nil)
           resolved = []
+          current = current_head.to_s
 
-          # Add approvals
+          # Add approvals. Approvals attach to a reviewed commit; only those
+          # matching the current head are current approvals, earlier-head
+          # approvals are labeled, and unknown-head approvals are called out
+          # as unknown instead of presenting as current.
           reviews.select { |r| r[:state] == "APPROVED" }.each do |review|
-            resolved << "@#{review[:author]} approved changes"
+            review_head = review[:head_sha].to_s
+            label = if review_head.empty?
+                      " (head unknown)"
+                    elsif review_head == current
+                      ""
+                    else
+                      " (for earlier head #{review_head[0, 12]})"
+                    end
+            resolved << "@#{review[:author]} approved changes#{label}"
           end
 
           return nil if resolved.empty?
@@ -184,6 +221,14 @@ module Ace
           end
 
           section
+        end
+
+        # An ACE post carries our review header AND a well-formed session
+        # marker as the trailing hidden line. A human reply quoting an
+        # earlier comment rarely matches both, so quotes stay visible.
+        def self.own_session_post?(body)
+          return false unless body.start_with?("## Code Review - ace-review")
+          body.match?(/<!--\s*ace-review-session:[a-zA-Z0-9._:-]+\s*-->\s*\z/)
         end
 
         # Build comments table for quick reference
@@ -256,7 +301,7 @@ module Ace
         # @param review_threads [Array<Hash>] Inline review threads
         # @return [Integer] Count of unresolved items
         def self.count_unresolved(comments, reviews, review_threads = [])
-          unresolved_threads = review_threads.count { |t| !t[:is_resolved] }
+          unresolved_threads = review_threads.count { |t| t[:is_resolved] == false }
           actionable_comments = comments.count { |c| actionable_comment?(c[:body]) }
           actionable_comments + reviews.count { |r| r[:state] == "CHANGES_REQUESTED" } + unresolved_threads
         end

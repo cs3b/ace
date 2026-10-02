@@ -36,7 +36,7 @@ class CleanupPrResolverTest < Minitest::Test
   def merged_evidence(number: 101, head_sha: "feat123", merge_commit_sha: "merge456", state: :merged, url: nil,
     head_ref: "feature", base_ref: "main", base_repository_url: "https://forge.example.com/o/r", server_name: "forgejo-lab")
     Ace::Git::ProviderPullRequest.new(
-      server_name: server_name, number: number, title: "t", state: state,
+      server_name: server_name, number: number, title: "t", body: nil, state: state,
       head_ref: head_ref, base_ref: base_ref, head_sha: head_sha, author: "u",
       url: url, draft: false, merged_at: nil, head_repository_url: nil,
       base_repository_url: base_repository_url, merge_commit_sha: merge_commit_sha

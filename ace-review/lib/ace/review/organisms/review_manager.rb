@@ -134,11 +134,9 @@ module Ace
           config_result = prepare_review_config(options)
           return config_result unless config_result[:success]
 
-          metadata = Molecules::GhPrFetcher.fetch_metadata(options.pr)
+          # The brief consumes metadata and the file inventory only.
+          metadata = pr_provider(options).fetch_metadata(options.pr)
           return metadata unless metadata[:success]
-          inventory = Molecules::GhPrFetcher.fetch_file_inventory(metadata[:metadata])
-          return inventory unless inventory[:success]
-          metadata[:metadata]["files"] = inventory[:files]
 
           session_dir = File.join(@project_root || Dir.pwd, ".ace-local", "review", "goals-brief")
           FileUtils.mkdir_p(session_dir)
@@ -151,6 +149,13 @@ module Ace
         def ensure_review_options(options)
           return options if options.is_a?(Models::ReviewOptions)
           Models::ReviewOptions.new(options.is_a?(Hash) ? options : {})
+        end
+
+        def pr_provider(options)
+          Molecules::PrProvider.new(
+            server_name: options.server, use_default: options.default_server,
+            timeout: options.provider_timeout
+          )
         end
 
         # Step 1: Prepare and validate configuration
@@ -291,8 +296,8 @@ module Ace
           return extract_pr_delta_content(pr_identifier, config, options) if options.delta_requested?
 
           # Fetch PR diff and metadata
-          fetch_options = options.gh_timeout ? {timeout: options.gh_timeout} : {}
-          result = Ace::Review::Molecules::GhPrFetcher.fetch_pr(pr_identifier, fetch_options)
+          result = pr_provider(options).fetch(pr_identifier,
+            include_comments: options.include_pr_comments?)
 
           unless result[:success]
             return {success: false, error: result[:error]}
@@ -330,15 +335,10 @@ module Ace
 
           # Fetch PR comments if enabled
           if options.include_pr_comments?
-            comments_result = Ace::Review::Molecules::GhPrCommentFetcher.fetch(pr_identifier, fetch_options)
-            if comments_result[:success]
-              if Ace::Review::Molecules::GhPrCommentFetcher.has_comments?(comments_result)
-                options.pr_comment_data = comments_result
-              end
-            else
-              # Log warning but continue with review (comments are optional enhancement)
-              warn "Warning: Failed to fetch PR comments: #{comments_result[:error]}. " \
-                   "Review will proceed without developer feedback."
+            comments_result = result[:comments]
+            if comments_result[:comments].any? || comments_result[:reviews].any? ||
+                comments_result[:review_threads].any?
+              options.pr_comment_data = comments_result
             end
           end
 
@@ -364,8 +364,7 @@ module Ace
         # this PR) and the current head. Fails closed on missing sessions, rewritten
         # history, or oversized deltas. An empty delta returns a no-op round marker.
         def extract_pr_delta_content(pr_identifier, config, options)
-          fetch_options = options.gh_timeout ? {timeout: options.gh_timeout} : {}
-          metadata_result = Molecules::GhPrFetcher.fetch_metadata(pr_identifier, fetch_options)
+          metadata_result = pr_provider(options).fetch_metadata(pr_identifier)
           return {success: false, error: metadata_result[:error]} unless metadata_result[:success]
 
           metadata = metadata_result[:metadata]
@@ -373,12 +372,21 @@ module Ace
             return {success: false, error: "Delta review requires exact head/base SHAs"}
           end
 
-          inventory = Molecules::GhPrFetcher.fetch_file_inventory(metadata, fetch_options)
-          return {success: false, error: inventory[:error]} unless inventory[:success]
-          metadata["files"] = inventory[:files]
 
           delta = Molecules::DeltaResolver.resolve(options.delta, metadata, project_root: @project_root || Dir.pwd)
           return {success: false, error: delta[:error]} unless delta[:success]
+
+          # The snapshot above was read before resolution ran; re-read the
+          # provider metadata and compare identity so a head, base, or
+          # repository move during delta computation fails the round instead
+          # of certifying a delta against stale identity.
+          recheck_result = pr_provider(options).fetch_metadata(pr_identifier)
+          return {success: false, error: recheck_result[:error]} unless recheck_result[:success]
+          rechecked = recheck_result[:metadata]
+          identity_keys = %w[server_name provider repository_url number headRefOid baseRefOid]
+          if identity_keys.any? { |key| rechecked[key] != metadata[key] }
+            return {success: false, error: "PR identity changed during delta resolution; delta round rejected"}
+          end
 
           options.pr_metadata = metadata
           # Carry the reference session's findings forward as evidence; an explicit
@@ -448,6 +456,7 @@ module Ace
         def save_noop_round(session_dir, options, config, content)
           review_data = {
             preset: options.preset,
+            pr_metadata: options.pr_metadata,
             review_role: config[:review_role],
             pr_url: options.pr_metadata&.dig("url"),
             evidence_sessions: options.evidence_sessions,
@@ -567,7 +576,20 @@ module Ace
           info += "- **Base branch SHA**: #{metadata["baseRefOid"]}\n"
           info += "- **Head**: #{metadata["headRefName"]}\n"
           info += "- **Head SHA**: #{metadata["headRefOid"]}\n"
+          info += "- **Forge server**: #{metadata["server_name"]}\n" if metadata["server_name"]
+          info += "- **Repository**: #{metadata["repository_url"]}\n" if metadata["repository_url"]
           info += "- **URL**: #{metadata["url"]}\n"
+          checks = Array(metadata["checks"])
+          if checks.any?
+            info += "\n### Advisory CI check states\n\n"
+            checks.each do |check|
+              line = "- **#{check["name"]}**: #{check["state"]}"
+              line += " / #{check["conclusion"]}" if check["conclusion"].to_s.length.positive?
+              info += line + "\n"
+            end
+            info += "\nCI states are advisory evidence; failed CI alone cannot override executed tests " \
+                    "plus the independent exact-head review policy.\n"
+          end
           info
         end
 
@@ -777,8 +799,15 @@ module Ace
             ref = item["ref"] || item[:ref]
             authority = item["authority"] || item[:authority]
             sha = (ref == "base") ? metadata["baseRefOid"] : metadata["headRefOid"]
-            repository_url = metadata["url"].to_s.sub(%r{/pull/\d+\z}, "")
-            url = "#{repository_url}/blob/#{sha}/#{URI::DEFAULT_PARSER.escape(path)}" if repository_url.start_with?("https://github.com/")
+            # Clone-form URLs (trailing .git) are not valid web bases.
+            repository_url = metadata["repository_url"].to_s.sub(/\.git\z/i, "").chomp("/")
+            # Source routes differ per forge: GitHub serves blobs at /blob/,
+            # Forgejo at /src/commit/. Route on the resolved snapshot provider.
+            route = (metadata["provider"] == "github") ? "blob" : "src/commit"
+            encoded = path.split("/").map { |part|
+              part.gsub(/[^A-Za-z0-9._~!$&'()*+,;=@:-]/) { |c| c.bytes.map { |b| format("%%%02X", b) }.join }
+            }.join("/")
+            url = "#{repository_url}/#{route}/#{sha}/#{encoded}" unless repository_url.empty?
             {path: path, ref: ref, authority: authority,
              snapshot: source_at_ref(path, sha, metadata, session_dir), url: url}
           end
@@ -853,23 +882,11 @@ module Ace
 
           content, _error, show_status = Open3.capture3("git", "show", "#{sha}:#{relative}", chdir: root.strip)
           unless show_status.success?
-            match = metadata["url"].to_s.match(%r{\Ahttps://github\.com/([^/]+/[^/]+)/pull/\d+\z})
-            raise Errors::BundleProcessingError.new("Cannot identify repository for PR task spec at reviewed head") unless match
-
-            escaped = URI::DEFAULT_PARSER.escape(relative)
-            endpoint = "repos/#{match[1]}/contents/#{escaped}?ref=#{sha}"
-            fetched = Ace::Git::Github::CliExecutor.execute("api", [endpoint])
-            unless fetched[:success]
-              raise Errors::BundleProcessingError.new("Goals source is unavailable at reviewed ref #{sha}: #{fetched[:stderr]}")
-            end
             begin
-              payload = JSON.parse(fetched[:stdout])
-              unless payload.is_a?(Hash) && payload["encoding"] == "base64" && payload["content"].is_a?(String)
-                raise ArgumentError, "expected a base64 file response"
-              end
-              content = payload["content"].gsub(/\s/, "").unpack1("m0")
-            rescue JSON::ParserError, ArgumentError => e
-              raise Errors::BundleProcessingError.new("Goals source cannot be decoded at reviewed ref #{sha}: #{e.message}")
+              content = Molecules::PrProvider.new(server_name: metadata.fetch("server_name"))
+                .file_at_ref(metadata.fetch("number"), path: relative, ref: sha)
+            rescue Ace::Git::Error => e
+              raise Errors::BundleProcessingError.new("Goals source is unavailable at reviewed ref #{sha}: #{e.message}")
             end
           end
 
@@ -1213,6 +1230,7 @@ module Ace
 
           review_data = {
             preset: options.preset,
+            pr_metadata: options.pr_metadata,
             campaign_binding: campaign_binding_for(options, content),
             config: config,
             subject: content[:subject],
@@ -1253,7 +1271,7 @@ module Ace
             return typed_subject_config
           end
 
-          # Handle --pr flag (full PR mode with GhPrFetcher)
+          # Handle --pr flag with the resolved provider snapshot.
           if subject && !subject.empty? && options&.pr_review?
             pr_diff_path = File.join(session_dir, "pr-diff.patch")
             File.write(pr_diff_path, subject)
@@ -1263,7 +1281,7 @@ module Ace
                 "sections" => {
                   "pr_changes" => {
                     "title" => "Pull Request Changes",
-                    "description" => "Code changes from GitHub Pull Request",
+                    "description" => "Code changes from the selected pull request",
                     "files" => [pr_diff_path],
                     "verbatim_files" => true,
                     "max_size" => File.size(pr_diff_path)
@@ -1390,20 +1408,136 @@ module Ace
           # Read review content
           review_content = File.read(review_file)
 
-          # Prepare metadata for comment
-          metadata = {
-            preset: review_data[:preset],
-            model: review_data[:model],
-            timestamp: Time.now.utc.strftime("%Y-%m-%d %H:%M:%S UTC")
-          }
+          # The identity digest covers only stable review content: the
+          # metadata header carries a fresh timestamp on every run, so hashing
+          # the whole file would mint a new identity for identical review
+          # text and let an uncertain-post retry post a duplicate. The
+          # dry-run preview uses the same digest so preview and post agree.
+          stable_content = review_content.sub(/\A---\n.*?\n---\n\n/m, "")
+          review_digest = Digest::SHA256.hexdigest(stable_content)
 
-          # Post comment
-          Ace::Review::Molecules::GhCommentPoster.post_comment(
-            options.pr,
-            review_content,
-            metadata: metadata,
-            dry_run: options.dry_run
+          # Dry-run prepares the exact comment body without posting; the
+          # response builder reads :preview. The timestamp derives from the
+          # review digest — identical to what a real post would send.
+          if options.dry_run
+            preview = Molecules::PrProvider.format_comment(
+              review_content, preset: review_data[:preset], model: review_data[:model],
+              timestamp: "review-#{review_digest[0, 12]}"
+            )
+            return {success: true, dry_run: true, preview: preview}
+          end
+
+          head = options.pr_metadata&.fetch("headRefOid", nil)
+          return {success: false, error: "Cannot post without an exact reviewed PR head"} unless head
+
+          # The session key and formatted body persist beside the review
+          # artifact: a retry in a later run must reuse the exact identity
+          # and content to reconcile the existing session comment.
+          # The identity store lives OUTSIDE the per-run session directory,
+          # keyed by everything reuse depends on: PR identity, head, and
+          # the review artifact digest. Identical review text for another
+          # PR therefore never collides.
+          # The numeric PR (not the raw reference spelling) keys the
+          # persisted identity, matching the provider-side marker basis.
+          identity_pr = (options.pr_metadata&.fetch("number", nil) || options.pr).to_s
+          identity_head = head.to_s
+          identity_server = options.pr_metadata&.fetch("server_name", nil).to_s
+          identity_repo = options.pr_metadata&.fetch("repository_url", nil).to_s
+          # The lookup key uses only values stable across reruns of the same
+          # review (PR identity, review content, preset, model) so a retry
+          # after a lost response finds the persisted body and marker before
+          # any new timestamp is generated.
+          identity_preset = review_data[:preset].to_s
+          identity_model = review_data[:model].to_s
+          # The identity includes the review artifact digest: a retry of
+          # the same artifact reuses the persisted marker (no duplicate),
+          # while a regenerated review for a later round is a new artifact
+          # and gets its own comment.
+          identity_key = Digest::SHA256.hexdigest(
+            [identity_server, identity_repo, identity_pr, identity_head, review_digest,
+             identity_preset, identity_model].join("\0")
           )
+          identity_root = File.join(@project_root || Dir.pwd, ".ace-local/review/post-identity")
+          FileUtils.mkdir_p(identity_root)
+          identity_path = File.join(identity_root, "#{identity_key}.yml")
+          persisted = File.exist?(identity_path) &&
+            begin
+              YAML.safe_load_file(identity_path, permitted_classes: [Time, Date])
+            rescue Psych::Exception
+              nil
+            end
+          # The persisted record is reusable only for the exact same PR,
+          # head, and review content; anything else starts a fresh identity.
+          if persisted && persisted["pr"] == identity_pr &&
+              persisted["head"] == head && persisted["review_sha256"] == review_digest &&
+              persisted["server_name"] == identity_server && persisted["repository_url"] == identity_repo &&
+              persisted["preset"] == identity_preset && persisted["model"] == identity_model &&
+              persisted["session_key"].is_a?(String) && persisted["body"].is_a?(String)
+            session_key = persisted["session_key"]
+            content = persisted["body"]
+          else
+            # The marker IS the identity key: deterministic for the same
+            # identity even when the local record was lost, so the posted
+            # body and correlation always reconcile. The body is formatted
+            # from the same stable content the digest hashes: embedding the
+            # timestamped frontmatter would make a rerun with identical
+            # review text report a content conflict after a lost record.
+            session_key = identity_key
+            content = Molecules::PrProvider.format_comment(
+              stable_content, preset: review_data[:preset], model: review_data[:model],
+              # Deterministic per identity: the review digest stands in
+              # for the mtime so re-formatting after a lost record still
+              # reconciles.
+              timestamp: "review-#{review_digest[0, 12]}"
+            )
+            record = YAML.dump(
+              "session_key" => session_key, "body" => content,
+              "pr" => identity_pr, "head" => head, "review_sha256" => review_digest,
+              "server_name" => identity_server, "repository_url" => identity_repo,
+              "preset" => identity_preset, "model" => identity_model
+            )
+            tmp_path = "#{identity_path}.tmp-#{Process.pid}"
+            File.write(tmp_path, record)
+            File.rename(tmp_path, identity_path)
+          end
+
+          # Pin posting to the server resolved during review: a remote
+          # change mid-review must not redirect the comment to another
+          # repository with the same number and head.
+          pinned_server = options.pr_metadata&.fetch("server_name", nil)
+          provider = pinned_server ? Molecules::PrProvider.new(server_name: pinned_server, timeout: options.provider_timeout) : pr_provider(options)
+          # Compare the resolved server URL with the reviewed repository
+          # BEFORE any mutation, not only in the receipt.
+          reviewed_repo = options.pr_metadata&.fetch("repository_url", nil)
+          if reviewed_repo && provider.resolved_server_url(options.pr).to_s.chomp("/").sub(/\.git\z/i, "") != reviewed_repo.to_s.chomp("/").sub(/\.git\z/i, "")
+            return {success: false, error: "Resolved server #{provider.resolved_server_url(options.pr)} does not match the reviewed repository #{reviewed_repo}"}
+          end
+          receipt = provider.post_comment(
+            options.pr, expected_head: head,
+            content: content,
+            session_key: session_key
+          )
+          # Posted results retain the resolved identity the contract requires:
+          # server, repository, PR number, and the exact guarded head.
+          # The posted identity must match the reviewed identity exactly.
+          reviewed_server = options.pr_metadata&.fetch("server_name", nil)
+          reviewed_repo = options.pr_metadata&.fetch("repository_url", nil)
+          reviewed_number = options.pr_metadata&.fetch("number", nil)
+          # Normalize both sides: forgejo strips .git from its PR URL while
+          # comment evidence retains the configured URL, so exact comparison
+          # would fail a successful post.
+          normalize = ->(url) { url.to_s.chomp("/").sub(/\.git\z/i, "") }
+          if (reviewed_server && receipt.comment.server_name != reviewed_server) ||
+             (reviewed_repo && normalize.call(receipt.comment.repository_url) != normalize.call(reviewed_repo)) ||
+             (reviewed_number && receipt.comment.pr_number != reviewed_number)
+            raise Ace::Git::ProviderIdentityMismatchError,
+              "Posted comment identity (#{receipt.comment.server_name}/#{receipt.comment.repository_url}##{receipt.comment.pr_number}) does not match the reviewed PR"
+          end
+          {success: true, comment_url: receipt.comment.url, idempotency: receipt.idempotency,
+           server_name: receipt.comment.server_name, repository_url: receipt.comment.repository_url,
+           pr_number: receipt.comment.pr_number, head_sha: receipt.head_sha}
+        rescue Ace::Git::Error, ArgumentError => e
+          {success: false, error: "#{e.class.name.split('::').last}: #{e.message}"}
         end
 
         def save_session_files(session_dir, review_data)
@@ -1490,6 +1624,9 @@ module Ace
           root = @project_root || Ace::Support::Fs::Molecules::ProjectRootFinder.find_or_current
           head, _s = Open3.capture2("git", "rev-parse", "HEAD", chdir: root)
           tree, _s = Open3.capture2("git", "rev-parse", "HEAD^{tree}", chdir: root)
+          # For PR reviews the reviewed head is the provider-resolved PR
+          # head, not the local checkout; keep both identities distinct.
+          pr_head = review_data[:pr_metadata]&.fetch("headRefOid", nil)
 
           {
             "timestamp" => Time.now.iso8601(6),
@@ -1506,7 +1643,11 @@ module Ace
             "diff_manifest" => review_data[:diff_manifest],
             "source_manifest" => review_data[:source_manifest],
             "budget" => review_data[:budget],
-            "head" => head.to_s.strip,
+            "head" => pr_head || head.to_s.strip,
+            "checkout_sha" => head.to_s.strip,
+            "server_name" => review_data[:pr_metadata]&.fetch("server_name", nil),
+            "repository_url" => review_data[:pr_metadata]&.fetch("repository_url", nil),
+            "pr_number" => review_data[:pr_metadata]&.fetch("number", nil),
             "tree" => tree.to_s.strip
           }
         end
@@ -1621,11 +1762,21 @@ module Ace
               # Dry-run mode: add preview to response
               response[:dry_run_preview] = comment_result[:preview]
             else
-              # Actual posting: add comment URL
+              # Actual posting: add comment URL and the resolved identity.
               response[:comment_url] = comment_result[:comment_url]
+              response[:comment_idempotency] = comment_result[:idempotency]
+              response[:posted_to] = {
+                server_name: comment_result[:server_name],
+                repository_url: comment_result[:repository_url],
+                pr_number: comment_result[:pr_number],
+                head_sha: comment_result[:head_sha]
+              }
               response[:message] += "\n✓ Review posted to PR: #{comment_result[:comment_url]}"
             end
           elsif comment_result && !comment_result[:success]
+            # A requested post that is not confirmed is a failed command
+            # result, not a successful review with an error note.
+            response[:success] = false
             response[:comment_error] = comment_result[:error]
             response[:message] += "\n✗ Failed to post comment: #{comment_result[:error]}"
           end

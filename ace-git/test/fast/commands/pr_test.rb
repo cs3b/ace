@@ -9,7 +9,7 @@ class PrCommandsTest < AceGitTestCase
     super
     @server = Ace::Git::ResolvedServer.new(name: "forgejo-lab", provider: :forgejo, url: "https://forge.example.com/cs3b/ace")
     @pr = Ace::Git::ProviderPullRequest.new(
-      server_name: "forgejo-lab", number: 25, title: "Ship it", state: :open,
+      server_name: "forgejo-lab", number: 25, title: "Ship it", state: :open, body: nil,
       head_ref: "feature", base_ref: "main", head_sha: "a" * 40, author: "dev",
       url: "https://forge.example.com/cs3b/ace/pull/25", draft: true, merged_at: nil,
       head_repository_url: @server.url, base_repository_url: @server.url, merge_commit_sha: nil

@@ -50,7 +50,7 @@ class PullRequestCheckoutPreparerTest < Minitest::Test
 
   def evidence(head_url:, head_ref: "feature/x", head_sha: @feature_sha)
     Ace::Git::ProviderPullRequest.new(
-      server_name: "forgejo-lab", number: 25, title: "t", state: :open,
+      server_name: "forgejo-lab", number: 25, title: "t", body: nil, state: :open,
       head_ref: head_ref, base_ref: "main", head_sha: head_sha, author: "u",
       url: nil, draft: true, merged_at: nil,
       head_repository_url: head_url, base_repository_url: "https://forge.example.com/o/r",

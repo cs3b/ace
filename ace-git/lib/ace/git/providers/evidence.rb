@@ -11,7 +11,7 @@ module Ace
     # Pull request state values: :open, :merged, :closed. Issue state values:
     # :open, :closed.
     ProviderPullRequest = Data.define(
-      :server_name, :number, :title, :state, :head_ref, :base_ref,
+      :server_name, :number, :title, :body, :state, :head_ref, :base_ref,
       :head_sha, :author, :url, :draft, :merged_at,
       :head_repository_url, :base_repository_url, :merge_commit_sha
     )
@@ -20,6 +20,33 @@ module Ace
 
     # Normalized check/CI evidence for one check run.
     ProviderCheck = Data.define(:server_name, :name, :state, :conclusion, :url)
+
+    # Comments keep the exact repository and PR identity supplied by the
+    # selected provider. A nil path/line denotes a conversation comment.
+    ProviderReviewComment = Data.define(
+      :server_name, :repository_url, :pr_number, :id, :author, :body,
+      :url, :path, :line, :head_sha, :resolved, :thread_id
+    )
+
+    ProviderReview = Data.define(
+      :server_name, :repository_url, :pr_number, :id, :author, :body,
+      :state, :url, :head_sha
+    )
+
+    ProviderReviewEvidence = Data.define(
+      :server_name, :repository_url, :pr_number, :head_sha, :comments, :reviews
+    )
+
+    ProviderReviewDetails = Data.define(:server_name, :repository_url, :pr_number, :base_sha, :files)
+
+    ProviderReviewSnapshot = Data.define(
+      :provider, :pull_request, :base_sha, :files, :diff, :review_evidence, :checks
+    )
+
+    ProviderReviewMutation = Data.define(
+      :server_name, :repository_url, :pr_number, :head_sha, :comment,
+      :idempotency
+    )
 
     # Normalized repository evidence.
     ProviderRepository = Data.define(:server_name, :full_name, :default_branch, :url)

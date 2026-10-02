@@ -9,6 +9,14 @@ class CampaignManagerTest < AceReviewTest
     super
     @head = "a" * 40
     @base = "b" * 40
+    Ace::Git.instance_variable_set(:@config, Ace::Git.config.merge(
+      "servers" => [{"name" => "public", "provider" => "github", "url" => "https://github.com/owner/repo"}]
+    ))
+  end
+
+  def teardown
+    Ace::Git.reset_config!
+    super
   end
 
   def test_history_survives_heads_restart_and_unresolved_high_absent_from_later_reviews
@@ -120,7 +128,7 @@ class CampaignManagerTest < AceReviewTest
     end
   end
 
-  def test_missing_earlier_counted_report_blocks_acceptance_without_erasing_rounds
+  def test_missing_current_counted_report_blocks_acceptance_without_erasing_rounds
     campaign = start_campaign
     3.times do |n|
       input = round_input(n)
@@ -130,14 +138,19 @@ class CampaignManagerTest < AceReviewTest
     end
     result = campaign_manager.finish(campaign["campaign_id"])
     assert result["accepted"]
+    # Earlier rounds' session files age legitimately (historical authority is
+    # journal-backed); the current round's report must stay verifiable.
     File.delete(File.join(@test_dir, result["rounds"].first["sessions"].first["reports"].first["artifact"]["path"]))
+    result = campaign_manager.status(campaign["campaign_id"])
+    assert result["accepted"]
+    File.delete(File.join(@test_dir, result["rounds"].last["sessions"].first["reports"].first["artifact"]["path"]))
     result = campaign_manager.status(campaign["campaign_id"])
     refute result["accepted"]
     assert_equal 3, result["completed_rounds"]
     assert_equal 3, result["clean_streak"]
   end
 
-  def test_partial_attempt_and_earlier_approval_sources_remain_required_after_convergence
+  def test_current_sources_stay_strict_while_partial_and_earlier_authority_is_journal_backed
     campaign = start_campaign(scopes: %w[one two])
     3.times do |n|
       input = round_input(n, scopes: %w[one two])
@@ -152,19 +165,29 @@ class CampaignManagerTest < AceReviewTest
     assert result["accepted"], result["reasons"].inspect
     partial_report = result["attempts"].last["sessions"].first["reports"].first["artifact"]["path"]
     earlier_approval = result["rounds"].first["approval"]["artifact"]["path"]
+    # Partial and earlier authority is validated by journal-backed historical
+    # reads, so their working files may age without blocking acceptance.
     [partial_report, earlier_approval].each do |relative|
       path = File.join(@test_dir, relative)
       bytes = File.binread(path)
       File.delete(path)
-      blocked = campaign_manager.finish(campaign["campaign_id"])
-      refute blocked["accepted"]
-      refute blocked["evidence"]["available"]
-      assert_equal 3, blocked["completed_rounds"]
-      assert_equal 3, blocked["clean_streak"]
-      assert_equal result["counters"], blocked["counters"]
+      still_accepted = campaign_manager.finish(campaign["campaign_id"])
+      assert still_accepted["accepted"], still_accepted["reasons"].inspect
       File.binwrite(path, bytes)
-      assert campaign_manager.status(campaign["campaign_id"])["accepted"]
     end
+    # The current round's own evidence stays strictly verified.
+    current_report = result["rounds"].last["sessions"].first["reports"].first["artifact"]["path"]
+    path = File.join(@test_dir, current_report)
+    bytes = File.binread(path)
+    File.delete(path)
+    blocked = campaign_manager.finish(campaign["campaign_id"])
+    refute blocked["accepted"]
+    refute blocked["evidence"]["available"]
+    assert_equal 3, blocked["completed_rounds"]
+    assert_equal 3, blocked["clean_streak"]
+    assert_equal result["counters"], blocked["counters"]
+    File.binwrite(path, bytes)
+    assert campaign_manager.status(campaign["campaign_id"])["accepted"]
   end
 
   def test_contract_successor_retains_findings_and_same_contract_reuses_identity
@@ -211,15 +234,15 @@ class CampaignManagerTest < AceReviewTest
     subject = {"repository" => "https://github.com/owner/repo", "pr" => "owner/repo#42"}
     metadata = {success: true, metadata: {"url" => "https://github.com/Owner/Repo/pull/42",
       "headRefOid" => "c" * 40, "baseRefOid" => @base}}
-    campaign = Ace::Review::Molecules::GhPrFetcher.stub(:fetch_metadata, metadata) do
+    campaign = with_pr_result(metadata) do
       manager.start(subject: subject, contract: "requirements", policy: campaign_policy)
     end
     assert_equal "c" * 40, campaign["evidence"]["current_head"]
-    status = Ace::Review::Molecules::GhPrFetcher.stub(:fetch_metadata, {success: false, error: "source unavailable"}) do
+    status = with_pr_result(success: false, error: "source unavailable") do
       manager.status(campaign["campaign_id"])
     end
     refute status["accepted"]
-    assert_includes status["reasons"], "source unavailable"
+    assert status["reasons"].any? { |reason| reason.include?("source unavailable") }
     assert_raises(ArgumentError) do
       manager.start(subject: subject.merge("repository" => "https://forge.invalid/owner/repo"),
         contract: "requirements", policy: campaign_policy)
@@ -567,9 +590,9 @@ class CampaignManagerTest < AceReviewTest
   def test_pr_source_exceptions_produce_blocked_start_status_and_finish
     manager = Ace::Review::Organisms::CampaignManager.new(repo_root: @test_dir)
     subject = {"repository" => "https://github.com/owner/repo", "pr" => "owner/repo#42"}
-    [Ace::Review::Errors::GhCliNotInstalledError.new, Ace::Review::Errors::GhAuthenticationError.new,
-      Ace::Git::ProviderCliMissingError.new("github"), Ace::Git::ProviderAuthenticationError.new("github")].each do |failure|
-      Ace::Review::Molecules::GhPrFetcher.stub(:fetch_metadata, ->(*) { raise failure }) do
+    [Ace::Git::ProviderCliMissingError.new("forge CLI"),
+      Ace::Git::ProviderAuthenticationError.new("forge login")].each do |failure|
+      with_pr_result(->(*) { raise failure }) do
         campaign = manager.start(subject: subject, contract: "requirements", policy: campaign_policy)
         [campaign, manager.status(campaign["campaign_id"]), manager.finish(campaign["campaign_id"])].each do |result|
           refute JSON.parse(JSON.generate(result))["accepted"]
@@ -613,6 +636,23 @@ class CampaignManagerTest < AceReviewTest
     restored = start_campaign
     assert_equal campaign["campaign_id"], restored["campaign_id"]
     assert_equal 1, restored["open_findings"].size
+  end
+
+  def with_pr_result(result)
+    provider = Object.new
+    provider.define_singleton_method(:fetch) do |_identifier|
+      result.respond_to?(:call) ? result.call : result
+    end
+    provider.define_singleton_method(:fetch_metadata) do |_identifier|
+      if result.respond_to?(:call)
+        result.call
+      elsif result[:success] == false
+        result
+      else
+        {success: true, metadata: result[:metadata]}
+      end
+    end
+    Ace::Review::Molecules::PrProvider.stub(:new, provider) { yield }
   end
 
 end

@@ -310,7 +310,16 @@ module Ace
             revision_error = e.message
           end
           round = record["rounds"].last
-          refs = record["attempts"].flat_map do |attempt|
+          # Availability re-hashing covers the current round's evidence plus
+          # every finding snapshot. Earlier rounds' sessions and approvals are
+          # validated by journal-backed historical authority reads instead:
+          # their working files legitimately age (feedback resolve archives
+          # and annotates finding files; test report `latest` paths move on),
+          # so hashing them here would permanently block finish for any
+          # campaign that resolved findings. Finding snapshots are
+          # content-addressed and must remain available.
+          current_attempt_ids = round ? [round["attempt_id"]] : []
+          refs = record["attempts"].select { |attempt| current_attempt_ids.include?(attempt["attempt_id"]) }.flat_map do |attempt|
             attempt["sessions"].flat_map { |session| session["artifacts"] } +
               (attempt["approval"] ? [attempt["approval"]["artifact"]] + attempt["approval"]["artifacts"] : [])
           end + (record["assessments"] + record["inherited_findings"]).map { |finding| finding["artifact"] }
@@ -394,7 +403,7 @@ module Ace
 
         def current_revisions(record)
           if @live_git && record["subject"]["pr"]
-            metadata = fetch_pr_metadata(record["subject"]["pr"])
+            metadata = fetch_pr_metadata(record["subject"])
             raise Contract::Invalid, metadata[:error] unless metadata[:success]
             value = metadata[:metadata]
             validate_repository(record, value["url"])
@@ -409,11 +418,14 @@ module Ace
           [head, base]
         end
 
-        def fetch_pr_metadata(pr)
-          Molecules::GhPrFetcher.fetch_metadata(pr)
-        rescue Errors::GhCliNotInstalledError, Errors::GhAuthenticationError,
-          Ace::Git::ProviderCliMissingError, Ace::Git::ProviderAuthenticationError => e
-          raise Contract::Invalid, "PR source unavailable: #{e.message}"
+        def fetch_pr_metadata(subject)
+          server = configured_pr_server(subject["repository"])
+          # Only head/base identity is consumed here; skip the full diff/
+          # comment/check inventory.
+          result = Molecules::PrProvider.new(server_name: server.name).fetch_metadata(subject["pr"])
+          result[:success] ? result : result.merge(error: "PR source unavailable: #{result[:error]}")
+        rescue Ace::Git::Error, ArgumentError => e
+          {success: false, error: "PR source unavailable: #{e.message}"}
         end
 
         def clean_candidate?
@@ -426,7 +438,11 @@ module Ace
         def pr_url_for(subject)
           return nil unless subject["pr"]
           parsed = Ace::Git::Atoms::PrIdentifier.parse(subject["pr"])
-          "#{subject['repository'].delete_suffix('/')}/pull/#{parsed.number}"
+          server = configured_pr_server(subject["repository"])
+          suffix = (server.provider == :forgejo) ? "pulls" : "pull"
+          # Clone-form server URLs (trailing .git) are not valid web bases.
+          web_base = server.url.delete_suffix("/").sub(/\.git\z/i, "")
+          "#{web_base}/#{suffix}/#{parsed.number}"
         end
 
         def git_revision(ref, record = nil)
@@ -443,13 +459,13 @@ module Ace
         def validate_repository(record, pr_url)
           subject = record["subject"]
           if subject["pr"]
-            unless subject["repository"].start_with?("https://github.com/")
-              raise Contract::Invalid, "unsupported PR source; no configured adapter for #{subject['repository']}"
-            end
+            server = configured_pr_server(subject["repository"])
             parsed = Ace::Git::Atoms::PrIdentifier.parse(subject["pr"])
-            expected = "#{subject['repository'].delete_suffix('/')}/pull/#{parsed.number}"
-            unless subject["repository"].delete_prefix("https://github.com/").delete_suffix("/") == parsed.repo &&
-                pr_url.is_a?(String) && pr_url.downcase == expected
+            selected_repo = Ace::Git::Atoms::ServerUrl.normalize(server.url).split("/", 2)[1]
+            supplied = Ace::Git::Atoms::PrReference.parse(pr_url)
+            unless parsed.repo&.casecmp?(selected_repo) && supplied &&
+                supplied.number == parsed.number.to_i && supplied.repository_url ==
+                  Ace::Git::Atoms::ServerUrl.normalize(server.url)
               raise Contract::Invalid, "PR session belongs to a different repository or PR"
             end
           else
@@ -459,6 +475,15 @@ module Ace
               raise Contract::Invalid, "local repository identity must be local:#{@repo_root}"
             end
           end
+        end
+
+        def configured_pr_server(repository)
+          matches = Ace::Git::ServerRegistry.matching_servers(repository)
+          unless matches.one?
+            raise Contract::Invalid,
+              "PR repository #{repository} must match exactly one configured forge server"
+          end
+          matches.first
         end
 
         def allocate_id

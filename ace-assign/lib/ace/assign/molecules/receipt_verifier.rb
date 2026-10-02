@@ -64,9 +64,15 @@ module Ace
           receipt
         end
         # Recheck the source artifacts/checks of an already accepted receipt.
-        def verify_accepted_evidence!(data, live_head:, repo_root:)
+        # Historical reads (recorded at a past head) validate acceptance from
+        # the append-only journal without re-hashing artifacts: the review
+        # lifecycle legitimately archives and annotates finding files after
+        # collection, and `.ace-local` working files are disposable, so their
+        # current existence proves nothing about an accepted past receipt.
+        # Current-head reads keep full artifact re-verification.
+        def verify_accepted_evidence!(data, live_head:, repo_root:, historical: false)
           verify_head(data, live_head)
-          verify_artifacts(data, repo_root)
+          verify_artifacts(data, repo_root) unless historical
           verify_checks(data)
           verify_review(data)
         end

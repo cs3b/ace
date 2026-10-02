@@ -3,3 +3,10 @@ git:
     commits_limit: 7      # Recent commits
     merged_prs_limit: 5   # Recently merged PRs
     open_prs_limit: 10    # Open PRs from others
+  servers:
+    # The origin remote of this checkout; default so `--pr` review resolves
+    # PRs without an explicit --server selection.
+    - name: github-cs3b
+      provider: github
+      url: https://github.com/cs3b/ace
+      default: true

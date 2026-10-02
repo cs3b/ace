@@ -40,7 +40,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   # Runtime dependencies
-  spec.add_dependency "ace-git", "~> 0.24"
+  spec.add_dependency "ace-git", "~> 0.26"
 
   # Development dependencies managed in root Gemfile
 end

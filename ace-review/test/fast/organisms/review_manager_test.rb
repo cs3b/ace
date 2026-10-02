@@ -195,7 +195,7 @@ class ReviewManagerTest < AceReviewTest
     options = Ace::Review::Models::ReviewOptions.new(pr: "42", pr_comments: false)
     fetched = {success: true, diff: diff, metadata: metadata}
 
-    Ace::Review::Molecules::GhPrFetcher.stub(:fetch_pr, fetched) do
+    with_pr_result(fetched) do
       result = @manager.send(:extract_pr_content, "42",
         {file_patterns: {"include" => ["apps/web/**"]}}, options)
 
@@ -1111,7 +1111,7 @@ class ReviewManagerTest < AceReviewTest
     metadata = {"headRefOid" => "b" * 40, "baseRefOid" => "a" * 40,
                 "changedFiles" => 1, "files" => [{"path" => "app.rb"}]}
     options = Ace::Review::Models::ReviewOptions.new(subject: "pr:42", pr_comments: false)
-    Ace::Review::Molecules::GhPrFetcher.stub(:fetch_pr, {success: true, diff: diff, metadata: metadata}) do
+    with_pr_result(success: true, diff: diff, metadata: metadata) do
       result = @manager.send(:extract_review_content, {}, options)
       assert result[:success], result[:error]
       assert_equal "42", options.pr
@@ -1174,28 +1174,31 @@ class ReviewManagerTest < AceReviewTest
     File.write(spec_path, "local text\n")
     system("git", "init", "-q", @test_dir, exception: true)
     remote_text = "proposed remote task\n"
-    api_result = {success: true, stdout: JSON.generate({encoding: "base64", content: [remote_text].pack("m0")}), stderr: ""}
-    metadata = {"headRefOid" => "a" * 40, "url" => "https://github.com/acme/repo/pull/42"}
+    metadata = {"headRefOid" => "a" * 40, "server_name" => "public", "number" => 42}
+    provider = Object.new
+    provider.define_singleton_method(:file_at_ref) { |*_args, **_kwargs| remote_text }
 
-    Ace::Git::Github::CliExecutor.stub(:execute, api_result) do
+    Ace::Review::Molecules::PrProvider.stub(:new, provider) do
       snapshot = @manager.send(:task_spec_at_head, spec_path, metadata, @test_dir)
       assert_equal remote_text, File.read(snapshot)
     end
   end
 
-  def test_remote_source_handles_empty_file_and_rejects_non_file_api_responses
+  def test_remote_source_preserves_provider_errors_and_empty_file
     system("git", "init", "-q", @test_dir, exception: true)
-    metadata = {"url" => "https://github.com/acme/repo/pull/42"}
-    [{"encoding" => "none", "content" => nil}, {"encoding" => "base64", "content" => "!"}, []].each do |payload|
-      Ace::Git::Github::CliExecutor.stub(:execute, {success: true, stdout: JSON.generate(payload)}) do
-        error = assert_raises(Ace::Review::Errors::BundleProcessingError) do
-          @manager.send(:source_at_ref, "task.md", "a" * 40, metadata, @test_dir)
-        end
-        assert_includes error.message, "cannot be decoded"
-      end
+    metadata = {"server_name" => "public", "number" => 42}
+    provider = Object.new
+    provider.define_singleton_method(:file_at_ref) do |*_args, **_kwargs|
+      raise Ace::Git::ProviderMalformedOutputError, "malformed file"
     end
-    Ace::Git::Github::CliExecutor.stub(:execute,
-      {success: true, stdout: JSON.generate({encoding: "base64", content: ""})}) do
+    Ace::Review::Molecules::PrProvider.stub(:new, provider) do
+      error = assert_raises(Ace::Review::Errors::BundleProcessingError) do
+        @manager.send(:source_at_ref, "task.md", "a" * 40, metadata, @test_dir)
+      end
+      assert_includes error.message, "malformed file"
+    end
+    provider.define_singleton_method(:file_at_ref) { |*_args, **_kwargs| "" }
+    Ace::Review::Molecules::PrProvider.stub(:new, provider) do
       snapshot = @manager.send(:source_at_ref, "task.md", "a" * 40, metadata, @test_dir)
       assert_equal "", File.read(snapshot)
     end
@@ -1517,7 +1520,7 @@ class ReviewManagerTest < AceReviewTest
         "url" => "https://example.com/pr/123"
       }
     }
-    Ace::Review::Molecules::GhPrFetcher.stub(:fetch_pr, fetch_result) do
+    with_pr_result(fetch_result) do
       result = @manager.send(:extract_pr_content, "123", config, options)
 
       assert result[:success], "Expected PR extraction to succeed"
@@ -1531,7 +1534,7 @@ class ReviewManagerTest < AceReviewTest
                metadata: {"headRefOid" => "b" * 40, "baseRefOid" => "a" * 40,
                           "changedFiles" => 2, "files" => [{"path" => "file.rb"}]}}
 
-    Ace::Review::Molecules::GhPrFetcher.stub(:fetch_pr, fetched) do
+    with_pr_result(fetched) do
       result = @manager.send(:extract_pr_content, "42", {}, options)
       refute result[:success]
       assert_match(/file inventory/, result[:error])
@@ -1545,7 +1548,7 @@ class ReviewManagerTest < AceReviewTest
                metadata: {"headRefOid" => "b" * 40, "baseRefOid" => "a" * 40,
                           "changedFiles" => 1, "files" => [{"path" => "file.rb"}]}}
 
-    Ace::Review::Molecules::GhPrFetcher.stub(:fetch_pr, fetched) do
+    with_pr_result(fetched) do
       result = @manager.send(:extract_pr_content, "42", {}, options)
       refute result[:success]
       assert_match(/selected diff alone/, result[:error])
@@ -1564,7 +1567,7 @@ class ReviewManagerTest < AceReviewTest
     config = {file_pattern_groups: [{"include" => ["apps/admin/**"]},
       {"include" => ["**/*.tsx"], "exclude" => ["**/*.test.tsx"]}]}
 
-    Ace::Review::Molecules::GhPrFetcher.stub(:fetch_pr, fetched) do
+    with_pr_result(fetched) do
       result = @manager.send(:extract_pr_content, "42", config, options)
 
       assert result[:success]
@@ -2470,13 +2473,7 @@ class ReviewManagerTest < AceReviewTest
   end
 
   def stub_delta_fetchers(metadata)
-    Ace::Review::Molecules::GhPrFetcher.stub(:fetch_metadata,
-      {success: true, metadata: metadata}) do
-      Ace::Review::Molecules::GhPrFetcher.stub(:fetch_file_inventory,
-        {success: true, files: [{"path" => "a.txt"}]}) do
-        yield
-      end
-    end
+    with_pr_result(success: true, metadata: metadata.merge("files" => [{"path" => "a.txt"}])) { yield }
   end
 
   def test_extract_pr_delta_content_scopes_subject_to_delta_diff
@@ -2540,6 +2537,52 @@ class ReviewManagerTest < AceReviewTest
     refute File.file?(File.join(session_dir, "user.prompt.md"))
   end
 
+  def test_post_identity_stable_across_timestamped_reruns
+    Dir.mktmpdir do |dir|
+      manager = Ace::Review::Organisms::ReviewManager.new(project_root: dir)
+      body = "## Review\n\nLGTM with notes\n"
+      header = ->(ts) { "---\ntimestamp: #{ts}\npreset: code-valid\nmodel: role:review-codex\n---\n\n" }
+      file_a = File.join(dir, "review-a.md")
+      File.write(file_a, header.call("2026-10-02T10:00:00Z") + body)
+      file_b = File.join(dir, "review-b.md")
+      File.write(file_b, header.call("2026-10-02T11:30:00Z") + body)
+
+      metadata = {
+        "headRefOid" => "a" * 40, "number" => 7,
+        "server_name" => "github-cs3b", "repository_url" => "https://github.com/cs3b/ace"
+      }
+      options = Ace::Review::Models::ReviewOptions.new(pr: 7, provider_timeout: 30)
+      options.pr_metadata = metadata
+      review_data = {preset: "code-valid", model: "role:review-codex"}
+
+      comment = Struct.new(:server_name, :repository_url, :pr_number, :url).new(
+        "github-cs3b", "https://github.com/cs3b/ace", 7, "https://github.com/cs3b/ace/comment/91")
+      receipt = Struct.new(:comment, :head_sha, :idempotency).new(comment, "a" * 40, :created)
+      posts = []
+      provider = Object.new
+      provider.define_singleton_method(:resolved_server_url) { |_pr| "https://github.com/cs3b/ace" }
+      provider.define_singleton_method(:post_comment) do |_pr, expected_head:, content:, session_key:|
+        posts << {session_key: session_key, content: content, expected_head: expected_head}
+        receipt
+      end
+
+      results = []
+      Ace::Review::Molecules::PrProvider.stub(:new, provider) do
+        results << manager.send(:post_pr_comment, options, file_a, review_data)
+        results << manager.send(:post_pr_comment, options, file_b, review_data)
+      end
+
+      assert results[0][:success], results[0][:error].to_s
+      assert results[1][:success], results[1][:error].to_s
+      # An uncertain-post retry of identical review text must reconcile the
+      # existing comment: same correlation marker and body despite the fresh
+      # per-run metadata timestamp.
+      assert_equal 2, posts.length
+      assert_equal posts[0][:session_key], posts[1][:session_key]
+      assert_equal posts[0][:content], posts[1][:content]
+    end
+  end
+
   def test_delta_without_pr_is_refused
     options = Ace::Review::Models::ReviewOptions.new(delta: :auto, preset: "pr")
 
@@ -2547,6 +2590,32 @@ class ReviewManagerTest < AceReviewTest
 
     refute result[:success]
     assert_match(/--delta requires --pr/, result[:error])
+  end
+
+  def test_delta_round_rejects_head_move_during_resolution
+    setup_delta_repo
+    write_delta_prior_session(@delta_c1)
+    config = {}
+    options = Ace::Review::Models::ReviewOptions.new(pr: "7", delta: @delta_c1)
+
+    calls = 0
+    base_metadata = delta_pr_metadata
+    provider = Object.new
+    provider.define_singleton_method(:fetch_metadata) do |_identifier|
+      calls += 1
+      metadata = base_metadata.dup
+      metadata["headRefOid"] = "f" * 40 if calls > 1
+      {success: true, metadata: metadata}
+    end
+
+    result = nil
+    Ace::Review::Molecules::PrProvider.stub(:new, provider) do
+      result = @manager.send(:extract_pr_delta_content, "7", config, options)
+    end
+
+    refute result[:success]
+    assert_match(/identity changed during delta resolution/, result[:error])
+    assert_equal 2, calls
   end
 
   # ---- Exempt-path scopes (8wq.t.1qb.1) ----
@@ -2577,8 +2646,7 @@ class ReviewManagerTest < AceReviewTest
     options = Ace::Review::Models::ReviewOptions.new(pr: "42", pr_comments: false)
 
     result = nil
-    Ace::Review::Molecules::GhPrFetcher.stub(:fetch_pr,
-      {success: true, diff: diff, metadata: metadata}) do
+    with_pr_result(success: true, diff: diff, metadata: metadata) do
       result = @manager.send(:extract_pr_content, "42", {exempt_paths: ["docs/**"]}, options)
     end
 
@@ -2605,8 +2673,7 @@ class ReviewManagerTest < AceReviewTest
     )
 
     result = nil
-    Ace::Review::Molecules::GhPrFetcher.stub(:fetch_pr,
-      {success: true, diff: diff, metadata: metadata}) do
+    with_pr_result(success: true, diff: diff, metadata: metadata) do
       result = @manager.send(:extract_pr_content, "42", {exempt_paths: ["CHANGELOG.md"]},
         Ace::Review::Models::ReviewOptions.new(pr: "42"))
     end
@@ -2716,5 +2783,15 @@ class ReviewManagerTest < AceReviewTest
       digests = extraction["report_sha256"] || extraction[:report_sha256]
       assert_equal [Digest::SHA256.file(report).hexdigest], digests
     end
+  end
+
+  def with_pr_result(result)
+    provider = Object.new
+    normalized = result.merge(comments: {
+      success: true, comments: [], reviews: [], review_threads: []
+    })
+    provider.define_singleton_method(:fetch) { |_identifier, **_kwargs| normalized }
+    provider.define_singleton_method(:fetch_metadata) { |_identifier| {success: true, metadata: result[:metadata]} }
+    Ace::Review::Molecules::PrProvider.stub(:new, provider) { yield }
   end
 end

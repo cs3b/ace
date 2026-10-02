@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "digest"
+require "open3"
 require "json"
 require "uri"
 
@@ -26,7 +28,7 @@ module Ace
           "skipping" => :skipped
         }.freeze
 
-        PR_FIELDS = "number,state,isDraft,title,author,headRefName,baseRefName,url,headRefOid,mergeCommit,mergedAt,headRepositoryOwner,headRepository"
+        PR_FIELDS = "number,state,isDraft,title,body,author,headRefName,baseRefName,url,headRefOid,mergeCommit,mergedAt,headRepositoryOwner,headRepository"
         LIST_FIELDS = PrFetcher::LIST_FIELDS
         REPO_FIELDS = "nameWithOwner,defaultBranchRef,url"
         ISSUE_FIELDS = "number,title,state,author,url"
@@ -89,7 +91,15 @@ module Ace
         # @return [String] unified diff text for the pull request
         def pull_request_diff(number:)
           result = PrFetcher.fetch_diff(number.to_s, timeout: timeout, runner: runner, repo: repo_target)
-          result[:diff]
+          return result[:diff] if result[:success]
+          # API size-limit rejections (HTTP 406) fall back to a local git
+          # diff at the exact reviewed head, never an approximation.
+          raise Ace::Git::ProviderObjectNotFoundError, "gh pr diff failed: #{result[:error]}" if result[:error].to_s.match?(PrFetcher::PR_NOT_FOUND_PATTERN)
+          raise Ace::Git::ProviderAuthenticationError, result[:error].to_s if result[:error].to_s.match?(PrFetcher::AUTH_ERROR_PATTERN)
+          if result[:error].to_s.match?(/\bHTTP 406\b|Not Acceptable|exceeded the maximum/)
+            return local_diff_fallback(number)
+          end
+          raise Ace::Git::ProviderUnreachableError, "gh pr diff failed: #{result[:error]}"
         end
 
         # @return [Array<ProviderPullRequest>] recent PRs, newest first
@@ -110,12 +120,19 @@ module Ace
         def checks(ref:)
           output = gh_json(["pr", "checks", ref.to_s, "--json", "name,state,bucket"])
           output.map do |check|
+            state = check["state"].to_s.downcase
+            raise Ace::Git::ProviderMalformedOutputError,
+              "Malformed GitHub check entry: missing state" if state.empty?
             bucket = check["bucket"].to_s.downcase
+            unless bucket.empty? || BUCKET_MAP.key?(bucket)
+              raise Ace::Git::ProviderMalformedOutputError,
+                "Malformed GitHub check entry: unrecognized bucket #{bucket}"
+            end
             Ace::Git::ProviderCheck.new(
               server_name: server.name,
               name: check["name"].to_s,
-              state: check["state"].to_s.downcase.to_sym,
-              conclusion: BUCKET_MAP.fetch(bucket, bucket.empty? ? nil : bucket.to_sym),
+              state: state.to_sym,
+              conclusion: BUCKET_MAP.fetch(bucket, nil),
               url: nil
             )
           end
@@ -131,6 +148,442 @@ module Ace
             default_branch: output.dig("defaultBranchRef", "name"),
             url: output["url"]
           )
+        end
+
+def pull_request_body(number:)
+  pull_request(number: number).body
+end
+
+        def pull_request_review_evidence(number:, expected_head:)
+          pr = verify_expected_head!(pull_request(number: number), expected_head)
+          threads = review_thread_index(pr)
+          comments = gh_api_pages("issues/#{pr.number}/comments").map do |entry|
+            review_comment(entry, pr, expected_head, threads)
+          end
+          inline = gh_api_pages("pulls/#{pr.number}/comments").map do |entry|
+            review_comment(entry, pr, expected_head, threads)
+          end
+          reviews = gh_api_pages("pulls/#{pr.number}/reviews").map do |entry|
+            review_entry(entry, pr, expected_head)
+          end
+          verify_expected_head!(pull_request(number: pr.number), expected_head)
+          Ace::Git::ProviderReviewEvidence.new(
+            server_name: server.name, repository_url: server.url,
+            pr_number: pr.number, head_sha: expected_head,
+            comments: comments + inline, reviews: reviews
+          )
+        end
+
+        # Map REST comment database ids to their review thread (GraphQL id,
+        # resolution state). A truncated thread listing would silently
+        # understate resolution evidence, so pagination limits fail closed.
+def review_thread_index(pr)
+  host, repository = Ace::Git::Atoms::ServerUrl.normalize(server.url).split("/", 2)
+  owner, name = repository.to_s.split("/", 2)
+  unless owner && name
+    raise Ace::Git::ConfigError, "Invalid selected GitHub repository #{server.url}"
+  end
+  threads = []
+  cursor = nil
+  seen_thread_pages = {}
+  seen_thread_ids = {}
+  total_count = nil
+  loop do
+    query = <<~GRAPHQL
+      query($id: Int!, $cursor: String) {
+        repository(owner: "#{owner}", name: "#{name}") {
+          pullRequest(number: $id) {
+            reviewThreads(first: 100, after: $cursor) {
+              totalCount
+              pageInfo { hasNextPage endCursor }
+              nodes {
+                id
+                isResolved
+                comments(first: 100) {
+                  pageInfo { hasNextPage endCursor }
+                  nodes { databaseId }
+                }
+              }
+            }
+          }
+        }
+      }
+    GRAPHQL
+    pull_request_node = gh_graphql(query, id: pr.number, cursor: cursor).dig("data", "repository", "pullRequest")
+    threads_page = pull_request_node.is_a?(Hash) && pull_request_node["reviewThreads"]
+    unless threads_page.is_a?(Hash) && threads_page["totalCount"].is_a?(Integer) &&
+        threads_page["pageInfo"].is_a?(Hash) && threads_page["nodes"].is_a?(Array)
+      raise Ace::Git::ProviderMalformedOutputError, "Malformed GitHub review thread evidence"
+    end
+    if total_count && total_count != threads_page["totalCount"]
+      raise Ace::Git::ProviderMalformedOutputError, "Inconsistent GitHub review thread total"
+    end
+    total_count = threads_page["totalCount"]
+    threads.concat(threads_page["nodes"])
+    page_digest = Digest::SHA256.hexdigest(threads_page["nodes"].to_s)
+    raise Ace::Git::ProviderMalformedOutputError,
+      "GitHub review thread pagination repeated a page" if seen_thread_pages[page_digest]
+
+    seen_thread_pages[page_digest] = true
+    break unless threads_page["pageInfo"]["hasNextPage"] == true
+    cursor = threads_page["pageInfo"]["endCursor"]
+    raise Ace::Git::ProviderMalformedOutputError,
+      "Incomplete GitHub review thread evidence" unless cursor.is_a?(String)
+  end
+  if total_count != threads.length
+    raise Ace::Git::ProviderMalformedOutputError, "Incomplete GitHub review thread evidence"
+  end
+  threads.each do |thread|
+    next unless thread.is_a?(Hash)
+    if seen_thread_ids[thread["id"]]
+      raise Ace::Git::ProviderMalformedOutputError, "Duplicate GitHub review thread id"
+    end
+    seen_thread_ids[thread["id"]] = true
+  end
+  index = {}
+  threads.each do |thread|
+    page_info = thread.is_a?(Hash) && thread["comments"].is_a?(Hash) && thread["comments"]["pageInfo"]
+    unless thread.is_a?(Hash) && thread["id"].is_a?(String) &&
+        [true, false].include?(thread["isResolved"]) &&
+        thread["comments"].is_a?(Hash) && thread["comments"]["nodes"].is_a?(Array) &&
+        page_info.is_a?(Hash) && [true, false].include?(page_info["hasNextPage"])
+      raise Ace::Git::ProviderMalformedOutputError, "Malformed GitHub review thread evidence"
+    end
+    resolved = thread["isResolved"]
+    thread_comment_ids(thread["id"], thread["comments"]).each do |database_id|
+      index[database_id] = [thread["id"], resolved]
+    end
+  end
+  index
+end
+
+# A thread's comment list may itself be paginated; follow its cursor
+# so resolution state covers every comment in the thread.
+        def thread_comment_ids(thread_id, first_page)
+          cursor = nil
+          ids = []
+          seen_cursors = {}
+          comments_page = first_page
+          loop do
+            unless comments_page.is_a?(Hash) && comments_page["pageInfo"].is_a?(Hash) &&
+                [true, false].include?(comments_page["pageInfo"]["hasNextPage"]) &&
+                comments_page["nodes"].is_a?(Array)
+              raise Ace::Git::ProviderMalformedOutputError, "Malformed GitHub review thread evidence"
+            end
+            comments_page["nodes"].each do |comment|
+              unless comment.is_a?(Hash) && comment["databaseId"].is_a?(Integer)
+                raise Ace::Git::ProviderMalformedOutputError, "Malformed GitHub review thread evidence"
+              end
+              ids << comment["databaseId"]
+            end
+            break unless comments_page["pageInfo"]["hasNextPage"] == true
+            cursor = comments_page["pageInfo"]["endCursor"]
+            raise Ace::Git::ProviderMalformedOutputError,
+              "Incomplete GitHub review thread evidence" unless cursor.is_a?(String)
+            raise Ace::Git::ProviderMalformedOutputError,
+              "GitHub review thread comment pagination repeated a cursor" if seen_cursors[cursor]
+
+            seen_cursors[cursor] = true
+
+            query = <<~GRAPHQL
+              query($id: ID!, $cursor: String) {
+                node(id: $id) {
+                  ... on PullRequestReviewThread {
+                    comments(first: 100, after: $cursor) {
+                      pageInfo { hasNextPage endCursor }
+                      nodes { databaseId }
+                    }
+                  }
+                }
+              }
+            GRAPHQL
+            node = gh_graphql(query, id: thread_id, cursor: cursor).dig("data", "node")
+            comments_page = node.is_a?(Hash) ? node["comments"] : nil
+          end
+  ids
+end
+
+        def pull_request_review_details(number:)
+          number = Integer(number)
+          data = gh_api("pulls/#{number}")
+          files = gh_api_pages("pulls/#{number}/files").map do |entry|
+            entry.is_a?(Hash) && entry["filename"]
+          end
+          unless data.is_a?(Hash) && data["base"].is_a?(Hash) && data["number"] == number &&
+              data.dig("base", "sha").to_s.match?(/\A[0-9a-f]{40}\z/) &&
+              data["changed_files"].is_a?(Integer) && data["changed_files"] == files.length &&
+              files.all? { |path| path.is_a?(String) && !path.empty? }
+            raise Ace::Git::ProviderMalformedOutputError, "Malformed or incomplete GitHub PR file evidence"
+          end
+          Ace::Git::ProviderReviewDetails.new(
+            server_name: server.name, repository_url: server.url, pr_number: number,
+            base_sha: data.dig("base", "sha"), files: files
+          )
+        end
+
+        def pull_request_checks(number:, head_sha:)
+          verify_expected_head!(pull_request(number: number), head_sha)
+          pages = gh_api("commits/#{head_sha}/check-runs?per_page=100", paginate: true)
+          # --paginate --slurp returns one payload per page; a single-page
+          # response stays a bare object.
+          page_payloads = pages.is_a?(Array) ? pages : [pages]
+          unless page_payloads.is_a?(Array) && page_payloads.all? { |page| page.is_a?(Hash) && page["check_runs"].is_a?(Array) }
+            raise Ace::Git::ProviderMalformedOutputError, "Malformed GitHub PR check evidence"
+          end
+          runs = page_payloads.flat_map { |page| page["check_runs"] }
+          unless runs.all? { |run| run.is_a?(Hash) && run["name"].is_a?(String) }
+            raise Ace::Git::ProviderMalformedOutputError, "Malformed GitHub PR check evidence"
+          end
+          total = page_payloads.filter_map { |page| page["total_count"] }.last
+          # The accumulated pages must account for every reported run; a
+          # shortfall would silently understate check evidence. GitHub
+      # caps the check-runs endpoint at the 1,000 most recent check
+      # suites, so a maxed-out page cannot be exhausted further and the
+      # snapshot is marked incomplete instead.
+          if total.is_a?(Integer) && total > runs.length && runs.length >= 1000
+            raise Ace::Git::ProviderMalformedOutputError,
+              "Incomplete GitHub PR check evidence: endpoint capped at the 1,000 most recent check suites"
+          end
+          unless total.is_a?(Integer) && total <= runs.length
+            raise Ace::Git::ProviderMalformedOutputError, "Incomplete GitHub PR check evidence"
+          end
+          checks = runs.map do |run|
+            status = run["status"].to_s.downcase
+            raise Ace::Git::ProviderMalformedOutputError,
+              "Malformed GitHub check run entry: missing status" if status.empty?
+            conclusion = run["conclusion"]
+            unless conclusion.nil? || conclusion.is_a?(String)
+              raise Ace::Git::ProviderMalformedOutputError,
+                "Malformed GitHub check run entry: conclusion must be a string or null"
+            end
+            Ace::Git::ProviderCheck.new(
+              server_name: server.name, name: run["name"],
+              state: status.to_sym,
+              conclusion: conclusion&.downcase&.to_sym,
+              url: run["html_url"]
+            )
+          end
+          checks + commit_statuses(head_sha)
+        end
+
+        # Combined commit statuses are a separate GitHub evidence stream from
+        # check runs; both must appear or the snapshot overstates success.
+        def commit_statuses(head_sha)
+          data = gh_api("commits/#{head_sha}/status")
+          statuses = data.is_a?(Hash) && data["statuses"]
+          unless statuses.is_a?(Array) && statuses.all? { |s| s.is_a?(Hash) && s["context"].is_a?(String) }
+            raise Ace::Git::ProviderMalformedOutputError, "Malformed GitHub commit status evidence"
+          end
+          total = data["total_count"]
+          unless total.is_a?(Integer)
+            raise Ace::Git::ProviderMalformedOutputError, "Malformed GitHub commit status evidence"
+          end
+          # The combined view can cap its inline statuses array; the
+          # paginated statuses endpoint is the complete stream.
+          if total > statuses.length
+            statuses = gh_api("commits/#{head_sha}/statuses?per_page=100", paginate: true)
+            statuses = statuses.is_a?(Array) ? statuses.flat_map { |page| page.is_a?(Array) ? page : [page] } : [statuses]
+            unless statuses.all? { |st| st.is_a?(Hash) && st["context"].is_a?(String) }
+              raise Ace::Git::ProviderMalformedOutputError, "Malformed GitHub commit status evidence"
+            end
+            # The statuses stream is reverse-chronological with one entry
+            # per state change; the combined total counts distinct
+            # contexts. Keep the first (latest) entry per context.
+            statuses = statuses.uniq { |st| st["context"] }
+          end
+          unless statuses.length == total
+            raise Ace::Git::ProviderMalformedOutputError, "Incomplete GitHub commit status evidence"
+          end
+          statuses.map do |status|
+            Ace::Git::ProviderCheck.new(
+              server_name: server.name, name: status["context"],
+              state: status["state"].to_s.downcase.to_sym,
+              conclusion: nil,
+              url: status["target_url"]
+            )
+          end
+        end
+
+        def repository_file(path:, ref:)
+          require "base64"
+          # %20, not form encoding: "+" in a path segment is a literal plus.
+          # Explicit unreserved-character allowlist: percent-encode
+          # everything else (DEFAULT_PARSER leaves ? and + ambiguous).
+          escaped = path.split("/").map { |part|
+            part.gsub(/[^A-Za-z0-9._~!$&'()*+,;=@:-]/) { |c| c.bytes.map { |b| format("%%%02X", b) }.join }
+          }.join("/")
+          data = gh_api("contents/#{escaped}?ref=#{ref}")
+          unless data.is_a?(Hash) && data["encoding"] == "base64" && data["content"].is_a?(String)
+            raise Ace::Git::ProviderMalformedOutputError, "Malformed GitHub repository file evidence"
+          end
+          Base64.strict_decode64(data["content"].delete("\n"))
+        rescue ArgumentError => e
+          raise Ace::Git::ProviderMalformedOutputError, "Malformed GitHub repository file content: #{e.message}"
+        end
+
+        def create_pull_request_comment(number:, expected_head:, body:, correlation:)
+          pr = verify_expected_head!(pull_request(number: number), expected_head)
+          require_open_pr!(pr)
+          marker = comment_marker(correlation)
+          with_session_lock(correlation) do
+          existing = matching_review_comments(pr, marker, expected_head)
+          if existing.length > 1
+            raise Ace::Git::ProviderConflictingMatchesError,
+              "Multiple comments match review session #{correlation} on PR ##{pr.number}"
+          end
+          if existing.one?
+            # A repeat reconciles only the exact session comment; a marker
+            # match with different content is a conflict, never our post.
+            sent = "#{body}\n\n#{marker}"
+            if existing.first.body == sent
+              verify_post_mutation_head!(pr, expected_head, correlation)
+              return review_mutation(pr, expected_head, existing.first, :existing)
+            end
+
+            raise Ace::Git::ProviderConflictingMatchesError,
+              "Review session #{correlation} comment exists on PR ##{pr.number} with different content"
+          end
+
+          second = verify_expected_head!(pull_request(number: pr.number), expected_head)
+          require_open_pr!(second)
+          begin
+            gh_api("issues/#{pr.number}/comments", method: :post, body: "#{body}\n\n#{marker}")
+          rescue Ace::Git::ProviderMalformedOutputError => e
+            raise Ace::Git::ProviderUnknownOutcomeError,
+              "PR comment sent but response unreadable for #{server.name}/#{pr.number}, head #{expected_head}, session #{correlation}: #{e.message}; reconcile before repeating"
+          rescue Ace::Git::ProviderUnreachableError => e
+            raise Ace::Git::ProviderUnknownOutcomeError,
+              "PR comment outcome unknown for #{server.name}/#{pr.number}, head #{expected_head}, " \
+              "session #{correlation}: #{e.message}; reconcile before repeating"
+          end
+          begin
+            matches = matching_review_comments(pr, marker, expected_head)
+          rescue Ace::Git::ProviderMalformedOutputError, Ace::Git::ProviderAuthenticationError, Ace::Git::ProviderObjectNotFoundError, Ace::Git::ProviderUnreachableError => e
+            raise Ace::Git::ProviderUnknownOutcomeError,
+              "PR comment sent but reconciliation read failed for session #{correlation}: #{e.message}; reconcile before repeating"
+          end
+          unless matches.one? && matches.first.body == "#{body}\n\n#{marker}"
+            raise Ace::Git::ProviderUnknownOutcomeError,
+              "PR comment sent but reconciliation found #{matches.length} exact-content match(es) for session #{correlation}"
+          end
+          verify_post_mutation_head!(pr, expected_head, correlation)
+          review_mutation(pr, expected_head, matches.first, :created)
+          end
+        end
+
+        def update_pull_request_comment(number:, expected_head:, comment_id:, body:)
+          comment_id = Integer(comment_id)
+          pr = verify_expected_head!(pull_request(number: number), expected_head)
+          # Collected evidence includes issue and inline comments; the
+          # update must locate the id in both and use the matching route.
+          # Inline (review) comments take precedence: if an id exists in
+          # both collections, editing must target the inline comment the
+          # reviewer thread actually references.
+          inline_matches = gh_api_pages("pulls/#{pr.number}/comments").select { |entry| entry["id"] == comment_id }
+          issue_matches = inline_matches.empty? ? gh_api_pages("issues/#{pr.number}/comments").select { |entry| entry["id"] == comment_id } : []
+          matches = inline_matches + issue_matches
+          update_route = inline_matches.any? ? "pulls/comments/#{comment_id}" : "issues/comments/#{comment_id}"
+          unless matches.one?
+            raise Ace::Git::ProviderIdentityMismatchError,
+              "Comment #{comment_id} does not belong to selected PR ##{pr.number}"
+          end
+          comment = review_comment(matches.first, pr, expected_head)
+          if comment.body == body
+            verify_post_mutation_head!(pr, expected_head, "comment #{comment_id}")
+            return review_mutation(pr, expected_head, comment, :existing)
+          end
+
+          verify_expected_head!(pull_request(number: number), expected_head)
+          begin
+            gh_api(update_route, method: :patch, body: body)
+          rescue Ace::Git::ProviderMalformedOutputError => e
+            raise Ace::Git::ProviderUnknownOutcomeError,
+              "Comment update sent but response unreadable for #{server.name}/#{pr.number}, comment #{comment_id}: #{e.message}; reconcile before repeating"
+          rescue Ace::Git::ProviderUnreachableError => e
+            raise Ace::Git::ProviderUnknownOutcomeError,
+              "Comment update outcome unknown for #{server.name}/#{pr.number}, " \
+              "head #{expected_head}, comment #{comment_id}: #{e.message}"
+          end
+          begin
+            # Fetch the edited comment individually (both patch routes are
+            # valid GET item endpoints) and validate its PR identity.
+            begin
+              updated = gh_api(update_route)
+            rescue Ace::Git::ProviderMalformedOutputError, Ace::Git::ProviderAuthenticationError, Ace::Git::ProviderObjectNotFoundError, Ace::Git::ProviderUnreachableError => e
+              raise Ace::Git::ProviderUnknownOutcomeError,
+                "Comment update sent but verification read failed for comment #{comment_id}: #{e.message}; reconcile before repeating"
+            end
+            unless comment_belongs_to_pr?(updated, pr.number)
+              raise Ace::Git::ProviderUnknownOutcomeError,
+                "Comment update sent but edited comment #{comment_id} does not verify against PR ##{pr.number}; reconcile before repeating"
+            end
+          rescue Ace::Git::ProviderUnreachableError => e
+            raise Ace::Git::ProviderUnknownOutcomeError,
+              "Comment update sent but verification read failed for comment #{comment_id}: #{e.message}; reconcile before repeating"
+          end
+          unless updated && updated["id"] == comment_id && updated["body"] == body
+            raise Ace::Git::ProviderUnknownOutcomeError,
+              "Comment update sent but exact PR comment #{comment_id} could not be verified"
+          end
+          verify_post_mutation_head!(pr, expected_head, "comment #{comment_id}")
+          review_mutation(pr, expected_head, review_comment(updated, pr, expected_head), :updated)
+        end
+
+        def resolve_pull_request_thread(number:, expected_head:, thread_id:)
+          unless thread_id.to_s.match?(/\APRRT_[A-Za-z0-9_=-]+\z/)
+            raise Ace::Git::ConfigError, "Invalid GitHub review thread ID"
+          end
+          pr = verify_expected_head!(pull_request(number: number), expected_head)
+          query = <<~GRAPHQL
+            query($id: ID!) {
+              node(id: $id) {
+                ... on PullRequestReviewThread {
+                  id isResolved
+                  pullRequest { number headRefOid repository { url } }
+                }
+              }
+            }
+          GRAPHQL
+          thread = gh_graphql(query, id: thread_id).dig("data", "node")
+          verify_review_thread!(thread, pr, expected_head, thread_id: thread_id)
+          if thread["isResolved"] == true
+            verify_post_mutation_head!(pr, expected_head, "thread #{thread_id}")
+            return true
+          end
+
+          verify_expected_head!(pull_request(number: number), expected_head)
+          mutation = <<~GRAPHQL
+            mutation($id: ID!) {
+              resolveReviewThread(input: {threadId: $id}) {
+                thread { id isResolved pullRequest { number headRefOid repository { url } } }
+              }
+            }
+          GRAPHQL
+          begin
+            resolved = gh_graphql(mutation, id: thread_id).dig("data", "resolveReviewThread", "thread")
+            raise Ace::Git::ProviderMalformedOutputError, "Missing thread confirmation" unless resolved.is_a?(Hash)
+          rescue Ace::Git::ProviderMalformedOutputError => e
+            raise Ace::Git::ProviderUnknownOutcomeError,
+              "Thread resolution sent but confirmation unreadable for #{server.name}/#{pr.number}, thread #{thread_id}: #{e.message}; reconcile before repeating"
+          rescue Ace::Git::ProviderUnreachableError => e
+            raise Ace::Git::ProviderUnknownOutcomeError,
+              "Thread resolution outcome unknown for #{server.name}/#{pr.number}, " \
+              "head #{expected_head}, thread #{thread_id}: #{e.message}"
+          end
+          begin
+            verify_review_thread!(resolved, pr, expected_head, thread_id: thread_id)
+          rescue Ace::Git::ProviderIdentityMismatchError, Ace::Git::ProviderMalformedOutputError, Ace::Git::ProviderExpectedHeadConflictError => e
+            raise Ace::Git::ProviderUnknownOutcomeError,
+              "Thread resolution sent but confirmation unreadable for #{server.name}/#{pr.number}, thread #{thread_id}: #{e.message}; reconcile before repeating"
+          end
+          unless resolved["isResolved"] == true
+            # The resolution mutation may have landed; only its evidence
+            # is unreadable. Reconcile via the thread id.
+            raise Ace::Git::ProviderUnknownOutcomeError,
+              "GitHub did not confirm thread resolution for #{server.name}/#{pr.number}, thread #{thread_id}; reconcile before repeating"
+          end
+          verify_post_mutation_head!(pr, expected_head, "thread #{thread_id}")
+          true
         end
 
         # ---- PR lifecycle mutations ----
@@ -217,6 +670,225 @@ module Ace
 
         private
 
+        def require_open_pr!(pr)
+          return if pr.state == :open
+
+          raise Ace::Git::ProviderUnsupportedCapabilityError,
+            "Cannot post review comment to PR ##{pr.number} in #{pr.state} state"
+        end
+
+        def verify_review_thread!(thread, pr, expected_head, thread_id: nil)
+          unless thread.is_a?(Hash) && thread["id"] && thread["pullRequest"].is_a?(Hash) &&
+              thread.dig("pullRequest", "number") == pr.number &&
+              Ace::Git::Atoms::ServerUrl.match?(thread.dig("pullRequest", "repository", "url"), server.url)
+            raise Ace::Git::ProviderIdentityMismatchError,
+              "GitHub review thread does not belong to selected PR ##{pr.number}"
+          end
+          if thread_id && thread["id"] != thread_id
+            raise Ace::Git::ProviderIdentityMismatchError,
+              "GitHub returned thread #{thread["id"]} instead of #{thread_id}"
+          end
+          unless thread.dig("pullRequest", "headRefOid") == expected_head
+            raise Ace::Git::ProviderExpectedHeadConflictError,
+              "GitHub review thread PR head changed before resolution"
+          end
+        end
+
+        def gh_graphql(query, id:, cursor: nil)
+          host = Ace::Git::Atoms::ServerUrl.normalize(server.url).split("/", 2).first
+          args = ["graphql", "-f", "query=#{query}", "-F", "id=#{id}", "--hostname", host]
+          args += ["-F", "cursor=#{cursor}"] if cursor
+          result = CliExecutor.execute("api", args, timeout: timeout, runner: runner)
+          classify_failure(result[:stderr], context: "api graphql") unless result[:success]
+          data = JSON.parse(result[:stdout])
+          if data.is_a?(Hash) && data["errors"].is_a?(Array) && data["errors"].any?
+            raise Ace::Git::ProviderUnreachableError,
+              "GitHub GraphQL rejected review operation: #{data["errors"].first["message"]}"
+          end
+          unless data.is_a?(Hash) && data["data"].is_a?(Hash)
+            raise Ace::Git::ProviderMalformedOutputError, "Malformed GitHub GraphQL response"
+          end
+          data
+        rescue JSON::ParserError => e
+          raise Ace::Git::ProviderMalformedOutputError, "Malformed GitHub GraphQL JSON: #{e.message}"
+        end
+
+        # A mutation receipt may only bind the expected head; if the PR head
+        # moved during the mutation the outcome stays uncertain.
+        def verify_post_mutation_head!(pr, expected_head, correlation)
+          current = begin
+            pull_request(number: pr.number)
+          rescue Ace::Git::ProviderMalformedOutputError, Ace::Git::ProviderAuthenticationError, Ace::Git::ProviderObjectNotFoundError, Ace::Git::ProviderUnreachableError => e
+            raise Ace::Git::ProviderUnknownOutcomeError,
+              "Head verification read failed after mutation for #{server.name}: #{e.message}; reconcile before repeating"
+          end
+          return if current.head_sha == expected_head
+
+          raise Ace::Git::ProviderUnknownOutcomeError,
+            "PR head moved during mutation for #{server.name}/##{pr.number} " \
+            "(#{expected_head} -> #{current.head_sha}), session #{correlation}: reconcile before repeating"
+        end
+
+        # GitHub identity URLs end with the PR number for both comment kinds.
+        def comment_belongs_to_pr?(entry, number)
+          return false unless entry.is_a?(Hash)
+          issue_url = entry["issue_url"].to_s
+          # Review comments expose pull_request_url as a plain string.
+          pr_url = (entry.dig("pull_request", "url") || entry["pull_request_url"]).to_s
+          issue_url.end_with?("/issues/#{number}") || pr_url.end_with?("/pulls/#{number}")
+        end
+
+        # Serialize the read/post/reconcile sequence per session so two
+      # concurrent callers cannot both observe "no marker" and post.
+        def with_session_lock(correlation)
+          require "tmpdir"
+          lock_path = File.join(Dir.tmpdir, "ace-review-session-#{correlation}.lock")
+          File.open(lock_path, File::CREAT | File::RDWR, 0600) do |lock|
+            lock.flock(File::LOCK_EX)
+            yield
+          end
+        end
+
+        def comment_marker(correlation)
+          unless correlation.to_s.match?(/\A[a-zA-Z0-9._:-]+\z/)
+            raise Ace::Git::ConfigError, "Invalid review session correlation"
+          end
+          "<!-- ace-review-session:#{correlation} -->"
+        end
+
+        def matching_review_comments(pr, marker, head)
+          gh_api_pages("issues/#{pr.number}/comments").filter_map do |entry|
+            # Every row must be a valid comment; a row without a body
+      # means malformed collection and must not hide our session post.
+            unless entry.is_a?(Hash) && entry["body"].is_a?(String)
+              raise Ace::Git::ProviderMalformedOutputError, "Malformed GitHub PR comment collection"
+            end
+            next unless entry["body"].include?(marker)
+
+            review_comment(entry, pr, head)
+          end
+        end
+
+        def review_comment(entry, pr, head, threads = {})
+          user = entry.is_a?(Hash) ? entry["user"] : nil
+          unless entry.is_a?(Hash) && entry["id"].is_a?(Integer) && entry["id"].positive? && entry["body"].is_a?(String) &&
+              user.is_a?(Hash) && user["login"].is_a?(String)
+            raise Ace::Git::ProviderMalformedOutputError, "Malformed GitHub PR comment evidence"
+          end
+          thread_id, resolved = threads[entry["id"]] || [nil, nil]
+          Ace::Git::ProviderReviewComment.new(
+            server_name: server.name, repository_url: server.url, pr_number: pr.number,
+            id: entry["id"], author: user["login"], body: entry["body"],
+            url: entry["html_url"], path: entry["path"], line: entry["line"],
+            head_sha: entry["commit_id"], resolved: resolved, thread_id: thread_id
+          )
+        end
+
+        def review_entry(entry, pr, head)
+          user = entry.is_a?(Hash) ? entry["user"] : nil
+          unless entry.is_a?(Hash) && entry["id"].is_a?(Integer) && entry["id"].positive? &&
+              user.is_a?(Hash) && user["login"].is_a?(String) &&
+              entry["state"].is_a?(String) && !entry["state"].empty?
+            raise Ace::Git::ProviderMalformedOutputError, "Malformed GitHub PR review evidence"
+          end
+          Ace::Git::ProviderReview.new(
+            server_name: server.name, repository_url: server.url, pr_number: pr.number,
+            id: entry["id"], author: user["login"], body: entry["body"],
+            state: entry["state"], url: entry["html_url"], head_sha: entry["commit_id"]
+          )
+        end
+
+        def review_mutation(pr, head, comment, idempotency)
+          Ace::Git::ProviderReviewMutation.new(
+            server_name: server.name, repository_url: server.url, pr_number: pr.number,
+            head_sha: head, comment: comment, idempotency: idempotency
+          )
+        end
+
+        def gh_api_pages(suffix)
+          data = gh_api(suffix, paginate: true)
+          pages = data.is_a?(Array) ? data : nil
+          unless pages && pages.all? { |page| page.is_a?(Array) }
+            raise Ace::Git::ProviderMalformedOutputError, "Malformed GitHub PR collection"
+          end
+          pages.flatten(1)
+        end
+
+        def gh_api(suffix, method: :get, body: nil, paginate: false)
+          target = Ace::Git::Atoms::ServerUrl.normalize(server.url)
+          host, repository = target.split("/", 2)
+          unless repository&.match?(%r{\A[^/]+/[^/]+\z})
+            raise Ace::Git::ConfigError, "Invalid selected GitHub repository #{server.url}"
+          end
+          args = ["repos/#{repository}/#{suffix}", "--hostname", host]
+          args += ["--paginate", "--slurp"] if paginate
+          stdin = nil
+          if %i[post patch].include?(method)
+            # The body travels on stdin (`--input -`), never as a
+            # command argument: argv leaks into process listings and
+            # timeout errors, and huge review bodies exceed arg limits.
+            args += ["-X", method.to_s.upcase, "--input", "-"]
+            stdin = JSON.generate(body: body)
+          end
+          result = CliExecutor.execute("api", args, timeout: timeout, runner: runner, stdin: stdin)
+          classify_failure(result[:stderr], context: "api #{suffix}") unless result[:success]
+          JSON.parse(result[:stdout])
+        rescue JSON::ParserError => e
+          raise Ace::Git::ProviderMalformedOutputError, "Malformed GitHub API JSON: #{e.message}"
+        end
+
+        # Exact-head local fallback for oversized API diffs: fetch the PR
+        # head ref from the selected host into a temp ref, verify the SHA
+        # matches, and diff base..head locally.
+        def local_diff_fallback(number)
+          base_oid = pull_request_review_details(number: number).base_sha
+          head_oid = pull_request(number: number).head_sha
+          # Preserve the configured scheme (http or https) rather than
+          # assuming https, and never use scp-style host:path remotes.
+          scheme = server.url.to_s[/\A[a-z][a-z0-9+.-]*:\/\//i].to_s.downcase
+          scheme = "https://" if scheme.empty?
+          host = Ace::Git::Atoms::ServerUrl.normalize(server.url).split("/", 2).first
+          remote = "#{scheme}#{host}/#{repo_path}"
+          head_ref = "refs/ace/review/pr-#{number}-#{Process.pid}"
+          base_ref = "#{head_ref}-base"
+          begin
+            run_git("fetch", "--no-tags", remote, "+refs/pull/#{number}/head:#{head_ref}")
+            fetched = run_git("rev-parse", head_ref).strip
+            unless fetched == head_oid
+              raise Ace::Git::ProviderMalformedOutputError,
+                "Local fallback fetched #{fetched[0, 12]} but the reviewed head is #{head_oid[0, 12]}"
+            end
+            # The base commit may not exist locally and a two-dot diff
+            # would include unrelated target-branch changes: fetch the
+            # exact base SHA and diff from the merge base.
+            run_git("fetch", "--no-tags", remote, "+#{base_oid}:#{base_ref}")
+            merge_base = run_git("merge-base", base_ref, head_ref).strip
+            diff = run_git("diff", "#{merge_base}..#{head_ref}")
+            raise Ace::Git::ProviderMalformedOutputError, "Local fallback produced an empty diff" if diff.strip.empty?
+            diff
+          ensure
+            run_git("update-ref", "-d", head_ref) rescue nil
+            run_git("update-ref", "-d", base_ref) rescue nil
+          end
+        end
+
+        def repo_path
+          Ace::Git::Atoms::ServerUrl.normalize(server.url).split("/", 2).last
+        end
+
+        def run_git(*args)
+          require "open3"
+          require "timeout"
+          out, status = Timeout.timeout(timeout) do
+            Open3.capture2({"LC_ALL" => "C"}, "git", *args)
+          end
+        rescue Timeout::Error
+          raise Ace::Git::ProviderUnreachableError, "git #{args.first} timed out after #{timeout}s"
+        else
+          raise Ace::Git::ProviderUnreachableError, "git #{args.first} failed" unless status.success?
+          out
+        end
+
         STATE_ORDER = {open: 0, merged: 1, closed: 2}.freeze
 
         # Send one mutating `gh` command. When `ambiguous` is true (create),
@@ -300,6 +972,7 @@ module Ace
             server_name: server_name,
             number: data["number"],
             title: data["title"],
+            body: data["body"],
             state: STATE_MAP.fetch(data["state"].to_s.upcase, data["state"].to_s.downcase.to_sym),
             head_ref: data["headRefName"],
             base_ref: data["baseRefName"],

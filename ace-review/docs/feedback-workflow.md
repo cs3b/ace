@@ -23,7 +23,7 @@ Key benefits:
 
 1. Run a review with feedback extraction:
    ```bash
-   ace-review --preset code-pr --pr 123 --auto-execute
+   ace-review --preset code-valid --pr 123 --auto-execute
    ```
 
 2. List feedback items:
@@ -245,7 +245,7 @@ feedback:
 ### Example Workflow Configuration
 
 ```yaml
-# .ace/review/presets/code-pr.yml
+# .ace/review/presets/code-valid.yml
 presets:
   - code
 
@@ -416,10 +416,10 @@ Each review execution creates a new session:
 
 ```bash
 # First review
-ace-review --pr 189 --preset code-pr
+ace-review --pr 189 --preset code-valid
 
 # Second review (different PR or updated code)
-ace-review --pr 190 --preset code-pr
+ace-review --pr 190 --preset code-valid
 
 # List all sessions
 ls -la .ace-local/review/sessions/
