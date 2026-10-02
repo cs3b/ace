@@ -446,7 +446,12 @@ end
           begin
             # Fetch the edited comment individually (both patch routes are
             # valid GET item endpoints) and validate its PR identity.
-            updated = gh_api(update_route)
+            begin
+              updated = gh_api(update_route)
+            rescue Ace::Git::ProviderMalformedOutputError, Ace::Git::ProviderUnreachableError => e
+              raise Ace::Git::ProviderUnknownOutcomeError,
+                "Comment update sent but verification read failed for comment #{comment_id}: #{e.message}; reconcile before repeating"
+            end
             unless comment_belongs_to_pr?(updated, pr.number)
               raise Ace::Git::ProviderIdentityMismatchError,
                 "Edited comment #{comment_id} does not belong to selected PR ##{pr.number}"
@@ -663,7 +668,8 @@ end
         def comment_belongs_to_pr?(entry, number)
           return false unless entry.is_a?(Hash)
           issue_url = entry["issue_url"].to_s
-          pr_url = entry.dig("pull_request", "url").to_s
+          # Review comments expose pull_request_url as a plain string.
+          pr_url = (entry.dig("pull_request", "url") || entry["pull_request_url"]).to_s
           issue_url.end_with?("/issues/#{number}") || pr_url.end_with?("/pulls/#{number}")
         end
 
