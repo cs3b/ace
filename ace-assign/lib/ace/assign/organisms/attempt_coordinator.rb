@@ -225,6 +225,12 @@ module Ace
                 raise AttemptErrors::ReceiptRejected, "Service receipt evidence must live inside the repository: #{ref}"
               end
               stat = file.stat
+              # The open handle must still be the file at the validated
+              # location: a swap between resolution and open fails here.
+              opened = File.stat(real)
+              unless opened.dev == stat.dev && opened.ino == stat.ino
+                raise AttemptErrors::ReceiptRejected, "Service receipt evidence changed during verification: #{ref}"
+              end
               unless stat.uid == request["executor_uid"] && (stat.mode & 0o022).zero?
                 raise AttemptErrors::ReceiptRejected, "Service receipt evidence is not executor-owned: #{ref}"
               end

@@ -40,12 +40,21 @@ module Ace
           release_receipt = receipt_currency(receipts, "release", head)
           unresolved_effects = collect_unresolved_effects(attempts)
           if assignment&.managed?
+            requests = journal.service_requests(assignment.id)
             # A rejected effect stays unresolved when its claim had been
             # dispatched (authorization consumed): only attributable evidence
             # that no effect occurred settles it, never the bare rejection.
-            unresolved_effects.concat(journal.service_requests(assignment.id)
+            unresolved_effects.concat(requests
               .select { |request| unresolved_service_state?(request) }
               .map { |request| "#{request["request_id"]}:#{request["operation"]}:#{request["state"]}" })
+            # Settled requests keep their authorization only while their
+            # receipt evidence remains intact in the candidate repository:
+            # a deleted or modified artifact drops the outcome back to
+            # unresolved instead of trusting an unverifiable receipt.
+            unresolved_effects.concat(requests
+              .select { |request| request["state"] == "succeeded" || request["state"] == "failed-settled" }
+              .reject { |request| evidence_intact?(request) }
+              .map { |request| "#{request["request_id"]}:#{request["operation"]}:evidence-unavailable" })
             unresolved_effects.uniq!
           end
           feedback_state = derive_feedback_state(attempts, receipts, head, unresolved_effects)
@@ -94,6 +103,19 @@ module Ace
         def unresolved_service_state?(request)
           %w[accepted uncertain failed].include?(request["state"]) ||
             (request["state"] == "rejected" && request["consumed"] != false)
+        end
+
+        # Every receipt evidence artifact must still exist in the candidate
+        # repository with its recorded digest; evidence lives in the working
+        # tree, so its integrity is re-checked on every calculation.
+        def evidence_intact?(request)
+          receipt = request["receipt"]
+          return false unless receipt.is_a?(Hash)
+          Array(receipt["evidence"]).all? do |item|
+            path = File.join(@repo_root, item["ref"].to_s)
+            File.file?(path) && !File.symlink?(path) &&
+              Digest::SHA256.file(path).hexdigest == item["sha256"]
+          end
         end
 
         def git_facts
