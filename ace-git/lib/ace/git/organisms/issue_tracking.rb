@@ -32,7 +32,7 @@ module Ace
         end
 
         def sync(number:, task_id:, task_link:, task_status:, previous_task_id: nil,
-          create_pending: false)
+          create_pending: false, before_create: nil)
           # Reparenting/promotion changes the local ID; the remote marker may
           # still name the previous ID, or may already carry the new one when
           # a prior sync failed partway. Both count as this task's ownership.
@@ -71,6 +71,10 @@ module Ace
                 "Prior tracking comment create for issue ##{number} is still unresolved" unless resolved
             else
               mutate_and_reconcile(number, desired_body: desired_body) do
+                # Persist the uncertain-create guard before the only
+                # non-idempotent call, so a stop after the POST leaves a
+                # durable reconcile record instead of a duplicate on replay.
+                before_create&.call
                 @provider.create_issue_comment(number: number, body: desired_body)
               end
             end
