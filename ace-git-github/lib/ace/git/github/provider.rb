@@ -126,9 +126,12 @@ module Ace
           owner_repo = uri.path.sub(%r{\A/}, "").chomp("/").sub(/\.git\z/, "")
           pages = gh_json(["api", "repos/#{owner_repo}/issues/#{number}/comments", "--hostname", forge_hostname(uri),
                            "--paginate", "--slurp"], bind_repo: false)
-          {
+            unless pages.is_a?(Array) && pages.all? { |page| page.is_a?(Array) }
+              raise Ace::Git::ProviderMalformedOutputError, "Malformed GitHub comment pagination for issue ##{number}"
+            end
+            {
             issue: evidence,
-            comments: Array(pages).flatten.map do |comment|
+            comments: pages.flatten.map do |comment|
               id = comment["id"]
               raise Ace::Git::ProviderMalformedOutputError, "Issue comment has no API id" unless id.to_s.match?(/\A\d+\z/)
 
