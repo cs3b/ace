@@ -469,7 +469,7 @@ module Ace
         end
 
         def review_comment(entry, number, head)
-          unless entry.is_a?(Hash) && entry["id"] && entry["body"].is_a?(String) &&
+          unless entry.is_a?(Hash) && entry["id"].is_a?(Integer) && entry["id"].positive? && entry["body"].is_a?(String) &&
               entry.dig("user", "login").is_a?(String)
             raise Ace::Git::ProviderMalformedOutputError, "Malformed Forgejo PR comment evidence"
           end
@@ -489,13 +489,15 @@ module Ace
         def review_comment_ids(number)
           review_http.paginate("pulls/#{number}/reviews").flat_map do |review|
             entries = review_http.request(:get, "pulls/#{number}/reviews/#{review["id"]}/comments")
-            entries = [] unless entries.is_a?(Array)
-            entries.filter_map { |entry| entry["id"] if entry.is_a?(Hash) }
+            unless entries.is_a?(Array)
+              raise Ace::Git::ProviderMalformedOutputError, "Malformed Forgejo review comment evidence"
+            end
+            entries.filter_map { |entry| entry["id"] if entry.is_a?(Hash) && entry["id"].is_a?(Integer) }
           end
         end
 
         def review_entry(entry, number, head)
-          unless entry.is_a?(Hash) && entry["id"] && entry.dig("user", "login").is_a?(String) &&
+          unless entry.is_a?(Hash) && entry["id"].is_a?(Integer) && entry["id"].positive? && entry.dig("user", "login").is_a?(String) &&
               entry["state"].is_a?(String) && !entry["state"].empty?
             raise Ace::Git::ProviderMalformedOutputError, "Malformed Forgejo PR review evidence"
           end

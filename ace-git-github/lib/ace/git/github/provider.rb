@@ -722,7 +722,7 @@ end
         end
 
         def review_comment(entry, pr, head, threads = {})
-          unless entry.is_a?(Hash) && entry["id"] && entry["body"].is_a?(String) &&
+          unless entry.is_a?(Hash) && entry["id"].is_a?(Integer) && entry["id"].positive? && entry["body"].is_a?(String) &&
               entry.dig("user", "login").is_a?(String)
             raise Ace::Git::ProviderMalformedOutputError, "Malformed GitHub PR comment evidence"
           end
@@ -736,7 +736,7 @@ end
         end
 
         def review_entry(entry, pr, head)
-          unless entry.is_a?(Hash) && entry["id"] && entry.dig("user", "login").is_a?(String) &&
+          unless entry.is_a?(Hash) && entry["id"].is_a?(Integer) && entry["id"].positive? && entry.dig("user", "login").is_a?(String) &&
               entry["state"].is_a?(String) && !entry["state"].empty?
             raise Ace::Git::ProviderMalformedOutputError, "Malformed GitHub PR review evidence"
           end
