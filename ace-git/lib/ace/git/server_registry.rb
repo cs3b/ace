@@ -132,7 +132,9 @@ module Ace
           supplied = repository_url.to_s
           supplied_scheme = supplied[/\A([a-z][a-z0-9+.\-]*):\/\//i, 1]&.downcase
           entries.map(&:server).select do |server|
-            next false unless Atoms::ServerUrl.match?(server.url, supplied)
+            # Compare the derived web endpoint so SSH clone URLs (including
+            # custom SSH ports) match their HTTPS issue URLs.
+            next false unless Atoms::ServerUrl.match?(Atoms::ServerUrl.web_base(server.url), supplied)
             next true if supplied_scheme.nil?
 
             # An explicit issue-URL scheme must not downgrade to a server

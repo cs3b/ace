@@ -7,6 +7,8 @@ module Ace
       # transport; this service owns only the marker, label, and task lifecycle.
       class IssueTracking
         STICKY_MARKER = "<!-- ace-task:tracked -->"
+        RECONCILE_READ_ATTEMPTS = 3
+        RECONCILE_READ_INTERVAL_SECONDS = 1
         TRACKED_LABEL = "ace:tracked"
         TERMINAL_STATUSES = %w[done cancelled skipped].freeze
 
@@ -146,17 +148,25 @@ module Ace
           absent_comment: false, absent_label: nil)
           yield
         rescue ProviderUnknownOutcomeError
-          snapshot = fetch(number)
-          resolved = if desired_body
-            sticky_comment(snapshot)&.[](:body) == desired_body
-          elsif label
-            snapshot[:labels].include?(label)
-          elsif state
-            snapshot[:issue].state == state
-          elsif absent_comment
-            sticky_comment(snapshot).nil?
-          elsif absent_label
-            !snapshot[:labels].include?(absent_label)
+          resolved = RECONCILE_READ_ATTEMPTS.times.any? do |attempt|
+            snapshot = fetch(number)
+            outcome = if desired_body
+              sticky_comment(snapshot)&.[](:body) == desired_body
+            elsif label
+              snapshot[:labels].include?(label)
+            elsif state
+              snapshot[:issue].state == state
+            elsif absent_comment
+              sticky_comment(snapshot).nil?
+            elsif absent_label
+              !snapshot[:labels].include?(absent_label)
+            end
+            break outcome if outcome
+
+            # The forge may still be committing the write; an immediate read
+            # can miss it and a replay would then duplicate the mutation.
+            sleep(RECONCILE_READ_INTERVAL_SECONDS * (attempt + 1)) if desired_body
+            outcome
           end
           raise unless resolved
         end
