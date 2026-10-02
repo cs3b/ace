@@ -65,29 +65,40 @@ module Ace
                     "window '#{existing[:name]}' conflicts with root or preset"
                 end
 
+                # Adopting a record-less tab: persist its provenance so
+                # later instances (and prepared-pane reuse) share it.
+                if read_identity(path, existing).nil?
+                  write_identity(path, id: existing[:id], root: canonical_root(root), preset: preset)
+                end
                 next existing[:id]
               end
 
-              known_tabs = tabs(workspace).map { |tab| tab[:id] }.to_set
-              id = begin
+              known_tab_ids = tabs(workspace).map { |tab| tab[:id] }.to_set
+              created_id = nil
+              begin
                 if preset
                   created = @surface.create_tab(preset, workspace_id: workspace, cwd: root, label: label)
-                  created.fetch(:tab)
+                  created_id = created.fetch(:tab)
                 else
                   parsed = @executor.tab_create(workspace_id: workspace, label: label, cwd: File.expand_path(root)).parsed_json
-                  find_value(parsed, %w[tab tab_id])
+                  created_id = find_value(parsed, %w[tab tab_id])
                 end
+                raise TargetResolutionError, "tab create returned no tab id" if created_id.nil?
+
+                write_identity(path, id: created_id, root: canonical_root(root), preset: preset)
               rescue StandardError
-                # Roll back only tabs this attempt created (present now but
-                # absent from the pre-call inventory); never touch a tab we
-                # did not observe being created.
-                cleanup_attempt_tabs(workspace, label, known_tabs)
+                # Roll back this attempt's tab: prefer the exact captured
+                # id; without one (mid-materialization preset failure) fall
+                # back to same-label tabs that appeared under our lock
+                # tenure. Never touch tabs we did not observe appearing.
+                if created_id
+                  @executor.tab_close(created_id)
+                else
+                  cleanup_attempt_tabs(workspace, label, known_tab_ids)
+                end
                 raise
               end
-              raise TargetResolutionError, "tab create returned no tab id" if id.nil?
-
-              write_identity(path, id: id, root: canonical_root(root), preset: preset)
-              id
+              created_id
             end
           end
         end

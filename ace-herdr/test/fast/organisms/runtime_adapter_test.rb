@@ -361,6 +361,36 @@ module Ace
           assert_empty @adapter.list_windows.select { |row| row[:name] == "work" }
         end
 
+        def test_adopted_tab_identity_is_recorded_for_later_instances
+          @executor.tab_create(workspace_id: "w1", label: "work", cwd: "/tmp/work")
+          tab = @adapter.ensure_window(name: "work", root: "/tmp/work")
+          assert_equal "w1:t1", tab
+
+          first = RuntimeAdapter.new(executor: @executor, env: env, sleeper: FastSleeper.new,
+            identity_dir: @identity_dir)
+          pane = first.prepare_pane(window: tab)
+          third = RuntimeAdapter.new(executor: @executor, env: env, sleeper: FastSleeper.new,
+            identity_dir: @identity_dir)
+          assert_equal pane, third.prepare_pane(window: tab)
+          assert_equal 1, @executor.calls_of(:pane_split).size
+        end
+
+        def test_identity_write_failure_rolls_back_the_created_tab
+          failing = Class.new(RuntimeAdapter) do
+            def write_identity(*)
+              raise StandardError, "identity write failed"
+            end
+          end
+          adapter = failing.new(executor: @executor, env: env, sleeper: FastSleeper.new,
+            identity_dir: @identity_dir)
+          error = assert_raises(StandardError) do
+            adapter.ensure_window(name: "work", root: "/tmp/work")
+          end
+          assert_match(/identity write failed/, error.message)
+          assert_equal 1, @executor.calls_of(:tab_close).size
+          assert_empty adapter.list_windows
+        end
+
         def test_prepared_pane_creation_is_serialized_across_instances
           tab = @adapter.ensure_window(name: "work", root: "/tmp/work")
           split_started = Queue.new
