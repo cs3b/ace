@@ -792,10 +792,12 @@ end
         def local_diff_fallback(number)
           base_oid = pull_request_review_details(number: number).base_sha
           head_oid = pull_request(number: number).head_sha
+          # Preserve the configured scheme (http or https) rather than
+          # assuming https, and never use scp-style host:path remotes.
+          scheme = server.url.to_s[/\A[a-z][a-z0-9+.-]*:\/\//i].to_s.downcase
+          scheme = "https://" if scheme.empty?
           host = Ace::Git::Atoms::ServerUrl.normalize(server.url).split("/", 2).first
-          # An https remote, never scp-style: "host:path" would be an SSH
-          # URL using the local username.
-          remote = "https://#{host}/#{repo_path}"
+          remote = "#{scheme}#{host}/#{repo_path}"
           head_ref = "refs/ace/review/pr-#{number}-#{Process.pid}"
           base_ref = "#{head_ref}-base"
           begin
@@ -824,7 +826,14 @@ end
         end
 
         def run_git(*args)
-          out, status = Open3.capture2({"LC_ALL" => "C"}, "git", *args)
+          require "open3"
+          require "timeout"
+          out, status = Timeout.timeout(timeout) do
+            Open3.capture2({"LC_ALL" => "C"}, "git", *args)
+          end
+        rescue Timeout::Error
+          raise Ace::Git::ProviderUnreachableError, "git #{args.first} timed out after #{timeout}s"
+        else
           raise Ace::Git::ProviderUnreachableError, "git #{args.first} failed" unless status.success?
           out
         end
