@@ -179,6 +179,7 @@ def review_thread_index(pr)
   threads = []
   cursor = nil
   seen_thread_pages = {}
+  seen_thread_ids = {}
   total_count = nil
   loop do
     query = <<~GRAPHQL
@@ -207,6 +208,9 @@ def review_thread_index(pr)
         threads_page["pageInfo"].is_a?(Hash) && threads_page["nodes"].is_a?(Array)
       raise Ace::Git::ProviderMalformedOutputError, "Malformed GitHub review thread evidence"
     end
+    if total_count && total_count != threads_page["totalCount"]
+      raise Ace::Git::ProviderMalformedOutputError, "Inconsistent GitHub review thread total"
+    end
     total_count = threads_page["totalCount"]
     threads.concat(threads_page["nodes"])
     page_digest = Digest::SHA256.hexdigest(threads_page["nodes"].to_s)
@@ -219,8 +223,15 @@ def review_thread_index(pr)
     raise Ace::Git::ProviderMalformedOutputError,
       "Incomplete GitHub review thread evidence" unless cursor.is_a?(String)
   end
-  if threads.length < total_count
+  if total_count != threads.length
     raise Ace::Git::ProviderMalformedOutputError, "Incomplete GitHub review thread evidence"
+  end
+  threads.each do |thread|
+    next unless thread.is_a?(Hash)
+    if seen_thread_ids[thread["id"]]
+      raise Ace::Git::ProviderMalformedOutputError, "Duplicate GitHub review thread id"
+    end
+    seen_thread_ids[thread["id"]] = true
   end
   index = {}
   threads.each do |thread|

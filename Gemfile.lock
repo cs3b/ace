@@ -82,13 +82,13 @@ PATH
   remote: ace-git-forgejo
   specs:
     ace-git-forgejo (0.4.0)
-      ace-git (~> 0.24)
+      ace-git (~> 0.26)
 
 PATH
   remote: ace-git-github
   specs:
     ace-git-github (0.3.0)
-      ace-git (~> 0.24)
+      ace-git (~> 0.26)
 
 PATH
   remote: ace-git-secrets

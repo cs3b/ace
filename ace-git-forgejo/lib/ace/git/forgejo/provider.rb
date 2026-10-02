@@ -113,7 +113,9 @@ module Ace
         def checks(ref:)
           tasks = fj(:actions_tasks)
           Parsers.parse_actions_tasks(tasks)
-            .select { |task| task[:sha].start_with?(ref.to_s) || ref.to_s.start_with?(task[:sha]) }
+            # Exact-head evidence requires the complete 40-character SHA
+            # equal to the reviewed head; prefix matches are rejected.
+            .select { |task| task[:sha] == ref.to_s }
             .map do |task|
               Ace::Git::ProviderCheck.new(
                 server_name: server.name,
