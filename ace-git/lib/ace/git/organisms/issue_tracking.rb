@@ -88,9 +88,11 @@ module Ace
             raise ProviderIdentityMismatchError, "Issue ##{number} is owned by another ACE task"
           end
           if sticky
-            preserved = sticky[:body].to_s.lines.reject do |line|
-              line.chomp == STICKY_MARKER || line.start_with?("Tracked in ace-task: ")
-            end
+            # Strip inline markers concatenated onto note lines (historical
+            # layout) so the rebuilt body verifies marker-free.
+            preserved = sticky[:body].to_s.lines
+              .reject { |line| line.chomp == STICKY_MARKER || line.start_with?("Tracked in ace-task: ") }
+              .map { |line| line.gsub(STICKY_MARKER, "") }
             mutate_and_reconcile(number, absent_comment: true) do
               if preserved.empty?
                 @provider.delete_issue_comment(number: number, comment_id: sticky[:id])
