@@ -213,6 +213,10 @@ module Ace
               unless claimed_at.nil? || stat.mtime >= claimed_at
                 raise AttemptErrors::ReceiptRejected, "Service receipt evidence predates the claim: #{ref}"
               end
+              failed_at = parse_failed_at(request)
+              unless failed_at.nil? || stat.mtime >= failed_at
+                raise AttemptErrors::ReceiptRejected, "Service receipt evidence predates the failure: #{ref}"
+              end
               content = file.read
               unless attestation_line(content, request, state, require_no_effect: require_no_effect)
                 raise AttemptErrors::ReceiptRejected,
@@ -246,6 +250,27 @@ input:#{Regexp.escape(request.fetch("input_digest"))} outcome:(\S+)( no-effect:(
           Time.iso8601(request["claimed_at"])
         rescue ArgumentError
           raise AttemptErrors::ReceiptRejected, "Service request has an invalid claim timestamp"
+        end
+
+        def parse_failed_at(request)
+          return nil if request["failed_at"].nil?
+          Time.iso8601(request["failed_at"])
+        rescue ArgumentError
+          raise AttemptErrors::ReceiptRejected, "Service request has an invalid failure timestamp"
+        end
+
+        # Read-only eligibility check for dry-run: applies the same review
+        # evidence and candidate-head requirements as the claim without
+        # reserving anything.
+        def request_eligible!(binding)
+          attempt = service_attempt(binding)
+          head = candidate_head!
+          valid_head = binding["candidate_head"] == head && [nil, head].include?(attempt.candidate_head)
+          unless valid_head
+            raise AttemptErrors::ReceiptRejected, "Service request candidate head is stale"
+          end
+          require_review_evidence(attempt, head) if @verifier.external_effect?(binding["operation"])
+          true
         end
 
         # Start a scoped attempt for an assignment.

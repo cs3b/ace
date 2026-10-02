@@ -162,9 +162,15 @@ module Ace
           unless %w[succeeded failed uncertain rejected failed-settled].include?(state)
             raise ArgumentError, "invalid service request state"
           end
-          if state == "failed-settled" && receipt.nil?
-            raise AttemptErrors::ReceiptRejected,
-              "Service request #{request_id} settlement requires the validated no-effect receipt"
+          if state == "failed-settled"
+            evidence = receipt.is_a?(Hash) ? receipt["evidence"] : nil
+            unless evidence.is_a?(Array) && !evidence.empty? && evidence.all? do |item|
+              item.is_a?(Hash) && item["ref"].is_a?(String) && item["sha256"].is_a?(String) &&
+                item["sha256"].match?(/\A[0-9a-f]{64}\z/)
+            end
+              raise AttemptErrors::ReceiptRejected,
+                "Service request #{request_id} settlement requires the validated no-effect receipt"
+            end
           end
           current = service_request(request_id)
           raise AttemptErrors::NotFound, "Service request #{request_id} not found" unless current
@@ -175,8 +181,10 @@ module Ace
               (current["state"] != "failed" && state == "failed-settled")
             raise AttemptErrors::InvalidState, "Service request #{request_id} is terminal"
           end
+          stamped = current.merge("state" => state, "receipt" => receipt)
+          stamped["failed_at"] = Time.now.utc.iso8601(9) if state == "failed"
           update_service_request(request_id, expected: current,
-            replacement: current.merge("state" => state, "receipt" => receipt),
+            replacement: stamped,
             event_type: "service_transition")
         end
 
