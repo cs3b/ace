@@ -492,7 +492,7 @@ end
           end
           begin
             verify_review_thread!(resolved, pr, expected_head)
-          rescue Ace::Git::ProviderIdentityMismatchError, Ace::Git::ProviderMalformedOutputError => e
+          rescue Ace::Git::ProviderIdentityMismatchError, Ace::Git::ProviderMalformedOutputError, Ace::Git::ProviderExpectedHeadConflictError => e
             raise Ace::Git::ProviderUnknownOutcomeError,
               "Thread resolution sent but confirmation unreadable for #{server.name}/#{pr.number}, thread #{thread_id}: #{e.message}; reconcile before repeating"
           end
