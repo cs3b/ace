@@ -1416,7 +1416,9 @@ module Ace
           # the review artifact digest. Identical review text for another
           # PR therefore never collides.
           review_digest = Digest::SHA256.file(review_file).hexdigest
-          identity_pr = options.pr.to_s
+          # The numeric PR (not the raw reference spelling) keys the
+          # persisted identity, matching the provider-side marker basis.
+          identity_pr = (options.pr_metadata&.fetch("number", nil) || options.pr).to_s
           identity_head = head.to_s
           identity_server = options.pr_metadata&.fetch("server_name", nil).to_s
           identity_repo = options.pr_metadata&.fetch("repository_url", nil).to_s
@@ -1441,7 +1443,7 @@ module Ace
             end
           # The persisted record is reusable only for the exact same PR,
           # head, and review content; anything else starts a fresh identity.
-          if persisted && persisted["pr"] == options.pr.to_s &&
+          if persisted && persisted["pr"] == identity_pr &&
               persisted["head"] == head && persisted["review_sha256"] == review_digest &&
               persisted["server_name"] == identity_server && persisted["repository_url"] == identity_repo &&
               persisted["preset"] == identity_preset && persisted["model"] == identity_model &&
@@ -1464,7 +1466,7 @@ module Ace
             )
             record = YAML.dump(
               "session_key" => session_key, "body" => content,
-              "pr" => options.pr.to_s, "head" => head, "review_sha256" => review_digest,
+              "pr" => identity_pr, "head" => head, "review_sha256" => review_digest,
               "server_name" => identity_server, "repository_url" => identity_repo,
               "preset" => identity_preset, "model" => identity_model
             )
@@ -1592,6 +1594,9 @@ module Ace
             "budget" => review_data[:budget],
             "head" => pr_head || head.to_s.strip,
             "checkout_sha" => head.to_s.strip,
+            "server_name" => review_data[:pr_metadata]&.fetch("server_name", nil),
+            "repository_url" => review_data[:pr_metadata]&.fetch("repository_url", nil),
+            "pr_number" => review_data[:pr_metadata]&.fetch("number", nil),
             "tree" => tree.to_s.strip
           }
         end
