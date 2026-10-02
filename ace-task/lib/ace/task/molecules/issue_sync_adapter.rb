@@ -29,6 +29,20 @@ module Ace
           )
         end
 
+        # Clear-time reconciliation: establish comment ownership without any
+        # lifecycle side effect (clear never changes issue state).
+        def reconcile_comment(task:)
+          identity = task.metadata.fetch("remote_issue")
+          server = IssueLink.validate!(identity)
+          tracking(server).sync(
+            number: identity.fetch("number"), task_id: task.id,
+            previous_task_id: task.metadata["issue_sync_previous_id"],
+            task_link: task_link(identity, task), task_status: task.status,
+            create_pending: task.metadata["issue_sync_operation"] == "reconcile-create",
+            comment_only: true
+          )
+        end
+
         def clear_task(task:, previous_task_id: nil)
           identity = task.metadata.fetch("remote_issue")
           server = IssueLink.validate!(identity)
