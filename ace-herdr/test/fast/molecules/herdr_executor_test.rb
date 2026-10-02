@@ -110,6 +110,26 @@ module Ace
           assert_match(/exit 139/, error.message)
         end
 
+        def test_stdout_only_failure_detail_is_not_hidden_by_empty_stderr
+          executor = StubbedExecutor.new(results: [
+            ExecutionResult.new(stdout: "no herdr server is running", stderr: "", success: false, exit_code: 1)
+          ])
+
+          error = assert_raises(ExecutorUnavailableError) { executor.agent_get("p5") }
+
+          assert_match(/no herdr server is running/, error.message)
+        end
+
+        def test_plain_stdout_failure_detail_reaches_command_error
+          executor = StubbedExecutor.new(results: [
+            ExecutionResult.new(stdout: "boom", stderr: "", success: false, exit_code: 2)
+          ])
+
+          error = assert_raises(CommandError) { executor.agent_get("p5") }
+
+          assert_match(/boom/, error.message)
+        end
+
         def test_error_json_on_stderr_is_recognized
           executor = StubbedExecutor.new(results: [
             ExecutionResult.new(

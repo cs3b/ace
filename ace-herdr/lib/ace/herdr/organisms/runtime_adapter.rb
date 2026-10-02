@@ -347,19 +347,23 @@ module Ace
         def record_prepared_pane(tab, pane_id)
           @prepared[tab[:id]] = pane_id
           path = identity_path(tab[:workspace], tab[:name])
-          recorded = File.file?(path) ? JSON.parse(File.read(path)) : nil
-          recorded = nil unless recorded.is_a?(Hash) && recorded["id"] == tab[:id]
-
-          if recorded
+          begin
+            recorded = File.file?(path) ? JSON.parse(File.read(path)) : nil
+          rescue JSON::ParserError
+            # A corrupt record is repaired under the identity lock rather
+            # than silently dropped, so the pointer survives.
+            recorded = :corrupt
+          end
+          if recorded.is_a?(Hash) && recorded["id"] == tab[:id]
             write_identity(path, id: recorded["id"], root: recorded["root"], preset: recorded["preset"],
               prepared_pane: pane_id)
           else
-            # Foreign tab (not created through ensure_window): persist a
-            # pointer-only record so later instances reuse this pane
-            # instead of splitting again.
+            # Foreign tab (not created through ensure_window) or corrupt
+            # record: persist a pointer-only record so later instances
+            # reuse this pane instead of splitting again.
             write_pointer_only(path, id: tab[:id], prepared_pane: pane_id)
           end
-        rescue JSON::ParserError, Errno::ENOENT
+        rescue Errno::ENOENT
           nil
         end
 
@@ -515,14 +519,14 @@ module Ace
           raise error
         rescue PaneNotFoundError, TabNotFoundError, AgentNotFoundError => e
           raise Runtime::TargetNotFoundError, e.message
-        rescue WorkspaceNotFoundError => e
+        rescue WorkspaceNotFoundError, TargetResolutionError => e
+          # Unresolvable caller context, or the runtime responded but the
+          # answer was unusable (missing ids)
           raise Runtime::RuntimeUnavailableError, e.message
-        rescue TargetResolutionError => e
-          # The runtime responded but the answer was unusable (missing ids)
-          raise Runtime::RuntimeUnavailableError, e.message
-        rescue ValidationError, CommandError => e
-          # Bad request configuration or an unmapped native failure keeps
-          # the native cause while surfacing under the contract error type.
+        rescue TabMaterializationError, ValidationError, CommandError => e
+          # Bad request configuration, a failed materialization, or an
+          # unmapped native failure keeps the native cause while surfacing
+          # under the contract error type.
           raise Runtime::Error, e.message
         rescue ExecutorUnavailableError => e
           raise Runtime::RuntimeUnavailableError, e.message

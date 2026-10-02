@@ -354,7 +354,7 @@ module Ace
           end.new(@executor)
           failing = RuntimeAdapter.new(executor: @executor, env: env, sleeper: FastSleeper.new,
             surface: failing_surface, identity_dir: @identity_dir)
-          error = assert_raises(TabMaterializationError) do
+          error = assert_raises(Runtime::Error) do
             failing.ensure_window(name: "work", root: "/tmp/work", preset: "main")
           end
           assert_match(/materialization failed/, error.message)
@@ -420,6 +420,31 @@ module Ace
           assert_empty adapter.list_windows
         end
 
+        def test_corrupt_record_is_repaired_by_prepare
+          @executor.tab_create(workspace_id: "w1", label: "foreign", cwd: "/tmp/work")
+          tab = @adapter.list_windows.find { |row| row[:name] == "foreign" }[:window]
+          first = RuntimeAdapter.new(executor: @executor, env: env, sleeper: FastSleeper.new,
+            identity_dir: @identity_dir)
+          first.prepare_pane(window: tab)
+          path = Dir[File.join(@identity_dir, "*.json")].first
+          File.write(path, "{corrupt json")
+
+          # The corrupt record loses the pane id, so the next prepare must
+          # split again — but it repairs the record under the lock.
+          second = RuntimeAdapter.new(executor: @executor, env: env, sleeper: FastSleeper.new,
+            identity_dir: @identity_dir)
+          repaired_pane = second.prepare_pane(window: tab)
+          assert_equal 2, @executor.calls_of(:pane_split).size
+          parsed = JSON.parse(File.read(path))
+          assert_equal repaired_pane, parsed["prepared_pane"]
+
+          # Instances after the repair reuse instead of splitting again.
+          third = RuntimeAdapter.new(executor: @executor, env: env, sleeper: FastSleeper.new,
+            identity_dir: @identity_dir)
+          assert_equal repaired_pane, third.prepare_pane(window: tab)
+          assert_equal 2, @executor.calls_of(:pane_split).size
+        end
+
         def test_prepared_pane_creation_is_serialized_across_instances
           tab = @adapter.ensure_window(name: "work", root: "/tmp/work")
           split_started = Queue.new
@@ -454,6 +479,7 @@ module Ace
             @adapter.ensure_window(name: "work", root: "/tmp/work", preset: "no-such-preset")
           end
           refute error.is_a?(Herdr::ValidationError)
+          refute error.is_a?(TabMaterializationError)
           assert_match(/no-such-preset/, error.message)
         end
 
@@ -484,7 +510,7 @@ module Ace
           end.new(@executor)
           failing = RuntimeAdapter.new(executor: @executor, env: env, sleeper: FastSleeper.new,
             surface: failing_surface, identity_dir: @identity_dir)
-          error = assert_raises(TabMaterializationError) do
+          error = assert_raises(Runtime::Error) do
             failing.ensure_window(name: "work", root: "/tmp/work", preset: "main")
           end
           assert_match(/materialization failed/, error.message)
