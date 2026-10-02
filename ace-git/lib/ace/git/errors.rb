@@ -78,5 +78,10 @@ module Ace
     # failure after the send). Contains the exact base/head identity needed to
     # reconcile by lookup; never retried automatically.
     class ProviderUnknownOutcomeError < Error; end
+
+    # Reconciliation reads all completed and the tracked marker never
+    # appeared: authoritative absence of a prior create. The only outcome
+    # that may authorize a fresh create POST.
+    class ProviderReconcileAbsenceError < ProviderUnknownOutcomeError; end
   end
 end
