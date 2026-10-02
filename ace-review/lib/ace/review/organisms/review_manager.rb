@@ -134,7 +134,8 @@ module Ace
           config_result = prepare_review_config(options)
           return config_result unless config_result[:success]
 
-          metadata = pr_provider(options).fetch(options.pr, include_comments: false)
+          # The brief consumes metadata and the file inventory only.
+          metadata = pr_provider(options).fetch_metadata(options.pr)
           return metadata unless metadata[:success]
 
           session_dir = File.join(@project_root || Dir.pwd, ".ace-local", "review", "goals-brief")
