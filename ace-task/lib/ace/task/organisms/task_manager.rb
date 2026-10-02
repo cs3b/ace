@@ -220,7 +220,8 @@ module Ace
             moved_descendants = linked_descendants_of(current_path, current_id)
             moved_descendants.each do |descendant|
               Ace::Support::Items::Molecules::FieldUpdater.update(
-                descendant.file_path, set: {"issue_sync_pending" => true}
+                descendant.file_path,
+                set: {"issue_sync_pending" => true, "issue_sync_previous_id" => descendant.id}
               )
             end
             reparented = reparenter.reparent(task_for_reparent, target: move_as_child_of, resolve_ref: resolve_fn)
@@ -364,16 +365,17 @@ module Ace
                   "Task #{task.id} has a pending clear; complete it before linking again"
               end
               # An explicit identical-link retry is the documented recovery
-              # for a create that never committed: drop the reconcile-only
-              # guard so sync may create the missing marker again.
+              # for a create that never committed: after ownership validation
+              # succeeds, drop the reconcile-only guard so sync may create the
+              # missing marker again. Failed validation retains the guard.
+              ensure_issue_linkable!(identity, task_id: task.id,
+                previous_task_id: task.metadata["issue_sync_previous_id"])
               if task.metadata["issue_sync_operation"] == "reconcile-create"
                 Ace::Support::Items::Molecules::FieldUpdater.update(
                   task.file_path, set: {"issue_sync_operation" => nil}
                 )
                 task = show(ref)
               end
-              ensure_issue_linkable!(identity, task_id: task.id,
-                previous_task_id: task.metadata["issue_sync_previous_id"])
               result = sync_linked_issues_for(task, reason: "link-retry")
               raise Ace::Git::ProviderUnreachableError, result[:error] unless result[:success]
               return show(ref)
@@ -696,7 +698,15 @@ module Ace
               reason: reason, error: "Pending clear must be replayed")
           end
           previous_id = task.metadata["issue_sync_previous_id"] || previous_task&.id
-          issue_adapter.sync_task(task: task, previous_task_id: previous_id)
+          issue_adapter.sync_task(
+            task: task, previous_task_id: previous_id,
+            before_create: lambda do
+              mark_issue_sync_pending(task)
+              Ace::Support::Items::Molecules::FieldUpdater.update(
+                task.file_path, set: {"issue_sync_operation" => "reconcile-create"}
+              )
+            end
+          )
           clear_issue_sync_pending(task)
           sync_result_for(task: task, issues: [identity], success: true, reason: reason)
         rescue Ace::Git::ProviderUnknownOutcomeError => e

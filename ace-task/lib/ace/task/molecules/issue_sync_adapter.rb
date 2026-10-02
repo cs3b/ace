@@ -17,14 +17,15 @@ module Ace
             previous_task_id: previous_task_id)
         end
 
-        def sync_task(task:, previous_task_id: nil)
+        def sync_task(task:, previous_task_id: nil, before_create: nil)
           identity = task.metadata.fetch("remote_issue")
           server = IssueLink.validate!(identity)
           tracking(server).sync(
             number: identity.fetch("number"), task_id: task.id,
             previous_task_id: previous_task_id,
             task_link: task_link(identity, task), task_status: task.status,
-            create_pending: task.metadata["issue_sync_operation"] == "reconcile-create"
+            create_pending: task.metadata["issue_sync_operation"] == "reconcile-create",
+            before_create: before_create
           )
         end
 
