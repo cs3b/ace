@@ -13,7 +13,7 @@ module Ace
         RECEIPT_KEY = OpenSSL::PKey::RSA.generate(2048)
 
         class FakeExecutor
-          attr_accessor :pane, :prompt_error
+          attr_accessor :pane, :prompt_error, :pane_get_error
           attr_reader :prompts
 
           def initialize
@@ -24,6 +24,8 @@ module Ace
           end
 
           def pane_get(_id)
+            raise pane_get_error if pane_get_error
+
             Molecules::ExecutionResult.new(stdout: JSON.generate("result" => {"pane" => pane}),
               stderr: "", success: true, exit_code: 0)
           end
@@ -149,6 +151,28 @@ module Ace
           assert_nil Molecules::DeliveryRecordStore.load(@dir, "inb-1")
         end
 
+        def test_probe_launch_failure_keeps_event_retryable
+          enqueue
+          @executor.pane_get_error = ExecutorUnavailableError.new("herdr not executable")
+
+          result = @inbox.deliver(event: @event)
+
+          assert_equal "queued", result["state"]
+          assert_equal "queued", Molecules::DeliveryRecordStore.load(@dir, @event).state
+          assert_empty @native.calls
+        end
+
+        def test_non_object_ref_file_is_a_validation_error
+          ref_path = File.join(@dir, "ref.json")
+          File.write(ref_path, JSON.generate(["ws1", "p1"]))
+
+          error = assert_raises(ValidationError) do
+            @inbox.enqueue(event: @event, attempt: "att-1", ref: ref_path, payload: "hello")
+          end
+
+          assert_match(/expected a JSON object/, error.message)
+        end
+
         def test_busy_agent_receives_one_native_queue_submission_even_with_concurrent_callers
           enqueue
           results = 2.times.map { Thread.new { @inbox.deliver(event: @event) } }.map(&:value)
@@ -209,6 +233,8 @@ module Ace
 
           assert_equal "delivered", result["state"]
           assert_equal "sent", result.dig("wake", "status")
+          assert_equal "sent",
+            Molecules::DeliveryRecordStore.load(@dir, @event).inbox.dig("wake", "status")
           assert_equal [["p1", "Check your native queued messages."]], @executor.prompts
           assert_equal 1, @native.calls.length
         end

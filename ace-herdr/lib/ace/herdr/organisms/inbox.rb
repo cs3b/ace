@@ -284,11 +284,12 @@ module Ace
 
         def address_for(ref)
           hash = ref.is_a?(Hash) ? ref : JSON.parse(File.read(ref))
+          raise ValidationError, "invalid ref: expected a JSON object" unless hash.is_a?(Hash)
           Ace::Hitl::Providers::Ref.new(
             session: Ace::Hitl::Providers::Ref.validate!(hash.fetch("session"), "session"),
             pane: Ace::Hitl::Providers::Ref.validate!(hash.fetch("pane"), "pane")
           )
-        rescue Errno::ENOENT, JSON::ParserError, KeyError => e
+        rescue Errno::ENOENT, JSON::ParserError, KeyError, TypeError => e
           raise ValidationError, "invalid ref: #{e.message}"
         end
 
@@ -396,8 +397,10 @@ module Ace
             {"status" => "sent"}
           end
           detail = wake_error ? "wake-failed" : "wake-sent"
-          transition(record, "delivered",
+          saved = transition(record, "delivered",
             record.inbox.merge("wake" => wake).compact, detail, wake_error)
+          save(saved)
+          saved
         end
 
         def wake_idle(binding)

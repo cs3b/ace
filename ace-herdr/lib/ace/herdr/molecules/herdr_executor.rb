@@ -231,8 +231,8 @@ module Ace
             stdout: stdout.strip, stderr: stderr.strip,
             success: status.success?, exit_code: status.exitstatus || -1
           )
-        rescue Errno::ENOENT
-          raise ExecutorUnavailableError, "herdr CLI not found on PATH: #{@binary}"
+        rescue Errno::ENOENT, Errno::EACCES
+          raise ExecutorUnavailableError, "herdr CLI not found or not executable: #{@binary}"
         end
 
         def run_raw_stdout(cmd)
@@ -241,8 +241,8 @@ module Ace
             stdout: stdout, stderr: stderr.strip,
             success: status.success?, exit_code: status.exitstatus || -1
           )
-        rescue Errno::ENOENT
-          raise ExecutorUnavailableError, "herdr CLI not found on PATH: #{@binary}"
+        rescue Errno::ENOENT, Errno::EACCES
+          raise ExecutorUnavailableError, "herdr CLI not found or not executable: #{@binary}"
         end
 
         # Map a failed result to a typed error from herdr's error codes

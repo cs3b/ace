@@ -7,6 +7,19 @@ module Ace
   module Herdr
     module Molecules
       class HerdrExecutorTest < Minitest::Test
+        def test_unexecutable_binary_raises_executor_unavailable_not_raw_errno
+          Dir.mktmpdir do |dir|
+            script = File.join(dir, "not-executable-herdr")
+            File.write(script, "#!/bin/sh\ntrue\n")
+            File.chmod(0o644, script)
+            executor = HerdrExecutor.new(binary: script)
+
+            error = assert_raises(ExecutorUnavailableError) { executor.agent_get("p1") }
+
+            assert_match(/not executable/, error.message)
+          end
+        end
+
         # Executor with the process boundary stubbed out: run/raise at the
         # Open3 seam so argv building and error classification are tested
         # without the herdr binary.
