@@ -109,8 +109,7 @@ module Ace
         def issue_tracking(number:)
           data = gh_json(["issue", "view", number.to_s, "--json", "number,title,state,author,url,labels"])
           evidence = normalize_issue(data)
-          unless evidence.number.to_i == number.to_i &&
-              Ace::Git::Atoms::ServerUrl.match?(server.url, evidence.url.to_s.sub(%r{/issues/\d+\z}, ""))
+          unless evidence.number.to_i == number.to_i && url_matches_server?(evidence.url)
             raise Ace::Git::ProviderIdentityMismatchError, "Issue ##{number} is not in #{server.url}"
           end
           uri = URI.parse(server.url)
@@ -405,6 +404,17 @@ module Ace
 
         # gh --hostname accepts "host:port"; a bare uri.host would silently
         # retarget a port-configured server to the default authority.
+        # Issue evidence must match the configured server URL including its
+        # scheme; ServerUrl.match? intentionally ignores schemes for git
+        # remotes, but a web issue URL must not downgrade the authority.
+        def url_matches_server?(evidence_url)
+          return false unless Ace::Git::Atoms::ServerUrl.match?(server.url, evidence_url.to_s.sub(%r{/issues/\d+\z}, ""))
+
+          configured = URI.parse(server.url.to_s).scheme
+          supplied = URI.parse(evidence_url.to_s).scheme
+          configured.nil? || supplied.nil? || configured.downcase == supplied.downcase
+        end
+
         # Unrecognized or missing state is malformed evidence: mapping it to
         # :closed would let sync close an issue without valid state proof.
         def normalize_state(value)
