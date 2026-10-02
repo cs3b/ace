@@ -34,10 +34,12 @@ module Ace
           snapshot = validate_link!(number: number, task_id: task_id, previous_task_id: previous_task_id)
           sticky = sticky_comment(snapshot)
           desired_line = "Tracked in ace-task: [#{task_id}](#{task_link})"
-          preserved = Array(sticky&.dig(:body).to_s.lines).map(&:rstrip).reject do |line|
-            line == STICKY_MARKER || line.start_with?("Tracked in ace-task: ")
+          # Unrelated lines are preserved verbatim (including trailing
+          # whitespace); only ACE-owned lines are ever added or removed.
+          preserved = Array(sticky&.dig(:body).to_s.lines).reject do |line|
+            line.chomp == STICKY_MARKER || line.start_with?("Tracked in ace-task: ")
           end
-          desired_body = (preserved + [STICKY_MARKER, desired_line]).join("\n")
+          desired_body = "#{preserved.join}#{STICKY_MARKER}\n#{desired_line}"
           if sticky.nil?
             mutate_and_reconcile(number, desired_body: desired_body) do
               @provider.create_issue_comment(number: number, body: desired_body)
@@ -82,14 +84,14 @@ module Ace
             raise ProviderIdentityMismatchError, "Issue ##{number} is owned by another ACE task"
           end
           if sticky
-            preserved = sticky[:body].to_s.lines.map(&:rstrip).reject do |line|
-              line == STICKY_MARKER || line.start_with?("Tracked in ace-task: ")
+            preserved = sticky[:body].to_s.lines.reject do |line|
+              line.chomp == STICKY_MARKER || line.start_with?("Tracked in ace-task: ")
             end
             mutate_and_reconcile(number, absent_comment: true) do
               if preserved.empty?
                 @provider.delete_issue_comment(number: number, comment_id: sticky[:id])
               else
-                @provider.update_issue_comment(number: number, comment_id: sticky[:id], body: preserved.join("\n"))
+                @provider.update_issue_comment(number: number, comment_id: sticky[:id], body: preserved.join)
               end
             end
           end
