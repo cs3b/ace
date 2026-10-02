@@ -412,7 +412,7 @@ module Ace
           end
           adapter = failing.new(executor: @executor, env: env, sleeper: FastSleeper.new,
             identity_dir: @identity_dir)
-          error = assert_raises(StandardError) do
+          error = assert_raises(Runtime::Error) do
             adapter.ensure_window(name: "work", root: "/tmp/work")
           end
           assert_match(/identity write failed/, error.message)
