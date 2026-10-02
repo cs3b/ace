@@ -351,7 +351,10 @@ end
               "Comment #{comment_id} does not belong to selected PR ##{pr.number}"
           end
           comment = review_comment(matches.first, pr, expected_head)
-          return review_mutation(pr, expected_head, comment, :existing) if comment.body == body
+          if comment.body == body
+            verify_post_mutation_head!(pr, expected_head, "comment #{comment_id}")
+            return review_mutation(pr, expected_head, comment, :existing)
+          end
 
           verify_expected_head!(pull_request(number: number), expected_head)
           begin
@@ -545,7 +548,12 @@ end
         # A mutation receipt may only bind the expected head; if the PR head
         # moved during the mutation the outcome stays uncertain.
         def verify_post_mutation_head!(pr, expected_head, correlation)
-          current = pull_request(number: pr.number)
+          current = begin
+            pull_request(number: pr.number)
+          rescue Ace::Git::ProviderUnreachableError => e
+            raise Ace::Git::ProviderUnknownOutcomeError,
+              "Head verification read failed after mutation for #{server.name}: #{e.message}; reconcile before repeating"
+          end
           return if current.head_sha == expected_head
 
           raise Ace::Git::ProviderUnknownOutcomeError,

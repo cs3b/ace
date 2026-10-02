@@ -116,18 +116,26 @@ module Ace
         #
         # @return [Array<Hash>] {name:, state:, sha:}
         def self.parse_actions_tasks(text)
-          text.to_s.lines.map { |line| clean(line) }.filter_map do |line|
+          tasks = []
+          text.to_s.lines.map { |line| clean(line) }.reject(&:empty?).each do |line|
+            # `fj` emits a leading "<n> tasks" count header before task lines.
+            next if line.match?(/\A\d+ tasks?\z/i)
+
             match = line.match(
               /\A#(?<task>\d+)\s+\((?<sha>[0-9a-f]+)\)\s+(?<state>\w+)\s+(?<name>.+?)\s+[\dhms.]+\s+\((?:push|pull_request|schedule)\)/
             )
-            next nil unless match
+            # Any other nonempty line that cannot be parsed must not silently
+            # shrink check evidence; fail closed instead.
+            raise Ace::Git::ProviderMalformedOutputError,
+              "Unrecognized `fj actions tasks` output line: #{line[0, 80]}" unless match
 
-            {
+            tasks << {
               name: match[:name],
               state: match[:state].downcase.to_sym,
               sha: match[:sha]
             }
           end
+          tasks
         end
 
         # Parse `fj repo view` output.

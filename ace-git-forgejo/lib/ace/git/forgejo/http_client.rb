@@ -2,6 +2,7 @@
 
 require "json"
 require "net/http"
+require "openssl"
 require "uri"
 require_relative "repository_binding"
 
@@ -61,7 +62,7 @@ module Ace
           JSON.parse(payload)
         rescue JSON::ParserError => e
           raise Ace::Git::ProviderMalformedOutputError, "Malformed Forgejo response: #{e.message}"
-        rescue Net::OpenTimeout, Net::ReadTimeout, IOError, SocketError, SystemCallError => e
+        rescue Net::OpenTimeout, Net::ReadTimeout, IOError, SocketError, OpenSSL::SSL::SSLError, SystemCallError => e
           error = (method == :get) ? Ace::Git::ProviderUnreachableError : Ace::Git::ProviderUnknownOutcomeError
           raise error, "Forgejo #{method} #{path} outcome unknown: #{e.class}"
         end
