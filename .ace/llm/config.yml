@@ -47,9 +47,9 @@ llm:
     review-codex:
       - codex:sol:high@ro
     review-gemini:
-      - gemini:pro-latest@ro
-      # gemini-cli auth for individuals is deprecated machine-wide; fall
-      # back to the working Antigravity CLI when the gemini leg fails
+      # gemini-cli auth for individuals is deprecated machine-wide and the
+      # review runner runs single-leg (no role fallback), so this role
+      # resolves to the working Antigravity CLI until gemini is re-authed
       - agy@ro
 
     # --- Assignment ---
