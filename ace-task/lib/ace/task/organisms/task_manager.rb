@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "digest"
 require "tmpdir"
 
 require_relative "../molecules/task_config_loader"
@@ -394,19 +395,22 @@ module Ace
             .filter_map { |child| linked_issue(child) }
         end
 
-        # Canonical lock/ownership key for an issue identity: provider plus
-        # normalized web repository plus number. Aliased server names and
-        # SSH/HTTPS/case variants of one repository normalize to the same key
-        # (same convention as ServerUrl.normalize); the stored link keeps the
+        # Canonical lock/ownership key for an issue identity: a digest over
+        # provider, normalized web repository, and number. Aliased server
+        # names and SSH/HTTPS/case variants of one repository normalize to
+        # the same key (same convention as ServerUrl.normalize); the digest
+        # keeps distinct repositories unambiguous. The stored link keeps the
         # selected server name for replay authentication.
         def canonical_issue_key(identity)
-          [
-            canonical_value(identity, "provider"),
-            Ace::Git::Atoms::ServerUrl.normalize(
-              Ace::Git::Atoms::ServerUrl.web_base(canonical_value(identity, "repository_url"))
-            ),
-            canonical_value(identity, "number")
-          ].map { |entry| entry.gsub(%r{[^\w.-]}, "_") }.join("--")
+          Digest::SHA256.hexdigest(
+            [
+              canonical_value(identity, "provider"),
+              Ace::Git::Atoms::ServerUrl.normalize(
+                Ace::Git::Atoms::ServerUrl.web_base(canonical_value(identity, "repository_url"))
+              ),
+              canonical_value(identity, "number")
+            ].join("\x1F")
+          )
         end
 
         def canonical_value(identity, key)
