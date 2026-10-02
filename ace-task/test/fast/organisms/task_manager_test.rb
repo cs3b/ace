@@ -552,6 +552,27 @@ class TaskManagerTest < AceTaskTestCase
     end
   end
 
+  def test_concurrent_linked_creates_serialize_on_issue_lock
+    adapter = fake_issue_adapter { |task:, **_| {success: true} }
+    @manager.stub(:issue_adapter, adapter) do
+      first = @manager.create("First", remote_issue: issue_identity)
+      pending_create = nil
+      @manager.send(:with_issue_identity_lock, issue_identity) do
+        thread = Thread.new { @manager.create("Second", remote_issue: issue_identity) }
+        sleep 0.3
+        # The second create cannot have written while the lock is held.
+        specs = Dir.glob(File.join(@manager.root_dir, "**", "*.s.md"))
+        assert_equal 1, specs.length
+        pending_create = thread
+      end
+      error = assert_raises(Ace::Git::ProviderIdentityMismatchError) { pending_create.value }
+      assert_match(/already linked/, error.message)
+      # The rejected create leaves no artifact behind.
+      specs = Dir.glob(File.join(@manager.root_dir, "**", "*.s.md"))
+      assert_equal 1, specs.length
+    end
+  end
+
   def test_generic_updates_reject_issue_sync_control_fields
     adapter = fake_issue_adapter { |task:, **_| {success: true} }
     @manager.stub(:issue_adapter, adapter) do
