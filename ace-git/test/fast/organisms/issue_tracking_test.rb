@@ -170,6 +170,36 @@ class IssueTrackingTest < AceGitTestCase
     end
   end
 
+  class LateCommitProvider < FakeProvider
+    attr_reader :reads
+
+    def initialize
+      super
+      @reads = 0
+    end
+
+    def issue_tracking(number:)
+      @reads += 1
+      # Simulate the forge committing the earlier unknown-outcome POST only
+      # after several reconciliation reads.
+      if @reads == 3
+        comments << {id: 1, body: "<!-- ace-task:tracked -->\nTracked in ace-task: [8pp.t.q7w](task.md)"}
+      end
+      super
+    end
+  end
+
+  def test_create_pending_replay_reconciles_without_second_create
+    provider = LateCommitProvider.new
+    service = Ace::Git::Organisms::IssueTracking.new(provider: provider)
+    service.stub(:create_reconcile_interval, 0) do
+      service.sync(number: 42, task_id: "8pp.t.q7w", task_link: "task.md", task_status: "pending",
+        create_pending: true)
+    end
+    assert_equal 0, provider.calls.count { |call| call.first == :create }
+    assert_equal 1, provider.comments.length
+  end
+
   def test_unknown_create_reconciles_without_duplicate_after_delayed_commit
     provider = DelayedCreateProvider.new
     provider.arm_delayed_create
