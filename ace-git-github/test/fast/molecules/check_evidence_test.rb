@@ -22,7 +22,7 @@ class GithubCheckEvidenceTest < AceGitGithubTestCase
       "gh pr view 25 --json #{Ace::Git::Github::Provider::PR_FIELDS} --repo github.example.com/owner/repo" => {
         success: true, stdout: pr_json.to_json, stderr: "", exit_code: 0
       },
-      "gh api repos/owner/repo/commits/#{HEAD}/check-runs?per_page=100 --hostname github.example.com" => {
+      "gh api repos/owner/repo/commits/#{HEAD}/check-runs?per_page=100 --hostname github.example.com --paginate --slurp" => {
         success: true, stdout: checks_payload.to_json, stderr: "", exit_code: 0
       },
       "gh api repos/owner/repo/commits/#{HEAD}/status --hostname github.example.com" => {
@@ -43,7 +43,7 @@ class GithubCheckEvidenceTest < AceGitGithubTestCase
 
   def test_status_only_evidence_is_collected_as_checks
     runner = scripted_checks_runner(
-      checks_payload: {"total_count" => 0, "check_runs" => []},
+      checks_payload: [{"total_count" => 0, "check_runs" => []}],
       status_payload: {
         "state" => "success", "total_count" => 2,
         "statuses" => [
@@ -65,12 +65,11 @@ class GithubCheckEvidenceTest < AceGitGithubTestCase
 
   def test_check_runs_and_statuses_are_merged
     runner = scripted_checks_runner(
-      checks_payload: {
+      checks_payload: [{
         "total_count" => 1,
         "check_runs" => [
           {"name" => "test-suite", "status" => "COMPLETED", "conclusion" => "SUCCESS", "html_url" => "https://ci.example.com/run/1"}
-        ]
-      },
+        ]}],
       status_payload: {
         "state" => "failure", "total_count" => 1,
         "statuses" => [{"context" => "ci/lab", "state" => "failure", "target_url" => nil}]
@@ -87,10 +86,10 @@ class GithubCheckEvidenceTest < AceGitGithubTestCase
 
   def test_truncated_check_run_page_fails_closed
     runner = scripted_checks_runner(
-      checks_payload: {
+      checks_payload: [{
         "total_count" => 101,
         "check_runs" => Array.new(100) { |i| {"name" => "check-#{i}", "status" => "COMPLETED", "conclusion" => "SUCCESS"} }
-      },
+      }],
       status_payload: {"state" => "success", "total_count" => 0, "statuses" => []}
     )
 
@@ -102,7 +101,7 @@ class GithubCheckEvidenceTest < AceGitGithubTestCase
 
   def test_missing_total_count_fails_closed
     runner = scripted_checks_runner(
-      checks_payload: {"check_runs" => [{"name" => "test-suite", "status" => "COMPLETED", "conclusion" => "SUCCESS"}]},
+      checks_payload: [{"check_runs" => [{"name" => "test-suite", "status" => "COMPLETED", "conclusion" => "SUCCESS"}]}],
       status_payload: {"state" => "success", "total_count" => 0, "statuses" => []}
     )
 

@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "digest"
 require "json"
 require "uri"
 
@@ -160,62 +161,112 @@ end
         # Map REST comment database ids to their review thread (GraphQL id,
         # resolution state). A truncated thread listing would silently
         # understate resolution evidence, so pagination limits fail closed.
-        def review_thread_index(pr)
-          host, repository = Ace::Git::Atoms::ServerUrl.normalize(server.url).split("/", 2)
-          owner, name = repository.to_s.split("/", 2)
-          unless owner && name
-            raise Ace::Git::ConfigError, "Invalid selected GitHub repository #{server.url}"
-          end
-          query = <<~GRAPHQL
-            query($id: Int!) {
-              repository(owner: "#{owner}", name: "#{name}") {
-                pullRequest(number: $id) {
-                  reviewThreads(first: 100) {
-                    totalCount
-                    pageInfo { hasNextPage }
-                    nodes {
-                      id
-                      isResolved
-                      comments(first: 100) {
-                        pageInfo { hasNextPage }
-                        nodes { databaseId }
-                      }
-                    }
-                  }
+def review_thread_index(pr)
+  host, repository = Ace::Git::Atoms::ServerUrl.normalize(server.url).split("/", 2)
+  owner, name = repository.to_s.split("/", 2)
+  unless owner && name
+    raise Ace::Git::ConfigError, "Invalid selected GitHub repository #{server.url}"
+  end
+  threads = []
+  cursor = nil
+  seen_thread_pages = {}
+  total_count = nil
+  loop do
+    query = <<~GRAPHQL
+      query($id: Int!, $cursor: String) {
+        repository(owner: "#{owner}", name: "#{name}") {
+          pullRequest(number: $id) {
+            reviewThreads(first: 100, after: $cursor) {
+              totalCount
+              pageInfo { hasNextPage endCursor }
+              nodes {
+                id
+                isResolved
+                comments(first: 100) {
+                  pageInfo { hasNextPage endCursor }
+                  nodes { databaseId }
                 }
               }
             }
-          GRAPHQL
-          pull_request_node = gh_graphql(query, id: pr.number).dig("data", "repository", "pullRequest")
-          threads = pull_request_node.is_a?(Hash) && pull_request_node["reviewThreads"]
-          unless threads.is_a?(Hash) && threads["totalCount"].is_a?(Integer) &&
-              threads["pageInfo"].is_a?(Hash) && threads["nodes"].is_a?(Array)
-            raise Ace::Git::ProviderMalformedOutputError, "Malformed GitHub review thread evidence"
-          end
-          if threads["pageInfo"]["hasNextPage"] == true || threads["totalCount"] > threads["nodes"].length
-            raise Ace::Git::ProviderMalformedOutputError, "Incomplete GitHub review thread evidence"
-          end
-          index = {}
-          threads["nodes"].each do |thread|
-            comments = thread.is_a?(Hash) && thread["comments"]
-            unless thread.is_a?(Hash) && thread["id"].is_a?(String) &&
-                comments.is_a?(Hash) && comments["nodes"].is_a?(Array) &&
-                comments["pageInfo"].is_a?(Hash) && [true, false].include?(comments["pageInfo"]["hasNextPage"])
-              raise Ace::Git::ProviderMalformedOutputError, "Malformed GitHub review thread evidence"
-            end
-            if comments["pageInfo"]["hasNextPage"] == true
-              raise Ace::Git::ProviderMalformedOutputError, "Incomplete GitHub review thread evidence"
-            end
-            resolved = thread["isResolved"] == true
-            comments["nodes"].each do |comment|
-              unless comment.is_a?(Hash) && comment["databaseId"].is_a?(Integer)
-                raise Ace::Git::ProviderMalformedOutputError, "Malformed GitHub review thread evidence"
-              end
-              index[comment["databaseId"]] = [thread["id"], resolved]
-            end
-          end
-          index
-        end
+          }
+        }
+      }
+    GRAPHQL
+    pull_request_node = gh_graphql(query, id: pr.number, cursor: cursor).dig("data", "repository", "pullRequest")
+    threads_page = pull_request_node.is_a?(Hash) && pull_request_node["reviewThreads"]
+    unless threads_page.is_a?(Hash) && threads_page["totalCount"].is_a?(Integer) &&
+        threads_page["pageInfo"].is_a?(Hash) && threads_page["nodes"].is_a?(Array)
+      raise Ace::Git::ProviderMalformedOutputError, "Malformed GitHub review thread evidence"
+    end
+    total_count = threads_page["totalCount"]
+    threads.concat(threads_page["nodes"])
+    page_digest = Digest::SHA256.hexdigest(threads_page["nodes"].to_s)
+    raise Ace::Git::ProviderMalformedOutputError,
+      "GitHub review thread pagination repeated a page" if seen_thread_pages[page_digest]
+
+    seen_thread_pages[page_digest] = true
+    break unless threads_page["pageInfo"]["hasNextPage"] == true
+    cursor = threads_page["pageInfo"]["endCursor"]
+    raise Ace::Git::ProviderMalformedOutputError,
+      "Incomplete GitHub review thread evidence" unless cursor.is_a?(String)
+  end
+  if threads.length < total_count
+    raise Ace::Git::ProviderMalformedOutputError, "Incomplete GitHub review thread evidence"
+  end
+  index = {}
+  threads.each do |thread|
+    unless thread.is_a?(Hash) && thread["id"].is_a?(String) &&
+        thread["comments"].is_a?(Hash) && thread["comments"]["nodes"].is_a?(Array)
+      raise Ace::Git::ProviderMalformedOutputError, "Malformed GitHub review thread evidence"
+    end
+    resolved = thread["isResolved"] == true
+    thread_comment_ids(thread["id"], thread["comments"]).each do |database_id|
+      index[database_id] = [thread["id"], resolved]
+    end
+  end
+  index
+end
+
+# A thread's comment list may itself be paginated; follow its cursor
+# so resolution state covers every comment in the thread.
+def thread_comment_ids(thread_id, first_page)
+  cursor = nil
+  ids = []
+  comments_page = first_page
+  loop do
+    unless comments_page.is_a?(Hash) && comments_page["pageInfo"].is_a?(Hash) &&
+        [true, false].include?(comments_page["pageInfo"]["hasNextPage"]) &&
+        comments_page["nodes"].is_a?(Array)
+      raise Ace::Git::ProviderMalformedOutputError, "Malformed GitHub review thread evidence"
+    end
+    comments_page["nodes"].each do |comment|
+      unless comment.is_a?(Hash) && comment["databaseId"].is_a?(Integer)
+        raise Ace::Git::ProviderMalformedOutputError, "Malformed GitHub review thread evidence"
+      end
+      ids << comment["databaseId"]
+    end
+    break unless comments_page["pageInfo"]["hasNextPage"] == true
+    cursor = comments_page["pageInfo"]["endCursor"]
+    raise Ace::Git::ProviderMalformedOutputError,
+      "Incomplete GitHub review thread evidence" unless cursor.is_a?(String)
+
+    query = <<~GRAPHQL
+      query($id: ID!, $cursor: String) {
+        node(id: $id) {
+          ... on PullRequestReviewThread {
+            comments(first: 100, after: $cursor) {
+              pageInfo { hasNextPage endCursor }
+              nodes { databaseId }
+            }
+          }
+        }
+      }
+    GRAPHQL
+    node = gh_graphql(query, id: thread_id, cursor: cursor).dig("data", "node")
+    comments_page = node.is_a?(Hash) ? node["comments"] : nil
+  end
+  ids
+end
 
         def pull_request_review_details(number:)
           number = Integer(number)
@@ -237,16 +288,20 @@ end
 
         def pull_request_checks(number:, head_sha:)
           verify_expected_head!(pull_request(number: number), head_sha)
-          data = gh_api("commits/#{head_sha}/check-runs?per_page=100")
-          runs = data.is_a?(Hash) && data["check_runs"]
-          unless runs.is_a?(Array) && runs.all? { |run| run.is_a?(Hash) && run["name"].is_a?(String) }
+          pages = gh_api("commits/#{head_sha}/check-runs?per_page=100", paginate: true)
+          # --paginate --slurp returns one payload per page; a single-page
+          # response stays a bare object.
+          page_payloads = pages.is_a?(Array) ? pages : [pages]
+          unless page_payloads.is_a?(Array) && page_payloads.all? { |page| page.is_a?(Hash) && page["check_runs"].is_a?(Array) }
             raise Ace::Git::ProviderMalformedOutputError, "Malformed GitHub PR check evidence"
           end
-          total = data["total_count"]
-          # The API returns at most per_page runs here; total_count above the
-          # fetched count means unfetched pages, which would silently
-          # understate check evidence. Fail closed instead of reporting a
-          # partial snapshot as complete.
+          runs = page_payloads.flat_map { |page| page["check_runs"] }
+          unless runs.all? { |run| run.is_a?(Hash) && run["name"].is_a?(String) }
+            raise Ace::Git::ProviderMalformedOutputError, "Malformed GitHub PR check evidence"
+          end
+          total = page_payloads.filter_map { |page| page["total_count"] }.last
+          # The accumulated pages must account for every reported run; a
+          # shortfall would silently understate check evidence.
           unless total.is_a?(Integer) && total <= runs.length
             raise Ace::Git::ProviderMalformedOutputError, "Incomplete GitHub PR check evidence"
           end
@@ -532,9 +587,10 @@ end
           end
         end
 
-        def gh_graphql(query, id:)
+        def gh_graphql(query, id:, cursor: nil)
           host = Ace::Git::Atoms::ServerUrl.normalize(server.url).split("/", 2).first
           args = ["graphql", "-f", "query=#{query}", "-F", "id=#{id}", "--hostname", host]
+          args += ["-F", "cursor=#{cursor}"] if cursor
           result = CliExecutor.execute("api", args, timeout: timeout, runner: runner)
           classify_failure(result[:stderr], context: "api graphql") unless result[:success]
           data = JSON.parse(result[:stdout])
