@@ -281,6 +281,19 @@ module Ace
           assert_equal 1, @native.calls.length
         end
 
+        def test_unsupported_agent_change_classifies_as_drift
+          enqueue
+          @native.result = {"accepted" => false, "pre_submit" => true, "error" => "missing executable"}
+          assert_equal "queued", @inbox.deliver(event: @event)["state"]
+          @executor.pane["agent"] = "claude"
+
+          result = @inbox.deliver(event: @event)
+
+          assert_equal "uncertain", result["state"]
+          assert_match(/target identity changed/, result["last_error"])
+          assert_equal 1, @native.calls.length
+        end
+
         def test_busy_agent_receives_one_native_queue_submission_even_with_concurrent_callers
           enqueue
           results = 2.times.map { Thread.new { @inbox.deliver(event: @event) } }.map(&:value)

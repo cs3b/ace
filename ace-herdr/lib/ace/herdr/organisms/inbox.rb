@@ -331,7 +331,7 @@ module Ace
         def observe(record)
           target = record.inbox["target"]
           binding = observe_target(target ? target["session"] : record.session,
-            target ? target["pane"] : record.pane)
+            target ? target["pane"] : record.pane, target: target)
           # Target drift is classified BEFORE agent-specific event id rules:
           # a bound event whose pane changed agent (e.g. codex -> pi) must
           # reconcile, not loop on a pre-send validation error.
@@ -345,7 +345,7 @@ module Ace
           binding.merge("payload_sha256" => record.answer_digest)
         end
 
-        def observe_target(expected_session, expected_pane)
+        def observe_target(expected_session, expected_pane, target: nil)
           payload = @executor.pane_get(expected_pane).parsed_json
           # Shape-check each level: parseable but malformed probe JSON must
           # fail as a validation error, never as a TypeError that would
@@ -357,6 +357,11 @@ module Ace
           observed_session = pane["workspace_id"] || pane["session_id"]
           raise IdentityDriftError, "runtime session identity changed" unless observed_session == expected_session
           agent = pane["agent"]
+          # An agent change is target drift: classify it as reconciliation-
+          # worthy before any agent-specific validation can mask it.
+          if target && target["agent"] != agent
+            raise IdentityDriftError, "target identity changed since enqueue; reconciliation is required"
+          end
           raise ValidationError, "unsupported native agent" unless %w[codex pi].include?(agent)
           session = pane["agent_session"]
           raise IdentityDriftError, "native session identity is unavailable" unless session.is_a?(Hash) && session["agent"] == agent

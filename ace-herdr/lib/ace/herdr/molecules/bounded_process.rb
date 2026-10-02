@@ -14,6 +14,15 @@ module Ace
         # Immutable outcome of one bounded child run.
         Result = Struct.new(:stdout, :stderr, :status, :oversized)
 
+        # A SystemCallError raised while the child was already running (pipe
+        # I/O after launch). Distinct from spawn failures: the child exists,
+        # so the caller cannot classify the run as pre-launch.
+        class PostLaunchError < StandardError
+          def initialize(message)
+            super("post-launch process failure: #{message}")
+          end
+        end
+
         module_function
 
         # @param argv [Array<String>] child argv (no shell)
@@ -22,12 +31,30 @@ module Ace
         # @param output_limit [Integer] per-stream retained byte cap
         # @return [Result] stdout/stderr are capped; oversized reports truncation
         # @raise [Timeout::Error] when the child outlives the deadline (killed)
+        # @raise [SystemCallError] spawn failures only (child never launched)
+        # @raise [PostLaunchError] SystemCallError while the child was live
         def call(argv, stdin_data: "", timeout_s:, output_limit: 65_536)
           Open3.popen3(*argv, pgroup: true) do |stdin, stdout, stderr, waiter|
-            payload = stdin_data.to_s
-            sent = 0
-            stdin_closed = payload.empty?
-            stdin.close if stdin_closed
+            begin
+              run_loop(stdin, stdout, stderr, waiter,
+                stdin_data: stdin_data, timeout_s: timeout_s, output_limit: output_limit)
+            rescue SystemCallError => e
+              # The child was already spawned: an I/O failure now cannot be
+              # rewound into a pre-launch classification.
+              raise PostLaunchError, e.message
+            end
+          end
+        end
+
+        def run_loop(stdin, stdout, stderr, waiter, stdin_data:, timeout_s:, output_limit:)
+          payload = stdin_data.to_s
+          sent = 0
+          stdin_closed = payload.empty?
+          stdin.close if stdin_closed
+          buffers = {stdout => +"", stderr => +""}
+          streams = [stdout, stderr]
+          oversized = false
+          deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + timeout_s
             buffers = {stdout => +"", stderr => +""}
             streams = [stdout, stderr]
             oversized = false
@@ -74,8 +101,7 @@ module Ace
               end
             end
 
-            Result.new(buffers.fetch(stdout), buffers.fetch(stderr), waiter.value, oversized)
-          end
+          Result.new(buffers.fetch(stdout), buffers.fetch(stderr), waiter.value, oversized)
         end
 
         def kill_group(waiter)

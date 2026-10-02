@@ -42,6 +42,8 @@ module Ace
           execution
         rescue Timeout::Error
           raise AgentNotReadyError, "pane probe timed out after #{timeout_s}s"
+        rescue BoundedProcess::PostLaunchError => e
+          raise AgentNotReadyError, "pane probe failed after launch: #{e.message}"
         rescue SystemCallError
           raise ExecutorUnavailableError, "herdr CLI not found or not executable: #{@binary}"
         end
@@ -81,6 +83,8 @@ module Ace
           execution
         rescue Timeout::Error
           raise AgentNotReadyError, "herdr wake timed out after #{timeout_ms}ms"
+        rescue BoundedProcess::PostLaunchError => e
+          raise AgentNotReadyError, "herdr wake failed after launch: #{e.message}"
         rescue SystemCallError => e
           raise ExecutorUnavailableError, e.message
         end

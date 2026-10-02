@@ -105,6 +105,20 @@ module Ace
           assert_empty @calls
         end
 
+        def test_post_launch_io_failure_is_not_classified_pre_submit
+          Molecules::BoundedProcess.stub(:call,
+            lambda { |*| raise Molecules::BoundedProcess::PostLaunchError, "EIO on drained pipe" }) do
+              executor = NativeQueueExecutor.new(codex: "codex")
+
+              error = assert_raises(ExecutorError) do
+                executor.submit(agent: "codex", thread: "thread-1", event_id: "inb-12345678",
+                  digest: "a" * 64, payload: "hello")
+              end
+
+              assert_match(/post-launch/, error.message)
+            end
+        end
+
         def test_e2big_at_spawn_is_a_pre_submission_rejection
           runner = ->(*, **) { raise Errno::E2BIG, "argument list too long" }
           executor = NativeQueueExecutor.new(codex: "codex", runner: runner)

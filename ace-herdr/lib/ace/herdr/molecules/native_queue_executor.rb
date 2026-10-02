@@ -107,7 +107,12 @@ module Ace
         rescue SystemCallError => e
           # popen3 raises spawn failures before the child exists, so no
           # submission can have begun: proven pre-launch, retryable.
+          # (Post-launch I/O failures arrive as PostLaunchError instead.)
           raise ExecutorUnavailableError, e.message
+        rescue BoundedProcess::PostLaunchError => e
+          # The child was live, so the message may already have been accepted:
+          # keep this uncertain, never pre-submit retryable.
+          raise ExecutorError, e.message
         end
       end
     end
