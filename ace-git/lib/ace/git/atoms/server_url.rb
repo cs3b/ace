@@ -57,11 +57,16 @@ module Ace
             authority = authority.split(":").first.to_s
             scheme = "https"
           else
-            # scp-style "git@host:path" splits on the colon; ssh ports ride
-            # that colon and are dropped from the web endpoint.
-            authority, _, path = rest.partition(":")
-            authority = authority.split(":").first.to_s
-            path = path.sub(%r{\A\d+/}, "")
+            host_part, sep, remainder = rest.partition(":")
+            if sep == ":" && !remainder.start_with?("/")
+              # scp-style "git@host:path"; ssh ports ride the colon and are
+              # dropped from the web endpoint.
+              authority = host_part.split(":").first.to_s
+              path = remainder.sub(%r{\A\d+/}, "")
+            else
+              # Scheme-less "host/owner/repo" splits on the first slash.
+              authority, _, path = rest.partition("/")
+            end
             scheme = "https"
           end
           path = path.sub(%r{/+\z}, "").sub(/\.git\z/i, "")
