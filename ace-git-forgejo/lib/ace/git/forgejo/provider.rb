@@ -311,7 +311,7 @@ module Ace
             raise Ace::Git::ProviderUnknownOutcomeError,
               "Comment update sent but verification read failed for comment #{comment_id}: #{e.message}; reconcile before repeating"
           end
-          unless updated && updated["body"] == body
+          unless updated && updated["id"] == comment_id && updated["body"] == body
             raise Ace::Git::ProviderUnknownOutcomeError,
               "Comment update sent but exact PR comment #{comment_id} could not be verified"
           end

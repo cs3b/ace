@@ -126,7 +126,7 @@ module Ace
             end
 
             match = line.match(
-              /\A#(?<task>\d+)\s+\((?<sha>[0-9a-f]+)\)\s+(?<state>\w+)\s+(?<name>.+?)\s+[\dhms.]+\s+\((?:push|pull_request|schedule)\)/
+              /\A#(?<task>\d+)\s+\((?<sha>[0-9a-f]+)\)\s+(?<state>\w+)\s+(?<name>.+?)\s+[\dhms.]+\s+\((?<event>[^)]+)\)/
             )
             # Any other nonempty line that cannot be parsed must not silently
             # shrink check evidence; fail closed instead.
