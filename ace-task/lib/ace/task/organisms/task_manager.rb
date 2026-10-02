@@ -268,7 +268,9 @@ module Ace
           # Reload and return updated task
           updated_task = loader.load(current_path, id: current_id, special_folder: current_special)
           if sync_needed_after_update?(task, updated_task, set: set, add: add, remove: remove, move_to: move_to)
-            sync_linked_issues_for(updated_task, reason: "update", previous_task: task)
+            with_issue_identity_lock(linked_issue(updated_task) || {}) do
+              sync_linked_issues_for(updated_task, reason: "update", previous_task: task)
+            end
             return show_after_sync(updated_task) || updated_task
           end
           updated_task
@@ -346,7 +348,12 @@ module Ace
             linked_tasks = tasks.select { |t| linked_issue(t) }
             results = linked_tasks.map do |task|
               with_issue_identity_lock(linked_issue(task)) do
-                sync_or_clear_linked_issue(task, reason: "manual-sync")
+                # Reload inside the lock: another process may have cleared or
+                # synced this link while this replay waited for the lock.
+                fresh = show(task.id)
+                next sync_result_for(task: task, issues: [], success: true, reason: "manual-sync") if fresh.nil?
+
+                sync_or_clear_linked_issue(fresh, reason: "manual-sync")
               end
             end
             # An unlinked task with a pending flag is inconsistent state: it
@@ -374,7 +381,8 @@ module Ace
           end
 
           result = with_issue_identity_lock(linked_issue(task)) do
-            sync_or_clear_linked_issue(task, reason: "manual-sync")
+            fresh = show(task.id) || task
+            sync_or_clear_linked_issue(fresh, reason: "manual-sync")
           end
           summary = summarize_manual_sync_results([result], skipped: 0)
           summary.merge(task_id: task.id)
@@ -422,7 +430,9 @@ module Ace
               end
               ensure_issue_linkable!(identity, task_id: task.id,
                 previous_task_id: task.metadata["issue_sync_previous_id"])
-              result = sync_linked_issues_for(task, reason: "link-retry")
+              result = with_issue_identity_lock(identity) do
+                sync_linked_issues_for(task, reason: "link-retry")
+              end
               raise Ace::Git::ProviderUnreachableError, result[:error] unless result[:success]
               return show(ref)
             end
@@ -728,12 +738,17 @@ module Ace
 
           key = identity.values_at("server_name", "provider", "repository_url", "number")
             .map { |value| value.to_s.gsub(%r{[^\w.-]}, "_") }.join("--")
+          held = (Thread.current[:ace_task_identity_locks] ||= [])
+          return yield if held.include?(key)
+
           lock_path = File.join(Dir.tmpdir, "ace-task-issue-#{key}.lock")
           File.open(lock_path, File::CREAT | File::RDWR) do |lock|
             lock.flock(File::LOCK_EX)
+            held << key
             begin
               yield
             ensure
+              held.delete(key)
               lock.flock(File::LOCK_UN)
             end
           end
@@ -839,6 +854,12 @@ module Ace
         end
 
         def clear_issue_link(task)
+          with_issue_identity_lock(linked_issue(task) || {}) do
+            clear_issue_link_locked(task)
+          end
+        end
+
+        def clear_issue_link_locked(task)
           if task.metadata["issue_sync_operation"] == "reconcile-create"
             # A tracking comment may still be committing forge-side; dropping
             # the link now would orphan it. Reconcile comment ownership only -
