@@ -137,6 +137,13 @@ module Ace
             # shrink check evidence; fail closed instead.
             raise Ace::Git::ProviderMalformedOutputError,
               "Unrecognized `fj actions tasks` output line: #{line[0, 80]}" unless match
+            # Exact-head evidence filters on the complete 40-character SHA; an
+            # abbreviated SHA would be silently dropped by that filter, so
+            # reject it here instead of shrinking evidence without error.
+            unless match[:sha].length == 40
+              raise Ace::Git::ProviderMalformedOutputError,
+                "Abbreviated SHA in `fj actions tasks` output: #{match[:sha]}"
+            end
 
             tasks << {
               name: match[:name],
