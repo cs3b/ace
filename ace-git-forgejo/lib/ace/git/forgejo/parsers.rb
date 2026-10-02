@@ -136,9 +136,14 @@ module Ace
             # Any other nonempty line that cannot be parsed must not silently
             # shrink check evidence; fail closed instead. The SHA may be
             # abbreviated; the provider binds it to the reviewed head by
-            # prefix instead of assuming a documented output width.
+            # prefix, so anything shorter than Git's conventional minimum
+            # abbreviation cannot establish commit identity and is rejected.
             raise Ace::Git::ProviderMalformedOutputError,
               "Unrecognized `fj actions tasks` output line: #{line[0, 80]}" unless match
+            unless match[:sha].length.between?(7, 40)
+              raise Ace::Git::ProviderMalformedOutputError,
+                "Unbindable `fj actions tasks` SHA (need 7-40 hex chars): #{match[:sha]}"
+            end
 
             tasks << {
               name: match[:name],

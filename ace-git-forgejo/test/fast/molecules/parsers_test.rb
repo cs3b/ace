@@ -81,6 +81,15 @@ module Forgejo
       assert_equal "fc14c43d3", checks[0][:sha]
     end
 
+    def test_parse_actions_tasks_rejects_unbindable_abbreviations
+      error = assert_raises(Ace::Git::ProviderMalformedOutputError) do
+        Ace::Git::Forgejo::Parsers.parse_actions_tasks(
+          "1 tasks\n#83 (fc14c4) failure Test Summary 0s (push): subject\n"
+        )
+      end
+      assert_includes error.message, "Unbindable"
+    end
+
     def test_parse_actions_tasks_rejects_empty_output
       ["", "\n   \n"].each do |output|
         error = assert_raises(Ace::Git::ProviderMalformedOutputError) do
