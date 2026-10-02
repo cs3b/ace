@@ -711,10 +711,12 @@ module Ace
           end
           previous_id = task.metadata["issue_sync_previous_id"] || previous_task&.id
           reconcile_only = task.metadata["issue_sync_operation"] == "reconcile-create"
+          reached_post = false
           issue_adapter.sync_task(
             task: task, previous_task_id: previous_id,
             before_create: lambda do
               mark_issue_sync_pending(task)
+              reached_post = true
               Ace::Support::Items::Molecules::FieldUpdater.update(
                 task.file_path, set: {"issue_sync_operation" => "reconcile-create"}
               )
@@ -739,8 +741,8 @@ module Ace
           # after a fresh create POST proves it did not commit: replay may
           # retry the create, so the uncertain-create guard must not survive
           # it. Reconcile-only passes (unreadable forge) keep the guard.
-          if !reconcile_only && e.class != Ace::Git::ProviderUnknownOutcomeError &&
-              task.metadata["issue_sync_operation"] == "reconcile-create"
+          if reached_post && !reconcile_only &&
+              e.class != Ace::Git::ProviderUnknownOutcomeError
             Ace::Support::Items::Molecules::FieldUpdater.update(
               task.file_path, set: {"issue_sync_operation" => nil}
             )

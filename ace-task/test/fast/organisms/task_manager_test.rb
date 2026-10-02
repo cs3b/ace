@@ -679,11 +679,11 @@ class TaskManagerTest < AceTaskTestCase
       parent = @manager.create("Parent")
       child = @manager.create_subtask(parent.id, "Linked child")
       @manager.update(dependent.id, set: {}, add: {dependencies: child.id})
-      @manager.update(parent.id, move_as_child_of: target.id)
+      demoted = @manager.update(parent.id, move_as_child_of: target.id)
       spec = File.read(Dir.glob(File.join(@manager.root_dir, "**", "*.s.md"))
         .find { |file| File.read(file).include?("Dependent") })
       # The child reference follows the reparented parent's new ID.
-      assert_match(/dependencies: \[#{Regexp.escape(parent.id)}\.0\]/, spec)
+      assert_match(/dependencies: \[#{Regexp.escape(demoted.id)}\.0\]/, spec)
     end
   end
 

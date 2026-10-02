@@ -171,7 +171,7 @@ module Ace
 
           # Descendant identities hang off the parent ID: rewrite their
           # frontmatter and spec filenames so persisted IDs stay authoritative.
-          id_map = {}
+          id_map = {task.id => new_id}
           rewrite_descendants(new_dir, old_parent_id: task.id, new_parent_id: new_id, id_map: id_map)
           rewrite_dependency_references(id_map)
 
@@ -186,10 +186,17 @@ module Ace
 
           Dir.glob(File.join(@root_dir, "**", "*.s.md")).sort.each do |spec|
             content = File.read(spec)
-            updated = content.gsub(/^(\s*-\s*)(\S+)(\s*)$/) do
-              "#{Regexp.last_match(1)}#{id_map.fetch(Regexp.last_match(2), Regexp.last_match(2))}#{Regexp.last_match(3)}"
-            end
-            File.write(spec, updated) if updated != content
+            frontmatter, body = Ace::Support::Items::Atoms::FrontmatterParser.parse(content)
+            deps = frontmatter["dependencies"]
+            next unless deps.is_a?(Array)
+
+            mapped = deps.map { |dep| id_map.fetch(dep, dep) }
+            next if mapped == deps
+
+            frontmatter["dependencies"] = mapped
+            tmp_path = "#{spec}.tmp.#{Process.pid}"
+            File.write(tmp_path, Ace::Support::Items::Atoms::FrontmatterSerializer.rebuild(frontmatter, body))
+            File.rename(tmp_path, spec)
           end
         end
 
