@@ -9,18 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.58.0] - 2026-10-02
 
-### Changed
+### Added
+- Provider-neutral PR reviews and comment handling for GitHub, default Forgejo, and named Forgejo servers with exact-head evidence.
 
+### Changed
 - Review model queries honor the configured ace-llm fallback (role candidate
   chains + `llm.fallback`) instead of forcing single-leg execution, so a
   reviewer position survives a dead provider leg.
+- Replaced `--gh-timeout` with `--provider-timeout`; removed the GitHub-only review fetcher, poster, and resolver paths.
+- Preserve provider and repository identity across review sessions and comments; fail closed on moved heads and collection errors.
 
 ## [0.57.1] - 2026-10-02
 
 ### Fixed
 
 - A failed or incomplete provider entry no longer invalidates a campaign session's completed reviewer executions; one completed reviewer per needed scope still completes the round.
-
 
 
 ## [0.57.0] - 2026-10-01
