@@ -81,6 +81,27 @@ class GithubIssueTrackingProviderTest < AceGitGithubTestCase
     refute calls.any? { |argv| argv.include?("forge.example") && !argv.include?("forge.example:8443") }
   end
 
+  def test_issue_calls_work_with_ssh_style_server_url
+    calls = []
+    runner = lambda do |args:, **_options|
+      calls << args
+      stdout = if args[1..2] == ["issue", "view"]
+        {"number" => 42, "title" => "Issue", "state" => "OPEN", "author" => nil,
+         "url" => "https://github.example.com/owner/repo/issues/42", "labels" => []}.to_json
+      else
+        "[[]]"
+      end
+      {success: true, status: 200, stdout: stdout, stderr: "", exit_code: 0}
+    end
+    server = Ace::Git::ResolvedServer.new(name: "gh", provider: :github,
+      url: "git@github.example.com:owner/repo.git")
+    provider = Ace::Git::Github::Provider.new(server: server, runner: runner)
+    provider.issue_tracking(number: 42)
+    provider.create_issue_comment(number: 42, body: "x")
+    assert calls.any? { |argv| argv.any? { |arg| arg.to_s == "repos/owner/repo/issues/42/comments" } }
+    assert calls.any? { |argv| argv.include?("github.example.com") }
+  end
+
   def test_issue_evidence_rejects_number_mismatch_in_url
     runner = lambda do |args:, **_options|
       {success: true, status: 200,

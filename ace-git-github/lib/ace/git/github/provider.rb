@@ -112,7 +112,7 @@ module Ace
           unless evidence.number.to_i == number.to_i && url_matches_server?(evidence.url, number)
             raise Ace::Git::ProviderIdentityMismatchError, "Issue ##{number} is not in #{server.url}"
           end
-          uri = URI.parse(server.url)
+          uri = URI.parse(Ace::Git::Atoms::ServerUrl.web_base(server.url))
           owner_repo = uri.path.sub(%r{\A/}, "").chomp("/").sub(/\.git\z/, "")
           pages = gh_json(["api", "repos/#{owner_repo}/issues/#{number}/comments", "--hostname", forge_hostname(uri),
                            "--paginate", "--slurp"], bind_repo: false)
@@ -275,7 +275,7 @@ module Ace
         end
 
         def issue_api(method, suffix, fields: [])
-          uri = URI.parse(server.url)
+          uri = URI.parse(Ace::Git::Atoms::ServerUrl.web_base(server.url))
           owner_repo = uri.path.sub(%r{\A/}, "").chomp("/").sub(/\.git\z/, "")
           args = ["repos/#{owner_repo}/#{suffix}", "--hostname", forge_hostname(uri), "--method", method]
           fields.each { |field| args += ["--raw-field", field] }
