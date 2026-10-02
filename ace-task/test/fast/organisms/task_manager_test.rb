@@ -595,6 +595,61 @@ class TaskManagerTest < AceTaskTestCase
     end
   end
 
+  def test_identical_retry_reconciles_before_authorizing_create
+    phases = []
+    reconcile_reads = 0
+    adapter = Object.new
+    adapter.define_singleton_method(:validate_link!) { |**_args| true }
+    adapter.define_singleton_method(:sync_task) do |task:, previous_task_id: nil, before_create: nil|
+      if task.metadata["issue_sync_operation"] == "reconcile-create"
+        phases << :reconcile
+        reconcile_reads += 1
+        raise Ace::Git::ProviderUnreachableError, "marker still absent" if reconcile_reads < 2
+
+        phases << :reconciled
+        nil
+      else
+        phases << :create
+        before_create&.call
+        nil
+      end
+    end
+    adapter.define_singleton_method(:clear_task) { |**_args| true }
+    @manager.stub(:issue_adapter, adapter) do
+      task = @manager.create("Linked task", remote_issue: issue_identity)
+      Ace::Support::Items::Molecules::FieldUpdater.update(
+        task.file_path, set: {"issue_sync_operation" => "reconcile-create"}
+      )
+      Ace::Task::Molecules::IssueLink.stub(:from_input, issue_identity) do
+        @manager.issue_link(task.id, issue: "276", server_name: "lab")
+      end
+      # The retry reconciles the guarded create first; only after the
+      # reconcile window finds no marker does it authorize a fresh create.
+      # The leading :create is the original link-time sync.
+      assert_equal %i[create reconcile create], phases
+      refute @manager.show(task.id).metadata["issue_sync_operation"]
+    end
+  end
+
+  def test_chained_descendant_reparents_preserve_original_owner_id
+    offline = true
+    adapter = fake_issue_adapter { |task:, **_| raise Ace::Git::ProviderUnreachableError, "offline" if offline }
+    @manager.stub(:issue_adapter, adapter) do
+      target = @manager.create("Target")
+      parent = @manager.create("Parent")
+      child = @manager.create_subtask(parent.id, "Linked child", remote_issue: issue_identity(9))
+      first = @manager.update(parent.id, move_as_child_of: target.id)
+      demoted_child_id = nil
+      spec = Dir.glob(File.join(@manager.root_dir, "**", "*.s.md"))
+        .find { |file| File.read(file).include?("issue_sync_previous_id") }
+      demoted_child_id = File.basename(spec, ".s.md").sub(/\A.*-/, "")
+      second = @manager.update("#{first.id}.0", move_as_child_of: target.id) rescue nil
+      content = File.read(spec)
+      # The ORIGINAL outgoing ID survives the second offline reparent.
+      assert_match(/issue_sync_previous_id: #{Regexp.escape(child.id)}/, content)
+    end
+  end
+
   def test_clear_rejects_unresolved_create_and_retry_recovers
     create_attempts = 0
     adapter = Object.new

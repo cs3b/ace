@@ -221,7 +221,8 @@ module Ace
             moved_descendants.each do |descendant|
               Ace::Support::Items::Molecules::FieldUpdater.update(
                 descendant.file_path,
-                set: {"issue_sync_pending" => true, "issue_sync_previous_id" => descendant.id}
+                set: {"issue_sync_pending" => true,
+                      "issue_sync_previous_id" => descendant.metadata["issue_sync_previous_id"] || descendant.id}
               )
             end
             reparented = reparenter.reparent(task_for_reparent, target: move_as_child_of, resolve_ref: resolve_fn)
@@ -365,17 +366,22 @@ module Ace
                   "Task #{task.id} has a pending clear; complete it before linking again"
               end
               # An explicit identical-link retry is the documented recovery
-              # for a create that never committed: after ownership validation
-              # succeeds, drop the reconcile-only guard so sync may create the
-              # missing marker again. Failed validation retains the guard.
-              ensure_issue_linkable!(identity, task_id: task.id,
-                previous_task_id: task.metadata["issue_sync_previous_id"])
+              # for a create that never committed. Reconcile first so a slow
+              # commit is adopted rather than duplicated; only after the
+              # reconcile window finds no marker does the retry authorize a
+              # fresh create. Failed validation retains the guard.
               if task.metadata["issue_sync_operation"] == "reconcile-create"
+                reconciled = sync_linked_issues_for(task, reason: "link-retry-reconcile")
+                if reconciled[:success]
+                  return show_after_sync(task) || task
+                end
                 Ace::Support::Items::Molecules::FieldUpdater.update(
                   task.file_path, set: {"issue_sync_operation" => nil}
                 )
                 task = show(ref)
               end
+              ensure_issue_linkable!(identity, task_id: task.id,
+                previous_task_id: task.metadata["issue_sync_previous_id"])
               result = sync_linked_issues_for(task, reason: "link-retry")
               raise Ace::Git::ProviderUnreachableError, result[:error] unless result[:success]
               return show(ref)
