@@ -110,4 +110,34 @@ class GithubCheckEvidenceTest < AceGitGithubTestCase
     end
     assert_match(/Incomplete GitHub PR check evidence/, error.message)
   end
+# frozen_string_literal: false
+
+  def test_local_diff_fallback_fetches_exact_refs_from_https_remote
+    provider = Ace::Git::Github::Provider.new(server: SERVER, runner: ->(**) { flunk("gh must not be called") })
+    pr = Struct.new(:number, :head_sha, :state).new(42, "c" * 40, :open)
+    details = Struct.new(:base_sha).new("b" * 40)
+    git_calls = []
+    provider.stub(:pull_request, pr) do
+      provider.stub(:pull_request_review_details, details) do
+        provider.stub(:run_git, lambda { |*args|
+          git_calls << args
+          case args.first
+          when "fetch" then "ok"
+          when "rev-parse" then ("c" * 40) + "\n"
+          when "merge-base" then ("d" * 40) + "\n"
+          when "diff" then "diff --git a/x b/x\n"
+          when "update-ref" then ""
+          end
+        }) do
+          diff = provider.send(:local_diff_fallback, 42)
+          assert_equal "diff --git a/x b/x\n", diff
+        end
+      end
+    end
+    fetch = git_calls.find { |a| a.first == "fetch" }
+    assert fetch[2].start_with?("https://github.example.com/owner/repo"), "fallback must fetch over https, not scp-style"
+    assert_equal "+refs/pull/42/head:refs/ace/review/pr-42-#{Process.pid}", fetch[3]
+    assert git_calls.any? { |a| a.first == "merge-base" }
+    assert_equal 2, git_calls.count { |a| a.first == "update-ref" && a[1] == "-d" }
+  end
 end

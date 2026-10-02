@@ -779,7 +779,9 @@ end
           base_oid = pull_request_review_details(number: number).base_sha
           head_oid = pull_request(number: number).head_sha
           host = Ace::Git::Atoms::ServerUrl.normalize(server.url).split("/", 2).first
-          remote = "#{host}:#{repo_path}"
+          # An https remote, never scp-style: "host:path" would be an SSH
+          # URL using the local username.
+          remote = "https://#{host}/#{repo_path}"
           head_ref = "refs/ace/review/pr-#{number}-#{Process.pid}"
           base_ref = "#{head_ref}-base"
           begin
