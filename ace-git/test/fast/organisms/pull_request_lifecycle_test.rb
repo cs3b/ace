@@ -202,7 +202,7 @@ module Organisms
         attr_accessor :move_head, :forbid_comments
       end
       PR = Ace::Git::ProviderPullRequest.new(
-        server_name: "x", number: 25, title: "t", state: :open, head_ref: "feature",
+        server_name: "x", number: 25, title: "t", state: :open, head_ref: "feature", body: nil,
         base_ref: "main", head_sha: "a" * 40, author: "u", url: nil, draft: true,
         merged_at: nil, head_repository_url: nil, base_repository_url: nil, merge_commit_sha: nil
       ).freeze
