@@ -151,7 +151,10 @@ module Ace
           reject_issue_metadata_update!(set, add, remove)
           # Linked tasks defer remote sync: persist the pending flag in the
           # same write as the local change so a crash cannot lose the replay.
-          deferred_sync = linked_issue(task) && task.metadata["issue_sync_operation"] != "clear"
+          # Only status changes require remote reconciliation (issue state
+          # follows task status); other edits need no recovery identity.
+          deferred_sync = linked_issue(task) && task.metadata["issue_sync_operation"] != "clear" &&
+            set.is_a?(Hash) && set.key?("status")
           deferred_set = deferred_sync ? set.merge("issue_sync_pending" => true) : set
           if has_field_updates || deferred_sync
             Ace::Support::Items::Molecules::FieldUpdater.update(

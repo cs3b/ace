@@ -298,6 +298,42 @@ class TaskFrontmatterValidatorTest < AceTaskTestCase
     end
   end
 
+  def test_falsy_remote_issue_value_is_rejected
+    with_tasks_dir do |root|
+      file = write_task_file(root, "issue-falsy", <<~CONTENT)
+        ---
+        id: 8pp.t.q7w
+        status: pending
+        title: Linked task
+        tags: []
+        created_at: 2026-02-28 12:00:00
+        remote_issue: false
+        ---
+      CONTENT
+
+      issues = Validator.validate(file)
+      assert issues.any? { |i| i[:message].include?("remote_issue") && i[:type] == :error }
+    end
+  end
+
+  def test_pending_sync_requires_remote_issue_identity
+    with_tasks_dir do |root|
+      file = write_task_file(root, "issue-pending-no-identity", <<~CONTENT)
+        ---
+        id: 8pp.t.q7w
+        status: pending
+        title: Linked task
+        tags: []
+        created_at: 2026-02-28 12:00:00
+        issue_sync_pending: true
+        ---
+      CONTENT
+
+      issues = Validator.validate(file)
+      assert issues.any? { |i| i[:message].include?("issue_sync_pending") && i[:type] == :error }
+    end
+  end
+
   def test_obsolete_github_issue_key
     with_tasks_dir do |root|
       file = write_task_file(root, "issue-obsolete", <<~CONTENT)
