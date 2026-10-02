@@ -115,7 +115,7 @@ module Ace
           end
           uri = URI.parse(server.url)
           owner_repo = uri.path.sub(%r{\A/}, "").sub(/\.git\z/, "")
-          pages = gh_json(["api", "repos/#{owner_repo}/issues/#{number}/comments", "--hostname", uri.host,
+          pages = gh_json(["api", "repos/#{owner_repo}/issues/#{number}/comments", "--hostname", forge_hostname(uri),
                            "--paginate", "--slurp"], bind_repo: false)
           {
             issue: evidence,
@@ -278,7 +278,7 @@ module Ace
         def issue_api(method, suffix, fields: [])
           uri = URI.parse(server.url)
           owner_repo = uri.path.sub(%r{\A/}, "").sub(/\.git\z/, "")
-          args = ["repos/#{owner_repo}/#{suffix}", "--hostname", uri.host, "--method", method]
+          args = ["repos/#{owner_repo}/#{suffix}", "--hostname", forge_hostname(uri), "--method", method]
           fields.each { |field| args += ["--raw-field", field] }
           result = CliExecutor.execute("api", args, timeout: timeout, runner: runner)
           classify_failure(result[:stderr], context: "issue #{method} #{suffix}") unless result[:success]
@@ -399,8 +399,14 @@ module Ace
         def server_host_root
           @server_host_root ||= begin
             uri = URI.parse(server.url.to_s)
-            "#{uri.scheme || "https"}://#{uri.host}#{":#{uri.port}" if uri.port && uri.port != uri.default_port}"
+            "#{uri.scheme || "https"}://#{forge_hostname(uri)}"
           end
+        end
+
+        # gh --hostname accepts "host:port"; a bare uri.host would silently
+        # retarget a port-configured server to the default authority.
+        def forge_hostname(uri)
+          uri.port && uri.port != uri.default_port ? "#{uri.host}:#{uri.port}" : uri.host
         end
 
         def merged_at_of(data)
