@@ -60,7 +60,7 @@ module Ace
           # follows it, so identity and body can never come from different
           # points in time.
           after = provider.pull_request(number: reference.number)
-          after = after.with(body: hydrated_body) unless hydrated_body.nil?
+          after = after.with(body: hydrated_body) if hydrated_body && after.body.to_s.empty?
           # Body hydration and identity must agree with the base provenance
           # read before collection; a moved base invalidates the metadata.
           latest_details = provider.pull_request_review_details(number: reference.number)
@@ -110,7 +110,7 @@ module Ace
           # from different points in time.
           hydrated_body = provider.pull_request_body(number: reference.number)
           after = provider.pull_request(number: reference.number)
-          after = after.with(body: hydrated_body) unless hydrated_body.nil?
+          after = after.with(body: hydrated_body) if hydrated_body && after.body.to_s.empty?
           latest_details = provider.pull_request_review_details(number: reference.number)
           if after.head_sha != head || latest_details.base_sha != details.base_sha ||
               after.head_ref != before.head_ref || after.base_ref != before.base_ref ||
