@@ -120,12 +120,19 @@ module Ace
         def checks(ref:)
           output = gh_json(["pr", "checks", ref.to_s, "--json", "name,state,bucket"])
           output.map do |check|
+            state = check["state"].to_s.downcase
+            raise Ace::Git::ProviderMalformedOutputError,
+              "Malformed GitHub check entry: missing state" if state.empty?
             bucket = check["bucket"].to_s.downcase
+            unless bucket.empty? || BUCKET_MAP.key?(bucket)
+              raise Ace::Git::ProviderMalformedOutputError,
+                "Malformed GitHub check entry: unrecognized bucket #{bucket}"
+            end
             Ace::Git::ProviderCheck.new(
               server_name: server.name,
               name: check["name"].to_s,
-              state: check["state"].to_s.downcase.to_sym,
-              conclusion: BUCKET_MAP.fetch(bucket, bucket.empty? ? nil : bucket.to_sym),
+              state: state.to_sym,
+              conclusion: BUCKET_MAP.fetch(bucket, nil),
               url: nil
             )
           end
@@ -341,10 +348,18 @@ end
             raise Ace::Git::ProviderMalformedOutputError, "Incomplete GitHub PR check evidence"
           end
           checks = runs.map do |run|
+            status = run["status"].to_s.downcase
+            raise Ace::Git::ProviderMalformedOutputError,
+              "Malformed GitHub check run entry: missing status" if status.empty?
+            conclusion = run["conclusion"]
+            unless conclusion.nil? || conclusion.is_a?(String)
+              raise Ace::Git::ProviderMalformedOutputError,
+                "Malformed GitHub check run entry: conclusion must be a string or null"
+            end
             Ace::Git::ProviderCheck.new(
               server_name: server.name, name: run["name"],
-              state: run["status"].to_s.downcase.to_sym,
-              conclusion: run["conclusion"]&.downcase&.to_sym,
+              state: status.to_sym,
+              conclusion: conclusion&.downcase&.to_sym,
               url: run["html_url"]
             )
           end
@@ -755,28 +770,31 @@ end
         end
 
         def review_comment(entry, pr, head, threads = {})
+          user = entry.is_a?(Hash) ? entry["user"] : nil
           unless entry.is_a?(Hash) && entry["id"].is_a?(Integer) && entry["id"].positive? && entry["body"].is_a?(String) &&
-              entry.dig("user", "login").is_a?(String)
+              user.is_a?(Hash) && user["login"].is_a?(String)
             raise Ace::Git::ProviderMalformedOutputError, "Malformed GitHub PR comment evidence"
           end
           thread_id, resolved = threads[entry["id"]] || [nil, nil]
           Ace::Git::ProviderReviewComment.new(
             server_name: server.name, repository_url: server.url, pr_number: pr.number,
-            id: entry["id"], author: entry.dig("user", "login"), body: entry["body"],
+            id: entry["id"], author: user["login"], body: entry["body"],
             url: entry["html_url"], path: entry["path"], line: entry["line"],
-            head_sha: entry["commit_id"] || head, resolved: resolved, thread_id: thread_id
+            head_sha: entry["commit_id"], resolved: resolved, thread_id: thread_id
           )
         end
 
         def review_entry(entry, pr, head)
-          unless entry.is_a?(Hash) && entry["id"].is_a?(Integer) && entry["id"].positive? && entry.dig("user", "login").is_a?(String) &&
+          user = entry.is_a?(Hash) ? entry["user"] : nil
+          unless entry.is_a?(Hash) && entry["id"].is_a?(Integer) && entry["id"].positive? &&
+              user.is_a?(Hash) && user["login"].is_a?(String) &&
               entry["state"].is_a?(String) && !entry["state"].empty?
             raise Ace::Git::ProviderMalformedOutputError, "Malformed GitHub PR review evidence"
           end
           Ace::Git::ProviderReview.new(
             server_name: server.name, repository_url: server.url, pr_number: pr.number,
-            id: entry["id"], author: entry.dig("user", "login"), body: entry["body"],
-            state: entry["state"], url: entry["html_url"], head_sha: entry["commit_id"] || head
+            id: entry["id"], author: user["login"], body: entry["body"],
+            state: entry["state"], url: entry["html_url"], head_sha: entry["commit_id"]
           )
         end
 
