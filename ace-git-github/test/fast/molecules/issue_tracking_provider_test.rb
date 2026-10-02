@@ -59,4 +59,25 @@ class GithubIssueTrackingProviderTest < AceGitGithubTestCase
     end
     refute calls.any? { |args| args.include?("DELETE") }
   end
+
+  def test_issue_calls_preserve_configured_port
+    calls = []
+    runner = lambda do |args:, **_options|
+      calls << args
+      stdout = if args[1..2] == ["issue", "view"]
+        {"number" => 42, "title" => "Issue", "state" => "OPEN", "author" => nil,
+         "url" => "https://forge.example:8443/owner/repo/issues/42", "labels" => []}.to_json
+      else
+        "[[]]"
+      end
+      {success: true, stdout: stdout, stderr: "", exit_code: 0}
+    end
+    server = Ace::Git::ResolvedServer.new(name: "gh", provider: :github,
+      url: "https://forge.example:8443/owner/repo")
+    provider = Ace::Git::Github::Provider.new(server: server, runner: runner)
+    provider.issue_tracking(number: 42)
+    provider.create_issue_comment(number: 42, body: "x")
+    assert calls.any? { |argv| argv.include?("--hostname") && argv.include?("forge.example:8443") }
+    refute calls.any? { |argv| argv.include?("forge.example") && !argv.include?("forge.example:8443") }
+  end
 end
