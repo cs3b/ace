@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- **ace-review v0.57.1**: A failed or incomplete provider entry no longer invalidates a campaign session's completed reviewer executions; one completed reviewer per needed scope completes the round.
 
 - **RubyGems publisher**: Retain the push results before printing the final summary so successful dependency-wave publication exits cleanly instead of raising `NameError` after the gems are registered.
 
