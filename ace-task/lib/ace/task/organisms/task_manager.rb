@@ -216,6 +216,13 @@ module Ace
               with_issue_identity_lock("task" => task.id) do
                 fresh = show(task.id) || task
                 linked_fresh = linked_issue(fresh)
+                # The participant locks were selected from the initially
+                # loaded task: a concurrent clear+re-link while this update
+                # waited must not proceed under the old issue's lock.
+                if linked_fresh != linked
+                  raise Ace::Git::ProviderIdentityMismatchError,
+                    "Task #{task.id} link changed during update; retry the command"
+                end
                 deferred_sync = linked_fresh && fresh.metadata["issue_sync_operation"] != "clear" && sync_planned
                 deferred_set = deferred_sync ? set.merge("issue_sync_pending" => true) : set
                 # A pending clear also needs the outgoing ID: its replay must
@@ -331,6 +338,10 @@ module Ace
             linked_descendants_of(current_path, current_id).each do |child|
               with_issue_identity_lock(linked_issue(child) || {}) do
                 fresh = show(child.id) || child
+                # The lock was acquired for the scanned identity: a
+                # concurrent re-link leaves the refresh to the new owner's
+                # own pending replay.
+                next if linked_issue(child) && linked_issue(fresh) != linked_issue(child)
                 sync_linked_issues_for(fresh, reason: "move") if linked_issue(fresh)
               end
             end
@@ -373,6 +384,10 @@ module Ace
                   .each do |descendant|
                     with_issue_identity_lock(linked_issue(descendant) || {}) do
                       fresh = show(descendant.id) || descendant
+                      # The lock was acquired for the scanned identity: a
+                      # concurrent re-link leaves the refresh to the new
+                      # owner's own pending replay.
+                      next if linked_issue(descendant) && linked_issue(fresh) != linked_issue(descendant)
                       sync_linked_issues_for(fresh, reason: "reparent") if linked_issue(fresh)
                     end
                   end
@@ -386,6 +401,10 @@ module Ace
             linked_descendants_of(reparented.path, reparented.id).each do |descendant|
               with_issue_identity_lock(linked_issue(descendant) || {}) do
                 fresh = show(descendant.id) || descendant
+                # The lock was acquired for the scanned identity: a
+                # concurrent re-link leaves the refresh to the new owner's
+                # own pending replay.
+                next if linked_issue(descendant) && linked_issue(fresh) != linked_issue(descendant)
                 sync_linked_issues_for(fresh, reason: "reparent") if linked_issue(fresh)
               end
             end
