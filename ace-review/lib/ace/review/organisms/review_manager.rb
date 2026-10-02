@@ -786,7 +786,8 @@ module Ace
             ref = item["ref"] || item[:ref]
             authority = item["authority"] || item[:authority]
             sha = (ref == "base") ? metadata["baseRefOid"] : metadata["headRefOid"]
-            repository_url = metadata["repository_url"].to_s
+            # Clone-form URLs (trailing .git) are not valid web bases.
+            repository_url = metadata["repository_url"].to_s.sub(/\.git\z/i, "").chomp("/")
             # Source routes differ per forge: GitHub serves blobs at /blob/,
             # Forgejo at /src/commit/. Route on the resolved snapshot provider.
             route = (metadata["provider"] == "github") ? "blob" : "src/commit"
