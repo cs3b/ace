@@ -137,7 +137,12 @@ module Ace
           validate_id!(event, "event")
           with_event(event) do |record|
             raise ValidationError, "unknown inbox event: #{event}" unless record&.inbox
-            raise ValidationError, "event is not uncertain" unless record.state == "uncertain"
+            # `delivered` only proves native queue acceptance: the message may
+            # still be consumed or evicted afterwards, so a signed observation
+            # can reconcile it exactly like an uncertain outcome.
+            unless %w[uncertain delivered].include?(record.state)
+              raise ValidationError, "event is not reconcilable from state #{record.state}"
+            end
             binding = record.inbox["binding"]
             matches = receipt.is_a?(Hash) && receipt["event_id"] == event &&
               receipt["attempt_id"] == record.inbox["attempt_id"] &&

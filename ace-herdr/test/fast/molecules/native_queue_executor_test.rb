@@ -9,15 +9,20 @@ module Ace
         Status = Struct.new(:success?, :exitstatus)
 
         def setup
+          @dir = Dir.mktmpdir
           @calls = []
           @stdout = "queued"
           @stderr = ""
           @status = Status.new(true, 0)
-          runner = lambda do |*argv, **options|
+          runner = lambda do |argv, **options|
             @calls << [argv, options]
             [@stdout, @stderr, @status]
           end
           @executor = NativeQueueExecutor.new(codex: "codex", pi_client: "pi-client", runner: runner)
+        end
+
+        def teardown
+          FileUtils.remove_entry(@dir)
         end
 
         def test_codex_uses_exact_thread_queue_without_terminal_input
@@ -26,7 +31,7 @@ module Ace
 
           assert result["accepted"]
           assert_equal [["codex", "queue", "--thread", "thread-1", "--message", "line 1\nline 2"],
-            {stdin_data: ""}], @calls.fetch(0)
+            {stdin_data: "", timeout_s: NativeQueueExecutor::DEFAULT_SUBMIT_TIMEOUT_S}], @calls.fetch(0)
         end
 
         def test_pi_uses_digest_bound_client_and_validates_receipt
@@ -37,7 +42,8 @@ module Ace
 
           assert result["accepted"]
           assert_equal [["pi-client", "--delivery", "inb-12345678", "--session-id", "thread-1",
-            "--payload-sha256", "a" * 64, "--payload-bytes", "5"], {stdin_data: "hello"}], @calls.fetch(0)
+            "--payload-sha256", "a" * 64, "--payload-bytes", "5"],
+            {stdin_data: "hello", timeout_s: NativeQueueExecutor::DEFAULT_SUBMIT_TIMEOUT_S}], @calls.fetch(0)
 
           @stdout = JSON.generate("ok" => true, "id" => "inb-other", "session_id" => "thread-1",
             "payload_sha256" => "a" * 64)
@@ -87,6 +93,47 @@ module Ace
             digest: "a" * 64, payload: "hello")
           assert_equal true, result["pre_submit"]
           refute result["accepted"]
+        end
+
+        def test_stalled_real_process_is_killed_at_the_deadline
+          pid_file = File.join(@dir, "child.pid")
+          script = File.join(@dir, "stalling-codex")
+          File.write(script, <<~SH)
+            #!/bin/sh
+            echo $$ > '#{pid_file}'
+            exec sleep 30
+          SH
+          FileUtils.chmod(0o755, script)
+          executor = NativeQueueExecutor.new(codex: script, submit_timeout_s: 0.3)
+
+          started = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+          result = executor.submit(agent: "codex", thread: "thread-1", event_id: "inb-12345678",
+            digest: "a" * 64, payload: "hello")
+          elapsed = Process.clock_gettime(Process::CLOCK_MONOTONIC) - started
+
+          refute result["accepted"]
+          refute result["pre_submit"]
+          assert_match(/timed out/, result["error"])
+          assert_operator elapsed, :<, 5, "deadline must not wait for the stalled child"
+          child_pid = File.read(pid_file).to_i
+          assert_raises(Errno::ESRCH) { Process.kill(0, child_pid) }
+        end
+
+        def test_real_process_receives_stdin_payload_and_validates_receipt
+          script = File.join(@dir, "pi-client")
+          File.write(script, <<~SH)
+            #!/bin/sh
+            cat > /dev/null
+            printf '{"ok":true,"id":"inb-12345678","session_id":"thread-1","payload_sha256":"%s"}\\n' \\
+              "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          SH
+          FileUtils.chmod(0o755, script)
+          executor = NativeQueueExecutor.new(pi_client: script, submit_timeout_s: 5)
+
+          result = executor.submit(agent: "pi", thread: "thread-1", event_id: "inb-12345678",
+            digest: "a" * 64, payload: "hello")
+
+          assert result["accepted"]
         end
       end
     end

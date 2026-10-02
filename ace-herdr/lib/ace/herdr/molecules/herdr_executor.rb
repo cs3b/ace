@@ -2,6 +2,7 @@
 
 require "open3"
 require "json"
+require "timeout"
 
 module Ace
   module Herdr
@@ -42,61 +43,28 @@ module Ace
           run!([@binary, "agent", "prompt", pane, text])
         end
 
-        # A bounded, payload-free wake. Drain pipes with bounded memory while
-        # managing the child deadline directly, so a stalled process cannot
+        # A bounded, payload-free wake. The child deadline is managed by
+        # BoundedProcess (process-group kill), so a stalled process cannot
         # keep the inbox event lock through Open3.capture3 cleanup.
         def agent_prompt_bounded(pane:, text:, timeout_ms:)
           cmd = [@binary, "agent", "prompt", pane, text]
-          Open3.popen3(*cmd, pgroup: true) do |stdin, stdout, stderr, waiter|
-            stdin.close
-            buffers = {stdout => +"", stderr => +""}
-            streams = [stdout, stderr]
-            oversized = false
-            deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + timeout_ms / 1000.0
-            until streams.empty? && waiter.join(0)
-              remaining = deadline - Process.clock_gettime(Process::CLOCK_MONOTONIC)
-              if remaining <= 0
-                begin
-                  Process.kill("KILL", -waiter.pid)
-                rescue Errno::ESRCH
-                  nil
-                end
-                waiter.join
-                raise AgentNotReadyError, "herdr wake timed out after #{timeout_ms}ms"
-              end
-              if streams.empty?
-                waiter.join([remaining, 0.02].min)
-                next
-              end
-
-              ready = IO.select(streams, nil, nil, [remaining, 0.02].min)
-              next unless ready
-
-              ready.first.each do |io|
-                chunk = io.read_nonblock(4096, exception: false)
-                if chunk.nil?
-                  io.close
-                  streams.delete(io)
-                elsif chunk != :wait_readable
-                  buffer = buffers.fetch(io)
-                  available = WAKE_OUTPUT_LIMIT - buffer.bytesize
-                  oversized = true if chunk.bytesize > available
-                  buffer << chunk.byteslice(0, available) if available.positive?
-                end
-              end
+          result = BoundedProcess.call(cmd, stdin_data: "",
+            timeout_s: timeout_ms / 1000.0, output_limit: WAKE_OUTPUT_LIMIT)
+          execution = ExecutionResult.new(
+            stdout: result.stdout.strip, stderr: result.stderr.strip,
+            success: result.status.success?, exit_code: result.status.exitstatus || -1
+          )
+          unless execution.success?
+            error = classify(execution, cmd)
+            if result.oversized && error.is_a?(CommandError)
+              raise CommandError, "herdr wake output exceeded #{WAKE_OUTPUT_LIMIT} bytes (exit #{execution.exit_code})"
             end
-            result = ExecutionResult.new(stdout: buffers.fetch(stdout).strip, stderr: buffers.fetch(stderr).strip,
-              success: waiter.value.success?, exit_code: waiter.value.exitstatus || -1)
-            unless result.success?
-              error = classify(result, cmd)
-              if oversized && error.is_a?(CommandError)
-                raise CommandError, "herdr wake output exceeded #{WAKE_OUTPUT_LIMIT} bytes (exit #{result.exit_code})"
-              end
-              raise error
-            end
-
-            result
+            raise error
           end
+
+          execution
+        rescue Timeout::Error
+          raise AgentNotReadyError, "herdr wake timed out after #{timeout_ms}ms"
         rescue Errno::ENOENT, Errno::EACCES => e
           raise ExecutorUnavailableError, e.message
         end

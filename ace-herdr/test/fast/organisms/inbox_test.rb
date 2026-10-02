@@ -246,6 +246,29 @@ module Ace
           assert_equal THREAD, @native.calls.first[:thread]
         end
 
+        def test_delivered_event_reconciles_to_completed_on_consumption_proof
+          enqueue
+          delivered = @inbox.deliver(event: @event)
+          assert_equal "delivered", delivered["state"]
+          assert_equal 1, @native.calls.length
+
+          assert_equal "completed", reconcile(proof(delivered))["state"]
+        end
+
+        def test_delivered_event_superseded_by_signed_observation_returns_to_queued
+          enqueue
+          delivered = @inbox.deliver(event: @event)
+          assert_equal "delivered", delivered["state"]
+
+          assert_equal "queued", reconcile(proof(delivered, outcome: "superseded"))["state"]
+          @native.result = {"accepted" => true, "stdout" => "queued"}
+          redelivered = @inbox.deliver(event: @event)
+
+          assert_equal "delivered", redelivered["state"]
+          assert_equal 2, redelivered["claim_generation"]
+          assert_equal 2, @native.calls.length
+        end
+
         def test_reconciliation_requires_matching_observed_proof
           enqueue
           @native.result = {"accepted" => false, "error" => "stalled"}
