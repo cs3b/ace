@@ -19,7 +19,7 @@ class PullRequestEvidenceResolverTest < Minitest::Test
 
   def test_resolve_returns_server_and_normalized_evidence
     evidence = Ace::Git::ProviderPullRequest.new(
-      server_name: "forgejo-lab", number: 25, title: "t", state: :open,
+      server_name: "forgejo-lab", number: 25, title: "t", body: nil, state: :open,
       head_ref: "feature", base_ref: "main", head_sha: "a" * 40, author: "u",
       url: nil, draft: true, merged_at: nil, head_repository_url: nil,
       base_repository_url: nil, merge_commit_sha: nil
@@ -49,7 +49,7 @@ class PullRequestEvidenceResolverTest < Minitest::Test
       define_method(:pull_request) do |number:|
         seen = server.name
         Ace::Git::ProviderPullRequest.new(
-          server_name: server.name, number: number, title: "t", state: :open,
+          server_name: server.name, number: number, title: "t", body: nil, state: :open,
           head_ref: "f", base_ref: "m", head_sha: "a" * 40, author: "u",
           url: nil, draft: nil, merged_at: nil, head_repository_url: nil,
           base_repository_url: nil, merge_commit_sha: nil

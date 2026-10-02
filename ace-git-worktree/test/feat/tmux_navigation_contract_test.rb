@@ -71,7 +71,7 @@ class CreateCommandTmuxContractTest < Minitest::Test
     ENV.delete("TMUX")
 
     evidence = Ace::Git::ProviderPullRequest.new(
-      server_name: "forgejo-lab", number: 26, title: "Add authentication feature",
+      server_name: "forgejo-lab", number: 26, title: "Add authentication feature", body: nil,
       state: :open, head_ref: "feature/auth", base_ref: "main", head_sha: "a" * 40,
       author: "dev", url: nil, draft: true, merged_at: nil,
       head_repository_url: "https://forge.example.com/o/r",
