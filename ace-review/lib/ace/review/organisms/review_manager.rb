@@ -790,7 +790,10 @@ module Ace
             # Source routes differ per forge: GitHub serves blobs at /blob/,
             # Forgejo at /src/commit/. Route on the resolved snapshot provider.
             route = (metadata["provider"] == "github") ? "blob" : "src/commit"
-            url = "#{repository_url}/#{route}/#{sha}/#{URI::DEFAULT_PARSER.escape(path)}" unless repository_url.empty?
+            encoded = path.split("/").map { |part|
+              part.gsub(/[^A-Za-z0-9._~!$&'()*+,;=@:-]/) { |c| c.bytes.map { |b| format("%%%02X", b) }.join }
+            }.join("/")
+            url = "#{repository_url}/#{route}/#{sha}/#{encoded}" unless repository_url.empty?
             {path: path, ref: ref, authority: authority,
              snapshot: source_at_ref(path, sha, metadata, session_dir), url: url}
           end
