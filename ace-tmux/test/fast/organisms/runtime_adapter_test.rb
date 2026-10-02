@@ -285,4 +285,62 @@ class TmuxRuntimeAdapterNativeTest < Minitest::Test
     assert backend.wait_agent(pane: "%2", states: %w[idle working], timeout: 5)
     assert_empty wait_calls
   end
+
+  def test_native_shell_wait_matches_completion_alias_via_idle
+    surface = Object.new
+    surface.define_singleton_method(:fetch_pane_profile) { |_pane| {interactive_cli: false} }
+    surface.define_singleton_method(:capture_recent_output) { |**_options| "ready\n$ " }
+    backend = Ace::Tmux::NativeRuntimeBackend.new(
+      executor: @executor, env: {"ACE_TMUX_SESSION" => "main"}, surface: surface
+    )
+
+    assert backend.wait_agent(pane: "%2", states: %w[done], timeout: 5)
+  end
+
+  def test_native_window_option_reads_use_window_scope
+    @adapter.ensure_window(name: "work", root: "/tmp/work")
+    @adapter.ensure_window(name: "work", root: "/tmp/work")
+
+    reads = @executor.commands.select { |command| command[1] == "show-options" && command.last == "@ace_runtime_root" }
+    refute_empty reads
+    assert_includes reads.first, "-w"
+  end
+
+  def test_native_window_option_reads_tolerate_trailing_newline
+    executor = NewlineShowOptionsExecutor.new
+    adapter = Ace::Tmux::RuntimeAdapter.new(
+      backend: Ace::Tmux::NativeRuntimeBackend.new(executor: executor, env: {"ACE_TMUX_SESSION" => "main"})
+    )
+
+    first = adapter.ensure_window(name: "work", root: "/tmp/work")
+    assert_equal first, adapter.ensure_window(name: "work", root: "/tmp/work")
+    assert_equal 1, executor.commands.count { |command| command[1] == "new-window" }
+  end
+
+  def test_native_context_preserves_session_and_window_when_pane_is_unresolved
+    executor = FakeTmuxExecutor.new
+    backend = Ace::Tmux::NativeRuntimeBackend.new(
+      executor: executor,
+      env: {"TMUX" => "1", "ACE_TMUX_SESSION" => "main", "ACE_TMUX_WINDOW" => "work"}
+    )
+
+    context = backend.context
+
+    assert_equal true, context[:in_runtime]
+    assert_equal "main", context[:session]
+    assert_equal "work", context[:window]
+    assert_nil context[:pane]
+  end
+
+  class NewlineShowOptionsExecutor < FakeTmuxExecutor
+    def capture(command)
+      result = super
+      if command[1] == "show-options" && !result.stdout.to_s.empty?
+        return Ace::Tmux::Molecules::ExecutionResult.new(
+          stdout: "#{result.stdout}\n", stderr: result.stderr, success: result.success?, exit_code: 0
+        )
+      end
+      result
+    end
+  end
 end

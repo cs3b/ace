@@ -21,8 +21,8 @@ module Ace
         return {in_runtime: false, session: nil, window: nil, pane: nil} unless present
 
         session = resolver.resolve_session.session
-        window = resolver.resolve_window(session: session).window if !env["TMUX"].to_s.empty? || !env["ACE_TMUX_WINDOW"].to_s.empty?
-        pane = resolver.resolve_pane(session: session, window: window).pane_target if window
+        window = context_window(session)
+        pane = context_pane(session, window)
         {in_runtime: true, session: session, window: window, pane: pane}
       rescue Ace::Tmux::TargetResolutionError
         {in_runtime: false, session: nil, window: nil, pane: nil}
@@ -128,7 +128,8 @@ module Ace
         interval = (timeout.to_f / 5).clamp(0.02, 0.2)
         # The stability+settle completion wait only supports interactive CLI
         # panes and only observes completion. Shell panes and any requested
-        # "working" state must poll the observed state instead.
+        # "working" state must poll the observed state instead. Shell panes
+        # only ever observe idle/working, so completion aliases read as idle.
         if (desired - completion_states).empty? && interactive_cli_pane?(pane)
           return surface.wait_for_condition(
             condition: "agent", pane: pane, timeout: timeout,
@@ -137,9 +138,10 @@ module Ace
           )
         end
 
+        observable = desired.flat_map { |state| %w[idle working].include?(state) ? [state] : %w[idle] }.uniq
         deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + timeout.to_f
         loop do
-          return true if desired.include?(agent_state(pane))
+          return true if observable.include?(agent_state(pane))
           raise Ace::Tmux::WaitTimeoutError if Process.clock_gettime(Process::CLOCK_MONOTONIC) >= deadline
 
           sleep(interval)
@@ -178,6 +180,24 @@ module Ace
         false
       end
 
+      # A missing pane must not erase an explicitly available session or
+      # window from the reported context.
+      def context_window(session)
+        return nil if env["TMUX"].to_s.empty? && env["ACE_TMUX_WINDOW"].to_s.empty?
+
+        resolver.resolve_window(session: session).window
+      rescue Ace::Tmux::TargetResolutionError
+        nil
+      end
+
+      def context_pane(session, window)
+        return nil unless window
+
+        resolver.resolve_pane(session: session, window: window).pane_target
+      rescue Ace::Tmux::TargetResolutionError
+        nil
+      end
+
       def pane_exists?(pane)
         result = executor.capture(B.display_message_target(pane, "\#{pane_id}", tmux: tmux))
         result.success? && !result.stdout.to_s.empty?
@@ -193,8 +213,12 @@ module Ace
       def option(target, name, pane: false)
         command = [tmux, "show-options", "-v"]
         command << "-p" if pane
+        # Runtime window marks live in the window scope; without -w tmux
+        # reports the option as unset and idempotency checks conflict.
+        command << "-w" unless pane
         result = executor.capture(command + ["-t", target, name])
-        result.stdout unless !result.success? || result.stdout.to_s.empty?
+        value = result.stdout.to_s.strip
+        value unless !result.success? || value.empty?
       end
 
       def query(command)
