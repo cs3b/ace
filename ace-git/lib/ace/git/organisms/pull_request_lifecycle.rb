@@ -106,6 +106,10 @@ module Ace
           # provider's body capability when available (nil stays absence).
           hydrated_body = provider.pull_request_body(number: reference.number)
           after = after.with(body: hydrated_body) unless hydrated_body.nil?
+          # Hydration is itself a remote read: re-verify the PR head after it
+          # so the snapshot can never pair a new body with an old head.
+          verified = provider.pull_request(number: reference.number)
+          after = after.with(head_sha: verified.head_sha)
           if after.head_sha != head || latest_details.base_sha != details.base_sha ||
               after.head_ref != before.head_ref || after.base_ref != before.base_ref ||
               after.head_repository_url != before.head_repository_url ||
