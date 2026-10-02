@@ -132,6 +132,44 @@ class ForgejoIssueApiTest < AceGitForgejoTestCase
     provider.add_issue_label(number: 42, label: "ace:tracked")
   end
 
+  def test_add_issue_label_treats_forbidden_org_labels_as_absent
+    created = false
+    calls = []
+    runner = lambda do |args:, **_options|
+      calls << args[1]
+      if args[2].include?("/api/v1/orgs/")
+        next {success: false, status: 403, stdout: "{}"}
+      end
+      if args[1] == "POST" && args[2].end_with?("/repos/owner/repo/labels")
+        created = true
+        next {success: true, status: 201, stdout: {"id" => 9, "name" => "ace:tracked"}.to_json}
+      end
+      if args[2].include?("/repos/owner/repo/labels?page=")
+        listed = created ? [{"id" => 9, "name" => "ace:tracked"}] : []
+        next {success: true, status: 200, stdout: listed.to_json}
+      end
+      {success: true, status: 200, stdout: "{}"}
+    end
+    provider = Ace::Git::Forgejo::Provider.new(server: SERVER, runner: runner)
+    provider.add_issue_label(number: 42, label: "ace:tracked")
+    assert_includes calls, "POST"
+  end
+
+  def test_repository_labels_fall_back_when_org_listing_is_forbidden
+    runner = lambda do |args:, **_options|
+      if args[2].include?("/api/v1/orgs/")
+        next {success: false, status: 403, stdout: "{}"}
+      end
+      if args[2].include?("/repos/owner/repo/labels?page=")
+        next {success: true, status: 200, stdout: [{"id" => 7, "name" => "ace:tracked"}].to_json}
+      end
+      {success: true, status: 200, stdout: "{}"}
+    end
+    api = Ace::Git::Forgejo::IssueApi.new(server: SERVER, timeout: 5, runner: runner)
+    labels = api.repository_labels
+    assert_equal [7], labels.map { |label| label["id"] }
+  end
+
   def test_missing_issue_state_is_malformed
     runner = lambda do |args:, **_options|
       stdout = if args[2].include?("/issues/42?")
