@@ -1081,6 +1081,31 @@ class TaskManagerTest < AceTaskTestCase
     end
   end
 
+  def test_post_create_identity_mismatch_retains_linked_subtask
+    adapter = Object.new
+    adapter.define_singleton_method(:validate_link!) { |**_args| true }
+    adapter.define_singleton_method(:sync_task) do |task:, before_create: nil, **_|
+      before_create&.call
+      raise Ace::Git::ProviderIdentityMismatchError, "Multiple ACE tracking comments on issue #276"
+    end
+    adapter.define_singleton_method(:clear_task) { |**_args| true }
+    adapter.define_singleton_method(:reconcile_comment) { |task:, **_| }
+    @manager.stub(:issue_adapter, adapter) do
+      parent = @manager.create("Parent for subtask")
+      error = assert_raises(Ace::Git::ProviderIdentityMismatchError) do
+        @manager.create_subtask(parent.id, "Committed subtask", remote_issue: issue_identity)
+      end
+      assert_match(/Multiple ACE tracking comments/, error.message)
+      specs = Dir.glob(File.join(@manager.root_dir, "**", "*.s.md"))
+      assert_equal 2, specs.length
+      subtask_specs = specs.select { |path| File.basename(path).include?("committed-subtask") }
+      assert_equal 1, subtask_specs.length
+      frontmatter = YAML.safe_load_file(subtask_specs.first, permitted_classes: [Time, Date])
+      assert frontmatter["remote_issue"]
+      assert frontmatter["issue_sync_pending"]
+    end
+  end
+
   def test_ref_sync_fails_for_pending_task_without_identity
     adapter = fake_issue_adapter { |task:, **_| raise Ace::Git::ProviderUnknownOutcomeError, "unknown" }
     @manager.stub(:issue_adapter, adapter) do

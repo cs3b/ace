@@ -498,8 +498,18 @@ module Ace
               sync_started = true
               result = sync_linked_issues_for(created_subtask, reason: "create")
             end
-            if result[:success] == false && result[:error].to_s.start_with?("Ace::Git::ProviderIdentityMismatchError")
+            if result[:success] == false && result[:error].to_s.start_with?("Ace::Git::ProviderIdentityMismatchError") &&
+                !result[:committed_create]
+              # Ownership was rejected before any remote mutation: the subtask
+              # must not survive as a second local claimant for the issue.
               FileUtils.rm_rf(created_subtask.path)
+              raise Ace::Git::ProviderIdentityMismatchError, result[:error].to_s
+            end
+            if result[:success] == false &&
+                result[:error].to_s.start_with?("Ace::Git::ProviderIdentityMismatchError")
+              # Post-create rejection (e.g. a concurrent external marker):
+              # the committed marker needs a local cleanup record, so the
+              # subtask and its pending identity stay for replay.
               raise Ace::Git::ProviderIdentityMismatchError, result[:error].to_s
             end
           rescue StandardError
