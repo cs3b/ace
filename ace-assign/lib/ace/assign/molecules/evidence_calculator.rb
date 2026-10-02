@@ -87,11 +87,12 @@ module Ace
 
         private
 
-        # Accepted and uncertain effects are unresolved by definition; a
-        # rejected effect stays unresolved when its claim was dispatched
-        # (authorization consumed), because the effect may have happened.
+        # Accepted, uncertain, and failed effects are unresolved by
+        # definition; a rejected effect stays unresolved when its claim was
+        # dispatched (authorization consumed), because the effect may have
+        # happened.
         def unresolved_service_state?(request)
-          %w[accepted uncertain].include?(request["state"]) ||
+          %w[accepted uncertain failed].include?(request["state"]) ||
             (request["state"] == "rejected" && request["consumed"] != false)
         end
 
