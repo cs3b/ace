@@ -1637,7 +1637,17 @@ module Ace
         # completes; an absent directory cannot attest a zero-findings review.
         def save_campaign_feedback_metadata(session_dir, result)
           path = File.join(session_dir, "metadata.yml")
-          metadata = YAML.safe_load_file(path, permitted_classes: [Time, Date, Symbol])
+          # Session metadata is symbol-keyed YAML; normalize before any key
+          # reads so the completed-execution rule and the binding check see
+          # string keys, matching the campaign evidence reader.
+          normalize = lambda do |value|
+            case value
+            when Hash then value.to_h { |k, v| [k.to_s, normalize.call(v)] }
+            when Array then value.map { |v| normalize.call(v) }
+            else value
+            end
+          end
+          metadata = normalize.call(YAML.safe_load_file(path, permitted_classes: [Time, Date, Symbol]))
           return unless metadata["campaign_binding"]
           extraction = {"status" => result ? "failed" : "skipped"}
           if result && result[:success]
@@ -1650,8 +1660,9 @@ module Ace
             unless result[:items_count] == ids.size && ids.uniq.size == ids.size
               raise Errors::BundleProcessingError, "feedback extraction inventory is incomplete"
             end
-            entries = metadata["models"] || [YAML.safe_load_file(File.join(session_dir, "llm_metadata.yml"),
-              permitted_classes: [Time, Date, Symbol])]
+            entries = metadata["models"] || [normalize.call(YAML.safe_load_file(
+              File.join(session_dir, "llm_metadata.yml"), permitted_classes: [Time, Date, Symbol]
+            ))]
             # Same completed rule as the campaign evidence reader: a failed
             # provider that left partial output is not a reviewed report.
             digests = entries.select do |entry|

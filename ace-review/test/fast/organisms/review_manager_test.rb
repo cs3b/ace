@@ -2424,7 +2424,7 @@ class ReviewManagerTest < AceReviewTest
   # ---- Delta review rounds (8wq.t.1qb.0) ----
 
   def setup_delta_repo
-    git = ->(*args) { system("git", *args, chdir: @test_dir) or raise "git #{args.join(' ')} failed" }
+    git = ->(*args) { system("git", *args, chdir: @test_dir) or raise "git #{args.join(" ")} failed" }
     git.call("init", "-q")
     git.call("config", "user.email", "test@example.com")
     git.call("config", "user.name", "Test")
@@ -2516,7 +2516,7 @@ class ReviewManagerTest < AceReviewTest
 
   def test_noop_delta_round_records_session_without_model_calls
     setup_delta_repo
-    prior = write_delta_prior_session(@delta_c2)
+    write_delta_prior_session(@delta_c2)
     options = Ace::Review::Models::ReviewOptions.new(pr: "7", delta: :auto, preset: "pr")
 
     result = nil
@@ -2688,5 +2688,33 @@ class ReviewManagerTest < AceReviewTest
       "baseRefName" => "main",
       "headRefName" => "feature"
     }.merge(hash)
+  end
+
+  def test_extraction_inventory_excludes_failed_provider_reports
+    Dir.mktmpdir do |dir|
+      session_dir = File.join(dir, "session")
+      FileUtils.mkdir_p(session_dir)
+      report = File.join(session_dir, "review-role-review-codex.md")
+      File.write(report, "substantive review")
+      metadata = {
+        campaign_binding: {round_id: "r1"},
+        models: [
+          {status: "failed", output_file: nil, report_sha256: nil, completed_at: Time.now.utc.iso8601,
+           execution: {status: "failed", provider: "gemini", model: "gemini"}},
+          {status: "success", output_file: "review-role-review-codex.md",
+           report_sha256: Digest::SHA256.file(report).hexdigest, completed_at: Time.now.utc.iso8601,
+           execution: {status: "succeeded", provider: "codex", model: "gpt-6-sol"}}
+        ]
+      }
+      File.write(File.join(session_dir, "metadata.yml"), YAML.dump(metadata))
+      manager = Ace::Review::Organisms::ReviewManager.new(project_root: dir)
+      manager.send(:save_campaign_feedback_metadata, session_dir,
+        {success: true, paths: [], items_count: 0})
+      saved = YAML.safe_load_file(File.join(session_dir, "metadata.yml"), permitted_classes: [Symbol])
+      extraction = saved["feedback_extraction"] || saved[:feedback_extraction]
+      assert_equal "succeeded", extraction["status"] || extraction[:status]
+      digests = extraction["report_sha256"] || extraction[:report_sha256]
+      assert_equal [Digest::SHA256.file(report).hexdigest], digests
+    end
   end
 end
