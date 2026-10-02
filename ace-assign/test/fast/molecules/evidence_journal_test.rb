@@ -64,9 +64,15 @@ module Ace
         end
       end
 
-      def terminal_receipt(binding, outcome)
+      def terminal_receipt(repo, binding, outcome)
+        evidence = File.join(repo, "forge", "receipt-#{outcome}")
+        FileUtils.mkdir_p(File.dirname(evidence))
+        content = "ace-service-attestation request:#{binding["request_id"]} " \
+          "input:#{binding["input_digest"]} outcome:#{outcome}\n"
+        File.write(evidence, content)
         binding.merge("outcome" => outcome, "executor_uid" => binding["executor_uid"],
-          "evidence" => [{"ref" => "forge/receipt-#{outcome}", "sha256" => "b" * 64}])
+          "evidence" => [{"ref" => "forge/receipt-#{outcome}",
+                          "sha256" => Digest::SHA256.hexdigest(content)}])
       end
 
       def test_service_request_claim_is_idempotent_and_journal_backed
@@ -100,10 +106,10 @@ module Ace
           end
           assert_raises(AttemptErrors::ReceiptRejected) do
             journal.transition_service_request("req-1", state: "succeeded",
-              receipt: terminal_receipt(binding, "failed"), validated: true)
+              receipt: terminal_receipt(repo, binding, "failed"), validated: true)
           end
           journal.transition_service_request("req-1", state: "succeeded",
-            receipt: terminal_receipt(binding, "succeeded"), validated: true)
+            receipt: terminal_receipt(repo, binding, "succeeded"), validated: true)
           reloaded = Molecules::EvidenceJournal.new(repo_root: repo, ref: REF, checkout_root: root)
           assert_equal "succeeded", reloaded.service_request("req-1")["state"]
           assert_equal 3, reloaded.read_events("assignment-1").size

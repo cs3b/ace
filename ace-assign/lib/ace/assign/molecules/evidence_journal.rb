@@ -230,7 +230,8 @@ module Ace
             real = begin
               File.realpath(path)
             rescue Errno::ENOENT, Errno::EACCES, Errno::ELOOP
-              next false
+              raise AttemptErrors::ReceiptRejected,
+                "Service terminal receipt evidence is unverifiable: #{item["ref"]}"
             end
             intact = begin
               real.start_with?(repo_root + File::SEPARATOR) &&
@@ -240,6 +241,15 @@ module Ace
             end
             raise AttemptErrors::ReceiptRejected,
               "Service terminal receipt evidence is unverifiable: #{item["ref"]}" unless intact
+            attestation = /^ace-service-attestation request:#{Regexp.escape(current["request_id"])} \
+input:#{Regexp.escape(current["input_digest"])} outcome:(\S+)( no-effect:(\S+))?$/
+            attested = File.read(real).scan(attestation).first
+            attested_outcome = state == "failed-settled" ? "failed" : state
+            unless attested && attested.first == attested_outcome &&
+                (state == "failed-settled" ? attested[2] == "true" : true)
+              raise AttemptErrors::ReceiptRejected,
+                "Service terminal receipt evidence does not attest #{attested_outcome}: #{item["ref"]}"
+            end
           end
         end
 
