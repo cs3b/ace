@@ -28,9 +28,10 @@ module Ace
         end
 
         def sync(number:, task_id:, task_link:, task_status:, previous_task_id: nil)
-          # Reparenting/promotion changes the local ID; the remote marker still
-          # names the previous ID until this sync transfers ownership.
-          snapshot = validate_link!(number: number, task_id: previous_task_id || task_id)
+          # Reparenting/promotion changes the local ID; the remote marker may
+          # still name the previous ID, or may already carry the new one when
+          # a prior sync failed partway. Both count as this task's ownership.
+          snapshot = validate_link!(number: number, task_id: task_id, previous_task_id: previous_task_id)
           sticky = sticky_comment(snapshot)
           desired_line = "Tracked in ace-task: [#{task_id}](#{task_link})"
           preserved = Array(sticky&.dig(:body).to_s.lines).map(&:rstrip).reject do |line|

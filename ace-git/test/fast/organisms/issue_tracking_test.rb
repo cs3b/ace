@@ -109,4 +109,19 @@ class IssueTrackingTest < AceGitTestCase
     assert_empty @provider.comments
     refute_includes @provider.labels, "ace:tracked"
   end
+
+  def test_reparent_replay_accepts_marker_already_on_new_id
+    @provider.comments << {id: 1, body: "<!-- ace-task:tracked -->\nTracked in ace-task: [8pp.t.q7w.new](x.md)"}
+    @service.sync(number: 42, task_id: "8pp.t.q7w.new", previous_task_id: "8pp.t.q7w.old",
+                  task_link: "x.md", task_status: "pending")
+    assert_match(/Tracked in ace-task: \[8pp.t.q7w\.new\]/, @provider.comments.first[:body])
+    assert_includes @provider.labels, "ace:tracked"
+  end
+
+  def test_sync_accepts_ownership_from_either_previous_or_current_id
+    @provider.comments << {id: 1, body: "<!-- ace-task:tracked -->\nTracked in ace-task: [8pp.t.q7w.old](x.md)"}
+    @service.sync(number: 42, task_id: "8pp.t.q7w.new", previous_task_id: "8pp.t.q7w.old",
+                  task_link: "x.md", task_status: "pending")
+    assert_match(/Tracked in ace-task: \[8pp\.t\.q7w\.new\]/, @provider.comments.first[:body])
+  end
 end
