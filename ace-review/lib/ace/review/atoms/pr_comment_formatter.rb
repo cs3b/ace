@@ -54,7 +54,7 @@ module Ace
           summary = build_summary(comments, reviews, review_threads, pr_number, pr_title)
           inline_section = build_inline_comments_section(review_threads)
           unresolved_section = build_unresolved_section(comments, reviews)
-          resolved_section = build_resolved_section(reviews)
+          resolved_section = build_resolved_section(reviews, current_head: comments_data[:head_sha].to_s)
           comments_table = build_comments_table(comments, reviews)
 
           # Combine sections
@@ -191,13 +191,23 @@ module Ace
         # Build resolved feedback section
         #
         # @param reviews [Array<Hash>] Code reviews
+        # @param current_head [String] Reviewed PR head (empty when unknown)
         # @return [String, nil] Resolved section or nil if empty
-        def self.build_resolved_section(reviews)
+        def self.build_resolved_section(reviews, current_head: nil)
           resolved = []
+          current = current_head.to_s
 
-          # Add approvals
+          # Add approvals. Approvals attach to a reviewed commit; only those
+          # matching the current head are current approvals, earlier-head
+          # approvals are labeled, and unknown-head approvals stay unlabeled.
           reviews.select { |r| r[:state] == "APPROVED" }.each do |review|
-            resolved << "@#{review[:author]} approved changes"
+            review_head = review[:head_sha].to_s
+            label = if current.empty? || review_head.empty? || review_head == current
+                      ""
+                    else
+                      " (for earlier head #{review_head[0, 12]})"
+                    end
+            resolved << "@#{review[:author]} approved changes#{label}"
           end
 
           return nil if resolved.empty?

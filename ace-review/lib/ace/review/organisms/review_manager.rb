@@ -1501,8 +1501,12 @@ module Ace
           reviewed_server = options.pr_metadata&.fetch("server_name", nil)
           reviewed_repo = options.pr_metadata&.fetch("repository_url", nil)
           reviewed_number = options.pr_metadata&.fetch("number", nil)
+          # Normalize both sides: forgejo strips .git from its PR URL while
+          # comment evidence retains the configured URL, so exact comparison
+          # would fail a successful post.
+          normalize = ->(url) { url.to_s.chomp("/").sub(/\.git\z/i, "") }
           if (reviewed_server && receipt.comment.server_name != reviewed_server) ||
-             (reviewed_repo && receipt.comment.repository_url != reviewed_repo) ||
+             (reviewed_repo && normalize.call(receipt.comment.repository_url) != normalize.call(reviewed_repo)) ||
              (reviewed_number && receipt.comment.pr_number != reviewed_number)
             raise Ace::Git::ProviderIdentityMismatchError,
               "Posted comment identity (#{receipt.comment.server_name}/#{receipt.comment.repository_url}##{receipt.comment.pr_number}) does not match the reviewed PR"

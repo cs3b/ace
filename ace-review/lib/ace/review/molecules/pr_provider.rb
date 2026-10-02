@@ -141,8 +141,11 @@ module Ace
              comments: [{id: comment.id, author: comment.author, body: comment.body, url: comment.url}]}
           end
           reviews = snapshot.review_evidence.reviews.map do |review|
+            # Carry the reviewed commit so the formatter can tell
+            # current-head approvals from approvals of earlier heads.
             {id: review.id, author: review.author, body: review.body,
-             state: review.state.to_s.upcase, url: review.url}
+             state: review.state.to_s.upcase, url: review.url,
+             head_sha: review.head_sha}
           end
           {
             success: true, comments: issue_comments, review_threads: threads,
