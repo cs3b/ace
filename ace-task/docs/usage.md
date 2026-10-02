@@ -55,8 +55,11 @@ issue_sync_pending: true
 
 `issue_sync_pending` appears when a linked change or clear has not completed.
 For a failed clear, `issue_sync_operation: clear` records the operation so
-`issue-sync --pending` resumes cleanup. The exact `remote_issue` identity
-remains available for replay.
+`issue-sync --pending` resumes cleanup. When a reparent changed the task ID
+before synchronization, `issue_sync_previous_id` records the outgoing ID the
+remote marker still names; replay proves ownership against both IDs and clears
+the field after reconciliation. The exact `remote_issue` identity remains
+available for replay.
 
 ### ace-task create TITLE
 

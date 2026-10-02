@@ -165,6 +165,11 @@ module Ace
             unless operation.nil? || (operation == "clear" && pending == true && frontmatter["remote_issue"].is_a?(Hash))
               issues << {type: :error, message: "Invalid issue_sync_operation", location: file_path}
             end
+            previous_id = frontmatter["issue_sync_previous_id"]
+            unless previous_id.nil? || (previous_id.is_a?(String) && !previous_id.empty?)
+              issues << {type: :error, message: "Invalid issue_sync_previous_id value (expected task ID string)",
+                         location: file_path}
+            end
           end
         end
       end

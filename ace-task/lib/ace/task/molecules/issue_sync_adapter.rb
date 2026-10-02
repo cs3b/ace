@@ -26,10 +26,11 @@ module Ace
           )
         end
 
-        def clear_task(task:)
+        def clear_task(task:, previous_task_id: nil)
           identity = task.metadata.fetch("remote_issue")
           server = IssueLink.validate!(identity)
-          tracking(server).clear(number: identity.fetch("number"), task_id: task.id)
+          tracking(server).clear(number: identity.fetch("number"), task_id: task.id,
+            previous_task_id: previous_task_id)
         end
 
         private

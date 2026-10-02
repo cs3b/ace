@@ -153,10 +153,15 @@ module Ace
           # same write as the local change so a crash cannot lose the replay.
           # The trigger mirrors sync_needed_after_update?: only changes that
           # require remote reconciliation (title/status/path/identity) count.
+          # Reparents additionally persist the outgoing ID so replay can prove
+          # ownership of a marker written under the previous task ID.
           sync_relevant_keys = [set, add, remove].compact.flat_map(&:keys).map(&:to_s)
-          deferred_sync = linked_issue(task) && task.metadata["issue_sync_operation"] != "clear" &&
-            (move_to || (sync_relevant_keys & %w[title status]).any?)
+          linked = linked_issue(task)
+          clear_pending = linked && task.metadata["issue_sync_operation"] != "clear"
+          deferred_sync = clear_pending &&
+            (move_to || move_as_child_of || (sync_relevant_keys & %w[title status]).any?)
           deferred_set = deferred_sync ? set.merge("issue_sync_pending" => true) : set
+          deferred_set = deferred_set.merge("issue_sync_previous_id" => task.id) if deferred_sync && move_as_child_of
           if has_field_updates || deferred_sync
             Ace::Support::Items::Molecules::FieldUpdater.update(
               task.file_path, set: deferred_set, add: add, remove: remove
@@ -558,7 +563,7 @@ module Ace
           keys = changes.compact.flat_map(&:keys).map(&:to_s)
           forbidden = keys.find do |key|
             key == "remote_issue" || key.start_with?("remote_issue.") ||
-              %w[issue_sync_pending issue_sync_operation github_issue github_sync_pending].include?(key)
+              %w[issue_sync_pending issue_sync_previous_id issue_sync_operation github_issue github_sync_pending].include?(key)
           end
           raise ArgumentError, "Use ace-task issue-link to change #{forbidden}" if forbidden
         end
@@ -619,7 +624,8 @@ module Ace
             return sync_result_for(task: task, issues: [identity], success: false,
               reason: reason, error: "Pending clear must be replayed")
           end
-          issue_adapter.sync_task(task: task, previous_task_id: previous_task&.id)
+          previous_id = task.metadata["issue_sync_previous_id"] || previous_task&.id
+          issue_adapter.sync_task(task: task, previous_task_id: previous_id)
           clear_issue_sync_pending(task)
           sync_result_for(task: task, issues: [identity], success: true, reason: reason)
         rescue StandardError => e
@@ -642,14 +648,14 @@ module Ace
           return unless task&.file_path && File.exist?(task.file_path)
 
           Ace::Support::Items::Molecules::FieldUpdater.update(
-            task.file_path, set: {"issue_sync_pending" => nil}
+            task.file_path, set: {"issue_sync_pending" => nil, "issue_sync_previous_id" => nil}
           )
         end
 
         def clear_issue_link(task)
           Ace::Support::Items::Molecules::FieldUpdater.update(task.file_path,
             set: {"issue_sync_pending" => true, "issue_sync_operation" => "clear"})
-          issue_adapter.clear_task(task: task)
+          issue_adapter.clear_task(task: task, previous_task_id: task.metadata["issue_sync_previous_id"])
           Ace::Support::Items::Molecules::FieldUpdater.update(task.file_path,
             set: {"remote_issue" => nil, "issue_sync_pending" => nil, "issue_sync_operation" => nil})
         end
