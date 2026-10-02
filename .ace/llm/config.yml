@@ -51,7 +51,8 @@ llm:
       - claude:sonnet:medium@ro
     review-codex:
       - codex:sol:high@ro
-    # The single independent astra review for a PR (one session per PR)
+    # Reserved: the single independent astra review for a PR (one session
+    # per PR), run explicitly by the delivery flow — not wired into presets.
     review-astra:
       - codex:astra@ro
 
