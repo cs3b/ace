@@ -199,10 +199,13 @@ module Ace
 
           # Add approvals. Approvals attach to a reviewed commit; only those
           # matching the current head are current approvals, earlier-head
-          # approvals are labeled, and unknown-head approvals stay unlabeled.
+          # approvals are labeled, and unknown-head approvals are called out
+          # as unknown instead of presenting as current.
           reviews.select { |r| r[:state] == "APPROVED" }.each do |review|
             review_head = review[:head_sha].to_s
-            label = if current.empty? || review_head.empty? || review_head == current
+            label = if review_head.empty?
+                      " (head unknown)"
+                    elsif review_head == current
                       ""
                     else
                       " (for earlier head #{review_head[0, 12]})"
