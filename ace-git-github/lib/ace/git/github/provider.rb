@@ -497,7 +497,10 @@ end
               "Thread resolution sent but confirmation unreadable for #{server.name}/#{pr.number}, thread #{thread_id}: #{e.message}; reconcile before repeating"
           end
           unless resolved["isResolved"] == true
-            raise Ace::Git::ProviderMalformedOutputError, "GitHub did not confirm thread resolution"
+            # The resolution mutation may have landed; only its evidence
+            # is unreadable. Reconcile via the thread id.
+            raise Ace::Git::ProviderUnknownOutcomeError,
+              "GitHub did not confirm thread resolution for #{server.name}/#{pr.number}, thread #{thread_id}; reconcile before repeating"
           end
           verify_post_mutation_head!(pr, expected_head, "thread #{thread_id}")
           true
