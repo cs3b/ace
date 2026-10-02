@@ -1630,8 +1630,15 @@ module Ace
               # Dry-run mode: add preview to response
               response[:dry_run_preview] = comment_result[:preview]
             else
-              # Actual posting: add comment URL
+              # Actual posting: add comment URL and the resolved identity.
               response[:comment_url] = comment_result[:comment_url]
+              response[:comment_idempotency] = comment_result[:idempotency]
+              response[:posted_to] = {
+                server_name: comment_result[:server_name],
+                repository_url: comment_result[:repository_url],
+                pr_number: comment_result[:pr_number],
+                head_sha: comment_result[:head_sha]
+              }
               response[:message] += "\n✓ Review posted to PR: #{comment_result[:comment_url]}"
             end
           elsif comment_result && !comment_result[:success]

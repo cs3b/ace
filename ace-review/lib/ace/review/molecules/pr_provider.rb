@@ -109,7 +109,7 @@ module Ace
             "url" => pr.url,
             "changedFiles" => snapshot.files.length,
             "files" => snapshot.files.map { |path| {"path" => path} },
-            "checks" => snapshot.checks.map(&:to_h)
+            "checks" => snapshot.checks.map { |check| check.to_h.transform_keys(&:to_s) }
           }
         end
 
