@@ -58,7 +58,12 @@ module Ace
             scheme = "https"
           else
             host_part, sep, remainder = rest.partition(":")
-            if sep == ":" && !remainder.start_with?("/")
+            if sep == ":" && remainder.match?(%r{\A\d+/})
+              # A numeric segment before the slash is an SSH-style port, not
+              # an scp repo path: keep it in the web authority.
+              authority = "#{host_part}:#{remainder.split("/", 2).first}"
+              path = remainder.split("/", 2).last
+            elsif sep == ":" && !remainder.start_with?("/")
               # scp-style "git@host:path"; ssh ports ride the colon and are
               # dropped from the web endpoint.
               authority = host_part.split(":").first.to_s
