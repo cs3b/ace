@@ -290,6 +290,7 @@ module Ace
         end
 
         def provider_for(server)
+          @resolved_server_url = server.url
           Ace::Git::Providers.for(server, timeout: @timeout, runner: @runner)
         end
 
