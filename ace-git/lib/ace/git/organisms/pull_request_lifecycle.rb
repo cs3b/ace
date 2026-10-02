@@ -234,6 +234,10 @@ module Ace
           )
         end
 
+        def resolved_server_url(identifier)
+          reference = parse_identifier(identifier)
+          resolve_server_for(reference).url
+        end
         private
 
         def required_head!(pull_request)
@@ -291,10 +295,6 @@ module Ace
 
         # The forge server URL for a PR identifier, resolved on demand
       # through the shared registry (pure resolution, no mutation).
-        def resolved_server_url(identifier)
-          reference = parse_identifier(identifier)
-          resolve_server_for(reference).url
-        end
 
         def provider_for(server)
           @resolved_server_url = server.url
