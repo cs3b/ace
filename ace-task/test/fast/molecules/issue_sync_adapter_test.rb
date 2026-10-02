@@ -28,7 +28,7 @@ class IssueSyncAdapterTest < AceTaskTestCase
         Ace::Git::Organisms::IssueTracking.stub(:new, tracking) { adapter.sync_task(task: task) }
       end
 
-      assert_equal({number: 42, task_id: task.id,
+      assert_equal({number: 42, task_id: task.id, previous_task_id: nil,
                     task_link: "https://forge.example/owner/repo/blob/HEAD/tasks/8pp.t.q7w/task.s.md",
                     task_status: "pending"}, captured)
     end

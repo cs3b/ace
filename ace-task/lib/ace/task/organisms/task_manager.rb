@@ -71,7 +71,7 @@ module Ace
               remote_issue: remote_issue
             )
             sync_linked_issues_for(created_task, reason: "create")
-            created_task
+            show_after_sync(created_task) || created_task
           rescue Molecules::TaskCreator::IdCollisionError
             retry if attempts < CREATE_RETRY_LIMIT
             raise CreateRetriesExhaustedError,
@@ -151,10 +151,11 @@ module Ace
           reject_issue_metadata_update!(set, add, remove)
           # Linked tasks defer remote sync: persist the pending flag in the
           # same write as the local change so a crash cannot lose the replay.
-          # Only status changes require remote reconciliation (issue state
-          # follows task status); other edits need no recovery identity.
+          # The trigger mirrors sync_needed_after_update?: only changes that
+          # require remote reconciliation (title/status/path/identity) count.
+          sync_relevant_keys = [set, add, remove].compact.flat_map(&:keys).map(&:to_s)
           deferred_sync = linked_issue(task) && task.metadata["issue_sync_operation"] != "clear" &&
-            set.is_a?(Hash) && set.key?("status")
+            (move_to || (sync_relevant_keys & %w[title status]).any?)
           deferred_set = deferred_sync ? set.merge("issue_sync_pending" => true) : set
           if has_field_updates || deferred_sync
             Ace::Support::Items::Molecules::FieldUpdater.update(
@@ -195,7 +196,7 @@ module Ace
             task_for_reparent = loader.load(current_path, id: task.id, special_folder: current_special)
             reparented = reparenter.reparent(task_for_reparent, target: move_as_child_of, resolve_ref: resolve_fn)
             sync_linked_issues_for(reparented, reason: "reparent", previous_task: task)
-            return reparented
+            return show_after_sync(reparented) || reparented
           end
 
           # Auto-archive hook: if a subtask status was set to terminal,
@@ -208,8 +209,17 @@ module Ace
           updated_task = loader.load(current_path, id: current_id, special_folder: current_special)
           if sync_needed_after_update?(task, updated_task, set: set, add: add, remove: remove, move_to: move_to)
             sync_linked_issues_for(updated_task, reason: "update", previous_task: task)
+            return show_after_sync(updated_task) || updated_task
           end
           updated_task
+        end
+
+        # Reload persisted metadata after synchronization: the in-memory task
+        # predates the pending-flag clear that a successful sync performs.
+        def show_after_sync(task)
+          return nil unless task
+
+          show(task.id)
         end
 
         # Create a subtask within a parent task.
@@ -236,7 +246,7 @@ module Ace
             remote_issue: remote_issue
           )
           sync_linked_issues_for(created_subtask, reason: "create")
-          created_subtask
+          show_after_sync(created_subtask) || created_subtask
         end
 
         def issue_sync(ref: nil, all: false, pending: false)
@@ -307,7 +317,7 @@ module Ace
           result = sync_linked_issues_for(linked, reason: "link")
           raise Ace::Git::ProviderUnreachableError, result[:error] unless result[:success]
 
-          linked
+          show_after_sync(linked) || linked
         end
 
         # Get the root directory.
@@ -609,7 +619,7 @@ module Ace
             return sync_result_for(task: task, issues: [identity], success: false,
               reason: reason, error: "Pending clear must be replayed")
           end
-          issue_adapter.sync_task(task: task)
+          issue_adapter.sync_task(task: task, previous_task_id: previous_task&.id)
           clear_issue_sync_pending(task)
           sync_result_for(task: task, issues: [identity], success: true, reason: reason)
         rescue StandardError => e
@@ -666,7 +676,13 @@ module Ace
         end
 
         def summarize_manual_sync_results(results, skipped:)
-          failures = results.reject { |result| result[:success] }.map do |result|
+          failures = results.reject { |result| result[:success] }
+          # A failed sync persists issue_sync_pending; classify it as pending
+          # (recoverable) rather than failed so replay counts stay truthful.
+          pending = failures.count do |result|
+            show(result[:task_id])&.metadata&.[]("issue_sync_pending") == true
+          end
+          failures_detail = failures.map do |result|
             {
               task_id: result[:task_id],
               remote_issues: result[:issue_ids],
@@ -674,14 +690,12 @@ module Ace
             }
           end
 
-          pending = results.count { |result| result[:offline] }
-
           {
-            synced: results.length - failures.length - pending,
-            failed: failures.length,
+            synced: results.length - failures.length,
+            failed: failures.length - pending,
             pending: pending,
             skipped: skipped,
-            failures: failures
+            failures: failures_detail
           }
         end
       end

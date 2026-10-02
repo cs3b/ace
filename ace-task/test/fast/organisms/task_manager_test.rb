@@ -355,7 +355,7 @@ class TaskManagerTest < AceTaskTestCase
 
   def test_create_with_remote_issue_validates_and_syncs
     calls = []
-    adapter = fake_issue_adapter { |task:| calls << task.metadata.fetch("remote_issue") }
+    adapter = fake_issue_adapter { |task:, **_| calls << task.metadata.fetch("remote_issue") }
     @manager.stub(:issue_adapter, adapter) do
       task = @manager.create("Linked task", remote_issue: issue_identity)
       assert_equal issue_identity, task.metadata["remote_issue"]
@@ -372,7 +372,7 @@ class TaskManagerTest < AceTaskTestCase
   end
 
   def test_offline_local_update_retains_link_and_pending_identity
-    adapter = fake_issue_adapter { |task:| raise Ace::Git::ProviderUnreachableError, "offline" }
+    adapter = fake_issue_adapter { |task:, **_| raise Ace::Git::ProviderUnreachableError, "offline" }
     @manager.stub(:issue_adapter, adapter) do
       task = @manager.create("Linked task", remote_issue: issue_identity)
       updated = @manager.update(task.id, set: {"status" => "blocked"})
@@ -383,7 +383,7 @@ class TaskManagerTest < AceTaskTestCase
   end
 
   def test_offline_create_persists_pending_in_link_write
-    adapter = fake_issue_adapter { |task:| raise Ace::Git::ProviderUnreachableError, "offline" }
+    adapter = fake_issue_adapter { |task:, **_| raise Ace::Git::ProviderUnreachableError, "offline" }
     @manager.stub(:issue_adapter, adapter) do
       task = @manager.create("Linked task", remote_issue: issue_identity)
       reloaded = @manager.show(task.id)
@@ -393,7 +393,7 @@ class TaskManagerTest < AceTaskTestCase
   end
 
   def test_priority_only_update_does_not_set_pending_flag
-    adapter = fake_issue_adapter { |task:| }
+    adapter = fake_issue_adapter { |task:, **_| }
     @manager.stub(:issue_adapter, adapter) do
       task = @manager.create("Linked task", remote_issue: issue_identity)
       @manager.update(task.id, set: {"priority" => "high"})
@@ -402,7 +402,7 @@ class TaskManagerTest < AceTaskTestCase
   end
 
   def test_status_update_sets_pending_flag_for_linked_task
-    adapter = fake_issue_adapter { |task:| raise Ace::Git::ProviderUnreachableError, "offline" }
+    adapter = fake_issue_adapter { |task:, **_| raise Ace::Git::ProviderUnreachableError, "offline" }
     @manager.stub(:issue_adapter, adapter) do
       task = @manager.create("Linked task", remote_issue: issue_identity)
       @manager.update(task.id, set: {"status" => "blocked"})
@@ -410,8 +410,43 @@ class TaskManagerTest < AceTaskTestCase
     end
   end
 
+  def test_move_sets_pending_before_relocating_linked_task
+    synced = []
+    adapter = fake_issue_adapter { |task:, **_| synced << [task.id, task.metadata["issue_sync_pending"]] }
+    @manager.stub(:issue_adapter, adapter) do
+      task = @manager.create("Linked task", remote_issue: issue_identity)
+      @manager.update(task.id, move_to: "archive")
+      # The sync that follows the move observes the durable pending flag
+      # written before the relocation; verified sync then clears it.
+      assert_equal [task.id, true], synced.last
+      refute @manager.show(task.id).metadata["issue_sync_pending"]
+    end
+  end
+
+  def test_successful_sync_clears_pending_in_returned_metadata
+    adapter = fake_issue_adapter { |task:, **_| }
+    @manager.stub(:issue_adapter, adapter) do
+      task = @manager.create("Linked task", remote_issue: issue_identity)
+      updated = @manager.update(task.id, set: {"status" => "blocked"})
+      refute updated.metadata["issue_sync_pending"]
+      assert @manager.show(task.id).metadata["issue_sync_pending"].nil?
+    end
+  end
+
+  def test_reparent_passes_previous_id_for_ownership_transfer
+    captured = []
+    adapter = fake_issue_adapter { |task:, previous_task_id: nil| captured << [task.id, previous_task_id] }
+    @manager.stub(:issue_adapter, adapter) do
+      parent = @manager.create("Parent")
+      task = @manager.create("Linked task", remote_issue: issue_identity)
+      reparented = @manager.update(task.id, move_as_child_of: parent.id)
+      refute_equal task.id, reparented.id
+      assert_equal [reparented.id, task.id], captured.last
+    end
+  end
+
   def test_bulk_sync_continues_after_failure
-    adapter = fake_issue_adapter do |task:|
+    adapter = fake_issue_adapter do |task:, **_|
       raise Ace::Git::ProviderUnreachableError, "offline" if task.title == "First"
     end
     @manager.stub(:issue_adapter, adapter) do
@@ -419,14 +454,15 @@ class TaskManagerTest < AceTaskTestCase
       @manager.create("Second", remote_issue: issue_identity(2))
       result = @manager.issue_sync(all: true)
       assert_equal 1, result[:synced]
-      assert_equal 1, result[:failed]
+      assert_equal 0, result[:failed]
+      assert_equal 1, result[:pending]
       assert_equal issue_identity(1), result[:failures].first[:remote_issues].first
     end
   end
 
   def test_bulk_sync_includes_linked_subtasks
     synced = []
-    adapter = fake_issue_adapter { |task:| synced << task.id }
+    adapter = fake_issue_adapter { |task:, **_| synced << task.id }
     @manager.stub(:issue_adapter, adapter) do
       parent = @manager.create("Parent")
       child = @manager.create_subtask(parent.id, "Linked child", remote_issue: issue_identity(9))
@@ -437,7 +473,7 @@ class TaskManagerTest < AceTaskTestCase
   end
 
   def test_create_rejects_duplicate_local_link_to_same_issue
-    adapter = fake_issue_adapter { |task:| raise Ace::Git::ProviderUnreachableError, "offline" }
+    adapter = fake_issue_adapter { |task:, **_| raise Ace::Git::ProviderUnreachableError, "offline" }
     @manager.stub(:issue_adapter, adapter) do
       @manager.create("First", remote_issue: issue_identity)
       error = assert_raises(Ace::Git::ProviderIdentityMismatchError) do
@@ -448,7 +484,7 @@ class TaskManagerTest < AceTaskTestCase
   end
 
   def test_duplicate_local_link_guard_ignores_other_issues
-    adapter = fake_issue_adapter { |task:| }
+    adapter = fake_issue_adapter { |task:, **_| }
     @manager.stub(:issue_adapter, adapter) do
       @manager.create("First", remote_issue: issue_identity)
       second = @manager.create("Second", remote_issue: issue_identity(277))
@@ -472,7 +508,7 @@ class TaskManagerTest < AceTaskTestCase
 
   def test_identical_link_retries_pending_sync
     calls = 0
-    adapter = fake_issue_adapter do |task:|
+    adapter = fake_issue_adapter do |task:, **_|
       calls += 1
       raise Ace::Git::ProviderUnreachableError, "offline" if calls == 1
     end
@@ -489,7 +525,7 @@ class TaskManagerTest < AceTaskTestCase
 
   def test_explicit_link_rejects_other_owner_before_metadata_change
     task = @manager.create("Local task")
-    adapter = fake_issue_adapter { |task:| }
+    adapter = fake_issue_adapter { |task:, **_| }
     adapter.define_singleton_method(:validate_link!) do |**_args|
       raise Ace::Git::ProviderIdentityMismatchError, "owned elsewhere"
     end
@@ -504,7 +540,7 @@ class TaskManagerTest < AceTaskTestCase
   end
 
   def test_clear_failure_keeps_recovery_identity_and_pending_flag
-    adapter = fake_issue_adapter { |task:| }
+    adapter = fake_issue_adapter { |task:, **_| }
     adapter.define_singleton_method(:clear_task) do |**_args|
       raise Ace::Git::ProviderUnreachableError, "offline"
     end
@@ -521,7 +557,7 @@ class TaskManagerTest < AceTaskTestCase
   def test_pending_clear_replays_clear_without_recreating_tracking
     sync_calls = 0
     clear_calls = 0
-    adapter = fake_issue_adapter { |task:| sync_calls += 1 }
+    adapter = fake_issue_adapter { |task:, **_| sync_calls += 1 }
     adapter.define_singleton_method(:clear_task) do |**_args|
       clear_calls += 1
       raise Ace::Git::ProviderUnknownOutcomeError, "label removal unknown" if clear_calls == 1
@@ -540,7 +576,7 @@ class TaskManagerTest < AceTaskTestCase
   end
 
   def test_different_link_conflicts_until_successful_clear
-    adapter = fake_issue_adapter { |task:| }
+    adapter = fake_issue_adapter { |task:, **_| }
     @manager.stub(:issue_adapter, adapter) do
       task = @manager.create("Linked task", remote_issue: issue_identity)
       Ace::Task::Molecules::IssueLink.stub(:from_input, issue_identity(277)) do
