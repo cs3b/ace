@@ -124,7 +124,7 @@ class ControlSurfaceTest < Minitest::Test
   def test_capture_recent_output_returns_stdout
     executor = MockExecutor.new(
       capture_responses: {
-        "tmux capture-pane -p -t %3 -S -10 -E -1" => mock_result(stdout: "Task context:")
+        "tmux capture-pane -p -t %3 -S -10" => mock_result(stdout: "Task context:")
       }
     )
     control = Ace::Tmux::Organisms::ControlSurface.new(
@@ -184,7 +184,7 @@ class ControlSurfaceTest < Minitest::Test
   def test_wait_for_output_succeeds_when_pattern_found
     executor = MockExecutor.new(
       capture_responses: {
-        "tmux capture-pane -p -t %4 -S -40 -E -1" => mock_result(stdout: "Task context:")
+        "tmux capture-pane -p -t %4 -S -40" => mock_result(stdout: "Task context:")
       }
     )
     control = Ace::Tmux::Organisms::ControlSurface.new(
@@ -198,7 +198,7 @@ class ControlSurfaceTest < Minitest::Test
   def test_wait_for_output_uses_post_send_match_when_baseline_is_provided
     executor = MockExecutor.new(
       capture_responses: {
-        "tmux capture-pane -p -t %4 -S -40 -E -1" => [
+        "tmux capture-pane -p -t %4 -S -40" => [
           mock_result(stdout: "done"),
           mock_result(stdout: "done\ndone")
         ]

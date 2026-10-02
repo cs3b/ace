@@ -105,7 +105,9 @@ module Ace
       end
 
       def write_text(pane, text)
-        run!([tmux, "send-keys", "-l", "-t", pane, text])
+        # -- terminates option parsing so messages starting with "-" are
+        # delivered literally.
+        run!([tmux, "send-keys", "-l", "-t", pane, "--", text])
         @pending_text_pane = pane
       end
 
@@ -287,8 +289,9 @@ module Ace
         else
           detail = result.stderr.to_s
           raise Ace::Tmux::TargetResolutionError, "tmux target is unavailable" if detail.match?(TARGET_ERROR_PATTERN)
-          # tmux exits non-zero with quiet output for an unset option.
-          return nil if detail.strip.empty?
+          # tmux exits non-zero for an unset option — with quiet output or
+          # "invalid option: NAME" for unset user options.
+          return nil if detail.strip.empty? || detail.match?(/invalid option/i)
 
           raise Ace::Tmux::Error, detail
         end

@@ -223,6 +223,25 @@ class TmuxRuntimeAdapterNativeTest < Minitest::Test
     refute_includes sends.last, "-l"
   end
 
+  def test_native_literal_message_terminates_option_parsing
+    @adapter.ensure_window(name: "work", root: "/tmp/work")
+    @adapter.prepare_pane(window: "work")
+    @adapter.send_text(pane: "%2", text: "--trace")
+
+    send_command = @executor.commands.find { |command| command[1] == "send-keys" }
+    assert_equal "--", send_command[-2]
+    assert_equal "--trace", send_command.last
+  end
+
+  def test_native_option_unset_invalid_option_error_reads_as_nil
+    executor = FakeTmuxExecutor.new
+    executor.fail_pane_queries = true
+    executor.pane_query_error = "invalid option: @ace_runtime_root"
+    backend = Ace::Tmux::NativeRuntimeBackend.new(executor: executor, env: {"ACE_TMUX_SESSION" => "main"})
+
+    assert_nil backend.send(:option, "@1", "@ace_runtime_root")
+  end
+
   def test_native_missing_pane_send_is_target_not_found
     @adapter.ensure_window(name: "work", root: "/tmp/work")
     @adapter.prepare_pane(window: "work")
