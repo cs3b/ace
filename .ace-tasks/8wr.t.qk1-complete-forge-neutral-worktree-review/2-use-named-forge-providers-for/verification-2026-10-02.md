@@ -1,17 +1,17 @@
 # Verification evidence — 8wr.t.qk1.2 (2026-10-02)
 
-Head tested: 8c89866f8e727f762ac8093cbed5c7868c996a24 (branch 8wr-t-qk1-2-named-forge-providers)
+Head tested: 9f8b749747030e1084923de680bca180dcfc8389 (branch 8wr-t-qk1-2-named-forge-providers, final reviewed head after review rounds r2/r3 fix applications).
 
 ## Modified-package suites (all green, hermetic mode)
 
 | Package | Tests | Failures | Notes |
 |---|---|---|---|
-| ace-git | 546 | 0 | includes new issue_tracking organisms/providers tests |
-| ace-git-github | 69 | 0 | includes issue_tracking_provider contract tests |
-| ace-git-forgejo | 93 | 0 | includes issue_api molecule tests |
-| ace-task | 427 | 0 (2 skipped) | includes issue_link/issue_sync command + molecule tests |
+| ace-git | 548 | 0 | run 8x13ka at final head; includes new issue_tracking organisms/providers tests |
+| ace-git-github | 71 | 0 | run 8x13kb at final head; includes issue_tracking_provider contract tests |
+| ace-git-forgejo | 93 | 0 | run 8x13kc at final head; includes issue_api molecule tests |
+| ace-task | 433 | 0 (2 skipped) | run 8x13kd at final head; includes issue_link/issue_sync command + molecule tests |
 
-Report roots: `.ace-local/test/reports/{git,git-github,git-forgejo,task}/8x116{r,l,m,n}/` (verify step 012 rerun; the subtree's verify-test run at the same head used report IDs under the same roots).
+Earlier runs during implementation: 546/69/93/427 at 8c89866f8 (verify step 012) and 548/70/433 intermediate runs after each review-fix application (reports under `.ace-local/test/reports/`).
 
 ## Full suite (`ace-test-suite --target all`)
 
