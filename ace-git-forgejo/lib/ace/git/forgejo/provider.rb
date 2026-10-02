@@ -152,7 +152,7 @@ module Ace
         end
 
         def add_issue_label(number:, label:)
-          match = Array(issue_api.repository_labels).find { |entry| entry["name"] == label }
+          match = Array(issue_api.repository_labels(wanted: label)).find { |entry| entry["name"] == label }
           unless match && match["id"].to_i.positive?
             raise Ace::Git::ProviderObjectNotFoundError, "Forgejo label #{label.inspect} is not configured on #{server.url}"
           end
@@ -160,7 +160,7 @@ module Ace
         end
 
         def remove_issue_label(number:, label:)
-          match = Array(issue_api.repository_labels).find { |entry| entry["name"] == label }
+          match = Array(issue_api.repository_labels(wanted: label)).find { |entry| entry["name"] == label }
           return unless match
 
           issue_api.remove_label(request_number!(number), match.fetch("id"))

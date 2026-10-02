@@ -46,8 +46,13 @@ module Ace
           request(:delete, "issues/#{number}/labels/#{label_id}")
         end
 
-        def repository_labels
+        def repository_labels(wanted: nil)
           labels = paginate("labels")
+          # Repository labels satisfy the common case; the organization label
+          # listing is an extra request that can fail (403 org scope) and must
+          # not block linking when the wanted label is already available.
+          return labels if wanted && labels.any? { |entry| entry["name"] == wanted }
+
           owner = @target.repo.split("/", 2).first
           begin
             labels + paginate("/api/v1/orgs/#{owner}/labels")

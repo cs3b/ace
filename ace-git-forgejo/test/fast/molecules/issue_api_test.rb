@@ -56,6 +56,23 @@ class ForgejoIssueApiTest < AceGitForgejoTestCase
     assert_raises(Ace::Git::ProviderAuthenticationError) { api.issue(42) }
   end
 
+  def test_add_label_skips_org_request_when_repository_label_exists
+    calls = []
+    runner = lambda do |args:, **_options|
+      calls << args[2]
+      if args[2].include?("/api/v1/orgs/")
+        next {success: false, status: 403, stdout: "{}"}
+      end
+      if args[2].include?("/repos/owner/repo/labels?page=")
+        next {success: true, status: 200, stdout: [{"id" => 7, "name" => "ace:tracked"}].to_json}
+      end
+      {success: true, status: 200, stdout: "{}"}
+    end
+    provider = Ace::Git::Forgejo::Provider.new(server: SERVER, runner: runner)
+    provider.add_issue_label(number: 42, label: "ace:tracked")
+    refute calls.any? { |path| path.include?("/api/v1/orgs/") }
+  end
+
   def test_missing_issue_state_is_malformed
     runner = lambda do |args:, **_options|
       stdout = if args[2].include?("/issues/42?")
