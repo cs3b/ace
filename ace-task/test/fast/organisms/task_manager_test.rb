@@ -392,6 +392,24 @@ class TaskManagerTest < AceTaskTestCase
     end
   end
 
+  def test_priority_only_update_does_not_set_pending_flag
+    adapter = fake_issue_adapter { |task:| }
+    @manager.stub(:issue_adapter, adapter) do
+      task = @manager.create("Linked task", remote_issue: issue_identity)
+      @manager.update(task.id, set: {"priority" => "high"})
+      refute @manager.show(task.id).metadata["issue_sync_pending"]
+    end
+  end
+
+  def test_status_update_sets_pending_flag_for_linked_task
+    adapter = fake_issue_adapter { |task:| raise Ace::Git::ProviderUnreachableError, "offline" }
+    @manager.stub(:issue_adapter, adapter) do
+      task = @manager.create("Linked task", remote_issue: issue_identity)
+      @manager.update(task.id, set: {"status" => "blocked"})
+      assert @manager.show(task.id).metadata["issue_sync_pending"]
+    end
+  end
+
   def test_bulk_sync_continues_after_failure
     adapter = fake_issue_adapter do |task:|
       raise Ace::Git::ProviderUnreachableError, "offline" if task.title == "First"

@@ -141,8 +141,8 @@ module Ace
               issues << {type: :error, message: "Obsolete #{key}; use remote_issue/issue_sync_pending",
                          location: file_path}
             end
-            linked = frontmatter["remote_issue"]
-            if linked
+            if frontmatter.key?("remote_issue")
+              linked = frontmatter["remote_issue"]
               valid = linked.is_a?(Hash) && linked.keys.sort ==
                 %w[number provider repository_url server_name url] &&
                 linked["number"].is_a?(Integer) && linked["number"].positive? &&
@@ -157,8 +157,12 @@ module Ace
               issues << {type: :error, message: "Invalid issue_sync_pending value (expected boolean)",
                          location: file_path}
             end
+            if pending == true && !frontmatter.key?("remote_issue")
+              issues << {type: :error, message: "issue_sync_pending requires a complete remote_issue identity",
+                         location: file_path}
+            end
             operation = frontmatter["issue_sync_operation"]
-            unless operation.nil? || (operation == "clear" && pending == true && linked)
+            unless operation.nil? || (operation == "clear" && pending == true && frontmatter["remote_issue"].is_a?(Hash))
               issues << {type: :error, message: "Invalid issue_sync_operation", location: file_path}
             end
           end
