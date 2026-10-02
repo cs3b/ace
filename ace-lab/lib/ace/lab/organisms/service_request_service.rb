@@ -22,7 +22,7 @@ module Ace
           @policy = policy
           @coordinator = coordinator || Ace::Assign::Organisms::AttemptCoordinator.new(repo_root: repo_root)
           @executor = executor || Molecules::ServiceExecutor.new
-          @repo_root = repo_root || Ace::Support::Fs::Molecules::ProjectRootFinder.find_or_current
+          @repo_root = repo_root || git_toplevel
         end
 
         def request(project:, assignment:, attempt:, operation:, input_path:, authorization:, request_id:, dry_run: false)
@@ -196,6 +196,15 @@ module Ace
         rescue Ace::Assign::AttemptErrors::InvalidState, Ace::Assign::AttemptErrors::ReceiptRejected,
                Ace::Assign::AttemptErrors::NotFound, Errno::ENOENT, Errno::EACCES, Errno::EEXIST
           nil
+        end
+
+        # The Git toplevel (not a package directory that happens to hold a
+        # Rakefile) bounds evidence verification for nested invocations.
+        def git_toplevel
+          out, status = Open3.capture2("git", "rev-parse", "--show-toplevel")
+          (status&.success? ? out.strip : Dir.pwd)
+        rescue Errno::ENOENT
+          Dir.pwd
         end
 
         def policy_loader
