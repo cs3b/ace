@@ -1,6 +1,6 @@
 ---
 id: 8wr.t.t8j
-status: in-progress
+status: done
 priority: high
 created_at: "2026-09-28 19:29:30"
 estimate: large
@@ -45,4 +45,4 @@ FILE is YAML with `version: 1` and `candidates: []`; each record has `worktree_p
 
 ## Slice and review decisions
 One large safety enforcement slice. Producers: lifecycle/attempt evidence and accepted Git refs; consumers: overseer workflow, task/worktree cleanup and assignment cleanup. No automatic snapshot, new authorization policy or Lab engine expansion. Reference original independent High finding from ocz in history-before-2026-09-29.md.
-2026-09-29 delivered on 8wr-t-t8j-enforce-prune-safety (PR #352): enforcement on worktree/assignment/Lab paths with durable lifecycle exclusion; independent code-valid review converged over 8 rounds (9 findings round 1, clean round 8), all fixed with regression tests; overseer 252 tests, assign 740 tests, monorepo 10308 tests green; overseer 0.18.0, ace-assign 0.59.0. Prior dirty-tree convenience example invalidated because it could discard unpreserved work. Manifest semantics make cross-repository proof executable rather than an undocumented implementer decision. Draft pending independent spec review.
+2026-09-29 delivered on 8wr-t-t8j-enforce-prune-safety (PR #352): enforcement on worktree/assignment/Lab paths with durable lifecycle exclusion; independent code-valid review converged over 8 rounds (9 findings round 1, clean round 8), all fixed with regression tests; overseer 252 tests, assign 740 tests, monorepo 10308 tests green; overseer 0.18.0, ace-assign 0.59.0. Prior dirty-tree convenience example invalidated because it could discard unpreserved work. Manifest semantics make cross-repository proof executable rather than an undocumented implementer decision. Delivery review and executed tests recorded above; status reconciled to done on 2026-10-02 following Captain confirmation.

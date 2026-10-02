@@ -1,6 +1,6 @@
 ---
 id: 8wm.t.y23
-status: pending
+status: in-progress
 priority: high
 created_at: "2026-09-23 22:42:16"
 estimate: 
@@ -13,6 +13,12 @@ bundle:
   files: [ace-herdr/lib/ace/herdr/organisms/deliverer.rb, ace-herdr/lib/ace/herdr/molecules/delivery_record_store.rb, ace-herdr/lib/ace/herdr/models/delivery_record.rb, ace-herdr/lib/ace/herdr/molecules/herdr_executor.rb]
   commands: []
 title: Deliver durable agent inbox messages once across recovery
+worktree:
+  branch: y23-deliver-durable-agent-inbox-messages-once-across-recovery
+  path: .ace-wt/ace-t.y23
+  created_at: "2026-10-02 00:20:17"
+  updated_at: "2026-10-02 00:20:17"
+  target_branch: main
 ---
 
 # Deliver durable agent inbox messages once across recovery

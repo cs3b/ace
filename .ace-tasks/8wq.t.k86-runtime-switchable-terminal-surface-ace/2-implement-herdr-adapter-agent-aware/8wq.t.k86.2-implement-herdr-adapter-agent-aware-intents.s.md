@@ -1,6 +1,6 @@
 ---
 id: 8wq.t.k86.2
-status: pending
+status: in-progress
 priority: medium
 created_at: "2026-09-27 13:29:29"
 estimate: TBD
@@ -13,6 +13,12 @@ bundle:
   commands: []
 needs_review: false
 title: Implement herdr adapter agent-aware intents
+worktree:
+  branch: k86.2-implement-herdr-adapter-agent-aware-intents
+  path: .ace-wt/ace-t.k86.2
+  created_at: "2026-10-02 00:20:40"
+  updated_at: "2026-10-02 00:20:40"
+  target_branch: main
 ---
 
 # Implement herdr adapter agent-aware intents

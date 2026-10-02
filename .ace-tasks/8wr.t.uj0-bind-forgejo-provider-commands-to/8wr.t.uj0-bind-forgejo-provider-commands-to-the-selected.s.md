@@ -1,6 +1,6 @@
 ---
 id: 8wr.t.uj0
-status: in-progress
+status: done
 priority: medium
 created_at: "2026-09-28 20:21:07"
 estimate: medium
@@ -44,3 +44,6 @@ One medium provider correctness slice. No consumer migration, publication, new F
 2026-09-29 implementation review (code-valid, role:review-codex): round 1 findings — (1) cleanup resolver base_ref compare breaks remote-prefixed targets like origin/main → fixed with remote-name-aware target branch resolution + tests; (2) RepositoryBinding::Target constructor public → forged targets could bypass validation → constructor privatized behind Target.resolve + test. Round 2 on full diff: no correctness findings. Open QA note (Lab smoke test) = SC4's documented open half, environmental.
 
 2026-09-29 astra review of origin/main..main (codex:astra:high, session review-8wsp6w, operator-directed): (1) HIGH — fj keys-file aliases silently override `-H` (verified against the real binary: alias codeberg.org→127.0.0.1:9 redirected the request) → fixed with a read-only alias-conflict guard at the observed v0.6.0 keys-file locations; conflicting alias raises ConfigError before any repository subprocess, absent/unreadable file allows. (2) MEDIUM — `-H` dropped the selected scheme (fj assumes HTTPS for a bare host; verified `http://` full-URL -H preserves scheme+port) → executor now passes scheme://authority; non-http(s) schemes rejected pre-subprocess. (3) MEDIUM — fully qualified cleanup targets (refs/heads/main, refs/remotes/origin/main) wrongly conflicted → normalized in target_branch with remote-name awareness + regression tests. All three findings reproduced/verified against the observed binary before fixing; forgejo 87 / worktree 545 / support-cli 62 / suite 50 pkgs 10278 green after fixes.
+
+## Closure reconciliation — 2026-10-02
+Captain explicitly accepted this task as closed. Repository-binding implementation and recorded tests/reviews are delivered on main (f823c6572, f30f5bf7f, 54ea07be4). Status corrected to done. The SC4 text above preserves its historical limitation: no new test of the currently installed Lab fj was performed here. That endpoint-specific proof is carried by existing acceptance owner ACE 8wr.t.qkc, required before its matrix closes; do not present upstream binary probes as the Lab smoke result.

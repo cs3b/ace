@@ -10,7 +10,7 @@ title: Close foundation gaps and integrate the second ACE Lab wave
 needs_review: false
 bundle:
   presets: [project]
-  files: [AGENTS.md, .ace-tasks/8wr.t.uj0-bind-forgejo-provider-commands-to/8wr.t.uj0-bind-forgejo-provider-commands-to-the-selected.s.md, .ace-tasks/8wr.t.t8j-enforce-prune-safety-workflow-contract/8wr.t.t8j-enforce-prune-safety-workflow-contract-in-overseer.s.md, .ace-tasks/8ws.t.lq1-close-foundation-gaps-and-integrate/evidence/release-proof-2026-09-29.md, .ace-tasks/8ws.t.lq1-close-foundation-gaps-and-integrate/evidence/install-observations.json]
+  files: [AGENTS.md, .ace-tasks/8wr.t.uj0-bind-forgejo-provider-commands-to/8wr.t.uj0-bind-forgejo-provider-commands-to-the-selected.s.md, .ace-tasks/_archive/8x/v/8wr.t.t8j-enforce-prune-safety-workflow-contract/8wr.t.t8j-enforce-prune-safety-workflow-contract-in-overseer.s.md, .ace-tasks/8ws.t.lq1-close-foundation-gaps-and-integrate/evidence/release-proof-2026-09-29.md, .ace-tasks/8ws.t.lq1-close-foundation-gaps-and-integrate/evidence/install-observations.json]
   commands: []
 ---
 
@@ -21,7 +21,7 @@ This is the ACE integration tracker replacing the planning role of the loose lab
 
 This task owns sequencing and acceptance receipts, not duplicate implementations. Existing tasks stay at their canonical IDs; new uncovered outcomes are actual children. Check a task checkbox only after its owning record is done and linked evidence establishes the listed result. Reopen this checklist item if receipt is invalidated; do not silently expand a historical done task. `bin/ace-task show 8ws.t.lq1 --content` displays the checklist; updates are explicit, not automatic synchronization.
 
-Current Captain instruction: specifications/checklists first; no implementation, publishing or dispatch in this turn. All counts/checkmarks below are a 2026-09-29 snapshot, not permission to execute.
+Current phase (2026-10-02): Captain confirms foundation closure; implementation receipts below verified against stored records and main history. This update reconciles task state and selects the next feature wave; it does not dispatch implementation.
 
 ## First wave — delivered scopes
 - [x] ACE 8wq.t.1w2 — hermetic test infrastructure, main PR344; tp0 consumer fixes also delivered, with later runner source loading fix 96c445b8a. This does not close new fixture defects.
@@ -35,14 +35,14 @@ Current Captain instruction: specifications/checklists first; no implementation,
 Historical source audit: dbb9bde1e; current spec inspection: e45679c1e. Completed scope evidence lives with the original task records. Status/PR identity alone must not establish later broader guarantees.
 
 ## Foundation closure — do this before resuming the feature wave
-- [ ] ACE 8wr.t.uj0 — selected-repository Forgejo calls and authoritative cleanup evidence; accepted code + actual supported fj surface + tests + independent verdict.
-- [ ] ACE 8wr.t.t8j — force-proof preservation/no-writer checks on actual prune paths; destructive boundary tests + independent verdict.
-- [ ] ACE 8ws.t.lq1.0 — correctly classified long CLI execution; verified cause, no false timeout or replay of uncertain effects.
-- [ ] ACE 8ws.t.lq1.1 — coherent published dependency graph and completed TS-MONO-001 verdict for exact intended versions.
+- [x] ACE 8wr.t.uj0 — selected-repository Forgejo calls and authoritative cleanup evidence; accepted code + actual supported fj surface + tests + independent verdict.
+- [x] ACE 8wr.t.t8j — force-proof preservation/no-writer checks on actual prune paths; destructive boundary tests + independent verdict.
+- [x] ACE 8ws.t.lq1.0 — correctly classified long CLI execution; verified cause, no false timeout or replay of uncertain effects.
+- [x] ACE 8ws.t.lq1.1 — coherent published dependency graph and completed TS-MONO-001 verdict for exact intended versions.
 
-These are parallel scopes until lq1.1's final acceptance, which waits for lq1.0. They do not share a requirement to merge simultaneously. The Captain has chosen to close this group first; that sequencing preference does not invent technical dependencies for every adapter.
+Foundation group accepted on 2026-10-02 by the Captain. Source receipts: uj0 f823c6572/f30f5bf7f/54ea07be4 plus task review/test records; t8j PR #352 (38c6515cb); lq1.0 PR #351 (1e5d6ac46); lq1.1 PR #353 (8bc108f21) with final installed acceptance 4ab68e8eb. uj0's current-Lab fj smoke proof was not present in its receipt: retain it explicitly as a required qkc endpoint row, not as a performed check.
 
-Release evidence: evidence/release-proof-2026-09-29.md preserves the supplied SAFE proof; evidence/install-observations.json records hashes/excerpts of both existing install logs. Both show successful bundle completion with ace-git-github 0.1.2 and older pre-afternoon runner/wrapper packages. Publication of 17 artifacts is reported by the Captain, not independently re-queried here. SAFE installation for that graph is accepted partial evidence; full final scenario completion and latest graph are still unchecked. Lab-ready is not inferred.
+Release acceptance: [2026-10-01 final receipt](evidence/installation-acceptance-2026-10-01.md), [machine receipt](evidence/installation-acceptance.json) and [frozen manifest](evidence/installation-manifest.json) supersede the historical partial September proof. TS-MONO-001 run 8x0f3w4: PASS 4/4, SAFE, 20 exact manifest package versions, zero findings, both install modes and consumer dependency edges verified. This is the frozen tested graph, not proof that every later release or Lab installation is current. No installation rerun was performed in this status update.
 
 ## Second feature wave — existing task owners, no duplicate scopes
 - [ ] ACE 8wq.t.k86.1 — tmux adapter satisfies runtime contract.
@@ -52,7 +52,7 @@ Release evidence: evidence/release-proof-2026-09-29.md preserves the supplied SA
 - [ ] ACE 8wr.t.qk1.1 — review consumers use named providers.
 - [ ] ACE 8wr.t.qk1.2 — task issue consumers use named providers.
 
-After foundation closure these six scopes can be written concurrently. Merge Herdr adapter before y23 as shared-package coordination, then rerun both; this is not an invented hard API dependency. Merge uj0 before accepting either Forgejo consumer; prefer qk1.1 before qk1.2 when both edit common provider surfaces. qjx and tmux adapter integrate independently. Every integration records exact merged candidate, executed relevant checks, independent verdict and separately accounted historical red results. CI is advisory.
+Foundation closure is accepted; these six pending scopes are now the next parallel implementation wave. Merge Herdr adapter before y23 as shared-package coordination, then rerun both; this is not an invented hard API dependency. Merge uj0 before accepting either Forgejo consumer; prefer qk1.1 before qk1.2 when both edit common provider surfaces. qjx and tmux adapter integrate independently. Every integration records exact merged candidate, executed relevant checks, independent verdict and separately accounted historical red results. CI is advisory.
 
 ## Repair lane — tracked separately, not hidden blockers
 - [ ] ACE 8ws.t.ibk — managed assignment test isolation; close before trusting those fixtures for qjx/y23 acceptance.
@@ -73,4 +73,11 @@ lab-config 8wl.t.gad owns installed topology/services/Pi/roles and artifact mani
 - [ ] Each released/installed claim cites exact evidence and version; public registry availability, resolved graph, E2E verdict and Lab deployment remain distinct.
 - [ ] `bin/ace-task show/list/doctor` resolve owners/dependencies; no new cycles/dangling IDs. Historical doctor errors are reported separately.
 
-One large tracking/acceptance task with two new outcome children and references to existing owners. No product CLI/API change in this tracker, so no ux/usage.md is needed here. Status stays draft until child specs and tracker review are accepted. Task checklists are the durable planning surface; local audit logs remain temporary.
+One large tracking/acceptance task with two new outcome children and references to existing owners. No product CLI/API change in this tracker, so no ux/usage.md is needed here. Specification review is accepted. The umbrella remains in-progress until the six feature outcomes, integration receipts and repair dispositions are complete; two done children alone cannot close it. Task checklists are the durable planning surface; local audit logs remain temporary.
+
+## Status reconciliation — 2026-10-02
+- Corrected uj0 and archived t8j metadata from in-progress to done using ace-task update, following Captain closure and stored delivery evidence.
+- lq1.0/.1 were already done, but their split archived directories were invisible to ace-task show. Reunited those existing records and evidence with this active parent; no duplicate tasks or history removal.
+- Restored this tracker bundle's t8j path.
+- Repair lane needs evidence reconciliation before dispatching duplicate fixes: main already contains docs fixture fix 7c043ebd2 and cleanup test fix a656b47de. ibl/lq8 remain open until their acceptance is mapped to those deliveries; this update does not claim fresh test runs or close them.
+- Next integration order: k86.2 before y23 (shared Herdr changes), qk1.1 before qk1.2 where provider edits overlap; k86.1 and qjx independently. ibk fixture isolation remains a verification concern for qjx/y23, not a reason to stop writing all six scopes.
