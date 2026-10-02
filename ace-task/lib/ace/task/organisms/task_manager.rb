@@ -710,6 +710,7 @@ module Ace
               reason: reason, error: "Pending clear must be replayed")
           end
           previous_id = task.metadata["issue_sync_previous_id"] || previous_task&.id
+          reconcile_only = task.metadata["issue_sync_operation"] == "reconcile-create"
           issue_adapter.sync_task(
             task: task, previous_task_id: previous_id,
             before_create: lambda do
@@ -734,6 +735,16 @@ module Ace
             reason: reason, error: "#{e.class}: #{e.message}")
         rescue StandardError => e
           mark_issue_sync_pending(task)
+          # A definitive provider outcome (auth rejection, object-not-found)
+          # after a fresh create POST proves it did not commit: replay may
+          # retry the create, so the uncertain-create guard must not survive
+          # it. Reconcile-only passes (unreadable forge) keep the guard.
+          if !reconcile_only && e.class != Ace::Git::ProviderUnknownOutcomeError &&
+              task.metadata["issue_sync_operation"] == "reconcile-create"
+            Ace::Support::Items::Molecules::FieldUpdater.update(
+              task.file_path, set: {"issue_sync_operation" => nil}
+            )
+          end
           @last_update_note = "Issue sync warning for task #{task&.id}: #{e.class}: #{e.message}; " \
             "flagged for 'ace-task issue-sync --pending'"
           sync_result_for(task: task, issues: [identity].compact, success: false,
