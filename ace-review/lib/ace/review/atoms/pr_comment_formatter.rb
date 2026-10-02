@@ -37,7 +37,9 @@ module Ace
               body.empty? ||
               own_session_post?(body)
           end
-          reviews = comments_data[:reviews] || []
+          reviews = (comments_data[:reviews] || []).reject do |review|
+            review[:author].to_s.match?(/\b(bot|github-actions|ace-review)\b/i)
+          end
           review_threads = comments_data[:review_threads] || []
 
           # Build report sections
