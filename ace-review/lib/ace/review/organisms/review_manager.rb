@@ -1484,7 +1484,7 @@ module Ace
           # BEFORE any mutation, not only in the receipt.
           reviewed_repo = options.pr_metadata&.fetch("repository_url", nil)
           if reviewed_repo && provider.resolved_server_url(options.pr).to_s.chomp("/").sub(/\.git\z/i, "") != reviewed_repo.to_s.chomp("/").sub(/\.git\z/i, "")
-            return {success: false, error: "Resolved server #{provider.resolved_server_url} does not match the reviewed repository #{reviewed_repo}"}
+            return {success: false, error: "Resolved server #{provider.resolved_server_url(options.pr)} does not match the reviewed repository #{reviewed_repo}"}
           end
           receipt = provider.post_comment(
             options.pr, expected_head: head,
