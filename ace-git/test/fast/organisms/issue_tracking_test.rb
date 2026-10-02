@@ -214,6 +214,49 @@ class IssueTrackingTest < AceGitTestCase
     assert_equal %i[guard post], events
   end
 
+  class LateOwnerlessMarkerProvider < FakeProvider
+    attr_reader :reads
+
+    def initialize
+      super
+      @reads = 0
+    end
+
+    def issue_tracking(number:)
+      @reads += 1
+      if @reads == 3
+        comments << {id: 1, body: "<!-- ace-task:tracked -->\nUnattributed note"}
+      end
+      super
+    end
+  end
+
+  def test_late_reconciliation_rejects_ownerless_marker
+    provider = LateOwnerlessMarkerProvider.new
+    service = Ace::Git::Organisms::IssueTracking.new(provider: provider)
+    service.stub(:create_reconcile_interval, 0) do
+      assert_raises(Ace::Git::ProviderIdentityMismatchError) do
+        service.sync(number: 42, task_id: "8pp.t.q7w", task_link: "task.md", task_status: "pending",
+          create_pending: true)
+      end
+    end
+    assert_equal 0, provider.calls.count { |call| call.first == :create }
+    assert_match(/Unattributed note/, provider.comments.first[:body])
+  end
+
+  def test_sync_update_preserves_unrelated_note_and_verifies_final_body
+    provider = FakeProvider.new
+    provider.comments << {id: 1, body: "A user note\n<!-- ace-task:tracked -->\n" \
+      "Tracked in ace-task: [old](old.md)"}
+    service = Ace::Git::Organisms::IssueTracking.new(provider: provider)
+    # The late reconcile path verifies against the body it actually wrote
+    # (preserved note + marker + current line), not a pre-computed one.
+    service.sync(number: 42, task_id: "old", task_link: "task.md", task_status: "pending")
+    body = provider.comments.find { |comment| comment[:id] == 1 }[:body]
+    assert_includes body, "A user note\n"
+    assert_includes body, "Tracked in ace-task: [old](task.md)"
+  end
+
   def test_unknown_create_reconciles_without_duplicate_after_delayed_commit
     provider = DelayedCreateProvider.new
     provider.arm_delayed_create
