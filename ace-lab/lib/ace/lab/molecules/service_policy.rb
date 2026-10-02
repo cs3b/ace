@@ -60,8 +60,14 @@ module Ace
               raise Ace::Lab::InvalidConfigurationError,
                 "host maintenance requires a local executable transport"
             end
-            deployment = resolved_path(operation["deployment_root"].to_s)
-            sink = resolved_path(operation["evidence_sink"].to_s)
+            deployment_root = operation["deployment_root"].to_s
+            sink_path = operation["evidence_sink"].to_s
+            unless deployment_root.start_with?("/") && sink_path.start_with?("/")
+              raise Ace::Lab::InvalidConfigurationError,
+                "host maintenance needs absolute deployment and evidence sink paths"
+            end
+            deployment = resolved_path(deployment_root)
+            sink = resolved_path(sink_path)
             executable = operation.dig("argv", 0).to_s
             unless deployment.start_with?("/") && sink.start_with?("/") && executable.start_with?("/") &&
                 !inside?(executable, deployment) && !inside?(sink, deployment)

@@ -81,9 +81,16 @@ module Ace
           end
           # The trusted policy owns executor identity and transport; the
           # journaled claim binds them so only that executor identity can
-          # later complete the receipt.
+          # later complete the receipt. A local operation whose configured
+          # executor is not this process is refused before any claim, so no
+          # authorization is consumed by a dispatch that cannot happen.
           binding["executor_uid"] = operation_policy.fetch("executor_uid")
-          binding["transport"] = operation_policy.fetch("transport", "local")
+          binding["transport"] = transport = operation_policy.fetch("transport", "local")
+          if transport == "local" &&
+              (Process.uid != binding["executor_uid"] || Process.euid != binding["executor_uid"])
+            @coordinator.reject_service_request(binding, reason: "executor_identity_unavailable")
+            raise SecurityError, "current OS identity is not the configured executor"
+          end
 
           if dry_run
             # The preview applies the same read-only eligibility checks as
