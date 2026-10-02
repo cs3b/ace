@@ -133,7 +133,7 @@ module Github
     end
 
     def test_timeout_raises_unreachable_error
-      runner = ->(args:, timeout: nil, env: nil) { :timeout }
+      runner = ->(args:, timeout: nil, env: nil, **_) { :timeout }
       error = assert_raises(Ace::Git::ProviderUnreachableError) do
         Ace::Git::Github::PrFetcher.fetch_diff("42", timeout: 1, runner: runner)
       end
@@ -163,7 +163,7 @@ module Github
 
     def test_fetch_recently_merged_respects_limit
       captured = nil
-      runner = lambda do |args:, timeout: nil, env: nil|
+      runner = lambda do |args:, timeout: nil, env: nil, **|
         captured = args.join(" ")
         {success: true, stdout: [{"number" => 1}].to_json, stderr: "", exit_code: 0}
       end
@@ -174,7 +174,7 @@ module Github
 
     def test_fetch_open_prs_excludes_specified_branch
       captured = nil
-      runner = lambda do |args:, timeout: nil, env: nil|
+      runner = lambda do |args:, timeout: nil, env: nil, **|
         captured = args.join(" ")
         {success: true, stdout: [
           {"number" => 85, "title" => "Open PR", "headRefName" => "feature-1"},

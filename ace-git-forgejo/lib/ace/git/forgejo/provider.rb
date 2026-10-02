@@ -266,7 +266,10 @@ module Ace
           number = request_number!(number)
           comment_id = Integer(comment_id)
           verify_expected_head!(pull_request(number: number), expected_head)
-          matches = review_http.paginate("issues/#{number}/comments").select { |entry| entry["id"] == comment_id }
+          issue_matches = review_http.paginate("issues/#{number}/comments").select { |entry| entry["id"] == comment_id }
+          inline_matches = issue_matches.empty? ? review_http.paginate("pulls/#{number}/comments").select { |entry| entry["id"] == comment_id } : []
+          matches = issue_matches + inline_matches
+          update_route = issue_matches.any? ? "issues/comments/#{comment_id}" : "pulls/comments/#{comment_id}"
           unless matches.one?
             raise Ace::Git::ProviderIdentityMismatchError,
               "Comment #{comment_id} does not belong to selected PR ##{number}"
@@ -279,7 +282,7 @@ module Ace
 
           verify_expected_head!(pull_request(number: number), expected_head)
           begin
-            review_http.request(:patch, "issues/comments/#{comment_id}", body: {body: body})
+            review_http.request(:patch, update_route, body: {body: body})
           rescue Ace::Git::ProviderMalformedOutputError => e
             raise Ace::Git::ProviderUnknownOutcomeError,
               "Comment update sent but response unreadable for #{server.name}/#{number}, comment #{comment_id}: #{e.message}; reconcile before repeating"

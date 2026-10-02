@@ -416,7 +416,12 @@ end
         def update_pull_request_comment(number:, expected_head:, comment_id:, body:)
           comment_id = Integer(comment_id)
           pr = verify_expected_head!(pull_request(number: number), expected_head)
-          matches = gh_api_pages("issues/#{pr.number}/comments").select { |entry| entry["id"] == comment_id }
+          # Collected evidence includes issue and inline comments; the
+          # update must locate the id in both and use the matching route.
+          issue_matches = gh_api_pages("issues/#{pr.number}/comments").select { |entry| entry["id"] == comment_id }
+          inline_matches = issue_matches.empty? ? gh_api_pages("pulls/#{pr.number}/comments").select { |entry| entry["id"] == comment_id } : []
+          matches = issue_matches + inline_matches
+          update_route = issue_matches.any? ? "issues/comments/#{comment_id}" : "pulls/comments/#{comment_id}"
           unless matches.one?
             raise Ace::Git::ProviderIdentityMismatchError,
               "Comment #{comment_id} does not belong to selected PR ##{pr.number}"
@@ -429,7 +434,7 @@ end
 
           verify_expected_head!(pull_request(number: number), expected_head)
           begin
-            gh_api("issues/comments/#{comment_id}", method: :patch, body: body)
+            gh_api(update_route, method: :patch, body: body)
           rescue Ace::Git::ProviderMalformedOutputError => e
             raise Ace::Git::ProviderUnknownOutcomeError,
               "Comment update sent but response unreadable for #{server.name}/#{pr.number}, comment #{comment_id}: #{e.message}; reconcile before repeating"
@@ -713,8 +718,15 @@ end
           end
           args = ["repos/#{repository}/#{suffix}", "--hostname", host]
           args += ["--paginate", "--slurp"] if paginate
-          args += ["-X", method.to_s.upcase, "-f", "body=#{body}"] if %i[post patch].include?(method)
-          result = CliExecutor.execute("api", args, timeout: timeout, runner: runner)
+          stdin = nil
+          if %i[post patch].include?(method)
+            # The body travels on stdin (`--input -`), never as a
+            # command argument: argv leaks into process listings and
+            # timeout errors, and huge review bodies exceed arg limits.
+            args += ["-X", method.to_s.upcase, "--input", "-"]
+            stdin = JSON.generate(body: body)
+          end
+          result = CliExecutor.execute("api", args, timeout: timeout, runner: runner, stdin: stdin)
           classify_failure(result[:stderr], context: "api #{suffix}") unless result[:success]
           JSON.parse(result[:stdout])
         rescue JSON::ParserError => e

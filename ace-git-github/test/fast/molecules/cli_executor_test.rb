@@ -5,7 +5,7 @@ require "test_helper"
 module Github
   class CliExecutorTest < AceGitGithubTestCase
     def test_execute_returns_structured_result_on_success
-      runner = ->(args:, timeout: nil, env: nil) do
+      runner = ->(args:, timeout: nil, env: nil, **_) do
         assert_equal ["gh", "issue", "view", "1"], args
         {success: true, stdout: "ok\n", stderr: "", exit_code: 0}
       end

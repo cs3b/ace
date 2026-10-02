@@ -54,7 +54,7 @@ module Github
     private
 
     def scripted_runner(responses)
-      lambda do |args:, timeout: nil, env: nil|
+      lambda do |args:, timeout: nil, env: nil, **|
         response = responses.fetch(args.join(" ")) { flunk("Unexpected command: #{args.join(' ')}") }
         response.is_a?(Array) ? {success: false, stdout: "", stderr: response[0], exit_code: response[1]} : response
       end
