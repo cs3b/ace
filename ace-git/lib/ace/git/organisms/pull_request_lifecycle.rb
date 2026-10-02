@@ -58,8 +58,11 @@ module Ace
           after = provider.pull_request(number: reference.number)
           hydrated_body = provider.pull_request_body(number: reference.number)
           after = after.with(body: hydrated_body) unless hydrated_body.nil?
+          # Body hydration and identity must agree with the base provenance
+          # read before collection; a moved base invalidates the metadata.
+          latest_details = provider.pull_request_review_details(number: reference.number)
           if after.head_sha != head || after.head_ref != before.head_ref ||
-              after.base_ref != before.base_ref
+              after.base_ref != before.base_ref || latest_details.base_sha != details.base_sha
             raise ProviderExpectedHeadConflictError,
               "PR head/base changed while collecting review metadata; retry on the current head"
           end
