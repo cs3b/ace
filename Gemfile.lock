@@ -274,7 +274,7 @@ PATH
 PATH
   remote: ace-review
   specs:
-    ace-review (0.57.0)
+    ace-review (0.58.0)
       ace-b36ts (~> 0.14)
       ace-bundle (~> 0.44)
       ace-compressor (~> 0.25)
