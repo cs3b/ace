@@ -522,6 +522,23 @@ class TaskManagerTest < AceTaskTestCase
     end
   end
 
+  def test_clear_after_pending_reparent_removes_previous_id
+    adapter = fake_issue_adapter do |task:, **_|
+      raise Ace::Git::ProviderUnreachableError, "offline" if @offline
+    end
+    @offline = true
+    @manager.stub(:issue_adapter, adapter) do
+      parent = @manager.create("Parent")
+      task = @manager.create("Linked task", remote_issue: issue_identity)
+      reparented = @manager.update(task.id, move_as_child_of: parent.id)
+      @offline = false
+      @manager.issue_link(reparented.id, clear: true)
+      cleared = @manager.show(reparented.id)
+      refute cleared.metadata["remote_issue"]
+      refute cleared.metadata["issue_sync_previous_id"]
+    end
+  end
+
   def test_same_link_retry_validates_persisted_previous_id
     validate_calls = []
     offline = true

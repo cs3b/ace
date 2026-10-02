@@ -675,7 +675,8 @@ module Ace
             set: {"issue_sync_pending" => true, "issue_sync_operation" => "clear"})
           issue_adapter.clear_task(task: task, previous_task_id: task.metadata["issue_sync_previous_id"])
           Ace::Support::Items::Molecules::FieldUpdater.update(task.file_path,
-            set: {"remote_issue" => nil, "issue_sync_pending" => nil, "issue_sync_operation" => nil})
+            set: {"remote_issue" => nil, "issue_sync_pending" => nil,
+                  "issue_sync_operation" => nil, "issue_sync_previous_id" => nil})
         end
 
         def sync_or_clear_linked_issue(task, reason:)
