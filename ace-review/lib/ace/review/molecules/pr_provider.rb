@@ -87,6 +87,7 @@ module Ace
             "repository_url" => pr.base_repository_url,
             "number" => pr.number,
             "title" => pr.title,
+            "body" => pr.body,
             "author" => {"login" => pr.author},
             "state" => pr.state.to_s.upcase,
             "isDraft" => pr.draft,
@@ -110,7 +111,10 @@ module Ace
              body: comment.body, url: comment.url}
           end
           threads = comments.select(&:path).map do |comment|
-            {id: comment.thread_id || comment.id, path: comment.path, line: comment.line,
+            # Only a provider-supplied thread ID is resolvable; presenting a
+            # comment ID as one would advertise an unsupported resolution as
+            # supported. A nil id/resolved state is honest absence.
+            {id: comment.thread_id, path: comment.path, line: comment.line,
              is_resolved: comment.resolved,
              comments: [{id: comment.id, author: comment.author, body: comment.body, url: comment.url}]}
           end
