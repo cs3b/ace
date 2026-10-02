@@ -94,6 +94,21 @@ class IssueLinkTest < AceTaskTestCase
     end
   end
 
+  def test_ssh_scheme_server_links_by_number_and_url
+    server = OpenStruct.new(name: "lab", provider: "forgejo",
+      url: "ssh://git@forge.example.com/owner/repo.git")
+    Ace::Git::ServerRegistry.stub(:resolve_for, server) do
+      by_number = Ace::Task::Molecules::IssueLink.from_input("42", server_name: "lab")
+      assert_equal "https://forge.example.com/owner/repo/issues/42", by_number.fetch("url")
+
+      Ace::Git::ServerRegistry.stub(:matching_servers, [server]) do
+        by_url = Ace::Task::Molecules::IssueLink.from_input("https://forge.example.com/owner/repo/issues/43")
+        assert_equal "https://forge.example.com/owner/repo/issues/43", by_url.fetch("url")
+        assert_equal "ssh://git@forge.example.com/owner/repo.git", by_url.fetch("repository_url")
+      end
+    end
+  end
+
   def test_ambiguous_url_rejects_explicit_selection
     matches = [
       OpenStruct.new(name: "one", provider: "github", url: "https://github.example.com/owner/repo"),
