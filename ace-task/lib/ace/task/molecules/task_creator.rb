@@ -40,7 +40,7 @@ module Ace
           time: Time.now.utc,
           use_llm_slug: false,
           estimate: nil,
-          github_issue: nil
+          remote_issue: nil
         )
           raise ArgumentError, "Title is required" if title.nil? || title.strip.empty?
 
@@ -76,7 +76,7 @@ module Ace
                 dependencies: dependencies,
                 created_at: time,
                 estimate: estimate,
-                github_issue: github_issue
+                remote_issue: remote_issue
               )
 
               # Write spec file with file_slug

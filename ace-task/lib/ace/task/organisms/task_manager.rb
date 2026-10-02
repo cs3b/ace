@@ -7,7 +7,7 @@ require_relative "../molecules/task_loader"
 require_relative "../molecules/task_creator"
 require_relative "../molecules/subtask_creator"
 require_relative "../molecules/task_reparenter"
-require_relative "../molecules/github_issue_sync_adapter"
+require_relative "../molecules/issue_link"
 require_relative "../atoms/task_validation_rules"
 
 module Ace
@@ -49,10 +49,10 @@ module Ace
           dependencies: [],
           use_llm_slug: false,
           estimate: nil,
-          github_issue: nil
+          remote_issue: nil
         )
+          ensure_issue_linkable!(remote_issue) if remote_issue
           ensure_root_dir
-          ensure_github_issue_linkable!(github_issue)
           creator = Molecules::TaskCreator.new(root_dir: @root_dir, config: @config)
           attempts = 0
 
@@ -67,7 +67,7 @@ module Ace
               use_llm_slug: use_llm_slug,
               time: Time.now.utc + ((attempts - 1) * 2),
               estimate: estimate,
-              github_issue: github_issue
+              remote_issue: remote_issue
             )
             sync_linked_issues_for(created_task, reason: "create")
             created_task
@@ -147,8 +147,7 @@ module Ace
 
           # Apply field updates if any
           has_field_updates = [set, add, remove].any? { |h| h && !h.empty? }
-          desired_issue = extract_desired_github_issue(task, set: set, remove: remove)
-          ensure_github_issue_linkable!(desired_issue, previous_task: task) if desired_issue
+          reject_issue_metadata_update!(set, add, remove)
           if has_field_updates
             Ace::Support::Items::Molecules::FieldUpdater.update(
               task.file_path, set: set, add: add, remove: remove
@@ -212,11 +211,11 @@ module Ace
         # @param priority [String, nil] Priority level
         # @param tags [Array<String>] Tags
         # @return [Models::Task, nil] Created subtask or nil if parent not found
-        def create_subtask(parent_ref, title, status: nil, priority: nil, tags: [], estimate: nil, github_issue: nil)
+        def create_subtask(parent_ref, title, status: nil, priority: nil, tags: [], estimate: nil, remote_issue: nil)
           parent = show(parent_ref)
           return nil unless parent
 
-          ensure_github_issue_linkable!(github_issue)
+          ensure_issue_linkable!(remote_issue) if remote_issue
           subtask_creator = Molecules::SubtaskCreator.new(config: @config)
           created_subtask = subtask_creator.create(
             parent,
@@ -225,33 +224,78 @@ module Ace
             priority: priority,
             tags: tags,
             estimate: estimate,
-            github_issue: github_issue
+            remote_issue: remote_issue
           )
           sync_linked_issues_for(created_subtask, reason: "create")
           created_subtask
         end
 
-        def github_sync(ref: nil, all: false, pending: false)
+        def issue_sync(ref: nil, all: false, pending: false)
           raise ArgumentError, "Provide --all or a task reference" if !all && !pending && (ref.nil? || ref.strip.empty?)
+          raise ArgumentError, "--all and --pending are mutually exclusive" if all && pending
+          raise ArgumentError, "REF cannot be combined with --all or --pending" if ref && (all || pending)
 
           if all || pending
             tasks = list(in_folder: "all")
-            tasks = tasks.select { |t| t.metadata["github_sync_pending"] } if pending
-            linked_tasks = tasks.select { |t| linked_issue_id(t) }
-            results = linked_tasks.map { |task| sync_linked_issues_for(task, reason: "manual-sync") }
-            return summarize_manual_sync_results(results, skipped: tasks.length - linked_tasks.length)
+            tasks = tasks.select { |t| t.metadata["issue_sync_pending"] } if pending
+            linked_tasks = tasks.select { |t| linked_issue(t) }
+            results = linked_tasks.map { |task| sync_or_clear_linked_issue(task, reason: "manual-sync") }
+            if pending
+              results.concat((tasks - linked_tasks).map do |task|
+                sync_result_for(task: task, issues: [], success: false,
+                  reason: "manual-sync", error: "Pending task has no remote_issue recovery identity")
+              end)
+            end
+            return summarize_manual_sync_results(results, skipped: pending ? 0 : tasks.length - linked_tasks.length)
           end
 
           task = show(ref)
           return nil unless task
 
-          unless linked_issue_id(task)
-            return {synced: 0, failed: 0, skipped: 1, task_id: task.id, failures: []}
+          unless linked_issue(task)
+            return {synced: 0, failed: 0, pending: 0, skipped: 1, task_id: task.id, failures: []}
           end
 
-          result = sync_linked_issues_for(task, reason: "manual-sync")
+          result = sync_or_clear_linked_issue(task, reason: "manual-sync")
           summary = summarize_manual_sync_results([result], skipped: 0)
           summary.merge(task_id: task.id)
+        end
+
+        def issue_link(ref, issue: nil, clear: false, server_name: nil, use_default: false)
+          raise ArgumentError, "Choose --issue or --clear" if (issue.nil? && !clear) || (issue && clear)
+          task = show(ref)
+          return nil unless task
+
+          current = linked_issue(task)
+          if clear
+            raise ArgumentError, "Task #{task.id} has no remote issue" unless current
+            clear_issue_link(task)
+            return show(ref)
+          end
+
+          identity = Molecules::IssueLink.from_input(issue, server_name: server_name, use_default: use_default)
+          if current
+            if current == identity
+              if task.metadata["issue_sync_operation"] == "clear"
+                raise Ace::Git::ProviderIdentityMismatchError,
+                  "Task #{task.id} has a pending clear; complete it before linking again"
+              end
+              ensure_issue_linkable!(identity, task_id: task.id)
+              result = sync_linked_issues_for(task, reason: "link-retry")
+              raise Ace::Git::ProviderUnreachableError, result[:error] unless result[:success]
+              return show(ref)
+            end
+
+            raise Ace::Git::ProviderIdentityMismatchError,
+              "Task #{task.id} already links another issue; clear it before linking a different issue"
+          end
+          ensure_issue_linkable!(identity, task_id: task.id)
+          Ace::Support::Items::Molecules::FieldUpdater.update(task.file_path, set: {"remote_issue" => identity})
+          linked = show(ref)
+          result = sync_linked_issues_for(linked, reason: "link")
+          raise Ace::Git::ProviderUnreachableError, result[:error] unless result[:success]
+
+          linked
         end
 
         # Get the root directory.
@@ -476,77 +520,89 @@ module Ace
           return false unless after_task
           return true if move_to
           return true if before_task.path != after_task.path
-          return true if linked_issue_id(before_task) != linked_issue_id(after_task)
+          return true if linked_issue(before_task) != linked_issue(after_task)
 
           touched_keys = [set, add, remove].compact.flat_map(&:keys).map(&:to_s)
           touched_keys.any? do |key|
-            key == "title" || key == "status" || key == "github_issue"
+            key == "title" || key == "status"
           end
         end
 
-        def linked_issue_id(task)
-          return nil unless task&.metadata
-
-          issue_id = task.metadata["github_issue"]
-          return nil unless issue_id.to_i.positive?
-
-          issue_id.to_i
+        def linked_issue(task)
+          task&.metadata&.[]("remote_issue")
         end
 
-        def extract_desired_github_issue(task, set:, remove:)
-          return nil if set&.key?("github_issue") && !set["github_issue"].to_i.positive?
-          return set["github_issue"].to_i if set&.key?("github_issue") && set["github_issue"].to_i.positive?
-          return nil if Array(remove&.keys).map(&:to_s).include?("github_issue")
-
-          linked_issue_id(task)
+        def reject_issue_metadata_update!(*changes)
+          keys = changes.compact.flat_map(&:keys).map(&:to_s)
+          forbidden = keys.find do |key|
+            key == "remote_issue" || key.start_with?("remote_issue.") ||
+              %w[issue_sync_pending issue_sync_operation github_issue github_sync_pending].include?(key)
+          end
+          raise ArgumentError, "Use ace-task issue-link to change #{forbidden}" if forbidden
         end
 
-        def ensure_github_issue_linkable!(github_issue, previous_task: nil)
-          return unless github_issue
+        def issue_adapter
+          require_relative "../molecules/issue_sync_adapter"
+          Molecules::IssueSyncAdapter.new
+        end
 
-          Molecules::GithubIssueSyncAdapter.new.validate_link!(issue_id: github_issue, previous_task: previous_task)
+        def ensure_issue_linkable!(identity, task_id: nil)
+          issue_adapter.validate_link!(identity: identity, task_id: task_id)
         end
 
         def sync_linked_issues_for(task, reason:, previous_task: nil)
-          issue_ids = [linked_issue_id(task), linked_issue_id(previous_task)].compact.uniq
-          return sync_result_for(task: task, issues: issue_ids, success: true, reason: reason) if issue_ids.empty?
+          identity = linked_issue(task)
+          return sync_result_for(task: task, issues: [], success: true, reason: reason) unless identity
 
-          adapter = Molecules::GithubIssueSyncAdapter.new
-          unless adapter.available?
-            mark_github_sync_pending(task)
-            @last_update_note = "GitHub sync skipped (gh unavailable); flagged for 'ace-task github-sync --pending'"
-            return sync_result_for(task: task, issues: issue_ids, success: true, reason: reason).merge(offline: true)
+          if task.metadata["issue_sync_operation"] == "clear"
+            @last_update_note = "Issue clear pending for task #{task.id}; replay with 'ace-task issue-sync --pending'"
+            return sync_result_for(task: task, issues: [identity], success: false,
+              reason: reason, error: "Pending clear must be replayed")
           end
-
-          adapter.sync_task(task: task, reason: reason, previous_task: previous_task)
-          clear_github_sync_pending(task)
-          sync_result_for(task: task, issues: issue_ids, success: true, reason: reason)
+          issue_adapter.sync_task(task: task)
+          clear_issue_sync_pending(task)
+          sync_result_for(task: task, issues: [identity], success: true, reason: reason)
         rescue StandardError => e
-          mark_github_sync_pending(task)
-          @last_update_note = "GitHub sync warning for task #{task&.id}: #{e.message}; flagged for 'ace-task github-sync --pending'"
-          sync_result_for(task: task, issues: issue_ids, success: false, reason: reason, error: e.message)
+          mark_issue_sync_pending(task)
+          @last_update_note = "Issue sync warning for task #{task&.id}: #{e.class}: #{e.message}; " \
+            "flagged for 'ace-task issue-sync --pending'"
+          sync_result_for(task: task, issues: [identity].compact, success: false,
+            reason: reason, error: "#{e.class}: #{e.message}")
         end
 
-        # Flag the task so the missed GitHub sync survives offline work and can be
-        # replayed with 'ace-task github-sync --pending'.
-        def mark_github_sync_pending(task)
+        def mark_issue_sync_pending(task)
           return unless task&.file_path && File.exist?(task.file_path)
 
           Ace::Support::Items::Molecules::FieldUpdater.update(
-            task.file_path, set: {"github_sync_pending" => true}
+            task.file_path, set: {"issue_sync_pending" => true}
           )
-        rescue StandardError
-          nil
         end
 
-        def clear_github_sync_pending(task)
+        def clear_issue_sync_pending(task)
           return unless task&.file_path && File.exist?(task.file_path)
 
           Ace::Support::Items::Molecules::FieldUpdater.update(
-            task.file_path, set: {"github_sync_pending" => nil}
+            task.file_path, set: {"issue_sync_pending" => nil}
           )
-        rescue StandardError
-          nil
+        end
+
+        def clear_issue_link(task)
+          Ace::Support::Items::Molecules::FieldUpdater.update(task.file_path,
+            set: {"issue_sync_pending" => true, "issue_sync_operation" => "clear"})
+          issue_adapter.clear_task(task: task)
+          Ace::Support::Items::Molecules::FieldUpdater.update(task.file_path,
+            set: {"remote_issue" => nil, "issue_sync_pending" => nil, "issue_sync_operation" => nil})
+        end
+
+        def sync_or_clear_linked_issue(task, reason:)
+          return sync_linked_issues_for(task, reason: reason) unless task.metadata["issue_sync_operation"] == "clear"
+
+          identity = linked_issue(task)
+          clear_issue_link(task)
+          sync_result_for(task: task, issues: [identity], success: true, reason: reason)
+        rescue StandardError => e
+          sync_result_for(task: task, issues: [identity].compact, success: false,
+            reason: reason, error: "#{e.class}: #{e.message}")
         end
 
         def sync_result_for(task:, issues:, success:, reason:, error: nil)
@@ -563,7 +619,7 @@ module Ace
           failures = results.reject { |result| result[:success] }.map do |result|
             {
               task_id: result[:task_id],
-              issue_ids: result[:issue_ids],
+              remote_issues: result[:issue_ids],
               error: result[:error]
             }
           end

@@ -254,48 +254,53 @@ class TaskFrontmatterValidatorTest < AceTaskTestCase
     end
   end
 
-  # --- github linkage fields ---
+  # --- exact remote issue linkage fields ---
 
-  def test_valid_github_issue
+  def test_valid_remote_issue
     with_tasks_dir do |root|
-      file = write_task_file(root, "github-valid", <<~CONTENT)
+      file = write_task_file(root, "issue-valid", <<~CONTENT)
         ---
         id: 8pp.t.q7w
         status: pending
         title: Linked task
         tags: []
         created_at: 2026-02-28 12:00:00
-        github_issue: 276
+        remote_issue:
+          server_name: lab
+          provider: forgejo
+          repository_url: https://forge.example/owner/repo
+          number: 276
+          url: https://forge.example/owner/repo/issues/276
         ---
       CONTENT
 
       issues = Validator.validate(file)
-      refute issues.any? { |i| i[:message].include?("github_issue") }
+      refute issues.any? { |i| i[:message].include?("remote_issue") }
     end
   end
 
-  def test_invalid_github_issue_type
+  def test_invalid_partial_remote_issue
     with_tasks_dir do |root|
-      file = write_task_file(root, "github-type", <<~CONTENT)
+      file = write_task_file(root, "issue-partial", <<~CONTENT)
         ---
         id: 8pp.t.q7w
         status: pending
         title: Linked task
         tags: []
         created_at: 2026-02-28 12:00:00
-        github_issue:
-          - 276
+        remote_issue:
+          number: 276
         ---
       CONTENT
 
       issues = Validator.validate(file)
-      assert issues.any? { |i| i[:message].include?("github_issue") && i[:type] == :error }
+      assert issues.any? { |i| i[:message].include?("remote_issue") && i[:type] == :error }
     end
   end
 
-  def test_invalid_github_issue_value
+  def test_obsolete_github_issue_key
     with_tasks_dir do |root|
-      file = write_task_file(root, "github-value", <<~CONTENT)
+      file = write_task_file(root, "issue-obsolete", <<~CONTENT)
         ---
         id: 8pp.t.q7w
         status: pending
@@ -307,7 +312,7 @@ class TaskFrontmatterValidatorTest < AceTaskTestCase
       CONTENT
 
       issues = Validator.validate(file)
-      assert issues.any? { |i| i[:message].include?("Invalid GitHub issue ID") && i[:type] == :error }
+      assert issues.any? { |i| i[:message].include?("Obsolete github_issue") && i[:type] == :error }
     end
   end
 

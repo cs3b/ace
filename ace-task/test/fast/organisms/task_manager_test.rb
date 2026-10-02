@@ -289,64 +289,6 @@ class TaskManagerTest < AceTaskTestCase
     assert_equal "_archive", reloaded_parent.special_folder
   end
 
-  def test_update_subtask_move_to_archive_when_parent_linked_syncs_parent_issue_via_update
-    sync_calls = []
-    fake_sync = Object.new
-    fake_sync.define_singleton_method(:validate_link!) { |**_payload| }
-    fake_sync.define_singleton_method(:available?) { true }
-    fake_sync.define_singleton_method(:available?) { true }
-    fake_sync.define_singleton_method(:sync_task) do |**payload|
-      sync_calls << payload
-      {synced: 1}
-    end
-
-    parent = nil
-    Ace::Task::Molecules::GithubIssueSyncAdapter.stub(:new, fake_sync) do
-      parent = @manager.create("Parent task", github_issue: 901)
-      first = @manager.create_subtask(parent.id, "Subtask one", status: "done")
-      @manager.create_subtask(parent.id, "Subtask two", status: "skipped")
-
-      sync_calls.clear
-      @manager.update(first.id, move_to: "archive")
-    end
-
-    assert_equal 1, sync_calls.length
-    assert_equal "update", sync_calls.first[:reason]
-    assert_equal parent.id, sync_calls.first[:task].id
-    assert_equal 901, sync_calls.first[:task].metadata["github_issue"]
-    assert_equal "done", sync_calls.first[:task].status
-    assert_equal "_archive", sync_calls.first[:task].special_folder
-  end
-
-  def test_update_subtask_status_auto_archive_syncs_parent_issue_via_update
-    sync_calls = []
-    fake_sync = Object.new
-    fake_sync.define_singleton_method(:validate_link!) { |**_payload| }
-    fake_sync.define_singleton_method(:available?) { true }
-    fake_sync.define_singleton_method(:available?) { true }
-    fake_sync.define_singleton_method(:sync_task) do |**payload|
-      sync_calls << payload
-      {synced: 1}
-    end
-
-    parent = nil
-    Ace::Task::Molecules::GithubIssueSyncAdapter.stub(:new, fake_sync) do
-      parent = @manager.create("Parent task", status: "done", github_issue: 902)
-      first = @manager.create_subtask(parent.id, "Subtask one", status: "done")
-      second = @manager.create_subtask(parent.id, "Subtask two", status: "pending")
-
-      sync_calls.clear
-      @manager.update(second.id, set: {"status" => "done"})
-    end
-
-    assert_equal 1, sync_calls.length
-    assert_equal "update", sync_calls.first[:reason]
-    assert_equal parent.id, sync_calls.first[:task].id
-    assert_equal 902, sync_calls.first[:task].metadata["github_issue"]
-    assert_equal "done", sync_calls.first[:task].status
-    assert_equal "_archive", sync_calls.first[:task].special_folder
-  end
-
   # --- create_subtask ---
 
   def test_create_subtask_allocates_char
@@ -390,198 +332,165 @@ class TaskManagerTest < AceTaskTestCase
     assert_equal @tmpdir, @manager.root_dir
   end
 
-  def test_create_with_github_issue_triggers_sync
-    sync_calls = []
-    fake_sync = Object.new
-    fake_sync.define_singleton_method(:validate_link!) { |**_payload| }
-    fake_sync.define_singleton_method(:available?) { true }
-    fake_sync.define_singleton_method(:available?) { true }
-    fake_sync.define_singleton_method(:sync_task) do |**payload|
-      sync_calls << payload
-      {synced: 1}
-    end
-
-    Ace::Task::Molecules::GithubIssueSyncAdapter.stub(:new, fake_sync) do
-      @manager.create("Linked task", github_issue: 276)
-    end
-
-    assert_equal 1, sync_calls.length
-    assert_equal "create", sync_calls.first[:reason]
-    assert_equal 276, sync_calls.first[:task].metadata["github_issue"]
+  def issue_identity(number = 276)
+    {"server_name" => "lab", "provider" => "forgejo",
+     "repository_url" => "https://forge.example/owner/repo", "number" => number,
+     "url" => "https://forge.example/owner/repo/issues/#{number}"}
   end
 
-  def test_github_sync_all_only_processes_linked_tasks
-    sync_calls = []
-    fake_sync = Object.new
-    fake_sync.define_singleton_method(:validate_link!) { |**_payload| }
-    fake_sync.define_singleton_method(:available?) { true }
-    fake_sync.define_singleton_method(:available?) { true }
-    fake_sync.define_singleton_method(:sync_task) do |**payload|
-      sync_calls << payload
-      {synced: 1}
-    end
-
-    Ace::Task::Molecules::GithubIssueSyncAdapter.stub(:new, fake_sync) do
-      @manager.create("Unlinked task")
-      @manager.create("Linked task A", github_issue: 276)
-      @manager.create("Linked task B", github_issue: 278)
-      sync_calls.clear
-      result = @manager.github_sync(all: true)
-      assert_equal 2, result[:synced]
-    end
-
-    assert_equal 2, sync_calls.length
-    assert sync_calls.all? { |call| call[:reason] == "manual-sync" }
+  def fake_issue_adapter(&sync)
+    adapter = Object.new
+    adapter.define_singleton_method(:validate_link!) { |**_args| true }
+    adapter.define_singleton_method(:sync_task) { |**args| sync.call(**args) }
+    adapter.define_singleton_method(:clear_task) { |**_args| true }
+    adapter
   end
 
-  def test_github_sync_all_reports_failures
-    calls = 0
-    fake_sync = Object.new
-    fake_sync.define_singleton_method(:validate_link!) { |**_payload| }
-    fake_sync.define_singleton_method(:available?) { true }
-    fake_sync.define_singleton_method(:available?) { true }
-    fake_sync.define_singleton_method(:sync_task) do |**payload|
-      calls += 1
-      raise "gh unavailable for #{payload[:task]&.id}" if calls == 2
-
-      {synced: 1}
+  def test_unlinked_task_create_never_loads_issue_adapter
+    @manager.stub(:issue_adapter, -> { flunk "local task touched provider" }) do
+      task = @manager.create("Local only")
+      assert_equal "Local only", @manager.show(task.id).title
     end
-
-    result = nil
-    Ace::Task::Molecules::GithubIssueSyncAdapter.stub(:new, fake_sync) do
-      @manager.create("Linked task A", github_issue: 276)
-      @manager.create("Linked task B", github_issue: 278)
-      calls = 0
-      result = @manager.github_sync(all: true)
-    end
-
-    assert_equal 1, result[:synced]
-    assert_equal 1, result[:failed]
-    assert_equal 0, result[:skipped]
-    assert_equal 1, result[:failures].length
   end
 
-  def test_create_records_sync_warning_instead_of_raising
-    fake_sync = Object.new
-    fake_sync.define_singleton_method(:validate_link!) { |**_payload| }
-    fake_sync.define_singleton_method(:available?) { true }
-    fake_sync.define_singleton_method(:available?) { true }
-    fake_sync.define_singleton_method(:sync_task) do |**_payload|
-      raise "gh unavailable"
+  def test_create_with_remote_issue_validates_and_syncs
+    calls = []
+    adapter = fake_issue_adapter { |task:| calls << task.metadata.fetch("remote_issue") }
+    @manager.stub(:issue_adapter, adapter) do
+      task = @manager.create("Linked task", remote_issue: issue_identity)
+      assert_equal issue_identity, task.metadata["remote_issue"]
     end
-
-    task = nil
-    Ace::Task::Molecules::GithubIssueSyncAdapter.stub(:new, fake_sync) do
-      task = @manager.create("Linked task", github_issue: 276)
-    end
-
-    assert_equal "Linked task", task.title
-    assert_match(/GitHub sync warning/i, @manager.last_update_note)
-    assert_match(/gh unavailable/, @manager.last_update_note)
+    assert_equal [issue_identity], calls
   end
 
-  def test_update_syncs_removed_linked_issues_using_previous_task_context
-    sync_calls = []
-    fake_sync = Object.new
-    fake_sync.define_singleton_method(:validate_link!) { |**_payload| }
-    fake_sync.define_singleton_method(:available?) { true }
-    fake_sync.define_singleton_method(:available?) { true }
-    fake_sync.define_singleton_method(:sync_task) do |**payload|
-      sync_calls << payload
-      {synced: 1}
+  def test_generic_update_cannot_partially_retarget_remote_issue
+    task = @manager.create("Local task")
+    assert_raises(ArgumentError) do
+      @manager.update(task.id, set: {"remote_issue.number" => "43"})
     end
-
-    Ace::Task::Molecules::GithubIssueSyncAdapter.stub(:new, fake_sync) do
-      task = @manager.create("Linked task", github_issue: 276)
-      sync_calls.clear
-      @manager.update(task.id, set: {"github_issue" => nil})
-    end
-
-    assert_equal 1, sync_calls.length
-    assert_equal "update", sync_calls.first[:reason]
-    assert_equal 276, sync_calls.first[:previous_task].metadata["github_issue"]
+    refute @manager.show(task.id).metadata.key?("remote_issue")
   end
 
-  # --- offline github sync (pending outbox) ---
-
-  def test_offline_github_sync_flags_task_pending_and_skips_call
-    sync_calls = []
-    fake_sync = Object.new
-    fake_sync.define_singleton_method(:available?) { false }
-    fake_sync.define_singleton_method(:validate_link!) { |**_payload| }
-    fake_sync.define_singleton_method(:sync_task) do |**payload|
-      sync_calls << payload
-      {synced: 1}
+  def test_offline_local_update_retains_link_and_pending_identity
+    adapter = fake_issue_adapter { |task:| raise Ace::Git::ProviderUnreachableError, "offline" }
+    @manager.stub(:issue_adapter, adapter) do
+      task = @manager.create("Linked task", remote_issue: issue_identity)
+      updated = @manager.update(task.id, set: {"status" => "blocked"})
+      assert_equal issue_identity, updated.metadata["remote_issue"]
+      assert @manager.show(task.id).metadata["issue_sync_pending"]
+      assert_match(/issue-sync --pending/, @manager.last_update_note)
     end
-
-    task = nil
-    Ace::Task::Molecules::GithubIssueSyncAdapter.stub(:new, fake_sync) do
-      task = @manager.create("Linked task", github_issue: 276)
-      @manager.update(task.id, move_to: "archive")
-    end
-
-    assert_empty sync_calls
-    assert_match(/github-sync --pending/, @manager.last_update_note)
-    moved = @manager.show(task.id)
-    assert_match(/github_sync_pending: true/, File.read(moved.file_path))
-
-    replay = nil
-    Ace::Task::Molecules::GithubIssueSyncAdapter.stub(:new, fake_sync) do
-      replay = @manager.github_sync(pending: true)
-    end
-    assert_equal 0, replay[:synced]
-    assert_equal 1, replay[:pending]
-    assert_empty sync_calls
   end
 
-  def test_github_sync_pending_replays_flagged_tasks_and_clears_flag
-    sync_calls = []
-    offline_sync = Object.new
-    offline_sync.define_singleton_method(:available?) { false }
-    offline_sync.define_singleton_method(:validate_link!) { |**_payload| }
-    offline_sync.define_singleton_method(:sync_task) { |**_payload| {synced: 1} }
-
-    task = nil
-    Ace::Task::Molecules::GithubIssueSyncAdapter.stub(:new, offline_sync) do
-      task = @manager.create("Linked task", github_issue: 276)
+  def test_bulk_sync_continues_after_failure
+    adapter = fake_issue_adapter do |task:|
+      raise Ace::Git::ProviderUnreachableError, "offline" if task.title == "First"
     end
-
-    online_sync = Object.new
-    online_sync.define_singleton_method(:available?) { true }
-    online_sync.define_singleton_method(:validate_link!) { |**_payload| }
-    online_sync.define_singleton_method(:sync_task) do |**payload|
-      sync_calls << payload
-      {synced: 1}
+    @manager.stub(:issue_adapter, adapter) do
+      @manager.create("First", remote_issue: issue_identity(1))
+      @manager.create("Second", remote_issue: issue_identity(2))
+      result = @manager.issue_sync(all: true)
+      assert_equal 1, result[:synced]
+      assert_equal 1, result[:failed]
+      assert_equal issue_identity(1), result[:failures].first[:remote_issues].first
     end
-
-    result = nil
-    Ace::Task::Molecules::GithubIssueSyncAdapter.stub(:new, online_sync) do
-      result = @manager.github_sync(pending: true)
-    end
-
-    assert_equal 1, result[:synced]
-    assert_equal 1, sync_calls.length
-    refute_match(/github_sync_pending: true/, File.read(task.file_path))
   end
 
-  def test_github_sync_pending_with_nothing_pending_syncs_nothing
-    sync_calls = []
-    fake_sync = Object.new
-    fake_sync.define_singleton_method(:available?) { true }
-    fake_sync.define_singleton_method(:validate_link!) { |**_payload| }
-    fake_sync.define_singleton_method(:available?) { true }
-    fake_sync.define_singleton_method(:sync_task) do |**payload|
-      sync_calls << payload
-      {synced: 1}
-    end
-
-    result = nil
-    Ace::Task::Molecules::GithubIssueSyncAdapter.stub(:new, fake_sync) do
-      @manager.create("Plain task")
-      result = @manager.github_sync(pending: true)
-    end
-
+  def test_empty_pending_set_succeeds_with_zero_counts
+    @manager.create("Local task")
+    result = @manager.issue_sync(pending: true)
     assert_equal 0, result[:synced]
-    assert_empty sync_calls
+    assert_equal 0, result[:failed]
+    assert_equal 0, result[:pending]
   end
+
+  def test_unlinked_reference_sync_returns_complete_counts
+    task = @manager.create("Local task")
+    assert_equal({synced: 0, failed: 0, pending: 0, skipped: 1, task_id: task.id, failures: []},
+      @manager.issue_sync(ref: task.id))
+  end
+
+  def test_identical_link_retries_pending_sync
+    calls = 0
+    adapter = fake_issue_adapter do |task:|
+      calls += 1
+      raise Ace::Git::ProviderUnreachableError, "offline" if calls == 1
+    end
+    @manager.stub(:issue_adapter, adapter) do
+      task = @manager.create("Linked task", remote_issue: issue_identity)
+      assert @manager.show(task.id).metadata["issue_sync_pending"]
+      Ace::Task::Molecules::IssueLink.stub(:from_input, issue_identity) do
+        @manager.issue_link(task.id, issue: "276", server_name: "lab")
+      end
+      refute @manager.show(task.id).metadata["issue_sync_pending"]
+      assert_equal 2, calls
+    end
+  end
+
+  def test_explicit_link_rejects_other_owner_before_metadata_change
+    task = @manager.create("Local task")
+    adapter = fake_issue_adapter { |task:| }
+    adapter.define_singleton_method(:validate_link!) do |**_args|
+      raise Ace::Git::ProviderIdentityMismatchError, "owned elsewhere"
+    end
+    Ace::Task::Molecules::IssueLink.stub(:from_input, issue_identity) do
+      @manager.stub(:issue_adapter, adapter) do
+        assert_raises(Ace::Git::ProviderIdentityMismatchError) do
+          @manager.issue_link(task.id, issue: "276", server_name: "lab")
+        end
+      end
+    end
+    refute @manager.show(task.id).metadata.key?("remote_issue")
+  end
+
+  def test_clear_failure_keeps_recovery_identity_and_pending_flag
+    adapter = fake_issue_adapter { |task:| }
+    adapter.define_singleton_method(:clear_task) do |**_args|
+      raise Ace::Git::ProviderUnreachableError, "offline"
+    end
+    @manager.stub(:issue_adapter, adapter) do
+      task = @manager.create("Linked task", remote_issue: issue_identity)
+      assert_raises(Ace::Git::ProviderUnreachableError) { @manager.issue_link(task.id, clear: true) }
+      reloaded = @manager.show(task.id)
+      assert_equal issue_identity, reloaded.metadata["remote_issue"]
+      assert reloaded.metadata["issue_sync_pending"]
+      assert_equal "clear", reloaded.metadata["issue_sync_operation"]
+    end
+  end
+
+  def test_pending_clear_replays_clear_without_recreating_tracking
+    sync_calls = 0
+    clear_calls = 0
+    adapter = fake_issue_adapter { |task:| sync_calls += 1 }
+    adapter.define_singleton_method(:clear_task) do |**_args|
+      clear_calls += 1
+      raise Ace::Git::ProviderUnknownOutcomeError, "label removal unknown" if clear_calls == 1
+    end
+    @manager.stub(:issue_adapter, adapter) do
+      task = @manager.create("Linked task", remote_issue: issue_identity)
+      assert_raises(Ace::Git::ProviderUnknownOutcomeError) { @manager.issue_link(task.id, clear: true) }
+      assert_equal "clear", @manager.show(task.id).metadata["issue_sync_operation"]
+      result = @manager.issue_sync(pending: true)
+      assert_equal 1, result[:synced]
+      assert_equal 0, result[:failed]
+      assert_nil @manager.show(task.id).metadata["remote_issue"]
+      assert_equal 1, sync_calls
+      assert_equal 2, clear_calls
+    end
+  end
+
+  def test_different_link_conflicts_until_successful_clear
+    adapter = fake_issue_adapter { |task:| }
+    @manager.stub(:issue_adapter, adapter) do
+      task = @manager.create("Linked task", remote_issue: issue_identity)
+      Ace::Task::Molecules::IssueLink.stub(:from_input, issue_identity(277)) do
+        assert_raises(Ace::Git::ProviderIdentityMismatchError) do
+          @manager.issue_link(task.id, issue: "277", server_name: "lab")
+        end
+      end
+      cleared = @manager.issue_link(task.id, clear: true)
+      refute cleared.metadata["remote_issue"]
+    end
+  end
+
 end

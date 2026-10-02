@@ -27,7 +27,7 @@ module Ace
           created_at: nil,
           parent: nil,
           estimate: nil,
-          github_issue: nil
+          remote_issue: nil
         )
           fm = {
             "id" => id,
@@ -39,7 +39,7 @@ module Ace
           fm["dependencies"] = dependencies || []
           fm["tags"] = tags || []
           fm["parent"] = parent if parent
-          fm["github_issue"] = github_issue if github_issue
+          fm["remote_issue"] = remote_issue if remote_issue
           fm
         end
 

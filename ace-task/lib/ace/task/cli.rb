@@ -10,7 +10,8 @@ require_relative "cli/commands/update"
 require_relative "cli/commands/doctor"
 require_relative "cli/commands/status"
 require_relative "cli/commands/plan"
-require_relative "cli/commands/github_sync"
+require_relative "cli/commands/issue_sync"
+require_relative "cli/commands/issue_link"
 
 module Ace
   module Task
@@ -28,7 +29,8 @@ module Ace
         ["doctor", "Run health checks on tasks"],
         ["status", "Show task status overview"],
         ["plan", "Resolve or generate implementation plan"],
-        ["github-sync", "Sync linked GitHub issues for task(s)"]
+        ["issue-sync", "Sync linked issues for task(s)"],
+        ["issue-link", "Link or clear one exact remote issue"]
       ].freeze
 
       HELP_EXAMPLES = [
@@ -48,8 +50,9 @@ module Ace
         "ace-task plan q7w",
         "ace-task plan q7w --refresh",
         "ace-task plan q7w --content",
-        "ace-task github-sync q7w",
-        "ace-task github-sync --all"
+        "ace-task issue-sync q7w",
+        "ace-task issue-sync --pending",
+        "ace-task issue-link q7w --issue 42 --server forgejo-lab"
       ].freeze
 
       register "create", CLI::Commands::Create
@@ -59,7 +62,8 @@ module Ace
       register "doctor", CLI::Commands::Doctor
       register "status", CLI::Commands::Status
       register "plan", CLI::Commands::Plan
-      register "github-sync", CLI::Commands::GithubSync
+      register "issue-sync", CLI::Commands::IssueSync
+      register "issue-link", CLI::Commands::IssueLink
 
       version_cmd = Ace::Support::Cli::VersionCommand.build(
         gem_name: "ace-task",
