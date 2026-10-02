@@ -4,6 +4,7 @@ require "ace/runtime"
 require "digest"
 require "fileutils"
 require "json"
+require "set"
 
 module Ace
   module Herdr
@@ -56,16 +57,18 @@ module Ace
               path = identity_path(workspace, label)
               existing = tabs(workspace).find { |tab| tab[:name] == label }
               if existing
-                if verifiable_identity?(existing, root: root, preset: preset, path: path)
-                  next existing[:id]
+                # Ownership must be proven by the record (or, without one,
+                # by the pane's native root for a preset-free request); a
+                # tab we cannot verify is never closed or replaced.
+                unless verifiable_identity?(existing, root: root, preset: preset, path: path)
+                  raise Runtime::WindowConflictError,
+                    "window '#{existing[:name]}' conflicts with root or preset"
                 end
 
-                # A same-label tab with no readable identity record and a
-                # matching root is a leftover from an interrupted create:
-                # clean it up and recreate instead of failing forever.
-                next existing[:id] if adopt_or_cleanup!(existing, root: root, preset: preset, path: path)
+                next existing[:id]
               end
 
+              known_tabs = tabs(workspace).map { |tab| tab[:id] }.to_set
               id = begin
                 if preset
                   created = @surface.create_tab(preset, workspace_id: workspace, cwd: root, label: label)
@@ -75,7 +78,10 @@ module Ace
                   find_value(parsed, %w[tab tab_id])
                 end
               rescue StandardError
-                cleanup_orphan_tab(workspace, label, root)
+                # Roll back only tabs this attempt created (present now but
+                # absent from the pre-call inventory); never touch a tab we
+                # did not observe being created.
+                cleanup_attempt_tabs(workspace, label, known_tabs)
                 raise
               end
               raise TargetResolutionError, "tab create returned no tab id" if id.nil?
@@ -89,19 +95,23 @@ module Ace
         def prepare_pane(window:)
           with_errors do
             tab = resolve_tab!(window)
-            cached = discover_prepared_pane(tab)
-            return cached if cached
+            # Hold the identity lock through discovery, split, verification,
+            # and recording so concurrent instances cannot split twice.
+            with_identity_lock(tab[:workspace], tab[:name]) do
+              cached = discover_prepared_pane(tab)
+              next cached if cached
 
-            root_pane = panes(tab[:workspace]).find { |pane| pane[:tab] == tab[:id] }
-            raise Runtime::TargetNotFoundError, "tab '#{window}' has no pane" unless root_pane
+              root_pane = panes(tab[:workspace]).find { |pane| pane[:tab] == tab[:id] }
+              raise Runtime::TargetNotFoundError, "tab '#{window}' has no pane" unless root_pane
 
-            parsed = @executor.pane_split(pane: root_pane[:pane], direction: "right").parsed_json
-            id = find_value(parsed, %w[pane pane_id])
-            raise TargetResolutionError, "pane split returned no pane id" if id.nil?
+              parsed = @executor.pane_split(pane: root_pane[:pane], direction: "right").parsed_json
+              id = find_value(parsed, %w[pane pane_id])
+              raise TargetResolutionError, "pane split returned no pane id" if id.nil?
 
-            verify_retained_shell!(id)
-            record_prepared_pane(tab, id)
-            id
+              verify_retained_shell!(id)
+              record_prepared_pane(tab, id)
+              id
+            end
           end
         end
 
@@ -282,25 +292,19 @@ module Ace
           false
         end
 
-        # After a failed/partial preset materialization the native tab may
-        # exist without an identity record; remove our same-label, same-root
-        # leftover so the next attempt recreates a complete layout.
-        def cleanup_orphan_tab(workspace, label, root)
-          path = identity_path(workspace, label)
-          orphan = tabs(workspace).find do |tab|
-            next false unless tab[:name] == label
-            next false if read_identity(path, tab)
+        # Rollback after a failed create: close only same-label tabs that
+        # appeared during this attempt (absent from the pre-call
+        # inventory). Tabs we did not observe being created are never
+        # touched — closing an unowned tab could destroy running work.
+        def cleanup_attempt_tabs(workspace, label, known_tab_ids)
+          tabs(workspace).each do |tab|
+            next if known_tab_ids.include?(tab[:id])
+            next unless tab[:name] == label
 
-            native_root_matches?(tab, root)
+            @executor.tab_close(tab[:id])
           end
-          @executor.tab_close(orphan[:id]) if orphan
         rescue ExecutorError, Runtime::Error
           nil
-        end
-
-        def native_root_matches?(tab, root)
-          native_root = native_pane_cwd(tab)
-          native_root && canonical_root(native_root) == canonical_root(root)
         end
 
         def read_identity(path, tab)
@@ -494,6 +498,13 @@ module Ace
           raise Runtime::TargetNotFoundError, e.message
         rescue WorkspaceNotFoundError => e
           raise Runtime::RuntimeUnavailableError, e.message
+        rescue TargetResolutionError => e
+          # The runtime responded but the answer was unusable (missing ids)
+          raise Runtime::RuntimeUnavailableError, e.message
+        rescue ValidationError, CommandError => e
+          # Bad request configuration or an unmapped native failure keeps
+          # the native cause while surfacing under the contract error type.
+          raise Runtime::Error, e.message
         rescue ExecutorUnavailableError => e
           raise Runtime::RuntimeUnavailableError, e.message
         end

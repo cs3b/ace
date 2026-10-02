@@ -304,16 +304,39 @@ module Ace
           assert_equal 0, @executor.calls_of(:tab_close).size
         end
 
-        def test_interrupted_preset_create_leftover_is_cleaned_up_and_recreated
-          ok_surface = Class.new do
+        def test_interrupted_preset_create_leftover_conflicts_and_is_never_closed
+          @executor.tab_create(workspace_id: "w1", label: "work", cwd: "/tmp/work")
+          assert_raises(Runtime::WindowConflictError) do
+            @adapter.ensure_window(name: "work", root: "/tmp/work", preset: "agent")
+          end
+          assert_equal 1, @executor.calls_of(:tab_create).size
+          assert_equal 0, @executor.calls_of(:tab_close).size
+        end
+
+        def test_manual_same_label_tab_is_never_closed_by_preset_request
+          # A manually created tab (no adapter record) must survive any
+          # adapter request — closing an unowned tab destroys running work.
+          @executor.tab_create(workspace_id: "w1", label: "work", cwd: "/tmp/work")
+          manual_tab = @adapter.list_windows.find { |row| row[:name] == "work" }[:window]
+          assert_raises(Runtime::WindowConflictError) do
+            @adapter.ensure_window(name: "work", root: "/tmp/work", preset: "agent")
+          end
+          assert @adapter.list_windows.any? { |row| row[:window] == manual_tab }
+          assert_equal 0, @executor.calls_of(:tab_close).size
+        end
+
+        def test_rollback_only_closes_tabs_created_by_the_current_attempt
+          @executor.tab_create(workspace_id: "w1", label: "other", cwd: "/tmp/work")
+          manual_tabs_before = @adapter.list_windows.map { |row| row[:window] }
+          failing_surface = Class.new do
             def initialize(executor)
               @real = ControlSurface.new(executor: executor)
               @executor = executor
             end
 
             def create_tab(*)
-              parsed = @executor.tab_create(workspace_id: "w1", label: "work", cwd: "/tmp/work").parsed_json
-              {tab: parsed["result"]["tab_id"], panes: [], commands: [], agents: []}
+              @executor.tab_create(workspace_id: "w1", label: "work", cwd: "/tmp/work")
+              raise StandardError, "preset materialization failed after native create"
             end
 
             def method_missing(name, *args, **kwargs, &block)
@@ -326,13 +349,53 @@ module Ace
               @real.respond_to?(name, include_private) || super
             end
           end.new(@executor)
-          preset_adapter = RuntimeAdapter.new(executor: @executor, env: env, sleeper: FastSleeper.new,
-            surface: ok_surface, identity_dir: @identity_dir)
-          @executor.tab_create(workspace_id: "w1", label: "work", cwd: "/tmp/work")
-          tab = preset_adapter.ensure_window(name: "work", root: "/tmp/work", preset: "agent")
-          assert tab
-          assert_equal 2, @executor.calls_of(:tab_create).size
+          failing = RuntimeAdapter.new(executor: @executor, env: env, sleeper: FastSleeper.new,
+            surface: failing_surface, identity_dir: @identity_dir)
+          error = assert_raises(StandardError) do
+            failing.ensure_window(name: "work", root: "/tmp/work", preset: "main")
+          end
+          assert_match(/materialization failed/, error.message)
           assert_equal 1, @executor.calls_of(:tab_close).size
+          remaining = @adapter.list_windows.map { |row| row[:window] }
+          assert_equal manual_tabs_before.sort, (remaining & manual_tabs_before).sort
+          assert_empty @adapter.list_windows.select { |row| row[:name] == "work" }
+        end
+
+        def test_prepared_pane_creation_is_serialized_across_instances
+          tab = @adapter.ensure_window(name: "work", root: "/tmp/work")
+          split_started = Queue.new
+          release_split = Queue.new
+          executor = Object.new
+          real = @executor
+          executor.define_singleton_method(:method_missing) do |name, *args, **kwargs, &block|
+            if name == :pane_split
+              split_started << true
+              release_split.pop
+            end
+            real.public_send(name, *args, **kwargs)
+          end
+          executor.define_singleton_method(:respond_to_missing?) { |_name, *_| true }
+          holder = RuntimeAdapter.new(executor: executor, env: env, sleeper: FastSleeper.new,
+            identity_dir: @identity_dir)
+          waiter = RuntimeAdapter.new(executor: real, env: env, sleeper: FastSleeper.new,
+            identity_dir: @identity_dir)
+          holder_thread = Thread.new { holder.prepare_pane(window: tab) }
+          split_started.pop
+          waiter_thread = Thread.new { waiter.prepare_pane(window: tab) }
+          sleep 0.1
+          release_split << true
+          assert_equal holder_thread.value, waiter_thread.value
+          assert_equal 1, real.calls_of(:pane_split).size
+        ensure
+          release_split << true if release_split && !holder_thread&.status.nil? && holder_thread.alive?
+        end
+
+        def test_unknown_preset_surfaces_as_contract_error
+          error = assert_raises(Runtime::Error) do
+            @adapter.ensure_window(name: "work", root: "/tmp/work", preset: "no-such-preset")
+          end
+          refute error.is_a?(Herdr::ValidationError)
+          assert_match(/no-such-preset/, error.message)
         end
 
         def test_failed_preset_materialization_rolls_back_the_native_tab
