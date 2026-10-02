@@ -700,6 +700,15 @@ module Ace
           scanner.scan.flat_map { |sr| collect.call(sr.dir_path, sr.id, sr.special_folder) }
         end
 
+        # Provider outcomes that conclusively prove a create POST never
+        # committed. Everything else (unknown outcome, unreachable reads)
+        # keeps the reconcile-create guard so replay reconciles instead of
+        # duplicating the comment.
+        DEFINITIVE_CREATE_OUTCOME_ERRORS = [
+          Ace::Git::ProviderAuthenticationError,
+          Ace::Git::ProviderObjectNotFoundError
+        ].freeze
+
         def sync_linked_issues_for(task, reason:, previous_task: nil)
           identity = linked_issue(task)
           return sync_result_for(task: task, issues: [], success: true, reason: reason) unless identity
@@ -737,12 +746,13 @@ module Ace
             reason: reason, error: "#{e.class}: #{e.message}")
         rescue StandardError => e
           mark_issue_sync_pending(task)
-          # A definitive provider outcome (auth rejection, object-not-found)
-          # after a fresh create POST proves it did not commit: replay may
-          # retry the create, so the uncertain-create guard must not survive
-          # it. Reconcile-only passes (unreadable forge) keep the guard.
+          # Only a definitive provider rejection of the create POST itself
+          # (auth failure, object-not-found) proves it did not commit; the
+          # guard then clears so replay may retry. Unknown outcomes and
+          # unreachable reconciliation reads keep the guard: the first POST
+          # may still commit and a second one would duplicate the comment.
           if reached_post && !reconcile_only &&
-              e.class != Ace::Git::ProviderUnknownOutcomeError
+              DEFINITIVE_CREATE_OUTCOME_ERRORS.any? { |klass| e.is_a?(klass) }
             Ace::Support::Items::Molecules::FieldUpdater.update(
               task.file_path, set: {"issue_sync_operation" => nil}
             )
