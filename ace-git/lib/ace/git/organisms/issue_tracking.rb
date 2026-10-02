@@ -174,6 +174,19 @@ module Ace
               snapshot[:comments].is_a?(Array) && snapshot[:labels].is_a?(Array)
             raise ProviderMalformedOutputError, "Incomplete issue tracking evidence for ##{number}"
           end
+          # Pagination across capped pages can repeat comments; dedupe by id
+          # so duplicate pages never read as multiple ACE tracking comments.
+          seen_ids = []
+          snapshot = snapshot.merge(
+            comments: snapshot[:comments].reject do |comment|
+              if seen_ids.include?(comment[:id])
+                true
+              else
+                seen_ids << comment[:id]
+                false
+              end
+            end
+          )
           snapshot
         end
 
