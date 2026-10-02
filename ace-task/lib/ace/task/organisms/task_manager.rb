@@ -320,13 +320,11 @@ module Ace
               result = sync_linked_issues_for(fresh, reason: "update", previous_task: task)
               if result[:success] == false &&
                   result[:error].to_s.start_with?("Ace::Git::ProviderIdentityMismatchError")
-                # Rejection before any remote mutation (sync's validate_link!
-                # runs first): roll back the freshly written link metadata so
-                # no local mapping survives for an issue this task never
-                # owned.
+                # Established links keep the stored identity for recovery and
+                # stay pending; the identity was written before this update,
+                # so there is no fresh mapping to roll back.
                 Ace::Support::Items::Molecules::FieldUpdater.update(
-                  fresh.file_path,
-                  set: {"remote_issue" => nil, "issue_sync_pending" => nil}
+                  fresh.file_path, set: {"issue_sync_pending" => true}
                 )
                 sync_failed_definitively = true
               end
