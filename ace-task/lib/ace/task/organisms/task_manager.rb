@@ -656,12 +656,13 @@ module Ace
                 if reconciled[:success]
                   return show_after_sync(task) || task
                 end
-                # Only authoritative absence (reads succeeded, marker never
-                # appeared) authorizes a fresh create. Unreadable forges keep
-                # the guard so a later pending replay can adopt a slow commit.
-                unless reconciled[:error].to_s.start_with?("Ace::Git::ProviderUnknownOutcomeError")
-                  raise Ace::Git::ProviderUnreachableError, reconciled[:error]
-                end
+              # Only authoritative absence (reads all completed, marker never
+              # appeared) authorizes a fresh create. Any other uncertainty —
+              # read failures, unresolved mutations — keeps the guard so a
+              # later pending replay can adopt a slow commit.
+              unless reconciled[:error].to_s.start_with?("Ace::Git::ProviderReconcileAbsenceError")
+                raise Ace::Git::ProviderUnreachableError, reconciled[:error]
+              end
                 Ace::Support::Items::Molecules::FieldUpdater.update(
                   task.file_path, set: {"issue_sync_operation" => nil}
                 )

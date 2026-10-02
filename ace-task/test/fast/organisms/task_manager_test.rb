@@ -687,7 +687,7 @@ class TaskManagerTest < AceTaskTestCase
         # Extended internal reads succeeded; the marker never appeared:
         # authoritative absence.
         phases << :reconcile
-        raise Ace::Git::ProviderUnknownOutcomeError, "tracking comment create still unresolved"
+        raise Ace::Git::ProviderReconcileAbsenceError, "tracking comment create still unresolved"
       else
         phases << :create
         before_create&.call
@@ -708,6 +708,67 @@ class TaskManagerTest < AceTaskTestCase
       # The leading :create is the original link-time sync.
       assert_equal %i[create reconcile create], phases
       refute @manager.show(task.id).metadata["issue_sync_operation"]
+    end
+  end
+
+  def test_identical_retry_keeps_guard_after_reconciliation_read_failure
+    phases = []
+    adapter = Object.new
+    adapter.define_singleton_method(:validate_link!) { |**_args| true }
+    adapter.define_singleton_method(:sync_task) do |task:, previous_task_id: nil, before_create: nil|
+      if task.metadata["issue_sync_operation"] == "reconcile-create"
+        # A read failure mid-reconciliation is NOT authoritative absence:
+        # the guard must survive and no fresh create may be authorized.
+        phases << :reconcile
+        raise Ace::Git::ProviderUnknownOutcomeError, "reconciliation reads failed"
+      else
+        phases << :create
+        before_create&.call
+        nil
+      end
+    end
+    adapter.define_singleton_method(:clear_task) { |**_args| true }
+    @manager.stub(:issue_adapter, adapter) do
+      task = @manager.create("Linked task", remote_issue: issue_identity)
+      Ace::Support::Items::Molecules::FieldUpdater.update(
+        task.file_path, set: {"issue_sync_operation" => "reconcile-create"}
+      )
+      Ace::Task::Molecules::IssueLink.stub(:from_input, issue_identity) do
+        assert_raises(Ace::Git::ProviderUnreachableError) do
+          @manager.issue_link(task.id, issue: "276", server_name: "lab")
+        end
+      end
+      assert_equal %i[create reconcile], phases
+      assert_equal "reconcile-create", @manager.show(task.id).metadata["issue_sync_operation"]
+    end
+  end
+
+  def test_pending_clear_create_guard_sets_create_pending_on_sync
+    captured = []
+    adapter = @manager.send(:issue_adapter)
+    adapter.define_singleton_method(:tracking) do |server|
+      Object.new.tap do |service|
+        service.define_singleton_method(:sync) do |**kwargs|
+          captured << kwargs[:create_pending]
+          {issue: nil, comments: [], labels: []}
+        end
+      end
+    end
+    Ace::Task::Molecules::IssueLink.stub(:validate!, issue_identity) do
+      adapter.define_singleton_method(:validate_link!) { |**_args| true }
+      @manager.stub(:issue_adapter, adapter) do
+        task = @manager.create("Linked task", remote_issue: issue_identity)
+        Ace::Support::Items::Molecules::FieldUpdater.update(
+          task.file_path, set: {"issue_sync_operation" => "clear", "issue_sync_pending" => true,
+                                "issue_sync_reconcile_create" => true}
+        )
+        fresh = @manager.show(task.id)
+        adapter.sync_task(task: fresh, previous_task_id: nil, before_create: nil)
+        # A sync of a clear-flagged task must reconcile the original create
+        # (create_pending) instead of risking a duplicate POST before the
+        # original comment appears.
+        assert captured.last == true
+      end
     end
   end
 

@@ -24,7 +24,8 @@ module Ace
             number: identity.fetch("number"), task_id: task.id,
             previous_task_id: previous_task_id,
             task_link: task_link(identity, task), task_status: task.status,
-            create_pending: task.metadata["issue_sync_operation"] == "reconcile-create",
+            create_pending: task.metadata["issue_sync_operation"] == "reconcile-create" ||
+              task.metadata["issue_sync_reconcile_create"] == true,
             before_create: before_create
           )
         end
@@ -38,7 +39,8 @@ module Ace
             number: identity.fetch("number"), task_id: task.id,
             previous_task_id: task.metadata["issue_sync_previous_id"],
             task_link: task_link(identity, task), task_status: task.status,
-            create_pending: task.metadata["issue_sync_operation"] == "reconcile-create",
+            create_pending: task.metadata["issue_sync_operation"] == "reconcile-create" ||
+              task.metadata["issue_sync_reconcile_create"] == true,
             comment_only: true
           )
         end
