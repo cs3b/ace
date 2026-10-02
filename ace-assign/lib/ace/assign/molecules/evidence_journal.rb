@@ -159,11 +159,18 @@ module Ace
         end
 
         def transition_service_request(request_id, state:, receipt: nil)
-          unless %w[succeeded failed uncertain rejected].include?(state)
+          unless %w[succeeded failed uncertain rejected failed-settled].include?(state)
             raise ArgumentError, "invalid service request state"
           end
           current = service_request(request_id)
           raise AttemptErrors::NotFound, "Service request #{request_id} not found" unless current
+          # failed-settled is the one evidence-validated exit from a terminal
+          # failed effect; every other terminal state is immutable.
+          if %w[succeeded rejected].include?(current["state"]) ||
+              (current["state"] == "failed" && state != "failed-settled") ||
+              (current["state"] != "failed" && state == "failed-settled")
+            raise AttemptErrors::InvalidState, "Service request #{request_id} is terminal"
+          end
           update_service_request(request_id, expected: current,
             replacement: current.merge("state" => state, "receipt" => receipt),
             event_type: "service_transition")
@@ -299,7 +306,9 @@ module Ace
               if expected && existing != expected
                 raise AttemptErrors::Conflict, "Service request #{request_id} changed during transition"
               end
-              if expected && %w[succeeded failed rejected].include?(existing["state"])
+              terminal = existing && %w[succeeded failed rejected].include?(existing["state"])
+              settlement = existing && existing["state"] == "failed" && replacement["state"] == "failed-settled"
+              if expected && existing && terminal && !settlement
                 raise AttemptErrors::InvalidState, "Service request #{request_id} is terminal"
               end
 

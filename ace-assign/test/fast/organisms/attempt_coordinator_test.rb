@@ -351,8 +351,44 @@ module Ace
         end
         assert_includes error.message, "submitter"
 
-        assert_equal "uncertain", coordinator.service_request_status("svc-provenance")["state"]
-      end
+  assert_equal "uncertain", coordinator.service_request_status("svc-provenance")["state"]
+end
+
+def test_failed_effect_settles_only_through_attributable_reconciliation
+  coordinator = build_coordinator
+  assignment = create_assignment
+  attempt = coordinator.start(assignment_id: assignment.id, step: "010", project_id: "ace")
+  binding = {"request_id" => "svc-failed", "assignment_id" => assignment.id,
+             "attempt_id" => attempt.attempt_id, "project_id" => "ace",
+             "operation" => "forge-sync", "input_digest" => "a" * 64,
+             "target" => {"resource" => "forge/repo"},
+             "candidate_head" => git(@repo, "rev-parse", "HEAD").strip,
+             "executor_uid" => Process.uid, "transport" => "unix"}
+  coordinator.claim_service_request(binding)
+  digest = write_evidence("forge/failed", "ace-service-attestation request:#{binding["request_id"]} " \
+    "input:#{binding["input_digest"]} outcome:failed\n")
+  coordinator.transition_service_request("svc-failed", state: "failed", receipt: binding.merge(
+    "outcome" => "failed", "executor_uid" => Process.uid,
+    "evidence" => [{"ref" => "forge/failed", "sha256" => digest}]))
+
+  # A failed effect is immutable for ordinary transitions.
+  assert_raises(AttemptErrors::InvalidState) do
+    coordinator.transition_service_request("svc-failed", state: "uncertain")
+  end
+
+  # Reconciliation requires a bound, executor-attested failed receipt.
+  coordinator.reconcile_service_failure("svc-failed", receipt: binding.merge(
+    "outcome" => "failed", "executor_uid" => Process.uid,
+    "evidence" => [{"ref" => "forge/failed", "sha256" => digest}]))
+  assert_equal "failed-settled", coordinator.service_request_status("svc-failed")["state"]
+
+  error = assert_raises(AttemptErrors::InvalidState) do
+    coordinator.reconcile_service_failure("svc-failed", receipt: binding.merge(
+      "outcome" => "failed", "executor_uid" => Process.uid,
+      "evidence" => [{"ref" => "forge/failed", "sha256" => digest}]))
+  end
+  assert_includes error.message, "Only failed service requests"
+end
 
       def test_service_receipt_evidence_cannot_be_reused_from_an_earlier_request
         coordinator = build_coordinator

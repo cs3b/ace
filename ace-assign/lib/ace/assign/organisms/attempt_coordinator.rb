@@ -124,6 +124,20 @@ module Ace
           journal_for.transition_service_request(request_id, state: state, receipt: receipt)
         end
 
+        # Settle a failed effect as "no effect occurred". The settlement is
+        # evidence-validated like a terminal receipt — the executor must
+        # attest this request with outcome:failed and attributable evidence
+        # — and the original failure event stays in the journal history.
+        def reconcile_service_failure(request_id, receipt:)
+          request = journal_for.service_request(request_id)
+          raise AttemptErrors::NotFound, "Service request #{request_id} not found" unless request
+          unless request["state"] == "failed"
+            raise AttemptErrors::InvalidState, "Only failed service requests can be reconciled"
+          end
+          validate_service_receipt!(request, "failed", receipt)
+          journal_for.transition_service_request(request_id, state: "failed-settled", receipt: receipt)
+        end
+
         def validate_service_receipt!(request, state, receipt)
           unless receipt.is_a?(Hash) && receipt.keys.sort == SERVICE_RECEIPT_FIELDS.sort
             raise AttemptErrors::ReceiptRejected, "Service receipt has invalid fields"
@@ -157,12 +171,11 @@ module Ace
         end
 
         # Evidence must live inside the candidate repository (symlinks
-        # resolved), exist, match its digest, be owned by — and not writable
-        # by anyone but — the claimed executor identity, postdate the claim,
-        # and name the claimed request, input digest, and attested outcome: a
-        # caller cannot attest an effect with a file it selected, wrote, or
-        # reused from an earlier execution, nor record an outcome the
-        # executor did not attest.
+        # resolved), be owned by — and not writable by anyone but — the
+        # claimed executor identity, postdate the claim, and carry a
+        # structured attestation naming the claimed request, input digest,
+        # and attested outcome. All checks read one open handle, so a swap
+        # on a caller-writable path cannot mix files between checks.
         def verify_service_evidence!(evidence, request, state)
           repo_root = File.realpath(@repo_root)
           claimed_at = parse_claimed_at(request)
@@ -176,26 +189,32 @@ module Ace
               raise AttemptErrors::ReceiptRejected, "Service receipt evidence must live inside the repository: #{ref}"
             end
             begin
-              real = File.realpath(path)
+              file = File.open(path, "rb")
             rescue Errno::ENOENT
               raise AttemptErrors::ReceiptRejected, "Service receipt evidence is unavailable: #{ref}"
             end
-            unless real.start_with?(repo_root + File::SEPARATOR)
-              raise AttemptErrors::ReceiptRejected, "Service receipt evidence must live inside the repository: #{ref}"
-            end
-            stat = File.stat(real)
-            unless stat.uid == request["executor_uid"] && (stat.mode & 0o022).zero?
-              raise AttemptErrors::ReceiptRejected, "Service receipt evidence is not executor-owned: #{ref}"
-            end
-            unless claimed_at.nil? || stat.mtime >= claimed_at
-              raise AttemptErrors::ReceiptRejected, "Service receipt evidence predates the claim: #{ref}"
-            end
-            unless evidence_bound_to_request?(real, request, state)
-              raise AttemptErrors::ReceiptRejected,
-                "Service receipt evidence does not bind the claimed request: #{ref}"
-            end
-            unless Digest::SHA256.file(real).hexdigest == item["sha256"]
-              raise AttemptErrors::ReceiptRejected, "Service receipt evidence digest mismatch: #{ref}"
+            begin
+              real = File.realpath(path)
+              unless real.start_with?(repo_root + File::SEPARATOR)
+                raise AttemptErrors::ReceiptRejected, "Service receipt evidence must live inside the repository: #{ref}"
+              end
+              stat = file.stat
+              unless stat.uid == request["executor_uid"] && (stat.mode & 0o022).zero?
+                raise AttemptErrors::ReceiptRejected, "Service receipt evidence is not executor-owned: #{ref}"
+              end
+              unless claimed_at.nil? || stat.mtime >= claimed_at
+                raise AttemptErrors::ReceiptRejected, "Service receipt evidence predates the claim: #{ref}"
+              end
+              content = file.read
+              unless attestation_line(content, request, state)
+                raise AttemptErrors::ReceiptRejected,
+                  "Service receipt evidence does not bind the claimed request: #{ref}"
+              end
+              unless Digest::SHA256.hexdigest(content) == item["sha256"]
+                raise AttemptErrors::ReceiptRejected, "Service receipt evidence digest mismatch: #{ref}"
+              end
+            ensure
+              file.close
             end
           end
         end
@@ -205,10 +224,10 @@ module Ace
         # exactly: an unrelated executor-owned file cannot attest this
         # effect, prose cannot substitute for the attested outcome, and its
         # result cannot be recorded under another terminal state.
-        def evidence_bound_to_request?(path, request, state)
+        def attestation_line(content, request, state)
           attestation = /^ace-service-attestation request:#{Regexp.escape(request.fetch("request_id"))} \
 input:#{Regexp.escape(request.fetch("input_digest"))} outcome:(\S+)$/
-          line = File.read(path).scan(attestation).first
+          line = content.scan(attestation).first
           line && (%w[succeeded failed].include?(state) ? line.first == state : true)
         end
 
