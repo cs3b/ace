@@ -445,6 +445,39 @@ class TaskManagerTest < AceTaskTestCase
     end
   end
 
+  def test_reparent_persists_pending_and_previous_id_before_transfer
+    adapter = fake_issue_adapter { |task:, **_| raise Ace::Git::ProviderUnreachableError, "offline" }
+    @manager.stub(:issue_adapter, adapter) do
+      parent = @manager.create("Parent")
+      task = @manager.create("Linked task", remote_issue: issue_identity)
+      reparented = @manager.update(task.id, move_as_child_of: parent.id)
+      reloaded = @manager.show(reparented.id)
+      assert reloaded.metadata["issue_sync_pending"]
+      assert_equal task.id, reloaded.metadata["issue_sync_previous_id"]
+    end
+  end
+
+  def test_pending_replay_uses_persisted_previous_id
+    captured = []
+    offline = true
+    adapter = fake_issue_adapter do |task:, previous_task_id: nil|
+      raise Ace::Git::ProviderUnreachableError, "offline" if offline
+
+      captured << [task.id, previous_task_id]
+    end
+    @manager.stub(:issue_adapter, adapter) do
+      parent = @manager.create("Parent")
+      task = @manager.create("Linked task", remote_issue: issue_identity)
+      reparented = @manager.update(task.id, move_as_child_of: parent.id)
+      offline = false
+      captured.clear
+      result = @manager.issue_sync(pending: true)
+      assert_equal 1, result[:synced]
+      assert_equal [reparented.id, task.id], captured.last
+      refute @manager.show(reparented.id).metadata["issue_sync_previous_id"]
+    end
+  end
+
   def test_bulk_sync_continues_after_failure
     adapter = fake_issue_adapter do |task:, **_|
       raise Ace::Git::ProviderUnreachableError, "offline" if task.title == "First"
