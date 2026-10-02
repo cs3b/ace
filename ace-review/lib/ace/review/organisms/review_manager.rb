@@ -1451,19 +1451,16 @@ module Ace
             session_key = persisted["session_key"]
             content = persisted["body"]
           else
-            # The correlation is derived from normalized identity values
-            # (server, repository, numeric PR, head, review digest): the
-            # same review expressed as 42 or owner/repo#42 must reconcile
-            # to the same marker instead of posting a duplicate.
-            pr_number = options.pr_metadata&.fetch("number", nil) || options.pr
-            session_key = [identity_server, identity_repo, pr_number, identity_head, review_digest, identity_preset, identity_model].join("            # Derive the marker from the identity key (not the review
-            # file directory) so the same identity always produces the
-            # same marker even if the local record was lost.
+            # The marker IS the identity key: deterministic for the same
+            # identity even when the local record was lost, so the posted
+            # body and correlation always reconcile.
             session_key = identity_key
-")
             content = Molecules::PrProvider.format_comment(
               review_content, preset: review_data[:preset], model: review_data[:model],
-              timestamp: File.mtime(review_file).utc.strftime("%Y-%m-%d %H:%M:%S UTC")
+              # Deterministic per identity: the review digest stands in
+              # for the mtime so re-formatting after a lost record still
+              # reconciles.
+              timestamp: "review-#{review_digest[0, 12]}"
             )
             record = YAML.dump(
               "session_key" => session_key, "body" => content,
