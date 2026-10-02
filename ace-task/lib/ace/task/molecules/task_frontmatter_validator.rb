@@ -143,7 +143,8 @@ module Ace
             end
             if frontmatter.key?("remote_issue")
               linked = frontmatter["remote_issue"]
-              valid = linked.is_a?(Hash) && linked.keys.sort ==
+              valid = linked.is_a?(Hash) && linked.keys.all? { |key| key.is_a?(String) } &&
+                linked.keys.sort ==
                 %w[number provider repository_url server_name url] &&
                 linked["number"].is_a?(Integer) && linked["number"].positive? &&
                 %w[server_name provider repository_url url].all? { |key| linked[key].is_a?(String) && !linked[key].empty? } &&
