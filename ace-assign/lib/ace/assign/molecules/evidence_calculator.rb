@@ -44,9 +44,8 @@ module Ace
             # dispatched (authorization consumed): only attributable evidence
             # that no effect occurred settles it, never the bare rejection.
             unresolved_effects.concat(journal.service_requests(assignment.id)
-              .select { |request| %w[accepted uncertain].include?(request["state"]) ||
-                (request["state"] == "rejected" && request["consumed"] != false) }
-              .map { |request| "#{request['request_id']}:#{request['operation']}:#{request['state']}" })
+              .select { |request| unresolved_service_state?(request) }
+              .map { |request| "#{request["request_id"]}:#{request["operation"]}:#{request["state"]}" })
             unresolved_effects.uniq!
           end
           feedback_state = derive_feedback_state(attempts, receipts, head, unresolved_effects)
@@ -87,6 +86,14 @@ module Ace
         end
 
         private
+
+        # Accepted and uncertain effects are unresolved by definition; a
+        # rejected effect stays unresolved when its claim was dispatched
+        # (authorization consumed), because the effect may have happened.
+        def unresolved_service_state?(request)
+          %w[accepted uncertain].include?(request["state"]) ||
+            (request["state"] == "rejected" && request["consumed"] != false)
+        end
 
         def git_facts
           head, _s = Open3.capture2("git", "rev-parse", "HEAD", chdir: @repo_root, stdin_data: "")

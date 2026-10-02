@@ -150,7 +150,7 @@ module Ace
                    "candidate_head" => head, "executor_uid" => Process.uid,
                    "transport" => "local"}
         coordinator.claim_service_request(binding)
-        evidence_digest = write_evidence("forge/receipt", "executor attested effect\n")
+        evidence_digest = write_evidence("forge/receipt", "executor attested effect #{binding["request_id"]} #{binding["input_digest"]}\n")
         coordinator.transition_service_request("svc-evidence", state: "uncertain")
 
         evidence = calculate(auto_merge: true)

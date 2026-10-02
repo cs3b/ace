@@ -279,7 +279,7 @@ module Ace
                    "candidate_head" => git(@repo, "rev-parse", "HEAD").strip,
                    "executor_uid" => Process.uid, "transport" => "unix"}
         coordinator.claim_service_request(binding)
-        evidence = write_evidence("forge/receipt", "executor attested effect\n")
+        evidence = write_evidence("forge/receipt", "executor attested effect #{binding["request_id"]} #{binding["input_digest"]}\n")
         coordinator.transition_service_request("svc-receipt", state: "uncertain")
         receipt = binding.merge("outcome" => "succeeded", "executor_uid" => Process.uid,
           "evidence" => [{"ref" => "forge/receipt", "sha256" => evidence}])
@@ -305,7 +305,7 @@ module Ace
                    "candidate_head" => git(@repo, "rev-parse", "HEAD").strip,
                    "executor_uid" => Process.uid, "transport" => "unix"}
         coordinator.claim_service_request(binding)
-        digest = write_evidence("forge/provenance", "real effect artifact\n")
+        digest = write_evidence("forge/provenance", "real effect artifact #{binding["request_id"]} #{binding["input_digest"]}\n")
         coordinator.transition_service_request("svc-provenance", state: "uncertain")
 
         # A receipt from a different executor identity cannot complete the claim.
@@ -366,7 +366,7 @@ module Ace
 
         first = base.merge("request_id" => "svc-first")
         coordinator.claim_service_request(first)
-        digest = write_evidence("forge/attestation", "executor attested effect\n")
+        digest = write_evidence("forge/attestation", "executor attested effect #{first["request_id"]} #{first["input_digest"]}\n")
         coordinator.transition_service_request("svc-first", state: "succeeded", receipt: first.merge(
           "outcome" => "succeeded",
           "evidence" => [{"ref" => "forge/attestation", "sha256" => digest}]))

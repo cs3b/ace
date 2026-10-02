@@ -184,10 +184,22 @@ module Ace
             unless claimed_at.nil? || stat.mtime >= claimed_at
               raise AttemptErrors::ReceiptRejected, "Service receipt evidence predates the claim: #{ref}"
             end
+            unless evidence_bound_to_request?(real, request)
+              raise AttemptErrors::ReceiptRejected,
+                "Service receipt evidence does not bind the claimed request: #{ref}"
+            end
             unless Digest::SHA256.file(real).hexdigest == item["sha256"]
               raise AttemptErrors::ReceiptRejected, "Service receipt evidence digest mismatch: #{ref}"
             end
           end
+        end
+
+        # The evidence artifact must name the claimed request and input
+        # digest: an unrelated executor-owned file cannot attest this effect.
+        def evidence_bound_to_request?(path, request)
+          content = File.read(path)
+          content.include?(request.fetch("request_id")) &&
+            content.include?(request.fetch("input_digest"))
         end
 
         def parse_claimed_at(request)
