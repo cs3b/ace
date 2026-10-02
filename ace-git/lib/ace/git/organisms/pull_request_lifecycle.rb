@@ -55,13 +55,12 @@ module Ace
           before = provider.pull_request(number: reference.number)
           head = required_head!(before)
           details = provider.pull_request_review_details(number: reference.number)
-          after = provider.pull_request(number: reference.number)
           hydrated_body = provider.pull_request_body(number: reference.number)
+          # Hydration is a remote read: build the metadata from the read that
+          # follows it, so identity and body can never come from different
+          # points in time.
+          after = provider.pull_request(number: reference.number)
           after = after.with(body: hydrated_body) unless hydrated_body.nil?
-          # Hydration is a remote read: re-verify identity after it so the
-          # metadata can never pair a newer body with a stale head.
-          verified = provider.pull_request(number: reference.number)
-          after = after.with(head_sha: verified.head_sha)
           # Body hydration and identity must agree with the base provenance
           # read before collection; a moved base invalidates the metadata.
           latest_details = provider.pull_request_review_details(number: reference.number)
@@ -104,16 +103,15 @@ module Ace
             )
           end
           checks = provider.pull_request_checks(number: reference.number, head_sha: head)
-          after = provider.pull_request(number: reference.number)
-          latest_details = provider.pull_request_review_details(number: reference.number)
           # The CLI-parsed PR may omit the description; hydrate it from the
           # provider's body capability when available (nil stays absence).
+          # Hydration is itself a remote read: the final identity comes from
+          # the read that follows it, so body and identity can never come
+          # from different points in time.
           hydrated_body = provider.pull_request_body(number: reference.number)
+          after = provider.pull_request(number: reference.number)
           after = after.with(body: hydrated_body) unless hydrated_body.nil?
-          # Hydration is itself a remote read: re-verify the PR head after it
-          # so the snapshot can never pair a new body with an old head.
-          verified = provider.pull_request(number: reference.number)
-          after = after.with(head_sha: verified.head_sha)
+          latest_details = provider.pull_request_review_details(number: reference.number)
           if after.head_sha != head || latest_details.base_sha != details.base_sha ||
               after.head_ref != before.head_ref || after.base_ref != before.base_ref ||
               after.head_repository_url != before.head_repository_url ||
