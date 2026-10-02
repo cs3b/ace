@@ -78,8 +78,12 @@ module Ace
                 sync_started = true
                 sync_linked_issues_for(created_task, reason: "create")
               end
+            rescue Ace::Git::ProviderUnreachableError
+              # Offline validation retains the complete local link + pending
+              # flag: offline replay is the spec-mandated recovery path.
+              raise
             rescue StandardError
-              # Pre-sync rejections (ownership conflict, unknown server) must
+              # Confirmed rejections (ownership conflict, unknown server) must
               # not leave a second local claimant for the issue. Once sync has
               # begun the remote marker may exist: retain the task and its
               # pending identity as the recovery record instead of deleting it.
@@ -356,6 +360,8 @@ module Ace
               sync_started = true
               sync_linked_issues_for(created_subtask, reason: "create")
             end
+          rescue Ace::Git::ProviderUnreachableError
+            raise
           rescue StandardError
             FileUtils.rm_rf(created_subtask.path) unless sync_started
             raise
@@ -379,7 +385,13 @@ module Ace
                 # synced, or REPLACED this link while this replay waited. A
                 # replaced identity must not be mutated under the old lock.
                 fresh = show(task.id)
-                next sync_result_for(task: task, issues: [], success: true, reason: "manual-sync") if fresh.nil?
+                if fresh.nil?
+                  # A concurrent reparent changed the task's ID; report a
+                  # retryable failure rather than claiming a sync that never
+                  # happened.
+                  next sync_result_for(task: task, issues: [locked_identity].compact, success: false,
+                    reason: "manual-sync", error: "Task relocated during replay; retry the command")
+                end
 
                 if linked_issue(fresh) != locked_identity
                   next sync_result_for(task: fresh, issues: [locked_identity].compact, success: false,
