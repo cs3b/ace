@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "test_helper"
+require "openssl"
 require "ace/git/forgejo/issue_api"
 
 class ForgejoIssueApiTest < AceGitForgejoTestCase
@@ -33,6 +34,18 @@ class ForgejoIssueApiTest < AceGitForgejoTestCase
 
   def test_post_timeout_keeps_unknown_outcome
     runner = ->(**_args) { raise Net::ReadTimeout }
+    api = Ace::Git::Forgejo::IssueApi.new(server: SERVER, timeout: 5, runner: runner)
+    assert_raises(Ace::Git::ProviderUnknownOutcomeError) { api.create_comment(42, "marker") }
+  end
+
+  def test_read_tls_failure_is_unreachable
+    runner = ->(**_args) { raise OpenSSL::SSL::SSLError, "certificate verify failed" }
+    api = Ace::Git::Forgejo::IssueApi.new(server: SERVER, timeout: 5, runner: runner)
+    assert_raises(Ace::Git::ProviderUnreachableError) { api.issue(42) }
+  end
+
+  def test_mutation_tls_failure_keeps_unknown_outcome
+    runner = ->(**_args) { raise OpenSSL::SSL::SSLError, "handshake failed" }
     api = Ace::Git::Forgejo::IssueApi.new(server: SERVER, timeout: 5, runner: runner)
     assert_raises(Ace::Git::ProviderUnknownOutcomeError) { api.create_comment(42, "marker") }
   end
