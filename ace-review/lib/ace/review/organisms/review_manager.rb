@@ -1449,9 +1449,15 @@ module Ace
             session_key = persisted["session_key"]
             content = persisted["body"]
           else
-            # The digest in the key keeps a changed review on its own
+            # The correlation is derived from normalized identity values
+            # (server, repository, numeric PR, head, review digest): the
+            # same review expressed as 42 or owner/repo#42 must reconcile
+            # to the same marker instead of posting a duplicate.
+            pr_number = options.pr_metadata&.fetch("number", nil) || options.pr
+            session_key = [identity_server, identity_repo, pr_number, identity_head, review_digest, identity_preset, identity_model].join("            # The digest in the key keeps a changed review on its own
             # session marker instead of conflicting with the old comment.
             session_key = File.dirname(File.expand_path(review_file)) + ":" + review_digest
+")
             content = Molecules::PrProvider.format_comment(
               review_content, preset: review_data[:preset], model: review_data[:model],
               timestamp: File.mtime(review_file).utc.strftime("%Y-%m-%d %H:%M:%S UTC")
