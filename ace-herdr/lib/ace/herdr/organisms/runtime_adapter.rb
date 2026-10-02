@@ -4,7 +4,6 @@ require "ace/runtime"
 require "digest"
 require "fileutils"
 require "json"
-require "set"
 
 module Ace
   module Herdr
@@ -77,7 +76,7 @@ module Ace
               created_id =
                 if preset
                   begin
-                    created = @surface.create_tab(preset, workspace_id: workspace, cwd: root, label: label)
+                    created = @surface.create_tab(preset, workspace_id: workspace, cwd: File.expand_path(root), label: label)
                   rescue TabMaterializationError => e
                     # Roll back the tab this call created — exact id from
                     # the surface, never a listing guess.
@@ -111,7 +110,11 @@ module Ace
               cached = discover_prepared_pane(tab)
               next cached if cached
 
-              root_pane = panes(tab[:workspace]).find { |pane| pane[:tab] == tab[:id] }
+              # Split a shell pane: prefer the first pane without a live
+              # agent — pane list ordering does not contractually promise
+              # a shell root pane in foreign multi-pane tabs.
+              tab_panes = panes(tab[:workspace]).select { |pane| pane[:tab] == tab[:id] }
+              root_pane = tab_panes.find { |pane| !agent_pane?(pane[:pane]) } || tab_panes.first
               raise Runtime::TargetNotFoundError, "tab '#{window}' has no pane" unless root_pane
 
               parsed = @executor.pane_split(pane: root_pane[:pane], direction: "right").parsed_json
@@ -284,22 +287,6 @@ module Ace
 
           native_root = native_pane_cwd(tab)
           native_root && canonical_root(native_root) == canonical_root(root) && preset.nil?
-        end
-
-        # Called when verifiable_identity? was false: a conflicting
-        # recorded identity is a WindowConflictError; a record-less tab
-        # whose native root matches the request is an interrupted create —
-        # remove it and report recreate.
-        def adopt_or_cleanup!(tab, root:, preset:, path:)
-          recorded = read_identity(path, tab)
-          unless recorded.nil? && native_root_matches?(tab, root)
-            raise Runtime::WindowConflictError,
-              "window '#{tab[:name]}' conflicts with root or preset"
-          end
-
-          @prepared.delete(tab[:id])
-          @executor.tab_close(tab[:id])
-          false
         end
 
         # Rollback after a failed create is exact-id only (see ensure_window);

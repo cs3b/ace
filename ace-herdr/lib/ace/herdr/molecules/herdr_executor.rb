@@ -216,13 +216,25 @@ module Ace
         # code is kept in the message so CLI failures carry it.
         def classify(result, cmd)
           code, message = error_code(result)
-          # First nonempty value: herdr writes some failures (socket
-          # errors) to stdout with an empty stderr, and empty strings are
-          # truthy in Ruby, so `||` chaining would hide the detail.
-          detail = [message, result.stderr, result.stdout].reject { |value| value.to_s.empty? }.first
+          if code
+            return classify_code(code, message)
+          end
+
+          # No structured code: first nonempty of stderr/stdout — herdr
+          # writes some failures (socket errors) to stdout with an empty
+          # stderr, and empty strings are truthy in Ruby, so `||` chaining
+          # would hide the detail.
+          detail = [result.stderr, result.stdout].reject { |value| value.to_s.empty? }.first
           if detail.to_s.match?(/no herdr server is running|cannot connect|connection refused|socket.*unavailable/i)
             return ExecutorUnavailableError.new(detail)
           end
+
+          CommandError.new(
+            "herdr command failed (exit #{result.exit_code}): #{cmd.join(" ")} #{detail}".strip
+          )
+        end
+
+        def classify_code(code, message)
           case code
           when "agent_blocked" then AgentBlockedError.new(tag_code(code, message))
           when "agent_prompt_stalled" then AgentNotReadyError.new(tag_code(code, message))
@@ -233,7 +245,7 @@ module Ace
           when "timeout" then ExecutorTimeoutError.new(tag_code(code, message))
           else
             CommandError.new(
-              "herdr command failed (exit #{result.exit_code}): #{cmd.join(" ")} #{detail}".strip
+              "herdr command failed: #{tag_code(code, message)}"
             )
           end
         end

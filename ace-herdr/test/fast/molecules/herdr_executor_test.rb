@@ -130,6 +130,20 @@ module Ace
           assert_match(/boom/, error.message)
         end
 
+        def test_structured_timeout_with_socket_phrase_stays_timeout
+          executor = StubbedExecutor.new(results: [
+            ExecutionResult.new(
+              stdout: JSON.generate({error: {code: "timeout", message: "connection refused during wait"}}),
+              stderr: "", success: false, exit_code: 1
+            )
+          ])
+
+          error = assert_raises(ExecutorTimeoutError) { executor.agent_wait(pane: "p5", until_states: ["idle"], timeout_ms: 10) }
+
+          refute error.is_a?(ExecutorUnavailableError)
+          assert_match(/connection refused/, error.message)
+        end
+
         def test_error_json_on_stderr_is_recognized
           executor = StubbedExecutor.new(results: [
             ExecutionResult.new(

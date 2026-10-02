@@ -258,9 +258,10 @@ module Ace
             commands = run_pane_commands(placed)
             agents = start_pane_agents(placed, workspace_id: workspace_id)
           rescue StandardError => e
-            # Surface the created tab id so the owner can roll back exactly
-            # this tab instead of guessing from listings.
-            raise TabMaterializationError.new(tab_id: tab_id, message: e.message)
+            # Surface the created tab id and the original error class so
+            # the owner can roll back exactly this tab and keep
+            # mapping-relevant semantics (e.g. AgentBlockedError).
+            raise TabMaterializationError.new(tab_id: tab_id, message: "#{e.class}: #{e.message}")
           end
 
           {
