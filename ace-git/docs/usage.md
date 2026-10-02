@@ -282,9 +282,13 @@ the provider contract (`Ace::Git::Providers::Base`), and normalized evidence typ
 provider packages own all forge CLI behavior:
 
 - **ace-git-github** - GitHub behavior via the `gh` CLI (PR lookups, diffs, issue
-  synchronization). Registers under the `github` provider type.
+  tracking operations). Registers under the `github` provider type.
 - **ace-git-forgejo** - Forgejo behavior via the `fj` CLI. Registers under the
   `forgejo` provider type.
+
+Both providers implement the same issue-tracking contract (issue lookup, comment
+create/update/delete, label add/remove, state transitions) so task issue
+synchronization stays forge-neutral; `ace-task` owns the sync orchestration.
 
 Configure servers in `.ace/git.yml` (or project config) under `git.servers`, then
 resolve them by name, by default, or from a git remote URL. Every failure path is

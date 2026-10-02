@@ -89,6 +89,37 @@ module Ace
           raise NotImplementedError, "Providers must implement #{self.class}#issue"
         end
 
+        # Read the exact issue and its comments/labels for task tracking.
+        # Returns {issue: ProviderIssue, comments: [{id:, body:}], labels: [String]}.
+        # Every mutation below is scoped to this provider's resolved server.
+        def issue_tracking(number:)
+          raise NotImplementedError, "Providers must implement #{self.class}#issue_tracking"
+        end
+
+        def create_issue_comment(number:, body:)
+          raise NotImplementedError, "Providers must implement #{self.class}#create_issue_comment"
+        end
+
+        def update_issue_comment(number:, comment_id:, body:)
+          raise NotImplementedError, "Providers must implement #{self.class}#update_issue_comment"
+        end
+
+        def delete_issue_comment(number:, comment_id:)
+          raise NotImplementedError, "Providers must implement #{self.class}#delete_issue_comment"
+        end
+
+        def add_issue_label(number:, label:)
+          raise NotImplementedError, "Providers must implement #{self.class}#add_issue_label"
+        end
+
+        def remove_issue_label(number:, label:)
+          raise NotImplementedError, "Providers must implement #{self.class}#remove_issue_label"
+        end
+
+        def set_issue_state(number:, state:)
+          raise NotImplementedError, "Providers must implement #{self.class}#set_issue_state"
+        end
+
         # Fetch check/CI status evidence for a reference.
         #
         # @param ref [String] commit sha or branch name
