@@ -951,6 +951,35 @@ class TaskManagerTest < AceTaskTestCase
     Process.wait(child_pid)
   end
 
+  def test_subtask_archive_never_holds_child_lock_while_waiting_for_parent
+    parent_identity = issue_identity(280)
+    child_identity = issue_identity(282)
+    child_key = @manager.send(:canonical_issue_key, child_identity)
+    child_lock_path = File.join(Dir.tmpdir, "ace-task-issue-#{child_key}.lock")
+
+    adapter = fake_issue_adapter { |**_args| {success: true} }
+    updater = nil
+    @manager.stub(:issue_adapter, adapter) do
+      parent = @manager.create("Archivable parent", remote_issue: parent_identity)
+      child = @manager.create_subtask(parent.id, "Terminal subtask", status: "done",
+        remote_issue: child_identity)
+
+      # With the parent's identity lock held elsewhere, the child archive must
+      # block on the parent lock BEFORE holding the child lock: holding both
+      # directions at once is the parent/child ABBA deadlock hazard.
+      @manager.send(:with_issue_identity_lock, parent_identity) do
+        updater = Thread.new { @manager.update(child.id, move_to: "archive") }
+        sleep 0.4
+        contender = File.open(child_lock_path, File::CREAT | File::RDWR)
+        acquired = contender.flock(File::LOCK_EX | File::LOCK_NB) != false
+        contender.flock(File::LOCK_UN) if acquired
+        contender.close
+        assert acquired, "child archive held the child lock while waiting for the parent lock"
+      end
+      assert updater.join(10), "child archive deadlocked on the parent identity lock"
+    end
+  end
+
   def test_bulk_sync_fails_for_pending_tasks_without_identity
     adapter = fake_issue_adapter { |task:, **_| raise Ace::Git::ProviderUnknownOutcomeError, "unknown" }
     @manager.stub(:issue_adapter, adapter) do
