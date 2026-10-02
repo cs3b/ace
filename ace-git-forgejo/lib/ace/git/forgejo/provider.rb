@@ -162,8 +162,45 @@ module Ace
           )
         end
 
+        def pull_request_review_details(number:)
+          number = request_number!(number)
+          data = review_http.request(:get, "pulls/#{number}")
+          files = review_http.paginate("pulls/#{number}/files").map do |entry|
+            entry.is_a?(Hash) && entry["filename"]
+          end
+          unless data.is_a?(Hash) && data["number"] == number &&
+              data.dig("base", "sha").to_s.match?(/\A[0-9a-f]{40}\z/) &&
+              data["changed_files"].is_a?(Integer) && data["changed_files"] == files.length &&
+              files.all? { |path| path.is_a?(String) && !path.empty? }
+            raise Ace::Git::ProviderMalformedOutputError, "Malformed or incomplete Forgejo PR file evidence"
+          end
+          Ace::Git::ProviderReviewDetails.new(
+            server_name: server.name, repository_url: server.url, pr_number: number,
+            base_sha: data.dig("base", "sha"), files: files
+          )
+        end
+
+        def pull_request_checks(number:, head_sha:)
+          verify_expected_head!(pull_request(number: number), head_sha)
+          checks(ref: head_sha)
+        end
+
+        def repository_file(path:, ref:)
+          require "base64"
+          escaped = path.split("/").map { |part| URI.encode_www_form_component(part) }.join("/")
+          data = review_http.request(:get, "contents/#{escaped}?ref=#{ref}")
+          unless data.is_a?(Hash) && data["encoding"] == "base64" && data["content"].is_a?(String)
+            raise Ace::Git::ProviderMalformedOutputError, "Malformed Forgejo repository file evidence"
+          end
+          Base64.strict_decode64(data["content"].delete("\n"))
+        rescue ArgumentError => e
+          raise Ace::Git::ProviderMalformedOutputError, "Malformed Forgejo repository file content: #{e.message}"
+        end
+
         def create_pull_request_comment(number:, expected_head:, body:, correlation:)
           number = request_number!(number)
+          pr = verify_expected_head!(pull_request(number: number), expected_head)
+          require_open_pr!(pr)
           marker = comment_marker(correlation)
           existing = matching_review_comments(number, marker, expected_head)
           if existing.length > 1
@@ -186,6 +223,34 @@ module Ace
               "PR comment sent but reconciliation found #{matches.length} matches for session #{correlation}"
           end
           review_mutation(number, expected_head, matches.first, :created)
+        end
+
+        def update_pull_request_comment(number:, expected_head:, comment_id:, body:)
+          number = request_number!(number)
+          comment_id = Integer(comment_id)
+          verify_expected_head!(pull_request(number: number), expected_head)
+          matches = review_http.paginate("issues/#{number}/comments").select { |entry| entry["id"] == comment_id }
+          unless matches.one?
+            raise Ace::Git::ProviderIdentityMismatchError,
+              "Comment #{comment_id} does not belong to selected PR ##{number}"
+          end
+          comment = review_comment(matches.first, number, expected_head)
+          return review_mutation(number, expected_head, comment, :existing) if comment.body == body
+
+          verify_expected_head!(pull_request(number: number), expected_head)
+          begin
+            review_http.request(:patch, "issues/comments/#{comment_id}", body: {body: body})
+          rescue Ace::Git::ProviderUnknownOutcomeError => e
+            raise Ace::Git::ProviderUnknownOutcomeError,
+              "Comment update outcome unknown for #{server.name}/#{number}, " \
+              "head #{expected_head}, comment #{comment_id}: #{e.message}"
+          end
+          updated = review_http.paginate("issues/#{number}/comments").find { |entry| entry["id"] == comment_id }
+          unless updated && updated["body"] == body
+            raise Ace::Git::ProviderUnknownOutcomeError,
+              "Comment update sent but exact PR comment #{comment_id} could not be verified"
+          end
+          review_mutation(number, expected_head, review_comment(updated, number, expected_head), :updated)
         end
 
         def resolve_pull_request_thread(number:, expected_head:, thread_id:)
@@ -283,6 +348,13 @@ module Ace
         end
 
         private
+
+        def require_open_pr!(pr)
+          return if pr.state == :open
+
+          raise Ace::Git::ProviderUnsupportedCapabilityError,
+            "Cannot post review comment to PR ##{pr.number} in #{pr.state} state"
+        end
 
         def review_http
           @review_http ||= HttpClient.new(server: server, timeout: timeout, runner: runner)

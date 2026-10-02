@@ -152,8 +152,56 @@ module Ace
           )
         end
 
+        def pull_request_review_details(number:)
+          number = Integer(number)
+          data = gh_api("pulls/#{number}")
+          files = gh_api_pages("pulls/#{number}/files").map do |entry|
+            entry.is_a?(Hash) && entry["filename"]
+          end
+          unless data.is_a?(Hash) && data["number"] == number &&
+              data.dig("base", "sha").to_s.match?(/\A[0-9a-f]{40}\z/) &&
+              data["changed_files"].is_a?(Integer) && data["changed_files"] == files.length &&
+              files.all? { |path| path.is_a?(String) && !path.empty? }
+            raise Ace::Git::ProviderMalformedOutputError, "Malformed or incomplete GitHub PR file evidence"
+          end
+          Ace::Git::ProviderReviewDetails.new(
+            server_name: server.name, repository_url: server.url, pr_number: number,
+            base_sha: data.dig("base", "sha"), files: files
+          )
+        end
+
+        def pull_request_checks(number:, head_sha:)
+          verify_expected_head!(pull_request(number: number), head_sha)
+          data = gh_api("commits/#{head_sha}/check-runs?per_page=100")
+          runs = data.is_a?(Hash) && data["check_runs"]
+          unless runs.is_a?(Array) && runs.all? { |run| run.is_a?(Hash) && run["name"].is_a?(String) }
+            raise Ace::Git::ProviderMalformedOutputError, "Malformed GitHub PR check evidence"
+          end
+          runs.map do |run|
+            Ace::Git::ProviderCheck.new(
+              server_name: server.name, name: run["name"],
+              state: run["status"].to_s.downcase.to_sym,
+              conclusion: run["conclusion"]&.downcase&.to_sym,
+              url: run["html_url"]
+            )
+          end
+        end
+
+        def repository_file(path:, ref:)
+          require "base64"
+          escaped = path.split("/").map { |part| URI.encode_www_form_component(part) }.join("/")
+          data = gh_api("contents/#{escaped}?ref=#{ref}")
+          unless data.is_a?(Hash) && data["encoding"] == "base64" && data["content"].is_a?(String)
+            raise Ace::Git::ProviderMalformedOutputError, "Malformed GitHub repository file evidence"
+          end
+          Base64.strict_decode64(data["content"].delete("\n"))
+        rescue ArgumentError => e
+          raise Ace::Git::ProviderMalformedOutputError, "Malformed GitHub repository file content: #{e.message}"
+        end
+
         def create_pull_request_comment(number:, expected_head:, body:, correlation:)
           pr = verify_expected_head!(pull_request(number: number), expected_head)
+          require_open_pr!(pr)
           marker = comment_marker(correlation)
           existing = matching_review_comments(pr, marker, expected_head)
           if existing.length > 1
@@ -178,9 +226,72 @@ module Ace
           review_mutation(pr, expected_head, matches.first, :created)
         end
 
+        def update_pull_request_comment(number:, expected_head:, comment_id:, body:)
+          comment_id = Integer(comment_id)
+          pr = verify_expected_head!(pull_request(number: number), expected_head)
+          matches = gh_api_pages("issues/#{pr.number}/comments").select { |entry| entry["id"] == comment_id }
+          unless matches.one?
+            raise Ace::Git::ProviderIdentityMismatchError,
+              "Comment #{comment_id} does not belong to selected PR ##{pr.number}"
+          end
+          comment = review_comment(matches.first, pr, expected_head)
+          return review_mutation(pr, expected_head, comment, :existing) if comment.body == body
+
+          verify_expected_head!(pull_request(number: number), expected_head)
+          begin
+            gh_api("issues/comments/#{comment_id}", method: :patch, body: body)
+          rescue Ace::Git::ProviderUnreachableError => e
+            raise Ace::Git::ProviderUnknownOutcomeError,
+              "Comment update outcome unknown for #{server.name}/#{pr.number}, " \
+              "head #{expected_head}, comment #{comment_id}: #{e.message}"
+          end
+          updated = gh_api_pages("issues/#{pr.number}/comments").find { |entry| entry["id"] == comment_id }
+          unless updated && updated["body"] == body
+            raise Ace::Git::ProviderUnknownOutcomeError,
+              "Comment update sent but exact PR comment #{comment_id} could not be verified"
+          end
+          review_mutation(pr, expected_head, review_comment(updated, pr, expected_head), :updated)
+        end
+
         def resolve_pull_request_thread(number:, expected_head:, thread_id:)
-          raise Ace::Git::ProviderUnsupportedCapabilityError,
-            "GitHub review thread resolution requires a reviewed GraphQL thread identity contract"
+          unless thread_id.to_s.match?(/\APRRT_[A-Za-z0-9_=-]+\z/)
+            raise Ace::Git::ConfigError, "Invalid GitHub review thread ID"
+          end
+          pr = verify_expected_head!(pull_request(number: number), expected_head)
+          query = <<~GRAPHQL
+            query($id: ID!) {
+              node(id: $id) {
+                ... on PullRequestReviewThread {
+                  id isResolved
+                  pullRequest { number headRefOid repository { url } }
+                }
+              }
+            }
+          GRAPHQL
+          thread = gh_graphql(query, id: thread_id).dig("data", "node")
+          verify_review_thread!(thread, pr, expected_head)
+          return true if thread["isResolved"] == true
+
+          verify_expected_head!(pull_request(number: number), expected_head)
+          mutation = <<~GRAPHQL
+            mutation($id: ID!) {
+              resolveReviewThread(input: {threadId: $id}) {
+                thread { id isResolved pullRequest { number headRefOid repository { url } } }
+              }
+            }
+          GRAPHQL
+          begin
+            resolved = gh_graphql(mutation, id: thread_id).dig("data", "resolveReviewThread", "thread")
+          rescue Ace::Git::ProviderUnreachableError => e
+            raise Ace::Git::ProviderUnknownOutcomeError,
+              "Thread resolution outcome unknown for #{server.name}/#{pr.number}, " \
+              "head #{expected_head}, thread #{thread_id}: #{e.message}"
+          end
+          verify_review_thread!(resolved, pr, expected_head)
+          unless resolved["isResolved"] == true
+            raise Ace::Git::ProviderMalformedOutputError, "GitHub did not confirm thread resolution"
+          end
+          true
         end
 
         # ---- PR lifecycle mutations ----
@@ -267,6 +378,44 @@ module Ace
 
         private
 
+        def require_open_pr!(pr)
+          return if pr.state == :open
+
+          raise Ace::Git::ProviderUnsupportedCapabilityError,
+            "Cannot post review comment to PR ##{pr.number} in #{pr.state} state"
+        end
+
+        def verify_review_thread!(thread, pr, expected_head)
+          unless thread.is_a?(Hash) && thread["id"] && thread["pullRequest"].is_a?(Hash) &&
+              thread.dig("pullRequest", "number") == pr.number &&
+              Ace::Git::Atoms::ServerUrl.match?(thread.dig("pullRequest", "repository", "url"), server.url)
+            raise Ace::Git::ProviderIdentityMismatchError,
+              "GitHub review thread does not belong to selected PR ##{pr.number}"
+          end
+          unless thread.dig("pullRequest", "headRefOid") == expected_head
+            raise Ace::Git::ProviderExpectedHeadConflictError,
+              "GitHub review thread PR head changed before resolution"
+          end
+        end
+
+        def gh_graphql(query, id:)
+          host = Ace::Git::Atoms::ServerUrl.normalize(server.url).split("/", 2).first
+          args = ["graphql", "-f", "query=#{query}", "-F", "id=#{id}", "--hostname", host]
+          result = CliExecutor.execute("api", args, timeout: timeout, runner: runner)
+          classify_failure(result[:stderr], context: "api graphql") unless result[:success]
+          data = JSON.parse(result[:stdout])
+          if data.is_a?(Hash) && data["errors"].is_a?(Array) && data["errors"].any?
+            raise Ace::Git::ProviderUnreachableError,
+              "GitHub GraphQL rejected review operation: #{data["errors"].first["message"]}"
+          end
+          unless data.is_a?(Hash) && data["data"].is_a?(Hash)
+            raise Ace::Git::ProviderMalformedOutputError, "Malformed GitHub GraphQL response"
+          end
+          data
+        rescue JSON::ParserError => e
+          raise Ace::Git::ProviderMalformedOutputError, "Malformed GitHub GraphQL JSON: #{e.message}"
+        end
+
         def comment_marker(correlation)
           unless correlation.to_s.match?(/\A[a-zA-Z0-9._:-]+\z/)
             raise Ace::Git::ConfigError, "Invalid review session correlation"
@@ -330,7 +479,7 @@ module Ace
           end
           args = ["repos/#{repository}/#{suffix}", "--hostname", host]
           args += ["--paginate", "--slurp"] if paginate
-          args += ["-X", "POST", "-f", "body=#{body}"] if method == :post
+          args += ["-X", method.to_s.upcase, "-f", "body=#{body}"] if %i[post patch].include?(method)
           result = CliExecutor.execute("api", args, timeout: timeout, runner: runner)
           classify_failure(result[:stderr], context: "api #{suffix}") unless result[:success]
           JSON.parse(result[:stdout])

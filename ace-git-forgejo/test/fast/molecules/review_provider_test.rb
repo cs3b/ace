@@ -41,5 +41,73 @@ module Forgejo
         end
       end
     end
+
+    def test_repeat_comment_reconciles_exact_session_without_post
+      calls = []
+      runner = lambda do |args:, **|
+        calls << args
+        comment = {"id" => 91, "body" => "Reviewed\n\n<!-- ace-review-session:session-1 -->",
+                   "user" => {"login" => "reviewer"}, "html_url" => "https://forge.example.com/comment/91"}
+        {success: true, status: 200, stdout: [comment].to_json, stderr: "", exit_code: 0}
+      end
+      provider = Ace::Git::Forgejo::Provider.new(server: SERVER, runner: runner)
+      pr = Struct.new(:number, :head_sha).new(42, HEAD)
+
+      receipt = provider.stub(:pull_request, pr) do
+        provider.create_pull_request_comment(
+          number: 42, expected_head: HEAD, body: "Reviewed", correlation: "session-1"
+        )
+      end
+
+      assert_equal :existing, receipt.idempotency
+      assert_equal 91, receipt.comment.id
+      assert calls.none? { |args| args[1] == "POST" }
+    end
+
+    def test_post_timeout_is_unknown_and_cannot_auto_repeat
+      calls = []
+      runner = lambda do |args:, **|
+        calls << args
+        if args[1] == "POST"
+          raise IOError, "socket closed"
+        end
+        {success: true, status: 200, stdout: "[]", stderr: "", exit_code: 0}
+      end
+      provider = Ace::Git::Forgejo::Provider.new(server: SERVER, runner: runner)
+      pr = Struct.new(:number, :head_sha).new(42, HEAD)
+
+      error = assert_raises(Ace::Git::ProviderUnknownOutcomeError) do
+        provider.stub(:pull_request, pr) do
+          provider.create_pull_request_comment(
+            number: 42, expected_head: HEAD, body: "Reviewed", correlation: "session-1"
+          )
+        end
+      end
+      assert_includes error.message, "session-1"
+      assert_equal 1, calls.count { |args| args[1] == "POST" }
+    end
+
+    def test_thread_resolution_reports_unsupported
+      provider = Ace::Git::Forgejo::Provider.new(server: SERVER)
+      assert_raises(Ace::Git::ProviderUnsupportedCapabilityError) do
+        provider.resolve_pull_request_thread(number: 42, expected_head: HEAD, thread_id: "thread")
+      end
+    end
+
+    def test_comment_update_rejects_id_outside_selected_pr
+      calls = []
+      runner = lambda do |args:, **|
+        calls << args
+        {success: true, status: 200, stdout: "[]", stderr: "", exit_code: 0}
+      end
+      provider = Ace::Git::Forgejo::Provider.new(server: SERVER, runner: runner)
+      pr = Struct.new(:number, :head_sha).new(42, HEAD)
+      assert_raises(Ace::Git::ProviderIdentityMismatchError) do
+        provider.stub(:pull_request, pr) do
+          provider.update_pull_request_comment(number: 42, expected_head: HEAD, comment_id: 99, body: "edit")
+        end
+      end
+      assert calls.none? { |args| args[1] == "PATCH" }
+    end
   end
 end
