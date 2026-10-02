@@ -26,6 +26,8 @@
 4. Retryable failures back off on a fixed deterministic schedule; terminal failures are reported and persisted in the delivery record.
 5. `ace-herdr dispatch`, `wait`, and `close` give agents one-command subagent lifecycle with sensible defaults (same workspace as the caller, label = task id, prompt from file or stdin).
 
+The `inbox` command records one attempt-linked agent message before native submission. It binds the live terminal, agent session, and configured receipt verification key at enqueue, serializes claims by event ID, and exposes uncertain outcomes through `inbox status`. An uncertain event stays uncertain until `inbox reconcile --receipt FILE` receives a matching, signed operator or supervisor observation of consumption or supersession; missing or mismatched proof returns a JSON refusal without resending. See the [usage guide](docs/usage.md#durable-agent-inbox) for states, key configuration, and receipt shape.
+
 ## Use Cases
 
 - Push an HITL answer to the pane that asked, even if its agent was restarted since.

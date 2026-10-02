@@ -12,6 +12,7 @@ module Ace
       # binary; tests substitute this class.
       class HerdrExecutor
         DEFAULT_BINARY = "herdr"
+        WAKE_OUTPUT_LIMIT = 65_536
 
         def initialize(binary: DEFAULT_BINARY)
           @binary = binary
@@ -20,6 +21,12 @@ module Ace
         # Probe the agent living in a pane (raises AgentNotFoundError when none)
         def agent_get(pane)
           run!([@binary, "agent", "get", pane])
+        end
+
+        # Structured live pane observation; callers must verify all identity
+        # fields before using a native queue target.
+        def pane_get(pane)
+          run!([@binary, "pane", "get", pane])
         end
 
         # Start an agent in a pane at an interactive shell prompt.
@@ -33,6 +40,65 @@ module Ace
         # rejects blocked agents pre-send with agent_blocked.
         def agent_prompt(pane:, text:)
           run!([@binary, "agent", "prompt", pane, text])
+        end
+
+        # A bounded, payload-free wake. Drain pipes with bounded memory while
+        # managing the child deadline directly, so a stalled process cannot
+        # keep the inbox event lock through Open3.capture3 cleanup.
+        def agent_prompt_bounded(pane:, text:, timeout_ms:)
+          cmd = [@binary, "agent", "prompt", pane, text]
+          Open3.popen3(*cmd, pgroup: true) do |stdin, stdout, stderr, waiter|
+            stdin.close
+            buffers = {stdout => +"", stderr => +""}
+            streams = [stdout, stderr]
+            oversized = false
+            deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + timeout_ms / 1000.0
+            until streams.empty? && waiter.join(0)
+              remaining = deadline - Process.clock_gettime(Process::CLOCK_MONOTONIC)
+              if remaining <= 0
+                begin
+                  Process.kill("KILL", -waiter.pid)
+                rescue Errno::ESRCH
+                  nil
+                end
+                waiter.join
+                raise AgentNotReadyError, "herdr wake timed out after #{timeout_ms}ms"
+              end
+              if streams.empty?
+                waiter.join([remaining, 0.02].min)
+                next
+              end
+
+              ready = IO.select(streams, nil, nil, [remaining, 0.02].min)
+              next unless ready
+
+              ready.first.each do |io|
+                chunk = io.read_nonblock(4096, exception: false)
+                if chunk.nil?
+                  io.close
+                  streams.delete(io)
+                elsif chunk != :wait_readable
+                  buffer = buffers.fetch(io)
+                  available = WAKE_OUTPUT_LIMIT - buffer.bytesize
+                  oversized = true if chunk.bytesize > available
+                  buffer << chunk.byteslice(0, available) if available.positive?
+                end
+              end
+            end
+            result = ExecutionResult.new(stdout: buffers.fetch(stdout).strip, stderr: buffers.fetch(stderr).strip,
+              success: waiter.value.success?, exit_code: waiter.value.exitstatus || -1)
+            unless result.success?
+              error = classify(result, cmd)
+              if oversized && error.is_a?(CommandError)
+                raise CommandError, "herdr wake output exceeded #{WAKE_OUTPUT_LIMIT} bytes (exit #{result.exit_code})"
+              end
+              raise error
+            end
+
+            result
+          end
+        rescue Errno::ENOENT, Errno::EACCES => e
+          raise ExecutorUnavailableError, e.message
         end
 
         # Wait until the agent reaches one of the requested states

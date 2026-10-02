@@ -90,7 +90,7 @@ module Ace
             record = entry[:record]
             if record.nil?
               report[:deliveries][:preserved] << {event_id: event_id, reason: "unreadable"}
-            elsif record.state != "delivered"
+            elsif record.inbox || record.state != "delivered"
               report[:deliveries][:protected] << {event_id: event_id, state: record.state}
             elsif (updated_at = parse_updated_at(record))
               entry = {event_id: event_id, updated_at: record.updated_at}
@@ -138,7 +138,7 @@ module Ace
               fresh = @record_store.load_revalidated(@deliveries_dir, event_id)
               if fresh == :unreadable
                 outcome = {reason: "unreadable"}
-              elsif fresh&.delivered? && older_than_retention?(fresh)
+              elsif fresh&.delivered? && !fresh.inbox && older_than_retention?(fresh)
                 outcome = {archive_path: @record_store.archive(@deliveries_dir, event_id)}
               end
             end

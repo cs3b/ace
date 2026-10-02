@@ -4,6 +4,7 @@ require "ace/support/cli"
 require "ace/core"
 require_relative "../herdr"
 require_relative "cli/commands/deliver"
+require_relative "cli/commands/inbox"
 require_relative "cli/commands/dispatch"
 require_relative "cli/commands/wait"
 require_relative "cli/commands/close"
@@ -26,6 +27,7 @@ module Ace
       # Application commands with descriptions (for help output)
       REGISTERED_COMMANDS = [
         ["deliver", "Push an answer to an agent pane (ace-hitl delivery contract)"],
+        ["inbox", "Durable agent message queue and reconciliation"],
         ["dispatch", "Start an agent in one command: tab + agent + prompt"],
         ["list", "List live panes, tabs, or workspaces as one JSON line"],
         ["send", "Send a command, raw text, or named keys to a pane"],
@@ -40,6 +42,7 @@ module Ace
 
       HELP_EXAMPLES = [
         "ace-herdr deliver --session ws-1 --pane p5 --event-id evt-1 --answer-file answer.md",
+        "ace-herdr inbox enqueue --event evt-1 --attempt att-1 --ref ref.json --file prompt.txt",
         "echo 'the answer' | ace-herdr deliver --pane p5",
         "ace-herdr dispatch --label 8wm.t.vs0 --kind pi --prompt-file prompt.md",
         "ace-herdr list --workspace w1",
@@ -64,6 +67,7 @@ module Ace
 
       # Register commands
       register "deliver", CLI::Commands::Deliver.new
+      register "inbox", CLI::Commands::Inbox.new
       register "dispatch", CLI::Commands::Dispatch.new
       register "list", CLI::Commands::List.new
       register "send", CLI::Commands::Send.new

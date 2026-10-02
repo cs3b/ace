@@ -81,6 +81,7 @@ module Ace
 
           Molecules::DeliveryRecordStore.with_lock(@deliveries_dir, event_id) do
             record = Molecules::DeliveryRecordStore.load(@deliveries_dir, event_id)
+            raise ValidationError, "event belongs to the agent inbox" if record&.inbox
             validate_existing_record(record, ref, digest) if record
             record ||= Models::DeliveryRecord.new(
               event_id: event_id, session: ref.session, pane: ref.pane,
@@ -98,6 +99,7 @@ module Ace
           validate_event_id!(event_id)
           Molecules::DeliveryRecordStore.with_lock(@deliveries_dir, event_id) do
             record = Molecules::DeliveryRecordStore.load(@deliveries_dir, event_id)
+            raise ValidationError, "event belongs to the agent inbox" if record&.inbox
             if record.nil? || record.answer.to_s.empty?
               raise ValidationError,
                 "no recoverable answer stored for event #{event_id.inspect}"

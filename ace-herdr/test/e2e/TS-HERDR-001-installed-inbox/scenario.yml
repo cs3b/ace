@@ -1,0 +1,48 @@
+test-id: TS-HERDR-001
+title: "Installed durable inbox delivery and reconciliation"
+area: herdr
+package: ace-herdr
+priority: high
+duration: ~10min
+cost-tier: smoke
+tags: [inbox, installed, "use-case:delivery"]
+tool-under-test: ace-herdr
+
+sandbox-layout:
+  results/tc/01/: "Local gem installation and durable native queue delivery evidence"
+  results/tc/02/: "Restart, reconciliation refusal, and consumed receipt evidence"
+  results/tc/03/: "Installed idle Pi delivery and exact session receipt evidence"
+
+e2e-justification: >
+  Tests the packaged executable, filesystem persistence across separate CLI
+  processes, and argv-based native queue invocation. Fast tests substitute
+  Ruby collaborators and cannot prove the installed command path.
+
+unit-coverage-reviewed:
+  - test/fast/commands/inbox_test.rb
+  - test/fast/organisms/inbox_test.rb
+  - test/fast/molecules/native_queue_executor_test.rb
+
+requires:
+  tools: [gem, ruby, git, openssl]
+  ruby: ">= 3.2"
+
+setup:
+  - git-init
+  - copy-fixtures
+  - run: "chmod +x bin/herdr bin/codex bin/pi-overseer-queue-client"
+  - run: "openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out receipt-private.pem && openssl pkey -in receipt-private.pem -pubout -out receipt-public.pem"
+  - run: "mkdir -p .ace/herdr && printf 'inbox_receipt_public_key: %s/receipt-public.pem\n' \"$PWD\" > .ace/herdr/config.yml"
+  - run: |
+      mkdir -p install artifacts
+      source_root="${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}"
+      for package in ace-support-fs ace-support-config ace-support-cli ace-support-core ace-b36ts ace-support-items ace-hitl; do
+        if [ ! -f "$package/$package.gemspec" ]; then
+          mkdir -p "$package"
+          cp -R "$source_root/$package/." "$package/" || exit 1
+        fi
+        (cd "$package" && gem build "$package.gemspec" --output "../artifacts/$package.gem") || exit 1
+        gem install "artifacts/$package.gem" --local --ignore-dependencies --install-dir "$PWD/install" --no-document || exit 1
+      done
+  - agent-env:
+      PROJECT_ROOT_PATH: .

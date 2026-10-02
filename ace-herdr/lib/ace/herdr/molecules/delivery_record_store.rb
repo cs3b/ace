@@ -46,8 +46,11 @@ module Ace
           tmp = "#{path}.tmp.#{Process.pid}"
           File.open(tmp, IO::CREAT | IO::TRUNC | IO::WRONLY, 0o600) do |file|
             file.write(JSON.generate(record.to_h))
+            file.flush
+            file.fsync
           end
           File.rename(tmp, path)
+          File.open(deliveries_dir) { |dir| dir.fsync }
           path
         end
 

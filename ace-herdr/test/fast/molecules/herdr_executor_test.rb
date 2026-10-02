@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "test_helper"
+require "tmpdir"
 
 module Ace
   module Herdr
@@ -55,6 +56,99 @@ module Ace
           executor.agent_prompt(pane: "p5", text: "line1\nline2")
 
           assert_equal ["herdr", "agent", "prompt", "p5", "line1\nline2"], executor.commands.first
+        end
+
+        def test_bounded_wake_terminates_stalled_subprocess
+          Dir.mktmpdir do |dir|
+            script = File.join(dir, "stalled-herdr")
+            File.write(script, "#!/bin/sh\nsleep 2\n")
+            File.chmod(0o700, script)
+            executor = HerdrExecutor.new(binary: script)
+            started = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+
+            error = assert_raises(AgentNotReadyError) do
+              executor.agent_prompt_bounded(pane: "p1", text: "wake", timeout_ms: 100)
+            end
+
+            elapsed = Process.clock_gettime(Process::CLOCK_MONOTONIC) - started
+            assert_operator elapsed, :<, 1.0
+            assert_match(/timed out/, error.message)
+          end
+        end
+
+        def test_bounded_wake_preserves_structured_herdr_failure
+          Dir.mktmpdir do |dir|
+            script = File.join(dir, "blocked-herdr")
+            File.write(script, "#!/bin/sh\nprintf '%s\\n' '{\"error\":{\"code\":\"agent_blocked\",\"message\":\"pane blocked\"}}'\nexit 1\n")
+            File.chmod(0o700, script)
+            executor = HerdrExecutor.new(binary: script)
+
+            error = assert_raises(AgentBlockedError) do
+              executor.agent_prompt_bounded(pane: "p1", text: "wake", timeout_ms: 1000)
+            end
+
+            assert_equal "agent_blocked: pane blocked", error.message
+          end
+        end
+
+        def test_bounded_wake_preserves_structured_error_beyond_eight_kib
+          Dir.mktmpdir do |dir|
+            script = File.join(dir, "long-error-herdr")
+            message = "blocked-" + ("x" * 9000)
+            File.write(script, "#!/bin/sh\nprintf '%s\\n' '#{JSON.generate(error: {code: "agent_blocked", message: message})}'\nexit 1\n")
+            File.chmod(0o700, script)
+            executor = HerdrExecutor.new(binary: script)
+
+            error = assert_raises(AgentBlockedError) do
+              executor.agent_prompt_bounded(pane: "p1", text: "wake", timeout_ms: 1000)
+            end
+
+            assert_match(/agent_blocked: blocked-/, error.message)
+            assert_operator error.message.bytesize, :>, 8192
+          end
+        end
+
+        def test_bounded_wake_drains_continuous_output_without_waiting_past_deadline
+          Dir.mktmpdir do |dir|
+            script = File.join(dir, "noisy-herdr")
+            File.write(script, "#!/bin/sh\nwhile :; do printf '0123456789abcdef'; done\n")
+            File.chmod(0o700, script)
+            executor = HerdrExecutor.new(binary: script)
+            started = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+
+            assert_raises(AgentNotReadyError) do
+              executor.agent_prompt_bounded(pane: "p1", text: "wake", timeout_ms: 100)
+            end
+
+            elapsed = Process.clock_gettime(Process::CLOCK_MONOTONIC) - started
+            assert_operator elapsed, :<, 1.0
+          end
+        end
+
+        def test_bounded_wake_accepts_successful_verbose_output
+          Dir.mktmpdir do |dir|
+            script = File.join(dir, "verbose-herdr")
+            File.write(script, "#!/bin/sh\nprintf '%*s' 70000 ''\n")
+            File.chmod(0o700, script)
+            executor = HerdrExecutor.new(binary: script)
+
+            assert executor.agent_prompt_bounded(pane: "p1", text: "wake", timeout_ms: 1000).success?
+          end
+        end
+
+        def test_bounded_wake_keeps_structured_stderr_after_stdout_overflow
+          Dir.mktmpdir do |dir|
+            script = File.join(dir, "verbose-error-herdr")
+            File.write(script, "#!/bin/sh\nprintf '%*s' 70000 ''\nprintf '%s\\n' '{\"error\":{\"code\":\"agent_blocked\",\"message\":\"pane blocked\"}}' >&2\nexit 1\n")
+            File.chmod(0o700, script)
+            executor = HerdrExecutor.new(binary: script)
+
+            error = assert_raises(AgentBlockedError) do
+              executor.agent_prompt_bounded(pane: "p1", text: "wake", timeout_ms: 1000)
+            end
+
+            assert_equal "agent_blocked: pane blocked", error.message
+          end
         end
 
         def test_agent_wait_repeats_until_flags
