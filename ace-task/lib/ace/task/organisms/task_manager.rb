@@ -181,7 +181,7 @@ module Ace
             # comments embed repo-relative links that just went stale. Flag
             # linked descendants pending (crash-safe, written pre-move) and
             # sync their comments from the post-move locations.
-            linked_subtasks_of(task.path, task.id).each do |child|
+            linked_descendants_of(task.path, task.id).each do |child|
               Ace::Support::Items::Molecules::FieldUpdater.update(
                 child.file_path, set: {"issue_sync_pending" => true}
               )
@@ -204,7 +204,7 @@ module Ace
                 new_path, root: @root_dir
               )
             end
-            linked_subtasks_of(current_path, current_id).each do |child|
+            linked_descendants_of(current_path, current_id).each do |child|
               sync_linked_issues_for(child, reason: "move")
             end
           end
@@ -258,13 +258,21 @@ module Ace
 
         # Direct linked subtasks of a task directory (used to refresh their
         # issue comment links after the parent directory relocates).
-        def linked_subtasks_of(path, id)
+        # Linked descendants at any depth (a grandchild under an unlinked
+        # child still holds a remote comment whose path went stale).
+        def linked_descendants_of(path, id)
           scanner = Molecules::TaskScanner.new(@root_dir)
           loader = Molecules::TaskLoader.new
-          scanner.scan_subtasks(path, parent_id: id).filter_map do |sr|
-            child = loader.load(sr.dir_path, id: sr.id, special_folder: sr.special_folder)
-            child if child && linked_issue(child)
+          collect = lambda do |p, i|
+            scanner.scan_subtasks(p, parent_id: i).flat_map do |sr|
+              child = loader.load(sr.dir_path, id: sr.id, special_folder: sr.special_folder)
+              next [] unless child
+
+              deeper = collect.call(sr.dir_path, sr.id)
+              linked_issue(child) ? [child] + deeper : deeper
+            end
           end
+          collect.call(path, id)
         end
 
         # Create a subtask within a parent task.
