@@ -11,7 +11,7 @@ module Ace
     # Pull request state values: :open, :merged, :closed. Issue state values:
     # :open, :closed.
     ProviderPullRequest = Data.define(
-      :server_name, :number, :title, :state, :head_ref, :base_ref,
+      :server_name, :number, :title, :body, :state, :head_ref, :base_ref,
       :head_sha, :author, :url, :draft, :merged_at,
       :head_repository_url, :base_repository_url, :merge_commit_sha
     )
