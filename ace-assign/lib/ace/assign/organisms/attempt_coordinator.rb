@@ -131,8 +131,10 @@ module Ace
         def reconcile_service_failure(request_id, receipt:)
           request = journal_for.service_request(request_id)
           raise AttemptErrors::NotFound, "Service request #{request_id} not found" unless request
-          unless request["state"] == "failed"
-            raise AttemptErrors::InvalidState, "Only failed service requests can be reconciled"
+          unless %w[failed rejected uncertain].include?(request["state"]) &&
+              (request["state"] != "rejected" || request["consumed"] != false)
+            raise AttemptErrors::InvalidState,
+              "Only dispatched (failed, uncertain, or rejected) service requests can be reconciled"
           end
           settle_no_effect(request_id, request, receipt)
         end

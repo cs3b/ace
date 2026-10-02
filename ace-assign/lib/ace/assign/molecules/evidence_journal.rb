@@ -172,9 +172,12 @@ module Ace
           current = service_request(request_id)
           raise AttemptErrors::NotFound, "Service request #{request_id} not found" unless current
           # Terminal states are immutable; failed-settled is reached only
-          # from failed or uncertain with a validated no-effect receipt.
-          if %w[succeeded rejected failed-settled].include?(current["state"]) ||
-              (current["state"] == "failed" && state != "failed-settled")
+          # from a dispatched (failed, uncertain, or consumed-rejected)
+          # effect with a validated no-effect receipt.
+          consumed_rejected = current["state"] == "rejected" && current["consumed"] != false
+          if %w[succeeded failed-settled].include?(current["state"]) ||
+              (current["state"] == "rejected" && !consumed_rejected) ||
+              (consumed_rejected && state != "failed-settled")
             raise AttemptErrors::InvalidState, "Service request #{request_id} is terminal"
           end
           validate_terminal_receipt!(current, state, receipt) if terminal_state?(state)
@@ -220,6 +223,23 @@ module Ace
               !receipt["evidence"].any? { |item| item["ref"].end_with?("no-effect") }
             raise AttemptErrors::ReceiptRejected,
               "Service settlement requires a no-effect attestation artifact"
+          end
+          repo_root = File.realpath(@repo_root)
+          receipt["evidence"].each do |item|
+            path = File.expand_path(item["ref"], repo_root)
+            real = begin
+              File.realpath(path)
+            rescue Errno::ENOENT, Errno::EACCES, Errno::ELOOP
+              next false
+            end
+            intact = begin
+              real.start_with?(repo_root + File::SEPARATOR) &&
+                Digest::SHA256.file(real).hexdigest == item["sha256"]
+            rescue Errno::EACCES, Errno::ELOOP
+              false
+            end
+            raise AttemptErrors::ReceiptRejected,
+              "Service terminal receipt evidence is unverifiable: #{item["ref"]}" unless intact
           end
         end
 

@@ -414,7 +414,7 @@ def test_failed_effect_settles_only_through_attributable_reconciliation
       "outcome" => "failed", "executor_uid" => Process.uid,
       "evidence" => [{"ref" => "forge/failed", "sha256" => digest}]))
   end
-  assert_includes error.message, "Only failed service requests"
+  assert_includes error.message, "Only dispatched"
 end
 
       def test_service_receipt_evidence_cannot_be_reused_from_an_earlier_request
