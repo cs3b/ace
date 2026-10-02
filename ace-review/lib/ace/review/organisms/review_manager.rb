@@ -1395,22 +1395,35 @@ module Ace
           head = options.pr_metadata&.fetch("headRefOid", nil)
           return {success: false, error: "Cannot post without an exact reviewed PR head"} unless head
 
+          # The session key and formatted body persist beside the review
+          # artifact: a retry in a later run must reuse the exact identity
+          # and content to reconcile the existing session comment.
+          identity_path = File.join(File.dirname(File.expand_path(review_file)), "post-identity.yml")
+          if File.exist?(identity_path)
+            persisted = YAML.safe_load_file(identity_path, permitted_classes: [Time, Date])
+            session_key = persisted["session_key"]
+            content = persisted["body"]
+          else
+            session_key = File.dirname(File.expand_path(review_file))
+            content = Molecules::PrProvider.format_comment(
+              review_content, preset: review_data[:preset], model: review_data[:model],
+              # The timestamp is frozen to the review artifact so the same
+              # artifact always formats the identical body.
+              timestamp: File.mtime(review_file).utc.strftime("%Y-%m-%d %H:%M:%S UTC")
+            )
+            File.write(identity_path, YAML.dump("session_key" => session_key, "body" => content))
+          end
+
           receipt = pr_provider(options).post_comment(
             options.pr, expected_head: head,
-            # The timestamp is frozen to the review artifact so a repeat
-            # after an uncertain outcome formats the exact same body and
-            # reconciles the existing session comment.
-            content: Molecules::PrProvider.format_comment(
-              review_content, preset: review_data[:preset], model: review_data[:model],
-              timestamp: File.mtime(review_file).utc.strftime("%Y-%m-%d %H:%M:%S UTC")
-            ),
-            session_key: File.dirname(File.expand_path(review_file))
+            content: content,
+            session_key: session_key
           )
-# Posted results retain the resolved identity the contract requires:
-# server, repository, PR number, and the exact guarded head.
-{success: true, comment_url: receipt.comment.url, idempotency: receipt.idempotency,
- server_name: receipt.comment.server_name, repository_url: receipt.comment.repository_url,
- pr_number: receipt.comment.pr_number, head_sha: receipt.head_sha}
+          # Posted results retain the resolved identity the contract requires:
+          # server, repository, PR number, and the exact guarded head.
+          {success: true, comment_url: receipt.comment.url, idempotency: receipt.idempotency,
+           server_name: receipt.comment.server_name, repository_url: receipt.comment.repository_url,
+           pr_number: receipt.comment.pr_number, head_sha: receipt.head_sha}
         rescue Ace::Git::Error, ArgumentError => e
           {success: false, error: "#{e.class.name.split('::').last}: #{e.message}"}
         end
@@ -1642,6 +1655,9 @@ module Ace
               response[:message] += "\n✓ Review posted to PR: #{comment_result[:comment_url]}"
             end
           elsif comment_result && !comment_result[:success]
+            # A requested post that is not confirmed is a failed command
+            # result, not a successful review with an error note.
+            response[:success] = false
             response[:comment_error] = comment_result[:error]
             response[:message] += "\n✗ Failed to post comment: #{comment_result[:error]}"
           end
