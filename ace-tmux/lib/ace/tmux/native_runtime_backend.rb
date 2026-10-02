@@ -126,20 +126,23 @@ module Ace
         end
 
         interval = (timeout.to_f / 5).clamp(0.02, 0.2)
-        if (desired & completion_states).any?
-          surface.wait_for_condition(
+        # The stability+settle completion wait only supports interactive CLI
+        # panes and only observes completion. Shell panes and any requested
+        # "working" state must poll the observed state instead.
+        if (desired - completion_states).empty? && interactive_cli_pane?(pane)
+          return surface.wait_for_condition(
             condition: "agent", pane: pane, timeout: timeout,
             interval: interval,
             settle: [timeout.to_f / 2, 1.0].min
           )
-        else
-          deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + timeout.to_f
-          loop do
-            return true if desired.include?(agent_state(pane))
-            raise Ace::Tmux::WaitTimeoutError if Process.clock_gettime(Process::CLOCK_MONOTONIC) >= deadline
+        end
 
-            sleep(interval)
-          end
+        deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + timeout.to_f
+        loop do
+          return true if desired.include?(agent_state(pane))
+          raise Ace::Tmux::WaitTimeoutError if Process.clock_gettime(Process::CLOCK_MONOTONIC) >= deadline
+
+          sleep(interval)
         end
       end
 
@@ -168,6 +171,12 @@ module Ace
       private
 
       attr_reader :executor, :env, :tmux, :resolver, :surface
+
+      def interactive_cli_pane?(pane)
+        surface.send(:fetch_pane_profile, pane)[:interactive_cli]
+      rescue Ace::Tmux::Error
+        false
+      end
 
       def pane_exists?(pane)
         result = executor.capture(B.display_message_target(pane, "\#{pane_id}", tmux: tmux))

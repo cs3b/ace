@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Send adapter message text literally, classify missing pane targets, and use bounded polling plus output settling for agent completion waits.
+- Agent completion waits poll shell panes and any mixed requested states instead of requiring an interactive CLI pane, and `working` now matches immediately in mixed requests.
 
 
 ## [0.17.5] - 2026-09-02

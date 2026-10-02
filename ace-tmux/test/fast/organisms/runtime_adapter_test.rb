@@ -236,6 +236,7 @@ class TmuxRuntimeAdapterNativeTest < Minitest::Test
   def test_native_multi_state_completion_wait_uses_stability_and_capped_polling
     surface = Object.new
     calls = []
+    surface.define_singleton_method(:fetch_pane_profile) { |_pane| {interactive_cli: true} }
     surface.define_singleton_method(:wait_for_condition) do |**options|
       calls << options
       true
@@ -248,5 +249,40 @@ class TmuxRuntimeAdapterNativeTest < Minitest::Test
     assert_equal "agent", calls.first[:condition]
     assert_operator calls.first[:interval], :<=, 0.2
     assert_equal 1.0, calls.first[:settle]
+  end
+
+  def test_native_wait_agent_polls_shell_panes_for_completion_states
+    surface = Object.new
+    wait_calls = []
+    surface.define_singleton_method(:fetch_pane_profile) { |_pane| {interactive_cli: false} }
+    surface.define_singleton_method(:wait_for_condition) do |**options|
+      wait_calls << options
+      raise "shell panes must not use the interactive completion wait"
+    end
+    outputs = ["building...\n", "done\n$ "]
+    surface.define_singleton_method(:capture_recent_output) { |**_options| outputs.shift || "done\n$ " }
+    backend = Ace::Tmux::NativeRuntimeBackend.new(
+      executor: @executor, env: {"ACE_TMUX_SESSION" => "main"}, surface: surface
+    )
+
+    assert backend.wait_agent(pane: "%2", states: %w[idle], timeout: 5)
+    assert_empty wait_calls
+  end
+
+  def test_native_wait_agent_mixed_states_match_any_requested_state
+    surface = Object.new
+    wait_calls = []
+    surface.define_singleton_method(:fetch_pane_profile) { |_pane| {interactive_cli: true} }
+    surface.define_singleton_method(:wait_for_condition) do |**options|
+      wait_calls << options
+      true
+    end
+    surface.define_singleton_method(:capture_recent_output) { |**_options| "esc to interrupt\n" }
+    backend = Ace::Tmux::NativeRuntimeBackend.new(
+      executor: @executor, env: {"ACE_TMUX_SESSION" => "main"}, surface: surface
+    )
+
+    assert backend.wait_agent(pane: "%2", states: %w[idle working], timeout: 5)
+    assert_empty wait_calls
   end
 end
