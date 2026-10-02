@@ -68,10 +68,17 @@ module Ace
               estimate: estimate,
               remote_issue: remote_issue
             )
-            with_issue_identity_lock(remote_issue) do
-              ensure_issue_linkable!(remote_issue) if remote_issue
-              ensure_issue_not_linked_elsewhere!(remote_issue, exclude_id: created_task.id) if remote_issue
-              sync_linked_issues_for(created_task, reason: "create")
+            begin
+              with_issue_identity_lock(remote_issue) do
+                ensure_issue_linkable!(remote_issue) if remote_issue
+                ensure_issue_not_linked_elsewhere!(remote_issue, exclude_id: created_task.id) if remote_issue
+                sync_linked_issues_for(created_task, reason: "create")
+              end
+            rescue StandardError
+              # Rejected linked creation must not leave a task artifact that
+              # would become a second local claimant for the issue.
+              FileUtils.rm_rf(created_task.path)
+              raise
             end
             show_after_sync(created_task) || created_task
           rescue Molecules::TaskCreator::IdCollisionError
@@ -315,10 +322,15 @@ module Ace
             estimate: estimate,
             remote_issue: remote_issue
           )
-          with_issue_identity_lock(remote_issue) do
-            ensure_issue_linkable!(remote_issue) if remote_issue
-            ensure_issue_not_linked_elsewhere!(remote_issue, exclude_id: created_subtask.id) if remote_issue
-            sync_linked_issues_for(created_subtask, reason: "create")
+          begin
+            with_issue_identity_lock(remote_issue) do
+              ensure_issue_linkable!(remote_issue) if remote_issue
+              ensure_issue_not_linked_elsewhere!(remote_issue, exclude_id: created_subtask.id) if remote_issue
+              sync_linked_issues_for(created_subtask, reason: "create")
+            end
+          rescue StandardError
+            FileUtils.rm_rf(created_subtask.path)
+            raise
           end
           show_after_sync(created_subtask) || created_subtask
         end
@@ -332,7 +344,11 @@ module Ace
             tasks = all_tasks_including_subtasks
             tasks = tasks.select { |t| t.metadata["issue_sync_pending"] } if pending
             linked_tasks = tasks.select { |t| linked_issue(t) }
-            results = linked_tasks.map { |task| sync_or_clear_linked_issue(task, reason: "manual-sync") }
+            results = linked_tasks.map do |task|
+              with_issue_identity_lock(linked_issue(task)) do
+                sync_or_clear_linked_issue(task, reason: "manual-sync")
+              end
+            end
             # An unlinked task with a pending flag is inconsistent state: it
             # fails in every mode (matching REF and --pending semantics).
             inconsistent = (tasks - linked_tasks).select { |t| t.metadata["issue_sync_pending"] }
@@ -357,7 +373,9 @@ module Ace
             return {synced: 0, failed: 0, pending: 0, skipped: 1, task_id: task.id, failures: []}
           end
 
-          result = sync_or_clear_linked_issue(task, reason: "manual-sync")
+          result = with_issue_identity_lock(linked_issue(task)) do
+            sync_or_clear_linked_issue(task, reason: "manual-sync")
+          end
           summary = summarize_manual_sync_results([result], skipped: 0)
           summary.merge(task_id: task.id)
         end
