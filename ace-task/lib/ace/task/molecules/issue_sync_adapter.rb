@@ -37,12 +37,27 @@ module Ace
           Ace::Git::Organisms::IssueTracking.new(provider: @provider_factory.for(server))
         end
 
+        # Repository-relative so the forge blob link is stable no matter which
+        # working directory ace-task was invoked from.
         def safe_task_path(task)
-          path = Pathname.new(task.file_path || task.path)
-          relative = path.relative_path_from(Pathname.pwd).to_s
+          path = Pathname.new(task.file_path || task.path).expand_path
+          root = Pathname.new(git_repo_root(path))
+          relative = path.relative_path_from(root).to_s
           relative.start_with?("../") ? path.basename.to_s : relative
-        rescue ArgumentError
+        rescue ArgumentError, SystemCallError
           path.basename.to_s
+        end
+
+        def git_repo_root(path)
+          candidate = path.dirname
+          loop do
+            return candidate.to_s if File.exist?(File.join(candidate, ".git"))
+
+            parent = candidate.parent
+            raise SystemCallError, "no git repository" if parent == candidate
+
+            candidate = parent
+          end
         end
 
         # A repository-relative path is not a resolvable link target inside a

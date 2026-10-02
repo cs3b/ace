@@ -149,9 +149,13 @@ module Ace
           # Apply field updates if any
           has_field_updates = [set, add, remove].any? { |h| h && !h.empty? }
           reject_issue_metadata_update!(set, add, remove)
-          if has_field_updates
+          # Linked tasks defer remote sync: persist the pending flag in the
+          # same write as the local change so a crash cannot lose the replay.
+          deferred_sync = linked_issue(task) && task.metadata["issue_sync_operation"] != "clear"
+          deferred_set = deferred_sync ? set.merge("issue_sync_pending" => true) : set
+          if has_field_updates || deferred_sync
             Ace::Support::Items::Molecules::FieldUpdater.update(
-              task.file_path, set: set, add: add, remove: remove
+              task.file_path, set: deferred_set, add: add, remove: remove
             )
           end
 
@@ -293,7 +297,9 @@ module Ace
           end
           ensure_issue_linkable!(identity, task_id: task.id)
           ensure_issue_not_linked_elsewhere!(identity, exclude_id: task.id)
-          Ace::Support::Items::Molecules::FieldUpdater.update(task.file_path, set: {"remote_issue" => identity})
+          Ace::Support::Items::Molecules::FieldUpdater.update(
+            task.file_path, set: {"remote_issue" => identity, "issue_sync_pending" => true}
+          )
           linked = show(ref)
           result = sync_linked_issues_for(linked, reason: "link")
           raise Ace::Git::ProviderUnreachableError, result[:error] unless result[:success]
