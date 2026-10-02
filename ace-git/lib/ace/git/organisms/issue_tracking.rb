@@ -9,6 +9,8 @@ module Ace
         STICKY_MARKER = "<!-- ace-task:tracked -->"
         RECONCILE_READ_ATTEMPTS = 3
         RECONCILE_READ_INTERVAL_SECONDS = 1
+        CREATE_RECONCILE_READ_ATTEMPTS = 5
+        CREATE_RECONCILE_READ_INTERVAL_SECONDS = 2
         TRACKED_LABEL = "ace:tracked"
         TERMINAL_STATUSES = %w[done cancelled skipped].freeze
 
@@ -29,7 +31,8 @@ module Ace
             "Issue ##{number} is already owned by ACE task #{owners.join(', ')}"
         end
 
-        def sync(number:, task_id:, task_link:, task_status:, previous_task_id: nil)
+        def sync(number:, task_id:, task_link:, task_status:, previous_task_id: nil,
+          create_pending: false)
           # Reparenting/promotion changes the local ID; the remote marker may
           # still name the previous ID, or may already carry the new one when
           # a prior sync failed partway. Both count as this task's ownership.
@@ -47,8 +50,29 @@ module Ace
           prefix += "\n" unless prefix.empty? || prefix.end_with?("\n")
           desired_body = "#{prefix}#{STICKY_MARKER}\n#{desired_line}"
           if sticky.nil?
-            mutate_and_reconcile(number, desired_body: desired_body) do
-              @provider.create_issue_comment(number: number, body: desired_body)
+            if create_pending
+              # A prior create ended with an unknown outcome: this replay must
+              # reconcile (bounded extended reads), never issue a second POST.
+              resolved = CREATE_RECONCILE_READ_ATTEMPTS.times.any? do |attempt|
+                snapshot = fetch(number)
+                found = sticky_comment(snapshot)
+                break true if found&.[](:body) == desired_body
+
+                if found
+                  mutate_and_reconcile(number, desired_body: desired_body) do
+                    @provider.update_issue_comment(number: number, comment_id: found[:id], body: desired_body)
+                  end
+                  break true
+                end
+                sleep(create_reconcile_interval(attempt))
+                false
+              end
+              raise ProviderUnknownOutcomeError,
+                "Prior tracking comment create for issue ##{number} is still unresolved" unless resolved
+            else
+              mutate_and_reconcile(number, desired_body: desired_body) do
+                @provider.create_issue_comment(number: number, body: desired_body)
+              end
             end
           elsif sticky[:body] != desired_body
             mutate_and_reconcile(number, desired_body: desired_body) do
@@ -117,6 +141,10 @@ module Ace
         end
 
         private
+
+        def create_reconcile_interval(attempt)
+          CREATE_RECONCILE_READ_INTERVAL_SECONDS * (attempt + 1)
+        end
 
         def fetch(number)
           snapshot = @provider.issue_tracking(number: number)
