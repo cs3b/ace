@@ -957,7 +957,8 @@ module Ace
           keys = changes.compact.flat_map(&:keys).map(&:to_s)
           forbidden = keys.find do |key|
             key == "remote_issue" || key.start_with?("remote_issue.") ||
-              %w[issue_sync_pending issue_sync_previous_id issue_sync_operation github_issue github_sync_pending].include?(key)
+              %w[issue_sync_pending issue_sync_previous_id issue_sync_operation
+                 issue_sync_reconcile_create github_issue github_sync_pending].include?(key)
           end
           raise ArgumentError, "Use ace-task issue-link to change #{forbidden}" if forbidden
         end

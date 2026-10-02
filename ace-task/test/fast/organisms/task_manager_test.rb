@@ -552,6 +552,20 @@ class TaskManagerTest < AceTaskTestCase
     end
   end
 
+  def test_generic_updates_reject_issue_sync_control_fields
+    adapter = fake_issue_adapter { |task:, **_| {success: true} }
+    @manager.stub(:issue_adapter, adapter) do
+      task = @manager.create("Linked task", remote_issue: issue_identity)
+      %w[remote_issue issue_sync_pending issue_sync_operation issue_sync_previous_id
+         issue_sync_reconcile_create].each do |key|
+        error = assert_raises(ArgumentError) do
+          @manager.update(task.id, set: {key => nil})
+        end
+        assert_match(/issue-link/, error.message)
+      end
+    end
+  end
+
   def test_pending_clear_completes_when_guarded_create_never_committed
     # Authoritative absence during a clear's reconciliation proves the
     # guarded create never committed: there is no marker to remove, so the
