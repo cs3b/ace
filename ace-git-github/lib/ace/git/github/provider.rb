@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "digest"
+require "open3"
 require "json"
 require "uri"
 
@@ -90,7 +91,15 @@ module Ace
         # @return [String] unified diff text for the pull request
         def pull_request_diff(number:)
           result = PrFetcher.fetch_diff(number.to_s, timeout: timeout, runner: runner, repo: repo_target)
-          result[:diff]
+          return result[:diff] if result[:success]
+          # API size-limit rejections (HTTP 406) fall back to a local git
+          # diff at the exact reviewed head, never an approximation.
+          raise Ace::Git::ProviderObjectNotFoundError, "gh pr diff failed: #{result[:error]}" if result[:error].to_s.match?(PR_NOT_FOUND_PATTERN)
+          raise Ace::Git::ProviderAuthenticationError, result[:error].to_s if result[:error].to_s.match?(AUTH_ERROR_PATTERN)
+          if result[:error].to_s.match?(/\bHTTP 406\b|Not Acceptable|exceeded the maximum/)
+            return local_diff_fallback(number)
+          end
+          raise Ace::Git::ProviderUnreachableError, "gh pr diff failed: #{result[:error]}"
         end
 
         # @return [Array<ProviderPullRequest>] recent PRs, newest first
@@ -761,6 +770,37 @@ end
           JSON.parse(result[:stdout])
         rescue JSON::ParserError => e
           raise Ace::Git::ProviderMalformedOutputError, "Malformed GitHub API JSON: #{e.message}"
+        end
+
+        # Exact-head local fallback for oversized API diffs: fetch the PR
+        # head ref from the selected host into a temp ref, verify the SHA
+        # matches, and diff base..head locally.
+        def local_diff_fallback(number)
+          pr = pull_request(number: number)
+          base_oid = pull_request_review_details(number: number).base_sha
+          head_oid = pr.head_sha
+          host = Ace::Git::Atoms::ServerUrl.normalize(server.url).split("/", 2).first
+          temp_ref = "refs/ace/review/pr-#{number}-#{Process.pid}"
+          run_git("fetch", "--no-tags", "#{host}:#{repo_path}", "+refs/pull/#{number}/head:#{temp_ref}")
+          fetched = run_git("rev-parse", temp_ref).strip
+          unless fetched == head_oid
+            raise Ace::Git::ProviderMalformedOutputError,
+              "Local fallback fetched #{fetched[0, 12]} but the reviewed head is #{head_oid[0, 12]}"
+          end
+          diff = run_git("diff", "#{base_oid}..#{head_oid}")
+          run_git("update-ref", "-d", temp_ref)
+          raise Ace::Git::ProviderMalformedOutputError, "Local fallback produced an empty diff" if diff.strip.empty?
+          diff
+        end
+
+        def repo_path
+          Ace::Git::Atoms::ServerUrl.normalize(server.url).split("/", 2).last
+        end
+
+        def run_git(*args)
+          out, status = Open3.capture2({"LC_ALL" => "C"}, "git", *args)
+          raise Ace::Git::ProviderUnreachableError, "git #{args.first} failed" unless status.success?
+          out
         end
 
         STATE_ORDER = {open: 0, merged: 1, closed: 2}.freeze
