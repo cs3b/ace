@@ -115,15 +115,40 @@ module Ace
 
         # Resolve a configured path through symlinks so placement checks see
         # the real location. Paths may not exist yet (an evidence sink is
-        # created on first use), so the deepest existing ancestor is
-        # resolved instead of failing.
+        # created on first use), so the deepest ancestor — counting symlink
+        # components themselves via lstat — is resolved instead of failing;
+        # a dangling symlink resolves through its own target chain rather
+        # than hiding behind its parent.
         def resolved_path(path)
           expanded = File.expand_path(path)
           candidate = expanded
-          candidate = File.dirname(candidate) until candidate == "/" || File.exist?(candidate)
-          File.realpath(candidate)
+          candidate = File.dirname(candidate) until candidate == "/" || lstat?(candidate)
+          resolved = begin
+            File.realpath(candidate)
+          rescue Errno::ENOENT, Errno::EACCES, Errno::ELOOP
+            dangling_target(candidate) || candidate
+          end
+          return resolved unless resolved == candidate && lstat?(candidate) && File.symlink?(candidate)
+          dangling_target(candidate) || resolved
         rescue Errno::ENOENT, Errno::EACCES, Errno::ELOOP
           expanded
+        end
+
+        # Follow a dangling symlink's own target chain; nil when the link
+        # cannot be resolved to any concrete location.
+        def dangling_target(link)
+          target = File.readlink(link)
+          target = File.expand_path(target, File.dirname(link)) unless Pathname.new(target).absolute?
+          resolved_path(target)
+        rescue Errno::ENOENT, Errno::EACCES, Errno::ELOOP
+          nil
+        end
+
+        def lstat?(path)
+          File.lstat(path)
+          true
+        rescue Errno::ENOENT
+          false
         end
 
         def parse_time(value)

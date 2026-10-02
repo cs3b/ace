@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "digest"
+require "fileutils"
 require "open3"
 require "ace/assign"
 
@@ -84,6 +86,11 @@ module Ace
           binding["transport"] = operation_policy.fetch("transport", "local")
 
           if dry_run
+            # The preview applies the same read-only eligibility checks as
+            # the claim — review evidence for external effects and the
+            # current candidate head — so it cannot promise acceptance for a
+            # request that would fail on submission.
+            @coordinator.request_eligible!(binding)
             preview = {"outcome" => "accepted", "dry_run" => true, "request_id" => request_id,
                        "project" => project, "operation" => operation, "service_id" => service_id,
                        "target" => target, "candidate_head" => head}
@@ -98,9 +105,17 @@ module Ace
 
           # The executor reloads the trusted policy from disk at the effect
           # boundary: a revocation after the claim must still stop dispatch.
-          receipt = @executor.execute(operation: operation_policy, request: binding, input: input,
-            policy_loader: policy_loader, authorization: authorization,
-            head_loader: -> { current_head })
+          begin
+            receipt = @executor.execute(operation: operation_policy, request: binding, input: input,
+              policy_loader: policy_loader, authorization: authorization,
+              head_loader: -> { current_head })
+          rescue SecurityError, Ace::Lab::InvalidConfigurationError => e
+            # Refusal before invocation: no effect was attempted. When this
+            # process is the executor identity (local transport), record a
+            # proven no-effect settlement instead of stranding uncertainty.
+            settle_pre_invocation_refusal(binding, request_id, e)
+            raise
+          end
           return result(@coordinator.service_request_status(request_id)) if receipt.nil?
 
           state = receipt.fetch("outcome")
@@ -136,6 +151,32 @@ module Ace
         end
 
         private
+
+        # A refusal raised before the handler was invoked proves no effect
+        # was attempted. When this process runs as the executor identity
+        # (local transport), record the proven no-effect settlement with an
+        # executor-owned attestation; otherwise the claim stays uncertain
+        # for evidence-based reconciliation.
+        def settle_pre_invocation_refusal(binding, request_id, error)
+          return unless binding["transport"] == "local" && Process.uid == binding["executor_uid"]
+          evidence_dir = File.join(@repo_root, "evidence", "service")
+          FileUtils.mkdir_p(evidence_dir)
+          attestation = File.join(evidence_dir, "#{request_id}-no-effect.txt")
+          content = "ace-service-attestation request:#{request_id} " \
+            "input:#{binding.fetch("input_digest")} outcome:failed no-effect:true\n" \
+            "refusal: #{error.message}\n"
+          File.write(attestation, content)
+          receipt = Models::ServiceReceipt.build(binding, {
+            "outcome" => "failed",
+            "evidence" => [{"ref" => "evidence/service/#{request_id}-no-effect.txt",
+                            "sha256" => Digest::SHA256.hexdigest(content)}],
+            "executor_uid" => binding.fetch("executor_uid")
+          })
+          @coordinator.reconcile_service_failure(request_id, receipt: receipt)
+        rescue Ace::Assign::AttemptErrors::InvalidState, Ace::Assign::AttemptErrors::ReceiptRejected,
+               Ace::Assign::AttemptErrors::NotFound, Errno::ENOENT, Errno::EACCES
+          nil
+        end
 
         def policy_loader
           if @policy
