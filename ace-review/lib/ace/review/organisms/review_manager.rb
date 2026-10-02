@@ -417,7 +417,8 @@ module Ace
                       pr_metadata: metadata, delta: delta,
                       diff_manifest: manifest.merge(scoped[:manifest]).merge(
                         exempt_files: classification[:exempt],
-                        exempt_patterns: Array(config[:exempt_paths]))}
+                        exempt_patterns: Array(config[:exempt_paths])
+                      )}
             end
 
             scoped = apply_exempt_paths(scoped, config)
@@ -497,10 +498,10 @@ module Ace
           lines << ""
           lines << "# No-op review round"
           lines << ""
-          if content[:noop_reason] == :empty_delta && delta
-            lines << "Scope: delta since `#{delta[:reference_head]}` — the delta is empty; there is no change to review."
+          lines << if content[:noop_reason] == :empty_delta && delta
+            "Scope: delta since `#{delta[:reference_head]}` — the delta is empty; there is no change to review."
           else
-            lines << "Scope: #{content[:noop_scope] || "no-op"}."
+            "Scope: #{content[:noop_scope] || "no-op"}."
           end
           lines << ""
           lines << "Verdict: no new findings. This round is clean only if no carried-forward Critical/High finding remains unresolved."
@@ -1651,7 +1652,13 @@ module Ace
             end
             entries = metadata["models"] || [YAML.safe_load_file(File.join(session_dir, "llm_metadata.yml"),
               permitted_classes: [Time, Date, Symbol])]
-            digests = entries.map { |entry| entry["report_sha256"] }.compact
+            # Same completed rule as the campaign evidence reader: a failed
+            # provider that left partial output is not a reviewed report.
+            digests = entries.select do |entry|
+              execution = entry["execution"] || {}
+              entry["status"] == "success" && execution["status"].to_s == "succeeded" &&
+                !entry["completed_at"].to_s.empty?
+            end.map { |entry| entry["report_sha256"] }.compact
             extraction = {"status" => "succeeded", "finding_ids" => ids, "report_sha256" => digests}
           end
           metadata["feedback_extraction"] = extraction
