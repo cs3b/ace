@@ -199,7 +199,11 @@ end
         def repository_file(path:, ref:)
           require "base64"
           # %20, not form encoding: "+" in a path segment is a literal plus.
-          escaped = path.split("/").map { |part| URI::DEFAULT_PARSER.escape(part) }.join("/")
+          # Explicit unreserved-character allowlist: percent-encode
+          # everything else (DEFAULT_PARSER leaves ? and + ambiguous).
+          escaped = path.split("/").map { |part|
+            part.gsub(/[^A-Za-z0-9._~!$&'()*+,;=@:-]/) { |c| c.bytes.map { |b| format("%%%02X", b) }.join }
+          }.join("/")
           data = review_http.request(:get, "contents/#{escaped}?ref=#{ref}")
           unless data.is_a?(Hash) && data["encoding"] == "base64" && data["content"].is_a?(String)
             raise Ace::Git::ProviderMalformedOutputError, "Malformed Forgejo repository file evidence"
