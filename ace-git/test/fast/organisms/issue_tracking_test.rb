@@ -93,7 +93,15 @@ class IssueTrackingTest < AceGitTestCase
     @service.sync(number: 42, task_id: "8pp.t.q7w", task_link: "task.md", task_status: "pending")
     assert_match(/Keep this note/, @provider.comments.first[:body])
     @service.clear(number: 42, task_id: "8pp.t.q7w")
-    assert_equal "Keep this note", @provider.comments.first[:body]
+    assert_equal "Keep this note\n", @provider.comments.first[:body]
+  end
+
+  def test_sync_preserves_unrelated_trailing_whitespace
+    @provider.comments << {id: 1, body: "Note with trailing spaces  \n" \
+      "<!-- ace-task:tracked -->\nTracked in ace-task: [8pp.t.q7w](old.md)"}
+    @service.sync(number: 42, task_id: "8pp.t.q7w", task_link: "task.md", task_status: "pending")
+    assert_includes @provider.comments.first[:body], "Note with trailing spaces  \n"
+    refute_includes @provider.comments.first[:body], "Note with trailing spaces  \n\n"
   end
 
   def test_clear_refuses_ambiguous_marker_without_owner
