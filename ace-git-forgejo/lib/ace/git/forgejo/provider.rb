@@ -198,7 +198,8 @@ end
 
         def repository_file(path:, ref:)
           require "base64"
-          escaped = path.split("/").map { |part| URI.encode_www_form_component(part) }.join("/")
+          # %20, not form encoding: "+" in a path segment is a literal plus.
+          escaped = path.split("/").map { |part| URI::DEFAULT_PARSER.escape(part) }.join("/")
           data = review_http.request(:get, "contents/#{escaped}?ref=#{ref}")
           unless data.is_a?(Hash) && data["encoding"] == "base64" && data["content"].is_a?(String)
             raise Ace::Git::ProviderMalformedOutputError, "Malformed Forgejo repository file evidence"
@@ -240,6 +241,7 @@ end
             raise Ace::Git::ProviderUnknownOutcomeError,
               "PR comment sent but reconciliation found #{matches.length} exact-content match(es) for session #{correlation}"
           end
+          verify_post_mutation_head!(number, expected_head, correlation)
           review_mutation(number, expected_head, matches.first, :created)
         end
 
@@ -268,6 +270,7 @@ end
             raise Ace::Git::ProviderUnknownOutcomeError,
               "Comment update sent but exact PR comment #{comment_id} could not be verified"
           end
+          verify_post_mutation_head!(number, expected_head, "comment #{comment_id}")
           review_mutation(number, expected_head, review_comment(updated, number, expected_head), :updated)
         end
 
@@ -377,6 +380,17 @@ end
         def review_http
           @review_http ||= HttpClient.new(server: server, timeout: timeout, runner: runner)
         end
+
+  # A mutation receipt may only bind the expected head; if the PR head
+  # moved during the mutation the outcome stays uncertain.
+  def verify_post_mutation_head!(number, expected_head, correlation)
+    current = pull_request(number: number)
+    return if current.head_sha == expected_head
+
+    raise Ace::Git::ProviderUnknownOutcomeError,
+      "PR head moved during mutation for #{server.name}/##{number} " \
+      "(#{expected_head} -> #{current.head_sha}), session #{correlation}: reconcile before repeating"
+  end
 
         def comment_marker(correlation)
           unless correlation.to_s.match?(/\A[a-zA-Z0-9._:-]+\z/)

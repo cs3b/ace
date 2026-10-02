@@ -197,16 +197,20 @@ end
           end
           index = {}
           threads["nodes"].each do |thread|
+            comments = thread.is_a?(Hash) && thread["comments"]
             unless thread.is_a?(Hash) && thread["id"].is_a?(String) &&
-                thread["comments"].is_a?(Hash) && thread["comments"]["nodes"].is_a?(Array)
+                comments.is_a?(Hash) && comments["nodes"].is_a?(Array) &&
+                comments["pageInfo"].is_a?(Hash) && [true, false].include?(comments["pageInfo"]["hasNextPage"])
               raise Ace::Git::ProviderMalformedOutputError, "Malformed GitHub review thread evidence"
             end
-            if thread["comments"]["pageInfo"]["hasNextPage"] == true
+            if comments["pageInfo"]["hasNextPage"] == true
               raise Ace::Git::ProviderMalformedOutputError, "Incomplete GitHub review thread evidence"
             end
             resolved = thread["isResolved"] == true
-            thread["comments"]["nodes"].each do |comment|
-              next unless comment.is_a?(Hash) && comment["databaseId"].is_a?(Integer)
+            comments["nodes"].each do |comment|
+              unless comment.is_a?(Hash) && comment["databaseId"].is_a?(Integer)
+                raise Ace::Git::ProviderMalformedOutputError, "Malformed GitHub review thread evidence"
+              end
               index[comment["databaseId"]] = [thread["id"], resolved]
             end
           end
@@ -283,7 +287,8 @@ end
 
         def repository_file(path:, ref:)
           require "base64"
-          escaped = path.split("/").map { |part| URI.encode_www_form_component(part) }.join("/")
+          # %20, not form encoding: "+" in a path segment is a literal plus.
+          escaped = path.split("/").map { |part| URI::DEFAULT_PARSER.escape(part) }.join("/")
           data = gh_api("contents/#{escaped}?ref=#{ref}")
           unless data.is_a?(Hash) && data["encoding"] == "base64" && data["content"].is_a?(String)
             raise Ace::Git::ProviderMalformedOutputError, "Malformed GitHub repository file evidence"
@@ -325,6 +330,7 @@ end
             raise Ace::Git::ProviderUnknownOutcomeError,
               "PR comment sent but reconciliation found #{matches.length} exact-content match(es) for session #{correlation}"
           end
+          verify_post_mutation_head!(pr, expected_head, correlation)
           review_mutation(pr, expected_head, matches.first, :created)
         end
 
@@ -352,6 +358,7 @@ end
             raise Ace::Git::ProviderUnknownOutcomeError,
               "Comment update sent but exact PR comment #{comment_id} could not be verified"
           end
+          verify_post_mutation_head!(pr, expected_head, "comment #{comment_id}")
           review_mutation(pr, expected_head, review_comment(updated, pr, expected_head), :updated)
         end
 
@@ -516,6 +523,17 @@ end
           data
         rescue JSON::ParserError => e
           raise Ace::Git::ProviderMalformedOutputError, "Malformed GitHub GraphQL JSON: #{e.message}"
+        end
+
+        # A mutation receipt may only bind the expected head; if the PR head
+        # moved during the mutation the outcome stays uncertain.
+        def verify_post_mutation_head!(pr, expected_head, correlation)
+          current = pull_request(number: pr.number)
+          return if current.head_sha == expected_head
+
+          raise Ace::Git::ProviderUnknownOutcomeError,
+            "PR head moved during mutation for #{server.name}/##{pr.number} " \
+            "(#{expected_head} -> #{current.head_sha}), session #{correlation}: reconcile before repeating"
         end
 
         def comment_marker(correlation)
