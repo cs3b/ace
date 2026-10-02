@@ -16,11 +16,12 @@ module Ace
           tracking(server).validate_link!(number: identity.fetch("number"), task_id: task_id)
         end
 
-        def sync_task(task:)
+        def sync_task(task:, previous_task_id: nil)
           identity = task.metadata.fetch("remote_issue")
           server = IssueLink.validate!(identity)
           tracking(server).sync(
             number: identity.fetch("number"), task_id: task.id,
+            previous_task_id: previous_task_id,
             task_link: task_link(identity, task), task_status: task.status
           )
         end
