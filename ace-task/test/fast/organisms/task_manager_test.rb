@@ -648,6 +648,45 @@ class TaskManagerTest < AceTaskTestCase
     end
   end
 
+  def test_definitive_rejection_clears_guard_for_retry
+    adapter = Object.new
+    adapter.define_singleton_method(:validate_link!) { |**_args| true }
+    attempts = 0
+    adapter.define_singleton_method(:sync_task) do |task:, **_|
+      if attempts.zero?
+        attempts += 1
+        raise Ace::Git::ProviderAuthenticationError, "credentials expired"
+      end
+      nil
+    end
+    adapter.define_singleton_method(:clear_task) { |**_args| true }
+    @manager.stub(:issue_adapter, adapter) do
+      task = @manager.create("Linked task", remote_issue: issue_identity)
+      # The auth rejection is definitive: the guard does not survive it.
+      refute @manager.show(task.id).metadata["issue_sync_operation"]
+      # Pending replay retries the create (now succeeding).
+      result = @manager.issue_sync(pending: true)
+      assert_equal 1, result[:synced]
+      refute @manager.show(task.id).metadata["issue_sync_pending"]
+    end
+  end
+
+  def test_reparent_rewrites_stale_dependency_references
+    adapter = fake_issue_adapter { |task:, **_| }
+    @manager.stub(:issue_adapter, adapter) do
+      dependent = @manager.create("Dependent")
+      target = @manager.create("Target")
+      parent = @manager.create("Parent")
+      child = @manager.create_subtask(parent.id, "Linked child")
+      @manager.update(dependent.id, set: {}, add: {dependencies: child.id})
+      @manager.update(parent.id, move_as_child_of: target.id)
+      spec = File.read(Dir.glob(File.join(@manager.root_dir, "**", "*.s.md"))
+        .find { |file| File.read(file).include?("Dependent") })
+      # The child reference follows the reparented parent's new ID.
+      assert_match(/dependencies: \[#{Regexp.escape(parent.id)}\.0\]/, spec)
+    end
+  end
+
   def test_offline_reconcile_retains_creation_guard
     adapter = Object.new
     adapter.define_singleton_method(:validate_link!) { |**_args| true }

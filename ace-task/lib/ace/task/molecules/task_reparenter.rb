@@ -76,7 +76,9 @@ module Ace
           end
 
           # Promoted descendants rebase from the standalone ID.
-          rewrite_descendants(new_dir, old_parent_id: task.id, new_parent_id: new_id)
+          id_map = {}
+          rewrite_descendants(new_dir, old_parent_id: task.id, new_parent_id: new_id, id_map: id_map)
+          rewrite_dependency_references(id_map)
 
           loader = TaskLoader.new
           loader.load(new_dir, id: new_id)
@@ -169,15 +171,31 @@ module Ace
 
           # Descendant identities hang off the parent ID: rewrite their
           # frontmatter and spec filenames so persisted IDs stay authoritative.
-          rewrite_descendants(new_dir, old_parent_id: task.id, new_parent_id: new_id)
+          id_map = {}
+          rewrite_descendants(new_dir, old_parent_id: task.id, new_parent_id: new_id, id_map: id_map)
+          rewrite_dependency_references(id_map)
 
           loader = TaskLoader.new
           loader.load(new_dir, id: new_id)
         end
 
+        # Rewrite dependency references in every task spec after an ID map
+        # changes (stale references would read as unmet dependencies).
+        def rewrite_dependency_references(id_map)
+          return if id_map.empty?
+
+          Dir.glob(File.join(@root_dir, "**", "*.s.md")).sort.each do |spec|
+            content = File.read(spec)
+            updated = content.gsub(/^(\s*-\s*)(\S+)(\s*)$/) do
+              "#{Regexp.last_match(1)}#{id_map.fetch(Regexp.last_match(2), Regexp.last_match(2))}#{Regexp.last_match(3)}"
+            end
+            File.write(spec, updated) if updated != content
+          end
+        end
+
         # Recursively rewrite descendant frontmatter IDs, parent references and
         # spec filenames after their ancestor's ID changed.
-        def rewrite_descendants(dir, old_parent_id:, new_parent_id:)
+        def rewrite_descendants(dir, old_parent_id:, new_parent_id:, id_map: {})
           return unless Dir.exist?(dir)
 
           Dir.entries(dir).sort.each do |entry|
@@ -191,6 +209,7 @@ module Ace
 
             old_child_id = "#{old_parent_id}.#{char}"
             new_child_id = "#{new_parent_id}.#{char}"
+            id_map[old_child_id] = new_child_id
 
             spec = Dir.glob(File.join(child_dir, "*.s.md")).sort.first
             if spec
@@ -204,7 +223,7 @@ module Ace
               end
             end
 
-            rewrite_descendants(child_dir, old_parent_id: old_child_id, new_parent_id: new_child_id)
+            rewrite_descendants(child_dir, old_parent_id: old_child_id, new_parent_id: new_child_id, id_map: id_map)
           end
         end
 
