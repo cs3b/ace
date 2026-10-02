@@ -208,13 +208,16 @@ module Ace
         stable_since = nil
         loop do
           output = capture_output(pane, lines: 40)
+          now = Process.clock_gettime(Process::CLOCK_MONOTONIC)
           state = agent_state_from_output(output)
           if observable.include?(state)
             return true if state == "working"
 
             if output == previous_output
-              stable_since ||= Process.clock_gettime(Process::CLOCK_MONOTONIC)
-              return true if Process.clock_gettime(Process::CLOCK_MONOTONIC) - stable_since >= settle
+              stable_since ||= now
+              # The deadline bounds acceptance: a match confirmed only
+              # after it passes is a timeout, not a success.
+              return true if now < deadline && now - stable_since >= settle
             else
               stable_since = nil
             end
@@ -222,7 +225,7 @@ module Ace
             stable_since = nil
           end
           previous_output = output
-          raise Ace::Tmux::WaitTimeoutError if Process.clock_gettime(Process::CLOCK_MONOTONIC) >= deadline
+          raise Ace::Tmux::WaitTimeoutError if now >= deadline
 
           sleep(interval)
         end
@@ -279,8 +282,17 @@ module Ace
         # reports the option as unset and idempotency checks conflict.
         command << "-w" unless pane
         result = executor.capture(command + ["-t", target, name])
-        value = result.stdout.to_s.strip
-        value unless !result.success? || value.empty?
+        if result.success?
+          value = result.stdout.to_s.strip
+          value.empty? ? nil : value
+        else
+          detail = result.stderr.to_s
+          raise Ace::Tmux::TargetResolutionError, "tmux target is unavailable" if detail.match?(/can't find|no such|unknown target|not found/i)
+          # tmux exits non-zero with quiet output for an unset option.
+          return nil if detail.strip.empty?
+
+          raise Ace::Tmux::Error, detail
+        end
       end
 
       def query(command)

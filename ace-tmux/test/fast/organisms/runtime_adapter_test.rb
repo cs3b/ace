@@ -127,7 +127,13 @@ class TmuxRuntimeAdapterNativeTest < Minitest::Test
       when "list-panes"
         @pane ? "1\t%2\tmain\t@1\t1\twork\t0\tzsh\t/tmp/work" : ""
       when "show-options"
-        @options[[command[-2], command[-1]]].to_s
+        if @fail_pane_queries
+          success = false
+          stderr = "server error"
+          ""
+        else
+          @options[[command[-2], command[-1]]].to_s
+        end
       when "set-window-option", "set-option"
         @options[[command[command.index("-t") + 1], command[-2]]] = command[-1]
         ""
@@ -481,6 +487,14 @@ class TmuxRuntimeAdapterNativeTest < Minitest::Test
   def test_native_wait_output_rejects_blank_pattern
     assert_raises(ArgumentError) { @adapter.wait_output(pane: "%2", pattern: "", timeout: 1) }
     assert_raises(ArgumentError) { @adapter.wait_output(pane: "%2", pattern: nil, timeout: 1) }
+  end
+
+  def test_native_option_query_failure_is_runtime_unavailable
+    executor = FakeTmuxExecutor.new
+    executor.fail_pane_queries = true
+    backend = Ace::Tmux::NativeRuntimeBackend.new(executor: executor, env: {"ACE_TMUX_SESSION" => "main"})
+
+    assert_raises(Ace::Tmux::Error) { backend.send(:option, "@1", "@ace_runtime_root") }
   end
 
   class NewlineShowOptionsExecutor < FakeTmuxExecutor
