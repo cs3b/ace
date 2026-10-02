@@ -108,7 +108,40 @@ module HerdrContractSupport
     def agent_get(pane)
       guard!
       pane!(pane)
-      result(agent: {state: @fixture.agent_state(pane)})
+      state = @fixture.agent_state(pane)
+      raise Ace::Herdr::AgentNotFoundError, "agent_not_found" if state.nil?
+
+      result(agent: {state: state})
+    end
+
+    # Plain-pane transport (agentless panes): ordered raw text/keys and
+    # one-shot command submission, mapped onto the fixture's recorded ops.
+    def pane_run(pane, command)
+      guard!
+      pane!(pane)
+      @fixture.write_text(pane, command)
+      @fixture.press_key(pane, "Enter")
+      result(sent: "cmd")
+    rescue Ace::Runtime::Testing::FixtureStall => e
+      raise Ace::Herdr::AgentNotReadyError, e.message
+    end
+
+    def pane_send_text(pane, text)
+      guard!
+      pane!(pane)
+      @fixture.write_text(pane, text)
+      result(sent: "text")
+    rescue Ace::Runtime::Testing::FixtureStall => e
+      raise Ace::Herdr::AgentNotReadyError, e.message
+    end
+
+    def pane_send_keys(pane, keys)
+      guard!
+      pane!(pane)
+      keys.each { |key| @fixture.press_key(pane, key) }
+      result(sent: "keys")
+    rescue Ace::Runtime::Testing::FixtureStall => e
+      raise Ace::Herdr::AgentNotReadyError, e.message
     end
 
     def agent_prompt(pane:, text:)
@@ -125,6 +158,8 @@ module HerdrContractSupport
       pane!(pane)
       keys.each { |key| @fixture.press_key(pane, key) }
       result(sent: "keys")
+    rescue Ace::Runtime::Testing::FixtureStall => e
+      raise Ace::Herdr::AgentNotReadyError, e.message
     end
 
     def pane_read(pane, source: "recent", lines: nil)

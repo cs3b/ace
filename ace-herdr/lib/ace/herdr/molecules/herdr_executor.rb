@@ -234,7 +234,7 @@ module Ace
           )
         end
 
-        def classify_code(code, message, result: nil, cmd: nil)
+        def classify_code(code, message, result:, cmd:)
           case code
           when "agent_blocked" then AgentBlockedError.new(tag_code(code, message))
           when "agent_prompt_stalled" then AgentNotReadyError.new(tag_code(code, message))
@@ -245,8 +245,7 @@ module Ace
           when "timeout" then ExecutorTimeoutError.new(tag_code(code, message))
           else
             CommandError.new(
-              "herdr command failed#{result ? " (exit #{result.exit_code}): #{cmd.join(" ")}" : ""}: " \
-                "#{tag_code(code, message)}"
+              "herdr command failed (exit #{result.exit_code}): #{cmd.join(" ")}: #{tag_code(code, message)}"
             )
           end
         end

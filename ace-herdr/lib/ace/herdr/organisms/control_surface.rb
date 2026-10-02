@@ -394,33 +394,13 @@ module Ace
         end
 
         def dig_value(json, path)
-          current = json
-          path.each do |key|
-            return nil unless current.is_a?(Hash)
-
-            current = current[key]
-          end
-          current.is_a?(String) && !current.empty? ? current : nil
+          Atoms::JsonFind.dig_value(json, path)
         end
 
-        # Recursive search mirroring the Dispatcher's tolerant extraction of
-        # ids from native responses (native shapes nest under result.*)
+        # Tolerant extraction of ids from native responses (native shapes
+        # nest under result.*); shared atom, same semantics as Dispatcher.
         def find_value(json, keys)
-          case json
-          when Hash
-            keys.each { |key| return json[key] if json[key].is_a?(String) && !json[key].empty? }
-            json.each_value do |value|
-              found = find_value(value, keys)
-              return found if found
-            end
-            nil
-          when Array
-            json.each do |value|
-              found = find_value(value, keys)
-              return found if found
-            end
-            nil
-          end
+          Atoms::JsonFind.find_value(json, keys)
         end
 
         # --- send: validation -------------------------------------------------

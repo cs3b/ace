@@ -328,30 +328,7 @@ module Ace
         def test_rollback_closes_only_the_failed_tab_id
           @executor.tab_create(workspace_id: "w1", label: "other", cwd: "/tmp/work")
           manual_tabs_before = @adapter.list_windows.map { |row| row[:window] }
-          failing_surface = Class.new do
-            def initialize(executor)
-              @real = ControlSurface.new(executor: executor)
-              @executor = executor
-            end
-
-            def create_tab(*)
-              parsed = @executor.tab_create(workspace_id: "w1", label: "work", cwd: "/tmp/work").parsed_json
-              raise TabMaterializationError.new(
-                tab_id: parsed["result"]["tab_id"],
-                message: "preset materialization failed after native create"
-              )
-            end
-
-            def method_missing(name, *args, **kwargs, &block)
-              return @real.public_send(name, *args, **kwargs, &block) if @real.respond_to?(name)
-
-              super
-            end
-
-            def respond_to_missing?(name, include_private = false)
-              @real.respond_to?(name, include_private) || super
-            end
-          end.new(@executor)
+          failing_surface = failing_materialization_surface
           failing = RuntimeAdapter.new(executor: @executor, env: env, sleeper: FastSleeper.new,
             surface: failing_surface, identity_dir: @identity_dir)
           error = assert_raises(Runtime::Error) do
@@ -484,30 +461,7 @@ module Ace
         end
 
         def test_failed_preset_materialization_rolls_back_the_native_tab
-          failing_surface = Class.new do
-            def initialize(executor)
-              @real = ControlSurface.new(executor: executor)
-              @executor = executor
-            end
-
-            def create_tab(*)
-              parsed = @executor.tab_create(workspace_id: "w1", label: "work", cwd: "/tmp/work").parsed_json
-              raise TabMaterializationError.new(
-                tab_id: parsed["result"]["tab_id"],
-                message: "preset materialization failed after native create"
-              )
-            end
-
-            def method_missing(name, *args, **kwargs, &block)
-              return @real.public_send(name, *args, **kwargs, &block) if @real.respond_to?(name)
-
-              super
-            end
-
-            def respond_to_missing?(name, include_private = false)
-              @real.respond_to?(name, include_private) || super
-            end
-          end.new(@executor)
+          failing_surface = failing_materialization_surface
           failing = RuntimeAdapter.new(executor: @executor, env: env, sleeper: FastSleeper.new,
             surface: failing_surface, identity_dir: @identity_dir)
           error = assert_raises(Runtime::Error) do
@@ -538,6 +492,35 @@ module Ace
         end
 
         private
+
+        # Surface double whose create_tab materializes a native tab and
+        # then fails with TabMaterializationError carrying its id.
+        def failing_materialization_surface
+          Class.new do
+            def initialize(executor)
+              @real = ControlSurface.new(executor: executor)
+              @executor = executor
+            end
+
+            def create_tab(*)
+              parsed = @executor.tab_create(workspace_id: "w1", label: "work", cwd: "/tmp/work").parsed_json
+              raise TabMaterializationError.new(
+                tab_id: parsed["result"]["tab_id"],
+                message: "preset materialization failed after native create"
+              )
+            end
+
+            def method_missing(name, *args, **kwargs, &block)
+              return @real.public_send(name, *args, **kwargs, &block) if @real.respond_to?(name)
+
+              super
+            end
+
+            def respond_to_missing?(name, include_private = false)
+              @real.respond_to?(name, include_private) || super
+            end
+          end.new(@executor)
+        end
 
         def env
           {"HERDR_SESSION" => "s1", "HERDR_PANE" => "w1:p0"}

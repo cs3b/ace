@@ -14,7 +14,7 @@ module Ace
         POLL_INTERVAL = 0.02
 
         def initialize(executor: Molecules::HerdrExecutor.new, env: ENV, clock: Process, sleeper: Kernel, surface: nil,
-          identity_dir: nil)
+          identity_dir: nil, poll_interval: POLL_INTERVAL)
           @executor = executor
           @env = env
           @clock = clock
@@ -22,6 +22,7 @@ module Ace
           @surface = surface || ControlSurface.new(executor: executor)
           @prepared = {}
           @identity_dir = identity_dir
+          @poll_interval = poll_interval
         end
 
         def context
@@ -79,8 +80,13 @@ module Ace
                     created = @surface.create_tab(preset, workspace_id: workspace, cwd: File.expand_path(root), label: label)
                   rescue TabMaterializationError => e
                     # Roll back the tab this call created — exact id from
-                    # the surface, never a listing guess.
-                    @executor.tab_close(e.tab_id)
+                    # the surface, never a listing guess. Best effort: a
+                    # rollback failure never replaces the primary error.
+                    begin
+                      @executor.tab_close(e.tab_id)
+                    rescue StandardError => close_error
+                      warn "ace-herdr: rollback close failed for tab #{e.tab_id}: #{close_error.class}: #{close_error.message}"
+                    end
                     raise
                   end
                   created.fetch(:tab)
@@ -93,7 +99,11 @@ module Ace
               begin
                 write_identity(path, id: created_id, root: canonical_root(root), preset: preset)
               rescue StandardError
-                @executor.tab_close(created_id)
+                begin
+                  @executor.tab_close(created_id)
+                rescue StandardError => close_error
+                  warn "ace-herdr: rollback close failed for tab #{created_id}: #{close_error.class}: #{close_error.message}"
+                end
                 raise
               end
               created_id
@@ -212,7 +222,7 @@ module Ace
               raise Runtime::WaitTimeoutError.new(condition: condition, target: target, timeout: timeout) if
                 @clock.clock_gettime(Process::CLOCK_MONOTONIC) >= deadline
 
-              @sleeper.sleep(POLL_INTERVAL)
+              @sleeper.sleep(@poll_interval)
             end
           end
         end
@@ -361,7 +371,10 @@ module Ace
             # reuse this pane instead of splitting again.
             write_pointer_only(path, id: tab[:id], prepared_pane: pane_id)
           end
-        rescue Errno::ENOENT
+        rescue Errno::ENOENT => e
+          # The pointer could not be persisted; surface it instead of
+          # silently losing prepared-pane reuse.
+          warn "ace-herdr: could not persist prepared-pane record for '#{tab[:name]}': #{e.class}: #{e.message}"
           nil
         end
 
@@ -479,14 +492,7 @@ module Ace
         end
 
         def find_value(value, keys)
-          case value
-          when Hash
-            keys.each { |key| return value[key] if value[key].is_a?(String) && !value[key].empty? }
-            value.each_value { |child| found = find_value(child, keys); return found if found }
-          when Array
-            value.each { |child| found = find_value(child, keys); return found if found }
-          end
-          nil
+          Atoms::JsonFind.find_value(value, keys)
         end
 
         # Pinned-path walk that fails closed: nil unless every hop resolves
