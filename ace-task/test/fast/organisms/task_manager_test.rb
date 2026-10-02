@@ -835,6 +835,41 @@ class TaskManagerTest < AceTaskTestCase
     Process.wait(child_pid)
   end
 
+  def test_update_move_runs_while_issue_identity_lock_is_held
+    identity = issue_identity
+    key = identity.values_at("server_name", "provider", "repository_url", "number")
+      .map { |value| value.to_s.gsub(%r{[^\w.-]}, "_") }.join("--")
+    lock_path = File.join(Dir.tmpdir, "ace-task-issue-#{key}.lock")
+    lock_probe = File.join(Dir.tmpdir, "qk12-move-lock-probe")
+    File.delete(lock_probe) if File.exist?(lock_probe)
+
+    # At the moment the relocation moves the spec file, a non-blocking flock
+    # from another thread can only fail if the update itself holds the
+    # identity lock - proving the move runs under the same hold that wrote
+    # the pending flag, so no replay can clear it mid-move.
+    Ace::Support::Items::Molecules::FolderMover.prepend(Module.new do
+      define_method(:move) do |*args, **kwargs|
+        contender = Thread.new do
+          fd = File.open(lock_path, File::CREAT | File::RDWR)
+          acquired = fd.flock(File::LOCK_EX | File::LOCK_NB) != false
+          fd.flock(File::LOCK_UN) if acquired
+          fd.close
+          acquired
+        end
+        File.write(lock_probe, contender.value ? "free" : "held")
+        super(*args, **kwargs)
+      end
+    end)
+
+    adapter = fake_issue_adapter { |**_args| {success: true} }
+    @manager.stub(:issue_adapter, adapter) do
+      task = @manager.create("Movable task", remote_issue: identity)
+      @manager.update(task.id, move_to: "archive")
+    end
+    assert_equal "held", File.read(lock_probe),
+      "relocation must run while the linked issue's identity lock is held"
+  end
+
   def test_bulk_sync_fails_for_pending_tasks_without_identity
     adapter = fake_issue_adapter { |task:, **_| raise Ace::Git::ProviderUnknownOutcomeError, "unknown" }
     @manager.stub(:issue_adapter, adapter) do

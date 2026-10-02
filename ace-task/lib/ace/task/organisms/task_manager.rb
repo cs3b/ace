@@ -190,12 +190,21 @@ module Ace
           # pending flag with no remote_issue target.
           sync_relevant_keys = [set, add, remove].compact.flat_map(&:keys).map(&:to_s)
           sync_planned = move_to || move_as_child_of || (sync_relevant_keys & %w[title status]).any?
-          if has_field_updates || (linked_issue(task) && sync_planned)
-            with_issue_identity_lock(linked_issue(task) || {}) do
+          current_path = task.path
+          current_special = task.special_folder
+          current_id = task.id
+          linked = linked_issue(task)
+          if linked && sync_planned
+            # The pending flag, the relocation, and the post-relocation syncs
+            # run under one hold of every linked participant's issue lock: a
+            # replay slipping in between would sync the pre-move path, clear
+            # the pending flag, and leave the remote marker stale with no
+            # replay pending after a post-move stop.
+            with_identity_locks(participant_identities(task)) do
               with_issue_identity_lock("task" => task.id) do
                 fresh = show(task.id) || task
-                linked = linked_issue(fresh)
-                deferred_sync = linked && fresh.metadata["issue_sync_operation"] != "clear" && sync_planned
+                linked_fresh = linked_issue(fresh)
+                deferred_sync = linked_fresh && fresh.metadata["issue_sync_operation"] != "clear" && sync_planned
                 deferred_set = deferred_sync ? set.merge("issue_sync_pending" => true) : set
                 deferred_set = deferred_set.merge(
                   "issue_sync_previous_id" => fresh.metadata["issue_sync_previous_id"] || task.id
@@ -205,97 +214,24 @@ module Ace
                     fresh.file_path, set: deferred_set, add: add, remove: remove
                   )
                 end
+                early, current_path, current_special, current_id = apply_relocation_phase(
+                  task, loader, current_path: task.path, current_special: task.special_folder,
+                  current_id: task.id, move_to: move_to, move_as_child_of: move_as_child_of
+                )
+                return early if early
               end
             end
-          end
-
-          # Apply move if requested
-          current_path = task.path
-          current_special = task.special_folder
-          current_id = task.id
-          if move_to
-            # Relocating a parent moves its children's files too: their issue
-            # comments embed repo-relative links that just went stale. Flag
-            # linked descendants pending (crash-safe, written pre-move) and
-            # sync their comments from the post-move locations.
-            linked_descendants_of(task.path, task.id).each do |child|
+          else
+            if has_field_updates
               Ace::Support::Items::Molecules::FieldUpdater.update(
-                child.file_path, set: {"issue_sync_pending" => true}
+                task.file_path, set: set, add: add, remove: remove
               )
             end
-            if archive_move_for_subtask?(task, move_to)
-              result = handle_subtask_archive_move(task, loader)
-              current_path = result[:path]
-              current_special = result[:special_folder]
-              current_id = result[:id]
-            else
-              mover = Ace::Support::Items::Molecules::FolderMover.new(@root_dir)
-              new_path = if Ace::Support::Items::Atoms::SpecialFolderDetector.move_to_root?(move_to)
-                mover.move_to_root(task)
-              else
-                archive_date = parse_archive_date(task)
-                mover.move(task, to: move_to, date: archive_date)
-              end
-              current_path = new_path
-              current_special = Ace::Support::Items::Atoms::SpecialFolderDetector.detect_in_path(
-                new_path, root: @root_dir
-              )
-            end
-            linked_descendants_of(current_path, current_id).each do |child|
-              with_issue_identity_lock(linked_issue(child) || {}) do
-                fresh = show(child.id) || child
-                sync_linked_issues_for(fresh, reason: "move") if linked_issue(fresh)
-              end
-            end
-          end
-
-          # Reparent if requested (mutually exclusive with move_to)
-          if move_as_child_of
-            reparenter = Molecules::TaskReparenter.new(root_dir: @root_dir, config: @config)
-            resolve_fn = ->(r) { show(r) }
-            # Reload task from current path before reparenting (may have been field-updated)
-            task_for_reparent = loader.load(current_path, id: task.id, special_folder: current_special)
-            # Demoting a parent relocates its descendants' files too; their
-            # issue comment links need the same pending-and-sync treatment.
-            moved_descendants = linked_descendants_of(current_path, current_id)
-            moved_descendants.each do |descendant|
-              Ace::Support::Items::Molecules::FieldUpdater.update(
-                descendant.file_path,
-                set: {"issue_sync_pending" => true,
-                      "issue_sync_previous_id" => descendant.metadata["issue_sync_previous_id"] || descendant.id}
-              )
-            end
-            reparented = reparenter.reparent(task_for_reparent, target: move_as_child_of, resolve_ref: resolve_fn)
-            if linked_issue(task) && linked_issue(reparented).nil?
-              # Orchestrator conversion: the linked spec became a child that
-              # retains the remote_issue mapping (and the pending transfer
-              # metadata). Sync that child, not the newly created parent.
-              scanner = Molecules::TaskScanner.new(@root_dir)
-              converted_child = scanner.scan_subtasks(reparented.path, parent_id: reparented.id)
-                .filter_map { |sr| loader.load(sr.dir_path, id: sr.id, special_folder: sr.special_folder) }
-                .find { |t| linked_issue(t) }
-              if converted_child
-                with_issue_identity_lock(linked_issue(converted_child) || {}) do
-                  sync_linked_issues_for(converted_child, reason: "reparent", previous_task: task)
-                end
-                # Other linked descendants of the converted parent keep their
-                # identities; refresh their comments from the new layout too.
-                linked_descendants_of(reparented.path, reparented.id)
-                  .reject { |descendant| descendant.id == converted_child.id }
-                  .each { |descendant| sync_linked_issues_for(descendant, reason: "reparent") }
-                return show_after_sync(converted_child) || converted_child
-              end
-            end
-            with_issue_identity_lock(linked_issue(reparented) || {}) do
-              sync_linked_issues_for(reparented, reason: "reparent", previous_task: task)
-            end
-            linked_descendants_of(reparented.path, reparented.id).each do |descendant|
-              with_issue_identity_lock(linked_issue(descendant) || {}) do
-                fresh = show(descendant.id) || descendant
-                sync_linked_issues_for(fresh, reason: "reparent") if linked_issue(fresh)
-              end
-            end
-            return show_after_sync(reparented) || reparented
+            early, current_path, current_special, current_id = apply_relocation_phase(
+              task, loader, current_path: task.path, current_special: task.special_folder,
+              current_id: task.id, move_to: move_to, move_as_child_of: move_as_child_of
+            )
+            return early if early
           end
 
           # Auto-archive hook: if a subtask status was set to terminal,
@@ -333,6 +269,134 @@ module Ace
             return show_after_sync(updated_task) || updated_task
           end
           updated_task
+        end
+
+        # Relocate spec files (move_to or move_as_child_of). Pending flags for
+        # every linked participant are written before the relocation and their
+        # comments resynced after it. Callers hold the participants' issue
+        # locks across the whole phase so a concurrent replay cannot clear a
+        # pending flag mid-move and strand a stale remote marker.
+        # Returns [early_result, current_path, current_special, current_id]:
+        # early_result is a relocation that ends the update (reparent), nil
+        # when the caller should continue with its own tail.
+        def apply_relocation_phase(task, loader, current_path:, current_special:, current_id:,
+          move_to:, move_as_child_of:)
+          if move_to
+            # Relocating a parent moves its children's files too: their issue
+            # comments embed repo-relative links that just went stale. Flag
+            # linked descendants pending (crash-safe, written pre-move) and
+            # sync their comments from the post-move locations.
+            linked_descendants_of(task.path, task.id).each do |child|
+              with_issue_identity_lock(linked_issue(child) || {}) do
+                Ace::Support::Items::Molecules::FieldUpdater.update(
+                  child.file_path, set: {"issue_sync_pending" => true}
+                )
+              end
+            end
+            if archive_move_for_subtask?(task, move_to)
+              result = handle_subtask_archive_move(task, loader)
+              current_path = result[:path]
+              current_special = result[:special_folder]
+              current_id = result[:id]
+            else
+              mover = Ace::Support::Items::Molecules::FolderMover.new(@root_dir)
+              new_path = if Ace::Support::Items::Atoms::SpecialFolderDetector.move_to_root?(move_to)
+                mover.move_to_root(task)
+              else
+                archive_date = parse_archive_date(task)
+                mover.move(task, to: move_to, date: archive_date)
+              end
+              current_path = new_path
+              current_special = Ace::Support::Items::Atoms::SpecialFolderDetector.detect_in_path(
+                new_path, root: @root_dir
+              )
+            end
+            linked_descendants_of(current_path, current_id).each do |child|
+              with_issue_identity_lock(linked_issue(child) || {}) do
+                fresh = show(child.id) || child
+                sync_linked_issues_for(fresh, reason: "move") if linked_issue(fresh)
+              end
+            end
+          end
+
+          # Reparent if requested (mutually exclusive with move_to)
+          if move_as_child_of
+            reparenter = Molecules::TaskReparenter.new(root_dir: @root_dir, config: @config)
+            resolve_fn = ->(r) { show(r) }
+            # Reload task from current path before reparenting (may have been field-updated)
+            task_for_reparent = loader.load(current_path, id: task.id, special_folder: current_special)
+            # Demoting a parent relocates its descendants' files too; their
+            # issue comment links need the same pending-and-sync treatment.
+            linked_descendants_of(current_path, current_id).each do |descendant|
+              with_issue_identity_lock(linked_issue(descendant) || {}) do
+                Ace::Support::Items::Molecules::FieldUpdater.update(
+                  descendant.file_path,
+                  set: {"issue_sync_pending" => true,
+                        "issue_sync_previous_id" => descendant.metadata["issue_sync_previous_id"] || descendant.id}
+                )
+              end
+            end
+            reparented = reparenter.reparent(task_for_reparent, target: move_as_child_of, resolve_ref: resolve_fn)
+            if linked_issue(task) && linked_issue(reparented).nil?
+              # Orchestrator conversion: the linked spec became a child that
+              # retains the remote_issue mapping (and the pending transfer
+              # metadata). Sync that child, not the newly created parent.
+              scanner = Molecules::TaskScanner.new(@root_dir)
+              converted_child = scanner.scan_subtasks(reparented.path, parent_id: reparented.id)
+                .filter_map { |sr| loader.load(sr.dir_path, id: sr.id, special_folder: sr.special_folder) }
+                .find { |t| linked_issue(t) }
+              if converted_child
+                with_issue_identity_lock(linked_issue(converted_child) || {}) do
+                  sync_linked_issues_for(converted_child, reason: "reparent", previous_task: task)
+                end
+                # Other linked descendants of the converted parent keep their
+                # identities; refresh their comments from the new layout too.
+                linked_descendants_of(reparented.path, reparented.id)
+                  .reject { |descendant| descendant.id == converted_child.id }
+                  .each do |descendant|
+                    with_issue_identity_lock(linked_issue(descendant) || {}) do
+                      fresh = show(descendant.id) || descendant
+                      sync_linked_issues_for(fresh, reason: "reparent") if linked_issue(fresh)
+                    end
+                  end
+                return [show_after_sync(converted_child) || converted_child,
+                  current_path, current_special, current_id]
+              end
+            end
+            with_issue_identity_lock(linked_issue(reparented) || {}) do
+              sync_linked_issues_for(reparented, reason: "reparent", previous_task: task)
+            end
+            linked_descendants_of(reparented.path, reparented.id).each do |descendant|
+              with_issue_identity_lock(linked_issue(descendant) || {}) do
+                fresh = show(descendant.id) || descendant
+                sync_linked_issues_for(fresh, reason: "reparent") if linked_issue(fresh)
+              end
+            end
+            return [show_after_sync(reparented) || reparented, current_path, current_special, current_id]
+          end
+
+          [nil, current_path, current_special, current_id]
+        end
+
+        # Every linked identity a relocation of this task touches: the task's
+        # own link plus each linked descendant's.
+        def participant_identities(task)
+          [linked_issue(task)] + linked_descendants_of(task.path, task.id)
+            .filter_map { |child| linked_issue(child) }
+        end
+
+        # Acquire identity locks in one stable sorted order so concurrent
+        # relocations cannot deadlock on opposite orders; nested acquisitions
+        # of held identities are re-entrant no-ops.
+        def with_identity_locks(identities, &block)
+          ordered = identities.compact.sort_by do |identity|
+            identity.values_at("server_name", "provider", "repository_url", "number").join("--")
+          end
+          return block.call if ordered.empty?
+
+          with_issue_identity_lock(ordered.first) do
+            with_identity_locks(ordered[1..], &block)
+          end
         end
 
         # Reload persisted metadata after synchronization: the in-memory task
