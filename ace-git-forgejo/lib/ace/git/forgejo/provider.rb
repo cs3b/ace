@@ -425,7 +425,8 @@ end
         end
 
         def review_entry(entry, number, head)
-          unless entry.is_a?(Hash) && entry["id"] && entry.dig("user", "login").is_a?(String)
+          unless entry.is_a?(Hash) && entry["id"] && entry.dig("user", "login").is_a?(String) &&
+              entry["state"].is_a?(String) && !entry["state"].empty?
             raise Ace::Git::ProviderMalformedOutputError, "Malformed Forgejo PR review evidence"
           end
           Ace::Git::ProviderReview.new(
