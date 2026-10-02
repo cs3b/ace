@@ -297,7 +297,15 @@ module Ace
           updated_task = loader.load(current_path, id: current_id, special_folder: current_special)
           if sync_needed_after_update?(task, updated_task, set: set, add: add, remove: remove, move_to: move_to)
             with_issue_identity_lock(linked_issue(updated_task) || {}) do
-              sync_linked_issues_for(updated_task, reason: "update", previous_task: task)
+              # Reload inside the lock: a concurrent clear may have removed
+              # the link while this update waited; syncing the stale snapshot
+              # would resurrect an orphaned remote marker.
+              fresh = show(updated_task.id)
+              if fresh.nil? || linked_issue(fresh).nil? ||
+                  fresh.metadata["issue_sync_operation"] == "clear"
+                next show_after_sync(updated_task) || updated_task
+              end
+              sync_linked_issues_for(fresh, reason: "update", previous_task: task)
             end
             return show_after_sync(updated_task) || updated_task
           end
@@ -427,8 +435,13 @@ module Ace
 
           locked_identity = linked_issue(task)
           result = with_issue_identity_lock(locked_identity || {}) do
-            fresh = show(task.id) || task
-            if fresh && linked_issue(fresh) != locked_identity
+            fresh = show(task.id)
+            if fresh.nil?
+              return {synced: 0, failed: 1, pending: 0, skipped: 0, task_id: task.id,
+                      failures: [{task_id: task.id, remote_issues: [locked_identity].compact,
+                                  error: "Task relocated during replay; retry the command"}]}
+            end
+            if linked_issue(fresh) != locked_identity
               return {synced: 0, failed: 1, pending: 0, skipped: 0, task_id: task.id,
                       failures: [{task_id: task.id, remote_issues: [locked_identity].compact,
                                   error: "Issue link changed during replay; retry the command"}]}
