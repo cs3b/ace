@@ -85,6 +85,24 @@ module Ace
             assert_raises(Ace::Support::Cli::Error) { call("status") }
           end
 
+          def test_unreadable_receipt_file_reports_machine_readable_refusal
+            call("enqueue", attempt: "att-1", ref: File.join(@dir, "ref.json"),
+              file: File.join(@dir, "payload.txt"))
+            @native.result = {"accepted" => false, "error" => "stalled"}
+            uncertain = call("deliver")
+            assert_equal "uncertain", uncertain["state"]
+            receipt_path = File.join(@dir, "secret-receipt.json")
+            File.write(receipt_path, "{}")
+            File.chmod(0o000, receipt_path)
+
+            result = call("reconcile", receipt: receipt_path)
+
+            assert_equal "uncertain", result["state"]
+            assert_match(/invalid receipt/, result["reconciliation_refusal"])
+          ensure
+            File.chmod(0o644, receipt_path)
+          end
+
           def test_reconcile_reports_refusal_then_accepts_matching_observation_after_restart
             call("enqueue", attempt: "att-1", ref: File.join(@dir, "ref.json"),
               file: File.join(@dir, "payload.txt"))

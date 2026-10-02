@@ -47,9 +47,18 @@ module Ace
                 inbox.deliver(event: options[:event])
               when "reconcile"
                 path = options[:receipt]
-                bytes = path.to_s.empty? ? nil : File.binread(path)
-                receipt = bytes && JSON.parse(bytes)
-                signature = bytes && File.binread("#{path}.sig")
+                begin
+                  bytes = path.to_s.empty? ? nil : File.binread(path)
+                  receipt = bytes && JSON.parse(bytes)
+                  signature = bytes && File.binread("#{path}.sig")
+                rescue SystemCallError, JSON::ParserError => e
+                  # Receipt input is caller-owned: unreadable or malformed
+                  # proof files surface as the documented refusal, never as
+                  # command failures.
+                  puts JSON.generate(inbox.status(event: options[:event]).merge(
+                    "reconciliation_refusal" => "invalid receipt: #{e.message}"))
+                  return
+                end
                 inbox.reconcile(event: options[:event], receipt: receipt,
                   signed_bytes: bytes, signature: signature)
               else
@@ -57,14 +66,7 @@ module Ace
               end
               puts JSON.generate(result)
             end
-          rescue JSON::ParserError, Errno::ENOENT => e
-            # Receipt/ref file problems are caller-input errors and surface
-            # as an observable refusal; persistence failures are not.
-            if operation == "reconcile"
-              puts JSON.generate(inbox.status(event: options[:event]).merge(
-                "reconciliation_refusal" => "invalid receipt: #{e.message}"))
-              return
-            end
+          rescue Errno::ENOENT, JSON::ParserError => e
             raise Ace::Support::Cli::Error, e.message
           end
 
