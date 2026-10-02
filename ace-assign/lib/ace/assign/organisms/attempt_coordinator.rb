@@ -135,6 +135,14 @@ module Ace
             raise AttemptErrors::InvalidState, "Only failed service requests can be reconciled"
           end
           validate_service_receipt!(request, "failed", receipt)
+          # The settlement must be a distinct, later executor attestation:
+          # replaying the already-recorded failure receipt proves nothing
+          # about whether the effect took place.
+          if request["receipt"] && Atoms::EvidenceDigest.digest(receipt) ==
+              Atoms::EvidenceDigest.digest(request["receipt"])
+            raise AttemptErrors::ReceiptRejected,
+              "Service failure settlement requires a new attestation, not the recorded receipt"
+          end
           journal_for.transition_service_request(request_id, state: "failed-settled", receipt: receipt)
         end
 

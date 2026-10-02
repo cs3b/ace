@@ -376,10 +376,23 @@ def test_failed_effect_settles_only_through_attributable_reconciliation
     coordinator.transition_service_request("svc-failed", state: "uncertain")
   end
 
-  # Reconciliation requires a bound, executor-attested failed receipt.
+  # Settlement with the already-recorded failure receipt proves nothing and
+  # is rejected: a distinct, later executor attestation is required.
+  failed_receipt = binding.merge("outcome" => "failed", "executor_uid" => Process.uid,
+    "evidence" => [{"ref" => "forge/failed", "sha256" => digest}])
+  error = assert_raises(AttemptErrors::ReceiptRejected) do
+    coordinator.reconcile_service_failure("svc-failed", receipt: failed_receipt)
+  end
+  assert_includes error.message, "new attestation"
+
+  # A later, distinct no-effect attestation settles the failed effect.
+  later = write_evidence("forge/no-effect", "ace-service-attestation request:#{binding["request_id"]} " \
+    "input:#{binding["input_digest"]} outcome:failed\n" \
+    "verified-no-effect: handler confirmed the operation never ran\n")
+  refute_equal digest, later
   coordinator.reconcile_service_failure("svc-failed", receipt: binding.merge(
     "outcome" => "failed", "executor_uid" => Process.uid,
-    "evidence" => [{"ref" => "forge/failed", "sha256" => digest}]))
+    "evidence" => [{"ref" => "forge/no-effect", "sha256" => later}]))
   assert_equal "failed-settled", coordinator.service_request_status("svc-failed")["state"]
 
   error = assert_raises(AttemptErrors::InvalidState) do
