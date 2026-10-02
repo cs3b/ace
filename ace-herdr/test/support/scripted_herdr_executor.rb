@@ -28,6 +28,9 @@ module HerdrContractSupport
       @fixture = fixture
     end
 
+    # Pane model: the fixture's context pane (from set_context) always
+    # resolves; every other pane must have been seeded into a window via
+    # seed_pane. Unseeded panes raise, mirroring native pane_not_found.
     def pane_get(pane)
       guard!
       if pane == "context-pane" || pane == @fixture.context[:pane]

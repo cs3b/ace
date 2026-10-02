@@ -112,9 +112,13 @@ module Ace
 
               # Split a shell pane: prefer the first pane without a live
               # agent — pane list ordering does not contractually promise
-              # a shell root pane in foreign multi-pane tabs.
+              # a shell root pane in foreign multi-pane tabs. Single-pane
+              # tabs skip the probe entirely.
               tab_panes = panes(tab[:workspace]).select { |pane| pane[:tab] == tab[:id] }
-              root_pane = tab_panes.find { |pane| !agent_pane?(pane[:pane]) } || tab_panes.first
+              root_pane = tab_panes.first
+              if tab_panes.length > 1
+                root_pane = tab_panes.find { |pane| !agent_pane?(pane[:pane]) } || tab_panes.first
+              end
               raise Runtime::TargetNotFoundError, "tab '#{window}' has no pane" unless root_pane
 
               parsed = @executor.pane_split(pane: root_pane[:pane], direction: "right").parsed_json
@@ -194,10 +198,17 @@ module Ace
             raise ArgumentError, "unknown lifecycle condition '#{condition}'"
           end
 
+          # Window conditions resolve the caller workspace once per wait so
+          # poll iterations do not re-run context and tab-list subprocesses;
+          # pane conditions never need it.
+          scope = nil
           deadline = @clock.clock_gettime(Process::CLOCK_MONOTONIC) + timeout
           with_errors(condition: condition, target: target, timeout: timeout) do
             loop do
-              return true if lifecycle_met?(condition, target)
+              if condition.start_with?("window-") && scope.nil?
+                scope = workspace_id!
+              end
+              return true if lifecycle_met?(condition, target, workspace: scope)
               raise Runtime::WaitTimeoutError.new(condition: condition, target: target, timeout: timeout) if
                 @clock.clock_gettime(Process::CLOCK_MONOTONIC) >= deadline
 
@@ -400,28 +411,34 @@ module Ace
           false
         end
 
-        def lifecycle_met?(condition, target)
+        def lifecycle_met?(condition, target, workspace:)
           case condition
-          when "window-exists" then tab_exists?(target)
-          when "window-active" then tab_active?(target)
+          when "window-exists" then tab_exists?(target, workspace: workspace)
+          when "window-active" then tab_active?(target, workspace: workspace)
           when "pane-exists" then pane_exists?(target)
           when "pane-exited" then pane_exited?(target)
           end
         end
 
-        def tab_exists?(target)
-          @executor.tab_get(resolve_tab!(target)[:id])
+        def tab_exists?(target, workspace:)
+          @executor.tab_get(find_tab(target, workspace)[:id])
           true
         rescue Runtime::TargetNotFoundError, TabNotFoundError
           false
         end
 
-        def tab_active?(target)
-          tab = resolve_tab!(target)
+        def tab_active?(target, workspace:)
+          tab = find_tab(target, workspace)
           @executor.tab_get(tab[:id])
           tab[:active] == true
         rescue Runtime::TargetNotFoundError, TabNotFoundError
           false
+        end
+
+        # Scoped to the workspace resolved once for the enclosing wait.
+        def find_tab(target, workspace)
+          tabs(workspace).find { |row| row[:id] == target || row[:name] == target } ||
+            raise(Runtime::TargetNotFoundError, "tab '#{target}' not found")
         end
 
         def pane_exists?(target)
@@ -517,6 +534,14 @@ module Ace
           raise Runtime::Error, e.message
         rescue ExecutorUnavailableError => e
           raise Runtime::RuntimeUnavailableError, e.message
+        rescue Runtime::Error
+          # Already a contract error (raised inside the block): pass through
+          # untouched — never re-wrap.
+          raise
+        rescue StandardError => e
+          # Adapter boundary: every runtime failure surfaces under the
+          # contract error model, with the native cause preserved.
+          raise Runtime::Error, "#{e.class}: #{e.message}"
         end
       end
     end
