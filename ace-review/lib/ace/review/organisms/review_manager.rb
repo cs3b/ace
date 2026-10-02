@@ -1665,11 +1665,8 @@ module Ace
             ))]
             # Same completed rule as the campaign evidence reader: a failed
             # provider that left partial output is not a reviewed report.
-            digests = entries.select do |entry|
-              execution = entry["execution"] || {}
-              entry["status"] == "success" && execution["status"].to_s == "succeeded" &&
-                !entry["completed_at"].to_s.empty?
-            end.map { |entry| entry["report_sha256"] }.compact
+            digests = entries.select { |entry| Molecules::CampaignEvidence.completed_entry?(entry) }
+              .map { |entry| entry["report_sha256"] }.compact
             extraction = {"status" => "succeeded", "finding_ids" => ids, "report_sha256" => digests}
           end
           metadata["feedback_extraction"] = extraction

@@ -18,6 +18,16 @@ module Ace
       class CampaignEvidence
         Contract = Atoms::CampaignContract
 
+        # One completion predicate for provider executions, shared with the
+        # extraction-inventory writer so session metadata and campaign
+        # evidence can never disagree about which reports were reviewed.
+        def self.completed_entry?(entry)
+          execution = entry["execution"] || {}
+          entry["status"] == "success" && execution["status"].to_s == "succeeded" &&
+            !execution["provider"].to_s.empty? && !execution["model"].to_s.empty? &&
+            !entry["completed_at"].to_s.empty?
+        end
+
         def initialize(repo_root:, check_evidence: nil, review_evidence: nil, approval_evidence: nil)
           @repo_root = File.realpath(repo_root)
           authority = CampaignExecutionEvidence.new(repo_root: @repo_root)
@@ -83,11 +93,7 @@ module Ace
           reports = []
           entries.each do |entry|
             Contract.object!(entry, "model execution")
-            execution = entry["execution"] || {}
-            complete = entry["status"] == "success" && execution["status"] == "succeeded" &&
-              !execution["provider"].to_s.empty? && !execution["model"].to_s.empty? &&
-              !entry["completed_at"].to_s.empty?
-            next unless complete
+            next unless self.class.completed_entry?(entry)
             path = entry["output_file"].to_s
             raise Contract::Invalid, "completed execution has no report" if path.empty?
             path = File.expand_path(path, dir)
@@ -98,7 +104,7 @@ module Ace
             resolved, report_ref = artifact("path" => path, "sha256" => entry["report_sha256"])
             raise Contract::Invalid, "empty reviewer report" if File.read(resolved).strip.empty?
             refs << report_ref
-            reports << {"artifact" => report_ref, "execution" => execution}
+            reports << {"artifact" => report_ref, "execution" => entry["execution"] || {}}
             prompts = entry["prompt_sha256"]
             Contract.object!(prompts, "execution prompt checksums")
             %w[system user].each do |name|
