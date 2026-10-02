@@ -114,6 +114,8 @@ module Ace
                 intention: intention
               )
             end
+          rescue ArgumentError => e
+            raise Ace::Support::Cli::Error, e.message
           end
 
           private

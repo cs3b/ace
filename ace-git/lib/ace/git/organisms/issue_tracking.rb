@@ -1,0 +1,270 @@
+# frozen_string_literal: true
+
+module Ace
+  module Git
+    module Organisms
+      # One ACE task owns at most one exact remote issue. The provider handles
+      # transport; this service owns only the marker, label, and task lifecycle.
+      class IssueTracking
+        STICKY_MARKER = "<!-- ace-task:tracked -->"
+        RECONCILE_READ_ATTEMPTS = 3
+        RECONCILE_READ_INTERVAL_SECONDS = 1
+        CREATE_RECONCILE_READ_ATTEMPTS = 5
+        CREATE_RECONCILE_READ_INTERVAL_SECONDS = 2
+        TRACKED_LABEL = "ace:tracked"
+        TERMINAL_STATUSES = %w[done cancelled skipped].freeze
+
+        def initialize(provider:)
+          @provider = provider
+        end
+
+        def validate_link!(number:, task_id: nil, previous_task_id: nil)
+          snapshot = fetch(number)
+          owners = owned_task_ids(snapshot)
+          if sticky_comment(snapshot) && owners.empty?
+            raise ProviderMalformedOutputError, "Issue ##{number} has an ACE marker without a task owner"
+          end
+          accepted = [task_id, previous_task_id].compact.map(&:to_s).uniq
+          return snapshot if owners.empty? || (!accepted.empty? && owners.all? { |owner| accepted.include?(owner) })
+
+          raise ProviderIdentityMismatchError,
+            "Issue ##{number} is already owned by ACE task #{owners.join(', ')}"
+        end
+
+        def sync(number:, task_id:, task_link:, task_status:, previous_task_id: nil,
+          create_pending: false, before_create: nil, comment_only: false)
+          # Reparenting/promotion changes the local ID; the remote marker may
+          # still name the previous ID, or may already carry the new one when
+          # a prior sync failed partway. Both count as this task's ownership.
+          snapshot = validate_link!(number: number, task_id: task_id, previous_task_id: previous_task_id)
+          sticky = sticky_comment(snapshot)
+          desired_line = "Tracked in ace-task: [#{task_id}](#{task_link})"
+          desired_body = compose_tracking_body(sticky&.dig(:body), desired_line)
+          if sticky.nil?
+            if create_pending
+              # A prior create ended with an unknown outcome: this replay must
+              # reconcile (bounded extended reads), never issue a second POST.
+              resolved = CREATE_RECONCILE_READ_ATTEMPTS.times.any? do |attempt|
+                snapshot = fetch(number)
+                found = sticky_comment(snapshot)
+                break true if found&.[](:body) == desired_body
+
+                if found
+                  # The marker that just appeared may belong to another task
+                  # or be malformed; validate ownership before overwriting
+                  # anything (same guard as validate_link!).
+                  owners = owned_task_ids(snapshot)
+                  accepted = [task_id, previous_task_id].compact.map(&:to_s).uniq
+                  if (found && owners.empty?) || !owners.all? { |owner| accepted.include?(owner) }
+                    raise ProviderIdentityMismatchError,
+                      "Issue ##{number} is already owned by ACE task #{owners.join(', ')}"
+                  end
+                  desired_line = "Tracked in ace-task: [#{task_id}](#{task_link})"
+                  reconciled_body = compose_tracking_body(found[:body], desired_line)
+                  desired_body = reconciled_body
+                  mutate_and_reconcile(number, desired_body: reconciled_body) do
+                    @provider.update_issue_comment(number: number, comment_id: found[:id], body: reconciled_body)
+                  end
+                  break true
+                end
+                sleep(create_reconcile_interval(attempt))
+                false
+              end
+              raise ProviderReconcileAbsenceError,
+                "Prior tracking comment create for issue ##{number} is still unresolved" unless resolved
+            else
+              mutate_and_reconcile(number, desired_body: desired_body) do
+                # Persist the uncertain-create guard before the only
+                # non-idempotent call, so a stop after the POST leaves a
+                # durable reconcile record instead of a duplicate on replay.
+                before_create&.call
+                @provider.create_issue_comment(number: number, body: desired_body)
+              end
+            end
+          elsif sticky[:body] != desired_body
+            mutate_and_reconcile(number, desired_body: desired_body) do
+              @provider.update_issue_comment(number: number, comment_id: sticky[:id], body: desired_body)
+            end
+          end
+          verified = nil
+          unless comment_only
+            begin
+              snapshot = fetch(number)
+              unless snapshot[:labels].include?(TRACKED_LABEL)
+                mutate_and_reconcile(number, label: TRACKED_LABEL) do
+                  @provider.add_issue_label(number: number, label: TRACKED_LABEL)
+                end
+              end
+              desired_state = TERMINAL_STATUSES.include?(task_status.to_s) ? :closed : :open
+              snapshot = fetch(number)
+              unless snapshot[:issue].state == desired_state
+                mutate_and_reconcile(number, state: desired_state) do
+                  @provider.set_issue_state(number: number, state: desired_state)
+                end
+              end
+            rescue ProviderAuthenticationError, ProviderObjectNotFoundError => e
+              # The non-idempotent comment POST already committed, so a later
+              # definitive-looking failure cannot prove the create failed.
+              # Replay must reconcile the committed marker, never re-POST.
+              raise ProviderUnknownOutcomeError,
+                "post-create step failed after the tracking comment committed: #{e.class}: #{e.message}"
+            end
+            verified = fetch(number)
+            unless sticky_comment(verified)&.[](:body) == desired_body &&
+                verified[:labels].include?(TRACKED_LABEL) && verified[:issue].state == desired_state
+              raise ProviderMalformedOutputError, "Issue ##{number} did not reflect ACE tracking updates"
+            end
+          else
+            verified = fetch(number)
+            unless sticky_comment(verified)&.[](:body) == desired_body
+              raise ProviderMalformedOutputError, "Issue ##{number} did not reflect ACE tracking updates"
+            end
+          end
+          verified
+        end
+
+        # Clear only the task's marker/comment and ACE label. Issue state is
+        # intentionally untouched, even when it was changed by prior sync.
+        def clear(number:, task_id:, previous_task_id: nil)
+          snapshot = fetch(number)
+          owners = owned_task_ids(snapshot)
+          sticky = sticky_comment(snapshot)
+          if sticky && owners.empty?
+            raise ProviderMalformedOutputError, "Issue ##{number} has an ACE marker without a task owner"
+          end
+          accepted = [task_id, previous_task_id].compact.map(&:to_s).uniq
+          unless owners.empty? || (!accepted.empty? && owners.all? { |owner| accepted.include?(owner) })
+            raise ProviderIdentityMismatchError, "Issue ##{number} is owned by another ACE task"
+          end
+          if sticky
+            # Strip inline markers concatenated onto note lines (historical
+            # layout) so the rebuilt body verifies marker-free.
+            preserved = sticky[:body].to_s.lines
+              .reject { |line| line.chomp == STICKY_MARKER || line.start_with?("Tracked in ace-task: ") }
+              .map { |line| line.gsub(STICKY_MARKER, "") }
+            mutate_and_reconcile(number, absent_comment: true) do
+              if preserved.empty?
+                @provider.delete_issue_comment(number: number, comment_id: sticky[:id])
+              else
+                @provider.update_issue_comment(number: number, comment_id: sticky[:id], body: preserved.join)
+              end
+            end
+          end
+          snapshot = fetch(number)
+          if snapshot[:labels].include?(TRACKED_LABEL)
+            mutate_and_reconcile(number, absent_label: TRACKED_LABEL) do
+              @provider.remove_issue_label(number: number, label: TRACKED_LABEL)
+            end
+          end
+          verified = fetch(number)
+          if sticky_comment(verified) || verified[:labels].include?(TRACKED_LABEL)
+            raise ProviderMalformedOutputError, "Issue ##{number} still contains ACE tracking artifacts"
+          end
+          verified
+        end
+
+        private
+
+        # Unrelated lines are preserved verbatim (including trailing
+        # whitespace); only ACE-owned lines are ever added or removed. A
+        # marker concatenated onto a note line (historical layout) is
+        # stripped in place so clear can rebuild the body cleanly.
+        def compose_tracking_body(existing_body, desired_line)
+          preserved = existing_body.to_s.lines
+            .reject { |line| line.chomp == STICKY_MARKER || line.start_with?("Tracked in ace-task: ") }
+            .map { |line| line.gsub(STICKY_MARKER, "") }
+          prefix = preserved.join
+          prefix += "\n" unless prefix.empty? || prefix.end_with?("\n")
+          "#{prefix}#{STICKY_MARKER}\n#{desired_line}"
+        end
+
+        def create_reconcile_interval(attempt)
+          CREATE_RECONCILE_READ_INTERVAL_SECONDS * (attempt + 1)
+        end
+
+        def fetch(number)
+          snapshot = @provider.issue_tracking(number: number)
+          unless snapshot.is_a?(Hash) && snapshot[:issue]&.number.to_i == number.to_i &&
+              snapshot[:comments].is_a?(Array) && snapshot[:labels].is_a?(Array)
+            raise ProviderMalformedOutputError, "Incomplete issue tracking evidence for ##{number}"
+          end
+          # Pagination across capped pages can repeat comments; dedupe by id
+          # so duplicate pages never read as multiple ACE tracking comments.
+          seen_ids = []
+          snapshot = snapshot.merge(
+            comments: snapshot[:comments].reject do |comment|
+              if seen_ids.include?(comment[:id])
+                true
+              else
+                seen_ids << comment[:id]
+                false
+              end
+            end
+          )
+          snapshot
+        end
+
+        def sticky_comment(snapshot)
+          matches = snapshot[:comments].select { |comment| comment[:body].to_s.include?(STICKY_MARKER) }
+          if matches.length > 1
+            raise ProviderIdentityMismatchError, "Multiple ACE tracking comments on issue ##{snapshot[:issue].number}"
+          end
+          matches.first
+        end
+
+        def owned_task_ids(snapshot)
+          sticky = sticky_comment(snapshot)
+          return [] unless sticky
+
+          sticky[:body].to_s.lines.filter_map do |line|
+            line[/\ATracked in ace-task: \[([^\]]+)\]\(/, 1]
+          end.uniq
+        end
+
+        def mutate_and_reconcile(number, desired_body: nil, label: nil, state: nil,
+          absent_comment: false, absent_label: nil)
+          yield
+        rescue ProviderUnknownOutcomeError
+          begin
+            @reconcile_resolved = reconcile_outcome(number, desired_body: desired_body, label: label, state: state,
+              absent_comment: absent_comment, absent_label: absent_label)
+          rescue ProviderUnknownOutcomeError
+            raise
+          rescue StandardError => e
+            # The mutation outcome is still unknown when reconciliation reads
+            # fail (a 401/404 on a read says nothing about the write); keep
+            # the uncertainty so replay reconciles instead of duplicating.
+            raise ProviderUnknownOutcomeError,
+              "Mutation outcome unresolved; reconciliation read failed: #{e.class}"
+          end
+          raise unless @reconcile_resolved
+        end
+
+        def reconcile_outcome(number, desired_body: nil, label: nil, state: nil,
+          absent_comment: false, absent_label: nil)
+          resolved = RECONCILE_READ_ATTEMPTS.times.any? do |attempt|
+            snapshot = fetch(number)
+            outcome = if desired_body
+              sticky_comment(snapshot)&.[](:body) == desired_body
+            elsif label
+              snapshot[:labels].include?(label)
+            elsif state
+              snapshot[:issue].state == state
+            elsif absent_comment
+              sticky_comment(snapshot).nil?
+            elsif absent_label
+              !snapshot[:labels].include?(absent_label)
+            end
+            break outcome if outcome
+
+            # The forge may still be committing the write; an immediate read
+            # can miss it and a replay would then duplicate the mutation.
+            sleep(RECONCILE_READ_INTERVAL_SECONDS * (attempt + 1)) if desired_body
+            outcome
+          end
+          resolved
+        end
+      end
+    end
+  end
+end

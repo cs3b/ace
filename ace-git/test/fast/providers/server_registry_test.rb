@@ -231,6 +231,35 @@ module Providers
       end
     end
 
+    def test_matching_servers_matches_https_url_against_ssh_clone_url_with_port
+      with_servers([
+        {"name" => "forgejo-lab", "provider" => "forgejo",
+         "url" => "ssh://git@forgejo.example.com:2222/owner/repo.git"}
+      ]) do
+        matches = Ace::Git::ServerRegistry.matching_servers("https://forgejo.example.com/owner/repo")
+        assert_equal ["forgejo-lab"], matches.map(&:name)
+      end
+    end
+
+    def test_matching_servers_matches_https_url_against_ssh_clone_url
+      with_servers([
+        {"name" => "forgejo-lab", "provider" => "forgejo", "url" => "ssh://git@forgejo.example.com/owner/repo.git"}
+      ]) do
+        matches = Ace::Git::ServerRegistry.matching_servers("https://forgejo.example.com/owner/repo")
+        assert_equal ["forgejo-lab"], matches.map(&:name)
+      end
+    end
+
+    def test_matching_servers_requires_url_scheme_to_match
+      with_servers([
+        {"name" => "forgejo-lab", "provider" => "forgejo", "url" => "http://forgejo.example.com/owner/repo"}
+      ]) do
+        assert_empty Ace::Git::ServerRegistry.matching_servers("https://forgejo.example.com/owner/repo")
+        assert_equal ["forgejo-lab"],
+          Ace::Git::ServerRegistry.matching_servers("http://forgejo.example.com/owner/repo").map(&:name)
+      end
+    end
+
     def test_servers_for_owner_repo_matches_repository_path_on_any_host
       with_servers([
         {"name" => "forgejo-lab", "provider" => "forgejo", "url" => "https://forgejo.example.com/cs3b/ace"},

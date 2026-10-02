@@ -21,7 +21,7 @@ module Ace
             '--title "Fix login bug"                      # Create task with title flag',
             '"Fix auth" --priority high --tags auth,security  # With priority and tags',
             '"Setup DB" --child-of q7w                    # Create as subtask',
-            '"Track issue" --github-issue 276             # Link GitHub issue',
+            '"Track issue" --issue 276 --server forgejo-lab # Link one exact issue',
             '"Quick task" --in maybe                      # Create in _maybe/ folder',
             '"Draft spec" --status draft --estimate TBD   # Create as draft with estimate',
             '"Preview only" --dry-run                     # Show what would be created'
@@ -34,7 +34,9 @@ module Ace
           option :tags, type: :string, aliases: %w[-T], desc: "Tags (comma-separated)"
           option :status, type: :string, aliases: %w[-s], desc: "Initial status (draft, pending, blocked, ...)"
           option :estimate, type: :string, aliases: %w[-e], desc: "Effort estimate (e.g. TBD, 2h, 1d)"
-          option :"github-issue", type: :array, desc: "Linked GitHub issue number"
+          option :issue, type: :array, desc: "Issue number or URL to link"
+          option :server, type: :string, desc: "Named forge server"
+          option :"default-server", type: :boolean, desc: "Use the configured default forge server"
           option :"child-of", type: :string, desc: "Parent task reference (creates subtask)"
           option :in, type: :string, aliases: %w[-i], desc: "Target folder (e.g. next, maybe)"
           option :"dry-run", type: :boolean, aliases: %w[-n], desc: "Preview without writing"
@@ -53,7 +55,13 @@ module Ace
             tags = tags_str ? tags_str.split(",").map(&:strip).reject(&:empty?) : []
             status = options[:status]
             estimate = options[:estimate]
-            github_issue = parse_github_issue(options[:"github-issue"])
+            issue = parse_issue(options[:issue])
+            if !issue && (options[:server] || options[:"default-server"])
+              raise Ace::Support::Cli::Error, "Server selection requires --issue"
+            end
+            remote_issue = issue && Ace::Task::Molecules::IssueLink.from_input(
+              issue, server_name: options[:server], use_default: options[:"default-server"]
+            )
             child_of = options[:"child-of"]
             in_folder = options[:in]
 
@@ -70,7 +78,7 @@ module Ace
               puts "  Status:   #{status}" if status
               puts "  Priority: #{priority}" if priority
               puts "  Estimate: #{estimate}" if estimate
-              puts "  GitHub:   #{github_issue}" if github_issue
+              puts "  Issue:    #{remote_issue['url']}" if remote_issue
               puts "  Tags:     #{tags.join(", ")}" if tags.any?
               puts "  Parent:   #{child_of}" if child_of
               puts "  Folder:   #{in_folder}" if in_folder
@@ -88,7 +96,7 @@ module Ace
                   priority: priority,
                   tags: tags,
                   estimate: estimate,
-                  github_issue: github_issue
+                  remote_issue: remote_issue
                 )
               else
                 manager.create(
@@ -97,7 +105,7 @@ module Ace
                   priority: priority,
                   tags: tags,
                   estimate: estimate,
-                  github_issue: github_issue
+                  remote_issue: remote_issue
                 )
               end
             rescue Ace::Task::Organisms::TaskManager::CreateRetriesExhaustedError => e
@@ -126,6 +134,8 @@ module Ace
                 intention: "create task #{task.id}"
               )
             end
+          rescue Ace::Git::Error, ArgumentError => e
+            raise Ace::Support::Cli::Error, e.message
           end
 
           private
@@ -148,18 +158,15 @@ module Ace
             !value.nil? && !value.to_s.strip.empty?
           end
 
-          def parse_github_issue(raw_values)
+          def parse_issue(raw_values)
             values = Array(raw_values).flatten.compact
             return nil if values.empty?
-            raise Ace::Support::Cli::Error.new("Only one --github-issue may be provided") if values.length > 1
+            raise Ace::Support::Cli::Error.new("Only one --issue may be provided") if values.length > 1
 
             candidate = values.first.to_s.strip
-            raise Ace::Support::Cli::Error.new("Invalid GitHub issue '#{values.first}': expected numeric ID") unless candidate.match?(/\A\d+\z/)
+            raise Ace::Support::Cli::Error.new("Issue identifier cannot be empty") if candidate.empty?
 
-            id = candidate.to_i
-            raise Ace::Support::Cli::Error.new("Invalid GitHub issue '#{values.first}': expected positive numeric ID") if id <= 0
-
-            id
+            candidate
           end
         end
       end

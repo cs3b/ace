@@ -38,6 +38,46 @@ module Ace
           text.chomp("/").downcase
         end
 
+        # Derive the HTTP(S) web endpoint for a configured server URL.
+        # HTTPS/HTTP URLs keep their scheme and authority; SSH-style URLs
+        # (scp-style "git@host:path", "ssh://") map to https web endpoints.
+        #
+        # @param url [String] configured server URL
+        # @return [String] web base without trailing slash or .git suffix
+        def self.web_base(url)
+          text = url.to_s.strip
+          scheme = text[/\A(https?):\/\//i, 1]&.downcase
+          rest = text.sub(/\A[a-z][a-z0-9+.\-]*:\/\//i, "").sub(/\A[^\/\s]+@/, "")
+          if scheme
+            authority, _, path = rest.partition("/")
+          elsif text.match?(/\Assh:\/\//i)
+            # ssh:// URLs separate the authority (with optional port) by slash.
+            rest = text.sub(/\Assh:\/\//i, "").sub(/\A[^\/\s]+@/, "")
+            authority, _, path = rest.partition("/")
+            authority = authority.split(":").first.to_s
+            scheme = "https"
+          else
+            host_part, sep, remainder = rest.partition(":")
+            if sep == ":" && remainder.match?(%r{\A\d+/})
+              # A numeric segment before the slash is an SSH-style port, not
+              # an scp repo path: keep it in the web authority.
+              authority = "#{host_part}:#{remainder.split("/", 2).first}"
+              path = remainder.split("/", 2).last
+            elsif sep == ":" && !remainder.start_with?("/")
+              # scp-style "git@host:path"; ssh ports ride the colon and are
+              # dropped from the web endpoint.
+              authority = host_part.split(":").first.to_s
+              path = remainder.sub(%r{\A\d+/}, "")
+            else
+              # Scheme-less "host/owner/repo" splits on the first slash.
+              authority, _, path = rest.partition("/")
+            end
+            scheme = "https"
+          end
+          path = path.sub(%r{/+\z}, "").sub(/\.git\z/i, "")
+          "#{scheme}://#{authority}/#{path}"
+        end
+
         # Compare a configured server URL against a remote URL for identity.
         #
         # @param server_url [String] configured server base URL

@@ -27,7 +27,7 @@ module Ace
           created_at: nil,
           parent: nil,
           estimate: nil,
-          github_issue: nil
+          remote_issue: nil
         )
           fm = {
             "id" => id,
@@ -39,7 +39,10 @@ module Ace
           fm["dependencies"] = dependencies || []
           fm["tags"] = tags || []
           fm["parent"] = parent if parent
-          fm["github_issue"] = github_issue if github_issue
+          fm["remote_issue"] = remote_issue if remote_issue
+          # Linked tasks start pending-sync in the same write that establishes
+          # the link; a crash before the first sync still replays via --pending.
+          fm["issue_sync_pending"] = true if remote_issue
           fm
         end
 

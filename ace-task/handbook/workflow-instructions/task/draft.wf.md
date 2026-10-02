@@ -35,11 +35,11 @@ Create high-level behavioral specifications that define WHAT the system should d
      * User stories or experience descriptions
      * Interface specifications or contracts
    * If files are referenced, read their contents
-   * If the input is a GitHub issue URL, extract the issue number and treat it
-     as task lifecycle metadata. Use that number with `ace-task create
-     --github-issue <number>` when creating the parent task or single flat task.
+   * If the input is a configured forge issue URL, retain its exact repository
+     identity. Use it with `ace-task create --issue <url>` when creating the
+     parent task or single flat task.
      The issue URL may still appear in the task body as source context, but the
-     lifecycle link belongs in task frontmatter as `github_issue`.
+     lifecycle link belongs in task frontmatter as a complete `remote_issue` mapping.
    * **Intent mapping from enhanced ideas**: When the source idea contains the
      3-Question Delegation Brief sections (`What I Hope to Accomplish`,
      `What "Complete" Looks Like`, `Success Criteria`), use them as the
@@ -134,14 +134,14 @@ Create high-level behavioral specifications that define WHAT the system should d
    **Pattern A -- Single flat task (default):**
    ```bash
    ace-task create "Task Title" --status draft --estimate "TBD"
-   ace-task create "Task Title" --status draft --estimate "TBD" --github-issue 276
+   ace-task create "Task Title" --status draft --estimate "TBD" --issue 276 --default-server
    ```
 
    **Pattern B -- Orchestrator with subtasks:**
    ```bash
    # 1. Create the parent task first
    ace-task create "Parent Title" --status draft --estimate "TBD"
-   ace-task create "Parent Title" --status draft --estimate "TBD" --github-issue 276
+   ace-task create "Parent Title" --status draft --estimate "TBD" --issue 276 --default-server
    # Returns: v.X.Y+task.NNN
 
    # 2. Add each subtask with --child-of (auto-converts parent to orchestrator)
@@ -166,12 +166,12 @@ Create high-level behavioral specifications that define WHAT the system should d
    * For subtasks, list required shared context files explicitly in EACH subtask's bundle (no implicit inheritance)
    * Include behavioral specification template
    * Focus on behavioral content, leave implementation for replan step
-   * When drafting from a GitHub issue:
-     * Put `--github-issue <number>` only on the parent/orchestrator or single
+   * When drafting from a forge issue:
+     * Put `--issue <url>` only on the parent/orchestrator or single
        flat task create command unless separate subtasks each own distinct
-       GitHub issues.
-     * Run `ace-task github-sync <parent-or-task-ref>` after creation so the
-       GitHub issue receives the ACE task tracking update.
+       issues.
+     * Run `ace-task issue-sync <parent-or-task-ref>` after creation so the
+       exact linked issue receives the ACE task tracking update.
 
 ### Review-First Rule for Uncertain Drafts
 
@@ -243,8 +243,8 @@ When requirements are uncertain, do not create a special spike task. Draft the r
    * **Validation Checklist:**
      * [ ] All behavioral requirements captured as drafts
      * [ ] Task files have status: draft
-     * [ ] GitHub issue inputs are linked through `github_issue` frontmatter on the parent/single task
-     * [ ] Linked GitHub issue inputs have been synced with `ace-task github-sync <ref>`
+     * [ ] Forge issue inputs are linked through complete `remote_issue` frontmatter on the parent/single task
+     * [ ] Linked issue inputs have been synced with `ace-task issue-sync <ref>`
      * [ ] Behavioral specifications are complete
      * [ ] Interface contracts are defined
      * [ ] Success criteria are measurable
@@ -350,10 +350,10 @@ All code implementation happens during `ace-bundle wfi://task/work` (status: in-
 * All tasks have status: draft
 * No implementation details mixed with behavioral requirements
 * Clear handoff to review-task for readiness validation and promotion to pending
-* **REQUIRED when drafting from a GitHub issue URL:**
-  * The parent/orchestrator or single flat task is created with `--github-issue <number>`
-  * The task frontmatter contains `github_issue: <number>`
-  * `ace-task github-sync <ref>` has updated the linked issue
+* **REQUIRED when drafting from a forge issue URL:**
+  * The parent/orchestrator or single flat task is created with `--issue <url>`
+  * The task frontmatter contains a complete `remote_issue` mapping
+  * `ace-task issue-sync <ref>` has updated the linked issue
 * **REQUIRED when drafting from ideas:**
   * All source idea files marked as done via `ace-idea move <id> --to archive`
   * Task references updated to new idea file locations
@@ -383,7 +383,7 @@ All code implementation happens during `ace-bundle wfi://task/work` (status: in-
 Create the parent or single task with the linked issue number:
 
 ```bash
-ace-task create "Task Title" --status draft --estimate "TBD" --github-issue 276
+ace-task create "Task Title" --status draft --estimate "TBD" --issue 276 --default-server
 ```
 
 ---

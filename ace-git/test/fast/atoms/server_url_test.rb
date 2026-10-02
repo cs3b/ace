@@ -42,5 +42,15 @@ module Atoms
       refute Ace::Git::Atoms::ServerUrl.match?("", "https://forgejo.example.com/owner/repo")
       refute Ace::Git::Atoms::ServerUrl.match?("https://forgejo.example.com/owner/repo", nil)
     end
+
+    def test_web_base_preserves_numeric_port_in_scheme_less_url
+      assert_equal "https://forge.example:8443/owner/repo",
+        Ace::Git::Atoms::ServerUrl.web_base("forge.example:8443/owner/repo")
+    end
+
+    def test_web_base_still_maps_scp_style_remote
+      assert_equal "https://forge.example/owner/repo",
+        Ace::Git::Atoms::ServerUrl.web_base("git@forge.example:owner/repo.git")
+    end
   end
 end
