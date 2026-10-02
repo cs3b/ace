@@ -431,7 +431,9 @@ module Ace
           parsed = Ace::Git::Atoms::PrIdentifier.parse(subject["pr"])
           server = configured_pr_server(subject["repository"])
           suffix = (server.provider == :forgejo) ? "pulls" : "pull"
-          "#{server.url.delete_suffix('/')}/#{suffix}/#{parsed.number}"
+          # Clone-form server URLs (trailing .git) are not valid web bases.
+          web_base = server.url.delete_suffix("/").sub(/\.git\z/i, "")
+          "#{web_base}/#{suffix}/#{parsed.number}"
         end
 
         def git_revision(ref, record = nil)
