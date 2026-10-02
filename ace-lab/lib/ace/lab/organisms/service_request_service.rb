@@ -174,7 +174,12 @@ module Ace
           content = "ace-service-attestation request:#{request_id} " \
             "input:#{binding.fetch("input_digest")} outcome:failed no-effect:true\n" \
             "refusal: #{error.message}\n"
-          File.write(attestation, content)
+          # Exclusive creation without following symlinks: the caller-controlled
+          # request ID must never truncate an existing file, and the artifact
+          # must stay private to pass the executor-owned verification.
+          File.open(attestation, File::WRONLY | File::CREAT | File::EXCL, 0600) do |file|
+            file.write(content)
+          end
           receipt = Models::ServiceReceipt.build(binding, {
             "outcome" => "failed",
             "evidence" => [{"ref" => "evidence/service/#{request_id}-no-effect",
@@ -183,7 +188,7 @@ module Ace
           })
           @coordinator.reconcile_service_no_effect(request_id, receipt: receipt)
         rescue Ace::Assign::AttemptErrors::InvalidState, Ace::Assign::AttemptErrors::ReceiptRejected,
-               Ace::Assign::AttemptErrors::NotFound, Errno::ENOENT, Errno::EACCES
+               Ace::Assign::AttemptErrors::NotFound, Errno::ENOENT, Errno::EACCES, Errno::EEXIST
           nil
         end
 
