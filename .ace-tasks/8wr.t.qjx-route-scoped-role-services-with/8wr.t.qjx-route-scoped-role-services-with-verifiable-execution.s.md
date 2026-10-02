@@ -1,6 +1,6 @@
 ---
 id: 8wr.t.qjx
-status: pending
+status: in-progress
 priority: high
 created_at: "2026-09-28 17:42:09"
 estimate: TBD
@@ -39,8 +39,8 @@ A worker requests an operation it cannot perform directly. The routed executor v
 
 ### Success Criteria and Verification Plan
 
-- [ ] SC1: Exercise authorized operation through a fake executor and a real filesystem/OS identity integration fixture; forged role/project/approval/head must fail.
-- [ ] SC2: Race duplicate requests, crash after execution before receipt, expired lease, stale approval and dry-run: never duplicate a side effect.
+- [x] SC1: Exercise authorized operation through a fake executor and a real filesystem/OS identity integration fixture; forged role/project/approval/head must fail.
+- [x] SC2: Race duplicate requests, crash after execution before receipt, expired lease, stale approval and dry-run: never duplicate a side effect.
 - [ ] SC3: Run `ace-test ace-lab all` and assignment receipt integration; installed domain proof consumed from lab-config:8wl.t.gad.b before lab retirement.
 
 ### Scope and Ownership
