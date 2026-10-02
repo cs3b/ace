@@ -14,20 +14,23 @@ module Ace
           @provider = provider
         end
 
-        def validate_link!(number:, task_id: nil)
+        def validate_link!(number:, task_id: nil, previous_task_id: nil)
           snapshot = fetch(number)
           owners = owned_task_ids(snapshot)
           if sticky_comment(snapshot) && owners.empty?
             raise ProviderMalformedOutputError, "Issue ##{number} has an ACE marker without a task owner"
           end
-          return snapshot if owners.empty? || (task_id && owners == [task_id.to_s])
+          accepted = [task_id, previous_task_id].compact.map(&:to_s).uniq
+          return snapshot if owners.empty? || (!accepted.empty? && owners.all? { |owner| accepted.include?(owner) })
 
           raise ProviderIdentityMismatchError,
             "Issue ##{number} is already owned by ACE task #{owners.join(', ')}"
         end
 
-        def sync(number:, task_id:, task_link:, task_status:)
-          snapshot = validate_link!(number: number, task_id: task_id)
+        def sync(number:, task_id:, task_link:, task_status:, previous_task_id: nil)
+          # Reparenting/promotion changes the local ID; the remote marker still
+          # names the previous ID until this sync transfers ownership.
+          snapshot = validate_link!(number: number, task_id: previous_task_id || task_id)
           sticky = sticky_comment(snapshot)
           desired_line = "Tracked in ace-task: [#{task_id}](#{task_link})"
           preserved = Array(sticky&.dig(:body).to_s.lines).map(&:rstrip).reject do |line|
