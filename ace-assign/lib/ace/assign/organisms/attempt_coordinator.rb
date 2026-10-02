@@ -200,15 +200,16 @@ module Ace
           end
         end
 
-        # The evidence artifact must name the claimed request, input digest,
-        # and attested outcome: an unrelated executor-owned file cannot
-        # attest this effect, and its result cannot be recorded under
-        # another terminal state.
+        # The evidence artifact must carry a structured attestation line
+        # naming the claimed request, input digest, and attested outcome
+        # exactly: an unrelated executor-owned file cannot attest this
+        # effect, prose cannot substitute for the attested outcome, and its
+        # result cannot be recorded under another terminal state.
         def evidence_bound_to_request?(path, request, state)
-          content = File.read(path)
-          content.include?(request.fetch("request_id")) &&
-            content.include?(request.fetch("input_digest")) &&
-            (%w[succeeded failed].include?(state) ? content.include?(state) : true)
+          attestation = /^ace-service-attestation request:#{Regexp.escape(request.fetch("request_id"))} \
+input:#{Regexp.escape(request.fetch("input_digest"))} outcome:(\S+)$/
+          line = File.read(path).scan(attestation).first
+          line && (%w[succeeded failed].include?(state) ? line.first == state : true)
         end
 
         def parse_claimed_at(request)
