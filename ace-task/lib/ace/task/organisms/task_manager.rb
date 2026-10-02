@@ -365,11 +365,18 @@ module Ace
             tasks = tasks.select { |t| t.metadata["issue_sync_pending"] } if pending
             linked_tasks = tasks.select { |t| linked_issue(t) }
             results = linked_tasks.map do |task|
-              with_issue_identity_lock(linked_issue(task)) do
-                # Reload inside the lock: another process may have cleared or
-                # synced this link while this replay waited for the lock.
+              locked_identity = linked_issue(task)
+              with_issue_identity_lock(locked_identity || {}) do
+                # Reload inside the lock: another process may have cleared,
+                # synced, or REPLACED this link while this replay waited. A
+                # replaced identity must not be mutated under the old lock.
                 fresh = show(task.id)
                 next sync_result_for(task: task, issues: [], success: true, reason: "manual-sync") if fresh.nil?
+
+                if linked_issue(fresh) != locked_identity
+                  next sync_result_for(task: fresh, issues: [locked_identity].compact, success: false,
+                    reason: "manual-sync", error: "Issue link changed during replay; retry the command")
+                end
 
                 sync_or_clear_linked_issue(fresh, reason: "manual-sync")
               end
