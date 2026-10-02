@@ -119,7 +119,7 @@ module Ace
         def issue_tracking(number:)
           data = gh_json(["issue", "view", number.to_s, "--json", "number,title,state,author,url,labels"])
           evidence = normalize_issue(data)
-          unless evidence.number.to_i == number.to_i && url_matches_server?(evidence.url)
+          unless evidence.number.to_i == number.to_i && url_matches_server?(evidence.url, number)
             raise Ace::Git::ProviderIdentityMismatchError, "Issue ##{number} is not in #{server.url}"
           end
           uri = URI.parse(server.url)
@@ -1080,10 +1080,11 @@ end
         # Issue evidence must match the configured server URL including its
         # scheme; ServerUrl.match? intentionally ignores schemes for git
         # remotes, but a web issue URL must not downgrade the authority.
-        def url_matches_server?(evidence_url)
-          return false unless Ace::Git::Atoms::ServerUrl.match?(server.url, evidence_url.to_s.sub(%r{/issues/\d+\z}, ""))
+        def url_matches_server?(evidence_url, number)
+          expected = "#{Ace::Git::Atoms::ServerUrl.web_base(server.url)}/issues/#{number.to_i}"
+          return false unless evidence_url.to_s.chomp("/").casecmp?(expected)
 
-          configured = URI.parse(server.url.to_s).scheme
+          configured = URI.parse(Ace::Git::Atoms::ServerUrl.web_base(server.url)).scheme
           supplied = URI.parse(evidence_url.to_s).scheme
           configured.nil? || supplied.nil? || configured.downcase == supplied.downcase
         end
