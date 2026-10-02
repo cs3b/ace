@@ -142,16 +142,17 @@ module Ace
           )
         end
 
-# The fj CLI surface omits the PR body; the repository-bound API
-# supplies it for review evidence. Malformed payloads fail closed.
-def pull_request_body(number:)
-  number = request_number!(number)
-  data = review_http.request(:get, "pulls/#{number}")
-  unless data.is_a?(Hash) && (data["body"].nil? || data["body"].is_a?(String))
-    raise Ace::Git::ProviderMalformedOutputError, "Malformed Forgejo PR body evidence"
-  end
-  data["body"]
-end
+        # The fj CLI surface omits the PR body; the repository-bound API
+        # supplies it for review evidence. Malformed payloads fail closed.
+        def pull_request_body(number:)
+          number = request_number!(number)
+          data = review_http.request(:get, "pulls/#{number}")
+          unless data.is_a?(Hash) && data["number"] == number && data.key?("body") &&
+                    (data["body"].nil? || data["body"].is_a?(String))
+            raise Ace::Git::ProviderMalformedOutputError, "Malformed Forgejo PR body evidence"
+          end
+          data["body"]
+        end
 
         def pull_request_review_evidence(number:, expected_head:)
           number = request_number!(number)

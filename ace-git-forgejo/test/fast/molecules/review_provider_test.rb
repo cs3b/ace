@@ -46,9 +46,14 @@ module Forgejo
       calls = []
       runner = lambda do |args:, **|
         calls << args
-        comment = {"id" => 91, "body" => "Reviewed\n\n<!-- ace-review-session:session-1 -->",
-                   "user" => {"login" => "reviewer"}, "html_url" => "https://forge.example.com/comment/91"}
-        {success: true, status: 200, stdout: [comment].to_json, stderr: "", exit_code: 0}
+        # Model real pagination: an empty page after the first content page.
+        if calls.count > 1
+          {success: true, status: 200, stdout: [].to_json, stderr: "", exit_code: 0}
+        else
+          comment = {"id" => 91, "body" => "Reviewed\n\n<!-- ace-review-session:session-1 -->",
+                     "user" => {"login" => "reviewer"}, "html_url" => "https://forge.example.com/comment/91"}
+          {success: true, status: 200, stdout: [comment].to_json, stderr: "", exit_code: 0}
+        end
       end
       provider = Ace::Git::Forgejo::Provider.new(server: SERVER, runner: runner)
       pr = Struct.new(:number, :head_sha, :state).new(42, HEAD, :open)

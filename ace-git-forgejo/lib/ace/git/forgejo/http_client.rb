@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "digest"
 require "json"
 require "net/http"
 require "openssl"
@@ -21,6 +22,7 @@ module Ace
         def paginate(suffix)
           page = 1
           entries = []
+          seen_pages = {}
           loop do
             separator = suffix.include?("?") ? "&" : "?"
             batch = request(:get, "#{suffix}#{separator}page=#{page}&limit=50")
@@ -28,8 +30,15 @@ module Ace
               raise Ace::Git::ProviderMalformedOutputError, "Forgejo #{suffix} did not return a list"
             end
             entries.concat(batch)
-            break if batch.length < 50
+            # A server may cap pages below the requested limit, so a short
+            # page is not proof of the end; stop only on an empty page and
+            # guard against servers repeating the same page forever.
+            break if batch.empty?
+            digest = Digest::SHA256.hexdigest(batch.to_s)
+            raise Ace::Git::ProviderMalformedOutputError,
+              "Forgejo #{suffix} pagination repeated page #{page}" if seen_pages[digest]
 
+            seen_pages[digest] = true
             page += 1
           end
           entries
@@ -62,7 +71,7 @@ module Ace
           JSON.parse(payload)
         rescue JSON::ParserError => e
           raise Ace::Git::ProviderMalformedOutputError, "Malformed Forgejo response: #{e.message}"
-        rescue Net::OpenTimeout, Net::ReadTimeout, IOError, SocketError, OpenSSL::SSL::SSLError, SystemCallError => e
+        rescue Net::OpenTimeout, Net::ReadTimeout, Net::WriteTimeout, IOError, SocketError, OpenSSL::SSL::SSLError, SystemCallError => e
           error = (method == :get) ? Ace::Git::ProviderUnreachableError : Ace::Git::ProviderUnknownOutcomeError
           raise error, "Forgejo #{method} #{path} outcome unknown: #{e.class}"
         end
