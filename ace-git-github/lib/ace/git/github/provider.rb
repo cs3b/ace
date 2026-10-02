@@ -215,11 +215,14 @@ def review_thread_index(pr)
   end
   index = {}
   threads.each do |thread|
+    page_info = thread.is_a?(Hash) && thread["comments"].is_a?(Hash) && thread["comments"]["pageInfo"]
     unless thread.is_a?(Hash) && thread["id"].is_a?(String) &&
-        thread["comments"].is_a?(Hash) && thread["comments"]["nodes"].is_a?(Array)
+        [true, false].include?(thread["isResolved"]) &&
+        thread["comments"].is_a?(Hash) && thread["comments"]["nodes"].is_a?(Array) &&
+        page_info.is_a?(Hash) && [true, false].include?(page_info["hasNextPage"])
       raise Ace::Git::ProviderMalformedOutputError, "Malformed GitHub review thread evidence"
     end
-    resolved = thread["isResolved"] == true
+    resolved = thread["isResolved"]
     thread_comment_ids(thread["id"], thread["comments"]).each do |database_id|
       index[database_id] = [thread["id"], resolved]
     end
@@ -634,7 +637,7 @@ end
         def verify_post_mutation_head!(pr, expected_head, correlation)
           current = begin
             pull_request(number: pr.number)
-          rescue Ace::Git::ProviderUnreachableError => e
+          rescue Ace::Git::ProviderMalformedOutputError, Ace::Git::ProviderUnreachableError => e
             raise Ace::Git::ProviderUnknownOutcomeError,
               "Head verification read failed after mutation for #{server.name}: #{e.message}; reconcile before repeating"
           end

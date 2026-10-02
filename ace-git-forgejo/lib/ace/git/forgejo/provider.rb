@@ -414,7 +414,7 @@ module Ace
   def verify_post_mutation_head!(number, expected_head, correlation)
     current = begin
       pull_request(number: number)
-    rescue Ace::Git::ProviderUnreachableError => e
+    rescue Ace::Git::ProviderMalformedOutputError, Ace::Git::ProviderUnreachableError => e
       raise Ace::Git::ProviderUnknownOutcomeError,
         "Head verification read failed after mutation for #{server.name}: #{e.message}; reconcile before repeating"
     end
