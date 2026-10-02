@@ -236,6 +236,11 @@ module Ace
                 .find { |t| linked_issue(t) }
               if converted_child
                 sync_linked_issues_for(converted_child, reason: "reparent", previous_task: task)
+                # Other linked descendants of the converted parent keep their
+                # identities; refresh their comments from the new layout too.
+                linked_descendants_of(reparented.path, reparented.id)
+                  .reject { |descendant| descendant.id == converted_child.id }
+                  .each { |descendant| sync_linked_issues_for(descendant, reason: "reparent") }
                 return show_after_sync(converted_child) || converted_child
               end
             end
@@ -325,13 +330,15 @@ module Ace
             tasks = tasks.select { |t| t.metadata["issue_sync_pending"] } if pending
             linked_tasks = tasks.select { |t| linked_issue(t) }
             results = linked_tasks.map { |task| sync_or_clear_linked_issue(task, reason: "manual-sync") }
-            if pending
-              results.concat((tasks - linked_tasks).map do |task|
-                sync_result_for(task: task, issues: [], success: false,
-                  reason: "manual-sync", error: "Pending task has no remote_issue recovery identity")
-              end)
-            end
-            return summarize_manual_sync_results(results, skipped: pending ? 0 : tasks.length - linked_tasks.length)
+            # An unlinked task with a pending flag is inconsistent state: it
+            # fails in every mode (matching REF and --pending semantics).
+            inconsistent = (tasks - linked_tasks).select { |t| t.metadata["issue_sync_pending"] }
+            results.concat(inconsistent.map do |task|
+              sync_result_for(task: task, issues: [], success: false,
+                reason: "manual-sync", error: "Pending task has no remote_issue recovery identity")
+            end)
+            skipped = tasks.length - linked_tasks.length - inconsistent.length
+            return summarize_manual_sync_results(results, skipped: pending ? 0 : skipped)
           end
 
           task = show(ref)

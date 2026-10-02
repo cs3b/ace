@@ -787,6 +787,24 @@ class TaskManagerTest < AceTaskTestCase
     end
   end
 
+  def test_bulk_sync_fails_for_pending_tasks_without_identity
+    adapter = fake_issue_adapter { |task:, **_| raise Ace::Git::ProviderUnknownOutcomeError, "unknown" }
+    @manager.stub(:issue_adapter, adapter) do
+      task = @manager.create("Linked task", remote_issue: issue_identity)
+      task = @manager.show(task.id)
+      Ace::Support::Items::Molecules::FieldUpdater.update(
+        task.file_path, set: {"remote_issue" => nil}
+      )
+      result = @manager.issue_sync(all: true)
+      # The inconsistent task is reported as a failure (never a silent skip)
+      # and the CLI exits nonzero on its pending count.
+      assert_equal 0, result[:skipped]
+      assert_equal 1, result[:failed] + result[:pending]
+      assert_equal 1, result[:failures].length
+      assert_match(/no remote_issue recovery identity/, result[:failures].first[:error])
+    end
+  end
+
   def test_ref_sync_fails_for_pending_task_without_identity
     adapter = fake_issue_adapter { |task:, **_| raise Ace::Git::ProviderUnknownOutcomeError, "unknown" }
     @manager.stub(:issue_adapter, adapter) do
