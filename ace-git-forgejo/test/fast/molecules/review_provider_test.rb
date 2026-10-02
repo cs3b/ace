@@ -116,4 +116,20 @@ module Forgejo
       assert calls.none? { |args| args[1] == "PATCH" }
     end
   end
+def test_team_review_identity_is_accepted
+  runner = lambda do |args:, **|
+    review = {"id" => 77, "user" => nil, "team" => {"name" => "core-devs"}, "body" => "Team review",
+              "state" => "APPROVED", "html_url" => "https://forge.example.com/review/77"}
+    {success: true, status: 200, stdout: [review].to_json, stderr: "", exit_code: 0}
+  end
+  provider = Ace::Git::Forgejo::Provider.new(server: SERVER, runner: runner)
+  pr = Struct.new(:number, :head_sha, :state).new(42, HEAD, :open)
+
+  evidence = provider.stub(:pull_request, pr) do
+    provider.pull_request_review_evidence(number: 42, expected_head: HEAD)
+  end
+
+  team_review = evidence.reviews.find { |r| r.author == "core-devs" }
+  assert team_review, "team-identified reviews must be accepted with the team name as author"
+end
 end
