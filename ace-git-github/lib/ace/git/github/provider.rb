@@ -353,6 +353,10 @@ end
             unless statuses.all? { |st| st.is_a?(Hash) && st["context"].is_a?(String) }
               raise Ace::Git::ProviderMalformedOutputError, "Malformed GitHub commit status evidence"
             end
+            # The statuses stream is reverse-chronological with one entry
+            # per state change; the combined total counts distinct
+            # contexts. Keep the first (latest) entry per context.
+            statuses = statuses.uniq { |st| st["context"] }
           end
           unless statuses.length == total
             raise Ace::Git::ProviderMalformedOutputError, "Incomplete GitHub commit status evidence"

@@ -185,7 +185,10 @@ module Ace
             if home
               candidates << File.join(home, ".local", "share", "forgejo-cli", "keys.json")
               candidates << File.join(home, "Library", "Application Support", "forgejo-cli", "keys.json")
+              # macOS app-support uses reverse-DNS bundle directories.
+              candidates << File.join(home, "Library", "Application Support", "forgejo-cli.forgejo-cli", "keys.json")
               candidates << File.join(home, ".local", "share", "Cyborus", "forgejo-cli", "keys.json")
+              candidates << File.join(home, "Library", "Application Support", "Cyborus.forgejo-cli", "keys.json")
               candidates << File.join(home, "Library", "Application Support", "Cyborus", "forgejo-cli", "keys.json")
             end
             candidates.find { |path| File.exist?(path) }
