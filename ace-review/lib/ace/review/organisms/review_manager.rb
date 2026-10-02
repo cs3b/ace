@@ -1412,12 +1412,20 @@ module Ace
           # artifact: a retry in a later run must reuse the exact identity
           # and content to reconcile the existing session comment.
           # The identity store lives OUTSIDE the per-run session directory,
-          # keyed by the review artifact digest: a retry in any later run
-          # finds it; changed review content starts a fresh identity.
+          # keyed by everything reuse depends on: PR identity, head, and
+          # the review artifact digest. Identical review text for another
+          # PR therefore never collides.
           review_digest = Digest::SHA256.file(review_file).hexdigest
+          identity_pr = options.pr.to_s
+          identity_head = head.to_s
+          identity_server = options.pr_metadata&.fetch("server_name", nil).to_s
+          identity_repo = options.pr_metadata&.fetch("repository_url", nil).to_s
+          identity_key = Digest::SHA256.hexdigest(
+            [identity_server, identity_repo, identity_pr, identity_head, review_digest].join("\0")
+          )
           identity_root = File.join(@project_root || Dir.pwd, ".ace-local/review/post-identity")
           FileUtils.mkdir_p(identity_root)
-          identity_path = File.join(identity_root, "#{review_digest}.yml")
+          identity_path = File.join(identity_root, "#{identity_key}.yml")
           persisted = File.exist?(identity_path) &&
             begin
               YAML.safe_load_file(identity_path, permitted_classes: [Time, Date])
@@ -1428,6 +1436,7 @@ module Ace
           # head, and review content; anything else starts a fresh identity.
           if persisted && persisted["pr"] == options.pr.to_s &&
               persisted["head"] == head && persisted["review_sha256"] == review_digest &&
+              persisted["server_name"] == identity_server && persisted["repository_url"] == identity_repo &&
               persisted["session_key"].is_a?(String) && persisted["body"].is_a?(String)
             session_key = persisted["session_key"]
             content = persisted["body"]
@@ -1441,10 +1450,14 @@ module Ace
               # artifact always formats the identical body.
               timestamp: File.mtime(review_file).utc.strftime("%Y-%m-%d %H:%M:%S UTC")
             )
-            File.write(identity_path, YAML.dump(
+            record = YAML.dump(
               "session_key" => session_key, "body" => content,
-              "pr" => options.pr.to_s, "head" => head, "review_sha256" => review_digest
-            ))
+              "pr" => options.pr.to_s, "head" => head, "review_sha256" => review_digest,
+              "server_name" => identity_server, "repository_url" => identity_repo
+            )
+            tmp_path = "#{identity_path}.tmp-#{Process.pid}"
+            File.write(tmp_path, record)
+            File.rename(tmp_path, identity_path)
           end
 
           receipt = pr_provider(options).post_comment(
