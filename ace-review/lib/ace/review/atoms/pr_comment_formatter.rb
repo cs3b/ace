@@ -35,7 +35,7 @@ module Ace
             body = comment[:body].to_s
             author.match?(/\b(bot|github-actions|ace-review)\b/i) ||
               body.empty? ||
-              body.include?("ace-review-session:")
+              own_session_post?(body)
           end
           reviews = comments_data[:reviews] || []
           review_threads = comments_data[:review_threads] || []
@@ -199,6 +199,14 @@ module Ace
           end
 
           section
+        end
+
+        # An ACE post carries our review header AND a well-formed session
+        # marker as the trailing hidden line. A human reply quoting an
+        # earlier comment rarely matches both, so quotes stay visible.
+        def self.own_session_post?(body)
+          return false unless body.start_with?("## Code Review - ace-review")
+          body.match?(/<!--\s*ace-review-session:[a-zA-Z0-9._:-]+\s*-->\s*\z/)
         end
 
         # Build comments table for quick reference
