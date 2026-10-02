@@ -249,13 +249,19 @@ module Ace
           tab_id = dig_value(tab_json, %w[result tab tab_id]) ||
             raise(TargetResolutionError, "could not read the new tab id from herdr tab create output")
 
-          pane_specs = Array(tab_spec["panes"])
-          root_pane_id = dig_value(tab_json, %w[result root_pane pane_id]) ||
-            raise(TargetResolutionError, "could not read the root pane id from herdr tab create output")
-          placed = place_panes(tab_spec, pane_specs, tab_cwd, root_pane_id)
+          begin
+            pane_specs = Array(tab_spec["panes"])
+            root_pane_id = dig_value(tab_json, %w[result root_pane pane_id]) ||
+              raise(TargetResolutionError, "could not read the root pane id from herdr tab create output")
+            placed = place_panes(tab_spec, pane_specs, tab_cwd, root_pane_id)
 
-          commands = run_pane_commands(placed)
-          agents = start_pane_agents(placed, workspace_id: workspace_id)
+            commands = run_pane_commands(placed)
+            agents = start_pane_agents(placed, workspace_id: workspace_id)
+          rescue StandardError => e
+            # Surface the created tab id so the owner can roll back exactly
+            # this tab instead of guessing from listings.
+            raise TabMaterializationError.new(tab_id: tab_id, message: e.message)
+          end
 
           {
             tab: tab_id,

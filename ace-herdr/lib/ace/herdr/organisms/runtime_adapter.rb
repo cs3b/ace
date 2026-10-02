@@ -65,37 +65,36 @@ module Ace
                     "window '#{existing[:name]}' conflicts with root or preset"
                 end
 
-                # Adopting a record-less tab: persist its provenance so
-                # later instances (and prepared-pane reuse) share it.
+                # Adopting a record-less tab: persist its provenance (and
+                # keep any prepared-pane pointer) so later instances share it.
                 if read_identity(path, existing).nil?
-                  write_identity(path, id: existing[:id], root: canonical_root(root), preset: preset)
+                  write_identity(path, id: existing[:id], root: canonical_root(root), preset: preset,
+                    prepared_pane: pointer_prepared_pane(path, existing[:id]))
                 end
                 next existing[:id]
               end
 
-              known_tab_ids = tabs(workspace).map { |tab| tab[:id] }.to_set
-              created_id = nil
-              begin
+              created_id =
                 if preset
-                  created = @surface.create_tab(preset, workspace_id: workspace, cwd: root, label: label)
-                  created_id = created.fetch(:tab)
+                  begin
+                    created = @surface.create_tab(preset, workspace_id: workspace, cwd: root, label: label)
+                  rescue TabMaterializationError => e
+                    # Roll back the tab this call created — exact id from
+                    # the surface, never a listing guess.
+                    @executor.tab_close(e.tab_id)
+                    raise
+                  end
+                  created.fetch(:tab)
                 else
                   parsed = @executor.tab_create(workspace_id: workspace, label: label, cwd: File.expand_path(root)).parsed_json
-                  created_id = find_value(parsed, %w[tab tab_id])
+                  find_value(parsed, %w[tab tab_id])
                 end
-                raise TargetResolutionError, "tab create returned no tab id" if created_id.nil?
+              raise TargetResolutionError, "tab create returned no tab id" if created_id.nil?
 
+              begin
                 write_identity(path, id: created_id, root: canonical_root(root), preset: preset)
               rescue StandardError
-                # Roll back this attempt's tab: prefer the exact captured
-                # id; without one (mid-materialization preset failure) fall
-                # back to same-label tabs that appeared under our lock
-                # tenure. Never touch tabs we did not observe appearing.
-                if created_id
-                  @executor.tab_close(created_id)
-                else
-                  cleanup_attempt_tabs(workspace, label, known_tab_ids)
-                end
+                @executor.tab_close(created_id)
                 raise
               end
               created_id
@@ -303,24 +302,15 @@ module Ace
           false
         end
 
-        # Rollback after a failed create: close only same-label tabs that
-        # appeared during this attempt (absent from the pre-call
-        # inventory). Tabs we did not observe being created are never
-        # touched — closing an unowned tab could destroy running work.
-        def cleanup_attempt_tabs(workspace, label, known_tab_ids)
-          tabs(workspace).each do |tab|
-            next if known_tab_ids.include?(tab[:id])
-            next unless tab[:name] == label
-
-            @executor.tab_close(tab[:id])
-          end
-        rescue ExecutorError, Runtime::Error
-          nil
-        end
+        # Rollback after a failed create is exact-id only (see ensure_window);
+        # listings are never consulted for ownership decisions.
 
         def read_identity(path, tab)
           recorded = JSON.parse(File.read(path)) if File.file?(path)
           recorded = nil unless recorded.is_a?(Hash) && recorded["id"] == tab[:id]
+          # A pointer-only record (no root/preset provenance — written for
+          # a foreign tab's prepared pane) proves no ownership.
+          recorded = nil if recorded && !recorded.key?("root") && !recorded.key?("preset")
           recorded
         rescue JSON::ParserError
           raise Runtime::WindowConflictError,
@@ -334,20 +324,23 @@ module Ace
 
         # Cross-instance prepared-pane reuse: the identity record carries
         # the prepared pane id, so another adapter instance (or process)
-        # reuses the retained target instead of splitting again.
+        # reuses the retained target instead of splitting again. Works for
+        # provenance records and pointer-only (foreign tab) records alike.
         def discover_prepared_pane(tab)
           cached = @prepared[tab[:id]]
           return cached if usable_prepared_pane?(cached)
 
-          recorded = read_identity(identity_path(tab[:workspace], tab[:name]), tab)
-          return nil unless recorded.is_a?(Hash) && recorded["prepared_pane"]
-
-          pane_id = recorded["prepared_pane"]
-          return nil unless usable_prepared_pane?(pane_id)
+          pane_id = pointer_prepared_pane(identity_path(tab[:workspace], tab[:name]), tab[:id])
+          return nil unless pane_id && usable_prepared_pane?(pane_id)
 
           @prepared[tab[:id]] = pane_id
           pane_id
-        rescue Runtime::WindowConflictError
+        end
+
+        def pointer_prepared_pane(path, id)
+          raw = JSON.parse(File.read(path))
+          raw.is_a?(Hash) && raw["id"] == id ? raw["prepared_pane"] : nil
+        rescue JSON::ParserError, Errno::ENOENT
           nil
         end
 
@@ -355,10 +348,17 @@ module Ace
           @prepared[tab[:id]] = pane_id
           path = identity_path(tab[:workspace], tab[:name])
           recorded = File.file?(path) ? JSON.parse(File.read(path)) : nil
-          return nil unless recorded.is_a?(Hash) && recorded["id"] == tab[:id]
+          recorded = nil unless recorded.is_a?(Hash) && recorded["id"] == tab[:id]
 
-          write_identity(path, id: recorded["id"], root: recorded["root"], preset: recorded["preset"],
-            prepared_pane: pane_id)
+          if recorded
+            write_identity(path, id: recorded["id"], root: recorded["root"], preset: recorded["preset"],
+              prepared_pane: pane_id)
+          else
+            # Foreign tab (not created through ensure_window): persist a
+            # pointer-only record so later instances reuse this pane
+            # instead of splitting again.
+            write_pointer_only(path, id: tab[:id], prepared_pane: pane_id)
+          end
         rescue JSON::ParserError, Errno::ENOENT
           nil
         end
@@ -383,6 +383,14 @@ module Ace
         def write_identity(path, id:, root:, preset:, prepared_pane: nil)
           payload = {id: id, root: root, preset: preset}
           payload[:prepared_pane] = prepared_pane if prepared_pane
+          atomic_write_json(path, payload)
+        end
+
+        def write_pointer_only(path, id:, prepared_pane:)
+          atomic_write_json(path, {id: id, prepared_pane: prepared_pane})
+        end
+
+        def atomic_write_json(path, payload)
           temp = "#{path}.#{Process.pid}.tmp"
           File.open(temp, File::WRONLY | File::CREAT | File::TRUNC, 0o600) do |file|
             file.write(JSON.generate(payload))

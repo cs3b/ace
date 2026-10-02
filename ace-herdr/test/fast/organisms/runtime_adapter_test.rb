@@ -325,7 +325,7 @@ module Ace
           assert_equal 0, @executor.calls_of(:tab_close).size
         end
 
-        def test_rollback_only_closes_tabs_created_by_the_current_attempt
+        def test_rollback_closes_only_the_failed_tab_id
           @executor.tab_create(workspace_id: "w1", label: "other", cwd: "/tmp/work")
           manual_tabs_before = @adapter.list_windows.map { |row| row[:window] }
           failing_surface = Class.new do
@@ -335,8 +335,11 @@ module Ace
             end
 
             def create_tab(*)
-              @executor.tab_create(workspace_id: "w1", label: "work", cwd: "/tmp/work")
-              raise StandardError, "preset materialization failed after native create"
+              parsed = @executor.tab_create(workspace_id: "w1", label: "work", cwd: "/tmp/work").parsed_json
+              raise TabMaterializationError.new(
+                tab_id: parsed["result"]["tab_id"],
+                message: "preset materialization failed after native create"
+              )
             end
 
             def method_missing(name, *args, **kwargs, &block)
@@ -351,7 +354,7 @@ module Ace
           end.new(@executor)
           failing = RuntimeAdapter.new(executor: @executor, env: env, sleeper: FastSleeper.new,
             surface: failing_surface, identity_dir: @identity_dir)
-          error = assert_raises(StandardError) do
+          error = assert_raises(TabMaterializationError) do
             failing.ensure_window(name: "work", root: "/tmp/work", preset: "main")
           end
           assert_match(/materialization failed/, error.message)
@@ -359,6 +362,32 @@ module Ace
           remaining = @adapter.list_windows.map { |row| row[:window] }
           assert_equal manual_tabs_before.sort, (remaining & manual_tabs_before).sort
           assert_empty @adapter.list_windows.select { |row| row[:name] == "work" }
+        end
+
+        def test_foreign_tab_prepared_pane_is_discovered_by_later_instances
+          @executor.tab_create(workspace_id: "w1", label: "foreign", cwd: "/tmp/work")
+          tab = @adapter.list_windows.find { |row| row[:name] == "foreign" }[:window]
+          first = RuntimeAdapter.new(executor: @executor, env: env, sleeper: FastSleeper.new,
+            identity_dir: @identity_dir)
+          pane = first.prepare_pane(window: tab)
+          second = RuntimeAdapter.new(executor: @executor, env: env, sleeper: FastSleeper.new,
+            identity_dir: @identity_dir)
+          assert_equal pane, second.prepare_pane(window: tab)
+          assert_equal 1, @executor.calls_of(:pane_split).size
+        end
+
+        def test_adoption_preserves_a_foreign_prepared_pane_pointer
+          @executor.tab_create(workspace_id: "w1", label: "foreign", cwd: "/tmp/work")
+          tab = @adapter.list_windows.find { |row| row[:name] == "foreign" }[:window]
+          preparer = RuntimeAdapter.new(executor: @executor, env: env, sleeper: FastSleeper.new,
+            identity_dir: @identity_dir)
+          pane = preparer.prepare_pane(window: tab)
+
+          @adapter.ensure_window(name: "foreign", root: "/tmp/work")
+          adopter = RuntimeAdapter.new(executor: @executor, env: env, sleeper: FastSleeper.new,
+            identity_dir: @identity_dir)
+          assert_equal pane, adopter.prepare_pane(window: tab)
+          assert_equal 1, @executor.calls_of(:pane_split).size
         end
 
         def test_adopted_tab_identity_is_recorded_for_later_instances
@@ -436,8 +465,11 @@ module Ace
             end
 
             def create_tab(*)
-              @executor.tab_create(workspace_id: "w1", label: "work", cwd: "/tmp/work")
-              raise StandardError, "preset materialization failed after native create"
+              parsed = @executor.tab_create(workspace_id: "w1", label: "work", cwd: "/tmp/work").parsed_json
+              raise TabMaterializationError.new(
+                tab_id: parsed["result"]["tab_id"],
+                message: "preset materialization failed after native create"
+              )
             end
 
             def method_missing(name, *args, **kwargs, &block)
@@ -452,7 +484,7 @@ module Ace
           end.new(@executor)
           failing = RuntimeAdapter.new(executor: @executor, env: env, sleeper: FastSleeper.new,
             surface: failing_surface, identity_dir: @identity_dir)
-          error = assert_raises(StandardError) do
+          error = assert_raises(TabMaterializationError) do
             failing.ensure_window(name: "work", root: "/tmp/work", preset: "main")
           end
           assert_match(/materialization failed/, error.message)
