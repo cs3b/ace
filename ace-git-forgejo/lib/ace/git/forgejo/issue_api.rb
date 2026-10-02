@@ -59,7 +59,11 @@ module Ace
           owner = @target.repo.split("/", 2).first
           begin
             labels + paginate("/api/v1/orgs/#{owner}/labels")
-          rescue Ace::Git::ProviderObjectNotFoundError
+          rescue Ace::Git::ProviderObjectNotFoundError, Ace::Git::ProviderAuthenticationError
+            # Organization labels are an optional supplement: 404 means no org
+            # scope exists and 401/403 mean the token cannot read it. Both
+            # leave the repository labels authoritative; errors from the
+            # repository-label request above still propagate.
             labels
           end
         end
