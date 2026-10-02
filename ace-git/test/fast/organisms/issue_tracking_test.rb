@@ -145,6 +145,40 @@ class IssueTrackingTest < AceGitTestCase
     refute_includes @provider.labels, "ace:tracked"
   end
 
+  class DelayedCreateProvider < FakeProvider
+    attr_reader :reads_after_unknown
+
+    def initialize
+      super
+      @reads_after_unknown = 0
+      @delayed = false
+    end
+
+    def arm_delayed_create
+      @delayed = true
+    end
+
+    def issue_tracking(number:)
+      if @delayed && @calls.count { |call| call.first == :create } > 0
+        @reads_after_unknown += 1
+        # First reconciliation read misses the still-committing write.
+        return super if @reads_after_unknown == 1
+
+        @delayed = false
+      end
+      super
+    end
+  end
+
+  def test_unknown_create_reconciles_without_duplicate_after_delayed_commit
+    provider = DelayedCreateProvider.new
+    provider.arm_delayed_create
+    service = Ace::Git::Organisms::IssueTracking.new(provider: provider)
+    service.sync(number: 42, task_id: "8pp.t.q7w", task_link: "task.md", task_status: "pending")
+    assert_equal 1, provider.calls.count { |call| call.first == :create }
+    assert_equal 1, provider.comments.length
+  end
+
   def test_sync_accepts_ownership_from_either_previous_or_current_id
     @provider.comments << {id: 1, body: "<!-- ace-task:tracked -->\nTracked in ace-task: [8pp.t.q7w.old](x.md)"}
     @service.sync(number: 42, task_id: "8pp.t.q7w.new", previous_task_id: "8pp.t.q7w.old",
