@@ -22,6 +22,9 @@ module Ace
       end
     end
 
+    # Native timeout is distinct from a prompt accepted but not observed.
+    class ExecutorTimeoutError < AgentNotReadyError; end
+
     # Target pane does not exist (pane_not_found)
     class PaneNotFoundError < ExecutorError; end
 

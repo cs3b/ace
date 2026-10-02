@@ -15,6 +15,18 @@ module Ace
 
     # Raised when a bounded wait exceeds its timeout
     class WaitTimeoutError < Error; end
+
+    # Raised when a preset tab was created natively but a later
+    # materialization step (splits, commands, agents) failed; carries the
+    # created tab id so the owner can roll back exactly that tab.
+    class TabMaterializationError < Error
+      attr_reader :tab_id
+
+      def initialize(tab_id:, message:)
+        @tab_id = tab_id
+        super(message)
+      end
+    end
   end
 end
 
@@ -23,6 +35,7 @@ require_relative "herdr/errors"
 
 # Load all ace-herdr components
 require_relative "herdr/atoms/answer_digest"
+require_relative "herdr/atoms/json_find"
 require_relative "herdr/models/delivery_record"
 require_relative "herdr/models/dispatch_outcome"
 require_relative "herdr/molecules/herdr_executor"
@@ -33,6 +46,7 @@ require_relative "herdr/molecules/preset_resolver"
 require_relative "herdr/organisms/deliverer"
 require_relative "herdr/organisms/dispatcher"
 require_relative "herdr/organisms/control_surface"
+require_relative "herdr/organisms/runtime_adapter"
 require_relative "herdr/organisms/tidy"
 require_relative "herdr/cli"
 
