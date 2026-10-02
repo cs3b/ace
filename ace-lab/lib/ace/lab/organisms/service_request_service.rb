@@ -88,7 +88,9 @@ module Ace
           binding["transport"] = transport = operation_policy.fetch("transport", "local")
           if transport == "local" &&
               (Process.uid != binding["executor_uid"] || Process.euid != binding["executor_uid"])
-            @coordinator.reject_service_request(binding, reason: "executor_identity_unavailable")
+            # A preview records nothing: the durable rejection is only for
+            # real submissions, so the request ID stays reusable.
+            @coordinator.reject_service_request(binding, reason: "executor_identity_unavailable") unless dry_run
             raise SecurityError, "current OS identity is not the configured executor"
           end
 
