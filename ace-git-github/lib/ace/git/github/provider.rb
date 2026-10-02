@@ -328,7 +328,12 @@ end
               "PR comment outcome unknown for #{server.name}/#{pr.number}, head #{expected_head}, " \
               "session #{correlation}: #{e.message}; reconcile before repeating"
           end
-          matches = matching_review_comments(pr, marker, expected_head)
+          begin
+            matches = matching_review_comments(pr, marker, expected_head)
+          rescue Ace::Git::ProviderUnreachableError => e
+            raise Ace::Git::ProviderUnknownOutcomeError,
+              "PR comment sent but reconciliation read failed for session #{correlation}: #{e.message}; reconcile before repeating"
+          end
           unless matches.one? && matches.first.body == "#{body}\n\n#{marker}"
             raise Ace::Git::ProviderUnknownOutcomeError,
               "PR comment sent but reconciliation found #{matches.length} exact-content match(es) for session #{correlation}"
@@ -356,7 +361,12 @@ end
               "Comment update outcome unknown for #{server.name}/#{pr.number}, " \
               "head #{expected_head}, comment #{comment_id}: #{e.message}"
           end
-          updated = gh_api_pages("issues/#{pr.number}/comments").find { |entry| entry["id"] == comment_id }
+          begin
+            updated = gh_api_pages("issues/#{pr.number}/comments").find { |entry| entry["id"] == comment_id }
+          rescue Ace::Git::ProviderUnreachableError => e
+            raise Ace::Git::ProviderUnknownOutcomeError,
+              "Comment update sent but verification read failed for comment #{comment_id}: #{e.message}; reconcile before repeating"
+          end
           unless updated && updated["body"] == body
             raise Ace::Git::ProviderUnknownOutcomeError,
               "Comment update sent but exact PR comment #{comment_id} could not be verified"
