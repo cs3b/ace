@@ -66,12 +66,16 @@ module Ace
           unless stat.socket? && stat.uid == operation.fetch("executor_uid") && (stat.mode & 0o002).zero?
             raise SecurityError, "service socket owner or permissions do not match the executor"
           end
-          UNIXSocket.open(path) do |socket|
-            peer_uid, = socket.getpeereid
-            raise SecurityError, "service peer identity does not match the executor" unless peer_uid == stat.uid
-            socket.write(JSON.generate({"request" => request, "input" => input}) + "\n")
-            socket.flush
-            Timeout.timeout(30) { socket.gets(16 * 1024 + 1) }
+          # One deadline covers connecting, writing, and reading: a stalled
+          # peer must leave the claimed effect uncertain, never block.
+          Timeout.timeout(30) do
+            UNIXSocket.open(path) do |socket|
+              peer_uid, = socket.getpeereid
+              raise SecurityError, "service peer identity does not match the executor" unless peer_uid == stat.uid
+              socket.write(JSON.generate({"request" => request, "input" => input}) + "\n")
+              socket.flush
+              socket.gets(16 * 1024 + 1)
+            end
           end
         end
 
