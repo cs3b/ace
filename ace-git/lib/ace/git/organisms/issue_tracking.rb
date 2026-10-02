@@ -86,25 +86,39 @@ module Ace
               @provider.update_issue_comment(number: number, comment_id: sticky[:id], body: desired_body)
             end
           end
+          verified = nil
           unless comment_only
-            snapshot = fetch(number)
-            unless snapshot[:labels].include?(TRACKED_LABEL)
-              mutate_and_reconcile(number, label: TRACKED_LABEL) do
-                @provider.add_issue_label(number: number, label: TRACKED_LABEL)
+            begin
+              snapshot = fetch(number)
+              unless snapshot[:labels].include?(TRACKED_LABEL)
+                mutate_and_reconcile(number, label: TRACKED_LABEL) do
+                  @provider.add_issue_label(number: number, label: TRACKED_LABEL)
+                end
               end
-            end
-            desired_state = TERMINAL_STATUSES.include?(task_status.to_s) ? :closed : :open
-            snapshot = fetch(number)
-            unless snapshot[:issue].state == desired_state
-              mutate_and_reconcile(number, state: desired_state) do
-                @provider.set_issue_state(number: number, state: desired_state)
+              desired_state = TERMINAL_STATUSES.include?(task_status.to_s) ? :closed : :open
+              snapshot = fetch(number)
+              unless snapshot[:issue].state == desired_state
+                mutate_and_reconcile(number, state: desired_state) do
+                  @provider.set_issue_state(number: number, state: desired_state)
+                end
               end
+            rescue ProviderAuthenticationError, ProviderObjectNotFoundError => e
+              # The non-idempotent comment POST already committed, so a later
+              # definitive-looking failure cannot prove the create failed.
+              # Replay must reconcile the committed marker, never re-POST.
+              raise ProviderUnknownOutcomeError,
+                "post-create step failed after the tracking comment committed: #{e.class}: #{e.message}"
             end
-          end
-          verified = fetch(number)
-          unless sticky_comment(verified)&.[](:body) == desired_body &&
-              (comment_only || (verified[:labels].include?(TRACKED_LABEL) && verified[:issue].state == desired_state))
-            raise ProviderMalformedOutputError, "Issue ##{number} did not reflect ACE tracking updates"
+            verified = fetch(number)
+            unless sticky_comment(verified)&.[](:body) == desired_body &&
+                verified[:labels].include?(TRACKED_LABEL) && verified[:issue].state == desired_state
+              raise ProviderMalformedOutputError, "Issue ##{number} did not reflect ACE tracking updates"
+            end
+          else
+            verified = fetch(number)
+            unless sticky_comment(verified)&.[](:body) == desired_body
+              raise ProviderMalformedOutputError, "Issue ##{number} did not reflect ACE tracking updates"
+            end
           end
           verified
         end

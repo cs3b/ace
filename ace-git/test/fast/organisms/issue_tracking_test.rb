@@ -126,6 +126,35 @@ class IssueTrackingTest < AceGitTestCase
     assert_includes @provider.labels, "ace:tracked"
   end
 
+  def test_post_create_label_failure_is_uncertain_not_definitive
+    # The comment POST commits, then the label attach hits a definitive-looking
+    # provider error. The create outcome can no longer be proven failed, so
+    # the sync must surface uncertainty (guard kept, replay reconciles)
+    # instead of authorizing a duplicate POST.
+    @provider.define_singleton_method(:add_issue_label) do |number:, label:|
+      calls << [:add_label, number]
+      raise Ace::Git::ProviderObjectNotFoundError, "label attach rejected"
+    end
+    error = assert_raises(Ace::Git::ProviderUnknownOutcomeError) do
+      @service.sync(number: 42, task_id: "8pp.t.q7w", task_link: "task.md", task_status: "pending")
+    end
+    assert_includes error.message, "committed"
+    assert_equal [:create, 42], @provider.calls.first
+  end
+
+  def test_create_post_rejection_stays_definitive
+    # A definitive failure OF the POST itself must keep proving the create
+    # never committed, so replay may retry the create.
+    @provider.define_singleton_method(:create_issue_comment) do |number:, body:|
+      calls << [:create, number]
+      raise Ace::Git::ProviderObjectNotFoundError, "issue not found"
+    end
+    error = assert_raises(Ace::Git::ProviderObjectNotFoundError) do
+      @service.sync(number: 42, task_id: "8pp.t.q7w", task_link: "task.md", task_status: "pending")
+    end
+    assert_equal [[:create, 42]], @provider.calls
+  end
+
   def test_sync_separates_marker_from_trailing_note_without_newline
     @provider.comments << {id: 1, body: "Final note without newline<!-- ace-task:tracked -->\n" \
       "Tracked in ace-task: [8pp.t.q7w](old.md)"}
