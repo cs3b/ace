@@ -29,7 +29,8 @@ All notable changes to this project will be documented in this file.
 - **ace-lab v0.2.0**: Added authorized `service request` and `service status`
   commands with exact policy checks, fixed argv execution, and durable outcomes.
 - **ace-tmux v0.18.0**: Added the shared ace-runtime tmux adapter with typed window, pane, send, capture, and wait operations over the existing control surface.
-- **ace-herdr v0.2.0**: Added the `ace-runtime` Herdr adapter with workspace/tab mapping, native agent prompt and wait semantics, all lifecycle observations, typed error mapping, and shared contract tests, plus a durable attempt-linked inbox with exact-session Codex/Pi queue delivery, payload-free idle wakes, persisted submission intent, signed proof-based reconciliation, and installed delivery coverage.
+- **ace-herdr v0.2.0**: Added the `ace-runtime` Herdr adapter with workspace/tab mapping, native agent prompt and wait semantics, all lifecycle observations, typed error mapping, and shared contract tests.
+- **ace-herdr v0.3.0**: Added a durable attempt-linked inbox with exact-session Codex/Pi queue delivery, payload-free idle wakes, persisted submission intent, signed proof-based reconciliation, and installed delivery coverage.
 - **ace-review v0.58.0**: Review model queries now honor the configured ace-llm fallback (role candidate chains + `llm.fallback`) instead of forcing single-leg execution, so a reviewer position survives a dead provider leg.
 
 - **ace-review v0.57.0**: Durable review campaigns retain verified findings and convergence across commits; current acceptance requires independent approval and passing checks backed by accepted execution receipts.

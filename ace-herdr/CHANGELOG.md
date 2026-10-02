@@ -7,12 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.2.0] - 2026-10-02
+## [0.3.0] - 2026-10-02
 
 ### Added
-- `Ace::Herdr::Organisms::RuntimeAdapter` and the lazy `ace/runtime/adapters/herdr` entrypoint implement the shared ace-runtime intent contract. It preserves native agent prompt and wait semantics, polls all four lifecycle observations, and maps Herdr failures to contract errors. Native tab and pane probes support context, focus, and retained pane preparation. The packaged shared adapter contract suite runs against a Herdr-shaped fake executor.
 - Durable `inbox enqueue`, `status`, and `deliver` commands for attempt-linked messages. Enqueue binds the live pane, terminal, agent, and native session; per-event locked claims and saved submission intent prevent duplicate dispatch after a crash. Codex and Pi use exact-session native queues, and idle agents receive a bounded, payload-free Herdr wake after accepted submission.
-- Inbox status reports claim generation, target binding, accepted submission receipt, and uncertainty. `reconcile` accepts an operator or supervisor native-outcome receipt file only when its trusted detached signature and event, attempt, generation, digest, and full bound identity match; missing or mismatched proof returns a machine-readable refusal and keeps the event uncertain. Signed observations also reconcile `delivered` events (consumption completes, supersession requeues with a verified replacement), undeliverable events are rejected at enqueue, and wake retries recover without resubmitting.
+- Inbox status reports claim generation, target binding, accepted submission receipt, and uncertainty. `reconcile` accepts an operator or supervisor native-outcome receipt file only when its trusted detached signature and event, attempt, generation, digest, and full bound identity match; missing or mismatched proof returns a machine-readable refusal and keeps the event uncertain.
 - Installed acceptance covers Codex delivery, signed uncertainty reconciliation, and idle Pi delivery; bounded wake tests cover subprocess stalls and structured errors.
 
 ### Fixed
@@ -28,6 +27,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Enqueue applies the target agent's native payload limit (Codex argv bound, Pi body bound) before persisting an event, validates recognized agent statuses before submission (undetermined statuses stay retryable pre-send), and shares one Pi event id validator between enqueue and delivery, so events that could never be delivered are rejected up front instead of queuing forever.
 - Idle-agent wakes are persisted as pending before they are attempted and retried by later deliver calls (re-verifying the live target; identity drift demotes the event to uncertain) without ever resubmitting the native payload, so a crash or transient wake failure can no longer leave an accepted message undelivered to an idle agent. Pi targets now enforce the `inb-`/`wnk-` event id constraint at enqueue instead of queuing an event that can never be delivered.
 - Native queue submission and the Pi identity probe enforce their deadline at the child boundary through a shared bounded-process molecule (process-group kill, bounded pipe draining, nonblocking partial stdin writes). A stalled or non-reading native client can no longer hold the per-event inbox lock past the configured timeout the way a cleanup-blocking `Timeout.timeout` around `Open3.capture3` allowed. Codex payloads are size-bounded before launch and a spawn-time `E2BIG` is classified as a proven pre-submission rejection, keeping the event retryable instead of stranding it uncertain.
+
+## [0.2.0] - 2026-10-02
+
+### Added
+- `Ace::Herdr::Organisms::RuntimeAdapter` and the lazy `ace/runtime/adapters/herdr` entrypoint implement the shared ace-runtime intent contract. It preserves native agent prompt and wait semantics, polls all four lifecycle observations, and maps Herdr failures to contract errors. Native tab and pane probes support context, focus, and retained pane preparation. The packaged shared adapter contract suite runs against a Herdr-shaped fake executor.
 
 ## [0.1.0] - 2026-09-27
 
