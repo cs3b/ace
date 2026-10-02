@@ -198,6 +198,23 @@ module Ace
           absent_comment: false, absent_label: nil)
           yield
         rescue ProviderUnknownOutcomeError
+          begin
+            @reconcile_resolved = reconcile_outcome(number, desired_body: desired_body, label: label, state: state,
+              absent_comment: absent_comment, absent_label: absent_label)
+          rescue ProviderUnknownOutcomeError
+            raise
+          rescue StandardError => e
+            # The mutation outcome is still unknown when reconciliation reads
+            # fail (a 401/404 on a read says nothing about the write); keep
+            # the uncertainty so replay reconciles instead of duplicating.
+            raise ProviderUnknownOutcomeError,
+              "Mutation outcome unresolved; reconciliation read failed: #{e.class}"
+          end
+          raise unless @reconcile_resolved
+        end
+
+        def reconcile_outcome(number, desired_body: nil, label: nil, state: nil,
+          absent_comment: false, absent_label: nil)
           resolved = RECONCILE_READ_ATTEMPTS.times.any? do |attempt|
             snapshot = fetch(number)
             outcome = if desired_body
@@ -218,7 +235,7 @@ module Ace
             sleep(RECONCILE_READ_INTERVAL_SECONDS * (attempt + 1)) if desired_body
             outcome
           end
-          raise unless resolved
+          resolved
         end
       end
     end
