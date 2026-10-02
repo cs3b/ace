@@ -83,10 +83,19 @@ module Ace
                 sync_started = true
                 result = sync_linked_issues_for(created_task, reason: "create")
               end
-              if result[:success] == false && result[:error].to_s.start_with?("Ace::Git::ProviderIdentityMismatchError")
-                # Ownership was confirmed to have changed: the task must not
-                # survive as a second local claimant for the issue.
+              if result[:success] == false && result[:error].to_s.start_with?("Ace::Git::ProviderIdentityMismatchError") &&
+                  !result[:committed_create]
+                # Ownership was rejected before any remote mutation: the task
+                # must not survive as a second local claimant for the issue.
                 FileUtils.rm_rf(created_task.path)
+                raise Ace::Git::ProviderIdentityMismatchError, result[:error].to_s
+              end
+              if result[:success] == false &&
+                  result[:error].to_s.start_with?("Ace::Git::ProviderIdentityMismatchError")
+                # The mismatch surfaced after the tracking comment committed
+                # (e.g. a concurrent external marker): the remote record
+                # exists, so the task and its pending identity stay as the
+                # cleanup record for replay.
                 raise Ace::Git::ProviderIdentityMismatchError, result[:error].to_s
               end
             rescue Ace::Git::ProviderUnreachableError
@@ -663,7 +672,8 @@ module Ace
             linked = show(ref)
             result = sync_linked_issues_for(linked, reason: "link")
             if result[:success] == false &&
-                result[:error].to_s.start_with?("Ace::Git::ProviderIdentityMismatchError")
+                result[:error].to_s.start_with?("Ace::Git::ProviderIdentityMismatchError") &&
+                !result[:committed_create]
               # Definitive pre-mutation rejection (sync validates ownership
               # before touching the forge): roll back the freshly written
               # mapping so no local claim survives for an issue this task
@@ -671,6 +681,13 @@ module Ace
               Ace::Support::Items::Molecules::FieldUpdater.update(
                 linked.file_path, set: {"remote_issue" => nil, "issue_sync_pending" => nil}
               )
+              raise Ace::Git::ProviderIdentityMismatchError, result[:error].to_s
+            end
+            if result[:success] == false &&
+                result[:error].to_s.start_with?("Ace::Git::ProviderIdentityMismatchError")
+              # Post-create rejection (e.g. a concurrent external marker):
+              # the committed marker needs a local cleanup record, so the
+              # link and pending flag are retained for replay.
               raise Ace::Git::ProviderIdentityMismatchError, result[:error].to_s
             end
             raise Ace::Git::ProviderUnreachableError, result[:error] unless result[:success]
@@ -1065,7 +1082,7 @@ module Ace
           @last_update_note = "Issue sync warning for task #{task&.id}: #{e.class}: #{e.message}; " \
             "flagged for 'ace-task issue-sync --pending'"
           sync_result_for(task: task, issues: [identity].compact, success: false,
-            reason: reason, error: "#{e.class}: #{e.message}")
+            reason: reason, error: "#{e.class}: #{e.message}", committed_create: reached_post)
         end
 
         def mark_issue_sync_pending(task)
@@ -1131,13 +1148,18 @@ module Ace
             reason: reason, error: "#{e.class}: #{e.message}")
         end
 
-        def sync_result_for(task:, issues:, success:, reason:, error: nil)
+        def sync_result_for(task:, issues:, success:, reason:, error: nil, committed_create: false)
           {
             task_id: task&.id,
             issue_ids: issues,
             success: success,
             reason: reason,
-            error: error
+            error: error,
+            # True when the error surfaced after the create guard was armed:
+            # the tracking comment POST may have committed, so callers must
+            # retain the local identity as the cleanup record instead of
+            # rolling it back.
+            committed_create: committed_create
           }
         end
 

@@ -1033,6 +1033,54 @@ class TaskManagerTest < AceTaskTestCase
     end
   end
 
+  def test_post_create_identity_mismatch_retains_task_and_pending_flag
+    # A mismatch that surfaces after the create guard was armed (e.g. a
+    # concurrent external marker during post-POST verification) means the
+    # tracking comment may have committed: the task and its pending identity
+    # are the cleanup record and must survive.
+    adapter = Object.new
+    adapter.define_singleton_method(:validate_link!) { |**_args| true }
+    adapter.define_singleton_method(:sync_task) do |task:, before_create: nil, **_|
+      before_create&.call
+      raise Ace::Git::ProviderIdentityMismatchError, "Multiple ACE tracking comments on issue #276"
+    end
+    adapter.define_singleton_method(:clear_task) { |**_args| true }
+    adapter.define_singleton_method(:reconcile_comment) { |task:, **_| }
+    @manager.stub(:issue_adapter, adapter) do
+      error = assert_raises(Ace::Git::ProviderIdentityMismatchError) do
+        @manager.create("Committed marker", remote_issue: issue_identity)
+      end
+      assert_match(/Multiple ACE tracking comments/, error.message)
+      specs = Dir.glob(File.join(@manager.root_dir, "**", "*.s.md"))
+      assert_equal 1, specs.length
+      frontmatter = YAML.safe_load_file(specs.first, permitted_classes: [Time, Date])
+      assert frontmatter["remote_issue"]
+      assert frontmatter["issue_sync_pending"]
+    end
+  end
+
+  def test_post_create_identity_mismatch_retains_fresh_link_mapping
+    adapter = Object.new
+    adapter.define_singleton_method(:validate_link!) { |**_args| true }
+    adapter.define_singleton_method(:sync_task) do |task:, before_create: nil, **_|
+      before_create&.call
+      raise Ace::Git::ProviderIdentityMismatchError, "Multiple ACE tracking comments on issue #276"
+    end
+    adapter.define_singleton_method(:clear_task) { |**_args| true }
+    adapter.define_singleton_method(:reconcile_comment) { |task:, **_| }
+    @manager.stub(:issue_adapter, adapter) do
+      task = @manager.create("Plain task")
+      Ace::Task::Molecules::IssueLink.stub(:from_input, issue_identity) do
+        assert_raises(Ace::Git::ProviderIdentityMismatchError) do
+          @manager.issue_link(task.id, issue: "276", server_name: "lab")
+        end
+      end
+      linked = @manager.show(task.id)
+      assert linked.metadata["remote_issue"]
+      assert linked.metadata["issue_sync_pending"]
+    end
+  end
+
   def test_ref_sync_fails_for_pending_task_without_identity
     adapter = fake_issue_adapter { |task:, **_| raise Ace::Git::ProviderUnknownOutcomeError, "unknown" }
     @manager.stub(:issue_adapter, adapter) do
