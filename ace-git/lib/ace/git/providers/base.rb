@@ -111,11 +111,29 @@ module Ace
           raise NotImplementedError, "Providers must implement #{self.class}#pull_request_review_evidence"
         end
 
+        # The exact base SHA and complete file inventory used to prove that a
+        # review diff has not been silently truncated.
+        def pull_request_review_details(number:)
+          raise NotImplementedError, "Providers must implement #{self.class}#pull_request_review_details"
+        end
+
+        def pull_request_checks(number:, head_sha:)
+          raise NotImplementedError, "Providers must implement #{self.class}#pull_request_checks"
+        end
+
+        def repository_file(path:, ref:)
+          raise NotImplementedError, "Providers must implement #{self.class}#repository_file"
+        end
+
         # Create a top-level PR comment. `correlation` is a stable session key
         # embedded in the body so a retry can find exactly one prior send.
         # A possible post-send transport failure raises ProviderUnknownOutcomeError.
         def create_pull_request_comment(number:, expected_head:, body:, correlation:)
           raise NotImplementedError, "Providers must implement #{self.class}#create_pull_request_comment"
+        end
+
+        def update_pull_request_comment(number:, expected_head:, comment_id:, body:)
+          raise NotImplementedError, "Providers must implement #{self.class}#update_pull_request_comment"
         end
 
         # Thread resolution is a separate capability. Unsupported providers

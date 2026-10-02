@@ -45,6 +45,82 @@ module Ace
           provider_for(server).pull_request(number: reference.number)
         end
 
+        # Collect one complete review packet under an exact head/base guard.
+        # Provider failure is propagated; empty diff/comments remain valid
+        # evidence only after the full inventory and second read agree.
+        def review_snapshot(identifier, include_comments: true)
+          reference = parse_identifier(identifier)
+          server = resolve_server_for(reference)
+          provider = provider_for(server)
+          before = provider.pull_request(number: reference.number)
+          head = required_head!(before)
+          details = provider.pull_request_review_details(number: reference.number)
+          diff = provider.pull_request_diff(number: reference.number)
+          unless diff.is_a?(String)
+            raise ProviderMalformedOutputError, "PR diff is not text"
+          end
+          comments = if include_comments
+            provider.pull_request_review_evidence(number: reference.number, expected_head: head)
+          else
+            ProviderReviewEvidence.new(
+              server_name: server.name, repository_url: server.url,
+              pr_number: before.number, head_sha: head, comments: [], reviews: []
+            )
+          end
+          checks = provider.pull_request_checks(number: reference.number, head_sha: head)
+          after = provider.pull_request(number: reference.number)
+          latest_details = provider.pull_request_review_details(number: reference.number)
+          if after.head_sha != head || latest_details.base_sha != details.base_sha ||
+              after.head_ref != before.head_ref || after.base_ref != before.base_ref ||
+              after.head_repository_url != before.head_repository_url ||
+              after.base_repository_url != before.base_repository_url
+            raise ProviderExpectedHeadConflictError,
+              "PR head/base changed while collecting review evidence; retry on the current head"
+          end
+          unless details.files.is_a?(Array) && checks.is_a?(Array) &&
+              comments.head_sha == head && comments.pr_number == before.number
+            raise ProviderMalformedOutputError, "PR review evidence is incomplete or mismatched"
+          end
+          ProviderReviewSnapshot.new(
+            provider: server.provider, pull_request: after,
+            base_sha: details.base_sha, files: details.files,
+            diff: diff, review_evidence: comments, checks: checks
+          )
+        end
+
+        def post_review_comment(identifier, expected_head:, body:, correlation:)
+          reference = parse_identifier(identifier)
+          provider = provider_for(resolve_server_for(reference))
+          provider.create_pull_request_comment(
+            number: reference.number, expected_head: expected_head,
+            body: body, correlation: correlation
+          )
+        end
+
+        def update_review_comment(identifier, expected_head:, comment_id:, body:)
+          reference = parse_identifier(identifier)
+          provider = provider_for(resolve_server_for(reference))
+          provider.update_pull_request_comment(
+            number: reference.number, expected_head: expected_head,
+            comment_id: comment_id, body: body
+          )
+        end
+
+        def resolve_review_thread(identifier, expected_head:, thread_id:)
+          reference = parse_identifier(identifier)
+          provider = provider_for(resolve_server_for(reference))
+          provider.resolve_pull_request_thread(
+            number: reference.number, expected_head: expected_head,
+            thread_id: thread_id
+          )
+        end
+
+        def file_at_ref(identifier, path:, ref:)
+          reference = parse_identifier(identifier)
+          provider = provider_for(resolve_server_for(reference))
+          provider.repository_file(path: path, ref: ref)
+        end
+
         # Create (or reconcile to) a pull request for an exact base/head
         # identity. There is no identifier: the selected server's repository
         # is the base, `head_repository_url` names the source (defaults to
@@ -107,6 +183,13 @@ module Ace
         end
 
         private
+
+        def required_head!(pull_request)
+          head = pull_request.head_sha
+          return head if head.to_s.match?(/\A[0-9a-f]{40}\z/)
+
+          raise ProviderMalformedOutputError, "PR evidence is missing an exact head SHA"
+        end
 
         def parse_identifier(identifier)
           reference = Atoms::PrReference.parse(identifier)

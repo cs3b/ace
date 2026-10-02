@@ -37,6 +37,12 @@ module Ace
       :server_name, :repository_url, :pr_number, :head_sha, :comments, :reviews
     )
 
+    ProviderReviewDetails = Data.define(:server_name, :repository_url, :pr_number, :base_sha, :files)
+
+    ProviderReviewSnapshot = Data.define(
+      :provider, :pull_request, :base_sha, :files, :diff, :review_evidence, :checks
+    )
+
     ProviderReviewMutation = Data.define(
       :server_name, :repository_url, :pr_number, :head_sha, :comment,
       :idempotency
