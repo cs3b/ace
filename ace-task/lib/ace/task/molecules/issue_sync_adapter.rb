@@ -64,9 +64,16 @@ module Ace
         end
 
         # A repository-relative path is not a resolvable link target inside a
-        # forge comment; build a web blob URL from the linked repository.
+        # forge comment; build a web URL from the linked repository using the
+        # provider's file-browse route (GitHub: /blob/, Forgejo: /src/branch/).
         def task_link(identity, task)
-          "#{identity.fetch("repository_url").sub(%r{/+\z}, "").sub(%r{\.git\z}i, "")}/blob/HEAD/#{safe_task_path(task)}"
+          base = identity.fetch("repository_url").sub(%r{/+\z}, "").sub(%r{\.git\z}i, "")
+          path = safe_task_path(task)
+          if identity.fetch("provider") == "github"
+            "#{base}/blob/HEAD/#{path}"
+          else
+            "#{base}/src/branch/HEAD/#{path}"
+          end
         end
       end
     end

@@ -29,7 +29,7 @@ class IssueSyncAdapterTest < AceTaskTestCase
       end
 
       assert_equal({number: 42, task_id: task.id, previous_task_id: nil,
-                    task_link: "https://forge.example/owner/repo/blob/HEAD/tasks/8pp.t.q7w/task.s.md",
+                    task_link: "https://forge.example/owner/repo/src/branch/HEAD/tasks/8pp.t.q7w/task.s.md",
                     task_status: "pending"}, captured)
     end
   end
@@ -56,7 +56,7 @@ class IssueSyncAdapterTest < AceTaskTestCase
         Ace::Git::Organisms::IssueTracking.stub(:new, tracking) { adapter.sync_task(task: task) }
       end
 
-      assert_equal "https://forge.example/owner/repo/blob/HEAD/tasks/8pp.t.q7w/task.s.md", captured[:task_link]
+      assert_equal "https://forge.example/owner/repo/src/branch/HEAD/tasks/8pp.t.q7w/task.s.md", captured[:task_link]
     end
   end
 
@@ -84,7 +84,7 @@ class IssueSyncAdapterTest < AceTaskTestCase
         end
       end
 
-      assert_equal "https://forge.example/owner/repo/blob/HEAD/tasks/8pp.t.q7w/task.s.md", captured[:task_link]
+      assert_equal "https://forge.example/owner/repo/src/branch/HEAD/tasks/8pp.t.q7w/task.s.md", captured[:task_link]
     end
   end
 
