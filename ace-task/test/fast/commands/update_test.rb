@@ -278,7 +278,7 @@ class UpdateCommandTest < AceTaskTestCase
 
     sync_calls = []
     fake_sync = Object.new
-    fake_sync.define_singleton_method(:sync_task) { |task:, previous_task_id: nil| sync_calls << task }
+    fake_sync.define_singleton_method(:sync_task) { |task:, previous_task_id: nil, **_| sync_calls << task }
     manager = Ace::Task::Organisms::TaskManager.new
     manager.stub(:issue_adapter, fake_sync) do
       Ace::Task::Organisms::TaskManager.stub(:new, manager) do

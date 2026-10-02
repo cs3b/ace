@@ -435,7 +435,7 @@ class TaskManagerTest < AceTaskTestCase
 
   def test_reparent_passes_previous_id_for_ownership_transfer
     captured = []
-    adapter = fake_issue_adapter { |task:, previous_task_id: nil| captured << [task.id, previous_task_id] }
+    adapter = fake_issue_adapter { |task:, previous_task_id: nil, **_| captured << [task.id, previous_task_id] }
     @manager.stub(:issue_adapter, adapter) do
       parent = @manager.create("Parent")
       task = @manager.create("Linked task", remote_issue: issue_identity)
@@ -460,7 +460,7 @@ class TaskManagerTest < AceTaskTestCase
   def test_pending_replay_uses_persisted_previous_id
     captured = []
     offline = true
-    adapter = fake_issue_adapter do |task:, previous_task_id: nil|
+    adapter = fake_issue_adapter do |task:, previous_task_id: nil, **_|
       raise Ace::Git::ProviderUnreachableError, "offline" if offline
 
       captured << [task.id, previous_task_id]
@@ -481,7 +481,7 @@ class TaskManagerTest < AceTaskTestCase
   def test_chained_reparents_preserve_original_previous_id
     captured = []
     offline = true
-    adapter = fake_issue_adapter do |task:, previous_task_id: nil|
+    adapter = fake_issue_adapter do |task:, previous_task_id: nil, **_|
       raise Ace::Git::ProviderUnreachableError, "offline" if offline
 
       captured << [task.id, previous_task_id]
@@ -561,11 +561,45 @@ class TaskManagerTest < AceTaskTestCase
     end
   end
 
+  def test_failed_validation_retains_reconcile_create_guard
+    adapter = fake_issue_adapter { |task:, **_| }
+    @manager.stub(:issue_adapter, adapter) do
+      task = @manager.create("Linked task", remote_issue: issue_identity)
+      Ace::Support::Items::Molecules::FieldUpdater.update(
+        task.file_path, set: {"issue_sync_operation" => "reconcile-create"}
+      )
+      assert_raises(Ace::Git::ProviderIdentityMismatchError) do
+        Ace::Task::Molecules::IssueLink.stub(:from_input, issue_identity(999)) do
+          @manager.issue_link(task.id, issue: "999", server_name: "lab")
+        end
+      end
+      assert_equal "reconcile-create", @manager.show(task.id).metadata["issue_sync_operation"]
+    end
+  end
+
+  def test_reparent_records_descendant_previous_ids
+    offline_adapter = fake_issue_adapter { |task:, **_| raise Ace::Git::ProviderUnreachableError, "offline" }
+    @manager.stub(:issue_adapter, offline_adapter) do
+      target = @manager.create("Target")
+      parent = @manager.create("Parent")
+      child = @manager.create_subtask(parent.id, "Linked child", remote_issue: issue_identity(9))
+      @manager.update(parent.id, move_as_child_of: target.id)
+      # The descendant's local ID changed with the parent; the persisted
+      # previous ID preserves ownership of the remote marker.
+      spec = Dir.glob(File.join(@manager.root_dir, "**", "*.s.md"))
+        .find { |file| File.read(file).include?("issue_sync_previous_id") }
+      assert spec, "expected a descendant carrying issue_sync_previous_id"
+      content = File.read(spec)
+      assert_match(/issue_sync_previous_id: #{Regexp.escape(child.id)}/, content)
+      assert_match(/issue_sync_pending: true/, content)
+    end
+  end
+
   def test_clear_rejects_unresolved_create_and_retry_recovers
     create_attempts = 0
     adapter = Object.new
     adapter.define_singleton_method(:validate_link!) { |**_args| true }
-    adapter.define_singleton_method(:sync_task) do |task:, previous_task_id: nil|
+    adapter.define_singleton_method(:sync_task) do |task:, previous_task_id: nil, **_|
       reconcile = task.metadata["issue_sync_operation"] == "reconcile-create"
       if reconcile
         # The marker never committed: reconciliation stays unresolved.
@@ -607,7 +641,7 @@ class TaskManagerTest < AceTaskTestCase
 
   def test_orchestrator_conversion_syncs_linked_child_with_previous_id
     captured = []
-    adapter = fake_issue_adapter do |task:, previous_task_id: nil|
+    adapter = fake_issue_adapter do |task:, previous_task_id: nil, **_|
       captured << [task.id, previous_task_id]
     end
     @manager.stub(:issue_adapter, adapter) do
