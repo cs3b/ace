@@ -194,8 +194,10 @@ module Ace
         end
 
         def label_exists?(owner_repo, hostname, label)
+          # gh api rejects --slurp combined with --jq; per-page jq output is
+          # one name per line, which the line parse below handles.
           result = CliExecutor.execute("api", ["repos/#{owner_repo}/labels?per_page=100", "--hostname", hostname,
-            "--paginate", "--slurp", "--jq", ".[].name"], timeout: timeout, runner: runner)
+            "--paginate", "--jq", ".[].name"], timeout: timeout, runner: runner)
           return false unless result[:success]
 
           result[:stdout].to_s.lines.map(&:strip).include?(label)
