@@ -2537,6 +2537,52 @@ class ReviewManagerTest < AceReviewTest
     refute File.file?(File.join(session_dir, "user.prompt.md"))
   end
 
+  def test_post_identity_stable_across_timestamped_reruns
+    Dir.mktmpdir do |dir|
+      manager = Ace::Review::Organisms::ReviewManager.new(project_root: dir)
+      body = "## Review\n\nLGTM with notes\n"
+      header = ->(ts) { "---\ntimestamp: #{ts}\npreset: code-valid\nmodel: role:review-codex\n---\n\n" }
+      file_a = File.join(dir, "review-a.md")
+      File.write(file_a, header.call("2026-10-02T10:00:00Z") + body)
+      file_b = File.join(dir, "review-b.md")
+      File.write(file_b, header.call("2026-10-02T11:30:00Z") + body)
+
+      metadata = {
+        "headRefOid" => "a" * 40, "number" => 7,
+        "server_name" => "github-cs3b", "repository_url" => "https://github.com/cs3b/ace"
+      }
+      options = Ace::Review::Models::ReviewOptions.new(pr: 7, provider_timeout: 30)
+      options.pr_metadata = metadata
+      review_data = {preset: "code-valid", model: "role:review-codex"}
+
+      comment = Struct.new(:server_name, :repository_url, :pr_number, :url).new(
+        "github-cs3b", "https://github.com/cs3b/ace", 7, "https://github.com/cs3b/ace/comment/91")
+      receipt = Struct.new(:comment, :head_sha, :idempotency).new(comment, "a" * 40, :created)
+      posts = []
+      provider = Object.new
+      provider.define_singleton_method(:resolved_server_url) { |_pr| "https://github.com/cs3b/ace" }
+      provider.define_singleton_method(:post_comment) do |_pr, expected_head:, content:, session_key:|
+        posts << {session_key: session_key, content: content, expected_head: expected_head}
+        receipt
+      end
+
+      results = []
+      Ace::Review::Molecules::PrProvider.stub(:new, provider) do
+        results << manager.send(:post_pr_comment, options, file_a, review_data)
+        results << manager.send(:post_pr_comment, options, file_b, review_data)
+      end
+
+      assert results[0][:success], results[0][:error].to_s
+      assert results[1][:success], results[1][:error].to_s
+      # An uncertain-post retry of identical review text must reconcile the
+      # existing comment: same correlation marker and body despite the fresh
+      # per-run metadata timestamp.
+      assert_equal 2, posts.length
+      assert_equal posts[0][:session_key], posts[1][:session_key]
+      assert_equal posts[0][:content], posts[1][:content]
+    end
+  end
+
   def test_delta_without_pr_is_refused
     options = Ace::Review::Models::ReviewOptions.new(delta: :auto, preset: "pr")
 

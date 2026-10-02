@@ -1429,7 +1429,12 @@ module Ace
           # keyed by everything reuse depends on: PR identity, head, and
           # the review artifact digest. Identical review text for another
           # PR therefore never collides.
-          review_digest = Digest::SHA256.file(review_file).hexdigest
+          # The identity digest covers only stable review content: the
+          # metadata header carries a fresh timestamp on every run, so hashing
+          # the whole file would mint a new identity for identical review
+          # text and let an uncertain-post retry post a duplicate.
+          stable_content = review_content.sub(/\A---\n.*?\n---\n\n/m, "")
+          review_digest = Digest::SHA256.hexdigest(stable_content)
           # The numeric PR (not the raw reference spelling) keys the
           # persisted identity, matching the provider-side marker basis.
           identity_pr = (options.pr_metadata&.fetch("number", nil) || options.pr).to_s
