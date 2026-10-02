@@ -101,6 +101,25 @@ class ForgejoIssueApiTest < AceGitForgejoTestCase
     assert_raises(Ace::Git::ProviderMalformedOutputError) { provider.issue_tracking(number: 42) }
   end
 
+  def test_provider_tracking_accepts_web_evidence_for_ssh_server
+    runner = lambda do |args:, **_options|
+      stdout = if args[2].include?("/issues/42/comments?")
+        "[]"
+      elsif args[2].include?("/issues/42?")
+        {"number" => 42, "title" => "Issue", "state" => "open",
+         "html_url" => "https://forge.example.com/owner/repo/issues/42"}.to_json
+      else
+        "[]"
+      end
+      {success: true, status: 200, stdout: stdout}
+    end
+    server = Ace::Git::ResolvedServer.new(name: "lab", provider: :forgejo,
+      url: "ssh://git@forge.example.com/owner/repo.git")
+    provider = Ace::Git::Forgejo::Provider.new(server: server, runner: runner)
+    snapshot = provider.issue_tracking(number: 42)
+    assert_equal 42, snapshot[:issue].number
+  end
+
   def test_provider_tracking_rejects_wrong_repository_evidence
     runner = lambda do |args:, **_options|
       stdout = if args[2].include?("/issues/42?")
