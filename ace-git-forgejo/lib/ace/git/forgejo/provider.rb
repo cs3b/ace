@@ -261,7 +261,7 @@ module Ace
           end
           begin
           matches = matching_review_comments(number, marker, expected_head)
-          rescue Ace::Git::ProviderMalformedOutputError, Ace::Git::ProviderUnreachableError => e
+          rescue Ace::Git::ProviderMalformedOutputError, Ace::Git::ProviderAuthenticationError, Ace::Git::ProviderObjectNotFoundError, Ace::Git::ProviderUnreachableError => e
             raise Ace::Git::ProviderUnknownOutcomeError,
               "PR comment sent but reconciliation read failed for session #{correlation}: #{e.message}; reconcile before repeating"
           end
@@ -314,7 +314,7 @@ module Ace
             # Fetch individually and validate the Forgejo issue identity.
             begin
               updated = review_http.request(:get, update_route)
-            rescue Ace::Git::ProviderMalformedOutputError, Ace::Git::ProviderUnreachableError => e
+            rescue Ace::Git::ProviderMalformedOutputError, Ace::Git::ProviderAuthenticationError, Ace::Git::ProviderObjectNotFoundError, Ace::Git::ProviderUnreachableError => e
               raise Ace::Git::ProviderUnknownOutcomeError,
                 "Comment update sent but verification read failed for comment #{comment_id}: #{e.message}; reconcile before repeating"
             end
@@ -446,7 +446,7 @@ module Ace
   def verify_post_mutation_head!(number, expected_head, correlation)
     current = begin
       pull_request(number: number)
-    rescue Ace::Git::ProviderMalformedOutputError, Ace::Git::ProviderUnreachableError => e
+    rescue Ace::Git::ProviderMalformedOutputError, Ace::Git::ProviderAuthenticationError, Ace::Git::ProviderObjectNotFoundError, Ace::Git::ProviderUnreachableError => e
       raise Ace::Git::ProviderUnknownOutcomeError,
         "Head verification read failed after mutation for #{server.name}: #{e.message}; reconcile before repeating"
     end
@@ -512,6 +512,9 @@ module Ace
         end
 
         def review_entry(entry, number, head)
+          unless entry.is_a?(Hash)
+            raise Ace::Git::ProviderMalformedOutputError, "Malformed Forgejo PR review evidence"
+          end
           reviewer = entry.dig("user", "login") || entry.dig("team", "name")
           unless entry.is_a?(Hash) && entry["id"].is_a?(Integer) && entry["id"].positive? && reviewer.is_a?(String) &&
               entry["state"].is_a?(String) && !entry["state"].empty?

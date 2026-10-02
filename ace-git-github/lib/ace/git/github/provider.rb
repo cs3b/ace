@@ -443,7 +443,7 @@ end
           end
           begin
             matches = matching_review_comments(pr, marker, expected_head)
-          rescue Ace::Git::ProviderMalformedOutputError, Ace::Git::ProviderUnreachableError => e
+          rescue Ace::Git::ProviderMalformedOutputError, Ace::Git::ProviderAuthenticationError, Ace::Git::ProviderObjectNotFoundError, Ace::Git::ProviderUnreachableError => e
             raise Ace::Git::ProviderUnknownOutcomeError,
               "PR comment sent but reconciliation read failed for session #{correlation}: #{e.message}; reconcile before repeating"
           end
@@ -494,7 +494,7 @@ end
             # valid GET item endpoints) and validate its PR identity.
             begin
               updated = gh_api(update_route)
-            rescue Ace::Git::ProviderMalformedOutputError, Ace::Git::ProviderUnreachableError => e
+            rescue Ace::Git::ProviderMalformedOutputError, Ace::Git::ProviderAuthenticationError, Ace::Git::ProviderObjectNotFoundError, Ace::Git::ProviderUnreachableError => e
               raise Ace::Git::ProviderUnknownOutcomeError,
                 "Comment update sent but verification read failed for comment #{comment_id}: #{e.message}; reconcile before repeating"
             end
@@ -699,7 +699,7 @@ end
         def verify_post_mutation_head!(pr, expected_head, correlation)
           current = begin
             pull_request(number: pr.number)
-          rescue Ace::Git::ProviderMalformedOutputError, Ace::Git::ProviderUnreachableError => e
+          rescue Ace::Git::ProviderMalformedOutputError, Ace::Git::ProviderAuthenticationError, Ace::Git::ProviderObjectNotFoundError, Ace::Git::ProviderUnreachableError => e
             raise Ace::Git::ProviderUnknownOutcomeError,
               "Head verification read failed after mutation for #{server.name}: #{e.message}; reconcile before repeating"
           end
