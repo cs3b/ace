@@ -870,6 +870,38 @@ class TaskManagerTest < AceTaskTestCase
       "relocation must run while the linked issue's identity lock is held"
   end
 
+  def test_unlinked_parent_move_holds_linked_descendant_locks
+    identity = issue_identity(277)
+    key = identity.values_at("server_name", "provider", "repository_url", "number")
+      .map { |value| value.to_s.gsub(%r{[^\w.-]}, "_") }.join("--")
+    lock_path = File.join(Dir.tmpdir, "ace-task-issue-#{key}.lock")
+    lock_probe = File.join(Dir.tmpdir, "qk12-desc-lock-probe")
+    File.delete(lock_probe) if File.exist?(lock_probe)
+
+    Ace::Support::Items::Molecules::FolderMover.prepend(Module.new do
+      define_method(:move) do |*args, **kwargs|
+        contender = Thread.new do
+          fd = File.open(lock_path, File::CREAT | File::RDWR)
+          acquired = fd.flock(File::LOCK_EX | File::LOCK_NB) != false
+          fd.flock(File::LOCK_UN) if acquired
+          fd.close
+          acquired
+        end
+        File.write(lock_probe, contender.value ? "free" : "held")
+        super(*args, **kwargs)
+      end
+    end)
+
+    adapter = fake_issue_adapter { |**_args| {success: true} }
+    @manager.stub(:issue_adapter, adapter) do
+      parent = @manager.create("Unlinked parent")
+      @manager.create_subtask(parent.id, "Linked subtask", remote_issue: identity)
+      @manager.update(parent.id, move_to: "maybe")
+    end
+    assert_equal "held", File.read(lock_probe),
+      "descendant locks must span a relocation even when the parent is unlinked"
+  end
+
   def test_bulk_sync_fails_for_pending_tasks_without_identity
     adapter = fake_issue_adapter { |task:, **_| raise Ace::Git::ProviderUnknownOutcomeError, "unknown" }
     @manager.stub(:issue_adapter, adapter) do

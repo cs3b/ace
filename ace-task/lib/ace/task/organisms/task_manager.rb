@@ -194,13 +194,13 @@ module Ace
           current_special = task.special_folder
           current_id = task.id
           linked = linked_issue(task)
-          if linked && sync_planned
-            # The pending flag, the relocation, and the post-relocation syncs
-            # run under one hold of every linked participant's issue lock: a
-            # replay slipping in between would sync the pre-move path, clear
-            # the pending flag, and leave the remote marker stale with no
-            # replay pending after a post-move stop.
-            with_identity_locks(participant_identities(task)) do
+          # Every linked participant of this relocation — the task itself and
+          # each linked descendant, including descendants under an unlinked
+          # parent — holds its identity lock across the pending writes, the
+          # move, and the post-move syncs, so no replay can clear a pending
+          # flag against the pre-move path mid-relocation.
+          with_identity_locks(participant_identities(task)) do
+            if linked && sync_planned
               with_issue_identity_lock("task" => task.id) do
                 fresh = show(task.id) || task
                 linked_fresh = linked_issue(fresh)
@@ -214,22 +214,15 @@ module Ace
                     fresh.file_path, set: deferred_set, add: add, remove: remove
                   )
                 end
-                early, current_path, current_special, current_id = apply_relocation_phase(
-                  task, loader, current_path: task.path, current_special: task.special_folder,
-                  current_id: task.id, move_to: move_to, move_as_child_of: move_as_child_of
-                )
-                return early if early
               end
-            end
-          else
-            if has_field_updates
+            elsif has_field_updates
               Ace::Support::Items::Molecules::FieldUpdater.update(
                 task.file_path, set: set, add: add, remove: remove
               )
             end
             early, current_path, current_special, current_id = apply_relocation_phase(
-              task, loader, current_path: task.path, current_special: task.special_folder,
-              current_id: task.id, move_to: move_to, move_as_child_of: move_as_child_of
+              task, loader, current_path: current_path, current_special: current_special,
+              current_id: current_id, move_to: move_to, move_as_child_of: move_as_child_of
             )
             return early if early
           end
