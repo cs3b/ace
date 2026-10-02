@@ -117,9 +117,13 @@ module Ace
         # @return [Array<Hash>] {name:, state:, sha:}
         def self.parse_actions_tasks(text)
           tasks = []
+          declared_count = nil
           text.to_s.lines.map { |line| clean(line) }.reject(&:empty?).each do |line|
             # `fj` emits a leading "<n> tasks" count header before task lines.
-            next if line.match?(/\A\d+ tasks?\z/i)
+            if (header = line.match(/\A(\d+) tasks?\z/i))
+              declared_count = header[1].to_i
+              next
+            end
 
             match = line.match(
               /\A#(?<task>\d+)\s+\((?<sha>[0-9a-f]+)\)\s+(?<state>\w+)\s+(?<name>.+?)\s+[\dhms.]+\s+\((?:push|pull_request|schedule)\)/
@@ -134,6 +138,13 @@ module Ace
               state: match[:state].downcase.to_sym,
               sha: match[:sha]
             }
+          end
+          # A declared count that disagrees with the parsed rows means
+          # truncated output; fail closed instead of accepting partial
+          # check evidence.
+          if declared_count && declared_count != tasks.length
+            raise Ace::Git::ProviderMalformedOutputError,
+              "Incomplete `fj actions tasks` output: declared #{declared_count}, parsed #{tasks.length}"
           end
           tasks
         end
