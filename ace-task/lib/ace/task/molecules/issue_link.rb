@@ -48,7 +48,7 @@ module Ace
             "provider" => selected.provider.to_s,
             "repository_url" => selected.url,
             "number" => number,
-            "url" => "#{selected.url.sub(%r{/+\z}, "")}/issues/#{number}"
+            "url" => "#{selected.url.sub(%r{/+\z}, "").sub(%r{\.git\z}i, "")}/issues/#{number}"
           }
         end
 
