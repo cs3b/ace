@@ -687,6 +687,26 @@ class TaskManagerTest < AceTaskTestCase
     end
   end
 
+  def test_unknown_create_with_unreachable_reconcile_retains_guard_in_call
+    calls = 0
+    adapter = Object.new
+    adapter.define_singleton_method(:validate_link!) { |**_args| true }
+    adapter.define_singleton_method(:sync_task) do |task:, before_create: nil, **_|
+      calls += 1
+      before_create&.call
+      # The reconciliation read inside the creating call fails unreachable.
+      raise Ace::Git::ProviderUnreachableError, "reconciliation read failed"
+    end
+    adapter.define_singleton_method(:clear_task) { |**_args| true }
+    @manager.stub(:issue_adapter, adapter) do
+      task = @manager.create("Linked task", remote_issue: issue_identity)
+      @manager.issue_sync(pending: true) rescue nil
+      # Create attempt + one reconcile-only replay; no third (create) call.
+      assert_equal 2, calls
+      assert_equal "reconcile-create", @manager.show(task.id).metadata["issue_sync_operation"]
+    end
+  end
+
   def test_unknown_create_then_unreachable_reconcile_retains_guard
     state = :unknown_create
     adapter = Object.new
