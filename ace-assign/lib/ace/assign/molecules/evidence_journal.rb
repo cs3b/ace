@@ -158,42 +158,68 @@ module Ace
             event_type: "service_claim")
         end
 
-        # Validated marks a settlement already checked by the coordinator;
-        # terminal writes without it (and without a bound receipt) are
-        # refused so direct journal callers cannot bypass evidence.
-        def transition_service_request(request_id, state:, receipt: nil, validated: false)
-          unless %w[succeeded failed uncertain rejected failed-settled].include?(state)
-            raise ArgumentError, "invalid service request state"
-          end
-          if %w[succeeded failed failed-settled].include?(state) && !validated
-            raise AttemptErrors::ReceiptRejected,
-              "Service request #{request_id} terminal transitions require coordinator validation"
-          end
-          if state == "failed-settled"
-            evidence = receipt.is_a?(Hash) ? receipt["evidence"] : nil
-            unless evidence.is_a?(Array) && !evidence.empty? && evidence.all? do |item|
-              item.is_a?(Hash) && item["ref"].is_a?(String) && item["sha256"].is_a?(String) &&
-                item["sha256"].match?(/\A[0-9a-f]{64}\z/)
-            end
-              raise AttemptErrors::ReceiptRejected,
-                "Service request #{request_id} settlement requires the validated no-effect receipt"
-            end
-          end
-          current = service_request(request_id)
-          raise AttemptErrors::NotFound, "Service request #{request_id} not found" unless current
-          # failed-settled is the one evidence-validated exit from a terminal
-          # failed effect; every other terminal state is immutable.
-          if %w[succeeded rejected].include?(current["state"]) ||
-              (current["state"] == "failed" && state != "failed-settled") ||
-              (current["state"] != "failed" && state == "failed-settled")
-            raise AttemptErrors::InvalidState, "Service request #{request_id} is terminal"
-          end
-          stamped = current.merge("state" => state, "receipt" => receipt)
-          stamped["failed_at"] = Time.now.utc.iso8601(9) if state == "failed"
-          update_service_request(request_id, expected: current,
-            replacement: stamped,
-            event_type: "service_transition")
-        end
+# Terminal writes are validated HERE at the journal boundary —
+# receipt schema, binding against the current record, and attested
+# outcome — so no caller-supplied flag decides trust. The
+# coordinator additionally performs content-level attestation and
+# file verification.
+def transition_service_request(request_id, state:, receipt: nil, validated: false)
+  unless %w[succeeded failed uncertain rejected failed-settled].include?(state)
+    raise ArgumentError, "invalid service request state"
+  end
+  current = service_request(request_id)
+  raise AttemptErrors::NotFound, "Service request #{request_id} not found" unless current
+  # Terminal states are immutable; failed-settled is reached only
+  # from failed or uncertain with a validated no-effect receipt.
+  if %w[succeeded rejected failed-settled].include?(current["state"]) ||
+      (current["state"] == "failed" && state != "failed-settled")
+    raise AttemptErrors::InvalidState, "Service request #{request_id} is terminal"
+  end
+  validate_terminal_receipt!(current, state, receipt) if terminal_state?(state)
+  stamped = current.merge("state" => state, "receipt" => receipt)
+  stamped["failed_at"] = Time.now.utc.iso8601(9) if state == "failed"
+  update_service_request(request_id, expected: current,
+    replacement: stamped,
+    event_type: "service_transition")
+end
+
+TERMINAL_RECEIPT_FIELDS = %w[assignment_id attempt_id candidate_head evidence executor_uid
+  input_digest operation outcome project_id request_id target transport].freeze
+TERMINAL_BINDING_FIELDS = %w[request_id assignment_id attempt_id project_id operation
+  input_digest target candidate_head executor_uid transport].freeze
+
+def terminal_state?(state)
+  %w[succeeded failed failed-settled].include?(state)
+end
+
+def validate_terminal_receipt!(current, state, receipt)
+  unless receipt.is_a?(Hash) && receipt.keys.sort == TERMINAL_RECEIPT_FIELDS.sort
+    raise AttemptErrors::ReceiptRejected,
+      "Service terminal receipt has invalid fields"
+  end
+  TERMINAL_BINDING_FIELDS.each do |key|
+    unless receipt[key] == current[key]
+      raise AttemptErrors::ReceiptRejected, "Service terminal receipt does not match #{key}"
+    end
+  end
+  expected_outcome = state == "failed-settled" ? "failed" : state
+  evidence_items = receipt["evidence"]
+  valid_evidence = evidence_items.is_a?(Array) && !evidence_items.empty? &&
+    evidence_items.all? do |item|
+      item.is_a?(Hash) && item.keys.sort == %w[ref sha256] &&
+        item["ref"].is_a?(String) && item["ref"].match?(/\A[a-zA-Z0-9_.:\/-]{1,256}\z/) &&
+        item["sha256"].is_a?(String) && item["sha256"].match?(/\A[0-9a-f]{64}\z/)
+    end
+  executor_valid = receipt["executor_uid"].is_a?(Integer) && receipt["executor_uid"] >= 0
+  unless receipt["outcome"] == expected_outcome && executor_valid && valid_evidence
+    raise AttemptErrors::ReceiptRejected, "Service terminal receipt has invalid executor or evidence"
+  end
+  if state == "failed-settled" &&
+      !receipt["evidence"].any? { |item| item["ref"].end_with?("no-effect") }
+    raise AttemptErrors::ReceiptRejected,
+      "Service settlement requires a no-effect attestation artifact"
+  end
+end
 
         def service_request(request_id)
           validate_request_id!(request_id)

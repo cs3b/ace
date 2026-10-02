@@ -64,6 +64,11 @@ module Ace
         end
       end
 
+      def terminal_receipt(binding, outcome)
+        binding.merge("outcome" => outcome, "executor_uid" => binding["executor_uid"],
+          "evidence" => [{"ref" => "forge/receipt-#{outcome}", "sha256" => "b" * 64}])
+      end
+
       def test_service_request_claim_is_idempotent_and_journal_backed
         with_temp_cache do |cache_dir|
           repo = File.join(cache_dir, "repo")
@@ -71,12 +76,14 @@ module Ace
           root = File.join(cache_dir, "co")
           journal = Molecules::EvidenceJournal.new(repo_root: repo, ref: REF, checkout_root: root)
           binding = {"request_id" => "req-1", "assignment_id" => "assignment-1", "attempt_id" => "attempt-1",
-                     "project_id" => "ace", "operation" => "publish", "input_digest" => "a" * 64}
+                     "project_id" => "ace", "operation" => "publish", "input_digest" => "a" * 64,
+                     "target" => {"resource" => "gem/ace"}, "candidate_head" => candidate_head,
+                     "executor_uid" => Process.uid, "transport" => "local"}
 
           first = journal.claim_service_request(binding)
           repeated = journal.claim_service_request(binding)
           assert_equal "accepted", first["state"]
-          assert_equal first.reject { |key, _| key == "journal_commit" }, repeated
+          assert_equal first.reject { |key, _| %w[journal_commit claimed_at].include?(key) }, repeated.reject { |key, _| key == "claimed_at" }
           assert_equal 1, journal.read_events("assignment-1").size
           assert_equal candidate_head, git(repo, "rev-parse", "HEAD").strip
           assert_raises(AttemptErrors::Conflict) do
@@ -84,13 +91,19 @@ module Ace
           end
 
           journal.transition_service_request("req-1", state: "uncertain")
-          # Terminal transitions require coordinator validation; a direct
-          # unvalidated write is refused at the journal boundary.
+          # Terminal transitions are validated at the journal boundary: a
+          # receipt with the wrong schema, binding, or outcome is refused
+          # even with a caller-supplied validated flag.
           assert_raises(AttemptErrors::ReceiptRejected) do
-            journal.transition_service_request("req-1", state: "succeeded", receipt: {"evidence" => "ok"})
+            journal.transition_service_request("req-1", state: "succeeded", receipt: {"evidence" => "ok"},
+              validated: true)
           end
-          journal.transition_service_request("req-1", state: "succeeded", receipt: {"evidence" => "ok"},
-            validated: true)
+          assert_raises(AttemptErrors::ReceiptRejected) do
+            journal.transition_service_request("req-1", state: "succeeded",
+              receipt: terminal_receipt(binding, "failed"), validated: true)
+          end
+          journal.transition_service_request("req-1", state: "succeeded",
+            receipt: terminal_receipt(binding, "succeeded"), validated: true)
           reloaded = Molecules::EvidenceJournal.new(repo_root: repo, ref: REF, checkout_root: root)
           assert_equal "succeeded", reloaded.service_request("req-1")["state"]
           assert_equal 3, reloaded.read_events("assignment-1").size
