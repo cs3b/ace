@@ -32,7 +32,7 @@ module Ace
         end
 
         def sync(number:, task_id:, task_link:, task_status:, previous_task_id: nil,
-          create_pending: false, before_create: nil)
+          create_pending: false, before_create: nil, comment_only: false)
           # Reparenting/promotion changes the local ID; the remote marker may
           # still name the previous ID, or may already carry the new one when
           # a prior sync failed partway. Both count as this task's ownership.
@@ -86,22 +86,24 @@ module Ace
               @provider.update_issue_comment(number: number, comment_id: sticky[:id], body: desired_body)
             end
           end
-          snapshot = fetch(number)
-          unless snapshot[:labels].include?(TRACKED_LABEL)
-            mutate_and_reconcile(number, label: TRACKED_LABEL) do
-              @provider.add_issue_label(number: number, label: TRACKED_LABEL)
+          unless comment_only
+            snapshot = fetch(number)
+            unless snapshot[:labels].include?(TRACKED_LABEL)
+              mutate_and_reconcile(number, label: TRACKED_LABEL) do
+                @provider.add_issue_label(number: number, label: TRACKED_LABEL)
+              end
             end
-          end
-          desired_state = TERMINAL_STATUSES.include?(task_status.to_s) ? :closed : :open
-          snapshot = fetch(number)
-          unless snapshot[:issue].state == desired_state
-            mutate_and_reconcile(number, state: desired_state) do
-              @provider.set_issue_state(number: number, state: desired_state)
+            desired_state = TERMINAL_STATUSES.include?(task_status.to_s) ? :closed : :open
+            snapshot = fetch(number)
+            unless snapshot[:issue].state == desired_state
+              mutate_and_reconcile(number, state: desired_state) do
+                @provider.set_issue_state(number: number, state: desired_state)
+              end
             end
           end
           verified = fetch(number)
           unless sticky_comment(verified)&.[](:body) == desired_body &&
-              verified[:labels].include?(TRACKED_LABEL) && verified[:issue].state == desired_state
+              (comment_only || (verified[:labels].include?(TRACKED_LABEL) && verified[:issue].state == desired_state))
             raise ProviderMalformedOutputError, "Issue ##{number} did not reflect ACE tracking updates"
           end
           verified
