@@ -111,10 +111,16 @@ module Ace
         def evidence_intact?(request)
           receipt = request["receipt"]
           return false unless receipt.is_a?(Hash)
+          repo_root = File.realpath(@repo_root)
           Array(receipt["evidence"]).all? do |item|
-            path = File.join(@repo_root, item["ref"].to_s)
-            File.file?(path) && !File.symlink?(path) &&
-              Digest::SHA256.file(path).hexdigest == item["sha256"]
+            path = File.expand_path(item["ref"].to_s, repo_root)
+            real = begin
+              File.realpath(path)
+            rescue Errno::ENOENT
+              next false
+            end
+            real.start_with?(repo_root + File::SEPARATOR) &&
+              Digest::SHA256.file(real).hexdigest == item["sha256"]
           end
         end
 

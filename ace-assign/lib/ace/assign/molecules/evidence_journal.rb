@@ -147,7 +147,7 @@ module Ace
           request_id = binding.fetch("request_id")
           existing = service_request(request_id)
           if existing
-            unless existing.except("state", "receipt", "reason", "claimed_at") == binding.except("state", "receipt", "reason", "claimed_at")
+            unless existing.except("state", "receipt", "reason", "claimed_at", "failed_at") == binding.except("state", "receipt", "reason", "claimed_at", "failed_at")
               raise AttemptErrors::Conflict, "Service request #{request_id} has different input"
             end
             return existing if existing["state"] == "rejected"
@@ -262,10 +262,16 @@ module Ace
         def settlement_evidence_intact?(record)
           receipt = record["receipt"]
           return false unless receipt.is_a?(Hash)
+          repo_root = File.realpath(@repo_root)
           Array(receipt["evidence"]).all? do |item|
-            path = File.join(@repo_root, item["ref"].to_s)
-            File.file?(path) && !File.symlink?(path) &&
-              Digest::SHA256.file(path).hexdigest == item["sha256"]
+            path = File.expand_path(item["ref"].to_s, repo_root)
+            real = begin
+              File.realpath(path)
+            rescue Errno::ENOENT
+              next false
+            end
+            real.start_with?(repo_root + File::SEPARATOR) &&
+              Digest::SHA256.file(real).hexdigest == item["sha256"]
           end
         end
 
