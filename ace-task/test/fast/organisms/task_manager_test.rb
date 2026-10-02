@@ -807,8 +807,7 @@ class TaskManagerTest < AceTaskTestCase
 
   def test_issue_identity_lock_serializes_operations
     identity = issue_identity
-    key = identity.values_at("server_name", "provider", "repository_url", "number")
-      .map { |value| value.to_s.gsub(%r{[^\w.-]}, "_") }.join("--")
+    key = @manager.send(:canonical_issue_key, identity)
     lock_path = File.join(Dir.tmpdir, "ace-task-issue-#{key}.lock")
     marker = File.join(Dir.tmpdir, "\#{key}.held")
     File.delete(marker) if File.exist?(marker)
@@ -837,8 +836,7 @@ class TaskManagerTest < AceTaskTestCase
 
   def test_update_move_runs_while_issue_identity_lock_is_held
     identity = issue_identity
-    key = identity.values_at("server_name", "provider", "repository_url", "number")
-      .map { |value| value.to_s.gsub(%r{[^\w.-]}, "_") }.join("--")
+    key = @manager.send(:canonical_issue_key, identity)
     lock_path = File.join(Dir.tmpdir, "ace-task-issue-#{key}.lock")
     lock_probe = File.join(Dir.tmpdir, "qk12-move-lock-probe")
     File.delete(lock_probe) if File.exist?(lock_probe)
@@ -872,8 +870,7 @@ class TaskManagerTest < AceTaskTestCase
 
   def test_unlinked_parent_move_holds_linked_descendant_locks
     identity = issue_identity(277)
-    key = identity.values_at("server_name", "provider", "repository_url", "number")
-      .map { |value| value.to_s.gsub(%r{[^\w.-]}, "_") }.join("--")
+    key = @manager.send(:canonical_issue_key, identity)
     lock_path = File.join(Dir.tmpdir, "ace-task-issue-#{key}.lock")
     lock_probe = File.join(Dir.tmpdir, "qk12-desc-lock-probe")
     File.delete(lock_probe) if File.exist?(lock_probe)
@@ -900,6 +897,58 @@ class TaskManagerTest < AceTaskTestCase
     end
     assert_equal "held", File.read(lock_probe),
       "descendant locks must span a relocation even when the parent is unlinked"
+  end
+
+  def test_aliased_server_identity_rejects_duplicate_link_of_same_issue
+    identity = issue_identity(276)
+    alias_identity = identity.merge(
+      "server_name" => "mirror",
+      "repository_url" => "ssh://git@forge.example/owner/repo.git",
+      "url" => "https://forge.example/owner/repo/issues/276"
+    )
+    adapter = fake_issue_adapter { |**_args| {success: true} }
+    @manager.stub(:issue_adapter, adapter) do
+      task = @manager.create("Linked task", remote_issue: identity)
+      error = assert_raises(Ace::Git::ProviderIdentityMismatchError) do
+        @manager.create("Aliased task", remote_issue: alias_identity)
+      end
+      assert_includes error.message, task.id
+      # A different issue on the same repository stays linkable.
+      other = @manager.create("Other issue task", remote_issue: identity.merge("number" => 278,
+        "url" => "https://forge.example/owner/repo/issues/278"))
+      assert other.metadata["remote_issue"]
+    end
+  end
+
+  def test_aliased_server_identities_share_one_issue_lock
+    identity = issue_identity(276)
+    alias_identity = identity.merge("server_name" => "mirror",
+      "repository_url" => "ssh://git@forge.example/owner/repo.git")
+    key = @manager.send(:canonical_issue_key, identity)
+    lock_path = File.join(Dir.tmpdir, "ace-task-issue-#{key}.lock")
+    marker = File.join(Dir.tmpdir, "alias-lock-held")
+    File.delete(marker) if File.exist?(marker)
+
+    child_pid = fork do
+      holder = File.open(lock_path, File::CREAT | File::RDWR)
+      holder.flock(File::LOCK_EX)
+      File.write(marker, "held")
+      sleep 0.3
+      holder.flock(File::LOCK_UN)
+      exit!(0)
+    end
+    deadline = Time.now + 5
+    sleep 0.05 until File.exist?(marker) || Time.now > deadline
+    assert File.exist?(marker), "child did not take the lock"
+
+    started = Time.now
+    entered = false
+    @manager.send(:with_issue_identity_lock, alias_identity) { entered = true }
+    assert entered
+    # The alias normalizes to the same canonical lock, so the operation could
+    # only proceed after the child released the primary identity's lock.
+    assert Time.now - started >= 0.2, "aliased identity bypassed the canonical issue lock"
+    Process.wait(child_pid)
   end
 
   def test_bulk_sync_fails_for_pending_tasks_without_identity
