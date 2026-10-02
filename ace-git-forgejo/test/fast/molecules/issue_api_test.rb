@@ -88,6 +88,50 @@ class ForgejoIssueApiTest < AceGitForgejoTestCase
     refute calls.any? { |path| path.include?("/api/v1/orgs/") }
   end
 
+  def test_add_issue_label_creates_missing_repo_label
+    created = false
+    calls = []
+    runner = lambda do |args:, **_options|
+      calls << args
+      if args[2].include?("/api/v1/orgs/")
+        next {success: false, status: 404, stdout: ""}
+      end
+      if args[1] == "POST" && args[2].end_with?("/repos/owner/repo/labels")
+        created = true
+        next {success: true, status: 201, stdout: {"id" => 9, "name" => "ace:tracked"}.to_json}
+      end
+      if args[2].include?("/repos/owner/repo/labels?page=")
+        listed = created ? [{"id" => 9, "name" => "ace:tracked"}] : []
+        next {success: true, status: 200, stdout: listed.to_json}
+      end
+      {success: true, status: 200, stdout: "{}"}
+    end
+    provider = Ace::Git::Forgejo::Provider.new(server: SERVER, runner: runner)
+    provider.add_issue_label(number: 42, label: "ace:tracked")
+    assert calls.any? { |args| args[1] == "POST" && args[2].end_with?("/repos/owner/repo/labels") }
+    assert calls.any? { |args| args[1] == "POST" && args[2].end_with?("/issues/42/labels") }
+  end
+
+  def test_add_issue_label_survives_concurrent_label_creation
+    created = false
+    runner = lambda do |args:, **_options|
+      if args[2].include?("/api/v1/orgs/")
+        next {success: false, status: 404, stdout: ""}
+      end
+      if args[1] == "POST" && args[2].end_with?("/repos/owner/repo/labels")
+        created = true
+        next {success: false, status: 422, stdout: "{}"}
+      end
+      if args[2].include?("/repos/owner/repo/labels?page=")
+        listed = created ? [{"id" => 9, "name" => "ace:tracked"}] : []
+        next {success: true, status: 200, stdout: listed.to_json}
+      end
+      {success: true, status: 200, stdout: "{}"}
+    end
+    provider = Ace::Git::Forgejo::Provider.new(server: SERVER, runner: runner)
+    provider.add_issue_label(number: 42, label: "ace:tracked")
+  end
+
   def test_missing_issue_state_is_malformed
     runner = lambda do |args:, **_options|
       stdout = if args[2].include?("/issues/42?")

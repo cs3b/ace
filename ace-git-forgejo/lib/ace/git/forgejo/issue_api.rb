@@ -64,6 +64,10 @@ module Ace
           end
         end
 
+        def create_repo_label(name:, color:)
+          request(:post, "labels", body: {name: name, color: color})
+        end
+
         def set_state(number, state)
           request(:patch, "issues/#{number}", body: {state: state.to_s})
         end
