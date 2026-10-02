@@ -486,7 +486,12 @@ end
               "Thread resolution outcome unknown for #{server.name}/#{pr.number}, " \
               "head #{expected_head}, thread #{thread_id}: #{e.message}"
           end
-          verify_review_thread!(resolved, pr, expected_head)
+          begin
+            verify_review_thread!(resolved, pr, expected_head)
+          rescue Ace::Git::ProviderIdentityMismatchError, Ace::Git::ProviderMalformedOutputError => e
+            raise Ace::Git::ProviderUnknownOutcomeError,
+              "Thread resolution sent but confirmation unreadable for #{server.name}/#{pr.number}, thread #{thread_id}: #{e.message}; reconcile before repeating"
+          end
           unless resolved["isResolved"] == true
             raise Ace::Git::ProviderMalformedOutputError, "GitHub did not confirm thread resolution"
           end

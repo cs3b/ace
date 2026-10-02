@@ -280,6 +280,9 @@ module Ace
           verify_expected_head!(pull_request(number: number), expected_head)
           begin
             review_http.request(:patch, "issues/comments/#{comment_id}", body: {body: body})
+          rescue Ace::Git::ProviderMalformedOutputError => e
+            raise Ace::Git::ProviderUnknownOutcomeError,
+              "Comment update sent but response unreadable for #{server.name}/#{number}, comment #{comment_id}: #{e.message}; reconcile before repeating"
           rescue Ace::Git::ProviderUnknownOutcomeError => e
             raise Ace::Git::ProviderUnknownOutcomeError,
               "Comment update outcome unknown for #{server.name}/#{number}, " \
