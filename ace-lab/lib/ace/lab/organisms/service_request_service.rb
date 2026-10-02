@@ -161,14 +161,14 @@ module Ace
           return unless binding["transport"] == "local" && Process.uid == binding["executor_uid"]
           evidence_dir = File.join(@repo_root, "evidence", "service")
           FileUtils.mkdir_p(evidence_dir)
-          attestation = File.join(evidence_dir, "#{request_id}-no-effect.txt")
+          attestation = File.join(evidence_dir, "#{request_id}-no-effect")
           content = "ace-service-attestation request:#{request_id} " \
             "input:#{binding.fetch("input_digest")} outcome:failed no-effect:true\n" \
             "refusal: #{error.message}\n"
           File.write(attestation, content)
           receipt = Models::ServiceReceipt.build(binding, {
             "outcome" => "failed",
-            "evidence" => [{"ref" => "evidence/service/#{request_id}-no-effect.txt",
+            "evidence" => [{"ref" => "evidence/service/#{request_id}-no-effect",
                             "sha256" => Digest::SHA256.hexdigest(content)}],
             "executor_uid" => binding.fetch("executor_uid")
           })
@@ -202,7 +202,10 @@ module Ace
         def result(request)
           public = request.slice("request_id", "assignment_id", "attempt_id", "project_id", "operation",
             "input_digest", "target", "candidate_head", "service_id", "state", "receipt")
-          {"status" => "ok", "data" => public.merge("outcome" => request.fetch("state"))}
+          # failed-settled is internal bookkeeping: the documented public
+          # outcome stays "failed"; the state field distinguishes settlement.
+          outcome = request.fetch("state") == "failed-settled" ? "failed" : request.fetch("state")
+          {"status" => "ok", "data" => public.merge("outcome" => outcome)}
         end
 
         def failure(code, message)
