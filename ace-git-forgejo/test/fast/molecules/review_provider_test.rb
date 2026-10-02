@@ -115,22 +115,40 @@ module Forgejo
       end
       assert calls.none? { |args| args[1] == "PATCH" }
     end
+def test_team_review_identity_is_accepted
+  team_review = {"id" => 77, "user" => nil, "team" => {"name" => "core-devs"}, "body" => "Team review",
+                 "state" => "APPROVED", "html_url" => "https://forge.example.com/review/77"}
+  calls = []
+  runner = lambda do |args:, **|
+    calls << args
+    # forgejo-http GET routes carry the API path in args[2].
+    path = args[2].to_s
+    payload =
+      if path.include?("/issues/42/comments")
+        []
+      elsif path.include?("/pulls/42/reviews/77/comments")
+        [{"id" => 91, "user" => {"login" => "reviewer"}, "body" => "Inline note",
+          "html_url" => "https://forge.example.com/comment/91"}]
+      elsif path.include?("/pulls/42/reviews")
+        page = path[/page=(\d+)/, 1].to_i
+        page <= 1 ? [team_review] : []
+      else
+        []
+      end
+    {success: true, status: 200, stdout: payload.to_json, stderr: "", exit_code: 0}
+  end
+  provider = Ace::Git::Forgejo::Provider.new(server: SERVER, runner: runner)
+  pr = Struct.new(:number, :head_sha, :state).new(42, HEAD, :open)
+
+  evidence = provider.stub(:pull_request, pr) do
+    provider.pull_request_review_evidence(number: 42, expected_head: HEAD)
   end
 
-  def test_team_review_identity_is_accepted
-    runner = lambda do |args:, **|
-      review = {"id" => 77, "user" => nil, "team" => {"name" => "core-devs"}, "body" => "Team review",
-                "state" => "APPROVED", "html_url" => "https://forge.example.com/review/77"}
-      {success: true, status: 200, stdout: [review].to_json, stderr: "", exit_code: 0}
-    end
-    provider = Ace::Git::Forgejo::Provider.new(server: SERVER, runner: runner)
-    pr = Struct.new(:number, :head_sha, :state).new(42, HEAD, :open)
-
-    evidence = provider.stub(:pull_request, pr) do
-      provider.pull_request_review_evidence(number: 42, expected_head: HEAD)
-    end
-
-    team_review = evidence.reviews.find { |r| r.author == "core-devs" }
-    assert team_review, "team-identified reviews must be accepted with the team name as author"
+  team = evidence.reviews.find { |r| r.author == "core-devs" }
+  assert team, "team-identified reviews must be accepted with the team name as author"
+  # Per-review comments are collected even though editing them is
+  # unsupported on the observed fj surface.
+  assert evidence.comments.any? { |c| c.id == 91 }
+end
   end
 end
