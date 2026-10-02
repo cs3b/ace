@@ -1408,13 +1408,21 @@ module Ace
           # Read review content
           review_content = File.read(review_file)
 
+          # The identity digest covers only stable review content: the
+          # metadata header carries a fresh timestamp on every run, so hashing
+          # the whole file would mint a new identity for identical review
+          # text and let an uncertain-post retry post a duplicate. The
+          # dry-run preview uses the same digest so preview and post agree.
+          stable_content = review_content.sub(/\A---\n.*?\n---\n\n/m, "")
+          review_digest = Digest::SHA256.hexdigest(stable_content)
+
           # Dry-run prepares the exact comment body without posting; the
           # response builder reads :preview. The timestamp derives from the
           # review digest — identical to what a real post would send.
           if options.dry_run
             preview = Molecules::PrProvider.format_comment(
               review_content, preset: review_data[:preset], model: review_data[:model],
-              timestamp: "review-#{Digest::SHA256.file(review_file).hexdigest[0, 12]}"
+              timestamp: "review-#{review_digest[0, 12]}"
             )
             return {success: true, dry_run: true, preview: preview}
           end
@@ -1429,12 +1437,6 @@ module Ace
           # keyed by everything reuse depends on: PR identity, head, and
           # the review artifact digest. Identical review text for another
           # PR therefore never collides.
-          # The identity digest covers only stable review content: the
-          # metadata header carries a fresh timestamp on every run, so hashing
-          # the whole file would mint a new identity for identical review
-          # text and let an uncertain-post retry post a duplicate.
-          stable_content = review_content.sub(/\A---\n.*?\n---\n\n/m, "")
-          review_digest = Digest::SHA256.hexdigest(stable_content)
           # The numeric PR (not the raw reference spelling) keys the
           # persisted identity, matching the provider-side marker basis.
           identity_pr = (options.pr_metadata&.fetch("number", nil) || options.pr).to_s
