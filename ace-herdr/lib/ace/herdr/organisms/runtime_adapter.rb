@@ -28,9 +28,17 @@ module Ace
           return {in_runtime: false, session: nil, window: nil, pane: nil} unless inside?
 
           current = @executor.pane_get(@env["HERDR_PANE"]).parsed_json
+          native_workspace = find_value(current, %w[workspace_id workspaceId])
+          hint = @env["HERDR_WORKSPACE_ID"]
+          if hint && native_workspace && hint != native_workspace
+            raise Runtime::RuntimeUnavailableError,
+              "HERDR_WORKSPACE_ID '#{hint}' does not match the caller pane's workspace " \
+              "'#{native_workspace}'; clear the hint or reconnect the pane"
+          end
+
           {
             in_runtime: true,
-            session: @env["HERDR_WORKSPACE_ID"] || find_value(current, %w[workspace_id workspaceId]),
+            session: native_workspace || hint,
             window: find_value(current, %w[tab_id tabId]),
             pane: @env["HERDR_PANE"] || find_value(current, %w[pane_id paneId])
           }
@@ -44,24 +52,35 @@ module Ace
           with_errors do
             workspace = workspace_id!
             label = Runtime.sanitize_name(name)
-            path = identity_path(root, workspace, label)
-            with_identity_lock(path) do
+            with_identity_lock(workspace, label) do
+              path = identity_path(workspace, label)
               existing = tabs(workspace).find { |tab| tab[:name] == label }
               if existing
-                verify_identity!(existing, root: root, preset: preset, path: path)
-                next existing[:id]
+                if verifiable_identity?(existing, root: root, preset: preset, path: path)
+                  next existing[:id]
+                end
+
+                # A same-label tab with no readable identity record and a
+                # matching root is a leftover from an interrupted create:
+                # clean it up and recreate instead of failing forever.
+                next existing[:id] if adopt_or_cleanup!(existing, root: root, preset: preset, path: path)
               end
 
-              id = if preset
-                created = @surface.create_tab(preset, workspace_id: workspace, cwd: root, label: label)
-                created.fetch(:tab)
-              else
-                parsed = @executor.tab_create(workspace_id: workspace, label: label, cwd: File.expand_path(root)).parsed_json
-                find_value(parsed, %w[tab tab_id])
+              id = begin
+                if preset
+                  created = @surface.create_tab(preset, workspace_id: workspace, cwd: root, label: label)
+                  created.fetch(:tab)
+                else
+                  parsed = @executor.tab_create(workspace_id: workspace, label: label, cwd: File.expand_path(root)).parsed_json
+                  find_value(parsed, %w[tab tab_id])
+                end
+              rescue StandardError
+                cleanup_orphan_tab(workspace, label, root)
+                raise
               end
               raise TargetResolutionError, "tab create returned no tab id" if id.nil?
 
-              write_identity(identity_path(root, workspace, label), id: id, root: canonical_root(root), preset: preset)
+              write_identity(path, id: id, root: canonical_root(root), preset: preset)
               id
             end
           end
@@ -70,15 +89,8 @@ module Ace
         def prepare_pane(window:)
           with_errors do
             tab = resolve_tab!(window)
-            cached = @prepared[tab[:id]]
-            if cached
-              begin
-                @executor.pane_get(cached)
-                return cached
-              rescue PaneNotFoundError
-                @prepared.delete(tab[:id])
-              end
-            end
+            cached = discover_prepared_pane(tab)
+            return cached if cached
 
             root_pane = panes(tab[:workspace]).find { |pane| pane[:tab] == tab[:id] }
             raise Runtime::TargetNotFoundError, "tab '#{window}' has no pane" unless root_pane
@@ -87,13 +99,9 @@ module Ace
             id = find_value(parsed, %w[pane pane_id])
             raise TargetResolutionError, "pane split returned no pane id" if id.nil?
 
-            @executor.pane_get(id)
-            process_info = @executor.pane_process_info(id).parsed_json
-            unless find_value_of_type(process_info, "shell_pid", Integer)
-              raise Runtime::RuntimeUnavailableError, "prepared pane '#{id}' has no retained shell"
-            end
-
-            @prepared[tab[:id]] = id
+            verify_retained_shell!(id)
+            record_prepared_pane(tab, id)
+            id
           end
         end
 
@@ -226,45 +234,143 @@ module Ace
           File.expand_path(root)
         end
 
-        # Identity records live under the requested root (not the adapter's
-        # working directory), so instances started from any cwd agree on
-        # the same provenance file for a workspace+label tab.
-        def identity_path(root, workspace, label)
-          base = @identity_dir || File.join(canonical_root(root), ".ace-local", "herdr", "runtime-tabs")
+        # Identity records and locks are keyed on the shared (workspace,
+        # label) identity in a stable user-level location — instances from
+        # any cwd and any requested root agree on the same record, so
+        # concurrent creators of the same label serialize and reuse is
+        # verifiable across processes.
+        def identity_path(workspace, label)
+          base = @identity_dir || File.join(Dir.home, ".ace", "local", "herdr", "runtime-tabs")
           File.join(base, "#{Digest::SHA256.hexdigest("#{workspace}\0#{label}")}.json")
         end
 
-        def with_identity_lock(path)
+        def with_identity_lock(workspace, label, &_block)
+          path = "#{identity_path(workspace, label)}.lock"
           FileUtils.mkdir_p(File.dirname(path))
-          File.open("#{path}.lock", File::RDWR | File::CREAT, 0o600) do |file|
+          File.open(path, File::RDWR | File::CREAT, 0o600) do |file|
             file.flock(File::LOCK_EX)
-            yield path
+            yield
           end
         end
 
-        def verify_identity!(tab, root:, preset:, path:)
-          native_pane = @surface.list_panes(workspace_id: tab[:workspace]).find { |pane| pane[:tab] == tab[:id] }
-          native_root = native_pane && native_pane[:cwd]
+        # Reuse needs the recorded identity to match the request; when no
+        # readable record exists, native pane cwd is the only remaining
+        # root evidence and a preset can never be verified.
+        def verifiable_identity?(tab, root:, preset:, path:)
+          recorded = read_identity(path, tab)
+          if recorded
+            return recorded["root"] == canonical_root(root) && recorded["preset"] == preset
+          end
+
+          native_root = native_pane_cwd(tab)
+          native_root && canonical_root(native_root) == canonical_root(root) && preset.nil?
+        end
+
+        # Called when verifiable_identity? was false: a conflicting
+        # recorded identity is a WindowConflictError; a record-less tab
+        # whose native root matches the request is an interrupted create —
+        # remove it and report recreate.
+        def adopt_or_cleanup!(tab, root:, preset:, path:)
+          recorded = read_identity(path, tab)
+          unless recorded.nil? && native_root_matches?(tab, root)
+            raise Runtime::WindowConflictError,
+              "window '#{tab[:name]}' conflicts with root or preset"
+          end
+
+          @prepared.delete(tab[:id])
+          @executor.tab_close(tab[:id])
+          false
+        end
+
+        # After a failed/partial preset materialization the native tab may
+        # exist without an identity record; remove our same-label, same-root
+        # leftover so the next attempt recreates a complete layout.
+        def cleanup_orphan_tab(workspace, label, root)
+          path = identity_path(workspace, label)
+          orphan = tabs(workspace).find do |tab|
+            next false unless tab[:name] == label
+            next false if read_identity(path, tab)
+
+            native_root_matches?(tab, root)
+          end
+          @executor.tab_close(orphan[:id]) if orphan
+        rescue ExecutorError, Runtime::Error
+          nil
+        end
+
+        def native_root_matches?(tab, root)
+          native_root = native_pane_cwd(tab)
+          native_root && canonical_root(native_root) == canonical_root(root)
+        end
+
+        def read_identity(path, tab)
           recorded = JSON.parse(File.read(path)) if File.file?(path)
           recorded = nil unless recorded.is_a?(Hash) && recorded["id"] == tab[:id]
-
-          root_matches = if recorded
-            recorded["root"] == canonical_root(root)
-          else
-            native_root && canonical_root(native_root) == canonical_root(root)
-          end
-          preset_matches = recorded ? recorded["preset"] == preset : preset.nil?
-          return if root_matches && preset_matches
-
-          raise Runtime::WindowConflictError, "window '#{tab[:name]}' conflicts with root or preset"
+          recorded
         rescue JSON::ParserError
-          raise Runtime::WindowConflictError, "window '#{tab[:name]}' has unreadable root or preset identity"
+          raise Runtime::WindowConflictError,
+            "window '#{tab[:name]}' has unreadable root or preset identity"
         end
 
-        def write_identity(path, id:, root:, preset:)
+        def native_pane_cwd(tab)
+          native_pane = @surface.list_panes(workspace_id: tab[:workspace]).find { |pane| pane[:tab] == tab[:id] }
+          native_pane && native_pane[:cwd]
+        end
+
+        # Cross-instance prepared-pane reuse: the identity record carries
+        # the prepared pane id, so another adapter instance (or process)
+        # reuses the retained target instead of splitting again.
+        def discover_prepared_pane(tab)
+          cached = @prepared[tab[:id]]
+          return cached if usable_prepared_pane?(cached)
+
+          recorded = read_identity(identity_path(tab[:workspace], tab[:name]), tab)
+          return nil unless recorded.is_a?(Hash) && recorded["prepared_pane"]
+
+          pane_id = recorded["prepared_pane"]
+          return nil unless usable_prepared_pane?(pane_id)
+
+          @prepared[tab[:id]] = pane_id
+          pane_id
+        rescue Runtime::WindowConflictError
+          nil
+        end
+
+        def record_prepared_pane(tab, pane_id)
+          @prepared[tab[:id]] = pane_id
+          path = identity_path(tab[:workspace], tab[:name])
+          recorded = File.file?(path) ? JSON.parse(File.read(path)) : nil
+          return nil unless recorded.is_a?(Hash) && recorded["id"] == tab[:id]
+
+          write_identity(path, id: recorded["id"], root: recorded["root"], preset: recorded["preset"],
+            prepared_pane: pane_id)
+        rescue JSON::ParserError, Errno::ENOENT
+          nil
+        end
+
+        def usable_prepared_pane?(pane_id)
+          return false unless pane_id
+
+          @executor.pane_get(pane_id)
+          info = find_hash(@executor.pane_process_info(pane_id).parsed_json, %w[result process_info])
+          info.is_a?(Hash) && !!find_value_of_type(info, "shell_pid", Integer)
+        rescue PaneNotFoundError
+          false
+        end
+
+        def verify_retained_shell!(pane_id)
+          info = find_hash(@executor.pane_process_info(pane_id).parsed_json, %w[result process_info])
+          return if info.is_a?(Hash) && find_value_of_type(info, "shell_pid", Integer)
+
+          raise Runtime::RuntimeUnavailableError, "prepared pane '#{pane_id}' has no retained shell"
+        end
+
+        def write_identity(path, id:, root:, preset:, prepared_pane: nil)
+          payload = {id: id, root: root, preset: preset}
+          payload[:prepared_pane] = prepared_pane if prepared_pane
           temp = "#{path}.#{Process.pid}.tmp"
           File.open(temp, File::WRONLY | File::CREAT | File::TRUNC, 0o600) do |file|
-            file.write(JSON.generate({id: id, root: root, preset: preset}))
+            file.write(JSON.generate(payload))
             file.flush
             file.fsync
           end
@@ -327,11 +433,14 @@ module Ace
           processes = info["foreground_processes"]
           return false if info.key?("foreground_processes") && !processes.is_a?(Array)
 
-          processes = Array(processes)
-          return true if processes.empty?
-
+          # An omitted list is only trusted exit evidence inside a
+          # well-formed object that also carries the pane's shell pid;
+          # an empty or shell-only hash alone proves nothing.
           shell_pid = find_value_of_type(info, "shell_pid", Integer)
           return false unless shell_pid
+
+          processes = Array(processes)
+          return true if processes.empty?
 
           processes.all? { |process| process.is_a?(Hash) && process["pid"] == shell_pid }
         rescue PaneNotFoundError

@@ -20,7 +20,7 @@ module Ace
             tab_create: ->(args) {
               id = "w1:t#{@tabs.length + 1}"
               @tabs << {"tab_id" => id, "label" => args[:label], "workspace_id" => "w1", "focused" => false}
-              @panes << {"pane_id" => "w1:p0", "tab_id" => id, "workspace_id" => "w1"}
+              @panes << {"pane_id" => "w1:p0", "tab_id" => id, "workspace_id" => "w1", "cwd" => args[:cwd]}
               result(result: {tab_id: id, root_pane_id: "w1:p0"})
             },
             pane_split: ->(_args) {
@@ -202,7 +202,7 @@ module Ace
           assert adapter.wait_lifecycle(condition: "pane-exited", target: "opaque-pane", timeout: 0.05)
         end
 
-        def test_omitted_foreground_processes_proves_exit_but_null_stays_inconclusive
+        def test_omitted_foreground_processes_proves_exit_but_empty_info_stays_inconclusive
           prepared_pane
           @executor = HerdrTestHelper::FakeExecutor.new(outcomes: {
             pane_get: result(result: {pane_id: "w1:p1"}),
@@ -214,6 +214,18 @@ module Ace
             identity_dir: @identity_dir)
           assert adapter.wait_lifecycle(condition: "pane-exited", target: "w1:p1", timeout: 0.05)
 
+          # A bare hash without shell pid proves nothing
+          @executor = HerdrTestHelper::FakeExecutor.new(outcomes: {
+            pane_get: result(result: {pane_id: "w1:p1"}),
+            pane_process_info: result(result: {process_info: {}})
+          })
+          adapter = RuntimeAdapter.new(executor: @executor, env: env, sleeper: FastSleeper.new,
+            identity_dir: @identity_dir)
+          assert_raises(Runtime::WaitTimeoutError) do
+            adapter.wait_lifecycle(condition: "pane-exited", target: "w1:p1", timeout: 0.01)
+          end
+
+          # An explicit null list is malformed evidence, not exit proof
           @executor = HerdrTestHelper::FakeExecutor.new(outcomes: {
             pane_get: result(result: {pane_id: "w1:p1"}),
             pane_process_info: result(result: {process_info: {shell_pid: 42, foreground_processes: nil}})
@@ -244,16 +256,124 @@ module Ace
           dir_b = Dir.mktmpdir("herdr-cwd-b")
           tab = nil
           Dir.chdir(dir_a) do
-            adapter = RuntimeAdapter.new(executor: @executor, env: env, sleeper: FastSleeper.new)
+            adapter = RuntimeAdapter.new(executor: @executor, env: env, sleeper: FastSleeper.new,
+              identity_dir: @identity_dir)
             tab = adapter.ensure_window(name: "work", root: root)
           end
           Dir.chdir(dir_b) do
-            adapter = RuntimeAdapter.new(executor: @executor, env: env, sleeper: FastSleeper.new)
+            adapter = RuntimeAdapter.new(executor: @executor, env: env, sleeper: FastSleeper.new,
+              identity_dir: @identity_dir)
             assert_equal tab, adapter.ensure_window(name: "work", root: root)
             assert_equal 1, @executor.calls_of(:tab_create).size
           end
         ensure
           [root, dir_a, dir_b].each { |dir| FileUtils.remove_entry(dir) if dir && File.exist?(dir) }
+        end
+
+        def test_context_rejects_workspace_hint_conflicting_with_caller_pane
+          @executor = HerdrTestHelper::FakeExecutor.new(outcomes: {
+            pane_get: result(result: {pane: {"pane_id" => "w1:p0", "workspace_id" => "w1"}})
+          })
+          adapter = RuntimeAdapter.new(executor: @executor,
+            env: {"HERDR_SESSION" => "s1", "HERDR_PANE" => "w1:p0", "HERDR_WORKSPACE_ID" => "w9"},
+            identity_dir: @identity_dir)
+          error = assert_raises(Runtime::RuntimeUnavailableError) { adapter.context }
+          assert_match(/HERDR_WORKSPACE_ID/, error.message)
+
+          matched = RuntimeAdapter.new(executor: @executor,
+            env: {"HERDR_SESSION" => "s1", "HERDR_PANE" => "w1:p0", "HERDR_WORKSPACE_ID" => "w1"},
+            identity_dir: @identity_dir)
+          assert_equal "w1", matched.context[:session]
+        end
+
+        def test_same_label_in_other_root_conflicts_instead_of_duplicating
+          @adapter.ensure_window(name: "work", root: "/tmp/work")
+          other = RuntimeAdapter.new(executor: @executor, env: env, sleeper: FastSleeper.new,
+            identity_dir: @identity_dir)
+          assert_raises(Runtime::WindowConflictError) do
+            other.ensure_window(name: "work", root: "/other")
+          end
+          assert_equal 1, @executor.calls_of(:tab_create).size
+        end
+
+        def test_interrupted_non_preset_create_leftover_is_adopted_by_matching_root
+          @executor.tab_create(workspace_id: "w1", label: "work", cwd: "/tmp/work")
+          tab = @adapter.ensure_window(name: "work", root: "/tmp/work")
+          assert_equal "w1:t1", tab
+          assert_equal 1, @executor.calls_of(:tab_create).size
+          assert_equal 0, @executor.calls_of(:tab_close).size
+        end
+
+        def test_interrupted_preset_create_leftover_is_cleaned_up_and_recreated
+          ok_surface = Class.new do
+            def initialize(executor)
+              @real = ControlSurface.new(executor: executor)
+              @executor = executor
+            end
+
+            def create_tab(*)
+              parsed = @executor.tab_create(workspace_id: "w1", label: "work", cwd: "/tmp/work").parsed_json
+              {tab: parsed["result"]["tab_id"], panes: [], commands: [], agents: []}
+            end
+
+            def method_missing(name, *args, **kwargs, &block)
+              return @real.public_send(name, *args, **kwargs, &block) if @real.respond_to?(name)
+
+              super
+            end
+
+            def respond_to_missing?(name, include_private = false)
+              @real.respond_to?(name, include_private) || super
+            end
+          end.new(@executor)
+          preset_adapter = RuntimeAdapter.new(executor: @executor, env: env, sleeper: FastSleeper.new,
+            surface: ok_surface, identity_dir: @identity_dir)
+          @executor.tab_create(workspace_id: "w1", label: "work", cwd: "/tmp/work")
+          tab = preset_adapter.ensure_window(name: "work", root: "/tmp/work", preset: "agent")
+          assert tab
+          assert_equal 2, @executor.calls_of(:tab_create).size
+          assert_equal 1, @executor.calls_of(:tab_close).size
+        end
+
+        def test_failed_preset_materialization_rolls_back_the_native_tab
+          failing_surface = Class.new do
+            def initialize(executor)
+              @real = ControlSurface.new(executor: executor)
+              @executor = executor
+            end
+
+            def create_tab(*)
+              @executor.tab_create(workspace_id: "w1", label: "work", cwd: "/tmp/work")
+              raise StandardError, "preset materialization failed after native create"
+            end
+
+            def method_missing(name, *args, **kwargs, &block)
+              return @real.public_send(name, *args, **kwargs, &block) if @real.respond_to?(name)
+
+              super
+            end
+
+            def respond_to_missing?(name, include_private = false)
+              @real.respond_to?(name, include_private) || super
+            end
+          end.new(@executor)
+          failing = RuntimeAdapter.new(executor: @executor, env: env, sleeper: FastSleeper.new,
+            surface: failing_surface, identity_dir: @identity_dir)
+          error = assert_raises(StandardError) do
+            failing.ensure_window(name: "work", root: "/tmp/work", preset: "main")
+          end
+          assert_match(/materialization failed/, error.message)
+          assert_equal 1, @executor.calls_of(:tab_close).size
+          assert_empty @adapter.list_windows
+        end
+
+        def test_prepared_pane_is_reused_across_adapter_instances
+          tab = @adapter.ensure_window(name: "work", root: "/tmp/work")
+          first = @adapter.prepare_pane(window: tab)
+          second = RuntimeAdapter.new(executor: @executor, env: env, sleeper: FastSleeper.new,
+            identity_dir: @identity_dir)
+          assert_equal first, second.prepare_pane(window: tab)
+          assert_equal 1, @executor.calls_of(:pane_split).size
         end
 
         def test_missing_target_and_unavailable_errors
