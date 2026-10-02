@@ -565,6 +565,17 @@ module Ace
           info += "- **Forge server**: #{metadata["server_name"]}\n" if metadata["server_name"]
           info += "- **Repository**: #{metadata["repository_url"]}\n" if metadata["repository_url"]
           info += "- **URL**: #{metadata["url"]}\n"
+          checks = Array(metadata["checks"])
+          if checks.any?
+            info += "\n### Advisory CI check states\n\n"
+            checks.each do |check|
+              line = "- **#{check["name"]}**: #{check["state"]}"
+              line += " / #{check["conclusion"]}" if check["conclusion"].to_s.length.positive?
+              info += line + "\n"
+            end
+            info += "\nCI states are advisory evidence; failed CI alone cannot override executed tests " \
+                    "plus the independent exact-head review policy.\n"
+          end
           info
         end
 
