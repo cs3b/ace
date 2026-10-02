@@ -136,8 +136,9 @@ module Ace
             next true if supplied_scheme.nil?
 
             # An explicit issue-URL scheme must not downgrade to a server
-            # serving the same host/path over a weaker scheme.
-            server_scheme = server.url[/\A([a-z][a-z0-9+.\-]*):\/\//i, 1]&.downcase || "https"
+            # serving the same host/path over a weaker scheme. SSH-configured
+            # clones serve their web endpoint over HTTPS.
+            server_scheme = Atoms::ServerUrl.web_base(server.url)[/\A(https?):\/\//i, 1]&.downcase
             server_scheme == supplied_scheme
           end
         end
