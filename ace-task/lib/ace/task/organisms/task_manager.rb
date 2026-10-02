@@ -395,13 +395,16 @@ module Ace
         end
 
         # Canonical lock/ownership key for an issue identity: provider plus
-        # web repository plus number. Aliased server names and SSH/HTTPS URL
-        # variants of one repository normalize to the same key; the stored
-        # link keeps the selected server name for replay authentication.
+        # normalized web repository plus number. Aliased server names and
+        # SSH/HTTPS/case variants of one repository normalize to the same key
+        # (same convention as ServerUrl.normalize); the stored link keeps the
+        # selected server name for replay authentication.
         def canonical_issue_key(identity)
           [
             canonical_value(identity, "provider"),
-            Ace::Git::Atoms::ServerUrl.web_base(canonical_value(identity, "repository_url")),
+            Ace::Git::Atoms::ServerUrl.normalize(
+              Ace::Git::Atoms::ServerUrl.web_base(canonical_value(identity, "repository_url"))
+            ),
             canonical_value(identity, "number")
           ].map { |entry| entry.gsub(%r{[^\w.-]}, "_") }.join("--")
         end

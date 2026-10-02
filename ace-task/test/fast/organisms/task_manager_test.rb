@@ -951,6 +951,15 @@ class TaskManagerTest < AceTaskTestCase
     Process.wait(child_pid)
   end
 
+  def test_canonical_issue_key_folds_case_and_scheme_variants
+    base = issue_identity(276)
+    variant = base.merge("server_name" => "other",
+      "repository_url" => "SSH://GIT@FORGE.EXAMPLE/OWNER/REPO.GIT")
+    refute_equal base["server_name"], variant["server_name"]
+    assert_equal @manager.send(:canonical_issue_key, base),
+      @manager.send(:canonical_issue_key, variant)
+  end
+
   def test_subtask_archive_never_holds_child_lock_while_waiting_for_parent
     parent_identity = issue_identity(280)
     child_identity = issue_identity(282)
