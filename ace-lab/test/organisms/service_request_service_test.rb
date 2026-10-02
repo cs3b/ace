@@ -98,6 +98,33 @@ module Ace
         end
       end
 
+      def test_completed_request_replays_outcome_after_authorization_expiry
+        Dir.mktmpdir do |dir|
+          repo, topology, coordinator, policy, input_path, assignment, attempt = setup_fixture(dir)
+          digest = write_evidence(repo, "forge/receipt", "executor attested effect\n")
+          executor = Object.new
+          calls = 0
+          executor.define_singleton_method(:execute) do |operation:, request:, input:, **_|
+            calls += 1
+            {"outcome" => "succeeded", "evidence" => [{"ref" => "forge/receipt", "sha256" => digest}],
+             "executor_uid" => Process.uid}
+          end
+          service = Organisms::ServiceRequestService.new(topology: topology, policy: policy,
+            coordinator: coordinator, executor: executor, repo_root: repo)
+          args = {project: "atlas", assignment: assignment.id, attempt: attempt.attempt_id,
+            operation: "forge-sync", input_path: input_path, authorization: "decision-1", request_id: "request-1"}
+          assert_equal "succeeded", service.request(**args).dig("data", "outcome")
+
+          # The decision expires and the attempt reaches a terminal state;
+          # the identical retry still returns the stored outcome.
+          policy.instance_variable_get(:@authorizations)["decision-1"]["expires_at"] =
+            (Time.now.utc - 10).iso8601
+          replay = service.request(**args)
+          assert_equal "succeeded", replay.dig("data", "outcome")
+          assert_equal 1, calls
+        end
+      end
+
       def test_duplicate_authorization_under_new_request_id_conflicts
         Dir.mktmpdir do |dir|
           repo, topology, coordinator, policy, input_path, assignment, attempt = setup_fixture(dir)

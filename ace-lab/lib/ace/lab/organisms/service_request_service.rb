@@ -37,6 +37,15 @@ module Ace
           binding["authorization"] = authorization
           binding["service_id"] = service_id
           binding["caller_uid"] = Process.uid
+          # An identical retry returns the stored outcome without re-checking
+          # attempt or policy: a completed request must survive attempt
+          # terminality and authorization expiry.
+          existing = @coordinator.service_request_status(request_id)
+          if existing && existing["project_id"] == project && existing["operation"] == operation &&
+              existing["input_digest"] == binding.fetch("input_digest") &&
+              existing["caller_uid"] == Process.uid
+            return result(existing)
+          end
           validate_attempt!(binding)
           begin
             operation_policy = policy.operation!(operation, project: project, service_id: service_id)
@@ -45,9 +54,11 @@ module Ace
             @coordinator.reject_service_request(binding, reason: "policy_rejected") unless dry_run
             raise
           end
-          # The trusted policy owns executor identity; the journaled claim
-          # binds it so only that executor can later complete the receipt.
+          # The trusted policy owns executor identity and transport; the
+          # journaled claim binds them so only that executor identity can
+          # later complete the receipt.
           binding["executor_uid"] = operation_policy.fetch("executor_uid")
+          binding["transport"] = operation_policy.fetch("transport", "local")
 
           if dry_run
             preview = {"outcome" => "accepted", "dry_run" => true, "request_id" => request_id,

@@ -7,7 +7,7 @@ module Ace
       # The coordinator independently verifies every binding before acceptance.
       module ServiceReceipt
         BINDING_FIELDS = %w[request_id assignment_id attempt_id project_id operation
-          input_digest target candidate_head].freeze
+          input_digest target candidate_head executor_uid transport].freeze
 
         def self.build(binding, executor_result)
           BINDING_FIELDS.to_h { |field| [field, binding.fetch(field)] }.merge(executor_result)
