@@ -133,6 +133,56 @@ module Ace
           )
         end
 
+        def pull_request_review_evidence(number:, expected_head:)
+          pr = verify_expected_head!(pull_request(number: number), expected_head)
+          comments = gh_api_pages("issues/#{pr.number}/comments").map do |entry|
+            review_comment(entry, pr, expected_head)
+          end
+          inline = gh_api_pages("pulls/#{pr.number}/comments").map do |entry|
+            review_comment(entry, pr, expected_head)
+          end
+          reviews = gh_api_pages("pulls/#{pr.number}/reviews").map do |entry|
+            review_entry(entry, pr, expected_head)
+          end
+          verify_expected_head!(pull_request(number: pr.number), expected_head)
+          Ace::Git::ProviderReviewEvidence.new(
+            server_name: server.name, repository_url: server.url,
+            pr_number: pr.number, head_sha: expected_head,
+            comments: comments + inline, reviews: reviews
+          )
+        end
+
+        def create_pull_request_comment(number:, expected_head:, body:, correlation:)
+          pr = verify_expected_head!(pull_request(number: number), expected_head)
+          marker = comment_marker(correlation)
+          existing = matching_review_comments(pr, marker, expected_head)
+          if existing.length > 1
+            raise Ace::Git::ProviderConflictingMatchesError,
+              "Multiple comments match review session #{correlation} on PR ##{pr.number}"
+          end
+          return review_mutation(pr, expected_head, existing.first, :existing) if existing.one?
+
+          verify_expected_head!(pull_request(number: pr.number), expected_head)
+          begin
+            gh_api("issues/#{pr.number}/comments", method: :post, body: "#{body}\n\n#{marker}")
+          rescue Ace::Git::ProviderUnreachableError => e
+            raise Ace::Git::ProviderUnknownOutcomeError,
+              "PR comment outcome unknown for #{server.name}/#{pr.number}, head #{expected_head}, " \
+              "session #{correlation}: #{e.message}; reconcile before repeating"
+          end
+          matches = matching_review_comments(pr, marker, expected_head)
+          unless matches.one?
+            raise Ace::Git::ProviderUnknownOutcomeError,
+              "PR comment sent but reconciliation found #{matches.length} matches for session #{correlation}"
+          end
+          review_mutation(pr, expected_head, matches.first, :created)
+        end
+
+        def resolve_pull_request_thread(number:, expected_head:, thread_id:)
+          raise Ace::Git::ProviderUnsupportedCapabilityError,
+            "GitHub review thread resolution requires a reviewed GraphQL thread identity contract"
+        end
+
         # ---- PR lifecycle mutations ----
 
         # @return [Array<ProviderPullRequest>] open PRs matching the exact
@@ -216,6 +266,77 @@ module Ace
         end
 
         private
+
+        def comment_marker(correlation)
+          unless correlation.to_s.match?(/\A[a-zA-Z0-9._:-]+\z/)
+            raise Ace::Git::ConfigError, "Invalid review session correlation"
+          end
+          "<!-- ace-review-session:#{correlation} -->"
+        end
+
+        def matching_review_comments(pr, marker, head)
+          gh_api_pages("issues/#{pr.number}/comments").filter_map do |entry|
+            next unless entry.is_a?(Hash) && entry["body"].is_a?(String) && entry["body"].include?(marker)
+
+            review_comment(entry, pr, head)
+          end
+        end
+
+        def review_comment(entry, pr, head)
+          unless entry.is_a?(Hash) && entry["id"] && entry["body"].is_a?(String) &&
+              entry.dig("user", "login").is_a?(String)
+            raise Ace::Git::ProviderMalformedOutputError, "Malformed GitHub PR comment evidence"
+          end
+          Ace::Git::ProviderReviewComment.new(
+            server_name: server.name, repository_url: server.url, pr_number: pr.number,
+            id: entry["id"], author: entry.dig("user", "login"), body: entry["body"],
+            url: entry["html_url"], path: entry["path"], line: entry["line"],
+            head_sha: entry["commit_id"] || head, resolved: nil, thread_id: nil
+          )
+        end
+
+        def review_entry(entry, pr, head)
+          unless entry.is_a?(Hash) && entry["id"] && entry.dig("user", "login").is_a?(String)
+            raise Ace::Git::ProviderMalformedOutputError, "Malformed GitHub PR review evidence"
+          end
+          Ace::Git::ProviderReview.new(
+            server_name: server.name, repository_url: server.url, pr_number: pr.number,
+            id: entry["id"], author: entry.dig("user", "login"), body: entry["body"],
+            state: entry["state"], url: entry["html_url"], head_sha: entry["commit_id"] || head
+          )
+        end
+
+        def review_mutation(pr, head, comment, idempotency)
+          Ace::Git::ProviderReviewMutation.new(
+            server_name: server.name, repository_url: server.url, pr_number: pr.number,
+            head_sha: head, comment: comment, idempotency: idempotency
+          )
+        end
+
+        def gh_api_pages(suffix)
+          data = gh_api(suffix, paginate: true)
+          pages = data.is_a?(Array) ? data : nil
+          unless pages && pages.all? { |page| page.is_a?(Array) }
+            raise Ace::Git::ProviderMalformedOutputError, "Malformed GitHub PR collection"
+          end
+          pages.flatten(1)
+        end
+
+        def gh_api(suffix, method: :get, body: nil, paginate: false)
+          target = Ace::Git::Atoms::ServerUrl.normalize(server.url)
+          host, repository = target.split("/", 2)
+          unless repository&.match?(%r{\A[^/]+/[^/]+\z})
+            raise Ace::Git::ConfigError, "Invalid selected GitHub repository #{server.url}"
+          end
+          args = ["repos/#{repository}/#{suffix}", "--hostname", host]
+          args += ["--paginate", "--slurp"] if paginate
+          args += ["-X", "POST", "-f", "body=#{body}"] if method == :post
+          result = CliExecutor.execute("api", args, timeout: timeout, runner: runner)
+          classify_failure(result[:stderr], context: "api #{suffix}") unless result[:success]
+          JSON.parse(result[:stdout])
+        rescue JSON::ParserError => e
+          raise Ace::Git::ProviderMalformedOutputError, "Malformed GitHub API JSON: #{e.message}"
+        end
 
         STATE_ORDER = {open: 0, merged: 1, closed: 2}.freeze
 

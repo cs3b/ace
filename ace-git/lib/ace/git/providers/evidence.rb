@@ -21,6 +21,27 @@ module Ace
     # Normalized check/CI evidence for one check run.
     ProviderCheck = Data.define(:server_name, :name, :state, :conclusion, :url)
 
+    # Comments keep the exact repository and PR identity supplied by the
+    # selected provider. A nil path/line denotes a conversation comment.
+    ProviderReviewComment = Data.define(
+      :server_name, :repository_url, :pr_number, :id, :author, :body,
+      :url, :path, :line, :head_sha, :resolved, :thread_id
+    )
+
+    ProviderReview = Data.define(
+      :server_name, :repository_url, :pr_number, :id, :author, :body,
+      :state, :url, :head_sha
+    )
+
+    ProviderReviewEvidence = Data.define(
+      :server_name, :repository_url, :pr_number, :head_sha, :comments, :reviews
+    )
+
+    ProviderReviewMutation = Data.define(
+      :server_name, :repository_url, :pr_number, :head_sha, :comment,
+      :idempotency
+    )
+
     # Normalized repository evidence.
     ProviderRepository = Data.define(:server_name, :full_name, :default_branch, :url)
 

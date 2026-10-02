@@ -104,6 +104,26 @@ module Ace
           raise NotImplementedError, "Providers must implement #{self.class}#repository"
         end
 
+        # Collect normalized conversation comments, code comments and reviews
+        # for one exact PR head. A provider must reject malformed collections;
+        # an empty successful collection is represented by empty arrays.
+        def pull_request_review_evidence(number:, expected_head:)
+          raise NotImplementedError, "Providers must implement #{self.class}#pull_request_review_evidence"
+        end
+
+        # Create a top-level PR comment. `correlation` is a stable session key
+        # embedded in the body so a retry can find exactly one prior send.
+        # A possible post-send transport failure raises ProviderUnknownOutcomeError.
+        def create_pull_request_comment(number:, expected_head:, body:, correlation:)
+          raise NotImplementedError, "Providers must implement #{self.class}#create_pull_request_comment"
+        end
+
+        # Thread resolution is a separate capability. Unsupported providers
+        # must raise ProviderUnsupportedCapabilityError, never simulate success.
+        def resolve_pull_request_thread(number:, expected_head:, thread_id:)
+          raise NotImplementedError, "Providers must implement #{self.class}#resolve_pull_request_thread"
+        end
+
         # ---- PR lifecycle mutations ----
         #
         # Contract requirements (enforced by every provider implementation):
