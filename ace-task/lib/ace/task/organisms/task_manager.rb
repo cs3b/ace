@@ -64,33 +64,38 @@ module Ace
           ensure_issue_linkable!(remote_issue) if remote_issue
           begin
             attempts += 1
-            created_task = creator.create(
-              title,
-              status: status,
-              priority: priority,
-              tags: tags,
-              dependencies: dependencies,
-              use_llm_slug: use_llm_slug,
-              time: Time.now.utc + ((attempts - 1) * 2),
-              estimate: estimate,
-              remote_issue: remote_issue
-            )
+            created_task = nil
             sync_started = false
             begin
               result = nil
+              # The canonical issue lock covers the local duplicate scan, the
+              # task write, and the sync: two concurrent creates for one
+              # issue serialize instead of both writing and both deleting.
               with_issue_identity_lock(remote_issue) do
+                ensure_issue_not_linked_elsewhere!(remote_issue) if remote_issue
+                created_task = creator.create(
+                  title,
+                  status: status,
+                  priority: priority,
+                  tags: tags,
+                  dependencies: dependencies,
+                  use_llm_slug: use_llm_slug,
+                  time: Time.now.utc + ((attempts - 1) * 2),
+                  estimate: estimate,
+                  remote_issue: remote_issue
+                )
                 ensure_issue_not_linked_elsewhere!(remote_issue, exclude_id: created_task.id) if remote_issue
                 sync_started = true
-                result = sync_linked_issues_for(created_task, reason: "create")
+                result = remote_issue ? sync_linked_issues_for(created_task, reason: "create") : nil
               end
-              if result[:success] == false && result[:error].to_s.start_with?("Ace::Git::ProviderIdentityMismatchError") &&
+              if result && result[:success] == false && result[:error].to_s.start_with?("Ace::Git::ProviderIdentityMismatchError") &&
                   !result[:committed_create]
                 # Ownership was rejected before any remote mutation: the task
                 # must not survive as a second local claimant for the issue.
                 FileUtils.rm_rf(created_task.path)
                 raise Ace::Git::ProviderIdentityMismatchError, result[:error].to_s
               end
-              if result[:success] == false &&
+              if result && result[:success] == false &&
                   result[:error].to_s.start_with?("Ace::Git::ProviderIdentityMismatchError")
                 # The mismatch surfaced after the tracking comment committed
                 # (e.g. a concurrent external marker): the remote record
@@ -107,7 +112,7 @@ module Ace
               # not leave a second local claimant for the issue. Once sync has
               # begun the remote marker may exist: retain the task and its
               # pending identity as the recovery record instead of deleting it.
-              FileUtils.rm_rf(created_task.path) unless sync_started
+              FileUtils.rm_rf(created_task.path) if created_task && !sync_started
               raise
             end
             show_after_sync(created_task) || created_task
@@ -511,32 +516,37 @@ module Ace
           # leaving an unvalidated offline link after a failed command.
           ensure_issue_linkable!(remote_issue) if remote_issue
           subtask_creator = Molecules::SubtaskCreator.new(config: @config)
-          created_subtask = subtask_creator.create(
-            parent,
-            title,
-            status: status,
-            priority: priority,
-            tags: tags,
-            estimate: estimate,
-            remote_issue: remote_issue
-          )
+          created_subtask = nil
           sync_started = false
           begin
             result = nil
+            # The canonical issue lock covers the local duplicate scan, the
+            # subtask write, and the sync: two concurrent creates for one
+            # issue serialize instead of both writing and both deleting.
             with_issue_identity_lock(remote_issue) do
               ensure_issue_linkable!(remote_issue) if remote_issue
+              ensure_issue_not_linked_elsewhere!(remote_issue) if remote_issue
+              created_subtask = subtask_creator.create(
+                parent,
+                title,
+                status: status,
+                priority: priority,
+                tags: tags,
+                estimate: estimate,
+                remote_issue: remote_issue
+              )
               ensure_issue_not_linked_elsewhere!(remote_issue, exclude_id: created_subtask.id) if remote_issue
               sync_started = true
-              result = sync_linked_issues_for(created_subtask, reason: "create")
+              result = remote_issue ? sync_linked_issues_for(created_subtask, reason: "create") : nil
             end
-            if result[:success] == false && result[:error].to_s.start_with?("Ace::Git::ProviderIdentityMismatchError") &&
+            if result && result[:success] == false && result[:error].to_s.start_with?("Ace::Git::ProviderIdentityMismatchError") &&
                 !result[:committed_create]
               # Ownership was rejected before any remote mutation: the subtask
               # must not survive as a second local claimant for the issue.
               FileUtils.rm_rf(created_subtask.path)
               raise Ace::Git::ProviderIdentityMismatchError, result[:error].to_s
             end
-            if result[:success] == false &&
+            if result && result[:success] == false &&
                 result[:error].to_s.start_with?("Ace::Git::ProviderIdentityMismatchError")
               # Post-create rejection (e.g. a concurrent external marker):
               # the committed marker needs a local cleanup record, so the
@@ -548,7 +558,7 @@ module Ace
             # leave an artifact claiming a link that was never validated; once
             # sync has begun the remote marker may exist, so retain the task
             # and its pending identity as the recovery record.
-            FileUtils.rm_rf(created_subtask.path) unless sync_started
+            FileUtils.rm_rf(created_subtask.path) if created_subtask && !sync_started
             raise
           end
           show_after_sync(created_subtask) || created_subtask
