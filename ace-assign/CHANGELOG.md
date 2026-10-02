@@ -20,6 +20,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Validate terminal service receipts against the exact claimed request and
   executor evidence before accepting them in the assignment journal.
 
+### Technical
+
+- Updated the ace-tmux dependency to the 0.18 adapter release line.
+
 ## [0.60.0] - 2026-10-01
 
 ### Fixed

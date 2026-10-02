@@ -48,7 +48,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "ace-llm", "~> 0.39"
   spec.add_dependency "ace-review", "~> 0.57"
   spec.add_dependency "ace-task", "~> 0.37"
-  spec.add_dependency "ace-tmux", "~> 0.17"
+  spec.add_dependency "ace-tmux", "~> 0.18"
 
   # Development dependencies
   spec.add_development_dependency "ace-support-test-helpers", "~> 0.14"

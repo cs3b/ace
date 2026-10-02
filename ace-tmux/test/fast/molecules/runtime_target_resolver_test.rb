@@ -47,6 +47,23 @@ class RuntimeTargetResolverTest < Minitest::Test
     assert_equal "explicit", target.source
   end
 
+
+  def test_resolve_live_window_identity_trims_trailing_newline
+    resolver = Ace::Tmux::Molecules::RuntimeTargetResolver.new(
+      executor: MockExecutor.new(
+        capture_responses: {
+          'tmux display-message -t dev: -p #{window_id}	#{window_index}	#{window_name}' => mock_result(stdout: "@3\t2\twork\n")
+        }
+      ),
+      env: {"ACE_TMUX_SESSION" => "dev", "TMUX" => "/tmp/socket"}
+    )
+
+    target = resolver.resolve_window
+
+    assert_equal "work", target.window
+    assert_equal "@3", target.window_target
+  end
+
   def test_resolve_pane_uses_live_tmux_when_needed
     executor = MockExecutor.new(
       capture_responses: {

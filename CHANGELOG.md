@@ -28,6 +28,7 @@ All notable changes to this project will be documented in this file.
   bound, verified receipts with conservative uncertainty after interrupted effects.
 - **ace-lab v0.2.0**: Added authorized `service request` and `service status`
   commands with exact policy checks, fixed argv execution, and durable outcomes.
+- **ace-tmux v0.18.0**: Added the shared ace-runtime tmux adapter with typed window, pane, send, capture, and wait operations over the existing control surface.
 
 - **ace-review v0.57.0**: Durable review campaigns retain verified findings and convergence across commits; current acceptance requires independent approval and passing checks backed by accepted execution receipts.
 - **ace-assign v0.60.0**: Validates campaign results and exposes read-only managed check, review-collection and review-approval authority, including explicit historical review evidence.
@@ -70,7 +71,8 @@ All notable changes to this project will be documented in this file.
 
 ### Technical
 
-- Dependency-following patch release after ace-assign 0.61: `ace-overseer v0.18.2`.
+- Dependency-following release after ace-assign 0.61: `ace-overseer v0.18.2` (also carries the ace-tmux 0.18 dependency update).
+- Dependency-following release for the ace-tmux 0.18 line: `ace-demo v0.25.11` (ace-assign published as v0.61.0 instead of v0.60.1).
 
 - **ace-llm-providers-cli v0.36.1**: Stabilize asynchronous descendant-exit observations without weakening cleanup checks; a live-child negative control enforces the bounded wait.
 

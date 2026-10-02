@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Technical
 - Follow the ace-assign 0.61 release line for journal-backed service effects.
+- Updated the ace-tmux dependency to the 0.18 adapter release line.
 
 ## [0.18.1] - 2026-10-01
 
