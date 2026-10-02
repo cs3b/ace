@@ -4,6 +4,7 @@ require "json"
 require "uri"
 require_relative "cli_executor"
 require_relative "parsers"
+require_relative "issue_api"
 
 module Ace
   module Git
@@ -107,6 +108,58 @@ module Ace
             url: issue_url(parsed[:number]),
             labels: nil
           )
+        end
+
+        def issue_tracking(number:)
+          data = issue_api.issue(request_number!(number))
+          unless data.is_a?(Hash) && data["number"].to_i == number.to_i &&
+              data["html_url"].to_s == issue_url(number.to_i)
+            raise Ace::Git::ProviderIdentityMismatchError, "Issue ##{number} is not in #{server.url}"
+          end
+          evidence = Ace::Git::ProviderIssue.new(
+            server_name: server.name, number: data["number"], title: data["title"],
+            state: data["state"] == "open" ? :open : :closed,
+            author: data.dig("user", "login"), url: data["html_url"],
+            labels: Array(data["labels"]).map { |label| label["name"] }
+          )
+          {issue: evidence,
+           comments: Array(issue_api.comments(number)).map { |c| {id: c.fetch("id"), body: c["body"].to_s} },
+           labels: evidence.labels}
+        end
+
+        def create_issue_comment(number:, body:)
+          issue_api.create_comment(request_number!(number), body)
+        end
+
+        def update_issue_comment(number:, comment_id:, body:)
+          assert_issue_comment_owned!(number, comment_id)
+          issue_api.update_comment(Integer(comment_id), body)
+        end
+
+        def delete_issue_comment(number:, comment_id:)
+          assert_issue_comment_owned!(number, comment_id)
+          issue_api.delete_comment(Integer(comment_id))
+        end
+
+        def add_issue_label(number:, label:)
+          match = Array(issue_api.repository_labels).find { |entry| entry["name"] == label }
+          unless match && match["id"].to_i.positive?
+            raise Ace::Git::ProviderObjectNotFoundError, "Forgejo label #{label.inspect} is not configured on #{server.url}"
+          end
+          issue_api.add_label(request_number!(number), match["id"])
+        end
+
+        def remove_issue_label(number:, label:)
+          match = Array(issue_api.repository_labels).find { |entry| entry["name"] == label }
+          return unless match
+
+          issue_api.remove_label(request_number!(number), match.fetch("id"))
+        end
+
+        def set_issue_state(number:, state:)
+          raise ArgumentError, "Invalid issue state #{state.inspect}" unless %i[open closed].include?(state)
+
+          issue_api.set_state(request_number!(number), state)
         end
 
         # @return [Array<ProviderCheck>] normalized check evidence for a ref
@@ -555,6 +608,17 @@ module Ace
             server_name: server.name, repository_url: server.url, pr_number: number,
             head_sha: head, comment: comment, idempotency: idempotency
           )
+        end
+
+        def assert_issue_comment_owned!(number, comment_id)
+          return if issue_tracking(number: number)[:comments].any? { |comment| comment[:id].to_i == comment_id.to_i }
+
+          raise Ace::Git::ProviderIdentityMismatchError,
+            "Comment #{comment_id} is not on selected issue ##{number} in #{server.url}"
+        end
+
+        def issue_api
+          @issue_api ||= IssueApi.new(server: server, timeout: timeout, runner: runner)
         end
 
         # Validated selected repository identity. Built once; malformed

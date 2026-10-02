@@ -1,0 +1,62 @@
+# frozen_string_literal: true
+
+require "test_helper"
+
+class GithubIssueTrackingProviderTest < AceGitGithubTestCase
+  SERVER = Ace::Git::ResolvedServer.new(name: "github", provider: :github,
+    url: "https://github.example.com/owner/repo")
+
+  def test_tracking_read_binds_repository_and_paginates_comments
+    calls = []
+    runner = lambda do |args:, **_options|
+      calls << args
+      stdout = if args[1..2] == ["issue", "view"]
+        {"number" => 42, "title" => "Issue", "state" => "OPEN",
+         "author" => {"login" => "dev"}, "url" => "https://github.example.com/owner/repo/issues/42",
+         "labels" => [{"name" => "customer"}]}.to_json
+      else
+        [[{"id" => 99, "body" => "<!-- ace-task:tracked -->"}]].to_json
+      end
+      {success: true, stdout: stdout, stderr: "", exit_code: 0}
+    end
+    snapshot = Ace::Git::Github::Provider.new(server: SERVER, runner: runner).issue_tracking(number: 42)
+    assert_equal 99, snapshot[:comments].first[:id]
+    assert_equal ["customer"], snapshot[:labels]
+    assert calls.any? { |argv| argv.include?("--repo") && argv.include?("github.example.com/owner/repo") }
+    assert calls.any? { |argv| argv.include?("--hostname") && argv.include?("github.example.com") }
+  end
+
+  def test_mutation_uses_selected_host_and_repository_path
+    calls = []
+    runner = lambda do |args:, **_options|
+      calls << args
+      {success: true, stdout: "{}", stderr: "", exit_code: 0}
+    end
+    provider = Ace::Git::Github::Provider.new(server: SERVER, runner: runner)
+    provider.create_issue_comment(number: 42, body: "@literal text")
+    args = calls.first
+    assert_includes args, "repos/owner/repo/issues/42/comments"
+    assert_includes args, "github.example.com"
+    assert_includes args, "--raw-field"
+    assert_includes args, "body=@literal text"
+  end
+
+  def test_comment_mutation_refuses_id_not_on_selected_issue
+    calls = []
+    runner = lambda do |args:, **_options|
+      calls << args
+      stdout = if args[1] == "issue"
+        {"number" => 42, "title" => "Issue", "state" => "OPEN", "author" => nil,
+         "url" => "https://github.example.com/owner/repo/issues/42", "labels" => []}.to_json
+      else
+        "[[]]"
+      end
+      {success: true, stdout: stdout, stderr: "", exit_code: 0}
+    end
+    provider = Ace::Git::Github::Provider.new(server: SERVER, runner: runner)
+    assert_raises(Ace::Git::ProviderIdentityMismatchError) do
+      provider.delete_issue_comment(number: 42, comment_id: 999)
+    end
+    refute calls.any? { |args| args.include?("DELETE") }
+  end
+end

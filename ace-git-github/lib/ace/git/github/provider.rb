@@ -116,6 +116,57 @@ module Ace
           normalize_issue(output)
         end
 
+        def issue_tracking(number:)
+          data = gh_json(["issue", "view", number.to_s, "--json", "number,title,state,author,url,labels"])
+          evidence = normalize_issue(data)
+          unless evidence.number.to_i == number.to_i &&
+              Ace::Git::Atoms::ServerUrl.match?(server.url, evidence.url.to_s.sub(%r{/issues/\d+\z}, ""))
+            raise Ace::Git::ProviderIdentityMismatchError, "Issue ##{number} is not in #{server.url}"
+          end
+          uri = URI.parse(server.url)
+          owner_repo = uri.path.sub(%r{\A/}, "").sub(/\.git\z/, "")
+          pages = gh_json(["api", "repos/#{owner_repo}/issues/#{number}/comments", "--hostname", uri.host,
+                           "--paginate", "--slurp"], bind_repo: false)
+          {
+            issue: evidence,
+            comments: Array(pages).flatten.map do |comment|
+              id = comment["id"]
+              raise Ace::Git::ProviderMalformedOutputError, "Issue comment has no API id" unless id.to_s.match?(/\A\d+\z/)
+
+              {id: id.to_i, body: comment["body"].to_s}
+            end,
+            labels: Array(data["labels"]).map { |label| label["name"].to_s }
+          }
+        end
+
+        def create_issue_comment(number:, body:)
+          issue_api("POST", "issues/#{number}/comments", fields: ["body=#{body}"])
+        end
+
+        def update_issue_comment(number:, comment_id:, body:)
+          assert_issue_comment_owned!(number, comment_id)
+          issue_api("PATCH", "issues/comments/#{Integer(comment_id)}", fields: ["body=#{body}"])
+        end
+
+        def delete_issue_comment(number:, comment_id:)
+          assert_issue_comment_owned!(number, comment_id)
+          issue_api("DELETE", "issues/comments/#{Integer(comment_id)}")
+        end
+
+        def add_issue_label(number:, label:)
+          issue_api("POST", "issues/#{number}/labels", fields: ["labels[]=#{label}"])
+        end
+
+        def remove_issue_label(number:, label:)
+          issue_api("DELETE", "issues/#{number}/labels/#{URI.encode_www_form_component(label)}")
+        end
+
+        def set_issue_state(number:, state:)
+          raise ArgumentError, "Invalid issue state #{state.inspect}" unless %i[open closed].include?(state)
+
+          issue_api("PATCH", "issues/#{number}", fields: ["state=#{state}"])
+        end
+
         # @return [Array<ProviderCheck>] normalized check evidence for a ref
         def checks(ref:)
           output = gh_json(["pr", "checks", ref.to_s, "--json", "name,state,bucket"])
@@ -887,6 +938,26 @@ end
         else
           raise Ace::Git::ProviderUnreachableError, "git #{args.first} failed" unless status.success?
           out
+        end
+
+        def assert_issue_comment_owned!(number, comment_id)
+          return if issue_tracking(number: number)[:comments].any? { |comment| comment[:id].to_i == comment_id.to_i }
+
+          raise Ace::Git::ProviderIdentityMismatchError,
+            "Comment #{comment_id} is not on selected issue ##{number} in #{server.url}"
+        end
+
+        def issue_api(method, suffix, fields: [])
+          uri = URI.parse(server.url)
+          owner_repo = uri.path.sub(%r{\A/}, "").sub(/\.git\z/, "")
+          args = ["repos/#{owner_repo}/#{suffix}", "--hostname", uri.host, "--method", method]
+          fields.each { |field| args += ["--raw-field", field] }
+          result = CliExecutor.execute("api", args, timeout: timeout, runner: runner)
+          classify_failure(result[:stderr], context: "issue #{method} #{suffix}") unless result[:success]
+          result
+        rescue Ace::Git::ProviderUnreachableError => e
+          raise Ace::Git::ProviderUnknownOutcomeError,
+            "Unknown outcome for issue mutation on #{server.url} (#{suffix}): #{e.message}"
         end
 
         STATE_ORDER = {open: 0, merged: 1, closed: 2}.freeze

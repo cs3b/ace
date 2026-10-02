@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Repository-bound GitHub PR comment and review retrieval, comment create/update, and thread resolution through the shared provider contract.
 - Correlation-based comment reconciliation after uncertain posts and explicit malformed or unsupported result classification.
-
+- GitHub issue tracking through the shared provider contract, including repository-bound lookup and mutation.
 
 ## [0.2.0] - 2026-09-28
 
