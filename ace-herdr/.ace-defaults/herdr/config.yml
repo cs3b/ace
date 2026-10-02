@@ -19,6 +19,10 @@ timeouts:
 # Delivery record root (ADR-029 short-name layout), relative to project root
 deliveries_dir: .ace-local/herdr/deliveries
 
+# Absolute path to the supervisor-managed receipt verification key. Configure
+# before enqueue; each event pins this key's fingerprint for reconciliation.
+inbox_receipt_public_key:
+
 # Tidy (spec 8wq.t.1w0): archive delivered records strictly older than this
 # many days (age = record updated_at); failed/retryable/pending are never
 # touched

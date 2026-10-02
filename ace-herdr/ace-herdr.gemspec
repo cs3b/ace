@@ -9,9 +9,9 @@ Gem::Specification.new do |spec|
   spec.email = ["mc@cs3b.com"]
 
   spec.summary = "Zero-token ergonomic wrapper over the herdr CLI for agent panes"
-  spec.description = "Push delivery and agent bootstrap for the Herdr runtime: deliver(ref, answer) -> " \
-                     "herdr agent prompt <pane>, bootstrap missing agents, and dispatch agents with " \
-                     "deterministic defaults. Implements the ace-hitl provider delivery contract."
+  spec.description = "Herdr agent orchestration with push delivery, agent bootstrap, dispatch, and a durable " \
+                     "attempt-linked inbox for exact-session Codex/Pi queue submission and signed reconciliation. " \
+                     "Implements the ace-hitl provider delivery contract."
   spec.homepage = "https://github.com/cs3b/ace"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"

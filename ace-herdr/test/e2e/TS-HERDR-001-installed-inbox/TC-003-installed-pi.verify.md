@@ -1,0 +1,3 @@
+# Goal 3 — Installed Pi delivery verdict
+
+PASS only if the isolated installed executable completed enqueue and two deliver invocations with zero exits, the idle Pi target was verified by the fake live identity probe, and the JSON states are `queued`, `delivered`, `delivered`. The persisted binding must name Pi and the expected exact session ID. The Pi queue log must contain exactly one submission for `inb-99999999`, including the event ID, and the returned receipt must match the event, session, and payload digest. The wake log must contain exactly one generic `Check your native queued messages.` prompt and never contain the inbox payload. Cite the captured command outputs and sandbox record. Otherwise FAIL.

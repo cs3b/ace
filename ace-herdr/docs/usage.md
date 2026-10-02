@@ -14,6 +14,7 @@ ace-docs:
 ## Command Surface
 
 - `ace-herdr deliver [OPTIONS]`
+- `ace-herdr inbox enqueue|status|deliver|reconcile [OPTIONS]`
 - `ace-herdr dispatch [OPTIONS]`
 - `ace-herdr list [--panes|--tabs|--workspaces] [--workspace ID] [--quiet]`
 - `ace-herdr send [--cmd TEXT] [--msg TEXT...] [--key NAME...] --pane ID [--quiet]`
@@ -40,6 +41,50 @@ The adapter implements `context`, `ensure_window`, `prepare_pane`, `focus`, orde
 Sends probe for a live agent. Plain panes receive raw text and keys in order; agent panes receive one self-submitting `agent prompt`, with one trailing Enter dropped and reported. Agent waits use native `agent wait` states (`idle`, `working`, `blocked`, `done`). Contract timeout values are seconds and are converted to Herdr milliseconds. Lifecycle waits observe `tab get`, focused tab state, `pane get`, and `pane process-info`; a missing pane keeps `pane-exists` waiting but immediately satisfies `pane-exited`. A pane with only its retained shell also satisfies `pane-exited` because no submitted foreground command remains. This observation does not prove assignment success or authorize cleanup.
 
 Native `agent_blocked` becomes `SendRejectedError`; `agent_prompt_stalled` becomes `SendStalledError` and must not be automatically resent. Native wait timeouts become `WaitTimeoutError`, missing targets become `TargetNotFoundError`, and an unavailable binary or socket becomes `RuntimeUnavailableError`.
+
+## Durable agent inbox
+
+Use a stable event ID for one message and the assignment attempt that owns it. The reverse-address JSON contains `session` and `pane`, as with `deliver`.
+
+```bash
+ace-herdr inbox enqueue --event inb-12345678 --attempt ATTEMPT --ref ref.json --file prompt.txt
+ace-herdr inbox status --event inb-12345678 --format json
+ace-herdr inbox deliver --event inb-12345678
+```
+
+`enqueue` checks the live pane, durable terminal, agent kind, and native thread identity. Repeating the same event, attempt, target, and payload returns its existing record; a changed value is an error. `deliver` claims the record once. Idle and busy Codex or Pi agents receive an exact-session native queue submission. After an accepted idle submission, Herdr sends a generic wake prompt without the inbox payload. A pane replacement can receive at most that generic wake, never the payload. The JSON result includes `state`, `claim_generation`, `binding`, `last_error`, and any submission receipt.
+
+`queued` can be retried after a proven pre-submission rejection. `delivered` means native submission was accepted; it does not mean the agent consumed the message. A crash after claim, changed target identity, or a native result without a verified acceptance receipt is `uncertain`; another `deliver` call does not resend it. A `completed` record has a positively verified consumption receipt. A superseded uncertain record can return to `queued` only after positive nonconsumption proof.
+
+```bash
+ace-herdr inbox reconcile --event inb-12345678 --receipt proof.json
+```
+
+The receipt is a file supplied from an operator or supervisor observation of the native outcome. Codex and Pi expose submission but no queryable consumption or eviction proof, so `reconcile` never polls the native queue or infers an outcome from age. Before enqueue, the supervisor sets `inbox_receipt_public_key` in `.ace/herdr/config.yml` to the absolute path of its trusted RSA public key. Each event pins that key's fingerprint; a later process cannot substitute a different key. Protect this configuration from delivery requesters. The receipt file must have a detached SHA-256 RSA signature at `FILE.sig`. The private key stays with the operator or supervisor. Its JSON must include the recorded event, attempt, claim generation, payload digest, and complete binding, plus an outcome (`consumed` or `superseded`), an identified observer, and a native observation reference:
+
+```json
+{
+  "event_id": "inb-12345678",
+  "attempt_id": "ATTEMPT",
+  "claim_generation": 1,
+  "payload_sha256": "<digest from inbox status>",
+  "binding": {"session": "<exact binding from inbox status>"},
+  "outcome": "consumed",
+  "observer": {"role": "operator", "id": "operator-id"},
+  "evidence": {"kind": "consumed_acknowledged", "native_reference": "session-log:42", "observation": "message consumed and acknowledged"}
+}
+```
+
+Copy the **entire** `binding` object from `inbox status`; the shortened object above only illustrates the field. `consumed` requires `evidence.kind: consumed_acknowledged`. `superseded` requires `queue_evicted`, `queue_expired`, or `thread_replaced`, with an observation that the old queue entry cannot be consumed. A matching receipt changes `uncertain` to `completed` for consumption, or to `queued` for proven supersession. The original target binding stays pinned. To authorize a replacement native session, include `replacement_target` in the signed receipt with the complete target identity from a fresh Herdr pane observation; reconciliation verifies its session, pane, terminal, agent, and thread against that live replacement address before saving it. Without that field, a new claim can only use the original target. A missing or mismatched receipt returns JSON with unchanged `state: uncertain` and `reconciliation_refusal`; it does not resend. Keep the observation record with the receipt. Signature validation authenticates the configured key; the operator or supervisor remains responsible for checking the cited native outcome before signing.
+
+After inspecting the native outcome and writing `proof.json`, the trusted operator signs the exact bytes:
+
+```bash
+openssl dgst -sha256 -sign operator-private.pem -out proof.json.sig proof.json
+ace-herdr inbox reconcile --event inb-12345678 --receipt proof.json
+```
+
+The command verifies the detached signature against the configured public key before any transition. Missing, malformed, or self-signed receipts leave the event uncertain and return a machine-readable refusal. Keep the signed receipt and source observation for audit.
 
 ## tmux-intent ↔ herdr-command parity
 

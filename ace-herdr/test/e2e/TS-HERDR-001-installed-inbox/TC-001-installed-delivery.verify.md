@@ -1,0 +1,3 @@
+# Goal 1 — Installed delivery verdict
+
+PASS only if the local gem build and install exits are zero, the isolated gem activation capture resolves `ace-herdr` under `install/gems/` and outside the source checkout, the installed executable performed enqueue and two deliver invocations with zero exits, their JSON reports `queued` then `delivered` then `delivered`, and the sandbox queue log contains exactly one native `queue --thread` submission for the intended payload. Confirm the durable delivery record exists under `.ace-local/herdr/deliveries/` and no migrated lab-config Python transport file was used. Cite sandbox state and captured command outputs. Otherwise FAIL.

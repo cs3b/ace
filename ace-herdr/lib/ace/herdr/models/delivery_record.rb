@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "json"
+require "digest"
 
 module Ace
   module Herdr
@@ -17,14 +18,23 @@ module Ace
       # before the prompt never loses the content; it can be re-delivered
       # via resume. Record files are 0600 (answers may be sensitive).
       class DeliveryRecord
-        STATES = %w[pending delivered retryable failed].freeze
+        STATES = %w[pending delivered retryable failed queued claimed uncertain completed].freeze
 
         attr_reader :event_id, :session, :pane, :answer_digest, :answer,
-          :state, :attempts, :history, :created_at, :updated_at
+          :state, :attempts, :history, :created_at, :updated_at, :inbox
 
         def initialize(event_id:, session:, pane:, answer_digest:, answer: nil,
-          state: "pending", attempts: 0, history: [], created_at: nil, updated_at: nil)
+          state: "pending", attempts: 0, history: [], created_at: nil, updated_at: nil, inbox: nil)
           raise ArgumentError, "unknown state: #{state}" unless STATES.include?(state)
+          if inbox
+            unless inbox.is_a?(Hash) && inbox["attempt_id"].is_a?(String) &&
+                inbox["claim_generation"].is_a?(Integer) && inbox["claim_generation"] >= 0 &&
+                answer.is_a?(String) && Digest::SHA256.hexdigest(answer) == answer_digest
+              raise ArgumentError, "invalid inbox record"
+            end
+          elsif %w[queued claimed uncertain completed].include?(state)
+            raise ArgumentError, "inbox state requires inbox metadata"
+          end
 
           @event_id = event_id
           @session = session
@@ -36,6 +46,7 @@ module Ace
           @history = history.dup.freeze
           @created_at = created_at
           @updated_at = updated_at
+          @inbox = inbox && deep_freeze(JSON.parse(JSON.generate(inbox)))
           freeze
         end
 
@@ -45,7 +56,7 @@ module Ace
             answer_digest: hash["answer_digest"], answer: hash["answer"],
             state: hash["state"] || "pending",
             attempts: hash["attempts"] || 0, history: hash["history"] || [],
-            created_at: hash["created_at"], updated_at: hash["updated_at"]
+            created_at: hash["created_at"], updated_at: hash["updated_at"], inbox: hash["inbox"]
           )
         end
 
@@ -59,7 +70,8 @@ module Ace
             "answer_digest" => answer_digest, "answer" => answer,
             "state" => state,
             "attempts" => attempts, "history" => history,
-            "created_at" => created_at, "updated_at" => updated_at
+            "created_at" => created_at, "updated_at" => updated_at,
+            "inbox" => inbox
           }
         end
 
@@ -84,7 +96,7 @@ module Ace
             state: state || self.state,
             attempts: attempts,
             history: history + [detail.merge("at" => timestamp)],
-            created_at: created_at || timestamp, updated_at: timestamp
+            created_at: created_at || timestamp, updated_at: timestamp, inbox: inbox
           )
         end
 
@@ -100,8 +112,31 @@ module Ace
             state: state,
             attempts: attempts + 1,
             history: appended.history,
-            created_at: appended.created_at, updated_at: appended.updated_at
+            created_at: appended.created_at, updated_at: appended.updated_at, inbox: inbox
           )
+        end
+
+        def advance_inbox(state:, inbox:, detail:, timestamp:)
+          self.class.new(
+            event_id: event_id, session: session, pane: pane,
+            answer_digest: answer_digest, answer: answer,
+            state: state, attempts: attempts + (detail["action"] == "claim" ? 1 : 0),
+            history: history + [detail.merge("at" => timestamp)],
+            created_at: created_at || timestamp, updated_at: timestamp,
+            inbox: inbox
+          )
+        end
+
+        private
+
+        def deep_freeze(value)
+          case value
+          when Hash
+            value.each { |key, item| deep_freeze(key); deep_freeze(item) }
+          when Array
+            value.each { |item| deep_freeze(item) }
+          end
+          value.freeze
         end
       end
     end

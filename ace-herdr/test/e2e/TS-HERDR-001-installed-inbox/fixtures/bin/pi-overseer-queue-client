@@ -1,0 +1,12 @@
+#!/bin/sh
+if [ "$1" = --identity ]; then
+  printf '%s\n' '{"session_id":"0123abcd-0000-4000-8000-000000000001"}'
+  exit 0
+fi
+if [ "$1" != --delivery ] || [ "$3" != --session-id ] || [ "$5" != --payload-sha256 ] || [ "$7" != --payload-bytes ]; then
+  printf '%s\n' 'invalid Pi queue invocation' >&2
+  exit 2
+fi
+cat >/dev/null
+printf '%s\n' "$2" >> "$ACE_E2E_PI_QUEUE_LOG"
+printf '{"ok":true,"id":"%s","session_id":"%s","payload_sha256":"%s"}\n' "$2" "$4" "$6"

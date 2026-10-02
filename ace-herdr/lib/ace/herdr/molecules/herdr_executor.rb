@@ -2,6 +2,7 @@
 
 require "open3"
 require "json"
+require "timeout"
 
 module Ace
   module Herdr
@@ -12,6 +13,8 @@ module Ace
       # binary; tests substitute this class.
       class HerdrExecutor
         DEFAULT_BINARY = "herdr"
+        WAKE_OUTPUT_LIMIT = 65_536
+        DEFAULT_PROBE_TIMEOUT_S = 60
 
         def initialize(binary: DEFAULT_BINARY)
           @binary = binary
@@ -20,6 +23,28 @@ module Ace
         # Probe the agent living in a pane (raises AgentNotFoundError when none)
         def agent_get(pane)
           run!([@binary, "agent", "get", pane])
+        end
+
+        # Structured live pane observation for the inbox: the caller holds
+        # its per-event lock across this probe, so a stalled herdr child is
+        # killed at the deadline and the timeout classifies as a retryable
+        # pre-submission failure.
+        def pane_get_bounded(pane, timeout_s: DEFAULT_PROBE_TIMEOUT_S)
+          result = BoundedProcess.call([@binary, "pane", "get", pane], stdin_data: "",
+            timeout_s: timeout_s, output_limit: WAKE_OUTPUT_LIMIT)
+          execution = ExecutionResult.new(
+            stdout: result.stdout.strip, stderr: result.stderr.strip,
+            success: result.status.success?, exit_code: result.status.exitstatus || -1
+          )
+          raise classify(execution, [@binary, "pane", "get", pane]) unless execution.success?
+
+          execution
+        rescue Timeout::Error
+          raise AgentNotReadyError, "pane probe timed out after #{timeout_s}s"
+        rescue BoundedProcess::PostLaunchError => e
+          raise AgentNotReadyError, "pane probe failed after launch: #{e.message}"
+        rescue SystemCallError
+          raise ExecutorUnavailableError, "herdr CLI not found or not executable: #{@binary}"
         end
 
         # Start an agent in a pane at an interactive shell prompt.
@@ -33,6 +58,34 @@ module Ace
         # rejects blocked agents pre-send with agent_blocked.
         def agent_prompt(pane:, text:)
           run!([@binary, "agent", "prompt", pane, text])
+        end
+
+        # A bounded, payload-free wake. The child deadline is managed by
+        # BoundedProcess (process-group kill), so a stalled process cannot
+        # keep the inbox event lock through Open3.capture3 cleanup.
+        def agent_prompt_bounded(pane:, text:, timeout_ms:)
+          cmd = [@binary, "agent", "prompt", pane, text]
+          result = BoundedProcess.call(cmd, stdin_data: "",
+            timeout_s: timeout_ms / 1000.0, output_limit: WAKE_OUTPUT_LIMIT)
+          execution = ExecutionResult.new(
+            stdout: result.stdout.strip, stderr: result.stderr.strip,
+            success: result.status.success?, exit_code: result.status.exitstatus || -1
+          )
+          unless execution.success?
+            error = classify(execution, cmd)
+            if result.oversized && error.is_a?(CommandError)
+              raise CommandError, "herdr wake output exceeded #{WAKE_OUTPUT_LIMIT} bytes (exit #{execution.exit_code})"
+            end
+            raise error
+          end
+
+          execution
+        rescue Timeout::Error
+          raise AgentNotReadyError, "herdr wake timed out after #{timeout_ms}ms"
+        rescue BoundedProcess::PostLaunchError => e
+          raise AgentNotReadyError, "herdr wake failed after launch: #{e.message}"
+        rescue SystemCallError => e
+          raise ExecutorUnavailableError, e.message
         end
 
         # Wait until the agent reaches one of the requested states
@@ -60,6 +113,8 @@ module Ace
           run!([@binary, "pane", "current", "--current"])
         end
 
+        # Structured live pane observation; callers must verify all identity
+        # fields before using a native queue target.
         def pane_get(pane)
           run!([@binary, "pane", "get", pane])
         end
@@ -197,8 +252,8 @@ module Ace
             stdout: stdout.strip, stderr: stderr.strip,
             success: status.success?, exit_code: status.exitstatus || -1
           )
-        rescue Errno::ENOENT
-          raise ExecutorUnavailableError, "herdr CLI not found on PATH: #{@binary}"
+        rescue SystemCallError
+          raise ExecutorUnavailableError, "herdr CLI not found or not executable: #{@binary}"
         end
 
         def run_raw_stdout(cmd)
@@ -207,8 +262,8 @@ module Ace
             stdout: stdout, stderr: stderr.strip,
             success: status.success?, exit_code: status.exitstatus || -1
           )
-        rescue Errno::ENOENT
-          raise ExecutorUnavailableError, "herdr CLI not found on PATH: #{@binary}"
+        rescue SystemCallError
+          raise ExecutorUnavailableError, "herdr CLI not found or not executable: #{@binary}"
         end
 
         # Map a failed result to a typed error from herdr's error codes
