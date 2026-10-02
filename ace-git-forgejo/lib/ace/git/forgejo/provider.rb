@@ -459,7 +459,10 @@ module Ace
           Ace::Git::ProviderReview.new(
             server_name: server.name, repository_url: server.url, pr_number: number,
             id: entry["id"], author: entry.dig("user", "login"), body: entry["body"],
-            state: entry["state"], url: entry["html_url"], head_sha: entry["commit_id"] || head
+            # Forgejo reports REQUEST_CHANGES; consumers count only the
+            # canonical CHANGES_REQUESTED spelling.
+            state: (entry["state"] == "REQUEST_CHANGES") ? "CHANGES_REQUESTED" : entry["state"],
+            url: entry["html_url"], head_sha: entry["commit_id"] || head
           )
         end
 
@@ -717,7 +720,9 @@ module Ace
         end
 
         def pr_url(number)
-          base = repository_target.url.to_s.chomp("/")
+          # A configured URL may end in .git (clone form); the web URL
+          # must be built from the repository page base instead.
+          base = repository_target.url.to_s.chomp("/").sub(/\.git\z/i, "")
           "#{base}/pulls/#{number}"
         end
 
