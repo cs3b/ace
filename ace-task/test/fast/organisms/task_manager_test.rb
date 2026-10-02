@@ -853,6 +853,25 @@ class TaskManagerTest < AceTaskTestCase
     end
   end
 
+  def test_rejected_linked_creation_leaves_no_task_artifact
+    adapter = Object.new
+    adapter.define_singleton_method(:validate_link!) do |**args|
+      raise Ace::Git::ProviderIdentityMismatchError, "remote owner conflict" if args[:task_id].nil?
+      true
+    end
+    adapter.define_singleton_method(:sync_task) { |task:, **_| }
+    adapter.define_singleton_method(:clear_task) { |**_args| true }
+    adapter.define_singleton_method(:reconcile_comment) { |task:, **_| }
+    @manager.stub(:issue_adapter, adapter) do
+      error = assert_raises(Ace::Git::ProviderIdentityMismatchError) do
+        @manager.create("Rejected", remote_issue: issue_identity)
+      end
+      assert_match(/remote owner conflict/, error.message)
+      # No task artifact survives a rejected linked creation.
+      assert_empty Dir.glob(File.join(@manager.root_dir, "**", "*.s.md"))
+    end
+  end
+
   def test_ref_sync_fails_for_pending_task_without_identity
     adapter = fake_issue_adapter { |task:, **_| raise Ace::Git::ProviderUnknownOutcomeError, "unknown" }
     @manager.stub(:issue_adapter, adapter) do
