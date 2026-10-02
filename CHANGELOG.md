@@ -32,6 +32,9 @@ All notable changes to this project will be documented in this file.
 - **ace-herdr v0.2.0**: Added the `ace-runtime` Herdr adapter with workspace/tab mapping, native agent prompt and wait semantics, all lifecycle observations, typed error mapping, and shared contract tests.
 - **ace-herdr v0.3.0**: Added a durable attempt-linked inbox with exact-session Codex/Pi queue delivery, payload-free idle wakes, persisted submission intent, signed proof-based reconciliation, and installed delivery coverage.
 - **ace-review v0.58.0**: Review model queries now honor the configured ace-llm fallback (role candidate chains + `llm.fallback`) instead of forcing single-leg execution, so a reviewer position survives a dead provider leg.
+- **ace-git v0.26.0**: Added a forge-neutral issue tracking contract with named-server selection and normalized issue evidence.
+- **ace-git-github v0.3.0, ace-git-forgejo v0.4.0**: Implemented repository-bound issue tracking through the shared provider contract.
+- **ace-task v0.39.0**: Added named-forge issue links and best-effort issue synchronization, including pending replay.
 
 - **ace-review v0.57.0**: Durable review campaigns retain verified findings and convergence across commits; current acceptance requires independent approval and passing checks backed by accepted execution receipts.
 - **ace-assign v0.60.0**: Validates campaign results and exposes read-only managed check, review-collection and review-approval authority, including explicit historical review evidence.

@@ -6,7 +6,6 @@ require_relative "github/version"
 require_relative "github/cli_executor"
 require_relative "github/pr_identifier"
 require_relative "github/pr_fetcher"
-require_relative "github/issue_sync"
 require_relative "github/provider"
 
 module Ace
