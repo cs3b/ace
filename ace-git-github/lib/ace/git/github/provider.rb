@@ -152,6 +152,14 @@ module Ace
 
         def add_issue_label(number:, label:)
           issue_api("POST", "issues/#{number}/labels", fields: ["labels[]=#{label}"])
+        rescue Ace::Git::ProviderObjectNotFoundError, Ace::Git::ProviderUnknownOutcomeError => e
+          raise unless e.message.match?(/label/i) && e.message.match?(/does not exist|not found/i)
+
+          # Fresh repositories lack the tracking label; create it on demand so
+          # linking cannot commit a tracking comment it could never label
+          # (mirrors the Forgejo provider), then attach exactly once.
+          create_repo_label(label)
+          issue_api("POST", "issues/#{number}/labels", fields: ["labels[]=#{label}"])
         end
 
         def remove_issue_label(number:, label:)
@@ -162,6 +170,15 @@ module Ace
           raise ArgumentError, "Invalid issue state #{state.inspect}" unless %i[open closed].include?(state)
 
           issue_api("PATCH", "issues/#{number}", fields: ["state=#{state}"])
+        end
+
+        # A concurrent creator produces GitHub's already_exists error, which
+        # is exactly the ensured state; any other failure keeps its
+        # classification.
+        def create_repo_label(label)
+          issue_api("POST", "labels", fields: ["name=#{label}", "color=0e8a16"])
+        rescue Ace::Git::ProviderObjectNotFoundError, Ace::Git::ProviderUnknownOutcomeError => e
+          raise unless e.message.match?(/already[_ ]exists/i)
         end
 
         # @return [Array<ProviderCheck>] normalized check evidence for a ref
