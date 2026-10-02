@@ -888,9 +888,17 @@ module Ace
         def clear_issue_link(task)
           # Lock order is issue-first everywhere (link, sync, clear) so
           # concurrent clear and replay cannot deadlock on opposite orders.
-          with_issue_identity_lock(linked_issue(task) || {}) do
+          locked_identity = linked_issue(task)
+          with_issue_identity_lock(locked_identity || {}) do
             with_issue_identity_lock("task" => task.id) do
               fresh = show(task.id) || task
+              # If the link changed while this clear waited (A cleared, B
+              # linked), reject the stale request so the new link's marker is
+              # only cleared under its own lock.
+              if locked_identity.is_a?(Hash) && linked_issue(fresh) != locked_identity
+                raise Ace::Git::ProviderIdentityMismatchError,
+                  "Task #{task.id} link changed during clear; retry the command"
+              end
               clear_issue_link_locked(fresh)
             end
           end
