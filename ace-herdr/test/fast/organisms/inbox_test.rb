@@ -233,6 +233,38 @@ module Ace
           assert_equal "queued", record.state
         end
 
+        def test_codex_name_kind_thread_is_rejected_for_binding
+          enqueue
+          @executor.pane["agent_session"] = {"agent" => "codex", "kind" => "name", "value" => "agent-main"}
+
+          result = @inbox.deliver(event: @event)
+
+          assert_equal "queued", result["state"]
+          assert_match(/immutable session id/, result["last_error"])
+          assert_empty @native.calls
+        end
+
+        def test_replacement_pi_target_requires_compatible_event_id
+          event = "evt-generic0000000000000001"
+          @event = event
+          @inbox.enqueue(event: event, attempt: "att-1", ref: @ref, payload: "hello")
+          @native.result = {"accepted" => true, "stdout" => "queued"}
+          delivered = @inbox.deliver(event: event)
+          assert_equal "delivered", delivered["state"]
+          # The signed replacement points the event at a live Pi pane.
+          @executor.pane["agent"] = "pi"
+          @executor.pane["agent_session"] = {"agent" => "pi", "kind" => "id", "value" => THREAD}
+          replacement = delivered["target"].merge("agent" => "pi", "thread" => THREAD)
+          receipt = proof(delivered, outcome: "superseded").merge("replacement_target" => replacement)
+
+          refusal = @inbox.reconcile(event: event, receipt: receipt,
+            signed_bytes: JSON.generate(receipt),
+            signature: RECEIPT_KEY.sign(OpenSSL::Digest::SHA256.new, JSON.generate(receipt)))["reconciliation_refusal"]
+
+          assert_match(/replacement pi target requires/, refusal)
+          assert_equal "delivered", @inbox.status(event: event)["state"]
+        end
+
         def test_busy_agent_receives_one_native_queue_submission_even_with_concurrent_callers
           enqueue
           results = 2.times.map { Thread.new { @inbox.deliver(event: @event) } }.map(&:value)

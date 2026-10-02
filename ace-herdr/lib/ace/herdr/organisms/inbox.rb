@@ -17,7 +17,6 @@ module Ace
 
         EVENT = /\A[A-Za-z0-9][A-Za-z0-9._-]{0,127}\z/
         THREAD_ID = /\A[0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}\z/
-        THREAD_NAME = /\A[A-Za-z0-9][A-Za-z0-9._-]{3,127}\z/
         PI_PATH = /_([0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12})\.jsonl\z/
         # Single validator for Pi queue event ids, shared by enqueue and
         # delivery observation so the two sites can never disagree again.
@@ -210,6 +209,19 @@ module Ace
                   stable.all? { |key| replacement[key] == observed[key] }
                 refusal ||= "replacement target does not match the live native session"
               end
+              # The replacement agent's own delivery rules must admit this
+              # event: its immutable-id requirement and payload bound.
+              if observed
+                if observed["agent"] == "pi" && !PI_EVENT_ID.match?(event)
+                  refusal ||= "replacement pi target requires an inbox (inb-) or wake (wnk-) event id"
+                end
+                payload_limit = observed["agent"] == "pi" ?
+                  Molecules::NativeQueueExecutor::PI_PAYLOAD_LIMIT_BYTES :
+                  Molecules::NativeQueueExecutor::MAX_ARG_PAYLOAD_BYTES
+                if record.answer.to_s.bytesize > payload_limit
+                  refusal ||= "payload exceeds the replacement agent's native queue limit"
+                end
+              end
             end
             next public_record(record).merge("reconciliation_refusal" => refusal) if refusal
 
@@ -344,8 +356,14 @@ module Ace
             thread = PI_PATH.match(thread)&.captures&.first.to_s
             kind = "id"
           end
-          valid = kind == "id" ? THREAD_ID.match?(thread) : (kind == "name" && THREAD_NAME.match?(thread))
-          raise ValidationError, "native thread identity is invalid" unless valid
+          # Only an immutable session UUID may carry a binding: a name
+          # survives an agent restart in the same pane/terminal, so a reused
+          # session could inherit an old event.
+          unless kind == "id" && THREAD_ID.match?(thread)
+            raise ValidationError,
+              "native queue binding requires an immutable session id " \
+              "(got #{kind.inspect})"
+          end
           raise ValidationError, "Pi queue requires a session ID" if agent == "pi" && kind != "id"
           raw_terminal = pane["terminal_id"]
           terminal = raw_terminal.to_s.strip if raw_terminal.is_a?(String) || raw_terminal.is_a?(Integer)
