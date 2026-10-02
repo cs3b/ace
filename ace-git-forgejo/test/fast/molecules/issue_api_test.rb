@@ -56,6 +56,19 @@ class ForgejoIssueApiTest < AceGitForgejoTestCase
     assert_raises(Ace::Git::ProviderAuthenticationError) { api.issue(42) }
   end
 
+  def test_missing_issue_state_is_malformed
+    runner = lambda do |args:, **_options|
+      stdout = if args[2].include?("/issues/42?")
+        "[]"
+      else
+        {"number" => 42, "title" => "Issue", "html_url" => "https://forge.example.com/owner/repo/issues/42"}.to_json
+      end
+      {success: true, status: 200, stdout: stdout}
+    end
+    provider = Ace::Git::Forgejo::Provider.new(server: SERVER, runner: runner)
+    assert_raises(Ace::Git::ProviderMalformedOutputError) { provider.issue_tracking(number: 42) }
+  end
+
   def test_provider_tracking_rejects_wrong_repository_evidence
     runner = lambda do |args:, **_options|
       stdout = if args[2].include?("/issues/42?")

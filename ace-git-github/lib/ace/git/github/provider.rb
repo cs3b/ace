@@ -1078,6 +1078,16 @@ end
 
         # gh --hostname accepts "host:port"; a bare uri.host would silently
         # retarget a port-configured server to the default authority.
+        # Unrecognized or missing state is malformed evidence: mapping it to
+        # :closed would let sync close an issue without valid state proof.
+        def normalize_state(value)
+          case value.to_s.upcase
+          when "OPEN" then :open
+          when "CLOSED" then :closed
+          else raise Ace::Git::ProviderMalformedOutputError, "Unknown issue state #{value.inspect}"
+          end
+        end
+
         def forge_hostname(uri)
           uri.port && uri.port != uri.default_port ? "#{uri.host}:#{uri.port}" : uri.host
         end
@@ -1097,7 +1107,7 @@ end
             server_name: server.name,
             number: data["number"],
             title: data["title"],
-            state: data["state"].to_s.upcase == "OPEN" ? :open : :closed,
+            state: normalize_state(data["state"]),
             author: normalize_author(data["author"]),
             url: data["url"],
             labels: nil

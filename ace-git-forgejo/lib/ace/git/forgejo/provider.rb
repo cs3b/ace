@@ -118,13 +118,23 @@ module Ace
           end
           evidence = Ace::Git::ProviderIssue.new(
             server_name: server.name, number: data["number"], title: data["title"],
-            state: data["state"] == "open" ? :open : :closed,
+            state: normalize_state(data["state"]),
             author: data.dig("user", "login"), url: data["html_url"],
             labels: Array(data["labels"]).map { |label| label["name"] }
           )
           {issue: evidence,
            comments: Array(issue_api.comments(number)).map { |c| {id: c.fetch("id"), body: c["body"].to_s} },
            labels: evidence.labels}
+        end
+
+        # Unrecognized or missing state is malformed evidence: mapping it to
+        # :closed would let sync close an issue without valid state proof.
+        def normalize_state(value)
+          case value.to_s
+          when "open" then :open
+          when "closed" then :closed
+          else raise Ace::Git::ProviderMalformedOutputError, "Unknown issue state #{value.inspect}"
+          end
         end
 
         def create_issue_comment(number:, body:)

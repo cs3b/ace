@@ -81,6 +81,16 @@ class GithubIssueTrackingProviderTest < AceGitGithubTestCase
     refute calls.any? { |argv| argv.include?("forge.example") && !argv.include?("forge.example:8443") }
   end
 
+  def test_missing_or_unknown_issue_state_is_malformed
+    runner = lambda do |args:, **_options|
+      {success: true, status: 200,
+       stdout: {"number" => 42, "title" => "Issue", "state" => "PLUMING", "author" => nil,
+                "url" => "https://github.example.com/owner/repo/issues/42", "labels" => []}.to_json}
+    end
+    provider = Ace::Git::Github::Provider.new(server: SERVER, runner: runner)
+    assert_raises(Ace::Git::ProviderMalformedOutputError) { provider.issue_tracking(number: 42) }
+  end
+
   def test_issue_calls_tolerate_trailing_slash_in_server_url
     calls = []
     runner = lambda do |args:, **_options|
