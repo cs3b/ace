@@ -51,6 +51,51 @@ module Github
       assert_equal "lab", issue.author
     end
 
+    def test_add_issue_label_creates_missing_repo_label
+      calls = []
+      attached = false
+      runner = lambda do |args:, **_opts|
+        joined = args.join(" ")
+        calls << joined
+        if joined.include?("issues/42/labels")
+          if attached
+            next {success: true, stdout: "[]", stderr: "", exit_code: 0}
+          end
+
+          attached = true
+          next {success: false, stdout: "", stderr: "gh: Label does not exist (404)", exit_code: 1}
+        elsif joined.include?("repos/owner/repo/labels")
+          next {success: true, stdout: '{"id":9,"name":"ace:tracked"}', stderr: "", exit_code: 0}
+        end
+        flunk("Unexpected command: #{joined}")
+      end
+
+      build_provider(runner).add_issue_label(number: 42, label: "ace:tracked")
+      assert_equal 3, calls.length
+      assert calls.first.include?("issues/42/labels")
+      assert calls.one? { |call| call.include?("repos/owner/repo/labels") && call.include?("name=ace:tracked") }
+    end
+
+    def test_add_issue_label_tolerates_concurrent_label_creation
+      attached = false
+      runner = lambda do |args:, **_opts|
+        joined = args.join(" ")
+        if joined.include?("issues/42/labels")
+          if attached
+            next {success: true, stdout: "[]", stderr: "", exit_code: 0}
+          end
+
+          attached = true
+          next {success: false, stdout: "", stderr: "gh: Label does not exist (404)", exit_code: 1}
+        elsif joined.include?("repos/owner/repo/labels")
+          next {success: false, stdout: "", stderr: "gh: Label already exists (422)", exit_code: 1}
+        end
+        flunk("Unexpected command: #{joined}")
+      end
+
+      build_provider(runner).add_issue_label(number: 42, label: "ace:tracked")
+    end
+
     private
 
     def scripted_runner(responses)
