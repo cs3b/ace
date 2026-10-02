@@ -40,10 +40,11 @@ module Ace
           RUBY
           File.write(executable, script)
           File.chmod(0o700, executable)
-          operation = {"project" => "ace", "service_id" => "executor", "argv" => [executable],
-            "executor_uid" => Process.uid, "lease_expires_at" => (Time.now.utc + 3600).iso8601}
+          policy = policy_for({"project" => "ace", "service_id" => "executor", "argv" => [executable],
+            "executor_uid" => Process.uid, "lease_expires_at" => (Time.now.utc + 3600).iso8601})
+          operation = policy.operation!("forge-sync", project: "ace", service_id: "executor")
           receipt = Molecules::ServiceExecutor.new.execute(operation: operation, request: request,
-            input: {"target" => {"resource" => "release"}}, policy_loader: -> { policy_for(operation) }, head_loader: -> { request["candidate_head"] },
+            input: {"target" => {"resource" => "release"}}, policy_loader: -> { policy }, head_loader: -> { request["candidate_head"] },
             authorization: "decision-1")
           assert_equal "succeeded", receipt["outcome"]
           assert_equal Process.uid, receipt["executor_uid"]
@@ -79,8 +80,9 @@ module Ace
           operation = {"project" => "ace", "service_id" => "executor", "transport" => "unix",
             "socket_path" => path, "executor_uid" => Process.uid,
             "lease_expires_at" => (Time.now.utc + 3600).iso8601}
+          policy = policy_for(operation)
           receipt = Molecules::ServiceExecutor.new.execute(operation: operation, request: request,
-            input: {"target" => {"resource" => "release"}}, policy_loader: -> { policy_for(operation) }, head_loader: -> { request["candidate_head"] },
+            input: {"target" => {"resource" => "release"}}, policy_loader: -> { policy }, head_loader: -> { request["candidate_head"] },
             authorization: "decision-1")
           assert_equal "succeeded", receipt["outcome"]
           thread.join
@@ -118,12 +120,13 @@ module Ace
           executable = File.join(dir, "handler")
           File.write(executable, "#!/usr/bin/env ruby\n")
           File.chmod(0o700, executable)
-          operation = {"project" => "ace", "service_id" => "executor", "argv" => [executable],
-            "executor_uid" => Process.uid, "lease_expires_at" => (Time.now.utc + 3600).iso8601}
+          policy = policy_for({"project" => "ace", "service_id" => "executor", "argv" => [executable],
+            "executor_uid" => Process.uid, "lease_expires_at" => (Time.now.utc + 3600).iso8601})
+          operation = policy.operation!("forge-sync", project: "ace", service_id: "executor")
           error = assert_raises(SecurityError) do
             Molecules::ServiceExecutor.new.execute(operation: operation, request: request,
               input: {"target" => {"resource" => "release"}},
-              policy_loader: -> { policy_for(operation) },
+              policy_loader: -> { policy },
               head_loader: -> { "c" * 40 }, authorization: "decision-1")
           end
           assert_includes error.message, "candidate head changed"

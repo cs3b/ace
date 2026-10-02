@@ -19,7 +19,7 @@ module Ace
             "lease_expires_at" => (Time.now.utc + 3600).iso8601}},
             "authorizations" => {"decision-1" => binding.merge("expires_at" => (Time.now.utc + 3600).iso8601)}}
           policy = Molecules::ServicePolicy.new(document)
-          assert_equal executable, policy.operation!("publish", project: "ace", service_id: "publisher")["argv"].first
+          assert_equal File.realpath(executable), policy.operation!("publish", project: "ace", service_id: "publisher")["argv"].first
           assert_equal binding["attempt_id"], policy.authorize!("decision-1", binding)["attempt_id"]
           assert_raises(SecurityError) { policy.authorize!("decision-1", binding.merge("project_id" => "other")) }
           assert_raises(SecurityError) { policy.authorize!("decision-1", binding.merge("candidate_head" => "c" * 40)) }

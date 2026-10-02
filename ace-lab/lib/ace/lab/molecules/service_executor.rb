@@ -40,7 +40,10 @@ module Ace
           return nil unless valid_response?(response, request)
           {"outcome" => response.fetch("outcome"), "evidence" => response.fetch("evidence"),
            "executor_uid" => current.fetch("executor_uid")}
-        rescue JSON::ParserError, Errno::ENOENT, Errno::EACCES, Errno::ECONNREFUSED, EOFError, Timeout::Error
+        rescue JSON::ParserError, Timeout::Error, SystemCallError, IOError
+          # Transport failures after the claim (broken pipe, connection
+          # reset, socket loss) leave the effect unknown: uncertainty, not a
+          # classified crash, is the honest outcome.
           nil
         end
 

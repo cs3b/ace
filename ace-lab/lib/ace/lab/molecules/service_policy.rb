@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "pathname"
 require "time"
 
 module Ace
@@ -41,7 +42,14 @@ module Ace
           end
           uid = operation["executor_uid"]
           raise Ace::Lab::InvalidConfigurationError, "configured executor UID is invalid" unless uid.is_a?(Integer) && uid >= 0
-          validate_executable!(operation["argv"].first, uid) if transport == "local"
+          if transport == "local"
+            # Every path component is validated (symlinks resolved, writable
+            # ancestors rejected) and the validated resolved file replaces
+            # the configured argv entry, so execution cannot be redirected
+            # between validation and dispatch.
+            resolved = trusted_executable!(operation["argv"].first, uid)
+            operation = operation.merge("argv" => [resolved] + operation["argv"][1..])
+          end
           expires_at = parse_time(operation["lease_expires_at"])
           raise SecurityError, "executor lease has expired" if expires_at <= Time.now.utc
           if operation["host_maintenance"] == true
@@ -54,13 +62,12 @@ module Ace
             end
             deployment = resolved_path(operation["deployment_root"].to_s)
             sink = resolved_path(operation["evidence_sink"].to_s)
-            executable = resolved_path(operation.dig("argv", 0).to_s)
+            executable = operation.dig("argv", 0).to_s
             unless deployment.start_with?("/") && sink.start_with?("/") && executable.start_with?("/") &&
                 !inside?(executable, deployment) && !inside?(sink, deployment)
               raise Ace::Lab::InvalidConfigurationError,
                 "host maintenance needs executable and evidence sink outside the replaced deployment"
             end
-            validate_executable!(executable, uid)
           end
           operation
         end
@@ -79,15 +86,24 @@ module Ace
 
         private
 
-        def validate_executable!(path, uid)
-          file = File.stat(path)
-          parent = File.stat(File.dirname(File.realpath(path)))
-          unless [0, uid].include?(file.uid) && [0, uid].include?(parent.uid) &&
-              (file.mode & 0o022).zero? && (parent.mode & 0o022).zero?
-            raise Ace::Lab::InvalidConfigurationError,
-              "configured executable or containing directory is writable by another identity"
+        # Validate the executable and every directory component on its
+        # resolved path: each must be owned by root or the executor and not
+        # group/other-writable, so no ancestor or symlink component can
+        # redirect the fixed argv. Returns the resolved file path.
+        def trusted_executable!(path, uid)
+          resolved = resolved_path(path.to_s)
+          unless resolved.start_with?("/") && File.file?(resolved) && File.executable?(resolved)
+            raise Ace::Lab::InvalidConfigurationError, "configured executable is unavailable"
           end
-        rescue Errno::ENOENT, Errno::EACCES
+          Pathname.new(resolved).descend do |component|
+            stat = File.stat(component)
+            unless [0, uid].include?(stat.uid) && (stat.mode & 0o022).zero?
+              raise Ace::Lab::InvalidConfigurationError,
+                "configured executable path has a writable or foreign-owned component: #{component}"
+            end
+          end
+          resolved
+        rescue Errno::ENOENT, Errno::EACCES, Errno::ELOOP
           raise Ace::Lab::InvalidConfigurationError, "configured executable is unavailable"
         end
 
