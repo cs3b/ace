@@ -478,6 +478,29 @@ class TaskManagerTest < AceTaskTestCase
     end
   end
 
+  def test_chained_reparents_preserve_original_previous_id
+    captured = []
+    offline = true
+    adapter = fake_issue_adapter do |task:, previous_task_id: nil|
+      raise Ace::Git::ProviderUnreachableError, "offline" if offline
+
+      captured << [task.id, previous_task_id]
+    end
+    @manager.stub(:issue_adapter, adapter) do
+      parent = @manager.create("Parent")
+      grandparent = @manager.create("Grandparent")
+      task = @manager.create("Linked task", remote_issue: issue_identity)
+      first = @manager.update(task.id, move_as_child_of: parent.id)
+      second = @manager.update(first.id, move_as_child_of: grandparent.id)
+      offline = false
+      @manager.issue_sync(pending: true)
+      # The remote marker still names the ORIGINAL task ID; replay must prove
+      # ownership against it, not the intermediate local ID.
+      assert_equal [second.id, task.id], captured.last
+      refute @manager.show(second.id).metadata["issue_sync_previous_id"]
+    end
+  end
+
   def test_bulk_sync_continues_after_failure
     adapter = fake_issue_adapter do |task:, **_|
       raise Ace::Git::ProviderUnreachableError, "offline" if task.title == "First"
