@@ -1420,7 +1420,13 @@ module Ace
           identity_head = head.to_s
           identity_server = options.pr_metadata&.fetch("server_name", nil).to_s
           identity_repo = options.pr_metadata&.fetch("repository_url", nil).to_s
-          identity_body_digest = Digest::SHA256.hexdigest(content)
+          # Format first: the body digest binds the identity to the exact
+          # comment that would be posted (preset/model included).
+          formatted_body = Molecules::PrProvider.format_comment(
+            review_content, preset: review_data[:preset], model: review_data[:model],
+            timestamp: File.mtime(review_file).utc.strftime("%Y-%m-%d %H:%M:%S UTC")
+          )
+          identity_body_digest = Digest::SHA256.hexdigest(formatted_body)
           identity_key = Digest::SHA256.hexdigest(
             [identity_server, identity_repo, identity_pr, identity_head, review_digest, identity_body_digest].join("\0")
           )
@@ -1446,12 +1452,7 @@ module Ace
             # The digest in the key keeps a changed review on its own
             # session marker instead of conflicting with the old comment.
             session_key = File.dirname(File.expand_path(review_file)) + ":" + review_digest
-            content = Molecules::PrProvider.format_comment(
-              review_content, preset: review_data[:preset], model: review_data[:model],
-              # The timestamp is frozen to the review artifact so the same
-              # artifact always formats the identical body.
-              timestamp: File.mtime(review_file).utc.strftime("%Y-%m-%d %H:%M:%S UTC")
-            )
+            content = formatted_body
             record = YAML.dump(
               "session_key" => session_key, "body" => content,
               "pr" => options.pr.to_s, "head" => head, "review_sha256" => review_digest,
