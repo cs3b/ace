@@ -9,7 +9,7 @@ tags: [lab-readiness]
 parent: 8wr.t.qk1
 bundle:
   presets: [project]
-  files: [.ace-tasks/8wr.t.qk1-complete-forge-neutral-worktree-review/8wr.t.qk1-complete-forge-neutral-worktree-review-and-task.s.md, ace-task/lib/ace/task/cli/commands/issue_sync.rb, ace-task/lib/ace/task/cli/commands/issue_link.rb, ace-task/lib/ace/task/molecules/issue_link.rb, ace-task/lib/ace/task/organisms/task_manager.rb, ace-git/lib/ace/git/organisms/issue_tracking.rb, .ace-tasks/8wr.t.qk1-complete-forge-neutral-worktree-review/2-use-named-forge-providers-for/ux/usage.md]
+  files: [.ace-tasks/_archive/8x/v/8wr.t.qk1-complete-forge-neutral-worktree-review/8wr.t.qk1-complete-forge-neutral-worktree-review-and-task.s.md, ace-task/lib/ace/task/cli/commands/issue_sync.rb, ace-task/lib/ace/task/cli/commands/issue_link.rb, ace-task/lib/ace/task/molecules/issue_link.rb, ace-task/lib/ace/task/organisms/task_manager.rb, ace-git/lib/ace/git/organisms/issue_tracking.rb, .ace-tasks/_archive/8x/v/8wr.t.qk1-complete-forge-neutral-worktree-review/2-use-named-forge-providers-for/ux/usage.md]
   commands: []
 needs_review: false
 worktree:

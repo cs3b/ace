@@ -6,13 +6,19 @@ created_at: "2026-08-13 12:44:08"
 estimate: TBD
 dependencies: []
 tags: []
-github_issue: 315
+remote_issue:
+  server_name: github-cs3b
+  provider: github
+  repository_url: https://github.com/cs3b/ace
+  number: 315
+  url: https://github.com/cs3b/ace/issues/315
+
 bundle:
   presets: [project]
   files: [docs/quick-start.md]
   commands: []
 needs_review: false
-github_sync_pending: true
+issue_sync_pending: true
 ---
 
 # Add application capability packages to default quick start

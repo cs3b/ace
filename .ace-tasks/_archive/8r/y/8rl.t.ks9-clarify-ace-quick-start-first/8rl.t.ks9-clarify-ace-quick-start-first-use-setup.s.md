@@ -10,7 +10,13 @@ bundle:
   commands: [ace-task show 8rl.t.ks9 --tree, ace-task show 8rl.t.ks9 --content]
 tags: []
 created_at: "2026-04-22 13:51:24"
-github_issue: 299
+remote_issue:
+  server_name: github-cs3b
+  provider: github
+  repository_url: https://github.com/cs3b/ace
+  number: 299
+  url: https://github.com/cs3b/ace/issues/299
+
 needs_review: false
 worktree:
   branch: ks9-clarify-ace-quick-start-first-use-setup-flow

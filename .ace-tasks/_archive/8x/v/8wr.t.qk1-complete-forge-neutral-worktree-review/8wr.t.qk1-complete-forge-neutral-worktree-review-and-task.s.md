@@ -1,6 +1,6 @@
 ---
 id: 8wr.t.qk1
-status: in-progress
+status: done
 priority: high
 created_at: "2026-09-28 17:42:16"
 estimate: TBD
@@ -8,7 +8,7 @@ dependencies: [8wk.t.l1e]
 tags: [lab-readiness]
 bundle:
   presets: [project]
-  files: [.ace-tasks/_archive/8w/y/8wk.t.l1e-forge-neutral-git-core-with/8wk.t.l1e-forge-neutral-git-core-with-github-and.s.md, ace-git/lib/ace/git/providers/base.rb, ace-git/lib/ace/git/providers/evidence.rb, ace-git/lib/ace/git/server_registry.rb, .ace-tasks/8wr.t.qk1-complete-forge-neutral-worktree-review/ux/usage.md]
+  files: [.ace-tasks/_archive/8w/y/8wk.t.l1e-forge-neutral-git-core-with/8wk.t.l1e-forge-neutral-git-core-with-github-and.s.md, ace-git/lib/ace/git/providers/base.rb, ace-git/lib/ace/git/providers/evidence.rb, ace-git/lib/ace/git/server_registry.rb, .ace-tasks/_archive/8x/v/8wr.t.qk1-complete-forge-neutral-worktree-review/ux/usage.md]
   commands: []
 needs_review: false
 position: 6o000h
@@ -20,7 +20,7 @@ position: 6o000h
 
 Users create worktrees, review PRs and synchronize task issues on GitHub, default Forgejo and another named Forgejo through the same public ACE behavior. Local Git/task/review inputs remain usable without forge configuration, credentials or binaries.
 
-Foundation ace:8wk.t.l1e is delivered; its scope explicitly excluded these consumers. Existing `Providers::Base` supports read-only PR/diff/issues/check/repository evidence. Worktree creation still calls `Github::PrFetcher`, review calls Github CLI/comment modules, and task sync uses GithubIssueSyncAdapter. The old lab-overseer l2d.3–.5 mandates now consume this owner's receipts, rather than own duplicate implementation.
+Foundation ace:8wk.t.l1e is delivered; its scope explicitly excluded these consumers. At drafting, `Providers::Base` supported read-only evidence and consumers used GitHub-specific helpers. All three children have now replaced those operational consumer paths; the historical limitation is not a statement of current code. The old lab-overseer l2d.3–.5 mandates now consume this owner's receipts, rather than own duplicate implementation.
 
 ## Decomposition and ownership
 
@@ -51,3 +51,11 @@ Run `ace-test` all for each changed package and `ace-test-suite`; report exact c
 ## Boundaries and decisions
 
 Umbrella; advisory size: large. Provider mutation extensions are necessary because the delivered base is read-only. Canonical assignment/role workflow migration belongs qkb; runtime switching belongs k86; durable attempts belong qjl. No backward compatibility, automatic migration or aliases for removed GitHub-specific public commands. Existing repository metadata referencing removed keys is updated within implementation where authored; unsupported old user input fails with the new syntax, never silently converted. No blocking product questions.
+
+## Child delivery reconciliation — 2026-10-04
+
+- [x] qk1.0: PR347, child report.md retains provider/core/worktree tests, independent astra review and explicitly delegated uj0 correction. Required full delivery capabilities were outside this historical safe-refusal acceptance; new z78 owns them.
+- [x] qk1.1: PR360 merged f345d7feb024aa3366e54bdf7cf863964b4ccd58; child review-delivery-2026-10-02.md preserves exact-head 37190e744 independent approval/check receipts and package counts. It also preserves the then-blocked campaign finish, which must not be represented as a successful finish. Main later contains campaign repair 3d40a79c3; final R2/R3 acceptance remains separate.
+- [x] qk1.2: PR359 merged 2cae1345bad3d08d3a27144c7fa626c123377bdb; child verification-2026-10-02.md plus review-delivery-2026-10-02.md preserve tests, executed independent review coverage, campaign bookkeeping limitations and Medium follow-ups. Do not rewrite a rejected campaign finish as accepted or claim a new exact-head campaign receipt.
+
+Current source recheck at 46b980777 confirms the named-provider consumer boundaries. The preceding program review executed review all 941, task all 493, Forgejo all 118 and default suite 10,944 passing, no errors; see lq1/evidence/program-reconciliation-2026-10-04.md for non-frozen-revision limitation. This aggregate is a closure of the delivered consumer migration under the existing merged-child decisions, not installed endpoint proof or R2/R3 completion. qkc remains the full matrix gate; z78 addresses missing provider operations. Independent specification reviewer checks this disposition before parent closure.

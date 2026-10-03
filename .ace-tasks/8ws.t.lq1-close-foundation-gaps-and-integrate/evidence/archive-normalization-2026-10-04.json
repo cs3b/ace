@@ -1,0 +1,117 @@
+[
+  {
+    "path": ".ace-tasks/_archive/8w/y/8wq.t.1qb-improve-ace-review-round-efficiency/8wq.t.1qb-improve-ace-review-round-efficiency-and-usage.s.md",
+    "before_frontmatter": "id: 8wq.t.1qb\nstatus: done\npriority: medium\ncreated_at: \"2026-09-27 01:09:15\"\nestimate: TBD\ndependencies: []\nbundle:\n  presets: [project]\n  files: []\n  commands: []\ntags: [ace-review, review-rounds, observability]\ngithub_issue: 335",
+    "after_sha256": "d151998437ebe72011fe73fc07b5bcefd4c188cdfa5a6f7a340c70e941697d76"
+  },
+  {
+    "path": ".ace-tasks/_archive/8w/y/8vt.t.rtr-resolve-clean-container-package-test/8vt.t.rtr-resolve-clean-container-package-test-failures.s.md",
+    "before_frontmatter": "priority: high\nstatus: done",
+    "after_sha256": "0bc43b2c979ba2c26fcf03dfe1703fc3af26c65d20c4e4499e482beaff05a522"
+  },
+  {
+    "path": ".ace-tasks/_archive/8w/y/8wm.t.nnv-scoped-review-context-and-complete/8wm.t.nnv-scoped-review-context-and-complete-review-lifecycle.s.md",
+    "before_frontmatter": "id: 8wm.t.nnv\nstatus: done\npriority: high\ncreated_at: \"2026-09-23 15:46:31\"\nestimate: \ndependencies: []\ntags: []\ngithub_issue: 321\ngithub_sync_pending: true",
+    "after_sha256": "9f8832926c9911eb8fc64194db35c6b6e2d9acef7202c8ac6f2a2d09a415adfc"
+  },
+  {
+    "path": ".ace-tasks/_archive/8c/v/8c0.t.070-human-approval-gates/8c0.t.070-human-approval-gates-workflow.s.md",
+    "before_frontmatter": "id: 8c0.t.070\ntitle: Human Approval Gates\nstatus: obsolete\npriority: medium\ncreated_at: \"2025-01-01 00:07:46\"\nestimate: 3h\ndependencies: [8c0.t.06d]\ntags: [migrated]\nstate: skipped",
+    "after_sha256": "852bff577e3b35867d1c21fc88f80c47fb85c10f0a33a44e0e5cdbe3c1ffaa5a"
+  },
+  {
+    "path": ".ace-tasks/_archive/8v/w/8vb.t.vyz-first-class-worktree-bootstrap-and/8vb.t.vyz-first-class-worktree-bootstrap-and-readiness.s.md",
+    "before_frontmatter": "id: 8vb.t.vyz\nstatus: done\npriority: high\ncreated_at: \"2026-08-12 21:18:52\"\nestimate: TBD\ndependencies: []\ntags: [worktree, bootstrap, readiness, orchestrator]\ngithub_issue: 313\nbundle:\n  presets: [project]\n  files: [ace-git-worktree/lib/ace/git/worktree/cli.rb, ace-git-worktree/lib/ace/git/worktree/configuration.rb, ace-git-worktree/lib/ace/git/worktree/commands/config_command.rb, ace-git-worktree/lib/ace/git/worktree/molecules/config_loader.rb, ace-git-worktree/lib/ace/git/worktree/molecules/hook_executor.rb, ace-git-worktree/lib/ace/git/worktree/molecules/worktree_creator.rb, ace-git-worktree/lib/ace/git/worktree/organisms/task_worktree_orchestrator.rb, ace-git-worktree/handbook/workflow-instructions/git/worktree-create.wf.md, ace-git-worktree/handbook/skills/as-git-worktree-create/SKILL.md, ace-git-worktree/test/fast/molecules/worktree_creator_test.rb, ace-git-worktree/test/feat/worktree_manager_contract_test.rb, ace-git-worktree/test/e2e/TS-WORKTREE-002-task-aware/TC-002-create-task-worktree.runner.md]\n  commands: [ace-git-worktree config show --json, ace-git-worktree create --help, ace-bundle wfi://git/worktree-create, ace-test ace-git-worktree all]\nneeds_review: false\ngithub_sync_pending: true",
+    "after_sha256": "add92e182287ecbda9efcf64e158a224e0d9215c4f8c35e21815c8908d9ef1d9"
+  },
+  {
+    "path": ".ace-tasks/_archive/8v/w/8vc.t.j3p-add-application-capability-packages-to/8vc.t.j3p-add-application-capability-packages-to-default-quick.s.md",
+    "before_frontmatter": "id: 8vc.t.j3p\nstatus: done\npriority: medium\ncreated_at: \"2026-08-13 12:44:08\"\nestimate: TBD\ndependencies: []\ntags: []\ngithub_issue: 315\nbundle:\n  presets: [project]\n  files: [docs/quick-start.md]\n  commands: []\nneeds_review: false\ngithub_sync_pending: true",
+    "after_sha256": "6b0fcaf75cbd4fc638bc7a3ffc7b36432aa89e60c7a39f5abfecdef61ef812f1"
+  },
+  {
+    "path": ".ace-tasks/_archive/8v/w/8vb.t.vy9-safe-application-lifecycle-recommendations-and/8vb.t.vy9-safe-application-lifecycle-recommendations-and.s.md",
+    "before_frontmatter": "id: 8vb.t.vy9\nstatus: done\npriority: high\ncreated_at: \"2026-08-12 21:18:05\"\nestimate: TBD\ndependencies: []\ntags: [lifecycle, recommendations, delivery, orchestrator]\ngithub_issue: 311\nbundle:\n  presets: [project]\n  files: [ace-support-config/lib/ace/support/config/organisms/setup_doctor.rb, ace-support-config/lib/ace/support/config/cli.rb, ace-git-worktree/.ace-defaults/git/worktree.yml, ace-assign/.ace-defaults/assign/presets/work-on-task.yml, ace-task/handbook/skills/as-task-work/SKILL.md, ace-task/handbook/workflow-instructions/task/work.wf.md, ace-review/.ace-defaults/review/config.yml, ace-handbook/.ace-defaults/handbook/providers/agents.yml, ace-support-core/.ace-defaults/project-root/AGENTS.md]\n  commands: [ace-config doctor --no-probe --json, ace-bundle wfi://task/work, ace-bundle wfi://assign/drive, ace-handbook status]\nneeds_review: false\ngithub_sync_pending: true",
+    "after_sha256": "ffa94a19b5cf2c91823de7a5d317863983f11ae48451fe5fc6c41eaafa0a240d"
+  },
+  {
+    "path": ".ace-tasks/_archive/8v/w/8vb.t.vz8-scope-task-bookkeeping-commits-to/8vb.t.vz8-scope-task-bookkeeping-commits-to-ace-owned.s.md",
+    "before_frontmatter": "id: 8vb.t.vz8\nstatus: done\npriority: critical\ncreated_at: \"2026-08-12 21:19:09\"\nestimate: TBD\ndependencies: []\ntags: [worktree, git, safety, bug]\ngithub_issue: 314\nbundle:\n  presets: [project]\n  files: [ace-git-worktree/lib/ace/git/worktree/organisms/task_worktree_orchestrator.rb, ace-git-worktree/lib/ace/git/worktree/molecules/task_committer.rb, ace-git-worktree/lib/ace/git/worktree/molecules/task_status_updater.rb, ace-git-worktree/lib/ace/git/worktree/molecules/hook_executor.rb, ace-git-worktree/lib/ace/git/worktree/configuration.rb, ace-git-worktree/.ace-defaults/git/worktree.yml, ace-git-worktree/test/fast/molecules/task_pusher_test.rb, ace-git-worktree/test/fast/organisms/task_worktree_orchestrator_test.rb, ace-git-worktree/test/feat/subtask_workflow_test.rb, ace-git-worktree/test/e2e/TS-WORKTREE-002-task-aware/TC-002-create-task-worktree.runner.md]\n  commands: [ace-git-worktree create --task 8vb.t.vz8 --dry-run, ace-test ace-git-worktree all, ace-test-suite --target fast]\nneeds_review: false\ngithub_sync_pending: true",
+    "after_sha256": "9f51bde6dba892d8284ff4a63fe0f6df808ce659f71eb8990dfd91afd9839574"
+  },
+  {
+    "path": ".ace-tasks/_archive/8v/w/8vb.t.vyq-squash-aware-digest-bound-worktree/8vb.t.vyq-squash-aware-digest-bound-worktree-cleanup.s.md",
+    "before_frontmatter": "id: 8vb.t.vyq\nstatus: done\npriority: medium\ncreated_at: \"2026-08-12 21:18:35\"\nestimate: TBD\ndependencies: []\ntags: [worktree, cleanup, safety, orchestrator]\ngithub_issue: 312\nbundle:\n  presets: [project]\n  files: [ace-git-worktree/lib/ace/git/worktree/cli.rb, ace-git-worktree/lib/ace/git/worktree/configuration.rb, ace-git-worktree/lib/ace/git/worktree/molecules/worktree_lister.rb, ace-git-worktree/lib/ace/git/worktree/molecules/worktree_remover.rb, ace-git-worktree/lib/ace/git/worktree/models/worktree_info.rb, ace-git/lib/ace/git/molecules/pr_metadata_fetcher.rb, ace-git/lib/ace/git/molecules/gh_cli_executor.rb, ace-git-worktree/handbook/workflow-instructions/git/worktree-manage.wf.md, ace-git-worktree/docs/usage.md, ace-git-worktree/test/fast/molecules/worktree_lister_test.rb, ace-git-worktree/test/feat/worktree_manager_contract_test.rb, ace-git-worktree/test/e2e/TS-WORKTREE-002-task-aware/TC-007-remove-and-cleanup.runner.md]\n  commands: [ace-git-worktree list --format json, ace-git-worktree prune --dry-run, ace-test ace-git-worktree all]\ngithub_sync_pending: true",
+    "after_sha256": "2aa9ed5c39e82cd2f1d018ade917e05c6ea1eaf2fc69488ef252a3f0ba827052"
+  },
+  {
+    "path": ".ace-tasks/_archive/8v/w/8vb.t.ey3-first-use-release-workflows-and/8vb.t.ey3-first-use-release-workflows-and-agent-setup.s.md",
+    "before_frontmatter": "id: 8vb.t.ey3\nstatus: done\npriority: medium\ncreated_at: \"2026-08-12 09:57:53\"\nestimate: TBD\ndependencies: []\ntags: []\ngithub_issue: 310\nbundle:\n  presets: [project]\n  files: [docs/quick-start.md, docs/tools.md, ace-handbook/handbook/skills/as-release/SKILL.md, ace-bundle/test/feat/workflow_resolution_test.rb]\n  commands: [ace-bundle wfi://release/local, ace-task show 8vb.t.ey3]\nneeds_review: false\ngithub_sync_pending: true",
+    "after_sha256": "eb598416d984c970c4a8eefef24c7d1b91a2adc01498dceb8d5c07bdfe4c7460"
+  },
+  {
+    "path": ".ace-tasks/_archive/8q/w/8q5.t.nai-ace-compressor-ace-bundle-integration/8q5.t.nai-ace-compressor-ace-bundle-integration.s.md",
+    "before_frontmatter": "status: done\nworktree:\n  branch: nai-ace-compressor-ace-native-source-inputs\n  path: ../ace-task.nai\n  created_at: \"2026-03-09 01:48:51\"\n  updated_at: \"2026-03-09 01:48:51\"\n  target_branch: main",
+    "after_sha256": "13f113c63439b641411f6f62815460ee5ec826e2dcb94a8df3b1a54bc3ef44ed"
+  },
+  {
+    "path": ".ace-tasks/_archive/8q/w/8q5.t.naj-ace-compressor-advanced-architecture/8q5.t.naj-ace-compressor-advanced-architecture.s.md",
+    "before_frontmatter": "status: skipped\nskip_reason: no current consumer; groundwork already shipped in na8/nah/nai",
+    "after_sha256": "da4ad5509dd0b5b08b1aa291d5ae347afed62f7151e48344ad817447cc1f05da"
+  },
+  {
+    "path": ".ace-tasks/_archive/8q/y/8qm.t.5nx-readme-refresh-align-all-package/8qm.t.5nx-readme-refresh-align-all-package-readmes-with.s.md",
+    "before_frontmatter": "id: 8qm.t.5nx\nstatus: in_progress\npriority: medium\ncreated_at: \"2026-03-23 03:46:36\"\nestimate: \ndependencies: []\ntags: [docs, readme, unplanned]\nworktree:\n  branch: 5nx-readme-refresh-align-all-package-readmes-with-new-layout-patterns\n  path: ../ace-t.5nx\n  created_at: \"2026-03-23 03:50:48\"\n  updated_at: \"2026-03-23 03:50:48\"\n  target_branch: main",
+    "after_sha256": "fbfeb618bd0753f4ccb27cf08723f9ac44cb217e760ff129f44e9a3f5fa5fec4"
+  },
+  {
+    "path": ".ace-tasks/_archive/8q/v/8q5.t.na8-ace-compressor-exact-mode-mvp/8q5.t.na8-ace-compressor-exact-mode-mvp.s.md",
+    "before_frontmatter": "status: done\nworktree:\n  branch: na8-ace-compressor-exact-mode-runnable-cli\n  path: ../ace-task.na8\n  created_at: \"2026-03-06 23:31:16\"\n  updated_at: \"2026-03-06 23:31:16\"\n  target_branch: main",
+    "after_sha256": "972324149aaa154e7c60a9df85a86b002b022a4273c299a28c69673887f31146"
+  },
+  {
+    "path": ".ace-tasks/_archive/8q/v/8q5.t.nah-ace-compressor-compact-mode/8q5.t.nah-ace-compressor-compact-mode.s.md",
+    "before_frontmatter": "status: done\nworktree:\n  branch: nah-ace-compressor-compact-mode-runnable-cli\n  path: ../ace-task.nah\n  created_at: \"2026-03-07 19:07:01\"\n  updated_at: \"2026-03-07 19:07:01\"\n  target_branch: main",
+    "after_sha256": "69047d230a8bb8860c5a85af125087460a4402eaf77fa1a4d0a2635278d890af"
+  },
+  {
+    "path": ".ace-tasks/_archive/8r/y/8rl.t.k5a-make-ace-quick-start-ready/8rl.t.k5a-make-ace-quick-start-ready-out-of.s.md",
+    "before_frontmatter": "id: 8rl.t.k5a\nstatus: done\npriority: medium\nestimate: TBD\ndependencies: []\nbundle:\n  presets: [project]\n  files: [README.md, docs/quick-start.md, ace-llm/.ace-defaults/llm/config.yml, ace-llm-providers-cli/.ace-defaults/llm/providers/codex.yml, ace-support-config/lib/ace/support/config/organisms/config_initializer.rb, ace-git-commit/lib/ace/git_commit/molecules/message_generator.rb]\n  commands: [ace-task show 8rl.t.k5a]\ntags: []\ncreated_at: \"2026-04-22 13:25:52\"\ngithub_issue: 298\nneeds_review: false\nworktree:\n  branch: k5a-make-ace-quick-start-ready-out-of-the-box\n  path: ../ace-t.k5a\n  created_at: \"2026-04-22 14:46:52\"\n  updated_at: \"2026-04-22 14:46:52\"\n  target_branch: main",
+    "after_sha256": "31df44c1be2931b1c9ab8ce0087f6792931aaf26357f1e18f4d0faebe38a52a6"
+  },
+  {
+    "path": ".ace-tasks/_archive/8r/y/8rl.t.ks9-clarify-ace-quick-start-first/8rl.t.ks9-clarify-ace-quick-start-first-use-setup.s.md",
+    "before_frontmatter": "id: 8rl.t.ks9\nstatus: done\npriority: medium\nestimate: TBD\ndependencies: []\nbundle:\n  presets: [project]\n  files: [README.md, docs/quick-start.md, ace-support-config/README.md, ace-llm/docs/usage.md, ace-git-commit/docs/usage.md, ace-git-commit/docs/getting-started.md, ace-support-core/.ace-defaults/project-root/AGENTS.md, ace-support-core/.ace-defaults/project-root/CLAUDE.md, ace-support-core/.ace-defaults/README.md, .ace-tasks/8rl.t.k5a-make-ace-quick-start-ready/8rl.t.k5a-make-ace-quick-start-ready-out-of.s.md, .ace-tasks/8rl.t.k5a-make-ace-quick-start-ready/2-add-setup-readiness-doctor/8rl.t.k5a.2-add-setup-readiness-doctor.s.md, .ace-tasks/8rl.t.k5a-make-ace-quick-start-ready/3-improve-ace-git-commit-setup/8rl.t.k5a.3-improve-ace-git-commit-setup-failure-guidance.s.md, .ace-tasks/8rl.t.ks9-clarify-ace-quick-start-first/ux-usage.md]\n  commands: [ace-task show 8rl.t.ks9 --tree, ace-task show 8rl.t.ks9 --content]\ntags: []\ncreated_at: \"2026-04-22 13:51:24\"\ngithub_issue: 299\nneeds_review: false\nworktree:\n  branch: ks9-clarify-ace-quick-start-first-use-setup-flow\n  path: ../ace-t.ks9\n  created_at: \"2026-04-24 14:44:17\"\n  updated_at: \"2026-04-24 14:44:17\"\n  target_branch: main",
+    "after_sha256": "fc32b9dd02e080cc5487297601983888fd1d8c4e00a5f7abe13470c47ce055bf"
+  },
+  {
+    "path": ".ace-tasks/_archive/8r/v/8r4.t.i68-fix-fresh-start-bootstrap-gaps/8r4.t.i68-fix-fresh-start-bootstrap-gaps-from-linked.s.md",
+    "before_frontmatter": "id: 8r4.t.i68\nstatus: done\npriority: medium\ncreated_at: \"2026-04-05 12:06:55\"\nestimate: TBD\ndependencies: []\ntags: [onboarding, quick-start, ace-config, ace-llm, ace-git-commit]\ngithub_issue: 276\nbundle:\n  presets: [work-on-task]\n  files: [docs/quick-start.md, ace-support-config/lib/ace/support/config/organisms/config_initializer.rb, ace-llm/lib/ace/llm/configuration.rb, ace-llm-providers-cli/lib/ace/llm/providers/cli/claude_code_client.rb]\n  commands: [ace-config init, ace-llm --list-providers, ace-git-commit -i \"test\"]\nneeds_review: false\nworktree:\n  branch: i68-fix-fresh-start-bootstrap-gaps-from-linked-issues\n  path: ../ace-t.i68\n  created_at: \"2026-04-13 13:55:12\"\n  updated_at: \"2026-04-13 13:55:12\"\n  target_branch: main",
+    "after_sha256": "ab908103ec705ed8cd89fd70724cf355df8701259145ba7d73424c413dbb8af9"
+  },
+  {
+    "path": ".ace-tasks/_archive/8r/v/8r4.t.i68-fix-fresh-start-bootstrap-gaps/0-add-ace-local-gitignore-and/8r4.t.i68.0-add-ace-local-gitignore-and-sample-agent.s.md",
+    "before_frontmatter": "id: 8r4.t.i68.0\nstatus: done\npriority: medium\ncreated_at: \"2026-04-05 12:06:57\"\nestimate: TBD\ndependencies: []\ntags: []\nparent: 8r4.t.i68\ngithub_issue: 279\nbundle:\n  presets: [work-on-task]\n  files: [ace-support-config/lib/ace/support/config/organisms/config_initializer.rb, docs/quick-start.md, AGENTS.md, CLAUDE.md]\n  commands: [ace-config init]\nneeds_review: false",
+    "after_sha256": "a627aa2d45df869eacd5d2394566d53b2a5f0c24ee77a4e509c661f3917d671b"
+  },
+  {
+    "path": ".ace-tasks/_archive/8r/v/8r4.t.i68-fix-fresh-start-bootstrap-gaps/2-guard-unsupported-claude-max-tokens/8r4.t.i68.2-guard-unsupported-claude-max-tokens-in-ace.s.md",
+    "before_frontmatter": "id: 8r4.t.i68.2\nstatus: done\npriority: medium\ncreated_at: \"2026-04-05 12:07:02\"\nestimate: TBD\ndependencies: []\ntags: []\nparent: 8r4.t.i68\ngithub_issue: 278\nbundle:\n  presets: [work-on-task]\n  files: [ace-llm-providers-cli/lib/ace/llm/providers/cli/claude_code_client.rb, ace-git-commit/lib/ace/git_commit/molecules/message_generator.rb, ace-git-commit/docs/usage.md]\n  commands: [ace-git-commit -i \"test\"]\nneeds_review: false",
+    "after_sha256": "842da97ee1b151093bf2957458e4ecd6fa7e76c11045ceaf671b23a2541b0a04"
+  },
+  {
+    "path": ".ace-tasks/_archive/8u/x/8ue.t.bo8-align-agents-projection-with-canonical/8ue.t.bo8-align-agents-projection-with-canonical-inventory.s.md",
+    "before_frontmatter": "id: 8ue.t.bo8\nstatus: done\npriority: medium\ncreated_at: \"2026-07-15 07:46:55\"\nestimate: TBD\ndependencies: []\ntags: [handbook, skills, agents, projection]\ngithub_issue: 307\nbundle:\n  presets: [project]\n  files: [ace-handbook/.ace-defaults/handbook/providers/agents.yml, ace-handbook/docs/usage.md, ace-handbook/lib/ace/handbook/atoms/provider_registry.rb, ace-handbook/lib/ace/handbook/organisms/skill_inventory.rb, ace-handbook/lib/ace/handbook/molecules/skill_projection.rb, ace-handbook/lib/ace/handbook/organisms/provider_syncer.rb, ace-handbook/lib/ace/handbook/organisms/status_collector.rb, ace-handbook/test/fast/organisms/skill_inventory_test.rb, ace-handbook/test/fast/organisms/provider_syncer_test.rb, ace-handbook/test/fast/organisms/status_collector_test.rb, ace-handbook/test/e2e/TS-HANDBOOK-002-sync-behavior/scenario.yml, ace-handbook/test/e2e/TS-HANDBOOK-002-sync-behavior/TC-003-default-agents-projection.verify.md, .ace-tasks/8ue.t.bo8-align-agents-projection-with-canonical/ux/usage.md]\n  commands: [ace-task show 8ue.t.bo8 --content, ace-handbook sync, ace-handbook status, ace-handbook status --format json, ace-handbook sync --provider codex, ace-test ace-handbook, ace-test-e2e ace-handbook TS-HANDBOOK-002]\nneeds_review: false\nworktree:\n  branch: bo8-align-agents-projection-with-canonical-inventory\n  path: ../ace-t.bo8\n  created_at: \"2026-07-15 09:54:15\"\n  updated_at: \"2026-07-15 09:54:15\"\n  target_branch: main\ngithub_sync_pending: true",
+    "after_sha256": "bac447e45a6d8fda997fabefc780853f246ee59400b13484be81829f28b30797"
+  },
+  {
+    "path": ".ace-tasks/_archive/8u/v/8tt.t.f3a-make-ace-retro-use-repo/8tt.t.f3a-make-ace-retro-use-repo-root-retro.s.md",
+    "before_frontmatter": "id: 8tt.t.f3a\nstatus: done\npriority: medium\ncreated_at: \"2026-06-30 10:03:39\"\nestimate: TBD\ndependencies: []\ntags: []\ngithub_issue: 305\ngithub_sync_pending: true",
+    "after_sha256": "8030cc2a58967a2dd45c3fb75a8b411b8ce38ca743dd397c0abc9145959a8256"
+  },
+  {
+    "path": ".ace-tasks/_archive/8u/v/8tt.t.stj-project-default-ace-workflow-skills/8tt.t.stj-project-default-ace-workflow-skills-into-agents.s.md",
+    "before_frontmatter": "id: 8tt.t.stj\nstatus: done\npriority: medium\ncreated_at: \"2026-06-30 19:12:50\"\nestimate: TBD\ndependencies: []\ntags: [handbook, skills, agents]\ngithub_issue: 306\nbundle:\n  presets: [project]\n  files: [ace-git-commit/handbook/skills/as-git-commit/SKILL.md, ace-handbook/.ace-defaults/handbook/providers/agents.yml, ace-handbook/lib/ace/handbook/atoms/provider_registry.rb, ace-handbook/lib/ace/handbook/molecules/skill_projection.rb, ace-handbook/lib/ace/handbook/organisms/provider_syncer.rb, ace-handbook/lib/ace/handbook/organisms/status_collector.rb, ace-handbook/test/fast/organisms/provider_syncer_test.rb, ace-handbook/test/fast/organisms/status_collector_test.rb, ace-handbook/test/e2e/TS-HANDBOOK-002-sync-behavior/scenario.yml, .ace-tasks/8tt.t.stj-project-default-ace-workflow-skills/ux/usage.md]\n  commands: [ace-task show 8tt.t.stj --content, ace-handbook status, ace-handbook sync, ace-test ace-handbook, ace-test ace-handbook test/e2e/TS-HANDBOOK-002-sync-behavior]\nneeds_review: false\ngithub_sync_pending: true",
+    "after_sha256": "c1852db2848fb40ef02cb3ea02ee9c60aca705508b7c1f32342aa2b5021fbb25"
+  }
+]

@@ -12,7 +12,7 @@ bundle:
   commands: []
 needs_review: false
 title: Resolve second-commander proposals with a sixteen-hour veto window
-position: 6o000e
+position: 6o000c
 ---
 
 # Resolve second-commander proposals with a sixteen-hour veto window

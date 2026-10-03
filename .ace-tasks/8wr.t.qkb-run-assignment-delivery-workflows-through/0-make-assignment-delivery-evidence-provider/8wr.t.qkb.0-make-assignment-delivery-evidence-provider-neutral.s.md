@@ -4,12 +4,12 @@ status: pending
 priority: high
 created_at: "2026-09-28 17:44:29"
 estimate: TBD
-dependencies: [8wr.t.qk1, 8wr.t.qjl]
+dependencies: [8wr.t.qk1, 8wr.t.qjl, 8x2.t.z78]
 tags: [lab-readiness]
 parent: 8wr.t.qkb
 bundle:
   presets: [project]
-  files: [.ace-tasks/8wr.t.qkb-run-assignment-delivery-workflows-through/8wr.t.qkb-run-assignment-delivery-workflows-through-named-forge.s.md, .ace-tasks/8wr.t.qk1-complete-forge-neutral-worktree-review/8wr.t.qk1-complete-forge-neutral-worktree-review-and-task.s.md, .ace-tasks/8wr.t.qjl-persist-assignment-attempts-and-exact/8wr.t.qjl-persist-assignment-attempts-and-exact-execution.s.md, ace-assign/.ace-defaults/assign/catalog/recipes/implement-with-pr.recipe.yml, ace-assign/.ace-defaults/assign/catalog/steps/create-pr.step.yml, ace-assign/.ace-defaults/assign/catalog/steps/update-pr-desc.step.yml, ace-assign/.ace-defaults/assign/catalog/steps/mark-pr-ready.step.yml, .ace-tasks/8wr.t.qkb-run-assignment-delivery-workflows-through/0-make-assignment-delivery-evidence-provider/ux/usage.md]
+  files: [.ace-tasks/8wr.t.qkb-run-assignment-delivery-workflows-through/8wr.t.qkb-run-assignment-delivery-workflows-through-named-forge.s.md, .ace-tasks/_archive/8x/v/8wr.t.qk1-complete-forge-neutral-worktree-review/8wr.t.qk1-complete-forge-neutral-worktree-review-and-task.s.md, .ace-tasks/8wr.t.qjl-persist-assignment-attempts-and-exact/8wr.t.qjl-persist-assignment-attempts-and-exact-execution.s.md, ace-assign/.ace-defaults/assign/catalog/recipes/implement-with-pr.recipe.yml, ace-assign/.ace-defaults/assign/catalog/steps/create-pr.step.yml, ace-assign/.ace-defaults/assign/catalog/steps/update-pr-desc.step.yml, ace-assign/.ace-defaults/assign/catalog/steps/mark-pr-ready.step.yml, .ace-tasks/8wr.t.qkb-run-assignment-delivery-workflows-through/0-make-assignment-delivery-evidence-provider/ux/usage.md, .ace-tasks/8x2.t.z78-complete-forgejo-delivery-capabilities-with/8x2.t.z78-complete-forgejo-delivery-capabilities-with-verifiable.s.md, .ace-tasks/8x2.t.z78-complete-forgejo-delivery-capabilities-with/ux/usage.md]
   commands: []
 needs_review: false
 ---
@@ -48,3 +48,7 @@ Single end-to-end slice, advisory size: large. Depends on qk1 delivered capabili
 ## Atomic delivery constraint
 
 qkb.0 and qkb.1 are reviewed as separate observable scopes but integrate in one coherent delivery. The final neutral workflow entrypoints, all catalog consumers and removal of old GitHub-specific names ship together; no intermediate installed release exposes mixed vocabularies or compatibility aliases.
+
+## Provider acceptance prerequisite — 2026-10-04
+
+ACE 8x2.t.z78 owns the actual missing Forgejo fork/draft/ready/atomic expected-head and uncertainty behavior. Its accepted provider receipt is required before this delivery scope is accepted. Existing safe unsupported errors are not completed matrix rows. qkb.0 and qkb.1 remain one atomic installed vocabulary change; no release with mixed old/new workflow names. R2 follows completed qkb, and R3 follows R2; neither is an upstream qkb prerequisite.

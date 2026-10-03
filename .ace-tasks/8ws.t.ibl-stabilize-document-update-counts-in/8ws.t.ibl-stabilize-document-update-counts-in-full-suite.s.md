@@ -1,6 +1,6 @@
 ---
 id: 8ws.t.ibl
-status: draft
+status: pending
 priority: medium
 created_at: "2026-09-29 12:12:54"
 estimate: small
@@ -10,8 +10,9 @@ bundle:
   presets: [project]
   files: [ace-docs/test/fast/molecules/frontmatter_manager_test.rb, ace-docs/lib/ace/docs/molecules/frontmatter_manager.rb]
   commands: []
-needs_review: true
+needs_review: false
 title: Stabilize document update counts in full suite runs
+position: 6o0007
 ---
 
 # Stabilize document update counts in full suite runs
@@ -32,8 +33,14 @@ The unrestricted suite on main dbb9bde1e returned expected 2 / actual 0 in `Fron
 
 ### Success criteria and verification
 
-- [ ] SC1: Reproduce the failure mechanism deterministically (include collection after fixture creation when testing the lifetime hypothesis) and retain pre-fix evidence.
+- [x] SC1: Reproduce the failure mechanism deterministically (include collection after fixture creation when testing the lifetime hypothesis) and retain pre-fix evidence.
 - [ ] SC2: Two fixture documents persist through update and both contain the requested values; mixed valid/invalid inputs return only the successful count.
 - [ ] SC3: `bin/ace-test ace-docs all` and the full suite pass this case with the reproducing conditions; record seeds, exact SHA and independent verdict. A green rerun without a proven fix does not close the task.
 
 Owner: ace-docs tests. Single observable slice; small. Independent of the Lab feature dependency graph and not a blocker for starting second-wave implementation. No CLI/API/config change; no separate usage file required. Draft awaiting review; no product implementation performed.
+
+## Delivery reconciliation — 2026-10-04
+
+The GC lifetime repair is already in main: 7c043ebd21a591650aae9961b8ca142b806edcf5. R1's archived reports/implementation-report.md and test-failure-analysis.md retain the failed bulk count, GC mechanism, Tempfile.create ownership, forced GC, targeted 15/55, docs all 213/579 and subsequent full-suite evidence. SC1 is supported; do not reimplement this fix.
+
+Remaining SC2 is concrete: the current bulk test asserts count 2, but does not read back both updated documents or exercise mixed valid/invalid inputs in one bulk call. Keep this task open for that regression evidence and independent closure mapped to SC2/SC3; no product redesign is needed. The earlier hypothesis paragraph is historical, superseded by this proven diagnosis. No fresh product tests were run during this spec reconciliation.

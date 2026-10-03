@@ -7,7 +7,7 @@ estimate: TBD
 dependencies: [8wm.t.vs2, 8wr.t.qjx, 8wr.t.qkb]
 needs_review: false
 tags: [ace-hitl, pilot, release, rubygems]
-position: 6o000l
+position: 6o000j
 bundle:
   presets: [project]
   files: [.ace-bin/ace-rubygems-publish, ace-hitl/lib/ace/hitl/lifecycle/kinds.rb, ace-hitl/lib/ace/hitl/lifecycle/effects.rb]

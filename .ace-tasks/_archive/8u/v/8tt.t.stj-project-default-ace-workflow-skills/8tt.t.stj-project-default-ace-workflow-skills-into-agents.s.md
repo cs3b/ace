@@ -6,13 +6,19 @@ created_at: "2026-06-30 19:12:50"
 estimate: TBD
 dependencies: []
 tags: [handbook, skills, agents]
-github_issue: 306
+remote_issue:
+  server_name: github-cs3b
+  provider: github
+  repository_url: https://github.com/cs3b/ace
+  number: 306
+  url: https://github.com/cs3b/ace/issues/306
+
 bundle:
   presets: [project]
   files: [ace-git-commit/handbook/skills/as-git-commit/SKILL.md, ace-handbook/.ace-defaults/handbook/providers/agents.yml, ace-handbook/lib/ace/handbook/atoms/provider_registry.rb, ace-handbook/lib/ace/handbook/molecules/skill_projection.rb, ace-handbook/lib/ace/handbook/organisms/provider_syncer.rb, ace-handbook/lib/ace/handbook/organisms/status_collector.rb, ace-handbook/test/fast/organisms/provider_syncer_test.rb, ace-handbook/test/fast/organisms/status_collector_test.rb, ace-handbook/test/e2e/TS-HANDBOOK-002-sync-behavior/scenario.yml, .ace-tasks/8tt.t.stj-project-default-ace-workflow-skills/ux/usage.md]
   commands: [ace-task show 8tt.t.stj --content, ace-handbook status, ace-handbook sync, ace-test ace-handbook, ace-test ace-handbook test/e2e/TS-HANDBOOK-002-sync-behavior]
 needs_review: false
-github_sync_pending: true
+issue_sync_pending: true
 ---
 
 # Project default ACE workflow skills into agents provider

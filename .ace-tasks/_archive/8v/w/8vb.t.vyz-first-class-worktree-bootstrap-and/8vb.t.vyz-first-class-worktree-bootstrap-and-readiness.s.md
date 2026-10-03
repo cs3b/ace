@@ -6,13 +6,19 @@ created_at: "2026-08-12 21:18:52"
 estimate: TBD
 dependencies: []
 tags: [worktree, bootstrap, readiness, orchestrator]
-github_issue: 313
+remote_issue:
+  server_name: github-cs3b
+  provider: github
+  repository_url: https://github.com/cs3b/ace
+  number: 313
+  url: https://github.com/cs3b/ace/issues/313
+
 bundle:
   presets: [project]
   files: [ace-git-worktree/lib/ace/git/worktree/cli.rb, ace-git-worktree/lib/ace/git/worktree/configuration.rb, ace-git-worktree/lib/ace/git/worktree/commands/config_command.rb, ace-git-worktree/lib/ace/git/worktree/molecules/config_loader.rb, ace-git-worktree/lib/ace/git/worktree/molecules/hook_executor.rb, ace-git-worktree/lib/ace/git/worktree/molecules/worktree_creator.rb, ace-git-worktree/lib/ace/git/worktree/organisms/task_worktree_orchestrator.rb, ace-git-worktree/handbook/workflow-instructions/git/worktree-create.wf.md, ace-git-worktree/handbook/skills/as-git-worktree-create/SKILL.md, ace-git-worktree/test/fast/molecules/worktree_creator_test.rb, ace-git-worktree/test/feat/worktree_manager_contract_test.rb, ace-git-worktree/test/e2e/TS-WORKTREE-002-task-aware/TC-002-create-task-worktree.runner.md]
   commands: [ace-git-worktree config show --json, ace-git-worktree create --help, ace-bundle wfi://git/worktree-create, ace-test ace-git-worktree all]
 needs_review: false
-github_sync_pending: true
+issue_sync_pending: true
 ---
 
 # First-class worktree bootstrap and readiness

@@ -6,13 +6,19 @@ created_at: "2026-08-12 09:57:53"
 estimate: TBD
 dependencies: []
 tags: []
-github_issue: 310
+remote_issue:
+  server_name: github-cs3b
+  provider: github
+  repository_url: https://github.com/cs3b/ace
+  number: 310
+  url: https://github.com/cs3b/ace/issues/310
+
 bundle:
   presets: [project]
   files: [docs/quick-start.md, docs/tools.md, ace-handbook/handbook/skills/as-release/SKILL.md, ace-bundle/test/feat/workflow_resolution_test.rb]
   commands: [ace-bundle wfi://release/local, ace-task show 8vb.t.ey3]
 needs_review: false
-github_sync_pending: true
+issue_sync_pending: true
 ---
 
 # First-use release workflows and agent setup

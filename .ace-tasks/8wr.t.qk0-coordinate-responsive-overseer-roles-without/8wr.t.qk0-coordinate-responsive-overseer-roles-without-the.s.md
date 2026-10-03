@@ -12,7 +12,7 @@ bundle:
   commands: []
 needs_review: false
 title: Coordinate responsive overseer roles without the legacy Lab engine
-position: 6o000f
+position: 6o000e
 ---
 
 # Coordinate responsive overseer roles without the legacy Lab engine

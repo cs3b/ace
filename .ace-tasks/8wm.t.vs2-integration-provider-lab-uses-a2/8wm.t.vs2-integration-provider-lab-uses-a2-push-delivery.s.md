@@ -7,10 +7,10 @@ estimate: TBD
 dependencies: [8wq.t.34i, 8wm.t.y23, 8wm.t.y24, 8wm.t.vs0, 8wm.t.vs1, 8wr.t.qjy]
 needs_review: false
 tags: [ace-hitl, integration, lab, hermes]
-position: 6o000b
+position: 6o000a
 bundle:
   presets: [project]
-  files: [ace-hitl/lib/ace/hitl/providers/lab.rb, ace-hitl/lib/ace/hitl/providers/lab/daemon_binding.rb, ace-hitl/lib/ace/hitl/providers/ref.rb, ace-hitl-hermes/lib/ace/hitl/hermes/schemas/message.v1.schema.json]
+  files: [ace-hitl/lib/ace/hitl/providers/lab.rb, ace-hitl/lib/ace/hitl/providers/lab/daemon_binding.rb, ace-hitl/lib/ace/hitl/providers/ref.rb, ace-hitl-hermes/lib/ace/hitl/hermes/schemas/message.v1.schema.json, .ace-tasks/_archive/8w/y/8wm.t.y23-ace-herdr-migrate-generic-queue/8wm.t.y23-ace-herdr-migrate-generic-queue-and-delivery.s.md, ace-herdr/lib/ace/herdr/organisms/inbox.rb, ace-herdr/docs/usage.md, .ace-tasks/8wm.t.vs2-integration-provider-lab-uses-a2/ux/usage.md]
   commands: []
 title: Integrate scoped HITL delivery without the Lab daemon
 ---
@@ -63,3 +63,12 @@ Earlier text is retained in `history/pre-lab-spec-review.md` as non-normative hi
 ### Usage and Review Evidence
 
 Public scenarios: `ux/usage.md`. Record independent review before promotion.
+
+## Signed inbox consumer contract — 2026-10-04
+
+Consume delivered ACE 8wm.t.y23 as implemented, without another journal. An uncertain inbox result can advance only from a verified signed receipt binding event_id, attempt_id, claim_generation, payload_sha256, full native binding and observer/native observation reference. `consumed` maps to completed; `superseded` requeues the same event after trusted non-consumption evidence and may supply a verified replacement target. Superseded is not delivery/business success or a generic dead state. No receipt, stale-generation or mismatched proof, unknown liveness or elapsed time leaves uncertainty visible and prohibits automatic resend/relaunch of the uncertain effect.
+
+The trusted supervisor/observer verifies actual native Codex/Pi consumption or non-consumption before signing. A requester cannot mint its own acceptance. lab-config:gad.8 owns installation of the protected signer process, private key and configured public verification key; gad.b owns the domain operation. Preserve the per-event key fingerprint and existing verifier checks. Rotation cannot make an old event trusted under a new key: retain the matching trusted verifier/signing context for unresolved old events or postpone rotation. Never weaken verification to unblock recovery. Persist non-secret observation/proof references in the existing ace-assign attempt journal, not OTPs or raw private keys. Delivery consumption does not itself authorize or prove a business effect.
+
+- [ ] Consumer acceptance: consumed and superseded with correct signature/binding; wrong signer/key/digest/generation/native target; replay; missing proof; supervisor restart and key rotation with unresolved old event. Valid consumption settles once; supersession permits only the explicit verified retry; all invalid or absent proofs stay uncertain.
+- [ ] Installed acceptance with gad.8/.b uses actual requester and trusted signer OS users and native Codex/Pi observation, not only scripted subprocess proof. Implementation reports separate deterministic coverage from this required Lab gate.

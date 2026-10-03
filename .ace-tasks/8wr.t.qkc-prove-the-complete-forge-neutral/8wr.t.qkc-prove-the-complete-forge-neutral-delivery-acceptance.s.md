@@ -4,14 +4,14 @@ status: pending
 priority: high
 created_at: "2026-09-28 17:42:36"
 estimate: TBD
-dependencies: [8wr.t.qk1, 8wr.t.qkb]
+dependencies: [8wr.t.qk1, 8wr.t.qkb, 8x0.t.ig4]
 tags: [lab-readiness]
 bundle:
   presets: [project]
-  files: [.ace-tasks/8wr.t.qk1-complete-forge-neutral-worktree-review/8wr.t.qk1-complete-forge-neutral-worktree-review-and-task.s.md, .ace-tasks/8wr.t.qkb-run-assignment-delivery-workflows-through/8wr.t.qkb-run-assignment-delivery-workflows-through-named-forge.s.md, .ace-tasks/_archive/8w/y/8wk.t.l1e-forge-neutral-git-core-with/8wk.t.l1e-forge-neutral-git-core-with-github-and.s.md, .ace-tasks/8wr.t.qjl-persist-assignment-attempts-and-exact/8wr.t.qjl-persist-assignment-attempts-and-exact-execution.s.md, .ace-tasks/8wr.t.qkc-prove-the-complete-forge-neutral/ux/usage.md]
+  files: [.ace-tasks/_archive/8x/v/8wr.t.qk1-complete-forge-neutral-worktree-review/8wr.t.qk1-complete-forge-neutral-worktree-review-and-task.s.md, .ace-tasks/8wr.t.qkb-run-assignment-delivery-workflows-through/8wr.t.qkb-run-assignment-delivery-workflows-through-named-forge.s.md, .ace-tasks/_archive/8w/y/8wk.t.l1e-forge-neutral-git-core-with/8wk.t.l1e-forge-neutral-git-core-with-github-and.s.md, .ace-tasks/8wr.t.qjl-persist-assignment-attempts-and-exact/8wr.t.qjl-persist-assignment-attempts-and-exact-execution.s.md, .ace-tasks/8wr.t.qkc-prove-the-complete-forge-neutral/ux/usage.md, .ace-tasks/8x0.t.ig3-unify-review-loop-ownership-and/8x0.t.ig3-unify-review-loop-ownership-and-effective-policy.s.md, .ace-tasks/8x0.t.ig4-bound-review-convergence-and-expose/8x0.t.ig4-bound-review-convergence-and-expose-escalation.s.md]
   commands: []
 needs_review: false
-position: 6o000j
+position: 6o000i
 ---
 
 # Prove the complete forge-neutral delivery acceptance matrix
@@ -59,3 +59,9 @@ All required rows executed and verified, coupling inventory fully classified, ex
 
 ## Carried endpoint proof — uj0 closure, 2026-10-02
 - [ ] On the actual Lab installation, record installed fj version and sanitized per-subcommand capabilities, then run a read-only explicitly named-server/repository query from a different checkout and confirm returned identity. Record exact package versions and endpoint identity in the matrix. uj0 delivered repository binding and tested the upstream fj v0.6.0 binary; its current-Lab smoke half lacked evidence. The Captain closed that implementation on 2026-10-02; this already-required named-Forgejo acceptance row owns the remaining installed endpoint proof. No access means unexecuted, never pass.
+
+## Review-program final gate — 2026-10-04
+
+R1 (8x0.t.ig2) is delivered storage/evidence foundation, not proof of caps or escalation. Required input now includes accepted R2 (8x0.t.ig3) and R3 (8x0.t.ig4) receipts for the installed review workflow. Verify effective policy/session/worktree binding, restart without duplicate repair, discovery/delivery round limits, infra retry accounting and escalation with retained history on the exact installed manifest. Missing limits or an unbounded review is a failed required row. Cross-repo lab-config:gad.2 consumes this proof; experimental ig5 does not gate acceptance. No dependency from qkb/qk0 to R3 is introduced.
+
+- [ ] Final review-policy row binds R2/R3 revisions and executes cap/escalation/restart negative scenarios before full Lab acceptance.

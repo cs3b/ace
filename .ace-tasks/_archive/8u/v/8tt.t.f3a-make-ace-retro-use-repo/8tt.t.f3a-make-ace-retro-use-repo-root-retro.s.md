@@ -6,8 +6,14 @@ created_at: "2026-06-30 10:03:39"
 estimate: TBD
 dependencies: []
 tags: []
-github_issue: 305
-github_sync_pending: true
+remote_issue:
+  server_name: github-cs3b
+  provider: github
+  repository_url: https://github.com/cs3b/ace
+  number: 305
+  url: https://github.com/cs3b/ace/issues/305
+
+issue_sync_pending: true
 ---
 
 # Make ace-retro use repo-root retro workspace consistently

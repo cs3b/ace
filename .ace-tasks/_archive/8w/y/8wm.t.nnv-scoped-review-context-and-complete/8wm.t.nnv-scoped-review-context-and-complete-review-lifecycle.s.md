@@ -6,8 +6,14 @@ created_at: "2026-09-23 15:46:31"
 estimate: 
 dependencies: []
 tags: []
-github_issue: 321
-github_sync_pending: true
+remote_issue:
+  server_name: github-cs3b
+  provider: github
+  repository_url: https://github.com/cs3b/ace
+  number: 321
+  url: https://github.com/cs3b/ace/issues/321
+
+issue_sync_pending: true
 ---
 
 # Scoped, budget-aware context and complete review lifecycle

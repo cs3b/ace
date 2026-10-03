@@ -6,7 +6,7 @@ created_at: "2026-09-27 02:05:00"
 estimate: 
 dependencies: [8wr.t.qjl, 8wr.t.qjx]
 tags: []
-position: 6o0007
+position: 6o0003
 bundle:
   presets: [project]
   files: [ace-hitl/lib/ace/hitl/lifecycle/store.rb, ace-hitl/lib/ace/hitl/lifecycle/identity.rb, ace-hitl/lib/ace/hitl/lifecycle/atomic_json.rb]

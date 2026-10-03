@@ -10,7 +10,12 @@ bundle:
   files: []
   commands: []
 tags: [ace-review, review-rounds, observability]
-github_issue: 335
+remote_issue:
+  server_name: github-cs3b
+  provider: github
+  repository_url: https://github.com/cs3b/ace
+  number: 335
+  url: https://github.com/cs3b/ace/issues/335
 ---
 
 # Improve ace-review round efficiency and usage observability

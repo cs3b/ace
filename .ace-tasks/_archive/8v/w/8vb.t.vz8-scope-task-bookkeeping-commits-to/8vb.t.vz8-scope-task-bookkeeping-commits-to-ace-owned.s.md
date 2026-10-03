@@ -6,13 +6,19 @@ created_at: "2026-08-12 21:19:09"
 estimate: TBD
 dependencies: []
 tags: [worktree, git, safety, bug]
-github_issue: 314
+remote_issue:
+  server_name: github-cs3b
+  provider: github
+  repository_url: https://github.com/cs3b/ace
+  number: 314
+  url: https://github.com/cs3b/ace/issues/314
+
 bundle:
   presets: [project]
   files: [ace-git-worktree/lib/ace/git/worktree/organisms/task_worktree_orchestrator.rb, ace-git-worktree/lib/ace/git/worktree/molecules/task_committer.rb, ace-git-worktree/lib/ace/git/worktree/molecules/task_status_updater.rb, ace-git-worktree/lib/ace/git/worktree/molecules/hook_executor.rb, ace-git-worktree/lib/ace/git/worktree/configuration.rb, ace-git-worktree/.ace-defaults/git/worktree.yml, ace-git-worktree/test/fast/molecules/task_pusher_test.rb, ace-git-worktree/test/fast/organisms/task_worktree_orchestrator_test.rb, ace-git-worktree/test/feat/subtask_workflow_test.rb, ace-git-worktree/test/e2e/TS-WORKTREE-002-task-aware/TC-002-create-task-worktree.runner.md]
   commands: [ace-git-worktree create --task 8vb.t.vz8 --dry-run, ace-test ace-git-worktree all, ace-test-suite --target fast]
 needs_review: false
-github_sync_pending: true
+issue_sync_pending: true
 ---
 
 # Scope task bookkeeping commits to ACE-owned paths

@@ -15,3 +15,6 @@ Output: passed row bound to exact versions/head and provider identity, available
 ## Reject missing or inconsistent evidence
 Input: unavailable second Forgejo server, skipped required row, conflicting head, or only exit code 0.
 Output: incomplete matrix with exact blocker; no fallback to default endpoint, no partial acceptance and no full-Lab-ready claim.
+
+## Mandatory R2/R3 row
+Install the exact R2/R3 versions from the candidate manifest. Exercise completed-stage recovery, conflicting policy, discovery cap, delivery cap and infra retry exhaustion. Observe retained campaign identity and explicit escalation, never an automatic extra review. A missing receipt or a skipped required scenario keeps the full matrix unaccepted. Pilot ig5 is not required.

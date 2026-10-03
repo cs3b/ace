@@ -10,7 +10,13 @@ bundle:
   commands: [ace-task show 8rl.t.k5a]
 tags: []
 created_at: "2026-04-22 13:25:52"
-github_issue: 298
+remote_issue:
+  server_name: github-cs3b
+  provider: github
+  repository_url: https://github.com/cs3b/ace
+  number: 298
+  url: https://github.com/cs3b/ace/issues/298
+
 needs_review: false
 worktree:
   branch: k5a-make-ace-quick-start-ready-out-of-the-box

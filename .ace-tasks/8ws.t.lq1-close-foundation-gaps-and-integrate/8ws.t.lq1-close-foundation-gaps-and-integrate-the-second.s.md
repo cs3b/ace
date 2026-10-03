@@ -12,6 +12,7 @@ bundle:
   presets: [project]
   files: [AGENTS.md, .ace-tasks/8wr.t.uj0-bind-forgejo-provider-commands-to/8wr.t.uj0-bind-forgejo-provider-commands-to-the-selected.s.md, .ace-tasks/_archive/8x/v/8wr.t.t8j-enforce-prune-safety-workflow-contract/8wr.t.t8j-enforce-prune-safety-workflow-contract-in-overseer.s.md, .ace-tasks/8ws.t.lq1-close-foundation-gaps-and-integrate/evidence/release-proof-2026-09-29.md, .ace-tasks/8ws.t.lq1-close-foundation-gaps-and-integrate/evidence/install-observations.json]
   commands: []
+position: 6o000l
 ---
 
 # Close foundation gaps and integrate the second ACE Lab wave
@@ -21,7 +22,7 @@ This is the ACE integration tracker replacing the planning role of the loose lab
 
 This task owns sequencing and acceptance receipts, not duplicate implementations. Existing tasks stay at their canonical IDs; new uncovered outcomes are actual children. Check a task checkbox only after its owning record is done and linked evidence establishes the listed result. Reopen this checklist item if receipt is invalidated; do not silently expand a historical done task. `bin/ace-task show 8ws.t.lq1 --content` displays the checklist; updates are explicit, not automatic synchronization.
 
-Current phase (2026-10-02): Captain confirms foundation closure; implementation receipts below verified against stored records and main history. This update reconciles task state and selects the next feature wave; it does not dispatch implementation.
+Current phase (2026-10-04): foundation and six feature owners are delivered. This tracker remains open for combined integration and explicit repair dispositions; specifications below select the next work, not authorize dispatch.
 
 ## First wave — delivered scopes
 - [x] ACE 8wq.t.1w2 — hermetic test infrastructure, main PR344; tp0 consumer fixes also delivered, with later runner source loading fix 96c445b8a. This does not close new fixture defects.
@@ -45,25 +46,25 @@ Foundation group accepted on 2026-10-02 by the Captain. Source receipts: uj0 f82
 Release acceptance: [2026-10-01 final receipt](evidence/installation-acceptance-2026-10-01.md), [machine receipt](evidence/installation-acceptance.json) and [frozen manifest](evidence/installation-manifest.json) supersede the historical partial September proof. TS-MONO-001 run 8x0f3w4: PASS 4/4, SAFE, 20 exact manifest package versions, zero findings, both install modes and consumer dependency edges verified. This is the frozen tested graph, not proof that every later release or Lab installation is current. No installation rerun was performed in this status update.
 
 ## Second feature wave — existing task owners, no duplicate scopes
-- [ ] ACE 8wq.t.k86.1 — tmux adapter satisfies runtime contract.
-- [ ] ACE 8wq.t.k86.2 — Herdr adapter satisfies runtime contract.
-- [ ] ACE 8wr.t.qjx — scoped service request/receipt seam consumes qjl/1w4.
-- [ ] ACE 8wm.t.y23 — durable inbox once-or-uncertain semantics consume qjl.
-- [ ] ACE 8wr.t.qk1.1 — review consumers use named providers.
-- [ ] ACE 8wr.t.qk1.2 — task issue consumers use named providers.
+- [x] ACE 8wq.t.k86.1 — tmux adapter satisfies runtime contract.
+- [x] ACE 8wq.t.k86.2 — Herdr adapter satisfies runtime contract.
+- [x] ACE 8wr.t.qjx — scoped service request/receipt seam consumes qjl/1w4.
+- [x] ACE 8wm.t.y23 — durable inbox once-or-uncertain semantics consume qjl.
+- [x] ACE 8wr.t.qk1.1 — review consumers use named providers.
+- [x] ACE 8wr.t.qk1.2 — task issue consumers use named providers.
 
-Foundation closure is accepted; these six pending scopes are now the next parallel implementation wave. Merge Herdr adapter before y23 as shared-package coordination, then rerun both; this is not an invented hard API dependency. Merge uj0 before accepting either Forgejo consumer; prefer qk1.1 before qk1.2 when both edit common provider surfaces. qjx and tmux adapter integrate independently. Every integration records exact merged candidate, executed relevant checks, independent verdict and separately accounted historical red results. CI is advisory.
+All six are done with code in main. Their historical receipts remain with their owners; [the reconciliation record](evidence/program-reconciliation-2026-10-04.md) links revisions and limits. This is not proof of one frozen installed Lab. k86.3, service deployment and HITL/recovery still need integration.
 
 ## Repair lane — tracked separately, not hidden blockers
 - [ ] ACE 8ws.t.ibk — managed assignment test isolation; close before trusting those fixtures for qjx/y23 acceptance.
-- [ ] ACE 8ws.t.ibl — intermittent docs update-count assertion; standalone pass did not close it.
-- [ ] ACE 8ws.t.lq8 — SafeCapture descendant verification under load; do not assume reported flake means harmless.
-- [ ] ACE 8wr.t.v3k — reconcile likely duplicate gh-auth test scope with e7986bff4/tp0 evidence; verify before closure, do not implement twice.
+- [ ] ACE 8ws.t.ibl — GC fixture repair delivered in 7c043ebd2; remaining bulk persistence/mixed-input proof stays here.
+- [ ] ACE 8ws.t.lq8 — bounded observation repair delivered in a656b47de; controlled contention and independent criterion closure still required.
+- [x] ACE 8wr.t.v3k — duplicate of delivered tp0/e7986bff4, reconciled as skipped; current fixture explicitly disables remote comments.
 
 These items do not globally block unrelated coding. This tracker can finish only when each required receipt is accepted or its owning task has an explicitly reviewed disposition; an unresolved red test is never hidden as green.
 
 ## Later gates — references, not additional acceptance scope here
-k86.1 + .2 precede k86.3; full k86 plus qjl/y23 precedes 1w5. qjx precedes 34i then y24; 34i/y23/y24/qjy precede vs2. qk1 completion precedes qkb.0; qkb.1 waits qk0/qjx/qjz. qkb.0 owns reconciliation of required Forgejo ready/atomic expected-head capabilities before full delivery acceptance: uj0 does not supply them. Existing refusals remain visible; spec review must give any missing provider implementation a real scope before qkb dispatch. qkc/vs3 remain later, with vs3 also requiring lab-config gad.b executors and actual release authority.
+k86.1 + .2 precede k86.3; full k86 plus qjl/y23 precedes 1w5. qjx precedes 34i then y24; 34i/y23/y24/qjy precede vs2. qk1 completion precedes qkb.0; qkb.1 waits qk0/qjx/qjz. 8x2.t.z78 owns required Forgejo fork/draft/ready/atomic expected-head capabilities before qkb.0 acceptance; uj0 does not supply them. Existing refusals remain visible. qkc/vs3 remain later, with vs3 also requiring lab-config gad.b executors and actual release authority.
 
 lab-config 8wl.t.gad owns installed topology/services/Pi/roles and artifact manifest (gad.b/.8/.9/.5/.a, nfe), installed acceptance with legacy disabled (gad.2), removal/retest (gad.3), cold start (gad.4). No new Lab deployment task is duplicated here.
 
@@ -73,11 +74,25 @@ lab-config 8wl.t.gad owns installed topology/services/Pi/roles and artifact mani
 - [ ] Each released/installed claim cites exact evidence and version; public registry availability, resolved graph, E2E verdict and Lab deployment remain distinct.
 - [ ] `bin/ace-task show/list/doctor` resolve owners/dependencies; no new cycles/dangling IDs. Historical doctor errors are reported separately.
 
-One large tracking/acceptance task with two new outcome children and references to existing owners. No product CLI/API change in this tracker, so no ux/usage.md is needed here. Specification review is accepted. The umbrella remains in-progress until the six feature outcomes, integration receipts and repair dispositions are complete; two done children alone cannot close it. Task checklists are the durable planning surface; local audit logs remain temporary.
+One large tracking/acceptance task with two new outcome children and references to existing owners. No product CLI/API change in this tracker, so no ux/usage.md is needed here. Specification review of this reconciliation is recorded with the task. The umbrella remains in-progress until the six feature outcomes, integration receipts and repair dispositions are complete; two done children alone cannot close it. Task checklists are the durable planning surface; local audit logs remain temporary.
 
-## Status reconciliation — 2026-10-02
+## Historical status reconciliation — 2026-10-02 (superseded scheduling)
 - Corrected uj0 and archived t8j metadata from in-progress to done using ace-task update, following Captain closure and stored delivery evidence.
 - lq1.0/.1 were already done, but their split archived directories were invisible to ace-task show. Reunited those existing records and evidence with this active parent; no duplicate tasks or history removal.
 - Restored this tracker bundle's t8j path.
 - Repair lane needs evidence reconciliation before dispatching duplicate fixes: main already contains docs fixture fix 7c043ebd2 and cleanup test fix a656b47de. ibl/lq8 remain open until their acceptance is mapped to those deliveries; this update does not claim fresh test runs or close them.
 - Next integration order: k86.2 before y23 (shared Herdr changes), qk1.1 before qk1.2 where provider edits overlap; k86.1 and qjx independently. ibk fixture isolation remains a verification concern for qjx/y23, not a reason to stop writing all six scopes.
+
+## Next implementation and final gates — 2026-10-04
+
+- [ ] Runtime: hym repair and k86.3 consumer development can proceed in parallel; merge/accept hym first, then k86.3 → k86 → 1w5.
+- [ ] HITL: 34i → y24 → vs2 → qjz; vs2/recovery consume y23 signed proof, not generic settled/dead.
+- [ ] Provider: z78 → qkb.0; qkb.0/.1 ship atomically after qk0/qjx/qjz prerequisites.
+- [ ] Domain (lab-config): gad.8, gad.9 and first executable gad.b service may proceed against delivered qjx/1w4/y23; expand by available ACE contracts.
+- [ ] Reliability: ibk implementation; ibl and lq8 only remaining explicit verification above. These do not globally block unrelated coding.
+- [x] R1 8x0.t.ig2 — durable campaign/evidence foundation, delivered; no claim of R2/R3 limits.
+- [ ] R2 8x0.t.ig3 — after qkb and R1; one stage owner, effective policy and session binding.
+- [ ] R3 8x0.t.ig4 — after R2; bounded rounds/retries and explicit escalation.
+- [ ] qkc and lab-config:gad.2 require R3 plus exact installed manifest, real users/runtime restart/uncertain effects and independent acceptance with legacy disabled. Then gad.3 removal → gad.4 cold start. ig5 is experimental and not a gate.
+
+There is no single current blocker of every lane. The final join is qk0 → completed qkb → R2 → R3 → qkc/gad.2. Authorization by sixteen-hour silence applies only to a precisely presented and delivered qjz proposal; it never replaces receipt, scope, test, reviewer or OTP requirements. vs3 additionally needs the installed publication executor and specific release authorization.

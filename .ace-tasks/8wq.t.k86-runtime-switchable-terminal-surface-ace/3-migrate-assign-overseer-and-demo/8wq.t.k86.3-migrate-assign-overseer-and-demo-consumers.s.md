@@ -4,12 +4,12 @@ status: pending
 priority: medium
 created_at: "2026-09-27 13:29:29"
 estimate: TBD
-dependencies: [8wq.t.k86.1, 8wq.t.k86.2]
+dependencies: [8wq.t.k86.1, 8wq.t.k86.2, 8x1.t.hym]
 tags: [assign, overseer, demo, migration]
 parent: 8wq.t.k86
 bundle:
   presets: [project]
-  files: [ace-assign/lib/ace/assign/molecules/tmux_control_surface_runner.rb, ace-assign/lib/ace/assign/molecules/fork_session_launcher.rb, ace-assign/lib/ace/assign/cli/commands/fork_run.rb, ace-assign/handbook/workflow-instructions/assign/drive.wf.md, ace-overseer/lib/ace/overseer/molecules/tmux_window_opener.rb, ace-overseer/lib/ace/overseer/organisms/work_on_orchestrator.rb, ace-overseer/lib/ace/overseer/organisms/prune_orchestrator.rb, ace-overseer/.ace-defaults/overseer/config.yml, ace-demo/lib/ace/demo/molecules/tmux_directive_executor.rb, ace-git-worktree/lib/ace/git/worktree/commands/create_command.rb, ace-test-runner-e2e/lib/ace/test/end_to_end_runner/molecules/setup_executor.rb, ace-test-runner-e2e/test/feat/setup_executor_tmux_test.rb, ace-overseer/test/e2e]
+  files: [ace-assign/lib/ace/assign/molecules/tmux_control_surface_runner.rb, ace-assign/lib/ace/assign/molecules/fork_session_launcher.rb, ace-assign/lib/ace/assign/cli/commands/fork_run.rb, ace-assign/handbook/workflow-instructions/assign/drive.wf.md, ace-overseer/lib/ace/overseer/molecules/tmux_window_opener.rb, ace-overseer/lib/ace/overseer/organisms/work_on_orchestrator.rb, ace-overseer/lib/ace/overseer/organisms/prune_orchestrator.rb, ace-overseer/.ace-defaults/overseer/config.yml, ace-demo/lib/ace/demo/molecules/tmux_directive_executor.rb, ace-git-worktree/lib/ace/git/worktree/commands/create_command.rb, ace-test-runner-e2e/lib/ace/test/end_to_end_runner/molecules/setup_executor.rb, ace-test-runner-e2e/test/feat/setup_executor_tmux_test.rb, ace-overseer/test/e2e, .ace-tasks/8x1.t.hym-fix-astra-follow-ups-pointer/8x1.t.hym-fix-astra-follow-ups-pointer-only-record.s.md, .ace-tasks/8x1.t.hym-fix-astra-follow-ups-pointer/ux/usage.md]
   commands: []
 needs_review: false
 title: Migrate assign overseer and demo consumers
@@ -159,3 +159,7 @@ This draft retains the existing detailed send/wait contract and the Captain's ad
 - ace-test-runner-e2e setup and retained overseer scenarios exercise both adapters through public ACE entrypoints. Required live Herdr proof must not be replaced by a mocked "scripted equivalent".
 - Run ace-test ace-git-worktree all and ace-test ace-test-runner-e2e all, plus existing three consumer suites and retained E2E scenarios. Both-runtime fixture matrix covers absent/unknown backend, callback exactly once, context propagation, worktree tab open and accepted prune.
 - Runtime selection for neutral callback follows explicit --runtime flag, then inherited ACE_RUNTIME from the caller, then ADR-022 runtime configuration, then detect; a child inherits caller backend so nested tmux/herdr cannot misroute a callback.
+
+## Herdr acceptance prerequisite — 2026-10-04
+
+ACE 8x1.t.hym owns pointer-only prepared-pane replacement and public CLI materialization errors. Implement consumers in parallel if useful, but accept/merge this scope only after hym is delivered and its restarted-adapter/native-tab scenario passes through the installed consumer. Do not broaden the done k86.2 contract backwards or duplicate the repair here.

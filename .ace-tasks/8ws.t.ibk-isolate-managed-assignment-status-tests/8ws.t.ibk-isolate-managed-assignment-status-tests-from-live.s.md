@@ -1,6 +1,6 @@
 ---
 id: 8ws.t.ibk
-status: draft
+status: pending
 priority: high
 created_at: "2026-09-29 12:12:52"
 estimate: medium
@@ -10,8 +10,9 @@ bundle:
   presets: [project]
   files: [ace-assign/test/fast/commands/status_command_test.rb, ace-assign/test/test_helper.rb, ace-assign/lib/ace/assign/molecules/evidence_calculator.rb, ace-assign/lib/ace/assign/molecules/evidence_journal.rb]
   commands: []
-needs_review: true
+needs_review: false
 title: Isolate managed assignment status tests from live evidence state
+position: 6o0005
 ---
 
 # Isolate managed assignment status tests from live evidence state
@@ -39,3 +40,7 @@ At main dbb9bde1e, the sandboxed full suite failed in `test_status_json_evidence
 - [ ] SC4: `bin/ace-test ace-assign all` and `bin/ace-test-suite` contain no regression attributable to this scope; record exact SHA and independent review.
 
 Owner: ace-assign tests. Single observable slice; medium. Follow-up to delivered qjl and tp0, whose original scopes stay done. Consumers qjx/y23 may be developed concurrently, but their acceptance must use isolated evidence fixtures. No CLI/API/config change; no separate usage file required. Draft awaiting review; no product implementation performed.
+
+## Source recheck — 2026-10-04
+
+At 46b980777, status_command_test.rb's managed-assignment fixtures isolate the cache but test_helper.rb still sets PROJECT_ROOT_PATH to the ACE checkout; EvidenceCalculator can consult that checkout's journal. Current source reading confirms ambient coupling, not a fresh reproduction of destructive writes. Preserve source catalog resolution while isolating the evidence repository. Existing full-suite green is not SC2 sentinel proof. Scope is still required and ready for independent specification review.

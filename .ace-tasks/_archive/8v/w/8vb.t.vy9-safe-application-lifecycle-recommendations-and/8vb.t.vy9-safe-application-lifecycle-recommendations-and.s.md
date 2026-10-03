@@ -6,13 +6,19 @@ created_at: "2026-08-12 21:18:05"
 estimate: TBD
 dependencies: []
 tags: [lifecycle, recommendations, delivery, orchestrator]
-github_issue: 311
+remote_issue:
+  server_name: github-cs3b
+  provider: github
+  repository_url: https://github.com/cs3b/ace
+  number: 311
+  url: https://github.com/cs3b/ace/issues/311
+
 bundle:
   presets: [project]
   files: [ace-support-config/lib/ace/support/config/organisms/setup_doctor.rb, ace-support-config/lib/ace/support/config/cli.rb, ace-git-worktree/.ace-defaults/git/worktree.yml, ace-assign/.ace-defaults/assign/presets/work-on-task.yml, ace-task/handbook/skills/as-task-work/SKILL.md, ace-task/handbook/workflow-instructions/task/work.wf.md, ace-review/.ace-defaults/review/config.yml, ace-handbook/.ace-defaults/handbook/providers/agents.yml, ace-support-core/.ace-defaults/project-root/AGENTS.md]
   commands: [ace-config doctor --no-probe --json, ace-bundle wfi://task/work, ace-bundle wfi://assign/drive, ace-handbook status]
 needs_review: false
-github_sync_pending: true
+issue_sync_pending: true
 ---
 
 # Safe application lifecycle recommendations and delivery defaults

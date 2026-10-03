@@ -9,7 +9,7 @@ tags: [lab-readiness]
 parent: 8wr.t.qk1
 bundle:
   presets: [project]
-  files: [.ace-tasks/8wr.t.qk1-complete-forge-neutral-worktree-review/8wr.t.qk1-complete-forge-neutral-worktree-review-and-task.s.md, .ace-tasks/_archive/8w/y/8wk.t.l1e-forge-neutral-git-core-with/8wk.t.l1e-forge-neutral-git-core-with-github-and.s.md, ace-git-worktree/lib/ace/git/worktree/commands/create_command.rb, ace-git-worktree/lib/ace/git/worktree/commands/cleanup_command.rb, ace-git/lib/ace/git/providers/base.rb, .ace-tasks/8wr.t.qk1-complete-forge-neutral-worktree-review/0-use-named-forge-providers-for/ux/usage.md]
+  files: [.ace-tasks/_archive/8x/v/8wr.t.qk1-complete-forge-neutral-worktree-review/8wr.t.qk1-complete-forge-neutral-worktree-review-and-task.s.md, .ace-tasks/_archive/8w/y/8wk.t.l1e-forge-neutral-git-core-with/8wk.t.l1e-forge-neutral-git-core-with-github-and.s.md, ace-git-worktree/lib/ace/git/worktree/commands/create_command.rb, ace-git-worktree/lib/ace/git/worktree/commands/cleanup_command.rb, ace-git/lib/ace/git/providers/base.rb, .ace-tasks/_archive/8x/v/8wr.t.qk1-complete-forge-neutral-worktree-review/0-use-named-forge-providers-for/ux/usage.md]
   commands: []
 needs_review: false
 ---
