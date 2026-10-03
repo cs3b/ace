@@ -113,7 +113,11 @@ module Ace
         def checks(ref:)
           tasks = fj(:actions_tasks)
           Parsers.parse_actions_tasks(tasks)
-            .select { |task| task[:sha].start_with?(ref.to_s) || ref.to_s.start_with?(task[:sha]) }
+            # Exact-head evidence binds each task to the reviewed head by SHA
+            # prefix: a full or abbreviated SHA that prefixes the reviewed
+            # head identifies that commit, and anything else is another
+            # head's task. No matching evidence is silently dropped.
+            .select { |task| ref.to_s.downcase.start_with?(task[:sha].downcase) }
             .map do |task|
               Ace::Git::ProviderCheck.new(
                 server_name: server.name,
@@ -123,6 +127,13 @@ module Ace
                 url: nil
               )
             end
+        rescue Ace::Git::ProviderObjectNotFoundError
+          # A repository with Actions disabled serves no tasks endpoint. The
+          # review flows resolve the repository binding and the PR before
+          # collecting checks, so a not-found here means CI is unavailable,
+          # not a missing repository; empty check evidence keeps the review
+          # collectable. Parse and transport failures still fail closed.
+          []
         end
 
         # @return [ProviderRepository] normalized repository evidence
@@ -140,6 +151,201 @@ module Ace
             default_branch: nil,
             url: parsed[:url] || target.url
           )
+        end
+
+        # The fj CLI surface omits the PR body; the repository-bound API
+        # supplies it for review evidence. Malformed payloads fail closed.
+        def pull_request_body(number:)
+          number = request_number!(number)
+          data = review_http.request(:get, "pulls/#{number}")
+          unless data.is_a?(Hash) && data["number"] == number && data.key?("body") &&
+                    (data["body"].nil? || data["body"].is_a?(String))
+            raise Ace::Git::ProviderMalformedOutputError, "Malformed Forgejo PR body evidence"
+          end
+          data["body"]
+        end
+
+        def pull_request_review_evidence(number:, expected_head:)
+          number = request_number!(number)
+          verify_expected_head!(pull_request(number: number), expected_head)
+          comments = review_http.paginate("issues/#{number}/comments").map do |entry|
+            review_comment(entry, number, expected_head)
+          end
+          reviews = review_http.paginate("pulls/#{number}/reviews").map do |entry|
+            review_entry(entry, number, expected_head)
+          end
+          # Review comments live under each review, not at the PR level.
+          inline = reviews.flat_map do |review|
+            # The per-review endpoint returns the complete list (no
+            # pagination); a repeated nonempty page would trip the loop
+            # guard, so fetch once and require an array.
+            entries = review_http.request(:get, "pulls/#{number}/reviews/#{review.id}/comments")
+            unless entries.is_a?(Array)
+              raise Ace::Git::ProviderMalformedOutputError, "Malformed Forgejo review comment evidence"
+            end
+            entries.map { |entry| review_comment(entry, number, expected_head) }
+          end
+          verify_expected_head!(pull_request(number: number), expected_head)
+          Ace::Git::ProviderReviewEvidence.new(
+            server_name: server.name, repository_url: server.url,
+            pr_number: number, head_sha: expected_head,
+            comments: comments + inline, reviews: reviews
+          )
+        end
+
+        def pull_request_review_details(number:)
+          number = request_number!(number)
+          data = review_http.request(:get, "pulls/#{number}")
+          files = review_http.paginate("pulls/#{number}/files").map do |entry|
+            entry.is_a?(Hash) && entry["filename"]
+          end
+          unless data.is_a?(Hash) && data["base"].is_a?(Hash) && data["number"] == number &&
+              data.dig("base", "sha").to_s.match?(/\A[0-9a-f]{40}\z/) &&
+              data["changed_files"].is_a?(Integer) && data["changed_files"] == files.length &&
+              files.all? { |path| path.is_a?(String) && !path.empty? }
+            raise Ace::Git::ProviderMalformedOutputError, "Malformed or incomplete Forgejo PR file evidence"
+          end
+          Ace::Git::ProviderReviewDetails.new(
+            server_name: server.name, repository_url: server.url, pr_number: number,
+            base_sha: data.dig("base", "sha"), files: files
+          )
+        end
+
+        def pull_request_checks(number:, head_sha:)
+          verify_expected_head!(pull_request(number: number), head_sha)
+          checks(ref: head_sha)
+        end
+
+        def repository_file(path:, ref:)
+          require "base64"
+          # %20, not form encoding: "+" in a path segment is a literal plus.
+          # Explicit unreserved-character allowlist: percent-encode
+          # everything else (DEFAULT_PARSER leaves ? and + ambiguous).
+          escaped = path.split("/").map { |part|
+            part.gsub(/[^A-Za-z0-9._~!$&'()*+,;=@:-]/) { |c| c.bytes.map { |b| format("%%%02X", b) }.join }
+          }.join("/")
+          data = review_http.request(:get, "contents/#{escaped}?ref=#{ref}")
+          unless data.is_a?(Hash) && data["encoding"] == "base64" && data["content"].is_a?(String)
+            raise Ace::Git::ProviderMalformedOutputError, "Malformed Forgejo repository file evidence"
+          end
+          Base64.strict_decode64(data["content"].delete("\n"))
+        rescue ArgumentError => e
+          raise Ace::Git::ProviderMalformedOutputError, "Malformed Forgejo repository file content: #{e.message}"
+        end
+
+        def create_pull_request_comment(number:, expected_head:, body:, correlation:)
+          number = request_number!(number)
+          pr = verify_expected_head!(pull_request(number: number), expected_head)
+          require_open_pr!(pr)
+          marker = comment_marker(correlation)
+          with_session_lock(correlation) do
+          existing = matching_review_comments(number, marker, expected_head)
+          if existing.length > 1
+            raise Ace::Git::ProviderConflictingMatchesError,
+              "Multiple comments match review session #{correlation} on PR ##{number}"
+          end
+          if existing.one?
+            # A repeat reconciles only the exact session comment; a marker
+            # match with different content is a conflict, never our post.
+            sent = "#{body}\n\n#{marker}"
+            if existing.first.body == sent
+              verify_post_mutation_head!(number, expected_head, correlation)
+              return review_mutation(number, expected_head, existing.first, :existing)
+            end
+
+            raise Ace::Git::ProviderConflictingMatchesError,
+              "Review session #{correlation} comment exists on PR ##{number} with different content"
+          end
+          second = verify_expected_head!(pull_request(number: number), expected_head)
+          require_open_pr!(second)
+          begin
+            review_http.request(:post, "issues/#{number}/comments", body: {body: "#{body}\n\n#{marker}"})
+          rescue Ace::Git::ProviderMalformedOutputError => e
+            raise Ace::Git::ProviderUnknownOutcomeError,
+              "PR comment sent but response unreadable for #{server.name}/#{number}, head #{expected_head}, session #{correlation}: #{e.message}; reconcile before repeating"
+          rescue Ace::Git::ProviderUnknownOutcomeError => e
+            raise Ace::Git::ProviderUnknownOutcomeError,
+              "PR comment outcome unknown for #{server.name}/#{number}, head #{expected_head}, " \
+              "session #{correlation}: #{e.message}; reconcile before repeating"
+          end
+          begin
+          matches = matching_review_comments(number, marker, expected_head)
+          rescue Ace::Git::ProviderMalformedOutputError, Ace::Git::ProviderAuthenticationError, Ace::Git::ProviderObjectNotFoundError, Ace::Git::ProviderUnreachableError => e
+            raise Ace::Git::ProviderUnknownOutcomeError,
+              "PR comment sent but reconciliation read failed for session #{correlation}: #{e.message}; reconcile before repeating"
+          end
+          unless matches.one? && matches.first.body == "#{body}\n\n#{marker}"
+            raise Ace::Git::ProviderUnknownOutcomeError,
+              "PR comment sent but reconciliation found #{matches.length} exact-content match(es) for session #{correlation}"
+          end
+          verify_post_mutation_head!(number, expected_head, correlation)
+          review_mutation(number, expected_head, matches.first, :created)
+          end
+        end
+
+        def update_pull_request_comment(number:, expected_head:, comment_id:, body:)
+          number = request_number!(number)
+          comment_id = Integer(comment_id)
+          verify_expected_head!(pull_request(number: number), expected_head)
+          issue_matches = review_http.paginate("issues/#{number}/comments").select { |entry| entry["id"] == comment_id }
+          # Inline ids live under individual reviews; locate them there
+          # so an unsupported edit is classified explicitly instead of
+          # being misread as not-belonging to this PR.
+          inline_found = issue_matches.empty? && review_comment_ids(number).include?(comment_id)
+          if inline_found
+            raise Ace::Git::ProviderUnsupportedCapabilityError,
+              "Editing inline review comments is unsupported by the observed fj v0.6.0 surface (comment #{comment_id})"
+          end
+          matches = issue_matches
+          update_route = "issues/comments/#{comment_id}"
+          unless matches.one?
+            raise Ace::Git::ProviderIdentityMismatchError,
+              "Comment #{comment_id} does not belong to selected PR ##{number}"
+          end
+          comment = review_comment(matches.first, number, expected_head)
+          if comment.body == body
+            verify_post_mutation_head!(number, expected_head, "comment #{comment_id}")
+            return review_mutation(number, expected_head, comment, :existing)
+          end
+
+          verify_expected_head!(pull_request(number: number), expected_head)
+          begin
+            review_http.request(:patch, update_route, body: {body: body})
+          rescue Ace::Git::ProviderMalformedOutputError => e
+            raise Ace::Git::ProviderUnknownOutcomeError,
+              "Comment update sent but response unreadable for #{server.name}/#{number}, comment #{comment_id}: #{e.message}; reconcile before repeating"
+          rescue Ace::Git::ProviderUnknownOutcomeError => e
+            raise Ace::Git::ProviderUnknownOutcomeError,
+              "Comment update outcome unknown for #{server.name}/#{number}, " \
+              "head #{expected_head}, comment #{comment_id}: #{e.message}"
+          end
+          begin
+            # Fetch individually and validate the Forgejo issue identity.
+            begin
+              updated = review_http.request(:get, update_route)
+            rescue Ace::Git::ProviderMalformedOutputError, Ace::Git::ProviderAuthenticationError, Ace::Git::ProviderObjectNotFoundError, Ace::Git::ProviderUnreachableError => e
+              raise Ace::Git::ProviderUnknownOutcomeError,
+                "Comment update sent but verification read failed for comment #{comment_id}: #{e.message}; reconcile before repeating"
+            end
+            unless updated.is_a?(Hash) && updated["issue_url"].to_s.end_with?("/#{number}")
+              raise Ace::Git::ProviderUnknownOutcomeError,
+                "Comment update sent but edited comment #{comment_id} does not verify against PR ##{number}; reconcile before repeating"
+            end
+          rescue Ace::Git::ProviderUnreachableError => e
+            raise Ace::Git::ProviderUnknownOutcomeError,
+              "Comment update sent but verification read failed for comment #{comment_id}: #{e.message}; reconcile before repeating"
+          end
+          unless updated && updated["id"] == comment_id && updated["body"] == body
+            raise Ace::Git::ProviderUnknownOutcomeError,
+              "Comment update sent but exact PR comment #{comment_id} could not be verified"
+          end
+          verify_post_mutation_head!(number, expected_head, "comment #{comment_id}")
+          review_mutation(number, expected_head, review_comment(updated, number, expected_head), :updated)
+        end
+
+        def resolve_pull_request_thread(number:, expected_head:, thread_id:)
+          raise Ace::Git::ProviderUnsupportedCapabilityError,
+            "Forgejo does not expose an observed repository-bound review thread resolution capability"
         end
 
         # ---- PR lifecycle mutations ----
@@ -232,6 +438,124 @@ module Ace
         end
 
         private
+
+        def require_open_pr!(pr)
+          return if pr.state == :open
+
+          raise Ace::Git::ProviderUnsupportedCapabilityError,
+            "Cannot post review comment to PR ##{pr.number} in #{pr.state} state"
+        end
+
+        def review_http
+          @review_http ||= HttpClient.new(server: server, timeout: timeout, runner: runner)
+        end
+
+  # A mutation receipt may only bind the expected head; if the PR head
+  # moved during the mutation the outcome stays uncertain.
+  def verify_post_mutation_head!(number, expected_head, correlation)
+    current = begin
+      pull_request(number: number)
+    rescue Ace::Git::ProviderMalformedOutputError, Ace::Git::ProviderAuthenticationError, Ace::Git::ProviderObjectNotFoundError, Ace::Git::ProviderUnreachableError => e
+      raise Ace::Git::ProviderUnknownOutcomeError,
+        "Head verification read failed after mutation for #{server.name}: #{e.message}; reconcile before repeating"
+    end
+    return if current.head_sha == expected_head
+
+    raise Ace::Git::ProviderUnknownOutcomeError,
+      "PR head moved during mutation for #{server.name}/##{number} " \
+      "(#{expected_head} -> #{current.head_sha}), session #{correlation}: reconcile before repeating"
+  end
+
+        # Serialize the read/post/reconcile sequence per session so two
+      # concurrent callers cannot both observe "no marker" and post.
+        def with_session_lock(correlation)
+          require "tmpdir"
+          lock_path = File.join(Dir.tmpdir, "ace-review-session-#{correlation}.lock")
+          File.open(lock_path, File::CREAT | File::RDWR, 0600) do |lock|
+            lock.flock(File::LOCK_EX)
+            yield
+          end
+        end
+
+        def comment_marker(correlation)
+          unless correlation.to_s.match?(/\A[a-zA-Z0-9._:-]+\z/)
+            raise Ace::Git::ConfigError, "Invalid review session correlation"
+          end
+          "<!-- ace-review-session:#{correlation} -->"
+        end
+
+        def matching_review_comments(number, marker, expected_head)
+          review_http.paginate("issues/#{number}/comments").filter_map do |entry|
+            unless entry.is_a?(Hash) && entry["body"].is_a?(String)
+              raise Ace::Git::ProviderMalformedOutputError, "Malformed Forgejo PR comment collection"
+            end
+            next unless entry["body"].include?(marker)
+
+            review_comment(entry, number, expected_head)
+          end
+        end
+
+        def review_comment(entry, number, head)
+          user = entry.is_a?(Hash) ? entry["user"] : nil
+          unless entry.is_a?(Hash) && entry["id"].is_a?(Integer) && entry["id"].positive? && entry["body"].is_a?(String) &&
+              user.is_a?(Hash) && user["login"].is_a?(String)
+            raise Ace::Git::ProviderMalformedOutputError, "Malformed Forgejo PR comment evidence"
+          end
+          Ace::Git::ProviderReviewComment.new(
+            server_name: server.name, repository_url: server.url, pr_number: number,
+            id: entry["id"], author: user["login"], body: entry["body"],
+            url: entry["html_url"], path: entry["path"],
+            # Forgejo supplies position/original_position rather than
+            # line; the positive side position is the normalized line.
+            line: entry["line"] || [entry["position"], entry["original_position"]].compact.reject { |v| !v.is_a?(Integer) || v <= 0 }.first,
+            head_sha: entry["commit_id"], resolved: entry.key?("resolver") ? !entry["resolver"].nil? : nil,
+            thread_id: nil
+          )
+        end
+
+        # Collect inline (review) comment ids by walking each review.
+        def review_comment_ids(number)
+          review_http.paginate("pulls/#{number}/reviews").flat_map do |review|
+            entries = review_http.request(:get, "pulls/#{number}/reviews/#{review["id"]}/comments")
+            unless entries.is_a?(Array)
+              raise Ace::Git::ProviderMalformedOutputError, "Malformed Forgejo review comment evidence"
+            end
+            entries.filter_map { |entry| entry["id"] if entry.is_a?(Hash) && entry["id"].is_a?(Integer) }
+          end
+        end
+
+        def review_entry(entry, number, head)
+          unless entry.is_a?(Hash)
+            raise Ace::Git::ProviderMalformedOutputError, "Malformed Forgejo PR review evidence"
+          end
+          user, team = entry["user"], entry["team"]
+          unless user.nil? || user.is_a?(Hash)
+            raise Ace::Git::ProviderMalformedOutputError, "Malformed Forgejo PR review evidence: user must be an object"
+          end
+          unless team.nil? || team.is_a?(Hash)
+            raise Ace::Git::ProviderMalformedOutputError, "Malformed Forgejo PR review evidence: team must be an object"
+          end
+          reviewer = user&.[]("login") || team&.[]("name")
+          unless entry["id"].is_a?(Integer) && entry["id"].positive? && reviewer.is_a?(String) &&
+              entry["state"].is_a?(String) && !entry["state"].empty?
+            raise Ace::Git::ProviderMalformedOutputError, "Malformed Forgejo PR review evidence"
+          end
+          Ace::Git::ProviderReview.new(
+            server_name: server.name, repository_url: server.url, pr_number: number,
+            id: entry["id"], author: reviewer, body: entry["body"],
+            # Forgejo reports REQUEST_CHANGES; consumers count only the
+            # canonical CHANGES_REQUESTED spelling.
+            state: (entry["state"] == "REQUEST_CHANGES") ? "CHANGES_REQUESTED" : entry["state"],
+            url: entry["html_url"], head_sha: entry["commit_id"]
+          )
+        end
+
+        def review_mutation(number, head, comment, idempotency)
+          Ace::Git::ProviderReviewMutation.new(
+            server_name: server.name, repository_url: server.url, pr_number: number,
+            head_sha: head, comment: comment, idempotency: idempotency
+          )
+        end
 
         # Validated selected repository identity. Built once; malformed
         # selections fail as configuration errors before any subprocess.
@@ -384,6 +708,7 @@ module Ace
             server_name: server.name,
             number: parsed[:number],
             title: parsed[:title],
+            body: parsed[:body],
             state: parsed[:state],
             head_ref: parsed[:head_ref],
             base_ref: parsed[:base_ref],
@@ -423,6 +748,7 @@ module Ace
             server_name: server.name,
             number: entry[:number],
             title: entry[:title],
+            body: nil,
             state: nil,
             head_ref: nil,
             base_ref: nil,
@@ -478,7 +804,9 @@ module Ace
         end
 
         def pr_url(number)
-          base = repository_target.url.to_s.chomp("/")
+          # A configured URL may end in .git (clone form); the web URL
+          # must be built from the repository page base instead.
+          base = repository_target.url.to_s.chomp("/").sub(/\.git\z/i, "")
           "#{base}/pulls/#{number}"
         end
 

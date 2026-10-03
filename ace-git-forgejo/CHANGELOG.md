@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-02
+
+### Added
+- Repository-bound Forgejo PR comment and review retrieval and comment create/update through the shared provider contract.
+- Correlation-based reconciliation after uncertain posts and explicit unsupported thread resolution.
+
+
 ## [0.3.0] - 2026-09-29
 
 ### Added

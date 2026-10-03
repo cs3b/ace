@@ -37,7 +37,7 @@ class ForgejoProviderContractTest < AceGitForgejoTestCase
       },
       "fj -H https://forgejo.example.com --style minimal issue view owner/repo#9" => {success: true, stdout: issue9_view, stderr: "", exit_code: 0},
       "fj -H https://forgejo.example.com --style minimal actions tasks -r owner/repo" => {
-        success: true, stdout: "2 tasks\n#83 (fc14c43d3660ac6c133959a6dec29603413f0e8a) success test-suite 23s (push): subject\n", stderr: "", exit_code: 0
+        success: true, stdout: "1 tasks\n#83 (fc14c43d3660ac6c133959a6dec29603413f0e8a) success test-suite 23s (push): subject\n", stderr: "", exit_code: 0
       },
       "fj -H https://forgejo.example.com --style minimal repo view owner/repo" => {
         success: true, stdout: "owner/repo\n> Sample repository\nView online at https://forgejo.example.com/owner/repo\n", stderr: "", exit_code: 0

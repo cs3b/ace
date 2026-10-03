@@ -104,6 +104,50 @@ module Ace
           raise NotImplementedError, "Providers must implement #{self.class}#repository"
         end
 
+        # Collect normalized conversation comments, code comments and reviews
+        # for one exact PR head. A provider must reject malformed collections;
+        # an empty successful collection is represented by empty arrays.
+        def pull_request_review_evidence(number:, expected_head:)
+          raise NotImplementedError, "Providers must implement #{self.class}#pull_request_review_evidence"
+        end
+
+        # The PR description text when the provider can supply it; nil stays
+        # an honest absence for providers whose CLI surface omits the body.
+        def pull_request_body(number:)
+          nil
+        end
+
+        # The exact base SHA and complete file inventory used to prove that a
+        # review diff has not been silently truncated.
+        def pull_request_review_details(number:)
+          raise NotImplementedError, "Providers must implement #{self.class}#pull_request_review_details"
+        end
+
+        def pull_request_checks(number:, head_sha:)
+          raise NotImplementedError, "Providers must implement #{self.class}#pull_request_checks"
+        end
+
+        def repository_file(path:, ref:)
+          raise NotImplementedError, "Providers must implement #{self.class}#repository_file"
+        end
+
+        # Create a top-level PR comment. `correlation` is a stable session key
+        # embedded in the body so a retry can find exactly one prior send.
+        # A possible post-send transport failure raises ProviderUnknownOutcomeError.
+        def create_pull_request_comment(number:, expected_head:, body:, correlation:)
+          raise NotImplementedError, "Providers must implement #{self.class}#create_pull_request_comment"
+        end
+
+        def update_pull_request_comment(number:, expected_head:, comment_id:, body:)
+          raise NotImplementedError, "Providers must implement #{self.class}#update_pull_request_comment"
+        end
+
+        # Thread resolution is a separate capability. Unsupported providers
+        # must raise ProviderUnsupportedCapabilityError, never simulate success.
+        def resolve_pull_request_thread(number:, expected_head:, thread_id:)
+          raise NotImplementedError, "Providers must implement #{self.class}#resolve_pull_request_thread"
+        end
+
         # ---- PR lifecycle mutations ----
         #
         # Contract requirements (enforced by every provider implementation):

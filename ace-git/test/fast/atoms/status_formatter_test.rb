@@ -8,7 +8,7 @@ class StatusFormatterTest < AceGitTestCase
     Ace::Git::ProviderPullRequest.new(
       server_name: "forge",
       number: number,
-      title: title,
+      title: title, body: nil,
       state: state,
       head_ref: "feature",
       base_ref: "main",

@@ -21,7 +21,7 @@ class AceGitGithubTestCase < AceTestCase
   # Build a scripted runner from a hash of full-command => response.
   # Response: Hash result, or [:stderr, exit_code] shorthand for failure.
   def scripted_runner(responses)
-    lambda do |args:, timeout: nil, env: nil|
+    lambda do |args:, timeout: nil, env: nil, **|
       key = args.join(" ")
       response = responses.fetch(key) do
         flunk("Unexpected command in test: #{key}")

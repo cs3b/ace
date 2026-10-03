@@ -485,7 +485,8 @@ input:#{Regexp.escape(request.fetch("input_digest"))} outcome:(\S+)( no-effect:(
           unless data["verdict"] == "succeeded" && data["head"] == evidence_head && attempt.candidate_head == evidence_head
             raise AttemptErrors::ReceiptRejected, "Accepted execution evidence is stale or unsuccessful"
           end
-          @verifier.verify_accepted_evidence!(data, live_head: evidence_head, repo_root: @repo_root)
+          @verifier.verify_accepted_evidence!(data, live_head: evidence_head, repo_root: @repo_root,
+            historical: !historical_head.nil?)
           {"attempt_id" => attempt_id, "receipt_digest" => receipt_digest, "head" => evidence_head, "kind" => kind,
            "historical" => !historical_head.nil?,
            "operation" => data["operation"], "checks" => data["checks"], "producer" => data["producer"], "review" => data["review"],

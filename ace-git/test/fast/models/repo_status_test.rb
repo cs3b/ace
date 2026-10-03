@@ -7,7 +7,7 @@ class RepoStatusTest < AceGitTestCase
     Ace::Git::ProviderPullRequest.new(
       server_name: "forge",
       number: 75,
-      title: "Add feature",
+      title: "Add feature", body: nil,
       state: :open,
       head_ref: "140-feature",
       base_ref: "main",

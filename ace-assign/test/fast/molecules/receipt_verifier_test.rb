@@ -185,6 +185,26 @@ module Ace
         verify_raises(data) { |e| assert_includes e.message, "self-approval" }
       end
 
+      def test_historical_evidence_read_skips_artifact_rehash_current_read_stays_strict
+        File.write(File.join(@repo_root, "session-report.md"), "collected review evidence")
+        data = build_receipt_data("verdict" => "succeeded",
+          "operation" => "review-collect",
+          "artifacts" => [{"path" => "session-report.md",
+            "sha256" => Digest::SHA256.hexdigest("collected review evidence")}],
+          "checks" => [{"name" => "review-execution", "verdict" => "passed"}])
+        verifier = Molecules::ReceiptVerifier.new
+        verifier.verify_accepted_evidence!(data, live_head: HEAD_A, repo_root: @repo_root)
+
+        # The review lifecycle archives and annotates finding files after a
+        # receipt was accepted; the historical read must still validate.
+        File.delete(File.join(@repo_root, "session-report.md"))
+        error = assert_raises(AttemptErrors::ReceiptRejected) do
+          verifier.verify_accepted_evidence!(data, live_head: HEAD_A, repo_root: @repo_root)
+        end
+        assert_includes error.message, "artifact file not found"
+        verifier.verify_accepted_evidence!(data, live_head: HEAD_A, repo_root: @repo_root, historical: true)
+      end
+
       def test_independent_review_for_exact_head_is_accepted
         receipt = verify(review_receipt_data)
         assert_equal "codex-reviewer", receipt.review["reviewer"]["actor"]

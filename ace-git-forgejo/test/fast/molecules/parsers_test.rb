@@ -64,14 +64,43 @@ module Forgejo
     end
 
     def test_parse_actions_tasks_extracts_check_evidence
-      tasks = "2 tasks\n#83 (fc14c43d3) failure Test Summary 0s (push): subject\n#82 (fc14c43d3660ac6c133959a6dec29603413f0e8a) success Complete package suite 1m29s (pull_request): subject\n"
+      tasks = "2 tasks\n#83 (fc14c43d3fc14c43d3fc14c43d3fc14c43d3fc14) failure Test Summary 0s (push): subject\n#82 (fc14c43d3660ac6c133959a6dec29603413f0e8a) success Complete package suite 1m29s (pull_request): subject\n"
       checks = Ace::Git::Forgejo::Parsers.parse_actions_tasks(tasks)
       assert_equal 2, checks.length
       assert_equal "Test Summary", checks[0][:name]
       assert_equal :failure, checks[0][:state]
-      assert_equal "fc14c43d3", checks[0][:sha]
+      assert_equal "fc14c43d3fc14c43d3fc14c43d3fc14c43d3fc14", checks[0][:sha]
       assert_equal "Complete package suite", checks[1][:name]
       assert_equal :success, checks[1][:state]
+    end
+
+    def test_parse_actions_tasks_tolerates_abbreviated_sha
+      tasks = "1 tasks\n#83 (fc14c43d3) failure Test Summary 0s (push): subject\n"
+      checks = Ace::Git::Forgejo::Parsers.parse_actions_tasks(tasks)
+      assert_equal 1, checks.length
+      assert_equal "fc14c43d3", checks[0][:sha]
+    end
+
+    def test_parse_actions_tasks_rejects_unbindable_abbreviations
+      error = assert_raises(Ace::Git::ProviderMalformedOutputError) do
+        Ace::Git::Forgejo::Parsers.parse_actions_tasks(
+          "1 tasks\n#83 (fc14c4) failure Test Summary 0s (push): subject\n"
+        )
+      end
+      assert_includes error.message, "Unbindable"
+    end
+
+    def test_parse_actions_tasks_rejects_empty_output
+      ["", "\n   \n"].each do |output|
+        error = assert_raises(Ace::Git::ProviderMalformedOutputError) do
+          Ace::Git::Forgejo::Parsers.parse_actions_tasks(output)
+        end
+        assert_includes error.message, "count header"
+      end
+    end
+
+    def test_parse_actions_tasks_accepts_zero_task_header
+      assert_equal [], Ace::Git::Forgejo::Parsers.parse_actions_tasks("0 tasks\n")
     end
 
     def test_parse_repo_view_extracts_full_name_and_url

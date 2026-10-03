@@ -89,6 +89,41 @@ module Organisms
       end
     end
 
+    def test_review_snapshot_accepts_complete_empty_diff_and_comments
+      with_test_providers do
+        lifecycle = Ace::Git::Organisms::PullRequestLifecycle.new(server_name: "forgejo-lab")
+        snapshot = lifecycle.review_snapshot("25")
+        assert_equal "", snapshot.diff
+        assert_empty snapshot.files
+        assert_empty snapshot.review_evidence.comments
+        assert_equal "a" * 40, snapshot.pull_request.head_sha
+        assert_equal "b" * 40, snapshot.base_sha
+      end
+    end
+
+    def test_review_snapshot_rejects_head_change_during_collection
+      with_test_providers do
+        RecordingProvider.move_head = true
+        lifecycle = Ace::Git::Organisms::PullRequestLifecycle.new(server_name: "forgejo-lab")
+        assert_raises(Ace::Git::ProviderExpectedHeadConflictError) do
+          lifecycle.review_snapshot("25")
+        end
+      end
+    ensure
+      RecordingProvider.move_head = false
+    end
+
+    def test_review_snapshot_can_skip_comment_collection_explicitly
+      with_test_providers do
+        RecordingProvider.forbid_comments = true
+        lifecycle = Ace::Git::Organisms::PullRequestLifecycle.new(server_name: "forgejo-lab")
+        snapshot = lifecycle.review_snapshot("25", include_comments: false)
+        assert_empty snapshot.review_evidence.comments
+      end
+    ensure
+      RecordingProvider.forbid_comments = false
+    end
+
     def test_create_without_head_repo_uses_selected_server_repository
       with_test_providers do
         lifecycle = Ace::Git::Organisms::PullRequestLifecycle.new(server_name: "forgejo-lab")
@@ -163,16 +198,44 @@ module Organisms
     # Minimal provider double returning fixed normalized evidence; the
     # shared @calls runner additionally proves when real commands would run.
     class RecordingProvider < Ace::Git::Providers::Base
+      class << self
+        attr_accessor :move_head, :forbid_comments
+      end
       PR = Ace::Git::ProviderPullRequest.new(
-        server_name: "x", number: 25, title: "t", state: :open, head_ref: "feature",
+        server_name: "x", number: 25, title: "t", state: :open, head_ref: "feature", body: nil,
         base_ref: "main", head_sha: "a" * 40, author: "u", url: nil, draft: true,
         merged_at: nil, head_repository_url: nil, base_repository_url: nil, merge_commit_sha: nil
       ).freeze
 
       def pull_request(number:)
+        @reads = (@reads || 0) + 1
         Ace::Git::ProviderPullRequest.new(**PR.to_h.merge(
-          server_name: server.name, number: number, base_repository_url: server.url
+          server_name: server.name, number: number, base_repository_url: server.url,
+          head_sha: (self.class.move_head && @reads > 1) ? "c" * 40 : "a" * 40
         ))
+      end
+
+      def pull_request_review_details(number:)
+        Ace::Git::ProviderReviewDetails.new(
+          server_name: server.name, repository_url: server.url,
+          pr_number: number, base_sha: "b" * 40, files: []
+        )
+      end
+
+      def pull_request_diff(number:)
+        ""
+      end
+
+      def pull_request_review_evidence(number:, expected_head:)
+        raise "Comments were fetched" if self.class.forbid_comments
+        Ace::Git::ProviderReviewEvidence.new(
+          server_name: server.name, repository_url: server.url,
+          pr_number: number, head_sha: expected_head, comments: [], reviews: []
+        )
+      end
+
+      def pull_request_checks(number:, head_sha:)
+        []
       end
 
       def create_pull_request(head_ref:, head_repository_url:, base_ref:, expected_head:, title:, body: nil, draft: true)

@@ -197,6 +197,40 @@ class CampaignReceiptTest < AceAssignTestCase
     refute_equal git_in(@test_dir, "rev-parse", "HEAD"), proof["head"]
   end
 
+  def test_resolved_finding_relocation_keeps_historical_authority_and_campaign_accepted
+    status = campaign_manager.status(@campaign["campaign_id"])
+    first_round = status["rounds"].first
+    ref = first_round["sessions"].first["receipt"]
+    assert @check_coordinator.evidence(attempt_id: ref["attempt_id"], receipt_digest: ref["digest"],
+      kind: "review-collection", historical_head: @head)["historical"]
+
+    # Simulate the review feedback lifecycle: resolving a finding annotates
+    # and archives its file, changing both path and digest after the round's
+    # receipt was accepted.
+    relocate_session_reports = lambda do |round_id|
+      Dir.glob(File.join(@test_dir, ".ace-local/review/sessions/#{round_id}-full/review-report-*.md")).map do |report|
+        archived = File.join(File.dirname(report), "_archived")
+        FileUtils.mkdir_p(archived)
+        annotated = File.read(report) + "\n## Resolution\nFixed in a later round.\n"
+        FileUtils.mv(report, File.join(archived, File.basename(report)))
+        File.write(File.join(archived, File.basename(report)), annotated)
+      end
+    end
+
+    relocate_session_reports.call(first_round["round_id"])
+    proof = @check_coordinator.evidence(attempt_id: ref["attempt_id"], receipt_digest: ref["digest"],
+      kind: "review-collection", historical_head: @head)
+    assert proof["historical"]
+    assert campaign_manager.status(@campaign["campaign_id"])["accepted"]
+
+    # The newest round's evidence is current and stays strictly verified.
+    last_round = campaign_manager.status(@campaign["campaign_id"])["rounds"].last
+    relocate_session_reports.call(last_round["round_id"])
+    refused = campaign_manager.status(@campaign["campaign_id"])
+    refute refused["accepted"]
+    refute refused["evidence"]["available"]
+  end
+
   def test_worker_authored_passed_check_cannot_become_accepted_execution_authority
     attempt = start_attempt
     path = receipt(attempt, "operation" => "test", "review" => nil, "campaign" => nil)

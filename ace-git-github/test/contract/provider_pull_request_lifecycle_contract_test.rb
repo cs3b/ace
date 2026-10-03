@@ -12,7 +12,7 @@ class GithubProviderPullRequestLifecycleContractTest < AceGitGithubTestCase
   SERVER = Ace::Git::ResolvedServer.new(name: "forge-server", provider: :github, url: CONTRACT::SERVER_URL)
   SHA = CONTRACT::HEAD_SHA
 
-  PR_FIELDS = "number,state,isDraft,title,author,headRefName,baseRefName,url,headRefOid,mergeCommit,mergedAt,headRepositoryOwner,headRepository"
+  PR_FIELDS = "number,state,isDraft,title,body,author,headRefName,baseRefName,url,headRefOid,mergeCommit,mergedAt,headRepositoryOwner,headRepository"
   LIST_FIELDS = Ace::Git::Github::Provider::LIFECYCLE_LIST_FIELDS
 
   def build_provider(runner)

@@ -107,11 +107,14 @@ module CampaignFixtures
       unless proof && proof["head"] == head && (artifacts - proof["artifacts"]).empty?
         raise Ace::Review::Atoms::CampaignContract::Invalid, "fixture coordinator did not accept review execution"
       end
+      # Historical authority is journal-backed: working files legitimately age
+      # (feedback resolve archives and annotates finding files), so only
+      # current-head reads re-hash artifacts.
       proof["artifacts"].each do |artifact|
         unless artifact_ref(artifact["path"]) == artifact
           raise Ace::Review::Atoms::CampaignContract::Invalid, "accepted review artifact changed"
         end
-      end
+      end unless historical
       proof
     end
   end
@@ -133,7 +136,7 @@ module CampaignFixtures
       end
       proof["artifacts"].each do |artifact|
         raise Ace::Review::Atoms::CampaignContract::Invalid, "accepted approval artifact changed" unless artifact_ref(artifact["path"]) == artifact
-      end
+      end unless historical
       proof
     end
   end
