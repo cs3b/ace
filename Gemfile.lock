@@ -387,11 +387,11 @@ PATH
 PATH
   remote: ace-task
   specs:
-    ace-task (0.39.0)
+    ace-task (0.39.1)
       ace-b36ts (~> 0.14)
-      ace-git (~> 0.26)
-      ace-git-forgejo (~> 0.4)
-      ace-git-github (~> 0.3)
+      ace-git (~> 0.27)
+      ace-git-forgejo (~> 0.5)
+      ace-git-github (~> 0.4)
       ace-support-cli (~> 0.6)
       ace-support-core (~> 0.31)
       ace-support-fs (~> 0.3)
