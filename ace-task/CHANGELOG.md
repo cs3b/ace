@@ -16,6 +16,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Task issue commands and workflow guidance now use forge-neutral `--issue` and `--default-server` options.
 - Raised minimum dependencies to the versions providing the issue tracking contract: ace-git ~> 0.26, ace-git-github ~> 0.3, ace-git-forgejo ~> 0.4.
 
+### Fixed
+- Issue identity locks serialize by canonical repository identity (provider + normalized web repository + issue number) and are held across task relocations, with parent-before-child ordering that closes the archive deadlock window.
+- Definitive-looking provider failures after a tracking comment committed (label/state steps, post-write ownership conflicts) retain the task, link, and pending identity as the cleanup record instead of deleting them; only pre-mutation ownership rejection rolls back.
+- Clear intent is persisted before comment reconciliation (with the create guard remembered), pending clears complete after authoritative create absence, and a pending clear's outgoing ID survives reparenting.
+- Generic task updates reject all issue-sync control fields, including `issue_sync_reconcile_create`.
+
 ## [0.38.1] - 2026-09-29
 
 ### Fixed
