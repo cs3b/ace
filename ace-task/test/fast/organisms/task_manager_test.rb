@@ -553,19 +553,33 @@ class TaskManagerTest < AceTaskTestCase
   end
 
   def test_concurrent_linked_creates_serialize_on_issue_lock
-    adapter = fake_issue_adapter { |task:, **_| {success: true} }
-    @manager.stub(:issue_adapter, adapter) do
-      first = @manager.create("First", remote_issue: issue_identity)
-      pending_create = nil
-      @manager.send(:with_issue_identity_lock, issue_identity) do
-        thread = Thread.new { @manager.create("Second", remote_issue: issue_identity) }
-        sleep 0.3
-        # The second create cannot have written while the lock is held.
-        specs = Dir.glob(File.join(@manager.root_dir, "**", "*.s.md"))
-        assert_equal 1, specs.length
-        pending_create = thread
+    gate_open = false
+    adapter = fake_issue_adapter do |task:, **_|
+      # Park inside the protected region until the test has observed the
+      # second create's blocked state.
+      until gate_open
+        sleep 0.05
       end
-      error = assert_raises(Ace::Git::ProviderIdentityMismatchError) { pending_create.value }
+      {success: true}
+    end
+    @manager.stub(:issue_adapter, adapter) do
+      first = Thread.new { @manager.create("First", remote_issue: issue_identity) }
+      deadline = Time.now + 5
+      sleep 0.05 until Dir.glob(File.join(@manager.root_dir, "**", "*.s.md")).any? || Time.now > deadline
+      assert Dir.glob(File.join(@manager.root_dir, "**", "*.s.md")).any?, "first create never wrote its task"
+
+      second = Thread.new { @manager.create("Second", remote_issue: issue_identity) }
+      # The duplicate check alone cannot satisfy this test: while the first
+      # create holds the identity lock (parked in its sync), the second
+      # create must still be alive and blocked on that lock - a lock-free
+      # implementation would have already scanned, raised, and exited.
+      sleep 0.5
+      assert second.alive?, "second create entered the protected region before the first released it"
+      assert_equal "sleep", second.status, "second create should be blocked on the identity lock"
+
+      gate_open = true
+      first.value
+      error = assert_raises(Ace::Git::ProviderIdentityMismatchError) { second.value }
       assert_match(/already linked/, error.message)
       # The rejected create leaves no artifact behind.
       specs = Dir.glob(File.join(@manager.root_dir, "**", "*.s.md"))
