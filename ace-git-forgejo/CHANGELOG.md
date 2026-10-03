@@ -7,12 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-10-03
+
+### Added
+- Forgejo issue tracking through the shared provider contract with selected-server authority checks and parsed issue evidence.
+
+### Fixed
+- Missing tracking labels are created on demand before attachment, forbidden organization-label listings fall back to repository labels, and fj credentials are found in the real macOS bundle directories (forgejo-cli.forgejo-cli, legacy Cyborus.forgejo-cli).
+
 ## [0.4.0] - 2026-10-02
 
 ### Added
 - Repository-bound Forgejo PR comment and review retrieval and comment create/update through the shared provider contract.
 - Correlation-based reconciliation after uncertain posts and explicit unsupported thread resolution.
-- Forgejo issue tracking through the shared provider contract with selected-server authority checks and parsed issue evidence.
 
 ## [0.3.0] - 2026-09-29
 
