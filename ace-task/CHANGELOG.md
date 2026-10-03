@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.39.1] - 2026-10-04
+
+### Fixed
+- The gemspec now requires the provider versions that contain the issue tracking contract (ace-git ~> 0.27, ace-git-github ~> 0.4, ace-git-forgejo ~> 0.5): the published 0.39.0 metadata still allowed resolving the pre-contract providers (ace-git 0.26.0, ace-git-github 0.3.0, ace-git-forgejo 0.4.0), so fresh installs — especially through a lagging CDN index — could pair `ace-task` issue synchronization with providers missing its required operations.
+
 ## [0.39.0] - 2026-10-02
 
 ### Added

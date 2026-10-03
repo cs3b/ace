@@ -46,9 +46,9 @@ Gem::Specification.new do |spec|
   spec.add_dependency "ace-support-items", "~> 0.15"
   spec.add_dependency "ace-support-markdown", "~> 0.3"
   spec.add_dependency "ace-b36ts", "~> 0.14"
-  spec.add_dependency "ace-git", "~> 0.26"
-  spec.add_dependency "ace-git-github", "~> 0.3"
-  spec.add_dependency "ace-git-forgejo", "~> 0.4"
+  spec.add_dependency "ace-git", "~> 0.27"
+  spec.add_dependency "ace-git-github", "~> 0.4"
+  spec.add_dependency "ace-git-forgejo", "~> 0.5"
   spec.add_dependency "ace-support-cli", "~> 0.6"
 
   # Development dependencies managed in root Gemfile
