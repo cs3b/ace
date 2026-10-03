@@ -56,8 +56,11 @@ class TaskFrontmatterDefaultsTest < AceTaskTestCase
     assert_equal "2026-03-01 14:30:00", Defaults.format_time(time)
   end
 
-  def test_build_with_github_issue
-    fm = Defaults.build(id: "8pp.t.q7w", github_issue: 276)
-    assert_equal 276, fm["github_issue"]
+  def test_build_with_remote_issue
+    identity = {"server_name" => "github", "provider" => "github",
+                "repository_url" => "https://github.com/example/repo", "number" => 276,
+                "url" => "https://github.com/example/repo/issues/276"}
+    fm = Defaults.build(id: "8pp.t.q7w", remote_issue: identity)
+    assert_equal identity, fm["remote_issue"]
   end
 end

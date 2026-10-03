@@ -265,7 +265,12 @@ class UpdateCommandTest < AceTaskTestCase
       priority: medium
       tags:
         - auth
-      github_issue: 276
+      remote_issue:
+        server_name: lab
+        provider: forgejo
+        repository_url: https://forge.example/owner/repo
+        number: 276
+        url: https://forge.example/owner/repo/issues/276
       ---
 
       # Fix Login Bug
@@ -273,21 +278,15 @@ class UpdateCommandTest < AceTaskTestCase
 
     sync_calls = []
     fake_sync = Object.new
-    fake_sync.define_singleton_method(:validate_link!) { |**_payload| }
-    fake_sync.define_singleton_method(:available?) { true }
-    fake_sync.define_singleton_method(:sync_task) do |**payload|
-      sync_calls << payload
-      {synced: 1}
-    end
-
-    Ace::Task::Molecules::GithubIssueSyncAdapter.stub(:new, fake_sync) do
-      capture_io do
-        Ace::Task::TaskCLI.start(["update", "q7w", "--set", "status=done"])
+    fake_sync.define_singleton_method(:sync_task) { |task:, previous_task_id: nil, **_| sync_calls << task }
+    manager = Ace::Task::Organisms::TaskManager.new
+    manager.stub(:issue_adapter, fake_sync) do
+      Ace::Task::Organisms::TaskManager.stub(:new, manager) do
+        capture_io { Ace::Task::TaskCLI.start(["update", "q7w", "--set", "status=done"]) }
       end
     end
 
     assert_equal 1, sync_calls.length
-    assert_equal "update", sync_calls.first[:reason]
-    assert_equal "done", sync_calls.first[:task].status
+    assert_equal "done", sync_calls.first.status
   end
 end

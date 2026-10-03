@@ -1,6 +1,6 @@
 ---
 id: 8wr.t.qk1.2
-status: in-progress
+status: done
 priority: high
 created_at: "2026-09-28 17:44:28"
 estimate: TBD
@@ -9,7 +9,7 @@ tags: [lab-readiness]
 parent: 8wr.t.qk1
 bundle:
   presets: [project]
-  files: [.ace-tasks/8wr.t.qk1-complete-forge-neutral-worktree-review/8wr.t.qk1-complete-forge-neutral-worktree-review-and-task.s.md, ace-task/lib/ace/task/cli/commands/github_sync.rb, ace-task/lib/ace/task/molecules/github_issue_sync_adapter.rb, ace-task/lib/ace/task/organisms/task_manager.rb, ace-git-github/lib/ace/git/github/issue_sync.rb, .ace-tasks/8wr.t.qk1-complete-forge-neutral-worktree-review/2-use-named-forge-providers-for/ux/usage.md]
+  files: [.ace-tasks/8wr.t.qk1-complete-forge-neutral-worktree-review/8wr.t.qk1-complete-forge-neutral-worktree-review-and-task.s.md, ace-task/lib/ace/task/cli/commands/issue_sync.rb, ace-task/lib/ace/task/cli/commands/issue_link.rb, ace-task/lib/ace/task/molecules/issue_link.rb, ace-task/lib/ace/task/organisms/task_manager.rb, ace-git/lib/ace/git/organisms/issue_tracking.rb, .ace-tasks/8wr.t.qk1-complete-forge-neutral-worktree-review/2-use-named-forge-providers-for/ux/usage.md]
   commands: []
 needs_review: false
 worktree:

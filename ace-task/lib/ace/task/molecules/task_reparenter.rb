@@ -75,6 +75,11 @@ module Ace
             fm.delete("parent")
           end
 
+          # Promoted descendants rebase from the standalone ID.
+          id_map = {task.id => new_id}
+          rewrite_descendants(new_dir, old_parent_id: task.id, new_parent_id: new_id, id_map: id_map)
+          rewrite_dependency_references(id_map)
+
           loader = TaskLoader.new
           loader.load(new_dir, id: new_id)
         end
@@ -164,8 +169,69 @@ module Ace
             fm["parent"] = parent_task.id
           end
 
+          # Descendant identities hang off the parent ID: rewrite their
+          # frontmatter and spec filenames so persisted IDs stay authoritative.
+          id_map = {task.id => new_id}
+          rewrite_descendants(new_dir, old_parent_id: task.id, new_parent_id: new_id, id_map: id_map)
+          rewrite_dependency_references(id_map)
+
           loader = TaskLoader.new
           loader.load(new_dir, id: new_id)
+        end
+
+        # Rewrite dependency references in every task spec after an ID map
+        # changes (stale references would read as unmet dependencies).
+        def rewrite_dependency_references(id_map)
+          return if id_map.empty?
+
+          Dir.glob(File.join(@root_dir, "**", "*.s.md")).sort.each do |spec|
+            content = File.read(spec)
+            frontmatter, body = Ace::Support::Items::Atoms::FrontmatterParser.parse(content)
+            deps = frontmatter["dependencies"]
+            next unless deps.is_a?(Array)
+
+            mapped = deps.map { |dep| id_map.fetch(dep, dep) }
+            next if mapped == deps
+
+            frontmatter["dependencies"] = mapped
+            tmp_path = "#{spec}.tmp.#{Process.pid}"
+            File.write(tmp_path, Ace::Support::Items::Atoms::FrontmatterSerializer.rebuild(frontmatter, body))
+            File.rename(tmp_path, spec)
+          end
+        end
+
+        # Recursively rewrite descendant frontmatter IDs, parent references and
+        # spec filenames after their ancestor's ID changed.
+        def rewrite_descendants(dir, old_parent_id:, new_parent_id:, id_map: {})
+          return unless Dir.exist?(dir)
+
+          Dir.entries(dir).sort.each do |entry|
+            next if entry.start_with?(".")
+            next unless (short_match = entry.match(/\A([a-z0-9])-(.+)/))
+
+            char = short_match[1]
+            slug = short_match[2]
+            child_dir = File.join(dir, entry)
+            next unless File.directory?(child_dir)
+
+            old_child_id = "#{old_parent_id}.#{char}"
+            new_child_id = "#{new_parent_id}.#{char}"
+            id_map[old_child_id] = new_child_id
+
+            spec = Dir.glob(File.join(child_dir, "*.s.md")).sort.first
+            if spec
+              new_spec = File.join(child_dir, "#{new_child_id}-#{slug}.s.md")
+              File.rename(spec, new_spec) if spec != new_spec && !File.exist?(new_spec)
+              if File.exist?(new_spec)
+                update_frontmatter(new_spec) do |fm|
+                  fm["id"] = new_child_id
+                  fm["parent"] = new_parent_id
+                end
+              end
+            end
+
+            rewrite_descendants(child_dir, old_parent_id: old_child_id, new_parent_id: new_child_id, id_map: id_map)
+          end
         end
 
         # Extract the base task ID (without subtask char) from a potentially dotted ID

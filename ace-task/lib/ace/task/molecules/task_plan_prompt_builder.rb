@@ -76,9 +76,9 @@ module Ace
         end
 
         def run_ace_bundle(input, output_path)
-          _stdout, status = Open3.capture2(
-            "ace-bundle", input, "--format", "markdown-xml", "--output", output_path
-          )
+          checkout_binstub = File.expand_path("../../../../../bin/ace-bundle", __dir__)
+          executable = File.file?(checkout_binstub) ? checkout_binstub : Gem.bin_path("ace-bundle", "ace-bundle")
+          _stdout, status = Open3.capture2(executable, input, "--format", "markdown-xml", "--output", output_path)
           unless status.success?
             raise Ace::Support::Cli::Error.new("ace-bundle failed for: #{input}")
           end

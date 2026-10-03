@@ -7,12 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.27.0] - 2026-10-03
+
+### Added
+- Forge-neutral issue tracking contract with named-server selection, normalized issue evidence, and classified provider failures.
+
+### Fixed
+- Scheme-less server URLs with numeric ports (forge.example:8443/owner/repo) keep the port in the derived web endpoint instead of parsing it as an scp-style repo path.
+
 ## [0.26.0] - 2026-10-02
 
 ### Added
 - Normalized PR comment and review evidence, comment mutation receipts, and guarded review snapshots with exact repository and head identity.
 - Recheck PR heads around collection and before review comments or thread mutations; classify unsupported capabilities and uncertain post outcomes.
-
 
 ## [0.25.0] - 2026-09-28
 

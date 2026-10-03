@@ -110,7 +110,7 @@ module Ace
               issues << {type: :warning, message: "Title exceeds #{Atoms::TaskValidationRules::MAX_TITLE_LENGTH} characters (#{title.length} chars)", location: file_path}
             end
 
-            validate_github_fields(frontmatter, file_path, issues)
+            validate_issue_fields(frontmatter, file_path, issues)
           end
 
           def validate_recommended_fields(frontmatter, file_path, issues)
@@ -134,24 +134,50 @@ module Ace
             end
           end
 
-          def validate_github_fields(frontmatter, file_path, issues)
-            linked = frontmatter["github_issue"]
-            unless linked.nil? || (linked.is_a?(Integer) && linked.positive?)
-              issues << {
-                type: :error,
-                message: "Invalid GitHub issue ID '#{linked}' in github_issue (expected positive integer)",
-                location: file_path
-              }
+          def validate_issue_fields(frontmatter, file_path, issues)
+            %w[github_issue github_sync_pending].each do |key|
+              next unless frontmatter.key?(key)
+
+              issues << {type: :error, message: "Obsolete #{key}; use remote_issue/issue_sync_pending",
+                         location: file_path}
             end
-
-            pending = frontmatter["github_sync_pending"]
-            return if pending.nil? || pending == true || pending == false
-
-            issues << {
-              type: :error,
-              message: "Invalid github_sync_pending value (expected boolean)",
-              location: file_path
-            }
+            if frontmatter.key?("remote_issue")
+              linked = frontmatter["remote_issue"]
+              valid = linked.is_a?(Hash) && linked.keys.all? { |key| key.is_a?(String) } &&
+                linked.keys.sort ==
+                %w[number provider repository_url server_name url] &&
+                linked["number"].is_a?(Integer) && linked["number"].positive? &&
+                %w[server_name provider repository_url url].all? { |key| linked[key].is_a?(String) && !linked[key].empty? } &&
+                linked["url"] == "#{Ace::Git::Atoms::ServerUrl.web_base(linked["repository_url"])}/issues/#{linked["number"]}"
+              unless valid
+                issues << {type: :error, message: "Invalid complete remote_issue identity", location: file_path}
+              end
+            end
+            pending = frontmatter["issue_sync_pending"]
+            unless pending.nil? || pending == true || pending == false
+              issues << {type: :error, message: "Invalid issue_sync_pending value (expected boolean)",
+                         location: file_path}
+            end
+            if pending == true && !frontmatter.key?("remote_issue")
+              issues << {type: :error, message: "issue_sync_pending requires a complete remote_issue identity",
+                         location: file_path}
+            end
+            operation = frontmatter["issue_sync_operation"]
+            valid_operation = operation.nil? ||
+              (%w[clear reconcile-create].include?(operation) && pending == true && frontmatter["remote_issue"].is_a?(Hash))
+            unless valid_operation
+              issues << {type: :error, message: "Invalid issue_sync_operation", location: file_path}
+            end
+            previous_id = frontmatter["issue_sync_previous_id"]
+            unless previous_id.nil? || (previous_id.is_a?(String) && !previous_id.empty?)
+              issues << {type: :error, message: "Invalid issue_sync_previous_id value (expected task ID string)",
+                         location: file_path}
+            end
+            reconcile_flag = frontmatter["issue_sync_reconcile_create"]
+            unless reconcile_flag.nil? || reconcile_flag == true
+              issues << {type: :error, message: "Invalid issue_sync_reconcile_create value (expected boolean)",
+                         location: file_path}
+            end
           end
         end
       end

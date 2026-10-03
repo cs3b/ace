@@ -175,8 +175,10 @@ module Ace
             nil
           end
 
-          # Observed forgejo-cli v0.6.0 keys-file locations (data_dir of the
-          # `directories` crate, plus the legacy Cyborus org path).
+          # Observed forgejo-cli keys-file locations (data_dir of the
+          # `directories` crate, plus the legacy Cyborus org path). On macOS
+          # the real CLI uses bundle-dir names: forgejo-cli.forgejo-cli
+          # (current) and Cyborus.forgejo-cli (legacy).
           def default_keys_path
             candidates = []
             xdg = ENV["XDG_DATA_HOME"]

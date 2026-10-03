@@ -81,13 +81,13 @@ PATH
 PATH
   remote: ace-git-forgejo
   specs:
-    ace-git-forgejo (0.4.0)
+    ace-git-forgejo (0.5.0)
       ace-git (~> 0.26)
 
 PATH
   remote: ace-git-github
   specs:
-    ace-git-github (0.3.0)
+    ace-git-github (0.4.0)
       ace-git (~> 0.26)
 
 PATH
@@ -114,7 +114,7 @@ PATH
 PATH
   remote: ace-git
   specs:
-    ace-git (0.26.0)
+    ace-git (0.27.0)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)
       ace-support-core (~> 0.31)
@@ -387,10 +387,11 @@ PATH
 PATH
   remote: ace-task
   specs:
-    ace-task (0.38.1)
+    ace-task (0.39.0)
       ace-b36ts (~> 0.14)
-      ace-git (~> 0.24)
-      ace-git-github (~> 0.2)
+      ace-git (~> 0.26)
+      ace-git-forgejo (~> 0.4)
+      ace-git-github (~> 0.3)
       ace-support-cli (~> 0.6)
       ace-support-core (~> 0.31)
       ace-support-fs (~> 0.3)

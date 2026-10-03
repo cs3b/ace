@@ -129,7 +129,20 @@ module Ace
         # @param repository_url [String] repository URL in any supported shape
         # @return [Array<ResolvedServer>] matching servers (may be empty)
         def matching_servers(repository_url)
-          entries.map(&:server).select { |server| Atoms::ServerUrl.match?(server.url, repository_url) }
+          supplied = repository_url.to_s
+          supplied_scheme = supplied[/\A([a-z][a-z0-9+.\-]*):\/\//i, 1]&.downcase
+          entries.map(&:server).select do |server|
+            # Compare the derived web endpoint so SSH clone URLs (including
+            # custom SSH ports) match their HTTPS issue URLs.
+            next false unless Atoms::ServerUrl.match?(Atoms::ServerUrl.web_base(server.url), supplied)
+            next true if supplied_scheme.nil?
+
+            # An explicit issue-URL scheme must not downgrade to a server
+            # serving the same host/path over a weaker scheme. SSH-configured
+            # clones serve their web endpoint over HTTPS.
+            server_scheme = Atoms::ServerUrl.web_base(server.url)[/\A(https?):\/\//i, 1]&.downcase
+            server_scheme == supplied_scheme
+          end
         end
 
         # Configured servers whose repository path equals `owner/repo`

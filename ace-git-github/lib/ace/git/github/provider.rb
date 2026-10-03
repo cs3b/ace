@@ -76,7 +76,12 @@ module Ace
         #   to every data/mutation command so a `--server` selection can never
         #   be silently retargeted to the checkout's repository.
         def repo_target
-          @repo_target ||= Ace::Git::Atoms::ServerUrl.normalize(server.url)
+          # Issue operations talk to the HTTPS web endpoint derived from the
+          # configured URL; a plain normalize would carry an SSH-style
+          # host:port into gh --hostname/--repo.
+          @repo_target ||= Ace::Git::Atoms::ServerUrl.normalize(
+            Ace::Git::Atoms::ServerUrl.web_base(server.url)
+          )
         end
 
         # @return [ProviderPullRequest, nil] evidence for the branch's PR
@@ -114,6 +119,90 @@ module Ace
         def issue(number:)
           output = gh_json(["issue", "view", number.to_s, "--json", ISSUE_FIELDS])
           normalize_issue(output)
+        end
+
+        def issue_tracking(number:)
+          data = gh_json(["issue", "view", number.to_s, "--json", "number,title,state,author,url,labels"])
+          evidence = normalize_issue(data)
+          unless evidence.number.to_i == number.to_i && url_matches_server?(evidence.url, number)
+            raise Ace::Git::ProviderIdentityMismatchError, "Issue ##{number} is not in #{server.url}"
+          end
+          uri = URI.parse(Ace::Git::Atoms::ServerUrl.web_base(server.url))
+          owner_repo = uri.path.sub(%r{\A/}, "").chomp("/").sub(/\.git\z/, "")
+          pages = gh_json(["api", "repos/#{owner_repo}/issues/#{number}/comments", "--hostname", forge_hostname(uri),
+                           "--paginate", "--slurp"], bind_repo: false)
+            unless pages.is_a?(Array) && pages.all? { |page| page.is_a?(Array) }
+              raise Ace::Git::ProviderMalformedOutputError, "Malformed GitHub comment pagination for issue ##{number}"
+            end
+            {
+            issue: evidence,
+            comments: pages.flatten.map do |comment|
+              id = comment["id"]
+              raise Ace::Git::ProviderMalformedOutputError, "Issue comment has no API id" unless id.to_s.match?(/\A\d+\z/)
+
+              {id: id.to_i, body: comment["body"].to_s}
+            end,
+            labels: Array(data["labels"]).map { |label| label["name"].to_s }
+          }
+        end
+
+        def create_issue_comment(number:, body:)
+          issue_api("POST", "issues/#{number}/comments", fields: ["body=#{body}"])
+        end
+
+        def update_issue_comment(number:, comment_id:, body:)
+          assert_issue_comment_owned!(number, comment_id)
+          issue_api("PATCH", "issues/comments/#{Integer(comment_id)}", fields: ["body=#{body}"])
+        end
+
+        def delete_issue_comment(number:, comment_id:)
+          assert_issue_comment_owned!(number, comment_id)
+          issue_api("DELETE", "issues/comments/#{Integer(comment_id)}")
+        end
+
+        def add_issue_label(number:, label:)
+          ensure_repo_label(label)
+          issue_api("POST", "issues/#{number}/labels", fields: ["labels[]=#{label}"])
+        end
+
+        def remove_issue_label(number:, label:)
+          issue_api("DELETE", "issues/#{number}/labels/#{URI.encode_www_form_component(label)}")
+        end
+
+        def set_issue_state(number:, state:)
+          raise ArgumentError, "Invalid issue state #{state.inspect}" unless %i[open closed].include?(state)
+
+          issue_api("PATCH", "issues/#{number}", fields: ["state=#{state}"])
+        end
+
+        # Fresh repositories lack the tracking label: look it up and create
+        # it on demand BEFORE attaching, so linking cannot commit a tracking
+        # comment it could never label (mirrors the Forgejo provider). A
+        # concurrent creator surfaces as a failed create whose re-list
+        # confirms the ensured state; any other lookup/create failure still
+        # surfaces through the attach call.
+        def ensure_repo_label(label)
+          uri = URI.parse(Ace::Git::Atoms::ServerUrl.web_base(server.url))
+          owner_repo = uri.path.sub(%r{\A/}, "").chomp("/").sub(/\.git\z/, "")
+          hostname = forge_hostname(uri)
+          return if label_exists?(owner_repo, hostname, label)
+
+          CliExecutor.execute("api", ["repos/#{owner_repo}/labels", "--hostname", hostname,
+            "--method", "POST", "--raw-field", "name=#{label}", "--raw-field", "color=0e8a16"],
+            timeout: timeout, runner: runner)
+          label_exists?(owner_repo, hostname, label)
+        end
+
+        def label_exists?(owner_repo, hostname, label)
+          # gh api rejects --slurp combined with --jq; per-page jq output is
+          # one name per line, which the line parse below handles.
+          result = CliExecutor.execute("api", ["repos/#{owner_repo}/labels?per_page=100", "--hostname", hostname,
+            "--paginate", "--jq", ".[].name"], timeout: timeout, runner: runner)
+          return false unless result[:success]
+
+          result[:stdout].to_s.lines.map(&:strip).include?(label)
+        rescue Ace::Git::Error
+          false
         end
 
         # @return [Array<ProviderCheck>] normalized check evidence for a ref
@@ -889,6 +978,26 @@ end
           out
         end
 
+        def assert_issue_comment_owned!(number, comment_id)
+          return if issue_tracking(number: number)[:comments].any? { |comment| comment[:id].to_i == comment_id.to_i }
+
+          raise Ace::Git::ProviderIdentityMismatchError,
+            "Comment #{comment_id} is not on selected issue ##{number} in #{server.url}"
+        end
+
+        def issue_api(method, suffix, fields: [])
+          uri = URI.parse(Ace::Git::Atoms::ServerUrl.web_base(server.url))
+          owner_repo = uri.path.sub(%r{\A/}, "").chomp("/").sub(/\.git\z/, "")
+          args = ["repos/#{owner_repo}/#{suffix}", "--hostname", forge_hostname(uri), "--method", method]
+          fields.each { |field| args += ["--raw-field", field] }
+          result = CliExecutor.execute("api", args, timeout: timeout, runner: runner)
+          classify_failure(result[:stderr], context: "issue #{method} #{suffix}") unless result[:success]
+          result
+        rescue Ace::Git::ProviderUnreachableError => e
+          raise Ace::Git::ProviderUnknownOutcomeError,
+            "Unknown outcome for issue mutation on #{server.url} (#{suffix}): #{e.message}"
+        end
+
         STATE_ORDER = {open: 0, merged: 1, closed: 2}.freeze
 
         # Send one mutating `gh` command. When `ambiguous` is true (create),
@@ -1001,8 +1110,36 @@ end
         def server_host_root
           @server_host_root ||= begin
             uri = URI.parse(server.url.to_s)
-            "#{uri.scheme || "https"}://#{uri.host}#{":#{uri.port}" if uri.port && uri.port != uri.default_port}"
+            "#{uri.scheme || "https"}://#{forge_hostname(uri)}"
           end
+        end
+
+        # gh --hostname accepts "host:port"; a bare uri.host would silently
+        # retarget a port-configured server to the default authority.
+        # Issue evidence must match the configured server URL including its
+        # scheme; ServerUrl.match? intentionally ignores schemes for git
+        # remotes, but a web issue URL must not downgrade the authority.
+        def url_matches_server?(evidence_url, number)
+          expected = "#{Ace::Git::Atoms::ServerUrl.web_base(server.url)}/issues/#{number.to_i}"
+          return false unless evidence_url.to_s.chomp("/").casecmp?(expected)
+
+          configured = URI.parse(Ace::Git::Atoms::ServerUrl.web_base(server.url)).scheme
+          supplied = URI.parse(evidence_url.to_s).scheme
+          configured.nil? || supplied.nil? || configured.downcase == supplied.downcase
+        end
+
+        # Unrecognized or missing state is malformed evidence: mapping it to
+        # :closed would let sync close an issue without valid state proof.
+        def normalize_state(value)
+          case value.to_s.upcase
+          when "OPEN" then :open
+          when "CLOSED" then :closed
+          else raise Ace::Git::ProviderMalformedOutputError, "Unknown issue state #{value.inspect}"
+          end
+        end
+
+        def forge_hostname(uri)
+          uri.port && uri.port != uri.default_port ? "#{uri.host}:#{uri.port}" : uri.host
         end
 
         def merged_at_of(data)
@@ -1020,7 +1157,7 @@ end
             server_name: server.name,
             number: data["number"],
             title: data["title"],
-            state: data["state"].to_s.upcase == "OPEN" ? :open : :closed,
+            state: normalize_state(data["state"]),
             author: normalize_author(data["author"]),
             url: data["url"],
             labels: nil

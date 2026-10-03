@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "fileutils"
+require "tmpdir"
 require "test_helper"
 
 module Forgejo
@@ -254,6 +256,30 @@ module Forgejo
       end
     ensure
       File.delete(benign_path) if benign_path && File.exist?(benign_path)
+    end
+
+    def test_default_keys_path_finds_macos_bundle_dir_credentials
+      home = File.join(Dir.tmpdir, "qk12-fj-home-#{Process.pid}")
+      current = File.join(home, "Library", "Application Support", "forgejo-cli.forgejo-cli", "keys.json")
+      FileUtils.mkdir_p(File.dirname(current))
+      File.write(current, {"hosts" => {}}.to_json)
+      # Setup installs a nil lookup stub; restore the real implementation.
+      RepositoryBindingStub.remove
+      Dir.stub(:home, home) do
+        assert_equal current, Ace::Git::Forgejo::RepositoryBinding.default_keys_path
+      end
+
+      # The legacy vendor-prefixed bundle dir is the fallback.
+      FileUtils.rm_rf(File.dirname(current))
+      legacy = File.join(home, "Library", "Application Support", "Cyborus.forgejo-cli", "keys.json")
+      FileUtils.mkdir_p(File.dirname(legacy))
+      File.write(legacy, {"hosts" => {}}.to_json)
+      Dir.stub(:home, home) do
+        assert_equal legacy, Ace::Git::Forgejo::RepositoryBinding.default_keys_path
+      end
+    ensure
+      RepositoryBindingStub.install(nil)
+      FileUtils.rm_rf(home) if home && File.exist?(home)
     end
 
     private

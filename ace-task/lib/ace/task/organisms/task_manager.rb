@@ -1,5 +1,8 @@
 # frozen_string_literal: true
 
+require "digest"
+require "tmpdir"
+
 require_relative "../molecules/task_config_loader"
 require_relative "../molecules/task_scanner"
 require_relative "../molecules/task_resolver"
@@ -7,9 +10,8 @@ require_relative "../molecules/task_loader"
 require_relative "../molecules/task_creator"
 require_relative "../molecules/subtask_creator"
 require_relative "../molecules/task_reparenter"
-require_relative "../molecules/github_issue_sync_adapter"
+require_relative "../molecules/issue_link"
 require_relative "../atoms/task_validation_rules"
-
 module Ace
   module Task
     module Organisms
@@ -49,28 +51,71 @@ module Ace
           dependencies: [],
           use_llm_slug: false,
           estimate: nil,
-          github_issue: nil
+          remote_issue: nil
         )
           ensure_root_dir
-          ensure_github_issue_linkable!(github_issue)
           creator = Molecules::TaskCreator.new(root_dir: @root_dir, config: @config)
           attempts = 0
 
+          # Authoritative validation precedes the task write: an offline or
+          # conflicting link must not create a task artifact at all. Offline
+          # validation is the one accepted pre-write failure mode - the task
+          # is then created with the complete pending link for replay.
+          ensure_issue_linkable!(remote_issue) if remote_issue
           begin
             attempts += 1
-            created_task = creator.create(
-              title,
-              status: status,
-              priority: priority,
-              tags: tags,
-              dependencies: dependencies,
-              use_llm_slug: use_llm_slug,
-              time: Time.now.utc + ((attempts - 1) * 2),
-              estimate: estimate,
-              github_issue: github_issue
-            )
-            sync_linked_issues_for(created_task, reason: "create")
-            created_task
+            created_task = nil
+            sync_started = false
+            begin
+              result = nil
+              # The canonical issue lock covers the local duplicate scan, the
+              # task write, and the sync: two concurrent creates for one
+              # issue serialize instead of both writing and both deleting.
+              with_issue_identity_lock(remote_issue) do
+                ensure_issue_not_linked_elsewhere!(remote_issue) if remote_issue
+                created_task = creator.create(
+                  title,
+                  status: status,
+                  priority: priority,
+                  tags: tags,
+                  dependencies: dependencies,
+                  use_llm_slug: use_llm_slug,
+                  time: Time.now.utc + ((attempts - 1) * 2),
+                  estimate: estimate,
+                  remote_issue: remote_issue
+                )
+                ensure_issue_not_linked_elsewhere!(remote_issue, exclude_id: created_task.id) if remote_issue
+                sync_started = true
+                result = remote_issue ? sync_linked_issues_for(created_task, reason: "create") : nil
+              end
+              if result && result[:success] == false && result[:error].to_s.start_with?("Ace::Git::ProviderIdentityMismatchError") &&
+                  !result[:committed_create]
+                # Ownership was rejected before any remote mutation: the task
+                # must not survive as a second local claimant for the issue.
+                FileUtils.rm_rf(created_task.path)
+                raise Ace::Git::ProviderIdentityMismatchError, result[:error].to_s
+              end
+              if result && result[:success] == false &&
+                  result[:error].to_s.start_with?("Ace::Git::ProviderIdentityMismatchError")
+                # The mismatch surfaced after the tracking comment committed
+                # (e.g. a concurrent external marker): the remote record
+                # exists, so the task and its pending identity stay as the
+                # cleanup record for replay.
+                raise Ace::Git::ProviderIdentityMismatchError, result[:error].to_s
+              end
+            rescue Ace::Git::ProviderUnreachableError
+              # Offline sync retains the complete local link + pending flag:
+              # offline replay is the spec-mandated recovery path.
+              raise
+            rescue StandardError
+              # Confirmed rejections (ownership conflict, unknown server) must
+              # not leave a second local claimant for the issue. Once sync has
+              # begun the remote marker may exist: retain the task and its
+              # pending identity as the recovery record instead of deleting it.
+              FileUtils.rm_rf(created_task.path) if created_task && !sync_started
+              raise
+            end
+            show_after_sync(created_task) || created_task
           rescue Molecules::TaskCreator::IdCollisionError
             retry if attempts < CREATE_RETRY_LIMIT
             raise CreateRetriesExhaustedError,
@@ -147,19 +192,136 @@ module Ace
 
           # Apply field updates if any
           has_field_updates = [set, add, remove].any? { |h| h && !h.empty? }
-          desired_issue = extract_desired_github_issue(task, set: set, remove: remove)
-          ensure_github_issue_linkable!(desired_issue, previous_task: task) if desired_issue
-          if has_field_updates
-            Ace::Support::Items::Molecules::FieldUpdater.update(
-              task.file_path, set: set, add: add, remove: remove
-            )
-          end
-
-          # Apply move if requested
+          reject_issue_metadata_update!(set, add, remove)
+          # Linked tasks defer remote sync: persist the pending flag in the
+          # same write as the local change so a crash cannot lose the replay.
+          # The trigger mirrors sync_needed_after_update?: only changes that
+          # require remote reconciliation (title/status/path/identity) count.
+          # Reparents additionally persist the outgoing ID so replay can prove
+          # ownership of a marker written under the previous task ID.
+          # The deferred decision is computed under the issue + task locks
+          # from reloaded state so a concurrent clear/link cannot leave a
+          # pending flag with no remote_issue target.
+          sync_relevant_keys = [set, add, remove].compact.flat_map(&:keys).map(&:to_s)
+          sync_planned = move_to || move_as_child_of || (sync_relevant_keys & %w[title status]).any?
           current_path = task.path
           current_special = task.special_folder
           current_id = task.id
+          linked = linked_issue(task)
+          # Every linked participant of this relocation — the task itself and
+          # each linked descendant, including descendants under an unlinked
+          # parent — holds its identity lock across the pending writes, the
+          # move, and the post-move syncs, so no replay can clear a pending
+          # flag against the pre-move path mid-relocation. A subtask archive
+          # nests a parent update, so the parent's participants join the
+          # up-front sorted acquisition: every multi-lock path then follows
+          # one global order instead of child-then-parent hold-and-wait.
+          with_identity_locks(relocation_participants(task, move_to)) do
+            if linked && sync_planned
+              with_issue_identity_lock("task" => task.id) do
+                fresh = show(task.id) || task
+                linked_fresh = linked_issue(fresh)
+                # The participant locks were selected from the initially
+                # loaded task: a concurrent clear+re-link while this update
+                # waited must not proceed under the old issue's lock.
+                if linked_fresh != linked
+                  raise Ace::Git::ProviderIdentityMismatchError,
+                    "Task #{task.id} link changed during update; retry the command"
+                end
+                deferred_sync = linked_fresh && fresh.metadata["issue_sync_operation"] != "clear" && sync_planned
+                deferred_set = deferred_sync ? set.merge("issue_sync_pending" => true) : set
+                # A pending clear also needs the outgoing ID: its replay must
+                # prove ownership of the marker written under the previous
+                # task ID, even though the clear defers the pending write.
+                outgoing_id_save = linked_fresh && move_as_child_of
+                deferred_set = deferred_set.merge(
+                  "issue_sync_previous_id" => fresh.metadata["issue_sync_previous_id"] || task.id
+                ) if (deferred_sync || outgoing_id_save) && move_as_child_of
+                if has_field_updates || deferred_sync || outgoing_id_save
+                  Ace::Support::Items::Molecules::FieldUpdater.update(
+                    fresh.file_path, set: deferred_set, add: add, remove: remove
+                  )
+                end
+              end
+            elsif has_field_updates
+              Ace::Support::Items::Molecules::FieldUpdater.update(
+                task.file_path, set: set, add: add, remove: remove
+              )
+            end
+            early, current_path, current_special, current_id = apply_relocation_phase(
+              task, loader, current_path: current_path, current_special: current_special,
+              current_id: current_id, move_to: move_to, move_as_child_of: move_as_child_of
+            )
+            return early if early
+          end
+
+          # Auto-archive hook: if a subtask status was set to terminal,
+          # check if all siblings are terminal and auto-move parent to archive
+          if set && set.key?("status")
+            check_auto_archive(task, set["status"], loader)
+          end
+
+          # Reload and return updated task
+          updated_task = loader.load(current_path, id: current_id, special_folder: current_special)
+          if sync_needed_after_update?(task, updated_task, set: set, add: add, remove: remove, move_to: move_to)
+            sync_failed_definitively = false
+            with_issue_identity_lock(linked_issue(updated_task) || {}) do
+              # Reload inside the lock: a concurrent clear may have removed
+              # the link while this update waited; syncing the stale snapshot
+              # would resurrect an orphaned remote marker.
+              fresh = show(updated_task.id)
+              if fresh.nil? || linked_issue(fresh).nil? ||
+                  fresh.metadata["issue_sync_operation"] == "clear"
+                next show_after_sync(updated_task) || updated_task
+              end
+              # The lock was acquired for the pre-reload identity: a
+              # concurrent re-link must not have this update sync the new
+              # issue under the old issue's lock.
+              locked_identity = linked_issue(updated_task)
+              if locked_identity.is_a?(Hash) && linked_issue(fresh) != locked_identity
+                raise Ace::Git::ProviderIdentityMismatchError,
+                  "Task #{updated_task.id} link changed during update; retry the command"
+              end
+              result = sync_linked_issues_for(fresh, reason: "update", previous_task: task)
+              if result[:success] == false &&
+                  result[:error].to_s.start_with?("Ace::Git::ProviderIdentityMismatchError")
+                # Established links keep the stored identity for recovery and
+                # stay pending; the identity was written before this update,
+                # so there is no fresh mapping to roll back.
+                Ace::Support::Items::Molecules::FieldUpdater.update(
+                  fresh.file_path, set: {"issue_sync_pending" => true}
+                )
+                sync_failed_definitively = true
+              end
+            end
+            raise Ace::Git::ProviderIdentityMismatchError, "Issue link rejected during update sync" if sync_failed_definitively
+            return show_after_sync(updated_task) || updated_task
+          end
+          updated_task
+        end
+
+        # Relocate spec files (move_to or move_as_child_of). Pending flags for
+        # every linked participant are written before the relocation and their
+        # comments resynced after it. Callers hold the participants' issue
+        # locks across the whole phase so a concurrent replay cannot clear a
+        # pending flag mid-move and strand a stale remote marker.
+        # Returns [early_result, current_path, current_special, current_id]:
+        # early_result is a relocation that ends the update (reparent), nil
+        # when the caller should continue with its own tail.
+        def apply_relocation_phase(task, loader, current_path:, current_special:, current_id:,
+          move_to:, move_as_child_of:)
           if move_to
+            # Relocating a parent moves its children's files too: their issue
+            # comments embed repo-relative links that just went stale. Flag
+            # linked descendants pending (crash-safe, written pre-move) and
+            # sync their comments from the post-move locations.
+            linked_descendants_of(task.path, task.id).each do |child|
+              with_issue_identity_lock(linked_issue(child) || {}) do
+                Ace::Support::Items::Molecules::FieldUpdater.update(
+                  child.file_path, set: {"issue_sync_pending" => true}
+                )
+              end
+            end
             if archive_move_for_subtask?(task, move_to)
               result = handle_subtask_archive_move(task, loader)
               current_path = result[:path]
@@ -178,6 +340,16 @@ module Ace
                 new_path, root: @root_dir
               )
             end
+            linked_descendants_of(current_path, current_id).each do |child|
+              with_issue_identity_lock(linked_issue(child) || {}) do
+                fresh = show(child.id) || child
+                # The lock was acquired for the scanned identity: a
+                # concurrent re-link leaves the refresh to the new owner's
+                # own pending replay.
+                next if linked_issue(child) && linked_issue(fresh) != linked_issue(child)
+                sync_linked_issues_for(fresh, reason: "move") if linked_issue(fresh)
+              end
+            end
           end
 
           # Reparent if requested (mutually exclusive with move_to)
@@ -186,23 +358,147 @@ module Ace
             resolve_fn = ->(r) { show(r) }
             # Reload task from current path before reparenting (may have been field-updated)
             task_for_reparent = loader.load(current_path, id: task.id, special_folder: current_special)
+            # Demoting a parent relocates its descendants' files too; their
+            # issue comment links need the same pending-and-sync treatment.
+            linked_descendants_of(current_path, current_id).each do |descendant|
+              with_issue_identity_lock(linked_issue(descendant) || {}) do
+                Ace::Support::Items::Molecules::FieldUpdater.update(
+                  descendant.file_path,
+                  set: {"issue_sync_pending" => true,
+                        "issue_sync_previous_id" => descendant.metadata["issue_sync_previous_id"] || descendant.id}
+                )
+              end
+            end
             reparented = reparenter.reparent(task_for_reparent, target: move_as_child_of, resolve_ref: resolve_fn)
-            sync_linked_issues_for(reparented, reason: "reparent", previous_task: task)
-            return reparented
+            if linked_issue(task) && linked_issue(reparented).nil?
+              # Orchestrator conversion: the linked spec became a child that
+              # retains the remote_issue mapping (and the pending transfer
+              # metadata). Sync that child, not the newly created parent.
+              scanner = Molecules::TaskScanner.new(@root_dir)
+              converted_child = scanner.scan_subtasks(reparented.path, parent_id: reparented.id)
+                .filter_map { |sr| loader.load(sr.dir_path, id: sr.id, special_folder: sr.special_folder) }
+                .find { |t| linked_issue(t) }
+              if converted_child
+                with_issue_identity_lock(linked_issue(converted_child) || {}) do
+                  sync_linked_issues_for(converted_child, reason: "reparent", previous_task: task)
+                end
+                # Other linked descendants of the converted parent keep their
+                # identities; refresh their comments from the new layout too.
+                linked_descendants_of(reparented.path, reparented.id)
+                  .reject { |descendant| descendant.id == converted_child.id }
+                  .each do |descendant|
+                    with_issue_identity_lock(linked_issue(descendant) || {}) do
+                      fresh = show(descendant.id) || descendant
+                      # The lock was acquired for the scanned identity: a
+                      # concurrent re-link leaves the refresh to the new
+                      # owner's own pending replay.
+                      next if linked_issue(descendant) && linked_issue(fresh) != linked_issue(descendant)
+                      sync_linked_issues_for(fresh, reason: "reparent") if linked_issue(fresh)
+                    end
+                  end
+                return [show_after_sync(converted_child) || converted_child,
+                  current_path, current_special, current_id]
+              end
+            end
+            with_issue_identity_lock(linked_issue(reparented) || {}) do
+              sync_linked_issues_for(reparented, reason: "reparent", previous_task: task)
+            end
+            linked_descendants_of(reparented.path, reparented.id).each do |descendant|
+              with_issue_identity_lock(linked_issue(descendant) || {}) do
+                fresh = show(descendant.id) || descendant
+                # The lock was acquired for the scanned identity: a
+                # concurrent re-link leaves the refresh to the new owner's
+                # own pending replay.
+                next if linked_issue(descendant) && linked_issue(fresh) != linked_issue(descendant)
+                sync_linked_issues_for(fresh, reason: "reparent") if linked_issue(fresh)
+              end
+            end
+            return [show_after_sync(reparented) || reparented, current_path, current_special, current_id]
           end
 
-          # Auto-archive hook: if a subtask status was set to terminal,
-          # check if all siblings are terminal and auto-move parent to archive
-          if set && set.key?("status")
-            check_auto_archive(task, set["status"], loader)
-          end
+          [nil, current_path, current_special, current_id]
+        end
 
-          # Reload and return updated task
-          updated_task = loader.load(current_path, id: current_id, special_folder: current_special)
-          if sync_needed_after_update?(task, updated_task, set: set, add: add, remove: remove, move_to: move_to)
-            sync_linked_issues_for(updated_task, reason: "update", previous_task: task)
+        # Every linked identity a relocation of this task touches: the task's
+        # own link plus each linked descendant's — extended with the parent's
+        # participants when the relocation is a subtask archive, whose nested
+        # parent update would otherwise acquire parent locks while holding
+        # this task's.
+        def relocation_participants(task, move_to)
+          participants = participant_identities(task)
+          if move_to && archive_move_for_subtask?(task, move_to)
+            parent = show(task.parent_id)
+            participants += participant_identities(parent) if parent
           end
-          updated_task
+          participants
+        end
+
+        # Every linked identity a relocation of this task touches: the task's
+        # own link plus each linked descendant's.
+        def participant_identities(task)
+          [linked_issue(task)] + linked_descendants_of(task.path, task.id)
+            .filter_map { |child| linked_issue(child) }
+        end
+
+        # Canonical lock/ownership key for an issue identity: a digest over
+        # provider, normalized web repository, and number. Aliased server
+        # names and SSH/HTTPS/case variants of one repository normalize to
+        # the same key (same convention as ServerUrl.normalize); the digest
+        # keeps distinct repositories unambiguous. The stored link keeps the
+        # selected server name for replay authentication.
+        def canonical_issue_key(identity)
+          Digest::SHA256.hexdigest(
+            [
+              canonical_value(identity, "provider"),
+              Ace::Git::Atoms::ServerUrl.normalize(
+                Ace::Git::Atoms::ServerUrl.web_base(canonical_value(identity, "repository_url"))
+              ),
+              canonical_value(identity, "number")
+            ].join("\x1F")
+          )
+        end
+
+        def canonical_value(identity, key)
+          (identity[key] || identity[key.to_sym]).to_s
+        end
+
+        # Acquire identity locks in one stable sorted order so concurrent
+        # relocations cannot deadlock on opposite orders; nested acquisitions
+        # of held identities are re-entrant no-ops.
+        def with_identity_locks(identities, &block)
+          ordered = identities.compact.sort_by { |identity| canonical_issue_key(identity) }
+          return block.call if ordered.empty?
+
+          with_issue_identity_lock(ordered.first) do
+            with_identity_locks(ordered[1..], &block)
+          end
+        end
+
+        # Reload persisted metadata after synchronization: the in-memory task
+        # predates the pending-flag clear that a successful sync performs.
+        def show_after_sync(task)
+          return nil unless task
+
+          show(task.id)
+        end
+
+        # Direct linked subtasks of a task directory (used to refresh their
+        # issue comment links after the parent directory relocates).
+        # Linked descendants at any depth (a grandchild under an unlinked
+        # child still holds a remote comment whose path went stale).
+        def linked_descendants_of(path, id)
+          scanner = Molecules::TaskScanner.new(@root_dir)
+          loader = Molecules::TaskLoader.new
+          collect = lambda do |p, i|
+            scanner.scan_subtasks(p, parent_id: i).flat_map do |sr|
+              child = loader.load(sr.dir_path, id: sr.id, special_folder: sr.special_folder)
+              next [] unless child
+
+              deeper = collect.call(sr.dir_path, sr.id)
+              linked_issue(child) ? [child] + deeper : deeper
+            end
+          end
+          collect.call(path, id)
         end
 
         # Create a subtask within a parent task.
@@ -212,46 +508,244 @@ module Ace
         # @param priority [String, nil] Priority level
         # @param tags [Array<String>] Tags
         # @return [Models::Task, nil] Created subtask or nil if parent not found
-        def create_subtask(parent_ref, title, status: nil, priority: nil, tags: [], estimate: nil, github_issue: nil)
+        def create_subtask(parent_ref, title, status: nil, priority: nil, tags: [], estimate: nil, remote_issue: nil)
           parent = show(parent_ref)
           return nil unless parent
 
-          ensure_github_issue_linkable!(github_issue)
+          # Authoritative validation precedes the write: the spec forbids
+          # leaving an unvalidated offline link after a failed command.
+          ensure_issue_linkable!(remote_issue) if remote_issue
           subtask_creator = Molecules::SubtaskCreator.new(config: @config)
-          created_subtask = subtask_creator.create(
-            parent,
-            title,
-            status: status,
-            priority: priority,
-            tags: tags,
-            estimate: estimate,
-            github_issue: github_issue
-          )
-          sync_linked_issues_for(created_subtask, reason: "create")
-          created_subtask
+          created_subtask = nil
+          sync_started = false
+          begin
+            result = nil
+            # The canonical issue lock covers the local duplicate scan, the
+            # subtask write, and the sync: two concurrent creates for one
+            # issue serialize instead of both writing and both deleting.
+            with_issue_identity_lock(remote_issue) do
+              ensure_issue_linkable!(remote_issue) if remote_issue
+              ensure_issue_not_linked_elsewhere!(remote_issue) if remote_issue
+              created_subtask = subtask_creator.create(
+                parent,
+                title,
+                status: status,
+                priority: priority,
+                tags: tags,
+                estimate: estimate,
+                remote_issue: remote_issue
+              )
+              ensure_issue_not_linked_elsewhere!(remote_issue, exclude_id: created_subtask.id) if remote_issue
+              sync_started = true
+              result = remote_issue ? sync_linked_issues_for(created_subtask, reason: "create") : nil
+            end
+            if result && result[:success] == false && result[:error].to_s.start_with?("Ace::Git::ProviderIdentityMismatchError") &&
+                !result[:committed_create]
+              # Ownership was rejected before any remote mutation: the subtask
+              # must not survive as a second local claimant for the issue.
+              FileUtils.rm_rf(created_subtask.path)
+              raise Ace::Git::ProviderIdentityMismatchError, result[:error].to_s
+            end
+            if result && result[:success] == false &&
+                result[:error].to_s.start_with?("Ace::Git::ProviderIdentityMismatchError")
+              # Post-create rejection (e.g. a concurrent external marker):
+              # the committed marker needs a local cleanup record, so the
+              # subtask and its pending identity stay for replay.
+              raise Ace::Git::ProviderIdentityMismatchError, result[:error].to_s
+            end
+          rescue StandardError
+            # Any pre-sync failure (unreachable validation included) must not
+            # leave an artifact claiming a link that was never validated; once
+            # sync has begun the remote marker may exist, so retain the task
+            # and its pending identity as the recovery record.
+            FileUtils.rm_rf(created_subtask.path) if created_subtask && !sync_started
+            raise
+          end
+          show_after_sync(created_subtask) || created_subtask
         end
 
-        def github_sync(ref: nil, all: false, pending: false)
+        def issue_sync(ref: nil, all: false, pending: false)
           raise ArgumentError, "Provide --all or a task reference" if !all && !pending && (ref.nil? || ref.strip.empty?)
+          raise ArgumentError, "--all and --pending are mutually exclusive" if all && pending
+          raise ArgumentError, "REF cannot be combined with --all or --pending" if ref && (all || pending)
 
           if all || pending
-            tasks = list(in_folder: "all")
-            tasks = tasks.select { |t| t.metadata["github_sync_pending"] } if pending
-            linked_tasks = tasks.select { |t| linked_issue_id(t) }
-            results = linked_tasks.map { |task| sync_linked_issues_for(task, reason: "manual-sync") }
-            return summarize_manual_sync_results(results, skipped: tasks.length - linked_tasks.length)
+            tasks = all_tasks_including_subtasks
+            tasks = tasks.select { |t| t.metadata["issue_sync_pending"] } if pending
+            linked_tasks = tasks.select { |t| linked_issue(t) }
+            results = linked_tasks.map do |task|
+              locked_identity = linked_issue(task)
+              with_issue_identity_lock(locked_identity || {}) do
+                # Reload inside the lock: another process may have cleared,
+                # synced, or REPLACED this link while this replay waited. A
+                # replaced identity must not be mutated under the old lock.
+                fresh = show(task.id)
+                if fresh.nil?
+                  # A concurrent reparent changed the task's ID; report a
+                  # retryable failure rather than claiming a sync that never
+                  # happened.
+                  next sync_result_for(task: task, issues: [locked_identity].compact, success: false,
+                    reason: "manual-sync", error: "Task relocated during replay; retry the command")
+                end
+
+                if linked_issue(fresh) != locked_identity
+                  next sync_result_for(task: fresh, issues: [locked_identity].compact, success: false,
+                    reason: "manual-sync", error: "Issue link changed during replay; retry the command")
+                end
+
+                sync_or_clear_linked_issue(fresh, reason: "manual-sync")
+              end
+            end
+            # An unlinked task with a pending flag is inconsistent state: it
+            # fails in every mode (matching REF and --pending semantics).
+            inconsistent = (tasks - linked_tasks).select { |t| t.metadata["issue_sync_pending"] }
+            results.concat(inconsistent.map do |task|
+              sync_result_for(task: task, issues: [], success: false,
+                reason: "manual-sync", error: "Pending task has no remote_issue recovery identity")
+            end)
+            skipped = tasks.length - linked_tasks.length - inconsistent.length
+            return summarize_manual_sync_results(results, skipped: pending ? 0 : skipped)
           end
 
           task = show(ref)
           return nil unless task
 
-          unless linked_issue_id(task)
-            return {synced: 0, failed: 0, skipped: 1, task_id: task.id, failures: []}
+          unless linked_issue(task)
+            if task.metadata["issue_sync_pending"]
+              # Inconsistent state: pending without a recovery identity is a
+              # failure, not a skip (the CLI must exit nonzero).
+              return {synced: 0, failed: 1, pending: 0, skipped: 0, task_id: task.id,
+                      failures: [{task_id: task.id, remote_issues: [], error: "Pending task has no remote_issue recovery identity"}]}
+            end
+            return {synced: 0, failed: 0, pending: 0, skipped: 1, task_id: task.id, failures: []}
           end
 
-          result = sync_linked_issues_for(task, reason: "manual-sync")
+          locked_identity = linked_issue(task)
+          result = with_issue_identity_lock(locked_identity || {}) do
+            fresh = show(task.id)
+            if fresh.nil?
+              return {synced: 0, failed: 1, pending: 0, skipped: 0, task_id: task.id,
+                      failures: [{task_id: task.id, remote_issues: [locked_identity].compact,
+                                  error: "Task relocated during replay; retry the command"}]}
+            end
+            if linked_issue(fresh) != locked_identity
+              return {synced: 0, failed: 1, pending: 0, skipped: 0, task_id: task.id,
+                      failures: [{task_id: task.id, remote_issues: [locked_identity].compact,
+                                  error: "Issue link changed during replay; retry the command"}]}
+            end
+            sync_or_clear_linked_issue(fresh || task, reason: "manual-sync")
+          end
           summary = summarize_manual_sync_results([result], skipped: 0)
           summary.merge(task_id: task.id)
+        end
+
+        def issue_link(ref, issue: nil, clear: false, server_name: nil, use_default: false)
+          raise ArgumentError, "Choose --issue or --clear" if (issue.nil? && !clear) || (issue && clear)
+          task = show(ref)
+          return nil unless task
+
+          current = linked_issue(task)
+          if clear
+            raise ArgumentError, "Task #{task.id} has no remote issue" unless current
+            clear_issue_link(task)
+            return show(ref)
+          end
+
+          identity = Molecules::IssueLink.from_input(issue, server_name: server_name, use_default: use_default)
+          # Lock order is issue-first everywhere; the task transition lock
+          # nests inside so concurrent link/clear/replay serialize.
+          with_issue_identity_lock(identity) do
+            with_issue_identity_lock("task" => task.id) do
+              # Reload: a concurrent link may have changed this task's state
+              # while this call waited for the locks.
+              task = show(ref) || task
+              current = linked_issue(task)
+              issue_link_locked(task, identity, current, ref: ref,
+                server_name: server_name, use_default: use_default)
+            end
+          end
+          show(ref)
+        end
+
+        def issue_link_locked(task, identity, current, ref:, server_name:, use_default:)
+          if current
+            if current == identity
+              if task.metadata["issue_sync_operation"] == "clear"
+                raise Ace::Git::ProviderIdentityMismatchError,
+                  "Task #{task.id} has a pending clear; complete it before linking again"
+              end
+              # A completed identical link (synced, no pending operations)
+              # is idempotent: return the current task without touching the
+              # forge. Guarded (reconcile-create) and pending-clear links
+              # keep the recovery paths below.
+              if task.metadata["issue_sync_pending"] != true &&
+                  task.metadata["issue_sync_operation"] != "clear" &&
+                  task.metadata["issue_sync_operation"] != "reconcile-create"
+                return show(ref)
+              end
+              # An explicit identical-link retry is the documented recovery
+              # for a create that never committed. Reconcile first so a slow
+              # commit is adopted rather than duplicated; only after the
+              # reconcile window finds no marker does the retry authorize a
+              # fresh create. Failed validation retains the guard.
+              if task.metadata["issue_sync_operation"] == "reconcile-create"
+                reconciled = sync_linked_issues_for(task, reason: "link-retry-reconcile")
+                if reconciled[:success]
+                  return show_after_sync(task) || task
+                end
+              # Only authoritative absence (reads all completed, marker never
+              # appeared) authorizes a fresh create. Any other uncertainty —
+              # read failures, unresolved mutations — keeps the guard so a
+              # later pending replay can adopt a slow commit.
+              unless reconciled[:error].to_s.start_with?("Ace::Git::ProviderReconcileAbsenceError")
+                raise Ace::Git::ProviderUnreachableError, reconciled[:error]
+              end
+                Ace::Support::Items::Molecules::FieldUpdater.update(
+                  task.file_path, set: {"issue_sync_operation" => nil}
+                )
+                task = show(ref)
+              end
+              ensure_issue_linkable!(identity, task_id: task.id,
+                previous_task_id: task.metadata["issue_sync_previous_id"])
+              result = sync_linked_issues_for(task, reason: "link-retry")
+              raise Ace::Git::ProviderUnreachableError, result[:error] unless result[:success]
+              return show(ref)
+            end
+
+            raise Ace::Git::ProviderIdentityMismatchError,
+              "Task #{task.id} already links another issue; clear it before linking a different issue"
+          end
+          with_issue_identity_lock(identity) do
+            ensure_issue_linkable!(identity, task_id: task.id)
+            ensure_issue_not_linked_elsewhere!(identity, exclude_id: task.id)
+            Ace::Support::Items::Molecules::FieldUpdater.update(
+              task.file_path, set: {"remote_issue" => identity, "issue_sync_pending" => true}
+            )
+            linked = show(ref)
+            result = sync_linked_issues_for(linked, reason: "link")
+            if result[:success] == false &&
+                result[:error].to_s.start_with?("Ace::Git::ProviderIdentityMismatchError") &&
+                !result[:committed_create]
+              # Definitive pre-mutation rejection (sync validates ownership
+              # before touching the forge): roll back the freshly written
+              # mapping so no local claim survives for an issue this task
+              # never owned.
+              Ace::Support::Items::Molecules::FieldUpdater.update(
+                linked.file_path, set: {"remote_issue" => nil, "issue_sync_pending" => nil}
+              )
+              raise Ace::Git::ProviderIdentityMismatchError, result[:error].to_s
+            end
+            if result[:success] == false &&
+                result[:error].to_s.start_with?("Ace::Git::ProviderIdentityMismatchError")
+              # Post-create rejection (e.g. a concurrent external marker):
+              # the committed marker needs a local cleanup record, so the
+              # link and pending flag are retained for replay.
+              raise Ace::Git::ProviderIdentityMismatchError, result[:error].to_s
+            end
+            raise Ace::Git::ProviderUnreachableError, result[:error] unless result[:success]
+          end
+
+          show_after_sync(show(ref) || task) || show(ref) || task
         end
 
         # Get the root directory.
@@ -476,106 +970,285 @@ module Ace
           return false unless after_task
           return true if move_to
           return true if before_task.path != after_task.path
-          return true if linked_issue_id(before_task) != linked_issue_id(after_task)
+          return true if linked_issue(before_task) != linked_issue(after_task)
 
           touched_keys = [set, add, remove].compact.flat_map(&:keys).map(&:to_s)
           touched_keys.any? do |key|
-            key == "title" || key == "status" || key == "github_issue"
+            key == "title" || key == "status"
           end
         end
 
-        def linked_issue_id(task)
-          return nil unless task&.metadata
-
-          issue_id = task.metadata["github_issue"]
-          return nil unless issue_id.to_i.positive?
-
-          issue_id.to_i
+        def linked_issue(task)
+          task&.metadata&.[]("remote_issue")
         end
 
-        def extract_desired_github_issue(task, set:, remove:)
-          return nil if set&.key?("github_issue") && !set["github_issue"].to_i.positive?
-          return set["github_issue"].to_i if set&.key?("github_issue") && set["github_issue"].to_i.positive?
-          return nil if Array(remove&.keys).map(&:to_s).include?("github_issue")
-
-          linked_issue_id(task)
+        def reject_issue_metadata_update!(*changes)
+          keys = changes.compact.flat_map(&:keys).map(&:to_s)
+          forbidden = keys.find do |key|
+            key == "remote_issue" || key.start_with?("remote_issue.") ||
+              %w[issue_sync_pending issue_sync_previous_id issue_sync_operation
+                 issue_sync_reconcile_create github_issue github_sync_pending].include?(key)
+          end
+          raise ArgumentError, "Use ace-task issue-link to change #{forbidden}" if forbidden
         end
 
-        def ensure_github_issue_linkable!(github_issue, previous_task: nil)
-          return unless github_issue
-
-          Molecules::GithubIssueSyncAdapter.new.validate_link!(issue_id: github_issue, previous_task: previous_task)
+        def issue_adapter
+          require_relative "../molecules/issue_sync_adapter"
+          Molecules::IssueSyncAdapter.new
         end
+
+        def ensure_issue_linkable!(identity, task_id: nil, previous_task_id: nil)
+          issue_adapter.validate_link!(identity: identity, task_id: task_id, previous_task_id: previous_task_id)
+        end
+
+        # One task owns at most one exact issue: reject a second local task
+        # holding the same identity even when the first link is still pending
+        # and has therefore written no remote owner marker yet. Identity
+        # comparison is canonical (provider + web repository + number), so a
+        # second configured server name for the same repository cannot claim
+        # the issue across the marker's absence window.
+        def ensure_issue_not_linked_elsewhere!(identity, exclude_id: nil)
+          target_key = canonical_issue_key(identity)
+          all_tasks_including_subtasks.each do |task|
+            next if exclude_id && task.id == exclude_id.to_s
+
+            existing = task.metadata["remote_issue"]
+            next unless existing.is_a?(Hash)
+            next unless canonical_issue_key(existing) == target_key
+
+            raise Ace::Git::ProviderIdentityMismatchError,
+              "Issue ##{canonical_value(identity, 'number')} on " \
+                "#{canonical_value(identity, 'server_name')} is already linked to task #{task.id}"
+          end
+        end
+
+        # Serialize link operations per canonical issue identity: ownership
+        # validation, the local write, and the remote marker creation must not
+        # interleave across processes, or two tasks can claim one issue —
+        # including through two configured names for the same repository.
+        def with_issue_identity_lock(identity)
+          return yield unless identity.is_a?(Hash)
+
+          key = if identity["task"]
+            "task-#{canonical_value(identity, 'task')}"
+          else
+            canonical_issue_key(identity)
+          end
+          held = (Thread.current[:ace_task_identity_locks] ||= [])
+          return yield if held.include?(key)
+
+          lock_path = File.join(Dir.tmpdir, "ace-task-issue-#{key}.lock")
+          File.open(lock_path, File::CREAT | File::RDWR) do |lock|
+            lock.flock(File::LOCK_EX)
+            held << key
+            begin
+              yield
+            ensure
+              held.delete(key)
+              lock.flock(File::LOCK_UN)
+            end
+          end
+        end
+
+        # Bulk issue sync must see linked subtasks too; TaskScanner#scan
+        # excludes subtask folders, which would hide deferred child replays.
+        # Descendants are traversed recursively (grandchildren included).
+        def all_tasks_including_subtasks
+          scanner = Molecules::TaskScanner.new(@root_dir)
+          loader = Molecules::TaskLoader.new
+          collect = lambda do |path, id, special_folder|
+            primary = loader.load(path, id: id, special_folder: special_folder)
+            descendants = scanner.scan_subtasks(path, parent_id: id).flat_map do |sub|
+              collect.call(sub.dir_path, sub.id, sub.special_folder)
+            end
+            primary ? [primary] + descendants : descendants
+          end
+          scanner.scan.flat_map { |sr| collect.call(sr.dir_path, sr.id, sr.special_folder) }
+        end
+
+        # Provider outcomes that conclusively prove a create POST never
+        # committed. Everything else (unknown outcome, unreachable reads)
+        # keeps the reconcile-create guard so replay reconciles instead of
+        # duplicating the comment.
+        DEFINITIVE_CREATE_OUTCOME_ERRORS = [
+          Ace::Git::ProviderAuthenticationError,
+          Ace::Git::ProviderObjectNotFoundError
+        ].freeze
 
         def sync_linked_issues_for(task, reason:, previous_task: nil)
-          issue_ids = [linked_issue_id(task), linked_issue_id(previous_task)].compact.uniq
-          return sync_result_for(task: task, issues: issue_ids, success: true, reason: reason) if issue_ids.empty?
+          identity = linked_issue(task)
+          return sync_result_for(task: task, issues: [], success: true, reason: reason) unless identity
 
-          adapter = Molecules::GithubIssueSyncAdapter.new
-          unless adapter.available?
-            mark_github_sync_pending(task)
-            @last_update_note = "GitHub sync skipped (gh unavailable); flagged for 'ace-task github-sync --pending'"
-            return sync_result_for(task: task, issues: issue_ids, success: true, reason: reason).merge(offline: true)
+          if task.metadata["issue_sync_operation"] == "clear"
+            @last_update_note = "Issue clear pending for task #{task.id}; replay with 'ace-task issue-sync --pending'"
+            return sync_result_for(task: task, issues: [identity], success: false,
+              reason: reason, error: "Pending clear must be replayed")
           end
-
-          adapter.sync_task(task: task, reason: reason, previous_task: previous_task)
-          clear_github_sync_pending(task)
-          sync_result_for(task: task, issues: issue_ids, success: true, reason: reason)
+          previous_id = task.metadata["issue_sync_previous_id"] || previous_task&.id
+          reconcile_only = task.metadata["issue_sync_operation"] == "reconcile-create"
+          reached_post = false
+          locked_identity = linked_issue(task)
+          issue_adapter.sync_task(
+            task: task, previous_task_id: previous_id,
+            before_create: lambda do
+              mark_issue_sync_pending(task)
+              reached_post = true
+              Ace::Support::Items::Molecules::FieldUpdater.update(
+                task.file_path, set: {"issue_sync_operation" => "reconcile-create"}
+              )
+            end
+          )
+          # The caller holds the locked identity's lock; a link changed to a
+          # different issue mid-sync would have mutated B without its lock.
+          if locked_identity && linked_issue(task) != locked_identity
+            raise Ace::Git::ProviderIdentityMismatchError,
+              "Task #{task.id} link changed during sync; retry the command"
+          end
+          clear_issue_sync_pending(task)
+          sync_result_for(task: task, issues: [identity], success: true, reason: reason)
+        rescue Ace::Git::ProviderUnknownOutcomeError => e
+          # Only an uncertain comment creation blocks a second POST; label or
+          # state updates are idempotent and need no create guard.
+          mark_issue_sync_pending(task)
+          if reached_post
+            Ace::Support::Items::Molecules::FieldUpdater.update(
+              task.file_path, set: {"issue_sync_operation" => "reconcile-create"}
+            )
+          end
+          @last_update_note = "Issue sync warning for task #{task&.id}: #{e.class}: #{e.message}; " \
+            "flagged for 'ace-task issue-sync --pending'"
+          sync_result_for(task: task, issues: [identity].compact, success: false,
+            reason: reason, error: "#{e.class}: #{e.message}")
         rescue StandardError => e
-          mark_github_sync_pending(task)
-          @last_update_note = "GitHub sync warning for task #{task&.id}: #{e.message}; flagged for 'ace-task github-sync --pending'"
-          sync_result_for(task: task, issues: issue_ids, success: false, reason: reason, error: e.message)
+          mark_issue_sync_pending(task)
+          # Only a definitive provider rejection of the create POST itself
+          # (auth failure, object-not-found) proves it did not commit; the
+          # guard then clears so replay may retry. Unknown outcomes and
+          # unreachable reconciliation reads keep the guard: the first POST
+          # may still commit and a second one would duplicate the comment.
+          if reached_post && !reconcile_only &&
+              DEFINITIVE_CREATE_OUTCOME_ERRORS.any? { |klass| e.is_a?(klass) }
+            Ace::Support::Items::Molecules::FieldUpdater.update(
+              task.file_path, set: {"issue_sync_operation" => nil}
+            )
+          end
+          @last_update_note = "Issue sync warning for task #{task&.id}: #{e.class}: #{e.message}; " \
+            "flagged for 'ace-task issue-sync --pending'"
+          sync_result_for(task: task, issues: [identity].compact, success: false,
+            reason: reason, error: "#{e.class}: #{e.message}", committed_create: reached_post)
         end
 
-        # Flag the task so the missed GitHub sync survives offline work and can be
-        # replayed with 'ace-task github-sync --pending'.
-        def mark_github_sync_pending(task)
+        def mark_issue_sync_pending(task)
           return unless task&.file_path && File.exist?(task.file_path)
 
           Ace::Support::Items::Molecules::FieldUpdater.update(
-            task.file_path, set: {"github_sync_pending" => true}
+            task.file_path, set: {"issue_sync_pending" => true}
           )
-        rescue StandardError
-          nil
         end
 
-        def clear_github_sync_pending(task)
+        def clear_issue_sync_pending(task)
           return unless task&.file_path && File.exist?(task.file_path)
 
           Ace::Support::Items::Molecules::FieldUpdater.update(
-            task.file_path, set: {"github_sync_pending" => nil}
+            task.file_path,
+            set: {"issue_sync_pending" => nil, "issue_sync_previous_id" => nil,
+                  "issue_sync_operation" => nil}
           )
-        rescue StandardError
-          nil
         end
 
-        def sync_result_for(task:, issues:, success:, reason:, error: nil)
+        def clear_issue_link(task)
+          # Lock order is issue-first everywhere (link, sync, clear) so
+          # concurrent clear and replay cannot deadlock on opposite orders.
+          locked_identity = linked_issue(task)
+          with_issue_identity_lock(locked_identity || {}) do
+            with_issue_identity_lock("task" => task.id) do
+              fresh = show(task.id) || task
+              # If the link changed while this clear waited (A cleared, B
+              # linked), reject the stale request so the new link's marker is
+              # only cleared under its own lock.
+              if locked_identity.is_a?(Hash) && linked_issue(fresh) != locked_identity
+                raise Ace::Git::ProviderIdentityMismatchError,
+                  "Task #{task.id} link changed during clear; retry the command"
+              end
+              clear_issue_link_locked(fresh)
+            end
+          end
+        end
+
+        def clear_issue_link_locked(task)
+          # Persist the clear intent (retaining the create guard) before any
+          # forge call: a stop after reconciliation mutated the remote must
+          # still replay as a clear, never silently restore tracking.
+          reconcile_first = task.metadata["issue_sync_operation"] == "reconcile-create" ||
+            task.metadata["issue_sync_reconcile_create"] == true
+          Ace::Support::Items::Molecules::FieldUpdater.update(task.file_path,
+            set: {"issue_sync_pending" => true, "issue_sync_operation" => "clear",
+                  "issue_sync_reconcile_create" => (true if reconcile_first)})
+          # A tracking comment may still be committing forge-side: reconcile
+          # comment ownership before the clear — clear must never change
+          # issue state as a side effect. Authoritative absence (the guarded
+          # create never committed) means there is no marker to reconcile,
+          # so the clear proceeds; any other uncertainty retains the intent
+          # for replay.
+          begin
+            issue_adapter.reconcile_comment(task: task) if reconcile_first
+          rescue Ace::Git::ProviderReconcileAbsenceError
+            nil
+          end
+          issue_adapter.clear_task(task: task, previous_task_id: task.metadata["issue_sync_previous_id"])
+          Ace::Support::Items::Molecules::FieldUpdater.update(task.file_path,
+            set: {"remote_issue" => nil, "issue_sync_pending" => nil,
+                  "issue_sync_operation" => nil, "issue_sync_previous_id" => nil,
+                  "issue_sync_reconcile_create" => nil})
+        end
+
+        def sync_or_clear_linked_issue(task, reason:)
+          return sync_linked_issues_for(task, reason: reason) unless task.metadata["issue_sync_operation"] == "clear"
+
+          identity = linked_issue(task)
+          clear_issue_link(task)
+          sync_result_for(task: task, issues: [identity], success: true, reason: reason)
+        rescue StandardError => e
+          sync_result_for(task: task, issues: [identity].compact, success: false,
+            reason: reason, error: "#{e.class}: #{e.message}")
+        end
+
+        def sync_result_for(task:, issues:, success:, reason:, error: nil, committed_create: false)
           {
             task_id: task&.id,
             issue_ids: issues,
             success: success,
             reason: reason,
-            error: error
+            error: error,
+            # True when the error surfaced after the create guard was armed:
+            # the tracking comment POST may have committed, so callers must
+            # retain the local identity as the cleanup record instead of
+            # rolling it back.
+            committed_create: committed_create
           }
         end
 
         def summarize_manual_sync_results(results, skipped:)
-          failures = results.reject { |result| result[:success] }.map do |result|
+          failures = results.reject { |result| result[:success] }
+          # A failed sync persists issue_sync_pending; classify it as pending
+          # (recoverable) rather than failed so replay counts stay truthful.
+          pending = failures.count do |result|
+            show(result[:task_id])&.metadata&.[]("issue_sync_pending") == true
+          end
+          failures_detail = failures.map do |result|
             {
               task_id: result[:task_id],
-              issue_ids: result[:issue_ids],
+              remote_issues: result[:issue_ids],
               error: result[:error]
             }
           end
 
-          pending = results.count { |result| result[:offline] }
-
           {
-            synced: results.length - failures.length - pending,
-            failed: failures.length,
+            synced: results.length - failures.length,
+            failed: failures.length - pending,
             pending: pending,
             skipped: skipped,
-            failures: failures
+            failures: failures_detail
           }
         end
       end

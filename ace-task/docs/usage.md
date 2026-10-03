@@ -29,19 +29,37 @@ All commands support these flags:
 
 ## Commands
 
-## Linked GitHub Issues (ACE-Linked Work)
+## Linked Issues
 
-For ACE-linked workflows, treat task metadata as the source of truth for issue lifecycle.
+Local tasks work without a forge configuration, binary, credentials, or network.
+When a task is linked, its frontmatter stores one exact named-server issue
+identity. Task status drives the linked issue's open or closed state.
 
-- Link issues in task frontmatter with machine-readable metadata (`github_issue`).
-- Keep issue lifecycle updates task-driven through ACE tooling and workflows.
-- PR closing keywords such as `Closes #123` remain optional GitHub-native guidance for manual or non-ACE-linked work.
+Create a linked task with `--issue NUMBER_OR_URL`. Select a named server with
+`--server NAME`, use `--default-server`, or let ACE match the configured Git
+remote. A URL must match exactly one configured server and cannot contradict
+an explicit selection. Existing links always replay against their stored
+server identity, even if the configured default changes.
 
 Example task frontmatter pattern:
 
 ```yaml
-github_issue: 276
+remote_issue:
+  server_name: forgejo-lab
+  provider: forgejo
+  repository_url: https://forge.example.com/owner/repo
+  number: 276
+  url: https://forge.example.com/owner/repo/issues/276
+issue_sync_pending: true
 ```
+
+`issue_sync_pending` appears when a linked change or clear has not completed.
+For a failed clear, `issue_sync_operation: clear` records the operation so
+`issue-sync --pending` resumes cleanup. When a reparent changed the task ID
+before synchronization, `issue_sync_previous_id` records the outgoing ID the
+remote marker still names; replay proves ownership against both IDs and clears
+the field after reconciliation. The exact `remote_issue` identity remains
+available for replay.
 
 ### ace-task create TITLE
 
@@ -61,7 +79,9 @@ budget, the command fails cleanly without leaving behind a partial task artifact
 | `--tags` | `-T` | Tags (comma-separated) |
 | `--status` | `-s` | Initial status: draft, pending, blocked, ... |
 | `--estimate` | `-e` | Effort estimate (e.g. TBD, 2h, 1d) |
-| `--github-issue` | | Linked GitHub issue number |
+| `--issue` | | Issue number or URL to link |
+| `--server` | | Named forge server for the issue |
+| `--default-server` | | Select the configured default forge server |
 | `--child-of` | | Parent task reference (creates subtask) |
 | `--in` | `-i` | Target folder (next, maybe) |
 | `--dry-run` | `-n` | Preview without writing |
@@ -74,7 +94,7 @@ ace-task create "Fix auth" --priority high --tags auth,security
 ace-task create "Setup DB" --child-of q7w
 ace-task create "Quick task" --in maybe
 ace-task create "Draft spec" --status draft --estimate TBD
-ace-task create "Track issue" --github-issue 276
+ace-task create "Track issue" --issue 276 --default-server
 ace-task create "Preview only" --dry-run
 ```
 
@@ -188,30 +208,44 @@ For E2E validation, path mode is the recommended contract because it verifies
 real plan artifact creation without depending on inline LLM output rendering.
 Use `--content` only when inline output is needed. If `--content` appears stalled for ~3 minutes, cancel and rerun path mode.
 
-### ace-task github-sync REF
+### ace-task issue-link REF
 
-Synchronize linked GitHub issues for one task or all linked tasks.
-
-Preconditions:
-
-- Task frontmatter includes `github_issue: <number>`.
-- GitHub authentication is configured for the current environment.
-
-| Option | Alias | Description |
-|--------|-------|-------------|
-| `--all` | `-a` | Sync all linked tasks |
+Link one existing task to an authoritative issue or clear its current link.
+Explicit linking checks that the issue is reachable and not owned by another
+ACE task before changing local metadata. Repeating the same link succeeds;
+replacing it requires a successful clear first. Clear removes ACE tracking
+content and label without changing the issue state. If cleanup fails, the link
+and pending flag remain for recovery.
 
 ```bash
-ace-task github-sync q7w
-ace-task github-sync --all
+ace-task issue-link q7w --issue 42 --server forgejo-lab
+# Linked 8pp.t.q7w to https://forge.example.com/owner/repo/issues/42
+ace-task issue-link q7w --clear
+# Cleared issue link for 8pp.t.q7w
 ```
 
+### ace-task issue-sync REF|--all|--pending
+
+Synchronize the stored exact issue identity. `--all` and `--pending` cannot
+combine with each other or a reference. Bulk sync continues independent tasks;
+any failure or unresolved pending result returns nonzero with per-task identity
+and error. An empty pending set succeeds with zero counts.
+
+| Option | Description |
+|--------|-------------|
+| `--all` | Sync every linked task |
+| `--pending` | Replay tasks with deferred synchronization |
+
 ```bash
-# Verify auth and task metadata before syncing
-gh auth status
-ace-task show q7w --content
-ace-task github-sync q7w
+ace-task issue-sync q7w
+# Issue sync: synced 1, failed 0, pending 0, skipped 0
+ace-task issue-sync --pending
+# Issue sync: synced 0, failed 0, pending 0, skipped 0
 ```
+
+If sync reports a changed server identity, restore the original server
+configuration or explicitly clear the link after remote cleanup succeeds.
+ACE never switches to the new default as a fallback.
 
 ### ace-task doctor
 

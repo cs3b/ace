@@ -4,6 +4,7 @@ require "json"
 require "uri"
 require_relative "cli_executor"
 require_relative "parsers"
+require_relative "issue_api"
 
 module Ace
   module Git
@@ -20,6 +21,9 @@ module Ace
       # `fj` failures are never hidden behind ad-hoc curl calls or silent
       # fallbacks.
       class Provider < Ace::Git::Providers::Base
+        # Fill color for repo labels created on demand by issue linking.
+        TRACKED_LABEL_COLOR = "0e8a16"
+
         class << self
           def display_name
             "Forgejo"
@@ -107,6 +111,85 @@ module Ace
             url: issue_url(parsed[:number]),
             labels: nil
           )
+        end
+
+        def issue_tracking(number:)
+          data = issue_api.issue(request_number!(number))
+          unless data.is_a?(Hash) && data["number"].to_i == number.to_i &&
+              data["html_url"].to_s == issue_url(number.to_i)
+            raise Ace::Git::ProviderIdentityMismatchError, "Issue ##{number} is not in #{server.url}"
+          end
+          evidence = Ace::Git::ProviderIssue.new(
+            server_name: server.name, number: data["number"], title: data["title"],
+            state: normalize_state(data["state"]),
+            author: data.dig("user", "login"), url: data["html_url"],
+            labels: Array(data["labels"]).map { |label| label["name"] }
+          )
+          {issue: evidence,
+           comments: Array(issue_api.comments(number)).map { |c| {id: c.fetch("id"), body: c["body"].to_s} },
+           labels: evidence.labels}
+        end
+
+        # Unrecognized or missing state is malformed evidence: mapping it to
+        # :closed would let sync close an issue without valid state proof.
+        def normalize_state(value)
+          case value.to_s
+          when "open" then :open
+          when "closed" then :closed
+          else raise Ace::Git::ProviderMalformedOutputError, "Unknown issue state #{value.inspect}"
+          end
+        end
+
+        def create_issue_comment(number:, body:)
+          issue_api.create_comment(request_number!(number), body)
+        end
+
+        def update_issue_comment(number:, comment_id:, body:)
+          assert_issue_comment_owned!(number, comment_id)
+          issue_api.update_comment(Integer(comment_id), body)
+        end
+
+        def delete_issue_comment(number:, comment_id:)
+          assert_issue_comment_owned!(number, comment_id)
+          issue_api.delete_comment(Integer(comment_id))
+        end
+
+        def add_issue_label(number:, label:)
+          issue_api.add_label(request_number!(number), ensure_repo_label_id(label))
+        end
+
+        def remove_issue_label(number:, label:)
+          match = Array(issue_api.repository_labels(wanted: label)).find { |entry| entry["name"] == label }
+          return unless match
+
+          issue_api.remove_label(request_number!(number), match.fetch("id"))
+        end
+
+        # Fresh repositories lack the tracking label; creating it on demand
+        # keeps issue linking from committing a tracking comment it could
+        # never label. A concurrent creator surfaces as an uncertain mutation
+        # outcome, which only means re-list and attach what appeared.
+        def ensure_repo_label_id(label)
+          match = Array(issue_api.repository_labels(wanted: label)).find { |entry| entry["name"] == label }
+          return match["id"] if match && match["id"].to_i.positive?
+
+          begin
+            issue_api.create_repo_label(name: label, color: TRACKED_LABEL_COLOR)
+          rescue Ace::Git::ProviderUnknownOutcomeError
+            nil
+          end
+          match = Array(issue_api.repository_labels(wanted: label)).find { |entry| entry["name"] == label }
+          unless match && match["id"].to_i.positive?
+            raise Ace::Git::ProviderObjectNotFoundError,
+              "Forgejo label #{label.inspect} could not be created or found on #{server.url}"
+          end
+          match["id"]
+        end
+
+        def set_issue_state(number:, state:)
+          raise ArgumentError, "Invalid issue state #{state.inspect}" unless %i[open closed].include?(state)
+
+          issue_api.set_state(request_number!(number), state)
         end
 
         # @return [Array<ProviderCheck>] normalized check evidence for a ref
@@ -557,6 +640,17 @@ module Ace
           )
         end
 
+        def assert_issue_comment_owned!(number, comment_id)
+          return if issue_tracking(number: number)[:comments].any? { |comment| comment[:id].to_i == comment_id.to_i }
+
+          raise Ace::Git::ProviderIdentityMismatchError,
+            "Comment #{comment_id} is not on selected issue ##{number} in #{server.url}"
+        end
+
+        def issue_api
+          @issue_api ||= IssueApi.new(server: server, timeout: timeout, runner: runner)
+        end
+
         # Validated selected repository identity. Built once; malformed
         # selections fail as configuration errors before any subprocess.
         def repository_target
@@ -811,8 +905,9 @@ module Ace
         end
 
         def issue_url(number)
-          base = repository_target.url.to_s.chomp("/")
-          "#{base}/issues/#{number}"
+          # Identity evidence comes from the web endpoint, not the clone URL
+          # (which may be SSH-style and is not a parseable web URL).
+          "#{Ace::Git::Atoms::ServerUrl.web_base(server.url)}/issues/#{number}"
         end
       end
     end
