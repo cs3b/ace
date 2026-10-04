@@ -130,3 +130,15 @@ All ten prepared gems were published by the Captain and confirmed present by the
 Specification-first gaps, not ready implementation dispatch: define the cross-user receiving executor ownership and evidence-sink authority (qjx provides the Unix client, not a reusable receiver); define native consumption observation provenance before automatic signed settlement. These remain explicit gad.8/gad.b integration obligations until fresh ACE mechanism tasks are reviewed. Do not reopen completed qjx/y23 or infer consumption from disappearance/time.
 
 Next join: y24 → vs2 → qjz; together with 1w5 → qk0 → qkb.1 and atomic qkb delivery → R2 (ig3) → R3 (ig4) → qkc/gad.2. Pilot ig5 is not a gate. No single task blocks all parallel source work.
+
+## Wave 4 dispatch and explicit remaining mechanisms — 2026-10-04
+
+- [ ] 1w5: dispatched to gpt-6.1-sol on codex/wave4-recovery.
+- [ ] y24: dispatched to gpt-6.1-sol on codex/wave4-hermes.
+- [ ] qkb.0: dispatched to gpt-6.1-sol after postpublication verification, on its own new delivery worktree. Recovery integrates before overlapping delivery changes.
+- [ ] ACE 8x3.t.xz9: real draft for authenticated cross-user service receiving and protected receipt authority. Complete technical readiness review before implementation; gad.8/.b install and consume it.
+- [ ] ACE 8x3.t.xza: real draft for native consumption/non-consumption observation provenance. Complete provider evidence review before implementation; gad.b signs and reconciles, gad.8 protects keys.
+
+These two drafts replace hidden mechanism work in the domain blocker notes. They do not reopen completed qjx/y23. Current blockers/questions are written in their specs and usage scenarios.
+
+Postpublication TS-MONO-001 run 8x3xqd0: normal and full-index installation exit 0, 49/49 exact versions (all ten wave gems), six consumer installs exit 0; classifier SAFE. Final acceptance FAIL and wrapper PARTIAL 3/4: stale consumer requirement predicate insists on ~>0.2 for consumers whose reviewed source/published requirements are ~>0.3/~>0.4. Preserve this failed acceptance; repair source-aware expected edges and rerun before claiming the final proof green.
