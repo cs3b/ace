@@ -287,6 +287,28 @@ module Forgejo
 
     # ---- Merge classification ----
 
+    def test_merge_transient_mergeable_check_is_retryable_unreachable
+      runner = lambda do |args:, **|
+        path = args[2].to_s
+        case path
+        when "https://forge.example.com/api/v1/version"
+          ok_raw(200, {"version" => "8.0.3"}.to_json)
+        when "#{API}/pulls/25"
+          ok(pr_payload(25, state: "open", merged: false, draft: false))
+        when "#{API}/pulls/25/merge"
+          {success: false, status: 405, stdout: {message: "Please try again later"}.to_json,
+           stderr: "", exit_code: 1}
+        else
+          flunk("Unexpected #{args[1]} #{path}")
+        end
+      end
+      error = assert_raises(Ace::Git::ProviderUnreachableError) do
+        build_provider(runner).merge_pull_request(number: 25, expected_head: SHA, method: :squash)
+      end
+      assert_match(/still computing/, error.message)
+      assert_match(/may be repeated/, error.message)
+    end
+
     def test_merge_disabled_method_is_capability_refusal
       runner = lambda do |args:, **|
         path = args[2].to_s

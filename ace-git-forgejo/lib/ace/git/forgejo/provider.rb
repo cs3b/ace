@@ -618,6 +618,14 @@ module Ace
             end
             reconcile_refused_merge(number, expected_head, outcome)
           when 405
+            if outcome.message.to_s.match?(/try again later/i)
+              # The server's mergeable state was still computing; the merge
+              # was not applied. The caller may retry the same command.
+              raise Ace::Git::ProviderUnreachableError,
+                "Forgejo mergeable state for PR ##{number} is still computing " \
+                "(HTTP 405: #{outcome.message}); the merge was not applied and the " \
+                "command may be repeated"
+            end
             raise Ace::Git::ProviderUnsupportedCapabilityError,
               "Forgejo refused to merge PR ##{number} as #{method}: #{outcome.message || "merge style unavailable"}"
           when 404

@@ -18,7 +18,9 @@
 - **Verdict**: PASS only if `merge-squash.json`, `merge-merge.json`, and
   `merge-rebase.json` all show exit 0, `state: "merged"`, a 40-character
   `merge_commit`, and `head` equal to the branch SHA recorded for each
-  PR.
+  PR. A recorded transient refusal (`unreachable`, "try again later")
+  before the successful attempt is acceptable runner evidence, not a
+  failure: the refusal must show a nonzero exit and no receipt.
 
 ### Goal 4 - Already-merged result is reusable
 

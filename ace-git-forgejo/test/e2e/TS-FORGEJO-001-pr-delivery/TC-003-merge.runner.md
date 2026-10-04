@@ -46,8 +46,16 @@ Preparation (real pushes, keep evidence):
    squash --server e2e-forgejo --format json` → `merge-squash.json`.
    Expected: exit 0, `operation: merge`, `state: merged`, non-null
    `merge_commit`, head = `$SQUASH`.
-8. Same for `$MERGE_PR` with `--method merge` → `merge-merge.json`.
-9. Same for `$REBASE_PR` with `--method rebase` → `merge-rebase.json`.
+   Note: Forgejo computes mergeable state asynchronously; a merge may be
+   refused with a transient `unreachable` error whose message says
+   "try again later". That is a definitive no-mutation refusal — record
+   it as `merge-squash-transient.json`, wait ~10 seconds, and repeat the
+   identical command until it succeeds (record the successful attempt as
+   `merge-squash.json`).
+8. Same for `$MERGE_PR` with `--method merge` → `merge-merge.json`
+   (same transient-retry rule if needed).
+9. Same for `$REBASE_PR` with `--method rebase` → `merge-rebase.json`
+   (same transient-retry rule if needed).
 
 ### Goal 4 — An already-merged result is reusable with authoritative evidence
 
