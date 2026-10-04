@@ -11,6 +11,7 @@ module Ace
           @identity_dir = Dir.mktmpdir("herdr-runtime-tabs")
           @tabs = []
           @panes = []
+          @pane_seq = 0
           @agent = false
           @processes = ["busy"]
           @executor = HerdrTestHelper::FakeExecutor.new(outcomes: {
@@ -24,7 +25,9 @@ module Ace
               result(result: {tab_id: id, root_pane_id: "w1:p0"})
             },
             pane_split: ->(_args) {
-              id = "w1:p#{@panes.length}"
+              # Monotonic ids: a removed (dead) pane's id is never recycled,
+              # so replacement panes stay distinct in identity assertions.
+              id = "w1:p#{@pane_seq += 1}"
               @panes << {"pane_id" => id, "tab_id" => @tabs.last["tab_id"], "workspace_id" => "w1"}
               result(result: {pane_id: id})
             },
@@ -359,16 +362,18 @@ module Ace
           tab = @adapter.list_windows.find { |row| row[:name] == "foreign" }[:window]
           first = RuntimeAdapter.new(executor: @executor, env: env, sleeper: FastSleeper.new,
             identity_dir: @identity_dir)
-          first.prepare_pane(window: tab)
+          prepared = first.prepare_pane(window: tab)
+          assert_equal "w1:p1", prepared
 
           # The prepared pane dies; a fresh adapter splits a replacement. The
           # stored record must stay pointer-only — never invented root/preset
           # ownership (asserted before any ensure_window adoption).
-          @panes.reject! { |pane| pane["pane_id"] == "w1:p1" }
+          @panes.reject! { |pane| pane["pane_id"] == prepared }
           second = RuntimeAdapter.new(executor: @executor, env: env, sleeper: FastSleeper.new,
             identity_dir: @identity_dir)
           replacement = second.prepare_pane(window: tab)
-          assert_equal 2, @executor.calls_of(:pane_split).size
+          assert_equal "w1:p2", replacement
+          refute_equal prepared, replacement
           path = Dir[File.join(@identity_dir, "*.json")].first
           parsed = JSON.parse(File.read(path))
           assert_equal %w[id prepared_pane], parsed.keys.sort

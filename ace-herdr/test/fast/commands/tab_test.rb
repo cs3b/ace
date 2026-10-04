@@ -113,7 +113,8 @@ module Ace
               "HERDR_FAKE_JOURNAL" => journal
             }
             exe = File.expand_path("../../../exe/ace-herdr", __dir__)
-            stdout, stderr, status = Open3.capture3(env, Gem.ruby, exe, "tab", "agent", "--workspace", "w1")
+            stdout, stderr, status = Open3.capture3(env, Gem.ruby, exe, "tab", "agent", "--workspace", "w1",
+              chdir: work_dir)
 
             # Standard CLI failure: nonzero, actionable message on stderr, no
             # success payload, and no ordinary-mode stack trace.

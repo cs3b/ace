@@ -239,7 +239,7 @@ Creation is deterministic and ordered: the workspace is created first, then tabs
 
 Output: `{"workspace":"w2","tabs":[{"tab":"w2:t1","panes":["w2:p1","w2:p2"],"commands":1,"agents":["development-agent"]}]}`; the tab command reports the single tab object. `--cwd` overrides the resolved root/tab cwd (CLI > tab > root > pane inheritance).
 
-Unknown preset: CLI error listing the available names (ace-tmux `--list-presets` parity), for example `Error: Unknown workspace preset 'nope' (available: development)`. A preset whose native tab is created but then fails a materialization step (split, command, or agent start) is likewise a standard CLI error: the process exits non-zero with the underlying failure on stderr, no success payload on stdout, and no stack trace in ordinary mode -- and this entrypoint never closes tabs (rollback of the failed tab is the runtime adapter's exact-id policy).
+Unknown preset: CLI error listing the available names (ace-tmux `--list-presets` parity), for example `Error: Unknown workspace preset 'nope' (available: development)`. A preset whose native tab is created but then fails a materialization step (split, command, or agent start) is likewise a standard CLI error for both `ace-herdr tab` and `ace-herdr workspace`: the process exits non-zero with the underlying failure on stderr, no success payload on stdout, and no stack trace in ordinary mode -- and these entrypoints never close tabs (rollback of the failed tab is the runtime adapter's exact-id policy).
 
 ## `ace-herdr deliver`
 
@@ -357,7 +357,7 @@ Commands raise a CLI error (non-zero exit) carrying herdr's machine code where o
 - herdr binary or socket unavailable: explicit CLI error, no partial output
 - Blocked agent: `agent_blocked: ...` (terminal -- never silently dropped); stalled prompt: `agent_prompt_stalled: ...` (transient)
 - Output wait timeout: `timeout: ...`
-- Failed tab materialization: CLI error carrying the underlying failure (`ace-herdr tab`); never a false success or a stack trace
+- Failed tab materialization: CLI error carrying the underlying failure (`ace-herdr tab`, `ace-herdr workspace`); never a false success or a stack trace
 - Unknown preset: usage error listing the available preset names
 - Invalid send shapes: usage error **before any transport call** (nothing is sent)
 
