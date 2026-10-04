@@ -79,9 +79,14 @@ module Ace
           declaration = value["effect"]
           return nil unless declaration.is_a?(Hash) && Array(declaration["argv"]).any?
 
-          if !identity.root? && requester_uid != identity.euid
-            raise Lifecycle::PermissionError,
+          # The permission check happens INSIDE the recorded attempt (an
+          # escalation outcome, never an escape after the answer was
+          # relayed — review 8x333sqr; the message keeps the drop
+          # contract explicit).
+          permission_error = if !identity.root? && requester_uid != identity.euid
+            Lifecycle::PermissionError.new(
               "effect callback requires the requester's identity and root authority to drop to it"
+            )
           end
 
           match_ok = declaration["match"].nil? || fullmatch?(declaration["match"], answer)
@@ -95,6 +100,8 @@ module Ace
           if match_ok
             start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
             begin
+              raise permission_error if permission_error
+
               status, timed_out = execute(
                 declaration, answer, requester_uid, requester_gid, spawner,
                 group_dropper: group_dropper

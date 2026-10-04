@@ -135,7 +135,7 @@ class LifecycleStoreTest < AceHitlTestCase
     with_lifecycle_root do |root|
       binding = LifecycleFixtures::TestBinding.new(
         on_active: ->(work:, attempt:) {
-          raise Ace::Hitl::Lifecycle::BindingError, "HITL Attempt is no longer active"
+          raise Ace::Hitl::Lifecycle::EndedAttemptError, "HITL Attempt is no longer active"
         }
       )
       store = make_store(root: root, identity: unprivileged_identity, binding: binding)
@@ -155,7 +155,7 @@ class LifecycleStoreTest < AceHitlTestCase
     with_lifecycle_root do |root|
       binding = LifecycleFixtures::TestBinding.new(
         on_active: ->(work:, attempt:) {
-          raise Ace::Hitl::Lifecycle::BindingError,
+          raise Ace::Hitl::Lifecycle::EndedAttemptError,
             "HITL request is not bound to the exact active Work Attempt"
         }
       )
@@ -239,7 +239,7 @@ class LifecycleStoreTest < AceHitlTestCase
     with_lifecycle_root do |root|
       binding = LifecycleFixtures::TestBinding.new(
         on_active: ->(work:, attempt:) {
-          raise Ace::Hitl::Lifecycle::BindingError, "HITL Attempt is no longer active"
+          raise Ace::Hitl::Lifecycle::EndedAttemptError, "HITL Attempt is no longer active"
         }
       )
       store = make_store(root: root, identity: unprivileged_identity, binding: binding)

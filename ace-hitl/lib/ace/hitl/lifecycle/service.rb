@@ -26,6 +26,10 @@ module Ace
         # An idle connection holds a thread; bounded idleness keeps a
         # wedged peer from pinning the service (review 8x327buo).
         DEFAULT_IDLE_SECONDS = 120.0
+        # Bound total concurrency: each connection is a thread (and may
+        # hold one consume wait), so the cap bounds service load
+        # (review 8x333sqv).
+        MAX_CONNECTIONS = 64
 
         attr_reader :socket_path
 
@@ -41,6 +45,9 @@ module Ace
           @vault = vault || OtpVault::MemoryVault.new
           @logger = logger
           @idle_seconds = idle_seconds
+          @max_connections = MAX_CONNECTIONS
+          @connections = 0
+          @connections_mutex = Mutex.new
           @stopping = false
           @server = nil
         end
@@ -61,7 +68,28 @@ module Ace
             next unless ready
 
             connection = @server.accept
-            Thread.new(connection) { |socket| serve_connection(socket) }
+            slot = @connections_mutex.synchronize do
+              break nil if @connections >= @max_connections
+
+              @connections += 1
+            end
+            if slot.nil?
+              begin
+                connection.write(Protocol.encode_error(
+                  TransportError.new("the HITL boundary is at its connection limit; retry shortly")))
+                connection.close
+              rescue SystemCallError, IOError
+                nil
+              end
+              next
+            end
+            Thread.new(connection) do |socket|
+              begin
+                serve_connection(socket)
+              ensure
+                @connections_mutex.synchronize { @connections -= 1 }
+              end
+            end
           end
         ensure
           shutdown!
@@ -95,10 +123,14 @@ module Ace
         private
 
         def prepare!
-          verify_socket_directory!
-          refuse_live_service!
-          FileUtils.rm_f(@socket_path)
-          @server = UNIXServer.open(@socket_path)
+          begin
+            verify_socket_directory!
+            refuse_live_service!
+            FileUtils.rm_f(@socket_path)
+            @server = UNIXServer.open(@socket_path)
+          rescue SystemCallError, IOError => e
+            raise TransportError, "the HITL boundary endpoint is not usable (#{e.class}: #{e.message})"
+          end
           File.chmod(DEFAULT_SOCKET_MODE, @socket_path)
           begin
             File.chown(nil, Etc.getgrnam(@group).gid, @socket_path)
@@ -107,7 +139,11 @@ module Ace
             # owner-only socket; the peer-credential gate still applies.
             nil
           end
-          root_store.ensure_layout!
+          begin
+            root_store.ensure_layout!
+          rescue SystemCallError => e
+            raise TransportError, "the HITL store layout is not usable (#{e.class}: #{e.message})"
+          end
           log("serving #{@socket_path}")
         end
 

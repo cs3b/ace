@@ -35,6 +35,8 @@ class MultiUidBoundaryTest < AceHitlTestCase
     store_root = File.join(scratch, "store")
     socket_dir = File.join(scratch, "boundary")
     socket_path = File.join(socket_dir, "hitl.sock")
+    FileUtils.mkdir_p(store_root)
+    FileUtils.chown(service_uid, common_gid, store_root)
     FileUtils.mkdir_p(socket_dir)
     FileUtils.chown(service_uid, common_gid, socket_dir)
     FileUtils.chmod(0o750, socket_dir)
@@ -141,7 +143,14 @@ class MultiUidBoundaryTest < AceHitlTestCase
     assert_equal service_uid, store_stat.uid, "requests/ is service-owned"
     assert_equal 0o700, store_stat.mode & 0o777
   ensure
-    service_pid && (Process.kill("TERM", service_pid) rescue nil) && (Process.wait(service_pid) rescue nil)
+    if service_pid
+      begin
+        Process.kill("TERM", service_pid)
+        Process.wait(service_pid)
+      rescue StandardError
+        nil
+      end
+    end
     FileUtils.remove_entry(scratch) if scratch && File.exist?(scratch)
   end
 
@@ -190,7 +199,6 @@ class MultiUidBoundaryTest < AceHitlTestCase
         exit! 1
       end
     end
-    Process.detach(pid) if pid
     raise "service child failed to start" unless pid
     pid
   end

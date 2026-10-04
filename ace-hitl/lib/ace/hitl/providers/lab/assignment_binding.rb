@@ -62,9 +62,15 @@ module Ace
             message = error.message.to_s
             case error.class.name
             when /NotFound/
-              Lifecycle::BindingError.new("HITL attempt is unknown: #{message}")
+              # An unknown attempt id is a verifiably dead binding.
+              Lifecycle::EndedAttemptError.new("HITL attempt is unknown: #{message}")
+            when /ReceiptRejected/
+              Lifecycle::EndedAttemptError.new(message)
             when /UnauthorizedIdentity/
-              Lifecycle::BindingError.new("HITL requester does not own the attempt: #{message}")
+              # A foreign actor on the record means the attempt moved on.
+              Lifecycle::EndedAttemptError.new("HITL requester does not own the attempt: #{message}")
+            when /InvalidState/
+              Lifecycle::EndedAttemptError.new(message)
             else
               Lifecycle::BindingError.new(message)
             end

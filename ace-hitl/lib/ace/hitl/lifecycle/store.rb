@@ -788,19 +788,10 @@ module Ace
           ) do
             yield
           end
-        rescue BindingError => e
-          raise unless ended_authority_error?(e)
-
+        rescue EndedAttemptError
           update_public(value, "cancelled")
           remove_request(value, keep_public: true)
           raise
-        end
-
-        # The ended-vs-unavailable line: the binding implementations own
-        # these message surfaces (AssignmentBinding maps the assign
-        # authority; DaemonBinding maps the labd projection).
-        def ended_authority_error?(error)
-          /no longer active|not bound to the exact|does not own|unknown:|active managed attempt|not found|does not match/i.match?(error.message)
         end
 
         def public_state(request_id, value)

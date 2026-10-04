@@ -69,8 +69,11 @@ module Ace
               hops += 1
               raise Lifecycle::Error, "trusted HITL authorization path has too many symlinks: #{path}" if hops > MAX_SYMLINK_HOPS
 
-              current = File.readlink(current)
-              current = File.expand_path(current, File.dirname(path)) if current.relative?
+              # A relative link target resolves against the DIRECTORY
+              # CONTAINING THE LINK, never the original path's directory
+              # (review 8x333sqw).
+              target = File.readlink(current)
+              current = File.expand_path(target, File.dirname(current))
               next
             end
             verify_owned!(stat, "trusted HITL authorization path component", current)

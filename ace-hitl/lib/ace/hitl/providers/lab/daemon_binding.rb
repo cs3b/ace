@@ -45,10 +45,10 @@ module Ace
 
             _work_value, record = query(work, attempt)
             unless record["work"] == work && record["id"] == attempt
-              raise Lifecycle::BindingError, "HITL Attempt cannot be verified against its Work"
+              raise Lifecycle::EndedAttemptError, "HITL Attempt cannot be verified against its Work"
             end
             unless LIVE_ATTEMPT_STATES.include?(record["state"].to_s)
-              raise Lifecycle::BindingError, "HITL Attempt is no longer active"
+              raise Lifecycle::EndedAttemptError, "HITL Attempt is no longer active"
             end
             nil
           end

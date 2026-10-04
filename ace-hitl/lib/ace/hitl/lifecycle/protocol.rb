@@ -71,12 +71,15 @@ module Ace
         def error_class(name)
           known = {
             "BindingError" => Lifecycle::BindingError,
+            "EndedAttemptError" => Lifecycle::EndedAttemptError,
             "PermissionError" => Lifecycle::PermissionError,
             "StateError" => Lifecycle::StateError,
             "AnswerError" => Lifecycle::AnswerError,
             "TransportError" => Lifecycle::TransportError,
             "FrameError" => FrameError,
-            "MissError" => OtpVault::MissError
+            "MissError" => OtpVault::MissError,
+            "ExpiredError" => OtpVault::ExpiredError,
+            "DeclarationError" => Effects::DeclarationError
           }
           known.fetch(name, Lifecycle::TransportError)
         end

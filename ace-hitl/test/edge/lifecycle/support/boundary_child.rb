@@ -34,7 +34,16 @@ service_uid = Integer(ENV.fetch("ACE_HITL_SERVICE_UID"))
 op = ARGV[0]
 client = Ace::Hitl::Lifecycle::Client.new(socket_path: socket_path, service_uid: service_uid)
 
-result =
+# Classified denials are REPORTED outcomes, not crashes: the envelope
+# carries the error class and message (review 8x333sqq).
+begin
+  result = run_op(client, op)
+  puts JSON.generate({ok: true, op: op, result: result})
+rescue Ace::Hitl::Lifecycle::Error => e
+  puts JSON.generate({ok: false, op: op, error: e.message, error_class: e.class.name})
+end
+
+def run_op(client, op)
   case op
   when "create"
     client.create(id: ARGV[1], assignment: ARGV[2], attempt: ARGV[3], kind: "decision",
@@ -78,4 +87,4 @@ result =
   else
     raise "unknown child op: #{op}"
   end
-puts JSON.generate({ok: true, op: op, result: result})
+end

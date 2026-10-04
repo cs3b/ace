@@ -39,21 +39,10 @@ module Ace
 
         def initialize(manager: nil, store: nil, binding: nil)
           @manager = manager
-          @store = store
+          # The boundary dependency: an injected store (unit wiring) or
+          # the authenticated boundary client (review 8x333sqz).
+          @boundary = store
           @binding = binding
-        end
-
-        # The lifecycle store configured for the lab deployment: native
-        # generic core + labd-backed binding policy (spec 8wm.t.y21 §1).
-        # The operator/broker CLI surface builds its store here, inside
-        # the provider seam.
-        def self.lifecycle_store(store: nil, binding: nil)
-          return store if store
-
-          Lifecycle::Store.new(
-            root: ENV.fetch(STORE_ROOT_ENV, DEFAULT_STORE_ROOT),
-            binding: binding || DaemonBinding.new
-          )
         end
 
         # The managed binding authority (spec 8wq.t.34i): assignment
@@ -164,7 +153,7 @@ module Ace
         end
 
         def boundary
-          @store || self.class.boundary_client
+          @boundary || self.class.boundary_client
         end
 
         def build_manager

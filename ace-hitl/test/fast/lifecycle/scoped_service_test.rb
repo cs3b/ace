@@ -248,7 +248,7 @@ class ScopedServiceTest < AceHitlTestCase
   def test_ended_attempt_cancels_the_request_through_the_boundary
     failing = LifecycleFixtures::TestBinding.new(
       on_validate: ->(**_kwargs) { nil },
-      on_active: ->(**_kwargs) { raise Ace::Hitl::Lifecycle::BindingError, "HITL Attempt is no longer active" }
+      on_active: ->(**_kwargs) { raise Ace::Hitl::Lifecycle::EndedAttemptError, "HITL Attempt is no longer active" }
     )
     service = Ace::Hitl::Lifecycle::Service.new(
       root: File.join(@scratch, "store2"), binding: failing, policy: @policy,

@@ -11,6 +11,11 @@ module Ace
       # binding authority is unreachable. Never a silent pass.
       class BindingError < Error; end
 
+      # The bound attempt has verifiably ENDED (terminal, replaced, or
+      # reassigned): the request is cancelled. Distinct from an
+      # unreachable authority, which stays retryable (review 8x333squ).
+      class EndedAttemptError < BindingError; end
+
       # The operation requires an identity the caller does not have
       # (transport-only boundary operations, foreign-requester answers).
       class PermissionError < Error; end

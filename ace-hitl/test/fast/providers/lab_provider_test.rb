@@ -141,18 +141,6 @@ class LabProviderTest < AceHitlTestCase
     assert_match(/ace-hitl wait command/, error.message)
   end
 
-  def test_lifecycle_store_factory_builds_a_store_with_the_labd_binding
-    with_env("ACE_HITL_STORE_ROOT" => "/tmp/factory-root") do
-      store = Ace::Hitl::Providers::Lab.lifecycle_store
-      assert_instance_of Ace::Hitl::Lifecycle::Store, store
-      assert_instance_of Ace::Hitl::Providers::Lab::DaemonBinding, store.binding
-      assert_equal "/tmp/factory-root", store.root.to_s
-    end
-
-    sentinel = Object.new
-    assert_same sentinel, Ace::Hitl::Providers::Lab.lifecycle_store(store: sentinel)
-  end
-
   def test_assignment_binding_factory_wraps_the_coordinator_authority
     binding = Ace::Hitl::Providers::Lab.assignment_binding(repo_root: "/tmp/nowhere")
     assert_instance_of Ace::Hitl::Providers::Lab::AssignmentBinding, binding
