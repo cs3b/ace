@@ -880,11 +880,12 @@ module Ace
 
           # Explicit runtime selection: ACE_RUNTIME env, then the
           # ace-runtime config namespace — the same precedence every
-          # consumer uses (k86.3).
+          # consumer uses (k86.3). The value `auto` means "detect", never
+          # a runtime name, so it normalizes to unset.
           def explicit_runtime_name
             explicit = ENV["ACE_RUNTIME"].to_s.strip
             explicit = Ace::Runtime.config["runtime"].to_s.strip if explicit.empty?
-            explicit.empty? ? nil : explicit
+            explicit.empty? || explicit == "auto" ? nil : explicit
           end
 
           # Check if terminal integration is enabled in config
