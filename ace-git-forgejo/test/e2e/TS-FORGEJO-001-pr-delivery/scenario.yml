@@ -50,5 +50,14 @@ setup:
   - run: "test -s /tmp/ace-e2e-fork-token || (docker exec -u 1000 ace-e2e-forgejo forgejo admin user generate-access-token --username e2e-fork --token-name ace-e2e | tee /tmp/ace-e2e-fork-token-raw; grep -oE '[a-f0-9]{40}' /tmp/ace-e2e-fork-token-raw | head -1 > /tmp/ace-e2e-fork-token; test -s /tmp/ace-e2e-fork-token)"
   - run: "TOKEN=$(cat /tmp/ace-e2e-lab-token); curl -sf -X POST -H \"Authorization: token $TOKEN\" -H 'Content-Type: application/json' -d '{\"name\":\"base\",\"auto_init\":true,\"default_branch\":\"main\",\"private\":false}' ${FORGEJO_URL}/api/v1/user/repos > /dev/null && echo 'base repo created'"
   - run: "FORK_TOKEN=$(cat /tmp/ace-e2e-fork-token); curl -sf -X POST -H \"Authorization: token $FORK_TOKEN\" -H 'Content-Type: application/json' -d '{}' ${FORGEJO_URL}/api/v1/repos/${FORGEJO_BASE_REPO}/forks | python3 -c 'import json,sys; d=json.load(sys.stdin); assert d[\"full_name\"]==\"e2e-fork/base\", d; print(d[\"full_name\"])'"
-  - run: "mkdir -p .ace/git \"${XDG_DATA_HOME:-$HOME/.local/share}/forgejo-cli\" && printf 'servers:\\n  - name: e2e-forgejo\\n    provider: forgejo\\n    url: %s/%s\\n    default: true\\n' \"${FORGEJO_URL}\" \"${FORGEJO_BASE_REPO}\" > .ace/git/config.yml && printf '{\"hosts\": {\"%s\": {\"token\": \"%s\"}}}' \"${FORGEJO_HOST_KEY}\" \"$(cat /tmp/ace-e2e-lab-token)\" > \"${XDG_DATA_HOME:-$HOME/.local/share}/forgejo-cli/keys.json\" && echo 'server and keys configured'"
+  - write-file:
+      path: .ace/git/config.yml
+      content: |
+        git:
+          servers:
+            - name: e2e-forgejo
+              provider: forgejo
+              url: http://127.0.0.1:24417/e2e-lab/base
+              default: true
+  - run: "mkdir -p \"${XDG_DATA_HOME:-$HOME/.local/share}/forgejo-cli\" && printf '{\"hosts\": {\"%s\": {\"token\": \"%s\"}}}' \"${FORGEJO_HOST_KEY}\" \"$(cat /tmp/ace-e2e-lab-token)\" > \"${XDG_DATA_HOME:-$HOME/.local/share}/forgejo-cli/keys.json\" && echo 'server and keys configured'"
   - run: "git clone http://e2e-lab:$(cat /tmp/ace-e2e-lab-token)@127.0.0.1:${FORGEJO_PORT}/${FORGEJO_BASE_REPO}.git work-base && cd work-base && git config user.email e2e@ace.invalid && git config user.name 'E2E Lab' && printf 'one\\n' > feature.txt && git checkout -b feature/canonical && git add feature.txt && git commit -m 'canonical feature work' && git push -u origin feature/canonical && git checkout main && printf 'two\\n' > fork-only.txt && git checkout -b feature/forked && git add fork-only.txt && git commit -m 'forked feature work' && git push -u http://e2e-fork:$(cat /tmp/ace-e2e-fork-token)@127.0.0.1:${FORGEJO_PORT}/${FORGEJO_FORK_REPO}.git feature/forked && echo 'branches pushed'"
