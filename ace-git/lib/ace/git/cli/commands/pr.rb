@@ -13,7 +13,9 @@ module Ace
         # (mutually exclusive; remote resolution when neither is given) and
         # `--format json`. Success output carries the resolved server,
         # provider, and exact PR identity; failures exit nonzero with the
-        # classified provider error and never claim success.
+        # classified provider error and never claim success. JSON failures
+        # put the error category and message on stdout so machine callers
+        # can parse the classification; text goes to stderr via the runner.
         module Pr
           # Shared plumbing for all pr subcommands.
           class BaseCommand < Ace::Support::Cli::Command
@@ -23,6 +25,19 @@ module Ace
             option :default_server, type: :boolean, desc: "Use the configured default forge server"
             option :remote, type: :string, desc: "Git remote used for server resolution when nothing is selected"
             option :format, type: :string, default: "text", desc: "Output format: text, json"
+
+            ERROR_CATEGORIES = {
+              "ProviderAuthenticationError" => "authentication",
+              "ProviderUnreachableError" => "unreachable",
+              "ProviderMalformedOutputError" => "malformed",
+              "ProviderObjectNotFoundError" => "not_found",
+              "ProviderCliMissingError" => "cli_missing",
+              "ProviderIdentityMismatchError" => "identity_mismatch",
+              "ProviderConflictingMatchesError" => "conflicting_matches",
+              "ProviderExpectedHeadConflictError" => "expected_head_conflict",
+              "ProviderUnsupportedCapabilityError" => "unsupported_capability",
+              "ProviderUnknownOutcomeError" => "unknown_outcome"
+            }.freeze
 
             private
 
@@ -45,6 +60,18 @@ module Ace
                   puts "#{label.to_s.tr("_", "-")}: #{format_value(value)}"
                 end
               end
+            end
+
+            # JSON mode keeps the classified failure parseable on stdout;
+            # the human-readable line still reaches stderr through the
+            # raised Cli::Error with a nonzero exit.
+            def render_failure(options, error)
+              return unless options[:format] == "json"
+
+              puts JSON.pretty_generate(
+                error: {category: ERROR_CATEGORIES.fetch(error.class.name.split("::").last, "error"),
+                        message: error.message}
+              )
             end
 
             def format_value(value)
@@ -73,7 +100,8 @@ module Ace
                 head_ref: pr.head_ref,
                 head_repository: pr.head_repository_url,
                 base_ref: pr.base_ref,
-                base_repository: pr.base_repository_url
+                base_repository: pr.base_repository_url,
+                merge_commit: pr.merge_commit_sha
               )
             end
           end
@@ -103,6 +131,7 @@ module Ace
                 merge_commit: pr.merge_commit_sha
               )
             rescue Ace::Git::Error, ArgumentError => e
+              render_failure(options, e)
               raise Ace::Support::Cli::Error.new(e.message)
             end
           end
@@ -131,6 +160,7 @@ module Ace
               )
               emit_receipt(options, "created", receipt)
             rescue Ace::Git::Error, ArgumentError => e
+              render_failure(options, e)
               raise Ace::Support::Cli::Error.new(e.message)
             end
           end
@@ -153,6 +183,7 @@ module Ace
               )
               emit_receipt(options, "updated", receipt)
             rescue Ace::Git::Error, ArgumentError => e
+              render_failure(options, e)
               raise Ace::Support::Cli::Error.new(e.message)
             end
           end
@@ -168,6 +199,7 @@ module Ace
               receipt = lifecycle(options).ready(identifier, expected_head: expected_head)
               emit_receipt(options, "readied", receipt)
             rescue Ace::Git::Error, ArgumentError => e
+              render_failure(options, e)
               raise Ace::Support::Cli::Error.new(e.message)
             end
           end
@@ -184,6 +216,7 @@ module Ace
               receipt = lifecycle(options).merge(identifier, expected_head: expected_head, method: method)
               emit_receipt(options, "merged", receipt)
             rescue Ace::Git::Error, ArgumentError => e
+              render_failure(options, e)
               raise Ace::Support::Cli::Error.new(e.message)
             end
           end
