@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.42.0] - 2026-10-04
+
+### Added
+- The `tmux-session` setup step is replaced by `runtime-session`: `runtime: tmux` (default) keeps the detached-session behavior and exports `ACE_TMUX_SESSION` + `ACE_RUNTIME=tmux`; `runtime: herdr` inherits the caller's live herdr environment and exports `ACE_RUNTIME=herdr`, failing explicitly when no herdr context is live (no fabricated stand-in).
+
 ## [0.41.0] - 2026-09-29
 
 ### Changed
