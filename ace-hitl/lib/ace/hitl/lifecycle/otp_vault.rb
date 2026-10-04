@@ -90,7 +90,10 @@ module Ace
           def write(_store, value, answer)
             key = key_for(value)
             @entries.shift while @entries.length >= @max_entries
-            @entries[key] = Entry.new(answer.dup.freeze, @clock.now.to_i + @ttl_seconds)
+            retention_deadline = @clock.now.to_i + @ttl_seconds
+            challenge_deadline = value.dig("otp", "expires_at")
+            deadline = challenge_deadline ? [retention_deadline, Integer(challenge_deadline)].min : retention_deadline
+            @entries[key] = Entry.new(answer.dup.freeze, deadline)
             nil
           end
 
@@ -101,7 +104,10 @@ module Ace
           def read(store, value)
             entry = @entries[key_for(value)]
             raise MissError, "no OTP is pending for this request" unless entry
-            raise ExpiredError, "the OTP challenge has expired; request a new one" if entry.expires_at <= @clock.now.to_i
+            if entry.expires_at <= @clock.now.to_i
+              @entries.delete(key_for(value))
+              raise ExpiredError, "the OTP challenge has expired; request a new one"
+            end
 
             @entries.delete(key_for(value))
             entry.answer.dup

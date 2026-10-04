@@ -251,7 +251,12 @@ A consume timeout bounds ONLY the local wait — the request stays
 pending and answerable. OTP consumption requires the challenge's
 authorized operation (`--operation <name>`); the secret transfers
 exactly once and a consumed retry replays the receipt WITHOUT the
-bytes. Cancel is the ONLY way to abandon a request, requester-only;
+bytes. The persisted challenge deadline is checked at the locked handoff;
+consumption at or after that deadline refuses with an expired error and
+discards the pending secret. Memory retention ends at the earlier of the
+challenge deadline and the vault TTL. Delivery, duplicate delivery, waits,
+and service restarts cannot extend the authorized window. Request a fresh
+authorized challenge after expiry. Cancel is the ONLY way to abandon a request, requester-only;
 it records `cancelled_by` and the `reason` in the public projection,
 and late answers/consumes fail closed against the committed receipt.
 

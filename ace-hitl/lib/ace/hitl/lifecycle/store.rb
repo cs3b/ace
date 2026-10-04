@@ -235,11 +235,18 @@ module Ace
               # fails closed instead of handing over an answer.
               with_live_authority!(value, requester: @identity.username) do
                 verify_operation!(value, operation)
+                verify_otp_deadline!(value)
                 answer = read_answer(value)
                 unless answer
                   next
                 end
 
+                begin
+                  verify_otp_deadline!(value)
+                rescue OtpVault::ExpiredError
+                  answer.clear if value["sensitive"] == true && !answer.frozen?
+                  raise
+                end
                 commit_terminal!(value, "consumed",
                   answer: value["sensitive"] == true ? nil : answer)
                 update_public(value, "consumed")
@@ -341,6 +348,7 @@ module Ace
             # under the lock; report it without a second write or effect.
             return delivered_result(value) if answer_present?(value)
             with_live_authority!(value, requester: value["requester"]) do
+              verify_otp_deadline!(value)
               write_answer(value, answer)
               update_public(value, "answer-delivered")
               unless value["sensitive"] == true
@@ -837,6 +845,15 @@ module Ace
           end
 
           answer
+        end
+
+        # The persisted authorization window applies to every vault and
+        # is checked under the request and live-authority locks at handoff.
+        def verify_otp_deadline!(value)
+          return unless value["otp"] && Integer(value["otp"]["expires_at"]) <= Time.now.to_i
+
+          @vault.discard(self, value)
+          raise OtpVault::ExpiredError, "the OTP challenge has expired; request a new one"
         end
 
         # Persist the answer service-owned (0600): requesters never touch
