@@ -149,6 +149,23 @@ module Organisms
       end
     end
 
+    def test_create_preserves_provider_unknown_outcome
+      with_test_providers do
+        error = Ace::Git::ProviderUnknownOutcomeError.new("accepted create; reconcile exact fork identity")
+        lifecycle = Ace::Git::Organisms::PullRequestLifecycle.new(server_name: "forgejo-lab")
+        provider = RecordingProvider.new(server: SERVER)
+        lifecycle.stub(:provider_for, provider) do
+          provider.stub(:create_pull_request, ->(**) { raise error }) do
+            raised = assert_raises(Ace::Git::ProviderUnknownOutcomeError) do
+              lifecycle.create(head_ref: "feature", head_repository_url: "https://git.example.com/fork/ace",
+                base_ref: "main", expected_head: "a" * 40, title: "Fork PR")
+            end
+            assert_same error, raised
+          end
+        end
+      end
+    end
+
     def test_create_rejects_unreadable_body_file
       with_test_providers do
         lifecycle = Ace::Git::Organisms::PullRequestLifecycle.new(server_name: "forgejo-lab")

@@ -97,6 +97,33 @@ module Ace
           @http.paginate("pulls?state=open").map { |payload| validate_pr_payload!(payload, payload["number"]) }
         end
 
+        # Prove the repository selected by Forgejo's owner:branch resolver.
+        # Forgejo uses the selected repository for its own owner, otherwise
+        # a direct fork owned by that user, then the selected repo's parent.
+        def create_repository_identity(owner:)
+          base = repository_identity!(@http.request(:get, ""))
+          return [base, base] if base.dig("owner", "login").casecmp?(owner)
+
+          forks = @http.paginate("forks").map { |entry| repository_identity!(entry) }
+          matches = forks.select { |entry| entry.dig("owner", "login").casecmp?(owner) }
+          if matches.length > 1
+            raise Ace::Git::ProviderConflictingMatchesError, "Forgejo fork selector is ambiguous for #{owner}"
+          end
+          head = matches.first
+          if head.nil? && base["parent"]
+            parent = repository_identity!(base["parent"])
+            head = parent if parent.dig("owner", "login").casecmp?(owner)
+          end
+          unless head
+            raise Ace::Git::ProviderIdentityMismatchError, "Forgejo cannot prove fork selector for #{owner}"
+          end
+          [base, head]
+        end
+
+        def creation_evidence(payload)
+          validate_pr_payload!(payload, payload.is_a?(Hash) ? payload["number"] : nil)
+        end
+
         # Send the create mutation. The head argument must already be in the
         # documented API form (plain branch, or "owner:branch" for a
         # same-server fork).
@@ -152,6 +179,17 @@ module Ace
           else Ace::Git::ProviderUnknownOutcomeError
           end
           raise error, "Forgejo #{operation} returned HTTP #{status}; reconcile before repeating"
+        end
+
+        def repository_identity!(payload)
+          unless payload.is_a?(Hash) && payload["id"].is_a?(Integer) && payload["id"].positive? &&
+              payload["full_name"].is_a?(String) && payload["full_name"].match?(%r{\A[^/:\s?#]+/[^/:\s?#]+\z}) &&
+              payload["owner"].is_a?(Hash) && payload.dig("owner", "id").is_a?(Integer) && payload.dig("owner", "id").positive? &&
+              payload.dig("owner", "login").is_a?(String) && !payload.dig("owner", "login").empty? &&
+              payload["full_name"].split("/").first.casecmp?(payload.dig("owner", "login"))
+            raise Ace::Git::ProviderMalformedOutputError, "Malformed Forgejo repository selector evidence"
+          end
+          payload
         end
 
         def validate_pr_payload!(payload, requested_number)

@@ -101,6 +101,8 @@ module Ace
         def exchange_path(suffix)
           return suffix if suffix.to_s.start_with?("/api/v1/")
 
+          return "/api/v1/repos/#{@target.repo}" if suffix.to_s.empty?
+
           "/api/v1/repos/#{@target.repo}/#{suffix}"
         end
 

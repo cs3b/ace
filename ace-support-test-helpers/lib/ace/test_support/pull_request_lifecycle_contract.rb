@@ -49,6 +49,11 @@ module Ace
         assert_instance_of Ace::Git::ProviderMutationReceipt, receipt
         assert_equal :create, receipt.operation
         assert_equal :created, receipt.idempotency
+        assert_equal 25, receipt.pull_request.number
+        assert_equal "feature/x", receipt.pull_request.head_ref
+        assert_equal "main", receipt.pull_request.base_ref
+        assert_equal SERVER_URL, receipt.pull_request.head_repository_url
+        assert_equal true, receipt.pull_request.draft
         assert_equal HEAD_SHA, receipt.pull_request.head_sha
         assert_equal SERVER_URL, receipt.pull_request.base_repository_url
         assert_equal HEAD_SHA, receipt.to_h.dig(:pull_request, :head_sha)

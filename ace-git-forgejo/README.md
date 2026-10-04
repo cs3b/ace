@@ -96,3 +96,5 @@ Forgejo-specific conventions the provider translates:
 
 Identical lifecycle assertions run against every provider through the
 shared `Ace::TestSupport::PullRequestLifecycleContract` parity suite.
+
+Create preflight verifies the repository that Forgejo's `owner:branch` selector resolves, including direct forks and a fork's parent. Sharing an owner, branch or SHA does not establish source identity. An accepted create returns a receipt only when the response and authoritative read agree with the requested repository IDs, refs, SHA and draft state. A failed or contradictory verification stays `unknown_outcome`; reconcile by reading the exact identity before authorizing another mutation.

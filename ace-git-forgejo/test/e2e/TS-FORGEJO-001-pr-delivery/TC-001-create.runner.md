@@ -61,3 +61,8 @@ Note: this request matches the existing open PR #1 (same head/base) whose
 draft state is true — the expected observation is a nonzero exit with a
 draft disagreement conflict (category `conflicting_matches`), NOT a silent
 ready publication and NOT a second PR.
+
+### Goal 5 — Wrong same-owner source refuses before POST
+
+7. Request `feature/forked` at `$FORKED` with `--head-repo http://127.0.0.1:24417/e2e-fork/unrelated`, the same server/base and draft flags as Goal 2. Record `create-wrong-source.json` and exit. The unrelated repository has the actual fork's branch and SHA, but is not the repository selected by Forgejo's fork resolver.
+8. List open PRs by raw API. Record `open-pulls-after-wrong-source.json`. The create exits nonzero with `identity_mismatch`; the list still contains exactly the two earlier PRs, with no unrelated source.
