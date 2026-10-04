@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.0] - 2026-10-04
+
+### Added
+- Work-on and prune manage worktree windows through the `ace-runtime` contract (`TmuxWindowOpener` replaced by `WindowOpener`); the terminal runtime comes from the new `runtime:` config key (`tmux` | `herdr` | `auto`; `ACE_RUNTIME` env wins, detection as fallback, explicit fail when nothing is live).
+- Config key `tmux_window_presets` renamed to `window_presets` (no legacy alias, ADR-024); "tmux window" progress text is runtime-neutral.
+- New dependency: `ace-runtime` (~> 0.1); `ace-tmux` is kept to install the tmux adapter.
+
 ## [0.18.2] - 2026-10-02
 
 ### Technical
