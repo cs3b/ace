@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.0] - 2026-10-04
+
+### Added
+- PR receipts include merge-commit proof and `pr` JSON failures carry the classified error category on stdout (parseable non-success; text and nonzero exit unchanged).
+
 ## [0.27.0] - 2026-10-03
 
 ### Added

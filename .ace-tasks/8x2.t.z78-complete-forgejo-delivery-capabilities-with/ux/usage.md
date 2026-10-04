@@ -1,4 +1,9 @@
-# Forgejo delivery scenarios (proposed acceptance contract)
+# Forgejo delivery scenarios (proven acceptance contract)
+
+Proven 2026-10-04 against a disposable Forgejo 8.0.3 instance by
+TS-FORGEJO-001 (16/16 goals PASS; see task-report-2026-10-04.md).
+Minimum supported server: Forgejo 8.0 (version-probed before mutations).
+
 
 Use the existing `ace-git pr` command forms documented by `ace-git/docs/usage.md`; supply the named Forgejo server, source repository/ref, base ref and full expected SHA. No new option spelling is invented here.
 

@@ -1,0 +1,63 @@
+test-id: TS-FORGEJO-001
+title: "Forgejo PR delivery lifecycle on a disposable server"
+area: git
+package: ace-git-forgejo
+priority: high
+cost-tier: standard
+tags: ["use-case:git", "delivery-lifecycle", "disposable-forgejo"]
+tool-under-test: ace-git
+
+sandbox-layout:
+  results/tc/01/: "Canonical and fork draft creation, replay, show evidence"
+  results/tc/02/: "Ready transitions: exact head, replay, stale head"
+  results/tc/03/: "Merge races and merge methods with server-enforced heads"
+  results/tc/04/: "Response-loss reconciliation and refusal classifications"
+  results/tc/05/: "Server teardown evidence"
+
+e2e-justification: >
+  Draft semantics, same-server fork head encoding, and the atomic
+  expected-head merge precondition are server-side guarantees that scripted
+  fixtures cannot establish; they must be proven against a real Forgejo
+  server (minimum supported version 8.0) before the delivery capability is
+  accepted.
+
+unit-coverage-reviewed:
+  - ace-git-forgejo/test/fast/molecules/pull_request_api_test.rb
+  - ace-git-forgejo/test/fast/molecules/provider_test.rb
+  - ace-git-forgejo/test/contract/provider_pull_request_lifecycle_contract_test.rb
+
+requires:
+  tools: [ace-git, git, docker, curl]
+  ruby: ">= 3.2"
+
+setup:
+  - git-init
+  - agent-env:
+      FORGEJO_URL: "http://127.0.0.1:24417"
+      FORGEJO_HOST_KEY: "127.0.0.1:24417"
+      FORGEJO_BASE_REPO: "e2e-lab/base"
+      FORGEJO_FORK_REPO: "e2e-fork/base"
+      FORGEJO_PORT: "24417"
+  - run: "cp ${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}/mise.toml mise.toml && mise trust mise.toml"
+  - run: "docker rm -f ace-e2e-forgejo >/dev/null 2>&1 || true"
+  - run: "docker run -d --name ace-e2e-forgejo -p ${FORGEJO_PORT}:3000 -e FORGEJO__security__INSTALL_LOCK=true -e FORGEJO__mailer__ENABLED=false -e USER_UID=1000 -e USER_GID=1000 codeberg.org/forgejo/forgejo:8.0"
+  - run: "for i in $(seq 1 120); do curl -sf ${FORGEJO_URL}/api/v1/version >/dev/null 2>&1 && break; sleep 2; done; curl -sf ${FORGEJO_URL}/api/v1/version"
+  - run: "docker exec -u 1000 ace-e2e-forgejo forgejo admin user create --admin --username e2e-lab --password ace-e2e-lab-pass --email e2e-lab@ace.invalid --must-change-password=false"
+  - run: "docker exec -u 1000 ace-e2e-forgejo forgejo admin user create --admin --username e2e-fork --password ace-e2e-fork-pass --email e2e-fork@ace.invalid --must-change-password=false"
+  - run: "docker exec -u 1000 ace-e2e-forgejo forgejo admin user generate-access-token --username e2e-lab --token-name ace-e2e --scopes all | tee /tmp/ace-e2e-lab-token-raw; grep -oE '[a-f0-9]{40}' /tmp/ace-e2e-lab-token-raw | head -1 > /tmp/ace-e2e-lab-token; test -s /tmp/ace-e2e-lab-token"
+  - run: "docker exec -u 1000 ace-e2e-forgejo forgejo admin user generate-access-token --username e2e-fork --token-name ace-e2e --scopes all | tee /tmp/ace-e2e-fork-token-raw; grep -oE '[a-f0-9]{40}' /tmp/ace-e2e-fork-token-raw | head -1 > /tmp/ace-e2e-fork-token; test -s /tmp/ace-e2e-fork-token"
+  - run: "test -s /tmp/ace-e2e-lab-token || (docker exec -u 1000 ace-e2e-forgejo forgejo admin user generate-access-token --username e2e-lab --token-name ace-e2e | tee /tmp/ace-e2e-lab-token-raw; grep -oE '[a-f0-9]{40}' /tmp/ace-e2e-lab-token-raw | head -1 > /tmp/ace-e2e-lab-token; test -s /tmp/ace-e2e-lab-token)"
+  - run: "test -s /tmp/ace-e2e-fork-token || (docker exec -u 1000 ace-e2e-forgejo forgejo admin user generate-access-token --username e2e-fork --token-name ace-e2e | tee /tmp/ace-e2e-fork-token-raw; grep -oE '[a-f0-9]{40}' /tmp/ace-e2e-fork-token-raw | head -1 > /tmp/ace-e2e-fork-token; test -s /tmp/ace-e2e-fork-token)"
+  - run: "TOKEN=$(cat /tmp/ace-e2e-lab-token); curl -sf -X POST -H \"Authorization: token $TOKEN\" -H 'Content-Type: application/json' -d '{\"name\":\"base\",\"auto_init\":true,\"default_branch\":\"main\",\"private\":false}' ${FORGEJO_URL}/api/v1/user/repos > /dev/null && echo 'base repo created'"
+  - run: "FORK_TOKEN=$(cat /tmp/ace-e2e-fork-token); curl -sf -X POST -H \"Authorization: token $FORK_TOKEN\" -H 'Content-Type: application/json' -d '{}' ${FORGEJO_URL}/api/v1/repos/${FORGEJO_BASE_REPO}/forks | python3 -c 'import json,sys; d=json.load(sys.stdin); assert d[\"full_name\"]==\"e2e-fork/base\", d; print(d[\"full_name\"])'"
+  - write-file:
+      path: .ace/git/config.yml
+      content: |
+        git:
+          servers:
+            - name: e2e-forgejo
+              provider: forgejo
+              url: http://127.0.0.1:24417/e2e-lab/base
+              default: true
+  - run: "mkdir -p \"${XDG_DATA_HOME:-$HOME/.local/share}/forgejo-cli\" && printf '{\"hosts\": {\"%s\": {\"token\": \"%s\"}}}' \"${FORGEJO_HOST_KEY}\" \"$(cat /tmp/ace-e2e-lab-token)\" > \"${XDG_DATA_HOME:-$HOME/.local/share}/forgejo-cli/keys.json\" && echo 'server and keys configured'"
+  - run: "git clone http://e2e-lab:$(cat /tmp/ace-e2e-lab-token)@127.0.0.1:${FORGEJO_PORT}/${FORGEJO_BASE_REPO}.git work-base && cd work-base && git config user.email e2e@ace.invalid && git config user.name 'E2E Lab' && printf 'one\\n' > feature.txt && git checkout -b feature/canonical && git add feature.txt && git commit -m 'canonical feature work' && git push -u origin feature/canonical && git checkout main && printf 'two\\n' > fork-only.txt && git checkout -b feature/forked && git add fork-only.txt && git commit -m 'forked feature work' && git push -u http://e2e-fork:$(cat /tmp/ace-e2e-fork-token)@127.0.0.1:${FORGEJO_PORT}/${FORGEJO_FORK_REPO}.git feature/forked && echo 'branches pushed'"

@@ -199,6 +199,18 @@ ace-git pr merge 25 --expected-head SHA --method squash
 - A create request whose outcome is unknown (transport failure after send)
   reports an unknown outcome with the exact identity to reconcile; it never
   retries automatically.
+- With `--format json`, a failed operation prints the classified error as
+  JSON on stdout (`{"error": {"category": ..., "message": ...}}` — e.g.
+  `expected_head_conflict`, `unsupported_capability`, `unknown_outcome`)
+  before the nonzero exit; text mode explains the same failure on stderr.
+
+Provider notes (Forgejo): the delivery lifecycle rides the repository-bound
+Forgejo API v1 and requires Forgejo >= 8.0 (probed before mutations; the
+provider refuses below the documented capability floor). Drafts use the
+forge's WIP-title convention (`draft: true` creates a `WIP:`-prefixed
+title; `pr ready` strips it and proves the ready state by read-back).
+Same-server fork sources are supported via the declared `--head-repo`
+URL; cross-host sources refuse before any mutation.
 
 ### `ace-git version`
 
@@ -290,7 +302,7 @@ Both providers implement the same issue-tracking contract (issue lookup, comment
 create/update/delete, label add/remove, state transitions) so task issue
 synchronization stays forge-neutral; `ace-task` owns the sync orchestration.
 
-Configure servers in `.ace/git.yml` (or project config) under `git.servers`, then
+Configure servers in `.ace/git/config.yml` under `git.servers`, then
 resolve them by name, by default, or from a git remote URL. Every failure path is
 classified (missing CLI, unauthenticated, unreachable, malformed output, object
 not found) with no silent fallbacks.

@@ -116,8 +116,6 @@ class PrCommandsTest < AceGitTestCase
 
   def test_invalid_merge_method_is_rejected_before_provider_invocation
     with_servers do
-      calls = []
-      runner = ->(args:, **_kw) { calls << args; {success: true, stdout: "", stderr: "", exit_code: 0} }
       error = assert_raises(Ace::Support::Cli::Error) do
         capture_io do
           Ace::Git::CLI::Commands::Pr::Merge.new.call(
@@ -126,7 +124,66 @@ class PrCommandsTest < AceGitTestCase
         end
       end
       assert_match(/Invalid merge method/, error.message)
-      assert_empty calls
+    end
+  end
+
+  def test_receipt_json_includes_merge_proof_on_merged_pr
+    merged = Ace::Git::ProviderPullRequest.new(
+      server_name: "forgejo-lab", number: 25, title: "Ship it", state: :merged, body: nil,
+      head_ref: "feature", base_ref: "main", head_sha: "a" * 40, author: "dev",
+      url: "https://forge.example.com/cs3b/ace/pull/25", draft: false,
+      merged_at: "2026-10-04T12:00:00Z",
+      head_repository_url: @server.url, base_repository_url: @server.url,
+      merge_commit_sha: "d" * 40
+    )
+    receipt = Ace::Git::ProviderMutationReceipt.new(
+      server_name: "forgejo-lab", operation: :merge, pull_request: merged, idempotency: nil
+    )
+    with_servers do
+      stub_lifecycle(receipt) do
+        output = capture_io do
+          Ace::Git::CLI::Commands::Pr::Merge.new.call(
+            identifier: "25", expected_head: "a" * 40, method: "squash", format: "json"
+          )
+        end
+        parsed = JSON.parse(output.first)
+        assert_equal "d" * 40, parsed["merge_commit"]
+        assert_equal "merged", parsed["state"]
+      end
+    end
+  end
+
+  def test_json_failures_carry_the_error_category
+    with_servers do
+      stub_lifecycle(nil, raised: Ace::Git::ProviderExpectedHeadConflictError.new("head moved")) do
+        error = assert_raises(Ace::Support::Cli::Error) do
+          output = capture_io do
+            Ace::Git::CLI::Commands::Pr::Merge.new.call(
+              identifier: "25", expected_head: "a" * 40, method: "squash", format: "json"
+            )
+          end
+          parsed = JSON.parse(output.first)
+          assert_equal "expected_head_conflict", parsed.dig("error", "category")
+          assert_equal "head moved", parsed.dig("error", "message")
+        end
+        assert_match(/head moved/, error.message)
+      end
+    end
+  end
+
+  def test_json_failures_classify_unknown_outcomes
+    with_servers do
+      stub_lifecycle(nil, raised: Ace::Git::ProviderUnknownOutcomeError.new("lost after send; reconcile by exact identity")) do
+        assert_raises(Ace::Support::Cli::Error) do
+          output = capture_io do
+            Ace::Git::CLI::Commands::Pr::Create.new.call(
+              head: "feature", base: "main", expected_head: "a" * 40, title: "Ship it", format: "json"
+            )
+          end
+          parsed = JSON.parse(output.first)
+          assert_equal "unknown_outcome", parsed.dig("error", "category")
+        end
+      end
     end
   end
 end

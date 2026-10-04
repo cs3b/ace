@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-10-04
+
+### Added
+- Complete PR delivery lifecycle over the repository-bound Forgejo API v1: create with canonical and same-server fork heads and exact draft state, mark-ready, and merge with the server-enforced `head_commit_id` expected-head precondition (minimum supported server: Forgejo 8.0 — first line enforcing the merge precondition and reporting the API draft field — probed before mutations).
+- Authoritative pull request reads from the API: exact head provenance, draft state, and merge-commit evidence replace the fj view/commits pair for PR identity.
+- Duplicate-create races reconcile to the exact open match; already-merged refusals are reusable only with authoritative merged evidence at the expected source SHA.
+
+### Changed
+- PR reads, lifecycle matching, and updates ride the Faraday HTTP transport (ADR-010) with retries limited to safe GETs and no redirect following; lifecycle mutations are gated on a documented server capability floor and fail closed without it.
+
+### Removed
+- The fj-era refusals for fork creation, draft-to-ready, and expected-head merging; the conservative `fj pr merge`/`pr edit` paths are replaced by the API lifecycle.
+
 ## [0.5.0] - 2026-10-03
 
 ### Added
@@ -61,19 +74,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   file is allowed, never modified).
 
 ## [0.2.0] - 2026-09-28
-
-### Added
-- PR lifecycle mutations matching the shared provider contract: exact-match
-  lookup via `fj pr search`, idempotent create reconciliation, head-verified
-  title/body updates.
-- Fork provenance: the `fj pr view` head-repository segment is parsed and
-  returned in normalized PR evidence.
-
-### Changed
-- `pr ready` and `pr merge` are classified unsupported capabilities: `fj`
-  offers no draft-to-ready command and cannot enforce an expected-head merge
-  precondition atomically, so both refuse instead of racing.
-- PR view parser captures the fork repository prefix of the `From` segment.
 
 ### Added
 - PR lifecycle mutations matching the shared provider contract: exact-match
