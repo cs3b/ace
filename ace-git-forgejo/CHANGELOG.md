@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 - The fj-era refusals for fork creation, draft-to-ready, and expected-head merging; the conservative `fj pr merge`/`pr edit` paths are replaced by the API lifecycle.
+- The unused `expected_head` plumbing on the review-comment reconciliation helpers (internal refactor; no behavior change).
 
 ## [0.5.0] - 2026-10-03
 
