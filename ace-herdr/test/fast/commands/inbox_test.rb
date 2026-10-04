@@ -45,9 +45,10 @@ module Ace
             File.write(key_path, @receipt_key.public_key.to_pem)
             @native = Native.new
             @command = Inbox.new(executor: Executor.new, native: @native)
-            @command.define_singleton_method(:config) { {"inbox_receipt_public_key" => key_path} }
             delivery_path = File.join(@dir, "deliveries")
-            @command.define_singleton_method(:deliveries_dir) { delivery_path }
+            @command.define_singleton_method(:config) do
+              {"inbox_receipt_public_key" => key_path, "deliveries_dir" => delivery_path}
+            end
             File.write(File.join(@dir, "ref.json"), JSON.generate("session" => "ws1", "pane" => "p1"))
             File.write(File.join(@dir, "payload.txt"), "hello")
           end
@@ -133,8 +134,9 @@ module Ace
             restarted = Inbox.new(executor: Executor.new, native: @native)
             delivery_path = File.join(@dir, "deliveries")
             trusted_path = File.join(@dir, "receipt-public.pem")
-            restarted.define_singleton_method(:deliveries_dir) { delivery_path }
-            restarted.define_singleton_method(:config) { {"inbox_receipt_public_key" => trusted_path} }
+            restarted.define_singleton_method(:config) do
+              {"inbox_receipt_public_key" => trusted_path, "deliveries_dir" => delivery_path}
+            end
             File.write(receipt_path, JSON.generate(receipt))
             File.binwrite("#{receipt_path}.sig", @receipt_key.sign(
               OpenSSL::Digest::SHA256.new, File.binread(receipt_path)))
@@ -154,7 +156,10 @@ module Ace
             rogue_key = OpenSSL::PKey::RSA.generate(2048)
             rogue_path = File.join(@dir, "rogue-public.pem")
             File.write(rogue_path, rogue_key.public_key.to_pem)
-            @command.define_singleton_method(:config) { {"inbox_receipt_public_key" => rogue_path} }
+            delivery_path = File.join(@dir, "deliveries")
+            @command.define_singleton_method(:config) do
+              {"inbox_receipt_public_key" => rogue_path, "deliveries_dir" => delivery_path}
+            end
 
             receipt = {"event_id" => uncertain["event_id"], "attempt_id" => "att-1",
               "claim_generation" => uncertain["claim_generation"],

@@ -14,7 +14,7 @@ module Ace
         POLL_INTERVAL = 0.02
 
         def initialize(executor: Molecules::HerdrExecutor.new, env: ENV, clock: Process, sleeper: Kernel, surface: nil,
-          identity_dir: nil, poll_interval: POLL_INTERVAL)
+          identity_dir: nil, poll_interval: POLL_INTERVAL, process_identity: Runtime::Molecules::ProcessIdentity.new)
           @executor = executor
           @env = env
           @clock = clock
@@ -23,6 +23,7 @@ module Ace
           @prepared = {}
           @identity_dir = identity_dir
           @poll_interval = poll_interval
+          @process_identity = process_identity
         end
 
         def context
@@ -106,6 +107,34 @@ module Ace
               end
               created_id
             end
+          end
+        end
+
+        def process_binding(pane:, caller_pid:)
+          return nil unless caller_pid.is_a?(Integer) && caller_pid.positive?
+
+          with_errors do
+            native = find_hash(@executor.pane_get(pane).parsed_json, %w[result pane])
+            info = find_hash(@executor.pane_process_info(pane).parsed_json, %w[result process_info])
+            next nil unless native && info && native["pane_id"] == pane
+
+            owner = @process_identity.owner(shell_pid: info["shell_pid"], caller_pid: caller_pid)
+            foreground = info["foreground_processes"]
+            next nil unless owner && foreground.is_a?(Array) && foreground.any? do |process|
+              process.is_a?(Hash) && process["pid"] == owner.dig("process_identity", "pid")
+            end
+
+            session = native["agent_session"]
+            workspace = native["workspace_id"] || native["session_id"]
+            terminal = native["terminal_id"]
+            next nil unless session.is_a?(Hash) && session["kind"] == "id" &&
+              session["value"].is_a?(String) && session["value"].match?(Inbox::THREAD_ID) &&
+              session["agent"] == native["agent"] && native["agent"].is_a?(String) &&
+              workspace.is_a?(String) && !workspace.empty? &&
+              (terminal.is_a?(String) || terminal.is_a?(Integer)) && !terminal.to_s.empty?
+
+            {"runtime" => "herdr", "session" => workspace, "pane" => pane,
+              "terminal_id" => terminal.to_s, "agent" => native["agent"], "agent_session" => session}.merge(owner)
           end
         end
 

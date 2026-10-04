@@ -82,7 +82,11 @@ module Ace
           SH
           FileUtils.chmod(0o755, script)
           offender = lambda do |*|
-            sleep 0.5 # let the child record its pid first
+            deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + 5
+            until File.exist?(pid_file) || Process.clock_gettime(Process::CLOCK_MONOTONIC) >= deadline
+              sleep 0.01
+            end
+            assert File.exist?(pid_file), "the launched child must record its PID before injecting the IO failure"
             raise Errno::EIO, "injected pipe failure"
           end
           Molecules::BoundedProcess.stub(:run_loop, offender) do

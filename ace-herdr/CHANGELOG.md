@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Expose verified native process/session ownership and allow identical signed inbox proof re-verification after settlement without duplicate transitions.
+
 ## [0.3.2] - 2026-10-04
 
 ### Changed

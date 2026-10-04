@@ -364,3 +364,5 @@ Commands raise a CLI error (non-zero exit) carrying herdr's machine code where o
 - Invalid send shapes: usage error **before any transport call** (nothing is sent)
 
 Exit `0` means success (including an explicit empty `list` result or a satisfied wait).
+
+An identical signed reconciliation receipt may be verified again after a consumed/superseded settlement, without another transition. This lets an assignment consumer recover a crash before journaling its verified observation reference. Re-verification preserves the original pinned key, complete binding and generation checks; a later claim's generation rejects the old proof. It never resubmits the payload. Runtime recovery additionally exposes the read-only `process_binding(pane:, caller_pid:)` adapter operation, which requires OS ancestry under the native shell, a matching foreground owner and immutable agent-session identity.

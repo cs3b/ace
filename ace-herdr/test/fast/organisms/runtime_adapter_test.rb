@@ -76,6 +76,30 @@ module Ace
           def sleep(_seconds); end
         end
 
+        def test_process_binding_requires_exact_native_agent_and_foreground_owner
+          pane = {"pane_id" => "w1:p1", "workspace_id" => "w1", "terminal_id" => "terminal1",
+            "agent" => "codex", "agent_session" => {"agent" => "codex", "kind" => "id",
+              "value" => "0123abcd-0000-4000-8000-000000000001"}}
+          @panes << pane
+          @processes = [{"pid" => 43}]
+          owner = {"shell_identity" => {"pid" => 42}, "process_identity" => {"pid" => 43}}
+          process_identity = Object.new
+          process_identity.define_singleton_method(:owner) do |shell_pid:, caller_pid:|
+            shell_pid == 42 && caller_pid == 44 ? owner : nil
+          end
+          adapter = RuntimeAdapter.new(executor: @executor, process_identity: process_identity)
+          binding = adapter.process_binding(pane: "w1:p1", caller_pid: 44)
+          assert_equal "herdr", binding["runtime"]
+          assert_equal "terminal1", binding["terminal_id"]
+          assert_equal pane["agent_session"], binding["agent_session"]
+          assert_equal owner["process_identity"], binding["process_identity"]
+          @processes = [{"pid" => 42}]
+          assert_nil adapter.process_binding(pane: "w1:p1", caller_pid: 44)
+          @processes = [{"pid" => 43}]
+          pane["agent_session"]["kind"] = "name"
+          assert_nil adapter.process_binding(pane: "w1:p1", caller_pid: 44)
+        end
+
         def test_registration_and_context_map_workspace_tab_and_pane
           assert_instance_of RuntimeAdapter, Runtime.resolve("herdr")
           assert_equal({in_runtime: true, session: "w1", window: "w1:t0", pane: "w1:p0"}, @adapter.context)
