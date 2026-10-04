@@ -1,0 +1,320 @@
+{
+  "schema_version": 1,
+  "source_sha": "b4bcb42a9aa998c67c5552c7d2bf9f31a464f664",
+  "packages": [
+    {
+      "name": "ace-assign",
+      "artifact_version": "0.63.1",
+      "source_sha": "b4bcb42a9aa998c67c5552c7d2bf9f31a464f664",
+      "supersedes": [
+        "0.63.0"
+      ]
+    },
+    {
+      "name": "ace-b36ts",
+      "artifact_version": "0.14.11",
+      "source_sha": "b3b170355826012274cdd7cd418732c297b0db5a"
+    },
+    {
+      "name": "ace-bundle",
+      "artifact_version": "0.44.2",
+      "source_sha": "e38b87fe6d049bc6eb98f8d081a013539c0bc397",
+      "supersedes": [
+        "0.44.1"
+      ],
+      "runtime_dependencies": {
+        "ace-git-github": [
+          "~> 0.2"
+        ]
+      }
+    },
+    {
+      "name": "ace-compressor",
+      "artifact_version": "0.25.5",
+      "source_sha": "b3b170355826012274cdd7cd418732c297b0db5a"
+    },
+    {
+      "name": "ace-demo",
+      "artifact_version": "0.26.1",
+      "source_sha": "b4bcb42a9aa998c67c5552c7d2bf9f31a464f664",
+      "supersedes": [
+        "0.26.0"
+      ]
+    },
+    {
+      "name": "ace-docs",
+      "artifact_version": "0.34.5",
+      "source_sha": "7c043ebd21a591650aae9961b8ca142b806edcf5"
+    },
+    {
+      "name": "ace-git",
+      "artifact_version": "0.28.1",
+      "source_sha": "b4bcb42a9aa998c67c5552c7d2bf9f31a464f664",
+      "supersedes": [
+        "0.28.0"
+      ]
+    },
+    {
+      "name": "ace-git-commit",
+      "artifact_version": "0.26.6",
+      "source_sha": "b3b170355826012274cdd7cd418732c297b0db5a"
+    },
+    {
+      "name": "ace-git-forgejo",
+      "artifact_version": "0.6.1",
+      "source_sha": "b4bcb42a9aa998c67c5552c7d2bf9f31a464f664",
+      "supersedes": [
+        "0.6.0"
+      ]
+    },
+    {
+      "name": "ace-git-github",
+      "artifact_version": "0.4.0",
+      "source_sha": "42f37a320fc514c219346d1bdf3ce60df02cf4d8",
+      "supersedes": [
+        "0.1.2"
+      ]
+    },
+    {
+      "name": "ace-git-secrets",
+      "artifact_version": "0.15.11",
+      "source_sha": "b3b170355826012274cdd7cd418732c297b0db5a"
+    },
+    {
+      "name": "ace-git-worktree",
+      "artifact_version": "0.25.1",
+      "source_sha": "b4bcb42a9aa998c67c5552c7d2bf9f31a464f664",
+      "supersedes": [
+        "0.25.0"
+      ]
+    },
+    {
+      "name": "ace-handbook",
+      "artifact_version": "0.33.0",
+      "source_sha": "07631bbc68696d0066ae4f71051d270a406a6c99"
+    },
+    {
+      "name": "ace-handbook-integration-claude",
+      "artifact_version": "0.3.12",
+      "source_sha": "2b2660a2b519bf8142dbcd8e6d32d8be25ab37f1"
+    },
+    {
+      "name": "ace-handbook-integration-codex",
+      "artifact_version": "0.3.12",
+      "source_sha": "2b2660a2b519bf8142dbcd8e6d32d8be25ab37f1"
+    },
+    {
+      "name": "ace-handbook-integration-gemini",
+      "artifact_version": "0.3.11",
+      "source_sha": "2b2660a2b519bf8142dbcd8e6d32d8be25ab37f1"
+    },
+    {
+      "name": "ace-handbook-integration-opencode",
+      "artifact_version": "0.3.11",
+      "source_sha": "2b2660a2b519bf8142dbcd8e6d32d8be25ab37f1"
+    },
+    {
+      "name": "ace-handbook-integration-pi",
+      "artifact_version": "0.5.0",
+      "source_sha": "98e09992dea028db757b51339cc93c534ef81482"
+    },
+    {
+      "name": "ace-herdr",
+      "artifact_version": "0.3.2",
+      "source_sha": "b4bcb42a9aa998c67c5552c7d2bf9f31a464f664",
+      "supersedes": [
+        "0.3.1"
+      ]
+    },
+    {
+      "name": "ace-hitl",
+      "artifact_version": "0.11.1",
+      "source_sha": "b4bcb42a9aa998c67c5552c7d2bf9f31a464f664",
+      "supersedes": [
+        "0.11.0"
+      ]
+    },
+    {
+      "name": "ace-hitl-contract",
+      "artifact_version": "0.1.0",
+      "source_sha": "b4bcb42a9aa998c67c5552c7d2bf9f31a464f664"
+    },
+    {
+      "name": "ace-hitl-hermes",
+      "artifact_version": "0.1.0",
+      "source_sha": "51b462e2e5dc02514545e74d20d7453d164b13d0"
+    },
+    {
+      "name": "ace-idea",
+      "artifact_version": "0.21.6",
+      "source_sha": "b3b170355826012274cdd7cd418732c297b0db5a"
+    },
+    {
+      "name": "ace-lab",
+      "artifact_version": "0.3.1",
+      "source_sha": "46967e9998b767e57ec8e320d2bfe78ec6fc3ba8"
+    },
+    {
+      "name": "ace-lint",
+      "artifact_version": "0.30.10",
+      "source_sha": "b3b170355826012274cdd7cd418732c297b0db5a"
+    },
+    {
+      "name": "ace-llm",
+      "artifact_version": "0.42.0",
+      "source_sha": "e38b87fe6d049bc6eb98f8d081a013539c0bc397",
+      "supersedes": [
+        "0.41.1"
+      ]
+    },
+    {
+      "name": "ace-llm-providers-cli",
+      "artifact_version": "0.36.1",
+      "source_sha": "a656b47def429efcdee851907a2ce9d11dd4c0ea",
+      "supersedes": [
+        "0.35.2"
+      ]
+    },
+    {
+      "name": "ace-overseer",
+      "artifact_version": "0.19.1",
+      "source_sha": "b4bcb42a9aa998c67c5552c7d2bf9f31a464f664",
+      "supersedes": [
+        "0.19.0"
+      ]
+    },
+    {
+      "name": "ace-prompt-prep",
+      "artifact_version": "0.25.10",
+      "source_sha": "b3b170355826012274cdd7cd418732c297b0db5a"
+    },
+    {
+      "name": "ace-retro",
+      "artifact_version": "0.18.8",
+      "source_sha": "b3b170355826012274cdd7cd418732c297b0db5a"
+    },
+    {
+      "name": "ace-review",
+      "artifact_version": "0.58.1",
+      "source_sha": "3d40a79c318a42a250bfbeca5b95b3a38e057ede",
+      "supersedes": [
+        "0.56.0"
+      ],
+      "runtime_dependencies": {
+        "ace-git-github": [
+          "~> 0.3"
+        ]
+      }
+    },
+    {
+      "name": "ace-runtime",
+      "artifact_version": "0.1.1",
+      "source_sha": "46967e9998b767e57ec8e320d2bfe78ec6fc3ba8"
+    },
+    {
+      "name": "ace-search",
+      "artifact_version": "0.26.6",
+      "source_sha": "b3b170355826012274cdd7cd418732c297b0db5a"
+    },
+    {
+      "name": "ace-sim",
+      "artifact_version": "0.15.8",
+      "source_sha": "b3b170355826012274cdd7cd418732c297b0db5a"
+    },
+    {
+      "name": "ace-support-cli",
+      "artifact_version": "0.6.9",
+      "source_sha": "e38b87fe6d049bc6eb98f8d081a013539c0bc397",
+      "supersedes": [
+        "0.6.8"
+      ]
+    },
+    {
+      "name": "ace-support-config",
+      "artifact_version": "0.18.2",
+      "source_sha": "3a1ba603a228bf0c2247290d41cc7000fb7bad42"
+    },
+    {
+      "name": "ace-support-core",
+      "artifact_version": "0.32.0",
+      "source_sha": "c7390a40ff4e7560d27af78ec775336b09b3cfbf"
+    },
+    {
+      "name": "ace-support-fs",
+      "artifact_version": "0.3.4",
+      "source_sha": "b3b170355826012274cdd7cd418732c297b0db5a"
+    },
+    {
+      "name": "ace-support-items",
+      "artifact_version": "0.15.13",
+      "source_sha": "b3b170355826012274cdd7cd418732c297b0db5a"
+    },
+    {
+      "name": "ace-support-mac-clipboard",
+      "artifact_version": "0.3.5",
+      "source_sha": "b3b170355826012274cdd7cd418732c297b0db5a"
+    },
+    {
+      "name": "ace-support-markdown",
+      "artifact_version": "0.3.6",
+      "source_sha": "b3b170355826012274cdd7cd418732c297b0db5a"
+    },
+    {
+      "name": "ace-support-models",
+      "artifact_version": "0.12.4",
+      "source_sha": "c7f1244dc88081abd804c5f73392d36ee59da1ac"
+    },
+    {
+      "name": "ace-support-nav",
+      "artifact_version": "0.28.7",
+      "source_sha": "3a1ba603a228bf0c2247290d41cc7000fb7bad42"
+    },
+    {
+      "name": "ace-support-test-helpers",
+      "artifact_version": "0.14.7",
+      "source_sha": "b4bcb42a9aa998c67c5552c7d2bf9f31a464f664",
+      "supersedes": [
+        "0.14.6"
+      ]
+    },
+    {
+      "name": "ace-task",
+      "artifact_version": "0.39.1",
+      "source_sha": "0d68ee4df139cf34f9af3e92fc968ec7b37a41c1",
+      "supersedes": [
+        "0.38.0"
+      ],
+      "runtime_dependencies": {
+        "ace-git-github": [
+          "~> 0.4"
+        ]
+      }
+    },
+    {
+      "name": "ace-test",
+      "artifact_version": "0.7.4",
+      "source_sha": "b6a8c1b7d793a529b675b47d567a706a72b9d1b0"
+    },
+    {
+      "name": "ace-test-runner",
+      "artifact_version": "0.27.1",
+      "source_sha": "96c445b8ad253796c01fc1ef89f4dfe6022c5749",
+      "supersedes": [
+        "0.27.0"
+      ]
+    },
+    {
+      "name": "ace-test-runner-e2e",
+      "artifact_version": "0.42.0",
+      "source_sha": "8b9bd7f776469bde0450cb17ce6c16fc81beba0b",
+      "supersedes": [
+        "0.40.6"
+      ]
+    },
+    {
+      "name": "ace-tmux",
+      "artifact_version": "0.18.0",
+      "source_sha": "2e6b73df01225a469ad352d0ab0d452327c881e1"
+    }
+  ]
+}

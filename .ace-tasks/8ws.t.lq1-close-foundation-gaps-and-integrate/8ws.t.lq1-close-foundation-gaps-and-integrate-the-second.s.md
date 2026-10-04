@@ -144,3 +144,11 @@ These two drafts replace hidden mechanism work in the domain blocker notes. They
 Postpublication TS-MONO-001 run 8x3xqd0: normal and full-index installation exit 0, 49/49 exact versions (all ten wave gems), six consumer installs exit 0; classifier SAFE. Final acceptance FAIL and wrapper PARTIAL 3/4: stale consumer requirement predicate insists on ~>0.2 for consumers whose reviewed source/published requirements are ~>0.3/~>0.4. Preserve this failed acceptance; repair source-aware expected edges and rerun before claiming the final proof green.
 
 Integration checkpoint: y1q source edge fix dd97ee1ef reviewed independently (APPROVE,83focused+5adversarial tests) and merged to main b87c763e8. Author executed full packages62+652tests. Canonical installation replay remains open; original PARTIAL preserved. Native runtime inspection generated Codex0.159.3 protocol schema and recorded potential clientUserMessageId→thread userMessage.clientId correlation under xza; actual native validation still required.
+
+## Installation proof and implementation checkpoint — 2026-10-05
+
+- [x] ACE 8x3.t.y1q: canonical TS-MONO-001 replay `8x3ydnj` passed all four cases; the host finalizer passed with no findings. Normal/full-index installs, all 49 exact manifest versions and six frozen consumer dependency edges passed. [Retained evidence](../_archive/8x/v/8x3.t.y1q-verify-current-consumer-provider-edges/evidence/installation-acceptance-2026-10-05.md). The original PARTIAL remains preserved. This closes installation propagation for the published wave, not installed Lab acceptance.
+- [ ] y24: candidate `1d016f20d` rejected by independent review. Three reproduced defects: lost retention falsely restores old coverage, transient polling failure permanently prevents new healthy coverage, and interrupted OTP ingress wedges replay. Author is repairing all three before fresh independent review and integration.
+- [ ] 1w5 and qkb.0: implementation continues in separate GPT-6.1 Sol worktrees. Managed process ownership and service-backed merge authority must be tested end to end; recovery integrates before overlapping assignment delivery changes.
+
+The downstream join and real-user/native Lab acceptance gates above remain open.
