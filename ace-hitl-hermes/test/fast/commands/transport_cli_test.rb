@@ -178,6 +178,10 @@ class TransportCliTest < AceHermesTestCase
           end
         end
       else
+        # The isolated executable uses this same Ruby, whose default gems remain
+        # available with an empty GEM_HOME. They need not have cached archives.
+        next if dependency.default_gem?
+
         assert File.file?(dependency.cache_file), "missing local dependency archive #{dependency.full_name}"
         FileUtils.cp(dependency.cache_file, pool)
       end
@@ -186,8 +190,10 @@ class TransportCliTest < AceHermesTestCase
     home = File.join(@tmp, "installed-home")
     env = {"GEM_HOME" => home, "GEM_PATH" => home,
            "BUNDLE_GEMFILE" => nil, "BUNDLE_BIN_PATH" => nil, "RUBYOPT" => nil, "RUBYLIB" => nil}
+    # GEM_HOME selects the isolated destination. Explicit --install-dir tells
+    # RubyGems to ignore even this Ruby's default gems during resolution.
     out, status = Open3.capture2e(env, RbConfig.ruby, "-S", "gem", "install", "--local", "--no-document",
-      "--install-dir", home, archive, chdir: pool)
+      archive, chdir: pool)
     assert status.success?, out
     executable = File.join(home, "bin", "ace-hitl-hermes")
     out, status = Open3.capture2e(env, executable, "receive", "--config", @config_path,
