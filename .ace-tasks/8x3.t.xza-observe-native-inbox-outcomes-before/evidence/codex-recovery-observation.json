@@ -1,0 +1,26 @@
+{
+  "version": "codex-cli 0.159.3",
+  "sandbox": "/var/folders/hf/knhxwtnx76gcdps2hxb3bp2r0000gr/T/ace-native-observation-jv3rdhgt",
+  "phase": "checked",
+  "thread_id": "01a10949-562e-7163-9b91-4bf447815d34",
+  "queue_list": {
+    "data": [],
+    "nextCursor": null
+  },
+  "start_error": "thread/queue/start:code=-32600 queued submission not found: 01a10949-56c0-7910-92b2-fd663e2efded",
+  "turns": [
+    {
+      "id": "01a10949-56c2-7c20-93ea-405c119de8cf",
+      "status": "interrupted",
+      "user_items": [
+        {
+          "id": "item-1",
+          "client_id": "ace-probe-8d2ca9a8c9934b86a151e1cff0f5068e"
+        }
+      ]
+    }
+  ],
+  "delete_result": {
+    "deleted": false
+  }
+}
