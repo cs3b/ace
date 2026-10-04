@@ -631,7 +631,7 @@ class StatusCommandTest < AceAssignTestCase
       journal.append(assignment_id: shown.id, attempt_id: attempt.attempt_id, events: [transition])
 
       assert Dir.exist?(checkout_dir)
-      assert_includes git_in(repo, "worktree", "list", "--porcelain"), checkout_dir
+      assert_includes git_in(repo, "worktree", "list", "--porcelain"), File.realpath(checkout_dir)
 
       with_isolated_evidence_calculator(cache_base: cache_dir, repo_root: repo, journal: journal) do
         payload = JSON.parse(capture_status_command(cache_base: cache_dir, format: "json", assignment: shown.id).first)
