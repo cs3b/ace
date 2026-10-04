@@ -1,6 +1,6 @@
 ---
 id: 8ws.t.ibk
-status: pending
+status: in-progress
 priority: high
 created_at: "2026-09-29 12:12:52"
 estimate: medium
