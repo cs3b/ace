@@ -1,6 +1,6 @@
 ---
 id: 8wq.t.1w5
-status: pending
+status: in-progress
 priority: medium
 created_at: "2026-09-27 01:15:43"
 estimate: TBD
