@@ -161,7 +161,7 @@ PATH
 PATH
   remote: ace-herdr
   specs:
-    ace-herdr (0.3.0)
+    ace-herdr (0.3.1)
       ace-hitl (~> 0.10)
       ace-runtime (~> 0.1)
       ace-support-cli (~> 0.6)

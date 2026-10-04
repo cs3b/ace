@@ -362,8 +362,12 @@ module Ace
             recorded = :corrupt
           end
           if recorded.is_a?(Hash) && recorded["id"] == tab[:id]
-            write_identity(path, id: recorded["id"], root: recorded["root"], preset: recorded["preset"],
-              prepared_pane: pane_id)
+            # Preserve the record's exact provenance shape: a pointer-only
+            # record stays pointer-only (no invented root/preset keys), an
+            # owned record keeps its verified values — only the pointer moves.
+            updated = recorded.dup
+            updated["prepared_pane"] = pane_id
+            atomic_write_json(path, updated)
           else
             # Foreign tab (not created through ensure_window) or corrupt
             # record: persist a pointer-only record so later instances

@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-10-04
+
+### Fixed
+- Replacing a dead prepared pane updates only the recorded pane pointer: a foreign tab's pointer-only identity record stays pointer-only instead of gaining invented `root`/`preset` ownership keys, so the live replacement pane is reused across adapter and process restarts and `ensure_window` at the verified native root still adopts the tab. Records with genuine provenance keep their exact root and preset, and wrong ids, conflicting provenance, corrupt records, and stale pointers still cannot bypass the ownership guards.
+- `ace-herdr tab` reports a failed preset materialization (native tab created, later step failed) through the standard CLI error boundary — non-zero exit, actionable message, no success payload, and no stack trace in ordinary mode. The runtime adapter keeps its documented runtime classification and exact-id rollback; this entrypoint never closes tabs.
+
 ## [0.3.0] - 2026-10-02
 
 ### Added

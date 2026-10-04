@@ -68,6 +68,24 @@ module Ace
 
             assert_match(/available: dev/, error.message)
           end
+
+          def test_materialization_failure_translates_to_a_cli_error
+            failing = Class.new(Organisms::ControlSurface) do
+              def create_workspace(*)
+                raise TabMaterializationError.new(
+                  tab_id: "w2:t2",
+                  message: "Runtime::Error: pane split failed after native create"
+                )
+              end
+            end.new(executor: @executor, preset_loader: StubLoader.new)
+            cmd = Workspace.new(executor: @executor, control: failing)
+
+            error = assert_raises(Ace::Support::Cli::Error) do
+              capture_io { cmd.call(preset: "dev", cwd: nil, quiet: nil) }
+            end
+
+            assert_match(/pane split failed after native create/, error.message)
+          end
         end
       end
     end
