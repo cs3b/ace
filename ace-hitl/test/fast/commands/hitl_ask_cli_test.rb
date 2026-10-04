@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "test_helper"
+require "etc"
 require "socket"
 require "json"
 
@@ -12,35 +13,62 @@ class HitlAskCliTest < AceHitlTestCase
   HITL_EVENT_LINE = /HITL event: (\S+)/
   LAB_REQUEST_LINE = /Lab request: (\S+)/
 
-  # The requester identity is pinned through the spec-sanctioned test
-  # seam (Lifecycle::Identity, spec §2): these CLI tests must not depend
-  # on the OS login name — an OS user literally named `lab-admin` (the
-  # store's default admin) would skip binding validation entirely and
-  # flip the binding-dependent expectations (review F4 on W696).
-  REQUESTER = "lab-asker"
+  # The requester identity is the KERNEL peer identity the boundary
+  # service resolves (spec 8wq.t.34i): the daemon binding reply must
+  # name exactly that account for validation to pass.
+  REQUESTER = Etc.getpwuid(Process.uid).name
 
   def setup
     super
-    @original_username = Ace::Hitl::Lifecycle::Identity.method(:username)
-    Ace::Hitl::Lifecycle::Identity.define_singleton_method(:username) { REQUESTER }
     @raw_reply = nil
     @scratch = Dir.mktmpdir("ace-hitl-ask")
     @store_root = File.join(@scratch, "store")
-    %w[requests secrets answers public effects].each do |dir|
-      FileUtils.mkdir_p(File.join(@store_root, dir))
-    end
     @labd_socket = File.join(@scratch, "labd.sock")
+    @hitl_socket = File.join(@scratch, "hitl.sock")
     @queries = []
     @listener = UNIXServer.new(@labd_socket)
     @server = Thread.new { serve_binding }
+
+    # The REAL boundary service runs in-process; the CLI reaches it
+    # through the real client (only the root-owned grants file is
+    # injected, as a document — the sanctioned seam).
+    require "ace/hitl"
+    policy = Ace::Hitl::Lifecycle::GrantsPolicy.new(
+      document: {"hitl" => {"service_uid" => Process.uid, "transport_uids" => [Process.uid]}}
+    )
+    @service = Ace::Hitl::Lifecycle::Service.new(
+      root: @store_root,
+      binding: Ace::Hitl::Providers::Lab::DaemonBinding.new(socket_path: @labd_socket),
+      policy: policy,
+      socket_path: @hitl_socket,
+      group: "staff"
+    )
+    @service_thread = Thread.new { @service.run }
+    @client = Ace::Hitl::Lifecycle::Client.new(socket_path: @hitl_socket, service_uid: Process.uid)
+    @original_boundary_client = Ace::Hitl::Providers::Lab.method(:boundary_client)
+    injected_client = @client
+    Ace::Hitl::Providers::Lab.define_singleton_method(:boundary_client) { |**_options| injected_client }
+    wait_for_hitl_socket
   end
 
   def teardown
-    Ace::Hitl::Lifecycle::Identity.define_singleton_method(:username, @original_username)
+    Ace::Hitl::Providers::Lab.define_singleton_method(:boundary_client, @original_boundary_client)
+    @service&.stop
+    @service_thread&.join(5)
+    @service_thread&.exit
     @server.exit
     @listener.close
     FileUtils.remove_entry(@scratch) if @scratch && File.exist?(@scratch)
     super
+  end
+
+  def wait_for_hitl_socket
+    deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + 5
+    until File.exist?(@hitl_socket)
+      raise "the boundary socket never appeared" if Process.clock_gettime(Process::CLOCK_MONOTONIC) > deadline
+
+      sleep 0.02
+    end
   end
 
   def serve_binding
@@ -241,11 +269,33 @@ class HitlAskCliTest < AceHitlTestCase
   def test_binding_unavailability_fails_closed_and_reports_orphan_event
     with_hitl_dir do |root|
       with_cli_root(root) do
-        # The daemon socket does not exist: the store create must fail
-        # closed with the orphan event surfaced.
+        # A boundary service whose binding authority (the lab daemon) is
+        # absent: the store create must fail closed with the orphan
+        # event surfaced.
+        absent_socket = File.join(@scratch, "absent.sock")
+        orphan_policy = Ace::Hitl::Lifecycle::GrantsPolicy.new(
+          document: {"hitl" => {"service_uid" => Process.uid}}
+        )
+        orphan_service = Ace::Hitl::Lifecycle::Service.new(
+          root: @store_root,
+          binding: Ace::Hitl::Providers::Lab::DaemonBinding.new(socket_path: absent_socket),
+          policy: orphan_policy,
+          socket_path: File.join(@scratch, "hitl-orphan.sock"),
+          group: "staff"
+        )
+        orphan_thread = Thread.new { orphan_service.run }
+        deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + 5
+        until File.exist?(File.join(@scratch, "hitl-orphan.sock"))
+          raise "orphan socket never appeared" if Process.clock_gettime(Process::CLOCK_MONOTONIC) > deadline
+
+          sleep 0.02
+        end
+        orphan_client = Ace::Hitl::Lifecycle::Client.new(
+          socket_path: File.join(@scratch, "hitl-orphan.sock"), service_uid: Process.uid
+        )
+        Ace::Hitl::Providers::Lab.define_singleton_method(:boundary_client) { |**_options| orphan_client }
+
         with_env(
-          "ACE_HITL_STORE_ROOT" => @store_root,
-          "ACE_HITL_LABD_SOCKET" => File.join(@scratch, "absent.sock"),
           "HERDR_SESSION" => "w692-test",
           "HERDR_PANE" => "agent-1"
         ) do
@@ -263,6 +313,13 @@ class HitlAskCliTest < AceHitlTestCase
           refute_nil event, "orphan event stays inspectable"
           assert_nil event.metadata["lab_request_id"]
         end
+      ensure
+        # Restore the primary boundary stub for later assertions.
+        injected_client = @client
+        Ace::Hitl::Providers::Lab.define_singleton_method(:boundary_client) { |**_options| injected_client }
+        orphan_service.stop
+        orphan_thread.join(5)
+        orphan_thread.exit
       end
     end
   end

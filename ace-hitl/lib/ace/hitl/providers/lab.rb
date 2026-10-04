@@ -93,19 +93,24 @@ module Ace
         # Local event + relay request in ONE operation. The ref is
         # REQUIRED and must be validated by the caller before this call.
         def ask(question:, ref:, attempt:, work: nil, assignment: nil, title: nil,
-          project: DEFAULT_PROJECT, harness: DEFAULT_HARNESS,
+          kind: "text", otp: nil, project: DEFAULT_PROJECT, harness: DEFAULT_HARNESS,
           plan: DEFAULT_PLAN, effect: {})
           effect = effect.to_h
           request_id = "hitl-#{SecureRandom.hex(8)}"
           manager = build_manager
           event = manager.create(title || question, questions: [question])
 
+          # The ask reaches the store through the AUTHENTICATED BOUNDARY
+          # (spec 8wq.t.34i): requesters never write shared store files.
+          # An injected store stays available for unit-level wiring.
           begin
-            build_store.create(
+            boundary.create(
               id: request_id,
               work: work,
               assignment: assignment,
               attempt: attempt,
+              kind: kind,
+              otp: otp,
               project: project,
               harness: harness,
               plan: plan,
@@ -158,10 +163,8 @@ module Ace
             Array(effect[:effect_args]).any?)
         end
 
-        def build_store
-          return @store if @store
-
-          self.class.lifecycle_store(store: nil, binding: @binding)
+        def boundary
+          @store || self.class.boundary_client
         end
 
         def build_manager

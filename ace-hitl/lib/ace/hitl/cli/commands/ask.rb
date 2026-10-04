@@ -21,6 +21,11 @@ module Ace
           # Managed binding (spec 8wq.t.34i): the request binds to the
           # exact active managed attempt of the calling identity.
           option :assignment, type: :string, desc: "Managed assignment id (compact id)"
+          option :kind, type: :string, desc: "Request kind (default: text; otp requires the challenge evidence)"
+          option :"otp-operation", type: :string, desc: "OTP challenge: the ONE authorized operation name"
+          option :"otp-result-ref", type: :string, desc: "OTP challenge: OTP-required publisher result reference"
+          option :"otp-input-digest", type: :string, desc: "OTP challenge: sha256 input digest of the authorized input"
+          option :"otp-expires-at", type: :string, desc: "OTP challenge: expiry as unix seconds (<= 24h ahead)"
           option :work, type: :string, desc: "Lab Work id (W...) - legacy binding until vs2 switches consumers"
           option :attempt, type: :string, desc: "Attempt id of the exact active attempt"
           option :project, type: :string, desc: "Lab project label (default: ace)"
@@ -42,6 +47,7 @@ module Ace
 
             work, assignment = require_binding!(options)
             attempt = require_attempt!(options)
+            otp = build_otp_challenge!(options)
             provider = resolve_provider(options[:provider])
             ref = capture_ref
 
@@ -52,6 +58,8 @@ module Ace
               work: work,
               assignment: assignment,
               attempt: attempt,
+              kind: options[:kind] || "text",
+              otp: otp,
               project: options[:project] || Providers::Lab::DEFAULT_PROJECT,
               harness: options[:harness] || Providers::Lab::DEFAULT_HARNESS,
               plan: options[:plan] || Providers::Lab::DEFAULT_PLAN,
@@ -98,6 +106,26 @@ module Ace
             return [work, nil] unless work.nil?
 
             [nil, assignment]
+          end
+
+          # The OTP challenge evidence is non-secret, structurally
+          # validated store-side; the CLI only assembles it (spec
+          # 8wq.t.34i: no publisher result, no OTP request).
+          def build_otp_challenge!(options)
+            kind = options[:kind] || "text"
+            return nil unless kind == "otp"
+
+            operation = options[:"otp-operation"]
+            result_ref = options[:"otp-result-ref"]
+            input_digest = options[:"otp-input-digest"]
+            expires_at = options[:"otp-expires-at"]
+            missing = %w[--otp-operation --otp-result-ref --otp-input-digest --otp-expires-at]
+              .zip([operation, result_ref, input_digest, expires_at])
+              .select { |_flag, value| value.nil? || value.to_s.strip.empty? }
+              .map(&:first)
+            raise_cli_error("OTP requests require #{missing.join(", ")} (the OTP-required publisher evidence)") unless missing.empty?
+
+            {operation: operation, result_ref: result_ref, input_digest: input_digest, expires_at: expires_at}
           end
 
           def require_attempt!(options)
