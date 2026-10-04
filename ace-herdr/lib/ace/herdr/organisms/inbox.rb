@@ -5,7 +5,7 @@ require "json"
 require "time"
 require "securerandom"
 require "openssl"
-require "ace/hitl"
+require "ace/hitl/contract"
 
 module Ace
   module Herdr

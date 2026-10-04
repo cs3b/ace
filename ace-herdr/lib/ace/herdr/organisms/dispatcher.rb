@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "shellwords"
-require "ace/hitl"
+require "ace/hitl/contract"
 
 module Ace
   module Herdr

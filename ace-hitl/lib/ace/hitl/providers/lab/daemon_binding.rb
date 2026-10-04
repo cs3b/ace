@@ -2,7 +2,7 @@
 
 require "socket"
 require "json"
-require_relative "../errors"
+require "ace/hitl/contract"
 require_relative "../../lifecycle/errors"
 
 module Ace

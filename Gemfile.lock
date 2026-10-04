@@ -3,6 +3,7 @@ PATH
   specs:
     ace-assign (0.63.0)
       ace-b36ts (~> 0.14)
+      ace-herdr (~> 0.3)
       ace-llm (~> 0.39)
       ace-review (~> 0.57)
       ace-runtime (~> 0.1)
@@ -48,6 +49,7 @@ PATH
   specs:
     ace-demo (0.26.0)
       ace-b36ts (~> 0.14)
+      ace-herdr (~> 0.3)
       ace-runtime (~> 0.1)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)
@@ -110,6 +112,7 @@ PATH
   specs:
     ace-git-worktree (0.25.0)
       ace-git (~> 0.24)
+      ace-herdr (~> 0.3)
       ace-runtime (~> 0.1)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)
@@ -168,11 +171,16 @@ PATH
   remote: ace-herdr
   specs:
     ace-herdr (0.3.1)
-      ace-hitl (~> 0.10)
+      ace-hitl-contract (~> 0.1)
       ace-runtime (~> 0.1)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)
       ace-support-core (~> 0.31)
+
+PATH
+  remote: ace-hitl-contract
+  specs:
+    ace-hitl-contract (0.1.0)
 
 PATH
   remote: ace-hitl-hermes
@@ -185,6 +193,7 @@ PATH
     ace-hitl (0.11.0)
       ace-assign (~> 0.62)
       ace-b36ts (~> 0.14)
+      ace-hitl-contract (~> 0.1)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)
       ace-support-core (~> 0.31)
@@ -248,6 +257,7 @@ PATH
       ace-assign (~> 0.62)
       ace-git (~> 0.23)
       ace-git-worktree (~> 0.25)
+      ace-herdr (~> 0.3)
       ace-runtime (~> 0.1)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)
@@ -575,6 +585,7 @@ DEPENDENCIES
   ace-handbook-integration-pi!
   ace-herdr!
   ace-hitl!
+  ace-hitl-contract!
   ace-hitl-hermes!
   ace-idea!
   ace-lab!

@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Preserve the authenticated service endpoint when another HITL startup is refused. Serialize listener ownership and remove only the socket acquired by the stopping invocation; stale recovery requires a protected service-owned socket.
 
+### Changed
+
+- Load shared provider references, results, and errors from `ace-hitl-contract`; retain provider registration and locked assignment authority in HITL.
+
 ## [0.11.0] - 2026-10-04
 
 ### Added

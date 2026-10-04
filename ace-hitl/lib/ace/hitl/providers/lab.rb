@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "securerandom"
-require_relative "errors"
+require "ace/hitl/contract"
 require_relative "lab/daemon_binding"
 require_relative "lab/assignment_binding"
 require_relative "lab/composite_binding"

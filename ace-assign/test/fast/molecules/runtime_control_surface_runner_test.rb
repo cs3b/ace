@@ -126,6 +126,7 @@ class RuntimeControlSurfaceRunnerTest < AceAssignTestCase
     assert shell_command_includes_handoff?(command, "$as-assign-drive a@010")
     assert shell_command_includes_env?(command, "FROM_BUILDER=1")
     assert shell_command_includes_env?(command, "-u ACE_RUNTIME")
+    refute_match(/(?:\A|&& )exec /, command, "invocation must retain the prepared shell")
   end
 
   def test_run_script_in_pane_sends_bash_invocation

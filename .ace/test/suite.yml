@@ -206,6 +206,9 @@ test_suite:
       group: tools
       priority: 2
 
+    - name: ace-hitl-contract
+      path: ace-hitl-contract
+
     - name: ace-hitl
       path: ace-hitl
       group: tools

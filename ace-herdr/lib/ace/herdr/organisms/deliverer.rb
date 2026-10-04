@@ -2,7 +2,7 @@
 
 require "shellwords"
 require "time"
-require "ace/hitl"
+require "ace/hitl/contract"
 
 module Ace
   module Herdr
