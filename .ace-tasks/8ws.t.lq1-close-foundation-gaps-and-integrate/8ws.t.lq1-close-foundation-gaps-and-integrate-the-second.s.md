@@ -22,7 +22,7 @@ This is the ACE integration tracker replacing the planning role of the loose lab
 
 This task owns sequencing and acceptance receipts, not duplicate implementations. Existing tasks stay at their canonical IDs; new uncovered outcomes are actual children. Check a task checkbox only after its owning record is done and linked evidence establishes the listed result. Reopen this checklist item if receipt is invalidated; do not silently expand a historical done task. `bin/ace-task show 8ws.t.lq1 --content` displays the checklist; updates are explicit, not automatic synchronization.
 
-Current phase (2026-10-04): foundation and six feature owners are delivered. This tracker remains open for combined integration and explicit repair dispositions; specifications below select the next work, not authorize dispatch.
+Current phase (2026-10-04 post-delivery review): foundation, prior feature wave, hym, 34i, z78 and ibk are delivered in source; k86.3 is merged but acceptance remains open. This tracker remains open for combined integration and explicit repair dispositions; specifications below select the next work, not authorize dispatch.
 
 ## First wave — delivered scopes
 - [x] ACE 8wq.t.1w2 — hermetic test infrastructure, main PR344; tp0 consumer fixes also delivered, with later runner source loading fix 96c445b8a. This does not close new fixture defects.
@@ -56,7 +56,7 @@ Release acceptance: [2026-10-01 final receipt](evidence/installation-acceptance-
 All six are done with code in main. Their historical receipts remain with their owners; [the reconciliation record](evidence/program-reconciliation-2026-10-04.md) links revisions and limits. This is not proof of one frozen installed Lab. k86.3, service deployment and HITL/recovery still need integration.
 
 ## Repair lane — tracked separately, not hidden blockers
-- [ ] ACE 8ws.t.ibk — managed assignment test isolation; close before trusting those fixtures for qjx/y23 acceptance.
+- [x] ACE 8ws.t.ibk — fixture-owned evidence, attribution/sentinel/stale-state proof and independent delivery receipt verified; closed and archived after source reconciliation.
 - [ ] ACE 8ws.t.ibl — GC fixture repair delivered in 7c043ebd2; remaining bulk persistence/mixed-input proof stays here.
 - [ ] ACE 8ws.t.lq8 — bounded observation repair delivered in a656b47de; controlled contention and independent criterion closure still required.
 - [x] ACE 8wr.t.v3k — duplicate of delivered tp0/e7986bff4, reconciled as skipped; current fixture explicitly disables remote comments.
@@ -83,7 +83,7 @@ One large tracking/acceptance task with two new outcome children and references 
 - Repair lane needs evidence reconciliation before dispatching duplicate fixes: main already contains docs fixture fix 7c043ebd2 and cleanup test fix a656b47de. ibl/lq8 remain open until their acceptance is mapped to those deliveries; this update does not claim fresh test runs or close them.
 - Next integration order: k86.2 before y23 (shared Herdr changes), qk1.1 before qk1.2 where provider edits overlap; k86.1 and qjx independently. ibk fixture isolation remains a verification concern for qjx/y23, not a reason to stop writing all six scopes.
 
-## Next implementation and final gates — 2026-10-04
+## Earlier wave plan — 2026-10-04 (superseded by the post-delivery checklist below)
 
 - [ ] Runtime: hym repair and k86.3 consumer development can proceed in parallel; merge/accept hym first, then k86.3 → k86 → 1w5.
 - [ ] HITL: 34i → y24 → vs2 → qjz; vs2/recovery consume y23 signed proof, not generic settled/dead.
@@ -96,3 +96,23 @@ One large tracking/acceptance task with two new outcome children and references 
 - [ ] qkc and lab-config:gad.2 require R3 plus exact installed manifest, real users/runtime restart/uncertain effects and independent acceptance with legacy disabled. Then gad.3 removal → gad.4 cold start. ig5 is experimental and not a gate.
 
 There is no single current blocker of every lane. The final join is qk0 → completed qkb → R2 → R3 → qkc/gad.2. Authorization by sixteen-hour silence applies only to a precisely presented and delivered qjz proposal; it never replaces receipt, scope, test, reviewer or OTP requirements. vs3 additionally needs the installed publication executor and specific release authorization.
+
+## Next series — post-delivery code review, 2026-10-04
+
+The authoritative review/evidence map is [wave-3-review-2026-10-04.md](wave-3-review-2026-10-04.md). Independent code review found gaps not exercised by the green default suite. Historical done scopes stay intact; new repairs have real task IDs.
+
+- [x] hym: pointer-only provenance and public materialization error translation landed.
+- [x] 34i: scoped authenticated HITL IPC source landed; installed multi-UID proof still required by domain acceptance. vft/vfv own newly identified defects.
+- [x] z78: API-based fork/draft/ready/atomic merge landed, with retained disposable Forgejo 8.0.3 evidence. vfw owns create provenance/uncertainty repair; live response-loss gap remains explicit.
+- [x] ibk: accepted fixture-isolation source/receipts reconciled, status done and archived.
+- [ ] k86.3: finish acyclic adapter installation, retained writable pane proof and actual live Herdr scenarios. This keeps k86/1w5 formally open.
+- [ ] ACE 8x3.t.vft: preserve the original HITL listener on rejected/failed startup; first independent repair lane.
+- [ ] ACE 8x3.t.vfv: enforce the challenge expiry at actual OTP handoff; independent repair lane in the same package (coordinate integration with vft).
+- [ ] ACE 8x3.t.vfw: prove full Forgejo create provenance and retain uncertainty after accepted mutation; independent provider lane.
+- [ ] lab-config:gad.8: prepare/install topology and trusted boundary; listener acceptance waits vft and real-user proof. Domain signer/authorization is not supplied by code existence.
+- [ ] lab-config:gad.9: installed Pi wake extension proof; independent of the new HITL/Forgejo repairs.
+- [ ] lab-config:gad.b: begin its existing setup-project service slice; integrate after gad.8 identity/grants, expand by available contracts. OTP/publisher acceptance waits vfv and exact release authority.
+- [ ] y24: optional development alongside vft/vfv; accept only after both repairs. qkb.0: optional development alongside vfw; accept only after vfw and ship atomically with qkb.1.
+- [ ] l2d.3/.4/.5: reconcile already-delivered consumer evidence; no duplicate implementation. ibl/lq8 remaining verification and 3zi/4gy hygiene remain separate, not global Lab blockers.
+
+Recommended initial dispatch is the three repairs plus k86.3 closure and the three domain scopes above. Parallel development is not permission for parallel mutation of one primary checkout: use isolated worktrees, one owner per changed file, and serially merge shared HITL/installer/assign changes. Integrate vft/vfv before y24; vfw before qkb.0 acceptance; k86.3 before 1w5. qkb.0/.1 keep one installed vocabulary. Later join is 1w5 + vs2/qjz → qk0 → completed qkb → R2 → R3 → qkc/gad.2. ig5 remains optional.

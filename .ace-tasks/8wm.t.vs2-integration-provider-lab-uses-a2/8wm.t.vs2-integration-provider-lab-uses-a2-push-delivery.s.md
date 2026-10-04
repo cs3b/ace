@@ -72,3 +72,7 @@ The trusted supervisor/observer verifies actual native Codex/Pi consumption or n
 
 - [ ] Consumer acceptance: consumed and superseded with correct signature/binding; wrong signer/key/digest/generation/native target; replay; missing proof; supervisor restart and key rotation with unresolved old event. Valid consumption settles once; supersession permits only the explicit verified retry; all invalid or absent proofs stay uncertain.
 - [ ] Installed acceptance with gad.8/.b uses actual requester and trusted signer OS users and native Codex/Pi observation, not only scripted subprocess proof. Implementation reports separate deterministic coverage from this required Lab gate.
+
+## Current producer state — 2026-10-04
+
+34i supplies authenticated IPC in source, not full installed Lab acceptance. y24 now carries prerequisite repairs vft (listener ownership) and vfv (OTP challenge expiry). This integration consumes their accepted evidence transitively through y24, including requester/transport/service OS-user proof and the publisher's exact authorization; the mere presence of a result_ref string is not authorization. No reopening of 34i history or second lifecycle owner.

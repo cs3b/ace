@@ -1,6 +1,6 @@
 ---
 id: 8ws.t.ibk
-status: in-progress
+status: done
 priority: high
 created_at: "2026-09-29 12:12:52"
 estimate: medium
@@ -44,3 +44,7 @@ Owner: ace-assign tests. Single observable slice; medium. Follow-up to delivered
 ## Source recheck — 2026-10-04
 
 At 46b980777, status_command_test.rb's managed-assignment fixtures isolate the cache but test_helper.rb still sets PROJECT_ROOT_PATH to the ACE checkout; EvidenceCalculator can consult that checkout's journal. Current source reading confirms ambient coupling, not a fresh reproduction of destructive writes. Preserve source catalog resolution while isolating the evidence repository. Existing full-suite green is not SC2 sentinel proof. Scope is still required and ready for independent specification review.
+
+## Closure reconciliation — 2026-10-04
+
+Independent progress reviewer /root/wave_runtime_audit inspected the landed fixture-owned calculator, exact assignment attribution, sentinel preservation and absent/seed/stale matrix. The retained verification-2026-10-04.md maps all four original criteria to executed tests and independent approval at its recorded candidate. Main carries de92d80c1/cf2f31553. Fresh default source suite at 686abe359 passed 11,074 tests (24 skipped); no fresh all-target or installed Lab claim is added. Status reconciled to done and archived; prior in-progress metadata was stale. This does not close ibl/lq8 or native runtime acceptance.

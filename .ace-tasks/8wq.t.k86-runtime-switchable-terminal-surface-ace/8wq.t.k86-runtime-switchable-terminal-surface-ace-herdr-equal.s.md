@@ -8,7 +8,7 @@ dependencies: [8wq.t.k84, 8wm.t.vs0]
 tags: [ace-runtime, ace-tmux, ace-herdr, assign, overseer, demo]
 bundle:
   presets: [project]
-  files: [ace-assign/lib/ace/assign/molecules/tmux_control_surface_runner.rb, ace-assign/lib/ace/assign/molecules/fork_session_launcher.rb, ace-assign/handbook/workflow-instructions/assign/drive.wf.md, ace-overseer/lib/ace/overseer/molecules/tmux_window_opener.rb, ace-overseer/lib/ace/overseer/organisms/work_on_orchestrator.rb, ace-overseer/lib/ace/overseer/organisms/prune_orchestrator.rb, ace-overseer/.ace-defaults/overseer/config.yml, ace-demo/lib/ace/demo/molecules/tmux_directive_executor.rb, ace-tmux/lib/ace/tmux/organisms/control_surface.rb, ace-herdr/docs/usage.md, .ace-tasks/_archive/8w/y/8wq.t.k84-ace-herdr-match-ace-tmux/8wq.t.k84-ace-herdr-match-ace-tmux-cli-and.s.md]
+  files: [ace-assign/lib/ace/assign/molecules/runtime_control_surface_runner.rb, ace-assign/lib/ace/assign/molecules/fork_session_launcher.rb, ace-assign/handbook/workflow-instructions/assign/drive.wf.md, ace-overseer/lib/ace/overseer/molecules/window_opener.rb, ace-overseer/lib/ace/overseer/organisms/work_on_orchestrator.rb, ace-overseer/lib/ace/overseer/organisms/prune_orchestrator.rb, ace-overseer/.ace-defaults/overseer/config.yml, ace-demo/lib/ace/demo/molecules/runtime_directive_executor.rb, ace-tmux/lib/ace/tmux/organisms/control_surface.rb, ace-herdr/docs/usage.md, .ace-tasks/_archive/8w/y/8wq.t.k84-ace-herdr-match-ace-tmux/8wq.t.k84-ace-herdr-match-ace-tmux-cli-and.s.md]
   commands: []
 needs_review: false
 title: "Runtime-switchable terminal surface: ace-herdr equal partner to ace-tmux"
@@ -187,3 +187,7 @@ is referenced in ace-overseer today).
 ## Lab-readiness review scope (2026-09-28)
 
 This draft retains the existing detailed send/wait contract and the Captain's adapter-location and callback decisions. No runtime code is changed in this spec pass. Review must check all four child specs before parent promotion. Executed tests and independent current-head verdict gate implementation delivery; CI is advisory. Earlier text is preserved in history/pre-lab-spec-review.md only for provenance.
+
+## Progress reconciliation — 2026-10-04, post-PR364
+
+Contract and both adapters are delivered; consumer migration code is merged. k86.3 retains its original clean-install/retained-pane/live Herdr acceptance. The current dependency direction needs an acyclic resolution before all consumer installations include Herdr. Do not mark this parent done or dispatch 1w5 as prerequisite-complete merely because PR364 is merged. The remaining work is explicit in k86.3, not hidden in this umbrella.

@@ -4,13 +4,13 @@ status: pending
 priority: high
 created_at: "2026-09-23 22:42:16"
 estimate: 
-dependencies: [8wm.t.vs1, 8wq.t.34i]
+dependencies: [8wm.t.vs1, 8wq.t.34i, 8x3.t.vft, 8x3.t.vfv]
 needs_review: false
 tags: [ace-hitl-hermes, migration, telegram, plugin, lab-config, gad]
 position: 6o0009
 bundle:
   presets: [project]
-  files: [ace-hitl-hermes/lib/ace/hitl/hermes/organisms/hermes_box.rb, ace-hitl-hermes/lib/ace/hitl/hermes/schemas/message.v1.schema.json]
+  files: [ace-hitl-hermes/lib/ace/hitl/hermes/organisms/hermes_box.rb, ace-hitl-hermes/lib/ace/hitl/hermes/schemas/message.v1.schema.json, .ace-tasks/8x3.t.vft-preserve-the-active-hitl-listener/8x3.t.vft-preserve-the-active-hitl-listener-on-refused.s.md, .ace-tasks/8x3.t.vfv-enforce-the-authorized-otp-expiry/8x3.t.vfv-enforce-the-authorized-otp-expiry-at-consumption.s.md, .ace-tasks/_archive/8w/y/8wq.t.34i-privileged-store-boundary-for-ace/8wq.t.34i-privileged-store-boundary-for-ace-hitl-lifecycle.s.md, ace-hitl/lib/ace/hitl/lifecycle/client.rb, ace-hitl/lib/ace/hitl/lifecycle/service.rb, .ace-tasks/8wm.t.y24-ace-hitl-hermes-migrate-telegram/ux/usage.md]
   commands: []
 title: Provide correlated Telegram transport through the Hermes package
 ---
@@ -67,3 +67,7 @@ Public scenarios: `ux/usage.md`. Record independent review before promotion.
 ### Secret transport failure semantics
 
 If the requesting protected OTP consume endpoint is unavailable, do not buffer the secret in the folder or log. Return secret delivery unavailable with non-secret request identity; after the executor recovers, re-ask for a fresh code. Telegram remains the explicitly approved transient input channel; this contract does not claim erasure of third-party message history.
+
+## Post-delivery repair gate — 2026-10-04
+
+The added prerequisite tasks repair observed producer defects, not a change to this consumer's behavior. Development may use the delivered API in parallel, but acceptance/integration waits for the named repairs and reruns the affected consumer cases after rebase. No local bypass or duplicate validation substitutes for fixing the owning producer. Pending means the specification is ready, not that its prerequisites are already complete.

@@ -4,12 +4,12 @@ status: pending
 priority: high
 created_at: "2026-09-28 17:44:29"
 estimate: TBD
-dependencies: [8wr.t.qk1, 8wr.t.qjl, 8x2.t.z78]
+dependencies: [8wr.t.qk1, 8wr.t.qjl, 8x2.t.z78, 8x3.t.vfw]
 tags: [lab-readiness]
 parent: 8wr.t.qkb
 bundle:
   presets: [project]
-  files: [.ace-tasks/8wr.t.qkb-run-assignment-delivery-workflows-through/8wr.t.qkb-run-assignment-delivery-workflows-through-named-forge.s.md, .ace-tasks/_archive/8x/v/8wr.t.qk1-complete-forge-neutral-worktree-review/8wr.t.qk1-complete-forge-neutral-worktree-review-and-task.s.md, .ace-tasks/8wr.t.qjl-persist-assignment-attempts-and-exact/8wr.t.qjl-persist-assignment-attempts-and-exact-execution.s.md, ace-assign/.ace-defaults/assign/catalog/recipes/implement-with-pr.recipe.yml, ace-assign/.ace-defaults/assign/catalog/steps/create-pr.step.yml, ace-assign/.ace-defaults/assign/catalog/steps/update-pr-desc.step.yml, ace-assign/.ace-defaults/assign/catalog/steps/mark-pr-ready.step.yml, .ace-tasks/8wr.t.qkb-run-assignment-delivery-workflows-through/0-make-assignment-delivery-evidence-provider/ux/usage.md, .ace-tasks/8x2.t.z78-complete-forgejo-delivery-capabilities-with/8x2.t.z78-complete-forgejo-delivery-capabilities-with-verifiable.s.md, .ace-tasks/8x2.t.z78-complete-forgejo-delivery-capabilities-with/ux/usage.md]
+  files: [.ace-tasks/8wr.t.qkb-run-assignment-delivery-workflows-through/8wr.t.qkb-run-assignment-delivery-workflows-through-named-forge.s.md, .ace-tasks/_archive/8x/v/8wr.t.qk1-complete-forge-neutral-worktree-review/8wr.t.qk1-complete-forge-neutral-worktree-review-and-task.s.md, .ace-tasks/8wr.t.qjl-persist-assignment-attempts-and-exact/8wr.t.qjl-persist-assignment-attempts-and-exact-execution.s.md, ace-assign/.ace-defaults/assign/catalog/recipes/implement-with-pr.recipe.yml, ace-assign/.ace-defaults/assign/catalog/steps/create-pr.step.yml, ace-assign/.ace-defaults/assign/catalog/steps/update-pr-desc.step.yml, ace-assign/.ace-defaults/assign/catalog/steps/mark-pr-ready.step.yml, .ace-tasks/8wr.t.qkb-run-assignment-delivery-workflows-through/0-make-assignment-delivery-evidence-provider/ux/usage.md, .ace-tasks/_archive/8x/v/8x2.t.z78-complete-forgejo-delivery-capabilities-with/8x2.t.z78-complete-forgejo-delivery-capabilities-with-verifiable.s.md, .ace-tasks/_archive/8x/v/8x2.t.z78-complete-forgejo-delivery-capabilities-with/ux/usage.md, .ace-tasks/8x3.t.vfw-verify-forgejo-create-provenance-and/8x3.t.vfw-verify-forgejo-create-provenance-and-uncertain-outcomes.s.md]
   commands: []
 needs_review: false
 ---
@@ -52,3 +52,7 @@ qkb.0 and qkb.1 are reviewed as separate observable scopes but integrate in one 
 ## Provider acceptance prerequisite — 2026-10-04
 
 ACE 8x2.t.z78 owns the actual missing Forgejo fork/draft/ready/atomic expected-head and uncertainty behavior. Its accepted provider receipt is required before this delivery scope is accepted. Existing safe unsupported errors are not completed matrix rows. qkb.0 and qkb.1 remain one atomic installed vocabulary change; no release with mixed old/new workflow names. R2 follows completed qkb, and R3 follows R2; neither is an upstream qkb prerequisite.
+
+## Post-delivery repair gate — 2026-10-04
+
+The added prerequisite tasks repair observed producer defects, not a change to this consumer's behavior. Development may use the delivered API in parallel, but acceptance/integration waits for the named repairs and reruns the affected consumer cases after rebase. No local bypass or duplicate validation substitutes for fixing the owning producer. Pending means the specification is ready, not that its prerequisites are already complete.
