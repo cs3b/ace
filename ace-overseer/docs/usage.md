@@ -188,3 +188,5 @@ Use these user-visible checks when validating behavior end-to-end:
   3. `ace-overseer prune --yes`
   4. `ace-git-worktree list` to confirm removed vs retained task worktrees
   5. `ace-overseer prune --dry-run` to confirm no remaining safe candidates
+
+Assignment JSON includes `recovery`: current liveness, recovery decision/reason, last verified observation, exact attempt identities, checkpoints and unresolved effect/inbox references. Unreadable evidence is explicitly unknown; dashboard rows needing reconciliation use a question mark instead of a success indicator. An older verified observation remains audit history and does not make a current unknown observation live.

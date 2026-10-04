@@ -4,11 +4,12 @@ module Ace
   module Overseer
     module Molecules
       class WorktreeContextCollector
-        def initialize(repo_status_loader: nil, assignment_discoverer_factory: nil)
+        def initialize(repo_status_loader: nil, assignment_discoverer_factory: nil, recovery_factory: nil)
           @repo_status_loader = repo_status_loader || -> {
             Ace::Git::Organisms::RepoStatusLoader.load(include_pr_activity: false, include_commits: false)
           }
           @assignment_discoverer_factory = assignment_discoverer_factory || -> { Ace::Assign::Molecules::AssignmentDiscoverer.new }
+          @recovery_factory = recovery_factory || -> { Ace::Assign::Organisms::AttemptCoordinator.new }
         end
 
         def collect(worktree_path, location_type: :worktree)
@@ -49,8 +50,9 @@ module Ace
         def load_all_assignments
           infos = @assignment_discoverer_factory.call.find_all(include_completed: true)
           infos.map { |info| assignment_info_to_h(info) }
-        rescue
-          []
+        rescue StandardError => e
+          [{"assignment" => {"id" => "unknown", "name" => "unreadable assignment state", "state" => "unknown"},
+            "recovery" => unavailable_recovery("unknown", e)}]
         end
 
         def assignment_info_to_h(info)
@@ -70,8 +72,20 @@ module Ace
               "pending" => info.queue_state.summary[:pending]
             },
             "active_steps" => active_steps.map(&:name),
-            "next_step" => next_step&.name
+            "next_step" => next_step&.name,
+            "recovery" => recovery_for(info.id)
           }
+        end
+
+        def recovery_for(id)
+          @recovery_factory.call.recovery_snapshot(id)
+        rescue StandardError => e
+          unavailable_recovery(id, e)
+        end
+
+        def unavailable_recovery(id, error)
+          {"assignment_id" => id, "liveness" => "unknown", "last_verified_observation" => nil,
+           "decision" => "reconcile-required", "recovery_reason" => "recovery evidence unavailable (#{error.class})"}
         end
 
         def extract_task_id(worktree_path, branch)

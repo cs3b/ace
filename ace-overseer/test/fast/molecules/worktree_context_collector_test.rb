@@ -121,8 +121,10 @@ class WorktreeContextCollectorTest < AceOverseerTestCase
 
       context = collector.collect(worktree)
 
-      assert_equal [], context.assignments
-      assert_equal 0, context.assignment_count
+      assert_equal "unknown", context.assignments.first.dig("assignment", "state")
+      assert_equal "unknown", context.assignments.first.dig("recovery", "liveness")
+      assert_equal "reconcile-required", context.assignments.first.dig("recovery", "decision")
+      assert_equal 1, context.assignment_count
     end
   end
 
