@@ -245,6 +245,37 @@ class ScopedServiceTest < AceHitlTestCase
     thread&.exit
   end
 
+  def test_otp_challenge_deadline_and_operation_are_enforced_over_authenticated_ipc
+    now = Time.now
+    Time.stub(:now, -> { now }) do
+      args = managed_args.transform_keys(&:to_s).merge("kind" => "otp", "otp" => otp_context(expires_in: 10))
+      client.create(**args)
+      client.deliver("hitl001", "654321")
+      error = assert_raises(Ace::Hitl::Lifecycle::PermissionError) do
+        client.consume("hitl001", timeout: 1, operation: "other-op")
+      end
+      refute_includes error.message, "654321"
+      now += 9
+      assert_equal "654321", client.consume("hitl001", timeout: 1, operation: "gem-push")["answer"]
+      refute_includes JSON.generate(client.consume("hitl001", timeout: 1, operation: "gem-push")), "654321"
+
+      args["id"] = "hitl002"
+      args["otp"] = otp_context(expires_in: 10)
+      client.create(**args)
+      now += 9
+      client.deliver("hitl002", "123456")
+      now += 1
+      2.times do
+        error = assert_raises(Ace::Hitl::Lifecycle::StateError) do
+          client.consume("hitl002", timeout: 1, operation: "gem-push")
+        end
+        assert_match(/expired/, error.message)
+        refute_includes error.message, "123456"
+      end
+      refute_equal "consumed", client.read("hitl002")["state"]
+    end
+  end
+
   def test_ended_attempt_cancels_the_request_through_the_boundary
     failing = LifecycleFixtures::TestBinding.new(
       on_validate: ->(**_kwargs) { nil },
