@@ -103,7 +103,7 @@ module Ace
             FAKE
             FileUtils.chmod(0o755, File.join(bin_dir, "herdr"))
 
-            pkg_libs = %w[ace-hitl ace-runtime ace-support-cli ace-support-config ace-support-core]
+            pkg_libs = %w[ace-hitl-contract ace-runtime ace-support-cli ace-support-config ace-support-core]
               .map { |pkg| File.expand_path("../../../../#{pkg}/lib", __dir__) }
             env = {
               "PATH" => "#{bin_dir}#{File::PATH_SEPARATOR}#{ENV['PATH']}",

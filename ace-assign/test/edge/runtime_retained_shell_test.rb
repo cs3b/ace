@@ -3,10 +3,12 @@
 require_relative "../test_helper"
 require "open3"
 require "timeout"
+require_relative "../support/native_runtime_fixture"
 
 # Opt in via a test-runner environment override. The test owns a named
 # native server and never connects to the operator's active session.
 class RuntimeRetainedShellTest < AceAssignTestCase
+  include NativeRuntimeFixture
   def test_submitted_command_exit_preserves_the_same_writable_prepared_target
     runtime_name = ENV["ACE_NATIVE_RUNTIME"]
     skip "requires explicit ACE_NATIVE_RUNTIME fixture override" unless %w[herdr tmux].include?(runtime_name)
@@ -24,7 +26,11 @@ class RuntimeRetainedShellTest < AceAssignTestCase
       ENV["ACE_TMUX_SESSION"] = "proof"
     end
     Ace::Runtime.reset_registry!
-    runner = Ace::Assign::Molecules::RuntimeControlSurfaceRunner.new(runtime: runtime_name)
+    runner = if ENV["ACE_INSTALLED_HOME"]
+      InstalledRuntimeRunner.new(runtime_name, ENV.fetch("ACE_INSTALLED_HOME"))
+    else
+      Ace::Assign::Molecules::RuntimeControlSurfaceRunner.new(runtime: runtime_name)
+    end
     window = runner.ensure_window(name: "retain-proof", root: @scratch)
     pane = runner.prepare_pane(window: window)
     marker = File.join(@scratch, "first")
@@ -82,35 +88,27 @@ class RuntimeRetainedShellTest < AceAssignTestCase
     assert_equal replacement, restarted.prepare_pane(window: tab)
   end
 
-  def start_herdr
-    session = "ace-retain-#{Process.pid}"
-    @log = File.open(File.join(@scratch, "server.log"), "w")
-    ENV["XDG_CONFIG_HOME"] = @scratch
-    ENV["HERDR_CONFIG_PATH"] = File.join(@scratch, "config.toml")
-    File.write(ENV["HERDR_CONFIG_PATH"], "[terminal]\ndefault_shell = \"/bin/bash\"\nshell_mode = \"non_login\"\n")
-    @pid = Process.spawn("herdr", "--session", session, "server", out: @log, err: @log, pgroup: true)
-    socket = File.join(@scratch, "herdr/sessions", session, "herdr.sock")
-    begin
-      wait_until { File.socket?(socket) }
-    rescue Timeout::Error
-      flunk "isolated native server did not start: #{File.read(@log.path)}"
+  # Each operation starts a fresh process using only built installed gems.
+  class InstalledRuntimeRunner
+    def initialize(runtime, home)
+      @runtime, @home = runtime, home
     end
-    created = native("herdr", "--session", session, "workspace", "create", "--cwd", @scratch,
-      "--label", "retention-proof", "--no-focus")
-    caller = JSON.parse(created).fetch("result").fetch("root_pane")
-    ENV["HERDR_SOCKET_PATH"] = socket
-    ENV["HERDR_SESSION"] = session
-    ENV["HERDR_PANE"] = caller.fetch("pane_id")
-    ENV["HERDR_WORKSPACE_ID"] = caller.fetch("workspace_id")
-  end
 
-  def native(*argv)
-    stdout, stderr, status = Open3.capture3(*argv)
-    assert status.success?, "#{argv.take(3).join(' ')} failed: #{stderr}"
-    stdout
-  end
-
-  def wait_until
-    Timeout.timeout(10) { sleep(0.02) until yield }
+    %i[ensure_window prepare_pane run_invocation_in_pane].each do |operation|
+      define_method(operation) do |**arguments|
+        script = <<~RUBY
+          require "json"
+          require "ace/assign"
+          runner = Ace::Assign::Molecules::RuntimeControlSurfaceRunner.new(runtime: #{@runtime.inspect})
+          args = JSON.parse(#{JSON.generate(arguments).inspect}, symbolize_names: true)
+          puts JSON.generate(runner.public_send(#{operation.inspect}, **args))
+        RUBY
+        env = ENV.keys.grep(/\ABUNDLE/).to_h { |key| [key, nil] }.merge(
+          "GEM_HOME" => @home, "GEM_PATH" => @home, "RUBYOPT" => nil, "RUBYLIB" => nil)
+        output, status = Open3.capture2e(env, Gem.ruby, "-e", script, chdir: "/tmp")
+        raise "installed #{operation} failed: #{output}" unless status.success?
+        JSON.parse(output.lines.last)
+      end
+    end
   end
 end
