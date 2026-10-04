@@ -392,7 +392,7 @@ git:
   worktree:
     root_path: ".ace-wt"
     auto_navigate: true
-    tmux: false
+    terminal: false
     task:
       directory_format: "task.{task_id}"
       branch_format: "{id}-{slug}"

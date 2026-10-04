@@ -93,7 +93,7 @@ git:
       on_delete: true
 ```
 
-Add hooks, auto-push, tmux launch, or PR automation only after the basic create/switch/remove loop feels right.
+Add hooks, auto-push, terminal launch, or PR automation only after the basic create/switch/remove loop feels right.
 
 ## Common Commands
 

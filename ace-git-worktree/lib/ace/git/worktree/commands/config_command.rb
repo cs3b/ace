@@ -459,7 +459,7 @@ module Ace
             provenance = {
               "root_path" => provenance_for.call("root_path"),
               "auto_navigate" => provenance_for.call("auto_navigate"),
-              "tmux" => provenance_for.call("tmux"),
+              "terminal" => provenance_for.call("terminal"),
               "mise_trust_auto" => provenance_for.call("mise_trust_auto")
             }
 
