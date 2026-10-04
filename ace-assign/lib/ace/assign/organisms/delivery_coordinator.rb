@@ -67,6 +67,7 @@ module Ace
 
         def execute(binding, operation, params, **options)
           @binding = binding
+          @intent_context = nil
           @attempt = @coordinator.authoritative_attempt(binding)
           unless @attempt&.active? && @attempt.managed?
             raise AttemptErrors::ReceiptRejected, "Delivery attempt is no longer active"
@@ -101,7 +102,12 @@ module Ace
           return status if operation == "status"
           return review_snapshot if operation == "review"
           pending = unresolved_intent
-          return reconcile(pending) if pending
+          if pending
+            result = reconcile(pending)
+            return result if pending["operation"] == operation
+            raise AttemptErrors::ReceiptRejected,
+              "Recovered #{pending['operation']}; requested #{operation} still needs execution"
+          end
           require_evidence!(options[:tests], options[:review]) if %w[ready merge].include?(operation)
           return consume_merge(options[:service_request_id]) if operation == "merge"
           pr = current_pr
@@ -113,6 +119,7 @@ module Ace
                     "fields" => options.slice(:title, :body).compact.keys.map(&:to_s),
                     "pr_number" => pr&.number, "tests" => options[:tests], "review" => options[:review]}
           record(intent)
+          @intent_context = unresolved_intent
           receipt = case operation
           when "create"
             @lifecycle.create(head_ref: provenance["head_ref"], base_ref: provenance["base_ref"],
@@ -138,7 +145,7 @@ module Ace
 
         def events
           @journal.read_events(@binding.fetch("assignment_id")).select do |event|
-            event["type"] == "delivery" && event["attempt_id"] == @binding.fetch("attempt_id")
+            event["type"] == "delivery"
           end
         end
 
@@ -153,13 +160,18 @@ module Ace
         end
 
         def unresolved_intent
-          pending = nil
-          events.each do |event|
+          history = events
+          settled = history.filter_map do |event|
             payload = event.fetch("payload")
-            pending = payload if payload["stage"] == "intent"
-            pending = nil if payload["stage"] == "result" && payload["outcome"] == "succeeded"
+            payload["intent_digest"] if payload["stage"] == "result" && payload["outcome"] == "succeeded"
           end
-          pending
+          pending = history.select do |event|
+            event.dig("payload", "stage") == "intent" && !settled.include?(event["digest"])
+          end
+          raise AttemptErrors::Conflict, "Multiple unresolved delivery intents require reconciliation" if pending.length > 1
+          event = pending.first
+          event && event.fetch("payload").merge("intent_digest" => event.fetch("digest"),
+            "intent_attempt_id" => event.fetch("attempt_id"))
         end
 
         def current_pr
@@ -168,6 +180,7 @@ module Ace
         end
 
         def reconcile(intent)
+          @intent_context = intent
           raise AttemptErrors::ReceiptRejected, "Unresolved delivery belongs to an older candidate" unless intent["head"] == @head
           operation = intent.fetch("operation")
           if operation == "create"
@@ -264,6 +277,8 @@ module Ace
 
         def record_result(operation, pr, outcome, extra = {})
           record({"stage" => "result", "operation" => operation, "head" => @head, "outcome" => outcome,
+            "intent_digest" => @intent_context&.fetch("intent_digest", nil),
+            "intent_attempt_id" => @intent_context&.fetch("intent_attempt_id", nil),
             "pr" => {"number" => pr.number, "url" => pr.url, "head_sha" => pr.head_sha,
                      "draft" => pr.draft, "state" => pr.state.to_s, "merge_commit_sha" => pr.merge_commit_sha}}.merge(extra))
         end
@@ -275,7 +290,9 @@ module Ace
            "actor" => attempt.binding.actor, "role" => attempt.binding.role, "runtime" => attempt.binding.runtime,
            "base_head" => attempt.binding.base_head, "candidate_head" => attempt.candidate_head,
            "evidence_git_ref" => @attempt.binding.evidence_git_ref, "journal_commit" => @journal.ref_value,
-           "delivery" => events.map { |event| event.fetch("payload") }}
+           "delivery" => events.map do |event|
+             event.fetch("payload").merge("attempt_id" => event.fetch("attempt_id"), "event_digest" => event.fetch("digest"))
+           end}
         end
 
         def git!(*argv)

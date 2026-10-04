@@ -59,3 +59,39 @@ qkb.1 removal and normal projection updates. Do not publish this intermediate so
 candidate. Fresh installed outside-checkout resolution and the actual configured
 qjx/gad.b merge producer/grants/native evidence path remain companion acceptance
 gates. Controlled provider/service fixtures do not establish live installed acceptance.
+
+## Independent review P1 repair after recovery integration
+
+Repair worktree `/Users/mc/Ps/ace/.ace-wt/codex-wave4-delivery-integrated`, branch
+`codex/wave4-delivery-integrated`, base `ac940ce60` includes accepted recovery from
+main `394d816dc`. Original candidate was rejected for filtering delivery context to
+one scoped attempt: closing create030 lost the PR for later steps, and unknown
+create030 could be repeated by fresh scoped attempt031.
+
+Ported regressions failed before correction: receipt `8x3zn5`, 14 tests/245
+assertions, one duplicate-create failure and one cross-step context error. The
+successful path closes scoped create030, runs read-only review145, closes it,
+updates147, closes it, and readies148 with current accepted evidence. Unknown
+create retains zero-match uncertainty in a new scoped attempt, then adopts the
+single exact result without another write and records original intent attribution.
+
+The repair derives assignment-wide identity, PR and pending intents exclusively
+from the existing qjl evidence events. Results remain owned by the current scoped
+attempt and link their original intent digest and attempt. Settlement is determined
+by digest links, not cross-attempt array chronology (journal ordering follows each
+attempt's chain). Status history exposes each event's owning attempt and digest.
+No attempt must remain active across the recipe; no new ledger is introduced.
+The recovery-based Git suite passed 575/1425, receipt `8x3zmx`.
+
+Final repair-focused run passed 15 tests/277 assertions in 4m3s, receipt
+`8x3zxz`. It also proves recovery of an older create cannot report success for a
+requested readiness operation: the caller receives an explicit remaining-step
+error, closes the original create attempt, then executes readiness on its own
+current scoped attempt with valid evidence. No timeout settings were changed.
+The intermediate 14-case repair passed 14/257 in 3m51s, receipt `8x3zsj`.
+
+Full `bin/ace-test ace-assign all` repair verification is still running at candidate
+freeze: its first run predates the final differing-operation completion guard;
+the second run includes the final guard and test. Both cleared all fast targets;
+feature outcomes must be recorded before claiming the full package gate. Neither
+those pending results nor the atomic installed companion gates are claimed green.

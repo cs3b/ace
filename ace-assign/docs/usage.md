@@ -462,3 +462,15 @@ Version and changelog preparation do not authorize publication.
 The neutral `git/pr/create` and `git/pr/update` workflow and skill assets require
 qkb.1 companion adoption across installed consumers. Their source tests do not
 claim fresh installed workflow acceptance or authorized live merge acceptance.
+
+Delivery context belongs to the assignment's existing evidence journal, while each
+operation belongs to its own scoped attempt. Closing create step `030` and starting
+update `147` or readiness `148` retains the exact PR and forge. An unresolved intent
+from any earlier scoped attempt prevents a second mutation: reconciliation records
+a result under the current attempt and links the original intent digest and attempt.
+Status history includes each event's owning `attempt_id` and `event_digest`. No
+single delivery attempt needs to remain active throughout the recipe.
+If reconciliation recovers a different operation than the requested step (for
+example, create while invoking readiness), the command reports that the requested
+step still needs execution. It does not return success for an unperformed step.
+Retry that requested operation with its current evidence after recovery settles.

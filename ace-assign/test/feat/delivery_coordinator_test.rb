@@ -329,4 +329,65 @@ class DeliveryCoordinatorTest < AceAssignTestCase
     assert_raises(Ace::Git::ProviderIdentityMismatchError) { perform("status") }
     assert_equal [:create], @io[:writes]
   end
+
+  def test_later_scoped_steps_reuse_assignment_pr_and_keep_operation_attribution
+    tests = accept("test", "010"); review = accept("review", "020")
+    perform("create", title: "Task")
+    created_attempt = @delivery_attempt.attempt_id
+    accept("create-pr", "030")
+    @delivery_attempt = start("145")
+    before = @journal.ref_value
+    assert_equal 1, perform("review").pull_request.number
+    assert_equal before, @journal.ref_value
+    accept("review", "145")
+    @delivery_attempt = start("147")
+    perform("update", title: "Final", body: "Executed validation")
+    updated_attempt = @delivery_attempt.attempt_id
+    accept("update-pr", "147")
+    @delivery_attempt = start("148")
+    status = perform("ready", tests: tests, review: review)
+    assert_equal false, @io[:prs].first.draft
+    assert_equal %i[create update ready], @io[:writes]
+    assert_equal @delivery_attempt.attempt_id, status["delivery"].last["attempt_id"]
+    results = @journal.read_events(@assignment.id).select { |event| event.dig("payload", "stage") == "result" }
+    assert_equal [created_attempt, updated_attempt, @delivery_attempt.attempt_id], results.map { |event| event["attempt_id"] }
+  end
+
+  def test_new_scoped_attempt_cannot_repeat_unknown_create
+    @io[:lose_create] = true
+    assert_raises(Ace::Git::ProviderUnknownOutcomeError) { perform("create", title: "Task") }
+    original = @io[:prs].first
+    original_attempt = @delivery_attempt.attempt_id
+    @io[:prs] = []
+    @delivery_attempt = start("031")
+    assert_raises(Ace::Git::ProviderUnknownOutcomeError) { perform("create", title: "Task") }
+    assert_equal [:create], @io[:writes]
+    @io[:prs] = [original]
+    perform("create", title: "Task")
+    assert_equal [:create], @io[:writes]
+    result = @journal.read_events(@assignment.id).last
+    assert_equal @delivery_attempt.attempt_id, result["attempt_id"]
+    assert_equal original_attempt, result.dig("payload", "intent_attempt_id")
+    refute_nil result.dig("payload", "intent_digest")
+  end
+
+  def test_recovering_create_does_not_claim_later_ready_step_completed
+    tests = accept("test", "010"); review = accept("review", "020")
+    @io[:lose_create] = true
+    assert_raises(Ace::Git::ProviderUnknownOutcomeError) { perform("create", title: "Task") }
+    original_attempt = @delivery_attempt.attempt_id
+    @delivery_attempt = start("148")
+    error = assert_raises(Ace::Assign::AttemptErrors::ReceiptRejected) do
+      perform("ready", tests: tests, review: review)
+    end
+    assert_includes error.message, "requested ready still needs execution"
+    assert_equal true, @io[:prs].first.draft
+    assert_equal [:create], @io[:writes]
+    accept("create-pr", "030")
+    assert @coordinator.authoritative_attempt({"assignment_id" => @assignment.id,
+      "attempt_id" => original_attempt}).terminal?
+    perform("ready", tests: tests, review: review)
+    assert_equal false, @io[:prs].first.draft
+    assert_equal %i[create ready], @io[:writes]
+  end
 end
