@@ -61,7 +61,8 @@ module Ace
               end
               record = {"request" => request, "revision" => revision, "channel" => channel,
                         "chat_id" => entry["chat_id"], "binding" => binding,
-                        "sensitive" => facts["sensitive"] == true, "status" => "uncertain"}
+                        "sensitive" => facts["sensitive"] == true, "status" => "uncertain",
+                        "coverage_generation" => state["poll"].dig(channel, "generation") || 0}
               state["requests"][request] = record
               commit.call # crash/send timeout leaves uncertain; no duplicate send
               begin
@@ -104,7 +105,14 @@ module Ace
                 if %w[queued unresolved].include?(duplicate["status"])
                   if duplicate["request"]
                     existing = state["requests"].fetch(duplicate["request"])
-                    deliver_reply(existing, duplicate, text, channel, commit) unless existing["sensitive"]
+                    if existing["sensitive"]
+                      duplicate["status"] = "secret-unavailable"
+                      existing["secret_delivery"] = "unavailable"
+                      commit.call
+                      text.clear unless text.frozen?
+                    else
+                      deliver_reply(existing, duplicate, text, channel, commit)
+                    end
                   else
                     deliver_instruction(duplicate, text, channel, commit)
                   end
@@ -137,10 +145,22 @@ module Ace
             raise ContractError, "invalid poll interval" if started_at > through || through > now
             @journal.synchronize do |state, commit|
               old = state["poll"][channel]
-              gap = old && started_at > old["through"]
-              healthy = continuous == true && !gap && (!old || old["healthy"] == true)
-              state["poll"][channel] = {"from" => old ? old["from"] : started_at,
-                                        "through" => through, "healthy" => healthy}
+              gap = old && started_at > old["through"] && old["healthy"]
+              broken = continuous != true || gap
+              generation = old ? old.fetch("generation", 0) : 0
+              if broken
+                state["poll_history"] ||= {}
+                (state["poll_history"][channel] ||= []) << old.dup if old
+                generation += 1 if !old || old["healthy"]
+                state["poll"][channel] = {"from" => started_at, "through" => through,
+                                          "healthy" => false, "generation" => generation}
+              else
+                recovering = old && !old["healthy"]
+                state["poll"][channel] = {
+                  "from" => recovering ? [old["from"], started_at].max : (old ? old["from"] : started_at),
+                  "through" => through, "healthy" => true, "generation" => generation
+                }
+              end
               commit.call
             end
           end
@@ -153,7 +173,8 @@ module Ace
 
               poll = state["poll"][record["channel"]]
               healthy = poll && poll["healthy"] && poll["from"] <= through && poll["through"] >= through &&
-                record["status"] == "submitted"
+                record["status"] == "submitted" && poll["from"] <= record["submitted_at"] &&
+                poll.fetch("generation", 0) == record.fetch("coverage_generation", 0)
               relevant = state["ingress"].select do |item|
                 item["request"] == request && item["revision"] == record["revision"] && item["received_at"] <= through
               end
@@ -214,6 +235,11 @@ module Ace
           def deliver_reply(record, item, text, channel, commit)
             # Durable terminal history in ace-hitl defeats late replies even
             # after transport tombstones expire. Hermes never runs the effect.
+            if record["sensitive"] && record["secret_delivery"] == "unavailable"
+              item["status"] = "secret-unavailable"
+              commit.call
+              return
+            end
             begin
               facts = @lifecycle.read(record["request"])
             rescue Ace::Hitl::Lifecycle::StateError
@@ -257,6 +283,7 @@ module Ace
             commit.call
           rescue StandardError
             item["status"] = record["sensitive"] ? "secret-unavailable" : "unresolved"
+            record["secret_delivery"] = "unavailable" if record["sensitive"]
             commit.call
           ensure
             answer&.clear

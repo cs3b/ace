@@ -22,6 +22,15 @@ module Ace
             # transient. Replay from the unadvanced offset; secret failures
             # remain status-only and require a fresh challenge.
             started = stamp
+            if Time.iso8601(started) - Time.iso8601(cursor["through"]) >= 24 * 60 * 60
+              invalidate_coverage(started)
+              cursor["coverage_from"] = started
+              cursor["generation"] += 1
+              @journal.synchronize do |state, commit|
+                state["cursor"] = cursor
+                commit.call
+              end
+            end
             updates = @telegram.updates(offset: cursor["offset"])
             ids = updates.map { |u| u.is_a?(Hash) && u["update_id"] }
             unless ids.all? { |id| id.is_a?(Integer) && id >= cursor["offset"] } && ids == ids.sort && ids.uniq == ids
@@ -65,13 +74,24 @@ module Ace
             end
             updates.size
           rescue StandardError
-            @registry.channels.each do |channel|
-              @relay.poll_complete(channel: channel["name"], started_at: stamp, through: stamp, continuous: false)
+            at = stamp
+            invalidate_coverage(at)
+            @journal.synchronize do |state, commit|
+              previous = state["cursor"] || cursor || {"offset" => 0, "generation" => 0}
+              state["cursor"] = previous.merge("through" => at, "coverage_from" => at,
+                "generation" => previous.fetch("generation", 0) + 1)
+              commit.call
             end
             raise ContractError, "Telegram poll unavailable; ingress coverage is unknown"
           end
 
           private
+
+          def invalidate_coverage(at)
+            @registry.channels.each do |channel|
+              @relay.poll_complete(channel: channel["name"], started_at: at, through: at, continuous: false)
+            end
+          end
 
           def stamp
             @clock.call.utc.iso8601

@@ -32,3 +32,23 @@ Source version remains 0.1.0 with Unreleased changelog; coordinated version prep
 ## Skills applied
 
 Loaded and executed `as-task-work`, `as-git-worktree-create`, their workflow bundles and the generated JIT task plan. Loaded `as-test-plan`/`wfi://test/plan` and retained the responsibility map. Loaded `as-git-commit`/`wfi://git/commit` and used path-scoped ACE commits. No nested subagents were started.
+
+## Independent review repair — 2026-10-05
+
+The independent review rejected `1d016f20d` for three verified P1s. The replacement candidate repairs all three without changing the live Telegram/Lab acceptance boundary:
+
+1. Retention gaps are invalidated durably before any successful response batch can advance the cursor. Requests bind to a coverage generation; a recovered epoch cannot certify requests from the old generation. Prior poll epochs remain in the non-secret journal.
+2. An unhealthy epoch can recover on verified empty polling, beginning fresh coverage instead of inheriting unhealthy forever. Fresh requests in that epoch can obtain healthy checkpoints; older requests remain unknown. Startup now establishes coverage before sending new questions so those submissions fall within the new epoch.
+3. A crashed queued sensitive receipt becomes sanitized `secret-unavailable` on replay, without IPC redelivery. Polling can advance its offset; both duplicate and newly messaged codes on the interrupted original challenge remain unavailable, requiring a fresh authorized challenge.
+
+Durable regressions include the three exact reviewer behaviors plus old/new epoch separation, history preservation, cursor advancement without secret IPC, original-challenge refusal and startup poll/send ordering.
+
+Executed repair receipts:
+
+- Hermes full suite: **106 tests, 607 assertions, zero failures/errors**, `.ace-local/test/reports/hitl-hermes/8x3yqk/`.
+- HITL full suite: **219 tests, 1181 assertions, zero failures/errors, one existing opt-in multi-UID skip**, `.ace-local/test/reports/hitl/8x3ype/`.
+- Original reviewer PoCs with repaired-library bootstrap: **49 tests, 198 assertions, zero failures/errors**, `.ace-local/test/reports/hitl-hermes/8x3yql/`. The unchanged reviewer file directly requires its own worktree library; direct invocation before updating that checkout reproduced the original three failures (`8x3ymz`). Independent recheck should update the reviewer worktree to the replacement SHA and run its original file directly.
+- Installed clean-home artifact proof retained under `.ace-local/test/artifacts/hitl-hermes/installed-20261004230927-433245fc/`.
+- `git diff --check`: clean.
+
+Task remains in-progress, source version unchanged, no merge or publication. Fresh independent review remains required.

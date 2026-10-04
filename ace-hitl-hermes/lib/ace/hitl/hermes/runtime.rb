@@ -30,6 +30,13 @@ module Ace
           verify_polling_owner!
           @journal.actor do
             poller = Transport::Poller.new(relay: @relay, telegram: telegram, journal: @journal, registry: @registry)
+            # Establish the new coverage epoch before issuing questions, so
+            # a startup submission is never stamped before its coverage begins.
+            begin
+              poller.once
+            rescue ContractError
+              raise if once
+            end
             loop do
               # Every folder question is an actual lifecycle request. Plain
               # instructions have Captain sender and are left for the target.

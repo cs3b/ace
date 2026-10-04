@@ -123,6 +123,27 @@ class TransportCliTest < AceHermesTestCase
     assert_raises(Ace::Hitl::Hermes::ContractError) { runtime.verify_polling_owner! }
   end
 
+  def test_serve_establishes_coverage_before_startup_submission
+    @client.create(id: "startup1", assignment: "8x3test", attempt: "a1b2c3", kind: "text",
+      project: "ace", harness: "agy", plan: "test", question: "Proceed?", ace_hitl_id: "ace-hitl-1")
+    ch = Ace::Hitl::Hermes::Molecules::HermesChannels::Channel.new(name: "inbox", machine: "local", folder: @folder)
+    Ace::Hitl::Hermes::Organisms::HermesBox.new(channel: ch).publish(kind: :question, id: "startup1",
+      body: "Proceed?", sender: "agent", timestamp: Time.now.utc.iso8601)
+    calls = []
+    transport = Object.new
+    transport.define_singleton_method(:updates) { |offset:| calls << :poll; [] }
+    transport.define_singleton_method(:call) do |channel, question|
+      calls << :send
+      {"success" => true, "chat_id" => channel["chat_id"], "message_id" => "100"}
+    end
+    runtime = Ace::Hitl::Hermes::Runtime.new(@config_path)
+    runtime.define_singleton_method(:telegram) { transport }
+    runtime.serve(once: true)
+    assert_equal [:poll, :send, :poll], calls
+    submitted_at = runtime.relay.delivery("startup1")["submitted_at"]
+    assert runtime.relay.reconcile(request: "startup1", through: submitted_at)["healthy"]
+  end
+
   def test_unknown_request_checkpoint_and_malformed_ingress_errors_are_sanitized
     checkpoint = cli("ingress", "reconcile", "--request", "absent1", "--through", Time.now.utc.iso8601)
     refute checkpoint["healthy"]

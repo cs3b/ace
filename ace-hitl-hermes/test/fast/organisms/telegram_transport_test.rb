@@ -373,6 +373,97 @@ class TelegramTransportTest < AceHermesTestCase
     checkpoint&.join(1)
   end
 
+  def test_nonempty_batch_after_retention_gap_does_not_restore_old_coverage
+    submit
+    source = Object.new
+    unrelated_update = {'update_id' => 8, 'message' => {'message_id' => 123, 'date' => @time.to_i, 'chat' => {'id' => -999999, 'type' => 'supergroup'}, 'from' => {'id' => 99}, 'text' => 'unrelated'}}
+    batches = [[], [unrelated_update], []]
+    source.define_singleton_method(:updates) { |offset:| batches.shift }
+    poller = T::Poller.new(relay: @relay, telegram: source, journal: @journal, registry: @registry, clock: -> { @time })
+    poller.once
+    @time += 25 * 60 * 60
+    poller.once
+    @time += 1
+    poller.once
+    refute @relay.reconcile(request: 'q-1', through: @time.iso8601)['healthy'], 'Nonempty first batch after Telegram retention gap erased the gap and certified old coverage'
+  end
+
+  def test_recovered_empty_polls_restore_healthy_coverage_for_a_new_request
+    submit
+    source = Object.new
+    failing = true
+    source.define_singleton_method(:updates) { |offset:| raise 'temporary network fault' if failing; [] }
+    poller = T::Poller.new(relay: @relay, telegram: source, journal: @journal, registry: @registry, clock: -> { @time })
+    assert_raises(Ace::Hitl::Hermes::ContractError) { poller.once }
+    failing = false
+    @time += 60
+    poller.once
+    @time += 60
+    submit('q-new')
+    poller.once
+    assert @relay.reconcile(request: 'q-new', through: @time.iso8601)['healthy'], 'A newly submitted request cannot obtain healthy coverage even after successful empty polls'
+  end
+
+  def test_queued_secret_after_crash_is_not_confirmed_without_delivery_or_explicit_failure
+    submit(secret: true)
+    @journal.synchronize do |state, commit|
+      state['sequence'] = 1
+      state['ingress'] << {'request' => 'q-1', 'revision' => 'rev-1', 'channel' => 'lab', 'message_id' => '101', 'sequence' => 1, 'received_at' => QUESTION_TS, 'status' => 'queued'}
+      commit.call
+    end
+    result = @relay.receive(event('987654'))
+    assert_equal 'secret-unavailable', result['status'], 'Crashed queued secret must become explicit unavailable instead of blocking Telegram offset forever'
+  end
+
+  def test_recovery_epoch_preserves_old_unknown_and_allows_fresh_request
+    submit
+    source = Object.new
+    failing = false
+    source.define_singleton_method(:updates) { |offset:| raise "poll failed" if failing; [] }
+    poller = T::Poller.new(relay: @relay, telegram: source, journal: @journal, registry: @registry,
+      clock: -> { @time })
+    poller.once
+    failing = true
+    @time += 1
+    assert_raises(Ace::Hitl::Hermes::ContractError) { poller.once }
+    failing = false
+    @time += 60
+    poller.once
+    submit("q-fresh")
+    poller.once
+    refute @relay.reconcile(request: "q-1", through: @time.iso8601)["healthy"]
+    assert @relay.reconcile(request: "q-fresh", through: @time.iso8601)["healthy"]
+    @journal.synchronize do |state, _|
+      assert state["poll_history"]["lab"].any? { |epoch| epoch["generation"] == 0 }
+      refute_equal state["requests"]["q-1"]["coverage_generation"], state["poll"]["lab"]["generation"]
+    end
+  end
+
+  def test_crashed_secret_replay_advances_cursor_without_ipc_or_old_challenge_retry
+    submit(secret: true)
+    @journal.synchronize do |state, commit|
+      state["sequence"] = 1
+      state["ingress"] << {"request" => "q-1", "revision" => "rev-1", "channel" => "lab",
+        "message_id" => "101", "sequence" => 1, "received_at" => QUESTION_TS, "status" => "queued"}
+      commit.call
+    end
+    updates = [{"update_id" => 8, "message" => {"message_id" => 101,
+      "chat" => {"id" => -424242, "type" => "supergroup"}, "from" => {"id" => 42},
+      "reply_to_message" => {"message_id" => 100}, "text" => "987654"}}]
+    source = Object.new
+    source.define_singleton_method(:updates) { |offset:| updates }
+    T::Poller.new(relay: @relay, telegram: source, journal: @journal, registry: @registry,
+      clock: -> { @time }).once
+    @journal.synchronize do |state, _|
+      assert_equal 9, state["cursor"]["offset"]
+      assert_equal "secret-unavailable", state["ingress"][0]["status"]
+    end
+    assert_equal "secret-unavailable", @relay.receive(event("123456", message_id: "102"))["status"]
+    assert_empty @boundary.answers
+    assert_empty box.poll.messages
+    assert_no_secret("987654", @relay.delivery("q-1"))
+  end
+
   def assert_no_secret(secret, projection)
     require "digest"
     bytes = File.read(File.join(@tmp, "state", "journal.json")) + JSON.generate(projection)
