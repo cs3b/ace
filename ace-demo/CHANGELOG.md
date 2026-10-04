@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.26.0] - 2026-10-04
+
+### Added
+- Demo terminal directives run through the `ace-runtime` contract (`TmuxDirectiveExecutor` replaced by `RuntimeDirectiveExecutor`): the four lifecycle wait conditions and send directives work on both adapters with identical semantics, with per-directive `runtime:` selection (directive > `ACE_RUNTIME` > configured > detection). `attach`/`detach` stay tmux-local and raise an explicit error under any other runtime.
+- New dependency: `ace-runtime` (~> 0.1); `ace-tmux` is kept for the tmux adapter and detach.
+
 ## [0.25.11] - 2026-10-02
 
 ### Technical
