@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.25.0] - 2026-10-04
+
+### Added
+- Post-create terminal opening goes through the `ace-runtime` contract: inside a live runtime a window/tab rooted at the worktree opens via `ensure_window`; with tmux explicitly selected outside any runtime, `ace-tmux start` bootstraps the session; explicit herdr never launches tmux; without a live runtime the cd hint is shown. Config key `tmux` renamed to `terminal` (no legacy alias, ADR-024).
+- New dependencies: `ace-runtime` (~> 0.1) and `ace-tmux` (~> 0.18, tmux adapter).
+
 ## [0.24.1] - 2026-09-29
 
 ### Fixed
