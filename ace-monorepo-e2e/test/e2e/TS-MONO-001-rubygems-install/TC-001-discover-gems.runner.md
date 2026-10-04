@@ -17,7 +17,7 @@ Save all output to `results/tc/01/`.
 5. Confirm the frozen release manifest copied by setup is present and record
    its package count:
 ```bash
-"LANG="${ACE_E2E_LANG:-C.UTF-8}" $ACE_E2E_SANDBOX_RUBY_ROOT/bin/ruby" -rjson -e 'puts JSON.parse(File.read("results/tc/01/release-manifest.json"))["packages"].size' \
+LANG="${ACE_E2E_LANG:-C.UTF-8}" "$ACE_E2E_SANDBOX_RUBY_ROOT/bin/ruby" -rjson -e 'puts JSON.parse(File.read("results/tc/01/release-manifest.json"))["packages"].size' \
   > results/tc/01/manifest-package-count.txt
 ```
 
