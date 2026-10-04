@@ -397,7 +397,7 @@ module Ace
 
         def runtime
           @runtime ||= Ace::Runtime::Molecules::RuntimeSelector.new(
-            config: {runtime: @config["runtime"]}
+            config: {runtime: Atoms::RuntimeSetting.normalize(@config["runtime"])}
           ).resolve
         end
       end

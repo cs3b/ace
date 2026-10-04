@@ -62,6 +62,38 @@ class WindowOpenerTest < AceOverseerTestCase
     Ace::Runtime.reset_registry!
   end
 
+  def test_shipped_auto_default_falls_through_to_env_selection
+    Ace::Runtime.reset_registry!
+    runtime = FakeRuntime.new
+    Ace::Runtime.register(:faketest, -> { runtime })
+
+    opener = Ace::Overseer::Molecules::WindowOpener.new(
+      config: {"runtime" => "auto"},
+      env: {"ACE_RUNTIME" => "faketest"}
+    )
+    opener.open(worktree_path: "/wt/task.230")
+
+    assert_equal [{name: "task-230", root: "/wt/task.230", preset: nil}], runtime.calls
+  ensure
+    Ace::Runtime.reset_registry!
+  end
+
+  def test_shipped_auto_default_falls_through_to_detection
+    Ace::Runtime.reset_registry!
+    runtime = FakeRuntime.new
+    Ace::Runtime.register(:herdr, -> { runtime })
+
+    opener = Ace::Overseer::Molecules::WindowOpener.new(
+      config: {"runtime" => "auto"},
+      env: {"HERDR_SESSION" => "ws-live", "HERDR_PANE" => "p1"}
+    )
+    opener.open(worktree_path: "/wt/task.230")
+
+    assert_equal [{name: "task-230", root: "/wt/task.230", preset: nil}], runtime.calls
+  ensure
+    Ace::Runtime.reset_registry!
+  end
+
   def test_unknown_configured_runtime_fails_closed
     Ace::Runtime.reset_registry!
 

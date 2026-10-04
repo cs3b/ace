@@ -33,7 +33,7 @@ module Ace
 
         def adapter
           @adapter ||= @runtime || Ace::Runtime::Molecules::RuntimeSelector.new(
-            config: {runtime: config["runtime"]},
+            config: {runtime: Atoms::RuntimeSetting.normalize(config["runtime"])},
             env: env
           ).resolve
         end
