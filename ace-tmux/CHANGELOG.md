@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Expose native session/pane/shell identity for managed assignment owner verification.
+
 ## [0.18.0] - 2026-10-02
 
 ### Added

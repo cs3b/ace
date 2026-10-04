@@ -140,6 +140,8 @@ class TmuxRuntimeAdapterNativeTest < Minitest::Test
         ""
       when "display-message"
         case command[-1]
+        when "\#{session_id}\t\#{pane_id}\t\#{pane_pid}"
+          "$1\t%2\t42"
         when "\#{pane_current_path}" then "/tmp/work"
         when "\#{pane_dead}", "\#{pane_id}"
           if command[command.index("-t") + 1] == @pane && !@fail_pane_queries
@@ -180,6 +182,22 @@ class TmuxRuntimeAdapterNativeTest < Minitest::Test
     @executor = FakeTmuxExecutor.new
     @backend = Ace::Tmux::NativeRuntimeBackend.new(executor: @executor, env: {"ACE_TMUX_SESSION" => "main"})
     @adapter = Ace::Tmux::RuntimeAdapter.new(backend: @backend)
+  end
+
+  def test_native_process_binding_pins_os_owner_below_retained_shell
+    identity = Object.new
+    owner = {"shell_identity" => {"pid" => 42, "started_at" => "shell"},
+      "process_identity" => {"pid" => 43, "started_at" => "agent"}}
+    identity.define_singleton_method(:owner) do |shell_pid:, caller_pid:|
+      shell_pid == 42 && caller_pid == 44 ? owner : nil
+    end
+    adapter = Ace::Tmux::RuntimeAdapter.new(backend: @backend, process_identity: identity)
+    binding = adapter.process_binding(pane: "%2", caller_pid: 44)
+    assert_equal "tmux", binding["runtime"]
+    assert_equal "$1", binding["session"]
+    assert_equal "%2", binding["pane"]
+    assert_equal owner["process_identity"], binding["process_identity"]
+    assert_nil adapter.process_binding(pane: "%2", caller_pid: 42)
   end
 
   def test_native_window_creation_is_idempotent_and_uses_root

@@ -18,6 +18,7 @@ Eleven operations, keyword-arg surfaces mirroring today's consumer calls:
 |-----------|---------|
 | Context | `runtime.context` → `{in_runtime:, session:, window:, pane:}` |
 | Ensure window | `runtime.ensure_window(name:, root:, preset: nil)` — idempotent by normalized name; conflicting root/preset raises `WindowConflictError` |
+| Process identity | `runtime.process_binding(pane:, caller_pid:)` → verified owner/native binding or nil (unknown); read-only, no authorization |
 | Prepare pane | `runtime.prepare_pane(window:)` — splits when needed; target stays alive after a submitted command exits |
 | Focus | `runtime.focus(window:)` |
 | Send | `runtime.send(pane:, command: nil, items: [])` — ordered `{message: String}` / `{key: String}` entries |
@@ -118,3 +119,9 @@ adapter-authoring walkthrough.
 Note: adapters intentionally define `send` (the intent operation),
 which overrides `Object#send`. Use `__send__` for reflective dispatch
 on adapter objects.
+
+## Recoverable process ownership
+
+`process_binding(pane:, caller_pid:)` identifies a caller's owner below the exact native retained shell. The returned string-keyed object binds `runtime`, `session`, `pane`, `shell_identity` and `process_identity`; each OS identity carries PID, UID, start time and host. Herdr additionally binds durable terminal ID, agent kind and immutable native agent session, and corroborates the owner against foreground process information. No command line arguments are stored.
+
+An absent or non-native caller, retained shell without its owner, inaccessible OS facts, zombie or mismatched process returns nil. Native transport failures keep the standard typed error model. Consumers must compare the complete binding on each recovery observation. A process binding proves liveness only and grants no actor, service, effect or HITL authority. Unknown observation preserves resources; it does not prove all descendants stopped.
