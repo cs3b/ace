@@ -5,7 +5,7 @@ require "ace/support/config"
 require "ace/support/fs"
 require "ace/support/nav"
 require "ace/support/cli"
-require "ace/tmux"
+require "ace/runtime"
 require "pathname"
 
 # CLI and commands

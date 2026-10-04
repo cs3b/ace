@@ -21,8 +21,8 @@ module Ace
           option :provider, desc: "LLM provider:model override (e.g., codex:gpt-5, claude:sonnet)"
           option :cli_args, desc: "Extra CLI args for provider process"
           option :timeout, type: :integer, desc: "Execution timeout in seconds"
-          option :launch_mode, desc: "Launch mode: auto, headless, or tmux"
-          option :callback, type: :boolean, default: false, desc: "Capture the origin tmux pane and let the forked agent send a final callback message there"
+          option :launch_mode, desc: "Launch mode: auto, headless, tmux, or herdr"
+          option :callback, type: :boolean, default: false, desc: "Capture the origin pane and let the forked agent send a final callback message there"
           option :quiet, aliases: ["-q"], type: :boolean, default: false, desc: "Suppress non-essential output"
           option :debug, aliases: ["-d"], type: :boolean, default: false, desc: "Show debug output"
 
@@ -225,13 +225,13 @@ module Ace
           def resolve_callback_pane(callback_enabled, launch_mode)
             return nil unless callback_enabled
 
-            unless launch_mode == "tmux"
-              raise Error, "--callback requires tmux launch mode so the origin pane can be addressed."
+            unless Molecules::ForkSessionLauncher::TERMINAL_LAUNCH_MODES.include?(launch_mode)
+              raise Error, "--callback requires a terminal launch mode (tmux or herdr) so the origin pane can be addressed."
             end
 
-            pane = launcher.respond_to?(:callback_pane) ? launcher.callback_pane : nil
+            pane = launcher.respond_to?(:callback_pane) ? launcher.callback_pane(runtime: launch_mode) : nil
             pane = pane.to_s.strip
-            raise Error, "--callback requires a resolvable origin tmux pane." if pane.empty?
+            raise Error, "--callback requires a resolvable origin pane." if pane.empty?
 
             pane
           end

@@ -20,7 +20,7 @@ class AssignDriveContractTest < AceAssignTestCase
     assert_includes content, "do not poll the forked subtree on a timer"
     assert_includes content, "wait for the child forked agent to send a final status message back into the origin pane"
     assert_includes content, "ACE_ASSIGN_CALLBACK_PANE"
-    assert_includes content, 'ace-tmux send --pane "$ACE_ASSIGN_CALLBACK_PANE"'
+    assert_includes content, 'ace-runtime send --pane "$ACE_ASSIGN_CALLBACK_PANE"'
     assert_includes content, "Poll the forked subtree every 6 minutes by default."
     assert_includes content, "Treat scoped assignment status as the source of truth for subtree completion."
     assert_includes content, "ace-assign step --assignment \"$ASSIGNMENT_TARGET\""

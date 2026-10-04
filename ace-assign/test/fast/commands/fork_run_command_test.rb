@@ -81,13 +81,13 @@ class ForkRunCommandTest < AceAssignTestCase
       @calls = []
     end
 
-    def callback_pane
+    def callback_pane(runtime: nil)
       @pane
     end
 
     def launch(**kwargs)
       @calls << kwargs
-      {tmux: true, pane_target: "%42", callback_mode: true, callback_pane: @pane}
+      {runtime: "tmux", pane_target: "%42", callback_mode: true, callback_pane: @pane}
     end
   end
 
@@ -260,7 +260,7 @@ class ForkRunCommandTest < AceAssignTestCase
     end
   end
 
-  def test_fork_run_callback_requires_tmux_launch_mode
+  def test_fork_run_callback_requires_terminal_launch_mode
     with_temp_cache do |cache_dir|
       steps = [
         {"name" => "work-on-task", "instructions" => "Implement task", "context" => "fork"}
@@ -282,7 +282,7 @@ class ForkRunCommandTest < AceAssignTestCase
         )
       end
 
-      assert_includes error.message, "--callback requires tmux launch mode"
+      assert_includes error.message, "--callback requires a terminal launch mode"
       Ace::Assign.reset_config!
     end
   end
@@ -309,7 +309,7 @@ class ForkRunCommandTest < AceAssignTestCase
         )
       end
 
-      assert_includes error.message, "resolvable origin tmux pane"
+      assert_includes error.message, "resolvable origin pane"
       Ace::Assign.reset_config!
     end
   end

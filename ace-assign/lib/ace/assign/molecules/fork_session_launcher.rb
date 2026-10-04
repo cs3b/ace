@@ -11,7 +11,8 @@ module Ace
         DEFAULT_PROVIDER = "claude:sonnet"
         DEFAULT_TIMEOUT = 1800
         DEFAULT_LAUNCH_MODE = "auto"
-        VALID_LAUNCH_MODES = %w[auto headless tmux].freeze
+        VALID_LAUNCH_MODES = %w[auto headless tmux herdr].freeze
+        TERMINAL_LAUNCH_MODES = %w[tmux herdr].freeze
         TMUX_POLL_INTERVAL = 0.5
         DEFAULT_TARGET_ENV = "ACE_ASSIGN_DEFAULT_TARGET"
         CURRENT_ASSIGNMENT_ID_ENV = "ACE_ASSIGN_CURRENT_ASSIGNMENT_ID"
@@ -35,18 +36,11 @@ module Ace
             env[CURRENT_FORK_ROOT_ENV].to_s.strip == root_ref
         end
 
-        def initialize(config: nil, query_interface: Ace::LLM::QueryInterface, tmux_runner: nil, interactive_builder: nil)
-          @config = config || Ace::Assign.config
-          @query_interface = query_interface
-          @tmux_runner = tmux_runner || TmuxControlSurfaceRunner.new
-          @interactive_builder = interactive_builder || Ace::LLM::Molecules::InteractiveCommandBuilder.new
-        end
-
-        def initialize(config: nil, query_interface: Ace::LLM::QueryInterface, tmux_runner: nil, interactive_builder: nil,
+        def initialize(config: nil, query_interface: Ace::LLM::QueryInterface, runner: nil, interactive_builder: nil,
           lifecycle_exclusion: nil)
           @config = config || Ace::Assign.config
           @query_interface = query_interface
-          @tmux_runner = tmux_runner || TmuxControlSurfaceRunner.new
+          @runner = runner || RuntimeControlSurfaceRunner.new
           @interactive_builder = interactive_builder || Ace::LLM::Molecules::InteractiveCommandBuilder.new
           @lifecycle_exclusion = lifecycle_exclusion
         end
@@ -62,17 +56,7 @@ module Ace
           # marker fails the launch closed instead of writing into a deleted
           # assignment.
           lifecycle_exclusion.with_shared(lifecycle_exclusion.assignment_key(assignment_id)) do
-            if resolved_mode == "tmux"
-              launch_tmux(
-                assignment_id: assignment_id,
-                fork_root: fork_root,
-                provider: resolved_provider,
-                cli_args: cli_args,
-                timeout: resolved_timeout,
-                cache_dir: cache_dir,
-                callback_pane: callback_pane
-              )
-            else
+            if resolved_mode == "headless"
               launch_provider_session(
                 assignment_id: assignment_id,
                 fork_root: fork_root,
@@ -81,12 +65,23 @@ module Ace
                 timeout: resolved_timeout,
                 cache_dir: cache_dir
               )
+            else
+              launch_in_runtime(
+                runtime: resolved_mode,
+                assignment_id: assignment_id,
+                fork_root: fork_root,
+                provider: resolved_provider,
+                cli_args: cli_args,
+                timeout: resolved_timeout,
+                cache_dir: cache_dir,
+                callback_pane: callback_pane
+              )
             end
           end
         end
 
-        def callback_pane
-          tmux_runner.current_pane
+        def callback_pane(runtime: nil)
+          runtime_runner_for(runtime).current_pane
         end
 
         def launch_provider_session(assignment_id:, fork_root:, provider:, cli_args: nil, timeout: nil, cache_dir: nil,
@@ -124,7 +119,7 @@ module Ace
 
         private
 
-        attr_reader :config, :query_interface, :tmux_runner, :interactive_builder
+        attr_reader :config, :query_interface, :runner, :interactive_builder
 
         def lifecycle_exclusion
           @lifecycle_exclusion ||= Molecules::LifecycleExclusion.new
@@ -140,36 +135,35 @@ module Ace
 
           return mode unless mode == "auto"
 
-          tmux_runner.tmux_context? ? "tmux" : "headless"
+          # Assign is the only consumer whose auto mode selects headless,
+          # and only when no terminal runtime is detected (k86.3 spec).
+          runner.detect_runtime || "headless"
         end
 
-        def launch_tmux(assignment_id:, fork_root:, provider:, cli_args:, timeout:, cache_dir:, callback_pane: nil)
+        def launch_in_runtime(runtime:, assignment_id:, fork_root:, provider:, cli_args:, timeout:, cache_dir:, callback_pane: nil)
           ensure_not_same_scoped_refork!(assignment_id: assignment_id, fork_root: fork_root)
-          session = tmux_runner.current_session
-          raise Error, "Launch mode tmux requires an active tmux session (TMUX or ACE_TMUX_SESSION)." unless session
-          raise Error, "Tmux launch requires assignment cache_dir for subtree polling." if cache_dir.to_s.strip.empty?
+          launch_runner = runtime_runner_for(runtime)
+          context = launch_runner.context
+          unless context[:in_runtime]
+            raise Error, "Launch mode #{runtime} requires a live #{runtime} runtime (run inside it or set its session environment)."
+          end
+          raise Error, "Runtime launch requires assignment cache_dir for subtree polling." if cache_dir.to_s.strip.empty?
 
-          current_window = tmux_runner.current_window
-          raise Error, "Could not resolve current tmux window for fork launch." if current_window.to_s.strip.empty?
+          origin_window = context[:window]
+          raise Error, "Could not resolve current runtime window for fork launch." if origin_window.to_s.strip.empty?
 
           fork_window = ENV["ACE_ASSIGN_FORK_WINDOW"].to_s.strip
-          fork_window = tmux_runner.fork_window_name(current_window) if fork_window.empty?
+          fork_window = launch_runner.fork_window_name(origin_window) if fork_window.empty?
 
-          window_info = tmux_runner.ensure_window(session: session, name: fork_window, root: Dir.pwd)
-          pane_target = tmux_runner.prepare_pane(
-            session: session,
-            window: fork_window,
-            window_target: window_info[:target],
-            root: Dir.pwd,
-            keep_existing: window_info[:created]
-          )
+          window = launch_runner.ensure_window(name: fork_window, root: Dir.pwd)
+          pane_target = launch_runner.prepare_pane(window: fork_window)
 
           session_meta_file = build_session_meta_file(cache_dir, fork_root)
           prompt = "/as-assign-drive #{assignment_id}@#{fork_root}"
-          tmux_env = tmux_subprocess_env(
+          subprocess_env = runtime_subprocess_env(
+            runtime: runtime,
             assignment_id: assignment_id,
             fork_root: fork_root,
-            session: session,
             fork_window: fork_window,
             callback_pane: callback_pane
           )
@@ -178,32 +172,32 @@ module Ace
             prompt: prompt,
             cli_args: cli_args,
             working_dir: Dir.pwd,
-            subprocess_env: tmux_env
+            subprocess_env: subprocess_env
           )
 
-          tmux_runner.run_invocation_in_pane(
+          launch_runner.run_invocation_in_pane(
             pane_target: pane_target,
             command: invocation[:command],
             env: invocation[:env],
             working_dir: invocation[:working_dir],
             visible_handoff: invocation[:prompt]
           )
-          write_tmux_launch_metadata(
+          write_runtime_launch_metadata(
             session_meta_file: session_meta_file,
             provider: invocation[:provider],
             model: invocation[:model],
             prompt: invocation[:prompt]
           )
-          tmux_runner.merge_tmux_metadata(
+          launch_runner.merge_runtime_metadata(
             session_meta_file: session_meta_file,
-            session: session,
+            session: context[:session],
             window: fork_window,
             pane: pane_target,
-            window_id: window_info[:window_id],
+            window_id: window,
             callback_pane: callback_pane
           )
 
-          return {tmux: true, pane_target: pane_target, callback_mode: true, callback_pane: callback_pane} if callback_pane
+          return {runtime: runtime, pane_target: pane_target, callback_mode: true, callback_pane: callback_pane} if callback_pane
 
           wait_for_subtree_terminal(
             assignment_id: assignment_id,
@@ -212,10 +206,10 @@ module Ace
             timeout: timeout
           )
 
-          {tmux: true, pane_target: pane_target}
+          {runtime: runtime, pane_target: pane_target}
         end
 
-        def write_tmux_launch_metadata(session_meta_file:, provider:, model:, prompt:)
+        def write_runtime_launch_metadata(session_meta_file:, provider:, model:, prompt:)
           detected = detect_provider_session(provider, prompt)
           meta = {}
           meta = YAML.safe_load_file(session_meta_file) || {} if File.exist?(session_meta_file)
@@ -278,11 +272,19 @@ module Ace
             "Cannot fork-run subtree #{assignment_id}@#{fork_root}: already running inside that scoped subtree. Continue inline instead of calling fork-run again."
         end
 
-        def tmux_subprocess_env(assignment_id:, fork_root:, session:, fork_window:, callback_pane: nil)
+        def runtime_runner_for(runtime)
+          if runtime == runner.runtime_name
+            runner
+          else
+            RuntimeControlSurfaceRunner.new(runtime: runtime)
+          end
+        end
+
+        def runtime_subprocess_env(runtime:, assignment_id:, fork_root:, fork_window:, callback_pane: nil)
           env = self.class.fork_scope_env(assignment_id: assignment_id, fork_root: fork_root).merge(
             "PROJECT_ROOT_PATH" => Dir.pwd,
-            "ACE_TMUX_SESSION" => session,
-            "ACE_ASSIGN_LAUNCH_MODE" => "tmux",
+            "ACE_RUNTIME" => runtime,
+            "ACE_ASSIGN_LAUNCH_MODE" => runtime,
             "ACE_ASSIGN_FORK_WINDOW" => fork_window
           )
           env["ACE_ASSIGN_CALLBACK_PANE"] = callback_pane if callback_pane && !callback_pane.empty?
@@ -303,10 +305,10 @@ module Ace
           loop do
             state = scanner.scan(assignment.steps_dir, assignment: assignment)
             return state if state.subtree_complete?(fork_root)
-            raise Error, "Fork session execution failed in tmux subtree #{fork_root}." if state.subtree_failed?(fork_root)
+            raise Error, "Fork session execution failed in the #{fork_root} subtree." if state.subtree_failed?(fork_root)
 
             if Process.clock_gettime(Process::CLOCK_MONOTONIC) >= deadline
-              raise Error, "Timed out waiting for tmux fork subtree #{fork_root} to reach a terminal state."
+              raise Error, "Timed out waiting for the fork subtree #{fork_root} to reach a terminal state."
             end
 
             sleep(TMUX_POLL_INTERVAL)
