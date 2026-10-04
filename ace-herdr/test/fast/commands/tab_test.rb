@@ -125,6 +125,7 @@ module Ace
 
             # The failed tab is never reported as success and no tab — native
             # or foreign — is closed through this entrypoint.
+            assert_path_exists journal, "fake herdr journal missing (executable failed before first call)"
             calls = File.readlines(journal).map(&:strip)
             assert calls.any? { |line| line.start_with?("tab create") }
             assert_empty calls.grep(/\Atab close\b/)
