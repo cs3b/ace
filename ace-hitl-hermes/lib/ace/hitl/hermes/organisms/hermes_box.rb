@@ -27,7 +27,7 @@ module Ace
           attr_reader :channel
 
           def initialize(channel:, registry: nil, id_generator: -> { SecureRandom.hex(6) },
-            notifier: nil, euid_provider: -> { Process.euid })
+            notifier: nil, euid_provider: -> { Process.euid }, answer_authorizer: nil)
             @channel =
               if channel.is_a?(Molecules::HermesChannels::Channel)
                 channel
@@ -40,6 +40,7 @@ module Ace
             @id_generator = id_generator
             @notifier = notifier || ->(_line) {}
             @euid_provider = euid_provider
+            @answer_authorizer = answer_authorizer
           end
 
           def address(id)
@@ -53,6 +54,16 @@ module Ace
           # so a collision there fails loudly instead of silently breaking
           # the question -> answer pairing. Returns the published Message.
           def publish(kind:, body:, sender:, timestamp:, id: nil)
+            if kind.to_s == "answer"
+              unless id && @answer_authorizer
+                raise ContractError, "answer publication requires authenticated request classification"
+              end
+              facts = @answer_authorizer.call(id)
+              unless facts.is_a?(Hash) && facts["id"] == id && facts["sensitive"] == false &&
+                  !%w[otp secret].include?(facts["kind"])
+                raise ContractError, "sensitive answers must use the protected HITL boundary"
+              end
+            end
             explicit_id = !id.nil?
             attempts = 0
             loop do

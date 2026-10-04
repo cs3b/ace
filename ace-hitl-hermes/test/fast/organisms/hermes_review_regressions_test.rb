@@ -72,7 +72,8 @@ class HermesReviewRegressionsTest < AceHermesTestCase
 
   def build_box(folder)
     channel = Ace::Hitl::Hermes::Molecules::HermesChannels::Channel.new(name: "inbox", machine: "lab", folder: folder)
-    Ace::Hitl::Hermes::Organisms::HermesBox.new(channel: channel)
+    Ace::Hitl::Hermes::Organisms::HermesBox.new(channel: channel,
+      answer_authorizer: ->(id) { {"id" => id, "kind" => "text", "sensitive" => false} })
   end
 
   def pollable_files(folder)
