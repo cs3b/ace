@@ -49,8 +49,10 @@ module Ace
         # shutdown that unlinks the socket file.
         def run
           prepare!
-          %i[TERM INT].each do |signal|
-            trap(signal) { stop }
+          if Thread.current == Thread.main
+            %i[TERM INT].each do |signal|
+              trap(signal) { stop }
+            end
           end
           loop do
             break if @stopping
@@ -137,9 +139,6 @@ module Ace
 
         def peer_credentials(socket)
           socket.getpeereid
-        rescue NoMethodError, NotImplementedError
-          address = socket.peeraddr(false)
-          address.values_at(1, 2)
         end
 
         def store_for(peer)

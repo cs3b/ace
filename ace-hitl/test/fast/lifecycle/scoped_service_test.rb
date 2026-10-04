@@ -187,11 +187,12 @@ class ScopedServiceTest < AceHitlTestCase
       root: @store_root, binding: @binding, policy: @policy,
       identity: LifecycleFixtures::TestIdentity.new(username: "someone-else")
     )
-    error = assert_raises(Ace::Hitl::Lifecycle::StateError) do
+    # Foreign callers get the uniform denial — never the terminal
+    # state, never the answer (review 8x32r9b1).
+    error = assert_raises(Ace::Hitl::Lifecycle::PermissionError) do
       foreign.consume("hitl001", timeout: 1)
     end
-    assert_match(/already consumed/, error.message)
-    # The classified conflict carries no answer payload.
+    assert_match(/only the requesting role/, error.message)
     refute_includes error.message, "approved"
   end
 

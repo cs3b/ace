@@ -472,6 +472,14 @@ module Ace
           request_path(request_id).unlink if request_path(request_id).exist?
           public_path(request_id).unlink if !keep_public && public_path(request_id).exist?
           @vault.discard(self, value)
+          # A memory vault discards only its entry: the service-owned
+          # answer file of a non-sensitive request is still unlinked, so
+          # a consumed answer never outlives the request on disk
+          # (review 8x32r9az).
+          unless value["sensitive"] == true
+            path = answers_dir.join("#{safe_id(value["id"])}.answer")
+            path.unlink if path.exist?
+          end
           nil
         end
 
@@ -691,11 +699,12 @@ module Ace
           terminal = load_terminal(request_id)
           return nil unless terminal
           # A receipt replays ONLY to the requester of record: knowing a
-          # request id never discloses another actor's answer (spec
-          # 8wq.t.34i). Everyone else keeps the classified terminal
-          # conflict.
+          # request id never discloses another actor's answer — nor
+          # whether it was consumed or cancelled (spec 8wq.t.34i; review
+          # 8x32r9b1). Foreign callers get the same uniform denial as a
+          # live request.
           unless @identity.username == terminal["requester"].to_s
-            raise StateError, terminal["state"] == "cancelled" ? "HITL request was already cancelled" : "HITL request was already consumed"
+            raise PermissionError, "only the requesting role can #{operation == "cancelled" ? "cancel" : "consume"} this request"
           end
 
           case terminal["state"]
@@ -765,10 +774,13 @@ module Ace
 
         # ---- transition helpers ----------------------------------------------
 
-        # Live authority is HELD across the transition commit; a binding
-        # that reports the attempt ended (or became unverifiable) cancels
-        # the request and fails closed — stale attempts never hand over
-        # answers (spec 8wq.t.34i).
+        # Live authority is HELD across the transition commit. A binding
+        # that reports the attempt ENDED cancels the request and fails
+        # closed — stale attempts never hand over answers (spec
+        # 8wq.t.34i). An authority that is temporarily UNAVAILABLE (the
+        # lab daemon unreachable, the journal unreadable) is NOT an end:
+        # the request stays pending and the classified error propagates
+        # for retry (review 8x32r9b0).
         def with_live_authority!(value, requester:)
           @binding.with_active(
             work: value["work"], assignment: value["assignment"], attempt: value["attempt"],
@@ -776,10 +788,19 @@ module Ace
           ) do
             yield
           end
-        rescue BindingError
+        rescue BindingError => e
+          raise unless ended_authority_error?(e)
+
           update_public(value, "cancelled")
           remove_request(value, keep_public: true)
           raise
+        end
+
+        # The ended-vs-unavailable line: the binding implementations own
+        # these message surfaces (AssignmentBinding maps the assign
+        # authority; DaemonBinding maps the labd projection).
+        def ended_authority_error?(error)
+          /no longer active|not bound to the exact|does not own|unknown:|active managed attempt|not found|does not match/i.match?(error.message)
         end
 
         def public_state(request_id, value)

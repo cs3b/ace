@@ -119,9 +119,6 @@ module Ace
 
         def peer_credentials(socket)
           socket.getpeereid
-        rescue NoMethodError, NotImplementedError
-          address = socket.peeraddr(false)
-          address.values_at(1, 2)
         end
 
         # A consume without a timeout waits indefinitely at the client
@@ -147,7 +144,9 @@ module Ace
 
             chunk = socket.read_nonblock(4096, exception: false)
             raise TransportError, "HITL boundary closed before responding" if chunk.nil?
-            raise TransportError, "HITL boundary is temporarily unavailable" if chunk == :wait_readable
+            # A spurious not-ready result goes back to select; only the
+            # deadline ends the wait (review 8x32r9b4).
+            next if chunk == :wait_readable
 
             data << chunk
             if data.bytesize > Protocol::MAX_FRAME_BYTES

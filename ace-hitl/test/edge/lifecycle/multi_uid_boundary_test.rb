@@ -39,6 +39,8 @@ class MultiUidBoundaryTest < AceHitlTestCase
     FileUtils.chown(service_uid, common_gid, socket_dir)
     FileUtils.chmod(0o750, socket_dir)
 
+    @socket_path = socket_path
+    @service_uid = service_uid
     service_pid = spawn_service(store_root: store_root, socket_path: socket_path,
       service_uid: service_uid, gid: common_gid)
     wait_for_socket(socket_path)
@@ -75,7 +77,7 @@ class MultiUidBoundaryTest < AceHitlTestCase
     probe = run_as(accounts[:requester_b], gid: common_gid,
       argv: ["directread", File.join(store_root, "requests", "req0001.json")])
     refute probe["ok"], "the store's request files are unreadable to a foreign uid"
-    assert_equal "Errno::EACCES", probe["error"] if probe.key?("error")
+    assert_includes probe["error"], "Errno::EACCES" if probe.key?("error")
 
     mode = run_as(accounts[:requester_b], gid: common_gid,
       argv: ["peekmode", store_root])
@@ -96,7 +98,7 @@ class MultiUidBoundaryTest < AceHitlTestCase
     # The consumed answer file never leaks: requester B cannot read it.
     answer_probe = run_as(accounts[:requester_b], gid: common_gid,
       argv: ["directread", File.join(store_root, "answers", "req0001.answer")])
-    refute answer_probe["ok"], "the answer file is unreadable to a foreign uid"
+    refute answer_probe["ok"], "the consumed answer never outlives the request on disk"
 
     # --- SC2: one terminal transition under cancel/consume races ----------
     run_as(accounts[:requester_a], gid: common_gid, argv: ["create", "req0003", assignment, attempt])
@@ -206,6 +208,8 @@ class MultiUidBoundaryTest < AceHitlTestCase
       begin
         Process::Sys.setgid(gid)
         Process::Sys.setuid(account.uid)
+        ENV["ACE_HITL_SOCKET"] = @socket_path
+        ENV["ACE_HITL_SERVICE_UID"] = @service_uid.to_s
         args = [RbConfig.ruby]
         load_paths.each { |path| args << "-I" << path }
         args << File.expand_path("support/boundary_child.rb", __dir__)

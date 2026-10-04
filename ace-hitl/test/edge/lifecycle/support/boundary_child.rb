@@ -60,11 +60,13 @@ result =
     client.states
   when "directread"
     # A raw filesystem probe OUTSIDE the boundary: proves the store's
-    # OS-level isolation from a foreign identity.
+    # OS-level isolation from a foreign identity. A DENIAL is the
+    # expected, reported outcome — same top-level envelope as the
+    # boundary operations (review 8x32r9ay).
     begin
-      {ok: true, content: File.read(ARGV[1])}
+      {content: File.read(ARGV[1])}
     rescue SystemCallError => e
-      {ok: false, error: e.class.name, errno: e.errno}
+      raise Ace::Hitl::Lifecycle::TransportError, "fs-denied:#{e.class.name}:#{e.errno}"
     end
   when "peekmode"
     begin

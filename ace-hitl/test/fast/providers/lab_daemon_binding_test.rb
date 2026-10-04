@@ -219,8 +219,12 @@ class LabDaemonBindingTest < AceHitlTestCase
           binding: daemon).deliver("hitl001", stdin_reader("approved"))
       end
       assert_match(/unavailable/, error.message)
-      assert_equal "cancelled", JSON.parse(File.read(File.join(root, "public", "hitl001.json")))["state"]
-      assert_empty Dir.children(File.join(root, "requests"))
+      # An UNAVAILABLE authority is not an ENDED attempt: the request
+      # stays pending for retry (review 8x32r9b0); the ended-attempt
+      # cancellation lives in the scoped-service and managed-binding
+      # fixtures.
+      assert_equal "created", JSON.parse(File.read(File.join(root, "public", "hitl001.json")))["state"]
+      assert_equal ["hitl001.json"], Dir.children(File.join(root, "requests"))
     end
   end
 

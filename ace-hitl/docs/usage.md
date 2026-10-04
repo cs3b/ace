@@ -177,7 +177,9 @@ authenticated connection, never through file ownership.
 
 Roles:
 
-- requester: create/read/consume/cancel its OWN requests;
+- requester: create, consume and cancel its OWN requests (request
+  facts come back from `ask`/`consume`; the boundary `read` protocol
+  operation is available to library clients);
 - configured transport (grants `hitl.transport_uids` + principals):
   `deliver`, `pending`, `states`, `duty`;
 - unknown identity is an error, never permission.
