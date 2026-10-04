@@ -7,11 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Managed assignment status JSON tests run against test-owned repositories and evidence journals instead of the invoking checkout's journal, evidence ref, or worktree registrations (task 8ws.t.ibk). A sentinel-based invariance test asserts the ambient repository's refs, registrations, and files stay untouched, and fixture journals cover absent, seed-only, and stale-checkout states.
+
 ## [0.62.0] - 2026-10-04
 
 ### Added
 - **Lock-scoped external attempt authority (spec 8wq.t.34i)**: `AttemptCoordinator#with_verified_attempt` verifies that a managed attempt is live (reserved/running — uncertainty never grants external authority), bound to the exact assignment/project, and owned by the requesting actor, holding the assignment `LifecycleExclusion` shared side across the caller's whole locked transition. `finish` and `reconcile` hold the exclusive side across their terminal commits, so a liveness check can never observe an attempt as active after the terminal event landed (and vice versa). This is the authority behind ace-hitl's managed HITL request binding.
-
 
 ## [0.61.1] - 2026-10-02
 
