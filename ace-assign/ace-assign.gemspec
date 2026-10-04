@@ -50,7 +50,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "ace-task", "~> 0.37"
   spec.add_dependency "ace-runtime", "~> 0.1"
   spec.add_dependency "ace-tmux", "~> 0.18"
-  spec.add_dependency "ace-herdr", "~> 0.3"
+  spec.add_dependency "ace-herdr", "~> 0.3.2"
 
   # Development dependencies
   spec.add_development_dependency "ace-support-test-helpers", "~> 0.14"

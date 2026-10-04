@@ -6,7 +6,14 @@ All notable changes to this project will be documented in this file.
 
 
 ### Fixed
-- **Runtime consumers**: Retain writable prepared shells after fork commands exit and install both terminal adapters through the dependency-free `ace-hitl-contract` vocabulary, preserving HITL assignment authority without a dependency cycle.
+
+- **ace-assign v0.63.1**: Preserve prepared runtime shells after commands exit and install both terminal adapters through an acyclic dependency graph.
+- **ace-demo v0.26.1**: Install the reviewed Herdr adapter alongside tmux for standalone runtime selection.
+- **ace-git-forgejo v0.6.1**: Bind create receipts to the complete requested source and destination; preserve unknown outcomes after accepted mutations.
+- **ace-git-worktree v0.25.1**: Install both terminal adapters without activating privileged HITL authority.
+- **ace-herdr v0.3.2**: Use the shared leaf HITL contract, removing the assignment dependency cycle.
+- **ace-hitl v0.11.1**: Preserve active listener ownership, enforce authorized OTP deadlines at consumption, and load the shared leaf provider contract.
+- **ace-overseer v0.19.1**: Require reviewed standalone runtime adapters and consumer versions with retained-shell behavior.
 - **ace-review v0.57.1**: A failed or incomplete provider entry no longer invalidates a campaign session's completed reviewer executions; one completed reviewer per needed scope completes the round.
 
 - **RubyGems publisher**: Retain the push results before printing the final summary so successful dependency-wave publication exits cleanly instead of raising `NameError` after the gems are registered.
@@ -25,6 +32,8 @@ All notable changes to this project will be documented in this file.
 - **ace-git-forgejo v0.1.1**: Aligned the Forgejo provider with the real `fj` v0.6.0 CLI per independent PR #26 review: strip Unicode bidi isolate/pop-directional marks (U+2066–U+2069 and friends) that real minimal-style output wraps around dynamic fields so PR/issue/repo views parse and URL evidence stays clean, drop the nonexistent `fj pr search --limit` flag (client-side cap after newest-first sort), and probe CLI presence with `fj version` instead of the rejected `fj --version`, keeping classified `ProviderCliMissingError` semantics. Captured real `fj` outputs as test fixtures.
 
 ### Added
+
+- **ace-hitl-contract v0.1.0**: Single shared provider vocabulary without assignment or privileged lifecycle dependencies.
 
 - **ace-assign v0.61.0**: Added journal-backed service request claims and
   bound, verified receipts with conservative uncertainty after interrupted effects.
@@ -79,6 +88,9 @@ All notable changes to this project will be documented in this file.
 - **ace-llm-providers-cli v0.34.0**: Registered Codex Astra, Sol, Terra and Luna with Terra as the generic default and Luna as mini, retaining all existing explicit IDs, and derived Codex client defaults and model listings from provider configuration instead of a separate hardcoded catalog.
 
 ### Technical
+
+- **ace-git v0.28.1**: Verify the public PR lifecycle preserves provider uncertainty after accepted mutations.
+- **ace-support-test-helpers v0.14.7**: Verify full source-repository and base-reference provenance in shared PR lifecycle receipts.
 
 - Dependency-following release after ace-assign 0.61: `ace-overseer v0.18.2` (also carries the ace-tmux 0.18 dependency update).
 - Dependency-following release for the ace-tmux 0.18 line: `ace-demo v0.25.11` (ace-assign published as v0.61.0 instead of v0.60.1).

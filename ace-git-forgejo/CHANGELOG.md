@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-10-04
+
 ### Fixed
 - Prove Forgejo's source repository selector before PR creation and bind accepted receipts to source/base repository IDs, refs, SHA and draft state. Incomplete accepted responses and failed verification remain unknown outcomes without replay.
 

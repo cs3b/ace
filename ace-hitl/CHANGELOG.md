@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.1] - 2026-10-04
+
 ### Fixed
 - Enforce the persisted OTP challenge deadline at locked consumption, including vault reads that cross expiry. Expired secrets are discarded without a success receipt; memory retention is bounded by both vault TTL and challenge expiry.
 
