@@ -3,8 +3,8 @@ doc-type: user
 title: ace-herdr Usage
 purpose: Full CLI and configuration reference for ace-herdr: push delivery, agent bootstrap, the terminal-control surface (list, send, capture, wait, presets), and tidy cleanup.
 ace-docs:
-  last-updated: 2026-10-02
-  last-checked: 2026-10-02
+  last-updated: 2026-10-04
+  last-checked: 2026-10-04
 ---
 
 # Usage
@@ -37,6 +37,8 @@ herdr *sessions* (server persistence) are intentionally not exposed; the tmux se
 Install `ace-herdr` alongside `ace-runtime`, then resolve the adapter with `Ace::Runtime.resolve("herdr")`. The contract's `session` is a Herdr **workspace**, `window` is a **tab**, and `pane` is an opaque Herdr pane ID. The adapter does not construct pane IDs. It locates the caller through `HERDR_SESSION` and `HERDR_PANE` and reads the explicit pane with `pane get`; the pane's native workspace is authoritative and a conflicting `HERDR_WORKSPACE_ID` hint is rejected instead of honored. Outside Herdr, `context` reports `in_runtime: false`; operations requiring a caller workspace raise `Ace::Runtime::RuntimeUnavailableError`.
 
 The adapter implements `context`, `ensure_window`, `prepare_pane`, `focus`, ordered `send` and its convenience methods, `capture`, `wait_output`, `wait_agent`, `wait_lifecycle`, `close_window`, `list_windows`, and `list_panes`. `ensure_window` scopes the sanitized tab label to the caller workspace. It records the tab's root, preset, and prepared pane under `~/.ace/local/herdr/runtime-tabs/` — keyed by workspace and label, so adapter instances from any working directory or requested root share one record, create through the same lock, and serialize prepared-pane creation through it. Later instances verify an idempotent request and reject a conflicting one; a tab whose ownership cannot be proven is never closed or replaced (a failed create rolls back only tabs the same attempt created). `prepare_pane` splits a retained shell target and returns the native pane ID after verifying it exists and has a shell process.
+
+Replacing a dead prepared pane updates only the recorded pane pointer: a foreign tab's pointer-only record stays pointer-only (no root/preset keys are invented, so it never becomes ownership evidence), and an owned record keeps its exact root and preset. A prepared-pane pointer to a dead pane is replaced by the next split; a pointer-only record never satisfies `ensure_window` by itself -- adoption still requires the tab's verified native root.
 
 Sends probe for a live agent. Plain panes receive raw text and keys in order; agent panes receive one self-submitting `agent prompt`, with one trailing Enter dropped and reported. Agent waits use native `agent wait` states (`idle`, `working`, `blocked`, `done`). Contract timeout values are seconds and are converted to Herdr milliseconds. Lifecycle waits observe `tab get`, focused tab state, `pane get`, and `pane process-info`; a missing pane keeps `pane-exists` waiting but immediately satisfies `pane-exited`. A pane with only its retained shell also satisfies `pane-exited` because no submitted foreground command remains. This observation does not prove assignment success or authorize cleanup.
 
@@ -237,7 +239,7 @@ Creation is deterministic and ordered: the workspace is created first, then tabs
 
 Output: `{"workspace":"w2","tabs":[{"tab":"w2:t1","panes":["w2:p1","w2:p2"],"commands":1,"agents":["development-agent"]}]}`; the tab command reports the single tab object. `--cwd` overrides the resolved root/tab cwd (CLI > tab > root > pane inheritance).
 
-Unknown preset: CLI error listing the available names (ace-tmux `--list-presets` parity), for example `Error: Unknown workspace preset 'nope' (available: development)`.
+Unknown preset: CLI error listing the available names (ace-tmux `--list-presets` parity), for example `Error: Unknown workspace preset 'nope' (available: development)`. A preset whose native tab is created but then fails a materialization step (split, command, or agent start) is likewise a standard CLI error: the process exits non-zero with the underlying failure on stderr, no success payload on stdout, and no stack trace in ordinary mode -- and this entrypoint never closes tabs (rollback of the failed tab is the runtime adapter's exact-id policy).
 
 ## `ace-herdr deliver`
 
@@ -355,6 +357,7 @@ Commands raise a CLI error (non-zero exit) carrying herdr's machine code where o
 - herdr binary or socket unavailable: explicit CLI error, no partial output
 - Blocked agent: `agent_blocked: ...` (terminal -- never silently dropped); stalled prompt: `agent_prompt_stalled: ...` (transient)
 - Output wait timeout: `timeout: ...`
+- Failed tab materialization: CLI error carrying the underlying failure (`ace-herdr tab`); never a false success or a stack trace
 - Unknown preset: usage error listing the available preset names
 - Invalid send shapes: usage error **before any transport call** (nothing is sent)
 
