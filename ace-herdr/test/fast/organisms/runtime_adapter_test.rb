@@ -392,6 +392,110 @@ module Ace
           FileUtils.remove_entry(native_root) if native_root
         end
 
+        def test_owned_provenance_survives_prepared_pane_replacement
+          native_root = Dir.mktmpdir("herdr-owned-root")
+          tab = @adapter.ensure_window(name: "work", root: native_root)
+          first = RuntimeAdapter.new(executor: @executor, env: env, sleeper: FastSleeper.new,
+            identity_dir: @identity_dir)
+          assert_equal "w1:p1", first.prepare_pane(window: tab)
+
+          # Replace the prepared pane; the owned record keeps its exact
+          # verified provenance and only the pointer moves.
+          @panes.reject! { |pane| pane["pane_id"] == "w1:p1" }
+          second = RuntimeAdapter.new(executor: @executor, env: env, sleeper: FastSleeper.new,
+            identity_dir: @identity_dir)
+          replacement = second.prepare_pane(window: tab)
+          assert_equal 2, @executor.calls_of(:pane_split).size
+          path = Dir[File.join(@identity_dir, "*.json")].first
+          parsed = JSON.parse(File.read(path))
+          assert_equal tab, parsed["id"]
+          assert_equal File.realpath(native_root), parsed["root"]
+          assert_nil parsed["preset"]
+          assert_equal replacement, parsed["prepared_pane"]
+
+          # Genuine provenance still reuses the window; wrong root and wrong
+          # preset cannot take it over, and conflicts never close or duplicate.
+          third = RuntimeAdapter.new(executor: @executor, env: env, sleeper: FastSleeper.new,
+            identity_dir: @identity_dir)
+          assert_equal tab, third.ensure_window(name: "work", root: native_root)
+          other_root = Dir.mktmpdir("herdr-other-root")
+          assert_raises(Runtime::WindowConflictError) do
+            third.ensure_window(name: "work", root: other_root)
+          end
+          assert_raises(Runtime::WindowConflictError) do
+            third.ensure_window(name: "work", root: native_root, preset: "main")
+          end
+          assert_equal 1, @executor.calls_of(:tab_create).size
+          assert_equal 0, @executor.calls_of(:tab_close).size
+          fourth = RuntimeAdapter.new(executor: @executor, env: env, sleeper: FastSleeper.new,
+            identity_dir: @identity_dir)
+          assert_equal replacement, fourth.prepare_pane(window: tab)
+          assert_equal 2, @executor.calls_of(:pane_split).size
+        ensure
+          [native_root, other_root].each { |dir| FileUtils.remove_entry(dir) if dir }
+        end
+
+        def test_preset_provenance_survives_prepared_pane_replacement
+          native_root = Dir.mktmpdir("herdr-preset-root")
+          @executor.tab_create(workspace_id: "w1", label: "work", cwd: native_root)
+          tab = @adapter.list_windows.find { |row| row[:name] == "work" }[:window]
+          path = File.join(@identity_dir, "#{Digest::SHA256.hexdigest("w1\0work")}.json")
+          File.write(path, JSON.generate(id: tab, root: File.realpath(native_root), preset: "main"))
+
+          first = RuntimeAdapter.new(executor: @executor, env: env, sleeper: FastSleeper.new,
+            identity_dir: @identity_dir)
+          assert_equal "w1:p1", first.prepare_pane(window: tab)
+          parsed = JSON.parse(File.read(path))
+          assert_equal tab, parsed["id"]
+          assert_equal File.realpath(native_root), parsed["root"]
+          assert_equal "main", parsed["preset"]
+          assert_equal "w1:p1", parsed["prepared_pane"]
+        ensure
+          FileUtils.remove_entry(native_root) if native_root
+        end
+
+        def test_mismatched_record_id_stays_pointer_only_and_conflicting_ensure_is_refused
+          native_root = Dir.mktmpdir("herdr-stale-root")
+          @executor.tab_create(workspace_id: "w1", label: "foreign", cwd: native_root)
+          tab = @adapter.list_windows.find { |row| row[:name] == "foreign" }[:window]
+          path = File.join(@identity_dir, "#{Digest::SHA256.hexdigest("w1\0foreign")}.json")
+          # A record for another tab incarnation carries provenance a live
+          # foreign tab must never inherit through the pointer repair.
+          File.write(path, JSON.generate(id: "w1:t-stale", root: "/elsewhere", prepared_pane: "w1:p9"))
+
+          first = RuntimeAdapter.new(executor: @executor, env: env, sleeper: FastSleeper.new,
+            identity_dir: @identity_dir)
+          first.prepare_pane(window: tab)
+          parsed = JSON.parse(File.read(path))
+          assert_equal tab, parsed["id"]
+          assert_equal %w[id prepared_pane], parsed.keys.sort
+          assert_equal "w1:p1", parsed["prepared_pane"]
+
+          # The repaired pointer proves no ownership: a conflicting root is
+          # refused and nothing is closed.
+          second = RuntimeAdapter.new(executor: @executor, env: env, sleeper: FastSleeper.new,
+            identity_dir: @identity_dir)
+          assert_raises(Runtime::WindowConflictError) do
+            second.ensure_window(name: "foreign", root: "/elsewhere")
+          end
+          assert_equal 0, @executor.calls_of(:tab_close).size
+        ensure
+          FileUtils.remove_entry(native_root) if native_root
+        end
+
+        def test_corrupt_record_conflicts_at_ensure_window_and_is_never_closed
+          @executor.tab_create(workspace_id: "w1", label: "foreign", cwd: "/tmp/work")
+          tab = @adapter.list_windows.find { |row| row[:name] == "foreign" }[:window]
+          path = File.join(@identity_dir, "#{Digest::SHA256.hexdigest("w1\0foreign")}.json")
+          File.write(path, "{corrupt json")
+
+          assert_raises(Runtime::WindowConflictError) do
+            @adapter.ensure_window(name: "foreign", root: "/tmp/work")
+          end
+          assert_equal 1, @executor.calls_of(:tab_create).size
+          assert_equal 0, @executor.calls_of(:tab_close).size
+        end
+
         def test_adoption_preserves_a_foreign_prepared_pane_pointer
           @executor.tab_create(workspace_id: "w1", label: "foreign", cwd: "/tmp/work")
           tab = @adapter.list_windows.find { |row| row[:name] == "foreign" }[:window]
