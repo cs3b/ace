@@ -58,6 +58,7 @@ module Ace
             Ace::Herdr::ValidationError,
             Ace::Herdr::TargetResolutionError,
             Ace::Herdr::WaitTimeoutError,
+            Ace::Herdr::TabMaterializationError,
             Ace::Herdr::ExecutorError => e
             raise Ace::Support::Cli::Error, e.message
           end
