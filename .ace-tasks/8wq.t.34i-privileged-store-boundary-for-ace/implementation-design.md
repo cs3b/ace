@@ -57,6 +57,15 @@ conflict.
    per-request lock files live in `locks/` and are never unlinked, so
    id reuse cannot land on a fresh inode.
    
+   **Effect dispatch bound (review 8x32r9b2, design)**: the effect
+   callback runs INSIDE the held authority (request lock + shared
+   assignment exclusion), bounded by the declared `timeout_s`
+   (validator max 600s). Moving dispatch outside the exclusion would
+   reopen the ended-attempt race the spec closes ("validate under the
+   same transition lock immediately before applying effects"); the
+   exclusion hold is the accepted operational bound. The gad.2
+   named-operation executor replaces requester-uid argv effects.
+
    **Terminal receipt retention (review 8x327buj, design)**: receipts
    (`terminals/<id>.json`, service-owned 0600) carry replay answers for
    NON-sensitive kinds only; OTP receipts never hold bytes. Receipts
