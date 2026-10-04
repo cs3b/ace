@@ -3,6 +3,7 @@
 require "test_helper"
 require "socket"
 require "json"
+require "timeout"
 require "support/lifecycle_fixtures"
 
 # The scoped store boundary (spec 8wq.t.34i): the REAL service and the
@@ -15,7 +16,7 @@ class ScopedServiceTest < AceHitlTestCase
   REQUESTER = "lab-asker"
 
   def setup
-    @scratch = Dir.mktmpdir("ace-hitl-boundary")
+    @scratch = Dir.mktmpdir("ace-hitl-boundary", "/tmp")
     @store_root = File.join(@scratch, "store")
     @socket_path = File.join(@scratch, "hitl.sock")
     @binding = LifecycleFixtures::TestBinding.new
@@ -201,10 +202,169 @@ class ScopedServiceTest < AceHitlTestCase
       root: File.join(@scratch, "store3"), binding: @binding, policy: @policy,
       socket_path: @socket_path, group: "staff"
     )
+    identity = File.lstat(@socket_path).then { |stat| [stat.dev, stat.ino] }
     error = assert_raises(Ace::Hitl::Lifecycle::TransportError) do
-      second.send(:prepare!)
+      second.run
     end
     assert_match(/already serving/, error.message)
+    assert File.socket?(@socket_path), "refused startup removed the active endpoint"
+    assert_equal identity, File.lstat(@socket_path).then { |stat| [stat.dev, stat.ino] }
+    assert_equal true, client.ping["pong"]
+    client.create(**managed_args.transform_keys(&:to_s))
+    assert_equal "created", client.read("hitl001")["state"]
+    client.deliver("hitl001", "approved")
+    assert_equal "approved", client.consume("hitl001", timeout: 2)["answer"]
+  end
+
+
+  def extra_service(path, **options)
+    Ace::Hitl::Lifecycle::Service.new(
+      root: File.join(@scratch, "extra-store"), binding: @binding, policy: @policy,
+      socket_path: path, group: "staff", **options
+    )
+  end
+
+  def run_extra(service)
+    ready = Queue.new
+    service.instance_variable_set(:@logger, ->(message) { ready << true if message.include?("serving ") })
+    thread = Thread.new { service.run }
+    Timeout.timeout(5) { ready.pop }
+    thread
+  end
+
+  def test_failed_start_preserves_regular_file_and_symlink_endpoints
+    path = File.join(@scratch, "regular")
+    File.write(path, "preserve me")
+    assert_raises(Ace::Hitl::Lifecycle::TransportError) { extra_service(path).run }
+    assert_equal "preserve me", File.read(path)
+    link = File.join(@scratch, "link")
+    File.symlink(path, link)
+    assert_raises(Ace::Hitl::Lifecycle::TransportError) { extra_service(link).run }
+    assert File.symlink?(link)
+    assert_equal "preserve me", File.read(path)
+  end
+
+  def test_unprotected_stale_socket_and_lock_are_preserved
+    path = File.join(@scratch, "unsafe-stale.sock")
+    stale = UNIXServer.open(path)
+    stale.close
+    File.chmod(0o777, path)
+    identity = File.lstat(path).ino
+    assert_raises(Ace::Hitl::Lifecycle::TransportError) { extra_service(path).run }
+    assert_equal identity, File.lstat(path).ino
+
+    lock_path = File.join(@scratch, "unsafe-lock.sock")
+    File.write("#{lock_path}.lock", "preserve lock")
+    File.chmod(0o666, "#{lock_path}.lock")
+    assert_raises(Ace::Hitl::Lifecycle::TransportError) { extra_service(lock_path).run }
+    assert_equal "preserve lock", File.read("#{lock_path}.lock")
+    refute File.exist?(lock_path)
+  end
+
+  def test_failed_directory_validation_does_not_remove_endpoint
+    dir = File.join(@scratch, "unsafe")
+    Dir.mkdir(dir, 0o777)
+    File.chmod(0o777, dir)
+    path = File.join(dir, "endpoint")
+    File.write(path, "preserve me")
+    assert_raises(Ace::Hitl::Lifecycle::TransportError) { extra_service(path).run }
+    assert_equal "preserve me", File.read(path)
+  end
+
+  def test_failed_store_setup_releases_bound_socket_and_allows_restart
+    path = File.join(@scratch, "setup.sock")
+    service = extra_service(path)
+    store = Object.new
+    store.define_singleton_method(:ensure_layout!) { raise Errno::EACCES, "setup refused" }
+    service.define_singleton_method(:root_store) { store }
+    assert_raises(Ace::Hitl::Lifecycle::TransportError) { service.run }
+    refute File.exist?(path)
+    replacement = extra_service(path)
+    thread = run_extra(replacement)
+    assert_equal true, Ace::Hitl::Lifecycle::Client.new(socket_path: path, service_uid: Process.uid).ping["pong"]
+  ensure
+    replacement&.stop
+    thread&.join(5)
+  end
+
+  def test_normal_stop_releases_socket_and_stale_socket_can_be_recovered
+    path = File.join(@scratch, "stale.sock")
+    stale = UNIXServer.open(path)
+    stale.close
+    service = extra_service(path)
+    thread = run_extra(service)
+    assert_equal true, Ace::Hitl::Lifecycle::Client.new(socket_path: path, service_uid: Process.uid).ping["pong"]
+    service.stop
+    thread.join(5)
+    refute thread.alive?
+    refute File.exist?(path)
+    replacement = extra_service(path)
+    next_thread = run_extra(replacement)
+    assert_equal true, Ace::Hitl::Lifecycle::Client.new(socket_path: path, service_uid: Process.uid).ping["pong"]
+  ensure
+    service&.stop
+    thread&.join(5)
+    replacement&.stop
+    next_thread&.join(5)
+  end
+
+  def test_shutdown_preserves_a_replacement_listener
+    path = File.join(@scratch, "replace.sock")
+    service = extra_service(path)
+    thread = run_extra(service)
+    File.unlink(path)
+    replacement = UNIXServer.open(path)
+    identity = File.lstat(path).then { |stat| [stat.dev, stat.ino] }
+    service.stop
+    thread.join(5)
+    assert_equal identity, File.lstat(path).then { |stat| [stat.dev, stat.ino] }
+    peer = UNIXSocket.open(path)
+    accepted = replacement.accept
+    peer.write("reachable")
+    assert_equal "reachable", accepted.read(9)
+  ensure
+    service&.stop
+    thread&.join(5)
+    peer&.close
+    accepted&.close
+    replacement&.close
+  end
+
+  def test_concurrent_public_starts_have_one_reachable_winner
+    path = File.join(@scratch, "race.sock")
+    arrived = Queue.new
+    release = Queue.new
+    ready = Queue.new
+    outcomes = Queue.new
+    services = 2.times.map do
+      service = extra_service(path, logger: ->(message) { ready << service if message.include?("serving ") })
+      service.define_singleton_method(:acquire_endpoint_lock!) do
+        arrived << true
+        release.pop
+        super()
+      end
+      service
+    end
+    threads = services.map do |service|
+      Thread.new do
+        service.run
+      rescue Ace::Hitl::Lifecycle::TransportError => error
+        outcomes << error
+      end
+    end
+    Timeout.timeout(5) { 2.times { arrived.pop } }
+    2.times { release << true }
+    winner = Timeout.timeout(5) { ready.pop }
+    error = Timeout.timeout(5) { outcomes.pop }
+    assert_match(/already serving/, error.message)
+    assert ready.empty?, "more than one startup succeeded"
+    assert_equal true, Ace::Hitl::Lifecycle::Client.new(socket_path: path, service_uid: Process.uid).ping["pong"]
+    winner.stop
+    threads.each { |thread| thread.join(5) }
+    refute File.exist?(path)
+  ensure
+    services&.each(&:stop)
+    threads&.each { |thread| thread.join(5) }
   end
 
   def test_consume_waits_for_a_pending_otp_delivery_through_the_boundary

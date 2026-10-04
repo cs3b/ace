@@ -50,6 +50,8 @@ module Ace
           @connections_mutex = Mutex.new
           @stopping = false
           @server = nil
+          @endpoint_identity = nil
+          @endpoint_lock = nil
         end
 
         # Serve until #stop. Installs TERM/INT handlers for a clean
@@ -125,9 +127,10 @@ module Ace
         def prepare!
           begin
             verify_socket_directory!
-            refuse_live_service!
-            FileUtils.rm_f(@socket_path)
+            acquire_endpoint_lock!
+            recover_stale_endpoint!
             @server = UNIXServer.open(@socket_path)
+            @endpoint_identity = endpoint_identity
           rescue SystemCallError, IOError => e
             raise TransportError, "the HITL boundary endpoint is not usable (#{e.class}: #{e.message})"
           end
@@ -148,8 +151,20 @@ module Ace
         end
 
         def shutdown!
-          @server&.close rescue nil
-          FileUtils.rm_f(@socket_path)
+          begin
+            @server&.close
+          rescue SystemCallError, IOError
+            nil
+          end
+          begin
+            File.unlink(@socket_path) if @endpoint_identity && endpoint_identity == @endpoint_identity
+          rescue Errno::ENOENT
+            nil
+          ensure
+            @endpoint_identity = nil
+            @endpoint_lock&.close
+            @endpoint_lock = nil
+          end
           log("stopped")
         end
 
@@ -229,27 +244,53 @@ module Ace
           ->(limit) { answer[0, limit] }
         end
 
-        # A connectable socket has a live listener: a second service must
-        # refuse to start instead of stealing the endpoint (review
-        # 8x327buq). Only a dead socket (ECONNREFUSED) is removed.
-        def refuse_live_service!
-          return unless File.exist?(@socket_path)
+        # Keep one stable lock inode for the endpoint. Holding the lock
+        # through shutdown prevents simultaneous starters from recovering
+        # or replacing a socket another invocation is still acquiring.
+        # Never unlink the lock file: waiters must all use the same inode.
+        def acquire_endpoint_lock!
+          @endpoint_lock = File.open("#{@socket_path}.lock", File::RDWR | File::CREAT | File::NOFOLLOW, 0o600)
+          stat = @endpoint_lock.stat
+          unless stat.file? && stat.uid == Process.uid && stat.nlink == 1 && (stat.mode & 0o077).zero?
+            raise TransportError, "HITL boundary endpoint lock is not protected"
+          end
+          return if @endpoint_lock.flock(File::LOCK_EX | File::LOCK_NB)
 
+          raise TransportError,
+            "a HITL boundary service is already serving #{@socket_path}; stop it before starting another"
+        end
+
+        def endpoint_identity
+          stat = File.lstat(@socket_path)
+          [stat.dev, stat.ino] if stat.socket?
+        rescue Errno::ENOENT
+          nil
+        end
+
+        # Only an owned socket whose connection is explicitly refused is
+        # stale. Permission, type and other probe failures cannot grant
+        # authority to delete an endpoint.
+        def recover_stale_endpoint!
+          stat = File.lstat(@socket_path)
+          unless stat.socket? && stat.uid == Process.uid && (stat.mode & 0o002).zero?
+            raise TransportError, "HITL boundary endpoint is not a protected service-owned socket"
+          end
+          identity = [stat.dev, stat.ino]
           begin
             probe = UNIXSocket.open(@socket_path)
-          rescue SystemCallError, IOError
+          rescue Errno::ECONNREFUSED
+            unless endpoint_identity == identity
+              raise TransportError, "HITL boundary endpoint changed during stale socket recovery"
+            end
+            File.unlink(@socket_path)
             return
-          end
-          begin
-            probe.write(Protocol.encode_request("ping"))
-            probe.flush
-          rescue SystemCallError, IOError
-            nil
           ensure
-            probe.close rescue nil
+            probe&.close
           end
           raise TransportError,
             "a HITL boundary service is already serving #{@socket_path}; stop it before starting another"
+        rescue Errno::ENOENT
+          nil
         end
 
         def read_frame(socket)
