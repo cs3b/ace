@@ -197,3 +197,5 @@ module Ace
     private_class_method :load_gem_defaults_fallback
   end
 end
+
+require_relative "assign/atoms/delivery_parameters"
