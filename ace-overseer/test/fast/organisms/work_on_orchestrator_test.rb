@@ -97,7 +97,7 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
         worktree_provisioner: FakeWorktreeProvisioner.new(
           {worktree_path: worktree, branch: "230-feature", created: true}
         ),
-        tmux_window_opener: FakeWindowOpener.new,
+        window_opener: FakeWindowOpener.new,
         assignment_launcher: FakeAssignmentLauncher.new,
         config: {
           "default_assign_preset" => "work-on-task"
@@ -120,7 +120,7 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
         worktree_provisioner: FakeWorktreeProvisioner.new(
           {worktree_path: worktree, branch: "232-feature", created: true}
         ),
-        tmux_window_opener: FakeWindowOpener.new,
+        window_opener: FakeWindowOpener.new,
         assignment_launcher: FakeAssignmentLauncher.new,
         config: {
           "default_assign_preset" => "work-on-task"
@@ -133,7 +133,7 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
       assert messages.any? { |m| m.include?("Loading task 232") }
       assert messages.any? { |m| m.include?("Provisioning worktree") }
       assert messages.any? { |m| m.include?("Worktree created at") }
-      assert messages.any? { |m| m.include?("Opening tmux window") }
+      assert messages.any? { |m| m.include?("Opening terminal window") }
       assert messages.any? { |m| m.include?("Checking assignment status") }
       assert messages.any? { |m| m.include?("Launching assignment") }
     end
@@ -147,7 +147,7 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
         worktree_provisioner: FakeWorktreeProvisioner.new(
           {worktree_path: worktree, branch: "233-feature", created: false}
         ),
-        tmux_window_opener: FakeWindowOpener.new,
+        window_opener: FakeWindowOpener.new,
         assignment_launcher: FakeAssignmentLauncher.new,
         config: {
           "default_assign_preset" => "work-on-task"
@@ -173,7 +173,7 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
         worktree_provisioner: FakeWorktreeProvisioner.new(
           {worktree_path: worktree, branch: "234-feature", created: true}
         ),
-        tmux_window_opener: FakeWindowOpener.new,
+        window_opener: FakeWindowOpener.new,
         assignment_launcher: FakeAssignmentLauncher.new,
         config: {
           "default_assign_preset" => "work-on-task"
@@ -205,7 +205,7 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
         worktree_provisioner: FakeWorktreeProvisioner.new(
           {worktree_path: worktree, branch: "272-orchestrator", created: true}
         ),
-        tmux_window_opener: FakeWindowOpener.new,
+        window_opener: FakeWindowOpener.new,
         assignment_launcher: launcher,
         config: {
           "default_assign_preset" => "work-on-task"
@@ -234,7 +234,7 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
         worktree_provisioner: FakeWorktreeProvisioner.new(
           {worktree_path: "/tmp/worktree", branch: "280-feature", created: false}
         ),
-        tmux_window_opener: FakeWindowOpener.new,
+        window_opener: FakeWindowOpener.new,
         config: {
           "default_assign_preset" => "work-on-task"
         },
@@ -256,7 +256,7 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
         worktree_provisioner: FakeWorktreeProvisioner.new(
           {worktree_path: worktree, branch: "150-feature", created: true}
         ),
-        tmux_window_opener: FakeWindowOpener.new,
+        window_opener: FakeWindowOpener.new,
         assignment_launcher: launcher,
         config: {
           "default_assign_preset" => "work-on-task"
@@ -278,7 +278,7 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
         worktree_provisioner: FakeWorktreeProvisioner.new(
           {worktree_path: worktree, branch: "231-feature", created: false}
         ),
-        tmux_window_opener: FakeWindowOpener.new,
+        window_opener: FakeWindowOpener.new,
         assignment_launcher: FakeAssignmentLauncher.new,
         config: {
           "default_assign_preset" => "work-on-task"
@@ -291,19 +291,19 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
       assert_equal "quick-implement", result[:preset]
     end
 
-    def test_passes_tmux_preset_from_overseer_config
+    def test_passes_window_preset_from_overseer_config
       Dir.mktmpdir("task.235") do |worktree|
-        tmux = FakeWindowOpener.new
+        opener = FakeWindowOpener.new
         orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
           task_loader: FakeTaskManager.new("235" => {metadata: {}}),
           worktree_provisioner: FakeWorktreeProvisioner.new(
             {worktree_path: worktree, branch: "235-feature", created: true}
           ),
-          tmux_window_opener: tmux,
+          window_opener: opener,
           assignment_launcher: FakeAssignmentLauncher.new,
           config: {
             "default_assign_preset" => "work-on-task",
-            "tmux_window_presets" => {
+            "window_presets" => {
               "work-on-task" => "work-on-task"
             }
           },
@@ -312,27 +312,27 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
 
         orchestrator.call(task_ref: "235", cli_preset: "work-on-task")
 
-        assert_equal 1, tmux.calls.length
+        assert_equal 1, opener.calls.length
         assert_equal(
           {worktree_path: worktree, preset: "work-on-task"},
-          tmux.calls.first
+          opener.calls.first
         )
       end
     end
 
-    def test_passes_no_tmux_preset_when_mapping_missing
+    def test_passes_no_window_preset_when_mapping_missing
       Dir.mktmpdir("task.236") do |worktree|
-        tmux = FakeWindowOpener.new
+        opener = FakeWindowOpener.new
         orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
           task_loader: FakeTaskManager.new("236" => {metadata: {}}),
           worktree_provisioner: FakeWorktreeProvisioner.new(
             {worktree_path: worktree, branch: "236-feature", created: true}
           ),
-          tmux_window_opener: tmux,
+          window_opener: opener,
           assignment_launcher: FakeAssignmentLauncher.new,
           config: {
             "default_assign_preset" => "work-on-task",
-            "tmux_window_presets" => {
+            "window_presets" => {
               "other-preset" => "work-on-task"
             }
           },
@@ -341,8 +341,8 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
 
         orchestrator.call(task_ref: "236")
 
-        assert_equal 1, tmux.calls.length
-        assert_equal({worktree_path: worktree, preset: nil}, tmux.calls.first)
+        assert_equal 1, opener.calls.length
+        assert_equal({worktree_path: worktree, preset: nil}, opener.calls.first)
       end
     end
   end
@@ -363,7 +363,7 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
         worktree_provisioner: FakeWorktreeProvisioner.new(
           {worktree_path: worktree, branch: "288-orchestrator", created: true}
         ),
-        tmux_window_opener: FakeWindowOpener.new,
+        window_opener: FakeWindowOpener.new,
         assignment_launcher: launcher,
         config: {
           "default_assign_preset" => "work-on-task"
@@ -385,7 +385,7 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
       worktree_provisioner = FakeWorktreeProvisioner.new(
         {worktree_path: worktree, branch: "288-orchestrator", created: true}
       )
-      tmux = FakeWindowOpener.new
+      opener = FakeWindowOpener.new
       launcher = FakeAssignmentLauncher.new(supports_taskrefs: false)
 
       orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
@@ -394,7 +394,7 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
           "287" => {metadata: {}, is_orchestrator: false}
         ),
         worktree_provisioner: worktree_provisioner,
-        tmux_window_opener: tmux,
+        window_opener: opener,
         assignment_launcher: launcher,
         config: {
           "default_assign_preset" => "work-on-task"
@@ -408,7 +408,7 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
 
       assert_includes error.message, "accepts only single taskref"
       assert_empty worktree_provisioner.calls
-      assert_empty tmux.calls
+      assert_empty opener.calls
       assert_empty launcher.calls
     end
   end
@@ -418,7 +418,7 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
       worktree_provisioner = FakeWorktreeProvisioner.new(
         {worktree_path: worktree, branch: "288-orchestrator", created: true}
       )
-      tmux = FakeWindowOpener.new
+      opener = FakeWindowOpener.new
       launcher = FakeAssignmentLauncher.new
 
       orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
@@ -427,7 +427,7 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
           "999" => nil
         ),
         worktree_provisioner: worktree_provisioner,
-        tmux_window_opener: tmux,
+        window_opener: opener,
         assignment_launcher: launcher,
         config: {
           "default_assign_preset" => "work-on-task"
@@ -441,7 +441,7 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
 
       assert_equal "Task not found: 999", error.message
       assert_empty worktree_provisioner.calls
-      assert_empty tmux.calls
+      assert_empty opener.calls
       assert_empty launcher.calls
     end
   end
@@ -451,13 +451,13 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
       worktree_provisioner = FakeWorktreeProvisioner.new(
         {worktree_path: worktree, branch: "draft-feature", created: true}
       )
-      tmux = FakeWindowOpener.new
+      opener = FakeWindowOpener.new
       launcher = FakeAssignmentLauncher.new
 
       orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
         task_loader: FakeTaskManager.new("400" => {metadata: {}, status: "draft"}),
         worktree_provisioner: worktree_provisioner,
-        tmux_window_opener: tmux,
+        window_opener: opener,
         assignment_launcher: launcher,
         config: {"default_assign_preset" => "work-on-task"},
         assignment_detector: ->(_path) {}
@@ -470,7 +470,7 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
       assert_includes error.message, "status 'draft'"
       assert_includes error.message, "/as-task-review 400"
       assert_empty worktree_provisioner.calls
-      assert_empty tmux.calls
+      assert_empty opener.calls
       assert_empty launcher.calls
     end
   end
@@ -480,13 +480,13 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
       worktree_provisioner = FakeWorktreeProvisioner.new(
         {worktree_path: worktree, branch: "empty-test", created: true}
       )
-      tmux = FakeWindowOpener.new
+      opener = FakeWindowOpener.new
       launcher = FakeAssignmentLauncher.new
 
       orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
         task_loader: FakeTaskManager.new({}),
         worktree_provisioner: worktree_provisioner,
-        tmux_window_opener: tmux,
+        window_opener: opener,
         assignment_launcher: launcher,
         config: {"default_assign_preset" => "work-on-task"},
         assignment_detector: ->(_path) {}
@@ -498,7 +498,7 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
 
       assert_equal "No valid task references provided", error.message
       assert_empty worktree_provisioner.calls
-      assert_empty tmux.calls
+      assert_empty opener.calls
       assert_empty launcher.calls
     end
   end
@@ -508,13 +508,13 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
       worktree_provisioner = FakeWorktreeProvisioner.new(
         {worktree_path: worktree, branch: "done-feature", created: true}
       )
-      tmux = FakeWindowOpener.new
+      opener = FakeWindowOpener.new
       launcher = FakeAssignmentLauncher.new
 
       orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
         task_loader: FakeTaskManager.new("401" => {metadata: {}, status: "done"}),
         worktree_provisioner: worktree_provisioner,
-        tmux_window_opener: tmux,
+        window_opener: opener,
         assignment_launcher: launcher,
         config: {"default_assign_preset" => "work-on-task"},
         assignment_detector: ->(_path) {}
@@ -527,7 +527,7 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
       assert_includes error.message, "already terminal"
       assert_includes error.message, "401"
       assert_empty worktree_provisioner.calls
-      assert_empty tmux.calls
+      assert_empty opener.calls
       assert_empty launcher.calls
     end
   end
@@ -537,7 +537,7 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
       worktree_provisioner = FakeWorktreeProvisioner.new(
         {worktree_path: worktree, branch: "all-done", created: true}
       )
-      tmux = FakeWindowOpener.new
+      opener = FakeWindowOpener.new
       launcher = FakeAssignmentLauncher.new
 
       orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
@@ -546,7 +546,7 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
           "403" => {metadata: {}, status: "skipped"}
         ),
         worktree_provisioner: worktree_provisioner,
-        tmux_window_opener: tmux,
+        window_opener: opener,
         assignment_launcher: launcher,
         config: {"default_assign_preset" => "work-on-task"},
         assignment_detector: ->(_path) {}
@@ -560,7 +560,7 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
       assert_includes error.message, "402"
       assert_includes error.message, "403"
       assert_empty worktree_provisioner.calls
-      assert_empty tmux.calls
+      assert_empty opener.calls
       assert_empty launcher.calls
     end
   end
@@ -578,7 +578,7 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
         worktree_provisioner: FakeWorktreeProvisioner.new(
           {worktree_path: worktree, branch: "mixed-set", created: true}
         ),
-        tmux_window_opener: FakeWindowOpener.new,
+        window_opener: FakeWindowOpener.new,
         assignment_launcher: launcher,
         config: {"default_assign_preset" => "work-on-task"},
         assignment_detector: ->(_path) {}
@@ -615,7 +615,7 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
         worktree_provisioner: FakeWorktreeProvisioner.new(
           {worktree_path: worktree, branch: "500-orchestrator", created: true}
         ),
-        tmux_window_opener: FakeWindowOpener.new,
+        window_opener: FakeWindowOpener.new,
         assignment_launcher: launcher,
         config: {"default_assign_preset" => "work-on-task"},
         assignment_detector: ->(_path) {}

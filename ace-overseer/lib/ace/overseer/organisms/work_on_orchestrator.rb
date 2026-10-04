@@ -7,10 +7,10 @@ module Ace
         # B36TS subtask pattern: "8pp.t.q7w.a" (parent 9-char ID + dot + single char)
         SUBTASK_PATTERN = /^[0-9a-z]{3}\.[a-z]\.[0-9a-z]{3}\.[a-z0-9]$/
 
-        def initialize(worktree_provisioner: nil, tmux_window_opener: nil, assignment_launcher: nil,
+        def initialize(worktree_provisioner: nil, window_opener: nil, assignment_launcher: nil,
           task_loader: nil, config: nil, assignment_detector: nil, lifecycle_exclusion: nil)
           @worktree_provisioner = worktree_provisioner || Molecules::WorktreeProvisioner.new
-          @tmux_window_opener = tmux_window_opener || Molecules::TmuxWindowOpener.new
+          @window_opener = window_opener || Molecules::WindowOpener.new
           @task_manager = task_loader || Ace::Task::Organisms::TaskManager.new
           @assignment_launcher = assignment_launcher || Molecules::AssignmentLauncher.new(task_manager: @task_manager)
           @config = config || Ace::Overseer.config
@@ -47,7 +47,7 @@ module Ace
 
           expanded_taskrefs = expand_task_refs_in_order(resolved_refs)
           primary_subtask_refs = extract_subtask_refs(primary_task)
-          tmux_preset = @config.dig("tmux_window_presets", preset_name)
+          window_preset = @config.dig("window_presets", preset_name)
 
           # Participate in prune exclusion for the whole start: provisioning,
           # runtime window and assignment launch all hold the shared side of
@@ -67,10 +67,10 @@ module Ace
               progress.call("Worktree exists at #{worktree[:worktree_path]}")
             end
 
-            progress.call("Opening tmux window...")
-            @tmux_window_opener.open(
+            progress.call("Opening terminal window...")
+            @window_opener.open(
               worktree_path: worktree[:worktree_path],
-              preset: tmux_preset
+              preset: window_preset
             )
 
             progress.call("Checking assignment status...")

@@ -19,12 +19,12 @@ module Ace
       # revalidation blocks; it only suppresses the interactive confirmation
       # for already-safe candidates.
       class PruneOrchestrator
-        def initialize(worktree_manager: nil, prune_checker: nil, tmux_executor: nil, config: nil,
+        def initialize(worktree_manager: nil, prune_checker: nil, runtime: nil, config: nil,
           assignment_prune_checker: nil, assignment_manager: nil, lifecycle_exclusion: nil,
           preservation_manifest_loader: nil)
           @worktree_manager = worktree_manager || Ace::Git::Worktree::Organisms::WorktreeManager.new
           @prune_checker = prune_checker || Molecules::PruneSafetyChecker.new
-          @tmux_executor = tmux_executor || Ace::Tmux::Molecules::TmuxExecutor.new
+          @runtime = runtime
           @config = config || Ace::Overseer.config
           @assignment_prune_checker = assignment_prune_checker || Molecules::AssignmentPruneSafetyChecker.new
           @assignment_manager = assignment_manager || Ace::Assign::Molecules::AssignmentManager.new
@@ -168,7 +168,7 @@ module Ace
           )
           return remove_result unless remove_result[:success]
 
-          close_tmux_window(candidate.worktree_path)
+          close_runtime_window(candidate.worktree_path)
           # Only the branch the recheck verified is deletable — never a
           # freshly observed branch name.
           branch_result = delete_branch(repo, branch: verified_branch, head: verified_head)
@@ -385,15 +385,20 @@ module Ace
           progress.call("Warning: failed to prune stale worktree metadata: #{e.message}")
         end
 
-        def close_tmux_window(worktree_path)
-          window_name = File.basename(worktree_path)
-          tmux_bin = @config["tmux_binary"] || "tmux"
-          session_name = @tmux_executor.run([tmux_bin, "display-message", "-p", "#S"]).to_s.strip
-          return false if session_name.empty?
-
-          @tmux_executor.run([tmux_bin, "kill-window", "-t", "#{session_name}:#{window_name}"])
-        rescue
+        def close_runtime_window(worktree_path)
+          window_name = Ace::Runtime.sanitize_name(File.basename(worktree_path.to_s))
+          runtime.close_window(window: window_name)
+          true
+        rescue StandardError
+          # Terminal cleanup must never fail the prune; a window that
+          # could not be closed is left in place.
           false
+        end
+
+        def runtime
+          @runtime ||= Ace::Runtime::Molecules::RuntimeSelector.new(
+            config: {runtime: @config["runtime"]}
+          ).resolve
         end
       end
     end

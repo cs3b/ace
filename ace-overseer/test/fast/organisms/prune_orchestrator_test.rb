@@ -90,17 +90,16 @@ class PruneOrchestratorTest < AceOverseerTestCase
     end
   end
 
-  class FakeTmuxExecutor
-    attr_reader :run_calls
+  class FakeRuntime
+    attr_reader :close_calls
 
-    def initialize(session_name: "test-session")
-      @session_name = session_name
-      @run_calls = []
+    def initialize
+      @close_calls = []
     end
 
-    def run(cmd)
-      @run_calls << cmd
-      cmd.include?("display-message") ? @session_name : true
+    def close_window(window:)
+      @close_calls << window
+      true
     end
   end
 
@@ -144,7 +143,7 @@ class PruneOrchestratorTest < AceOverseerTestCase
     Ace::Overseer::Organisms::PruneOrchestrator.new(
       worktree_manager: manager,
       prune_checker: checker,
-      tmux_executor: FakeTmuxExecutor.new,
+      runtime: FakeRuntime.new,
       config: config,
       lifecycle_exclusion: exclusion
     )
@@ -177,11 +176,11 @@ class PruneOrchestratorTest < AceOverseerTestCase
     tmux_run_calls = nil
 
     orchestrator = nil
-    tmux = FakeTmuxExecutor.new
+    tmux = FakeRuntime.new
     orchestrator = Ace::Overseer::Organisms::PruneOrchestrator.new(
       worktree_manager: manager,
       prune_checker: checker,
-      tmux_executor: tmux,
+      runtime: tmux,
       config: {},
       lifecycle_exclusion: exclusion
     )
@@ -197,8 +196,7 @@ class PruneOrchestratorTest < AceOverseerTestCase
     assert_equal false, manager.remove_calls.first[:options][:force]
     assert_equal ["task:230"], exclusion.exclusive_keys
     assert_equal ["task:230"], exclusion.removed_keys
-    kill_calls = tmux.run_calls.select { |c| c.include?("kill-window") }
-    assert_equal 1, kill_calls.length
+    assert_equal ["task-230"], tmux.close_calls
   end
 
   def test_force_cannot_prune_unsafe_candidates
@@ -457,7 +455,7 @@ class PruneOrchestratorTest < AceOverseerTestCase
       orchestrator = Ace::Overseer::Organisms::PruneOrchestrator.new(
         worktree_manager: manager,
         prune_checker: checker,
-        tmux_executor: FakeTmuxExecutor.new,
+        runtime: FakeRuntime.new,
         config: {},
         lifecycle_exclusion: FakeExclusion.new,
         preservation_manifest_loader: loader
@@ -517,7 +515,7 @@ class PruneOrchestratorTest < AceOverseerTestCase
     Ace::Overseer::Organisms::PruneOrchestrator.new(
       worktree_manager: FakeManager.new([]),
       prune_checker: FakeChecker.new([]),
-      tmux_executor: FakeTmuxExecutor.new,
+      runtime: FakeRuntime.new,
       config: {},
       assignment_prune_checker: checker,
       assignment_manager: mgr,
@@ -601,7 +599,7 @@ class PruneOrchestratorTest < AceOverseerTestCase
     orchestrator = Ace::Overseer::Organisms::PruneOrchestrator.new(
       worktree_manager: FakeManager.new([]),
       prune_checker: FakeChecker.new([]),
-      tmux_executor: FakeTmuxExecutor.new,
+      runtime: FakeRuntime.new,
       config: {},
       assignment_prune_checker: assignment_checker,
       assignment_manager: mgr,

@@ -6,7 +6,7 @@ require "ace/assign"
 require "ace/git"
 require "ace/git/worktree"
 require "ace/task"
-require "ace/tmux"
+require "ace/runtime"
 
 module Ace
   module Overseer
@@ -24,7 +24,7 @@ require_relative "overseer/atoms/preset_resolver"
 require_relative "overseer/atoms/status_formatter"
 require_relative "overseer/molecules/worktree_provisioner"
 require_relative "overseer/molecules/lab_client"
-require_relative "overseer/molecules/tmux_window_opener"
+require_relative "overseer/molecules/window_opener"
 require_relative "overseer/molecules/assignment_launcher"
 require_relative "overseer/molecules/worktree_context_collector"
 require_relative "overseer/molecules/preservation_manifest"
