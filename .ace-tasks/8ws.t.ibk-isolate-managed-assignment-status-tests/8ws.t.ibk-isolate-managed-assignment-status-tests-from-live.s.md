@@ -34,10 +34,10 @@ At main dbb9bde1e, the sandboxed full suite failed in `test_status_json_evidence
 
 ### Success criteria and verification
 
-- [ ] SC1: Run the managed status case against a test-owned repository containing evidence; assert exact displayed attempt and exclusion of the other assignment.
-- [ ] SC2: Use a separate sentinel repository with existing evidence refs/registered worktrees and verify its refs, registrations and files are unchanged before/after the tests.
-- [ ] SC3: Run package and full-suite contexts, including missing/stale fixture checkout states; results are independent of the caller's evidence state. Tests clean only their own fixtures.
-- [ ] SC4: `bin/ace-test ace-assign all` and `bin/ace-test-suite` contain no regression attributable to this scope; record exact SHA and independent review.
+- [x] SC1: Run the managed status case against a test-owned repository containing evidence; assert exact displayed attempt and exclusion of the other assignment.
+- [x] SC2: Use a separate sentinel repository with existing evidence refs/registered worktrees and verify its refs, registrations and files are unchanged before/after the tests.
+- [x] SC3: Run package and full-suite contexts, including missing/stale fixture checkout states; results are independent of the caller's evidence state. Tests clean only their own fixtures.
+- [x] SC4: `bin/ace-test ace-assign all` and `bin/ace-test-suite` contain no regression attributable to this scope; record exact SHA and independent review.
 
 Owner: ace-assign tests. Single observable slice; medium. Follow-up to delivered qjl and tp0, whose original scopes stay done. Consumers qjx/y23 may be developed concurrently, but their acceptance must use isolated evidence fixtures. No CLI/API/config change; no separate usage file required. Draft awaiting review; no product implementation performed.
 
