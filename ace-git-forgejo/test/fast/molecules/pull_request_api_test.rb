@@ -13,7 +13,7 @@ module Forgejo
     end
 
     def test_version_gate_accepts_documented_release_strings
-      ["7.0.5", "v12.0.1", "7.0.5+gitea-7.0.5-abc123", "16.0.5+gitea"].each do |version|
+      ["8.0.5", "v12.0.1", "8.0.3+gitea-1.22.0", "16.0.5+gitea"].each do |version|
         api = build_api("version" => {status: 200, body: {"version" => version}.to_json})
         api.ensure_version_supported!
         assert api.instance_variable_get(:@version_supported)
@@ -53,7 +53,7 @@ module Forgejo
     end
 
     def test_version_probe_hits_the_server_level_route
-      api = build_api("version" => {status: 200, body: {"version" => "7.0.5"}.to_json})
+      api = build_api("version" => {status: 200, body: {"version" => "8.0.5"}.to_json})
       api.ensure_version_supported!
       # The probe must not be repository-scoped; one call memoizes the gate.
       api.ensure_version_supported!

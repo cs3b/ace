@@ -3,6 +3,7 @@
 require "digest"
 require "json"
 require "faraday"
+require "faraday/retry"
 require "openssl"
 require_relative "repository_binding"
 
@@ -135,7 +136,7 @@ module Ace
             faraday.headers["Accept"] = "application/json"
             faraday.headers["Authorization"] = "token #{access_token!}"
             if method == :get
-              faraday.request :retry, max: 2, retry_methods: [:get], retry_if: ->(_env, _result) { false }
+              faraday.request :retry, max: 2, methods: [:get], retry_if: ->(_env, _result) { false }
             end
             faraday.adapter Faraday.default_adapter
           end

@@ -169,7 +169,7 @@ module Forgejo
         path = args[2].to_s
         case path
         when "https://other.example.com:3443/api/v1/version"
-          api_ok({"version" => "7.0.5"})
+          api_ok({"version" => "8.0.5"})
         when "https://other.example.com:3443/api/v1/repos/lab-b/repo/pulls?state=open&page=1&limit=50"
           lists += 1
           api_ok(lists == 1 ? [] : [pr_payload])

@@ -42,7 +42,7 @@ class ForgejoProviderPullRequestLifecycleContractTest < AceGitForgejoTestCase
   # Route one scripted API exchange per scenario.
   def respond_to_lifecycle(method, path, body, scenario)
     if method == "GET" && path == "https://forge.example.com/api/v1/version"
-      return ok({"version" => "7.0.5"})
+      return ok({"version" => "8.0.5"})
     end
     if method == "GET" && path.start_with?("#{API}/pulls?state=open")
       page = path[/page=(\d+)/, 1].to_i
@@ -127,7 +127,7 @@ class ForgejoProviderPullRequestLifecycleContractTest < AceGitForgejoTestCase
       path = args[2].to_s
       body = args[3]
       if method == "GET" && path == "https://forge.example.com/api/v1/version"
-        ok({"version" => "7.0.5"})
+        ok({"version" => "8.0.5"})
       elsif method == "GET" && path.include?("/pulls?state=open")
         ok([])
       elsif method == "POST" && path == "#{API}/pulls"
@@ -154,7 +154,7 @@ class ForgejoProviderPullRequestLifecycleContractTest < AceGitForgejoTestCase
       method = args[1]
       path = args[2].to_s
       if method == "GET" && path == "https://forge.example.com/api/v1/version"
-        ok({"version" => "7.0.5"})
+        ok({"version" => "8.0.5"})
       elsif method == "GET" && path.include?("/pulls?state=open")
         page = path[/page=(\d+)/, 1].to_i
         ok(page == 1 && posts.positive? ? [pr_payload(25, draft: true)] : [])
@@ -201,7 +201,7 @@ class ForgejoProviderPullRequestLifecycleContractTest < AceGitForgejoTestCase
       method = args[1]
       path = args[2].to_s
       if method == "GET" && path == "https://forge.example.com/api/v1/version"
-        ok({"version" => "7.0.5"})
+        ok({"version" => "8.0.5"})
       elsif method == "POST" && path == "#{API}/pulls/25/merge"
         conflict("user can only merge one time")
       elsif method == "GET" && path == "#{API}/pulls/25"

@@ -219,7 +219,7 @@ module Forgejo
       runner = lambda do |args:, **|
         path = args[2].to_s
         if path == "https://forge.example.com/api/v1/version"
-          ok_raw(200, {"version" => "7.0.5"}.to_json)
+          ok_raw(200, {"version" => "8.0.5"}.to_json)
         elsif args[1] == "PATCH"
           reads = 2
           {success: true, status: 200, stdout: "", stderr: "", exit_code: 0}
@@ -292,7 +292,7 @@ module Forgejo
         path = args[2].to_s
         case path
         when "https://forge.example.com/api/v1/version"
-          ok_raw(200, {"version" => "7.0.5"}.to_json)
+          ok_raw(200, {"version" => "8.0.5"}.to_json)
         when "#{API}/pulls/25"
           ok(pr_payload(25, state: "open", merged: false, draft: false))
         when "#{API}/pulls/25/merge"
@@ -306,7 +306,7 @@ module Forgejo
       error = assert_raises(Ace::Git::ProviderUnsupportedCapabilityError) do
         build_provider(runner).merge_pull_request(number: 25, expected_head: SHA, method: :squash)
       end
-      assert_match(/refused the.*merge/i, error.message)
+      assert_match(/refused to merge/i, error.message)
     end
 
     def test_merge_content_conflict_stays_unknown_outcome
@@ -314,7 +314,7 @@ module Forgejo
         path = args[2].to_s
         case path
         when "https://forge.example.com/api/v1/version"
-          ok_raw(200, {"version" => "7.0.5"}.to_json)
+          ok_raw(200, {"version" => "8.0.5"}.to_json)
         when "#{API}/pulls/25"
           ok(pr_payload(25, state: "open", merged: false, draft: false))
         when "#{API}/pulls/25/merge"
@@ -336,7 +336,7 @@ module Forgejo
         path = args[2].to_s
         case path
         when "https://forge.example.com/api/v1/version"
-          ok_raw(200, {"version" => "7.0.5"}.to_json)
+          ok_raw(200, {"version" => "8.0.5"}.to_json)
         when "#{API}/pulls/25"
           reads += 1
           if reads > 1

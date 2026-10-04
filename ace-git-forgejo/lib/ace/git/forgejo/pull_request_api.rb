@@ -23,11 +23,12 @@ module Ace
       # absence, and transport failures raise the shared taxonomy directly.
       class PullRequestApi
         # Official capability evidence (see the task capability-evidence
-        # report): `head_commit_id` merge enforcement is documented in the
-        # Forgejo API swagger on release branch v7.0 and every later branch
-        # inspected; WIP-title drafts and `owner:branch` fork heads predate
-        # it. Older servers must not inherit these capabilities.
-        MINIMUM_SERVER_VERSION = Gem::Version.new("7.0.0")
+        # report): `head_commit_id` merge enforcement is documented from
+        # release branch v7.0, and the API `draft` field is only computed
+        # from the WIP title from v8.0 (`Draft: pr.IsWorkInProgress` and a
+        # non-omitempty bool; v7.0 leaves it unset). The lifecycle proves
+        # draft state, so the floor is the first line reporting both.
+        MINIMUM_SERVER_VERSION = Gem::Version.new("8.0.0")
 
         # Outcome of one mutation send whose status the provider must
         # interpret: the HTTP status, the sanitized server message (nil on

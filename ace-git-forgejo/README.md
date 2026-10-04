@@ -54,3 +54,43 @@ observed keys-file locations and refuses a repository command when an
 alias redirects the selected host — never modifying user fj
 configuration; an absent or unreadable keys file is allowed.
 
+## PR delivery lifecycle (Forgejo API v1)
+
+The delivery lifecycle — create (canonical and same-server fork sources,
+exact draft state), mark-ready, and merge with a server-enforced
+expected-head precondition — rides the repository-bound Forgejo REST API
+v1 through the same selected host and `fj` token as the review transport.
+The `fj` v0.6 CLI cannot encode a fork head, an explicit draft state, a
+ready transition, or an atomic merge precondition, so those operations do
+not approximate it with check-then-act sequencing.
+
+Minimum supported server: **Forgejo 8.0** (the first line that both
+enforces the documented `MergePullRequestOption.head_commit_id` merge
+precondition server-side and reports the API `draft` field; the provider
+probes `/api/v1/version` and refuses lifecycle mutations below the
+floor). Official capability evidence lives in the
+`8x2.t.z78` task folder (`capability-evidence-2026-10-04.md`).
+
+Forgejo-specific conventions the provider translates:
+
+- **Drafts** have no API field: a draft is a WIP-prefixed title (server
+  defaults `WIP:`, `[WIP]`; compared case-insensitively). Create with
+  `draft: true` prefixes the title `WIP: `; `draft: false` refuses a
+  WIP-prefixed title instead of silently publishing it as a draft. Ready
+  strips one leading prefix and proves the resulting `draft: false` by
+  read-back. A draft whose title carries no known prefix refuses before
+  the mutation (the server likely uses configured prefixes).
+- **Merge** sends the full expected SHA in `head_commit_id`; Forgejo
+  re-resolves the head ref inside the merge and refuses with 409 when it
+  moved. The provider classifies that as
+  `ProviderExpectedHeadConflictError` and never pre-reads as a substitute
+  guard. A 409 that reads back as already merged at the expected source
+  SHA, with a merge commit, is reusable authoritative evidence.
+- **Reconciliation**: a transport failure on any mutation raises
+  `ProviderUnknownOutcomeError` carrying the exact identity; nothing is
+  retried automatically. A duplicate-create 409 reconciles to the exact
+  open match; mutation outcomes are proven by authoritative read-backs
+  (head unchanged, requested state, merged evidence).
+
+Identical lifecycle assertions run against every provider through the
+shared `Ace::TestSupport::PullRequestLifecycleContract` parity suite.

@@ -525,7 +525,7 @@ module Ace
             outcome = send_lifecycle_mutation("PR ##{number} on #{server.name}, head #{expected_head}") do
               pr_api.edit_pull_request(number, title: title, body: body)
             end
-            unless outcome.status == 200
+            unless (200..299).cover?(outcome.status)
               raise Ace::Git::ProviderUnknownOutcomeError,
                 "PR update refused for ##{number} (HTTP #{outcome.status}: #{outcome.message}); " \
                 "reconcile before repeating"
@@ -558,7 +558,7 @@ module Ace
           outcome = send_lifecycle_mutation("ready transition for PR ##{number} on #{server.name}, head #{expected_head}") do
             pr_api.edit_pull_request(number, title: stripped_title)
           end
-          unless outcome.status == 200
+          unless (200..299).cover?(outcome.status)
             raise Ace::Git::ProviderUnknownOutcomeError,
               "Ready transition refused for PR ##{number} (HTTP #{outcome.status}: #{outcome.message}); " \
               "reconcile before repeating"
@@ -587,7 +587,15 @@ module Ace
           end
           number = request_number!(number)
           pr = verify_expected_head!(pull_request(number: number), expected_head)
-          unless pr.state == :open
+          case pr.state
+          when :open
+            nil # proceed to the guarded merge
+          when :merged
+            # Already merged at the expected source SHA: authoritative
+            # evidence is reusable without another mutation attempt.
+            prove_merged!(pr, expected_head)
+            return receipt(:merge, pr, nil)
+          else
             raise Ace::Git::ProviderUnsupportedCapabilityError,
               "Cannot merge PR ##{number} in #{pr.state} state"
           end
@@ -598,7 +606,7 @@ module Ace
           end
 
           case outcome.status
-          when 200
+          when 200..299
             after = verify_post_mutation_head!(number, expected_head, "merge")
             prove_merged!(after, expected_head)
             receipt(:merge, after, nil)
@@ -611,7 +619,7 @@ module Ace
             reconcile_refused_merge(number, expected_head, outcome)
           when 405
             raise Ace::Git::ProviderUnsupportedCapabilityError,
-              "Forgejo refused the #{method} merge of PR ##{number}: #{outcome.message || "merge style unavailable"}"
+              "Forgejo refused to merge PR ##{number} as #{method}: #{outcome.message || "merge style unavailable"}"
           when 404
             raise Ace::Git::ProviderObjectNotFoundError, "Forgejo pull request ##{number} not found"
           when 422
