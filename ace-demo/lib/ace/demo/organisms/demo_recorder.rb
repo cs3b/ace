@@ -19,7 +19,7 @@ module Ace
           yaml_compiler: Atoms::VhsTapeCompiler,
           asciinema_tape_compiler: Atoms::AsciinemaTapeCompiler,
           media_retimer: Molecules::MediaRetimer.new,
-          tmux_directive_executor: Molecules::TmuxDirectiveExecutor.new,
+          directive_executor: Molecules::RuntimeDirectiveExecutor.new,
           sandbox_builder: Molecules::DemoSandboxBuilder.new,
           teardown_executor: Molecules::DemoTeardownExecutor.new,
           output_dir: Demo.config["output_dir"],
@@ -38,7 +38,7 @@ module Ace
           @yaml_compiler = yaml_compiler
           @asciinema_tape_compiler = asciinema_tape_compiler
           @media_retimer = media_retimer
-          @tmux_directive_executor = tmux_directive_executor
+          @directive_executor = directive_executor
           @sandbox_builder = sandbox_builder
           @teardown_executor = teardown_executor
           @output_dir = output_dir || ".ace-local/demo"
@@ -268,7 +268,7 @@ module Ace
             write_io.flush
             nil
           when :tmux
-            @tmux_directive_executor.execute({"tmux" => command.fetch(:directive)}, env)
+            @directive_executor.execute({"tmux" => command.fetch(:directive)}, env)
           end
         end
 

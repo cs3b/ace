@@ -2,7 +2,7 @@
 
 require "fileutils"
 require "ace/support/config"
-require "ace/tmux"
+require "ace/runtime"
 
 require_relative "demo/version"
 require_relative "demo/atoms/vhs_command_builder"
@@ -41,7 +41,7 @@ require_relative "demo/molecules/media_retimer"
 require_relative "demo/molecules/demo_comment_poster"
 require_relative "demo/molecules/verification_report_writer"
 require_relative "demo/molecules/recording_manifest_writer"
-require_relative "demo/molecules/tmux_directive_executor"
+require_relative "demo/molecules/runtime_directive_executor"
 require_relative "demo/organisms/demo_recorder"
 require_relative "demo/organisms/demo_attacher"
 require_relative "demo/organisms/tape_creator"
