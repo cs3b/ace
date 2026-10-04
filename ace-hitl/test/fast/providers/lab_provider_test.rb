@@ -109,7 +109,7 @@ class LabProviderTest < AceHitlTestCase
         )
       end
 
-      assert_match(/invalid work id/, error.message)
+      assert_match(/requires a Work id or a managed assignment binding/, error.message)
       orphan_id = error.message[/HITL event (\S+) was created/, 1]
       refute_nil orphan_id, "error must surface the orphan local event id"
 
@@ -151,5 +151,33 @@ class LabProviderTest < AceHitlTestCase
 
     sentinel = Object.new
     assert_same sentinel, Ace::Hitl::Providers::Lab.lifecycle_store(store: sentinel)
+  end
+
+  def test_assignment_binding_factory_wraps_the_coordinator_authority
+    binding = Ace::Hitl::Providers::Lab.assignment_binding(repo_root: "/tmp/nowhere")
+    assert_instance_of Ace::Hitl::Providers::Lab::AssignmentBinding, binding
+  end
+
+  def test_grants_policy_and_boundary_client_come_from_trusted_facts
+    policy = Ace::Hitl::Providers::Lab.grants_policy(document: {
+      "hitl" => {"service_uid" => 4210}
+    })
+    assert_equal 4210, policy.service_uid
+
+    with_env("ACE_HITL_SOCKET" => "/tmp/boundary.sock") do
+      client = Ace::Hitl::Providers::Lab.boundary_client(policy: policy)
+      assert_instance_of Ace::Hitl::Lifecycle::Client, client
+      assert_equal "/tmp/boundary.sock", client.socket_path
+      assert_equal 4210, client.service_uid
+    end
+  end
+
+  def test_boundary_client_fails_closed_without_a_configured_service_identity
+    error = assert_raises(Ace::Hitl::Providers::ProviderUnavailableError) do
+      Ace::Hitl::Providers::Lab.boundary_client(
+        policy: Ace::Hitl::Providers::Lab.grants_policy(document: {})
+      )
+    end
+    assert_match(/service is not configured/, error.message)
   end
 end

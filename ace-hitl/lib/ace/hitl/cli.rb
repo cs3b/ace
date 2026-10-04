@@ -14,6 +14,7 @@ require_relative "cli/commands/cancel"
 require_relative "cli/commands/pending"
 require_relative "cli/commands/states"
 require_relative "cli/commands/duty"
+require_relative "cli/commands/serve"
 require_relative "cli/commands/overseer_send"
 require_relative "cli/commands/overseer_pending"
 require_relative "cli/commands/overseer_ack"
@@ -64,6 +65,7 @@ module Ace
       register "pending", CLI::Commands::Pending
       register "states", CLI::Commands::States
       register "duty", CLI::Commands::Duty
+      register "serve", CLI::Commands::Serve
       register "overseer-send", CLI::Commands::OverseerSend
       register "overseer-pending", CLI::Commands::OverseerPending
       register "overseer-ack", CLI::Commands::OverseerAck

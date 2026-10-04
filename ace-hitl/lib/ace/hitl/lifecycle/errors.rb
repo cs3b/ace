@@ -22,6 +22,12 @@ module Ace
       # The answer violates its kind's shape or carries secret-shaped
       # content.
       class AnswerError < Error; end
+
+      # The authenticated transport to the scoped store boundary failed
+      # (unavailable, untrusted endpoint, deadline, malformed frame).
+      # Visible and recoverable: it never silently changes lifecycle
+      # state (spec 8wq.t.34i).
+      class TransportError < Error; end
     end
   end
 end

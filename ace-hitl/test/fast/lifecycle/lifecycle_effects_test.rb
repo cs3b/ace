@@ -383,7 +383,8 @@ class LifecycleEffectsTest < AceHitlTestCase
         "timeout_s" => 45
       }, persisted["effect"])
 
-      duty = Ace::Hitl::Lifecycle::Duty.project(make_store(root: root, identity: root_identity))
+      root_store = make_store(root: root, identity: root_identity)
+      duty = Ace::Hitl::Lifecycle::Duty.project(pending: root_store.pending, states: root_store.states)
       assert_equal [true], duty["pending"].map { |entry| entry["has_effect"] }
     end
   end

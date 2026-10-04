@@ -40,22 +40,23 @@ class LifecycleStoreTest < AceHitlTestCase
     end
   end
 
-  def test_create_validates_binding_for_otp_and_non_admin_and_persists_requester
+  def test_create_validates_binding_for_every_requester_and_persists_requester
     with_lifecycle_root do |root|
       binding = LifecycleFixtures::TestBinding.new
       store = make_store(root: root, identity: unprivileged_identity, binding: binding)
-      # Admin otp requests always validate.
-      store.create(**request_args(kind: "otp"))
+      # OTP requests always validate.
+      store.create(**request_args(kind: "otp", otp: otp_context))
       assert_equal 1, binding.validations.length
 
-      # Admin non-otp requests skip the binding, as migrated.
+      # Plain kinds validate too: EVERY request binds to its verified
+      # attempt — there is no admin bypass (spec 8wq.t.34i).
       store.create(**request_args(id: "hitl002"))
-      assert_equal 1, binding.validations.length
+      assert_equal 2, binding.validations.length
 
-      # Non-admin requesters validate even for plain kinds.
+      # Other requesters validate against their own actor attribution.
       mo_store = make_store(root: root, identity: unprivileged_identity("mo"), binding: binding)
       mo_store.create(**request_args(id: "hitl003", kind: "text", harness: "overseer-codex"))
-      assert_equal 2, binding.validations.length
+      assert_equal 3, binding.validations.length
 
       persisted = JSON.parse(File.read(File.join(root, "requests", "hitl003.json")))
       assert_equal "mo", persisted["requester"]
@@ -72,7 +73,7 @@ class LifecycleStoreTest < AceHitlTestCase
       )
       store = make_store(root: root, identity: unprivileged_identity, binding: binding)
       error = assert_raises(Ace::Hitl::Lifecycle::BindingError) do
-        store.create(**request_args(kind: "otp"))
+        store.create(**request_args(kind: "otp", otp: otp_context))
       end
       assert_match(/exact active Work Attempt/, error.message)
       assert_empty Dir.children(File.join(root, "requests"))
@@ -88,7 +89,7 @@ class LifecycleStoreTest < AceHitlTestCase
       end
       assert_match(/must not offer choices/, error.message)
 
-      store.create(**request_args(kind: "otp"))
+      store.create(**request_args(kind: "otp", otp: otp_context))
       persisted = JSON.parse(File.read(File.join(root, "requests", "hitl001.json")))
       assert_equal "otp", persisted["kind"]
       assert_equal true, persisted["sensitive"]
@@ -100,7 +101,7 @@ class LifecycleStoreTest < AceHitlTestCase
   def test_no_time_based_expiry_is_ever_recorded
     with_lifecycle_root do |root|
       store = make_store(root: root, identity: unprivileged_identity)
-      created = store.create(**request_args(kind: "otp"))
+      created = store.create(**request_args(kind: "otp", otp: otp_context))
       refute_includes created.keys, "expires_at"
       refute_includes JSON.parse(File.read(File.join(root, "requests", "hitl001.json")).then { |s| s }).keys, "expires_at"
       public = JSON.parse(File.read(File.join(root, "public", "hitl001.json")))
@@ -173,7 +174,7 @@ class LifecycleStoreTest < AceHitlTestCase
   def test_otp_deliver_requires_exactly_six_ascii_digits
     with_lifecycle_root do |root|
       store = make_store(root: root, identity: unprivileged_identity)
-      store.create(**request_args(kind: "otp"))
+      store.create(**request_args(kind: "otp", otp: otp_context))
       root_store = make_store(root: root, identity: root_identity)
 
       ["12345", "1234567", "12a456", "otp: 123456"].each do |bad|
@@ -190,7 +191,7 @@ class LifecycleStoreTest < AceHitlTestCase
       assert_equal "123456", File.read(File.join(root, "secrets", "hitl001.answer"))
       refute_includes File.read(File.join(root, "public", "hitl001.json")), "123456"
 
-      consumed = store.consume("hitl001", timeout: 1)
+      consumed = store.consume("hitl001", timeout: 1, operation: "gem-push")
       assert_equal "123456", consumed["answer"]
     end
   end
@@ -213,7 +214,7 @@ class LifecycleStoreTest < AceHitlTestCase
 
   def test_deliver_holds_the_per_request_lock_inside_its_critical_section
     with_lifecycle_root do |root|
-      request_path = File.join(root, "requests", "hitl001.json")
+      request_path = File.join(root, "locks", "hitl001.lock")
       gated = nil
       binding = LifecycleFixtures::TestBinding.new(
         on_active: ->(work:, attempt:) {
@@ -255,7 +256,7 @@ class LifecycleStoreTest < AceHitlTestCase
 
   def test_consume_commits_the_terminal_transition_under_the_request_lock
     with_lifecycle_root do |root|
-      request_path = File.join(root, "requests", "hitl001.json")
+      request_path = File.join(root, "locks", "hitl001.lock")
       store = make_store(root: root, identity: unprivileged_identity)
       store.create(**request_args)
       make_store(root: root, identity: root_identity).deliver("hitl001", stdin_reader("approved"))
@@ -292,12 +293,16 @@ class LifecycleStoreTest < AceHitlTestCase
     end
   end
 
-  def test_lock_on_vanished_record_fails_closed_as_state_error
+  def test_vanished_record_fails_closed_as_state_error_at_load
     with_lifecycle_root do |root|
       store = make_store(root: root, identity: unprivileged_identity)
 
+      # The per-request lock file is STABLE (spec 8wq.t.34i): locking
+      # never depends on the record; the vanished record fails closed
+      # at load, with the classified state error.
+      store.send(:with_request_lock, "absent1") {}
       error = assert_raises(Ace::Hitl::Lifecycle::StateError) do
-        store.send(:with_request_lock, "absent1") {}
+        store.send(:load_request, "absent1")
       end
       assert_match(/unknown or invalid HITL request/, error.message)
     end
@@ -316,9 +321,9 @@ class LifecycleStoreTest < AceHitlTestCase
 
       # The modes are pinned by spec §2 regardless of the creating
       # process umask (review F6 on W696).
-      assert_equal 0o700, File.stat(root).mode & 0o777
+      assert_equal 0o711, File.stat(root).mode & 0o777
       assert_equal 0o755, File.stat(File.join(root, "public")).mode & 0o777
-      %w[requests secrets answers effects].each do |name|
+      %w[requests secrets answers effects locks terminals].each do |name|
         assert_equal 0o700, File.stat(File.join(root, name)).mode & 0o777, name
       end
       assert_path_exists File.join(root, "requests", "hitl001.json")
@@ -340,7 +345,7 @@ class LifecycleStoreTest < AceHitlTestCase
   def test_request_stays_pending_far_beyond_a_legacy_expiry_and_is_still_answered
     with_lifecycle_root do |root|
       store = make_store(root: root, identity: unprivileged_identity)
-      store.create(**request_args(kind: "otp"))
+      store.create(**request_args(kind: "otp", otp: otp_context))
       # A backdated pre-W651 record still carrying a long-past expiry.
       request_path = File.join(root, "requests", "hitl001.json")
       record = JSON.parse(File.read(request_path))
@@ -354,7 +359,7 @@ class LifecycleStoreTest < AceHitlTestCase
 
       delivered = root_store.deliver("hitl001", stdin_reader("654321"))
       assert_equal true, delivered["delivered"]
-      consumed = store.consume("hitl001", timeout: 1)
+      consumed = store.consume("hitl001", timeout: 1, operation: "gem-push")
       assert_equal "654321", consumed["answer"]
       assert_equal "consumed", public_state(root)
     end
@@ -363,7 +368,7 @@ class LifecycleStoreTest < AceHitlTestCase
   def test_consume_waits_indefinitely_and_resumes_on_a_late_answer
     with_lifecycle_root do |root|
       store = make_store(root: root, identity: unprivileged_identity, poll_seconds: 0.05)
-      store.create(**request_args(kind: "otp"))
+      store.create(**request_args(kind: "otp", otp: otp_context))
       request_path = File.join(root, "requests", "hitl001.json")
       record = JSON.parse(File.read(request_path))
       record["created_at"] = Time.now.to_i - 3600
@@ -375,7 +380,7 @@ class LifecycleStoreTest < AceHitlTestCase
         sleep 0.3
         root_store.deliver("hitl001", stdin_reader("654321"))
       end
-      consumed = store.consume("hitl001", timeout: 0)
+      consumed = store.consume("hitl001", timeout: 0, operation: "gem-push")
       answerer.join(30)
       refute answerer.alive?
       assert_equal "654321", consumed["answer"]
@@ -402,7 +407,7 @@ class LifecycleStoreTest < AceHitlTestCase
   def test_explicit_cancel_is_audited_and_a_late_answer_fails_closed
     with_lifecycle_root do |root|
       store = make_store(root: root, identity: unprivileged_identity)
-      store.create(**request_args(kind: "otp"))
+      store.create(**request_args(kind: "otp", otp: otp_context))
       cancelled = store.cancel("hitl001", reason: "operator stopped the publication")
       assert_equal "lab-admin", cancelled["cancelled_by"]
       assert_equal "operator stopped the publication", cancelled["reason"]
@@ -417,11 +422,11 @@ class LifecycleStoreTest < AceHitlTestCase
       error = assert_raises(Ace::Hitl::Lifecycle::StateError) do
         root_store.deliver("hitl001", stdin_reader("654321"))
       end
-      assert_match(/unknown or invalid HITL request/, error.message)
+      assert_match(/already cancelled/, error.message)
       error = assert_raises(Ace::Hitl::Lifecycle::StateError) do
         store.consume("hitl001", timeout: 1)
       end
-      assert_match(/unknown or invalid HITL request/, error.message)
+      assert_match(/already cancelled/, error.message)
 
       states = make_store(root: root, identity: root_identity).states
       assert_equal ["hitl001"], states.map { |item| item["id"] }
@@ -432,27 +437,29 @@ class LifecycleStoreTest < AceHitlTestCase
   def test_answers_fail_closed_for_duplicates_and_foreign_requesters
     with_lifecycle_root do |root|
       store = make_store(root: root, identity: unprivileged_identity)
-      store.create(**request_args(kind: "otp"))
+      store.create(**request_args(kind: "otp", otp: otp_context))
       root_store = make_store(root: root, identity: root_identity)
       root_store.deliver("hitl001", stdin_reader("654321"))
 
-      error = assert_raises(Ace::Hitl::Lifecycle::StateError) do
-        root_store.deliver("hitl001", stdin_reader("654321"))
-      end
-      assert_match(/already has an answer/, error.message)
+      # A duplicate delivery is idempotent: the committed answer is
+      # reported again and no second answer file appears.
+      redelivered = root_store.deliver("hitl001", stdin_reader("654321"))
+      assert_equal true, redelivered["delivered"]
+      assert_equal ["hitl001.answer"], Dir.children(File.join(root, "secrets"))
 
       foreign = make_store(root: root, identity: unprivileged_identity("mo"))
       error = assert_raises(Ace::Hitl::Lifecycle::PermissionError) do
-        foreign.consume("hitl001", timeout: 1)
+        foreign.consume("hitl001", timeout: 1, operation: "gem-push")
       end
       assert_match(/only the requesting role/, error.message)
 
-      consumed = store.consume("hitl001", timeout: 1)
+      consumed = store.consume("hitl001", timeout: 1, operation: "gem-push")
       assert_equal "654321", consumed["answer"]
-      error = assert_raises(Ace::Hitl::Lifecycle::StateError) do
-        store.consume("hitl001", timeout: 1)
-      end
-      assert_match(/unknown or invalid HITL request/, error.message)
+      # A consumed retry replays the committed receipt — never the OTP
+      # bytes (spec 8wq.t.34i).
+      replayed = store.consume("hitl001", timeout: 1, operation: "gem-push")
+      assert_equal true, replayed["replay"]
+      refute_includes replayed.keys, "answer"
       refute_path_exists File.join(root, "secrets", "hitl001.answer")
       assert_equal "consumed", public_state(root)
     end
@@ -469,11 +476,12 @@ class LifecycleStoreTest < AceHitlTestCase
       creator.create(**request_args)
 
       store.deliver("hitl001", stdin_reader("approved"))
-      # The answer file transition carries the requester's exact ids.
-      answer_transition = find_transition(ownership, "answers")
-      refute_nil answer_transition
-      assert_equal [1234, 1234], [answer_transition[1], answer_transition[2]]
-      # The public projection carries the requester uid with the
+      # Answers are service-owned (0600): requesters receive the bytes
+      # over the authenticated boundary, never through file ownership
+      # (spec 8wq.t.34i).
+      assert_nil find_transition(ownership, "answers")
+      assert_equal 0o600, File.stat(File.join(root, "answers", "hitl001.answer")).mode & 0o777
+      # The public projection still carries the requester uid with the
       # control group gid (port of the chown(1234, 966) contract).
       public_transition = find_transition(ownership, "public")
       refute_nil public_transition
@@ -485,19 +493,19 @@ class LifecycleStoreTest < AceHitlTestCase
   def test_public_projection_file_mode_is_0440_and_answer_0400
     with_lifecycle_root do |root|
       store = make_store(root: root, identity: unprivileged_identity)
-      store.create(**request_args(kind: "otp"))
+      store.create(**request_args(kind: "otp", otp: otp_context))
       make_store(root: root, identity: root_identity).deliver("hitl001", stdin_reader("654321"))
       assert_equal 0o440, File.stat(File.join(root, "public", "hitl001.json")).mode & 0o777
-      assert_equal 0o400, File.stat(File.join(root, "secrets", "hitl001.answer")).mode & 0o777
+      assert_equal 0o600, File.stat(File.join(root, "secrets", "hitl001.answer")).mode & 0o777
     end
   end
 
   def test_duplicate_request_id_fails_closed_keeping_the_original
     with_lifecycle_root do |root|
       store = make_store(root: root, identity: unprivileged_identity)
-      store.create(**request_args(kind: "otp"))
+      store.create(**request_args(kind: "otp", otp: otp_context))
       error = assert_raises(Ace::Hitl::Lifecycle::StateError) do
-        store.create(**request_args(kind: "otp"))
+        store.create(**request_args(kind: "otp", otp: otp_context))
       end
       assert_match(/already exists/, error.message)
       assert_equal ["hitl001.json"], Dir.children(File.join(root, "requests")).sort
@@ -553,7 +561,7 @@ class LifecycleStoreTest < AceHitlTestCase
       }))
       root_store.deliver("hitl001", stdin_reader("the-answer"))
       assert_equal "callback-escalated", public_effect_state(root)
-      duty = Ace::Hitl::Lifecycle::Duty.project(root_store)
+      duty = Ace::Hitl::Lifecycle::Duty.project(pending: root_store.pending, states: root_store.states)
       assert_equal ["hitl001"], duty["escalated"].map { |record| record["id"] }
 
       # Consuming the answer is a lifecycle write: it must merge over
@@ -564,24 +572,28 @@ class LifecycleStoreTest < AceHitlTestCase
       record = JSON.parse(File.read(File.join(root, "public", "hitl001.json")))
       assert_equal "consumed", record["state"]
       assert_equal "callback-escalated", record["effect_state"]
-      duty = Ace::Hitl::Lifecycle::Duty.project(root_store)
+      duty = Ace::Hitl::Lifecycle::Duty.project(pending: root_store.pending, states: root_store.states)
       assert_equal ["hitl001"], duty["escalated"].map { |entry| entry["id"] }
     end
   end
 
-  def test_root_only_operations_reject_unprivileged_callers
+  def test_transport_operations_reject_callers_without_transport_authority
     with_lifecycle_root do |root|
-      store = make_store(root: root, identity: unprivileged_identity)
+      store = make_store(
+        root: root, identity: unprivileged_identity,
+        policy: LifecycleFixtures::DenyTransportPolicy.new
+      )
       ["pending", "states"].each do |operation|
         error = assert_raises(Ace::Hitl::Lifecycle::PermissionError) do
           store.public_send(operation)
         end
-        assert_match(/host-broker operation/, error.message)
+        assert_match(/configured transport identity/, error.message)
       end
+      store.create(**request_args)
       error = assert_raises(Ace::Hitl::Lifecycle::PermissionError) do
         store.deliver("hitl001", stdin_reader("approved"))
       end
-      assert_match(/host-broker operation/, error.message)
+      assert_match(/configured transport identity/, error.message)
     end
   end
 

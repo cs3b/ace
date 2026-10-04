@@ -6,15 +6,15 @@ module Ace
   module Hitl
     module CLI
       module Commands
-        # Shared plumbing for the operator/broker lifecycle commands
-        # (spec 8wm.t.y21 §8): the store is built through the provider=lab
-        # seam and machine outputs are one JSON line, byte-compatible
-        # with the migrated CLI contract.
+        # Shared plumbing for the lifecycle commands (spec 8wm.t.y21 §8,
+        # scoped by 8wq.t.34i): every lifecycle operation reaches the
+        # store through the AUTHENTICATED BOUNDARY CLIENT — direct
+        # shared-store access is not a CLI option — and machine outputs
+        # are one JSON line, byte-compatible with the migrated CLI
+        # contract.
         module LifecycleCommand
-          STDIN_READER = ->(limit) { $stdin.read(limit) }.freeze
-
-          def lifecycle_store(store: nil)
-            Providers::Lab.lifecycle_store(store: store)
+          def lifecycle_client
+            Providers::Lab.boundary_client
           end
 
           def overseer

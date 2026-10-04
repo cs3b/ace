@@ -1,0 +1,212 @@
+# frozen_string_literal: true
+
+require "test_helper"
+require "socket"
+require "json"
+require "support/lifecycle_fixtures"
+
+# The scoped store boundary (spec 8wq.t.34i): the REAL service and the
+# REAL client talk over a REAL AF_UNIX socket in-process — classified
+# errors cross the wire, roles are enforced from the (same-uid) peer
+# identity, and idempotent terminals survive transport retries.
+class ScopedServiceTest < AceHitlTestCase
+  include LifecycleFixtures
+
+  REQUESTER = "lab-asker"
+
+  def setup
+    @scratch = Dir.mktmpdir("ace-hitl-boundary")
+    @store_root = File.join(@scratch, "store")
+    @socket_path = File.join(@scratch, "hitl.sock")
+    @binding = LifecycleFixtures::TestBinding.new
+    @policy = LifecycleFixtures::AllowTransportPolicy.new
+    @service = Ace::Hitl::Lifecycle::Service.new(
+      root: @store_root,
+      binding: @binding,
+      policy: @policy,
+      socket_path: @socket_path,
+      group: "staff"
+    )
+    @thread = Thread.new { @service.run }
+    wait_for_socket
+  end
+
+  def teardown
+    @service&.stop
+    @thread&.join(5)
+    @thread&.exit
+    FileUtils.remove_entry(@scratch) if @scratch && File.exist?(@scratch)
+  end
+
+  def client
+    Ace::Hitl::Lifecycle::Client.new(socket_path: @socket_path, service_uid: Process.uid)
+  end
+
+  def wait_for_socket
+    deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + 5
+    until File.exist?(@socket_path)
+      raise "boundary socket never appeared" if Process.clock_gettime(Process::CLOCK_MONOTONIC) > deadline
+
+      sleep 0.02
+    end
+  end
+
+  def managed_args(id: "hitl001", kind: "decision", assignment: "8x3test", attempt: "a1b2c3")
+    {
+      id: id, assignment: assignment, attempt: attempt, kind: kind,
+      project: "ace", harness: "agy", plan: "configure CI",
+      question: "approve the exact change?", ace_hitl_id: "ace-hitl-1"
+    }
+  end
+
+  def test_ping_and_full_lifecycle_round_trip_through_the_boundary
+    result = client.ping
+    assert_equal true, result["pong"]
+
+    created = client.create(**managed_args.transform_keys(&:to_s))
+    assert_equal "hitl001", created["id"]
+
+    facts = client.read("hitl001")
+    assert_equal "created", facts["state"]
+    refute_includes JSON.generate(facts), "answer"
+
+    delivered = client.deliver("hitl001", "approved")
+    assert_equal true, delivered["delivered"]
+
+    consumed = client.consume("hitl001", timeout: 2)
+    assert_equal "approved", consumed["answer"]
+    assert_equal "ace", consumed["project"]
+
+    # A late cancel of a consumed request is a classified conflict.
+    error = assert_raises(Ace::Hitl::Lifecycle::StateError) do
+      client.cancel("hitl001", reason: "not needed")
+    end
+    assert_match(/already consumed/, error.message)
+
+    # ...and cancelling a live request still works end-to-end.
+    client.create(**managed_args(id: "hitl002").transform_keys(&:to_s))
+    cancelled = client.cancel("hitl002", reason: "not needed")
+    assert_equal true, cancelled["cancelled"]
+    replay = client.cancel("hitl002", reason: "not needed")
+    assert_equal true, replay["replay"]
+  end
+
+  def test_transport_operations_reach_the_store_through_the_boundary
+    client.create(**managed_args.transform_keys(&:to_s))
+    client.create(**managed_args(id: "hitl002").transform_keys(&:to_s))
+
+    pending = client.pending
+    assert_equal %w[hitl001 hitl002], pending.map { |value| value["id"] }
+    states = client.states
+    assert_equal 2, states.length
+  end
+
+  def test_classified_errors_cross_the_wire_under_their_own_classes
+    error = assert_raises(Ace::Hitl::Lifecycle::StateError) do
+      client.read("absent1")
+    end
+    assert_match(/unknown or invalid HITL request/, error.message)
+
+    error = assert_raises(Ace::Hitl::Lifecycle::StateError) do
+      client.create(**managed_args.transform_keys(&:to_s).merge("assignment" => "../evil"))
+    end
+    assert_match(/exact managed assignment and attempt/, error.message)
+  end
+
+  def test_requester_gate_enforced_through_the_peer_identity
+    # The peer identity IS the store identity: the service resolves it
+    # from kernel credentials, so a payload requester name cannot
+    # impersonate anyone. The pinned service-side identity here is the
+    # test process owner; a foreign-requester consume fails with the
+    # classified permission error.
+    client.create(**managed_args.transform_keys(&:to_s))
+    store = Ace::Hitl::Lifecycle::Store.new(
+      root: @store_root, binding: @binding, policy: @policy,
+      identity: LifecycleFixtures::TestIdentity.new(username: "someone-else")
+    )
+    error = assert_raises(Ace::Hitl::Lifecycle::PermissionError) do
+      store.consume("hitl001", timeout: 1)
+    end
+    assert_match(/only the requesting role/, error.message)
+  end
+
+  def test_idempotent_terminals_survive_transport_retries
+    client.create(**managed_args.transform_keys(&:to_s))
+    client.deliver("hitl001", "approved")
+    consumed = client.consume("hitl001", timeout: 2)
+
+    # A retry after a cut response reports the committed receipt and
+    # never re-runs the answer hand-off.
+    replay = client.consume("hitl001", timeout: 2)
+    assert_equal true, replay["replay"]
+    assert_equal consumed["answer"], replay["answer"]
+
+    error = assert_raises(Ace::Hitl::Lifecycle::StateError) do
+      client.deliver("hitl001", "late answer")
+    end
+    assert_match(/already consumed/, error.message)
+  end
+
+  def test_unavailable_boundary_is_a_classified_transport_error
+    absent = Ace::Hitl::Lifecycle::Client.new(
+      socket_path: File.join(@scratch, "absent.sock"), service_uid: Process.uid
+    )
+    error = assert_raises(Ace::Hitl::Lifecycle::TransportError) do
+      absent.ping
+    end
+    assert_match(/does not exist|unavailable/, error.message)
+  end
+
+  def test_world_writable_endpoint_is_refused_before_any_byte_is_sent
+    File.chmod(0o666, @socket_path)
+    error = assert_raises(Ace::Hitl::Lifecycle::TransportError) do
+      client.ping
+    end
+    assert_match(/world-writable/, error.message)
+  end
+
+  def test_non_socket_endpoint_is_refused
+    decoy = File.join(@scratch, "decoy.sock")
+    File.write(decoy, "not a socket")
+    decoy_client = Ace::Hitl::Lifecycle::Client.new(socket_path: decoy, service_uid: Process.uid)
+    error = assert_raises(Ace::Hitl::Lifecycle::TransportError) do
+      decoy_client.ping
+    end
+    assert_match(/not a socket/, error.message)
+  end
+
+  def test_ended_attempt_cancels_the_request_through_the_boundary
+    failing = LifecycleFixtures::TestBinding.new(
+      on_validate: ->(**_kwargs) { nil },
+      on_active: ->(**_kwargs) { raise Ace::Hitl::Lifecycle::BindingError, "HITL Attempt is no longer active" }
+    )
+    service = Ace::Hitl::Lifecycle::Service.new(
+      root: File.join(@scratch, "store2"), binding: failing, policy: @policy,
+      socket_path: File.join(@scratch, "hitl2.sock"), group: "staff"
+    )
+    thread = Thread.new { service.run }
+    deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + 5
+    until File.exist?(File.join(@scratch, "hitl2.sock"))
+      raise "socket never appeared" if Process.clock_gettime(Process::CLOCK_MONOTONIC) > deadline
+
+      sleep 0.02
+    end
+    second = Ace::Hitl::Lifecycle::Client.new(
+      socket_path: File.join(@scratch, "hitl2.sock"), service_uid: Process.uid
+    )
+
+    # Validation passes at creation (on_validate is a no-op)...
+    second.create(**managed_args.transform_keys(&:to_s))
+    # ...and liveness re-verification cancels the request at deliver.
+    error = assert_raises(Ace::Hitl::Lifecycle::BindingError) do
+      second.deliver("hitl001", "approved")
+    end
+    assert_match(/no longer active/, error.message)
+    states = second.states
+    assert_equal "cancelled", states[0]["state"]
+  ensure
+    service&.stop
+    thread&.join(5)
+    thread&.exit
+  end
+end

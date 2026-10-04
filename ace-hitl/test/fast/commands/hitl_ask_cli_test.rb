@@ -267,16 +267,19 @@ class HitlAskCliTest < AceHitlTestCase
     end
   end
 
-  def test_ask_defaults_attempt_from_lab_attempt_id_env
+  def test_ask_rejects_environment_derived_attempt_identity
     with_hitl_dir do |root|
       with_cli_root(root) do
         with_ask_env do
+          # An environment variable is never attempt authority
+          # (spec 8wq.t.34i): the visible, typed failure must happen
+          # before any state is created.
           with_env("LAB_ATTEMPT_ID" => "A-000000000000000000000000") do
             result = run_cli(["ask", "Env attempt?", "--work", "W685"])
 
-            assert_equal 0, result[:exit_code], result[:stderr]
-            request_id = result[:stdout][LAB_REQUEST_LINE, 1]
-            assert_equal "A-000000000000000000000000", persisted_request(request_id)["attempt"]
+            assert_equal 1, result[:exit_code]
+            assert_match(/--attempt required/, result[:stderr])
+            assert_empty Dir.children(File.join(@store_root, "requests"))
           end
         end
       end
@@ -338,19 +341,24 @@ class HitlAskCliTest < AceHitlTestCase
     end
   end
 
-  def test_ask_requires_work_and_attempt
+  def test_ask_requires_binding_and_attempt
     with_hitl_dir do |root|
       with_cli_root(root) do
         with_ask_env do
-          result = run_cli(["ask", "No work?", "--attempt", "A-a73ebdaeb811210d51e0251e"])
+          result = run_cli(["ask", "No binding?", "--attempt", "A-a73ebdaeb811210d51e0251e"])
           assert_equal 1, result[:exit_code]
-          assert_match(/--work required/, result[:stderr])
+          assert_match(/--assignment required/, result[:stderr])
 
-          with_env("LAB_ATTEMPT_ID" => nil) do
-            result = run_cli(["ask", "No attempt?", "--work", "W685"])
-            assert_equal 1, result[:exit_code]
-            assert_match(/--attempt required/, result[:stderr])
-          end
+          result = run_cli(["ask", "No attempt?", "--work", "W685"])
+          assert_equal 1, result[:exit_code]
+          assert_match(/--attempt required/, result[:stderr])
+
+          result = run_cli([
+            "ask", "Both bindings?", "--work", "W685",
+            "--assignment", "abc123", "--attempt", "A-a73ebdaeb811210d51e0251e"
+          ])
+          assert_equal 1, result[:exit_code]
+          assert_match(/mutually exclusive/, result[:stderr])
           assert_empty Dir.children(File.join(@store_root, "requests"))
         end
       end

@@ -18,8 +18,8 @@ module Ace
           option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
 
           def call(**options)
-            emit(Lifecycle::Duty.project(lifecycle_store))
-          rescue Lifecycle::Error => e
+            emit(Lifecycle::Duty.project(pending: lifecycle_client.pending, states: lifecycle_client.states))
+          rescue Lifecycle::Error, Providers::ProviderUnavailableError => e
             raise_lifecycle_error(e.message)
           end
         end

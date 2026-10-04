@@ -43,8 +43,10 @@ module LifecycleFixtures
   end
 
   # The binding seam fixture: records every query and fails on demand,
-  # exactly like the ported suite's binding scenarios.
-  class TestBinding
+  # exactly like the ported suite's binding scenarios. Subclasses the
+  # real seam so transition scoping (with_active) behaves like
+  # production.
+  class TestBinding < Ace::Hitl::Lifecycle::Binding
     attr_reader :validations, :activations
 
     def initialize(on_validate: nil, on_active: nil)
@@ -54,16 +56,30 @@ module LifecycleFixtures
       @activations = []
     end
 
-    def validate_request(work:, attempt:, project:, requester:)
-      @validations << {work: work, attempt: attempt, project: project, requester: requester}
-      instance_exec(work: work, attempt: attempt, project: project, requester: requester, &@on_validate) if @on_validate
+    def validate_request(work: nil, assignment: nil, attempt:, project:, requester:)
+      @validations << {work: work, assignment: assignment, attempt: attempt, project: project, requester: requester}
+      callback(**binding_kwargs(work, assignment, attempt, project, requester), &@on_validate) if @on_validate
       nil
     end
 
-    def require_active(work:, attempt:)
-      @activations << {work: work, attempt: attempt}
-      instance_exec(work: work, attempt: attempt, &@on_active) if @on_active
+    def require_active(work: nil, assignment: nil, attempt:, project: nil, requester: nil)
+      @activations << {work: work, assignment: assignment, attempt: attempt}
+      callback(**binding_kwargs(work, assignment, attempt, project, requester).slice(:work, :assignment, :attempt), &@on_active) if @on_active
       nil
+    end
+
+    private
+
+    # Legacy on_validate/on_active lambdas declare the Work-era kwargs;
+    # assignment is forwarded only when present so both generations of
+    # callbacks keep working.
+    def callback(**kwargs, &block)
+      arity_safe = block.parameters.map { |_kind, name| name }
+      block.call(**kwargs.slice(*arity_safe))
+    end
+
+    def binding_kwargs(work, assignment, attempt, project, requester)
+      {work: work, assignment: assignment, attempt: attempt, project: project, requester: requester}
     end
   end
 
@@ -82,7 +98,38 @@ module LifecycleFixtures
     end
   end
 
-  def make_store(root:, identity: nil, binding: nil, ownership: nil, poll_seconds: 1)
+  # The boundary access-policy fixture: the configured transport is
+  # allowed for broker-side scenarios; requester operations never
+  # consult it.
+  class AllowTransportPolicy
+    def transport?(_peer, project: nil)
+      true
+    end
+
+    def service_uid; end
+  end
+
+
+  # The boundary access-policy fixture that grants nothing: proves the
+  # transport operations fail closed without configured authority.
+  class DenyTransportPolicy
+    def transport?(_peer, project: nil)
+      false
+    end
+
+    def service_uid; end
+  end
+
+  def unprivileged_identity(name = "lab-admin")
+    LifecycleFixtures::TestIdentity.new(username: name, root: false)
+  end
+
+  def root_identity(name = "lab-admin")
+    LifecycleFixtures::TestIdentity.new(username: name, root: true)
+  end
+
+  def make_store(root:, identity: nil, binding: nil, ownership: nil, poll_seconds: 1, policy: nil,
+    vault: :file)
     Ace::Hitl::Lifecycle::Store.new(
       root: root,
       binding: binding || LifecycleFixtures::TestBinding.new,
@@ -91,18 +138,32 @@ module LifecycleFixtures
       # behavior, ownership transitions recorded instead of executed, so
       # named foreign identities never hit EPERM in an unprivileged run.
       ownership: ownership || LifecycleFixtures::RecordingOwnership.new,
-      poll_seconds: poll_seconds
+      policy: policy || LifecycleFixtures::AllowTransportPolicy.new,
+      poll_seconds: poll_seconds,
+      vault: vault
     )
   end
 
   def request_args(id: "hitl001", work: "W500", attempt: "A-#{"a" * 24}", kind: "decision",
     project: "ace", harness: "agy", plan: "configure CI", question: "approve the exact change?",
-    options: [], ace_hitl_id: "ace-hitl-1", effect: nil)
+    options: [], ace_hitl_id: "ace-hitl-1", effect: nil, otp: nil, assignment: nil)
     {
-      id: id, work: work, attempt: attempt, kind: kind, project: project,
+      id: id, work: work, assignment: assignment, attempt: attempt, kind: kind, project: project,
       harness: harness, plan: plan, question: question, options: options,
-      ace_hitl_id: ace_hitl_id, effect: effect
+      ace_hitl_id: ace_hitl_id, effect: effect, otp: otp
     }.compact
+  end
+
+  # A structurally valid, non-secret OTP challenge: the OTP-required
+  # publisher result evidence bound to one authorized operation.
+  def otp_context(operation: "gem-push", expires_in: 3600, result_ref: "publisher-result-otp-required",
+    input_digest: "b" * 64)
+    {
+      operation: operation,
+      result_ref: result_ref,
+      input_digest: input_digest,
+      expires_at: Time.now.to_i + expires_in
+    }
   end
 
   def stdin_reader(answer)

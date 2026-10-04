@@ -202,15 +202,17 @@ class LabDaemonBindingTest < AceHitlTestCase
   end
 
   def test_deliver_cancels_liveness_when_the_daemon_reply_is_not_json
-    @raw_reply = "this is not json"
+    @raw_reply = nil
+    # Creation validates its binding against the live daemon reply (the
+    # attempt's unix_user); deliver must then RE-verify liveness and
+    # fail closed when the attempt cannot be proven active.
+    @reply = ->(_query) { ok_reply("unix_user" => "lab-admin") }
     with_lifecycle_root do |root|
       daemon = Ace::Hitl::Providers::Lab::DaemonBinding.new(socket_path: path)
-      # The requester is the store's admin user, so create skips the
-      # (unanswerable) binding validation; deliver must still re-verify
-      # liveness and fail closed.
       store = make_store(root: root, binding: daemon)
       store.create(**request_args)
 
+      @raw_reply = "this is not json"
       error = assert_raises(Ace::Hitl::Lifecycle::BindingError) do
         make_store(root: root,
           identity: LifecycleFixtures::TestIdentity.new(username: "lab-admin", root: true),

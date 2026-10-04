@@ -171,7 +171,7 @@ class LifecycleOverseerTest < AceHitlTestCase
       make_store(root: root, identity: unprivileged_identity, poll_seconds: 0.05)
         .consume("hitl002", timeout: 1)
 
-      duty = Ace::Hitl::Lifecycle::Duty.project(root_store)
+      duty = Ace::Hitl::Lifecycle::Duty.project(pending: root_store.pending, states: root_store.states)
       # Nothing is pending any more: both were delivered.
       assert_empty duty["pending"]
       assert_equal ["hitl001"], duty["escalated"].map { |record| record["id"] }
@@ -182,7 +182,7 @@ class LifecycleOverseerTest < AceHitlTestCase
         match: nil, effect_args: ["/bin/true"], effect_cwd: root, effect_timeout: 30
       }))
       store.create(**request_args(id: "hitl004"))
-      duty = Ace::Hitl::Lifecycle::Duty.project(root_store)
+      duty = Ace::Hitl::Lifecycle::Duty.project(pending: root_store.pending, states: root_store.states)
       assert_equal %w[hitl003 hitl004], duty["pending"].map { |entry| entry["id"] }
       assert_equal [true, false], duty["pending"].map { |entry| entry["has_effect"] }
     end

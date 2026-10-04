@@ -45,4 +45,9 @@ Gem::Specification.new do |spec|
   spec.add_dependency "ace-support-items", "~> 0.15"
   spec.add_dependency "ace-b36ts", "~> 0.14"
   spec.add_dependency "ace-support-cli", "~> 0.6"
+  # The managed binding authority: assignment attempts are verified
+  # through the ace-assign coordinator (spec 8wq.t.34i). No reverse
+  # dependency exists or may be added (consumers map the delivery
+  # contract instead).
+  spec.add_dependency "ace-assign", "~> 0.61"
 end

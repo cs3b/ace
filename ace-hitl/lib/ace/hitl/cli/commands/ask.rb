@@ -18,8 +18,11 @@ module Ace
 
           option :title, type: :string, desc: "Local HITL event title (defaults to the question)"
           option :provider, type: :string, desc: "HITL provider adapter (default: ACE_HITL_PROVIDER or lab)"
-          option :work, type: :string, desc: "Lab Work id (W...)"
-          option :attempt, type: :string, desc: "Lab Attempt id (A-...); defaults to LAB_ATTEMPT_ID"
+          # Managed binding (spec 8wq.t.34i): the request binds to the
+          # exact active managed attempt of the calling identity.
+          option :assignment, type: :string, desc: "Managed assignment id (compact id)"
+          option :work, type: :string, desc: "Lab Work id (W...) - legacy binding until vs2 switches consumers"
+          option :attempt, type: :string, desc: "Attempt id of the exact active attempt"
           option :project, type: :string, desc: "Lab project label (default: ace)"
           option :harness, type: :string, desc: "Lab harness label (default: lab-admin)"
           option :plan, type: :string, desc: "Lab plan label (default: ace-hitl ask)"
@@ -37,7 +40,7 @@ module Ace
             effect = build_effect(options)
             validate_effect!(effect)
 
-            work = require_work!(options)
+            work, assignment = require_binding!(options)
             attempt = require_attempt!(options)
             provider = resolve_provider(options[:provider])
             ref = capture_ref
@@ -47,6 +50,7 @@ module Ace
               title: options[:title],
               ref: ref,
               work: work,
+              assignment: assignment,
               attempt: attempt,
               project: options[:project] || Providers::Lab::DEFAULT_PROJECT,
               harness: options[:harness] || Providers::Lab::DEFAULT_HARNESS,
@@ -78,17 +82,28 @@ module Ace
             raise_cli_error(e.message)
           end
 
-          def require_work!(options)
+          # The binding is authority: exactly one of the managed
+          # assignment binding or the legacy Work binding. An
+          # environment variable never supplies attempt identity
+          # (spec 8wq.t.34i).
+          def require_binding!(options)
             work = options[:work]
-            raise_cli_error("--work required (Lab Work id, e.g. W685)") if work.nil? || work.strip.empty?
+            assignment = options[:assignment]
+            if work && assignment
+              raise_cli_error("--assignment and --work are mutually exclusive binding authorities")
+            end
+            if work.nil? && assignment.nil?
+              raise_cli_error("--assignment required (managed binding), or --work for the legacy Work binding")
+            end
+            return [work, nil] unless work.nil?
 
-            work
+            [nil, assignment]
           end
 
           def require_attempt!(options)
-            attempt = options[:attempt] || ENV["LAB_ATTEMPT_ID"]
+            attempt = options[:attempt]
             unless attempt && !attempt.strip.empty?
-              raise_cli_error("--attempt required (or set LAB_ATTEMPT_ID)")
+              raise_cli_error("--attempt required (the exact active attempt id)")
             end
 
             attempt
