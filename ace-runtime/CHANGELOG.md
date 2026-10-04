@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-10-04
+
+### Fixed
+- Adapter `LoadError`s propagate instead of being swallowed, and the runtime contract enforces its typed error surface (k86.3 consumer migration).
+
 ## [0.1.0] - 2026-09-28
 
 ### Added
