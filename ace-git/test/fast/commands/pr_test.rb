@@ -116,8 +116,6 @@ class PrCommandsTest < AceGitTestCase
 
   def test_invalid_merge_method_is_rejected_before_provider_invocation
     with_servers do
-      calls = []
-      runner = ->(args:, **_kw) { calls << args; {success: true, stdout: "", stderr: "", exit_code: 0} }
       error = assert_raises(Ace::Support::Cli::Error) do
         capture_io do
           Ace::Git::CLI::Commands::Pr::Merge.new.call(
@@ -126,7 +124,6 @@ class PrCommandsTest < AceGitTestCase
         end
       end
       assert_match(/Invalid merge method/, error.message)
-      assert_empty calls
     end
   end
 
