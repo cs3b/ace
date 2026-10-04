@@ -73,8 +73,10 @@ setup_executor), drive.wf.md callback rule, consumer gemspecs.
    - `tmux-session` step → `runtime-session` (tmux: detached session as
      today exporting ACE_TMUX_SESSION; herdr: requires live HERDR_* env,
      fails explicitly when absent — no scripted stand-in). Scenario YAML +
-     template + orchestrator transient-step list updated.
-   - gemspec: + `ace-runtime`.
+     template + orchestrator transient-step list updated. No gemspec
+     change: this package only plumbs environment, it never loads the
+     contract itself; scenario sandboxes resolve runtimes through the
+     installed consumer gems.
    - Tests: step behavior for both runtimes + absent-backend failure.
 
 6. **Verification** — `ace-test` on all five packages, then `ace-test-suite`;
