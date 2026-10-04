@@ -30,7 +30,7 @@ class DependencyBoundaryTest < AceHitlContractTestCase
 
   def test_consumers_install_both_adapters_without_an_authority_cycle
     specs = Dir.glob(File.join(ROOT, "ace-*/*.gemspec")).to_h do |path|
-      spec = Gem::Specification.load(path)
+      spec = load_source_gemspec(path)
       [spec.name, spec]
     end
     visit = lambda do |name, stack, seen|

@@ -19,7 +19,7 @@ class InstalledConsumersTest < AceHitlContractTestCase
     pool = File.join(@scratch, "packages")
     FileUtils.mkdir_p(pool)
     specs = Dir.glob(File.join(ROOT, "ace-*/*.gemspec")).to_h do |path|
-      spec = Dir.chdir(File.dirname(path)) { Gem::Specification.load(path) }
+      spec = load_source_gemspec(path)
       [spec.name, spec]
     end
     closure = Set.new
