@@ -66,9 +66,15 @@ sources below prove; the disposable-server scenario (step_06) proves behavior.
   transitions, or the atomic merge precondition (RepositoryBinding.FORMS).
   The lifecycle therefore uses the repository-bound JSON API v1 — the same
   provider-owned transport precedent as `HttpClient`/`IssueApi`.
-- Minimum supported server/transport combination implemented and documented:
-  Forgejo v7.0+ REST API v1 (`head_commit_id` present and enforced since
-  v7.0; draft via default WIP prefixes; fork heads via `owner:branch`).
+- Minimum supported server/transport combination implemented and
+  documented: Forgejo v8.0+ REST API v1. `head_commit_id` is documented
+  and enforced from v7.0, but the API `draft` field is only computed from
+  the WIP title from v8.0 (`Draft: pr.IsWorkInProgress(ctx)` in
+  services/convert/pull.go with a non-omitempty bool; v7.0's
+  ToAPIPullRequest never assigns Draft — verified on release branches
+  v7.0 through v12.0 and the live 7.0.16 preflight instance, where both
+  list and single-PR payloads omit `draft`). The lifecycle proves draft
+  state, so v8.0 is the first line that can honor the full contract.
   `/api/v1/version` is probed and validated before enabling lifecycle
   mutations (fail closed on mismatch).
 
