@@ -124,7 +124,10 @@ module Ace
           handoff = visible_handoff.to_s
           steps << "printf '%s\\n' #{Shellwords.escape(handoff)}" unless handoff.empty?
 
-          steps << "exec #{build_exec_command(command: command, env: env)}"
+          # The prepared pane owns a retained interactive shell. Run the
+          # invocation as its child so another submission can use the same
+          # target after this command exits.
+          steps << build_exec_command(command: command, env: env)
           steps.join(" && ")
         end
 
