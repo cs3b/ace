@@ -4,21 +4,23 @@ require "test_helper"
 
 # Provider-contract parity suite for the Forgejo provider.
 # Shares identical assertions with ace-git-github via
-# Ace::TestSupport::ProviderContract; fixtures are Forgejo (`fj`, minimal
-# style) shaped, and every repository command is selected-repository bound
-# (`-H <authority>` plus qualified `owner/repo#N` or `-r owner/repo`).
+# Ace::TestSupport::ProviderContract. Pull request identity reads ride the
+# documented Forgejo API v1 (`forgejo-http` transport, selected-repository
+# bound); `fj` fixtures are minimal-style and `-H <authority>` bound.
 class ForgejoProviderContractTest < AceGitForgejoTestCase
   include Ace::TestSupport::ProviderContract
 
   SERVER = Ace::Git::ResolvedServer.new(name: "forge-server", provider: :forgejo, url: "https://forgejo.example.com/owner/repo")
   HOST = "forgejo.example.com"
+  API = "https://forgejo.example.com/api/v1/repos/owner/repo"
 
   def build_provider(runner)
     Ace::Git::Forgejo::Provider.new(server: SERVER, runner: runner)
   end
 
   def ok_runner
-    @ok_runner ||= scripted_runner(
+    @ok_runner ||= api_and_fj_runner(
+      "pulls/25" => {status: 200, payload: pr25_payload},
       "fj version" => version_ok,
       "fj auth list" => {success: true, stdout: "forgejo.example.com\n", stderr: "", exit_code: 0},
       "fj -H https://forgejo.example.com --style minimal pr view owner/repo#25" => {success: true, stdout: pr25_view, stderr: "", exit_code: 0},
@@ -69,30 +71,74 @@ class ForgejoProviderContractTest < AceGitForgejoTestCase
   end
 
   def not_found_runner
-    scripted_runner(
-      "fj version" => version_ok,
-      "fj -H https://forgejo.example.com --style minimal pr view owner/repo#999" => ["error: pull request does not exist", 1]
-    )
+    api_runner("pulls/999" => {status: 404, payload: {"message" => "pull request does not exist"}})
   end
 
   def malformed_runner
-    scripted_runner(
-      "fj version" => version_ok,
-      "fj -H https://forgejo.example.com --style minimal pr view owner/repo#25" => {success: true, stdout: "unexpected output shape", stderr: "", exit_code: 0}
-    )
+    api_runner("pulls/25" => {status: 200, body: "unexpected output shape"})
   end
 
   def unreachable_runner
-    scripted_runner(
-      "fj version" => version_ok,
-      "fj -H https://forgejo.example.com --style minimal pr view owner/repo#25" => ["fj: Forgejo request failed with HTTP 502", 1]
-    )
+    api_runner("pulls/25" => {status: 502, payload: {"message" => "upstream failure"}})
   end
 
   private
 
+  # Route `forgejo-http` API exchanges by suffix and `fj` commands by their
+  # full argv; each API route serves one scripted status/payload.
+  def api_and_fj_runner(routes)
+    fj_responses = routes.except("pulls/25")
+    api_route = routes["pulls/25"]
+    lambda do |args:, **|
+      if args.first == "forgejo-http"
+        respond_api(args, "pulls/25" => api_route)
+      else
+        fj_responses.fetch(args.join(" ")) { flunk("Unexpected command in test: #{args.join(' ')}") }
+      end
+    end
+  end
+
+  # API-only runner: every exchange is routed by the path suffix.
+  def api_runner(routes)
+    lambda do |args:, **|
+      flunk("Unexpected non-API command: #{args.join(' ')}") unless args.first == "forgejo-http"
+      respond_api(args, routes)
+    end
+  end
+
+  def respond_api(args, routes)
+    method = args[1]
+    path = args[2].to_s
+    route = routes.find { |suffix, _| path.end_with?(suffix) }
+    flunk("Unexpected API route: #{method} #{path}") unless route
+
+    spec = route[1]
+    status = spec.is_a?(Hash) ? spec.fetch(:status, 200) : spec
+    body = spec.is_a?(Hash) && spec.key?(:body) ? spec[:body] : JSON.generate(spec.is_a?(Hash) ? spec[:payload] : {})
+    {success: (200..299).cover?(status), status: status, stdout: body, stderr: "", exit_code: (200..299).cover?(status) ? 0 : 1}
+  end
+
   def version_ok
     {success: true, stdout: "fj v0.6.0\nCheck for a new version with `fj version --check`\n", stderr: "", exit_code: 0}
+  end
+
+  def pr25_payload
+    {
+      "number" => 25,
+      "title" => "Ship the provider contract",
+      "body" => "body text",
+      "state" => "closed",
+      "draft" => false,
+      "merged" => true,
+      "merged_at" => "2026-09-30T10:00:00Z",
+      "merge_commit_sha" => "c" * 40,
+      "user" => {"login" => "lab-builder"},
+      "head" => {"label" => "owner/repo:lab/W675-ace", "ref" => "lab/W675-ace",
+                 "sha" => "fc14c43d3660ac6c133959a6dec29603413f0e8a",
+                 "repo" => {"full_name" => "owner/repo"}},
+      "base" => {"label" => "main", "ref" => "main", "sha" => "b" * 40,
+                 "repo" => {"full_name" => "owner/repo"}}
+    }
   end
 
   def pr25_view

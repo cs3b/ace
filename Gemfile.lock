@@ -83,6 +83,7 @@ PATH
   specs:
     ace-git-forgejo (0.5.0)
       ace-git (~> 0.26)
+      faraday (~> 2.14)
 
 PATH
   remote: ace-git-github

@@ -5,16 +5,18 @@ require "tmpdir"
 require "test_helper"
 
 module Forgejo
-  # Selected-repository binding matrix: every provider subprocess carries the
-  # selected host/owner/repository; two servers sharing PR/issue numbers with
-  # conflicting cwd, remote order, and default login cannot cross-route; all
-  # pre-send failures classify with zero wrongly targeted subprocesses.
+  # Selected-repository binding matrix: every provider call carries the
+  # selected host/owner/repository — `fj` subprocesses through `-H` plus the
+  # qualified reference, API exchanges through the selected-repository URL —
+  # and two servers sharing PR/issue numbers with conflicting cwd, remote
+  # order, and default login cannot cross-route; all pre-send failures
+  # classify with zero wrongly targeted requests.
   class RepositoryBindingTest < AceGitForgejoTestCase
     LAB_A = Ace::Git::ResolvedServer.new(name: "lab-a", provider: :forgejo, url: "https://forge.example.com/lab-a/repo")
     LAB_B = Ace::Git::ResolvedServer.new(name: "lab-b", provider: :forgejo, url: "https://other.example.com:3443/lab-b/repo")
     SHA = "a" * 40
 
-    def test_every_subprocess_of_selected_server_carries_its_identity
+    def test_every_request_of_selected_server_carries_its_identity
       commands = recording_runner(lab_b_fixtures)
       provider = Ace::Git::Forgejo::Provider.new(server: LAB_B, runner: commands.recorder)
 
@@ -28,21 +30,34 @@ module Forgejo
 
       refute_empty commands.argvs
       commands.argvs.each do |argv|
-        assert_equal "fj", argv.first
-        next if argv == %w[fj version] # control probe, host-scoped only
+        case argv.first
+        when "fj"
+          next if argv == %w[fj version] # control probe, host-scoped only
 
-        assert_equal ["-H", "https://other.example.com:3443"], argv[1, 2],
-          "every subprocess must carry the selected authority"
-        assert_nil argv.index("-C"), "cwd must never be used for targeting"
-        assert_includes argv.join(" "), "lab-b/repo",
-          "every subprocess must reference the selected repository"
+          assert_equal ["-H", "https://other.example.com:3443"], argv[1, 2],
+            "every subprocess must carry the selected authority"
+          assert_nil argv.index("-C"), "cwd must never be used for targeting"
+          assert_includes argv.join(" "), "lab-b/repo",
+            "every subprocess must reference the selected repository"
+        when "forgejo-http"
+          assert_includes argv[2], "https://other.example.com:3443/api/v1/repos/lab-b/repo/",
+            "every API exchange must target the selected repository on the selected authority"
+        else
+          flunk("unexpected transport: #{argv.first}")
+        end
       end
+      api_read = commands.argvs.find { |argv| argv.first == "forgejo-http" && argv[2]&.end_with?("/pulls/7") }
+      assert api_read, "pull request identity reads must ride the selected-repository API route"
       pr_view = commands.argvs.find { |argv| argv.include?("pr") && argv.include?("view") && argv.last.end_with?("#7") }
-      assert_equal "lab-b/repo#7", pr_view.last, "PR reads must use the qualified selected-repository reference"
+      assert_equal "lab-b/repo#7", pr_view.last, "fj PR reads must use the qualified selected-repository reference"
     end
 
     def test_same_numbers_on_two_servers_never_cross_route
-      commands = recording_runner(lab_b_fixtures.merge(lab_a_fixtures))
+      commands = recording_runner(
+        lab_b_fixtures.merge(lab_a_fixtures).merge("forgejo-api" => lambda do |args|
+          api_ok(args[2].to_s.include?("forge.example.com") ? pr_payload(repo: "lab-a/repo") : pr_payload(repo: "lab-b/repo"))
+        end)
+      )
       lab_a = Ace::Git::Forgejo::Provider.new(server: LAB_A, runner: commands.recorder)
       lab_b = Ace::Git::Forgejo::Provider.new(server: LAB_B, runner: commands.recorder)
 
@@ -51,29 +66,28 @@ module Forgejo
 
       assert_equal "https://forge.example.com/lab-a/repo/pulls/7", pr_a.url
       assert_equal "https://other.example.com:3443/lab-b/repo/pulls/7", pr_b.url
-      views = commands.argvs.select { |argv| argv.include?("pr") && argv.include?("view") && argv.last.end_with?("#7") }
-      assert_equal 2, views.length
-      assert_equal ["-H", "https://forge.example.com", "--style", "minimal", "pr", "view", "lab-a/repo#7"], views[0][1..]
-      assert_equal ["-H", "https://other.example.com:3443", "--style", "minimal", "pr", "view", "lab-b/repo#7"], views[1][1..]
+      api_reads = commands.argvs.select { |argv| argv.first == "forgejo-http" && argv[2]&.end_with?("/pulls/7") }
+      assert_equal 2, api_reads.length
+      assert_equal "https://forge.example.com/api/v1/repos/lab-a/repo/pulls/7", api_reads[0][2]
+      assert_equal "https://other.example.com:3443/api/v1/repos/lab-b/repo/pulls/7", api_reads[1][2]
     end
 
-    def test_unobserved_cli_version_refuses_all_operations_with_zero_mutation_subprocesses
-      # Usage scenario 2: a CLI that cannot target the selected repository.
+    def test_unobserved_cli_version_refuses_cli_operations_with_zero_mutation_subprocesses
+      # An fj whose argv surface was never observed must not inherit CLI
+      # capabilities; API-backed reads and mutations have their own
+      # transport and capability gates and do not consult the CLI probe.
       commands = recording_runner(
-        "fj version" => {success: true, stdout: "fj v0.9.9\n", stderr: "", exit_code: 0}
+        "fj version" => {success: true, stdout: "fj v0.9.9\n", stderr: "", exit_code: 0},
+        "forgejo-api" => api_ok(pr_payload)
       )
       provider = Ace::Git::Forgejo::Provider.new(server: LAB_B, runner: commands.recorder)
 
-      assert_raises(Ace::Git::ProviderUnsupportedCapabilityError) { provider.pull_request(number: 7) }
       assert_raises(Ace::Git::ProviderUnsupportedCapabilityError) { provider.pull_request_for_branch(branch: "feature") }
       assert_raises(Ace::Git::ProviderUnsupportedCapabilityError) { provider.pull_request_diff(number: 7) }
       assert_raises(Ace::Git::ProviderUnsupportedCapabilityError) { provider.recent_pull_requests(limit: 5) }
       assert_raises(Ace::Git::ProviderUnsupportedCapabilityError) { provider.issue(number: 7) }
       assert_raises(Ace::Git::ProviderUnsupportedCapabilityError) { provider.checks(ref: SHA) }
       assert_raises(Ace::Git::ProviderUnsupportedCapabilityError) { provider.repository }
-      assert_raises(Ace::Git::ProviderUnsupportedCapabilityError) do
-        provider.update_pull_request(number: 7, expected_head: SHA, title: "Reviewed")
-      end
 
       assert commands.argvs.any?, "the version gate must probe before refusing"
       commands.argvs.each do |argv|
@@ -93,7 +107,7 @@ module Forgejo
       auth_error = assert_raises(Ace::Git::ConfigError) { provider.authenticated? }
       assert_match(/owner\/repository/, auth_error.message)
 
-      assert_empty commands.argvs, "malformed selection must fail before any subprocess launch"
+      assert_empty commands.argvs, "malformed selection must fail before any request"
     end
 
     def test_cli_missing_and_failed_auth_classify_without_repository_commands
@@ -113,7 +127,7 @@ module Forgejo
 
       (missing.argvs + no_login.argvs).each do |argv|
         assert_includes %w[version auth], argv[1],
-          "only control probes may run; no repository or mutation subprocess"
+          "only control probes may run; no repository or mutation request"
       end
     end
 
@@ -128,15 +142,12 @@ module Forgejo
 
     def test_conflicting_returned_identity_fails_closed
       commands = recording_runner(
-        "fj version" => {success: true, stdout: "fj v0.6.0\n", stderr: "", exit_code: 0},
-        "fj -H https://forge.example.com --style minimal pr view lab-a/repo#7" => {
-          success: true, stdout: view(99, "Open", "feature"), stderr: "", exit_code: 0
-        }
+        "forgejo-api" => api_ok(pr_payload(number: 99))
       )
       provider = Ace::Git::Forgejo::Provider.new(server: LAB_A, runner: commands.recorder)
       error = assert_raises(Ace::Git::ProviderIdentityMismatchError) { provider.pull_request(number: 7) }
       assert_match(/#99/, error.message)
-      assert_match(/selected pull request #7/, error.message)
+      assert_match(/for selected #7/, error.message)
 
       commands = recording_runner(
         "fj version" => {success: true, stdout: "fj v0.6.0\n", stderr: "", exit_code: 0},
@@ -152,28 +163,24 @@ module Forgejo
 
     def test_create_and_reconciliation_stay_on_selected_identity_throughout
       argvs = []
-      searches = 0
+      lists = 0
       runner = lambda do |args:, timeout: nil, env: nil|
         argvs << args
-        key = args.join(" ")
-        case key
-        when "fj version"
-          {success: true, stdout: "fj v0.6.0\n", stderr: "", exit_code: 0}
-        when "fj -H https://other.example.com:3443 --style minimal pr search --state open -r lab-b/repo"
-          searches += 1
-          if searches == 1
-            {success: true, stdout: "0 pull requests\n", stderr: "", exit_code: 0}
-          else
-            {success: true, stdout: "1 pull requests\n#7: Ship it (by lab-builder)\n", stderr: "", exit_code: 0}
-          end
-        when "fj -H https://other.example.com:3443 pr create Ship it --head feature --base main -r lab-b/repo"
-          {success: true, stdout: "", stderr: "", exit_code: 0}
-        when "fj -H https://other.example.com:3443 --style minimal pr view lab-b/repo#7"
-          {success: true, stdout: view(7, "Open", "feature"), stderr: "", exit_code: 0}
-        when "fj -H https://other.example.com:3443 --style minimal pr view lab-b/repo#7 commits"
-          {success: true, stdout: "commit #{SHA} (+1, -0)\n", stderr: "", exit_code: 0}
+        path = args[2].to_s
+        case path
+        when "https://other.example.com:3443/api/v1/version"
+          api_ok({"version" => "7.0.5"})
+        when "https://other.example.com:3443/api/v1/repos/lab-b/repo/pulls?state=open&page=1&limit=50"
+          lists += 1
+          api_ok(lists == 1 ? [] : [pr_payload])
+        when "https://other.example.com:3443/api/v1/repos/lab-b/repo/pulls"
+          assert_equal "POST", args[1]
+          assert_equal({"title" => "WIP: Ship it", "base" => "main", "head" => "feature"}, args[3])
+          api_created(pr_payload)
+        when "https://other.example.com:3443/api/v1/repos/lab-b/repo/pulls/7"
+          api_ok(pr_payload)
         else
-          flunk("Unexpected command in test: #{key}")
+          flunk("Unexpected request: #{args.join(' ')}")
         end
       end
 
@@ -186,52 +193,57 @@ module Forgejo
       assert_equal 7, receipt.pull_request.number
 
       argvs.each do |argv|
-        next if argv == %w[fj version] # control probe
-
-        assert_equal "https://other.example.com:3443", argv[2], "every subprocess targets the selected authority"
+        assert_equal "https://other.example.com:3443", argv[2].to_s[/\Ahttps:\/\/[^\/]+/],
+          "every request targets the selected authority"
       end
-      assert_equal 1, argvs.count { |argv| argv.include?("create") }, "exactly one create, no automatic retry"
-      assert_equal 2, argvs.count { |argv| argv.join(" ").include?("pr search") },
-        "create pre-check and reconciliation each search the selected repository"
+      assert_equal 1, argvs.count { |argv| argv[1] == "POST" && argv[2].end_with?("/repos/lab-b/repo/pulls") },
+        "exactly one create send, no automatic retry"
+      assert_equal 1, argvs.count { |argv| argv[2].include?("/pulls?state=open") },
+        "the pre-send lookup lists the selected repository"
+      assert_equal 1, argvs.count { |argv| argv[2].end_with?("/pulls/7") },
+        "the accepted create is proven by one authoritative read-back"
     end
 
-    def test_refusals_classify_before_any_subprocess
-      commands = recording_runner
-      provider = Ace::Git::Forgejo::Provider.new(server: LAB_B, runner: commands.recorder)
+    def test_mutations_never_run_for_classified_pre_send_refusals
+      argvs = []
+      runner = lambda do |args:, **|
+        argvs << args
+        path = args[2].to_s
+        if path.include?("/pulls?state=open")
+          api_ok([])
+        else
+          flunk("no request may follow the refusal: #{args.join(' ')}")
+        end
+      end
+      provider = Ace::Git::Forgejo::Provider.new(server: LAB_B, runner: runner)
 
       assert_raises(Ace::Git::ProviderUnsupportedCapabilityError) do
         provider.create_pull_request(
-          head_repository_url: "https://other.example.com:3443/forker/repo", head_ref: "feature",
+          head_repository_url: "https://evil.example.com/forker/repo", head_ref: "feature",
           base_ref: "main", expected_head: SHA, title: "Ship it"
         )
       end
-      assert_raises(Ace::Git::ProviderUnsupportedCapabilityError) do
-        provider.ready_pull_request(number: 7, expected_head: SHA)
-      end
-      assert_raises(Ace::Git::ProviderUnsupportedCapabilityError) do
-        provider.merge_pull_request(number: 7, expected_head: SHA, method: :squash)
-      end
+      assert_raises(ArgumentError) { provider.merge_pull_request(number: 7, expected_head: SHA, method: :fast_forward) }
       assert_raises(Ace::Git::ConfigError) { provider.pull_request_diff(number: "abc") }
       assert_raises(Ace::Git::ConfigError) { provider.update_pull_request(number: "", expected_head: SHA, title: "t") }
 
-      assert_empty commands.argvs, "refusals must classify before any repository subprocess"
+      assert argvs.all? { |argv| argv[2].to_s.include?("/pulls?state=open") },
+        "only the create pre-check may read; no mutation may be sent for refused work"
     end
 
-    def test_conflicting_fj_alias_refuses_repository_operations
+    def test_conflicting_fj_alias_refuses_api_operations_too
       keys_path = File.join(Dir.tmpdir, "uj0-alias-test-#{Process.pid}-conflict.json")
       File.write(keys_path, {
         "hosts" => {}, "aliases" => {"other.example.com:3443" => "evil.example.test"}, "default_ssh" => []
       }.to_json)
       stub_keys_path(keys_path) do
-        commands = recording_runner(
-          "fj version" => {success: true, stdout: "fj v0.6.0\n", stderr: "", exit_code: 0}
-        )
+        commands = recording_runner
         provider = Ace::Git::Forgejo::Provider.new(server: LAB_B, runner: commands.recorder)
         error = assert_raises(Ace::Git::ConfigError) { provider.pull_request(number: 7) }
         assert_match(/redirects selected host other\.example\.com:3443/, error.message)
         assert_match(/evil\.example\.test/, error.message)
-        assert_equal [["fj", "version"]], commands.argvs.uniq,
-          "alias conflict refuses before any repository subprocess"
+        assert_empty commands.argvs,
+          "alias conflict refuses before any API exchange or subprocess"
       end
     ensure
       File.delete(keys_path) if keys_path && File.exist?(keys_path)
@@ -245,8 +257,7 @@ module Forgejo
       stub_keys_path(benign_path) do
         commands = recording_runner(lab_b_fixtures)
         provider = Ace::Git::Forgejo::Provider.new(server: LAB_B, runner: commands.recorder)
-        pr = provider.pull_request(number: 7)
-        assert_equal 7, pr.number
+        assert_equal 7, provider.pull_request(number: 7).number
       end
 
       stub_keys_path(nil) do
@@ -302,11 +313,38 @@ module Forgejo
       TEXT
     end
 
+    def api_ok(payload)
+      {success: true, status: 200, stdout: payload.to_json, stderr: "", exit_code: 0}
+    end
+
+    def api_created(payload)
+      {success: true, status: 201, stdout: payload.to_json, stderr: "", exit_code: 0}
+    end
+
+    def pr_payload(number: 7, repo: "lab-b/repo")
+      {
+        "number" => number,
+        "title" => "WIP: Ship it",
+        "body" => "Ship the thing",
+        "state" => "open",
+        "draft" => true,
+        "merged" => false,
+        "merged_at" => nil,
+        "merge_commit_sha" => nil,
+        "user" => {"login" => "lab-builder"},
+        "head" => {"label" => "#{repo}:feature", "ref" => "feature", "sha" => SHA,
+                   "repo" => {"full_name" => repo}},
+        "base" => {"label" => "main", "ref" => "main", "sha" => "b" * 40,
+                   "repo" => {"full_name" => repo}}
+      }
+    end
+
     def lab_a_fixtures
       prefix = "fj -H https://forge.example.com --style minimal"
       {
         "#{prefix} pr view lab-a/repo#7" => {success: true, stdout: view(7, "Open", "feature"), stderr: "", exit_code: 0},
-        "#{prefix} pr view lab-a/repo#7 commits" => {success: true, stdout: "commit #{SHA} (+1, -0)\n", stderr: "", exit_code: 0}
+        "#{prefix} pr view lab-a/repo#7 commits" => {success: true, stdout: "commit #{SHA} (+1, -0)\n", stderr: "", exit_code: 0},
+        "forgejo-api" => api_ok(pr_payload(repo: "lab-a/repo"))
       }
     end
 
@@ -331,7 +369,8 @@ module Forgejo
         "#{prefix} repo view lab-b/repo" => {
           success: true, stdout: "lab-b/repo\n> Selected repository\nView online at https://other.example.com:3443/lab-b/repo\n",
           stderr: "", exit_code: 0
-        }
+        },
+        "forgejo-api" => api_ok(pr_payload)
       }
     end
 
@@ -339,12 +378,19 @@ module Forgejo
       argvs = []
       recorder = lambda do |args:, timeout: nil, env: nil|
         argvs << args
-        assert_equal({"LC_ALL" => "C"}, env, "runner env must stay fixed; no login or config injection")
-        response = responses[args.join(" ")]
-        if response
-          response
+        # Only the fj transport spawns a subprocess; its env contract is
+        # fixed. API exchanges carry no subprocess environment.
+        assert_equal({"LC_ALL" => "C"}, env, "runner env must stay fixed; no login or config injection") if args.first == "fj"
+        response = if args.first == "forgejo-http"
+          fixture = responses["forgejo-api"]
+          fixture.respond_to?(:call) ? fixture.call(args) : fixture
         else
+          responses[args.join(" ")]
+        end
+        unless response
           {success: false, stdout: "", stderr: "unexpected command: #{args.join(' ')}", exit_code: 2}
+        else
+          response
         end
       end
       Struct.new(:argvs, :recorder).new(argvs, recorder)
