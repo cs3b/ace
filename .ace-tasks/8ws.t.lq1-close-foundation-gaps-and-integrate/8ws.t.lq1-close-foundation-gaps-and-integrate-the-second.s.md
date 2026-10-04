@@ -154,3 +154,5 @@ Integration checkpoint: y1q source edge fix dd97ee1ef reviewed independently (AP
 The downstream join and real-user/native Lab acceptance gates above remain open.
 
 Hermes source checkpoint: independent review APPROVE for `a5429f416`, all previous P1 reproductions and additional restart/epoch tests pass. Merged to main `08c64b6a5`; y24 retains actual Telegram/Lab gates. `vs2` source implementation dispatched to GPT-6.1 Sol in a new isolated worktree from this integration, consuming the existing dependency-leaf contract and pending recovery public inbox API.
+
+Recovery review checkpoint: clean candidate `ded081ca6` submitted to independent GPT-6.1 Sol review. Full affected suites and fast monorepo suite passed before final attribution hardening; final runtime and focused signed recovery checks passed afterward. Review explicitly checks precise OS birth, native owner binding and journal-attributed live/archive inbox records. No integration or installed Lab acceptance is claimed yet. `vs2` is now in-progress against integrated Hermes source.
