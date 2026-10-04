@@ -1,0 +1,24 @@
+{
+  "schema": "ace.hitl.managed/v1",
+  "request_id": "hitl-abcdef1234",
+  "project": "ace",
+  "assignment_id": "abc123",
+  "attempt_id": "def456",
+  "requester": "lab-admin",
+  "correlation_id": "hitl-abcdef1234",
+  "kind": "decision",
+  "reverse": {
+    "schema": "ace.hitl.ref/v1",
+    "session": "workspace:1",
+    "pane": "pane:1"
+  },
+  "payload_sha256": "7d2a89fa56032bf20bd4f17f72c81fc49ad0a202dd5c8e563e083fdf24239b4c",
+  "message": {
+    "schema": "ace.hitl.hermes.message/v1",
+    "id": "hitl-abcdef1234",
+    "kind": "question",
+    "sender": "captain",
+    "question": "Proceed?",
+    "created_at": "2026-10-05T09:00:00Z"
+  }
+}

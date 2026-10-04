@@ -1,0 +1,24 @@
+{
+  "schema": "ace.hitl.managed/v1",
+  "request_id": "hitl-abcdef1234",
+  "project": "ace",
+  "assignment_id": "abc123",
+  "attempt_id": "def456",
+  "requester": "lab-admin",
+  "correlation_id": "hitl-abcdef1234",
+  "kind": "decision",
+  "reverse": {
+    "schema": "ace.hitl.ref/v1",
+    "session": "workspace:1",
+    "pane": "pane:1"
+  },
+  "payload_sha256": "f01847dfc94126426b4849004762a12557de2332ae0ca1b4602210b341f0281b",
+  "message": {
+    "schema": "ace.hitl.hermes.message/v1",
+    "id": "hitl-abcdef1234",
+    "kind": "answer",
+    "sender": "captain",
+    "answer": "Proceed",
+    "received_at": "2026-10-05T10:00:00Z"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "schema": "ace.hitl.managed/v1",
+  "request_id": "hitl-abcdef1234",
+  "project": "ace",
+  "assignment_id": "abc123",
+  "attempt_id": "def456",
+  "requester": "lab-admin",
+  "correlation_id": "hitl-abcdef1234",
+  "kind": "otp",
+  "reverse": null,
+  "message": {
+    "schema": "ace.hitl.hermes.message/v1",
+    "id": "hitl-abcdef1234",
+    "kind": "question",
+    "sender": "captain",
+    "question": "Provide the code for the authorized operation",
+    "created_at": "2026-10-05T09:00:00Z"
+  }
+}

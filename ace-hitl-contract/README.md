@@ -12,3 +12,18 @@ result = Ace::Hitl::Providers::DeliverResult.new(ref: ref, state: :delivered)
 The protocol owns `Ref`, `AskResult`, `DeliverResult` and the provider error hierarchy under `Ace::Hitl::Providers`. Full registry and locked assignment authority remain in `ace-hitl`. Runtime adapters use this leaf package without loading the privileged HITL lifecycle.
 
 Run package tests from the ACE checkout with `bin/ace-test ace-hitl-contract all`.
+
+`Ace::Hitl::Contract::ManagedEnvelope.load(json, expected: {...})` validates
+`ace.hitl.managed/v1` and exact expected assignment, attempt and correlation
+fields. The installed gem includes `managed.v1.schema.json` and shared examples
+under `lib/ace/hitl/contract/examples`. HITL owns envelope semantics; this leaf
+contains only the pure wire codec, with no dependency on Herdr, assignment or
+the privileged service.
+
+The nested `ace.hitl.ref/v1` reverse address and Hermes `message/v1` retain their
+own schemas. A nil reverse address explicitly selects pane-less consumption.
+Ordinary payload digests refer to the exact UTF-8 payload bytes. OTP envelopes
+contain neither answer bytes nor their digest; folder answers and callback
+effects are prohibited for that kind. A non-secret OTP question remains valid.
+Effect references identify authorization and result evidence; structural
+validation never grants authority or proves business success.
