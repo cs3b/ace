@@ -85,7 +85,7 @@ worktree:
 
 ### Success Criteria
 
-- [ ] `runtime: herdr` end-to-end: assign fork-run with `--callback` delivers the callback to the caller's herdr pane; overseer work-on opens a herdr tab rooted at the worktree; prune closes it.
+- [x] `runtime: herdr` end-to-end: assign fork-run with `--callback` delivers the callback to the caller's herdr pane; overseer work-on opens a herdr tab rooted at the worktree; prune closes it.
 - [x] `runtime: tmux` / `launch_mode: tmux|auto`: all existing consumer test suites green — zero behavior change (regression gate).
 - [x] Consumer code depends on the contract; gemspecs may depend on the existing wrapper gems to install their adapters.
 - [x] drive.wf.md prescribes no runtime-specific command.
@@ -116,7 +116,7 @@ worktree:
 - [x] Demo wait directives: all four lifecycle conditions pass against BOTH adapters (shared contract examples — regression preservation).
 
 #### Integration / E2E Validation (if cross-boundary behavior exists)
-- [ ] `runtime: herdr`: fork run --callback round-trip on live herdr (scripted mocks are component tests, not a substitute for installed acceptance); overseer work-on opens herdr tab.
+- [x] `runtime: herdr`: fork run --callback round-trip on live herdr (scripted mocks are component tests, not a substitute for installed acceptance); overseer work-on opens herdr tab.
 - [x] `runtime: tmux` regression: existing suites green.
 
 #### Failure / Invalid-Path Validation
@@ -172,8 +172,10 @@ ACE 8x1.t.hym owns pointer-only prepared-pane replacement and public CLI materia
 
 PR364 (4f32bed12) delivers the consumer migration; this owner remains in-progress, not a request to reimplement it. Its original acceptance is not complete. Independent read-only review identified the remaining checks below; earlier implementation prose moving live Herdr acceptance to a later gate does not override the reviewed contract.
 
-- [ ] Clean standalone installation of each migrated consumer (assign, overseer, demo, git-worktree) installs/resolves both in-wrapper adapters. Current gemspecs install runtime/tmux only. Preserve an acyclic dependency graph: simply adding ace-herdr to ace-assign creates ace-assign → ace-herdr → ace-hitl → ace-assign. Preserve ace-assign's authority over execution evidence and ace-hitl's locked verified-attempt integration; do not remove that authority or duplicate protocol definitions. Resolve the dependency direction at the actual protocol/integration boundary, with independent architecture review. Code layout belongs to JIT implementation planning.
+- [x] Clean standalone installation of each migrated consumer (assign, overseer, demo, git-worktree) installs/resolves both in-wrapper adapters. Current gemspecs install runtime/tmux only. Preserve an acyclic dependency graph: simply adding ace-herdr to ace-assign creates ace-assign → ace-herdr → ace-hitl → ace-assign. Preserve ace-assign's authority over execution evidence and ace-hitl's locked verified-attempt integration; do not remove that authority or duplicate protocol definitions. Resolve the dependency direction at the actual protocol/integration boundary, with independent architecture review. Code layout belongs to JIT implementation planning.
 - [ ] Prove the prepared target remains writable after the submitted command exits. Current RuntimeControlSurfaceRunner sends exec into the shell; tmux retains an exited pane via remain-on-exit, which does not itself preserve a live shell. This is a static/code-path finding, not a native reproduction; start with a failing disposable runtime scenario, then prove a second command works on the same retained prepared target without splitting or bypassing identity checks.
-- [ ] Execute actual installed Herdr fork/callback, work-on/root, prune and hym pointer replacement/reuse scenarios, plus tmux retention regression. A scripted backend or published version does not satisfy these native checks. This review host has no tmux binary available, so no native reproduction was run here.
+- [x] Execute actual installed Herdr fork/callback, work-on/root, prune and hym pointer replacement/reuse scenarios, plus tmux retention regression. A scripted backend or published version does not satisfy these native checks. This review host has no tmux binary available, so no native reproduction was run here.
 
 Fresh default suite at 686abe359: 50 packages passed, 11,074 tests, 33,274 assertions, 24 skips. These checks do not cover the missing clean-install/native guarantees above. Preserve in-progress state until closure evidence is accepted; parent k86 and dependent 1w5 remain open. No new behavioral requirement or compatibility path is introduced: these are the original installation/pane/installed-runtime criteria.
+
+Closure implementation and executed receipts: [implementation-evidence-2026-10-04.md](implementation-evidence-2026-10-04.md). Status intentionally remains in-progress pending independent exact-head acceptance.

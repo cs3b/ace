@@ -21,3 +21,5 @@ An unavailable explicitly selected or auto-detected backend returns RuntimeUnava
 `Ace::Runtime.resolve("herdr").wait_lifecycle(condition: "pane-exited", target: target, timeout: 10)`
 
 Expected: positive observation of exit/absence satisfies the wait. It does not prove assignment success or preservation for prune. Adapter contract examples test all four lifecycle conditions on both backends; live acceptance confirms actual Herdr behavior.
+
+Standalone installs of ace-assign, ace-overseer, ace-demo and ace-git-worktree install both in-wrapper terminal adapters. Native Herdr/tmux programs still need to be available. Herdr obtains shared provider vocabulary from the leaf ace-hitl-contract package; full HITL service and assignment authority remain separate. Prepared fork panes retain a writable shell after the launched command exits.
