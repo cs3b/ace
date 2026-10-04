@@ -168,6 +168,8 @@ module Forgejo
         argvs << args
         path = args[2].to_s
         case path
+        when "https://other.example.com:3443/api/v1/repos/lab-b/repo"
+          api_ok({"id" => 2, "full_name" => "lab-b/repo", "owner" => {"id" => 20, "login" => "lab-b"}})
         when "https://other.example.com:3443/api/v1/version"
           api_ok({"version" => "8.0.5"})
         when "https://other.example.com:3443/api/v1/repos/lab-b/repo/pulls?state=open&page=1&limit=50"
@@ -333,9 +335,9 @@ module Forgejo
         "merge_commit_sha" => nil,
         "user" => {"login" => "lab-builder"},
         "head" => {"label" => "#{repo}:feature", "ref" => "feature", "sha" => SHA,
-                   "repo" => {"full_name" => repo}},
+                   "repo" => {"full_name" => repo, "id" => 2}},
         "base" => {"label" => "main", "ref" => "main", "sha" => "b" * 40,
-                   "repo" => {"full_name" => repo}}
+                   "repo" => {"full_name" => repo, "id" => 2}}
       }
     end
 

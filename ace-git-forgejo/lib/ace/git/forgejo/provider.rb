@@ -496,7 +496,17 @@ module Ace
           head_arg = api_head_argument!(head_repository_url, head_ref)
           send_title = draft_title!(title, draft)
           pr_api.ensure_version_supported!
-          outcome = send_lifecycle_mutation(identity_text(head_repository_url, head_ref, base_ref)) do
+          requested_head = head_repository_url.to_s.empty? ? server.url : head_repository_url
+          owner = Ace::Git::Atoms::ServerUrl.normalize(requested_head).split("/")[1]
+          base_identity, head_identity = pr_api.create_repository_identity(owner: owner)
+          unless Ace::Git::Atoms::ServerUrl.match?("#{server_host_root}/#{base_identity["full_name"]}", server.url) &&
+              Ace::Git::Atoms::ServerUrl.match?("#{server_host_root}/#{head_identity["full_name"]}", requested_head)
+            raise Ace::Git::ProviderIdentityMismatchError,
+              "Forgejo head selector does not select #{requested_head}; refusing create"
+          end
+          identity = "#{identity_text(requested_head, head_ref, base_ref)}, " \
+            "expected head #{expected_head}, draft #{draft.inspect}"
+          outcome = send_lifecycle_mutation(identity) do
             pr_api.create_pull_request(head: head_arg, base: base_ref, title: send_title, body: body)
           end
 
@@ -506,13 +516,31 @@ module Ace
             return reconcile_raced_create(head_repository_url: head_repository_url, head_ref: head_ref,
               base_ref: base_ref, expected_head: expected_head, draft: draft)
           end
-          unless outcome.status == 201 && outcome.payload.is_a?(Hash) && outcome.payload["number"].is_a?(Integer)
+          unless (200..299).cover?(outcome.status)
             classify_create_refusal(outcome, head_repository_url, head_ref, base_ref)
           end
 
-          created = verify_expected_head!(pull_request(number: outcome.payload["number"]), expected_head)
-          ensure_draft_outcome!(created, draft)
-          receipt(:create, created, :created)
+          begin
+            payload = outcome.payload
+            unless outcome.status == 201 && payload.is_a?(Hash) &&
+                payload["number"].is_a?(Integer) && payload["number"].positive?
+              raise Ace::Git::ProviderMalformedOutputError, "Accepted create lacks pull request identity"
+            end
+            accepted = pr_api.creation_evidence(payload)
+            verify_created_identity!(accepted, requested_head, head_ref, base_ref, expected_head,
+              draft, base_identity, head_identity)
+            after = pr_api.pull_request(payload["number"])
+            created = verify_created_identity!(after, requested_head, head_ref, base_ref, expected_head,
+              draft, base_identity, head_identity)
+            receipt(:create, created, :created)
+          rescue Ace::Git::Error => e
+            known_number = outcome.payload.is_a?(Hash) && outcome.payload["number"]
+            known_number = "unknown" unless known_number.is_a?(Integer) && known_number.positive?
+            raise Ace::Git::ProviderUnknownOutcomeError,
+              "Forgejo accepted create but verification failed (#{e.class.name.split("::").last}); " \
+              "reconcile by exact identity before repeating: #{identity_text(requested_head, head_ref, base_ref)}, " \
+              "expected head #{expected_head}, draft #{draft.inspect}, PR #{known_number}"
+          end
         end
 
         # Edit title/body after exact-head verification through the same
@@ -650,6 +678,19 @@ module Ace
             "#{e.message}; reconcile by exact identity before repeating: #{identity}"
         end
 
+        def verify_created_identity!(payload, head_url, head_ref, base_ref, expected_head,
+          draft, base_identity, head_identity)
+          created = verify_expected_head!(normalize_api_pr(payload), expected_head)
+          unless created.state == :open && created.head_ref == head_ref && created.base_ref == base_ref &&
+              Ace::Git::Atoms::ServerUrl.match?(created.head_repository_url, head_url) &&
+              payload.dig("head", "repo", "id") == head_identity["id"] &&
+              payload.dig("base", "repo", "id") == base_identity["id"]
+            raise Ace::Git::ProviderIdentityMismatchError, "Created pull request provenance does not match request"
+          end
+          ensure_draft_outcome!(created, draft)
+          created
+        end
+
         # Server-derived draft state must agree with the request for an
         # existing exact match to be reusable.
         def ensure_draft_agreement!(existing, draft)
@@ -709,6 +750,9 @@ module Ace
         # an owner path; cross-host sources are refused before any
         # mutation (the exact-match lookup may read first).
         def api_head_argument!(head_repository_url, head_ref)
+          if head_ref.to_s.empty? || head_ref.include?(":")
+            raise Ace::Git::ProviderIdentityMismatchError, "Head ref cannot encode a repository selector"
+          end
           return head_ref if head_repository_url.nil? ||
             Ace::Git::Atoms::ServerUrl.match?(head_repository_url, server.url)
           unless same_server_authority?(head_repository_url)
@@ -717,7 +761,8 @@ module Ace
               "selected server #{server.url}; only canonical and same-server fork sources are supported"
           end
 
-          owner = URI.parse(head_repository_url.to_s).path.to_s.split("/").reject(&:empty?).first
+          segments = Ace::Git::Atoms::ServerUrl.normalize(head_repository_url).split("/")[1..]
+          owner = segments.first if segments.length == 2 && segments.none?(&:empty?)
           unless owner
             raise Ace::Git::ProviderIdentityMismatchError,
               "Head repository #{head_repository_url.inspect} has no owner path; " \
@@ -740,7 +785,11 @@ module Ace
         # a deleted fork repository reports none, and that absence stays
         # honest instead of being relabelled.
         def api_head_repository_url(payload)
-          full_name = payload.dig("head", "repo", "full_name")
+          repo = payload.dig("head", "repo")
+          unless repo.nil? || repo.is_a?(Hash)
+            raise Ace::Git::ProviderMalformedOutputError, "Malformed Forgejo source repository evidence"
+          end
+          full_name = repo && repo["full_name"]
           return nil if !full_name.is_a?(String) || full_name.empty?
 
           "#{server_host_root}/#{full_name}"
@@ -750,7 +799,11 @@ module Ace
         # repository must be the selected one: a misrouted payload is never
         # relabelled.
         def normalize_api_pr(payload)
-          base_full_name = payload.dig("base", "repo", "full_name").to_s
+          base_repo = payload.dig("base", "repo")
+          unless base_repo.nil? || base_repo.is_a?(Hash)
+            raise Ace::Git::ProviderMalformedOutputError, "Malformed Forgejo destination repository evidence"
+          end
+          base_full_name = base_repo.is_a?(Hash) ? base_repo["full_name"].to_s : ""
           unless !base_full_name.empty? && base_full_name.casecmp(repository_target.repo).zero?
             raise Ace::Git::ProviderIdentityMismatchError,
               "Forgejo returned pull request ##{payload["number"]} with base repository " \

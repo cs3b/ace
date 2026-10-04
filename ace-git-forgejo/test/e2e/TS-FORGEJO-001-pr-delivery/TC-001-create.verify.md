@@ -27,3 +27,5 @@
   category `conflicting_matches` or an explicit draft-disagreement
   message, and no new PR exists (open count still two in any later
   listing).
+
+Verify Goal 5: wrong-source create exits nonzero with `identity_mismatch`. The unrelated repo's `feature/forked` SHA equals the real fork branch SHA. The final open PR inventory contains exactly the two earlier PRs and no newly created PR; same owner/ref/SHA cannot substitute for source repository provenance.

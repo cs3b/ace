@@ -40,6 +40,7 @@ class ForgejoProviderPullRequestLifecycleContractTest < AceGitForgejoTestCase
 
   # Route one scripted API exchange per scenario.
   def respond_to_lifecycle(method, path, body, scenario)
+    return ok(repository_payload(REPO)) if method == "GET" && path == API
     if method == "GET" && path == "https://forge.example.com/api/v1/version"
       return ok({"version" => "8.0.5"})
     end
@@ -129,6 +130,10 @@ class ForgejoProviderPullRequestLifecycleContractTest < AceGitForgejoTestCase
         ok({"version" => "8.0.5"})
       elsif method == "GET" && path.include?("/pulls?state=open")
         ok([])
+      elsif method == "GET" && path == API
+        ok(repository_payload(REPO))
+      elsif method == "GET" && path.include?("/forks?")
+        ok(path.include?("page=1&") ? [repository_payload("forker/other")] : [])
       elsif method == "POST" && path == "#{API}/pulls"
         assert_equal "forker:feature/x", body["head"], "fork heads must use the documented owner:branch form"
         created(forked)
@@ -147,6 +152,199 @@ class ForgejoProviderPullRequestLifecycleContractTest < AceGitForgejoTestCase
     assert_equal SERVER.url, receipt.pull_request.base_repository_url
   end
 
+  def test_create_rejects_same_owner_wrong_repository_before_post
+    posts = 0
+    runner = lambda do |args:, **|
+      method, path = args[1], args[2].to_s
+      if method == "POST"
+        posts += 1
+        created(pr_payload(25, draft: true))
+      elsif path.end_with?("/version")
+        ok({"version" => "8.0.5"})
+      elsif path.include?("/pulls?state=open")
+        ok([])
+      elsif path.end_with?("/pulls/25")
+        ok(pr_payload(25, draft: true))
+      elsif path == API
+        ok(repository_payload(REPO))
+      else
+        flunk("Unexpected #{method} #{path}")
+      end
+    end
+    assert_raises(Ace::Git::ProviderIdentityMismatchError) do
+      build_provider(runner).create_pull_request(
+        head_repository_url: "https://forge.example.com/owner/unrelated", head_ref: "feature/x",
+        base_ref: "main", expected_head: SHA, title: "Ship it"
+      )
+    end
+    assert_equal 0, posts
+  end
+
+  def test_create_read_failure_after_201_is_unknown_without_replay
+    posts = 0
+    runner = lambda do |args:, **|
+      method, path = args[1], args[2].to_s
+      if method == "POST"
+        posts += 1
+        created(pr_payload(25, draft: true))
+      elsif path.end_with?("/version")
+        ok({"version" => "8.0.5"})
+      elsif path.include?("/pulls?state=open")
+        ok([])
+      elsif path.end_with?("/pulls/25")
+        raise IOError, "read failed"
+      elsif path == API
+        ok(repository_payload(REPO))
+      else
+        flunk("Unexpected #{method} #{path}")
+      end
+    end
+    error = assert_raises(Ace::Git::ProviderUnknownOutcomeError) do
+      build_provider(runner).create_pull_request(head_repository_url: SERVER.url,
+        head_ref: "feature/x", base_ref: "main", expected_head: SHA, title: "Ship it")
+    end
+    assert_match(/reconcile.*feature\/x/, error.message)
+    assert_equal 1, posts
+  end
+
+  def create_probe(response: nil, read: nil, base: nil, forks: nil, head_url: SERVER.url)
+    calls = []
+    runner = lambda do |args:, **|
+      calls << args
+      method, path = args[1], args[2].to_s
+      if method == "POST"
+        response || created(pr_payload(25, draft: true))
+      elsif path.end_with?("/version")
+        ok({"version" => "8.0.5"})
+      elsif path == API
+        base || ok(repository_payload(REPO))
+      elsif path.include?("/forks?")
+        ok(path.include?("page=1&") ? (forks || []) : [])
+      elsif path.include?("/pulls?state=open")
+        ok([])
+      elsif path.match?(%r{/pulls/(25|26)$})
+        read.respond_to?(:call) ? read.call : (read || ok(pr_payload(25, draft: true)))
+      else
+        flunk("Unexpected #{method} #{path}")
+      end
+    end
+    result = yield build_provider(runner), head_url
+    [result, calls]
+  end
+
+  def test_create_proves_every_accepted_and_readback_identity_field
+    changes = {
+      source_repository: ->(p) { p["head"]["repo"]["full_name"] = "owner/unrelated" },
+      destination_repository: ->(p) { p["base"]["repo"]["full_name"] = "owner/unrelated" },
+      source_id: ->(p) { p["head"]["repo"]["id"] = 900 },
+      destination_id: ->(p) { p["base"]["repo"]["id"] = 900 },
+      source_ref: ->(p) { p["head"]["ref"] = "wrong" },
+      destination_ref: ->(p) { p["base"]["ref"] = "wrong" },
+      sha: ->(p) { p["head"]["sha"] = "f" * 40 },
+      draft: ->(p) { p["draft"] = false },
+      malformed_source: ->(p) { p["head"]["repo"] = "malformed" },
+      malformed_destination: ->(p) { p["base"]["repo"] = "malformed" },
+      missing_source: ->(p) { p["head"].delete("repo") },
+      missing_destination: ->(p) { p["base"].delete("repo") },
+      number: ->(p) { p["number"] = 26 },
+      closed: ->(p) { p["state"] = "closed" }
+    }
+    changes.each do |field, mutate|
+      [:response, :read].each do |phase|
+        payload = pr_payload(25, draft: true)
+        mutate.call(payload)
+        options = {phase => phase == :response ? created(payload) : ok(payload)}
+        error, calls = create_probe(**options) do |provider, url|
+          assert_raises(Ace::Git::ProviderUnknownOutcomeError, "#{phase}: #{field}") do
+            provider.create_pull_request(head_repository_url: url, head_ref: "feature/x",
+              base_ref: "main", expected_head: SHA, title: "Ship it")
+          end
+        end
+        assert_match(/expected head #{SHA}, draft true/, error.message)
+        assert_equal 1, calls.count { |c| c[1] == "POST" }
+      end
+    end
+  end
+
+  def test_create_all_post_acceptance_read_failures_remain_unknown
+    [401, 403, 404, 503].each do |status|
+      error, calls = create_probe(read: {status: status, stdout: "{}"}) do |provider, url|
+        assert_raises(Ace::Git::ProviderUnknownOutcomeError) do
+          provider.create_pull_request(head_repository_url: url, head_ref: "feature/x",
+            base_ref: "main", expected_head: SHA, title: "Ship it")
+        end
+      end
+      assert_match(/reconcile.*feature\/x.*main/, error.message)
+      assert_equal 1, calls.count { |c| c[1] == "POST" }
+    end
+    [nil, {}, {"number" => 0}, {"number" => 25}].each do |payload|
+      _, calls = create_probe(response: created(payload)) do |provider, url|
+        assert_raises(Ace::Git::ProviderUnknownOutcomeError) do
+          provider.create_pull_request(head_repository_url: url, head_ref: "feature/x",
+            base_ref: "main", expected_head: SHA, title: "Ship it")
+        end
+      end
+      assert_equal 1, calls.count { |c| c[1] == "POST" }
+    end
+  end
+
+  def test_create_selector_refuses_missing_ambiguous_and_wrong_owner_forks
+    [[], [repository_payload("forker/actual")],
+      [repository_payload("forker/requested"), repository_payload("forker/other")]].each do |forks|
+      _, calls = create_probe(forks: forks, head_url: "https://forge.example.com/forker/requested") do |provider, url|
+        assert_raises(Ace::Git::ProviderIdentityMismatchError, Ace::Git::ProviderConflictingMatchesError) do
+          provider.create_pull_request(head_repository_url: url, head_ref: "feature/x",
+            base_ref: "main", expected_head: SHA, title: "Ship it")
+        end
+      end
+      assert_equal 0, calls.count { |c| c[1] == "POST" }
+    end
+  end
+
+  def test_create_selector_accepts_direct_fork_and_normalized_clone_url
+    parent = repository_payload("forker/parent")
+    base = repository_payload(REPO).merge("parent" => parent)
+    payload = pr_payload(25, draft: true)
+    payload["head"]["repo"] = parent
+    result, calls = create_probe(base: ok(base), forks: [parent], response: created(payload), read: ok(payload),
+      head_url: "git@forge.example.com:forker/parent.git") do |provider, url|
+      provider.create_pull_request(head_repository_url: url, head_ref: "feature/x",
+        base_ref: "main", expected_head: SHA, title: "Ship it")
+    end
+    assert_equal :created, result.idempotency
+    assert_equal "forker:feature/x", calls.find { |c| c[1] == "POST" }[3]["head"]
+  end
+
+  def test_create_selector_refuses_parent_without_direct_fork_before_post
+    parent = repository_payload("forker/parent")
+    base = repository_payload(REPO).merge("parent" => parent)
+    _, calls = create_probe(base: ok(base), forks: [],
+      head_url: "git@forge.example.com:forker/parent.git") do |provider, url|
+      assert_raises(Ace::Git::ProviderIdentityMismatchError) do
+        provider.create_pull_request(head_repository_url: url, head_ref: "feature/x",
+          base_ref: "main", expected_head: SHA, title: "Ship it")
+      end
+    end
+    assert_equal 0, calls.count { |c| c[1] == "POST" }
+  end
+
+  def test_create_missing_or_malformed_repository_evidence_refuses_before_post
+    [{status: 404, stdout: "{}"}, ok({}), ok(repository_payload(REPO).merge("id" => nil))].each do |base|
+      _, calls = create_probe(base: base) do |provider, url|
+        assert_raises(Ace::Git::ProviderObjectNotFoundError, Ace::Git::ProviderMalformedOutputError) do
+          provider.create_pull_request(head_repository_url: url, head_ref: "feature/x",
+            base_ref: "main", expected_head: SHA, title: "Ship it")
+        end
+      end
+      assert_equal 0, calls.count { |c| c[1] == "POST" }
+    end
+  end
+
+  def repository_payload(full_name)
+    {"id" => full_name == REPO ? 1 : 2, "full_name" => full_name,
+     "owner" => {"id" => full_name == REPO ? 10 : 20, "login" => full_name.split("/").first}}
+  end
+
   def test_lifecycle_create_reconciles_raced_duplicate_to_existing
     posts = 0
     runner = lambda do |args:, **|
@@ -157,6 +355,10 @@ class ForgejoProviderPullRequestLifecycleContractTest < AceGitForgejoTestCase
       elsif method == "GET" && path.include?("/pulls?state=open")
         page = path[/page=(\d+)/, 1].to_i
         ok(page == 1 && posts.positive? ? [pr_payload(25, draft: true)] : [])
+      elsif method == "GET" && path == API
+        ok(repository_payload(REPO))
+      elsif method == "GET" && path.include?("/forks?")
+        ok(path.include?("page=1&") ? [repository_payload("forker/other")] : [])
       elsif method == "POST" && path == "#{API}/pulls"
         posts += 1
         conflict("pull request already exists for these targets")
@@ -248,7 +450,7 @@ class ForgejoProviderPullRequestLifecycleContractTest < AceGitForgejoTestCase
 
   def pr_branch(ref, sha, full_name = REPO)
     {"label" => "#{full_name}:#{ref}", "ref" => ref, "sha" => sha,
-     "repo" => {"full_name" => full_name}}
+     "repo" => repository_payload(full_name)}
   end
 
   def pr_payload(number, draft:)
