@@ -33,7 +33,8 @@ module Ace
           "failed" => {icon: "\u2717", color: :red},     # ✗
           "stalled" => {icon: "\u25FC", color: :yellow},  # ◼
           "paused" => {icon: "\u2016", color: :dim},     # ‖
-          "none" => {icon: "-", color: :dim}
+          "none" => {icon: "-", color: :dim},
+          "unknown" => {icon: "?", color: :yellow}
         }.freeze
 
         # PR state colors
@@ -80,6 +81,7 @@ module Ace
           id = assignment.dig("assignment", "id") || "-"
           name = assignment.dig("assignment", "name") || "-"
           state_str = assignment.dig("assignment", "state") || "none"
+          state_str = "unknown" if assignment.dig("recovery", "decision") == "reconcile-required"
           display = STATE_DISPLAY[state_str] || STATE_DISPLAY["none"]
 
           state_icon = colorize(display[:icon].to_s.ljust(COL_STATE), display[:color])

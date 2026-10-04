@@ -11,6 +11,7 @@ require_relative "runtime/atoms/name_sanitizer"
 require_relative "runtime/atoms/send_contract"
 require_relative "runtime/registry"
 require_relative "runtime/molecules/runtime_selector"
+require_relative "runtime/molecules/process_identity"
 
 module Ace
   module Runtime

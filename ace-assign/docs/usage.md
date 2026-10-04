@@ -409,3 +409,19 @@ ace-assign select --clear
 | 130 | Interrupted (SIGINT) |
 
 See [exit-codes.md](exit-codes.md) for complete descriptions.
+
+## Resume accepted assignment state
+
+```bash
+ace-assign resume --assignment ID --dry-run
+ace-assign resume --assignment ID
+ace-assign inbox-reconcile --attempt ID --event ID --receipt proof.json
+```
+
+Both commands return JSON with task goal, checkpoint, attempts, pending HITL references and unresolved effect/inbox references. Each attempt reports `adopt`, `restart-required` or `reconcile-required`, liveness, recovery reason and its last verified observation. Dry-run writes nothing. Actual resume journals a bounded observation; unproven running attempts become uncertain and keep their writer slot. It never launches a new process or resends a payload. Restart goes through a new `attempt start` only after the previous attempt ends with accepted evidence.
+
+Managed agents invoking attempt start inside tmux/Herdr obtain a runtime-owned process binding. Recovery compares PID, UID, OS start time, host, exact pane/native session and Herdr terminal/native thread. A surviving shell is not the agent. Missing, unreadable or reused identity remains unknown. A plain local CLI establishes its actor through the OS login boundary but supplies no durable agent identity; trusted service executors may supply `process_pid` in their configured identity JSON. Process observation never grants service privilege or effect authority.
+
+Pending HITL references retain their exact scope/attempt and are not rebound by resume. Uncertain external claims require existing effect receipt reconciliation. Delivery consumption is separate from business success. Herdr owns signed inbox verification (`ace-herdr inbox reconcile --event ID --receipt FILE`); the assignment `inbox-reconcile` command uses that same configured verifier and additionally records the accepted observation references. `AttemptCoordinator#bind_inbox` records only the event reference, and `#reconcile_inbox` delegates that same verifier and journals only the verified proof digest/path and native observation reference. A consumed receipt settles transport once. A superseded receipt requeues the same event for an explicit retry, without succeeding the attempt. Exact signed replay recovers a crash between Herdr settlement and the assignment journal write; changed key, target, payload or generation fails closed. Retain the matching protected key pair for unresolved events or postpone rotation.
+
+Installed Herdr/Pi compaction and writing-child stop/close acceptance must be recorded separately from deterministic fixture coverage before Lab cutover.

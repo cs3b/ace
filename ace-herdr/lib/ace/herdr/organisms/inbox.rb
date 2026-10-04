@@ -28,6 +28,22 @@ module Ace
         AGENT_STATUSES = %w[idle busy working blocked done].freeze
         WAKE_STATUSES = %w[idle done].freeze
 
+        # One configured verifier construction for the Herdr CLI and signed
+        # receipt consumers. Configuration remains supervisor-owned.
+        def self.from_config(config: Ace::Herdr.config, root: Dir.pwd,
+          executor: Molecules::HerdrExecutor.new, native: Molecules::NativeQueueExecutor.new)
+          path = config["inbox_receipt_public_key"]
+          key = begin
+            candidate = OpenSSL::PKey.read(File.read(path)) if path.is_a?(String) && path.start_with?("/")
+            candidate if candidate.is_a?(OpenSSL::PKey::RSA) && !candidate.private?
+          rescue SystemCallError, OpenSSL::PKey::PKeyError
+            nil
+          end
+          new(executor: executor, native: native,
+            deliveries_dir: File.expand_path(config["deliveries_dir"] || ".ace-local/herdr/deliveries", root),
+            receipt_public_key: key)
+        end
+
         def initialize(executor:, native:, deliveries_dir:, receipt_public_key: nil)
           @executor = executor
           @native = native
@@ -176,14 +192,24 @@ module Ace
           end
         end
 
-        def reconcile(event:, receipt:, signed_bytes: nil, signature: nil)
+        def reconcile(event:, receipt:, signed_bytes: nil, signature: nil, expected_registration: nil)
           validate_id!(event, "event")
           with_event(event) do |record|
             raise ValidationError, "unknown inbox event: #{event}" unless record&.inbox
+            # The consumer's accepted registration must match under the same
+            # event lock that verifies and settles the signed observation.
+            unless expected_registration.nil?
+              registration = public_record(record).slice("event_id", "attempt_id", "payload_sha256", "receipt_key_sha256")
+              unless expected_registration == registration
+                raise ValidationError, "inbox event differs from expected registration"
+              end
+            end
             # `delivered` only proves native queue acceptance: the message may
             # still be consumed or evicted afterwards, so a signed observation
             # can reconcile it exactly like an uncertain outcome.
-            unless %w[uncertain delivered].include?(record.state)
+            replay = %w[completed queued].include?(record.state) && receipt.is_a?(Hash) &&
+              receipt == record.inbox["reconciliation"]
+            unless %w[uncertain delivered].include?(record.state) || replay
               raise ValidationError, "event is not reconcilable from state #{record.state}"
             end
             binding = record.inbox["binding"]
@@ -231,6 +257,11 @@ module Ace
               end
             end
             next public_record(record).merge("reconciliation_refusal" => refusal) if refusal
+            # The consumer may crash after Herdr settles but before recording
+            # its observation reference. Re-verify the identical signed proof
+            # without another transition. A later claim has a new generation
+            # and fails the binding checks above.
+            next public_record(record) if replay
 
             outcome = receipt["outcome"]
             state = outcome == "consumed" ? "completed" : "queued"

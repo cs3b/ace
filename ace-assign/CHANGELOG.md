@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Resume from accepted attempt history without relaunch/replay; consume signed inbox observations in the existing journal and preserve unknown owner/effect state.
+
 ## [0.63.1] - 2026-10-04
 
 ### Changed

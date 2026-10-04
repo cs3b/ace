@@ -32,6 +32,15 @@ module Ace
         {in_runtime: false, session: nil, window: nil, pane: nil}
       end
 
+      def process_target(pane)
+        value = query(B.display_message_target(pane, "\#{session_id}\t\#{pane_id}\t\#{pane_pid}", tmux: tmux))
+        session, id, pid = value.split("\t", -1)
+        return nil unless session.to_s.match?(/\A\$[0-9]+\z/) && id.to_s.match?(/\A%[0-9]+\z/) &&
+          pid.to_s.match?(/\A[0-9]+\z/)
+
+        {"session" => session, "pane" => id, "shell_pid" => pid.to_i}
+      end
+
       def available!
         raise Ace::Tmux::NotInTmuxError unless executor.tmux_available?(tmux: tmux)
 

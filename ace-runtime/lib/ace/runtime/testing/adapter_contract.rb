@@ -43,6 +43,15 @@ module Ace
 
         # --- identity and context ---
 
+        def test_unknown_process_identity_never_grants_a_binding_or_mutates_runtime
+          pane = prepare_target!
+          before = fixture.calls.dup
+          [nil, -1, "123"].each do |pid|
+            assert_nil adapter.process_binding(pane: pane, caller_pid: pid)
+          end
+          assert_equal before, fixture.calls
+        end
+
         def test_context_reports_scripted_environment
           fixture.set_context(in_runtime: true, session: "main", window: "work", pane: "%1")
 

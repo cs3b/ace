@@ -27,6 +27,10 @@ module Ace
         fixture.context.dup
       end
 
+      def process_binding(pane:, caller_pid:)
+        nil
+      end
+
       # --- op 2: ensure named window (idempotent by normalized name) ---
 
       def ensure_window(name:, root:, preset: nil)

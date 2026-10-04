@@ -4,6 +4,7 @@ require "digest"
 require "json"
 require "open3"
 require "pathname"
+require "ace/herdr"
 
 module Ace
   module Assign
@@ -498,6 +499,199 @@ input:#{Regexp.escape(request.fetch("input_digest"))} outcome:(\S+)( no-effect:(
           attempt.projection
         end
 
+        # Reconstruct recovery from accepted history. Local caches and pane
+        # titles never override journal authority. This method has no writes.
+        def recovery_snapshot(assignment_id)
+          assignment = @manager.load(assignment_id)
+          managed = assignment&.managed? || journal_for.assignment_ids.include?(assignment_id)
+          attempts = managed ? journal_for.derived_attempts(assignment_id) : @store.list(assignment_id)
+          raise AssignmentErrors::NotFound, "Assignment '#{assignment_id}' not found" unless assignment || attempts.any?
+
+          requests = managed ? journal_for.service_requests(assignment_id) : []
+          unresolved = requests.reject do |request|
+            %w[succeeded failed-settled].include?(request["state"]) ||
+              request["state"] == "rejected" && request["consumed"] == false
+          end
+          queue = assignment && Molecules::QueueScanner.new.scan(assignment.steps_dir, assignment: assignment)
+          inbox_records = recovery_inboxes(attempts)
+          recovered = attempts.sort_by { |attempt| [attempt.binding.created_at, attempt.attempt_id] }.map do |attempt|
+            observation = reconciler.observation(attempt)
+            blocked = unresolved.any? { |request| request["attempt_id"] == attempt.attempt_id }
+            inbox_blocked = inbox_records.any? do |record|
+              [nil, attempt.attempt_id].include?(record["attempt_id"]) &&
+                %w[unknown claimed uncertain delivered].include?(record["state"])
+            end
+            unstarted = !reconciler.process_started?(attempt)
+            decision, reason = if blocked || inbox_blocked || attempt.uncertain?
+              ["reconcile-required", blocked ? "unresolved external effect" :
+                (inbox_blocked ? "inbox outcome requires signed native observation" : "attempt remains uncertain")]
+            elsif attempt.terminal?
+              ["restart-required", "attempt ended; restart requires a new attributable attempt"]
+            elsif unstarted
+              ["restart-required", "no recorded process start"]
+            elsif !assignment || observation["liveness"] != "live"
+              ["reconcile-required", !assignment ? "assignment checkpoint unavailable" : observation["reason"]]
+            else
+              ["adopt", "verified owner survives; preserve current attempt"]
+            end
+            receipt_history = reconciler.events(attempt).select { |event| event["type"] == "receipt_accepted" }
+              .filter_map { |event| event.dig("payload", "receipt") }
+            accepted_effects = receipt_history.select { |receipt| @verifier.external_effect?(receipt["operation"]) }
+              .map { |receipt| receipt.slice("operation", "head", "digest", "verdict") }
+            attempt.projection.merge("decision" => decision, "recovery_reason" => reason,
+              "accepted_effects" => accepted_effects,
+              "accepted_receipt_digests" => receipt_history.map { |receipt| receipt["digest"] },
+              "liveness" => observation["liveness"], "last_verified_observation" =>
+                (observation["liveness"] == "live" ? observation : last_verified_observation(attempt)),
+              "observation" => observation)
+          end
+          decision = if recovered.empty? || recovered.any? { |item| item["decision"] == "reconcile-required" }
+            "reconcile-required"
+          elsif recovered.any? { |item| item["decision"] == "adopt" }
+            "adopt"
+          else
+            "restart-required"
+          end
+          {"assignment_id" => assignment_id, "task_id" => assignment&.task_id,
+           "latest_attempt_id" => recovered.last&.dig("attempt_id"),
+           "decision" => decision, "liveness" => decision == "adopt" ? "live" : "unknown",
+           "last_verified_observation" => recovered.filter_map { |item| item["last_verified_observation"] }
+             .max_by { |item| item["observed_at"].to_s },
+           "recovery_reason" => recovered.empty? ? "accepted attempt evidence unavailable" :
+             recovered.find { |item| item["decision"] == decision }&.dig("recovery_reason"),
+           "goal" => assignment&.description || assignment&.name,
+           "checkpoint" => queue && {"state" => queue.assignment_state.to_s,
+             "active_steps" => queue.active_steps.map(&:number), "next_step" => queue.next_workable&.number},
+           "attempts" => recovered, "inbox_events" => inbox_records,
+           "pending_hitl" => queue ? queue.steps.filter_map do |step|
+             id = step.stall_reason.to_s[/\AHITL:\s*([a-zA-Z0-9_.-]+)/, 1]
+             {"event_id" => id, "scope" => step.number, "rebind" => false} if id
+           end : [], "unresolved_effects" => unresolved.map do |request|
+             request.slice("request_id", "attempt_id", "operation", "state", "candidate_head")
+           end}
+        end
+
+        def resume(assignment_id:, dry_run: false)
+          return recovery_snapshot(assignment_id) if dry_run
+
+          lifecycle_exclusion.with_exclusive(lifecycle_exclusion.assignment_key(assignment_id)) do
+            @store.with_lock(assignment_id) do
+              snapshot = recovery_snapshot(assignment_id)
+              snapshot.fetch("attempts").each do |projection|
+                attempt = recover_managed_attempt(assignment_id, projection["attempt_id"]) ||
+                  @store.load(assignment_id, projection["attempt_id"])
+                next unless attempt && !attempt.terminal?
+
+                event = Models::EvidenceEvent.build(type: "recovery_observation", attempt_id: attempt.attempt_id,
+                  payload: projection.slice("decision", "recovery_reason", "observation"),
+                  previous_digest: last_event_digest(attempt))
+                attempt = append_events(attempt, [event])
+                if attempt.state == "running" && projection["decision"] != "adopt"
+                  target = projection["decision"] == "restart-required" ? "stopped" : "uncertain"
+                  attempt = append_events(attempt, [transition_event(attempt, target, projection["recovery_reason"])])
+                  attempt = attempt.transition(target)
+                  @store.release(assignment_id, attempt.binding.scope, attempt.attempt_id) if attempt.terminal?
+                end
+                @store.save(attempt)
+              end
+              recovery_snapshot(assignment_id)
+            end
+          end
+        end
+
+        # Inbox delivery is transport evidence, never business-effect proof.
+        # Herdr owns signature, pinned key, generation and native identity
+        # verification; this consumer records only its verified references.
+        def reconcile_inbox(attempt_id:, event_id:, receipt_path:, inbox:, identity: nil)
+          identity ||= @identity_resolver.resolve
+          unless @identity_resolver.trusted?(identity)
+            raise AttemptErrors::UnauthorizedIdentity, "Inbox recovery requires a trusted supervisor"
+          end
+          attempt = @store.find(attempt_id) || recover_managed_attempt(nil, attempt_id)
+          raise AttemptErrors::NotFound, "Attempt '#{attempt_id}' not found" unless attempt
+
+          lifecycle_exclusion.with_exclusive(lifecycle_exclusion.assignment_key(attempt.binding.assignment_id)) do
+            @store.with_lock(attempt.binding.assignment_id) do
+              attempt = attempt.managed? ? recover_managed_attempt(attempt.binding.assignment_id, attempt_id) :
+                @store.load(attempt.binding.assignment_id, attempt_id)
+              record = inbox.status(event: event_id)
+              unless record["attempt_id"] == attempt_id
+                raise AttemptErrors::ReceiptRejected, "Inbox event does not belong to this attempt"
+              end
+              registered = reconciler.events(attempt).find do |event|
+                event["type"] == "inbox_binding" && event.dig("payload", "event_id") == event_id
+              end
+              expected = record.slice("event_id", "attempt_id", "payload_sha256", "receipt_key_sha256")
+              unless registered && registered["payload"] == expected
+                raise AttemptErrors::ReceiptRejected, "Inbox event does not match its registered binding"
+              end
+              bytes = File.binread(receipt_path)
+              receipt = JSON.parse(bytes)
+              result = inbox.reconcile(event: event_id, receipt: receipt,
+                expected_registration: registered.fetch("payload"),
+                signed_bytes: bytes, signature: File.binread("#{receipt_path}.sig"))
+              return result if result["reconciliation_refusal"]
+
+              payload = result.slice("event_id", "attempt_id", "claim_generation", "payload_sha256",
+                "receipt_key_sha256", "binding", "state")
+                .merge("receipt_sha256" => Digest::SHA256.hexdigest(bytes),
+                  "receipt_ref" => File.expand_path(receipt_path),
+                  "outcome" => receipt["outcome"], "observer" => receipt["observer"],
+                  "evidence" => receipt["evidence"].slice("kind", "native_reference"))
+              accepted = reconciler.events(attempt).any? do |event|
+                event["type"] == "inbox_reconciliation" &&
+                  event["payload"].reject { |key, _| %w[receipt_ref receipt_sha256].include?(key) } ==
+                    payload.reject { |key, _| %w[receipt_ref receipt_sha256].include?(key) }
+              end
+              unless accepted
+                event = Models::EvidenceEvent.build(type: "inbox_reconciliation", attempt_id: attempt_id,
+                  payload: payload, previous_digest: last_event_digest(attempt))
+                @store.save(append_events(attempt, [event]))
+              end
+              result
+            end
+          end
+        rescue JSON::ParserError, SystemCallError => e
+          raise AttemptErrors::ReceiptRejected, "Inbox proof unavailable (#{e.class})"
+        rescue Ace::Herdr::Error => e
+          raise AttemptErrors::ReceiptRejected, "Inbox proof rejected: #{e.message}"
+        end
+
+        # Register a transport reference in the existing attempt journal so
+        # a missing delivery record cannot be mistaken for no pending effect.
+        def bind_inbox(attempt_id:, event_id:, inbox:, identity: nil)
+          identity ||= @identity_resolver.resolve
+          attempt = @store.find(attempt_id) || recover_managed_attempt(nil, attempt_id)
+          raise AttemptErrors::NotFound, "Attempt '#{attempt_id}' not found" unless attempt
+
+          lifecycle_exclusion.with_exclusive(lifecycle_exclusion.assignment_key(attempt.binding.assignment_id)) do
+            @store.with_lock(attempt.binding.assignment_id) do
+              attempt = attempt.managed? ? recover_managed_attempt(attempt.binding.assignment_id, attempt_id) :
+                @store.load(attempt.binding.assignment_id, attempt_id)
+              unless attempt.active? && attempt.binding.actor == identity.actor
+                raise AttemptErrors::UnauthorizedIdentity, "Inbox registration must belong to the active attempt owner"
+              end
+              record = inbox.status(event: event_id)
+              unless record["attempt_id"] == attempt_id
+                raise AttemptErrors::ReceiptRejected, "Inbox event does not belong to this attempt"
+              end
+              payload = record.slice("event_id", "attempt_id", "payload_sha256", "receipt_key_sha256")
+              existing = reconciler.events(attempt).find do |event|
+                event["type"] == "inbox_binding" && event.dig("payload", "event_id") == event_id
+              end
+              if existing && existing["payload"] != payload
+                raise AttemptErrors::ReceiptRejected, "Inbox binding changed"
+              end
+              unless existing
+                event = Models::EvidenceEvent.build(type: "inbox_binding", attempt_id: attempt_id,
+                  payload: payload, previous_digest: last_event_digest(attempt))
+                @store.save(append_events(attempt, [event]))
+              end
+              payload
+            end
+          end
+        end
+
         # Read accepted check evidence without transitions, locks, cache writes
         # or audit checkout creation. Managed history comes from the Git ref.
         def evidence(attempt_id:, receipt_digest:, kind: "check", check_name: "tests", historical_head: nil)
@@ -596,6 +790,51 @@ input:#{Regexp.escape(request.fetch("input_digest"))} outcome:(\S+)( no-effect:(
         end
 
         private
+
+        def last_verified_observation(attempt)
+          event = reconciler.events(attempt).reverse.find do |candidate|
+            candidate["type"] == "recovery_observation" && candidate.dig("payload", "observation", "liveness") == "live"
+          end
+          event&.dig("payload", "observation")
+        end
+
+        def recovery_inboxes(attempts)
+          root = File.expand_path(Ace::Herdr.config["deliveries_dir"] || ".ace-local/herdr/deliveries", @repo_root)
+          entries = Ace::Herdr::Molecules::DeliveryRecordStore.list_records(root)
+          registrations = attempts.flat_map do |attempt|
+            reconciler.events(attempt).select { |event| event["type"] == "inbox_binding" }
+              .map { |event| [attempt, event["payload"]] }
+          end
+          records = registrations.map do |attempt, payload|
+            record = Ace::Herdr::Molecules::DeliveryRecordStore.load(root, payload["event_id"])
+            attributed = record && record.inbox && record.event_id == payload["event_id"] &&
+              record.inbox["attempt_id"] == attempt.attempt_id && payload["attempt_id"] == attempt.attempt_id &&
+              record.answer_digest == payload["payload_sha256"] &&
+              record.inbox["receipt_key_sha256"] == payload["receipt_key_sha256"]
+            verified = attributed && reconciler.events(attempt).any? do |event|
+              next false unless event["type"] == "inbox_reconciliation"
+              proof = event["payload"]
+              proof["event_id"] == record.event_id && proof["claim_generation"] == record.inbox["claim_generation"] &&
+                proof["payload_sha256"] == record.answer_digest && proof["binding"] == record.inbox["binding"] &&
+                proof["receipt_key_sha256"] == record.inbox["receipt_key_sha256"] && proof["state"] == record.state
+            end
+            state = if !attributed || ((record.state == "completed" || record.state == "queued" && record.inbox["reconciliation"]) && !verified)
+              "unknown"
+            else
+              record.state
+            end
+            payload.slice("event_id", "attempt_id", "receipt_key_sha256").merge("state" => state)
+          rescue JSON::ParserError, ArgumentError, SystemCallError
+            payload.slice("event_id", "attempt_id").merge("state" => "unknown")
+          end
+          entries.each do |entry|
+            next if records.any? { |record| record["event_id"] == entry[:event_id] }
+            record = entry[:record]
+            next if record && (!record.inbox || !attempts.any? { |attempt| attempt.attempt_id == record.inbox["attempt_id"] })
+            records << {"event_id" => entry[:event_id], "state" => "unknown"}
+          end
+          records
+        end
 
         # Attempt IDs must be unique per assignment AND globally: records,
         # journal events, and reconciliation lookups key on them. Allocation
@@ -809,7 +1048,9 @@ input:#{Regexp.escape(request.fetch("input_digest"))} outcome:(\S+)( no-effect:(
               "actor" => identity.actor,
               "role" => identity.role,
               "runtime" => identity.runtime,
-              "pid" => Process.pid
+              "pid" => identity.process_pid,
+              "process_identity" => Ace::Runtime::Molecules::ProcessIdentity.new.capture(identity.process_pid),
+              "runtime_binding" => identity.runtime_binding
             },
             previous_digest: intent["digest"]
           )

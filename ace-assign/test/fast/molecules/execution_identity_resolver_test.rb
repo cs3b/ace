@@ -26,6 +26,26 @@ module Ace
         assert Molecules::ExecutionIdentityResolver.new(adapter: "local").trusted?(identity)
       end
 
+      def test_native_runtime_produces_owner_without_changing_authorization_identity
+        binding = {"runtime" => "tmux", "pane" => "%2", "process_identity" => {"pid" => 123}}
+        native = Object.new
+        native.define_singleton_method(:context) { {in_runtime: true, pane: "%2"} }
+        native.define_singleton_method(:process_binding) do |pane:, caller_pid:|
+          raise "wrong boundary" unless pane == "%2" && caller_pid == 456
+          binding
+        end
+        runtime = Object.new
+        runtime.define_singleton_method(:detect) { |env:| :tmux }
+        runtime.define_singleton_method(:resolve) { |_name| native }
+        identity = Molecules::ExecutionIdentityResolver.new(adapter: "local", runtime_resolver: runtime,
+          caller_pid: 456, env: {"ACE_RUNTIME" => "tmux"}).resolve
+        assert_equal 123, identity.process_pid
+        assert_equal binding, identity.runtime_binding
+        assert_equal "coordinator", identity.role
+        assert_equal "local", identity.adapter
+        assert_includes identity.runtime, "local:"
+      end
+
       def test_local_adapter_fails_closed_without_login_identity
         resolver = Molecules::ExecutionIdentityResolver.new(adapter: "local")
         Etc.stub(:getlogin, nil) do

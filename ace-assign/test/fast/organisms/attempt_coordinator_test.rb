@@ -23,7 +23,7 @@ module Ace
           git(@repo, "commit", "-m", "candidate base")
         end
         @identity = Molecules::ExecutionIdentityResolver::Identity.new(
-          actor: "mc", role: "coordinator", runtime: "local:test", adapter: "local"
+          actor: "mc", role: "coordinator", runtime: "local:test", adapter: "local", process_pid: Process.pid
         )
         @worker = Molecules::ExecutionIdentityResolver::Identity.new(
           actor: "fork-1", role: "worker", runtime: "fork:1", adapter: "service"
@@ -772,7 +772,8 @@ end
             Models::EvidenceEvent.build(
               type: "process_start",
               attempt_id: attempt.attempt_id,
-              payload: {"runtime" => "local:test", "pid" => child}
+              payload: {"runtime" => "local:test", "pid" => child,
+                "process_identity" => Ace::Runtime::Molecules::ProcessIdentity.new.capture(child)}
             )
           ]
           rewrite_events(coordinator, attempt, events)
@@ -1146,6 +1147,71 @@ end
           ) { flunk "must not yield" }
         end
       end
+      def test_resume_adopts_verified_owner_and_dry_run_has_no_writes
+        assignment = create_assignment
+        coordinator = build_coordinator
+        attempt = coordinator.start(assignment_id: assignment.id, step: "010", project_id: "ace")
+        ref = coordinator.send(:journal_for).ref_value
+        snapshot = coordinator.resume(assignment_id: assignment.id, dry_run: true)
+        assert_equal "adopt", snapshot["attempts"].first["decision"]
+        assert_equal "live", snapshot["attempts"].first["liveness"]
+        assert_equal ref, coordinator.send(:journal_for).ref_value
+        snapshot = build_coordinator.resume(assignment_id: assignment.id)
+        assert_equal attempt.attempt_id, snapshot["attempts"].first["attempt_id"]
+        assert_equal "running", snapshot["attempts"].first["state"]
+        assert_equal 1, coordinator.send(:journal_for).derived_attempts(assignment.id).length
+      end
+
+      def test_resume_lost_cache_keeps_journal_owner_and_reports_missing_checkpoint
+        assignment = create_assignment
+        coordinator = build_coordinator
+        attempt = coordinator.start(assignment_id: assignment.id, step: "010", project_id: "ace")
+        FileUtils.rm_rf(assignment.cache_dir)
+        snapshot = build_coordinator.resume(assignment_id: assignment.id, dry_run: true)
+        projection = snapshot["attempts"].first
+        assert_equal attempt.attempt_id, projection["attempt_id"]
+        assert_equal "reconcile-required", projection["decision"]
+        assert_equal "assignment checkpoint unavailable", projection["recovery_reason"]
+        assert_nil snapshot["checkpoint"]
+      end
+
+      def test_resume_unknown_owner_preserves_attempt_and_commits
+        assignment = create_assignment
+        coordinator = build_coordinator
+        @identity.process_pid = nil
+        attempt = coordinator.start(assignment_id: assignment.id, step: "010", project_id: "ace")
+        head = git(@repo, "rev-parse", "HEAD")
+        snapshot = coordinator.resume(assignment_id: assignment.id)
+        projection = snapshot["attempts"].first
+        assert_equal "reconcile-required", projection["decision"]
+        assert_equal "uncertain", projection["state"]
+        assert_equal "unknown", projection["liveness"]
+        assert_nil projection["last_verified_observation"]
+        assert_equal head, git(@repo, "rev-parse", "HEAD")
+        assert File.exist?(File.join(@repo, "work.txt"))
+        assert_raises(AttemptErrors::Conflict) do
+          coordinator.start(assignment_id: assignment.id, step: "010", project_id: "ace",
+            identity: @worker)
+        end
+        assert_equal attempt.attempt_id, coordinator.store.active(assignment.id, "010").attempt_id
+      end
+
+      def test_resume_unresolved_external_claim_never_adopts_or_replays
+        assignment = create_assignment
+        coordinator = build_coordinator
+        attempt = coordinator.start(assignment_id: assignment.id, step: "010", project_id: "ace")
+        binding = {"request_id" => "request-recovery", "assignment_id" => assignment.id,
+          "attempt_id" => attempt.attempt_id, "project_id" => "ace", "operation" => "forge-sync",
+          "input_digest" => "a" * 64, "candidate_head" => git(@repo, "rev-parse", "HEAD").strip,
+          "executor_uid" => Process.uid}
+        coordinator.claim_service_request(binding)
+        snapshot = coordinator.resume(assignment_id: assignment.id, dry_run: true)
+        assert_equal "reconcile-required", snapshot["attempts"].first["decision"]
+        assert_equal "unresolved external effect", snapshot["attempts"].first["recovery_reason"]
+        assert_equal "uncertain", snapshot["unresolved_effects"].first["state"]
+        assert_equal "uncertain", coordinator.service_request_status(binding["request_id"])["state"]
+      end
+
     end
   end
 end

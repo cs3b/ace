@@ -25,14 +25,17 @@ module Ace
         TRUSTED_ROLES = %w[coordinator service].freeze
 
         # Resolved boundary identity.
-        Identity = Struct.new(:actor, :role, :runtime, :adapter, keyword_init: true)
+        Identity = Struct.new(:actor, :role, :runtime, :adapter, :process_pid, :runtime_binding, keyword_init: true)
 
         # @param adapter [String, nil] "local" or "service" (default from config)
         # @param service_env [String, nil] Env var carrying the service identity (default from config)
-        def initialize(adapter: nil, service_env: nil)
+        def initialize(adapter: nil, service_env: nil, runtime_resolver: Ace::Runtime, env: ENV, caller_pid: Process.ppid)
           section = Ace::Assign.config["attempt"] || {}
           @adapter = adapter || section["identity_adapter"] || "local"
           @service_env = service_env || section["service_identity_env"] || "ACE_ASSIGN_SERVICE_IDENTITY"
+          @runtime_resolver = runtime_resolver
+          @env = env
+          @caller_pid = caller_pid
         end
 
         # @return [Identity] Trusted boundary identity
@@ -60,11 +63,14 @@ module Ace
             raise AttemptErrors::UnauthorizedIdentity, "No OS login identity available at the execution boundary"
           end
 
+          binding = native_process_binding
           Identity.new(
             actor: actor.strip,
             role: "coordinator",
             runtime: "local:#{Socket.gethostname}",
-            adapter: "local"
+            adapter: "local",
+            process_pid: binding&.dig("process_identity", "pid"),
+            runtime_binding: binding
           )
         end
 
@@ -89,7 +95,22 @@ module Ace
               "Service identity must supply actor, runtime, and a role in #{ROLES.join('/')}"
           end
 
-          Identity.new(actor: actor, role: role, runtime: runtime, adapter: "service")
+          pid = data["process_pid"]
+          if pid && (!pid.is_a?(Integer) || !pid.positive?)
+            raise AttemptErrors::UnauthorizedIdentity, "Service process_pid must be a positive integer"
+          end
+          Identity.new(actor: actor, role: role, runtime: runtime, adapter: "service", process_pid: pid)
+        end
+
+        def native_process_binding
+          adapter = Ace::Runtime::Molecules::RuntimeSelector.new(
+            config: Ace::Runtime.config, registry: @runtime_resolver, env: @env).resolve
+          context = adapter.context
+          return nil unless context[:in_runtime] && context[:pane]
+
+          adapter.process_binding(pane: context[:pane], caller_pid: @caller_pid)
+        rescue Ace::Runtime::Error
+          nil
         end
       end
     end

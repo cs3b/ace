@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- Add read-only process ownership observation with PID birth identity, OS ancestry, unknown liveness and shared adapter contract coverage.
+
 ## [0.1.1] - 2026-10-04
 
 ### Fixed

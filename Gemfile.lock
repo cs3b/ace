@@ -317,6 +317,7 @@ PATH
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)
       ace-support-core (~> 0.31)
+      fiddle (>= 1.1, < 2)
 
 PATH
   remote: ace-search
@@ -483,6 +484,7 @@ GEM
     ffi (1.17.4-aarch64-linux-gnu)
     ffi (1.17.4-arm64-darwin)
     ffi (1.17.4-x86_64-linux-gnu)
+    fiddle (1.1.6)
     fileutils (1.8.0)
     hashdiff (1.2.1)
     json (2.21.2)

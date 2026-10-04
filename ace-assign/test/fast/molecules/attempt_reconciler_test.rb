@@ -38,7 +38,8 @@ module Ace
           process_start = Models::EvidenceEvent.build(
             type: "process_start",
             attempt_id: "atrec01",
-            payload: {"runtime" => "local:test", "pid" => child}
+            payload: {"runtime" => "local:test", "pid" => child,
+              "process_identity" => Ace::Runtime::Molecules::ProcessIdentity.new.capture(child)}
           )
           reconciler = build_reconciler
 
@@ -47,6 +48,25 @@ module Ace
           Process.kill("TERM", child)
           Process.wait(child)
         end
+      end
+
+      def test_native_binding_reuse_keeps_live_pid_unknown
+        identity = Ace::Runtime::Molecules::ProcessIdentity.new.capture(Process.pid)
+        binding = {"runtime" => "herdr", "pane" => "w1:p1", "agent_session" => "old",
+          "process_identity" => identity}
+        native = Object.new
+        live = binding.dup
+        native.define_singleton_method(:process_binding) { |**options| live }
+        runtime = Object.new
+        runtime.define_singleton_method(:resolve) { |_name| native }
+        event = Models::EvidenceEvent.build(type: "process_start", attempt_id: "atrec01",
+          payload: {"runtime" => "local:test", "process_identity" => identity, "runtime_binding" => binding})
+        reconciler = Molecules::AttemptReconciler.new(runtime_resolver: runtime)
+        attempt = build_attempt(events: [event])
+        assert_equal :live, reconciler.classify(attempt)
+        live["agent_session"] = "replacement"
+        assert_equal :uncertain, reconciler.classify(attempt)
+        assert_equal "unknown", reconciler.observation(attempt)["liveness"]
       end
 
       def test_running_with_dead_recorded_process_classifies_uncertain

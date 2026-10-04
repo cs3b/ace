@@ -7,14 +7,29 @@ module Ace
       SEND = Ace::Runtime::Atoms::SendContract
       LIFECYCLE = SEND::LIFECYCLE_CONDITIONS
 
-      def initialize(backend: NativeRuntimeBackend.new)
+      def initialize(backend: NativeRuntimeBackend.new, process_identity: Ace::Runtime::Molecules::ProcessIdentity.new)
         @backend = backend
+        @process_identity = process_identity
       end
 
       def send_profile = :plain_pane
 
       def context
         backend.context
+      end
+
+      def process_binding(pane:, caller_pid:)
+        return nil unless caller_pid.is_a?(Integer) && caller_pid.positive?
+
+        with_errors do
+          target = backend.process_target(pane)
+          next nil unless target
+
+          owner = @process_identity.owner(shell_pid: target["shell_pid"], caller_pid: caller_pid)
+          next nil unless owner
+
+          target.slice("session", "pane").merge("runtime" => "tmux").merge(owner)
+        end
       end
 
       def ensure_window(name:, root:, preset: nil)

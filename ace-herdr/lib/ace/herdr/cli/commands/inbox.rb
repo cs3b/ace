@@ -32,10 +32,9 @@ module Ace
             translate_errors do
               cli_error("--event is required") if options[:event].to_s.empty?
               cli_error("only --format json is supported") if options[:format] && options[:format] != "json"
-              inbox = Organisms::Inbox.new(executor: executor,
+              inbox = Organisms::Inbox.from_config(config: config, executor: executor,
                 native: @native || Molecules::NativeQueueExecutor.new,
-                deliveries_dir: deliveries_dir,
-                receipt_public_key: %w[enqueue reconcile].include?(operation) ? receipt_public_key : nil)
+                root: Dir.pwd)
               result = case operation
               when "enqueue"
                 %i[attempt ref file].each { |key| cli_error("--#{key} is required") if options[key].to_s.empty? }
@@ -70,17 +69,6 @@ module Ace
             raise Ace::Support::Cli::Error, e.message
           end
 
-          private
-
-          def receipt_public_key
-            path = config["inbox_receipt_public_key"]
-            return nil unless path.is_a?(String) && path.start_with?("/")
-
-            key = OpenSSL::PKey.read(File.read(path))
-            key if key.is_a?(OpenSSL::PKey::RSA) && !key.private?
-          rescue SystemCallError, OpenSSL::PKey::PKeyError
-            nil
-          end
         end
       end
     end
