@@ -1,6 +1,6 @@
 ---
 id: 8wq.t.k86.3
-status: pending
+status: in-progress
 priority: medium
 created_at: "2026-09-27 13:29:29"
 estimate: TBD
@@ -13,6 +13,10 @@ bundle:
   commands: []
 needs_review: false
 title: Migrate assign overseer and demo consumers
+worktree:
+  branch: k86.3-consumer-runtime-migration
+  path: .ace-wt/k86-3-consumer-runtime-migration
+  target_branch: main
 ---
 
 # Migrate assign, overseer and demo consumers
