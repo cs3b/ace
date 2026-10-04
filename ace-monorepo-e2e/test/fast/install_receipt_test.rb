@@ -4,6 +4,7 @@ require_relative "../test_helper"
 require_relative "../e2e/TS-MONO-001-rubygems-install/install_receipt"
 require "json"
 require "tmpdir"
+require "open3"
 
 class InstallReceiptTest < AceMonorepoE2eTestCase
   def setup
@@ -1311,6 +1312,21 @@ end
 
 class InstallReceiptRunnerContractTest < AceMonorepoE2eTestCase
   SCENARIO_DIR = File.expand_path("../e2e/TS-MONO-001-rubygems-install", __dir__)
+
+  def test_discovery_manifest_count_command_executes_verbatim
+    content = File.read(File.join(SCENARIO_DIR, "TC-001-discover-gems.runner.md"))
+    command = content.match(/```bash\n(.*?)```/m)[1]
+    Dir.mktmpdir do |root|
+      target = File.join(root, "results/tc/01")
+      FileUtils.mkdir_p(target)
+      File.write(File.join(target, "release-manifest.json"), JSON.generate("packages" => [{"name" => "ace-git"}]))
+      ruby_root = File.dirname(File.dirname(RbConfig.ruby))
+      _out, err, status = Open3.capture3({"ACE_E2E_SANDBOX_RUBY_ROOT" => ruby_root,
+        "ACE_E2E_LANG" => "C.UTF-8"}, "bash", "-c", command, chdir: root)
+      assert status.success?, err
+      assert_equal "1", File.read(File.join(target, "manifest-package-count.txt")).strip
+    end
+  end
 
   def test_consumer_bundle_uses_absolute_bundler_paths
     %w[TC-002-sandbox-install TC-003-fullindex-fallback].each do |tc|
