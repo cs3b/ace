@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 require "test_helper"
-require "ace/hitl/providers/ref"
+require "ace/hitl/contract"
 
-class RefTest < AceHitlTestCase
+class RefTest < AceHitlContractTestCase
   def test_from_env_returns_stripped_ref
     ref = with_env("HERDR_SESSION" => " w692-lab ", "HERDR_PANE" => "agent-3") do
       Ace::Hitl::Providers::Ref.from_env

@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "errors"
-require_relative "ref"
+require "ace/hitl/contract"
 require_relative "lab"
 
 module Ace
@@ -10,13 +9,6 @@ module Ace
     # transports behind one interface. Agent-facing ace-hitl paths resolve
     # adapters through this registry only — never a concrete transport.
     module Providers
-      # ask(question:, ...) result: local event id + relay request id.
-      AskResult = Struct.new(:event_id, :request_id, keyword_init: true)
-
-      # deliver(ref, answer) result; state is :delivered, :retryable
-      # (safe to re-push identical content) or :failed.
-      DeliverResult = Struct.new(:ref, :state, keyword_init: true)
-
       REGISTRY = {
         Lab::PROVIDER_NAME => -> { Lab.new }
       }.freeze

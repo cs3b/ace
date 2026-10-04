@@ -7,11 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Install both Herdr and tmux runtime adapters for standalone runtime switching, through an acyclic dependency graph.
+
 ### Fixed
 
 - Run terminal fork invocations as children of the prepared shell, retaining the same writable pane after a command exits.
-
-### Fixed
 
 - Managed assignment status JSON tests run against test-owned repositories and evidence journals instead of the invoking checkout's journal, evidence ref, or worktree registrations (task 8ws.t.ibk). A sentinel-based invariance test asserts the ambient repository's refs, registrations, and files stay untouched, and fixture journals cover absent, seed-only, and stale-checkout states.
 

@@ -8,7 +8,7 @@
 end
 
 require "ace/herdr"
-require "ace/hitl"
+require "ace/hitl/contract"
 
 require "minitest/autorun"
 require "tmpdir"

@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "ace/support/items"
+require "ace/hitl/contract"
 require_relative "hitl/version"
 require_relative "hitl/atoms/hitl_file_pattern"
 require_relative "hitl/atoms/hitl_id_formatter"

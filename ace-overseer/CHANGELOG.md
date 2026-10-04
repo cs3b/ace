@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Install both Herdr and tmux runtime adapters for standalone runtime switching, through an acyclic dependency graph.
+
 ## [0.19.0] - 2026-10-04
 
 ### Added

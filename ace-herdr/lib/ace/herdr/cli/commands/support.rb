@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "ace/hitl/contract"
+
 require "json"
 require "ace/support/cli"
 require "ace/core"

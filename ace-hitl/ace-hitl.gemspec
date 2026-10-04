@@ -39,6 +39,7 @@ Gem::Specification.new do |spec|
   spec.executables = spec.files.grep(%r{\Aexe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
 
+  spec.add_dependency "ace-hitl-contract", "~> 0.1"
   spec.add_dependency "ace-support-core", "~> 0.31"
   spec.add_dependency "ace-support-config", "~> 0.18"
   spec.add_dependency "ace-support-fs", "~> 0.3"
@@ -47,7 +48,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "ace-support-cli", "~> 0.6"
   # The managed binding authority: assignment attempts are verified
   # through the ace-assign coordinator (spec 8wq.t.34i). No reverse
-  # dependency exists or may be added (consumers map the delivery
-  # contract instead).
+  # dependency exists or may be added (consumers share the leaf
+  # ace-hitl-contract provider protocol instead).
   spec.add_dependency "ace-assign", "~> 0.62"
 end
