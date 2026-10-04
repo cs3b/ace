@@ -348,96 +348,161 @@ class SetupExecutorTest < Minitest::Test
     end
   end
 
-  def test_tmux_session_uses_scenario_name_when_provided
+  def test_runtime_session_uses_scenario_name_when_provided
     calls = []
     executor = build_tmux_executor(command_calls: calls)
 
     Dir.mktmpdir do |sandbox|
       result = executor.execute(
-        setup_steps: ["tmux-session"],
+        setup_steps: ["runtime-session"],
         sandbox_dir: sandbox,
         scenario_name: "TS-TEST-001"
       )
 
       assert result[:success]
-      assert_equal "TS-TEST-001-e2e", result[:tmux_session]
+      assert_equal "TS-TEST-001-e2e", result[:runtime_session]
       assert_equal "TS-TEST-001-e2e", result[:env]["ACE_TMUX_SESSION"]
       assert_equal ["tmux", "new-session", "-d", "-s", "TS-TEST-001-e2e"], calls.first.drop(1)
     end
   end
 
-  def test_tmux_session_uses_run_id_with_name_source_run_id
+  def test_runtime_session_uses_run_id_with_name_source_run_id
     calls = []
     executor = build_tmux_executor(command_calls: calls)
 
     Dir.mktmpdir do |sandbox|
       result = executor.execute(
-        setup_steps: [{"tmux-session" => {"name-source" => "run-id"}}],
+        setup_steps: [{"runtime-session" => {"name-source" => "run-id"}}],
         sandbox_dir: sandbox,
         scenario_name: "TS-TEST-001",
         run_id: "8pny7t0"
       )
 
       assert result[:success]
-      assert_equal "8pny7t0", result[:tmux_session]
+      assert_equal "8pny7t0", result[:runtime_session]
       assert_equal "8pny7t0", result[:env]["ACE_TMUX_SESSION"]
       assert_equal ["tmux", "new-session", "-d", "-s", "8pny7t0"], calls.first.drop(1)
     end
   end
 
-  def test_tmux_session_name_source_run_id_falls_back_when_run_id_missing
+  def test_runtime_session_name_source_run_id_falls_back_when_run_id_missing
     calls = []
     executor = build_tmux_executor(command_calls: calls)
 
     Dir.mktmpdir do |sandbox|
       result = executor.execute(
-        setup_steps: [{"tmux-session" => {"name-source" => "run-id"}}],
+        setup_steps: [{"runtime-session" => {"name-source" => "run-id"}}],
         sandbox_dir: sandbox,
         scenario_name: "TS-TEST-001"
       )
 
       assert result[:success]
-      assert_equal "TS-TEST-001-e2e", result[:tmux_session]
+      assert_equal "TS-TEST-001-e2e", result[:runtime_session]
       assert_equal "TS-TEST-001-e2e", result[:env]["ACE_TMUX_SESSION"]
       assert_equal ["tmux", "new-session", "-d", "-s", "TS-TEST-001-e2e"], calls.first.drop(1)
     end
   end
 
-  def test_tmux_session_uses_fallback_name_without_scenario_name
+  def test_runtime_session_uses_fallback_name_without_scenario_name
     calls = []
     executor = build_tmux_executor(command_calls: calls, time_source: -> { 123_456 })
 
     Dir.mktmpdir do |sandbox|
       result = executor.execute(
-        setup_steps: ["tmux-session"],
+        setup_steps: ["runtime-session"],
         sandbox_dir: sandbox
       )
 
       assert result[:success]
-      assert_equal "ace-e2e-123456", result[:tmux_session]
+      assert_equal "ace-e2e-123456", result[:runtime_session]
       assert_equal ["tmux", "new-session", "-d", "-s", "ace-e2e-123456"], calls.first.drop(1)
     end
   end
 
-  def test_teardown_clears_tmux_session
+  def test_teardown_clears_runtime_session
     command_calls = []
     system_calls = []
     executor = build_tmux_executor(command_calls: command_calls, system_calls: system_calls)
 
     Dir.mktmpdir do |sandbox|
       result = executor.execute(
-        setup_steps: ["tmux-session"],
+        setup_steps: ["runtime-session"],
         sandbox_dir: sandbox,
         scenario_name: "TS-TEARDOWN-001"
       )
 
       assert result[:success]
-      assert_equal "TS-TEARDOWN-001-e2e", result[:tmux_session]
+      assert_equal "TS-TEARDOWN-001-e2e", result[:runtime_session]
 
       executor.teardown
 
       assert_equal [["tmux", "kill-session", "-t", "TS-TEARDOWN-001-e2e"]], system_calls
       assert_equal ["tmux", "new-session", "-d", "-s", "TS-TEARDOWN-001-e2e"], command_calls.first.drop(1)
+    end
+  end
+
+  def test_runtime_session_tmux_exports_ace_runtime
+    calls = []
+    executor = build_tmux_executor(command_calls: calls)
+
+    Dir.mktmpdir do |sandbox|
+      result = executor.execute(
+        setup_steps: ["runtime-session"],
+        sandbox_dir: sandbox,
+        scenario_name: "TS-RUNTIME-EXPORT"
+      )
+
+      assert result[:success]
+      assert_equal "tmux", result[:env]["ACE_RUNTIME"]
+    end
+  end
+
+  def test_runtime_session_herdr_inherits_live_context
+    executor = build_tmux_executor(command_calls: [])
+
+    Dir.mktmpdir do |sandbox|
+      result = executor.execute(
+        setup_steps: [{"runtime-session" => {"runtime" => "herdr"}}],
+        sandbox_dir: sandbox,
+        scenario_name: "TS-HERDR-001",
+        initial_env: {"HERDR_SESSION" => "ws-live", "HERDR_PANE" => "p9"}
+      )
+
+      assert result[:success]
+      assert_nil result[:runtime_session], "herdr workspaces are operator-owned; no session is created"
+      assert_equal "herdr", result[:env]["ACE_RUNTIME"]
+      assert_equal "ws-live", result[:env]["HERDR_SESSION"]
+      assert_equal "p9", result[:env]["HERDR_PANE"]
+    end
+  end
+
+  def test_runtime_session_herdr_fails_explicitly_without_live_context
+    executor = build_tmux_executor(command_calls: [])
+
+    Dir.mktmpdir do |sandbox|
+      result = executor.execute(
+        setup_steps: [{"runtime-session" => {"runtime" => "herdr"}}],
+        sandbox_dir: sandbox,
+        scenario_name: "TS-HERDR-002"
+      )
+
+      refute result[:success]
+      assert_includes result[:error], "requires a live herdr context"
+    end
+  end
+
+  def test_runtime_session_rejects_unknown_runtime
+    executor = build_tmux_executor(command_calls: [])
+
+    Dir.mktmpdir do |sandbox|
+      result = executor.execute(
+        setup_steps: [{"runtime-session" => {"runtime" => "screen"}}],
+        sandbox_dir: sandbox,
+        scenario_name: "TS-HERDR-003"
+      )
+
+      refute result[:success]
+      assert_includes result[:error], "runtimes: tmux, herdr"
     end
   end
 

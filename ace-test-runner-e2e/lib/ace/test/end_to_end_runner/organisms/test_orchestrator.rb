@@ -396,7 +396,7 @@ module Ace
                 # Transient resources (tmux sessions) die with the first
                 # run's teardown; such scenarios always re-set-up on retry.
                 declares_transient = effective_steps.any? do |step|
-                  step == "tmux-session" || (step.is_a?(Hash) && step.key?("tmux-session"))
+                  step == "runtime-session" || (step.is_a?(Hash) && step.key?("runtime-session"))
                 end
                 state = declares_transient ? nil : Molecules::SetupExecutor.setup_state_for(
                   state_file, sandbox_path, setup_steps: effective_steps

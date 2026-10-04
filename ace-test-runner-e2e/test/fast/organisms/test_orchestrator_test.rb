@@ -947,7 +947,7 @@ class TestOrchestratorTest < Minitest::Test
           steps_completed: setup_steps.length,
           error: nil,
           env: initial_env.merge("PROJECT_ROOT_PATH" => "."),
-          tmux_session: nil
+          runtime_session: nil
         }
       end
       setup_executor.define_singleton_method(:teardown) do
@@ -989,7 +989,7 @@ class TestOrchestratorTest < Minitest::Test
           steps_completed: setup_steps.length,
           error: nil,
           env: initial_env.merge("PROJECT_ROOT_PATH" => "."),
-          tmux_session: nil
+          runtime_session: nil
         }
       end
       setup_executor.define_singleton_method(:teardown) do
@@ -1031,7 +1031,7 @@ class TestOrchestratorTest < Minitest::Test
           steps_completed: setup_steps.length,
           error: nil,
           env: initial_env.merge("PROJECT_ROOT_PATH" => "."),
-          tmux_session: nil
+          runtime_session: nil
         }
       end
       setup_executor.define_singleton_method(:teardown) do
@@ -1059,7 +1059,7 @@ class TestOrchestratorTest < Minitest::Test
     end
   end
 
-  def test_cli_provider_passes_run_id_to_setup_tmux_session
+  def test_cli_provider_passes_run_id_to_setup_runtime_session
     Dir.mktmpdir do |tmpdir|
       create_ts_test_package_with_run_id_tmux_setup(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001])
 
@@ -1078,7 +1078,7 @@ class TestOrchestratorTest < Minitest::Test
             "PROJECT_ROOT_PATH" => ".",
             "ACE_TMUX_SESSION" => run_id
           ),
-          tmux_session: run_id
+          runtime_session: run_id
         }
       end
       setup_executor.define_singleton_method(:teardown) do
@@ -1365,7 +1365,7 @@ class TestOrchestratorTest < Minitest::Test
       setup_executor = Object.new
       setup_executor.define_singleton_method(:execute) do |**|
         setup_calls += 1
-        {success: true, steps_completed: 1, error: nil, env: {"PROJECT_ROOT_PATH" => "."}, tmux_session: nil}
+        {success: true, steps_completed: 1, error: nil, env: {"PROJECT_ROOT_PATH" => "."}, runtime_session: nil}
       end
       setup_executor.define_singleton_method(:teardown) { nil }
 
@@ -1429,7 +1429,7 @@ class TestOrchestratorTest < Minitest::Test
           steps_completed: setup_steps.length,
           error: nil,
           env: initial_env.merge("PROJECT_ROOT_PATH" => "."),
-          tmux_session: nil
+          runtime_session: nil
         }
       end
       setup_executor.define_singleton_method(:teardown) { nil }
@@ -1479,7 +1479,7 @@ class TestOrchestratorTest < Minitest::Test
       setup_executor = Object.new
       setup_executor.define_singleton_method(:execute) do |**|
         setup_calls += 1
-        {success: true, steps_completed: 0, error: nil, env: {}, tmux_session: nil}
+        {success: true, steps_completed: 0, error: nil, env: {}, runtime_session: nil}
       end
       setup_executor.define_singleton_method(:teardown) { nil }
 
@@ -1515,7 +1515,7 @@ class TestOrchestratorTest < Minitest::Test
           steps_completed: setup_steps.length,
           error: nil,
           env: initial_env.merge("PROJECT_ROOT_PATH" => "."),
-          tmux_session: nil
+          runtime_session: nil
         }
       end
       setup_executor.define_singleton_method(:teardown) { nil }
@@ -1546,7 +1546,7 @@ class TestOrchestratorTest < Minitest::Test
           steps_completed: setup_steps.length,
           error: nil,
           env: initial_env.merge("PROJECT_ROOT_PATH" => "."),
-          tmux_session: nil
+          runtime_session: nil
         }
       end
       setup_executor.define_singleton_method(:teardown) { nil }
@@ -1578,7 +1578,7 @@ class TestOrchestratorTest < Minitest::Test
           steps_completed: 0,
           error: "release manifest is missing: /tmp/frozen/installation-manifest.json",
           env: initial_env,
-          tmux_session: nil
+          runtime_session: nil
         }
       end
       setup_executor.define_singleton_method(:teardown) { torn_down = true }
@@ -1626,7 +1626,7 @@ class TestOrchestratorTest < Minitest::Test
           steps_completed: setup_steps.length,
           error: nil,
           env: env,
-          tmux_session: nil
+          runtime_session: nil
         }
       end
       setup_executor.define_singleton_method(:teardown) { nil }
@@ -1933,7 +1933,7 @@ class TestOrchestratorTest < Minitest::Test
       package: #{package}
       priority: medium
       setup:
-        - tmux-session:
+        - runtime-session:
             name-source: run-id
         - agent-env:
             PROJECT_ROOT_PATH: "."
