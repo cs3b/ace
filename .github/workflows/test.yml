@@ -73,6 +73,19 @@ jobs:
           RAILS_ENV: test
           BUNDLE_PATH: vendor/bundle
 
+      # Advisory evidence (spec 8wq.t.34i SC1/SC2): the multi-UID HITL
+      # boundary fixture needs root to drop children to distinct OS
+      # accounts. CI is never a merge gate; this run only records the
+      # installed-boundary acceptance alongside the suite.
+      - name: Multi-UID boundary acceptance (root, ace-hitl only)
+        if: matrix.package == 'ace-hitl'
+        run: |
+          sudo -E env PATH="$PATH" BUNDLE_PATH="$BUNDLE_PATH" \
+            bundle exec ace-test ace-hitl edge
+        env:
+          RAILS_ENV: test
+          BUNDLE_PATH: vendor/bundle
+
       - name: Upload test results
         if: failure()
         uses: actions/upload-artifact@v4

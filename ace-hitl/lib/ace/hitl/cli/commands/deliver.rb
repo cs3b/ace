@@ -21,8 +21,9 @@ module Ace
           option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
 
           def call(id:, **options)
-            emit(lifecycle_store.deliver(id, LifecycleCommand::STDIN_READER))
-          rescue Lifecycle::Error => e
+            answer = $stdin.read(Lifecycle::Store::MAX_ANSWER_BYTES + 1).to_s
+            emit(lifecycle_client.deliver(id, answer))
+          rescue Lifecycle::Error, Providers::ProviderUnavailableError => e
             raise_lifecycle_error(e.message)
           end
         end

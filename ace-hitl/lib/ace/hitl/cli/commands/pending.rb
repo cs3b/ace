@@ -13,13 +13,13 @@ module Ace
           include Ace::Support::Cli::Base
           include LifecycleCommand
 
-          desc "List answerable HITL relay requests (host-broker operation)"
+          desc "List answerable HITL relay requests (transport operation)"
 
           option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
 
           def call(**options)
-            emit(lifecycle_store.pending)
-          rescue Lifecycle::Error => e
+            emit(lifecycle_client.pending)
+          rescue Lifecycle::Error, Providers::ProviderUnavailableError => e
             raise_lifecycle_error(e.message)
           end
         end

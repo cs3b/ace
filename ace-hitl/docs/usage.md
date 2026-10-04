@@ -144,17 +144,82 @@ ace-hitl ask "Proceed with deploy?" \
   is declared by the adapter interface; provider `lab` reports it as
   unsupported until the ace-herdr push-delivery integration lands.
 
+## Scoped Store Boundary (spec 8wq.t.34i)
+
+The relay request store is the PRIVATE state of one authenticated
+boundary service. `ace-hitl serve` owns the store and speaks a bounded
+JSON protocol over a UNIX socket; every client operation
+(`ask`/`deliver`/`consume`/`cancel`/`pending`/`states`/`duty`/`read`)
+runs through the authenticated boundary client — the CLI never touches
+shared store files directly.
+
+Identity is a kernel fact: the service resolves each connection's peer
+uid from the OS (`getpeereid`), and payload fields or environment
+variables can never name a requester. Clients authenticate the
+endpoint back: the socket must be owned by the trusted service uid,
+must not be world-writable, and the connected peer must BE the service
+uid. Authorization facts (service uid, transport uids, per-project
+Captain visibility) come only from the trusted deployment grants
+document — the same file and traversal trust rules as ace-lab
+(default `ACE_HITL_GRANTS_PATH`, `/etc/lab/ace-lab/authorization.yml`).
+
+```bash
+# Deployment (root runs the service under its own account):
+ace-hitl serve                      # ACE_HITL_SOCKET, ACE_HITL_STORE_ROOT,
+                                    # ACE_HITL_GRANTS_PATH override paths
+```
+
+Store layout (all service-owned): `0711` traverse-only root;
+`requests/ answers/ secrets/ effects/ locks/ terminals/` are `0700`;
+`public/` is `0755` with `0440` non-secret projections. There is no
+chmod-to-world-writable mode: requesters receive answer bytes over the
+authenticated connection, never through file ownership.
+
+Roles:
+
+- requester: create, consume and cancel its OWN requests (request
+  facts come back from `ask`/`consume`; the boundary `read` protocol
+  operation is available to library clients);
+- configured transport (grants `hitl.transport_uids` + principals):
+  `deliver`, `pending`, `states`, `duty`;
+- unknown identity is an error, never permission.
+
+Failures are classified end to end: `PermissionError`,
+`BindingError`, `StateError`, `AnswerError`, and `TransportError`
+(unavailable/untrusted boundary, deadline, malformed frame) — transport
+failures are visible and recoverable, and duplicate consume/cancel are
+idempotent (the committed receipt replays; a conflicting transition is
+an error).
+
 ## Relay Lifecycle (Generic HITL Request Store)
 
 The generic relay request lifecycle is native to the gem
-(`Ace::Hitl::Lifecycle`; migration spec 8wm.t.y21). Requests are
-file-backed, never expire on a timer, and every terminal transition
-shares one per-request lock. The store root is `ACE_HITL_STORE_ROOT`
-(default `/run/lab/hitl`); the Overseer channel root is
-`ACE_HITL_OVERSEER_CHANNEL_ROOT` (default `/lab/state/overseer-channel`).
-Machine output is one JSON line.
+(`Ace::Hitl::Lifecycle`; migration spec 8wm.t.y21, scoped by
+8wq.t.34i). Requests never expire on a timer, every terminal
+transition shares one stable per-request lock, and the store root is
+`ACE_HITL_STORE_ROOT` (default `/run/lab/hitl`); the Overseer channel
+root is `ACE_HITL_OVERSEER_CHANNEL_ROOT` (default
+`/lab/state/overseer-channel`). Machine output is one JSON line.
 
-Operator/broker side (host-broker operations are root-only):
+Managed binding (the default authority):
+
+```bash
+ace-hitl ask "Choose the next scope" \
+  --assignment 8x3abc --attempt a1b2c3 --project ace
+```
+
+The request binds to the exact ACTIVE MANAGED attempt of the calling
+identity, verified through the ace-assign coordinator under the
+assignment exclusion: a stale, ended, replaced, or uncertain attempt
+cannot acquire authority, and the exclusion is HELD across every
+consume/deliver transition so an attempt cannot end between the
+liveness check and the commit. `--work W... --attempt A-...` remains
+the legacy binding until the provider=lab integration (vs2) switches
+consumers; the two authorities are mutually exclusive and
+`--attempt` is always required (environment variables are never
+attempt identity).
+
+Transport side:
 
 ```bash
 ace-hitl pending                    # answerable requests
@@ -163,15 +228,16 @@ ace-hitl duty                       # pending + escalated projection
 ace-hitl deliver hitl-0a1b2c3d4e5f6708 <<< "approved"
 ```
 
-`deliver` reads the answer from stdin, relays it unchanged (0400,
-owner = requester) into `secrets/` for OTP kinds or `answers/` for
-everything else, re-verifies attempt liveness under the request lock,
-and then executes the declared effect callback AS THE REQUESTER:
+`deliver` reads the answer from stdin and relays it unchanged. OTP
+bytes go to the service's memory vault; plain answers to the
+service-owned `0600` answers file. Liveness is re-verified under the
+lock, and the declared effect callback (non-OTP kinds only) executes:
 exec-style argv (never a shell), `{answer}` substituted once per
 element, optional fullmatch regex gate, bounded timeout, attempts
-logged redacted in the root-only effects log, and one deduped
-escalation with `effect_state: callback-escalated` in the public
-projection on failure (`callback-ok` on success).
+logged redacted in the effects log, and one deduped escalation with
+`effect_state: callback-escalated` in the public projection on failure
+(`callback-ok` on success). Duplicate deliveries are idempotent: the
+committed answer is reported without re-running any effect.
 
 Requester side:
 
@@ -182,9 +248,12 @@ ace-hitl cancel hitl-0a1b2c3d4e5f6708 --reason "operator stopped the work"
 ```
 
 A consume timeout bounds ONLY the local wait — the request stays
-pending and answerable. Cancel is the ONLY way to abandon a request;
+pending and answerable. OTP consumption requires the challenge's
+authorized operation (`--operation <name>`); the secret transfers
+exactly once and a consumed retry replays the receipt WITHOUT the
+bytes. Cancel is the ONLY way to abandon a request, requester-only;
 it records `cancelled_by` and the `reason` in the public projection,
-and a late answer fails closed.
+and late answers/consumes fail closed against the committed receipt.
 
 Overseer reverse address (bounded, type-tagged responses):
 

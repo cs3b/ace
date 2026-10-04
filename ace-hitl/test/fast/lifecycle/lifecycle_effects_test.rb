@@ -270,15 +270,19 @@ class LifecycleEffectsTest < AceHitlTestCase
       }))
       value = JSON.parse(File.read(File.join(root, "requests", "hitl001.json")))
 
-      # A non-root executor of a foreign requester's callback.
-      error = assert_raises(Ace::Hitl::Lifecycle::PermissionError) do
-        Ace::Hitl::Lifecycle::Effects.run(
-          store, value, "approved",
-          requester_uid: 1234, requester_gid: 966,
-          identity: LifecycleFixtures::TestIdentity.new(username: "broker", root: false, euid: 4242)
-        )
-      end
-      assert_match(/root authority to drop/, error.message)
+      # A non-root executor of a foreign requester's callback: the
+      # permission failure is a RECORDED escalation outcome — the answer
+      # stays relayed, the operator signal lands in the effects log and
+      # the public projection (review 8x333sqr; nothing raises).
+      outcome = Ace::Hitl::Lifecycle::Effects.run(
+        store, value, "approved",
+        requester_uid: 1234, requester_gid: 966,
+        identity: LifecycleFixtures::TestIdentity.new(username: "broker", root: false, euid: 4242)
+      )
+      assert_equal "callback-escalated", outcome
+      log = JSON.parse(File.read(File.join(root, "effects", "hitl001.json")))
+      assert_includes log["attempts"][0]["error"], "root authority to drop"
+      assert_equal "escalated", log["attempts"][0]["outcome"]
     end
   end
 
@@ -383,7 +387,8 @@ class LifecycleEffectsTest < AceHitlTestCase
         "timeout_s" => 45
       }, persisted["effect"])
 
-      duty = Ace::Hitl::Lifecycle::Duty.project(make_store(root: root, identity: root_identity))
+      root_store = make_store(root: root, identity: root_identity)
+      duty = Ace::Hitl::Lifecycle::Duty.project(pending: root_store.pending, states: root_store.states)
       assert_equal [true], duty["pending"].map { |entry| entry["has_effect"] }
     end
   end

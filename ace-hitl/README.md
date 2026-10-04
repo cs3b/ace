@@ -10,15 +10,22 @@ Canonical workflow and skill for agents:
 ## Commands
 
 - `ace-hitl create` creates a HITL event
-- `ace-hitl ask` asks a human via HITL and forwards the request through a provider adapter (`--provider`, default `lab`); ONE operation: local event + relay request through the native lifecycle store (`--work`, effect callback flags)
+- `ace-hitl ask` asks a human via HITL and forwards the request through a provider adapter (`--provider`, default `lab`); ONE operation: local event + relay request through the authenticated boundary (`--assignment/--attempt/--project` managed binding, `--work` legacy, effect callback flags)
 - `ace-hitl list` lists HITL events with filters (`--scope current|all`, all statuses by default)
 - `ace-hitl show` renders event details, path, or raw content (`--scope current|all`)
 - `ace-hitl update` updates frontmatter, answer content, and folder location
 - `ace-hitl wait` polls a specific HITL event until answered (`--poll-every`, `--timeout`)
-- `ace-hitl deliver` answers a pending relay request from stdin (host-broker operation); executes the declared effect callback as the requester
+- `ace-hitl deliver` answers a pending relay request from stdin (configured transport operation through the boundary); executes the declared effect callback (non-OTP kinds)
 - `ace-hitl consume` consumes one own relay request's answer (indefinite by default; `--timeout` bounds only the local wait)
 - `ace-hitl cancel` cancels with an audited reason (the only way to abandon a request)
-- `ace-hitl pending` / `ace-hitl states` / `ace-hitl duty` host-broker projections (pending, public lifecycle records, pending + escalated)
+- `ace-hitl pending` / `ace-hitl states` / `ace-hitl duty` transport projections (pending, public lifecycle records, pending + escalated)
+- `ace-hitl serve` runs the authenticated store boundary service (peer-credential UNIX socket; trusted grants authorize the transport)
+
+Multi-user HITL state (spec 8wq.t.34i) is the PRIVATE state of the
+`ace-hitl serve` boundary: identity comes from kernel peer
+credentials, transport authority from the trusted grants document,
+and OTP secrets are held in service memory only — never in files,
+logs, or projections.
 - `ace-hitl overseer-send` / `ace-hitl overseer-pending` / `ace-hitl overseer-ack` the Overseer reverse-address response channel
 
 `ace-hitl` is a blocker-resolution tool, not a global dashboard:

@@ -14,6 +14,7 @@ require_relative "cli/commands/cancel"
 require_relative "cli/commands/pending"
 require_relative "cli/commands/states"
 require_relative "cli/commands/duty"
+require_relative "cli/commands/serve"
 require_relative "cli/commands/overseer_send"
 require_relative "cli/commands/overseer_pending"
 require_relative "cli/commands/overseer_ack"
@@ -35,9 +36,9 @@ module Ace
         ["deliver", "Deliver an answer (stdin) to a pending HITL relay request"],
         ["consume", "Wait for and consume the answer of one own HITL relay request"],
         ["cancel", "Cancel one HITL relay request with an audited reason"],
-        ["pending", "List answerable HITL relay requests (host-broker)"],
-        ["states", "List public HITL lifecycle projections (host-broker)"],
-        ["duty", "Project pending and escalated HITL requests (host-broker)"],
+        ["pending", "List answerable HITL relay requests (transport)"],
+        ["states", "List public HITL lifecycle projections (transport)"],
+        ["duty", "Project pending and escalated HITL requests (transport)"],
         ["overseer-send", "Queue a bounded, type-tagged Overseer response (stdin)"],
         ["overseer-pending", "List queued Overseer responses (host-broker)"],
         ["overseer-ack", "Acknowledge one relayed Overseer response"]
@@ -64,6 +65,7 @@ module Ace
       register "pending", CLI::Commands::Pending
       register "states", CLI::Commands::States
       register "duty", CLI::Commands::Duty
+      register "serve", CLI::Commands::Serve
       register "overseer-send", CLI::Commands::OverseerSend
       register "overseer-pending", CLI::Commands::OverseerPending
       register "overseer-ack", CLI::Commands::OverseerAck

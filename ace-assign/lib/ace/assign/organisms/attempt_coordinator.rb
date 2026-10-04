@@ -104,6 +104,29 @@ module Ace
           end
         end
 
+        # The exact-authority check behind with_verified_attempt: the
+        # journal-derived managed attempt must be live (reserved/running —
+        # uncertainty is unproven liveness and never grants external
+        # authority) and bound to the exact assignment, project, and
+        # requesting actor.
+        def verified_attempt(assignment_id:, attempt_id:, project_id:, requester:)
+          attempt = journal_for.derived_attempts(assignment_id)
+            .find { |candidate| candidate.attempt_id == attempt_id }
+          raise AttemptErrors::NotFound, "Attempt '#{attempt_id}' not found" unless attempt
+
+          unless attempt.managed? && %w[reserved running].include?(attempt.state) &&
+              attempt.binding.assignment_id == assignment_id &&
+              attempt.binding.project_id == project_id
+            raise AttemptErrors::ReceiptRejected,
+              "Authority request does not match an active managed attempt"
+          end
+          unless attempt.binding.actor == requester
+            raise AttemptErrors::UnauthorizedIdentity,
+              "Requester #{requester.inspect} does not own attempt '#{attempt_id}'"
+          end
+          attempt
+        end
+
         def reject_service_request(binding, reason:)
           service_attempt(binding)
           journal_for.reject_service_request(binding, reason: reason)
@@ -299,6 +322,36 @@ input:#{Regexp.escape(request.fetch("input_digest"))} outcome:(\S+)( no-effect:(
           true
         end
 
+        # Hold verified authority over one managed attempt for the duration
+        # of a single external transition (the HITL consume/deliver
+        # critical sections). The shared exclusion side is held across the
+        # yielded transition, so a terminal commit (finish/reconcile hold
+        # the exclusive side) or a prune cannot land between the liveness
+        # check and the caller's commit: stale, ended or replaced attempts
+        # cannot acquire new authority. Authority is attribution over
+        # journal facts and the requesting identity — never a process id,
+        # runtime marker, or caller-supplied name.
+        #
+        # @param assignment_id [String] Owning assignment ID
+        # @param attempt_id [String] Attempt ID
+        # @param project_id [String] Project the attempt must be bound to
+        # @param requester [String] Authenticated requester (execution-
+        #   boundary identity of the caller, matched against binding actor)
+        # @yield [attempt] the verified managed attempt
+        # @raise [AttemptErrors::NotFound, AttemptErrors::ReceiptRejected,
+        #   AttemptErrors::UnauthorizedIdentity] on any authority doubt
+        def with_verified_attempt(assignment_id:, attempt_id:, project_id:, requester:)
+          assignment_id = assignment_id.to_s
+          attempt_id = attempt_id.to_s
+          lifecycle_exclusion.with_shared(lifecycle_exclusion.assignment_key(assignment_id)) do
+            attempt = verified_attempt(
+              assignment_id: assignment_id, attempt_id: attempt_id,
+              project_id: project_id.to_s, requester: requester.to_s
+            )
+            yield attempt
+          end
+        end
+
         # Start a scoped attempt for an assignment.
         #
         # A repeated identical start returns the existing active attempt; a
@@ -392,38 +445,44 @@ input:#{Regexp.escape(request.fetch("input_digest"))} outcome:(\S+)( no-effect:(
           data = read_receipt_file(receipt_path)
           assignment_id = data["assignment_id"].to_s
 
-          # Serialize load-validate-accept so concurrent finishes observe one
-          # consistent state and cannot persist contradictory terminal outcomes.
-          @store.with_lock(assignment_id) do
-            attempt = @store.load(assignment_id, attempt_id) || recover_managed_attempt(assignment_id, attempt_id)
-            raise AttemptErrors::NotFound, "Attempt '#{attempt_id}' not found" unless attempt
+          # Terminal commits hold the exclusive exclusion so an external
+          # liveness reader (with_verified_attempt holds the shared side
+          # across its whole transition) can never observe the attempt as
+          # active after the terminal event landed.
+          lifecycle_exclusion.with_exclusive(lifecycle_exclusion.assignment_key(assignment_id)) do
+            # Serialize load-validate-accept so concurrent finishes observe one
+            # consistent state and cannot persist contradictory terminal outcomes.
+            @store.with_lock(assignment_id) do
+              attempt = @store.load(assignment_id, attempt_id) || recover_managed_attempt(assignment_id, attempt_id)
+              raise AttemptErrors::NotFound, "Attempt '#{attempt_id}' not found" unless attempt
 
-            ensure_journal_consistent!(attempt) if attempt.managed?
-            raise AttemptErrors::InvalidState, "Attempt #{attempt_id} is terminal; accepted history is immutable" if attempt.terminal?
-            raise AttemptErrors::InvalidState, "Attempt #{attempt_id} is uncertain; reconcile before finishing" if attempt.uncertain?
+              ensure_journal_consistent!(attempt) if attempt.managed?
+              raise AttemptErrors::InvalidState, "Attempt #{attempt_id} is terminal; accepted history is immutable" if attempt.terminal?
+              raise AttemptErrors::InvalidState, "Attempt #{attempt_id} is uncertain; reconcile before finishing" if attempt.uncertain?
 
-            identity ||= @identity_resolver.resolve
-            live_head = candidate_head!
+              identity ||= @identity_resolver.resolve
+              live_head = candidate_head!
 
-            attempt = invalidate_stale_candidate(attempt, live_head)
+              attempt = invalidate_stale_candidate(attempt, live_head)
 
-            receipt = @verifier.verify!(
-              data,
-              attempt: attempt,
-              identity: identity,
-              live_head: live_head,
-              repo_root: @repo_root
-            )
-            if @verifier.external_effect?(receipt.operation)
-              unless attempt.managed?
-                raise AttemptErrors::InvalidState,
-                  "Taskless attempts cannot record external effects without managed evidence"
+              receipt = @verifier.verify!(
+                data,
+                attempt: attempt,
+                identity: identity,
+                live_head: live_head,
+                repo_root: @repo_root
+              )
+              if @verifier.external_effect?(receipt.operation)
+                unless attempt.managed?
+                  raise AttemptErrors::InvalidState,
+                    "Taskless attempts cannot record external effects without managed evidence"
+                end
+
+                require_review_evidence(attempt, live_head)
               end
 
-              require_review_evidence(attempt, live_head)
+              accept(attempt, receipt, live_head)
             end
-
-            accept(attempt, receipt, live_head)
           end
         end
 
@@ -512,24 +571,27 @@ input:#{Regexp.escape(request.fetch("input_digest"))} outcome:(\S+)( no-effect:(
           probe = @store.find(attempt_id) || recover_managed_attempt(nil, attempt_id)
           raise AttemptErrors::NotFound, "Attempt '#{attempt_id}' not found" unless probe
 
-          @store.with_lock(probe.binding.assignment_id) do
-            attempt = @store.load(probe.binding.assignment_id, attempt_id) ||
-              recover_managed_attempt(probe.binding.assignment_id, attempt_id)
-            raise AttemptErrors::NotFound, "Attempt '#{attempt_id}' not found" unless attempt
+          # Terminal commits hold the exclusive exclusion (see finish).
+          lifecycle_exclusion.with_exclusive(lifecycle_exclusion.assignment_key(probe.binding.assignment_id)) do
+            @store.with_lock(probe.binding.assignment_id) do
+              attempt = @store.load(probe.binding.assignment_id, attempt_id) ||
+                recover_managed_attempt(probe.binding.assignment_id, attempt_id)
+              raise AttemptErrors::NotFound, "Attempt '#{attempt_id}' not found" unless attempt
 
-            derived = ensure_journal_consistent!(attempt, allow_uncertain: true) if attempt.managed?
-            # The journal is authoritative for managed attempts: uncertainty
-            # journaled after the local save drives reconciliation.
-            attempt = attempt.with(state: derived.state) if derived&.state == "uncertain" && attempt.state == "running"
+              derived = ensure_journal_consistent!(attempt, allow_uncertain: true) if attempt.managed?
+              # The journal is authoritative for managed attempts: uncertainty
+              # journaled after the local save drives reconciliation.
+              attempt = attempt.with(state: derived.state) if derived&.state == "uncertain" && attempt.state == "running"
 
-            if attempt.terminal?
-              raise AttemptErrors::InvalidState, "Attempt #{attempt_id} is terminal; accepted history is immutable"
+              if attempt.terminal?
+                raise AttemptErrors::InvalidState, "Attempt #{attempt_id} is terminal; accepted history is immutable"
+              end
+
+              return classify_running(attempt) if attempt.state == "running"
+
+              identity ||= @identity_resolver.resolve
+              resolve_uncertain(attempt, receipt_path, identity)
             end
-
-            return classify_running(attempt) if attempt.state == "running"
-
-            identity ||= @identity_resolver.resolve
-            resolve_uncertain(attempt, receipt_path, identity)
           end
         end
 

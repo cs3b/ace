@@ -8,16 +8,16 @@ module Ace
       # The standing-duty projection (spec 8wm.t.y21 §7; contract of the
       # deployed hitl_status/duty surface): pending answerable requests
       # with their effect declaration visibility, plus everything the
-      # effect layer has escalated. Root-only, like the store reads it
-      # projects from.
+      # effect layer has escalated. Transport-scoped: the projection is
+      # built from data already fetched through the authenticated
+      # boundary (spec 8wq.t.34i).
       module Duty
         module_function
 
-        def project(store)
-          store.require_root!("duty")
+        def project(pending:, states:)
           {
-            "pending" => store.pending.map { |value| pending_entry(value) },
-            "escalated" => store.states.select do |record|
+            "pending" => pending.map { |value| pending_entry(value) },
+            "escalated" => states.select do |record|
               record["effect_state"] == Effects::OUTCOME_ESCALATED
             end
           }

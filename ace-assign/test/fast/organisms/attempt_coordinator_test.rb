@@ -1039,6 +1039,113 @@ end
         end
         assert_includes error.message, "was pruned"
       end
+
+      # ---- verified attempt authority (HITL boundary, spec 8wq.t.34i) ----
+
+      def test_verified_attempt_yields_the_managed_attempt_under_exact_authority
+        coordinator = build_coordinator
+        assignment = create_assignment
+        attempt = coordinator.start(assignment_id: assignment.id, step: "010", project_id: "ace")
+
+        yielded = nil
+        coordinator.with_verified_attempt(
+          assignment_id: assignment.id, attempt_id: attempt.attempt_id,
+          project_id: "ace", requester: "mc"
+        ) { |verified| yielded = verified }
+        assert_equal attempt.attempt_id, yielded.attempt_id
+        assert_equal "mc", yielded.binding.actor
+      end
+
+      def test_verified_attempt_rejects_unknown_ended_replaced_and_mismatched_authority
+        coordinator = build_coordinator
+        assignment = create_assignment
+        attempt = coordinator.start(assignment_id: assignment.id, step: "010", project_id: "ace")
+
+        error = assert_raises(AttemptErrors::NotFound) do
+          coordinator.with_verified_attempt(
+            assignment_id: assignment.id, attempt_id: "nope01",
+            project_id: "ace", requester: "mc"
+          ) { flunk "must not yield" }
+        end
+        assert_includes error.message, "not found"
+
+        # Wrong project never acquires authority.
+        error = assert_raises(AttemptErrors::ReceiptRejected) do
+          coordinator.with_verified_attempt(
+            assignment_id: assignment.id, attempt_id: attempt.attempt_id,
+            project_id: "other", requester: "mc"
+          ) { flunk "must not yield" }
+        end
+        assert_includes error.message, "active managed attempt"
+
+        # A different requester (even a trusted coordinator actor) never
+        # acquires another actor's attempt authority.
+        error = assert_raises(AttemptErrors::UnauthorizedIdentity) do
+          coordinator.with_verified_attempt(
+            assignment_id: assignment.id, attempt_id: attempt.attempt_id,
+            project_id: "ace", requester: "someone-else"
+          ) { flunk "must not yield" }
+        end
+        assert_includes error.message, "does not own"
+
+        # An ended attempt is dead authority: finish, then verify must fail.
+        coordinator.finish(attempt_id: attempt.attempt_id, receipt_path: build_receipt(attempt))
+        error = assert_raises(AttemptErrors::ReceiptRejected) do
+          coordinator.with_verified_attempt(
+            assignment_id: assignment.id, attempt_id: attempt.attempt_id,
+            project_id: "ace", requester: "mc"
+          ) { flunk "must not yield" }
+        end
+        assert_includes error.message, "active managed attempt"
+
+        # A replaced attempt (a fresh writer after the terminal one) cannot
+        # resurrect authority for the replaced attempt id.
+        replacement = coordinator.start(assignment_id: assignment.id, step: "010", project_id: "ace")
+        refute_equal attempt.attempt_id, replacement.attempt_id
+        assert_raises(AttemptErrors::ReceiptRejected) do
+          coordinator.with_verified_attempt(
+            assignment_id: assignment.id, attempt_id: attempt.attempt_id,
+            project_id: "ace", requester: "mc"
+          ) { flunk "must not yield" }
+        end
+      end
+
+      def test_verified_attempt_blocks_terminal_commit_until_the_transition_completes
+        coordinator = build_coordinator
+        assignment = create_assignment
+        attempt = coordinator.start(assignment_id: assignment.id, step: "010", project_id: "ace")
+
+        sequence = Queue.new
+        holder = Thread.new do
+          coordinator.with_verified_attempt(
+            assignment_id: assignment.id, attempt_id: attempt.attempt_id,
+            project_id: "ace", requester: "mc"
+          ) do
+            sequence << :authority_held
+            sleep 0.3
+          end
+          sequence << :authority_released
+        end
+
+        assert_equal :authority_held, sequence.pop
+        finisher = Thread.new do
+          coordinator.finish(attempt_id: attempt.attempt_id, receipt_path: build_receipt(attempt))
+          sequence << :terminal_committed
+        end
+
+        holder.join
+        assert_equal :authority_released, sequence.pop
+        assert_equal :terminal_committed, sequence.pop
+        finisher.join
+
+        # After the terminal commit, the attempt no longer grants authority.
+        assert_raises(AttemptErrors::ReceiptRejected) do
+          coordinator.with_verified_attempt(
+            assignment_id: assignment.id, attempt_id: attempt.attempt_id,
+            project_id: "ace", requester: "mc"
+          ) { flunk "must not yield" }
+        end
+      end
     end
   end
 end

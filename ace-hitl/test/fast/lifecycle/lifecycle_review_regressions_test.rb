@@ -47,7 +47,7 @@ class LifecycleReviewRegressionsTest < AceHitlTestCase
       requester.create(**request_args)
       reader = lambda do |_limit|
         requester.cancel("hitl001")
-        requester.create(**request_args(kind: "otp"))
+        requester.create(**request_args(kind: "otp", otp: otp_context))
         "approved"
       end
 

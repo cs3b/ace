@@ -15,7 +15,7 @@ module Ace
         # lab-side; this client consumes the daemon's narrow projection
         # and fails closed on every doubt. Confined here by the A1 §8
         # guard — the generic lifecycle never sees this class.
-        class DaemonBinding
+        class DaemonBinding < Lifecycle::Binding
           LIVE_ATTEMPT_STATES = %w[reserved starting working].freeze
           DAEMON_ATTEMPT_OWNER = "labd"
           MAX_REPLY_BYTES = 64 * 1024
@@ -29,7 +29,9 @@ module Ace
             @identity = identity
           end
 
-          def validate_request(work:, attempt:, project:, requester:)
+          def validate_request(work: nil, assignment: nil, attempt:, project:, requester:)
+            raise Lifecycle::BindingError, "the Work binding does not accept managed assignments" if assignment
+
             work_value, record = query(work, attempt)
             unless work_value["id"] == work && work_value["project"] == project &&
                 work_value["active_attempt"] == attempt
@@ -38,13 +40,15 @@ module Ace
             validate_record(work, attempt, project, requester, record, work_value)
           end
 
-          def require_active(work:, attempt:)
+          def require_active(work: nil, assignment: nil, attempt:, project: nil, requester: nil)
+            raise Lifecycle::BindingError, "the Work binding does not accept managed assignments" if assignment
+
             _work_value, record = query(work, attempt)
             unless record["work"] == work && record["id"] == attempt
-              raise Lifecycle::BindingError, "HITL Attempt cannot be verified against its Work"
+              raise Lifecycle::EndedAttemptError, "HITL Attempt cannot be verified against its Work"
             end
             unless LIVE_ATTEMPT_STATES.include?(record["state"].to_s)
-              raise Lifecycle::BindingError, "HITL Attempt is no longer active"
+              raise Lifecycle::EndedAttemptError, "HITL Attempt is no longer active"
             end
             nil
           end

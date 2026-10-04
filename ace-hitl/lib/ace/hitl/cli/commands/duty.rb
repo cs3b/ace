@@ -13,13 +13,13 @@ module Ace
           include Ace::Support::Cli::Base
           include LifecycleCommand
 
-          desc "Project pending and escalated HITL requests (host-broker operation)"
+          desc "Project pending and escalated HITL requests (transport operation)"
 
           option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
 
           def call(**options)
-            emit(Lifecycle::Duty.project(lifecycle_store))
-          rescue Lifecycle::Error => e
+            emit(Lifecycle::Duty.project(pending: lifecycle_client.pending, states: lifecycle_client.states))
+          rescue Lifecycle::Error, Providers::ProviderUnavailableError => e
             raise_lifecycle_error(e.message)
           end
         end

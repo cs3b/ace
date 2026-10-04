@@ -32,8 +32,10 @@ module Ace
         # the store re-applies the declaration checks so direct API use
         # cannot bypass the bounds. Declarations are never rewritten.
         def validate_declaration!(effect)
-          match = effect[:match]&.to_s
-          cwd = (effect[:cwd] || effect[:effect_cwd])&.to_s
+          # Declarations arrive symbol-keyed in-process and string-keyed
+          # over the boundary protocol; both shapes are the same record.
+          match = field(effect, :match)&.to_s
+          cwd = (field(effect, :cwd) || field(effect, :effect_cwd))&.to_s
           # cwd is a required declaration field (spec §5: {argv:, cwd:,
           # match:, timeout_s:}). A cwd-less declaration would otherwise
           # pass validation and fail at answer time as a misleading
@@ -44,22 +46,28 @@ module Ace
           end
           Atoms::HitlEffectValidator.validate!(
             match: match,
-            effect_args: Array(effect[:effect_args] || effect[:argv]).map(&:to_s),
+            effect_args: Array(field(effect, :effect_args) || field(effect, :argv)).map(&:to_s),
             effect_cwd: cwd,
-            effect_timeout: (effect[:timeout_s] || effect[:effect_timeout]).to_s
+            effect_timeout: (field(effect, :timeout_s) || field(effect, :effect_timeout)).to_s
           )
         rescue Atoms::HitlEffectValidator::ValidationError => e
           raise DeclarationError, e.message
         end
 
+        # Symbol-or-string field read (the boundary protocol stringifies
+        # request params; spec 8wq.t.34i).
+        def field(effect, name)
+          effect[name] || effect[name.to_s]
+        end
+
         # The persisted record shape, byte-compatible with the deployed
         # contract: {argv:, cwd:, match:, timeout_s:}.
         def normalized_declaration(effect)
-          timeout = effect[:timeout_s] || effect[:effect_timeout] || DEFAULT_TIMEOUT_S
+          timeout = field(effect, :timeout_s) || field(effect, :effect_timeout) || DEFAULT_TIMEOUT_S
           {
-            "argv" => Array(effect[:effect_args] || effect[:argv]).map(&:to_s),
-            "cwd" => (effect[:cwd] || effect[:effect_cwd]).to_s,
-            "match" => effect[:match]&.to_s,
+            "argv" => Array(field(effect, :effect_args) || field(effect, :argv)).map(&:to_s),
+            "cwd" => (field(effect, :cwd) || field(effect, :effect_cwd)).to_s,
+            "match" => field(effect, :match)&.to_s,
             "timeout_s" => Integer(timeout)
           }
         end
@@ -71,9 +79,14 @@ module Ace
           declaration = value["effect"]
           return nil unless declaration.is_a?(Hash) && Array(declaration["argv"]).any?
 
-          if !identity.root? && requester_uid != identity.euid
-            raise Lifecycle::PermissionError,
+          # The permission check happens INSIDE the recorded attempt (an
+          # escalation outcome, never an escape after the answer was
+          # relayed — review 8x333sqr; the message keeps the drop
+          # contract explicit).
+          permission_error = if !identity.root? && requester_uid != identity.euid
+            Lifecycle::PermissionError.new(
               "effect callback requires the requester's identity and root authority to drop to it"
+            )
           end
 
           match_ok = declaration["match"].nil? || fullmatch?(declaration["match"], answer)
@@ -87,6 +100,8 @@ module Ace
           if match_ok
             start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
             begin
+              raise permission_error if permission_error
+
               status, timed_out = execute(
                 declaration, answer, requester_uid, requester_gid, spawner,
                 group_dropper: group_dropper
@@ -98,6 +113,16 @@ module Ace
               # It is an escalation outcome exactly like a timeout or a
               # nonzero exit (spec §5; review F2 on W696).
               attempt["error"] = e.class.name
+              status = nil
+              timed_out = false
+            rescue Lifecycle::PermissionError => e
+              # A boundary service that cannot drop to the requester
+              # (non-root transport peer) cannot run requester-uid
+              # callbacks: the failure escalates like any other outcome,
+              # the delivered answer stays relayed, and the operator
+              # signal is preserved (review 8x327buf; the named-operation
+              # executor is the gad.2 acceptance).
+              attempt["error"] = "#{e.class.name}: #{e.message}"
               status = nil
               timed_out = false
             end

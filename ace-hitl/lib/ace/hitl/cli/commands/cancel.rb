@@ -23,8 +23,8 @@ module Ace
           option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
 
           def call(id:, **options)
-            emit(lifecycle_store.cancel(id, reason: options[:reason] || ""))
-          rescue Lifecycle::Error => e
+            emit(lifecycle_client.cancel(id, reason: options[:reason] || ""))
+          rescue Lifecycle::Error, Providers::ProviderUnavailableError => e
             raise_lifecycle_error(e.message)
           end
         end
