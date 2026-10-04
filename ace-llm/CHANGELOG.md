@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.42.0] - 2026-09-29
 
+### Fixed
+- Execution evidence redacts `Authorization` headers carrying Bearer and Basic credentials in addition to raw token forms.
+
 ### Added
 - `Ace::LLM::Models::ExecutionEvidence`: structured, immutable record of how a CLI provider execution actually ended (outcome kind, invocation correlation ID, configured deadline, monotonic elapsed time, exit status/signal, bounded output excerpts). `Ace::LLM::ProviderError` instances can now carry it via `execution_evidence`.
 
