@@ -2,9 +2,7 @@
 
 require "securerandom"
 require "ace/hitl/contract"
-require_relative "lab/daemon_binding"
 require_relative "lab/assignment_binding"
-require_relative "lab/composite_binding"
 require_relative "../lifecycle/store"
 require_relative "../lifecycle/policy"
 require_relative "../lifecycle/client"
@@ -81,7 +79,7 @@ module Ace
 
         # Local event + relay request in ONE operation. The ref is
         # REQUIRED and must be validated by the caller before this call.
-        def ask(question:, ref:, attempt:, work: nil, assignment: nil, title: nil,
+        def ask(question:, attempt:, assignment:, title: nil,
           kind: "text", otp: nil, project: DEFAULT_PROJECT, harness: DEFAULT_HARNESS,
           plan: DEFAULT_PLAN, effect: {})
           effect = effect.to_h
@@ -93,9 +91,8 @@ module Ace
           # (spec 8wq.t.34i): requesters never write shared store files.
           # An injected store stays available for unit-level wiring.
           begin
-            boundary.create(
+            created = boundary.create(
               id: request_id,
-              work: work,
               assignment: assignment,
               attempt: attempt,
               kind: kind,
@@ -107,7 +104,14 @@ module Ace
               ace_hitl_id: event.id,
               effect: effect_declared?(effect) ? effect : nil
             )
-          rescue Lifecycle::Error => e
+            envelope = Contract::ManagedEnvelope.load(created.fetch("envelope"), expected: {
+              request_id: request_id, assignment_id: assignment, attempt_id: attempt, project: project,
+              correlation_id: request_id, kind: kind
+            })
+            address = envelope["reverse"]
+            raise Lifecycle::BindingError, "managed ask has no verified native reverse address" unless address
+            ref = Ref.new(session: address.fetch("session"), pane: address.fetch("pane"))
+          rescue Lifecycle::Error, Contract::InvalidEnvelope, KeyError => e
             raise ProviderUnavailableError,
               "#{e.message}; local HITL event #{event.id} was created but never bound to a " \
               "Lab request (orphan) - inspect it with ace-hitl show #{event.id} and delete " \
@@ -124,7 +128,7 @@ module Ace
             "lab_request_effect" => effect_declared?(effect) ? "declared" : "none"
           })
 
-          AskResult.new(event_id: event.id, request_id: request_id)
+          AskResult.new(event_id: event.id, request_id: request_id, ref: ref)
         end
 
         # Contract defined in spec §1.2; the herdr push delivery itself

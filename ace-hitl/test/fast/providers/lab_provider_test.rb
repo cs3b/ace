@@ -19,7 +19,7 @@ class LabProviderTest < AceHitlTestCase
       %w[requests secrets answers public effects].each do |dir|
         FileUtils.mkdir_p(File.join(tmp, dir))
       end
-      store = make_store(root: tmp, identity: root_identity)
+      store = make_store(root: tmp, identity: root_identity, binding: LifecycleFixtures::TestBinding.new(reverse: ref.to_h.transform_keys(&:to_s)))
       provider = Ace::Hitl::Providers::Lab.new(store: store, manager: pinned_manager(tmp))
       yield provider, tmp, store
     end
@@ -44,16 +44,15 @@ class LabProviderTest < AceHitlTestCase
     with_provider_store do |provider, tmp, store|
       result = provider.ask(
         question: "Proceed with deploy?",
-        ref: ref,
-        work: "W685",
-        attempt: "A-a73ebdaeb811210d51e0251e",
+        assignment: "assign685",
+        attempt: "attempt685",
         effect: {match: nil, effect_args: [], effect_cwd: nil, effect_timeout: nil}
       )
 
       assert_match(/\Ahitl-[0-9a-f]{16}\z/, result.request_id)
       assert_path_exists File.join(tmp, "requests", "#{result.request_id}.json")
       record = JSON.parse(File.read(File.join(tmp, "requests", "#{result.request_id}.json")))
-      assert_equal "W685", record["work"]
+      assert_equal "assign685", record["assignment"]
       assert_equal "Proceed with deploy?", record["question"]
       assert_equal result.event_id, record["ace_hitl_id"]
       assert_path_exists File.join(tmp, "public", "#{result.request_id}.json")
@@ -76,9 +75,8 @@ class LabProviderTest < AceHitlTestCase
       result = provider.ask(
         question: "Ship without tests?",
         title: nil,
-        ref: ref,
-        work: "W685",
-        attempt: "A-a73ebdaeb811210d51e0251e",
+        assignment: "assign685",
+        attempt: "attempt685",
         effect: {match: nil, effect_args: ["/bin/false"], effect_cwd: tmp, effect_timeout: nil}
       )
 
@@ -103,13 +101,12 @@ class LabProviderTest < AceHitlTestCase
       error = assert_raises(Ace::Hitl::Providers::ProviderUnavailableError) do
         provider.ask(
           question: "Orphaned?",
-          ref: ref,
-          work: "BAD",
-          attempt: "A-a73ebdaeb811210d51e0251e"
+            assignment: "BAD",
+          attempt: "attempt685"
         )
       end
 
-      assert_match(/requires a Work id or a managed assignment binding/, error.message)
+      assert_match(/requires the exact managed assignment and attempt ids/, error.message)
       orphan_id = error.message[/HITL event (\S+) was created/, 1]
       refute_nil orphan_id, "error must surface the orphan local event id"
 

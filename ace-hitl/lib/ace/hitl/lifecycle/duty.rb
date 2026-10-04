@@ -26,7 +26,6 @@ module Ace
         def pending_entry(value)
           {
             "id" => value["id"],
-            "work" => value["work"],
             "attempt" => value["attempt"],
             "project" => value["project"],
             "harness" => value["harness"],

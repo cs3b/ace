@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "ace/hitl/contract/secret_gate"
+
 module Ace
   module Hitl
     module Lifecycle
@@ -13,8 +15,6 @@ module Ace
         SECRET = %w[otp].freeze
 
         REQUEST_ID = /\A[A-Za-z0-9_-]{6,64}\z/
-        WORK_ID = /\AW[0-9]+\z/
-        ATTEMPT_ID = /\AA-[0-9a-f]{24}\z/
         # Compact managed identifiers (ADR-030): ace-assign assignment and
         # attempt ids are Base36 timestamp ids plus optional local suffix.
         COMPACT_ID = /\A[0-9a-z][0-9a-z]{4,63}\z/
@@ -32,13 +32,7 @@ module Ace
 
         # Secret-shape scrubbing: tokens that must never enter a
         # non-OTP answer or a channel message.
-        SECRET_SHAPED = Regexp.new(
-          "(?:github_pat_[A-Za-z0-9_]+|gh[pousr]_[A-Za-z0-9]+|" \
-          "sk-[A-Za-z0-9_-]{20,}|-----BEGIN [A-Z ]+PRIVATE KEY-----|" \
-          "\\b(?:otp|token|secret|password)\\s*[:=]\\s*\\S+|" \
-          "\\b[0-9]{6}\\b)",
-          Regexp::IGNORECASE
-        ).freeze
+        SECRET_SHAPED = Ace::Hitl::Contract::SecretGate::PATTERN
 
         class << self
           def secret?(kind)

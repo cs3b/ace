@@ -24,7 +24,7 @@ class LifecycleStoreTest < AceHitlTestCase
       error = assert_raises(Ace::Hitl::Lifecycle::StateError) do
         store.create(**request_args(attempt: ""))
       end
-      assert_match(/exact active Attempt id/, error.message)
+      assert_match(/exact managed assignment and attempt ids/, error.message)
       assert_empty Dir.children(File.join(root, "requests"))
     end
   end
@@ -66,7 +66,7 @@ class LifecycleStoreTest < AceHitlTestCase
   def test_binding_rejection_fails_closed_without_creating_a_request
     with_lifecycle_root do |root|
       binding = LifecycleFixtures::TestBinding.new(
-        on_validate: ->(work:, attempt:, project:, requester:) {
+        on_validate: ->(assignment:, attempt:, project:, requester:) {
           raise Ace::Hitl::Lifecycle::BindingError,
             "HITL request is not bound to the exact active Work Attempt"
         }
@@ -134,7 +134,7 @@ class LifecycleStoreTest < AceHitlTestCase
   def test_deliver_rejects_terminal_attempt_cancels_and_fails_closed
     with_lifecycle_root do |root|
       binding = LifecycleFixtures::TestBinding.new(
-        on_active: ->(work:, attempt:) {
+        on_active: ->(assignment:, attempt:) {
           raise Ace::Hitl::Lifecycle::EndedAttemptError, "HITL Attempt is no longer active"
         }
       )
@@ -154,7 +154,7 @@ class LifecycleStoreTest < AceHitlTestCase
   def test_deliver_rejects_mismatched_attempt
     with_lifecycle_root do |root|
       binding = LifecycleFixtures::TestBinding.new(
-        on_active: ->(work:, attempt:) {
+        on_active: ->(assignment:, attempt:) {
           raise Ace::Hitl::Lifecycle::EndedAttemptError,
             "HITL request is not bound to the exact active Work Attempt"
         }
@@ -217,7 +217,7 @@ class LifecycleStoreTest < AceHitlTestCase
       request_path = File.join(root, "locks", "hitl001.lock")
       gated = nil
       binding = LifecycleFixtures::TestBinding.new(
-        on_active: ->(work:, attempt:) {
+        on_active: ->(assignment:, attempt:) {
           File.open(request_path, "r") do |probe|
             # The stop-side cancellation protocol must be excluded:
             # a non-blocking exclusive acquisition fails.
@@ -238,7 +238,7 @@ class LifecycleStoreTest < AceHitlTestCase
   def test_consume_rejects_attempt_terminalized_before_answer
     with_lifecycle_root do |root|
       binding = LifecycleFixtures::TestBinding.new(
-        on_active: ->(work:, attempt:) {
+        on_active: ->(assignment:, attempt:) {
           raise Ace::Hitl::Lifecycle::EndedAttemptError, "HITL Attempt is no longer active"
         }
       )
@@ -338,7 +338,7 @@ class LifecycleStoreTest < AceHitlTestCase
       assert_equal true, cancelled["cancelled"]
       public = JSON.parse(File.read(File.join(root, "public", "hitl001.json")))
       assert_equal "cancelled", public["state"]
-      assert_equal "A-#{"a" * 24}", public["attempt"]
+      assert_equal "attempt500", public["attempt"]
     end
   end
 
@@ -416,7 +416,7 @@ class LifecycleStoreTest < AceHitlTestCase
       assert_equal "cancelled", public["state"]
       assert_equal "lab-admin", public["cancelled_by"]
       assert_equal "operator stopped the publication", public["reason"]
-      assert_equal "A-#{"a" * 24}", public["attempt"]
+      assert_equal "attempt500", public["attempt"]
 
       root_store = make_store(root: root, identity: root_identity)
       error = assert_raises(Ace::Hitl::Lifecycle::StateError) do

@@ -51,7 +51,7 @@ module Ace
           @receipt_public_key = receipt_public_key
         end
 
-        def enqueue(event:, attempt:, ref:, payload:)
+        def enqueue(event:, attempt:, ref:, payload:, managed_envelope: nil)
           validate_id!(event, "event")
           validate_id!(attempt, "attempt")
           raise ValidationError, "trusted receipt public key is unavailable" unless @receipt_public_key
@@ -67,9 +67,18 @@ module Ace
 
           address = address_for(ref)
           digest = Digest::SHA256.hexdigest(payload)
+          envelope = if managed_envelope
+            Ace::Hitl::Contract::ManagedEnvelope.load(managed_envelope, expected: {
+              attempt_id: attempt, payload_sha256: digest,
+              reverse: {"schema" => Ace::Hitl::Providers::Ref::SCHEMA, "session" => address.session, "pane" => address.pane}
+            })
+          end
           with_event(event) do |record|
             if record
               validate_match!(record, attempt, address, digest)
+              unless record.inbox["managed_envelope"] == envelope
+                raise ValidationError, "managed envelope conflicts with immutable inbox event"
+              end
               next public_record(record)
             end
 
@@ -92,11 +101,14 @@ module Ace
               answer_digest: digest, answer: payload, state: "queued",
               inbox: {"attempt_id" => attempt, "claim_generation" => 0,
                 "receipt_key_sha256" => key_fingerprint,
+                "managed_envelope" => envelope,
                 "target" => target, "binding" => target.merge("payload_sha256" => digest)}
             )
             save(record)
             public_record(record)
           end
+        rescue Ace::Hitl::Contract::InvalidEnvelope => e
+          raise ValidationError, e.message
         end
 
         def status(event:)
@@ -499,6 +511,7 @@ module Ace
           {"event_id" => record.event_id, "attempt_id" => record.inbox["attempt_id"],
            "session" => record.session, "pane" => record.pane,
            "payload_sha256" => record.answer_digest, "state" => record.state,
+           "managed_envelope" => record.inbox["managed_envelope"],
            "receipt_key_sha256" => record.inbox["receipt_key_sha256"],
            "claim_generation" => record.inbox["claim_generation"],
            "claim_owner" => record.inbox["claim_owner"],

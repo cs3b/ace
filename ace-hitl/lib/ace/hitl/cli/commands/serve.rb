@@ -35,10 +35,7 @@ module Ace
                 "fail every client endpoint verification"
               )
             end
-            binding_policy = Providers::Lab::CompositeBinding.new(
-              assignment: Providers::Lab.assignment_binding(repo_root: options[:repo_root]),
-              work: Providers::Lab::DaemonBinding.new
-            )
+            binding_policy = Providers::Lab.assignment_binding(repo_root: options[:repo_root])
             service = Lifecycle::Service.new(
               root: store_root(options),
               binding: binding_policy,

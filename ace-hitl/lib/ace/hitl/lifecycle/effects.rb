@@ -172,7 +172,7 @@ module Ace
 
           sink.call(
             request_id: value["id"],
-            work: value["work"],
+            assignment: value["assignment"],
             attempt: value["attempt"],
             project: value["project"],
             outcome: attempt["outcome"]

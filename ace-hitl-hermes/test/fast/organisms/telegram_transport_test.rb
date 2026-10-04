@@ -14,9 +14,14 @@ class TelegramTransportTest < AceHermesTestCase
     end
 
     def add(id, secret: false)
-      @requests[id] = {"id" => id, "attempt" => "W651.1", "work" => "W651", "project" => "lab",
+      @requests[id] = {"id" => id, "attempt" => "attempt651", "assignment" => "assign651", "project" => "lab",
                        "requester" => "agent", "kind" => secret ? "otp" : "text",
                        "sensitive" => secret, "question" => "Proceed?", "state" => "created"}
+      envelope = {"schema" => Ace::Hitl::Contract::ManagedEnvelope::SCHEMA, "request_id" => id,
+        "project" => "lab", "assignment_id" => "assign651", "attempt_id" => "attempt651", "requester" => "agent",
+        "correlation_id" => id, "kind" => secret ? "otp" : "text", "reverse" => nil}
+      envelope["payload_sha256"] = Digest::SHA256.hexdigest("Proceed?") unless secret
+      @requests[id]["envelope"] = envelope
     end
 
     def read(id)

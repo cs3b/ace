@@ -21,13 +21,19 @@ module Ace
             @repo_root = repo_root
           end
 
-          def validate_request(work: nil, assignment: nil, attempt:, project:, requester:)
-            with_verified(assignment, attempt, project, requester) { nil }
+          def validate_request(assignment:, attempt:, project:, requester:, caller_pid: nil)
+            unless caller_pid.is_a?(Integer) && caller_pid.positive?
+              raise Lifecycle::BindingError, "kernel requester process identity is unavailable"
+            end
+            with_verified(assignment, attempt, project, requester) do
+              binding = coordinator.runtime_binding(attempt_id: attempt, caller_pid: caller_pid)
+              {"schema" => Ref::SCHEMA, "session" => binding.fetch("session"), "pane" => binding.fetch("pane")}
+            end
           end
 
           # The liveness scope: the assignment exclusion is HELD across
           # the yielded transition commit.
-          def with_active(work: nil, assignment: nil, attempt:, project: nil, requester: nil)
+          def with_active(assignment:, attempt:, project: nil, requester: nil)
             with_verified(assignment, attempt, project, requester) { yield }
           end
 

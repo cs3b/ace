@@ -185,11 +185,24 @@ module Ace
 
         def authenticate!(socket)
           peer_uid, peer_gid = peer_credentials(socket)
-          Peer.for_uid(peer_uid, gid: peer_gid)
+          Peer.for_uid(peer_uid, gid: peer_gid, pid: peer_pid(socket))
         end
 
         def peer_credentials(socket)
           socket.getpeereid
+        end
+
+        # Kernel attribution only. Darwin sys/un.h defines SOL_LOCAL=0,
+        # LOCAL_PEERPID=2; Linux SO_PEERCRED exposes pid/uid/gid. Unsupported
+        # platforms keep nil, so exact requester claims can fail closed.
+        def peer_pid(socket)
+          if RUBY_PLATFORM.include?("darwin")
+            socket.getsockopt(0, 2).int
+          elsif Socket.const_defined?(:SO_PEERCRED)
+            socket.getsockopt(Socket::SOL_SOCKET, Socket::SO_PEERCRED).data.unpack("i!3").first
+          end
+        rescue SystemCallError, IOError, SocketError
+          nil
         end
 
         def store_for(peer)

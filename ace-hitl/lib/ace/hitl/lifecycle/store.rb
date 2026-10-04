@@ -2,6 +2,7 @@
 
 require "securerandom"
 require "fileutils"
+require "ace/hitl/contract"
 require_relative "errors"
 require_relative "identity"
 require_relative "peer"
@@ -97,10 +98,10 @@ module Ace
         # validates its binding — unknown identity/authority is an
         # error, never permission.
         def create(id:, attempt:, plan:, question:, ace_hitl_id:, project: "ace", harness: "lab-admin",
-          work: nil, assignment: nil, kind: "text", options: [], effect: nil, otp: nil)
+          assignment:, kind: "text", options: [], effect: nil, otp: nil)
           requester = @identity.username
           request_id = safe_id(id)
-          binding_kind = validate_binding_ids!(work, assignment, attempt)
+          validate_binding_ids!(assignment, attempt)
           unless Kinds::SAFE_LABEL.match?(project) && Kinds::SAFE_LABEL.match?(harness)
             raise StateError, "invalid project or harness label"
           end
@@ -128,13 +129,11 @@ module Ace
             challenge = normalize_otp_challenge!(otp)
           end
 
-          validate_request_binding(binding_kind, work, assignment, attempt, project, requester)
+          reverse = validate_request_binding(assignment, attempt, project, requester)
 
           value = {
             "id" => request_id,
-            "work" => work,
             "assignment" => assignment,
-            "binding_kind" => binding_kind,
             "attempt" => attempt,
             "project" => project,
             "harness" => harness,
@@ -151,6 +150,14 @@ module Ace
           Effects.validate_declaration!(effect) if effect
           value["effect"] = Effects.normalized_declaration(effect) if effect
           value["incarnation"] = SecureRandom.hex(8)
+          envelope = {
+            "schema" => Contract::ManagedEnvelope::SCHEMA, "request_id" => request_id,
+            "project" => project, "assignment_id" => assignment, "attempt_id" => attempt,
+            "requester" => requester, "correlation_id" => request_id, "kind" => kind,
+            "reverse" => reverse
+          }
+          envelope["payload_sha256"] = Digest::SHA256.hexdigest(question) unless Kinds.secret?(kind)
+          value["envelope"] = managed_envelope!(envelope)
 
           request_path = requests_dir.join("#{request_id}.json")
           raise StateError, "HITL request already exists" if request_path.exist?
@@ -168,9 +175,9 @@ module Ace
           initialize_projection!(value)
           {
             "id" => request_id,
-            "work" => value["work"],
             "assignment" => value["assignment"],
             "attempt" => attempt,
+            "envelope" => value["envelope"],
             "requested" => true
           }
         end
@@ -183,7 +190,6 @@ module Ace
           gate_read_access!(value)
           {
             "id" => request_id,
-            "work" => value["work"],
             "assignment" => value["assignment"],
             "attempt" => value["attempt"],
             "project" => value["project"],
@@ -195,6 +201,7 @@ module Ace
             "plan" => value["plan"],
             "otp" => value["otp"],
             "requester" => value["requester"],
+            "envelope" => value["envelope"],
             "state" => public_state(request_id, value),
             "effect" => value["effect_state"]
           }
@@ -257,10 +264,10 @@ module Ace
             if answer
               return {
                 "id" => request_id,
-                "work" => value["work"],
                 "assignment" => value["assignment"],
                 "attempt" => value["attempt"],
                 "project" => value["project"],
+                "envelope" => value["envelope"],
                 "answer" => answer,
                 "sensitive" => value["sensitive"] == true
               }
@@ -300,7 +307,6 @@ module Ace
           end
           {
             "id" => request_id,
-            "work" => locked_value["work"],
             "assignment" => locked_value["assignment"],
             "attempt" => locked_value["attempt"],
             "cancelled" => true,
@@ -453,7 +459,6 @@ module Ace
           request_id = safe_id(value["id"].to_s)
           public = {
             "id" => request_id,
-            "work" => value["work"].to_s,
             "assignment" => value["assignment"].to_s,
             "attempt" => value["attempt"].to_s,
             "project" => value["project"].to_s,
@@ -461,6 +466,7 @@ module Ace
             "kind" => value["kind"].to_s,
             "state" => state,
             "created_at" => Integer(value["created_at"]),
+            "envelope" => value["envelope"],
             "updated_at" => Time.now.to_i
           }
           public["incarnation"] = value["incarnation"] if value["incarnation"]
@@ -600,26 +606,16 @@ module Ace
 
         # ---- creation helpers ----------------------------------------------
 
-        # Work ids and managed assignment ids are mutually exclusive; the
-        # attempt id format follows the binding kind. Returns the binding
-        # kind tag persisted with the request.
-        def validate_binding_ids!(work, assignment, attempt)
-          if work && assignment
-            raise StateError, "bind the request by assignment OR by work, never both"
+        def managed_envelope!(value)
+          Contract::ManagedEnvelope.load(value)
+        rescue Contract::InvalidEnvelope => e
+          raise StateError, e.message
+        end
+
+        def validate_binding_ids!(assignment, attempt)
+          unless Kinds::COMPACT_ID.match?(assignment.to_s) && Kinds::COMPACT_ID.match?(attempt.to_s)
+            raise StateError, "HITL request requires the exact managed assignment and attempt ids"
           end
-          if assignment
-            unless Kinds::COMPACT_ID.match?(assignment) && Kinds::COMPACT_ID.match?(attempt.to_s)
-              raise StateError, "HITL request requires the exact managed assignment and attempt ids"
-            end
-            return "assignment"
-          end
-          unless Kinds::WORK_ID.match?(work.to_s)
-            raise StateError, "HITL request requires a Work id or a managed assignment binding"
-          end
-          unless attempt && Kinds::ATTEMPT_ID.match?(attempt)
-            raise StateError, "HITL request requires the exact active Attempt id"
-          end
-          "work"
         end
 
         # The OTP challenge evidence (spec 8wq.t.34i): non-secret,
@@ -658,9 +654,10 @@ module Ace
            "input_digest" => input_digest, "expires_at" => expires_at}
         end
 
-        def validate_request_binding(binding_kind, work, assignment, attempt, project, requester)
-          @binding.validate_request(work: work, assignment: assignment, attempt: attempt,
-            project: project, requester: requester)
+        def validate_request_binding(assignment, attempt, project, requester)
+          @binding.validate_request(assignment: assignment, attempt: attempt,
+            project: project, requester: requester,
+            caller_pid: @identity.respond_to?(:pid) ? @identity.pid : nil)
         end
 
         # ---- role gates ------------------------------------------------------
@@ -731,13 +728,13 @@ module Ace
         def replayed_consume(terminal)
           result = {
             "id" => terminal["id"],
-            "work" => terminal["work"],
             "assignment" => terminal["assignment"],
             "attempt" => terminal["attempt"],
             "sensitive" => terminal["sensitive"] == true,
             "replay" => true
           }
           result["answer"] = terminal["answer"] unless terminal["sensitive"] == true
+          result["envelope"] = terminal["envelope"]
           result
         end
 
@@ -745,7 +742,6 @@ module Ace
           audit = terminal["audit"].is_a?(Hash) ? terminal["audit"] : {}
           {
             "id" => request_id,
-            "work" => terminal["work"],
             "assignment" => terminal["assignment"],
             "attempt" => terminal["attempt"],
             "cancelled" => true,
@@ -765,12 +761,12 @@ module Ace
             "id" => request_id,
             "incarnation" => value["incarnation"],
             "state" => state,
-            "work" => value["work"],
             "assignment" => value["assignment"],
             "attempt" => value["attempt"],
             "project" => value["project"],
             "requester" => value["requester"],
             "sensitive" => value["sensitive"] == true,
+            "envelope" => value["envelope"],
             "at" => Time.now.to_i
           }
           record["answer"] = extra[:answer] if extra[:answer]
@@ -791,7 +787,7 @@ module Ace
         # for retry (review 8x32r9b0).
         def with_live_authority!(value, requester:)
           @binding.with_active(
-            work: value["work"], assignment: value["assignment"], attempt: value["attempt"],
+            assignment: value["assignment"], attempt: value["attempt"],
             project: value["project"], requester: requester
           ) do
             yield
@@ -814,7 +810,6 @@ module Ace
         def delivered_result(value)
           {
             "id" => value["id"],
-            "work" => value["work"],
             "assignment" => value["assignment"],
             "attempt" => value["attempt"],
             "delivered" => true,

@@ -14,7 +14,7 @@ class TransportCliTest < AceHermesTestCase
 
   class Binding < L::Binding
     def validate_request(**); end
-    def require_active(**); end
+    def with_active(**); yield; end
   end
 
   class Policy

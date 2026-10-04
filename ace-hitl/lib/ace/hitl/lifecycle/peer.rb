@@ -11,21 +11,22 @@ module Ace
       # whose uid has no passwd entry is unknown identity — an error,
       # never permission.
       class Peer
-        attr_reader :uid, :gid, :username
+        attr_reader :uid, :gid, :username, :pid
 
-        def self.for_uid(uid, gid: nil)
+        def self.for_uid(uid, gid: nil, pid: nil)
           entry = Etc.getpwuid(Integer(uid))
           raise Lifecycle::PermissionError, "unknown peer identity: uid #{uid}" unless entry
 
-          new(uid: Integer(uid), gid: gid.nil? ? entry.gid : Integer(gid), username: entry.name)
+          new(uid: Integer(uid), gid: gid.nil? ? entry.gid : Integer(gid), username: entry.name, pid: pid)
         rescue ArgumentError
           raise Lifecycle::PermissionError, "unknown peer identity: uid #{uid}"
         end
 
-        def initialize(uid:, gid:, username:)
+        def initialize(uid:, gid:, username:, pid: nil)
           @uid = uid
           @gid = gid
           @username = username
+          @pid = pid.is_a?(Integer) && pid.positive? ? pid : nil
         end
 
         def root?
