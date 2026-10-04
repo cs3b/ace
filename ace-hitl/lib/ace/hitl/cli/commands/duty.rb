@@ -13,7 +13,7 @@ module Ace
           include Ace::Support::Cli::Base
           include LifecycleCommand
 
-          desc "Project pending and escalated HITL requests (host-broker operation)"
+          desc "Project pending and escalated HITL requests (transport operation)"
 
           option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
 

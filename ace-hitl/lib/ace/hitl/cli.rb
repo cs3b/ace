@@ -36,9 +36,9 @@ module Ace
         ["deliver", "Deliver an answer (stdin) to a pending HITL relay request"],
         ["consume", "Wait for and consume the answer of one own HITL relay request"],
         ["cancel", "Cancel one HITL relay request with an audited reason"],
-        ["pending", "List answerable HITL relay requests (host-broker)"],
-        ["states", "List public HITL lifecycle projections (host-broker)"],
-        ["duty", "Project pending and escalated HITL requests (host-broker)"],
+        ["pending", "List answerable HITL relay requests (transport)"],
+        ["states", "List public HITL lifecycle projections (transport)"],
+        ["duty", "Project pending and escalated HITL requests (transport)"],
         ["overseer-send", "Queue a bounded, type-tagged Overseer response (stdin)"],
         ["overseer-pending", "List queued Overseer responses (host-broker)"],
         ["overseer-ack", "Acknowledge one relayed Overseer response"]

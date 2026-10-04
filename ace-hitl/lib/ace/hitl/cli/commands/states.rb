@@ -12,7 +12,7 @@ module Ace
           include Ace::Support::Cli::Base
           include LifecycleCommand
 
-          desc "List public HITL lifecycle projections (host-broker operation)"
+          desc "List public HITL lifecycle projections (transport operation)"
 
           option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
 

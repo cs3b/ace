@@ -12,7 +12,7 @@ module Ace
       class BindingError < Error; end
 
       # The operation requires an identity the caller does not have
-      # (root-only host-broker operations, foreign-requester answers).
+      # (transport-only boundary operations, foreign-requester answers).
       class PermissionError < Error; end
 
       # The request record is unknown, already transitioned, or the
