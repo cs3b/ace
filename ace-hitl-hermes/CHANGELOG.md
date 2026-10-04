@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Installable correlated Telegram transport, explicit Captain/group registry, authenticated HITL IPC and guarded Hermes plugin assets.
+- Durable non-secret submission acknowledgements, ingress receipts, polling offsets and conservative reconciliation checkpoints.
+- Supervised single polling actor with gateway ownership checks and recovery without duplicate lifecycle effects.
+
+### Changed
+
+- Ordinary answer folder publication requires authenticated request classification; OTP and sensitive answers are refused before any file creation.
+
 ## [0.1.0] - 2026-09-27
 
 ### Added

@@ -38,7 +38,8 @@ class AceHermesTestCase < AceTestCase
       channel: name, registry: registry,
       id_generator: id_generator,
       notifier: notifier,
-      euid_provider: euid_provider
+      euid_provider: euid_provider,
+      answer_authorizer: ->(id) { {"id" => id, "kind" => "text", "sensitive" => false} }
     )
     [box, registry]
   end

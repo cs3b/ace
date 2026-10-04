@@ -12,6 +12,11 @@ require_relative "hermes/molecules/hermes_retry_policy"
 require_relative "hermes/molecules/hermes_notifications"
 require_relative "hermes/molecules/hermes_channels"
 require_relative "hermes/organisms/hermes_box"
+require_relative "hermes/transport/registry"
+require_relative "hermes/transport/journal"
+require_relative "hermes/transport/relay"
+require_relative "hermes/transport/telegram"
+require_relative "hermes/transport/poller"
 
 module Ace
   module Hitl

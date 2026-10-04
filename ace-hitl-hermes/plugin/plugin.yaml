@@ -1,0 +1,4 @@
+name: ace-hitl-hermes
+version: 0.2.0
+description: "Scoped ACE HITL Telegram replies with protected secret ingress."
+author: "cs3b"

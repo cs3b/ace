@@ -33,7 +33,7 @@ module Ace
             with_hermes_dir do |folder|
               box, = build_box(folder)
               message = box.publish(
-                kind: :answer, body: "ok", sender: "captain", timestamp: ANSWER_TS
+                kind: :question, body: "ok", sender: "captain", timestamp: ANSWER_TS
               )
               assert_match(/\A[A-Za-z0-9][A-Za-z0-9._:-]{0,63}\z/, message.id)
               assert File.exist?(File.join(folder, "#{message.id}.json"))
@@ -49,7 +49,7 @@ module Ace
                 notifier: notifier)
 
               message = box.publish(
-                kind: :answer, body: "ok", sender: "captain", timestamp: ANSWER_TS
+                kind: :question, body: "ok", sender: "captain", timestamp: ANSWER_TS
               )
 
               assert_equal "fresh-id", message.id
@@ -71,7 +71,7 @@ module Ace
 
               error = assert_raises(CollisionError) do
                 box.publish(
-                  kind: :answer, body: "ok", sender: "captain", timestamp: ANSWER_TS
+                  kind: :question, body: "ok", sender: "captain", timestamp: ANSWER_TS
                 )
               end
               assert_match(/already exists/, error.message)

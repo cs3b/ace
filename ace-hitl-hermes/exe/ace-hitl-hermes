@@ -1,0 +1,11 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require_relative "../lib/ace/hitl/hermes/cli"
+trap("INT") { exit 130 }
+begin
+  Ace::Hitl::Hermes::CLI.start(ARGV)
+rescue Ace::Support::Cli::Error => e
+  warn e.message
+  exit e.exit_code
+end

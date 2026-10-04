@@ -1,7 +1,7 @@
 # ace-hitl-hermes
 
 Folder-as-interface HITL transport plugin for the hermes relay
-(spec `8wm.t.vs1`). The shared folder between the lab and hermes **is**
+(specs `8wm.t.vs1` and `8wm.t.y24`). The shared folder between the lab and hermes **is**
 the transport:
 
 - a **message** is a file `<id>.json` in the channel folder;
@@ -17,7 +17,7 @@ tmp file + rename) without root.
 
 ## Contract
 
-- Folder contract: `ace.hitl.hermes.folder/v1` (spec `8wm.t.vs1`).
+- Folder contract: `ace.hitl.hermes.folder/v1` (specs `8wm.t.vs1` and `8wm.t.y24`).
 - Message schema: `ace.hitl.hermes.message/v1`; the machine-readable
   JSON Schema ships at
   `lib/ace/hitl/hermes/schemas/message.v1.schema.json`.
@@ -53,6 +53,7 @@ registry.default = "inbox"
 lines = []
 box = Ace::Hitl::Hermes::Organisms::HermesBox.new(
   channel: "inbox", registry: registry,
+  answer_authorizer: ->(id) { authenticated_hitl_client.read(id) },
   notifier: ->(line) { lines << line }
 )
 
@@ -69,6 +70,14 @@ result.messages.each do |msg|
   box.ack(msg.id)          # deletion IS the ACK
 end
 ```
+
+## Telegram transport
+
+The installed `ace-hitl-hermes serve` actor owns exact registered-group correlation,
+submission acknowledgements, durable ingress sequencing and conservative checkpoints.
+OTP goes directly through authenticated `ace-hitl` IPC; sensitive folder answers are
+rejected before publication. Ordinary answers require authenticated request classification.
+See [configuration, single polling owner and recovery](docs/usage.md).
 
 ## Development
 

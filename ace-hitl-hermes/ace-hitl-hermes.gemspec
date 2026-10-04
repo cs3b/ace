@@ -31,6 +31,7 @@ Gem::Specification.new do |spec|
 
   spec.files = Dir.glob(%w[
     lib/**/*
+    plugin/**/*
     handbook/**/*
     docs/**/*
     exe/*
@@ -42,6 +43,10 @@ Gem::Specification.new do |spec|
   spec.bindir = "exe"
   spec.executables = spec.files.grep(%r{\Aexe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
+
+  spec.add_dependency "ace-hitl", "~> 0.11"
+  spec.add_dependency "ace-support-cli", "~> 0.6"
+  spec.add_dependency "faraday", "~> 2.14"
 
   # Development dependencies
   spec.add_development_dependency "ace-support-test-helpers", "~> 0.14"
