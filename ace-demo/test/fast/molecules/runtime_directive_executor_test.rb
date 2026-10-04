@@ -89,6 +89,24 @@ class RuntimeDirectiveExecutorTest < AceDemoTestCase
     assert_equal [:send_command, {pane: "%3", command: "echo hi"}], adapter.calls.first
   end
 
+  def test_each_directive_resolves_its_own_runtime
+    Ace::Runtime.reset_registry!
+    tmux_adapter = FakeAdapter.new
+    herdr_adapter = FakeAdapter.new
+    Ace::Runtime.register(:tmux, -> { tmux_adapter })
+    Ace::Runtime.register(:herdr, -> { herdr_adapter })
+
+    executor = Ace::Demo::Molecules::RuntimeDirectiveExecutor.new(env: {})
+
+    executor.execute({"tmux" => {"action" => "send", "runtime" => "tmux", "pane" => "%3", "command" => "one"}}, {})
+    executor.execute({"tmux" => {"action" => "send", "runtime" => "herdr", "pane" => "p1", "command" => "two"}}, {})
+
+    assert_equal [[:send_command, {pane: "%3", command: "one"}]], tmux_adapter.calls
+    assert_equal [[:send_command, {pane: "p1", command: "two"}]], herdr_adapter.calls
+  ensure
+    Ace::Runtime.reset_registry!
+  end
+
   def test_wait_rejects_unknown_condition
     executor = build_executor(runtime: "tmux", adapter: FakeAdapter.new)
 

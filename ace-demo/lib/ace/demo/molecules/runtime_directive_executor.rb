@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "ace/runtime"
+require "ace/tmux"
 require "shellwords"
 
 module Ace
@@ -14,7 +15,6 @@ module Ace
       class RuntimeDirectiveExecutor
         LIFECYCLE_CONDITIONS = Ace::Runtime::Atoms::SendContract::LIFECYCLE_CONDITIONS
         WINDOW_CONDITIONS = %w[window-exists window-active].freeze
-        PANE_CONDITIONS = %w[pane-exists pane-exited].freeze
         DEFAULT_TIMEOUT = 10.0
 
         def initialize(runtime: nil, env: ENV, tmux_executor: nil)
@@ -55,7 +55,20 @@ module Ace
 
         private
 
-        attr_reader :env, :runtime_override, :tmux_executor
+        private
+
+        attr_reader :env, :runtime_override
+
+        # The adapter resolves per execute() call: the per-directive
+        # `runtime:` key and the caller environment are selection inputs,
+        # so a memoized adapter could route a later directive to the
+        # wrong runtime.
+        def adapter(directive, directive_env)
+          Ace::Runtime::Molecules::RuntimeSelector.new(
+            config: Ace::Runtime.config,
+            env: directive_env
+          ).resolve(explicit: directive_runtime(directive))
+        end
 
         def wait_directive(directive, directive_env)
           condition = directive.fetch("for")
@@ -77,11 +90,11 @@ module Ace
 
         def send_directive(directive, directive_env)
           pane = required_target(directive, "pane")
-          adapter = adapter(directive, directive_env)
+          runtime_adapter = adapter(directive, directive_env)
           if directive["command"]
-            adapter.send_command(pane: pane, command: directive["command"])
+            runtime_adapter.send_command(pane: pane, command: directive["command"])
           else
-            adapter.send_keys(pane: pane, keys: [directive.fetch("key")])
+            runtime_adapter.send_keys(pane: pane, keys: [directive.fetch("key")])
           end
         end
 
@@ -90,13 +103,6 @@ module Ace
           raise ArgumentError, "Invalid tmux directive: missing #{kind}" if target.empty?
 
           target
-        end
-
-        def adapter(directive, directive_env)
-          @adapter ||= Ace::Runtime::Molecules::RuntimeSelector.new(
-            config: Ace::Runtime.config,
-            env: directive_env
-          ).resolve(explicit: directive_runtime(directive))
         end
 
         # Selection precedence mirrors the contract selector: per-directive
