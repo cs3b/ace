@@ -628,6 +628,7 @@ input:#{Regexp.escape(request.fetch("input_digest"))} outcome:(\S+)( no-effect:(
               bytes = File.binread(receipt_path)
               receipt = JSON.parse(bytes)
               result = inbox.reconcile(event: event_id, receipt: receipt,
+                expected_registration: registered.fetch("payload"),
                 signed_bytes: bytes, signature: File.binread("#{receipt_path}.sig"))
               return result if result["reconciliation_refusal"]
 

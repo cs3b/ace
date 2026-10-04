@@ -74,10 +74,17 @@ module Ace
         # Platforms lacking either exact facility remain unobservable.
         def native_birth(pid)
           if RUBY_PLATFORM.include?("linux")
-            stat = File.read("/proc/#{pid}/stat")
-            fields = stat.sub(/\A.*\) /, "").split
+            stat = File.read("/proc/#{pid}/stat").b
+            # comm is parenthesized and may itself contain parentheses or
+            # newlines. The final closing parenthesis precedes numeric fields.
+            match = stat.match(/\A#{pid} \(.*\) ([^\n]+)\n?\z/m)
+            return nil unless match
+            fields = match[1].split
+            ticks = fields[19]
+            return nil unless fields[0]&.match?(/\A[A-Za-z]\z/) && ticks&.match?(/\A[0-9]+\z/)
             boot = File.read("/proc/sys/kernel/random/boot_id").strip
-            "linux:#{boot}:#{fields.fetch(19)}"
+            return nil if boot.empty?
+            "linux:#{boot}:#{ticks}"
           elsif RUBY_PLATFORM.include?("darwin")
             library = Fiddle.dlopen("/usr/lib/libproc.dylib")
             function = Fiddle::Function.new(library["proc_pidinfo"],

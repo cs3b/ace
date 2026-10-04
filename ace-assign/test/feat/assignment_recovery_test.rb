@@ -257,4 +257,35 @@ class AssignmentRecoveryTest < AceAssignTestCase
     assert_equal "reconcile-required", snapshot["attempts"].first["decision"]
     assert_equal 1, @native.calls.length
   end
+  def test_replacement_after_registration_check_cannot_settle_another_attempt
+    transport = inbox
+    original_status = transport.method(:status)
+    deliveries = @deliveries
+    event_id = @event
+    replaced = false
+    transport.define_singleton_method(:status) do |event:|
+      observed = original_status.call(event: event)
+      unless replaced
+        H::Molecules::DeliveryRecordStore.with_lock(deliveries, event_id) do
+          record = H::Molecules::DeliveryRecordStore.load(deliveries, event_id)
+          data = JSON.parse(JSON.generate(record.to_h))
+          data['inbox']['attempt_id'] = 'substituted-attempt'
+          H::Molecules::DeliveryRecordStore.save(H::Models::DeliveryRecord.from_h(data), deliveries)
+        end
+        replaced = true
+      end
+      observed
+    end
+    proof = @proof.merge('attempt_id' => 'substituted-attempt')
+    refused = false
+    begin
+      result = reconcile(proof, transport: transport)
+      refused = result['reconciliation_refusal'] || result['state'] != 'completed'
+    rescue A::AttemptErrors::ReceiptRejected
+      refused = true
+    end
+    assert refused, 'Consumer settled substituted attempt after registration status check'
+    assert_empty events
+    assert_equal 'uncertain', H::Molecules::DeliveryRecordStore.load(@deliveries, @event).state
+  end
 end

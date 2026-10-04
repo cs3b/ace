@@ -192,10 +192,18 @@ module Ace
           end
         end
 
-        def reconcile(event:, receipt:, signed_bytes: nil, signature: nil)
+        def reconcile(event:, receipt:, signed_bytes: nil, signature: nil, expected_registration: nil)
           validate_id!(event, "event")
           with_event(event) do |record|
             raise ValidationError, "unknown inbox event: #{event}" unless record&.inbox
+            # The consumer's accepted registration must match under the same
+            # event lock that verifies and settles the signed observation.
+            unless expected_registration.nil?
+              registration = public_record(record).slice("event_id", "attempt_id", "payload_sha256", "receipt_key_sha256")
+              unless expected_registration == registration
+                raise ValidationError, "inbox event differs from expected registration"
+              end
+            end
             # `delivered` only proves native queue acceptance: the message may
             # still be consumed or evicted afterwards, so a signed observation
             # can reconcile it exactly like an uncertain outcome.

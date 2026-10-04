@@ -29,3 +29,9 @@ Pre-review corrections: exact platform birth replaces whole-second process times
 Final focused verification: 74 tests / 363 assertions passed (8x3ypn); precise-birth/attribution run covered 75 / 368 with only a new test fixture using the wrong projection field, corrected from inboxes to inbox_events. Final signed recovery suite: 10 tests / 126 assertions passed (8x3yw7), including substituted live/archive attempt/key/payload/generation. The signed consumer registration guard was included in this final run. git diff --check passed.
 
 Scoped commits: 40eb746d3 (runtime/tmux ownership), 394508556 (Herdr verifier/factory/native ownership), c14a0cc6c (precise birth and ancestry revalidation), 624ed89fd (overseer recovery projection), followed by the assignment recovery implementation commit containing this report. Candidate is ready for independent review; no main merge, task completion, gem preparation or publication performed in this worktree.
+
+## Independent review repairs — 2026-10-05
+
+Root repair branch `codex/wave4-recovery-repair` starts at reviewed `ded081ca6`. Independent review reproduced Linux process-name newline parsing collisions and a substituted inbox record between consumer status and settlement. Runtime now parses binary `/proc` facts with validated PID/start ticks, including parentheses/newlines/non-UTF8 names; Herdr checks the consumer's expected journal registration under the settlement event lock. Assign passes its accepted registration. The runtime gem explicitly depends on Fiddle so installed consumers load the declared native facility without a default-gem warning.
+
+Ported regressions failed before the fix: runtime `8x3z26`, assignment recovery `8x3z2p`. Post-fix signed recovery `8x3z3s`: 11 tests / 135 assertions, all passed; Herdr `8x3z3f`: 454 / 1464 passed. Final checks and fresh independent verdict remain required.
