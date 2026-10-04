@@ -47,12 +47,21 @@ conflict.
    no delete of `daemon_binding.rb` in this task). CLI: `--assignment
    --attempt --project` for managed; `--work --attempt` keeps working.
    `LAB_ATTEMPT_ID` env default is removed (env is never authority).
-4. **Lock order** (documented, single direction): assignment exclusion
-   (shared) → HITL per-request lock file → journal CAS. Attempt terminal
-   transitions (`finish`) take the assignment exclusion exclusive so a
-   liveness check holding shared cannot interleave with the terminal
-   commit. Stable per-request lock files live in `locks/` and are never
-   unlinked, so id reuse cannot land on a fresh inode.
+4. **Lock order** (documented, single direction, review 8x327bun):
+   HITL per-request lock file FIRST, then the assignment exclusion
+   (shared) inside `with_live_authority!`, then the journal CAS.
+   Attempt terminal transitions (`finish`/`reconcile`) take the
+   assignment exclusion EXCLUSIVE plus the assign store lock — they
+   never take a HITL lock, so the order is acyclic. A liveness check
+   holding shared cannot interleave with a terminal commit. Stable
+   per-request lock files live in `locks/` and are never unlinked, so
+   id reuse cannot land on a fresh inode.
+   
+   **Terminal receipt retention (review 8x327buj, design)**: receipts
+   (`terminals/<id>.json`, service-owned 0600) carry replay answers for
+   NON-sensitive kinds only; OTP receipts never hold bytes. Receipts
+   are overwritten by the next incarnation of the same id and removed
+   with the store; long-term retention pruning is a gad.2 concern.
 5. **Idempotent terminals**: every terminal transition writes a
    `terminals/<id>.json` receipt {incarnation, state, correlation, at}
    before/with the projection update. Duplicate deliver/consume/cancel on a
