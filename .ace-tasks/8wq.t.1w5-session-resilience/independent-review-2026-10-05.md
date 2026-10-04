@@ -16,3 +16,5 @@ Independent replacement receipts under `.ace-wt/codex-wave4-review-recovery-fixe
 All pass. Original full assignment suite separately passed 802 / 3111 with two skips; that result belongs to the original SHA. Root replacement full assignment run remains pending at this checkpoint. The original UTF-8 fixture overrequired unknown: the corrected contract accepts exact birth or unknown; both fixture versions remain retained.
 
 This verdict accepts source integration, not installed Herdr/Pi consumption, compaction, process-tree closure, multi-UID authority or full Lab readiness. Those remain explicit domain gates; task stays in-progress.
+
+Integration completed: replacement full assignment suite passed **803 tests / 3120 assertions**, zero failures/errors, two existing skips (`.ace-wt/codex-wave4-recovery-repair/.ace-local/test/reports/assign/8x3zcb/`). Source merged to main `3dda44055`. Post-merge signed recovery passed **11 / 135** (`.ace-local/test/reports/assign/8x3zd5/`). Installed Lab gates above remain open.
