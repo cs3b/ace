@@ -48,3 +48,17 @@ After these gates: recovery plus HITL → qk0 → completed qkb → R2 (`ig3`) �
 The boundary auditor authored vft/vfv/vfw after code inspection. A separate runtime reviewer checked those specifications and UX against the actual service/vault/provider interfaces, then reviewed the root metadata/checklist changes and both domain repositories. Verdict: **APPROVE, no open P1/P2 readiness findings**. Root also checked the cited code paths. This verdict covers specification readiness and progress reconciliation, not repaired implementation correctness or installed Lab acceptance.
 
 The review preserved delivered task history and retained original k86.3 acceptance. New producer-repair dependencies gate y24 and qkb without adding an R3 cycle. Repository validation and commit identities are reported with delivery of this review; historical doctor warnings are not newly introduced acceptance failures.
+
+## Implementation dispatch — 2026-10-04
+
+Captain authorized implementation in independent worktrees using `gpt-6.1-sol`. Three active worker slots are available, so seven scopes are dispatched as three automatic sequential queues; this is not a claim that seven executors run simultaneously.
+
+| Worker | Active first scope | Automatically queued next scopes |
+|---|---|---|
+| wave3_runtime_lane | ACE vft | ACE k86.3 closure |
+| wave3_otp_services_lane | ACE vfv | lab-config gad.b setup-project slice |
+| wave3_forge_topology_lane | ACE vfw | lab-config gad.8, then gad.9 |
+
+Each scope has a separate branch `codex/wave3-<name>` and worktree `<repository>/.ace-wt/wave3-<name>`: ACE names `vft`, `vfv`, `vfw`, `k86-3-close`; lab-config names `gad-8`, `gad-9`, `gad-b-setup`. ACE base is b06d0aee9; lab-config base is 76d8e4b. Workers mark their own task in-progress when beginning it, commit and test only in their own worktrees, and report exact heads for independent review. Main integration, release and live deployment are separate gates. Queued work is not marked implemented or accepted.
+
+Dispatch setup note: lab-config worktree creation initially refused because `.ace-wt` did not exist; created that directory and retried successfully. No task or product behavior was changed to work around the failure.
