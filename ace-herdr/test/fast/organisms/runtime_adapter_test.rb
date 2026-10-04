@@ -353,6 +353,45 @@ module Ace
           assert_equal 1, @executor.calls_of(:pane_split).size
         end
 
+        def test_foreign_tab_replacement_keeps_record_pointer_only_and_reuses_live_pane
+          native_root = Dir.mktmpdir("herdr-native-root")
+          @executor.tab_create(workspace_id: "w1", label: "foreign", cwd: native_root)
+          tab = @adapter.list_windows.find { |row| row[:name] == "foreign" }[:window]
+          first = RuntimeAdapter.new(executor: @executor, env: env, sleeper: FastSleeper.new,
+            identity_dir: @identity_dir)
+          first.prepare_pane(window: tab)
+
+          # The prepared pane dies; a fresh adapter splits a replacement. The
+          # stored record must stay pointer-only — never invented root/preset
+          # ownership (asserted before any ensure_window adoption).
+          @panes.reject! { |pane| pane["pane_id"] == "w1:p1" }
+          second = RuntimeAdapter.new(executor: @executor, env: env, sleeper: FastSleeper.new,
+            identity_dir: @identity_dir)
+          replacement = second.prepare_pane(window: tab)
+          assert_equal 2, @executor.calls_of(:pane_split).size
+          path = Dir[File.join(@identity_dir, "*.json")].first
+          parsed = JSON.parse(File.read(path))
+          assert_equal %w[id prepared_pane], parsed.keys.sort
+          assert_equal tab, parsed["id"]
+          assert_equal replacement, parsed["prepared_pane"]
+
+          # Ensuring the window at its verified native root adopts the tab
+          # (pointer preserved); a later instance reuses the live replacement
+          # without another split.
+          third = RuntimeAdapter.new(executor: @executor, env: env, sleeper: FastSleeper.new,
+            identity_dir: @identity_dir)
+          assert_equal tab, third.ensure_window(name: "foreign", root: native_root)
+          adopted = JSON.parse(File.read(path))
+          assert_equal File.realpath(native_root), adopted["root"]
+          assert_equal replacement, adopted["prepared_pane"]
+          fourth = RuntimeAdapter.new(executor: @executor, env: env, sleeper: FastSleeper.new,
+            identity_dir: @identity_dir)
+          assert_equal replacement, fourth.prepare_pane(window: tab)
+          assert_equal 2, @executor.calls_of(:pane_split).size
+        ensure
+          FileUtils.remove_entry(native_root) if native_root
+        end
+
         def test_adoption_preserves_a_foreign_prepared_pane_pointer
           @executor.tab_create(workspace_id: "w1", label: "foreign", cwd: "/tmp/work")
           tab = @adapter.list_windows.find { |row| row[:name] == "foreign" }[:window]
