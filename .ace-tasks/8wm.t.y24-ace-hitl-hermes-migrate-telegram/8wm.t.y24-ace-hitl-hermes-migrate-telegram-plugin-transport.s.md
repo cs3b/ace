@@ -10,7 +10,7 @@ tags: [ace-hitl-hermes, migration, telegram, plugin, lab-config, gad]
 position: 6o0009
 bundle:
   presets: [project]
-  files: [ace-hitl-hermes/lib/ace/hitl/hermes/organisms/hermes_box.rb, ace-hitl-hermes/lib/ace/hitl/hermes/schemas/message.v1.schema.json, .ace-tasks/8x3.t.vft-preserve-the-active-hitl-listener/8x3.t.vft-preserve-the-active-hitl-listener-on-refused.s.md, .ace-tasks/8x3.t.vfv-enforce-the-authorized-otp-expiry/8x3.t.vfv-enforce-the-authorized-otp-expiry-at-consumption.s.md, .ace-tasks/_archive/8w/y/8wq.t.34i-privileged-store-boundary-for-ace/8wq.t.34i-privileged-store-boundary-for-ace-hitl-lifecycle.s.md, ace-hitl/lib/ace/hitl/lifecycle/client.rb, ace-hitl/lib/ace/hitl/lifecycle/service.rb, .ace-tasks/8wm.t.y24-ace-hitl-hermes-migrate-telegram/ux/usage.md]
+  files: [ace-hitl-hermes/lib/ace/hitl/hermes/organisms/hermes_box.rb, ace-hitl-hermes/lib/ace/hitl/hermes/schemas/message.v1.schema.json, .ace-tasks/_archive/8x/v/8x3.t.vft-preserve-the-active-hitl-listener/8x3.t.vft-preserve-the-active-hitl-listener-on-refused.s.md, .ace-tasks/_archive/8x/v/8x3.t.vfv-enforce-the-authorized-otp-expiry/8x3.t.vfv-enforce-the-authorized-otp-expiry-at-consumption.s.md, .ace-tasks/_archive/8w/y/8wq.t.34i-privileged-store-boundary-for-ace/8wq.t.34i-privileged-store-boundary-for-ace-hitl-lifecycle.s.md, ace-hitl/lib/ace/hitl/lifecycle/client.rb, ace-hitl/lib/ace/hitl/lifecycle/service.rb, .ace-tasks/8wm.t.y24-ace-hitl-hermes-migrate-telegram/ux/usage.md]
   commands: []
 title: Provide correlated Telegram transport through the Hermes package
 ---

@@ -10,7 +10,7 @@ tags: [ace-hitl, integration, lab, hermes]
 position: 6o000a
 bundle:
   presets: [project]
-  files: [ace-hitl/lib/ace/hitl/providers/lab.rb, ace-hitl/lib/ace/hitl/providers/lab/daemon_binding.rb, ace-hitl/lib/ace/hitl/providers/ref.rb, ace-hitl-hermes/lib/ace/hitl/hermes/schemas/message.v1.schema.json, .ace-tasks/_archive/8w/y/8wm.t.y23-ace-herdr-migrate-generic-queue/8wm.t.y23-ace-herdr-migrate-generic-queue-and-delivery.s.md, ace-herdr/lib/ace/herdr/organisms/inbox.rb, ace-herdr/docs/usage.md, .ace-tasks/8wm.t.vs2-integration-provider-lab-uses-a2/ux/usage.md]
+  files: [ace-hitl/lib/ace/hitl/providers/lab.rb, ace-hitl/lib/ace/hitl/providers/lab/daemon_binding.rb, ace-hitl-contract/lib/ace/hitl/contract/ref.rb, ace-hitl-hermes/lib/ace/hitl/hermes/schemas/message.v1.schema.json, .ace-tasks/_archive/8w/y/8wm.t.y23-ace-herdr-migrate-generic-queue/8wm.t.y23-ace-herdr-migrate-generic-queue-and-delivery.s.md, ace-herdr/lib/ace/herdr/organisms/inbox.rb, ace-herdr/docs/usage.md, .ace-tasks/8wm.t.vs2-integration-provider-lab-uses-a2/ux/usage.md]
   commands: []
 title: Integrate scoped HITL delivery without the Lab daemon
 ---

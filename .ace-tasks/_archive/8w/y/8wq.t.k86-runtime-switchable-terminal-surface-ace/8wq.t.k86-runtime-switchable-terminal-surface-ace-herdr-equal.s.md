@@ -1,6 +1,6 @@
 ---
 id: 8wq.t.k86
-status: in-progress
+status: done
 priority: high
 created_at: "2026-09-27 13:29:05"
 estimate: TBD
@@ -91,11 +91,11 @@ task family:
 
 ### Success Criteria
 
-- [ ] **Equal partnership**: with `runtime: herdr`, fork-run-with-callback, overseer work-on window opening, and demo wait/send directives all function against herdr end-to-end.
-- [ ] **Zero tmux regression**: with `runtime: tmux` (and for assign, `launch_mode: tmux|auto`), existing behavior is unchanged — the full existing consumer test suites stay green.
-- [ ] **Decoupled gemspecs**: ace-assign, ace-overseer, and ace-demo depend on ace-runtime plus existing wrapper gems for installed adapters; no direct tmux API calls remain.
-- [ ] **Neutral contract**: neither adapter gem depends on the other; contract tests run against BOTH adapters (shared examples, ace-hitl provider-test pattern).
-- [ ] **Workflow text updated**: the Fork Callback Rule prescribes no runtime-specific command.
+- [x] **Equal partnership**: with `runtime: herdr`, fork-run-with-callback, overseer work-on window opening, and demo wait/send directives all function against herdr end-to-end.
+- [x] **Zero tmux regression**: with `runtime: tmux` (and for assign, `launch_mode: tmux|auto`), existing behavior is unchanged — the full existing consumer test suites stay green.
+- [x] **Decoupled gemspecs**: ace-assign, ace-overseer, and ace-demo depend on ace-runtime plus existing wrapper gems for installed adapters; no direct tmux API calls remain.
+- [x] **Neutral contract**: neither adapter gem depends on the other; contract tests run against BOTH adapters (shared examples, ace-hitl provider-test pattern).
+- [x] **Workflow text updated**: the Fork Callback Rule prescribes no runtime-specific command.
 
 ### Reviewed Decisions (2026-09-28)
 
@@ -117,19 +117,19 @@ task family:
 ### Verification Plan
 
 #### Unit / Component Validation
-- [ ] Shared contract examples pass against both adapters (tmux fake executor + herdr fake executor).
-- [ ] Runtime resolution: explicit config, auto-detection, unknown name, unavailable runtime.
+- [x] Shared contract examples pass against both adapters (tmux fake executor + herdr fake executor).
+- [x] Runtime resolution: explicit config, auto-detection, unknown name, unavailable runtime.
 
 #### Integration / E2E Validation (if cross-boundary behavior exists)
-- [ ] `runtime: herdr` end-to-end: assign fork-run with callback delivered to the caller's pane; overseer work-on opens a herdr tab rooted at the worktree.
-- [ ] `runtime: tmux` regression: existing consumer suites green.
+- [x] `runtime: herdr` end-to-end: assign fork-run with callback delivered to the caller's pane; overseer work-on opens a herdr tab rooted at the worktree.
+- [x] `runtime: tmux` regression: existing consumer suites green.
 
 #### Failure / Invalid-Path Validation
-- [ ] herdr selected but binary unavailable: explicit error, including auto when that backend was detected; headless only when no backend was detected.
-- [ ] Unknown runtime key: fail closed with available list.
+- [x] herdr selected but binary unavailable: explicit error, including auto when that backend was detected; headless only when no backend was detected.
+- [x] Unknown runtime key: fail closed with available list.
 
 #### Verification Commands
-- [ ] `ace-test ace-runtime` / `ace-test ace-tmux` / `ace-test ace-herdr` / `ace-test ace-assign` / `ace-test ace-overseer` / `ace-test ace-demo` — all green.
+- [x] `ace-test ace-runtime` / `ace-test ace-tmux` / `ace-test ace-herdr` / `ace-test ace-assign` / `ace-test ace-overseer` / `ace-test ace-demo` — all green.
 
 ## Objective
 
@@ -191,3 +191,9 @@ This draft retains the existing detailed send/wait contract and the Captain's ad
 ## Progress reconciliation — 2026-10-04, post-PR364
 
 Contract and both adapters are delivered; consumer migration code is merged. k86.3 retains its original clean-install/retained-pane/live Herdr acceptance. The current dependency direction needs an acyclic resolution before all consumer installations include Herdr. Do not mark this parent done or dispatch 1w5 as prerequisite-complete merely because PR364 is merged. The remaining work is explicit in k86.3, not hidden in this umbrella.
+
+## Integrated delivery closure — 2026-10-04
+
+Closed by the coordinator after exact-head independent implementation approval, source integration, final versioned clean-install/native proof and confirmed RubyGems publication. See ACE lq1 release-preparation-2026-10-04.md and this family's integration-review/implementation evidence. The final versioned graph/install check passed14tests/714assertions, actual installed Herdr workflow1/69. Published runtime/consumer and boundary repair versions were independently confirmed by the publisher's registry snapshot.
+
+The default aggregate suite retains two timing failures (assign120s and unchanged SafeCapture0.2s); bounded separate assignfast770/2822 and SafeCapture24/74 passed. Do not rewrite that aggregate as green. Earlier reviewed full modified-package executions and exact native acceptance remain documented. Completion concerns this source capability; real multi-UID Lab, full domain installation and final program cutover remain separate open gates.

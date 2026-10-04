@@ -22,7 +22,7 @@ This is the ACE integration tracker replacing the planning role of the loose lab
 
 This task owns sequencing and acceptance receipts, not duplicate implementations. Existing tasks stay at their canonical IDs; new uncovered outcomes are actual children. Check a task checkbox only after its owning record is done and linked evidence establishes the listed result. Reopen this checklist item if receipt is invalidated; do not silently expand a historical done task. `bin/ace-task show 8ws.t.lq1 --content` displays the checklist; updates are explicit, not automatic synchronization.
 
-Current phase (2026-10-04 post-delivery review): foundation, prior feature wave, hym, 34i, z78 and ibk are delivered in source; k86.3 is merged but acceptance remains open. This tracker remains open for combined integration and explicit repair dispositions; specifications below select the next work, not authorize dispatch.
+Current phase (2026-10-04 post-delivery review): foundation, prior feature wave, hym, 34i, z78 and ibk are delivered in source; k86.3 installed runtime acceptance and vft/vfv/vfw repairs are delivered; postpublication graph verification remains in progress. This tracker remains open for combined integration and explicit repair dispositions; specifications below select the next work, not authorize dispatch.
 
 ## First wave — delivered scopes
 - [x] ACE 8wq.t.1w2 — hermetic test infrastructure, main PR344; tp0 consumer fixes also delivered, with later runner source loading fix 96c445b8a. This does not close new fixture defects.
@@ -105,10 +105,10 @@ The authoritative review/evidence map is [wave-3-review-2026-10-04.md](wave-3-re
 - [x] 34i: scoped authenticated HITL IPC source landed; installed multi-UID proof still required by domain acceptance. vft/vfv own newly identified defects.
 - [x] z78: API-based fork/draft/ready/atomic merge landed, with retained disposable Forgejo 8.0.3 evidence. vfw owns create provenance/uncertainty repair; live response-loss gap remains explicit.
 - [x] ibk: accepted fixture-isolation source/receipts reconciled, status done and archived.
-- [ ] k86.3: finish acyclic adapter installation, retained writable pane proof and actual live Herdr scenarios. This keeps k86/1w5 formally open.
-- [ ] ACE 8x3.t.vft: preserve the original HITL listener on rejected/failed startup; first independent repair lane.
-- [ ] ACE 8x3.t.vfv: enforce the challenge expiry at actual OTP handoff; independent repair lane in the same package (coordinate integration with vft).
-- [ ] ACE 8x3.t.vfw: prove full Forgejo create provenance and retain uncertainty after accepted mutation; independent provider lane.
+- [x] k86.3: finish acyclic adapter installation, retained writable pane proof and actual live Herdr scenarios. k86 is done; 1w5 is now dependency-ready.
+- [x] ACE 8x3.t.vft: preserve the original HITL listener on rejected/failed startup; first independent repair lane.
+- [x] ACE 8x3.t.vfv: enforce the challenge expiry at actual OTP handoff; independent repair lane in the same package (coordinate integration with vft).
+- [x] ACE 8x3.t.vfw: prove full Forgejo create provenance and retain uncertainty after accepted mutation; independent provider lane.
 - [ ] lab-config:gad.8: prepare/install topology and trusted boundary; listener acceptance waits vft and real-user proof. Domain signer/authorization is not supplied by code existence.
 - [ ] lab-config:gad.9: installed Pi wake extension proof; independent of the new HITL/Forgejo repairs.
 - [ ] lab-config:gad.b: begin its existing setup-project service slice; integrate after gad.8 identity/grants, expand by available contracts. OTP/publisher acceptance waits vfv and exact release authority.
@@ -116,3 +116,17 @@ The authoritative review/evidence map is [wave-3-review-2026-10-04.md](wave-3-re
 - [ ] l2d.3/.4/.5: reconcile already-delivered consumer evidence; no duplicate implementation. ibl/lq8 remaining verification and 3zi/4gy hygiene remain separate, not global Lab blockers.
 
 Recommended initial dispatch is the three repairs plus k86.3 closure and the three domain scopes above. Parallel development is not permission for parallel mutation of one primary checkout: use isolated worktrees, one owner per changed file, and serially merge shared HITL/installer/assign changes. Integrate vft/vfv before y24; vfw before qkb.0 acceptance; k86.3 before 1w5. qkb.0/.1 keep one installed vocabulary. Later join is 1w5 + vs2/qjz → qk0 → completed qkb → R2 → R3 → qkc/gad.2. ig5 remains optional.
+
+## Next implementation wave — after publication, 2026-10-04
+
+All ten prepared gems were published by the Captain and confirmed present by the publisher dry-run. Release versions and executed source/installed tests are recorded in [release preparation](release-preparation-2026-10-04.md). TS-MONO-001 for this release is still running; publication alone is not installed-Lab acceptance.
+
+- [ ] ACE 8wq.t.1w5 — implement attributable recovery with existing signed receipt semantics. All recorded prerequisites are done.
+- [ ] ACE 8wm.t.y24 — implement correlated Hermes/Telegram delivery; vft/vfv are done.
+- [ ] ACE 8wr.t.qkb.0 — implement forge-neutral assignment delivery; vfw is done. Coordinate shared ace-assign changes with 1w5; merge recovery first where overlap exists, then rebase and verify delivery. Keep new installed workflow vocabulary atomic with qkb.1; no standalone mixed-vocabulary publication.
+- [ ] lab-config:gad.8/gad.b — continue protected topology/grants/storage and same-UID setup-project acceptance. Retain existing signing keys and refuse rotation; no new rotation API is required for this slice. Bind a trusted attempt credential lease through the sanitized handler environment, then test the public CLI against disposable/authenticated Forgejo. Local-remote fixtures do not establish this result.
+- [ ] lab-config:gad.9 — execute remaining installed Linux/Incus and real Pi acceptance where the Lab environment is available. Source/SDK verification does not close this gate.
+
+Specification-first gaps, not ready implementation dispatch: define the cross-user receiving executor ownership and evidence-sink authority (qjx provides the Unix client, not a reusable receiver); define native consumption observation provenance before automatic signed settlement. These remain explicit gad.8/gad.b integration obligations until fresh ACE mechanism tasks are reviewed. Do not reopen completed qjx/y23 or infer consumption from disappearance/time.
+
+Next join: y24 → vs2 → qjz; together with 1w5 → qk0 → qkb.1 and atomic qkb delivery → R2 (ig3) → R3 (ig4) → qkc/gad.2. Pilot ig5 is not a gate. No single task blocks all parallel source work.
