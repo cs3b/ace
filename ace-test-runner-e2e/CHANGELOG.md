@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Frozen release manifests accept validated `runtime_dependencies` declarations for exact source-bound consumer edge verification. Missing required consumer declarations remain a proof failure.
+
 ## [0.42.0] - 2026-10-04
 
 ### Added

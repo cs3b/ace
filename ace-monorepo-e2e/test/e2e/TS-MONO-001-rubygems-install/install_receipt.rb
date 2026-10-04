@@ -14,6 +14,7 @@ require "fileutils"
 require "json"
 require "yaml"
 require "rubygems/version"
+require "rubygems/requirement"
 
 module InstallReceipt
   MANIFEST_SCHEMA_VERSION = 1
@@ -35,6 +36,15 @@ module InstallReceipt
     packages.each_with_index do |entry, index|
       unless entry.is_a?(Hash) && entry["name"].is_a?(String) && entry["artifact_version"].is_a?(String)
         raise ArgumentError, "manifest package entry #{index} must be an object with name and artifact_version"
+      end
+      if entry.key?("runtime_dependencies")
+        dependencies = entry["runtime_dependencies"]
+        unless dependencies.is_a?(Hash) && dependencies.all? { |name, requirements|
+            name.is_a?(String) && name.match?(/\Aace-[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\z/) &&
+              canonical_requirements?(requirements)
+          }
+          raise ArgumentError, "manifest package entry #{index} has invalid runtime_dependencies"
+        end
       end
       supersedes = entry["supersedes"]
       unless supersedes.nil? || (supersedes.is_a?(Array) && supersedes.all? { |v| v.is_a?(String) })
@@ -909,7 +919,9 @@ module InstallReceipt
       end
       findings.concat(registry_remote_findings(lockfile, "consumer #{name}"))
     end
-    if lockfile && provider_version && !lockfile_spec_declares_provider?(lockfile, name)
+    if lockfile && provider_version && !lockfile_spec_declares_provider?(lockfile, name,
+        expected: manifest_versions[name]&.dig("runtime_dependencies", "ace-git-github"),
+        provider_version: provider_entry["artifact_version"])
       findings << "#{name} lockfile spec does not declare ace-git-github as a dependency"
     end
 
@@ -978,27 +990,43 @@ module InstallReceipt
     {"root" => root, "ok" => findings.empty?, "findings" => findings.uniq}
   end
 
-  # In a lockfile, a package's dependency declarations are the six-space
-  # indented lines following its four-space `name (version)` entry. The
-  # provider requirement must be the source constraint: a widened published
-  # requirement would resolve 0.2.x without proving the consumer's release
-  # actually declares it.
-  EXPECTED_PROVIDER_REQUIREMENT = "~> 0.2"
+  # Compare against the frozen release-source contract. Merely allowing
+  # the resolved provider would also accept a mistakenly widened release.
+  def lockfile_spec_declares_provider?(lockfile, name, expected:, provider_version:)
+    return false unless canonical_requirements?(expected)
 
-  def lockfile_spec_declares_provider?(lockfile, name)
     content = utf8_read(lockfile["path"])
     spec_header = /^    #{Regexp.escape(name)} \([^\n]+\)\n/
-    match = content.match(spec_header)
-    return false unless match
+    headers = content.enum_for(:scan, spec_header).map { Regexp.last_match }
+    return false unless headers.length == 1
 
-    content[match.end(0)..].each_line do |line|
+    declared = []
+    content[headers.first.end(0)..].each_line do |line|
       break unless line.start_with?("      ")
 
-      requirement = line.match(/\A\s+ace-git-github \(([^)]+)\)/)
-      next unless requirement
-
-      return requirement[1] == EXPECTED_PROVIDER_REQUIREMENT
+      requirement = line.match(/\A      ace-git-github \(([^)]+)\)\s*\z/)
+      declared << requirement[1] if requirement
     end
+    return false unless declared.length == 1
+
+    observed = declared.first.split(/,\s*/)
+    return false unless canonical_requirements?(observed)
+    return false unless observed.sort == expected.sort
+
+    Gem::Requirement.new(*expected).satisfied_by?(Gem::Version.new(provider_version))
+  rescue ArgumentError
+    false
+  end
+
+  def canonical_requirements?(requirements)
+    return false unless requirements.is_a?(Array) && !requirements.empty? &&
+      requirements.uniq.length == requirements.length
+
+    requirements.all? do |requirement|
+      requirement.is_a?(String) &&
+        Gem::Requirement.new(requirement).requirements.map { |operator, version| "#{operator} #{version}" } == [requirement]
+    end
+  rescue ArgumentError
     false
   end
 

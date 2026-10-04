@@ -4,6 +4,7 @@ require "digest"
 require "fileutils"
 require "json"
 require "rubygems/version"
+require "rubygems/requirement"
 
 module Ace
   module Test
@@ -124,7 +125,7 @@ module Ace
               label = "packages[#{index}]"
               raise Invalid, "#{label} must be an object" unless entry.is_a?(Hash)
 
-              reject_unknown_keys!(entry, %w[name artifact_version source_sha supersedes], label)
+              reject_unknown_keys!(entry, %w[name artifact_version source_sha supersedes runtime_dependencies], label)
 
               name = entry["name"]
               unless name.is_a?(String) && name.match?(GEM_NAME_PATTERN)
@@ -134,7 +135,32 @@ module Ace
               validate_exact_version!(entry["artifact_version"], "#{label}(#{name}) artifact_version")
               validate_source_sha!(entry["source_sha"], "#{label}(#{name}) source_sha")
               validate_supersedes!(entry["supersedes"], entry["artifact_version"], "#{label}(#{name})")
+              validate_runtime_dependencies!(entry["runtime_dependencies"], label) if entry.key?("runtime_dependencies")
               name
+            end
+
+            # These are frozen source declarations, not requirements inferred
+            # from whatever a registry happened to return during the proof.
+            def validate_runtime_dependencies!(raw, label)
+              unless raw.is_a?(Hash)
+                raise Invalid, "#{label} runtime_dependencies must be an object"
+              end
+              raw.each do |name, requirements|
+                unless name.is_a?(String) && name.match?(GEM_NAME_PATTERN) &&
+                    requirements.is_a?(Array) && !requirements.empty? &&
+                    requirements.uniq.length == requirements.length
+                  raise Invalid, "#{label} has invalid runtime dependency declaration"
+                end
+                requirements.each do |requirement|
+                  parsed = requirement.is_a?(String) ? Gem::Requirement.new(requirement) : nil
+                  canonical = parsed&.requirements&.map { |operator, version| "#{operator} #{version}" }
+                  unless canonical == [requirement]
+                    raise Invalid, "#{label} runtime dependency requirements must be canonical strings"
+                  end
+                rescue ArgumentError
+                  raise Invalid, "#{label} has invalid runtime dependency requirement"
+                end
+              end
             end
 
             def validate_exact_version!(raw, label)

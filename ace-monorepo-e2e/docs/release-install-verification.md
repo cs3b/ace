@@ -96,6 +96,27 @@ SHAs must be full 40-character commits; `supersedes` is an optional array of
 earlier versions of the same package; unknown fields, duplicate names, absent
 required fields, and unsupported schema versions fail validation.
 
+### Frozen consumer declarations
+
+Package entries may include `runtime_dependencies`, a map of ACE dependency
+names to nonempty canonical RubyGems requirement arrays. For example, the
+release source for ace-task can declare:
+
+```json
+"runtime_dependencies": {"ace-git-github": ["~> 0.4"]}
+```
+
+Capture these declarations from each consumer's gemspec at its exact
+`source_sha` before freezing the manifest. TS-MONO-001 requires this edge for
+ace-bundle, ace-review and ace-task. Missing metadata fails edge acceptance;
+there is no historical constraint fallback. The published consumer lockfile
+must declare exactly the frozen requirement and it must admit the exact
+manifest provider version. A widened published constraint still fails even
+if resolution happens to select the intended version. Existing isolation,
+consumer-only install and activated-version checks also remain required.
+Changing release requirements requires a new frozen manifest and proof run;
+never amend a failed run's input to make its old acceptance green.
+
 ### Supersession
 
 `supersedes` records explicit replacement: the artifact version supersedes the

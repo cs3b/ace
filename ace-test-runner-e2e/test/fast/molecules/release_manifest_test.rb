@@ -21,6 +21,21 @@ class ReleaseManifestTest < Minitest::Test
     assert_equal 2, data["packages"].size
   end
 
+  def test_frozen_runtime_dependencies_are_validated
+    data = valid_manifest
+    data["packages"].first["runtime_dependencies"] = {"ace-git-github" => ["~> 0.4", "!= 0.4.1"]}
+    write_manifest(data)
+    assert_equal data, load_manifest
+
+    [nil, [], {"ace-git-github" => []}, {"ace-git-github" => [nil]},
+      {"ace-git-github" => ["bad"]}, {"ace-git-github" => ["0.4"]},
+      {"ace-git-github" => ["~> 0.4", "~> 0.4"]}, {"../../evil" => ["~> 0.4"]}].each do |bad|
+      data["packages"].first["runtime_dependencies"] = bad
+      write_manifest(data)
+      assert_raises(invalid_manifest) { load_manifest }
+    end
+  end
+
   def test_missing_file_fails
     error = assert_raises(Ace::Test::EndToEndRunner::Molecules::ReleaseManifest::Invalid) do
       Ace::Test::EndToEndRunner::Molecules::ReleaseManifest.load_validated(File.join(@tmpdir, "absent.json"))

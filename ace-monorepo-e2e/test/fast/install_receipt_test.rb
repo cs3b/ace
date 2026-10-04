@@ -97,6 +97,74 @@ class InstallReceiptTest < AceMonorepoE2eTestCase
     assert verdict["consumer_edges"]["full_index"]["ace-task"]["ok"]
   end
 
+  def test_verify_accepts_current_distinct_frozen_consumer_requirements
+    fixture = build_complete_fixture
+    # Reproduce the installed release whose consumers declare different
+    # requirements while all resolve and load the same exact provider.
+    Dir.glob(File.join(@tmpdir, "**", "*"), File::FNM_DOTMATCH).select { |path| File.file?(path) }.each do |path|
+      File.write(path, File.read(path).gsub("0.2.0", "0.4.0"))
+    end
+    manifest = JSON.parse(File.read(@manifest_path))
+    {"ace-review" => "~> 0.3", "ace-task" => "~> 0.4"}.each do |name, requirement|
+      manifest["packages"].find { |entry| entry["name"] == name }["runtime_dependencies"] = {
+        "ace-git-github" => [requirement]
+      }
+      [fixture[:normal], fixture[:full_index]].each do |mode|
+        path = File.join(mode, "consumer", name, "Gemfile.lock")
+        File.write(path, File.read(path).sub("ace-git-github (~> 0.2)", "ace-git-github (#{requirement})"))
+      end
+    end
+    File.write(@manifest_path, JSON.generate(manifest))
+
+    verdict = InstallReceipt.verify(manifest_path: @manifest_path,
+      mode_dirs: {"normal" => fixture[:normal], "full_index" => fixture[:full_index]})
+
+    assert_equal "pass", verdict["acceptance"], verdict["findings"].inspect
+  end
+
+  def test_verify_refuses_missing_frozen_consumer_edge
+    fixture = build_complete_fixture
+    manifest = JSON.parse(File.read(@manifest_path))
+    manifest["packages"].find { |entry| entry["name"] == "ace-review" }.delete("runtime_dependencies")
+    File.write(@manifest_path, JSON.generate(manifest))
+
+    verdict = InstallReceipt.verify(manifest_path: @manifest_path,
+      mode_dirs: {"normal" => fixture[:normal], "full_index" => fixture[:full_index]})
+
+    assert_equal "fail", verdict["acceptance"]
+    refute verdict["consumer_edges"]["normal"]["ace-review"]["ok"]
+  end
+
+  def test_declared_requirement_must_allow_exact_provider_and_be_unique
+    path = write_lockfile(File.join(@tmpdir, "edge"), <<~LOCK)
+      GEM
+        remote: https://rubygems.org/
+        specs:
+          ace-review (0.58.1)
+            ace-git-github (~> 0.4)
+    LOCK
+    parsed = InstallReceipt.parse_lockfile(path)
+    refute InstallReceipt.lockfile_spec_declares_provider?(parsed, "ace-review",
+      expected: ["~> 0.4"], provider_version: "0.3.9")
+    assert InstallReceipt.lockfile_spec_declares_provider?(parsed, "ace-review",
+      expected: ["~> 0.4"], provider_version: "0.4.0")
+    File.write(path, File.read(path) + "      ace-git-github (~> 0.4)\n")
+    refute InstallReceipt.lockfile_spec_declares_provider?(parsed, "ace-review",
+      expected: ["~> 0.4"], provider_version: "0.4.0")
+  end
+
+  def test_manifest_rejects_malformed_frozen_requirements
+    [nil, [], [nil], ["bad"], ["0.4"], ["~> 0.4", "~> 0.4"]].each do |bad|
+      write_manifest
+      manifest = JSON.parse(File.read(@manifest_path))
+      manifest["packages"].find { |entry| entry["name"] == "ace-review" }["runtime_dependencies"] = {
+        "ace-git-github" => bad
+      }
+      File.write(@manifest_path, JSON.generate(manifest))
+      assert_raises(ArgumentError) { InstallReceipt.load_manifest(@manifest_path) }
+    end
+  end
+
   def test_verify_rejects_stale_but_compatible_versions
     fixture = build_complete_fixture
     rewrite_lockfile(fixture[:normal], "ace-git-github" => "0.1.2")
@@ -1081,9 +1149,9 @@ end
         {"name" => "ace-git-github", "artifact_version" => "0.2.0", "source_sha" => "b" * 40,
          "supersedes" => ["0.1.2"]},
         {"name" => "ace-bundle", "artifact_version" => "0.44.2", "source_sha" => "b" * 40,
-         "supersedes" => ["0.44.1"]},
-        {"name" => "ace-review", "artifact_version" => "0.56.1", "source_sha" => "b" * 40},
-        {"name" => "ace-task", "artifact_version" => "0.38.1", "source_sha" => "b" * 40},
+         "supersedes" => ["0.44.1"], "runtime_dependencies" => {"ace-git-github" => ["~> 0.2"]}},
+        {"name" => "ace-review", "artifact_version" => "0.56.1", "source_sha" => "b" * 40, "runtime_dependencies" => {"ace-git-github" => ["~> 0.2"]}},
+        {"name" => "ace-task", "artifact_version" => "0.38.1", "source_sha" => "b" * 40, "runtime_dependencies" => {"ace-git-github" => ["~> 0.2"]}},
         {"name" => "ace-git", "artifact_version" => "0.25.0", "source_sha" => "b" * 40},
         {"name" => "ace-test", "artifact_version" => "0.7.4", "source_sha" => "b" * 40},
         {"name" => "ace-test-runner", "artifact_version" => "0.27.1", "source_sha" => "b" * 40,
