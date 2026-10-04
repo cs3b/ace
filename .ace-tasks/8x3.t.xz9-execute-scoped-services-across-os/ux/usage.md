@@ -1,12 +1,13 @@
 # Cross-user services — draft usage
 
-## Authorized call
-Deployment starts `ace-lab service serve --service admin-ace` under its fixed executor account. A worker uses the existing `ace-lab service request --project ace --assignment assign-1 --attempt attempt-1 --operation setup-project --input request.json --authorization decision-1 --request-id request-1`. Expected: one authorized effect and a durable public receipt; no executor credentials returned.
+## Deployment and authoritative attempt origin
 
-## Duplicate and loss
-Repeat exact request after client disconnect. Expected: stored outcome or uncertainty; no blind second effect. Changed input under request-1 refuses.
+Deployment starts `ace-assign authority serve --authority project-ace` under the fixed assignment owner, then `ace-lab service serve --service admin-ace` under the fixed executor. The launcher reserves/binds a managed worker through the protected authority API, imports its candidate to an immutable protected snapshot and obtains an independent exact-snapshot review. The protected-authority-contract.md defines mapping/API fields. These are proposed interfaces, not commands delivered by current main.
 
-## Invalid authority
-Wrong peer UID, stale decision, caller-selected sink, or writable trusted parent refuses before handler execution. `--dry-run` on request validates eligibility with no claim or credentials.
+## One effect
 
-Exact protected assignment mapping and receipt authority configuration remain readiness-review items; this draft is not implementation-ready.
+Worker invokes existing `ace-lab service request --project ace --assignment assign-1 --attempt attempt-1 --operation setup-project --input request.json --authorization decision-1 --request-id request-1`. Expected: one configured effect and qjl durable public receipt. The receiver authenticates the worker; only its configured executor peer can complete the authority claim. Worker never rewrites canonical evidence or receives secrets.
+
+## Replay and refusal
+
+Same request after lost response returns its canonical result/uncertainty without redispatch. Changed input conflicts. Worker-local refs, forged review/receipt paths, wrong peer or writable trust ancestor refuses before effects. `--dry-run` checks current eligibility without claim or import. Native domain operation proof remains gad.b.
