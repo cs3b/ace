@@ -442,21 +442,21 @@ After launching `ace-assign fork-run`, the driver remains inside the same drive 
 
 When `ACE_ASSIGN_CALLBACK_PANE` is present in the forked child environment:
 
-- before stopping for either success or failure, send one final sentence back to the origin pane with direct `ace-tmux send`
+- before stopping for either success or failure, send one final sentence back to the origin pane with direct `ace-runtime send`
 - use the exact pane target from `ACE_ASSIGN_CALLBACK_PANE`
 - use a success sentence shaped like:
 
   ```bash
-  ace-tmux send --pane "$ACE_ASSIGN_CALLBACK_PANE" --msg "Fork subtree ${FORK_ROOT} for assignment ${ASSIGNMENT_ID} completed. Resume parent assignment drive now." --key Enter
+  ace-runtime send --pane "$ACE_ASSIGN_CALLBACK_PANE" --msg "Fork subtree ${FORK_ROOT} for assignment ${ASSIGNMENT_ID} completed. Resume parent assignment drive now." --key Enter
   ```
 
 - use a failure sentence shaped like:
 
   ```bash
-  ace-tmux send --pane "$ACE_ASSIGN_CALLBACK_PANE" --msg "Fork subtree ${FORK_ROOT} for assignment ${ASSIGNMENT_ID} failed. Resume parent assignment drive and inspect scoped status." --key Enter
+  ace-runtime send --pane "$ACE_ASSIGN_CALLBACK_PANE" --msg "Fork subtree ${FORK_ROOT} for assignment ${ASSIGNMENT_ID} failed. Resume parent assignment drive and inspect scoped status." --key Enter
   ```
 
-- do not invent a new skill or wrapper for this callback; use `ace-tmux send` directly
+- do not invent a new skill or wrapper for this callback; use `ace-runtime send` directly
 
 #### Post-Fork Resume Checklist
 

@@ -112,17 +112,18 @@ Available directives:
 - `copy-fixtures` — Copy fixtures/ directory into sandbox
 - `write-file:` — Write inline content to a file (`path:` + `content:`)
 - `agent-env:` — Environment variables passed to the runner/verifier agent subprocess (not setup commands)
-- `tmux-session` — Create a detached tmux session
-  - String form: `tmux-session` (uses scenario-based naming)
-  - Hash form: `tmux-session: { name-source: run-id }` (uses unique E2E run ID as session name)
-  - Runner teardown removes the created session after test execution
+- `runtime-session` — Establish a live terminal runtime context for the scenario
+  - String form: `runtime-session` (tmux session with scenario-based naming)
+  - Hash form: `runtime-session: { name-source: run-id }` (tmux session named by the E2E run ID)
+  - Hash form: `runtime-session: { runtime: herdr }` (inherits the caller's live HERDR_SESSION/HERDR_PANE; fails explicitly when absent)
+  - tmux sessions export ACE_TMUX_SESSION; both runtimes export ACE_RUNTIME. tmux sessions are removed by runner teardown after test execution
 
 Example:
 
 ```yaml
 setup:
   - git-init
-  - tmux-session:
+  - runtime-session:
       name-source: run-id
   - run: "cp ${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}/mise.toml mise.toml && mise trust mise.toml"
   - copy-fixtures

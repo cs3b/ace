@@ -32,7 +32,7 @@ hidden: 66 | done: 64 active: 1 pending: 5 failed: 1
 Use `ace-assign status --mode full` when you need the whole tree, and `ace-assign step` when you need the raw instructions for the current or next step.
 
 
-The easiest way to start is through [ace-overseer](../ace-overseer) -- define a task and run `ace-overseer work-on --task <ref> --preset work-on-task` , which creates the assignment, worktree, and tmux window in one shot.
+The easiest way to start is through [ace-overseer](../ace-overseer) -- define a task and run `ace-overseer work-on --task <ref> --preset work-on-task` , which creates the assignment, worktree, and terminal window in one shot.
 
 ## Testing Contract
 

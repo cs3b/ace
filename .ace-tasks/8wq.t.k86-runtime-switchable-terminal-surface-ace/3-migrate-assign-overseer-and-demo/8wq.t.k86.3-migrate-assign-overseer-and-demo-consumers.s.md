@@ -1,6 +1,6 @@
 ---
 id: 8wq.t.k86.3
-status: pending
+status: in-progress
 priority: medium
 created_at: "2026-09-27 13:29:29"
 estimate: TBD
@@ -13,6 +13,10 @@ bundle:
   commands: []
 needs_review: false
 title: Migrate assign overseer and demo consumers
+worktree:
+  branch: k86.3-consumer-runtime-migration
+  path: .ace-wt/k86-3-consumer-runtime-migration
+  target_branch: main
 ---
 
 # Migrate assign, overseer and demo consumers
@@ -82,10 +86,10 @@ title: Migrate assign overseer and demo consumers
 ### Success Criteria
 
 - [ ] `runtime: herdr` end-to-end: assign fork-run with `--callback` delivers the callback to the caller's herdr pane; overseer work-on opens a herdr tab rooted at the worktree; prune closes it.
-- [ ] `runtime: tmux` / `launch_mode: tmux|auto`: all existing consumer test suites green — zero behavior change (regression gate).
-- [ ] Consumer code depends on the contract; gemspecs may depend on the existing wrapper gems to install their adapters.
-- [ ] drive.wf.md prescribes no runtime-specific command.
-- [ ] Overseer config uses the runtime-neutral preset key.
+- [x] `runtime: tmux` / `launch_mode: tmux|auto`: all existing consumer test suites green — zero behavior change (regression gate).
+- [x] Consumer code depends on the contract; gemspecs may depend on the existing wrapper gems to install their adapters.
+- [x] drive.wf.md prescribes no runtime-specific command.
+- [x] Overseer config uses the runtime-neutral preset key.
 
 ### Reviewed Decisions (2026-09-28)
 
@@ -107,20 +111,20 @@ title: Migrate assign overseer and demo consumers
 ### Verification Plan
 
 #### Unit / Component Validation
-- [ ] Launch-mode resolution matrix: auto/headless/tmux/herdr × detected runtime (existing assign tests extended).
-- [ ] Overseer window-open/prune via contract on both runtimes (fake adapters).
-- [ ] Demo wait directives: all four lifecycle conditions pass against BOTH adapters (shared contract examples — regression preservation).
+- [x] Launch-mode resolution matrix: auto/headless/tmux/herdr × detected runtime (existing assign tests extended).
+- [x] Overseer window-open/prune via contract on both runtimes (fake adapters).
+- [x] Demo wait directives: all four lifecycle conditions pass against BOTH adapters (shared contract examples — regression preservation).
 
 #### Integration / E2E Validation (if cross-boundary behavior exists)
 - [ ] `runtime: herdr`: fork run --callback round-trip on live herdr (scripted mocks are component tests, not a substitute for installed acceptance); overseer work-on opens herdr tab.
-- [ ] `runtime: tmux` regression: existing suites green.
+- [x] `runtime: tmux` regression: existing suites green.
 
 #### Failure / Invalid-Path Validation
-- [ ] herdr configured but unavailable: explicit error; detected unavailable backend remains an error even in auto. Auto with no backend reports headless.
-- [ ] Unknown runtime value in config: fail closed with available list.
+- [x] herdr configured but unavailable: explicit error; detected unavailable backend remains an error even in auto. Auto with no backend reports headless.
+- [x] Unknown runtime value in config: fail closed with available list.
 
 #### Verification Commands
-- [ ] `ace-test ace-assign` / `ace-test ace-overseer` / `ace-test ace-demo` — all green.
+- [x] `ace-test ace-assign` / `ace-test ace-overseer` / `ace-test ace-demo` — all green.
 
 ## Objective
 

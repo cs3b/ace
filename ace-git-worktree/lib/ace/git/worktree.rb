@@ -12,6 +12,7 @@ end
 # Core ace-git dependency for Git operations
 require "ace/git"
 require "ace/support/config"
+require "ace/runtime"
 
 require_relative "worktree/version"
 

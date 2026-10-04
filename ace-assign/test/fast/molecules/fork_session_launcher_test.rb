@@ -3,45 +3,42 @@
 require_relative "../../test_helper"
 
 class ForkSessionLauncherTest < AceAssignTestCase
-  class FakeTmuxRunner
-    attr_reader :last_prepare, :last_invocation, :last_select, :last_ensure
+  class FakeRuntimeRunner
+    attr_reader :last_ensure, :last_prepare, :last_invocation, :last_metadata
 
-    def initialize(enabled: false, session: "dev", window: "task", pane: "%8")
-      @enabled = enabled
-      @session = session
-      @window = window
-      @pane = pane
+    def initialize(runtime: "tmux", detected: nil, context: nil, pane: "%9")
+      @runtime_name = runtime
+      @detected = detected
+      @context = context || {in_runtime: true, session: "dev", window: "work", pane: pane}
     end
 
-    def tmux_context?
-      @enabled
+    def runtime_name
+      @runtime_name
     end
 
-    def current_session
-      @session if @enabled
+    def detect_runtime
+      @detected
     end
 
-    def current_window
-      @window if @enabled
+    def context
+      @context
     end
 
     def current_pane
-      @pane if @enabled
+      @context[:pane] if @context[:in_runtime]
     end
 
     def fork_window_name(base_window)
       "#{base_window}-fs"
     end
 
-    def ensure_window(session:, name:, root:)
-      @last_ensure = {session: session, name: name, root: root}
-      {created: true, target: "@42", window_id: "@42", root: root}
+    def ensure_window(name:, root:)
+      @last_ensure = {name: name, root: root}
+      "@42"
     end
 
-    def prepare_pane(session:, window:, root:, keep_existing:, window_target: nil)
-      @last_prepare = {
-        session: session, window: window, window_target: window_target, root: root, keep_existing: keep_existing
-      }
+    def prepare_pane(window:)
+      @last_prepare = {window: window}
       "%42"
     end
 
@@ -55,17 +52,18 @@ class ForkSessionLauncherTest < AceAssignTestCase
       }
     end
 
-    def select_window(session:, window:, window_target: nil)
-      @last_select = {session: session, window: window, window_target: window_target}
-    end
-
-    def merge_tmux_metadata(session_meta_file:, session:, window:, pane:, window_id: nil, callback_pane: nil)
+    def merge_runtime_metadata(session_meta_file:, session:, window:, pane:, window_id: nil, callback_pane: nil)
+      @last_metadata = {
+        session_meta_file: session_meta_file, session: session, window: window,
+        pane: pane, window_id: window_id, callback_pane: callback_pane
+      }
       meta = File.exist?(session_meta_file) ? YAML.safe_load_file(session_meta_file) : {}
-      meta["launch_mode"] = "tmux"
-      meta["tmux_session"] = session
-      meta["tmux_window"] = window
-      meta["tmux_window_id"] = window_id if window_id
-      meta["tmux_pane_id"] = pane
+      meta["launch_mode"] = runtime_name
+      meta["runtime"] = runtime_name
+      meta["session"] = session
+      meta["window"] = window
+      meta["window_id"] = window_id if window_id
+      meta["pane"] = pane
       meta["callback_pane"] = callback_pane if callback_pane
       File.write(session_meta_file, meta.to_yaml)
     end
@@ -119,15 +117,27 @@ class ForkSessionLauncherTest < AceAssignTestCase
     original.each { |key, value| value.nil? ? ENV.delete(key) : ENV[key] = value }
   end
 
-  def build_launcher(config:, query_interface:, tmux_enabled: false, session: "dev", window: "task", pane: "%8", interactive_builder: nil,
-    tmux_runner: nil, lifecycle_exclusion: nil)
+  def build_launcher(config:, query_interface:, runner: nil, interactive_builder: nil, lifecycle_exclusion: nil)
     Ace::Assign::Molecules::ForkSessionLauncher.new(
       config: config,
       query_interface: query_interface,
-      tmux_runner: tmux_runner || FakeTmuxRunner.new(enabled: tmux_enabled, session: session, window: window, pane: pane),
+      runner: runner || FakeRuntimeRunner.new,
       interactive_builder: interactive_builder,
       lifecycle_exclusion: lifecycle_exclusion
     )
+  end
+
+  def with_fork_step(tmp_dir, fork_root = "010")
+    steps_dir = File.join(tmp_dir, "steps")
+    FileUtils.mkdir_p(steps_dir)
+    File.write(File.join(steps_dir, "#{fork_root}-demo-root.st.md"), <<~STEP)
+      ---
+      name: demo-root
+      status: done
+      context: fork
+      ---
+      done
+    STEP
   end
 
   def test_launch_refuses_after_prune_recorded_removal
@@ -378,60 +388,83 @@ class ForkSessionLauncherTest < AceAssignTestCase
     assert_nil call[:options][:last_message_file]
   end
 
-  def test_launch_mode_tmux_requires_tmux_context
+  def test_launch_mode_tmux_requires_live_runtime
     fake = FakeQueryInterface.new
     config = {"execution" => {"provider" => "claude:sonnet", "timeout" => 1800}, "providers" => {}}
-    launcher = build_launcher(config: config, query_interface: fake, tmux_enabled: false)
+    runner = FakeRuntimeRunner.new(context: {in_runtime: false, session: nil, window: nil, pane: nil})
+    launcher = build_launcher(config: config, query_interface: fake, runner: runner)
 
     error = assert_raises(Ace::Support::Cli::Error) do
       launcher.launch(assignment_id: "abc123", fork_root: "010", launch_mode: "tmux")
     end
 
-    assert_includes error.message, "requires an active tmux session"
+    assert_includes error.message, "requires a live tmux runtime"
+  end
+
+  def test_launch_mode_herdr_requires_live_runtime
+    fake = FakeQueryInterface.new
+    config = {"execution" => {"provider" => "claude:sonnet", "timeout" => 1800}, "providers" => {}}
+    runner = FakeRuntimeRunner.new(
+      runtime: "herdr",
+      context: {in_runtime: false, session: nil, window: nil, pane: nil}
+    )
+    launcher = build_launcher(config: config, query_interface: fake, runner: runner)
+
+    error = assert_raises(Ace::Support::Cli::Error) do
+      launcher.launch(assignment_id: "abc123", fork_root: "010", launch_mode: "herdr")
+    end
+
+    assert_includes error.message, "requires a live herdr runtime"
+  end
+
+  def test_launch_mode_unknown_fails_closed_with_valid_list
+    fake = FakeQueryInterface.new
+    config = {"execution" => {"provider" => "claude:sonnet", "timeout" => 1800}, "providers" => {}}
+    launcher = build_launcher(config: config, query_interface: fake)
+
+    error = assert_raises(Ace::Support::Cli::Error) do
+      launcher.launch(assignment_id: "abc123", fork_root: "010", launch_mode: "pty")
+    end
+
+    assert_includes error.message, "Invalid launch mode 'pty'"
+    assert_includes error.message, "auto, headless, tmux, herdr"
+    assert_empty fake.calls
   end
 
   def test_launch_uses_config_launch_mode_when_explicit_mode_missing
     fake = FakeQueryInterface.new
     config = {"execution" => {"provider" => "claude:sonnet", "timeout" => 1800, "launch_mode" => "headless"}, "providers" => {}}
-    launcher = build_launcher(config: config, query_interface: fake, tmux_enabled: true)
+    launcher = build_launcher(config: config, query_interface: fake)
 
     launcher.launch(assignment_id: "abc123", fork_root: "010")
 
     assert_equal 1, fake.calls.size
   end
 
-  def test_launch_mode_auto_uses_tmux_when_context_available
+  def test_launch_mode_auto_uses_tmux_when_detected
     fake = FakeQueryInterface.new
     interactive = FakeInteractiveBuilder.new
-    tmux_runner = FakeTmuxRunner.new(enabled: true, session: "dev", window: "work")
+    runner = FakeRuntimeRunner.new(detected: "tmux", runtime: "tmux", context: {in_runtime: true, session: "dev", window: "work", pane: "%9"})
     config = {"execution" => {"provider" => "claude:sonnet", "timeout" => 30}, "providers" => {}}
     launcher = build_launcher(
       config: config,
       query_interface: fake,
-      interactive_builder: interactive,
-      tmux_runner: tmux_runner
+      runner: runner,
+      interactive_builder: interactive
     )
 
     with_temp_cache do |tmp_dir|
-      steps_dir = File.join(tmp_dir, "steps")
-      FileUtils.mkdir_p(steps_dir)
-      File.write(File.join(steps_dir, "010-demo-root.st.md"), <<~STEP)
-        ---
-        name: demo-root
-        status: done
-        context: fork
-        ---
-        done
-      STEP
+      with_fork_step(tmp_dir)
       launcher.launch(assignment_id: "abc123", fork_root: "010", cache_dir: tmp_dir, launch_mode: "auto")
 
       session_file = File.join(tmp_dir, "sessions", "010-session.yml")
       meta = YAML.safe_load_file(session_file)
       assert_equal "tmux", meta["launch_mode"]
-      assert_equal "dev", meta["tmux_session"]
-      assert_equal "work-fs", meta["tmux_window"]
-      assert_equal "@42", meta["tmux_window_id"]
-      assert_equal "%42", meta["tmux_pane_id"]
+      assert_equal "tmux", meta["runtime"]
+      assert_equal "dev", meta["session"]
+      assert_equal "work-fs", meta["window"]
+      assert_equal "@42", meta["window_id"]
+      assert_equal "%42", meta["pane"]
 
       wrapper = File.join(tmp_dir, "sessions", "010-tmux-launch.sh")
       refute File.exist?(wrapper), "tmux launch wrapper should not be written"
@@ -441,7 +474,7 @@ class ForkSessionLauncherTest < AceAssignTestCase
       assert_equal(
         {
           "PROJECT_ROOT_PATH" => Dir.pwd,
-          "ACE_TMUX_SESSION" => "dev",
+          "ACE_RUNTIME" => "tmux",
           "ACE_ASSIGN_LAUNCH_MODE" => "tmux",
           "ACE_ASSIGN_FORK_WINDOW" => "work-fs",
           "ACE_ASSIGN_DEFAULT_TARGET" => "abc123@010",
@@ -450,70 +483,117 @@ class ForkSessionLauncherTest < AceAssignTestCase
         },
         interactive.calls.last[:options][:subprocess_env]
       )
-      assert_equal "%42", tmux_runner.last_invocation[:pane_target]
+      assert_equal "%42", runner.last_invocation[:pane_target]
       assert_equal ["ace-llm", "claude:sonnet", "/as-assign-drive abc123@010", "--interactive"],
-        tmux_runner.last_invocation[:command]
-      assert_equal({"FROM_BUILDER" => "1"}, tmux_runner.last_invocation[:env])
-      assert_equal Dir.pwd, tmux_runner.last_invocation[:working_dir]
-      assert_equal "$as-assign-drive abc123@010", tmux_runner.last_invocation[:visible_handoff]
-      assert_nil tmux_runner.last_select, "tmux fork launch should not steal focus"
+        runner.last_invocation[:command]
+      assert_equal({"FROM_BUILDER" => "1"}, runner.last_invocation[:env])
+      assert_equal Dir.pwd, runner.last_invocation[:working_dir]
+      assert_equal "$as-assign-drive abc123@010", runner.last_invocation[:visible_handoff]
+    end
+  end
+
+  def test_launch_mode_auto_uses_herdr_when_detected
+    fake = FakeQueryInterface.new
+    interactive = FakeInteractiveBuilder.new
+    runner = FakeRuntimeRunner.new(
+      detected: "herdr",
+      runtime: "herdr",
+      context: {in_runtime: true, session: "ws-1", window: "tab-1", pane: "p9"}
+    )
+    config = {"execution" => {"provider" => "claude:sonnet", "timeout" => 30}, "providers" => {}}
+    launcher = build_launcher(
+      config: config,
+      query_interface: fake,
+      runner: runner,
+      interactive_builder: interactive
+    )
+
+    with_temp_cache do |tmp_dir|
+      with_fork_step(tmp_dir)
+      launcher.launch(assignment_id: "abc123", fork_root: "010", cache_dir: tmp_dir, launch_mode: "auto")
+
+      session_file = File.join(tmp_dir, "sessions", "010-session.yml")
+      meta = YAML.safe_load_file(session_file)
+      assert_equal "herdr", meta["launch_mode"]
+      assert_equal "herdr", meta["runtime"]
+      assert_equal "ws-1", meta["session"]
+      assert_equal "tab-1-fs", meta["window"]
+      assert_equal "%42", meta["pane"]
+      assert_equal(
+        "herdr",
+        interactive.calls.last[:options][:subprocess_env]["ACE_RUNTIME"]
+      )
+      assert_equal [], fake.calls, "herdr mode should launch directly in the pane, not use direct query"
+      assert_equal "tab-1-fs", runner.last_ensure[:name]
+    end
+  end
+
+  def test_launch_mode_auto_selects_headless_without_runtime
+    fake = FakeQueryInterface.new
+    interactive = FakeInteractiveBuilder.new
+    runner = FakeRuntimeRunner.new(detected: nil)
+    config = {"execution" => {"provider" => "claude:sonnet", "timeout" => 30}, "providers" => {}}
+    launcher = build_launcher(
+      config: config,
+      query_interface: fake,
+      runner: runner,
+      interactive_builder: interactive
+    )
+
+    with_temp_cache do |tmp_dir|
+      with_fork_step(tmp_dir)
+      launcher.launch(assignment_id: "abc123", fork_root: "010", cache_dir: tmp_dir, launch_mode: "auto")
+
+      assert_equal 1, fake.calls.size, "headless auto mode should use direct query"
+      assert_empty interactive.calls
+      assert_nil runner.last_ensure, "headless auto mode must not open terminal surfaces"
     end
   end
 
   def test_launch_mode_tmux_uses_origin_window_name_for_fork_target
     fake = FakeQueryInterface.new
     interactive = FakeInteractiveBuilder.new
-    tmux_runner = FakeTmuxRunner.new(enabled: true, session: "dev", window: "ace-t-ks9")
+    runner = FakeRuntimeRunner.new(context: {in_runtime: true, session: "dev", window: "ace-t-ks9", pane: "%9"})
     config = {"execution" => {"provider" => "claude:sonnet", "timeout" => 30}, "providers" => {}}
     launcher = build_launcher(
       config: config,
       query_interface: fake,
-      interactive_builder: interactive,
-      tmux_runner: tmux_runner
-    )
-
-    with_temp_cache do |tmp_dir|
-      steps_dir = File.join(tmp_dir, "steps")
-      FileUtils.mkdir_p(steps_dir)
-      File.write(File.join(steps_dir, "010-demo-root.st.md"), <<~STEP)
-        ---
-        name: demo-root
-        status: done
-        context: fork
-        ---
-        done
-      STEP
-      launcher.launch(assignment_id: "abc123", fork_root: "010", cache_dir: tmp_dir, launch_mode: "tmux")
-
-      assert_equal "ace-t-ks9-fs", tmux_runner.last_ensure[:name]
-      assert_equal "ace-t-ks9-fs", tmux_runner.last_prepare[:window]
-      assert_nil tmux_runner.last_select, "tmux fork launch should not steal focus"
-    end
-  end
-
-  def test_callback_pane_uses_tmux_runner_current_pane
-    fake = FakeQueryInterface.new
-    config = {"execution" => {"provider" => "claude:sonnet", "timeout" => 30}, "providers" => {}}
-    launcher = build_launcher(config: config, query_interface: fake, tmux_enabled: true, pane: "%11")
-
-    assert_equal "%11", launcher.callback_pane
-  end
-
-  def test_launch_tmux_callback_mode_skips_subtree_wait_and_exports_callback_pane
-    fake = FakeQueryInterface.new
-    interactive = FakeInteractiveBuilder.new
-    config = {"execution" => {"provider" => "claude:sonnet", "timeout" => 30}, "providers" => {}}
-    launcher = build_launcher(
-      config: config,
-      query_interface: fake,
-      tmux_enabled: true,
-      session: "dev",
-      window: "work",
-      pane: "%9",
+      runner: runner,
       interactive_builder: interactive
     )
 
     with_temp_cache do |tmp_dir|
+      with_fork_step(tmp_dir)
+      launcher.launch(assignment_id: "abc123", fork_root: "010", cache_dir: tmp_dir, launch_mode: "tmux")
+
+      assert_equal "ace-t-ks9-fs", runner.last_ensure[:name]
+      assert_equal "ace-t-ks9-fs", runner.last_prepare[:window]
+    end
+  end
+
+  def test_callback_pane_uses_runner_current_pane
+    fake = FakeQueryInterface.new
+    config = {"execution" => {"provider" => "claude:sonnet", "timeout" => 30}, "providers" => {}}
+    runner = FakeRuntimeRunner.new(pane: "%11")
+    launcher = build_launcher(config: config, query_interface: fake, runner: runner)
+
+    assert_equal "%11", launcher.callback_pane(runtime: "tmux")
+  end
+
+  def test_launch_callback_mode_skips_subtree_wait_and_exports_callback_pane
+    fake = FakeQueryInterface.new
+    interactive = FakeInteractiveBuilder.new
+    runner = FakeRuntimeRunner.new(context: {in_runtime: true, session: "dev", window: "work", pane: "%9"})
+    config = {"execution" => {"provider" => "claude:sonnet", "timeout" => 30}, "providers" => {}}
+    launcher = build_launcher(
+      config: config,
+      query_interface: fake,
+      runner: runner,
+      interactive_builder: interactive
+    )
+
+    with_temp_cache do |tmp_dir|
+      with_fork_step(tmp_dir)
       result = launcher.launch(
         assignment_id: "abc123",
         fork_root: "010",
@@ -523,6 +603,7 @@ class ForkSessionLauncherTest < AceAssignTestCase
       )
 
       assert_equal true, result[:callback_mode]
+      assert_equal "tmux", result[:runtime]
       assert_equal "%9", result[:callback_pane]
 
       session_file = File.join(tmp_dir, "sessions", "010-session.yml")
@@ -578,13 +659,13 @@ class ForkSessionLauncherTest < AceAssignTestCase
   def test_launch_mode_tmux_rejects_same_scoped_refork_before_pane_creation
     fake = FakeQueryInterface.new
     interactive = FakeInteractiveBuilder.new
-    tmux_runner = FakeTmuxRunner.new(enabled: true, session: "dev", window: "work")
+    runner = FakeRuntimeRunner.new
     config = {"execution" => {"provider" => "claude:sonnet", "timeout" => 30}, "providers" => {}}
     launcher = build_launcher(
       config: config,
       query_interface: fake,
-      interactive_builder: interactive,
-      tmux_runner: tmux_runner
+      runner: runner,
+      interactive_builder: interactive
     )
 
     with_temp_cache do |tmp_dir|
@@ -600,8 +681,8 @@ class ForkSessionLauncherTest < AceAssignTestCase
       end
     end
 
-    assert_nil tmux_runner.last_ensure
-    assert_nil tmux_runner.last_prepare
+    assert_nil runner.last_ensure
+    assert_nil runner.last_prepare
     assert_equal [], interactive.calls
     assert_equal [], fake.calls
   end

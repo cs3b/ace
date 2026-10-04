@@ -17,7 +17,7 @@ module Ace
         #
         # Processes the setup array from scenario.yml, running each action
         # via Ruby system calls (no LLM involved). Supports: git-init,
-        # copy-fixtures, run, write-file, agent-env, tmux-session, and
+        # copy-fixtures, run, write-file, agent-env, runtime-session, and
         # release-manifest actions.
         #
         # Note: This is a Molecule because it performs filesystem I/O and
@@ -28,6 +28,7 @@ module Ace
           STRIPPED_ENV_KEYS = %w[RUBYOPT RUBYLIB].freeze
           RESERVED_ENV_KEYS = Molecules::SandboxRuntimeBuilder::RESERVED_ENV_KEYS + %w[
             PATH HOME TMPDIR XDG_RUNTIME_DIR TMUX_TMPDIR ACE_TMUX_SESSION
+            ACE_RUNTIME HERDR_SESSION HERDR_PANE HERDR_WORKSPACE_ID
           ]
           RELEASE_MANIFEST_DEFAULT_PATH = File.join(".ace-local", "release", "installation-manifest.json")
           # Retry trust state lives in the report directory — host-side,
@@ -56,14 +57,14 @@ module Ace
           # @param setup_steps [Array] Setup steps from scenario.yml
           # @param sandbox_dir [String] Path to the sandbox directory
           # @param fixture_source [String, nil] Path to the fixtures/ directory
-          # @param scenario_name [String, nil] Test ID for tmux session naming (e.g., "TS-OVERSEER-001")
-          # @param run_id [String, nil] Unique run ID for deterministic tmux session naming
+          # @param scenario_name [String, nil] Test ID for runtime session naming (e.g., "TS-OVERSEER-001")
+          # @param run_id [String, nil] Unique run ID for deterministic runtime session naming
           # @param release_manifest_path [String, nil] Explicit absolute manifest path carried
           #   from the invoking process (ACE_RELEASE_MANIFEST). When nil, the release-manifest
           #   step falls back to the default path under ACE_E2E_SOURCE_ROOT.
           # @param state_file [String, nil] Host-side path (report directory) for retry
           #   state. When nil, no retry state is recorded and the sandbox is never reused.
-          # @return [Hash] Result with :success, :steps_completed, :error, :env, :tmux_session keys
+          # @return [Hash] Result with :success, :steps_completed, :error, :env, :runtime_session keys
           def execute(setup_steps:, sandbox_dir:, fixture_source: nil, scenario_name: nil, run_id: nil, initial_env: {},
             git_excludes: [], release_manifest_path: nil, state_file: nil)
             # Initialized before any filesystem operation: an early failure
@@ -71,7 +72,7 @@ module Ace
             # secondary error from nil state.
             env = {}
             steps_completed = 0
-            @tmux_session = nil
+            @runtime_session = nil
             @teardown_env = nil
             FileUtils.mkdir_p(sandbox_dir)
             # A rerun invalidates any earlier success up front: state is
@@ -94,7 +95,7 @@ module Ace
             @release_manifest_input = release_manifest_path
             @release_manifest_state = nil
             steps_completed = 0
-            @tmux_session = nil
+            @runtime_session = nil
             @scenario_name = scenario_name
             @run_id = run_id
             @teardown_env = nil
@@ -137,7 +138,7 @@ module Ace
               steps_completed: steps_completed,
               error: nil,
               env: merged,
-              tmux_session: @tmux_session
+              runtime_session: @runtime_session
             }
           rescue => e
             {
@@ -145,24 +146,24 @@ module Ace
               steps_completed: steps_completed,
               error: e.message,
               env: merged_environment(env),
-              tmux_session: @tmux_session
+              runtime_session: @runtime_session
             }
           end
 
-          # Clean up resources created during setup (e.g. tmux session)
+          # Clean up resources created during setup (e.g. tmux runtime session)
           def teardown
-            return unless @tmux_session
+            return unless @runtime_session
 
             if @sandbox_backend
               @sandbox_backend.capture3(
-                ["tmux", "kill-session", "-t", @tmux_session],
+                ["tmux", "kill-session", "-t", @runtime_session],
                 chdir: @teardown_env&.fetch("PROJECT_ROOT_PATH", Dir.pwd) || Dir.pwd,
                 env: @teardown_env || {}
               )
             else
-              @system_runner.call("tmux", "kill-session", "-t", @tmux_session, out: File::NULL, err: File::NULL)
+              @system_runner.call("tmux", "kill-session", "-t", @runtime_session, out: File::NULL, err: File::NULL)
             end
-            @tmux_session = nil
+            @runtime_session = nil
           end
 
           private
@@ -179,8 +180,8 @@ module Ace
               handle_git_init(sandbox_dir, env)
             when "copy-fixtures"
               handle_copy_fixtures(sandbox_dir, fixture_source)
-            when "tmux-session"
-              handle_tmux_session(env)
+            when "runtime-session"
+              handle_runtime_session(env)
             when Hash
               execute_hash_step(step, sandbox_dir, env)
             else
@@ -200,8 +201,8 @@ module Ace
               handle_write_file(value["path"], value["content"], sandbox_dir)
             when "agent-env"
               handle_env(value, env)
-            when "tmux-session"
-              handle_tmux_session(env, value)
+            when "runtime-session"
+              handle_runtime_session(env, value)
             when "release-manifest"
               handle_release_manifest(value, sandbox_dir, env)
             else
@@ -209,8 +210,22 @@ module Ace
             end
           end
 
-          # Create an isolated detached tmux session and store its name in env
-          def handle_tmux_session(env, config = nil)
+          # Establish a live terminal runtime context for the scenario.
+          # runtime "tmux" (default) creates an isolated detached tmux
+          # session and exports ACE_TMUX_SESSION + ACE_RUNTIME=tmux.
+          # runtime "herdr" requires the caller's live HERDR_SESSION and
+          # HERDR_PANE (herdr workspaces are operator-owned; the runner
+          # never fabricates one) and exports ACE_RUNTIME=herdr. An absent
+          # herdr context fails the step explicitly — no scripted stand-in.
+          def handle_runtime_session(env, config = nil)
+            runtime = config.is_a?(Hash) ? config["runtime"].to_s.strip : ""
+            runtime = "tmux" if runtime.empty?
+            unless %w[tmux herdr].include?(runtime)
+              raise ArgumentError, "runtime-session supports runtimes: tmux, herdr (got '#{runtime}')"
+            end
+
+            return handle_herdr_session(env) if runtime == "herdr"
+
             name_source = config.is_a?(Hash) ? config["name-source"] : nil
             session_name = if name_source == "run-id" && @run_id && !@run_id.to_s.empty?
               @run_id
@@ -229,8 +244,23 @@ module Ace
             end
             raise "Failed to create tmux session '#{session_name}': #{stderr.strip}" unless status.success?
 
-            @tmux_session = session_name
+            @runtime_session = session_name
             env["ACE_TMUX_SESSION"] = session_name
+            env["ACE_RUNTIME"] = "tmux"
+            @teardown_env = merged_environment(env)
+          end
+
+          def handle_herdr_session(env)
+            merged = merged_environment(env)
+            herdr_session = merged["HERDR_SESSION"].to_s.strip
+            herdr_pane = merged["HERDR_PANE"].to_s.strip
+            if herdr_session.empty? || herdr_pane.empty?
+              raise "runtime-session herdr requires a live herdr context (HERDR_SESSION and HERDR_PANE); run this scenario inside herdr"
+            end
+
+            env["HERDR_SESSION"] = herdr_session
+            env["HERDR_PANE"] = herdr_pane
+            env["ACE_RUNTIME"] = "herdr"
             @teardown_env = merged_environment(env)
           end
 

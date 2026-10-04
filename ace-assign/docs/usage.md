@@ -286,28 +286,27 @@ Options:
 - `--provider <provider:model>`
 - `--cli-args <args>`
 - `--timeout <seconds>`
-- `--launch-mode auto|headless|tmux`
+- `--launch-mode auto|headless|tmux|herdr`
 - `--callback`
 - `--quiet, -q`
 - `--debug, -d`
 
 Launch modes:
 
-- `auto` (default): use tmux when the current process is already inside tmux or `ACE_TMUX_SESSION` is set; otherwise use the headless subprocess path
-- `headless`: force the existing provider subprocess path and never create tmux panes
-- `tmux`: require tmux context, create or reuse `<origin-window>-fs`, start a real interactive agent in a pane there via `ace-llm --interactive`, and send the scoped `/as-assign-drive <assignment>@<root>` handoff automatically. The fork window name uses the shared `ace-tmux` safe-name policy, so punctuation in the base window is replaced with `-`. Fork windows and panes are created detached, so the current tmux focus stays where the user left it.
-- `tmux`: require tmux context, create or reuse `<origin-window>-fs`, start a real interactive agent in a pane there via `ace-llm --interactive`, and send the scoped `/as-assign-drive <assignment>@<root>` handoff automatically
+- `auto` (default): use the detected terminal runtime — tmux when the current process is inside tmux or `ACE_TMUX_SESSION` is set (tmux wins when both are live), herdr when `HERDR_SESSION` + `HERDR_PANE` are live; with no runtime detected, use the headless subprocess path (assign is the only consumer with a headless fallback)
+- `headless`: force the existing provider subprocess path and never create terminal panes
+- `tmux`: require a live tmux context, create or reuse `<origin-window>-fs` through the `ace-runtime` contract, start a real interactive agent in a prepared pane via `ace-llm --interactive`, and send the scoped `/as-assign-drive <assignment>@<root>` handoff automatically
+- `herdr`: the same flow through the Herdr adapter — the fork opens as a tab in the caller's live Herdr workspace and the child inherits `HERDR_*` plus `ACE_RUNTIME=herdr`
 
-  - This mode consumes the shared `ace-tmux` runtime/control surface for tmux targeting, pane dispatch, and diagnostics.
-  - The fork window name uses the shared `ace-tmux` safe-name policy, so punctuation in the base window is replaced with `-`.
-  - Fork windows and panes are created detached, so the current tmux focus stays where the user left it.
+  - All terminal targeting, pane dispatch, and capture go through the runtime-neutral `ace-runtime` contract; the fork window name uses the shared `ace-runtime` safe-name policy, so punctuation in the base window is replaced with `-`.
+  - Fork windows/panes and herdr tabs are created detached, so the current focus stays where the user left it.
   - Assignment step state remains the source of truth for subtree completion or failure; pane capture is diagnostic support only.
 
 Callback mode:
 
-- `--callback`: tmux-only fork mode that captures the pane where `fork-run` was started and passes it into the child fork session as `ACE_ASSIGN_CALLBACK_PANE`
-- In callback mode the child agent is instructed to send one final status sentence back to the origin pane with `ace-tmux send` before stopping
-- Callback mode is intended for interactive parent/child agent tmux flows where the parent stays idle until the child sends the final message back
+- `--callback`: terminal-only fork mode (requires `tmux` or `herdr` launch mode) that captures the pane where `fork-run` was started and passes it into the child fork session as `ACE_ASSIGN_CALLBACK_PANE`
+- In callback mode the child agent is instructed to send one final status sentence back to the origin pane with `ace-runtime send` before stopping
+- Callback mode is intended for interactive parent/child agent flows where the parent stays idle until the child sends the final message back
 
 Launch-mode precedence for fork execution:
 

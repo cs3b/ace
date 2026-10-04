@@ -41,7 +41,7 @@ class DemoRecorderTest < AceDemoTestCase
     end
   end
 
-  class StubTmuxDirectiveExecutor
+  class StubDirectiveExecutor
     attr_reader :calls
 
     def initialize
@@ -514,7 +514,7 @@ class DemoRecorderTest < AceDemoTestCase
       ),
       sandbox_builder: StubSandboxBuilder.new(sandbox_path),
       teardown_executor: StubTeardownExecutor.new,
-      tmux_directive_executor: StubTmuxDirectiveExecutor.new,
+      directive_executor: StubDirectiveExecutor.new,
       default_backend: "asciinema"
     )
 
@@ -550,7 +550,7 @@ class DemoRecorderTest < AceDemoTestCase
     sandbox_path = File.join(@tmp, "sandbox")
     FileUtils.mkdir_p(sandbox_path)
     asciinema_executor = StubInteractiveExecutor.new
-    tmux_executor = StubTmuxDirectiveExecutor.new
+    directive_executor = StubDirectiveExecutor.new
     verification_result = Ace::Demo::Models::VerificationResult.new(
       success: true,
       status: "pass",
@@ -580,7 +580,7 @@ class DemoRecorderTest < AceDemoTestCase
       ),
       sandbox_builder: StubSandboxBuilder.new(sandbox_path),
       teardown_executor: StubTeardownExecutor.new,
-      tmux_directive_executor: tmux_executor,
+      directive_executor: directive_executor,
       default_backend: "asciinema"
     )
 
@@ -591,9 +591,9 @@ class DemoRecorderTest < AceDemoTestCase
     assert_equal :tmux, asciinema_executor.commands[2][:kind]
     asciinema_executor.handler.call(asciinema_executor.commands[0], write_io: StringIO.new)
     asciinema_executor.handler.call(asciinema_executor.commands[2], write_io: StringIO.new)
-    assert_equal "wait", tmux_executor.calls[0][:command]["tmux"]["action"]
-    assert_equal "detach", tmux_executor.calls[1][:command]["tmux"]["action"]
-    assert_equal sandbox_path, tmux_executor.calls[0][:env]["PROJECT_ROOT_PATH"]
+    assert_equal "wait", directive_executor.calls[0][:command]["tmux"]["action"]
+    assert_equal "detach", directive_executor.calls[1][:command]["tmux"]["action"]
+    assert_equal sandbox_path, directive_executor.calls[0][:env]["PROJECT_ROOT_PATH"]
   end
 
   def test_passes_settings_env_to_tmux_directive_executor
@@ -602,7 +602,7 @@ class DemoRecorderTest < AceDemoTestCase
     sandbox_path = File.join(@tmp, "sandbox")
     FileUtils.mkdir_p(sandbox_path)
     asciinema_executor = StubInteractiveExecutor.new
-    tmux_executor = StubTmuxDirectiveExecutor.new
+    directive_executor = StubDirectiveExecutor.new
     verification_result = Ace::Demo::Models::VerificationResult.new(
       success: true,
       status: "pass",
@@ -636,16 +636,16 @@ class DemoRecorderTest < AceDemoTestCase
       ),
       sandbox_builder: StubSandboxBuilder.new(sandbox_path),
       teardown_executor: StubTeardownExecutor.new,
-      tmux_directive_executor: tmux_executor,
+      directive_executor: directive_executor,
       default_backend: "asciinema"
     )
 
     recorder.record(tape_ref: "demo")
 
     asciinema_executor.handler.call(asciinema_executor.commands[0], write_io: StringIO.new)
-    assert_equal "fork-demo", tmux_executor.calls[0][:env]["ACE_TMUX_SESSION"]
-    assert_equal "work", tmux_executor.calls[0][:env]["ACE_TMUX_WINDOW"]
-    assert_equal sandbox_path, tmux_executor.calls[0][:env]["PROJECT_ROOT_PATH"]
+    assert_equal "fork-demo", directive_executor.calls[0][:env]["ACE_TMUX_SESSION"]
+    assert_equal "work", directive_executor.calls[0][:env]["ACE_TMUX_WINDOW"]
+    assert_equal sandbox_path, directive_executor.calls[0][:env]["PROJECT_ROOT_PATH"]
   end
 
   def test_preserves_asciinema_sandbox_on_failed_verification

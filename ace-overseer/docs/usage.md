@@ -102,6 +102,24 @@ Check dashboard: `ace-overseer status`.
 
 Preview then prune: `ace-overseer prune --dry-run`, then `ace-overseer prune --yes`.
 
+## Terminal Runtime Configuration
+
+Work-on opens the task's terminal window and prune closes it through the
+runtime-neutral `ace-runtime` contract. Select the terminal runtime in
+`.ace/overseer/config.yml`:
+
+```yaml
+# tmux | herdr | auto (default) — auto detects tmux first, then herdr;
+# ACE_RUNTIME env wins over this key; nothing detected fails explicitly
+runtime: auto
+window_presets:
+  "work-on-task": "work-on-task"   # preset applied to the opened window/tab
+```
+
+The preset key is `window_presets` (renamed from `tmux_window_presets`
+pre-1.0; there is no legacy alias). The same configured runtime closes a
+worktree's window during accepted prunes.
+
 Prune migrated work with a declared destination:
 
 ```bash

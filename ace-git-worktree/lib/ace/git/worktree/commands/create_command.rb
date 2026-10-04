@@ -678,10 +678,10 @@ module Ace
 
             display_warnings(result[:warnings]) if result[:warnings]
 
-            # Display cd command or launch tmux
+            # Display cd command or open a terminal
             unless dry_run
               puts ""
-              launch_tmux_or_display_cd(result[:worktree_path])
+              open_terminal_or_display_cd(result[:worktree_path])
             end
           end
 
@@ -722,9 +722,9 @@ module Ace
 
             display_warnings(result[:warnings]) if result[:warnings]
 
-            # Display cd command or launch tmux
+            # Display cd command or open a terminal
             unless dry_run
-              launch_tmux_or_display_cd(result[:worktree_path])
+              open_terminal_or_display_cd(result[:worktree_path])
             end
           end
 
@@ -770,9 +770,9 @@ module Ace
 
             display_warnings(result[:warnings]) if result[:warnings]
 
-            # Display cd command or launch tmux
+            # Display cd command or open a terminal
             unless dry_run
-              launch_tmux_or_display_cd(result[:worktree_path])
+              open_terminal_or_display_cd(result[:worktree_path])
             end
           end
 
@@ -795,7 +795,7 @@ module Ace
 
               display_warnings(result[:warnings]) if result[:warnings]
               puts ""
-              launch_tmux_or_display_cd(result[:worktree_path])
+              open_terminal_or_display_cd(result[:worktree_path])
             end
           end
 
@@ -830,41 +830,74 @@ module Ace
             end
           end
 
-          # Launch tmux session or display cd hint for navigation
+          # Open a terminal for the new worktree or display cd hint
           #
-          # When tmux config is enabled and ace-tmux is available, launches a tmux
-          # session rooted at the worktree path (replaces current process).
-          # Uses `start` outside tmux and `window` inside tmux.
-          # Otherwise falls back to displaying the cd command.
+          # When terminal config is enabled, opens a window/tab rooted at the
+          # worktree through the runtime contract inside a live runtime, and
+          # falls back to the tmux-native `ace-tmux start` when tmux is the
+          # explicit selection outside any live runtime (the contract has no
+          # session-create intent). An explicit herdr selection never
+          # launches tmux. Otherwise falls back to displaying the cd command.
           #
           # @param worktree_path [String] Path to the worktree
-          def launch_tmux_or_display_cd(worktree_path)
+          def open_terminal_or_display_cd(worktree_path)
             return unless worktree_path
 
-            if tmux_enabled?
-              if ace_tmux_available?
-                command = ENV["TMUX"].to_s.strip.empty? ? "start" : "window"
-                Kernel.exec("ace-tmux", command, "--root", worktree_path)
-              else
-                puts "Warning: tmux is enabled in config but ace-tmux is not installed."
-                puts "Install ace-tmux or disable tmux in .ace/git/worktree.yml"
+            unless terminal_enabled?
+              puts "cd #{worktree_path}"
+              return
+            end
+
+            detected = Ace::Runtime.detect
+            runtime_name = explicit_runtime_name || detected&.to_s
+
+            if runtime_name.nil?
+              puts "Warning: terminal is enabled but no terminal runtime is detected."
+              puts "Run inside tmux/herdr, set ACE_RUNTIME, or configure runtime under the ace-runtime config namespace."
+              puts "cd #{worktree_path}"
+              return
+            end
+
+            if detected && detected.to_s == runtime_name
+              name = Ace::Runtime.sanitize_name(File.basename(worktree_path))
+              Ace::Runtime.resolve(runtime_name).ensure_window(name: name, root: File.expand_path(worktree_path))
+            elsif runtime_name == "tmux"
+              unless ace_tmux_available?
+                puts "Warning: tmux terminal is enabled but ace-tmux is not installed."
+                puts "Install ace-tmux or disable terminal in .ace/git/worktree.yml"
                 puts "cd #{worktree_path}"
+                return
               end
+              Kernel.exec("ace-tmux", "start", "--root", worktree_path)
             else
+              puts "Warning: the '#{runtime_name}' runtime is not live; cannot open a terminal at #{worktree_path}."
               puts "cd #{worktree_path}"
             end
+          rescue Ace::Runtime::Error => e
+            puts "Warning: failed to open a terminal window at #{worktree_path}: #{e.message}"
+            puts "cd #{worktree_path}"
           end
 
-          # Check if tmux integration is enabled in config
+          # Explicit runtime selection: ACE_RUNTIME env, then the
+          # ace-runtime config namespace — the same precedence every
+          # consumer uses (k86.3). The value `auto` means "detect", never
+          # a runtime name, so it normalizes to unset.
+          def explicit_runtime_name
+            explicit = ENV["ACE_RUNTIME"].to_s.strip
+            explicit = Ace::Runtime.config["runtime"].to_s.strip if explicit.empty?
+            explicit.empty? || explicit == "auto" ? nil : explicit
+          end
+
+          # Check if terminal integration is enabled in config
           #
-          # @return [Boolean] true if tmux is enabled
-          def tmux_enabled?
+          # @return [Boolean] true if terminal launch is enabled
+          def terminal_enabled?
             require_relative "../molecules/config_loader"
             config_loader = Ace::Git::Worktree::Molecules::ConfigLoader.new
             config = config_loader.load
             return false unless config
 
-            config.tmux?
+            config.terminal?
           rescue
             false
           end

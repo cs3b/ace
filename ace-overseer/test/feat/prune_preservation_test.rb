@@ -59,9 +59,16 @@ class PrunePreservationIntegrationTest < AceOverseerTestCase
     end
   end
 
-  class FakeTmuxExecutor
-    def run(_cmd)
-      ""
+  class FakeRuntime
+    attr_reader :close_calls
+
+    def initialize
+      @close_calls = []
+    end
+
+    def close_window(window:)
+      @close_calls << window
+      true
     end
   end
 
@@ -110,7 +117,7 @@ class PrunePreservationIntegrationTest < AceOverseerTestCase
     Ace::Overseer::Organisms::PruneOrchestrator.new(
       worktree_manager: manager,
       prune_checker: checker,
-      tmux_executor: FakeTmuxExecutor.new,
+      runtime: FakeRuntime.new,
       config: {},
       lifecycle_exclusion: @exclusion
     )
@@ -232,7 +239,7 @@ def test_head_mismatch_after_recheck_preserves_worktree_and_branch
   orchestrator = Ace::Overseer::Organisms::PruneOrchestrator.new(
     worktree_manager: StaticManager.new([worktree_entry], repo_root: @repo.path),
     prune_checker: checker,
-    tmux_executor: FakeTmuxExecutor.new,
+    runtime: FakeRuntime.new,
     config: {},
     lifecycle_exclusion: @exclusion
   )
@@ -305,7 +312,7 @@ def test_safe_detached_candidate_applies_without_branch_deletion
   orchestrator = Ace::Overseer::Organisms::PruneOrchestrator.new(
     worktree_manager: StaticManager.new([worktree_entry], repo_root: @repo.path),
     prune_checker: checker,
-    tmux_executor: FakeTmuxExecutor.new,
+    runtime: FakeRuntime.new,
     config: {},
     lifecycle_exclusion: @exclusion
   )
@@ -350,7 +357,7 @@ end
         @repo.git!("update-ref", "refs/heads/task-work", @repo.rev("main~0"))
       }),
       prune_checker: checker,
-      tmux_executor: FakeTmuxExecutor.new,
+      runtime: FakeRuntime.new,
       config: {},
       lifecycle_exclusion: @exclusion
     )

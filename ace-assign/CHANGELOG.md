@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.62.0] - 2026-10-04
 
 ### Added
+- Runtime-neutral fork launches: `launch_mode` gains `herdr` and `auto` detects the live terminal runtime (tmux first, then herdr; headless only outside any runtime). `TmuxControlSurfaceRunner` is replaced by the contract-backed `RuntimeControlSurfaceRunner`; fork windows/panes, sends, captures, and session metadata are runtime-neutral (`runtime`/`session`/`window`/`window_id`/`pane` replace the `tmux_*` metadata keys), and `--callback` works under herdr. Fork children now receive `ACE_RUNTIME` instead of `ACE_TMUX_SESSION` propagation, and the drive workflow callback rule prescribes `ace-runtime send`.
+- New dependency: `ace-runtime` (~> 0.1); `ace-tmux` is kept to install the tmux adapter.
 - **Lock-scoped external attempt authority (spec 8wq.t.34i)**: `AttemptCoordinator#with_verified_attempt` verifies that a managed attempt is live (reserved/running — uncertainty never grants external authority), bound to the exact assignment/project, and owned by the requesting actor, holding the assignment `LifecycleExclusion` shared side across the caller's whole locked transition. `finish` and `reconcile` hold the exclusive side across their terminal commits, so a liveness check can never observe an attempt as active after the terminal event landed (and vice versa). This is the authority behind ace-hitl's managed HITL request binding.
 
 ## [0.61.1] - 2026-10-02

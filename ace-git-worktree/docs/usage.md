@@ -392,7 +392,15 @@ git:
   worktree:
     root_path: ".ace-wt"
     auto_navigate: true
-    tmux: false
+    terminal: false
+    # terminal: true opens a window/tab rooted at the new worktree through
+    # the ace-runtime contract (renamed from `tmux`; boolean, no alias).
+    # Runtime selection follows ACE_RUNTIME > .ace/runtime/config.yml >
+    # detection (tmux first). Inside a live runtime the window/tab opens
+    # via the contract; with tmux explicitly selected but no live runtime,
+    # `ace-tmux start` bootstraps a session; anything else without a live
+    # runtime (including explicit herdr outside herdr) prints the cd hint
+    # instead — tmux is never launched unless tmux is the selection.
     task:
       directory_format: "task.{task_id}"
       branch_format: "{id}-{slug}"

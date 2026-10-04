@@ -2,13 +2,14 @@
 
 require_relative "../test_helper"
 
-class CreateCommandTmuxContractTest < Minitest::Test
+class CreateCommandTerminalContractTest < Minitest::Test
   include TestHelper
 
   def setup
     setup_temp_dir
     @original_path = ENV["PATH"]
     @original_log_path = ENV["ACE_FAKE_TMUX_INVOCATION_LOG"]
+    @original_ace_runtime = ENV["ACE_RUNTIME"]
 
     @fake_bin = File.join(@temp_dir, "bin")
     @fake_tmux_script = File.join(@fake_bin, "ace-tmux")
@@ -24,16 +25,14 @@ class CreateCommandTmuxContractTest < Minitest::Test
 
   def teardown
     ENV["PATH"] = @original_path
-    if @original_log_path
-      ENV["ACE_FAKE_TMUX_INVOCATION_LOG"] = @original_log_path
-    else
-      ENV.delete("ACE_FAKE_TMUX_INVOCATION_LOG")
-    end
+    restore_env("ACE_FAKE_TMUX_INVOCATION_LOG", @original_log_path)
+    restore_env("ACE_RUNTIME", @original_ace_runtime)
+    Ace::Runtime.reset_registry!
     teardown_temp_dir
   end
 
-  def test_tmux_command_contract_for_task_create_uses_start_subcommand
-    original_tmux = ENV["TMUX"]
+  def test_terminal_contract_for_task_create_uses_start_subcommand_outside_runtime
+    ENV["ACE_RUNTIME"] = "tmux"
     ENV.delete("TMUX")
 
     mock_worktree_manager = Minitest::Mock.new
@@ -49,25 +48,21 @@ class CreateCommandTmuxContractTest < Minitest::Test
     command = Ace::Git::Worktree::Commands::CreateCommand.new(manager: mock_worktree_manager)
     Kernel.stub(:exec, ->(*args) { Kernel.system(*args) }) do
       command.stub(:check_task_dependency_availability, {available: true, message: "mocked"}) do
-        command.stub(:tmux_enabled?, true) do
-          result = command.run(["--task", "081"])
-          assert_equal 0, result
+        command.stub(:terminal_enabled?, true) do
+          command.stub(:ace_tmux_available?, true) do
+            result = command.run(["--task", "081"])
+            assert_equal 0, result
+          end
         end
       end
     end
 
     assert_equal "#{@fake_tmux_script}\nstart\n--root\n/path/to/worktree", invocation_log
     mock_worktree_manager.verify
-  ensure
-    if original_tmux
-      ENV["TMUX"] = original_tmux
-    else
-      ENV.delete("TMUX")
-    end
   end
 
-  def test_tmux_command_contract_for_pr_create_uses_start_subcommand
-    original_tmux = ENV["TMUX"]
+  def test_terminal_contract_for_pr_create_uses_start_subcommand_outside_runtime
+    ENV["ACE_RUNTIME"] = "tmux"
     ENV.delete("TMUX")
 
     evidence = Ace::Git::ProviderPullRequest.new(
@@ -99,9 +94,11 @@ class CreateCommandTmuxContractTest < Minitest::Test
       Ace::Git::Worktree::Molecules::PullRequestCheckoutPreparer.stub(:new, ->(**_kw) { fake_preparer }) do
         command = Ace::Git::Worktree::Commands::CreateCommand.new(manager: mock_worktree_manager)
         Kernel.stub(:exec, ->(*args) { Kernel.system(*args) }) do
-          command.stub(:tmux_enabled?, true) do
-            result = command.run(["--pr", "26"])
-            assert_equal 0, result
+          command.stub(:terminal_enabled?, true) do
+            command.stub(:ace_tmux_available?, true) do
+              result = command.run(["--pr", "26"])
+              assert_equal 0, result
+            end
           end
         end
       end
@@ -109,16 +106,10 @@ class CreateCommandTmuxContractTest < Minitest::Test
 
     assert_equal "#{@fake_tmux_script}\nstart\n--root\n/path/to/worktree", invocation_log
     mock_worktree_manager.verify
-  ensure
-    if original_tmux
-      ENV["TMUX"] = original_tmux
-    else
-      ENV.delete("TMUX")
-    end
   end
 
-  def test_tmux_command_contract_for_task_create_uses_window_subcommand_when_in_tmux
-    original_tmux = ENV["TMUX"]
+  def test_terminal_contract_inside_live_runtime_opens_window_through_contract
+    ENV.delete("ACE_RUNTIME")
     ENV["TMUX"] = "/tmp/tmux-1000,12345,0"
 
     mock_worktree_manager = Minitest::Mock.new
@@ -131,27 +122,47 @@ class CreateCommandTmuxContractTest < Minitest::Test
       steps_completed: ["create_worktree"]
     }, [String, Hash])
 
+    ensure_calls = []
+    fake_runtime = Object.new
+    fake_runtime.define_singleton_method(:ensure_window) do |name:, root:, preset: nil|
+      ensure_calls << {name: name, root: root, preset: preset}
+      "w1"
+    end
+    Ace::Runtime.reset_registry!
+    Ace::Runtime.register(:tmux, -> { fake_runtime })
+
     command = Ace::Git::Worktree::Commands::CreateCommand.new(manager: mock_worktree_manager)
-    Kernel.stub(:exec, ->(*args) { Kernel.system(*args) }) do
+    Kernel.stub(:exec, ->(*_args) { flunk("a live runtime must never exec a native launcher") }) do
       command.stub(:check_task_dependency_availability, {available: true, message: "mocked"}) do
-        command.stub(:tmux_enabled?, true) do
+        command.stub(:terminal_enabled?, true) do
           result = command.run(["--task", "081"])
           assert_equal 0, result
         end
       end
     end
 
-    assert_equal "#{@fake_tmux_script}\nwindow\n--root\n/path/to/worktree", invocation_log
+    assert_empty invocation_log_content, "no native launcher may be invoked inside a live runtime"
+    assert_equal [{name: "worktree", root: "/path/to/worktree", preset: nil}], ensure_calls
     mock_worktree_manager.verify
-  ensure
-    if original_tmux
-      ENV["TMUX"] = original_tmux
-    else
-      ENV.delete("TMUX")
-    end
   end
 
   private
+
+  def invocation_log_content
+    File.exist?(@fake_tmux_invocation_log) ? File.read(@fake_tmux_invocation_log) : ""
+  end
+
+  def invocation_log
+    File.read(@fake_tmux_invocation_log)
+  end
+
+  def restore_env(key, original)
+    if original
+      ENV[key] = original
+    else
+      ENV.delete(key)
+    end
+  end
 
   def fake_ace_tmux_script_content
     <<~RUBY
@@ -162,9 +173,5 @@ class CreateCommandTmuxContractTest < Minitest::Test
       File.write(ENV["ACE_FAKE_TMUX_INVOCATION_LOG"], [ $0, *ARGV ].join("\\n"))
       exit 0
     RUBY
-  end
-
-  def invocation_log
-    File.read(@fake_tmux_invocation_log)
   end
 end

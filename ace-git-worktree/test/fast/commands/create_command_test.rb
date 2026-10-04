@@ -596,24 +596,64 @@ class CreateCommandTest < Minitest::Test
     assert_equal 1, result
   end
 
-  # Tmux integration tests
+  # Terminal integration tests
 
-  def test_tmux_disabled_shows_cd_hint
+  class FakeTerminalRuntime
+    attr_reader :ensure_calls
+
+    def initialize
+      @ensure_calls = []
+    end
+
+    def ensure_window(name:, root:, preset: nil)
+      @ensure_calls << {name: name, root: root, preset: preset}
+      name
+    end
+  end
+
+  def with_terminal_env(ace_runtime: nil, tmux: nil)
+    original_runtime = ENV["ACE_RUNTIME"]
+    original_tmux = ENV["TMUX"]
+    ace_runtime ? ENV["ACE_RUNTIME"] = ace_runtime : ENV.delete("ACE_RUNTIME")
+    tmux ? ENV["TMUX"] = tmux : ENV.delete("TMUX")
+    yield
+  ensure
+    if original_runtime
+      ENV["ACE_RUNTIME"] = original_runtime
+    else
+      ENV.delete("ACE_RUNTIME")
+    end
+    if original_tmux
+      ENV["TMUX"] = original_tmux
+    else
+      ENV.delete("TMUX")
+    end
+  end
+
+  def with_fake_tmux_runtime
+    Ace::Runtime.reset_registry!
+    runtime = FakeTerminalRuntime.new
+    Ace::Runtime.register(:tmux, -> { runtime })
+    yield runtime
+  ensure
+    Ace::Runtime.reset_registry!
+  end
+
+  def test_terminal_disabled_shows_cd_hint
     mock_worktree_manager = Minitest::Mock.new
-    mock_result = {
+    mock_worktree_manager.expect(:create_task, {
       success: true,
       task_id: "081",
       task_title: "Test task",
       worktree_path: "/path/to/worktree",
       branch: "task-081",
       steps_completed: ["create_worktree"]
-    }
-    mock_worktree_manager.expect(:create_task, mock_result, [String, Hash])
+    }, [String, Hash])
 
     command = Ace::Git::Worktree::Commands::CreateCommand.new(manager: mock_worktree_manager)
 
     command.stub(:check_task_dependency_availability, {available: true, message: "mocked"}) do
-      command.stub(:tmux_enabled?, false) do
+      command.stub(:terminal_enabled?, false) do
         output = capture_io do
           result = command.run(["--task", "081"])
           assert_equal 0, result
@@ -625,33 +665,31 @@ class CreateCommandTest < Minitest::Test
     end
   end
 
-  def test_tmux_enabled_with_ace_tmux_available_calls_exec_for_task
-    original_tmux = ENV["TMUX"]
-    ENV.delete("TMUX")
-
+  def test_terminal_tmux_explicit_outside_runtime_exec_start_for_task
     mock_worktree_manager = Minitest::Mock.new
-    mock_result = {
+    mock_worktree_manager.expect(:create_task, {
       success: true,
       task_id: "081",
       task_title: "Test task",
       worktree_path: "/path/to/worktree",
       branch: "task-081",
       steps_completed: ["create_worktree"]
-    }
-    mock_worktree_manager.expect(:create_task, mock_result, [String, Hash])
+    }, [String, Hash])
 
     command = Ace::Git::Worktree::Commands::CreateCommand.new(manager: mock_worktree_manager)
 
     exec_called_with = nil
-    mock_exec = ->(* args) { exec_called_with = args }
+    mock_exec = ->(*args) { exec_called_with = args }
 
-    command.stub(:check_task_dependency_availability, {available: true, message: "mocked"}) do
-      command.stub(:tmux_enabled?, true) do
-        command.stub(:ace_tmux_available?, true) do
-          Kernel.stub(:exec, mock_exec) do
-            capture_io do
-              result = command.run(["--task", "081"])
-              assert_equal 0, result
+    with_terminal_env(ace_runtime: "tmux") do
+      command.stub(:check_task_dependency_availability, {available: true, message: "mocked"}) do
+        command.stub(:terminal_enabled?, true) do
+          command.stub(:ace_tmux_available?, true) do
+            Kernel.stub(:exec, mock_exec) do
+              capture_io do
+                result = command.run(["--task", "081"])
+                assert_equal 0, result
+              end
             end
           end
         end
@@ -660,18 +698,9 @@ class CreateCommandTest < Minitest::Test
 
     assert_equal ["ace-tmux", "start", "--root", "/path/to/worktree"], exec_called_with
     mock_worktree_manager.verify
-  ensure
-    if original_tmux
-      ENV["TMUX"] = original_tmux
-    else
-      ENV.delete("TMUX")
-    end
   end
 
-  def test_tmux_enabled_with_ace_tmux_available_calls_exec_for_pr
-    original_tmux = ENV["TMUX"]
-    ENV.delete("TMUX")
-
+  def test_terminal_tmux_explicit_outside_runtime_exec_start_for_pr
     evidence = pr_evidence
     mock_worktree_manager = Minitest::Mock.new
     mock_worktree_manager.expect(:create_pr, {
@@ -685,13 +714,15 @@ class CreateCommandTest < Minitest::Test
     exec_called_with = nil
     mock_exec = ->(*args) { exec_called_with = args }
 
-    stub_pr_pipeline(evidence) do
-      command.stub(:tmux_enabled?, true) do
-        command.stub(:ace_tmux_available?, true) do
-          Kernel.stub(:exec, mock_exec) do
-            capture_io do
-              result = command.run(["--pr", "26"])
-              assert_equal 0, result
+    with_terminal_env(ace_runtime: "tmux") do
+      stub_pr_pipeline(evidence) do
+        command.stub(:terminal_enabled?, true) do
+          command.stub(:ace_tmux_available?, true) do
+            Kernel.stub(:exec, mock_exec) do
+              capture_io do
+                result = command.run(["--pr", "26"])
+                assert_equal 0, result
+              end
             end
           end
         end
@@ -700,122 +731,136 @@ class CreateCommandTest < Minitest::Test
 
     assert_equal ["ace-tmux", "start", "--root", "/path/to/worktree"], exec_called_with
     mock_worktree_manager.verify
-  ensure
-    if original_tmux
-      ENV["TMUX"] = original_tmux
-    else
-      ENV.delete("TMUX")
-    end
   end
 
-  def test_tmux_enabled_with_tmux_session_calls_window_for_task
-    original_tmux = ENV["TMUX"]
-    ENV["TMUX"] = "/tmp/tmux-1000,12345,0"
-
+  def test_terminal_detected_runtime_opens_contract_window_for_task
     mock_worktree_manager = Minitest::Mock.new
-    mock_result = {
+    mock_worktree_manager.expect(:create_task, {
       success: true,
       task_id: "081",
       task_title: "Test task",
       worktree_path: "/path/to/worktree",
       branch: "task-081",
       steps_completed: ["create_worktree"]
-    }
-    mock_worktree_manager.expect(:create_task, mock_result, [String, Hash])
-
-    command = Ace::Git::Worktree::Commands::CreateCommand.new(manager: mock_worktree_manager)
-
-    exec_called_with = nil
-    mock_exec = ->(* args) { exec_called_with = args }
-
-    command.stub(:check_task_dependency_availability, {available: true, message: "mocked"}) do
-      command.stub(:tmux_enabled?, true) do
-        command.stub(:ace_tmux_available?, true) do
-          Kernel.stub(:exec, mock_exec) do
-            capture_io do
-              result = command.run(["--task", "081"])
-              assert_equal 0, result
-            end
-          end
-        end
-      end
-    end
-
-    assert_equal ["ace-tmux", "window", "--root", "/path/to/worktree"], exec_called_with
-    mock_worktree_manager.verify
-  ensure
-    if original_tmux
-      ENV["TMUX"] = original_tmux
-    else
-      ENV.delete("TMUX")
-    end
-  end
-
-  def test_tmux_enabled_with_tmux_session_calls_window_for_pr
-    original_tmux = ENV["TMUX"]
-    ENV["TMUX"] = "/tmp/tmux-1000,12345,0"
-
-    evidence = pr_evidence
-    mock_worktree_manager = Minitest::Mock.new
-    mock_worktree_manager.expect(:create_pr, {
-      success: true, pr_number: 26, pr_title: "Add authentication feature",
-      worktree_path: "/path/to/worktree", branch: "pr-26",
-      tracking: nil, directory_name: "ace-pr-26"
-    }, [evidence, successful_checkout, Hash])
+    }, [String, Hash])
 
     command = Ace::Git::Worktree::Commands::CreateCommand.new(manager: mock_worktree_manager)
 
     exec_called_with = nil
     mock_exec = ->(*args) { exec_called_with = args }
 
-    stub_pr_pipeline(evidence) do
-      command.stub(:tmux_enabled?, true) do
-        command.stub(:ace_tmux_available?, true) do
-          Kernel.stub(:exec, mock_exec) do
-            capture_io do
-              result = command.run(["--pr", "26"])
-              assert_equal 0, result
+    with_terminal_env(tmux: "/tmp/tmux-1000,12345,0") do
+      with_fake_tmux_runtime do |runtime|
+        command.stub(:check_task_dependency_availability, {available: true, message: "mocked"}) do
+          command.stub(:terminal_enabled?, true) do
+            Kernel.stub(:exec, mock_exec) do
+              capture_io do
+                result = command.run(["--task", "081"])
+                assert_equal 0, result
+              end
             end
           end
         end
+
+        assert_equal [{name: "worktree", root: "/path/to/worktree", preset: nil}], runtime.ensure_calls
+        assert_nil exec_called_with, "live runtimes open a window through the contract, never via exec"
       end
     end
-
-    assert_equal ["ace-tmux", "window", "--root", "/path/to/worktree"], exec_called_with
     mock_worktree_manager.verify
-  ensure
-    if original_tmux
-      ENV["TMUX"] = original_tmux
-    else
-      ENV.delete("TMUX")
-    end
   end
 
-  def test_tmux_enabled_without_ace_tmux_shows_warning_and_cd
+  def test_terminal_explicit_herdr_never_launches_tmux
     mock_worktree_manager = Minitest::Mock.new
-    mock_result = {
+    mock_worktree_manager.expect(:create_task, {
       success: true,
       task_id: "081",
       task_title: "Test task",
       worktree_path: "/path/to/worktree",
       branch: "task-081",
       steps_completed: ["create_worktree"]
-    }
-    mock_worktree_manager.expect(:create_task, mock_result, [String, Hash])
+    }, [String, Hash])
 
     command = Ace::Git::Worktree::Commands::CreateCommand.new(manager: mock_worktree_manager)
 
-    command.stub(:check_task_dependency_availability, {available: true, message: "mocked"}) do
-      command.stub(:tmux_enabled?, true) do
-        command.stub(:ace_tmux_available?, false) do
+    exec_called_with = nil
+    mock_exec = ->(*args) { exec_called_with = args }
+
+    with_terminal_env(ace_runtime: "herdr") do
+      command.stub(:check_task_dependency_availability, {available: true, message: "mocked"}) do
+        command.stub(:terminal_enabled?, true) do
+          command.stub(:ace_tmux_available?, true) do
+            Kernel.stub(:exec, mock_exec) do
+              output = capture_io do
+                result = command.run(["--task", "081"])
+                assert_equal 0, result
+              end.first
+              assert_match(/'herdr' runtime is not live/, output)
+              assert_match(/cd \/path\/to\/worktree/, output)
+            end
+          end
+        end
+      end
+    end
+
+    assert_nil exec_called_with, "explicit herdr must never launch tmux"
+    mock_worktree_manager.verify
+  end
+
+  def test_terminal_without_runtime_shows_warning_and_cd
+    mock_worktree_manager = Minitest::Mock.new
+    mock_worktree_manager.expect(:create_task, {
+      success: true,
+      task_id: "081",
+      task_title: "Test task",
+      worktree_path: "/path/to/worktree",
+      branch: "task-081",
+      steps_completed: ["create_worktree"]
+    }, [String, Hash])
+
+    command = Ace::Git::Worktree::Commands::CreateCommand.new(manager: mock_worktree_manager)
+
+    with_terminal_env do
+      command.stub(:check_task_dependency_availability, {available: true, message: "mocked"}) do
+        command.stub(:terminal_enabled?, true) do
           output = capture_io do
             result = command.run(["--task", "081"])
             assert_equal 0, result
           end.first
 
-          assert_match(/Warning.*tmux.*enabled.*ace-tmux.*not installed/, output)
+          assert_match(/no terminal runtime is detected/, output)
           assert_match(/cd \/path\/to\/worktree/, output)
           mock_worktree_manager.verify
+        end
+      end
+    end
+  end
+
+  def test_terminal_tmux_explicit_without_ace_tmux_shows_warning_and_cd
+    mock_worktree_manager = Minitest::Mock.new
+    mock_worktree_manager.expect(:create_task, {
+      success: true,
+      task_id: "081",
+      task_title: "Test task",
+      worktree_path: "/path/to/worktree",
+      branch: "task-081",
+      steps_completed: ["create_worktree"]
+    }, [String, Hash])
+
+    command = Ace::Git::Worktree::Commands::CreateCommand.new(manager: mock_worktree_manager)
+
+    with_terminal_env(ace_runtime: "tmux") do
+      command.stub(:check_task_dependency_availability, {available: true, message: "mocked"}) do
+        command.stub(:terminal_enabled?, true) do
+          command.stub(:ace_tmux_available?, false) do
+            output = capture_io do
+              result = command.run(["--task", "081"])
+              assert_equal 0, result
+            end.first
+
+            assert_match(/Warning.*tmux terminal is enabled but ace-tmux is not installed/, output)
+            assert_match(/cd \/path\/to\/worktree/, output)
+            mock_worktree_manager.verify
+          end
         end
       end
     end

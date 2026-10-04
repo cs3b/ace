@@ -5,6 +5,7 @@ PATH
       ace-b36ts (~> 0.14)
       ace-llm (~> 0.39)
       ace-review (~> 0.57)
+      ace-runtime (~> 0.1)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)
       ace-support-core (~> 0.31)
@@ -45,8 +46,9 @@ PATH
 PATH
   remote: ace-demo
   specs:
-    ace-demo (0.25.11)
+    ace-demo (0.26.0)
       ace-b36ts (~> 0.14)
+      ace-runtime (~> 0.1)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)
       ace-support-core (~> 0.31)
@@ -106,12 +108,14 @@ PATH
 PATH
   remote: ace-git-worktree
   specs:
-    ace-git-worktree (0.24.1)
+    ace-git-worktree (0.25.0)
       ace-git (~> 0.24)
+      ace-runtime (~> 0.1)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)
       ace-support-core (~> 0.31)
       ace-task (~> 0.37)
+      ace-tmux (~> 0.18)
 
 PATH
   remote: ace-git
@@ -201,7 +205,7 @@ PATH
   remote: ace-lab
   specs:
     ace-lab (0.3.0)
-      ace-assign (~> 0.61)
+      ace-assign (~> 0.62)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)
       ace-support-core (~> 0.31)
@@ -240,10 +244,11 @@ PATH
 PATH
   remote: ace-overseer
   specs:
-    ace-overseer (0.18.2)
-      ace-assign (~> 0.61)
+    ace-overseer (0.19.0)
+      ace-assign (~> 0.62)
       ace-git (~> 0.23)
-      ace-git-worktree (~> 0.22)
+      ace-git-worktree (~> 0.25)
+      ace-runtime (~> 0.1)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)
       ace-support-core (~> 0.31)
@@ -404,7 +409,7 @@ PATH
 PATH
   remote: ace-test-runner-e2e
   specs:
-    ace-test-runner-e2e (0.41.0)
+    ace-test-runner-e2e (0.42.0)
       ace-b36ts (~> 0.14)
       ace-llm (~> 0.42)
       ace-support-cli (~> 0.6)

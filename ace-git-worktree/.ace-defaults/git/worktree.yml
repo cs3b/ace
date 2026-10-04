@@ -28,11 +28,12 @@ git:
     # If true, provides enhanced navigation experience after worktree creation
     auto_navigate: true
 
-    # Launch tmux session after worktree creation
-    # Requires ace-tmux to be installed. When enabled, replaces "cd ..." hint
-    # with automatic tmux session launch rooted at the new worktree.
+    # Open a terminal window/tab after worktree creation
+    # Uses the configured terminal runtime (ace-runtime selection: explicit
+    # > ACE_RUNTIME > ace-runtime config > detection) and roots it at the
+    # new worktree. When enabled but no runtime is live, shows the cd hint.
     # Values: true | false
-    tmux: false
+    terminal: false
 
     # Task-based naming and behavior configuration
     task:

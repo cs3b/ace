@@ -51,14 +51,14 @@ requires:
   ruby: ">= 3.0"
 
 # Setup directives (executed before test cases)
-# Available: git-init, run:, copy-fixtures, write-file:, agent-env:, tmux-session
+# Available: git-init, run:, copy-fixtures, write-file:, agent-env:, runtime-session
 # Rules:
 # - setup is fail-fast (do not use `|| true`)
 # - fixtures/setup own sandbox preparation; runner TCs do not re-implement setup
 setup:
   - git-init
   # Optional detached tmux session for test isolation (uses unique run ID)
-  # - tmux-session:
+  # - runtime-session:
   #     name-source: run-id
   - run: "cp ${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}/mise.toml mise.toml && mise trust mise.toml"
   # Uncomment as needed:
