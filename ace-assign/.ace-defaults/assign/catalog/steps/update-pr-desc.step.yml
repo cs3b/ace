@@ -1,5 +1,5 @@
 name: update-pr-desc
-skill: as-github-pr-update
+skill: as-git-pr-update
 description: Update PR description with implementation summary and final state
 intent:
   phrases:

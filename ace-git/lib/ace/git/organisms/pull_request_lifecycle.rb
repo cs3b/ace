@@ -29,8 +29,10 @@ module Ace
         # @param remote_name [String, nil] git remote used when nothing selected
         # @param timeout [Integer, nil] provider operation timeout
         # @param runner [Proc, nil] injectable provider command runner (tests)
-        def initialize(server_name: nil, use_default: false, remote_name: nil, timeout: nil, runner: nil)
+        def initialize(server_name: nil, use_default: false, remote_name: nil, timeout: nil, runner: nil, repo_root: nil, resolved_server: nil)
+          @pinned_server = resolved_server
           @selection = {server_name: server_name, use_default: use_default, remote_name: remote_name}
+          @selection[:repo_root] = repo_root if repo_root
           @timeout = timeout
           @runner = runner
         end
@@ -234,6 +236,22 @@ module Ace
           )
         end
 
+        # Freeze the selected provider identity for an assignment attempt.
+        def resolved_identity
+          resolve_selected_server.to_h.transform_keys(&:to_s).transform_values(&:to_s)
+        end
+
+        # Read-only reconciliation of a possibly completed create. Absence
+        # does not authorize another write; the assignment owns that policy.
+        def reconcile_create(head_repository_url:, head_ref:, base_repository_url:, base_ref:)
+          server = resolve_selected_server
+          unless Atoms::ServerUrl.match?(server.url, base_repository_url)
+            raise ProviderIdentityMismatchError, "Create reconciliation base does not match selected server"
+          end
+          provider_for(server).find_open_pull_requests(head_repository_url: head_repository_url,
+            head_ref: head_ref, base_repository_url: base_repository_url, base_ref: base_ref)
+        end
+
         def resolved_server_url(identifier)
           reference = parse_identifier(identifier)
           resolve_server_for(reference).url
@@ -255,7 +273,11 @@ module Ace
         end
 
         def resolve_selected_server
-          ServerRegistry.resolve_for(**@selection)
+          selected = ServerRegistry.resolve_for(**@selection)
+          if @pinned_server && selected != @pinned_server
+            raise ProviderIdentityMismatchError, "Configured server identity changed from the pinned delivery identity"
+          end
+          @pinned_server || selected
         end
 
         # Resolve exactly one server for a parsed reference, validating any
@@ -270,7 +292,7 @@ module Ace
           end
 
           if @selection[:server_name] || @selection[:use_default]
-            selected = ServerRegistry.resolve_for(**@selection)
+            selected = resolve_selected_server
             unless candidates.any? { |candidate| candidate.name == selected.name }
               identity = reference.repository_url || reference.owner_repo
               raise ProviderIdentityMismatchError,

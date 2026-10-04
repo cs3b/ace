@@ -1,6 +1,6 @@
 name: mark-pr-ready
 description: Mark a reviewed draft pull request ready after the review completion rule
-instructions: "After the review completion rule is met and appropriate tests have passed, run gh pr ready on the draft PR."
+instructions: "After the review completion rule is met and appropriate tests have passed, run ace-assign delivery --assignment ID --attempt ATTEMPT --operation ready --tests TEST-REF --review REVIEW-REF with accepted exact-head evidence."
 prerequisites:
   - name: review-pr
     strength: required

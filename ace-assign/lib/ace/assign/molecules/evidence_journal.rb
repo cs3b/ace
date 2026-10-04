@@ -89,6 +89,28 @@ module Ace
           end
         end
 
+        # Build an event against the latest chain while holding the ref lock.
+        # Re-run the eligibility guard on each CAS retry, never append a
+        # stale chain continuation after another accepted writer.
+        def record(assignment_id:, attempt_id:, type:, payload:, guard: nil)
+          with_lock do
+            CAS_ATTEMPTS.times do
+              old = ref_value
+              ensure_checkout!
+              old = ref_value if old.nil?
+              sync_checkout(old)
+              guard&.call
+              previous = read_events(assignment_id).reverse.find { |event| event["attempt_id"] == attempt_id }&.fetch("digest")
+              event = Models::EvidenceEvent.build(type: type, attempt_id: attempt_id,
+                payload: payload, previous_digest: previous)
+              write_event_files(assignment_id, [event])
+              commit = commit_events(assignment_id, attempt_id, [event])
+              return commit if update_ref_cas(commit, old)
+            end
+            raise AttemptErrors::EvidenceUnavailable, "Evidence ref stayed conflicting during event recording"
+          end
+        end
+
         # Read all journal events recorded for an assignment, ordered by the
         # digest chain (never by filename: same-second events sort
         # alphabetically, which can invert lifecycle order).
@@ -469,10 +491,15 @@ input:#{Regexp.escape(current["input_digest"])} outcome:(\S+)( no-effect:(\S+))?
           process_start = events.reverse.find do |event|
             event["type"] == "process_start" && event["attempt_id"] == attempt_id
           end
-          candidate_head = events.select { |event| event["type"] == "receipt_accepted" }
-            .map { |event| event.dig("payload", "receipt", "head") }
-            .compact
-            .first
+          candidate_head = nil
+          events.each do |event|
+            case event["type"]
+            when "candidate_invalidated" then candidate_head = nil
+            when "receipt_accepted" then candidate_head ||= event.dig("payload", "receipt", "head")
+            when "delivery"
+              candidate_head = event.dig("payload", "head") if %w[intent result].include?(event.dig("payload", "stage"))
+            end
+          end
           binding = Models::AttemptBinding.new(
             attempt_id: attempt_id,
             assignment_id: assignment_id,

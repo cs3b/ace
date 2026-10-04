@@ -5,6 +5,18 @@ name: fix-bug
 description: Fix an issue, verify tests, and create a reviewed PR
 
 parameters:
+  forge_server:
+    required: false
+    type: string
+    description: Named configured forge; mutually exclusive with forge_default
+  forge_default:
+    required: false
+    type: boolean
+    description: Explicitly select the configured default forge
+  pr_provenance:
+    required: false
+    type: object
+    description: Explicit mode, head_repository_url, head_ref, base_repository_url and base_ref; required before remote delivery
   taskref:
     required: true
     description: Task reference for the bug fix (e.g., 123 or 256.01)
@@ -37,7 +49,7 @@ steps:
       - Ensure all required checks pass before continuing.
 
   - name: create-pr
-    skill: as-github-pr-create
+    skill: as-git-pr-create
     instructions:
       - Create a pull request for the bug fix.
       - Create it as a draft with --draft; mark it ready only after the review completion rule is met.
@@ -50,13 +62,13 @@ steps:
       - "Verify findings, fix concrete defects, and run appropriate tests. Record rounds and dispositions; commits do not reset counters."
 
   - name: update-pr-desc
-    workflow: wfi://github/pr/update
+    workflow: wfi://git/pr/update
     instructions:
       - "Record the review rounds, actual reviewers, findings and tests in the PR description before marking it ready."
 
   - name: mark-pr-ready
     instructions:
-      - "After review completes and appropriate tests pass, run `gh pr ready` on the draft PR."
+      - "After review completes and appropriate tests pass, run `ace-assign delivery --assignment ID --attempt ATTEMPT --operation ready --tests TEST-REF --review REVIEW-REF` with accepted exact-head test and independent review references."
 
 customization_hints:
   - "Add fix-tests after verify-test-suite if failures found"

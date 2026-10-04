@@ -425,3 +425,40 @@ Managed agents invoking attempt start inside tmux/Herdr obtain a runtime-owned p
 Pending HITL references retain their exact scope/attempt and are not rebound by resume. Uncertain external claims require existing effect receipt reconciliation. Delivery consumption is separate from business success. Herdr owns signed inbox verification (`ace-herdr inbox reconcile --event ID --receipt FILE`); the assignment `inbox-reconcile` command uses that same configured verifier and additionally records the accepted observation references. `AttemptCoordinator#bind_inbox` records only the event reference, and `#reconcile_inbox` delegates that same verifier and journals only the verified proof digest/path and native observation reference. A consumed receipt settles transport once. A superseded receipt requeues the same event for an explicit retry, without succeeding the attempt. Exact signed replay recovers a crash between Herdr settlement and the assignment journal write; changed key, target, payload or generation fails closed. Retain the matching protected key pair for unresolved events or postpone rotation.
 
 Installed Herdr/Pi compaction and writing-child stop/close acceptance must be recorded separately from deterministic fixture coverage before Lab cutover.
+
+### Attempt-bound forge delivery
+
+`ace-assign create --task TASK --preset work-on-task --delivery-parameters delivery.json`
+accepts an explicit delivery mapping. A local-only preset rejects that mapping.
+The same mapping is retained as `delivery` in the assignment job:
+
+```json
+{"forge_server":"lab-forge","pr_provenance":{"mode":"fork","head_repository_url":"https://forge.example/worker/project","head_ref":"task-branch","base_repository_url":"https://forge.example/team/project","base_ref":"main"}}
+```
+
+Use either `forge_server` or boolean `forge_default: true`. With neither,
+the first remote delivery resolves the repository remote and journals the selected
+forge. Subsequent mutations retain that identity. Canonical mode requires equal
+head and base repository URLs; fork mode names both repositories explicitly.
+The source ref must already contain the exact local candidate commit.
+
+`ace-assign delivery --assignment ID --attempt ATTEMPT --operation create --title TITLE`
+creates a draft. Operations `update`, `review` and `status` reuse that attempt;
+status and review do not append evidence. `ready --tests TEST-REF.json --review
+REVIEW-REF.json` requires references containing `attempt_id` and `receipt_digest`
+to coordinator-accepted, executed tests and independent approval at the current
+candidate. Remote CI remains visible and advisory. An unresolved mutation is
+reconciled by exact provider identity; absence or conflicting matches remain
+unresolved and never trigger an automatic second write. Retrying readiness uses
+the original intent's evidence references, revalidated against the current head.
+
+Merge runs in the authorized qjx executor, which calls the neutral provider merge
+primitive under its existing scoped policy. The worker only consumes completion:
+`delivery --operation merge --service-request REQUEST --tests TEST-REF.json
+--review REVIEW-REF.json`. A completed, verified receipt must bind this assignment,
+attempt, candidate and exact PR resource; credentials do not grant authority.
+Version and changelog preparation do not authorize publication.
+
+The neutral `git/pr/create` and `git/pr/update` workflow and skill assets require
+qkb.1 companion adoption across installed consumers. Their source tests do not
+claim fresh installed workflow acceptance or authorized live merge acceptance.

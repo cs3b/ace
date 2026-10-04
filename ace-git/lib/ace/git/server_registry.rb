@@ -80,9 +80,9 @@ module Ace
         # @return [ResolvedServer] the single matching configured server
         # @raise [AmbiguousRemoteError] when the remote matches no configured
         #   server, or more than one
-        def resolve_remote(remote_name = nil)
+        def resolve_remote(remote_name = nil, repo_root: nil)
           remote_name ||= Ace::Git.config["remote"] || "origin"
-          remote_url = read_remote_url(remote_name)
+          remote_url = read_remote_url(remote_name, repo_root: repo_root)
           matches = entries.map(&:server).select { |server| Atoms::ServerUrl.match?(server.url, remote_url) }
 
           if matches.empty?
@@ -108,7 +108,7 @@ module Ace
         # @raise [ConfigError] when explicit selection and default conflict
         # @raise [UnknownServerNameError, NoDefaultServerConfiguredError,
         #   MultipleDefaultServersError, AmbiguousRemoteError] per resolution
-        def resolve_for(server_name: nil, use_default: false, remote_name: nil)
+        def resolve_for(server_name: nil, use_default: false, remote_name: nil, repo_root: nil)
           if server_name && use_default
             raise ConfigError,
               "Server selection is ambiguous: an explicit server ('#{server_name}') and " \
@@ -120,7 +120,7 @@ module Ace
           elsif use_default
             resolve_default
           else
-            resolve_remote(remote_name)
+            resolve_remote(remote_name, repo_root: repo_root)
           end
         end
 
@@ -173,8 +173,10 @@ module Ace
         end
 
         # Read a remote URL with local git only (no network, no forge CLI).
-        def read_remote_url(remote_name)
-          result = Atoms::CommandExecutor.execute("git", "remote", "get-url", remote_name.to_s)
+        def read_remote_url(remote_name, repo_root: nil)
+          argv = ["git"]
+          argv += ["-C", repo_root] if repo_root
+          result = Atoms::CommandExecutor.execute(*argv, "remote", "get-url", remote_name.to_s)
           result[:success] ? result[:output].to_s.strip : nil
         end
 

@@ -9,6 +9,9 @@ module Ace
         PROVENANCE_FIELDS = %w[mode head_repository_url head_ref base_repository_url base_ref].freeze
         def self.validate(input)
           raise ArgumentError, "Delivery parameters must be a mapping" unless input.is_a?(Hash)
+          unless (input.keys - %w[forge_server forge_default pr_provenance]).empty?
+            raise ArgumentError, "Unexpected delivery parameter fields"
+          end
           default = input.fetch("forge_default", false)
           raise ArgumentError, "forge_default must be boolean" unless [true, false].include?(default)
           server = input["forge_server"]

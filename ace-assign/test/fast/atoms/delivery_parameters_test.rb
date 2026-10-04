@@ -33,6 +33,10 @@ class DeliveryParametersTest < AceAssignTestCase
     assert_raises(ArgumentError) { validate(parameters.merge("forge_default" => "true")) }
   end
 
+  def test_unrecognized_fields_cannot_carry_credentials
+    assert_raises(ArgumentError) { validate(parameters.merge("token" => "forbidden")) }
+  end
+
   def test_credentials_queries_and_unsafe_refs_fail
     ["https://user:secret@forge.example/team/repo", "https://forge.example/team/repo?token=value"].each do |url|
       p = parameters

@@ -1028,7 +1028,7 @@ class AssignmentExecutorTest < AceAssignTestCase
         ---
         ---
       MD
-      File.write(File.join(project_root, "ace-handbook", "handbook", "workflow-instructions", "release", "publish.wf.md"), <<~MD)
+      File.write(File.join(project_root, "ace-handbook", "handbook", "workflow-instructions", "release", "bump-version.wf.md"), <<~MD)
         ---
         ---
 
@@ -1819,7 +1819,7 @@ class AssignmentExecutorTest < AceAssignTestCase
             assert_includes work_steps.first.instructions, "# Work on Task"
             assert_includes File.read(verify_suite.file_path), "source_workflow: wfi://assign/verify-test-suite"
             refute_includes File.read(verify_suite.file_path), "source_skill: as-test-verify-suite"
-            assert_includes File.read(create_pr.file_path), "source_skill: as-github-pr-create"
+            assert_includes File.read(create_pr.file_path), "source_skill: as-git-pr-create"
           end
         ensure
           ENV["PROJECT_ROOT_PATH"] = original_project_root
@@ -1874,7 +1874,7 @@ class AssignmentExecutorTest < AceAssignTestCase
             assert_includes work_steps[0].instructions, "# Work on Task"
             assert_includes File.read(verify_suite.file_path), "source_workflow: wfi://assign/verify-test-suite"
             refute_includes File.read(verify_suite.file_path), "source_skill: as-test-verify-suite"
-            assert_includes File.read(create_pr.file_path), "source_skill: as-github-pr-create"
+            assert_includes File.read(create_pr.file_path), "source_skill: as-git-pr-create"
 
             assert_equal "mark-tasks-done", mark_tasks_done.name
             assert_includes File.read(mark_tasks_done.file_path), "source_workflow: wfi://task/update"

@@ -199,3 +199,4 @@ module Ace
 end
 
 require_relative "assign/atoms/delivery_parameters"
+require_relative "assign/organisms/delivery_coordinator"

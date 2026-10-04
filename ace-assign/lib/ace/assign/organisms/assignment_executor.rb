@@ -68,6 +68,12 @@ module Ace
 
           assignment_config = config["assignment"] || {}
           steps_config = config["steps"] || []
+          if config.key?("delivery")
+            Atoms::DeliveryParameters.validate(config["delivery"])
+            unless Array(steps_config).any? { |step| %w[create-pr update-pr-desc mark-pr-ready].include?(step["name"]) }
+              raise ArgumentError, "Explicit delivery inputs require remote steps"
+            end
+          end
 
           raise Error, "No steps defined in config" if steps_config.empty?
 

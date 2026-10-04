@@ -222,6 +222,29 @@ class CreateCommandTest < AceAssignTestCase
     assert_includes error.message, "403"
   end
 
+  def test_explicit_delivery_parameters_survive_task_preset_generation
+    with_temp_cache do |cache_dir|
+      Ace::Assign.config["cache_dir"] = cache_dir
+      executor = FakeExecutor.new
+      creator = Ace::Assign::Organisms::TaskAssignmentCreator.new(
+        task_manager: FakeTaskManager.new("405" => {status: "pending"}), executor: executor)
+      params = {"forge_server" => "forge", "pr_provenance" => {"mode" => "canonical",
+        "head_repository_url" => "https://forge.example/team/repo", "head_ref" => "feature",
+        "base_repository_url" => "https://forge.example/team/repo", "base_ref" => "main"}}
+      creator.call(task_refs: ["405"], delivery_parameters: params)
+      assert_equal "forge", YAML.safe_load_file(executor.path).dig("delivery", "forge_server")
+      assert_equal "canonical", YAML.safe_load_file(executor.path).dig("delivery", "pr_provenance", "mode")
+      local = {"parameters" => {"taskrefs" => {"required" => true}}, "steps" => [{"name" => "local"}]}
+      Ace::Assign::Atoms::PresetLoader.stub(:load, local) do
+        assert_raises(ArgumentError) { creator.call(task_refs: ["405"], delivery_parameters: params) }
+        creator.call(task_refs: ["405"])
+        refute YAML.safe_load_file(executor.path).key?("delivery")
+      end
+    ensure
+      Ace::Assign.reset_config!
+    end
+  end
+
   def test_create_task_mode_creates_assignment_and_step_files_end_to_end
     with_temp_cache do |cache_dir|
       Ace::Assign.config["cache_dir"] = cache_dir
