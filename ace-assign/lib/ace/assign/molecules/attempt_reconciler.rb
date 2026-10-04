@@ -19,9 +19,11 @@ module Ace
       class AttemptReconciler
         # @param journal [EvidenceJournal, nil] Managed evidence journal
         # @param verifier [ReceiptVerifier, nil] Receipt verifier (coordinator supplies on use)
-        def initialize(journal: nil, verifier: nil)
+        def initialize(journal: nil, verifier: nil, observer: nil, runtime_resolver: Ace::Runtime)
           @journal = journal
           @verifier = verifier
+          @observer = observer || Ace::Runtime::Molecules::ProcessIdentity.new
+          @runtime_resolver = runtime_resolver
         end
 
         # Classify a running attempt after an interruption.
@@ -44,15 +46,27 @@ module Ace
         # @param attempt [Models::Attempt] Attempt to inspect
         # @return [Boolean] True when the recorded process is verifiably alive
         def process_live?(attempt)
-          pid = start_event(attempt)&.dig("payload", "pid")
-          return false unless pid
+          observation(attempt)["liveness"] == "live"
+        end
 
-          Process.kill(0, pid)
-          true
-        rescue Errno::EPERM
-          true
-        rescue Errno::ESRCH, TypeError, ArgumentError
-          false
+        def observation(attempt)
+          payload = start_event(attempt)&.dig("payload")
+          observation = @observer.observe(payload&.dig("process_identity"))
+          binding = payload&.dig("runtime_binding")
+          return observation unless binding && observation["liveness"] == "live"
+
+          live = @runtime_resolver.resolve(binding["runtime"]).process_binding(
+            pane: binding["pane"], caller_pid: binding.dig("process_identity", "pid"))
+          return observation if binding == live
+
+          observation.merge("liveness" => "unknown", "reason" => "native process/session binding changed")
+        rescue Ace::Runtime::Error
+          {"liveness" => "unknown", "observed_at" => Time.now.utc.iso8601,
+            "reason" => "native process/session observation unavailable"}
+        end
+
+        def events(attempt)
+          events_for(attempt)
         end
 
         # Runtime recorded at the attempt's process start — the boundary any

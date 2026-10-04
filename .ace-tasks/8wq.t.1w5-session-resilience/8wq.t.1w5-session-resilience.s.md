@@ -1,6 +1,6 @@
 ---
 id: 8wq.t.1w5
-status: pending
+status: in-progress
 priority: medium
 created_at: "2026-09-27 01:15:43"
 estimate: TBD
@@ -34,7 +34,11 @@ After compaction, terminal loss or agent death, the supervisor explains what rem
 
 ### Interface Contract
 
-`ace-assign resume --assignment ID [--dry-run]` reports adopt/restart-required/reconcile-required and accepts a restart only through a new attributable attempt. `ace-overseer status --format json` includes liveness, last verified observation and recovery reason; stale/unreadable is unknown, never green.
+`ace-assign resume --assignment ID [--dry-run]` reports adopt/restart-required/reconcile-required and accepts a restart only through a new attributable attempt. `ace-assign inbox-reconcile --attempt ID --event ID --receipt FILE` consumes the existing Herdr receipt JSON plus detached FILE.sig through the same configured verifier and appends only verified observation references to the attempt journal; it never resends or settles a business effect. `ace-overseer status --format json` includes liveness, last verified observation and recovery reason; stale/unreadable is unknown, never green.
+
+Runtime owner observation is a public `Ace::Runtime` adapter operation: `process_binding(pane:, caller_pid:)` returns a string-keyed object containing `runtime`, exact native `session` and `pane`, `shell_identity`, and `process_identity`. Process identities bind OS PID, UID, start time and host; no command-line arguments are recorded. Herdr also binds durable `terminal_id`, agent kind and immutable native session identity. The owner is the caller's verified OS ancestor below the native retained shell, corroborated against native foreground evidence where available. A retained shell alone, dead/reused owner PID, reused pane/native session, unreadable OS/native evidence or non-native execution returns `nil` (unknown). Native adapter failures preserve `Ace::Runtime` typed errors. This read-only observation grants no actor identity, service privilege, HITL authorization or business-effect authority.
+
+Managed drivers invoke attempt start inside the runtime-owned agent. `ExecutionIdentityResolver` obtains the adapter binding at that execution boundary; `process_start` journals the verified binding. Resume re-observes the exact native binding and OS birth identities before adoption. Service executors may additionally supply a verified `process_pid`; absent native/service owner proof, recovery remains unknown. Inbox proof consumption delegates existing Herdr signature verification and records bounded proof/native observation references in the existing attempt journal; the public Herdr reconcile vocabulary remains unchanged.
 
 ### Success Criteria and Verification Plan
 
@@ -72,3 +76,5 @@ The trusted supervisor/observer verifies actual native Codex/Pi consumption or n
 
 - [ ] Consumer acceptance: consumed and superseded with correct signature/binding; wrong signer/key/digest/generation/native target; replay; missing proof; supervisor restart and key rotation with unresolved old event. Valid consumption settles once; supersession permits only the explicit verified retry; all invalid or absent proofs stay uncertain.
 - [ ] Installed acceptance with gad.8/.b uses actual requester and trusted signer OS users and native Codex/Pi observation, not only scripted subprocess proof. Implementation reports separate deterministic coverage from this required Lab gate.
+
+Process birth evidence is platform exact: Linux boot ID plus process start ticks, Darwin libproc microsecond birth; whole-second ps timestamps are insufficient. Capture and ancestry revalidation fail closed when exact facts change or are unavailable. Registered inbox records, including archive fallback, must match the journal event/attempt/digest/key and any signed settlement generation/full binding; substituted records remain unknown.

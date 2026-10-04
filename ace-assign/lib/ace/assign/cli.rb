@@ -56,6 +56,8 @@ require_relative "organisms/attempt_coordinator"
 require_relative "cli/commands/create"
 require_relative "cli/commands/assignment_target"
 require_relative "cli/commands/status"
+require_relative "cli/commands/resume"
+require_relative "cli/commands/inbox_reconcile"
 require_relative "cli/commands/step"
 require_relative "cli/commands/start"
 require_relative "cli/commands/finish"
@@ -110,7 +112,8 @@ module Ace
         "cat report.md | ace-assign finish     # Complete step via stdin",
         "ace-assign fork-run 010.01            # Run subtree in subprocess",
         "ace-assign attempt start --assignment ID --step 010 --project ID",
-        "ace-assign attempt finish --attempt ID --receipt receipt.json"
+        "ace-assign attempt finish --attempt ID --receipt receipt.json",
+        "ace-assign resume --assignment ID --dry-run"
       ].freeze
 
       # Captured command exit code from last run
@@ -163,6 +166,8 @@ module Ace
       register "attempt evidence", wrap_command(Commands::Attempt::Evidence)
       register "attempt finish", wrap_command(Commands::Attempt::Finish)
       register "attempt reconcile", wrap_command(Commands::Attempt::Reconcile)
+      register "resume", wrap_command(Commands::Resume)
+      register "inbox-reconcile", wrap_command(Commands::InboxReconcile)
 
       # Register version command
       version_cmd = Ace::Support::Cli::VersionCommand.build(
