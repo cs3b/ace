@@ -30,15 +30,14 @@ requires:
   tools: [ace-git, git, docker, curl]
   ruby: ">= 3.2"
 
-agent-env:
-  FORGEJO_URL: "http://127.0.0.1:24417"
-  FORGEJO_HOST_KEY: "127.0.0.1:24417"
-  FORGEJO_BASE_REPO: "e2e-lab/base"
-  FORGEJO_FORK_REPO: "e2e-fork/base"
-  FORGEJO_PORT: "24417"
-
 setup:
   - git-init
+  - agent-env:
+      FORGEJO_URL: "http://127.0.0.1:24417"
+      FORGEJO_HOST_KEY: "127.0.0.1:24417"
+      FORGEJO_BASE_REPO: "e2e-lab/base"
+      FORGEJO_FORK_REPO: "e2e-fork/base"
+      FORGEJO_PORT: "24417"
   - run: "cp ${ACE_E2E_SOURCE_ROOT:-$PROJECT_ROOT_PATH}/mise.toml mise.toml && mise trust mise.toml"
   - run: "docker rm -f ace-e2e-forgejo >/dev/null 2>&1 || true"
   - run: "docker run -d --name ace-e2e-forgejo -p ${FORGEJO_PORT}:3000 -e FORGEJO__security__INSTALL_LOCK=true -e FORGEJO__mailer__ENABLED=false -e USER_UID=1000 -e USER_GID=1000 codeberg.org/forgejo/forgejo:8.0"
