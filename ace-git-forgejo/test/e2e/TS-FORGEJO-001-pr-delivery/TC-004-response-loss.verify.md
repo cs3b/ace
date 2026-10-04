@@ -14,7 +14,9 @@
 
 - **Verdict**: PASS only if `ready-recovered.exit` is 0 with
   `draft: false`, `open-pulls-final.json` shows exactly one open pull
-  request for the fork identity (`e2e-fork/base` + `feature/forked`), and
+  request for the fork identity (`e2e-fork/base` + `feature/forked`);
+  an open canonical-branch pull request alongside it is expected and not
+  a failure, and
   `show-final.json` reports `draft: false` at the fork head SHA.
 
 ### Goal 4 - Read-only paths mutate nothing

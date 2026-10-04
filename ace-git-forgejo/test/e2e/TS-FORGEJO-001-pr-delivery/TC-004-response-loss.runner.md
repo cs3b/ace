@@ -29,12 +29,12 @@ call it `$KEYS`.
 5. With the server back, run the ready command again →
    `ready-recovered.json`. Expected: exit 0, `operation: ready`,
    `draft: false`.
-6. Prove exactly one pull request exists for the fork identity:
+6. Prove no duplicate was created for the fork identity:
    `curl -s -H "Authorization: token $(cat /tmp/ace-e2e-lab-token)"
    '$FORGEJO_URL/api/v1/repos/e2e-lab/base/pulls?state=open'` →
-   `open-pulls-final.json`. Expected: exactly one open pull request whose
-   head repo is `e2e-fork/base` and ref `feature/forked` (no duplicate
-   was created by any replay).
+   `open-pulls-final.json`. Expected: exactly one open pull request with
+   head repo `e2e-fork/base` and ref `feature/forked` (the canonical
+   branch's open pull request, if any, is separate and expected).
 7. `bin/ace-git pr show $FORK_PR --server e2e-forgejo --format json` →
    `show-final.json`. Expected: `draft: false`, head `$FORKED`.
 

@@ -2,7 +2,9 @@
 
 require "json"
 require "uri"
+require "ace/git/atoms/server_url"
 require_relative "cli_executor"
+require_relative "repository_binding"
 require_relative "parsers"
 require_relative "issue_api"
 require_relative "pull_request_api"
@@ -264,7 +266,7 @@ module Ace
           number = request_number!(number)
           verify_expected_head!(pull_request(number: number), expected_head)
           comments = review_http.paginate("issues/#{number}/comments").map do |entry|
-            review_comment(entry, number, expected_head)
+            review_comment(entry, number)
           end
           reviews = review_http.paginate("pulls/#{number}/reviews").map do |entry|
             review_entry(entry, number, expected_head)
@@ -278,7 +280,7 @@ module Ace
             unless entries.is_a?(Array)
               raise Ace::Git::ProviderMalformedOutputError, "Malformed Forgejo review comment evidence"
             end
-            entries.map { |entry| review_comment(entry, number, expected_head) }
+            entries.map { |entry| review_comment(entry, number) }
           end
           verify_expected_head!(pull_request(number: number), expected_head)
           Ace::Git::ProviderReviewEvidence.new(
@@ -397,7 +399,7 @@ module Ace
             raise Ace::Git::ProviderIdentityMismatchError,
               "Comment #{comment_id} does not belong to selected PR ##{number}"
           end
-          comment = review_comment(matches.first, number, expected_head)
+          comment = review_comment(matches.first, number)
           if comment.body == body
             verify_post_mutation_head!(number, expected_head, "comment #{comment_id}")
             return review_mutation(number, expected_head, comment, :existing)
@@ -435,7 +437,7 @@ module Ace
               "Comment update sent but exact PR comment #{comment_id} could not be verified"
           end
           verify_post_mutation_head!(number, expected_head, "comment #{comment_id}")
-          review_mutation(number, expected_head, review_comment(updated, number, expected_head), :updated)
+          review_mutation(number, expected_head, review_comment(updated, number), :updated)
         end
 
         def resolve_pull_request_thread(number:, expected_head:, thread_id:)
@@ -853,25 +855,25 @@ module Ace
           @review_http ||= HttpClient.new(server: server, timeout: timeout, runner: runner)
         end
 
-  # A mutation receipt may only bind the expected head; if the PR head
-  # moved during the mutation the outcome stays uncertain. Returns the
-  # authoritative read-back when the head still matches.
-  def verify_post_mutation_head!(number, expected_head, correlation)
-    current = begin
-      pull_request(number: number)
-    rescue Ace::Git::ProviderMalformedOutputError, Ace::Git::ProviderAuthenticationError, Ace::Git::ProviderObjectNotFoundError, Ace::Git::ProviderUnreachableError => e
-      raise Ace::Git::ProviderUnknownOutcomeError,
-        "Head verification read failed after mutation for #{server.name}: #{e.message}; reconcile before repeating"
-    end
-    return current if current.head_sha == expected_head
+        # A mutation receipt may only bind the expected head; if the PR head
+        # moved during the mutation the outcome stays uncertain. Returns the
+        # authoritative read-back when the head still matches.
+        def verify_post_mutation_head!(number, expected_head, correlation)
+          current = begin
+            pull_request(number: number)
+          rescue Ace::Git::ProviderMalformedOutputError, Ace::Git::ProviderAuthenticationError, Ace::Git::ProviderObjectNotFoundError, Ace::Git::ProviderUnreachableError => e
+            raise Ace::Git::ProviderUnknownOutcomeError,
+              "Head verification read failed after mutation for #{server.name}: #{e.message}; reconcile before repeating"
+          end
+          return current if current.head_sha == expected_head
 
-    raise Ace::Git::ProviderUnknownOutcomeError,
-      "PR head moved during mutation for #{server.name}/##{number} " \
-      "(#{expected_head} -> #{current.head_sha}), session #{correlation}: reconcile before repeating"
-  end
+          raise Ace::Git::ProviderUnknownOutcomeError,
+            "PR head moved during mutation for #{server.name}/##{number} " \
+            "(#{expected_head} -> #{current.head_sha}), session #{correlation}: reconcile before repeating"
+        end
 
         # Serialize the read/post/reconcile sequence per session so two
-      # concurrent callers cannot both observe "no marker" and post.
+        # concurrent callers cannot both observe "no marker" and post.
         def with_session_lock(correlation)
           require "tmpdir"
           lock_path = File.join(Dir.tmpdir, "ace-review-session-#{correlation}.lock")
@@ -895,11 +897,11 @@ module Ace
             end
             next unless entry["body"].include?(marker)
 
-            review_comment(entry, number, expected_head)
+            review_comment(entry, number)
           end
         end
 
-        def review_comment(entry, number, head)
+        def review_comment(entry, number)
           user = entry.is_a?(Hash) ? entry["user"] : nil
           unless entry.is_a?(Hash) && entry["id"].is_a?(Integer) && entry["id"].positive? && entry["body"].is_a?(String) &&
               user.is_a?(Hash) && user["login"].is_a?(String)
@@ -1031,12 +1033,6 @@ module Ace
           else
             raise Ace::Git::ProviderUnreachableError, "Forgejo request failed (#{context}): #{message}"
           end
-        end
-
-        # Complete a parsed PR view with its exact head SHA evidence.
-        def with_head_sha(parsed)
-          parsed[:head_sha] = head_sha_of(parsed[:number])
-          normalize_pr(parsed)
         end
 
         # View one PR and parse its stable minimal-style output. The

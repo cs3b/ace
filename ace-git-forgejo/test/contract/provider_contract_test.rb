@@ -11,8 +11,6 @@ class ForgejoProviderContractTest < AceGitForgejoTestCase
   include Ace::TestSupport::ProviderContract
 
   SERVER = Ace::Git::ResolvedServer.new(name: "forge-server", provider: :forgejo, url: "https://forgejo.example.com/owner/repo")
-  HOST = "forgejo.example.com"
-  API = "https://forgejo.example.com/api/v1/repos/owner/repo"
 
   def build_provider(runner)
     Ace::Git::Forgejo::Provider.new(server: SERVER, runner: runner)

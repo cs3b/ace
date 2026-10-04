@@ -36,16 +36,15 @@ forbidden; there is no silent fallback of any kind.
 
 ## Supported operations (observed on forgejo-cli v0.6.0)
 
-PR view/diff/head-commits, PR search (all/open, client-side newest-first
-window — `fj` has no `--limit`), PR create (same-repository head only),
-PR edit title/body, issue view, actions tasks, repository view, version
-and `auth list` probes. `fj` v0.6.0 exposes no draft-to-ready command, no
-atomic expected-head merge, and no authoritative merge-commit field, so
-`ready_pull_request`/`merge_pull_request` refuse as unsupported
-capabilities and `merge_commit_sha` stays empty — worktree cleanup
-conservatively retains Forgejo checkouts until `fj` exposes that field.
-The capability evidence and its provenance live in the
-`8wr.t.uj0` task folder (`evidence/fj-capabilities.md`).
+Through `fj` (observed on forgejo-cli v0.6.0): PR view/diff/head-commits,
+PR search (all/open, client-side newest-first window — `fj` has no
+`--limit`), issue view, actions tasks, repository view, version and
+`auth list` probes. Through the repository-bound API v1: authoritative PR
+reads, PR create (canonical and same-server fork heads, exact draft
+state), edit, ready transitions, and expected-head-guarded merges — see
+the delivery lifecycle section below. The per-surface capability evidence
+and its provenance live in the `8wr.t.uj0` (`evidence/fj-capabilities.md`)
+and `8x2.t.z78` (`capability-evidence-2026-10-04.md`) task folders.
 
 Endpoint fidelity: `-H` carries the selected `scheme://authority` (fj
 otherwise assumes HTTPS), and because fj v0.6.0 silently applies its
@@ -73,8 +72,11 @@ floor). Official capability evidence lives in the
 
 Forgejo-specific conventions the provider translates:
 
-- **Drafts** have no API field: a draft is a WIP-prefixed title (server
-  defaults `WIP:`, `[WIP]`; compared case-insensitively). Create with
+- **Drafts**: the create/edit API forms have no writable draft field —
+  a draft is a WIP-prefixed title (server defaults `WIP:`, `[WIP]`;
+  compared case-insensitively). The server reports the computed boolean
+  in the API `draft` response field, which this provider treats as the
+  only draft truth on reads. Create with
   `draft: true` prefixes the title `WIP: `; `draft: false` refuses a
   WIP-prefixed title instead of silently publishing it as a draft. Ready
   strips one leading prefix and proves the resulting `draft: false` by

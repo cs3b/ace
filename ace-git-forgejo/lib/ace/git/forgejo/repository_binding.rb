@@ -100,17 +100,6 @@ module Ace
           pr_search: ->(target, state) do
             ["--style", "minimal", "pr", "search", "--state", state, "-r", target.repo]
           end,
-          pr_create: ->(target, title, head_ref, base_ref, body) do
-            argv = ["pr", "create", title, "--head", head_ref, "--base", base_ref]
-            argv += ["--body", body] if body
-            argv + ["-r", target.repo]
-          end,
-          pr_edit_title: ->(target, number, title) do
-            ["pr", "edit", target.qualified_ref(number), "title", title]
-          end,
-          pr_edit_body: ->(target, number, body) do
-            ["pr", "edit", target.qualified_ref(number), "body", body]
-          end,
           issue_view: ->(target, number) do
             ["--style", "minimal", "issue", "view", target.qualified_ref(number)]
           end,

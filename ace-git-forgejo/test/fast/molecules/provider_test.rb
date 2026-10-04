@@ -221,6 +221,8 @@ module Forgejo
         if path == "https://forge.example.com/api/v1/version"
           ok_raw(200, {"version" => "8.0.5"}.to_json)
         elsif args[1] == "PATCH"
+          # Every GET after the PATCH serves the moved head, so the
+          # post-mutation verification sees the transition race.
           reads = 2
           {success: true, status: 200, stdout: "", stderr: "", exit_code: 0}
         elsif path == "#{API}/pulls/25"
@@ -309,6 +311,27 @@ module Forgejo
       assert_match(/may be repeated/, error.message)
     end
 
+    def test_merge_server_side_stale_head_refusal_maps_to_expected_head_conflict
+      runner = lambda do |args:, **|
+        path = args[2].to_s
+        case path
+        when "https://forge.example.com/api/v1/version"
+          ok_raw(200, {"version" => "8.0.3"}.to_json)
+        when "#{API}/pulls/25"
+          ok(pr_payload(25, state: "open", merged: false, draft: false))
+        when "#{API}/pulls/25/merge"
+          {success: false, status: 409, stdout: {message: "head out of date"}.to_json,
+           stderr: "", exit_code: 1}
+        else
+          flunk("Unexpected #{args[1]} #{path}")
+        end
+      end
+      error = assert_raises(Ace::Git::ProviderExpectedHeadConflictError) do
+        build_provider(runner).merge_pull_request(number: 25, expected_head: SHA, method: :squash)
+      end
+      assert_match(/head moved past/, error.message)
+    end
+
     def test_merge_disabled_method_is_capability_refusal
       runner = lambda do |args:, **|
         path = args[2].to_s
@@ -379,13 +402,6 @@ module Forgejo
     end
 
     private
-
-    def scripted_runner(responses)
-      lambda do |args:, timeout: nil, env: nil|
-        response = responses.fetch(args.join(" ")) { flunk("Unexpected command: #{args.join(' ')}") }
-        response.is_a?(Array) ? {success: false, stdout: "", stderr: response[0], exit_code: response[1]} : response
-      end
-    end
 
     # API runner that records POST/PATCH sends into `sends` so tests can
     # assert that a refusal happened before any mutation.

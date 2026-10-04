@@ -12,7 +12,6 @@ class ForgejoProviderPullRequestLifecycleContractTest < AceGitForgejoTestCase
   CONTRACT = Ace::TestSupport::PullRequestLifecycleContract
   SERVER = Ace::Git::ResolvedServer.new(name: "forge-server", provider: :forgejo, url: CONTRACT::SERVER_URL)
   SHA = CONTRACT::HEAD_SHA
-  HOST = "forge.example.com"
   REPO = "owner/repo"
   API = "https://forge.example.com/api/v1/repos/owner/repo"
 
