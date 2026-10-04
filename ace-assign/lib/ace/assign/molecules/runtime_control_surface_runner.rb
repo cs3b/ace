@@ -42,13 +42,6 @@ module Ace
           context[:session]
         end
 
-        def current_window
-          explicit = env["ACE_ASSIGN_FORK_WINDOW"].to_s.strip
-          return explicit unless explicit.empty?
-
-          context[:window]
-        end
-
         def current_pane
           explicit = env["ACE_ASSIGN_CALLBACK_PANE"].to_s.strip
           return explicit unless explicit.empty?

@@ -55,20 +55,18 @@ class RuntimeControlSurfaceRunnerTest < AceAssignTestCase
 
     assert_equal true, runner.in_runtime?
     assert_equal "dev", runner.current_session
-    assert_equal "work", runner.current_window
     assert_equal "%9", runner.current_pane
     assert_empty adapter.calls
   end
 
-  def test_env_overrides_win_for_window_and_pane
+  def test_env_override_wins_for_callback_pane
     register_fake_runtime
 
     runner = build_runner(
       runtime: "faketmux",
-      env: {"ACE_ASSIGN_FORK_WINDOW" => "fork-fs", "ACE_ASSIGN_CALLBACK_PANE" => "%1"}
+      env: {"ACE_ASSIGN_CALLBACK_PANE" => "%1"}
     )
 
-    assert_equal "fork-fs", runner.current_window
     assert_equal "%1", runner.current_pane
   end
 

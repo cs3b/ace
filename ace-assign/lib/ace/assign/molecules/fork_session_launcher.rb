@@ -13,7 +13,7 @@ module Ace
         DEFAULT_LAUNCH_MODE = "auto"
         VALID_LAUNCH_MODES = %w[auto headless tmux herdr].freeze
         TERMINAL_LAUNCH_MODES = %w[tmux herdr].freeze
-        TMUX_POLL_INTERVAL = 0.5
+        SUBTREE_POLL_INTERVAL = 0.5
         DEFAULT_TARGET_ENV = "ACE_ASSIGN_DEFAULT_TARGET"
         CURRENT_ASSIGNMENT_ID_ENV = "ACE_ASSIGN_CURRENT_ASSIGNMENT_ID"
         CURRENT_FORK_ROOT_ENV = "ACE_ASSIGN_CURRENT_FORK_ROOT"
@@ -311,7 +311,7 @@ module Ace
               raise Error, "Timed out waiting for the fork subtree #{fork_root} to reach a terminal state."
             end
 
-            sleep(TMUX_POLL_INTERVAL)
+            sleep(SUBTREE_POLL_INTERVAL)
           end
         end
       end
