@@ -62,3 +62,9 @@ Captain authorized implementation in independent worktrees using `gpt-6.1-sol`. 
 Each scope has a separate branch `codex/wave3-<name>` and worktree `<repository>/.ace-wt/wave3-<name>`: ACE names `vft`, `vfv`, `vfw`, `k86-3-close`; lab-config names `gad-8`, `gad-9`, `gad-b-setup`. ACE base is b06d0aee9; lab-config base is 76d8e4b. Workers mark their own task in-progress when beginning it, commit and test only in their own worktrees, and report exact heads for independent review. Main integration, release and live deployment are separate gates. Queued work is not marked implemented or accepted.
 
 Dispatch setup note: lab-config worktree creation initially refused because `.ace-wt` did not exist; created that directory and retried successfully. No task or product behavior was changed to work around the failure.
+
+## Release steering and integration — 2026-10-04
+
+Captain subsequently authorized ongoing integration and publishing, then refined this to: integrate all wave work into main first, prepare the complete gem queue, and leave actual publishing to the operator's interactive OTP script. Do not perform a live gem push from the agent. Exact-head independent approvals permit vft/vfv/vfw integration; runtime and domain slices still require their separate implementation reviews. gad.8 has an honest blocker record, not a delivered topology installation. Source integration does not discharge installed Lab acceptance.
+
+Integration tooling incident: path-scoped ace-git-commit during a conflicted merge committed only the selected changelog and did not preserve the pending merge ancestry. Remaining reviewed source was retained and committed, then a normal Git merge commit recorded the original branch ancestry after preserving both changelog entries. No source was discarded; combined package verification is required.
