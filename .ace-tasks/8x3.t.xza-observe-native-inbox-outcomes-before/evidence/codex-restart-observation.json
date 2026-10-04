@@ -1,0 +1,23 @@
+{
+  "version": "codex-cli 0.159.3",
+  "sandbox": "/var/folders/hf/knhxwtnx76gcdps2hxb3bp2r0000gr/T/ace-native-observation-iv7mqs_1",
+  "phase": "read-after-process-restart",
+  "thread_id": "01a1094b-c912-7da3-9bb5-fdccbfb39bc3",
+  "observations": [
+    {
+      "turn_id": "01a1094b-cb4d-76d2-8387-df2202cd4369",
+      "turn_status": "completed",
+      "item_id": "item-1",
+      "client_id": "ace-probe-343573f925db4a5385063ce925320e51"
+    }
+  ],
+  "expected_client_id": "ace-probe-343573f925db4a5385063ce925320e51",
+  "cancel_client_id": "ace-cancel-4f03682cf4e3465ea15e64b5e0f0cff3",
+  "delete_ack_previously_retained": {
+    "deleted": true
+  },
+  "queue_list": {
+    "data": [],
+    "nextCursor": null
+  }
+}
