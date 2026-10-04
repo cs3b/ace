@@ -218,7 +218,17 @@ module Ace
           loop do
             answer = nil
             with_request_lock(request_id) do
-              value = load_request(request_id)
+              begin
+                value = load_request(request_id)
+              rescue StateError
+                # A concurrent cancel removed the record while this
+                # consume waited: report the committed terminal state
+                # (review 8x327bul).
+                replay = replay_terminal!(request_id, "consumed")
+                raise StateError, "HITL request was already cancelled" unless replay
+
+                return replay
+              end
               requester_gate!(value)
               # Live authority is HELD across the terminal commit: an
               # attempt ending concurrently cancels the request and
@@ -302,6 +312,9 @@ module Ace
         # the prior result without re-running any effect.
         def deliver(id, answer_reader)
           request_id = safe_id(id)
+          # Authority first: an unauthorized caller learns nothing about
+          # request existence or terminal state (review 8x327buk).
+          require_transport!("deliver")
           terminal = load_terminal(request_id)
           if terminal
             raise StateError, terminal["state"] == "cancelled" ? "HITL request was already cancelled" : "HITL request was already consumed"
@@ -315,6 +328,9 @@ module Ace
 
           answer = read_bounded_answer(answer_reader)
           Kinds.check_answer!(value["kind"].to_s, answer)
+          if value["otp"] && Integer(value["otp"]["expires_at"]) <= Time.now.to_i
+            raise StateError, "the OTP challenge has expired; request a new one"
+          end
           incarnation = [value["created_at"], value["kind"], value["sensitive"], value["requester"]]
           with_request_lock(request_id) do
             value = load_request(request_id)
@@ -525,8 +541,19 @@ module Ace
 
         def read_answer(value)
           # OTP bytes live only in the vault (spec 8wq.t.34i); plain
-          # answers are the service-owned 0600 file in answers/.
-          return @vault.read(self, value) if value["sensitive"] == true
+          # answers are the service-owned 0600 file in answers/. A
+          # pending (not-yet-delivered) secret keeps the consume loop
+          # WAITING — absence is nil, only expiry/rejection raises
+          # (review 8x327bue).
+          if value["sensitive"] == true
+            begin
+              return @vault.read(self, value)
+            rescue OtpVault::ExpiredError
+              raise
+            rescue OtpVault::MissError
+              return nil
+            end
+          end
 
           path = answers_dir.join("#{safe_id(value["id"])}.answer")
           return nil unless path.exist?
@@ -602,7 +629,11 @@ module Ace
           unless Kinds::OTP_INPUT_DIGEST.match?(input_digest.to_s)
             raise StateError, "OTP challenge input digest must be a sha256 hex digest"
           end
-          expires_at = Integer(expires_at)
+          begin
+            expires_at = Integer(expires_at)
+          rescue ArgumentError, TypeError
+            raise StateError, "OTP challenge expiry must be unix seconds"
+          end
           now = Time.now.to_i
           unless expires_at > now && expires_at <= now + Kinds::OTP_MAX_TTL_SECONDS
             raise StateError, "OTP challenge expiry must be in the future and within 24 hours"
@@ -659,6 +690,13 @@ module Ace
         def replay_terminal!(request_id, operation)
           terminal = load_terminal(request_id)
           return nil unless terminal
+          # A receipt replays ONLY to the requester of record: knowing a
+          # request id never discloses another actor's answer (spec
+          # 8wq.t.34i). Everyone else keeps the classified terminal
+          # conflict.
+          unless @identity.username == terminal["requester"].to_s
+            raise StateError, terminal["state"] == "cancelled" ? "HITL request was already cancelled" : "HITL request was already consumed"
+          end
 
           case terminal["state"]
           when "cancelled"
@@ -714,6 +752,7 @@ module Ace
             "assignment" => value["assignment"],
             "attempt" => value["attempt"],
             "project" => value["project"],
+            "requester" => value["requester"],
             "sensitive" => value["sensitive"] == true,
             "at" => Time.now.to_i
           }

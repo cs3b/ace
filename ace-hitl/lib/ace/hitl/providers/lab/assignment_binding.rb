@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "ace/assign/organisms/attempt_coordinator"
 require_relative "../../lifecycle/binding"
 
 module Ace
@@ -33,16 +34,24 @@ module Ace
           private
 
           def with_verified(assignment_id, attempt_id, project_id, requester)
+            # ONLY the authority verification is error-mapped: the
+            # caller's transition (answer hand-off, commits, effects)
+            # keeps its own failure classes — mapping it into
+            # BindingError would cancel a live request on an unrelated
+            # failure (review 8x327bud). The exclusion still spans the
+            # whole transition, so the phase flag separates the two.
+            verifying = true
             coordinator.with_verified_attempt(
               assignment_id: assignment_id,
               attempt_id: attempt_id,
               project_id: project_id,
               requester: requester
             ) do |attempt|
+              verifying = false
               yield attempt
             end
-          rescue StandardError => e
-            raise map_error(e)
+          rescue Ace::Assign::Error => e
+            raise verifying ? map_error(e) : e
           end
 
           def coordinator

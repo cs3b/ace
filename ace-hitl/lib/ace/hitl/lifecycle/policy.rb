@@ -128,6 +128,10 @@ module Ace
           return false unless facts["transport_uids"].is_a?(Array) && facts["transport_uids"].include?(peer.uid)
 
           projects = authorized_projects(peer.uid)
+          return false if projects.nil?
+          # A transport uid without a principals entry is nobody (aligned
+          # with ace-lab's HitlAuthorizer; review 8x327buh); an entry
+          # with an empty project list sees every project.
           project.nil? || projects.empty? || projects.include?(project.to_s)
         end
 
@@ -152,10 +156,10 @@ module Ace
         # usernames; a numeric match is uid-exact).
         def authorized_projects(uid)
           principals = document["authorization"].is_a?(Hash) ? document["authorization"]["principals"] : {}
-          return [] unless principals.is_a?(Hash)
+          return nil unless principals.is_a?(Hash)
 
           policy = principals[uid.to_s]
-          return [] unless policy.is_a?(Hash)
+          return nil unless policy.is_a?(Hash)
 
           Array(policy["projects"]).map(&:to_s)
         end

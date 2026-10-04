@@ -44,6 +44,18 @@ class ScopedPolicyTest < AceHitlTestCase
     refute policy.transport?(peer)
   end
 
+  def test_transport_uid_without_a_principal_entry_is_nobody
+    # Aligned with ace-lab's HitlAuthorizer (review 8x327buh): a uid on
+    # the transport list without a principals entry authorizes nothing.
+    orphaned = Ace::Hitl::Lifecycle::GrantsPolicy.new(document: {
+      "hitl" => {"service_uid" => 4210, "transport_uids" => [4299]},
+      "authorization" => {"principals" => {"4211" => {"projects" => ["ace"]}}}
+    })
+    peer = stub_peer(4299)
+    refute orphaned.transport?(peer, project: "ace")
+    refute orphaned.transport?(peer)
+  end
+
   def test_service_uid_comes_from_the_trusted_document_only
     assert_equal 4210, policy.service_uid
     assert_nil Ace::Hitl::Lifecycle::GrantsPolicy.new(document: {}).service_uid

@@ -24,6 +24,10 @@ module Ace
         # cannot serve the secret (absent, expired, or already consumed).
         class MissError < Lifecycle::StateError; end
 
+        # The challenge existed but is no longer consumable: prompts the
+        # requester immediately instead of waiting (spec 8wq.t.34i).
+        class ExpiredError < MissError; end
+
         module FileVault
           module_function
 
@@ -91,11 +95,13 @@ module Ace
           end
 
           # One-time read: the bytes leave memory exactly once, and only
-          # for the request incarnation that delivered them.
+          # for the request incarnation that delivered them. Absence is
+          # a plain MissError (the store keeps waiting); expiry is the
+          # terminal ExpiredError (the requester prompts again).
           def read(store, value)
             entry = @entries[key_for(value)]
             raise MissError, "no OTP is pending for this request" unless entry
-            raise MissError, "the OTP challenge has expired; request a new one" if entry.expires_at <= @clock.now.to_i
+            raise ExpiredError, "the OTP challenge has expired; request a new one" if entry.expires_at <= @clock.now.to_i
 
             @entries.delete(key_for(value))
             entry.answer.dup

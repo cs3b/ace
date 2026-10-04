@@ -175,6 +175,75 @@ class ScopedServiceTest < AceHitlTestCase
     assert_match(/not a socket/, error.message)
   end
 
+  def test_terminal_replay_never_discloses_to_a_foreign_requester
+    # A direct store view with a FOREIGN identity proves the gate: the
+    # committed answer replays only to the requester of record (review
+    # 8x327buc, critical).
+    client.create(**managed_args.transform_keys(&:to_s))
+    client.deliver("hitl001", "approved")
+    client.consume("hitl001", timeout: 2)
+
+    foreign = Ace::Hitl::Lifecycle::Store.new(
+      root: @store_root, binding: @binding, policy: @policy,
+      identity: LifecycleFixtures::TestIdentity.new(username: "someone-else")
+    )
+    error = assert_raises(Ace::Hitl::Lifecycle::StateError) do
+      foreign.consume("hitl001", timeout: 1)
+    end
+    assert_match(/already consumed/, error.message)
+    # The classified conflict carries no answer payload.
+    refute_includes error.message, "approved"
+  end
+
+  def test_a_second_service_refuses_a_live_endpoint
+    second = Ace::Hitl::Lifecycle::Service.new(
+      root: File.join(@scratch, "store3"), binding: @binding, policy: @policy,
+      socket_path: @socket_path, group: "staff"
+    )
+    error = assert_raises(Ace::Hitl::Lifecycle::TransportError) do
+      second.send(:prepare!)
+    end
+    assert_match(/already serving/, error.message)
+  end
+
+  def test_consume_waits_for_a_pending_otp_delivery_through_the_boundary
+    vault = Ace::Hitl::Lifecycle::OtpVault::MemoryVault.new
+    otp_service = Ace::Hitl::Lifecycle::Service.new(
+      root: File.join(@scratch, "store4"), binding: @binding, policy: @policy,
+      socket_path: File.join(@scratch, "hitl4.sock"), group: "staff", vault: vault
+    )
+    thread = Thread.new { otp_service.run }
+    deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + 5
+    until File.exist?(File.join(@scratch, "hitl4.sock"))
+      raise "socket never appeared" if Process.clock_gettime(Process::CLOCK_MONOTONIC) > deadline
+
+      sleep 0.02
+    end
+    otp_client = Ace::Hitl::Lifecycle::Client.new(
+      socket_path: File.join(@scratch, "hitl4.sock"), service_uid: Process.uid
+    )
+    otp_args = managed_args.transform_keys(&:to_s).merge(
+      "kind" => "otp",
+      "otp" => {operation: "gem-push", result_ref: "publisher-result",
+                input_digest: "b" * 64, expires_at: Time.now.to_i + 600}
+    )
+    otp_client.create(**otp_args)
+
+    # The answer arrives AFTER the consume starts: absence waits, and
+    # the late delivery completes the hand-off (review 8x327bue).
+    deliverer = Thread.new do
+      sleep 0.4
+      otp_client.deliver("hitl001", "654321")
+    end
+    consumed = otp_client.consume("hitl001", timeout: 5, operation: "gem-push")
+    deliverer.join
+    assert_equal "654321", consumed["answer"]
+  ensure
+    otp_service&.stop
+    thread&.join(5)
+    thread&.exit
+  end
+
   def test_ended_attempt_cancels_the_request_through_the_boundary
     failing = LifecycleFixtures::TestBinding.new(
       on_validate: ->(**_kwargs) { nil },

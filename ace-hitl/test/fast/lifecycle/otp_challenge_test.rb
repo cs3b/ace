@@ -109,13 +109,15 @@ class OtpChallengeTest < AceHitlTestCase
       store.create(**request_args(kind: "otp", otp: otp_context))
       root_store.deliver("hitl001", stdin_reader("654321"))
 
-      # The service restarts: a fresh vault knows nothing, and the
-      # requester is prompted again — no persisted verifier exists.
+      # The service restarts: a fresh vault knows nothing. The consume
+      # WAITS for a delivery that can never come (the answer is gone)
+      # and the timeout bounds the wait — the requester prompts again;
+      # no persisted verifier exists (review 8x327bue).
       restarted = make_store(root: root, vault: Ace::Hitl::Lifecycle::OtpVault::MemoryVault.new)
       error = assert_raises(Ace::Hitl::Lifecycle::StateError) do
         restarted.consume("hitl001", timeout: 1, operation: "gem-push")
       end
-      assert_match(/no OTP is pending/, error.message)
+      assert_match(/timed out waiting/, error.message)
     end
   end
 
@@ -149,6 +151,39 @@ class OtpChallengeTest < AceHitlTestCase
       consumed = store.consume("hitl001", timeout: 1, operation: "gem-push")
       assert_equal "654321", consumed["answer"]
       refute_path_exists path
+    end
+  end
+
+  def test_deliver_refuses_an_expired_challenge_without_storing_bytes
+    with_lifecycle_root do |root|
+      vault = Ace::Hitl::Lifecycle::OtpVault::MemoryVault.new
+      store = make_store(root: root, vault: vault)
+      root_store = make_store(root: root, identity: root_identity, vault: vault)
+      store.create(**request_args(kind: "otp", otp: otp_context(expires_in: 600)))
+
+      # The challenge lapses after creation (backdated record, same
+      # mechanism as the W651 legacy-expiry fixture).
+      request_path = File.join(root, "requests", "hitl001.json")
+      record = JSON.parse(File.read(request_path))
+      record["otp"]["expires_at"] = Time.now.to_i - 10
+      File.write(request_path, JSON.generate(record))
+
+      error = assert_raises(Ace::Hitl::Lifecycle::StateError) do
+        root_store.deliver("hitl001", stdin_reader("654321"))
+      end
+      assert_match(/expired/, error.message)
+      assert_empty Dir.children(File.join(root, "secrets"))
+    end
+  end
+
+  def test_malformed_expiry_is_a_classified_validation_error
+    with_lifecycle_root do |root|
+      store = make_store(root: root)
+      error = assert_raises(Ace::Hitl::Lifecycle::StateError) do
+        store.create(**request_args(kind: "otp",
+          otp: otp_context.tap { |context| context[:expires_at] = "soon" }))
+      end
+      assert_match(/unix seconds/, error.message)
     end
   end
 

@@ -158,6 +158,22 @@ class LabAssignmentBindingTest < AceHitlTestCase
     end
   end
 
+  def test_transition_failures_keep_their_own_error_classes
+    @assignment = create_managed_assignment
+    @attempt = start_attempt(@assignment)
+
+    # A failure INSIDE the caller's transition is NOT authority: it must
+    # propagate unchanged instead of becoming a cancelling BindingError
+    # (review 8x327bud).
+    error = assert_raises(Ace::Hitl::Lifecycle::StateError) do
+      @binding.with_active(assignment: @assignment.id, attempt: @attempt.attempt_id,
+        project: "ace", requester: ACTOR) do
+        raise Ace::Hitl::Lifecycle::StateError, "vault exploded"
+      end
+    end
+    assert_match(/vault exploded/, error.message)
+  end
+
   def test_consume_replays_the_committed_managed_receipt
     @assignment = create_managed_assignment
     @attempt = start_attempt(@assignment)

@@ -49,5 +49,5 @@ Gem::Specification.new do |spec|
   # through the ace-assign coordinator (spec 8wq.t.34i). No reverse
   # dependency exists or may be added (consumers map the delivery
   # contract instead).
-  spec.add_dependency "ace-assign", "~> 0.61"
+  spec.add_dependency "ace-assign", "~> 0.62"
 end

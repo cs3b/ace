@@ -108,6 +108,16 @@ module Ace
               attempt["error"] = e.class.name
               status = nil
               timed_out = false
+            rescue Lifecycle::PermissionError => e
+              # A boundary service that cannot drop to the requester
+              # (non-root transport peer) cannot run requester-uid
+              # callbacks: the failure escalates like any other outcome,
+              # the delivered answer stays relayed, and the operator
+              # signal is preserved (review 8x327buf; the named-operation
+              # executor is the gad.2 acceptance).
+              attempt["error"] = "#{e.class.name}: #{e.message}"
+              status = nil
+              timed_out = false
             end
             attempt["timed_out"] = timed_out
             attempt["exit_status"] = status

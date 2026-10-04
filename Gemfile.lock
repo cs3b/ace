@@ -177,7 +177,7 @@ PATH
   remote: ace-hitl
   specs:
     ace-hitl (0.11.0)
-      ace-assign (~> 0.61)
+      ace-assign (~> 0.62)
       ace-b36ts (~> 0.14)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)

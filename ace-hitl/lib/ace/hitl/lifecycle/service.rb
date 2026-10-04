@@ -23,11 +23,15 @@ module Ace
       # the service.
       class Service
         DEFAULT_SOCKET_MODE = 0o660
+        # An idle connection holds a thread; bounded idleness keeps a
+        # wedged peer from pinning the service (review 8x327buo).
+        DEFAULT_IDLE_SECONDS = 120.0
 
         attr_reader :socket_path
 
         def initialize(root:, binding:, policy:, socket_path:, group: Store::DEFAULT_GROUP,
-          deadline_seconds: Protocol::DEFAULT_DEADLINE_SECONDS, vault: nil, logger: nil)
+          deadline_seconds: Protocol::DEFAULT_DEADLINE_SECONDS, vault: nil, logger: nil,
+          idle_seconds: DEFAULT_IDLE_SECONDS)
           @root = root
           @binding = binding
           @policy = policy
@@ -36,6 +40,7 @@ module Ace
           @deadline_seconds = deadline_seconds
           @vault = vault || OtpVault::MemoryVault.new
           @logger = logger
+          @idle_seconds = idle_seconds
           @stopping = false
           @server = nil
         end
@@ -89,6 +94,7 @@ module Ace
 
         def prepare!
           verify_socket_directory!
+          refuse_live_service!
           FileUtils.rm_f(@socket_path)
           @server = UNIXServer.open(@socket_path)
           File.chmod(DEFAULT_SOCKET_MODE, @socket_path)
@@ -188,10 +194,33 @@ module Ace
           ->(limit) { answer[0, limit] }
         end
 
+        # A connectable socket has a live listener: a second service must
+        # refuse to start instead of stealing the endpoint (review
+        # 8x327buq). Only a dead socket (ECONNREFUSED) is removed.
+        def refuse_live_service!
+          return unless File.exist?(@socket_path)
+
+          begin
+            probe = UNIXSocket.open(@socket_path)
+          rescue SystemCallError, IOError
+            return
+          end
+          begin
+            probe.write(Protocol.encode_request("ping"))
+            probe.flush
+          rescue SystemCallError, IOError
+            nil
+          ensure
+            probe.close rescue nil
+          end
+          raise TransportError,
+            "a HITL boundary service is already serving #{@socket_path}; stop it before starting another"
+        end
+
         def read_frame(socket)
           data = +""
           loop do
-            ready = IO.select([socket])
+            ready = IO.select([socket], nil, nil, @idle_seconds)
             return nil unless ready
 
             chunk = socket.read_nonblock(4096, exception: false)
