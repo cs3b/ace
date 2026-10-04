@@ -99,7 +99,7 @@ module Ace
 
         # Prove the repository selected by Forgejo's owner:branch resolver.
         # Forgejo uses the selected repository for its own owner, otherwise
-        # a direct fork owned by that user, then the selected repo's parent.
+        # a direct fork owned by that user (the supported Forgejo 8 resolver).
         def create_repository_identity(owner:)
           base = repository_identity!(@http.request(:get, ""))
           return [base, base] if base.dig("owner", "login").casecmp?(owner)
@@ -110,10 +110,6 @@ module Ace
             raise Ace::Git::ProviderConflictingMatchesError, "Forgejo fork selector is ambiguous for #{owner}"
           end
           head = matches.first
-          if head.nil? && base["parent"]
-            parent = repository_identity!(base["parent"])
-            head = parent if parent.dig("owner", "login").casecmp?(owner)
-          end
           unless head
             raise Ace::Git::ProviderIdentityMismatchError, "Forgejo cannot prove fork selector for #{owner}"
           end

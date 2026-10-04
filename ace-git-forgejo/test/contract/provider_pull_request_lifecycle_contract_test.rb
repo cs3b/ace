@@ -301,18 +301,31 @@ class ForgejoProviderPullRequestLifecycleContractTest < AceGitForgejoTestCase
     end
   end
 
-  def test_create_selector_accepts_parent_and_normalized_clone_url
+  def test_create_selector_accepts_direct_fork_and_normalized_clone_url
     parent = repository_payload("forker/parent")
     base = repository_payload(REPO).merge("parent" => parent)
     payload = pr_payload(25, draft: true)
     payload["head"]["repo"] = parent
-    result, calls = create_probe(base: ok(base), response: created(payload), read: ok(payload),
+    result, calls = create_probe(base: ok(base), forks: [parent], response: created(payload), read: ok(payload),
       head_url: "git@forge.example.com:forker/parent.git") do |provider, url|
       provider.create_pull_request(head_repository_url: url, head_ref: "feature/x",
         base_ref: "main", expected_head: SHA, title: "Ship it")
     end
     assert_equal :created, result.idempotency
     assert_equal "forker:feature/x", calls.find { |c| c[1] == "POST" }[3]["head"]
+  end
+
+  def test_create_selector_refuses_parent_without_direct_fork_before_post
+    parent = repository_payload("forker/parent")
+    base = repository_payload(REPO).merge("parent" => parent)
+    _, calls = create_probe(base: ok(base), forks: [],
+      head_url: "git@forge.example.com:forker/parent.git") do |provider, url|
+      assert_raises(Ace::Git::ProviderIdentityMismatchError) do
+        provider.create_pull_request(head_repository_url: url, head_ref: "feature/x",
+          base_ref: "main", expected_head: SHA, title: "Ship it")
+      end
+    end
+    assert_equal 0, calls.count { |c| c[1] == "POST" }
   end
 
   def test_create_missing_or_malformed_repository_evidence_refuses_before_post
