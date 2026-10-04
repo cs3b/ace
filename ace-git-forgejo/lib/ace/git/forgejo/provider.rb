@@ -336,7 +336,7 @@ module Ace
           require_open_pr!(pr)
           marker = comment_marker(correlation)
           with_session_lock(correlation) do
-          existing = matching_review_comments(number, marker, expected_head)
+          existing = matching_review_comments(number, marker)
           if existing.length > 1
             raise Ace::Git::ProviderConflictingMatchesError,
               "Multiple comments match review session #{correlation} on PR ##{number}"
@@ -366,7 +366,7 @@ module Ace
               "session #{correlation}: #{e.message}; reconcile before repeating"
           end
           begin
-          matches = matching_review_comments(number, marker, expected_head)
+          matches = matching_review_comments(number, marker)
           rescue Ace::Git::ProviderMalformedOutputError, Ace::Git::ProviderAuthenticationError, Ace::Git::ProviderObjectNotFoundError, Ace::Git::ProviderUnreachableError => e
             raise Ace::Git::ProviderUnknownOutcomeError,
               "PR comment sent but reconciliation read failed for session #{correlation}: #{e.message}; reconcile before repeating"
@@ -706,7 +706,8 @@ module Ace
 
         # Same-server fork heads ride the documented "owner:branch" API
         # form. The declared source must resolve to the selected host with
-        # an owner path; cross-host sources are refused before any request.
+        # an owner path; cross-host sources are refused before any
+        # mutation (the exact-match lookup may read first).
         def api_head_argument!(head_repository_url, head_ref)
           return head_ref if head_repository_url.nil? ||
             Ace::Git::Atoms::ServerUrl.match?(head_repository_url, server.url)
@@ -890,7 +891,7 @@ module Ace
           "<!-- ace-review-session:#{correlation} -->"
         end
 
-        def matching_review_comments(number, marker, expected_head)
+        def matching_review_comments(number, marker)
           review_http.paginate("issues/#{number}/comments").filter_map do |entry|
             unless entry.is_a?(Hash) && entry["body"].is_a?(String)
               raise Ace::Git::ProviderMalformedOutputError, "Malformed Forgejo PR comment collection"

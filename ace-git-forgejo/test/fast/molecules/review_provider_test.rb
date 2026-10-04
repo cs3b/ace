@@ -126,7 +126,7 @@ module Forgejo
       pr = Struct.new(:number, :head_sha, :state).new(42, HEAD, :open)
 
       matches = provider.stub(:pull_request, pr) do
-        provider.send(:matching_review_comments, pr, "ace-review-session:session-1", HEAD)
+        provider.send(:matching_review_comments, pr, "ace-review-session:session-1")
       end
 
       assert_equal [91], matches.map(&:id)
