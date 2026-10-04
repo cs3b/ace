@@ -8,3 +8,9 @@ Verdict: **APPROVE**, exact candidate `a5429f4161bd7c38b583aa1ecf41da338a41ab21`
 - Additional checks: 58 / 242, receipt `hitl-hermes/8x3ysl`.
 
 Receipts and fixtures remain under the review worktree `.ace-local/`. Tracked tree and diff checks were clean at the reviewed SHA. Source integrated into main `08c64b6a5`. This accepts source integration only: actual registered Telegram channel and lab-config:gad.2 adoption remain required. Task stays in-progress; no publication or installed Lab acceptance claimed.
+
+## Integrated dependency fixture correction
+
+Recovery added an explicit Fiddle dependency. The integrated suite at `394d816dc` exposed an offline installation fixture assumption: Ruby's default Fiddle has no cached gem archive (`hitl-hermes/8x3zqo`). The fixture now preserves the isolated `GEM_HOME`/`GEM_PATH`, uses that home as the installation destination, and allows the same Ruby's default gems instead of forcing RubyGems to ignore them through `--install-dir`. Non-default dependencies still require archives; real built executable, OTP boundary and plugin assertions remain.
+
+Exact correction `673eb0f0848b9e8355b7cc4b7e5ae388347136b6`: independent GPT-6.1 Sol **APPROVE** (`wave4_hermes`), with independent command tests 7 / 65 (`hitl-hermes/8x3ztp`). Full corrected Hermes package: 106 / 607 (`hitl-hermes/8x3zse`). Integrated by fast-forward. The wider suite also reached its 120-second limit for ace-assign; that separate unresolved result is not classified as a successful suite run.
