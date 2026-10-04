@@ -41,7 +41,7 @@ module Ace
       def test_owner_requires_descendant_of_native_shell_with_same_uid
         table = ProcessTable.new(10 => {parent: 1, uid: 100, birth: "shell"},
           11 => {parent: 10, uid: 100, birth: "agent"}, 12 => {parent: 11, uid: 100, birth: "tool"})
-        observer = Ace::Runtime::Molecules::ProcessIdentity.new(executor: table)
+        observer = Ace::Runtime::Molecules::ProcessIdentity.new(executor: table, birth_reader: ->(pid) { table.rows.dig(pid, :birth) })
         owner = observer.owner(shell_pid: 10, caller_pid: 12)
         assert_equal 11, owner.dig("process_identity", "pid")
         assert_equal 10, owner.dig("shell_identity", "pid")
@@ -53,10 +53,32 @@ module Ace
       def test_shell_surviving_dead_agent_or_reparented_child_is_not_owner
         table = ProcessTable.new(10 => {parent: 1, uid: 100, birth: "shell"},
           12 => {parent: 1, uid: 100, birth: "orphan"})
-        observer = Ace::Runtime::Molecules::ProcessIdentity.new(executor: table)
+        observer = Ace::Runtime::Molecules::ProcessIdentity.new(executor: table, birth_reader: ->(pid) { table.rows.dig(pid, :birth) })
         assert_nil observer.owner(shell_pid: 10, caller_pid: 11)
         assert_nil observer.owner(shell_pid: 10, caller_pid: 12)
         table.rows[11] = {parent: 10, uid: 100, birth: "agent", state: "Z"}
+        assert_nil observer.owner(shell_pid: 10, caller_pid: 11)
+      end
+
+      def test_same_second_birth_change_is_pid_reuse
+        table = ProcessTable.new(10 => {parent: 1, uid: 100, birth: "darwin:42:1"})
+        observer = Ace::Runtime::Molecules::ProcessIdentity.new(executor: table,
+          birth_reader: ->(pid) { table.rows.dig(pid, :birth) })
+        saved = observer.capture(10)
+        table.rows[10][:birth] = "darwin:42:2"
+        assert_equal "unknown", observer.observe(saved)["liveness"]
+      end
+
+      def test_ancestry_revalidation_rejects_changed_incarnation
+        table = ProcessTable.new(10 => {parent: 1, uid: 100, birth: "shell"},
+          11 => {parent: 10, uid: 100, birth: "agent"})
+        count = 0
+        observer = Ace::Runtime::Molecules::ProcessIdentity.new(executor: table,
+          birth_reader: ->(pid) {
+            count += 1 if pid == 11
+            table.rows[11][:birth] = "reused" if count >= 3
+            table.rows.dig(pid, :birth)
+          })
         assert_nil observer.owner(shell_pid: 10, caller_pid: 11)
       end
 
