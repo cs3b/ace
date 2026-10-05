@@ -227,7 +227,8 @@ After corrected qjz source joins recovery/HITL, proceed to qk0, then full qkb, R
 ### Current convergence and steering gap — 2026-10-05
 
 - [ ] `qjz`: repaired d20cd8 source and normative specification independently
-  approved with zero findings; final full Assign gate underway. Installed SC3
+  approved with zero findings; full Assign849/3693 passed and source merged
+  as3d2ffcdd4, post-merge HITL23/161 and Overseer7/20 passed. Installed SC3
   controlled sixteen-hour restart/one-receipt proof is still missing and owned
   by qjz, so source acceptance will not alone close the task.
 - [ ] `09j`: full frozen5549 Assign passed884/3927 with two existing skips;
