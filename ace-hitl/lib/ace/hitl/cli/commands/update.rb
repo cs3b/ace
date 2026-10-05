@@ -79,6 +79,8 @@ module Ace
             when :dispatched
               puts "Resume dispatched: mode=#{dispatch[:mode]} details=#{dispatch[:details]}"
               puts "HITL event archived after successful dispatch."
+            when :managed_request
+              raise Ace::Support::Cli::Error.new("Managed requests require scoped live delivery; unscoped resume is prohibited")
             when :no_answer
               raise Ace::Support::Cli::Error.new("Cannot resume '#{event.id}' without an answer")
             when :failed

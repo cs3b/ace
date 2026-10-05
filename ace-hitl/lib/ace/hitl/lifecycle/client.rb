@@ -60,9 +60,10 @@ module Ace
           request("deliver", {"id" => id, "answer" => answer.to_s})
         end
 
-        def consume(id, timeout: 0, operation: nil)
+        def consume(id, timeout: 0, operation: nil, native_delivery: false)
           params = {"id" => id, "timeout" => Integer(timeout)}
           params["operation"] = operation if operation
+          params["native_delivery"] = true if native_delivery
           request("consume", params)
         end
 
@@ -70,8 +71,24 @@ module Ace
           request("cancel", {"id" => id, "reason" => reason.to_s})
         end
 
-        def pending
-          request("pending")
+        def pending(project: nil)
+          items = []
+          after = nil
+          loop do
+            page = pending_page(project: project, after: after)
+            items.concat(page.fetch("items"))
+            cursor = page.fetch("next")
+            break unless cursor
+            unless cursor.is_a?(String) && (after.nil? || cursor > after)
+              raise TransportError, "pending cursor did not advance"
+            end
+            after = cursor
+          end
+          items
+        end
+
+        def pending_page(project: nil, after: nil)
+          request("pending", {"project" => project, "after" => after}.compact)
         end
 
         def states

@@ -62,6 +62,7 @@ class NoDirectLabHitlGuardTest < AceHitlTestCase
     source = File.read(File.expand_path("../../../lib/ace/hitl/cli/commands/ask.rb", __dir__))
 
     assert_match(/Providers\.resolve/, source)
-    assert_match(/Providers::Ref\.from_env/, source)
+    refute_match(/Providers::Ref\.from_env/, source)
+    assert_match(/ref = result\.ref/, source)
   end
 end

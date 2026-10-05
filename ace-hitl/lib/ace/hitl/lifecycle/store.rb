@@ -2,6 +2,7 @@
 
 require "securerandom"
 require "fileutils"
+require "ace/hitl/contract"
 require_relative "errors"
 require_relative "identity"
 require_relative "peer"
@@ -11,6 +12,7 @@ require_relative "kinds"
 require_relative "binding"
 require_relative "effects"
 require_relative "otp_vault"
+require_relative "protocol"
 
 module Ace
   module Hitl
@@ -92,15 +94,14 @@ module Ace
 
         # Create one request bound to the exact live attempt of the
         # CALLING identity. Managed requests bind by assignment
-        # (--assignment/--attempt/--project); the legacy lab path binds
-        # by Work (kept until vs2 switches consumers). EVERY request
+        # (--assignment/--attempt/--project). EVERY request
         # validates its binding — unknown identity/authority is an
         # error, never permission.
         def create(id:, attempt:, plan:, question:, ace_hitl_id:, project: "ace", harness: "lab-admin",
-          work: nil, assignment: nil, kind: "text", options: [], effect: nil, otp: nil)
+          assignment:, kind: "text", options: [], effect: nil, otp: nil)
           requester = @identity.username
           request_id = safe_id(id)
-          binding_kind = validate_binding_ids!(work, assignment, attempt)
+          validate_binding_ids!(assignment, attempt)
           unless Kinds::SAFE_LABEL.match?(project) && Kinds::SAFE_LABEL.match?(harness)
             raise StateError, "invalid project or harness label"
           end
@@ -128,13 +129,11 @@ module Ace
             challenge = normalize_otp_challenge!(otp)
           end
 
-          validate_request_binding(binding_kind, work, assignment, attempt, project, requester)
+          reverse = validate_request_binding(assignment, attempt, project, requester)
 
           value = {
             "id" => request_id,
-            "work" => work,
             "assignment" => assignment,
-            "binding_kind" => binding_kind,
             "attempt" => attempt,
             "project" => project,
             "harness" => harness,
@@ -151,6 +150,18 @@ module Ace
           Effects.validate_declaration!(effect) if effect
           value["effect"] = Effects.normalized_declaration(effect) if effect
           value["incarnation"] = SecureRandom.hex(8)
+          envelope = {
+            "schema" => Contract::ManagedEnvelope::SCHEMA, "request_id" => request_id,
+            "request_incarnation" => value["incarnation"],
+            "project" => project, "assignment_id" => assignment, "attempt_id" => attempt,
+            "requester" => requester, "correlation_id" => request_id, "kind" => kind,
+            "reverse" => reverse
+          }
+          envelope["payload_sha256"] = Digest::SHA256.hexdigest(question) unless Kinds.secret?(kind)
+          if value["effect"]
+            envelope["effect"] = {"authorization_ref" => "requester-declaration:#{request_id}:#{value['incarnation']}"}
+          end
+          value["envelope"] = managed_envelope!(envelope)
 
           request_path = requests_dir.join("#{request_id}.json")
           raise StateError, "HITL request already exists" if request_path.exist?
@@ -168,9 +179,9 @@ module Ace
           initialize_projection!(value)
           {
             "id" => request_id,
-            "work" => value["work"],
             "assignment" => value["assignment"],
             "attempt" => attempt,
+            "envelope" => value["envelope"],
             "requested" => true
           }
         end
@@ -179,11 +190,18 @@ module Ace
         # transport). Never carries answer content.
         def read(id)
           request_id = safe_id(id)
+          unless request_path(request_id).exist?
+            terminal = load_terminal(request_id)
+            if terminal
+              gate_read_access!(terminal)
+              return terminal.slice("id", "assignment", "attempt", "project", "requester", "sensitive", "envelope", "state", "native_delivery", "effect_receipt_ref")
+                .merge("kind" => terminal.dig("envelope", "kind"))
+            end
+          end
           value = load_request(request_id)
           gate_read_access!(value)
           {
             "id" => request_id,
-            "work" => value["work"],
             "assignment" => value["assignment"],
             "attempt" => value["attempt"],
             "project" => value["project"],
@@ -195,7 +213,9 @@ module Ace
             "plan" => value["plan"],
             "otp" => value["otp"],
             "requester" => value["requester"],
+            "envelope" => value["envelope"],
             "state" => public_state(request_id, value),
+            "effect_receipt_ref" => effect_receipt_ref(value),
             "effect" => value["effect_state"]
           }
         end
@@ -206,13 +226,24 @@ module Ace
         # answer transfers exactly once and only for the challenge's
         # authorized operation; a consumed retry replays the committed
         # receipt (never the secret bytes).
-        def consume(id, timeout: 0, operation: nil)
+        def consume(id, timeout: 0, operation: nil, native_delivery: false)
+          unless [true, false].include?(native_delivery)
+            raise StateError, "native_delivery must be a boolean"
+          end
           request_id = safe_id(id)
           replay = replay_terminal!(request_id, "consumed")
-          return replay if replay
+          if replay
+            if native_delivery
+              terminal = load_terminal(request_id)
+              raise StateError, "request was consumed locally; it has no native delivery claim" unless terminal["native_delivery"]
+              verify_native_consumer!(terminal)
+            end
+            return replay
+          end
 
           value = load_request(request_id)
           requester_gate!(value)
+          verify_native_consumer!(value) if native_delivery
           verify_operation!(value, operation)
           deadline = timeout.positive? ? Time.now.to_i + timeout : nil
           loop do
@@ -234,6 +265,7 @@ module Ace
               # attempt ending concurrently cancels the request and
               # fails closed instead of handing over an answer.
               with_live_authority!(value, requester: @identity.username) do
+                verify_native_consumer!(value) if native_delivery
                 verify_operation!(value, operation)
                 verify_otp_deadline!(value)
                 answer = read_answer(value)
@@ -248,7 +280,8 @@ module Ace
                   raise
                 end
                 commit_terminal!(value, "consumed",
-                  answer: value["sensitive"] == true ? nil : answer)
+                  answer: value["sensitive"] == true ? nil : answer, native_delivery: native_delivery)
+                value["native_delivery"] = true if native_delivery
                 update_public(value, "consumed")
                 @vault.discard(self, value)
                 remove_request(value, keep_public: true)
@@ -257,11 +290,13 @@ module Ace
             if answer
               return {
                 "id" => request_id,
-                "work" => value["work"],
                 "assignment" => value["assignment"],
                 "attempt" => value["attempt"],
                 "project" => value["project"],
+                "envelope" => value["envelope"],
+                "effect_receipt_ref" => effect_receipt_ref(value),
                 "answer" => answer,
+                "native_delivery" => value["native_delivery"] == true,
                 "sensitive" => value["sensitive"] == true
               }
             end
@@ -300,7 +335,6 @@ module Ace
           end
           {
             "id" => request_id,
-            "work" => locked_value["work"],
             "assignment" => locked_value["assignment"],
             "attempt" => locked_value["attempt"],
             "cancelled" => true,
@@ -363,16 +397,58 @@ module Ace
           answer&.clear
         end
 
-        # Answerable requests; never purges or cancels anything (W651).
-        def pending
-          require_transport!("pending")
-          requests_dir.glob("*.json").sort.filter_map do |path|
-            value = AtomicJson.read(path)
-            next unless value.is_a?(Hash)
+        # Awaiting answers or deliberate native reconciliation. Never purges
+        # answered/dead requests, and never exposes answer or callback argv.
+        def pending(project: nil)
+          each_pending(project: project).to_a
+        end
 
-            value if !answer_present?(value)
+        # Stable keyset pagination bounds each IPC frame without discarding
+        # consumed native claims needed by signed-receipt reconciliation.
+        # Concurrent new IDs preceding the cursor appear on the next scan.
+        def pending_page(project: nil, after: nil)
+          unless after.nil? || (after.is_a?(String) && after.match?(/\A[A-Za-z0-9][A-Za-z0-9._:-]{0,127}\z/))
+            raise StateError, "invalid pending cursor"
+          end
+          items = []
+          each_pending(project: project, after: after) do |value|
+            candidate = {"items" => items + [value], "next" => value.fetch("id")}
+            begin
+              Protocol.encode_result(candidate)
+            rescue Protocol::FrameError
+              raise StateError, "pending record exceeds boundary frame limit" if items.empty?
+              return {"items" => items, "next" => items.last.fetch("id")}
+            end
+            items << value
+          end
+          {"items" => items, "next" => nil}
+        end
+
+        def each_pending(project: nil, after: nil)
+          return enum_for(__method__, project: project, after: after) unless block_given?
+          require_transport!("pending")
+          ids = (requests_dir.glob("*.json") + public_dir.glob("*.json")).map { |path| path.basename(".json").to_s }.uniq.sort
+          ids.each do |id|
+            next if after && id <= after
+            value = AtomicJson.read(requests_dir.join("#{id}.json"))
+            active = value.is_a?(Hash)
+            value = AtomicJson.read(public_dir.join("#{id}.json")) unless active
+            next unless value.is_a?(Hash) && (active || value["native_delivery"] == true)
+            next if project && value["project"] != project
+            begin
+              require_transport!("pending", value)
+            rescue PermissionError
+              next
+            end
+            if active
+              value = value.slice("id", "assignment", "attempt", "project", "harness", "kind", "sensitive", "plan", "question",
+                "options", "ace_hitl_id", "requester", "created_at", "otp", "envelope")
+                .merge("state" => public_state(value["id"], value), "has_effect" => !value["effect"].nil?)
+            end
+            yield value
           end
         end
+        private :each_pending
 
         # All public lifecycle records (non-secret projections).
         def states
@@ -453,7 +529,6 @@ module Ace
           request_id = safe_id(value["id"].to_s)
           public = {
             "id" => request_id,
-            "work" => value["work"].to_s,
             "assignment" => value["assignment"].to_s,
             "attempt" => value["attempt"].to_s,
             "project" => value["project"].to_s,
@@ -461,9 +536,11 @@ module Ace
             "kind" => value["kind"].to_s,
             "state" => state,
             "created_at" => Integer(value["created_at"]),
+            "envelope" => value["envelope"],
             "updated_at" => Time.now.to_i
           }
           public["incarnation"] = value["incarnation"] if value["incarnation"]
+          public["native_delivery"] = true if value["native_delivery"]
           public["otp"] = public_otp_projection(value["otp"]) if value["otp"]
           public["effect_state"] = value["effect_state"] if value["effect_state"]
           public.update(audit) if audit
@@ -600,26 +677,33 @@ module Ace
 
         # ---- creation helpers ----------------------------------------------
 
-        # Work ids and managed assignment ids are mutually exclusive; the
-        # attempt id format follows the binding kind. Returns the binding
-        # kind tag persisted with the request.
-        def validate_binding_ids!(work, assignment, attempt)
-          if work && assignment
-            raise StateError, "bind the request by assignment OR by work, never both"
+        def managed_envelope!(value)
+          Contract::ManagedEnvelope.load(value)
+        rescue Contract::InvalidEnvelope => e
+          raise StateError, e.message
+        end
+
+        def effect_receipt_ref(value)
+          record = AtomicJson.read(effects_dir.join("#{safe_id(value['id'])}.json"))
+          if record.is_a?(Hash) && record["incarnation"] == value["incarnation"] &&
+              Array(record["attempts"]).any? { |attempt| %w[ok escalated].include?(attempt["outcome"]) }
+            "effect-log:#{value['id']}:#{value['incarnation']}"
           end
-          if assignment
-            unless Kinds::COMPACT_ID.match?(assignment) && Kinds::COMPACT_ID.match?(attempt.to_s)
-              raise StateError, "HITL request requires the exact managed assignment and attempt ids"
-            end
-            return "assignment"
+        end
+
+        def verify_native_consumer!(value)
+          raise StateError, "OTP requires protected local consume" if value["sensitive"] == true
+          reverse = @binding.reverse_address(attempt: value["attempt"],
+            caller_pid: @identity.respond_to?(:pid) ? @identity.pid : nil)
+          unless reverse && reverse == value.dig("envelope", "reverse")
+            raise BindingError, "native delivery requires the exact original requester process"
           end
-          unless Kinds::WORK_ID.match?(work.to_s)
-            raise StateError, "HITL request requires a Work id or a managed assignment binding"
+        end
+
+        def validate_binding_ids!(assignment, attempt)
+          unless Kinds::COMPACT_ID.match?(assignment.to_s) && Kinds::COMPACT_ID.match?(attempt.to_s)
+            raise StateError, "HITL request requires the exact managed assignment and attempt ids"
           end
-          unless attempt && Kinds::ATTEMPT_ID.match?(attempt)
-            raise StateError, "HITL request requires the exact active Attempt id"
-          end
-          "work"
         end
 
         # The OTP challenge evidence (spec 8wq.t.34i): non-secret,
@@ -658,9 +742,10 @@ module Ace
            "input_digest" => input_digest, "expires_at" => expires_at}
         end
 
-        def validate_request_binding(binding_kind, work, assignment, attempt, project, requester)
-          @binding.validate_request(work: work, assignment: assignment, attempt: attempt,
-            project: project, requester: requester)
+        def validate_request_binding(assignment, attempt, project, requester)
+          @binding.validate_request(assignment: assignment, attempt: attempt,
+            project: project, requester: requester,
+            caller_pid: @identity.respond_to?(:pid) ? @identity.pid : nil)
         end
 
         # ---- role gates ------------------------------------------------------
@@ -731,13 +816,15 @@ module Ace
         def replayed_consume(terminal)
           result = {
             "id" => terminal["id"],
-            "work" => terminal["work"],
             "assignment" => terminal["assignment"],
             "attempt" => terminal["attempt"],
             "sensitive" => terminal["sensitive"] == true,
             "replay" => true
           }
           result["answer"] = terminal["answer"] unless terminal["sensitive"] == true
+          result["envelope"] = terminal["envelope"]
+          result["native_delivery"] = terminal["native_delivery"] == true
+          result["effect_receipt_ref"] = terminal["effect_receipt_ref"]
           result
         end
 
@@ -745,7 +832,6 @@ module Ace
           audit = terminal["audit"].is_a?(Hash) ? terminal["audit"] : {}
           {
             "id" => request_id,
-            "work" => terminal["work"],
             "assignment" => terminal["assignment"],
             "attempt" => terminal["attempt"],
             "cancelled" => true,
@@ -765,15 +851,17 @@ module Ace
             "id" => request_id,
             "incarnation" => value["incarnation"],
             "state" => state,
-            "work" => value["work"],
             "assignment" => value["assignment"],
             "attempt" => value["attempt"],
             "project" => value["project"],
             "requester" => value["requester"],
             "sensitive" => value["sensitive"] == true,
+            "envelope" => value["envelope"],
+            "effect_receipt_ref" => effect_receipt_ref(value),
             "at" => Time.now.to_i
           }
           record["answer"] = extra[:answer] if extra[:answer]
+          record["native_delivery"] = true if extra[:native_delivery]
           record["audit"] = extra["audit"] if extra["audit"]
           terminals_dir.mkpath
           AtomicJson.call(terminals_dir.join("#{request_id}.json"), record, mode: TERMINAL_MODE)
@@ -791,7 +879,7 @@ module Ace
         # for retry (review 8x32r9b0).
         def with_live_authority!(value, requester:)
           @binding.with_active(
-            work: value["work"], assignment: value["assignment"], attempt: value["attempt"],
+            assignment: value["assignment"], attempt: value["attempt"],
             project: value["project"], requester: requester
           ) do
             yield
@@ -814,7 +902,6 @@ module Ace
         def delivered_result(value)
           {
             "id" => value["id"],
-            "work" => value["work"],
             "assignment" => value["assignment"],
             "attempt" => value["attempt"],
             "delivered" => true,

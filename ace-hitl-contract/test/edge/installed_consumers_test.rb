@@ -38,6 +38,8 @@ class InstalledConsumersTest < AceHitlContractTestCase
         end
       else
         spec = Gem::Specification.find_by_name(name)
+        next if spec.default_gem? # This same Ruby supplies its default gems.
+
         cache = spec.cache_file
         assert File.file?(cache), "missing local dependency archive #{spec.full_name}; no network fallback"
         FileUtils.cp(cache, pool)
@@ -47,10 +49,10 @@ class InstalledConsumersTest < AceHitlContractTestCase
       home = File.join(@scratch, consumer)
       refute File.exist?(home), "clean install requires an empty consumer GEM_HOME: #{home}"
       env = {"GEM_HOME" => home, "GEM_PATH" => home, "BUNDLE_GEMFILE" => nil,
-             "BUNDLE_BIN_PATH" => nil, "RUBYOPT" => nil, "RUBYLIB" => nil}
+             "BUNDLE_BIN_PATH" => nil, "BUNDLER_SETUP" => nil, "RUBYOPT" => nil, "RUBYLIB" => nil}
       archive = File.join(pool, "#{specs.fetch(consumer).full_name}.gem")
       out, status = Open3.capture2e(env, RbConfig.ruby, "-S", "gem", "install", "--local",
-        "--no-document", "--install-dir", home, archive, chdir: pool)
+        "--no-document", archive, chdir: pool)
       assert status.success?, "#{consumer} clean install failed: #{out}"
       script = <<~RUBY
         require #{consumer.sub('ace-', 'ace/').tr('-', '/').inspect}
@@ -76,10 +78,10 @@ class InstalledConsumersTest < AceHitlContractTestCase
       # the native fixture can launch its credential-free codex executable.
       home = File.join(@scratch, "ace-overseer")
       env = {"GEM_HOME" => home, "GEM_PATH" => home, "BUNDLE_GEMFILE" => nil,
-             "BUNDLE_BIN_PATH" => nil, "RUBYOPT" => nil, "RUBYLIB" => nil}
+             "BUNDLE_BIN_PATH" => nil, "BUNDLER_SETUP" => nil, "RUBYOPT" => nil, "RUBYLIB" => nil}
       archive = File.join(pool, "#{specs.fetch('ace-llm-providers-cli').full_name}.gem")
       out, status = Open3.capture2e(env, RbConfig.ruby, "-S", "gem", "install", "--local",
-        "--no-document", "--install-dir", home, archive, chdir: pool)
+        "--no-document", archive, chdir: pool)
       assert status.success?, "native fixture CLI plugin install failed: #{out}"
     end
   ensure

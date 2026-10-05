@@ -2,9 +2,7 @@
 
 require "securerandom"
 require "ace/hitl/contract"
-require_relative "lab/daemon_binding"
 require_relative "lab/assignment_binding"
-require_relative "lab/composite_binding"
 require_relative "../lifecycle/store"
 require_relative "../lifecycle/policy"
 require_relative "../lifecycle/client"
@@ -37,12 +35,13 @@ module Ace
 
         PROVIDER_NAME = "lab"
 
-        def initialize(manager: nil, store: nil, binding: nil)
+        def initialize(manager: nil, store: nil, binding: nil, live_client: nil)
           @manager = manager
           # The boundary dependency: an injected store (unit wiring) or
           # the authenticated boundary client (review 8x333sqz).
           @boundary = store
           @binding = binding
+          @live_client = live_client
         end
 
         # The managed binding authority (spec 8wq.t.34i): assignment
@@ -79,9 +78,9 @@ module Ace
           )
         end
 
-        # Local event + relay request in ONE operation. The ref is
-        # REQUIRED and must be validated by the caller before this call.
-        def ask(question:, ref:, attempt:, work: nil, assignment: nil, title: nil,
+        # Local event + scoped request in ONE operation. The authenticated
+        # managed binding supplies the verified reverse; callers cannot choose it.
+        def ask(question:, attempt:, assignment:, title: nil,
           kind: "text", otp: nil, project: DEFAULT_PROJECT, harness: DEFAULT_HARNESS,
           plan: DEFAULT_PLAN, effect: {})
           effect = effect.to_h
@@ -93,9 +92,8 @@ module Ace
           # (spec 8wq.t.34i): requesters never write shared store files.
           # An injected store stays available for unit-level wiring.
           begin
-            boundary.create(
+            created = boundary.create(
               id: request_id,
-              work: work,
               assignment: assignment,
               attempt: attempt,
               kind: kind,
@@ -107,7 +105,14 @@ module Ace
               ace_hitl_id: event.id,
               effect: effect_declared?(effect) ? effect : nil
             )
-          rescue Lifecycle::Error => e
+            envelope = Contract::ManagedEnvelope.load(created.fetch("envelope"), expected: {
+              request_id: request_id, assignment_id: assignment, attempt_id: attempt, project: project,
+              correlation_id: request_id, kind: kind
+            })
+            address = envelope["reverse"]
+            raise Lifecycle::BindingError, "managed ask has no verified native reverse address" unless address
+            ref = Ref.new(session: address.fetch("session"), pane: address.fetch("pane"))
+          rescue Lifecycle::Error, Contract::InvalidEnvelope, KeyError => e
             raise ProviderUnavailableError,
               "#{e.message}; local HITL event #{event.id} was created but never bound to a " \
               "Lab request (orphan) - inspect it with ace-hitl show #{event.id} and delete " \
@@ -124,28 +129,27 @@ module Ace
             "lab_request_effect" => effect_declared?(effect) ? "declared" : "none"
           })
 
-          AskResult.new(event_id: event.id, request_id: request_id)
+          AskResult.new(event_id: event.id, request_id: request_id, ref: ref)
         end
 
-        # Contract defined in spec §1.2; the herdr push delivery itself
-        # lands with ace-herdr (8wm.t.vs0) + the provider=lab integration
-        # (8wm.t.vs2). Operator-side answering of a relay request is the
-        # lifecycle deliver path (`ace-hitl deliver`), not this method.
-        def deliver(ref, _answer)
-          raise UnsupportedOperationError,
-            "provider 'lab' does not deliver yet: push delivery lands with ace-herdr " \
-            "(8wm.t.vs0) and the provider=lab integration (8wm.t.vs2); the relay answer " \
-            "is consumed lab-side for now"
+        def deliver(request:, timeout: 0)
+          live_client.deliver(request: request, timeout: timeout)
         end
 
-        # Optional operation (spec §1.3): the ace-hitl wait command is the
-        # pane-less script path and does not poll through the adapter.
-        def wait(*)
-          raise UnsupportedOperationError,
-            "provider 'lab' does not poll through the adapter; use the ace-hitl wait command"
+        def watch(request:, timeout: 0, &observer)
+          live_client.watch(request: request, timeout: timeout, &observer)
+        end
+
+        def wait(request:, timeout: 0, operation: nil)
+          live_client.wait(request: request, timeout: timeout, operation: operation)
         end
 
         private
+
+        def live_client
+          require_relative "../live_client"
+          @live_client ||= LiveClient.new(boundary: boundary)
+        end
 
         def effect_declared?(effect)
           !!(effect[:match] || effect[:effect_cwd] || effect[:effect_timeout] ||

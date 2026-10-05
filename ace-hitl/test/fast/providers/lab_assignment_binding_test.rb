@@ -47,6 +47,13 @@ class LabAssignmentBindingTest < AceHitlTestCase
       )
     )
     @binding = Ace::Hitl::Providers::Lab::AssignmentBinding.new(coordinator: @coordinator)
+    # Native observation is a separate public coordinator boundary. This
+    # fixture tests the real assignment authority and locked transitions;
+    # native owner drift/refusal belongs to the runtime-binding tests.
+    @coordinator.define_singleton_method(:runtime_binding) do |attempt_id:, caller_pid:|
+      raise "missing kernel caller" unless caller_pid == Process.pid
+      {"session" => "workspace1", "pane" => "pane1"}
+    end
   end
 
   def stub_resolver
@@ -73,7 +80,7 @@ class LabAssignmentBindingTest < AceHitlTestCase
 
   def managed_request_args(id: "hitl001", attempt: nil, assignment: nil, kind: "decision")
     request_args(
-      id: id, work: nil, assignment: assignment || @assignment.id,
+      id: id, assignment: assignment || @assignment.id,
       attempt: attempt || @attempt.attempt_id, kind: kind
     )
   end
@@ -92,7 +99,8 @@ class LabAssignmentBindingTest < AceHitlTestCase
       created = store.create(**managed_request_args)
       assert_equal @attempt.attempt_id, created["attempt"]
       persisted = JSON.parse(File.read(File.join(root, "requests", "hitl001.json")))
-      assert_equal "assignment", persisted["binding_kind"]
+      refute persisted.key?("binding_kind")
+      refute persisted.key?("work")
       assert_equal @assignment.id, persisted["assignment"]
       assert_equal ACTOR, persisted["requester"]
     end
@@ -112,7 +120,7 @@ class LabAssignmentBindingTest < AceHitlTestCase
       foreign = make_store(root: root, identity: unprivileged_identity(ACTOR), binding: @binding)
       error = assert_raises(Ace::Hitl::Lifecycle::BindingError) do
         foreign.create(**request_args(
-          work: nil, assignment: @assignment.id, attempt: @attempt.attempt_id, project: "other-project"
+          assignment: @assignment.id, attempt: @attempt.attempt_id, project: "other-project"
         ))
       end
       assert_match(/active managed attempt/, error.message)

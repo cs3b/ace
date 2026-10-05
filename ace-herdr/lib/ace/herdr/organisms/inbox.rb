@@ -16,6 +16,7 @@ module Ace
         class IdentityDriftError < ValidationError; end
 
         EVENT = /\A[A-Za-z0-9][A-Za-z0-9._-]{0,127}\z/
+        TARGET_IDENTITY = %w[session pane terminal_id agent thread thread_kind].freeze
         THREAD_ID = /\A[0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}\z/
         PI_PATH = /_([0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12})\.jsonl\z/
         # Single validator for Pi queue event ids, shared by enqueue and
@@ -51,7 +52,20 @@ module Ace
           @receipt_public_key = receipt_public_key
         end
 
-        def enqueue(event:, attempt:, ref:, payload:)
+        # Project the accepted runtime owner before consuming an answer. Native
+        # observation may verify this identity, but cannot choose its replacement.
+        def target_from_owner(owner)
+          unless owner.is_a?(Hash) && owner["runtime"] == "herdr" &&
+              owner["agent_session"].is_a?(Hash) && owner.dig("agent_session", "agent") == owner["agent"]
+            raise ValidationError, "accepted native owner is unavailable"
+          end
+          target = owner.slice("session", "pane", "terminal_id", "agent").merge(
+            "thread" => owner.dig("agent_session", "value"), "thread_kind" => owner.dig("agent_session", "kind"))
+          validate_expected_target!(target)
+          target.transform_values { |value| value.dup.freeze }.freeze
+        end
+
+        def enqueue(event:, attempt:, ref:, payload:, managed_envelope: nil, expected_target: nil)
           validate_id!(event, "event")
           validate_id!(attempt, "attempt")
           raise ValidationError, "trusted receipt public key is unavailable" unless @receipt_public_key
@@ -67,13 +81,41 @@ module Ace
 
           address = address_for(ref)
           digest = Digest::SHA256.hexdigest(payload)
+          envelope = if managed_envelope
+            Ace::Hitl::Contract::ManagedEnvelope.load(managed_envelope, expected: {
+              attempt_id: attempt, payload_sha256: digest,
+              reverse: {"schema" => Ace::Hitl::Providers::Ref::SCHEMA, "session" => address.session, "pane" => address.pane}
+            })
+          end
+          if envelope && Ace::Hitl::Contract::SecretGate::PATTERN.match?(payload)
+            raise ValidationError, "secret-bearing managed native answers are prohibited"
+          end
+          if envelope && expected_target.nil?
+            raise ValidationError, "managed native delivery requires the accepted original target"
+          end
+          unless expected_target.nil?
+            validate_expected_target!(expected_target)
+            expected_target = expected_target.slice(*TARGET_IDENTITY)
+            unless expected_target.values_at("session", "pane") == [address.session, address.pane]
+              raise ValidationError, "accepted original target differs from reverse address"
+            end
+          end
           with_event(event) do |record|
             if record
               validate_match!(record, attempt, address, digest)
+              unless record.inbox["managed_envelope"] == envelope
+                raise ValidationError, "managed envelope conflicts with immutable inbox event"
+              end
+              if expected_target && record.inbox["origin_target"] != expected_target
+                raise IdentityDriftError, "original native target conflicts with immutable inbox event"
+              end
               next public_record(record)
             end
 
-            target = observe_target(address.session, address.pane)
+            target = observe_target(address.session, address.pane, target: expected_target)
+            if expected_target && !TARGET_IDENTITY.all? { |key| target[key] == expected_target[key] }
+              raise IdentityDriftError, "native target differs from accepted original owner"
+            end
             if target["agent"] == "pi" && !PI_EVENT_ID.match?(event)
               raise ValidationError,
                 "Pi queue requires an inbox (inb-) or wake (wnk-) event id with at " \
@@ -92,11 +134,15 @@ module Ace
               answer_digest: digest, answer: payload, state: "queued",
               inbox: {"attempt_id" => attempt, "claim_generation" => 0,
                 "receipt_key_sha256" => key_fingerprint,
+                "managed_envelope" => envelope,
+                "origin_target" => target.slice(*TARGET_IDENTITY),
                 "target" => target, "binding" => target.merge("payload_sha256" => digest)}
             )
             save(record)
             public_record(record)
           end
+        rescue Ace::Hitl::Contract::InvalidEnvelope => e
+          raise ValidationError, e.message
         end
 
         def status(event:)
@@ -237,7 +283,7 @@ module Ace
                 refusal = "replacement target cannot be verified: #{e.message}"
                 nil
               end
-              stable = %w[session pane terminal_id agent thread thread_kind]
+              stable = TARGET_IDENTITY
               unless replacement.is_a?(Hash) && observed &&
                   stable.all? { |key| replacement[key] == observed[key] }
                 refusal ||= "replacement target does not match the live native session"
@@ -351,6 +397,14 @@ module Ace
           raise ValidationError, "invalid ref: #{e.message}"
         end
 
+        def validate_expected_target!(target)
+          unless target.is_a?(Hash) && TARGET_IDENTITY.all? { |key| target[key].is_a?(String) && !target[key].empty? } &&
+              %w[codex pi].include?(target["agent"]) && target["thread_kind"] == "id" &&
+              THREAD_ID.match?(target["thread"]) && target["terminal_id"].bytesize <= 64
+            raise ValidationError, "accepted original native target is incomplete or invalid"
+          end
+        end
+
         def validate_match!(record, attempt, address, digest)
           unless record.inbox && record.inbox["attempt_id"] == attempt &&
               record.session == address.session && record.pane == address.pane &&
@@ -366,7 +420,7 @@ module Ace
           # Target drift is classified BEFORE agent-specific event id rules:
           # a bound event whose pane changed agent (e.g. codex -> pi) must
           # reconcile, not loop on a pre-send validation error.
-          stable = %w[session pane terminal_id agent thread thread_kind]
+          stable = TARGET_IDENTITY
           if target && !stable.all? { |key| target[key] == binding[key] }
             raise IdentityDriftError, "target identity changed since enqueue; reconciliation is required"
           end
@@ -499,10 +553,12 @@ module Ace
           {"event_id" => record.event_id, "attempt_id" => record.inbox["attempt_id"],
            "session" => record.session, "pane" => record.pane,
            "payload_sha256" => record.answer_digest, "state" => record.state,
+           "managed_envelope" => record.inbox["managed_envelope"],
            "receipt_key_sha256" => record.inbox["receipt_key_sha256"],
            "claim_generation" => record.inbox["claim_generation"],
            "claim_owner" => record.inbox["claim_owner"],
            "submission_intent" => !!record.inbox["submission_intent"],
+           "origin_target" => record.inbox["origin_target"],
            "target" => record.inbox["target"],
            "binding" => record.inbox["binding"], "receipt" => record.inbox["receipt"],
            "reconciliation" => record.inbox["reconciliation"],

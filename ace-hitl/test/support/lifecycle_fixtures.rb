@@ -21,6 +21,10 @@ module LifecycleFixtures
 
     attr_reader :username, :euid
 
+    def pid
+      Process.pid
+    end
+
     def root?
       @root
     end
@@ -49,37 +53,40 @@ module LifecycleFixtures
   class TestBinding < Ace::Hitl::Lifecycle::Binding
     attr_reader :validations, :activations
 
-    def initialize(on_validate: nil, on_active: nil)
+    def initialize(on_validate: nil, on_active: nil, reverse: nil)
       @on_validate = on_validate
       @on_active = on_active
       @validations = []
       @activations = []
+      @reverse = reverse
     end
 
-    def validate_request(work: nil, assignment: nil, attempt:, project:, requester:)
-      @validations << {work: work, assignment: assignment, attempt: attempt, project: project, requester: requester}
-      callback(**binding_kwargs(work, assignment, attempt, project, requester), &@on_validate) if @on_validate
-      nil
+    def validate_request(assignment:, attempt:, project:, requester:, caller_pid: nil)
+      @validations << {assignment: assignment, attempt: attempt, project: project, requester: requester}
+      callback(**binding_kwargs(assignment, attempt, project, requester), &@on_validate) if @on_validate
+      @reverse
     end
 
-    def require_active(work: nil, assignment: nil, attempt:, project: nil, requester: nil)
-      @activations << {work: work, assignment: assignment, attempt: attempt}
-      callback(**binding_kwargs(work, assignment, attempt, project, requester).slice(:work, :assignment, :attempt), &@on_active) if @on_active
-      nil
+    def with_active(assignment:, attempt:, project: nil, requester: nil)
+      @activations << {assignment: assignment, attempt: attempt}
+      callback(**binding_kwargs(assignment, attempt, project, requester).slice(:assignment, :attempt), &@on_active) if @on_active
+      yield
+    end
+
+    def reverse_address(attempt:, caller_pid:)
+      @reverse
     end
 
     private
 
-    # Legacy on_validate/on_active lambdas declare the Work-era kwargs;
-    # assignment is forwarded only when present so both generations of
-    # callbacks keep working.
+    # Callback fixtures observe only the authority fields they declare.
     def callback(**kwargs, &block)
       arity_safe = block.parameters.map { |_kind, name| name }
       block.call(**kwargs.slice(*arity_safe))
     end
 
-    def binding_kwargs(work, assignment, attempt, project, requester)
-      {work: work, assignment: assignment, attempt: attempt, project: project, requester: requester}
+    def binding_kwargs(assignment, attempt, project, requester)
+      {assignment: assignment, attempt: attempt, project: project, requester: requester}
     end
   end
 
@@ -144,11 +151,11 @@ module LifecycleFixtures
     )
   end
 
-  def request_args(id: "hitl001", work: "W500", attempt: "A-#{"a" * 24}", kind: "decision",
+  def request_args(id: "hitl001", assignment: "assign500", attempt: "attempt500", kind: "decision",
     project: "ace", harness: "agy", plan: "configure CI", question: "approve the exact change?",
-    options: [], ace_hitl_id: "ace-hitl-1", effect: nil, otp: nil, assignment: nil)
+    options: [], ace_hitl_id: "ace-hitl-1", effect: nil, otp: nil)
     {
-      id: id, work: work, assignment: assignment, attempt: attempt, kind: kind, project: project,
+      id: id, assignment: assignment, attempt: attempt, kind: kind, project: project,
       harness: harness, plan: plan, question: question, options: options,
       ace_hitl_id: ace_hitl_id, effect: effect, otp: otp
     }.compact

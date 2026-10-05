@@ -19,7 +19,7 @@ class LabProviderTest < AceHitlTestCase
       %w[requests secrets answers public effects].each do |dir|
         FileUtils.mkdir_p(File.join(tmp, dir))
       end
-      store = make_store(root: tmp, identity: root_identity)
+      store = make_store(root: tmp, identity: root_identity, binding: LifecycleFixtures::TestBinding.new(reverse: ref.to_h.transform_keys(&:to_s)))
       provider = Ace::Hitl::Providers::Lab.new(store: store, manager: pinned_manager(tmp))
       yield provider, tmp, store
     end
@@ -44,16 +44,15 @@ class LabProviderTest < AceHitlTestCase
     with_provider_store do |provider, tmp, store|
       result = provider.ask(
         question: "Proceed with deploy?",
-        ref: ref,
-        work: "W685",
-        attempt: "A-a73ebdaeb811210d51e0251e",
+        assignment: "assign685",
+        attempt: "attempt685",
         effect: {match: nil, effect_args: [], effect_cwd: nil, effect_timeout: nil}
       )
 
       assert_match(/\Ahitl-[0-9a-f]{16}\z/, result.request_id)
       assert_path_exists File.join(tmp, "requests", "#{result.request_id}.json")
       record = JSON.parse(File.read(File.join(tmp, "requests", "#{result.request_id}.json")))
-      assert_equal "W685", record["work"]
+      assert_equal "assign685", record["assignment"]
       assert_equal "Proceed with deploy?", record["question"]
       assert_equal result.event_id, record["ace_hitl_id"]
       assert_path_exists File.join(tmp, "public", "#{result.request_id}.json")
@@ -76,9 +75,8 @@ class LabProviderTest < AceHitlTestCase
       result = provider.ask(
         question: "Ship without tests?",
         title: nil,
-        ref: ref,
-        work: "W685",
-        attempt: "A-a73ebdaeb811210d51e0251e",
+        assignment: "assign685",
+        attempt: "attempt685",
         effect: {match: nil, effect_args: ["/bin/false"], effect_cwd: tmp, effect_timeout: nil}
       )
 
@@ -103,13 +101,12 @@ class LabProviderTest < AceHitlTestCase
       error = assert_raises(Ace::Hitl::Providers::ProviderUnavailableError) do
         provider.ask(
           question: "Orphaned?",
-          ref: ref,
-          work: "BAD",
-          attempt: "A-a73ebdaeb811210d51e0251e"
+            assignment: "BAD",
+          attempt: "attempt685"
         )
       end
 
-      assert_match(/requires a Work id or a managed assignment binding/, error.message)
+      assert_match(/requires the exact managed assignment and attempt ids/, error.message)
       orphan_id = error.message[/HITL event (\S+) was created/, 1]
       refute_nil orphan_id, "error must surface the orphan local event id"
 
@@ -120,25 +117,15 @@ class LabProviderTest < AceHitlTestCase
     end
   end
 
-  def test_deliver_is_declared_but_not_implemented_until_push_delivery_lands
-    provider = Ace::Hitl::Providers::Lab.new
-
-    error = assert_raises(Ace::Hitl::Providers::UnsupportedOperationError) do
-      provider.deliver(ref, "Use JWT with refresh tokens.")
-    end
-
-    assert_match(/does not deliver yet/, error.message)
-    assert_match(/ace-herdr/, error.message)
-  end
-
-  def test_wait_is_not_implemented_through_the_adapter
-    provider = Ace::Hitl::Providers::Lab.new
-
-    error = assert_raises(Ace::Hitl::Providers::UnsupportedOperationError) do
-      provider.wait(ref)
-    end
-
-    assert_match(/ace-hitl wait command/, error.message)
+  def test_provider_exposes_the_public_scoped_live_client
+    client = Object.new
+    seen = []
+    client.define_singleton_method(:deliver) { |**args| seen << [:deliver, args]; {"state" => "delivered"} }
+    client.define_singleton_method(:wait) { |**args| seen << [:wait, args]; {"answer" => "Proceed"} }
+    provider = Ace::Hitl::Providers::Lab.new(live_client: client)
+    assert_equal "delivered", provider.deliver(request: "hitl001")["state"]
+    assert_equal "Proceed", provider.wait(request: "hitl001")["answer"]
+    assert_equal [[:deliver, {request: "hitl001", timeout: 0}], [:wait, {request: "hitl001", timeout: 0, operation: nil}]], seen
   end
 
   def test_assignment_binding_factory_wraps_the_coordinator_authority

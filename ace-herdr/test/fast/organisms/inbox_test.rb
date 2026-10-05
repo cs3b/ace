@@ -96,6 +96,55 @@ module Ace
           @inbox.reconcile(event: @event, receipt: receipt, signed_bytes: bytes, signature: signature)
         end
 
+        def original_target
+          {"session" => @executor.pane["workspace_id"], "pane" => @executor.pane["pane_id"],
+            "terminal_id" => @executor.pane["terminal_id"], "agent" => @executor.pane["agent"],
+            "thread" => @executor.pane.dig("agent_session", "value"), "thread_kind" => "id"}
+        end
+
+        def managed_example
+          path = Gem::Specification.find_by_name("ace-hitl-contract").full_gem_path
+          JSON.parse(File.read(File.join(path, "lib/ace/hitl/contract/examples/managed-answer.json")))
+        end
+
+        def test_managed_shared_example_crosses_inbox_without_changing_scope
+          value = managed_example
+          @ref = value.fetch("reverse")
+          @executor.pane["workspace_id"] = @ref["session"]
+          @executor.pane["pane_id"] = @ref["pane"]
+          @event = Ace::Hitl::Contract::ManagedEnvelope.inbox_event_id(value)
+          record = @inbox.enqueue(event: @event, attempt: value.fetch("attempt_id"), ref: @ref,
+            payload: value.dig("message", "answer"), managed_envelope: value,
+            expected_target: original_target)
+          assert_equal value, record["managed_envelope"]
+          assert_equal record, @inbox.enqueue(event: @event, attempt: value.fetch("attempt_id"), ref: @ref,
+            payload: value.dig("message", "answer"), managed_envelope: value,
+            expected_target: original_target)
+          changed = Marshal.load(Marshal.dump(value))
+          changed["requester"] = "other-owner"
+          assert_raises(ValidationError) do
+            @inbox.enqueue(event: @event, attempt: value.fetch("attempt_id"), ref: @ref,
+              payload: value.dig("message", "answer"), managed_envelope: changed)
+          end
+        end
+
+        def test_managed_inbox_refuses_wrong_version_attempt_digest_correlation_and_secret
+          value = managed_example
+          [->(v) { v["schema"] = "ace.hitl.managed/v99" },
+           ->(v) { v["attempt_id"] = "other685" },
+           ->(v) { v["payload_sha256"] = "f" * 64 },
+           ->(v) { v["message"]["id"] = "other-request" },
+           ->(v) { v["message"]["answer"] = "otp=123456" }].each do |change|
+            candidate = Marshal.load(Marshal.dump(value))
+            change.call(candidate)
+            assert_raises(ValidationError) do
+              @inbox.enqueue(event: @event, attempt: value.fetch("attempt_id"), ref: value.fetch("reverse"),
+                payload: value.dig("message", "answer"), managed_envelope: candidate)
+            end
+          end
+          assert_empty Dir.children(@dir)
+        end
+
         def test_idempotent_enqueue_and_digest_conflict
           first = enqueue
           assert_equal "queued", first["state"]
@@ -104,6 +153,68 @@ module Ace
           assert_raises(ValidationError) do
             @inbox.enqueue(event: @event, attempt: "att-2", ref: @ref, payload: "hello")
           end
+        end
+
+        def test_expected_original_target_refuses_initial_drift_and_duplicate_conflicts
+          origin = original_target
+          @executor.pane["agent_session"]["value"] = "9999abcd-0000-4000-8000-000000000009"
+          assert_raises(Inbox::IdentityDriftError) do
+            @inbox.enqueue(event: @event, attempt: "att-1", ref: @ref, payload: "hello", expected_target: origin)
+          end
+          assert_nil Molecules::DeliveryRecordStore.load(@dir, @event)
+          assert_empty @native.calls
+          @executor.pane["agent_session"]["value"] = THREAD
+          accepted = @inbox.enqueue(event: @event, attempt: "att-1", ref: @ref, payload: "hello", expected_target: origin)
+          assert_equal origin, accepted["origin_target"]
+          %w[terminal_id thread agent].each do |key|
+            changed = origin.merge(key => key == "agent" ? "pi" : "9999abcd-0000-4000-8000-000000000009")
+            assert_raises(Inbox::IdentityDriftError) do
+              @inbox.enqueue(event: @event, attempt: "att-1", ref: @ref, payload: "hello", expected_target: changed)
+            end
+          end
+          assert_equal accepted, @inbox.status(event: @event)
+          assert_empty @native.calls
+        end
+
+        def test_drift_after_locked_observation_keeps_origin_and_refuses_submission
+          origin = original_target
+          original_save = @inbox.method(:save)
+          pane = @executor.pane
+          @inbox.define_singleton_method(:save) do |record|
+            pane["agent_session"]["value"] = "9999abcd-0000-4000-8000-000000000009"
+            original_save.call(record)
+          end
+          @inbox.enqueue(event: @event, attempt: "att-1", ref: @ref, payload: "hello", expected_target: origin)
+          result = @inbox.deliver(event: @event)
+          assert_equal "uncertain", result["state"]
+          assert_equal origin, result["origin_target"]
+          assert_equal THREAD, result.dig("binding", "thread")
+          assert_empty @native.calls
+        end
+
+        def test_managed_target_and_secret_checks_cannot_be_bypassed_by_missing_message
+          value = managed_example
+          value.delete("message")
+          @ref = value.fetch("reverse")
+          @executor.pane["workspace_id"] = @ref["session"]
+          @executor.pane["pane_id"] = @ref["pane"]
+          @event = Ace::Hitl::Contract::ManagedEnvelope.inbox_event_id(value)
+          payload = "ordinary answer"
+          value["payload_sha256"] = Digest::SHA256.hexdigest(payload)
+          [nil, false, {}, original_target.reject { |key, _| key == "thread" }].each do |target|
+            assert_raises(ValidationError) do
+              @inbox.enqueue(event: @event, attempt: value["attempt_id"], ref: @ref,
+                payload: payload, managed_envelope: value, expected_target: target)
+            end
+          end
+          payload = "otp=123456"
+          value["payload_sha256"] = Digest::SHA256.hexdigest(payload)
+          assert_raises(ValidationError) do
+            @inbox.enqueue(event: @event, attempt: value["attempt_id"], ref: @ref,
+              payload: payload, managed_envelope: value, expected_target: original_target)
+          end
+          assert_empty Dir.children(@dir)
+          assert_empty @native.calls
         end
 
         def test_unknown_agent_status_is_a_retryable_pre_submission_rejection
@@ -608,6 +719,12 @@ module Ace
           assert_equal 2, delivered["claim_generation"]
           assert_equal "9999abcd-0000-4000-8000-000000000009", delivered.dig("binding", "thread")
           assert_equal 2, @native.calls.length
+          assert_equal THREAD, delivered.dig("origin_target", "thread")
+          assert_equal delivered, @inbox.enqueue(event: @event, attempt: "att-1", ref: @ref,
+            payload: "hello", expected_target: uncertain["origin_target"])
+          assert_raises(Inbox::IdentityDriftError) do
+            @inbox.enqueue(event: @event, attempt: "att-1", ref: @ref, payload: "hello", expected_target: original_target)
+          end
         end
 
         def test_signed_replacement_target_permits_new_pane_after_supersession

@@ -44,7 +44,7 @@ platforms:
     enabled: false
 ```
 
-Stop/restart the existing gateway to apply that change. `serve` validates this configuration and refuses an enabled or unverifiable Telegram gateway. Its state-directory polling lease excludes a second package actor. A Telegram 409/conflicting poll failure invalidates ingress coverage rather than pretending it is connected. Never run the package actor and Hermes gateway against the same bot at the same time.
+Stop/restart the existing gateway to apply that change. `serve` validates this configuration and refuses an enabled or unverifiable Telegram gateway. Its state-directory polling lease excludes a second package actor. During a transient HITL pending-publication transport outage, continuous `serve` reports the unavailable channel on stderr, waits one second, keeps its polling lease and retries on the next cycle without consuming or replacing the request. A single-pass run reports the error to its caller. A Telegram 409/conflicting poll failure invalidates ingress coverage rather than pretending it is connected. Never run the package actor and Hermes gateway against the same bot at the same time.
 
 ```sh
 ace-hitl-hermes serve --config /etc/ace-hitl-hermes/runtime.json
@@ -82,3 +82,8 @@ Configure the gateway process with `ACE_HITL_HERMES_CONFIG` pointing to the runt
 Successful commands return 0 and JSON. Rejected input/configuration returns 1 with a sanitized error. SIGINT returns 130. OTP is never accepted as an argument: `receive` takes a bounded JSON event from stdin.
 
 Local acceptance exercises registered controlled identities, real message folders, fsynced state, a real authenticated Unix socket and installed guard assets. Live Telegram channel acceptance and the Lab transport smoke/removal of `hermes-lab-hitl`, `lab-hitl-broker` and `lab-hitl-channels` remain explicit `lab-config:gad.2` delivery gates; local tests do not claim those deployment results.
+
+A lifecycle requester named `captain` is handled like every other authenticated
+requester. Submission authority comes from the scoped lifecycle record and its
+exact project/body binding, not the folder sender label. Unmanaged Captain
+instructions remain in the folder for their target and are not sent as requests.

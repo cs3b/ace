@@ -1,0 +1,50 @@
+{
+  "cases": [
+    {
+      "schema": "ace.hitl.hermes.ingress-checkpoint/v1",
+      "request": "hitl-abcdef1234",
+      "revision": "def456",
+      "channel": "ace-captain",
+      "status": "unknown",
+      "healthy": false,
+      "drained": false,
+      "checkpoint": null,
+      "unresolved": []
+    },
+    {
+      "schema": "ace.hitl.hermes.ingress-checkpoint/v1",
+      "request": "hitl-abcdef1234",
+      "revision": "def456",
+      "channel": "ace-captain",
+      "status": "healthy",
+      "healthy": true,
+      "drained": true,
+      "checkpoint": {
+        "through": "2026-10-05T10:00:00Z",
+        "sequence": 4
+      },
+      "unresolved": []
+    },
+    {
+      "schema": "ace.hitl.hermes.ingress-checkpoint/v1",
+      "request": "hitl-abcdef1234",
+      "revision": "def456",
+      "channel": "ace-captain",
+      "status": "healthy",
+      "healthy": true,
+      "drained": false,
+      "checkpoint": {
+        "through": "2026-10-05T10:00:00Z",
+        "sequence": 5
+      },
+      "unresolved": [
+        {
+          "request": "hitl-abcdef1234",
+          "revision": "def456",
+          "received_at": "2026-10-05T09:59:59Z",
+          "status": "unresolved"
+        }
+      ]
+    }
+  ]
+}

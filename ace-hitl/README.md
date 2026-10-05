@@ -10,7 +10,7 @@ Canonical workflow and skill for agents:
 ## Commands
 
 - `ace-hitl create` creates a HITL event
-- `ace-hitl ask` asks a human via HITL and forwards the request through a provider adapter (`--provider`, default `lab`); ONE operation: local event + relay request through the authenticated boundary (`--assignment/--attempt/--project` managed binding, `--work` legacy, effect callback flags)
+- `ace-hitl ask` asks a human via HITL and forwards the request through a provider adapter (`--provider`, default `lab`); ONE operation: local event + relay request through the authenticated boundary (`--assignment/--attempt/--project` managed binding, effect callback flags)
 - `ace-hitl list` lists HITL events with filters (`--scope current|all`, all statuses by default)
 - `ace-hitl show` renders event details, path, or raw content (`--scope current|all`)
 - `ace-hitl update` updates frontmatter, answer content, and folder location
@@ -37,29 +37,23 @@ Use `ace-overseer status` for a global worktree dashboard.
 
 ## Provider adapters
 
-`ace-hitl ask` dispatches through the `Ace::Hitl::Providers` registry
-(selection: `--provider` flag → `ACE_HITL_PROVIDER` env → `lab`).
+`ace-hitl ask --question ... --assignment ... --attempt ...` creates a scoped
+request through authenticated IPC. The managed coordinator verifies the exact
+active native owner and reverse address; caller environment variables cannot
+supply authority. No Lab daemon or Work binding is used.
 
-- `ask` is ONE operation: it creates the local HITL event and the relay
-  request through the NATIVE generic lifecycle store
-  (`Ace::Hitl::Lifecycle`; migration spec 8wm.t.y21), then persists
-  `provider`, `ref_schema`, `ref_session`, `ref_pane` plus the existing
-  `lab_request_*` fields.
-- The asker's reverse address (`ref`, versioned schema
-  `ace.hitl.ref/v1`: herdr session + pane) is captured fail-closed from
-  `HERDR_SESSION` / `HERDR_PANE`; absent or invalid values abort the ask
-  before any event is created or store state changes.
-- Error model: `UnknownProviderError`, `InvalidRefError`,
-  `ProviderUnavailableError` (store-create failure; surfaces the orphan
-  event id when one was already created), `UnsupportedOperationError`.
-- `deliver(ref, answer)` (push the answer back to the asker's pane) is
-  declared by the interface; provider `lab` raises
-  `UnsupportedOperationError` until the ace-herdr push-delivery
-  integration lands. `ace-hitl wait` stays the pane-less script path and
-  does not go through a provider.
-- The generic lifecycle is provider-agnostic; all lab coupling lives in
-  the provider=lab seams (the `Providers::Lab::DaemonBinding` labd
-  binding client and the store factory), enforced by guard tests.
+`Ace::Hitl::LiveClient` provides explicit in-process `deliver`, `watch`, `wait`,
+`status`, `pending`, and signed `reconcile`. `watch` returns a thread owned by
+its calling agent. Native delivery commits an incarnation-bound event through
+Herdr Inbox and registers it through Assign. Queue acceptance and wake do not
+prove consumption. Only an event-bound signed native observation verified by
+Herdr and journaled by Assign completes delivery. Business callbacks have
+separate authorization and receipts and are never rerun by native retries.
+
+Pane-less `wait --request ID` consumes an existing authorized request over IPC;
+it neither creates a native target nor proves a business effect. OTP answers
+use that protected path with their authorized operation; no OTP bytes or OTP
+hash enter the shared envelope, folder or native inbox.
 
 ## Examples
 
@@ -67,8 +61,8 @@ Use `ace-overseer status` for a global worktree dashboard.
 ace-hitl list
 ace-hitl list --scope all
 ace-hitl create "Which auth strategy?" --kind decision --question "JWT or sessions?"
-ace-hitl ask "Proceed with deploy?" --work W685 --effect-arg /bin/false --effect-cwd /tmp
-ace-hitl ask "Proceed with deploy?" --provider lab --work W685
+ace-hitl ask --question "Proceed with deploy?" --assignment assign685 --attempt attempt685 --effect-arg /bin/false --effect-cwd /tmp
+ace-hitl ask --question "Proceed with deploy?" --provider lab --assignment assign685 --attempt attempt685
 ace-hitl show abc123 --content
 ace-hitl show abc123 --scope current
 ace-hitl update abc123 --answer "Use JWT with server-side refresh tokens."
@@ -78,7 +72,7 @@ ace-hitl update abc123 --answer "Use JWT with server-side refresh tokens." --res
 
 ## Testing
 
-This package is **fast-only** in the ACE testing model.
+This package has deterministic fast and scoped integration tests.
 
 - Deterministic test coverage lives under `test/fast/`.
 - This migration does not introduce `test/feat/` or `test/e2e/` for this package.
