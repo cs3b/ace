@@ -9,13 +9,14 @@ class SystemdScopeManagerTest < AceRuntimeTestCase
 
   class Command
     attr_reader :calls
-    attr_accessor :transform, :failure
+    attr_accessor :transform, :failure, :typed_response
     def initialize
       @calls = []
     end
     def call(argv, timeout:)
       @calls << [argv, timeout]
       raise failure if failure
+      return typed_response if argv.include?("get-property")
       return "" unless argv.include?("show")
       unit = argv.last
       values = {"Id" => unit, "LoadState" => "loaded", "ActiveState" => "active", "SubState" => "running",
@@ -48,6 +49,7 @@ class SystemdScopeManagerTest < AceRuntimeTestCase
       assert_equal 5, timeout
       assert_includes argv, "--system"
       assert_includes argv, "--no-ask-password"
+      assert_includes argv, "--all"
       assert_equal "--", argv[-2]
     end
     @command.transform = ->(_unit, bytes) { bytes.sub("LoadState=loaded", "LoadState=not-found") }
@@ -96,6 +98,46 @@ class SystemdScopeManagerTest < AceRuntimeTestCase
       Manager.new(slice_unit: "ace-worker.slice", service_unit: "worker@.service", command: @command)
     end
     assert_empty @command.calls
+  end
+
+  def test_typed_property_reads_preserve_empty_arrays_and_command_argument_boundaries
+    command = ["/usr/libexec/ace-ready", ["/usr/libexec/ace-ready", "argument with spaces"], [], 0, 0, 0, 0, 0, 0, 0]
+    @command.typed_response = JSON.generate("type" => "a(sasasttttuii)", "data" => []) + "\n" +
+      JSON.generate("type" => "a(sasasttttuii)", "data" => [command]) + "\n"
+    signatures = {"ExecConditionEx" => "a(sasasttttuii)", "ExecStartPostEx" => "a(sasasttttuii)"}
+    result = @manager.typed_properties(unit: "ace-worker.service", interface: "Service", signatures: signatures)
+    assert_equal [], result.fetch("ExecConditionEx")
+    assert_equal [command], result.fetch("ExecStartPostEx")
+    argv = @command.calls.last.first
+    assert_equal Manager::BUSCTL, argv.first
+    assert_includes argv, "--auto-start=no"
+    assert_includes argv, "--allow-interactive-authorization=no"
+    assert_includes argv, "/org/freedesktop/systemd1/unit/ace_2dworker_2eservice"
+    ["{}\n", "{bad\n", JSON.generate("type" => "s", "data" => "") + "\n", "x" * 65_537].each do |bytes|
+      @command.typed_response = bytes
+      assert_raises(Unavailable) do
+        @manager.typed_properties(unit: "ace-worker.service", interface: "Service", signatures: signatures)
+      end
+    end
+    assert_raises(ArgumentError) do
+      @manager.typed_properties(unit: "foreign.service", interface: "Service", signatures: signatures)
+    end
+  end
+
+  def test_typed_signature_is_not_enough_without_matching_primitive_data
+    [["Delegate", "b", "false"], ["RestrictNamespaces", "t", -1], ["Environment", "as", [12]],
+     ["BindPaths", "a(ssbt)", [["/a", "/b", "no", 0]]],
+     ["ExecStartEx", "a(sasasttttuii)", [["/bin/app", ["/bin/app"], [], -1, 0, 0, 0, 1, 0, 0]]]].each do |key, signature, data|
+      @command.typed_response = JSON.generate("type" => signature, "data" => data) + "\n"
+      assert_raises(Unavailable, key) do
+        @manager.typed_properties(unit: "ace-worker.service", interface: "Service", signatures: {key => signature})
+      end
+    end
+    before = @command.calls.size
+    assert_raises(ArgumentError) do
+      @manager.typed_properties(unit: "ace-worker.service", interface: "Service", signatures: {"TriggeredBy" => "as"})
+    end
+    assert_equal before, @command.calls.size
   end
 
   def test_native_command_refuses_unsupported_platform_before_spawning

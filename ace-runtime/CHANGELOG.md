@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- Verify fixed execution-unit artifact bytes and typed effective system-manager properties, including retained parent activation hierarchy, service enablement routes and exact native/readiness commands. Installation verification remains separate from live boundary and whole-scope proof.
+
 - Add fixed system-systemd unit operations with bounded noninteractive jobs and descriptor-pinned cgroup-v2 population/membership observation. These primitives do not manufacture canonical scope proof or claim installed boundary acceptance.
 
 - Ship the immutable native worker gate and protected Linux/socket primitives with exact process birth, pidfd exit, enforced Yama 2, empty capability sets and NoNewPrivs checks.

@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "protected_socket"
+require "json"
 
 module Ace
   module Runtime
@@ -9,10 +10,31 @@ module Ace
       # when a generation may start/stop: canonical lifecycle owns admission.
       class SystemdScopeManager
         SYSTEMCTL = "/usr/bin/systemctl"
+        BUSCTL = "/usr/bin/busctl"
         UNIT = /\A[a-zA-Z0-9][a-zA-Z0-9_.-]{0,127}\z/
         PROPERTIES = %w[Id LoadState ActiveState SubState InvocationID ControlGroup Job
           FragmentPath DropInPaths].freeze
         SERVICE_PROPERTIES = (PROPERTIES + %w[MainPID Slice]).freeze
+        UNIT_GRAPH_SIGNATURES = {
+          "Id" => "s", "Names" => "as", "LoadState" => "s", "FragmentPath" => "s", "DropInPaths" => "as",
+          "UnitFileState" => "s", "NeedDaemonReload" => "b", "StopWhenUnneeded" => "b", "DefaultDependencies" => "b",
+          **%w[Requires Requisite Wants BindsTo PartOf Upholds RequiredBy RequisiteOf WantedBy BoundBy UpheldBy
+            ConsistsOf After Before OnSuccess OnSuccessOf OnFailure OnFailureOf Triggers TriggeredBy
+            PropagatesStopTo StopPropagatedFrom JoinsNamespaceOf RequiresMountsFor WantsMountsFor].to_h { |key| [key, "as"] }
+        }.freeze
+        SERVICE_EXEC_SIGNATURES = {
+          **%w[Type User Group Restart KillMode ProtectSystem RootDirectory RootImage NetworkNamespacePath Slice StandardOutput StandardError WorkingDirectory RuntimeDirectoryPreserve].to_h { |key| [key, "s"] },
+          **%w[SupplementaryGroups ReadWritePaths ReadOnlyPaths Environment PassEnvironment UnsetEnvironment Sockets InaccessiblePaths ExtensionDirectories RuntimeDirectory].to_h { |key| [key, "as"] },
+          **%w[SendSIGKILL Delegate ProtectControlGroups NoNewPrivileges PrivateIPC PrivateDevices DynamicUser RootEphemeral MountAPIVFS].to_h { |key| [key, "b"] },
+          **%w[CapabilityBoundingSet AmbientCapabilities RestrictNamespaces].to_h { |key| [key, "t"] },
+          "RuntimeDirectoryMode" => "u", "UMask" => "u", "RootImageOptions" => "a(ss)", "TemporaryFileSystem" => "a(ss)", "MountImages" => "a(ssba(ss))",
+          "ExtensionImages" => "a(sba(ss))", "EnvironmentFiles" => "a(sb)", "RestartForceExitStatus" => "(aiai)", "RestrictAddressFamilies" => "(bas)",
+          "BindPaths" => "a(ssbt)", "BindReadOnlyPaths" => "a(ssbt)",
+          **%w[ExecConditionEx ExecStartPreEx ExecStartEx ExecStartPostEx ExecReloadEx ExecStopEx ExecStopPostEx].to_h { |key| [key, "a(sasasttttuii)"] }
+        }.freeze
+
+        UNIT_STATE_SIGNATURES = {"Id" => "s", "LoadState" => "s", "ActiveState" => "s", "SubState" => "s", "Job" => "(uo)"}.freeze
+        MOUNT_SIGNATURES = {"Where" => "s"}.freeze
 
         class Command
           LIMIT = 65_536
@@ -21,8 +43,12 @@ module Ace
             unless RUBY_PLATFORM.include?("linux") && File.directory?("/run/systemd/system")
               raise RuntimeUnavailableError, "execution scope requires the Linux system systemd manager"
             end
-            ProtectedSocket.root_path!(SYSTEMCTL)
-            unless File.executable?(SYSTEMCTL) && (File.stat(SYSTEMCTL).mode & 0o6000).zero?
+            client = argv.first
+            unless [SYSTEMCTL, BUSCTL].include?(client)
+              raise RuntimeUnavailableError, "system manager client is not fixed"
+            end
+            ProtectedSocket.root_path!(client)
+            unless File.executable?(client) && (File.stat(client).mode & 0o6000).zero?
               raise RuntimeUnavailableError, "installed system manager client is unsafe"
             end
             output_reader, output_writer = IO.pipe
@@ -94,6 +120,14 @@ module Ace
             raise ArgumentError, "execution scope requires fixed dedicated slice/service units"
           end
           @slice_unit, @service_unit, @command = slice_unit, service_unit, command
+          @slice_ancestors = []
+          parent = slice_unit
+          loop do
+            stem = parent.delete_suffix(".slice")
+            parent = stem.include?("-") ? stem.rpartition("-").first + ".slice" : "-.slice"
+            @slice_ancestors << parent
+            break if parent == "-.slice"
+          end
         end
 
         def inspect_units
@@ -110,6 +144,76 @@ module Ace
           operate("start", @slice_unit)
         end
 
+        def inspect_profile
+          # `show` loads installed metadata before typed reads; it starts no unit.
+          inspect_units
+          slice = typed_properties(unit: @slice_unit, interface: "Unit", signatures: UNIT_GRAPH_SIGNATURES)
+          service = typed_properties(unit: @service_unit, interface: "Unit", signatures: UNIT_GRAPH_SIGNATURES).merge(
+            typed_properties(unit: @service_unit, interface: "Service", signatures: SERVICE_EXEC_SIGNATURES))
+          ancestors = @slice_ancestors.to_h do |unit|
+            show(unit)
+            [unit, typed_properties(unit: unit, interface: "Unit", signatures: UNIT_GRAPH_SIGNATURES)]
+          end
+          {"slice" => slice, "service" => service, "ancestors" => ancestors, "unit_paths" => unit_paths, "prerequisites" => inspect_prerequisites(service)}
+        end
+
+        def unit_paths
+          bytes = @command.call([BUSCTL, "--system", "--no-pager", "--json=short", "--auto-start=no",
+            "--allow-interactive-authorization=no", "get-property", "org.freedesktop.systemd1",
+            "/org/freedesktop/systemd1", "org.freedesktop.systemd1.Manager", "UnitPath"], timeout: 5)
+          unless bytes.is_a?(String) && bytes.bytesize.between?(1, Command::LIMIT) && bytes.lines.size == 1
+            raise RuntimeUnavailableError, "system manager lookup paths are unavailable"
+          end
+          value = JSON.parse(bytes)
+          unless value.is_a?(Hash) && value.keys.sort == %w[data type] && value["type"] == "as" &&
+              value["data"].is_a?(Array) && value["data"].size.between?(1, 64) &&
+              value["data"].all? { |path| path.is_a?(String) && path.start_with?("/") && !path.include?("\0") && File.expand_path(path) == path }
+            raise RuntimeUnavailableError, "system manager lookup paths differ"
+          end
+          value.fetch("data")
+        rescue JSON::ParserError, KeyError
+          raise RuntimeUnavailableError, "system manager lookup paths are malformed"
+        end
+
+        # Typed reads only, against the existing system manager. Property sets
+        # and unit identities are owner-selected, never request-controlled.
+        def typed_properties(unit:, interface:, signatures:)
+          unless [@slice_unit, @service_unit, *@slice_ancestors, *@prerequisite_units.to_a].include?(unit) &&
+              %w[Unit Service Mount].include?(interface) && (interface == "Unit" || interface == "Service" && unit == @service_unit || interface == "Mount" && @prerequisite_units.to_a.include?(unit) && unit.end_with?(".mount")) && signatures.is_a?(Hash) &&
+              signatures.all? { |key, value|
+                allowed = case interface
+                when "Unit" then UNIT_GRAPH_SIGNATURES.merge(UNIT_STATE_SIGNATURES)
+                when "Service" then SERVICE_EXEC_SIGNATURES
+                when "Mount" then MOUNT_SIGNATURES
+                end
+                allowed[key] == value
+              } && !signatures.empty?
+            raise ArgumentError, "typed inspection requires fixed unit properties"
+          end
+          object = "/org/freedesktop/systemd1/unit/" + unit.bytes.map { |byte|
+            ((byte >= 65 && byte <= 90) || (byte >= 97 && byte <= 122) || (byte >= 48 && byte <= 57)) ? byte.chr : "_%02x" % byte
+          }.join
+          bytes = @command.call([BUSCTL, "--system", "--no-pager", "--json=short", "--auto-start=no",
+            "--allow-interactive-authorization=no", "get-property", "org.freedesktop.systemd1", object,
+            "org.freedesktop.systemd1.#{interface}", *signatures.keys], timeout: 5)
+          unless bytes.is_a?(String) && bytes.bytesize.between?(1, Command::LIMIT)
+            raise RuntimeUnavailableError, "typed manager properties are unavailable"
+          end
+          lines = bytes.lines
+          unless lines.size == signatures.size
+            raise RuntimeUnavailableError, "typed manager property set is incomplete"
+          end
+          signatures.to_a.zip(lines).to_h do |(key, signature), line|
+            value = JSON.parse(line)
+            unless value.is_a?(Hash) && value.keys.sort == %w[data type] && value["type"] == signature && typed_value?(signature, value["data"])
+              raise RuntimeUnavailableError, "typed manager property signature differs"
+            end
+            [key, value.fetch("data")]
+          end
+        rescue JSON::ParserError, KeyError
+          raise RuntimeUnavailableError, "typed manager properties are malformed"
+        end
+
         def start_service
           operate("start", @service_unit)
         end
@@ -124,6 +228,56 @@ module Ace
 
         private
 
+        def inspect_prerequisites(service)
+          @prerequisite_units = service.values_at("Requires", "Wants", "After").flatten.uniq - [@slice_unit]
+          unless @prerequisite_units.all? { |unit| unit == "systemd-journald.socket" ||
+              unit.is_a?(String) && unit.bytesize.between?(7, 255) && unit.end_with?(".mount") && !unit.match?(/[\s\/\0]/) }
+            raise RuntimeUnavailableError, "execution service has an unverified implicit prerequisite"
+          end
+          @prerequisite_units.to_h do |unit|
+            value = typed_properties(unit: unit, interface: "Unit", signatures: UNIT_STATE_SIGNATURES)
+            value.merge!(typed_properties(unit: unit, interface: "Mount", signatures: MOUNT_SIGNATURES)) if unit.end_with?(".mount")
+            [unit, value]
+          end
+        end
+
+        def typed_value?(signature, value)
+          string = ->(item) { item.is_a?(String) && !item.include?("\0") }
+          unsigned = ->(item, bits) { item.is_a?(Integer) && item >= 0 && item < (1 << bits) }
+          signed = ->(item) { item.is_a?(Integer) && item >= -(1 << 31) && item < (1 << 31) }
+          strings = ->(items) { items.is_a?(Array) && items.all? { |item| string.call(item) } }
+          case signature
+          when "s" then string.call(value)
+          when "(uo)" then value.is_a?(Array) && value.size == 2 && unsigned.call(value.first, 32) && string.call(value.last) && value.last.start_with?("/")
+          when "a(ss)"
+            value.is_a?(Array) && value.all? { |item| item.is_a?(Array) && item.size == 2 && item.all? { |part| string.call(part) } }
+          when "a(ssba(ss))", "a(sba(ss))"
+            strings_count = signature == "a(ssba(ss))" ? 2 : 1
+            value.is_a?(Array) && value.all? { |item| item.is_a?(Array) && item.size == strings_count + 2 &&
+              item.first(strings_count).all? { |part| string.call(part) } && [true, false].include?(item[strings_count]) &&
+              typed_value?("a(ss)", item.last) }
+          when "b" then value == true || value == false
+          when "t" then unsigned.call(value, 64)
+          when "u" then unsigned.call(value, 32)
+          when "as" then strings.call(value)
+          when "(aiai)"
+            value.is_a?(Array) && value.size == 2 && value.all? { |items| items.is_a?(Array) && items.all? { |item| signed.call(item) } }
+          when "(bas)"
+            value.is_a?(Array) && value.size == 2 && [true, false].include?(value.first) && strings.call(value.last)
+          when "a(sb)"
+            value.is_a?(Array) && value.all? { |item| item.is_a?(Array) && item.size == 2 && string.call(item.first) && [true, false].include?(item.last) }
+          when "a(ssbt)"
+            value.is_a?(Array) && value.all? { |item| item.is_a?(Array) && item.size == 4 &&
+              string.call(item[0]) && string.call(item[1]) && [true, false].include?(item[2]) && unsigned.call(item[3], 64) }
+          when "a(sasasttttuii)"
+            value.is_a?(Array) && value.all? { |item| item.is_a?(Array) && item.size == 10 &&
+              string.call(item[0]) && strings.call(item[1]) && strings.call(item[2]) &&
+              item[3..6].all? { |number| unsigned.call(number, 64) } && unsigned.call(item[7], 32) &&
+              signed.call(item[8]) && signed.call(item[9]) }
+          else false
+          end
+        end
+
         def operate(verb, unit)
           @command.call([SYSTEMCTL, "--system", "--no-pager", "--no-ask-password", verb, "--", unit], timeout: 30)
           true
@@ -131,7 +285,7 @@ module Ace
 
         def show(unit, properties: PROPERTIES)
           bytes = @command.call([SYSTEMCTL, "--system", "--no-pager", "--no-ask-password", "show",
-            "--property=#{properties.join(',')}", "--", unit], timeout: 5)
+            "--all", "--property=#{properties.join(',')}", "--", unit], timeout: 5)
           unless bytes.is_a?(String) && bytes.bytesize.between?(1, Command::LIMIT)
             raise RuntimeUnavailableError, "fixed unit properties are unavailable"
           end
