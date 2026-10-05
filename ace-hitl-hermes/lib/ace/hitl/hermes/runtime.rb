@@ -44,7 +44,9 @@ module Ace
                 box_channel = Molecules::HermesChannels::Channel.new(
                   name: channel["name"], machine: channel["machine"], folder: channel["folder"]
                 )
-                Organisms::HermesBox.new(channel: box_channel).poll.messages.each do |message|
+                box = Organisms::HermesBox.new(channel: box_channel)
+                publish_pending(channel, box)
+                box.poll.messages.each do |message|
                   next unless message.question? && message.sender != "captain"
                   begin
                     facts = @lifecycle.read(message.id)
@@ -80,6 +82,33 @@ module Ace
         end
 
         private
+
+        # The installed transport owns publication as well as Telegram polling.
+        # Ask writes only scoped lifecycle state; no hidden Lab watcher or
+        # HITL→Hermes dependency is required to get a question into message.v1.
+        def publish_pending(channel, box)
+          channel["projects"].each do |project|
+            @lifecycle.pending(project: project).each do |facts|
+              next unless facts["state"] == "created"
+              envelope = Ace::Hitl::Contract::ManagedEnvelope.load(facts.fetch("envelope"), expected: {
+                request_id: facts["id"], project: project, assignment_id: facts["assignment"], attempt_id: facts["attempt"]
+              })
+              status = @relay.delivery(facts["id"])["status"]
+              next unless %w[unknown failed].include?(status)
+              existing = box.poll.messages.find { |message| message.id == facts["id"] }
+              if existing
+                unless existing.question? && existing.body == facts["question"]
+                  raise ContractError, "managed question folder identity conflicts"
+                end
+                next
+              end
+              box.publish(kind: :question, id: facts["id"], body: facts["question"], sender: envelope["requester"],
+                timestamp: Time.at(Integer(facts["created_at"])).utc.iso8601)
+            end
+          end
+        rescue Ace::Hitl::Contract::InvalidEnvelope, KeyError, ArgumentError => e
+          raise ContractError, "managed pending publication binding is invalid (#{e.class})"
+        end
 
         def telegram
           @telegram ||= Transport::Telegram.new(token_file: @config.fetch("token_file"))

@@ -35,12 +35,13 @@ module Ace
 
         PROVIDER_NAME = "lab"
 
-        def initialize(manager: nil, store: nil, binding: nil)
+        def initialize(manager: nil, store: nil, binding: nil, live_client: nil)
           @manager = manager
           # The boundary dependency: an injected store (unit wiring) or
           # the authenticated boundary client (review 8x333sqz).
           @boundary = store
           @binding = binding
+          @live_client = live_client
         end
 
         # The managed binding authority (spec 8wq.t.34i): assignment
@@ -131,25 +132,24 @@ module Ace
           AskResult.new(event_id: event.id, request_id: request_id, ref: ref)
         end
 
-        # Contract defined in spec §1.2; the herdr push delivery itself
-        # lands with ace-herdr (8wm.t.vs0) + the provider=lab integration
-        # (8wm.t.vs2). Operator-side answering of a relay request is the
-        # lifecycle deliver path (`ace-hitl deliver`), not this method.
-        def deliver(ref, _answer)
-          raise UnsupportedOperationError,
-            "provider 'lab' does not deliver yet: push delivery lands with ace-herdr " \
-            "(8wm.t.vs0) and the provider=lab integration (8wm.t.vs2); the relay answer " \
-            "is consumed lab-side for now"
+        def deliver(request:, timeout: 0)
+          live_client.deliver(request: request, timeout: timeout)
         end
 
-        # Optional operation (spec §1.3): the ace-hitl wait command is the
-        # pane-less script path and does not poll through the adapter.
-        def wait(*)
-          raise UnsupportedOperationError,
-            "provider 'lab' does not poll through the adapter; use the ace-hitl wait command"
+        def watch(request:, timeout: 0, &observer)
+          live_client.watch(request: request, timeout: timeout, &observer)
+        end
+
+        def wait(request:, timeout: 0, operation: nil)
+          live_client.wait(request: request, timeout: timeout, operation: operation)
         end
 
         private
+
+        def live_client
+          require_relative "../live_client"
+          @live_client ||= LiveClient.new(boundary: boundary)
+        end
 
         def effect_declared?(effect)
           !!(effect[:match] || effect[:effect_cwd] || effect[:effect_timeout] ||

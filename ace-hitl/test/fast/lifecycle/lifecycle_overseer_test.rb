@@ -172,8 +172,9 @@ class LifecycleOverseerTest < AceHitlTestCase
         .consume("hitl002", timeout: 1)
 
       duty = Ace::Hitl::Lifecycle::Duty.project(pending: root_store.pending, states: root_store.states)
-      # Nothing is pending any more: both were delivered.
-      assert_empty duty["pending"]
+      # Answer availability is pending until authorized consumption.
+      assert_equal ["hitl001"], duty["pending"].map { |entry| entry["id"] }
+      assert_equal "answer-delivered", duty["pending"].first["state"]
       assert_equal ["hitl001"], duty["escalated"].map { |record| record["id"] }
       assert_equal "callback-escalated", duty["escalated"][0]["effect_state"]
 
@@ -183,8 +184,8 @@ class LifecycleOverseerTest < AceHitlTestCase
       }))
       store.create(**request_args(id: "hitl004"))
       duty = Ace::Hitl::Lifecycle::Duty.project(pending: root_store.pending, states: root_store.states)
-      assert_equal %w[hitl003 hitl004], duty["pending"].map { |entry| entry["id"] }
-      assert_equal [true, false], duty["pending"].map { |entry| entry["has_effect"] }
+      assert_equal %w[hitl001 hitl003 hitl004], duty["pending"].map { |entry| entry["id"] }
+      assert_equal [true, true, false], duty["pending"].map { |entry| entry["has_effect"] }
     end
   end
 

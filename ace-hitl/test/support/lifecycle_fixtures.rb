@@ -73,6 +73,10 @@ module LifecycleFixtures
       yield
     end
 
+    def reverse_address(attempt:, caller_pid:)
+      @reverse
+    end
+
     private
 
     # Callback fixtures observe only the authority fields they declare.

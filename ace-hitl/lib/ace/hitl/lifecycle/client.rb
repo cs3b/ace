@@ -60,9 +60,10 @@ module Ace
           request("deliver", {"id" => id, "answer" => answer.to_s})
         end
 
-        def consume(id, timeout: 0, operation: nil)
+        def consume(id, timeout: 0, operation: nil, native_delivery: false)
           params = {"id" => id, "timeout" => Integer(timeout)}
           params["operation"] = operation if operation
+          params["native_delivery"] = true if native_delivery
           request("consume", params)
         end
 
@@ -70,8 +71,8 @@ module Ace
           request("cancel", {"id" => id, "reason" => reason.to_s})
         end
 
-        def pending
-          request("pending")
+        def pending(project: nil)
+          request("pending", project ? {"project" => project} : {})
         end
 
         def states

@@ -16,9 +16,10 @@ module Ace
           desc "List answerable HITL relay requests (transport operation)"
 
           option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
+          option :project, type: :string, desc: "Show requests for one authorized project"
 
           def call(**options)
-            emit(lifecycle_client.pending)
+            emit(LiveClient.new(boundary: lifecycle_client).pending(project: options[:project]))
           rescue Lifecycle::Error, Providers::ProviderUnavailableError => e
             raise_lifecycle_error(e.message)
           end

@@ -152,11 +152,15 @@ module Ace
           value["incarnation"] = SecureRandom.hex(8)
           envelope = {
             "schema" => Contract::ManagedEnvelope::SCHEMA, "request_id" => request_id,
+            "request_incarnation" => value["incarnation"],
             "project" => project, "assignment_id" => assignment, "attempt_id" => attempt,
             "requester" => requester, "correlation_id" => request_id, "kind" => kind,
             "reverse" => reverse
           }
           envelope["payload_sha256"] = Digest::SHA256.hexdigest(question) unless Kinds.secret?(kind)
+          if value["effect"]
+            envelope["effect"] = {"authorization_ref" => "requester-declaration:#{request_id}:#{value['incarnation']}"}
+          end
           value["envelope"] = managed_envelope!(envelope)
 
           request_path = requests_dir.join("#{request_id}.json")
@@ -186,6 +190,14 @@ module Ace
         # transport). Never carries answer content.
         def read(id)
           request_id = safe_id(id)
+          unless request_path(request_id).exist?
+            terminal = load_terminal(request_id)
+            if terminal
+              gate_read_access!(terminal)
+              return terminal.slice("id", "assignment", "attempt", "project", "requester", "sensitive", "envelope", "state", "native_delivery", "effect_receipt_ref")
+                .merge("kind" => terminal.dig("envelope", "kind"))
+            end
+          end
           value = load_request(request_id)
           gate_read_access!(value)
           {
@@ -203,6 +215,7 @@ module Ace
             "requester" => value["requester"],
             "envelope" => value["envelope"],
             "state" => public_state(request_id, value),
+            "effect_receipt_ref" => effect_receipt_ref(value),
             "effect" => value["effect_state"]
           }
         end
@@ -213,13 +226,24 @@ module Ace
         # answer transfers exactly once and only for the challenge's
         # authorized operation; a consumed retry replays the committed
         # receipt (never the secret bytes).
-        def consume(id, timeout: 0, operation: nil)
+        def consume(id, timeout: 0, operation: nil, native_delivery: false)
+          unless [true, false].include?(native_delivery)
+            raise StateError, "native_delivery must be a boolean"
+          end
           request_id = safe_id(id)
           replay = replay_terminal!(request_id, "consumed")
-          return replay if replay
+          if replay
+            if native_delivery
+              terminal = load_terminal(request_id)
+              raise StateError, "request was consumed locally; it has no native delivery claim" unless terminal["native_delivery"]
+              verify_native_consumer!(terminal)
+            end
+            return replay
+          end
 
           value = load_request(request_id)
           requester_gate!(value)
+          verify_native_consumer!(value) if native_delivery
           verify_operation!(value, operation)
           deadline = timeout.positive? ? Time.now.to_i + timeout : nil
           loop do
@@ -241,6 +265,7 @@ module Ace
               # attempt ending concurrently cancels the request and
               # fails closed instead of handing over an answer.
               with_live_authority!(value, requester: @identity.username) do
+                verify_native_consumer!(value) if native_delivery
                 verify_operation!(value, operation)
                 verify_otp_deadline!(value)
                 answer = read_answer(value)
@@ -255,7 +280,8 @@ module Ace
                   raise
                 end
                 commit_terminal!(value, "consumed",
-                  answer: value["sensitive"] == true ? nil : answer)
+                  answer: value["sensitive"] == true ? nil : answer, native_delivery: native_delivery)
+                value["native_delivery"] = true if native_delivery
                 update_public(value, "consumed")
                 @vault.discard(self, value)
                 remove_request(value, keep_public: true)
@@ -268,7 +294,9 @@ module Ace
                 "attempt" => value["attempt"],
                 "project" => value["project"],
                 "envelope" => value["envelope"],
+                "effect_receipt_ref" => effect_receipt_ref(value),
                 "answer" => answer,
+                "native_delivery" => value["native_delivery"] == true,
                 "sensitive" => value["sensitive"] == true
               }
             end
@@ -369,15 +397,36 @@ module Ace
           answer&.clear
         end
 
-        # Answerable requests; never purges or cancels anything (W651).
-        def pending
+        # Awaiting answers or deliberate native reconciliation. Never purges
+        # answered/dead requests, and never exposes answer or callback argv.
+        def pending(project: nil)
           require_transport!("pending")
-          requests_dir.glob("*.json").sort.filter_map do |path|
+          active = requests_dir.glob("*.json").sort.filter_map do |path|
             value = AtomicJson.read(path)
             next unless value.is_a?(Hash)
-
-            value if !answer_present?(value)
+            next if project && value["project"] != project
+            begin
+              require_transport!("pending", value)
+            rescue PermissionError
+              next
+            end
+            value.slice("id", "assignment", "attempt", "project", "harness", "kind", "sensitive", "plan", "question",
+              "options", "ace_hitl_id", "requester", "created_at", "otp", "envelope")
+              .merge("state" => public_state(value["id"], value), "has_effect" => !value["effect"].nil?)
           end
+          native = public_dir.glob("*.json").sort.filter_map do |path|
+            value = AtomicJson.read(path)
+            next unless value.is_a?(Hash) && value["native_delivery"] == true
+            next if active.any? { |request| request["id"] == value["id"] }
+            next if project && value["project"] != project
+            begin
+              require_transport!("pending", value)
+            rescue PermissionError
+              next
+            end
+            value
+          end
+          active + native
         end
 
         # All public lifecycle records (non-secret projections).
@@ -470,6 +519,7 @@ module Ace
             "updated_at" => Time.now.to_i
           }
           public["incarnation"] = value["incarnation"] if value["incarnation"]
+          public["native_delivery"] = true if value["native_delivery"]
           public["otp"] = public_otp_projection(value["otp"]) if value["otp"]
           public["effect_state"] = value["effect_state"] if value["effect_state"]
           public.update(audit) if audit
@@ -612,6 +662,23 @@ module Ace
           raise StateError, e.message
         end
 
+        def effect_receipt_ref(value)
+          record = AtomicJson.read(effects_dir.join("#{safe_id(value['id'])}.json"))
+          if record.is_a?(Hash) && record["incarnation"] == value["incarnation"] &&
+              Array(record["attempts"]).any? { |attempt| %w[ok escalated].include?(attempt["outcome"]) }
+            "effect-log:#{value['id']}:#{value['incarnation']}"
+          end
+        end
+
+        def verify_native_consumer!(value)
+          raise StateError, "OTP requires protected local consume" if value["sensitive"] == true
+          reverse = @binding.reverse_address(attempt: value["attempt"],
+            caller_pid: @identity.respond_to?(:pid) ? @identity.pid : nil)
+          unless reverse && reverse == value.dig("envelope", "reverse")
+            raise BindingError, "native delivery requires the exact original requester process"
+          end
+        end
+
         def validate_binding_ids!(assignment, attempt)
           unless Kinds::COMPACT_ID.match?(assignment.to_s) && Kinds::COMPACT_ID.match?(attempt.to_s)
             raise StateError, "HITL request requires the exact managed assignment and attempt ids"
@@ -735,6 +802,8 @@ module Ace
           }
           result["answer"] = terminal["answer"] unless terminal["sensitive"] == true
           result["envelope"] = terminal["envelope"]
+          result["native_delivery"] = terminal["native_delivery"] == true
+          result["effect_receipt_ref"] = terminal["effect_receipt_ref"]
           result
         end
 
@@ -767,9 +836,11 @@ module Ace
             "requester" => value["requester"],
             "sensitive" => value["sensitive"] == true,
             "envelope" => value["envelope"],
+            "effect_receipt_ref" => effect_receipt_ref(value),
             "at" => Time.now.to_i
           }
           record["answer"] = extra[:answer] if extra[:answer]
+          record["native_delivery"] = true if extra[:native_delivery]
           record["audit"] = extra["audit"] if extra["audit"]
           terminals_dir.mkpath
           AtomicJson.call(terminals_dir.join("#{request_id}.json"), record, mode: TERMINAL_MODE)

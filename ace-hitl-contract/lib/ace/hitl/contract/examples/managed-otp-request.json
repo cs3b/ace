@@ -15,5 +15,6 @@
     "sender": "captain",
     "question": "Provide the code for the authorized operation",
     "created_at": "2026-10-05T09:00:00Z"
-  }
+  },
+  "request_incarnation": "0123456789abcdef"
 }

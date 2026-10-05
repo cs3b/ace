@@ -15,7 +15,7 @@ class ManagedEnvelopeTest < AceHitlContractTestCase
 
   def ordinary
     {
-      "schema" => Envelope::SCHEMA, "request_id" => "hitl-abcdef1234", "project" => "ace",
+      "schema" => Envelope::SCHEMA, "request_id" => "hitl-abcdef1234", "request_incarnation" => "0123456789abcdef", "project" => "ace",
       "assignment_id" => "abc123", "attempt_id" => "def456", "requester" => "lab-admin",
       "correlation_id" => "hitl-abcdef1234", "kind" => "decision", "payload_sha256" => Digest::SHA256.hexdigest("Proceed"),
       "reverse" => {"schema" => Ace::Hitl::Providers::Ref::SCHEMA, "session" => "workspace:1", "pane" => "pane:1"}

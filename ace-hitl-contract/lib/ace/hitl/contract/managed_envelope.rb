@@ -15,13 +15,19 @@ module Ace
       # Transport message.v1 and Herdr's reverse address stay separate schemas.
       class ManagedEnvelope
         SCHEMA = "ace.hitl.managed/v1"
-        REQUIRED = %w[schema request_id project assignment_id attempt_id requester correlation_id kind reverse].freeze
+        REQUIRED = %w[schema request_id request_incarnation project assignment_id attempt_id requester correlation_id kind reverse].freeze
         OPTIONAL = %w[payload_sha256 message effect].freeze
         TOKEN = /\A[A-Za-z0-9][A-Za-z0-9._:-]{0,127}\z/
         COMPACT = /\A[0-9a-z][0-9a-z]{4,63}\z/
         DIGEST = /\A[0-9a-f]{64}\z/
         KINDS = %w[text choice confirm review question decision verification otp].freeze
         MESSAGE_SCHEMA = "ace.hitl.hermes.message/v1"
+
+        def self.inbox_event_id(value)
+          data = load(value)
+          raise InvalidEnvelope, "OTP has no ordinary native inbox event" if data["kind"] == "otp"
+          "inb-#{Digest::SHA256.hexdigest([data['request_id'], data['request_incarnation']].join(':'))[0, 32]}"
+        end
 
         def self.load(value, expected: {})
           data = value.is_a?(String) ? JSON.parse(value) : JSON.parse(JSON.generate(value))
@@ -30,7 +36,7 @@ module Ace
           unknown = data.keys - REQUIRED - OPTIONAL
           raise InvalidEnvelope, "managed envelope fields differ (missing #{missing.join(',')}; unknown #{unknown.join(',')})" unless missing.empty? && unknown.empty?
           raise InvalidEnvelope, "unsupported managed envelope version" unless data["schema"] == SCHEMA
-          %w[request_id project requester correlation_id].each { |key| token!(data[key], key) }
+          %w[request_id request_incarnation project requester correlation_id].each { |key| token!(data[key], key) }
           %w[assignment_id attempt_id].each do |key|
             raise InvalidEnvelope, "invalid #{key}" unless data[key].is_a?(String) && COMPACT.match?(data[key])
           end

@@ -20,5 +20,6 @@
     "sender": "captain",
     "answer": "Proceed",
     "received_at": "2026-10-05T10:00:00Z"
-  }
+  },
+  "request_incarnation": "0123456789abcdef"
 }

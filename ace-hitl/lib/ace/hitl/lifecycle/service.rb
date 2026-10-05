@@ -234,9 +234,9 @@ module Ace
           when "deliver" then store.deliver(required(params, "id"), answer_reader(params))
           when "consume"
             store.consume(required(params, "id"), timeout: Integer(params["timeout"] || 0),
-              operation: params["operation"])
+              operation: params["operation"], native_delivery: params.fetch("native_delivery", false))
           when "cancel" then store.cancel(required(params, "id"), reason: params["reason"].to_s)
-          when "pending" then store.pending
+          when "pending" then store.pending(project: params["project"])
           when "states" then store.states
           end
         end

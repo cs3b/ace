@@ -14,7 +14,8 @@
     "requester",
     "correlation_id",
     "kind",
-    "reverse"
+    "reverse",
+    "request_incarnation"
   ],
   "properties": {
     "schema": {
@@ -199,6 +200,10 @@
           "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
         }
       }
+    },
+    "request_incarnation": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
     }
   },
   "if": {

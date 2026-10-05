@@ -124,7 +124,8 @@ class HitlAskCliTest < AceHitlTestCase
       request = result[:stdout][/Lab request: (\S+)/, 1]
       record = JSON.parse(File.read(File.join(@root, "requests", "#{request}.json")))
       assert_equal ["/bin/false"], record.dig("effect", "argv")
-      refute record["envelope"].key?("effect") # declaration is not an effect receipt
+      assert record.dig("envelope", "effect", "authorization_ref")
+      refute record["envelope"]["effect"].key?("receipt_ref") # declaration is not an effect receipt
     end
   end
 end

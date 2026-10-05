@@ -152,7 +152,9 @@ module Ace
           store.effects_dir.mkpath
           path = store.effects_dir.join("#{value["id"]}.json")
           record = AtomicJson.read(path)
-          record = {"id" => value["id"], "attempts" => [], "escalated" => nil} unless record.is_a?(Hash)
+          unless record.is_a?(Hash) && record["incarnation"] == value["incarnation"]
+            record = {"id" => value["id"], "incarnation" => value["incarnation"], "attempts" => [], "escalated" => nil}
+          end
           record["attempts"] << attempt
           if attempt["outcome"] != "ok" && record["escalated"].nil?
             record["escalated"] = {"at" => Time.now.to_i, "outcome" => attempt["outcome"]}

@@ -16,6 +16,10 @@ module Ace
           raise NotImplementedError
         end
 
+        def reverse_address(attempt:, caller_pid:)
+          raise NotImplementedError
+        end
+
         # Re-verify that the attempt is still live before an answer is
         # delivered or consumed. Raises BindingError when terminal.
         # Hold verified live authority across ONE whole transition: the

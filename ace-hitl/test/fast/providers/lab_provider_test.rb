@@ -117,25 +117,15 @@ class LabProviderTest < AceHitlTestCase
     end
   end
 
-  def test_deliver_is_declared_but_not_implemented_until_push_delivery_lands
-    provider = Ace::Hitl::Providers::Lab.new
-
-    error = assert_raises(Ace::Hitl::Providers::UnsupportedOperationError) do
-      provider.deliver(ref, "Use JWT with refresh tokens.")
-    end
-
-    assert_match(/does not deliver yet/, error.message)
-    assert_match(/ace-herdr/, error.message)
-  end
-
-  def test_wait_is_not_implemented_through_the_adapter
-    provider = Ace::Hitl::Providers::Lab.new
-
-    error = assert_raises(Ace::Hitl::Providers::UnsupportedOperationError) do
-      provider.wait(ref)
-    end
-
-    assert_match(/ace-hitl wait command/, error.message)
+  def test_provider_exposes_the_public_scoped_live_client
+    client = Object.new
+    seen = []
+    client.define_singleton_method(:deliver) { |**args| seen << [:deliver, args]; {"state" => "delivered"} }
+    client.define_singleton_method(:wait) { |**args| seen << [:wait, args]; {"answer" => "Proceed"} }
+    provider = Ace::Hitl::Providers::Lab.new(live_client: client)
+    assert_equal "delivered", provider.deliver(request: "hitl001")["state"]
+    assert_equal "Proceed", provider.wait(request: "hitl001")["answer"]
+    assert_equal [[:deliver, {request: "hitl001", timeout: 0}], [:wait, {request: "hitl001", timeout: 0, operation: nil}]], seen
   end
 
   def test_assignment_binding_factory_wraps_the_coordinator_authority

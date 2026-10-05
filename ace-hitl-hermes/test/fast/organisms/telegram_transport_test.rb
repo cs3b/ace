@@ -18,6 +18,7 @@ class TelegramTransportTest < AceHermesTestCase
                        "requester" => "agent", "kind" => secret ? "otp" : "text",
                        "sensitive" => secret, "question" => "Proceed?", "state" => "created"}
       envelope = {"schema" => Ace::Hitl::Contract::ManagedEnvelope::SCHEMA, "request_id" => id,
+        "request_incarnation" => "0123456789abcdef",
         "project" => "lab", "assignment_id" => "assign651", "attempt_id" => "attempt651", "requester" => "agent",
         "correlation_id" => id, "kind" => secret ? "otp" : "text", "reverse" => nil}
       envelope["payload_sha256"] = Digest::SHA256.hexdigest("Proceed?") unless secret
