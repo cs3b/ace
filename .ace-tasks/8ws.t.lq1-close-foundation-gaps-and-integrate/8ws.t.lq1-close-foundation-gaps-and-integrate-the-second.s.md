@@ -433,7 +433,8 @@ are claimed as newly executed by this specification edit.
   24 skipped; original Assign 120-second suite timeout and successful isolated retry
   are both retained in xz9.0/endcap-inbox-verification.md.
 - [ ] 9c2 connected parent binding, seal/closure, guarded abort, canonical reservation
-  release and reuse remain in progress; network installation evidence needs review.
+  release and reuse remain in progress; accepted generic network evidence verification
+  still needs its namespace/admission and maintenance consumers.
 - [ ] xz9.0 scope-guarded registration, finish/recover and complete composition remain
   open. A reconciliation/settlement helper does not make protected startup complete.
 - [ ] Integrate remaining coherent source and dependency floors before gem preparation;
@@ -442,4 +443,6 @@ are claimed as newly executed by this specification edit.
 - [x] ACE 8x4.t.i6i: fix ignored explicit suite configuration, independently review and verify. Combined source e546a7618 passed all 51 configured fast-suite entries with a 300-second per-entry ceiling: 11252 passed, 24 skipped, zero failures/errors. Original timeout histories remain retained; this is local source verification, not publication or Lab acceptance.
 
 - [x] ACE 9c2 network installation/maintenance contract accepted at 2d4959ee7 after independent review; domain gad.8/gad.b adoption owns installer implementation and installed proof. Parent-only cleanup is distinct from evidence-gated native admission; historical release verification preserves original artifacts.
-- [ ] Implement the accepted generic network verifier and connect admission/maintenance interfaces, then verify the domain installer after publication. Specification acceptance is not positive runtime readiness.
+- [x] 9c2 generic protected network evidence verifier integrated at `77fd6c51b` after independent APPROVE, including strict JSON dependency and two reviewed schema responsibility clarifications. Runtime all 235/833 and independent focused 28/174 passed; configured fast suite with a 300-second ceiling: 11273 passed / 24 skipped / 34612 assertions, all 51 entries passed. Initial 120-second timeout and Lab fixture failure remain retained. This verifies authenticated content, not actual installed network enforcement.
+- [x] ACE `8x4.t.jdx`: independent diagnosis and fixture-only repair `47f5eca70` synchronize handler request input before response. Lab all 199/697 passed, 1 skip; independent corrected-blob review approved. Original failure and controlled reproduction retained in the archived task.
+- [ ] Connect accepted network verification to namespace pinning, native admission/stage joins and complete original/candidate maintenance interfaces, then verify the domain installer after publication. Generic verifier acceptance is not positive runtime readiness or whole 9c2 completion.
