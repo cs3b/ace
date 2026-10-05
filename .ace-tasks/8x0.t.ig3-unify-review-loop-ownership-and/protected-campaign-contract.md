@@ -6,6 +6,10 @@ remains the only campaign/history/disposition owner; Assign remains the only
 attempt, candidate, receipt and evidence owner. No new listener, campaign journal,
 policy dialect or repair controller is introduced.
 
+The exact managed-child, model/actor and nonreentrant lock proposal is now in
+`protected-campaign-technical-closure.md`. It supersedes conflicting API/lock
+shorthand and alternatives below; independent readiness remains required.
+
 ## Actual owners and the missing seam
 
 At baseline `85c9704fe`, `Ace::Review::Organisms::CampaignManager` exposes

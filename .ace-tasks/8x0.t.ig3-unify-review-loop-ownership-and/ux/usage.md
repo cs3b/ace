@@ -77,3 +77,23 @@ candidate advance, then attempt fresh acceptance using that old result.
 current visibility authorization. Fresh acceptance refuses stale generation,
 head/base or policy. Missing R1 store/index requires retained-owner restoration;
 worker `.ace-local` files and campaign records beside the journal are never used.
+
+
+## Scenario 8: Accepted execution children precede campaign finish
+
+**Action:** The authenticated launcher registers collection/check/approval managed
+child definitions bound to the parent's exact round/scope/head/base/generation.
+Real child workers submit campaign-free results; independently assigned reviewer
+processes admit exact direct reviews; launcher/supervisor finishes each child
+using protected cleanup/no-writer proof.
+
+**Expected:** R1 consumes only succeeded accepted child receipts at their exact
+canonical commits. Wrong parent/phase/round/operation/generation is rejected.
+Approval persists authenticated reviewer actor separately from `report_models`;
+model text never replaces UID/actor independence. Parent campaign finish waits
+for these earlier accepted proofs. Missing 9c2 proof keeps child finish blocked.
+
+The exact source API is the proposed single-transaction
+`CampaignManager#with_verified_result!(...) { |projection| ... }`, specified in
+`../protected-campaign-technical-closure.md`; nested status/finish calls are
+forbidden while its store lock is held. This is not an installed CLI command.

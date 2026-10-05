@@ -4,6 +4,11 @@ Baseline: `85c9704fe`. Scope is specification only; no runtime/tests/native prob
 provider transmission, deployment or auth change was executed. This document is
 not an independent readiness verdict. Task remains draft / needs_review.
 
+The subsequent `protected-campaign-technical-closure.md` selects concrete
+technical proposals for these recorded gaps. The alternatives below are retained
+as source research history, not choices delegated to implementation. Its explicit
+campaign-free finish/9c2 prerequisite remains an independent-review input.
+
 ## Closed proposed decisions
 
 The companion contract fixes the canonical owner (existing CampaignManager /
