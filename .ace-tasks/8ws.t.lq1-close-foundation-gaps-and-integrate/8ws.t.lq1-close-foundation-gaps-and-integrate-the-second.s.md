@@ -22,7 +22,7 @@ This is the ACE integration tracker replacing the planning role of the loose lab
 
 This task owns sequencing and acceptance receipts, not duplicate implementations. Existing tasks stay at their canonical IDs; new uncovered outcomes are actual children. Check a task checkbox only after its owning record is done and linked evidence establishes the listed result. Reopen this checklist item if receipt is invalidated; do not silently expand a historical done task. `bin/ace-task show 8ws.t.lq1 --content` displays the checklist; updates are explicit, not automatic synchronization.
 
-Current phase: active source integration and installed acceptance, updated 2026-10-05 in the final checklist below. Earlier dated sections retain review history; they are not the current dispatch state. The tracker remains open until the final integration and Lab gates are met.
+Current phase: local source implementation and integration, then gem publication, then installed Lab acceptance, as specified in the current delivery sequence below. Earlier dated sections retain review history; they are not the current dispatch state. The tracker remains open until the final integration and Lab gates are met.
 
 ## First wave — delivered scopes
 - [x] ACE 8wq.t.1w2 — hermetic test infrastructure, main PR344; tp0 consumer fixes also delivered, with later runner source loading fix 96c445b8a. This does not close new fixture defects.
@@ -337,3 +337,59 @@ No gems published or actual Lab deployment performed in this checkpoint.
 
 - [x] xz9.0 remaining finish/recover/inbox contract independently APPROVED at baa96cbe51; existing attempt-local CAS, canonical receipt/signature provenance and 9c2 cleanup/release ownership preserved. Specification pending; unfinished 09j/9c2 still gate implementation.
 - [ ] xz9.2 remains draft: select exact native prompt method/acknowledgement/error contract and bounded payload framing, then independent review. Current launch/terminate operations do not supply that proof.
+
+## Current delivery sequence — local source, publication, Lab (2026-10-05)
+
+The Captain's local-first instruction supersedes earlier scheduling prose that
+requires unfinished installed acceptance before downstream source implementation.
+Declared dependencies remain whole-task acceptance dependencies; they are not
+removed, marked done or bypassed by a scheduler status change. A source checkpoint
+allows the next source scope only after its required producer contracts are
+integrated at an exact revision, relevant `bin/ace-test` package suites and
+`bin/ace-test-suite` have executed successfully on the combined source, and an
+independent reviewer has approved that exact candidate. Record revision, commands,
+invocation-bound receipts and verdict in the existing task. Any subsequent
+producer change requires affected consumer verification and fresh review.
+Installed criteria remain open and their owning task cannot close until all of
+its criteria pass. Unsupported or unproved protected execution continues to
+refuse; no same-UID/mock fixture substitutes for real native/multi-UID evidence.
+This sequencing decision authorizes no Lab SSH, protected probe, VM experiment,
+filter retry, native permission bypass or deployment.
+
+The existing tasks remain the only implementation and acceptance owners. Earlier
+“continue 09j installed acceptance, then 9c2” and “unfinished installed criteria
+gate implementation” dispatch statements are superseded by this phase decision.
+
+- [ ] Local producer: 9c2 implementation against integrated reviewed 09j source;
+  execute affected package suites and default fast suite, independently review,
+  integrate and retain the exact source checkpoint. 09j installed matrix stays open.
+- [ ] Local service consumers: xz9.0 finish/recovery/inbox/full composition after
+  the 9c2 source checkpoint and accepted xz9.3; then xz9.1 resilience. Preserve
+  composition refusal and no-writer/service settlement/inbox terminal checks.
+- [ ] Local steering: resolve xz9.2 terminal-versus-PID guarantee, independently
+  review its complete specification, then implement and accept source. This
+  unanswered decision is not waived by local-first ordering.
+- [ ] Local downstream: qk0 consumes accepted protected steering/service source;
+  complete qkb.0 and qkb.1 adoption together, then ig3/R2 and ig4/R3 against
+  integrated reviewed producer checkpoints. Each existing owner keeps its full
+  behavioral criteria and later installed acceptance; no duplicate umbrella work.
+- [ ] Release gate: combined producer/consumer source tests executed and exact
+  candidate independently approved; coherent versions/dependency graph, package
+  contents and canonical workflow projection prepared and checked locally.
+  qkb.0/.1 vocabulary and consumer removal ship atomically. No mixed vocabulary
+  publication. Publish gems through the existing release workflow with Captain
+  OTP only after local integration; retain exact public versions/manifest.
+- [ ] After publication: execute installed graph/consumer resolution acceptance
+  for the frozen versions, then remaining generic 09j matrix, 9c2 native/resource
+  proof, xz9.0/.1/.2 distinct-account scenarios and qkb.1 SC7. Publication alone
+  completes none of these task criteria.
+- [ ] Later Lab: lab-config 8wl.t.gad.8/.9/.b/.5/.a install topology/services/
+  runtime/roles and frozen artifacts; ACE qkc and lab-config gad.2 execute final
+  real-user, native restart, uncertain-effect and R2/R3 acceptance with legacy
+  disabled. gad.3 removal/retest precedes gad.4 cold start; vs3 still requires
+  its installed publisher and exact release authority. Existing task receipts
+  must establish every result before this tracker closes.
+
+This amendment changes sequencing only. No task status, dependency, acceptance
+checkbox, product behavior or completed evidence is changed; no tests or probes
+are claimed as newly executed by this specification edit.
