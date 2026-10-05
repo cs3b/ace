@@ -21,3 +21,11 @@ Post-merge combined coordinator, journal mutation and HITL runtime-binding
 verification: 8x421p, 66 tests / 418 assertions, no failures/errors. The four
 verified source findings from both rejected rounds are resolved. This does not
 close xz9.0: the protected endcap is now the next authored source slice.
+
+## Existing consumers on integrated main
+
+Source revision 9f8833c70: full Lab tests 8x423b passed 178 total / 599
+assertions, no failures/errors, one existing skip. Full Review tests 8x424z
+passed 941 total / 2975 assertions, no failures/errors, four feature skips.
+These checks cover existing service and campaign consumers after journal
+integration; they do not claim delivery of the new protected endcap.
