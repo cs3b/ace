@@ -1,0 +1,54 @@
+# frozen_string_literal: true
+module Ace
+  module Assign
+    module Authority
+      # Source-owned handlers share one listener. Requests never name a method.
+      class Router
+        def initialize(launch:, handlers: [])
+          @launch = launch
+          @routes = {}
+          ([launch] + handlers).each do |handler|
+            handler.class::OPERATIONS.each do |operation|
+              raise ArgumentError, "duplicate authority operation" if @routes.key?(operation)
+              @routes[operation] = handler
+            end
+          end
+          @routes.freeze
+        end
+
+        def dispatch(request:, peer:, role:, transfer: nil)
+          handler = @routes.fetch(request.fetch("operation")) { raise ArgumentError, "unknown authority operation" }
+          options = {request: request, peer: peer, role: role}
+          options[:transfer] = transfer if transfer
+          handler.dispatch(**options)
+        end
+
+        def transfer_binding(operation)
+          handler = @routes.fetch(operation) { raise ArgumentError, "unknown authority operation" }
+          return nil unless handler.class.const_defined?(:TRANSFER_OPERATIONS, false)
+          binding = handler.class::TRANSFER_OPERATIONS[operation]
+          return nil unless binding
+          unless binding.is_a?(Hash) && binding.keys.sort == %i[direction purpose roles] &&
+              %i[upload download].include?(binding[:direction]) && TransferCodec::LIMITS.key?(binding[:purpose]) &&
+              binding[:roles].is_a?(Array) && binding[:roles].all? { |role| %i[worker launcher reviewer executor supervisor].include?(role) }
+            raise ArgumentError, "invalid source transfer binding"
+          end
+          binding
+        end
+
+        def authorize_transfer!(request:, peer:, role:)
+          handler = @routes.fetch(request.fetch("operation"))
+          handler.authorize_transfer!(request: request, peer: peer, role: role)
+        end
+
+        def close
+          @launch.close
+        end
+
+        def gate_ready(**options)
+          @launch.gate_ready(**options)
+        end
+      end
+    end
+  end
+end
