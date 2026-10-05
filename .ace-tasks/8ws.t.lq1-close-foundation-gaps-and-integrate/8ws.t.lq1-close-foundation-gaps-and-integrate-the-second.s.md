@@ -290,3 +290,7 @@ Historical unchecked sections above retain prior review states; this latest chec
   candidate 340b; xz9.0 remains draft / needs_review. Full-service composition
   guard, outstanding 09j installed crash/restart matrix and native filter
   limitation remain intact; no deployment/protected probe is claimed here.
+
+- [ ] xz9.3: independent canonical submit_result/evidence_fetch source/public
+  consumer slice, extracted from xz9.0, depends 09j/accepted source only. Draft
+  awaits review before implementation; xz9.0 consumes it for terminal integration.

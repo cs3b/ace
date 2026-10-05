@@ -16,3 +16,10 @@ Review the exact new frozen parent delta, not source tests or main status as
 readiness proof. Result/fetch interface decisions are closed, but finish's native
 positive proof remains dependent on unresolved 9c2 selection. No task promotion,
 code changes, protected probe or filter workaround occurred in this repair.
+
+
+A follow-up extraction creates real child xz9.3 for independently executable
+submit_result/evidence_fetch source/client acceptance, consuming exact accepted
+f91b02889cd465250640c61076835dba7aeed7b5 and 09j, not xz9.0. xz9.0 consumes
+and depends on xz9.3 for terminal integration; it retains blocked finish and
+9c2 dependency. New child remains draft / needs_review pending independent review.

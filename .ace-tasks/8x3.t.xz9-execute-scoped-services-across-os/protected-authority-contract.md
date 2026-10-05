@@ -164,8 +164,9 @@ than rebuilding it from worker projections. Unsupported origin guarantees refuse
 
 This amendment closes the public contracts left open by the bounded result JIT
 plan. It awaits an independent amendment verdict; xz9.0 stays draft / needs_review.
-Its existing child owns this entire result-to-terminal slice and its consumers,
-including missing cleanup integration. No additional research task or controller
+Real child xz9.3 owns submit_result/evidence_fetch and their public consumers;
+xz9.0 consumes it and owns finish/terminal and full endcap integration. Upstream
+9c2 owns the missing scope-proof capability; no research-only task or controller
 is introduced. Recovery, no-effect settlement and inbox signing/consumer work
 remain tracked in xz9.0; installed drills remain xz9.1 and installation children.
 Full services construction continues to refuse until its complete operation set
@@ -423,7 +424,9 @@ rejection or unproven process/effect/inbox cleanup is evidence_unavailable.
 Refusal records no terminal acceptance, frees no scope and removes private upload
 spool. Public reasons are bounded/sanitized and contain no raw artifact content.
 
-xz9.0 acceptance must execute real Git ref/blob/event-chain and JournalMutation
+xz9.3 acceptance must execute the result/fetch scenarios below; xz9.0 owns
+finish/terminal integration scenarios and consumes that verified result. Use real
+Git ref/blob/event-chain and JournalMutation
 CAS tests for original versus normalized digests, ordered multi-artifact imports,
 failed zero-artifact result, private metadata exclusion from fresh/replay replies,
 one-result-per-generation and same-head new-generation correction/fresh review,
