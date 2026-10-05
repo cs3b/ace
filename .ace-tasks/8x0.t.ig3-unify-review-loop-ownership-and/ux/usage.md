@@ -50,5 +50,30 @@ checkpoint refuses campaign-bearing receipts; this is not R2/R3 completion.
 Wrong worktree, stale candidate/result, revoked policy, missing authoritative
 campaign or a worker-forged accepted result refuses. Neither worker-local
 .ace-local files nor journal_repository can stand in for campaign authority.
-The exact source-owned protected lookup schema awaits this amendment's readiness
-review; task is reopened draft / needs_review, preserving historical reviews.
+The exact proposed mapping, source API and import schema are specified in
+`../protected-campaign-contract.md`; readiness gaps are explicit in
+`../protected-campaign-readiness-inputs.md`. Task remains draft / needs_review.
+
+
+## Scenario 6: Protected exact campaign lookup
+
+**Action:** The mapped independent reviewer submits the bounded review receipt
+with `campaign: {id, result: {path, sha256}}` and the same result in `artifacts`.
+The existing authority resolves registered subject/candidate generation and
+imports bytes through CanonicalEvidence before CampaignManager validation.
+
+**Expected:** Current accepted campaign, policy, head/base, completed round/session
+and independent attribution match. Only the existing journal CAS accepts the
+receipt. A worker-selected campaign path or forged finish JSON fails without a
+canonical accepted receipt. The source-only proposed `verify_result!` method is
+not an installed CLI command.
+
+## Scenario 7: Restart and historical evidence
+
+**Action:** Restart authority, fetch an authorized exact retained artifact after
+candidate advance, then attempt fresh acceptance using that old result.
+
+**Expected:** Historical bytes remain retrievable under xz9's exact purpose and
+current visibility authorization. Fresh acceptance refuses stale generation,
+head/base or policy. Missing R1 store/index requires retained-owner restoration;
+worker `.ace-local` files and campaign records beside the journal are never used.
