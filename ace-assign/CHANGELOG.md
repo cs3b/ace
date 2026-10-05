@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Attribute local attempts to the kernel process account instead of terminal login/environment; refuse unresolved accounts, privilege transitions and changing credentials.
 - Commit proposal supersession and the new revision atomically with canonical operation replay and unresolved-effect claim exclusion.
 
 - Enforce global proposal identity ownership and immutable prepared lifecycle projection in the sole canonical proposal journal.
