@@ -294,3 +294,10 @@ Historical unchecked sections above retain prior review states; this latest chec
 - [ ] xz9.3: independent canonical submit_result/evidence_fetch source/public
   consumer slice, extracted from xz9.0, depends 09j/accepted source only. Draft
   awaits review before implementation; xz9.0 consumes it for terminal integration.
+
+### Result slice readiness decision
+
+- [x] `xz9.3` behavioral specification independently APPROVED; scheduler dependency corrected to the actual accepted source prerequisite. Promoted pending/needs_review false; next executable source slice is result submission, authorized discovery and artifact fetch.
+- [ ] `xz9.3` implementation and source acceptance.
+- [ ] `9c2` scope-owner mechanism/proof remains draft; xz9.0 finish and xz9.2 stop consume it.
+- [ ] `ig3` protected campaign authority contract requires its own readiness review; mandatory R2/R3 acceptance remains.

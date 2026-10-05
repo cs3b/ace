@@ -1,0 +1,5 @@
+# Readiness: APPROVE — xz9.3 only
+
+Independent Sol 6.1 review approved the behavioral contract at 7073c81bc2caf91a5228278685e2a58018e315d0 after two rejection rounds. Full history remains in ../0-execute-one-protected-cross-user/result-contract-independent-review-340b.md. The sole scheduling qualification was repaired in 4db764f10b4eaab426081ee27a2934246637d25c: dependencies no longer falsely wait for the whole unfinished 09j task; the actual integrated source prerequisite f91b02889cd465250640c61076835dba7aeed7b5 remains explicit. Root verified the exact metadata-only delta against the review condition and accepted it.
+
+Promoted pending / needs_review false. API schemas, private result event versus sanitized responses, same-commit discovery, result replay, failed zero-artifact records, public Client invocation and exact transfer framing are accepted for this bounded source task. No implementation or installed acceptance is claimed. Full-service startup remains guarded; xz9.0/9c2/xz9.2/ig3 are not promoted. The new graph has no reverse dependency from the prerequisite scope proof or this child to xz9.0.
