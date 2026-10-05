@@ -176,6 +176,34 @@ class ProtectedServiceReceiverTest < Minitest::Test
     end
   end
 
+  def test_cleanup_preserves_replacement_inserted_after_identity_check
+    Dir.mktmpdir("ace-receiver-cleanup-race-", Etc.getpwuid(Process.uid).dir) do |root|
+      File.chmod(0o700, root)
+      directory = File.join(root, "candidate-owned")
+      Dir.mkdir(directory, 0o700)
+      identity = File.lstat(directory)
+      retained = File.join(root, "candidate-retained")
+      receiver, = fixture(Object.new, staging: root)
+      real_lstat = File.method(:lstat)
+      replaced = false
+      late_replace = lambda do |path|
+        stat = real_lstat.call(path)
+        if path == directory && !replaced
+          replaced = true
+          File.rename(directory, retained)
+          Dir.mkdir(directory, 0o700)
+          File.write(File.join(directory, "replacement"), "retain")
+        end
+        stat
+      end
+      File.stub(:lstat, late_replace) { receiver.send(:cleanup_staging, directory, identity) }
+      assert File.directory?(retained)
+      replacements = Dir.glob(File.join(root, "**", "replacement"), File::FNM_DOTMATCH)
+      assert_equal 1, replacements.length
+      assert_equal "retain", File.read(replacements.first)
+    end
+  end
+
   def test_malformed_peer_or_original_body_refuses_before_authority_contact
     client = Object.new
     client.define_singleton_method(:call) { |*_, **_| raise "must not contact" }

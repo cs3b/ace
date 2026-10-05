@@ -122,18 +122,35 @@ module Ace
         private
 
         def cleanup_staging(directory, identity)
+          quarantine = nil
           root = File.expand_path(@receiver.fetch("staging_root"))
           Ace::Assign::Authority::PrivateDirectory.verify!(root)
           current = File.lstat(directory)
           return unless File.dirname(directory) == root && File.basename(directory).start_with?("candidate-") &&
             current.directory? && current.uid == Process.uid && current.dev == identity.dev && current.ino == identity.ino
-          # Only this invocation's privately materialized directory is removed,
-          # after the authority durably accepted its exact terminal receipt.
-          FileUtils.remove_entry_secure(directory)
+          # Capture the pathname atomically before checking the object we will
+          # delete. A concurrent replacement at the original name must survive.
+          quarantine = Dir.mktmpdir(".receiver-cleanup-", root)
+          File.chmod(0o700, quarantine)
+          captured = File.join(quarantine, "candidate")
+          File.rename(directory, captured)
+          moved = File.lstat(captured)
+          return unless moved.directory? && moved.uid == Process.uid &&
+            moved.dev == identity.dev && moved.ino == identity.ino
+          FileUtils.remove_entry_secure(captured)
         rescue Ace::Assign::Error, SystemCallError
           # A cleanup failure cannot change already-confirmed canonical truth.
           # Never fall back to cleaning the staging root or another directory.
           nil
+        ensure
+          if quarantine
+            begin
+              # Never recursively remove a mismatched captured object.
+              Dir.rmdir(quarantine)
+            rescue SystemCallError
+              nil
+            end
+          end
         end
 
         def projection(data)
