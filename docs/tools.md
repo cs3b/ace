@@ -73,7 +73,7 @@ Never reset or discard changes you didn't make — use `ace-git-commit $paths` t
 
 ### Skill-first planning and execution
 
-If a user names a skill (for example `/as-github-pr-create`) or the task clearly matches an available skill, that skill is mandatory and takes precedence over ad-hoc/manual flow.
+If a user names a skill (for example `/as-git-pr-create`) or the task clearly matches an available skill, that skill is mandatory and takes precedence over ad-hoc/manual flow.
 
 **Planning phase (mandatory load, optional run)** — before drafting or finalizing any substantial plan:
 

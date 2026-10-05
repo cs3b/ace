@@ -19,7 +19,7 @@ scenes:
   commands:
   - type: sed -n '20,33p' $PROJECT_ROOT_PATH/ace-task/handbook/skills/as-task-plan/SKILL.md
     sleep: 3s
-  - type: sed -n '27,50p' $PROJECT_ROOT_PATH/ace-git/handbook/skills/as-github-pr-create/SKILL.md
+  - type: sed -n '1,23p' $PROJECT_ROOT_PATH/ace-git/handbook/skills/as-git-pr-create/SKILL.md
     sleep: 3s
 - name: Assignment steps keep the canonical source contract
   commands:
@@ -33,15 +33,15 @@ scenes:
   commands:
   - type: clear
     sleep: 1s
-  - type: sed -n '13,36p' $PROJECT_ROOT_PATH/.codex/skills/as-task-plan/SKILL.md
+  - type: sed -n '13,36p' $PROJECT_ROOT_PATH/.agents/skills/as-task-plan/SKILL.md
     sleep: 3s
-  - type: sed -n '13,49p' $PROJECT_ROOT_PATH/.claude/skills/as-github-pr-create/SKILL.md
+  - type: sed -n '1,26p' $PROJECT_ROOT_PATH/.agents/skills/as-git-pr-create/SKILL.md
     sleep: 3s
 - name: Lint accepts the canonical skill contract
   commands:
   - type: clear
     sleep: 1s
-  - type: ace-lint $PROJECT_ROOT_PATH/ace-lint/handbook/skills/as-lint-run/SKILL.md $PROJECT_ROOT_PATH/ace-task/handbook/skills/as-task-plan/SKILL.md $PROJECT_ROOT_PATH/ace-git/handbook/skills/as-github-pr-create/SKILL.md
+  - type: ace-lint $PROJECT_ROOT_PATH/ace-lint/handbook/skills/as-lint-run/SKILL.md $PROJECT_ROOT_PATH/ace-task/handbook/skills/as-task-plan/SKILL.md $PROJECT_ROOT_PATH/ace-git/handbook/skills/as-git-pr-create/SKILL.md
     sleep: 4s
 verify:
   forbid_output:

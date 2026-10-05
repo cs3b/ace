@@ -183,12 +183,18 @@ git remote prune origin
    git push -u origin feature/your-feature
    ```
 
-2. **Create PR through GitHub interface** or CLI:
+2. **Create an attempt-bound draft on the selected forge**:
 
    ```bash
-   gh pr create --title "feat(feature): add new functionality" \
-                --body "Description of changes..."
+   ace-bundle wfi://git/pr/create
    ```
+
+   Use the managed assignment and active delivery attempt with explicit
+   fork/canonical repository and ref provenance. The canonical operation is
+   `ace-assign delivery --assignment ID --attempt ATTEMPT --operation create --title TITLE --body-file DESCRIPTION`.
+   Preserve the resolved forge and exact candidate SHA. Continue through
+   `wfi://git/pr/update` only with accepted current test and independent review
+   receipts; CI status remains advisory. Inside ACE use source `bin/ace-*`.
 
 3. **Link to relevant issues/tasks**:
 
@@ -219,7 +225,8 @@ git push --force-with-lease origin feature/your-feature
 
 #### Fork-Based Workflow
 
-For external contributors:
+Provider-specific GitHub clone example for external contributors; canonical
+assignment delivery above uses the explicitly selected forge and provenance:
 
 ```bash
 # Fork repository on GitHub, then:

@@ -26,6 +26,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Align prepare/drive discovery and draft creation instructions with the canonical neutral PR skills and attempt-bound delivery command.
+
 - Expose read-only runtime_binding for an active accepted attempt using the existing native/process authority, refusing missing, dead, changed or unrelated owner evidence.
 
 ### Fixed

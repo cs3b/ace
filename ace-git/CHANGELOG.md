@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- Remove the obsolete GitHub PR workflow and skill sources; canonical PR creation/update use only `git/pr` and `as-git-pr-*`, with no forwarding aliases.
+
 ### Added
 
 - PR lifecycle selection can use an explicit repository and pinned forge identity; exact create reconciliation is read-only. Neutral PR workflow and skill sources are prepared for coordinated canonical adoption.

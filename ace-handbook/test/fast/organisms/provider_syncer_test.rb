@@ -748,13 +748,13 @@ class Ace::Handbook::Organisms::ProviderSyncerTest < Minitest::Test
     refute_includes codex_rendered, "integration:"
   end
 
-  def test_sync_projects_claude_overrides_and_preserves_canonical_github_pr_body
+  def test_sync_projects_claude_overrides_and_preserves_canonical_neutral_pr_body
     frontmatter = {
-      "name" => "as-github-pr-create",
-      "description" => "Create GitHub pull request",
+      "name" => "as-git-pr-create",
+      "description" => "Create forge-neutral pull request",
       "source" => "ace-demo",
       "argument-hint" => "pr-type",
-      "skill" => {"kind" => "workflow", "execution" => {"workflow" => "wfi://github/pr/create"}},
+      "skill" => {"kind" => "workflow", "execution" => {"workflow" => "wfi://git/pr/create"}},
       "integration" => {
         "providers" => {
           "claude" => {
@@ -767,7 +767,7 @@ class Ace::Handbook::Organisms::ProviderSyncerTest < Minitest::Test
       }
     }
 
-    create_skill("as-github-pr-create", <<~BODY, frontmatter: frontmatter)
+    create_skill("as-git-pr-create", <<~BODY, frontmatter: frontmatter)
       ## Arguments
 
       Use the skill `argument-hint` values as the explicit inputs for this skill.
@@ -779,7 +779,7 @@ class Ace::Handbook::Organisms::ProviderSyncerTest < Minitest::Test
       ## Execution
 
       - You are working in the current project.
-      - Run `ace-bundle wfi://github/pr/create` in the current project to load the workflow instructions.
+      - Run `ace-bundle wfi://git/pr/create` in the current project to load the workflow instructions.
       - Read the loaded workflow and execute it end-to-end in this project.
       - Follow the workflow as the source of truth.
       - Do the work described by the workflow instead of only summarizing it.
@@ -789,13 +789,13 @@ class Ace::Handbook::Organisms::ProviderSyncerTest < Minitest::Test
     syncer.sync(provider: "claude")
     syncer.sync(provider: "codex")
 
-    claude_rendered = File.read(File.join(@tmpdir, ".claude", "skills", "as-github-pr-create", "SKILL.md"))
-    codex_rendered = File.read(File.join(@tmpdir, ".codex", "skills", "as-github-pr-create", "SKILL.md"))
+    claude_rendered = File.read(File.join(@tmpdir, ".claude", "skills", "as-git-pr-create", "SKILL.md"))
+    codex_rendered = File.read(File.join(@tmpdir, ".codex", "skills", "as-git-pr-create", "SKILL.md"))
 
     assert_includes claude_rendered, "context: fork"
     assert_includes claude_rendered, "model: haiku"
     assert_includes claude_rendered, "## Execution"
-    assert_includes claude_rendered, "Run `ace-bundle wfi://github/pr/create` in the current project to load the workflow instructions."
+    assert_includes claude_rendered, "Run `ace-bundle wfi://git/pr/create` in the current project to load the workflow instructions."
     refute_includes codex_rendered, "context: fork"
     refute_includes codex_rendered, "model: haiku"
     assert_includes codex_rendered, "## Execution"

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- PR review instructions retain neutral forge selection and current candidate evidence instead of identifying a PR through GitHub CLI.
+
 ## [0.58.1] - 2026-10-02
 
 ### Fixed

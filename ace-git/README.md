@@ -32,7 +32,7 @@
 
 **Rebase with changelog-safe workflow guardrails** - use the `as-git-rebase` agent workflow to run structured rebase flows that preserve package release metadata and reduce manual conflict-prone steps.
 
-**Prepare clean review history before publishing** - run the `as-git-reorganize-commits` workflow to reorganize commit stacks, then use `as-github-pr-create` or `as-github-pr-update` to manage PR metadata in a predictable workflow sequence. See [Handbook](docs/handbook.md) for the full skill and workflow catalog.
+**Prepare clean review history before publishing** - run the `as-git-reorganize-commits` workflow to reorganize commit stacks, then use `as-git-pr-create` or `as-git-pr-update` to manage PR metadata in a predictable workflow sequence. See [Handbook](docs/handbook.md) for the full skill and workflow catalog.
 
 **Coordinate with commit and worktree tools** - pair with [ace-git-commit](../ace-git-commit) for scoped commit authoring, [ace-git-worktree](../ace-git-worktree) for task-oriented worktree management, and [ace-bundle](../ace-bundle) for loading workflow instructions.
 

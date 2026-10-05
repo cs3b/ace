@@ -168,7 +168,7 @@ When parsing informal instructions, identify:
 1. **Task References**: "task 123", "task-123", "#123"
 2. **Skill Keywords**: Map to known skills
    - "work on task" → `ace:task-work`
-   - "create pr", "make pr" → `ace:github-pr-create`
+   - "create pr", "make pr" → `ace:git-pr-create`
    - "review", "review pr" → `ace:review-pr`
    - "commit" → `ace:git-commit`
    - "onboard" → `onboard`
@@ -379,7 +379,7 @@ steps:
       - Implement the required changes following project conventions.
 
   - name: create-pr
-    source: skill://as-github-pr-create
+    source: skill://as-git-pr-create
     instructions:
       - Create a pull request for the changes.
       - Capture the PR number for subsequent review steps.

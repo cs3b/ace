@@ -17,8 +17,8 @@ Reference for package-owned handbook resources in `ace-git/handbook/`.
 |-------|--------------|
 | `as-git-rebase` | Guide changelog-preserving rebases |
 | `as-git-reorganize-commits` | Rework commit history into reviewable logical groups |
-| `as-github-pr-create` | Create pull requests with the package templates and workflow |
-| `as-github-pr-update` | Refresh an existing PR body from current branch context |
+| `as-git-pr-create` | Create an attempt-bound draft on the selected forge |
+| `as-git-pr-update` | Update the exact attempt-bound PR and consume current evidence |
 | `as-github-release-publish` | Publish a GitHub release from the ACE workflow |
 
 ## Workflow Instructions
@@ -27,8 +27,8 @@ Reference for package-owned handbook resources in `ace-git/handbook/`.
 |--------------|---------|------------|
 | `wfi://git/rebase` | Rebase a branch while preserving changelog/version files | `as-git-rebase` |
 | `wfi://git/reorganize-commits` | Consolidate or regroup commit history before review | `as-git-reorganize-commits` |
-| `wfi://github/pr/create` | Create a PR with the package templates | `as-github-pr-create` |
-| `wfi://github/pr/update` | Update a PR description from current state | `as-github-pr-update` |
+| `wfi://git/pr/create` | Create or reconcile the exact attempt-bound draft | `as-git-pr-create` |
+| `wfi://git/pr/update` | Update the recorded PR and retain delivery identity | `as-git-pr-update` |
 | `wfi://github/release-publish` | Publish a GitHub release | `as-github-release-publish` |
 
 ## Guides
