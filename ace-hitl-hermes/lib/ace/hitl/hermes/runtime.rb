@@ -38,8 +38,8 @@ module Ace
               raise if once
             end
             loop do
-              # Every folder question is an actual lifecycle request. Plain
-              # instructions have Captain sender and are left for the target.
+              # Only an authoritative lifecycle request may be submitted.
+              # A sender label is not authority or a reserved OS username.
               @registry.channels.each do |channel|
                 box_channel = Molecules::HermesChannels::Channel.new(
                   name: channel["name"], machine: channel["machine"], folder: channel["folder"]
@@ -54,7 +54,7 @@ module Ace
                   next
                 end
                 box.poll.messages.each do |message|
-                  next unless message.question? && message.sender != "captain"
+                  next unless message.question?
                   begin
                     facts = @lifecycle.read(message.id)
                     revision = facts.fetch("attempt")

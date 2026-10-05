@@ -148,4 +148,35 @@ class ManagedPendingPublicationTest < AceHermesTestCase
     assert_empty Dir.children(@folder)
   end
 
+  def test_requester_named_captain_still_reaches_telegram
+    create(id: "auto001")
+    actor, calls = runtime
+    lifecycle = actor.instance_variable_get(:@lifecycle)
+    original_pending = lifecycle.method(:pending)
+    original_read = lifecycle.method(:read)
+    lifecycle.define_singleton_method(:pending) do |**args|
+      original_pending.call(**args).each do |facts|
+        facts["requester"] = "captain"
+        facts["envelope"]["requester"] = "captain"
+      end
+    end
+    lifecycle.define_singleton_method(:read) do |id|
+      facts = original_read.call(id)
+      facts["requester"] = "captain"
+      facts["envelope"]["requester"] = "captain"
+      facts
+    end
+    actor.serve(once: true)
+    assert_equal 1, calls.count { |entry| entry.first == :send },
+      "authenticated request must not be mistaken for a Captain instruction"
+  end
+  def test_unmanaged_captain_instruction_is_left_for_target
+    original = question_payload(id: "instruction1", sender: "captain", question: "Inspect status")
+    message_file(@folder, "instruction1", original)
+    actor, calls = runtime
+    actor.serve(once: true)
+    assert_empty calls.select { |entry| entry.first == :send }
+    assert_equal original, JSON.parse(File.read(File.join(@folder, "instruction1.json")))
+  end
+
 end

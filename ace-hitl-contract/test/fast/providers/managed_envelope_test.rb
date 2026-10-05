@@ -61,4 +61,18 @@ class ManagedEnvelopeTest < AceHitlContractTestCase
     assert_raises(Invalid) { Envelope.load(ordinary.merge("effect" => {"receipt_ref" => "receipt1"})) }
     assert_raises(Invalid) { Envelope.load(ordinary.merge("effect" => {"authorization_ref" => "grant1", "argv" => ["execute"]})) }
   end
+  def test_digest_requires_json_string
+    assert_raises(Invalid) { Envelope.load(ordinary.merge("payload_sha256" => ("1" * 64).to_i)) }
+  end
+
+  def test_nested_timestamp_requires_real_canonical_calendar_components
+    message = {"schema" => Envelope::MESSAGE_SCHEMA, "id" => ordinary["correlation_id"],
+      "kind" => "answer", "sender" => "captain", "answer" => "Proceed"}
+    %w[2026-02-30T10:00:00Z 2026-04-31T10:00:00Z 2026-10-05T24:00:00Z 2026-10-05T10:60:00Z].each do |stamp|
+      assert_raises(Invalid) { Envelope.load(ordinary.merge("message" => message.merge("received_at" => stamp))) }
+    end
+    stamp = "2028-02-29T23:59:59Z"
+    assert_equal stamp, Envelope.load(ordinary.merge("message" => message.merge("received_at" => stamp))).dig("message", "received_at")
+  end
+
 end

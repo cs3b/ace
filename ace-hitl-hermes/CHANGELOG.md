@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- Submit authenticated requests from users named captain; leave unmanaged instructions for their target based on lifecycle authority, not sender labels.
 - Retain the continuous polling owner across transient pending-publication transport outages, report the channel failure and retry without consuming the request.
 
 ### Changed

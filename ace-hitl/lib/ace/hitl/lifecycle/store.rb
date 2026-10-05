@@ -12,6 +12,7 @@ require_relative "kinds"
 require_relative "binding"
 require_relative "effects"
 require_relative "otp_vault"
+require_relative "protocol"
 
 module Ace
   module Hitl
@@ -399,34 +400,55 @@ module Ace
         # Awaiting answers or deliberate native reconciliation. Never purges
         # answered/dead requests, and never exposes answer or callback argv.
         def pending(project: nil)
-          require_transport!("pending")
-          active = requests_dir.glob("*.json").sort.filter_map do |path|
-            value = AtomicJson.read(path)
-            next unless value.is_a?(Hash)
-            next if project && value["project"] != project
-            begin
-              require_transport!("pending", value)
-            rescue PermissionError
-              next
-            end
-            value.slice("id", "assignment", "attempt", "project", "harness", "kind", "sensitive", "plan", "question",
-              "options", "ace_hitl_id", "requester", "created_at", "otp", "envelope")
-              .merge("state" => public_state(value["id"], value), "has_effect" => !value["effect"].nil?)
-          end
-          native = public_dir.glob("*.json").sort.filter_map do |path|
-            value = AtomicJson.read(path)
-            next unless value.is_a?(Hash) && value["native_delivery"] == true
-            next if active.any? { |request| request["id"] == value["id"] }
-            next if project && value["project"] != project
-            begin
-              require_transport!("pending", value)
-            rescue PermissionError
-              next
-            end
-            value
-          end
-          active + native
+          each_pending(project: project).to_a
         end
+
+        # Stable keyset pagination bounds each IPC frame without discarding
+        # consumed native claims needed by signed-receipt reconciliation.
+        # Concurrent new IDs preceding the cursor appear on the next scan.
+        def pending_page(project: nil, after: nil)
+          unless after.nil? || (after.is_a?(String) && after.match?(/\A[A-Za-z0-9][A-Za-z0-9._:-]{0,127}\z/))
+            raise StateError, "invalid pending cursor"
+          end
+          items = []
+          each_pending(project: project, after: after) do |value|
+            candidate = {"items" => items + [value], "next" => value.fetch("id")}
+            begin
+              Protocol.encode_result(candidate)
+            rescue Protocol::FrameError
+              raise StateError, "pending record exceeds boundary frame limit" if items.empty?
+              return {"items" => items, "next" => items.last.fetch("id")}
+            end
+            items << value
+          end
+          {"items" => items, "next" => nil}
+        end
+
+        def each_pending(project: nil, after: nil)
+          return enum_for(__method__, project: project, after: after) unless block_given?
+          require_transport!("pending")
+          ids = (requests_dir.glob("*.json") + public_dir.glob("*.json")).map { |path| path.basename(".json").to_s }.uniq.sort
+          ids.each do |id|
+            next if after && id <= after
+            value = AtomicJson.read(requests_dir.join("#{id}.json"))
+            active = value.is_a?(Hash)
+            value = AtomicJson.read(public_dir.join("#{id}.json")) unless active
+            next unless value.is_a?(Hash) && (active || value["native_delivery"] == true)
+            next if project && value["project"] != project
+            begin
+              require_transport!("pending", value)
+            rescue PermissionError
+              next
+            end
+            if active
+              value = value.slice("id", "assignment", "attempt", "project", "harness", "kind", "sensitive", "plan", "question",
+                "options", "ace_hitl_id", "requester", "created_at", "otp", "envelope")
+                .merge("state" => public_state(value["id"], value), "has_effect" => !value["effect"].nil?)
+            end
+            yield value
+          end
+        end
+        private :each_pending
 
         # All public lifecycle records (non-secret projections).
         def states

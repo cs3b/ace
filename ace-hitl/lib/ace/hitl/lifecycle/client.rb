@@ -72,7 +72,23 @@ module Ace
         end
 
         def pending(project: nil)
-          request("pending", project ? {"project" => project} : {})
+          items = []
+          after = nil
+          loop do
+            page = pending_page(project: project, after: after)
+            items.concat(page.fetch("items"))
+            cursor = page.fetch("next")
+            break unless cursor
+            unless cursor.is_a?(String) && (after.nil? || cursor > after)
+              raise TransportError, "pending cursor did not advance"
+            end
+            after = cursor
+          end
+          items
+        end
+
+        def pending_page(project: nil, after: nil)
+          request("pending", {"project" => project, "after" => after}.compact)
         end
 
         def states

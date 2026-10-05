@@ -82,3 +82,8 @@ Configure the gateway process with `ACE_HITL_HERMES_CONFIG` pointing to the runt
 Successful commands return 0 and JSON. Rejected input/configuration returns 1 with a sanitized error. SIGINT returns 130. OTP is never accepted as an argument: `receive` takes a bounded JSON event from stdin.
 
 Local acceptance exercises registered controlled identities, real message folders, fsynced state, a real authenticated Unix socket and installed guard assets. Live Telegram channel acceptance and the Lab transport smoke/removal of `hermes-lab-hitl`, `lab-hitl-broker` and `lab-hitl-channels` remain explicit `lab-config:gad.2` delivery gates; local tests do not claim those deployment results.
+
+A lifecycle requester named `captain` is handled like every other authenticated
+requester. Submission authority comes from the scoped lifecycle record and its
+exact project/body binding, not the folder sender label. Unmanaged Captain
+instructions remain in the folder for their target and are not sent as requests.

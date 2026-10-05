@@ -2,6 +2,7 @@
 
 require "json"
 require "digest"
+require "time"
 require_relative "ref"
 require_relative "secret_gate"
 
@@ -47,7 +48,7 @@ module Ace
               raise InvalidEnvelope, "OTP envelope cannot contain payload digest, folder answer or effect"
             end
           else
-            raise InvalidEnvelope, "invalid non-secret payload digest" unless DIGEST.match?(data["payload_sha256"].to_s)
+            raise InvalidEnvelope, "invalid non-secret payload digest" unless data["payload_sha256"].is_a?(String) && DIGEST.match?(data["payload_sha256"])
           end
           message!(data["message"], data) if data.key?("message")
           effect!(data["effect"]) if data.key?("effect")
@@ -92,6 +93,14 @@ module Ace
             raise InvalidEnvelope, "folder payload digest differs"
           end
           unless value[time_key].is_a?(String) && value[time_key].match?(/\A\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z\z/)
+            raise InvalidEnvelope, "invalid folder message timestamp"
+          end
+          begin
+            parsed = Time.iso8601(value[time_key])
+            unless parsed.utc.strftime("%Y-%m-%dT%H:%M:%SZ") == value[time_key]
+              raise ArgumentError, "non-canonical calendar components"
+            end
+          rescue ArgumentError
             raise InvalidEnvelope, "invalid folder message timestamp"
           end
         end

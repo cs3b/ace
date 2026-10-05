@@ -25,7 +25,7 @@ module Ace
         def encode_request(op, params = {})
           frame = {"v" => VERSION, "op" => op.to_s, "params" => params}
           line = JSON.generate(frame)
-          raise FrameError, "request frame exceeds #{MAX_FRAME_BYTES} bytes" if line.bytesize > MAX_FRAME_BYTES
+          raise FrameError, "request frame exceeds #{MAX_FRAME_BYTES} bytes" if line.bytesize + 1 > MAX_FRAME_BYTES
 
           line << "\n"
         end
@@ -86,7 +86,7 @@ module Ace
 
         def frame_line(frame)
           line = JSON.generate(frame)
-          raise FrameError, "response frame exceeds #{MAX_FRAME_BYTES} bytes" if line.bytesize > MAX_FRAME_BYTES
+          raise FrameError, "response frame exceeds #{MAX_FRAME_BYTES} bytes" if line.bytesize + 1 > MAX_FRAME_BYTES
 
           line << "\n"
         end

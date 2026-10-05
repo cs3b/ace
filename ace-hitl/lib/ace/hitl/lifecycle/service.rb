@@ -236,7 +236,7 @@ module Ace
             store.consume(required(params, "id"), timeout: Integer(params["timeout"] || 0),
               operation: params["operation"], native_delivery: params.fetch("native_delivery", false))
           when "cancel" then store.cancel(required(params, "id"), reason: params["reason"].to_s)
-          when "pending" then store.pending(project: params["project"])
+          when "pending" then store.pending_page(project: params["project"], after: params["after"])
           when "states" then store.states
           end
         end

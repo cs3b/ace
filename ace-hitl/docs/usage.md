@@ -331,3 +331,22 @@ Canonical namespace for HITL lifecycle signaling:
 - `hitl.event.resume_skipped_waiter_active`
 - `hitl.event.resume_failed`
 - `hitl.event.archived`
+
+## Pending recovery history across bounded IPC pages
+
+`ace-hitl pending --project ace` continues to show unresolved native delivery
+claims even after their answers have been consumed. A large retained history
+must not prevent newly created questions from reaching Telegram.
+
+The lifecycle wire `pending` operation returns `{items, next}`. `next` is an
+exclusive request-ID cursor; send it as `after` with the same project for the
+next page. Each response, including framing, fits the IPC byte limit. Every
+page rechecks transport/project authorization. `Lifecycle::Client#pending`
+collects the pages for existing Ruby/CLI callers; `pending_page(project:, after:)`
+exposes a single bounded page. `read(id)` remains available for exact recovery.
+No consumed claim is deleted to make the list fit. A record too large for one
+page produces a classified error, never a successful truncated list.
+
+This is a live keyset scan, not a frozen snapshot: a newly inserted ID before
+the current cursor appears on the next scan. Repeated polling therefore remains
+required; a cursor is not proof of delivery or native consumption.
