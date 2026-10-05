@@ -131,3 +131,15 @@ A lost begin or final authorization reply does not permit invocation or assert
 no effect; preserve the original claim/phase and obtain challenge-bound fresh
 reconciliation. The final fresh service_authorization read checks seal. Effects
 admitted before seal still settle independently of local scope emptiness.
+
+## Recover provisioning without a genuine child reply
+
+After exact parent binding but lost native readiness or layout reply, use the
+same observe_execution_scope/close_execution_scope selectors and two-phase close
+as above. The generation names the original parent, even without child binding.
+No pane search, new layout or worker release is allowed. Positive recursive
+whole-parent cleanup may yield closed_no_writers; independent service/inbox
+settlement still precedes canonical release and fresh slot reuse. With no
+verifiable original parent binding, evidence_unavailable preserves the held
+intent. See ../provisioning-scope-lineage-amendment.md for immutable event schemas
+and the future failure/restart/replay verification map.

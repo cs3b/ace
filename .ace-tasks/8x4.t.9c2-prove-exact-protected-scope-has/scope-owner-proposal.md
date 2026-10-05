@@ -378,3 +378,12 @@ Arbitrary worker host-admin/shared-write access is not required by this program.
 A later user request for persistent shared worker servers or those broader
 capabilities would change the specification and must be assessed then; it does
 not block the current authorized engineering default.
+
+## Pre-child provisioning ordering amendment
+
+See [provisioning-scope-lineage-amendment.md](provisioning-scope-lineage-amendment.md)
+for the normative candidate replacing full-binding-before-layout ordering:
+immutable parent, native and genuine-child stages, pre-child whole-parent close,
+and unknown-origin refusal. Existing success criteria remain required; no task
+status or acceptance claim changes. Independent review is required before this
+amendment becomes the implementation contract.
