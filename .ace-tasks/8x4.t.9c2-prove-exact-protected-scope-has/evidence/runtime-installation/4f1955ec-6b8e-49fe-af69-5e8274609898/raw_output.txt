@@ -1,0 +1,51 @@
+Started with run options --seed 2536
+
+SystemdScopeManagerTest
+  test_observation_requires_both_exact_loaded_units_and_installed_placement PASS (0.00s)
+  test_only_fixed_start_stop_targets_are_available_without_caller_arguments PASS (0.00s)
+  test_wrong_duplicate_missing_or_unknown_property_response_refuses PASS (0.00s)
+  test_typed_property_reads_preserve_empty_arrays_and_command_argument_boundaries PASS (0.00s)
+  test_nonfixed_or_shared_manager_targets_are_rejected_without_io PASS (0.00s)
+  test_native_command_refuses_unsupported_platform_before_spawning PASS (0.00s)
+  test_lost_job_outcome_is_not_retried_or_turned_into_success     PASS (0.00s)
+  test_typed_signature_is_not_enough_without_matching_primitive_data PASS (0.00s)
+
+ExecutionUnitInstallationTest
+  test_environment_injection_cannot_be_approved_by_manifest       PASS (0.00s)
+  test_unused_exec_hooks_or_external_incoming_service_activation_refuse PASS (0.00s)
+  test_effective_overlay_cannot_shadow_hashed_native_or_config_even_if_manifest_declares_it PASS (0.00s)
+  test_complete_command_arguments_and_config_bytes_cannot_be_replaced_by_claimed_manifest PASS (0.00s)
+  test_transitive_parent_dependency_and_unloaded_enablement_routes_refuse PASS (0.00s)
+  test_verifies_actual_artifact_bytes_and_effective_manager_profile_without_claiming_runtime_proof PASS (0.00s)
+  test_effective_change_refuses_even_when_root_manifest_retains_old_property PASS (0.00s)
+  test_implicit_private_and_kernel_mounts_cannot_hide_hashed_root_image_executable PASS (0.00s)
+  test_readonly_overlay_is_accepted_only_when_actual_source_bytes_are_verified PASS (0.00s)
+  test_privileged_failure_ignore_or_other_readiness_command_refuses PASS (0.00s)
+  test_other_kernel_mount_shadow_options_cannot_be_approved_by_manifest PASS (0.00s)
+  test_lookup_scanner_finds_unloaded_generator_routes_and_aliases_without_following_links PASS (0.00s)
+  test_declared_weaker_security_or_other_principal_never_qualifies PASS (0.01s)
+  test_manifest_hash_and_closed_schema_cannot_be_asserted_without_matching_bytes PASS (0.00s)
+  test_activation_edges_cannot_be_approved_by_manifest_and_slice_cannot_require_child PASS (0.00s)
+  test_implicit_mount_ordering_requires_active_exact_backing_and_no_job PASS (0.00s)
+
+InstallationImplicitShadowTest
+  test_environment_injection_cannot_be_approved_by_manifest       PASS (0.00s)
+  test_unused_exec_hooks_or_external_incoming_service_activation_refuse PASS (0.00s)
+  test_effective_overlay_cannot_shadow_hashed_native_or_config_even_if_manifest_declares_it PASS (0.00s)
+  test_complete_command_arguments_and_config_bytes_cannot_be_replaced_by_claimed_manifest PASS (0.00s)
+  test_transitive_parent_dependency_and_unloaded_enablement_routes_refuse PASS (0.00s)
+  test_private_devices_cannot_hide_hashed_native_executable       PASS (0.00s)
+  test_verifies_actual_artifact_bytes_and_effective_manager_profile_without_claiming_runtime_proof PASS (0.00s)
+  test_effective_change_refuses_even_when_root_manifest_retains_old_property PASS (0.00s)
+  test_implicit_private_and_kernel_mounts_cannot_hide_hashed_root_image_executable PASS (0.00s)
+  test_readonly_overlay_is_accepted_only_when_actual_source_bytes_are_verified PASS (0.00s)
+  test_privileged_failure_ignore_or_other_readiness_command_refuses PASS (0.00s)
+  test_other_kernel_mount_shadow_options_cannot_be_approved_by_manifest PASS (0.00s)
+  test_lookup_scanner_finds_unloaded_generator_routes_and_aliases_without_following_links PASS (0.00s)
+  test_declared_weaker_security_or_other_principal_never_qualifies PASS (0.01s)
+  test_manifest_hash_and_closed_schema_cannot_be_asserted_without_matching_bytes PASS (0.00s)
+  test_activation_edges_cannot_be_approved_by_manifest_and_slice_cannot_require_child PASS (0.00s)
+  test_implicit_mount_ordering_requires_active_exact_backing_and_no_job PASS (0.00s)
+
+Finished in 0.07646s
+41 tests, 195 assertions, 0 failures, 0 errors, 0 skips

@@ -1,0 +1,13 @@
+
+# Running tests with run options --seed 15535:
+
+.F.
+
+Finished tests in 0.243988s, 12.2957 tests/s, 45.0842 assertions/s.
+
+
+Failure:
+Ace::Herdr::Organisms::NilRegistrationBoundaryTest#test_retained_consumed_signature_after_stop_does_not_open_any_native_endpoint [/Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/.ace-local/review/inbox_nil_registration_test.rb:50]
+Minitest::Assertion: Ace::Herdr::ValidationError expected but nothing was raised.
+
+3 tests, 11 assertions, 1 failures, 0 errors, 0 skips

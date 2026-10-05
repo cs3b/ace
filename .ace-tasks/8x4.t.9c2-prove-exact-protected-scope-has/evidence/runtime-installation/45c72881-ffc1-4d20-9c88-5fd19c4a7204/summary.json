@@ -1,0 +1,13 @@
+{
+  "execution_id": "45c72881-ffc1-4d20-9c88-5fd19c4a7204",
+  "assertions": 75,
+  "passed": 22,
+  "failed": 1,
+  "errors": 0,
+  "skipped": 0,
+  "total": 23,
+  "pass_rate": 95.65,
+  "duration": 0.04316,
+  "success": false,
+  "timestamp": "2026-10-05T11:15:43+01:00"
+}

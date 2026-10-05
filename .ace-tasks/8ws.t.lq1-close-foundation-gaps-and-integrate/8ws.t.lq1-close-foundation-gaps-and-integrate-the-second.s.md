@@ -411,6 +411,16 @@ are claimed as newly executed by this specification edit.
   9c2 staged-lineage-verification.md and xz9.0 inbox-source-checkpoints.md.
 - [ ] 9c2 complete owner/readiness/closure/reuse and xz9.0 canonical handlers remain
   in progress. Runtime installation review findings and service-created resource
-  stage clarification must be resolved before their source integration.
+  stage clarification were resolved in the checkpoint below; connected lifecycle
+  implementation remains open.
 - [ ] Coherent downstream integration and release preparation still precede
   Captain interactive publication; installed graph and Lab acceptance follow.
+
+## Local installation and retained inbox checkpoint — 2026-10-05
+
+- [x] Integrate reviewed runtime installation checks, including read-only bind projection and private mutable mount refusal; retain all corrective review rounds in 9c2.
+- [x] Review and bundle the service-created resource stage and deadlock-safe private readiness exchange contract.
+- [x] Integrate exact-registration retained inbox verification; retain independent review and combined source receipts in xz9.0.
+- [x] Verify exact source `0786c817ae1d426ed2d8639d56450a55016a7083`: default suite 51 entries, 11,252 passed, 24 skipped, zero failures/errors.
+- [ ] Connect actual 9c2 owner lifecycle and xz9.0 canonical inbox handlers, including no-create retained locks; complete independent review and integration before coherent release preparation.
+- [ ] Publish the prepared integrated versions through Captain's interactive OTP script, then verify the installed graph and execute remaining Lab acceptance.
