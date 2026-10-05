@@ -130,3 +130,9 @@ read-only. Finish uses result_id only after positive closure and every independe
 service/inbox settlement; local closure alone cannot settle remote effects.
 Terminal commit precedes exact slot release, and historical finish replay after
 reuse never operates on the replacement scope.
+
+For recover/bind_inbox/reconcile_inbox and stop/close consumers, expected_generation
+is the existing attempt-local authority_generation from authority status for the
+exact attempt. It is neither assignment-wide nor candidate/inbox-claim/scope
+generation. Each mutation reply's generation is that same attempt-local counter;
+retained exact replay reports its original value.

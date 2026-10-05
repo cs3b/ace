@@ -35,8 +35,13 @@ permission: resolve and compare canonical original registration independently.
 receipt_ref/signature_ref are canonical {artifact_id, ref, sha256, bytes}, never
 absolute paths; only returned refs whose bytes/provenance verified may be exposed.
 Existing transport.replayed wraps the original committed projection. Fresh same-ID
-changed params/body digests conflicts. expected_generation compares canonical
-assignment generation; each fresh CAS retry rereads state/bindings/provenance.
+changed params/body digests conflicts. expected_generation compares the existing
+attempt-local authority_generation, computed by JournalMutation from canonical
+events filtered to this exact attempt_id. Existing authority status supplies that
+value; it is not an assignment-wide, candidate, inbox claim or scope generation.
+Reply generation is this same attempt-local mutation generation. Each fresh CAS
+retry rereads state/bindings/provenance without changing the existing generation
+owner or introducing another counter.
 An exact replay authenticates current mapped principal/visibility and revalidates
 retained canonical evidence outside JournalMutation's skipped callback, then
 returns original data/generation/commit without another observation/native effect.
@@ -153,8 +158,9 @@ or terminal cleanup; existing current delivery state remains independent.
 Import both exact verified raw parts through CanonicalEvidence, kind inbox,
 existing canonical descriptor role signer (CanonicalEvidence::ROLES), same full project/assignment/attempt/
 context/event/registration/claim-generation/native binding/key/receipt+signature
-digests as binding_digest. request_id_or_event_id is event_id; generation is the
-verified claim_generation. Owner-generated immutable descriptors and blobs,
+digests as binding_digest. request_id_or_event_id is event_id; the descriptor candidate_generation_or_claim_generation is the
+verified claim_generation; the public reply generation remains the attempt-local
+authority_generation. Owner-generated immutable descriptors and blobs,
 inbox_reconciliation consumer event and sanitized mutation reply share one qjl
 commit. xz9.0 wires this complete context into CanonicalEvidence readers,
 recovery_inboxes, finish/stop and existing authorized inbox evidence_fetch; no

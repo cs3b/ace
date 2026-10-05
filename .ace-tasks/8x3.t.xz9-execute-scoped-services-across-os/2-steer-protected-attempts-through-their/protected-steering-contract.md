@@ -10,6 +10,9 @@ trusted mapped supervisor, current project visibility, canonical exclusion/CAS
 and Router. No worker, reviewer, executor, signer claim or caller-selected native
 endpoint. Exact params for stop_attempt are {mapping_id, assignment_id,
 attempt_id, expected_generation}; nonnull strict mutation_id, no transfer.
+expected_generation and reply generation use existing attempt-local
+authority_generation from canonical events/status, not assignment-wide, candidate,
+inbox claim or scope generation.
 Prompt's desired params add text (nonblank UTF-8 <=16 KiB) but its native method/
 acknowledgement and bounded transfer framing remain the concrete review question
 in the task; no positive prompt implementation readiness is claimed. The total
