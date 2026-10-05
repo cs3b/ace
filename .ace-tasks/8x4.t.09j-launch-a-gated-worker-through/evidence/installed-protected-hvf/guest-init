@@ -1,0 +1,19 @@
+#!/bin/sh
+export PATH=/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+export GEM_HOME=/usr/local/bundle
+export GEM_PATH=/usr/local/bundle:/usr/local/lib/ruby/gems/3.4.0
+mount -t proc proc /proc
+mount -t sysfs sysfs /sys
+mount -t devtmpfs devtmpfs /dev
+mkdir -p /run /tmp
+mount -t tmpfs -o mode=0755 tmpfs /run
+mount -t tmpfs tmpfs /tmp
+printf 'ACE_GUEST_BOOT_BEGIN\n'
+uname -a
+cat /proc/sys/kernel/random/boot_id
+printf '2' > /proc/sys/kernel/yama/ptrace_scope
+cat /proc/sys/kernel/yama/ptrace_scope
+ruby -v
+printf 'ACE_GUEST_BOOT_POLICY_READY\n'
+/usr/bin/python3 /opt/ace-fixture/guest-probe.py
+/usr/bin/python3 -c 'import ctypes; ctypes.CDLL(None).reboot(0x4321fedc)'
