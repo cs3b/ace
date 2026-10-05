@@ -232,3 +232,7 @@ FD discipline, fresh baseline installation and actual kernel/manager checks rema
 implementation/installed acceptance obligations of 9c2, not claims of completed
 experiments. Broader filesystem/network writer-boundary feasibility and Captain's
 server-lifetime preference remain as recorded in scope-owner-proposal.md.
+
+### ADR-024 implementation boundary
+
+Preserving current mapping-v1 checks above describes the unchanged delivered source while this proposal is unimplemented. Delivery of the replacement removes obsolete v1 rather than retaining a compatibility branch; unsupported old configuration refuses. Protected-origin guarantees remain mandatory in the replacement. Independent review of 4a824b95 confirms this interpretation.
