@@ -42,7 +42,9 @@ module Ace
           lines << summary
 
           # Add failure details if there are any
-          if result.has_failures?
+          lines << "Execution failed: #{result.execution_error}" unless result.execution_success
+
+          if result.failed > 0 || result.errors > 0
             lines << ""
             total_failures = result.failed + result.errors
 

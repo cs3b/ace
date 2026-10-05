@@ -20,3 +20,7 @@ These must not be attributed to the new verdict propagation. If fixture repair i
 ## Readiness review
 
 First independent Sol review `review-8x42l3`: approve with minor changes; requested deterministic mode coverage and explicit operator interruption artifact behavior. Clarification committed `7a9191782`; second review pending. This record is not task/source acceptance.
+
+## Initial regression checkpoint (not acceptance)
+
+Readiness second round `review-8x42ni` approved as-is, zero findings; root promoted the task and began source repair. Component regressions failed before repair (`8x42pq`: 4 tests, 3 failures and one missing-new-API error), then model/aggregation tests passed (`8x42q4`: 15 tests, 38 assertions). Actual CLI disposable fixture `8x42qo` ran a passing first target followed by a process exiting 9 after a green-looking summary: CLI exit 1, terminal execution diagnostic, saved summary `success: false` with original parsed counts. This is an initial path only; full pinned mode/timeout/SIGINT matrix and final review remain open.

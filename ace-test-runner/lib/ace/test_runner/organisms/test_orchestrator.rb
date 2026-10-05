@@ -519,7 +519,8 @@ module Ace
             end_time: Time.now,
             deprecations: parsed_result[:deprecations],
             raw_output: execution_result[:stdout],
-            stderr: execution_result[:stderr]
+            stderr: execution_result[:stderr],
+            execution_success: execution_result[:success] == true
           )
         end
 

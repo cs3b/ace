@@ -76,6 +76,7 @@ module Ace
           lines << ""
           lines << "**Generated:** #{timestamp.strftime("%Y-%m-%d %H:%M:%S")}"
           lines << "**Status:** #{success? ? "✅ Success" : "❌ Failed"}"
+          lines << "**Execution failure:** #{result.execution_error}" unless result.execution_success
           lines << ""
 
           lines << "## Summary"

@@ -160,7 +160,8 @@ module Ace
           combined_stderr = all_results.map { |r| r[:stderr] }.join("\n")
 
           # Determine success
-          success = total_summary[:failures] == 0 && total_summary[:errors] == 0
+          success = all_results.all? { |result| result[:success] == true } &&
+            total_summary[:failures] == 0 && total_summary[:errors] == 0
 
           {
             stdout: combined_stdout,
