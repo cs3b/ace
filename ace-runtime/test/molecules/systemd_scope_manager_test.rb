@@ -22,7 +22,8 @@ class SystemdScopeManagerTest < AceRuntimeTestCase
         "InvocationID" => "a" * 32, "ControlGroup" => "/ace-worker.slice",
         "MainPID" => unit.end_with?(".service") ? "99" : "0", "Slice" => "ace-worker.slice", "Job" => "",
         "FragmentPath" => "/etc/systemd/system/#{unit}", "DropInPaths" => ""}
-      bytes = values.map { |key, value| "#{key}=#{value}\n" }.join
+      requested = argv.find { |arg| arg.start_with?("--property=") }.delete_prefix("--property=").split(",")
+      bytes = values.select { |key, _| requested.include?(key) }.map { |key, value| "#{key}=#{value}\n" }.join
       transform ? transform.call(unit, bytes) : bytes
     end
   end
@@ -37,6 +38,12 @@ class SystemdScopeManagerTest < AceRuntimeTestCase
     assert_equal "ace-worker.slice", units.fetch("slice").fetch("Id")
     assert_equal "99", units.fetch("service").fetch("MainPID")
     assert_equal 2, @command.calls.size
+    slice_properties = @command.calls.first.first.find { |arg| arg.start_with?("--property=") }
+    refute_includes slice_properties, "MainPID"
+    refute_includes slice_properties, "Slice"
+    service_properties = @command.calls.last.first.find { |arg| arg.start_with?("--property=") }
+    assert_includes service_properties, "MainPID"
+    assert_includes service_properties, "Slice"
     @command.calls.each do |argv, timeout|
       assert_equal 5, timeout
       assert_includes argv, "--system"
