@@ -246,6 +246,12 @@ module Ace
         # Canonical consumers reverify retained signed settlement without creating
         # a new local transition. The same event lock and proof owner are used.
         def verify_reconciliation(event:, receipt:, signed_bytes:, signature:, expected_registration:)
+          unless expected_registration.is_a?(Hash) && expected_registration.keys.sort ==
+              %w[event_id attempt_id payload_sha256 receipt_key_sha256].sort &&
+              %w[event_id attempt_id].all? { |key| expected_registration[key].is_a?(String) && EVENT.match?(expected_registration[key]) } &&
+              %w[payload_sha256 receipt_key_sha256].all? { |key| expected_registration[key].is_a?(String) && expected_registration[key].match?(/\A[0-9a-f]{64}\z/) }
+            raise ValidationError, "canonical reconciliation requires exact registration"
+          end
           reconcile_record(event: event, receipt: receipt, signed_bytes: signed_bytes,
             signature: signature, expected_registration: expected_registration, settle: false)
         end

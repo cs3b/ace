@@ -45,6 +45,12 @@ module Ace
               assert_equal "completed", result.fetch("state")
               refute result.key?("reconciliation_refusal")
             end
+            [nil, {}, registration.merge("extra" => true), registration.merge("payload_sha256" => "bad")].each do |invalid|
+              assert_raises(ValidationError) do
+                factory.verify_reconciliation(event: "event", receipt: receipt, signed_bytes: bytes,
+                  signature: signature, expected_registration: invalid)
+              end
+            end
             before = Dir.glob(File.join(root, "**", "*"), File::FNM_DOTMATCH)
               .select { |entry| File.file?(entry) }.to_h { |entry| [entry, File.binread(entry)] }
             verified = factory.verify_reconciliation(event: "event", receipt: receipt,
