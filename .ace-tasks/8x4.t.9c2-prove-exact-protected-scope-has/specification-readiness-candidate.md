@@ -21,8 +21,8 @@ gate. No current behavior contract depends on a further Captain answer.
 | Native | Fixed same-User unprivileged readiness/ACL action; authority independently checks genuine kernel peer against MainPID/birth/InvocationID before each write. FD leakage/in-process injection forbidden. Replacement/handoff refuses; never repin. |
 | Local resources | Exact resource_identities for scratch checkout/Git metadata, harness state/output/cache/temp and native runtime roots, protected by immutable ancestor permissions and mount/FD/socket/route boundaries. Canonical candidate_root is separate authority quarantine. |
 | Seal/closure | Canonical irreversible old-generation admission seal precedes systemd StopUnit; retained parent cgroup identity plus recursive populated=0 and boundary revalidation produce private positive proof. |
-| External effects | Seal serializes with new service request/claim/begin_dispatch admission. Existing issued requests settle through their owner. Terminal consumers independently require verified service settlement/inbox reconciliation; cgroup emptiness cancels no remote operation. |
-| Interfaces | Existing Authority framing: read-only observe_execution_scope, mutation close_execution_scope, closed params/results/refusal behavior in scope-owner-proposal.md and usage examples. No new CLI, root argv or caller-supplied proof. |
+| External effects | Seal serializes with new service request/effect-claim/begin_dispatch and final fresh receiver authorization. Settlement-only recovery claims/challenges permit unclaimed requests to reach verified no-effect through the same owner; admitted effects still settle. Terminal consumers independently require verified service settlement/inbox reconciliation; cgroup emptiness cancels no remote operation. |
+| Interfaces | Existing Authority framing: read-only observe_execution_scope, mutation close_execution_scope, closed params/results/refusal behavior in scope-owner-proposal.md, sealed-service-settlement-contract.md and usage examples (including recovery-only service calls). No new CLI, root argv or caller-supplied proof. |
 | Restart/reuse | Reconstruct canonical lineage and reopen exact same-boot retained scope, otherwise hold uncertainty. Historical proof cannot authorize a new generation. Fresh slot reuse only after positive old closure and canonical release. |
 
 ## Coordination and private event precision
@@ -74,7 +74,11 @@ attempt returns missing. The two-phase mutation/replay behavior remains unchange
 
 ## Review and acceptance boundary
 
-No undefined interface, ownership, platform or behavior choice remains for this
+The prior fda55 whole-task review requested the concrete seal-recovery repair;
+sealed-service-settlement-contract.md now defines that behavior and closed API.
+That historical REQUEST CHANGES verdict is retained, not rewritten as approval.
+This frozen revision is submitted for rereview. No undefined interface, ownership,
+platform or behavior choice remains for this
 engineering baseline. Whole-task independent readiness review should assess the
 coherent contract and identify any concrete counterexample or missing rule.
 Promotion is not performed by this drafting lane.

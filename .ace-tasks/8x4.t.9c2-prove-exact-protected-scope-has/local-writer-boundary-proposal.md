@@ -156,8 +156,12 @@ that can directly mutate worker scratch cannot qualify under this selected profi
 Use verified byte transfer and separately owned staging/output instead.
 
 At canonical seal, serialize with existing service and local-write admission:
-no new request/claim/begin_dispatch may authorize an effect for that old generation.
-Previously dispatched work may still complete; its completion/settlement remains
+no new request/effect claim/begin_dispatch or final fresh receiver authorization
+read may authorize an effect for that old generation. Settlement-only claim
+admission is explicitly allowed by sealed-service-settlement-contract.md; it
+creates recovery identity/challenge only, never effect permission. Requested but
+unclaimed and already claimed work settle through that exact contract.
+Previously admitted/dispatched work may still complete; its completion/settlement remains
 accepted through its existing owner so sealing cannot strand it. Buffered requests,
 lost replies and receiver work already in flight cannot be treated as canceled
 because the worker/socket died. Before finish or terminal stop releases ownership,

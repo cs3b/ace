@@ -15,3 +15,11 @@ behavior or additional Captain permission gate remains claimed for the authorize
 engineering baseline. This is the author's readiness claim for independent review,
 not a reviewer verdict, status promotion, implemented capability or installed proof.
 Task stays draft/needs_review until that independent whole-task result.
+
+Independent whole-task review of fda55dcdfe33a2b75d0a6aab38114e2b18597926
+returned REQUEST CHANGES for the requested-before-claim seal recovery gap. The
+retained review is .ace-local/review/9c2-whole-spec-readiness-review.md. The new
+sealed-service-settlement-contract.md supplies settlement-only claim identity,
+fresh challenge/completion and final receiver authorization seal guards through
+the existing owner. This is a repaired frozen candidate awaiting rereview; the
+historical verdict is not erased or represented as approval. Task stays draft.

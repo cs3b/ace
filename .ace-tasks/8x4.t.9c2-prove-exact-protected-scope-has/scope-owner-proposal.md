@@ -301,7 +301,9 @@ chosen design; silently exposing their sockets would invalidate the proposal.
 
 **9c2 / generic ACE** owns the closed map/manifest and generation contracts,
 system-manager/native observation integration, public owner calls, lifecycle
-admission/seal/proof journal semantics, restart/refusal/reuse, 09j adaptation,
+admission/seal/proof journal semantics, sealed-service settlement-only recovery
+and final receiver seal guard (sealed-service-settlement-contract.md),
+restart/refusal/reuse, 09j adaptation,
 portable installer validation and permitted installed acceptance fixtures. It
 must provide an auditable bounded native readiness/ACL setup contract and verify
 its actual artifacts. It implements no Lab project policy or second state owner.
