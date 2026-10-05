@@ -1,0 +1,12 @@
+# Independent source review round 1 — 2026-10-05
+
+Candidate `f2a6affd694d51e64e93747b898090e13badf767`, compared with main `d0ffb6eed`. Independent Sol 6.1 code review `review-8x43dy` completed with changes requested. Four feedback items are verified pending; no source acceptance or installed task completion is recorded.
+
+1. `8x43kfh7`, high: native creation calls `workspace.create` before `layout.apply`; actual Herdr 0.9.3 creates a default shell in the first operation. This launches an ungated process outside the bootstrap contract. The author confirmed the actual native source behavior. Repair direction: root-installed workspace container bound to exact native server birth/socket generation; `layout.apply` alone creates a fresh bootstrap tab/pane. No adoption, current-workspace lookup, fallback, or extra shell. Actual native process-count proof and contract review are required.
+2. `8x43kfh8`, high: public inspection refuses an exited child before terminate can submit abort, despite retained pidfd proof. Root executed reviewer probes in the unchanged candidate worktree, receipt `assign/8x43m9`: 15 tests/107 assertions, zero failures. The probes deliberately assert the existing defective behavior, so this green result confirms the finding, not the repair.
+3. `8x43kfh9`, medium: a 17,000-digit scope commits a reservation then cannot fit the 16 KiB response envelope. The same root probe confirms canonical reserved state followed by response refusal. Bound input before mutation and ensure accepted replies fit.
+4. `8x43kfha`, medium: positive distinct-UID protected launch under enforced Yama=2 remains unverified. Installed binary refusal under shared Yama=0 is negative evidence only. Keep the installed acceptance gate open; do not modify shared host policy to manufacture evidence.
+
+Additional author self-audit: an initially inconclusive abort remained uncertain after later positive child exit with no release ever issued. Fail-before isolated receipt `8x43i4` and developing repair `8x43j1` are retained by the author; public recovery and CAS-safe absence-of-release tests remain part of the next review.
+
+Author full Assign `8x43kv` reported 876 tests/3861 assertions, two skips and no errors, but source/test edits occurred while it ran. This is an evolving baseline only, not a frozen final-source acceptance. Final full verification must use the integrated corrected runner and the final reviewed source revision.

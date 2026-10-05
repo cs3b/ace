@@ -53,7 +53,9 @@ module Ace
               assertions: result.assertions,
               duration: result.duration,
               pass_rate: result.pass_rate,
-              success: result.success?
+              success: result.success?,
+              execution_success: result.execution_success,
+              execution_error: result.execution_error
             },
             timing: {
               start_time: result.start_time&.iso8601,

@@ -104,22 +104,18 @@ module Ace
                 runs: 0,
                 assertions: 0,
                 failures: 0,
-                errors: test_files.size,  # Count all test files as errors
+                errors: 0,  # Execution failure is distinct from completed test errors
                 skips: 0,
                 passed: 0
               },
               failures: [],
-              errors: [{
-                message: execution_result[:stderr].strip,
-                type: "LoadError",
-                files: test_files
-              }],
+              errors: [],
               deprecations: [],
               duration: execution_result[:duration]
             }
           elsif execution_result[:commands] && execution_result[:commands].is_a?(Array)
             # Each file was executed separately, parse and sum them all
-            aggregate_individual_results(execution_result[:stdout])
+            aggregate_individual_results(execution_result.fetch(:execution_outputs))
           else
             # Single command execution (by-target)
             @result_parser.parse_output(execution_result[:stdout])
@@ -519,17 +515,16 @@ module Ace
             end_time: Time.now,
             deprecations: parsed_result[:deprecations],
             raw_output: execution_result[:stdout],
-            stderr: execution_result[:stderr]
+            stderr: execution_result[:stderr],
+            execution_success: execution_result[:success] == true
           )
         end
 
-        def aggregate_individual_results(combined_output)
-          # Split output by test file executions
-          individual_outputs = combined_output.split(/^Started with run options/)
-          individual_outputs.shift if individual_outputs.first && individual_outputs.first.empty?
+        def aggregate_individual_results(individual_outputs)
+          # Process boundaries come from the executor, never text inside stdout.
 
           aggregated = {
-            raw_output: combined_output,
+            raw_output: individual_outputs.join("\n"),
             summary: {
               runs: 0,
               assertions: 0,
@@ -545,7 +540,6 @@ module Ace
           }
 
           individual_outputs.each do |output|
-            output = "Started with run options" + output  # Restore the split text
             parsed = @result_parser.parse_output(output)
 
             # Sum up the counts

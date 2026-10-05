@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Preserve unsuccessful execution through target aggregation and saved/CLI verdicts even after passing partial output; distinguish operator interruption from completed test errors.
+
 ## [0.27.1] - 2026-09-29
 
 ### Fixed
