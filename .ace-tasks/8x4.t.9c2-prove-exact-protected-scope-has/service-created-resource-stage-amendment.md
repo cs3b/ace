@@ -15,12 +15,15 @@ an exact fixed host path, in-unit view, creation directive and protected ancesto
 in that manifest. The partition is derived from the authenticated fixed artifact,
 not a caller-supplied omission list. No writable path may remain unclassified.
 
-`scope_bound` additionally records `host_mount_namespace_identity`, exactly
-`{device, inode}` from the opened host mount-namespace object. The authority must
-positively verify that its resource observation namespace is the installed system
-manager host namespace; a private authority namespace cannot silently substitute.
-Together with parent `boot_id`, this identifies the namespace of every parent
-`mount_id`. Host namespace/object handles remain pinned during observation.
+`scope_bound` additionally records `resource_mount_namespace_identity`, exactly
+`{device, inode}` from its own opened `/proc/self/ns/mnt` object. This is
+truthfully the authority resource-observation namespace, not a claim about PID 1
+or an inferred globally shared host namespace. Together with parent `boot_id`,
+it identifies every parent `mount_id`. The verified root-installed authority
+profile exposes precisely the manifest backing paths/ancestors; actual open-object
+observations and the cross-view join below establish those mappings. The
+authority pins its namespace/object handles during observation; it needs neither
+`/proc/1/ns/mnt` access nor CAP_SYS_PTRACE.
 
 `scope_bound.resource_identities` contains the existing backing roots and protected
 ancestors, using the unchanged closed identity object
@@ -31,8 +34,8 @@ inode. The complete existing set must be present before service activation.
 `scope_native_bound` becomes exactly
 `{scope_generation, scope_binding_event_id, service_invocation_id,
 server_identity, socket_identity, workspace_id, mount_namespace_identity,
-resource_identities}`. `mount_namespace_identity` is exactly `{device, inode}`
-from the opened mount-namespace object of the already authenticated native server
+resource_observer_identity, resource_identities}`. `mount_namespace_identity` is exactly `{device, inode}`
+from the same-User readiness hook's opened mount-namespace object of the already authenticated native server
 whose exact kernel identity is `server_identity`; the existing parent `boot_id`
 and native binding event identify its origin. Namespace identity is observed and
 pinned with that server, never supplied by the caller or taken from a same-PID
@@ -86,6 +89,62 @@ Readers derive the complete union only from the same canonical lineage, never
 from current-path discovery. A missing native stage means no leaf identity was
 admitted, not null fields, compatibility repair or permission to release.
 
+## Existing readiness hook as the bounded observer
+
+The fixed root-installed same-User ExecStartPost action observes the exact native
+server through `/proc/<pid>/root`, `/proc/<pid>/mountinfo` and `/proc/<pid>/ns/mnt`.
+It observes the server namespace, never substitutes its own per-command namespace.
+No setns, ptrace attach, new capability, privileged prefix, native API extension
+or additional controller is permitted. The action opens/pins server root and
+namespace objects and checks the supplied exact server kernel birth/credentials
+before and after the bounded object/topology observations; PID reuse, server
+replacement, lost handles or access denial refuses readiness. Resource paths
+remain fixed manifest inputs, not caller paths.
+
+This READ_FSCREDS route requires the original native baseline's real/effective/
+saved UID/GID to match the hook filesystem UID/GID, dumpable=1, the approved empty
+capability sets, and installed proc/LSM access permitting these reads. Ordinary
+unprivileged non-setuid/non-file-capability native exec is the supported baseline;
+no dumpability/security setting is changed to obtain access. The worker gate's
+separate non-dumpable condition remains intact. Enforced Yama=2 continues to deny
+same-UID ATTACH/control; its kernel hook does not itself deny READ mode. Source
+inspection found no dumpability/credential-changing operation in pinned Herdr
+7b116c05bfda646af39d2524c54e70c751f57ee8 src. This is feasibility evidence only:
+the installed artifact/profile and successful permitted reads must be verified,
+not inferred from that absence. Failed reads cannot be repaired by relaxing Yama,
+proc policy, credentials or adding capabilities.
+
+The existing authenticated canonical authority endpoint gains a private readiness
+exchange for this fixed hook, not a worker-callable admission verb. While that
+exact fixed service is activating, authority authenticates the connected hook's
+kernel PID/UID/GID/birth and same-parent membership against the system manager's
+current exact service InvocationID and ExecStartPost ControlPID. The verified
+fixed unit/artifact identifies the only permitted action. Same UID alone is
+insufficient. The authority then supplies a fresh connection-bound challenge
+and its already observed original server kernel identity plus exact manifest
+selection. The hook replies on that authenticated connection with challenge,
+server identity, server namespace identity, bounded resource observations and
+bounded mount projection facts. Before accepting the reply, authority repeats
+hook ControlPID/birth/membership and original server birth/incarnation checks.
+Malformed, oversized, wrong peer/challenge/lineage or delayed post-activation
+reports refuse. Only fixed baseline/hook processes can run at this phase; no
+payload, restored sessions, extensions or outside same-UID executors may exist.
+
+The report is an ephemeral observation input, not a journal/store or a reusable
+file in worker-writable storage. Authority independently observes backing objects
+in its own namespace and checks the complete join against the authenticated hook
+report and fixed installation. It commits `scope_native_bound` only after that
+same activation successfully completes and it independently verifies native
+endpoint/readiness and unchanged server identity. The existing native payload
+additionally records `resource_observer_identity` using the existing closed kernel
+process identity schema, capturing the authenticated original hook origin. The
+challenge is not durable authority and is not a replay token. Lost report,
+authority restart before commit, hook/activation failure or seal means no native
+binding; exact held-parent cleanup remains available without repeat activation.
+After commit, replay reads the immutable canonical native event; the departed hook
+and its old proc namespace need not still be live. This readiness snapshot never
+replaces later boundary revalidation or whole-parent closure.
+
 ## Closure, cleanup and reuse
 
 Before native binding, closure still seals the exact recorded retained parent,
@@ -122,7 +181,7 @@ adopted or copied into the next lineage.
 * Manifest verification: exhaustive lifecycle partition; reject omitted writable
   roots/views, duplicate/overlapping aliases, runtime ancestor writable by workers,
   preservation/restart changes and implicit persistent-root creation.
-* Parent bind: host namespace identity and existing roots/ancestors positively
+* Parent bind: authority observation namespace identity and existing roots/ancestors positively
   pinned, nonexistent runtime
   leaf does not require a fake inode; unexpected pre-existing leaf refuses start.
 * Native bind/reader: exact server mount namespace and fresh runtime/view
@@ -135,6 +194,10 @@ adopted or copied into the next lineage.
 * Lost start/readiness: no native event fabricated; known parent can close after
   verified fixed cleanup, empty retained parent and settled effects. Unknown
   parent, pending cleanup/activation and outside-writer conflict remain held.
+* Hook provenance: same-UID passive reads with Yama=2 succeed in the supported
+  fixture; denied proc/LSM or non-dumpable server refuses. Wrong ControlPID/birth,
+  unrelated same-UID reporter, stale challenge, replacement server, own-namespace
+  substitution and late report refuse without canonical native binding.
 * Stop/reuse: native-bound leaf removed by completed fixed stop is compatible
   with whole-parent proof; absence alone, replacement leaf and persistent late
   root are negative cases. Release then fresh next-generation inode succeeds.
@@ -149,3 +212,12 @@ runtime leaf removal on stop, persistent state/cache/log directories, ownership
 adjustment and RuntimeDirectoryPreserve. These justify stage timing only; they do
 not prove an installed profile, completed cleanup or writer absence. All such
 claims require the existing authenticated owner and boundary observations.
+
+[Linux v6.12 ptrace access source](https://raw.githubusercontent.com/torvalds/linux/v6.12/kernel/ptrace.c)
+and [Yama source](https://raw.githubusercontent.com/torvalds/linux/v6.12/security/yama/yama_lsm.c)
+distinguish same-credential/dumpability READ checks from Yama ATTACH restrictions.
+[proc root semantics](https://man7.org/linux/man-pages/man5/proc_pid_root.5.html)
+provides the target process's filesystem/mount view;
+[namespace semantics](https://man7.org/linux/man-pages/man7/namespaces.7.html)
+defines namespace handles and READ_FSCREDS access. Kernel/profile equivalence on
+the installed supported platform remains acceptance work.
