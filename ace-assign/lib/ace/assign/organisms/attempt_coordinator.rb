@@ -46,6 +46,41 @@ module Ace
 
         attr_reader :store
 
+        # Read-only exact native reverse binding from accepted history. A PID
+        # supplied by a trusted boundary must be kernel-derived; no command
+        # flag, environment address or local cache grants this authority.
+        # Missing/dead/changed owners remain a classified refusal.
+        def runtime_binding(attempt_id:, caller_pid: nil)
+          attempt = recover_managed_attempt(nil, attempt_id)
+          raise AttemptErrors::NotFound, "Attempt '#{attempt_id}' not found in accepted history" unless attempt
+          unless attempt.managed? && attempt.active?
+            raise AttemptErrors::ReceiptRejected, "Native reverse requires an active managed attempt"
+          end
+          binding = reconciler.recorded_binding(attempt)
+          observation = reconciler.observation(attempt)
+          unless binding && observation["liveness"] == "live" &&
+              binding["process_identity"] == observation["identity"] &&
+              %w[runtime session pane].all? { |key| binding[key].is_a?(String) && !binding[key].empty? }
+            raise AttemptErrors::ReceiptRejected, "Exact native owner binding is unavailable or changed"
+          end
+          unless caller_pid.nil?
+            unless caller_pid.is_a?(Integer) && caller_pid.positive?
+              raise AttemptErrors::UnauthorizedIdentity, "Kernel caller process is unavailable"
+            end
+            caller = Ace::Runtime.resolve(binding["runtime"]).process_binding(pane: binding["pane"], caller_pid: caller_pid)
+            unless caller == binding
+              raise AttemptErrors::UnauthorizedIdentity, "Caller does not descend from the recorded native owner"
+            end
+          end
+          latest = recover_managed_attempt(attempt.binding.assignment_id, attempt_id)
+          unless latest&.active? && latest.binding.to_h == attempt.binding.to_h && reconciler.recorded_binding(latest) == binding
+            raise AttemptErrors::ReceiptRejected, "Native owner changed during observation"
+          end
+          binding
+        rescue Ace::Runtime::Error => e
+          raise AttemptErrors::ReceiptRejected, "Native owner observation unavailable (#{e.class})"
+        end
+
         # Claim an external service effect before dispatch. Only a managed,
         # active attempt for the exact project and candidate may own it. The
         # guard re-runs inside the journal lock per CAS attempt, so a
