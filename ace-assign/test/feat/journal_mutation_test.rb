@@ -165,6 +165,29 @@ module Ace
         end
       end
 
+      def test_import_preserves_exact_bytes_under_line_conversion_and_clean_filters
+        ["autocrlf", "filter"].each do |conversion|
+          with_journal do |journal, repo|
+            git(repo, "config", "core.autocrlf", "true")
+            if conversion == "filter"
+              git(repo, "config", "filter.evidence.clean", "tr a-z A-Z")
+              git(repo, "config", "filter.evidence.smudge", "tr A-Z a-z")
+              File.write(File.join(repo, ".git/info/attributes"), "evidence/imports/* filter=evidence\n")
+            end
+            content = "artifact\r\n\r\n".b
+            first = mutate(journal) { plan(content) }
+            assert_equal content, journal.blob("evidence/imports/fixture-1")
+            event = journal.read_events("assignment-1").find { |e| e["type"] == "evidence_import" }
+            assert_equal Digest::SHA256.hexdigest(content), event.dig("payload", "sha256")
+            assert_equal first, mutate(journal) { flunk "replay must not rewrite bytes" }
+            mutate(journal, id: "mutation-2", expected: 1) { plan(content) }
+            assert_equal content, journal.blob("evidence/imports/fixture-1")
+            FileUtils.rm_rf(journal.checkout_root)
+            assert_equal content, journal.blob("evidence/imports/fixture-1")
+          end
+        end
+      end
+
       def canonical_import(journal)
         intent = Models::EvidenceEvent.build(type: "intent", attempt_id: "attempt-1",
           payload: {"scope" => "010", "project_id" => "fixture", "actor" => "worker",

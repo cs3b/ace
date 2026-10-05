@@ -462,7 +462,13 @@ input:#{Regexp.escape(request.fetch("input_digest"))} outcome:(\S+)( no-effect:(
               attempt = @store.load(assignment_id, attempt_id) || recover_managed_attempt(assignment_id, attempt_id)
               raise AttemptErrors::NotFound, "Attempt '#{attempt_id}' not found" unless attempt
 
-              ensure_journal_consistent!(attempt) if attempt.managed?
+              derived = ensure_journal_consistent!(attempt) if attempt.managed?
+              attempt = attempt.with(state: derived.state) if derived
+              if attempt.state == "reserved"
+                raise AttemptErrors::EvidenceUnavailable,
+                  "Reservation #{attempt_id} is unbound; protected launch reconciliation requires positive " \
+                  "no-execution/no-surviving-writer proof before abort"
+              end
               raise AttemptErrors::InvalidState, "Attempt #{attempt_id} is terminal; accepted history is immutable" if attempt.terminal?
               raise AttemptErrors::InvalidState, "Attempt #{attempt_id} is uncertain; reconcile before finishing" if attempt.uncertain?
 
@@ -1078,6 +1084,10 @@ input:#{Regexp.escape(request.fetch("input_digest"))} outcome:(\S+)( no-effect:(
         end
 
         def accept(attempt, receipt, live_head, pre_events = [])
+          # Reject illegal terminal outcomes before accepting any receipt.
+          if %w[succeeded failed].include?(receipt.verdict)
+            Atoms::AttemptStateMachine.transition!(attempt.state, receipt.verdict)
+          end
           previous = pre_events.last&.dig("digest") || last_event_digest(attempt)
           event = Models::EvidenceEvent.build(
             type: "receipt_accepted",

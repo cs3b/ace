@@ -720,6 +720,45 @@ end
         assert_nil projection["candidate_head"]
       end
 
+      def unbound_reservation(coordinator, assignment)
+        journal = coordinator.send(:journal_for)
+        intent = Models::EvidenceEvent.build(type: "intent", attempt_id: "unbound",
+          payload: {"scope" => "010", "project_id" => "ace", "task_id" => assignment.task_id,
+            "base_head" => git(@repo, "rev-parse", "HEAD").strip,
+            "actor" => @identity.actor, "role" => @identity.role, "runtime" => @identity.runtime})
+        journal.append(assignment_id: assignment.id, attempt_id: "unbound", events: [intent])
+        journal.derived_attempts(assignment.id).first
+      end
+
+      def test_finish_cannot_accept_unbound_reservation_without_cache
+        coordinator = build_coordinator
+        assignment = create_assignment
+        attempt = unbound_reservation(coordinator, assignment)
+        journal = coordinator.send(:journal_for)
+        before = journal.ref_value
+        assert_raises(AttemptErrors::EvidenceUnavailable) do
+          coordinator.finish(attempt_id: attempt.attempt_id, receipt_path: build_receipt(attempt))
+        end
+        assert_equal before, journal.ref_value
+        assert_empty journal.accepted_receipts(assignment.id)
+        assert_equal "reserved", journal.derived_attempts(assignment.id).first.state
+      end
+
+      def test_finish_cannot_accept_unbound_reservation_with_stale_running_cache
+        coordinator = build_coordinator
+        assignment = create_assignment
+        attempt = unbound_reservation(coordinator, assignment)
+        coordinator.store.save(attempt.with(state: "running"))
+        journal = coordinator.send(:journal_for)
+        before = journal.ref_value
+        assert_raises(AttemptErrors::EvidenceUnavailable) do
+          coordinator.finish(attempt_id: attempt.attempt_id, receipt_path: build_receipt(attempt))
+        end
+        assert_equal before, journal.ref_value
+        assert_empty journal.accepted_receipts(assignment.id)
+        assert_equal ["unbound"], journal.active_attempts(assignment.id).map(&:attempt_id)
+      end
+
       def test_intent_only_reservation_reports_blocked_and_preserves_ownership
         coordinator = build_coordinator
         assignment = create_assignment

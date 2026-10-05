@@ -51,9 +51,11 @@ module Ace
                           "parameters_digest" => parameters_digest, "assignment_id" => assignment_id,
                           "attempt_id" => attempt_id, "data" => data})
               events << receipt
-              paths = write_mutation_blobs(plan.fetch(:blobs, {}))
+              blobs = plan.fetch(:blobs, {})
+              write_mutation_blobs(blobs, commit: old)
               write_event_files(assignment_id, events)
-              git!("-C", checkout_dir, "add", "--", "execution/#{assignment_id}", *paths)
+              git!("-C", checkout_dir, "add", "--", "execution/#{assignment_id}")
+              stage_mutation_blobs(blobs)
               git!("-C", checkout_dir, "-c", "user.name=ace-assign", "-c", "user.email=ace-assign@localhost",
                 "-c", "core.hooksPath=/dev/null", "commit", "-m", "evidence: authority #{operation} #{mutation_id}")
               commit = git!("-C", checkout_dir, "rev-parse", "HEAD").first
@@ -118,13 +120,28 @@ module Ace
           end
         end
 
-        def write_mutation_blobs(blobs)
+        # Git clean/smudge filters and CRLF conversion cannot redefine accepted
+        # evidence bytes. Insert unfiltered objects after staging the events.
+        def stage_mutation_blobs(blobs)
+          blobs.each do |path, bytes|
+            oid, error, status = Open3.capture3("git", "hash-object", "-w", "--stdin", "--no-filters",
+              chdir: repo_root, stdin_data: bytes.b)
+            unless status.success?
+              raise AttemptErrors::EvidenceUnavailable, "Cannot write canonical evidence object: #{error.strip}"
+            end
+            git!("-C", checkout_dir, "update-index", "--add", "--cacheinfo", "100644,#{oid.strip},#{path}")
+          end
+        end
+
+        def write_mutation_blobs(blobs, commit:)
           blobs.map do |path, bytes|
             validate_blob_path!(path)
             raise ArgumentError, "canonical blob must contain bytes" unless bytes.is_a?(String)
             target = File.join(checkout_dir, path)
             if File.exist?(target)
-              unless File.binread(target) == bytes.b
+              # A checkout may have smudged the file; immutability is checked
+              # against accepted bytes at the canonical commit, not projection.
+              unless blob(path, commit: commit) == bytes.b
                 raise AttemptErrors::Conflict, "Canonical evidence blob is immutable"
               end
             else
