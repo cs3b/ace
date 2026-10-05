@@ -27,6 +27,111 @@ module Ace
                "started_at" => "linux:0123-abcd:199", "host" => "fixture"}}}}}
       end
 
+      def inbox_data
+        value = data
+        value["authorities"]["authority"]["composition"] = "services"
+        project = value["projects"]["project"]
+        project["service_executor_uids"] = [13004]
+        project["supervisor_uids"] = [13005]
+        project["peer_credentials"]["13004"] = {"gid" => 13004, "groups" => [13004], "scratch_root" => "/var/lib/ace-executor"}
+        project["peer_credentials"]["13005"] = {"gid" => 13005, "groups" => [13005], "scratch_root" => "/var/lib/ace-supervisor"}
+        project["service_receivers"] = {"setup" => {"executor_uid" => 13004,
+          "socket_path" => "/run/ace-setup/control.sock", "staging_root" => "/var/lib/ace-setup"}}
+        project["inbox_contexts"] = {"inbox" => {"deliveries_dir" => "/var/lib/ace-inbox",
+          "receipt_public_key" => "/etc/ace/inbox-public.pem", "native_mapping_id" => "mapping",
+          "pi_queue_client" => "/usr/libexec/ace-pi-identity", "pi_queue_client_sha256" => "b" * 64,
+          "supervisor_uids" => [13005]}}
+        value
+      end
+
+      def test_inbox_context_is_fixed_project_selection_without_native_repinnning
+        deployment = Authority::Deployment.new(inbox_data)
+        context = deployment.inbox_context("mapping", "inbox")
+        assert_equal "mapping", context.fetch("native_mapping_id")
+        refute context.key?("server_identity")
+        refute context.key?("socket_identity")
+        context["deliveries_dir"] = "/tmp/caller-change"
+        assert_equal "/var/lib/ace-inbox", deployment.inbox_context("mapping", "inbox").fetch("deliveries_dir")
+        assert_raises(AttemptErrors::EvidenceUnavailable) { deployment.inbox_context("mapping", "missing") }
+      end
+
+      def test_inbox_context_filesystem_refusal_preserves_private_directory_and_never_runs_client
+        Dir.mktmpdir("ace-inbox-context-", Etc.getpwuid(Process.uid).dir) do |root|
+          File.chmod(0700, root)
+          deliveries = File.join(root, "deliveries")
+          Dir.mkdir(deliveries, 0700)
+          File.write(File.join(deliveries, "retained"), "original")
+          key = File.join(root, "key.pem")
+          File.write(key, OpenSSL::PKey::RSA.new(1024).public_to_pem)
+          client = File.join(root, "client")
+          File.write(client, "#!/bin/sh\nexit 1\n")
+          File.chmod(0700, client)
+          value = inbox_data
+          service = value["authorities"]["authority"]
+          service.merge!("uid" => Process.uid, "gid" => Process.gid, "groups" => Process.groups.sort)
+          context = value["projects"]["project"]["inbox_contexts"]["inbox"]
+          context.merge!("deliveries_dir" => deliveries, "receipt_public_key" => key,
+            "pi_queue_client" => client, "pi_queue_client_sha256" => Digest::SHA256.file(client).hexdigest)
+          deployment = Authority::Deployment.new(value)
+          # Genuine filesystem ownership fails root-installed artifact policy;
+          # no chmod/chown, global fallback or identity subprocess is attempted.
+          assert_raises(Ace::Runtime::RuntimeUnavailableError) { deployment.verify_inbox_context!("mapping", "inbox") }
+          File.chmod(0770, deliveries)
+          assert_raises(Ace::Runtime::RuntimeUnavailableError) { deployment.verify_inbox_context!("mapping", "inbox") }
+          File.chmod(0700, deliveries)
+          File.rename(deliveries, deliveries + "-original")
+          File.symlink(deliveries + "-original", deliveries)
+          assert_raises(Ace::Runtime::RuntimeUnavailableError) { deployment.verify_inbox_context!("mapping", "inbox") }
+          assert_equal "original", File.read(File.join(deliveries, "retained"))
+          assert_equal 0700, File.stat(deliveries + "-original").mode & 0777
+        end
+      end
+
+      def test_inbox_effective_acl_mask_cannot_hide_foreign_write_or_private_read
+        deployment = Authority::Deployment.new(inbox_data)
+        rows = nil
+        acl = Object.new
+        acl.define_singleton_method(:entries) { |path| path == "/installed" ? rows : nil }
+        deployment.define_singleton_method(:receiver_acl) { acl }
+        rows = [[1, 7, 0xffffffff], [4, 0, 0xffffffff], [32, 0, 0xffffffff], [16, 6, 0xffffffff], [2, 6, 13001]]
+        assert_raises(Ace::Runtime::RuntimeUnavailableError) { deployment.send(:verify_inbox_acl!, "/installed") }
+        rows[3][1] = 4
+        deployment.send(:verify_inbox_acl!, "/installed")
+        assert_raises(Ace::Runtime::RuntimeUnavailableError) { deployment.send(:verify_inbox_acl!, "/installed", private_leaf: true) }
+        rows[3][1] = 0
+        deployment.send(:verify_inbox_acl!, "/installed", private_leaf: true)
+      end
+
+      def test_inbox_context_rejects_unknown_fields_bad_roles_native_selection_and_artifacts
+        [->(context) { context["executable"] = "/tmp/arbitrary" },
+         ->(context) { context["supervisor_uids"] = [13001] },
+         ->(context) { context["supervisor_uids"] = [13005, 13005] },
+         ->(context) { context["native_mapping_id"] = "unknown" },
+         ->(context) { context["receipt_public_key"] = "relative.pem" },
+         ->(context) { context["pi_queue_client"] = "/usr/../tmp/client" },
+         ->(context) { context["pi_queue_client_sha256"] = "B" * 64 }].each do |change|
+          value = inbox_data
+          change.call(value["projects"]["project"]["inbox_contexts"]["inbox"])
+          assert_raises(ArgumentError) { Authority::Deployment.new(value) }
+        end
+      end
+
+      def test_inbox_context_roots_cannot_alias_worker_receiver_authority_or_sibling_state
+        ["/var/lib/ace-worker/messages", "/var/lib/ace-setup", "/var/lib/ace-authority/inbox",
+          "/var/lib/ace-checkout", "/var/lib"].each do |root|
+          value = inbox_data
+          value["projects"]["project"]["inbox_contexts"]["inbox"]["deliveries_dir"] = root
+          assert_raises(ArgumentError) { Authority::Deployment.new(value) }
+        end
+        value = inbox_data
+        contexts = value["projects"]["project"]["inbox_contexts"]
+        contexts["second"] = contexts["inbox"].merge("deliveries_dir" => "/var/lib/ace-inbox/nested")
+        assert_raises(ArgumentError) { Authority::Deployment.new(value) }
+        value = inbox_data
+        value["authorities"]["authority"]["composition"] = "launch"
+        assert_raises(ArgumentError) { Authority::Deployment.new(value) }
+      end
+
       def test_fixed_mapping_and_source_composition_match
         deployment = Authority::Deployment.new(data)
         assert deployment.verify_composition!("authority", composition: "launch")
