@@ -1,0 +1,17 @@
+{
+  "source_head": "e2d3dad3e3c93247e0d741ddaef3cf07cddaa46f",
+  "source_delta": "c3bdc29c0 neutral termination diagnostic only, independently approved; installed artifacts remain e2d",
+  "host": "Darwin 25.6.0 arm64",
+  "guest_boot_id": "46e08d5c-b033-44df-8a82-c90025f718cd",
+  "qemu_session": 22184,
+  "qemu_exit": 0,
+  "verification_exit": 0,
+  "artifact_verification": "all exact manifest SHA256 verified before boot",
+  "original_rootfs_sha256": "70a70dc4a05b8e8ef0be606aa56729a9c7e609226060feb9921a94e71ce5276e",
+  "disk": "APFS clone independent-rootfs.img; original retained clean",
+  "network": "none",
+  "host_shares": "none",
+  "proof_sha256": "c2ee0d05e7f9c7d80cdb5154351351b4d1b69a48a0b75a0a49e4ae83db50e8ba",
+  "log_sha256": "dc4072f96217b0bd77a85992ebbcaa29c870762de8dfa545d1263ba20df109c7",
+  "scope": "Executed isolated installed proof only; remaining literal SC matrix and actual Lab separate"
+}

@@ -1,0 +1,11 @@
+# Independent installed protected launch verification
+
+2026-10-05 — root independently verified every cached artifact hash, inspected fixture/phase clients/boot/verifier, cloned the clean disk and executed QEMU HVF with no NIC, host shares or host credentials. Session **22184 exited 0** and the separate proof verifier exited 0. Root read the actual result, not only the exit code. Retained proof and run/hash metadata are in `evidence/installed-independent-hvf/`.
+
+Exact installed source: `e2d3dad3e3c93247e0d741ddaef3cf07cddaa46f`. Later `c3bdc29c0` changes only a termination diagnostic, independently inspected and approved; it is disclosed rather than claimed byte-identical to the installed build. Actual host is Darwin25.6.0 ARM64; guest is its own Debian6.1.0-53 kernel, boot `46e08d5c-b033-44df-8a82-c90025f718cd`, enforcing Yama2. The proof's `outer_kernel` records an earlier Docker reference, not the current HVF host. No host kernel policy was changed.
+
+Executed outcomes include actual distinct-UID public launch through registered/reserved/recorded/bound/issued, exact native/kernel child agreement and single payload; denied worker gate mimic and privileged operations; launcher loss before release with positive no-execution abort; lost release with exact canonical retry and no second payload; lost creation with one retained gate and no adoption/retry; issued child exit retaining uncertainty; authority crash/restart refusing to invent lost pidfd proof; endpoint replacement and closed container refusal; capability bounding and missing NNP refusal; root-installed setuid fixture unable to raise effective UID under NNP.
+
+**These executed cases PASS. This is not a claim that every literal task requirement or actual Lab acceptance is complete.** The author must map all SC3/SC4 windows and SC5 native-server restart/reinstallation/reconnect to actual evidence, and fill remaining gaps. Source integration may proceed under the independently accepted source review and executed package gates while the task remains in progress.
+
+Source gates read by root: Assign total888/3961, two existing skips, receipt8x45dm; Runtime175/485 receipt8x463l; Herdr463/1521 receipt8x463y, all zero failures/errors. Final main integration/post-merge verification remains separately recorded.
