@@ -924,10 +924,10 @@ When executing a step with a `skill:` field:
 |-------|-----------|---------|
 | `onboard` | `/as-onboard` | Load project context |
 | `ace:task-work` | `/as-task-work <taskref>` | Implement task changes |
-| `ace:github-pr-create` | `/as-github-pr-create` | Create pull request |
+| `ace:git-pr-create` | `/as-git-pr-create` | Create pull request |
 | `ace:review-pr` | `/as-review-pr [pr#]` | Review code changes |
 | `ace:git-commit` | `/as-git-commit` | Generate commit message |
-| `ace:github-pr-update` | `/as-github-pr-update` | Update PR description |
+| `ace:git-pr-update` | `/as-git-pr-update` | Update PR description |
 
 ## Error Handling
 

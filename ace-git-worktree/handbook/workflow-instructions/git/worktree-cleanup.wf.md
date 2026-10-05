@@ -21,7 +21,7 @@ ace-git-worktree cleanup --target main --remote origin
 This will:
 1. Refresh remote evidence (unless `--offline` is passed).
 2. Find all worktrees, local refs, and remote refs.
-3. Classify each using GitHub PR evidence (exact merge, stable patch equivalence) or Git ancestry.
+3. Classify each using selected-forge PR evidence (exact merge, stable patch equivalence) or Git ancestry.
 4. Output an ordered plan with a **Plan Digest**.
 
 ### Report Output Interpretation

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Canonical delivery consumes neutral attempt-bound PR operations, current executed test/independent review receipts and exact authorized merge evidence; optional release preparation remains separate from publication.
+
 ## [0.33.0] - 2026-09-28
 
 ### Added
