@@ -57,12 +57,14 @@ candidate_generation, head, receipt_sha256, transfer}` and receipt_artifacts
 bytes (normal receipt first; ordered declared artifact bytes follow). Success
 returns result_id, original/upload/normalized digests, ordered canonical artifact
 references, verdict, generation and journal_commit. It leaves the attempt active.
-After worker exit and positive original launch containment cleanup, the exact
+After worker exit and positive execution-scope no-writer proof from prerequisite
+9c2 (currently draft; positive finish is blocked until delivered), the exact
 launcher or mapped supervisor sends operation finish, mutation_id finish-1,
 params `{mapping_id, assignment_id, attempt_id, expected_generation,
 candidate_generation, head, result_id}` without a body. Success returns terminal
 state and accepted receipt_digest with canonical generation/commit. A worker
-finish is unauthorized. Pending effect/inbox/cleanup is evidence_unavailable and
+finish is unauthorized. Failed receipt settlement does not require an approved
+success review, but still requires all independent cleanup proofs. Pending effect/inbox/cleanup is evidence_unavailable and
 ownership remains held. Failed receipt with no artifacts still uploads its one
 receipt part and cannot assert no effect.
 
@@ -79,8 +81,10 @@ is supplied on this read.
 ## Retry after a lost reply
 
 Retry the identical submit_result or finish envelope with the original mutation
-ID. The original canonical reply returns with transport.replayed true and no
-second import/terminal release. Changing content under that ID conflicts; sending
+ID. For submit_result the original canonical reply returns with transport.replayed
+true only while its worker lineage remains live and attempt active; exit or
+terminality fails closed with evidence_unavailable. Finish exact replay returns
+its retained verified reply without re-running cleanup or releasing twice. Changing content under that ID conflicts; sending
 a fresh result ID for the same candidate or fresh finish ID after terminality
 conflicts. Missing canonical provenance/blob returns evidence_unavailable even
 if a disposable local cache still contains an earlier successful response.
