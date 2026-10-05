@@ -335,10 +335,12 @@ module Ace
                 sleep 5
                 exit! 0
               end
+              may_signal = true
               ready_writer.close
               assert ready_reader.wait_readable(0.5), "owned child should announce readiness"
-              assert_equal "ready", ready_reader.read
-              stopped_pid, stopped_status = Process.wait2(pid, Process::WUNTRACED)
+              assert_equal "ready", ready_reader.read_nonblock(5)
+              stopped_pid, stopped_status = wait_for_stopped_child(pid)
+              may_signal = stopped_status.stopped? if stopped_status
               assert_equal pid, stopped_pid
               assert stopped_status.stopped?
 
@@ -352,6 +354,8 @@ module Ace
               assert process_alive?(pid), "the original immediate predicate still sees the unreaped PID"
               refute wait_for_process_exit(pid, timeout: 0.02), "an unreaped owned child must not pass"
 
+              # Disable signaling before opening the only final-reaping gate.
+              may_signal = false
               reap_writer.write("reap")
               assert wait_for_process_exit(pid), "bounded observation should see absence after owned reaping"
               assert reaper.join(0.5), "owned reaper should finish"
@@ -360,13 +364,15 @@ module Ace
               assert status.signaled?
               assert_equal Signal.list.fetch("KILL"), status.termsig
             ensure
-              reap_writer&.close unless reap_writer&.closed?
               if pid
-                begin
-                  Process.kill("KILL", pid)
-                rescue Errno::ESRCH
-                  nil
+                if may_signal
+                  begin
+                    Process.kill("KILL", pid)
+                  rescue Errno::ESRCH
+                    nil
+                  end
                 end
+                reap_writer&.close unless reap_writer&.closed?
                 reaper&.join(0.5)
                 reaper&.kill if reaper&.alive?
                 cleanup_deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + 0.5
@@ -383,6 +389,16 @@ module Ace
             end
 
             private
+
+            def wait_for_stopped_child(pid, timeout: 0.5)
+              deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + timeout
+              loop do
+                result = Process.wait2(pid, Process::WUNTRACED | Process::WNOHANG)
+                return result if result
+                return nil if Process.clock_gettime(Process::CLOCK_MONOTONIC) >= deadline
+                sleep 0.01
+              end
+            end
 
             def wait_for_process_state(pid, expected, timeout: 0.5)
               deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + timeout
