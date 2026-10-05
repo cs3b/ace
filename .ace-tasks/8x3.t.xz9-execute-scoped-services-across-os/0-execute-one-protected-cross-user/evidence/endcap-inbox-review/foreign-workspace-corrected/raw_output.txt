@@ -1,0 +1,23 @@
+Started with run options --seed 41901
+
+InboxForeignNativeTest
+  test_signed_foreign_workspace_and_original_child_mismatch_refuse_before_import PASS (16.12s)
+  test_changed_same_id_and_uncontextual_registration_cannot_adopt_old_proof PASS (8.58s)
+  test_herdr_accepted_before_qjl_failure_replays_exact_signed_proof PASS (4.98s)
+  test_signed_consumed_import_replay_fetch_and_corruption_after_native_stop PASS (9.38s)
+  test_superseded_claim_history_is_retained_but_not_used_to_settle_a_new_claim PASS (12.91s)
+  test_wrong_registration_role_context_signature_and_body_refuse_without_import PASS (4.01s)
+  test_consumed_local_binding_must_match_canonical_native_workspace PASS (2.00s)
+  test_retained_proof_after_seal_requires_current_context_role_and_exact_launcher PASS (11.37s)
+
+Ace::Assign::EndcapInboxesTest
+  test_retained_proof_after_seal_requires_current_context_role_and_exact_launcher PASS (11.51s)
+  test_changed_same_id_and_uncontextual_registration_cannot_adopt_old_proof PASS (8.60s)
+  test_signed_foreign_workspace_and_original_child_mismatch_refuse_before_import PASS (15.73s)
+  test_superseded_claim_history_is_retained_but_not_used_to_settle_a_new_claim PASS (13.16s)
+  test_wrong_registration_role_context_signature_and_body_refuse_without_import PASS (4.06s)
+  test_herdr_accepted_before_qjl_failure_replays_exact_signed_proof PASS (5.15s)
+  test_signed_consumed_import_replay_fetch_and_corruption_after_native_stop PASS (9.05s)
+
+Finished in 136.62852s
+15 tests, 103 assertions, 0 failures, 0 errors, 0 skips

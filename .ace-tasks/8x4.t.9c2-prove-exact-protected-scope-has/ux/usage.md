@@ -1,5 +1,10 @@
 # Exact scope proof — proposed usage, draft
 
+Current network readiness review target:
+[network-installation-evidence-amendment.md](../network-installation-evidence-amendment.md).
+9c2 is in-progress / needs_review=true for this material amendment; historical
+draft prose below does not define current task status.
+
 Developer/agent API and fixed deployment configuration change. No new CLI.
 These are proposed acceptance calls through existing Authority::Client; no calls
 below are implemented or executable delivered interfaces. See
@@ -143,3 +148,28 @@ settlement still precedes canonical release and fresh slot reuse. With no
 verifiable original parent binding, evidence_unavailable preserves the held
 intent. See ../provisioning-scope-lineage-amendment.md for immutable event schemas
 and the future failure/restart/replay verification map.
+
+## Install and replace effective network policy
+
+The existing trusted root installer verifies ordinary Internet/DNS/provider/Git
+egress while denying unsolicited ingress and protected host/internal controls.
+It publishes protected immutable effective-policy exports and bounded checked
+report/trace evidence selected by the fixed boundary manifest. Runtime validates
+that authenticated evidence and exact namespace/boot/stage joins; it does not
+read privileged firewall state or accept worker uploads as installation proof.
+
+For replacement, persist activation inhibition, stop/drain every old authority
+without holding its lifecycle locks, then enter the shared source-owned sorted
+slot exclusion. Scan the complete union of original/candidate descriptor roots;
+require exact closure, terminal/release and independent service/inbox settlement.
+Retire only exactly released empty retained parents through the same scope owner.
+Keep inhibition/exclusion through effective verification and atomic publication;
+restart fresh authorities only after leaving locks and verifying the complete set.
+Failure/reboot retains inhibition and both scan obligations, never cached old
+Deployment readiness. Mapping/project/journal ownership of a physical slot is
+fixed; a new owner needs a fresh slot/namespace. Normal unchanged-slot attempt
+reuse remains automatic.
+
+These are proposed installer/source interfaces for independent review, not
+delivered commands or executed installation. See the linked amendment for exact
+schemas, error/order/crash semantics and required source/installed test cases.

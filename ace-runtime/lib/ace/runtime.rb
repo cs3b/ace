@@ -12,6 +12,7 @@ require_relative "runtime/atoms/send_contract"
 require_relative "runtime/registry"
 require_relative "runtime/molecules/runtime_selector"
 require_relative "runtime/molecules/process_identity"
+require_relative "runtime/molecules/network_installation_evidence"
 
 module Ace
   module Runtime

@@ -1,0 +1,12 @@
+Started with run options --seed 48155
+
+Ace::Assign::EndcapInboxesTest
+  test_signed_consumed_import_replay_fetch_and_corruption_after_native_stop PASS (11.17s)
+  test_superseded_claim_history_is_retained_but_not_used_to_settle_a_new_claim PASS (15.52s)
+  test_wrong_registration_role_context_signature_and_body_refuse_without_import PASS (4.55s)
+  test_herdr_accepted_before_qjl_failure_replays_exact_signed_proof PASS (6.13s)
+  test_retained_proof_after_seal_requires_current_context_role_and_exact_launcher PASS (31.76s)
+  test_changed_same_id_and_uncontextual_registration_cannot_adopt_old_proof PASS (13.05s)
+
+Finished in 82.18251s
+6 tests, 40 assertions, 0 failures, 0 errors, 0 skips

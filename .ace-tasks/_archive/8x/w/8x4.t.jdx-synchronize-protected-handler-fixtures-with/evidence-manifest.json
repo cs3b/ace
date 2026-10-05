@@ -1,0 +1,19 @@
+{
+  "evidence/fixed-all/raw_output.txt": "0189d97b436c785efec9872dc8aae93a3376bdba090dd9479b3e53d498990b9b",
+  "evidence/fixed-all/raw_stderr.txt": "545c38b0922de19734fbffde62792c37c2aef6a3216cfa472449173165220f7d",
+  "evidence/fixed-all/report.json": "d57fc974766885afdf2dbb8392401c166ea3b24f71410ab93565639a9f135fa3",
+  "evidence/fixed-all/report.md": "ff8ce99ba1c7fe15fe7afb702ac0effde0264714a4a9ebc12b56f74d6993c7ca",
+  "evidence/fixed-all/summary.json": "b5c6852b93df9898c4656f688f9adeb26feed648efafd8c3ebfa4a863052a73b",
+  "evidence/handler_stdin_boundary_test.rb": "9695babaa3f59f6ca197d530cfdf3449f42a737238a3b2fc5351507d32857594",
+  "evidence/independent-diagnosis/raw_output.txt": "30a5f562058edc105f4e2a5ccd9aa0d80df2e1f0abdfced409419e990d18b423",
+  "evidence/independent-diagnosis/report.json": "181ced085a0f7bc84b7f94da1e922fe6fb831a66f1bf1392dd07e1e6ab723a0a",
+  "evidence/independent-diagnosis/report.md": "22c0de394ea57753604ba55f0e10f705bc19225839ab4b9cdd969326136a364e",
+  "evidence/independent-diagnosis/summary.json": "00fdafbec89ac27ebd2e3111db2cd13820523099c06aaaec81200c7cfd40f511",
+  "evidence/original-failure/failures/001-ace_lab_protectedservicehandlertest_test_receiver_.md": "09c8672559bdce5999781edc036d915f3966266dc7eab8e8927c84562c2a8b21",
+  "evidence/original-failure/failures/index.md": "92ef56bb7c368221dc0ac9b0f9e6b236b54bc88429bffc64fffd5fc24f131161",
+  "evidence/original-failure/failures.json": "05301e60c7e6490ffb992e4c86072e16f6ad0764e2c483f32550719764b0f3f1",
+  "evidence/original-failure/raw_output.txt": "fc7507c7ba61c47ce6c39420c6eab436e249f77e2128cd91c9553d1b9dcacf4e",
+  "evidence/original-failure/report.json": "2bf1a3afaa8be212a884275f8964ec3d561b03cbcf1136d16210ec785408684e",
+  "evidence/original-failure/report.md": "a9ef849fc466cbde8288dbfb49e96ac45c26e8105ca4f489fb19bb2a77190f60",
+  "evidence/original-failure/summary.json": "c06edc6538870d07e16fcd5a106a73605e77753bebe660cd973c76ed2a384a75"
+}

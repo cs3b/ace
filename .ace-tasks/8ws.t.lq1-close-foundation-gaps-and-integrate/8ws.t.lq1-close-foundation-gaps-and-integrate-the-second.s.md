@@ -411,6 +411,39 @@ are claimed as newly executed by this specification edit.
   9c2 staged-lineage-verification.md and xz9.0 inbox-source-checkpoints.md.
 - [ ] 9c2 complete owner/readiness/closure/reuse and xz9.0 canonical handlers remain
   in progress. Runtime installation review findings and service-created resource
-  stage clarification must be resolved before their source integration.
+  stage clarification were resolved in the checkpoint below; connected lifecycle
+  implementation remains open.
 - [ ] Coherent downstream integration and release preparation still precede
   Captain interactive publication; installed graph and Lab acceptance follow.
+
+## Local installation and retained inbox checkpoint — 2026-10-05
+
+- [x] Integrate reviewed runtime installation checks, including read-only bind projection and private mutable mount refusal; retain all corrective review rounds in 9c2.
+- [x] Review and bundle the service-created resource stage and deadlock-safe private readiness exchange contract.
+- [x] Integrate exact-registration retained inbox verification; retain independent review and combined source receipts in xz9.0.
+- [x] Verify exact source `0786c817ae1d426ed2d8639d56450a55016a7083`: default suite 51 entries, 11,252 passed, 24 skipped, zero failures/errors.
+- [ ] Connect actual 9c2 owner lifecycle and xz9.0 canonical inbox handlers, including no-create retained locks; complete independent review and integration before coherent release preparation.
+- [ ] Publish the prepared integrated versions through Captain's interactive OTP script, then verify the installed graph and execute remaining Lab acceptance.
+
+## Current local integration — 2026-10-05
+
+- [x] xz9.0 canonical inbox reconciliation and shared settlement integrated at
+  881cc43868 after independent review of 943444/07ee62443. Full Assign 1003 passed
+  (2 skipped) and Herdr 476 passed. Composed fast-suite coverage: 11252 passed,
+  24 skipped; original Assign 120-second suite timeout and successful isolated retry
+  are both retained in xz9.0/endcap-inbox-verification.md.
+- [ ] 9c2 connected parent binding, seal/closure, guarded abort, canonical reservation
+  release and reuse remain in progress; accepted generic network evidence verification
+  still needs its namespace/admission and maintenance consumers.
+- [ ] xz9.0 scope-guarded registration, finish/recover and complete composition remain
+  open. A reconciliation/settlement helper does not make protected startup complete.
+- [ ] Integrate remaining coherent source and dependency floors before gem preparation;
+  Captain interactive publication precedes installed graph and actual Lab tests.
+
+- [x] ACE 8x4.t.i6i: fix ignored explicit suite configuration, independently review and verify. Combined source e546a7618 passed all 51 configured fast-suite entries with a 300-second per-entry ceiling: 11252 passed, 24 skipped, zero failures/errors. Original timeout histories remain retained; this is local source verification, not publication or Lab acceptance.
+
+- [x] ACE 9c2 network installation/maintenance contract accepted at 2d4959ee7 after independent review; domain gad.8/gad.b adoption owns installer implementation and installed proof. Parent-only cleanup is distinct from evidence-gated native admission; historical release verification preserves original artifacts.
+- [x] 9c2 generic protected network evidence verifier integrated at `77fd6c51b` after independent APPROVE, including strict JSON dependency and two reviewed schema responsibility clarifications. Runtime all 235/833 and independent focused 28/174 passed; configured fast suite with a 300-second ceiling: 11273 passed / 24 skipped / 34612 assertions, all 51 entries passed. Initial 120-second timeout and Lab fixture failure remain retained. This verifies authenticated content, not actual installed network enforcement.
+- [x] ACE `8x4.t.jdx`: independent diagnosis and fixture-only repair `47f5eca70` synchronize handler request input before response. Lab all 199/697 passed, 1 skip; independent corrected-blob review approved. Original failure and controlled reproduction retained in the archived task.
+- [ ] Connect accepted network verification to namespace pinning, native admission/stage joins and complete original/candidate maintenance interfaces, then verify the domain installer after publication. Generic verifier acceptance is not positive runtime readiness or whole 9c2 completion.
+- [ ] `qkb.1` independent neutral-vocabulary source slice is in progress against accepted `qkb.0` commands. Remove packaged old PR workflows/skills and migrate remaining Assign/Handbook/Review consumers before publishing Assign/Git; complete protected role adoption still requires `qk0`/`xz9`. Current source presence of both vocabularies is a concrete release blocker, not merely a pending task label. Bounded Runtime/Herdr/Test Runner producer releases require a separately verified dependency/follower closure and do not close this gate.

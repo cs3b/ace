@@ -320,6 +320,7 @@ PATH
       ace-support-config (~> 0.18)
       ace-support-core (~> 0.31)
       fiddle (>= 1.1, < 2)
+      json (>= 2.20, < 3)
 
 PATH
   remote: ace-search

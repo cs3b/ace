@@ -1,0 +1,51 @@
+
+# Running tests with run options --seed 21780:
+
+...............................................
+
+Finished tests in 0.006093s, 7713.7698 tests/s, 22977.1867 assertions/s.
+
+
+47 tests, 140 assertions, 0 failures, 0 errors, 0 skips
+
+Run options: --seed 63953
+
+# Running:
+
+...........................................................................
+
+Finished in 1.000158s, 74.9882 runs/s, 214.9660 assertions/s.
+
+75 runs, 215 assertions, 0 failures, 0 errors, 0 skips
+
+Run options: --seed 43667
+
+# Running:
+
+....................................
+
+Finished in 14.665076s, 2.4548 runs/s, 8.4555 assertions/s.
+
+36 runs, 124 assertions, 0 failures, 0 errors, 0 skips
+
+
+# Running tests with run options --seed 5601:
+
+...............
+
+Finished tests in 0.001866s, 8038.5862 tests/s, 26795.2873 assertions/s.
+
+
+15 tests, 50 assertions, 0 failures, 0 errors, 0 skips
+
+Run options: --seed 47918
+
+# Running:
+
+.............S............
+
+Finished in 16.411739s, 1.5842 runs/s, 10.2366 assertions/s.
+
+26 runs, 168 assertions, 0 failures, 0 errors, 1 skips
+
+You have skipped tests. Run with --verbose for details.

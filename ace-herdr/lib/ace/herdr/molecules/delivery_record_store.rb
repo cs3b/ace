@@ -56,9 +56,10 @@ module Ace
 
         # Hold the exclusive per-event lock while delivering; concurrent
         # callers block until the winner finishes, then observe its record.
-        def with_lock(deliveries_dir, event_id)
-          FileUtils.mkdir_p(deliveries_dir)
-          File.open(lock_path(deliveries_dir, event_id), "a") do |lock|
+        def with_lock(deliveries_dir, event_id, create: true)
+          FileUtils.mkdir_p(deliveries_dir) if create
+          flags = create ? "a" : File::RDWR | File::NOFOLLOW
+          File.open(lock_path(deliveries_dir, event_id), flags) do |lock|
             lock.flock(File::LOCK_EX)
             begin
               return yield

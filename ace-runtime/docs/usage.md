@@ -187,3 +187,71 @@ The reference implementation is `test/support/fake_runtime_adapter.rb`
 in the ace-runtime gem; the in-gem suite
 (`test/contract/adapter_contract_test.rb`) proves the battery against
 it for both send profiles.
+
+## Root-produced network installation evidence
+
+The source-only `Ace::Runtime::Molecules::NetworkInstallationEvidence` consumer
+checks the protected content selected by the installed scope owner:
+
+```ruby
+result = Ace::Runtime::Molecules::NetworkInstallationEvidence.verify!(
+  selection: boundary_manifest.fetch("network_installation"),
+  expected: {
+    "slot_id" => slot_id,
+    "namespace_path" => installed_namespace_path,
+    "boot_id" => current_boot_id,
+    "namespace_identity" => {"device" => pinned_device, "inode" => pinned_inode},
+    "installer_artifact_sha256" => installed_producer_sha256
+  }
+)
+```
+
+`selection` is exactly `{profile,policy_export,report,installer_artifact}`; each
+reference is exactly `{path,sha256,bytes}`. All keys are strings, paths canonical
+and absolute, SHA256 lowercase, and lengths positive integers. There is no
+caller-uploaded evidence or caller-selected trust root. The namespace identity
+above must come from the owner's actual held, authenticated nsfs network object;
+the owner validates its type/current boot and keeps the namespace pinned through
+admission. This verifier reads content artifacts and never opens/substitutes the
+namespace, probes traffic or grants runtime networking privilege.
+
+Successful output contains exactly `report_id`, `boot_id`, `slot_id`,
+`namespace_path`, `namespace_identity`, `profile_sha256`, `policy_export_sha256`,
+`report_sha256` and `installer_artifact_sha256`, deeply frozen. It authenticates
+installation content, not actual enforcement from a summary boolean. Missing,
+unreadable, malformed, conflicting, oversized or context-mismatched evidence
+raises `Ace::Runtime::RuntimeUnavailableError`; the authority boundary exposes
+that refusal as `evidence_unavailable` and retains public `invalid_input`
+classification for malformed public selectors. No absent-evidence fallback.
+
+The reader pins regular-file and directory descriptors for the complete graph,
+checks exact lengths/digests and revalidates original objects/modes at completion.
+It uses root ownership and no group/other write on supported Linux POSIX local
+filesystems (`ext2`, `ext3`, `ext4`, `xfs`, `btrfs`, `tmpfs`): group mode bits
+represent the access ACL mask, so named non-root ACL users/groups cannot obtain
+write through it. Unknown filesystem models refuse. All ancestors are checked;
+no symlink, untrusted writable ancestor or mutable worker artifact qualifies.
+Content bounds are 1MiB per artifact, 16MiB aggregate and 256 distinct artifacts.
+The profile's 256-entry bound counts its four outer collections only; nested
+ranges, ports and helper/configuration refs are bounded by the profile bytes and
+separate artifact graph limits. Strict JSON parsing requires the declared
+`json >= 2.20, < 3` dependency to reject duplicate keys and comments explicitly.
+
+The trusted domain installer owns complete effective policy/topology comparison,
+independent correlated flow checks, immutable digest-bearing evidence filenames
+and publication that preserves historical artifacts. The generic reference
+schema specifies no basename grammar: this consumer checks selected content and
+protection, and cannot establish publication history. Raw policy/topology/setup
+and correlated observations remain required; unsupported or incomplete domain
+checks must never produce a passing report. Domain source/installed review proves
+those obligations. For each loopback tool, the fixed domain procedure inspects
+the actual selected executable against its profile `artifact_sha256` and retains
+the observation in the exact tool-target trace. The schema provides no executable
+path/ref: generic ACE authenticates the trace/raw refs and digest format; it does
+not compare a tool executable digest with observation bytes or invent a ref.
+Domain acceptance must exercise tool-executable mismatch refusal.
+
+Root installation lifetime, private admission CAS, stage joins,
+namespace containment and maintenance ordering belong to their respective
+installed owners; this verifier does not implement them or supply native,
+packet-filter or installed acceptance by itself.

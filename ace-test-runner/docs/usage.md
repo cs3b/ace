@@ -79,7 +79,7 @@ ace-test --check-rake-status
 ace-test-suite [options]
 ```
 
-- `-c`, `--config FILE`: suite config path (default: `.ace/test/suite.yml`)
+- `-c`, `--config FILE`: load exactly this suite file; missing, unreadable or malformed files fail. Without this option, use the existing `test/suite` configuration cascade.
 - `-p`, `--parallel N`: override max parallel worker count
 - `-t`, `--timeout SEC`: fail any package subprocess that exceeds the timeout
 - `-g`, `--group GROUP`: limit execution to a package group

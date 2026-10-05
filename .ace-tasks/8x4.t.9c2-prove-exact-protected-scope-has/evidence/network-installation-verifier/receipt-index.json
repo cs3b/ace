@@ -1,0 +1,86 @@
+[
+  {
+    "label": "author-runtime-all",
+    "source_path": "/Users/mc/Ps/ace/.ace-wt/network-installation-evidence/.ace-local/test/reports/runtime/779661f9-318a-48fa-9fdc-34daa1c3e9d6",
+    "retained_path": "evidence/network-installation-verifier/author-runtime-all/779661f9-318a-48fa-9fdc-34daa1c3e9d6",
+    "files": {
+      "summary.json": {
+        "bytes": 269,
+        "sha256": "7c2e42ba62970e18c00159340ad4bf6f130b4f7410a8820054810b727ce7ad5e"
+      },
+      "report.json": {
+        "bytes": 3472,
+        "sha256": "fa9611eb87add5d906f91f13c584f6168f48b9227815bd925f57d4547c5c0cde"
+      },
+      "raw_output.txt": {
+        "bytes": 5005,
+        "sha256": "4d18bdcf3f0d85a14f340ebb5d0c62e659664caf704485f3741c23b27f7f2162"
+      },
+      "raw_stderr.txt": {
+        "bytes": 667,
+        "sha256": "4571222b4cfb2e0331cfdbdb8c01a09e1f56bc9c48662e8adc7d8f9eccfa3bb5"
+      }
+    }
+  },
+  {
+    "label": "initial-lab-failure",
+    "source_path": "/Users/mc/Ps/ace/.ace-wt/network-installation-evidence/.ace-local/test/reports/lab/06375dfd-5073-4f03-b367-8426a4f354a0",
+    "retained_path": "evidence/network-installation-verifier/initial-lab-failure/06375dfd-5073-4f03-b367-8426a4f354a0",
+    "files": {
+      "summary.json": {
+        "bytes": 271,
+        "sha256": "c06edc6538870d07e16fcd5a106a73605e77753bebe660cd973c76ed2a384a75"
+      },
+      "report.json": {
+        "bytes": 4972,
+        "sha256": "2bf1a3afaa8be212a884275f8964ec3d561b03cbcf1136d16210ec785408684e"
+      },
+      "raw_output.txt": {
+        "bytes": 1251,
+        "sha256": "fc7507c7ba61c47ce6c39420c6eab436e249f77e2128cd91c9553d1b9dcacf4e"
+      }
+    }
+  },
+  {
+    "label": "focused-lab",
+    "source_path": "/Users/mc/Ps/ace/.ace-wt/network-installation-evidence/.ace-local/test/reports/lab/481b28f7-0ace-4ab9-9d8e-67f73df90fd2",
+    "retained_path": "evidence/network-installation-verifier/focused-lab/481b28f7-0ace-4ab9-9d8e-67f73df90fd2",
+    "files": {
+      "summary.json": {
+        "bytes": 258,
+        "sha256": "de475e455ef3f9e6e5deb3f702bccfd34493c1a338eff8ccae173bdc3742be9a"
+      },
+      "report.json": {
+        "bytes": 2751,
+        "sha256": "2c10c30cad9483b129161901e01b687b7846b0b5fbb908b890d9028ec6862ec9"
+      },
+      "raw_output.txt": {
+        "bytes": 176,
+        "sha256": "f3e5c0a4807671347711c78fb40e13d5bf6488bc58f0ae63e6b0750b293d86ad"
+      }
+    }
+  },
+  {
+    "label": "independent-reviewer",
+    "source_path": "/Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/.ace-local/test/reports/runtime/8946b94e-92d6-478b-89d0-eba0f018b85c",
+    "retained_path": "evidence/network-installation-verifier/independent-reviewer/8946b94e-92d6-478b-89d0-eba0f018b85c",
+    "files": {
+      "summary.json": {
+        "bytes": 266,
+        "sha256": "2dc951db172b4032b4044c847287bb8df011e2c92ddc621ae23c26e7a62e10e9"
+      },
+      "report.json": {
+        "bytes": 2951,
+        "sha256": "52c4871a6cb0f6203b6ca037959ed5f1254febf1b2993df7bd9c08c2a97ad581"
+      },
+      "raw_output.txt": {
+        "bytes": 2630,
+        "sha256": "91b8c550cd2896af0b5ddc9b2f574044775ccdf072e6286e919461d61ee16a3c"
+      },
+      "raw_stderr.txt": {
+        "bytes": 320,
+        "sha256": "1942a18d7d426bbeb8c17b8c25dd2b53d63bc997c45e0b623fc9c99fcde6df07"
+      }
+    }
+  }
+]

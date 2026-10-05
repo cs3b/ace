@@ -1,0 +1,50 @@
+Started with run options --seed 43883
+
+InboxInventoryBoundaryTest
+  test_source_owned_empty_inbox_set_is_verified_without_native_or_public_peer PASS (2.16s)
+  test_unregistered_retained_event_cannot_disappear_from_settlement_inventory PASS (4.57s)
+  test_signed_consumed_import_replay_fetch_and_corruption_after_native_stop PASS (9.55s)
+  test_herdr_accepted_before_qjl_failure_replays_exact_signed_proof PASS (5.18s)
+  test_retained_proof_after_seal_requires_current_context_role_and_exact_launcher PASS (11.65s)
+  test_wrong_registration_role_context_signature_and_body_refuse_without_import PASS (7.43s)
+  test_corrupt_archive_cannot_hide_behind_live_record             FAIL (4.83s)
+        Ace::Assign::AttemptErrors::EvidenceUnavailable expected but nothing was raised.
+        /Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/.ace-local/review/inbox_inventory_boundary_test.rb:9:in 'block in InboxInventoryBoundaryTest#test_corrupt_archive_cannot_hide_behind_live_record'
+        /Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/ace-assign/test/feat/endcap_inboxes_test.rb:108:in 'block in Ace::Assign::EndcapInboxesTest#fixture'
+        /Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/3.4.0/tmpdir.rb:105:in 'Dir.mktmpdir'
+        /Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/ace-assign/test/feat/endcap_inboxes_test.rb:31:in 'Ace::Assign::EndcapInboxesTest#fixture'
+        /Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/.ace-local/review/inbox_inventory_boundary_test.rb:4:in 'InboxInventoryBoundaryTest#test_corrupt_archive_cannot_hide_behind_live_record'
+        /Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/ace-test-runner/lib/ace/test_runner/molecules/in_process_runner.rb:278:in 'Ace::TestRunner::Molecules::InProcessRunner#run_minitest_silent'
+        /Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/ace-test-runner/lib/ace/test_runner/molecules/in_process_runner.rb:138:in 'Ace::TestRunner::Molecules::InProcessRunner#execute_tests'
+        /Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/ace-test-runner/lib/ace/test_runner/molecules/in_process_runner.rb:190:in 'Ace::TestRunner::Molecules::InProcessRunner#execute_with_progress'
+        /Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/ace-test-runner/lib/ace/test_runner/molecules/smart_test_executor.rb:55:in 'Ace::TestRunner::Molecules::SmartTestExecutor#execute_with_progress'
+        /Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/ace-test-runner/lib/ace/test_runner/organisms/test_orchestrator.rb:505:in 'Ace::TestRunner::Organisms::TestOrchestrator#execute_tests'
+        /Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/ace-test-runner/lib/ace/test_runner/organisms/test_orchestrator.rb:99:in 'Ace::TestRunner::Organisms::TestOrchestrator#run_with_package_context'
+        /Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/ace-test-runner/lib/ace/test_runner/organisms/test_orchestrator.rb:50:in 'Ace::TestRunner::Organisms::TestOrchestrator#run'
+        /Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/ace-test-runner/lib/ace/test_runner.rb:73:in 'Ace::TestRunner.run'
+        /Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/ace-test-runner/lib/ace/test_runner/cli/commands/test.rb:299:in 'Ace::TestRunner::CLI::Commands::Test#run_tests_with_exit_handling'
+        /Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/ace-test-runner/lib/ace/test_runner/cli/commands/test.rb:156:in 'Ace::TestRunner::CLI::Commands::Test#call'
+        /Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/ace-support-cli/lib/ace/support/cli/runner.rb:24:in 'Ace::Support::Cli::Runner#call'
+        /Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/ace-test-runner/exe/ace-test:17:in '<top (required)>'
+        bin/ace-test:17:in 'Kernel#load'
+        bin/ace-test:17:in '<main>'
+
+  test_source_owned_settlement_shares_provenance_without_fabricated_public_peer PASS (13.05s)
+  test_changed_same_id_and_uncontextual_registration_cannot_adopt_old_proof PASS (8.62s)
+  test_signed_foreign_workspace_and_original_child_mismatch_refuse_before_import PASS (16.18s)
+  test_superseded_claim_history_is_retained_but_not_used_to_settle_a_new_claim PASS (13.56s)
+
+Ace::Assign::EndcapInboxesTest
+  test_wrong_registration_role_context_signature_and_body_refuse_without_import PASS (4.11s)
+  test_signed_foreign_workspace_and_original_child_mismatch_refuse_before_import PASS (15.77s)
+  test_retained_proof_after_seal_requires_current_context_role_and_exact_launcher PASS (11.46s)
+  test_superseded_claim_history_is_retained_but_not_used_to_settle_a_new_claim PASS (13.16s)
+  test_source_owned_settlement_shares_provenance_without_fabricated_public_peer PASS (13.15s)
+  test_herdr_accepted_before_qjl_failure_replays_exact_signed_proof PASS (5.03s)
+  test_changed_same_id_and_uncontextual_registration_cannot_adopt_old_proof PASS (8.89s)
+  test_signed_consumed_import_replay_fetch_and_corruption_after_native_stop PASS (9.32s)
+  test_source_owned_empty_inbox_set_is_verified_without_native_or_public_peer PASS (1.91s)
+  test_unregistered_retained_event_cannot_disappear_from_settlement_inventory PASS (4.37s)
+
+Finished in 183.93946s
+21 tests, 125 assertions, 1 failures, 0 errors, 0 skips

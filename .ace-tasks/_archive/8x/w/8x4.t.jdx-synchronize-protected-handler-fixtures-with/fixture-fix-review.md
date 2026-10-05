@@ -1,0 +1,7 @@
+# Lab handler stdin fixture correction review
+
+Independent read-only review of primary HEAD `77fd6c51bf0d46c1f67b32e3bb6b5730a91804d6` plus sole uncommitted test-file diff. Exact corrected file Git blob `2242f0737d1e9f4163ddb58e3631d8ac3fcb3db4` at `ace-lab/test/molecules/protected_service_handler_test.rb`. Verdict: **APPROVE bounded test correction**, subject to root retaining this exact blob in the final commit and executed package gates.
+
+operation(script) now prepends `cat >/dev/null;` before every controlled script. Parent writes JSON then closes stdin; cat drains the actual pipe to EOF before success output, environment check, background writer creation or negative output. This removes the early-exit/EPIPE fixture race without changing production's fail-closed transport handling. Negative noisy/mismatched scripts now exercise their intended output checks rather than incidental missing input consumption. Wrong executor still refuses before process launch; no assertion weakened. Process-group cleanup/background marker assertions remain intact. Only two-line explanation and fixture argv changed.
+
+No additional tests run on primary, as requested. Root's ace-lab all result remains a distinct pending executed gate. Prior independent actual-handler diagnosis7/16 receiptff0a276b-218d-4c69-9938-6dd4e2f6ca8d and original failed06375dfd receipt remain preserved. No product edits, package version changes, native/security/system-manager probes or change to verifier77fd verdict.

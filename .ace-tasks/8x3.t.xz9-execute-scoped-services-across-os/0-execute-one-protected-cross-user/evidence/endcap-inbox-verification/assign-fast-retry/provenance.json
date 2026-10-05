@@ -1,0 +1,24 @@
+{
+  "source_revision": "07ee624430518909945eb4fa2b970c386a096821",
+  "command": "bin/ace-test ace-assign fast --timeout=300",
+  "summary": {
+    "execution_id": "c70e071b-4722-4339-9ac5-162b3e56fba3",
+    "assertions": 3017,
+    "passed": 818,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0,
+    "total": 818,
+    "pass_rate": 100.0,
+    "duration": 101.810789,
+    "success": true,
+    "timestamp": "2026-10-05T12:51:08+01:00"
+  },
+  "files_sha256": {
+    "summary.json": "cab4ed5cda8bf01f35e3862d15606b71aace1145bccd3916ad39a87a7e7fe229",
+    "report.json": "1b7a0a442f055a4cc6e47a4fe1c79728f2c6addf99a8e1005c8907cd51ec296d",
+    "raw_output.txt": "235be9d6ce0bbed79773620828a3c0ed0095103ed5a6b8966247bceba35ab740",
+    "raw_stderr.txt": "34093b3abbd76bf3c1b75a57ad07be61be6735c7c69e2683709477729c767875"
+  },
+  "note": "Separate retry of missing timed-out suite entry; original suite exit 1 remains unchanged."
+}

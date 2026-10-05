@@ -1,0 +1,15 @@
+[
+  {
+    "type": "error",
+    "test_name": "test_receiver_owned_process_group_cleanup_stops_background_writer:",
+    "test_class": "Ace::Lab::ProtectedServiceHandlerTest",
+    "message": "NoMethodError: undefined method 'fetch' for nil\n    test/molecules/protected_service_handler_test.rb:42:in 'block in Ace::Lab::ProtectedServiceHandlerTest#test_receiver_owned_process_group_cleanup_stops_background_writer'\n    test/molecules/protected_service_handler_test.rb:16:in 'block in Ace::Lab::ProtectedServiceHandlerTest#with_handler'",
+    "location": null,
+    "file_path": null,
+    "line_number": null,
+    "backtrace": [],
+    "fix_suggestion": null,
+    "code_context": null,
+    "stderr_warnings": null
+  }
+]

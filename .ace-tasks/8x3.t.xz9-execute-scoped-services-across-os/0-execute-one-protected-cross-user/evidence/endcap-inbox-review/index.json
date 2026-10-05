@@ -1,0 +1,139 @@
+[
+  {
+    "label": "initial-focused",
+    "execution_id": "37fb2ca4-9310-40ec-9fe4-3424ffa7bef7",
+    "summary": {
+      "execution_id": "37fb2ca4-9310-40ec-9fe4-3424ffa7bef7",
+      "assertions": 40,
+      "passed": 6,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "total": 6,
+      "pass_rate": 100.0,
+      "duration": 82.18251,
+      "success": true,
+      "timestamp": "2026-10-05T11:51:40+01:00"
+    },
+    "sha256": {
+      "summary.json": "9594b471c0066f50941086c8e4540a6a10595032792002d1211cdeeb3b8bc2ef",
+      "report.json": "08a08b5880cb54cd3cc05ff226dcbd5d49a96aec3b6d314ff942f33927810b48",
+      "raw_output.txt": "ffa50aa8089483d0813035c2e192351220f2ea55af7e61563939e0828f068260",
+      "raw_stderr.txt": "1942a18d7d426bbeb8c17b8c25dd2b53d63bc997c45e0b623fc9c99fcde6df07"
+    }
+  },
+  {
+    "label": "initial-retained-lock",
+    "execution_id": "d0524eb8-0479-42c4-81c2-d449b341d0c7",
+    "summary": {
+      "execution_id": "d0524eb8-0479-42c4-81c2-d449b341d0c7",
+      "assertions": 22,
+      "passed": 3,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "total": 3,
+      "pass_rate": 100.0,
+      "duration": 0.0,
+      "success": true,
+      "timestamp": "2026-10-05T11:52:16+01:00"
+    },
+    "sha256": {
+      "summary.json": "550d722596a6ad14be25e5e86cf651d457937899736f5e924ddfc89679e7bf11",
+      "report.json": "4ececdf7362e2c8536c70c4c44081a754f3edd77c9278fd016a0b4bc0cc10529",
+      "raw_output.txt": "8fc713fc4f6d6f386d2991ba727e368b0459b7f05f530384603eed7d2663499f"
+    }
+  },
+  {
+    "label": "foreign-workspace-failure",
+    "execution_id": "d9ebecaf-9f02-4db1-b93a-473ecec31df0",
+    "summary": {
+      "execution_id": "d9ebecaf-9f02-4db1-b93a-473ecec31df0",
+      "assertions": 81,
+      "passed": 12,
+      "failed": 1,
+      "errors": 0,
+      "skipped": 0,
+      "total": 13,
+      "pass_rate": 92.31,
+      "duration": 152.53421,
+      "success": false,
+      "timestamp": "2026-10-05T11:53:56+01:00"
+    },
+    "sha256": {
+      "summary.json": "dcc7588e408d9fe29a69b94e0fc53ce519f4a8350774a4644ad743affc15e0b6",
+      "report.json": "8ccb5762342d2ecf087afb205732ff7435489b67a22cb5aa13659338178577b9",
+      "raw_output.txt": "1df67ed97b1aebeccb0a89e29e792e95c15f6bf037d8a5c8c02cf3e426a36cc1",
+      "raw_stderr.txt": "1942a18d7d426bbeb8c17b8c25dd2b53d63bc997c45e0b623fc9c99fcde6df07"
+    }
+  },
+  {
+    "label": "foreign-workspace-corrected",
+    "execution_id": "b1ff915d-b481-4772-afbd-1c2d8e018ff0",
+    "summary": {
+      "execution_id": "b1ff915d-b481-4772-afbd-1c2d8e018ff0",
+      "assertions": 103,
+      "passed": 15,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "total": 15,
+      "pass_rate": 100.0,
+      "duration": 136.62852,
+      "success": true,
+      "timestamp": "2026-10-05T12:05:10+01:00"
+    },
+    "sha256": {
+      "summary.json": "8cc2fade668f41d7f88bf379731c275e66c07001bbe3b30eea2116922f96dafa",
+      "report.json": "d8f68441a6bd9983d49eb49d3d42bdc873ce8aa08de6cafcce4b98b9c1d7143f",
+      "raw_output.txt": "84eea5b3618faec8bc331bd0b2fc44a4356ee4431e7f2b7bd4a6f6a293a01481",
+      "raw_stderr.txt": "bd5d76f6908c63370df17338760ab9d78600357558bca3dcbf954886224e562d"
+    }
+  },
+  {
+    "label": "archive-inventory-failure",
+    "execution_id": "d7eb1077-89f8-41c4-8780-93b0aac614e2",
+    "summary": {
+      "execution_id": "d7eb1077-89f8-41c4-8780-93b0aac614e2",
+      "assertions": 125,
+      "passed": 20,
+      "failed": 1,
+      "errors": 0,
+      "skipped": 0,
+      "total": 21,
+      "pass_rate": 95.24,
+      "duration": 183.93946,
+      "success": false,
+      "timestamp": "2026-10-05T12:15:21+01:00"
+    },
+    "sha256": {
+      "summary.json": "36a13261cf505cbf2981a15f5a3c345ea06a43a403e019ce5a78151a1c721576",
+      "report.json": "9b64c84837de27346b729a069aa94198e8f07e9263f9db8a9c2223984f68bdb2",
+      "raw_output.txt": "de0f520917510d79b91ae48ab8b3f3a362fb219e1662aa1f2f2941406142ed61",
+      "raw_stderr.txt": "1942a18d7d426bbeb8c17b8c25dd2b53d63bc997c45e0b623fc9c99fcde6df07"
+    }
+  },
+  {
+    "label": "archive-inventory-corrected",
+    "execution_id": "913cc39b-e505-4b22-bfa4-31fba220aa15",
+    "summary": {
+      "execution_id": "913cc39b-e505-4b22-bfa4-31fba220aa15",
+      "assertions": 137,
+      "passed": 23,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "total": 23,
+      "pass_rate": 100.0,
+      "duration": 192.87828,
+      "success": true,
+      "timestamp": "2026-10-05T12:23:29+01:00"
+    },
+    "sha256": {
+      "summary.json": "fb58be68fed534624c3aa23c776529606a2969afdb431896e0494e4c2bec2e4f",
+      "report.json": "0804356c3a690f9bf392bf12ec46a283b1c305d04c3d715c3c73d393c50eed8e",
+      "raw_output.txt": "86a03a571e04a32a044a4fdb602f22c2f4cf2c559c08840e4f07372c9ffb8c0b",
+      "raw_stderr.txt": "1942a18d7d426bbeb8c17b8c25dd2b53d63bc997c45e0b623fc9c99fcde6df07"
+    }
+  }
+]

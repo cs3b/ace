@@ -1,0 +1,56 @@
+Started with run options --seed 23734
+
+InstallationImplicitShadowTest
+  test_unused_exec_hooks_or_external_incoming_service_activation_refuse PASS (0.00s)
+  test_environment_injection_cannot_be_approved_by_manifest       PASS (0.00s)
+  test_manifest_hash_and_closed_schema_cannot_be_asserted_without_matching_bytes PASS (0.00s)
+  test_privileged_failure_ignore_or_other_readiness_command_refuses PASS (0.00s)
+  test_private_devices_cannot_hide_hashed_native_executable       FAIL (0.00s)
+        Ace::Runtime::RuntimeUnavailableError expected but nothing was raised.
+        /Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/.ace-local/review/installation_implicit_shadow_test.rb:13:in 'InstallationImplicitShadowTest#test_private_devices_cannot_hide_hashed_native_executable'
+        /Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/ace-test-runner/lib/ace/test_runner/molecules/in_process_runner.rb:278:in 'Ace::TestRunner::Molecules::InProcessRunner#run_minitest_silent'
+        /Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/ace-test-runner/lib/ace/test_runner/molecules/in_process_runner.rb:138:in 'Ace::TestRunner::Molecules::InProcessRunner#execute_tests'
+        /Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/ace-test-runner/lib/ace/test_runner/molecules/in_process_runner.rb:190:in 'Ace::TestRunner::Molecules::InProcessRunner#execute_with_progress'
+        /Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/ace-test-runner/lib/ace/test_runner/molecules/smart_test_executor.rb:55:in 'Ace::TestRunner::Molecules::SmartTestExecutor#execute_with_progress'
+        /Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/ace-test-runner/lib/ace/test_runner/organisms/test_orchestrator.rb:505:in 'Ace::TestRunner::Organisms::TestOrchestrator#execute_tests'
+        /Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/ace-test-runner/lib/ace/test_runner/organisms/test_orchestrator.rb:99:in 'Ace::TestRunner::Organisms::TestOrchestrator#run_with_package_context'
+        /Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/ace-test-runner/lib/ace/test_runner/organisms/test_orchestrator.rb:50:in 'Ace::TestRunner::Organisms::TestOrchestrator#run'
+        /Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/ace-test-runner/lib/ace/test_runner.rb:73:in 'Ace::TestRunner.run'
+        /Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/ace-test-runner/lib/ace/test_runner/cli/commands/test.rb:299:in 'Ace::TestRunner::CLI::Commands::Test#run_tests_with_exit_handling'
+        /Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/ace-test-runner/lib/ace/test_runner/cli/commands/test.rb:156:in 'Ace::TestRunner::CLI::Commands::Test#call'
+        /Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/ace-support-cli/lib/ace/support/cli/runner.rb:24:in 'Ace::Support::Cli::Runner#call'
+        /Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/ace-test-runner/exe/ace-test:17:in '<top (required)>'
+        bin/ace-test:17:in 'Kernel#load'
+        bin/ace-test:17:in '<main>'
+
+  test_other_kernel_mount_shadow_options_cannot_be_approved_by_manifest PASS (0.01s)
+  test_implicit_mount_ordering_requires_active_exact_backing_and_no_job PASS (0.00s)
+  test_verifies_actual_artifact_bytes_and_effective_manager_profile_without_claiming_runtime_proof PASS (0.00s)
+  test_transitive_parent_dependency_and_unloaded_enablement_routes_refuse PASS (0.00s)
+  test_readonly_overlay_is_accepted_only_when_actual_source_bytes_are_verified PASS (0.00s)
+  test_effective_overlay_cannot_shadow_hashed_native_or_config_even_if_manifest_declares_it PASS (0.00s)
+  test_lookup_scanner_finds_unloaded_generator_routes_and_aliases_without_following_links PASS (0.00s)
+  test_effective_change_refuses_even_when_root_manifest_retains_old_property PASS (0.00s)
+  test_activation_edges_cannot_be_approved_by_manifest_and_slice_cannot_require_child PASS (0.00s)
+  test_complete_command_arguments_and_config_bytes_cannot_be_replaced_by_claimed_manifest PASS (0.00s)
+  test_declared_weaker_security_or_other_principal_never_qualifies PASS (0.01s)
+
+ExecutionUnitInstallationTest
+  test_environment_injection_cannot_be_approved_by_manifest       PASS (0.00s)
+  test_implicit_mount_ordering_requires_active_exact_backing_and_no_job PASS (0.00s)
+  test_verifies_actual_artifact_bytes_and_effective_manager_profile_without_claiming_runtime_proof PASS (0.00s)
+  test_transitive_parent_dependency_and_unloaded_enablement_routes_refuse PASS (0.00s)
+  test_other_kernel_mount_shadow_options_cannot_be_approved_by_manifest PASS (0.00s)
+  test_privileged_failure_ignore_or_other_readiness_command_refuses PASS (0.00s)
+  test_manifest_hash_and_closed_schema_cannot_be_asserted_without_matching_bytes PASS (0.00s)
+  test_unused_exec_hooks_or_external_incoming_service_activation_refuse PASS (0.00s)
+  test_readonly_overlay_is_accepted_only_when_actual_source_bytes_are_verified PASS (0.00s)
+  test_effective_overlay_cannot_shadow_hashed_native_or_config_even_if_manifest_declares_it PASS (0.00s)
+  test_lookup_scanner_finds_unloaded_generator_routes_and_aliases_without_following_links PASS (0.00s)
+  test_effective_change_refuses_even_when_root_manifest_retains_old_property PASS (0.00s)
+  test_activation_edges_cannot_be_approved_by_manifest_and_slice_cannot_require_child PASS (0.01s)
+  test_complete_command_arguments_and_config_bytes_cannot_be_replaced_by_claimed_manifest PASS (0.00s)
+  test_declared_weaker_security_or_other_principal_never_qualifies PASS (0.01s)
+
+Finished in 0.08316s
+31 tests, 107 assertions, 1 failures, 0 errors, 0 skips

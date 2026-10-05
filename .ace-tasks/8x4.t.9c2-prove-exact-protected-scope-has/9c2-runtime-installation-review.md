@@ -1,0 +1,19 @@
+# Runtime installation source review
+
+Verdict: **REQUEST CHANGES** at exact frozen `dbe80493b32546b7849124ca42999abf401c443d`.
+
+Scope: new ace-runtime installation/typed-manager delta against main `31ce1349f`; already reviewed staged reader is not re-adjudicated. Own isolated checkout `/Users/mc/Ps/ace/.ace-wt/review-9c2-runtime`. No source changes, system manager calls, native/protected/privileged/VM probes, broad suite or launch/proof-admission claim.
+
+## Verified findings
+
+1. **P2 — Hashes do not identify artifacts visible through allowed bind mounts.** `ace-runtime/lib/ace/runtime/molecules/execution_unit_installation.rb:148` compares effective properties with manifest; lines 213–219 establish host/view identity only by concatenating RootDirectory and view_path. BindPaths and BindReadOnlyPaths remain unconstrained beyond matching declarations. A manifest/effective profile with `BindReadOnlyPaths=[["/outside/unverified-herdr", "/usr/bin/herdr", false, 0]]` passes verification while only `RootDirectory/usr/bin/herdr` is hashed. The bind source shadows those bytes in the service view. Refuse artifact-shadowing mappings or prove the exact immutable source-to-view mapping, including ancestor directory overlays. Controlled regression in `.ace-local/review/installation_boundary_test.rb` expects refusal and fails because verify! succeeds. No mount was performed.
+
+2. **P2 — Required RootDirectory profile conflicts with native-generated WantsMountsFor.** `execution_unit_installation.rb:26` includes WantsMountsFor in EMPTY_ACTIVATION, applied to service at line 239. Required RootDirectory is nonempty. Pinned v257 `unit_add_exec_dependencies` adds that root directory to UNIT_MOUNT_WANTS without a DefaultDependencies condition; the D-Bus property returns that stored set. Thus the synthetic passing profile with WantsMountsFor=[] cannot represent the required native configuration. Validate the precise safe implicit root mount dependency/graph and use a fixture matching native generation; do not solve by removing the required root image. Primary source: [v257 unit.c](https://raw.githubusercontent.com/systemd/systemd/v257/src/core/unit.c), lines 1130–1132; [v257 dbus-unit.c](https://raw.githubusercontent.com/systemd/systemd/v257/src/core/dbus-unit.c), line 813.
+
+## Checks and limits
+
+- Focused candidate tests: **19 tests / 113 assertions PASS**, immutable receipt `.ace-wt/review-9c2-runtime/.ace-local/test/reports/runtime/fbe8a1fc-a864-49de-81dd-84652d92f427/`.
+- Runtime molecules: **58 tests / 226 assertions PASS**, receipt `a394de47-f938-429b-9fce-a0037b9249a9` under same report root.
+- Independent controlled artifact-overlay regression plus inherited fixture tests: **23 tests / 75 assertions / 1 failure / 0 errors**, receipt `45c72881-ffc1-4d20-9c88-5fd19c4a7204`. Expected refusal did not occur. An earlier `--filter` attempt selected no files (receipt b9b69f3d-a657-4e79-9f76-5fe27d9f055f); it is not verification evidence.
+- Source checked pinned v257 multi-property busctl get-property ordering/one JSON result per property, explicit system bus/noninteractive authorization argv, typed primitive range/shape refusal, ExecStartEx command flags and exact argv, unit graph property signatures, parent hierarchy ending -.slice, bounded root-owned UnitPath scanner, manifest bytes/artifact hashes and required profile comparisons. Primary [busctl.c](https://raw.githubusercontent.com/systemd/systemd/v257/src/busctl/busctl.c) and [dbus-execute.c](https://raw.githubusercontent.com/systemd/systemd/v257/src/core/dbus-execute.c), [dbus-service.c](https://raw.githubusercontent.com/systemd/systemd/v257/src/core/dbus-service.c).
+- Controlled tests establish local source behavior; they do not establish an installed positive configuration. The two findings block this bounded checkpoint's approval. Whole 9c2 acceptance, live scope owner/hooks, native readiness, writer enforcement and installed proofs remain separate/open.

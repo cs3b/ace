@@ -551,10 +551,13 @@ module Ace
           assert_raises(AttemptErrors::UnauthorizedIdentity) { call("evidence_fetch", params, peer: @reviewer, role: :reviewer) }
           @revoked << @executor["uid"]
           assert_raises(AttemptErrors::UnauthorizedIdentity) { call("evidence_fetch", params, peer: @executor, role: :executor) }
-          %w[inbox observation].each do |kind|
-            assert_raises(AttemptErrors::EvidenceUnavailable) do
-              call("evidence_fetch", params.merge("kind" => kind), peer: @supervisor, role: :supervisor)
-            end
+          # Inbox now has its canonical reader; this service request is not
+          # an inbox registration. Observation still has no protected reader.
+          assert_raises(AttemptErrors::NotFound) do
+            call("evidence_fetch", params.merge("kind" => "inbox"), peer: @supervisor, role: :supervisor)
+          end
+          assert_raises(AttemptErrors::EvidenceUnavailable) do
+            call("evidence_fetch", params.merge("kind" => "observation"), peer: @supervisor, role: :supervisor)
           end
         end
       end

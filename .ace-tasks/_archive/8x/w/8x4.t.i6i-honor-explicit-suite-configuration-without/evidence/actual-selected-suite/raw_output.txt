@@ -1,0 +1,9 @@
+
+# Running tests with run options --seed 1930:
+
+.......................................................................
+
+Finished tests in 0.049482s, 1434.8652 tests/s, 2526.1711 assertions/s.
+
+
+71 tests, 125 assertions, 0 failures, 0 errors, 0 skips
