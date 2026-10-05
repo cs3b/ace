@@ -3,6 +3,7 @@
 require_relative "../test_helper"
 require "open3"
 require "ace/assign/molecules/canonical_evidence"
+require "ace/assign/authority/service_evidence"
 
 module Ace
   module Assign
@@ -22,20 +23,16 @@ module Ace
           binding = {"request_id" => "request-1", "assignment_id" => "assignment-1", "attempt_id" => "attempt-1",
             "project_id" => "fixture", "operation" => "publish", "input_digest" => "a" * 64,
             "target" => {"resource" => "fixture"}, "candidate_head" => git(repo, "rev-parse", "HEAD"),
-            "executor_uid" => Process.uid, "transport" => "unix"}
-          context = {kind: "service", project_id: "fixture", assignment_id: "assignment-1", attempt_id: "attempt-1",
-            peer_uid: Process.uid, binding: binding, request_id_or_event_id: "request-1", generation: 1}
+            "executor_uid" => Process.uid, "transport" => "unix", "dispatch_ticket_id" => "fixture-ticket",
+            "claim_binding" => "b" * 64, "candidate_generation" => 1, "claim_generation" => 1, "policy_digest" => "c" * 64}
           importer = nil
-          reader = lambda do |reference, _record, _state, pending|
-            if pending && pending[:pending_events]
-              importer.read_pending(reference, **context, **pending)
-            else
-              importer.read(reference, **context, commit: pending && pending[:commit] || importer.instance_variable_get(:@journal).ref_value)
-            end
-          end
+          owner = nil
+          reader = ->(reference, record, state, pending) { owner.call(reference, record, state, pending) }
           journal = Molecules::EvidenceJournal.new(repo_root: repo, checkout_root: File.join(cache, "journal"),
             mode: :protected, evidence_reader: reader, service_authorizer: ->(*) {})
           importer = Molecules::CanonicalEvidence.new(journal: journal)
+          owner = Authority::ServiceEvidence.new(journal: journal)
+          context = owner.context(binding)
           claim = binding.merge("state" => "accepted")
           mutate(journal, "claim", 0) do
             {data: {}, service_updates: [{request_id: "request-1", expected: nil, replacement: claim, event_type: "service_claim"}]}
@@ -53,7 +50,8 @@ module Ace
         bytes = "ace-service-attestation request:request-1 input:#{binding.fetch("input_digest")} outcome:succeeded\nexact artifact bytes\r\n"
         plan = importer.import_plan(**context, artifacts: [bytes],
           admitted_after_event_digest: journal.read_events("assignment-1").last.fetch("digest"))
-        receipt = binding.merge("outcome" => "succeeded", "evidence" => plan.fetch(:references))
+        receipt = binding.slice(*Molecules::EvidenceJournal::TERMINAL_BINDING_FIELDS).merge(
+          "outcome" => "succeeded", "evidence" => plan.fetch(:references))
         record = binding.merge("state" => "succeeded", "receipt" => receipt)
         plan.merge(data: {"state" => "succeeded"}, service_updates: [
           {request_id: "request-1", expected: journal.service_request("request-1"), replacement: record, event_type: "service_transition"}])
@@ -70,6 +68,16 @@ module Ace
           assert_equal %w[evidence_import service_transition authority_mutation], events.last(3).map { |event| event.fetch("type") }
           assert_equal result.fetch("journal_commit"), journal.mutation_result("complete").fetch("journal_commit")
           assert_equal binding.fetch("candidate_head"), git(repo, "rev-parse", "HEAD")
+          coordinator = Organisms::AttemptCoordinator.new(repo_root: repo, journal: journal)
+          assert coordinator.send(:verify_service_evidence!, plan.fetch(:references), binding, "succeeded")
+          owner = Authority::ServiceEvidence.new(journal: journal)
+          %w[attempt_id claim_binding executor_uid candidate_generation].each do |field|
+            altered = binding.merge(field => (binding[field].is_a?(Integer) ? binding[field] + 1 : "different"))
+            assert_raises(AttemptErrors::EvidenceUnavailable) do
+              owner.call(plan.fetch(:references).first, altered, "succeeded", nil)
+            end
+          end
+          assert_raises(AttemptErrors::EvidenceUnavailable) { owner.context(binding, no_effect: true) }
         end
       end
 
@@ -158,6 +166,10 @@ module Ace
           git(checkout, "-c", "user.name=test", "-c", "user.email=test@example.invalid", "commit", "-m", "delete import")
           git(repo, "update-ref", journal.ref, git(checkout, "rev-parse", "HEAD"), old)
           assert_raises(AttemptErrors::EvidenceUnavailable) { journal.service_request("request-1") }
+          coordinator = Organisms::AttemptCoordinator.new(repo_root: repo, journal: journal)
+          assert_raises(AttemptErrors::EvidenceUnavailable) do
+            coordinator.send(:verify_service_evidence!, plan.fetch(:references), binding, "succeeded")
+          end
         end
       end
     end

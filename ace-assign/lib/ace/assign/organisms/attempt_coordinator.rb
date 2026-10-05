@@ -264,6 +264,11 @@ module Ace
         # and attested outcome. All checks read one open handle, so a swap
         # on a caller-writable path cannot mix files between checks.
         def verify_service_evidence!(evidence, request, state, require_no_effect: false)
+          if @journal&.evidence_mode == :protected
+            receipt = request.slice(*SERVICE_BINDING_FIELDS).merge("outcome" => state, "evidence" => evidence)
+            @journal.validate_terminal_receipt!(request, require_no_effect ? "failed-settled" : state, receipt)
+            return true
+          end
           repo_root = File.realpath(@repo_root)
           claimed_at = parse_claimed_at(request)
           evidence.each do |item|

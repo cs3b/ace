@@ -28,6 +28,11 @@ module Ace
         include JournalMutation
         CAS_ATTEMPTS = 3
 
+        # Selected by source composition, never by receipt or wire parameters.
+        def evidence_mode
+          @mode
+        end
+
         # @param repo_root [String] Git repository root holding the evidence ref
         # @param ref [String, nil] Evidence ref (default from config)
         # @param checkout_root [String, nil] Isolated checkout root (default from config)
