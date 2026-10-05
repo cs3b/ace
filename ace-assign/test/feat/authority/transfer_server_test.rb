@@ -42,6 +42,7 @@ module Ace
           map = {"authority_id" => "authority", "project_id" => "project", "worker_uid" => 13001, "worker_gid" => 13001, "worker_groups" => [13001]}
           deployment = Object.new
           deployment.define_singleton_method(:verify_composition!) { |*args, **options| true }
+          deployment.define_singleton_method(:verify_receiver_paths!) { |_id| true }
           deployment.define_singleton_method(:authority) { |_id| service }
           deployment.define_singleton_method(:verify!) { |*args, **options| map }
           kernel = Object.new

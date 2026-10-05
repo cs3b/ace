@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Validate fixed service receiver principals and private placement before authority startup, refusing ambiguous roles, overlapping ownership and inaccessible endpoints.
+
 - Add the public protected assignment authority and gated launch driver with canonical reservation, exact binding, one durable release, replay refusal and conservative crash recovery.
 
 - Resolve immutable second-commander proposals through confirmed-delivery sixteen-hour policy and canonical Assign authorization.

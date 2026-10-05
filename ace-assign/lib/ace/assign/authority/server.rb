@@ -28,6 +28,7 @@ module Ace
           unless principal?(me, @service, "uid", "gid", "groups")
             raise AttemptErrors::UnauthorizedIdentity, "listener principal differs from installed authority"
           end
+          @deployment.verify_receiver_paths!(@authority_id)
           directory = File.dirname(@service.fetch("socket_path"))
           wire.root_path!(directory, directory: true, owner: @service.fetch("uid"))
           lock = File.open(File.join(directory, "listener.lock"), File::RDWR | File::CREAT | File::NOFOLLOW, 0o600)

@@ -3,6 +3,7 @@ require "json"
 require "digest"
 require "etc"
 require "rbconfig"
+require_relative "posix_acl"
 require "ace/runtime/molecules/protected_socket"
 require "ace/runtime/molecules/protected_linux"
 
@@ -41,8 +42,11 @@ module Ace
             %w[socket_path state_root].each { |key| path!(service.fetch(key)) }
           end
           @data["projects"].each_value do |project|
-            strict!(project, %w[journal_repository evidence_git_ref evidence_checkout_root assignment_root candidate_root
-              launcher_uids reviewer_uids worker_uids service_executor_uids supervisor_uids peer_credentials])
+            raise ArgumentError, "invalid project mapping" unless project.is_a?(Hash)
+            keys = %w[journal_repository evidence_git_ref evidence_checkout_root assignment_root candidate_root
+              launcher_uids reviewer_uids worker_uids service_executor_uids supervisor_uids peer_credentials]
+            keys << "service_receivers" if project.key?("service_receivers")
+            strict!(project, keys)
             %w[journal_repository evidence_checkout_root assignment_root candidate_root].each { |key| path!(project.fetch(key)) }
             unless project["evidence_git_ref"] == "refs/ace/execution"
               raise ArgumentError, "protected authority uses the canonical execution ref"
@@ -63,17 +67,117 @@ module Ace
               principal!(peer.merge("uid" => Integer(uid, 10)), "uid", "gid", "groups")
               path!(peer.fetch("scratch_root"))
             end
+            receivers = project.fetch("service_receivers", {})
+            unless receivers.is_a?(Hash) && receivers.keys.all? { |id| id.is_a?(String) && TOKEN.match?(id) }
+              raise ArgumentError, "invalid installed service receiver mapping"
+            end
+            receivers.each_value do |receiver|
+              strict!(receiver, %w[executor_uid socket_path staging_root])
+              uid = receiver.fetch("executor_uid")
+              conflicting = %w[launcher_uids reviewer_uids worker_uids supervisor_uids].flat_map { |key| project.fetch(key) }
+              unless uid.is_a?(Integer) && uid.positive? && project.fetch("service_executor_uids").include?(uid) && !conflicting.include?(uid)
+                raise ArgumentError, "receiver requires an unambiguous mapped executor"
+              end
+              %w[socket_path staging_root].each { |key| path!(receiver.fetch(key)) }
+            end
           end
           @data["launch_mappings"].each { |id, mapping| validate_mapping!(id, mapping) }
           endpoints = @data.fetch("authorities").values.map { |service| service.fetch("socket_path") }
+          receivers = @data.fetch("projects").values.flat_map { |project| project.fetch("service_receivers", {}).values }
+          protected_uids = @data.fetch("authorities").values.map { |service| service.fetch("uid") } +
+            @data.fetch("projects").values.flat_map { |project| %w[launcher_uids reviewer_uids worker_uids supervisor_uids].flat_map { |key| project.fetch(key) } }
+          if receivers.any? { |receiver| protected_uids.include?(receiver.fetch("executor_uid")) }
+            raise ArgumentError, "receiver executor overlaps another installed role"
+          end
+          endpoints.concat(receivers.map { |receiver| receiver.fetch("socket_path") })
           raise ArgumentError, "authority endpoint has duplicate owners" unless endpoints.uniq.size == endpoints.size
+          staging = receivers.map { |receiver| receiver.fetch("staging_root") }
+          unless staging.combination(2).none? { |left, right| paths_overlap?(left, right) }
+            raise ArgumentError, "receiver staging roots overlap"
+          end
+          if receivers.any? { |receiver| staging.any? { |root| paths_overlap?(receiver.fetch("socket_path"), root) } }
+            raise ArgumentError, "receiver endpoint must be separate from private staging"
+          end
+          protected_roots = @data.fetch("authorities").values.map { |service| service.fetch("state_root") } +
+            @data.fetch("projects").values.flat_map { |project| %w[journal_repository evidence_checkout_root assignment_root candidate_root].map { |key| project.fetch(key) } }
+          if staging.any? { |root| protected_roots.any? { |protected| paths_overlap?(root, protected) } }
+            raise ArgumentError, "receiver staging overlaps authority state"
+          end
           repositories = @data.fetch("projects").values.map { |project| project.fetch("journal_repository") }
           raise ArgumentError, "canonical project repository has duplicate mappings" unless repositories.uniq.size == repositories.size
           @data.fetch("projects").each_key do |project_id|
             owners = @data.fetch("launch_mappings").values.select { |map| map["project_id"] == project_id }.map { |map| map.fetch("authority_id") }.uniq
             raise ArgumentError, "project must have exactly one authority owner" unless owners.size == 1
+            service = authority(owners.first)
+            installed = project(project_id).fetch("service_receivers", {})
+            if service.fetch("composition") == "services" && installed.empty?
+              raise ArgumentError, "services composition requires installed receivers"
+            end
           end
         end
+
+        # Validate fixed receiver placement before the owner opens a listener or
+        # creates journal state. Operations/grants remain the Lab policy's job.
+        def verify_receiver_paths!(authority_id)
+          projects = data.fetch("launch_mappings").values.select { |map| map["authority_id"] == authority_id }.map { |map| map.fetch("project_id") }.uniq
+          projects.each do |id|
+            project(id).fetch("service_receivers", {}).each_value do |receiver|
+              uid = receiver.fetch("executor_uid")
+              root = receiver.fetch("staging_root")
+              credentials = project(id).fetch("peer_credentials").fetch(uid.to_s)
+              groups = (credentials.fetch("groups") + [credentials.fetch("gid")]).uniq
+              receiver_directory!(root, uid: uid, groups: groups)
+              unless File.executable?(File.dirname(root))
+                raise Ace::Runtime::RuntimeUnavailableError, "authority cannot inspect receiver staging"
+              end
+              stat = File.lstat(root)
+              unless stat.uid == uid && (stat.mode & 0o7777) == 0o700
+                raise Ace::Runtime::RuntimeUnavailableError, "receiver staging must be executor-private"
+              end
+              path = receiver.fetch("socket_path")
+              receiver_directory!(File.dirname(path), uid: uid, groups: groups)
+              unless File.executable?(File.dirname(path))
+                raise Ace::Runtime::RuntimeUnavailableError, "authority cannot inspect receiver endpoint"
+              end
+              if File.exist?(path) || File.symlink?(path)
+                endpoint = File.lstat(path)
+                unless endpoint.socket? && !endpoint.symlink? && endpoint.uid == uid &&
+                    endpoint.gid == project(id).fetch("peer_credentials").fetch(uid.to_s).fetch("gid") && (endpoint.mode & 0o007).zero?
+                  raise Ace::Runtime::RuntimeUnavailableError, "installed receiver endpoint is unsafe"
+                end
+              end
+            end
+          end
+          true
+        rescue SystemCallError
+          raise Ace::Runtime::RuntimeUnavailableError, "installed receiver paths are unavailable"
+        end
+
+        def receiver_directory!(path, uid:, groups:)
+          current = path
+          loop do
+            stat = File.lstat(current)
+            unless stat.directory? && !stat.symlink? && [0, uid].include?(stat.uid) && (stat.mode & 0o022).zero?
+              raise Ace::Runtime::RuntimeUnavailableError, "installed receiver ancestry is unsafe"
+            end
+            unless receiver_acl.searchable?(current, stat: stat, uid: uid, groups: groups)
+              raise Ace::Runtime::RuntimeUnavailableError, "executor cannot traverse receiver ancestry"
+            end
+            break if current == "/"
+            current = File.dirname(current)
+          end
+        end
+        private :receiver_directory!
+
+        def receiver_acl
+          @receiver_acl ||= PosixAcl.new
+        end
+        private :receiver_acl
+
+        def paths_overlap?(left, right)
+          left == right || left.start_with?(right.chomp("/") + "/") || right.start_with?(left.chomp("/") + "/")
+        end
+        private :paths_overlap?
 
         def verify_composition!(authority_id, composition:)
           unless %w[launch services].include?(composition) && authority(authority_id).fetch("composition") == composition
