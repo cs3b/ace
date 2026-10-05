@@ -15,6 +15,40 @@ module Ace
           scope_native_binding receipt_key_sha256 receipt_sha256 signature_sha256 submitter_uid submitter_role].freeze
         INBOX_REF_FIELDS = %w[artifact_id ref sha256 bytes].freeze
 
+        # Shared source-owned predicate for existing scope abort/reuse/finish.
+        # The caller holds lifecycle exclusion; this is never a wire operation.
+        def inbox_settlement_complete!(journal:, events:, params:, map:, commit:)
+          protected_journal!(journal)
+          retained = journal.read_events(params.fetch("assignment_id"), commit: commit)
+            .select { |event| event["attempt_id"] == params.fetch("attempt_id") }
+          unless retained == events && Models::EvidenceEvent.chain_valid?(events)
+            raise AttemptErrors::EvidenceUnavailable, "inbox settlement requires exact canonical commit"
+          end
+          registrations = events.select { |event| event["type"] == "inbox_binding" }
+          project = @deployment.project(map.fetch("project_id"))
+          project.fetch("inbox_contexts", {}).each_key do |id|
+            context = @deployment.inbox_context(params.fetch("mapping_id"), id)
+            next unless context.fetch("native_mapping_id") == params.fetch("mapping_id")
+            @deployment.verify_inbox_context!(params.fetch("mapping_id"), id)
+            actual = Ace::Herdr::Organisms::Inbox.retained_events(deliveries_dir: context.fetch("deliveries_dir"), attempt: params.fetch("attempt_id"))
+            registered = registrations.filter_map { |event| event.dig("payload", "event_id") if event.dig("payload", "inbox_context_id") == id }
+            unless actual.sort == registered.sort
+              raise AttemptErrors::EvidenceUnavailable, "registered or unattributable inbox retention differs"
+            end
+          end
+          registrations.each do |event|
+            selected = params.merge("event_id" => event.dig("payload", "event_id"), "inbox_context_id" => event.dig("payload", "inbox_context_id"))
+            box, registration, lineage = inbox_environment(events, selected, map)
+            proof = verified_inbox_record(journal, events, selected, map, commit, box: box, registration: registration, lineage: lineage)
+            unless proof && proof["state"] == "completed"
+              raise AttemptErrors::EvidenceUnavailable, "current inbox settlement is incomplete"
+            end
+          end
+          true
+        rescue KeyError, TypeError, ArgumentError, Ace::Herdr::Error, Ace::Runtime::RuntimeUnavailableError
+          raise AttemptErrors::EvidenceUnavailable, "canonical inbox settlement is unverifiable"
+        end
+
         private
 
         def inbox_request(request)
@@ -45,12 +79,20 @@ module Ace
         def inbox_selection(events, params, map, peer, role)
           origin = retained_origin(events, params)
           context = @deployment.inbox_context(params.fetch("mapping_id"), params.fetch("inbox_context_id"))
-          @deployment.verify_inbox_context!(params.fetch("mapping_id"), params.fetch("inbox_context_id"))
           @kernel.live!(peer)
           service_policy!.visible!(project: map.fetch("project_id"), uid: peer.fetch("uid"))
           allowed = (role == :supervisor && context.fetch("supervisor_uids").include?(peer["uid"])) ||
             (role == :launcher && peer["uid"] == map.fetch("launcher_uid") && @kernel.same?(peer, origin.fetch("launcher_identity")))
           raise AttemptErrors::UnauthorizedIdentity, "inbox requires exact launcher or mapped supervisor" unless allowed
+          inbox_environment(events, params, map)
+        end
+
+        def inbox_environment(events, params, map)
+          unless Models::EvidenceEvent.chain_valid?(events) && events.all? { |event| event["attempt_id"] == params.fetch("attempt_id") }
+            raise AttemptErrors::EvidenceUnavailable, "canonical inbox attempt chain differs"
+          end
+          context = @deployment.inbox_context(params.fetch("mapping_id"), params.fetch("inbox_context_id"))
+          @deployment.verify_inbox_context!(params.fetch("mapping_id"), params.fetch("inbox_context_id"))
           bindings = events.select { |event| event["type"] == "inbox_binding" && event.dig("payload", "event_id") == params["event_id"] }
           raise AttemptErrors::NotFound, "inbox registration missing" if bindings.empty?
           registered = bindings.one? && bindings.first.fetch("payload")
@@ -202,6 +244,10 @@ module Ace
 
         def verified_inbox(journal, events, params, map, peer, role, commit)
           box, registration, lineage = inbox_selection(events, params, map, peer, role)
+          verified_inbox_record(journal, events, params, map, commit, box: box, registration: registration, lineage: lineage)
+        end
+
+        def verified_inbox_record(journal, events, params, map, commit, box:, registration:, lineage:)
           records = events.select { |event| event["type"] == "inbox_reconciliation" && event.dig("payload", "event_id") == params.fetch("event_id") }
           replies = events.select { |event| event["type"] == "authority_mutation" &&
             event.dig("payload", "operation") == "reconcile_inbox" && event.dig("payload", "data", "event_id") == params.fetch("event_id") }
@@ -250,7 +296,8 @@ module Ace
           inbox_native_lineage!(observed, lineage, receipt: receipt)
           verified = box.verify_reconciliation(event: params.fetch("event_id"), receipt: receipt,
             signed_bytes: raw.first, signature: raw.last, expected_registration: registration)
-          if verified["reconciliation_refusal"] || verified["state"] != payload["state"]
+          signed_state = receipt["outcome"] == "consumed" ? "completed" : "queued"
+          if verified["reconciliation_refusal"] || verified["state"] != payload["state"] || payload["state"] != signed_state
             raise AttemptErrors::EvidenceUnavailable, "canonical inbox signature or settlement differs"
           end
           unless events.any? { |event| event["type"] == "authority_mutation" && event.dig("payload", "operation") == "reconcile_inbox" &&

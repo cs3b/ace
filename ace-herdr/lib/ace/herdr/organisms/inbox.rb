@@ -45,6 +45,26 @@ module Ace
             receipt_public_key: key)
         end
 
+        # Enumerate retained event identities through the same store/lock owner.
+        # Unreadable unattributable records cannot be treated as another attempt.
+        def self.retained_events(deliveries_dir:, attempt:)
+          raise ValidationError, "invalid attempt id" unless attempt.is_a?(String) && EVENT.match?(attempt)
+          ids = [deliveries_dir, Molecules::DeliveryRecordStore.archive_dir(deliveries_dir)].flat_map do |dir|
+            next [] unless Dir.exist?(dir)
+            Dir.children(dir).filter_map { |name| name.delete_suffix(".json") if name.end_with?(".json") }
+          end.uniq
+          ids.select do |event|
+            raise ValidationError, "retained inbox event id is invalid" unless EVENT.match?(event)
+            Molecules::DeliveryRecordStore.with_lock(deliveries_dir, event, create: false) do
+              record = Molecules::DeliveryRecordStore.load(deliveries_dir, event)
+              raise ValidationError, "retained inbox event is unavailable" unless record&.inbox
+              record.inbox.fetch("attempt_id") == attempt
+            end
+          end
+        rescue SystemCallError, JSON::ParserError, ArgumentError, KeyError
+          raise ValidationError, "retained inbox inventory is unavailable"
+        end
+
         def initialize(executor:, native:, deliveries_dir:, receipt_public_key: nil)
           @executor = executor
           @native = native

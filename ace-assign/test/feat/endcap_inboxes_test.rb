@@ -27,7 +27,7 @@ module Ace
         def bytes(index: 0); parts.fetch(index); end
       end
 
-      def fixture(child: false)
+      def fixture(child: false, inbox: true)
         Dir.mktmpdir do |root|
           repo = File.join(root, "repo"); FileUtils.mkdir_p(repo)
           git_in(repo, "init", "-b", "main")
@@ -46,6 +46,7 @@ module Ace
           @unsafe = false
           @deployment = Object.new
           owner = self
+          @deployment.define_singleton_method(:project) { |_| {"inbox_contexts" => {"context" => owner.instance_variable_get(:@context)}} }
           @deployment.define_singleton_method(:mapping) { |id| raise KeyError unless id == "mapping"; owner.instance_variable_get(:@map) }
           @deployment.define_singleton_method(:inbox_context) { |_mapping, id| raise AttemptErrors::EvidenceUnavailable unless id == "context"; owner.instance_variable_get(:@context) }
           @deployment.define_singleton_method(:verify_inbox_context!) { |*| raise Ace::Runtime::RuntimeUnavailableError if owner.instance_variable_get(:@unsafe); true }
@@ -76,6 +77,12 @@ module Ace
               "scope_generation" => 2, "scope_binding_event_id" => parent_event.fetch("digest"),
               "native_binding_event_id" => events.find { |event| event["type"] == "scope_native_bound" }.fetch("digest"),
               "original_process_binding" => original}}]})
+          end
+          unless inbox
+            FileUtils.mkdir_p(@context.fetch("deliveries_dir"))
+            @params = {"mapping_id" => "mapping", "assignment_id" => "assignment", "attempt_id" => "attempt"}
+            yield
+            next
           end
           executor = Object.new
           executor.define_singleton_method(:pane_get_bounded) do |_pane|
@@ -258,6 +265,57 @@ module Ace
           assert_equal "completed", reconcile.dig(:data, "state")
           @kernel.dead = [90, 91]
           assert reconcile.fetch(:replayed)
+        end
+      end
+
+      def settlement(events: self.events, commit: @journal.ref_value)
+        @owner.inbox_settlement_complete!(journal: @journal, events: events, params: @params.slice("mapping_id", "assignment_id", "attempt_id"), map: @map, commit: commit)
+      end
+
+      def test_source_owned_settlement_shares_provenance_without_fabricated_public_peer
+        fixture do
+          assert_raises(AttemptErrors::EvidenceUnavailable) { settlement }
+          reconcile
+          @kernel.dead = [81, 82, 90, 91]
+          @policy.define_singleton_method(:visible!) { |**| raise "internal source predicate must not invent a public peer" }
+          assert settlement
+          store = Ace::Herdr::Molecules::DeliveryRecordStore
+          store.with_lock(@context.fetch("deliveries_dir"), "event") { store.archive(@context.fetch("deliveries_dir"), "event") }
+          assert settlement
+          assert_raises(AttemptErrors::EvidenceUnavailable) { settlement(events: events.drop(1)) }
+          @journal.stub(:blob, "corrupt") { assert_raises(AttemptErrors::EvidenceUnavailable) { settlement } }
+          lock = Ace::Herdr::Molecules::DeliveryRecordStore.lock_path(@context.fetch("deliveries_dir"), "event")
+          File.unlink(lock)
+          assert_raises(AttemptErrors::EvidenceUnavailable) { settlement }
+          refute File.exist?(lock)
+        end
+        fixture do
+          receipt = JSON.parse(@bytes); receipt["outcome"] = "superseded"; receipt["evidence"]["kind"] = "queue_evicted"
+          @bytes = JSON.generate(receipt); @signature = @key.sign(OpenSSL::Digest::SHA256.new, @bytes)
+          @params = @params.merge("receipt_sha256" => Digest::SHA256.hexdigest(@bytes), "signature_sha256" => Digest::SHA256.hexdigest(@signature))
+          reconcile
+          assert_raises(AttemptErrors::EvidenceUnavailable) { settlement }
+        end
+      end
+
+      def test_source_owned_empty_inbox_set_is_verified_without_native_or_public_peer
+        fixture(inbox: false) do
+          @kernel.dead = [81, 82, 90, 91]
+          @policy.define_singleton_method(:visible!) { |**| raise "no invented public peer" }
+          assert settlement
+          @unsafe = true
+          assert_raises(AttemptErrors::EvidenceUnavailable) { settlement }
+        end
+      end
+
+      def test_unregistered_retained_event_cannot_disappear_from_settlement_inventory
+        fixture do
+          reconcile
+          store = Ace::Herdr::Molecules::DeliveryRecordStore
+          record = store.load(@context.fetch("deliveries_dir"), "event")
+          copy = Ace::Herdr::Models::DeliveryRecord.from_h(record.to_h.merge("event_id" => "unregistered"))
+          store.with_lock(@context.fetch("deliveries_dir"), "unregistered") { store.save(copy, @context.fetch("deliveries_dir")) }
+          assert_raises(AttemptErrors::EvidenceUnavailable) { settlement }
         end
       end
 
