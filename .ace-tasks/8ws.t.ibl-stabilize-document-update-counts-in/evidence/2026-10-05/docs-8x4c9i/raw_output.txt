@@ -1,0 +1,22 @@
+Started with run options --seed 30546
+
+Ace::Docs::Molecules::FrontmatterManagerTest
+  test_update_documents_returns_count                             PASS (0.01s)
+  test_update_preserves_other_frontmatter_fields                  PASS (0.00s)
+  test_update_document_with_date_only_timestamp                   PASS (0.00s)
+  test_process_value_other_string_unchanged                       PASS (0.00s)
+  test_process_value_number_unchanged                             PASS (0.00s)
+  test_update_document_with_today_special_value                   PASS (0.01s)
+  test_update_documents_counts_only_successful_updates            PASS (0.01s)
+  test_update_preserves_complex_nested_frontmatter                PASS (0.00s)
+  test_process_value_now_returns_datetime                         PASS (0.00s)
+  test_process_value_date_only_string_unchanged                   PASS (0.00s)
+  test_update_document_with_datetime_timestamp                    PASS (0.00s)
+  test_update_document_with_now_special_value                     PASS (0.00s)
+  test_update_returns_false_for_nonexistent_file                  PASS (0.00s)
+  test_update_returns_false_for_nil_path                          PASS (0.00s)
+  test_update_creates_backup_file                                 PASS (0.00s)
+  test_process_value_today_returns_date_only                      PASS (0.00s)
+
+Finished in 0.05078s
+16 tests, 60 assertions, 0 failures, 0 errors, 0 skips
