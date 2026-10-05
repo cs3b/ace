@@ -40,3 +40,54 @@ If begin or authorization reply is lost, the receiver reports uncertainty withou
 
 
 An executor reporting the exact observed outcome sends `complete_service` with its immutable request/claim/candidate and receipt/artifact binding, without an expected generation or generation-mode flag. The owner resolves current completion generation on each CAS retry, so an interleaved mutation cannot force a revoked executor to obtain a broad status read. Status itself still refuses absent/revoked current project visibility for every role. This records truth only; no new effect permission is created.
+
+
+# Protected result and terminal admission — draft usage
+
+API surface: agent/client API. These examples use the existing version 1
+Server envelope; project_id and deployment mapping are fixed installed values.
+The family protected-authority-contract.md amendment defines exact types,
+permissions, bounds, response fields and error codes.
+
+## Submit a worker result, then finish after cleanup
+
+The exact live mapped worker sends operation submit_result, mutation_id result-1,
+params `{mapping_id, assignment_id, attempt_id, expected_generation,
+candidate_generation, head, receipt_sha256, transfer}` and receipt_artifacts
+bytes (normal receipt first; ordered declared artifact bytes follow). Success
+returns result_id, original/upload/normalized digests, ordered canonical artifact
+references, verdict, generation and journal_commit. It leaves the attempt active.
+After worker exit and positive execution-scope no-writer proof from prerequisite
+9c2 (currently draft; positive finish is blocked until delivered), the exact
+launcher or mapped supervisor sends operation finish, mutation_id finish-1,
+params `{mapping_id, assignment_id, attempt_id, expected_generation,
+candidate_generation, head, result_id}` without a body. Success returns terminal
+state and accepted receipt_digest with canonical generation/commit. A worker
+finish is unauthorized. Failed receipt settlement does not require an approved
+success review, but still requires all independent cleanup proofs. Pending effect/inbox/cleanup is evidence_unavailable and
+ownership remains held. Failed receipt with no artifacts still uploads its one
+receipt part and cannot assert no effect.
+
+## Fetch one authorized retained artifact
+
+A permitted peer sends operation evidence_fetch, mutation_id null,
+params `{mapping_id, assignment_id, attempt_id, kind, purpose_id, artifact_id}`.
+Success returns exact canonical descriptor, current generation/read commit and
+one artifacts part matching descriptor bytes/SHA256. Worker can fetch only its
+own result bytes; raw review/observation fetch by worker is unauthorized. Current
+project revocation denies retained evidence. No receipt part or filesystem path
+is supplied on this read.
+
+## Retry after a lost reply
+
+Retry the identical submit_result or finish envelope with the original mutation
+ID. For submit_result the original canonical reply returns with transport.replayed
+true only while its worker lineage remains live and attempt active; exit or
+terminality fails closed with evidence_unavailable. Finish exact replay returns
+its retained verified reply without re-running cleanup or releasing twice. Changing content under that ID conflicts; sending
+a fresh result ID for the same candidate or fresh finish ID after terminality
+conflicts. Missing canonical provenance/blob returns evidence_unavailable even
+if a disposable local cache still contains an earlier successful response.
+
+Full usage will be completed during child implementation. This draft does not
+claim full service composition startup or installed cross-user acceptance.

@@ -158,3 +158,391 @@ No focused/current/aliased/reused/restored target or worker-selected pane can
 supply origin. Lost creation response keeps ownership uncertain, with no search,
 adoption, repeated spawn or release. xz9 consumes this accepted origin rather
 than rebuilding it from worker projections. Unsupported origin guarantees refuse.
+
+
+## Result, evidence-fetch and finish amendment — draft, 2026-10-05
+
+This amendment closes the public contracts left open by the bounded result JIT
+plan. It awaits an independent amendment verdict; xz9.0 stays draft / needs_review.
+Real child xz9.3 owns submit_result/evidence_fetch and their public consumers;
+xz9.0 consumes it and owns finish/terminal and full endcap integration. Upstream
+9c2 owns the missing scope-proof capability; no research-only task or controller
+is introduced. Recovery, no-effect settlement and inbox signing/consumer work
+remain tracked in xz9.0; installed drills remain xz9.1 and installation children.
+Full services construction continues to refuse until its complete operation set
+is implemented. A tested handler seam is not full-service readiness.
+
+### Closed wire schemas and identities
+
+All three operations retain the existing exact envelope
+`{version: 1, operation, project_id, mutation_id, params}`. Unknown/extra fields
+refuse. IDs use JournalMutation's 1–128 character identifier grammar; digests are
+64 lowercase hex; head is the exact full candidate commit SHA; generations are
+nonnegative integers. Mapping/project/assignment/attempt must resolve together.
+No wire actor, role, repository path, caller-issued import artifact ID, cleanup
+assertion or authority identity is accepted. evidence_fetch alone may select an
+existing owner-issued canonical artifact_id; it cannot assign IDs or blob paths. Server derives role and native peer identity from the fixed
+deployment and connection. Current project visibility is checked through the
+injected existing Lab policy owner, including for replay and historical fetch.
+
+| Operation | Exact params keys | Mutation ID / transfer |
+|---|---|---|
+| submit_result | mapping_id, assignment_id, attempt_id, expected_generation, candidate_generation, head, receipt_sha256, transfer | Required strict mutation ID; upload receipt_artifacts |
+| evidence_fetch | mapping_id, assignment_id, attempt_id, kind, purpose_id, artifact_id | Must be null; download artifacts, exactly one selected artifact |
+| finish | mapping_id, assignment_id, attempt_id, expected_generation, candidate_generation, head, result_id | Required strict mutation ID; no upload/download body |
+
+ReceiptTransfer's existing descriptor schema, receipt-first framing, SHA256,
+order, EOF/deadline and byte limits apply unchanged. submit_result accepts the
+normal ExecutionReceipt fields, never a second receipt dialect. Its producer
+must equal exactly `{actor: map.worker_actor, role: worker, runtime: herdr}` and
+its attempt/project/assignment/scope/head must equal canonical origin/candidate.
+Only the mapped owning worker may submit, with a live connection positively
+descending from the recorded original worker PID/UID/birth and native launch
+binding. Launcher/supervisor cannot upload on its behalf. Receipt metadata
+cannot replace that check, including for a failed verdict.
+
+### Submitted result identity, digests and output
+
+Before normalization verify SHA256 of the original JSON bytes against
+receipt_sha256 and the transfer descriptor, and verify the original
+ExecutionReceipt digest using EvidenceDigest / digest_payload. A missing normal
+receipt digest is computed by its existing owner; a supplied digest must match.
+Call the computed value `original_receipt_digest`. Validate normal schema,
+forbidden fields, binding, checks, operation and artifact declarations through
+the existing ReceiptVerifier owner; separate result validation from terminal
+acceptance authority. No synthetic trusted wire identity or accepted receipt
+is used to make worker submission appear approved.
+
+The authority generates one immutable result_id (32 lowercase hex) for the
+first admitted result of an exact candidate generation. There is at most one
+submitted result per attempt/candidate generation. Any fresh mutation ID trying
+to submit again conflicts, whether content is identical or different. A later
+candidate generation may submit a new result; old results are retained but
+cannot finish the new candidate. Correcting any result requires submit_candidate
+to admit a new generation, even if HEAD is unchanged, and fresh exact review
+before successful finish. A fresh mutation ID never replaces a result in-place. An exact original mutation retry returns its
+original result_id and reply without importing twice while the original worker
+lineage is still live and the attempt remains active. submit_result replay after
+worker exit or terminality fails closed with evidence_unavailable; it does not
+relax worker authentication to same UID. Apply this admission and canonical
+private-record verification outside JournalMutation's replay callback. Changed metadata/raw
+receipt bytes/artifact bytes/order with that ID conflicts; the mutation input
+digest covers the complete params including receipt and transfer digests.
+
+Normalize artifact paths, in declared order, to owner-issued canonical
+`evidence/imports/ARTIFACT_ID` references; recompute ExecutionReceipt digest
+without the old digest/recorded_at, as for accept_review. Call this value
+`receipt_digest`. `uploaded_receipt_sha256`, `original_receipt_digest` and
+`receipt_digest` are distinct named values and never substituted for one another.
+The private normalized receipt metadata and result binding are retained in one
+new source-owned `result_submitted` event type in the existing EvidenceEvent
+registry and attempt event chain, not in authority_mutation.data. Its exact
+payload is `{version: 1, result_id, binding, uploaded_receipt_sha256,
+original_receipt_digest, receipt_digest, receipt, artifacts}`. binding is the exact
+object below; receipt is the normal normalized ExecutionReceipt.to_h; artifacts
+is its identical ordered normalized array. IDs/digests must agree across all
+fields; receipt binding and producer must match origin and binding; exactly one
+such event may bind each result_id and candidate generation. No raw receipt JSON
+bytes or terminal output are retained in this metadata. The private event,
+artifact blobs/import events and sanitized public authority_mutation.data are
+written in the same existing EvidenceJournal CAS. Fresh/replay public data is
+exactly the projection below, never the private event or nested binding/receipt.
+No second journal, storage controller or RPC reply store is created. Every fetch,
+finish and submit replay validates this private event's chain, identity and
+receipt digest, including with zero artifacts, before using its projection.
+This commit emits no receipt_accepted or terminal transition.
+
+The exact result binding hashed by CanonicalEvidence's binding_digest is
+`{mapping_id, project_id, assignment_id, attempt_id, result_id, worker_uid,
+worker_actor, launch_ticket, process_binding, head, candidate_generation,
+uploaded_receipt_sha256, original_receipt_digest}`. process_binding is the full
+canonical recorded native binding; values are owner-resolved. Result import
+kind/role is result/worker; peer_uid is the authenticated worker;
+request_id_or_event_id is result_id; candidate_generation_or_claim_generation
+is the accepted candidate generation; admitted_after_event_digest is the last
+canonical attempt event preceding this admission. Timestamp does not prove
+lineage. Normalized receipt digest is deliberately outside the import binding
+because its references contain the owner-generated artifact IDs.
+
+Success data is exactly `{result_id, head, candidate_generation, verdict,
+uploaded_receipt_sha256, original_receipt_digest, receipt_digest, artifacts,
+generation, journal_commit}`; artifacts is the normalized ordered array of
+`{path, sha256}`. Existing Server transport.replayed wraps this projection.
+Result bytes and producer/native details are not public response fields.
+
+Failed results with `artifacts: []` are admissible under normal receipt rules:
+receipt part is still mandatory; there are zero following parts and zero import
+descriptors. Persist the private result_submitted event and sanitized reply in the same CAS
+rather than calling CanonicalEvidence.import_plan with an empty list or inventing
+a placeholder artifact. For either verdict, every declared artifact must be
+transferred and verified even though normal failed receipt validation does not
+require an artifact. Succeeded still requires normal artifacts and executed
+passed checks. A failed result does not assert no effect or cleanup.
+
+Campaign-bearing receipts are refused with evidence_unavailable in protected
+submit_result and accept_review for this slice. Never resolve CampaignManager
+against journal_repository or worker-local .ace-local, or infer campaign approval
+from an uploaded result. Ordinary independently executed review receipts remain
+supported. Mandatory protected campaign integration is owned by existing R2 task
+8x0.t.ig3 (consumed by R3/final qkc review-policy acceptance), whose amendment
+requires the existing ace-review CampaignManager authority to resolve exact
+campaign/repository/worktree/result identity and policy through a trusted owner
+boundary. ig3 consumes xz9.0 canonical transfer/provenance and must close this
+refusal before mandatory full-program review-policy acceptance. xz9.0 does not
+depend on ig3 and cannot fall back to local campaign state. This bounded source
+checkpoint is implementable without campaign support; it is not completion of
+R2/R3 or the overall program.
+
+### Purpose-filtered evidence fetch
+
+kind is exactly result, review, service, inbox or observation. purpose_id is the
+canonical result_id / review_id / request_id / event_id / observation event ID
+for that kind. artifact_id selects one artifact already referenced by that exact
+accepted/submitted record, never a caller path or journal commit. The owner
+resolves the reference, producer peer UID, exact binding and generation from
+canonical records, then reads descriptor and bytes from one current immutable
+canonical commit with CanonicalEvidence. Historical candidate and terminal
+attempt reads are allowed where retained purpose authorization below holds;
+current head/liveness is not fabricated as historical evidence. Corrupt/missing
+record, provenance, chain or bytes is evidence_unavailable; an unknown valid
+purpose/artifact is missing. Fetch imports nothing and grants no effect/replay.
+
+| Peer | Allowed raw kinds and purpose binding |
+|---|---|
+| Owning worker | result only, its own mapped attempt; live descendant of original worker binding |
+| Assigned independent reviewer | review for the exact retained assigned review_id and result for that review's exact candidate; live descendant of its recorded reviewer process binding, not merely same UID |
+| Recorded executor | service for its exact recorded request/executor UID, including terminal/historical completion evidence; no general result/review/inbox access |
+| Mapped launcher | all kinds for an attempt whose recorded launcher identity exactly matches the live peer PID/UID/birth |
+| Mapped supervisor | all kinds for its mapped project/attempt under current supervisor visibility |
+
+Reviewer reassignment revokes the previous review-purpose fetch permission;
+terminality/head advance alone does not. The current assigned review must still
+name the retained candidate/result being fetched. Retained approval verification
+for finish uses its admitted independent attribution, not live reviewer presence;
+reviewer exit does not invalidate executed review evidence. Worker receives only
+sanitized review/observation projections through existing status, never raw bytes.
+Inbox and observation fetch refuse evidence_unavailable until their existing
+canonical signer/observer owner supplies the complete exact bound provenance;
+there is no permissive generic project-visible reader.
+
+Success data is exactly `{descriptor, generation, journal_commit, transfer}`
+plus one artifacts transfer part. transfer is the existing TransferCodec
+descriptor `{version: 1, bytes, sha256, parts: [{bytes, sha256}]}` generated by
+Server from the one returned part using fixed artifacts purpose. Its aggregate
+and sole part bytes/sha256 must equal the canonical descriptor bytes/sha256;
+For evidence_fetch, Client.call validates the closed canonical descriptor
+and its equality to the one-part data.transfer before calling receive; then
+reads data.transfer using the existing codec with download: true and
+purpose: :artifacts. This source-owned operation-specific consistency check is
+part of xz9.3 Client integration, not reliance on example code after bytes
+have already escaped the client. A missing, extra-part or mismatched transfer descriptor fails
+evidence_unavailable before the client exposes bytes; no alternative framing. descriptor contains the existing exact
+CanonicalEvidence.DESCRIPTOR_FIELDS (including version); its length/SHA256 binds
+the one download part. generation is current canonical authority_generation;
+journal_commit is the immutable read commit. No null descriptor, empty synthetic
+artifact, caller-selected order, history ref or mutation ID is supported.
+
+### Canonical result discovery through existing attempt_status
+
+xz9.3 extends the source-owned services-composition projection of existing
+attempt_status, not a new operation/listener/journal. In services composition
+its exact params are `{mapping_id, assignment_id, attempt_id,
+result_candidate_generation}`; mutation_id must be null and no transfer/body is
+allowed. result_candidate_generation is null for the latest canonical candidate
+or a nonnegative integer selecting an already admitted retained candidate
+generation (including same-head replacements). Launch-only composition retains
+its existing launch-status product schema and exposes no result projection.
+The normal source composition attaches the trusted canonical result projection
+to LaunchLifecycle's existing status owner; Router must retain exactly one
+attempt_status route. No caller selects an adapter or private record reader.
+
+Authenticate current project visibility and live mapped principal before any
+result discovery. Exact recorded launcher incarnation and mapped supervisor may
+discover current or retained attempt results even after worker exit or terminal
+attempt; they need not revive the worker. Owning live worker may discover only
+its own attempt results under original descendant binding. Current assigned live
+reviewer may discover only a result for its exact assigned candidate/process
+purpose, with reassignment revoking old access. Executor cannot discover result
+metadata through this projection. These conditions are the same family purpose
+rules as fetch; neither status nor result discovery permits effects or cleanup.
+
+Retain normal role-filtered launch status fields, and add exactly
+`{result_candidate_generation, submitted_result, authority_generation}`.
+journal_commit is the one immutable read commit for launch/result projection;
+authority_generation is current JournalMutation.authority_generation from that
+commit, suitable for next expected_generation, never the historical result
+admission generation. result_candidate_generation is the resolved selected
+candidate generation, or null if no candidate has been admitted for latest.
+submitted_result is null if that known candidate has no admitted result;
+otherwise exactly `{result_id, head, candidate_generation, verdict,
+uploaded_receipt_sha256, original_receipt_digest, receipt_digest, artifacts}`.
+artifacts is the ordered normalized `{path, sha256}` array (zero entries allowed).
+artifact_id is obtained by stripping the fixed evidence/imports/ prefix from
+path; no new identifier or filesystem lookup is needed. Existing launch fields
+may expose native details only to their already authorized launcher/supervisor;
+submitted_result never contains private receipt, producer or process_binding.
+
+Resolve this projection from the unique verified private result_submitted record
+at the selected commit, not authority_mutation's cached reply alone. Revalidate
+normal receipt digest, exact private binding, candidate lineage and each import
+provenance/blob; zero-artifact results still validate the full private record.
+Missing syntactically valid attempt or explicitly selected nonexistent candidate
+is missing; malformed selector/mutation/body is invalid_input; denied peer or
+visibility is unauthorized; corrupt/duplicate/missing referenced record, chain,
+provenance or blob is evidence_unavailable, never submitted_result null.
+No submitted result is an ordinary null only when canonical absence is provable.
+Responses retain existing 16 KiB bound and transport.replayed false; one selected
+result avoids an unbounded history list. Failure to fit refuses without partial
+private disclosure. A lost submission reply followed by worker exit does not
+require a retry: supervisor/launcher discovers the committed result here, fetches
+its artifacts and later references result_id for finish once 9c2 is available.
+
+### Concrete client and consumer surface for xz9.3
+
+The public surface of this child is existing Authority::Client.call, not a new
+CLI. Client.new(mapping_id:) resolves installed project/socket/credentials;
+call injects mapping_id/project_id and upload transfer descriptor. Callers pass
+ordered local receipt/artifact byte strings via upload_parts and fixed
+purpose :receipt_artifacts; no local upload path crosses the wire. Discovery
+calls attempt_status with null mutation ID and the selector above. Fetch calls
+evidence_fetch with download: true and purpose :artifacts; Reply.parts supplies
+the one verified blob and Reply.data the sanitized descriptor/projection.
+
+xz9.3 owns Client/Server download integration, generic Endcap result/fetch and
+LaunchLifecycle's single trusted services status projection, plus actual public
+Client consumer tests/examples. Existing CLI attempt finish (--receipt FILE)
+and attempt evidence (--receipt-digest, check/review purpose) are not silently
+reinterpreted as these result APIs. Their protected coordinator/driver routing
+and terminal receipt acceptance remain xz9.0 responsibilities; local explicit
+mode stays separate and an unavailable protected owner must never fall back.
+No CLI command/flag is introduced by xz9.3; its direct client surface is complete
+and independently usable without finish. Public runnable examples are in the
+xz9.3 ux/usage.md and apply only after this draft's implementation/review.
+
+### Finish admission, cleanup and replay
+
+finish references the immutable result_id; it never uploads a second receipt or
+uses a bearer result token. Only the exact live recorded launcher incarnation or
+mapped live supervisor may call. Owning worker/reviewer/executor may not finish.
+Resolve the verifier identity from that authenticated mapped peer through the
+existing ExecutionIdentityResolver trusted coordinator/service authority; the
+producer remains the result's worker. Do not let actor strings choose authority.
+
+Under exclusive existing task+assignment lifecycle exclusion, each normal
+expected-generation CAS attempt resolves current canonical state, exact result,
+current head/candidate generation and all referenced provenance/bytes again.
+Revalidate the normalized receipt/digest with ReceiptVerifier's canonical reader
+and, for succeeded, the current candidate's existing approved_review!
+independent review. Failed finish follows the existing normal failure-receipt
+semantics: it requires exact attributable worker failure binding/checks/artifacts
+and the same settled effects, inboxes and positive no-writer proof, but does not
+require a successful approved review. Missing or rejected independent review
+cannot make a failed receipt authorize success or another effect. Any already
+accepted review is reverified as retained evidence where referenced; no fabricated
+approval is added when review is unavailable. Embedded worker review metadata
+never supplies successful approval. A valid failed receipt plus all independent
+cleanup conditions can terminalize failed through this same finish route, avoiding
+a permanently held failure with no settlement route. External
+operations keep all existing additional normal verifier/coordinator restrictions.
+Campaign receipts remain refused. A stale result/head/generation conflicts.
+
+Finish is eligible only for running canonical bound/issued attempts. Reserved,
+stopped, uncertain or already terminal attempts cannot freshly finish. Every
+service request for this attempt must be canonically succeeded or failed-settled:
+requested/claimed/issued/uncertain/failed, missing/corrupt completion evidence or
+outstanding no-effect challenge blocks admission. Reverify terminal service
+provenance using its existing owner; a failure exit/timeout is not no-effect.
+Every bound inbox must have its exact current signed consumer reconciliation
+accepted by existing Inbox/Herdr and recorded canonically; pending/missing or
+unverifiable inbox binding blocks admission. An attempt with no service requests
+or inbox bindings needs no invented empty proof.
+
+Worker may submit while alive, then exits. Before terminal admission the
+existing LaunchLifecycle owner supplies its exact recorded origin/child birth
+and pidfd observations, but these prove only original-child state, not the
+absence of all descendant or externally spawned writers. Genuine upstream draft
+8x4.t.9c2 owns the missing trustworthy exact execution-scope no-writer capability,
+extracted from xz9.2. It depends on 09j, never on xz9.0 or xz9.2; both children
+consume it. The native containment mechanism and installer topology are not yet
+selected. Current 09j source, an empty process group/subtree or pane disappearance
+do not satisfy it; accessible native/external spawner creation must be prevented
+or exhaustively bound into the same exact scope before emptiness is meaningful.
+
+Until 9c2's independently reviewed contract and implemented proof are available,
+finish must refuse evidence_unavailable, preserve ownership and remain incomplete.
+Result submission and authorized fetch are independently implementable; positive
+terminal finish acceptance is blocked, never simulated by a trusted boolean or
+mock no-writer response. Once selected, finish consumes that owner's exact scope,
+native origin, incarnation, closed-to-new-writers state and independently observed
+no-writer evidence under the same exclusive lifecycle/CAS boundary. No worker,
+caller timestamp, service outcome or original PID absence supplies that proof.
+Finish does not kill the worker or run an effect. Restart must reestablish the
+same scope proof or refuse; missing handles/unsupported/unreadable proof requires
+existing recovery inspection, never guessed absence or abort's pre-execution proof
+for an issued launch. Each CAS retry revalidates proof against exact current
+scope/origin and no fresh claim is admitted while the boundary is held.
+
+One durable existing journal CAS includes normal receipt_accepted with the
+normalized worker receipt, the legal succeeded/failed transition and finish
+mutation reply. Submitted-result blobs are retained and referenced, not imported
+again. Canonical terminal truth releases scope/reservation through existing qjl
+active-attempt semantics. Cache/store projection happens only after commit and
+is reconstructible; crash before commit retains ownership, crash after commit
+cannot resurrect it or accept/release twice.
+
+Success data is exactly `{attempt_id, result_id, head, candidate_generation,
+receipt_digest, state, generation, journal_commit}`; state equals the admitted
+normal receipt verdict. Exact same-ID retry validates current mapped peer and
+visibility plus retained result/accepted provenance outside the replay callback,
+then returns the original committed reply even after worker/reviewer exit,
+terminality or later head advance. It must not rerun cleanup or require the worker
+to be live. Changed parameters with that mutation ID conflict. Any new finish
+mutation ID for a terminal attempt conflicts, including same result. A replay
+whose canonical evidence is now unverifiable returns evidence_unavailable,
+never a success cached solely in the filesystem.
+
+### Error and verification contract
+
+Reuse Server errors: malformed schema/framing/ID/null rule is invalid_input;
+wrong role/native incarnation/project visibility/purpose is unauthorized; stale
+generation/candidate, duplicate fresh result or terminal finish is conflict;
+unknown syntactically valid identity is missing; unverifiable evidence, receipt
+rejection or unproven process/effect/inbox cleanup is evidence_unavailable.
+Refusal records no terminal acceptance, frees no scope and removes private upload
+spool. Public reasons are bounded/sanitized and contain no raw artifact content.
+
+xz9.3 acceptance must execute the result/fetch scenarios below; xz9.0 owns
+finish/terminal integration scenarios and consumes that verified result. Use real
+Git ref/blob/event-chain and JournalMutation
+CAS tests for original versus normalized digests, ordered multi-artifact imports,
+failed zero-artifact result, private metadata exclusion from fresh/replay replies,
+one-result-per-generation and same-head new-generation correction/fresh review,
+submit replay after worker exit fails closed, exact/changed-ID replay,
+forged producer/process/native binding, stale result/current review, campaign
+refusal, all fetch peer/purpose cases and current visibility revocation. Delete
+private caches and restart readers; corrupt descriptor/blob/chain and prove no
+fallback. Test live submitted worker then positively cleaned worker finish;
+failed receipt with unavailable/rejected review still settles only after all
+independent cleanup conditions; missing handle, surviving descendants or external
+spawner writers, pending/failed service, no-effect challenge
+and unreconciled inbox must preserve ownership. Compete finish with claim/begin
+under real lifecycle locks and CAS retry; fault before ref update and after commit
+before reply; independently inspect accepted receipt and terminal event in the
+same commit. Test consumer routing has no caller-local protected fallback.
+Use bin/ace-test / bin/ace-test-suite, then independent exact-source verdict.
+Injected exact-child observations may test refusal mechanics but cannot prove
+positive scope cleanup. 9c2 must provide actual scope-owner source integration
+and installed no-writer acceptance before positive finish completeness. Real installed
+multi-UID/native acceptance remains separately required before full-service claims.
+
+
+Round-2 verification additions for xz9.3: execute real Client upload, status and
+download against source Server/Router/canonical Git (not handler-hash assertions).
+Drop reply after committed submit then let original worker exit; authorized
+supervisor discovers result/ordered artifact IDs, fetches exact bytes after
+reader restart/cache deletion. Test no result null vs missing selected generation,
+corrupt private record/import/blob, exact historical generation, reassigned
+reviewer, executor/wrong launcher/current revocation denial. Test generated
+multipart download descriptor equals canonical descriptor and malformed/missing/
+mismatched data.transfer never exposes bytes or private fields. Zero-artifact
+status and fresh/replay sanitized reply remain bounded and leak-free.

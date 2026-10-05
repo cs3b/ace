@@ -274,3 +274,23 @@ Supporting tool defects `8x4.t.412` (review session isolation) and `8x4.t.5h5` (
 - [ ] `09j` remains open for its remaining native matrix; source integration is not whole-task acceptance. The recorded automatic-review limitation still applies.
 
 Historical unchecked sections above retain prior review states; this latest checklist and task metadata describe current progress. No gems were published in this checkpoint.
+
+
+## Open program proof owners — result contract correction
+
+- [ ] 8x4.t.9c2: select and independently verify the exact protected execution
+  scope no-writer capability, including accessible native/external spawners and
+  restart identity. It depends on 09j; xz9.0 finish and xz9.2 stop consume it.
+  This draft is real upstream work, not proof already supplied by 09j. Positive
+  finish/stopped remains incomplete while its mechanism is unresolved.
+- [ ] 8x0.t.ig3 (R2): close protected CampaignManager authority integration using
+  xz9.0 canonical provenance before R2/R3/final qkc policy acceptance. Material
+  amendment reopens ig3 to draft / needs_review, preserving historical reviews.
+- [ ] Re-review the corrected result/evidence/finish amendment after rejected
+  candidate 340b; xz9.0 remains draft / needs_review. Full-service composition
+  guard, outstanding 09j installed crash/restart matrix and native filter
+  limitation remain intact; no deployment/protected probe is claimed here.
+
+- [ ] xz9.3: independent canonical submit_result/evidence_fetch source/public
+  consumer slice, extracted from xz9.0, depends 09j/accepted source only. Draft
+  awaits review before implementation; xz9.0 consumes it for terminal integration.

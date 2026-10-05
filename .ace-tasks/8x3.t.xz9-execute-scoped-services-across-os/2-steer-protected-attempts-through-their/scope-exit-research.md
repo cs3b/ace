@@ -49,3 +49,11 @@ not tested. Therefore an eventual cgroup-based proof must also close or account
 for this creation path; merely collecting descendants of the original child
 cannot establish complete scope ownership. The accepted 09j exact-child
 contract and its safe refusal remain unchanged.
+
+
+## Ownership extraction, 2026-10-05
+
+Draft 8x4.t.9c2 now owns selecting and delivering the generic exact-scope
+no-writer capability above. xz9.0 finish and xz9.2 stop consume it; both retain
+uncertainty until positive proof exists. This research selects no mechanism and
+provides no positive readiness or installed acceptance.
