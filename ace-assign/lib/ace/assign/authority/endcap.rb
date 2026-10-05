@@ -13,25 +13,30 @@ module Ace
       # Business admission shares the launch origin, lifecycle exclusion and
       # journal CAS. Network transfer is completed outside those locks.
       class Endcap
-        OPERATIONS = %w[submit_candidate export_candidate assign_review accept_review].freeze
+        OPERATIONS = %w[submit_candidate export_candidate assign_review accept_review request_service begin_dispatch].freeze
         TRANSFER_OPERATIONS = {
           "submit_candidate" => {direction: :upload, purpose: :candidate, roles: %i[worker launcher]},
           "export_candidate" => {direction: :download, purpose: :candidate, roles: %i[reviewer executor]},
-          "accept_review" => {direction: :upload, purpose: :receipt_artifacts, roles: [:reviewer]}
+          "accept_review" => {direction: :upload, purpose: :receipt_artifacts, roles: [:reviewer]},
+          "request_service" => {direction: :upload, purpose: :service_input, roles: [:executor]},
+          "begin_dispatch" => {direction: :upload, purpose: :service_input, roles: [:executor]}
         }.freeze
         PARAMETERS = {
           "submit_candidate" => %w[mapping_id assignment_id attempt_id expected_generation candidate_generation head transfer],
           "export_candidate" => %w[mapping_id assignment_id attempt_id candidate_generation head purpose_id],
           "assign_review" => %w[mapping_id assignment_id attempt_id expected_generation candidate_generation head reviewer_uid reviewer_process_binding],
-          "accept_review" => %w[mapping_id assignment_id attempt_id expected_generation candidate_generation head purpose_id receipt_sha256 transfer]
+          "accept_review" => %w[mapping_id assignment_id attempt_id expected_generation candidate_generation head purpose_id receipt_sha256 transfer],
+          "request_service" => %w[mapping_id assignment_id attempt_id expected_generation candidate_generation head request_id operation input_digest target authorization service_id worker_process_binding transfer],
+          "begin_dispatch" => %w[mapping_id assignment_id attempt_id expected_generation candidate_generation head request_id claim_binding transfer]
         }.freeze
 
-        def initialize(deployment:, launch:, kernel: Ace::Runtime::Molecules::ProtectedLinux.new)
-          @deployment, @launch, @kernel = deployment, launch, kernel
+        def initialize(deployment:, launch:, kernel: Ace::Runtime::Molecules::ProtectedLinux.new, service_policy: nil)
+          @deployment, @launch, @kernel, @service_policy = deployment, launch, kernel, service_policy
         end
 
         def authorize_transfer!(request:, peer:, role:)
           params, map = validate_request(request)
+          return authorize_service_transfer!(request, params, map, peer, role) if %w[request_service begin_dispatch].include?(request.fetch("operation"))
           @launch.with_assignment(params: params, map: map) do |journal, _registration|
             protected_journal!(journal)
             events = attempt_events(journal, params)
@@ -48,6 +53,7 @@ module Ace
 
         def dispatch(request:, peer:, role:, transfer: nil)
           params, map = validate_request(request)
+          return dispatch_service(request, params, map, peer, role, transfer) if %w[request_service begin_dispatch].include?(request.fetch("operation"))
           admitted = nil
           if request.fetch("operation") == "submit_candidate"
             authorize_transfer!(request: request, peer: peer, role: role)
@@ -306,3 +312,5 @@ module Ace
     end
   end
 end
+
+require_relative "endcap_services"

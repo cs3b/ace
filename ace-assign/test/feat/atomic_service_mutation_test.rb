@@ -4,6 +4,7 @@ require_relative "../test_helper"
 require "open3"
 require "ace/assign/molecules/canonical_evidence"
 require "ace/assign/authority/service_evidence"
+require "ace/assign/authority/endcap"
 
 module Ace
   module Assign
@@ -78,6 +79,53 @@ module Ace
             end
           end
           assert_raises(AttemptErrors::EvidenceUnavailable) { owner.context(binding, no_effect: true) }
+        end
+      end
+
+      def test_repeated_dispatch_plan_only_reports_retained_state_without_fresh_permission
+        fixture do |journal, _importer, _context, binding, _repo|
+          current = journal.service_request("request-1")
+          started = current.merge("service_id" => "executor", "dispatch_phase" => "dispatch_started")
+          # Install a separate exact record through the journal owner; this
+          # checks retained-ticket projection, not native launch admission.
+          started["request_id"] = "request-2"
+          mutate(journal, "started-fixture", 1) { {data: {}, service_updates: [
+            {request_id: "request-2", expected: nil, replacement: started, event_type: "service_claim"}]} }
+          deployment = Object.new
+          deployment.define_singleton_method(:project) { |_| {"service_receivers" => {"executor" => {"executor_uid" => Process.uid}},
+            "service_executor_uids" => [Process.uid], "worker_uids" => [Process.uid + 1]} }
+          kernel = Object.new
+          kernel.define_singleton_method(:live!) { |_| true }
+          endcap = Authority::Endcap.new(deployment: deployment, launch: Object.new, kernel: kernel)
+          params = binding.slice("assignment_id", "attempt_id", "claim_binding").merge("request_id" => "request-2")
+          before = journal.ref_value
+          plan = endcap.send(:service_begin_plan, journal, [], params, {"project_id" => "fixture"}, {"uid" => Process.uid}, :executor, "unused")
+          assert_equal "already_started", plan.dig(:data, "invocation")
+          refute plan.key?(:service_updates)
+          assert_equal before, journal.ref_value
+          assert_raises(AttemptErrors::UnauthorizedIdentity) do
+            endcap.send(:service_begin_plan, journal, [], params.merge("claim_binding" => "d" * 64),
+              {"project_id" => "fixture"}, {"uid" => Process.uid}, :executor, "unused")
+          end
+          params["expected_generation"] = 2
+          params["transfer"] = {"fixture" => "retained reply projection only"}
+          journal.mutate(assignment_id: "assignment-1", attempt_id: "attempt-1", mutation_id: "lost-begin-reply",
+            operation: "begin_dispatch", parameters_digest: Atoms::EvidenceDigest.digest(params), expected_generation: 2,
+            with_replay: true) { {data: {"invocation" => "permitted"}} }
+          launch = Object.new
+          launch.define_singleton_method(:with_assignment) { |**_, &block| block.call(journal, {}) }
+          policy = Object.new
+          policy.define_singleton_method(:visible!) { |**_| true }
+          input = Object.new
+          input.define_singleton_method(:count) { 1 }
+          input.define_singleton_method(:bytes) { "unused exact replay input" }
+          replay_owner = Authority::Endcap.new(deployment: deployment, launch: launch, kernel: kernel, service_policy: policy)
+          before = journal.ref_value
+          replay = replay_owner.send(:dispatch_service, {"operation" => "begin_dispatch", "mutation_id" => "lost-begin-reply"},
+            params, {"project_id" => "fixture", "worker_uid" => Process.uid + 1}, {"uid" => Process.uid}, :executor, input)
+          assert replay.fetch(:replayed)
+          assert_equal "already_started", replay.dig(:data, "invocation")
+          assert_equal before, journal.ref_value
         end
       end
 
