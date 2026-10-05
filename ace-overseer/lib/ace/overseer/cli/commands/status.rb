@@ -28,7 +28,7 @@ module Ace
           end
 
           def call(format:, runtime: "tmux", project: nil, **options)
-            @proposal_tick.call
+            tick_proposals
             if runtime == "lab"
               if options[:watch]
                 raise Ace::Support::Cli::Error, "Lab watch runs in the project Herdr status pane; omit --watch"
@@ -58,14 +58,24 @@ module Ace
 
           private
 
+          def tick_proposals
+            @proposal_tick.call
+            @proposal_error = nil
+          rescue StandardError => e
+            @proposal_error = "Proposal resolution deferred (#{e.class}); retrying on next wake"
+          end
+
           def run_once(format)
             snapshot = @collector.collect
 
             if format == "json"
-              puts JSON.pretty_generate(@collector.to_h(snapshot))
+              value = @collector.to_h(snapshot)
+              value = value.merge(proposal_resolution: {status: "deferred", error: @proposal_error}) if @proposal_error
+              puts JSON.pretty_generate(value)
               return
             end
 
+            warn @proposal_error if @proposal_error
             puts @collector.to_table(snapshot)
           end
 
@@ -80,7 +90,7 @@ module Ace
 
             loop do
               sleep_interruptible(refresh_interval)
-              @proposal_tick.call
+              tick_proposals
 
               elapsed = Time.now - last_full_collect
               if elapsed >= git_refresh_interval
@@ -97,6 +107,7 @@ module Ace
           def print_watch_screen(snapshot, git_refresh_interval, last_full_collect)
             remaining = [(git_refresh_interval - (Time.now - last_full_collect)).round, 0].max
             print "\e[H\e[2J"
+            warn @proposal_error if @proposal_error
             puts @collector.to_table(snapshot)
             puts
             puts Atoms::StatusFormatter.format_watch_footer(remaining)
