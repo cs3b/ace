@@ -16,7 +16,7 @@ module Ace
               state = client.call("inspect_launch", {"assignment_id" => options.fetch(:assignment), "attempt_id" => options.fetch(:attempt)}).data
               binding = state.fetch("process_binding") { raise ArgumentError, "no positively recorded original child; supervisor inspection required" }
               result = Ace::Assign::Authority::LaunchDriver.new(mapping_id: options.fetch(:mapping)).terminate(
-                state: state, binding: binding, evidence: "launcher observed exact original native close and pre-acquired child pidfd exit")
+                state: state, binding: binding, evidence: "protected exact-child termination requested")
               puts JSON.generate(result)
             rescue ArgumentError, Ace::Runtime::Error, Ace::Assign::Error => error
               raise Ace::Support::Cli::Error, error.message
