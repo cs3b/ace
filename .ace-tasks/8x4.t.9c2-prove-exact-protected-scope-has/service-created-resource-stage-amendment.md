@@ -15,6 +15,13 @@ an exact fixed host path, in-unit view, creation directive and protected ancesto
 in that manifest. The partition is derived from the authenticated fixed artifact,
 not a caller-supplied omission list. No writable path may remain unclassified.
 
+`scope_bound` additionally records `host_mount_namespace_identity`, exactly
+`{device, inode}` from the opened host mount-namespace object. The authority must
+positively verify that its resource observation namespace is the installed system
+manager host namespace; a private authority namespace cannot silently substitute.
+Together with parent `boot_id`, this identifies the namespace of every parent
+`mount_id`. Host namespace/object handles remain pinned during observation.
+
 `scope_bound.resource_identities` contains the existing backing roots and protected
 ancestors, using the unchanged closed identity object
 `{host_path, view_path, mount_id, filesystem_type, device, inode, uid, gid}`.
@@ -23,16 +30,44 @@ inode. The complete existing set must be present before service activation.
 
 `scope_native_bound` becomes exactly
 `{scope_generation, scope_binding_event_id, service_invocation_id,
-server_identity, socket_identity, workspace_id, resource_identities}`.
-Its resource array uses the same closed identity object and contains precisely the
-manifest's service-created roots and freshly established in-unit mount identities.
-Each entry is positively observed after successful native readiness and before
-layout. Arrays contain no duplicate object/view roles; the validated union with
-parent entries covers the complete declared resource/view set before payload
-release. An empty native array is legal only when that manifest declares no
-service-created objects or views. Missing, aliased, replaced, incorrectly owned or
-foreign-mounted objects refuse native binding and release. Native readiness and
-09j original-child verification remain unchanged.
+server_identity, socket_identity, workspace_id, mount_namespace_identity,
+resource_identities}`. `mount_namespace_identity` is exactly `{device, inode}`
+from the opened mount-namespace object of the already authenticated native server
+whose exact kernel identity is `server_identity`; the existing parent `boot_id`
+and native binding event identify its origin. Namespace identity is observed and
+pinned with that server, never supplied by the caller or taken from a same-PID
+replacement. Every native `mount_id` belongs to this namespace.
+Its resource array uses the same closed identity object and covers every declared
+worker-visible resource view, including bind projections of parent-pinned roots
+and views of service-created roots. Parent-only protected ancestors do not need a
+worker-visible projection unless the fixed manifest declares one. Parent
+`host_path` resolves the actual backing object in the host namespace; its
+`view_path` is the manifest's intended service mapping, not a claim that the
+service view exists yet. Native `host_path` names that same manifest backing path,
+while native `view_path` resolves the actual object in the exact server namespace.
+No mount ID is compared across namespaces or used as a global identity.
+
+The union is a manifest-indexed join, not concatenation followed by pathname
+uniqueness. The same `{host_path, view_path}` pair in parent and native arrays is
+required for an existing root's genuine bind projection. Within each stage a
+manifest role/view occurs exactly once; extra entries, conflicting duplicate
+roles and undeclared cross-root aliases refuse. Legitimate declared projections
+of one root are verified separately; they cannot grant a second slot access.
+For an existing backing root, parent host observation and native view must agree
+on `device`, `inode`, `filesystem_type`, `uid` and `gid`; their mount IDs may differ
+and remain namespace-local. Fresh host revalidation must still match the parent
+identity. For a service-created root, fresh host and service-view observations
+must likewise agree on those five fields before its native entry is committed;
+there is no fabricated parent leaf entry. Fixed manifest bind/mount projection
+and namespace mount topology must positively explain each view, including bind
+source/subtree, mount flags and absence of foreign writable substitutions. Equal
+inode/device alone is insufficient. Ownership/mode changes that invalidate parent
+identity or boundary refuse. The validated join covers the complete declared
+backing, ancestor and writable-view set before payload release. An empty native
+array is legal only when no worker-visible resources are declared. Missing,
+aliased, replaced, incorrectly owned or foreign-mounted objects refuse native
+binding and release. Native readiness and 09j original-child verification remain
+unchanged.
 
 RuntimeDirectory's fresh leaf belongs to the native array, while its installed
 non-writable host ancestor belongs to the parent array. Existing private scratch,
@@ -87,11 +122,16 @@ adopted or copied into the next lineage.
 * Manifest verification: exhaustive lifecycle partition; reject omitted writable
   roots/views, duplicate/overlapping aliases, runtime ancestor writable by workers,
   preservation/restart changes and implicit persistent-root creation.
-* Parent bind: existing roots/ancestors positively pinned, nonexistent runtime
+* Parent bind: host namespace identity and existing roots/ancestors positively
+  pinned, nonexistent runtime
   leaf does not require a fake inode; unexpected pre-existing leaf refuses start.
-* Native bind/reader: fresh runtime and mount observations form one immutable
+* Native bind/reader: exact server mount namespace and fresh runtime/view
+  observations form one immutable
   native resource array; exact union required before layout/release. Reject
-  missing/extra identities, resource substitution and cross-lineage replay.
+  missing/extra identities, resource substitution and cross-lineage replay. Test
+  legitimate same-pair cross-stage bind projections with unequal mount IDs; reject
+  namespace replacement, wrong inode/device/filesystem, unexplained mount topology
+  and duplicate roles within a stage. Never compare mount IDs across namespaces.
 * Lost start/readiness: no native event fabricated; known parent can close after
   verified fixed cleanup, empty retained parent and settled effects. Unknown
   parent, pending cleanup/activation and outside-writer conflict remain held.
