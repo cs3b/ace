@@ -1,4 +1,4 @@
-# Gated cross-user runtime launch — draft usage
+# Gated cross-user runtime launch
 
 ## Start one mapped worker
 
@@ -33,3 +33,40 @@ pidfd. Labels, current/focused panes, supplied IDs and restored panes cannot sel
 the gate. Closing/replacing/moving a pane must not change the admitted original
 identity. If the create reply is lost, status stays uncertain: searching for a
 similar pane or retrying spawn cannot recover permission to bind/release.
+
+## Lost reservation response and authority observation
+
+The driver creates a native layout only after an unequivocally fresh reservation
+response. The authority reports a transport `replayed` boolean atomically with
+journal mutation deduplication; this metadata does not change the canonical
+reservation result, generation or commit. A replay, response loss, or existing
+reservation grants no new creation permission. Inspect the retained reservation;
+do not repeat native creation even when no process binding has been recorded.
+
+The trusted mapped launcher reports the original authenticated creation response
+and exact native child binding. The authority independently validates kernel
+peer credentials, server lineage and birth, and acquires the exact child pidfd.
+This does not claim that the authority directly queried a native endpoint to
+which it has no configured access. Native close is performed by the authorized
+launcher; authoritative termination additionally requires the authority's
+pre-acquired pidfd exit observation. Launcher loss without positive termination
+proof retains an uncertain attempt and its scope ownership.
+
+## Public source entrypoint and installed policy
+
+`ace-assign authority serve --authority ID` runs the fixed launch composition.
+`ace-assign authority launch --mapping ID --dry-run` checks installed policy without
+mutation/native creation. A real launch supplies managed definition, assignment,
+scope, exact base head and stable mutation ID. Status/terminate use the retained
+canonical attempt; they do not accept caller-selected native origin.
+
+See `ace-assign/docs/protected-authority.md` and the gem-shipped
+`ace-runtime/native/README.md` for the complete installed schema and reproducible
+native build inputs. The root-owned authority composition must match the source
+entrypoint; duplicate project owners/endpoints fail before listener creation.
+Every participant, including the pinned root-started Herdr service, requires empty
+Inh/Prm/Eff/Bnd/Amb capabilities and NoNewPrivs=1 in addition to enforced Yama=2,
+fixed UID/GID/groups and protected immutable paths. No host sysctl is changed by
+ACE. Compilation, package inclusion, actual UID/kernel primitives and Yama=0
+refusal can be demonstrated in Docker; positive enforced-policy native acceptance
+remains a separate installed fixture requirement.

@@ -69,7 +69,7 @@ module Ace
           # Closing a stream does not cancel a handler already inside dispatch.
           # The owner lock and endpoint remain held until every handler ends.
           @mutex.synchronize { @handlers.dup }.each(&:join)
-          @lifecycle.close if @lifecycle.respond_to?(:close)
+          @lifecycle.close if @endpoint && @lifecycle.respond_to?(:close)
           if @endpoint && same_endpoint?(path)
             File.unlink(path)
           end

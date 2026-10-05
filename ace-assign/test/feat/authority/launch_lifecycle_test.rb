@@ -15,7 +15,7 @@ module Ace
         def capture(pid)
           {"pid" => pid, "uid" => pid == Process.pid ? 13002 : 13001, "gid" => pid == Process.pid ? 13002 : 13001,
             "groups" => [pid == Process.pid ? 13002 : 13001], "started_at" => "linux:boot:#{pid}", "host" => "fixture",
-            "parent_pid" => pid == 91 ? 90 : 1}
+            "parent_pid" => pid.between?(91, 99) ? 90 : 1}
         end
         def live!(identity)
           raise Ace::Runtime::RuntimeUnavailableError, "dead" if dead.include?(identity["pid"])
@@ -158,6 +158,81 @@ module Ace
           gate.join(2)
           refute gate.alive?
           assert_nil IO.select([worker], nil, nil, 0.01), "exact replay never sends another frame"
+        ensure
+          server&.close; worker&.close
+          gate&.kill if gate&.alive?
+        end
+      end
+
+      def test_completed_launch_cycles_do_not_retain_pidfds
+        with_authority do
+          3.times do |index|
+            state = call("reserve_attempt", @reserve_params, id: "reserve-#{index}").fetch(:data)
+            child = binding(91 + index)
+            state = call("record_launch", params(state, child), id: "record-#{index}").fetch(:data)
+            @kernel.dead << child.dig("process_identity", "pid")
+            evidence = "exact exited child #{index}"
+            result = call("abort_launch", state.slice("attempt_id", "launch_ticket").merge(
+              "expected_generation" => state.fetch("generation"), "failure_evidence" => evidence,
+              "failure_digest" => Digest::SHA256.hexdigest(evidence)), id: "abort-#{index}").fetch(:data)
+            assert_equal "failed", result.fetch("phase")
+            assert @kernel.handles.all?(&:closed), "completed cycle cannot retain previous exact handles"
+          end
+          assert_equal 6, @kernel.handles.size
+        end
+      end
+
+      def test_launcher_loss_closes_admission_and_established_gate_never_reconnects
+        with_authority do
+          state = call("reserve_attempt", @reserve_params, id: "reserve").fetch(:data)
+          state = call("record_launch", params(state), id: "record").fetch(:data)
+          server, worker = UNIXSocket.pair
+          request = {"params" => {"mapping_id" => "mapping", "launch_ticket" => state.fetch("launch_ticket")}}
+          gate = Thread.new { @authority.gate_ready(request: request, peer: @kernel.capture(91), socket: server, deadline: WIRE.deadline(2)) }
+          assert_equal "ready", WIRE.read(worker, deadline: WIRE.deadline(2)).dig("data", "phase")
+          @kernel.dead << Process.pid
+          assert gate.join(1), "exact launcher death must end pre-release gate admission"
+          status = call("attempt_status", {"attempt_id" => state.fetch("attempt_id")}, id: nil, role: :supervisor).fetch(:data)
+          assert_equal "uncertain", status.fetch("phase")
+          assert_equal "reserved", @journal.derived_attempts("assignment").first.state
+          assert_nil IO.select([worker], nil, nil, 0.01), "launcher loss cannot issue permission"
+          @kernel.dead.clear
+          assert_raises(AttemptErrors::Conflict) do
+            @authority.gate_ready(request: request, peer: @kernel.capture(91), socket: server, deadline: WIRE.deadline(0.1))
+          end
+        ensure
+          server&.close; worker&.close
+          gate&.kill if gate&.alive?
+        end
+      end
+
+      def test_lost_release_frame_remains_issued_and_exact_exit_cannot_fabricate_no_execution
+        with_authority do
+          state = call("reserve_attempt", @reserve_params, id: "reserve").fetch(:data)
+          state = call("record_launch", params(state), id: "record").fetch(:data)
+          server, worker = UNIXSocket.pair
+          request = {"params" => {"mapping_id" => "mapping", "launch_ticket" => state.fetch("launch_ticket")}}
+          gate = Thread.new { @authority.gate_ready(request: request, peer: @kernel.capture(91), socket: server, deadline: WIRE.deadline(5)) }
+          WIRE.read(worker, deadline: WIRE.deadline(5))
+          bound = call("bind_process", params(state), id: "bind").fetch(:data)
+          writes = 0
+          WIRE.stub(:write, proc { |*args, **options| writes += 1; raise IOError, "lost permission reply" }) do
+            issued = call("release_launch", params(bound), id: "release").fetch(:data)
+            assert_equal "issued", issued.fetch("phase")
+            replay = call("release_launch", params(bound), id: "release")
+            assert replay.fetch(:replayed)
+            assert_equal issued, replay.fetch(:data)
+            assert_equal 1, writes
+            @kernel.dead << 91
+            evidence = "child exited after issuance"
+            uncertain = call("abort_launch", issued.slice("attempt_id", "launch_ticket").merge(
+              "expected_generation" => issued.fetch("generation"), "failure_evidence" => evidence,
+              "failure_digest" => Digest::SHA256.hexdigest(evidence)), id: "abort").fetch(:data)
+            assert_equal "uncertain", uncertain.fetch("phase")
+            assert_nil uncertain["abort_observation"]
+            assert @kernel.handles.none?(&:closed), "issued uncertainty keeps exact termination observations"
+          end
+          assert gate.join(1)
         ensure
           server&.close; worker&.close
           gate&.kill if gate&.alive?
