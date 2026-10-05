@@ -8,6 +8,33 @@ module Ace
           authorization service_id caller_uid candidate_head candidate_generation executor_uid transport policy_digest
           worker_process_binding launch_ticket reservation_generation mapping_id].freeze
 
+        # Source-owned terminal admission. Caller already owns lifecycle/journal
+        # exclusion; the immutable commit is the current CAS input, never a
+        # caller-selected alternate evidence ref.
+        def service_settlement_complete!(journal:, events:, params:, map:, commit:)
+          protected_journal!(journal)
+          references = events.select { |event| %w[service_claim service_transition].include?(event["type"]) }
+            .map { |event| event.fetch("payload").fetch("request_id") }.uniq.sort
+          records = journal.service_request_records(commit: commit).select do |record|
+            record["assignment_id"] == params.fetch("assignment_id") && record["attempt_id"] == params.fetch("attempt_id")
+          end
+          unless records.map { |record| record.fetch("request_id") }.uniq.sort == references
+            raise AttemptErrors::EvidenceUnavailable, "canonical service request set is incomplete"
+          end
+          records.each do |record|
+            unless record["project_id"] == map.fetch("project_id") && record["mapping_id"] == params.fetch("mapping_id") &&
+                %w[succeeded failed-settled].include?(record["state"])
+              raise AttemptErrors::EvidenceUnavailable, "canonical service request is not settled for this scope"
+            end
+            # This existing reader verifies the accepted record digest and all
+            # imported terminal/no-effect evidence against this exact commit.
+            journal.service_request(record.fetch("request_id"), commit: commit)
+          end
+          true
+        rescue KeyError, TypeError, ArgumentError, AttemptErrors::ReceiptRejected
+          raise AttemptErrors::EvidenceUnavailable, "canonical service settlement is unverifiable"
+        end
+
         # Called only by the installed journal composition, including lower
         # service writers. It never reacquires lifecycle/authority locks.
         def authorize_service_update!(journal:, existing:, replacement:, pending:)
@@ -29,6 +56,7 @@ module Ace
           end
           params = replacement.slice("mapping_id", "assignment_id", "attempt_id", "candidate_generation").merge("head" => replacement.fetch("candidate_head"))
           events = pending.fetch(:current_events)
+          @launch.scope_open_for_effect!(events: events, params: params, map: map)
           origin = active_origin(events, params)
           unless replacement["worker_process_binding"] == origin.fetch("process_binding").fetch("process_identity") &&
               replacement["launch_ticket"] == origin.fetch("launch_ticket") && replacement["reservation_generation"] == origin.fetch("reservation_generation")
@@ -119,6 +147,7 @@ module Ace
               raise AttemptErrors::Conflict, "authorization input binding differs"
             end
             events = attempt_events(journal, params)
+            @launch.scope_open_for_effect!(events: events, params: params, map: map)
             origin = active_origin(events, params)
             unless record["worker_process_binding"] == origin.fetch("process_binding").fetch("process_identity") &&
                 record["launch_ticket"] == origin.fetch("launch_ticket") && record["reservation_generation"] == origin.fetch("reservation_generation")

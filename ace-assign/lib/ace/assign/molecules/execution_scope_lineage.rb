@@ -11,7 +11,7 @@ module Ace
       # This reader never promotes cached population into a proof event.
       class ExecutionScopeLineage
         BINDING_FIELDS = %w[project_id assignment_id attempt_id mapping_id slot_id reservation_generation
-          scope_generation deployment_digest boot_id slice_invocation_id cgroup_identity resource_identities].freeze
+          scope_generation deployment_digest boot_id slice_invocation_id cgroup_identity resource_mount_namespace_identity resource_identities network_installation_selection network_namespace_identity].freeze
         PROOF_FIELDS = %w[scope_generation scope_binding_event_id seal_event_id boot_id slice_invocation_id
           cgroup_identity populated].freeze
         PROCESS_FIELDS = %w[pid uid gid groups started_at host parent_pid].freeze
@@ -22,7 +22,22 @@ module Ace
         INVOCATION = /\A[0-9a-f]{32}\z/
         BOOT = /\A[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\z/
 
-        attr_reader :binding_event, :native_event, :child_event, :seal_event, :proof_event
+        def self.validate_network_selection!(selection)
+          unless selection.is_a?(Hash) && selection.keys.sort == %w[installer_artifact policy_export profile report]
+            raise AttemptErrors::EvidenceUnavailable, "network installation selection is not closed"
+          end
+          selection.each_value do |ref|
+            unless ref.is_a?(Hash) && ref.keys.sort == %w[bytes path sha256] && ref["path"].is_a?(String) &&
+                ref["path"].bytesize.between?(1, 4096) && ref["path"].start_with?("/") && !ref["path"].include?("\0") &&
+                File.expand_path(ref["path"]) == ref["path"] && ref["sha256"].is_a?(String) && DIGEST.match?(ref["sha256"]) &&
+                ref["bytes"].is_a?(Integer) && ref["bytes"].between?(1, 1_048_576)
+              raise AttemptErrors::EvidenceUnavailable, "network installation artifact reference differs"
+            end
+          end
+          selection
+        end
+
+        attr_reader :binding_event, :native_event, :child_event, :seal_event, :proof_event, :admission_event
 
         def initialize(events:, project_id:, assignment_id:, attempt_id:, mapping_id:)
           events = freeze_tree(JSON.parse(JSON.generate(events)))
@@ -37,6 +52,8 @@ module Ace
             generation += 1 if event["type"] == "authority_mutation"
             accept_reservation!(event, generation) if event["type"] == "authority_mutation" &&
               event.dig("payload", "operation") == "reserve_attempt"
+            accept_admission!(event, generation) if event["type"] == "authority_mutation" &&
+              event.dig("payload", "operation") == "scope_service_admission"
             case event["type"]
             when "scope_bound" then accept_binding!(event, generation + 1)
             when "scope_native_bound" then accept_native!(event)
@@ -116,20 +133,11 @@ module Ace
             unavailable!("scope generation binding differs")
           end
           cgroup!(value.fetch("cgroup_identity"))
+          namespace!(value.fetch("resource_mount_namespace_identity"))
+          namespace!(value.fetch("network_namespace_identity"))
+          self.class.validate_network_selection!(value.fetch("network_installation_selection"))
           resources = value.fetch("resource_identities")
-          unless resources.is_a?(Array) && resources.size.between?(1, 64) &&
-              resources.map { |resource| resource["host_path"] }.uniq.size == resources.size &&
-              resources.map { |resource| resource["view_path"] }.uniq.size == resources.size
-            unavailable!("scope resources are missing or duplicate")
-          end
-          resources.each do |resource|
-            exact_fields!(resource, RESOURCE_FIELDS)
-            unless path?(resource["host_path"]) && path?(resource["view_path"]) &&
-                %w[mount_id device inode uid gid].all? { |key| resource[key].is_a?(Integer) && resource[key] >= 0 } &&
-                resource["filesystem_type"].is_a?(String) && !resource["filesystem_type"].empty?
-              unavailable!("scope resource identity is malformed")
-            end
-          end
+          resources!(resources)
           @binding_event = event
         end
 
@@ -141,17 +149,61 @@ module Ace
           end
         end
 
+        def accept_admission!(event, generation)
+          unavailable!("native admission cannot replace an existing stage") if admission_event || native_event
+          value = event.fetch("payload").fetch("data")
+          stage_reference!(value)
+          unless value.slice(*@expected.keys) == @expected && value["generation"] == generation &&
+              value["native_admission"] == "issued_uncertain"
+            unavailable!("native admission does not name the exact current reserved owner")
+          end
+          installation = value.fetch("network_installation")
+          exact_fields!(installation, %w[report_id boot_id slot_id namespace_path namespace_identity profile_sha256 policy_export_sha256 report_sha256 installer_artifact_sha256])
+          namespace!(installation.fetch("namespace_identity"))
+          selection = binding.fetch("network_installation_selection")
+          unless boot?(installation["report_id"]) && installation["boot_id"] == binding["boot_id"] &&
+              installation["slot_id"] == binding["slot_id"] && installation["namespace_identity"] == binding["network_namespace_identity"] &&
+              installation["namespace_path"].is_a?(String) && installation["namespace_path"].start_with?("/") &&
+              !installation["namespace_path"].include?("\0") && File.expand_path(installation["namespace_path"]) == installation["namespace_path"] &&
+              %w[profile policy_export report installer_artifact].all? { |key| installation["#{key}_sha256"] == selection.fetch(key).fetch("sha256") }
+            unavailable!("native admission installation differs from original parent selection")
+          end
+          @admission_event = event
+        end
+
         def accept_native!(event)
           unavailable!("native binding cannot be replaced") if native_event
           value = event.fetch("payload")
-          exact_fields!(value, %w[scope_generation scope_binding_event_id service_invocation_id server_identity socket_identity workspace_id])
+          exact_fields!(value, %w[scope_generation scope_binding_event_id service_invocation_id server_identity socket_identity workspace_id
+            mount_namespace_identity resource_observer_identity resource_identities network_namespace_identity network_admission_event_id])
           stage_reference!(value)
+          namespace!(value.fetch("network_namespace_identity"))
+          unless admission_event && value["network_admission_event_id"] == admission_event.fetch("digest") &&
+              value["network_namespace_identity"] == binding.fetch("network_namespace_identity")
+            unavailable!("native server does not join the original admitted network installation")
+          end
           process!(value.fetch("server_identity"), binding.fetch("boot_id"))
           socket = value.fetch("socket_identity")
           unless invocation?(value["service_invocation_id"]) && value["workspace_id"].is_a?(String) &&
               value["workspace_id"].match?(/\Aw[1-9][0-9]{0,8}\z/) && socket.is_a?(Array) && socket.size == 3 &&
               socket.all? { |part| part.is_a?(Integer) && part >= 0 } && socket.last == value.dig("server_identity", "uid")
             unavailable!("scope native incarnation differs")
+          end
+          namespace!(value.fetch("mount_namespace_identity"))
+          observer = value.fetch("resource_observer_identity")
+          process!(observer, binding.fetch("boot_id"))
+          server = value.fetch("server_identity")
+          unless observer.values_at("uid", "gid", "groups", "host") == server.values_at("uid", "gid", "groups", "host") &&
+              observer["pid"] != server["pid"]
+            unavailable!("native resource observer is not the distinct fixed same-user hook")
+          end
+          resources!(value.fetch("resource_identities"))
+          parent_resources = binding.fetch("resource_identities").to_h { |resource| [resource.values_at("host_path", "view_path"), resource] }
+          value.fetch("resource_identities").each do |resource|
+            original = parent_resources[resource.values_at("host_path", "view_path")]
+            if original && original.slice("device", "inode", "filesystem_type", "uid", "gid") != resource.slice("device", "inode", "filesystem_type", "uid", "gid")
+              unavailable!("native view substitutes a parent-pinned backing object")
+            end
           end
           @native_event = event
         end
@@ -208,6 +260,31 @@ module Ace
             "seal_event_id" => seal_event.fetch("digest"), "populated" => 0)
           unavailable!("scope proof is not exact sealed empty population") unless value == expected
           @proof_event = event
+        end
+
+        def namespace!(value)
+          exact_fields!(value, %w[device inode])
+          unless value["device"].is_a?(Integer) && value["device"] >= 0 && positive_integer?(value["inode"])
+            unavailable!("scope mount namespace identity is malformed")
+          end
+        end
+
+        def resources!(resources)
+          unless resources.is_a?(Array) && resources.size <= 64 &&
+              resources.all? { |resource| resource.is_a?(Hash) } &&
+              resources.map { |resource| resource.values_at("host_path", "view_path") }.uniq.size == resources.size &&
+              resources.map { |resource| resource["view_path"] }.uniq.size == resources.size
+            unavailable!("scope resource observations are duplicate or oversized")
+          end
+          resources.each do |resource|
+            exact_fields!(resource, RESOURCE_FIELDS)
+            unless path?(resource["host_path"]) && path?(resource["view_path"]) && positive_integer?(resource["mount_id"]) &&
+                %w[device inode uid gid].all? { |key| resource[key].is_a?(Integer) && resource[key] >= 0 } &&
+                resource["filesystem_type"].is_a?(String) && resource["filesystem_type"].bytesize.between?(1, 64) &&
+                resource["filesystem_type"].ascii_only? && !resource["filesystem_type"].match?(/[\s\0]/)
+              unavailable!("scope resource identity is malformed")
+            end
+          end
         end
 
         def cgroup!(value)

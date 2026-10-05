@@ -105,6 +105,7 @@ module Ace
               request["version"] == 1 && request["operation"].is_a?(String) && request["params"].is_a?(Hash)
             raise ArgumentError, "invalid authority envelope"
           end
+          deadline = wire.deadline(90) if %w[reserve_attempt close_execution_scope].include?(request.fetch("operation"))
           params = request.fetch("params")
           map = @deployment.verify!(params.fetch("mapping_id"), kernel: @kernel, authority_state: true)
           unless map["authority_id"] == @authority_id && map["project_id"] == request["project_id"]
@@ -125,7 +126,8 @@ module Ace
             end
           end
           raise AttemptErrors::UnauthorizedIdentity, "unmapped kernel peer" unless role
-          if @composition == "services" && %w[attempt_status evidence_fetch].include?(request["operation"])
+          if %w[observe_execution_scope close_execution_scope].include?(request["operation"]) ||
+              @composition == "services" && %w[attempt_status evidence_fetch].include?(request["operation"])
             bodyless_read!(socket, deadline)
           end
           if request["operation"] == "gate_ready"

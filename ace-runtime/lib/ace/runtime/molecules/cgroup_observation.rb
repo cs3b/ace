@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "../errors"
+require_relative "linux_mount_info"
 
 module Ace
   module Runtime
@@ -30,16 +31,8 @@ module Ace
             matches = info.lines.filter_map { |line| /\Amnt_id:\s+([0-9]+)\s*\z/.match(line)&.[](1) }
             raise RuntimeUnavailableError, "scope mount identity is unavailable" unless matches.size == 1
             mount_id = Integer(matches.first, 10)
-            mounts = read("/proc/self/mountinfo", limit: 1_048_576).lines.filter_map do |line|
-              fields = line.split
-              next unless fields.first == mount_id.to_s
-              separator = fields.index("-")
-              next unless separator && fields.size >= separator + 4
-              {"mount_id" => mount_id, "filesystem_type" => fields[separator + 1],
-               "root" => fields[3], "mountpoint" => fields[4]}
-            end
-            raise RuntimeUnavailableError, "scope mount is ambiguous" unless mounts.size == 1
-            mounts.first
+            mount = LinuxMountInfo.new(read("/proc/self/mountinfo", limit: LinuxMountInfo::LIMIT)).by_id(mount_id)
+            mount.slice("mount_id", "filesystem_type", "root", "mountpoint")
           end
         end
 

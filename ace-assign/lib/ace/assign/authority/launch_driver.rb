@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 require "digest"
+require "json"
 require "securerandom"
 require "ace/herdr/molecules/protected_native_control"
 require_relative "client"
@@ -13,12 +14,11 @@ module Ace
           @mapping_id, @deployment, @kernel = mapping_id, deployment, kernel
           @map = deployment.mapping(mapping_id)
           @client = client || Client.new(mapping_id: mapping_id, deployment: deployment, kernel: kernel)
-          @native = native || Ace::Herdr::Molecules::ProtectedNativeControl.new(mapping: @map, kernel: kernel)
+          @native = native
         end
 
         def preflight
           @deployment.verify!(@mapping_id, kernel: @kernel)
-          @native.preflight!
           @client.call("launch_preflight", {}).data
         end
 
@@ -41,6 +41,13 @@ module Ace
           # evidence of ownership, never evidence that native creation is fresh.
           return reserved.data.merge("required_action" => "inspect_retained_reservation_no_creation_permission") if reserved.replayed
           state = reserved.data
+          inspected = @client.call("inspect_launch", state.slice("assignment_id", "attempt_id")).data
+          state = inspected
+          origin = inspected.fetch("native_binding")
+          return close_before_native_release(state, mutation_id) unless origin
+          fixed = JSON.parse(JSON.generate(@map))
+          fixed.fetch("native").merge!(origin.slice("server_identity", "socket_identity", "workspace_id"))
+          @native ||= Ace::Herdr::Molecules::ProtectedNativeControl.new(mapping: fixed, kernel: @kernel)
           binding = @native.create(mapping_id: @mapping_id, ticket: state.fetch("launch_ticket"))
           child_handle = @kernel.pin(binding.fetch("process_identity"))
           recorded = @client.call("record_launch", lifecycle_params(state, binding), mutation_id: "#{mutation_id}-record").data
@@ -76,6 +83,27 @@ module Ace
         end
 
         private
+        def close_before_native_release(state, mutation_id)
+          unless state["scope_binding_event_id"]
+            return state.merge("required_action" => "inspect_exact_scope")
+          end
+          selectors = state.slice("assignment_id", "attempt_id")
+          sealed = @client.call("close_execution_scope", selectors.merge("expected_generation" => state.fetch("generation")),
+            mutation_id: "#{mutation_id}-scope-seal").data
+          closed = @client.call("close_execution_scope", selectors.merge("expected_generation" => sealed.fetch("generation")),
+            mutation_id: "#{mutation_id}-scope-proof").data
+          unless closed["state"] == "closed_no_writers"
+            return state.merge("required_action" => "inspect_exact_scope")
+          end
+          inspected = @client.call("inspect_launch", selectors).data
+          failure = inspected.fetch("scope_failure_evidence")
+          raise AttemptErrors::EvidenceUnavailable, "canonical scope failure selectors unavailable" unless failure
+          bytes = JSON.generate(failure)
+          @client.call("abort_launch", selectors.merge("launch_ticket" => state.fetch("launch_ticket"),
+            "expected_generation" => inspected.fetch("generation"), "failure_evidence" => bytes,
+            "failure_digest" => Digest::SHA256.hexdigest(bytes)), mutation_id: "#{mutation_id}-scope-abort").data
+        end
+
         def lifecycle_params(state, binding)
           state.slice("assignment_id", "attempt_id", "launch_ticket").merge("process_binding" => binding,
             "expected_generation" => state.fetch("generation"))

@@ -16,7 +16,7 @@ module Ace
           @service = deployment.authority(@map.fetch("authority_id"))
         end
 
-        def call(operation, params, mutation_id: nil, timeout: 5, upload_parts: nil, download: false, purpose: nil)
+        def call(operation, params, mutation_id: nil, timeout: nil, upload_parts: nil, download: false, purpose: nil)
           if operation == "evidence_fetch" && (!download || purpose != :artifacts || upload_parts)
             raise ArgumentError, "evidence fetch requires fixed artifacts download"
           end
@@ -32,7 +32,12 @@ module Ace
           codec = transfer_codec if upload_parts || download
           descriptor = codec.descriptor(upload_parts, purpose: purpose) if upload_parts
           parameters = upload_parts ? params.merge("transfer" => descriptor) : params
-          deadline = wire.deadline([timeout, 30].min)
+          cap = %w[reserve_attempt close_execution_scope].include?(operation) ? 90 : 30
+          duration = timeout || (cap == 90 ? 90 : 5)
+          unless duration.is_a?(Numeric) && duration.positive? && duration.finite?
+            raise ArgumentError, "authority timeout must be finite and positive"
+          end
+          deadline = wire.deadline([duration, cap].min)
           wire.connect(path, deadline: deadline) do |socket|
             peer = @kernel.peer(socket)
             unless peer["uid"] == @service.fetch("uid") && peer["gid"] == @service.fetch("gid") &&
@@ -42,7 +47,7 @@ module Ace
             wire.write(socket, {"version" => 1, "operation" => operation,
               "mutation_id" => mutation_id, "project_id" => @map.fetch("project_id"),
               "params" => parameters.merge("mapping_id" => mapping_id)}, deadline: deadline, limit: upload_parts || download ? 16_384 : wire::LIMIT)
-            if operation == "evidence_fetch" || (operation == "attempt_status" && params.key?("result_candidate_generation"))
+            if %w[evidence_fetch observe_execution_scope close_execution_scope].include?(operation) || (operation == "attempt_status" && params.key?("result_candidate_generation"))
               socket.shutdown(Socket::SHUT_WR)
             end
             if upload_parts

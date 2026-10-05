@@ -20,6 +20,11 @@ module Ace
           events.count { |event| event["type"] == "authority_mutation" }
         end
 
+        def canonical_attempt_state(events)
+          authority_generation(events)
+          derive_state(events)
+        end
+
         # The block runs against the current ref on every CAS attempt. It
         # returns events [{type:, payload:}], immutable blobs, and public data.
         # Only the authority calls this internal journal API; wire requests
@@ -149,8 +154,10 @@ module Ace
 
         def chain_mutation_events(attempt_id, previous, entries)
           entries.map do |entry|
+            recorded_at = entry.fetch(:recorded_at) { Time.now.utc }
+            raise ArgumentError, "internal event timestamp must be a UTC Time" unless recorded_at.is_a?(Time) && recorded_at.utc?
             event = Models::EvidenceEvent.build(type: entry.fetch(:type), attempt_id: attempt_id,
-              payload: entry.fetch(:payload), previous_digest: previous)
+              payload: entry.fetch(:payload), previous_digest: previous, recorded_at: recorded_at)
             previous = event.fetch("digest")
             event
           end

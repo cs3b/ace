@@ -26,6 +26,9 @@ module Ace
           deployment.define_singleton_method(:mapping) { |_| map }
           launch = Object.new
           launch.define_singleton_method(:with_assignment) { |**_, &block| block.call(journal, {}) }
+          # Controlled scope-owner seam; installed scope proof is covered by
+          # the connected owner/observer tests, not this service policy fixture.
+          launch.define_singleton_method(:scope_open_for_effect!) { |**_| true }
           kernel = Object.new
           kernel.define_singleton_method(:live!) { |_| true }
           kernel.define_singleton_method(:descendant?) { |*_args| true }
@@ -78,6 +81,24 @@ module Ace
           request["mutation_id"] = "not-a-read"
           assert_raises(ArgumentError) { endcap.dispatch(request: request, peer: {"uid" => Process.uid}, role: :executor, transfer: upload) }
           assert_equal ref, journal.ref_value
+        end
+      end
+
+      def test_authorization_read_refuses_closed_scope_before_fresh_policy
+        with_review_replay do |endcap, original, upload, _claim, journal|
+          params = original.fetch("params").slice("mapping_id", "assignment_id", "attempt_id", "candidate_generation", "head", "request_id", "input_digest", "transfer")
+          params["claim_binding"] = journal.service_request("request-2").fetch("claim_binding")
+          request = original.merge("operation" => "service_authorization", "mutation_id" => nil, "params" => params)
+          checked = false
+          endcap.instance_variable_get(:@launch).define_singleton_method(:scope_open_for_effect!) do |**_|
+            checked = true
+            raise AttemptErrors::EvidenceUnavailable, "canonical scope sealed"
+          end
+          endcap.instance_variable_get(:@service_policy).define_singleton_method(:prepare!) { |**_| flunk "sealed scope must not authorize fresh policy" }
+          before = journal.ref_value
+          assert_raises(AttemptErrors::EvidenceUnavailable) { endcap.dispatch(request: request, peer: {"uid" => Process.uid}, role: :executor, transfer: upload) }
+          assert checked
+          assert_equal before, journal.ref_value
         end
       end
 

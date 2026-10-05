@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 require_relative "../test_helper"
+require_relative "../support/execution_scope_observation_fixtures"
 require "ace/assign/authority/endcap"
 require "ace/herdr/organisms/inbox"
 
@@ -60,20 +61,30 @@ module Ace
           parent = {"project_id" => "project", "assignment_id" => "assignment", "attempt_id" => "attempt", "mapping_id" => "mapping",
             "slot_id" => "slot", "reservation_generation" => 1, "scope_generation" => 2, "deployment_digest" => "a" * 64,
             "boot_id" => BOOT, "slice_invocation_id" => "b" * 32,
+            "network_installation_selection" => ExecutionScopeObservationFixtures::NETWORK_SELECTION,
+            "network_namespace_identity" => {"device" => 7, "inode" => 88},
+            "resource_mount_namespace_identity" => {"device" => 4, "inode" => 1111},
             "cgroup_identity" => {"path" => "/sys/fs/cgroup/slot.slice", "mount_id" => 1, "filesystem_type" => "cgroup2", "device" => 2, "inode" => 3},
             "resource_identities" => [{"host_path" => "/var/lib/slot", "view_path" => "/scratch", "mount_id" => 4,
               "filesystem_type" => "ext4", "device" => 5, "inode" => 6, "uid" => 13001, "gid" => 13001}]}
           mutate("fixture_parent", "parent", 1, {data: {}, events: [{type: "scope_bound", payload: parent}]})
           parent_event = events.find { |event| event["type"] == "scope_bound" }
-          mutate("fixture_native", "native", 2, {data: {}, events: [{type: "scope_native_bound", payload: {
+          mutate("scope_service_admission", "admission", 2, {data: parent.slice("project_id", "assignment_id", "attempt_id", "mapping_id").merge(
+            "scope_generation" => 2, "scope_binding_event_id" => parent_event.fetch("digest"),
+            "native_admission" => "issued_uncertain", "network_installation" => ExecutionScopeObservationFixtures::NETWORK_OUTPUT)})
+          admission = events.find { |event| event.dig("payload", "operation") == "scope_service_admission" }
+          mutate("fixture_native", "native", 3, {data: {}, events: [{type: "scope_native_bound", payload: {
             "scope_generation" => 2, "scope_binding_event_id" => parent_event.fetch("digest"), "service_invocation_id" => "c" * 32,
-            "server_identity" => server, "socket_identity" => [1, 2, 13001], "workspace_id" => "w1"}}]})
+            "server_identity" => server, "socket_identity" => [1, 2, 13001], "workspace_id" => "w1",
+            "mount_namespace_identity" => {"device" => 4, "inode" => 2222}, "resource_observer_identity" => process(92, 13001),
+            "resource_identities" => parent.fetch("resource_identities").map { |resource| resource.merge("mount_id" => 99) },
+            "network_namespace_identity" => parent.fetch("network_namespace_identity"), "network_admission_event_id" => admission.fetch("digest")}}]})
           if child
             original = {"runtime" => "herdr", "session" => "w1", "pane" => "p1", "terminal_id" => "terminal",
               "process_identity" => process(91, 13001).merge("parent_pid" => 90), "shell_identity" => process(91, 13001).merge("parent_pid" => 90),
               "native_origin" => {"workspace" => "w1", "tab" => "t1", "pane" => "p1", "server_identity" => server,
                 "socket_identity" => [1, 2, 13001], "command" => ["/fixture/gate", "mapping", "ticket"], "cwd" => "/scratch"}}
-            mutate("fixture_child", "child", 3, {data: {}, events: [{type: "scope_child_bound", payload: {
+            mutate("fixture_child", "child", 4, {data: {}, events: [{type: "scope_child_bound", payload: {
               "scope_generation" => 2, "scope_binding_event_id" => parent_event.fetch("digest"),
               "native_binding_event_id" => events.find { |event| event["type"] == "scope_native_bound" }.fetch("digest"),
               "original_process_binding" => original}}]})
@@ -96,14 +107,14 @@ module Ace
           @box.enqueue(event: "event", attempt: "attempt", ref: {"session" => "w1", "pane" => "p1"}, payload: "message")
           record = @box.deliver(event: "event")
           @registration = record.slice("event_id", "attempt_id", "payload_sha256", "receipt_key_sha256")
-          mutate("fixture_registration", "registration", child ? 4 : 3, {data: {}, events: [{type: "inbox_binding", payload: {
+          mutate("fixture_registration", "registration", child ? 5 : 4, {data: {}, events: [{type: "inbox_binding", payload: {
             "event_id" => "event", "attempt_id" => "attempt", "inbox_context_id" => "context", "registration" => @registration}}]})
           receipt = record.slice("event_id", "attempt_id", "claim_generation", "payload_sha256", "binding").merge(
             "outcome" => "consumed", "observer" => {"role" => "supervisor", "id" => "observer"},
             "evidence" => {"kind" => "consumed_acknowledged", "native_reference" => "native:1", "observation" => "consumed"})
           @bytes = JSON.generate(receipt); @signature = key.sign(OpenSSL::Digest::SHA256.new, @bytes)
           @params = {"mapping_id" => "mapping", "assignment_id" => "assignment", "attempt_id" => "attempt",
-            "expected_generation" => child ? 5 : 4, "event_id" => "event", "inbox_context_id" => "context", "expected_registration" => @registration,
+            "expected_generation" => child ? 6 : 5, "event_id" => "event", "inbox_context_id" => "context", "expected_registration" => @registration,
             "receipt_sha256" => Digest::SHA256.hexdigest(@bytes), "signature_sha256" => Digest::SHA256.hexdigest(@signature), "transfer" => {}}
           yield
         end
@@ -130,7 +141,7 @@ module Ace
         fixture do
           result = reconcile
           assert_equal "completed", result.dig(:data, "state")
-          assert_equal 5, result.dig(:data, "generation")
+          assert_equal 6, result.dig(:data, "generation")
           assert_equal 2, events.count { |event| event["type"] == "evidence_import" }
           @kernel.dead = [90, 91]
           restart
@@ -169,7 +180,7 @@ module Ace
         fixture do
           accepted = reconcile
           parent = events.find { |event| event["type"] == "scope_bound" }
-          mutate("fixture_seal", "seal", 5, {data: {}, events: [{type: "scope_sealed", payload: {
+          mutate("fixture_seal", "seal", 6, {data: {}, events: [{type: "scope_sealed", payload: {
             "scope_generation" => 2, "scope_binding_event_id" => parent.fetch("digest")}}]})
           @kernel.dead = [90, 91]
           assert_equal accepted.fetch(:data), reconcile.fetch(:data)
@@ -186,13 +197,13 @@ module Ace
       def test_changed_same_id_and_uncontextual_registration_cannot_adopt_old_proof
         fixture do
           reconcile
-          assert_raises(AttemptErrors::Conflict) { reconcile(params: @params.merge("expected_generation" => 5)) }
+          assert_raises(AttemptErrors::Conflict) { reconcile(params: @params.merge("expected_generation" => 6)) }
           assert_raises(ArgumentError) { reconcile(params: @params.merge("expected_registration" => nil)) }
           assert_raises(ArgumentError) { reconcile(params: @params.merge("extra" => true)) }
           assert_equal 2, events.count { |event| event["type"] == "evidence_import" }
         end
         fixture do
-          mutate("fixture_duplicate_registration", "old-registration", 4, {data: {}, events: [{type: "inbox_binding", payload: @registration}]})
+          mutate("fixture_duplicate_registration", "old-registration", 5, {data: {}, events: [{type: "inbox_binding", payload: @registration}]})
           assert_raises(AttemptErrors::EvidenceUnavailable) { reconcile }
           assert_equal 0, events.count { |event| event["type"] == "evidence_import" }
         end
@@ -218,7 +229,7 @@ module Ace
             "outcome" => "consumed", "observer" => {"role" => "supervisor", "id" => "observer"},
             "evidence" => {"kind" => "consumed_acknowledged", "native_reference" => "native:2", "observation" => "consumed"})
           @bytes = JSON.generate(receipt); @signature = @key.sign(OpenSSL::Digest::SHA256.new, @bytes)
-          @params = @params.merge("expected_generation" => 5, "receipt_sha256" => Digest::SHA256.hexdigest(@bytes),
+          @params = @params.merge("expected_generation" => 6, "receipt_sha256" => Digest::SHA256.hexdigest(@bytes),
             "signature_sha256" => Digest::SHA256.hexdigest(@signature))
           second = reconcile(id: "claim-two")
           assert_equal "completed", second.dig(:data, "state")

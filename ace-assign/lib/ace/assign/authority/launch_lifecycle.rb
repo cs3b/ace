@@ -6,6 +6,8 @@ require "time"
 require "fileutils"
 require "open3"
 require_relative "deployment"
+require_relative "../molecules/execution_scope_lineage"
+require_relative "execution_scope_observation"
 
 module Ace
   module Assign
@@ -21,17 +23,22 @@ module Ace
           "release_launch" => %w[mapping_id assignment_id attempt_id launch_ticket process_binding expected_generation],
           "abort_launch" => %w[mapping_id assignment_id attempt_id launch_ticket failure_evidence failure_digest expected_generation]
         }.freeze
-        OPERATIONS = (MUTATIONS.keys + %w[launch_preflight registration_status attempt_status inspect_launch]).freeze
+        OPERATIONS = (MUTATIONS.keys + %w[launch_preflight registration_status attempt_status inspect_launch observe_execution_scope close_execution_scope]).freeze
         TERMINAL = %w[succeeded failed stopped].freeze
 
         attr_reader :mutex, :journals, :exclusions
-        def initialize(deployment:, kernel: Ace::Runtime::Molecules::ProtectedLinux.new, journals: nil, mutex: Mutex.new, exclusions: {})
+        def initialize(deployment:, kernel: Ace::Runtime::Molecules::ProtectedLinux.new, journals: nil, mutex: Mutex.new, exclusions: {}, scope_observer_factory: nil)
           @deployment, @kernel = deployment, kernel
           @journals = journals || {}
           @exclusions = exclusions
           @mutex = mutex
           @observations = {}
           @streams = {}
+          @slot_exclusions = {}
+          @scope_observers = {}
+          @scope_observer_factory = scope_observer_factory || ->(mapping_id) {
+            ExecutionScopeObservation.new(mapping_id: mapping_id, deployment: @deployment, kernel: @kernel)
+          }
           @changed = ConditionVariable.new
         end
 
@@ -40,8 +47,25 @@ module Ace
           @result_owner = owner
         end
 
+        # Existing service owners call this while holding slot-before-assignment
+        # exclusion. It is a canonical seal gate, never a new effect journal.
+        def scope_open_for_effect!(events:, params:, map:)
+          chain = events.select { |event| event["attempt_id"] == params.fetch("attempt_id") }
+          Molecules::ExecutionScopeLineage.new(events: chain, project_id: map.fetch("project_id"),
+            assignment_id: params.fetch("assignment_id"), attempt_id: params.fetch("attempt_id"),
+            mapping_id: params.fetch("mapping_id")).require_launch_bound!
+        end
+
         def dispatch(request:, peer:, role:)
           operation, params = request.values_at("operation", "params")
+          if operation == "observe_execution_scope"
+            raise ArgumentError, "scope observation mutation ID must be null" unless request.fetch("mutation_id").nil?
+            return {data: observe_execution_scope!(params: params, peer: peer, role: role), replayed: false}
+          end
+          if operation == "close_execution_scope"
+            strict!(params, %w[mapping_id assignment_id attempt_id expected_generation])
+            return close_execution_scope!(params: params.merge("mutation_id" => request.fetch("mutation_id")), peer: peer, role: role)
+          end
           if operation == "launch_preflight"
             strict!(params, %w[mapping_id])
             raise AttemptErrors::UnauthorizedIdentity, "preflight requires mapped launcher" unless role == :launcher
@@ -89,8 +113,21 @@ module Ace
           journal = journal_for(map)
           digest = Digest::SHA256.hexdigest(JSON.generate(canonical(params)))
           with_exclusion(params, map, journal) do
-          @mutex.synchronize do
+          if operation == "reserve_attempt"
+            existing = @mutex.synchronize { journal.mutation_result(request.fetch("mutation_id")) }
+            unless existing
+              # Retire the exact released predecessor before reserving a fresh
+              # generation. No native action occurs inside the journal CAS.
+              commit = journal.ref_value
+              retire_released_parent!(mapping_id: params.fetch("mapping_id"), journal: journal, commit: commit)
+            end
+          end
+          response = @mutex.synchronize do
             replay = journal.mutation_result(request.fetch("mutation_id"))
+            if replay && operation == "abort_launch"
+              replay_events = journal.read_events(params.fetch("assignment_id")).select { |event| event["attempt_id"] == params.fetch("attempt_id") }
+              scope_close_owner!(params, map, replay_events, peer, role)
+            end
             attempt_id = replay&.fetch("attempt_id") || mutation_attempt_id(operation, params)
             if operation == "release_launch" && !replay
               deadline = wire.deadline(5)
@@ -116,7 +153,7 @@ module Ace
                 when "release_launch"
                   released = true
                   release(params, map, events, peer)
-                when "abort_launch" then abort(params, map, events, peer, supervisor: role == :supervisor)
+                when "abort_launch" then abort(params, map, events, peer, supervisor: role == :supervisor, journal: journal, commit: commit)
                 end
                 bounded_reply!(plan.fetch(:data), generation + 1)
                 # Validate the complete plan before opening a handle, but acquire
@@ -154,6 +191,25 @@ module Ace
               reservation_handle&.close
             end
           end
+          if operation == "reserve_attempt" && !response.fetch(:replayed)
+            begin
+              parent = provision_reserved_parent_held!(response.fetch(:data), map, journal)
+              admission = response.fetch(:data).slice("mapping_id", "assignment_id", "attempt_id", "launch_ticket").merge(
+                "mutation_id" => "scope-admission-#{Digest::SHA256.hexdigest(response.dig(:data, 'attempt_id'))[0, 48]}",
+                "expected_generation" => parent.dig(:data, "generation"))
+              digest = Digest::SHA256.hexdigest(JSON.generate(canonical(admission.reject { |key, _| key == "mutation_id" })))
+              admit_native_service_held!(admission, map, journal, peer, role, digest)
+            rescue Ace::Runtime::RuntimeUnavailableError, AttemptErrors::EvidenceUnavailable
+              # Reservation is already canonical. A failed/lost parent job is
+              # held for exact inspection; replay must not activate it again.
+              # The immutable reservation reply remains its original outcome.
+              nil
+            end
+          end
+          if operation == "abort_launch" && response.dig(:data, "abort_observation", "kind") == "protected_scope_before_release"
+            resume_scope_release_held!(response, map, journal, peer, role)
+          end
+          response
           end
         end
 
@@ -234,12 +290,14 @@ module Ace
               yield journal, JSON.parse(JSON.generate(registration))
             end
           end
-          if exclusive
-            exclusion.with_exclusive(exclusion.task_key(task)) do
-              exclusion.with_exclusive(exclusion.assignment_key(id)) { enter.call }
+          with_slot(map) do
+            if exclusive
+              exclusion.with_exclusive(exclusion.task_key(task)) do
+                exclusion.with_exclusive(exclusion.assignment_key(id)) { enter.call }
+              end
+            else
+              exclusion.with_shared_multi([exclusion.task_key(task), exclusion.assignment_key(id)]) { enter.call }
             end
-          else
-            exclusion.with_shared_multi([exclusion.task_key(task), exclusion.assignment_key(id)]) { enter.call }
           end
         end
 
@@ -252,6 +310,10 @@ module Ace
         end
 
         private
+
+        def scope_observer_for(mapping_id)
+          @scope_observers[mapping_id] ||= @scope_observer_factory.call(mapping_id)
+        end
 
         def bounded_scope!(scope)
           unless scope.is_a?(String) && scope.bytesize.between?(1, 128) && scope.split(".", -1).length <= 16
@@ -302,7 +364,28 @@ module Ace
           end
           token!(task)
           keys = [exclusion.task_key(task), exclusion.assignment_key(params.fetch("assignment_id"))]
-          exclusion.with_shared_multi(keys) { yield }
+          with_slot(map) { exclusion.with_shared_multi(keys) { yield } }
+        end
+
+        # Slot ownership spans assignment chains and survives authority restart
+        # in the existing canonical journal. The file lock only serializes a
+        # fresh read/CAS or bounded manager action; its contents convey no facts.
+        def with_slot(map)
+          service = @deployment.authority(map.fetch("authority_id"))
+          scope = map.fetch("execution_scope")
+          exclusion = @slot_exclusions[map.fetch("authority_id")] ||= Molecules::LifecycleExclusion.new(
+            root: File.join(service.fetch("state_root"), "execution-slot-exclusion"))
+          key = [object_id, map.fetch("authority_id"), scope.fetch("slot_id")]
+          held = Thread.current[:ace_assign_scope_exclusions] ||= {}
+          raise AttemptErrors::Conflict, "execution slot exclusion cannot be entered recursively" if held[key]
+          exclusion.with_exclusive(exclusion.slot_key(scope.fetch("slot_id"))) do
+            held[key] = true
+            begin
+              yield
+            ensure
+              held.delete(key)
+            end
+          end
         end
 
         def materialize_definition(result, map, journal)
@@ -377,6 +460,7 @@ module Ace
             raise AttemptErrors::UnauthorizedIdentity, "reservation identity differs"
           end
           scope = Atoms::AssignmentScope.canonicalize(params.fetch("scope"))
+          ensure_slot_available!(map, journal)
           events = journal.read_events(params.fetch("assignment_id"))
           events.group_by { |event| event["attempt_id"] }.each_value do |chain|
             intent = chain.find { |event| event["type"] == "intent" }
@@ -393,15 +477,66 @@ module Ace
             "project_id" => map.fetch("project_id"), "task_id" => registration.fetch("task_id"),
             "base_head" => head, "actor" => map.fetch("worker_actor"), "role" => "worker", "runtime" => "herdr",
             "launcher_identity" => peer, "launch_ticket" => ticket}
-          {events: [{type: "intent", payload: payload}], blobs: {}, data: payload.merge(
+          provisioning = {"slot_id" => map.fetch("execution_scope").fetch("slot_id"),
+            "deployment_digest" => Digest::SHA256.hexdigest(JSON.generate(canonical(map))),
+            "reservation_generation" => generation + 1}
+          {events: [{type: "intent", payload: payload}, {type: "scope_provisioning", payload: provisioning}], blobs: {}, data: payload.merge(
             "attempt_id" => attempt_id, "phase" => "reserved", "mapping_id" => params.fetch("mapping_id"),
             "reservation_generation" => generation + 1, "handshake_deadline" => (Time.now.utc + 30).iso8601(6))}
+        end
+
+        def ensure_slot_available!(map, journal, commit: journal.ref_value)
+          slot = map.fetch("execution_scope").fetch("slot_id")
+          journal.assignment_ids(commit: commit).each do |assignment_id|
+            journal.read_events(assignment_id, commit: commit).group_by { |event| event.fetch("attempt_id") }.each do |attempt_id, chain|
+              unless Models::EvidenceEvent.chain_valid?(chain)
+                raise AttemptErrors::EvidenceUnavailable, "slot reservation chain is corrupt"
+              end
+              reservations = chain.select do |event|
+                event["type"] == "authority_mutation" && event.dig("payload", "operation") == "reserve_attempt"
+              end
+              next if reservations.empty?
+              raise AttemptErrors::EvidenceUnavailable, "attempt has conflicting reservations" unless reservations.size == 1
+              reservation = reservations.first.fetch("payload").fetch("data")
+              provisioning = chain.select { |event| event["type"] == "scope_provisioning" }
+              unless provisioning.size == 1
+                raise AttemptErrors::EvidenceUnavailable, "canonical slot provisioning identity is incomplete"
+              end
+              owner = provisioning.first.fetch("payload")
+              unless owner.is_a?(Hash) && owner.keys.sort == %w[deployment_digest reservation_generation slot_id] &&
+                  owner["reservation_generation"] == reservation.fetch("reservation_generation") &&
+                  owner["deployment_digest"].is_a?(String) && Molecules::ExecutionScopeLineage::DIGEST.match?(owner["deployment_digest"])
+                raise AttemptErrors::EvidenceUnavailable, "canonical slot provisioning identity differs"
+              end
+              prior_map = @deployment.mapping(reservation.fetch("mapping_id"))
+              unless prior_map.fetch("execution_scope").fetch("slot_id") == owner.fetch("slot_id") &&
+                  prior_map.fetch("project_id") == reservation.fetch("project_id")
+                raise AttemptErrors::EvidenceUnavailable, "historical slot owner was removed or moved"
+              end
+              next unless owner.fetch("slot_id") == slot
+              lineage = Molecules::ExecutionScopeLineage.new(events: chain, project_id: map.fetch("project_id"),
+                assignment_id: assignment_id, attempt_id: attempt_id, mapping_id: reservation.fetch("mapping_id"))
+              unless lineage.binding.nil? || lineage.binding.fetch("deployment_digest") == owner.fetch("deployment_digest")
+                raise AttemptErrors::EvidenceUnavailable, "parent binding differs from original slot provisioning"
+              end
+              # Terminality alone never clears this slot: canonical closure is
+              # separately mandatory, including after the authority restarts.
+              unless terminal_events?(chain) && lineage.proof_id && scope_reservation_released?(chain, lineage, journal, commit)
+                raise AttemptErrors::Conflict, "execution slot has an unreleased canonical reservation"
+              end
+              scope_settlement_complete!(journal: journal, events: chain, params: {"mapping_id" => reservation.fetch("mapping_id"),
+                "assignment_id" => assignment_id, "attempt_id" => attempt_id}, map: prior_map, commit: commit)
+            end
+          end
+          true
+        rescue KeyError
+          raise AttemptErrors::EvidenceUnavailable, "canonical slot ownership is incomplete"
         end
 
         def record(params, map, events, peer)
           state, observation = owned(params, events, peer)
           raise AttemptErrors::Conflict, "launch cannot record another child" unless state["phase"] == "reserved"
-          binding = validate_binding!(params.fetch("process_binding"), map, mapping_id: params.fetch("mapping_id"), launch_ticket: params.fetch("launch_ticket"))
+          binding = validate_binding!(params.fetch("process_binding"), map, mapping_id: params.fetch("mapping_id"), launch_ticket: params.fetch("launch_ticket"), assignment_id: params.fetch("assignment_id"), attempt_id: params.fetch("attempt_id"), events: events)
           child = binding.fetch("process_identity")
           @kernel.live!(child)
           if observation[:child_handle]
@@ -420,12 +555,17 @@ module Ace
           unless state["phase"] == "recorded" && state["process_binding"] == params["process_binding"]
             raise AttemptErrors::Conflict, "binding differs from recorded original child"
           end
-          validate_binding!(params.fetch("process_binding"), map, mapping_id: params.fetch("mapping_id"), launch_ticket: params.fetch("launch_ticket"))
+          validate_binding!(params.fetch("process_binding"), map, mapping_id: params.fetch("mapping_id"), launch_ticket: params.fetch("launch_ticket"), assignment_id: params.fetch("assignment_id"), attempt_id: params.fetch("attempt_id"), events: events)
           @kernel.live!(params.fetch("process_binding").fetch("process_identity"))
           payload = {"actor" => map.fetch("worker_actor"), "role" => "worker", "runtime" => "herdr",
             "pid" => params.dig("process_binding", "process_identity", "pid"),
             "process_identity" => params.dig("process_binding", "process_identity"), "runtime_binding" => params.fetch("process_binding")}
-          {events: [{type: "process_start", payload: payload}], blobs: {}, data: state.merge("phase" => "bound")}
+          lineage = Molecules::ExecutionScopeLineage.new(events: events, project_id: map.fetch("project_id"),
+            assignment_id: params.fetch("assignment_id"), attempt_id: params.fetch("attempt_id"), mapping_id: params.fetch("mapping_id"))
+          child = {"scope_generation" => lineage.binding.fetch("scope_generation"),
+            "scope_binding_event_id" => lineage.binding_event.fetch("digest"), "native_binding_event_id" => lineage.native_event.fetch("digest"),
+            "original_process_binding" => params.fetch("process_binding")}
+          {events: [{type: "scope_child_bound", payload: child}, {type: "process_start", payload: payload}], blobs: {}, data: state.merge("phase" => "bound")}
         end
 
         def release(params, map, events, peer)
@@ -433,18 +573,28 @@ module Ace
           unless state["phase"] == "bound" && state["process_binding"] == params["process_binding"] && @streams.key?(state.fetch("attempt_id"))
             raise AttemptErrors::Conflict, "exact live bound gate is unavailable"
           end
-          validate_binding!(params.fetch("process_binding"), map, mapping_id: params.fetch("mapping_id"), launch_ticket: params.fetch("launch_ticket"))
+          validate_binding!(params.fetch("process_binding"), map, mapping_id: params.fetch("mapping_id"), launch_ticket: params.fetch("launch_ticket"), assignment_id: params.fetch("assignment_id"), attempt_id: params.fetch("attempt_id"), events: events)
+          original = scope_open_for_effect!(events: events, params: params, map: map)
+          raise AttemptErrors::Conflict, "canonical original child differs" unless original == params.fetch("process_binding")
           @kernel.live!(observation.fetch(:child))
           raise AttemptErrors::Conflict, "launcher has exited" unless launcher_live?(observation)
           {events: [], blobs: {}, data: state.merge("phase" => "issued", "execution" => "potentially_executed")}
         end
 
-        def abort(params, map, events, peer, supervisor: false)
-          state, observation = owned(params, events, peer, require_launcher_live: false, supervisor: supervisor)
+        def abort(params, map, events, peer, supervisor: false, journal:, commit:)
           evidence = params.fetch("failure_evidence")
           unless evidence.is_a?(String) && evidence.bytesize <= 16_384 && Digest::SHA256.hexdigest(evidence) == params["failure_digest"]
             raise ArgumentError, "invalid bounded failure evidence"
           end
+          scope_failure = begin
+            JSON.parse(evidence)
+          rescue JSON::ParserError
+            nil
+          end
+          if scope_failure.is_a?(Hash) && scope_failure["kind"] == "protected_scope_before_release"
+            return scope_abort_plan(params, map, events, peer, journal: journal, commit: commit, supervisor: supervisor)
+          end
+          state, observation = owned(params, events, peer, require_launcher_live: false, supervisor: supervisor)
           issued = events.any? do |event|
             event["type"] == "authority_mutation" && event.dig("payload", "operation") == "release_launch"
           end
@@ -490,7 +640,7 @@ module Ace
           [state, observation]
         end
 
-        def validate_binding!(binding, map, mapping_id:, launch_ticket:)
+        def validate_binding!(binding, map, mapping_id:, launch_ticket:, assignment_id:, attempt_id:, events:)
           strict!(binding, %w[runtime session pane terminal_id process_identity shell_identity native_origin])
           raise ArgumentError, "native runtime differs" unless binding["runtime"] == "herdr" && binding["shell_identity"] == binding["process_identity"]
           identity = binding.fetch("process_identity")
@@ -501,11 +651,16 @@ module Ace
               binding["terminal_id"].is_a?(String) && !binding["terminal_id"].empty? && binding["session"].is_a?(String) && binding["pane"].is_a?(String)
             raise AttemptErrors::UnauthorizedIdentity, "native origin command or terminal differs"
           end
-          server = map.fetch("native").fetch("server_identity")
+          lineage = Molecules::ExecutionScopeLineage.new(events: events, project_id: map.fetch("project_id"),
+            assignment_id: assignment_id, attempt_id: attempt_id, mapping_id: mapping_id)
+          lineage.require_open!
+          native = lineage.native_event&.fetch("payload")
+          raise AttemptErrors::EvidenceUnavailable, "original canonical native stage is missing" unless native
+          server = native.fetch("server_identity")
           unless identity.is_a?(Hash) && identity["uid"] == map["worker_uid"] && identity["gid"] == map["worker_gid"] &&
               identity["groups"] == map["worker_groups"] && identity["parent_pid"] == server["pid"] &&
               binding.dig("native_origin", "server_identity") == server &&
-              binding.dig("native_origin", "socket_identity") == map.dig("native", "socket_identity") &&
+              binding.dig("native_origin", "socket_identity") == native.fetch("socket_identity") &&
               binding.dig("native_origin", "workspace") == map.dig("native", "workspace_id") &&
               binding.dig("native_origin", "workspace") == binding["session"] && binding.dig("native_origin", "pane") == binding["pane"]
             raise AttemptErrors::UnauthorizedIdentity, "original native child lineage differs"
@@ -543,11 +698,27 @@ module Ace
           token!(params.fetch("attempt_id"))
           map = @deployment.mapping(params.fetch("mapping_id"))
           journal = journal_for(map)
+          @kernel.live!(peer)
+          with_exclusion(params, map, journal) do
           @mutex.synchronize do
-            state = origin(journal.read_events(params.fetch("assignment_id")), assignment_id: params.fetch("assignment_id"),
+            commit = journal.ref_value
+            events = journal.read_events(params.fetch("assignment_id"), commit: commit).select { |event| event["attempt_id"] == params.fetch("attempt_id") }
+            state = origin(events, assignment_id: params.fetch("assignment_id"),
               attempt_id: params.fetch("attempt_id"), mapping_id: params.fetch("mapping_id"))
             if role == :launcher && !@kernel.same?(state.fetch("launcher_identity"), peer)
               raise AttemptErrors::UnauthorizedIdentity, "launch belongs to another launcher incarnation"
+            end
+            lineage = Molecules::ExecutionScopeLineage.new(events: events, project_id: map.fetch("project_id"),
+              assignment_id: params.fetch("assignment_id"), attempt_id: params.fetch("attempt_id"), mapping_id: params.fetch("mapping_id"))
+            state = state.merge("generation" => journal.authority_generation(events), "journal_commit" => commit)
+            unless state["process_binding"]
+              return state.merge("native_binding" => lineage.native_event&.fetch("payload"),
+                "scope_binding_event_id" => lineage.binding_event&.fetch("digest"),
+                "scope_failure_evidence" => lineage.proof_event && {"kind" => "protected_scope_before_release",
+                  "scope_generation" => lineage.binding.fetch("scope_generation"),
+                  "scope_binding_event_id" => lineage.binding_event.fetch("digest"),
+                  "seal_event_id" => lineage.seal_event.fetch("digest"), "proof_id" => lineage.proof_id},
+                "required_action" => lineage.binding ? "close_scope_before_release" : "inspect_exact_scope")
             end
             identity = state.fetch("process_binding") { raise AttemptErrors::EvidenceUnavailable, "no recorded original child; inspection cannot infer absence" }.fetch("process_identity")
             observation = @observations[params.fetch("attempt_id")]
@@ -556,7 +727,9 @@ module Ace
                 "termination_observation" => {"status" => "exited", "process_identity" => identity},
                 "required_action" => "request_abort_using_retained_exact_exit_proof")
             end
-            @kernel.live!(map.dig("native", "server_identity"))
+            native = lineage.native_event&.fetch("payload")
+          raise AttemptErrors::EvidenceUnavailable, "original canonical native stage is missing" unless native
+          @kernel.live!(native.fetch("server_identity"))
             @kernel.live!(identity)
             unless observation
               child_handle = @kernel.pin(identity)
@@ -566,6 +739,7 @@ module Ace
             state.merge("journal_commit" => journal.ref_value,
               "termination_observation" => {"status" => "alive", "process_identity" => identity},
               "required_action" => "close_original_native_child_then_request_abort")
+          end
           end
         end
 
@@ -640,3 +814,9 @@ module Ace
     end
   end
 end
+
+require_relative "launch_scope_abort"
+require_relative "launch_scope_admission"
+require_relative "launch_scope_close"
+require_relative "launch_scope_release"
+require_relative "launch_scope_parent"

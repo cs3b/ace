@@ -1,3 +1,18 @@
+---
+doc-type: user
+purpose: Fixed protected authority deployment and canonical launch lifecycle
+ace-docs:
+  last-updated: 2026-10-05
+  last-checked: 2026-10-05
+  subject:
+    - code:
+        diff:
+          paths:
+            - ace-assign/lib/ace/assign/authority/**/*.rb
+            - ace-assign/lib/ace/assign/molecules/execution_scope_lineage.rb
+            - ace-runtime/lib/ace/runtime/molecules/systemd_scope_manager.rb
+---
+
 # Protected native launch
 
 `ace-assign authority serve --authority AUTHORITY` runs the standalone launch
@@ -10,7 +25,7 @@ listener creation.
 
 An administrator provisions `/etc/ace/assignment-authorities.json`. There is no
 caller-selected configuration path or local fallback. The outer object contains
-`schema: "ace.assign.authorities/v1"`, `authorities`, `projects`, and
+`schema: "ace.assign.authorities/v2"`, `authorities`, `projects`, and
 `launch_mappings`; unknown fields are refused. The fixed schema is implemented
 by `Ace::Assign::Authority::Deployment`:
 
@@ -19,8 +34,9 @@ by `Ace::Assign::Authority::Deployment`:
 | `authorities.ID` | `uid`, `gid`, sorted unique `groups`, `socket_path`, `state_root`, `composition` (`launch` or `services`) |
 | `projects.ID` | `journal_repository`, `evidence_git_ref` (`refs/ace/execution`), `evidence_checkout_root`, `assignment_root`, `candidate_root`, `launcher_uids`, `reviewer_uids`, `worker_uids`, `service_executor_uids`, `supervisor_uids`, `peer_credentials`, optional `service_receivers` |
 | `projects.ID.peer_credentials.UID` | `gid`, sorted unique `groups`, `scratch_root`; every configured role UID has one fixed entry |
-| `launch_mappings.ID` | `project_id`, `authority_id`, `launcher_uid`, `launcher_gid`, `launcher_groups`, `worker_uid`, `worker_gid`, `worker_groups`, `worker_actor`, `worker_cwd`, `worker_argv`, `worker_env`, `bootstrap`, `bootstrap_sha256`, `native` |
-| `launch_mappings.ID.native` | `socket_path`, `socket_identity`, `executable`, `version` (`0.9.3`), `server_identity`, canonical `workspace_id` (`wN`) |
+| `launch_mappings.ID` | `project_id`, `authority_id`, `launcher_uid`, `launcher_gid`, `launcher_groups`, `worker_uid`, `worker_gid`, `worker_groups`, `worker_actor`, `worker_cwd`, `worker_argv`, `worker_env`, `bootstrap`, `bootstrap_sha256`, `native`, `execution_scope` |
+| `launch_mappings.ID.native` | `socket_path`, `executable`, `executable_sha256`, `version` (`0.9.3`), `protocol` (`22`), canonical `workspace_id` (`wN`) |
+| `launch_mappings.ID.execution_scope` | `backend` (`linux_systemd_cgroup_v2`), `slot_id`, `slice_unit`, `service_unit`, `unit_manifest_sha256`, `boundary_manifest_sha256`, `root_directory`, `runtime_directory`, `network_namespace_path` |
 
 A services composition requires a nonempty installed `service_receivers` map; launch composition may omit it. Each fixed service ID maps to exactly `{executor_uid, socket_path, staging_root}`. The positive nonroot executor UID belongs to the project's executor allowlist and cannot also be any configured authority, launcher, reviewer, worker or supervisor. This keeps kernel role selection unambiguous and private authority journals inaccessible to executors.
 
@@ -31,7 +47,9 @@ All paths are canonical and absolute. The native socket identity is the observed
 `{pid, uid, gid, groups, parent_pid, started_at, host}`, where `started_at` is
 `linux:BOOT_ID:START_TICKS`. These observations must be made after the root-owned
 native service starts; they cannot be invented, copied from a previous boot, or
-supplied by a worker. An endpoint/server restart requires installer repinning.
+supplied by a worker. The immutable per-attempt native stage owns these facts;
+the deployment record contains no persisted live server/socket tuple. A replacement
+cannot be repinned into the original generation.
 The root-installed native service, its executable, environment and configuration
 are trusted. Merely running arbitrary worker-supplied server code under the worker
 account does not meet this deployment contract.
@@ -73,9 +91,16 @@ The definition is a normal managed assignment JSON document (maximum 32 KiB),
 with matching `session_id`, `task_id` and installed `project_id`. The authority
 stores its exact immutable bytes in the canonical journal and materializes the
 owner-private assignment cache from that accepted blob. An active attempt blocks
-changed definitions. Reservation creates an intent only. An unequivocally fresh
-CAS response alone permits one fresh native layout creation; replay and lost
-responses never permit another spawn.
+changed definitions. A fresh reservation creates canonical intent/provisioning,
+then the owner activates and binds its independent parent under the slot exclusion.
+It pins existing resource objects, the authority mount namespace and the installed
+nsfs network namespace. Parent binding selects protected network evidence references
+without asserting policy readiness or requiring an available report.
+
+Native service admission is a separate private canonical CAS after all required
+readiness evidence succeeds. Only its fresh winner may start the fixed service;
+replay and lost replies never permit another start. Native and original-child
+bindings remain separate immutable stages before payload release.
 
 The original authenticated native layout response fixes workspace/tab/pane and
 exact child lineage. Record captures that original child; bind creates the running
@@ -96,12 +121,31 @@ ace-assign authority status --mapping MAPPING --assignment ASSIGNMENT --attempt 
 ace-assign authority terminate --mapping MAPPING --assignment ASSIGNMENT --attempt ATTEMPT
 ```
 
-Positive pre-release abort requires the authority's exact acquired child pidfd to
-prove exit of the immutable gate and canonical absence of issued permission. Native
-`pane.close`, disappearance, response loss, launcher death, PID reuse, or an already
-issued child's exit alone cannot prove no surviving writer. Uncertain attempts keep
-scope ownership for explicit protected recovery. Authority restart cannot recreate
-lost creation permission or readmit a reconnecting gate.
+A child pidfd proving exit cannot release the whole parent reservation. The
+connected never-native-admitted path seals the original parent before fixed service
+stop, records fresh exact recursive-empty/no-pending/resource closure, selects that
+canonical proof in the guarded pre-release abort, then privately commits reservation
+release after service/inbox settlement at the same immutable journal commit. A lost
+reply keeps the original accepted response. Restart can resume a missing private
+release without issuing native or payload permission. A new reservation first retires
+its exactly released predecessor through the same owner and slot exclusion.
+
+`observe_execution_scope` is read-only. `close_execution_scope` is an ordinary
+canonical mutation: the first fresh call seals, a later fresh call records closure
+when verifiable. A fresh sealed close can resume a lost fixed service stop; replay
+performs no manager I/O. The private `scope_service_admission` and
+`scope_reservation_release` operations are absent from the public allowlist.
+Reserve/close RPCs have a fixed 90-second ceiling for bounded manager waits;
+other control calls retain their existing ceiling.
+
+This source checkpoint proves the connected never-native-admitted failure/recovery
+path with controlled native-owner observations and real canonical journals. Full
+native hook/readiness and post-native writer observation, admitted-but-unbound
+cleanup, non-abort terminal release, and complete original/candidate installation
+maintenance remain separate required implementation work. The current maintenance
+helpers do not yet implement the accepted candidate-deployment union contract.
+No source fixture establishes installed namespace, network policy or containment
+acceptance; every installed SC remains open.
 
 Control replies are at most 16 KiB. Source-selected service transfer operations use
 a 16 KiB authenticated header followed by bounded raw bytes, a shared 30-second

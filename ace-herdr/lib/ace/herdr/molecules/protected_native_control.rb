@@ -6,7 +6,7 @@ require "securerandom"
 module Ace
   module Herdr
     module Molecules
-      # Uses only an installer-pinned server and its original fresh creation reply.
+      # Uses only the canonical attempt's pinned server and original fresh reply.
       class ProtectedNativeControl
         def initialize(mapping:, kernel: Ace::Runtime::Molecules::ProtectedLinux.new)
           @mapping, @kernel = mapping, kernel
@@ -16,8 +16,7 @@ module Ace
         def verify!
           @kernel.supported!
           native = @mapping.fetch("native")
-          wire.root_path!(File.dirname(native.fetch("socket_path")), directory: true)
-          wire.root_path!(native.fetch("executable"))
+          wire.root_path!(File.dirname(native.fetch("socket_path")), directory: true, owner: @mapping.fetch("worker_uid"))
           identity = wire.socket_identity(native.fetch("socket_path"))
           unless identity == native.fetch("socket_identity") && native.fetch("version") == "0.9.3"
             raise Ace::Runtime::RuntimeUnavailableError, "native endpoint generation or version changed"

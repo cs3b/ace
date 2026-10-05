@@ -8,6 +8,7 @@ require_relative "private_directory"
 require_relative "posix_acl"
 require "ace/runtime/molecules/protected_socket"
 require "ace/runtime/molecules/protected_linux"
+require "ace/runtime/molecules/execution_unit_installation"
 
 module Ace
   module Assign
@@ -25,7 +26,7 @@ module Ace
         end
 
         def initialize(data)
-          unless data.is_a?(Hash) && data["schema"] == "ace.assign.authorities/v1" &&
+          unless data.is_a?(Hash) && data["schema"] == "ace.assign.authorities/v2" &&
               data.keys.sort == %w[authorities launch_mappings projects schema]
             raise ArgumentError, "invalid assignment authority deployment schema"
           end
@@ -85,6 +86,7 @@ module Ace
             end
           end
           @data["launch_mappings"].each { |id, mapping| validate_mapping!(id, mapping) }
+          validate_execution_slots!
           validate_inbox_contexts!
           endpoints = @data.fetch("authorities").values.map { |service| service.fetch("socket_path") }
           receivers = @data.fetch("projects").values.flat_map { |project| project.fetch("service_receivers", {}).values }
@@ -318,7 +320,7 @@ module Ace
 
         def validate_mapping!(id, mapping)
           required = %w[project_id authority_id launcher_uid launcher_gid launcher_groups worker_uid worker_gid
-            worker_groups worker_actor worker_cwd worker_argv worker_env bootstrap bootstrap_sha256 native]
+            worker_groups worker_actor worker_cwd worker_argv worker_env bootstrap bootstrap_sha256 native execution_scope]
           unless mapping.is_a?(Hash) && mapping.keys.sort == required.sort
             raise ArgumentError, "launch mapping fields differ: #{id}"
           end
@@ -340,22 +342,30 @@ module Ace
           end
           %w[worker_cwd bootstrap].each { |key| path!(mapping.fetch(key)) }
           native = mapping.fetch("native")
-          strict!(native, %w[socket_path socket_identity executable version server_identity workspace_id])
+          strict!(native, %w[socket_path executable executable_sha256 version protocol workspace_id])
           %w[socket_path executable].each { |key| path!(native.fetch(key)) }
-          unless native["workspace_id"].is_a?(String) && native["workspace_id"].match?(/\Aw[1-9][0-9]{0,8}\z/)
-            raise ArgumentError, "invalid installed native workspace ID"
+          unless native["workspace_id"].is_a?(String) && native["workspace_id"].match?(/\Aw[1-9][0-9]{0,8}\z/) &&
+              native["version"] == "0.9.3" && native["protocol"] == 22 && digest?(native["executable_sha256"])
+            raise ArgumentError, "invalid fixed native artifact or protocol"
           end
-          identity = native.fetch("server_identity")
-          strict!(identity, %w[pid uid gid groups started_at host parent_pid])
-          principal!(identity, "uid", "gid", "groups")
-          unless identity["uid"] == mapping["worker_uid"] && identity["gid"] == mapping["worker_gid"] &&
-              identity["groups"] == mapping["worker_groups"] && identity["pid"].is_a?(Integer) && identity["pid"].positive? &&
-              identity["parent_pid"].is_a?(Integer) && identity["parent_pid"].positive? &&
-              identity["started_at"].is_a?(String) && identity["started_at"].match?(/\Alinux:[0-9a-f-]+:[0-9]+\z/) &&
-              identity["host"].is_a?(String) && !identity["host"].empty? && native["version"] == "0.9.3" &&
-              native["socket_identity"].is_a?(Array) && native["socket_identity"].size == 3 &&
-              native["socket_identity"].all? { |v| v.is_a?(Integer) && v >= 0 } && native["socket_identity"].last == mapping["worker_uid"]
-            raise ArgumentError, "invalid installed native server identity"
+          scope = mapping.fetch("execution_scope")
+          strict!(scope, %w[backend slot_id slice_unit service_unit unit_manifest_sha256 boundary_manifest_sha256
+            root_directory runtime_directory network_namespace_path])
+          unless scope["backend"] == "linux_systemd_cgroup_v2" && scope["slot_id"].is_a?(String) && TOKEN.match?(scope["slot_id"]) &&
+              %w[unit_manifest_sha256 boundary_manifest_sha256].all? { |key| digest?(scope[key]) }
+            raise ArgumentError, "invalid execution scope backend or manifest identity"
+          end
+          {"slice_unit" => ".slice", "service_unit" => ".service"}.each do |key, suffix|
+            name = scope.fetch(key)
+            unless name.is_a?(String) && TOKEN.match?(name) && name.end_with?(suffix) &&
+                name != "-.slice" && !name.downcase.include?("overseer")
+              raise ArgumentError, "invalid fixed protected unit"
+            end
+          end
+          %w[root_directory runtime_directory network_namespace_path].each { |key| path!(scope.fetch(key)) }
+          unless scope.fetch("runtime_directory").start_with?("/run/") &&
+              !paths_overlap?(scope.fetch("root_directory"), scope.fetch("runtime_directory"))
+            raise ArgumentError, "execution scope backing roots overlap or runtime root is invalid"
           end
           argv = mapping.fetch("worker_argv")
           env = mapping.fetch("worker_env")
@@ -370,6 +380,26 @@ module Ace
           end
         rescue KeyError, NoMethodError
           raise ArgumentError, "launch mapping is incomplete"
+        end
+
+        def digest?(value)
+          value.is_a?(String) && value.match?(/\A[0-9a-f]{64}\z/)
+        end
+
+        def validate_execution_slots!
+          mappings = @data.fetch("launch_mappings").values
+          %w[slot_id slice_unit service_unit].each do |key|
+            values = mappings.map { |map| map.fetch("execution_scope").fetch(key) }
+            raise ArgumentError, "execution slot has duplicate ownership" unless values.uniq.size == values.size
+          end
+          workers = mappings.map { |map| map.fetch("worker_uid") }
+          raise ArgumentError, "protected execution slots share a worker principal" unless workers.uniq.size == workers.size
+          roots = mappings.map { |map| map.fetch("execution_scope").values_at("root_directory", "runtime_directory") }
+          roots.combination(2).each do |left, right|
+            if left.product(right).any? { |a, b| paths_overlap?(a, b) }
+              raise ArgumentError, "protected execution slot roots overlap"
+            end
+          end
         end
 
         def strict!(value, keys)
@@ -398,17 +428,23 @@ module Ace
             header.byteslice(18, 2).unpack1("v") == expected
         end
 
-        def verify!(id, kernel: Ace::Runtime::Molecules::ProtectedLinux.new, authority_state: false)
+        def verify!(id, kernel: Ace::Runtime::Molecules::ProtectedLinux.new, authority_state: false, manager: nil)
           kernel.supported!
           map = mapping(id)
           service = authority(map.fetch("authority_id"))
           [service.fetch("uid"), map.fetch("launcher_uid"), map.fetch("worker_uid")].each { |uid| Etc.getpwuid(uid) }
           wire = Ace::Runtime::Molecules::ProtectedSocket
-          wire.root_path!(map.fetch("bootstrap"))
-          wire.root_path!(map.fetch("worker_argv").first)
-          unless Digest::SHA256.file(map.fetch("bootstrap")).hexdigest == map.fetch("bootstrap_sha256") &&
-              elf_architecture?(map.fetch("bootstrap")) &&
-              [map.fetch("bootstrap"), map.fetch("worker_argv").first].all? { |path| (File.stat(path).mode & 0o6000).zero? && File.executable?(path) }
+          scope = map.fetch("execution_scope")
+          manager ||= Ace::Runtime::Molecules::SystemdScopeManager.new(
+            slice_unit: scope.fetch("slice_unit"), service_unit: scope.fetch("service_unit"))
+          manifest = Ace::Runtime::Molecules::ExecutionUnitInstallation.new(scope: scope, native: map.fetch("native"),
+            bootstrap: map.fetch("bootstrap"), worker_executable: map.fetch("worker_argv").first,
+            worker_uid: map.fetch("worker_uid"), worker_gid: map.fetch("worker_gid")).verify!(manager: manager)
+          artifacts = manifest.fetch("artifacts")
+          bootstrap = artifacts.find { |artifact| artifact.fetch("role") == "bootstrap" }
+          executables = artifacts.select { |artifact| %w[bootstrap worker_executable].include?(artifact.fetch("role")) }
+          unless bootstrap.fetch("sha256") == map.fetch("bootstrap_sha256") && elf_architecture?(bootstrap.fetch("host_path")) &&
+              executables.all? { |artifact| File.executable?(artifact.fetch("host_path")) }
             raise Ace::Runtime::RuntimeUnavailableError, "installed bootstrap or executable is unsafe"
           end
           wire.root_path!(File.dirname(service.fetch("socket_path")), directory: true, owner: service.fetch("uid"))

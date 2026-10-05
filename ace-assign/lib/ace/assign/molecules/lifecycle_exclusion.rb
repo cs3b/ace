@@ -54,6 +54,10 @@ module Ace
           "assignment:#{assignment_id}"
         end
 
+        def slot_key(slot_id)
+          "execution-slot:#{slot_id}"
+        end
+
         # Task identity is the canonical worktree identity: work-on derives
         # the worktree path from the task ref, and prune candidates carry
         # the same task id.
