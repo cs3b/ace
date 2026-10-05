@@ -16,3 +16,9 @@ Reviewer: independent GPT-6.1 Sol `wave4_boundary_rereview`. Exact reviewed spec
 Only approved scopes are promoted. All implementation and installed acceptance criteria remain unchecked. Linux/macOS multi-user execution, Lab native/signing integration, domain handler installation and R2/R3 are not delivered by this review. Implementers consume recovery semantics accepted in `dab0dbeea`, integrated on main.
 
 Root integration followups: qkb.1 requires xz9 protected mode and parent qkb reflects it; qkc requires xz9/xza and installed lab-config:gad.8/gad.b evidence, without introducing reverse source/install or R2/R3 cycles. See `consumer-dependency-map.md` in xz9.
+
+## Implementation-discovered readiness gap
+
+The initial verdict above is historical. During xz9.0 implementation, the author found that an unprivileged launcher under a different UID cannot use current adapters to start the gated worker under the required worker UID. Existing lab-config per-user Herdr units correctly run as that worker, but `lab.py` currently restricts cross-user control to legacy root/runuser or the exact account. No reviewed trusted-launcher transport is delivered.
+
+xz9.0 remains in-progress for independent canonical journal/import work, with needs_review:true; parent also needs review. Its protected endcap cannot be accepted until an explicit native launch/control prerequisite is specified, reviewed and delivered. The author is drafting that real task, including ACE endpoint selection/authentication/gated-process binding and lab-config installation. Narrow kernel-enforced socket ACLs or existing authenticated runtime forwarding require actual capability evidence; neither is presumed installed. No new arbitrary UID-switch/root broker or same-UID impersonation is authorized by this note. Existing implementation acceptance remains open.
