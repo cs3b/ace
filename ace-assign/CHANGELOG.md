@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Connect fixed execution-slot parent activation to canonical sealing, exact never-native-admitted closure, guarded abort, durable reservation release and restart-safe reuse. Native service admission refuses unavailable readiness evidence; admitted and post-native positive closure and complete installer maintenance remain unfinished.
+
 - Register canonical execution-scope binding, seal and empty-observation events with an immutable exact-lineage reader. Missing, changed or corrupt generation/proof identities refuse; live scope verification and terminal handlers remain separate owners.
 
 - Submit immutable private canonical worker results and fetch one purpose-authorized artifact through the existing authority Client, with retained services status discovery and exact download descriptor validation. Full-service startup remains guarded.
@@ -29,6 +31,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Expose read-only runtime_binding for an active accepted attempt using the existing native/process authority, refusing missing, dead, changed or unrelated owner evidence.
 
 ### Fixed
+
+- Reject duplicate keys and comments in guarded scope-abort evidence using the required strict JSON parser, and preserve canonical slot ownership after child-only failure until whole-scope cleanup is proven.
 
 - Attribute local attempts to the kernel process account instead of terminal login/environment; refuse unresolved accounts, privilege transitions and changing credentials.
 - Commit proposal supersession and the new revision atomically with canonical operation replay and unresolved-effect claim exclusion.
