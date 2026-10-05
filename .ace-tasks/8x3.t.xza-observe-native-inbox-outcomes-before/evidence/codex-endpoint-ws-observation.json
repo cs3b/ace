@@ -1,0 +1,69 @@
+{
+  "version": "codex-cli 0.159.3",
+  "server_pid": 10505,
+  "socket": "/var/folders/hf/knhxwtnx76gcdps2hxb3bp2r0000gr/T/ace-codex-endpoint-fpqi5o0y/native.sock",
+  "scope": "dedicated controlled Unix endpoint; not deployed Herdr acceptance",
+  "socket_mode": "0o600",
+  "parent_mode": "0o700",
+  "thread_id": "01a1095f-f76f-76a0-88bf-0ba03a866990",
+  "client_ids": [
+    "ace-endpoint-219b1804adc84011bd6b01a4723017be",
+    "ace-endpoint-e83f91fcda974ed68a1343fb8a6b6245",
+    "ace-endpoint-d1d9c6337cc04c448fb8ad6ece9f5dd8"
+  ],
+  "first_submission": "01a1095f-f9d2-7143-9bf6-6630200584b7",
+  "statuses_before_followup": [
+    "inProgress"
+  ],
+  "third_submission": "01a1095f-fa5e-76c2-bf6d-29ae9d8b1f7e",
+  "queue_before_delete": {
+    "data": [
+      {
+        "id": "01a1095f-f9e3-7291-8126-7be38d59d2e0",
+        "input": [
+          {
+            "type": "text",
+            "text": "Reply exactly ENDPOINT_OK.",
+            "text_elements": []
+          }
+        ],
+        "clientUserMessageId": "ace-endpoint-e83f91fcda974ed68a1343fb8a6b6245"
+      },
+      {
+        "id": "01a1095f-fa5e-76c2-bf6d-29ae9d8b1f7e",
+        "input": [
+          {
+            "type": "text",
+            "text": "Reply exactly ENDPOINT_OK.",
+            "text_elements": []
+          }
+        ],
+        "clientUserMessageId": "ace-endpoint-d1d9c6337cc04c448fb8ad6ece9f5dd8"
+      }
+    ],
+    "nextCursor": null
+  },
+  "delete_ack": {
+    "deleted": true
+  },
+  "observations": [
+    {
+      "turn_id": "01a1095f-f9d5-7b81-bbc4-22d074f16024",
+      "status": "completed",
+      "client_id": "ace-endpoint-219b1804adc84011bd6b01a4723017be",
+      "item_id": "item-1"
+    },
+    {
+      "turn_id": "01a10960-0a81-7ca1-95a8-40b1c173b67c",
+      "status": "completed",
+      "client_id": "ace-endpoint-e83f91fcda974ed68a1343fb8a6b6245",
+      "item_id": "item-3"
+    }
+  ],
+  "lost_reply_observed_once": true,
+  "cancelled_absent": true,
+  "queue_after": {
+    "data": [],
+    "nextCursor": null
+  }
+}
