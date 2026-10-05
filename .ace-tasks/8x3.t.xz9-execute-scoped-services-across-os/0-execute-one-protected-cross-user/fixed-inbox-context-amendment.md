@@ -13,9 +13,11 @@ pi_queue_client_sha256, supervisor_uids}`. Paths are canonical absolute paths;
 the digest is lowercase SHA256 and supervisor_uids is sorted distinct positive
 UIDs, a subset of that project's existing supervisor_uids. native_mapping_id
 must select a launch mapping of the same project and authority, never a foreign
-endpoint. Context native identity is that mapping's installed native identity,
-verified by existing protected native client. No context-level PID or current
-endpoint repinning is permitted. Existing exact launcher incarnation also has
+endpoint. Context native identity is resolved from the exact attempt's canonical 9c2
+scope_native_bound stage and verified fixed artifact mapping, never permanent
+deployment PID/socket registration. This construction must consume the integrated
+9c2 staged lineage reader; it does not invent a live owner API. No context-level
+PID or current endpoint repinning is permitted. Existing exact launcher incarnation also has
 coordinator access; context UID allowlist does not replace kernel peer checks.
 
 Fixed pi_queue_client is an installer-selected root-owned executable with digest
@@ -33,15 +35,19 @@ installed authority/trusted coordinator profile, with immutable protected
 ancestors; it must not overlap worker scratch, project checkout, receiver staging,
 other context roots or service credential roots. Trusted public key and Pi client
 are root-installed immutable regular non-symlink files; public key must parse as
-public-only RSA using existing Inbox rules. Validate effective ancestry, endpoint
-identity, key fingerprint, executable digest and authority access at startup and
-every operation. No creation/chmod/ownership repair on query, no ~/.ace config or
+public-only RSA using existing Inbox rules. Validate effective ancestry, key fingerprint, executable digest and
+authority access at startup and every operation. Resolve canonical original
+native lineage every time, but require a live endpoint only for an operation
+that actually needs current replacement-target observation. No creation/chmod/ownership repair on query, no ~/.ace config or
 cwd fallback. An absent/unsafe/unreadable context refuses before journal mutation.
 
 ## One Herdr-owned construction
 
 Add a source-owned protected Inbox factory in ace-herdr, taking the resolved
-installed context and existing ProtectedNativeControl instance. It directly uses
+installed context and exact canonical original native lineage. Construct existing
+ProtectedNativeControl only when a live replacement observation is needed, using
+that original stage plus fixed artifacts; never a permanent installed process
+registration or a currently discovered server. It directly uses
 Inbox.new(executor:, native:, deliveries_dir:, receipt_public_key:). It does not
 call Inbox.from_config defaults. The executor implements only Inbox's existing
 `pane_get_bounded` observation through ProtectedNativeControl.request('pane.get',
@@ -57,6 +63,14 @@ remain existing bounded native control/Pi identity defaults.
 Deployment owns schema/project/ancestry selection; Herdr owns construction and
 event lock/key/signature/native reconciliation. Assign Endcap receives only the
 resolved Inbox plus validated fixed context; caller never supplies an Inbox object.
+Consumed proof against retained exact signed original binding remains
+reconcilable after the native service stops: signature, key, canonical event,
+registration and claimed native lineage are required, not a live endpoint.
+The factory must not call preflight/verify on construction or globally gate all
+reconciliation on current server liveness. Superseded proof with replacement_target
+still uses existing Inbox actual replacement observation and fails if required
+native evidence is unavailable; it never synthesizes replacement identity.
+
 Any required HerdrExecutor/BoundedProcess environment seam is source-owned Herdr
 implementation in this slice, not another executable/transport or arbitrary runner
 from deployment JSON. Fixed constructor collaborators may be test-injected only
@@ -87,7 +101,8 @@ only the fixed pane endpoint/explicit Pi identity client and sanitized environme
 poison global config/PATH/ACE_HERDR_PI_QUEUE_CLIENT without changing routing.
 No queue submit/wake or caller-controlled argv is possible.
 Reconciliation: signed original event, wrong registration/key/context/claim,
-replacement-target identity, Herdr-before-qjl crash, canonical descriptor/blob
+retained consumed proof after stop without any native call, mandatory live
+replacement-target observation, stale canonical native stage, Herdr-before-qjl crash, canonical descriptor/blob
 corruption, replay after worker exit/seal and per-reader provenance coverage.
 Actual installed native/multi-user criteria remain open. Review independently
 before source steps02/03 or promotion; no such source exists in this candidate.
