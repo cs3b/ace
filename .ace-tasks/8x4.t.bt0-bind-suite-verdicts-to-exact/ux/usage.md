@@ -14,6 +14,6 @@ A suite configuration containing two distinct entries for the same package execu
 
 ## Report saving disabled and zero selection
 
-Run the existing package CLI with `--no-save-reports`, or a suite entry using `save_reports: false`. The exact invocation still produces machine completion evidence and correct counts/outcome for its caller. No detailed/human/raw report files are persisted, and output does not fabricate a report path. A concurrent saved run cannot replace this result.
+Run the existing package CLI with `--no-save-reports`, or a suite configured with `test_suite: { test_options: { save_reports: false } }`. The exact invocation still produces machine completion evidence and correct counts/outcome for its caller. No detailed/human/raw report files are persisted, and output does not fabricate a report path. A concurrent saved run cannot replace this result.
 
 If that exact invocation completed discovery and selected zero files, its explicit zero-selection result is valid and contributes zero tests. An early child exit with no completion evidence instead fails verification even when its exit status is zero or latest has an old successful report.

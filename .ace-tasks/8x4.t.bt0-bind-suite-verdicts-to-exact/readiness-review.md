@@ -19,3 +19,9 @@ One unique identity per actual invocation, exclusive allocation under equal cloc
 Verification is appropriately deterministic and includes actual child/storage orchestration plus focused/affected package/default-suite gates and independent source review. No tests were necessary for this specs-only review: both corrections follow directly from current source and explicit draft requirements. No host-load burn, native probes, source edits, agents, push or publication.
 
 Reviewed as-task-review SKILL.md and loaded wfi://task/review; bounded assignment explicitly reserves promotion and task edits to root.
+
+## Repaired contract rereview
+
+Reviewed `f907861a31a6bb34a971917287f471320654e911`. Both prior readiness findings are resolved: mandatory identity-bound machine completion is independent of optional saved reports; no-save output exposes no fabricated persistent link; explicit completed zero-selection is distinguished from missing completion. All actual orchestration/display/failure-link/publication owners are now bundled and explicitly share the contract. The behavior is decision-complete, including truthful failure dominance and duplicate entries.
+
+Verdict at this SHA: **REQUEST CHANGES for one concrete usage correction only.** `ux/usage.md` says "a suite entry using save_reports: false". The actual existing seam is suite-wide `test_suite.test_options.save_reports`: Suite::Orchestrator reads that shared options hash once and ProcessMonitor#build_command reads options["save_reports"], with no package-entry override. Replace the example with that exact nested configuration key (or equivalent YAML). This keeps usage executable without silently introducing a new per-entry configuration contract. No implementation or tests are needed for this correction; source directly establishes it.
