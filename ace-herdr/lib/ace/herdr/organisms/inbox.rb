@@ -45,6 +45,39 @@ module Ace
             receipt_public_key: key)
         end
 
+        # Enumerate retained event identities through the same store/lock owner.
+        # Unreadable unattributable records cannot be treated as another attempt.
+        def self.retained_events(deliveries_dir:, attempt:)
+          raise ValidationError, "invalid attempt id" unless attempt.is_a?(String) && EVENT.match?(attempt)
+          ids = [deliveries_dir, Molecules::DeliveryRecordStore.archive_dir(deliveries_dir)].flat_map do |dir|
+            next [] unless Dir.exist?(dir)
+            Dir.children(dir).filter_map { |name| name.delete_suffix(".json") if name.end_with?(".json") }
+          end.uniq
+          ids.select do |event|
+            raise ValidationError, "retained inbox event id is invalid" unless EVENT.match?(event)
+            Molecules::DeliveryRecordStore.with_lock(deliveries_dir, event, create: false) do
+              paths = [Molecules::DeliveryRecordStore.path_for(deliveries_dir, event),
+                Molecules::DeliveryRecordStore.path_for(Molecules::DeliveryRecordStore.archive_dir(deliveries_dir), event)]
+              copies = paths.filter_map do |path|
+                next unless File.exist?(path)
+                record = Models::DeliveryRecord.from_json(File.read(path))
+                unless record.event_id == event && record.inbox && record.inbox.fetch("attempt_id").is_a?(String)
+                  raise ValidationError, "retained inbox event is unavailable"
+                end
+                record.to_h
+              end
+              # Identical retained copies describe one event. Never let live
+              # precedence hide a corrupt or conflicting archived copy.
+              if copies.empty? || copies.uniq.length != 1
+                raise ValidationError, "retained inbox copies conflict"
+              end
+              copies.first.fetch("inbox").fetch("attempt_id") == attempt
+            end
+          end
+        rescue SystemCallError, JSON::ParserError, ArgumentError, KeyError
+          raise ValidationError, "retained inbox inventory is unavailable"
+        end
+
         def initialize(executor:, native:, deliveries_dir:, receipt_public_key: nil)
           @executor = executor
           @native = native
@@ -154,6 +187,18 @@ module Ace
           end
         end
 
+        # Protected canonical reads only use an already registered event's lock.
+        # Missing retention is unavailable evidence, never query-time repair.
+        def retained_status(event:)
+          validate_id!(event, "event")
+          with_event(event, create_lock: false) do |record|
+            raise ValidationError, "unknown inbox event: #{event}" unless record&.inbox
+            public_record(record)
+          end
+        rescue SystemCallError
+          raise ValidationError, "retained inbox lock is unavailable"
+        end
+
         def deliver(event:)
           validate_id!(event, "event")
           with_event(event) do |record|
@@ -254,13 +299,15 @@ module Ace
           end
           reconcile_record(event: event, receipt: receipt, signed_bytes: signed_bytes,
             signature: signature, expected_registration: expected_registration, settle: false)
+        rescue SystemCallError
+          raise ValidationError, "retained inbox lock is unavailable"
         end
 
         private
 
         def reconcile_record(event:, receipt:, signed_bytes:, signature:, expected_registration:, settle:)
           validate_id!(event, "event")
-          with_event(event) do |record|
+          with_event(event, create_lock: settle) do |record|
             raise ValidationError, "unknown inbox event: #{event}" unless record&.inbox
             # The consumer's accepted registration must match under the same
             # event lock that verifies and settles the signed observation.
@@ -386,8 +433,8 @@ module Ace
           nil
         end
 
-        def with_event(event)
-          Molecules::DeliveryRecordStore.with_lock(@deliveries_dir, event) do
+        def with_event(event, create_lock: true)
+          Molecules::DeliveryRecordStore.with_lock(@deliveries_dir, event, create: create_lock) do
             record = Molecules::DeliveryRecordStore.load(@deliveries_dir, event)
             if record
               Ace::Hitl::Providers::Ref.new(session: record.session, pane: record.pane, canonical: true)
