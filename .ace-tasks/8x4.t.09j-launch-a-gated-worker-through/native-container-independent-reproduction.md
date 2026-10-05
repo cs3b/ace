@@ -5,7 +5,7 @@ The root integrator reran the committed probe from the repaired 09j worktree
 `b462ff5e05c318ded09451487698d677996ad62b`) using the pinned fixture image
 `sha256:f80837d9cd2fa588d1ee190e5a2d77a44c8446e711434b22488efb20908083de`.
 The container mounted the committed fixture and native Herdr read-only, and a
-fresh root-owned output directory; it mounted no credentials. Command exit 0.
+fresh dedicated output directory; it mounted no credentials. Command exit 0.
 
 Observed Herdr 0.9.3, protocol 22; launcher UID 13002, server/child UID 13001.
 Configured w1 remained nonfocused while w2 was active. workspace.get(w1)
