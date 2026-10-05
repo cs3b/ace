@@ -83,7 +83,7 @@ module Ace
 
         def aggregate_results(combined_output, parser)
           # Split output by test file executions
-          individual_outputs = combined_output.split(/^Started with run options/)
+          individual_outputs = combined_output.split(/^(?=Started with run options|Run options:)/)
           individual_outputs.shift if individual_outputs.first && individual_outputs.first.empty?
 
           aggregated = {
@@ -102,7 +102,6 @@ module Ace
           }
 
           individual_outputs.each do |output|
-            output = "Started with run options" + output
             parsed = parser.parse_output(output)
 
             aggregated[:summary][:runs] += parsed[:summary][:runs]

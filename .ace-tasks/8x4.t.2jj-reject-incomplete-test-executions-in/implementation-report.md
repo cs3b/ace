@@ -1,0 +1,15 @@
+# Source implementation and verification
+
+Root source714f6636b preserves actual execution success through sequential aggregation, final TestResult, terminal formatters and saved reports. This follow-up completes the pinned real CLI matrix and preserves in-process execution deadlines and operator interruption across Minitest's internal exception handling. A no-stdout failed execution now records zero completed errors instead of inventing one per file. Both existing per-file aggregation paths preserve plain Minitest and minitest-reporters header boundaries; the real CLI matrix asserts exact combined partial/completed counts rather than merely requiring some passing count.
+
+The private ExecutionTimeout control-flow exception passes through Minitest's documented source SystemExit exception boundary and is caught by the in-process runner as deadline failure. Operator SIGINT is tracked during Minitest execution, re-raised to the CLI before report creation, and the previous signal handler is restored. No deadlines were raised and process-tree cleanup remains outside this slice.
+
+## Verification coverage
+
+Actual checkout bin/ace-test fixtures pin by-target --direct and --subprocess; continue-after-failure versus fail-fast markers; explicit --subprocess --per-file; --run-in-single-batch --subprocess; and --fail-fast precedence over batch. Controlled partial stdout contains passing counts but unsuccessful exit9. Passing text mentioning timeout remains successful; genuine assertion failure remains failed. Target deadlines run in both direct/subprocess with/without fail-fast. Child TERM is unsuccessful without invented completed errors. Operator SIGINT in both modes produces exit130 and no new completed report, preserving prior artifact bytes. Summary JSON, report JSON, Markdown status and terminal exit agree. Actual bin/ace-test-suite consumes the failed package report.
+
+Existing three baseline fixture failures were repaired faithfully: ProcessMonitor expectations now include the already-existing RbConfig.ruby -rbundler/setup launcher; hermetic suite fixtures explicitly bootstrap checkout dependencies and eval the exact checkout Gemfile for disposable packages. Poisoned environment, fixture HOME isolation and parent environment immutability assertions remain enforced.
+
+Root fail-before receipt8x42pq and repaired component8x42q4 (15/38) remain retained. Follow-up initial CLI8x42vc exposed missing fixture Gemfile plus direct SIGINT loss;8x42yj demonstrated direct timeout becoming a normal test error before the owner control-flow repair. Fixture-only targeted8x42wl:10 tests/54 assertions green. Full source8x42zm:255 tests/895 assertions green. Full8x432h:256 tests/901 assertions green, including actual suite consumer; final exact-count full package8x433i:256 tests/905 assertions, zero failures/errors, terminal exit0. No live test sessions remain.
+
+Task remains in progress for independent source review. No main mutation, merge, push, publication, or done claim. Qjz remains frozen at a2cdb5804 while root owns its separate repair/review.

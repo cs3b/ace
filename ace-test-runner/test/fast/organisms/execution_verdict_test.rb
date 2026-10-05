@@ -52,4 +52,13 @@ class ExecutionVerdictTest < Minitest::Test
     assert_nil result.execution_error
     assert aggregate({first: true, second: true})[:success]
   end
+  def test_subprocess_fail_fast_takes_precedence_over_single_batch
+    executor = Ace::TestRunner::Molecules::TestExecutor.new(launch_env: {})
+    executor.define_singleton_method(:execute_per_file_with_progress) { |*_args| :per_file }
+    executor.define_singleton_method(:execute_tests) { |*_args| :batch }
+    assert_equal :per_file, executor.execute_with_progress(["a", "b"], fail_fast: true, run_in_single_batch: true)
+    assert_equal :per_file, executor.execute_with_progress(["a", "b"], per_file: true, fail_fast: false)
+    assert_equal :batch, executor.execute_with_progress(["a", "b"], fail_fast: false, run_in_single_batch: true)
+  end
+
 end

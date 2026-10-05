@@ -104,7 +104,7 @@ module Ace
                 runs: 0,
                 assertions: 0,
                 failures: 0,
-                errors: test_files.size,  # Count all test files as errors
+                errors: 0,  # Execution failure is distinct from completed test errors
                 skips: 0,
                 passed: 0
               },
@@ -526,7 +526,7 @@ module Ace
 
         def aggregate_individual_results(combined_output)
           # Split output by test file executions
-          individual_outputs = combined_output.split(/^Started with run options/)
+          individual_outputs = combined_output.split(/^(?=Started with run options|Run options:)/)
           individual_outputs.shift if individual_outputs.first && individual_outputs.first.empty?
 
           aggregated = {
@@ -546,7 +546,6 @@ module Ace
           }
 
           individual_outputs.each do |output|
-            output = "Started with run options" + output  # Restore the split text
             parsed = @result_parser.parse_output(output)
 
             # Sum up the counts
