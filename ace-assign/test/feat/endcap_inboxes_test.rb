@@ -27,7 +27,7 @@ module Ace
         def bytes(index: 0); parts.fetch(index); end
       end
 
-      def fixture
+      def fixture(child: false)
         Dir.mktmpdir do |root|
           repo = File.join(root, "repo"); FileUtils.mkdir_p(repo)
           git_in(repo, "init", "-b", "main")
@@ -67,6 +67,16 @@ module Ace
           mutate("fixture_native", "native", 2, {data: {}, events: [{type: "scope_native_bound", payload: {
             "scope_generation" => 2, "scope_binding_event_id" => parent_event.fetch("digest"), "service_invocation_id" => "c" * 32,
             "server_identity" => server, "socket_identity" => [1, 2, 13001], "workspace_id" => "w1"}}]})
+          if child
+            original = {"runtime" => "herdr", "session" => "w1", "pane" => "p1", "terminal_id" => "terminal",
+              "process_identity" => process(91, 13001).merge("parent_pid" => 90), "shell_identity" => process(91, 13001).merge("parent_pid" => 90),
+              "native_origin" => {"workspace" => "w1", "tab" => "t1", "pane" => "p1", "server_identity" => server,
+                "socket_identity" => [1, 2, 13001], "command" => ["/fixture/gate", "mapping", "ticket"], "cwd" => "/scratch"}}
+            mutate("fixture_child", "child", 3, {data: {}, events: [{type: "scope_child_bound", payload: {
+              "scope_generation" => 2, "scope_binding_event_id" => parent_event.fetch("digest"),
+              "native_binding_event_id" => events.find { |event| event["type"] == "scope_native_bound" }.fetch("digest"),
+              "original_process_binding" => original}}]})
+          end
           executor = Object.new
           executor.define_singleton_method(:pane_get_bounded) do |_pane|
             Ace::Herdr::Molecules::ExecutionResult.new(stdout: JSON.generate("result" => {"pane" => {
@@ -79,14 +89,14 @@ module Ace
           @box.enqueue(event: "event", attempt: "attempt", ref: {"session" => "w1", "pane" => "p1"}, payload: "message")
           record = @box.deliver(event: "event")
           @registration = record.slice("event_id", "attempt_id", "payload_sha256", "receipt_key_sha256")
-          mutate("fixture_registration", "registration", 3, {data: {}, events: [{type: "inbox_binding", payload: {
+          mutate("fixture_registration", "registration", child ? 4 : 3, {data: {}, events: [{type: "inbox_binding", payload: {
             "event_id" => "event", "attempt_id" => "attempt", "inbox_context_id" => "context", "registration" => @registration}}]})
           receipt = record.slice("event_id", "attempt_id", "claim_generation", "payload_sha256", "binding").merge(
             "outcome" => "consumed", "observer" => {"role" => "supervisor", "id" => "observer"},
             "evidence" => {"kind" => "consumed_acknowledged", "native_reference" => "native:1", "observation" => "consumed"})
           @bytes = JSON.generate(receipt); @signature = key.sign(OpenSSL::Digest::SHA256.new, @bytes)
           @params = {"mapping_id" => "mapping", "assignment_id" => "assignment", "attempt_id" => "attempt",
-            "expected_generation" => 4, "event_id" => "event", "inbox_context_id" => "context", "expected_registration" => @registration,
+            "expected_generation" => child ? 5 : 4, "event_id" => "event", "inbox_context_id" => "context", "expected_registration" => @registration,
             "receipt_sha256" => Digest::SHA256.hexdigest(@bytes), "signature_sha256" => Digest::SHA256.hexdigest(@signature), "transfer" => {}}
           yield
         end
@@ -211,6 +221,43 @@ module Ace
             reconcile(params: old_params, parts: [old_bytes, old_signature])
           end
           assert_equal second.fetch(:data), reconcile(id: "claim-two").fetch(:data)
+        end
+      end
+
+      def test_signed_foreign_workspace_and_original_child_mismatch_refuse_before_import
+        fixture do
+          store = Ace::Herdr::Molecules::DeliveryRecordStore
+          record = store.load(@context.fetch("deliveries_dir"), "event")
+          foreign = record.inbox.merge("binding" => record.inbox.fetch("binding").merge("session" => "foreign-workspace"))
+          store.save(record.advance_inbox(state: record.state, inbox: foreign, detail: {"action" => "fixture"}, timestamp: Time.now.utc.iso8601), @context.fetch("deliveries_dir"))
+          receipt = JSON.parse(@bytes)
+          receipt["binding"]["session"] = "foreign-workspace"
+          @bytes = JSON.generate(receipt); @signature = @key.sign(OpenSSL::Digest::SHA256.new, @bytes)
+          @params = @params.merge("receipt_sha256" => Digest::SHA256.hexdigest(@bytes), "signature_sha256" => Digest::SHA256.hexdigest(@signature))
+          assert_raises(AttemptErrors::EvidenceUnavailable) { reconcile }
+          assert_equal 0, events.count { |event| event["type"] == "evidence_import" }
+          assert_equal "delivered", @box.status(event: "event").fetch("state")
+        end
+        %w[pane terminal_id].each do |field|
+          fixture(child: true) do
+            store = Ace::Herdr::Molecules::DeliveryRecordStore
+            record = store.load(@context.fetch("deliveries_dir"), "event")
+            foreign_value = field == "pane" ? "p2" : "foreign-terminal"
+            foreign = record.inbox.merge("origin_target" => record.inbox.fetch("origin_target").merge(field => foreign_value),
+              "binding" => record.inbox.fetch("binding").merge(field => foreign_value))
+            store.save(record.advance_inbox(state: record.state, inbox: foreign, detail: {"action" => "fixture"}, timestamp: Time.now.utc.iso8601), @context.fetch("deliveries_dir"))
+            receipt = JSON.parse(@bytes); receipt["binding"][field] = foreign_value
+            @bytes = JSON.generate(receipt); @signature = @key.sign(OpenSSL::Digest::SHA256.new, @bytes)
+            @params = @params.merge("receipt_sha256" => Digest::SHA256.hexdigest(@bytes), "signature_sha256" => Digest::SHA256.hexdigest(@signature))
+            assert_raises(AttemptErrors::EvidenceUnavailable) { reconcile }
+            assert_equal 0, events.count { |event| event["type"] == "evidence_import" }
+            assert_equal "delivered", @box.status(event: "event").fetch("state")
+          end
+        end
+        fixture(child: true) do
+          assert_equal "completed", reconcile.dig(:data, "state")
+          @kernel.dead = [90, 91]
+          assert reconcile.fetch(:replayed)
         end
       end
 

@@ -73,9 +73,35 @@ module Ace
           unless current.slice(*INBOX_REGISTRATION_FIELDS) == registered.fetch("registration")
             raise AttemptErrors::EvidenceUnavailable, "current inbox differs from canonical registration"
           end
+          inbox_native_lineage!(current, lineage)
           [box, registered.fetch("registration"), lineage]
         rescue Ace::Herdr::Error, Ace::Runtime::RuntimeUnavailableError, KeyError, TypeError
           raise AttemptErrors::EvidenceUnavailable, "installed inbox or native lineage is unverifiable"
+        end
+
+        def inbox_native_lineage!(record, lineage, receipt: nil)
+          workspace = lineage.native_event.fetch("payload").fetch("workspace_id")
+          original = record.fetch("origin_target")
+          binding = record.fetch("binding")
+          unless original.is_a?(Hash) && binding.is_a?(Hash) &&
+              original["session"] == workspace && binding["session"] == workspace
+            raise AttemptErrors::EvidenceUnavailable, "inbox original native workspace differs"
+          end
+          if lineage.child_event
+            child = lineage.child_event.fetch("payload").fetch("original_process_binding")
+            unless original.values_at("session", "pane", "terminal_id") == child.values_at("session", "pane", "terminal_id")
+              raise AttemptErrors::EvidenceUnavailable, "inbox original native child differs"
+            end
+          end
+          if receipt
+            signed_binding = receipt["binding"]
+            replacement = receipt["replacement_target"]
+            unless signed_binding.is_a?(Hash) && signed_binding["session"] == workspace &&
+                (!receipt.key?("replacement_target") || (replacement.is_a?(Hash) && replacement["session"] == workspace))
+              raise AttemptErrors::EvidenceUnavailable, "signed inbox native workspace differs"
+            end
+          end
+          true
         end
 
         def authorize_inbox_transfer!(request:, peer:, role:)
@@ -124,6 +150,7 @@ module Ace
                 end
                 next({data: inbox_projection(retained)})
               end
+              inbox_native_lineage!(box.retained_status(event: params.fetch("event_id")), lineage, receipt: receipt)
               accepted = box.reconcile(event: params.fetch("event_id"), receipt: receipt, signed_bytes: bytes,
                 signature: signature, expected_registration: registration)
               raise AttemptErrors::EvidenceUnavailable, "signed inbox proof refused" if accepted["reconciliation_refusal"]
@@ -220,6 +247,7 @@ module Ace
             raise AttemptErrors::EvidenceUnavailable, "canonical inbox raw digests differ"
           end
           receipt = JSON.parse(raw.first)
+          inbox_native_lineage!(observed, lineage, receipt: receipt)
           verified = box.verify_reconciliation(event: params.fetch("event_id"), receipt: receipt,
             signed_bytes: raw.first, signature: raw.last, expected_registration: registration)
           if verified["reconciliation_refusal"] || verified["state"] != payload["state"]
