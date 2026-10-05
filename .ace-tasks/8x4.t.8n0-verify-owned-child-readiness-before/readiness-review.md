@@ -1,0 +1,3 @@
+# Independent readiness review
+
+Root independently approved55baea9fe0e6f451cf5289c754872a5ade92badd after reading complete spec/analysis/publicationJSON and actual BoundedProcess fixture/source. Observable boundaries are decision-complete. Evidence correctly distinguishes a sufficient publication-race mechanism from the unobserved historical schedule. Root authorized simplest existing owned handle/readiness, real surviving-child negative proof, bounded failing-path cleanup, focused+full Herdr gates and independent source review. No production change/algorithm mandate, lq8/protected probes or publication. Tool promotion pending/needs_reviewfalse then in-progress performed before implementation.

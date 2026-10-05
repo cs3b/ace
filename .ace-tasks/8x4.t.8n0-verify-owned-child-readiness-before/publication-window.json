@@ -1,0 +1,11 @@
+{
+  "schedule": "shell opens/truncates PID destination, explicitly pauses before PID write",
+  "file_exists": true,
+  "raw_pid_bytes": "",
+  "legacy_to_i_equivalent": 0,
+  "kill_zero_raises_ESRCH": false,
+  "actual_owned_pid": 40775,
+  "actual_owned_pid_positive": true,
+  "child_alive_before_cleanup": true,
+  "actual_owned_pid_absent_after_reap": true
+}
