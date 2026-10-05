@@ -63,7 +63,8 @@ module Ace
           if binding.key?("policy_digest") && binding["policy_digest"] != digest
             raise SecurityError, "service policy changed after claim"
           end
-          deep_freeze(operation: snapshot(operation), policy_digest: digest)
+          deep_freeze(operation: snapshot(operation), policy_digest: digest,
+            operation_digest: Ace::Assign::Atoms::EvidenceDigest.digest(operation))
         end
 
         def visible!(project:, uid:)
