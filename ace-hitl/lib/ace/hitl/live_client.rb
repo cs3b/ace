@@ -43,6 +43,7 @@ module Ace
         unless owner.values_at("session", "pane") == reverse.values_at("session", "pane")
           raise Lifecycle::BindingError, "request reverse differs from its exact active native owner"
         end
+        target = inbox.target_from_owner(owner)
         result = boundary.consume(request, timeout: timeout, native_delivery: true)
         raise Lifecycle::StateError, "native delivery claim was not committed" unless result["native_delivery"] == true
         consumed = envelope_for(result, request)
@@ -60,8 +61,11 @@ module Ace
         delivery = Contract::ManagedEnvelope.load(delivery)
         raise Lifecycle::AnswerError, "secret-bearing native answers are prohibited" if Contract::SecretGate::PATTERN.match?(answer)
         event = event_id(envelope)
-        inbox.enqueue(event: event, attempt: envelope["attempt_id"], ref: reverse, payload: answer,
-          managed_envelope: delivery)
+        queued = inbox.enqueue(event: event, attempt: envelope["attempt_id"], ref: reverse, payload: answer,
+          managed_envelope: delivery, expected_target: target)
+        # A signed supersession authorizes an explicit reconciliation retry,
+        # not another ordinary delivery/watch call.
+        return queued if queued["state"] == "queued" && queued.dig("reconciliation", "outcome") == "superseded"
         coordinator.bind_inbox(attempt_id: envelope["attempt_id"], event_id: event, inbox: inbox)
         inbox.deliver(event: event)
       ensure

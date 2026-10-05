@@ -45,7 +45,14 @@ module Ace
                   name: channel["name"], machine: channel["machine"], folder: channel["folder"]
                 )
                 box = Organisms::HermesBox.new(channel: box_channel)
-                publish_pending(channel, box)
+                begin
+                  publish_pending(channel, box)
+                rescue Ace::Hitl::Lifecycle::TransportError => e
+                  raise if once
+                  warn "ace-hitl-hermes: pending publication unavailable for #{channel['name']} (#{e.class}); retrying"
+                  sleep 1
+                  next
+                end
                 box.poll.messages.each do |message|
                   next unless message.question? && message.sender != "captain"
                   begin

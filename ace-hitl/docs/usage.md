@@ -128,7 +128,10 @@ client.status(request: request_id)
 
 `deliver` consumes an authorized ordinary answer, enqueues one incarnation-bound
 Herdr event, registers its digest/key with Assign, and attempts exact native
-submission. Repeated calls reuse the same event and never resubmit an uncertain
+submission. The accepted owner's terminal, agent and immutable native session ID
+are captured before consumption and checked under the Inbox event lock. A thread
+restart in the same pane refuses delivery rather than changing that original
+identity. Repeated calls reuse the same event and never resubmit an uncertain
 intent. A stopped watcher leaves the request/native intent visible in
 `pending --project ace`; it never chooses a new pane or launches a replacement
 watcher. The configured Hermes transport publishes created requests for its
@@ -148,7 +151,9 @@ client.reconcile(request: request_id, receipt_path: signed_receipt_path, retry_d
 Herdr verifies the signature, exact event/attempt/digest/generation/native binding
 and accepted registration under the event lock. Assign journals the verified
 observation. Missing authority or signer, wrong key, changed target and stale
-proof stay refused/unknown. No elapsed-time rule establishes success or retries.
+proof stay refused/unknown. Signed supersession leaves ordinary `deliver` and
+`watch` calls queued; only `reconcile(..., retry_delivery: true)` submits again.
+No elapsed-time rule establishes success or retries.
 Keep the original trusted verification/signing context for unresolved events or
 defer key rotation; a replacement fingerprint cannot rebind an existing event.
 

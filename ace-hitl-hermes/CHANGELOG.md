@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Retain the continuous polling owner across transient pending-publication transport outages, report the channel failure and retry without consuming the request.
+
 ### Changed
 - Consume the shared managed binding envelope and publish newly created authenticated pending requests through explicitly registered project channels in the existing single Telegram polling actor.
 

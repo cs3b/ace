@@ -52,7 +52,9 @@ class LiveClientTest < AceHitlTestCase
     attr_accessor :binding, :bind_failure
     attr_reader :registered, :observed
     def initialize
-      @binding = {"session" => "workspace1", "pane" => "pane1"}
+      @binding = {"runtime" => "herdr", "session" => "workspace1", "pane" => "pane1",
+        "terminal_id" => "terminal1", "agent" => "codex",
+        "agent_session" => {"agent" => "codex", "kind" => "id", "value" => THREAD}}
       @registered = {}
       @observed = {}
     end
@@ -148,6 +150,15 @@ class LiveClientTest < AceHitlTestCase
     assert_equal ["live001"], @client.pending.map { |value| value["id"] }
   end
 
+  def test_incomplete_native_owner_refuses_before_answer_consumption
+    request
+    answer
+    @coordinator.binding = @coordinator.binding.reject { |key, _| key == "agent_session" }
+    assert_raises(Ace::Herdr::ValidationError) { @client.deliver(request: "live001", timeout: 1) }
+    assert_equal "answer-delivered", @store.read("live001")["state"]
+    assert_empty @native.calls
+  end
+
   def test_queue_acceptance_stays_pending_until_signed_consumption_and_replay_is_idempotent
     request
     answer
@@ -205,6 +216,8 @@ class LiveClientTest < AceHitlTestCase
     path = proof(record, outcome: "superseded")
     assert_equal "queued", @client.reconcile(request: "live001", receipt_path: path)["state"]
     assert_equal 1, @native.calls.size
+    assert_equal "queued", @client.deliver(request: "live001", timeout: 1)["state"]
+    assert_equal 1, @native.calls.size
     @native.result = {"accepted" => true}
     assert_equal "delivered", @client.reconcile(request: "live001", receipt_path: path, retry_delivery: true)["state"]
     assert_equal 2, @native.calls.size
@@ -254,4 +267,34 @@ class LiveClientTest < AceHitlTestCase
     assert_equal true, @store.read("live002")["native_delivery"]
     assert_empty @native.calls
   end
+  def test_native_restart_between_consumption_and_enqueue_refuses_replacement
+    request
+    answer
+    executor = @inbox.instance_variable_get(:@executor)
+    original_consume = @boundary.method(:consume)
+    @boundary.define_singleton_method(:consume) do |id, **args|
+      result = original_consume.call(id, **args)
+      original_observe = executor.method(:pane_get_bounded)
+      executor.define_singleton_method(:pane_get_bounded) do |pane|
+        value = original_observe.call(pane)
+        Ace::Herdr::Molecules::ExecutionResult.new(stdout: value.stdout.sub(LiveClientTest::THREAD,
+          "0123abcd-0000-4000-8000-000000000002"), stderr: "", success: true, exit_code: 0)
+      end
+      result
+    end
+    assert_raises(Ace::Herdr::Organisms::Inbox::IdentityDriftError) do
+      @client.deliver(request: "live001", timeout: 1)
+    end
+    assert_equal "consumed", @store.read("live001")["state"]
+    assert_empty @native.calls
+    event = Ace::Hitl::Contract::ManagedEnvelope.inbox_event_id(@store.read("live001")["envelope"])
+    assert_nil Ace::Herdr::Molecules::DeliveryRecordStore.load(File.join(@dir, "deliveries"), event)
+    # A fresh caller must still use the accepted owner, never the reused pane.
+    restarted = Ace::Hitl::LiveClient.new(boundary: @boundary, coordinator: @coordinator, inbox: @inbox)
+    assert_raises(Ace::Herdr::Organisms::Inbox::IdentityDriftError) do
+      restarted.deliver(request: "live001", timeout: 1)
+    end
+    assert_empty @native.calls
+  end
+
 end

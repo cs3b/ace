@@ -44,7 +44,7 @@ platforms:
     enabled: false
 ```
 
-Stop/restart the existing gateway to apply that change. `serve` validates this configuration and refuses an enabled or unverifiable Telegram gateway. Its state-directory polling lease excludes a second package actor. A Telegram 409/conflicting poll failure invalidates ingress coverage rather than pretending it is connected. Never run the package actor and Hermes gateway against the same bot at the same time.
+Stop/restart the existing gateway to apply that change. `serve` validates this configuration and refuses an enabled or unverifiable Telegram gateway. Its state-directory polling lease excludes a second package actor. During a transient HITL pending-publication transport outage, continuous `serve` reports the unavailable channel on stderr, waits one second, keeps its polling lease and retries on the next cycle without consuming or replacing the request. A single-pass run reports the error to its caller. A Telegram 409/conflicting poll failure invalidates ingress coverage rather than pretending it is connected. Never run the package actor and Hermes gateway against the same bot at the same time.
 
 ```sh
 ace-hitl-hermes serve --config /etc/ace-hitl-hermes/runtime.json

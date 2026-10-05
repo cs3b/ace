@@ -105,4 +105,47 @@ class ManagedPendingPublicationTest < AceHermesTestCase
     assert_equal original, JSON.parse(File.read(File.join(@folder, "auto001.json")))
     assert_empty calls.select { |value| value.first == :send }
   end
+  # Test-only control flow bypasses the poller's intentional error wrapping.
+  StopLoop = Class.new(Exception)
+
+  def test_continuous_publication_retries_transport_outage_and_retains_one_poll_owner
+    create(id: "auto001")
+    actor, calls = runtime
+    lifecycle = actor.instance_variable_get(:@lifecycle)
+    original_pending = lifecycle.method(:pending)
+    attempts = 0
+    lifecycle.define_singleton_method(:pending) do |**args|
+      attempts += 1
+      raise L::TransportError, "HITL service restarting" if attempts == 1
+      original_pending.call(**args)
+    end
+    transport = actor.send(:telegram)
+    polls = 0
+    transport.define_singleton_method(:updates) do |offset:|
+      polls += 1
+      raise StopLoop if polls > 2
+      calls << [:poll, offset]
+      []
+    end
+    delays = []
+    actor.define_singleton_method(:sleep) { |seconds| delays << seconds }
+    _, errors = capture_io { assert_raises(StopLoop) { actor.serve(once: false) } }
+    assert_match(/pending publication unavailable/, errors)
+    assert_equal [1], delays
+    assert_equal 2, attempts
+    assert_equal 1, calls.count { |entry| entry.first == :send }
+    assert_equal "submitted", actor.relay.delivery("auto001")["status"]
+  end
+
+  def test_once_publication_reports_transport_failure_without_consuming_request
+    create(id: "auto001")
+    actor, calls = runtime
+    lifecycle = actor.instance_variable_get(:@lifecycle)
+    lifecycle.define_singleton_method(:pending) { |**| raise L::TransportError, "HITL service restarting" }
+    assert_raises(L::TransportError) { actor.serve(once: true) }
+    assert_equal "created", @client.read("auto001")["state"]
+    assert_empty calls.select { |entry| entry.first == :send }
+    assert_empty Dir.children(@folder)
+  end
+
 end
