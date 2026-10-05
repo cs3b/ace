@@ -26,4 +26,4 @@ Current `ace-herdr/lib/ace/herdr/molecules/native_queue_executor.rb:56-87` submi
 
 xz9.0 owns generic protected authority transport and receiver work. xza.0 owns the consumer-driven observation schema, Codex submission/observation and shared signer-to-consumer integration, dependent on xz9.0 and xza.3. xza.1 owns Pi provider identity/instrumentation and consumes xza.0. xza.2 owns separate native supersession proofs after both providers. gad.8/gad.b own actual installation/UID/endpoint/key/signing evidence; R2/R3 remain downstream acceptance. This addendum does not choose a new endpoint design or complete any dependency.
 
-Next readiness work must resolve the missing actual-runtime and protected-path evidence under separately authorized execution. The previously blocked launcher probes remain excluded; their unknown filter trigger is not investigated or reassigned by this audit.
+Next readiness work must resolve the missing actual-runtime and protected-path evidence while respecting the recorded execution limits. The previously blocked launcher probes remain excluded; their unknown filter trigger is not investigated or reassigned by this audit.
