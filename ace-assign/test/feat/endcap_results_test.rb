@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 require_relative "../test_helper"
+require_relative "../support/execution_scope_native_owner_fixture"
 require "ace/assign/authority/endcap"
 require "ace/assign/authority/launch_lifecycle"
 require "ace/assign/authority/router"
@@ -22,7 +23,7 @@ module Ace
           {"pid" => pid, "uid" => pid == Process.pid ? Process.uid : 13001,
             "gid" => pid == Process.pid ? Process.gid : 13001,
             "groups" => pid == Process.pid ? Process.groups.sort : [13001],
-            "started_at" => "fixture:#{pid}", "host" => "fixture", "parent_pid" => pid == 91 ? 90 : 1}
+            "started_at" => "linux:#{ExecutionScopeObservationFixtures::BOOT}:#{pid}", "host" => "fixture", "parent_pid" => pid == 91 ? 90 : 1}
         end
         def live!(identity)
           raise AttemptErrors::EvidenceUnavailable, "source fixture process exited" if dead.include?(identity.fetch("pid"))
@@ -61,7 +62,8 @@ module Ace
             "worker_gid" => 13001, "worker_groups" => [13001], "worker_actor" => "worker",
             "launcher_uid" => 13002, "launcher_gid" => 13002, "launcher_groups" => [13002],
             "bootstrap" => "/fixture/gate", "bootstrap_sha256" => "a" * 64, "worker_cwd" => "/fixture/worker",
-            "native" => {"workspace_id" => "w1", "server_identity" => @kernel.capture(90), "socket_identity" => [1, 2, 13001]}}
+            "execution_scope" => {"slot_id" => "slot", "service_unit" => "ace-slot.service", "network_namespace_path" => "/run/netns/slot"},
+            "native" => {"workspace_id" => "w1"}}
           @project = {"assignment_root" => File.join(root, "assignments"), "supervisor_uids" => [13004],
             "reviewer_uids" => [13003], "service_executor_uids" => [13005], "peer_credentials" => {}}
           [@reviewer, @executor, @supervisor, @service].each do |identity|
@@ -92,11 +94,12 @@ module Ace
           state = call("reserve_attempt", {"scope" => "010", "worker_uid" => 13001, "runtime" => "herdr", "base_head" => @head,
             "launcher_process_binding" => @launcher, "expected_generation" => 1}, id: "reserve", peer: @launcher, role: :launcher).fetch(:data)
           @attempt = state.fetch("attempt_id")
+          state = state.merge("generation" => generation)
           @binding = {"runtime" => "herdr", "session" => "w1", "pane" => "p1", "terminal_id" => "terminal",
             "process_identity" => @worker, "shell_identity" => @worker,
             "native_origin" => {"workspace" => "w1", "tab" => "t1", "pane" => "p1",
               "command" => ["/fixture/gate", "mapping", state.fetch("launch_ticket")], "cwd" => "/fixture/worker",
-              "server_identity" => @map.dig("native", "server_identity"), "socket_identity" => [1, 2, 13001]}}
+              "server_identity" => @kernel.capture(90), "socket_identity" => [1, 2, 13001]}}
           state = call("record_launch", {"launch_ticket" => state.fetch("launch_ticket"), "process_binding" => @binding,
             "expected_generation" => state.fetch("generation")}, id: "record", peer: @launcher, role: :launcher).fetch(:data)
           call("bind_process", {"launch_ticket" => state.fetch("launch_ticket"), "process_binding" => @binding,
@@ -111,7 +114,8 @@ module Ace
       end
 
       def restart
-        @launch = Authority::LaunchLifecycle.new(deployment: @deployment, kernel: @kernel, journals: {"project" => @journal})
+        @launch = Authority::LaunchLifecycle.new(deployment: @deployment, kernel: @kernel, journals: {"project" => @journal},
+          scope_observer_factory: ->(_id) { ExecutionScopeNativeOwnerFixture.new(@map, @journal, @kernel) })
         @endcap = Authority::Endcap.new(deployment: @deployment, launch: @launch, kernel: @kernel, service_policy: @policy)
         @router = Authority::Router.new(launch: @launch, handlers: [@endcap])
       end
