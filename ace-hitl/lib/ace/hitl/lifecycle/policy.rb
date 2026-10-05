@@ -102,6 +102,9 @@ module Ace
       # the contract. The default denies everything — direct-library use
       # gets requester-only semantics and no transport authority.
       class AccessPolicy
+        def proposal?(_peer, project:)
+          false
+        end
         # @return [Boolean] true when the peer may deliver answers and
         #   observe pending/states for the given project
         def transport?(_peer, project: nil)
@@ -127,10 +130,11 @@ module Ace
         end
 
         def transport?(peer, project: nil)
-          facts = hitl_facts
+          current = document
+          facts = hitl_facts(current)
           return false unless facts["transport_uids"].is_a?(Array) && facts["transport_uids"].include?(peer.uid)
 
-          projects = authorized_projects(peer.uid)
+          projects = authorized_projects(peer.uid, current)
           return false if projects.nil?
           # A transport uid without a principals entry is nobody (aligned
           # with ace-lab's HitlAuthorizer; review 8x327buh); an entry
@@ -143,22 +147,32 @@ module Ace
           uid.is_a?(Integer) ? uid : nil
         end
 
+        # Decision admission is explicitly installed, never inferred from
+        # an ordinary requester or transport grant.
+        def proposal?(peer, project:)
+          current = document
+          uids = hitl_facts(current)["proposal_uids"]
+          projects = authorized_projects(peer.uid, current)
+          uids.is_a?(Array) && uids.include?(peer.uid) && projects &&
+            (projects.empty? || projects.include?(project.to_s))
+        end
+
         private
 
         def document
-          @document ||= TrustedFile.read_yaml(@grants_path) || {}
+          @document || TrustedFile.read_yaml(@grants_path) || {}
         end
 
-        def hitl_facts
-          facts = document["hitl"]
+        def hitl_facts(current = document)
+          facts = current["hitl"]
           facts.is_a?(Hash) ? facts : {}
         end
 
         # Union of project IDs visible to this transport uid through the
         # principals section (uid-string grants share one namespace with
         # usernames; a numeric match is uid-exact).
-        def authorized_projects(uid)
-          principals = document["authorization"].is_a?(Hash) ? document["authorization"]["principals"] : {}
+        def authorized_projects(uid, current = document)
+          principals = current["authorization"].is_a?(Hash) ? current["authorization"]["principals"] : {}
           return nil unless principals.is_a?(Hash)
 
           policy = principals[uid.to_s]

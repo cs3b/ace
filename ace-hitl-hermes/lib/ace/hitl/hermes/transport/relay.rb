@@ -45,6 +45,7 @@ module Ace
                   raise ContractError, "request correlation binding cannot change"
                 end
                 if previous["status"] == "submitted"
+                  acknowledge_proposal(previous)
                   box = @box_factory.call(entry)
                   question = box.poll.messages.find { |m| m.id == request && m.question? }
                   box.ack(request) if question && question.body == facts["question"]
@@ -74,6 +75,7 @@ module Ace
                 record.merge!("status" => "submitted", "message_id" => ack["message_id"].to_s,
                   "submitted_at" => now)
                 commit.call
+                acknowledge_proposal(record)
                 box.ack(request)
               rescue SubmitFailed
                 record["status"] = "failed"
@@ -111,7 +113,7 @@ module Ace
                       commit.call
                       text.clear unless text.frozen?
                     else
-                      deliver_reply(existing, duplicate, text, channel, commit)
+                      deliver_reply(existing, duplicate, text, channel, commit, state)
                     end
                   else
                     deliver_instruction(duplicate, text, channel, commit)
@@ -128,7 +130,7 @@ module Ace
               state["ingress"] << item
               commit.call # write no answer, no digest, before any delivery
               if record
-                deliver_reply(record, item, text, channel, commit)
+                deliver_reply(record, item, text, channel, commit, state)
               else
                 deliver_instruction(item, text, channel, commit)
               end
@@ -179,12 +181,18 @@ module Ace
                 item["request"] == request && item["revision"] == record["revision"] && item["received_at"] <= through
               end
               unresolved = relevant.reject { |item| TERMINAL.include?(item["status"]) }.map { |i| public_ingress(i) }
-              {"schema" => "ace.hitl.hermes.ingress-checkpoint/v1", "request" => request,
+              checkpoint = {"schema" => "ace.hitl.hermes.ingress-checkpoint/v1", "request" => request,
                "revision" => record["revision"], "channel" => record["channel"],
                "status" => healthy ? "healthy" : "unknown", "healthy" => !!healthy,
                "drained" => !!healthy && unresolved.empty?,
                "checkpoint" => healthy ? {"through" => through, "sequence" => state["sequence"]} : nil,
                "unresolved" => unresolved}
+              if proposal?(record)
+                # Same ingress lock as receive; no received reply can land
+                # between this checkpoint and the HITL decision transition.
+                checkpoint["proposal"] = @lifecycle.proposal_reconcile(request, checkpoint: checkpoint)
+              end
+              checkpoint
             end
           end
 
@@ -196,6 +204,15 @@ module Ace
           end
 
           private
+
+          def proposal?(record)
+            record.dig("binding", "envelope", "kind") == "proposal"
+          end
+
+          def acknowledge_proposal(record)
+            return unless proposal?(record)
+            @lifecycle.proposal_acknowledge(record["request"], submitted_at: record.fetch("submitted_at"))
+          end
 
           def now
             @clock.call.utc.iso8601
@@ -238,7 +255,14 @@ module Ace
             records.first["request"]
           end
 
-          def deliver_reply(record, item, text, channel, commit)
+          def deliver_reply(record, item, text, channel, commit, state)
+            if proposal?(record) && state["ingress"].any? { |earlier|
+                earlier["request"] == item["request"] && earlier["revision"] == item["revision"] &&
+                  earlier["sequence"] < item["sequence"] && !TERMINAL.include?(earlier["status"]) }
+              item["status"] = "unresolved"
+              commit.call
+              return
+            end
             # Durable terminal history in ace-hitl defeats late replies even
             # after transport tombstones expire. Hermes never runs the effect.
             if record["sensitive"] && record["secret_delivery"] == "unavailable"
@@ -268,6 +292,13 @@ module Ace
               return
             end
             answer = text.sub(/\A\/hitl-reply(?:@\w+)?\s+\S+\s+/i, "")
+            if proposal?(record)
+              @lifecycle.proposal_reply(record["request"], answer: answer,
+                received_at: item["received_at"], sequence: item["sequence"])
+              item["status"] = "delivered"
+              commit.call
+              return
+            end
             if !record["sensitive"]
               box = @box_factory.call(channel)
               existing = box.poll.messages.find { |m| m.id == record["request"] && m.answer? }

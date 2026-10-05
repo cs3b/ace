@@ -18,6 +18,7 @@ require_relative "cli/commands/serve"
 require_relative "cli/commands/overseer_send"
 require_relative "cli/commands/overseer_pending"
 require_relative "cli/commands/overseer_ack"
+require_relative "cli/commands/proposal"
 
 module Ace
   module Hitl
@@ -27,6 +28,7 @@ module Ace
       PROGRAM_NAME = "ace-hitl"
 
       REGISTERED_COMMANDS = [
+        ["proposal", "Create, inspect, revise or resolve an immutable second-commander proposal"],
         ["create", "Create HITL event"],
         ["ask", "Ask a human via HITL and forward the request to the Lab"],
         ["show", "Show HITL event details"],
@@ -54,6 +56,7 @@ module Ace
       ].freeze
 
       register "create", CLI::Commands::Create
+      register "proposal", CLI::Commands::Proposal
       register "ask", CLI::Commands::Ask
       register "show", CLI::Commands::Show
       register "list", CLI::Commands::List

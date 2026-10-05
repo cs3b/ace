@@ -5,6 +5,18 @@ require_relative "../test_helper"
 module Ace
   module Lab
     class ServicePolicyTest < Minitest::Test
+      def test_proposal_reference_requires_canonical_authority_even_if_yaml_matches
+        reference = "proposal-#{'a' * 24}-r1"
+        binding = {"operation" => "deploy"}
+        policy = Molecules::ServicePolicy.new({"authorizations" => {reference => binding}})
+        assert_raises(SecurityError) { policy.authorize!(reference, binding) }
+        calls = []
+        resolver = ->(id, exact) { calls << [id, exact]; {"state" => "approved-by-silence"} }
+        policy = Molecules::ServicePolicy.new({}, resolver)
+        assert_equal "approved-by-silence", policy.authorize!(reference, binding)["state"]
+        assert_equal [[reference, binding]], calls
+        assert_raises(SecurityError) { policy.operation!("deploy", project: "ace", service_id: "publisher") }
+      end
       def test_exact_authorization_and_expired_lease
         Dir.mktmpdir do |dir|
           executable = File.join(dir, "handler")
