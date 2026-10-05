@@ -33,7 +33,7 @@ module Ace
           "begin_dispatch" => %w[mapping_id assignment_id attempt_id expected_generation candidate_generation head request_id claim_binding transfer],
           "service_status" => %w[mapping_id assignment_id attempt_id candidate_generation head request_id],
           "service_authorization" => %w[mapping_id assignment_id attempt_id candidate_generation head request_id claim_binding input_digest transfer],
-          "complete_service" => %w[mapping_id assignment_id attempt_id expected_generation candidate_generation head request_id claim_binding receipt_sha256 transfer]
+          "complete_service" => %w[mapping_id assignment_id attempt_id candidate_generation head request_id claim_binding receipt_sha256 transfer]
         }.freeze
 
         def initialize(deployment:, launch:, kernel: Ace::Runtime::Molecules::ProtectedLinux.new, service_policy: nil)

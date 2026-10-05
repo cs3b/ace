@@ -83,10 +83,10 @@ module Ace
             end
             events = attempt_events(journal, params)
             @kernel.live!(peer)
+            service_policy!.visible!(project: map.fetch("project_id"), uid: peer.fetch("uid"))
             if role == :executor
               service_executor!(peer, role, record)
             else
-              service_policy!.visible!(project: map.fetch("project_id"), uid: peer.fetch("uid"))
               authorized = case role
               when :worker
                 peer["uid"] == record["caller_uid"] && @kernel.descendant?(peer, record.fetch("worker_process_binding"))
@@ -176,8 +176,9 @@ module Ace
             end
             result = journal.mutate(assignment_id: params.fetch("assignment_id"), attempt_id: params.fetch("attempt_id"),
               mutation_id: request.fetch("mutation_id"), operation: request.fetch("operation"),
-              parameters_digest: Atoms::EvidenceDigest.digest(params), expected_generation: params.fetch("expected_generation"),
-              with_replay: true) do |events, _commit, _generation|
+              parameters_digest: Atoms::EvidenceDigest.digest(params),
+              expected_generation: request.fetch("operation") == "complete_service" ? nil : params.fetch("expected_generation"),
+              generation_mode: request.fetch("operation") == "complete_service" ? :recorded_completion : :expected, with_replay: true) do |events, _commit, _generation|
               if request.fetch("operation") == "request_service"
                 existing = journal.service_request(params.fetch("request_id"))
                 if existing

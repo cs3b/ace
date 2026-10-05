@@ -24,7 +24,11 @@ module Ace
         # returns events [{type:, payload:}], immutable blobs, and public data.
         # Only the authority calls this internal journal API; wire requests
         # cannot select blob paths, event types, or accepted response data.
-        def mutate(assignment_id:, attempt_id:, mutation_id:, operation:, parameters_digest:, expected_generation:, with_replay: false)
+        def mutate(assignment_id:, attempt_id:, mutation_id:, operation:, parameters_digest:, expected_generation:, with_replay: false, generation_mode: :expected)
+          unless (generation_mode == :expected && expected_generation.is_a?(Integer) && expected_generation >= 0) ||
+              (generation_mode == :recorded_completion && operation == "complete_service" && expected_generation.nil?)
+            raise ArgumentError, "invalid fixed mutation generation mode"
+          end
           [assignment_id, attempt_id, mutation_id].each { |id| validate_mutation_id!(id) }
           unless parameters_digest.is_a?(String) && parameters_digest.match?(/\A[0-9a-f]{64}\z/)
             raise ArgumentError, "invalid mutation parameter digest"
@@ -46,7 +50,7 @@ module Ace
               end
               current = read_events(assignment_id).select { |event| event["attempt_id"] == attempt_id }
               generation = authority_generation(current)
-              unless expected_generation == generation
+              unless generation_mode == :recorded_completion || expected_generation == generation
                 raise AttemptErrors::Conflict, "Authority registration generation changed"
               end
               plan = yield(current, old, generation)

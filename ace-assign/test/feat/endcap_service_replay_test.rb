@@ -112,6 +112,20 @@ module Ace
         end
       end
 
+      def test_executor_status_refuses_absent_and_revoked_current_visibility
+        with_review_replay do |endcap, request, _upload, _claim, journal|
+          params = request.fetch("params").slice("mapping_id", "assignment_id", "attempt_id", "candidate_generation", "head", "request_id")
+          status = request.merge("operation" => "service_status", "mutation_id" => nil, "params" => params)
+          before = journal.ref_value
+          policy = endcap.instance_variable_get(:@service_policy)
+          %w[absent revoked].each do |state|
+            policy.define_singleton_method(:visible!) { |**_| raise SecurityError, "#{state} project visibility" }
+            assert_raises(SecurityError) { endcap.dispatch(request: status, peer: {"uid" => Process.uid}, role: :executor) }
+            assert_equal before, journal.ref_value
+          end
+        end
+      end
+
       def test_review_exact_request_replay_keeps_acceptance_metadata
         with_review_replay do |endcap, request, upload, claim|
           reply = endcap.dispatch(request: request, peer: {"uid" => Process.uid}, role: :executor, transfer: upload)
