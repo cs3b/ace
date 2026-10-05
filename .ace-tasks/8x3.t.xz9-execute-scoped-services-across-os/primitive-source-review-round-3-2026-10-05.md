@@ -13,4 +13,11 @@ Executed via bin/ace-test in exact-head worktree:
 
 APPROVE source primitive repair. This does not establish protected installed origin, distinct-UID policy/endcap proof, or final Lab acceptance.
 
-Integration awaits the final full-package receipt for this repaired head.
+Final full-package receipt 8x4201 confirms 845 total tests (843 passed,
+2 existing skips), 3,661 assertions, no failures/errors. Source integrated as
+749bda001; receipt-only follow-up retained in 911a3c911.
+
+Post-merge combined coordinator, journal mutation and HITL runtime-binding
+verification: 8x421p, 66 tests / 418 assertions, no failures/errors. The four
+verified source findings from both rejected rounds are resolved. This does not
+close xz9.0: the protected endcap is now the next authored source slice.

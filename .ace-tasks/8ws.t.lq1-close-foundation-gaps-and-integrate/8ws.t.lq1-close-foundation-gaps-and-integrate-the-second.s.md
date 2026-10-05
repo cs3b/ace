@@ -190,3 +190,21 @@ Parallel source lanes are vs2 repair, journal repair, and independent 09j readin
   reserved finish bypass and Git-filter artifact conversion need correction.
   Repaired `b458644c0` is under independent review/full verification. No claim
   of protected endcap delivery follows from the primitive alone.
+
+### Journal integration and next parallel slices — 2026-10-05
+
+The corrected journal primitive is integrated as `749bda001`, independently
+approved at `b458644c0`, with full Assign 845 total / 3661 assertions, two existing
+skips and no failures/errors (`8x4201`). Combined post-merge coordinator, journal
+and HITL runtime binding passed 66/418 (`8x421p`). Four previously verified review
+findings are resolved; primitive delivery does not complete protected services.
+
+Active GPT-6.1 Sol source lanes, each on its own worktree:
+- `09j`: native protected launch and exact fresh/replay creation authority.
+- `xz9.0`: consume that origin in candidate/review/service/finish/inbox endcap.
+- `qjz`: immutable delivered proposals, 16-hour decision and atomic effect claim.
+
+Source joins remain qk0 → complete qkb → R2 → R3 → qkc/gad.2. Native observation
+xza and actual domain installation remain required. Final release preparation
+waits complete source integration, followed by interactive OTP and installed Lab
+acceptance; no source test result closes those gates.
