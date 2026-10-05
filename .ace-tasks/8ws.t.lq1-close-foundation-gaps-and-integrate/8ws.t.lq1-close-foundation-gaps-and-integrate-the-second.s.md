@@ -301,3 +301,8 @@ Historical unchecked sections above retain prior review states; this latest chec
 - [ ] `xz9.3` implementation and source acceptance.
 - [ ] `9c2` scope-owner mechanism/proof remains draft; xz9.0 finish and xz9.2 stop consume it.
 - [ ] `ig3` protected campaign authority contract requires its own readiness review; mandatory R2/R3 acceptance remains.
+
+### R2 protected contract readiness
+
+- [x] `ig3`: independent readiness APPROVE62a24a0c closes managed child receipt admission, separate actor/model provenance and CampaignStore-before-journal locking; pending/needs_review false.
+- [ ] `ig3` implementation remains dependency-blocked on completed campaign-free xz9.0 and qkb; full R2/R3 is still required before final qkc/gad.2.
