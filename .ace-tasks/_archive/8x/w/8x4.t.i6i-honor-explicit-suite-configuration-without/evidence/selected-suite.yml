@@ -1,0 +1,19 @@
+---
+test_suite:
+  max_parallel: 12
+  timeout: 120
+  packages:
+  - name: ace-support-fs
+    path: ace-support-fs
+    group: foundation
+    priority: 2
+  test_options:
+    format: compact
+    save_reports: true
+    report_dir: ".ace-local/test/reports"
+    fail_fast: false
+  display:
+    show_progress: true
+    update_interval: 0.1
+    color: true
+    clear_screen: false

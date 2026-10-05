@@ -1,0 +1,339 @@
+Started with run options --seed 50084
+
+TimestampGeneratorTest
+  test_generate_produces_6_char_id                                PASS (0.00s)
+  test_detect_format_invalid                                      PASS (0.00s)
+  test_filename_timestamp_with_extension                          PASS (0.00s)
+  test_generate_is_deterministic                                  PASS (0.00s)
+  test_iso_timestamp                                              PASS (0.00s)
+  test_iso_timestamp_defaults_to_now                              PASS (0.00s)
+  test_directory_name_uses_base36                                 PASS (0.00s)
+  test_elapsed_time_milliseconds                                  PASS (0.00s)
+  test_parse_invalid_returns_nil                                  PASS (0.00s)
+  test_parse_compact_id                                           PASS (0.00s)
+  test_detect_format_timestamp                                    PASS (0.00s)
+  test_generate_and_parse_roundtrip                               PASS (0.00s)
+  test_elapsed_time_seconds                                       PASS (0.00s)
+  test_filename_timestamp_without_extension                       PASS (0.00s)
+  test_detect_format_2sec_id                                      PASS (0.00s)
+  test_parse_empty_string_returns_nil                             PASS (0.00s)
+  test_elapsed_time_defaults_to_now                               PASS (0.00s)
+  test_parse_nil_returns_nil                                      PASS (0.00s)
+  test_elapsed_time_minutes                                       PASS (0.00s)
+
+Ace::TestRunner::Atoms::ReportDirectoryResolverTest
+  test_infer_package_name_uses_test_file_prefix_when_package_dir_missing PASS (0.00s)
+  test_infer_package_name_prefers_package_dir                     PASS (0.00s)
+  test_short_package_name_drops_ace_prefix                        PASS (0.00s)
+  test_resolve_package_report_dir_uses_short_package_name         PASS (0.00s)
+
+EnvironmentSanitizerTest
+  test_fixture_home_keys_are_not_copied_pending_replacement       PASS (0.00s)
+  test_nil_values_are_dropped                                     PASS (0.00s)
+  test_poisoned_parent_environment_yields_only_preserved_keys     PASS (0.00s)
+  test_dropped_keys_reports_names_only                            PASS (0.00s)
+  test_sanitizer_never_mutates_input_or_global_env                PASS (0.00s)
+
+Ace::TestRunner::Atoms::ReportPathResolverTest
+  test_returns_failures_json_if_exists                            PASS (0.00s)
+  test_returns_nil_if_no_reports_exist                            PASS (0.00s)
+  test_returns_nil_if_reports_dir_does_not_exist                  PASS (0.00s)
+  test_falls_back_to_legacy_test_reports_layout                   PASS (0.00s)
+  test_returns_summary_json_if_failures_missing                   PASS (0.00s)
+  test_returns_report_md_if_json_missing                          PASS (0.00s)
+
+Ace::TestRunner::Atoms::TestTypeDetectorTest
+  test_needs_subprocess_for_unit_directory_file_when_content_uses_open3 PASS (0.00s)
+  test_keeps_plain_unit_directory_file_in_process                 PASS (0.00s)
+
+TestDetectorTest
+  test_filters_by_pattern                                         PASS (0.00s)
+  test_finds_test_files_with_default_patterns                     PASS (0.00s)
+  test_removes_duplicate_files                                    PASS (0.00s)
+  test_detects_test_file                                          PASS (0.00s)
+  test_returns_empty_array_when_no_tests_found                    PASS (0.00s)
+
+Finished in 0.01644s
+41 tests, 63 assertions, 0 failures, 0 errors, 0 skips
+
+Started with run options --seed 2193
+
+Ace::TestRunner::RakeTaskTest
+  test_build_command_with_test_files                              PASS (0.00s)
+  test_accepts_configuration_block                                PASS (0.00s)
+  test_compatibility_accessors                                    PASS (0.00s)
+  test_build_command_basic                                        PASS (0.00s)
+  test_creates_test_task_with_default_name                        PASS (0.00s)
+  test_creates_test_task_with_custom_name                         PASS (0.00s)
+  test_build_command_with_testopts_env_variable                   PASS (0.00s)
+  test_loads_in_fresh_process_without_runner_preloaded            PASS (0.26s)
+  test_build_command_with_options                                 PASS (0.00s)
+  test_default_configuration                                      PASS (0.00s)
+  test_strips_assignment_context_vars_from_environment            PASS (0.00s)
+  test_build_command_with_verbose                                 PASS (0.00s)
+  test_build_command_with_format                                  PASS (0.00s)
+  test_build_command_with_test_env_variable                       PASS (0.00s)
+  test_build_command_with_all_options                             PASS (0.00s)
+
+Ace::TestRunner::Molecules::RakeIntegrationTest
+  test_integration_config_respects_environment_variables          PASS (0.00s)
+  test_set_default_idempotent                                     PASS (0.00s)
+  test_check_status_with_integration                              PASS (0.00s)
+  test_check_status_no_rakefile                                   PASS (0.00s)
+  test_set_default_with_existing_rakefile                         PASS (0.00s)
+  test_unset_default_with_integration_and_backup                  PASS (0.00s)
+  test_unset_default_with_no_integration                          PASS (0.00s)
+  test_unset_default_with_integration_no_backup                   PASS (0.00s)
+  test_set_default_with_existing_test_task                        PASS (0.00s)
+  test_integration_config_includes_fallback                       PASS (0.00s)
+  test_set_default_creates_rakefile_if_missing                    PASS (0.00s)
+  test_check_status_with_rakefile_no_integration                  PASS (0.00s)
+
+ProgressReportLinksTest
+  test_failure_headers_and_truncation_use_only_actual_saved_reports PASS (0.00s)
+
+PatternResolverTest
+  test_resolve_target_with_all                                    PASS (0.00s)
+  test_available_targets                                          PASS (0.00s)
+  test_resolve_multiple_targets                                   PASS (0.00s)
+  test_rejects_removed_legacy_targets                             PASS (0.00s)
+  test_classify_file                                              PASS (0.00s)
+  test_resolve_target_feat_does_not_include_legacy_integration_files PASS (0.00s)
+  test_resolve_target_with_nonexistent_rb_file                    PASS (0.00s)
+  test_resolve_target_with_existing_file                          PASS (0.00s)
+  test_rejects_removed_legacy_target_names                        PASS (0.00s)
+  test_rejects_e2e_target_with_guidance                           PASS (0.00s)
+  test_resolve_target_with_nonexistent_file_path_with_slash       PASS (0.00s)
+  test_resolve_target_with_deep_nonexistent_path                  PASS (0.00s)
+  test_resolve_target_with_unknown_target                         PASS (0.00s)
+  test_resolve_target_defaults_to_fast_when_nil                   PASS (0.00s)
+  test_resolve_target_with_known_pattern                          PASS (0.00s)
+  test_recursive_target_expansion                                 PASS (0.00s)
+  test_resolve_target_with_known_named_target                     PASS (0.00s)
+  test_detects_cyclic_target_definitions                          PASS (0.00s)
+
+FixtureEnvironmentTest
+  test_failed_build_cleans_up_the_created_root                    PASS (0.00s)
+  test_launch_environment_excludes_ambient_configuration_and_keeps_allowlist PASS (0.00s)
+  test_missing_required_override_is_a_setup_error_naming_the_key_only PASS (0.00s)
+  test_build_creates_fixture_home_and_xdg_directories_inside_owned_root PASS (0.00s)
+  test_build_and_cleanup_leave_parent_env_and_global_env_unchanged PASS (0.00s)
+  test_cleanup_removes_only_the_owned_root                        PASS (0.00s)
+  test_launch_environment_replaces_home_and_xdg_with_fixture_paths PASS (0.00s)
+  test_fixture_overrides_apply_after_sanitization                 PASS (0.00s)
+  test_cleanup_is_idempotent                                      PASS (0.00s)
+
+ConfigLoaderTest
+  test_gem_defaults_include_expected_defaults                     PASS (0.00s)
+  test_reset_gem_defaults_clears_cache                            PASS (0.00s)
+  test_gem_defaults_include_expected_patterns                     PASS (0.00s)
+  test_load_from_specific_file                                    PASS (0.00s)
+  test_merge_with_options                                         PASS (0.00s)
+  test_handle_invalid_yaml                                        PASS (0.00s)
+  test_load_gem_defaults                                          PASS (0.00s)
+  test_normalize_config_ensures_all_sections                      PASS (0.00s)
+  test_validate_config_version                                    PASS (0.00s)
+  test_merge_with_default_config                                  PASS (0.00s)
+  test_gem_defaults_include_failure_limits                        PASS (0.00s)
+  test_load_default_config_when_no_file_exists                    PASS (0.00s)
+  test_gem_defaults_include_expected_targets                      PASS (0.00s)
+
+CliArgumentParserTest
+  test_parses_package_with_options                                PASS (0.00s)
+  test_known_target_method                                        PASS (0.00s)
+  test_parses_relative_file_path_with_dot_slash                   PASS (0.00s)
+  test_parses_direct_file_path                                    PASS (0.00s)
+  test_parses_target_only                                         PASS (0.00s)
+  test_parses_relative_path_with_double_dot                       PASS (0.00s)
+  test_parses_package_with_prefixed_file_path                     PASS (0.00s)
+  test_raises_error_for_nonexistent_file_with_line                PASS (0.00s)
+  test_parses_package_prefixed_path_from_different_dir            PASS (0.00s)
+  test_preserves_option_flags_in_argv                             PASS (0.00s)
+  test_treats_removed_legacy_targets_as_unknown                   PASS (0.00s)
+  test_parses_package_with_prefixed_file_path_and_line_number     PASS (0.00s)
+  test_parses_package_name                                        PASS (0.00s)
+  test_raises_error_for_invalid_explicit_path                     PASS (0.00s)
+  test_parses_package_with_multiple_prefixed_files                PASS (0.00s)
+  test_parses_file_with_line_number                               PASS (0.00s)
+
+Ace::TestRunner::Molecules::FailedPackageReporterTest
+  test_format_for_display_fallback                                PASS (0.00s)
+  test_format_for_markdown_with_existing_report                   PASS (0.00s)
+  test_format_for_markdown_fallback                               PASS (0.00s)
+  test_format_for_display_handles_relative_path_error             PASS (0.00s)
+  test_format_for_display_with_existing_report                    PASS (0.00s)
+
+PackageResolverTest
+  test_resolves_package_without_ace_prefix                        PASS (0.00s)
+  test_accepts_custom_project_root                                PASS (0.00s)
+  test_resolves_absolute_path                                     PASS (0.00s)
+  test_resolve_with_nil_input                                     PASS (0.00s)
+  test_available_packages_only_includes_packages_with_tests       PASS (0.00s)
+  test_returns_nil_for_nonexistent_package                        PASS (0.00s)
+  test_resolve_current_directory_dot                              PASS (0.00s)
+  test_resolves_package_by_exact_name                             PASS (0.00s)
+  test_resolve_with_empty_string                                  PASS (0.00s)
+  test_resolves_relative_path_with_double_dot                     PASS (0.00s)
+  test_finds_project_root                                         PASS (0.00s)
+  test_available_packages_sorted                                  PASS (0.00s)
+  test_available_packages_returns_list                            PASS (0.00s)
+  test_resolves_package_with_test_dir                             PASS (0.00s)
+  test_suite_config_includes_all_testable_packages                PASS (0.00s)
+  test_returns_nil_for_nonexistent_absolute_path                  PASS (0.00s)
+  test_returns_nil_for_package_without_test_dir                   PASS (0.00s)
+  test_resolves_relative_path_with_dot_slash                      PASS (0.00s)
+  test_available_packages_returns_empty_when_no_root              PASS (0.00s)
+
+Finished in 0.31065s
+108 tests, 377 assertions, 0 failures, 0 errors, 0 skips
+
+Started with run options --seed 46433
+
+ExecutionVerdictTest
+  test_successful_timeout_text_is_not_failure                     PASS (0.00s)
+  test_orchestrator_preserves_execution_failure_without_inventing_tests PASS (0.00s)
+  test_fail_fast_retains_execution_failure                        PASS (0.00s)
+  test_subprocess_fail_fast_takes_precedence_over_single_batch    PASS (0.00s)
+  test_later_success_cannot_hide_unsuccessful_execution           PASS (0.00s)
+
+Finished in 0.00042s
+5 tests, 21 assertions, 0 failures, 0 errors, 0 skips
+
+
+# Running tests with run options --seed 39257:
+
+.......................
+
+Finished tests in 0.000632s, 36392.3961 tests/s, 93354.4074 assertions/s.
+
+
+23 tests, 59 assertions, 0 failures, 0 errors, 0 skips
+
+
+# Running tests with run options --seed 2757:
+
+.....
+
+Finished tests in 0.014431s, 346.4763 tests/s, 970.1338 assertions/s.
+
+
+5 tests, 14 assertions, 0 failures, 0 errors, 0 skips
+
+Started with run options --seed 41218
+
+Ace::TestRunner::Suite::OrchestratorTest
+  test_create_display_manager_returns_simple_by_default           PASS (0.00s)
+  test_create_display_manager_returns_simple_when_progress_false  PASS (0.00s)
+  test_create_display_manager_returns_animated_when_progress_true PASS (0.00s)
+
+HermeticEnvironmentTest
+  test_missing_required_fixture_configuration_is_a_setup_error_naming_the_key PASS (0.56s)
+  test_package_run_is_hermetic_under_clean_and_poisoned_parent_environments PASS (0.87s)
+  test_in_process_execution_is_hermetic_under_poisoned_environment PASS (0.60s)
+  test_suite_runs_parallel_packages_with_distinct_hermetic_fixture_homes PASS (1.33s)
+
+PackageArgumentTest
+  test_run_tests_for_package_by_name                              PASS (0.52s)
+  test_original_directory_preserved                               PASS (0.00s)
+  test_package_with_file_and_line_number                          PASS (0.00s)
+  test_removed_legacy_target_unit_fails_with_canonical_targets    PASS (0.44s)
+  test_run_all_tests_for_package                                  PASS (0.00s)
+  test_specific_file_still_works                                  PASS (0.00s)
+  test_directory_restored_on_error                                PASS (0.00s)
+  test_relative_file_path_with_dot_slash                          PASS (0.00s)
+  test_run_tests_from_different_directory                         PASS (0.00s)
+  test_relative_path_with_dot_slash                               PASS (0.00s)
+  test_package_prefixed_file_path                                 PASS (0.00s)
+  test_relative_path_with_double_dot                              PASS (0.00s)
+  test_package_prefixed_file_path_from_different_directory        PASS (0.00s)
+  test_target_still_works_without_package                         PASS (0.00s)
+  test_package_with_verbose_option                                PASS (0.00s)
+  test_package_with_target                                        PASS (0.00s)
+  test_relative_file_path_from_subdirectory                       PASS (0.00s)
+  test_package_with_profile_option                                PASS (0.00s)
+  test_package_prefixed_file_path_with_line_number                PASS (0.00s)
+  test_directory_restored_on_invalid_package                      PASS (0.00s)
+  test_error_for_invalid_path                                     PASS (0.00s)
+  test_relative_file_path_with_dot_slash_and_line_number          PASS (0.00s)
+  test_error_for_nonexistent_package_name                         PASS (0.00s)
+
+Ace::TestRunner::Suite::ProcessMonitorTest
+  test_build_command_includes_target_when_configured              PASS (0.00s)
+  test_stop_all_terminates_active_package_processes               PASS (0.06s)
+  test_build_command_omits_target_when_not_configured             PASS (0.00s)
+  test_build_command_forces_single_batch_for_suite_execution      PASS (0.00s)
+  test_timeout_kills_slow_package_and_starts_queued_package       PASS (1.10s)
+  test_nonzero_exit_does_not_reuse_stale_summary                  PASS (0.06s)
+
+SuiteConfigCliTest
+  test_malformed_yaml_and_invalid_shape_refuse_instead_of_using_cascade PASS (0.76s)
+  test_missing_explicit_file_refuses_instead_of_using_cascade     PASS (0.25s)
+  test_explicit_relative_and_absolute_files_replace_the_cascade   PASS (0.50s)
+  test_without_explicit_file_uses_existing_namespace_cascade      PASS (0.25s)
+
+ExplicitFileExecutionTest
+  test_orchestrator_handles_multiple_explicit_files               PASS (0.01s)
+  test_orchestrator_uses_targets_when_no_files_provided           PASS (0.00s)
+  test_configuration_preserves_explicit_files                     PASS (0.00s)
+  test_find_test_files_returns_explicit_files                     PASS (0.00s)
+  test_orchestrator_bypasses_targets_when_explicit_files_provided PASS (0.00s)
+  test_orchestrator_handles_file_with_line_number                 PASS (0.00s)
+  test_precedence_files_over_target                               PASS (0.00s)
+  test_orchestrator_handles_empty_files_array                     PASS (0.00s)
+
+SimpleDisplayManagerTest
+  test_show_summary_displays_success                              PASS (0.00s)
+  test_update_package_does_not_print_when_not_completed           PASS (0.00s)
+  test_show_summary_displays_skipped                              PASS (0.00s)
+  test_update_package_prints_when_completed_failure               PASS (0.00s)
+  test_update_package_shows_skipped_when_present                  PASS (0.00s)
+  test_show_summary_displays_failures                             PASS (0.00s)
+  test_update_package_prints_when_completed_success               PASS (0.00s)
+  test_initialize_display_prints_package_count                    PASS (0.00s)
+  test_update_package_shows_timeout_marker                        PASS (0.00s)
+  test_refresh_does_nothing                                       PASS (0.00s)
+  test_responds_to_all_display_manager_interface_methods          PASS (0.00s)
+  test_show_final_results_does_nothing                            PASS (0.00s)
+
+SuiteExecutionEvidenceTest
+  test_selected_but_unexecuted_success_is_not_explicit_zero_selection PASS (0.00s)
+  test_real_cli_children_duplicate_entries_saved_no_save_and_explicit_zero PASS (2.23s)
+  test_saved_completion_requires_readable_matching_summary_and_detail PASS (0.00s)
+  test_nonzero_timeout_and_interruption_never_accept_passing_receipt PASS (0.95s)
+  test_absent_incomplete_malformed_mismatched_and_unreadable_completion_fail PASS (0.00s)
+  test_zero_exit_without_receipt_cannot_become_zero_selection     PASS (0.04s)
+  test_fixed_clock_concurrent_allocation_and_publication_never_overwrite PASS (0.01s)
+  test_actual_cli_selected_file_without_tests_fails_in_saved_and_no_save_modes PASS (0.66s)
+  test_completion_is_exclusive_and_summary_detail_are_one_execution PASS (0.00s)
+  test_controlled_latest_replacement_cannot_change_captured_verdict_counts_or_links PASS (1.28s)
+
+Ace::TestRunner::Suite::DisplayHelpersTest
+  test_render_summary_no_assertions                               PASS (0.00s)
+  test_render_summary_with_failures                               PASS (0.00s)
+  test_render_summary_no_tests                                    PASS (0.00s)
+  test_render_summary_all_passed                                  PASS (0.00s)
+  test_render_summary_with_skipped                                PASS (0.00s)
+  test_render_summary_status_is_last                              PASS (0.00s)
+
+Ace::TestRunner::Suite::DurationEstimatorTest
+  test_estimate_falls_back_to_legacy_test_reports                 PASS (0.00s)
+  test_estimate_reads_duration_from_centralized_reports           PASS (0.00s)
+
+ExecutionVerdictCliTest
+  test_successful_timeout_text_and_assertion_failure              PASS (1.21s)
+  test_suite_consumer_observes_failed_package_verdict             PASS (1.03s)
+  test_target_modes_preserve_partial_counts_and_fail_fast_boundary PASS (2.65s)
+  test_child_signal_is_failure_without_completed_errors           PASS (0.58s)
+  test_failure_before_stdout_has_no_fabricated_test_case          PASS (0.57s)
+  test_operator_interrupt_exits_130_without_new_success_artifact  PASS (2.93s)
+  test_subprocess_per_file_and_batch_precedence                   PASS (2.62s)
+  test_timeout_after_passing_target_preserves_real_counts         PASS (7.75s)
+  test_per_file_preserves_headerless_counts_in_both_orders_and_entrypoints PASS (3.54s)
+
+Ace::TestRunner::Suite::ResultAggregatorTest
+  test_aggregate_uses_runtime_results_when_summary_is_missing     PASS (0.00s)
+  test_latest_report_is_never_completion_authority                PASS (0.00s)
+  test_aggregate_prefers_runtime_timeout_over_stale_summary       PASS (0.00s)
+
+Finished in 35.39498s
+90 tests, 723 assertions, 0 failures, 0 errors, 0 skips

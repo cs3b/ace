@@ -1,0 +1,39 @@
+Started with run options --seed 56149
+
+SuiteConfigCliTest
+  test_explicit_relative_and_absolute_files_replace_the_cascade   FAIL (0.25s)
+        --- expected
+        +++ actual
+        @@ -1 +1 @@
+        -{"test_suite" => {"max_parallel" => 1, "packages" => [{"name" => "chosen", "path" => "./chosen"}]}}
+        +{"test_suite" => {"max_parallel" => 1, "packages" => [{"name" => "cascade", "path" => "./cascade"}]}}
+        /Users/mc/Ps/ace/.ace-wt/fix-suite-explicit-config/ace-test-runner/test/feat/suite_config_cli_test.rb:55:in 'block (2 levels) in SuiteConfigCliTest#test_explicit_relative_and_absolute_files_replace_the_cascade'
+        /Users/mc/Ps/ace/.ace-wt/fix-suite-explicit-config/ace-test-runner/test/feat/suite_config_cli_test.rb:52:in 'Array#each'
+        /Users/mc/Ps/ace/.ace-wt/fix-suite-explicit-config/ace-test-runner/test/feat/suite_config_cli_test.rb:52:in 'block in SuiteConfigCliTest#test_explicit_relative_and_absolute_files_replace_the_cascade'
+        /Users/mc/Ps/ace/.ace-wt/fix-suite-explicit-config/ace-test-runner/test/feat/suite_config_cli_test.rb:18:in 'block in SuiteConfigCliTest#with_config'
+        /Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/3.4.0/tmpdir.rb:105:in 'Dir.mktmpdir'
+        /Users/mc/Ps/ace/.ace-wt/fix-suite-explicit-config/ace-test-runner/test/feat/suite_config_cli_test.rb:14:in 'SuiteConfigCliTest#with_config'
+        /Users/mc/Ps/ace/.ace-wt/fix-suite-explicit-config/ace-test-runner/test/feat/suite_config_cli_test.rb:49:in 'SuiteConfigCliTest#test_explicit_relative_and_absolute_files_replace_the_cascade'
+
+  test_malformed_yaml_and_invalid_shape_refuse_instead_of_using_cascade FAIL (0.25s)
+        SELECTED={"test_suite":{"max_parallel":1,"packages":[{"name":"cascade","path":"./cascade"}]}}
+        /Users/mc/Ps/ace/.ace-wt/fix-suite-explicit-config/ace-test-runner/test/feat/suite_config_cli_test.rb:82:in 'block (2 levels) in SuiteConfigCliTest#test_malformed_yaml_and_invalid_shape_refuse_instead_of_using_cascade'
+        /Users/mc/Ps/ace/.ace-wt/fix-suite-explicit-config/ace-test-runner/test/feat/suite_config_cli_test.rb:79:in 'Array#each'
+        /Users/mc/Ps/ace/.ace-wt/fix-suite-explicit-config/ace-test-runner/test/feat/suite_config_cli_test.rb:79:in 'block in SuiteConfigCliTest#test_malformed_yaml_and_invalid_shape_refuse_instead_of_using_cascade'
+        /Users/mc/Ps/ace/.ace-wt/fix-suite-explicit-config/ace-test-runner/test/feat/suite_config_cli_test.rb:18:in 'block in SuiteConfigCliTest#with_config'
+        /Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/3.4.0/tmpdir.rb:105:in 'Dir.mktmpdir'
+        /Users/mc/Ps/ace/.ace-wt/fix-suite-explicit-config/ace-test-runner/test/feat/suite_config_cli_test.rb:14:in 'SuiteConfigCliTest#with_config'
+        /Users/mc/Ps/ace/.ace-wt/fix-suite-explicit-config/ace-test-runner/test/feat/suite_config_cli_test.rb:78:in 'SuiteConfigCliTest#test_malformed_yaml_and_invalid_shape_refuse_instead_of_using_cascade'
+
+  test_without_explicit_file_uses_existing_namespace_cascade      PASS (0.25s)
+  test_missing_explicit_file_refuses_instead_of_using_cascade     FAIL (0.25s)
+        SELECTED={"test_suite":{"max_parallel":1,"packages":[{"name":"cascade","path":"./cascade"}]}}
+        /Users/mc/Ps/ace/.ace-wt/fix-suite-explicit-config/ace-test-runner/test/feat/suite_config_cli_test.rb:71:in 'block in SuiteConfigCliTest#test_missing_explicit_file_refuses_instead_of_using_cascade'
+        /Users/mc/Ps/ace/.ace-wt/fix-suite-explicit-config/ace-test-runner/test/feat/suite_config_cli_test.rb:18:in 'block in SuiteConfigCliTest#with_config'
+        /Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/3.4.0/tmpdir.rb:105:in 'Dir.mktmpdir'
+        /Users/mc/Ps/ace/.ace-wt/fix-suite-explicit-config/ace-test-runner/test/feat/suite_config_cli_test.rb:14:in 'SuiteConfigCliTest#with_config'
+        /Users/mc/Ps/ace/.ace-wt/fix-suite-explicit-config/ace-test-runner/test/feat/suite_config_cli_test.rb:69:in 'SuiteConfigCliTest#test_missing_explicit_file_refuses_instead_of_using_cascade'
+
+
+Finished in 1.00178s
+4 tests, 8 assertions, 3 failures, 0 errors, 0 skips

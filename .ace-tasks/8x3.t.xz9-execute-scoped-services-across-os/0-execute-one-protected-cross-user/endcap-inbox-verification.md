@@ -18,3 +18,7 @@ Original negative review regressions and corrected passes remain in `evidence/en
 ## Remaining scope
 
 This checkpoint supplies reconciliation and the reusable settlement predicate. Canonical `bind_inbox`, finish/recover, complete scope lifecycle and public services composition remain open. No task-wide completion, installed/native/distinct-user proof, publication or Lab acceptance is claimed. Downstream source must consume the independently accepted scope-owner interfaces before enabling these operations.
+
+## Subsequent combined hermetic pass
+
+After correcting the discovered runner `--config` defect (ACE 8x4.t.i6i), combined main `e546a7618b95ff2e9cb99fb205d5fcd7d1862899` passed `bin/ace-test-suite --timeout 300`: all 51 entries completed, 11252 passed, 24 skipped, zero failures/errors, 34487 assertions. The Assign hermetic entry passed 818/3017 (b6a5243a-2609-45d2-9123-f727d178c4c9). The exact manifest is retained in i6i; previous timeout/retry evidence is unchanged.

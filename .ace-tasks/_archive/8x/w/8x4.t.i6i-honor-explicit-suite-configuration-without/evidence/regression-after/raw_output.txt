@@ -1,0 +1,10 @@
+Started with run options --seed 13199
+
+SuiteConfigCliTest
+  test_missing_explicit_file_refuses_instead_of_using_cascade     PASS (0.24s)
+  test_without_explicit_file_uses_existing_namespace_cascade      PASS (0.26s)
+  test_explicit_relative_and_absolute_files_replace_the_cascade   PASS (0.49s)
+  test_malformed_yaml_and_invalid_shape_refuse_instead_of_using_cascade PASS (0.73s)
+
+Finished in 1.72140s
+4 tests, 29 assertions, 0 failures, 0 errors, 0 skips

@@ -438,3 +438,5 @@ are claimed as newly executed by this specification edit.
   open. A reconciliation/settlement helper does not make protected startup complete.
 - [ ] Integrate remaining coherent source and dependency floors before gem preparation;
   Captain interactive publication precedes installed graph and actual Lab tests.
+
+- [x] ACE 8x4.t.i6i: fix ignored explicit suite configuration, independently review and verify. Combined source e546a7618 passed all 51 configured fast-suite entries with a 300-second per-entry ceiling: 11252 passed, 24 skipped, zero failures/errors. Original timeout histories remain retained; this is local source verification, not publication or Lab acceptance.
