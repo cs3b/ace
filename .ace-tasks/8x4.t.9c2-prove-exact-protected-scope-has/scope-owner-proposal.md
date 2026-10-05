@@ -46,14 +46,16 @@ a side effect of stopping the child. Unit/config/native files remain installer
 owned; workers have no unit management or cgroup write authority. No unrelated
 unit is placed below this slice.
 
-The parent has a fixed Wants reference to its one service, retaining the service
-unit metadata while the parent is active. It has no Requires/BindsTo/PartOf edge
-that stops the parent when the service stops, and no Upholds edge that restarts
-the stopped service. Starting the fresh parent may therefore start its configured
-child; authority accounts for that fixed dependency in its provisioning job,
-not a competing second activation. Exact dependency/GC behavior is part of
-installed acceptance, rather than reliance on an authority D-Bus Ref lost when
-the authority exits.
+The parent slice starts independently: no Wants/Requires/Upholds edge, drop-in,
+symlink or indirect dependency may activate its child service when the parent
+starts. The child service has fixed Slice=parent, with systemd's normal child-to-
+parent Requires/After dependency. The parent has no Requires/BindsTo/PartOf edge
+that stops it with the child and StopWhenUnneeded=no. Authority starts only the
+parent, authenticates and commits its scope_bound event, then starts the child
+service; no baseline/native process starts before that commit. Exact unit/GC
+and retained-parent behavior remains installed acceptance, not an assumed D-Bus
+Ref kept alive by the authority. See provisioning-scope-lineage-amendment.md
+for manifest validation and version-pinned systemd semantics.
 
 The existing authority principal receives noninteractive OS authorization for
 only **StartUnit/StopUnit of the exact installed slice and service names**. No

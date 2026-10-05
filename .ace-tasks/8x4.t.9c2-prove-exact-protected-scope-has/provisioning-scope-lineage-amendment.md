@@ -5,6 +5,36 @@ scope-owner-proposal.md and specification-readiness-candidate.md. It is a
 specification candidate for independent review, not implemented or installed proof.
 No child identity can be asserted before genuine 09j creation provenance exists.
 
+## Fixed unit graph and ordered provisioning
+
+The parent slice has no direct or transitive dependency that starts its service.
+The service's fixed `Slice=` creates normal Requires/After toward the parent,
+not reverse activation. Under existing slot exclusion the authority issues
+StartUnit(parent), authenticates/pins its live cgroup and InvocationID, commits
+parent scope_bound, revalidates seal/lineage, then issues StartUnit(service).
+There is no paused child, delay/retry workaround or pre-start guessed binding.
+StopWhenUnneeded=no retains the active parent after service stop. Service unit
+metadata need not be retained by a parent Wants edge: current live observations
+and canonical native lineage verify it; an inactive unit disappearing cannot
+supply proof or launch provenance.
+
+Manifest validation inspects effective installed units, drop-ins, alias/template
+instances and wants/requires/upholds symlinks plus manager dependency/trigger
+properties. Refuse reverse activation via any reachable parent start dependency,
+boot/target enablement of the service, socket/path/timer, restart/Upholds,
+OnSuccess/OnFailure or other external activation route. Only authorized owner's
+fixed StartUnit(service) after committed parent lineage may start it. Service
+Slice placement, child-to-parent ordering and no stop propagation to parent must
+match. Unknown/unreadable effective graph or jobs refuses admission. No new OS
+verbs or broad privilege are added.
+
+Version-pinned primary basis: systemd v257
+[resource-control documentation source](https://raw.githubusercontent.com/systemd/systemd/v257/man/systemd.resource-control.xml)
+defines Slice's automatic Requires/After toward the slice;
+[unit documentation source](https://raw.githubusercontent.com/systemd/systemd/v257/man/systemd.unit.xml)
+defines Wants/Requires activation and dependency symlinks. These establish edge
+direction, not an executed fixture or proof of deployed unit retention.
+
 ## Immutable canonical stages
 
 Use the existing attempt journal and slot-before-attempt exclusion, with four
@@ -160,3 +190,8 @@ retrying creation. No worker success/result or child identity is manufactured.
   reservation release. One failed transition and fresh slot reuse follow verified
   cleanup; issued launch, forged selectors, unresolved service/inbox evidence and
   wrong/absent parent proof all refuse. General reserved transitions stay guarded.
+
+- Unit graph: reject parent Wants/Requires/Upholds, transitive activation and
+  enabled/trigger/drop-in alternatives; parent start produces no service/native
+  process before canonical binding. Verify service starts afterward in the same
+  parent and parent survives child stop/authority restart until proof/release.
