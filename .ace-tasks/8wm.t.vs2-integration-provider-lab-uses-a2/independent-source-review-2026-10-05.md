@@ -24,3 +24,12 @@ Verdict: APPROVE this source implementation head; no remaining verified P1/P2 fi
 Exact source 66c91a82d: installed-consumer fixture hitl-contract/8x41nc passed
 1 test / 66 assertions, separate empty GEM_HOME per consumer, local archives
 without network fallback. This does not prove the actual Lab installation.
+
+## Main integration
+
+Merged reviewed source as 0d9590097. Post-merge checks passed:
+- Assign runtime binding: 8x41og, 4 tests / 32 assertions.
+- HITL live delivery plus bounded pending: 8x41od, 12 / 95.
+
+Task remains in progress for installed acceptance. This source enables qjz
+implementation without claiming installed native/Telegram/signing completion.
