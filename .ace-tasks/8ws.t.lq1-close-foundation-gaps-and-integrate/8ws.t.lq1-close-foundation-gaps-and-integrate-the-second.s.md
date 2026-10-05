@@ -208,3 +208,9 @@ Source joins remain qk0 → complete qkb → R2 → R3 → qkc/gad.2. Native obs
 xza and actual domain installation remain required. Final release preparation
 waits complete source integration, followed by interactive OTP and installed Lab
 acceptance; no source test result closes those gates.
+
+### Test verdict integrity follow-up — 2026-10-05
+
+- [ ] ACE `8x4.t.2jj`: reject incomplete test executions in aggregate verdicts. New draft owns the false-green sequential-target result observed in qjz receipt `8x42fq`: passed fast counts were retained but the later 300s timeout did not make summary success false. Review, implement and independently verify before trusting aggregate delivery checks. This is separate from product timing/performance and does not supersede existing test isolation work.
+
+09j preflight review also reproduced and resolved terminal-scope ownership after positive abort; durable evidence is in `../8x4.t.09j-launch-a-gated-worker-through/source-preflight-review-2026-10-05.md`. That focused result does not close 09j or authorize installed Lab acceptance.
