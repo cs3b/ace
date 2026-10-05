@@ -96,3 +96,12 @@ Lab AuthorityComposition uses the same server/router/origin/journals and policy
 owner; a required-operation completeness check refuses before construction when
 any full-service operation is missing. Its negative startup unit checks passed
 2/5 (`8x45od`). It is not an installed listener/product acceptance claim.
+
+
+## Authorization read and accepted launch integration
+
+Readiness amendment eb582ea24/4674d821a independently approved by root (record c3eb13dae). Bounded source d7a99c8cd +946921433 adds fixed read-only service_authorization, original immutable input/current canonical binding and Lab policy recomputation, closed policy/operation digest projection, no journal mutation or invocation permission. Claim projection retains policy_digest. Receiver/public lifecycle implementation remains open; this source-only check does not prove protected native admission.
+
+Executed focused Lab policy6/34 PASS8x469u. New read fixture initially lacked launch_ticket (15tests,14passed,1error8x46a6); retained evidence and repaired fixture. Maintained replay plus read classification15/171 PASS8x46ba and exactfinal8x46c3. Path-mode JIT plan67547 remained silent over three minutes, gracefully interrupted owned73955 with SIGINT terminal130; no loaded-plan claim. Approved current contract and retained checkpoints supply the bounded fallback.
+
+Native merge d610c8389 consumes accepted09j main0d1090b83c3c228cc37bfdfaa1a671552c626882. Accepted source selected for Deployment, LaunchDriver, LaunchLifecycle, Server, terminate CLI, shared native control/kernel and their tests/fixture. TransferCodec and its test retain only independently approved receipt_artifacts/service_input additions over accepted base. JournalMutation changes auto-merged; no common launch source delta remains against accepted main. Native Git completed merge without scoped helper; accepted ancestry preserved. Cached whitespace check flags CR-bearing upstream proof logs; those evidentiary bytes were preserved. Postmerge focused replay/read plus codec24/220 PASS8x46e5. No broad test or full Endcap/installed acceptance claimed.
