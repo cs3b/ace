@@ -115,7 +115,7 @@ module Ace
         end
 
         def validate_blob_path!(path)
-          unless path.is_a?(String) && path.match?(%r{\A(?:evidence/imports|execution/definitions)/[a-zA-Z0-9_.-]+\z}) &&
+          unless path.is_a?(String) && path.match?(%r{\A(?:evidence/imports|execution/definitions|candidates/bundles)/[a-zA-Z0-9_.-]+\z}) &&
               !%w[. ..].include?(File.basename(path))
             raise ArgumentError, "invalid canonical blob reference"
           end
