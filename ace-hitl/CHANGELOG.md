@@ -7,18 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Fixed
-- Recover stable-ID proposal creation from canonical prepared requests, retain exact reply deduplication across retry ordering, and queue proposer reconciliation wakes for the existing transport actor.
-
 ### Added
+
 - Resolve immutable second-commander proposals through confirmed-delivery sixteen-hour policy and canonical Assign authorization.
 
+### Changed
+
+- Replace daemon/Work bindings with the managed assignment envelope and kernel-attributed exact native reverse owner. Add explicit in-process delivery/watch, authenticated pane-less wait, visible pending recovery, and existing signed Inbox reconciliation; keep native transport and business effect receipts separate.
+
 ### Fixed
+
+- Recover stable-ID proposal creation from canonical prepared requests, retain exact reply deduplication across retry ordering, and queue proposer reconciliation wakes for the existing transport actor.
 - Bound pending IPC pages by encoded frame size while retaining all native recovery claims and project authorization; Ruby callers traverse keyset pages.
 - Preserve the accepted native incarnation through answer consumption and require explicit signed-supersession retry before another submission.
-
-### Changed
-- Replace daemon/Work bindings with the managed assignment envelope and kernel-attributed exact native reverse owner. Add explicit in-process delivery/watch, authenticated pane-less wait, visible pending recovery, and existing signed Inbox reconciliation; keep native transport and business effect receipts separate.
 
 ## [0.11.1] - 2026-10-04
 

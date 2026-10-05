@@ -45,3 +45,18 @@ Public contract spec/usage changes set needs_review true until independent revie
 Source prerequisites and installed sixteen-hour/native/Telegram/multi-UID gates
 remain separate. No main mutation, publication, push, merge to main or done claim.
 Final affected suites after adopting current reviewed main test runner are pending.
+
+## Adopted reviewed runner and final checkpoint
+
+Source repair f379cc5cc cleanly merged current main6c672e6db as candidate
+722d079e93ef9b983252b16125249a260ea48738; source remains frozen for independent
+code review and public-contract readiness review. The merge adopts reviewed
+execution-verdict2jj so final reports cannot conceal incomplete execution.
+
+Post-merge Lab8x43ls179/603 green skip1; contract8x43l9 21/897 green skip1;
+changed Assign journal8x43lk10/147 green. Hermes8x43is116/659 and
+Overseer8x43fs259/1025 apply unchanged source trees. All four feedback items are
+resolved and archived with exact scoped repair commits; no pending feedback.
+Final full HITL8x43nl219/1268 green, one existing multi-UID skip, terminal exit0. No live author test sessions remain. Full Assign is intentionally queued
+behind root's requested quiet same-policy rerun, not claimed passed from the
+original rejected candidate baseline849/3693/2skip8x434p.
