@@ -11,7 +11,7 @@ module Ace
       # This reader never promotes cached population into a proof event.
       class ExecutionScopeLineage
         BINDING_FIELDS = %w[project_id assignment_id attempt_id mapping_id slot_id reservation_generation
-          scope_generation deployment_digest boot_id slice_invocation_id cgroup_identity resource_identities].freeze
+          scope_generation deployment_digest boot_id slice_invocation_id cgroup_identity resource_mount_namespace_identity resource_identities].freeze
         PROOF_FIELDS = %w[scope_generation scope_binding_event_id seal_event_id boot_id slice_invocation_id
           cgroup_identity populated].freeze
         PROCESS_FIELDS = %w[pid uid gid groups started_at host parent_pid].freeze
@@ -116,20 +116,9 @@ module Ace
             unavailable!("scope generation binding differs")
           end
           cgroup!(value.fetch("cgroup_identity"))
+          namespace!(value.fetch("resource_mount_namespace_identity"))
           resources = value.fetch("resource_identities")
-          unless resources.is_a?(Array) && resources.size.between?(1, 64) &&
-              resources.map { |resource| resource["host_path"] }.uniq.size == resources.size &&
-              resources.map { |resource| resource["view_path"] }.uniq.size == resources.size
-            unavailable!("scope resources are missing or duplicate")
-          end
-          resources.each do |resource|
-            exact_fields!(resource, RESOURCE_FIELDS)
-            unless path?(resource["host_path"]) && path?(resource["view_path"]) &&
-                %w[mount_id device inode uid gid].all? { |key| resource[key].is_a?(Integer) && resource[key] >= 0 } &&
-                resource["filesystem_type"].is_a?(String) && !resource["filesystem_type"].empty?
-              unavailable!("scope resource identity is malformed")
-            end
-          end
+          resources!(resources)
           @binding_event = event
         end
 
@@ -144,7 +133,8 @@ module Ace
         def accept_native!(event)
           unavailable!("native binding cannot be replaced") if native_event
           value = event.fetch("payload")
-          exact_fields!(value, %w[scope_generation scope_binding_event_id service_invocation_id server_identity socket_identity workspace_id])
+          exact_fields!(value, %w[scope_generation scope_binding_event_id service_invocation_id server_identity socket_identity workspace_id
+            mount_namespace_identity resource_observer_identity resource_identities])
           stage_reference!(value)
           process!(value.fetch("server_identity"), binding.fetch("boot_id"))
           socket = value.fetch("socket_identity")
@@ -152,6 +142,22 @@ module Ace
               value["workspace_id"].match?(/\Aw[1-9][0-9]{0,8}\z/) && socket.is_a?(Array) && socket.size == 3 &&
               socket.all? { |part| part.is_a?(Integer) && part >= 0 } && socket.last == value.dig("server_identity", "uid")
             unavailable!("scope native incarnation differs")
+          end
+          namespace!(value.fetch("mount_namespace_identity"))
+          observer = value.fetch("resource_observer_identity")
+          process!(observer, binding.fetch("boot_id"))
+          server = value.fetch("server_identity")
+          unless observer.values_at("uid", "gid", "groups", "host") == server.values_at("uid", "gid", "groups", "host") &&
+              observer["pid"] != server["pid"]
+            unavailable!("native resource observer is not the distinct fixed same-user hook")
+          end
+          resources!(value.fetch("resource_identities"))
+          parent_resources = binding.fetch("resource_identities").to_h { |resource| [resource.values_at("host_path", "view_path"), resource] }
+          value.fetch("resource_identities").each do |resource|
+            original = parent_resources[resource.values_at("host_path", "view_path")]
+            if original && original.slice("device", "inode", "filesystem_type", "uid", "gid") != resource.slice("device", "inode", "filesystem_type", "uid", "gid")
+              unavailable!("native view substitutes a parent-pinned backing object")
+            end
           end
           @native_event = event
         end
@@ -208,6 +214,31 @@ module Ace
             "seal_event_id" => seal_event.fetch("digest"), "populated" => 0)
           unavailable!("scope proof is not exact sealed empty population") unless value == expected
           @proof_event = event
+        end
+
+        def namespace!(value)
+          exact_fields!(value, %w[device inode])
+          unless value["device"].is_a?(Integer) && value["device"] >= 0 && positive_integer?(value["inode"])
+            unavailable!("scope mount namespace identity is malformed")
+          end
+        end
+
+        def resources!(resources)
+          unless resources.is_a?(Array) && resources.size <= 64 &&
+              resources.all? { |resource| resource.is_a?(Hash) } &&
+              resources.map { |resource| resource.values_at("host_path", "view_path") }.uniq.size == resources.size &&
+              resources.map { |resource| resource["view_path"] }.uniq.size == resources.size
+            unavailable!("scope resource observations are duplicate or oversized")
+          end
+          resources.each do |resource|
+            exact_fields!(resource, RESOURCE_FIELDS)
+            unless path?(resource["host_path"]) && path?(resource["view_path"]) && positive_integer?(resource["mount_id"]) &&
+                %w[device inode uid gid].all? { |key| resource[key].is_a?(Integer) && resource[key] >= 0 } &&
+                resource["filesystem_type"].is_a?(String) && resource["filesystem_type"].bytesize.between?(1, 64) &&
+                resource["filesystem_type"].ascii_only? && !resource["filesystem_type"].match?(/[\s\0]/)
+              unavailable!("scope resource identity is malformed")
+            end
+          end
         end
 
         def cgroup!(value)

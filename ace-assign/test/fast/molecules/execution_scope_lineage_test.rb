@@ -18,6 +18,7 @@ module Ace
         @binding = {"project_id" => "project", "assignment_id" => "assignment", "attempt_id" => "attempt",
           "mapping_id" => "mapping", "slot_id" => "slot", "reservation_generation" => 1, "scope_generation" => 2,
           "deployment_digest" => "a" * 64, "boot_id" => BOOT, "slice_invocation_id" => "b" * 32,
+          "resource_mount_namespace_identity" => {"device" => 4, "inode" => 1111},
           "service_invocation_id" => "c" * 32, "cgroup_identity" => {"path" => "/sys/fs/cgroup/ace-slot.slice",
             "mount_id" => 44, "filesystem_type" => "cgroup2", "device" => 27, "inode" => 111},
           "server_identity" => @server, "socket_identity" => socket, "workspace_id" => "w1",
@@ -28,6 +29,9 @@ module Ace
           "resource_identities" => [{"host_path" => "/var/lib/ace-slot/scratch", "view_path" => "/scratch",
             "mount_id" => 22, "filesystem_type" => "ext4", "device" => 24, "inode" => 500, "uid" => 13001, "gid" => 13001}]}
         @native = @binding.slice("service_invocation_id", "server_identity", "socket_identity", "workspace_id")
+        @native.merge!("mount_namespace_identity" => {"device" => 4, "inode" => 2222},
+          "resource_observer_identity" => @server.merge("pid" => 92, "started_at" => "linux:#{BOOT}:1001"),
+          "resource_identities" => @binding.fetch("resource_identities").map { |resource| resource.merge("mount_id" => 99) })
         @original = @binding.fetch("original_process_binding")
         @binding = @binding.slice(*Reader::BINDING_FIELDS)
         append("intent", {})
@@ -78,6 +82,39 @@ module Ace
         seal
         native
         assert_raises(AttemptErrors::EvidenceUnavailable) { reader }
+      end
+
+      def test_native_resources_use_the_server_namespace_and_preserve_backing_object_identity
+        bound
+        native
+        assert_equal 1111, reader.binding.fetch("resource_mount_namespace_identity").fetch("inode")
+        assert_equal 2222, reader.native_event.dig("payload", "mount_namespace_identity", "inode")
+        assert_equal 99, reader.native_event.dig("payload", "resource_identities", 0, "mount_id")
+        @events.pop
+        %w[device inode filesystem_type uid gid].each do |field|
+          original = @native.fetch("resource_identities").first.fetch(field)
+          @native.fetch("resource_identities").first[field] = original.is_a?(Integer) ? original + 1 : "anotherfs"
+          native
+          assert_raises(AttemptErrors::EvidenceUnavailable, field) { reader }
+          @events.pop
+          @native.fetch("resource_identities").first[field] = original
+        end
+      end
+
+      def test_native_observer_and_namespace_require_exact_typed_immutable_identities
+        bound
+        original = JSON.parse(JSON.generate(@native))
+        [->(v) { v["mount_namespace_identity"]["inode"] = "2222" },
+         ->(v) { v["mount_namespace_identity"]["extra"] = true },
+         ->(v) { v["resource_observer_identity"]["uid"] += 1 },
+         ->(v) { v["resource_observer_identity"]["pid"] = @server.fetch("pid") },
+         ->(v) { v["resource_identities"] << v["resource_identities"].first.dup }].each do |change|
+          @native = JSON.parse(JSON.generate(original))
+          change.call(@native)
+          native
+          assert_raises(AttemptErrors::EvidenceUnavailable) { reader }
+          @events.pop
+        end
       end
 
       def test_native_rejects_wrong_reference_malformed_identity_and_duplicate_or_sealed_admission
