@@ -3,6 +3,8 @@ require "json"
 require "digest"
 require "etc"
 require "rbconfig"
+require "openssl"
+require_relative "private_directory"
 require_relative "posix_acl"
 require "ace/runtime/molecules/protected_socket"
 require "ace/runtime/molecules/protected_linux"
@@ -46,6 +48,7 @@ module Ace
             keys = %w[journal_repository evidence_git_ref evidence_checkout_root assignment_root candidate_root
               launcher_uids reviewer_uids worker_uids service_executor_uids supervisor_uids peer_credentials]
             keys << "service_receivers" if project.key?("service_receivers")
+            keys << "inbox_contexts" if project.key?("inbox_contexts")
             strict!(project, keys)
             %w[journal_repository evidence_checkout_root assignment_root candidate_root].each { |key| path!(project.fetch(key)) }
             unless project["evidence_git_ref"] == "refs/ace/execution"
@@ -82,6 +85,7 @@ module Ace
             end
           end
           @data["launch_mappings"].each { |id, mapping| validate_mapping!(id, mapping) }
+          validate_inbox_contexts!
           endpoints = @data.fetch("authorities").values.map { |service| service.fetch("socket_path") }
           receivers = @data.fetch("projects").values.flat_map { |project| project.fetch("service_receivers", {}).values }
           protected_uids = @data.fetch("authorities").values.map { |service| service.fetch("uid") } +
@@ -115,6 +119,120 @@ module Ace
             end
           end
         end
+
+        # Static selection only. Live native identity comes from the attempt's
+        # canonical scope stage, never from this deployment record.
+        def inbox_context(mapping_id, context_id)
+          map = mapping(mapping_id)
+          contexts = project(map.fetch("project_id")).fetch("inbox_contexts", {})
+          context = contexts.fetch(context_id) { raise AttemptErrors::EvidenceUnavailable, "installed inbox context is unavailable" }
+          native = mapping(context.fetch("native_mapping_id"))
+          unless native.fetch("project_id") == map.fetch("project_id") && native.fetch("authority_id") == map.fetch("authority_id")
+            raise AttemptErrors::UnauthorizedIdentity, "inbox context belongs to another authority"
+          end
+          JSON.parse(JSON.generate(context))
+        end
+
+        def verify_inbox_context!(mapping_id, context_id)
+          context = inbox_context(mapping_id, context_id)
+          service = authority(mapping(mapping_id).fetch("authority_id"))
+          unless Process.uid == service.fetch("uid")
+            raise Ace::Runtime::RuntimeUnavailableError, "inbox resolver must run as its installed authority"
+          end
+          PrivateDirectory.verify!(context.fetch("deliveries_dir"))
+          verify_inbox_acl!(context.fetch("deliveries_dir"), private_leaf: true)
+          key_path = context.fetch("receipt_public_key")
+          client_path = context.fetch("pi_queue_client")
+          [key_path, client_path].each do |path|
+            Ace::Runtime::Molecules::ProtectedSocket.root_path!(path)
+            verify_inbox_acl!(path)
+            unless File.file?(path) && !File.symlink?(path) && File.readable?(path)
+              raise Ace::Runtime::RuntimeUnavailableError, "installed inbox artifact is unavailable"
+            end
+          end
+          unless File.executable?(client_path) && Digest::SHA256.file(client_path).hexdigest == context.fetch("pi_queue_client_sha256")
+            raise Ace::Runtime::RuntimeUnavailableError, "installed inbox identity client differs"
+          end
+          raise Ace::Runtime::RuntimeUnavailableError, "installed inbox public key is oversized" if File.size(key_path) > 16_384
+          key = OpenSSL::PKey.read(File.binread(key_path))
+          unless key.is_a?(OpenSSL::PKey::RSA) && !key.private?
+            raise Ace::Runtime::RuntimeUnavailableError, "installed inbox key must be public-only RSA"
+          end
+          context
+        rescue AttemptErrors::ReceiptRejected, OpenSSL::PKey::PKeyError, SystemCallError
+          raise Ace::Runtime::RuntimeUnavailableError, "installed inbox context evidence is unavailable"
+        end
+
+        def verify_inbox_acl!(path, private_leaf: false)
+          current = path
+          loop do
+            rows = receiver_acl.entries(current)
+            if rows
+              mask = rows.find { |tag, _perm, _id| tag == 16 }&.at(1) || 7
+              allowed = current == path && !private_leaf ? [0] : [0, Process.uid]
+              unsafe = rows.any? do |tag, perm, uid|
+                effective = [2, 4, 8].include?(tag) ? perm & mask : perm
+                case tag
+                when 2 then !allowed.include?(uid) && (effective & 2).positive?
+                when 4, 8, 32 then (effective & 2).positive?
+                else false
+                end
+              end
+              if private_leaf && current == path
+                unsafe ||= rows.any? do |tag, perm, uid|
+                  effective = [2, 4, 8].include?(tag) ? perm & mask : perm
+                  [4, 8, 32].include?(tag) && effective.positive? || tag == 2 && uid != Process.uid && effective.positive?
+                end
+              end
+              raise Ace::Runtime::RuntimeUnavailableError, "installed inbox access ACL is unsafe" if unsafe
+            end
+            break if current == "/"
+            current = File.dirname(current)
+          end
+        end
+        private :verify_inbox_acl!
+
+        def validate_inbox_contexts!
+          roots = []
+          data.fetch("projects").each do |project_id, fixed_project|
+            contexts = fixed_project.fetch("inbox_contexts", {})
+            unless contexts.is_a?(Hash) && contexts.keys.all? { |id| id.is_a?(String) && TOKEN.match?(id) }
+              raise ArgumentError, "invalid installed inbox context map"
+            end
+            contexts.each_value do |context|
+              strict!(context, %w[deliveries_dir receipt_public_key native_mapping_id pi_queue_client pi_queue_client_sha256 supervisor_uids])
+              %w[deliveries_dir receipt_public_key pi_queue_client].each { |key| path!(context.fetch(key)) }
+              unless context["pi_queue_client_sha256"].is_a?(String) && context["pi_queue_client_sha256"].match?(/\A[0-9a-f]{64}\z/)
+                raise ArgumentError, "invalid installed Pi identity client digest"
+              end
+              supervisors = context.fetch("supervisor_uids")
+              unless supervisors.is_a?(Array) && supervisors.all? { |uid| uid.is_a?(Integer) && uid.positive? } &&
+                  supervisors == supervisors.sort.uniq && (supervisors - fixed_project.fetch("supervisor_uids")).empty?
+                raise ArgumentError, "inbox supervisors exceed installed project authority"
+              end
+              id = context.fetch("native_mapping_id")
+              unless id.is_a?(String) && TOKEN.match?(id) && data.fetch("launch_mappings").key?(id)
+                raise ArgumentError, "inbox native mapping is unavailable"
+              end
+              native = mapping(id)
+              unless native.fetch("project_id") == project_id && authority(native.fetch("authority_id")).fetch("composition") == "services"
+                raise ArgumentError, "inbox context requires its services project mapping"
+              end
+              roots << context.fetch("deliveries_dir")
+            end
+          end
+          forbidden = data.fetch("projects").values.flat_map do |fixed_project|
+            fixed_project.fetch("peer_credentials").values.map { |peer| peer.fetch("scratch_root") } +
+              fixed_project.fetch("service_receivers", {}).values.map { |receiver| receiver.fetch("staging_root") } +
+              %w[journal_repository evidence_checkout_root assignment_root candidate_root].map { |key| fixed_project.fetch(key) }
+          end
+          forbidden.concat(data.fetch("authorities").values.map { |service| service.fetch("state_root") })
+          if roots.combination(2).any? { |left, right| paths_overlap?(left, right) } ||
+              roots.any? { |root| forbidden.any? { |other| paths_overlap?(root, other) } }
+            raise ArgumentError, "installed inbox private roots overlap protected state"
+          end
+        end
+        private :validate_inbox_contexts!
 
         # Validate fixed receiver placement before the owner opens a listener or
         # creates journal state. Operations/grants remain the Lab policy's job.
