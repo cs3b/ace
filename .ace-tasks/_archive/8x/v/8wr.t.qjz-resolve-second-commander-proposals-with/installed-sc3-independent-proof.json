@@ -1,0 +1,21 @@
+{
+  "receipt": "hitl/8x486t",
+  "source": "b3b5447343fa87012c44b0d9319b05fdc2953b32",
+  "artifacts": "/private/tmp/ace-installed-sc3-independent/run-6c9b7eb5b052",
+  "behavior": {
+    "success": true,
+    "checks": 38,
+    "effect_count": 1,
+    "window_seconds": 57600,
+    "outcome": "succeeded",
+    "decision": "approved-by-silence"
+  },
+  "evidence_sha256": {
+    "result.json": "8e73a6da8f088ea06111b9e9e10fc327e0d3cda16b9681c521e996b8ae7a4b3d",
+    "processes.jsonl": "979dae7b5c38e5d8f684f5ccb34d18b0448371794263665ed43dbab42d73043f",
+    "build-provenance.json": "4c4593ff2f330c32a61b6188ae242d697f4a189d93735a798d31f54bc951490d",
+    "canonical-evidence.json": "d8b7f9e159102fd00d0eebe3ff5d5fc26729bbc4296e1e13ea4db62513c84e4f",
+    "effects": "9175a5e056afc839a951c628008815b6187307b8d1055c6f897d394e3c2a65ac",
+    "artifacts.json": "dc2a4bea29a2260a9562a784a058962d3ecee00a08c2e37a8831852dd03dc911"
+  }
+}

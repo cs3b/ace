@@ -19,3 +19,5 @@ This is a controlled currentUID one-host local service proof with actual isolate
 | SC5 | proposal_creation_boundary_test ordinary multibyte question and generic orphan refusal; proposal_lifecycle_test currentproject grant revocation; Overseer status_proposal_recovery_test table/object/array JSON visible deferral. FullHITL/Overseer gates above and converged review evidence. |
 
 This map links prior accepted source evidence to the new controlled installed proof for independent review. It does not self-certify task completion or substitute for actualTelegram/native/multiUID/privileged installed gates owned elsewhere. New fixture code is test-only; runtime source is unchanged.
+
+Final acceptance: independent GPT-6.1 Sol APPROVE and separate exact-candidate installed run `8x486t` passed 1/18,552, 59.89s. Root read the report, criterion map and retained source evidence; all SC1–5 accepted within the task contract. Integrated main `cceee96d26feeeed228175f2f7a58da5650daf59`; installed-test/runtime files are unchanged from reviewed candidate. This closes qjz, not final Lab acceptance or live Telegram/multiUID gates.

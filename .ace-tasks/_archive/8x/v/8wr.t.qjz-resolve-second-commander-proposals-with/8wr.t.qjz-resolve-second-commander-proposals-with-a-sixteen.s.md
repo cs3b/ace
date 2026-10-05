@@ -1,6 +1,6 @@
 ---
 id: 8wr.t.qjz
-status: in-progress
+status: done
 priority: high
 created_at: "2026-09-28 17:42:13"
 estimate: TBD
@@ -41,11 +41,11 @@ Second commander proposes a precise action with context/options/recommendation. 
 
 ### Success Criteria and Verification Plan
 
-- [ ] SC1: Fake-clock lifecycle tests: before/exactly/after 16h, early approval/veto, revised proposal, delivery failure, restart, reply-ingress race, late veto, duplicate wake and uncertain effect.
-- [ ] SC2: Tests assert every operation class, including privilege expansion and deployment, can be authorized by silence while mandatory technical gates still reject invalid execution.
-- [ ] SC4: Revision operations require stable identity plus an expected source revision. Lost response and crash retries after delivery, approval or a later revision return the previously committed revision without another request, supersession or deadline reset; changed proposal/source/content/caller bindings fail. Concurrent revisions and concurrent old-effect claims have one canonical authority winner. Initial creation reports awaiting-delivery without waiting for transport.
-- [ ] SC5: Requester show/history and proposal request reads require current project authority; revoked projects disappear from history and direct reads refuse. Generic lifecycle create rejects proposal kind without persistence. Ordinary questions retain their character bound. Lab status preserves output and visibly reports deferred ticks, including JSON consumers.
-- [ ] SC3: Run `ace-test ace-hitl all` and `ace-test ace-overseer all`; installed controlled 16h scenario survives restart and produces one authorization/receipt with no manual queue injection.
+- [x] SC1: Fake-clock lifecycle tests: before/exactly/after 16h, early approval/veto, revised proposal, delivery failure, restart, reply-ingress race, late veto, duplicate wake and uncertain effect.
+- [x] SC2: Tests assert every operation class, including privilege expansion and deployment, can be authorized by silence while mandatory technical gates still reject invalid execution.
+- [x] SC4: Revision operations require stable identity plus an expected source revision. Lost response and crash retries after delivery, approval or a later revision return the previously committed revision without another request, supersession or deadline reset; changed proposal/source/content/caller bindings fail. Concurrent revisions and concurrent old-effect claims have one canonical authority winner. Initial creation reports awaiting-delivery without waiting for transport.
+- [x] SC5: Requester show/history and proposal request reads require current project authority; revoked projects disappear from history and direct reads refuse. Generic lifecycle create rejects proposal kind without persistence. Ordinary questions retain their character bound. Lab status preserves output and visibly reports deferred ticks, including JSON consumers.
+- [x] SC3: Run `ace-test ace-hitl all` and `ace-test ace-overseer all`; installed controlled 16h scenario survives restart and produces one authorization/receipt with no manual queue injection.
 
 ### Scope and Ownership
 
