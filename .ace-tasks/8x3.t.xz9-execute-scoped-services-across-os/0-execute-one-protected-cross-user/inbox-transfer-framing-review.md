@@ -1,0 +1,9 @@
+# Inbox proof transfer framing — independent source checkpoint review
+
+Exact head `0b53a8d0a43c51535e927c23fc98751eaf1c90f0`. **APPROVE bounded framing checkpoint**. Reviewed all three changed files against main 6485 and the accepted remaining-consumer contract. Own isolated reviewer worktree `/Users/mc/Ps/ace/.ace-wt/review-9c2-runtime` detached at exact head, no tracked changes. No verified actionable findings.
+
+The fixed inbox_proof purpose permits exactly two nonempty parts, independently bounded to 16 KiB and 32 KiB aggregate. It does not trade one part's capacity against the other. Generic exact descriptor fields, integer sizes, aggregate size equality and SHA-256 bounds run before purpose checks. Existing receive preserves part ordering/boundaries, recomputes each and aggregate digest, requires write EOF with no extra bytes, and cleans private spool on success/refusal/deadline. The new Server fixture proves this purpose traverses the existing framing path; its test-only worker role does not introduce a production reconcile handler or authorize workers.
+
+This primitive treats parts as bytes. Receipt UTF-8/JSON/signature meaning, receipt/signature param digests, exact supervisor/launcher roles, fixed context/registration, Herdr verification, canonical import/replay and startup capabilities remain required in the forthcoming handler checkpoint. No handler/startup/full xz9.0 completion or installed acceptance is claimed here.
+
+Independent bin/ace-test on the two changed files: **16 tests / 94 assertions PASS**, execution `e69b9e44-c0f1-4b81-a2f4-fccf6f161b36`; read immutable summary under the reviewer worktree's `.ace-local/test/reports/assign/e69b9e44-c0f1-4b81-a2f4-fccf6f161b36/summary.json`. Coverage includes exact maxima, one/three/empty/oversized parts, reordered/short/extra body, missing EOF deadline and cleanup. No broad suite duplicated, production edits, delegation or native/system-manager/VM/privilege probes.

@@ -12,9 +12,10 @@ module Ace
         def close; end
       end
       class Handler
-        OPERATIONS = %w[upload export].freeze
+        OPERATIONS = %w[upload export inbox_proof].freeze
         TRANSFER_OPERATIONS = {
           "upload" => {direction: :upload, purpose: :artifacts, roles: [:worker]},
+          "inbox_proof" => {direction: :upload, purpose: :inbox_proof, roles: [:worker]},
           "export" => {direction: :download, purpose: :artifacts, roles: [:worker]}
         }.freeze
         attr_accessor :authorized
@@ -90,6 +91,27 @@ module Ace
           end
           assert_equal ["one\x00\n".b, "two\r\n".b], parts
           assert_equal %w[upload export], handler.calls
+          assert_empty Dir.children(File.join(root, "transfers"))
+        ensure
+          socket&.close
+        end
+      end
+
+      def test_inbox_proof_source_handler_preserves_two_part_boundaries
+        with_server do |path, handler, root|
+          codec = Authority::TransferCodec.new(root: root)
+          socket = UNIXSocket.new(path)
+          parts = ['{"outcome":"consumed"}', "signature"]
+          handler.define_singleton_method(:dispatch) do |request:, transfer:, **options|
+            @calls << request.fetch("operation")
+            {data: {"parts" => Array.new(transfer.count) { |index| transfer.bytes(index: index) }}, replayed: false}
+          end
+          request(socket, "inbox_proof", "transfer" => codec.descriptor(parts, purpose: :inbox_proof))
+          socket.write(parts.join)
+          socket.shutdown(Socket::SHUT_WR)
+          reply = WIRE.read(socket, deadline: WIRE.deadline(2))
+          assert_equal parts, reply.dig("data", "parts")
+          assert_equal ["inbox_proof"], handler.calls
           assert_empty Dir.children(File.join(root, "transfers"))
         ensure
           socket&.close

@@ -197,3 +197,11 @@ prompt/stop extensions and their downstream consumer routing; qk0 owns its CLI.
 Actual installed multi-user/native service/receipt/inbox/finish/recovery and
 Linux/macOS supported claims remain family acceptance requirements. No current
 source completeness or installed acceptance is inferred from this document.
+
+## Fixed construction schema candidate
+
+The missing exact context/construction decision is now specified in
+[0-execute-one-protected-cross-user/fixed-inbox-context-amendment.md](0-execute-one-protected-cross-user/fixed-inbox-context-amendment.md).
+This candidate requires independent review; it supersedes the earlier context
+shorthand only after acceptance. No executable context/reconcile implementation
+or installed readiness follows from the framing-only source.

@@ -1,0 +1,24 @@
+Started with run options --seed 42104
+
+Ace::Assign::TransferCodecTest
+  test_export_uses_exact_binary_bytes_and_refuses_mismatched_descriptor PASS (0.01s)
+  test_consumer_failure_removes_only_new_spool_and_preserves_existing_private_files PASS (0.00s)
+  test_fixed_purpose_limits_and_descriptor_shape_refuse_before_spool PASS (0.00s)
+  test_service_input_is_exactly_one_nonempty_bounded_source_part  PASS (0.00s)
+  test_inbox_proof_preserves_order_and_refuses_reorder_extra_short_and_missing_eof PASS (0.06s)
+  test_exact_multi_part_binary_upload_is_admitted_only_after_write_eof_and_spool_is_removed PASS (0.00s)
+  test_inbox_proof_requires_exact_two_nonempty_parts_without_capacity_tradeoff PASS (0.00s)
+  test_receipt_purpose_preserves_all_sixteen_artifacts_and_separate_full_capacity PASS (0.01s)
+  test_missing_eof_hits_shared_deadline_without_mutation_or_retained_spool PASS (0.06s)
+  test_receipt_purpose_limits_do_not_widen_generic_artifacts_or_trade_evidence_for_receipt_capacity PASS (0.00s)
+  test_short_extra_and_changed_payload_never_invoke_consumer_or_leave_spool PASS (0.00s)
+
+Ace::Assign::ProtectedTransferServerTest
+  test_exact_upload_and_download_use_fixed_source_framing         PASS (0.01s)
+  test_exact_origin_refusal_precedes_spool_and_body_read          PASS (0.01s)
+  test_malformed_transfer_schema_is_invalid_input_before_handler_or_spool PASS (0.01s)
+  test_inbox_proof_source_handler_preserves_two_part_boundaries   PASS (0.01s)
+  test_extra_bytes_refuse_before_mutation_and_remove_spool        PASS (0.01s)
+
+Finished in 0.18805s
+16 tests, 94 assertions, 0 failures, 0 errors, 0 skips

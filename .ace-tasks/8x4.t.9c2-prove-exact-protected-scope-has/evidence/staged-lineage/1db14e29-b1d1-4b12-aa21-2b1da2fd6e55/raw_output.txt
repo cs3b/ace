@@ -1,0 +1,36 @@
+Started with run options --seed 63080
+
+Ace::Assign::IndependentStagedLineageBoundaryTest
+  test_child_projection_is_detached_and_deeply_immutable          PASS (0.00s)
+  test_child_without_native_and_foreign_child_reference_refuse    PASS (0.00s)
+  test_missing_foreign_or_repeated_canonical_reservation_and_wrong_ticket_refuse PASS (0.00s)
+  test_positive_proof_without_seal_or_for_other_object_boot_or_population_refuses PASS (0.00s)
+  test_stages_are_ordered_immutable_and_reference_original_parent_and_native PASS (0.00s)
+  test_native_rejects_wrong_reference_malformed_identity_and_duplicate_or_sealed_admission PASS (0.00s)
+  test_duplicate_binding_seal_or_proof_cannot_replace_original_generation PASS (0.00s)
+  test_foreign_native_digest_refuses_without_hash_corruption      PASS (0.00s)
+  test_read_projection_is_immutable_independent_of_caller_objects PASS (0.00s)
+  test_child_after_seal_refuses_even_with_matching_retained_native_reference PASS (0.00s)
+  test_missing_binding_never_admits_new_effect_or_positive_proof  PASS (0.00s)
+  test_parent_only_closure_is_positive_but_never_launchable       PASS (0.00s)
+  test_digest_corruption_and_foreign_attempt_chain_refuse         PASS (0.00s)
+  test_binding_seal_and_empty_observation_are_exact_chain_lineage PASS (0.00s)
+  test_false_reservation_generation_cannot_form_a_fully_chained_seal_and_proof PASS (0.00s)
+  test_binding_uses_original_full_native_child_and_canonical_mutation_generation PASS (0.00s)
+
+Ace::Assign::ExecutionScopeLineageTest
+  test_digest_corruption_and_foreign_attempt_chain_refuse         PASS (0.00s)
+  test_positive_proof_without_seal_or_for_other_object_boot_or_population_refuses PASS (0.00s)
+  test_read_projection_is_immutable_independent_of_caller_objects PASS (0.00s)
+  test_missing_binding_never_admits_new_effect_or_positive_proof  PASS (0.00s)
+  test_duplicate_binding_seal_or_proof_cannot_replace_original_generation PASS (0.00s)
+  test_child_without_native_and_foreign_child_reference_refuse    PASS (0.00s)
+  test_stages_are_ordered_immutable_and_reference_original_parent_and_native PASS (0.01s)
+  test_native_rejects_wrong_reference_malformed_identity_and_duplicate_or_sealed_admission PASS (0.00s)
+  test_false_reservation_generation_cannot_form_a_fully_chained_seal_and_proof PASS (0.00s)
+  test_binding_seal_and_empty_observation_are_exact_chain_lineage PASS (0.00s)
+  test_missing_foreign_or_repeated_canonical_reservation_and_wrong_ticket_refuse PASS (0.00s)
+  test_binding_uses_original_full_native_child_and_canonical_mutation_generation PASS (0.00s)
+
+Finished in 0.01912s
+28 tests, 128 assertions, 0 failures, 0 errors, 0 skips
