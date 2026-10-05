@@ -4,6 +4,7 @@ require "digest"
 require "fileutils"
 require "json"
 require "open3"
+require_relative "proposal_journal"
 require_relative "journal_mutation"
 
 module Ace
@@ -26,6 +27,7 @@ module Ace
       # non-duplicate events.
       class EvidenceJournal
         include JournalMutation
+        include ProposalJournal
         CAS_ATTEMPTS = 3
 
         # Selected by source composition, never by receipt or wire parameters.
