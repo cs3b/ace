@@ -37,7 +37,7 @@ module Ace
             # Parse result
             parsed = if result[:commands] && result[:commands].is_a?(Array)
               # Multiple commands executed (per-file)
-              aggregate_results(result[:stdout], @result_parser)
+              aggregate_results(result.fetch(:execution_outputs), @result_parser)
             else
               @result_parser.parse_output(result[:stdout])
             end
@@ -81,10 +81,8 @@ module Ace
 
         private
 
-        def aggregate_results(combined_output, parser)
-          # Split output by test file executions
-          individual_outputs = combined_output.split(/^Started with run options/)
-          individual_outputs.shift if individual_outputs.first && individual_outputs.first.empty?
+        def aggregate_results(individual_outputs, parser)
+          # Preserve exact executor boundaries, including headerless partial output.
 
           aggregated = {
             summary: {
@@ -102,7 +100,6 @@ module Ace
           }
 
           individual_outputs.each do |output|
-            output = "Started with run options" + output
             parsed = parser.parse_output(output)
 
             aggregated[:summary][:runs] += parsed[:summary][:runs]
@@ -160,7 +157,8 @@ module Ace
           combined_stderr = all_results.map { |r| r[:stderr] }.join("\n")
 
           # Determine success
-          success = total_summary[:failures] == 0 && total_summary[:errors] == 0
+          success = all_results.all? { |result| result[:success] == true } &&
+            total_summary[:failures] == 0 && total_summary[:errors] == 0
 
           {
             stdout: combined_stdout,

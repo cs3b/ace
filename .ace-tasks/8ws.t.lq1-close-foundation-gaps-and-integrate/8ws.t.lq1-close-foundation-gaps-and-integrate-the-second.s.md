@@ -211,6 +211,15 @@ acceptance; no source test result closes those gates.
 
 ### Test verdict integrity follow-up — 2026-10-05
 
-- [ ] ACE `8x4.t.2jj`: reject incomplete test executions in aggregate verdicts. New draft owns the false-green sequential-target result observed in qjz receipt `8x42fq`: passed fast counts were retained but the later 300s timeout did not make summary success false. Review, implement and independently verify before trusting aggregate delivery checks. This is separate from product timing/performance and does not supersede existing test isolation work.
+- [x] ACE `8x4.t.2jj`: reject incomplete test executions in aggregate verdicts. New draft owns the false-green sequential-target result observed in qjz receipt `8x42fq`: passed fast counts were retained but the later 300s timeout did not make summary success false. Review, implement and independently verify before trusting aggregate delivery checks. This is separate from product timing/performance and does not supersede existing test isolation work.
 
 09j preflight review also reproduced and resolved terminal-scope ownership after positive abort; durable evidence is in `../8x4.t.09j-launch-a-gated-worker-through/source-preflight-review-2026-10-05.md`. That focused result does not close 09j or authorize installed Lab acceptance.
+
+### Current integration checkpoint — 2026-10-05
+
+- [x] `8x4.t.2jj`: source merged `069af128d`; independent review accepted `de2f41903` after two reporting corrections. Author/root/reviewer full package evidence converges at 258 tests/987 assertions; root post-merge `8x43gf` passed. Incomplete execution can no longer produce a green aggregate.
+- [ ] `qjz`: first independent source review rejected `a2cdb5804` with four reproduced findings (veto ordering, transport UID delegation, watch resilience, creation recovery); isolated repairs in progress. Full baseline Assign 849/3693 with two skips does not override this rejection.
+- [ ] `09j`: source candidate `f2a6affd` in independent review; protected endpoint shutdown ownership repair independently verified. Linux Yama0 refusal is negative policy evidence, not installed Lab acceptance.
+- [ ] `xz9.0`: composed authority/endcap implementation continues against explicit developing dependency snapshots, with final acceptance deferred until all dependency repairs converge.
+
+After corrected qjz source joins recovery/HITL, proceed to qk0, then full qkb, R2, R3, qkc/gad.2. Final integrated source release still requires Captain interactive OTP and subsequent exact installed-graph/real-Lab verification.
