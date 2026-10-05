@@ -22,6 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Commit proposal supersession and the new revision atomically with canonical operation replay and unresolved-effect claim exclusion.
+
 - Enforce global proposal identity ownership and immutable prepared lifecycle projection in the sole canonical proposal journal.
 - Refuse finish receipts for unbound reservations before terminal acceptance, and preserve exact canonical import bytes across Git filters and CRLF conversion.
 

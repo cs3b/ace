@@ -37,7 +37,15 @@ module Ace
               arguments.concat(["--project", project]) unless project.to_s.empty?
               arguments << "--json" if format == "json"
               output = @lab_client.call(*arguments, json: false)
-              puts output unless options[:quiet]
+              unless options[:quiet]
+                warn @proposal_error if @proposal_error
+                if format == "json" && @proposal_error
+                  value = JSON.parse(output)
+                  output = JSON.pretty_generate(value.merge("proposal_resolution" =>
+                    {"status" => "deferred", "error" => @proposal_error})) if value.is_a?(Hash)
+                end
+                puts output
+              end
               return
             end
             raise Ace::Support::Cli::Error, "unsupported runtime: #{runtime}" unless runtime == "tmux"

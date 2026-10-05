@@ -37,12 +37,14 @@ Second commander proposes a precise action with context/options/recommendation. 
 
 ### Interface Contract
 
-`ace-hitl proposal create PROPOSAL_ID --assignment ID --attempt ID --project ID --file PROPOSAL`; `ace-hitl proposal show ID --format json`; `ace-hitl proposal resolve-due --project ID [--now UTC]` (clock override limited to test fixtures, production uses trusted clock); `ace-hitl proposal revise ID --file PROPOSAL`. Telegram Reply performs approve/veto/clarify with exact revision correlation. Creation returns proposal/revision/request IDs, delivery state and deadline only after acknowledgement. Executor consumes the resulting immutable authorization through ace-lab service request.
+`ace-hitl proposal create PROPOSAL_ID --assignment ID --attempt ID --project ID --file PROPOSAL`; `ace-hitl proposal show ID --format json`; `ace-hitl proposal resolve-due --project ID [--now UTC]` (clock override limited to test fixtures, production uses trusted clock); `ace-hitl proposal revise ID --expected-revision N --operation-id REVISION_OPERATION_ID --file PROPOSAL`. Telegram Reply performs approve/veto/clarify with exact revision correlation. Creation returns persisted proposal/revision/request IDs and current delivery state immediately, including when transport is unavailable. delivered_at and deadline remain absent until confirmed submission acknowledgement; show exposes them afterward. Executor consumes the resulting immutable authorization through ace-lab service request.
 
 ### Success Criteria and Verification Plan
 
 - [ ] SC1: Fake-clock lifecycle tests: before/exactly/after 16h, early approval/veto, revised proposal, delivery failure, restart, reply-ingress race, late veto, duplicate wake and uncertain effect.
 - [ ] SC2: Tests assert every operation class, including privilege expansion and deployment, can be authorized by silence while mandatory technical gates still reject invalid execution.
+- [ ] SC4: Revision operations require stable identity plus an expected source revision. Lost response and crash retries after delivery, approval or a later revision return the previously committed revision without another request, supersession or deadline reset; changed proposal/source/content/caller bindings fail. Concurrent revisions and concurrent old-effect claims have one canonical authority winner. Initial creation reports awaiting-delivery without waiting for transport.
+- [ ] SC5: Requester show/history and proposal request reads require current project authority; revoked projects disappear from history and direct reads refuse. Generic lifecycle create rejects proposal kind without persistence. Ordinary questions retain their character bound. Lab status preserves output and visibly reports deferred ticks, including JSON consumers.
 - [ ] SC3: Run `ace-test ace-hitl all` and `ace-test ace-overseer all`; installed controlled 16h scenario survives restart and produces one authorization/receipt with no manual queue injection.
 
 ### Scope and Ownership
@@ -86,3 +88,13 @@ Earlier unresolved same-request ingress blocks later approval; canonical history
 deduplicates exact sequence/content/time and rejects changed duplicate evidence.
 An unseen lower sequence is not a duplicate. Hermes metadata excludes raw bodies.
 These public changes require independent readiness/source review before acceptance.
+
+Revision requires `--expected-revision N` and a caller-persisted `--operation-id
+revision-<24 lowercase hex digits>`. Operation IDs are unique across proposals
+in the canonical journal. Persist the tuple of proposal ID, source revision,
+operation ID and exact file before invocation. Exact retry returns that operation's
+committed revision in its current historical state, even after delivery, approval,
+or a subsequent revision. Changed binding is refused. A new operation with a
+stale source is refused. Prior supersession and new prepared revision commit
+atomically in the existing Assign CAS; unresolved effect claims exclude revision
+at that same owner boundary. No retry resets delivery or mutable lifecycle state.

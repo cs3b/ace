@@ -233,7 +233,8 @@ module Ace
           when "ping" then {"pong" => true}
           when "proposal-create" then store.proposal_create(**symbolize(params))
           when "proposal-show" then store.proposal_show(required(params, "id"), history_after: params.fetch("history_after", 0))
-          when "proposal-revise" then store.proposal_revise(required(params, "id"), document: required(params, "document"))
+          when "proposal-revise" then store.proposal_revise(required(params, "id"), expected_revision: required(params, "expected_revision"),
+            operation_id: required(params, "operation_id"), document: required(params, "document"))
           when "proposal-ack"
             store.proposal_acknowledge(required(params, "id"), submitted_at: required(params, "submitted_at"))
           when "proposal-reply"

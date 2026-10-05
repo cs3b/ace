@@ -35,4 +35,39 @@ class ProposalWatchRegressionTest < AceOverseerTestCase
     assert_equal 'deferred', value.dig('proposal_resolution', 'status')
   end
 
+  def test_lab_status_preserves_table_with_visible_proposal_deferral
+    tick = Object.new
+    tick.define_singleton_method(:call) { raise Ace::Overseer::Error, 'temporarily unavailable' }
+    lab = Object.new
+    lab.define_singleton_method(:call) { |*_, **_| "lab status\n" }
+    command = Ace::Overseer::CLI::Commands::Status.new(lab_client: lab, proposal_tick: tick)
+    out, err = capture_io { command.call(format: 'table', runtime: 'lab') }
+    assert_equal "lab status\n", out
+    assert_includes err, 'Proposal resolution deferred'
+  end
+
+  def test_lab_status_json_preserves_work_projection_with_visible_proposal_deferral
+    tick = Object.new
+    tick.define_singleton_method(:call) { raise Ace::Overseer::Error, 'temporarily unavailable' }
+    lab = Object.new
+    lab.define_singleton_method(:call) { |*_, **_| '{"worktrees":[]}' }
+    command = Ace::Overseer::CLI::Commands::Status.new(lab_client: lab, proposal_tick: tick)
+    out, err = capture_io { command.call(format: 'json', runtime: 'lab') }
+    value = JSON.parse(out)
+    assert_equal [], value['worktrees']
+    assert_includes err, 'Proposal resolution deferred'
+    assert_equal 'deferred', value.dig('proposal_resolution', 'status')
+  end
+
+  def test_lab_array_json_keeps_schema_and_reports_deferral_on_stderr
+    tick = Object.new
+    tick.define_singleton_method(:call) { raise Ace::Overseer::Error, 'temporarily unavailable' }
+    lab = Object.new
+    lab.define_singleton_method(:call) { |*_, **_| '[{"id":"work1"}]' }
+    command = Ace::Overseer::CLI::Commands::Status.new(lab_client: lab, proposal_tick: tick)
+    out, err = capture_io { command.call(format: 'json', runtime: 'lab') }
+    assert_equal [{'id' => 'work1'}], JSON.parse(out)
+    assert_includes err, 'Proposal resolution deferred'
+  end
+
 end

@@ -140,4 +140,20 @@ class ScopedPolicyTest < AceHitlTestCase
     peer.send(:initialize, uid: uid, gid: uid, username: "fixture-#{uid}")
     peer
   end
+  def test_file_backed_policy_rechecks_current_project_grants_without_role_snapshot_mix
+    peer = Struct.new(:uid).new(1001)
+    current = {"hitl" => {"proposal_uids" => [1001], "transport_uids" => [1001]},
+      "authorization" => {"principals" => {"1001" => {"projects" => ["ace"]}}}}
+    policy = Ace::Hitl::Lifecycle::GrantsPolicy.new(grants_path: "/fixture/trusted-grants.yml")
+    Ace::Hitl::Lifecycle::TrustedFile.stub(:read_yaml, ->(_) { current }) do
+      assert policy.proposal?(peer, project: "ace")
+      assert policy.transport?(peer, project: "ace")
+      current = {"hitl" => {"proposal_uids" => [1001], "transport_uids" => [1001]},
+        "authorization" => {"principals" => {"1001" => {"projects" => ["other"]}}}}
+      refute policy.proposal?(peer, project: "ace")
+      refute policy.transport?(peer, project: "ace")
+      assert policy.proposal?(peer, project: "other")
+    end
+  end
+
 end

@@ -354,7 +354,7 @@ required; a cursor is not proof of delivery or native consumption.
 ## Immutable second-commander proposals
 
 `ace-hitl proposal create proposal-0123456789abcdef01234567 --assignment ID --attempt ID --project ID --file proposal.json`
-returns immutable proposal/revision/request IDs in awaiting-delivery state. The sole Hermes
+returns persisted immutable proposal/revision/request IDs and current awaiting-delivery state immediately, even with unavailable transport. delivered_at and deadline are absent until acknowledged submission; show exposes them afterward. The sole Hermes
 polling actor publishes the full precise proposal and records confirmed submission before
 HITL persists delivered_at and a deadline exactly sixteen hours later. Failed or uncertain
 submission cannot arm the window. A Telegram Reply `approve [rationale]`, `veto [rationale]`
@@ -373,11 +373,11 @@ still apply at execution. Proposal authorization never supplies credentials or r
 `ace-hitl proposal show ID --format json` shows decision, deadline, actual Assign claim/outcome
 and a bounded history page; continue with `--history-after HISTORY_NEXT`.
 `ace-hitl proposal history --project ID --query TEXT` retrieves relevant prior decisions;
-continue with `--after NEXT`. Project visibility and exact requester identity gate history.
-`ace-hitl proposal revise ID --file changed.json` supersedes the prior decision and creates a
+continue with `--after NEXT`. Current project grants and exact requester identity gate history and show; losing project access refuses reads and excludes history, including lifecycle proposal request reads.
+`ace-hitl proposal revise ID --expected-revision N --operation-id revision-abcdef0123456789abcdef01 --file changed.json` supersedes the prior decision and creates a
 new request with a fresh full window after acknowledgement. An unresolved claimed effect
 must be reconciled before revision; known successful or proven no-effect settlement can be
-followed by a new revision. Interrupted revision creation can retry the exact same file.
+followed by a new revision. Persist the proposal ID, expected source revision, stable revision operation ID and exact file before invocation. The operation ID is `revision-` followed by 24 lowercase hex digits and is unique across proposals. Exact retry returns that committed revision, including after acknowledged delivery, approval or a later revision, without creating another request or resetting the window. Changed proposal/source/content/caller bindings and stale-source new operations are refused. Supersession and new prepared revision commit atomically against effect claims. Generic lifecycle `create` rejects proposal kind; use this canonical proposal interface.
 
 Set ACE_HITL_SOCKET and ACE_HITL_PROJECT for the living overseer. It calls
 `ace-hitl proposal resolve-due --project PROJECT` on start/status/watch ticks.

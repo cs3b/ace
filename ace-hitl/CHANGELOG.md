@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Recover revision operations by explicit source revision and stable operation identity without resetting delivery; require current project authority for proposal reads, refuse generic proposal creation, and preserve ordinary question character limits.
+
 - Recover stable-ID proposal creation from canonical prepared requests, retain exact reply deduplication across retry ordering, and queue proposer reconciliation wakes for the existing transport actor.
 - Bound pending IPC pages by encoded frame size while retaining all native recovery claims and project authorization; Ruby callers traverse keyset pages.
 - Preserve the accepted native incarnation through answer consumption and require explicit signed-supersession retry before another submission.

@@ -102,6 +102,7 @@ module Ace
         # error, never permission.
         def create(id:, attempt:, plan:, question:, ace_hitl_id:, project: "ace", harness: "lab-admin",
           assignment:, kind: "text", options: [], effect: nil, otp: nil)
+          raise StateError, "proposal kind must use proposal_create" if kind == "proposal"
           value = prepare_request(id: id, attempt: attempt, plan: plan, question: question,
             ace_hitl_id: ace_hitl_id, project: project, harness: harness, assignment: assignment,
             kind: kind, options: options, effect: effect, otp: otp)
@@ -118,8 +119,8 @@ module Ace
           end
           plan = plan.to_s.strip
           question = question.to_s.strip
-          if plan.empty? || plan.length > MAX_PLAN_QUESTION ||
-              question.empty? || question.bytesize > (kind == "proposal" ? 4096 : MAX_PLAN_QUESTION)
+          question_too_long = kind == "proposal" ? question.bytesize > 4096 : question.length > MAX_PLAN_QUESTION
+          if plan.empty? || plan.length > MAX_PLAN_QUESTION || question.empty? || question_too_long
             raise StateError, "plan and question must contain 1-#{MAX_PLAN_QUESTION} characters"
           end
           options = Array(options).map(&:strip)

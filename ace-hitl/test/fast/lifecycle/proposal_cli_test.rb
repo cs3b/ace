@@ -30,9 +30,11 @@ class ProposalCliTest < AceHitlTestCase
         result = run_cli(["proposal", "show", "p1", "--format", "json"])
         assert_equal 0, result[:exit_code]
         assert_equal "p1", JSON.parse(result[:stdout])["proposal_id"]
-        result = run_cli(["proposal", "revise", "p1", "--file", file])
+        result = run_cli(["proposal", "revise", "p1", "--expected-revision", "1", "--operation-id", "revision-#{'a' * 24}", "--file", file])
         assert_equal 0, result[:exit_code]
         assert_equal 2, JSON.parse(result[:stdout])["revision"]
+        assert_equal 1, calls.last.last[:expected_revision]
+        assert_equal "revision-#{'a' * 24}", calls.last.last[:operation_id]
         result = run_cli(["proposal", "resolve-due", "--project", "ace"])
         assert_equal 0, result[:exit_code]
         assert_equal "queued-for-transport", JSON.parse(result[:stdout]).first["status"]
@@ -49,4 +51,13 @@ class ProposalCliTest < AceHitlTestCase
     refute_equal 0, result[:exit_code]
     assert_includes result[:stderr], "--assignment required"
   end
+  def test_revise_requires_source_revision_and_stable_operation_identity
+    result = run_cli(["proposal", "revise", "proposal-#{'a' * 24}", "--file", "missing"])
+    refute_equal 0, result[:exit_code]
+    assert_includes result[:stderr], "--expected-revision required"
+    result = run_cli(["proposal", "revise", "proposal-#{'a' * 24}", "--expected-revision", "1", "--file", "missing"])
+    refute_equal 0, result[:exit_code]
+    assert_includes result[:stderr], "--operation-id required"
+  end
+
 end

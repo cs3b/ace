@@ -31,8 +31,8 @@ module Ace
           request("proposal-show", {"id" => id, "history_after" => history_after})
         end
 
-        def proposal_revise(id, document:)
-          request("proposal-revise", {"id" => id, "document" => document})
+        def proposal_revise(id, expected_revision:, operation_id:, document:)
+          request("proposal-revise", {"id" => id, "expected_revision" => expected_revision, "operation_id" => operation_id, "document" => document})
         end
 
         def proposal_acknowledge(id, submitted_at:)

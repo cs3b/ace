@@ -11,7 +11,7 @@ module Ace
         PROPOSAL_REFERENCE = /\Aproposal-[0-9a-f]{24}-r[1-9][0-9]*\z/
         PROPOSAL_BINDING = %w[operation project_id assignment_id attempt_id input_digest target candidate_head caller_uid].freeze
 
-        PROPOSAL_IMMUTABLE = (PROPOSAL_BINDING + %w[schema proposal_id revision revision_id request_id requester content_digest created_at authorization context options recommendation rationale prerequisites lifecycle_request]).freeze
+        PROPOSAL_IMMUTABLE = (PROPOSAL_BINDING + %w[schema proposal_id revision revision_id request_id requester content_digest created_at authorization context options recommendation rationale prerequisites lifecycle_request revision_operation_id expected_source_revision]).freeze
 
         def proposal_history(id)
           assignment_ids.flat_map do |assignment|
@@ -35,6 +35,16 @@ module Ace
             read_events(assignment).select { |event| event["type"] == "proposal_state" }
               .map { |event| event.dig("payload", "record", "proposal_id") }
           end.uniq.map { |id| proposal_record(id) }
+        end
+
+        def proposal_operation_record(operation_id)
+          proposals.each do |record|
+            found = proposal_history(record["proposal_id"]).reverse.find do |entry|
+              entry["revision_operation_id"] == operation_id
+            end
+            return found if found
+          end
+          nil
         end
 
         # Admitted HITL policy runs this block while the same canonical
@@ -62,6 +72,9 @@ module Ace
                 end
                 validate_proposal_revision!(record, updated)
                 entries = []
+                if record && record["revision_id"] != updated["revision_id"]
+                  entries << {type: "proposal_state", payload: {"record" => record.merge("state" => "superseded", "resolution" => "revised")}}
+                end
                 if record.nil? || record["revision_id"] != updated["revision_id"]
                   entries << {type: "proposal_state", payload: {"record" => updated.merge("state" => "proposed")}}
                 end
@@ -88,9 +101,19 @@ module Ace
             updated["request_id"] == reference && updated["authorization"] == reference &&
             updated["state"] == "awaiting-delivery" && PROPOSAL_REFERENCE.match?(reference)
           if previous
-            valid &&= previous["state"] == "superseded" &&
+            valid &&= updated["expected_source_revision"] == previous["revision"] &&
+              updated["revision_operation_id"].is_a?(String) &&
+              updated["revision_operation_id"].match?(/\Arevision-[0-9a-f]{24}\z/) &&
+              proposal_operation_record(updated["revision_operation_id"]).nil? &&
               %w[assignment_id attempt_id project_id requester caller_uid].all? { |field| previous[field] == updated[field] }
+          else
+            valid &&= updated["revision_operation_id"].nil? && updated["expected_source_revision"].nil?
           end
+          unresolved = previous && proposal_claims(previous["revision_id"]).any? do |claim|
+            claim["state"] != "succeeded" &&
+              !(claim["state"] == "failed-settled" && settlement_evidence_intact?(claim))
+          end
+          raise AttemptErrors::ReceiptRejected, "Claimed proposal cannot be revised; reconcile the existing effect" if unresolved
           raise AttemptErrors::ReceiptRejected, "Proposal revision must begin with exact immutable delivery scope" unless valid
         end
         private :validate_proposal_revision!
