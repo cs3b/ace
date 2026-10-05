@@ -33,8 +33,14 @@ module Ace
         # @raise [Timeout::Error] when the child outlives the deadline (killed)
         # @raise [SystemCallError] spawn failures only (child never launched)
         # @raise [PostLaunchError] SystemCallError while the child was live
-        def call(argv, stdin_data: "", timeout_s:, output_limit: 65_536)
-          Open3.popen3(*argv, pgroup: true) do |stdin, stdout, stderr, waiter|
+        def call(argv, stdin_data: "", timeout_s:, output_limit: 65_536, environment: nil)
+          if environment && (!environment.is_a?(Hash) || !environment.all? { |key, value| key.is_a?(String) && value.is_a?(String) })
+            raise ArgumentError, "bounded process environment must be explicit strings"
+          end
+          command = environment ? [environment, *argv] : argv
+          options = {pgroup: true}
+          options[:unsetenv_others] = true if environment
+          Open3.popen3(*command, **options) do |stdin, stdout, stderr, waiter|
             begin
               run_loop(stdin, stdout, stderr, waiter,
                 stdin_data: stdin_data, timeout_s: timeout_s, output_limit: output_limit)
