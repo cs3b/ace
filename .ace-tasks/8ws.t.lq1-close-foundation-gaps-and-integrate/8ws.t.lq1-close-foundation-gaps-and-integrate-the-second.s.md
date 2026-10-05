@@ -252,7 +252,7 @@ After corrected qjz source joins recovery/HITL, proceed to qk0, then full qkb, R
 - [ ] `09j`: latest source repairs independently approved; combined Assign total888/3961 with two existing skips passed `8x45dm`. Author and root independent clean hardware-accelerated Linux/Yama2 launch and failure cases passed; Runtime175/485 and Herdr463/1521 all gates passed. Source merged `0d1090b83`, post-merge2/14 passed. Task remains open for the explicit remaining native restart/crash-window matrix, independently from actual Lab acceptance.
 - [ ] `xz9.0`: narrow service CAS replay repair `c5c7f5d9b` independently accepted after two reproduced findings; 14/157 regressions pass. Read-only authorization delta 4674d821a..946921433 independently approved with 30/229 targeted checks. Status-generation delta 37a7b91af rejected for bypassing current executor project visibility; repair must preserve separate late outcome completion without widening status access. Complete receiver/composition, mapping review, combined dependency integration and installed cross-user proof remain open.
 - [x] `xz9.0` receiver mapping source checkpoint: independently approved ACL/traversal repair integrated `050be8b9f`; full combined Assign 905 tests/4032 assertions (two skips), post-merge 15/71 passed. This is not installed receiver acceptance.
-- [ ] `xz9.0` status/completion and retained-worker ownership repair: frozen `ef76e05a9`, 34/386 focused checks passed `8x47jc`; combined independent review is in progress. Receiver orchestration remains a separate unfinished slice.
+- [x] `xz9.0` status/completion and retained-worker ownership source repair: frozen `ef76e05a9`, independently approved 34/386. Integrated with reviewed service orchestration in main `f91b02889`. This closes the source checkpoint only; full composition and installed acceptance remain open.
 - [ ] `xz9.2`: protected prompt/stop remains draft pending complete scope/writer proof and native contract readiness. It precedes qk0; no child-exit or empty-subtree shortcut is accepted.
 - [ ] After protected runtime/service/steering and HITL gates: qk0 → complete atomic qkb → R2 ig3 → R3 ig4 → qkc/gad.2, followed by legacy removal and cold-start acceptance in lab-config.
 
@@ -265,3 +265,12 @@ agent. See 09j `execution-limitation-2026-10-05.md`; unaffected source work and
 ordinary tests continue.
 
 Supporting tool defects `8x4.t.412` (review session isolation) and `8x4.t.5h5` (active Git operation preservation) remain drafts with explicit current procedures; they do not block unrelated implementation. Use unique review directories and native Git continuation for active merges.
+
+## Latest integrated checkpoint — 2026-10-05
+
+- [x] Service Endcap, canonical evidence transfer, policy composition and receiver source integrated `f91b02889`; independent combined APPROVE plus final receiver repair APPROVE. Full Assign 960/4474 (two skips), Lab 199/697 (one skip), combined default suite 11201 passed / 24 skipped / zero failures. Main tree equals reviewed candidate a0bbeb2ee.
+- [x] `8x4.t.8n0`: ordinary Herdr readiness fixture repaired, independently reviewed and integrated. Full Herdr 472/1610 and final exact test 10/57 passed. No product timeout changes; earlier failed suite remains retained.
+- [ ] `xz9.0` remains draft/needs_review for the closed result/evidence/finish contract amendment. Accepted source does not enable partial full-service startup. Next: independently review that amendment, then implement against the existing canonical owners. Recovery/inbox/public receiver composition and installed multi-user acceptance remain required.
+- [ ] `09j` remains open for its remaining native matrix; source integration is not whole-task acceptance. The recorded automatic-review limitation still applies.
+
+Historical unchecked sections above retain prior review states; this latest checklist and task metadata describe current progress. No gems were published in this checkpoint.
