@@ -36,6 +36,21 @@ class ManagedEnvelopeTest < AceHitlContractTestCase
     assert_raises(Invalid) { Envelope.load(value) }
   end
 
+  def test_native_reverse_pair_survives_wire_without_target_rewrite_or_authority
+    reverse = {"schema" => Ace::Hitl::Providers::Ref::SCHEMA, "session" => "$0", "pane" => "%0"}
+    value = ordinary.merge("reverse" => reverse)
+    assert_equal value, Envelope.load(value)
+    assert_raises(Invalid) { Envelope.load(value, expected: {reverse: reverse.merge("pane" => "%1")}) }
+  end
+
+  def test_wire_reverse_is_a_canonical_typed_pair
+    [["$0", "p1"], ["s1", "%0"], ["%0", "$0"], ["$01", "%0"], ["$0", "%01"],
+     [" $0 ", "%0"], ["$0", " %0 "], [" s1 ", "p1"], ["s1", " p1 "], [1, "p1"], ["s1", 2]].each do |session, pane|
+      reverse = {"schema" => Ace::Hitl::Providers::Ref::SCHEMA, "session" => session, "pane" => pane}
+      assert_raises(Invalid, [session, pane].inspect) { Envelope.load(ordinary.merge("reverse" => reverse)) }
+    end
+  end
+
   def test_pane_less_is_explicit_and_unknown_fields_do_not_enter_persistence
     assert_nil Envelope.load(ordinary.merge("reverse" => nil))["reverse"]
     %w[answer otp otp_hash work].each do |field|

@@ -106,6 +106,28 @@ class LabAssignmentBindingTest < AceHitlTestCase
     end
   end
 
+  def test_native_pair_projects_exact_ids_through_existing_authoritative_binding
+    @assignment = create_managed_assignment
+    @attempt = start_attempt(@assignment)
+    @coordinator.define_singleton_method(:runtime_binding) do |attempt_id:, caller_pid:|
+      raise "missing kernel caller" unless caller_pid == Process.pid
+      {"session" => "$0", "pane" => "%0"}
+    end
+    with_lifecycle_root do |root|
+      store = make_store(root: root, identity: unprivileged_identity(ACTOR), binding: @binding)
+      created = store.create(**managed_request_args)
+      expected = {"schema" => "ace.hitl.ref/v1", "session" => "$0", "pane" => "%0"}
+      assert_equal expected, created.dig("envelope", "reverse")
+      persisted = JSON.parse(File.read(File.join(root, "requests", "hitl001.json")))
+      assert_equal expected, persisted.dig("envelope", "reverse")
+      foreign = make_store(root: root, identity: unprivileged_identity("someone-else"), binding: @binding)
+      assert_raises(Ace::Hitl::Lifecycle::BindingError) do
+        foreign.create(**managed_request_args(id: "foreign001"))
+      end
+      refute File.exist?(File.join(root, "requests", "foreign001.json"))
+    end
+  end
+
   def test_foreign_requester_and_wrong_project_never_bind
     @assignment = create_managed_assignment
     @attempt = start_attempt(@assignment)

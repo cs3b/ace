@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Add an opt-in installed proposal scenario with an isolated local gem closure, real Unix and tmux owner binding, controlled sixteen-hour restart, technical refusal, and one verified service effect/receipt.
 - Resolve immutable second-commander proposals through confirmed-delivery sixteen-hour policy and canonical Assign authorization.
 
 ### Changed

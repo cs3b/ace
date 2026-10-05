@@ -368,7 +368,11 @@ module Ace
 
         def with_event(event)
           Molecules::DeliveryRecordStore.with_lock(@deliveries_dir, event) do
-            yield Molecules::DeliveryRecordStore.load(@deliveries_dir, event)
+            record = Molecules::DeliveryRecordStore.load(@deliveries_dir, event)
+            if record
+              Ace::Hitl::Providers::Ref.new(session: record.session, pane: record.pane, canonical: true)
+            end
+            yield record
           end
         end
 
@@ -390,8 +394,7 @@ module Ace
           hash = ref.is_a?(Hash) ? ref : JSON.parse(File.read(ref))
           raise ValidationError, "invalid ref: expected a JSON object" unless hash.is_a?(Hash)
           Ace::Hitl::Providers::Ref.new(
-            session: Ace::Hitl::Providers::Ref.validate!(hash.fetch("session"), "session"),
-            pane: Ace::Hitl::Providers::Ref.validate!(hash.fetch("pane"), "pane")
+            session: hash.fetch("session"), pane: hash.fetch("pane"), canonical: !ref.is_a?(Hash)
           )
         rescue Errno::ENOENT, JSON::ParserError, KeyError, TypeError => e
           raise ValidationError, "invalid ref: #{e.message}"

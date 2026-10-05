@@ -105,7 +105,7 @@ module Ace
                 "no recoverable answer stored for event #{event_id.inspect}"
             end
 
-            ref = Ace::Hitl::Providers::Ref.new(session: record.session, pane: record.pane)
+            ref = Ace::Hitl::Providers::Ref.new(session: record.session, pane: record.pane, canonical: true)
             deliver_locked(ref, record.answer, record, kind, label)
           end
         end
@@ -302,8 +302,7 @@ module Ace
             end
 
           Ace::Hitl::Providers::Ref.new(
-            session: Ace::Hitl::Providers::Ref.validate!(session, "ref session"),
-            pane: Ace::Hitl::Providers::Ref.validate!(pane, "ref pane")
+            session: session, pane: pane, session_source: "ref session", pane_source: "ref pane"
           )
         end
 

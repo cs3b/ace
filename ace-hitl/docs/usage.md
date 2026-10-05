@@ -438,3 +438,38 @@ proposal; proposer admission cannot acknowledge delivery, fabricate ingress, or
 resolve silence. Missing role or project admission refuses the operation,
 including direct library calls. This is a source configuration contract;
 installed deployment adoption remains part of gad.8 acceptance.
+
+### Controlled installed proposal verification
+
+From an ACE checkout with Ruby, tmux and the complete dependency archives cached locally:
+
+```bash
+bin/ace-test ace-hitl edge --filter installed_proposal_test --config-path "$PWD/ace-hitl/test/support/installed_proposal/runner.yml"
+```
+
+The explicit fixture configuration activates the installed scenario without changing
+test deadlines. Default package runs skip it. The run builds the current runtime
+gem closure and installs it into an empty GEM_HOME, using local archives only.
+It prints `Installed SC3 artifacts: /tmp/ace-installed-sc3/run-...`; read the
+reported test receipt and that directory's `result.json`, `artifacts.json`,
+`build-provenance.json`, `processes.jsonl` and `canonical-evidence.json`. A manifest/result pointer is
+retained under checkout `.ace-local/installed-sc3/`.
+
+The expected terminal result is one passing test with no failures/errors. Its
+consumer asserts confirmed submission + sixteen hours, actual service/actor
+process restarts, one effective authorization and one executor invocation with
+a canonical verified receipt. Failed submission does not arm a deadline; lost
+poll coverage stays blocked, including after fresh polling. Changed technical
+scope remains refused after approval. No inbox record is manually inserted.
+
+UTC and Telegram are test-only injected adapters. Assignment binding, kernel peer
+authentication, policy, claim, execution and receipt verification remain real.
+The fixture uses one host and the current UID, with an isolated tmux process and
+the existing local service mode. It does not prove live Telegram, protected Herdr
+launch, installed root-owned grants, or multiUID privilege separation. There is
+no production `--now` or transport-override option.
+
+Missing local dependency archives fail visibly without network fallback. A failed
+consumer retains diagnostic artifacts; inspect `result.json` and `service.log`
+before retrying. Each invocation retains a new run directory and requires a new
+empty GEM_HOME.

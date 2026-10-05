@@ -14,16 +14,18 @@ module Ace
 
         class FakeExecutor
           attr_accessor :pane, :prompt_error, :pane_get_error
-          attr_reader :prompts
+          attr_reader :prompts, :observations
 
           def initialize
             @pane = {"pane_id" => "p1", "workspace_id" => "ws1", "terminal_id" => "term-1",
               "agent" => "codex", "agent_status" => "busy",
               "agent_session" => {"agent" => "codex", "kind" => "id", "value" => THREAD}}
             @prompts = []
+            @observations = []
           end
 
           def pane_get_bounded(_id)
+            @observations << _id
             raise pane_get_error if pane_get_error
 
             Molecules::ExecutionResult.new(stdout: JSON.generate("result" => {"pane" => pane}),
@@ -78,6 +80,50 @@ module Ace
 
         def enqueue(payload = "hello")
           @inbox.enqueue(event: @event, attempt: "att-1", ref: @ref, payload: payload)
+        end
+
+        def test_shared_typed_pair_accepts_native_ids_without_adopting_authority
+          address = @inbox.send(:address_for, {"session" => "$0", "pane" => "%0"})
+          assert_equal ["$0", "%0"], [address.session, address.pane]
+          assert_raises(Ace::Hitl::Providers::InvalidRefError) do
+            @inbox.enqueue(event: @event, attempt: "att-1", ref: {"session" => "$0", "pane" => "p1"}, payload: "hello")
+          end
+          assert_empty @native.calls
+          refute File.exist?(File.join(@dir, "#{@event}.json"))
+        end
+
+        def test_malformed_persisted_pair_refuses_before_claim_or_native_submission
+          enqueue
+          record = Molecules::DeliveryRecordStore.load(@dir, @event)
+          [["$0", "p1"], [" ws1 ", "p1"]].each do |session, pane|
+            malformed = Models::DeliveryRecord.from_h(record.to_h.merge("session" => session, "pane" => pane))
+            Molecules::DeliveryRecordStore.save(malformed, @dir)
+            assert_raises(Ace::Hitl::Providers::InvalidRefError) { @inbox.deliver(event: @event) }
+            assert_equal "queued", Molecules::DeliveryRecordStore.load(@dir, @event).state
+            assert_empty @native.calls
+          end
+        end
+
+        def test_serialized_ref_refuses_padded_components_before_native_observation
+          [[" ws1 ", "p1"], ["ws1", " p1 "], [" $0 ", "%0"], ["$0", " %0 "]].each_with_index do |(session, pane), index|
+            path = File.join(@dir, "ref-#{index}.json")
+            File.write(path, JSON.generate("session" => session, "pane" => pane))
+            assert_raises(Ace::Hitl::Providers::InvalidRefError) do
+              @inbox.enqueue(event: @event, attempt: "att-1", ref: path, payload: "hello")
+            end
+            assert_empty @executor.observations
+            assert_empty @native.calls
+            refute File.exist?(File.join(@dir, "#{@event}.json"))
+          end
+        end
+
+        def test_direct_ref_normalizes_while_canonical_serialized_ref_preserves_pair
+          direct = @inbox.send(:address_for, {"session" => " ws1 ", "pane" => " p1 "})
+          assert_equal ["ws1", "p1"], [direct.session, direct.pane]
+          path = File.join(@dir, "native-ref.json")
+          File.write(path, JSON.generate("session" => "$0", "pane" => "%0"))
+          serialized = @inbox.send(:address_for, path)
+          assert_equal ["$0", "%0"], [serialized.session, serialized.pane]
         end
 
         def proof(record, outcome: "consumed")
