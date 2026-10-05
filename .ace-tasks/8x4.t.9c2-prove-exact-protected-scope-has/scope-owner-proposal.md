@@ -351,9 +351,13 @@ not ready for promotion:
   not a substitute. Source review establishes that a same-User, unprivileged
   ExecStartPost action can set its own socket ACL, but cannot satisfy the current
   root-owned non-writable final-parent contract while Herdr dynamically binds
-  there. See native-readiness-acl-feasibility.md for the concrete conditional
-  generation-verifier alternative and unresolved replacement safety; no ready
-  mechanism or relaxed 09j ancestry check is silently selected.
+  there. The scoped proposal therefore explicitly uses a worker-owned final
+  runtime parent and exact connected kernel peer/MainPID/birth/InvocationID
+  authentication before sending authority data on every connection. See
+  native-readiness-acl-feasibility.md for the source-backed threat argument,
+  bounded ACL consequences, FD discipline and exact readiness/baseline contract.
+  This technical proposal awaits independent spec review and installed evidence;
+  it does not silently relax other 09j protected ancestry checks.
 * Fresh container setup must avoid prior session/plugin/rc execution, account
   for native baseline processes and preserve 09j's one fresh gated-worker launch.
   Current 09j static preinstalled workspace is insufficient for automatic fresh
