@@ -74,3 +74,21 @@ All four fixes require a fresh independent exact-head verdict. These source
 receipts do not prove actual Telegram/native consumption, installed signer or
 multi-UID boundaries, SC2, or gad.2/.8/.b. No task-done, version bump, publishing,
 main merge or push is performed by this repair agent.
+
+### Rebased source verification
+
+Rebased the nine original source/repair commits onto main
+`b12bb0659` without editing its independently accepted delivery behavior. The
+only conflict was Assign CHANGELOG, resolved by retaining both Unreleased
+entries. Range-diff shows all source/repair patches unchanged; that changelog
+context is the sole patch difference. Consumer source trees (HITL, Herdr, Hermes
+and the shared contract) exactly equal pre-rebase repair `45307127e`.
+Rebase capture/proof lives in `.ace-local/git/wave5-vs2-rebase/`.
+
+Post-rebase source head `aac199340661111c053540b403cc23586afeaf73`:
+HITL all `8x4137`, **195 tests / 1095 assertions**, zero failures/errors, one
+existing multi-UID skip; Assign runtime-binding consumer `8x412u`, **4 / 32**,
+zero failures/errors. Herdr/Hermes full green receipts above remain applicable
+because their source and tests are byte-identical across the rebase. The source
+head has been handed to the independent reviewer; this report-only amendment
+does not claim their verdict or installed acceptance.
