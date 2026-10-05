@@ -1,0 +1,42 @@
+Started with run options --seed 54322
+
+Ace::Assign::EndcapInboxesTest
+  test_changed_same_id_and_uncontextual_registration_cannot_adopt_old_proof PASS (14.16s)
+  test_signed_consumed_import_replay_fetch_and_corruption_after_native_stop PASS (23.82s)
+  test_superseded_claim_history_is_retained_but_not_used_to_settle_a_new_claim PASS (20.42s)
+  test_wrong_registration_role_context_signature_and_body_refuse_without_import PASS (7.18s)
+  test_herdr_accepted_before_qjl_failure_replays_exact_signed_proof PASS (7.00s)
+  test_retained_proof_after_seal_requires_current_context_role_and_exact_launcher PASS (14.12s)
+
+InboxForeignNativeTest
+  test_retained_proof_after_seal_requires_current_context_role_and_exact_launcher PASS (13.45s)
+  test_changed_same_id_and_uncontextual_registration_cannot_adopt_old_proof PASS (10.32s)
+  test_signed_consumed_import_replay_fetch_and_corruption_after_native_stop PASS (11.04s)
+  test_superseded_claim_history_is_retained_but_not_used_to_settle_a_new_claim PASS (15.68s)
+  test_wrong_registration_role_context_signature_and_body_refuse_without_import PASS (4.70s)
+  test_consumed_local_binding_must_match_canonical_native_workspace FAIL (4.66s)
+        Ace::Assign::AttemptErrors::EvidenceUnavailable expected but nothing was raised.
+        /Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/.ace-local/review/inbox_foreign_native_test.rb:15:in 'block in InboxForeignNativeTest#test_consumed_local_binding_must_match_canonical_native_workspace'
+        /Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/ace-assign/test/feat/endcap_inboxes_test.rb:91:in 'block in Ace::Assign::EndcapInboxesTest#fixture'
+        /Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/3.4.0/tmpdir.rb:105:in 'Dir.mktmpdir'
+        /Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/ace-assign/test/feat/endcap_inboxes_test.rb:31:in 'Ace::Assign::EndcapInboxesTest#fixture'
+        /Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/.ace-local/review/inbox_foreign_native_test.rb:4:in 'InboxForeignNativeTest#test_consumed_local_binding_must_match_canonical_native_workspace'
+        /Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/ace-test-runner/lib/ace/test_runner/molecules/in_process_runner.rb:278:in 'Ace::TestRunner::Molecules::InProcessRunner#run_minitest_silent'
+        /Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/ace-test-runner/lib/ace/test_runner/molecules/in_process_runner.rb:138:in 'Ace::TestRunner::Molecules::InProcessRunner#execute_tests'
+        /Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/ace-test-runner/lib/ace/test_runner/molecules/in_process_runner.rb:190:in 'Ace::TestRunner::Molecules::InProcessRunner#execute_with_progress'
+        /Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/ace-test-runner/lib/ace/test_runner/molecules/smart_test_executor.rb:55:in 'Ace::TestRunner::Molecules::SmartTestExecutor#execute_with_progress'
+        /Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/ace-test-runner/lib/ace/test_runner/organisms/test_orchestrator.rb:505:in 'Ace::TestRunner::Organisms::TestOrchestrator#execute_tests'
+        /Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/ace-test-runner/lib/ace/test_runner/organisms/test_orchestrator.rb:99:in 'Ace::TestRunner::Organisms::TestOrchestrator#run_with_package_context'
+        /Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/ace-test-runner/lib/ace/test_runner/organisms/test_orchestrator.rb:50:in 'Ace::TestRunner::Organisms::TestOrchestrator#run'
+        /Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/ace-test-runner/lib/ace/test_runner.rb:73:in 'Ace::TestRunner.run'
+        /Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/ace-test-runner/lib/ace/test_runner/cli/commands/test.rb:299:in 'Ace::TestRunner::CLI::Commands::Test#run_tests_with_exit_handling'
+        /Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/ace-test-runner/lib/ace/test_runner/cli/commands/test.rb:156:in 'Ace::TestRunner::CLI::Commands::Test#call'
+        /Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/ace-support-cli/lib/ace/support/cli/runner.rb:24:in 'Ace::Support::Cli::Runner#call'
+        /Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/ace-test-runner/exe/ace-test:17:in '<top (required)>'
+        bin/ace-test:17:in 'Kernel#load'
+        bin/ace-test:17:in '<main>'
+
+  test_herdr_accepted_before_qjl_failure_replays_exact_signed_proof PASS (5.98s)
+
+Finished in 152.53421s
+13 tests, 81 assertions, 1 failures, 0 errors, 0 skips
