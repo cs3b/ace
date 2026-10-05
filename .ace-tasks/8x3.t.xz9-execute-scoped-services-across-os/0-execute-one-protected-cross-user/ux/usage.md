@@ -37,3 +37,6 @@ After obtaining a fresh successful begin-dispatch response, the recorded executo
 If policy, lease or a canonical proposal changes after claiming, the authorization read refuses; the receiver invokes nothing and retains uncertainty after any issued begin permission. A successful read from an earlier call cannot be cached to bypass that refusal. Changes after the final admission point do not retroactively cancel an admitted effect; a local operation mismatch still prevents invocation.
 
 If begin or authorization reply is lost, the receiver reports uncertainty without invoking or obtaining a second permission. An executor that already observed an outcome can still complete the exact recorded request after revocation or lease expiry; completion does not require this effect-admission read.
+
+
+An executor reporting the exact observed outcome sends `complete_service` with its immutable request/claim/candidate and receipt/artifact binding, without an expected generation or generation-mode flag. The owner resolves current completion generation on each CAS retry, so an interleaved mutation cannot force a revoked executor to obtain a broad status read. Status itself still refuses absent/revoked current project visibility for every role. This records truth only; no new effect permission is created.

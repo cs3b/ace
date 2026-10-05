@@ -46,3 +46,6 @@ Every authenticated API role includes wrong-project/wrong-role/unknown mutation 
 - Installed proof retains actual mapped executor/worker distinct-UID and protected native origin prerequisites; isolated unit success cannot stand in for these gates.
 
 Protected service status uses JournalMutation's same generation projection under owner exclusion. Claim → another Endcap mutation → status → begin tests current generation, stale refusal and unchanged original replay acceptance metadata. Status never refreshes an authorization, advances ref or returns invocation permission.
+
+
+Completion-only generation acceptance: real canonical journal claim/begin → interleaved Endcap mutation → revoke/remove executor project visibility → status refusal → exact late completion succeeds without status/generation lookup. Losing CAS repeats exact executor/request/ticket/candidate/receipt binding checks; changed binding or contradictory bytes refuse with no partial import. Exact mutation replay retains original acceptance metadata after later events. Other mutation missing/stale expected generation and any wire generation selector refuse; no completion grants invocation.
