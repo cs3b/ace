@@ -158,3 +158,19 @@ Hermes source checkpoint: independent review APPROVE for `a5429f416`, all previo
 Recovery review checkpoint: clean candidate `ded081ca6` submitted to independent GPT-6.1 Sol review. Full affected suites and fast monorepo suite passed before final attribution hardening; final runtime and focused signed recovery checks passed afterward. Review explicitly checks precise OS birth, native owner binding and journal-attributed live/archive inbox records. No integration or installed Lab acceptance is claimed yet. `vs2` is now in-progress against integrated Hermes source.
 
 Recovery source integrated to main `3dda44055` after independent APPROVE for `dab0dbeea`, full assignment suite 803/3120 (two existing skips), and post-merge signed recovery 11/135. `1w5` stays in-progress until its actual installed Herdr/Pi and domain acceptance gates pass. `vs2` consumes this source; delivery is being rebased in a separate integration worktree while its immutable original candidate receives independent review.
+
+
+## Current execution checkpoint — 2026-10-05, supersedes earlier dispatch state
+
+This checkpoint records source integration separately from each task's remaining acceptance. Unchecked task items remain open intentionally; source commits do not close installed gates.
+
+- [ ] ACE 8wq.t.1w5: accepted recovery source integrated `3dda44055`; actual installed multi-user/native recovery remains open.
+- [ ] ACE 8wm.t.y24: accepted Hermes source integrated `08c64b6a5`, installed default-gem fixture repair `673eb0f08`; actual Telegram/Lab gates remain open.
+- [ ] ACE 8wr.t.qkb.0: corrected provider delivery source integrated `855092590`, independent review/evidence `d1a36427d`. Final Assign 829/3469 and independent delivery 18/323 passed; qkb.0/.1 retain atomic installed vocabulary and publication gate. No gem publication of this source occurred.
+- [ ] ACE 8wm.t.vs2: candidate `5afccf58` rejected. Repair lane owns native incarnation replacement race, transient transport failure killing polling, implicit superseded retry, and direct managed-payload secret filtering. Independent regression receipts HITL `8x40wo` and Hermes `8x40wp` prove the failures; repaired source requires fresh independent review.
+- [ ] ACE 8x4.t.09j: real prerequisite now owns the authenticated native launch/gate, ahead of xz9.0. Draft contract and native primitive evidence integrated `bb7af23f1`; independent readiness review pending. Isolated kernel-peer/gate/termination proof is not protected Lab acceptance. Required Linux process-injection policy is not yet installed or accepted.
+- [ ] ACE 8x3.t.xz9.0: primitive source `793a21c2` rejected for failed-write leakage into a later transaction and incoherent reserved-attempt recovery. Separate repair lane; accepted canonical journal must not free uncertain ownership from absent process-start evidence. Full authority/service integration remains necessary after 09j.
+- [ ] ACE 8x3.t.xza: Codex private-endpoint correlation evidence retained; native production observation, Pi provenance and positive cancellation/death outcomes remain explicit owner tasks. No disappearance/time-based settlement.
+- [ ] lab-config:gad.8/.b/.9: existing source retained at `5ded430`; no duplicate setup-project or Pi installer implementation. Complete protected deployment and actual Linux/Incus acceptance after owning ACE producers. Remote receiver authentication is still pending; isolated Docker proofs do not replace it.
+
+Parallel source lanes are vs2 repair, journal repair, and independent 09j readiness review. Next admitted source slices are 09j/protected authority and vs2 → qjz; then recovery/HITL joins qk0 → qkb.1 → R2 → R3 → qkc/gad.2. Keep serial integration at shared Assign/HITL files. Final release preparation waits complete source integration; Captain publishes interactively with OTP, then the exact new graph and real Lab are verified.
