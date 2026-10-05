@@ -17,10 +17,10 @@ module Ace
         end
       end
 
-      def test_local_adapter_resolves_os_login_as_coordinator
+      def test_local_adapter_resolves_kernel_account_as_coordinator
         identity = Molecules::ExecutionIdentityResolver.new(adapter: "local").resolve
 
-        refute identity.actor.to_s.empty?
+        assert_equal Etc.getpwuid(Process.euid).name, identity.actor
         assert_equal "coordinator", identity.role
         assert_includes identity.runtime, "local:"
         assert Molecules::ExecutionIdentityResolver.new(adapter: "local").trusted?(identity)
@@ -46,18 +46,94 @@ module Ace
         assert_includes identity.runtime, "local:"
       end
 
-      def test_local_adapter_fails_closed_without_login_identity
+      def with_login_environment(user, logname)
+        previous = [ENV["USER"], ENV["LOGNAME"]]
+        ENV["USER"] = user
+        ENV["LOGNAME"] = logname
+        yield
+      ensure
+        ENV["USER"] = previous[0]
+        ENV["LOGNAME"] = previous[1]
+      end
+
+      def test_local_account_ignores_misleading_login_and_environment
+        expected = Etc.getpwuid(Process.euid).name
+        with_login_environment("forged-user", "forged-logname") do
+          Etc.stub(:getlogin, "different-login") do
+            assert_equal expected, Molecules::ExecutionIdentityResolver.new(adapter: "local").resolve.actor
+          end
+        end
+      end
+
+      def test_local_account_does_not_require_login_or_environment
+        expected = Etc.getpwuid(Process.euid).name
+        with_login_environment(nil, nil) do
+          Etc.stub(:getlogin, nil) do
+            assert_equal expected, Molecules::ExecutionIdentityResolver.new(adapter: "local").resolve.actor
+          end
+        end
+      end
+
+      def test_local_adapter_refuses_unresolved_or_invalid_account
         resolver = Molecules::ExecutionIdentityResolver.new(adapter: "local")
-        Etc.stub(:getlogin, nil) do
-          previous = [ENV["USER"], ENV["LOGNAME"]]
-          ENV.delete("USER")
-          ENV.delete("LOGNAME")
-          begin
+        entries = [nil, Struct.new(:uid, :name).new(Process.euid, ""),
+          Struct.new(:uid, :name).new(Process.euid + 1, "other")]
+        entries.each do |entry|
+          Etc.stub(:getpwuid, entry) do
             error = assert_raises(AttemptErrors::UnauthorizedIdentity) { resolver.resolve }
             assert_equal 5, error.exit_code
-          ensure
-            ENV["USER"] = previous[0] if previous[0]
-            ENV["LOGNAME"] = previous[1] if previous[1]
+          end
+        end
+        [ArgumentError.new("missing account"), Errno::EIO.new].each do |failure|
+          Etc.stub(:getpwuid, ->(*) { raise failure }) do
+            assert_raises(AttemptErrors::UnauthorizedIdentity) { resolver.resolve }
+          end
+        end
+      end
+
+      def test_local_adapter_refuses_real_effective_uid_mismatch_before_lookup
+        Process.stub(:uid, Process.euid + 1) do
+          Etc.stub(:getpwuid, ->(*) { flunk "unsupported identity must refuse before account lookup" }) do
+            error = assert_raises(AttemptErrors::UnauthorizedIdentity) do
+              Molecules::ExecutionIdentityResolver.new(adapter: "local").resolve
+            end
+            assert_equal 5, error.exit_code
+          end
+        end
+      end
+
+      def test_local_adapter_refuses_credentials_changed_during_resolution
+        original_uid = Process.euid
+        observed_uid = original_uid
+        entry = Etc.getpwuid(original_uid)
+        Process.stub(:uid, -> { observed_uid }) do
+          Process.stub(:euid, -> { observed_uid }) do
+            Etc.stub(:getpwuid, ->(*) { observed_uid += 1; entry }) do
+              assert_raises(AttemptErrors::UnauthorizedIdentity) do
+                Molecules::ExecutionIdentityResolver.new(adapter: "local").resolve
+              end
+            end
+          end
+        end
+      end
+
+      def test_local_adapter_refuses_credentials_changed_while_resolving_native_binding
+        observed_uid = Process.euid
+        native = Object.new
+        native.define_singleton_method(:context) { {in_runtime: true, pane: "%2"} }
+        native.define_singleton_method(:process_binding) do |**|
+          observed_uid += 1
+          {"runtime" => "tmux", "pane" => "%2", "process_identity" => {"pid" => 123}}
+        end
+        runtime = Object.new
+        runtime.define_singleton_method(:detect) { |env:| :tmux }
+        runtime.define_singleton_method(:resolve) { |_name| native }
+        Process.stub(:uid, -> { observed_uid }) do
+          Process.stub(:euid, -> { observed_uid }) do
+            assert_raises(AttemptErrors::UnauthorizedIdentity) do
+              Molecules::ExecutionIdentityResolver.new(adapter: "local", runtime_resolver: runtime,
+                env: {"ACE_RUNTIME" => "tmux"}).resolve
+            end
           end
         end
       end
