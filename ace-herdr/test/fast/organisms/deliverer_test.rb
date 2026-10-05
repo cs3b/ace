@@ -31,6 +31,28 @@ module Ace
           Ace::Herdr.const_get(name)
         end
 
+        def test_explicit_native_pair_is_validated_by_leaf_without_rewriting_ids
+          ref = @deliverer.send(:coerce_ref, {"session" => "$0", "pane" => "%0"})
+          assert_equal ["$0", "%0"], [ref.session, ref.pane]
+          assert_raises(Ace::Hitl::Providers::InvalidRefError) do
+            @deliverer.deliver({"session" => "ws1", "pane" => "%0"}, "answer", event_id: "bad-ref")
+          end
+          assert_empty @executor.calls_of(:agent_get)
+          assert_empty @executor.calls_of(:agent_prompt)
+        end
+
+        def test_resume_refuses_malformed_or_noncanonical_persisted_ref_before_observation
+          [["$0", "p1"], [" ws1 ", "p1"]].each do |session, pane|
+            record = Models::DeliveryRecord.new(event_id: "bad-ref", session: session, pane: pane,
+              answer: "answer", answer_digest: Ace::Herdr::Atoms::AnswerDigest.call("answer"))
+            Molecules::DeliveryRecordStore.save(record, @dir)
+            assert_raises(Ace::Hitl::Providers::InvalidRefError) { @deliverer.resume("bad-ref") }
+            assert_equal "pending", Molecules::DeliveryRecordStore.load(@dir, "bad-ref").state
+            assert_empty @executor.calls_of(:agent_get)
+            assert_empty @executor.calls_of(:agent_prompt)
+          end
+        end
+
         # --- Mandated scenario 1: existing-agent delivery -----------------
 
         def test_delivers_to_existing_agent_without_bootstrap

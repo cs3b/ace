@@ -80,6 +80,28 @@ module Ace
           @inbox.enqueue(event: @event, attempt: "att-1", ref: @ref, payload: payload)
         end
 
+        def test_shared_typed_pair_accepts_native_ids_without_adopting_authority
+          address = @inbox.send(:address_for, {"session" => "$0", "pane" => "%0"})
+          assert_equal ["$0", "%0"], [address.session, address.pane]
+          assert_raises(Ace::Hitl::Providers::InvalidRefError) do
+            @inbox.enqueue(event: @event, attempt: "att-1", ref: {"session" => "$0", "pane" => "p1"}, payload: "hello")
+          end
+          assert_empty @native.calls
+          refute File.exist?(File.join(@dir, "#{@event}.json"))
+        end
+
+        def test_malformed_persisted_pair_refuses_before_claim_or_native_submission
+          enqueue
+          record = Molecules::DeliveryRecordStore.load(@dir, @event)
+          [["$0", "p1"], [" ws1 ", "p1"]].each do |session, pane|
+            malformed = Models::DeliveryRecord.from_h(record.to_h.merge("session" => session, "pane" => pane))
+            Molecules::DeliveryRecordStore.save(malformed, @dir)
+            assert_raises(Ace::Hitl::Providers::InvalidRefError) { @inbox.deliver(event: @event) }
+            assert_equal "queued", Molecules::DeliveryRecordStore.load(@dir, @event).state
+            assert_empty @native.calls
+          end
+        end
+
         def proof(record, outcome: "consumed")
           {"event_id" => @event, "attempt_id" => "att-1",
            "claim_generation" => record["claim_generation"],

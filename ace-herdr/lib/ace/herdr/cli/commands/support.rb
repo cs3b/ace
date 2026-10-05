@@ -30,12 +30,8 @@ module Ace
           # fail closed (spec 8wm.t.vrz §3)
           def resolve_ref(session, pane)
             Ace::Hitl::Providers::Ref.new(
-              session: Ace::Hitl::Providers::Ref.validate!(
-                session || ENV["HERDR_SESSION"], "HERDR_SESSION"
-              ),
-              pane: Ace::Hitl::Providers::Ref.validate!(
-                pane || ENV["HERDR_PANE"], "HERDR_PANE"
-              )
+              session: session || ENV["HERDR_SESSION"], pane: pane || ENV["HERDR_PANE"],
+              session_source: "HERDR_SESSION", pane_source: "HERDR_PANE"
             )
           end
 

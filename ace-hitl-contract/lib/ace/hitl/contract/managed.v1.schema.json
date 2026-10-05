@@ -76,13 +76,29 @@
             },
             "session": {
               "type": "string",
-              "pattern": "^[A-Za-z0-9._:-]{1,128}$"
+              "minLength": 1,
+              "maxLength": 128
             },
             "pane": {
               "type": "string",
-              "pattern": "^[A-Za-z0-9._:-]{1,128}$"
+              "minLength": 1,
+              "maxLength": 128
             }
-          }
+          },
+          "oneOf": [
+            {
+              "properties": {
+                "session": { "pattern": "^[A-Za-z0-9._:-]+$(?![\\s\\S])" },
+                "pane": { "pattern": "^[A-Za-z0-9._:-]+$(?![\\s\\S])" }
+              }
+            },
+            {
+              "properties": {
+                "session": { "pattern": "^\\$(?:0|[1-9][0-9]*)$(?![\\s\\S])" },
+                "pane": { "pattern": "^%(?:0|[1-9][0-9]*)$(?![\\s\\S])" }
+              }
+            }
+          ]
         }
       ]
     },

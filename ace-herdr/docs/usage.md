@@ -48,6 +48,13 @@ Native `agent_blocked` becomes `SendRejectedError`; `agent_prompt_stalled` becom
 
 Use a stable event ID for one message and the assignment attempt that owns it. The reverse-address JSON contains `session` and `pane`, as with `deliver`.
 
+Reverse references use the shared `ace.hitl.ref/v1` pair contract. Herdr token names
+remain valid; the codec also preserves paired native tmux IDs (`$0`/`%0`) when
+carried by managed metadata. Mixed native/token or cross-field IDs refuse.
+Wire and persisted references must be canonical. Syntax acceptance does not add
+tmux execution to this Herdr controller or replace its exact native ownership,
+target and signed receipt checks.
+
 ```bash
 ace-herdr inbox enqueue --event inb-12345678 --attempt ATTEMPT --ref ref.json --file prompt.txt
 ace-herdr inbox status --event inb-12345678 --format json
