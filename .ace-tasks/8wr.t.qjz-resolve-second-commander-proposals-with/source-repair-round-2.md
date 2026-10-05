@@ -45,6 +45,15 @@ Intermediate focused receipts are not substituted for exact final gates. The ini
 
 ## Remaining gates
 
-Full repaired Assign verification awaits the coordinated heavy-test slot (root's 09j run owns it). Original rejected-candidate full Assign is baseline evidence only. Independent exact-source and amended public-contract re-review are pending. Installed authenticated multiUID/Hermes/Telegram sixteen-hour restart and actual privileged operation acceptance remain separate; source fixtures and skips do not satisfy them. No merge, push, release, task completion or installed success is claimed.
+Full repaired Assign verification awaits the coordinated heavy-test slot (root's 09j run owns it). Original rejected-candidate full Assign is baseline evidence only. Independent exact-source and amended public-contract re-review both approved the repair as recorded below; full repaired Assign remains required before integration. Installed authenticated multiUID/Hermes/Telegram sixteen-hour restart and actual privileged operation acceptance remain separate; source fixtures and skips do not satisfy them. No merge, push, release, task completion or installed success is claimed.
 
 The two spec feedback items and five recovered code items were shown, verified against the original source/root reproductions and maintained failures, and resolved against repair commit `d20cd8f62`. Feedback resolution records a repair, not independent approval.
+
+## Independent converged verdicts
+
+Root read the reports and empty feedback lists, and reported both terminal verdicts to the author:
+
+- Normative specification and usage readiness: session `qjz-d20cd8-readiness-round3`, terminal 18455, **APPROVE, zero findings**, scoped to `d20cd8f6296c78ce14e66e1193d58d2a95a9b953`. This establishes public-contract readiness, not implementation or installed proof.
+- Independent source repair re-review: session `qjz-d20cd8-source-round3`, terminal 34324, **APPROVE, zero findings**, same exact source head. Reviewer executed HITL 39 tests / 227 assertions and Overseer 5 / 13 with zero failures/errors. The final delta approval converges with retained prior rounds over the implementation ancestry; prior rejected heads remain rejected historical evidence.
+
+The author did not self-review or promote the task. No runtime source or normative contract changed after `d20cd8f62`; later commits retain evidence only. Root owns integration once the remaining executed Assign gate completes. Separate installed sixteen-hour and privileged-operation proof still gates program acceptance.
