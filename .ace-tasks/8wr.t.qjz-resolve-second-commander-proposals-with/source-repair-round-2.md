@@ -38,6 +38,7 @@ Final executed package gates on exact source `d20cd8f62`:
 | Hermes all | `8x448j` | 116 / 659, zero failures/errors; exit 0 |
 | Contract all | `8x4498` | 21 / 897, zero failures/errors, one installed-consumer skip; exit 0 |
 | Lab all | `8x44a4` | 179 / 603, zero failures/errors, one existing skip; exit 0 |
+| Assign all | `8x44wp` | 849 / 3,693, zero failures/errors, two existing skips; exit 0, 799.48 seconds |
 
 Hermes receipts `8x4465` and `8x447c` were failures (116 / 656, one failure), not passes: the Python plugin fixture reached a parent mise shim and refused the temporary checkout's config inside its isolated HOME. Host mise trust did not fix fixture trust. The final unchanged-source run selected the installed Ruby 3.4.8 and system Python with `PATH=/Users/mc/.local/share/mise/installs/ruby/3.4.8/bin:/opt/homebrew/bin:/usr/bin:/bin`, invoking the checkout's `bin/ace-test` and preserving deterministic isolation. Its report is under `ace-hitl-hermes/.ace-local/test/reports/hitl-hermes/8x448j`; the other final reports are under checkout `.ace-local/test/reports`.
 
@@ -45,7 +46,7 @@ Intermediate focused receipts are not substituted for exact final gates. The ini
 
 ## Remaining gates
 
-Full repaired Assign verification awaits the coordinated heavy-test slot (root's 09j run owns it). Original rejected-candidate full Assign is baseline evidence only. Independent exact-source and amended public-contract re-review both approved the repair as recorded below; full repaired Assign remains required before integration. Installed authenticated multiUID/Hermes/Telegram sixteen-hour restart and actual privileged operation acceptance remain separate; source fixtures and skips do not satisfy them. No merge, push, release, task completion or installed success is claimed.
+Full repaired Assign verification completed in owned session 87082 after the coordinated heavy-test slot became free. The checkout's `bin/ace-test ace-assign all` used unchanged deadlines and the same explicit Ruby/system-Python PATH documented above; `PROJECT_ROOT_PATH` selected this checkout. Its terminal exit was 0 and retained report/summary confirm receipt `8x44wp`. Original rejected-candidate full Assign remains baseline evidence only. Independent exact-source and amended public-contract re-review both approved the repair as recorded below. The installed controlled one-host sixteen-hour restart scenario (SC3) still requires execution and independent review; actual Telegram/native/multiUID and privileged operation acceptance remain separate. Source fixtures and skips satisfy none of those installed gates. No merge, push, release, task completion or installed success is claimed. No owned test session remains live.
 
 The two spec feedback items and five recovered code items were shown, verified against the original source/root reproductions and maintained failures, and resolved against repair commit `d20cd8f62`. Feedback resolution records a repair, not independent approval.
 
@@ -56,4 +57,4 @@ Root read the reports and empty feedback lists, and reported both terminal verdi
 - Normative specification and usage readiness: session `qjz-d20cd8-readiness-round3`, terminal 18455, **APPROVE, zero findings**, scoped to `d20cd8f6296c78ce14e66e1193d58d2a95a9b953`. This establishes public-contract readiness, not implementation or installed proof.
 - Independent source repair re-review: session `qjz-d20cd8-source-round3`, terminal 34324, **APPROVE, zero findings**, same exact source head. Reviewer executed HITL 39 tests / 227 assertions and Overseer 5 / 13 with zero failures/errors. The final delta approval converges with retained prior rounds over the implementation ancestry; prior rejected heads remain rejected historical evidence.
 
-The author did not self-review or promote the task. No runtime source or normative contract changed after `d20cd8f62`; later commits retain evidence only. Root owns integration once the remaining executed Assign gate completes. Separate installed sixteen-hour and privileged-operation proof still gates program acceptance.
+The author did not self-review or promote the task. No runtime source or normative contract changed after `d20cd8f62`; later commits retain evidence only. Root owns integration with both independent verdicts and the executed source gates complete. Separate installed sixteen-hour and privileged-operation proof still gates program acceptance.
