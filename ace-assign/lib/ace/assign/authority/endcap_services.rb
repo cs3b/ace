@@ -12,7 +12,7 @@ module Ace
 
         def authorize_service_transfer!(request, params, map, peer, role)
           service_policy!
-          service_policy!.visible!(project: map.fetch("project_id"), uid: map.fetch("worker_uid"))
+          service_policy!.visible!(project: map.fetch("project_id"), uid: map.fetch("worker_uid")) unless request.fetch("operation") == "complete_service"
           @launch.with_assignment(params: params, map: map) do |journal, _registration|
             protected_journal!(journal)
             if request.fetch("operation") == "request_service"
@@ -23,7 +23,7 @@ module Ace
             else
               record = journal.service_request(params.fetch("request_id"))
               raise AttemptErrors::NotFound, "service request is unavailable" unless record
-              service_receiver!(peer, role, map, record.fetch("service_id"))
+              service_executor!(peer, role, record)
               service_ticket!(record, params, map, peer)
             end
           end
@@ -32,17 +32,30 @@ module Ace
 
         def dispatch_service(request, params, map, peer, role, transfer)
           authorize_service_transfer!(request, params, map, peer, role)
-          raise ArgumentError, "structured service input transfer is missing" unless transfer && transfer.count == 1
-          bytes = transfer.bytes.dup.freeze
+          admitted = if request.fetch("operation") == "complete_service"
+            ReceiptTransfer.decode(input: transfer, receipt_sha256: params.fetch("receipt_sha256"), artifact_field: "evidence", reference_key: "ref")
+          else
+            raise ArgumentError, "structured service input transfer is missing" unless transfer && transfer.count == 1
+            transfer.bytes.dup.freeze
+          end
           @launch.with_assignment(params: params, map: map) do |journal, _registration|
             protected_journal!(journal)
+            unless request.fetch("operation") == "complete_service"
+              input_record = request.fetch("operation") == "request_service" ? params : journal.service_request(params.fetch("request_id"))
+              # Replay bypasses the mutation callback, never input validation.
+              # Only body binding is checked here; current effect policy stays
+              # inside each fresh CAS callback.
+              service_policy!.input_binding(admitted, expected_digest: input_record.fetch("input_digest"),
+                expected_target: input_record.fetch("target"))
+            end
             # Admission also runs outside mutate: an exact mutation replay
             # skips its callback and cannot bypass the authenticated ticket.
-            service_policy!.visible!(project: map.fetch("project_id"), uid: map.fetch("worker_uid"))
-            if request.fetch("operation") == "begin_dispatch"
+            service_policy!.visible!(project: map.fetch("project_id"), uid: map.fetch("worker_uid")) unless request.fetch("operation") == "complete_service"
+            if request.fetch("operation") != "request_service"
               record = journal.service_request(params.fetch("request_id"))
-              service_receiver!(peer, role, map, record.fetch("service_id"))
+              service_executor!(peer, role, record)
               service_ticket!(record, params, map, peer)
+              completion_binding!(record, params, admitted) if request.fetch("operation") == "complete_service"
             else
               origin = active_origin(attempt_events(journal, params), params)
               worker_or_launcher!(params.fetch("worker_process_binding"), :worker, map, origin)
@@ -53,9 +66,11 @@ module Ace
               parameters_digest: Atoms::EvidenceDigest.digest(params), expected_generation: params.fetch("expected_generation"),
               with_replay: true) do |events, _commit, _generation|
               if request.fetch("operation") == "request_service"
-                service_claim_plan(journal, events, params, map, peer, role, bytes)
+                service_claim_plan(journal, events, params, map, peer, role, admitted)
+              elsif request.fetch("operation") == "begin_dispatch"
+                service_begin_plan(journal, events, params, map, peer, role, admitted)
               else
-                service_begin_plan(journal, events, params, map, peer, role, bytes)
+                service_completion_plan(journal, events, params, map, peer, role, admitted)
               end
             end
             if request.fetch("operation") == "begin_dispatch" && result.fetch(:replayed)
@@ -67,6 +82,14 @@ module Ace
 
         def service_policy!
           @service_policy || raise(ArgumentError, "full-service authority requires its installed policy owner")
+        end
+
+        def service_executor!(peer, role, record)
+          unless record && role == :executor && peer["uid"] == record.fetch("executor_uid")
+            raise AttemptErrors::UnauthorizedIdentity, "completion requires the recorded executor"
+          end
+          @kernel.live!(peer)
+          true
         end
 
         def service_receiver!(peer, role, map, service_id)
@@ -149,6 +172,45 @@ module Ace
             raise AttemptErrors::UnauthorizedIdentity, "dispatch ticket binding differs"
           end
           true
+        end
+
+        def service_completion_plan(journal, events, params, map, peer, role, admitted)
+          record = journal.service_request(params.fetch("request_id"))
+          service_executor!(peer, role, record)
+          service_ticket!(record, params, map, peer)
+          digest = completion_binding!(record, params, admitted)
+          if record["completion_digest"]
+            return {data: service_projection(record)}
+          end
+          receipt = admitted.fetch(:receipt)
+          owner = ServiceEvidence.new(journal: journal)
+          canonical = Molecules::CanonicalEvidence.new(journal: journal)
+          plan = canonical.import_plan(**owner.context(record), artifacts: admitted.fetch(:artifacts),
+            admitted_after_event_digest: events.last.fetch("digest"))
+          normalized = JSON.parse(JSON.generate(receipt)).merge("evidence" => plan.fetch(:references))
+          replacement = record.merge("state" => receipt.fetch("outcome"), "receipt" => normalized, "completion_digest" => digest)
+          replacement["failed_at"] = Time.now.utc.iso8601(9) if receipt["outcome"] == "failed"
+          plan.merge(data: service_projection(replacement), service_updates: [{request_id: record.fetch("request_id"),
+            expected: record, replacement: replacement, event_type: "service_transition"}])
+        end
+
+        def completion_binding!(record, params, admitted)
+          unless record["candidate_head"] == params["head"] && record["candidate_generation"] == params["candidate_generation"]
+            raise AttemptErrors::Conflict, "completion candidate binding differs"
+          end
+          digest = Atoms::EvidenceDigest.digest("receipt_sha256" => admitted.fetch(:receipt_sha256),
+            "artifacts" => admitted.fetch(:artifacts).map { |bytes| Digest::SHA256.hexdigest(bytes) })
+          if record["completion_digest"] && record["completion_digest"] != digest
+            raise AttemptErrors::Conflict, "service completion content differs"
+          end
+          receipt = admitted.fetch(:receipt)
+          unless receipt.keys.sort == Molecules::EvidenceJournal::TERMINAL_RECEIPT_FIELDS.sort &&
+              Molecules::EvidenceJournal::TERMINAL_BINDING_FIELDS.all? { |field| receipt[field] == record[field] } &&
+              %w[succeeded failed].include?(receipt["outcome"]) &&
+              (receipt["outcome"] != "succeeded" || record["dispatch_phase"] == "dispatch_started")
+            raise AttemptErrors::ReceiptRejected, "completion must attest the exact dispatched request"
+          end
+          digest
         end
 
         def service_projection(record)

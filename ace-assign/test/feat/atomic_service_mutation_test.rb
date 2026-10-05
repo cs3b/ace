@@ -116,6 +116,9 @@ module Ace
           launch.define_singleton_method(:with_assignment) { |**_, &block| block.call(journal, {}) }
           policy = Object.new
           policy.define_singleton_method(:visible!) { |**_| true }
+          policy.define_singleton_method(:input_binding) do |bytes, expected_digest:, expected_target:|
+            raise SecurityError, "input differs" unless bytes == "unused exact replay input" && expected_digest == "a" * 64 && expected_target == {"resource" => "fixture"}
+          end
           input = Object.new
           input.define_singleton_method(:count) { 1 }
           input.define_singleton_method(:bytes) { "unused exact replay input" }
@@ -125,6 +128,12 @@ module Ace
             params, {"project_id" => "fixture", "worker_uid" => Process.uid + 1}, {"uid" => Process.uid}, :executor, input)
           assert replay.fetch(:replayed)
           assert_equal "already_started", replay.dig(:data, "invocation")
+          assert_equal before, journal.ref_value
+          input.define_singleton_method(:bytes) { "changed body under unchanged replay parameters" }
+          assert_raises(SecurityError) do
+            replay_owner.send(:dispatch_service, {"operation" => "begin_dispatch", "mutation_id" => "lost-begin-reply"},
+              params, {"project_id" => "fixture", "worker_uid" => Process.uid + 1}, {"uid" => Process.uid}, :executor, input)
+          end
           assert_equal before, journal.ref_value
         end
       end
@@ -145,6 +154,41 @@ module Ace
           assert_nil journal.mutation_result("complete")
           assert_raises(AttemptErrors::EvidenceUnavailable) { journal.blob(plan.fetch(:references).first.fetch("ref")) }
           refute journal.read_events("assignment-1").any? { |entry| entry.fetch("type") == "evidence_import" }
+        end
+      end
+
+      def test_completion_plan_imports_exact_executor_truth_without_new_origin_permission
+        fixture do |journal, _importer, _context, binding, _repo|
+          existing = journal.service_request("request-1")
+          started = existing.merge("state" => "uncertain", "dispatch_phase" => "dispatch_started")
+          mutate(journal, "begin-fixture", 1) { {data: {}, service_updates: [
+            {request_id: "request-1", expected: existing, replacement: started, event_type: "service_transition"}]} }
+          bytes = "ace-service-attestation request:request-1 input:#{binding.fetch("input_digest")} outcome:succeeded\nobserved result\r\n".b
+          receipt = binding.slice(*Molecules::EvidenceJournal::TERMINAL_BINDING_FIELDS).merge("outcome" => "succeeded",
+            "evidence" => [{"ref" => "private-handler-result", "sha256" => Digest::SHA256.hexdigest(bytes)}])
+          admitted = {receipt: receipt, artifacts: [bytes], receipt_sha256: Digest::SHA256.hexdigest(JSON.generate(receipt))}
+          kernel = Object.new
+          kernel.define_singleton_method(:live!) { |_| true }
+          owner = Authority::Endcap.new(deployment: Object.new, launch: Object.new, kernel: kernel)
+          params = binding.slice("request_id", "assignment_id", "attempt_id", "claim_binding", "candidate_generation").merge("head" => binding.fetch("candidate_head"))
+          prepare = ->(item) { owner.send(:service_completion_plan, journal, journal.read_events("assignment-1"), params,
+            {"project_id" => "fixture"}, {"uid" => Process.uid}, :executor, item) }
+          plan = prepare.call(admitted)
+          assert_equal "uncertain", journal.service_request("request-1").fetch("state")
+          mutate(journal, "complete-observation", 2) { plan }
+          assert_equal "succeeded", journal.service_request("request-1").fetch("state")
+          assert_equal bytes, journal.blob(plan.fetch(:references).first.fetch("ref"))
+          before = journal.ref_value
+          replay = prepare.call(admitted)
+          refute replay.key?(:service_updates)
+          refute replay.key?(:blobs)
+          assert_equal before, journal.ref_value
+          changed = admitted.merge(receipt_sha256: "f" * 64)
+          assert_raises(AttemptErrors::Conflict) { prepare.call(changed) }
+          assert_raises(AttemptErrors::UnauthorizedIdentity) do
+            owner.send(:service_completion_plan, journal, journal.read_events("assignment-1"), params,
+              {"project_id" => "fixture"}, {"uid" => Process.uid + 1}, :executor, admitted)
+          end
         end
       end
 
