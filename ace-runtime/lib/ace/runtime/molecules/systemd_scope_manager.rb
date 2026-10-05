@@ -23,14 +23,18 @@ module Ace
             PropagatesStopTo StopPropagatedFrom JoinsNamespaceOf RequiresMountsFor WantsMountsFor].to_h { |key| [key, "as"] }
         }.freeze
         SERVICE_EXEC_SIGNATURES = {
-          **%w[Type User Group Restart KillMode ProtectSystem RootDirectory NetworkNamespacePath Slice].to_h { |key| [key, "s"] },
-          **%w[SupplementaryGroups ReadWritePaths ReadOnlyPaths Environment PassEnvironment UnsetEnvironment Sockets].to_h { |key| [key, "as"] },
-          **%w[SendSIGKILL Delegate ProtectControlGroups NoNewPrivileges PrivateIPC PrivateDevices DynamicUser].to_h { |key| [key, "b"] },
+          **%w[Type User Group Restart KillMode ProtectSystem RootDirectory RootImage NetworkNamespacePath Slice StandardOutput StandardError WorkingDirectory RuntimeDirectoryPreserve].to_h { |key| [key, "s"] },
+          **%w[SupplementaryGroups ReadWritePaths ReadOnlyPaths Environment PassEnvironment UnsetEnvironment Sockets InaccessiblePaths ExtensionDirectories RuntimeDirectory].to_h { |key| [key, "as"] },
+          **%w[SendSIGKILL Delegate ProtectControlGroups NoNewPrivileges PrivateIPC PrivateDevices DynamicUser RootEphemeral MountAPIVFS].to_h { |key| [key, "b"] },
           **%w[CapabilityBoundingSet AmbientCapabilities RestrictNamespaces].to_h { |key| [key, "t"] },
-          "EnvironmentFiles" => "a(sb)", "RestartForceExitStatus" => "(aiai)", "RestrictAddressFamilies" => "(bas)",
+          "RuntimeDirectoryMode" => "u", "UMask" => "u", "RootImageOptions" => "a(ss)", "TemporaryFileSystem" => "a(ss)", "MountImages" => "a(ssba(ss))",
+          "ExtensionImages" => "a(sba(ss))", "EnvironmentFiles" => "a(sb)", "RestartForceExitStatus" => "(aiai)", "RestrictAddressFamilies" => "(bas)",
           "BindPaths" => "a(ssbt)", "BindReadOnlyPaths" => "a(ssbt)",
           **%w[ExecConditionEx ExecStartPreEx ExecStartEx ExecStartPostEx ExecReloadEx ExecStopEx ExecStopPostEx].to_h { |key| [key, "a(sasasttttuii)"] }
         }.freeze
+
+        UNIT_STATE_SIGNATURES = {"Id" => "s", "LoadState" => "s", "ActiveState" => "s", "SubState" => "s", "Job" => "(uo)"}.freeze
+        MOUNT_SIGNATURES = {"Where" => "s"}.freeze
 
         class Command
           LIMIT = 65_536
@@ -150,7 +154,7 @@ module Ace
             show(unit)
             [unit, typed_properties(unit: unit, interface: "Unit", signatures: UNIT_GRAPH_SIGNATURES)]
           end
-          {"slice" => slice, "service" => service, "ancestors" => ancestors, "unit_paths" => unit_paths}
+          {"slice" => slice, "service" => service, "ancestors" => ancestors, "unit_paths" => unit_paths, "prerequisites" => inspect_prerequisites(service)}
         end
 
         def unit_paths
@@ -174,10 +178,14 @@ module Ace
         # Typed reads only, against the existing system manager. Property sets
         # and unit identities are owner-selected, never request-controlled.
         def typed_properties(unit:, interface:, signatures:)
-          unless [@slice_unit, @service_unit, *@slice_ancestors].include?(unit) &&
-              %w[Unit Service].include?(interface) && (interface == "Unit" || unit == @service_unit) && signatures.is_a?(Hash) &&
+          unless [@slice_unit, @service_unit, *@slice_ancestors, *@prerequisite_units.to_a].include?(unit) &&
+              %w[Unit Service Mount].include?(interface) && (interface == "Unit" || interface == "Service" && unit == @service_unit || interface == "Mount" && @prerequisite_units.to_a.include?(unit) && unit.end_with?(".mount")) && signatures.is_a?(Hash) &&
               signatures.all? { |key, value|
-                allowed = interface == "Unit" ? UNIT_GRAPH_SIGNATURES : SERVICE_EXEC_SIGNATURES
+                allowed = case interface
+                when "Unit" then UNIT_GRAPH_SIGNATURES.merge(UNIT_STATE_SIGNATURES)
+                when "Service" then SERVICE_EXEC_SIGNATURES
+                when "Mount" then MOUNT_SIGNATURES
+                end
                 allowed[key] == value
               } && !signatures.empty?
             raise ArgumentError, "typed inspection requires fixed unit properties"
@@ -220,6 +228,19 @@ module Ace
 
         private
 
+        def inspect_prerequisites(service)
+          @prerequisite_units = service.values_at("Requires", "Wants", "After").flatten.uniq - [@slice_unit]
+          unless @prerequisite_units.all? { |unit| unit == "systemd-journald.socket" ||
+              unit.is_a?(String) && unit.bytesize.between?(7, 255) && unit.end_with?(".mount") && !unit.match?(/[\s\/\0]/) }
+            raise RuntimeUnavailableError, "execution service has an unverified implicit prerequisite"
+          end
+          @prerequisite_units.to_h do |unit|
+            value = typed_properties(unit: unit, interface: "Unit", signatures: UNIT_STATE_SIGNATURES)
+            value.merge!(typed_properties(unit: unit, interface: "Mount", signatures: MOUNT_SIGNATURES)) if unit.end_with?(".mount")
+            [unit, value]
+          end
+        end
+
         def typed_value?(signature, value)
           string = ->(item) { item.is_a?(String) && !item.include?("\0") }
           unsigned = ->(item, bits) { item.is_a?(Integer) && item >= 0 && item < (1 << bits) }
@@ -227,8 +248,17 @@ module Ace
           strings = ->(items) { items.is_a?(Array) && items.all? { |item| string.call(item) } }
           case signature
           when "s" then string.call(value)
+          when "(uo)" then value.is_a?(Array) && value.size == 2 && unsigned.call(value.first, 32) && string.call(value.last) && value.last.start_with?("/")
+          when "a(ss)"
+            value.is_a?(Array) && value.all? { |item| item.is_a?(Array) && item.size == 2 && item.all? { |part| string.call(part) } }
+          when "a(ssba(ss))", "a(sba(ss))"
+            strings_count = signature == "a(ssba(ss))" ? 2 : 1
+            value.is_a?(Array) && value.all? { |item| item.is_a?(Array) && item.size == strings_count + 2 &&
+              item.first(strings_count).all? { |part| string.call(part) } && [true, false].include?(item[strings_count]) &&
+              typed_value?("a(ss)", item.last) }
           when "b" then value == true || value == false
           when "t" then unsigned.call(value, 64)
+          when "u" then unsigned.call(value, 32)
           when "as" then strings.call(value)
           when "(aiai)"
             value.is_a?(Array) && value.size == 2 && value.all? { |items| items.is_a?(Array) && items.all? { |item| signed.call(item) } }

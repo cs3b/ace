@@ -43,7 +43,11 @@ class ExecutionUnitInstallationTest < AceRuntimeTestCase
         index = argv.index("get-property")
         unit = argv[index + 2].delete_prefix("/org/freedesktop/systemd1/unit/").gsub(/_([0-9a-f]{2})/) { [$1.to_i(16)].pack("C") }
         interface = argv[index + 3].split(".").last
-        signatures = interface == "Unit" ? Manager::UNIT_GRAPH_SIGNATURES : Manager::SERVICE_EXEC_SIGNATURES
+        signatures = case interface
+        when "Unit" then Manager::UNIT_GRAPH_SIGNATURES.merge(Manager::UNIT_STATE_SIGNATURES)
+        when "Service" then Manager::SERVICE_EXEC_SIGNATURES
+        when "Mount" then Manager::MOUNT_SIGNATURES
+        end
         profile = profiles.fetch(unit)
         return argv[(index + 4)..].map { |key| JSON.generate("type" => signatures.fetch(key), "data" => profile.fetch(key)) + "\n" }.join
       end
@@ -69,7 +73,7 @@ class ExecutionUnitInstallationTest < AceRuntimeTestCase
   def setup
     @files = Files.new
     @scope = {"slot_id" => "slot", "slice_unit" => "ace-slot.slice", "service_unit" => "ace-slot.service",
-      "root_directory" => "/var/lib/ace-slot/root", "network_namespace_path" => "/run/netns/ace-slot"}
+      "root_directory" => "/var/lib/ace-slot/root", "runtime_directory" => "/run/ace-slot", "network_namespace_path" => "/run/netns/ace-slot"}
     paths = {"slice_fragment" => "/etc/systemd/system/ace-slot.slice",
       "service_fragment" => "/etc/systemd/system/ace-slot.service", "native_executable" => "/usr/bin/herdr",
       "native_configuration" => "/etc/ace/herdr.json", "readiness_executable" => "/usr/libexec/ace-scope-ready",
@@ -88,7 +92,7 @@ class ExecutionUnitInstallationTest < AceRuntimeTestCase
       case signature
       when "s" then ""
       when "b" then false
-      when "t" then 0
+      when "t", "u" then 0
       when "(aiai)" then [[], []]
       when "(bas)" then [true, []]
       else []
@@ -97,10 +101,15 @@ class ExecutionUnitInstallationTest < AceRuntimeTestCase
     @profiles.fetch("ace-slot.service").merge!(service_defaults).merge!(Installation::SERVICE_REQUIRED).merge!(
       "User" => "13001", "Group" => "13001", "Slice" => @scope.fetch("slice_unit"),
       "RootDirectory" => @scope.fetch("root_directory"), "NetworkNamespacePath" => @scope.fetch("network_namespace_path"),
+      "WantsMountsFor" => [@scope.fetch("root_directory")], "RequiresMountsFor" => ["/run/ace-slot"],
+      "RuntimeDirectory" => ["ace-slot"], "After" => ["ace-slot.slice", "-.mount", "run.mount", "systemd-journald.socket"],
       "Environment" => ["HERDR_CONFIG_PATH=#{paths.fetch('native_configuration')}"],
       "RestrictAddressFamilies" => [true, %w[AF_INET AF_INET6 AF_UNIX]],
       "ExecStartEx" => [command(paths.fetch("native_executable"), args: ["server"])],
       "ExecStartPostEx" => [command(paths.fetch("readiness_executable"), args: ["slot"])])
+    @profiles["-.mount"] = {"Id" => "-.mount", "LoadState" => "loaded", "ActiveState" => "active", "SubState" => "mounted", "Job" => [0, "/"], "Where" => "/"}
+    @profiles["run.mount"] = {"Id" => "run.mount", "LoadState" => "loaded", "ActiveState" => "active", "SubState" => "mounted", "Job" => [0, "/"], "Where" => "/run"}
+    @profiles["systemd-journald.socket"] = {"Id" => "systemd-journald.socket", "LoadState" => "loaded", "ActiveState" => "active", "SubState" => "listening", "Job" => [0, "/"]}
     @manifest = {"schema" => Installation::SCHEMA, "slot_id" => "slot", "artifacts" => @artifacts,
       "properties" => {"slice" => JSON.parse(JSON.generate(@profiles.fetch("ace-slot.slice"))),
         "service" => JSON.parse(JSON.generate(@profiles.fetch("ace-slot.service")))}}
@@ -122,7 +131,7 @@ class ExecutionUnitInstallationTest < AceRuntimeTestCase
     value = @installation.verify!(manager: @manager)
     assert_equal @manifest, value
     assert_equal @artifacts.map { |a| a["host_path"] }, @files.digested
-    assert_equal 10, @command.calls.size
+    assert_equal 15, @command.calls.size
     refute value.key?("proof_id")
     refute value.key?("boundary_verified")
     @files.bytes[@scope.fetch("root_directory") + "/usr/bin/herdr"] = "changed native artifact"
@@ -241,6 +250,60 @@ class ExecutionUnitInstallationTest < AceRuntimeTestCase
           end
         end
       end
+    end
+  end
+
+  def test_effective_overlay_cannot_shadow_hashed_native_or_config_even_if_manifest_declares_it
+    %w[/usr/bin/herdr /usr /etc/ace/herdr.json].each do |target|
+      overlay = [["/outside/unverified", target, false, 0]]
+      @profiles["ace-slot.service"]["BindReadOnlyPaths"] = overlay
+      @manifest["properties"]["service"]["BindReadOnlyPaths"] = overlay
+      save_manifest
+      assert_raises(Unavailable) { @installation.verify!(manager: @manager) }
+    end
+    @profiles["ace-slot.service"]["BindReadOnlyPaths"] = []
+    @manifest["properties"]["service"]["BindReadOnlyPaths"] = []
+    @profiles["ace-slot.service"]["BindPaths"] = [[@scope.fetch("root_directory") + "/usr", "/usr", false, 0]]
+    @manifest["properties"]["service"]["BindPaths"] = @profiles["ace-slot.service"]["BindPaths"]
+    save_manifest
+    assert_raises(Unavailable) { @installation.verify!(manager: @manager) }
+  end
+
+  def test_implicit_mount_ordering_requires_active_exact_backing_and_no_job
+    assert @installation.verify!(manager: @manager)
+    @profiles["-.mount"]["Job"] = [42, "/org/freedesktop/systemd1/job/42"]
+    assert_raises(Unavailable) { @installation.verify!(manager: @manager) }
+    @profiles["-.mount"]["Job"] = [0, "/"]
+    @profiles["run.mount"]["Where"] = "/foreign"
+    assert_raises(Unavailable) { @installation.verify!(manager: @manager) }
+  end
+
+  def test_readonly_overlay_is_accepted_only_when_actual_source_bytes_are_verified
+    artifact = @artifacts.find { |entry| entry["role"] == "native_executable" }
+    original_host = artifact.fetch("host_path")
+    replacement = "/installed/verified-herdr"
+    @files.bytes[replacement] = @files.bytes.fetch(original_host)
+    artifact["host_path"] = replacement
+    overlay = [[replacement, "/usr/bin/herdr", false, 0]]
+    @profiles["ace-slot.service"]["BindReadOnlyPaths"] = overlay
+    @manifest["properties"]["service"]["BindReadOnlyPaths"] = overlay
+    save_manifest
+    assert @installation.verify!(manager: @manager)
+    assert_includes @files.digested, replacement
+    @files.bytes[replacement] = "changed actual bind source"
+    assert_raises(Unavailable) { @installation.verify!(manager: @manager) }
+  end
+
+  def test_other_kernel_mount_shadow_options_cannot_be_approved_by_manifest
+    {"TemporaryFileSystem" => [["/usr", "ro"]], "RootImage" => "/foreign/image.raw", "RootEphemeral" => true,
+     "InaccessiblePaths" => ["/usr/bin/herdr"], "ExtensionDirectories" => ["/foreign/extension"]}.each do |key, value|
+      previous = @profiles["ace-slot.service"][key]
+      @profiles["ace-slot.service"][key] = value
+      @manifest["properties"]["service"][key] = value
+      save_manifest
+      assert_raises(Unavailable, key) { @installation.verify!(manager: @manager) }
+      @profiles["ace-slot.service"][key] = previous
+      @manifest["properties"]["service"][key] = previous
     end
   end
 

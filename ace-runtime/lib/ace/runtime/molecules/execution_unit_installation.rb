@@ -22,11 +22,14 @@ module Ace
           "ProtectControlGroups" => true, "NoNewPrivileges" => true, "CapabilityBoundingSet" => 0,
           "AmbientCapabilities" => 0, "RestrictNamespaces" => 0, "PrivateIPC" => true,
           "PrivateDevices" => true, "ProtectSystem" => "strict", "DynamicUser" => false,
-          "EnvironmentFiles" => [], "PassEnvironment" => [], "UnsetEnvironment" => []}.freeze
+          "EnvironmentFiles" => [], "PassEnvironment" => [], "UnsetEnvironment" => [],
+          "StandardOutput" => "journal", "StandardError" => "journal", "RuntimeDirectoryPreserve" => "no",
+          "RuntimeDirectoryMode" => 0o700, "UMask" => 0o077, "RootImage" => "", "RootImageOptions" => [], "RootEphemeral" => false, "ExtensionDirectories" => [],
+          "ExtensionImages" => [], "MountImages" => [], "TemporaryFileSystem" => [], "InaccessiblePaths" => []}.freeze
         EMPTY_ACTIVATION = %w[Requisite BindsTo PartOf Upholds OnFailure OnSuccess OnFailureOf OnSuccessOf
-          TriggeredBy Triggers PropagatesStopTo StopPropagatedFrom JoinsNamespaceOf RequiresMountsFor WantsMountsFor].freeze
+          TriggeredBy Triggers PropagatesStopTo StopPropagatedFrom JoinsNamespaceOf].freeze
         NATIVE_ENVIRONMENT = %w[HERDR_CONFIG_PATH HERDR_SOCKET_PATH HOME SHELL PATH LANG LC_ALL TERM
-          XDG_CONFIG_HOME XDG_DATA_HOME XDG_STATE_HOME XDG_CACHE_HOME XDG_RUNTIME_DIR CODEX_HOME CLAUDE_CONFIG_DIR].freeze
+          TMPDIR TMP TEMP XDG_CONFIG_HOME XDG_DATA_HOME XDG_STATE_HOME XDG_CACHE_HOME XDG_RUNTIME_DIR CODEX_HOME CLAUDE_CONFIG_DIR].freeze
         EMPTY_EXEC = %w[ExecConditionEx ExecStartPreEx ExecReloadEx ExecStopEx ExecStopPostEx].freeze
 
         class Files
@@ -179,7 +182,7 @@ module Ace
             end
           end
           slice, service = profile.values_at("slice", "service")
-          verify_graph!(slice, service, profile.fetch("ancestors"))
+          verify_graph!(slice, service, profile.fetch("ancestors"), profile.fetch("prerequisites"))
           unless @files.activation_routes(profile.fetch("unit_paths"), @scope.fetch("service_unit")).empty?
             raise RuntimeUnavailableError, "service has installed outside enablement or alias routes"
           end
@@ -207,17 +210,10 @@ module Ace
               environment.include?("HERDR_CONFIG_PATH=#{artifacts.fetch('native_configuration').first.fetch('view_path')}")
             raise RuntimeUnavailableError, "native configuration is not the exact immutable input"
           end
-          artifacts.each do |role, entries|
-            next if %w[slice_fragment service_fragment unit_dropin].include?(role)
-            entries.each do |artifact|
-              unless artifact.fetch("host_path") == @scope.fetch("root_directory") + artifact.fetch("view_path")
-                raise RuntimeUnavailableError, "unit executable/configuration is outside its verified root image"
-              end
-            end
-          end
+          verify_artifact_projection!(service, artifacts)
         end
 
-        def verify_graph!(slice, service, ancestors)
+        def verify_graph!(slice, service, ancestors, prerequisites)
           unless ancestors.is_a?(Hash) && !ancestors.empty?
             raise RuntimeUnavailableError, "parent activation graph is incomplete"
           end
@@ -227,19 +223,60 @@ module Ace
             permitted = parent ? [parent.fetch("Id")] : []
             unless unit["LoadState"] == "loaded" && unit["NeedDaemonReload"] == false &&
                 unit["Requires"] == permitted && unit["Wants"] == [] &&
-                EMPTY_ACTIVATION.all? { |key| unit[key] == [] }
+                (EMPTY_ACTIVATION + %w[RequiresMountsFor WantsMountsFor]).all? { |key| unit[key] == [] }
               raise RuntimeUnavailableError, "parent activation graph could start outside its retained hierarchy"
             end
           end
+          permitted_paths = [@scope.fetch("root_directory"), *service.fetch("RuntimeDirectory").map { |path| "/run/#{path}" }]
+          unless prerequisites.is_a?(Hash) && prerequisites.all? { |unit, value|
+            value["Id"] == unit && value["LoadState"] == "loaded" && value["ActiveState"] == "active" && value["Job"] == [0, "/"] &&
+              (unit == "systemd-journald.socket" && value["SubState"] == "listening" ||
+                unit.end_with?(".mount") && value["SubState"] == "mounted" && (value["Where"] == "/" || path?(value["Where"])) &&
+                permitted_paths.any? { |path| covers?(value["Where"], path) })
+          } && (service.values_at("Requires", "Wants", "After").flatten.uniq - [slice["Id"]]).sort == prerequisites.keys.sort &&
+              service.values_at("Requires", "Wants").flatten.none? { |unit| unit == "systemd-journald.socket" }
+            raise RuntimeUnavailableError, "implicit backing mounts/logging are not active exact prerequisites"
+          end
           unless parents.last["Id"] == "-.slice" && service["Slice"] == slice["Id"] &&
-              service["Requires"] == [slice["Id"]] && service["After"] == [slice["Id"]] &&
-              service["Wants"] == [] && service["DefaultDependencies"] == false &&
+              service["Requires"].include?(slice["Id"]) && service["After"].include?(slice["Id"]) &&
+              service["WantsMountsFor"] == [@scope.fetch("root_directory")] &&
+              service.fetch("RuntimeDirectory") == [@scope.fetch("runtime_directory").delete_prefix("/run/")] &&
+              service["RequiresMountsFor"].sort == service.fetch("RuntimeDirectory").map { |path| "/run/#{path}" }.sort &&
+              service["WorkingDirectory"] == "" && service["DefaultDependencies"] == false &&
               %w[RequiredBy RequisiteOf WantedBy BoundBy UpheldBy ConsistsOf].all? { |key| service[key] == [] } &&
               %w[disabled static].include?(service["UnitFileState"]) &&
               EMPTY_ACTIVATION.all? { |key| service[key] == [] }
             raise RuntimeUnavailableError, "service has outside activation or parent stop propagation"
           end
         end
+
+        def verify_artifact_projection!(service, artifacts)
+          writable = service.fetch("BindPaths")
+          readonly = service.fetch("BindReadOnlyPaths")
+          mounts = writable + readonly
+          unless mounts.all? { |mount| path?(mount[0]) && path?(mount[1]) && mount[2] == false && mount[3] == 0 } &&
+              mounts.map { |mount| mount[1] }.uniq.size == mounts.size
+            raise RuntimeUnavailableError, "unit mount projection is ambiguous or optional"
+          end
+          artifacts.each do |role, entries|
+            next if %w[slice_fragment service_fragment unit_dropin].include?(role)
+            entries.each do |artifact|
+              view = artifact.fetch("view_path")
+              if writable.any? { |mount| overlaps?(view, mount[1]) }
+                raise RuntimeUnavailableError, "immutable unit artifact has a writable overlay"
+              end
+              selected = readonly.select { |mount| covers?(mount[1], view) }.max_by { |mount| mount[1].length }
+              relative = selected && view.delete_prefix(selected[1]).delete_prefix("/")
+              host = selected ? (relative.empty? ? selected[0] : File.join(selected[0], relative)) : @scope.fetch("root_directory") + view
+              unless artifact.fetch("host_path") == host
+                raise RuntimeUnavailableError, "hashed artifact is shadowed by another effective unit mount"
+              end
+            end
+          end
+        end
+
+        def covers?(root, path) = root == path || root == "/" || path.start_with?(root + "/")
+        def overlaps?(left, right) = covers?(left, right) || covers?(right, left)
 
         def verify_command!(value, executable)
           unless value.is_a?(Array) && value.size == 1 && value.first.is_a?(Array) && value.first.size == 10 &&
