@@ -10,8 +10,9 @@ module Ace
       class SystemdScopeManager
         SYSTEMCTL = "/usr/bin/systemctl"
         UNIT = /\A[a-zA-Z0-9][a-zA-Z0-9_.-]{0,127}\z/
-        PROPERTIES = %w[Id LoadState ActiveState SubState InvocationID ControlGroup MainPID Slice Job
+        PROPERTIES = %w[Id LoadState ActiveState SubState InvocationID ControlGroup Job
           FragmentPath DropInPaths].freeze
+        SERVICE_PROPERTIES = (PROPERTIES + %w[MainPID Slice]).freeze
 
         class Command
           LIMIT = 65_536
@@ -97,7 +98,7 @@ module Ace
 
         def inspect_units
           slice = show(@slice_unit)
-          service = show(@service_unit)
+          service = show(@service_unit, properties: SERVICE_PROPERTIES)
           unless slice["LoadState"] == "loaded" && service["LoadState"] == "loaded" &&
               service["Slice"] == @slice_unit
             raise RuntimeUnavailableError, "fixed execution units are missing or their placement changed"
@@ -128,21 +129,22 @@ module Ace
           true
         end
 
-        def show(unit)
+        def show(unit, properties: PROPERTIES)
           bytes = @command.call([SYSTEMCTL, "--system", "--no-pager", "--no-ask-password", "show",
-            "--property=#{PROPERTIES.join(',')}", "--", unit], timeout: 5)
+            "--property=#{properties.join(',')}", "--", unit], timeout: 5)
           unless bytes.is_a?(String) && bytes.bytesize.between?(1, Command::LIMIT)
             raise RuntimeUnavailableError, "fixed unit properties are unavailable"
           end
+          expected = properties
           properties = {}
           bytes.each_line do |line|
             key, value = line.chomp.split("=", 2)
-            unless PROPERTIES.include?(key) && value && !properties.key?(key) && !value.include?("\0")
+            unless expected.include?(key) && value && !properties.key?(key) && !value.include?("\0")
               raise RuntimeUnavailableError, "fixed unit property response is malformed"
             end
             properties[key] = value
           end
-          unless properties.keys.sort == PROPERTIES.sort && properties["Id"] == unit
+          unless properties.keys.sort == expected.sort && properties["Id"] == unit
             raise RuntimeUnavailableError, "fixed system manager unit identity differs"
           end
           properties
