@@ -393,3 +393,8 @@ gate implementation” dispatch statements are superseded by this phase decision
 This amendment changes sequencing only. No task status, dependency, acceptance
 checkbox, product behavior or completed evidence is changed; no tests or probes
 are claimed as newly executed by this specification edit.
+
+## Local 9c2 runtime checkpoint — 2026-10-05
+
+- [x] Runtime observation/fixedmanager primitives23bf5ed50 integrated after independentAPPROVE and runtimeall189/575; combinedsource27887208b suite51entries11219passed24skipped34322assertions explicit300. OriginalMainPID-slice fixture gap and corrective review retained in9c2 task.
+- [ ] 9c2 canonical generations, actualmanifest/readiness, scopeclosure/reuse and sealedservice settlement implementation continue; no whole-task or installed proof is claimed by the primitive checkpoint.
