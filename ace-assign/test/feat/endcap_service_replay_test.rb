@@ -16,7 +16,8 @@ module Ace
               "head" => binding.fetch("candidate_head"), "expected_generation" => 1,
               "transfer" => {"sha256" => Digest::SHA256.hexdigest(body), "bytes" => body.bytesize})
           record = binding.merge(params.except("head", "expected_generation", "transfer"),
-            "caller_uid" => worker.fetch("uid"), "dispatch_phase" => "issued", "state" => "uncertain")
+            "caller_uid" => worker.fetch("uid"), "dispatch_phase" => "issued", "state" => "uncertain",
+            "launch_ticket" => "fixture-launch", "reservation_generation" => 1)
           claim = journal.mutate(assignment_id: "assignment-1", attempt_id: "attempt-1", mutation_id: "claim-service",
             operation: "request_service", parameters_digest: Atoms::EvidenceDigest.digest(params), expected_generation: 1,
             with_replay: true) { {data: record, service_updates: [
@@ -36,6 +37,46 @@ module Ace
           endcap = Authority::Endcap.new(deployment: deployment, launch: launch, kernel: kernel, service_policy: policy)
           request = {"operation" => "request_service", "project_id" => "fixture", "mutation_id" => "claim-service", "params" => params}
           yield endcap, request, upload, claim, journal
+        end
+      end
+
+      def test_authorization_read_revalidates_body_and_policy_without_mutation_or_permission
+        with_review_replay do |endcap, original, upload, _claim, journal|
+          params = original.fetch("params").slice("mapping_id", "assignment_id", "attempt_id", "candidate_generation", "head", "request_id", "input_digest", "transfer")
+          record = journal.service_request("request-2")
+          params["claim_binding"] = record.fetch("claim_binding")
+          request = original.merge("operation" => "service_authorization", "mutation_id" => nil, "params" => params)
+          endcap.define_singleton_method(:active_origin) { |*| {"launch_ticket" => record["launch_ticket"], "reservation_generation" => record["reservation_generation"], "process_binding" => {"process_identity" => record["worker_process_binding"]}} }
+          endcap.define_singleton_method(:candidate) { |*| {"head" => params["head"], "candidate_generation" => params["candidate_generation"]} }
+          endcap.define_singleton_method(:approved_review!) { |*| true }
+          endcap.define_singleton_method(:service_receiver!) { |*| true }
+          policy = endcap.instance_variable_get(:@service_policy)
+          calls = 0
+          denied = false
+          policy.define_singleton_method(:prepare!) do |binding, input_bytes:|
+            raise SecurityError, "policy changed" if denied
+            raise SecurityError, "body changed" unless input_bytes == "exact original input"
+            calls += 1
+            {policy_digest: binding.fetch("policy_digest"), operation_digest: "operation-digest"}
+          end
+          ref = journal.ref_value
+          2.times do
+            reply = endcap.dispatch(request: request, peer: {"uid" => Process.uid}, role: :executor, transfer: upload)
+            assert_equal %w[candidate_generation claim_binding head operation_digest policy_digest request_id], reply.fetch(:data).keys.sort
+            refute reply.fetch(:replayed)
+            refute reply.fetch(:data).key?("invocation")
+          end
+          assert_equal 2, calls
+          denied = true
+          assert_raises(SecurityError) { endcap.dispatch(request: request, peer: {"uid" => Process.uid}, role: :executor, transfer: upload) }
+          denied = false
+          changed = Object.new
+          changed.define_singleton_method(:count) { 1 }
+          changed.define_singleton_method(:bytes) { "different body" }
+          assert_raises(SecurityError) { endcap.dispatch(request: request, peer: {"uid" => Process.uid}, role: :executor, transfer: changed) }
+          request["mutation_id"] = "not-a-read"
+          assert_raises(ArgumentError) { endcap.dispatch(request: request, peer: {"uid" => Process.uid}, role: :executor, transfer: upload) }
+          assert_equal ref, journal.ref_value
         end
       end
 

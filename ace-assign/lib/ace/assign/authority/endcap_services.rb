@@ -72,7 +72,39 @@ module Ace
           true
         end
 
+        def service_authorization(request, params, map, peer, role, transfer)
+          authorize_service_transfer!(request, params, map, peer, role)
+          raise ArgumentError, "structured service input transfer is missing" unless transfer && transfer.count == 1
+          bytes = transfer.bytes.dup.freeze
+          @launch.with_assignment(params: params, map: map) do |journal, _registration|
+            protected_journal!(journal)
+            record = journal.service_request(params.fetch("request_id"))
+            service_executor!(peer, role, record)
+            service_ticket!(record, params, map, peer)
+            unless record.fetch("input_digest") == params.fetch("input_digest")
+              raise AttemptErrors::Conflict, "authorization input binding differs"
+            end
+            events = attempt_events(journal, params)
+            origin = active_origin(events, params)
+            unless record["worker_process_binding"] == origin.fetch("process_binding").fetch("process_identity") &&
+                record["launch_ticket"] == origin.fetch("launch_ticket") && record["reservation_generation"] == origin.fetch("reservation_generation")
+              raise AttemptErrors::UnauthorizedIdentity, "authorization launch origin differs"
+            end
+            current = exact_candidate!(candidate(events), params)
+            unless record["candidate_head"] == current["head"] && record["candidate_generation"] == current["candidate_generation"]
+              raise AttemptErrors::Conflict, "authorization candidate changed"
+            end
+            service_receiver!(peer, role, map, record.fetch("service_id"))
+            approved_review!(journal, events, params, map, current)
+            prepared = service_policy!.prepare!(record, input_bytes: bytes)
+            data = params.slice("request_id", "claim_binding", "head", "candidate_generation").merge(
+              "policy_digest" => prepared.fetch(:policy_digest), "operation_digest" => prepared.fetch(:operation_digest))
+            {data: data, replayed: false}
+          end
+        end
+
         def dispatch_service(request, params, map, peer, role, transfer)
+          return service_authorization(request, params, map, peer, role, transfer) if request.fetch("operation") == "service_authorization"
           authorize_service_transfer!(request, params, map, peer, role)
           admitted = if request.fetch("operation") == "complete_service"
             ReceiptTransfer.decode(input: transfer, receipt_sha256: params.fetch("receipt_sha256"), artifact_field: "evidence", reference_key: "ref")
@@ -288,7 +320,7 @@ module Ace
 
         def service_projection(record)
           record.slice("request_id", "assignment_id", "attempt_id", "project_id", "operation", "service_id", "target",
-            "candidate_head", "candidate_generation", "state", "dispatch_ticket_id", "claim_binding", "claim_generation", "dispatch_phase")
+            "candidate_head", "candidate_generation", "state", "dispatch_ticket_id", "claim_binding", "claim_generation", "dispatch_phase", "policy_digest")
         end
       end
     end
