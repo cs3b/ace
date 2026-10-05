@@ -53,14 +53,15 @@ class ExecutionVerdictCliTest < Minitest::Test
     report = JSON.parse(File.read(File.join(report_root, "report.json")))
     assert_equal summary["success"], report.dig("result", "success")
     assert_includes File.read(File.join(report_root, "report.md")), summary["success"] ? "✅ Success" : "❌ Failed"
-    [stdout + stderr, status, summary]
+    [stdout + stderr, status, summary, report]
   end
 
   def assert_failed(root, *args)
-    output, status, summary = run_cli(root, *args)
+    output, status, summary, report = run_cli(root, *args)
     refute status.success?, output
     assert_equal false, summary["success"], output
     assert_equal 0, summary["errors"], output
+    assert_empty report.dig("result", "failures"), output
     assert_match(/execution/i, output)
     summary
   end
@@ -89,6 +90,28 @@ class ExecutionVerdictCliTest < Minitest::Test
         assert_equal marker, File.exist?(File.join(root, "marker"))
         assert_equal marker ? 4 : 3, summary["passed"]
       end
+    end
+  end
+
+  def test_per_file_preserves_headerless_counts_in_both_orders_and_entrypoints
+    [false, true].each do |failure_first|
+      [false, true].each do |by_target|
+        bodies = failure_first ? [green_failure, passing] : [passing, green_failure]
+        with_package("failure/a_test.rb" => bodies[0], "failure/b_test.rb" => bodies[1]) do |root|
+          selection = by_target ? ["all"] : [File.join(root, "test/failure/a_test.rb"), File.join(root, "test/failure/b_test.rb")]
+          summary = assert_failed(root, *selection, "--subprocess", "--per-file", "--no-fail-fast")
+          assert_equal 4, summary["passed"]
+          report = JSON.parse(File.read(Dir.glob(File.join(root, "reports", "**", "report.json")).fetch(0)))
+          assert_equal 5, report.dig("result", "assertions")
+        end
+      end
+    end
+  end
+
+  def test_failure_before_stdout_has_no_fabricated_test_case
+    with_package("failure/exit_test.rb" => "warn 'controlled early exit'\nexit 9\n") do |root|
+      summary = assert_failed(root, File.join(root, "test/failure/exit_test.rb"), "--subprocess")
+      assert_equal 0, summary["total"]
     end
   end
 
