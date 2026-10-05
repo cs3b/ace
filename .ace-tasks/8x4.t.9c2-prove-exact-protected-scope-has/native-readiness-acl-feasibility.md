@@ -124,8 +124,9 @@ canonically admitted generation endpoint in deployment mapping v2. Existing
 mapping v1/09j retains its current checks; no fallback or implicit owner override
 is introduced. It does not change authority/journal sockets or executable/config
 ancestry. Task
-remains draft and the dedicated-server product assumption still needs Captain's
-preference. The selection here is a technical proposal for independent review.
+remains draft pending independent whole-task review. Dedicated worker servers
+are the authorized program's engineering baseline; the optional earlier question
+may steer it but creates no extra approval gate.
 
 ### Why a replacement listener cannot authorize origin
 
@@ -230,8 +231,9 @@ The proposal is technically justified against pathname replacement under these
 explicit constraints, and is ready for independent specification review. Artifact
 FD discipline, fresh baseline installation and actual kernel/manager checks remain
 implementation/installed acceptance obligations of 9c2, not claims of completed
-experiments. Broader filesystem/network writer-boundary feasibility and Captain's
-server-lifetime preference remain as recorded in scope-owner-proposal.md.
+experiments. The usable filesystem/network writer boundary is specified in
+local-writer-boundary-proposal.md; specification readiness and later installed
+acceptance are distinguished in scope-owner-proposal.md.
 
 ### ADR-024 implementation boundary
 

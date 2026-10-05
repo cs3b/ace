@@ -178,12 +178,13 @@ routing; generic ACE owns admission, exact resource/generation identity and seal
 checks. Installation failure refuses before release; later loss of boundary
 identity makes fresh proof unverifiable and holds ownership.
 
-The only product question in this slice is whether a protected attempt must have
-arbitrary host SSH, containers, shared writable project state or host-admin tools.
-Those capabilities are incompatible with this declared profile unless routed
-through a separately authorized bounded existing service with disjoint resources.
-Do not silently expose them, and do not ask Captain to decide routine namespace or
-ACL mechanics. Dedicated-server lifetime preference remains independently pending.
+The engineering baseline uses bounded separately authorized services for host
+capabilities outside this profile and separate persistent overseers. Arbitrary
+worker host SSH/admin/container/shared-write access is not requested by the
+program and creates no new permission gate. The optional earlier preference
+question can steer the design, without treating silence as approval. A later
+request for broader access changes the declared specification; it is not a
+current undefined contract.
 
 ## Inspected source pointers
 

@@ -1,8 +1,12 @@
 # 9c2 scope owner proposal — dedicated reusable Herdr slots
 
 Proposal for independent readiness review, 2026-10-05, based on ACE
-`85c9704fe7e27a02dfd1ea12165093b6a3d2355a`. Task remains draft / needs_review.
-The dedicated worker-server assumption has not received Captain approval.
+`8b01f992b` and the retained pinned upstream research. Task remains draft /
+needs_review pending whole-task independent specification review. Dedicated
+worker Herdr, a separate persistent overseer and bounded outside capabilities
+are the engineering baseline within the authorized program. The earlier optional
+preference question can steer this baseline; silence is not an approval record
+and creates no additional permission gate.
 This document specifies required results of **9c2**, not future orphan work.
 No implementation, native experiment, privilege/auth change or installed proof
 was performed. The recorded automatic-filter restriction still applies.
@@ -106,18 +110,26 @@ scope-generation record instead pins observations established for that attempt:
  reservation_generation, scope_generation, deployment_digest,
  boot_id, slice_invocation_id, service_invocation_id,
  cgroup_identity: {path, mount_id, filesystem_type, device, inode},
- server_identity, socket_identity, workspace_id, original_process_binding}
+ server_identity, socket_identity, workspace_id, original_process_binding,
+ resource_identities: [{host_path, view_path, mount_id, filesystem_type,
+                        device, inode, uid, gid}]}
 ```
 
-`scope_generation` is an authority-allocated monotonic journal generation for the
-slot. Invocation IDs come from the authenticated system manager, server identity
+`scope_generation` is the canonical binding event's journal generation in this
+attempt chain. Full identity includes project/assignment/attempt/slot and manager
+incarnations; the integer alone is never compared across unrelated attempts or
+used as a globally unique slot counter. Invocation IDs come from the authenticated system manager, server identity
 from MainPID plus the existing kernel PID/UID/GID/groups/birth/parent policy, socket
 identity from the authenticated peer and fixed endpoint object, and original
 process binding from 09j's genuine fresh layout reply and gate. Native version,
 protocol and executable digest must match the installed artifact. The service
 must belong to the installed slice; server and gated child must be observed in
 its cgroup subtree before release. The cgroup object is opened and pinned during
-live observation; a same-name replacement is not adopted.
+live observation; a same-name replacement is not adopted. resource_identities
+pin each declared protected root object before payload release. The immutable
+ancestor/access policy comes from the verified boundary manifest; mutable worker
+file modes are not mistaken for immutable installed policy. Alias/foreign mount,
+root object replacement, changed ownership or an outside writer refuses proof.
 
 The v2 change requires adapting 09j's existing source checks to a **canonically
 admitted generation**, while retaining its fresh-pane, exact original child,
@@ -202,8 +214,9 @@ Observation data is exactly
 `{attempt_id, scope_generation, state, proof_id, required_action, generation,
 journal_commit}`. `state` is running, closed_no_writers or unverifiable;
 `proof_id` is null unless a verified canonical no-writer event exists for this
-generation. `required_action` is null for closed_no_writers, otherwise a bounded
-reason such as close_scope or inspect_exact_scope. Native/kernel/private manifest
+generation. `required_action` is exactly null for closed_no_writers, close_scope
+for running or sealed-empty-without-recorded-proof, and inspect_exact_scope for
+unverifiable identity/boundary evidence. Native/kernel/private manifest
 details stay in owner records. Close returns the same bounded projection; it may
 return running while OS stop is pending. Close is explicitly two-phase in this
 bounded interface: the first mutation seals and records its running reply before
@@ -338,49 +351,28 @@ restricts newly bound endpoint permissions. Local Linux platform source
 `src/platform/mod.rs:192` returns false for prepare_server_process; the macOS
 persistent-service path is not a Linux migration primitive.
 
-The following are **mandatory 9c2 results still unproved**, so this proposal is
-not ready for promotion:
+## Specification readiness versus acceptance
 
-* Exact fixed-unit authorization must reject all unauthorized units/verbs,
-  transient creation, property changes and indirect reactivation paths. Actual
-  root-owned deployment/native peer verification must work from non-root authority.
-* Native 0600 socket ACL must be reapplied every activation after exact native
-  readiness. The installer needs a bounded audited OS-owned readiness setup
-  action; there is no existing ACE ready hook that can be claimed as delivered.
-  It must use fixed inputs, reject replaced/symlink endpoints, and carry no
-  caller-controlled privileged arguments. Static/default ACL inheritance is
-  not a substitute. Source review establishes that a same-User, unprivileged
-  ExecStartPost action can set its own socket ACL, but cannot satisfy the current
-  root-owned non-writable final-parent contract while Herdr dynamically binds
-  there. The scoped proposal therefore explicitly uses a worker-owned final
-  runtime parent and exact connected kernel peer/MainPID/birth/InvocationID
-  authentication before sending authority data on every connection. See
-  native-readiness-acl-feasibility.md for the source-backed threat argument,
-  bounded ACL consequences, FD discipline and exact readiness/baseline contract.
-  This technical proposal awaits independent spec review and installed evidence;
-  this endpoint change applies only to canonically admitted mapping-v2 9c2
-  generations. Existing mapping-v1/09j checks receive no implicit owner override
-  or fallback, and authority/config/executable ancestry stays root-protected.
-* Fresh container setup must avoid prior session/plugin/rc execution, account
-  for native baseline processes and preserve 09j's one fresh gated-worker launch.
-  Current 09j static preinstalled workspace is insufficient for automatic fresh
-  server generations by itself.
-* Active slice object/invocation retention, reopening after authority/manager
-  restart, read access, root profile and native startup must work on a supported
-  real Linux/systemd configuration. Source facts do not replace that proof.
-* The declared profile in local-writer-boundary-proposal.md must receive effective
-  installation and refusal evidence; it preserves routed providers and private
-  harness state while separating remote/receiver settlement from local writer
-  closure. Minimal filesystem/network/socket profile must support actual harness/provider
-  work while closing all local or delegated writers. No inspected Lab profile
-  presently establishes this. Failure here requires another real mechanism,
-  not broad `/lab` writes plus a cgroup-empty claim.
+The selected behavior, owner, supported platform, exact public calls, map and
+proof schema, native readiness, local resource boundary, service seal integration,
+restart and continuous reuse are specified in this proposal and its two bounded
+reports. They form the whole-task specification readiness candidate. No remaining
+Captain decision or undefined behavior is claimed for this engineering baseline.
+Independent readiness review may identify a concrete gap; task remains draft until
+that verdict. Source implementation and executed installed proof are later task
+acceptance, not prerequisites for drafting a complete behavior contract.
 
-Captain product decisions: accept attempt-specific worker Herdr teardown while
-keeping overseer long-lived; accept dedicated writer principals/parallel slots;
-identify required SSH/container/host-terminal facilities that must survive the
-enforced boundary. These tradeoffs cannot be resolved by source implementation.
-Other items above are technical readiness obligations of this same task, not
-requests for Captain to bless an unproven primitive. If this mechanism cannot
-satisfy those obligations, retain the shared-server/native-routing alternative
-with the concrete failed obligation; do not promote a partial stopgap.
+Mandatory implementation/acceptance results remain: exact fixed-unit authorization
+allow/deny; real namespace/mount/ACL/FD/native artifact enforcement; fresh workspace
+and provider startup; canonical exclusion/seal/proof/replay and receiver guards;
+retained parent identity across owner/manager restart; true descendant emptiness,
+replacement refusal and safe automatic slot reuse. Failure must refuse/hold
+ownership, never replace these requirements with broad /lab writes or PID/group
+absence. The scoped mapping-v2 replacement removes obsolete v1 at delivery under
+ADR-024; unchanged source until then is not indefinite compatibility.
+
+The requested bounded service roles handle capabilities outside the worker profile.
+Arbitrary worker host-admin/shared-write access is not required by this program.
+A later user request for persistent shared worker servers or those broader
+capabilities would change the specification and must be assessed then; it does
+not block the current authorized engineering default.
