@@ -73,3 +73,26 @@ domain reconciliation owner proves exact target/effect absence and no surviving
 handler writer using a fresh bound challenge. A timestamp or Boolean is not
 proof. The authority has no native ACL and must not issue direct native queries;
 protected prompt/stop belongs to the separately drafted xz9.2 contract.
+
+## Service replay independent review repair
+
+Original checkpoint `a422f2347` remains frozen in its original worktree. Independent
+review rejected two medium defects: exact request replay lost its accepted
+generation/commit, and an existing-record shortcut bypassed canonical mutation-ID
+conflict validation. The independent PoCs were ported unchanged in expectation
+to `endcap_service_replay_test.rb`. They failed before repair: 12/139, two failures,
+no errors, `8x45uc`. The initial repair passed the same 12/139 (`8x45w4`).
+
+Every supplied mutation now passes JournalMutation#mutate. An identical existing
+request has no service update/effect in its plan. An exact retry retains original
+mutation acceptance metadata beside sanitized current service truth; a new ID
+obeys the current expected-generation gate and has its own acceptance metadata.
+Typed created/retained claim results never authorize invocation. Additional real
+Git checks cover new-ID generation refusal/no second claim and a later canonical
+failure followed by original claim replay: 14/157 PASS `8x45x8`.
+
+Continuation is isolated in `codex/wave5-protected-endcap-continuation`. The new
+Lab AuthorityComposition uses the same server/router/origin/journals and policy
+owner; a required-operation completeness check refuses before construction when
+any full-service operation is missing. Its negative startup unit checks passed
+2/5 (`8x45od`). It is not an installed listener/product acceptance claim.
