@@ -239,6 +239,20 @@ module Ace
         end
 
         def reconcile(event:, receipt:, signed_bytes: nil, signature: nil, expected_registration: nil)
+          reconcile_record(event: event, receipt: receipt, signed_bytes: signed_bytes,
+            signature: signature, expected_registration: expected_registration, settle: true)
+        end
+
+        # Canonical consumers reverify retained signed settlement without creating
+        # a new local transition. The same event lock and proof owner are used.
+        def verify_reconciliation(event:, receipt:, signed_bytes:, signature:, expected_registration:)
+          reconcile_record(event: event, receipt: receipt, signed_bytes: signed_bytes,
+            signature: signature, expected_registration: expected_registration, settle: false)
+        end
+
+        private
+
+        def reconcile_record(event:, receipt:, signed_bytes:, signature:, expected_registration:, settle:)
           validate_id!(event, "event")
           with_event(event) do |record|
             raise ValidationError, "unknown inbox event: #{event}" unless record&.inbox
@@ -255,7 +269,7 @@ module Ace
             # can reconcile it exactly like an uncertain outcome.
             replay = %w[completed queued].include?(record.state) && receipt.is_a?(Hash) &&
               receipt == record.inbox["reconciliation"]
-            unless %w[uncertain delivered].include?(record.state) || replay
+            unless replay || (settle && %w[uncertain delivered].include?(record.state))
               raise ValidationError, "event is not reconcilable from state #{record.state}"
             end
             binding = record.inbox["binding"]

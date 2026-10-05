@@ -34,11 +34,30 @@ module Ace
             stage = {"server_identity" => {"pid" => 1}, "socket_identity" => [1, 2, 3], "workspace_id" => "w1"}
             factory = ProtectedInbox.build(context: context, mapping: {"native" => {}}, native: stage, kernel: kernel)
             registration = record.slice("event_id", "attempt_id", "payload_sha256", "receipt_key_sha256")
+            signature = key.sign(OpenSSL::Digest::SHA256.new, bytes)
+            assert_raises(ValidationError) do
+              factory.verify_reconciliation(event: "event", receipt: receipt, signed_bytes: bytes,
+                signature: signature, expected_registration: registration)
+            end
             2.times do
               result = factory.reconcile(event: "event", receipt: receipt, signed_bytes: bytes,
-                signature: key.sign(OpenSSL::Digest::SHA256.new, bytes), expected_registration: registration)
+                signature: signature, expected_registration: registration)
               assert_equal "completed", result.fetch("state")
               refute result.key?("reconciliation_refusal")
+            end
+            before = Dir.glob(File.join(root, "**", "*"), File::FNM_DOTMATCH)
+              .select { |entry| File.file?(entry) }.to_h { |entry| [entry, File.binread(entry)] }
+            verified = factory.verify_reconciliation(event: "event", receipt: receipt,
+              signed_bytes: bytes, signature: signature, expected_registration: registration)
+            assert_equal "completed", verified.fetch("state")
+            refute verified.key?("reconciliation_refusal")
+            assert_equal before, before.keys.to_h { |entry| [entry, File.binread(entry)] }
+            wrong = factory.verify_reconciliation(event: "event", receipt: receipt,
+              signed_bytes: bytes, signature: "forged", expected_registration: registration)
+            assert wrong.fetch("reconciliation_refusal")
+            assert_raises(ValidationError) do
+              factory.verify_reconciliation(event: "event", receipt: receipt, signed_bytes: bytes,
+                signature: signature, expected_registration: registration.merge("payload_sha256" => "a" * 64))
             end
           end
         end
