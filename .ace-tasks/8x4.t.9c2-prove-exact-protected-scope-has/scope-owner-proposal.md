@@ -256,8 +256,9 @@ capabilities, existing NoNewPrivs/Yama policy, denied namespace creation, and
 private IPC/network namespace. A preinstalled NetworkNamespacePath can retain
 necessary routed provider egress without introducing an application broker.
 Host abstract Unix sockets must be absent from that namespace; hiding filesystem
-paths alone is insufficient. These are required profile results, not a proven
-configuration recipe.
+paths alone is insufficient. These are required profile results, not installed evidence. The concrete local
+resource set, usable Codex/Pi profile, OS permissions and outside-effect boundaries
+are specified in local-writer-boundary-proposal.md.
 
 Only this slot's native control socket and the canonical authority endpoint are
 mounted into the minimal root. Docker/Podman/Incus sockets, user/system bus,
@@ -367,7 +368,10 @@ not ready for promotion:
 * Active slice object/invocation retention, reopening after authority/manager
   restart, read access, root profile and native startup must work on a supported
   real Linux/systemd configuration. Source facts do not replace that proof.
-* Minimal filesystem/network/socket profile must support actual harness/provider
+* The declared profile in local-writer-boundary-proposal.md must receive effective
+  installation and refusal evidence; it preserves routed providers and private
+  harness state while separating remote/receiver settlement from local writer
+  closure. Minimal filesystem/network/socket profile must support actual harness/provider
   work while closing all local or delegated writers. No inspected Lab profile
   presently establishes this. Failure here requires another real mechanism,
   not broad `/lab` writes plus a cgroup-empty claim.
