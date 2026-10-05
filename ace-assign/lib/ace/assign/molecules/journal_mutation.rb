@@ -47,7 +47,8 @@ module Ace
               blobs = plan.fetch(:blobs, {})
               events = chain_mutation_events(attempt_id, current.last&.fetch("digest"), plan.fetch(:events, []))
               updates = prepare_service_updates(plan.fetch(:service_updates, []), assignment_id: assignment_id,
-                attempt_id: attempt_id, pending: {current_events: current, pending_events: events, blobs: blobs, commit: old})
+                attempt_id: attempt_id, pending: {current_events: current, pending_events: events, blobs: blobs, commit: old,
+                  service_inputs: service_input_context(plan)})
               events.concat(chain_mutation_events(attempt_id, events.last&.fetch("digest") || current.last&.fetch("digest"),
                 updates.map { |prepared| prepared.fetch(:event) }))
               data = plan.fetch(:data).merge("generation" => generation + 1)
@@ -96,6 +97,21 @@ module Ace
           end
           nil
         end
+
+        # Source composition supplies original body bytes only for the current
+        # service CAS callback. They are never part of persisted mutation data.
+        def service_input_context(plan)
+          inputs = plan.fetch(:service_inputs, {})
+          raise ArgumentError, "invalid ephemeral service input context" unless inputs.is_a?(Hash)
+          return {}.freeze if inputs.empty?
+          updates = plan.fetch(:service_updates, [])
+          unless inputs.size == 1 && updates.size == 1 && inputs.keys == [updates.first.fetch(:request_id)] &&
+              inputs.values.first.is_a?(String) && inputs.values.first.bytesize.between?(1, 64 * 1024)
+            raise ArgumentError, "invalid ephemeral service input context"
+          end
+          inputs.to_h { |key, bytes| [key.dup.freeze, bytes.dup.freeze] }.freeze
+        end
+        private :service_input_context
 
         # Read immutable bytes directly from a selected canonical ref commit.
         # Worktree projections are never consulted for protected evidence.

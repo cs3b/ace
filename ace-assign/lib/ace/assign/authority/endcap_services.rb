@@ -6,7 +6,43 @@ module Ace
       class Endcap
         SERVICE_IDENTITY = %w[request_id assignment_id attempt_id project_id operation input_digest target
           authorization service_id caller_uid candidate_head candidate_generation executor_uid transport policy_digest
-          worker_process_binding launch_ticket reservation_generation].freeze
+          worker_process_binding launch_ticket reservation_generation mapping_id].freeze
+
+        # Called only by the installed journal composition, including lower
+        # service writers. It never reacquires lifecycle/authority locks.
+        def authorize_service_update!(journal:, existing:, replacement:, pending:)
+          protected_journal!(journal)
+          initial = existing.nil? && %w[accepted uncertain].include?(replacement["state"])
+          begin_dispatch = existing && existing["dispatch_phase"] == "issued" && replacement["dispatch_phase"] == "dispatch_started"
+          if existing && existing["dispatch_phase"] != replacement["dispatch_phase"] && !begin_dispatch
+            raise AttemptErrors::InvalidState, "invalid protected dispatch phase change"
+          end
+          return true unless initial || begin_dispatch
+          unless replacement["state"] == "uncertain" && (initial ? replacement["dispatch_phase"] == "issued" : true)
+            raise AttemptErrors::InvalidState, "fresh protected effect requires an uncertain dispatch ticket"
+          end
+          bytes = pending && pending.fetch(:service_inputs, {})[replacement.fetch("request_id")]
+          raise AttemptErrors::UnauthorizedIdentity, "fresh service effect requires its exact original input" unless bytes.is_a?(String)
+          map = @deployment.mapping(replacement.fetch("mapping_id"))
+          unless replacement["project_id"] == map["project_id"] && replacement["caller_uid"] == map["worker_uid"]
+            raise AttemptErrors::UnauthorizedIdentity, "protected service mapping differs"
+          end
+          params = replacement.slice("mapping_id", "assignment_id", "attempt_id", "candidate_generation").merge("head" => replacement.fetch("candidate_head"))
+          events = pending.fetch(:current_events)
+          origin = active_origin(events, params)
+          unless replacement["worker_process_binding"] == origin.fetch("process_binding").fetch("process_identity") &&
+              replacement["launch_ticket"] == origin.fetch("launch_ticket") && replacement["reservation_generation"] == origin.fetch("reservation_generation")
+            raise AttemptErrors::UnauthorizedIdentity, "protected service origin differs"
+          end
+          receiver = @deployment.project(map.fetch("project_id")).fetch("service_receivers").fetch(replacement.fetch("service_id"))
+          raise AttemptErrors::UnauthorizedIdentity, "protected service executor differs" unless receiver.fetch("executor_uid") == replacement.fetch("executor_uid")
+          current = exact_candidate!(candidate(events), params)
+          approved_review!(journal, events, params, map, current)
+          service_policy!.prepare!(replacement, input_bytes: bytes)
+          true
+        rescue KeyError
+          raise AttemptErrors::UnauthorizedIdentity, "protected service admission context is incomplete"
+        end
 
         private
 
@@ -16,10 +52,16 @@ module Ace
           @launch.with_assignment(params: params, map: map) do |journal, _registration|
             protected_journal!(journal)
             if request.fetch("operation") == "request_service"
-              events = attempt_events(journal, params)
-              origin = active_origin(events, params)
-              worker_or_launcher!(params.fetch("worker_process_binding"), :worker, map, origin)
-              service_receiver!(peer, role, map, params.fetch("service_id"))
+              existing = journal.service_request(params.fetch("request_id"))
+              if existing
+                service_executor!(peer, role, existing)
+                service_replay_binding!(existing, params, map)
+              else
+                events = attempt_events(journal, params)
+                origin = active_origin(events, params)
+                worker_or_launcher!(params.fetch("worker_process_binding"), :worker, map, origin)
+                service_receiver!(peer, role, map, params.fetch("service_id"))
+              end
             else
               record = journal.service_request(params.fetch("request_id"))
               raise AttemptErrors::NotFound, "service request is unavailable" unless record
@@ -51,6 +93,11 @@ module Ace
             # Admission also runs outside mutate: an exact mutation replay
             # skips its callback and cannot bypass the authenticated ticket.
             service_policy!.visible!(project: map.fetch("project_id"), uid: map.fetch("worker_uid")) unless request.fetch("operation") == "complete_service"
+            if request.fetch("operation") == "request_service" && (existing = journal.service_request(params.fetch("request_id")))
+              service_executor!(peer, role, existing)
+              service_replay_binding!(existing, params, map)
+              return {data: service_projection(existing), replayed: true}
+            end
             if request.fetch("operation") != "request_service"
               record = journal.service_request(params.fetch("request_id"))
               service_executor!(peer, role, record)
@@ -115,7 +162,7 @@ module Ace
           receiver = service_receiver!(peer, role, map, params.fetch("service_id"))
           binding = params.slice("request_id", "assignment_id", "attempt_id", "operation", "input_digest", "target",
             "authorization", "service_id").merge("project_id" => map.fetch("project_id"),
-              "caller_uid" => map.fetch("worker_uid"), "candidate_head" => current.fetch("head"),
+              "caller_uid" => map.fetch("worker_uid"), "mapping_id" => params.fetch("mapping_id"), "candidate_head" => current.fetch("head"),
               "candidate_generation" => current.fetch("candidate_generation"),
               "worker_process_binding" => origin.fetch("process_binding").fetch("process_identity"),
               "launch_ticket" => origin.fetch("launch_ticket"), "reservation_generation" => origin.fetch("reservation_generation"))
@@ -136,7 +183,7 @@ module Ace
             "claim_binding" => Atoms::EvidenceDigest.digest(binding.merge("dispatch_ticket_id" => ticket)),
             "claim_generation" => 1, "dispatch_phase" => "issued", "state" => "uncertain",
             "claimed_at" => Time.now.utc.iso8601(9))
-          {data: service_projection(record), service_updates: [{request_id: record.fetch("request_id"),
+          {data: service_projection(record), service_inputs: {record.fetch("request_id") => input_bytes}, service_updates: [{request_id: record.fetch("request_id"),
             expected: nil, replacement: record, event_type: "service_claim"}]}
         end
 
@@ -161,6 +208,7 @@ module Ace
           service_policy!.prepare!(record, input_bytes: input_bytes)
           replacement = record.merge("dispatch_phase" => "dispatch_started")
           {data: service_projection(replacement).merge("invocation" => "permitted"),
+            service_inputs: {record.fetch("request_id") => input_bytes},
             service_updates: [{request_id: record.fetch("request_id"), expected: record,
               replacement: replacement, event_type: "service_transition"}]}
         end
@@ -171,6 +219,16 @@ module Ace
               record["claim_binding"] == params["claim_binding"]
             raise AttemptErrors::UnauthorizedIdentity, "dispatch ticket binding differs"
           end
+          true
+        end
+
+        def service_replay_binding!(record, params, map)
+          fields = %w[request_id assignment_id attempt_id operation input_digest target authorization service_id mapping_id]
+          unless fields.all? { |field| record[field] == params[field] } && record["project_id"] == map["project_id"] &&
+              record["caller_uid"] == map["worker_uid"] && params.dig("worker_process_binding", "uid") == map["worker_uid"]
+            raise AttemptErrors::Conflict, "service replay immutable identity differs"
+          end
+          @kernel.live!(params.fetch("worker_process_binding"))
           true
         end
 

@@ -44,7 +44,7 @@ module Ace
         def call(reference, record, state, pending)
           expected = context(record, no_effect: state == "failed-settled")
           if pending && pending[:pending_events]
-            @canonical.read_pending(reference, **expected, **pending)
+            @canonical.read_pending(reference, **expected, **pending.slice(:current_events, :pending_events, :blobs, :commit))
           else
             @canonical.read(reference, **expected, commit: pending && pending[:commit] || @journal.ref_value)
           end

@@ -185,10 +185,74 @@ module Ace
           assert_equal before, journal.ref_value
           changed = admitted.merge(receipt_sha256: "f" * 64)
           assert_raises(AttemptErrors::Conflict) { prepare.call(changed) }
+          launch = Object.new
+          launch.define_singleton_method(:with_assignment) { |**_, &block| block.call(journal, {}) }
+          revoked_policy = Object.new
+          revoked_policy.define_singleton_method(:visible!) { |**_| raise SecurityError, "worker grant revoked" }
+          transport_owner = Authority::Endcap.new(deployment: Object.new, launch: launch, kernel: kernel, service_policy: revoked_policy)
+          parts = [JSON.generate(receipt), bytes]
+          upload = Object.new
+          upload.define_singleton_method(:count) { parts.size }
+          upload.define_singleton_method(:bytes) { |index: 0| parts.fetch(index) }
+          wire_params = params.merge("receipt_sha256" => admitted.fetch(:receipt_sha256), "expected_generation" => 3)
+          result = transport_owner.send(:dispatch_service, {"operation" => "complete_service", "mutation_id" => "completion-retry"},
+            wire_params, {"project_id" => "fixture"}, {"uid" => Process.uid}, :executor, upload)
+          assert_equal "succeeded", result.dig(:data, "state")
+          assert_equal "succeeded", journal.service_request("request-1").fetch("state")
           assert_raises(AttemptErrors::UnauthorizedIdentity) do
             owner.send(:service_completion_plan, journal, journal.read_events("assignment-1"), params,
               {"project_id" => "fixture"}, {"uid" => Process.uid + 1}, :executor, admitted)
           end
+        end
+      end
+
+      def test_ephemeral_original_input_is_bounded_immutable_and_never_persisted
+        fixture do |journal, _importer, _context, _binding, repo|
+          existing = journal.service_request("request-1")
+          replacement = existing.merge("dispatch_phase" => "issued", "state" => "uncertain")
+          body = "private-original-input-#{SecureRandom.hex(16)}"
+          observed = nil
+          journal.instance_variable_set(:@service_authorizer, lambda do |_old, _record, pending|
+            observed = pending.fetch(:service_inputs)
+            assert observed.frozen?
+            assert observed.fetch("request-1").frozen?
+            assert_equal body, observed.fetch("request-1")
+            assert_raises(FrozenError) { observed.fetch("request-1") << "changed" }
+          end)
+          plan = {data: {"state" => "uncertain"}, service_inputs: {"request-1" => body}, service_updates: [
+            {request_id: "request-1", expected: existing, replacement: replacement, event_type: "service_transition"}]}
+          before = journal.ref_value
+          [{"wrong-request" => body}, {"request-1" => ""}, {"request-1" => "x" * (64 * 1024 + 1)}].each do |inputs|
+            error = assert_raises(ArgumentError) { mutate(journal, "ephemeral", 1) { plan.merge(service_inputs: inputs) } }
+            refute_includes error.message, body
+            assert_equal before, journal.ref_value
+          end
+          reply = mutate(journal, "ephemeral", 1) { plan }
+          refute_includes JSON.generate(reply), body
+          refute_includes JSON.generate(journal.read_events("assignment-1")), body
+          git(repo, "ls-tree", "-r", "--name-only", journal.ref_value).lines.each do |path|
+            refute_includes git(repo, "show", "#{journal.ref_value}:#{path.strip}"), body
+          end
+          body << "caller mutation"
+          refute_equal body, observed.fetch("request-1")
+        end
+      end
+
+      def test_lower_protected_fresh_write_without_original_input_refuses_before_policy_or_origin
+        fixture do |journal, _importer, _context, binding, _repo|
+          owner = Authority::Endcap.new(deployment: Object.new, launch: Object.new)
+          journal.instance_variable_set(:@service_authorizer, ->(existing, replacement, pending) {
+            owner.authorize_service_update!(journal: journal, existing: existing, replacement: replacement, pending: pending)
+          })
+          before = journal.ref_value
+          replacement = binding.merge("request_id" => "request-2", "state" => "uncertain", "dispatch_phase" => "issued")
+          error = assert_raises(AttemptErrors::UnauthorizedIdentity) do
+            mutate(journal, "unbound-input", 1) { {data: {}, service_updates: [
+              {request_id: "request-2", expected: nil, replacement: replacement, event_type: "service_claim"}]} }
+          end
+          assert_match(/original input/, error.message)
+          assert_equal before, journal.ref_value
+          assert_nil journal.service_request("request-2")
         end
       end
 
