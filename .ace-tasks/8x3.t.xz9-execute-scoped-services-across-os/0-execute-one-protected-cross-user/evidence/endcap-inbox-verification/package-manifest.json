@@ -1,0 +1,54 @@
+{
+  "source_revision": "07ee624430518909945eb4fa2b970c386a096821",
+  "scope": "Executed local package verification; not installed Lab acceptance",
+  "records": [
+    {
+      "package": "assign",
+      "command": "bin/ace-test ace-assign all",
+      "execution_id": "2862773c-c655-4f44-a272-96012c08e82c",
+      "summary": {
+        "execution_id": "2862773c-c655-4f44-a272-96012c08e82c",
+        "assertions": 4853,
+        "passed": 1003,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 2,
+        "total": 1005,
+        "pass_rate": 99.8,
+        "duration": 1198.781141,
+        "success": true,
+        "timestamp": "2026-10-05T12:44:28+01:00"
+      },
+      "files_sha256": {
+        "summary.json": "f56dab58b72d01841e5d3c8c70eaaeb5861db2d258c065a9c16aef8d69f10ef4",
+        "report.json": "f0b66275106593f94270ebc1b8830d338dd07d7eca2deafc5675a2fe090e6471",
+        "raw_output.txt": "971b498caed72d275b5677f3b89ffada53a6ccd1cde177c9fa8700680eb9600b",
+        "raw_stderr.txt": "f818e561c18c8ff818fee134dbeca5abdc96954360b0dbb1d11c93672137faf0"
+      }
+    },
+    {
+      "package": "herdr",
+      "command": "bin/ace-test ace-herdr all",
+      "execution_id": "aafc3f4b-beea-4ebc-bbaf-d435379c3a1e",
+      "summary": {
+        "execution_id": "aafc3f4b-beea-4ebc-bbaf-d435379c3a1e",
+        "assertions": 1641,
+        "passed": 476,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "total": 476,
+        "pass_rate": 100.0,
+        "duration": 11.089478,
+        "success": true,
+        "timestamp": "2026-10-05T12:45:54+01:00"
+      },
+      "files_sha256": {
+        "summary.json": "90788f0442a2c30eb82cdcca66887973e5256429b1768b83995d855b38385112",
+        "report.json": "06907294d5cd4fdbc3b53bdda44ba8502ddb587c2abf0424ce6f40ea0f694ae5",
+        "raw_output.txt": "353c5cabc39e855348331944ca7b287d29fc3c2fe68cf7c0fdaf7fafc591c5c7",
+        "raw_stderr.txt": "7c370d9536d7d0d6a0f7cd7f9826692acd93e4fb05ba46f7b630b879740343d3"
+      }
+    }
+  ]
+}

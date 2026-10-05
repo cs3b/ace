@@ -424,3 +424,17 @@ are claimed as newly executed by this specification edit.
 - [x] Verify exact source `0786c817ae1d426ed2d8639d56450a55016a7083`: default suite 51 entries, 11,252 passed, 24 skipped, zero failures/errors.
 - [ ] Connect actual 9c2 owner lifecycle and xz9.0 canonical inbox handlers, including no-create retained locks; complete independent review and integration before coherent release preparation.
 - [ ] Publish the prepared integrated versions through Captain's interactive OTP script, then verify the installed graph and execute remaining Lab acceptance.
+
+## Current local integration — 2026-10-05
+
+- [x] xz9.0 canonical inbox reconciliation and shared settlement integrated at
+  881cc43868 after independent review of 943444/07ee62443. Full Assign 1003 passed
+  (2 skipped) and Herdr 476 passed. Composed fast-suite coverage: 11252 passed,
+  24 skipped; original Assign 120-second suite timeout and successful isolated retry
+  are both retained in xz9.0/endcap-inbox-verification.md.
+- [ ] 9c2 connected parent binding, seal/closure, guarded abort, canonical reservation
+  release and reuse remain in progress; network installation evidence needs review.
+- [ ] xz9.0 scope-guarded registration, finish/recover and complete composition remain
+  open. A reconciliation/settlement helper does not make protected startup complete.
+- [ ] Integrate remaining coherent source and dependency floors before gem preparation;
+  Captain interactive publication precedes installed graph and actual Lab tests.

@@ -11,3 +11,7 @@ Final package/default-suite verification and main integration are still pending
 at the time these review artifacts were retained. An interrupted initial full
 Assign run on ec57 returned130 and produced no final report; its completed fast
 phase is not a full-package pass.
+
+Subsequent integration: candidate 07ee was merged at 881cc43868 after full package
+verification and composed fast-suite coverage. See ../../endcap-inbox-verification.md
+for exact invocations and the retained original suite timeout.
