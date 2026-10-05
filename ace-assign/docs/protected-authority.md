@@ -19,7 +19,7 @@ by `Ace::Assign::Authority::Deployment`:
 | `projects.ID` | `journal_repository`, `evidence_git_ref` (`refs/ace/execution`), `evidence_checkout_root`, `assignment_root`, `candidate_root`, `launcher_uids`, `reviewer_uids`, `worker_uids`, `service_executor_uids`, `supervisor_uids`, `peer_credentials` |
 | `projects.ID.peer_credentials.UID` | `gid`, sorted unique `groups`, `scratch_root`; every configured role UID has one fixed entry |
 | `launch_mappings.ID` | `project_id`, `authority_id`, `launcher_uid`, `launcher_gid`, `launcher_groups`, `worker_uid`, `worker_gid`, `worker_groups`, `worker_actor`, `worker_cwd`, `worker_argv`, `worker_env`, `bootstrap`, `bootstrap_sha256`, `native` |
-| `launch_mappings.ID.native` | `socket_path`, `socket_identity`, `executable`, `version` (`0.9.3`), `server_identity` |
+| `launch_mappings.ID.native` | `socket_path`, `socket_identity`, `executable`, `version` (`0.9.3`), `server_identity`, canonical `workspace_id` (`wN`) |
 
 All paths are canonical and absolute. The native socket identity is the observed
 `[device, inode, worker_uid]`. The server identity is the exact observed object
@@ -108,3 +108,5 @@ operations.
 Source tests and Linux primitive fixtures are separate from installed deployment
 acceptance. A Docker kernel with Yama=0 is expected to refuse the product gate;
 it does not establish the required positive protected launch proof.
+
+Protected launch uses only `layout.apply` in the installed workspace. `workspace.get` checks that exact workspace ID before creation; its reply must echo the ID even when another workspace is active. Missing or replaced containers refuse without fallback. Container contents supply no worker evidence. The original fresh layout reply remains the source of the new tab/pane identity.

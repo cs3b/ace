@@ -38,7 +38,7 @@ module Ace
           @kernel = Kernel.new
           @peer = @kernel.capture(Process.pid)
           @map = {"project_id" => "project", "authority_id" => "authority", "worker_uid" => 13001, "worker_gid" => 13001,
-            "worker_groups" => [13001], "bootstrap" => "/usr/libexec/ace-worker-gate", "bootstrap_sha256" => "a" * 64, "worker_cwd" => "/home/worker", "worker_actor" => "worker", "native" => {"server_identity" => @kernel.capture(90), "socket_identity" => [1, 2, 13001]}}
+            "worker_groups" => [13001], "bootstrap" => "/usr/libexec/ace-worker-gate", "bootstrap_sha256" => "a" * 64, "worker_cwd" => "/home/worker", "worker_actor" => "worker", "native" => {"workspace_id" => "w1", "server_identity" => @kernel.capture(90), "socket_identity" => [1, 2, 13001]}}
           deployment = Object.new
           mapping = @map
           deployment.define_singleton_method(:mapping) { |_id| mapping }
@@ -230,12 +230,92 @@ module Ace
               "failure_digest" => Digest::SHA256.hexdigest(evidence)), id: "abort").fetch(:data)
             assert_equal "uncertain", uncertain.fetch("phase")
             assert_nil uncertain["abort_observation"]
+            again = call("abort_launch", uncertain.slice("attempt_id", "launch_ticket").merge(
+              "expected_generation" => uncertain.fetch("generation"), "failure_evidence" => evidence,
+              "failure_digest" => Digest::SHA256.hexdigest(evidence)), id: "later-abort").fetch(:data)
+            assert_equal "uncertain", again.fetch("phase"), "prior canonical issuance remains authoritative after an uncertain abort"
+            assert_nil again["abort_observation"]
             assert @kernel.handles.none?(&:closed), "issued uncertainty keeps exact termination observations"
           end
           assert gate.join(1)
         ensure
           server&.close; worker&.close
           gate&.kill if gate&.alive?
+        end
+      end
+
+      def test_uncertain_recovery_without_retained_handle_cannot_infer_exit
+        with_authority do
+          state = call("reserve_attempt", @reserve_params, id: "reserve").fetch(:data)
+          state = call("record_launch", params(state), id: "record").fetch(:data)
+          evidence = "inconclusive observation"
+          state = call("abort_launch", state.slice("attempt_id", "launch_ticket").merge(
+            "expected_generation" => state.fetch("generation"), "failure_evidence" => evidence,
+            "failure_digest" => Digest::SHA256.hexdigest(evidence)), id: "uncertain").fetch(:data)
+          @authority.close
+          @kernel.dead << 91
+          before = @journal.ref_value
+          assert_raises(AttemptErrors::EvidenceUnavailable) do
+            call("abort_launch", state.slice("attempt_id", "launch_ticket").merge(
+              "expected_generation" => state.fetch("generation"), "failure_evidence" => evidence,
+              "failure_digest" => Digest::SHA256.hexdigest(evidence)), id: "missing-observation")
+          end
+          assert_equal before, @journal.ref_value
+          assert_equal "uncertain", @journal.derived_attempts("assignment").first.state
+        end
+      end
+
+      def test_inconclusive_abort_can_resolve_only_with_exact_retained_exit_and_no_issuance
+        with_authority do
+          state = call("reserve_attempt", @reserve_params, id: "reserve").fetch(:data)
+          state = call("record_launch", params(state), id: "record").fetch(:data)
+          evidence = "child still alive"
+          state = call("abort_launch", state.slice("attempt_id", "launch_ticket").merge(
+            "expected_generation" => state.fetch("generation"), "failure_evidence" => evidence,
+            "failure_digest" => Digest::SHA256.hexdigest(evidence)), id: "inconclusive").fetch(:data)
+          assert_equal "uncertain", state.fetch("phase")
+          assert @kernel.handles.none?(&:closed)
+          @kernel.dead << 91
+          evidence = "exact retained child pidfd exited; no release ever issued"
+          state = call("abort_launch", state.slice("attempt_id", "launch_ticket").merge(
+            "expected_generation" => state.fetch("generation"), "failure_evidence" => evidence,
+            "failure_digest" => Digest::SHA256.hexdigest(evidence)), id: "positive-recovery").fetch(:data)
+          assert_equal "failed", state.fetch("phase")
+          assert_equal "failed", @journal.derived_attempts("assignment").first.state
+          assert @kernel.handles.all?(&:closed)
+          replacement = call("reserve_attempt", @reserve_params, id: "replacement").fetch(:data)
+          assert_equal "reserved", replacement.fetch("phase")
+        end
+      end
+
+      def test_public_termination_uses_retained_exit_without_native_close_or_repinnning
+        with_authority do
+          state = call("reserve_attempt", @reserve_params, id: "reserve").fetch(:data)
+          state = call("record_launch", params(state), id: "record").fetch(:data)
+          @kernel.dead.concat([90, 91])
+          state = call("inspect_launch", {"attempt_id" => state.fetch("attempt_id")}, id: nil, role: :supervisor).fetch(:data)
+          assert_equal "exited", state.dig("termination_observation", "status")
+          native = Object.new
+          native.define_singleton_method(:terminate) { |*args, **options| raise "an already exited child needs no native close" }
+          result = driver(native).terminate(state: state, binding: state.fetch("process_binding"), evidence: "retained exact gate exit")
+          assert_equal "failed", result.fetch("phase")
+          assert_equal 2, @kernel.handles.size, "inspection/termination must not repin an exited process"
+          assert @kernel.handles.all?(&:closed)
+        end
+      end
+
+      def test_oversized_and_deep_scope_or_oversized_result_refuse_before_commit
+        with_authority do
+          before = @journal.ref_value
+          ["1" * 17_000, Array.new(17, "010").join(".")].each_with_index do |scope, index|
+            assert_raises(ArgumentError) { call("reserve_attempt", @reserve_params.merge("scope" => scope), id: "oversized-#{index}") }
+            assert_equal before, @journal.ref_value
+          end
+          @map["worker_actor"] = "a" * 17_000
+          assert_raises(ArgumentError) { call("reserve_attempt", @reserve_params, id: "oversized-reply") }
+          assert_equal before, @journal.ref_value
+          assert_empty @journal.derived_attempts("assignment")
+          assert_empty @kernel.handles, "a rejected reservation cannot acquire launch authority"
         end
       end
 

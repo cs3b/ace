@@ -62,9 +62,12 @@ module Ace
         end
 
         def terminate(state:, binding:, evidence:, mutation_id: SecureRandom.hex(16))
-          handle = @kernel.pin(binding.fetch("process_identity"))
-          exited = @native.terminate(binding, handle: handle)
-          raise AttemptErrors::EvidenceUnavailable, "native close did not prove exact child exit" unless exited
+          observed = state["termination_observation"]
+          unless observed.is_a?(Hash) && observed["status"] == "exited" && observed["process_identity"] == binding["process_identity"]
+            handle = @kernel.pin(binding.fetch("process_identity"))
+            exited = @native.terminate(binding, handle: handle)
+            raise AttemptErrors::EvidenceUnavailable, "native close did not prove exact child exit" unless exited
+          end
           @client.call("abort_launch", {"assignment_id" => state.fetch("assignment_id"), "attempt_id" => state.fetch("attempt_id"),
             "launch_ticket" => state.fetch("launch_ticket"), "expected_generation" => state.fetch("generation"),
             "failure_evidence" => evidence, "failure_digest" => Digest::SHA256.hexdigest(evidence)}, mutation_id: mutation_id).data
