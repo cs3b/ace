@@ -18,3 +18,5 @@ Create a registered candidate under launcher authority, accept independent curre
 ## Authority command scopes
 
 Full-service deployment uses `ace-lab authority serve --authority ID`; it composes one Assign authority server, 09j launch origin and Endcap with the same Lab-owned policy validator used by service execution. `ace-assign authority serve --authority ID` supplies standalone launch-only scope. Installed composition must match the command; the project never has parallel authority endpoints or journals. A full-service configuration refuses a launch-only command instead of accepting an incomplete server. Commands and actual installed proof remain implementation deliverables; this readiness amendment performs no deployment.
+
+An owning worker submits business result bytes as canonical `result` / `worker` imports. The authority derives that attribution from the exact authenticated native attempt/process; a receipt actor string cannot grant it. Submission does not self-approve completion. The mapped launcher/supervisor admits finish after independent review and outstanding effect/inbox/process checks.
