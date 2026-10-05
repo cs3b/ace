@@ -306,3 +306,13 @@ Historical unchecked sections above retain prior review states; this latest chec
 
 - [x] `ig3`: independent readiness APPROVE62a24a0c closes managed child receipt admission, separate actor/model provenance and CampaignStore-before-journal locking; pending/needs_review false.
 - [ ] `ig3` implementation remains dependency-blocked on completed campaign-free xz9.0 and qkb; full R2/R3 is still required before final qkc/gad.2.
+
+### Canonical result source integration — 2026-10-05
+
+- [x] `xz9.3`: independently APPROVED source e4e4e135 integrated 9b2046c18699943c9b416b03eaee7dd75d7b7cb8; full Assign 972 passed/two skipped, independent17/224 passed; defaultfast targets 11202 passed/24 skipped with --timeout300. The unchanged120-second invocation timed out Assign; passing package duration137.22s. Evidence retained in child.
+- [x] `9c2`: endpoint-generation/ACL technical proposal independently reviewed and integrated6ec9ff8b5. This is draft specification progress only.
+- [ ] `9c2`: finish usable protected-resource/writer boundary and remaining readiness questions, then independent whole-task review and permitted implementation/installed proof.
+- [ ] Complete `xz9.0` finish/recovery/inbox and full composition after its actual dependencies; `09j` remaining native matrix and execution limitation remain open.
+- [ ] `qk0` → atomic complete `qkb` → `ig3`/R2 → `ig4`/R3 → `qkc` and installed Lab gates remain required.
+
+No gems published or actual Lab deployment performed in this checkpoint.
