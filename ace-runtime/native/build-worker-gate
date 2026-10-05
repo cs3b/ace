@@ -1,0 +1,18 @@
+#!/bin/sh
+# Build the shipped immutable Linux bootstrap. Installation is a separate root operation.
+set -eu
+umask 077
+[ "$#" -eq 1 ] || { echo 'usage: build-worker-gate /absolute/private/output' >&2; exit 2; }
+[ "$(uname -s)" = Linux ] || { echo 'worker gate requires Linux' >&2; exit 2; }
+case "$1" in /*) ;; *) echo 'output must be absolute' >&2; exit 2;; esac
+source_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+build_dir=$(mktemp -d)
+trap 'rm -rf -- "$build_dir"' EXIT HUP INT TERM
+cflags=$(env -i PATH=/usr/bin:/bin /usr/bin/pkg-config --cflags json-c)
+libs=$(env -i PATH=/usr/bin:/bin /usr/bin/pkg-config --libs json-c)
+# pkg-config values come only from the installed system development package.
+# shellcheck disable=SC2086
+env -i PATH=/usr/bin:/bin /usr/bin/cc -std=c11 -O2 -D_FORTIFY_SOURCE=3 \
+  -fstack-protector-strong -fPIE -pie -Wl,-z,relro,-z,now \
+  -Wall -Wextra -Werror $cflags "$source_dir/worker_gate.c" $libs -o "$build_dir/ace-worker-gate"
+install -m 0755 "$build_dir/ace-worker-gate" "$1"
