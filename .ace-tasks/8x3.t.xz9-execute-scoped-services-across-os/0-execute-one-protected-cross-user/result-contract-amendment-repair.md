@@ -23,3 +23,26 @@ submit_result/evidence_fetch source/client acceptance, consuming exact accepted
 f91b02889cd465250640c61076835dba7aeed7b5 and 09j, not xz9.0. xz9.0 consumes
 and depends on xz9.3 for terminal integration; it retains blocked finish and
 9c2 dependency. New child remains draft / needs_review pending independent review.
+
+
+## Round-2 REJECT 1b218 repair mapping
+
+1. Existing single services attempt_status gains closed nullable/current-or-retained
+   generation selector and verified sanitized submitted_result projection; mapped
+   supervisor/launcher discovers after lost reply and worker exit, with exact
+   ACL/missing/corrupt behavior and public Client integration acceptance.
+2. Exact fetch success includes Server-generated data.transfer using existing
+   TransferCodec artifacts descriptor; equality to canonical one-part descriptor
+   and actual Client download refusal tests are required.
+3. Direct existing Client.call is the child's public API, with concrete byte-order,
+   fixed purpose, mapping injection, mutation and discovery/fetch usage examples.
+   No new CLI; xz9.0 retains existing finish/evidence CLI protected routing.
+4. Both new task titles set through bin/ace-task update; SCs are progress checkboxes.
+
+This records repair only, not a new independent readiness verdict. All affected
+unreviewed tasks stay draft; no code/tests/probes or promotion occurred.
+
+
+Validation of round-2 repair: bin/ace-task doctor scanned 781 tasks, 463 existing
+warnings (same baseline count as main before two new records; missing-title
+increment removed). git diff --check passes. No runtime tests executed.
