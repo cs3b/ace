@@ -1,0 +1,64 @@
+Test mode: deterministic (hermetic environment)
+Running tests for 51 packages...
+[32m✓[0m   3.20s  ace-git-secrets                     157 tests    396 asserts    0 fail  report: /Users/mc/Ps/ace/.ace-wt/network-installation-evidence/.ace-local/test/reports/git-secrets/81c4b717-32b4-420c-b632-c12e3a929a0c
+[32m✓[0m   3.70s  ace-tmux                            343 tests    909 asserts    0 fail  report: /Users/mc/Ps/ace/.ace-wt/network-installation-evidence/.ace-local/test/reports/tmux/38a7f882-b2ca-4b72-9515-ba58f9349edf
+[32m✓[0m   2.54s  ace-search                           99 tests    253 asserts    0 fail  report: /Users/mc/Ps/ace/.ace-wt/network-installation-evidence/.ace-local/test/reports/search/cff15758-b5ee-4ba3-8735-7e1a20e0cedc
+[32m✓[0m   2.84s  ace-support-items                   334 tests    615 asserts    0 fail  report: /Users/mc/Ps/ace/.ace-wt/network-installation-evidence/.ace-local/test/reports/support-items/3b9ca383-802f-404c-878c-efef35385c4b
+[32m✓[0m   7.89s  ace-support-config                  252 tests    588 asserts    0 fail  report: /Users/mc/Ps/ace/.ace-wt/network-installation-evidence/.ace-local/test/reports/support-config/6a043e81-cd2a-44a6-aa97-a6a29cc92468
+[32m✓[0m   7.99s  ace-llm-providers-cli               390 tests   1025 asserts    0 fail  report: /Users/mc/Ps/ace/.ace-wt/network-installation-evidence/.ace-local/test/reports/llm-providers-cli/d95c6755-5d44-4a5d-b6ca-19d13e94a8f5
+[33m?[0m   9.20s  ace-task                            493 tests   1307 asserts    0 fail  2 skip  report: /Users/mc/Ps/ace/.ace-wt/network-installation-evidence/.ace-local/test/reports/task/0588b56b-7e35-4281-ae5d-09519073531d
+[32m✓[0m   1.91s  ace-git-commit                      246 tests    569 asserts    0 fail  report: /Users/mc/Ps/ace/.ace-wt/network-installation-evidence/.ace-local/test/reports/git-commit/bfd011d6-81a6-4231-82c7-be139cd802d2
+[32m✓[0m   2.51s  ace-git                             556 tests   1387 asserts    0 fail  report: /Users/mc/Ps/ace/.ace-wt/network-installation-evidence/.ace-local/test/reports/git/46f3447d-2fab-4f47-98c5-018e082bc4cc
+[32m✓[0m   3.05s  ace-support-nav                     132 tests    431 asserts    0 fail  report: /Users/mc/Ps/ace/.ace-wt/network-installation-evidence/.ace-local/test/reports/support-nav/335ea947-18a0-4f6f-84eb-f7cbbfe152d3
+[32m✓[0m   3.33s  ace-handbook                         62 tests    390 asserts    0 fail  report: /Users/mc/Ps/ace/.ace-wt/network-installation-evidence/.ace-local/test/reports/handbook/7772e321-22ca-4e73-9511-9d2790b90c67
+[32m✓[0m  12.40s  ace-herdr                           473 tests   1483 asserts    0 fail  report: /Users/mc/Ps/ace/.ace-wt/network-installation-evidence/.ace-local/test/reports/herdr/5336138a-2bde-47f2-bdc2-686df86d43bb
+[32m✓[0m   2.07s  ace-handbook-integration-pi           9 tests     72 asserts    0 fail  report: /Users/mc/Ps/ace/.ace-wt/network-installation-evidence/.ace-local/test/reports/handbook-integration-pi/0332d5a3-e20e-40b0-a822-d175961f0947
+[32m✓[0m   0.62s  ace-runtime                         226 tests    768 asserts    0 fail  report: /Users/mc/Ps/ace/.ace-wt/network-installation-evidence/.ace-local/test/reports/runtime/162975c6-3787-4ef2-902b-aa9e9bfd53a2
+[33m?[0m   1.19s  ace-prompt-prep                     247 tests    622 asserts    0 fail  1 skip  report: /Users/mc/Ps/ace/.ace-wt/network-installation-evidence/.ace-local/test/reports/prompt-prep/a39c32c0-01bb-489f-8029-f36e7f265afb
+[32m✓[0m   0.85s  ace-lint                            306 tests    912 asserts    0 fail  report: /Users/mc/Ps/ace/.ace-wt/network-installation-evidence/.ace-local/test/reports/lint/2150dfe8-e60a-4bda-91f1-77eb5b62ab80
+[33m?[0m   1.10s  ace-bundle                          326 tests    911 asserts    0 fail  1 skip  report: /Users/mc/Ps/ace/.ace-wt/network-installation-evidence/.ace-local/test/reports/bundle/32abb68d-aa13-4f13-aa0a-68e520c02dc5
+[32m✓[0m   1.04s  ace-idea                            258 tests    697 asserts    0 fail  report: /Users/mc/Ps/ace/.ace-wt/network-installation-evidence/.ace-local/test/reports/idea/448a5217-5896-4f36-ab8f-03ef2b6a4c63
+[32m✓[0m   0.86s  ace-docs                            208 tests    573 asserts    0 fail  report: /Users/mc/Ps/ace/.ace-wt/network-installation-evidence/.ace-local/test/reports/docs/68051d10-d318-4b3e-b06a-640fce7a2eac
+[32m✓[0m   0.43s  ace-demo                            221 tests    895 asserts    0 fail  report: /Users/mc/Ps/ace/.ace-wt/network-installation-evidence/.ace-local/test/reports/demo/c7b22793-253a-482e-a59d-f9a6fe72f568
+[33m?[0m  15.90s  ace-git-worktree                    517 tests   1111 asserts    0 fail  17 skip  report: /Users/mc/Ps/ace/.ace-wt/network-installation-evidence/.ace-local/test/reports/git-worktree/869e07a6-94fa-4aff-a2dd-48051ebadceb
+[32m✓[0m   0.65s  ace-support-core                    177 tests    477 asserts    0 fail  report: /Users/mc/Ps/ace/.ace-wt/network-installation-evidence/.ace-local/test/reports/support-core/ce76675d-3196-4e15-8d1c-0be27f8ca037
+[32m✓[0m   0.46s  ace-retro                           195 tests    496 asserts    0 fail  report: /Users/mc/Ps/ace/.ace-wt/network-installation-evidence/.ace-local/test/reports/retro/8ef0ac90-afdb-4e74-accf-c3df86c6c851
+[32m✓[0m   0.79s  ace-test-runner                     182 tests    534 asserts    0 fail  report: /Users/mc/Ps/ace/.ace-wt/network-installation-evidence/.ace-local/test/reports/test-runner/53b9ced9-78d7-40fa-8801-2c6068735730
+[32m✓[0m   0.49s  ace-compressor                      125 tests    575 asserts    0 fail  report: /Users/mc/Ps/ace/.ace-wt/network-installation-evidence/.ace-local/test/reports/compressor/d6ab6cef-c248-4ad9-9481-4eb000bde74e
+[32m✓[0m   0.47s  ace-support-models                  206 tests    501 asserts    0 fail  report: /Users/mc/Ps/ace/.ace-wt/network-installation-evidence/.ace-local/test/reports/support-models/e86280c8-937f-4da5-8231-f371c962e952
+[32m✓[0m   0.21s  ace-llm                             347 tests    868 asserts    0 fail  report: /Users/mc/Ps/ace/.ace-wt/network-installation-evidence/.ace-local/test/reports/llm/2e4c5378-8225-47eb-b40e-f83cf6868df2
+[32m✓[0m   0.22s  ace-sim                              34 tests    161 asserts    0 fail  report: /Users/mc/Ps/ace/.ace-wt/network-installation-evidence/.ace-local/test/reports/sim/1ef4219b-53f0-47d4-8328-c30d91e2f0d0
+[32m✓[0m   0.06s  ace-b36ts                           266 tests    997 asserts    0 fail  report: /Users/mc/Ps/ace/.ace-wt/network-installation-evidence/.ace-local/test/reports/b36ts/ccb6ab9b-5e12-43b6-9e03-846c95125780
+[33m?[0m   0.22s  ace-support-test-helpers            105 tests    327 asserts    0 fail  1 skip  report: /Users/mc/Ps/ace/.ace-wt/network-installation-evidence/.ace-local/test/reports/support-test-helpers/5efe320c-bdbe-44c7-92ab-688bd07d4ed5
+[32m✓[0m   0.06s  ace-git-forgejo                     168 tests    751 asserts    0 fail  report: /Users/mc/Ps/ace/.ace-wt/network-installation-evidence/.ace-local/test/reports/git-forgejo/de365f7b-c8d9-4bf4-9aef-166edf2918ab
+[32m✓[0m   0.02s  ace-hitl-contract                    21 tests    128 asserts    0 fail  report: /Users/mc/Ps/ace/.ace-wt/network-installation-evidence/.ace-local/test/reports/hitl-contract/9f7d1074-c934-40f6-9d75-ee7abaa5ae79
+[32m✓[0m   0.03s  ace-git-github                       92 tests    268 asserts    0 fail  report: /Users/mc/Ps/ace/.ace-wt/network-installation-evidence/.ace-local/test/reports/git-github/2de5138f-7d0b-476c-ae26-db501ab51632
+[32m✓[0m   0.00s  ace-handbook-integration-opencode     1 tests      2 asserts    0 fail  report: /Users/mc/Ps/ace/.ace-wt/network-installation-evidence/.ace-local/test/reports/handbook-integration-opencode/c5e4d712-5da1-4bdf-8c7b-ea9e91de014a
+[32m✓[0m   0.00s  ace-support-mac-clipboard             0 tests      0 asserts    0 fail  report: /Users/mc/Ps/ace/.ace-wt/network-installation-evidence/.ace-local/test/reports/support-mac-clipboard/c02ec898-8436-492b-a960-3cb1637242ca
+[32m✓[0m   0.00s  ace-test                              0 tests      0 asserts    0 fail  report: /Users/mc/Ps/ace/.ace-wt/network-installation-evidence/.ace-local/test/reports/test/3c4f1da5-3ec5-4a60-8c07-133dd5b7277a
+[32m✓[0m   0.00s  ace-support-markdown                 28 tests    120 asserts    0 fail  report: /Users/mc/Ps/ace/.ace-wt/network-installation-evidence/.ace-local/test/reports/support-markdown/c301efb5-286a-4b4f-8d8f-d38490788668
+[32m✓[0m   0.01s  ace-support-cli                      62 tests    220 asserts    0 fail  report: /Users/mc/Ps/ace/.ace-wt/network-installation-evidence/.ace-local/test/reports/support-cli/283007b4-1c5a-4ac4-b20e-2c03ae9635bc
+[32m✓[0m   0.00s  ace-handbook-integration-claude       1 tests      2 asserts    0 fail  report: /Users/mc/Ps/ace/.ace-wt/network-installation-evidence/.ace-local/test/reports/handbook-integration-claude/bc1bb232-29c5-4e48-9423-b2f40516194f
+[32m✓[0m   0.00s  ace-handbook-integration-codex        1 tests      2 asserts    0 fail  report: /Users/mc/Ps/ace/.ace-wt/network-installation-evidence/.ace-local/test/reports/handbook-integration-codex/936219d7-b4fc-43e7-b8e7-995a9a5d2849
+[32m✓[0m   0.00s  ace-handbook-integration-gemini       1 tests      2 asserts    0 fail  report: /Users/mc/Ps/ace/.ace-wt/network-installation-evidence/.ace-local/test/reports/handbook-integration-gemini/ff1f2c12-3bb6-4dfd-ad33-4cd3f166d859
+[32m✓[0m   0.00s  ace-support-fs                       71 tests    125 asserts    0 fail  report: /Users/mc/Ps/ace/.ace-wt/network-installation-evidence/.ace-local/test/reports/support-fs/9bac00e1-8248-4c8c-9d68-57f06490dd26
+[32m✓[0m   0.00s  ace-monorepo-e2e                      0 tests      0 asserts    0 fail  report: /Users/mc/Ps/ace/.ace-wt/network-installation-evidence/.ace-local/test/reports/monorepo-e2e/a3d09ac4-e8f7-49ec-a917-0bc5bec458bc
+[32m✓[0m  19.82s  ace-review                          933 tests   2854 asserts    0 fail  report: /Users/mc/Ps/ace/.ace-wt/network-installation-evidence/.ace-local/test/reports/review/2a3d2b10-4244-4864-8dd3-e15dc48baa89
+[32m✓[0m  21.56s  ace-test-runner-e2e                 647 tests   2162 asserts    0 fail  report: /Users/mc/Ps/ace/.ace-wt/network-installation-evidence/.ace-local/test/reports/test-runner-e2e/5c4bf2d4-fb60-4c93-9fe1-271d03aea1a2
+[32m✓[0m  22.98s  ace-hitl-hermes                     116 tests    659 asserts    0 fail  report: /Users/mc/Ps/ace/.ace-wt/network-installation-evidence/.ace-local/test/reports/hitl-hermes/87838975-4d66-4ee9-9160-bfd2f4be9829
+[32m✓[0m  41.13s  ace-overseer                        252 tests    968 asserts    0 fail  report: /Users/mc/Ps/ace/.ace-wt/network-installation-evidence/.ace-local/test/reports/overseer/8f973808-b7d1-4a3e-be06-96878c4b58cf
+[32m✓[0m  45.29s  ace-hitl                            195 tests   1088 asserts    0 fail  report: /Users/mc/Ps/ace/.ace-wt/network-installation-evidence/.ace-local/test/reports/hitl/bc5eb1f0-81fa-4658-ac17-2182403d7945
+[33m?[0m  35.88s  ace-lab                             199 tests    697 asserts    0 fail  1 skip  report: /Users/mc/Ps/ace/.ace-wt/network-installation-evidence/.ace-local/test/reports/lab/3f6eb4e1-a8dc-4ffd-94ae-b4231669da43
+[33m?[0m  35.94s  ace-lab                             199 tests    697 asserts    0 fail  1 skip  report: /Users/mc/Ps/ace/.ace-wt/network-installation-evidence/.ace-local/test/reports/lab/92dbe1e2-53e7-4b71-a218-182c4859c73f
+[32m✓[0m  107.48s  ace-assign                          818 tests   3017 asserts    0 fail  report: /Users/mc/Ps/ace/.ace-wt/network-installation-evidence/.ace-local/test/reports/assign/e14eb0c0-f6aa-461a-9a03-65fb02a9bcb4
+
+=================================================================
+Skipped: ace-lab (1), ace-bundle (1), ace-git-worktree (17), ace-prompt-prep (1), ace-support-test-helpers (1), ace-lab (1), ace-task (2)
+
+Duration:    130.65s
+Packages:    51 passed, 0 failed
+Tests:       11273 passed, 0 failed, 24 skipped
+Assertions:  34612 passed, 0 failed
+
+[32m✓ ALL TESTS PASSED[0m
+=================================================================

@@ -1,0 +1,38 @@
+Started with run options --seed 21405
+
+ProtectedArtifactSetTest
+  test_supported_local_posix_mounts_and_readonly_modes_are_authenticated PASS (0.01s)
+  test_directory_uses_same_posix_mask_and_requires_directory_type PASS (0.00s)
+  test_wrong_owner_write_mask_and_wrong_kind_refuse_before_mount_lookup PASS (0.00s)
+  test_unknown_and_non_posix_filesystem_models_refuse             PASS (0.00s)
+
+NetworkInstallationEvidenceTest
+  test_ipv6_canonical_control_loopback_and_all_ports_are_supported PASS (0.01s)
+  test_artifact_references_require_exact_digest_length_path_and_schema PASS (0.00s)
+  test_expected_and_selection_are_closed_and_no_missing_evidence_fallback PASS (0.00s)
+  test_checks_are_the_exact_unique_profile_derived_set            PASS (0.00s)
+  test_gem_declares_the_existing_strict_json_feature_dependency   PASS (0.00s)
+  test_recursive_artifact_graph_refuses_even_with_a_fixture_integrity_boundary PASS (0.00s)
+  test_exact_success_is_deeply_immutable_and_contains_only_authentication_context PASS (0.00s)
+  test_observation_bounds_and_trace_ref_bounds_are_exact          PASS (0.00s)
+  test_trace_requires_complete_context_exact_tuple_producer_and_nonempty_raw_observations PASS (0.00s)
+  test_profile_controls_canonical_ranges_families_ports_and_helper_authority PASS (0.01s)
+  test_profile_budget_counts_outer_entries_and_not_nested_ports   PASS (0.00s)
+  test_consistent_shared_artifact_refs_are_allowed_but_conflicts_refuse PASS (0.00s)
+  test_no_duplicate_json_keys_or_invalid_utf8_or_nonfinite_numbers PASS (0.00s)
+  test_report_requires_closed_schema_version_source_and_utc_timestamp PASS (0.00s)
+  test_disabled_families_still_require_ingress_and_explicit_disabled_enforcement PASS (0.00s)
+  test_report_rejects_each_context_mismatch_and_non_integer_namespace PASS (0.00s)
+  test_otherwise_valid_json_with_comments_and_nested_duplicate_keys_refuses PASS (0.00s)
+
+NetworkInstallationArtifactsTest
+  test_complete_closed_verifier_uses_real_graph_bytes_and_holds_all_source_artifacts PASS (0.01s)
+  test_unique_graph_count_and_aggregate_bytes_limits_and_consistent_sharing PASS (0.24s)
+  test_actual_content_descriptors_are_held_until_complete_validation_and_closed_afterwards PASS (0.00s)
+  test_read_length_digest_kind_symlink_and_writable_modes_refuse  PASS (0.01s)
+  test_path_replacement_and_content_or_ancestor_mutation_refuse_while_pinned PASS (0.01s)
+  test_writable_or_symlink_ancestor_refuses                       PASS (0.01s)
+  test_eof_after_size_inspection_is_a_typed_content_refusal_and_closes_handles PASS (0.00s)
+
+Finished in 0.33552s
+28 tests, 174 assertions, 0 failures, 0 errors, 0 skips
