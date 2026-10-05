@@ -1,0 +1,3027 @@
+Started with run options --seed 23978
+
+BranchValidationTest
+  test_branch_validation_allows_slash_characters                  PASS (0.00s)
+  test_branch_validation_allows_main_and_master                   PASS (0.00s)
+  test_branch_validation_still_blocks_truly_invalid_patterns      PASS (0.00s)
+
+ForgeNeutralityTest
+  test_worktree_library_has_no_direct_provider_coupling           PASS (0.00s)
+  test_gemspec_declares_only_the_neutral_core_dependency          PASS (0.00s)
+
+CliOverrideTest
+  test_task_orchestrator_override_logic                           PASS (0.00s)
+  test_custom_commit_message_override                             PASS (0.00s)
+  test_traditional_worktree_mise_trust_logic                      PASS (0.00s)
+
+Finished in 0.00427s
+8 tests, 379 assertions, 0 failures, 0 errors, 0 skips
+
+Started with run options --seed 10251
+
+SlugGeneratorTest
+  test_sanitize_with_special_characters                           PASS (0.00s)
+  test_sanitize_basic                                             PASS (0.00s)
+  test_from_title_empty                                           PASS (0.00s)
+  test_valid_branch_name_too_long                                 PASS (0.00s)
+  test_combined_with_long_title                                   PASS (0.00s)
+  test_from_task_id_with_version                                  PASS (0.00s)
+  test_from_title_preserves_meaning                               PASS (0.00s)
+  test_invalid_branch_name                                        PASS (0.00s)
+  test_valid_branch_name                                          PASS (0.00s)
+  test_from_task_id_full                                          PASS (0.00s)
+  test_sanitize_empty                                             PASS (0.00s)
+  test_combined                                                   PASS (0.00s)
+  test_from_task_id_numeric                                       PASS (0.00s)
+  test_sanitize_with_separators                                   PASS (0.00s)
+  test_custom_max_length                                          PASS (0.00s)
+  test_valid_branch_name_empty                                    PASS (0.00s)
+  test_from_title_handles_underscores                             PASS (0.00s)
+  test_from_title_basic                                           PASS (0.00s)
+  test_custom_fallback                                            PASS (0.00s)
+  test_from_title_with_special_characters                         PASS (0.00s)
+  test_from_title_nil                                             PASS (0.00s)
+  test_from_title_with_long_title                                 PASS (0.00s)
+  test_from_title_handles_multiple_spaces                         PASS (0.00s)
+
+TaskIDExtractorTest
+  test_extract_from_short_ace_task_id                             PASS (0.00s)
+  test_extract_does_not_match_partial_patterns                    PASS (0.00s)
+  test_normalize_from_ace_task_b36ts_path                         PASS (0.00s)
+  test_normalize_orchestrator_number                              PASS (0.00s)
+  test_normalize_subtask_with_short_task_prefix                   PASS (0.00s)
+  test_normalize_with_task_prefix                                 PASS (0.00s)
+  test_normalize_with_nil                                         PASS (0.00s)
+  test_normalize_strips_whitespace                                PASS (0.00s)
+  test_normalize_b36ts_short_ref                                  PASS (0.00s)
+  test_extract_from_b36ts_full_id                                 PASS (0.00s)
+  test_normalize_fully_qualified_subtask_id                       PASS (0.00s)
+  test_extract_from_simple_task_id                                PASS (0.00s)
+  test_normalize_backlog_id                                       PASS (0.00s)
+  test_extract_with_three_digit_task_number                       PASS (0.00s)
+  test_normalize_subtask_number                                   PASS (0.00s)
+  test_normalize_from_task_b36ts_path                             PASS (0.00s)
+  test_normalize_from_ace_task_b36ts_path_with_trailing_slash     PASS (0.00s)
+  test_normalize_backlog_subtask_id                               PASS (0.00s)
+  test_normalize_with_short_ace_task_prefix                       PASS (0.00s)
+  test_extract_from_subtask_id                                    PASS (0.00s)
+  test_normalize_with_empty_string                                PASS (0.00s)
+  test_normalize_three_digit_subtask                              PASS (0.00s)
+  test_normalize_with_whitespace                                  PASS (0.00s)
+  test_extract_from_backlog_task                                  PASS (0.00s)
+  test_normalize_simple_number                                    PASS (0.00s)
+  test_extract_with_invalid_id                                    PASS (0.00s)
+  test_normalize_from_ace_task_numeric_path                       PASS (0.00s)
+  test_normalize_b36ts_full_id                                    PASS (0.00s)
+  test_extract_from_orchestrator_id                               PASS (0.00s)
+  test_normalize_b36ts_subtask_full_id                            PASS (0.00s)
+  test_extract_from_backlog_subtask                               PASS (0.00s)
+  test_normalize_fully_qualified_id                               PASS (0.00s)
+  test_extract_prefers_id_over_task_number                        PASS (0.00s)
+  test_extract_from_short_task_id                                 PASS (0.00s)
+  test_normalize_from_path_with_ace_task_prefix                   PASS (0.00s)
+  test_normalize_subtask_with_task_prefix                         PASS (0.00s)
+  test_normalize_from_path_with_ace_t_prefix                      PASS (0.00s)
+  test_extract_from_b36ts_subtask_full_id                         PASS (0.00s)
+  test_extract_with_task_number_fallback                          PASS (0.00s)
+  test_extract_with_empty_hash                                    PASS (0.00s)
+  test_extract_with_nil_data                                      PASS (0.00s)
+  test_normalize_with_short_task_prefix                           PASS (0.00s)
+  test_normalize_from_path_with_multiple_task_patterns            PASS (0.00s)
+  test_normalize_from_path_with_short_task_prefix                 PASS (0.00s)
+
+GitCommandTest
+  test_git_repository_check                                       PASS (0.00s)
+  test_execute_delegates_to_ace_git_command_executor              PASS (0.00s)
+  test_execute_passes_timeout_to_command_executor                 PASS (0.00s)
+  test_execute_uses_default_timeout                               PASS (0.00s)
+  test_ref_exists_returns_false_for_invalid_ref                   PASS (0.00s)
+  test_current_branch_returns_nil_on_failure                      PASS (0.00s)
+  test_git_root_returns_path                                      PASS (0.00s)
+  test_current_branch_delegates_to_ace_git                        PASS (0.00s)
+  test_current_branch_returns_sha_when_detached                   PASS (0.00s)
+  test_ref_exists_returns_true_for_valid_ref                      PASS (0.00s)
+  test_worktree_delegates_to_execute                              PASS (0.00s)
+  test_worktree_passes_timeout_to_execute                         PASS (0.00s)
+
+PathExpanderTest
+  test_expand_nil                                                 PASS (0.00s)
+  test_writable_create_if_missing                                 PASS (0.00s)
+  test_validate_for_worktree_in_subdirectory_should_pass          PASS (0.00s)
+  test_expand_relative_path                                       PASS (0.00s)
+  test_validate_for_worktree_existing_nonempty_directory          PASS (0.00s)
+  test_writable_permission_denied                                 PASS (0.00s)
+  test_validate_for_worktree_existing_file                        PASS (0.00s)
+  test_expand_absolute_path_with_base                             PASS (0.00s)
+  test_resolve_absolute_path                                      PASS (0.00s)
+  test_validate_for_worktree_at_git_root_should_fail              PASS (0.00s)
+  test_writable_nonexistent_directory                             PASS (0.00s)
+  test_relative_to_git_root                                       PASS (0.00s)
+  test_writable_existing_directory                                PASS (0.00s)
+  test_validate_for_worktree_nonexistent_parent                   PASS (0.00s)
+  test_expand_absolute_path                                       PASS (0.00s)
+  test_expand_home_directory                                      PASS (0.00s)
+  test_validate_for_worktree_in_custom_directory_should_pass      PASS (0.00s)
+  test_expand_with_base_parameter                                 PASS (0.00s)
+  test_relative_to_git_root_outside_repo                          PASS (0.00s)
+  test_expand_multiple_slashes                                    PASS (0.00s)
+  test_resolve_relative_to_base                                   PASS (0.00s)
+  test_expand_empty_string                                        PASS (0.00s)
+  test_expand_tilde_with_slash                                    PASS (0.00s)
+  test_expand_parent_directory                                    PASS (0.00s)
+  test_validate_for_worktree_long_path                            PASS (0.00s)
+  test_expand_current_directory                                   PASS (0.00s)
+  test_expand_without_base_uses_current_directory                 PASS (0.00s)
+  test_expand_tilde_with_subdirectory                             PASS (0.00s)
+  test_expand_with_user_name                                      PASS (0.00s)
+  test_expand_relative_path_with_base                             PASS (0.00s)
+  test_validate_for_worktree_outside_git_root_should_pass         PASS (0.00s)
+  test_validate_for_worktree_valid_path                           PASS (0.00s)
+
+Finished in 0.02693s
+111 tests, 149 assertions, 0 failures, 0 errors, 0 skips
+
+Started with run options --seed 8398
+
+WorktreeRemoverTest
+  test_remove_fails_when_directory_still_exists_after_cleanup     PASS (0.00s)
+  test_delete_branch_if_safe_with_unmerged_branch                 PASS (0.00s)
+  test_remove_with_delete_branch_on_unmerged_branch_without_force PASS (0.00s)
+  test_remove_with_delete_branch_on_merged_branch                 PASS (0.00s)
+  test_remove_forwards_ignore_untracked_to_change_check           PASS (0.00s)
+  test_remove_by_task_id                                          PASS (0.00s)
+  test_remove_without_delete_branch_keeps_branch                  PASS (0.00s)
+  test_remove_still_blocks_changes_when_ignore_untracked_enabled  PASS (0.00s)
+  test_delete_branch_if_safe_with_merged_branch                   PASS (0.00s)
+  test_remove_with_uncommitted_changes_without_force              PASS (0.00s)
+  test_delete_branch_if_safe_with_force                           PASS (0.00s)
+  test_remove_with_delete_branch_and_force_on_unmerged_branch     PASS (0.00s)
+  test_remove_by_branch                                           PASS (0.00s)
+  test_has_uncommitted_changes_ignores_untracked_files_when_requested PASS (0.17s)
+  test_remove_nonexistent_worktree                                PASS (0.00s)
+
+WorktreeListerTest
+  test_list_all_with_filter                                       PASS (0.00s)
+  test_list_all_with_bare_repository                              SKIP (0.00s)
+  test_handles_malformed_git_output                               PASS (0.00s)
+  test_security_validation_on_filter_arguments                    PASS (0.00s)
+  test_command_timeout_handling                                   PASS (0.00s)
+  test_list_all_success                                           PASS (0.00s)
+  test_list_all_empty_repository                                  PASS (0.00s)
+  test_worktree_info_structure                                    PASS (0.00s)
+  test_list_all_parsing_edge_cases                                PASS (0.00s)
+  test_list_all_git_failure                                       PASS (0.00s)
+  test_list_all_with_porcelain_format                             PASS (0.00s)
+
+TaskPusherTest
+  test_set_upstream_returns_success_when_tracking_set             PASS (0.00s)
+  test_set_upstream_uses_provided_remote                          PASS (0.00s)
+  test_remote_exists_returns_false_when_remote_missing            PASS (0.00s)
+  test_custom_timeout_can_be_set                                  PASS (0.00s)
+  test_push_uses_provided_remote                                  PASS (0.00s)
+  test_current_branch_returns_branch_name                         PASS (0.00s)
+  test_get_upstream_returns_nil_when_no_upstream                  PASS (0.00s)
+  test_get_upstream_parses_remote_and_branch                      PASS (0.00s)
+  test_set_upstream_defaults_to_origin_remote                     PASS (0.00s)
+  test_push_returns_success_on_successful_push                    PASS (0.00s)
+  test_has_upstream_returns_true_when_tracking                    PASS (0.00s)
+  test_push_uses_provided_branch                                  PASS (0.00s)
+  test_has_upstream_returns_false_when_not_tracking               PASS (0.00s)
+  test_push_returns_failure_when_no_branch                        PASS (0.00s)
+  test_set_upstream_returns_failure_when_remote_branch_missing    PASS (0.00s)
+  test_current_branch_returns_nil_for_detached_head               PASS (0.00s)
+  test_set_upstream_uses_provided_branch                          PASS (0.00s)
+  test_set_upstream_returns_failure_when_no_branch                PASS (0.00s)
+  test_remote_exists_returns_true_when_remote_exists              PASS (0.00s)
+  test_default_timeout_is_60_seconds                              PASS (0.00s)
+  test_push_returns_failure_on_failed_push                        PASS (0.00s)
+
+PullRequestCheckoutPreparerTest
+  test_fetches_via_matching_local_remote_and_tracks_it            PASS (0.49s)
+  test_rejects_evidence_without_exact_head                        PASS (0.42s)
+  test_rejects_sha_mismatch_between_fetch_and_evidence            PASS (0.51s)
+  test_rejects_evidence_without_source_provenance                 PASS (0.42s)
+  test_fetches_fork_source_by_explicit_url                        PASS (0.49s)
+
+ToolchainTrusterTest
+  test_discovers_tracked_mise_toml                                PASS (0.00s)
+  test_no_tracked_configs_returns_not_applicable                  PASS (0.00s)
+  test_required_policy_fails_when_mise_missing_or_failed          PASS (0.00s)
+  test_advisory_policy_returns_advisory_failed_when_trust_fails   PASS (0.00s)
+
+CleanupApplierTest
+  test_successful_application                                     PASS (0.00s)
+  test_stops_on_first_failure                                     PASS (0.00s)
+  test_rejects_digest_mismatch                                    PASS (0.00s)
+
+BootstrapExecutorTest
+  test_failing_required_command_returns_required_failed           PASS (0.01s)
+  test_no_bootstrap_flag_returns_skipped                          PASS (0.00s)
+  test_unconfigured_command_returns_not_configured                PASS (0.00s)
+  test_successful_command_returns_succeeded                       PASS (0.00s)
+  test_failing_advisory_command_returns_advisory_failed           PASS (0.01s)
+
+PullRequestCreatorTest
+  test_create_draft_proves_pushed_head_sha_to_provider            PASS (0.00s)
+  test_create_draft_reports_existing_pr_without_duplicates        PASS (0.00s)
+  test_local_only_selection_never_resolves_a_server               PASS (0.02s)
+  test_classified_failures_map_to_error_results                   PASS (0.00s)
+
+PullRequestEvidenceResolverTest
+  test_resolve_without_any_configuration_raises_classified_error  PASS (0.02s)
+  test_resolve_with_explicit_server_selection                     PASS (0.00s)
+  test_resolve_returns_server_and_normalized_evidence             PASS (0.00s)
+
+Ace::Git::Worktree::Molecules::ParentTaskResolverTest
+  test_current_branch_fallback_returns_hex_branch_when_branch_exists PASS (0.00s)
+  test_orchestrator_task_falls_back_to_main_when_no_current_branch PASS (0.00s)
+  test_current_branch_fallback_returns_nil_for_explicit_head      PASS (0.00s)
+  test_parent_branch_for_subtask                                  PASS (0.00s)
+  test_main_fallback_when_detached_head_returns_sha               PASS (0.00s)
+  test_extract_parent_branch_returns_default_for_nil              PASS (0.00s)
+  test_returns_default_when_task_fetcher_raises_exception         PASS (0.00s)
+  test_load_parent_task_returns_nil_for_nonexistent               PASS (0.00s)
+  test_current_branch_fallback_rescues_standard_error             PASS (0.00s)
+  test_current_branch_fallback_returns_nil_for_full_sha           PASS (0.00s)
+  test_main_fallback_when_current_branch_returns_nil              PASS (0.00s)
+  test_extract_parent_branch_handles_git_error_gracefully         PASS (0.00s)
+  test_extract_parent_branch_returns_default_for_no_worktree      PASS (0.00s)
+  test_current_branch_fallback_when_parent_worktree_has_no_branch PASS (0.00s)
+  test_orchestrator_task_falls_back_to_main_when_detached_head    PASS (0.00s)
+  test_current_branch_fallback_returns_nil_for_nil_branch         PASS (0.00s)
+  test_default_target_when_parent_has_no_worktree                 PASS (0.00s)
+  test_default_target_when_no_task_data                           PASS (0.00s)
+  test_default_target_when_parent_not_found                       PASS (0.00s)
+  test_current_branch_fallback_returns_nil_for_mixed_case_sha     PASS (0.00s)
+  test_current_branch_fallback_when_parent_has_no_worktree        PASS (0.00s)
+  test_extract_parent_branch_supports_symbol_keys                 PASS (0.00s)
+  test_current_branch_fallback_returns_branch_name                PASS (0.00s)
+  test_parent_worktree_branch_takes_precedence_over_current_branch PASS (0.00s)
+  test_extract_parent_branch_returns_branch_from_worktree         PASS (0.00s)
+  test_default_target_when_parent_worktree_has_no_branch          PASS (0.00s)
+  test_orchestrator_task_uses_current_branch                      PASS (0.00s)
+  test_load_parent_task_returns_data_when_found                   PASS (0.00s)
+  test_current_branch_fallback_returns_nil_for_empty_string       PASS (0.00s)
+  test_current_branch_fallback_returns_nil_for_short_sha          PASS (0.00s)
+
+CleanupReporterTest
+  test_locked_worktree_retained                                   PASS (0.00s)
+  test_ancestor_worktree_removed                                  PASS (0.00s)
+  test_successful_report_has_expected_schema                      PASS (0.00s)
+  test_report_fails_without_common_dir                            PASS (0.00s)
+  test_offline_mode_skips_remote_refresh                          PASS (0.00s)
+  test_dirty_worktree_retained                                    PASS (0.00s)
+  test_unproven_worktree_retained                                 PASS (0.00s)
+  test_protected_local_ref_retained                               PASS (0.00s)
+  test_ancestor_local_ref_removed                                 PASS (0.00s)
+  test_unproven_local_ref_retained                                PASS (0.00s)
+  test_action_plan_orders_worktrees_then_local_then_remote        PASS (0.00s)
+  test_repeated_report_produces_same_digest                       PASS (0.00s)
+  test_report_fails_without_target_ref                            PASS (0.00s)
+  test_different_state_produces_different_digest                  PASS (0.00s)
+  test_changed_provider_proof_invalidates_digest                  PASS (0.00s)
+  test_primary_worktree_retained                                  PASS (0.00s)
+
+CleanupPrResolverTest
+  test_stable_patch_equivalence_proof                             PASS (0.00s)
+  test_slashed_branch_target_stays_strict_against_segment_base    PASS (0.00s)
+  test_wrong_repository_provenance_retains_despite_identical_numbers PASS (0.00s)
+  test_closed_unmerged_pr_retains_candidate                       PASS (0.00s)
+  test_offline_mode_retains_without_provider_resolution           PASS (0.00s)
+  test_unreachable_merge_commit_retains_candidate                 PASS (0.00s)
+  test_patch_mismatch_returns_unproven                            PASS (0.00s)
+  test_incomplete_provenance_retains_candidate                    PASS (0.00s)
+  test_no_prs_found_returns_unproven                              PASS (0.00s)
+  test_remote_prefixed_target_matches_pr_base_branch              PASS (0.00s)
+  test_branch_mismatch_retains_candidate                          PASS (0.00s)
+  test_unresolvable_server_yields_offline_without_mutation        PASS (0.00s)
+  test_base_ref_mismatch_retains_candidate                        PASS (0.00s)
+  test_provider_authentication_failure_is_distinct_from_offline   PASS (0.00s)
+  test_server_name_mismatch_retains_candidate                     PASS (0.00s)
+  test_fully_qualified_ref_targets_match_pr_base_branch           PASS (0.00s)
+  test_exact_merged_pr_head_proof                                 PASS (0.00s)
+  test_open_pr_never_proves_removal                               PASS (0.00s)
+
+TaskFetcherTest
+  test_fetch_with_invalid_task_id                                 PASS (0.00s)
+  test_fetch_with_dangerous_inputs                                PASS (0.36s)
+  test_fetch_with_valid_task_id                                   PASS (0.00s)
+  test_fetch_with_various_valid_formats                           PASS (0.00s)
+  test_fetch_with_nil_or_empty_input                              PASS (0.35s)
+  test_ace_task_available                                         PASS (0.00s)
+
+WorktreeCreatorTest
+  test_create_worktree_with_invalid_path                          PASS (0.07s)
+  test_create_worktree_with_invalid_branch                        PASS (0.08s)
+  test_create_worktree_with_dry_run                               SKIP (0.00s)
+  test_format_pr_name_with_number                                 PASS (0.00s)
+  test_detect_remote_branch_with_local_slash_branch               PASS (0.00s)
+  test_branch_validation_blocks_dangerous_inputs                  PASS (0.19s)
+  test_create_worktree_with_checkout_option                       SKIP (0.00s)
+  test_format_pr_name_with_slug                                   PASS (0.00s)
+  test_create_worktree_success                                    PASS (0.04s)
+  test_generate_default_worktree_path_with_config                 PASS (0.00s)
+  test_handles_timeout_during_creation                            PASS (0.00s)
+  test_generate_default_worktree_path_without_config              PASS (0.00s)
+  test_create_worktree_git_failure                                PASS (0.00s)
+  test_detect_remote_branch_distinguishes_real_remotes_from_branch_prefixes PASS (0.00s)
+  test_create_for_branch_empty_branch_name                        PASS (0.00s)
+  test_generate_default_worktree_path_sanitizes_branch_name       PASS (0.00s)
+  test_valid_branch_names                                         PASS (0.40s)
+  test_detect_remote_branch_without_remote                        PASS (0.00s)
+  test_branch_validation_allows_main_and_master                   PASS (0.08s)
+  test_create_for_branch_local_success                            PASS (0.00s)
+  test_create_worktree_with_existing_path                         PASS (0.02s)
+  test_create_traditional_with_config_respects_root_path          PASS (0.04s)
+  test_create_for_pr_without_pr_data                              PASS (0.00s)
+  test_create_for_branch_without_branch_name                      PASS (0.00s)
+  test_create_for_pr_requires_verified_source_ref                 PASS (0.00s)
+  test_detect_remote_branch_invalid_format                        PASS (0.00s)
+  test_create_worktree_with_force_option                          SKIP (0.00s)
+  test_create_for_pr_success                                      PASS (0.00s)
+  test_create_for_pr_sets_and_verifies_upstream_when_tracking     PASS (0.02s)
+  test_create_for_pr_with_remote_tracking                         PASS (0.04s)
+  test_create_for_branch_remote_success                           PASS (0.00s)
+  test_path_validation_blocks_dangerous_inputs                    PASS (0.13s)
+  test_create_for_pr_reports_warning_when_upstream_unavailable    PASS (0.02s)
+  test_branch_validation_allows_slash_characters                  PASS (0.26s)
+  test_set_and_verify_upstream_with_real_git_repository           PASS (0.31s)
+  test_create_for_pr_worktree_failure                             PASS (0.00s)
+  test_detect_remote_branch_with_remote                           PASS (0.00s)
+  test_create_for_pr_without_config                               PASS (0.00s)
+  test_format_pr_name_with_multiple_variables                     PASS (0.00s)
+  test_branch_validation_still_blocks_truly_invalid_patterns      PASS (0.24s)
+  test_create_for_branch_without_config                           PASS (0.00s)
+
+CurrentTaskLinkerTest
+  test_exists_returns_true_when_symlink_exists                    PASS (0.00s)
+  test_current_target_returns_nil_when_no_symlink                 PASS (0.00s)
+  test_symlink_path_returns_correct_path                          PASS (0.00s)
+  test_link_replaces_existing_symlink                             PASS (0.00s)
+  test_link_creates_symlink_to_task_directory                     PASS (0.00s)
+  test_exists_returns_false_when_no_symlink                       PASS (0.00s)
+  test_unlink_succeeds_when_no_symlink_exists                     PASS (0.00s)
+  test_link_fails_for_missing_directory                           PASS (0.00s)
+  test_current_absolute_path_returns_nil_when_no_symlink          PASS (0.00s)
+  test_unlink_removes_existing_symlink                            PASS (0.00s)
+  test_current_absolute_path_returns_absolute_path                PASS (0.00s)
+  test_link_fails_for_nil_directory                               PASS (0.00s)
+  test_link_returns_relative_target_in_result                     PASS (0.00s)
+  test_custom_symlink_name                                        PASS (0.00s)
+  test_current_target_returns_relative_path                       PASS (0.00s)
+  test_link_fails_for_empty_directory                             PASS (0.00s)
+
+Finished in 5.25850s
+198 tests, 521 assertions, 0 failures, 0 errors, 4 skips
+
+
+# Running tests with run options --seed 34549:
+
+..........................
+
+Finished tests in 0.576659s, 45.0873 tests/s, 124.8572 assertions/s.
+
+
+26 tests, 72 assertions, 0 failures, 0 errors, 0 skips
+
+
+# Running tests with run options --seed 7310:
+
+.......................................................
+
+Finished tests in 0.002362s, 23285.3531 tests/s, 49110.9266 assertions/s.
+
+
+55 tests, 116 assertions, 0 failures, 0 errors, 0 skips
+
+Started with run options --seed 49247
+
+RemoveCommandTest
+ace-git-worktree remove - Remove a worktree
+
+USAGE:
+    ace-git-worktree remove <identifier> [OPTIONS]
+    ace-git-worktree remove --task <task-id> [OPTIONS]
+
+IDENTIFIERS:
+    Task ID:                081, task.081, v.0.9.0+081
+    Branch name:            feature-branch, main
+    Directory name:        task.081, feature-branch
+    Full path:              /path/to/worktree
+
+OPTIONS:
+    --task <task-id>         Remove worktree for specific task
+    --force                 Force removal even with uncommitted changes
+    --keep-directory        Keep the worktree directory (default: remove)
+    --delete-branch, -db    Also delete the associated branch
+    --dry-run               Show what would be removed without removing
+    --help, -h              Show this help message
+
+EXAMPLES:
+    # Remove task worktree
+    ace-git-worktree remove --task 081
+
+    # Remove by branch name
+    ace-git-worktree remove feature-branch
+
+    # Force remove with changes
+    ace-git-worktree remove --task 081 --force
+
+    # Dry run to see what would be removed
+    ace-git-worktree remove --task 081 --dry-run
+
+    # Remove but keep directory
+    ace-git-worktree remove --task 081 --keep-directory
+
+SAFETY:
+    • The command checks for uncommitted changes
+    • Use --force to remove worktrees with changes
+    • Task removal also cleans up task metadata
+    • Main worktree cannot be removed accidentally
+
+CONFIGURATION:
+    Worktree removal respects settings in .ace/git/worktree.yml
+  test_argument_combination_validation                            PASS (0.00s)
+Removing worktree: /nonexistent/path
+Error: Cannot remove worktree: not found
+  test_handles_removal_errors_gracefully                          PASS (0.00s)
+Error: Must specify either --task <task-id> or <identifier>
+
+ace-git-worktree remove - Remove a worktree
+
+USAGE:
+    ace-git-worktree remove <identifier> [OPTIONS]
+    ace-git-worktree remove --task <task-id> [OPTIONS]
+
+IDENTIFIERS:
+    Task ID:                081, task.081, v.0.9.0+081
+    Branch name:            feature-branch, main
+    Directory name:        task.081, feature-branch
+    Full path:              /path/to/worktree
+
+OPTIONS:
+    --task <task-id>         Remove worktree for specific task
+    --force                 Force removal even with uncommitted changes
+    --keep-directory        Keep the worktree directory (default: remove)
+    --delete-branch, -db    Also delete the associated branch
+    --dry-run               Show what would be removed without removing
+    --help, -h              Show this help message
+
+EXAMPLES:
+    # Remove task worktree
+    ace-git-worktree remove --task 081
+
+    # Remove by branch name
+    ace-git-worktree remove feature-branch
+
+    # Force remove with changes
+    ace-git-worktree remove --task 081 --force
+
+    # Dry run to see what would be removed
+    ace-git-worktree remove --task 081 --dry-run
+
+    # Remove but keep directory
+    ace-git-worktree remove --task 081 --keep-directory
+
+SAFETY:
+    • The command checks for uncommitted changes
+    • Use --force to remove worktrees with changes
+    • Task removal also cleans up task metadata
+    • Main worktree cannot be removed accidentally
+
+CONFIGURATION:
+    Worktree removal respects settings in .ace/git/worktree.yml
+  test_run_with_no_arguments_shows_error                          PASS (0.00s)
+  test_valid_path_characters                                      SKIP (0.00s)
+ace-git-worktree remove - Remove a worktree
+
+USAGE:
+    ace-git-worktree remove <identifier> [OPTIONS]
+    ace-git-worktree remove --task <task-id> [OPTIONS]
+
+IDENTIFIERS:
+    Task ID:                081, task.081, v.0.9.0+081
+    Branch name:            feature-branch, main
+    Directory name:        task.081, feature-branch
+    Full path:              /path/to/worktree
+
+OPTIONS:
+    --task <task-id>         Remove worktree for specific task
+    --force                 Force removal even with uncommitted changes
+    --keep-directory        Keep the worktree directory (default: remove)
+    --delete-branch, -db    Also delete the associated branch
+    --dry-run               Show what would be removed without removing
+    --help, -h              Show this help message
+
+EXAMPLES:
+    # Remove task worktree
+    ace-git-worktree remove --task 081
+
+    # Remove by branch name
+    ace-git-worktree remove feature-branch
+
+    # Force remove with changes
+    ace-git-worktree remove --task 081 --force
+
+    # Dry run to see what would be removed
+    ace-git-worktree remove --task 081 --dry-run
+
+    # Remove but keep directory
+    ace-git-worktree remove --task 081 --keep-directory
+
+SAFETY:
+    • The command checks for uncommitted changes
+    • Use --force to remove worktrees with changes
+    • Task removal also cleans up task metadata
+    • Main worktree cannot be removed accidentally
+
+CONFIGURATION:
+    Worktree removal respects settings in .ace/git/worktree.yml
+  test_run_with_help_flag                                         PASS (0.00s)
+  test_security_validation_on_paths                               SKIP (0.00s)
+Removing worktree: /path/to/worktree
+
+Worktree removed successfully!
+  test_run_with_path_argument                                     PASS (0.00s)
+Removing worktree: /path/to/worktree
+DRY RUN - No changes will be made
+This would remove the worktree and remove its directory
+  test_run_with_dry_run_flag                                      PASS (0.00s)
+Removing worktree: /path/to/worktree
+
+Worktree removed successfully!
+  test_run_with_force_flag                                        PASS (0.00s)
+  test_run_with_multiple_paths                                    SKIP (0.00s)
+
+PruneCommandTest
+Error: Git command failed
+  test_handles_prune_errors_gracefully                            PASS (0.00s)
+No worktrees to prune. Git metadata is clean.
+
+DRY RUN - No changes were made.
+No worktrees to prune. Git metadata is clean.
+No worktrees to prune. Git metadata is clean.
+
+DRY RUN - No changes were made.
+No worktrees to prune. Git metadata is clean.
+
+DRY RUN - No changes were made.
+  test_argument_combinations                                      PASS (0.00s)
+No worktrees to prune. Git metadata is clean.
+  test_run_prunes_worktrees                                       PASS (0.00s)
+No worktrees to prune. Git metadata is clean.
+  test_run_with_force_flag                                        PASS (0.00s)
+No worktrees to prune. Git metadata is clean.
+  test_run_with_verbose_flag                                      PASS (0.00s)
+ace-git-worktree prune - Clean up deleted worktrees
+
+USAGE:
+    ace-git-worktree prune [OPTIONS]
+
+OPTIONS:
+    --dry-run               Show what would be pruned without pruning
+    --cleanup-directories   Remove orphaned worktree directories
+    --verbose, -v           Show detailed pruning information
+    --help, -h              Show this help message
+
+EXAMPLES:
+    # Prune deleted worktrees (git metadata cleanup only)
+    ace-git-worktree prune
+
+    # Dry run to see what would be pruned
+    ace-git-worktree prune --dry-run
+
+    # Prune and cleanup orphaned directories
+    ace-git-worktree prune --cleanup-directories
+
+    # Verbose output
+    ace-git-worktree prune --verbose
+
+WHAT IT DOES:
+    1. Prunes git worktree metadata for deleted worktrees
+    2. Removes stale worktree entries from git's tracking
+    3. Optionally removes orphaned worktree directories
+    4. Reports what was cleaned up
+
+SAFETY:
+    • Only removes worktrees that are no longer tracked by git
+    • Does not affect active worktrees or current worktree
+    • Directory cleanup is optional and requires explicit flag
+    • Dry run available to preview changes
+
+CONFIGURATION:
+    Pruning behavior can be configured in .ace/git/worktree.yml:
+    - cleanup.on_delete: Automatic cleanup on branch deletion
+    - cleanup.on_merge: Automatic cleanup on branch merge
+  test_run_with_help_flag                                         PASS (0.00s)
+  test_prune_command_uses_expire_now_in_remover                   PASS (0.00s)
+Error: Unexpected argument: invalid-argument
+
+ace-git-worktree prune - Clean up deleted worktrees
+
+USAGE:
+    ace-git-worktree prune [OPTIONS]
+
+OPTIONS:
+    --dry-run               Show what would be pruned without pruning
+    --cleanup-directories   Remove orphaned worktree directories
+    --verbose, -v           Show detailed pruning information
+    --help, -h              Show this help message
+
+EXAMPLES:
+    # Prune deleted worktrees (git metadata cleanup only)
+    ace-git-worktree prune
+
+    # Dry run to see what would be pruned
+    ace-git-worktree prune --dry-run
+
+    # Prune and cleanup orphaned directories
+    ace-git-worktree prune --cleanup-directories
+
+    # Verbose output
+    ace-git-worktree prune --verbose
+
+WHAT IT DOES:
+    1. Prunes git worktree metadata for deleted worktrees
+    2. Removes stale worktree entries from git's tracking
+    3. Optionally removes orphaned worktree directories
+    4. Reports what was cleaned up
+
+SAFETY:
+    • Only removes worktrees that are no longer tracked by git
+    • Does not affect active worktrees or current worktree
+    • Directory cleanup is optional and requires explicit flag
+    • Dry run available to preview changes
+
+CONFIGURATION:
+    Pruning behavior can be configured in .ace/git/worktree.yml:
+    - cleanup.on_delete: Automatic cleanup on branch deletion
+    - cleanup.on_merge: Automatic cleanup on branch merge
+Error: Unknown option: --invalid-flag
+
+ace-git-worktree prune - Clean up deleted worktrees
+
+USAGE:
+    ace-git-worktree prune [OPTIONS]
+
+OPTIONS:
+    --dry-run               Show what would be pruned without pruning
+    --cleanup-directories   Remove orphaned worktree directories
+    --verbose, -v           Show detailed pruning information
+    --help, -h              Show this help message
+
+EXAMPLES:
+    # Prune deleted worktrees (git metadata cleanup only)
+    ace-git-worktree prune
+
+    # Dry run to see what would be pruned
+    ace-git-worktree prune --dry-run
+
+    # Prune and cleanup orphaned directories
+    ace-git-worktree prune --cleanup-directories
+
+    # Verbose output
+    ace-git-worktree prune --verbose
+
+WHAT IT DOES:
+    1. Prunes git worktree metadata for deleted worktrees
+    2. Removes stale worktree entries from git's tracking
+    3. Optionally removes orphaned worktree directories
+    4. Reports what was cleaned up
+
+SAFETY:
+    • Only removes worktrees that are no longer tracked by git
+    • Does not affect active worktrees or current worktree
+    • Directory cleanup is optional and requires explicit flag
+    • Dry run available to preview changes
+
+CONFIGURATION:
+    Pruning behavior can be configured in .ace/git/worktree.yml:
+    - cleanup.on_delete: Automatic cleanup on branch deletion
+    - cleanup.on_merge: Automatic cleanup on branch merge
+Error: Unexpected argument: /some/path
+
+ace-git-worktree prune - Clean up deleted worktrees
+
+USAGE:
+    ace-git-worktree prune [OPTIONS]
+
+OPTIONS:
+    --dry-run               Show what would be pruned without pruning
+    --cleanup-directories   Remove orphaned worktree directories
+    --verbose, -v           Show detailed pruning information
+    --help, -h              Show this help message
+
+EXAMPLES:
+    # Prune deleted worktrees (git metadata cleanup only)
+    ace-git-worktree prune
+
+    # Dry run to see what would be pruned
+    ace-git-worktree prune --dry-run
+
+    # Prune and cleanup orphaned directories
+    ace-git-worktree prune --cleanup-directories
+
+    # Verbose output
+    ace-git-worktree prune --verbose
+
+WHAT IT DOES:
+    1. Prunes git worktree metadata for deleted worktrees
+    2. Removes stale worktree entries from git's tracking
+    3. Optionally removes orphaned worktree directories
+    4. Reports what was cleaned up
+
+SAFETY:
+    • Only removes worktrees that are no longer tracked by git
+    • Does not affect active worktrees or current worktree
+    • Directory cleanup is optional and requires explicit flag
+    • Dry run available to preview changes
+
+CONFIGURATION:
+    Pruning behavior can be configured in .ace/git/worktree.yml:
+    - cleanup.on_delete: Automatic cleanup on branch deletion
+    - cleanup.on_merge: Automatic cleanup on branch merge
+Error: Unexpected argument: 081
+
+ace-git-worktree prune - Clean up deleted worktrees
+
+USAGE:
+    ace-git-worktree prune [OPTIONS]
+
+OPTIONS:
+    --dry-run               Show what would be pruned without pruning
+    --cleanup-directories   Remove orphaned worktree directories
+    --verbose, -v           Show detailed pruning information
+    --help, -h              Show this help message
+
+EXAMPLES:
+    # Prune deleted worktrees (git metadata cleanup only)
+    ace-git-worktree prune
+
+    # Dry run to see what would be pruned
+    ace-git-worktree prune --dry-run
+
+    # Prune and cleanup orphaned directories
+    ace-git-worktree prune --cleanup-directories
+
+    # Verbose output
+    ace-git-worktree prune --verbose
+
+WHAT IT DOES:
+    1. Prunes git worktree metadata for deleted worktrees
+    2. Removes stale worktree entries from git's tracking
+    3. Optionally removes orphaned worktree directories
+    4. Reports what was cleaned up
+
+SAFETY:
+    • Only removes worktrees that are no longer tracked by git
+    • Does not affect active worktrees or current worktree
+    • Directory cleanup is optional and requires explicit flag
+    • Dry run available to preview changes
+
+CONFIGURATION:
+    Pruning behavior can be configured in .ace/git/worktree.yml:
+    - cleanup.on_delete: Automatic cleanup on branch deletion
+    - cleanup.on_merge: Automatic cleanup on branch merge
+  test_invalid_arguments                                          PASS (0.00s)
+No worktrees to prune. Git metadata is clean.
+
+DRY RUN - No changes were made.
+  test_run_with_dry_run_flag                                      PASS (0.00s)
+
+BootstrapCommandTest
+ace-git-worktree bootstrap - Rerun preparation phases on existing worktree
+
+USAGE:
+    ace-git-worktree bootstrap <identifier> [OPTIONS]
+
+OPTIONS:
+    --json                  Output format as JSON
+    --help, -h              Show this help message
+
+EXAMPLES:
+    ace-git-worktree bootstrap 081
+    ace-git-worktree bootstrap t.8vb.t.vyz.2 --json
+  test_help_flag_returns_zero                                     PASS (0.00s)
+Error: Worktree matching 'nonexistent' not found.
+  test_unknown_identifier_returns_error                           PASS (0.00s)
+  test_reruns_phases_for_existing_worktree                        PASS (0.02s)
+ace-git-worktree bootstrap - Rerun preparation phases on existing worktree
+
+USAGE:
+    ace-git-worktree bootstrap <identifier> [OPTIONS]
+
+OPTIONS:
+    --json                  Output format as JSON
+    --help, -h              Show this help message
+
+EXAMPLES:
+    ace-git-worktree bootstrap 081
+    ace-git-worktree bootstrap t.8vb.t.vyz.2 --json
+  test_missing_identifier_returns_zero_showing_help               PASS (0.00s)
+
+CreateCommandTest
+Error: Must specify either --task <task-id>, --pr <number>, --branch <branch>, or <branch-name>
+
+ace-git-worktree create - Create a new worktree
+
+USAGE:
+    ace-git-worktree create <branch-name> [OPTIONS]
+    ace-git-worktree create --task <task-id> [OPTIONS]
+    ace-git-worktree create --pr <pr-number> [OPTIONS]
+    ace-git-worktree create --branch <branch> [OPTIONS]
+
+TASK-AWARE CREATION:
+    --task <task-id>         Create worktree for a specific task
+                           Task ID formats: 081, task.081, v.0.9.0+081
+
+PR-AWARE CREATION:
+    --pr <number>           Create worktree for a pull request
+    --pull-request <number> (alias for --pr)
+                           Requires a configured forge server and its
+                           provider package; fetches the exact declared
+                           source repository/ref and verifies the head
+                           SHA against the PR evidence.
+
+BRANCH-AWARE CREATION:
+    -b <branch>             Create worktree from a branch (local or remote)
+    --branch <branch>       (alias for -b)
+                           Remote branches: origin/feature, upstream/main
+                           Local branches: feature-name
+
+OPTIONS:
+    --path <path>           Custom worktree path (default: from config)
+    --source <ref>          Git ref to use as branch start-point (default: current branch)
+                          Examples: main, origin/develop, HEAD~3, commit-sha
+    --server <name>         Use the named configured forge server (PR mode)
+    --default-server        Use the configured default forge server
+    --dry-run               Show what would be created without creating
+    --no-status-update      Skip marking task as in-progress (task mode only)
+    --no-commit             Skip committing task changes (task mode only)
+    --no-push               Skip pushing task changes to remote (task mode only)
+    --no-upstream           Skip pushing worktree branch with upstream tracking (task mode only)
+    --no-pr                 Skip creating draft PR; keeps task creation local and provider-free
+    --no-bootstrap          Skip worktree bootstrap preparation
+    --push-remote <name>    Remote to push to (default: origin) (task mode only)
+    --no-auto-navigate      Stay in current directory (default: navigate to worktree)
+    --commit-message <msg>  Custom commit message for task updates (task mode only)
+    --force                 Create even if worktree already exists
+    --help, -h              Show this help message
+
+EXAMPLES:
+    # Create task-aware worktree
+    ace-git-worktree create --task 081
+
+    # Create task worktree based on main instead of current branch
+    ace-git-worktree create --task 081 --source main
+
+    # Create PR worktree on a named forge server (no mutation)
+    ace-git-worktree create --pr 26 --server forgejo-lab --dry-run
+
+    # Create worktree from remote branch
+    ace-git-worktree create -b origin/feature/auth
+
+    # Create worktree from local branch
+    ace-git-worktree create -b my-feature
+
+    # Create traditional worktree
+    ace-git-worktree create feature-branch
+
+    # Create traditional worktree based on specific commit
+    ace-git-worktree create feature-branch --source HEAD~3
+
+    # Custom path and dry run
+    ace-git-worktree create --pr 26 --path ~/worktrees --dry-run
+
+CONFIGURATION:
+    Worktree creation is controlled by .ace/git/worktree.yml:
+    - root_path: Default worktree root directory
+    - task.auto_*: Automation settings for task workflows
+    - pr.directory_format: PR worktree naming format (default: ace-pr-{number})
+    - pr.branch_format: PR branch naming format (default: pr-{number}-{slug})
+      Variables: {number}, {slug}, {title_slug}, {base_branch}
+    - hooks.after_create: Commands to run after worktree creation
+
+REQUIREMENTS:
+    PR-aware creation requires a configured forge server
+    (git.servers) and the provider package for its provider
+    type. Task and branch creation are fully local and never
+    touch a forge.
+  test_run_with_missing_task_argument                             PASS (0.00s)
+ace-git-worktree create - Create a new worktree
+
+USAGE:
+    ace-git-worktree create <branch-name> [OPTIONS]
+    ace-git-worktree create --task <task-id> [OPTIONS]
+    ace-git-worktree create --pr <pr-number> [OPTIONS]
+    ace-git-worktree create --branch <branch> [OPTIONS]
+
+TASK-AWARE CREATION:
+    --task <task-id>         Create worktree for a specific task
+                           Task ID formats: 081, task.081, v.0.9.0+081
+
+PR-AWARE CREATION:
+    --pr <number>           Create worktree for a pull request
+    --pull-request <number> (alias for --pr)
+                           Requires a configured forge server and its
+                           provider package; fetches the exact declared
+                           source repository/ref and verifies the head
+                           SHA against the PR evidence.
+
+BRANCH-AWARE CREATION:
+    -b <branch>             Create worktree from a branch (local or remote)
+    --branch <branch>       (alias for -b)
+                           Remote branches: origin/feature, upstream/main
+                           Local branches: feature-name
+
+OPTIONS:
+    --path <path>           Custom worktree path (default: from config)
+    --source <ref>          Git ref to use as branch start-point (default: current branch)
+                          Examples: main, origin/develop, HEAD~3, commit-sha
+    --server <name>         Use the named configured forge server (PR mode)
+    --default-server        Use the configured default forge server
+    --dry-run               Show what would be created without creating
+    --no-status-update      Skip marking task as in-progress (task mode only)
+    --no-commit             Skip committing task changes (task mode only)
+    --no-push               Skip pushing task changes to remote (task mode only)
+    --no-upstream           Skip pushing worktree branch with upstream tracking (task mode only)
+    --no-pr                 Skip creating draft PR; keeps task creation local and provider-free
+    --no-bootstrap          Skip worktree bootstrap preparation
+    --push-remote <name>    Remote to push to (default: origin) (task mode only)
+    --no-auto-navigate      Stay in current directory (default: navigate to worktree)
+    --commit-message <msg>  Custom commit message for task updates (task mode only)
+    --force                 Create even if worktree already exists
+    --help, -h              Show this help message
+
+EXAMPLES:
+    # Create task-aware worktree
+    ace-git-worktree create --task 081
+
+    # Create task worktree based on main instead of current branch
+    ace-git-worktree create --task 081 --source main
+
+    # Create PR worktree on a named forge server (no mutation)
+    ace-git-worktree create --pr 26 --server forgejo-lab --dry-run
+
+    # Create worktree from remote branch
+    ace-git-worktree create -b origin/feature/auth
+
+    # Create worktree from local branch
+    ace-git-worktree create -b my-feature
+
+    # Create traditional worktree
+    ace-git-worktree create feature-branch
+
+    # Create traditional worktree based on specific commit
+    ace-git-worktree create feature-branch --source HEAD~3
+
+    # Custom path and dry run
+    ace-git-worktree create --pr 26 --path ~/worktrees --dry-run
+
+CONFIGURATION:
+    Worktree creation is controlled by .ace/git/worktree.yml:
+    - root_path: Default worktree root directory
+    - task.auto_*: Automation settings for task workflows
+    - pr.directory_format: PR worktree naming format (default: ace-pr-{number})
+    - pr.branch_format: PR branch naming format (default: pr-{number}-{slug})
+      Variables: {number}, {slug}, {title_slug}, {base_branch}
+    - hooks.after_create: Commands to run after worktree creation
+
+REQUIREMENTS:
+    PR-aware creation requires a configured forge server
+    (git.servers) and the provider package for its provider
+    type. Task and branch creation are fully local and never
+    touch a forge.
+  test_run_with_no_arguments_shows_help                           PASS (0.00s)
+  test_security_validation_on_paths                               SKIP (0.00s)
+  test_run_with_pr_passes_server_selection_to_resolver            PASS (0.00s)
+  test_terminal_without_runtime_shows_warning_and_cd              PASS (0.00s)
+Creating worktree for task: 081
+
+Worktree created successfully!
+Task ID: 081
+Task title: Test task
+Worktree path: /path/to/worktree
+Branch: task-081
+
+Steps completed:
+  ✓ create worktree
+  ✓ checkout branch
+
+cd /path/to/worktree
+  test_run_with_task_argument                                     PASS (0.00s)
+  test_run_with_pr_auth_error                                     PASS (0.00s)
+Creating worktree for task: 081
+
+Dry run - no changes made:
+Would create worktree at: /path/to/worktree
+Would create branch: task-081
+Task ID: 081
+Task title: Test task
+
+Planned steps:
+  1. create worktree
+  test_cli_override_flags_are_passed_through_task_creation        PASS (0.00s)
+  test_run_with_pr_argument_success                               PASS (0.00s)
+ace-git-worktree create - Create a new worktree
+
+USAGE:
+    ace-git-worktree create <branch-name> [OPTIONS]
+    ace-git-worktree create --task <task-id> [OPTIONS]
+    ace-git-worktree create --pr <pr-number> [OPTIONS]
+    ace-git-worktree create --branch <branch> [OPTIONS]
+
+TASK-AWARE CREATION:
+    --task <task-id>         Create worktree for a specific task
+                           Task ID formats: 081, task.081, v.0.9.0+081
+
+PR-AWARE CREATION:
+    --pr <number>           Create worktree for a pull request
+    --pull-request <number> (alias for --pr)
+                           Requires a configured forge server and its
+                           provider package; fetches the exact declared
+                           source repository/ref and verifies the head
+                           SHA against the PR evidence.
+
+BRANCH-AWARE CREATION:
+    -b <branch>             Create worktree from a branch (local or remote)
+    --branch <branch>       (alias for -b)
+                           Remote branches: origin/feature, upstream/main
+                           Local branches: feature-name
+
+OPTIONS:
+    --path <path>           Custom worktree path (default: from config)
+    --source <ref>          Git ref to use as branch start-point (default: current branch)
+                          Examples: main, origin/develop, HEAD~3, commit-sha
+    --server <name>         Use the named configured forge server (PR mode)
+    --default-server        Use the configured default forge server
+    --dry-run               Show what would be created without creating
+    --no-status-update      Skip marking task as in-progress (task mode only)
+    --no-commit             Skip committing task changes (task mode only)
+    --no-push               Skip pushing task changes to remote (task mode only)
+    --no-upstream           Skip pushing worktree branch with upstream tracking (task mode only)
+    --no-pr                 Skip creating draft PR; keeps task creation local and provider-free
+    --no-bootstrap          Skip worktree bootstrap preparation
+    --push-remote <name>    Remote to push to (default: origin) (task mode only)
+    --no-auto-navigate      Stay in current directory (default: navigate to worktree)
+    --commit-message <msg>  Custom commit message for task updates (task mode only)
+    --force                 Create even if worktree already exists
+    --help, -h              Show this help message
+
+EXAMPLES:
+    # Create task-aware worktree
+    ace-git-worktree create --task 081
+
+    # Create task worktree based on main instead of current branch
+    ace-git-worktree create --task 081 --source main
+
+    # Create PR worktree on a named forge server (no mutation)
+    ace-git-worktree create --pr 26 --server forgejo-lab --dry-run
+
+    # Create worktree from remote branch
+    ace-git-worktree create -b origin/feature/auth
+
+    # Create worktree from local branch
+    ace-git-worktree create -b my-feature
+
+    # Create traditional worktree
+    ace-git-worktree create feature-branch
+
+    # Create traditional worktree based on specific commit
+    ace-git-worktree create feature-branch --source HEAD~3
+
+    # Custom path and dry run
+    ace-git-worktree create --pr 26 --path ~/worktrees --dry-run
+
+CONFIGURATION:
+    Worktree creation is controlled by .ace/git/worktree.yml:
+    - root_path: Default worktree root directory
+    - task.auto_*: Automation settings for task workflows
+    - pr.directory_format: PR worktree naming format (default: ace-pr-{number})
+    - pr.branch_format: PR branch naming format (default: pr-{number}-{slug})
+      Variables: {number}, {slug}, {title_slug}, {base_branch}
+    - hooks.after_create: Commands to run after worktree creation
+
+REQUIREMENTS:
+    PR-aware creation requires a configured forge server
+    (git.servers) and the provider package for its provider
+    type. Task and branch creation are fully local and never
+    touch a forge.
+  test_run_with_help_flag                                         PASS (0.00s)
+  test_terminal_tmux_explicit_without_ace_tmux_shows_warning_and_cd PASS (0.00s)
+  test_terminal_tmux_explicit_outside_runtime_exec_start_for_task PASS (0.00s)
+Creating worktree for branch: feature-branch
+
+Worktree created successfully!
+Worktree path: 
+Branch: 
+Git root: 
+
+  test_run_with_traditional_branch                                PASS (0.00s)
+Creating worktree for task: 081
+Error: Git command failed
+  test_handles_worktree_manager_errors                            PASS (0.00s)
+  test_terminal_disabled_shows_cd_hint                            PASS (0.00s)
+Error: Task ID contains potentially dangerous characters
+
+ace-git-worktree create - Create a new worktree
+
+USAGE:
+    ace-git-worktree create <branch-name> [OPTIONS]
+    ace-git-worktree create --task <task-id> [OPTIONS]
+    ace-git-worktree create --pr <pr-number> [OPTIONS]
+    ace-git-worktree create --branch <branch> [OPTIONS]
+
+TASK-AWARE CREATION:
+    --task <task-id>         Create worktree for a specific task
+                           Task ID formats: 081, task.081, v.0.9.0+081
+
+PR-AWARE CREATION:
+    --pr <number>           Create worktree for a pull request
+    --pull-request <number> (alias for --pr)
+                           Requires a configured forge server and its
+                           provider package; fetches the exact declared
+                           source repository/ref and verifies the head
+                           SHA against the PR evidence.
+
+BRANCH-AWARE CREATION:
+    -b <branch>             Create worktree from a branch (local or remote)
+    --branch <branch>       (alias for -b)
+                           Remote branches: origin/feature, upstream/main
+                           Local branches: feature-name
+
+OPTIONS:
+    --path <path>           Custom worktree path (default: from config)
+    --source <ref>          Git ref to use as branch start-point (default: current branch)
+                          Examples: main, origin/develop, HEAD~3, commit-sha
+    --server <name>         Use the named configured forge server (PR mode)
+    --default-server        Use the configured default forge server
+    --dry-run               Show what would be created without creating
+    --no-status-update      Skip marking task as in-progress (task mode only)
+    --no-commit             Skip committing task changes (task mode only)
+    --no-push               Skip pushing task changes to remote (task mode only)
+    --no-upstream           Skip pushing worktree branch with upstream tracking (task mode only)
+    --no-pr                 Skip creating draft PR; keeps task creation local and provider-free
+    --no-bootstrap          Skip worktree bootstrap preparation
+    --push-remote <name>    Remote to push to (default: origin) (task mode only)
+    --no-auto-navigate      Stay in current directory (default: navigate to worktree)
+    --commit-message <msg>  Custom commit message for task updates (task mode only)
+    --force                 Create even if worktree already exists
+    --help, -h              Show this help message
+
+EXAMPLES:
+    # Create task-aware worktree
+    ace-git-worktree create --task 081
+
+    # Create task worktree based on main instead of current branch
+    ace-git-worktree create --task 081 --source main
+
+    # Create PR worktree on a named forge server (no mutation)
+    ace-git-worktree create --pr 26 --server forgejo-lab --dry-run
+
+    # Create worktree from remote branch
+    ace-git-worktree create -b origin/feature/auth
+
+    # Create worktree from local branch
+    ace-git-worktree create -b my-feature
+
+    # Create traditional worktree
+    ace-git-worktree create feature-branch
+
+    # Create traditional worktree based on specific commit
+    ace-git-worktree create feature-branch --source HEAD~3
+
+    # Custom path and dry run
+    ace-git-worktree create --pr 26 --path ~/worktrees --dry-run
+
+CONFIGURATION:
+    Worktree creation is controlled by .ace/git/worktree.yml:
+    - root_path: Default worktree root directory
+    - task.auto_*: Automation settings for task workflows
+    - pr.directory_format: PR worktree naming format (default: ace-pr-{number})
+    - pr.branch_format: PR branch naming format (default: pr-{number}-{slug})
+      Variables: {number}, {slug}, {title_slug}, {base_branch}
+    - hooks.after_create: Commands to run after worktree creation
+
+REQUIREMENTS:
+    PR-aware creation requires a configured forge server
+    (git.servers) and the provider package for its provider
+    type. Task and branch creation are fully local and never
+    touch a forge.
+Error: Task ID contains potentially dangerous characters
+
+ace-git-worktree create - Create a new worktree
+
+USAGE:
+    ace-git-worktree create <branch-name> [OPTIONS]
+    ace-git-worktree create --task <task-id> [OPTIONS]
+    ace-git-worktree create --pr <pr-number> [OPTIONS]
+    ace-git-worktree create --branch <branch> [OPTIONS]
+
+TASK-AWARE CREATION:
+    --task <task-id>         Create worktree for a specific task
+                           Task ID formats: 081, task.081, v.0.9.0+081
+
+PR-AWARE CREATION:
+    --pr <number>           Create worktree for a pull request
+    --pull-request <number> (alias for --pr)
+                           Requires a configured forge server and its
+                           provider package; fetches the exact declared
+                           source repository/ref and verifies the head
+                           SHA against the PR evidence.
+
+BRANCH-AWARE CREATION:
+    -b <branch>             Create worktree from a branch (local or remote)
+    --branch <branch>       (alias for -b)
+                           Remote branches: origin/feature, upstream/main
+                           Local branches: feature-name
+
+OPTIONS:
+    --path <path>           Custom worktree path (default: from config)
+    --source <ref>          Git ref to use as branch start-point (default: current branch)
+                          Examples: main, origin/develop, HEAD~3, commit-sha
+    --server <name>         Use the named configured forge server (PR mode)
+    --default-server        Use the configured default forge server
+    --dry-run               Show what would be created without creating
+    --no-status-update      Skip marking task as in-progress (task mode only)
+    --no-commit             Skip committing task changes (task mode only)
+    --no-push               Skip pushing task changes to remote (task mode only)
+    --no-upstream           Skip pushing worktree branch with upstream tracking (task mode only)
+    --no-pr                 Skip creating draft PR; keeps task creation local and provider-free
+    --no-bootstrap          Skip worktree bootstrap preparation
+    --push-remote <name>    Remote to push to (default: origin) (task mode only)
+    --no-auto-navigate      Stay in current directory (default: navigate to worktree)
+    --commit-message <msg>  Custom commit message for task updates (task mode only)
+    --force                 Create even if worktree already exists
+    --help, -h              Show this help message
+
+EXAMPLES:
+    # Create task-aware worktree
+    ace-git-worktree create --task 081
+
+    # Create task worktree based on main instead of current branch
+    ace-git-worktree create --task 081 --source main
+
+    # Create PR worktree on a named forge server (no mutation)
+    ace-git-worktree create --pr 26 --server forgejo-lab --dry-run
+
+    # Create worktree from remote branch
+    ace-git-worktree create -b origin/feature/auth
+
+    # Create worktree from local branch
+    ace-git-worktree create -b my-feature
+
+    # Create traditional worktree
+    ace-git-worktree create feature-branch
+
+    # Create traditional worktree based on specific commit
+    ace-git-worktree create feature-branch --source HEAD~3
+
+    # Custom path and dry run
+    ace-git-worktree create --pr 26 --path ~/worktrees --dry-run
+
+CONFIGURATION:
+    Worktree creation is controlled by .ace/git/worktree.yml:
+    - root_path: Default worktree root directory
+    - task.auto_*: Automation settings for task workflows
+    - pr.directory_format: PR worktree naming format (default: ace-pr-{number})
+    - pr.branch_format: PR branch naming format (default: pr-{number}-{slug})
+      Variables: {number}, {slug}, {title_slug}, {base_branch}
+    - hooks.after_create: Commands to run after worktree creation
+
+REQUIREMENTS:
+    PR-aware creation requires a configured forge server
+    (git.servers) and the provider package for its provider
+    type. Task and branch creation are fully local and never
+    touch a forge.
+Error: Task ID contains potentially dangerous characters
+
+ace-git-worktree create - Create a new worktree
+
+USAGE:
+    ace-git-worktree create <branch-name> [OPTIONS]
+    ace-git-worktree create --task <task-id> [OPTIONS]
+    ace-git-worktree create --pr <pr-number> [OPTIONS]
+    ace-git-worktree create --branch <branch> [OPTIONS]
+
+TASK-AWARE CREATION:
+    --task <task-id>         Create worktree for a specific task
+                           Task ID formats: 081, task.081, v.0.9.0+081
+
+PR-AWARE CREATION:
+    --pr <number>           Create worktree for a pull request
+    --pull-request <number> (alias for --pr)
+                           Requires a configured forge server and its
+                           provider package; fetches the exact declared
+                           source repository/ref and verifies the head
+                           SHA against the PR evidence.
+
+BRANCH-AWARE CREATION:
+    -b <branch>             Create worktree from a branch (local or remote)
+    --branch <branch>       (alias for -b)
+                           Remote branches: origin/feature, upstream/main
+                           Local branches: feature-name
+
+OPTIONS:
+    --path <path>           Custom worktree path (default: from config)
+    --source <ref>          Git ref to use as branch start-point (default: current branch)
+                          Examples: main, origin/develop, HEAD~3, commit-sha
+    --server <name>         Use the named configured forge server (PR mode)
+    --default-server        Use the configured default forge server
+    --dry-run               Show what would be created without creating
+    --no-status-update      Skip marking task as in-progress (task mode only)
+    --no-commit             Skip committing task changes (task mode only)
+    --no-push               Skip pushing task changes to remote (task mode only)
+    --no-upstream           Skip pushing worktree branch with upstream tracking (task mode only)
+    --no-pr                 Skip creating draft PR; keeps task creation local and provider-free
+    --no-bootstrap          Skip worktree bootstrap preparation
+    --push-remote <name>    Remote to push to (default: origin) (task mode only)
+    --no-auto-navigate      Stay in current directory (default: navigate to worktree)
+    --commit-message <msg>  Custom commit message for task updates (task mode only)
+    --force                 Create even if worktree already exists
+    --help, -h              Show this help message
+
+EXAMPLES:
+    # Create task-aware worktree
+    ace-git-worktree create --task 081
+
+    # Create task worktree based on main instead of current branch
+    ace-git-worktree create --task 081 --source main
+
+    # Create PR worktree on a named forge server (no mutation)
+    ace-git-worktree create --pr 26 --server forgejo-lab --dry-run
+
+    # Create worktree from remote branch
+    ace-git-worktree create -b origin/feature/auth
+
+    # Create worktree from local branch
+    ace-git-worktree create -b my-feature
+
+    # Create traditional worktree
+    ace-git-worktree create feature-branch
+
+    # Create traditional worktree based on specific commit
+    ace-git-worktree create feature-branch --source HEAD~3
+
+    # Custom path and dry run
+    ace-git-worktree create --pr 26 --path ~/worktrees --dry-run
+
+CONFIGURATION:
+    Worktree creation is controlled by .ace/git/worktree.yml:
+    - root_path: Default worktree root directory
+    - task.auto_*: Automation settings for task workflows
+    - pr.directory_format: PR worktree naming format (default: ace-pr-{number})
+    - pr.branch_format: PR branch naming format (default: pr-{number}-{slug})
+      Variables: {number}, {slug}, {title_slug}, {base_branch}
+    - hooks.after_create: Commands to run after worktree creation
+
+REQUIREMENTS:
+    PR-aware creation requires a configured forge server
+    (git.servers) and the provider package for its provider
+    type. Task and branch creation are fully local and never
+    touch a forge.
+Error: Task ID contains potentially dangerous characters
+
+ace-git-worktree create - Create a new worktree
+
+USAGE:
+    ace-git-worktree create <branch-name> [OPTIONS]
+    ace-git-worktree create --task <task-id> [OPTIONS]
+    ace-git-worktree create --pr <pr-number> [OPTIONS]
+    ace-git-worktree create --branch <branch> [OPTIONS]
+
+TASK-AWARE CREATION:
+    --task <task-id>         Create worktree for a specific task
+                           Task ID formats: 081, task.081, v.0.9.0+081
+
+PR-AWARE CREATION:
+    --pr <number>           Create worktree for a pull request
+    --pull-request <number> (alias for --pr)
+                           Requires a configured forge server and its
+                           provider package; fetches the exact declared
+                           source repository/ref and verifies the head
+                           SHA against the PR evidence.
+
+BRANCH-AWARE CREATION:
+    -b <branch>             Create worktree from a branch (local or remote)
+    --branch <branch>       (alias for -b)
+                           Remote branches: origin/feature, upstream/main
+                           Local branches: feature-name
+
+OPTIONS:
+    --path <path>           Custom worktree path (default: from config)
+    --source <ref>          Git ref to use as branch start-point (default: current branch)
+                          Examples: main, origin/develop, HEAD~3, commit-sha
+    --server <name>         Use the named configured forge server (PR mode)
+    --default-server        Use the configured default forge server
+    --dry-run               Show what would be created without creating
+    --no-status-update      Skip marking task as in-progress (task mode only)
+    --no-commit             Skip committing task changes (task mode only)
+    --no-push               Skip pushing task changes to remote (task mode only)
+    --no-upstream           Skip pushing worktree branch with upstream tracking (task mode only)
+    --no-pr                 Skip creating draft PR; keeps task creation local and provider-free
+    --no-bootstrap          Skip worktree bootstrap preparation
+    --push-remote <name>    Remote to push to (default: origin) (task mode only)
+    --no-auto-navigate      Stay in current directory (default: navigate to worktree)
+    --commit-message <msg>  Custom commit message for task updates (task mode only)
+    --force                 Create even if worktree already exists
+    --help, -h              Show this help message
+
+EXAMPLES:
+    # Create task-aware worktree
+    ace-git-worktree create --task 081
+
+    # Create task worktree based on main instead of current branch
+    ace-git-worktree create --task 081 --source main
+
+    # Create PR worktree on a named forge server (no mutation)
+    ace-git-worktree create --pr 26 --server forgejo-lab --dry-run
+
+    # Create worktree from remote branch
+    ace-git-worktree create -b origin/feature/auth
+
+    # Create worktree from local branch
+    ace-git-worktree create -b my-feature
+
+    # Create traditional worktree
+    ace-git-worktree create feature-branch
+
+    # Create traditional worktree based on specific commit
+    ace-git-worktree create feature-branch --source HEAD~3
+
+    # Custom path and dry run
+    ace-git-worktree create --pr 26 --path ~/worktrees --dry-run
+
+CONFIGURATION:
+    Worktree creation is controlled by .ace/git/worktree.yml:
+    - root_path: Default worktree root directory
+    - task.auto_*: Automation settings for task workflows
+    - pr.directory_format: PR worktree naming format (default: ace-pr-{number})
+    - pr.branch_format: PR branch naming format (default: pr-{number}-{slug})
+      Variables: {number}, {slug}, {title_slug}, {base_branch}
+    - hooks.after_create: Commands to run after worktree creation
+
+REQUIREMENTS:
+    PR-aware creation requires a configured forge server
+    (git.servers) and the provider package for its provider
+    type. Task and branch creation are fully local and never
+    touch a forge.
+Error: Task ID contains potentially dangerous characters
+
+ace-git-worktree create - Create a new worktree
+
+USAGE:
+    ace-git-worktree create <branch-name> [OPTIONS]
+    ace-git-worktree create --task <task-id> [OPTIONS]
+    ace-git-worktree create --pr <pr-number> [OPTIONS]
+    ace-git-worktree create --branch <branch> [OPTIONS]
+
+TASK-AWARE CREATION:
+    --task <task-id>         Create worktree for a specific task
+                           Task ID formats: 081, task.081, v.0.9.0+081
+
+PR-AWARE CREATION:
+    --pr <number>           Create worktree for a pull request
+    --pull-request <number> (alias for --pr)
+                           Requires a configured forge server and its
+                           provider package; fetches the exact declared
+                           source repository/ref and verifies the head
+                           SHA against the PR evidence.
+
+BRANCH-AWARE CREATION:
+    -b <branch>             Create worktree from a branch (local or remote)
+    --branch <branch>       (alias for -b)
+                           Remote branches: origin/feature, upstream/main
+                           Local branches: feature-name
+
+OPTIONS:
+    --path <path>           Custom worktree path (default: from config)
+    --source <ref>          Git ref to use as branch start-point (default: current branch)
+                          Examples: main, origin/develop, HEAD~3, commit-sha
+    --server <name>         Use the named configured forge server (PR mode)
+    --default-server        Use the configured default forge server
+    --dry-run               Show what would be created without creating
+    --no-status-update      Skip marking task as in-progress (task mode only)
+    --no-commit             Skip committing task changes (task mode only)
+    --no-push               Skip pushing task changes to remote (task mode only)
+    --no-upstream           Skip pushing worktree branch with upstream tracking (task mode only)
+    --no-pr                 Skip creating draft PR; keeps task creation local and provider-free
+    --no-bootstrap          Skip worktree bootstrap preparation
+    --push-remote <name>    Remote to push to (default: origin) (task mode only)
+    --no-auto-navigate      Stay in current directory (default: navigate to worktree)
+    --commit-message <msg>  Custom commit message for task updates (task mode only)
+    --force                 Create even if worktree already exists
+    --help, -h              Show this help message
+
+EXAMPLES:
+    # Create task-aware worktree
+    ace-git-worktree create --task 081
+
+    # Create task worktree based on main instead of current branch
+    ace-git-worktree create --task 081 --source main
+
+    # Create PR worktree on a named forge server (no mutation)
+    ace-git-worktree create --pr 26 --server forgejo-lab --dry-run
+
+    # Create worktree from remote branch
+    ace-git-worktree create -b origin/feature/auth
+
+    # Create worktree from local branch
+    ace-git-worktree create -b my-feature
+
+    # Create traditional worktree
+    ace-git-worktree create feature-branch
+
+    # Create traditional worktree based on specific commit
+    ace-git-worktree create feature-branch --source HEAD~3
+
+    # Custom path and dry run
+    ace-git-worktree create --pr 26 --path ~/worktrees --dry-run
+
+CONFIGURATION:
+    Worktree creation is controlled by .ace/git/worktree.yml:
+    - root_path: Default worktree root directory
+    - task.auto_*: Automation settings for task workflows
+    - pr.directory_format: PR worktree naming format (default: ace-pr-{number})
+    - pr.branch_format: PR branch naming format (default: pr-{number}-{slug})
+      Variables: {number}, {slug}, {title_slug}, {base_branch}
+    - hooks.after_create: Commands to run after worktree creation
+
+REQUIREMENTS:
+    PR-aware creation requires a configured forge server
+    (git.servers) and the provider package for its provider
+    type. Task and branch creation are fully local and never
+    touch a forge.
+  test_run_with_dangerous_task_id                                 PASS (0.00s)
+Error: PR number must be a positive integer
+
+ace-git-worktree create - Create a new worktree
+
+USAGE:
+    ace-git-worktree create <branch-name> [OPTIONS]
+    ace-git-worktree create --task <task-id> [OPTIONS]
+    ace-git-worktree create --pr <pr-number> [OPTIONS]
+    ace-git-worktree create --branch <branch> [OPTIONS]
+
+TASK-AWARE CREATION:
+    --task <task-id>         Create worktree for a specific task
+                           Task ID formats: 081, task.081, v.0.9.0+081
+
+PR-AWARE CREATION:
+    --pr <number>           Create worktree for a pull request
+    --pull-request <number> (alias for --pr)
+                           Requires a configured forge server and its
+                           provider package; fetches the exact declared
+                           source repository/ref and verifies the head
+                           SHA against the PR evidence.
+
+BRANCH-AWARE CREATION:
+    -b <branch>             Create worktree from a branch (local or remote)
+    --branch <branch>       (alias for -b)
+                           Remote branches: origin/feature, upstream/main
+                           Local branches: feature-name
+
+OPTIONS:
+    --path <path>           Custom worktree path (default: from config)
+    --source <ref>          Git ref to use as branch start-point (default: current branch)
+                          Examples: main, origin/develop, HEAD~3, commit-sha
+    --server <name>         Use the named configured forge server (PR mode)
+    --default-server        Use the configured default forge server
+    --dry-run               Show what would be created without creating
+    --no-status-update      Skip marking task as in-progress (task mode only)
+    --no-commit             Skip committing task changes (task mode only)
+    --no-push               Skip pushing task changes to remote (task mode only)
+    --no-upstream           Skip pushing worktree branch with upstream tracking (task mode only)
+    --no-pr                 Skip creating draft PR; keeps task creation local and provider-free
+    --no-bootstrap          Skip worktree bootstrap preparation
+    --push-remote <name>    Remote to push to (default: origin) (task mode only)
+    --no-auto-navigate      Stay in current directory (default: navigate to worktree)
+    --commit-message <msg>  Custom commit message for task updates (task mode only)
+    --force                 Create even if worktree already exists
+    --help, -h              Show this help message
+
+EXAMPLES:
+    # Create task-aware worktree
+    ace-git-worktree create --task 081
+
+    # Create task worktree based on main instead of current branch
+    ace-git-worktree create --task 081 --source main
+
+    # Create PR worktree on a named forge server (no mutation)
+    ace-git-worktree create --pr 26 --server forgejo-lab --dry-run
+
+    # Create worktree from remote branch
+    ace-git-worktree create -b origin/feature/auth
+
+    # Create worktree from local branch
+    ace-git-worktree create -b my-feature
+
+    # Create traditional worktree
+    ace-git-worktree create feature-branch
+
+    # Create traditional worktree based on specific commit
+    ace-git-worktree create feature-branch --source HEAD~3
+
+    # Custom path and dry run
+    ace-git-worktree create --pr 26 --path ~/worktrees --dry-run
+
+CONFIGURATION:
+    Worktree creation is controlled by .ace/git/worktree.yml:
+    - root_path: Default worktree root directory
+    - task.auto_*: Automation settings for task workflows
+    - pr.directory_format: PR worktree naming format (default: ace-pr-{number})
+    - pr.branch_format: PR branch naming format (default: pr-{number}-{slug})
+      Variables: {number}, {slug}, {title_slug}, {base_branch}
+    - hooks.after_create: Commands to run after worktree creation
+
+REQUIREMENTS:
+    PR-aware creation requires a configured forge server
+    (git.servers) and the provider package for its provider
+    type. Task and branch creation are fully local and never
+    touch a forge.
+  test_run_with_invalid_pr_number                                 PASS (0.00s)
+Creating worktree for task: 081
+
+Dry run - no changes made:
+Would create worktree at: /path/to/worktree
+Would create branch: task-081
+Task ID: 081
+Task title: Test task
+
+Planned steps:
+  1. create worktree
+Creating worktree for task: task.081
+
+Dry run - no changes made:
+Would create worktree at: /path/to/worktree
+Would create branch: task-081
+Task ID: task.081
+Task title: Test task
+
+Planned steps:
+  1. create worktree
+Creating worktree for task: v.0.9.0+081
+
+Dry run - no changes made:
+Would create worktree at: /path/to/worktree
+Would create branch: task-081
+Task ID: v.0.9.0+081
+Task title: Test task
+
+Planned steps:
+  1. create worktree
+Creating worktree for task: v.0.9.0+task.081
+
+Dry run - no changes made:
+Would create worktree at: /path/to/worktree
+Would create branch: task-081
+Task ID: v.0.9.0+task.081
+Task title: Test task
+
+Planned steps:
+  1. create worktree
+  test_long_task_reference_formats                                PASS (0.00s)
+Creating worktree for task: 081
+
+Dry run - no changes made:
+Would create worktree at: /path/to/worktree
+Would create branch: task-081
+Task ID: 081
+Task title: Test task
+
+Planned steps:
+  1. create worktree
+Creating worktree for task: 081
+
+Dry run - no changes made:
+Would create worktree at: /path/to/worktree
+Would create branch: task-081
+Task ID: 081
+Task title: Test task
+
+Planned steps:
+  1. create worktree
+Creating worktree for task: 081
+
+Dry run - no changes made:
+Would create worktree at: /path/to/worktree
+Would create branch: task-081
+Task ID: 081
+Task title: Test task
+
+Planned steps:
+  1. create worktree
+  test_individual_override_flags_work                             PASS (0.00s)
+Creating worktree for task: invalid
+Failed to create worktree: Task not found: invalid
+
+Task not found suggestions:
+  1. Check task ID format (try: invalid)
+  2. List available tasks: ace-task list
+  3. Verify you're in the correct project directory
+  test_run_with_invalid_task_id                                   PASS (0.00s)
+  test_terminal_detected_runtime_opens_contract_window_for_task   PASS (0.00s)
+Creating worktree for task: 081
+
+Dry run - no changes made:
+Would create worktree at: /path/to/worktree
+Would create branch: task-081
+Task ID: 081
+Task title: Test task
+
+Planned steps:
+  1. create worktree
+  2. checkout branch
+  test_run_with_task_and_dry_run                                  PASS (0.00s)
+Creating worktree for branch: feature-branch
+
+Worktree created successfully!
+Worktree path: 
+Branch: 
+Git root: 
+
+  test_run_with_branch_and_path                                   PASS (0.00s)
+  test_run_with_pr_unverified_checkout_fails_without_mutation     PASS (0.00s)
+Error: Cannot use multiple creation modes: task, pr. Use only one of --task, --pr, --branch, or <branch-name>
+
+ace-git-worktree create - Create a new worktree
+
+USAGE:
+    ace-git-worktree create <branch-name> [OPTIONS]
+    ace-git-worktree create --task <task-id> [OPTIONS]
+    ace-git-worktree create --pr <pr-number> [OPTIONS]
+    ace-git-worktree create --branch <branch> [OPTIONS]
+
+TASK-AWARE CREATION:
+    --task <task-id>         Create worktree for a specific task
+                           Task ID formats: 081, task.081, v.0.9.0+081
+
+PR-AWARE CREATION:
+    --pr <number>           Create worktree for a pull request
+    --pull-request <number> (alias for --pr)
+                           Requires a configured forge server and its
+                           provider package; fetches the exact declared
+                           source repository/ref and verifies the head
+                           SHA against the PR evidence.
+
+BRANCH-AWARE CREATION:
+    -b <branch>             Create worktree from a branch (local or remote)
+    --branch <branch>       (alias for -b)
+                           Remote branches: origin/feature, upstream/main
+                           Local branches: feature-name
+
+OPTIONS:
+    --path <path>           Custom worktree path (default: from config)
+    --source <ref>          Git ref to use as branch start-point (default: current branch)
+                          Examples: main, origin/develop, HEAD~3, commit-sha
+    --server <name>         Use the named configured forge server (PR mode)
+    --default-server        Use the configured default forge server
+    --dry-run               Show what would be created without creating
+    --no-status-update      Skip marking task as in-progress (task mode only)
+    --no-commit             Skip committing task changes (task mode only)
+    --no-push               Skip pushing task changes to remote (task mode only)
+    --no-upstream           Skip pushing worktree branch with upstream tracking (task mode only)
+    --no-pr                 Skip creating draft PR; keeps task creation local and provider-free
+    --no-bootstrap          Skip worktree bootstrap preparation
+    --push-remote <name>    Remote to push to (default: origin) (task mode only)
+    --no-auto-navigate      Stay in current directory (default: navigate to worktree)
+    --commit-message <msg>  Custom commit message for task updates (task mode only)
+    --force                 Create even if worktree already exists
+    --help, -h              Show this help message
+
+EXAMPLES:
+    # Create task-aware worktree
+    ace-git-worktree create --task 081
+
+    # Create task worktree based on main instead of current branch
+    ace-git-worktree create --task 081 --source main
+
+    # Create PR worktree on a named forge server (no mutation)
+    ace-git-worktree create --pr 26 --server forgejo-lab --dry-run
+
+    # Create worktree from remote branch
+    ace-git-worktree create -b origin/feature/auth
+
+    # Create worktree from local branch
+    ace-git-worktree create -b my-feature
+
+    # Create traditional worktree
+    ace-git-worktree create feature-branch
+
+    # Create traditional worktree based on specific commit
+    ace-git-worktree create feature-branch --source HEAD~3
+
+    # Custom path and dry run
+    ace-git-worktree create --pr 26 --path ~/worktrees --dry-run
+
+CONFIGURATION:
+    Worktree creation is controlled by .ace/git/worktree.yml:
+    - root_path: Default worktree root directory
+    - task.auto_*: Automation settings for task workflows
+    - pr.directory_format: PR worktree naming format (default: ace-pr-{number})
+    - pr.branch_format: PR branch naming format (default: pr-{number}-{slug})
+      Variables: {number}, {slug}, {title_slug}, {base_branch}
+    - hooks.after_create: Commands to run after worktree creation
+
+REQUIREMENTS:
+    PR-aware creation requires a configured forge server
+    (git.servers) and the provider package for its provider
+    type. Task and branch creation are fully local and never
+    touch a forge.
+  test_pr_and_task_conflict                                       PASS (0.00s)
+  test_run_with_pr_dry_run_skips_checkout_and_mutation            PASS (0.00s)
+  test_run_with_pr_not_found_error                                PASS (0.00s)
+Creating worktree for task: 081
+
+Dry run - no changes made:
+Would create worktree at: /custom/path
+Would create branch: task-081
+Task ID: 081
+Task title: Test task
+
+Planned steps:
+  1. create worktree
+  test_parse_arguments_with_task_flag                             PASS (0.00s)
+Error: Cannot use multiple creation modes: task, traditional. Use only one of --task, --pr, --branch, or <branch-name>
+
+ace-git-worktree create - Create a new worktree
+
+USAGE:
+    ace-git-worktree create <branch-name> [OPTIONS]
+    ace-git-worktree create --task <task-id> [OPTIONS]
+    ace-git-worktree create --pr <pr-number> [OPTIONS]
+    ace-git-worktree create --branch <branch> [OPTIONS]
+
+TASK-AWARE CREATION:
+    --task <task-id>         Create worktree for a specific task
+                           Task ID formats: 081, task.081, v.0.9.0+081
+
+PR-AWARE CREATION:
+    --pr <number>           Create worktree for a pull request
+    --pull-request <number> (alias for --pr)
+                           Requires a configured forge server and its
+                           provider package; fetches the exact declared
+                           source repository/ref and verifies the head
+                           SHA against the PR evidence.
+
+BRANCH-AWARE CREATION:
+    -b <branch>             Create worktree from a branch (local or remote)
+    --branch <branch>       (alias for -b)
+                           Remote branches: origin/feature, upstream/main
+                           Local branches: feature-name
+
+OPTIONS:
+    --path <path>           Custom worktree path (default: from config)
+    --source <ref>          Git ref to use as branch start-point (default: current branch)
+                          Examples: main, origin/develop, HEAD~3, commit-sha
+    --server <name>         Use the named configured forge server (PR mode)
+    --default-server        Use the configured default forge server
+    --dry-run               Show what would be created without creating
+    --no-status-update      Skip marking task as in-progress (task mode only)
+    --no-commit             Skip committing task changes (task mode only)
+    --no-push               Skip pushing task changes to remote (task mode only)
+    --no-upstream           Skip pushing worktree branch with upstream tracking (task mode only)
+    --no-pr                 Skip creating draft PR; keeps task creation local and provider-free
+    --no-bootstrap          Skip worktree bootstrap preparation
+    --push-remote <name>    Remote to push to (default: origin) (task mode only)
+    --no-auto-navigate      Stay in current directory (default: navigate to worktree)
+    --commit-message <msg>  Custom commit message for task updates (task mode only)
+    --force                 Create even if worktree already exists
+    --help, -h              Show this help message
+
+EXAMPLES:
+    # Create task-aware worktree
+    ace-git-worktree create --task 081
+
+    # Create task worktree based on main instead of current branch
+    ace-git-worktree create --task 081 --source main
+
+    # Create PR worktree on a named forge server (no mutation)
+    ace-git-worktree create --pr 26 --server forgejo-lab --dry-run
+
+    # Create worktree from remote branch
+    ace-git-worktree create -b origin/feature/auth
+
+    # Create worktree from local branch
+    ace-git-worktree create -b my-feature
+
+    # Create traditional worktree
+    ace-git-worktree create feature-branch
+
+    # Create traditional worktree based on specific commit
+    ace-git-worktree create feature-branch --source HEAD~3
+
+    # Custom path and dry run
+    ace-git-worktree create --pr 26 --path ~/worktrees --dry-run
+
+CONFIGURATION:
+    Worktree creation is controlled by .ace/git/worktree.yml:
+    - root_path: Default worktree root directory
+    - task.auto_*: Automation settings for task workflows
+    - pr.directory_format: PR worktree naming format (default: ace-pr-{number})
+    - pr.branch_format: PR branch naming format (default: pr-{number}-{slug})
+      Variables: {number}, {slug}, {title_slug}, {base_branch}
+    - hooks.after_create: Commands to run after worktree creation
+
+REQUIREMENTS:
+    PR-aware creation requires a configured forge server
+    (git.servers) and the provider package for its provider
+    type. Task and branch creation are fully local and never
+    touch a forge.
+  test_argument_validation_errors                                 PASS (0.00s)
+  test_run_with_pr_provider_unavailable                           PASS (0.00s)
+Error: PR number must be a positive integer
+
+ace-git-worktree create - Create a new worktree
+
+USAGE:
+    ace-git-worktree create <branch-name> [OPTIONS]
+    ace-git-worktree create --task <task-id> [OPTIONS]
+    ace-git-worktree create --pr <pr-number> [OPTIONS]
+    ace-git-worktree create --branch <branch> [OPTIONS]
+
+TASK-AWARE CREATION:
+    --task <task-id>         Create worktree for a specific task
+                           Task ID formats: 081, task.081, v.0.9.0+081
+
+PR-AWARE CREATION:
+    --pr <number>           Create worktree for a pull request
+    --pull-request <number> (alias for --pr)
+                           Requires a configured forge server and its
+                           provider package; fetches the exact declared
+                           source repository/ref and verifies the head
+                           SHA against the PR evidence.
+
+BRANCH-AWARE CREATION:
+    -b <branch>             Create worktree from a branch (local or remote)
+    --branch <branch>       (alias for -b)
+                           Remote branches: origin/feature, upstream/main
+                           Local branches: feature-name
+
+OPTIONS:
+    --path <path>           Custom worktree path (default: from config)
+    --source <ref>          Git ref to use as branch start-point (default: current branch)
+                          Examples: main, origin/develop, HEAD~3, commit-sha
+    --server <name>         Use the named configured forge server (PR mode)
+    --default-server        Use the configured default forge server
+    --dry-run               Show what would be created without creating
+    --no-status-update      Skip marking task as in-progress (task mode only)
+    --no-commit             Skip committing task changes (task mode only)
+    --no-push               Skip pushing task changes to remote (task mode only)
+    --no-upstream           Skip pushing worktree branch with upstream tracking (task mode only)
+    --no-pr                 Skip creating draft PR; keeps task creation local and provider-free
+    --no-bootstrap          Skip worktree bootstrap preparation
+    --push-remote <name>    Remote to push to (default: origin) (task mode only)
+    --no-auto-navigate      Stay in current directory (default: navigate to worktree)
+    --commit-message <msg>  Custom commit message for task updates (task mode only)
+    --force                 Create even if worktree already exists
+    --help, -h              Show this help message
+
+EXAMPLES:
+    # Create task-aware worktree
+    ace-git-worktree create --task 081
+
+    # Create task worktree based on main instead of current branch
+    ace-git-worktree create --task 081 --source main
+
+    # Create PR worktree on a named forge server (no mutation)
+    ace-git-worktree create --pr 26 --server forgejo-lab --dry-run
+
+    # Create worktree from remote branch
+    ace-git-worktree create -b origin/feature/auth
+
+    # Create worktree from local branch
+    ace-git-worktree create -b my-feature
+
+    # Create traditional worktree
+    ace-git-worktree create feature-branch
+
+    # Create traditional worktree based on specific commit
+    ace-git-worktree create feature-branch --source HEAD~3
+
+    # Custom path and dry run
+    ace-git-worktree create --pr 26 --path ~/worktrees --dry-run
+
+CONFIGURATION:
+    Worktree creation is controlled by .ace/git/worktree.yml:
+    - root_path: Default worktree root directory
+    - task.auto_*: Automation settings for task workflows
+    - pr.directory_format: PR worktree naming format (default: ace-pr-{number})
+    - pr.branch_format: PR branch naming format (default: pr-{number}-{slug})
+      Variables: {number}, {slug}, {title_slug}, {base_branch}
+    - hooks.after_create: Commands to run after worktree creation
+
+REQUIREMENTS:
+    PR-aware creation requires a configured forge server
+    (git.servers) and the provider package for its provider
+    type. Task and branch creation are fully local and never
+    touch a forge.
+  test_run_with_pr_negative_number                                PASS (0.00s)
+  test_run_with_pr_fork_warning                                   PASS (0.00s)
+  test_terminal_explicit_herdr_never_launches_tmux                PASS (0.00s)
+Error: PR number must be between 1 and 999999.
+  test_run_with_pr_upper_bound_validation                         PASS (0.00s)
+Error: PR number cannot be empty
+
+ace-git-worktree create - Create a new worktree
+
+USAGE:
+    ace-git-worktree create <branch-name> [OPTIONS]
+    ace-git-worktree create --task <task-id> [OPTIONS]
+    ace-git-worktree create --pr <pr-number> [OPTIONS]
+    ace-git-worktree create --branch <branch> [OPTIONS]
+
+TASK-AWARE CREATION:
+    --task <task-id>         Create worktree for a specific task
+                           Task ID formats: 081, task.081, v.0.9.0+081
+
+PR-AWARE CREATION:
+    --pr <number>           Create worktree for a pull request
+    --pull-request <number> (alias for --pr)
+                           Requires a configured forge server and its
+                           provider package; fetches the exact declared
+                           source repository/ref and verifies the head
+                           SHA against the PR evidence.
+
+BRANCH-AWARE CREATION:
+    -b <branch>             Create worktree from a branch (local or remote)
+    --branch <branch>       (alias for -b)
+                           Remote branches: origin/feature, upstream/main
+                           Local branches: feature-name
+
+OPTIONS:
+    --path <path>           Custom worktree path (default: from config)
+    --source <ref>          Git ref to use as branch start-point (default: current branch)
+                          Examples: main, origin/develop, HEAD~3, commit-sha
+    --server <name>         Use the named configured forge server (PR mode)
+    --default-server        Use the configured default forge server
+    --dry-run               Show what would be created without creating
+    --no-status-update      Skip marking task as in-progress (task mode only)
+    --no-commit             Skip committing task changes (task mode only)
+    --no-push               Skip pushing task changes to remote (task mode only)
+    --no-upstream           Skip pushing worktree branch with upstream tracking (task mode only)
+    --no-pr                 Skip creating draft PR; keeps task creation local and provider-free
+    --no-bootstrap          Skip worktree bootstrap preparation
+    --push-remote <name>    Remote to push to (default: origin) (task mode only)
+    --no-auto-navigate      Stay in current directory (default: navigate to worktree)
+    --commit-message <msg>  Custom commit message for task updates (task mode only)
+    --force                 Create even if worktree already exists
+    --help, -h              Show this help message
+
+EXAMPLES:
+    # Create task-aware worktree
+    ace-git-worktree create --task 081
+
+    # Create task worktree based on main instead of current branch
+    ace-git-worktree create --task 081 --source main
+
+    # Create PR worktree on a named forge server (no mutation)
+    ace-git-worktree create --pr 26 --server forgejo-lab --dry-run
+
+    # Create worktree from remote branch
+    ace-git-worktree create -b origin/feature/auth
+
+    # Create worktree from local branch
+    ace-git-worktree create -b my-feature
+
+    # Create traditional worktree
+    ace-git-worktree create feature-branch
+
+    # Create traditional worktree based on specific commit
+    ace-git-worktree create feature-branch --source HEAD~3
+
+    # Custom path and dry run
+    ace-git-worktree create --pr 26 --path ~/worktrees --dry-run
+
+CONFIGURATION:
+    Worktree creation is controlled by .ace/git/worktree.yml:
+    - root_path: Default worktree root directory
+    - task.auto_*: Automation settings for task workflows
+    - pr.directory_format: PR worktree naming format (default: ace-pr-{number})
+    - pr.branch_format: PR branch naming format (default: pr-{number}-{slug})
+      Variables: {number}, {slug}, {title_slug}, {base_branch}
+    - hooks.after_create: Commands to run after worktree creation
+
+REQUIREMENTS:
+    PR-aware creation requires a configured forge server
+    (git.servers) and the provider package for its provider
+    type. Task and branch creation are fully local and never
+    touch a forge.
+  test_run_with_empty_pr_number                                   PASS (0.00s)
+  test_debug_output_on_error                                      PASS (0.00s)
+  test_terminal_tmux_explicit_outside_runtime_exec_start_for_pr   PASS (0.00s)
+Creating worktree for branch: feature-branch
+
+Worktree created successfully!
+Worktree path: 
+Branch: 
+Git root: 
+
+  test_cli_override_flags_are_passed_through_traditional_creation PASS (0.00s)
+Creating worktree for task: 081
+
+Dry run - no changes made:
+Would create worktree at: /path/to/worktree
+Would create branch: task-081
+Task ID: 081
+Task title: Test task
+
+Planned steps:
+  1. create worktree
+Creating worktree for task: 081
+
+Dry run - no changes made:
+Would create worktree at: /path/to/worktree
+Would create branch: task-081
+Task ID: 081
+Task title: Test task
+
+Planned steps:
+  1. create worktree
+Creating worktree for task: 081
+
+Dry run - no changes made:
+Would create worktree at: /path/to/worktree
+Would create branch: task-081
+Task ID: 081
+Task title: Test task
+
+Planned steps:
+  1. create worktree
+Creating worktree for task: 081
+
+Dry run - no changes made:
+Would create worktree at: /path/to/worktree
+Would create branch: task-081
+Task ID: 081
+Task title: Test task
+
+Planned steps:
+  1. create worktree
+  test_commit_message_override_works                              PASS (0.00s)
+
+CleanupCommandTest
+  test_apply_recomputes_report_and_rejects_stale_digest           PASS (0.00s)
+  test_apply_recomputation_failure_refuses_apply                  PASS (0.00s)
+
+🧹 Worktree Cleanup Report
+==================================================
+  Target: main (abc1234)
+  Remote: origin (def5678)
+  Mode:   offline
+
+Worktrees (0):
+----------------------------------------
+
+Local Refs (0):
+----------------------------------------
+
+Remote Refs (0):
+----------------------------------------
+
+Proposed Actions (0):
+----------------------------------------
+  No removable items found.
+
+Plan Digest: digest
+==================================================
+  test_successful_run_returns_zero                                PASS (0.00s)
+Error: Invalid format 'invalid'. Use: table, json
+
+USAGE
+  ace-git-worktree cleanup --target <ref> --remote <name> [OPTIONS]
+
+OPTIONS
+  --target <ref>      Target ref for ancestry proof (required)
+  --remote <name>     Local Git remote name (default: origin); never forge selection
+  --server <name>     Named configured forge server for PR proof
+  --default-server    Use the configured default forge server
+  --offline           Skip remote evidence refresh and provider proof
+  --apply             Apply a reviewed plan
+  --approved-digest <sha256>   Approved plan digest to apply
+  --require-only-target        Fail if final rescan has retained non-target state
+  --format <type>     Output format: table, json (default: table)
+  --help              Show this help
+
+DESCRIPTION
+  Generates a complete cleanup inventory without performing any
+  mutations. Each worktree, local ref, and remote ref is classified
+  by ancestry proof and retention policy.
+
+  The report includes a canonical SHA-256 plan digest that can be
+  used with --apply (in a future version) to safely execute the
+  reviewed plan.
+
+EXAMPLES
+  ace-git-worktree cleanup --target main
+  ace-git-worktree cleanup --target main --format json
+  ace-git-worktree cleanup --target main --offline
+  test_invalid_format_returns_error                               PASS (0.00s)
+Error: x
+  test_server_flags_forward_to_reporter_and_are_mutually_exclusive PASS (0.00s)
+USAGE
+  ace-git-worktree cleanup --target <ref> --remote <name> [OPTIONS]
+
+OPTIONS
+  --target <ref>      Target ref for ancestry proof (required)
+  --remote <name>     Local Git remote name (default: origin); never forge selection
+  --server <name>     Named configured forge server for PR proof
+  --default-server    Use the configured default forge server
+  --offline           Skip remote evidence refresh and provider proof
+  --apply             Apply a reviewed plan
+  --approved-digest <sha256>   Approved plan digest to apply
+  --require-only-target        Fail if final rescan has retained non-target state
+  --format <type>     Output format: table, json (default: table)
+  --help              Show this help
+
+DESCRIPTION
+  Generates a complete cleanup inventory without performing any
+  mutations. Each worktree, local ref, and remote ref is classified
+  by ancestry proof and retention policy.
+
+  The report includes a canonical SHA-256 plan digest that can be
+  used with --apply (in a future version) to safely execute the
+  reviewed plan.
+
+EXAMPLES
+  ace-git-worktree cleanup --target main
+  ace-git-worktree cleanup --target main --format json
+  ace-git-worktree cleanup --target main --offline
+  test_help_option_returns_zero                                   PASS (0.00s)
+Error: Something went wrong
+  test_failed_report_returns_error                                PASS (0.00s)
+Error: --target is required
+
+USAGE
+  ace-git-worktree cleanup --target <ref> --remote <name> [OPTIONS]
+
+OPTIONS
+  --target <ref>      Target ref for ancestry proof (required)
+  --remote <name>     Local Git remote name (default: origin); never forge selection
+  --server <name>     Named configured forge server for PR proof
+  --default-server    Use the configured default forge server
+  --offline           Skip remote evidence refresh and provider proof
+  --apply             Apply a reviewed plan
+  --approved-digest <sha256>   Approved plan digest to apply
+  --require-only-target        Fail if final rescan has retained non-target state
+  --format <type>     Output format: table, json (default: table)
+  --help              Show this help
+
+DESCRIPTION
+  Generates a complete cleanup inventory without performing any
+  mutations. Each worktree, local ref, and remote ref is classified
+  by ancestry proof and retention policy.
+
+  The report includes a canonical SHA-256 plan digest that can be
+  used with --apply (in a future version) to safely execute the
+  reviewed plan.
+
+EXAMPLES
+  ace-git-worktree cleanup --target main
+  ace-git-worktree cleanup --target main --format json
+  ace-git-worktree cleanup --target main --offline
+  test_missing_target_returns_error                               PASS (0.00s)
+
+ListCommandTest
+ace-git-worktree list - List worktrees
+
+USAGE:
+    ace-git-worktree list [OPTIONS]
+
+OUTPUT FORMATS:
+    --format <format>       Output format: table, json, simple (default: table)
+    --show-tasks            Include task associations
+
+FILTERING:
+    --task-associated       Show only task-associated worktrees
+    --no-task-associated    Show only non-task worktrees
+    --usable               Show only usable worktrees
+    --no-usable            Show only unusable worktrees
+    --search <pattern>      Filter by branch name pattern
+
+EXAMPLES:
+    # List all worktrees in table format
+    ace-git-worktree list
+
+    # List with task associations in JSON format
+    ace-git-worktree list --show-tasks --format json
+
+    # List only task-associated worktrees
+    ace-git-worktree list --task-associated
+
+    # Search for worktrees with "auth" in branch name
+    ace-git-worktree list --search auth
+
+    # List only usable worktrees
+    ace-git-worktree list --usable
+
+OUTPUT:
+    Table format columns:
+    - Task: Task ID (or - for non-task worktrees)
+    - Branch: Git branch name
+    - Path: Worktree directory path
+    - Status: worktree status (task, normal, bare, detached, etc.)
+
+    JSON format includes full worktree details and metadata.
+  test_run_with_help_flag                                         PASS (0.00s)
+No worktrees found.
+  test_format_option_json_converted_to_symbol                     PASS (0.00s)
+No worktrees found.
+  test_format_option_converted_to_symbol                          PASS (0.00s)
+  test_run_lists_worktrees                                        SKIP (0.00s)
+Error: Search pattern contains potentially dangerous characters
+
+ace-git-worktree list - List worktrees
+
+USAGE:
+    ace-git-worktree list [OPTIONS]
+
+OUTPUT FORMATS:
+    --format <format>       Output format: table, json, simple (default: table)
+    --show-tasks            Include task associations
+
+FILTERING:
+    --task-associated       Show only task-associated worktrees
+    --no-task-associated    Show only non-task worktrees
+    --usable               Show only usable worktrees
+    --no-usable            Show only unusable worktrees
+    --search <pattern>      Filter by branch name pattern
+
+EXAMPLES:
+    # List all worktrees in table format
+    ace-git-worktree list
+
+    # List with task associations in JSON format
+    ace-git-worktree list --show-tasks --format json
+
+    # List only task-associated worktrees
+    ace-git-worktree list --task-associated
+
+    # Search for worktrees with "auth" in branch name
+    ace-git-worktree list --search auth
+
+    # List only usable worktrees
+    ace-git-worktree list --usable
+
+OUTPUT:
+    Table format columns:
+    - Task: Task ID (or - for non-task worktrees)
+    - Branch: Git branch name
+    - Path: Worktree directory path
+    - Status: worktree status (task, normal, bare, detached, etc.)
+
+    JSON format includes full worktree details and metadata.
+Error: Search pattern contains potentially dangerous characters
+
+ace-git-worktree list - List worktrees
+
+USAGE:
+    ace-git-worktree list [OPTIONS]
+
+OUTPUT FORMATS:
+    --format <format>       Output format: table, json, simple (default: table)
+    --show-tasks            Include task associations
+
+FILTERING:
+    --task-associated       Show only task-associated worktrees
+    --no-task-associated    Show only non-task worktrees
+    --usable               Show only usable worktrees
+    --no-usable            Show only unusable worktrees
+    --search <pattern>      Filter by branch name pattern
+
+EXAMPLES:
+    # List all worktrees in table format
+    ace-git-worktree list
+
+    # List with task associations in JSON format
+    ace-git-worktree list --show-tasks --format json
+
+    # List only task-associated worktrees
+    ace-git-worktree list --task-associated
+
+    # Search for worktrees with "auth" in branch name
+    ace-git-worktree list --search auth
+
+    # List only usable worktrees
+    ace-git-worktree list --usable
+
+OUTPUT:
+    Table format columns:
+    - Task: Task ID (or - for non-task worktrees)
+    - Branch: Git branch name
+    - Path: Worktree directory path
+    - Status: worktree status (task, normal, bare, detached, etc.)
+
+    JSON format includes full worktree details and metadata.
+Error: Search pattern contains potentially dangerous characters
+
+ace-git-worktree list - List worktrees
+
+USAGE:
+    ace-git-worktree list [OPTIONS]
+
+OUTPUT FORMATS:
+    --format <format>       Output format: table, json, simple (default: table)
+    --show-tasks            Include task associations
+
+FILTERING:
+    --task-associated       Show only task-associated worktrees
+    --no-task-associated    Show only non-task worktrees
+    --usable               Show only usable worktrees
+    --no-usable            Show only unusable worktrees
+    --search <pattern>      Filter by branch name pattern
+
+EXAMPLES:
+    # List all worktrees in table format
+    ace-git-worktree list
+
+    # List with task associations in JSON format
+    ace-git-worktree list --show-tasks --format json
+
+    # List only task-associated worktrees
+    ace-git-worktree list --task-associated
+
+    # Search for worktrees with "auth" in branch name
+    ace-git-worktree list --search auth
+
+    # List only usable worktrees
+    ace-git-worktree list --usable
+
+OUTPUT:
+    Table format columns:
+    - Task: Task ID (or - for non-task worktrees)
+    - Branch: Git branch name
+    - Path: Worktree directory path
+    - Status: worktree status (task, normal, bare, detached, etc.)
+
+    JSON format includes full worktree details and metadata.
+Error: Search pattern contains potentially dangerous characters
+
+ace-git-worktree list - List worktrees
+
+USAGE:
+    ace-git-worktree list [OPTIONS]
+
+OUTPUT FORMATS:
+    --format <format>       Output format: table, json, simple (default: table)
+    --show-tasks            Include task associations
+
+FILTERING:
+    --task-associated       Show only task-associated worktrees
+    --no-task-associated    Show only non-task worktrees
+    --usable               Show only usable worktrees
+    --no-usable            Show only unusable worktrees
+    --search <pattern>      Filter by branch name pattern
+
+EXAMPLES:
+    # List all worktrees in table format
+    ace-git-worktree list
+
+    # List with task associations in JSON format
+    ace-git-worktree list --show-tasks --format json
+
+    # List only task-associated worktrees
+    ace-git-worktree list --task-associated
+
+    # Search for worktrees with "auth" in branch name
+    ace-git-worktree list --search auth
+
+    # List only usable worktrees
+    ace-git-worktree list --usable
+
+OUTPUT:
+    Table format columns:
+    - Task: Task ID (or - for non-task worktrees)
+    - Branch: Git branch name
+    - Path: Worktree directory path
+    - Status: worktree status (task, normal, bare, detached, etc.)
+
+    JSON format includes full worktree details and metadata.
+  test_security_validation_on_search_arguments                    PASS (0.00s)
+Error: Git command failed
+  test_handles_list_errors_gracefully                             PASS (0.00s)
+No worktrees found.
+  test_run_with_search_option                                     PASS (0.00s)
+No worktrees found.
+  test_run_with_no_task_associated_filter                         PASS (0.00s)
+No worktrees found.
+  test_format_option_simple_converted_to_symbol                   PASS (0.00s)
+No worktrees found.
+  test_format_option_table_converted_to_symbol                    PASS (0.00s)
+No worktrees found.
+  test_run_with_task_associated_filter                            PASS (0.00s)
+  test_json_output_does_not_print_summary_footer                  PASS (0.00s)
+
+ConfigCommandTest
+ace-git-worktree config - Manage worktree configuration
+
+USAGE:
+    ace-git-worktree config [SUBCOMMAND / OPTIONS]
+
+ACTIONS:
+    init                                    Initialize minimal project worktree configuration
+    set-bootstrap                           Set bootstrap command policy
+    --show                                  Show current configuration (default)
+    --validate                              Validate configuration
+    --files                                 Show configuration file locations
+
+SET BOOTSTRAP OPTIONS:
+    --command <cmd>                         Command to run
+    --working-dir <path>                    Working directory relative to project root
+    --timeout <sec>                         Timeout in seconds (max 300)
+    --required | --advisory                 Policy for execution failure
+    --env KEY=VALUE                         Environment variables
+
+FORMAT OPTIONS:
+    --json                                  Format output as JSON
+    --bootstrap                             Validate bootstrap section only
+
+EXAMPLES:
+    ace-git-worktree config init
+    ace-git-worktree config set-bootstrap --command "npm install" --timeout 120 --required
+    ace-git-worktree config show --json
+    ace-git-worktree config validate --bootstrap --json
+  test_run_with_help_flag                                         PASS (0.00s)
+Updated bootstrap policy at /private/var/folders/hf/knhxwtnx76gcdps2hxb3bp2r0000gr/T/d20261005-62179-r1zn08/.ace/git/worktree.yml
+  test_config_set_bootstrap_and_show_json_with_provenance         PASS (0.00s)
+Initialized project worktree configuration at /private/var/folders/hf/knhxwtnx76gcdps2hxb3bp2r0000gr/T/d20261005-62179-w5y5bn/.ace/git/worktree.yml
+  test_config_init_creates_minimal_file                           PASS (0.00s)
+Configuration Validation:
+==============================
+❌ Configuration validation failed
+  ❌ worktree_root is required
+  ❌ invalid naming pattern
+  test_run_validate_config_with_errors                            PASS (0.00s)
+  test_security_validation_on_config_paths                        SKIP (0.00s)
+  test_run_show_config                                            SKIP (0.00s)
+Current Worktree Configuration:
+==================================================
+Root Path: .ace-wt
+Absolute Root: /private/var/folders/hf/knhxwtnx76gcdps2hxb3bp2r0000gr/T/ace-git-worktree-test20261005-62179-s2r17s/.ace-wt
+Mise Trust Auto: enabled
+
+Bootstrap Settings: not configured
+
+Task Settings:
+  Directory Format: t.{task_id}
+  Branch Format: {id}-{slug}
+  Auto Mark In Progress: enabled
+  Auto Commit Task: enabled
+  Add Worktree Metadata: enabled
+
+  test_run_with_no_subcommand_shows_help                          PASS (0.00s)
+Error: Unexpected argument: invalid
+  test_run_with_invalid_subcommand                                PASS (0.00s)
+Updated bootstrap policy at /private/var/folders/hf/knhxwtnx76gcdps2hxb3bp2r0000gr/T/d20261005-62179-p0w2ra/.ace/git/worktree.yml
+  test_config_validate_bootstrap                                  PASS (0.00s)
+Current Worktree Configuration:
+==================================================
+Error showing configuration: Config file not found
+  test_handles_config_errors_gracefully                           PASS (0.00s)
+Configuration Validation:
+==============================
+✅ Configuration is valid
+  test_run_validate_config                                        PASS (0.00s)
+
+CliTest
+  test_security_validation_in_task_ids                            SKIP (0.00s)
+  test_list_cli_forwards_task_associated_true_filter              PASS (0.00s)
+  test_run_with_version_flag                                      PASS (0.00s)
+  test_run_create_with_missing_task_returns_error_exit_code       PASS (0.94s)
+  test_run_with_version_command                                   PASS (0.00s)
+  test_config_command_with_invalid_subcommand                     PASS (0.00s)
+  test_run_with_invalid_command                                   PASS (0.31s)
+  test_list_cli_forwards_task_associated_false_filter             PASS (0.00s)
+  test_config_command_show                                        PASS (0.00s)
+  test_handles_missing_ace_task_gracefully                        PASS (0.00s)
+  test_create_pr_worktree_cli_routes_correctly                    PASS (0.00s)
+  test_prune_command_with_dry_run                                 SKIP (0.00s)
+  test_remove_command_with_dry_run                                PASS (0.00s)
+  test_run_with_help_flag                                         PASS (0.00s)
+  test_run_with_short_help_flag                                   PASS (0.00s)
+  test_list_cli_forwards_no_usable_filter                         PASS (0.00s)
+  test_create_pr_worktree_cli_integration                         SKIP (0.00s)
+  test_run_with_help_command                                      PASS (0.00s)
+  test_switch_command_integration                                 SKIP (0.00s)
+  test_create_command_integration                                 SKIP (0.00s)
+  test_run_with_short_version_flag                                PASS (0.00s)
+  test_create_command_parses_pr_flag_without_positional_fallback  PASS (0.00s)
+  test_list_command_integration                                   PASS (0.02s)
+  test_run_without_arguments_shows_help                           PASS (0.33s)
+
+SwitchCommandTest
+Error: Worktree not found
+  test_handles_switch_errors_gracefully                           PASS (0.00s)
+Failed to switch worktree: Worktree not found: 081
+  test_mutually_exclusive_arguments                               PASS (0.07s)
+/path/to/task-worktree
+  test_run_with_task_reference                                    PASS (0.00s)
+/path/to/task-worktree
+/path/to/task-worktree
+/path/to/task-worktree
+  test_valid_task_formats                                         PASS (0.00s)
+  test_run_with_list_option                                       SKIP (0.00s)
+Failed to switch worktree: Worktree not found: /etc/passwd
+Error: Identifier contains potentially dangerous characters
+
+ace-git-worktree switch - Switch to a worktree
+
+USAGE:
+    ace-git-worktree switch <identifier>
+
+IDENTIFIERS:
+    Task ID:                081, task.081, v.0.9.0+081
+    Branch name:            feature-branch, main
+    Directory name:        task.081, feature-branch
+    Full path:              /path/to/worktree
+
+OPTIONS:
+    --help, -h              Show this help message
+    --list, -l              List available worktrees
+    --verbose, -v           Show detailed information
+
+EXAMPLES:
+    # Switch by task ID
+    ace-git-worktree switch 081
+
+    # Switch by branch name
+    ace-git-worktree switch feature-branch
+
+    # Switch and change directory
+    cd $(ace-git-worktree switch 081)
+
+    # List available worktrees
+    ace-git-worktree switch --list
+
+OUTPUT:
+    The command outputs the worktree path for use with cd:
+    $ ace-git-worktree switch 081
+    /project/.ace-wt/task.081
+
+    To change directory:
+    $ cd $(ace-git-worktree switch 081)
+
+CONFIGURATION:
+    Worktree paths and naming are controlled by .ace/git/worktree.yml
+Error: Identifier contains potentially dangerous characters
+
+ace-git-worktree switch - Switch to a worktree
+
+USAGE:
+    ace-git-worktree switch <identifier>
+
+IDENTIFIERS:
+    Task ID:                081, task.081, v.0.9.0+081
+    Branch name:            feature-branch, main
+    Directory name:        task.081, feature-branch
+    Full path:              /path/to/worktree
+
+OPTIONS:
+    --help, -h              Show this help message
+    --list, -l              List available worktrees
+    --verbose, -v           Show detailed information
+
+EXAMPLES:
+    # Switch by task ID
+    ace-git-worktree switch 081
+
+    # Switch by branch name
+    ace-git-worktree switch feature-branch
+
+    # Switch and change directory
+    cd $(ace-git-worktree switch 081)
+
+    # List available worktrees
+    ace-git-worktree switch --list
+
+OUTPUT:
+    The command outputs the worktree path for use with cd:
+    $ ace-git-worktree switch 081
+    /project/.ace-wt/task.081
+
+    To change directory:
+    $ cd $(ace-git-worktree switch 081)
+
+CONFIGURATION:
+    Worktree paths and naming are controlled by .ace/git/worktree.yml
+Error: Identifier contains potentially dangerous characters
+
+ace-git-worktree switch - Switch to a worktree
+
+USAGE:
+    ace-git-worktree switch <identifier>
+
+IDENTIFIERS:
+    Task ID:                081, task.081, v.0.9.0+081
+    Branch name:            feature-branch, main
+    Directory name:        task.081, feature-branch
+    Full path:              /path/to/worktree
+
+OPTIONS:
+    --help, -h              Show this help message
+    --list, -l              List available worktrees
+    --verbose, -v           Show detailed information
+
+EXAMPLES:
+    # Switch by task ID
+    ace-git-worktree switch 081
+
+    # Switch by branch name
+    ace-git-worktree switch feature-branch
+
+    # Switch and change directory
+    cd $(ace-git-worktree switch 081)
+
+    # List available worktrees
+    ace-git-worktree switch --list
+
+OUTPUT:
+    The command outputs the worktree path for use with cd:
+    $ ace-git-worktree switch 081
+    /project/.ace-wt/task.081
+
+    To change directory:
+    $ cd $(ace-git-worktree switch 081)
+
+CONFIGURATION:
+    Worktree paths and naming are controlled by .ace/git/worktree.yml
+Error: Identifier contains potentially dangerous characters
+
+ace-git-worktree switch - Switch to a worktree
+
+USAGE:
+    ace-git-worktree switch <identifier>
+
+IDENTIFIERS:
+    Task ID:                081, task.081, v.0.9.0+081
+    Branch name:            feature-branch, main
+    Directory name:        task.081, feature-branch
+    Full path:              /path/to/worktree
+
+OPTIONS:
+    --help, -h              Show this help message
+    --list, -l              List available worktrees
+    --verbose, -v           Show detailed information
+
+EXAMPLES:
+    # Switch by task ID
+    ace-git-worktree switch 081
+
+    # Switch by branch name
+    ace-git-worktree switch feature-branch
+
+    # Switch and change directory
+    cd $(ace-git-worktree switch 081)
+
+    # List available worktrees
+    ace-git-worktree switch --list
+
+OUTPUT:
+    The command outputs the worktree path for use with cd:
+    $ ace-git-worktree switch 081
+    /project/.ace-wt/task.081
+
+    To change directory:
+    $ cd $(ace-git-worktree switch 081)
+
+CONFIGURATION:
+    Worktree paths and naming are controlled by .ace/git/worktree.yml
+Error: Identifier contains potentially dangerous characters
+
+ace-git-worktree switch - Switch to a worktree
+
+USAGE:
+    ace-git-worktree switch <identifier>
+
+IDENTIFIERS:
+    Task ID:                081, task.081, v.0.9.0+081
+    Branch name:            feature-branch, main
+    Directory name:        task.081, feature-branch
+    Full path:              /path/to/worktree
+
+OPTIONS:
+    --help, -h              Show this help message
+    --list, -l              List available worktrees
+    --verbose, -v           Show detailed information
+
+EXAMPLES:
+    # Switch by task ID
+    ace-git-worktree switch 081
+
+    # Switch by branch name
+    ace-git-worktree switch feature-branch
+
+    # Switch and change directory
+    cd $(ace-git-worktree switch 081)
+
+    # List available worktrees
+    ace-git-worktree switch --list
+
+OUTPUT:
+    The command outputs the worktree path for use with cd:
+    $ ace-git-worktree switch 081
+    /project/.ace-wt/task.081
+
+    To change directory:
+    $ cd $(ace-git-worktree switch 081)
+
+CONFIGURATION:
+    Worktree paths and naming are controlled by .ace/git/worktree.yml
+Error: Identifier contains potentially dangerous characters
+
+ace-git-worktree switch - Switch to a worktree
+
+USAGE:
+    ace-git-worktree switch <identifier>
+
+IDENTIFIERS:
+    Task ID:                081, task.081, v.0.9.0+081
+    Branch name:            feature-branch, main
+    Directory name:        task.081, feature-branch
+    Full path:              /path/to/worktree
+
+OPTIONS:
+    --help, -h              Show this help message
+    --list, -l              List available worktrees
+    --verbose, -v           Show detailed information
+
+EXAMPLES:
+    # Switch by task ID
+    ace-git-worktree switch 081
+
+    # Switch by branch name
+    ace-git-worktree switch feature-branch
+
+    # Switch and change directory
+    cd $(ace-git-worktree switch 081)
+
+    # List available worktrees
+    ace-git-worktree switch --list
+
+OUTPUT:
+    The command outputs the worktree path for use with cd:
+    $ ace-git-worktree switch 081
+    /project/.ace-wt/task.081
+
+    To change directory:
+    $ cd $(ace-git-worktree switch 081)
+
+CONFIGURATION:
+    Worktree paths and naming are controlled by .ace/git/worktree.yml
+  test_security_validation_on_paths_and_tasks                     PASS (0.06s)
+
+  test_run_with_worktree_path                                     PASS (0.00s)
+/path/to/worktree
+  test_run_with_branch_name                                       PASS (0.00s)
+ace-git-worktree switch - Switch to a worktree
+
+USAGE:
+    ace-git-worktree switch <identifier>
+
+IDENTIFIERS:
+    Task ID:                081, task.081, v.0.9.0+081
+    Branch name:            feature-branch, main
+    Directory name:        task.081, feature-branch
+    Full path:              /path/to/worktree
+
+OPTIONS:
+    --help, -h              Show this help message
+    --list, -l              List available worktrees
+    --verbose, -v           Show detailed information
+
+EXAMPLES:
+    # Switch by task ID
+    ace-git-worktree switch 081
+
+    # Switch by branch name
+    ace-git-worktree switch feature-branch
+
+    # Switch and change directory
+    cd $(ace-git-worktree switch 081)
+
+    # List available worktrees
+    ace-git-worktree switch --list
+
+OUTPUT:
+    The command outputs the worktree path for use with cd:
+    $ ace-git-worktree switch 081
+    /project/.ace-wt/task.081
+
+    To change directory:
+    $ cd $(ace-git-worktree switch 081)
+
+CONFIGURATION:
+    Worktree paths and naming are controlled by .ace/git/worktree.yml
+  test_run_with_help_flag                                         PASS (0.00s)
+Error: Must specify <identifier> or use --list option
+
+ace-git-worktree switch - Switch to a worktree
+
+USAGE:
+    ace-git-worktree switch <identifier>
+
+IDENTIFIERS:
+    Task ID:                081, task.081, v.0.9.0+081
+    Branch name:            feature-branch, main
+    Directory name:        task.081, feature-branch
+    Full path:              /path/to/worktree
+
+OPTIONS:
+    --help, -h              Show this help message
+    --list, -l              List available worktrees
+    --verbose, -v           Show detailed information
+
+EXAMPLES:
+    # Switch by task ID
+    ace-git-worktree switch 081
+
+    # Switch by branch name
+    ace-git-worktree switch feature-branch
+
+    # Switch and change directory
+    cd $(ace-git-worktree switch 081)
+
+    # List available worktrees
+    ace-git-worktree switch --list
+
+OUTPUT:
+    The command outputs the worktree path for use with cd:
+    $ ace-git-worktree switch 081
+    /project/.ace-wt/task.081
+
+    To change directory:
+    $ cd $(ace-git-worktree switch 081)
+
+CONFIGURATION:
+    Worktree paths and naming are controlled by .ace/git/worktree.yml
+  test_run_with_no_arguments_shows_error                          PASS (0.00s)
+
+Finished in 1.89671s
+127 tests, 253 assertions, 0 failures, 0 errors, 13 skips
+
+Started with run options --seed 45281
+
+WorktreeManagerContractTest
+  test_error_result_structure                                     PASS (0.00s)
+  test_mock_matches_documented_api                                PASS (0.00s)
+  test_api_contract_documentation                                 PASS (0.00s)
+  test_create_task_api_structure                                  SKIP (0.00s)
+  test_dry_run_mock_matches_api                                   PASS (0.00s)
+
+Ace::Git::Worktree::Integration::SubtaskWorkflowTest
+  test_target_branch_resolution_for_subtask_with_parent           PASS (0.00s)
+  test_multiple_subtasks_have_distinct_paths                      PASS (0.00s)
+  test_status_updater_normalizes_subtask_refs                     PASS (0.00s)
+  test_commit_message_format_includes_subtask                     PASS (0.00s)
+  test_extractor_normalizes_all_ref_formats                       PASS (0.00s)
+  test_worktree_path_for_parent_task                              PASS (0.00s)
+  test_status_updater_distinguishes_parent_from_subtask           PASS (0.00s)
+  test_target_branch_fallback_when_parent_has_no_worktree         PASS (0.00s)
+  test_parent_and_subtask_have_distinct_paths                     PASS (0.00s)
+  test_target_branch_for_orchestrator_task                        PASS (0.00s)
+  test_branch_format_includes_subtask                             PASS (0.00s)
+  test_worktree_path_for_subtask                                  PASS (0.00s)
+  test_extractor_handles_all_id_formats                           PASS (0.00s)
+
+CreateCommandTerminalContractTest
+Creating worktree for PR #26...
+Fetching PR information...
+PR #26: Add authentication feature
+Branch: feature/auth -> main
+Source: https://forge.example.com/o/r@feature/auth (head aaaaaaaa)
+Server: forgejo-lab
+
+Worktree created successfully!
+✓ PR #26: Add authentication feature
+✓ Created worktree: ace-pr-26
+✓ Branch: pr-26 tracking 
+✓ Location: /path/to/worktree
+
+  test_terminal_contract_for_pr_create_uses_start_subcommand_outside_runtime PASS (0.66s)
+Creating worktree for task: 081
+
+Worktree created successfully!
+Task ID: 081
+Task title: Test task
+Worktree path: /path/to/worktree
+Branch: task-081
+
+Steps completed:
+  ✓ create worktree
+
+  test_terminal_contract_for_task_create_uses_start_subcommand_outside_runtime PASS (0.38s)
+Creating worktree for task: 081
+
+Worktree created successfully!
+Task ID: 081
+Task title: Test task
+Worktree path: /path/to/worktree
+Branch: task-081
+
+Steps completed:
+  ✓ create worktree
+
+  test_terminal_contract_inside_live_runtime_opens_window_through_contract PASS (0.00s)
+
+Finished in 1.04509s
+21 tests, 60 assertions, 0 failures, 0 errors, 1 skips

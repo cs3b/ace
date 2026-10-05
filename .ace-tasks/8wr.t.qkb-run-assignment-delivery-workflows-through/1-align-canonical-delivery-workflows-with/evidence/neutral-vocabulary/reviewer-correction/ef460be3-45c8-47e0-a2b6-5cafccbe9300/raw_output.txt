@@ -1,0 +1,8 @@
+Started with run options --seed 17117
+
+NeutralPrVocabularyTest
+  test_real_neutral_skills_project_to_agents_and_prune_old_names  PASS (0.04s)
+  test_gem_payload_sources_resolve_only_neutral_pr_names          PASS (0.00s)
+
+Finished in 0.04320s
+2 tests, 42 assertions, 0 failures, 0 errors, 0 skips

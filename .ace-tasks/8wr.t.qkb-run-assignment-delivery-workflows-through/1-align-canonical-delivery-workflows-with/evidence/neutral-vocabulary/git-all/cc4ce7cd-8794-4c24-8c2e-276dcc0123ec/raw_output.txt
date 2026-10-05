@@ -1,0 +1,552 @@
+Started with run options --seed 62884
+
+WorkflowValidationTest
+  test_all_workflows_have_valid_frontmatter                       PASS (0.00s)
+  test_workflow_files_have_proper_formatting                      PASS (0.00s)
+  test_all_workflows_have_required_fields                         PASS (0.00s)
+
+Finished in 0.00052s
+3 tests, 0 assertions, 0 failures, 0 errors, 0 skips
+
+Started with run options --seed 53076
+
+StatusFormatterTest
+  test_format_current_pr_section                                  PASS (0.00s)
+  test_to_markdown_includes_task_pattern_in_header                PASS (0.00s)
+  test_to_markdown_includes_current_pr_section                    PASS (0.00s)
+  test_to_markdown_omits_sections_when_no_prs                     PASS (0.00s)
+  test_to_markdown_includes_pr_activity_section                   PASS (0.00s)
+  test_to_markdown_shows_merged_relative_time                     PASS (0.00s)
+  test_format_recent_commits_section                              PASS (0.00s)
+  test_to_markdown_includes_header_and_position_section           PASS (0.00s)
+  test_format_recent_commits_handles_string_keys                  PASS (0.00s)
+  test_to_markdown_includes_file_changes_in_position              PASS (0.00s)
+  test_format_position_section_without_task                       PASS (0.00s)
+  test_format_pr_activity_section_handles_missing_author          PASS (0.00s)
+  test_to_markdown_handles_missing_pr_fields                      PASS (0.00s)
+  test_format_pr_activity_section_with_only_open                  PASS (0.00s)
+  test_to_markdown_includes_recent_commits_section                PASS (0.00s)
+  test_format_pr_activity_section_with_symbol_keys                PASS (0.00s)
+  test_format_pr_activity_section_with_only_merged                PASS (0.00s)
+  test_format_position_section_with_git_status                    PASS (0.00s)
+  test_format_position_section_fallback_without_git_status        PASS (0.00s)
+  test_to_markdown_shows_detached_head                            PASS (0.00s)
+  test_to_markdown_includes_git_status_in_position                PASS (0.00s)
+
+StaleLockCleanerTest
+  test_orphaned_returns_false_for_current_process_pid             PASS (0.00s)
+  test_clean_removes_orphaned_lock_even_if_fresh                  PASS (0.00s)
+  test_orphaned_handles_pid_with_hostname                         PASS (0.00s)
+  test_clean_returns_success_when_no_lock_exists                  PASS (0.00s)
+  test_clean_removes_stale_lock                                   PASS (0.00s)
+  test_clean_does_not_remove_fresh_lock_with_running_pid          PASS (0.00s)
+  test_stale_returns_false_for_fresh_lock                         PASS (0.00s)
+  test_find_lock_file_returns_nil_for_empty_path                  PASS (0.00s)
+  test_stale_returns_false_for_non_existent_file                  PASS (0.00s)
+  test_stale_returns_true_for_old_lock                            PASS (0.00s)
+  test_orphaned_returns_false_for_invalid_pid                     PASS (0.00s)
+  test_clean_returns_error_on_exception                           PASS (0.00s)
+  test_find_lock_file_returns_path_when_exists                    PASS (0.00s)
+  test_find_lock_file_returns_nil_for_nil_path                    PASS (0.00s)
+  test_clean_handles_relative_gitdir_path                         PASS (0.00s)
+  test_clean_handles_worktree_git_file                            PASS (0.00s)
+  test_clean_uses_custom_threshold                                PASS (0.00s)
+  test_orphaned_returns_false_for_non_existent_file               PASS (0.00s)
+  test_clean_refuses_to_delete_symlink                            PASS (0.00s)
+  test_clean_handles_race_condition_when_lock_deleted_externally  PASS (0.00s)
+  test_clean_handles_malformed_worktree_git_file                  PASS (0.00s)
+  test_stale_respects_custom_threshold                            PASS (0.00s)
+  test_orphaned_returns_false_for_non_numeric_content             PASS (0.00s)
+  test_orphaned_returns_true_for_non_existent_pid                 PASS (0.00s)
+  test_find_lock_file_returns_nil_when_not_exists                 PASS (0.00s)
+
+TimeFormatterTest
+  test_relative_time_returns_empty_for_invalid_timestamp          PASS (0.00s)
+  test_boundary_365_days_is_1y                                    PASS (0.00s)
+  test_relative_time_returns_empty_for_empty_string               PASS (0.00s)
+  test_boundary_60_minutes_is_1h                                  PASS (0.00s)
+  test_boundary_59_minutes_is_minutes                             PASS (0.00s)
+  test_boundary_10_months_is_months                               PASS (0.00s)
+  test_relative_time_returns_months_ago                           PASS (0.00s)
+  test_relative_time_handles_future_timestamp                     PASS (0.00s)
+  test_relative_time_returns_weeks_ago                            PASS (0.00s)
+  test_relative_time_returns_years_ago                            PASS (0.00s)
+  test_relative_time_returns_empty_for_nil                        PASS (0.00s)
+  test_boundary_59_seconds_is_just_now                            PASS (0.00s)
+  test_relative_time_returns_days_ago                             PASS (0.00s)
+  test_relative_time_handles_leap_year                            PASS (0.00s)
+  test_boundary_28_days_is_4w                                     PASS (0.00s)
+  test_boundary_30_days_is_1mo_not_0mo                            PASS (0.00s)
+  test_boundary_60_seconds_is_1m_ago                              PASS (0.00s)
+  test_relative_time_returns_hours_ago                            PASS (0.00s)
+  test_boundary_364_days_is_11mo_not_0y                           PASS (0.00s)
+  test_boundary_24_hours_is_1d                                    PASS (0.00s)
+  test_boundary_23_hours_is_hours                                 PASS (0.00s)
+  test_relative_time_returns_just_now_for_recent                  PASS (0.00s)
+  test_relative_time_returns_minutes_ago                          PASS (0.00s)
+  test_relative_time_parses_iso8601_string                        PASS (0.00s)
+
+LockErrorDetectorTest
+  test_lock_error_result_returns_false_for_empty_error            PASS (0.00s)
+  test_lock_error_result_returns_true_for_lock_error              PASS (0.00s)
+  test_case_insensitive_pattern_matching                          PASS (0.00s)
+  test_returns_false_for_empty_string                             PASS (0.00s)
+  test_returns_false_for_non_lock_errors                          PASS (0.00s)
+  test_lock_error_result_returns_false_for_nil_result             PASS (0.00s)
+  test_lock_error_result_returns_false_for_nil_error              PASS (0.00s)
+  test_lock_error_result_returns_false_for_success                PASS (0.00s)
+  test_detects_cannot_create_lock_error                           PASS (0.00s)
+  test_detects_another_git_process_error                          PASS (0.00s)
+  test_detects_unable_to_create_lock_error                        PASS (0.00s)
+  test_lock_error_result_returns_false_for_non_lock_error         PASS (0.00s)
+  test_detects_generic_index_lock_error                           PASS (0.00s)
+  test_detects_lock_error_with_additional_context                 PASS (0.00s)
+  test_returns_false_for_nil                                      PASS (0.00s)
+
+FileGrouperTest
+  test_group_relativizes_rename_display_path                      PASS (0.00s)
+  test_group_splits_package_dotfile_and_root                      PASS (0.00s)
+
+RepositoryCheckerTest
+  test_bare_repository_returns_false                              PASS (0.00s)
+  test_usable_returns_false_for_bare_repo                         PASS (0.00s)
+  test_repository_type_returns_not_git                            PASS (0.00s)
+  test_usable_returns_false_when_not_in_git                       PASS (0.00s)
+  test_status_description_returns_string_for_normal               PASS (0.00s)
+  test_usable_returns_true_for_normal_repo                        PASS (0.00s)
+  test_repository_type_returns_detached                           PASS (0.00s)
+  test_status_description_returns_string_for_detached             PASS (0.00s)
+  test_repository_type_returns_bare                               PASS (0.00s)
+  test_repository_type_returns_worktree                           PASS (0.00s)
+  test_detached_head_returns_true                                 PASS (0.00s)
+  test_in_git_repo_returns_false                                  PASS (0.00s)
+  test_repository_type_returns_normal                             PASS (0.00s)
+  test_in_worktree_returns_false                                  PASS (0.00s)
+  test_status_description_returns_string_for_not_git              PASS (0.00s)
+  test_in_worktree_returns_true                                   PASS (0.00s)
+  test_in_git_repo_returns_true                                   PASS (0.00s)
+  test_detached_head_returns_false                                PASS (0.00s)
+  test_bare_repository_returns_true                               PASS (0.00s)
+  test_status_description_returns_string_for_bare                 PASS (0.00s)
+
+TaskPatternExtractorTest
+  test_extract_from_branch_returns_nil_for_nil                    PASS (0.00s)
+  test_extract_from_branch_returns_nil_for_main                   PASS (0.00s)
+  test_extract_shortcut_method                                    PASS (0.00s)
+  test_extract_from_branch_extracts_dotted_number                 PASS (0.00s)
+  test_extract_from_branch_with_custom_pattern                    PASS (0.00s)
+  test_extract_from_branch_extracts_subtask_number                PASS (0.00s)
+  test_extract_from_branch_extracts_simple_number                 PASS (0.00s)
+  test_has_task_pattern                                           PASS (0.00s)
+  test_extract_from_branch_returns_nil_for_feature_without_leading_number PASS (0.00s)
+  test_extract_from_branch_returns_nil_for_detached_head          PASS (0.00s)
+  test_extract_from_branch_returns_nil_for_empty_string           PASS (0.00s)
+
+Atoms::PrIdentifierTest
+  test_canonicalizes_leading_zeros                                PASS (0.00s)
+  test_rejects_zero_number                                        PASS (0.00s)
+  test_parses_qualified_reference                                 PASS (0.00s)
+  test_rejects_overlong_input                                     PASS (0.00s)
+  test_returns_nil_for_nil_and_empty_input                        PASS (0.00s)
+  test_rejects_non_numeric_bare_input                             PASS (0.00s)
+  test_parses_integer_input                                       PASS (0.00s)
+  test_parses_simple_number                                       PASS (0.00s)
+  test_rejects_malformed_qualified_reference                      PASS (0.00s)
+
+DateResolverTest
+  test_commit_sha_recognizes_valid_shas                           PASS (0.00s)
+  test_resolve_since_to_commit_returns_head_for_nil               PASS (0.00s)
+  test_parse_relative_time_handles_days                           PASS (0.00s)
+  test_resolve_since_to_commit_returns_ref_unchanged              PASS (0.00s)
+  test_parse_relative_time_returns_nil_for_invalid_strings        PASS (0.00s)
+  test_resolve_since_to_commit_returns_sha_unchanged              PASS (0.00s)
+  test_git_ref_rejects_non_refs                                   PASS (0.00s)
+  test_parse_relative_time_handles_weeks_ago                      PASS (0.00s)
+  test_git_ref_recognizes_remote_branches                         PASS (0.00s)
+  test_parse_relative_time_handles_days_ago                       PASS (0.00s)
+  test_format_since_handles_string_inputs                         PASS (0.00s)
+  test_format_since_handles_time_objects                          PASS (0.00s)
+  test_parse_relative_time_handles_date_strings                   PASS (0.00s)
+  test_git_ref_recognizes_head_references                         PASS (0.00s)
+  test_resolve_since_to_commit_returns_head_for_empty_string      PASS (0.00s)
+  test_git_ref_recognizes_refs_paths                              PASS (0.00s)
+  test_git_ref_recognizes_branch_names                            PASS (0.00s)
+  test_format_since_handles_date_objects                          PASS (0.00s)
+  test_commit_sha_rejects_invalid_shas                            PASS (0.00s)
+  test_parse_relative_time_handles_months_ago                     PASS (0.00s)
+
+Atoms::PrReferenceTest
+  test_parses_bare_number_without_repository_identity             PASS (0.00s)
+  test_parses_github_style_url_with_pull_path                     PASS (0.00s)
+  test_parses_forgejo_style_url_with_pulls_path                   PASS (0.00s)
+  test_parses_owner_repo_number_form                              PASS (0.00s)
+  test_rejects_unrecognized_shapes                                PASS (0.00s)
+  test_url_normalization_strips_git_suffix_and_is_case_insensitive PASS (0.00s)
+
+GitScopeFilterTest
+  test_get_staged_files_stubbed                                   PASS (0.00s)
+  test_get_files_with_unknown_scope                               PASS (0.00s)
+  test_get_uncommitted_files_stubbed                              PASS (0.00s)
+  test_get_changed_files_stubbed                                  PASS (0.00s)
+  test_get_tracked_files_stubbed                                  PASS (0.00s)
+  test_get_files_returns_empty_array_on_git_failure               PASS (0.00s)
+  test_get_files_between_stubbed                                  PASS (0.00s)
+  test_in_git_repo_returns_boolean                                PASS (0.00s)
+  test_get_files_with_tracked_scope_stubbed                       PASS (0.00s)
+  test_get_files_with_changed_scope_stubbed                       PASS (0.00s)
+  test_get_files_with_staged_scope_stubbed                        PASS (0.00s)
+
+RepositoryStateDetectorTest
+  test_rebasing_check_returns_true                                PASS (0.00s)
+  test_state_description_returns_string_for_merging               PASS (0.00s)
+  test_rebasing_check_returns_false                               PASS (0.00s)
+  test_state_description_returns_string_for_rebasing              PASS (0.00s)
+  test_clean_check_returns_false                                  PASS (0.00s)
+  test_state_description_returns_string_for_unknown               PASS (0.00s)
+  test_dirty_check_returns_true                                   PASS (0.00s)
+  test_merging_check_returns_false                                PASS (0.00s)
+  test_detect_returns_dirty                                       PASS (0.00s)
+  test_detect_returns_merging                                     PASS (0.00s)
+  test_merging_check_returns_true                                 PASS (0.00s)
+  test_detect_returns_unknown_when_not_in_git                     PASS (0.00s)
+  test_state_description_returns_string_for_dirty                 PASS (0.00s)
+  test_dirty_check_returns_false                                  PASS (0.00s)
+  test_detect_returns_rebasing                                    PASS (0.00s)
+  test_detect_returns_clean                                       PASS (0.00s)
+  test_clean_check_returns_true                                   PASS (0.00s)
+  test_state_description_returns_string_for_clean                 PASS (0.00s)
+
+DiffNumstatParserTest
+  test_parse_rename_line_uses_arrow_display                       PASS (0.00s)
+  test_parse_standard_numstat_lines                               PASS (0.00s)
+  test_parse_binary_line_sets_binary_flag                         PASS (0.00s)
+  test_parse_brace_rename_with_empty_left_side                    PASS (0.00s)
+
+DiffParserTest
+  test_parse_handles_empty_diff                                   PASS (0.00s)
+  test_extract_files_returns_empty_for_empty_diff                 PASS (0.00s)
+  test_has_changes_returns_true_for_diff_with_changes             PASS (0.00s)
+  test_count_changes_counts_additions_and_deletions               PASS (0.00s)
+  test_extract_files_returns_array_of_file_paths                  PASS (0.00s)
+  test_exceeds_limit_returns_true_when_over_limit                 PASS (0.00s)
+  test_has_changes_returns_false_for_empty_diff                   PASS (0.00s)
+  test_count_changes_returns_zero_for_empty_diff                  PASS (0.00s)
+  test_count_changes_ignores_diff_headers                         PASS (0.00s)
+  test_exceeds_limit_returns_false_when_under_limit               PASS (0.00s)
+  test_has_changes_returns_false_for_diff_with_only_headers       PASS (0.00s)
+  test_count_lines_counts_correctly                               PASS (0.00s)
+  test_count_lines_returns_zero_for_empty_diff                    PASS (0.00s)
+  test_parse_returns_structured_data                              PASS (0.00s)
+
+Atoms::ServerUrlTest
+  test_match_returns_false_for_different_hosts                    PASS (0.00s)
+  test_web_base_preserves_numeric_port_in_scheme_less_url         PASS (0.00s)
+  test_matching_is_case_insensitive                               PASS (0.00s)
+  test_normalizes_ssh_url_with_port_and_user                      PASS (0.00s)
+  test_web_base_still_maps_scp_style_remote                       PASS (0.00s)
+  test_normalizes_scp_style_remote                                PASS (0.00s)
+  test_match_returns_false_for_empty_input                        PASS (0.00s)
+  test_normalizes_bare_host_path_form                             PASS (0.00s)
+  test_normalizes_https_url_and_strips_git_suffix                 PASS (0.00s)
+
+CommandExecutorTest
+  test_in_git_repo_stubbed_false                                  PASS (0.00s)
+  test_execute_uses_config_default_timeout                        PASS (0.00s)
+  test_retry_disabled_when_config_says_so                         PASS (0.00s)
+  test_changed_files_defaults_to_origin_main_when_origin_exists   PASS (0.00s)
+  test_current_branch_returns_sha_when_detached                   PASS (0.00s)
+  test_repo_root_with_stubbed_response                            PASS (0.00s)
+  test_git_diff_returns_output_on_success                         PASS (0.00s)
+  test_retry_on_lock_error_with_eventual_success                  PASS (0.00s)
+  test_lock_error_message_augmented_after_all_retries             PASS (0.00s)
+  test_execute_successful_command                                 PASS (0.00s)
+  test_current_branch_stubbed_failure                             PASS (0.00s)
+  test_has_staged_changes_returns_false_when_no_diff              PASS (0.00s)
+  test_repo_root_bypasses_lock_retry                              PASS (0.00s)
+  test_execute_accepts_custom_timeout                             PASS (0.00s)
+  test_progressive_delay_between_retries                          PASS (0.00s)
+  test_git_diff_returns_empty_string_on_failure                   PASS (0.00s)
+  test_execute_handles_errors_gracefully                          PASS (0.00s)
+  test_repo_root_stubbed_failure                                  PASS (0.00s)
+  test_current_branch_with_stubbed_response                       PASS (0.00s)
+  test_changed_files_with_stubbed_response                        PASS (0.00s)
+  test_execute_returns_hash_with_expected_keys                    PASS (0.00s)
+  test_has_staged_changes_returns_true_when_diff_exists           PASS (0.00s)
+  test_changed_files_without_origin_uses_working_diff             PASS (0.00s)
+  test_execute_failed_command                                     PASS (0.00s)
+  test_has_untracked_changes_returns_false_when_no_untracked_files PASS (0.00s)
+  test_no_retry_for_non_git_commands                              PASS (0.00s)
+  test_has_untracked_changes_returns_true_when_untracked_files_exist PASS (0.00s)
+  test_current_branch_returns_nil_when_detached_sha_fails         PASS (0.00s)
+  test_changed_files_with_empty_response                          PASS (0.00s)
+  test_changed_files_stubbed_failure                              PASS (0.00s)
+  test_no_retry_for_non_lock_errors                               PASS (0.00s)
+  test_has_unstaged_changes_returns_true_when_diff_exists         PASS (0.00s)
+  test_in_git_repo_stubbed_true                                   PASS (0.00s)
+  test_has_unstaged_changes_returns_false_when_no_diff            PASS (0.00s)
+  test_execute_returns_timeout_error_with_custom_timeout_value    PASS (0.00s)
+
+GroupedStatsFormatterTest
+  test_non_mapped_layer_name_remains_plain                        PASS (0.00s)
+  test_header_icon_uses_dedicated_column_for_group_and_layer      PASS (0.00s)
+  test_squashes_consecutive_renames_in_same_directory             PASS (0.00s)
+  test_compacts_layer_header_when_summary_matches_group           PASS (0.00s)
+  test_non_rename_after_rename_shows_full_path                    PASS (0.00s)
+  test_file_name_uses_same_name_column_as_headers                 PASS (0.00s)
+  test_compacts_single_rename_with_shared_prefix                  PASS (0.00s)
+  test_squashes_repeated_directory_prefix                         PASS (0.00s)
+  test_format_plain_no_blank_lines_within_group                   PASS (0.00s)
+  test_project_root_renders_single_header_with_dot_slash          PASS (0.00s)
+  test_format_markdown_wraps_large_groups_in_details              PASS (0.00s)
+  test_format_plain_includes_totals_and_binary_marker             PASS (0.00s)
+
+PatternFilterTest
+  test_filter_diff_by_patterns_handles_empty_diff                 PASS (0.00s)
+  test_matches_include_returns_false_for_non_matching_pattern     PASS (0.00s)
+  test_extract_file_path_from_diff_git_line                       PASS (0.00s)
+  test_should_exclude_returns_true_for_matching_pattern           PASS (0.00s)
+  test_should_exclude_returns_false_for_non_matching_pattern      PASS (0.00s)
+  test_matches_include_returns_true_for_matching_pattern          PASS (0.00s)
+  test_glob_to_regex_handles_double_star                          PASS (0.00s)
+  test_glob_to_regex_converts_simple_patterns                     PASS (0.00s)
+  test_matches_include_returns_true_for_empty_patterns            PASS (0.00s)
+  test_extract_file_path_from_plus_line                           PASS (0.00s)
+  test_extract_file_path_from_minus_line                          PASS (0.00s)
+  test_filter_diff_by_patterns_filters_excluded_files             PASS (0.00s)
+  test_glob_to_regex_handles_single_star                          PASS (0.00s)
+  test_file_header_recognizes_diff_headers                        PASS (0.00s)
+  test_file_header_rejects_non_headers                            PASS (0.00s)
+  test_should_exclude_handles_empty_patterns                      PASS (0.00s)
+
+GitStatusFetcherTest
+  test_fetch_status_sb_handles_clean_repo                         PASS (0.00s)
+  test_fetch_status_sb_handles_multiple_changed_files             PASS (0.00s)
+  test_fetch_status_sb_handles_exception                          PASS (0.00s)
+  test_fetch_status_sb_returns_empty_on_failure                   PASS (0.00s)
+  test_fetch_status_sb_returns_output_on_success                  PASS (0.00s)
+
+Finished in 0.03775s
+277 tests, 595 assertions, 0 failures, 0 errors, 0 skips
+
+
+# Running tests with run options --seed 34283:
+
+..................................................................
+
+Finished tests in 0.005722s, 11534.4299 tests/s, 28836.0747 assertions/s.
+
+
+66 tests, 165 assertions, 0 failures, 0 errors, 0 skips
+
+Started with run options --seed 23296
+
+Organisms::PullRequestLifecycleTest
+  test_review_snapshot_rejects_head_change_during_collection      PASS (0.00s)
+  test_create_preserves_provider_unknown_outcome                  PASS (0.00s)
+  test_show_with_bare_number_resolves_remote_once                 PASS (0.38s)
+  test_create_with_explicit_head_repo_preserves_fork_provenance   PASS (0.00s)
+  test_show_with_url_matching_one_server_uses_it_without_selection PASS (0.00s)
+  test_create_without_head_repo_uses_selected_server_repository   PASS (0.00s)
+  test_review_snapshot_can_skip_comment_collection_explicitly     PASS (0.00s)
+  test_show_with_url_contradicting_explicit_selection_fails_before_mutation PASS (0.00s)
+  test_show_with_ambiguous_owner_repo_requires_explicit_selection PASS (0.00s)
+  test_pinned_delivery_identity_rejects_configuration_change_before_write PASS (0.00s)
+  test_merge_rejects_invalid_and_missing_methods                  PASS (0.00s)
+  test_create_reconciliation_is_read_only_and_rejects_wrong_base  PASS (0.00s)
+  test_delivery_identity_uses_explicit_repository_context_outside_current_directory PASS (0.10s)
+  test_selection_flags_are_mutually_exclusive                     PASS (0.00s)
+  test_review_snapshot_accepts_complete_empty_diff_and_comments   PASS (0.00s)
+  test_create_rejects_unreadable_body_file                        PASS (0.00s)
+
+IssueTrackingTest
+  test_sync_update_preserves_unrelated_note_and_verifies_final_body PASS (0.00s)
+  test_before_create_fires_before_the_non_idempotent_post         PASS (0.00s)
+  test_sync_preserves_unrelated_trailing_whitespace               PASS (0.00s)
+  test_clear_without_marker_is_idempotent                         PASS (0.00s)
+  test_unknown_create_reconciles_without_duplicate_after_delayed_commit PASS (0.00s)
+  test_conflicting_owner_rejects_without_mutation                 PASS (0.00s)
+  test_sync_accepts_ownership_from_either_previous_or_current_id  PASS (0.00s)
+  test_timeout_after_create_reconciles_without_duplicate          PASS (0.00s)
+  test_reparent_replay_accepts_marker_already_on_new_id           PASS (0.00s)
+  test_sync_separates_marker_from_trailing_note_without_newline   PASS (0.00s)
+  test_post_create_label_failure_is_uncertain_not_definitive      PASS (0.00s)
+  test_late_reconciliation_rejects_ownerless_marker               PASS (0.00s)
+  test_create_post_rejection_stays_definitive                     PASS (0.00s)
+  test_clear_refuses_ambiguous_marker_without_owner               PASS (0.00s)
+  test_create_pending_replay_reconciles_without_second_create     PASS (0.00s)
+  test_sticky_comment_preserves_non_ace_lines                     PASS (0.00s)
+  test_link_sync_close_reopen_and_clear_preserves_unrelated_content PASS (0.00s)
+  test_clear_removes_inline_marker_without_prior_sync             PASS (0.00s)
+
+RepoStatusLoaderTest
+  test_load_fetches_pr_activity_by_default                        PASS (0.00s)
+  test_load_includes_pr_activity_when_partial_success             PASS (0.00s)
+  test_load_skips_pr_activity_when_include_pr_activity_false      PASS (0.00s)
+  test_load_returns_context_with_branch_info                      PASS (0.00s)
+  test_load_fetches_pr_evidence_when_pr_found                     PASS (0.00s)
+  test_load_returns_unusable_context_when_not_in_repo             PASS (0.00s)
+  test_load_skips_pr_when_include_pr_false                        PASS (0.00s)
+  test_load_excludes_current_branch_from_open_prs                 PASS (0.00s)
+  test_load_respects_commits_limit                                PASS (0.00s)
+  test_load_skips_pr_when_detached_head                           PASS (0.00s)
+  test_load_respects_timeout_option                               PASS (0.00s)
+  test_load_skips_pr_enrichment_without_server_configured         PASS (0.00s)
+  test_load_skips_commits_when_include_commits_false              PASS (0.00s)
+  test_load_handles_unreachable_gracefully                        PASS (0.00s)
+  test_load_minimal_returns_context_without_pr                    PASS (0.00s)
+  test_load_for_pr_fetches_specific_pr                            PASS (0.00s)
+  test_load_minimal_skips_commits_and_status                      PASS (0.00s)
+  test_load_minimal_skips_pr_activity                             PASS (0.00s)
+  test_load_handles_pr_activity_failure_gracefully                PASS (0.00s)
+  test_load_handles_cli_missing_gracefully                        PASS (0.00s)
+  test_load_extracts_task_pattern_from_branch                     PASS (0.00s)
+  test_load_fetches_recent_commits                                PASS (0.00s)
+  test_load_handles_no_branch_pr_gracefully                       PASS (0.00s)
+  test_load_fetches_git_status                                    PASS (0.00s)
+
+DiffOrchestratorTest
+  test_save_with_format_passes_format_option                      PASS (0.00s)
+  test_save_with_format_defaults_to_diff_format                   PASS (0.00s)
+  test_save_to_file_writes_empty_diff_result                      PASS (0.00s)
+  test_save_to_file_creates_parent_directories                    PASS (0.00s)
+  test_save_to_file_writes_content_to_file                        PASS (0.00s)
+  test_generate_grouped_stats_uses_numstat_and_returns_grouped_output PASS (0.00s)
+  test_save_to_file_overwrites_existing_file                      PASS (0.00s)
+
+Finished in 0.50136s
+65 tests, 187 assertions, 0 failures, 0 errors, 0 skips
+
+
+# Running tests with run options --seed 59461:
+
+.......................................................................
+
+Finished tests in 0.002716s, 26141.3915 tests/s, 57069.2350 assertions/s.
+
+
+71 tests, 155 assertions, 0 failures, 0 errors, 0 skips
+
+Started with run options --seed 37566
+
+BranchTest
+  test_execute_returns_success_with_branch_info                   PASS (0.00s)
+  test_execute_handles_ace_git_error                              PASS (0.00s)
+  test_execute_returns_error_on_branch_info_failure               PASS (0.00s)
+  test_execute_shows_tracking_status_when_not_up_to_date          PASS (0.00s)
+  test_execute_returns_success_with_detached_head                 PASS (0.00s)
+  test_execute_outputs_json_format                                PASS (0.00s)
+
+PrCommandsTest
+  test_json_failures_carry_the_error_category                     PASS (0.00s)
+  test_classified_failures_exit_nonzero_without_success_claims    PASS (0.00s)
+  test_show_renders_text_identity_with_server_and_head            PASS (0.00s)
+  test_show_json_includes_normalized_evidence_fields              PASS (0.00s)
+  test_merge_forwards_method_and_renders_receipt                  PASS (0.00s)
+  test_receipt_json_includes_merge_proof_on_merged_pr             PASS (0.00s)
+  test_invalid_merge_method_is_rejected_before_provider_invocation PASS (0.00s)
+  test_create_renders_idempotency_state                           PASS (0.00s)
+  test_json_failures_classify_unknown_outcomes                    PASS (0.00s)
+
+DiffTest
+  test_execute_returns_error_for_invalid_git_range                PASS (0.00s)
+  test_path_traversal_validation_rejects_dotdot                   PASS (0.00s)
+  test_config_file_option_loads_git_rooted_yaml                   PASS (0.00s)
+  test_execute_returns_no_changes_message_when_diff_empty         PASS (0.00s)
+  test_config_file_option_loads_yaml                              PASS (0.00s)
+  test_grouped_stats_format_uses_grouped_metadata                 PASS (0.00s)
+  test_git_errors_are_propagated_not_masked_as_no_changes         PASS (0.00s)
+  test_execute_returns_success_with_valid_range                   PASS (0.00s)
+  test_config_file_option_raises_on_missing_file                  PASS (0.00s)
+  test_execute_returns_error_when_not_in_git_repo                 PASS (0.00s)
+  test_output_path_validation_rejects_arbitrary_absolute_paths    PASS (0.00s)
+
+StatusTest
+  test_execute_includes_recent_commits_in_output                  PASS (0.00s)
+  test_execute_disables_commits_when_limit_zero                   PASS (0.00s)
+  test_execute_includes_pr_activity_in_json_output                PASS (0.00s)
+  test_execute_passes_commits_limit_to_loader                     PASS (0.00s)
+  test_execute_with_diff_option_silently_handles_diff_error       PASS (0.00s)
+  test_execute_outputs_markdown_format                            PASS (0.00s)
+  test_execute_handles_ace_git_error                              PASS (0.00s)
+  test_execute_with_diff_option_and_pr                            PASS (0.00s)
+  test_execute_outputs_json_format                                PASS (0.00s)
+  test_execute_includes_git_status_in_position                    PASS (0.00s)
+  test_execute_returns_success_with_context                       PASS (0.00s)
+  test_execute_without_no_pr_flag_includes_pr_lookups             PASS (0.00s)
+  test_execute_includes_pr_activity_in_output                     PASS (0.00s)
+  test_execute_with_no_pr_flag_skips_pr_lookups                   PASS (0.00s)
+  test_execute_returns_error_when_not_git_repo                    PASS (0.00s)
+
+Finished in 0.00905s
+41 tests, 147 assertions, 0 failures, 0 errors, 0 skips
+
+Started with run options --seed 2249
+
+Errors::TaxonomyTest
+  test_taxonomy_errors_are_distinct_classes                       PASS (0.00s)
+  test_all_taxonomy_errors_inherit_from_ace_git_error             PASS (0.00s)
+  test_core_local_errors_still_exist                              PASS (0.00s)
+
+Providers::ServerRegistryTest
+  test_resolve_returns_explicitly_named_server                    PASS (0.00s)
+  test_matching_servers_matches_repository_url_exactly            PASS (0.00s)
+  test_resolve_for_default_server                                 PASS (0.00s)
+  test_servers_for_owner_repo_matches_repository_path_on_any_host PASS (0.00s)
+  test_matching_servers_matches_https_url_against_ssh_clone_url_with_port PASS (0.00s)
+  test_resolve_default_with_zero_defaults_raises                  PASS (0.00s)
+  test_resolve_accepts_symbols                                    PASS (0.00s)
+  test_matching_servers_matches_https_url_against_ssh_clone_url   PASS (0.00s)
+  test_servers_empty_when_unconfigured                            PASS (0.00s)
+  test_resolve_remote_with_multiple_matches_raises_ambiguous      PASS (0.11s)
+  test_matching_servers_requires_url_scheme_to_match              PASS (0.00s)
+  test_resolve_for_explicit_server_name                           PASS (0.00s)
+  test_resolve_for_falls_back_to_remote_without_selection         PASS (0.11s)
+  test_malformed_entry_raises_config_error                        PASS (0.00s)
+  test_resolve_for_rejects_conflicting_selection                  PASS (0.00s)
+  test_resolve_default_with_exactly_one_default_succeeds          PASS (0.00s)
+  test_resolve_remote_defaults_to_configured_remote_name          PASS (0.11s)
+  test_resolve_unknown_name_raises                                PASS (0.00s)
+  test_resolve_remote_matches_scp_style_remote_to_configured_server PASS (0.10s)
+  test_duplicate_names_raise                                      PASS (0.00s)
+  test_servers_returns_resolved_identities_in_order               PASS (0.00s)
+  test_resolve_remote_with_no_matching_server_raises_ambiguous    PASS (0.11s)
+  test_non_mapping_entry_raises_config_error                      PASS (0.00s)
+  test_resolve_default_with_two_defaults_raises                   PASS (0.00s)
+
+Providers::BaseTest
+  test_cleanup_proof_only_merged_status_confirms_remote_merge     PASS (0.00s)
+  test_timeout_override                                           PASS (0.00s)
+  test_lifecycle_receipt_serializes_evidence_without_idempotency_for_non_create PASS (0.00s)
+  test_holds_server_identity_and_default_timeout                  PASS (0.00s)
+  test_contract_methods_are_abstract                              PASS (0.00s)
+
+Providers::ProvidersRegistryTest
+  test_register_rejects_invalid_type                              PASS (0.00s)
+  test_registered_and_types                                       PASS (0.00s)
+  test_for_passes_timeout_and_runner_through                      PASS (0.00s)
+  test_register_rejects_non_class                                 PASS (0.00s)
+  test_reset_clears_registrations                                 PASS (0.00s)
+  test_register_normalizes_type                                   PASS (0.00s)
+  test_registered_provider_is_returned_for_server                 PASS (0.00s)
+  test_for_unknown_provider_type_raises                           PASS (0.00s)
+
+Finished in 0.53722s
+40 tests, 148 assertions, 0 failures, 0 errors, 0 skips
+
+Started with run options --seed 1208
+
+Core::LocalGitBoundaryTest
+  test_local_git_operations_succeed_without_provider_clis_on_path PASS (0.25s)
+
+Finished in 0.25329s
+1 tests, 7 assertions, 0 failures, 0 errors, 0 skips
+
+
+# Running tests with run options --seed 14682:
+
+...........
+
+Finished tests in 0.084198s, 130.6444 tests/s, 249.4121 assertions/s.
+
+
+11 tests, 21 assertions, 0 failures, 0 errors, 0 skips

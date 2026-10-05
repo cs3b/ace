@@ -1,0 +1,172 @@
+/Users/mc/Ps/ace/.ace-wt/qkb-neutral-vocabulary/ace-support-test-helpers/lib/ace/test_support/performance_helpers.rb:3: warning: benchmark was loaded from the standard library, but will no longer be part of the default gems starting from Ruby 4.0.0.
+You can add benchmark to your Gemfile or gemspec to silence this warning.
+
+/Users/mc/Ps/ace/.ace-wt/qkb-neutral-vocabulary/ace-support-test-helpers/lib/ace/test_support/performance_helpers.rb:3: warning: benchmark was loaded from the standard library, but will no longer be part of the default gems starting from Ruby 4.0.0.
+You can add benchmark to your Gemfile or gemspec to silence this warning.
+
+Synthesizing feedback from 1 review reports...
+  Using model: role:review-synthesizer
+✓ Synthesis complete
+  Unique findings: 1
+
+Synthesizing feedback from 1 review reports...
+  Using model: role:review-synthesizer
+✓ Synthesis complete
+  Unique findings: 4
+
+Synthesizing feedback from 1 review reports...
+  Using model: role:review-synthesizer
+✓ Synthesis complete
+  Unique findings: 2
+
+Synthesizing feedback from 1 review reports...
+  Using model: role:review-synthesizer
+✓ Synthesis complete
+  Unique findings: 2
+
+Synthesizing feedback from 1 review reports...
+  Using model: role:review-synthesizer
+✓ Synthesis complete
+  Unique findings: 1
+
+Synthesizing feedback from 1 review reports...
+  Using model: role:review-synthesizer
+✓ Synthesis complete
+  Unique findings: 1
+
+Synthesizing feedback from 1 review reports...
+  Using model: role:review-synthesizer
+✓ Synthesis complete
+  Unique findings: 2
+
+Synthesizing feedback from 3 review reports...
+  Using model: role:review-synthesizer
+✓ Synthesis complete
+  Unique findings: 2
+  Consensus items: 1
+
+Synthesizing feedback from 1 review reports...
+  Using model: role:review-synthesizer
+✓ Synthesis complete
+  Unique findings: 20
+
+Synthesizing feedback from 2 review reports...
+  Using model: role:review-synthesizer
+✓ Synthesis complete
+  Unique findings: 1
+
+Synthesizing feedback from 1 review reports...
+  Using model: role:review-synthesizer
+✓ Synthesis complete
+  Unique findings: 2
+
+Synthesizing feedback from 1 review reports...
+  Using model: role:review-synthesizer
+✓ Synthesis complete
+  Unique findings: 0
+
+Synthesizing feedback from 1 review reports...
+  Using model: role:review-synthesizer
+✓ Synthesis complete
+  Unique findings: 0
+
+Synthesizing feedback from 1 review reports...
+  Using model: role:review-synthesizer
+✓ Synthesis complete
+  Unique findings: 1
+
+Synthesizing feedback from 1 review reports...
+  Using model: role:review-synthesizer
+✓ Synthesis complete
+  Unique findings: 2
+
+Synthesizing feedback from 3 review reports...
+  Using model: role:review-synthesizer
+✓ Synthesis complete
+  Unique findings: 2
+  Consensus items: 1
+
+Synthesizing feedback from 1 review reports...
+  Using model: role:review-synthesizer
+✓ Synthesis complete
+  Unique findings: 2
+
+Synthesizing feedback from 1 review reports...
+  Using model: role:review-synthesizer
+✓ Synthesis complete
+  Unique findings: 2
+
+Synthesizing feedback from 1 review reports...
+  Using model: role:review-synthesizer
+✓ Synthesis complete
+  Unique findings: 1
+
+Synthesizing feedback from 1 review reports...
+  Using model: role:review-synthesizer
+
+Synthesizing feedback from 1 review reports...
+  Using model: role:review-synthesizer
+✓ Synthesis complete
+  Unique findings: 2
+
+Synthesizing feedback from 1 review reports...
+  Using model: role:review-synthesizer
+✓ Synthesis complete
+  Unique findings: 0
+
+Synthesizing feedback from 1 review reports...
+  Using model: role:review-synthesizer
+✓ Synthesis complete
+  Unique findings: 1
+
+Synthesizing feedback from 1 review reports...
+  Using model: role:review-synthesizer
+✓ Synthesis complete
+  Unique findings: 2
+
+Synthesizing feedback from 1 review reports...
+  Using model: role:review-synthesizer
+✓ Synthesis complete
+  Unique findings: 1
+
+Synthesizing feedback from 1 review reports...
+  Using model: role:review-synthesizer
+
+Synthesizing feedback from 1 review reports...
+  Using model: role:review-synthesizer
+✓ Synthesis complete
+  Unique findings: 5
+
+Synthesizing feedback from 3 review reports...
+  Using model: role:review-synthesizer
+✓ Synthesis complete
+  Unique findings: 2
+  Consensus items: 1
+
+Synthesizing feedback from 1 review reports...
+  Using model: role:review-synthesizer
+✓ Synthesis complete
+  Unique findings: 1
+/Users/mc/Ps/ace/.ace-wt/qkb-neutral-vocabulary/ace-review/test/fast/molecules/preset_manager_test.rb:450: warning: DEPRECATED: Use assert_nil if expecting nil. This will fail in Minitest 6.
+
+/Users/mc/Ps/ace/.ace-wt/qkb-neutral-vocabulary/ace-support-test-helpers/lib/ace/test_support/performance_helpers.rb:3: warning: benchmark was loaded from the standard library, but will no longer be part of the default gems starting from Ruby 4.0.0.
+You can add benchmark to your Gemfile or gemspec to silence this warning.
+fatal: not a git repository (or any of the parent directories): .git
+fatal: not a git repository (or any of the parent directories): .git
+fatal: not a git repository (or any of the parent directories): .git
+fatal: not a git repository (or any of the parent directories): .git
+fatal: not a git repository (or any of the parent directories): .git
+fatal: not a git repository (or any of the parent directories): .git
+fatal: not a git repository (or any of the parent directories): .git
+fatal: not a git repository (or any of the parent directories): .git
+fatal: not a git repository (or any of the parent directories): .git
+fatal: not a git repository (or any of the parent directories): .git
+fatal: not a git repository (or any of the parent directories): .git
+fatal: not a git repository (or any of the parent directories): .git
+fatal: not a git repository (or any of the parent directories): .git
+fatal: not a git repository (or any of the parent directories): .git
+
+
+
+/Users/mc/Ps/ace/.ace-wt/qkb-neutral-vocabulary/ace-support-test-helpers/lib/ace/test_support/performance_helpers.rb:3: warning: benchmark was loaded from the standard library, but will no longer be part of the default gems starting from Ruby 4.0.0.
+You can add benchmark to your Gemfile or gemspec to silence this warning.
