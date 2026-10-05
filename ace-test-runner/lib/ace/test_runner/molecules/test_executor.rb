@@ -139,6 +139,7 @@ module Ace
             stdout: results.map { |r| r[:stdout] }.join("\n"),
             stderr: results.map { |r| r[:stderr] }.join("\n"),
             commands: results.map { |r| r[:command] },
+            execution_outputs: results.map { |r| r[:stdout] },
             start_time: results.first[:start_time],
             end_time: results.last[:end_time],
             duration: results.sum { |r| r[:duration] },

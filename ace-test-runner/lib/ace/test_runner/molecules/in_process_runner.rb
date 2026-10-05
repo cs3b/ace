@@ -10,6 +10,16 @@ module Ace
       # Runs tests directly in the current Ruby process without spawning subprocesses
       # This provides significantly faster execution for unit tests that don't need isolation
       class InProcessRunner
+        # Minitest converts ordinary timeout exceptions into completed test
+        # errors. Its pass-through SystemExit boundary preserves execution
+        # deadlines; this owner catches the private control-flow exception.
+        class ExecutionTimeout < SystemExit
+          def initialize(*)
+            super(124)
+          end
+        end
+        private_constant :ExecutionTimeout
+
         def initialize(timeout: nil, launch_env:)
           @timeout = timeout
           @launch_env = launch_env  # Hermetic fixture environment applied for the test run
@@ -121,7 +131,7 @@ module Ace
             # Run Minitest with captured output
             # Suppress Minitest's own output by using null reporter
             exit_code = if @timeout
-              Timeout.timeout(@timeout) do
+              Timeout.timeout(@timeout, ExecutionTimeout) do
                 run_minitest_silent(options)
               end
             else
@@ -129,7 +139,7 @@ module Ace
             end
 
             success = exit_code == true || exit_code == 0
-          rescue Timeout::Error
+          rescue ExecutionTimeout, Timeout::Error
             stderr_io.puts "Test execution timed out after #{@timeout} seconds"
             success = false
             exit_code = 124
@@ -256,9 +266,21 @@ module Ace
             args << "--name" << "/#{pattern}/"
           end
 
-          # Reporter already set up before loading test files
-          # Run Minitest
-          Minitest.run(args)
+          # Minitest swallows Interrupt and returns a normal failure. Preserve
+          # operator SIGINT as interruption so the owner never writes a completed
+          # report for this invocation.
+          interrupted = false
+          previous_handler = Signal.trap("INT") do
+            interrupted = true
+            raise Interrupt
+          end
+          begin
+            result = Minitest.run(args)
+            raise Interrupt if interrupted
+            result
+          ensure
+            Signal.trap("INT", previous_handler)
+          end
         end
       end
     end
