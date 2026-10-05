@@ -113,3 +113,16 @@ Import before Git commit remains quarantine and confers no accepted reference; c
 Shipped lab-config lab_setup_project.py currently requires request.transport=local and caller_uid=executor_uid, writes beneath fixed executor evidence_root, and its usage assumes assignment-repository/executor-owned evidence. It is NOT compatible with this protected cross-user receiver. xz9.0 generic fixture proves the new contract; gad.b must update the real producer/consumer source, docs/setup-project-service.md and tests before cross-user setup-project acceptance. No claim of present handler compatibility or source implementation here.
 
 Receiver handler stdin v1 is `{version: 1, request: CANONICAL_QJX_BINDING, input: ORIGINAL_STRUCTURED_INPUT, execution: {executor_uid, authority_id, claim_binding, candidate_generation, head, staging_id}}`. request.caller_uid remains the authenticated worker UID; request.transport remains unix for this receiving path. Handler verifies current OS real/effective UID equals execution.executor_uid and request.executor_uid, fixed operation/digest/target, and the receiver-created execution binding; it does not require worker UID equals its own UID. Handler is launched only by its trusted same-account receiver with fixed environment/config; arbitrary worker stdin cannot reach admin process. Receiver supplies staging path through its owned inherited directory handle/fixed internal launch configuration, never a request-selected path or public argv. Domain handler writes only private request staging and returns `{request_id,input_digest,outcome,evidence:[{ref:RELATIVE_STAGING_PATH,sha256}]}`. Receiver verifies bounded regular files without symlink ancestry, extracts bytes and completes canonical import; it rewrites evidence refs to authority-issued canonical import refs before receipt construction. Domain project_root/credentials remain fixed admin-controlled config; only evidence sink moves. Same-user local handlers use this same envelope contract where adopted, with authentic caller preserved; obsolete local-only equality assumptions are removed, not bypassed by impersonation. gad.b must prove real cross-user setup, duplicate/loss handling and worker inability to read secrets or staging; gad.8 installs mappings/accounts, downstream of source APIs.
+
+
+## Launch-origin creation provenance clarification — 2026-10-05
+
+09j admits only a new non-restored layout from the pinned authenticated Herdr
+server. The original layout.apply response supplies fresh workspace/tab/pane;
+terminal and child PID are queried only for that exact pane on the same server,
+then bound to independently observed kernel birth/UID/lineage and pidfd. Native
+non-reuse/no-respawn guarantees are required, not inferred from a label or argv.
+No focused/current/aliased/reused/restored target or worker-selected pane can
+supply origin. Lost creation response keeps ownership uncertain, with no search,
+adoption, repeated spawn or release. xz9 consumes this accepted origin rather
+than rebuilding it from worker projections. Unsupported origin guarantees refuse.

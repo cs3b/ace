@@ -22,3 +22,14 @@ Dry-run inaccessible, caller-selected or wrong-owner/version mapping. Expected
 refusal, unchanged qjl and no child. Native restart closes mapped access until
 installer reapplies the narrow connect ACL and endpoint verification succeeds.
 No force or local fallback grants protected launch authority.
+
+
+## Native creation provenance and an unknown creation result
+
+Protected launch creates one new, non-restored layout. The original authenticated
+layout response fixes workspace/tab/pane and server generation; exact-pane queries
+supply terminal and child identity, checked against kernel birth/UID/lineage and
+pidfd. Labels, current/focused panes, supplied IDs and restored panes cannot select
+the gate. Closing/replacing/moving a pane must not change the admitted original
+identity. If the create reply is lost, status stays uncertain: searching for a
+similar pane or retrying spawn cannot recover permission to bind/release.
