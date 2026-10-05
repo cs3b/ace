@@ -1,22 +1,33 @@
 # frozen_string_literal: true
 
+require "securerandom"
+
 module Ace
   module TestRunner
     module Molecules
       # Handles storage of test reports to filesystem
       class ReportStorage
-        def initialize(base_dir: ".ace-local/test/reports", timestamp_generator: nil)
+        def initialize(base_dir: ".ace-local/test/reports")
           @base_dir = base_dir
-          @timestamp_generator = timestamp_generator || Atoms::TimestampGenerator.new
         end
 
-        def save_report(report, format: :json)
+        def reserve(execution_id = SecureRandom.uuid)
           ensure_base_directory
-          report_dir = create_report_directory
+          directory = File.join(File.expand_path(@base_dir), execution_id)
+          Dir.mkdir(directory)
+          directory
+        end
+
+        def save_report(report, format: :json, report_dir: nil)
+          ensure_base_directory
+          report_dir ||= reserve
+          report.report_path = report_dir
+          report.metadata[:execution_id] = File.basename(report_dir)
 
           case format
           when :json
             save_json_report(report, report_dir)
+            save_summary(report.result, report_dir)
           when :markdown
             save_markdown_report(report, report_dir)
           when :all
@@ -50,6 +61,8 @@ module Ace
           summary_file = File.join(report_dir, "summary.json")
 
           summary_data = {
+            execution_id: File.basename(report_dir),
+            assertions: result.assertions,
             passed: result.passed,
             failed: result.failed,
             errors: result.errors,
@@ -61,7 +74,7 @@ module Ace
             timestamp: Time.now.iso8601
           }
 
-          File.write(summary_file, JSON.pretty_generate(summary_data))
+          File.open(summary_file, "wx") { |file| file.write(JSON.pretty_generate(summary_data)) }
           summary_file
         end
 
@@ -211,27 +224,18 @@ module Ace
           FileUtils.mkdir_p(dir) unless Dir.exist?(dir)
         end
 
-        def create_report_directory
-          ensure_base_directory
-          timestamp = @timestamp_generator.directory_name
-          report_dir = File.join(@base_dir, timestamp)
-          FileUtils.mkdir_p(report_dir)
-          report_dir
-        end
-
         def create_latest_symlink(report_dir)
           latest_link = File.join(@base_dir, "latest")
-
-          # Remove existing symlink if present
-          FileUtils.rm_f(latest_link) if File.exist?(latest_link)
-
-          # Create new symlink to the latest report
-          FileUtils.ln_s(File.basename(report_dir), latest_link)
+          temporary = "#{latest_link}.#{SecureRandom.uuid}"
+          File.symlink(File.basename(report_dir), temporary)
+          File.rename(temporary, latest_link)
+        ensure
+          FileUtils.rm_f(temporary) if temporary
         end
 
         def save_json_report(report, report_dir)
           report_file = File.join(report_dir, "report.json")
-          File.write(report_file, report.to_json)
+          File.open(report_file, "wx") { |file| file.write(report.to_json) }
           report_file
         end
 

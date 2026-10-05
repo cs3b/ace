@@ -29,8 +29,8 @@ module Ace
           # Report directory - use actual report path if available
           if @report_path
             lines << "Details: #{@report_path}/"
-          elsif @configuration && @configuration[:save_reports]
-            lines << "Details: #{@configuration[:report_dir] || ".ace-local/test/reports"}/latest/"
+          else
+            lines << "No saved report"
           end
 
           # Compact single-line summary with emoji status
@@ -66,8 +66,8 @@ module Ace
 
             # Show failure count header with reference to full report if needed
             if total_failures > @max_failures_to_display
-              report_path = @report_path || "#{@configuration[:report_dir] || ".ace-local/test/reports"}/latest"
-              lines << "#{label} (#{failures_to_show.size}/#{total_failures}) → #{report_path}/failures.json:"
+              reference = @report_path ? "→ #{@report_path}/failures.json" : "(no saved report)"
+              lines << "#{label} (#{failures_to_show.size}/#{total_failures}) #{reference}:"
             else
               lines << "#{label} (#{total_failures}):"
             end
@@ -102,8 +102,9 @@ module Ace
             # If there are more failures than displayed
             if result.failures_detail.size > @max_failures_to_display
               remaining = result.failures_detail.size - @max_failures_to_display
-              report_path = @report_path || "#{@configuration[:report_dir] || ".ace-local/test/reports"}/latest"
-              lines << "  ... and #{remaining} more #{(remaining == 1) ? "failure" : "failures"}. See full report: #{report_path}/failures.json"
+              reference = @report_path ? "See full report: #{@report_path}/failures.json" : "No saved report"
+              noun = remaining == 1 ? "failure" : "failures"
+              lines << "  ... and #{remaining} more #{noun}. #{reference}"
             end
           end
 

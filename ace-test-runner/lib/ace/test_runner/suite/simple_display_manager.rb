@@ -31,7 +31,7 @@ module Ace
 
         # Called when a package status changes. Prints a line when package completes.
         def update_package(package, status, _output = nil)
-          @package_status[package["name"]] = status
+          @package_status[package["entry_id"]] = status
 
           # Only print when package completes
           return unless status[:completed]
@@ -88,6 +88,7 @@ module Ace
           line += "  #{skipped} skip" if skipped > 0
           line += "  timeout" if status[:timed_out]
 
+          line += results[:report_dir] ? "  report: #{results[:report_dir]}" : "  no saved report"
           puts line
         end
 

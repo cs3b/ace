@@ -1,42 +1,26 @@
 # frozen_string_literal: true
 
-require "json"
-
 module Ace
   module TestRunner
     module Suite
       class ResultAggregator
         attr_reader :packages
 
-        def initialize(packages, report_root: nil, runtime_results: {})
+        def initialize(packages, runtime_results: {})
           @packages = packages
-          @report_root = report_root
           @runtime_results = runtime_results || {}
         end
 
         def aggregate
           results = collect_results
 
-          # Calculate assertion totals
-          total_assertions = 0
-          assertions_failed = 0
-
-          results.each do |r|
-            # Get assertions from either summary or report data
-            if r[:assertions]
-              total_assertions += r[:assertions]
-            elsif r[:report_data]
-              total_assertions += r[:report_data].dig(:result, :assertions) || 0
-            end
-          end
-
           {
             total_tests: results.sum { |r| r[:total] || 0 },
             total_passed: results.sum { |r| r[:passed] || 0 },
             total_failed: results.sum { |r| (r[:failed] || 0) + (r[:errors] || 0) },
             total_skipped: results.sum { |r| r[:skipped] || 0 },
-            total_assertions: total_assertions,
-            assertions_failed: assertions_failed,
+            total_assertions: results.sum { |result| result[:assertions] || 0 },
+            assertions_failed: 0,
             total_duration: results.map { |r| r[:duration] || 0 }.max,
             packages_passed: results.count { |r| r[:success] },
             packages_failed: results.count { |r| !r[:success] },
@@ -47,73 +31,12 @@ module Ace
 
         def collect_results
           @packages.map do |package|
-            runtime = runtime_result(package)
-            next runtime if runtime_result_overrides_summary?(package, runtime)
-
-            reports_dir = Atoms::ReportPathResolver.report_directory(
-              package["path"],
-              report_root: @report_root,
-              package_name: package["name"]
-            )
-            summary_path = reports_dir ? File.join(reports_dir, "summary.json") : nil
-
-            if summary_path && File.exist?(summary_path)
-              begin
-                data = JSON.parse(File.read(summary_path), symbolize_names: true)
-                data[:package] = package["name"]
-                data[:path] = package["path"]
-                data[:report_root] = @report_root
-
-                # Try to get assertions from report.json if not in summary
-                if !data[:assertions] || data[:assertions] == 0
-                  report_path = File.join(reports_dir, "report.json")
-                  if File.exist?(report_path)
-                    begin
-                      report_data = JSON.parse(File.read(report_path), symbolize_names: true)
-                      data[:assertions] = report_data.dig(:result, :assertions) || 0
-                      data[:report_data] = report_data
-                    rescue JSON::ParserError
-                      # Ignore if report.json can't be parsed
-                    end
-                  end
-                end
-
-                data
-              rescue JSON::ParserError => e
-                # If we can't parse the summary, create a failure result
-                {
-                  package: package["name"],
-                  path: package["path"],
-                  report_root: @report_root,
-                  success: false,
-                  error: "Failed to parse summary.json: #{e.message}",
-                  total: 0,
-                  passed: 0,
-                  failed: 0,
-                  errors: 1
-                }
-              end
-            else
-              runtime || {
-                package: package["name"],
-                path: package["path"],
-                report_root: @report_root,
-                success: false,
-                error: "No test results found (summary.json missing)",
-                total: 0,
-                passed: 0,
-                failed: 0,
-                errors: 1
-              }
-            end
+            runtime_result(package) || {
+              package: package["name"], path: package["path"], entry_id: package["entry_id"],
+              report_dir: nil, success: false, error: "No verified execution completion evidence",
+              total: 0, passed: 0, failed: 0, errors: 1, assertions: 0
+            }
           end
-        end
-
-        def runtime_result_overrides_summary?(package, runtime)
-          return false unless runtime
-
-          status = @runtime_results[package["name"]] || {}
-          status[:timed_out] || status[:interrupted] || runtime[:success] == false
         end
 
         def collect_failed_packages(results)
@@ -121,7 +44,9 @@ module Ace
             {
               name: result[:package],
               path: result[:path],
-              report_root: result[:report_root] || @report_root,
+              report_dir: result[:report_dir],
+              execution_id: result[:execution_id],
+              entry_id: result[:entry_id],
               failures: result[:failed] || 0,
               errors: result[:errors] || 0,
               error_message: result[:error]
@@ -130,7 +55,7 @@ module Ace
         end
 
         def runtime_result(package)
-          status = @runtime_results[package["name"]]
+          status = @runtime_results[package["entry_id"]]
           return nil unless status && status[:completed]
 
           results = status[:results] || {}
@@ -142,11 +67,14 @@ module Ace
           {
             package: package["name"],
             path: package["path"],
-            report_root: @report_root,
+            report_dir: results[:report_dir],
+            completion_path: results[:completion_path],
+            execution_id: results[:execution_id],
+            entry_id: package["entry_id"],
             success: status[:success],
             error: results[:error],
             total: total,
-            passed: total - failures - errors - skipped,
+            passed: results[:passed] || 0,
             failed: failures,
             errors: errors,
             skipped: skipped,
