@@ -311,6 +311,9 @@ module Ace
             raise AttemptErrors::Conflict, "service replay immutable identity differs"
           end
           @kernel.live!(params.fetch("worker_process_binding"))
+          unless @kernel.descendant?(params.fetch("worker_process_binding"), record.fetch("worker_process_binding"))
+            raise AttemptErrors::UnauthorizedIdentity, "service replay requires recorded native worker ownership"
+          end
           true
         end
 

@@ -28,6 +28,7 @@ module Ace
           launch.define_singleton_method(:with_assignment) { |**_, &block| block.call(journal, {}) }
           kernel = Object.new
           kernel.define_singleton_method(:live!) { |_| true }
+          kernel.define_singleton_method(:descendant?) { |*_args| true }
           policy = Object.new
           policy.define_singleton_method(:visible!) { |**_| true }
           policy.define_singleton_method(:input_binding) { |bytes, **_| raise "bad input" unless bytes == body }
@@ -123,6 +124,20 @@ module Ace
             assert_raises(SecurityError) { endcap.dispatch(request: status, peer: {"uid" => Process.uid}, role: :executor) }
             assert_equal before, journal.ref_value
           end
+        end
+      end
+
+      def test_retained_request_refuses_live_same_uid_sibling_of_recorded_native_worker
+        with_review_replay do |endcap, request, upload, _claim, journal|
+          kernel = endcap.instance_variable_get(:@kernel)
+          kernel.define_singleton_method(:descendant?) { |*_args| false }
+          # Same UID and kernel-live observation alone are not attempt ownership.
+          request["params"]["worker_process_binding"] = request.dig("params", "worker_process_binding").merge("pid" => 101)
+          request["mutation_id"] = "sibling-retained-read"
+          request["params"]["expected_generation"] = 2
+          before = journal.ref_value
+          assert_raises(AttemptErrors::UnauthorizedIdentity) { endcap.dispatch(request: request, peer: {"uid" => Process.uid}, role: :executor, transfer: upload) }
+          assert_equal before, journal.ref_value
         end
       end
 
