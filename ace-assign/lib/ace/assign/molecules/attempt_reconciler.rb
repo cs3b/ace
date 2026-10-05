@@ -8,7 +8,7 @@ module Ace
       # Conservative classification and resolution of interrupted attempts.
       #
       # Classification of a `running` attempt found after a lost session:
-      # - no recorded process start -> `stopped` (nothing could have run)
+      # - no recorded process start -> `uncertain` (launch may be unbound)
       # - recorded process still verifiably live -> keep `running`
       # - otherwise -> `uncertain` (the operation may have completed without
       #   a durable receipt)
@@ -34,8 +34,6 @@ module Ace
         # @return [Symbol] :stopped, :live, or :uncertain
         def classify(attempt)
           return :live if process_live?(attempt)
-          return :stopped unless process_started?(attempt)
-
           :uncertain
         end
 
