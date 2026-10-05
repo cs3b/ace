@@ -5,3 +5,5 @@ Status: draft, independent readiness review required before implementing the new
 The companion contract now specifies the fixed `service_authorization` read, closed request/reply fields, original body revalidation, no mutation/replay cache and explicit one-shot begin permission separation. Child usage covers successful invocation, changed authorization, and lost replies. The test plan maps hostile bindings, policy changes, no journal mutation, body redaction, retained/replayed permission refusal and late completion.
 
 Implementation is not included in this amendment. Current source remains frozen at c5c7f5d9b for independent replay review. Full Endcap and installed acceptance remain open, including adoption of independently accepted final 09j source.
+
+Review clarification: operation digest is recomputed locally by the same normalized Lab operation/digest owner; full current policy digest is computed only by authority and compared with the immutable claim projection. Final fresh read defines admission linearization; later changes do not retroactively cancel admission. No polling or extra controller is introduced.

@@ -32,8 +32,8 @@ Retry the exact mutation ID with its exact original parameters after response lo
 
 ### Executor checks current authorization
 
-After obtaining a fresh successful begin-dispatch response, the recorded executor sends `service_authorization` with the exact request/claim/candidate/input binding and original bounded input bytes. It receives only policy and operation digests, reloads the installed Lab operation and compares them immediately before invoking once. Neither this read nor a created/retained claim grants invocation permission.
+After obtaining a fresh successful begin-dispatch response, the recorded executor sends `service_authorization` with the exact request/claim/candidate/input binding and original bounded input bytes. It reloads the installed Lab operation, compares its source-owned operation digest, and compares the returned policy digest with the immutable canonical claim projection. It obtains a final fresh authority read immediately before invoking once; that successful read is the admission point. The receiver never reconstructs the authority-private proposal journal. Neither this read nor a created/retained claim grants invocation permission.
 
-If policy, lease or a canonical proposal changes after claiming, the authorization read refuses; the receiver invokes nothing and retains uncertainty after any issued begin permission. A successful read from an earlier call cannot be cached to bypass that refusal.
+If policy, lease or a canonical proposal changes after claiming, the authorization read refuses; the receiver invokes nothing and retains uncertainty after any issued begin permission. A successful read from an earlier call cannot be cached to bypass that refusal. Changes after the final admission point do not retroactively cancel an admitted effect; a local operation mismatch still prevents invocation.
 
 If begin or authorization reply is lost, the receiver reports uncertainty without invoking or obtaining a second permission. An executor that already observed an outcome can still complete the exact recorded request after revocation or lease expiry; completion does not require this effect-admission read.
