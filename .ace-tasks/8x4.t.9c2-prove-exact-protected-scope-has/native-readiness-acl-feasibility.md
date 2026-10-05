@@ -119,8 +119,11 @@ activation evidence remain mandatory acceptance work; this report supplies none.
 The proposed 9c2 mechanism is alternative 2 above: a worker-owned final runtime
 directory, with root-owned immutable ancestors and installed configuration,
 and exact connected-peer authentication as the authority boundary. This explicitly
-replaces the final-parent ownership condition for this scoped backend only; it
-does not change authority/journal sockets or executable/config ancestry. Task
+replaces the final-parent ownership condition only for the proposed 9c2
+canonically admitted generation endpoint in deployment mapping v2. Existing
+mapping v1/09j retains its current checks; no fallback or implicit owner override
+is introduced. It does not change authority/journal sockets or executable/config
+ancestry. Task
 remains draft and the dedicated-server product assumption still needs Captain's
 preference. The selection here is a technical proposal for independent review.
 

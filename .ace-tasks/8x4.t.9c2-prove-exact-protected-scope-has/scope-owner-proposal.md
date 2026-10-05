@@ -357,7 +357,9 @@ not ready for promotion:
   native-readiness-acl-feasibility.md for the source-backed threat argument,
   bounded ACL consequences, FD discipline and exact readiness/baseline contract.
   This technical proposal awaits independent spec review and installed evidence;
-  it does not silently relax other 09j protected ancestry checks.
+  this endpoint change applies only to canonically admitted mapping-v2 9c2
+  generations. Existing mapping-v1/09j checks receive no implicit owner override
+  or fallback, and authority/config/executable ancestry stays root-protected.
 * Fresh container setup must avoid prior session/plugin/rc execution, account
   for native baseline processes and preserve 09j's one fresh gated-worker launch.
   Current 09j static preinstalled workspace is insufficient for automatic fresh
