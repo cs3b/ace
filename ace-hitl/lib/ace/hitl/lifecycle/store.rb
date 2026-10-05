@@ -13,6 +13,7 @@ require_relative "binding"
 require_relative "effects"
 require_relative "otp_vault"
 require_relative "protocol"
+require_relative "proposals"
 
 module Ace
   module Hitl
@@ -35,6 +36,7 @@ module Ace
       #   with_active scope (the assignment exclusion), so stale, ended
       #   or replaced attempts cannot acquire new authority.
       class Store
+        include Proposals
         MAX_ANSWER = 4096
         # IO#read(limit) is byte-oriented, so the character limit is
         # enforced on a decoded string with this separate byte bound
@@ -77,7 +79,7 @@ module Ace
 
         def initialize(root:, binding:, policy: AccessPolicy.new,
           identity: Identity, ownership: AtomicJson::DEFAULT_OWNERSHIP,
-          poll_seconds: CONSUME_POLL_SECONDS, vault: :file)
+          poll_seconds: CONSUME_POLL_SECONDS, vault: :file, proposal_clock: -> { Time.now.utc })
           raise ArgumentError, "a binding policy is required (fail closed without one)" unless binding
           raise ArgumentError, "an access policy is required (fail closed without one)" unless policy
 
@@ -88,6 +90,7 @@ module Ace
           @ownership = ownership
           @poll_seconds = poll_seconds
           @vault = vault == :file ? OtpVault::FileVault : vault
+          @proposal_clock = proposal_clock
         end
 
         # ---- requester side ------------------------------------------------
@@ -99,6 +102,15 @@ module Ace
         # error, never permission.
         def create(id:, attempt:, plan:, question:, ace_hitl_id:, project: "ace", harness: "lab-admin",
           assignment:, kind: "text", options: [], effect: nil, otp: nil)
+          raise StateError, "proposal kind must use proposal_create" if kind == "proposal"
+          value = prepare_request(id: id, attempt: attempt, plan: plan, question: question,
+            ace_hitl_id: ace_hitl_id, project: project, harness: harness, assignment: assignment,
+            kind: kind, options: options, effect: effect, otp: otp)
+          persist_request(value)
+        end
+
+        def prepare_request(id:, attempt:, plan:, question:, ace_hitl_id:, project: "ace", harness: "lab-admin",
+          assignment:, kind: "text", options: [], effect: nil, otp: nil)
           requester = @identity.username
           request_id = safe_id(id)
           validate_binding_ids!(assignment, attempt)
@@ -107,8 +119,8 @@ module Ace
           end
           plan = plan.to_s.strip
           question = question.to_s.strip
-          if plan.empty? || plan.length > MAX_PLAN_QUESTION ||
-              question.empty? || question.length > MAX_PLAN_QUESTION
+          question_too_long = kind == "proposal" ? question.bytesize > 4096 : question.length > MAX_PLAN_QUESTION
+          if plan.empty? || plan.length > MAX_PLAN_QUESTION || question.empty? || question_too_long
             raise StateError, "plan and question must contain 1-#{MAX_PLAN_QUESTION} characters"
           end
           options = Array(options).map(&:strip)
@@ -121,6 +133,8 @@ module Ace
           unless Kinds.valid?(kind)
             raise StateError, "unknown HITL kind: #{kind}"
           end
+          raise StateError, "proposal effects belong to ace-assign" if kind == "proposal" && effect
+          require_proposer!(project) if kind == "proposal"
           if Kinds.secret?(kind)
             unless options.empty?
               raise StateError, "OTP requests must not offer choices"
@@ -163,6 +177,13 @@ module Ace
           end
           value["envelope"] = managed_envelope!(envelope)
 
+          value
+        end
+        private :prepare_request
+
+        def persist_request(value)
+          request_id = value.fetch("id")
+          attempt = value.fetch("attempt")
           request_path = requests_dir.join("#{request_id}.json")
           raise StateError, "HITL request already exists" if request_path.exist?
 
@@ -186,6 +207,8 @@ module Ace
           }
         end
 
+        private :persist_request
+
         # Non-secret request facts for the requester of record (or the
         # transport). Never carries answer content.
         def read(id)
@@ -200,7 +223,7 @@ module Ace
           end
           value = load_request(request_id)
           gate_read_access!(value)
-          {
+          facts = {
             "id" => request_id,
             "assignment" => value["assignment"],
             "attempt" => value["attempt"],
@@ -218,6 +241,8 @@ module Ace
             "effect_receipt_ref" => effect_receipt_ref(value),
             "effect" => value["effect_state"]
           }
+          facts["proposal"] = proposal_for_request!(request_id) if value["kind"] == "proposal"
+          facts
         end
 
         # Consumes the answer for one requester-owned request. Without a
@@ -243,6 +268,7 @@ module Ace
 
           value = load_request(request_id)
           requester_gate!(value)
+          raise StateError, "proposal authorization is consumed by the scoped Assign service claim" if value["kind"] == "proposal"
           verify_native_consumer!(value) if native_delivery
           verify_operation!(value, operation)
           deadline = timeout.positive? ? Time.now.to_i + timeout : nil
@@ -321,6 +347,7 @@ module Ace
           locked_value = nil
           with_request_lock(request_id) do
             value = load_request(request_id)
+            raise StateError, "proposal decisions use revise or authenticated Captain veto" if value["kind"] == "proposal"
             # Ownership is re-checked against the LOCKED record: an
             # unlocked check would race a concurrent recreate of the id
             # (review 8wq2zttu on PR#336).
@@ -362,6 +389,7 @@ module Ace
           end
           value = load_request(request_id)
           require_transport!("deliver", value)
+          raise StateError, "proposal reply requires authenticated ingress evidence" if value["kind"] == "proposal"
           if value["sensitive"] == true && !Kinds.secret?(value["kind"].to_s)
             raise StateError, "secret HITL answers are forbidden"
           end
@@ -427,6 +455,7 @@ module Ace
         def each_pending(project: nil, after: nil)
           return enum_for(__method__, project: project, after: after) unless block_given?
           require_transport!("pending")
+          recover_proposal_projections(project: project)
           ids = (requests_dir.glob("*.json") + public_dir.glob("*.json")).map { |path| path.basename(".json").to_s }.uniq.sort
           ids.each do |id|
             next if after && id <= after

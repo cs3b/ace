@@ -45,6 +45,10 @@ module Ace
             with_verified(assignment, attempt, project, requester) { yield }
           end
 
+          def proposal_journal
+            coordinator.send(:journal_for)
+          end
+
           private
 
           def with_verified(assignment_id, attempt_id, project_id, requester)

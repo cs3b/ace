@@ -148,7 +148,7 @@ does not read Lab credentials and does not call Podman or Herdr directly.
 - `ace-overseer agents`: list registered Lab agents and concurrency limits.
 - `ace-overseer prepare --runtime lab --project PROJECT --source KIND:ID --work WORK --planner AGENT --title TITLE`: create a reviewed Work and its isolated worktree.
 - `ace-overseer work-on --runtime lab --work WORK --agent AGENT`: reserve the agent, create or reuse its Herdr workspace, and dispatch it.
-- `ace-overseer status --runtime lab [--project PROJECT] [--format table|json]`: show Lab Work state. Continuous status lives in each project Herdr session, so `--watch` is intentionally rejected for Lab.
+- `ace-overseer status --runtime lab [--project PROJECT] [--format table|json]`: show Lab Work state. Failed proposal ticks defer resolution and report a diagnostic on stderr while status remains available. Object JSON also includes `proposal_resolution.status: "deferred"`; legacy array JSON keeps its schema and uses the stderr diagnostic. Continuous status lives in each project Herdr session, so `--watch` is intentionally rejected for Lab.
 - `ace-overseer prompt --work WORK --file PATH`: forward prompt text from a file to the Work pane. Piped stdin is also supported; prompt text is never passed as a process argument.
 - `ace-overseer review --work WORK --pr NUMBER`: prepare an exact-head admin review checkout and pane.
 - `ace-overseer stop --work WORK`: stop the assigned process without destroying Work state.

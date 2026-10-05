@@ -9,7 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Resolve immutable second-commander proposals through confirmed-delivery sixteen-hour policy and canonical Assign authorization.
 - Expose assignment recovery liveness/reasons and show unreadable evidence as unknown rather than omitting it.
+
+### Fixed
+
+- Expose deferred proposal ticks in Lab status diagnostics and object JSON while preserving status availability and array output.
+
+- Keep watch/status alive on proposal tick failure and queue project-scoped HITL reconciliation under the proposer identity.
 
 ## [0.19.1] - 2026-10-04
 

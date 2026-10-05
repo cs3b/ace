@@ -4,6 +4,7 @@ require "digest"
 require "fileutils"
 require "json"
 require "open3"
+require_relative "proposal_journal"
 require_relative "journal_mutation"
 
 module Ace
@@ -26,6 +27,7 @@ module Ace
       # non-duplicate events.
       class EvidenceJournal
         include JournalMutation
+        include ProposalJournal
         CAS_ATTEMPTS = 3
 
         # @param repo_root [String] Git repository root holding the evidence ref
@@ -409,6 +411,10 @@ input:#{Regexp.escape(current["input_digest"])} outcome:(\S+)( no-effect:(\S+))?
               ensure_checkout!
               old = ref_value if old.nil?
               sync_checkout(old)
+              if expected.nil? && %w[accepted uncertain].include?(replacement["state"]) &&
+                  replacement["authorization"].to_s.start_with?("proposal-")
+                proposal_authorize!(replacement["authorization"], replacement)
+              end
               # Guards (for example authorization consumption) re-run inside
               # the lock against the ref being committed, so a racing claim
               # cannot slip through between the check and the CAS.
