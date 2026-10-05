@@ -1,0 +1,216 @@
+{
+  "scope": "isolated Linux Docker native API capability; no authority/gate/product acceptance",
+  "worker_uid": 13001,
+  "launcher_uid": 13002,
+  "server_pid": 3407,
+  "before_acl": {
+    "error": "PermissionError"
+  },
+  "after_acl": {
+    "peer_pid": 3407,
+    "peer_uid": 13001,
+    "reply": {
+      "id": "fixture",
+      "result": {
+        "type": "pong",
+        "version": "0.9.3",
+        "protocol": 22,
+        "capabilities": {
+          "live_handoff": true,
+          "detached_server_daemon": false,
+          "endpoint_protocol_generation": 1,
+          "surface_interest": true,
+          "health_check": true,
+          "ssh_agent_registration": true
+        }
+      }
+    }
+  },
+  "workspace": {
+    "peer_pid": 3407,
+    "peer_uid": 13001,
+    "reply": {
+      "id": "fixture",
+      "result": {
+        "type": "workspace_created",
+        "workspace": {
+          "workspace_id": "w1",
+          "number": 1,
+          "label": "uid-capability",
+          "focused": true,
+          "pane_count": 1,
+          "tab_count": 1,
+          "active_tab_id": "w1:t1",
+          "agent_status": "unknown"
+        },
+        "tab": {
+          "tab_id": "w1:t1",
+          "workspace_id": "w1",
+          "number": 1,
+          "label": "1",
+          "focused": true,
+          "pane_count": 1,
+          "agent_status": "unknown"
+        },
+        "root_pane": {
+          "pane_id": "w1:p1",
+          "terminal_id": "term_65d0cd9cd501e1",
+          "workspace_id": "w1",
+          "tab_id": "w1:t1",
+          "focused": true,
+          "cwd": "/home/ace-worker",
+          "foreground_cwd": "/home/ace-worker",
+          "agent_status": "unknown",
+          "scroll": {
+            "offset_from_bottom": 0,
+            "max_offset_from_bottom": 0,
+            "viewport_rows": 40
+          },
+          "revision": 0
+        }
+      }
+    }
+  },
+  "layout": {
+    "peer_pid": 3407,
+    "peer_uid": 13001,
+    "reply": {
+      "id": "fixture",
+      "result": {
+        "type": "layout_apply",
+        "layout": {
+          "workspace_id": "w1",
+          "tab_id": "w1:t2",
+          "zoomed": false,
+          "focused_pane_id": "w1:p2",
+          "root": {
+            "type": "pane",
+            "pane_id": "w1:p2",
+            "cwd": "/home/ace-worker",
+            "command": [
+              "/bin/sleep",
+              "30"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "panes": {
+    "peer_pid": 3407,
+    "peer_uid": 13001,
+    "reply": {
+      "id": "fixture",
+      "result": {
+        "type": "pane_list",
+        "panes": [
+          {
+            "pane_id": "w1:p1",
+            "terminal_id": "term_65d0cd9cd501e1",
+            "workspace_id": "w1",
+            "tab_id": "w1:t1",
+            "focused": true,
+            "cwd": "/home/ace-worker",
+            "foreground_cwd": "/home/ace-worker",
+            "agent_status": "unknown",
+            "scroll": {
+              "offset_from_bottom": 0,
+              "max_offset_from_bottom": 0,
+              "viewport_rows": 40
+            },
+            "revision": 0
+          },
+          {
+            "pane_id": "w1:p2",
+            "terminal_id": "term_65d0cd9cd8dd72",
+            "workspace_id": "w1",
+            "tab_id": "w1:t2",
+            "focused": false,
+            "cwd": "/home/ace-worker",
+            "foreground_cwd": "/home/ace-worker",
+            "agent_status": "unknown",
+            "scroll": {
+              "offset_from_bottom": 0,
+              "max_offset_from_bottom": 0,
+              "viewport_rows": 40
+            },
+            "revision": 0
+          }
+        ]
+      }
+    }
+  },
+  "processes": [
+    {
+      "peer_pid": 3407,
+      "peer_uid": 13001,
+      "reply": {
+        "id": "fixture",
+        "result": {
+          "type": "pane_process_info",
+          "process_info": {
+            "pane_id": "w1:p1",
+            "shell_pid": 3432,
+            "foreground_process_group_id": 3432,
+            "foreground_processes": [
+              {
+                "pid": 3432,
+                "name": "sh",
+                "argv": [
+                  "/bin/sh"
+                ],
+                "cmdline": "/bin/sh",
+                "cwd": "/home/ace-worker"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "peer_pid": 3407,
+      "peer_uid": 13001,
+      "reply": {
+        "id": "fixture",
+        "result": {
+          "type": "pane_process_info",
+          "process_info": {
+            "pane_id": "w1:p2",
+            "shell_pid": 3436,
+            "foreground_process_group_id": 3436,
+            "foreground_processes": [
+              {
+                "pid": 3436,
+                "name": "sleep",
+                "argv": [
+                  "/bin/sleep",
+                  "30"
+                ],
+                "cmdline": "/bin/sleep 30",
+                "cwd": "/home/ace-worker"
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "server_uid": 13001,
+  "launcher_kernel_observations": [
+    {
+      "pid": 3432,
+      "uid": 13001,
+      "ppid": 3407,
+      "birth_ticks": "379484202"
+    },
+    {
+      "pid": 3436,
+      "uid": 13001,
+      "ppid": 3407,
+      "birth_ticks": "379484204"
+    }
+  ],
+  "after_revoke": {
+    "error": "PermissionError"
+  }
+}

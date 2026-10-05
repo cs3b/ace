@@ -27,3 +27,21 @@ or use launcher-role reserve/register APIs. Role UID collapse is prohibited.
 Drafting host is UID 504; sudo -n true needs a password. Same-UID fixtures or
 mocked identity cannot satisfy positive launch proof. Root owns Lab access and
 installation; this worker ran no Lab SSH/deployment action.
+
+## Executed isolated Linux native capability
+
+Selected transport: per-worker Herdr v0.9.3 Unix socket with deployment-scoped
+connect/traverse ACL. Evidence/herdr-cross-uid-observation.json retains kernel
+peer PID3407/UID13001, launcher UID13002, PermissionError before ACL and after
+revocation, fixed /bin/sleep argv native pane w1:p2, and launcher's own /proc
+child PID3436/UID13001/parent3407/birth379484204. Binary provenance and SHA256
+are retained in evidence/binary-proof.json. Root executed an isolated disposable
+Docker fixture; fixture root only established deployment/test principals. The
+launcher used no UID-switch helper or new daemon.
+
+This supersedes the earlier absence of a retained cross-UID probe above. It
+selects the native ACL transport; saved-machine SSH is unchosen. It proves no
+actual gate/release, authority qjl transaction, restart ACL reapplication, lost
+reply safety, macOS support, or installed Lab deployment. The existing inherited
+parent-control-pipe wording needs an explicit remote-native bootstrap channel
+decision in independent review; native socket access alone cannot supply it.
