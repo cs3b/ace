@@ -71,4 +71,3 @@ domain producer or installed enforcement. All 9c2 success criteria remain open;
 status stays in-progress. Source integration precedes interactive publication,
 which precedes actual Lab acceptance. No gem publication, Lab deployment or task
 completion is claimed.
-
