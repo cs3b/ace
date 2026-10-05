@@ -31,7 +31,13 @@ module Ace
         # @param repo_root [String] Git repository root holding the evidence ref
         # @param ref [String, nil] Evidence ref (default from config)
         # @param checkout_root [String, nil] Isolated checkout root (default from config)
-        def initialize(repo_root:, ref: nil, checkout_root: nil)
+        def initialize(repo_root:, ref: nil, checkout_root: nil, mode: :local,
+          evidence_reader: nil, service_authorizer: nil)
+          unless %i[local protected].include?(mode) &&
+              (mode != :protected || [evidence_reader, service_authorizer].all? { |owner| owner.respond_to?(:call) })
+            raise ArgumentError, "protected journal requires source-owned evidence and service boundaries"
+          end
+          @mode, @evidence_reader, @service_authorizer = mode, evidence_reader, service_authorizer
           @repo_root = repo_root
           @ref = ref || default_config("evidence_git_ref") || "refs/ace/execution"
           root = checkout_root || default_config("evidence_checkout_root") || ".ace-local/assign/evidence-checkout"
@@ -220,7 +226,7 @@ module Ace
           %w[succeeded failed failed-settled].include?(state)
         end
 
-        def validate_terminal_receipt!(current, state, receipt)
+        def validate_terminal_receipt!(current, state, receipt, pending: nil)
           unless receipt.is_a?(Hash) && receipt.keys.sort == TERMINAL_RECEIPT_FIELDS.sort
             raise AttemptErrors::ReceiptRejected,
               "Service terminal receipt has invalid fields"
@@ -247,6 +253,16 @@ module Ace
             raise AttemptErrors::ReceiptRejected,
               "Service settlement requires a no-effect attestation artifact"
           end
+          if @mode == :protected
+            evidence_items.each do |item|
+              content = @evidence_reader.call(item, current, state, pending)
+              unless content.is_a?(String) && Digest::SHA256.hexdigest(content.b) == item["sha256"]
+                raise AttemptErrors::ReceiptRejected, "Canonical service evidence is unverifiable"
+              end
+              verify_service_attestation!(content, current, state)
+            end
+            return true
+          end
           repo_root = File.realpath(@repo_root)
           receipt["evidence"].each do |item|
             path = File.expand_path(item["ref"], repo_root)
@@ -264,15 +280,7 @@ module Ace
             end
             raise AttemptErrors::ReceiptRejected,
               "Service terminal receipt evidence is unverifiable: #{item["ref"]}" unless intact
-            attestation = /^ace-service-attestation request:#{Regexp.escape(current["request_id"])} \
-input:#{Regexp.escape(current["input_digest"])} outcome:(\S+)( no-effect:(\S+))?$/
-            attested = File.read(real).scan(attestation).first
-            attested_outcome = state == "failed-settled" ? "failed" : state
-            unless attested && attested.first == attested_outcome &&
-                (state == "failed-settled" ? attested[2] == "true" : true)
-              raise AttemptErrors::ReceiptRejected,
-                "Service terminal receipt evidence does not attest #{attested_outcome}: #{item["ref"]}"
-            end
+            verify_service_attestation!(File.read(real), current, state)
           end
         end
 
@@ -281,7 +289,12 @@ input:#{Regexp.escape(current["input_digest"])} outcome:(\S+)( no-effect:(\S+))?
           value = ref_value
           return nil unless value
           out, stderr, status = git("show", "#{value}:#{service_request_path(request_id)}")
-          return JSON.parse(out) if status.success?
+          if status.success?
+            record = JSON.parse(out)
+            verify_service_record!(record, commit: value) if @mode == :protected
+            validate_terminal_receipt!(record, record["state"], record["receipt"], pending: {commit: value}) if @mode == :protected && terminal_state?(record["state"])
+            return record
+          end
           return nil if stderr.include?("does not exist") || stderr.include?("exists on disk")
           raise AttemptErrors::EvidenceUnavailable, "Cannot read service request: #{stderr}"
         rescue JSON::ParserError
@@ -315,6 +328,12 @@ input:#{Regexp.escape(current["input_digest"])} outcome:(\S+)( no-effect:(\S+))?
         def settlement_evidence_intact?(record)
           receipt = record["receipt"]
           return false unless receipt.is_a?(Hash)
+          if @mode == :protected
+            commit = ref_value
+            verify_service_record!(record, commit: commit)
+            validate_terminal_receipt!(record, "failed-settled", receipt, pending: {commit: commit})
+            return true
+          end
           repo_root = File.realpath(@repo_root)
           Array(receipt["evidence"]).all? do |item|
             path = File.expand_path(item["ref"].to_s, repo_root)
@@ -330,6 +349,8 @@ input:#{Regexp.escape(current["input_digest"])} outcome:(\S+)( no-effect:(\S+))?
               false
             end
           end
+        rescue AttemptErrors::EvidenceUnavailable, AttemptErrors::ReceiptRejected
+          false
         end
 
         def service_request_records
@@ -342,7 +363,9 @@ input:#{Regexp.escape(current["input_digest"])} outcome:(\S+)( no-effect:(\S+))?
             unless read_status.success?
               raise AttemptErrors::EvidenceUnavailable, "Cannot read service request #{path}: #{error}"
             end
-            JSON.parse(content)
+            record = JSON.parse(content)
+            verify_service_record!(record, commit: value) if @mode == :protected
+            record
           end
         rescue JSON::ParserError
           raise AttemptErrors::EvidenceUnavailable, "Corrupt service request index"
@@ -409,47 +432,20 @@ input:#{Regexp.escape(current["input_digest"])} outcome:(\S+)( no-effect:(\S+))?
               ensure_checkout!
               old = ref_value if old.nil?
               sync_checkout(old)
-              # Guards (for example authorization consumption) re-run inside
-              # the lock against the ref being committed, so a racing claim
-              # cannot slip through between the check and the CAS.
-              if guard
-                conflict = guard.call
-                if conflict
-                  raise AttemptErrors::Conflict,
-                    "Authorization reference already consumed by request #{conflict.fetch("request_id")}"
-                end
-              end
-              path = File.join(checkout_dir, service_request_path(request_id))
-              existing = File.exist?(path) ? JSON.parse(File.read(path)) : nil
-              if expected.nil? && existing
-                return existing if existing.except("state", "receipt", "reason", "claimed_at") ==
-                  replacement.except("state", "receipt", "reason", "claimed_at")
-                raise AttemptErrors::Conflict, "Service request #{request_id} has different input"
-              end
-              if expected && existing != expected
-                raise AttemptErrors::Conflict, "Service request #{request_id} changed during transition"
-              end
-              terminal = existing && %w[succeeded failed rejected].include?(existing["state"])
-              settlement = existing && existing["state"] == "failed" && replacement["state"] == "failed-settled"
-              if expected && existing && terminal && !settlement
-                raise AttemptErrors::InvalidState, "Service request #{request_id} is terminal"
-              end
-
-              FileUtils.mkdir_p(File.dirname(path))
-              File.write(path, JSON.pretty_generate(replacement))
+              prepared = prepare_service_update(request_id: request_id, expected: expected,
+                replacement: replacement, event_type: event_type, guard: guard)
+              return prepared.fetch(:record) if prepared[:replayed]
+              write_service_records([prepared])
               assignment_id = replacement.fetch("assignment_id")
               attempt_id = replacement.fetch("attempt_id")
               prior = read_events(assignment_id).reverse
                 .find { |entry| entry["attempt_id"] == attempt_id }&.fetch("digest")
-              payload = {"request_id" => request_id, "state" => replacement.fetch("state"),
-                         "input_digest" => replacement.fetch("input_digest"),
-                         "receipt_digest" => replacement["receipt"] &&
-                           Atoms::EvidenceDigest.digest(replacement["receipt"])}
               event = Models::EvidenceEvent.build(type: event_type, attempt_id: attempt_id,
-                payload: payload, previous_digest: prior)
+                payload: prepared.fetch(:event).fetch(:payload), previous_digest: prior)
               write_event_files(assignment_id, [event])
               git!("-C", checkout_dir, "add", "--", service_request_path(request_id),
                 "execution/#{assignment_id}/events")
+              stage_service_records([prepared])
               state = replacement.fetch("state")
               git!("-C", checkout_dir, "-c", "user.name=ace-assign", "-c", "user.email=ace-assign@localhost",
                 "commit", "-m", "evidence: service request #{request_id} #{state}")
@@ -457,6 +453,120 @@ input:#{Regexp.escape(current["input_digest"])} outcome:(\S+)( no-effect:(\S+))?
               return replacement.merge("journal_commit" => commit) if update_ref_cas(commit, old)
             end
             raise AttemptErrors::EvidenceUnavailable, "Service request ref stayed conflicting"
+          end
+        end
+
+        # Shared owner for ordinary service writes and atomic authority
+        # imports. Call only after checkout sync, under this journal's CAS lock.
+        def prepare_service_update(request_id:, expected:, replacement:, event_type:, guard: nil, pending: nil)
+          validate_request_id!(request_id)
+          unless replacement.is_a?(Hash) && replacement["request_id"] == request_id &&
+              %w[service_claim service_transition].include?(event_type) &&
+              %w[accepted uncertain rejected succeeded failed failed-settled].include?(replacement["state"])
+            raise ArgumentError, "invalid service update plan"
+          end
+          existing = service_request(request_id)
+          if expected.nil? && existing
+            return {record: existing, replayed: true} if existing.except("state", "receipt", "reason", "claimed_at") ==
+              replacement.except("state", "receipt", "reason", "claimed_at")
+            raise AttemptErrors::Conflict, "Service request #{request_id} has different input"
+          end
+          if expected && existing != expected
+            raise AttemptErrors::Conflict, "Service request #{request_id} changed during transition"
+          end
+          if expected.nil?
+            unless event_type == "service_claim" && %w[accepted uncertain rejected].include?(replacement["state"])
+              raise AttemptErrors::InvalidState, "Service request needs an initial claim"
+            end
+            if %w[accepted uncertain].include?(replacement["state"])
+              if replacement["authorization"].to_s.start_with?("proposal-")
+                unless respond_to?(:proposal_authorize!, true)
+                  raise AttemptErrors::UnauthorizedIdentity, "Canonical proposal producer is unavailable"
+                end
+                proposal_authorize!(replacement["authorization"], replacement)
+              end
+              conflict = authorization_conflict(replacement)
+              raise_authorization_conflict!(conflict) if conflict
+            end
+          else
+            unless event_type == "service_transition"
+              raise AttemptErrors::InvalidState, "Existing service request needs a transition"
+            end
+            terminal = %w[succeeded failed rejected failed-settled].include?(existing["state"])
+            settlement = replacement["state"] == "failed-settled" &&
+              (existing["state"] == "failed" || (existing["state"] == "rejected" && existing["consumed"] != false))
+            if terminal && !settlement
+              raise AttemptErrors::InvalidState, "Service request #{request_id} is terminal"
+            end
+            mutable = %w[state receipt reason claimed_at failed_at dispatch_phase no_effect_challenge
+              challenge_generation challenge_event_digest completion_digest]
+            unless existing.except(*mutable) == replacement.except(*mutable)
+              raise AttemptErrors::Conflict, "Service request #{request_id} changed immutable binding"
+            end
+          end
+          conflict = guard&.call
+          raise_authorization_conflict!(conflict) if conflict
+          @service_authorizer.call(existing, replacement, pending) if @mode == :protected
+          validate_terminal_receipt!(replacement, replacement["state"], replacement["receipt"], pending: pending) if terminal_state?(replacement["state"])
+          payload = {"request_id" => request_id, "state" => replacement.fetch("state"),
+                     "input_digest" => replacement.fetch("input_digest"),
+                     "record_digest" => Atoms::EvidenceDigest.digest(replacement),
+                     "receipt_digest" => replacement["receipt"] && Atoms::EvidenceDigest.digest(replacement["receipt"])}
+          {record: replacement, path: service_request_path(request_id),
+           event: {type: event_type, payload: payload}, replayed: false}
+        end
+
+        def prepare_service_updates(updates, assignment_id:, attempt_id:, pending:)
+          unless updates.is_a?(Array) && updates.length <= 1
+            raise ArgumentError, "one service update is allowed per authority mutation"
+          end
+          updates.map do |update|
+            unless update.is_a?(Hash) && update.keys.sort == %i[event_type expected replacement request_id].sort &&
+                update.dig(:replacement, "assignment_id") == assignment_id && update.dig(:replacement, "attempt_id") == attempt_id
+              raise ArgumentError, "service update does not match mutation attempt"
+            end
+            prepare_service_update(**update, pending: pending)
+          end.reject { |prepared| prepared[:replayed] }
+        end
+
+        def write_service_records(records)
+          records.each do |prepared|
+            path = File.join(checkout_dir, prepared.fetch(:path))
+            FileUtils.mkdir_p(File.dirname(path))
+            File.write(path, JSON.pretty_generate(prepared.fetch(:record)))
+          end
+        end
+
+        def stage_service_records(records)
+          stage_mutation_blobs(records.to_h { |prepared| [prepared.fetch(:path), JSON.pretty_generate(prepared.fetch(:record))] })
+        end
+
+        def verify_service_record!(record, commit: ref_value)
+          events = read_events(record.fetch("assignment_id"), commit: commit).select { |event| event["attempt_id"] == record.fetch("attempt_id") }
+          unless Models::EvidenceEvent.chain_valid?(events)
+            raise AttemptErrors::EvidenceUnavailable, "Canonical service event chain is unverifiable"
+          end
+          event = events.reverse.find do |entry|
+            %w[service_claim service_transition].include?(entry["type"]) && entry.dig("payload", "request_id") == record["request_id"]
+          end
+          unless event && event.dig("payload", "record_digest") == Atoms::EvidenceDigest.digest(record)
+            raise AttemptErrors::EvidenceUnavailable, "Canonical service record does not match accepted event"
+          end
+        rescue KeyError, TypeError
+          raise AttemptErrors::EvidenceUnavailable, "Canonical service record has invalid binding"
+        end
+
+        def raise_authorization_conflict!(conflict)
+          raise AttemptErrors::Conflict,
+            "Authorization reference already consumed by request #{conflict.fetch('request_id')}"
+        end
+
+        def verify_service_attestation!(content, request, state)
+          expression = /^ace-service-attestation request:#{Regexp.escape(request["request_id"])} input:#{Regexp.escape(request["input_digest"])} outcome:(\S+)( no-effect:(\S+))?$/
+          attested = content.scan(expression).first
+          outcome = state == "failed-settled" ? "failed" : state
+          unless attested && attested.first == outcome && (state != "failed-settled" || attested[2] == "true")
+            raise AttemptErrors::ReceiptRejected, "Service terminal evidence does not attest #{outcome}"
           end
         end
 

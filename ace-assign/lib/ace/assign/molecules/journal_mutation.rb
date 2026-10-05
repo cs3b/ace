@@ -44,7 +44,12 @@ module Ace
                 raise AttemptErrors::Conflict, "Authority registration generation changed"
               end
               plan = yield(current, old, generation)
+              blobs = plan.fetch(:blobs, {})
               events = chain_mutation_events(attempt_id, current.last&.fetch("digest"), plan.fetch(:events, []))
+              updates = prepare_service_updates(plan.fetch(:service_updates, []), assignment_id: assignment_id,
+                attempt_id: attempt_id, pending: {current_events: current, pending_events: events, blobs: blobs, commit: old})
+              events.concat(chain_mutation_events(attempt_id, events.last&.fetch("digest") || current.last&.fetch("digest"),
+                updates.map { |prepared| prepared.fetch(:event) }))
               data = plan.fetch(:data).merge("generation" => generation + 1)
               receipt = Models::EvidenceEvent.build(type: "authority_mutation", attempt_id: attempt_id,
                 previous_digest: events.last&.fetch("digest") || current.last&.fetch("digest"),
@@ -52,11 +57,12 @@ module Ace
                           "parameters_digest" => parameters_digest, "assignment_id" => assignment_id,
                           "attempt_id" => attempt_id, "data" => data})
               events << receipt
-              blobs = plan.fetch(:blobs, {})
               write_mutation_blobs(blobs, commit: old)
+              write_service_records(updates)
               write_event_files(assignment_id, events)
               git!("-C", checkout_dir, "add", "--", "execution/#{assignment_id}")
               stage_mutation_blobs(blobs)
+              stage_service_records(updates)
               git!("-C", checkout_dir, "-c", "user.name=ace-assign", "-c", "user.email=ace-assign@localhost",
                 "-c", "core.hooksPath=/dev/null", "commit", "-m", "evidence: authority #{operation} #{mutation_id}")
               commit = git!("-C", checkout_dir, "rev-parse", "HEAD").first

@@ -62,9 +62,8 @@ module Ace
         end
 
         def read(reference, kind:, project_id:, assignment_id:, attempt_id:, peer_uid:, binding:,
-          request_id_or_event_id:, generation:)
+          request_id_or_event_id:, generation:, commit: @journal.ref_value)
           # One immutable commit supplies both provenance events and bytes.
-          commit = @journal.ref_value
           events = @journal.read_events(assignment_id, commit: commit)
             .select { |event| event["attempt_id"] == attempt_id }
           verified_bytes(reference, events: events, kind: kind, project_id: project_id,
