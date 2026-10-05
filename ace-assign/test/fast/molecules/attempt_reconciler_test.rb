@@ -25,11 +25,11 @@ module Ace
         Molecules::AttemptReconciler.new
       end
 
-      def test_running_with_only_intent_classifies_stopped
+      def test_running_with_only_intent_classifies_uncertain
         intent = Models::EvidenceEvent.build(type: "intent", attempt_id: "atrec01", payload: {"scope" => "010"})
         reconciler = build_reconciler
 
-        assert_equal :stopped, reconciler.classify(build_attempt(events: [intent]))
+        assert_equal :uncertain, reconciler.classify(build_attempt(events: [intent]))
       end
 
       def test_running_with_live_recorded_process_stays_running
