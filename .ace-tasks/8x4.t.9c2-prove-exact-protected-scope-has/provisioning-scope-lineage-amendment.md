@@ -28,6 +28,21 @@ Slice placement, child-to-parent ordering and no stop propagation to parent must
 match. Unknown/unreadable effective graph or jobs refuses admission. No new OS
 verbs or broad privilege are added.
 
+After seal, completed stop and actual whole-parent emptiness, systemd may GC
+inactive service metadata. Absence of that metadata is allowed for positive
+closure only when the exact retained active parent object/InvocationID is still
+freshly verified, its recursive population is zero, admission is sealed and no
+pending activation can repopulate it. Canonical native/service lineage, if it
+was committed, remains required history; it is not repinned to a current unit.
+For running/provisioning or before a stop request, a live service must still
+have exact observable identity and parent placement. Missing current metadata
+then gives no permission to start, adopt or guess cleanup. During closure with
+no current service to stop, verify whole-parent emptiness directly; absent
+service status is never evidence of emptiness. A missing/replaced parent is
+always unprovable, regardless of service status. No process-local D-Bus retention
+is assumed. This supersedes earlier proposal wording requiring current service/
+native identity after successful stop; parent proof never loses its own checks.
+
 Version-pinned primary basis: systemd v257
 [resource-control documentation source](https://raw.githubusercontent.com/systemd/systemd/v257/man/systemd.resource-control.xml)
 defines Slice's automatic Requires/After toward the slice;
