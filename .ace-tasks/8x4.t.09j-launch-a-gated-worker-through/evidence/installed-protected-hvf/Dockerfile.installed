@@ -1,0 +1,5 @@
+FROM ace-09j-vm-toolchain:local
+RUN apt-get update && apt-get install -y --no-install-recommends build-essential libffi-dev && rm -rf /var/lib/apt/lists/*
+COPY gems /opt/ace-gems
+COPY install-gems.rb /opt/install-gems.rb
+RUN ruby /opt/install-gems.rb && ace-assign --version
