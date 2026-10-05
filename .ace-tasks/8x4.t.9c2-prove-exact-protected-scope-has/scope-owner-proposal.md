@@ -348,8 +348,12 @@ not ready for promotion:
   action; there is no existing ACE ready hook that can be claimed as delivered.
   It must use fixed inputs, reject replaced/symlink endpoints, and carry no
   caller-controlled privileged arguments. Static/default ACL inheritance is
-  not a substitute. Whether a safe fixed ExecStartPost setup meets the no-new-
-  privileged-helper constraint needs independent review before selection.
+  not a substitute. Source review establishes that a same-User, unprivileged
+  ExecStartPost action can set its own socket ACL, but cannot satisfy the current
+  root-owned non-writable final-parent contract while Herdr dynamically binds
+  there. See native-readiness-acl-feasibility.md for the concrete conditional
+  generation-verifier alternative and unresolved replacement safety; no ready
+  mechanism or relaxed 09j ancestry check is silently selected.
 * Fresh container setup must avoid prior session/plugin/rc execution, account
   for native baseline processes and preserve 09j's one fresh gated-worker launch.
   Current 09j static preinstalled workspace is insufficient for automatic fresh
