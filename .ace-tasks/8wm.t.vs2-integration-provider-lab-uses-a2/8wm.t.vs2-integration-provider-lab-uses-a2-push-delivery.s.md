@@ -1,6 +1,6 @@
 ---
 id: 8wm.t.vs2
-status: in-progress
+status: blocked
 priority: high
 created_at: "2026-09-23 21:11:12"
 estimate: TBD
@@ -10,10 +10,15 @@ tags: [ace-hitl, integration, lab, hermes]
 position: 6o000a
 bundle:
   presets: [project]
-  files: [ace-hitl/lib/ace/hitl/providers/lab.rb, ace-hitl/lib/ace/hitl/providers/lab/daemon_binding.rb, ace-hitl-contract/lib/ace/hitl/contract/ref.rb, ace-hitl-hermes/lib/ace/hitl/hermes/schemas/message.v1.schema.json, .ace-tasks/_archive/8w/y/8wm.t.y23-ace-herdr-migrate-generic-queue/8wm.t.y23-ace-herdr-migrate-generic-queue-and-delivery.s.md, ace-herdr/lib/ace/herdr/organisms/inbox.rb, ace-herdr/docs/usage.md, .ace-tasks/8wm.t.vs2-integration-provider-lab-uses-a2/ux/usage.md]
+  files: [ace-hitl/lib/ace/hitl/providers/lab.rb, ace-hitl/lib/ace/hitl/providers/lab/assignment_binding.rb, ace-hitl-contract/lib/ace/hitl/contract/ref.rb, ace-hitl-hermes/lib/ace/hitl/hermes/schemas/message.v1.schema.json, .ace-tasks/_archive/8w/y/8wm.t.y23-ace-herdr-migrate-generic-queue/8wm.t.y23-ace-herdr-migrate-generic-queue-and-delivery.s.md, ace-herdr/lib/ace/herdr/organisms/inbox.rb, ace-herdr/docs/usage.md, .ace-tasks/8wm.t.vs2-integration-provider-lab-uses-a2/ux/usage.md]
   commands: []
 title: Integrate scoped HITL delivery without the Lab daemon
 ---
+
+## Status reconciliation — 2026-10-05
+
+**Source delivered; blocked on cross-user installed acceptance.** Source independently approved at 66c91a82d and merged at 0d9590097; ace-hitl 0.12.0 is published. Current Lab provider uses AssignmentBinding and LiveClient; the earlier stub/DaemonBinding claim below describes pre-implementation history only. Deterministic envelope, signed inbox consumer and source tests are retained in implementation-report.md and independent-source-review-2026-10-05.md. Remaining SC2/installed SC3 require lab-config:8wl.t.gad.8 and gad.b signer/native observer installation, then gad.2 actual Telegram-to-native delivery without labd, requester death/recovery and distinct requester/signer OS users. y24 installed acceptance is also open. Do not rerun implementation merely to turn this record done.
+
 
 # Integrate scoped HITL delivery without the Lab daemon
 

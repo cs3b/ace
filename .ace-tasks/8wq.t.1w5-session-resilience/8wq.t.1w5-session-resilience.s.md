@@ -1,6 +1,6 @@
 ---
 id: 8wq.t.1w5
-status: in-progress
+status: blocked
 priority: medium
 created_at: "2026-09-27 01:15:43"
 estimate: TBD
@@ -14,6 +14,11 @@ bundle:
 needs_review: false
 title: Resume attributable agent work after process or session failure
 ---
+
+## Status reconciliation — 2026-10-05
+
+**Source delivered; blocked on installed recovery proof.** Source independently approved at dab0dbeea and merged at 3dda44055; delivered recovery source is included in published ace-assign 0.64.0. implementation-report.md and independent-review-2026-10-05.md retain Assign 803/3120 and signed recovery 11/135. Remaining SC2 requires installed close/stop with writing descendants and preserved files/commits, and actual Herdr/Pi compaction/reload/failure drills; signed recovery additionally needs lab-config:8wl.t.gad.8/gad.b trusted signer/native observation. Source acceptance is not installed recovery acceptance.
+
 
 # Resume attributable agent work after process or session failure
 

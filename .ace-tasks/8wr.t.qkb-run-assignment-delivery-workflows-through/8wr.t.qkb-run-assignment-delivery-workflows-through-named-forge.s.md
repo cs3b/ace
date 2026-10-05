@@ -1,6 +1,6 @@
 ---
 id: 8wr.t.qkb
-status: in-progress
+status: blocked
 priority: high
 created_at: "2026-09-28 17:42:35"
 estimate: TBD
@@ -8,11 +8,16 @@ dependencies: [8wr.t.qk1, 8wr.t.qjl, 8x2.t.z78, 8wr.t.qk0, 8wr.t.qjx, 8wr.t.qjz,
 tags: [lab-readiness]
 bundle:
   presets: [project]
-  files: [.ace-tasks/_archive/8x/v/8wr.t.qk1-complete-forge-neutral-worktree-review/8wr.t.qk1-complete-forge-neutral-worktree-review-and-task.s.md, .ace-tasks/8wr.t.qjl-persist-assignment-attempts-and-exact/8wr.t.qjl-persist-assignment-attempts-and-exact-execution.s.md, .ace-tasks/_archive/8x/v/8wr.t.qjz-resolve-second-commander-proposals-with/8wr.t.qjz-resolve-second-commander-proposals-with-a-sixteen.s.md, ace-assign/.ace-defaults/assign/catalog/recipes/implement-with-pr.recipe.yml, ace-assign/.ace-defaults/assign/presets/work-on-task.yml, .ace-tasks/8wr.t.qkb-run-assignment-delivery-workflows-through/ux/usage.md, .ace-tasks/_archive/8x/v/8x2.t.z78-complete-forgejo-delivery-capabilities-with/8x2.t.z78-complete-forgejo-delivery-capabilities-with-verifiable.s.md, .ace-tasks/_archive/8x/v/8x2.t.z78-complete-forgejo-delivery-capabilities-with/ux/usage.md, .ace-tasks/_archive/8x/v/8x3.t.vfw-verify-forgejo-create-provenance-and/8x3.t.vfw-verify-forgejo-create-provenance-and-uncertain-outcomes.s.md, .ace-tasks/8x3.t.xz9-execute-scoped-services-across-os/protected-authority-contract.md, .ace-tasks/8x3.t.xz9-execute-scoped-services-across-os/consumer-dependency-map.md]
+  files: [.ace-tasks/_archive/8x/v/8wr.t.qk1-complete-forge-neutral-worktree-review/8wr.t.qk1-complete-forge-neutral-worktree-review-and-task.s.md, .ace-tasks/_archive/8x/v/8wr.t.qjl-persist-assignment-attempts-and-exact/8wr.t.qjl-persist-assignment-attempts-and-exact-execution.s.md, .ace-tasks/_archive/8x/v/8wr.t.qjz-resolve-second-commander-proposals-with/8wr.t.qjz-resolve-second-commander-proposals-with-a-sixteen.s.md, ace-assign/.ace-defaults/assign/catalog/recipes/implement-with-pr.recipe.yml, ace-assign/.ace-defaults/assign/presets/work-on-task.yml, .ace-tasks/8wr.t.qkb-run-assignment-delivery-workflows-through/ux/usage.md, .ace-tasks/_archive/8x/v/8x2.t.z78-complete-forgejo-delivery-capabilities-with/8x2.t.z78-complete-forgejo-delivery-capabilities-with-verifiable.s.md, .ace-tasks/_archive/8x/v/8x2.t.z78-complete-forgejo-delivery-capabilities-with/ux/usage.md, .ace-tasks/_archive/8x/v/8x3.t.vfw-verify-forgejo-create-provenance-and/8x3.t.vfw-verify-forgejo-create-provenance-and-uncertain-outcomes.s.md, .ace-tasks/8x3.t.xz9-execute-scoped-services-across-os/protected-authority-contract.md, .ace-tasks/8x3.t.xz9-execute-scoped-services-across-os/consumer-dependency-map.md]
   commands: []
 needs_review: false
 position: 6o000f
 ---
+
+## Status reconciliation — 2026-10-05
+
+**Blocked on downstream protected delivery integration.** Both children have accepted bounded source checkpoints and coordinated published vocabulary. Whole delivery still requires qk0 role/charter adoption, xz9 protected service integration and installed executor/resolution/authorization evidence. Published gems do not close these requirements. Keep the parent and children blocked until the named dependent scope is available, then resume the specific remaining contract rather than reimplementing accepted source.
+
 
 # Run assignment delivery workflows through named forge providers
 

@@ -1,6 +1,6 @@
 ---
 id: 8wr.t.qkb.1
-status: in-progress
+status: blocked
 priority: high
 created_at: "2026-09-28 17:44:29"
 estimate: TBD
@@ -13,6 +13,11 @@ bundle:
   commands: []
 needs_review: false
 ---
+
+## Status reconciliation — 2026-10-05
+
+**Bounded vocabulary delivered; blocked on consumer integration.** Accepted f29c72e3 source and neutral-vocabulary-source-checkpoint.md document neutral PR workflows, consumers and normal skill projection. The coordinated release is now published. Remaining qk0 charter, xz9 SC7 adoption, configured merge executor, fresh installed workflow resolution and complete delivery/authorization matrix are still open. Publication does not prove ambient registrations resolve to the new sources. Resume after dependent contracts and installed deployment are available.
+
 
 # Align canonical delivery workflows with forge-neutral evidence
 

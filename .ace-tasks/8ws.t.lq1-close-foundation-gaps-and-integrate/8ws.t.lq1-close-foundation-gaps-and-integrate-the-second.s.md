@@ -10,7 +10,7 @@ title: Close foundation gaps and integrate the second ACE Lab wave
 needs_review: false
 bundle:
   presets: [project]
-  files: [AGENTS.md, .ace-tasks/8wr.t.uj0-bind-forgejo-provider-commands-to/8wr.t.uj0-bind-forgejo-provider-commands-to-the-selected.s.md, .ace-tasks/_archive/8x/v/8wr.t.t8j-enforce-prune-safety-workflow-contract/8wr.t.t8j-enforce-prune-safety-workflow-contract-in-overseer.s.md, .ace-tasks/8ws.t.lq1-close-foundation-gaps-and-integrate/evidence/release-proof-2026-09-29.md, .ace-tasks/8ws.t.lq1-close-foundation-gaps-and-integrate/evidence/install-observations.json, .ace-tasks/8ws.t.lq1-close-foundation-gaps-and-integrate/release-preparation-2026-10-05.md]
+  files: [AGENTS.md, .ace-tasks/_archive/8x/v/8wr.t.uj0-bind-forgejo-provider-commands-to/8wr.t.uj0-bind-forgejo-provider-commands-to-the-selected.s.md, .ace-tasks/_archive/8x/v/8wr.t.t8j-enforce-prune-safety-workflow-contract/8wr.t.t8j-enforce-prune-safety-workflow-contract-in-overseer.s.md, .ace-tasks/8ws.t.lq1-close-foundation-gaps-and-integrate/evidence/release-proof-2026-09-29.md, .ace-tasks/8ws.t.lq1-close-foundation-gaps-and-integrate/evidence/install-observations.json, .ace-tasks/8ws.t.lq1-close-foundation-gaps-and-integrate/release-preparation-2026-10-05.md]
   commands: []
 position: 6o000l
 ---
@@ -454,3 +454,8 @@ are claimed as newly executed by this specification edit.
 - [x] Build 16 fresh artifacts in eight dependency waves and verify all 1110 packaged source files, versions and runtime dependency declarations. Retain the 49-record installation manifest and historical provenance. See release-preparation-2026-10-05.md and evidence/local-release-2026-10-05/.
 - [x] Captain interactive publication of this exact prepared queue: 16 published, eight waves, 19.8 seconds per operator report; all 16 registry versions and artifact SHA-256 hashes independently confirmed. See evidence/publication-2026-10-05/registry-verification.json.
 - [ ] New-release installed graph and consumer acceptance: both install modes and exact-version/consumer checks passed in run 8x4m8d9, but independent verifier failed on external model capacity. Reconcile and rerun the full documented scenario after capacity is available; retain original failed evidence. Host finalizer also rejects Symbol-bearing failed pipeline YAML (diagnostic limitation; not grounds to turn ERROR into PASS). Remaining native/domain Lab acceptance follows separately. Neither publication nor partial install evidence closes 9c2/xz9/qkb/R2/R3.
+
+
+## Current queue reconciliation — 2026-10-05
+
+See status-reconciliation-2026-10-05.md for source-versus-installed evidence, explicit blockers and the next local scope. Root queue now has two in-progress records (this integration tracker and 9c2); five blocked scopes retain their missing acceptance requirements. Three done records are archived and duplicate 3r3 is skipped in favor of i6i. No underlying task is marked done based on publication alone.

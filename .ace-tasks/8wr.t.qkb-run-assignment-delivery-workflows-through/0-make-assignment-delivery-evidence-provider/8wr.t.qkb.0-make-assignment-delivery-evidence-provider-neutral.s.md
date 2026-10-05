@@ -1,6 +1,6 @@
 ---
 id: 8wr.t.qkb.0
-status: in-progress
+status: blocked
 priority: high
 created_at: "2026-09-28 17:44:29"
 estimate: TBD
@@ -9,10 +9,15 @@ tags: [lab-readiness]
 parent: 8wr.t.qkb
 bundle:
   presets: [project]
-  files: [.ace-tasks/8wr.t.qkb-run-assignment-delivery-workflows-through/8wr.t.qkb-run-assignment-delivery-workflows-through-named-forge.s.md, .ace-tasks/_archive/8x/v/8wr.t.qk1-complete-forge-neutral-worktree-review/8wr.t.qk1-complete-forge-neutral-worktree-review-and-task.s.md, .ace-tasks/8wr.t.qjl-persist-assignment-attempts-and-exact/8wr.t.qjl-persist-assignment-attempts-and-exact-execution.s.md, ace-assign/.ace-defaults/assign/catalog/recipes/implement-with-pr.recipe.yml, ace-assign/.ace-defaults/assign/catalog/steps/create-pr.step.yml, ace-assign/.ace-defaults/assign/catalog/steps/update-pr-desc.step.yml, ace-assign/.ace-defaults/assign/catalog/steps/mark-pr-ready.step.yml, .ace-tasks/8wr.t.qkb-run-assignment-delivery-workflows-through/0-make-assignment-delivery-evidence-provider/ux/usage.md, .ace-tasks/_archive/8x/v/8x2.t.z78-complete-forgejo-delivery-capabilities-with/8x2.t.z78-complete-forgejo-delivery-capabilities-with-verifiable.s.md, .ace-tasks/_archive/8x/v/8x2.t.z78-complete-forgejo-delivery-capabilities-with/ux/usage.md, .ace-tasks/_archive/8x/v/8x3.t.vfw-verify-forgejo-create-provenance-and/8x3.t.vfw-verify-forgejo-create-provenance-and-uncertain-outcomes.s.md]
+  files: [.ace-tasks/8wr.t.qkb-run-assignment-delivery-workflows-through/8wr.t.qkb-run-assignment-delivery-workflows-through-named-forge.s.md, .ace-tasks/_archive/8x/v/8wr.t.qk1-complete-forge-neutral-worktree-review/8wr.t.qk1-complete-forge-neutral-worktree-review-and-task.s.md, .ace-tasks/_archive/8x/v/8wr.t.qjl-persist-assignment-attempts-and-exact/8wr.t.qjl-persist-assignment-attempts-and-exact-execution.s.md, ace-assign/.ace-defaults/assign/catalog/recipes/implement-with-pr.recipe.yml, ace-assign/.ace-defaults/assign/catalog/steps/create-pr.step.yml, ace-assign/.ace-defaults/assign/catalog/steps/update-pr-desc.step.yml, ace-assign/.ace-defaults/assign/catalog/steps/mark-pr-ready.step.yml, .ace-tasks/8wr.t.qkb-run-assignment-delivery-workflows-through/0-make-assignment-delivery-evidence-provider/ux/usage.md, .ace-tasks/_archive/8x/v/8x2.t.z78-complete-forgejo-delivery-capabilities-with/8x2.t.z78-complete-forgejo-delivery-capabilities-with-verifiable.s.md, .ace-tasks/_archive/8x/v/8x2.t.z78-complete-forgejo-delivery-capabilities-with/ux/usage.md, .ace-tasks/_archive/8x/v/8x3.t.vfw-verify-forgejo-create-provenance-and/8x3.t.vfw-verify-forgejo-create-provenance-and-uncertain-outcomes.s.md]
   commands: []
 needs_review: false
 ---
+
+## Status reconciliation — 2026-10-05
+
+**Source delivered; blocked on protected delivery acceptance.** Neutral assignment delivery was integrated at 855092590, with final independent approval and Assign 829/3469 in independent-review-2026-10-05.md. That final record supersedes implementation-evidence prose which still calls source review/tests pending. Coordinated release versions are now published. Remaining shared protected service/workflow acceptance and installed atomic vocabulary verification depend on qkb.1, qk0/xz9 and installed executors; no whole-task completion is claimed.
+
 
 # Make assignment delivery evidence provider neutral
 

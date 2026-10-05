@@ -1,6 +1,6 @@
 ---
 id: 8wm.t.y24
-status: in-progress
+status: blocked
 priority: high
 created_at: "2026-09-23 22:42:16"
 estimate: 
@@ -14,6 +14,11 @@ bundle:
   commands: []
 title: Provide correlated Telegram transport through the Hermes package
 ---
+
+## Status reconciliation — 2026-10-05
+
+**Source delivered; blocked on installed acceptance.** Source reviewed at a5429f416 and integrated at 08c64b6a5; ace-hitl-hermes 0.2.0 is published. Correlation, allowlist, ingress checkpoint and protected OTP IPC source are delivered. Retained implementation-report.md and independent-review.md record deterministic tests (106/607). Remaining SC2 requires the actual registered Telegram test channel; SC3 still requires lab-config:8wl.t.gad.2 transport smoke and installed removal of replaced broker/plugin files. No open implementation is inferred from the old unchecked composite criteria. Status blocked means this external installed acceptance is outstanding, not a missing source implementation.
+
 
 # Provide correlated Telegram transport through the Hermes package
 
