@@ -41,6 +41,14 @@ One default fast monorepo run, `bin/ace-test-suite --parallel 1`, on exact `2b3f
 
 ## Product and installed gates still open
 
+### Combined default suite after separate Herdr fixture repair
+
+Native Git merges incorporated accepted main `c82ffc671` then the separate fixture candidate `b19890d49f72fb6914a23e32ffa631852c38e3db` without conflicts. The latter changes only the Herdr bounded-process test readiness fixture and its implementation evidence; production Herdr is unchanged. Frozen combined source was `1ba0181aa7e9b3df8bcc79ae1ec57c347e7125a5`.
+
+Exactly one `bin/ace-test-suite --parallel 1` run (owned session 55411) completed exit 0: **51 package entries passed, zero failed; 11201 tests passed, zero failed, 24 skipped; 34160 assertions; 366.54 seconds**. Configured deadlines were unchanged. Representative actual package receipts: Assign `8x48xj` (806/2960 PASS), Herdr `8x48zq` (469/1456 PASS), Lab `8x490r` (199/697, one skip). The runner discovered Lab twice; the aggregate is reported as executed package entries, not a deduplicated claim. No full Assign/Lab repeat was introduced for this combined gate. The earlier failed suite and `8x48iu` remain retained above.
+
+Root separately reported independent fixture review APPROVE with 9/52 executed (`8x48wh`). Any subsequent fixture-only assertion strengthening is a distinct exact delta with its own focused proof; this suite is tied to the source SHA above. Root owns final integration. This passing source gate does not close the following product/installed gaps.
+
 Receiver tests use authority reply fixtures. Actual Git bundle materialization, fixed handler execution, evidence bytes and uncertainty/cleanup behavior are exercised, but protected distinct-UID Client/Server/Endcap receiving transport is not proven. AuthorityComposition deliberately refuses construction before journal/listener creation while result/finish, recovery, inbox and evidence operations are incomplete. Public receiver socket/CLI, full composition startup, installed source consumers, canonical historical corruption cases and installed OS proof remain open. No native launch probe, deployment or publication was executed by this lane. The accepted protected launch and receiver-map dependencies do not imply actual receiver bind readiness or LSM acceptance.
 
 ## Read-only next-slice outline
