@@ -1,0 +1,306 @@
+{
+  "artifact_directory": "/private/tmp/ace-installed-sc3/run-8bbc12b2532a",
+  "receipt": "hitl/8x4820",
+  "terminal_exit": 0,
+  "tests": 1,
+  "assertions": 18552,
+  "seconds": 58.34,
+  "runtime_provenance": {
+    "source_head": "bb7da4dd2289c7be2ef4ce37a26c7c2b0feb1715",
+    "fixture_sha256": "447569704fa9cd926d04e7d9372d600043030446d1d82dec39e2b403cd8b25ff",
+    "ruby": "/Users/mc/.local/share/mise/installs/ruby/3.4.8/bin/ruby",
+    "ruby_version": "3.4.8",
+    "ruby_sha256": "569556af3cc4b3f3a7d5194c23f98c161b82af257bd67f0ee5fa692db6a28518",
+    "scope": "controlled one-host current-UID local mode; no live Telegram or protected Herdr acceptance"
+  },
+  "result": {
+    "success": true,
+    "checks": 38,
+    "effect_count": 1,
+    "window_seconds": 57600,
+    "outcome": "succeeded",
+    "decision": "approved-by-silence"
+  },
+  "processes": {
+    "main": 1,
+    "service": 3,
+    "actor": 8,
+    "executor": 1
+  },
+  "hashes": {
+    "artifacts.json": "79645c2909a50c2b8c74bcb79b61a987cfedba376db2723f37929106d2da0c63",
+    "build-provenance.json": "20114e361cf3d604f031ace4a01e295330d3dc76e255864a8c4880ea797e6fa8",
+    "processes.jsonl": "149a5406826057f6b3119c4fbfdd8d551823a36f931ba2ac35f0355484904bda",
+    "canonical-evidence.json": "69a2434b79cec77d5bdc75a73692ba7a09fd656d3a865c03f85b5720efe1f6d1",
+    "result.json": "db6e7b61dc03f6cfa329c6744c54797988381840e2d6e4752a7d7b5d9c88eaaa",
+    "consumer.rb": "447569704fa9cd926d04e7d9372d600043030446d1d82dec39e2b403cd8b25ff"
+  },
+  "artifacts": [
+    {
+      "name": "ace-assign",
+      "version": "0.63.1",
+      "default": false,
+      "archive": "/private/tmp/ace-installed-sc3/run-8bbc12b2532a/packages/ace-assign-0.63.1.gem",
+      "sha256": "908c3b394b9fc6e72044848d785959fae0b03510fe66e44e22c862e69c10e2a4"
+    },
+    {
+      "name": "ace-b36ts",
+      "version": "0.14.11",
+      "default": false,
+      "archive": "/private/tmp/ace-installed-sc3/run-8bbc12b2532a/packages/ace-b36ts-0.14.11.gem",
+      "sha256": "cab250539e7b6e969eb799292d348f9e38257cd6b859f5f38324e343f13e1e3a"
+    },
+    {
+      "name": "ace-bundle",
+      "version": "0.44.2",
+      "default": false,
+      "archive": "/private/tmp/ace-installed-sc3/run-8bbc12b2532a/packages/ace-bundle-0.44.2.gem",
+      "sha256": "69c2335be2e97bb8cca6541e417107bd6793614b8510feaba41dbbef4ed884ab"
+    },
+    {
+      "name": "ace-compressor",
+      "version": "0.25.5",
+      "default": false,
+      "archive": "/private/tmp/ace-installed-sc3/run-8bbc12b2532a/packages/ace-compressor-0.25.5.gem",
+      "sha256": "e24ef4e5a0e0f24ed9aabc21847035ac23d7381f195e1d96c9a6cd3ce1e8ef61"
+    },
+    {
+      "name": "ace-git",
+      "version": "0.28.1",
+      "default": false,
+      "archive": "/private/tmp/ace-installed-sc3/run-8bbc12b2532a/packages/ace-git-0.28.1.gem",
+      "sha256": "8dca0c16b1b4588fb460b1ac9033ff6fb1dc9f43e37398c20bccd80a23a04392"
+    },
+    {
+      "name": "ace-git-forgejo",
+      "version": "0.6.1",
+      "default": false,
+      "archive": "/private/tmp/ace-installed-sc3/run-8bbc12b2532a/packages/ace-git-forgejo-0.6.1.gem",
+      "sha256": "2d81ad3ee8cffa1e435e43bae6f0716465fda14246c2a7d0f043f413980efa4d"
+    },
+    {
+      "name": "ace-git-github",
+      "version": "0.4.0",
+      "default": false,
+      "archive": "/private/tmp/ace-installed-sc3/run-8bbc12b2532a/packages/ace-git-github-0.4.0.gem",
+      "sha256": "f775a0dcb9e9da16ffc6b8f1be270071d2a8c8d3027a9edb5ccb53f3d7091e3d"
+    },
+    {
+      "name": "ace-herdr",
+      "version": "0.3.2",
+      "default": false,
+      "archive": "/private/tmp/ace-installed-sc3/run-8bbc12b2532a/packages/ace-herdr-0.3.2.gem",
+      "sha256": "76f336d8f9ce7f644fe68fc70226e4acee9f2f92ac75ac4ded9ac56d1e9b0f84"
+    },
+    {
+      "name": "ace-hitl",
+      "version": "0.11.1",
+      "default": false,
+      "archive": "/private/tmp/ace-installed-sc3/run-8bbc12b2532a/packages/ace-hitl-0.11.1.gem",
+      "sha256": "57636a6faceeb6fbcd158d140afd0262d685e2870d6d5e97a539a4b841c79728"
+    },
+    {
+      "name": "ace-hitl-contract",
+      "version": "0.1.0",
+      "default": false,
+      "archive": "/private/tmp/ace-installed-sc3/run-8bbc12b2532a/packages/ace-hitl-contract-0.1.0.gem",
+      "sha256": "066bfeada8c4171f3eb542a0e30b2bc8036bffaa3077e0918c5261cfe706fa7f"
+    },
+    {
+      "name": "ace-hitl-hermes",
+      "version": "0.1.0",
+      "default": false,
+      "archive": "/private/tmp/ace-installed-sc3/run-8bbc12b2532a/packages/ace-hitl-hermes-0.1.0.gem",
+      "sha256": "02d27ef0e6ed57bc3658e9482a7dca655cc2e4431869c9112bdc1e0b8f3ce323"
+    },
+    {
+      "name": "ace-lab",
+      "version": "0.3.1",
+      "default": false,
+      "archive": "/private/tmp/ace-installed-sc3/run-8bbc12b2532a/packages/ace-lab-0.3.1.gem",
+      "sha256": "d8757e209ea5111393217259ccfb76c78e782f1d76fd333472549fd37beda4ec"
+    },
+    {
+      "name": "ace-llm",
+      "version": "0.42.0",
+      "default": false,
+      "archive": "/private/tmp/ace-installed-sc3/run-8bbc12b2532a/packages/ace-llm-0.42.0.gem",
+      "sha256": "38e596688bbfc4979933cc8ec679c988f3e56a87805b6d996fbd2d1bcffceedc"
+    },
+    {
+      "name": "ace-review",
+      "version": "0.58.1",
+      "default": false,
+      "archive": "/private/tmp/ace-installed-sc3/run-8bbc12b2532a/packages/ace-review-0.58.1.gem",
+      "sha256": "0fd432c77cd20271a4b02361613fdecb5ecbd9fd47463597fed97832792e1020"
+    },
+    {
+      "name": "ace-runtime",
+      "version": "0.1.1",
+      "default": false,
+      "archive": "/private/tmp/ace-installed-sc3/run-8bbc12b2532a/packages/ace-runtime-0.1.1.gem",
+      "sha256": "4d1321ac84d76f6944c7c5912c16a5ac4e922bfd056fe10b84abfaa94d81d547"
+    },
+    {
+      "name": "ace-support-cli",
+      "version": "0.6.9",
+      "default": false,
+      "archive": "/private/tmp/ace-installed-sc3/run-8bbc12b2532a/packages/ace-support-cli-0.6.9.gem",
+      "sha256": "737f8868d726c916e4b6437793dbac1e6e1b6ce5402d214ef45bc239b52fd5be"
+    },
+    {
+      "name": "ace-support-config",
+      "version": "0.18.2",
+      "default": false,
+      "archive": "/private/tmp/ace-installed-sc3/run-8bbc12b2532a/packages/ace-support-config-0.18.2.gem",
+      "sha256": "34b8882254764d677e5b5245ea11c1d6cd9683007aaf2092977aec3e87e03025"
+    },
+    {
+      "name": "ace-support-core",
+      "version": "0.32.0",
+      "default": false,
+      "archive": "/private/tmp/ace-installed-sc3/run-8bbc12b2532a/packages/ace-support-core-0.32.0.gem",
+      "sha256": "bc826eac837bcefe371b5e436d2a6997f1734906c44cf96600d7c577ce34dd6c"
+    },
+    {
+      "name": "ace-support-fs",
+      "version": "0.3.4",
+      "default": false,
+      "archive": "/private/tmp/ace-installed-sc3/run-8bbc12b2532a/packages/ace-support-fs-0.3.4.gem",
+      "sha256": "b0ba8f64bc81a98c5b009d1f9eb142468c1ff71f15f81239aef86d87dc137186"
+    },
+    {
+      "name": "ace-support-items",
+      "version": "0.15.13",
+      "default": false,
+      "archive": "/private/tmp/ace-installed-sc3/run-8bbc12b2532a/packages/ace-support-items-0.15.13.gem",
+      "sha256": "3c62f68bbd2e86d1f9a87bc4c7be9fca4588832e3d38409f918524bdb01d5ef9"
+    },
+    {
+      "name": "ace-support-markdown",
+      "version": "0.3.6",
+      "default": false,
+      "archive": "/private/tmp/ace-installed-sc3/run-8bbc12b2532a/packages/ace-support-markdown-0.3.6.gem",
+      "sha256": "a016f5f87a6f0127ef35b609f6940e2f621ba57fe5b64c0fed18b374a4f7acb9"
+    },
+    {
+      "name": "ace-support-models",
+      "version": "0.12.4",
+      "default": false,
+      "archive": "/private/tmp/ace-installed-sc3/run-8bbc12b2532a/packages/ace-support-models-0.12.4.gem",
+      "sha256": "4f4c7d6e1bd041325413b4472bb834d22e206784ceafc499ab3d0ca11f18d93d"
+    },
+    {
+      "name": "ace-support-nav",
+      "version": "0.28.7",
+      "default": false,
+      "archive": "/private/tmp/ace-installed-sc3/run-8bbc12b2532a/packages/ace-support-nav-0.28.7.gem",
+      "sha256": "60ad936d184f0520585d001d83a11102c81716e43f3e436bc6a8737722fabac2"
+    },
+    {
+      "name": "ace-task",
+      "version": "0.39.1",
+      "default": false,
+      "archive": "/private/tmp/ace-installed-sc3/run-8bbc12b2532a/packages/ace-task-0.39.1.gem",
+      "sha256": "4a667ad6e065b80da788a142f0998de7156b35f79a0c2f65977cfa27d1dd6187"
+    },
+    {
+      "name": "ace-tmux",
+      "version": "0.18.0",
+      "default": false,
+      "archive": "/private/tmp/ace-installed-sc3/run-8bbc12b2532a/packages/ace-tmux-0.18.0.gem",
+      "sha256": "9c8ecef74ce92def8ef6fb9b82dee583eda13d116daaf65c6749569dab16f534"
+    },
+    {
+      "name": "addressable",
+      "version": "2.9.0",
+      "default": false,
+      "archive": "/private/tmp/ace-installed-sc3/run-8bbc12b2532a/packages/addressable-2.9.0.gem",
+      "sha256": "7fdf6ac3660f7f4e867a0838be3f6cf722ace541dd97767fa42bc6cfa980c7af"
+    },
+    {
+      "name": "faraday",
+      "version": "2.14.4",
+      "default": false,
+      "archive": "/private/tmp/ace-installed-sc3/run-8bbc12b2532a/packages/faraday-2.14.4.gem",
+      "sha256": "9bb4408c44621b0dbaaaa39e5dbfc4dbe58cc6751b6eb94d16ae9e1f2f2fab6e"
+    },
+    {
+      "name": "faraday-net_http",
+      "version": "3.4.4",
+      "default": false,
+      "archive": "/private/tmp/ace-installed-sc3/run-8bbc12b2532a/packages/faraday-net_http-3.4.4.gem",
+      "sha256": "0e78af151747ed1b00f33e25973b4bc220d7f16c00c39676817c8b12331eb588"
+    },
+    {
+      "name": "faraday-retry",
+      "version": "2.4.0",
+      "default": false,
+      "archive": "/private/tmp/ace-installed-sc3/run-8bbc12b2532a/packages/faraday-retry-2.4.0.gem",
+      "sha256": "7b79c48fb7e56526faf247b12d94a680071ff40c9fda7cf1ec1549439ad11ebe"
+    },
+    {
+      "name": "fiddle",
+      "version": "1.1.6",
+      "default": false,
+      "archive": "/private/tmp/ace-installed-sc3/run-8bbc12b2532a/packages/fiddle-1.1.6.gem",
+      "sha256": "79e8d909e602d979434cf9fccfa6e729cb16432bb00e39c7596abe6bee1249ab"
+    },
+    {
+      "name": "json",
+      "version": "2.21.2",
+      "default": false,
+      "archive": "/private/tmp/ace-installed-sc3/run-8bbc12b2532a/packages/json-2.21.2.gem",
+      "sha256": "1f1d3b7cf2b3ba1a69beca0bb6db13d5438b80bff3cd54cdaaa620b9b07c1c6a"
+    },
+    {
+      "name": "kramdown",
+      "version": "2.5.2",
+      "default": false,
+      "archive": "/private/tmp/ace-installed-sc3/run-8bbc12b2532a/packages/kramdown-2.5.2.gem",
+      "sha256": "1ba542204c66b6f9111ff00dcc26075b95b220b07f2905d8261740c82f7f02fa"
+    },
+    {
+      "name": "kramdown-parser-gfm",
+      "version": "1.1.0",
+      "default": false,
+      "archive": "/private/tmp/ace-installed-sc3/run-8bbc12b2532a/packages/kramdown-parser-gfm-1.1.0.gem",
+      "sha256": "fb39745516427d2988543bf01fc4cf0ab1149476382393e0e9c48592f6581729"
+    },
+    {
+      "name": "logger",
+      "version": "1.7.0",
+      "default": false,
+      "archive": "/private/tmp/ace-installed-sc3/run-8bbc12b2532a/packages/logger-1.7.0.gem",
+      "sha256": "196edec7cc44b66cfb40f9755ce11b392f21f7967696af15d274dde7edff0203"
+    },
+    {
+      "name": "net-http",
+      "version": "0.9.1",
+      "default": false,
+      "archive": "/private/tmp/ace-installed-sc3/run-8bbc12b2532a/packages/net-http-0.9.1.gem",
+      "sha256": "25ba0b67c63e89df626ed8fac771d0ad24ad151a858af2cc8e6a716ca4336996"
+    },
+    {
+      "name": "public_suffix",
+      "version": "7.0.5",
+      "default": false,
+      "archive": "/private/tmp/ace-installed-sc3/run-8bbc12b2532a/packages/public_suffix-7.0.5.gem",
+      "sha256": "1a8bb08f1bbea19228d3bed6e5ed908d1cb4f7c2726d18bd9cadf60bc676f623"
+    },
+    {
+      "name": "rexml",
+      "version": "3.4.4",
+      "default": false,
+      "archive": "/private/tmp/ace-installed-sc3/run-8bbc12b2532a/packages/rexml-3.4.4.gem",
+      "sha256": "19e0a2c3425dfbf2d4fc1189747bdb2f849b6c5e74180401b15734bc97b5d142"
+    },
+    {
+      "name": "uri",
+      "version": "1.1.1",
+      "default": false,
+      "archive": "/private/tmp/ace-installed-sc3/run-8bbc12b2532a/packages/uri-1.1.1.gem",
+      "sha256": "379fa58d27ffb1387eaada68c749d1426738bd0f654d812fcc07e7568f5c57c6"
+    }
+  ]
+}
