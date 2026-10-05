@@ -99,3 +99,35 @@ Malformed selector is invalid_input; wrong role/project/incarnation unauthorized
 stale expected generation/occupied slot conflict; unknown attempt missing;
 unsupported or unprovable owner/boundary evidence evidence_unavailable.
 All failures keep ownership and authorize no effect or cleanup of unrelated slots.
+
+## Settle a request sealed before dispatch
+
+Goal: an installed service executor can close the pre-seal request without gaining
+invocation permission. Through the same Authority::Client framing it calls:
+
+```text
+operation: claim_service_settlement
+mutation_id: "settle-request"
+params: {assignment_id: "assignment", attempt_id: "attempt",
+         request_id: "request", head: "<recorded-head>",
+         candidate_generation: 3, expected_generation: 25}
+```
+
+Client injects mapping/project identity. The owner selects the recorded service's
+fixed receiver; a worker or supervisor calling instead is unauthorized. A new
+recovery claim returns dispatch_phase settlement_only, exact claim_binding and
+reconciliation_challenge. It never grants begin/invocation, consumes no new effect
+grant and cannot be changed to an effectful phase.
+
+The executor freshly inspects the actual target and handler/process/writer state,
+then sends the exact receipt/artifact bytes through complete_no_effect with the
+returned claim/challenge and immutable request/head/candidate identity. See
+../sealed-service-settlement-contract.md for the exact closed params, evidence
+and error contract. Only verified completion reaches failed-settled. A surviving
+handler, unknown outcome or missing evidence keeps uncertainty and blocks finish.
+
+A lost recovery reply retries the same mutation without issuing another claim.
+A lost begin or final authorization reply does not permit invocation or assert
+no effect; preserve the original claim/phase and obtain challenge-bound fresh
+reconciliation. The final fresh service_authorization read checks seal. Effects
+admitted before seal still settle independently of local scope emptiness.

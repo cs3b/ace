@@ -156,8 +156,12 @@ that can directly mutate worker scratch cannot qualify under this selected profi
 Use verified byte transfer and separately owned staging/output instead.
 
 At canonical seal, serialize with existing service and local-write admission:
-no new request/claim/begin_dispatch may authorize an effect for that old generation.
-Previously dispatched work may still complete; its completion/settlement remains
+no new request/effect claim/begin_dispatch or final fresh receiver authorization
+read may authorize an effect for that old generation. Settlement-only claim
+admission is explicitly allowed by sealed-service-settlement-contract.md; it
+creates recovery identity/challenge only, never effect permission. Requested but
+unclaimed and already claimed work settle through that exact contract.
+Previously admitted/dispatched work may still complete; its completion/settlement remains
 accepted through its existing owner so sealing cannot strand it. Buffered requests,
 lost replies and receiver work already in flight cannot be treated as canceled
 because the worker/socket died. Before finish or terminal stop releases ownership,
@@ -178,12 +182,13 @@ routing; generic ACE owns admission, exact resource/generation identity and seal
 checks. Installation failure refuses before release; later loss of boundary
 identity makes fresh proof unverifiable and holds ownership.
 
-The only product question in this slice is whether a protected attempt must have
-arbitrary host SSH, containers, shared writable project state or host-admin tools.
-Those capabilities are incompatible with this declared profile unless routed
-through a separately authorized bounded existing service with disjoint resources.
-Do not silently expose them, and do not ask Captain to decide routine namespace or
-ACL mechanics. Dedicated-server lifetime preference remains independently pending.
+The engineering baseline uses bounded separately authorized services for host
+capabilities outside this profile and separate persistent overseers. Arbitrary
+worker host SSH/admin/container/shared-write access is not requested by the
+program and creates no new permission gate. The optional earlier preference
+question can steer the design, without treating silence as approval. A later
+request for broader access changes the declared specification; it is not a
+current undefined contract.
 
 ## Inspected source pointers
 
