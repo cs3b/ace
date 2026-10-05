@@ -11,14 +11,18 @@ the installed workspace ID. Closed or stale containers refuse before any child.
 
 Executed actual Herdr0.9.3 binary with distinct launcher UID13002 and server/child
 UID13001, empty capability bounds and NoNewPrivs in an isolated Docker fixture.
-The pre-existing installer-created shell was measured before launch (PID40).
-One layout.apply created exactly one new direct child (PID47), whose executable
+The corrected preflight uses workspace.get with the configured ID, because
+layout.export ignores workspace_id in Herdr0.9.3. Configured w1 remained
+nonfocused while w2 was active; workspace.get(w1) echoed w1. The two
+pre-existing installer-created shells were measured before launch (PID39/43).
+One layout.apply created exactly one new direct child (PID51), whose executable
 was the fixed root-owned test bootstrap; no extra shell appeared. Original
 workspace/tab/pane and pane.process_info shell_pid matched that child. Exact
 pidfd exit after pane.close returned child inventory to the unchanged baseline.
-Closing the installed container made another layout.apply return workspace_not_found
+Closing the installed container while another workspace remained active made
+workspace.get and another layout.apply return workspace_not_found
 with zero new children. An intentionally unread create reply produced exactly
-one test bootstrap (PID69); it was not retried. Retained bootstrap counter was2
+one test bootstrap (PID75); it was not retried. Retained bootstrap counter was2
 for the two explicitly requested layout calls, not an extra default shell.
 
 Evidence: evidence/native-fixed-container/{native-shape.json,probe.py,bootstrap.c,Dockerfile}.

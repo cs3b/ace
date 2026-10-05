@@ -2,9 +2,9 @@
   "scope": "real Herdr0.9.3 API shape only; test bootstrap; Yama0 is not protected acceptance",
   "worker_uid": 13001,
   "launcher_uid": 13002,
-  "server_pid": 16,
+  "server_pid": 15,
   "ping": {
-    "peer_pid": 16,
+    "peer_pid": 15,
     "peer_uid": 13001,
     "reply": {
       "id": "fixture",
@@ -24,37 +24,43 @@
     }
   },
   "installed_container": "w1",
+  "active_other_container": "w2",
   "preflight": {
-    "peer_pid": 16,
+    "peer_pid": 15,
     "peer_uid": 13001,
     "reply": {
       "id": "fixture",
       "result": {
-        "type": "layout_export",
-        "layout": {
+        "type": "workspace_info",
+        "workspace": {
           "workspace_id": "w1",
-          "tab_id": "w1:t1",
-          "zoomed": false,
-          "focused_pane_id": "w1:p1",
-          "root": {
-            "type": "pane",
-            "pane_id": "w1:p1",
-            "cwd": "/home/ace-worker"
-          }
+          "number": 1,
+          "label": "~",
+          "focused": false,
+          "pane_count": 1,
+          "tab_count": 1,
+          "active_tab_id": "w1:t1",
+          "agent_status": "unknown"
         }
       }
     }
   },
   "baseline": [
     {
-      "pid": 40,
+      "pid": 39,
       "uid": 13001,
       "exe": "/usr/bin/dash",
-      "birth_ticks": "380266030"
+      "birth_ticks": "380334685"
+    },
+    {
+      "pid": 43,
+      "uid": 13001,
+      "exe": "/usr/bin/dash",
+      "birth_ticks": "380334687"
     }
   ],
   "original_layout": {
-    "peer_pid": 16,
+    "peer_pid": 15,
     "peer_uid": 13001,
     "reply": {
       "id": "fixture",
@@ -81,14 +87,14 @@
   },
   "created_child_delta": [
     {
-      "pid": 47,
+      "pid": 51,
       "uid": 13001,
       "exe": "/usr/libexec/ace-native-test-bootstrap",
-      "birth_ticks": "380266034"
+      "birth_ticks": "380334691"
     }
   ],
   "exact_child": {
-    "peer_pid": 16,
+    "peer_pid": 15,
     "peer_uid": 13001,
     "reply": {
       "id": "fixture",
@@ -96,11 +102,11 @@
         "type": "pane_process_info",
         "process_info": {
           "pane_id": "w1:p2",
-          "shell_pid": 47,
-          "foreground_process_group_id": 47,
+          "shell_pid": 51,
+          "foreground_process_group_id": 51,
           "foreground_processes": [
             {
-              "pid": 47,
+              "pid": 51,
               "name": "ace-native-test",
               "argv": [
                 "/usr/libexec/ace-native-test-bootstrap",
@@ -116,7 +122,7 @@
     }
   },
   "close": {
-    "peer_pid": 16,
+    "peer_pid": 15,
     "peer_uid": 13001,
     "reply": {
       "id": "fixture",
@@ -127,14 +133,20 @@
   },
   "after_gate_close": [
     {
-      "pid": 40,
+      "pid": 39,
       "uid": 13001,
       "exe": "/usr/bin/dash",
-      "birth_ticks": "380266030"
+      "birth_ticks": "380334685"
+    },
+    {
+      "pid": 43,
+      "uid": 13001,
+      "exe": "/usr/bin/dash",
+      "birth_ticks": "380334687"
     }
   ],
   "close_container": {
-    "peer_pid": 16,
+    "peer_pid": 15,
     "peer_uid": 13001,
     "reply": {
       "id": "fixture",
@@ -143,8 +155,19 @@
       }
     }
   },
+  "closed_container_preflight": {
+    "peer_pid": 15,
+    "peer_uid": 13001,
+    "reply": {
+      "id": "fixture",
+      "error": {
+        "code": "workspace_not_found",
+        "message": "workspace w1 not found"
+      }
+    }
+  },
   "missing_container_reply": {
-    "peer_pid": 16,
+    "peer_pid": 15,
     "peer_uid": 13001,
     "reply": {
       "id": "fixture",
@@ -160,10 +183,10 @@
   },
   "lost_reply_child_delta": [
     {
-      "pid": 69,
+      "pid": 75,
       "uid": 13001,
       "exe": "/usr/libexec/ace-native-test-bootstrap",
-      "birth_ticks": "380266049"
+      "birth_ticks": "380334713"
     }
   ],
   "bootstrap_start_count": 2,

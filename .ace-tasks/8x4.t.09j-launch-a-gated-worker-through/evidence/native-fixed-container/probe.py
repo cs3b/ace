@@ -46,8 +46,12 @@ try:
  proof['server_pid']=server.pid;proof['ping']=call('ping')
  seed=call('workspace.create',{'cwd':str(home),'focus':False}) # installer-owned container, before measured launch
  wid=seed['reply']['result']['workspace']['workspace_id'];proof['installed_container']=wid
- proof['preflight']=call('layout.export',{'workspace_id':wid})
- assert proof['preflight']['reply']['result']['layout']['workspace_id']==wid
+ other=call('workspace.create',{'cwd':str(home),'focus':True})
+ other_wid=other['reply']['result']['workspace']['workspace_id']
+ assert other_wid!=wid
+ proof['active_other_container']=other_wid
+ proof['preflight']=call('workspace.get',{'workspace_id':wid})
+ assert proof['preflight']['reply']['result']['workspace']['workspace_id']==wid
  baseline=children();proof['baseline']=baseline
  command=['/usr/libexec/ace-native-test-bootstrap','mapping','ticket']
  result=call('layout.apply',{'workspace_id':wid,'focus':False,'root':{'type':'pane','cwd':str(home),'command':command}})
@@ -62,6 +66,8 @@ try:
  proof['close']=call('pane.close',{'pane_id':pane});assert select.select([handle],[],[],3)[0];os.close(handle)
  proof['after_gate_close']=wait_count(len(baseline));assert proof['after_gate_close']==baseline
  proof['close_container']=call('workspace.close',{'workspace_id':wid})
+ proof['closed_container_preflight']=call('workspace.get',{'workspace_id':wid})
+ assert 'error' in proof['closed_container_preflight']['reply']
  before_missing=children();proof['missing_container_reply']=call('layout.apply',{'workspace_id':wid,'focus':False,'root':{'type':'pane','cwd':str(home),'command':command}})
  assert 'error' in proof['missing_container_reply']['reply'];assert children()==before_missing
  proof['missing_container_child_delta']=[]
