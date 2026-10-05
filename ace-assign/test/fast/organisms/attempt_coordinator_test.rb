@@ -30,7 +30,7 @@ module Ace
         )
       end
 
-      def build_coordinator
+      def build_coordinator(identity_resolver: stub_resolver)
         Organisms::AttemptCoordinator.new(
           cache_base: @cache_dir,
           repo_root: @repo,
@@ -39,7 +39,7 @@ module Ace
             ref: "refs/ace/execution",
             checkout_root: File.join(@cache_dir, "evidence-co")
           ),
-          identity_resolver: stub_resolver,
+          identity_resolver: identity_resolver,
           lifecycle_exclusion: Molecules::LifecycleExclusion.new(root: File.join(@cache_dir, ".exclusion"))
         )
       end
@@ -127,6 +127,25 @@ module Ace
 
         # Mutable base_head captured once; candidate/journal tracked separately
         assert_nil attempt.candidate_head
+      end
+
+      def test_invalid_local_credentials_publish_no_attempt_or_execution_ref
+        resolver = Molecules::ExecutionIdentityResolver.new(adapter: "local")
+        coordinator = build_coordinator(identity_resolver: resolver)
+        assignment = create_assignment
+        Process.stub(:uid, Process.euid + 1) do
+          assert_raises(AttemptErrors::UnauthorizedIdentity) do
+            coordinator.start(assignment_id: assignment.id, step: "010", project_id: "ace")
+          end
+        end
+        Etc.stub(:getpwuid, nil) do
+          assert_raises(AttemptErrors::UnauthorizedIdentity) do
+            coordinator.start(assignment_id: assignment.id, step: "010", project_id: "ace")
+          end
+        end
+        assert_empty coordinator.store.list(assignment.id)
+        _, _, status = Open3.capture3("git", "show-ref", "--verify", "refs/ace/execution", chdir: @repo)
+        refute status.success?, "invalid identity must not publish canonical execution evidence"
       end
 
       def test_repeated_identical_start_returns_same_attempt

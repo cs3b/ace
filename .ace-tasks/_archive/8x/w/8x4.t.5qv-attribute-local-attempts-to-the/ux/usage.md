@@ -1,4 +1,4 @@
-# Local attempt account attribution — draft usage
+# Local attempt account attribution
 
 ## Developer API
 
@@ -14,4 +14,4 @@ Use the same API with no terminal login and no `USER`/`LOGNAME`. A valid OS acco
 
 Use the same API with unequal real/effective UIDs, an unresolved account, or changing credentials. Resolution raises the existing `UnauthorizedIdentity` classification before attempt publication. Supplying login/environment names cannot override the refusal. No historical attempt ownership is changed.
 
-Complete package usage documentation during task work after readiness approval.
+The maintained package reference is `ace-assign/docs/usage.md`, under attempt identity and native ownership.
