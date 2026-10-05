@@ -33,9 +33,9 @@ module Ace
 
           # Reserve lines for each package
           @packages.each_with_index do |package, index|
-            @lines[package["name"]] = index + 5  # Account for header lines
-            @package_status[package["name"]] = {status: :waiting}
-            print_package_line(package["name"])
+            @lines[package["entry_id"]] = index + 5  # Account for header lines
+            @package_status[package["entry_id"]] = {status: :waiting}
+            print_package_line(package["entry_id"])
           end
 
           # Print footer space
@@ -45,8 +45,8 @@ module Ace
         end
 
         def update_package(package, status, output = nil)
-          @package_status[package["name"]] = status
-          print_package_line(package["name"])
+          @package_status[package["entry_id"]] = status
+          print_package_line(package["entry_id"])
           update_footer
         end
 
@@ -87,7 +87,7 @@ module Ace
           print "\033[K"  # Clear line
 
           # Format package name (fixed width, no brackets)
-          pkg_name = name.ljust(25)
+          pkg_name = @packages.find { |package| package["entry_id"] == name }.fetch("name").ljust(25)
 
           case status[:status]
           when :waiting
@@ -135,6 +135,7 @@ module Ace
             line_text = "#{icon}  #{elapsed}  #{pkg_name}  #{tests_col}  #{asserts_col}  #{fail_col}"
             line_text += "  #{skipped} skip" if skipped > 0
 
+            line_text += results[:report_dir] ? "  report: #{results[:report_dir]}" : "  no saved report"
             print line_text
           end
         end

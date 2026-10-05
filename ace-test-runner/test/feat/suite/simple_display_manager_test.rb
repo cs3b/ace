@@ -7,8 +7,8 @@ require "stringio"
 class SimpleDisplayManagerTest < Minitest::Test
   def setup
     @packages = [
-      {"name" => "ace-support-core", "path" => "/path/to/ace-support-core"},
-      {"name" => "ace-bundle", "path" => "/path/to/ace-bundle"}
+      {"entry_id" => "one", "name" => "ace-support-core", "path" => "/path/to/ace-support-core"},
+      {"entry_id" => "two", "name" => "ace-bundle", "path" => "/path/to/ace-bundle"}
     ]
     @config = {
       "test_suite" => {

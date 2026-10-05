@@ -30,6 +30,10 @@ module Ace
             return
           end
 
+          package["entry_id"] ||= SecureRandom.uuid
+          evidence = Molecules::ExecutionEvidence.new(package_path: package["path"],
+            package: package["name"], entry_id: package["entry_id"])
+
           # Build command
           cmd = build_command(package, test_options)
 
@@ -45,12 +49,16 @@ module Ace
           fixture_environment.env[Models::EnvironmentPolicy::SUITE_CHANNEL_KEY] =
             @environment_policy.channel_payload
 
+          fixture_environment.env[Molecules::ExecutionEvidence::CHANNEL] = evidence.channel
+
           start_time = now
           stdin, stdout, stderr, thread = Open3.popen3(
             fixture_environment.env, *cmd, chdir: package["path"], pgroup: true, unsetenv_others: true
           )
 
-          @processes[package["name"]] = {
+          @processes[package["entry_id"]] = {
+            evidence: evidence,
+            save_reports: test_options.fetch("save_reports", true),
             package: package,
             thread: thread,
             stdout: stdout,
@@ -61,7 +69,6 @@ module Ace
             fixture_environment: fixture_environment,
             output: +"",
             stderr_output: +"",
-            report_root: test_options["report_dir"],
             test_count: 0,
             tests_run: 0,
             dots: +"",
@@ -114,9 +121,8 @@ module Ace
 
               # Final callback
               if callback
-                # Use results[:success] from summary.json if available, otherwise check exit code
-                # This ensures the package status matches what ace-test actually reported
-                success_status = (!results[:success].nil?) ? results[:success] : (exit_status == 0)
+                # Completion evidence and child outcome must both permit success.
+                success_status = results[:success] == true
 
                 callback.call(package, {
                   status: :completed,
@@ -174,11 +180,14 @@ module Ace
             rescue Timeout::Error, StandardError
               nil
             end
+          end
 
+          # Capture trustworthy partial counts and interruption outcome before cleanup.
+          check_processes
+          @processes.each_value do |process_info|
             close_streams(process_info)
             process_info[:fixture_environment]&.cleanup
           end
-
           @processes.clear
           @completed.clear
         end
@@ -213,7 +222,7 @@ module Ace
           cmd_parts << "--format" << format
 
           # Add other options
-          cmd_parts << "--no-save" unless options["save_reports"]
+          cmd_parts << "--no-save-reports" unless options.fetch("save_reports", true)
           cmd_parts << "--fail-fast" if options["fail_fast"]
           cmd_parts << "--no-color" unless options.fetch("color", true)
           if options["report_dir"]
@@ -304,98 +313,31 @@ module Ace
         end
 
         def build_results(process_info, elapsed, exit_status)
-          return timeout_results(process_info, elapsed) if process_info[:timeout_triggered]
-          return interrupted_results(elapsed) if process_info[:terminated_by] == :interrupt
-          fresh_summary = load_summary_results(process_info, elapsed)
-          return fresh_summary if exit_status == 0 && fresh_summary
-          return failed_process_results(process_info, elapsed, exit_status, fresh_summary) if exit_status != 0
-
-          parse_results(process_info[:output])
-        end
-
-        def timeout_results(process_info, elapsed)
-          {
-            tests: 0,
-            assertions: 0,
-            failures: 0,
-            errors: 1,
-            duration: elapsed,
-            success: false,
-            error: "Timed out after #{process_info[:timeout]} seconds"
-          }
-        end
-
-        def interrupted_results(elapsed)
-          {
-            tests: 0,
-            assertions: 0,
-            failures: 0,
-            errors: 1,
-            duration: elapsed,
-            success: false,
-            error: "Interrupted before completion"
-          }
-        end
-
-        def failed_process_results(process_info, elapsed, exit_status, fresh_summary)
-          return fresh_summary if fresh_summary && fresh_summary[:success] == false
-
-          parsed = parse_results([process_info[:output], process_info[:stderr_output]].join("\n"))
-          parsed[:duration] ||= elapsed
-          parsed[:success] = false
-          parsed[:error] ||= failure_message_for(process_info, exit_status)
-          parsed[:errors] = 1 if parsed[:failures].to_i == 0 && parsed[:errors].to_i == 0
-          parsed
+          snapshot = begin
+            process_info[:evidence].read(pid: process_info[:pid], save_reports: process_info[:save_reports])
+          rescue Ace::TestRunner::Error => e
+            {total: 0, passed: 0, failed: 0, errors: 1, skipped: 0, assertions: 0,
+             duration: elapsed, success: false, error: e.message}
+          end
+          results = snapshot.merge(tests: snapshot[:total], failures: snapshot[:failed],
+            execution_id: process_info[:evidence].identity, completion_path: process_info[:evidence].path)
+          reason = if process_info[:timeout_triggered]
+            "Timed out after #{process_info[:timeout]} seconds"
+          elsif process_info[:terminated_by] == :interrupt
+            "Interrupted before completion"
+          elsif exit_status != 0
+            failure_message_for(process_info, exit_status)
+          end
+          if reason
+            results[:success] = false
+            results[:error] = reason
+          end
+          results.freeze
         end
 
         def failure_message_for(process_info, exit_status)
           stderr = process_info[:stderr_output].to_s.strip
-          stdout = process_info[:output].to_s.strip
-          message = stderr.empty? ? stdout : stderr
-          return message unless message.empty?
-
-          "ace-test exited with status #{exit_status}"
-        end
-
-        def load_summary_results(process_info, elapsed)
-          package = process_info[:package]
-          reports_dir = Atoms::ReportPathResolver.report_directory(
-            package["path"],
-            report_root: process_info[:report_root],
-            package_name: package["name"]
-          )
-          summary_file = reports_dir ? File.join(reports_dir, "summary.json") : nil
-          return nil unless summary_file && File.exist?(summary_file)
-          return nil unless summary_fresh_for_run?(summary_file, process_info[:start_time])
-
-          json_data = JSON.parse(File.read(summary_file))
-          results = {
-            tests: json_data["total"] || 0,
-            assertions: json_data["assertions"] || 0,
-            failures: json_data["failed"] || 0,
-            errors: json_data["errors"] || 0,
-            skipped: json_data["skipped"] || 0,
-            duration: json_data["duration"] || elapsed,
-            success: json_data["success"] || false
-          }
-
-          if results[:assertions] == 0
-            report_file = File.join(reports_dir, "report.json")
-            if File.exist?(report_file)
-              report_data = JSON.parse(File.read(report_file))
-              results[:assertions] = report_data.dig("result", "assertions") || 0
-            end
-          end
-
-          results
-        rescue JSON::ParserError
-          nil
-        end
-
-        def summary_fresh_for_run?(summary_file, start_time)
-          File.mtime(summary_file) >= (start_time - 0.001)
-        rescue StandardError
-          false
+          stderr.empty? ? "ace-test exited with status #{exit_status.inspect}" : stderr
         end
 
         def parse_progress(process_info, chunk)
@@ -409,30 +351,6 @@ module Ace
             process_info[:test_count] = $1.to_i * 10  # Estimate tests per file
           elsif chunk =~ /(\d+) tests?,/
             process_info[:test_count] = $1.to_i
-          end
-        end
-
-        def parse_results(output)
-          # Look for summary line in output
-          if output =~ /(\d+) tests?, (\d+) assertions?, (\d+) failures?, (\d+) errors? \(([\d.]+)s\)/
-            {
-              tests: $1.to_i,
-              assertions: $2.to_i,
-              failures: $3.to_i,
-              errors: $4.to_i,
-              duration: $5.to_f,
-              success: $3.to_i == 0 && $4.to_i == 0
-            }
-          else
-            # Fallback to counting dots/F/E/S
-            dots = output.scan(/[.FES]/).join
-            {
-              tests: dots.length,
-              failures: dots.count("F"),
-              errors: dots.count("E"),
-              skipped: dots.count("S"),
-              success: !dots.include?("F") && !dots.include?("E")
-            }
           end
         end
       end

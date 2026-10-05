@@ -60,6 +60,7 @@ module Ace
           validate_configuration!
 
           start_time = Time.now
+          @execution_evidence = Molecules::ExecutionEvidence.for_invocation(Dir.pwd)
 
           # Print package context if running in different directory
           if @package_dir
@@ -82,6 +83,7 @@ module Ace
           end
 
           resolve_and_set_report_dir_context(test_files)
+          reserve_execution_report
 
           # Count total available test files (before filtering)
           total_available = count_total_test_files
@@ -161,6 +163,9 @@ module Ace
             @formatter.report_path = report_path if @formatter.respond_to?(:report_path=)
           end
 
+          # Publish completion only after all optional report files are written.
+          @execution_evidence.publish(@result, files: report.files_tested, report_dir: @execution_report_dir)
+
           # Output to stdout
           @formatter.on_finish(@result)
 
@@ -227,6 +232,7 @@ module Ace
           all_files = targets.flat_map { |t| t[:files] }
 
           resolve_and_set_report_dir_context(all_files)
+          reserve_execution_report
 
           total_available = count_total_test_files
 
@@ -296,6 +302,9 @@ module Ace
             report_path = save_reports(report)
             @formatter.report_path = report_path if @formatter.respond_to?(:report_path=)
           end
+
+          # Publish completion only after all optional report files are written.
+          @execution_evidence.publish(@result, files: report.files_tested, report_dir: @execution_report_dir)
 
           # Output to stdout
           @formatter.on_finish(@result)
@@ -459,6 +468,10 @@ module Ace
 
         def handle_no_tests
           @result = Models::TestResult.new
+          resolve_and_set_report_dir_context([])
+          reserve_execution_report
+          save_reports(@report_generator.generate(@result, [])) if @configuration.save_reports
+          @execution_evidence.publish(@result, files: [], report_dir: @execution_report_dir)
 
           message = if @configuration.filter
             "No test files found matching pattern '#{@configuration.filter}'"
@@ -467,6 +480,7 @@ module Ace
           end
 
           puts message
+          puts(@execution_report_dir ? "Details: #{@execution_report_dir}/" : "No saved report")
           0
         end
 
@@ -596,19 +610,22 @@ module Ace
           )
         end
 
+        def reserve_execution_report
+          return unless @configuration.save_reports
+
+          @report_storage = Molecules::ReportStorage.new(base_dir: @configuration.report_dir)
+          @execution_report_dir = @report_storage.reserve(@execution_evidence.identity)
+        end
+
         def save_reports(report)
-          timestamp_generator = Atoms::TimestampGenerator.new
-          storage = Molecules::ReportStorage.new(
-            base_dir: @configuration.report_dir,
-            timestamp_generator: timestamp_generator
-          )
+          storage = @report_storage
 
           # Save in appropriate format
           report_path = case @configuration.format
           when "json"
-            storage.save_report(report, format: :json)
+            storage.save_report(report, format: :json, report_dir: @execution_report_dir)
           else
-            storage.save_report(report, format: :all)
+            storage.save_report(report, format: :all, report_dir: @execution_report_dir)
           end
 
           # Always save raw output

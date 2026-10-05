@@ -221,10 +221,8 @@ module Ace
             config_data = config_loader.load(options[:config_path])
             config = config_loader.merge_with_options(config_data, options)
 
-            timestamp_generator = Atoms::TimestampGenerator.new
             storage = Molecules::ReportStorage.new(
-              base_dir: config[:defaults][:report_dir] || ".ace-local/test/reports",
-              timestamp_generator: timestamp_generator
+              base_dir: config[:defaults][:report_dir] || ".ace-local/test/reports"
             )
 
             keep = options[:cleanup_keep] || 10

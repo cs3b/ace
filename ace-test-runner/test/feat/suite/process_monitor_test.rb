@@ -21,7 +21,7 @@ module Ace
           })
 
           assert_includes command, "--run-in-single-batch"
-          assert_equal [RbConfig.ruby, "-rbundler/setup", monitor.send(:ace_test_executable), "--run-in-single-batch", "--format", "progress", "--no-save", "--fail-fast", "--no-color", "--report-dir", "/tmp/reports/sample"], command
+          assert_equal [RbConfig.ruby, "-rbundler/setup", monitor.send(:ace_test_executable), "--run-in-single-batch", "--format", "progress", "--no-save-reports", "--fail-fast", "--no-color", "--report-dir", "/tmp/reports/sample"], command
         end
 
         class FakeProcessMonitor < ProcessMonitor
@@ -75,7 +75,8 @@ module Ace
             assert slow_status[:timed_out]
             refute slow_status[:success]
             assert_equal "Timed out after 1.0 seconds", slow_status.dig(:results, :error)
-            assert fast_status[:success]
+            refute fast_status[:success]
+            assert_match(/completion evidence/, fast_status.dig(:results, :error))
           end
         end
 
@@ -93,7 +94,7 @@ module Ace
             )
 
             monitor.start_package(pkg, {}) { |_package, _status, _output| }
-            pid = monitor.processes.fetch("ace-slow")[:pid]
+            pid = monitor.processes.fetch(pkg["entry_id"])[:pid]
 
             monitor.stop_all(reason: :interrupt)
 

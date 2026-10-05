@@ -11,7 +11,9 @@ module Ace
 
         def initialize(config)
           @config = config
-          @packages = config.dig("test_suite", "packages") || []
+          @packages = (config.dig("test_suite", "packages") || []).map do |package|
+            package.merge("entry_id" => SecureRandom.uuid)
+          end
           @results = {}
           @running_processes = {}
           @completed_packages = []
@@ -59,7 +61,7 @@ module Ace
 
               if status[:completed]
                 @completed_packages << pkg
-                @results[pkg["name"]] = status
+                @results[pkg["entry_id"]] = status
               end
             end
           end
@@ -75,7 +77,7 @@ module Ace
           display_manager.show_final_results
 
           # Aggregate results
-          aggregator = ResultAggregator.new(@packages, report_root: report_root, runtime_results: @results)
+          aggregator = ResultAggregator.new(@packages, runtime_results: @results)
           summary = aggregator.aggregate
 
           display_manager.show_summary(summary)
