@@ -18,7 +18,9 @@ module Ace
       end
 
       def operation(script)
-        {"executor_uid" => Process.uid, "argv" => ["/bin/sh", "-c", script]}
+        # Complete the input protocol before producing either a valid or invalid
+        # response; early shell exit otherwise races the handler's stdin write.
+        {"executor_uid" => Process.uid, "argv" => ["/bin/sh", "-c", "cat >/dev/null; #{script}"]}
       end
 
       def test_real_handler_exact_receipt_and_closed_environment

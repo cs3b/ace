@@ -1,0 +1,20 @@
+Run options: --seed 8641
+
+# Running:
+
+.............................E....................S....................................................................................................................................................
+
+Finished in 40.134029s, 4.9584 runs/s, 17.3170 assertions/s.
+
+  1) Error:
+Ace::Lab::ProtectedServiceHandlerTest#test_receiver_owned_process_group_cleanup_stops_background_writer:
+NoMethodError: undefined method 'fetch' for nil
+    test/molecules/protected_service_handler_test.rb:42:in 'block in Ace::Lab::ProtectedServiceHandlerTest#test_receiver_owned_process_group_cleanup_stops_background_writer'
+    test/molecules/protected_service_handler_test.rb:16:in 'block in Ace::Lab::ProtectedServiceHandlerTest#with_handler'
+    /Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/3.4.0/tmpdir.rb:105:in 'Dir.mktmpdir'
+    test/molecules/protected_service_handler_test.rb:12:in 'Ace::Lab::ProtectedServiceHandlerTest#with_handler'
+    test/molecules/protected_service_handler_test.rb:39:in 'Ace::Lab::ProtectedServiceHandlerTest#test_receiver_owned_process_group_cleanup_stops_background_writer'
+
+199 runs, 695 assertions, 0 failures, 1 errors, 1 skips
+
+You have skipped tests. Run with --verbose for details.
