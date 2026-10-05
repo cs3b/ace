@@ -64,6 +64,36 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+- **ace-runtime v0.2.0**: Protected process, unit, scope and network-evidence primitives; installed enforcement remains separately gated.
+
+- **ace-hitl-contract v0.2.0**: Managed delivery envelopes, exact native reverse references and second-commander proposal contracts.
+
+- **ace-herdr v0.4.0**: Protected native control and verified retained inbox settlement with exact managed ownership.
+
+- **ace-tmux v0.19.0**: Native runtime ownership observations for attributable assignment execution.
+
+- **ace-assign v0.64.0**: Canonical service/result/inbox evidence, neutral delivery and verified parent-only abort/release/reuse; unavailable native readiness still refuses.
+
+- **ace-hitl v0.12.0**: Managed assignment delivery and confirmed-delivery proposal resolution without the legacy daemon binding.
+
+- **ace-hitl-hermes v0.2.0**: Correlated managed Telegram transport, durable ingress and proposal reconciliation.
+
+- **ace-lab v0.4.0**: Protected service policy, receiver and authority composition; incomplete full-service startup remains refused.
+
+- **ace-git v0.29.0**: Neutral repository-bound PR lifecycle and canonical PR workflow vocabulary without legacy aliases.
+
+- **ace-handbook v0.34.0**: Coherent neutral delivery workflows with explicit standalone and managed modes, current evidence and separate publication authority.
+
+- **ace-git-worktree v0.26.0**: Neutral PR workflow consumption and coordinated Herdr dependencies.
+
+- **ace-review v0.59.0**: Neutral independent PR-review workflow consumption with the coordinated Git source.
+
+- **ace-overseer v0.20.0**: Recovery/proposal status and coordinated assignment, worktree and runtime consumers.
+
+- **ace-test-runner v0.28.0**: Invocation-bound execution evidence, truthful aggregate verdicts and explicit suite configuration.
+
+- **ace-test-runner-e2e v0.43.0**: Exact source-bound release-manifest dependency declarations for installation acceptance.
+
 - **ace-test-runner-e2e v0.41.0**: Release-verification scenarios can declare a `release-manifest` setup action — the runner carries only the explicitly allowed `ACE_RELEASE_MANIFEST` host input into deterministic setup, which validates the strict schema-version-1 manifest and copies it into the sandbox before any install goal; a failed deterministic setup now aborts the scenario with an ERROR result instead of degrading to an LLM-driven sandbox.
 - **ace-review v0.56.0** (8wq.t.1qb): Cheaper review rounds and honest usage. Delta rounds (`ace-review --pr <id> --delta [head>`) scope a round to changes since a prior reviewed head with carried-forward evidence, empty and fully review-exempt deltas (`exempt_paths` config) complete as no-op sessions with zero model calls, the unwired subject chunk strategies are removed in favor of the explicit oversized-diff refusal (ADR-024), and session usage records reflect measured provider tokens instead of estimates.
 - **ace-llm v0.41.0**: Derives the top-level `usage` record from provider metadata token counts; absent counts stay absent and measured zero cache reads are preserved.
@@ -88,6 +118,8 @@ All notable changes to this project will be documented in this file.
 - **ace-llm-providers-cli v0.34.0**: Registered Codex Astra, Sol, Terra and Luna with Terra as the generic default and Luna as mini, retaining all existing explicit IDs, and derived Codex client defaults and model listings from provider configuration instead of a separate hardcoded catalog.
 
 ### Technical
+
+- Dependency-following release: **ace-demo v0.26.2** consumes the coordinated Herdr 0.4 line. The release also declares required direct dependencies and raises verified API/workflow minimums in the owning consumers.
 
 - **ace-git v0.28.1**: Verify the public PR lifecycle preserves provider uncertainty after accepted mutations.
 - **ace-support-test-helpers v0.14.7**: Verify full source-repository and base-reference provenance in shared PR lifecycle receipts.

@@ -1,15 +1,18 @@
 PATH
   remote: ace-assign
   specs:
-    ace-assign (0.63.1)
+    ace-assign (0.64.0)
       ace-b36ts (~> 0.14)
-      ace-herdr (~> 0.3.2)
+      ace-git (~> 0.29)
+      ace-herdr (~> 0.4)
       ace-llm (~> 0.39)
-      ace-review (~> 0.57)
-      ace-runtime (~> 0.1)
+      ace-llm-providers-cli (~> 0.36.1)
+      ace-review (~> 0.59)
+      ace-runtime (~> 0.2)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)
       ace-support-core (~> 0.31)
+      ace-support-fs (~> 0.3)
       ace-support-markdown (~> 0.3)
       ace-support-nav (~> 0.28)
       ace-task (~> 0.37)
@@ -48,9 +51,9 @@ PATH
 PATH
   remote: ace-demo
   specs:
-    ace-demo (0.26.1)
+    ace-demo (0.26.2)
       ace-b36ts (~> 0.14)
-      ace-herdr (~> 0.3.2)
+      ace-herdr (~> 0.4)
       ace-runtime (~> 0.1)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)
@@ -111,9 +114,9 @@ PATH
 PATH
   remote: ace-git-worktree
   specs:
-    ace-git-worktree (0.25.1)
-      ace-git (~> 0.24)
-      ace-herdr (~> 0.3.2)
+    ace-git-worktree (0.26.0)
+      ace-git (~> 0.29)
+      ace-herdr (~> 0.4)
       ace-runtime (~> 0.1)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)
@@ -124,7 +127,7 @@ PATH
 PATH
   remote: ace-git
   specs:
-    ace-git (0.28.1)
+    ace-git (0.29.0)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)
       ace-support-core (~> 0.31)
@@ -162,7 +165,7 @@ PATH
 PATH
   remote: ace-handbook
   specs:
-    ace-handbook (0.33.0)
+    ace-handbook (0.34.0)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)
       ace-support-core (~> 0.31)
@@ -171,9 +174,9 @@ PATH
 PATH
   remote: ace-herdr
   specs:
-    ace-herdr (0.3.2)
-      ace-hitl-contract (~> 0.1)
-      ace-runtime (~> 0.1)
+    ace-herdr (0.4.0)
+      ace-hitl-contract (~> 0.2)
+      ace-runtime (~> 0.2)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)
       ace-support-core (~> 0.31)
@@ -181,24 +184,25 @@ PATH
 PATH
   remote: ace-hitl-contract
   specs:
-    ace-hitl-contract (0.1.0)
+    ace-hitl-contract (0.2.0)
 
 PATH
   remote: ace-hitl-hermes
   specs:
-    ace-hitl-hermes (0.1.0)
-      ace-hitl (~> 0.11)
+    ace-hitl-hermes (0.2.0)
+      ace-hitl (~> 0.12)
+      ace-hitl-contract (~> 0.2)
       ace-support-cli (~> 0.6)
       faraday (~> 2.14)
 
 PATH
   remote: ace-hitl
   specs:
-    ace-hitl (0.11.1)
-      ace-assign (~> 0.63.1)
+    ace-hitl (0.12.0)
+      ace-assign (~> 0.64)
       ace-b36ts (~> 0.14)
-      ace-herdr (~> 0.3.2)
-      ace-hitl-contract (~> 0.1)
+      ace-herdr (~> 0.4)
+      ace-hitl-contract (~> 0.2)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)
       ace-support-core (~> 0.31)
@@ -218,8 +222,9 @@ PATH
 PATH
   remote: ace-lab
   specs:
-    ace-lab (0.3.1)
-      ace-assign (~> 0.62)
+    ace-lab (0.4.0)
+      ace-assign (~> 0.64)
+      ace-runtime (~> 0.2)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)
       ace-support-core (~> 0.31)
@@ -258,11 +263,11 @@ PATH
 PATH
   remote: ace-overseer
   specs:
-    ace-overseer (0.19.1)
-      ace-assign (~> 0.63.1)
-      ace-git (~> 0.23)
-      ace-git-worktree (~> 0.25.1)
-      ace-herdr (~> 0.3.2)
+    ace-overseer (0.20.0)
+      ace-assign (~> 0.64)
+      ace-git (~> 0.29)
+      ace-git-worktree (~> 0.26)
+      ace-herdr (~> 0.4)
       ace-runtime (~> 0.1)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)
@@ -298,24 +303,25 @@ PATH
 PATH
   remote: ace-review
   specs:
-    ace-review (0.58.1)
+    ace-review (0.59.0)
       ace-b36ts (~> 0.14)
       ace-bundle (~> 0.44)
       ace-compressor (~> 0.25)
-      ace-git (~> 0.26)
+      ace-git (~> 0.29)
       ace-git-forgejo (~> 0.4)
       ace-git-github (~> 0.3)
       ace-llm (~> 0.41)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)
       ace-support-core (~> 0.32)
+      ace-support-fs (~> 0.3)
       ace-support-nav (~> 0.28)
       ace-task (~> 0.37)
 
 PATH
   remote: ace-runtime
   specs:
-    ace-runtime (0.1.1)
+    ace-runtime (0.2.0)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)
       ace-support-core (~> 0.31)
@@ -426,7 +432,7 @@ PATH
 PATH
   remote: ace-test-runner-e2e
   specs:
-    ace-test-runner-e2e (0.42.0)
+    ace-test-runner-e2e (0.43.0)
       ace-b36ts (~> 0.14)
       ace-llm (~> 0.42)
       ace-support-cli (~> 0.6)
@@ -437,11 +443,12 @@ PATH
 PATH
   remote: ace-test-runner
   specs:
-    ace-test-runner (0.27.1)
+    ace-test-runner (0.28.0)
       ace-b36ts (~> 0.14)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)
       ace-support-core (~> 0.31)
+      ace-support-fs (~> 0.3)
       ace-support-test-helpers (~> 0.14)
       minitest (~> 5.0)
       minitest-reporters (~> 1.8)
@@ -455,8 +462,8 @@ PATH
 PATH
   remote: ace-tmux
   specs:
-    ace-tmux (0.18.0)
-      ace-runtime (~> 0.1)
+    ace-tmux (0.19.0)
+      ace-runtime (~> 0.2)
       ace-support-cli (~> 0.6)
       ace-support-config (~> 0.18)
       ace-support-core (~> 0.31)

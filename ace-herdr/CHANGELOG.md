@@ -7,11 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-05
+
 ### Fixed
 - Use the shared typed reverse-reference pair at CLI, Inbox and delivery boundaries, refusing malformed persisted targets and noncanonical serialized files before claim or native observation.
 - Pin managed delivery to the accepted original native target under the event lock and reject secret-bearing payloads even without a nested message.
 
 ### Changed
+
+- Declare the required direct dependencies and minimum producer versions for this coordinated release: `ace-hitl-contract ~> 0.2`, `ace-runtime ~> 0.2`.
 - Bind protected control to the canonical per-attempt server/socket identity while retaining the fixed native executable view selected by installation verification.
 - Validate and preserve the shared managed delivery envelope at Inbox enqueue, rejecting mismatched scope/digest/correlation and changed replay metadata.
 

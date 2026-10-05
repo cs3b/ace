@@ -7,12 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-10-05
+
 ### Added
 
 - Add an opt-in installed proposal scenario with an isolated local gem closure, real Unix and tmux owner binding, controlled sixteen-hour restart, technical refusal, and one verified service effect/receipt.
 - Resolve immutable second-commander proposals through confirmed-delivery sixteen-hour policy and canonical Assign authorization.
 
 ### Changed
+
+- Declare the required direct dependencies and minimum producer versions for this coordinated release: `ace-assign ~> 0.64`, `ace-herdr ~> 0.4`, `ace-hitl-contract ~> 0.2`.
 
 - Replace daemon/Work bindings with the managed assignment envelope and kernel-attributed exact native reverse owner. Add explicit in-process delivery/watch, authenticated pane-less wait, visible pending recovery, and existing signed Inbox reconciliation; keep native transport and business effect receipts separate.
 

@@ -47,11 +47,11 @@ Gem::Specification.new do |spec|
   spec.add_dependency "ace-support-cli", "~> 0.6"
   spec.add_dependency "ace-support-core", "~> 0.31"
   spec.add_dependency "ace-support-config", "~> 0.18"
-  spec.add_dependency "ace-git", "~> 0.24"
+  spec.add_dependency "ace-git", "~> 0.29"
   spec.add_dependency "ace-task", "~> 0.37"
   spec.add_dependency "ace-runtime", "~> 0.1"
   spec.add_dependency "ace-tmux", "~> 0.18"
-  spec.add_dependency "ace-herdr", "~> 0.3.2"
+  spec.add_dependency "ace-herdr", "~> 0.4"
 
   # Development dependencies are managed in the root Gemfile
   spec.add_development_dependency "rake"

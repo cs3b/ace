@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.64.0] - 2026-10-05
+
 ### Added
 
 - Connect fixed execution-slot parent activation to canonical sealing, exact never-native-admitted closure, guarded abort, durable reservation release and restart-safe reuse. Native service admission refuses unavailable readiness evidence; admitted and post-native positive closure and complete installer maintenance remain unfinished.
@@ -27,6 +29,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Explicit forge selection and canonical/fork provenance for remote assignment creation; local assignments reject unused delivery inputs.
 
 ### Changed
+
+- Declare the required direct dependencies and minimum producer versions for this coordinated release: `ace-git ~> 0.29`, `ace-herdr ~> 0.4`, `ace-llm-providers-cli ~> 0.36.1`, `ace-review ~> 0.59`, `ace-runtime ~> 0.2`, `ace-support-fs ~> 0.3`.
 
 - Align prepare/drive discovery and draft creation instructions with the canonical neutral PR skills and attempt-bound delivery command.
 

@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-05
+
 ### Added
 
 - Authenticate bounded root-produced network profile/report/trace artifacts with closed strict JSON schemas, exact context/check joins and held protected file descriptors. Missing or incomplete evidence refuses; effective network enforcement and immutable publication remain the domain installer’s responsibility.

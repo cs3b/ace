@@ -7,9 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.0] - 2026-10-05
+
 ### Added
 
 - Expose native session/pane/shell identity for managed assignment owner verification.
+
+### Changed
+
+- Declare the required direct dependencies and minimum producer versions for this coordinated release: `ace-runtime ~> 0.2`.
 
 ## [0.18.0] - 2026-10-02
 

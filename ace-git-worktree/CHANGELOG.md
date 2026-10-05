@@ -7,7 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.26.0] - 2026-10-05
+
 ### Changed
+
+- Declare the required direct dependencies and minimum producer versions for this coordinated release: `ace-git ~> 0.29`, `ace-herdr ~> 0.4`.
 
 - Describe cleanup preservation using selected-forge PR evidence rather than GitHub-specific evidence.
 

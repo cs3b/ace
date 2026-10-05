@@ -7,7 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.59.0] - 2026-10-05
+
 ### Changed
+
+- Declare the required direct dependencies and minimum producer versions for this coordinated release: `ace-git ~> 0.29`, `ace-support-fs ~> 0.3`.
 
 - PR review instructions retain neutral forge selection and current candidate evidence instead of identifying a PR through GitHub CLI.
 

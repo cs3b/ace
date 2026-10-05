@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.29.0] - 2026-10-05
+
 ### Removed
 
 - Remove the obsolete GitHub PR workflow and skill sources; canonical PR creation/update use only `git/pr` and `as-git-pr-*`, with no forwarding aliases.

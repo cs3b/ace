@@ -42,13 +42,14 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   # Runtime dependencies
+  spec.add_dependency "ace-support-fs", "~> 0.3"
   spec.add_dependency "ace-support-cli", "~> 0.6"
   spec.add_dependency "ace-support-config", "~> 0.18"
   spec.add_dependency "ace-b36ts", "~> 0.14"
   spec.add_dependency "ace-support-core", "~> 0.32" # For ProcessTerminator
   spec.add_dependency "ace-bundle", "~> 0.44"
   spec.add_dependency "ace-compressor", "~> 0.25"
-  spec.add_dependency "ace-git", "~> 0.26"
+  spec.add_dependency "ace-git", "~> 0.29"
   spec.add_dependency "ace-git-github", "~> 0.3"
   spec.add_dependency "ace-git-forgejo", "~> 0.4"
   # Note: ace-git-diff dependency removed in v0.26.0 - functionality migrated to ace-git

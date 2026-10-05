@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.26.2] - 2026-10-05
+
+### Changed
+
+- Declare the required direct dependencies and minimum producer versions for this coordinated release: `ace-herdr ~> 0.4`.
+
 ## [0.26.1] - 2026-10-04
 
 ### Changed

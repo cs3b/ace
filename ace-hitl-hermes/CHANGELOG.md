@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-05
+
 ### Added
 
 - Resolve immutable second-commander proposals through confirmed-delivery sixteen-hour policy and canonical Assign authorization.
@@ -15,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Supervised single polling actor with gateway ownership checks and recovery without duplicate lifecycle effects.
 
 ### Changed
+
+- Declare the required direct dependencies and minimum producer versions for this coordinated release: `ace-hitl ~> 0.12`, `ace-hitl-contract ~> 0.2`.
 
 - Consume the shared managed binding envelope and publish newly created authenticated pending requests through explicitly registered project channels in the existing single Telegram polling actor.
 - Ordinary answer folder publication requires authenticated request classification; OTP and sensitive answers are refused before any file creation.

@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.0] - 2026-10-05
+
 ### Fixed
 
 - Honor explicit `ace-test-suite --config FILE` without merging the default cascade, and refuse unreadable or malformed selected files. Default namespace discovery remains unchanged.
@@ -14,6 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bind suite verdicts, counts and report links to each exact child invocation; preserve duplicate entries and no-save completion evidence during concurrent runs.
 
 - Preserve unsuccessful execution through target aggregation and saved/CLI verdicts even after passing partial output; distinguish operator interruption from completed test errors.
+
+### Changed
+
+- Declare the required direct dependencies and minimum producer versions for this coordinated release: `ace-support-fs ~> 0.3`.
 
 ## [0.27.1] - 2026-09-29
 
