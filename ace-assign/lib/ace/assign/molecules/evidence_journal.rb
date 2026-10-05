@@ -5,6 +5,7 @@ require "digest"
 require "fileutils"
 require "json"
 require "open3"
+require_relative "journal_mutation"
 
 module Ace
   module Assign
@@ -25,6 +26,7 @@ module Ace
       # reloads the authoritative ref and replays only still-valid,
       # non-duplicate events.
       class EvidenceJournal
+        include JournalMutation
         CAS_ATTEMPTS = 3
 
         # @param repo_root [String] Git repository root holding the evidence ref
@@ -117,8 +119,8 @@ module Ace
         #
         # @param assignment_id [String] Assignment ID
         # @return [Array<Hash>] Parsed events in journal order
-        def read_events(assignment_id)
-          value = ref_value
+        def read_events(assignment_id, commit: ref_value)
+          value = commit
           return [] if value.nil?
 
           paths, stderr, status = git("ls-tree", "-r", "--name-only", value, "--",
@@ -473,9 +475,11 @@ input:#{Regexp.escape(current["input_digest"])} outcome:(\S+)( no-effect:(\S+))?
         def derive_state(events)
           return nil unless events.any? { |event| event["type"] == "intent" }
 
-          state = "running"
+          state = "reserved"
           events.each do |event|
             case event["type"]
+            when "process_start"
+              state = "running"
             when "receipt_accepted"
               state = event.dig("payload", "receipt", "verdict") || state
             when "transition"
@@ -506,9 +510,9 @@ input:#{Regexp.escape(current["input_digest"])} outcome:(\S+)( no-effect:(\S+))?
             scope: intent_payload["scope"],
             project_id: intent_payload["project_id"],
             task_id: intent_payload["task_id"],
-            actor: process_start&.dig("payload", "actor") || "recovered",
-            role: process_start&.dig("payload", "role") || "coordinator",
-            runtime: process_start&.dig("payload", "runtime") || "recovered",
+            actor: process_start&.dig("payload", "actor") || intent_payload["actor"] || "recovered",
+            role: process_start&.dig("payload", "role") || intent_payload["role"] || "coordinator",
+            runtime: process_start&.dig("payload", "runtime") || intent_payload["runtime"] || "recovered",
             base_head: intent_payload["base_head"],
             evidence_git_ref: ref,
             created_at: parse_event_time(intent_time(events, attempt_id))

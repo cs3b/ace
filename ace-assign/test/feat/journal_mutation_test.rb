@@ -1,0 +1,159 @@
+# frozen_string_literal: true
+
+require_relative "../test_helper"
+require "open3"
+require "fileutils"
+
+module Ace
+  module Assign
+    class JournalMutationTest < AceAssignTestCase
+      def with_journal
+        with_temp_cache do |root|
+          repo = File.join(root, "repo")
+          FileUtils.mkdir_p(repo)
+          git(repo, "init", "-b", "main")
+          git(repo, "-c", "user.name=test", "-c", "user.email=test@localhost",
+            "commit", "--allow-empty", "-m", "candidate")
+          journal = Molecules::EvidenceJournal.new(repo_root: repo, checkout_root: File.join(root, "checkout"))
+          yield journal, repo
+        end
+      end
+
+      def git(repo, *args)
+        output, error, status = Open3.capture3("git", *args, chdir: repo, stdin_data: "")
+        assert status.success?, error
+        output.strip
+      end
+
+      def mutate(journal, id: "mutation-1", digest: "a" * 64, expected: 0, &block)
+        journal.mutate(assignment_id: "assignment-1", attempt_id: "attempt-1", mutation_id: id,
+          operation: "fixture", parameters_digest: digest, expected_generation: expected, &block)
+      end
+
+      def plan(content = "artifact\n")
+        {events: [{type: "evidence_import", payload: {"sha256" => Digest::SHA256.hexdigest(content)}}],
+         blobs: {"evidence/imports/fixture-1" => content}, data: {"evidence_id" => "fixture-1"}}
+      end
+
+      def test_import_bytes_provenance_and_mutation_reply_commit_together
+        with_journal do |journal, repo|
+          candidate = git(repo, "rev-parse", "HEAD")
+          reply = mutate(journal) { plan("binary\x00\n\n".b) }
+          assert_equal 1, reply["generation"]
+          assert_equal reply["journal_commit"], journal.ref_value
+          assert_equal "binary\x00\n\n".b, journal.blob("evidence/imports/fixture-1")
+          assert_equal %w[evidence_import authority_mutation], journal.read_events("assignment-1").map { |e| e["type"] }
+          assert_equal candidate, git(repo, "rev-parse", "HEAD")
+          FileUtils.rm_rf(journal.checkout_root)
+          assert_equal "binary\x00\n\n".b, journal.blob("evidence/imports/fixture-1")
+          assert_equal reply, mutate(journal) { flunk "exact replay must not execute mutation" }
+        end
+      end
+
+      def test_original_reply_commit_survives_later_mutations_and_changed_input_refuses
+        with_journal do |journal, _repo|
+          first = mutate(journal) { plan }
+          second = mutate(journal, id: "mutation-2", expected: 1) { {events: [], data: {"later" => true}} }
+          refute_equal first["journal_commit"], second["journal_commit"]
+          assert_equal first, mutate(journal) { flunk "replayed callback" }
+          assert_raises(AttemptErrors::Conflict) { mutate(journal, digest: "b" * 64) { plan } }
+          assert_raises(AttemptErrors::Conflict) { mutate(journal, id: "mutation-3", expected: 1) { plan } }
+          assert_equal second["journal_commit"], journal.ref_value
+        end
+      end
+
+      def test_refused_transaction_does_not_admit_artifacts_or_reply
+        with_journal do |journal, _repo|
+          assert_raises(AttemptErrors::ReceiptRejected) do
+            mutate(journal) { raise AttemptErrors::ReceiptRejected, "invalid evidence" }
+          end
+          assert_nil journal.mutation_result("mutation-1")
+          assert_empty journal.read_events("assignment-1")
+          assert_raises(AttemptErrors::EvidenceUnavailable) { journal.blob("evidence/imports/fixture-1") }
+        end
+      end
+
+      def test_immutable_import_paths_and_traversal_are_rejected
+        with_journal do |journal, _repo|
+          first = mutate(journal) { plan }
+          assert_raises(AttemptErrors::Conflict) do
+            mutate(journal, id: "mutation-2", expected: 1) { plan("replacement") }
+          end
+          assert_equal first["journal_commit"], journal.ref_value
+          assert_raises(ArgumentError) { journal.blob("evidence/imports/../../escape") }
+          assert_raises(ArgumentError) do
+            mutate(journal, id: "mutation-3", expected: 1) do
+              {events: [], data: {}, blobs: {"../escape" => "bad"}}
+            end
+          end
+          assert_equal first["journal_commit"], journal.ref_value
+        end
+      end
+
+      def canonical_import(journal)
+        intent = Models::EvidenceEvent.build(type: "intent", attempt_id: "attempt-1",
+          payload: {"scope" => "010", "project_id" => "fixture", "actor" => "worker",
+                    "role" => "worker", "runtime" => "herdr:fixture"})
+        journal.append(assignment_id: "assignment-1", attempt_id: "attempt-1", events: [intent])
+        verifier = Molecules::CanonicalEvidence.new(journal: journal)
+        binding = {"request_id" => "request-1", "claim_binding" => "a" * 64}
+        params = {kind: "service", project_id: "fixture", assignment_id: "assignment-1",
+                  attempt_id: "attempt-1", peer_uid: Process.uid, binding: binding,
+                  request_id_or_event_id: "request-1", generation: 1}
+        content = "ace-service-attestation request:request-1 input:#{'a' * 64} outcome:succeeded\n"
+        reply = mutate(journal) do |current, _commit, _generation|
+          imported = verifier.import_plan(**params, admitted_after_event_digest: current.last.fetch("digest"),
+            artifacts: [content])
+          {events: imported.fetch(:events), blobs: imported.fetch(:blobs),
+           data: {"evidence" => imported.fetch(:references)}}
+        end
+        [verifier, params, reply.fetch("evidence").first, content]
+      end
+
+      def test_canonical_import_verifies_exact_peer_binding_and_ignores_projections
+        with_journal do |journal, _repo|
+          verifier, params, reference, content = canonical_import(journal)
+          assert_equal content, verifier.read(reference, **params)
+          File.write(File.join(journal.checkout_root, "journal", reference.fetch("ref")), "forged projection")
+          assert_equal content, verifier.read(reference, **params)
+          %i[peer_uid generation project_id request_id_or_event_id binding].each do |key|
+            altered = case key
+            when :peer_uid, :generation then params[key] + 1
+            when :binding then params[key].merge("claim_binding" => "b" * 64)
+            else "other"
+            end
+            assert_raises(AttemptErrors::EvidenceUnavailable) do
+              verifier.read(reference, **params.merge(key => altered))
+            end
+          end
+          FileUtils.rm_rf(journal.checkout_root)
+          assert_equal content, verifier.read(reference, **params)
+        end
+      end
+
+      def test_canonical_blob_corruption_refuses_instead_of_trusting_cached_evidence
+        with_journal do |journal, repo|
+          verifier, params, reference, _content = canonical_import(journal)
+          path = File.join(journal.checkout_root, "journal")
+          File.write(File.join(path, reference.fetch("ref")), "changed canonical bytes")
+          git(path, "add", "--", reference.fetch("ref"))
+          git(path, "-c", "user.name=test", "-c", "user.email=test@localhost", "commit", "-m", "corrupt blob")
+          git(repo, "update-ref", journal.ref, git(path, "rev-parse", "HEAD"))
+          assert_raises(AttemptErrors::EvidenceUnavailable) { verifier.read(reference, **params) }
+        end
+      end
+
+      def test_intent_without_bound_process_remains_reserved_with_original_actor
+        with_journal do |journal, _repo|
+          canonical_import(journal)
+          attempt = journal.derived_attempts("assignment-1").first
+          assert_equal "reserved", attempt.state
+          assert_equal "worker", attempt.binding.actor
+          assert_equal "worker", attempt.binding.role
+          assert_equal "herdr:fixture", attempt.binding.runtime
+          assert_nil journal.read_events("assignment-1").find { |event| event["type"] == "process_start" }
+        end
+      end
+    end
+  end
+end

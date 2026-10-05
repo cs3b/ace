@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Atomic execution-ref mutation/import primitives with exact reply replay and canonical artifact binding/provenance verification. Intent-only attempts remain reserved until a real process-start fact.
 - Resume from accepted attempt history without relaunch/replay; consume signed inbox observations in the existing journal and preserve unknown owner/effect state.
 
 - Attempt-bound, provider-neutral delivery records draft creation, update and readiness in the existing evidence journal; lost responses reconcile exact remote identity without repeating writes. Readiness consumes accepted current test and independent review evidence, and merge consumes the existing authorized service receipt.
