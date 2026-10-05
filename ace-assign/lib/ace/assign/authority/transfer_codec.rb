@@ -14,7 +14,8 @@ module Ace
       class TransferCodec
         LIMITS = {candidate: [64 * 1024 * 1024, 1, 64 * 1024 * 1024],
                   artifacts: [256 * 1024, 16, 64 * 1024],
-                  receipt_artifacts: [272 * 1024, 17, 64 * 1024]}.freeze
+                  receipt_artifacts: [272 * 1024, 17, 64 * 1024],
+                  service_input: [64 * 1024, 1, 64 * 1024]}.freeze
         SHA256 = /\A[0-9a-f]{64}\z/
 
         class Input
@@ -111,7 +112,7 @@ module Ace
                 part["bytes"].is_a?(Integer) && part["bytes"].between?(0, each) &&
                 part["sha256"].is_a?(String) && part["sha256"].match?(SHA256) } &&
               descriptor["bytes"] == descriptor["parts"].sum { |part| part["bytes"] } &&
-              (purpose != :candidate || descriptor["bytes"].positive?)
+              (!%i[candidate service_input].include?(purpose) || descriptor["bytes"].positive?)
             reject!("Invalid or oversized transfer descriptor")
           end
           if purpose == :receipt_artifacts

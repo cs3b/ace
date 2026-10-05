@@ -123,6 +123,16 @@ module Ace
         end
       end
 
+      def test_service_input_is_exactly_one_nonempty_bounded_source_part
+        with_codec do |codec, root|
+          assert_equal 64 * 1024, codec.descriptor(["i" * (64 * 1024)], purpose: :service_input).fetch("bytes")
+          assert_raises(AttemptErrors::ReceiptRejected) { codec.descriptor(["i" * (64 * 1024 + 1)], purpose: :service_input) }
+          assert_raises(AttemptErrors::ReceiptRejected) { codec.descriptor(["one", "two"], purpose: :service_input) }
+          assert_raises(AttemptErrors::ReceiptRejected) { codec.descriptor([""], purpose: :service_input) }
+          assert_empty Dir.children(root)
+        end
+      end
+
       def test_export_uses_exact_binary_bytes_and_refuses_mismatched_descriptor
         with_codec do |codec, _root|
           parts = ["first\x00".b, "second\n".b]
