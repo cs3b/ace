@@ -1,0 +1,43 @@
+Started with run options --seed 23123
+
+Ace::Assign::AtomicServiceMutationTest
+  test_status_projects_current_owner_generation_for_begin_without_changing_original_replay PASS (6.41s)
+  test_deleted_import_cannot_be_replaced_by_workspace_evidence_on_terminal_read PASS (1.75s)
+  test_executor_status_refuses_absent_and_revoked_current_visibility PASS (1.89s)
+  test_retained_request_refuses_live_same_uid_sibling_of_recorded_native_worker PASS (1.44s)
+  test_authorization_read_revalidates_body_and_policy_without_mutation_or_permissionERROR (1.70s)
+Minitest::UnexpectedError:         NoMethodError: undefined method 'scope_open_for_effect!' for #<Object:0x0000000124b24948>
+            lib/ace/assign/authority/endcap_services.rb:150:in 'block in Ace::Assign::Authority::Endcap#service_authorization'
+            test/feat/endcap_service_replay_test.rb:28:in 'block (2 levels) in with_review_replay'
+            lib/ace/assign/authority/endcap_services.rb:141:in 'Ace::Assign::Authority::Endcap#service_authorization'
+            lib/ace/assign/authority/endcap_services.rb:170:in 'Ace::Assign::Authority::Endcap#dispatch_service'
+            lib/ace/assign/authority/endcap.rb:74:in 'Ace::Assign::Authority::Endcap#dispatch'
+            test/feat/endcap_service_replay_test.rb:65:in 'block (2 levels) in Ace::Assign::AtomicServiceMutationTest#test_authorization_read_revalidates_body_and_policy_without_mutation_or_permission'
+            <internal:numeric>:257:in 'Integer#times'
+            test/feat/endcap_service_replay_test.rb:64:in 'block in Ace::Assign::AtomicServiceMutationTest#test_authorization_read_revalidates_body_and_policy_without_mutation_or_permission'
+            test/feat/endcap_service_replay_test.rb:40:in 'block in Ace::Assign::AtomicServiceMutationTest#with_review_replay'
+            test/feat/atomic_service_mutation_test.rb:41:in 'block in Ace::Assign::AtomicServiceMutationTest#fixture'
+            test/test_helper.rb:36:in 'AceAssignTestCase#with_temp_cache'
+            test/feat/atomic_service_mutation_test.rb:19:in 'Ace::Assign::AtomicServiceMutationTest#fixture'
+            test/feat/endcap_service_replay_test.rb:9:in 'Ace::Assign::AtomicServiceMutationTest#with_review_replay'
+            test/feat/endcap_service_replay_test.rb:45:in 'Ace::Assign::AtomicServiceMutationTest#test_authorization_read_revalidates_body_and_policy_without_mutation_or_permission'
+
+  test_interleaved_completion_records_truth_without_revoked_or_absent_status_grants PASS (9.84s)
+  test_review_conflicting_mutation_id_is_rejected_on_request_replay PASS (1.87s)
+  test_raw_blob_plan_cannot_bypass_service_owner_and_cross_attempt_update_is_refused PASS (1.53s)
+  test_ephemeral_original_input_is_bounded_immutable_and_never_persisted PASS (2.74s)
+  test_new_mutation_for_exact_existing_request_retains_truth_without_another_claim PASS (3.67s)
+  test_rejected_staging_cannot_leak_into_later_append             PASS (2.27s)
+  test_pending_import_record_event_and_reply_share_one_commit_with_exact_bytes PASS (3.13s)
+  test_exact_claim_replay_keeps_original_acceptance_metadata_beside_current_terminal_truth PASS (4.16s)
+  test_completion_plan_imports_exact_executor_truth_without_new_origin_permission PASS (7.32s)
+  test_record_projection_corruption_cannot_claim_canonical_terminal_truth PASS (1.81s)
+  test_review_exact_request_replay_keeps_acceptance_metadata      PASS (2.59s)
+  test_completion_cas_loss_revalidates_exact_executor_before_importing_any_bytes PASS (6.69s)
+  test_completion_generation_mode_cannot_bypass_other_mutation_admission PASS (3.43s)
+  test_lower_protected_fresh_write_without_original_input_refuses_before_policy_or_origin PASS (1.25s)
+  test_repeated_dispatch_plan_only_reports_retained_state_without_fresh_permission PASS (3.44s)
+  test_lost_cas_rechecks_owner_policy_before_any_partial_acceptance PASS (2.13s)
+
+Finished in 71.05568s
+21 tests, 211 assertions, 0 failures, 1 errors, 0 skips

@@ -1,0 +1,454 @@
+[
+  {
+    "file": "test/feat/assignment_recovery_test.rb",
+    "original_product": "580248fda",
+    "original_receipt": "ab606734-7f95-49f8-af5c-705a84bfebe2",
+    "original_file_blob": "5b466fa113a9aaa20068464de503dd7b782035e7",
+    "final_file_blob": "5b466fa113a9aaa20068464de503dd7b782035e7",
+    "final_coverage": "original executed file unchanged",
+    "original_execution": {
+      "tests": 11,
+      "assertions": 135,
+      "failures": 0,
+      "errors": 0,
+      "skips": 0
+    },
+    "original_status": "PASS"
+  },
+  {
+    "file": "test/feat/atomic_service_mutation_test.rb",
+    "original_product": "580248fda",
+    "original_receipt": "ab606734-7f95-49f8-af5c-705a84bfebe2",
+    "original_file_blob": "c70fc412bf0323252b47c99fc913d496b4659bcd",
+    "final_file_blob": "c70fc412bf0323252b47c99fc913d496b4659bcd",
+    "final_coverage": "original executed file unchanged",
+    "original_execution": {
+      "tests": 10,
+      "assertions": 131,
+      "failures": 0,
+      "errors": 0,
+      "skips": 0
+    },
+    "original_status": "PASS"
+  },
+  {
+    "file": "test/feat/authority/deployment_test.rb",
+    "original_product": "580248fda",
+    "original_receipt": "ab606734-7f95-49f8-af5c-705a84bfebe2",
+    "original_file_blob": "6f5a1ee25a550c5aeadcb37219b3651d78f152d4",
+    "final_file_blob": "6f5a1ee25a550c5aeadcb37219b3651d78f152d4",
+    "final_coverage": "original executed file unchanged",
+    "original_execution": {
+      "tests": 11,
+      "assertions": 48,
+      "failures": 0,
+      "errors": 0,
+      "skips": 0
+    },
+    "original_status": "PASS"
+  },
+  {
+    "file": "test/feat/authority/launch_lifecycle_test.rb",
+    "original_product": "580248fda",
+    "original_receipt": "ab606734-7f95-49f8-af5c-705a84bfebe2",
+    "original_file_blob": "b704f665ae1bcdbf0f5809e383a20033da442eeb",
+    "final_file_blob": "b704f665ae1bcdbf0f5809e383a20033da442eeb",
+    "final_coverage": "original executed file unchanged",
+    "original_execution": {
+      "tests": 21,
+      "assertions": 163,
+      "failures": 0,
+      "errors": 0,
+      "skips": 0
+    },
+    "original_status": "PASS"
+  },
+  {
+    "file": "test/feat/authority/launch_scope_admission_test.rb",
+    "original_product": "580248fda",
+    "original_receipt": "ab606734-7f95-49f8-af5c-705a84bfebe2",
+    "original_file_blob": "0caf0f488478181528467e2f74f5dd564076aa1b",
+    "final_file_blob": "0caf0f488478181528467e2f74f5dd564076aa1b",
+    "final_coverage": "original executed file unchanged",
+    "original_execution": {
+      "tests": 10,
+      "assertions": 84,
+      "failures": 0,
+      "errors": 0,
+      "skips": 0
+    },
+    "original_status": "PASS"
+  },
+  {
+    "file": "test/feat/authority/launch_scope_parent_cap_test.rb",
+    "original_product": "580248fda",
+    "original_receipt": "ab606734-7f95-49f8-af5c-705a84bfebe2",
+    "original_file_blob": "44cef4cbc099758c60704b7d8628cf6b4a369fea",
+    "final_file_blob": "44cef4cbc099758c60704b7d8628cf6b4a369fea",
+    "final_coverage": "original executed file unchanged",
+    "original_execution": {
+      "tests": 1,
+      "assertions": 19,
+      "failures": 0,
+      "errors": 0,
+      "skips": 0
+    },
+    "original_status": "PASS"
+  },
+  {
+    "file": "test/feat/authority/posix_acl_test.rb",
+    "original_product": "580248fda",
+    "original_receipt": "ab606734-7f95-49f8-af5c-705a84bfebe2",
+    "original_file_blob": "b7490d79629da123b59800cbd45af648a3e33c6e",
+    "final_file_blob": "b7490d79629da123b59800cbd45af648a3e33c6e",
+    "final_coverage": "original executed file unchanged",
+    "original_execution": {
+      "tests": 15,
+      "assertions": 65,
+      "failures": 0,
+      "errors": 0,
+      "skips": 0
+    },
+    "original_status": "PASS"
+  },
+  {
+    "file": "test/feat/authority/public_launch_test.rb",
+    "original_product": "580248fda",
+    "original_receipt": "ab606734-7f95-49f8-af5c-705a84bfebe2",
+    "original_file_blob": "6791441dd2534195e177ba251b68d7d4b84654a7",
+    "final_file_blob": "6791441dd2534195e177ba251b68d7d4b84654a7",
+    "final_coverage": "original executed file unchanged",
+    "original_execution": {
+      "tests": 2,
+      "assertions": 14,
+      "failures": 0,
+      "errors": 0,
+      "skips": 0
+    },
+    "original_status": "PASS"
+  },
+  {
+    "file": "test/feat/authority/receiver_mapping_test.rb",
+    "original_product": "580248fda",
+    "original_receipt": "ab606734-7f95-49f8-af5c-705a84bfebe2",
+    "original_file_blob": "6e8f1d6fd306806b834473cee3f7a796b0894a5e",
+    "final_file_blob": "6e8f1d6fd306806b834473cee3f7a796b0894a5e",
+    "final_coverage": "original executed file unchanged",
+    "original_execution": {
+      "tests": 18,
+      "assertions": 85,
+      "failures": 0,
+      "errors": 0,
+      "skips": 0
+    },
+    "original_status": "PASS"
+  },
+  {
+    "file": "test/feat/authority/server_test.rb",
+    "original_product": "580248fda",
+    "original_receipt": "ab606734-7f95-49f8-af5c-705a84bfebe2",
+    "original_file_blob": "f85e3132847b1cbdf8440010da04d6a71f4631f3",
+    "final_file_blob": "f85e3132847b1cbdf8440010da04d6a71f4631f3",
+    "final_coverage": "original executed file unchanged",
+    "original_execution": {
+      "tests": 1,
+      "assertions": 5,
+      "failures": 0,
+      "errors": 0,
+      "skips": 0
+    },
+    "original_status": "PASS"
+  },
+  {
+    "file": "test/feat/authority/transfer_server_test.rb",
+    "original_product": "580248fda",
+    "original_receipt": "ab606734-7f95-49f8-af5c-705a84bfebe2",
+    "original_file_blob": "8d711281be9ca1d883c7d15ce4d4d5bbf645271e",
+    "final_file_blob": "8d711281be9ca1d883c7d15ce4d4d5bbf645271e",
+    "final_coverage": "original executed file unchanged",
+    "original_execution": {
+      "tests": 5,
+      "assertions": 29,
+      "failures": 0,
+      "errors": 0,
+      "skips": 0
+    },
+    "original_status": "PASS"
+  },
+  {
+    "file": "test/feat/campaign_receipt_test.rb",
+    "original_product": "580248fda",
+    "original_receipt": "ab606734-7f95-49f8-af5c-705a84bfebe2",
+    "original_file_blob": "f9dc8d878a72f4aef6236310a239f29312a81367",
+    "final_file_blob": "f9dc8d878a72f4aef6236310a239f29312a81367",
+    "final_coverage": "original executed file unchanged",
+    "original_execution": {
+      "tests": 10,
+      "assertions": 67,
+      "failures": 0,
+      "errors": 0,
+      "skips": 0
+    },
+    "original_status": "PASS"
+  },
+  {
+    "file": "test/feat/candidate_transfer_test.rb",
+    "original_product": "580248fda",
+    "original_receipt": "ab606734-7f95-49f8-af5c-705a84bfebe2",
+    "original_file_blob": "7b5804b162d86d48d1924afad0e7999f51eda41d",
+    "final_file_blob": "7b5804b162d86d48d1924afad0e7999f51eda41d",
+    "final_coverage": "original executed file unchanged",
+    "original_execution": {
+      "tests": 8,
+      "assertions": 102,
+      "failures": 0,
+      "errors": 0,
+      "skips": 0
+    },
+    "original_status": "PASS"
+  },
+  {
+    "file": "test/feat/canonical_receipt_reader_test.rb",
+    "original_product": "580248fda",
+    "original_receipt": "ab606734-7f95-49f8-af5c-705a84bfebe2",
+    "original_file_blob": "504255754bf3317a154a7f5ba6128b2463f6aeb3",
+    "final_file_blob": "504255754bf3317a154a7f5ba6128b2463f6aeb3",
+    "final_coverage": "original executed file unchanged",
+    "original_execution": {
+      "tests": 3,
+      "assertions": 17,
+      "failures": 0,
+      "errors": 0,
+      "skips": 0
+    },
+    "original_status": "PASS"
+  },
+  {
+    "file": "test/feat/cli_contract_test.rb",
+    "original_product": "580248fda",
+    "original_receipt": "ab606734-7f95-49f8-af5c-705a84bfebe2",
+    "original_file_blob": "9b8fb27c15413c26f8178be3aa1e08911ae8c6e2",
+    "final_file_blob": "9b8fb27c15413c26f8178be3aa1e08911ae8c6e2",
+    "final_coverage": "original executed file unchanged",
+    "original_execution": {
+      "tests": 2,
+      "assertions": 67,
+      "failures": 0,
+      "errors": 0,
+      "skips": 0
+    },
+    "original_status": "PASS"
+  },
+  {
+    "file": "test/feat/completion_generation_test.rb",
+    "original_product": "580248fda",
+    "original_receipt": "ab606734-7f95-49f8-af5c-705a84bfebe2",
+    "original_file_blob": "e526ff09ae37b0c7b9aef371258184c8ee4e9651",
+    "final_file_blob": "e526ff09ae37b0c7b9aef371258184c8ee4e9651",
+    "final_coverage": "composed corrected3file draft + exact failedcase replacement, independently APPROVED",
+    "original_execution": {
+      "tests": 21,
+      "assertions": 211,
+      "failures": 0,
+      "errors": 1,
+      "skips": 0
+    },
+    "original_status": "FAIL",
+    "replacement_receipts": [
+      "6fa4e350-93fd-4b4c-8189-9271614c7f95",
+      "f19067b6-2d43-412e-8170-08ff3ea955a5",
+      "94a2e723-cf00-498a-a95b-dcf509257f2c",
+      "e212c317-ed1f-4719-8141-aa0171d4e119"
+    ]
+  },
+  {
+    "file": "test/feat/delivery_coordinator_test.rb",
+    "original_product": "580248fda",
+    "original_receipt": "ab606734-7f95-49f8-af5c-705a84bfebe2",
+    "original_file_blob": "0e24862a92afbc161dbd934bb86cf5a3b01cbb91",
+    "final_file_blob": "0e24862a92afbc161dbd934bb86cf5a3b01cbb91",
+    "final_coverage": "original executed file unchanged",
+    "original_execution": {
+      "tests": 18,
+      "assertions": 323,
+      "failures": 0,
+      "errors": 0,
+      "skips": 0
+    },
+    "original_status": "PASS"
+  },
+  {
+    "file": "test/feat/endcap_inboxes_test.rb",
+    "original_product": "580248fda",
+    "original_receipt": "ab606734-7f95-49f8-af5c-705a84bfebe2",
+    "original_file_blob": "6ef1bcaea95f9e1568856477ab0c59a67f8ef193",
+    "final_file_blob": "6ef1bcaea95f9e1568856477ab0c59a67f8ef193",
+    "final_coverage": "original executed file unchanged",
+    "original_execution": {
+      "tests": 11,
+      "assertions": 68,
+      "failures": 0,
+      "errors": 0,
+      "skips": 0
+    },
+    "original_status": "PASS"
+  },
+  {
+    "file": "test/feat/endcap_results_test.rb",
+    "original_product": "580248fda",
+    "original_receipt": "ab606734-7f95-49f8-af5c-705a84bfebe2",
+    "original_file_blob": "3776f7c68836725f6d2baa8c6575e7a306ee11f3",
+    "final_file_blob": "3925b635fd1e6d36f9cd820df55b1bf40e63148d",
+    "final_coverage": "composed corrected3file draft + exact failedcase replacement, independently APPROVED",
+    "original_execution": {
+      "tests": 13,
+      "assertions": 39,
+      "failures": 0,
+      "errors": 13,
+      "skips": 0
+    },
+    "original_status": "FAIL",
+    "replacement_receipts": [
+      "6fa4e350-93fd-4b4c-8189-9271614c7f95",
+      "f19067b6-2d43-412e-8170-08ff3ea955a5",
+      "94a2e723-cf00-498a-a95b-dcf509257f2c",
+      "e212c317-ed1f-4719-8141-aa0171d4e119"
+    ]
+  },
+  {
+    "file": "test/feat/endcap_review_plan_test.rb",
+    "original_product": "580248fda",
+    "original_receipt": "ab606734-7f95-49f8-af5c-705a84bfebe2",
+    "original_file_blob": "58d3c2a4ad3b67f0398cc9dd5a319ed99b5b891c",
+    "final_file_blob": "58d3c2a4ad3b67f0398cc9dd5a319ed99b5b891c",
+    "final_coverage": "original executed file unchanged",
+    "original_execution": {
+      "tests": 3,
+      "assertions": 33,
+      "failures": 0,
+      "errors": 0,
+      "skips": 0
+    },
+    "original_status": "PASS"
+  },
+  {
+    "file": "test/feat/endcap_service_replay_test.rb",
+    "original_product": "580248fda",
+    "original_receipt": "ab606734-7f95-49f8-af5c-705a84bfebe2",
+    "original_file_blob": "8b9be6c7b994f6b6014b87abeb53179b770014fa",
+    "final_file_blob": "53dbfa53fcc4efd3f46afb4647c86041f322309f",
+    "final_coverage": "composed corrected3file draft + exact failedcase replacement, independently APPROVED",
+    "original_execution": {
+      "tests": 18,
+      "assertions": 182,
+      "failures": 0,
+      "errors": 1,
+      "skips": 0
+    },
+    "original_status": "FAIL",
+    "replacement_receipts": [
+      "6fa4e350-93fd-4b4c-8189-9271614c7f95",
+      "f19067b6-2d43-412e-8170-08ff3ea955a5",
+      "94a2e723-cf00-498a-a95b-dcf509257f2c",
+      "e212c317-ed1f-4719-8141-aa0171d4e119"
+    ]
+  },
+  {
+    "file": "test/feat/evidence_transfer_test.rb",
+    "original_product": "580248fda",
+    "original_receipt": "ab606734-7f95-49f8-af5c-705a84bfebe2",
+    "original_file_blob": "0577598f2ac458b460dee63094bc97cee3004242",
+    "final_file_blob": "0577598f2ac458b460dee63094bc97cee3004242",
+    "final_coverage": "original executed file unchanged",
+    "original_execution": {
+      "tests": 5,
+      "assertions": 20,
+      "failures": 0,
+      "errors": 0,
+      "skips": 0
+    },
+    "original_status": "PASS"
+  },
+  {
+    "file": "test/feat/journal_mutation_test.rb",
+    "original_product": "580248fda",
+    "original_receipt": "ab606734-7f95-49f8-af5c-705a84bfebe2",
+    "original_file_blob": "d6b3f2b8fbb78bfcff151d0f44e1875e2a17fafc",
+    "final_file_blob": "d6b3f2b8fbb78bfcff151d0f44e1875e2a17fafc",
+    "final_coverage": "original executed file unchanged",
+    "original_execution": {
+      "tests": 13,
+      "assertions": 164,
+      "failures": 0,
+      "errors": 0,
+      "skips": 0
+    },
+    "original_status": "PASS"
+  },
+  {
+    "file": "test/feat/receipt_transfer_test.rb",
+    "original_product": "580248fda",
+    "original_receipt": "ab606734-7f95-49f8-af5c-705a84bfebe2",
+    "original_file_blob": "a811f6ceb1ab4955999bed82fc6ea3fccb308fe1",
+    "final_file_blob": "a811f6ceb1ab4955999bed82fc6ea3fccb308fe1",
+    "final_coverage": "original executed file unchanged",
+    "original_execution": {
+      "tests": 3,
+      "assertions": 11,
+      "failures": 0,
+      "errors": 0,
+      "skips": 0
+    },
+    "original_status": "PASS"
+  },
+  {
+    "file": "test/feat/runtime_binding_consumer_test.rb",
+    "original_product": "580248fda",
+    "original_receipt": "ab606734-7f95-49f8-af5c-705a84bfebe2",
+    "original_file_blob": "5e9eed0280a3ca72c066d8fe2be016c099cf446e",
+    "final_file_blob": "5e9eed0280a3ca72c066d8fe2be016c099cf446e",
+    "final_coverage": "original executed file unchanged",
+    "original_execution": {
+      "tests": 4,
+      "assertions": 32,
+      "failures": 0,
+      "errors": 0,
+      "skips": 0
+    },
+    "original_status": "PASS"
+  },
+  {
+    "file": "test/feat/transfer_codec_test.rb",
+    "original_product": "580248fda",
+    "original_receipt": "ab606734-7f95-49f8-af5c-705a84bfebe2",
+    "original_file_blob": "30f1a1190fe2d892a2e4be9df1f474e2a701e5e3",
+    "final_file_blob": "30f1a1190fe2d892a2e4be9df1f474e2a701e5e3",
+    "final_coverage": "original executed file unchanged",
+    "original_execution": {
+      "tests": 11,
+      "assertions": 65,
+      "failures": 0,
+      "errors": 0,
+      "skips": 0
+    },
+    "original_status": "PASS"
+  },
+  {
+    "file": "test/edge/installed_herdr_workflows_test.rb",
+    "original_product": "580248fda",
+    "original_receipt": "ab606734-7f95-49f8-af5c-705a84bfebe2",
+    "original_file_blob": "7db6f83d21fbe14731c83708ce7debc600ffc337",
+    "final_file_blob": "7db6f83d21fbe14731c83708ce7debc600ffc337",
+    "final_coverage": "deferred installed/native edge; no acceptance claim",
+    "original_status": "NOT EXECUTED: preceding feat target failed; fail-fast prevented edge target"
+  },
+  {
+    "file": "test/edge/runtime_retained_shell_test.rb",
+    "original_product": "580248fda",
+    "original_receipt": "ab606734-7f95-49f8-af5c-705a84bfebe2",
+    "original_file_blob": "f9d006f55b71a35d0cfe195a1719b22c8270a10a",
+    "final_file_blob": "f9d006f55b71a35d0cfe195a1719b22c8270a10a",
+    "final_coverage": "deferred installed/native edge; no acceptance claim",
+    "original_status": "NOT EXECUTED: preceding feat target failed; fail-fast prevented edge target"
+  }
+]

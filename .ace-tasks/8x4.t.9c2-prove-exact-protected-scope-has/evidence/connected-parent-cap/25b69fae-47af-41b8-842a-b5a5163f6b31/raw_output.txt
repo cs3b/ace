@@ -1,0 +1,17 @@
+Started with run options --seed 9961
+
+Ace::Assign::EndcapInboxesTest
+  test_source_owned_empty_inbox_set_is_verified_without_native_or_public_peer PASS (2.91s)
+  test_wrong_registration_role_context_signature_and_body_refuse_without_import PASS (5.11s)
+  test_herdr_accepted_before_qjl_failure_replays_exact_signed_proof PASS (6.43s)
+  test_retained_proof_after_seal_requires_current_context_role_and_exact_launcher PASS (13.33s)
+  test_superseded_claim_history_is_retained_but_not_used_to_settle_a_new_claim PASS (15.96s)
+  test_signed_foreign_workspace_and_original_child_mismatch_refuse_before_import PASS (21.10s)
+  test_settlement_checks_every_live_and_archive_copy              PASS (8.73s)
+  test_changed_same_id_and_uncontextual_registration_cannot_adopt_old_proof PASS (11.53s)
+  test_signed_consumed_import_replay_fetch_and_corruption_after_native_stop PASS (11.64s)
+  test_source_owned_settlement_shares_provenance_without_fabricated_public_peer PASS (16.00s)
+  test_unregistered_retained_event_cannot_disappear_from_settlement_inventory PASS (5.50s)
+
+Finished in 118.27319s
+11 tests, 68 assertions, 0 failures, 0 errors, 0 skips

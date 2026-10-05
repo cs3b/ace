@@ -1,0 +1,11 @@
+Started with run options --name "/test_authorization_read_refuses_closed_scope_before_fresh_policy|test_real_client_server_submit_lost_reply_exit_restart_status_and_exact_fetch|test_real_client_refuses_missing_mismatched_extra_part_and_open_descriptor_before_bytes/" --seed 26591
+
+Ace::Assign::AtomicServiceMutationTest
+  test_authorization_read_refuses_closed_scope_before_fresh_policy PASS (2.06s)
+
+Ace::Assign::EndcapResultsTest
+  test_real_client_server_submit_lost_reply_exit_restart_status_and_exact_fetch PASS (41.59s)
+  test_real_client_refuses_missing_mismatched_extra_part_and_open_descriptor_before_bytes PASS (111.35s)
+
+Finished in 155.00805s
+3 tests, 31 assertions, 0 failures, 0 errors, 0 skips

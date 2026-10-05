@@ -1,0 +1,20 @@
+Started with run options --seed 48643
+
+Ace::Assign::LaunchScopeAdmissionTest
+  test_lost_stop_reply_keeps_seal_and_original_reply_without_retry PASS (4.29s)
+  test_private_admission_is_not_a_public_launch_operation         PASS (0.01s)
+  test_parent_only_proof_guarded_abort_and_durable_release_are_all_required_for_reuse FAIL (7.17s)
+        Expected false to be truthy.
+        /Users/mc/Ps/ace/.ace-wt/scope-local-implementation/ace-assign/test/feat/authority/launch_scope_admission_test.rb:206:in 'block in Ace::Assign::LaunchScopeAdmissionTest#test_parent_only_proof_guarded_abort_and_durable_release_are_all_required_for_reuse'
+        /Users/mc/Ps/ace/.ace-wt/scope-local-implementation/ace-assign/test/feat/authority/launch_scope_admission_test.rb:81:in 'block in Ace::Assign::LaunchScopeAdmissionTest#with_owner'
+        /Users/mc/Ps/ace/.ace-wt/scope-local-implementation/ace-assign/test/test_helper.rb:36:in 'AceAssignTestCase#with_temp_cache'
+        /Users/mc/Ps/ace/.ace-wt/scope-local-implementation/ace-assign/test/feat/authority/launch_scope_admission_test.rb:49:in 'Ace::Assign::LaunchScopeAdmissionTest#with_owner'
+        /Users/mc/Ps/ace/.ace-wt/scope-local-implementation/ace-assign/test/feat/authority/launch_scope_admission_test.rb:187:in 'Ace::Assign::LaunchScopeAdmissionTest#test_parent_only_proof_guarded_abort_and_durable_release_are_all_required_for_reuse'
+
+  test_unavailable_boundary_refuses_before_canonical_admission_and_start PASS (2.05s)
+  test_lost_manager_reply_and_authority_restart_never_retry_start PASS (2.78s)
+  test_only_fresh_canonical_winner_starts_and_replay_keeps_original_reply PASS (3.49s)
+  test_seal_commits_before_stop_and_requires_fresh_close_to_record_proof PASS (5.13s)
+
+Finished in 24.92389s
+7 tests, 57 assertions, 1 failures, 0 errors, 0 skips

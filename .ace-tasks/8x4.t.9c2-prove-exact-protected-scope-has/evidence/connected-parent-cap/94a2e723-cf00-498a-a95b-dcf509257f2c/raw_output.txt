@@ -1,0 +1,82 @@
+Started with run options --seed 42690
+
+Ace::Assign::EndcapResultsTest
+  test_source_authorization_roles_reassignment_visibility_and_wrong_purposes PASS (60.22s)
+  test_real_client_refuses_missing_mismatched_extra_part_and_open_descriptor_before_bytes FAIL (24.52s)
+        [Ace::Assign::AttemptErrors::EvidenceUnavailable] exception expected, not
+        Class: <Ace::Runtime::RuntimeUnavailableError>
+        Message: <"protected socket deadline expired">
+        ---Backtrace---
+        /Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/ace-runtime/lib/ace/runtime/molecules/protected_socket.rb:63:in 'block in Ace::Runtime::Molecules::ProtectedSocket.read'
+        <internal:kernel>:168:in 'Kernel#loop'
+        /Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/ace-runtime/lib/ace/runtime/molecules/protected_socket.rb:61:in 'Ace::Runtime::Molecules::ProtectedSocket.read'
+        /Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/ace-assign/lib/ace/assign/authority/client.rb:57:in 'block in Ace::Assign::Authority::Client#call'
+        /Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/ace-runtime/lib/ace/runtime/molecules/protected_socket.rb:46:in 'Ace::Runtime::Molecules::ProtectedSocket.connect'
+        /Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/ace-assign/lib/ace/assign/authority/client.rb:41:in 'Ace::Assign::Authority::Client#call'
+        /Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/ace-assign/test/feat/endcap_results_test.rb:321:in 'Ace::Assign::EndcapResultsTest#client_fetch'
+        /Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/ace-assign/test/feat/endcap_results_test.rb:400:in 'block (3 levels) in Ace::Assign::EndcapResultsTest#test_real_client_refuses_missing_mismatched_extra_part_and_open_descriptor_before_bytes'
+        ---------------
+        /Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/ace-assign/test/feat/endcap_results_test.rb:400:in 'block (2 levels) in Ace::Assign::EndcapResultsTest#test_real_client_refuses_missing_mismatched_extra_part_and_open_descriptor_before_bytes'
+        /Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/ace-assign/test/feat/endcap_results_test.rb:398:in 'Array#each'
+        /Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/ace-assign/test/feat/endcap_results_test.rb:398:in 'block in Ace::Assign::EndcapResultsTest#test_real_client_refuses_missing_mismatched_extra_part_and_open_descriptor_before_bytes'
+        /Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/ace-assign/test/feat/endcap_results_test.rb:108:in 'block in Ace::Assign::EndcapResultsTest#fixture'
+        /Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/3.4.0/tmpdir.rb:105:in 'Dir.mktmpdir'
+        /Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/ace-assign/test/feat/endcap_results_test.rb:46:in 'Ace::Assign::EndcapResultsTest#fixture'
+        /Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/ace-assign/test/feat/endcap_results_test.rb:372:in 'Ace::Assign::EndcapResultsTest#test_real_client_refuses_missing_mismatched_extra_part_and_open_descriptor_before_bytes'
+
+  test_real_client_server_submit_lost_reply_exit_restart_status_and_exact_fetch FAIL (16.90s)
+        [Ace::Assign::AttemptErrors::EvidenceUnavailable] exception expected, not
+        Class: <Ace::Runtime::RuntimeUnavailableError>
+        Message: <"protected socket deadline expired">
+        ---Backtrace---
+        /Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/ace-runtime/lib/ace/runtime/molecules/protected_socket.rb:63:in 'block in Ace::Runtime::Molecules::ProtectedSocket.read'
+        <internal:kernel>:168:in 'Kernel#loop'
+        /Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/ace-runtime/lib/ace/runtime/molecules/protected_socket.rb:61:in 'Ace::Runtime::Molecules::ProtectedSocket.read'
+        /Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/ace-assign/lib/ace/assign/authority/client.rb:57:in 'block in Ace::Assign::Authority::Client#call'
+        /Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/ace-runtime/lib/ace/runtime/molecules/protected_socket.rb:46:in 'Ace::Runtime::Molecules::ProtectedSocket.connect'
+        /Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/ace-assign/lib/ace/assign/authority/client.rb:41:in 'Ace::Assign::Authority::Client#call'
+        /Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/ace-assign/test/feat/endcap_results_test.rb:341:in 'block (2 levels) in Ace::Assign::EndcapResultsTest#test_real_client_server_submit_lost_reply_exit_restart_status_and_exact_fetch'
+        ---------------
+        /Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/ace-assign/test/feat/endcap_results_test.rb:340:in 'block in Ace::Assign::EndcapResultsTest#test_real_client_server_submit_lost_reply_exit_restart_status_and_exact_fetch'
+        /Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/ace-assign/test/feat/endcap_results_test.rb:108:in 'block in Ace::Assign::EndcapResultsTest#fixture'
+        /Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/3.4.0/tmpdir.rb:105:in 'Dir.mktmpdir'
+        /Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/ace-assign/test/feat/endcap_results_test.rb:46:in 'Ace::Assign::EndcapResultsTest#fixture'
+        /Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/ace-assign/test/feat/endcap_results_test.rb:327:in 'Ace::Assign::EndcapResultsTest#test_real_client_server_submit_lost_reply_exit_restart_status_and_exact_fetch'
+
+  test_bad_receipt_producer_digest_artifact_order_and_stale_candidate_do_not_change_ref PASS (34.38s)
+  test_campaign_result_and_review_refuse_before_local_campaign_manager_lookup PASS (19.89s)
+  test_result_private_record_and_ordered_blobs_commit_once_with_distinct_digests PASS (41.69s)
+  test_canonical_absence_is_null_and_selectors_schema_and_executor_fail_closed PASS (10.77s)
+  test_services_read_body_and_mutation_metadata_refuse_without_canonical_change PASS (16.31s)
+  test_failed_empty_result_survives_restart_exit_discovery_and_same_head_correction PASS (25.47s)
+  test_corrupt_blob_and_private_record_never_fall_back_to_workspace_or_cached_reply PASS (28.93s)
+  test_recorded_executor_fetches_only_own_canonical_terminal_service_evidence PASS (46.89s)
+  test_pre_cas_failure_leaves_no_result_and_cas_retry_revalidates_generation PASS (40.76s)
+  test_retained_review_fetch_exact_reviewer_purpose_and_terminal_result_permissions PASS (55.00s)
+
+Ace::Assign::AtomicServiceMutationTest
+  test_new_mutation_for_exact_existing_request_retains_truth_without_another_claim PASS (3.47s)
+  test_exact_claim_replay_keeps_original_acceptance_metadata_beside_current_terminal_truth PASS (4.11s)
+  test_raw_blob_plan_cannot_bypass_service_owner_and_cross_attempt_update_is_refused PASS (1.57s)
+  test_retained_request_refuses_live_same_uid_sibling_of_recorded_native_worker PASS (1.41s)
+  test_review_conflicting_mutation_id_is_rejected_on_request_replay PASS (1.86s)
+  test_authorization_read_revalidates_body_and_policy_without_mutation_or_permission PASS (3.14s)
+  test_ephemeral_original_input_is_bounded_immutable_and_never_persisted PASS (2.88s)
+  test_record_projection_corruption_cannot_claim_canonical_terminal_truth PASS (1.97s)
+  test_rejected_staging_cannot_leak_into_later_append             PASS (2.17s)
+  test_status_projects_current_owner_generation_for_begin_without_changing_original_replay PASS (7.00s)
+  test_authorization_read_refuses_closed_scope_before_fresh_policy PASS (1.94s)
+  test_executor_status_refuses_absent_and_revoked_current_visibility PASS (1.90s)
+  test_repeated_dispatch_plan_only_reports_retained_state_without_fresh_permission PASS (3.58s)
+  test_lower_protected_fresh_write_without_original_input_refuses_before_policy_or_origin PASS (1.17s)
+  test_completion_cas_loss_revalidates_exact_executor_before_importing_any_bytes PASS (7.07s)
+  test_review_exact_request_replay_keeps_acceptance_metadata      PASS (2.47s)
+  test_completion_plan_imports_exact_executor_truth_without_new_origin_permission PASS (7.55s)
+  test_interleaved_completion_records_truth_without_revoked_or_absent_status_grants PASS (10.96s)
+  test_pending_import_record_event_and_reply_share_one_commit_with_exact_bytes PASS (3.01s)
+  test_completion_generation_mode_cannot_bypass_other_mutation_admission PASS (3.69s)
+  test_deleted_import_cannot_be_replaced_by_workspace_evidence_on_terminal_read PASS (2.07s)
+  test_lost_cas_rechecks_owner_policy_before_any_partial_acceptance PASS (2.35s)
+
+Finished in 499.08185s
+35 tests, 411 assertions, 2 failures, 0 errors, 0 skips

@@ -1,0 +1,161 @@
+Started with run options --seed 45254
+
+Ace::Assign::ProtectedLaunchLifecycleTest
+  test_public_termination_uses_retained_exit_without_native_close_or_repinnning PASS (5.84s)
+  test_shared_assignment_context_uses_canonical_registration_and_one_mutex PASS (1.52s)
+  test_worker_cannot_mutate_origin_and_changed_child_cannot_bind  PASS (5.76s)
+  test_uncertainty_retains_exact_handles_until_completed_shutdown PASS (5.01s)
+  test_positive_abort_allows_a_new_reservation_for_the_same_scopeERROR (5.71s)
+Minitest::UnexpectedError:         Ace::Assign::AttemptErrors::Conflict: execution slot has an unreleased canonical reservation
+            lib/ace/assign/authority/launch_lifecycle.rb:440:in 'block (2 levels) in Ace::Assign::Authority::LaunchLifecycle#ensure_slot_available!'
+            lib/ace/assign/authority/launch_lifecycle.rb:423:in 'Hash#each'
+            lib/ace/assign/authority/launch_lifecycle.rb:423:in 'block in Ace::Assign::Authority::LaunchLifecycle#ensure_slot_available!'
+            lib/ace/assign/authority/launch_lifecycle.rb:422:in 'Array#each'
+            lib/ace/assign/authority/launch_lifecycle.rb:422:in 'Ace::Assign::Authority::LaunchLifecycle#ensure_slot_available!'
+            lib/ace/assign/authority/launch_lifecycle.rb:395:in 'Ace::Assign::Authority::LaunchLifecycle#reserve'
+            lib/ace/assign/authority/launch_lifecycle.rb:115:in 'block (3 levels) in Ace::Assign::Authority::LaunchLifecycle#dispatch'
+            lib/ace/assign/molecules/journal_mutation.rb:56:in 'block (2 levels) in Ace::Assign::Molecules::JournalMutation#mutate'
+            <internal:numeric>:257:in 'Integer#times'
+            lib/ace/assign/molecules/journal_mutation.rb:37:in 'block in Ace::Assign::Molecules::JournalMutation#mutate'
+            lib/ace/assign/molecules/evidence_journal.rb:751:in 'block in Ace::Assign::Molecules::EvidenceJournal#with_lock'
+            lib/ace/assign/molecules/evidence_journal.rb:748:in 'IO.open'
+            lib/ace/assign/molecules/evidence_journal.rb:748:in 'Ace::Assign::Molecules::EvidenceJournal#with_lock'
+            lib/ace/assign/molecules/journal_mutation.rb:36:in 'Ace::Assign::Molecules::JournalMutation#mutate'
+            lib/ace/assign/authority/launch_lifecycle.rb:109:in 'block (2 levels) in Ace::Assign::Authority::LaunchLifecycle#dispatch'
+            lib/ace/assign/authority/launch_lifecycle.rb:94:in 'Thread::Mutex#synchronize'
+            lib/ace/assign/authority/launch_lifecycle.rb:94:in 'block in Ace::Assign::Authority::LaunchLifecycle#dispatch'
+            lib/ace/assign/authority/launch_lifecycle.rb:309:in 'block (2 levels) in Ace::Assign::Authority::LaunchLifecycle#with_exclusion'
+            lib/ace/assign/molecules/lifecycle_exclusion.rb:141:in 'Ace::Assign::Molecules::LifecycleExclusion#with_shared_multi'
+            lib/ace/assign/authority/launch_lifecycle.rb:309:in 'block in Ace::Assign::Authority::LaunchLifecycle#with_exclusion'
+            lib/ace/assign/authority/launch_lifecycle.rb:320:in 'block in Ace::Assign::Authority::LaunchLifecycle#with_slot'
+            lib/ace/assign/molecules/lifecycle_exclusion.rb:88:in 'Ace::Assign::Molecules::LifecycleExclusion#with_exclusive'
+            lib/ace/assign/authority/launch_lifecycle.rb:320:in 'Ace::Assign::Authority::LaunchLifecycle#with_slot'
+            lib/ace/assign/authority/launch_lifecycle.rb:309:in 'Ace::Assign::Authority::LaunchLifecycle#with_exclusion'
+            lib/ace/assign/authority/launch_lifecycle.rb:93:in 'Ace::Assign::Authority::LaunchLifecycle#dispatch'
+            test/feat/authority/launch_lifecycle_test.rb:63:in 'Ace::Assign::ProtectedLaunchLifecycleTest#call'
+            test/feat/authority/launch_lifecycle_test.rb:509:in 'block in Ace::Assign::ProtectedLaunchLifecycleTest#test_positive_abort_allows_a_new_reservation_for_the_same_scope'
+            test/feat/authority/launch_lifecycle_test.rb:56:in 'block in Ace::Assign::ProtectedLaunchLifecycleTest#with_authority'
+            test/test_helper.rb:36:in 'AceAssignTestCase#with_temp_cache'
+            test/feat/authority/launch_lifecycle_test.rb:30:in 'Ace::Assign::ProtectedLaunchLifecycleTest#with_authority'
+            test/feat/authority/launch_lifecycle_test.rb:505:in 'Ace::Assign::ProtectedLaunchLifecycleTest#test_positive_abort_allows_a_new_reservation_for_the_same_scope'
+
+  test_driver_never_repeats_creation_after_lost_response_and_reservation_replay PASS (3.57s)
+  test_driver_losing_cas_to_same_id_acceptance_never_creates_native_child PASS (2.61s)
+  test_uncertain_recovery_without_retained_handle_cannot_infer_exit PASS (5.43s)
+  test_reservation_replay_and_overlap_never_create_another_intent PASS (4.01s)
+  test_launcher_pidfd_refusal_cannot_commit_or_wedge_reservation  PASS (2.79s)
+  test_oversized_and_deep_scope_or_oversized_result_refuse_before_commit PASS (1.76s)
+  test_reservation_replay_and_plan_refusal_open_no_additional_handles PASS (3.61s)
+  test_bind_precedes_single_durable_release_and_replay_never_resends PASS (6.99s)
+  test_pre_release_exact_child_exit_is_required_for_abort         PASS (4.22s)
+  test_competing_reservation_acceptance_replays_and_closes_local_handle PASS (3.33s)
+  test_completed_launch_cycles_do_not_retain_pidfds              ERROR (5.59s)
+Minitest::UnexpectedError:         Ace::Assign::AttemptErrors::Conflict: execution slot has an unreleased canonical reservation
+            lib/ace/assign/authority/launch_lifecycle.rb:440:in 'block (2 levels) in Ace::Assign::Authority::LaunchLifecycle#ensure_slot_available!'
+            lib/ace/assign/authority/launch_lifecycle.rb:423:in 'Hash#each'
+            lib/ace/assign/authority/launch_lifecycle.rb:423:in 'block in Ace::Assign::Authority::LaunchLifecycle#ensure_slot_available!'
+            lib/ace/assign/authority/launch_lifecycle.rb:422:in 'Array#each'
+            lib/ace/assign/authority/launch_lifecycle.rb:422:in 'Ace::Assign::Authority::LaunchLifecycle#ensure_slot_available!'
+            lib/ace/assign/authority/launch_lifecycle.rb:395:in 'Ace::Assign::Authority::LaunchLifecycle#reserve'
+            lib/ace/assign/authority/launch_lifecycle.rb:115:in 'block (3 levels) in Ace::Assign::Authority::LaunchLifecycle#dispatch'
+            lib/ace/assign/molecules/journal_mutation.rb:56:in 'block (2 levels) in Ace::Assign::Molecules::JournalMutation#mutate'
+            <internal:numeric>:257:in 'Integer#times'
+            lib/ace/assign/molecules/journal_mutation.rb:37:in 'block in Ace::Assign::Molecules::JournalMutation#mutate'
+            lib/ace/assign/molecules/evidence_journal.rb:751:in 'block in Ace::Assign::Molecules::EvidenceJournal#with_lock'
+            lib/ace/assign/molecules/evidence_journal.rb:748:in 'IO.open'
+            lib/ace/assign/molecules/evidence_journal.rb:748:in 'Ace::Assign::Molecules::EvidenceJournal#with_lock'
+            lib/ace/assign/molecules/journal_mutation.rb:36:in 'Ace::Assign::Molecules::JournalMutation#mutate'
+            lib/ace/assign/authority/launch_lifecycle.rb:109:in 'block (2 levels) in Ace::Assign::Authority::LaunchLifecycle#dispatch'
+            lib/ace/assign/authority/launch_lifecycle.rb:94:in 'Thread::Mutex#synchronize'
+            lib/ace/assign/authority/launch_lifecycle.rb:94:in 'block in Ace::Assign::Authority::LaunchLifecycle#dispatch'
+            lib/ace/assign/authority/launch_lifecycle.rb:309:in 'block (2 levels) in Ace::Assign::Authority::LaunchLifecycle#with_exclusion'
+            lib/ace/assign/molecules/lifecycle_exclusion.rb:141:in 'Ace::Assign::Molecules::LifecycleExclusion#with_shared_multi'
+            lib/ace/assign/authority/launch_lifecycle.rb:309:in 'block in Ace::Assign::Authority::LaunchLifecycle#with_exclusion'
+            lib/ace/assign/authority/launch_lifecycle.rb:320:in 'block in Ace::Assign::Authority::LaunchLifecycle#with_slot'
+            lib/ace/assign/molecules/lifecycle_exclusion.rb:88:in 'Ace::Assign::Molecules::LifecycleExclusion#with_exclusive'
+            lib/ace/assign/authority/launch_lifecycle.rb:320:in 'Ace::Assign::Authority::LaunchLifecycle#with_slot'
+            lib/ace/assign/authority/launch_lifecycle.rb:309:in 'Ace::Assign::Authority::LaunchLifecycle#with_exclusion'
+            lib/ace/assign/authority/launch_lifecycle.rb:93:in 'Ace::Assign::Authority::LaunchLifecycle#dispatch'
+            test/feat/authority/launch_lifecycle_test.rb:63:in 'Ace::Assign::ProtectedLaunchLifecycleTest#call'
+            test/feat/authority/launch_lifecycle_test.rb:241:in 'block (2 levels) in Ace::Assign::ProtectedLaunchLifecycleTest#test_completed_launch_cycles_do_not_retain_pidfds'
+            <internal:numeric>:257:in 'Integer#times'
+            test/feat/authority/launch_lifecycle_test.rb:240:in 'block in Ace::Assign::ProtectedLaunchLifecycleTest#test_completed_launch_cycles_do_not_retain_pidfds'
+            test/feat/authority/launch_lifecycle_test.rb:56:in 'block in Ace::Assign::ProtectedLaunchLifecycleTest#with_authority'
+            test/test_helper.rb:36:in 'AceAssignTestCase#with_temp_cache'
+            test/feat/authority/launch_lifecycle_test.rb:30:in 'Ace::Assign::ProtectedLaunchLifecycleTest#with_authority'
+            test/feat/authority/launch_lifecycle_test.rb:239:in 'Ace::Assign::ProtectedLaunchLifecycleTest#test_completed_launch_cycles_do_not_retain_pidfds'
+
+  test_launcher_loss_closes_admission_and_established_gate_never_reconnects PASS (3.48s)
+  test_inconclusive_abort_can_resolve_only_with_exact_retained_exit_and_no_issuanceERROR (7.58s)
+Minitest::UnexpectedError:         Ace::Assign::AttemptErrors::Conflict: execution slot has an unreleased canonical reservation
+            lib/ace/assign/authority/launch_lifecycle.rb:440:in 'block (2 levels) in Ace::Assign::Authority::LaunchLifecycle#ensure_slot_available!'
+            lib/ace/assign/authority/launch_lifecycle.rb:423:in 'Hash#each'
+            lib/ace/assign/authority/launch_lifecycle.rb:423:in 'block in Ace::Assign::Authority::LaunchLifecycle#ensure_slot_available!'
+            lib/ace/assign/authority/launch_lifecycle.rb:422:in 'Array#each'
+            lib/ace/assign/authority/launch_lifecycle.rb:422:in 'Ace::Assign::Authority::LaunchLifecycle#ensure_slot_available!'
+            lib/ace/assign/authority/launch_lifecycle.rb:395:in 'Ace::Assign::Authority::LaunchLifecycle#reserve'
+            lib/ace/assign/authority/launch_lifecycle.rb:115:in 'block (3 levels) in Ace::Assign::Authority::LaunchLifecycle#dispatch'
+            lib/ace/assign/molecules/journal_mutation.rb:56:in 'block (2 levels) in Ace::Assign::Molecules::JournalMutation#mutate'
+            <internal:numeric>:257:in 'Integer#times'
+            lib/ace/assign/molecules/journal_mutation.rb:37:in 'block in Ace::Assign::Molecules::JournalMutation#mutate'
+            lib/ace/assign/molecules/evidence_journal.rb:751:in 'block in Ace::Assign::Molecules::EvidenceJournal#with_lock'
+            lib/ace/assign/molecules/evidence_journal.rb:748:in 'IO.open'
+            lib/ace/assign/molecules/evidence_journal.rb:748:in 'Ace::Assign::Molecules::EvidenceJournal#with_lock'
+            lib/ace/assign/molecules/journal_mutation.rb:36:in 'Ace::Assign::Molecules::JournalMutation#mutate'
+            lib/ace/assign/authority/launch_lifecycle.rb:109:in 'block (2 levels) in Ace::Assign::Authority::LaunchLifecycle#dispatch'
+            lib/ace/assign/authority/launch_lifecycle.rb:94:in 'Thread::Mutex#synchronize'
+            lib/ace/assign/authority/launch_lifecycle.rb:94:in 'block in Ace::Assign::Authority::LaunchLifecycle#dispatch'
+            lib/ace/assign/authority/launch_lifecycle.rb:309:in 'block (2 levels) in Ace::Assign::Authority::LaunchLifecycle#with_exclusion'
+            lib/ace/assign/molecules/lifecycle_exclusion.rb:141:in 'Ace::Assign::Molecules::LifecycleExclusion#with_shared_multi'
+            lib/ace/assign/authority/launch_lifecycle.rb:309:in 'block in Ace::Assign::Authority::LaunchLifecycle#with_exclusion'
+            lib/ace/assign/authority/launch_lifecycle.rb:320:in 'block in Ace::Assign::Authority::LaunchLifecycle#with_slot'
+            lib/ace/assign/molecules/lifecycle_exclusion.rb:88:in 'Ace::Assign::Molecules::LifecycleExclusion#with_exclusive'
+            lib/ace/assign/authority/launch_lifecycle.rb:320:in 'Ace::Assign::Authority::LaunchLifecycle#with_slot'
+            lib/ace/assign/authority/launch_lifecycle.rb:309:in 'Ace::Assign::Authority::LaunchLifecycle#with_exclusion'
+            lib/ace/assign/authority/launch_lifecycle.rb:93:in 'Ace::Assign::Authority::LaunchLifecycle#dispatch'
+            test/feat/authority/launch_lifecycle_test.rb:63:in 'Ace::Assign::ProtectedLaunchLifecycleTest#call'
+            test/feat/authority/launch_lifecycle_test.rb:357:in 'block in Ace::Assign::ProtectedLaunchLifecycleTest#test_inconclusive_abort_can_resolve_only_with_exact_retained_exit_and_no_issuance'
+            test/feat/authority/launch_lifecycle_test.rb:56:in 'block in Ace::Assign::ProtectedLaunchLifecycleTest#with_authority'
+            test/test_helper.rb:36:in 'AceAssignTestCase#with_temp_cache'
+            test/feat/authority/launch_lifecycle_test.rb:30:in 'Ace::Assign::ProtectedLaunchLifecycleTest#with_authority'
+            test/feat/authority/launch_lifecycle_test.rb:340:in 'Ace::Assign::ProtectedLaunchLifecycleTest#test_inconclusive_abort_can_resolve_only_with_exact_retained_exit_and_no_issuance'
+
+  test_exact_child_exit_projects_uncertainty_without_releasing_ownership PASS (5.63s)
+  test_definition_change_requires_all_scopes_terminal            ERROR (7.67s)
+Minitest::UnexpectedError:         Ace::Assign::AttemptErrors::Conflict: execution slot has an unreleased canonical reservation
+            lib/ace/assign/authority/launch_lifecycle.rb:440:in 'block (2 levels) in Ace::Assign::Authority::LaunchLifecycle#ensure_slot_available!'
+            lib/ace/assign/authority/launch_lifecycle.rb:423:in 'Hash#each'
+            lib/ace/assign/authority/launch_lifecycle.rb:423:in 'block in Ace::Assign::Authority::LaunchLifecycle#ensure_slot_available!'
+            lib/ace/assign/authority/launch_lifecycle.rb:422:in 'Array#each'
+            lib/ace/assign/authority/launch_lifecycle.rb:422:in 'Ace::Assign::Authority::LaunchLifecycle#ensure_slot_available!'
+            lib/ace/assign/authority/launch_lifecycle.rb:395:in 'Ace::Assign::Authority::LaunchLifecycle#reserve'
+            lib/ace/assign/authority/launch_lifecycle.rb:115:in 'block (3 levels) in Ace::Assign::Authority::LaunchLifecycle#dispatch'
+            lib/ace/assign/molecules/journal_mutation.rb:56:in 'block (2 levels) in Ace::Assign::Molecules::JournalMutation#mutate'
+            <internal:numeric>:257:in 'Integer#times'
+            lib/ace/assign/molecules/journal_mutation.rb:37:in 'block in Ace::Assign::Molecules::JournalMutation#mutate'
+            lib/ace/assign/molecules/evidence_journal.rb:751:in 'block in Ace::Assign::Molecules::EvidenceJournal#with_lock'
+            lib/ace/assign/molecules/evidence_journal.rb:748:in 'IO.open'
+            lib/ace/assign/molecules/evidence_journal.rb:748:in 'Ace::Assign::Molecules::EvidenceJournal#with_lock'
+            lib/ace/assign/molecules/journal_mutation.rb:36:in 'Ace::Assign::Molecules::JournalMutation#mutate'
+            lib/ace/assign/authority/launch_lifecycle.rb:109:in 'block (2 levels) in Ace::Assign::Authority::LaunchLifecycle#dispatch'
+            lib/ace/assign/authority/launch_lifecycle.rb:94:in 'Thread::Mutex#synchronize'
+            lib/ace/assign/authority/launch_lifecycle.rb:94:in 'block in Ace::Assign::Authority::LaunchLifecycle#dispatch'
+            lib/ace/assign/authority/launch_lifecycle.rb:309:in 'block (2 levels) in Ace::Assign::Authority::LaunchLifecycle#with_exclusion'
+            lib/ace/assign/molecules/lifecycle_exclusion.rb:141:in 'Ace::Assign::Molecules::LifecycleExclusion#with_shared_multi'
+            lib/ace/assign/authority/launch_lifecycle.rb:309:in 'block in Ace::Assign::Authority::LaunchLifecycle#with_exclusion'
+            lib/ace/assign/authority/launch_lifecycle.rb:320:in 'block in Ace::Assign::Authority::LaunchLifecycle#with_slot'
+            lib/ace/assign/molecules/lifecycle_exclusion.rb:88:in 'Ace::Assign::Molecules::LifecycleExclusion#with_exclusive'
+            lib/ace/assign/authority/launch_lifecycle.rb:320:in 'Ace::Assign::Authority::LaunchLifecycle#with_slot'
+            lib/ace/assign/authority/launch_lifecycle.rb:309:in 'Ace::Assign::Authority::LaunchLifecycle#with_exclusion'
+            lib/ace/assign/authority/launch_lifecycle.rb:93:in 'Ace::Assign::Authority::LaunchLifecycle#dispatch'
+            test/feat/authority/launch_lifecycle_test.rb:63:in 'Ace::Assign::ProtectedLaunchLifecycleTest#call'
+            test/feat/authority/launch_lifecycle_test.rb:525:in 'block in Ace::Assign::ProtectedLaunchLifecycleTest#test_definition_change_requires_all_scopes_terminal'
+            test/feat/authority/launch_lifecycle_test.rb:56:in 'block in Ace::Assign::ProtectedLaunchLifecycleTest#with_authority'
+            test/test_helper.rb:36:in 'AceAssignTestCase#with_temp_cache'
+            test/feat/authority/launch_lifecycle_test.rb:30:in 'Ace::Assign::ProtectedLaunchLifecycleTest#with_authority'
+            test/feat/authority/launch_lifecycle_test.rb:516:in 'Ace::Assign::ProtectedLaunchLifecycleTest#test_definition_change_requires_all_scopes_terminal'
+
+  test_lost_release_frame_remains_issued_and_exact_exit_cannot_fabricate_no_execution PASS (9.91s)
+
+Finished in 102.02468s
+21 tests, 155 assertions, 0 failures, 4 errors, 0 skips
