@@ -1,0 +1,5 @@
+# APPROVE — 09j readiness clarification at 58188ef126fb1c30312bef9c3b5139cd6b731e44
+
+Read changed 09j spec, usage, companion launch-origin contract and integrated initial review. The only readiness gap is resolved consistently: new non-restored layout; authenticated original workspace/tab/pane response pinned with original server identity; terminal/PID queried only for that exact pane; kernel UID/birth/lineage and pidfd pinning before readiness; backend non-reuse/no-respawn explicitly required; unknown creation remains uncertain without search/adoption/repeat spawn/release.
+
+Correction that v0.9.3 layout response lacks terminal_id agrees with retained evidence. Exact-pane query obtains it; no unverifiable response field is required. Upstream fresh creation/non-reuse evidence and immutable bootstrap/Yama2 policy make the selected mechanism feasible without broad observer privileges or a broker. No remaining decision-completeness blocker identified. This is readiness approval only; executed real Linux policy/native/authority acceptance and all crash windows remain implementation deliverables. No promotion/main mutation was performed by reviewer.
