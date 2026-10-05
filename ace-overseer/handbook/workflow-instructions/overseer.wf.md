@@ -161,3 +161,16 @@ candidate:
 - Work starts only through `ace-overseer work-on` (or the Lab-runtime equivalent), never through ad-hoc manual worktree provisioning.
 - Every status review re-verified pending owner-blocked tasks with an executed check and corrected stale state in the same change.
 - Every pruned worktree/branch had an executed preservation proof (ancestor containment, or a verified destination with tree/artifact or exact content-transition equivalence) and an executed no-active-writer check; candidates without complete proof were reported as blocked, not removed; `--force` and `--yes` never bypassed a safety block.
+
+### Second-commander proposal policy ticks
+
+With ACE_HITL_SOCKET and ACE_HITL_PROJECT configured, the living overseer invokes
+`ace-hitl proposal resolve-due --project PROJECT` at startup and each watch/status tick, including restart
+after a missed deadline. The authenticated HITL boundary queues a canonical wake;
+the existing Hermes transport actor polls and reconciles under its own UID.
+The installed HITL/Hermes commands own policy/reconciliation;
+overseer does not claim effects, shorten the sixteen-hour window, or replay elapsed ticks.
+A failed tick is visible, defers authorization, and keeps watch/status running. The decision role reviews relevant prior
+`ace-hitl proposal history --project ID --query TEXT`, creates exact proposals, and inspects
+`proposal show` deadline/decision/Assign outcome. Do not mark technical or installed gates
+passed from a proposal's authorization state.

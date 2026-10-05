@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Resolve immutable second-commander proposals through confirmed-delivery sixteen-hour policy and canonical Assign authorization.
+
 ## [0.3.1] - 2026-10-04
 
 ### Changed

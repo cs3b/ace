@@ -10,7 +10,8 @@ module Ace
       class Runtime
         attr_reader :registry, :journal, :relay, :config
 
-        def initialize(path)
+        def initialize(path, clock: -> { Time.now.utc })
+          @clock = clock
           @config = JSON.parse(File.read(path))
           unless @config.is_a?(Hash) && @config["schema"] == "ace.hitl.hermes.runtime/v1"
             raise ContractError, "runtime configuration requires runtime/v1"
@@ -21,7 +22,7 @@ module Ace
             socket_path: @config.fetch("hitl_socket"), service_uid: @config.fetch("hitl_service_uid")
           )
           @relay = Transport::Relay.new(registry: @registry, journal: @journal, lifecycle: @lifecycle,
-            sender: ->(channel, question) { telegram.call(channel, question) })
+            sender: ->(channel, question) { telegram.call(channel, question) }, clock: @clock)
         rescue JSON::ParserError, KeyError, SystemCallError, ArgumentError
           raise ContractError, "runtime configuration is unavailable or malformed"
         end
@@ -29,7 +30,8 @@ module Ace
         def serve(once: false)
           verify_polling_owner!
           @journal.actor do
-            poller = Transport::Poller.new(relay: @relay, telegram: telegram, journal: @journal, registry: @registry)
+            poller = Transport::Poller.new(relay: @relay, telegram: telegram, journal: @journal,
+              registry: @registry, clock: @clock)
             # Establish the new coverage epoch before issuing questions, so
             # a startup submission is never stamped before its coverage begins.
             begin
@@ -57,7 +59,7 @@ module Ace
                   next unless message.question?
                   begin
                     facts = @lifecycle.read(message.id)
-                    revision = facts.fetch("attempt")
+                    revision = facts["proposal"] ? facts.fetch("proposal").fetch("revision_id") : facts.fetch("attempt")
                     @relay.submit(channel: channel["name"], request: message.id, revision: revision)
                   rescue StandardError
                     # Pending folder + visible delivery status are retained.
@@ -70,6 +72,7 @@ module Ace
                 raise if once
                 sleep 1
               end
+              reconcile_proposals
               break if once
             end
           end
@@ -115,6 +118,22 @@ module Ace
           end
         rescue Ace::Hitl::Contract::InvalidEnvelope, KeyError, ArgumentError => e
           raise ContractError, "managed pending publication binding is invalid (#{e.class})"
+        end
+
+        def reconcile_proposals
+          after = nil
+          loop do
+            page = @lifecycle.proposal_due(after: after)
+            page.fetch("items").each do |proposal|
+              @relay.reconcile(request: proposal.fetch("request_id"), through: proposal.fetch("deadline"))
+            end
+            cursor = page.fetch("next")
+            break unless cursor
+            raise ContractError, "proposal deadline cursor did not advance" unless cursor.is_a?(String) && (!after || cursor > after)
+            after = cursor
+          end
+        rescue Ace::Hitl::Lifecycle::Error, ContractError => e
+          warn "ace-hitl-hermes: proposal reconciliation unavailable (#{e.class}); deadlines deferred"
         end
 
         def telegram

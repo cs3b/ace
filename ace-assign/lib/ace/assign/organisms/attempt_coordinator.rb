@@ -101,6 +101,10 @@ module Ace
           journal_for.claim_service_request(binding, state: "uncertain", guard: -> { claim_guard(binding) })
         end
 
+        def proposal_authorization(reference, binding)
+          journal_for.proposal_authorize!(reference, binding)
+        end
+
         # Rechecked against the authoritative ref for every locked claim
         # attempt: the attempt must still be journal-active and the exact
         # authorization must still be unconsumed.

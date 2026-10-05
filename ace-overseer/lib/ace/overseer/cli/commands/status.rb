@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "json"
+require_relative "../../molecules/proposal_tick"
 
 module Ace
   module Overseer
@@ -18,14 +19,16 @@ module Ace
           option :runtime, default: "tmux", desc: "Runtime (tmux, lab)"
           option :project, desc: "Filter Lab status by project"
 
-          def initialize(collector: nil, config: nil, lab_client: nil)
+          def initialize(collector: nil, config: nil, lab_client: nil, proposal_tick: nil)
             super()
             @collector = collector || Organisms::StatusCollector.new
             @config = config
             @lab_client = lab_client || Molecules::LabClient.new
+            @proposal_tick = proposal_tick || Molecules::ProposalTick.new
           end
 
           def call(format:, runtime: "tmux", project: nil, **options)
+            tick_proposals
             if runtime == "lab"
               if options[:watch]
                 raise Ace::Support::Cli::Error, "Lab watch runs in the project Herdr status pane; omit --watch"
@@ -34,7 +37,15 @@ module Ace
               arguments.concat(["--project", project]) unless project.to_s.empty?
               arguments << "--json" if format == "json"
               output = @lab_client.call(*arguments, json: false)
-              puts output unless options[:quiet]
+              unless options[:quiet]
+                warn @proposal_error if @proposal_error
+                if format == "json" && @proposal_error
+                  value = JSON.parse(output)
+                  output = JSON.pretty_generate(value.merge("proposal_resolution" =>
+                    {"status" => "deferred", "error" => @proposal_error})) if value.is_a?(Hash)
+                end
+                puts output
+              end
               return
             end
             raise Ace::Support::Cli::Error, "unsupported runtime: #{runtime}" unless runtime == "tmux"
@@ -55,14 +66,24 @@ module Ace
 
           private
 
+          def tick_proposals
+            @proposal_tick.call
+            @proposal_error = nil
+          rescue StandardError => e
+            @proposal_error = "Proposal resolution deferred (#{e.class}); retrying on next wake"
+          end
+
           def run_once(format)
             snapshot = @collector.collect
 
             if format == "json"
-              puts JSON.pretty_generate(@collector.to_h(snapshot))
+              value = @collector.to_h(snapshot)
+              value = value.merge(proposal_resolution: {status: "deferred", error: @proposal_error}) if @proposal_error
+              puts JSON.pretty_generate(value)
               return
             end
 
+            warn @proposal_error if @proposal_error
             puts @collector.to_table(snapshot)
           end
 
@@ -77,6 +98,7 @@ module Ace
 
             loop do
               sleep_interruptible(refresh_interval)
+              tick_proposals
 
               elapsed = Time.now - last_full_collect
               if elapsed >= git_refresh_interval
@@ -93,6 +115,7 @@ module Ace
           def print_watch_screen(snapshot, git_refresh_interval, last_full_collect)
             remaining = [(git_refresh_interval - (Time.now - last_full_collect)).round, 0].max
             print "\e[H\e[2J"
+            warn @proposal_error if @proposal_error
             puts @collector.to_table(snapshot)
             puts
             puts Atoms::StatusFormatter.format_watch_footer(remaining)

@@ -69,7 +69,8 @@ module Ace
           return route.envelope unless route.ok?
           service_id = route.data.fetch("entry").fetch("id")
           trusted = Molecules::GrantResolver.trusted_document(Ace::Lab.authorization_path) unless @policy
-          policy = @policy || Molecules::ServicePolicy.new(trusted)
+          policy = @policy || Molecules::ServicePolicy.new(trusted,
+            ->(reference, exact) { @coordinator.proposal_authorization(reference, exact) })
           head = current_head
           binding = {"request_id" => request_id, "assignment_id" => assignment, "attempt_id" => attempt,
                      "project_id" => project, "operation" => operation,
@@ -212,7 +213,8 @@ module Ace
           if @policy
             -> { @policy }
           else
-            -> { Molecules::ServicePolicy.new(Molecules::GrantResolver.trusted_document(Ace::Lab.authorization_path)) }
+            -> { Molecules::ServicePolicy.new(Molecules::GrantResolver.trusted_document(Ace::Lab.authorization_path),
+              ->(reference, exact) { @coordinator.proposal_authorization(reference, exact) }) }
           end
         end
 
