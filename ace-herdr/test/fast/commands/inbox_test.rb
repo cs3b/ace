@@ -11,6 +11,15 @@ module Ace
         class InboxTest < Minitest::Test
           THREAD = "0123abcd-0000-4000-8000-000000000001"
 
+          def test_cli_shared_pair_contract_accepts_native_and_refuses_mixed_targets
+            consumer = Object.new.extend(Ace::Herdr::CLI::Commands::Runtime)
+            ref = consumer.send(:resolve_ref, " $0 ", " %0 ")
+            assert_equal ["$0", "%0"], [ref.session, ref.pane]
+            assert_raises(Ace::Hitl::Providers::InvalidRefError) do
+              consumer.send(:resolve_ref, "$0", "p1")
+            end
+          end
+
           class Executor
             def pane_get_bounded(_pane)
               Molecules::ExecutionResult.new(

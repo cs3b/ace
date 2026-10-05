@@ -65,7 +65,8 @@ module Ace
           unless value.is_a?(Hash) && value.keys.sort == %w[pane schema session] && value["schema"] == Providers::Ref::SCHEMA
             raise InvalidEnvelope, "invalid reverse address schema"
           end
-          %w[session pane].each { |key| Providers::Ref.validate!(value[key], "reverse.#{key}") }
+          Providers::Ref.new(session: value["session"], pane: value["pane"], canonical: true,
+            session_source: "reverse.session", pane_source: "reverse.pane")
         rescue Providers::InvalidRefError => e
           raise InvalidEnvelope, e.message
         end

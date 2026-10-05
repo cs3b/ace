@@ -6,6 +6,7 @@
 - Resolve immutable second-commander proposals through confirmed-delivery sixteen-hour policy and canonical Assign authorization.
 
 ### Fixed
+- Validate whole Herdr/native tmux reverse-reference pairs consistently, preserving exact `$session`/`%pane` IDs and rejecting mixed, noncanonical wire and unclassified encoding inputs.
 - Reject non-string payload digests and impossible nested calendar timestamps consistently with the Hermes message contract.
 
 ### Changed
