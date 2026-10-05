@@ -1,0 +1,5 @@
+# Explicit fixture activation; no deadline, mode or policy overrides.
+environment:
+  overrides:
+    ACE_INSTALL_PROPOSAL: "1"
+    ACE_INSTALL_PROPOSAL_RETAIN: "/tmp/ace-installed-sc3"
