@@ -30,6 +30,7 @@ module Ace
           TriggeredBy Triggers PropagatesStopTo StopPropagatedFrom JoinsNamespaceOf].freeze
         NATIVE_ENVIRONMENT = %w[HERDR_CONFIG_PATH HERDR_SOCKET_PATH HOME SHELL PATH LANG LC_ALL TERM
           TMPDIR TMP TEMP XDG_CONFIG_HOME XDG_DATA_HOME XDG_STATE_HOME XDG_CACHE_HOME XDG_RUNTIME_DIR CODEX_HOME CLAUDE_CONFIG_DIR].freeze
+        IMPLICIT_NAMESPACE_ROOTS = %w[/dev /proc /sys /run /tmp /var/tmp].freeze
         EMPTY_EXEC = %w[ExecConditionEx ExecStartPreEx ExecReloadEx ExecStopEx ExecStopPostEx].freeze
 
         class Files
@@ -262,6 +263,10 @@ module Ace
             next if %w[slice_fragment service_fragment unit_dropin].include?(role)
             entries.each do |artifact|
               view = artifact.fetch("view_path")
+              if IMPLICIT_NAMESPACE_ROOTS.any? { |root| covers?(root, view) } ||
+                  service.fetch("ReadWritePaths").any? { |root| !path?(root) || covers?(root, view) }
+                raise RuntimeUnavailableError, "immutable artifact is inside an implicit or writable namespace projection"
+              end
               if writable.any? { |mount| overlaps?(view, mount[1]) }
                 raise RuntimeUnavailableError, "immutable unit artifact has a writable overlay"
               end

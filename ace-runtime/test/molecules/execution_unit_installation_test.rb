@@ -307,4 +307,19 @@ class ExecutionUnitInstallationTest < AceRuntimeTestCase
     end
   end
 
+  def test_implicit_private_and_kernel_mounts_cannot_hide_hashed_root_image_executable
+    %w[/dev/herdr /proc/herdr /sys/herdr /run/ace-slot/herdr /tmp/herdr /var/tmp/herdr].each do |view|
+      artifact = @artifacts.find { |entry| entry["role"] == "native_executable" }
+      bytes = @files.bytes.fetch(artifact.fetch("host_path"))
+      artifact["host_path"] = @scope.fetch("root_directory") + view
+      artifact["view_path"] = view
+      @files.bytes[artifact.fetch("host_path")] = bytes
+      @native["executable"] = view
+      @profiles["ace-slot.service"]["ExecStartEx"] = [command(view, args: ["server"])]
+      @manifest["properties"]["service"]["ExecStartEx"] = @profiles["ace-slot.service"]["ExecStartEx"].map { |item| item.first(3) }
+      save_manifest
+      assert_raises(Unavailable, view) { @installation.verify!(manager: @manager) }
+    end
+  end
+
 end
