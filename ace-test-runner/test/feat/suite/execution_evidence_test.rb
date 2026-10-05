@@ -287,4 +287,51 @@ class SuiteExecutionEvidenceTest < Minitest::Test
     end
   end
 
+  def test_selected_but_unexecuted_success_is_not_explicit_zero_selection
+    [true, false].each do |save_reports|
+      Dir.mktmpdir do |root|
+        evidence = Evidence.new(package_path: root)
+        result = Runner::Models::TestResult.new
+        files = ["test/selected_test.rb"]
+        directory = nil
+        if save_reports
+          storage = Storage.new(base_dir: File.join(root, "reports"))
+          directory = storage.reserve(evidence.identity)
+          report = Runner::Models::TestReport.new(result: result, files_tested: files)
+          storage.save_report(report, format: :all, report_dir: directory)
+        end
+        evidence.publish(result, files: files, report_dir: directory)
+        assert_raises(Runner::Error) { evidence.read(pid: Process.pid, save_reports: save_reports) }
+      end
+    end
+  end
+
+  def test_actual_cli_selected_file_without_tests_fails_in_saved_and_no_save_modes
+    [true, false].each do |save_reports|
+      Dir.mktmpdir do |root|
+        File.write(File.join(root, "Gemfile"), "eval_gemfile #{File.join(ROOT, 'Gemfile').inspect}\n")
+        FileUtils.mkdir_p(File.join(root, ".ace/test"))
+        FileUtils.mkdir_p(File.join(root, "test"))
+        File.write(File.join(root, "test/empty_test.rb"), "require 'minitest/autorun'\n")
+        File.write(File.join(root, ".ace/test/runner.yml"), YAML.dump({"version" => 1,
+          "patterns" => {"probe" => "test/*_test.rb"}, "targets" => {"all" => ["probe"]}}))
+        monitor = Runner::Suite::ProcessMonitor.new
+        package = {"name" => "ace-empty", "path" => root}
+        final = nil
+        monitor.start_package(package, {"target" => "all", "save_reports" => save_reports,
+          "report_dir" => File.join(root, "reports")}) { |_pkg, status, _out| final = status if status[:completed] }
+        wait_for { monitor.check_processes; !monitor.running? }
+        refute final[:success]
+        assert_equal 1, final[:exit_code]
+        assert_equal 0, final.dig(:results, :tests)
+        assert_equal 0, final.dig(:results, :errors)
+        completion = JSON.parse(File.read(final.dig(:results, :completion_path)))
+        assert_equal ["test/empty_test.rb"], completion["selected_files"]
+        assert_equal false, completion["success"]
+      ensure
+        monitor&.stop_all
+      end
+    end
+  end
+
 end

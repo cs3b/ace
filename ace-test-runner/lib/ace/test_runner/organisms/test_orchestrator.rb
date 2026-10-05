@@ -125,6 +125,7 @@ module Ace
 
           # Build result object
           @result = build_result(@parsed_result, execution_result, start_time)
+          validate_selected_execution
 
           # Analyze failures and errors
           if @result.has_failures?
@@ -269,6 +270,7 @@ module Ace
 
           # Build result object
           @result = build_result(@parsed_result, execution_result, start_time)
+          validate_selected_execution
 
           # Analyze failures
           if @result.has_failures?
@@ -515,6 +517,13 @@ module Ace
               end
             end
           end
+        end
+
+        def validate_selected_execution
+          return unless @result.success? && @result.total_tests == 0
+
+          @result.execution_success = false
+          @result.stderr = [@result.stderr, "Selected test files produced no executed tests"].reject(&:empty?).join("\n")
         end
 
         def build_result(parsed_result, execution_result, start_time)

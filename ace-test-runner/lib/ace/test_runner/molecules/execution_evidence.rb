@@ -65,7 +65,8 @@ module Ace
             data["duration"].finite? && data["duration"] >= 0 &&
             data["total"] == data.values_at("passed", "failed", "errors", "skipped").sum &&
             (!data["success"] || data["failed"] + data["errors"] == 0) &&
-            (!data["selected_files"].empty? || data["total"] == 0)
+            (!data["selected_files"].empty? || data["total"] == 0) &&
+            (!data["success"] || data["total"] > 0 || data["selected_files"].empty?)
           raise Error, "Invalid or mismatched execution completion evidence" unless valid
 
           if save_reports
