@@ -16,10 +16,14 @@ by `Ace::Assign::Authority::Deployment`:
 | Installed object | Required fields |
 | --- | --- |
 | `authorities.ID` | `uid`, `gid`, sorted unique `groups`, `socket_path`, `state_root`, `composition` (`launch` or `services`) |
-| `projects.ID` | `journal_repository`, `evidence_git_ref` (`refs/ace/execution`), `evidence_checkout_root`, `assignment_root`, `candidate_root`, `launcher_uids`, `reviewer_uids`, `worker_uids`, `service_executor_uids`, `supervisor_uids`, `peer_credentials` |
+| `projects.ID` | `journal_repository`, `evidence_git_ref` (`refs/ace/execution`), `evidence_checkout_root`, `assignment_root`, `candidate_root`, `launcher_uids`, `reviewer_uids`, `worker_uids`, `service_executor_uids`, `supervisor_uids`, `peer_credentials`, optional `service_receivers` |
 | `projects.ID.peer_credentials.UID` | `gid`, sorted unique `groups`, `scratch_root`; every configured role UID has one fixed entry |
 | `launch_mappings.ID` | `project_id`, `authority_id`, `launcher_uid`, `launcher_gid`, `launcher_groups`, `worker_uid`, `worker_gid`, `worker_groups`, `worker_actor`, `worker_cwd`, `worker_argv`, `worker_env`, `bootstrap`, `bootstrap_sha256`, `native` |
 | `launch_mappings.ID.native` | `socket_path`, `socket_identity`, `executable`, `version` (`0.9.3`), `server_identity`, canonical `workspace_id` (`wN`) |
+
+A services composition requires a nonempty installed `service_receivers` map; launch composition may omit it. Each fixed service ID maps to exactly `{executor_uid, socket_path, staging_root}`. The positive nonroot executor UID belongs to the project's executor allowlist and cannot also be any configured authority, launcher, reviewer, worker or supervisor. This keeps kernel role selection unambiguous and private authority journals inaccessible to executors.
+
+Receiver socket and staging paths are canonical absolute paths with root-or-executor owned, nonwritable ancestry. Staging is executor-owned mode0700 and disjoint from other receiver staging and authority state roots. The endpoint resides outside private staging, where the actual authority can traverse its ancestry and inspect it. A pre-existing endpoint must be an executor-owned socket with its installed GID and no permissions for others. Duplicate receiver/authority endpoints, substituted paths and unreadable placement refuse before the authority opens its listener or creates journal state. These mappings select identity and placement; operation argv and grants remain the existing Lab ServicePolicy.
 
 All paths are canonical and absolute. The native socket identity is the observed
 `[device, inode, worker_uid]`. The server identity is the exact observed object
@@ -110,3 +114,13 @@ acceptance. A Docker kernel with Yama=0 is expected to refuse the product gate;
 it does not establish the required positive protected launch proof.
 
 Protected launch uses only `layout.apply` in the installed workspace. `workspace.get` checks that exact workspace ID before creation; its reply must echo the ID even when another workspace is active. Missing or replaced containers refuse without fallback. Container contents supply no worker evidence. The original fresh layout reply remains the source of the new tab/pane identity.
+
+Receiver admission reads Linux `system.posix_acl_access` on every directory from
+the endpoint parent and private staging root to `/`, and evaluates search access
+for the installed executor UID, primary GID and supplemental groups. Named user
+entries override group/other entries; the ACL mask constrains named user and
+group entries. Absence of an access ACL uses ordinary mode permissions;
+unsupported, unreadable or malformed ACL data refuses startup. The authority
+must also actually traverse the endpoint and staging parents. This inspection
+does not claim an executor readiness handshake or bypass additional LSM policy;
+the installed receiver still performs its own bind and private staging checks.

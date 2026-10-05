@@ -1,0 +1,16 @@
+{
+  "source_head": "e2d3dad3e3c93247e0d741ddaef3cf07cddaa46f",
+  "purpose": "Clean independent rerun input assembled after passing author run; not the author run preboot image hash",
+  "installed_export_sha256": "81270c54ed8b29446122031ded6a5ee97aaa73a847ecbca3acb9417d1ac68156",
+  "sha256": {
+    "vmlinuz": "4909442ce8c53a14239e29b0074ca7190733795ecce56b43b0ec8741fa9734da",
+    "initrd": "2b0ccb7aeb4ad773d9cc78da5023faec94fa09510914e89834f8b1f7b91f11e9",
+    "guest-probe.py": "a1f78418dacb208dc3b203988b2eb8c3071ca252d33d0c6d663bfc6b1d6a2e8e",
+    "phase-client.rb": "36cb96e413552c482ea78dcb55dcf585ec4bda47d8310a4fe3f1d5a8684391e5",
+    "guest-init": "b3ede6543ab942cba74ccebe23bbff54c70e8461f9353eab55819f831dad12d8",
+    "boot-hvf.sh": "41f5b2426218af0a628021d847e12cb4ae674ca65335c5fa2ba148f0f55813ec",
+    "build-rootfs.sh": "129900b0f0915816ee042c9bcf254ddc8a714c183cc491a10fd8f90e197afebd",
+    "verify-windows.py": "deb29170e933997022b5c65231b012fefe1fc6c359ededf3199b4d9cadb4e24e",
+    "clean-rootfs.img": "62edb1f0f03815bf20fb30a8e642d019d67a2d0e8e4cfea05d46849c9f4cdaa6"
+  }
+}
