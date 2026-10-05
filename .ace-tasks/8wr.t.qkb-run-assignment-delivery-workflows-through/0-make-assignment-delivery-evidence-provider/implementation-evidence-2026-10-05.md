@@ -95,3 +95,30 @@ freeze: its first run predates the final differing-operation completion guard;
 the second run includes the final guard and test. Both cleared all fast targets;
 feature outcomes must be recorded before claiming the full package gate. Neither
 those pending results nor the atomic installed companion gates are claimed green.
+
+## Independent review P1 repair: exact effect identity
+
+Independent d033e8403 review reproduced an uncertain update of Old content being
+reported as success for a later request of New content. The original reviewer PoC
+was read only and remains unchanged. Added real-Git regressions for differing
+update title/body, differing create description and already-known draft adoption,
+and differing explicitly supplied readiness evidence. Before the fix they failed
+three completion assertions: `8x40ly`, 18/310, 3 failures/no errors. Fixed final
+focused run passed 18/323 with no failures/errors, `8x40n1`, 5m23s.
+
+Reconciliation still uses the original retained intent and settles its observed
+outcome. Current request completion now additionally compares canonical effect
+inputs, not only operation name. A different request receives the typed
+`AttemptErrors::CurrentEffectRequired`; recovery does not execute a new effect.
+Known create adoption and uncertain create reconciliation validate requested
+content through neutral exact-head metadata reads. Omitted readiness retry refs
+retain the original verified refs; explicitly different refs are not substituted.
+Merge remains exact canonical qjx service request/target/head/receipt consumption,
+not dispatch or adoption of a prior generic PR result.
+
+The previously preserved72067 session was unavailable on reactivation; its known
+OS process had exited and no final report existed. It cannot be classified green.
+Earlier full825/3402 receipt8x3zyl is retained separately; it predates the final
+operation-completion guard. This newly requested source repair has a fresh full
+`bin/ace-test ace-assign all` run in progress at candidate freeze. Its actual final
+receipt must be retained before full-gate acceptance. No timeout settings changed.

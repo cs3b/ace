@@ -474,3 +474,13 @@ If reconciliation recovers a different operation than the requested step (for
 example, create while invoking readiness), the command reports that the requested
 step still needs execution. It does not return success for an unperformed step.
 Retry that requested operation with its current evidence after recovery settles.
+
+Recovery compares the exact requested effect, not only its operation name. An
+uncertain update of one title/body cannot complete a later update with different
+content. Creation also checks the requested title/body against the observed draft,
+including adoption of an already known draft. A mismatched request receives
+`AttemptErrors::CurrentEffectRequired` after the old intent is settled; the new
+effect remains unperformed until explicitly retried. Explicit readiness references
+must match the recovered intent; omitting them during retry retains and revalidates
+its original references. Merge always consumes the exact named qjx service request,
+its candidate/target binding and verified receipt, never an older PR result.

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Retain delivery context across scoped attempts and distinguish a recovered prior effect from a new request with different content or evidence before reporting completion.
+
 ### Added
 
 - Resume from accepted attempt history without relaunch/replay; consume signed inbox observations in the existing journal and preserve unknown owner/effect state.

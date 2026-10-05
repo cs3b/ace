@@ -390,4 +390,53 @@ class DeliveryCoordinatorTest < AceAssignTestCase
     assert_equal false, @io[:prs].first.draft
     assert_equal %i[create ready], @io[:writes]
   end
+
+  def test_recovered_update_cannot_complete_different_requested_content
+    perform("create", title: "Task")
+    @io[:lose_update] = true
+    assert_raises(Ace::Git::ProviderUnknownOutcomeError) { perform("update", title: "Old requested title", body: "Old body") }
+    @io[:lose_update] = false
+    @delivery_attempt = start("147")
+    error = assert_raises(Ace::Assign::AttemptErrors::ReceiptRejected) do
+      perform("update", title: "New requested title", body: "New body")
+    end
+    assert_equal "Ace::Assign::AttemptErrors::CurrentEffectRequired", error.class.name
+    assert_equal "Old requested title", @io[:prs].first.title
+    assert_equal %i[create update], @io[:writes]
+    perform("update", title: "New requested title", body: "New body")
+    assert_equal "New requested title", @io[:prs].first.title
+    assert_equal "New body", @io[:prs].first.body
+    assert_equal %i[create update update], @io[:writes]
+  end
+
+  def test_recovered_create_cannot_complete_different_requested_body_or_known_draft
+    @io[:lose_create] = true
+    assert_raises(Ace::Git::ProviderUnknownOutcomeError) { perform("create", title: "Task", body: "Old body") }
+    @io[:lose_create] = false
+    @delivery_attempt = start("031")
+    error = assert_raises(Ace::Assign::AttemptErrors::ReceiptRejected) do
+      perform("create", title: "Task", body: "New body")
+    end
+    assert_equal "Ace::Assign::AttemptErrors::CurrentEffectRequired", error.class.name
+    assert_equal [:create], @io[:writes]
+    assert_raises(Ace::Assign::AttemptErrors::ReceiptRejected) { perform("create", title: "Task", body: "New body") }
+    assert_equal "Old body", @io[:prs].first.body
+    perform("create", title: "Task", body: "Old body")
+    assert_equal [:create], @io[:writes]
+  end
+
+  def test_recovered_ready_does_not_substitute_different_explicit_evidence
+    tests = accept("test", "010"); review = accept("review", "020")
+    perform("create", title: "Task")
+    @io[:lose_ready] = true
+    assert_raises(Ace::Git::ProviderUnknownOutcomeError) { perform("ready", tests: tests, review: review) }
+    @io[:lose_ready] = false
+    different_tests = accept("test", "011")
+    @delivery_attempt = start("148")
+    error = assert_raises(Ace::Assign::AttemptErrors::ReceiptRejected) do
+      perform("ready", tests: different_tests, review: review)
+    end
+    assert_equal "Ace::Assign::AttemptErrors::CurrentEffectRequired", error.class.name
+    assert_equal %i[create ready], @io[:writes]
+  end
 end

@@ -104,19 +104,27 @@ module Ace
           pending = unresolved_intent
           if pending
             result = reconcile(pending)
-            return result if pending["operation"] == operation
-            raise AttemptErrors::ReceiptRejected,
-              "Recovered #{pending['operation']}; requested #{operation} still needs execution"
+            return result if same_effect?(pending, operation, options)
+            raise AttemptErrors::CurrentEffectRequired.new(operation: operation, recovered_operation: pending["operation"])
           end
           require_evidence!(options[:tests], options[:review]) if %w[ready merge].include?(operation)
           return consume_merge(options[:service_request_id]) if operation == "merge"
           pr = current_pr
-          return reconcile({"operation" => "create", "head" => @head}) if operation == "create" && pr
+          if operation == "create" && pr
+            requested = content_input(options)
+            metadata = @lifecycle.review_metadata_snapshot(pr.number).pull_request
+            verify_pr!(metadata)
+            unless content_matches?(requested.keys.map(&:to_s), Atoms::EvidenceDigest.digest(requested), metadata)
+              raise AttemptErrors::CurrentEffectRequired.new(operation: operation, recovered_operation: "create")
+            end
+            return reconcile({"operation" => "create", "head" => @head,
+              "fields" => requested.keys.map(&:to_s), "input_digest" => Atoms::EvidenceDigest.digest(requested)})
+          end
           raise AttemptErrors::ReceiptRejected, "Create a draft before #{operation}" if operation != "create" && !pr
           verify_pr!(pr) if pr
           intent = {"stage" => "intent", "operation" => operation, "head" => @head,
-                    "input_digest" => Atoms::EvidenceDigest.digest(options.slice(:title, :body).compact),
-                    "fields" => options.slice(:title, :body).compact.keys.map(&:to_s),
+                    "input_digest" => Atoms::EvidenceDigest.digest(content_input(options)),
+                    "fields" => content_input(options).keys.map(&:to_s),
                     "pr_number" => pr&.number, "tests" => options[:tests], "review" => options[:review]}
           record(intent)
           @intent_context = unresolved_intent
@@ -190,6 +198,11 @@ module Ace
             pr = matches.first
             verify_pr!(pr)
             raise Ace::Git::ProviderUnknownOutcomeError, "Created PR draft state is unproven" unless pr.draft == true
+            pr = @lifecycle.review_metadata_snapshot(pr.number).pull_request
+            verify_pr!(pr)
+            unless content_matches?(intent.fetch("fields"), intent.fetch("input_digest"), pr)
+              raise Ace::Git::ProviderUnknownOutcomeError, "Created PR content remains unproven"
+            end
           elsif operation == "ready"
             require_evidence!(intent["tests"], intent["review"])
             pr = @lifecycle.show(intent.fetch("pr_number"))
@@ -198,8 +211,7 @@ module Ace
           elsif operation == "update"
             pr = @lifecycle.review_metadata_snapshot(intent.fetch("pr_number")).pull_request
             verify_pr!(pr)
-            observed = intent.fetch("fields").to_h { |field| [field, pr.public_send(field)] }
-            unless Atoms::EvidenceDigest.digest(observed) == intent["input_digest"]
+            unless content_matches?(intent.fetch("fields"), intent.fetch("input_digest"), pr)
               raise Ace::Git::ProviderUnknownOutcomeError, "PR update remains unresolved"
             end
           else
@@ -207,6 +219,30 @@ module Ace
           end
           record_result(operation, pr, "succeeded")
           status
+        end
+
+        def content_input(options)
+          options.slice(:title, :body).compact
+        end
+
+        def content_matches?(fields, digest, pr)
+          observed = fields.to_h { |field| [field, pr.public_send(field)] }
+          Atoms::EvidenceDigest.digest(observed) == digest
+        end
+
+        def same_effect?(intent, operation, options)
+          return false unless intent["operation"] == operation
+          case operation
+          when "create", "update"
+            intent["input_digest"] == Atoms::EvidenceDigest.digest(content_input(options))
+          when "ready"
+            %i[tests review].all? { |key| options[key].nil? || options[key] == intent[key.to_s] }
+          when "merge"
+            options[:service_request_id].is_a?(String) &&
+              options[:service_request_id] == intent["service_request_id"] &&
+              %i[tests review].all? { |key| options[key].nil? || options[key] == intent[key.to_s] }
+          else false
+          end
         end
 
         def require_evidence!(tests, review)
