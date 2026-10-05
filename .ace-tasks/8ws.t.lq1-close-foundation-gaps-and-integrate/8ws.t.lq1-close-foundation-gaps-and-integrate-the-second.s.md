@@ -316,3 +316,5 @@ Historical unchecked sections above retain prior review states; this latest chec
 - [ ] `qk0` → atomic complete `qkb` → `ig3`/R2 → `ig4`/R3 → `qkc` and installed Lab gates remain required.
 
 No gems published or actual Lab deployment performed in this checkpoint.
+
+- [ ] `8x4.t.bt0`: restore exact suite invocation attribution; verified mutable-latest race during lq8 misreported full package counts using a concurrent focused report. Separate runner task; exact unique lq8 receipts remain evidence, no false aggregate acceptance.

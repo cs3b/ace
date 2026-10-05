@@ -1,0 +1,9 @@
+# Observed suite attribution race — 2026-10-05
+
+In owned worktree `/Users/mc/Ps/ace/.ace-wt/codex-lq8-cleanup-evidence`, suite llm-providers-cli child produced 390 passing tests and 1025 assertions in unique reports `8x4blp` (initial) and `8x4bpl` (corrected source). Independent focused reviewer subsequently produced 25 passing tests and 86 assertions (`8x4bmc`, then `8x4bq1`), updating latest while the suite awaited other packages. The final aggregate read 25/86 in place of 390/1025: 365 tests and 939 assertions were misattributed. Expected aggregate11203/34177 became10838/33238. Existing Lab entries both retained199 total/198passed/one skip; their selected files did not change.
+
+Prior canonical-result suite had provider389/1013 and aggregate11202/34165; the new lifecycle test adds one test/12 assertions. These exact retained report counts explain the difference, rather than reduced selected coverage. Raw artifacts remain in the worktree; lq8 retains its own gate/evidence report.
+
+Source confirms two mutable latest consumers: `suite/process_monitor.rb#load_summary_results` resolves current report_directory and checks only mtime freshness; `suite/result_aggregator.rb#collect_results` resolves report_directory again during aggregation. `atoms/report_path_resolver.rb` chooses the package latest directory. `molecules/report_storage.rb` owns report allocation/latest updates. A report existing after start is not proof it belongs to that child; re-reading latest after completion is not a stable result snapshot.
+
+The observed run demonstrates count/assertion contamination. Success/failure contamination is a required controlled regression scenario, not claimed reproduced by this all-green observation. This record is the new runner task's evidence, not an expansion of lq8 or a reason to repeat an entire suite merely until no concurrent reviewer happens to run.
