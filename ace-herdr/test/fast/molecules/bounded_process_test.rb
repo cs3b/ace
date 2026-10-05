@@ -73,31 +73,88 @@ module Ace
         end
 
         def test_post_launch_io_error_kills_child_and_raises_post_launch_error
-          pid_file = File.join(@dir, "child.pid")
-          script = File.join(@dir, "sleeper")
-          File.write(script, <<~SH)
-            #!/bin/sh
-            echo $$ > '#{pid_file}'
-            exec sleep 30
-          SH
-          FileUtils.chmod(0o755, script)
-          offender = lambda do |*|
-            deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + 5
-            until File.exist?(pid_file) || Process.clock_gettime(Process::CLOCK_MONOTONIC) >= deadline
-              sleep 0.01
-            end
-            assert File.exist?(pid_file), "the launched child must record its PID before injecting the IO failure"
+          child_waiter = nil
+          offender = lambda do |_, _, _, waiter, **|
+            child_waiter = waiter
+            assert_kind_of Integer, waiter.pid
+            assert_operator waiter.pid, :>, 0
+            assert waiter.alive?, "the exact spawned child must be live before injecting the IO failure"
+            assert_equal 1, Process.kill(0, waiter.pid)
+            # The cleanup check must reject this real surviving child.
+            assert_raises(Minitest::Assertion) { assert_owned_child_absent(waiter.pid) }
             raise Errno::EIO, "injected pipe failure"
+          rescue Minitest::Assertion
+            cleanup_owned_fixture_child(waiter)
+            raise
           end
           Molecules::BoundedProcess.stub(:run_loop, offender) do
             error = assert_raises(Molecules::BoundedProcess::PostLaunchError) do
-              Molecules::BoundedProcess.call([script], timeout_s: 5)
+              Molecules::BoundedProcess.call(["/bin/sleep", "30"], timeout_s: 5)
             end
 
             assert_match(/post-launch/, error.message)
           end
-          child_pid = File.read(pid_file).to_i
-          assert_raises(Errno::ESRCH) { Process.kill(0, child_pid) }
+          refute child_waiter.alive?, "cleanup must reap the exact spawned child"
+          assert_cleanup_termination(child_waiter.value)
+          assert_owned_child_absent(child_waiter.pid)
+        ensure
+          # Only an unreaped handle retained from this invocation is eligible
+          # for failing-path cleanup; never a file-derived or recycled PID.
+          cleanup_owned_fixture_child(child_waiter)
+        end
+
+        def cleanup_owned_fixture_child(waiter)
+          return unless waiter&.alive?
+          begin
+            Process.kill("KILL", -waiter.pid)
+          rescue Errno::ESRCH
+            # An already-exiting owned child still must be reaped below.
+          end
+          assert waiter.join(5), "owned fixture child cleanup must remain bounded"
+        end
+
+        def test_fixture_assertion_failure_cleans_only_its_owned_child
+          owned_waiter = nil
+          assert_raises(Minitest::Assertion) do
+            Open3.popen3("/bin/sleep", "30", pgroup: true) do |_, _, _, waiter|
+              owned_waiter = waiter
+              begin
+                assert_equal 1, Process.kill(0, waiter.pid)
+                flunk "controlled fixture assertion failure"
+              ensure
+                cleanup_owned_fixture_child(waiter)
+              end
+            end
+          end
+          refute owned_waiter.alive?
+          assert_owned_child_absent(owned_waiter.pid)
+        end
+
+        def test_absence_check_refuses_invalid_identity_without_probing_processes
+          probes = []
+          Process.stub(:kill, ->(*args) { probes << args; 1 }) do
+            [nil, "", 0, -1].each do |pid|
+              assert_raises(Minitest::Assertion) { assert_owned_child_absent(pid) }
+            end
+          end
+          assert_empty probes, "invalid identity must not probe a process"
+        end
+
+        def test_normal_exit_cannot_satisfy_cleanup_termination_proof
+          _, status = Open3.capture2("/bin/sh", "-c", "exit 0")
+          assert_predicate status, :success?
+          assert_raises(Minitest::Assertion) { assert_cleanup_termination(status) }
+        end
+
+        def assert_cleanup_termination(status)
+          assert_predicate status, :signaled?, "cleanup must terminate the child rather than await natural exit"
+          assert_equal Signal.list.fetch("KILL"), status.termsig
+        end
+
+        def assert_owned_child_absent(pid)
+          assert_kind_of Integer, pid
+          assert_operator pid, :>, 0
+          assert_raises(Errno::ESRCH) { Process.kill(0, pid) }
         end
 
         def test_oversized_output_is_truncated_and_reported

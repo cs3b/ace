@@ -33,7 +33,9 @@ module Ace
               raise Ace::Lab::InvalidConfigurationError,
                 "invalid lab configuration: trusted authorization file must contain a mapping"
             end
-            document
+            # Use the same principal schema and the same verified bytes for
+            # policy composition, rather than reading a second grants snapshot.
+            document.merge("principals" => parse_grants(content, path).fetch("principals"))
           rescue Psych::Exception
             raise Ace::Lab::InvalidConfigurationError,
               "invalid lab configuration: trusted authorization file could not be parsed"

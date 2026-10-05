@@ -51,6 +51,21 @@ module Ace
         end
       end
 
+      def test_candidate_bundle_is_immutable_canonical_bytes_without_widening_service_record_paths
+        with_journal do |journal, _repo|
+          bytes = "# v2 git bundle\nbinary\x00\r\n".b
+          reply = mutate(journal) { {data: {"head" => "a" * 40}, blobs: {"candidates/bundles/candidate-1" => bytes}} }
+          assert_equal bytes, journal.blob("candidates/bundles/candidate-1", commit: reply.fetch("journal_commit"))
+          assert_raises(AttemptErrors::Conflict) do
+            mutate(journal, id: "changed", expected: 1) { {data: {}, blobs: {"candidates/bundles/candidate-1" => "changed"}} }
+          end
+          assert_raises(ArgumentError) do
+            mutate(journal, id: "request-bypass", expected: 1) { {data: {}, blobs: {"execution/requests/request-1.json" => "{}"}} }
+          end
+          assert_equal reply.fetch("journal_commit"), journal.ref_value
+        end
+      end
+
       def test_original_reply_commit_survives_later_mutations_and_changed_input_refuses
         with_journal do |journal, _repo|
           first = mutate(journal) { plan }

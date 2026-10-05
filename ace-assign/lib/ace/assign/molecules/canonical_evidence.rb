@@ -15,7 +15,7 @@ module Ace
         MAX_ARTIFACTS = 16
         ID = /\A[a-zA-Z0-9][a-zA-Z0-9_.-]{0,127}\z/
         ROLES = {"service" => "executor", "review" => "reviewer", "inbox" => "signer",
-                 "observation" => "observer"}.freeze
+                 "observation" => "observer", "result" => "worker"}.freeze
         DESCRIPTOR_FIELDS = %w[version artifact_id kind project_id assignment_id attempt_id peer_uid role
           binding_digest sha256 bytes admitted_at admitted_after_event_digest request_id_or_event_id
           candidate_generation_or_claim_generation].freeze
@@ -62,16 +62,42 @@ module Ace
         end
 
         def read(reference, kind:, project_id:, assignment_id:, attempt_id:, peer_uid:, binding:,
+          request_id_or_event_id:, generation:, commit: @journal.ref_value)
+          # One immutable commit supplies both provenance events and bytes.
+          events = @journal.read_events(assignment_id, commit: commit)
+            .select { |event| event["attempt_id"] == attempt_id }
+          verified_bytes(reference, events: events, kind: kind, project_id: project_id,
+            assignment_id: assignment_id, attempt_id: attempt_id, peer_uid: peer_uid, binding: binding,
+            request_id_or_event_id: request_id_or_event_id, generation: generation) do |path|
+            @journal.blob(path, commit: commit)
+          end
+        end
+
+        # Only the journal writer supplies this transient pre-CAS view. It
+        # validates the exact same provenance/chain/bytes as committed reads;
+        # it does not accept a receipt or advance the canonical ref itself.
+        def read_pending(reference, current_events:, pending_events:, blobs:, commit:,
+          kind:, project_id:, assignment_id:, attempt_id:, peer_uid:, binding:,
+          request_id_or_event_id:, generation:)
+          events = current_events + pending_events
+          unless events.all? { |event| event["attempt_id"] == attempt_id } && blobs.is_a?(Hash)
+            unavailable!
+          end
+          verified_bytes(reference, events: events, kind: kind, project_id: project_id,
+            assignment_id: assignment_id, attempt_id: attempt_id, peer_uid: peer_uid, binding: binding,
+            request_id_or_event_id: request_id_or_event_id, generation: generation) do |path|
+            blobs.key?(path) ? blobs.fetch(path) : @journal.blob(path, commit: commit)
+          end
+        end
+
+        private
+
+        def verified_bytes(reference, events:, kind:, project_id:, assignment_id:, attempt_id:, peer_uid:, binding:,
           request_id_or_event_id:, generation:)
           unless reference.is_a?(Hash) && reference.keys.sort == %w[ref sha256] &&
               reference["ref"].is_a?(String) && reference["ref"].match?(%r{\Aevidence/imports/[a-z0-9-]+\z})
             unavailable!
           end
-          # Capture a single immutable commit for BOTH events and bytes. A
-          # subsequent ref advance cannot combine different generations.
-          commit = @journal.ref_value
-          events = @journal.read_events(assignment_id, commit: commit)
-            .select { |event| event["attempt_id"] == attempt_id }
           unavailable! unless Models::EvidenceEvent.chain_valid?(events)
           artifact_id = reference.fetch("ref").delete_prefix("evidence/imports/")
           imports = events.select do |event|
@@ -91,15 +117,13 @@ module Ace
           before = events.take_while { |entry| entry["digest"] != event["digest"] }
           unavailable! unless before.any? { |entry| entry["digest"] == descriptor["admitted_after_event_digest"] }
           Time.iso8601(descriptor.fetch("admitted_at"))
-          bytes = @journal.blob(reference.fetch("ref"), commit: commit)
-          unavailable! unless bytes.bytesize <= MAX_ARTIFACT_BYTES && bytes.bytesize == descriptor["bytes"] &&
+          bytes = yield(reference.fetch("ref"))
+          unavailable! unless bytes.is_a?(String) && bytes.bytesize <= MAX_ARTIFACT_BYTES && bytes.bytesize == descriptor["bytes"] &&
             Digest::SHA256.hexdigest(bytes) == descriptor["sha256"]
           bytes
         rescue ArgumentError, KeyError, TypeError
           unavailable!
         end
-
-        private
 
         def unavailable!
           raise AttemptErrors::EvidenceUnavailable, "Canonical evidence import or binding is unverifiable"

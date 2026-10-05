@@ -11,11 +11,24 @@ module Ace
       module JournalMutation
         ID = /\A[a-zA-Z0-9][a-zA-Z0-9_.-]{0,127}\z/
 
+        # Shared canonical projection used by admission and protected status.
+        # Callers hold the same owner exclusion when projecting current events.
+        def authority_generation(events)
+          unless Models::EvidenceEvent.chain_valid?(events)
+            raise AttemptErrors::EvidenceUnavailable, "Attempt event chain is corrupt"
+          end
+          events.count { |event| event["type"] == "authority_mutation" }
+        end
+
         # The block runs against the current ref on every CAS attempt. It
         # returns events [{type:, payload:}], immutable blobs, and public data.
         # Only the authority calls this internal journal API; wire requests
         # cannot select blob paths, event types, or accepted response data.
-        def mutate(assignment_id:, attempt_id:, mutation_id:, operation:, parameters_digest:, expected_generation:, with_replay: false)
+        def mutate(assignment_id:, attempt_id:, mutation_id:, operation:, parameters_digest:, expected_generation:, with_replay: false, generation_mode: :expected)
+          unless (generation_mode == :expected && expected_generation.is_a?(Integer) && expected_generation >= 0) ||
+              (generation_mode == :recorded_completion && operation == "complete_service" && expected_generation.nil?)
+            raise ArgumentError, "invalid fixed mutation generation mode"
+          end
           [assignment_id, attempt_id, mutation_id].each { |id| validate_mutation_id!(id) }
           unless parameters_digest.is_a?(String) && parameters_digest.match?(/\A[0-9a-f]{64}\z/)
             raise ArgumentError, "invalid mutation parameter digest"
@@ -36,15 +49,18 @@ module Ace
                 return with_replay ? {data: result, replayed: true} : result
               end
               current = read_events(assignment_id).select { |event| event["attempt_id"] == attempt_id }
-              unless Models::EvidenceEvent.chain_valid?(current)
-                raise AttemptErrors::EvidenceUnavailable, "Attempt event chain is corrupt"
-              end
-              generation = current.count { |event| event["type"] == "authority_mutation" }
-              unless expected_generation == generation
+              generation = authority_generation(current)
+              unless generation_mode == :recorded_completion || expected_generation == generation
                 raise AttemptErrors::Conflict, "Authority registration generation changed"
               end
               plan = yield(current, old, generation)
+              blobs = plan.fetch(:blobs, {})
               events = chain_mutation_events(attempt_id, current.last&.fetch("digest"), plan.fetch(:events, []))
+              updates = prepare_service_updates(plan.fetch(:service_updates, []), assignment_id: assignment_id,
+                attempt_id: attempt_id, pending: {current_events: current, pending_events: events, blobs: blobs, commit: old,
+                  service_inputs: service_input_context(plan)})
+              events.concat(chain_mutation_events(attempt_id, events.last&.fetch("digest") || current.last&.fetch("digest"),
+                updates.map { |prepared| prepared.fetch(:event) }))
               data = plan.fetch(:data).merge("generation" => generation + 1)
               receipt = Models::EvidenceEvent.build(type: "authority_mutation", attempt_id: attempt_id,
                 previous_digest: events.last&.fetch("digest") || current.last&.fetch("digest"),
@@ -52,11 +68,12 @@ module Ace
                           "parameters_digest" => parameters_digest, "assignment_id" => assignment_id,
                           "attempt_id" => attempt_id, "data" => data})
               events << receipt
-              blobs = plan.fetch(:blobs, {})
               write_mutation_blobs(blobs, commit: old)
+              write_service_records(updates)
               write_event_files(assignment_id, events)
               git!("-C", checkout_dir, "add", "--", "execution/#{assignment_id}")
               stage_mutation_blobs(blobs)
+              stage_service_records(updates)
               git!("-C", checkout_dir, "-c", "user.name=ace-assign", "-c", "user.email=ace-assign@localhost",
                 "-c", "core.hooksPath=/dev/null", "commit", "-m", "evidence: authority #{operation} #{mutation_id}")
               commit = git!("-C", checkout_dir, "rev-parse", "HEAD").first
@@ -91,6 +108,21 @@ module Ace
           nil
         end
 
+        # Source composition supplies original body bytes only for the current
+        # service CAS callback. They are never part of persisted mutation data.
+        def service_input_context(plan)
+          inputs = plan.fetch(:service_inputs, {})
+          raise ArgumentError, "invalid ephemeral service input context" unless inputs.is_a?(Hash)
+          return {}.freeze if inputs.empty?
+          updates = plan.fetch(:service_updates, [])
+          unless inputs.size == 1 && updates.size == 1 && inputs.keys == [updates.first.fetch(:request_id)] &&
+              inputs.values.first.is_a?(String) && inputs.values.first.bytesize.between?(1, 64 * 1024)
+            raise ArgumentError, "invalid ephemeral service input context"
+          end
+          inputs.to_h { |key, bytes| [key.dup.freeze, bytes.dup.freeze] }.freeze
+        end
+        private :service_input_context
+
         # Read immutable bytes directly from a selected canonical ref commit.
         # Worktree projections are never consulted for protected evidence.
         def blob(path, commit: ref_value)
@@ -109,7 +141,7 @@ module Ace
         end
 
         def validate_blob_path!(path)
-          unless path.is_a?(String) && path.match?(%r{\A(?:evidence/imports|execution/definitions)/[a-zA-Z0-9_.-]+\z}) &&
+          unless path.is_a?(String) && path.match?(%r{\A(?:evidence/imports|execution/definitions|candidates/bundles)/[a-zA-Z0-9_.-]+\z}) &&
               !%w[. ..].include?(File.basename(path))
             raise ArgumentError, "invalid canonical blob reference"
           end
