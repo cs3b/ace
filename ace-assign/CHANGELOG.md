@@ -9,10 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Refuse finish receipts for unbound reservations before terminal acceptance, and preserve exact canonical import bytes across Git filters and CRLF conversion.
+
+- Clean failed evidence transactions at every shared journal writer boundary; preserve unbound launch reservations and report explicit recovery evidence requirements.
+
 - Retain delivery context across scoped attempts and distinguish a recovered prior effect from a new request with different content or evidence before reporting completion.
 
 ### Added
 
+- Atomic execution-ref mutation/import primitives with exact reply replay and canonical artifact binding/provenance verification. Intent-only attempts remain reserved until a real process-start fact.
 - Resume from accepted attempt history without relaunch/replay; consume signed inbox observations in the existing journal and preserve unknown owner/effect state.
 
 - Attempt-bound, provider-neutral delivery records draft creation, update and readiness in the existing evidence journal; lost responses reconcile exact remote identity without repeating writes. Readiness consumes accepted current test and independent review evidence, and merge consumes the existing authorized service receipt.

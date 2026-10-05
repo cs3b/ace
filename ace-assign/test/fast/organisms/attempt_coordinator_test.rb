@@ -720,7 +720,78 @@ end
         assert_nil projection["candidate_head"]
       end
 
-      def test_reconcile_running_attempt_without_process_start_becomes_stopped
+      def unbound_reservation(coordinator, assignment)
+        journal = coordinator.send(:journal_for)
+        intent = Models::EvidenceEvent.build(type: "intent", attempt_id: "unbound",
+          payload: {"scope" => "010", "project_id" => "ace", "task_id" => assignment.task_id,
+            "base_head" => git(@repo, "rev-parse", "HEAD").strip,
+            "actor" => @identity.actor, "role" => @identity.role, "runtime" => @identity.runtime})
+        journal.append(assignment_id: assignment.id, attempt_id: "unbound", events: [intent])
+        journal.derived_attempts(assignment.id).first
+      end
+
+      def test_finish_cannot_accept_unbound_reservation_without_cache
+        coordinator = build_coordinator
+        assignment = create_assignment
+        attempt = unbound_reservation(coordinator, assignment)
+        journal = coordinator.send(:journal_for)
+        before = journal.ref_value
+        assert_raises(AttemptErrors::EvidenceUnavailable) do
+          coordinator.finish(attempt_id: attempt.attempt_id, receipt_path: build_receipt(attempt))
+        end
+        assert_equal before, journal.ref_value
+        assert_empty journal.accepted_receipts(assignment.id)
+        assert_equal "reserved", journal.derived_attempts(assignment.id).first.state
+      end
+
+      def test_finish_cannot_accept_unbound_reservation_with_stale_running_cache
+        coordinator = build_coordinator
+        assignment = create_assignment
+        attempt = unbound_reservation(coordinator, assignment)
+        coordinator.store.save(attempt.with(state: "running"))
+        journal = coordinator.send(:journal_for)
+        before = journal.ref_value
+        assert_raises(AttemptErrors::EvidenceUnavailable) do
+          coordinator.finish(attempt_id: attempt.attempt_id, receipt_path: build_receipt(attempt))
+        end
+        assert_equal before, journal.ref_value
+        assert_empty journal.accepted_receipts(assignment.id)
+        assert_equal ["unbound"], journal.active_attempts(assignment.id).map(&:attempt_id)
+      end
+
+      def test_intent_only_reservation_reports_blocked_and_preserves_ownership
+        coordinator = build_coordinator
+        assignment = create_assignment
+        journal = coordinator.send(:journal_for)
+        intent = Models::EvidenceEvent.build(type: "intent", attempt_id: "reserved-only",
+          payload: {"scope" => "010", "project_id" => "ace", "task_id" => assignment.task_id,
+            "base_head" => git(@repo, "rev-parse", "HEAD").strip,
+            "actor" => @identity.actor, "role" => @identity.role, "runtime" => @identity.runtime})
+        journal.append(assignment_id: assignment.id, attempt_id: "reserved-only", events: [intent])
+        before = journal.ref_value
+        snapshot = coordinator.resume(assignment_id: assignment.id, dry_run: true)
+        assert_equal "reconcile-required", snapshot["decision"]
+        assert_equal "reserved", snapshot["attempts"].first["state"]
+        assert_equal before, journal.ref_value
+        snapshot = coordinator.resume(assignment_id: assignment.id)
+        assert_equal "reconcile-required", snapshot["decision"]
+        assert_equal "reserved", snapshot["attempts"].first["state"]
+        error = assert_raises(AttemptErrors::EvidenceUnavailable) { coordinator.reconcile(attempt_id: "reserved-only") }
+        assert_includes error.message, "positive no-execution"
+        error = assert_raises(AttemptErrors::Conflict) do
+          coordinator.start(assignment_id: assignment.id, step: "010", project_id: "ace", identity: @identity)
+        end
+        assert_includes error.message, "reservation"
+        assert_raises(AttemptErrors::Conflict) do
+          coordinator.start(assignment_id: assignment.id, step: "010.01", project_id: "ace", identity: @worker)
+        end
+        assert_equal ["reserved-only"], journal.active_attempts(assignment.id).map(&:attempt_id)
+        refute journal.read_events(assignment.id).any? { |e| e["type"] == "process_start" || e["type"] == "transition" }
+        normal = coordinator.start(assignment_id: assignment.id, step: "020", project_id: "ace", identity: @identity)
+        assert_equal "running", normal.state
+      end
+
+      def test_reconcile_running_attempt_without_process_start_keeps_uncertain_ownership
         coordinator = build_coordinator
         assignment = create_assignment(managed: false)
         attempt = coordinator.start(assignment_id: assignment.id, step: "010", project_id: "ace")
@@ -732,8 +803,8 @@ end
 
         reconciled = coordinator.reconcile(attempt_id: attempt.attempt_id)
 
-        assert_equal "stopped", reconciled.state
-        assert_nil coordinator.store.active(assignment.id, "010")
+        assert_equal "uncertain", reconciled.state
+        assert_equal attempt.attempt_id, coordinator.store.active(assignment.id, "010").attempt_id
       end
 
       def test_reconcile_running_attempt_with_dead_process_becomes_uncertain

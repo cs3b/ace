@@ -392,9 +392,14 @@ input:#{Regexp.escape(request.fetch("input_digest"))} outcome:(\S+)( no-effect:(
             @store.with_lock(assignment_id) do
               journal_actives = assignment.managed? ? active_journal_attempts(assignment) : []
 
-              existing = @store.active(assignment_id, scope) ||
-                journal_actives.find { |attempt| Atoms::AssignmentScope.equal?(attempt.binding.scope, scope) }
+              existing = journal_actives.find { |attempt| Atoms::AssignmentScope.equal?(attempt.binding.scope, scope) } ||
+                @store.active(assignment_id, scope)
               if existing
+                if existing.state == "reserved"
+                  raise AttemptErrors::Conflict,
+                    "Unresolved reservation #{existing.attempt_id} owns #{assignment_id}@#{scope}; " \
+                    "protected launch reconciliation needs positive no-execution/no-surviving-writer proof before abort"
+                end
                 if existing.binding.project_id == project && existing.binding.task_id == assignment.task_id &&
                     existing.binding.actor == identity.actor && existing.binding.role == identity.role
                   return existing
@@ -457,7 +462,13 @@ input:#{Regexp.escape(request.fetch("input_digest"))} outcome:(\S+)( no-effect:(
               attempt = @store.load(assignment_id, attempt_id) || recover_managed_attempt(assignment_id, attempt_id)
               raise AttemptErrors::NotFound, "Attempt '#{attempt_id}' not found" unless attempt
 
-              ensure_journal_consistent!(attempt) if attempt.managed?
+              derived = ensure_journal_consistent!(attempt) if attempt.managed?
+              attempt = attempt.with(state: derived.state) if derived
+              if attempt.state == "reserved"
+                raise AttemptErrors::EvidenceUnavailable,
+                  "Reservation #{attempt_id} is unbound; protected launch reconciliation requires positive " \
+                  "no-execution/no-surviving-writer proof before abort"
+              end
               raise AttemptErrors::InvalidState, "Attempt #{attempt_id} is terminal; accepted history is immutable" if attempt.terminal?
               raise AttemptErrors::InvalidState, "Attempt #{attempt_id} is uncertain; reconcile before finishing" if attempt.uncertain?
 
@@ -528,7 +539,7 @@ input:#{Regexp.escape(request.fetch("input_digest"))} outcome:(\S+)( no-effect:(
             elsif attempt.terminal?
               ["restart-required", "attempt ended; restart requires a new attributable attempt"]
             elsif unstarted
-              ["restart-required", "no recorded process start"]
+              ["reconcile-required", "launch binding unavailable; positive no-execution/no-surviving-writer proof required before abort"]
             elsif !assignment || observation["liveness"] != "live"
               ["reconcile-required", !assignment ? "assignment checkpoint unavailable" : observation["reason"]]
             else
@@ -773,14 +784,19 @@ input:#{Regexp.escape(request.fetch("input_digest"))} outcome:(\S+)( no-effect:(
               raise AttemptErrors::NotFound, "Attempt '#{attempt_id}' not found" unless attempt
 
               derived = ensure_journal_consistent!(attempt, allow_uncertain: true) if attempt.managed?
-              # The journal is authoritative for managed attempts: uncertainty
-              # journaled after the local save drives reconciliation.
-              attempt = attempt.with(state: derived.state) if derived&.state == "uncertain" && attempt.state == "running"
+              # The journal is authoritative, including an unbound reservation
+              # that a stale local running projection must not promote.
+              attempt = attempt.with(state: derived.state) if derived
 
               if attempt.terminal?
                 raise AttemptErrors::InvalidState, "Attempt #{attempt_id} is terminal; accepted history is immutable"
               end
 
+              if attempt.state == "reserved"
+                raise AttemptErrors::EvidenceUnavailable,
+                  "Reservation #{attempt_id} requires protected launch reconciliation with positive no-execution/" \
+                  "no-surviving-writer proof before abort; missing process_start is not proof"
+              end
               return classify_running(attempt) if attempt.state == "running"
 
               identity ||= @identity_resolver.resolve
@@ -937,12 +953,6 @@ input:#{Regexp.escape(request.fetch("input_digest"))} outcome:(\S+)( no-effect:(
           when :live
             raise AttemptErrors::InvalidState,
               "Attempt #{attempt.attempt_id} process is verifiably live; reconcile after it exits"
-          when :stopped
-            attempt = append_events(attempt, [transition_event(attempt, "stopped", "interrupted before process start")])
-            attempt = attempt.transition("stopped")
-            @store.save(attempt)
-            @store.release(attempt.binding.assignment_id, attempt.binding.scope, attempt.attempt_id)
-            attempt
           else
             attempt = append_events(attempt, [transition_event(attempt, "uncertain", "effect completion cannot be proven or excluded")])
             attempt = attempt.transition("uncertain")
@@ -1074,6 +1084,10 @@ input:#{Regexp.escape(request.fetch("input_digest"))} outcome:(\S+)( no-effect:(
         end
 
         def accept(attempt, receipt, live_head, pre_events = [])
+          # Reject illegal terminal outcomes before accepting any receipt.
+          if %w[succeeded failed].include?(receipt.verdict)
+            Atoms::AttemptStateMachine.transition!(attempt.state, receipt.verdict)
+          end
           previous = pre_events.last&.dig("digest") || last_event_digest(attempt)
           event = Models::EvidenceEvent.build(
             type: "receipt_accepted",
