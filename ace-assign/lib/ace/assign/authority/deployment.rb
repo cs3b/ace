@@ -3,6 +3,7 @@ require "json"
 require "digest"
 require "etc"
 require "rbconfig"
+require_relative "posix_acl"
 require "ace/runtime/molecules/protected_socket"
 require "ace/runtime/molecules/protected_linux"
 
@@ -123,7 +124,9 @@ module Ace
             project(id).fetch("service_receivers", {}).each_value do |receiver|
               uid = receiver.fetch("executor_uid")
               root = receiver.fetch("staging_root")
-              receiver_directory!(root, uid: uid)
+              credentials = project(id).fetch("peer_credentials").fetch(uid.to_s)
+              groups = (credentials.fetch("groups") + [credentials.fetch("gid")]).uniq
+              receiver_directory!(root, uid: uid, groups: groups)
               unless File.executable?(File.dirname(root))
                 raise Ace::Runtime::RuntimeUnavailableError, "authority cannot inspect receiver staging"
               end
@@ -132,7 +135,7 @@ module Ace
                 raise Ace::Runtime::RuntimeUnavailableError, "receiver staging must be executor-private"
               end
               path = receiver.fetch("socket_path")
-              receiver_directory!(File.dirname(path), uid: uid)
+              receiver_directory!(File.dirname(path), uid: uid, groups: groups)
               unless File.executable?(File.dirname(path))
                 raise Ace::Runtime::RuntimeUnavailableError, "authority cannot inspect receiver endpoint"
               end
@@ -150,18 +153,26 @@ module Ace
           raise Ace::Runtime::RuntimeUnavailableError, "installed receiver paths are unavailable"
         end
 
-        def receiver_directory!(path, uid:)
+        def receiver_directory!(path, uid:, groups:)
           current = path
           loop do
             stat = File.lstat(current)
             unless stat.directory? && !stat.symlink? && [0, uid].include?(stat.uid) && (stat.mode & 0o022).zero?
               raise Ace::Runtime::RuntimeUnavailableError, "installed receiver ancestry is unsafe"
             end
+            unless receiver_acl.searchable?(current, stat: stat, uid: uid, groups: groups)
+              raise Ace::Runtime::RuntimeUnavailableError, "executor cannot traverse receiver ancestry"
+            end
             break if current == "/"
             current = File.dirname(current)
           end
         end
         private :receiver_directory!
+
+        def receiver_acl
+          @receiver_acl ||= PosixAcl.new
+        end
+        private :receiver_acl
 
         def paths_overlap?(left, right)
           left == right || left.start_with?(right.chomp("/") + "/") || right.start_with?(left.chomp("/") + "/")

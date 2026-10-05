@@ -87,7 +87,36 @@ module Ace
           row = value["projects"]["project"]["service_receivers"]["publish"]
           row.merge!("staging_root" => staging, "socket_path" => File.join(root, "service.sock"))
           value["projects"]["project"]["peer_credentials"][Process.uid.to_s]["gid"] = Process.gid
-          yield value, root, staging
+          if RUBY_PLATFORM.include?("linux")
+            yield value, root, staging
+          else
+            # These host tests exercise filesystem placement, not Linux ACL retrieval.
+            acl = Authority::PosixAcl.new
+            acl.define_singleton_method(:entries) { |_path| nil }
+            Authority::PosixAcl.stub(:new, acl) { yield value, root, staging }
+          end
+        end
+      end
+
+      def test_authority_access_does_not_admit_executor_inaccessible_ancestor
+        with_private_paths do |value, root, _staging|
+          deployment = Authority::Deployment.new(value)
+          original = File.method(:lstat)
+          observed = original.call(root)
+          modeled = Struct.new(:uid, :gid, :mode) do
+            def directory? = true
+            def symlink? = false
+          end.new(0, 13003, 0o40750)
+          acl = Authority::PosixAcl.new
+          acl.define_singleton_method(:entries) { |_path| nil }
+          deployment.define_singleton_method(:receiver_acl) { acl }
+          File.stub(:lstat, ->(path) { path == root ? modeled : original.call(path) }) do
+            # Host authority can traverse this actual directory; installed executor
+            # lacks the modeled root-owned ancestor's authority-only group.
+            assert File.executable?(root)
+            assert_raises(Ace::Runtime::RuntimeUnavailableError) { deployment.verify_receiver_paths!("authority") }
+          end
+          assert observed.directory?
         end
       end
 

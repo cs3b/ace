@@ -114,3 +114,13 @@ acceptance. A Docker kernel with Yama=0 is expected to refuse the product gate;
 it does not establish the required positive protected launch proof.
 
 Protected launch uses only `layout.apply` in the installed workspace. `workspace.get` checks that exact workspace ID before creation; its reply must echo the ID even when another workspace is active. Missing or replaced containers refuse without fallback. Container contents supply no worker evidence. The original fresh layout reply remains the source of the new tab/pane identity.
+
+Receiver admission reads Linux `system.posix_acl_access` on every directory from
+the endpoint parent and private staging root to `/`, and evaluates search access
+for the installed executor UID, primary GID and supplemental groups. Named user
+entries override group/other entries; the ACL mask constrains named user and
+group entries. Absence of an access ACL uses ordinary mode permissions;
+unsupported, unreadable or malformed ACL data refuses startup. The authority
+must also actually traverse the endpoint and staging parents. This inspection
+does not claim an executor readiness handshake or bypass additional LSM policy;
+the installed receiver still performs its own bind and private staging checks.
