@@ -322,7 +322,93 @@ module Ace
               end
             end
 
+            def test_exit_observation_waits_for_owned_reaping_after_actual_termination
+              ready_reader, ready_writer = IO.pipe
+              reap_reader, reap_writer = IO.pipe
+              pid = fork do
+                ready_reader.close
+                reap_reader.close
+                reap_writer.close
+                ready_writer.write("ready")
+                ready_writer.close
+                Process.kill("STOP", Process.pid)
+                sleep 5
+                exit! 0
+              end
+              may_signal = true
+              ready_writer.close
+              assert ready_reader.wait_readable(0.5), "owned child should announce readiness"
+              assert_equal "ready", ready_reader.read_nonblock(5)
+              stopped_pid, stopped_status = wait_for_stopped_child(pid)
+              may_signal = stopped_status.stopped? if stopped_status
+              assert_equal pid, stopped_pid
+              assert stopped_status.stopped?
+
+              reaper = Thread.new do
+                reap_reader.read(1)
+                Process.wait2(pid)
+              end
+              Process.kill("TERM", pid)
+              Process.kill("KILL", pid)
+              assert wait_for_process_state(pid, "Z"), "KILL should terminate the owned child before reaping"
+              assert process_alive?(pid), "the original immediate predicate still sees the unreaped PID"
+              refute wait_for_process_exit(pid, timeout: 0.02), "an unreaped owned child must not pass"
+
+              # Disable signaling before opening the only final-reaping gate.
+              may_signal = false
+              reap_writer.write("reap")
+              assert wait_for_process_exit(pid), "bounded observation should see absence after owned reaping"
+              assert reaper.join(0.5), "owned reaper should finish"
+              reaped_pid, status = reaper.value
+              assert_equal pid, reaped_pid
+              assert status.signaled?
+              assert_equal Signal.list.fetch("KILL"), status.termsig
+            ensure
+              if pid
+                if may_signal
+                  begin
+                    Process.kill("KILL", pid)
+                  rescue Errno::ESRCH
+                    nil
+                  end
+                end
+                reap_writer&.close unless reap_writer&.closed?
+                reaper&.join(0.5)
+                reaper&.kill if reaper&.alive?
+                cleanup_deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + 0.5
+                loop do
+                  break if Process.waitpid(pid, Process::WNOHANG)
+                  raise "owned child PID #{pid} was not reaped" if
+                    Process.clock_gettime(Process::CLOCK_MONOTONIC) >= cleanup_deadline
+                  sleep 0.01
+                rescue Errno::ECHILD
+                  break
+                end
+              end
+              [ready_reader, ready_writer, reap_reader].compact.each { |io| io.close unless io.closed? }
+            end
+
             private
+
+            def wait_for_stopped_child(pid, timeout: 0.5)
+              deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + timeout
+              loop do
+                result = Process.wait2(pid, Process::WUNTRACED | Process::WNOHANG)
+                return result if result
+                return nil if Process.clock_gettime(Process::CLOCK_MONOTONIC) >= deadline
+                sleep 0.01
+              end
+            end
+
+            def wait_for_process_state(pid, expected, timeout: 0.5)
+              deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + timeout
+              loop do
+                state, status = Open3.capture2("ps", "-o", "stat=", "-p", pid.to_s)
+                return true if status.success? && state.strip.start_with?(expected)
+                return false if Process.clock_gettime(Process::CLOCK_MONOTONIC) >= deadline
+                sleep 0.01
+              end
+            end
 
             def wait_for_process_exit(pid, timeout: 0.5)
               deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + timeout
