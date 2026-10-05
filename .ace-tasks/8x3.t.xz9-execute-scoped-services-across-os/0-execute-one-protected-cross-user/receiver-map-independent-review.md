@@ -32,3 +32,8 @@ Root read the success summary. No timeout override was used.
 readiness, LSM permission, a live executor, effect authorization, or full service
 acceptance. Receiver startup must perform its actual private-directory/listener
 checks; the installed cross-user receiver remains a separate open gate.
+
+Integrated into main as `050be8b9fe49d2e0eaf0e86d030cf73d6c17ce0a`.
+The root post-merge focused checks passed **15 tests / 71 assertions**,
+receipt `8x47j3`. This closes the mapping source checkpoint only; the installed
+cross-user receiver acceptance remains open.
