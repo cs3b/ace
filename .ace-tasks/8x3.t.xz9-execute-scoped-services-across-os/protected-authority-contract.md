@@ -1,6 +1,21 @@
 # Protected assignment authority contract — readiness decision, 2026-10-05
 
-This public contract passed independent readiness review at 0626be045; it is not delivered functionality. See readiness-review-2026-10-05.md for source implementation and installed acceptance boundaries. qjl remains the only attempt/effect journal. The protected repository below is the deployment of that journal, not a second ledger synchronized from worker refs.
+## Implementation-discovered launch ownership amendment
+
+The cross-user launcher assumption was not satisfied by current runtime source.
+Draft prerequisite 8x4.t.09j owns the smallest working protected launch origin:
+authenticated register/reserve/record_launch/bind/abort transport and qjl state,
+deployment-mapped native endpoint authentication/control, actual gated worker
+child and public driver integration. It depends on existing qjl/runtime core,
+never the future xz9.0 service endcap. xz9.0 now consumes that source and owns
+candidate/review/import, broader lifecycle/inbox routing and service integration.
+Its original launch SCs remain endcap integration checks. The authority remains
+one account and one qjl deployment, not a second launch ledger or domain daemon.
+Native socket ACL/control or standard OS authenticated transport is unchosen
+pending bounded capability proof and independent review; current Lab wrapper
+refuses a distinct unprivileged launcher. Historical approval predates this gap.
+
+The earlier contract passed independent readiness review at 0626be045; this launch amendment reopens affected readiness and is not delivered functionality. See readiness-review-2026-10-05.md for the historical decision and current needs_review metadata for the unresolved amendment. qjl remains the only attempt/effect journal. The protected repository below is the deployment of that journal, not a second ledger synchronized from worker refs.
 
 ## Mutation owner and installation contract
 

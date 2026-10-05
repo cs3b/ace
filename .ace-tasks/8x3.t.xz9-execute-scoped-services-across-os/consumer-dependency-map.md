@@ -4,6 +4,8 @@ This map is part of the revised specification. No external task metadata was mod
 
 | Producer | Source consumer/prerequisite | Downstream installed proof |
 |---|---|---|
+| Existing qjl/runtime core | draft 09j authenticated cross-user gated launch/control + minimal protected launch-origin authority | gad.8 fixed native endpoint/accounts/connect ACL or selected standard authentication; actual launch proof |
+| 09j accepted launch source | xz9.0 consumes protected register/reserve/record/bind/abort and driver gate, extends same authority into candidate/review/service endcap | gad.8/gad.b installed service proof; no reverse dependency on xz9.0 |
 | qjl/qjx already delivered | xz9.0 protected lifecycle/receiver/import endcap; xz9.1 resilience depends xz9.0 | gad.8 authority/account/topology installation; gad.b migrated setup-project/scoped handlers |
 | xz9.0 protected API | xza.3 context key admission; xza.0 observation import/fetch/first Codex signed consumed consumer | gad.8 protected native endpoint/context/signer/key installation |
 | xza.3 admission | xza.0 exact signed consumption under shared admission | gad.8 actual pair rotation/rollback; gad.b signer participation |
