@@ -1,0 +1,226 @@
+Started with run options --seed 1439
+
+ExecutionVerdictTest
+  test_successful_timeout_text_is_not_failure                     PASS (0.00s)
+  test_orchestrator_preserves_execution_failure_without_inventing_tests PASS (0.00s)
+  test_later_success_cannot_hide_unsuccessful_execution           PASS (0.00s)
+  test_fail_fast_retains_execution_failure                        PASS (0.00s)
+  test_subprocess_fail_fast_takes_precedence_over_single_batch    PASS (0.00s)
+
+Ace::TestRunner::Molecules::RakeIntegrationTest
+  test_set_default_with_existing_test_task                        PASS (0.04s)
+  test_set_default_creates_rakefile_if_missing                    PASS (0.02s)
+  test_check_status_with_rakefile_no_integration                  PASS (0.00s)
+  test_check_status_no_rakefile                                   PASS (0.00s)
+  test_integration_config_respects_environment_variables          PASS (0.02s)
+  test_set_default_with_existing_rakefile                         PASS (0.02s)
+  test_set_default_idempotent                                     PASS (0.01s)
+  test_unset_default_with_integration_and_backup                  PASS (0.02s)
+  test_unset_default_with_integration_no_backup                   PASS (0.01s)
+  test_check_status_with_integration                              PASS (0.00s)
+  test_unset_default_with_no_integration                          PASS (0.01s)
+  test_integration_config_includes_fallback                       PASS (0.01s)
+
+PatternResolverTest
+  test_resolve_target_with_deep_nonexistent_path                  PASS (0.00s)
+  test_detects_cyclic_target_definitions                          PASS (0.00s)
+  test_available_targets                                          PASS (0.00s)
+  test_resolve_target_defaults_to_fast_when_nil                   PASS (0.00s)
+  test_rejects_removed_legacy_target_names                        PASS (0.00s)
+  test_resolve_target_with_all                                    PASS (0.00s)
+  test_resolve_target_with_known_pattern                          PASS (0.00s)
+  test_resolve_target_with_known_named_target                     PASS (0.00s)
+  test_rejects_removed_legacy_targets                             PASS (0.00s)
+  test_rejects_e2e_target_with_guidance                           PASS (0.00s)
+  test_resolve_multiple_targets                                   PASS (0.00s)
+  test_resolve_target_with_nonexistent_rb_file                    PASS (0.00s)
+  test_resolve_target_feat_does_not_include_legacy_integration_files PASS (0.00s)
+  test_resolve_target_with_nonexistent_file_path_with_slash       PASS (0.00s)
+  test_classify_file                                              PASS (0.00s)
+  test_resolve_target_with_unknown_target                         PASS (0.00s)
+  test_resolve_target_with_existing_file                          PASS (0.00s)
+  test_recursive_target_expansion                                 PASS (0.00s)
+
+CliRoutingTest
+  test_positional_tokens_route_to_test_command                    PASS (0.05s)
+  test_cli_supports_version_flag                                  PASS (0.00s)
+  test_cli_help_is_available_from_single_command_entrypoint       PASS (0.00s)
+
+TestDetectorTest
+  test_returns_empty_array_when_no_tests_found                    PASS (0.00s)
+  test_finds_test_files_with_default_patterns                     PASS (0.00s)
+  test_filters_by_pattern                                         PASS (0.00s)
+  test_detects_test_file                                          PASS (0.00s)
+  test_removes_duplicate_files                                    PASS (0.00s)
+
+ProgressReportLinksTest
+  test_failure_headers_and_truncation_use_only_actual_saved_reports PASS (0.00s)
+
+FixtureEnvironmentTest
+  test_build_and_cleanup_leave_parent_env_and_global_env_unchanged PASS (0.00s)
+  test_launch_environment_replaces_home_and_xdg_with_fixture_paths PASS (0.00s)
+  test_cleanup_is_idempotent                                      PASS (0.01s)
+  test_fixture_overrides_apply_after_sanitization                 PASS (0.01s)
+  test_launch_environment_excludes_ambient_configuration_and_keeps_allowlist PASS (0.01s)
+  test_build_creates_fixture_home_and_xdg_directories_inside_owned_root PASS (0.00s)
+  test_missing_required_override_is_a_setup_error_naming_the_key_only PASS (0.00s)
+  test_failed_build_cleans_up_the_created_root                    PASS (0.00s)
+  test_cleanup_removes_only_the_owned_root                        PASS (0.01s)
+
+TestResultTest
+  test_determines_success_status                                  PASS (0.00s)
+  test_converts_to_hash                                           PASS (0.00s)
+  test_checks_for_deprecations                                    PASS (0.00s)
+  test_calculates_pass_rate                                       PASS (0.00s)
+  test_checks_for_skips                                           PASS (0.00s)
+  test_converts_to_json                                           PASS (0.00s)
+  test_generates_summary_line                                     PASS (0.00s)
+  test_handles_zero_tests_for_pass_rate                           PASS (0.00s)
+  test_calculates_total_tests                                     PASS (0.00s)
+  test_summary_line_with_no_tests                                 PASS (0.00s)
+  test_checks_for_failures                                        PASS (0.00s)
+
+TimestampGeneratorTest
+  test_detect_format_2sec_id                                      PASS (0.00s)
+  test_elapsed_time_milliseconds                                  PASS (0.00s)
+  test_filename_timestamp_with_extension                          PASS (0.00s)
+  test_detect_format_timestamp                                    PASS (0.00s)
+  test_generate_and_parse_roundtrip                               PASS (0.00s)
+  test_parse_invalid_returns_nil                                  PASS (0.00s)
+  test_iso_timestamp_defaults_to_now                              PASS (0.00s)
+  test_generate_is_deterministic                                  PASS (0.00s)
+  test_parse_compact_id                                           PASS (0.00s)
+  test_elapsed_time_minutes                                       PASS (0.00s)
+  test_elapsed_time_defaults_to_now                               PASS (0.00s)
+  test_elapsed_time_seconds                                       PASS (0.00s)
+  test_iso_timestamp                                              PASS (0.00s)
+  test_filename_timestamp_without_extension                       PASS (0.00s)
+  test_parse_empty_string_returns_nil                             PASS (0.00s)
+  test_detect_format_invalid                                      PASS (0.00s)
+  test_parse_nil_returns_nil                                      PASS (0.00s)
+  test_generate_produces_6_char_id                                PASS (0.00s)
+  test_directory_name_uses_base36                                 PASS (0.00s)
+
+EnvironmentPolicyTest
+  test_merge_with_prefers_specific_overrides_and_unions_lists     PASS (0.00s)
+  test_from_config_accepts_nil                                    PASS (0.00s)
+  test_default_policy_blocks_ambient_lab_and_ace_configuration    PASS (0.00s)
+  test_channel_payload_round_trips_through_from_channel           PASS (0.00s)
+  test_default_policy_preserves_toolchain_and_temp_keys_only      PASS (0.00s)
+  test_invalid_channel_payload_is_a_setup_error                   PASS (0.00s)
+  test_from_config_adds_preserved_keys_overrides_and_requirements PASS (0.00s)
+  test_policy_is_immutable_against_callers                        PASS (0.00s)
+  test_preserving_blocked_key_is_a_setup_error_naming_the_key     PASS (0.00s)
+  test_credential_like_keys_are_redacted_in_diagnostics           PASS (0.00s)
+  test_unlisted_keys_are_not_preserved                            PASS (0.00s)
+  test_default_policy_blocks_provider_credentials_and_project_selection PASS (0.00s)
+
+Ace::TestRunner::Atoms::ReportPathResolverTest
+  test_falls_back_to_legacy_test_reports_layout                   PASS (0.01s)
+  test_returns_nil_if_no_reports_exist                            PASS (0.01s)
+  test_returns_failures_json_if_exists                            PASS (0.01s)
+  test_returns_summary_json_if_failures_missing                   PASS (0.00s)
+  test_returns_report_md_if_json_missing                          PASS (0.01s)
+  test_returns_nil_if_reports_dir_does_not_exist                  PASS (0.01s)
+
+ConfigLoaderTest
+  test_gem_defaults_include_expected_targets                      PASS (0.00s)
+  test_gem_defaults_include_expected_defaults                     PASS (0.00s)
+  test_load_from_specific_file                                    PASS (0.00s)
+  test_load_default_config_when_no_file_exists                    PASS (0.00s)
+  test_normalize_config_ensures_all_sections                      PASS (0.00s)
+  test_merge_with_options                                         PASS (0.00s)
+  test_merge_with_default_config                                  PASS (0.00s)
+  test_handle_invalid_yaml                                        PASS (0.00s)
+  test_load_gem_defaults                                          PASS (0.00s)
+  test_reset_gem_defaults_clears_cache                            PASS (0.00s)
+  test_gem_defaults_include_expected_patterns                     PASS (0.00s)
+  test_validate_config_version                                    PASS (0.00s)
+  test_gem_defaults_include_failure_limits                        PASS (0.00s)
+
+Ace::TestRunner::Atoms::ReportDirectoryResolverTest
+  test_resolve_package_report_dir_uses_short_package_name         PASS (0.00s)
+  test_infer_package_name_uses_test_file_prefix_when_package_dir_missing PASS (0.00s)
+  test_infer_package_name_prefers_package_dir                     PASS (0.00s)
+  test_short_package_name_drops_ace_prefix                        PASS (0.00s)
+
+PackageResolverTest
+  test_accepts_custom_project_root                                PASS (0.00s)
+  test_finds_project_root                                         PASS (0.00s)
+  test_resolve_with_nil_input                                     PASS (0.00s)
+  test_available_packages_returns_empty_when_no_root              PASS (0.00s)
+  test_resolves_package_by_exact_name                             PASS (0.00s)
+  test_returns_nil_for_package_without_test_dir                   PASS (0.00s)
+  test_resolves_relative_path_with_double_dot                     PASS (0.00s)
+  test_resolves_package_with_test_dir                             PASS (0.00s)
+  test_returns_nil_for_nonexistent_absolute_path                  PASS (0.00s)
+  test_resolve_current_directory_dot                              PASS (0.00s)
+  test_available_packages_sorted                                  PASS (0.00s)
+  test_resolve_with_empty_string                                  PASS (0.00s)
+  test_resolves_relative_path_with_dot_slash                      PASS (0.00s)
+  test_resolves_absolute_path                                     PASS (0.00s)
+  test_returns_nil_for_nonexistent_package                        PASS (0.00s)
+  test_available_packages_only_includes_packages_with_tests       PASS (0.00s)
+  test_suite_config_includes_all_testable_packages                PASS (0.00s)
+  test_resolves_package_without_ace_prefix                        PASS (0.00s)
+  test_available_packages_returns_list                            PASS (0.00s)
+
+CleanupConfigTest
+  test_cleanup_cli_option_overrides_config                        PASS (0.01s)
+  test_cleanup_uses_config_cascade_for_report_dir                 PASS (0.01s)
+
+Ace::TestRunner::RakeTaskTest
+  test_build_command_with_all_options                             PASS (0.00s)
+  test_accepts_configuration_block                                PASS (0.00s)
+  test_build_command_with_test_files                              PASS (0.00s)
+  test_build_command_with_test_env_variable                       PASS (0.00s)
+  test_creates_test_task_with_default_name                        PASS (0.00s)
+  test_creates_test_task_with_custom_name                         PASS (0.00s)
+  test_build_command_with_verbose                                 PASS (0.00s)
+  test_build_command_with_options                                 PASS (0.00s)
+  test_build_command_with_testopts_env_variable                   PASS (0.00s)
+  test_compatibility_accessors                                    PASS (0.00s)
+  test_loads_in_fresh_process_without_runner_preloaded            PASS (0.40s)
+  test_build_command_basic                                        PASS (0.00s)
+  test_strips_assignment_context_vars_from_environment            PASS (0.00s)
+  test_default_configuration                                      PASS (0.00s)
+  test_build_command_with_format                                  PASS (0.00s)
+
+Ace::TestRunner::Molecules::FailedPackageReporterTest
+  test_format_for_markdown_with_existing_report                   PASS (0.00s)
+  test_format_for_display_with_existing_report                    PASS (0.00s)
+  test_format_for_display_handles_relative_path_error             PASS (0.00s)
+  test_format_for_display_fallback                                PASS (0.00s)
+  test_format_for_markdown_fallback                               PASS (0.00s)
+
+Ace::TestRunner::Atoms::TestTypeDetectorTest
+  test_keeps_plain_unit_directory_file_in_process                 PASS (0.00s)
+  test_needs_subprocess_for_unit_directory_file_when_content_uses_open3 PASS (0.00s)
+
+CliArgumentParserTest
+  test_parses_file_with_line_number                               PASS (0.00s)
+  test_known_target_method                                        PASS (0.00s)
+  test_parses_package_with_options                                PASS (0.00s)
+  test_parses_package_with_multiple_prefixed_files                PASS (0.00s)
+  test_raises_error_for_nonexistent_file_with_line                PASS (0.00s)
+  test_parses_target_only                                         PASS (0.00s)
+  test_parses_package_with_prefixed_file_path_and_line_number     PASS (0.00s)
+  test_parses_package_prefixed_path_from_different_dir            PASS (0.00s)
+  test_parses_package_with_prefixed_file_path                     PASS (0.00s)
+  test_parses_relative_path_with_double_dot                       PASS (0.00s)
+  test_parses_relative_file_path_with_dot_slash                   PASS (0.00s)
+  test_raises_error_for_invalid_explicit_path                     PASS (0.00s)
+  test_parses_direct_file_path                                    PASS (0.00s)
+  test_treats_removed_legacy_targets_as_unknown                   PASS (0.00s)
+  test_preserves_option_flags_in_argv                             PASS (0.00s)
+  test_parses_package_name                                        PASS (0.00s)
+
+EnvironmentSanitizerTest
+  test_sanitizer_never_mutates_input_or_global_env                PASS (0.00s)
+  test_nil_values_are_dropped                                     PASS (0.00s)
+  test_fixture_home_keys_are_not_copied_pending_replacement       PASS (0.00s)
+  test_dropped_keys_reports_names_only                            PASS (0.00s)
+  test_poisoned_parent_environment_yields_only_preserved_keys     PASS (0.00s)
+
+Finished in 0.78315s
+182 tests, 534 assertions, 0 failures, 0 errors, 0 skips

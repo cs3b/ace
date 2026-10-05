@@ -1,0 +1,1 @@
+Warning: Failed to load config from /private/var/folders/hf/knhxwtnx76gcdps2hxb3bp2r0000gr/T/ace_nav_test20261005-27852-a05djw/.ace/protocols/bad.yml: (<unknown>): mapping values are not allowed in this context at line 1 column 11

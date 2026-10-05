@@ -1,0 +1,100 @@
+Started with run options --seed 61424
+
+OptionTest
+  test_rejects_unknown_type                                       PASS (0.00s)
+  test_initializes_with_defaults                                  PASS (0.00s)
+
+Ace::Support::Cli::BaseTest
+  test_validate_required_raises_when_missing                      PASS (0.00s)
+  test_quiet_returns_true_when_enabled                            PASS (0.00s)
+  test_debug_log_outputs_when_debug_enabled                       PASS (0.00s)
+  test_reserved_flags_constant                                    PASS (0.00s)
+  test_raise_cli_error_raises_cli_error                           PASS (0.00s)
+  test_debug_returns_true_when_enabled                            PASS (0.00s)
+  test_help_returns_true_for_help_or_h                            PASS (0.00s)
+  test_verbose_returns_true_when_enabled                          PASS (0.00s)
+  test_standard_options_constant                                  PASS (0.00s)
+  test_format_pairs                                               PASS (0.00s)
+
+TwoTierHelpTest
+  test_dispatches_to_concise_and_full_renderers                   PASS (0.00s)
+  test_detects_concise_only_for_short_flag_without_long_flag      PASS (0.00s)
+
+CommandTest
+  test_inherited_metadata_is_copied                               PASS (0.00s)
+  test_collects_dsl_metadata                                      PASS (0.00s)
+
+HelpCommandFactoryTest
+  test_build_returns_callable_command                             PASS (0.00s)
+  test_build_accepts_args_argument                                PASS (0.00s)
+
+HelpBannerTest
+  test_omits_description_for_single_line_desc                     PASS (0.00s)
+  test_omits_false_default_for_optional_value_flags               PASS (0.00s)
+  test_renders_all_expected_sections                              PASS (0.00s)
+
+ParserTest
+  test_parses_all_supported_types                                 PASS (0.00s)
+  test_help_flag_on_rich_command_renders_banner                   PASS (0.00s)
+  test_absent_option_without_default_stays_absent                 PASS (0.00s)
+Usage: -e bare-command [options]
+        --[no-]verbose
+  test_help_flag_on_bare_command_falls_through                    PASS (0.00s)
+  test_help_flag_mixed_with_other_flags_still_triggers            PASS (0.00s)
+  test_optional_string_value_defaults_when_flag_absent            PASS (0.00s)
+  test_parses_optional_string_value_when_present                  PASS (0.00s)
+  test_bare_optional_value_option_is_present_with_nil_value       PASS (0.00s)
+  test_help_flag_after_separator_is_treated_as_positional         PASS (0.00s)
+  test_reports_unknown_flags_with_suggestion                      PASS (0.00s)
+  test_honors_double_dash                                         PASS (0.00s)
+  test_reports_invalid_integer                                    PASS (0.00s)
+  test_parses_optional_string_value_when_omitted                  PASS (0.00s)
+  test_parses_boolean_false_form                                  PASS (0.00s)
+  test_reports_missing_required_options                           PASS (0.00s)
+  test_h_flag_on_rich_command_renders_concise                     PASS (0.00s)
+
+ArgumentTest
+  test_rejects_unknown_type                                       PASS (0.00s)
+  test_initializes_with_defaults                                  PASS (0.00s)
+
+VersionCommandFactoryTest
+  test_module_show_version_outputs_correctly                      PASS (0.00s)
+  test_build_outputs_name_and_version                             PASS (0.00s)
+
+ArgvCoalescerTest
+  test_top_level_require_exposes_canonical_constant               PASS (0.00s)
+  test_coalesces_matching_flags                                   PASS (0.00s)
+
+RunnerTest
+  test_dispatches_with_typed_options                              PASS (0.00s)
+  test_help_flag_renders_rich_help_with_correct_command_name      PASS (0.00s)
+  test_root_help_renders_usage_without_crashing                   PASS (0.00s)
+
+Ace::Support::Cli::ErrorTest
+  test_can_be_raised_and_rescued                                  PASS (0.00s)
+  test_inherits_from_standard_error                               PASS (0.00s)
+  test_can_be_rescued_as_standard_error                           PASS (0.00s)
+  test_message_remains_unchanged                                  PASS (0.00s)
+  test_default_exit_code_is_one                                   PASS (0.00s)
+  test_to_s_prepends_error_prefix                                 PASS (0.00s)
+  test_stores_message                                             PASS (0.00s)
+  test_custom_exit_code                                           PASS (0.00s)
+
+HelpConciseTest
+  test_renders_compact_help_output                                PASS (0.00s)
+
+Ace::Support::Cli::StandardOptionsTest
+  test_option_description_constants                               PASS (0.00s)
+
+HelpUsageTest
+  test_renders_concise_usage_with_footer                          PASS (0.00s)
+  test_renders_grouped_usage_with_examples                        PASS (0.00s)
+  test_renders_registered_commands_and_string_examples            PASS (0.00s)
+
+RegistryTest
+  test_raises_for_missing_command                                 PASS (0.00s)
+  test_resolves_nested_commands                                   PASS (0.00s)
+  test_resolves_top_level_command                                 PASS (0.00s)
+
+Finished in 0.06427s
+62 tests, 220 assertions, 0 failures, 0 errors, 0 skips

@@ -1,0 +1,9 @@
+
+# Running tests with run options --seed 9103:
+
+.
+
+Finished tests in 0.009465s, 105.6524 tests/s, 211.3048 assertions/s.
+
+
+1 tests, 2 assertions, 0 failures, 0 errors, 0 skips

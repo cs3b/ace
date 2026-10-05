@@ -1,0 +1,29 @@
+Started with run options --seed 19099
+
+ManagedEnvelopeTest
+  test_secret_folder_answer_and_unauthorized_effect_shape_are_rejected PASS (0.02s)
+  test_otp_has_no_payload_or_hash_and_no_business_callback        PASS (0.00s)
+  test_exact_binding_and_distinct_nested_contracts                PASS (0.00s)
+  test_nested_timestamp_requires_real_canonical_calendar_components PASS (0.00s)
+  test_wire_reverse_is_a_canonical_typed_pair                     PASS (0.00s)
+  test_pane_less_is_explicit_and_unknown_fields_do_not_enter_persistence PASS (0.00s)
+  test_digest_requires_json_string                                PASS (0.00s)
+  test_packaged_shared_examples_are_valid                         PASS (0.00s)
+  test_native_reverse_pair_survives_wire_without_target_rewrite_or_authority PASS (0.00s)
+
+RefTest
+  test_missing_pane_fails_closed_naming_the_variable              PASS (0.00s)
+  test_overlong_value_fails_closed                                PASS (0.00s)
+  test_native_pairs_are_exact_and_normalized_at_direct_and_environment_boundaries PASS (0.00s)
+  test_all_token_punctuation_is_accepted                          PASS (0.00s)
+  test_invalid_characters_fail_closed                             PASS (0.00s)
+  test_from_env_returns_stripped_ref                              PASS (0.00s)
+  test_max_length_boundary_value_is_accepted                      PASS (0.00s)
+  test_missing_session_fails_closed_naming_the_variable           PASS (0.00s)
+  test_whitespace_only_values_fail_closed                         PASS (0.00s)
+  test_to_h_is_versioned_schema_shape                             PASS (0.00s)
+  test_all_pair_entrypoints_refuse_malformed_and_mixed_fields     PASS (0.03s)
+  test_diagnostic_labels_never_select_field_semantics             PASS (0.00s)
+
+Finished in 0.08908s
+21 tests, 128 assertions, 0 failures, 0 errors, 0 skips

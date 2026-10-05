@@ -1,0 +1,716 @@
+[
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/89307753-cec6-48e9-bd5a-07a0e1690acc/summary.json",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/89307753-cec6-48e9-bd5a-07a0e1690acc/summary.json",
+    "sha256": "4c4a3f3bffd1e7ef2686926178e9694240ea196ecd33e2494fcf864f5883ab38",
+    "bytes": 274
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/89307753-cec6-48e9-bd5a-07a0e1690acc/report.json",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/89307753-cec6-48e9-bd5a-07a0e1690acc/report.json",
+    "sha256": "abe8e67a73c76a86dc4199970f52cb79a5394f1e241b00ef9262f74b24ba1c9d",
+    "bytes": 8037
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/89307753-cec6-48e9-bd5a-07a0e1690acc/raw_stderr.txt",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/89307753-cec6-48e9-bd5a-07a0e1690acc/raw_stderr.txt",
+    "sha256": "cd47521c1b3c676f5a5af4aafa17c875cc9afdce38960ad34456f53407463f3d",
+    "bytes": 1359
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/89307753-cec6-48e9-bd5a-07a0e1690acc/report.md",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/89307753-cec6-48e9-bd5a-07a0e1690acc/report.md",
+    "sha256": "4e416adbd1d313f66324ebda98278de85470a64203fc9d9cb756070274a6c6b0",
+    "bytes": 5660
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/89307753-cec6-48e9-bd5a-07a0e1690acc/raw_output.txt",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/89307753-cec6-48e9-bd5a-07a0e1690acc/raw_output.txt",
+    "sha256": "c72f84f40e06a8887ea192910d559c35102fa658b95aec644584510ed3a80857",
+    "bytes": 61245
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/ab606734-7f95-49f8-af5c-705a84bfebe2/summary.json",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/ab606734-7f95-49f8-af5c-705a84bfebe2/summary.json",
+    "sha256": "90d590fbda4634dcc83dc21f61f594cf8c6655e0bbf71ca342473146a811aab2",
+    "bytes": 275
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/ab606734-7f95-49f8-af5c-705a84bfebe2/report.json",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/ab606734-7f95-49f8-af5c-705a84bfebe2/report.json",
+    "sha256": "65ebd702b4d53726430bccc24f2d9303f0562e6f0ab8fe5a9dfc464d6f9cbdad",
+    "bytes": 12768
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/ab606734-7f95-49f8-af5c-705a84bfebe2/raw_stderr.txt",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/ab606734-7f95-49f8-af5c-705a84bfebe2/raw_stderr.txt",
+    "sha256": "f1a0cd1dede840aa2d30859e1123cce544d5d356d1394e4cbaa8f5ca22675f5f",
+    "bytes": 8836
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/ab606734-7f95-49f8-af5c-705a84bfebe2/report.md",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/ab606734-7f95-49f8-af5c-705a84bfebe2/report.md",
+    "sha256": "d6a2caca4315ed7cfd0887082604450a1b4949bba94310b7bafb8aa76b3e0dbb",
+    "bytes": 10313
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/ab606734-7f95-49f8-af5c-705a84bfebe2/raw_output.txt",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/ab606734-7f95-49f8-af5c-705a84bfebe2/raw_output.txt",
+    "sha256": "15e6877c2693a564f275691d70061257be8ac2098b411643074b924db8967973",
+    "bytes": 44635
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/e0d9d93d-5135-4026-8b47-e0251d01da48/summary.json",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/e0d9d93d-5135-4026-8b47-e0251d01da48/summary.json",
+    "sha256": "86d568bb1440a4f5544f1c15684b4ae10ba134df0c234663af42abf0b4e90efb",
+    "bytes": 268
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/e0d9d93d-5135-4026-8b47-e0251d01da48/report.json",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/e0d9d93d-5135-4026-8b47-e0251d01da48/report.json",
+    "sha256": "a635e4d453cae1f58089c27259ec3d4c422f787eb504b3721fcddbd16c87ad8f",
+    "bytes": 3077
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/e0d9d93d-5135-4026-8b47-e0251d01da48/raw_stderr.txt",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/e0d9d93d-5135-4026-8b47-e0251d01da48/raw_stderr.txt",
+    "sha256": "916e1a0dde5d3a10245f92c7dc057cd1fa80e6586f2af1362e8d23de5ce35a9d",
+    "bytes": 328
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/e0d9d93d-5135-4026-8b47-e0251d01da48/report.md",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/e0d9d93d-5135-4026-8b47-e0251d01da48/report.md",
+    "sha256": "2be89232afed83c192e65d1eee698e98b86eb37d443cdfa835170dbab6071e63",
+    "bytes": 679
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/e0d9d93d-5135-4026-8b47-e0251d01da48/raw_output.txt",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/e0d9d93d-5135-4026-8b47-e0251d01da48/raw_output.txt",
+    "sha256": "7b601eb017835c60a3cba1dcf206fd2d839c4d937333502e628db7433888b87d",
+    "bytes": 3933
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/17cdeaf6-3882-478f-a1e0-67a7dce33074/summary.json",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/17cdeaf6-3882-478f-a1e0-67a7dce33074/summary.json",
+    "sha256": "df618ae1b32e8136c0831f93562bfc41925c22670df13687aa4ee7ce0d91d521",
+    "bytes": 264
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/17cdeaf6-3882-478f-a1e0-67a7dce33074/report.json",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/17cdeaf6-3882-478f-a1e0-67a7dce33074/report.json",
+    "sha256": "d73f888daaa16ffc9e9e87f91100ea11bc6a398ac574416d95b1b6ecd2f32e05",
+    "bytes": 3056
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/17cdeaf6-3882-478f-a1e0-67a7dce33074/raw_stderr.txt",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/17cdeaf6-3882-478f-a1e0-67a7dce33074/raw_stderr.txt",
+    "sha256": "916e1a0dde5d3a10245f92c7dc057cd1fa80e6586f2af1362e8d23de5ce35a9d",
+    "bytes": 328
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/17cdeaf6-3882-478f-a1e0-67a7dce33074/report.md",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/17cdeaf6-3882-478f-a1e0-67a7dce33074/report.md",
+    "sha256": "7180a6ead9fcf1af58cf7d8960cbcf366f26112a76ec0a329b534e697b16d7d8",
+    "bytes": 669
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/17cdeaf6-3882-478f-a1e0-67a7dce33074/raw_output.txt",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/17cdeaf6-3882-478f-a1e0-67a7dce33074/raw_output.txt",
+    "sha256": "efc4de108469ef1f68283477b077a2301ae4a8b032a975b7ad4a8c38aa09e192",
+    "bytes": 16425
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/6fa4e350-93fd-4b4c-8189-9271614c7f95/summary.json",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/6fa4e350-93fd-4b4c-8189-9271614c7f95/summary.json",
+    "sha256": "41d477cf606206696971fc8388b52c20275bf347613bce92a66393107eed8f07",
+    "bytes": 269
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/6fa4e350-93fd-4b4c-8189-9271614c7f95/report.json",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/6fa4e350-93fd-4b4c-8189-9271614c7f95/report.json",
+    "sha256": "110131198a8fe39cda31d754db1a94f659ac3bc527a73178a42018609b2cba3f",
+    "bytes": 11012
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/6fa4e350-93fd-4b4c-8189-9271614c7f95/raw_stderr.txt",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/6fa4e350-93fd-4b4c-8189-9271614c7f95/raw_stderr.txt",
+    "sha256": "916e1a0dde5d3a10245f92c7dc057cd1fa80e6586f2af1362e8d23de5ce35a9d",
+    "bytes": 328
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/6fa4e350-93fd-4b4c-8189-9271614c7f95/report.md",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/6fa4e350-93fd-4b4c-8189-9271614c7f95/report.md",
+    "sha256": "bc3092e7dea3e804a95349921dd3931236a79272842ec126a6ea231f8905e148",
+    "bytes": 2050
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/6fa4e350-93fd-4b4c-8189-9271614c7f95/raw_output.txt",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/6fa4e350-93fd-4b4c-8189-9271614c7f95/raw_output.txt",
+    "sha256": "130bc839f7070535fb225e123857c6edda922ffff1ca201ad792ae885135bc4f",
+    "bytes": 10736
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/55ba5ceb-baac-4ebd-a682-7fcb48854c52/summary.json",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/55ba5ceb-baac-4ebd-a682-7fcb48854c52/summary.json",
+    "sha256": "28ad3a77789448d1b31298b7b4fa42eddce34557e3ee030f7c712bab1c68924a",
+    "bytes": 272
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/55ba5ceb-baac-4ebd-a682-7fcb48854c52/report.json",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/55ba5ceb-baac-4ebd-a682-7fcb48854c52/report.json",
+    "sha256": "31ac25da277048360faee0f3a40f00ea702d5c7e706f52fe7565b31e913ec4f4",
+    "bytes": 5537
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/55ba5ceb-baac-4ebd-a682-7fcb48854c52/raw_stderr.txt",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/55ba5ceb-baac-4ebd-a682-7fcb48854c52/raw_stderr.txt",
+    "sha256": "3f92ecaf2434e587dfbab7450738cf1f7860a5d664989d7de933a54045ae3814",
+    "bytes": 1316
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/55ba5ceb-baac-4ebd-a682-7fcb48854c52/report.md",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/55ba5ceb-baac-4ebd-a682-7fcb48854c52/report.md",
+    "sha256": "fe19641ba7f4c334fbe771ec4ce33657593a5c8e2e344d510364a24a25bfba21",
+    "bytes": 3137
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/55ba5ceb-baac-4ebd-a682-7fcb48854c52/raw_output.txt",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/55ba5ceb-baac-4ebd-a682-7fcb48854c52/raw_output.txt",
+    "sha256": "0f3d4a5cba67280d4ffb456370b41bf78d4d8d7e354141629955e1302fbb14a3",
+    "bytes": 61242
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/42a13ef3-f582-4ec8-b84b-edd24345d5b7/summary.json",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/runtime/42a13ef3-f582-4ec8-b84b-edd24345d5b7/summary.json",
+    "sha256": "1fb2a98477efca423a0c4319c94e22ea01490d405dd5a0f531c468db19d8ecbb",
+    "bytes": 269
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/42a13ef3-f582-4ec8-b84b-edd24345d5b7/report.json",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/runtime/42a13ef3-f582-4ec8-b84b-edd24345d5b7/report.json",
+    "sha256": "6a5b5a3f0ad46902902a8a47bbc2ea392f47c9b95b304cd9a7d4cbb7cacffe3c",
+    "bytes": 3506
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/42a13ef3-f582-4ec8-b84b-edd24345d5b7/raw_stderr.txt",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/runtime/42a13ef3-f582-4ec8-b84b-edd24345d5b7/raw_stderr.txt",
+    "sha256": "8bb5e3c645c4c740e7a2bb943f1074329fab029600bc0da9360029842b8868a9",
+    "bytes": 661
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/42a13ef3-f582-4ec8-b84b-edd24345d5b7/report.md",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/runtime/42a13ef3-f582-4ec8-b84b-edd24345d5b7/report.md",
+    "sha256": "f9da086081989202bdbba56255f3915e9bc18f3cde74a22b648b3fc9ec01a49e",
+    "bytes": 1107
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/42a13ef3-f582-4ec8-b84b-edd24345d5b7/raw_output.txt",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/runtime/42a13ef3-f582-4ec8-b84b-edd24345d5b7/raw_output.txt",
+    "sha256": "35be19dad3ed04e21e2502bcea07e21150b3a53e56f052c44da49ecfbac76479",
+    "bytes": 4996
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/c9d1a9b4-3019-417e-9d1d-14c33813f118/summary.json",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/herdr/c9d1a9b4-3019-417e-9d1d-14c33813f118/summary.json",
+    "sha256": "1ec276ae65349093e63e1fb939d6d67b05137b7f29293427cb770d9a391abef6",
+    "bytes": 280
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/c9d1a9b4-3019-417e-9d1d-14c33813f118/report.json",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/herdr/c9d1a9b4-3019-417e-9d1d-14c33813f118/report.json",
+    "sha256": "e7b364529499708e7eaa219c2f934fc8ccc0e2aabd74ff6ae3746a03be29aced",
+    "bytes": 3888
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/c9d1a9b4-3019-417e-9d1d-14c33813f118/raw_stderr.txt",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/herdr/c9d1a9b4-3019-417e-9d1d-14c33813f118/raw_stderr.txt",
+    "sha256": "7c370d9536d7d0d6a0f7cd7f9826692acd93e4fb05ba46f7b630b879740343d3",
+    "bytes": 5
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/c9d1a9b4-3019-417e-9d1d-14c33813f118/report.md",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/herdr/c9d1a9b4-3019-417e-9d1d-14c33813f118/report.md",
+    "sha256": "be03880571a3997f727e62856e2aa54e701bce8b29e89101ff446883d4024f1a",
+    "bytes": 1484
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/c9d1a9b4-3019-417e-9d1d-14c33813f118/raw_output.txt",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/herdr/c9d1a9b4-3019-417e-9d1d-14c33813f118/raw_output.txt",
+    "sha256": "7a5c839f220e2014f4811b130ca546c871d095ae81ee9ab86ee666fd383285c5",
+    "bytes": 1499
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/25b69fae-47af-41b8-842a-b5a5163f6b31/summary.json",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/25b69fae-47af-41b8-842a-b5a5163f6b31/summary.json",
+    "sha256": "7f3d86c4d3be43a9186d4305112323a49563aabf441e9863022fbcb583d41292",
+    "bytes": 267
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/25b69fae-47af-41b8-842a-b5a5163f6b31/report.json",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/25b69fae-47af-41b8-842a-b5a5163f6b31/report.json",
+    "sha256": "b33263ca4b6247fbf5ccf41ea96fe6fa2ac6f29f2d4f3de79a4f15f249273d99",
+    "bytes": 2716
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/25b69fae-47af-41b8-842a-b5a5163f6b31/raw_stderr.txt",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/25b69fae-47af-41b8-842a-b5a5163f6b31/raw_stderr.txt",
+    "sha256": "916e1a0dde5d3a10245f92c7dc057cd1fa80e6586f2af1362e8d23de5ce35a9d",
+    "bytes": 328
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/25b69fae-47af-41b8-842a-b5a5163f6b31/report.md",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/25b69fae-47af-41b8-842a-b5a5163f6b31/report.md",
+    "sha256": "a1ccbfaa305324387069b8d42484b8c5816d05f29f749b0e313e326df421b0bf",
+    "bytes": 310
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/25b69fae-47af-41b8-842a-b5a5163f6b31/raw_output.txt",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/25b69fae-47af-41b8-842a-b5a5163f6b31/raw_output.txt",
+    "sha256": "9c50cafd0698c6cd0e1ffbe820f5fad55b3d54939777d3cf9dd6878c725cc628",
+    "bytes": 1141
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/6635dc3b-1afb-4267-9b90-50635a948ae1/summary.json",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/6635dc3b-1afb-4267-9b90-50635a948ae1/summary.json",
+    "sha256": "cd5c5f44cb43b102e4a8d92fe953dc14648741c784df1d77d4a243a1196140f0",
+    "bytes": 265
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/6635dc3b-1afb-4267-9b90-50635a948ae1/report.json",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/6635dc3b-1afb-4267-9b90-50635a948ae1/report.json",
+    "sha256": "3b9836bb1d9ccb05a21a9ca8c24cd0abefa486ea2acffb116d2ec78d681d3f86",
+    "bytes": 5622
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/6635dc3b-1afb-4267-9b90-50635a948ae1/raw_stderr.txt",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/6635dc3b-1afb-4267-9b90-50635a948ae1/raw_stderr.txt",
+    "sha256": "916e1a0dde5d3a10245f92c7dc057cd1fa80e6586f2af1362e8d23de5ce35a9d",
+    "bytes": 328
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/6635dc3b-1afb-4267-9b90-50635a948ae1/report.md",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/6635dc3b-1afb-4267-9b90-50635a948ae1/report.md",
+    "sha256": "159163b4ea6a0b27b0399227841e764bf532bce8208c3fc717c6230882a1ae80",
+    "bytes": 981
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/6635dc3b-1afb-4267-9b90-50635a948ae1/raw_output.txt",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/6635dc3b-1afb-4267-9b90-50635a948ae1/raw_output.txt",
+    "sha256": "29378ce04d1602fe973f5a45499c3602bf4c2d75fcc00859ceed169e2f3f59d9",
+    "bytes": 1803
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/6635dc3b-1afb-4267-9b90-50635a948ae1/failures/001-test_parent_only_proof_guarded_abort_and_durable_r.md",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/6635dc3b-1afb-4267-9b90-50635a948ae1/failures/001-test_parent_only_proof_guarded_abort_and_durable_r.md",
+    "sha256": "7d1d337cfbb0d89a38c0cb1232ef2c776c8220dc63658840e8e8e0bb2f13a99e",
+    "bytes": 1570
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/6635dc3b-1afb-4267-9b90-50635a948ae1/failures/index.md",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/6635dc3b-1afb-4267-9b90-50635a948ae1/failures/index.md",
+    "sha256": "285bf97156de2e205206c0abfd4275a5a08be3073429bcf319779bd29f14853c",
+    "bytes": 367
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/4b588547-e31a-45fd-b0ad-26f0842c7128/summary.json",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/4b588547-e31a-45fd-b0ad-26f0842c7128/summary.json",
+    "sha256": "b663b3899bd02bd6db9fa9ee0e458b42938b0509fa37bd47679ee9bc81b09249",
+    "bytes": 267
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/4b588547-e31a-45fd-b0ad-26f0842c7128/report.json",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/4b588547-e31a-45fd-b0ad-26f0842c7128/report.json",
+    "sha256": "85d27c660c65e9aef4e06df1e5365b34dcfdf59a00d47bea72f2bc07a51e16ce",
+    "bytes": 6301
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/4b588547-e31a-45fd-b0ad-26f0842c7128/raw_stderr.txt",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/4b588547-e31a-45fd-b0ad-26f0842c7128/raw_stderr.txt",
+    "sha256": "916e1a0dde5d3a10245f92c7dc057cd1fa80e6586f2af1362e8d23de5ce35a9d",
+    "bytes": 328
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/4b588547-e31a-45fd-b0ad-26f0842c7128/report.md",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/4b588547-e31a-45fd-b0ad-26f0842c7128/report.md",
+    "sha256": "9938a03456c69fb229546c98651673574021a0c3fb5cea70e2749cf528f2825f",
+    "bytes": 2056
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/4b588547-e31a-45fd-b0ad-26f0842c7128/raw_output.txt",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/4b588547-e31a-45fd-b0ad-26f0842c7128/raw_output.txt",
+    "sha256": "e93ddfcf87d4573da89483e13dff9f42f8d441ccb3d44e0886b6564275531c35",
+    "bytes": 3552
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/4b588547-e31a-45fd-b0ad-26f0842c7128/failures/001-test_absent_native_binding_does_not_erase_canonica.md",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/4b588547-e31a-45fd-b0ad-26f0842c7128/failures/001-test_absent_native_binding_does_not_erase_canonica.md",
+    "sha256": "67d8418468f19b4f5e0c63103fe799ae616ff523773d207bcb7c7da191eafcf7",
+    "bytes": 1656
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/4b588547-e31a-45fd-b0ad-26f0842c7128/failures/index.md",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/4b588547-e31a-45fd-b0ad-26f0842c7128/failures/index.md",
+    "sha256": "30c970b5ccbcfd0aa519320854d1ce33e86221b4d2da7b4ac46f688d53b67e75",
+    "bytes": 226
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/4ae2b82d-d4b6-4ab1-b3aa-2bb98b890664/summary.json",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/4ae2b82d-d4b6-4ab1-b3aa-2bb98b890664/summary.json",
+    "sha256": "09b5c418d60aa5e634eb8b3d3ab527dcf7c20003568e7a82702f38923be4553e",
+    "bytes": 269
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/4ae2b82d-d4b6-4ab1-b3aa-2bb98b890664/report.json",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/4ae2b82d-d4b6-4ab1-b3aa-2bb98b890664/report.json",
+    "sha256": "eeb53bca902118b6113cac303165f86047cb02f010a54a639a5ee4270a63db0e",
+    "bytes": 39070
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/4ae2b82d-d4b6-4ab1-b3aa-2bb98b890664/raw_stderr.txt",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/4ae2b82d-d4b6-4ab1-b3aa-2bb98b890664/raw_stderr.txt",
+    "sha256": "916e1a0dde5d3a10245f92c7dc057cd1fa80e6586f2af1362e8d23de5ce35a9d",
+    "bytes": 328
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/4ae2b82d-d4b6-4ab1-b3aa-2bb98b890664/report.md",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/4ae2b82d-d4b6-4ab1-b3aa-2bb98b890664/report.md",
+    "sha256": "bd31b02130dcbe420b87d0078cf1a976d6eee363923d9acd8c39762f8677186d",
+    "bytes": 17181
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/4ae2b82d-d4b6-4ab1-b3aa-2bb98b890664/raw_output.txt",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/4ae2b82d-d4b6-4ab1-b3aa-2bb98b890664/raw_output.txt",
+    "sha256": "110b5fb193ae4b27453ab061d95f0e87c722b7082b00e1349d20496ff9cfa158",
+    "bytes": 19211
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/4ae2b82d-d4b6-4ab1-b3aa-2bb98b890664/failures/006-test_inconclusive_abort_can_resolve_only_with_exac.md",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/4ae2b82d-d4b6-4ab1-b3aa-2bb98b890664/failures/006-test_inconclusive_abort_can_resolve_only_with_exac.md",
+    "sha256": "d331888baebfa634b9489866ad26149d532a655c7ca5e9124c27b9880c45d46b",
+    "bytes": 3217
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/4ae2b82d-d4b6-4ab1-b3aa-2bb98b890664/failures/003-test_bind_precedes_single_durable_release_and_repl.md",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/4ae2b82d-d4b6-4ab1-b3aa-2bb98b890664/failures/003-test_bind_precedes_single_durable_release_and_repl.md",
+    "sha256": "774c2783311325418b37d874ccec42f6b99f9227277ce6b9e17327bbbb51fcc8",
+    "bytes": 3197
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/4ae2b82d-d4b6-4ab1-b3aa-2bb98b890664/failures/index.md",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/4ae2b82d-d4b6-4ab1-b3aa-2bb98b890664/failures/index.md",
+    "sha256": "3a27209f639e4b5c5511130791f3ee4494503ee0073aab3cf23d58ae16395a24",
+    "bytes": 1112
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/4ae2b82d-d4b6-4ab1-b3aa-2bb98b890664/failures/005-test_positive_abort_allows_a_new_reservation_for_t.md",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/4ae2b82d-d4b6-4ab1-b3aa-2bb98b890664/failures/005-test_positive_abort_allows_a_new_reservation_for_t.md",
+    "sha256": "4b986b2272498925d76ff00b016147e3f1cf6544203d97c378c8d8a2d8760658",
+    "bytes": 3084
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/4ae2b82d-d4b6-4ab1-b3aa-2bb98b890664/failures/004-test_completed_launch_cycles_do_not_retain_pidfds.md",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/4ae2b82d-d4b6-4ab1-b3aa-2bb98b890664/failures/004-test_completed_launch_cycles_do_not_retain_pidfds.md",
+    "sha256": "1e70d08ddc7ecbd44b9ff670c1b739e624137c772f0515978b619ff62582b22c",
+    "bytes": 3250
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/4ae2b82d-d4b6-4ab1-b3aa-2bb98b890664/failures/001-test_lost_release_frame_remains_issued_and_exact_e.md",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/4ae2b82d-d4b6-4ab1-b3aa-2bb98b890664/failures/001-test_lost_release_frame_remains_issued_and_exact_e.md",
+    "sha256": "fe27197d8feaf1c080328a57df52f1065f25ca57d8eff7261689fd0bc92f7aae",
+    "bytes": 2788
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/4ae2b82d-d4b6-4ab1-b3aa-2bb98b890664/failures/002-test_definition_change_requires_all_scopes_termina.md",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/4ae2b82d-d4b6-4ab1-b3aa-2bb98b890664/failures/002-test_definition_change_requires_all_scopes_termina.md",
+    "sha256": "abf718ccbeede5fe343e6ededd5ac6e4c3ac8187a04eab6f6bff6ba9910fe0d9",
+    "bytes": 3048
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/2663acad-f609-4642-8511-f7396754f7fb/summary.json",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/2663acad-f609-4642-8511-f7396754f7fb/summary.json",
+    "sha256": "beb5b84ba49cb634b690ad10c4f37e3013700585091ca723d23b598ac9c7db33",
+    "bytes": 267
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/2663acad-f609-4642-8511-f7396754f7fb/report.json",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/2663acad-f609-4642-8511-f7396754f7fb/report.json",
+    "sha256": "4e149b31b3e05a023c7cb99e05fe418f7ad9577c93a0282fca7ec8a39300af3e",
+    "bytes": 6657
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/2663acad-f609-4642-8511-f7396754f7fb/raw_stderr.txt",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/2663acad-f609-4642-8511-f7396754f7fb/raw_stderr.txt",
+    "sha256": "916e1a0dde5d3a10245f92c7dc057cd1fa80e6586f2af1362e8d23de5ce35a9d",
+    "bytes": 328
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/2663acad-f609-4642-8511-f7396754f7fb/report.md",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/2663acad-f609-4642-8511-f7396754f7fb/report.md",
+    "sha256": "ef532acabe73dc96214055ee61f8065f3ccbd2c1978a36d825f928439b66ab6f",
+    "bytes": 2231
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/2663acad-f609-4642-8511-f7396754f7fb/raw_output.txt",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/2663acad-f609-4642-8511-f7396754f7fb/raw_output.txt",
+    "sha256": "d7c23f7f1c11535287a762d3bad791a50b2211eb741eb84048b0a75ad8471eec",
+    "bytes": 3662
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/2663acad-f609-4642-8511-f7396754f7fb/failures/001-test_absent_native_binding_does_not_erase_canonica.md",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/2663acad-f609-4642-8511-f7396754f7fb/failures/001-test_absent_native_binding_does_not_erase_canonica.md",
+    "sha256": "409af7d8b110695b3461ce9708518e4301c99a6ff9b022f58554f98b7a3e403c",
+    "bytes": 1831
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/2663acad-f609-4642-8511-f7396754f7fb/failures/index.md",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/2663acad-f609-4642-8511-f7396754f7fb/failures/index.md",
+    "sha256": "30c970b5ccbcfd0aa519320854d1ce33e86221b4d2da7b4ac46f688d53b67e75",
+    "bytes": 226
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/f83405b4-a0a6-423b-8449-55c81f4d70a0/summary.json",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/f83405b4-a0a6-423b-8449-55c81f4d70a0/summary.json",
+    "sha256": "8aceb49d4799dd9e38334399df2d432dadba7e2a7339e4b601093e466680378c",
+    "bytes": 269
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/f83405b4-a0a6-423b-8449-55c81f4d70a0/report.json",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/f83405b4-a0a6-423b-8449-55c81f4d70a0/report.json",
+    "sha256": "1d2f42d7cac8623c3ee43cdd9d82b31e6e87dd836326f5b164c52e8d16815116",
+    "bytes": 34135
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/f83405b4-a0a6-423b-8449-55c81f4d70a0/raw_stderr.txt",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/f83405b4-a0a6-423b-8449-55c81f4d70a0/raw_stderr.txt",
+    "sha256": "916e1a0dde5d3a10245f92c7dc057cd1fa80e6586f2af1362e8d23de5ce35a9d",
+    "bytes": 328
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/f83405b4-a0a6-423b-8449-55c81f4d70a0/report.md",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/f83405b4-a0a6-423b-8449-55c81f4d70a0/report.md",
+    "sha256": "ad2b8004fc0039788b4e5d60bbd4f49493e4cc8a3f353e370931bcf6dd6a17e2",
+    "bytes": 15177
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/f83405b4-a0a6-423b-8449-55c81f4d70a0/raw_output.txt",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/f83405b4-a0a6-423b-8449-55c81f4d70a0/raw_output.txt",
+    "sha256": "d46f31ea2bb951e04e66c58771bb685f3ccaa654fb383f44ecac47470edfa6ef",
+    "bytes": 17458
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/f83405b4-a0a6-423b-8449-55c81f4d70a0/failures/002-test_completed_launch_cycles_do_not_retain_pidfds.md",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/f83405b4-a0a6-423b-8449-55c81f4d70a0/failures/002-test_completed_launch_cycles_do_not_retain_pidfds.md",
+    "sha256": "e5e36be411f0e43fe213e660662cc10ffa2dc99ad7d900b1328f4a1d40e93fce",
+    "bytes": 4091
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/f83405b4-a0a6-423b-8449-55c81f4d70a0/failures/003-test_inconclusive_abort_can_resolve_only_with_exac.md",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/f83405b4-a0a6-423b-8449-55c81f4d70a0/failures/003-test_inconclusive_abort_can_resolve_only_with_exac.md",
+    "sha256": "836d5bfe178cb96b444073f3492572e23174b56c73a19f97bd8906022e03dad1",
+    "bytes": 3979
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/f83405b4-a0a6-423b-8449-55c81f4d70a0/failures/004-test_definition_change_requires_all_scopes_termina.md",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/f83405b4-a0a6-423b-8449-55c81f4d70a0/failures/004-test_definition_change_requires_all_scopes_termina.md",
+    "sha256": "9d4ecc32e3e0663e5cfce4f3c6e61f08de359a868ab7803a755bec9a74a9cb83",
+    "bytes": 3889
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/f83405b4-a0a6-423b-8449-55c81f4d70a0/failures/index.md",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/f83405b4-a0a6-423b-8449-55c81f4d70a0/failures/index.md",
+    "sha256": "389410d0fb4dc69f81fba328274059b6e9edbbbe07fb0840148d37b8376f1186",
+    "bytes": 741
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/f83405b4-a0a6-423b-8449-55c81f4d70a0/failures/001-test_positive_abort_allows_a_new_reservation_for_t.md",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/f83405b4-a0a6-423b-8449-55c81f4d70a0/failures/001-test_positive_abort_allows_a_new_reservation_for_t.md",
+    "sha256": "61e91a35d1a9df6d00103c0a4d810bbaef21b3b4f9f2034beca46aeab3f33319",
+    "bytes": 3925
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/58addb05-60f9-48f6-a35a-927fab19b986/summary.json",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/58addb05-60f9-48f6-a35a-927fab19b986/summary.json",
+    "sha256": "4805272d9ff717ca03006bca04857001ab984ee8e6080d7a3808db2b438c71d4",
+    "bytes": 265
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/58addb05-60f9-48f6-a35a-927fab19b986/report.json",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/58addb05-60f9-48f6-a35a-927fab19b986/report.json",
+    "sha256": "975c6304ccdc60fcac43b6e51f6c317853b80365f04bf032c99b549f60cad57c",
+    "bytes": 110533
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/58addb05-60f9-48f6-a35a-927fab19b986/raw_stderr.txt",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/58addb05-60f9-48f6-a35a-927fab19b986/raw_stderr.txt",
+    "sha256": "916e1a0dde5d3a10245f92c7dc057cd1fa80e6586f2af1362e8d23de5ce35a9d",
+    "bytes": 328
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/58addb05-60f9-48f6-a35a-927fab19b986/report.md",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/58addb05-60f9-48f6-a35a-927fab19b986/report.md",
+    "sha256": "c6cecf2bb49d846b60eed425865b547d973cba122e52626b8ec836fe383b835b",
+    "bytes": 48766
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/58addb05-60f9-48f6-a35a-927fab19b986/raw_output.txt",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/58addb05-60f9-48f6-a35a-927fab19b986/raw_output.txt",
+    "sha256": "ff4d91ab5a9127888ba72389ca4b60890b4b468e76e2ad6820821201f6fcd986",
+    "bytes": 59091
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/58addb05-60f9-48f6-a35a-927fab19b986/failures/006-test_worker_cannot_mutate_origin_and_changed_child.md",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/58addb05-60f9-48f6-a35a-927fab19b986/failures/006-test_worker_cannot_mutate_origin_and_changed_child.md",
+    "sha256": "9050164fd54687cbd791fdd22fa01f3db499e35c3bae66cd8cc16d64cdf3d85e",
+    "bytes": 2961
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/58addb05-60f9-48f6-a35a-927fab19b986/failures/005-test_reservation_replay_and_overlap_never_create_a.md",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/58addb05-60f9-48f6-a35a-927fab19b986/failures/005-test_reservation_replay_and_overlap_never_create_a.md",
+    "sha256": "da98854dc8ee364b0157e5ca4e95354a910538e6ac01ce9639c7fc4369885287",
+    "bytes": 2964
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/58addb05-60f9-48f6-a35a-927fab19b986/failures/004-test_driver_losing_cas_to_same_id_acceptance_never.md",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/58addb05-60f9-48f6-a35a-927fab19b986/failures/004-test_driver_losing_cas_to_same_id_acceptance_never.md",
+    "sha256": "1af65971ede8704e1e2f70b87248ce0b5df9c6589beb8e8b6d32f6a26811ad92",
+    "bytes": 3098
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/58addb05-60f9-48f6-a35a-927fab19b986/failures/003-test_pre_release_exact_child_exit_is_required_for_.md",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/58addb05-60f9-48f6-a35a-927fab19b986/failures/003-test_pre_release_exact_child_exit_is_required_for_.md",
+    "sha256": "d10ad6294f628bdbfad70deef5815db331df0623ff4c105c87c5e812c7a3513a",
+    "bytes": 2940
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/58addb05-60f9-48f6-a35a-927fab19b986/failures/001-test_launcher_loss_closes_admission_and_establishe.md",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/58addb05-60f9-48f6-a35a-927fab19b986/failures/001-test_launcher_loss_closes_admission_and_establishe.md",
+    "sha256": "25ebebd23475a09bd4e758bca4ce7a55beb3bfea07934a217cc3f5194683c513",
+    "bytes": 2994
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/58addb05-60f9-48f6-a35a-927fab19b986/failures/index.md",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/58addb05-60f9-48f6-a35a-927fab19b986/failures/index.md",
+    "sha256": "571a9bc5a049c185e63a5982d0afa357eff7ad755401cf39d334f2b14768d968",
+    "bytes": 3870
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/58addb05-60f9-48f6-a35a-927fab19b986/failures/007-test_launcher_pidfd_refusal_cannot_commit_or_wedge.md",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/58addb05-60f9-48f6-a35a-927fab19b986/failures/007-test_launcher_pidfd_refusal_cannot_commit_or_wedge.md",
+    "sha256": "f8e16d78f2ee35f56e036f6445f837afbe821811422cd2230304adc590bf2e44",
+    "bytes": 1642
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/58addb05-60f9-48f6-a35a-927fab19b986/failures/002-test_definition_change_requires_all_scopes_termina.md",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/58addb05-60f9-48f6-a35a-927fab19b986/failures/002-test_definition_change_requires_all_scopes_termina.md",
+    "sha256": "40b2b61c8ab163b8248dde02f98d92b6b231632fde2896f071de320defa7e298",
+    "bytes": 2928
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/f19067b6-2d43-412e-8170-08ff3ea955a5/summary.json",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/f19067b6-2d43-412e-8170-08ff3ea955a5/summary.json",
+    "sha256": "98ca87ec29e6724c4ced20c4b901deae828a7fd2373a746bace505d77be4cff6",
+    "bytes": 265
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/f19067b6-2d43-412e-8170-08ff3ea955a5/report.json",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/f19067b6-2d43-412e-8170-08ff3ea955a5/report.json",
+    "sha256": "2737b5b7e3ffaf3fed2037b3c8e9ff4996f7e9e4a3f858e914f4953fb50f2d29",
+    "bytes": 2908
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/f19067b6-2d43-412e-8170-08ff3ea955a5/raw_stderr.txt",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/f19067b6-2d43-412e-8170-08ff3ea955a5/raw_stderr.txt",
+    "sha256": "916e1a0dde5d3a10245f92c7dc057cd1fa80e6586f2af1362e8d23de5ce35a9d",
+    "bytes": 328
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/f19067b6-2d43-412e-8170-08ff3ea955a5/report.md",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/f19067b6-2d43-412e-8170-08ff3ea955a5/report.md",
+    "sha256": "50bc11d548c61ca58667e0b12edb760039ac1bf59a19ce02eea6216d863bf626",
+    "bytes": 396
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/f19067b6-2d43-412e-8170-08ff3ea955a5/raw_output.txt",
+    "source": "/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/.ace-local/test/reports/assign/f19067b6-2d43-412e-8170-08ff3ea955a5/raw_output.txt",
+    "sha256": "5720a50789ce6acfa25a3b7f48dc2cabc5985ccbbc0fe3b49e6e04e170e883c8",
+    "bytes": 708
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/94a2e723-cf00-498a-a95b-dcf509257f2c/summary.json",
+    "source": "/Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/.ace-local/test/reports/assign/94a2e723-cf00-498a-a95b-dcf509257f2c/summary.json",
+    "sha256": "3622d0670b6eb7fe984f4050550d2520bec70c48caad1c1285decf1118334e83",
+    "bytes": 269
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/94a2e723-cf00-498a-a95b-dcf509257f2c/report.json",
+    "source": "/Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/.ace-local/test/reports/assign/94a2e723-cf00-498a-a95b-dcf509257f2c/report.json",
+    "sha256": "c10e4c438c6db7f27639b3b34a4d8ac7da4669e546a62daf8ab33812a2893697",
+    "bytes": 8347
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/94a2e723-cf00-498a-a95b-dcf509257f2c/raw_stderr.txt",
+    "source": "/Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/.ace-local/test/reports/assign/94a2e723-cf00-498a-a95b-dcf509257f2c/raw_stderr.txt",
+    "sha256": "1942a18d7d426bbeb8c17b8c25dd2b53d63bc997c45e0b623fc9c99fcde6df07",
+    "bytes": 320
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/94a2e723-cf00-498a-a95b-dcf509257f2c/report.md",
+    "source": "/Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/.ace-local/test/reports/assign/94a2e723-cf00-498a-a95b-dcf509257f2c/report.md",
+    "sha256": "329bf340ecef55f13321fa6740b25969a47a20a91dbd68071bd43dec6f234ea4",
+    "bytes": 1617
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/94a2e723-cf00-498a-a95b-dcf509257f2c/raw_output.txt",
+    "source": "/Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/.ace-local/test/reports/assign/94a2e723-cf00-498a-a95b-dcf509257f2c/raw_output.txt",
+    "sha256": "47e4a6e75eb11dd757e99d4ac9cdc387d91a00ade19ee33a71d54be5cb54846c",
+    "bytes": 8286
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/94a2e723-cf00-498a-a95b-dcf509257f2c/failures/001-test_real_client_refuses_missing_mismatched_extra_.md",
+    "source": "/Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/.ace-local/test/reports/assign/94a2e723-cf00-498a-a95b-dcf509257f2c/failures/001-test_real_client_refuses_missing_mismatched_extra_.md",
+    "sha256": "3c099f0ba7a00998bd13f60495ccd5b72c72a99cbdee7a1f2324ef95d6db19cc",
+    "bytes": 1517
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/94a2e723-cf00-498a-a95b-dcf509257f2c/failures/002-test_real_client_server_submit_lost_reply_exit_res.md",
+    "source": "/Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/.ace-local/test/reports/assign/94a2e723-cf00-498a-a95b-dcf509257f2c/failures/002-test_real_client_server_submit_lost_reply_exit_res.md",
+    "sha256": "52674581085e1e86c792de21d042479260d43328a824bcf402f3f85f22c714c2",
+    "bytes": 1507
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/94a2e723-cf00-498a-a95b-dcf509257f2c/failures/index.md",
+    "source": "/Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/.ace-local/test/reports/assign/94a2e723-cf00-498a-a95b-dcf509257f2c/failures/index.md",
+    "sha256": "0888a2d2f1ef0d8f13d11f0a24bccfc15076e7b08432df0a2dda67d0880466d4",
+    "bytes": 652
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/e212c317-ed1f-4719-8141-aa0171d4e119/summary.json",
+    "source": "/Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/.ace-local/test/reports/assign/e212c317-ed1f-4719-8141-aa0171d4e119/summary.json",
+    "sha256": "b2d332c2c1693083097f28d48d9cdc9feec4138b56faa13f346b424d7e423ad4",
+    "bytes": 265
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/e212c317-ed1f-4719-8141-aa0171d4e119/report.json",
+    "source": "/Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/.ace-local/test/reports/assign/e212c317-ed1f-4719-8141-aa0171d4e119/report.json",
+    "sha256": "f2f9ec0cbd7098ca3cdba391915e421aaa9dedb931896271fcae77f101f79019",
+    "bytes": 2884
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/e212c317-ed1f-4719-8141-aa0171d4e119/raw_stderr.txt",
+    "source": "/Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/.ace-local/test/reports/assign/e212c317-ed1f-4719-8141-aa0171d4e119/raw_stderr.txt",
+    "sha256": "1942a18d7d426bbeb8c17b8c25dd2b53d63bc997c45e0b623fc9c99fcde6df07",
+    "bytes": 320
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/e212c317-ed1f-4719-8141-aa0171d4e119/report.md",
+    "source": "/Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/.ace-local/test/reports/assign/e212c317-ed1f-4719-8141-aa0171d4e119/report.md",
+    "sha256": "858d54a6639df48eea5c70cd0602b748842aa8732dd5ba54ed7fe9a59b9dae8a",
+    "bytes": 396
+  },
+  {
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/e212c317-ed1f-4719-8141-aa0171d4e119/raw_output.txt",
+    "source": "/Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/.ace-local/test/reports/assign/e212c317-ed1f-4719-8141-aa0171d4e119/raw_output.txt",
+    "sha256": "1dc1d7d89aaacde04a7ebbbe26dc66a766b00d8be47da3984607b89a582effad",
+    "bytes": 709
+  }
+]

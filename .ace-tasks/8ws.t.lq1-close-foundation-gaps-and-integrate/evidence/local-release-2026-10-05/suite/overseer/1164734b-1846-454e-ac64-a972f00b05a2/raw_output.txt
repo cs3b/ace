@@ -1,0 +1,398 @@
+Started with run options --seed 46210
+
+WorkContextTest
+  test_to_h_includes_assignments_and_location_type                PASS (0.00s)
+  test_to_h_returns_expected_payload                              PASS (0.00s)
+  test_assignment_status_returns_first_assignment                 PASS (0.00s)
+  test_defaults_for_assignments_and_location_type                 PASS (0.00s)
+  test_initializes_with_expected_attributes                       PASS (0.00s)
+  test_assignment_count_derived_from_assignments_size             PASS (0.00s)
+  test_assignment_status_returns_nil_when_no_assignments          PASS (0.00s)
+
+WorktreeProvisionerTest
+  test_recovers_when_create_returns_stale_missing_path            PASS (0.00s)
+  test_returns_existing_worktree_without_creation                 PASS (0.00s)
+  test_marks_existing_create_result_as_not_created                PASS (0.00s)
+  test_recovers_when_switch_returns_stale_missing_path            PASS (0.00s)
+  test_creates_worktree_when_missing                              PASS (0.00s)
+  test_raises_when_worktree_path_still_missing_after_recovery     PASS (0.00s)
+
+PruneCandidateTest
+  test_safe_to_prune_when_all_checks_pass                         PASS (0.00s)
+  test_safe_to_prune_is_false_when_any_check_fails                PASS (0.00s)
+
+WorkOnCommandTest
+  test_wraps_not_found_errors_as_cli_error                        PASS (0.58s)
+  test_requires_git_repo_before_running                           PASS (0.41s)
+  test_progress_output_displayed_when_not_quiet                   PASS (0.23s)
+  test_lab_runtime_rejects_tmux_task_options                      PASS (0.00s)
+  test_parses_comma_and_repeated_task_inputs_in_order             PASS (0.23s)
+  test_passes_task_and_preset_to_orchestrator                     PASS (0.04s)
+  test_lab_runtime_dispatches_existing_work_without_repo_guard    PASS (0.00s)
+  test_missing_task_raises_user_friendly_error                    PASS (0.19s)
+
+StatusCollectorTest
+  test_collect_quick_falls_back_to_full_collect_when_no_previous  PASS (0.06s)
+  test_collect_quick_reuses_git_data_and_refreshes_assignments    PASS (0.00s)
+  test_collect_excludes_main_branch_when_no_assignments           PASS (0.00s)
+  test_collect_includes_main_branch_when_it_has_assignments       PASS (0.00s)
+  test_collect_includes_non_task_worktree_with_assignments        PASS (0.00s)
+  test_collect_and_format                                         PASS (0.05s)
+  test_collect_excludes_non_task_worktree_without_assignments     PASS (0.00s)
+
+LabPruneSafetyCheckerTest
+  test_unavailable_surface_blocks                                 PASS (0.00s)
+  test_unknown_state_blocks                                       PASS (0.00s)
+  test_failed_preservation_proof_blocks                           PASS (0.00s)
+  test_missing_work_blocks                                        PASS (0.00s)
+  test_terminal_work_with_preservation_evidence_is_safe           PASS (0.00s)
+  test_active_work_blocks                                         PASS (0.00s)
+  test_missing_preservation_evidence_blocks_terminal_work         PASS (0.00s)
+
+WorktreeContextCollectorTest
+  test_collect_includes_active_steps_when_running                 PASS (0.02s)
+  test_collect_handles_discoverer_error                           PASS (0.00s)
+  test_collect_extracts_task_id_from_ace_task_path                PASS (0.00s)
+  test_collect_assignments_only_preserves_location_type           PASS (0.00s)
+  test_collect_extracts_task_id_from_ace_t_path                   PASS (0.00s)
+  test_collect_returns_context_with_assignments_and_git_status    PASS (0.03s)
+  test_collect_handles_no_assignments                             PASS (0.00s)
+  test_collect_returns_multiple_assignments                       PASS (0.06s)
+  test_collect_passes_location_type                               PASS (0.00s)
+  test_collect_sets_project_root_path_per_worktree_and_restores_it PASS (0.00s)
+  test_collect_extracts_four_digit_task_ids_from_worktree_path    PASS (0.00s)
+  test_collect_restores_project_root_path_on_error                PASS (0.00s)
+  test_collect_extracts_b36ts_task_id_from_ace_task_path          PASS (0.00s)
+  test_collect_extracts_b36ts_task_id_from_branch                 PASS (0.00s)
+  test_collect_active_steps_empty_when_not_running                PASS (0.02s)
+  test_collect_assignments_only_returns_fresh_assignments_with_cached_git_data PASS (0.05s)
+
+ProposalWatchRegressionTest
+  test_startup_tick_failure_still_displays_status_with_deferred_projection PASS (0.04s)
+  test_lab_status_json_preserves_work_projection_with_visible_proposal_deferral PASS (0.00s)
+  test_review_watch_keeps_running_after_transient_tick_failure    PASS (0.04s)
+  test_lab_array_json_keeps_schema_and_reports_deferral_on_stderr PASS (0.00s)
+  test_lab_status_preserves_table_with_visible_proposal_deferral  PASS (0.00s)
+
+StatusCommandTest
+  test_watch_option_with_json_format_runs_once                    PASS (0.03s)
+  test_watch_interrupt_returns_cleanly_without_stack_trace        PASS (0.03s)
+  test_requires_git_repo_before_running                           PASS (0.03s)
+  test_lab_runtime_rejects_duplicate_watch_loop                   PASS (0.00s)
+  test_one_shot_table_output                                      PASS (0.03s)
+  test_quiet_suppresses_output                                    PASS (0.03s)
+  test_lab_runtime_delegates_project_filter_without_repo_guard    PASS (0.00s)
+  test_one_shot_json_output                                       PASS (0.03s)
+
+LabCommandsTest
+  test_prompt_reads_direct_file_without_reading_tty               PASS (0.00s)
+  test_review_and_stop_forward_exact_work_arguments               PASS (0.00s)
+  test_projects_and_agents_forward_json_commands                  PASS (0.00s)
+  test_prompt_rejects_tty_and_blank_stdin                         PASS (0.00s)
+  test_lab_command_errors_are_wrapped_for_cli_users               PASS (0.00s)
+  test_prompt_forwards_stdin_without_process_argument             PASS (0.00s)
+
+AssignmentPruneCandidateTest
+  test_safe_to_prune_when_completed                               PASS (0.00s)
+  test_not_safe_to_prune_when_running                             PASS (0.00s)
+  test_to_h_returns_expected_fields                               PASS (0.00s)
+
+PrepareCommandTest
+  test_forwards_reviewed_title_and_source_to_lab                  PASS (0.00s)
+
+StatusFormatterTest
+  test_git_unknown_state                                          PASS (0.00s)
+  test_format_watch_footer_zero_seconds                           PASS (0.00s)
+  test_no_assignments_shows_location_only                         PASS (0.00s)
+  test_ansi_color_codes_present                                   PASS (0.00s)
+  test_progress_bar_in_assignment_row                             PASS (0.00s)
+  test_next_step_shown_when_no_active_steps                       PASS (0.00s)
+  test_sort_order_pr_descending                                   PASS (0.00s)
+  test_pr_open                                                    PASS (0.00s)
+  test_main_location_shows_main_label                             PASS (0.00s)
+  test_formats_hierarchical_dashboard                             PASS (0.00s)
+  test_pr_draft                                                   PASS (0.00s)
+  test_formats_assignment_sub_row                                 PASS (0.00s)
+  test_format_watch_footer_seconds_only                           PASS (0.00s)
+  test_formats_location_row_with_pr_and_git                       PASS (0.00s)
+  test_formats_empty_dashboard                                    PASS (0.00s)
+  test_progress_with_failures                                     PASS (0.00s)
+  test_git_dirty_with_count                                       PASS (0.00s)
+  test_stalled_state_icon                                         PASS (0.00s)
+  test_format_watch_footer_with_minutes_and_seconds               PASS (0.00s)
+  test_main_branch_sorts_last                                     PASS (0.00s)
+  test_blank_line_between_groups                                  PASS (0.00s)
+  test_progress_bar_partial_fill                                  PASS (0.00s)
+  test_active_steps_shown_when_present                            PASS (0.00s)
+  test_assignment_row_with_missing_id                             PASS (0.00s)
+
+PruneCommandTest
+  test_lab_undocumented_preservation_blocks                       PASS (0.00s)
+  test_lab_prune_delegates_exact_destroy_to_lab                   PASS (0.00s)
+  test_quiet_still_reports_results_and_failures                   PASS (0.04s)
+  test_apply_with_blocked_candidates_exits_nonzero                PASS (0.03s)
+  test_force_option_passed_to_orchestrator                        PASS (0.03s)
+  test_progress_output_passed_when_not_quiet                      PASS (0.03s)
+  test_lab_prune_requires_exact_work_and_confirmation             PASS (0.00s)
+  test_lab_active_work_never_destroys                             PASS (0.00s)
+  test_lab_dry_run_classifies_without_destroying                  PASS (0.00s)
+  test_lab_without_atomic_destroy_capability_blocks               PASS (0.00s)
+  test_requires_git_repo_before_running                           PASS (0.04s)
+  test_dry_run_lists_blocked_candidates_with_reasons              PASS (0.04s)
+  test_preservation_manifest_forwarded_to_orchestrator            PASS (0.04s)
+  test_no_progress_output_in_quiet_mode                           PASS (0.03s)
+  test_assignment_option_forwarded_to_orchestrator                PASS (0.03s)
+  test_assignment_prune_shows_removed                             PASS (0.04s)
+  test_apply_success_exits_zero                                   PASS (0.03s)
+  test_assignment_blocked_exits_nonzero                           PASS (0.03s)
+
+PreservationManifestTest
+  test_rejects_unknown_and_missing_fields                         PASS (1.11s)
+  test_parses_and_resolves_revisions                              PASS (1.51s)
+  test_rejects_unresolvable_revisions                             PASS (1.24s)
+  test_rejects_relative_paths_and_missing_repositories            PASS (1.27s)
+  test_rejects_wrong_version_and_missing_candidates               PASS (0.88s)
+  test_rejects_source_checkout_as_its_own_destination             PASS (1.02s)
+  test_rejects_missing_file_and_malformed_yaml                    PASS (0.99s)
+  test_rejects_duplicate_worktree_entries                         PASS (2.25s)
+  test_rejects_entries_not_matching_selected_worktrees            PASS (2.66s)
+  test_finds_record_for_worktree_by_realpath                      PASS (1.75s)
+  test_rejects_commit_sha_as_destination_branch                   PASS (2.03s)
+
+AssignmentLauncherTest
+  test_launch_uses_project_preset_path_when_available             PASS (0.42s)
+  test_launch_expands_subtask_refs_into_taskrefs_parameter        PASS (0.38s)
+  test_launch_uses_explicit_taskrefs_when_provided                PASS (0.39s)
+  test_launch_builds_job_and_starts_assignment                    PASS (0.38s)
+  test_launch_falls_back_to_task_ref_when_no_subtask_refs         PASS (0.34s)
+
+PruneOrchestratorTest
+  test_mixed_batch_prunes_independent_safe_candidates_and_reports_blocked PASS (0.29s)
+  test_assignment_prune_with_yes                                  PASS (0.00s)
+  test_force_skips_confirmation_for_safe_candidates               PASS (0.23s)
+  test_assignment_dry_run_returns_candidate                       PASS (0.00s)
+  test_dry_run_does_not_remove_or_mutate_metadata                 PASS (0.04s)
+  test_marks_missing_worktree_paths_as_unsafe_without_crashing    PASS (0.05s)
+  test_unmatched_explicit_targets_are_errors                      PASS (0.00s)
+  test_on_progress_receives_scanning_messages                     PASS (0.31s)
+  test_preservation_manifest_entries_must_match_selection         PASS (0.00s)
+  test_non_task_worktree_can_be_pruned_when_targeted_by_path      PASS (0.63s)
+  test_candidates_displayed_before_confirmation_prompt            PASS (0.05s)
+  test_assignment_prune_blocked_even_with_force                   PASS (0.00s)
+  test_empty_automatic_selection_is_a_noop                        PASS (0.00s)
+  test_checker_errors_are_converted_to_unsafe_candidates          PASS (0.05s)
+  test_prompt_can_abort                                           PASS (0.08s)
+  test_force_cannot_prune_unsafe_candidates                       PASS (0.23s)
+  test_yes_prunes_only_safe_candidates_without_force_flags        PASS (0.20s)
+  test_assignment_prune_recheck_blocks_changed_candidate          PASS (0.00s)
+  test_ignores_non_task_worktrees                                 PASS (0.05s)
+  test_assignment_prune_abortable                                 PASS (0.00s)
+  test_targets_filter_by_task_id                                  PASS (0.35s)
+  test_apply_rechecks_under_exclusion_and_blocks_changed_candidate PASS (0.06s)
+  test_assignment_failed_delete_records_no_removal_and_reports_failure PASS (0.00s)
+
+WindowOpenerTest
+  test_unknown_configured_runtime_fails_closed                    PASS (0.00s)
+  test_shipped_auto_default_falls_through_to_env_selection        PASS (0.00s)
+  test_shipped_auto_default_falls_through_to_detection            PASS (0.00s)
+  test_contract_failure_surfaces_as_overseer_error                PASS (0.00s)
+  test_opens_sanitized_window_rooted_at_worktree                  PASS (0.00s)
+  test_passes_window_preset_through                               PASS (0.00s)
+  test_configured_runtime_is_resolved_through_contract            PASS (0.00s)
+  test_expands_worktree_root                                      PASS (0.00s)
+
+WorkOnOrchestratorTest
+  test_raises_error_when_no_valid_task_refs_provided              PASS (0.00s)
+  test_on_progress_reports_existing_worktree                      PASS (0.04s)
+  test_resolves_preset_from_task_frontmatter                      PASS (0.04s)
+  test_does_not_pass_subtask_refs_for_non_orchestrator_task       PASS (0.03s)
+  test_multi_input_validation_happens_before_side_effects         PASS (0.00s)
+  test_rejects_single_terminal_task_before_side_effects           PASS (0.00s)
+  test_passes_subtask_refs_for_orchestrator_task                  PASS (0.04s)
+  test_on_progress_receives_step_messages                         PASS (0.04s)
+  test_on_progress_reports_existing_assignment                    PASS (0.03s)
+  test_rejects_all_terminal_requested_refs_before_side_effects    PASS (0.00s)
+  test_skips_terminal_requested_ref_in_mixed_set                  PASS (0.03s)
+  test_multi_input_requires_taskrefs_preset_before_side_effects   PASS (0.00s)
+  test_rejects_draft_task_before_side_effects                     PASS (0.00s)
+  test_filters_terminal_subtasks_during_expansion                 PASS (0.04s)
+  test_multi_input_preserves_order_and_expands_orchestrators_in_place PASS (0.05s)
+  test_default_assignment_launcher_uses_injected_task_manager     PASS (0.05s)
+  test_falls_back_to_cli_preset                                   PASS (0.05s)
+
+PruneSafetyCheckerTest
+  test_detached_head_yields_no_verified_branch                    PASS (0.77s)
+  test_uncertain_attempt_blocks_prune                             PASS (0.61s)
+  test_missing_task_record_is_not_proof_of_safety                 PASS (0.66s)
+  test_unreadable_attempt_store_blocks_when_assignments_exist     PASS (0.68s)
+  test_modified_tracked_files_block_prune                         PASS (0.65s)
+  test_no_accepted_base_blocks_preservation                       PASS (0.60s)
+  test_untracked_files_block_prune_as_work                        PASS (0.71s)
+  test_marks_candidate_safe_when_all_conditions_pass              PASS (0.75s)
+  test_proof_receives_the_symbolic_branch_read_before_it          PASS (0.48s)
+  test_includes_reasons_when_not_safe                             PASS (0.63s)
+  test_journal_checkout_outside_evidence_ref_blocks_prune         PASS (1.09s)
+  test_active_attempt_blocks_and_supplies_recorded_baseline       PASS (1.07s)
+  test_hex_named_branch_is_not_mistaken_for_detached_head         PASS (0.77s)
+
+CliTest
+  test_version_with_long_flag                                     PASS (0.00s)
+  test_help_shows_examples                                        PASS (0.00s)
+  test_version_command_prints_version                             PASS (0.00s)
+  test_help_lists_registered_commands                             PASS (0.00s)
+  test_help_with_short_flag                                       PASS (0.00s)
+
+GitPreservationCheckerTest
+  test_matching_title_with_different_content_blocks               PASS (13.41s)
+  test_distinct_destination_branch_at_same_tip_is_accepted        PASS (1.03s)
+  test_unmerged_head_without_manifest_blocks                      PASS (0.44s)
+  test_baseline_mismatch_blocks_patch_range_proof                 PASS (1.39s)
+  test_declared_source_repo_must_be_the_candidates_common_repository PASS (1.39s)
+  test_unaccepted_destination_head_blocks                         PASS (1.66s)
+  test_empty_range_identity_is_not_proof                          PASS (1.23s)
+  test_deleted_and_added_paths_compare                            PASS (1.77s)
+  test_destination_on_the_candidate_branch_is_rejected            PASS (0.99s)
+  test_missing_independent_baseline_disables_patch_range_proof    PASS (1.30s)
+  test_unpreserved_baseline_blocks_even_with_matching_content     PASS (1.46s)
+  test_commit_sha_destination_branch_is_rejected                  PASS (1.48s)
+  test_squash_with_unrelated_destination_content_preserves_by_transition PASS (2.13s)
+  test_squash_migration_with_identical_tree_preserves_by_tree_equality PASS (1.00s)
+  test_changed_source_head_after_preview_blocks                   PASS (1.04s)
+  test_cherry_picked_migration_preserves_by_content_transition    PASS (1.25s)
+  test_accepted_ancestor_preserves                                PASS (0.50s)
+  test_binary_modes_and_symlinks_compare_exactly                  PASS (2.27s)
+
+AssignmentPruneSafetyCheckerTest
+  test_taskless_assignment_without_journal_ref_passes_when_attempts_terminal PASS (0.00s)
+  test_completed_assignment_is_safe_to_prune                      PASS (0.00s)
+  test_uncertain_attempt_blocks_completed_assignment              PASS (0.00s)
+  test_managed_assignment_with_terminal_evidence_passes           PASS (0.00s)
+  test_unreadable_attempt_state_blocks                            PASS (0.00s)
+  test_missing_assignment_returns_not_found                       PASS (0.00s)
+  test_running_assignment_is_not_safe_to_prune                    PASS (0.00s)
+  test_managed_assignment_with_empty_journal_blocks               PASS (0.00s)
+  test_managed_assignment_requires_durable_evidence_ref           PASS (0.00s)
+  test_managed_assignment_unreadable_journal_blocks               PASS (0.00s)
+  test_active_attempt_blocks_completed_assignment                 PASS (0.00s)
+  test_managed_assignment_journal_active_attempt_blocks           PASS (0.00s)
+
+OverseerWorkflowContractTest
+  test_prune_safety_contract_is_first_class_non_negotiable        PASS (0.00s)
+  test_prune_requires_positive_no_active_writer_check             PASS (0.00s)
+  test_status_truth_contract_is_first_class_non_negotiable        PASS (0.00s)
+  test_encodes_work_on_status_and_prune_semantics                 PASS (0.00s)
+  test_prune_preserves_on_ambiguity_and_rejects_subject_only_proof PASS (0.00s)
+  test_migrated_work_requires_verified_destination_and_content_equivalence PASS (0.00s)
+  test_patch_range_proof_requires_independently_recorded_baseline PASS (0.00s)
+  test_contracts_are_listed_as_non_negotiable_summary             PASS (0.00s)
+  test_forbidden_unsafe_prune_practices_stay_out_of_the_workflow  PASS (0.00s)
+
+PresetResolverTest
+  test_prefers_task_frontmatter_preset                            PASS (0.00s)
+  test_falls_back_to_cli_preset_then_default                      PASS (0.00s)
+  test_supports_symbol_keys                                       PASS (0.00s)
+
+InstalledWorkflowResolutionTest
+  Successfully built RubyGem
+  Name: ace-support-config
+  Version: 0.18.2
+  File: ace-support-config-0.18.2.gem
+  Successfully built RubyGem
+  Name: ace-support-fs
+  Version: 0.3.4
+  File: ace-support-fs-0.3.4.gem
+  Successfully built RubyGem
+  Name: ace-support-cli
+  Version: 0.6.9
+  File: ace-support-cli-0.6.9.gem
+  Successfully built RubyGem
+  Name: ace-support-core
+  Version: 0.32.0
+  File: ace-support-core-0.32.0.gem
+  Successfully built RubyGem
+  Name: ace-git
+  Version: 0.29.0
+  File: ace-git-0.29.0.gem
+  Successfully built RubyGem
+  Name: ace-git-github
+  Version: 0.4.0
+  File: ace-git-github-0.4.0.gem
+  Successfully built RubyGem
+  Name: ace-compressor
+  Version: 0.25.5
+  File: ace-compressor-0.25.5.gem
+  Successfully built RubyGem
+  Name: ace-support-nav
+  Version: 0.28.7
+  File: ace-support-nav-0.28.7.gem
+  Successfully built RubyGem
+  Name: ace-bundle
+  Version: 0.44.2
+  File: ace-bundle-0.44.2.gem
+  Successfully built RubyGem
+  Name: ace-overseer
+  Version: 0.20.0
+  File: ace-overseer-0.20.0.gem
+  test_consumer_without_package_registration_fails_both_probes_despite_retained_workflow PASS (1.29s)
+  Successfully built RubyGem
+  Name: ace-support-config
+  Version: 0.18.2
+  File: ace-support-config-0.18.2.gem
+  Successfully built RubyGem
+  Name: ace-support-fs
+  Version: 0.3.4
+  File: ace-support-fs-0.3.4.gem
+  Successfully built RubyGem
+  Name: ace-support-cli
+  Version: 0.6.9
+  File: ace-support-cli-0.6.9.gem
+  Successfully built RubyGem
+  Name: ace-support-core
+  Version: 0.32.0
+  File: ace-support-core-0.32.0.gem
+  Successfully built RubyGem
+  Name: ace-git
+  Version: 0.29.0
+  File: ace-git-0.29.0.gem
+  Successfully built RubyGem
+  Name: ace-git-github
+  Version: 0.4.0
+  File: ace-git-github-0.4.0.gem
+  Successfully built RubyGem
+  Name: ace-compressor
+  Version: 0.25.5
+  File: ace-compressor-0.25.5.gem
+  Successfully built RubyGem
+  Name: ace-support-nav
+  Version: 0.28.7
+  File: ace-support-nav-0.28.7.gem
+  Successfully built RubyGem
+  Name: ace-bundle
+  Version: 0.44.2
+  File: ace-bundle-0.44.2.gem
+  Successfully built RubyGem
+  Name: ace-overseer
+  Version: 0.20.0
+  File: ace-overseer-0.20.0.gem
+  test_clean_consumer_resolves_overseer_workflow_from_installed_package PASS (1.22s)
+
+ProposalTickTest
+  test_unconfigured_tick_has_no_authority_and_failed_tick_is_visible PASS (0.00s)
+  test_tick_invokes_policy_only_and_survives_restart_without_own_timer PASS (0.00s)
+
+GemPackagingTest
+  test_gemspec_file_globs_include_payload_files                   PASS (0.00s)
+  Successfully built RubyGem
+  Name: ace-overseer
+  Version: 0.20.0
+  File: ace-overseer-0.20.0.gem
+  test_built_gem_ships_workflow_and_wfi_source_payload            PASS (0.03s)
+
+LabClientTest
+  test_raises_actionable_error_when_lab_binary_is_missing         PASS (0.00s)
+  test_uses_only_absolute_lab_binary_and_parses_json              PASS (0.00s)
+  test_passes_prompt_only_over_stdin                              PASS (0.00s)
+  test_raises_redacted_command_error                              PASS (0.00s)
+
+Finished in 72.18891s
+252 tests, 968 assertions, 0 failures, 0 errors, 0 skips

@@ -1,0 +1,52 @@
+Started with run options --seed 60575
+
+StageExecutorTest
+  test_executes_step_and_writes_required_files                    PASS (0.06s)
+  test_fails_for_empty_output                                     PASS (0.04s)
+  test_fails_when_bundle_command_fails                            PASS (0.01s)
+
+SimulationSessionTest
+  test_requires_workflow_when_synthesis_provider_is_set           PASS (0.00s)
+  test_rejects_invalid_repeat                                     PASS (0.00s)
+  test_builds_valid_session                                       PASS (0.00s)
+  test_rejects_missing_step_bundle                                PASS (0.00s)
+
+CliTest
+  test_help_output_lists_run                                      PASS (0.00s)
+  test_program_name                                               PASS (0.00s)
+  test_version_output                                             PASS (0.00s)
+
+FinalSynthesisExecutorTest
+  test_generates_report_and_revised_source                        PASS (0.03s)
+  test_returns_failed_when_llm_fails                              PASS (0.03s)
+  test_returns_failed_when_sequence_missing_required_tags         PASS (0.01s)
+
+RunCommandTest
+  test_errors_when_runner_fails                                   PASS (0.04s)
+  test_rejects_unknown_preset                                     PASS (0.01s)
+  test_rejects_synthesis_provider_without_workflow_flag           PASS (0.01s)
+  test_rejects_synthesis_provider_without_workflow                PASS (0.00s)
+  test_cli_overrides_preset_defaults                              PASS (0.03s)
+  test_requires_source                                            PASS (0.04s)
+  test_cli_can_override_synthesis_options                         PASS (0.01s)
+  test_default_presets_define_provider_and_synthesis_defaults     PASS (0.02s)
+
+SimulationRunnerTest
+  test_marks_run_failed_when_final_synthesis_fails                PASS (0.06s)
+  test_run_chain_uses_absolute_phase_numbering_for_plan_and_work  PASS (0.02s)
+  test_prepare_unique_run_recovers_from_directory_collision       PASS (0.05s)
+  test_prepare_unique_run_fails_after_repeated_collisions         PASS (0.00s)
+  test_failure_isolation_across_chains                            PASS (0.01s)
+  test_runs_file_chained_artifacts                                PASS (0.01s)
+  test_rejects_writeback_when_multiple_sources                    PASS (0.00s)
+  test_dry_run_skips_provider_and_final_synthesis_execution       PASS (0.01s)
+  test_repeat_creates_independent_chains                          PASS (0.07s)
+  test_generates_final_suggestions_report_when_synthesis_enabled  PASS (0.02s)
+
+SourceBundlerTest
+  test_creates_bundle_yaml_and_runs_ace_bundle                    PASS (0.00s)
+  test_raises_validation_error_when_bundle_command_fails          PASS (0.00s)
+  test_raises_validation_error_when_sources_empty                 PASS (0.00s)
+
+Finished in 0.61943s
+34 tests, 161 assertions, 0 failures, 0 errors, 0 skips

@@ -1,0 +1,10 @@
+Run options: --seed 8942
+
+# Running:
+
+........hello-world
+............................................................................................................................
+
+Finished in 3.172031s, 41.6137 runs/s, 135.8751 assertions/s.
+
+132 runs, 431 assertions, 0 failures, 0 errors, 0 skips

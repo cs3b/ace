@@ -1,0 +1,32 @@
+Warning: ace-bundle API failed for 'project': Context loading failed
+Warning: ace-bundle CLI failed for preset 'project': CLI failed
+Warning: ace-bundle returned empty content for preset 'project'
+Warning: LLM enhancement failed: API error
+Warning: ace-llm gem not available: gem not found
+Warning: Failed to load system prompt, using original content
+Warning: LLM returned empty response, using original content
+Error: Failed to load bundle: undefined method 'match?' for an instance of Integer
+Warning: ace-bundle failed, extracting prompt body only
+Warning: ace-bundle failed, extracting prompt body only
+Warning: Bundle content is empty
+Warning: ace-bundle failed, extracting prompt body only
+Error: File path resolves outside project: /private/var/folders/hf/knhxwtnx76gcdps2hxb3bp2r0000gr/T/d20261005-28777-by382f/.ace-local/prompt-prep/prompts/test.md
+Error: File path resolves outside project: /private/var/folders/hf/knhxwtnx76gcdps2hxb3bp2r0000gr/T/d20261005-28777-l5bp6e/.ace-local/prompt-prep/prompts/subdir/test.md
+Error: File path resolves outside project: /private/var/folders/hf/knhxwtnx76gcdps2hxb3bp2r0000gr/T/d20261005-28777-db3b7y/.ace-local/prompt-prep/prompts/medium.md
+Error: File path resolves outside project: /private/var/folders/hf/knhxwtnx76gcdps2hxb3bp2r0000gr/T/d20261005-28777-2knho4/external.txt
+test debug message
+Error: test error message
+Error: File path resolves outside project: /private/etc/passwd
+Error: Prompt file does not exist: /tmp/allowed.md
+Error: Prompt file is not readable: /private/var/folders/hf/knhxwtnx76gcdps2hxb3bp2r0000gr/T/d20261005-28777-62i2ue/.ace-local/prompt-prep/prompts/restricted.md
+Error: File path resolves outside project: /private/var/folders/hf/knhxwtnx76gcdps2hxb3bp2r0000gr/T/d20261005-28777-81tl1p/.ace-local/prompt-prep/prompts/target.txt
+Error: Prompt file does not exist: /private/var/folders/hf/knhxwtnx76gcdps2hxb3bp2r0000gr/T/d20261005-28777-8cs27q/.ace-local/prompt-prep/prompts/broken.md
+Error: Prompt file does not exist: /private/var/folders/hf/knhxwtnx76gcdps2hxb3bp2r0000gr/T/d20261005-28777-q5lvwe/.ace-local/prompt-prep/prompts/temp.md
+Error: File path resolves outside project: /private/var/folders/hf/knhxwtnx76gcdps2hxb3bp2r0000gr/T/d20261005-28777-2b449v/.ace-local/prompt-prep/prompts/large.md
+Warning: Invalid embed_source value, using default true
+Error: File path resolves outside project: /private/tmp/test.md
+Error: Prompt file does not exist: /valid/path.md
+Error: Prompt file does not exist: relative/path.md
+Warning: Invalid format 'invalid', using default 'markdown-xml'
+Error: File path resolves outside project: /private/tmp/test.md
+Error: Prompt file does not exist: /nonexistent/path.md

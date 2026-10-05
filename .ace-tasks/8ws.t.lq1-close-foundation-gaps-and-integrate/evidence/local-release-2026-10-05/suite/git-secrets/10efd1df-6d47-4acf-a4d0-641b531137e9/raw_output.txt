@@ -1,0 +1,10 @@
+Run options: --seed 12008
+
+# Running:
+
+................................................................................................Backup created at: /var/folders/hf/knhxwtnx76gcdps2hxb3bp2r0000gr/T/ace-mock-git-repo20261005-27150-xz1wsu-backup-8x4ldf.git
+.............................................................
+
+Finished in 6.125086s, 25.6323 runs/s, 64.6522 assertions/s.
+
+157 runs, 396 assertions, 0 failures, 0 errors, 0 skips

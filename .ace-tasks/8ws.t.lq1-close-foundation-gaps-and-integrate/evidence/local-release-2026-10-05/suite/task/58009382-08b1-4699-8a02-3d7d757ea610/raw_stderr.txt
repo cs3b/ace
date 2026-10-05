@@ -1,0 +1,12 @@
+/Users/mc/Ps/ace/ace-support-test-helpers/lib/ace/test_support/performance_helpers.rb:3: warning: benchmark was loaded from the standard library, but will no longer be part of the default gems starting from Ruby 4.0.0.
+You can add benchmark to your Gemfile or gemspec to silence this warning.
+#<Thread:0x00000001236f0d00 /Users/mc/Ps/ace/ace-task/test/fast/organisms/task_manager_test.rb:571 run> terminated with exception (report_on_exception is true):
+/Users/mc/Ps/ace/ace-task/lib/ace/task/organisms/task_manager.rb:1019:in 'block in Ace::Task::Organisms::TaskManager#ensure_issue_not_linked_elsewhere!': Issue #276 on lab is already linked to task 8x4.t.ld5 (Ace::Git::ProviderIdentityMismatchError)
+	from /Users/mc/Ps/ace/ace-task/lib/ace/task/organisms/task_manager.rb:1012:in 'Array#each'
+	from /Users/mc/Ps/ace/ace-task/lib/ace/task/organisms/task_manager.rb:1012:in 'Ace::Task::Organisms::TaskManager#ensure_issue_not_linked_elsewhere!'
+	from /Users/mc/Ps/ace/ace-task/lib/ace/task/organisms/task_manager.rb:75:in 'block in Ace::Task::Organisms::TaskManager#create'
+	from /Users/mc/Ps/ace/ace-task/lib/ace/task/organisms/task_manager.rb:1045:in 'block in Ace::Task::Organisms::TaskManager#with_issue_identity_lock'
+	from /Users/mc/Ps/ace/ace-task/lib/ace/task/organisms/task_manager.rb:1041:in 'IO.open'
+	from /Users/mc/Ps/ace/ace-task/lib/ace/task/organisms/task_manager.rb:1041:in 'Ace::Task::Organisms::TaskManager#with_issue_identity_lock'
+	from /Users/mc/Ps/ace/ace-task/lib/ace/task/organisms/task_manager.rb:74:in 'Ace::Task::Organisms::TaskManager#create'
+	from /Users/mc/Ps/ace/ace-task/test/fast/organisms/task_manager_test.rb:571:in 'block (2 levels) in TaskManagerTest#test_concurrent_linked_creates_serialize_on_issue_lock'

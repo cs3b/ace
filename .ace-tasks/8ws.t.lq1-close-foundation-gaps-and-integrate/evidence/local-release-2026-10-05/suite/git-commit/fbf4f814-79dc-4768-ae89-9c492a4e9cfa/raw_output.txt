@@ -1,0 +1,306 @@
+Started with run options --seed 26247
+
+FileStagerTest
+  test_stage_paths_handles_mixed_valid_force_add_and_skipped      PASS (0.00s)
+  test_stage_all_changes                                          PASS (0.00s)
+  test_stage_paths_no_output_when_quiet                           PASS (0.00s)
+  test_stage_all_handles_errors                                   PASS (0.00s)
+  test_unstage_in_new_repo_without_head                           PASS (0.00s)
+  test_stage_paths_returns_false_for_empty_list                   PASS (0.00s)
+  test_stages_specific_files                                      PASS (0.00s)
+  test_stage_paths_clears_last_error_on_success                   PASS (0.00s)
+  test_handles_unicode_filenames                                  PASS (0.00s)
+  test_handles_files_with_spaces                                  PASS (0.00s)
+  test_stage_paths_skips_untracked_gitignored_files               PASS (0.00s)
+  test_stage_paths_outputs_skipped_files_when_not_quiet           PASS (0.00s)
+  test_checks_files_not_staged                                    PASS (0.00s)
+  test_all_files_skipped_returns_false_when_no_files_skipped      PASS (0.00s)
+  test_unstages_specific_files                                    PASS (0.00s)
+  test_returns_false_for_empty_file_list                          PASS (0.00s)
+  test_stage_paths_force_adds_tracked_gitignored_files            PASS (0.00s)
+  test_stage_paths_handles_invalid_paths_via_git                  PASS (0.00s)
+  test_stage_paths_handles_git_errors                             PASS (0.00s)
+  test_staged_files_returns_empty_array_when_none                 PASS (0.00s)
+  test_stages_multiple_files                                      PASS (0.00s)
+  test_returns_false_for_nil_file_list                            PASS (0.00s)
+  test_clears_last_error_on_success                               PASS (0.00s)
+  test_checks_partially_staged_files                              PASS (0.00s)
+  test_stage_files_handles_errors                                 PASS (0.00s)
+  test_staged_files_returns_list                                  PASS (0.00s)
+  test_stage_paths_returns_false_for_nil                          PASS (0.00s)
+  test_staged_files_uses_no_renames_flag_for_directory_renames    PASS (0.00s)
+  test_stage_paths_resets_and_stages_paths                        PASS (0.00s)
+  test_stage_paths_returns_success_when_all_files_skipped         PASS (0.00s)
+  test_checks_if_files_staged                                     PASS (0.00s)
+
+StageResultTest
+  test_successful_result                                          PASS (0.00s)
+  test_human_file_size_megabytes                                  PASS (0.00s)
+  test_failed_result                                              PASS (0.00s)
+  test_status_field                                               PASS (0.00s)
+  test_human_file_size_bytes                                      PASS (0.00s)
+  test_large_file_detection                                       PASS (0.00s)
+  test_to_h_includes_all_fields                                   PASS (0.00s)
+  test_human_file_size_kilobytes                                  PASS (0.00s)
+  test_small_file_not_large                                       PASS (0.00s)
+  test_human_file_size_gigabytes                                  PASS (0.00s)
+
+CommitOptionsTest
+  test_use_llm_false_when_message_provided                        PASS (0.00s)
+  test_stage_all_false_when_only_staged                           PASS (0.00s)
+  test_initialize_with_defaults                                   PASS (0.00s)
+  test_to_h_returns_hash                                          PASS (0.00s)
+  test_initialize_with_values                                     PASS (0.00s)
+  test_stage_all_false_when_specific_files                        PASS (0.00s)
+  test_use_llm_when_no_message                                    PASS (0.00s)
+  test_specific_files_when_files_provided                         PASS (0.00s)
+  test_stage_all_true_by_default                                  PASS (0.00s)
+  test_specific_files_false_when_no_files                         PASS (0.00s)
+
+DiffAnalyzerTest
+  test_analyze_diff_extracts_file_information                     PASS (0.00s)
+  test_detect_scope_identifies_docs_scope                         PASS (0.00s)
+  test_detect_scope_identifies_test_scope                         PASS (0.00s)
+  test_detect_scope_returns_nil_for_mixed_files                   PASS (0.00s)
+  test_detect_scope_identifies_gem_scope                          PASS (0.00s)
+
+PathResolverTest
+  test_within_repository_returns_false_for_nonexistent_paths      PASS (0.00s)
+  test_all_paths_exist_returns_false_when_some_missing            PASS (0.00s)
+  test_validate_paths_accepts_copied_file_original_path           PASS (0.00s)
+  test_modified_files_in_paths_finds_unstaged_changes             PASS (0.00s)
+  test_filter_by_paths_with_multiple_paths                        PASS (0.00s)
+  test_validate_paths_separates_valid_and_invalid                 PASS (0.00s)
+  test_validate_paths_handles_renamed_paths_with_spaces           PASS (0.00s)
+  test_suggest_recursive_pattern_for_simple_glob                  PASS (0.00s)
+  test_glob_pattern_detects_brackets                              PASS (0.00s)
+  test_validate_paths_accepts_directory_with_deleted_files        PASS (0.00s)
+  test_validate_paths_memoizes_repo_root_for_multiple_absolute_paths PASS (0.00s)
+  test_resolve_paths_filters_glob_to_committable_files_only       PASS (0.00s)
+  test_resolve_paths_expands_glob_pattern                         PASS (0.00s)
+  test_all_paths_exist_returns_true_for_deleted_files             PASS (0.00s)
+  test_suggest_recursive_pattern_returns_nil_for_regular_paths    PASS (0.00s)
+  test_validate_paths_accepts_copied_file                         PASS (0.00s)
+  test_resolve_paths_excludes_directories_from_glob               PASS (0.00s)
+  test_files_in_path_returns_tracked_files                        PASS (0.00s)
+  test_resolve_paths_handles_mixed_paths_and_globs                PASS (0.00s)
+  test_modified_files_in_paths_handles_git_error                  PASS (0.00s)
+  test_resolve_paths_handles_mixed_paths                          PASS (0.00s)
+  test_glob_pattern_detects_asterisk                              PASS (0.00s)
+  test_validate_paths_skips_git_check_when_all_exist              PASS (0.00s)
+  test_files_in_path_handles_git_error                            PASS (0.00s)
+  test_validate_paths_handles_path_with_spaces                    PASS (0.00s)
+  test_files_in_path_returns_empty_for_empty_path                 PASS (0.00s)
+  test_validate_paths_directory_without_trailing_slash            PASS (0.00s)
+  test_resolve_paths_handles_glob_errors_gracefully               PASS (0.00s)
+  test_validate_paths_normalizes_trailing_slash                   PASS (0.00s)
+  test_resolve_paths_returns_empty_for_empty_input                PASS (0.00s)
+  test_simple_glob_pattern_returns_false_for_regular_paths        PASS (0.00s)
+  test_simple_glob_pattern_returns_false_for_recursive_globs      PASS (0.00s)
+  test_resolve_paths_glob_with_only_untracked_files               PASS (0.00s)
+  test_glob_pattern_detects_question_mark                         PASS (0.00s)
+  test_modified_files_in_paths_with_multiple_paths                PASS (0.00s)
+  test_modified_files_in_paths_returns_empty_for_empty_paths      PASS (0.00s)
+  test_validate_paths_handles_git_error_gracefully                PASS (0.00s)
+  test_suggest_recursive_pattern_returns_nil_for_already_recursive PASS (0.00s)
+  test_resolve_paths_includes_untracked_files_in_glob             PASS (0.00s)
+  test_resolve_paths_expands_directories                          PASS (0.00s)
+  test_validate_paths_accepts_directory_with_changed_files        PASS (0.00s)
+  test_validate_paths_accepts_renamed_file_old_path               PASS (0.00s)
+  test_resolve_paths_handles_multiple_glob_patterns               PASS (0.00s)
+  test_resolve_paths_excludes_gitignored_files_from_glob          PASS (0.00s)
+  test_all_paths_exist_returns_true_when_all_exist                PASS (0.00s)
+  test_validate_paths_handles_mixed_existing_and_deleted          PASS (0.00s)
+  test_resolve_paths_handles_glob_with_no_matches                 PASS (0.00s)
+  test_within_repository_returns_true_for_paths_in_repo           PASS (0.00s)
+  test_within_repository_returns_false_for_paths_outside_repo     PASS (0.00s)
+  test_resolve_paths_includes_single_files                        PASS (0.00s)
+  test_validate_paths_handles_empty_array                         PASS (0.00s)
+  test_filter_by_paths_filters_files                              PASS (0.00s)
+  test_validate_paths_accepts_deleted_files                       PASS (0.00s)
+  test_modified_files_in_paths_finds_staged_changes               PASS (0.00s)
+  test_glob_pattern_returns_false_for_regular_paths               PASS (0.00s)
+  test_within_repository_handles_git_error                        PASS (0.00s)
+  test_suggest_recursive_pattern_handles_subdirectory_patterns    PASS (0.00s)
+  test_filter_by_paths_returns_all_when_no_paths                  PASS (0.00s)
+  test_resolve_paths_includes_nonexistent_paths_for_validation    PASS (0.00s)
+  test_simple_glob_pattern_detects_non_recursive_globs            PASS (0.00s)
+  test_validate_paths_normalizes_absolute_path                    PASS (0.00s)
+  test_resolve_paths_returns_sorted_unique                        PASS (0.00s)
+  test_validate_paths_rejects_truly_nonexistent_paths             PASS (0.00s)
+  test_glob_pattern_detects_braces                                PASS (0.00s)
+  test_validate_paths_normalizes_dot_slash_prefix                 PASS (0.00s)
+  test_validate_paths_normalizes_renamed_file_with_dot_prefix     PASS (0.00s)
+  test_all_paths_exist_returns_true_for_empty_array               PASS (0.00s)
+
+GitignoreCheckerTest
+  test_tracked_returns_false_for_untracked_file                   PASS (0.00s)
+  test_categorize_paths_all_files_gitignored_but_tracked          PASS (0.00s)
+  test_tracked_returns_true_for_tracked_file                      PASS (0.00s)
+  test_extract_pattern_returns_nil_for_nil_output                 PASS (0.00s)
+  test_filter_ignored_includes_force_add_in_valid                 PASS (0.00s)
+  test_extract_pattern_returns_nil_for_empty_output               PASS (0.00s)
+  test_categorize_paths_returns_empty_for_nil_input               PASS (0.00s)
+  test_categorize_paths_all_files_gitignored_and_untracked        PASS (0.00s)
+  test_ignored_returns_true_for_gitignored_file                   PASS (0.00s)
+  test_categorize_paths_separates_valid_force_add_and_skipped     PASS (0.00s)
+  test_ignored_returns_false_for_non_gitignored_file              PASS (0.00s)
+  test_categorize_paths_returns_empty_for_empty_input             PASS (0.00s)
+  test_extract_pattern_parses_verbose_output                      PASS (0.00s)
+  test_categorize_paths_all_files_valid                           PASS (0.00s)
+
+GitExecutorTest
+  test_repository_root_returns_path                               PASS (0.00s)
+  test_has_staged_changes_returns_false_when_none_staged          PASS (0.00s)
+  test_has_staged_changes_returns_true_when_staged                PASS (0.00s)
+  test_execute_raises_on_command_failure                          PASS (0.00s)
+  test_in_repository_returns_true_when_in_repo                    PASS (0.00s)
+  test_has_changes_returns_false_when_no_changes                  PASS (0.00s)
+  test_in_repository_returns_false_when_not_in_repo               PASS (0.00s)
+  test_execute_runs_git_command_successfully                      PASS (0.00s)
+  test_has_changes_returns_true_when_changes_exist                PASS (0.00s)
+  test_execute_with_capture_stderr_on_failure                     PASS (0.00s)
+  test_has_changes_returns_true_when_untracked_files_exist        PASS (0.00s)
+  test_execute_with_capture_stderr                                PASS (0.00s)
+
+GitCommitCliRoutingTest
+  test_cli_renders_git_commit_error_as_controlled_failure         PASS (0.00s)
+  test_cli_runs_commit_without_subcommand_for_dry_run             PASS (0.00s)
+  test_cli_runs_commit_without_subcommand_for_message_dry_run     PASS (0.00s)
+  test_cli_routes_help_with_long_flag                             PASS (0.00s)
+  test_cli_runs_commit_without_subcommand_for_staged_dry_run      PASS (0.00s)
+  test_cli_runs_commit_when_no_args                               PASS (0.00s)
+  test_cli_routes_version_with_long_flag                          PASS (0.00s)
+
+CommitGroupTest
+  test_add_file_mutates_group                                     PASS (0.00s)
+  test_signature_differs_for_different_array_content              PASS (0.00s)
+  test_signature_is_stable                                        PASS (0.00s)
+  test_signature_is_stable_with_nested_structures                 PASS (0.00s)
+  test_signature_differs_for_different_array_order                PASS (0.00s)
+
+CommitGrouperTest
+  test_derive_scope_name_from_root_config_project_default         PASS (0.00s)
+  test_groups_all_ace_files_into_single_ace_config_scope          PASS (0.00s)
+  test_derive_scope_name_nil_source                               PASS (0.00s)
+  test_groups_distributed_configs_without_rule_config_by_full_config PASS (0.00s)
+  test_groups_mixed_ace_and_regular_files_separately              PASS (0.00s)
+  test_derive_scope_name_compound_path_root_config                PASS (0.00s)
+  test_derive_scope_name_from_root_config_keeps_resolved_name     PASS (0.00s)
+  test_derive_scope_name_ace_defaults_only_compound               PASS (0.00s)
+  test_groups_path_rule_matches_with_same_rule_config_but_different_cascade_configs PASS (0.00s)
+  test_derive_scope_name_handles_ace_defaults_in_package          PASS (0.00s)
+  test_ace_config_file_detects_package_ace_path                   PASS (0.00s)
+  test_ace_config_file_detects_deeply_nested_ace_path             PASS (0.00s)
+  test_no_ace_files_produces_no_ace_config_group                  PASS (0.00s)
+  test_derive_scope_name_from_git_commit_package                  PASS (0.00s)
+  test_derive_scope_name_handles_compound_source_path             PASS (0.00s)
+  test_derive_scope_name_nil_project_root                         PASS (0.00s)
+  test_derive_scope_name_handles_deeply_nested_package            PASS (0.00s)
+  test_groups_root_ace_files_into_ace_config_scope                PASS (0.00s)
+  test_groups_project_default_files_with_different_configs_into_one_group PASS (0.00s)
+  test_derive_scope_name_from_package_config                      PASS (0.00s)
+  test_ace_config_file_rejects_regular_file                       PASS (0.00s)
+  test_ace_config_file_rejects_ace_defaults                       PASS (0.00s)
+  test_derive_scope_name_handles_ace_defaults_at_root             PASS (0.00s)
+  test_groups_named_scopes_with_different_configs_separately      PASS (0.00s)
+  test_groups_files_by_config_signature                           PASS (0.00s)
+  test_groups_path_rule_matches_with_different_rule_configs_separately PASS (0.00s)
+  test_ace_config_file_detects_root_ace_path                      PASS (0.00s)
+
+SplitCommitExecutorTest
+----------------------------------------
+Scope: docs
+Files:
+  a.md
+
+Message:
+feat(docs): test changes
+----------------------------------------
+  test_dry_run_does_not_commit                                    PASS (0.00s)
+  test_rollback_on_second_group_failure                           PASS (0.00s)
+  test_rollback_on_staging_failure                                PASS (0.00s)
+----------------------------------------
+Scope: docs
+Files:
+  README.md
+
+Message:
+feat(docs): test changes
+----------------------------------------
+----------------------------------------
+Scope: taskflow
+Files:
+  task.md
+
+Message:
+feat(taskflow): test changes
+----------------------------------------
+  test_dry_run_tracks_groups_for_visibility                       PASS (0.00s)
+  test_skips_commit_when_all_files_gitignored                     PASS (0.00s)
+  test_handles_mixed_valid_and_gitignored_groups                  PASS (0.00s)
+  test_falls_back_to_per_scope_generation_when_batch_fails        PASS (0.00s)
+
+CommitOrchestratorTest
+  test_multiple_paths_uses_path_restricted_staging                PASS (0.00s)
+  test_explicit_message_bypasses_message_generator                PASS (0.00s)
+  test_stages_all_changes                                         PASS (0.00s)
+  test_generates_message_with_llm_when_intention_provided         PASS (0.00s)
+  test_split_commit_executes_split_executor                       PASS (0.00s)
+  test_no_change_output_omits_staging_messages                    PASS (0.00s)
+  test_dry_run_does_not_commit                                    PASS (0.00s)
+  test_commits_with_direct_message                                PASS (0.00s)
+  test_validates_git_repository                                   PASS (0.00s)
+  test_glob_pattern_staging_with_resolved_files                   PASS (0.00s)
+  test_stages_specific_files                                      PASS (0.00s)
+  test_simple_glob_pattern_shows_recursive_hint                   PASS (0.00s)
+  test_empty_glob_pattern_results_shows_helpful_message           PASS (0.00s)
+  test_handles_commit_failure_gracefully                          PASS (0.00s)
+  test_early_path_validation_rejects_invalid_paths                PASS (0.00s)
+  test_returns_true_when_no_changes                               PASS (0.00s)
+  test_no_split_ignores_split_executor                            PASS (0.00s)
+  test_dry_run_llm_failure_includes_setup_guidance                PASS (0.00s)
+
+MessageGeneratorTest
+  test_generate_batch_includes_setup_guidance_when_repair_query_fails PASS (0.00s)
+  test_parse_batch_response_rejects_missing_scopes                PASS (0.00s)
+  test_parse_batch_response_with_fenced_json                      PASS (0.00s)
+  test_generate_batch_retries_once_on_invalid_json                PASS (0.00s)
+  test_parse_batch_response_with_strict_json                      PASS (0.00s)
+  test_generate_includes_setup_guidance_for_unsupported_model     PASS (0.00s)
+  test_generate_includes_setup_guidance_for_role_based_missing_credentials PASS (0.00s)
+
+SplitCommitResultTest
+  test_tracks_success_and_failure                                 PASS (0.00s)
+
+CommitSummarizerTest
+  test_summarize_handles_first_commit                             PASS (0.00s)
+  test_summarize_with_refs                                        PASS (0.00s)
+  test_summarize_includes_file_stats                              PASS (0.00s)
+  test_summarize_with_specific_commit_sha                         PASS (0.00s)
+  test_summarize_strips_whitespace                                PASS (0.00s)
+  test_summarize_returns_formatted_output                         PASS (0.00s)
+
+GitExecutorEdgeTest
+  test_handles_repository_with_untracked_files                    PASS (0.00s)
+  test_handles_repository_in_subdirectory                         PASS (0.00s)
+  test_handles_worktree_directory                                 PASS (0.00s)
+  test_handles_repository_with_gitignore                          PASS (0.00s)
+  test_integration_detached_head_workflow                         PASS (0.90s)
+  test_handles_repository_with_staged_changes                     PASS (0.00s)
+  test_handles_detached_head_state                                PASS (0.00s)
+  test_handles_repository_with_submodules                         PASS (0.00s)
+  test_handles_bare_repository                                    PASS (0.00s)
+  test_integration_reports_changes_for_untracked_file             PASS (0.36s)
+  test_handles_repository_with_modified_files                     PASS (0.00s)
+  test_integration_real_git_repository                            PASS (0.48s)
+  test_handles_very_large_repository                              PASS (0.00s)
+  test_integration_commit_workflow                                PASS (0.39s)
+  test_handles_non_git_directory                                  PASS (0.00s)
+  test_handles_repository_with_spaces_in_filenames                PASS (0.00s)
+  test_handles_git_command_failure                                PASS (0.00s)
+  test_handles_repository_with_unicode_filenames                  PASS (0.00s)
+  test_handles_empty_repository                                   PASS (0.00s)
+
+Finished in 2.19094s
+246 tests, 569 assertions, 0 failures, 0 errors, 0 skips

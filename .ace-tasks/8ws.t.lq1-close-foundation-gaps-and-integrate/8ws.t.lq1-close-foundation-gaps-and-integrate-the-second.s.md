@@ -10,7 +10,7 @@ title: Close foundation gaps and integrate the second ACE Lab wave
 needs_review: false
 bundle:
   presets: [project]
-  files: [AGENTS.md, .ace-tasks/8wr.t.uj0-bind-forgejo-provider-commands-to/8wr.t.uj0-bind-forgejo-provider-commands-to-the-selected.s.md, .ace-tasks/_archive/8x/v/8wr.t.t8j-enforce-prune-safety-workflow-contract/8wr.t.t8j-enforce-prune-safety-workflow-contract-in-overseer.s.md, .ace-tasks/8ws.t.lq1-close-foundation-gaps-and-integrate/evidence/release-proof-2026-09-29.md, .ace-tasks/8ws.t.lq1-close-foundation-gaps-and-integrate/evidence/install-observations.json]
+  files: [AGENTS.md, .ace-tasks/8wr.t.uj0-bind-forgejo-provider-commands-to/8wr.t.uj0-bind-forgejo-provider-commands-to-the-selected.s.md, .ace-tasks/_archive/8x/v/8wr.t.t8j-enforce-prune-safety-workflow-contract/8wr.t.t8j-enforce-prune-safety-workflow-contract-in-overseer.s.md, .ace-tasks/8ws.t.lq1-close-foundation-gaps-and-integrate/evidence/release-proof-2026-09-29.md, .ace-tasks/8ws.t.lq1-close-foundation-gaps-and-integrate/evidence/install-observations.json, .ace-tasks/8ws.t.lq1-close-foundation-gaps-and-integrate/release-preparation-2026-10-05.md]
   commands: []
 position: 6o000l
 ---
@@ -22,7 +22,7 @@ This is the ACE integration tracker replacing the planning role of the loose lab
 
 This task owns sequencing and acceptance receipts, not duplicate implementations. Existing tasks stay at their canonical IDs; new uncovered outcomes are actual children. Check a task checkbox only after its owning record is done and linked evidence establishes the listed result. Reopen this checklist item if receipt is invalidated; do not silently expand a historical done task. `bin/ace-task show 8ws.t.lq1 --content` displays the checklist; updates are explicit, not automatic synchronization.
 
-Current phase: local source implementation and integration, then gem publication, then installed Lab acceptance, as specified in the current delivery sequence below. Earlier dated sections retain review history; they are not the current dispatch state. The tracker remains open until the final integration and Lab gates are met.
+Current handoff: Captain interactive publication of the prepared 2026-10-05 bounded source release, followed by its installed graph verification. Remaining local producer/consumer implementation and final Lab gates stay open as listed in release-preparation-2026-10-05.md. Earlier dated sections retain review history; they are not the current dispatch state. The tracker remains open until the full integration and Lab gates are met.
 
 ## First wave — delivered scopes
 - [x] ACE 8wq.t.1w2 — hermetic test infrastructure, main PR344; tp0 consumer fixes also delivered, with later runner source loading fix 96c445b8a. This does not close new fixture defects.
@@ -432,9 +432,7 @@ are claimed as newly executed by this specification edit.
   (2 skipped) and Herdr 476 passed. Composed fast-suite coverage: 11252 passed,
   24 skipped; original Assign 120-second suite timeout and successful isolated retry
   are both retained in xz9.0/endcap-inbox-verification.md.
-- [ ] 9c2 connected parent binding, seal/closure, guarded abort, canonical reservation
-  release and reuse remain in progress; accepted generic network evidence verification
-  still needs its namespace/admission and maintenance consumers.
+- [x] 9c2 never-native-admitted parent binding, seal/closure, guarded abort and canonical reservation release/reuse source is accepted and integrated. The complete native/network admission and original/candidate maintenance consumers remain open; see connected-parent-cap-verification.md in 9c2.
 - [ ] xz9.0 scope-guarded registration, finish/recover and complete composition remain
   open. A reconciliation/settlement helper does not make protected startup complete.
 - [ ] Integrate remaining coherent source and dependency floors before gem preparation;
@@ -447,4 +445,12 @@ are claimed as newly executed by this specification edit.
 - [x] ACE `8x4.t.jdx`: independent diagnosis and fixture-only repair `47f5eca70` synchronize handler request input before response. Lab all 199/697 passed, 1 skip; independent corrected-blob review approved. Original failure and controlled reproduction retained in the archived task.
 - [ ] Connect accepted network verification to namespace pinning, native admission/stage joins and complete original/candidate maintenance interfaces, then verify the domain installer after publication. Generic verifier acceptance is not positive runtime readiness or whole 9c2 completion.
 - [x] `qkb.1` bounded neutral-vocabulary source slice integrated at `f52816116`; evidence retained at `272811869`. Accepted source `f29c72e3` removes old packaged PR workflows/skills, migrates named consumers and retains explicit standalone delivery separately from managed protection. Independent correction review APPROVE (2/42); author correction checks 38/327 passed. Historical initial-source suite: 11273 passed, 24 skipped, 34610 assertions; it is not relabeled as the corrected revision. Nine retained receipts (36 files) match their original bytes and hashes. Full protected role adoption (`qk0`/`xz9`), fresh installed resolution and qkb SC7 remain open; ambient user registration of old installed sources is not modified.
-- [ ] Prepare the coherent 16-package candidate and verified direct/minimum dependencies after final source integration and tests. This source release does not complete 9c2/xz9/qkb or installed acceptance; retain their missing handlers, positive native admission, historical maintenance and domain installation requirements.
+- [x] Prepare the coherent 16-package candidate and verified direct/minimum dependencies after final source integration and tests. This source release does not complete 9c2/xz9/qkb or installed acceptance; their missing handlers, positive native admission, historical maintenance and domain installation requirements remain open.
+
+## Prepared bounded source release — 2026-10-05
+
+- [x] Integrate accepted neutral workflow source and never-native-admitted parent lifecycle, with all corrective reviews and failed-run history retained. The full producer/consumer task contracts stay open.
+- [x] Prepare the coordinated 16-package release on `5a0c9e05b`: explicit dependency floors, independently approved metadata, exact-source suite 51/51 entries, 11280 passed / 24 skipped / 34658 assertions, zero errors.
+- [x] Build 16 fresh artifacts in eight dependency waves and verify all 1110 packaged source files, versions and runtime dependency declarations. Retain the 49-record installation manifest and historical provenance. See release-preparation-2026-10-05.md and evidence/local-release-2026-10-05/.
+- [ ] Captain interactive publication of this exact prepared queue.
+- [ ] New-release installed graph and consumer acceptance, then remaining native/domain Lab acceptance. Neither publication nor this bounded preparation closes 9c2/xz9/qkb/R2/R3.

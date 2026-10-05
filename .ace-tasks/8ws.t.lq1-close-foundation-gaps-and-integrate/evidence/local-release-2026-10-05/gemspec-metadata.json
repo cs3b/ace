@@ -1,0 +1,450 @@
+{
+  "source_sha": "5a0c9e05b00fe429dc59f36445ec43507fbefae4",
+  "kind": "local gemspec metadata inspection; no archive build",
+  "packages": [
+    {
+      "name": "ace-runtime",
+      "version": "0.2.0",
+      "runtime_dependencies": {
+        "ace-support-cli": [
+          "~> 0.6"
+        ],
+        "ace-support-config": [
+          "~> 0.18"
+        ],
+        "ace-support-core": [
+          "~> 0.31"
+        ],
+        "fiddle": [
+          ">= 1.1",
+          "< 2"
+        ],
+        "json": [
+          ">= 2.20",
+          "< 3"
+        ]
+      },
+      "source_sha": "5a0c9e05b00fe429dc59f36445ec43507fbefae4"
+    },
+    {
+      "name": "ace-hitl-contract",
+      "version": "0.2.0",
+      "runtime_dependencies": {},
+      "source_sha": "5a0c9e05b00fe429dc59f36445ec43507fbefae4"
+    },
+    {
+      "name": "ace-herdr",
+      "version": "0.4.0",
+      "runtime_dependencies": {
+        "ace-hitl-contract": [
+          "~> 0.2"
+        ],
+        "ace-runtime": [
+          "~> 0.2"
+        ],
+        "ace-support-cli": [
+          "~> 0.6"
+        ],
+        "ace-support-config": [
+          "~> 0.18"
+        ],
+        "ace-support-core": [
+          "~> 0.31"
+        ]
+      },
+      "source_sha": "5a0c9e05b00fe429dc59f36445ec43507fbefae4"
+    },
+    {
+      "name": "ace-tmux",
+      "version": "0.19.0",
+      "runtime_dependencies": {
+        "ace-runtime": [
+          "~> 0.2"
+        ],
+        "ace-support-cli": [
+          "~> 0.6"
+        ],
+        "ace-support-config": [
+          "~> 0.18"
+        ],
+        "ace-support-core": [
+          "~> 0.31"
+        ],
+        "ace-support-fs": [
+          "~> 0.3"
+        ]
+      },
+      "source_sha": "5a0c9e05b00fe429dc59f36445ec43507fbefae4"
+    },
+    {
+      "name": "ace-assign",
+      "version": "0.64.0",
+      "runtime_dependencies": {
+        "ace-b36ts": [
+          "~> 0.14"
+        ],
+        "ace-git": [
+          "~> 0.29"
+        ],
+        "ace-herdr": [
+          "~> 0.4"
+        ],
+        "ace-llm": [
+          "~> 0.39"
+        ],
+        "ace-llm-providers-cli": [
+          "~> 0.36.1"
+        ],
+        "ace-review": [
+          "~> 0.59"
+        ],
+        "ace-runtime": [
+          "~> 0.2"
+        ],
+        "ace-support-cli": [
+          "~> 0.6"
+        ],
+        "ace-support-config": [
+          "~> 0.18"
+        ],
+        "ace-support-core": [
+          "~> 0.31"
+        ],
+        "ace-support-fs": [
+          "~> 0.3"
+        ],
+        "ace-support-markdown": [
+          "~> 0.3"
+        ],
+        "ace-support-nav": [
+          "~> 0.28"
+        ],
+        "ace-task": [
+          "~> 0.37"
+        ],
+        "ace-tmux": [
+          "~> 0.18"
+        ],
+        "json": [
+          ">= 2.20",
+          "< 3"
+        ]
+      },
+      "source_sha": "5a0c9e05b00fe429dc59f36445ec43507fbefae4"
+    },
+    {
+      "name": "ace-hitl",
+      "version": "0.12.0",
+      "runtime_dependencies": {
+        "ace-assign": [
+          "~> 0.64"
+        ],
+        "ace-b36ts": [
+          "~> 0.14"
+        ],
+        "ace-herdr": [
+          "~> 0.4"
+        ],
+        "ace-hitl-contract": [
+          "~> 0.2"
+        ],
+        "ace-support-cli": [
+          "~> 0.6"
+        ],
+        "ace-support-config": [
+          "~> 0.18"
+        ],
+        "ace-support-core": [
+          "~> 0.31"
+        ],
+        "ace-support-fs": [
+          "~> 0.3"
+        ],
+        "ace-support-items": [
+          "~> 0.15"
+        ]
+      },
+      "source_sha": "5a0c9e05b00fe429dc59f36445ec43507fbefae4"
+    },
+    {
+      "name": "ace-hitl-hermes",
+      "version": "0.2.0",
+      "runtime_dependencies": {
+        "ace-hitl": [
+          "~> 0.12"
+        ],
+        "ace-hitl-contract": [
+          "~> 0.2"
+        ],
+        "ace-support-cli": [
+          "~> 0.6"
+        ],
+        "faraday": [
+          "~> 2.14"
+        ]
+      },
+      "source_sha": "5a0c9e05b00fe429dc59f36445ec43507fbefae4"
+    },
+    {
+      "name": "ace-lab",
+      "version": "0.4.0",
+      "runtime_dependencies": {
+        "ace-assign": [
+          "~> 0.64"
+        ],
+        "ace-runtime": [
+          "~> 0.2"
+        ],
+        "ace-support-cli": [
+          "~> 0.6"
+        ],
+        "ace-support-config": [
+          "~> 0.18"
+        ],
+        "ace-support-core": [
+          "~> 0.31"
+        ]
+      },
+      "source_sha": "5a0c9e05b00fe429dc59f36445ec43507fbefae4"
+    },
+    {
+      "name": "ace-git",
+      "version": "0.29.0",
+      "runtime_dependencies": {
+        "ace-support-cli": [
+          "~> 0.6"
+        ],
+        "ace-support-config": [
+          "~> 0.18"
+        ],
+        "ace-support-core": [
+          "~> 0.31"
+        ]
+      },
+      "source_sha": "5a0c9e05b00fe429dc59f36445ec43507fbefae4"
+    },
+    {
+      "name": "ace-handbook",
+      "version": "0.34.0",
+      "runtime_dependencies": {
+        "ace-support-cli": [
+          "~> 0.6"
+        ],
+        "ace-support-config": [
+          "~> 0.18"
+        ],
+        "ace-support-core": [
+          "~> 0.31"
+        ],
+        "ace-support-nav": [
+          "~> 0.28"
+        ]
+      },
+      "source_sha": "5a0c9e05b00fe429dc59f36445ec43507fbefae4"
+    },
+    {
+      "name": "ace-git-worktree",
+      "version": "0.26.0",
+      "runtime_dependencies": {
+        "ace-git": [
+          "~> 0.29"
+        ],
+        "ace-herdr": [
+          "~> 0.4"
+        ],
+        "ace-runtime": [
+          "~> 0.1"
+        ],
+        "ace-support-cli": [
+          "~> 0.6"
+        ],
+        "ace-support-config": [
+          "~> 0.18"
+        ],
+        "ace-support-core": [
+          "~> 0.31"
+        ],
+        "ace-task": [
+          "~> 0.37"
+        ],
+        "ace-tmux": [
+          "~> 0.18"
+        ]
+      },
+      "source_sha": "5a0c9e05b00fe429dc59f36445ec43507fbefae4"
+    },
+    {
+      "name": "ace-review",
+      "version": "0.59.0",
+      "runtime_dependencies": {
+        "ace-b36ts": [
+          "~> 0.14"
+        ],
+        "ace-bundle": [
+          "~> 0.44"
+        ],
+        "ace-compressor": [
+          "~> 0.25"
+        ],
+        "ace-git": [
+          "~> 0.29"
+        ],
+        "ace-git-forgejo": [
+          "~> 0.4"
+        ],
+        "ace-git-github": [
+          "~> 0.3"
+        ],
+        "ace-llm": [
+          "~> 0.41"
+        ],
+        "ace-support-cli": [
+          "~> 0.6"
+        ],
+        "ace-support-config": [
+          "~> 0.18"
+        ],
+        "ace-support-core": [
+          "~> 0.32"
+        ],
+        "ace-support-fs": [
+          "~> 0.3"
+        ],
+        "ace-support-nav": [
+          "~> 0.28"
+        ],
+        "ace-task": [
+          "~> 0.37"
+        ]
+      },
+      "source_sha": "5a0c9e05b00fe429dc59f36445ec43507fbefae4"
+    },
+    {
+      "name": "ace-overseer",
+      "version": "0.20.0",
+      "runtime_dependencies": {
+        "ace-assign": [
+          "~> 0.64"
+        ],
+        "ace-git": [
+          "~> 0.29"
+        ],
+        "ace-git-worktree": [
+          "~> 0.26"
+        ],
+        "ace-herdr": [
+          "~> 0.4"
+        ],
+        "ace-runtime": [
+          "~> 0.1"
+        ],
+        "ace-support-cli": [
+          "~> 0.6"
+        ],
+        "ace-support-config": [
+          "~> 0.18"
+        ],
+        "ace-support-core": [
+          "~> 0.31"
+        ],
+        "ace-support-fs": [
+          "~> 0.3"
+        ],
+        "ace-task": [
+          "~> 0.37"
+        ],
+        "ace-tmux": [
+          "~> 0.18"
+        ]
+      },
+      "source_sha": "5a0c9e05b00fe429dc59f36445ec43507fbefae4"
+    },
+    {
+      "name": "ace-test-runner",
+      "version": "0.28.0",
+      "runtime_dependencies": {
+        "ace-b36ts": [
+          "~> 0.14"
+        ],
+        "ace-support-cli": [
+          "~> 0.6"
+        ],
+        "ace-support-config": [
+          "~> 0.18"
+        ],
+        "ace-support-core": [
+          "~> 0.31"
+        ],
+        "ace-support-fs": [
+          "~> 0.3"
+        ],
+        "ace-support-test-helpers": [
+          "~> 0.14"
+        ],
+        "minitest": [
+          "~> 5.0"
+        ],
+        "minitest-reporters": [
+          "~> 1.8"
+        ],
+        "ostruct": [
+          ">= 0"
+        ]
+      },
+      "source_sha": "5a0c9e05b00fe429dc59f36445ec43507fbefae4"
+    },
+    {
+      "name": "ace-test-runner-e2e",
+      "version": "0.43.0",
+      "runtime_dependencies": {
+        "ace-b36ts": [
+          "~> 0.14"
+        ],
+        "ace-llm": [
+          "~> 0.42"
+        ],
+        "ace-support-cli": [
+          "~> 0.6"
+        ],
+        "ace-support-config": [
+          "~> 0.18"
+        ],
+        "ace-support-core": [
+          "~> 0.31"
+        ],
+        "ace-support-test-helpers": [
+          "~> 0.14"
+        ]
+      },
+      "source_sha": "5a0c9e05b00fe429dc59f36445ec43507fbefae4"
+    },
+    {
+      "name": "ace-demo",
+      "version": "0.26.2",
+      "runtime_dependencies": {
+        "ace-b36ts": [
+          "~> 0.14"
+        ],
+        "ace-herdr": [
+          "~> 0.4"
+        ],
+        "ace-runtime": [
+          "~> 0.1"
+        ],
+        "ace-support-cli": [
+          "~> 0.6"
+        ],
+        "ace-support-config": [
+          "~> 0.18"
+        ],
+        "ace-support-core": [
+          "~> 0.31"
+        ],
+        "ace-tmux": [
+          "~> 0.18"
+        ]
+      },
+      "source_sha": "5a0c9e05b00fe429dc59f36445ec43507fbefae4"
+    }
+  ]
+}

@@ -1,0 +1,123 @@
+Started with run options --seed 25388
+
+Ace::Search::Organisms::UnifiedSearcherTest
+  test_search_content_with_files_with_matches_returns_file_results PASS (0.00s)
+
+CliRoutingTest
+  test_cli_shows_help_when_no_args                                PASS (0.62s)
+  test_cli_routes_version_with_long_flag                          PASS (0.42s)
+  test_cli_routes_help_with_long_flag                             PASS (0.50s)
+  test_cli_runs_search_without_subcommand                         PASS (0.64s)
+
+Ace::Search::Atoms::TestToolChecker
+  test_check_tool_returns_boolean                                 PASS (0.01s)
+  test_ripgrep_availability                                       PASS (0.01s)
+  test_tool_version                                               PASS (0.03s)
+  test_fd_availability                                            PASS (0.02s)
+  test_fzf_availability                                           PASS (0.01s)
+  test_check_all_tools                                            PASS (0.11s)
+
+Ace::Search::Organisms::TestResultFormatter
+  test_format_json                                                PASS (0.00s)
+  test_format_text_with_file_results                              PASS (0.00s)
+  test_format_text_with_count_results                             PASS (0.00s)
+  test_format_yaml                                                PASS (0.00s)
+  test_format_summary                                             PASS (0.00s)
+  test_format_summary_is_blank_for_count_mode                     PASS (0.00s)
+  test_format_empty_results                                       PASS (0.00s)
+  test_format_text_with_match_results                             PASS (0.00s)
+
+Ace::Search::Atoms::TestSearchPathResolver
+  test_priority_explicit_over_env                                 PASS (0.00s)
+  test_valid_path_expands_tilde_in_path                           PASS (0.00s)
+  test_resolve_with_empty_string_uses_fallback_chain              PASS (0.00s)
+  test_resolve_with_actual_project_root_finder                    PASS (0.00s)
+  test_resolve_with_explicit_current_directory                    PASS (0.00s)
+  test_resolve_with_path_containing_spaces                        PASS (0.00s)
+  test_resolve_with_explicit_relative_path                        PASS (0.00s)
+  test_valid_path_returns_false_for_nonexistent_directory         PASS (0.00s)
+  test_resolve_falls_back_to_current_directory_when_no_project_found PASS (0.00s)
+  test_resolve_path_with_trailing_slash                           PASS (0.00s)
+  test_valid_path_returns_true_for_existing_directory             PASS (0.00s)
+  test_resolve_with_explicit_absolute_path                        PASS (0.00s)
+  test_resolve_skips_nil_env_variable                             PASS (0.00s)
+  test_resolve_skips_invalid_env_path                             PASS (0.00s)
+  test_resolve_relative_path_with_dots                            PASS (0.00s)
+  test_resolve_with_explicit_parent_directory                     PASS (0.00s)
+  test_class_method_resolve_delegates_to_instance                 PASS (0.00s)
+  test_resolve_skips_empty_env_variable                           PASS (0.00s)
+  test_class_method_resolve_with_nil                              PASS (0.00s)
+  test_resolve_uses_env_variable_when_no_explicit_path            PASS (0.00s)
+  test_resolve_with_symlink_path                                  PASS (0.00s)
+  test_resolve_ignores_env_variable_if_explicit_path_provided     PASS (0.00s)
+  test_priority_project_root_over_fallback                        PASS (0.00s)
+  test_priority_env_over_project_root                             PASS (0.00s)
+  test_resolve_with_explicit_glob_pattern                         PASS (0.00s)
+  test_resolve_nonexistent_explicit_path_returns_as_is            PASS (0.00s)
+  test_resolve_with_whitespace_only_uses_fallback_chain           PASS (0.00s)
+  test_resolve_uses_project_root_finder_when_no_explicit_or_env   PASS (0.00s)
+
+Ace::Search::Atoms::TestPatternAnalyzer
+  test_analyze_file_glob_pattern                                  PASS (0.00s)
+  test_extract_extensions                                         PASS (0.00s)
+  test_content_regex_pattern_detection                            PASS (0.00s)
+  test_suggest_search_mode                                        PASS (0.00s)
+  test_analyze_hybrid_pattern                                     PASS (0.00s)
+  test_analyze_literal_pattern                                    PASS (0.00s)
+  test_analyze_content_regex_pattern                              PASS (0.00s)
+  test_file_glob_pattern_detection                                PASS (0.00s)
+
+Ace::Search::Molecules::SearchOptionBuilderTest
+  test_build_with_scope_staged                                    PASS (0.00s)
+  test_build_cli_options_override_config                          PASS (0.00s)
+  test_build_with_json_format                                     PASS (0.00s)
+  test_build_with_scope_tracked                                   PASS (0.00s)
+  test_build_with_yaml_format                                     PASS (0.00s)
+  test_build_merges_config_include                                PASS (0.00s)
+  test_build_with_include_option                                  PASS (0.00s)
+  test_build_with_empty_options                                   PASS (0.00s)
+  test_build_with_scope_changed                                   PASS (0.00s)
+  test_build_with_exclude_none_clears_defaults                    PASS (0.00s)
+  test_build_with_context_options                                 PASS (0.00s)
+  test_build_with_boolean_options                                 PASS (0.00s)
+  test_build_with_content_alias                                   PASS (0.00s)
+  test_build_with_exclude_option                                  PASS (0.00s)
+  test_build_with_files_alias                                     PASS (0.00s)
+  test_build_with_type_option                                     PASS (0.00s)
+
+Ace::Search::Models::TestSearchResult
+  test_create_file_result                                         PASS (0.00s)
+  test_extension_without_dot                                      PASS (0.00s)
+  test_to_h_conversion                                            PASS (0.00s)
+  test_create_match_result                                        PASS (0.00s)
+  test_equality                                                   PASS (0.00s)
+  test_create_directory_result                                    PASS (0.00s)
+
+Ace::Search::Atoms::TestResultParser
+  test_parse_ripgrep_with_column_numbers                          PASS (0.00s)
+  test_parse_fd_output                                            PASS (0.00s)
+  test_parse_ripgrep_files_only                                   PASS (0.00s)
+  test_parse_ripgrep_text_output                                  PASS (0.00s)
+  test_parse_empty_output                                         PASS (0.00s)
+
+Ace::Search::Atoms::TestDebugLogger
+  test_reset_clears_cache                                         PASS (0.00s)
+  test_section_formats_output_correctly                           PASS (0.00s)
+  test_section_outputs_title_with_separators_when_enabled         PASS (0.00s)
+  test_realistic_usage_pattern                                    PASS (0.00s)
+  test_enabled_caches_result                                      PASS (0.00s)
+  test_section_without_block_when_enabled                         PASS (0.00s)
+  test_enabled_returns_true_when_debug_is_true                    PASS (0.00s)
+  test_log_uses_custom_prefix                                     PASS (0.00s)
+  test_enabled_returns_false_when_debug_is_0                      PASS (0.00s)
+  test_section_executes_block_when_enabled                        PASS (0.00s)
+  test_log_handles_multiline_messages                             PASS (0.00s)
+  test_enabled_returns_true_when_debug_is_1                       PASS (0.00s)
+  test_enabled_returns_false_when_debug_is_false                  PASS (0.00s)
+  test_enabled_returns_false_when_debug_not_set                   PASS (0.00s)
+  test_log_outputs_message_when_enabled                           PASS (0.00s)
+  test_log_outputs_nothing_when_disabled                          PASS (0.00s)
+  test_section_outputs_nothing_when_disabled                      PASS (0.00s)
+
+Finished in 2.38691s
+99 tests, 253 assertions, 0 failures, 0 errors, 0 skips

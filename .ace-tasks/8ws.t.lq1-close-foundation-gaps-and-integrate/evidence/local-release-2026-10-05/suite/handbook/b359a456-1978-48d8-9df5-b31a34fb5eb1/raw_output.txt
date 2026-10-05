@@ -1,0 +1,82 @@
+Started with run options --seed 64644
+
+Ace::Handbook::Organisms::PromptTemplateInventoryTest
+  test_ignores_packages_without_provider_manifest                 PASS (0.01s)
+  test_tolerates_templates_without_frontmatter                    PASS (0.00s)
+  test_groups_templates_by_provider_from_package_manifests        PASS (0.01s)
+
+Ace::Handbook::Organisms::ProviderSyncerTest
+  test_default_agents_sync_excludes_narrow_provider_targets       PASS (0.03s)
+  test_summarize_sources_handles_empty_inventory                  PASS (0.01s)
+  test_sync_prunes_stale_skill_directories                        PASS (0.05s)
+  test_sync_projects_claude_overrides_and_preserves_canonical_release_body PASS (0.05s)
+  test_mid_copy_failure_rolls_back_and_retry_succeeds             PASS (0.15s)
+  test_summarize_sources_normalizes_nil_and_blank_sources         PASS (0.08s)
+  test_failed_projection_recovers_after_removing_blocking_ancestor_file PASS (0.13s)
+  test_sync_prunes_only_receipt_recorded_extension_files          PASS (0.15s)
+  test_sync_skips_prompt_projection_without_prompts_dir           PASS (0.11s)
+  test_sync_projects_claude_overrides_and_preserves_canonical_neutral_pr_body PASS (0.10s)
+  test_sync_updates_owned_files_on_repeat_projections             PASS (0.09s)
+  test_sync_refuses_to_overwrite_unowned_destination_files        PASS (0.07s)
+  test_sync_projects_extension_assets_into_extensions_dir         PASS (0.11s)
+  test_failed_projection_writes_nothing_and_retry_succeeds        PASS (0.13s)
+  test_explicit_provider_sync_projects_codex_even_when_default_is_agents PASS (0.14s)
+  test_sync_refuses_conflicting_writes_when_the_receipt_is_corrupt PASS (0.12s)
+  test_sync_never_prunes_extensions_without_receipt               PASS (0.07s)
+  test_receipt_failure_after_pruning_restores_deleted_assets      PASS (0.09s)
+  test_sync_prunes_stale_file_even_when_sibling_directory_keeps_files PASS (0.09s)
+  test_sync_projects_claude_overrides_and_preserves_canonical_git_commit_body PASS (0.08s)
+  test_default_agents_sync_includes_legacy_full_provider_targets  PASS (0.06s)
+  test_sync_prunes_only_stale_ace_marked_prompt_templates         PASS (0.08s)
+  test_sync_applies_provider_frontmatter_overrides_and_removes_integration_block PASS (0.07s)
+  test_sync_rejects_receipt_paths_through_symlinked_components    PASS (0.11s)
+  test_sync_preserves_conditional_sandbox_branch_in_skill_body    PASS (0.05s)
+  test_receipt_failure_after_pruning_restores_the_pruned_directory PASS (0.08s)
+  test_sync_never_writes_through_a_symlinked_receipt              PASS (0.04s)
+  test_default_sync_projects_to_agents_only                       PASS (0.04s)
+  test_explicit_provider_sync_blocks_disabled_provider            PASS (0.02s)
+  test_sync_ignores_receipts_from_a_foreign_source                PASS (0.05s)
+  test_sync_ignores_receipt_paths_outside_the_projection_directory PASS (0.05s)
+  test_sync_updates_changed_extension_assets                      PASS (0.05s)
+  test_sync_skips_extension_projection_without_extensions_dir     PASS (0.03s)
+  test_all_provider_projections_are_consistent_and_idempotent     PASS (0.33s)
+  test_sync_projects_prompt_templates_into_prompts_dir            PASS (0.06s)
+  test_sync_replaces_legacy_symlink_with_directory                PASS (0.02s)
+
+Ace::Handbook::Molecules::SkillProjectionTest
+  test_agents_only_registry_includes_explicit_agents_target       PASS (0.00s)
+  test_agents_only_registry_includes_legacy_full_provider_targets PASS (0.00s)
+  test_agents_only_registry_excludes_narrow_provider_target       PASS (0.00s)
+  test_agents_only_registry_includes_skills_without_targets       PASS (0.00s)
+
+Ace::Handbook::CLI::Commands::StatusTest
+  test_json_output_includes_canonical_and_provider_sections       PASS (0.00s)
+  test_table_output_uses_collector_renderer                       PASS (0.00s)
+
+Ace::Handbook::Organisms::LegacyAgentSkillsRetirementTest
+  test_canonical_inventory_includes_as_e2e_run                    PASS (0.06s)
+  test_legacy_agent_skills_directory_is_not_present               PASS (0.00s)
+
+Ace::Handbook::CLI::Commands::SyncTest
+  test_outputs_rerun_hint_when_only_one_source_detected           PASS (0.00s)
+  test_outputs_sync_lines_for_each_provider                       PASS (0.00s)
+  test_outputs_prompts_summary_when_provider_projects_prompts     PASS (0.00s)
+  test_quiet_suppresses_sync_summary_output                       PASS (0.00s)
+
+Ace::Handbook::Organisms::StatusCollectorTest
+  test_to_table_includes_canonical_summary_and_provider_metrics   PASS (0.07s)
+  test_collect_reports_sync_metrics_for_directory                 PASS (0.06s)
+  test_collect_explicit_provider_reports_codex_when_not_default   PASS (0.03s)
+  test_collect_reports_symlink_type_and_compares_through_target   PASS (0.06s)
+  test_collect_without_provider_reports_default_agents_projection_only PASS (0.05s)
+  test_agents_only_status_reports_curated_when_narrow_provider_target_is_excluded PASS (0.10s)
+  test_collect_groups_canonical_skills_by_source                  PASS (0.04s)
+  test_default_agents_status_reports_complete_coverage            PASS (0.03s)
+  test_default_agents_status_matches_sync_for_legacy_full_provider_targets PASS (0.04s)
+  test_to_table_includes_agents_projection_coverage               PASS (0.09s)
+
+Ace::Handbook::Organisms::SkillInventoryTest
+  test_loads_only_registered_skill_sources                        PASS (0.02s)
+
+Finished in 3.67447s
+62 tests, 390 assertions, 0 failures, 0 errors, 0 skips

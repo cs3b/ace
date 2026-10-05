@@ -1,0 +1,303 @@
+Started with run options --seed 43727
+
+AsciinemaExecutorTest
+  test_asciinema_available_false_when_binary_missing              PASS (0.00s)
+  test_run_raises_asciinema_not_found                             PASS (0.00s)
+  test_run_raises_execution_error_on_non_zero                     PASS (0.00s)
+  test_run_returns_execution_result_on_success                    PASS (0.00s)
+  test_run_raises_asciinema_not_found_with_configured_binary_name PASS (0.00s)
+  test_run_interactive_writes_commands_and_exit                   PASS (0.00s)
+
+DemoCommentFormatterTest
+  test_format_generates_markdown_comment                          PASS (0.00s)
+  test_format_uses_link_for_non_gif                               PASS (0.00s)
+
+VhsExecutorTest
+  test_run_raises_execution_error_on_non_zero                     PASS (0.00s)
+  test_run_returns_execution_result_on_success                    PASS (0.00s)
+  test_vhs_available_false_when_binary_missing                    PASS (0.00s)
+  test_run_uses_empty_browser_env_when_no_browser_found           PASS (0.00s)
+  test_run_raises_vhs_not_found                                   PASS (0.00s)
+
+VhsCommandBuilderTest
+  test_builds_command_array                                       PASS (0.00s)
+
+GhAssetUploaderTest
+  test_upload_creates_release_when_missing                        PASS (0.01s)
+  test_upload_dry_run_skips_release_upload                        PASS (0.01s)
+  test_upload_raises_auth_error                                   PASS (0.01s)
+  test_upload_dry_run_allows_planned_nonexistent_path             PASS (0.01s)
+
+CastRecordingTest
+  test_exposes_header_and_events                                  PASS (0.00s)
+
+DemoTeardownExecutorTest
+  test_cleanup_removes_sandbox                                    PASS (0.00s)
+  test_unknown_directive_raises_argument_error                    PASS (0.00s)
+  test_run_directive_executes_inside_sandbox                      PASS (0.10s)
+
+DemoSandboxBuilderTest
+  test_build_preserves_argument_error_and_cleans_failed_sandbox   PASS (0.04s)
+  test_build_wraps_runtime_error_and_cleans_failed_sandbox        PASS (0.07s)
+
+GettingStartedTapesSmokeTest
+  test_no_hard_coded_numeric_demo_ids                             PASS (0.00s)
+  test_task_demo_uses_sandbox_with_git_init                       PASS (0.00s)
+  test_no_placeholder_demo_commands                               PASS (0.00s)
+
+CliTest
+  test_verify_command_passes_for_existing_cast                    PASS (0.02s)
+  test_record_yaml_uses_tape_speed_with_cli_output_override       PASS (0.01s)
+  test_record_inline_with_pr                                      PASS (0.00s)
+  test_record_with_pr_attaches_after_recording                    PASS (0.03s)
+  test_record_yaml_dry_run_shows_exact_retime_target_when_output_is_defined PASS (0.01s)
+  test_record_without_args_uses_tape_path                         PASS (0.00s)
+  test_record_inline_from_stdin                                   PASS (0.00s)
+  test_record_uses_configured_playback_speed                      PASS (0.00s)
+  test_show_prints_metadata_and_contents                          PASS (0.00s)
+  test_help_lists_record_command                                  PASS (0.00s)
+  test_version_output                                             PASS (0.00s)
+  test_record_with_failed_verification_writes_report_and_does_not_attach PASS (0.00s)
+  test_record_invalid_format_returns_error                        PASS (0.00s)
+  test_record_inline_with_commands                                PASS (0.00s)
+  test_attach_requires_pr                                         PASS (0.00s)
+  test_record_yaml_dry_run_rejects_unsupported_yaml_format        PASS (0.00s)
+  test_verify_command_writes_report_for_non_pass_result           PASS (0.02s)
+  test_list_prints_discovered_tapes                               PASS (0.00s)
+  test_record_with_playback_speed_retimes_and_attaches_retimed_output PASS (0.01s)
+  test_record_rejects_mp4_with_actionable_guidance                PASS (0.00s)
+  test_attach_calls_attacher                                      PASS (0.00s)
+  test_record_yaml_passes_backend_override_to_demo_recorder       PASS (0.03s)
+  test_record_yaml_uses_tape_playback_speed_and_output_defaults   PASS (0.02s)
+  test_record_yaml_dry_run_defaults_preview_format_to_gif_when_yaml_not_found PASS (0.00s)
+  test_record_calls_recorder                                      PASS (0.00s)
+  test_record_inline_with_multiple_commands                       PASS (0.00s)
+  test_show_not_found_returns_error                               PASS (0.00s)
+  test_record_yaml_dry_run_reads_format_from_resolved_yaml_spec   PASS (0.02s)
+  test_record_inline_dry_run_prints_tape_content                  PASS (0.00s)
+  test_record_with_pr_dry_run_prints_preview                      PASS (0.00s)
+  test_record_yaml_path_calls_demo_recorder                       PASS (0.01s)
+  test_record_yaml_cli_flags_override_tape_settings               PASS (0.04s)
+  test_record_inline_with_options                                 PASS (0.00s)
+
+TapeScannerTest
+  test_find_by_name                                               PASS (0.01s)
+  test_find_missing_reports_available_tapes                       PASS (0.03s)
+  test_lists_tapes_with_override_precedence                       PASS (0.01s)
+  test_find_supports_direct_path                                  PASS (0.03s)
+  test_find_by_name_does_not_require_full_list_scan               PASS (0.01s)
+
+VerificationResultTest
+  test_exposes_success_status_and_details                         PASS (0.00s)
+
+DemoNameSanitizerTest
+  test_removes_path_traversal                                     PASS (0.00s)
+  test_strips_leading_and_trailing_dashes                         PASS (0.00s)
+  test_truncates_to_max_length                                    PASS (0.00s)
+  test_returns_demo_for_all_special_characters                    PASS (0.00s)
+  test_collapses_consecutive_dashes                               PASS (0.00s)
+  test_returns_demo_for_empty_string                              PASS (0.00s)
+  test_strips_special_characters                                  PASS (0.00s)
+  test_downcases_and_slugifies                                    PASS (0.00s)
+  test_replaces_slashes                                           PASS (0.00s)
+  test_truncation_does_not_leave_trailing_dash                    PASS (0.00s)
+
+TapeWriterTest
+  test_creates_directories                                        PASS (0.00s)
+  test_raises_on_existing_file                                    PASS (0.00s)
+  test_writes_tape_file                                           PASS (0.01s)
+  test_force_overwrites_existing                                  PASS (0.01s)
+
+DemoYamlParserTest
+  test_accepts_verify_block                                       PASS (0.00s)
+  test_rejects_tmux_capture_action                                PASS (0.00s)
+  test_rejects_unknown_backend                                    PASS (0.00s)
+  test_rejects_blank_output_setting                               PASS (0.00s)
+  test_accepts_playback_speed_and_output_settings                 PASS (0.00s)
+  test_rejects_non_array_verify_require_vars                      PASS (0.00s)
+  test_rejects_non_boolean_verify_allow_nonzero_exit              PASS (0.00s)
+  test_rejects_invalid_playback_speed                             PASS (0.00s)
+  test_accepts_tmux_commands_alongside_type_commands              PASS (0.00s)
+  test_coerces_output_setting_to_string                           PASS (0.00s)
+  test_rejects_tmux_send_without_exactly_one_command_or_key       PASS (0.00s)
+
+TapeResolverTest
+  test_does_not_resolve_directory_as_tape                         PASS (0.03s)
+  test_resolves_direct_path_first                                 PASS (0.04s)
+  test_resolves_from_cascade                                      PASS (0.01s)
+  test_raises_with_searched_paths                                 PASS (0.01s)
+
+RecordOptionValidatorTest
+  test_normalize_backend_accepts_known_values                     PASS (0.00s)
+  test_normalize_format_rejects_mp4_with_guidance                 PASS (0.00s)
+  test_validate_yaml_backend_capabilities_rejects_tmux_directives_for_vhs PASS (0.00s)
+  test_validate_yaml_backend_format_rejects_webm_without_vhs      PASS (0.00s)
+  test_validate_yaml_backend_capabilities_allows_tmux_directives_for_asciinema PASS (0.00s)
+  test_normalize_backend_rejects_unknown_values                   PASS (0.00s)
+
+TapeContentGeneratorTest
+  test_escapes_double_quotes_and_backslashes                      PASS (0.00s)
+  test_generates_multiple_commands                                PASS (0.00s)
+  test_uses_custom_output_path                                    PASS (0.00s)
+  test_omits_metadata_when_not_provided                           PASS (0.00s)
+  test_uses_custom_settings                                       PASS (0.00s)
+  test_generates_with_metadata                                    PASS (0.00s)
+  test_generates_basic_tape                                       PASS (0.00s)
+
+DemoAttacherTest
+  test_attach_cast_converts_to_gif_before_upload                  PASS (0.04s)
+  test_attach_cast_raises_when_agg_fails                          PASS (0.00s)
+  test_attach_orchestrates_upload_and_post                        PASS (0.00s)
+  test_attach_requires_existing_file                              PASS (0.00s)
+  test_attach_dry_run                                             PASS (0.00s)
+  test_attach_cast_dry_run_skips_conversion_and_uses_planned_gif_name PASS (0.01s)
+
+RuntimeDirectiveExecutorTest
+  test_attach_under_herdr_is_rejected                             PASS (0.00s)
+  test_lifecycle_and_send_directives_map_identically_on_both_adapters PASS (0.00s)
+  test_wait_rejects_unknown_condition                             PASS (0.00s)
+  test_detach_runs_tmux_client_detach                             PASS (0.00s)
+  test_attach_rejects_inherited_herdr_environment                 PASS (0.00s)
+  test_directive_runtime_wins_over_inherited_environment          PASS (0.00s)
+  test_each_directive_resolves_its_own_runtime                    PASS (0.00s)
+  test_detach_under_herdr_is_rejected                             PASS (0.00s)
+  test_attach_returns_shell_command_without_detected_runtime      PASS (0.00s)
+  test_wait_requires_condition_target                             PASS (0.00s)
+  test_contract_errors_surface_as_demo_errors                     PASS (0.00s)
+  test_unsupported_action_is_rejected                             PASS (0.00s)
+
+TapeMetadataParserTest
+  test_ignores_non_metadata_lines                                 PASS (0.00s)
+  test_parses_metadata_comments                                   PASS (0.00s)
+  test_normalizes_keys                                            PASS (0.00s)
+
+DemoRecorderTest
+  test_records_with_default_output                                PASS (0.02s)
+  test_uses_configured_defaults_for_output_dir_and_vhs_bin        PASS (0.02s)
+  test_passes_settings_env_to_tmux_directive_executor             PASS (0.05s)
+  test_rejects_unsupported_format                                 PASS (0.00s)
+  test_records_yaml_tape_with_output_only_without_retime          PASS (0.03s)
+  test_respects_custom_output                                     PASS (0.03s)
+  test_records_yaml_tape_with_playback_speed_only_and_returns_retimed_path PASS (0.03s)
+  test_records_yaml_tape_with_asciinema_default_backend           PASS (0.01s)
+  test_records_yaml_tape_with_preparsed_spec_without_reparsing    PASS (0.02s)
+  test_records_yaml_tape_with_tmux_directives_as_additive_commands PASS (0.00s)
+  test_rejects_tmux_directives_for_vhs_yaml_backend               PASS (0.00s)
+  test_records_yaml_tape_with_output_and_speed_as_retime_only_mode PASS (0.00s)
+  test_preserves_asciinema_sandbox_on_failed_verification         PASS (0.00s)
+  test_yaml_teardown_runs_when_vhs_execution_fails                PASS (0.01s)
+  test_records_yaml_tape_using_production_sandbox_pipeline        PASS (0.00s)
+  test_records_yaml_tape_with_speed_only_and_retime_output_override PASS (0.01s)
+
+AsciinemaCommandBuilderTest
+  test_builds_command_without_tty_size                            PASS (0.00s)
+  test_escapes_script_path_for_shell_command                      PASS (0.00s)
+  test_raises_on_invalid_cast_compatibility                       PASS (0.00s)
+  test_raises_on_invalid_tty_size                                 PASS (0.00s)
+  test_prefers_explicit_shell_command_when_provided               PASS (0.00s)
+  test_builds_default_command_array                               PASS (0.00s)
+
+AggExecutorTest
+  test_agg_available_false_when_binary_missing                    PASS (0.00s)
+  test_run_raises_agg_not_found_with_configured_binary_name       PASS (0.00s)
+  test_run_returns_execution_result_on_success                    PASS (0.00s)
+  test_run_raises_execution_error_on_non_zero                     PASS (0.00s)
+  test_run_raises_agg_not_found                                   PASS (0.00s)
+
+PlaybackSpeedParserTest
+  test_parses_supported_speed                                     PASS (0.00s)
+  test_returns_nil_for_nil_or_empty                               PASS (0.00s)
+  test_rejects_invalid_speed                                      PASS (0.00s)
+
+CastFileParserTest
+  test_parses_valid_cast_header_and_events                        PASS (0.01s)
+  test_raises_when_header_is_missing                              PASS (0.00s)
+  test_raises_on_malformed_json                                   PASS (0.00s)
+
+MediaRetimerTest
+  test_dry_run_builds_default_output_path                         PASS (0.01s)
+  test_raises_when_ffmpeg_missing                                 PASS (0.00s)
+  test_retimes_with_ffmpeg                                        PASS (0.00s)
+  test_raises_for_unsupported_extension                           PASS (0.00s)
+
+AsciinemaTapeCompilerTest
+  test_compiles_multi_scene_script_with_defaults                  PASS (0.00s)
+  test_rejects_invalid_sleep_value                                PASS (0.00s)
+  test_ignores_tmux_directives_when_compiling_script              PASS (0.00s)
+
+TapeSearchDirsTest
+  test_build_returns_cascade_order                                PASS (0.00s)
+
+CreateTest
+  test_creates_tape_with_multiple_commands                        PASS (0.00s)
+  test_force_overwrites_existing                                  PASS (0.01s)
+  test_reads_from_stdin                                           PASS (0.01s)
+  test_dry_run_prints_content_without_writing                     PASS (0.00s)
+  test_allows_no_commands_with_default_template_command           PASS (0.01s)
+  test_error_on_existing_tape                                     PASS (0.01s)
+  test_help_lists_create_command                                  PASS (0.00s)
+  test_creates_tape_from_args                                     PASS (0.07s)
+  test_creates_tape_with_options                                  PASS (0.00s)
+
+InlineRecorderTest
+  test_multiple_commands                                          PASS (0.03s)
+  test_returns_paths                                              PASS (0.00s)
+  test_session_dir_is_b36ts_based                                 PASS (0.00s)
+  test_respects_custom_vhs_bin                                    PASS (0.00s)
+  test_delegates_to_executor                                      PASS (0.00s)
+  test_respects_format_option                                     PASS (0.01s)
+  test_sanitizes_name                                             PASS (0.00s)
+  test_generates_session_dir_and_writes_tape                      PASS (0.01s)
+  test_passes_tape_options_to_content_generator                   PASS (0.00s)
+
+CastVerifierTest
+  test_classifies_missing_required_output_as_scenario_defect      PASS (0.00s)
+  test_uses_script_commands_for_asciinema_command_recordings      PASS (0.00s)
+  test_uses_echoed_output_commands_for_interactive_asciinema_recordings PASS (0.00s)
+  test_passes_when_all_commands_are_found                         PASS (0.00s)
+  test_classifies_missing_required_vars_as_scenario_defect        PASS (0.00s)
+  test_allows_nonzero_final_exit_when_explicitly_configured       PASS (0.00s)
+  test_returns_fail_details_when_cast_is_malformed                PASS (0.00s)
+  test_runs_assert_commands_with_captured_vars                    PASS (0.00s)
+  test_classifies_nonzero_final_exit_as_scenario_defect_by_default PASS (0.00s)
+  test_classifies_forbidden_output_as_product_bug                 PASS (0.00s)
+  test_warns_when_expected_command_is_missing                     PASS (0.00s)
+  test_classifies_missing_required_output_sequence_as_scenario_defect PASS (0.01s)
+  test_skips_assert_commands_without_sandbox_path                 PASS (0.01s)
+
+AggCommandBuilderTest
+  test_builds_command_with_optional_flags                         PASS (0.00s)
+  test_builds_default_command_array                               PASS (0.00s)
+
+DemoCommentPosterTest
+  test_post_does_not_misclassify_generic_not_found_errors         PASS (0.01s)
+  test_post_raises_pr_not_found                                   PASS (0.00s)
+  test_post_success                                               PASS (0.00s)
+  test_post_dry_run                                               PASS (0.00s)
+
+CastEventTest
+  test_exposes_event_fields                                       PASS (0.00s)
+
+TapeCreatorTest
+  test_creates_tape_file                                          PASS (0.00s)
+  test_force_overwrites                                           PASS (0.01s)
+  test_raises_on_conflict_without_force                           PASS (0.01s)
+  test_uses_format_in_output_path                                 PASS (0.00s)
+  test_passes_metadata_through                                    PASS (0.00s)
+  test_dry_run_returns_content_without_writing                    PASS (0.00s)
+
+AttachOutputPrinterTest
+  test_prints_dry_run_output                                      PASS (0.00s)
+  test_prints_live_output                                         PASS (0.00s)
+
+RetimeTest
+  test_retime_calls_processor                                     PASS (0.00s)
+  test_retime_requires_speed                                      PASS (0.03s)
+  test_retime_dry_run                                             PASS (0.00s)
+
+AsciinemaAggPipelineTest
+  test_compatibility_guard_raises_actionable_error_for_unsupported_mode PASS (0.00s)
+  test_compiler_and_builders_chain_for_cast_to_gif_flow           PASS (0.00s)
+
+Finished in 1.34149s
+221 tests, 895 assertions, 0 failures, 0 errors, 0 skips

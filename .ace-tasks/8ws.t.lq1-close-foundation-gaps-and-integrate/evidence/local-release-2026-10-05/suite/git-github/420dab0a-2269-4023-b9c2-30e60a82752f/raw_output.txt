@@ -1,0 +1,114 @@
+Started with run options --seed 55447
+
+Github::ProviderTest
+  test_add_issue_label_creates_missing_repo_label                 PASS (0.04s)
+  test_add_issue_label_survives_concurrent_label_creation         PASS (0.00s)
+  test_issue_normalizes_state_and_author                          PASS (0.00s)
+  test_add_issue_label_skips_creation_when_label_exists           PASS (0.00s)
+  test_pull_request_for_branch_prefers_open_over_merged           PASS (0.00s)
+  test_add_issue_label_propagates_missing_issue_as_not_found      PASS (0.00s)
+
+GithubIssueTrackingProviderTest
+  test_issue_calls_work_with_ssh_style_server_url                 PASS (0.00s)
+  test_issue_evidence_rejects_scheme_mismatch                     PASS (0.00s)
+  test_mutation_uses_selected_host_and_repository_path            PASS (0.00s)
+  test_issue_calls_strip_clone_suffix_with_trailing_slash         PASS (0.00s)
+  test_missing_or_unknown_issue_state_is_malformed                PASS (0.00s)
+  test_issue_calls_tolerate_trailing_slash_in_server_url          PASS (0.00s)
+  test_null_comment_pagination_is_malformed                       PASS (0.00s)
+  test_comment_mutation_refuses_id_not_on_selected_issue          PASS (0.00s)
+  test_issue_evidence_rejects_number_mismatch_in_url              PASS (0.01s)
+  test_tracking_read_binds_repository_and_paginates_comments      PASS (0.02s)
+  test_issue_calls_preserve_configured_port                       PASS (0.00s)
+
+GithubProviderPullRequestLifecycleContractTest
+  test_lifecycle_create_rejects_stale_expected_head_without_mutation PASS (0.00s)
+  test_lifecycle_merge_rejects_unknown_methods                    PASS (0.00s)
+  test_lifecycle_create_reports_unknown_outcome_with_reconciliation_identity PASS (0.00s)
+  test_lifecycle_merge_enforces_expected_head_atomically          PASS (0.00s)
+  test_lifecycle_create_conflicts_on_multiple_exact_matches       PASS (0.00s)
+  test_lifecycle_ready_classifies_capability                      PASS (0.00s)
+  test_lifecycle_find_matches_exact_identity_with_provenance      PASS (0.00s)
+  test_lifecycle_create_reconciles_to_exact_open_match            PASS (0.00s)
+  test_lifecycle_update_enforces_expected_head                    PASS (0.00s)
+  test_lifecycle_create_proves_head_and_reports_created           PASS (0.00s)
+
+GithubCheckEvidenceTest
+  test_check_runs_and_statuses_are_merged                         PASS (0.00s)
+  test_status_only_evidence_is_collected_as_checks                PASS (0.00s)
+  test_missing_total_count_fails_closed                           PASS (0.00s)
+  test_truncated_check_run_page_fails_closed                      PASS (0.00s)
+  test_local_diff_fallback_fetches_exact_refs_from_https_remote   PASS (0.00s)
+
+Github::CliExecutorTest
+  test_check_authenticated_raises_classified_error                PASS (0.00s)
+  test_execute_returns_structured_result_on_success               PASS (0.00s)
+  test_execute_without_runner_uses_open3                          PASS (0.00s)
+  test_execute_raises_unreachable_on_timeout                      PASS (0.00s)
+  test_execute_raises_cli_missing_when_binary_absent              PASS (0.00s)
+  test_installed_false_when_probe_fails                           PASS (0.00s)
+  test_check_installed_raises_classified_error                    PASS (0.00s)
+
+Github::PrIdentifierTest
+  test_parse_integer                                              PASS (0.00s)
+  test_parse_qualified_reference                                  PASS (0.00s)
+  test_parse_invalid_format_raises_error                          PASS (0.00s)
+  test_parse_normalizes_leading_zeros                             PASS (0.00s)
+  test_parse_empty_string_returns_nil                             PASS (0.00s)
+  test_parse_simple_number                                        PASS (0.00s)
+  test_parse_nil_returns_nil                                      PASS (0.00s)
+  test_parse_handles_repo_with_dots_and_hyphens                   PASS (0.00s)
+  test_parse_zero_raises_error                                    PASS (0.00s)
+  test_parse_github_url                                           PASS (0.00s)
+
+Github::ReviewProviderTest
+  test_changed_head_prevents_collection                           PASS (0.00s)
+  test_repeat_comment_reconciles_exact_session_without_post       PASS (0.00s)
+  test_unrelated_comments_are_excluded_from_match_results         PASS (0.00s)
+  test_post_timeout_is_unknown_and_cannot_auto_repeat             PASS (0.00s)
+  test_valid_empty_collection_preserves_identity                  PASS (0.01s)
+  test_comment_update_rejects_id_outside_selected_pr              PASS (0.00s)
+
+Github::PrFetcherTest
+  test_fetch_metadata_returns_parsed_json                         PASS (0.00s)
+  test_fetch_metadata_from_url_uses_explicit_repo                 PASS (0.00s)
+  test_fetch_open_prs_with_nil_exclude_branch_returns_all         PASS (0.00s)
+  test_fetch_recently_merged_raises_malformed_on_json_error       PASS (0.00s)
+  test_fetch_diff_raises_on_invalid_identifier                    PASS (0.00s)
+  test_find_pr_for_branch_returns_nil_on_json_error               PASS (0.00s)
+  test_fetch_diff_raises_authentication_error                     PASS (0.00s)
+  test_installed_true_when_probe_succeeds                         PASS (0.00s)
+  test_fetch_pr_returns_both_diff_and_metadata                    PASS (0.00s)
+  test_fetch_diff_raises_object_not_found_error                   PASS (0.00s)
+  test_find_pr_for_branch_returns_number_string                   PASS (0.00s)
+  test_fetch_recently_merged_returns_empty_on_failure             PASS (0.00s)
+  test_fetch_metadata_raises_malformed_output_on_json_parse_error PASS (0.00s)
+  test_find_pr_for_branch_returns_nil_when_no_pr                  PASS (0.00s)
+  test_authenticated_true_when_probe_succeeds                     PASS (0.00s)
+  test_fetch_open_prs_returns_empty_on_failure                    PASS (0.00s)
+  test_timeout_raises_unreachable_error                           PASS (0.00s)
+  test_fetch_metadata_raises_on_invalid_identifier                PASS (0.00s)
+  test_fetch_diff_returns_diff_content_on_success                 PASS (0.00s)
+  test_fetch_recently_merged_respects_limit                       PASS (0.00s)
+  test_fetch_open_prs_excludes_specified_branch                   PASS (0.00s)
+  test_fetch_recently_merged_returns_prs_on_success               PASS (0.00s)
+  test_fetch_diff_includes_repo_in_source_label                   PASS (0.00s)
+
+GithubProviderContractTest
+  test_contract_reports_available_and_authenticated               PASS (0.00s)
+  test_contract_pull_request_evidence_matches_normalized_shape    PASS (0.00s)
+  test_contract_cli_missing_failure_is_classified                 PASS (0.00s)
+  test_contract_malformed_output_failure_is_classified            PASS (0.00s)
+  test_contract_pull_request_diff_returns_raw_text                PASS (0.00s)
+  test_contract_authentication_failure_is_classified              PASS (0.00s)
+  test_contract_issue_evidence_matches_normalized_shape           PASS (0.00s)
+  test_contract_repository_evidence_matches_normalized_shape      PASS (0.00s)
+  test_contract_pull_request_for_branch_evidence_matches_normalized_shape PASS (0.00s)
+  test_contract_object_not_found_failure_is_classified            PASS (0.00s)
+  test_contract_pull_request_for_branch_returns_nil_without_match PASS (0.00s)
+  test_contract_recent_pull_requests_returns_normalized_list      PASS (0.00s)
+  test_contract_unreachable_failure_is_classified                 PASS (0.00s)
+  test_contract_checks_return_normalized_list                     PASS (0.00s)
+
+Finished in 0.13053s
+92 tests, 268 assertions, 0 failures, 0 errors, 0 skips

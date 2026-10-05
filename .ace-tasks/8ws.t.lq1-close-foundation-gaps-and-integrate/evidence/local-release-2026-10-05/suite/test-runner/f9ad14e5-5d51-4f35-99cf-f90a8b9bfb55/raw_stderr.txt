@@ -1,0 +1,4 @@
+/Users/mc/Ps/ace/ace-support-test-helpers/lib/ace/test_support/performance_helpers.rb:3: warning: benchmark was loaded from the standard library, but will no longer be part of the default gems starting from Ruby 4.0.0.
+You can add benchmark to your Gemfile or gemspec to silence this warning.
+Warning: Failed to load config from /var/folders/hf/knhxwtnx76gcdps2hxb3bp2r0000gr/T/test-runner20261005-29277-15vffz.yml: (/var/folders/hf/knhxwtnx76gcdps2hxb3bp2r0000gr/T/test-runner20261005-29277-15vffz.yml): mapping values are not allowed in this context at line 1 column 14
+Warning: Configuration missing version field, assuming version 1

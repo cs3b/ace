@@ -1,0 +1,150 @@
+Started with run options --seed 12989
+
+ManagedPendingPublicationTest
+  test_unregistered_project_is_left_pending_and_never_routed      PASS (0.59s)
+  test_requester_named_captain_still_reaches_telegram             PASS (0.56s)
+  test_once_publication_reports_transport_failure_without_consuming_request PASS (0.54s)
+  test_folder_collision_refuses_without_overwriting_or_sending    PASS (0.54s)
+  test_continuous_publication_retries_transport_outage_and_retains_one_poll_owner PASS (0.54s)
+  test_scoped_request_without_manual_post_is_published_and_sent_by_single_owner PASS (0.55s)
+  test_unmanaged_captain_instruction_is_left_for_target           PASS (0.55s)
+
+Ace::Hitl::Hermes::Molecules::HermesNotificationsTest
+  test_lines_are_deterministic_single_line_texts                  PASS (0.00s)
+  test_unknown_events_fail_closed                                 PASS (0.00s)
+
+Ace::Hitl::Hermes::Molecules::HermesRetryPolicyTest
+  test_backoff_is_exponential_with_a_cap                          PASS (0.00s)
+  test_undeleted_progression_wait_redeliver_quarantine            PASS (0.00s)
+  test_collision_retries_are_bounded                              PASS (0.00s)
+
+Ace::Hitl::Hermes::Molecules::HermesMessageTest
+  test_field_violation_reports_none_for_the_empty_side            PASS (0.00s)
+  test_canonical_json_round_trip_preserves_the_envelope           PASS (0.00s)
+  test_field_set_is_exact_per_kind                                PASS (0.00s)
+  test_timestamps_must_be_real_calendar_dates_and_times           PASS (0.00s)
+  test_schema_value_is_pinned_fail_closed                         PASS (0.00s)
+  test_question_and_answer_constructors_carry_dictated_fields     PASS (0.00s)
+  test_kind_is_fail_closed                                        PASS (0.00s)
+  test_sender_and_id_are_tokens                                   PASS (0.00s)
+  test_timestamps_are_strict_utc_iso8601                          PASS (0.00s)
+  test_id_must_match_file_name_stem                               PASS (0.00s)
+  test_body_must_be_non_empty_string                              PASS (0.00s)
+  test_leap_day_is_a_real_calendar_date                           PASS (0.00s)
+  test_from_hash_happy_paths_for_both_kinds                       PASS (0.00s)
+
+TelegramClientTest
+  test_api_shapes_send_identity_and_bounded_poll_cursor           PASS (0.00s)
+  test_token_file_permissions_are_required_before_transport_setup PASS (0.00s)
+  test_definite_api_refusal_and_malformed_response_are_classified_without_secret_errors PASS (0.00s)
+
+TransportCliTest
+  test_unknown_request_checkpoint_and_malformed_ingress_errors_are_sanitized PASS (0.52s)
+  test_installable_plugin_intercepts_unknown_reply_and_failure_without_preview PASS (0.57s)
+  test_cli_otp_crosses_real_ipc_without_disk_or_projection_value  PASS (0.58s)
+  test_cli_ordinary_reply_round_trips_real_authenticated_boundary_and_folder PASS (0.57s)
+  test_built_gem_installed_executable_delivers_otp_through_real_boundary PASS (23.65s)
+  test_serve_establishes_coverage_before_startup_submission       PASS (0.60s)
+  test_startup_refuses_competing_gateway_and_requires_explicit_polling_owner PASS (0.51s)
+
+Ace::Hitl::Hermes::Molecules::HermesAtomicWriterTest
+  test_refuses_root_fail_closed                                   PASS (0.00s)
+  test_writes_atomically_with_contract_permissions                PASS (0.00s)
+  test_collision_refuses_without_touching_the_existing_file       PASS (0.00s)
+  test_folder_contract_is_enforced_before_writing                 PASS (0.00s)
+
+HermesReviewRegressionsTest
+  test_poll_quarantines_a_symlink_instead_of_following_it         PASS (0.00s)
+  test_schema_and_ruby_validation_agree_on_shared_fixtures        PASS (0.00s)
+  test_publish_rejects_envelopes_exceeding_the_byte_gate          PASS (0.00s)
+
+Ace::Hitl::Hermes::Atoms::HermesTokensTest
+  test_validate_fails_closed_naming_label_and_rule                PASS (0.00s)
+  test_validate_strips_and_returns_token                          PASS (0.00s)
+  test_accepts_contract_shaped_tokens                             PASS (0.00s)
+  test_rejects_traversal_dots_empties_and_oversize                PASS (0.00s)
+
+Ace::Hitl::Hermes::Molecules::HermesFormatsTest
+  test_supported_formats_pinned_to_v1                             PASS (0.00s)
+  test_rejects_non_utf8                                           PASS (0.00s)
+  test_rejects_empty_payload                                      PASS (0.00s)
+  test_rejects_bad_json_and_non_objects                           PASS (0.00s)
+  test_decodes_v1_envelopes                                       PASS (0.00s)
+  test_rejects_oversize_before_parsing                            PASS (0.00s)
+  test_rejects_unknown_or_absent_schema                           PASS (0.00s)
+
+Ace::Hitl::Hermes::Molecules::HermesChannelsTest
+  test_register_resolve_address_and_listing                       PASS (0.00s)
+  test_duplicate_registration_fails_closed                        PASS (0.00s)
+  test_default_channel_resolution                                 PASS (0.00s)
+  test_registration_validates_tokens_and_folder_shape             PASS (0.00s)
+  test_unknown_channel_fails_closed_with_available_list           PASS (0.00s)
+
+Ace::Hitl::Hermes::Organisms::HermesBoxTest
+  test_full_folder_contract_flow_question_answer_deliver_ack      PASS (0.01s)
+  test_ack_refuses_root_fail_closed                               PASS (0.00s)
+  test_age_is_the_retry_clock_and_nil_after_ack                   PASS (0.01s)
+  test_publish_with_explicit_correlated_id_never_renames_on_collision PASS (0.01s)
+  test_publish_generates_token_ids_when_none_given                PASS (0.00s)
+  test_poll_reads_as_root_but_quarantine_refuses_fail_closed      PASS (0.01s)
+  test_publish_fails_terminally_when_collisions_are_exhausted     PASS (0.01s)
+  test_poll_quarantines_empty_files_and_the_channel_survives      PASS (0.00s)
+  test_publish_rejects_invalid_producer_input_before_any_write    PASS (0.00s)
+  test_publish_writes_canonical_v1_answer_atomically              PASS (0.00s)
+  test_poll_returns_validated_messages_and_skips_foreign_names    PASS (0.01s)
+  test_invalid_ids_never_reach_the_filesystem                     PASS (0.00s)
+  test_ack_deletes_the_file_and_is_idempotent                     PASS (0.00s)
+  test_poll_quarantines_invalid_files_and_never_delivers_them     PASS (0.01s)
+  test_identical_checks_redelivery_identity                       PASS (0.00s)
+  test_publish_retries_collisions_with_a_fresh_id                 PASS (0.00s)
+
+TelegramTransportTest
+  test_registry_rejects_ambiguous_chat_and_missing_allowlist      PASS (0.00s)
+  test_reconciliation_requires_real_coverage_and_excludes_untrusted_event_timestamp PASS (0.01s)
+  test_unauthorized_cross_channel_unknown_and_malformed_reply_fail_closed PASS (0.00s)
+  test_replayed_crash_after_folder_write_reuses_original_answer   PASS (0.01s)
+  test_shared_managed_example_is_consumed_without_merging_folder_and_reverse_schemas PASS (0.03s)
+  test_late_reply_after_transport_restart_uses_authoritative_history PASS (0.01s)
+  test_shared_ingress_examples_match_real_unknown_drained_and_unresolved_semantics PASS (0.02s)
+  test_submission_ack_is_not_a_read_receipt_and_retries_do_not_resend PASS (0.01s)
+  test_timeout_checkpoint_serializes_with_reply_durable_receipt_and_delivery PASS (0.03s)
+  test_poll_does_not_confirm_unresolved_ordinary_reply            PASS (0.05s)
+  test_failed_submit_is_recoverable_and_has_no_clock              PASS (0.02s)
+  test_crashed_secret_replay_advances_cursor_without_ipc_or_old_challenge_retry PASS (0.03s)
+  test_poller_produces_checkpoint_only_after_empty_batch_and_persisted_offset PASS (0.04s)
+  test_recovery_epoch_preserves_old_unknown_and_allows_fresh_request PASS (0.06s)
+  test_wrong_submission_destination_is_uncertain                  PASS (0.02s)
+  test_managed_wrong_version_attempt_and_correlation_refuse_before_transport PASS (0.01s)
+  test_nonempty_batch_after_retention_gap_does_not_restore_old_coverage PASS (0.07s)
+  test_low_level_answer_gate_rejects_otp_and_missing_authority_before_creation PASS (0.01s)
+  test_retention_lapse_and_secret_unavailable_prevent_timeout_drainage PASS (0.07s)
+  test_queued_ingress_and_poll_gap_cannot_claim_drained           PASS (0.04s)
+  test_queued_secret_after_crash_is_not_confirmed_without_delivery_or_explicit_failure PASS (0.02s)
+  test_otp_unavailable_discards_secret_and_requires_fresh_challenge PASS (0.02s)
+  test_recovered_empty_polls_restore_healthy_coverage_for_a_new_request PASS (0.11s)
+  test_otp_bypasses_answer_folder_and_never_enters_journal_or_projection PASS (0.04s)
+  test_poller_failure_invalidates_checkpoint_and_actor_lease_excludes_competitor PASS (0.04s)
+  test_plain_message_is_instruction_while_request_remains_pending PASS (0.04s)
+  test_request_binding_and_revision_cannot_be_reassigned          PASS (0.03s)
+  test_command_is_scoped_and_explicit_id_does_not_override_reply_identity PASS (0.07s)
+  test_same_channel_reply_delivers_folder_answer_and_only_one_effect PASS (0.05s)
+  test_replayed_ordinary_ingress_recovers_without_a_second_effect PASS (0.03s)
+  test_uncertain_submit_never_resends_or_starts_clock             PASS (0.02s)
+
+Ace::Hitl::Hermes::Molecules::HermesContractTest
+  test_verify_folder_rejects_unwritable_folders_for_non_root      PASS (0.00s)
+  test_schema_asset_is_shipped_and_valid_json                     PASS (0.00s)
+  test_message_and_quarantine_paths                               PASS (0.00s)
+  test_file_name_and_parse_round_trip                             PASS (0.00s)
+  test_contract_versions_and_bounds_are_pinned                    PASS (0.00s)
+  test_verify_folder_accepts_private_writable_directory           PASS (0.00s)
+  test_verify_folder_fails_closed_on_missing_non_dir_and_world_writable PASS (0.01s)
+
+Ace::Hitl::Hermes::Molecules::HermesQuarantineTest
+  test_name_collisions_get_numeric_suffixes                       PASS (0.01s)
+  test_refuses_root_fail_closed                                   PASS (0.01s)
+  test_modes_are_forced_regardless_of_umask                       PASS (0.01s)
+  test_moves_file_and_writes_reason_sidecar                       PASS (0.01s)
+
+Finished in 31.99983s
+116 tests, 659 assertions, 0 failures, 0 errors, 0 skips
