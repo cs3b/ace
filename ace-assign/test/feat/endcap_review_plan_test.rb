@@ -82,6 +82,35 @@ module Ace
           assert_equal ["intent"], journal.read_events("assignment-1").map { |event| event.fetch("type") }
         end
       end
+
+      def test_historical_approval_rechecks_imported_bytes_and_exact_candidate
+        fixture do |endcap, journal, params, current, review, admitted|
+          journal.mutate(assignment_id: "assignment-1", attempt_id: "attempt-1", mutation_id: "assign-review",
+            operation: "assign_review", parameters_digest: "a" * 64, expected_generation: 0) { {data: review} }
+          prepared = plan(endcap, journal, params, current, review, admitted)
+          journal.mutate(assignment_id: "assignment-1", attempt_id: "attempt-1", mutation_id: "accept-review",
+            operation: "accept_review", parameters_digest: "b" * 64, expected_generation: 1) { prepared }
+          map = {"project_id" => "fixture", "worker_uid" => Process.uid + 1}
+          read = ->(candidate) { endcap.send(:approved_review!, journal, journal.read_events("assignment-1"), params, map, candidate) }
+          before = journal.ref_value
+          assert_equal review.fetch("review_id"), read.call(current).fetch("review_id")
+          assert_equal before, journal.ref_value
+          assert_raises(AttemptErrors::ReceiptRejected) { read.call(current.merge("head" => "b" * 40)) }
+          assert_raises(AttemptErrors::ReceiptRejected) { read.call(current.merge("candidate_generation" => 2)) }
+          # Keep a matching workspace file: protected historical reads must
+          # still reject a canonical artifact changed in the journal ref.
+          reference = prepared.fetch(:references).first.fetch("ref")
+          File.binwrite(File.join(journal.repo_root, "private-review-report"), admitted.fetch(:artifacts).first)
+          journal.send(:with_lock) do
+            checkout = journal.send(:checkout_dir)
+            File.binwrite(File.join(checkout, reference), "replacement")
+            git(checkout, "add", reference)
+            git(checkout, "-c", "user.name=test", "-c", "user.email=test@example.invalid", "commit", "-m", "alter canonical artifact")
+            git(journal.repo_root, "update-ref", journal.ref, git(checkout, "rev-parse", "HEAD"))
+          end
+          assert_raises(AttemptErrors::EvidenceUnavailable) { read.call(current) }
+        end
+      end
     end
   end
 end

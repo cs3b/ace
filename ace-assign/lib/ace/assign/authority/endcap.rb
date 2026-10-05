@@ -221,6 +221,43 @@ module Ace
           events.reverse.find { |event| event["type"] == "authority_mutation" && event.dig("payload", "operation") == "assign_review" }&.dig("payload", "data")
         end
 
+        # A retained approval grants permission only while its original imported
+        # bytes, independent reviewer and exact candidate still verify. An old
+        # successful mutation reply is not a substitute for canonical evidence.
+        def approved_review!(journal, events, params, map, current)
+          accepted = events.reverse.find { |event| event["type"] == "authority_mutation" &&
+            event.dig("payload", "operation") == "accept_review" }&.dig("payload", "data")
+          review = assigned_review(events)
+          unless accepted && review && accepted["head"] == current["head"] &&
+              accepted["candidate_generation"] == current["candidate_generation"] &&
+              accepted["review_id"] == review["review_id"] && accepted["reviewer_uid"] == review["reviewer_uid"] &&
+              accepted["review_binding"] == review.slice("review_id", "head", "candidate_generation", "reviewer_uid", "reviewer_process_binding") &&
+              review["reviewer_uid"] != map.fetch("worker_uid")
+            raise AttemptErrors::ReceiptRejected, "current candidate requires its exact independent review"
+          end
+          context = {kind: "review", project_id: map.fetch("project_id"), assignment_id: params.fetch("assignment_id"),
+            attempt_id: params.fetch("attempt_id"), peer_uid: review.fetch("reviewer_uid"),
+            binding: accepted.fetch("review_binding"), request_id_or_event_id: review.fetch("review_id"),
+            generation: current.fetch("candidate_generation")}
+          canonical = Molecules::CanonicalEvidence.new(journal: journal)
+          commit = journal.ref_value
+          reader = ->(_data, artifact) { canonical.read({"ref" => artifact.fetch("path"), "sha256" => artifact.fetch("sha256")},
+            **context, commit: commit) }
+          intent = events.find { |event| event["type"] == "intent" }
+          attempt = journal.send(:build_attempt, params.fetch("assignment_id"), params.fetch("attempt_id"),
+            intent.fetch("payload"), events, "running")
+          identity = Molecules::ExecutionIdentityResolver::Identity.new(actor: "protected-authority", role: "service", runtime: "unix")
+          receipt = Molecules::ReceiptVerifier.new(artifact_reader: reader).verify!(accepted.fetch("review_receipt"),
+            attempt: attempt, identity: identity, live_head: current.fetch("head"), repo_root: journal.repo_root)
+          unless receipt.digest == accepted.fetch("receipt_digest") && receipt.operation == "review" &&
+              receipt.to_h.dig("review", "reviewer", "actor") == review.fetch("reviewer_actor")
+            raise AttemptErrors::ReceiptRejected, "canonical review receipt differs"
+          end
+          accepted
+        rescue KeyError
+          raise AttemptErrors::ReceiptRejected, "canonical review binding is incomplete"
+        end
+
         def accept_review_plan(journal, events, params, map, current, review, admitted)
           receipt = admitted.fetch(:receipt)
           unless receipt["operation"] == "review" && receipt["verdict"] == "succeeded" &&
