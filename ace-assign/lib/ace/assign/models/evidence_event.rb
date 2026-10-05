@@ -19,7 +19,7 @@ module Ace
           candidate_invalidated reconciliation
           service_claim service_transition recovery_observation inbox_binding inbox_reconciliation delivery
           authority_mutation evidence_import proposal_state result_submitted
-          scope_bound scope_sealed scope_closed_no_writers
+          scope_bound scope_native_bound scope_child_bound scope_sealed scope_closed_no_writers
         ].freeze
 
         # Build an event chained to a previous digest.

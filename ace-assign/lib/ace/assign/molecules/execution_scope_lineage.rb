@@ -11,10 +11,9 @@ module Ace
       # This reader never promotes cached population into a proof event.
       class ExecutionScopeLineage
         BINDING_FIELDS = %w[project_id assignment_id attempt_id mapping_id slot_id reservation_generation
-          scope_generation deployment_digest boot_id slice_invocation_id service_invocation_id cgroup_identity
-          server_identity socket_identity workspace_id original_process_binding resource_identities].freeze
+          scope_generation deployment_digest boot_id slice_invocation_id cgroup_identity resource_identities].freeze
         PROOF_FIELDS = %w[scope_generation scope_binding_event_id seal_event_id boot_id slice_invocation_id
-          service_invocation_id cgroup_identity populated].freeze
+          cgroup_identity populated].freeze
         PROCESS_FIELDS = %w[pid uid gid groups started_at host parent_pid].freeze
         RESOURCE_FIELDS = %w[host_path view_path mount_id filesystem_type device inode uid gid].freeze
         CGROUP_FIELDS = %w[path mount_id filesystem_type device inode].freeze
@@ -23,7 +22,7 @@ module Ace
         INVOCATION = /\A[0-9a-f]{32}\z/
         BOOT = /\A[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\z/
 
-        attr_reader :binding_event, :seal_event, :proof_event
+        attr_reader :binding_event, :native_event, :child_event, :seal_event, :proof_event
 
         def initialize(events:, project_id:, assignment_id:, attempt_id:, mapping_id:)
           events = freeze_tree(JSON.parse(JSON.generate(events)))
@@ -36,8 +35,12 @@ module Ace
           generation = 0
           events.each do |event|
             generation += 1 if event["type"] == "authority_mutation"
+            accept_reservation!(event, generation) if event["type"] == "authority_mutation" &&
+              event.dig("payload", "operation") == "reserve_attempt"
             case event["type"]
             when "scope_bound" then accept_binding!(event, generation + 1)
+            when "scope_native_bound" then accept_native!(event)
+            when "scope_child_bound" then accept_child!(event)
             when "scope_sealed" then accept_seal!(event)
             when "scope_closed_no_writers" then accept_proof!(event)
             end
@@ -64,6 +67,12 @@ module Ace
           true
         end
 
+        def require_launch_bound!
+          require_open!
+          unavailable!("original native and child stages are missing") unless native_event && child_event
+          child_event.fetch("payload").fetch("original_process_binding")
+        end
+
         def require_positive!(scope_generation:, scope_binding_event_id:, seal_event_id:, proof_id:)
           unless proof_event && binding.fetch("scope_generation") == scope_generation &&
               binding_event.fetch("digest") == scope_binding_event_id && seal_event.fetch("digest") == seal_event_id &&
@@ -74,6 +83,17 @@ module Ace
         end
 
         private
+
+        def accept_reservation!(event, generation)
+          unavailable!("canonical reservation is repeated") if @reservation
+          value = event.dig("payload", "data")
+          unless value.is_a?(Hash) && value.slice(*@expected.keys) == @expected &&
+              value["reservation_generation"] == generation && value["generation"] == generation &&
+              value["launch_ticket"].is_a?(String) && ID.match?(value["launch_ticket"])
+            unavailable!("canonical reservation binding differs")
+          end
+          @reservation = value
+        end
 
         def freeze_tree(value)
           case value
@@ -89,35 +109,13 @@ module Ace
           exact_fields!(value, BINDING_FIELDS)
           unless value.slice(*@expected.keys) == @expected &&
               value["slot_id"].is_a?(String) && ID.match?(value["slot_id"]) &&
-              value["scope_generation"] == generation && positive_integer?(value["reservation_generation"]) &&
+              value["scope_generation"] == generation && @reservation &&
+              value["reservation_generation"] == @reservation["reservation_generation"] &&
               digest?(value["deployment_digest"]) && boot?(value["boot_id"]) &&
-              invocation?(value["slice_invocation_id"]) && invocation?(value["service_invocation_id"]) &&
-              value["workspace_id"].is_a?(String) && value["workspace_id"].match?(/\Aw[1-9][0-9]{0,8}\z/)
+              invocation?(value["slice_invocation_id"])
             unavailable!("scope generation binding differs")
           end
           cgroup!(value.fetch("cgroup_identity"))
-          process!(value.fetch("server_identity"), value.fetch("boot_id"))
-          original = value.fetch("original_process_binding")
-          exact_fields!(original, %w[runtime session pane terminal_id process_identity shell_identity native_origin])
-          process!(original.fetch("process_identity"), value.fetch("boot_id"))
-          socket = value.fetch("socket_identity")
-          server = value.fetch("server_identity")
-          child = original.fetch("process_identity")
-          origin = original.fetch("native_origin")
-          exact_fields!(origin, %w[workspace tab pane server_identity socket_identity command cwd])
-          command = origin.fetch("command")
-          unless socket.is_a?(Array) && socket.size == 3 && socket.all? { |part| part.is_a?(Integer) && part >= 0 } &&
-              socket.last == server["uid"] && child["parent_pid"] == server["pid"] &&
-              child.values_at("uid", "gid", "groups") == server.values_at("uid", "gid", "groups") &&
-              original["runtime"] == "herdr" && original["shell_identity"] == child &&
-              original["session"] == value["workspace_id"] && origin["workspace"] == value["workspace_id"] &&
-              origin["server_identity"] == server && origin["socket_identity"] == socket &&
-              origin["pane"] == original["pane"] && %w[pane terminal_id].all? { |key| original[key].is_a?(String) && !original[key].empty? } &&
-              origin["tab"].is_a?(String) && !origin["tab"].empty? && path?(origin["cwd"]) &&
-              command.is_a?(Array) && command.size == 3 && path?(command.first) && command[1] == value["mapping_id"] &&
-              command.last.is_a?(String) && ID.match?(command.last)
-            unavailable!("scope native/original-child lineage differs")
-          end
           resources = value.fetch("resource_identities")
           unless resources.is_a?(Array) && resources.size.between?(1, 64) &&
               resources.map { |resource| resource["host_path"] }.uniq.size == resources.size &&
@@ -135,6 +133,61 @@ module Ace
           @binding_event = event
         end
 
+        def stage_reference!(value)
+          unavailable!("scope stage requires its original open parent") unless binding && !sealed?
+          unless value["scope_generation"] == binding.fetch("scope_generation") &&
+              value["scope_binding_event_id"] == binding_event.fetch("digest")
+            unavailable!("scope stage references another parent")
+          end
+        end
+
+        def accept_native!(event)
+          unavailable!("native binding cannot be replaced") if native_event
+          value = event.fetch("payload")
+          exact_fields!(value, %w[scope_generation scope_binding_event_id service_invocation_id server_identity socket_identity workspace_id])
+          stage_reference!(value)
+          process!(value.fetch("server_identity"), binding.fetch("boot_id"))
+          socket = value.fetch("socket_identity")
+          unless invocation?(value["service_invocation_id"]) && value["workspace_id"].is_a?(String) &&
+              value["workspace_id"].match?(/\Aw[1-9][0-9]{0,8}\z/) && socket.is_a?(Array) && socket.size == 3 &&
+              socket.all? { |part| part.is_a?(Integer) && part >= 0 } && socket.last == value.dig("server_identity", "uid")
+            unavailable!("scope native incarnation differs")
+          end
+          @native_event = event
+        end
+
+        def accept_child!(event)
+          unavailable!("child binding requires its single native predecessor") unless native_event && !child_event
+          value = event.fetch("payload")
+          exact_fields!(value, %w[scope_generation scope_binding_event_id native_binding_event_id original_process_binding])
+          stage_reference!(value)
+          unless value["native_binding_event_id"] == native_event.fetch("digest")
+            unavailable!("child references another native incarnation")
+          end
+          native = native_event.fetch("payload")
+          original = value.fetch("original_process_binding")
+          exact_fields!(original, %w[runtime session pane terminal_id process_identity shell_identity native_origin])
+          process!(original.fetch("process_identity"), binding.fetch("boot_id"))
+          socket = native.fetch("socket_identity")
+          server = native.fetch("server_identity")
+          child = original.fetch("process_identity")
+          origin = original.fetch("native_origin")
+          exact_fields!(origin, %w[workspace tab pane server_identity socket_identity command cwd])
+          command = origin.fetch("command")
+          unless child["parent_pid"] == server["pid"] &&
+              child.values_at("uid", "gid", "groups") == server.values_at("uid", "gid", "groups") &&
+              original["runtime"] == "herdr" && original["shell_identity"] == child &&
+              original["session"] == native["workspace_id"] && origin["workspace"] == native["workspace_id"] &&
+              origin["server_identity"] == server && origin["socket_identity"] == socket &&
+              origin["pane"] == original["pane"] && %w[pane terminal_id].all? { |key| original[key].is_a?(String) && !original[key].empty? } &&
+              origin["tab"].is_a?(String) && !origin["tab"].empty? && path?(origin["cwd"]) &&
+              command.is_a?(Array) && command.size == 3 && path?(command.first) && command[1] == binding["mapping_id"] &&
+              command.last == @reservation.fetch("launch_ticket")
+            unavailable!("scope original-child lineage differs")
+          end
+          @child_event = event
+        end
+
         def accept_seal!(event)
           unavailable!("scope seal has no immutable binding or is repeated") unless binding && !seal_event
           value = event.fetch("payload")
@@ -150,7 +203,7 @@ module Ace
           unavailable!("scope proof requires its original seal and single observation") unless sealed? && !proof_event
           value = event.fetch("payload")
           exact_fields!(value, PROOF_FIELDS)
-          expected = binding.slice("scope_generation", "boot_id", "slice_invocation_id", "service_invocation_id", "cgroup_identity")
+          expected = binding.slice("scope_generation", "boot_id", "slice_invocation_id", "cgroup_identity")
           expected.merge!("scope_binding_event_id" => binding_event.fetch("digest"),
             "seal_event_id" => seal_event.fetch("digest"), "populated" => 0)
           unavailable!("scope proof is not exact sealed empty population") unless value == expected

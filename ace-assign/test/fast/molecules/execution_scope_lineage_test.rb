@@ -27,8 +27,13 @@ module Ace
               "socket_identity" => socket, "command" => ["/usr/libexec/ace-worker-gate", "mapping", "ticket"], "cwd" => "/scratch"}},
           "resource_identities" => [{"host_path" => "/var/lib/ace-slot/scratch", "view_path" => "/scratch",
             "mount_id" => 22, "filesystem_type" => "ext4", "device" => 24, "inode" => 500, "uid" => 13001, "gid" => 13001}]}
+        @native = @binding.slice("service_invocation_id", "server_identity", "socket_identity", "workspace_id")
+        @original = @binding.fetch("original_process_binding")
+        @binding = @binding.slice(*Reader::BINDING_FIELDS)
         append("intent", {})
-        append("authority_mutation", {"operation" => "reserve_attempt"})
+        append("authority_mutation", {"operation" => "reserve_attempt", "data" => {
+          "project_id" => "project", "assignment_id" => "assignment", "attempt_id" => "attempt", "mapping_id" => "mapping",
+          "reservation_generation" => 1, "generation" => 1, "launch_ticket" => "ticket"}})
       end
 
       def append(type, payload)
@@ -46,12 +51,74 @@ module Ace
         append("scope_bound", @binding)
       end
 
+      def native
+        parent = @events.find { |e| e["type"] == "scope_bound" }
+        append("scope_native_bound", @native.merge("scope_generation" => 2, "scope_binding_event_id" => parent.fetch("digest")))
+      end
+
+      def child
+        append("scope_child_bound", {"scope_generation" => 2,
+          "scope_binding_event_id" => @events.find { |e| e["type"] == "scope_bound" }.fetch("digest"),
+          "native_binding_event_id" => @events.find { |e| e["type"] == "scope_native_bound" }.fetch("digest"),
+          "original_process_binding" => @original})
+      end
+
+      def test_stages_are_ordered_immutable_and_reference_original_parent_and_native
+        bound
+        assert_nil reader.native_event
+        assert_raises(AttemptErrors::EvidenceUnavailable) { reader.require_launch_bound! }
+        native
+        assert_raises(AttemptErrors::EvidenceUnavailable) { reader.require_launch_bound! }
+        child
+        assert_equal @original, reader.require_launch_bound!
+        assert_equal @original, reader.child_event.dig("payload", "original_process_binding")
+        child
+        assert_raises(AttemptErrors::EvidenceUnavailable) { reader }
+        @events.pop
+        seal
+        native
+        assert_raises(AttemptErrors::EvidenceUnavailable) { reader }
+      end
+
+      def test_native_rejects_wrong_reference_malformed_identity_and_duplicate_or_sealed_admission
+        bound
+        parent_id = @events.last.fetch("digest")
+        base = @native.merge("scope_generation" => 2, "scope_binding_event_id" => parent_id)
+        [base.merge("scope_binding_event_id" => "d" * 64), base.merge("scope_generation" => 3),
+         base.merge("service_invocation_id" => "bad"), base.merge("socket_identity" => [20, 30, 2]),
+         base.merge("server_identity" => @server.merge("started_at" => "linux:other:999")),
+         base.merge("extra" => true)].each do |value|
+          append("scope_native_bound", value)
+          assert_raises(AttemptErrors::EvidenceUnavailable) { reader }
+          @events.pop
+        end
+        native
+        native
+        assert_raises(AttemptErrors::EvidenceUnavailable) { reader }
+        @events.pop(2)
+        seal
+        native
+        assert_raises(AttemptErrors::EvidenceUnavailable) { reader }
+      end
+
+      def test_child_without_native_and_foreign_child_reference_refuse
+        bound
+        append("scope_child_bound", {"scope_generation" => 2, "scope_binding_event_id" => @events.last.fetch("digest"),
+          "native_binding_event_id" => "a" * 64, "original_process_binding" => @original})
+        assert_raises(AttemptErrors::EvidenceUnavailable) { reader }
+        @events.pop
+        native
+        @original["native_origin"]["pane"] = "foreign"
+        child
+        assert_raises(AttemptErrors::EvidenceUnavailable) { reader }
+      end
+
       def seal
         append("scope_sealed", {"scope_generation" => 2, "scope_binding_event_id" => @events.find { |e| e["type"] == "scope_bound" }.fetch("digest")})
       end
 
       def proof_payload
-        @binding.slice("scope_generation", "boot_id", "slice_invocation_id", "service_invocation_id", "cgroup_identity").merge(
+        @binding.slice("scope_generation", "boot_id", "slice_invocation_id", "cgroup_identity").merge(
           "scope_binding_event_id" => @events.find { |e| e["type"] == "scope_bound" }.fetch("digest"),
           "seal_event_id" => @events.find { |e| e["type"] == "scope_sealed" }.fetch("digest"), "populated" => 0)
       end
@@ -113,8 +180,7 @@ module Ace
 
       def test_binding_uses_original_full_native_child_and_canonical_mutation_generation
         [->(v) { v["scope_generation"] = 3 }, ->(v) { v["mapping_id"] = "foreign" },
-         ->(v) { v["original_process_binding"]["native_origin"]["pane"] = "foreign" },
-         ->(v) { v["server_identity"]["parent_pid"] = 2 },
+         ->(v) { v["reservation_generation"] = 9999 },
          ->(v) { v["resource_identities"] << v["resource_identities"].first.dup },
          ->(v) { v["cgroup_identity"]["filesystem_type"] = "cgroup" },
          ->(v) { v["unexpected"] = true }].each do |change|
@@ -124,6 +190,39 @@ module Ace
           assert_raises(AttemptErrors::EvidenceUnavailable) { reader }
           @events.pop
         end
+      end
+
+      def test_false_reservation_generation_cannot_form_a_fully_chained_seal_and_proof
+        @binding["reservation_generation"] = 9999
+        bound
+        seal
+        append("scope_closed_no_writers", proof_payload)
+        assert Models::EvidenceEvent.chain_valid?(@events), "the regression must fail semantic provenance, not hashing"
+        assert_raises(AttemptErrors::EvidenceUnavailable) { reader }
+      end
+
+      def test_missing_foreign_or_repeated_canonical_reservation_and_wrong_ticket_refuse
+        reserve = @events.pop
+        bound
+        assert_raises(AttemptErrors::EvidenceUnavailable) { reader }
+        @events.pop
+        data = reserve.fetch("payload").fetch("data")
+        [data.merge("reservation_generation" => 9999), data.merge("attempt_id" => "foreign"),
+         data.merge("generation" => 9999)].each do |changed|
+          append("authority_mutation", {"operation" => "reserve_attempt", "data" => changed})
+          bound
+          assert_raises(AttemptErrors::EvidenceUnavailable) { reader }
+          @events.pop(2)
+        end
+        @events << reserve
+        @original["native_origin"]["command"][-1] = "foreign-ticket"
+        bound
+        native
+        child
+        assert_raises(AttemptErrors::EvidenceUnavailable) { reader }
+        @events.pop(3)
+        append("authority_mutation", {"operation" => "reserve_attempt", "data" => data.merge("generation" => 2, "reservation_generation" => 2)})
+        assert_raises(AttemptErrors::EvidenceUnavailable) { reader }
       end
 
       def test_digest_corruption_and_foreign_attempt_chain_refuse
@@ -143,7 +242,7 @@ module Ace
         @binding["slot_id"] = "changed"
         assert_equal "slot", value.binding.fetch("slot_id")
         assert value.binding.frozen?
-        assert value.binding.fetch("server_identity").frozen?
+        assert value.binding.fetch("cgroup_identity").frozen?
       end
     end
   end
