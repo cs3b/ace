@@ -394,7 +394,7 @@ module Ace
           hash = ref.is_a?(Hash) ? ref : JSON.parse(File.read(ref))
           raise ValidationError, "invalid ref: expected a JSON object" unless hash.is_a?(Hash)
           Ace::Hitl::Providers::Ref.new(
-            session: hash.fetch("session"), pane: hash.fetch("pane")
+            session: hash.fetch("session"), pane: hash.fetch("pane"), canonical: !ref.is_a?(Hash)
           )
         rescue Errno::ENOENT, JSON::ParserError, KeyError, TypeError => e
           raise ValidationError, "invalid ref: #{e.message}"

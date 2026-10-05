@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
-- Use the shared typed reverse-reference pair at CLI, Inbox and delivery boundaries, refusing malformed persisted targets before claim or native observation.
+- Use the shared typed reverse-reference pair at CLI, Inbox and delivery boundaries, refusing malformed persisted targets and noncanonical serialized files before claim or native observation.
 - Pin managed delivery to the accepted original native target under the event lock and reject secret-bearing payloads even without a nested message.
 
 ### Changed
