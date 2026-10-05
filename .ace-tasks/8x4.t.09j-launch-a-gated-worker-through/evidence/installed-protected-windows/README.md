@@ -40,3 +40,9 @@ empty capabilities, NNP and direct root-installed server ancestry are enforced,
 but the interval before the gate's first prctl is not directly observed. This
 record does not claim that interval was sampled or all literal09j cases closed.
 Whole-scope issued termination and actual Lab acceptance remain separate.
+
+Root checked the frozen fixture delta and ran both `verify-windows.py` and the
+previous `installed-protected-hvf/verify-proof.py` against the retained author
+attempt2 log on 2026-10-05. Both exited successfully. This verifies the retained
+author evidence; it is not the pending independent clean-guest rerun. The earlier
+independent 22184 run retains its original, smaller case coverage.
