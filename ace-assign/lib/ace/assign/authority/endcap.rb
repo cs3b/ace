@@ -14,8 +14,10 @@ module Ace
       # Business admission shares the launch origin, lifecycle exclusion and
       # journal CAS. Network transfer is completed outside those locks.
       class Endcap
-        OPERATIONS = %w[submit_candidate export_candidate assign_review accept_review request_service begin_dispatch complete_service service_authorization service_status].freeze
+        OPERATIONS = %w[submit_candidate export_candidate assign_review accept_review request_service begin_dispatch complete_service service_authorization service_status submit_result evidence_fetch].freeze
         TRANSFER_OPERATIONS = {
+          "submit_result" => {direction: :upload, purpose: :receipt_artifacts, roles: [:worker]},
+          "evidence_fetch" => {direction: :download, purpose: :artifacts, roles: %i[worker reviewer executor launcher supervisor]},
           "submit_candidate" => {direction: :upload, purpose: :candidate, roles: %i[worker launcher]},
           "export_candidate" => {direction: :download, purpose: :candidate, roles: %i[reviewer executor]},
           "accept_review" => {direction: :upload, purpose: :receipt_artifacts, roles: [:reviewer]},
@@ -25,6 +27,8 @@ module Ace
           "complete_service" => {direction: :upload, purpose: :receipt_artifacts, roles: [:executor]}
         }.freeze
         PARAMETERS = {
+          "submit_result" => %w[mapping_id assignment_id attempt_id expected_generation candidate_generation head receipt_sha256 transfer],
+          "evidence_fetch" => %w[mapping_id assignment_id attempt_id kind purpose_id artifact_id],
           "submit_candidate" => %w[mapping_id assignment_id attempt_id expected_generation candidate_generation head transfer],
           "export_candidate" => %w[mapping_id assignment_id attempt_id candidate_generation head purpose_id],
           "assign_review" => %w[mapping_id assignment_id attempt_id expected_generation candidate_generation head reviewer_uid reviewer_process_binding],
@@ -38,9 +42,11 @@ module Ace
 
         def initialize(deployment:, launch:, kernel: Ace::Runtime::Molecules::ProtectedLinux.new, service_policy: nil)
           @deployment, @launch, @kernel, @service_policy = deployment, launch, kernel, service_policy
+          launch.attach_result_owner(self) if launch.respond_to?(:attach_result_owner)
         end
 
         def authorize_transfer!(request:, peer:, role:)
+          return authorize_result_transfer!(request: request, peer: peer, role: role) if %w[submit_result evidence_fetch].include?(request.fetch("operation"))
           params, map = validate_request(request)
           return authorize_service_transfer!(request, params, map, peer, role) if %w[request_service begin_dispatch complete_service service_authorization].include?(request.fetch("operation"))
           @launch.with_assignment(params: params, map: map) do |journal, _registration|
@@ -58,6 +64,7 @@ module Ace
         end
 
         def dispatch(request:, peer:, role:, transfer: nil)
+          return dispatch_result(request: request, peer: peer, role: role, transfer: transfer) if %w[submit_result evidence_fetch].include?(request.fetch("operation"))
           params, map = validate_request(request)
           return service_status(request, params, map, peer, role) if request.fetch("operation") == "service_status"
           return dispatch_service(request, params, map, peer, role, transfer) if %w[request_service begin_dispatch complete_service service_authorization].include?(request.fetch("operation"))
@@ -276,6 +283,7 @@ module Ace
 
         def accept_review_plan(journal, events, params, map, current, review, admitted)
           receipt = admitted.fetch(:receipt)
+          raise AttemptErrors::EvidenceUnavailable, "protected campaigns require their canonical owner" if receipt["campaign"]
           unless receipt["operation"] == "review" && receipt["verdict"] == "succeeded" &&
               receipt["producer"] == {"actor" => map.fetch("worker_actor"), "role" => "worker", "runtime" => "herdr"} &&
               receipt.dig("review", "reviewer", "actor") == review.fetch("reviewer_actor")
@@ -324,3 +332,5 @@ module Ace
 end
 
 require_relative "endcap_services"
+
+require_relative "endcap_results"

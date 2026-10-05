@@ -2,6 +2,7 @@
 require "securerandom"
 require_relative "deployment"
 require_relative "transfer_codec"
+require_relative "../molecules/canonical_evidence"
 
 module Ace
   module Assign
@@ -16,6 +17,12 @@ module Ace
         end
 
         def call(operation, params, mutation_id: nil, timeout: 5, upload_parts: nil, download: false, purpose: nil)
+          if operation == "evidence_fetch" && (!download || purpose != :artifacts || upload_parts)
+            raise ArgumentError, "evidence fetch requires fixed artifacts download"
+          end
+          if operation == "submit_result" && (!upload_parts || purpose != :receipt_artifacts || download)
+            raise ArgumentError, "result submission requires fixed receipt upload"
+          end
           @deployment.verify!(mapping_id, kernel: @kernel)
           wire = Ace::Runtime::Molecules::ProtectedSocket
           path = @service.fetch("socket_path")
@@ -35,6 +42,9 @@ module Ace
             wire.write(socket, {"version" => 1, "operation" => operation,
               "mutation_id" => mutation_id, "project_id" => @map.fetch("project_id"),
               "params" => parameters.merge("mapping_id" => mapping_id)}, deadline: deadline, limit: upload_parts || download ? 16_384 : wire::LIMIT)
+            if operation == "evidence_fetch" || (operation == "attempt_status" && params.key?("result_candidate_generation"))
+              socket.shutdown(Socket::SHUT_WR)
+            end
             if upload_parts
               codec.send(socket, parts: upload_parts, descriptor: descriptor, purpose: purpose, deadline: deadline)
               socket.shutdown(Socket::SHUT_WR)
@@ -48,6 +58,7 @@ module Ace
             unless transport.is_a?(Hash) && transport.keys == ["replayed"] && [true, false].include?(transport["replayed"])
               raise AttemptErrors::EvidenceUnavailable, "authority replay metadata is unavailable"
             end
+            validate_evidence_download!(result.fetch("data"), params) if operation == "evidence_fetch"
             parts = if download
               codec.receive(socket, descriptor: result.fetch("data").fetch("transfer"), purpose: purpose, deadline: deadline) do |input|
                 Array.new(input.count) { |index| input.bytes(index: index) }
@@ -59,6 +70,22 @@ module Ace
           raise AttemptErrors::EvidenceUnavailable, "protected authority connection unavailable; no local fallback"
         end
         private
+
+        def validate_evidence_download!(data, params)
+          descriptor, transfer = data.values_at("descriptor", "transfer")
+          unless data.keys.sort == %w[descriptor generation journal_commit transfer] &&
+              Molecules::CanonicalEvidence.valid_descriptor?(descriptor) &&
+              descriptor["project_id"] == @map.fetch("project_id") &&
+              {"assignment_id" => "assignment_id", "attempt_id" => "attempt_id", "kind" => "kind",
+                "request_id_or_event_id" => "purpose_id", "artifact_id" => "artifact_id"}.all? { |field, key| descriptor[field] == params[key] } &&
+              data["generation"].is_a?(Integer) && data["generation"] >= 0 &&
+              data["journal_commit"].is_a?(String) && data["journal_commit"].match?(/\A[0-9a-f]{40,64}\z/) &&
+              transfer.is_a?(Hash) && transfer.keys.sort == %w[bytes parts sha256 version] && transfer["version"] == 1 &&
+              transfer["bytes"] == descriptor["bytes"] && transfer["sha256"] == descriptor["sha256"] &&
+              transfer["parts"] == [descriptor.slice("bytes", "sha256")]
+            raise AttemptErrors::EvidenceUnavailable, "canonical download descriptor differs"
+          end
+        end
 
         def transfer_codec
           peer = @kernel.capture(Process.pid)

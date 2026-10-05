@@ -1,8 +1,9 @@
 # Protected native launch
 
 `ace-assign authority serve --authority AUTHORITY` runs the standalone launch
-composition. `ace-lab authority serve` supplies the separately implemented service
-composition using the same Assign server, router, lifecycle, journal and endpoint.
+composition. Lab owns the services composition using the same Assign server,
+router, lifecycle, journal and endpoint. Its full-service startup guard remains
+closed while required finish, recovery, inbox and no-effect handlers are incomplete.
 The installed `composition` must match the entrypoint. A project has exactly one
 configured authority owner; duplicate project owners or endpoints fail before
 listener creation.
@@ -124,3 +125,98 @@ unsupported, unreadable or malformed ACL data refuses startup. The authority
 must also actually traverse the endpoint and staging parents. This inspection
 does not claim an executor readiness handshake or bypass additional LSM policy;
 the installed receiver still performs its own bind and private staging checks.
+
+## Canonical result Client API
+
+The source-owned services handlers accept a live mapped worker's bounded result
+without terminalizing the attempt or releasing scope. The public seam is
+`Ace::Assign::Authority::Client`; no result CLI is introduced. Launch-only
+`attempt_status` retains its existing schema without a result selector. These
+source handlers and their deterministic tests do not establish installed
+full-service deployment acceptance.
+
+From an admitted services attempt, discover its current candidate and authority
+generation, then upload receipt JSON bytes followed by its declared artifact
+bytes in order:
+
+```ruby
+require "ace/assign"
+require "json"
+require "digest"
+
+client = Ace::Assign::Authority::Client.new(mapping_id: mapping_id)
+binding = {"assignment_id" => assignment_id, "attempt_id" => attempt_id}
+status = client.call("attempt_status", binding.merge(
+  "result_candidate_generation" => nil
+)).data
+receipt_bytes = File.binread(local_receipt_path)
+receipt = JSON.parse(receipt_bytes)
+artifacts = receipt.fetch("artifacts").map { |ref| File.binread(ref.fetch("path")) }
+params = binding.merge(
+  "expected_generation" => status.fetch("authority_generation"),
+  "candidate_generation" => status.fetch("result_candidate_generation"),
+  "head" => receipt.fetch("head"),
+  "receipt_sha256" => Digest::SHA256.hexdigest(receipt_bytes)
+)
+reply = client.call("submit_result", params, mutation_id: persisted_mutation_id,
+  upload_parts: [receipt_bytes, *artifacts], purpose: :receipt_artifacts, timeout: 30)
+result = reply.data
+```
+
+Only local byte strings cross the boundary; receipt paths are declarations, not
+authority filesystem access. The authority checks exact canonical worker
+attribution, original receipt digest and SHA256, candidate, native lineage and
+current visibility. It normalizes artifact references and writes private
+`result_submitted` metadata, imported blobs and a sanitized mutation reply in one
+Git CAS. Failed results may have `artifacts: []`; no synthetic artifact is added.
+Campaign receipts refuse until the trusted campaign owner is integrated.
+
+Persist the exact params, mutation ID and ordered byte strings before submission.
+An exact retry while the worker remains live and the attempt active returns the
+same result without another import. A changed input or fresh mutation ID for the
+same candidate conflicts. Correcting a result requires a new candidate generation
+even at unchanged HEAD; both records remain immutable. Submission creates no
+`receipt_accepted` event or terminal transition.
+
+The reply contains result ID, head, candidate generation, verdict, ordered
+canonical `{path, sha256}` references, generation and journal commit. Its
+`uploaded_receipt_sha256`, `original_receipt_digest` and normalized
+`receipt_digest` are distinct values. Private receipt, producer and process
+binding are excluded from fresh and replay result replies.
+
+After reply loss or worker exit, the exact owning launcher or mapped supervisor
+can discover the retained result and fetch one referenced artifact:
+
+```ruby
+status = client.call("attempt_status", binding.merge(
+  "result_candidate_generation" => retained_generation # nil selects latest
+)).data
+result = status.fetch("submitted_result")
+if result && (reference = result.fetch("artifacts").first)
+  fetched = client.call("evidence_fetch", binding.merge(
+    "kind" => "result", "purpose_id" => result.fetch("result_id"),
+    "artifact_id" => reference.fetch("path").delete_prefix("evidence/imports/")
+  ), download: true, purpose: :artifacts, timeout: 30)
+  artifact_bytes = fetched.parts.fetch(0)
+end
+```
+
+Client closes its request write side for services status and evidence fetch;
+Server refuses extra body bytes before exposing either read projection. Status
+reads launch and result projections from one immutable canonical commit.
+`authority_generation` is the current CAS generation; a known candidate without
+a result has `submitted_result: null`. Unknown selected generation is `missing`;
+corrupt or missing referenced provenance is `evidence_unavailable`. Disposable
+caches and requester files never supply evidence.
+
+Fetch returns exactly `descriptor`, `generation`, `journal_commit` and the
+Server-generated `transfer` descriptor, with one binary part. Client validates
+the closed canonical descriptor, exact selected purpose, one-part framing,
+aggregate length and SHA256 before exposing bytes. Owning workers read only
+their own results; assigned reviewers read their exact retained review and
+same-candidate result under their live process binding; recorded executors read
+only their own service evidence. Exact owning launchers and mapped supervisors
+read permitted attempt evidence, including retained terminal history. Current
+visibility and peer authorization apply to every read. Reassignment revokes the
+old reviewer purpose. Inbox and observation evidence refuse until their existing
+signer and observer owners provide complete canonical provenance.

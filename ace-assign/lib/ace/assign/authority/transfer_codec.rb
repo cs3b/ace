@@ -142,7 +142,7 @@ module Ace
         end
 
         def reject!(message)
-          raise AttemptErrors::ReceiptRejected, message
+          raise AttemptErrors::MalformedTransfer, message
         end
       end
     end

@@ -20,6 +20,22 @@ module Ace
           binding_digest sha256 bytes admitted_at admitted_after_event_digest request_id_or_event_id
           candidate_generation_or_claim_generation].freeze
 
+        # Shared closed descriptor validation before clients accept any bytes.
+        def self.valid_descriptor?(descriptor)
+          return false unless descriptor.is_a?(Hash) && descriptor.keys.sort == DESCRIPTOR_FIELDS.sort &&
+            descriptor["version"] == 1 && ROLES.key?(descriptor["kind"]) && ROLES[descriptor["kind"]] == descriptor["role"] &&
+            %w[artifact_id project_id assignment_id attempt_id request_id_or_event_id].all? { |key| descriptor[key].is_a?(String) && descriptor[key].match?(ID) } &&
+            %w[binding_digest sha256 admitted_after_event_digest].all? { |key| descriptor[key].is_a?(String) && descriptor[key].match?(/\A[0-9a-f]{64}\z/) } &&
+            descriptor["peer_uid"].is_a?(Integer) && descriptor["peer_uid"] >= 0 &&
+            descriptor["bytes"].is_a?(Integer) && descriptor["bytes"].between?(0, MAX_ARTIFACT_BYTES) &&
+            descriptor["candidate_generation_or_claim_generation"].is_a?(Integer) && descriptor["candidate_generation_or_claim_generation"] >= 0 &&
+            descriptor["admitted_at"].is_a?(String)
+          Time.iso8601(descriptor.fetch("admitted_at"))
+          true
+        rescue ArgumentError, TypeError
+          false
+        end
+
         def initialize(journal:)
           @journal = journal
         end
@@ -112,7 +128,7 @@ module Ace
                       "binding_digest" => Atoms::EvidenceDigest.digest(binding),
                       "sha256" => reference.fetch("sha256"), "request_id_or_event_id" => request_id_or_event_id,
                       "candidate_generation_or_claim_generation" => generation}
-          unavailable! unless descriptor.keys.sort == DESCRIPTOR_FIELDS.sort &&
+          unavailable! unless self.class.valid_descriptor?(descriptor) &&
             expected.all? { |key, value| descriptor[key] == value }
           before = events.take_while { |entry| entry["digest"] != event["digest"] }
           unavailable! unless before.any? { |entry| entry["digest"] == descriptor["admitted_after_event_digest"] }
