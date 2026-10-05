@@ -84,6 +84,45 @@ module Ace
         end
       end
 
+      def test_receipt_purpose_preserves_all_sixteen_artifacts_and_separate_full_capacity
+        with_codec do |codec, root|
+          parts = ["r" * (16 * 1024)] + Array.new(16) { "e" * (16 * 1024) }
+          descriptor = codec.descriptor(parts, purpose: :receipt_artifacts)
+          assert_equal 272 * 1024, descriptor.fetch("bytes")
+          reader, writer = UNIXSocket.pair
+          sender = Thread.new do
+            writer.write(parts.join)
+            writer.shutdown(Socket::SHUT_WR)
+          end
+          received = codec.receive(reader, descriptor: descriptor, purpose: :receipt_artifacts, deadline: deadline(5)) do |input|
+            Array.new(input.count) { |index| input.bytes(index: index) }
+          end
+          sender.value
+          assert_equal parts, received
+          assert_empty Dir.children(root)
+        ensure
+          reader&.close
+          writer&.close
+          sender&.join
+        end
+      end
+
+      def test_receipt_purpose_limits_do_not_widen_generic_artifacts_or_trade_evidence_for_receipt_capacity
+        with_codec do |codec, root|
+          assert_raises(AttemptErrors::ReceiptRejected) { codec.descriptor(["r" * (16 * 1024 + 1)], purpose: :receipt_artifacts) }
+          assert_raises(AttemptErrors::ReceiptRejected) { codec.descriptor(["", "e"], purpose: :receipt_artifacts) }
+          assert_raises(AttemptErrors::ReceiptRejected) { codec.descriptor(["r"] + Array.new(17, "e"), purpose: :receipt_artifacts) }
+          assert_raises(AttemptErrors::ReceiptRejected) do
+            codec.descriptor(["r", "e" * (64 * 1024 + 1)], purpose: :receipt_artifacts)
+          end
+          assert_raises(AttemptErrors::ReceiptRejected) do
+            codec.descriptor(["r"] + Array.new(5) { "e" * (64 * 1024) }, purpose: :receipt_artifacts)
+          end
+          assert_raises(AttemptErrors::ReceiptRejected) { codec.descriptor(Array.new(17, "e"), purpose: :artifacts) }
+          assert_empty Dir.children(root)
+        end
+      end
+
       def test_export_uses_exact_binary_bytes_and_refuses_mismatched_descriptor
         with_codec do |codec, _root|
           parts = ["first\x00".b, "second\n".b]
