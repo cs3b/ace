@@ -1,5 +1,5 @@
 name: release-minor
-description: Release modified packages and update CHANGELOGs following semver
+description: Prepare modified package versions and CHANGELOGs; publication is separate
 
 prerequisites:
   - name: verify-test
@@ -17,7 +17,9 @@ when_to_skip:
   - "No version-worthy changes since last release"
   - "Release is handled externally"
 
-workflow: wfi://release/publish
+workflow: wfi://release/bump-version
 
 effort: light
 tags: [git, versioning, release]
+
+instructions: "Prepare version/changelog changes only. Do not publish gems, deploy, or create a release merely because delivery completes."

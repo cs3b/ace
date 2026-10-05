@@ -17,7 +17,7 @@ module Ace
         TYPES = %w[
           intent process_start receipt_accepted transition
           candidate_invalidated reconciliation
-          service_claim service_transition recovery_observation inbox_binding inbox_reconciliation
+          service_claim service_transition recovery_observation inbox_binding inbox_reconciliation delivery
         ].freeze
 
         # Build an event chained to a previous digest.

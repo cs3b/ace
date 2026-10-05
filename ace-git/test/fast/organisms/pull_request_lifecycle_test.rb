@@ -51,6 +51,46 @@ module Organisms
       end
     end
 
+    def test_delivery_identity_uses_explicit_repository_context_outside_current_directory
+      with_test_providers do
+        in_temp_repo_with_remote do
+          repo = Dir.pwd
+          Dir.chdir(Dir.tmpdir) do
+            lifecycle = Ace::Git::Organisms::PullRequestLifecycle.new(repo_root: repo)
+            assert_equal "forgejo-lab", lifecycle.resolved_identity.fetch("name")
+          end
+        end
+      end
+    end
+
+    def test_pinned_delivery_identity_rejects_configuration_change_before_write
+      with_test_providers do
+        lifecycle = Ace::Git::Organisms::PullRequestLifecycle.new(server_name: "forgejo-lab", resolved_server: SERVER,
+          runner: @runner)
+        Ace::Git.instance_variable_set(:@config, Ace::Git.config.merge("servers" => [
+          {"name" => "forgejo-lab", "provider" => "testforge", "url" => FORK_SERVER.url}]))
+        assert_raises(Ace::Git::ProviderIdentityMismatchError) do
+          lifecycle.create(head_ref: "feature", base_ref: "main", expected_head: "a" * 40, title: "Task")
+        end
+        assert_empty @calls
+      end
+    end
+
+    def test_create_reconciliation_is_read_only_and_rejects_wrong_base
+      with_test_providers do
+        lifecycle = Ace::Git::Organisms::PullRequestLifecycle.new(server_name: "forgejo-lab", runner: @runner)
+        matches = lifecycle.reconcile_create(head_repository_url: SERVER.url, head_ref: "feature",
+          base_repository_url: SERVER.url, base_ref: "main")
+        assert_equal 1, matches.size
+        assert_empty @calls
+        assert_raises(Ace::Git::ProviderIdentityMismatchError) do
+          lifecycle.reconcile_create(head_repository_url: SERVER.url, head_ref: "feature",
+            base_repository_url: FORK_SERVER.url, base_ref: "main")
+        end
+        assert_empty @calls
+      end
+    end
+
     def test_show_with_url_matching_one_server_uses_it_without_selection
       with_test_providers do
         lifecycle = Ace::Git::Organisms::PullRequestLifecycle.new
@@ -253,6 +293,10 @@ module Organisms
 
       def pull_request_checks(number:, head_sha:)
         []
+      end
+
+      def find_open_pull_requests(**selector)
+        [pull_request(number: 25)]
       end
 
       def create_pull_request(head_ref:, head_repository_url:, base_ref:, expected_head:, title:, body: nil, draft: true)

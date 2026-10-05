@@ -7,9 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Retain delivery context across scoped attempts and distinguish a recovered prior effect from a new request with different content or evidence before reporting completion.
+
 ### Added
 
 - Resume from accepted attempt history without relaunch/replay; consume signed inbox observations in the existing journal and preserve unknown owner/effect state.
+
+- Attempt-bound, provider-neutral delivery records draft creation, update and readiness in the existing evidence journal; lost responses reconcile exact remote identity without repeating writes. Readiness consumes accepted current test and independent review evidence, and merge consumes the existing authorized service receipt.
+- Explicit forge selection and canonical/fork provenance for remote assignment creation; local assignments reject unused delivery inputs.
 
 ## [0.63.1] - 2026-10-04
 

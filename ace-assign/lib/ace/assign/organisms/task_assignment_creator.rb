@@ -21,7 +21,7 @@ module Ace
           @executor = executor || AssignmentExecutor.new
         end
 
-        def call(task_refs:, preset_name: DEFAULT_PRESET, primary_task_ref: nil)
+        def call(task_refs:, preset_name: DEFAULT_PRESET, primary_task_ref: nil, delivery_parameters: nil)
           requested_refs = normalize_requested_refs(task_refs)
           raise Ace::Support::Cli::Error, "--task requires at least one task reference" if requested_refs.empty?
 
@@ -48,10 +48,14 @@ module Ace
           validate_parameters!(preset, params)
 
           steps = Atoms::PresetExpander.expand(preset, params)
+          delivery = delivery_parameters && Atoms::DeliveryParameters.validate(delivery_parameters)
+          if delivery && !steps.any? { |step| %w[create-pr update-pr-desc mark-pr-ready].include?(step["name"]) }
+            raise ArgumentError, "Explicit delivery inputs require a remote-capable preset"
+          end
           job_path = write_job_file(
             session_name: "#{preset_name}-#{primary_ref}",
             description: preset["description"],
-            steps: steps
+            steps: steps, delivery: delivery
           )
 
           result = @executor.start(job_path, task_id: primary_ref)
@@ -147,7 +151,7 @@ module Ace
           raise Ace::Support::Cli::Error, errors.join(", ")
         end
 
-        def write_job_file(session_name:, description:, steps:)
+        def write_job_file(session_name:, description:, steps:, delivery: nil)
           job = {
             "session" => {
               "name" => session_name,
@@ -156,6 +160,7 @@ module Ace
             "steps" => steps
           }
 
+          job["delivery"] = delivery if delivery
           dir = File.join(Ace::Assign.cache_dir, "jobs")
           FileUtils.mkdir_p(dir)
           path = File.join(dir, "#{session_name}-#{SecureRandom.hex(4)}-job.yml")

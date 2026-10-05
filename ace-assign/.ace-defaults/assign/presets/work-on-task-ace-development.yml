@@ -5,6 +5,18 @@ name: work-on-task-ace-development
 description: Full ACE development pipeline with batching, releases, demo recording, and retrospectives
 
 parameters:
+  forge_server:
+    required: false
+    type: string
+    description: Named configured forge; mutually exclusive with forge_default
+  forge_default:
+    required: false
+    type: boolean
+    description: Explicitly select the configured default forge
+  pr_provenance:
+    required: false
+    type: object
+    description: Explicit mode, head_repository_url, head_ref, base_repository_url and base_ref; required before remote delivery
   taskrefs:
     required: true
     type: array
@@ -26,11 +38,11 @@ steps:
   - name: release-minor
     number: "020"
     instructions:
-      - Release all modified packages touched by this batch.
+      - Prepare version and changelog changes for modified packages only; publishing is a separate authorized operation.
 
   - name: create-pr
     number: "030"
-    workflow: wfi://github/pr/create
+    workflow: wfi://git/pr/create
     instructions:
       - "Create a pull request summarizing batch tasks: {{taskrefs}}."
       - "Create it as a draft with --draft; mark it ready only after the review completion rule is met."
@@ -61,11 +73,11 @@ steps:
 
   - name: update-pr-desc
     number: "149"
-    workflow: wfi://github/pr/update
+    workflow: wfi://git/pr/update
     instructions:
       - "Record the review rounds, actual reviewers, findings and tests in the PR description before marking it ready."
 
   - name: mark-pr-ready
     number: "150"
     instructions:
-      - "After review completes and appropriate tests pass, run `gh pr ready` on the draft PR."
+      - "After review completes and appropriate tests pass, run `ace-assign delivery --assignment ID --attempt ATTEMPT --operation ready --tests TEST-REF --review REVIEW-REF` with accepted exact-head test and independent review references."

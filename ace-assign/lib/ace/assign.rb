@@ -101,6 +101,13 @@ module Ace
         end
       end
 
+      # Recovery settled a prior effect, but did not perform this request.
+      class CurrentEffectRequired < ReceiptRejected
+        def initialize(operation:, recovered_operation:)
+          super("Recovered #{recovered_operation}; requested #{operation} still needs execution")
+        end
+      end
+
       # Attempt state forbids the requested effect (terminal, uncertain, blocked)
       class InvalidState < Error
         def initialize(message = "Attempt state forbids the requested operation")
@@ -197,3 +204,6 @@ module Ace
     private_class_method :load_gem_defaults_fallback
   end
 end
+
+require_relative "assign/atoms/delivery_parameters"
+require_relative "assign/organisms/delivery_coordinator"

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- PR lifecycle selection can use an explicit repository and pinned forge identity; exact create reconciliation is read-only. Neutral PR workflow and skill sources are prepared for coordinated canonical adoption.
+
 ## [0.28.1] - 2026-10-04
 
 ### Technical

@@ -53,6 +53,7 @@ require_relative "organisms/assignment_executor"
 require_relative "organisms/attempt_coordinator"
 
 # Commands
+require_relative "cli/commands/delivery"
 require_relative "cli/commands/create"
 require_relative "cli/commands/assignment_target"
 require_relative "cli/commands/status"
@@ -86,6 +87,7 @@ module Ace
       # Application commands with descriptions (for help output)
       REGISTERED_COMMANDS = [
         ["create", "Create assignment from preset or YAML"],
+        ["delivery", "Execute or reconcile attempt-bound forge delivery"],
         ["status", "Show assignment status"],
         ["step", "Show step instructions"],
         ["start", "Start next workable step"],
@@ -150,6 +152,7 @@ module Ace
 
       # Register commands (wrapped to capture exit codes)
       register "create", wrap_command(Commands::Create)
+      register "delivery", wrap_command(Commands::Delivery)
       register "status", wrap_command(Commands::Status)
       register "step", wrap_command(Commands::Step)
       register "start", wrap_command(Commands::Start)
