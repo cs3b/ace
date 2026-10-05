@@ -190,3 +190,27 @@ Parallel source lanes are vs2 repair, journal repair, and independent 09j readin
   reserved finish bypass and Git-filter artifact conversion need correction.
   Repaired `b458644c0` is under independent review/full verification. No claim
   of protected endcap delivery follows from the primitive alone.
+
+### Journal integration and next parallel slices — 2026-10-05
+
+The corrected journal primitive is integrated as `749bda001`, independently
+approved at `b458644c0`, with full Assign 845 total / 3661 assertions, two existing
+skips and no failures/errors (`8x4201`). Combined post-merge coordinator, journal
+and HITL runtime binding passed 66/418 (`8x421p`). Four previously verified review
+findings are resolved; primitive delivery does not complete protected services.
+
+Active GPT-6.1 Sol source lanes, each on its own worktree:
+- `09j`: native protected launch and exact fresh/replay creation authority.
+- `xz9.0`: consume that origin in candidate/review/service/finish/inbox endcap.
+- `qjz`: immutable delivered proposals, 16-hour decision and atomic effect claim.
+
+Source joins remain qk0 → complete qkb → R2 → R3 → qkc/gad.2. Native observation
+xza and actual domain installation remain required. Final release preparation
+waits complete source integration, followed by interactive OTP and installed Lab
+acceptance; no source test result closes those gates.
+
+### Test verdict integrity follow-up — 2026-10-05
+
+- [ ] ACE `8x4.t.2jj`: reject incomplete test executions in aggregate verdicts. New draft owns the false-green sequential-target result observed in qjz receipt `8x42fq`: passed fast counts were retained but the later 300s timeout did not make summary success false. Review, implement and independently verify before trusting aggregate delivery checks. This is separate from product timing/performance and does not supersede existing test isolation work.
+
+09j preflight review also reproduced and resolved terminal-scope ownership after positive abort; durable evidence is in `../8x4.t.09j-launch-a-gated-worker-through/source-preflight-review-2026-10-05.md`. That focused result does not close 09j or authorize installed Lab acceptance.
