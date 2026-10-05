@@ -26,8 +26,11 @@ No force or local fallback grants protected launch authority.
 
 ## Native creation provenance and an unknown creation result
 
-Protected launch creates one new, non-restored layout. The original authenticated
-layout response fixes workspace/tab/pane and server generation; exact-pane queries
+Protected launch calls only layout.apply in the root-installed native.workspace_id
+container and creates one new, non-restored tab/pane/bootstrap. It never calls
+workspace.create or uses an existing shell as worker evidence. A missing/stale
+container refuses without fallback. The original authenticated layout response
+fixes the configured workspace, fresh tab/pane and server generation; exact-pane queries
 supply terminal and child identity, checked against kernel birth/UID/lineage and
 pidfd. Labels, current/focused panes, supplied IDs and restored panes cannot select
 the gate. Closing/replacing/moving a pane must not change the admitted original
