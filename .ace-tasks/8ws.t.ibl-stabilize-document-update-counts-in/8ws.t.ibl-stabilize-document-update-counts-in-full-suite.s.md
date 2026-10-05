@@ -1,6 +1,6 @@
 ---
 id: 8ws.t.ibl
-status: pending
+status: in-progress
 priority: medium
 created_at: "2026-09-29 12:12:54"
 estimate: small
