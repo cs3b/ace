@@ -70,6 +70,10 @@ require_relative "cli/commands/list"
 require_relative "cli/commands/select"
 require_relative "cli/commands/fork_run"
 require_relative "cli/commands/fork_session"
+require_relative "cli/commands/authority/serve"
+require_relative "cli/commands/authority/launch"
+require_relative "cli/commands/authority/status"
+require_relative "cli/commands/authority/terminate"
 require_relative "cli/commands/attempt/base"
 require_relative "cli/commands/attempt/start"
 require_relative "cli/commands/attempt/status"
@@ -88,6 +92,10 @@ module Ace
       # Application commands with descriptions (for help output)
       REGISTERED_COMMANDS = [
         ["create", "Create assignment from preset or YAML"],
+        ["authority serve", "Serve the installed protected assignment owner"],
+        ["authority launch", "Launch one mapped native gated worker"],
+        ["authority status", "Inspect protected launch ownership"],
+        ["authority terminate", "Terminate the original native gated child"],
         ["delivery", "Execute or reconcile attempt-bound forge delivery"],
         ["status", "Show assignment status"],
         ["step", "Show step instructions"],
@@ -152,6 +160,10 @@ module Ace
       end
 
       # Register commands (wrapped to capture exit codes)
+      register "authority serve", wrap_command(Commands::Authority::Serve)
+register "authority launch", wrap_command(Commands::Authority::Launch)
+register "authority status", wrap_command(Commands::Authority::Status)
+register "authority terminate", wrap_command(Commands::Authority::Terminate)
       register "create", wrap_command(Commands::Create)
       register "delivery", wrap_command(Commands::Delivery)
       register "status", wrap_command(Commands::Status)

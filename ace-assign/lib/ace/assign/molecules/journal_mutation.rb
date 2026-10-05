@@ -15,7 +15,7 @@ module Ace
         # returns events [{type:, payload:}], immutable blobs, and public data.
         # Only the authority calls this internal journal API; wire requests
         # cannot select blob paths, event types, or accepted response data.
-        def mutate(assignment_id:, attempt_id:, mutation_id:, operation:, parameters_digest:, expected_generation:)
+        def mutate(assignment_id:, attempt_id:, mutation_id:, operation:, parameters_digest:, expected_generation:, with_replay: false)
           [assignment_id, attempt_id, mutation_id].each { |id| validate_mutation_id!(id) }
           unless parameters_digest.is_a?(String) && parameters_digest.match?(/\A[0-9a-f]{64}\z/)
             raise ArgumentError, "invalid mutation parameter digest"
@@ -32,7 +32,8 @@ module Ace
                     replay["assignment_id"] == assignment_id && replay["attempt_id"] == attempt_id
                   raise AttemptErrors::Conflict, "Mutation ID is already bound to different input"
                 end
-                return replay.fetch("data").merge("journal_commit" => replay.fetch("journal_commit"))
+                result = replay.fetch("data").merge("journal_commit" => replay.fetch("journal_commit"))
+                return with_replay ? {data: result, replayed: true} : result
               end
               current = read_events(assignment_id).select { |event| event["attempt_id"] == attempt_id }
               unless Models::EvidenceEvent.chain_valid?(current)
@@ -59,7 +60,10 @@ module Ace
               git!("-C", checkout_dir, "-c", "user.name=ace-assign", "-c", "user.email=ace-assign@localhost",
                 "-c", "core.hooksPath=/dev/null", "commit", "-m", "evidence: authority #{operation} #{mutation_id}")
               commit = git!("-C", checkout_dir, "rev-parse", "HEAD").first
-              return data.merge("journal_commit" => commit) if update_ref_cas(commit, old)
+              if update_ref_cas(commit, old)
+                result = data.merge("journal_commit" => commit)
+                return with_replay ? {data: result, replayed: false} : result
+              end
             end
             raise AttemptErrors::EvidenceUnavailable, "Authority mutation ref stayed conflicting"
           end

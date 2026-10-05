@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Add protected Herdr control pinned to the installed server/socket and fixed workspace, creating one fresh bootstrap pane with exact child observation and no default shell.
+
 - Expose verified native process/session ownership and allow identical signed inbox proof re-verification after settlement without duplicate transitions.
 
 ## [0.3.2] - 2026-10-04

@@ -22,7 +22,7 @@ This is the ACE integration tracker replacing the planning role of the loose lab
 
 This task owns sequencing and acceptance receipts, not duplicate implementations. Existing tasks stay at their canonical IDs; new uncovered outcomes are actual children. Check a task checkbox only after its owning record is done and linked evidence establishes the listed result. Reopen this checklist item if receipt is invalidated; do not silently expand a historical done task. `bin/ace-task show 8ws.t.lq1 --content` displays the checklist; updates are explicit, not automatic synchronization.
 
-Current phase (2026-10-04 post-delivery review): foundation, prior feature wave, hym, 34i, z78 and ibk are delivered in source; k86.3 installed runtime acceptance and vft/vfv/vfw repairs are delivered; postpublication graph verification remains in progress. This tracker remains open for combined integration and explicit repair dispositions; specifications below select the next work, not authorize dispatch.
+Current phase: active source integration and installed acceptance, updated 2026-10-05 in the final checklist below. Earlier dated sections retain review history; they are not the current dispatch state. The tracker remains open until the final integration and Lab gates are met.
 
 ## First wave — delivered scopes
 - [x] ACE 8wq.t.1w2 — hermetic test infrastructure, main PR344; tp0 consumer fixes also delivered, with later runner source loading fix 96c445b8a. This does not close new fixture defects.
@@ -241,3 +241,18 @@ After corrected qjz source joins recovery/HITL, proceed to qk0, then full qkb, R
   qk0 and the amended xz9 parent return to draft/needs_review; already-reviewed
   service/launch source work continues. Dependency:09j + xz9.0 → xz9.2 → qk0,
   with no reverse edge to qk0 or qkb.
+
+
+## Current execution checklist — 2026-10-05, after qjz source integration
+
+- [x] `qjz` source/spec d20cd8 independently accepted; merged `3d2ffcdd4`, integrated source evidence `4f869451f`. Task remains open for installed SC3.
+- [ ] `8x4.t.5qv`: repair local Assign identity from login/environment to the actual kernel process account. Readiness approved, tracked separately, implementation active. Actual installed SC3 failed `8x45o5` on this mismatch; do not relabel that run successful.
+- [ ] `qjz` SC3: rebuild exact integrated gems after accepted 5qv, then rerun the maintained isolated installed proposal scenario. This controlled proof is separate from actual Lab/Telegram acceptance.
+- [ ] `09j`: latest source repairs independently approved; combined Assign total888/3961 with two existing skips passed `8x45dm`. Author's uninstrumented isolated hardware-accelerated Linux/Yama2 launch and failure cases passed. Independent clean guest rerun, remaining full affected package gates, evidence review and source integration remain required.
+- [ ] `xz9.0`: narrow service CAS replay repair `c5c7f5d9b` independently accepted after two reproduced findings; 14/157 regressions pass. Complete receiver/composition, explicit canonical authorization seam review, combined dependency integration and installed cross-user proof remain open.
+- [ ] `xz9.2`: protected prompt/stop remains draft pending complete scope/writer proof and native contract readiness. It precedes qk0; no child-exit or empty-subtree shortcut is accepted.
+- [ ] After protected runtime/service/steering and HITL gates: qk0 → complete atomic qkb → R2 ig3 → R3 ig4 → qkc/gad.2, followed by legacy removal and cold-start acceptance in lab-config.
+
+Domain installation gad.8/.b/.9 and actual Lab remain separate required work. Pilot ig5 is optional. Final gem publication still belongs to the Captain's interactive OTP step after source integration; prior published-gem proof does not cover this new source closure.
+
+Supporting tool defects `8x4.t.412` (review session isolation) and `8x4.t.5h5` (active Git operation preservation) remain drafts with explicit current procedures; they do not block unrelated implementation. Use unique review directories and native Git continuation for active merges.
