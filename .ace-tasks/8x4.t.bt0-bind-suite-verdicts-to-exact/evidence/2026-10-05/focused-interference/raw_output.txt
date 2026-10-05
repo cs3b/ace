@@ -1,0 +1,7 @@
+Started with run options --seed 37868
+
+ProgressReportLinksTest
+  test_failure_headers_and_truncation_use_only_actual_saved_reports PASS (0.00s)
+
+Finished in 0.04160s
+1 tests, 52 assertions, 0 failures, 0 errors, 0 skips
