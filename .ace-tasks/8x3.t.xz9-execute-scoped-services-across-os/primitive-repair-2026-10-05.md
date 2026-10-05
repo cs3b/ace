@@ -10,3 +10,13 @@ Fail-before: `8x410m` reproduced restart-required for an intent-only reservation
 Focused repaired source: `bin/ace-test ace-assign test/feat/journal_mutation_test.rb test/fast/organisms/attempt_coordinator_test.rb test/fast/molecules/attempt_reconciler_test.rb test/fast/molecules/evidence_journal_test.rb test/fast/molecules/canonical_evidence_test.rb test/fast/commands/resume_test.rb` => `8x416m`, 85 tests / 455 assertions, zero failures/errors, 1m27s.
 
 Full Assign verification runs on the frozen candidate; its actual final receipt is required separately. No protected authority, positive abort path, distinct-UID or installed acceptance is claimed. 09j owns those producer requirements. No task is marked done and no release is prepared or published by this repair.
+
+## Independent review follow-up
+
+Independent review of `e484a8aab` found two additional High defects. The full run on that rejected source completed `8x41ji`: 842 tests / 3633 assertions, zero failures/errors, two existing installed edge skips, 13m25s. This does not override the rejection.
+
+Own fail-before `8x41ka`: 62 tests / 364 assertions, three failures reproduced (1) reserved finish without cache accepting a receipt before an invalid transition, (2) stale running cache finishing the reservation, and (3) CRLF import normalization by Git.
+
+Finish now applies authoritative journal state and refuses reserved attempts before any receipt or candidate invalidation write. Acceptance validates terminal transitions before committing receipt events. Artifact staging creates unfiltered Git objects from the original bytes and inserts their object IDs into the index; immutable reuse compares the canonical commit blob instead of a smudged checkout projection. Regression coverage includes CRLF and actual custom clean/smudge filters, exact replay, immutable byte reuse, restart and both cache cases.
+
+Affected verification `bin/ace-test ace-assign test/fast/organisms/attempt_coordinator_test.rb test/feat/journal_mutation_test.rb test/fast/molecules/canonical_evidence_test.rb test/fast/molecules/evidence_journal_test.rb` => `8x41mb`, 79 tests / 464 assertions, zero failures/errors, 1m29s. Revised full package verification and exact-head independent re-review remain gates.
