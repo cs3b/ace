@@ -23,3 +23,7 @@ sealed-service-settlement-contract.md supplies settlement-only claim identity,
 fresh challenge/completion and final receiver authorization seal guards through
 the existing owner. This is a repaired frozen candidate awaiting rereview; the
 historical verdict is not erased or represented as approval. Task stays draft.
+
+## Root readiness decision
+
+Whole-task independent readiness APPROVE at1122ddf7be3d90a7339a87209c665a8f1d3eab19 closes the previous service-seal settlement gap. Promoted pending/needs_review false after integration. This is specification readiness only; dependency09j remains unfinished and its execution limitation remains in force. Source implementation and installed/native acceptance are not supplied by this promotion.

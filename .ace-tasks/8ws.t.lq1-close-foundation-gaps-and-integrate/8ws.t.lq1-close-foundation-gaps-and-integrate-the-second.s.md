@@ -320,3 +320,6 @@ No gems published or actual Lab deployment performed in this checkpoint.
 - [ ] `8x4.t.bt0`: restore exact suite invocation attribution; verified mutable-latest race during lq8 misreported full package counts using a concurrent focused report. Separate runner task; exact unique lq8 receipts remain evidence, no false aggregate acceptance.
 
 - [x] `lq8`: controlled owned-child lifecycle evidence and independent c2f43APPROVE integrated 9786027ec1f91d36df9733ac7e4648500ef3ce3c; full401/1053, independent25/86 passed. Rootverified48savedreporthashes in51-entrysuite,11203passes24skips; threezero-selectedentries retainno-report limitation. Historicalorphan scheduler cause remainsqualified. `bt0` owns mutablelatest reporting defect, not a hidden reopening oflq8.
+
+- [x] `9c2` whole specification independently APPROVED at1122ddf7 after closing settlement-only recovery and final authorization seal checks; promoted pending/needs_review false.
+- [ ] `9c2` implementation/installed acceptance remains dependent on unfinished09j; promotion is not a bypass of its native proof or recorded execution limitation.
