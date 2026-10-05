@@ -320,7 +320,7 @@ module Ace
       def client_fetch(data)
         @client.call("evidence_fetch", client_params("kind" => "result", "purpose_id" => data.fetch("result_id"),
           "artifact_id" => data.fetch("artifacts").first.fetch("path").delete_prefix("evidence/imports/")),
-          download: true, purpose: :artifacts)
+          download: true, purpose: :artifacts, timeout: 30)
       end
 
       def test_real_client_server_submit_lost_reply_exit_restart_status_and_exact_fetch
@@ -338,7 +338,7 @@ module Ace
             result
           end
           assert_raises(AttemptErrors::EvidenceUnavailable) do
-            @client.call("submit_result", client_params(params), mutation_id: "wire-result", upload_parts: input.parts, purpose: :receipt_artifacts)
+            @client.call("submit_result", client_params(params), mutation_id: "wire-result", upload_parts: input.parts, purpose: :receipt_artifacts, timeout: 30)
           end
           @kernel.dead << @worker.fetch("pid")
           @kernel.peer_identity = @supervisor
@@ -349,7 +349,7 @@ module Ace
           restart
           router = @router
           @server.instance_variable_set(:@lifecycle, router)
-          discovered = @client.call("attempt_status", client_params("result_candidate_generation" => nil))
+          discovered = @client.call("attempt_status", client_params("result_candidate_generation" => nil), timeout: 30)
           assert_equal false, discovered.replayed
           data = discovered.data.fetch("submitted_result")
           assert_equal generation, discovered.data.fetch("authority_generation")
