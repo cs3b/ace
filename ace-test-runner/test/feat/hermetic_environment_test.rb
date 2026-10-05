@@ -79,7 +79,8 @@ class HermeticEnvironmentTest < Minitest::Test
       env = poisoned_env
 
       stdout, stderr, status = Open3.capture3(
-        env, RbConfig.ruby, "-I", @runner_lib, File.join(@runner_exe_dir, "ace-test-suite"),
+        env.merge("BUNDLE_GEMFILE" => File.expand_path("../Gemfile", @package_root)),
+        RbConfig.ruby, "-rbundler/setup", "-I", @runner_lib, File.join(@runner_exe_dir, "ace-test-suite"),
         chdir: root, unsetenv_others: true
       )
       output = stdout + stderr
@@ -151,7 +152,7 @@ class HermeticEnvironmentTest < Minitest::Test
 
     File.write(File.join(package, "Gemfile"), <<~GEM)
       source "https://rubygems.org"
-      gem "minitest"
+      eval_gemfile #{File.expand_path("../Gemfile", @package_root).inspect}
     GEM
 
     File.write(File.join(package, ".ace", "test", "runner.yml"), probe_runner_config(require_missing_token, extra_require))

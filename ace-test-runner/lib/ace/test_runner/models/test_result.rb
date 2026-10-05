@@ -7,7 +7,7 @@ module Ace
       class TestResult
         attr_accessor :passed, :failed, :skipped, :errors, :assertions,
           :duration, :start_time, :end_time, :failures_detail,
-          :deprecations, :raw_output, :stderr
+          :deprecations, :raw_output, :stderr, :execution_success
 
         def initialize(attributes = {})
           @passed = attributes[:passed] || 0
@@ -22,6 +22,7 @@ module Ace
           @deprecations = attributes[:deprecations] || []
           @raw_output = attributes[:raw_output] || ""
           @stderr = attributes[:stderr] || ""
+          @execution_success = attributes.fetch(:execution_success, true) == true
         end
 
         def total_tests
@@ -29,11 +30,16 @@ module Ace
         end
 
         def success?
-          failed == 0 && errors == 0
+          execution_success && failed == 0 && errors == 0
         end
 
         def has_failures?
-          failed > 0 || errors > 0
+          !success?
+        end
+
+        def execution_error
+          return nil if execution_success
+          stderr.to_s.strip.empty? ? "Test execution did not complete successfully" : stderr.to_s.strip
         end
 
         def has_skips?
@@ -55,6 +61,7 @@ module Ace
           parts << "❌ #{failed} failed" if failed > 0
           parts << "💥 #{errors} errors" if errors > 0
           parts << "⚠️ #{skipped} skipped" if skipped > 0
+          parts << "❌ execution failed" unless execution_success
 
           parts.empty? ? "No tests executed" : parts.join(", ")
         end
@@ -70,6 +77,8 @@ module Ace
             duration: duration,
             pass_rate: pass_rate,
             success: success?,
+            execution_success: execution_success,
+            execution_error: execution_error,
             start_time: start_time&.iso8601,
             end_time: end_time&.iso8601,
             failures: failures_detail.map(&:to_h),
