@@ -51,6 +51,50 @@ class ProtectedLinuxTest < AceRuntimeTestCase
     end
   end
 
+  def test_support_refuses_missing_pidfd_before_reporting_capability
+    klass = Ace::Runtime::Molecules::ProtectedLinux
+    klass.const_set(:RUBY_PLATFORM, "linux-fixture")
+    calls = 0
+    unavailable = ->(*) { calls += 1; raise Fiddle::DLError, "pidfd unavailable" }
+    File.stub(:read, "2\n") do
+      Fiddle.stub(:dlopen, unavailable) do
+        assert_raises(Ace::Runtime::RuntimeUnavailableError) { @kernel.supported! }
+      end
+    end
+    assert_equal 1, calls
+  ensure
+    klass.send(:remove_const, :RUBY_PLATFORM) if klass&.const_defined?(:RUBY_PLATFORM, false)
+  end
+
+  def test_support_closes_probe_after_live_poll_and_after_poll_refusal
+    klass = Ace::Runtime::Molecules::ProtectedLinux
+    klass.const_set(:RUBY_PLATFORM, "linux-fixture")
+    read = write = nil
+    [false, true].each do |refused|
+      read, write = IO.pipe
+      seen = []
+      @kernel.define_singleton_method(:pidfd_handle) { |pid| seen << pid; read }
+      @kernel.define_singleton_method(:exited?) do |handle, **|
+        raise IOError, "poll refused" if refused
+        !IO.select([handle], nil, nil, 0).nil?
+      end
+      File.stub(:read, "2\n") do
+        if refused
+          assert_raises(Ace::Runtime::RuntimeUnavailableError) { @kernel.supported! }
+        else
+          assert @kernel.supported!
+        end
+      end
+      assert_equal [Process.pid], seen
+      assert read.closed?
+      write.close
+    end
+  ensure
+    read&.close unless read&.closed?
+    write&.close unless write&.closed?
+    klass.send(:remove_const, :RUBY_PLATFORM) if klass&.const_defined?(:RUBY_PLATFORM, false)
+  end
+
   def test_unsupported_host_never_reports_secure_policy
     skip "Linux host tests real deployed policy separately" if RUBY_PLATFORM.include?("linux")
     assert_raises(Ace::Runtime::RuntimeUnavailableError) { @kernel.supported! }

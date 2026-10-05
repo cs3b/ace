@@ -17,9 +17,13 @@ module Ace
           unless RUBY_PLATFORM.include?("linux") && File.read("/proc/sys/kernel/yama/ptrace_scope").strip == "2"
             raise RuntimeUnavailableError, "protected launch requires Linux Yama ptrace_scope=2"
           end
+          probe = pidfd_handle(Process.pid)
+          raise RuntimeUnavailableError, "pidfd self observation is invalid" if exited?(probe)
           true
-        rescue SystemCallError
+        rescue SystemCallError, IOError
           raise RuntimeUnavailableError, "protected process policy is unavailable"
+        ensure
+          probe&.close
         end
 
         def capture(pid)
@@ -50,11 +54,7 @@ module Ace
         end
 
         def pin(identity)
-          library = Fiddle.dlopen(nil)
-          call = Fiddle::Function.new(library["pidfd_open"], [Fiddle::TYPE_INT, Fiddle::TYPE_INT], Fiddle::TYPE_INT)
-          fd = call.call(identity.fetch("pid"), 0)
-          raise RuntimeUnavailableError, "exact pidfd is unavailable" if fd.negative?
-          handle = IO.for_fd(fd, autoclose: true)
+          handle = pidfd_handle(identity.fetch("pid"))
           begin
             unless same?(identity, capture(identity.fetch("pid")))
               raise RuntimeUnavailableError, "process changed while acquiring pidfd"
@@ -64,8 +64,6 @@ module Ace
             handle.close
             raise
           end
-        rescue Fiddle::DLError
-          raise RuntimeUnavailableError, "exact pidfd capability is unsupported"
         end
 
         def same?(left, right)
@@ -101,6 +99,18 @@ module Ace
 
         def exited?(handle, timeout: 0)
           !IO.select([handle], nil, nil, timeout).nil?
+        end
+
+        private
+
+        def pidfd_handle(pid)
+          library = Fiddle.dlopen(nil)
+          call = Fiddle::Function.new(library["pidfd_open"], [Fiddle::TYPE_INT, Fiddle::TYPE_INT], Fiddle::TYPE_INT)
+          fd = call.call(pid, 0)
+          raise RuntimeUnavailableError, "exact pidfd is unavailable" if fd.negative?
+          IO.for_fd(fd, autoclose: true)
+        rescue Fiddle::DLError
+          raise RuntimeUnavailableError, "exact pidfd capability is unsupported"
         end
       end
     end

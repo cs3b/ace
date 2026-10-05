@@ -74,6 +74,75 @@ module Ace
         state.slice("attempt_id", "launch_ticket").merge("process_binding" => child, "expected_generation" => state.fetch("generation"))
       end
 
+      def test_launcher_pidfd_refusal_cannot_commit_or_wedge_reservation
+        with_authority do
+          old = @journal.ref_value
+          @kernel.stub(:pin, ->(*) { raise Ace::Runtime::RuntimeUnavailableError, "pidfd refused" }) do
+            assert_raises(Ace::Runtime::RuntimeUnavailableError) { call("reserve_attempt", @reserve_params, id: "reserve") }
+          end
+          assert_equal old, @journal.ref_value
+          refute @journal.read_events("assignment").any? { |event| event["type"] == "intent" }
+          assert_empty @kernel.handles
+          assert_equal "reserved", call("reserve_attempt", @reserve_params, id: "reserve").dig(:data, "phase")
+        end
+      end
+
+      def test_exact_child_exit_projects_uncertainty_without_releasing_ownership
+        with_authority do
+          state = call("reserve_attempt", @reserve_params, id: "reserve").fetch(:data)
+          state = call("record_launch", params(state), id: "record").fetch(:data)
+          state = call("bind_process", params(state), id: "bind").fetch(:data)
+          old = @journal.ref_value
+          @kernel.dead << 91
+          observed = call("attempt_status", {"attempt_id" => state.fetch("attempt_id")}, id: nil, role: :supervisor).fetch(:data)
+          assert_equal "uncertain", observed.fetch("phase")
+          assert_equal "supervisor_inspect_exact_child_and_release_uncertainty", observed.fetch("required_action")
+          assert_equal old, @journal.ref_value
+          assert @kernel.handles.none?(&:closed)
+          assert_raises(AttemptErrors::Conflict) { call("reserve_attempt", @reserve_params, id: "blocked") }
+        end
+      end
+
+      def test_reservation_replay_and_plan_refusal_open_no_additional_handles
+        with_authority do
+          state = call("reserve_attempt", @reserve_params, id: "reserve").fetch(:data)
+          original = @kernel.handles.fetch(0)
+          replay = call("reserve_attempt", @reserve_params, id: "reserve")
+          assert replay.fetch(:replayed)
+          assert_equal state, replay.fetch(:data)
+          assert_equal [original], @kernel.handles
+          assert_raises(AttemptErrors::Conflict) { call("reserve_attempt", @reserve_params, id: "blocked") }
+          refute original.closed
+          assert_equal [original], @kernel.handles
+        end
+      end
+
+      def test_competing_reservation_acceptance_replays_and_closes_local_handle
+        with_authority do
+          calls = 0
+          replace = lambda do |commit, old|
+            calls += 1
+            tree, error, ok = Open3.capture3("git", "-C", @journal.repo_root, "rev-parse", "#{commit}^{tree}")
+            assert ok.success?, error
+            accepted, error, ok = Open3.capture3("git", "-C", @journal.repo_root, "-c", "user.name=other-owner",
+              "-c", "user.email=other@localhost", "commit-tree", tree.strip, "-p", old, "-m", "competing acceptance")
+            assert ok.success?, error
+            _, error, ok = Open3.capture3("git", "-C", @journal.repo_root, "update-ref", "refs/ace/execution", accepted.strip, old)
+            assert ok.success?, error
+            false
+          end
+          reply = @journal.stub(:update_ref_cas, replace) { call("reserve_attempt", @reserve_params, id: "reserve") }
+          assert reply.fetch(:replayed)
+          assert_equal 1, calls
+          assert_equal 1, @kernel.handles.size
+          assert @kernel.handles.all?(&:closed)
+          state = reply.fetch(:data)
+          projected = call("attempt_status", {"attempt_id" => state.fetch("attempt_id")}, id: nil, role: :supervisor)
+          assert_equal "uncertain", projected.dig(:data, "phase")
+          assert_raises(AttemptErrors::Conflict) { call("reserve_attempt", @reserve_params, id: "blocked") }
+        end
+      end
+
       def test_shared_assignment_context_uses_canonical_registration_and_one_mutex
         with_authority do
           [false, true].each do |exclusive|

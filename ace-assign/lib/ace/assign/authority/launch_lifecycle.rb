@@ -88,49 +88,59 @@ module Ace
                 @changed.wait(@mutex, [remaining, 0.1].min)
               end
             end
-            fresh = false
-            released = false
-            result = journal.mutate(assignment_id: params.fetch("assignment_id"), attempt_id: attempt_id,
-              mutation_id: request.fetch("mutation_id"), operation: operation, parameters_digest: digest,
-              expected_generation: operation == "reserve_attempt" ? 0 : (params.fetch("expected_generation") || 0), with_replay: true) do |events, commit, generation|
-              fresh = true
-              plan = case operation
-              when "register_assignment" then register(params, map, journal, commit, generation)
-              when "reserve_attempt" then reserve(params, map, journal, commit, generation, peer, attempt_id)
-              when "record_launch" then record(params, map, events, peer)
-              when "bind_process" then bind(params, map, events, peer)
-              when "release_launch"
-                released = true
-                release(params, map, events, peer)
-              when "abort_launch" then abort(params, map, events, peer, supervisor: role == :supervisor)
+            reservation_handle = nil
+            begin
+              fresh = false
+              released = false
+              result = journal.mutate(assignment_id: params.fetch("assignment_id"), attempt_id: attempt_id,
+                mutation_id: request.fetch("mutation_id"), operation: operation, parameters_digest: digest,
+                expected_generation: operation == "reserve_attempt" ? 0 : (params.fetch("expected_generation") || 0), with_replay: true) do |events, commit, generation|
+                fresh = true
+                plan = case operation
+                when "register_assignment" then register(params, map, journal, commit, generation)
+                when "reserve_attempt" then reserve(params, map, journal, commit, generation, peer, attempt_id)
+                when "record_launch" then record(params, map, events, peer)
+                when "bind_process" then bind(params, map, events, peer)
+                when "release_launch"
+                  released = true
+                  release(params, map, events, peer)
+                when "abort_launch" then abort(params, map, events, peer, supervisor: role == :supervisor)
+                end
+                bounded_reply!(plan.fetch(:data), generation + 1)
+                # Validate the complete plan before opening a handle, but acquire
+                # it before returning any events for staging/CAS. Reuse across
+                # retries; a competing accepted replay never owns this handle.
+                reservation_handle ||= @kernel.pin(peer) if operation == "reserve_attempt"
+                plan
               end
-              bounded_reply!(plan.fetch(:data), generation + 1)
-              plan
-            end
-            fresh = !result.fetch(:replayed)
-            result = result.fetch(:data)
-            if fresh && operation == "reserve_attempt"
-              @observations[result.fetch("attempt_id")] = {launcher: peer, launcher_handle: @kernel.pin(peer), deadline: wire.deadline(30), ticket: result.fetch("launch_ticket"), assignment_id: result.fetch("assignment_id")}
-            end
-            # No release in mutation replay. A crash here retains issued uncertainty.
-            if fresh && released
-              stream = @streams.fetch(result.fetch("attempt_id"))
-              permission = {"operation" => "release", "launch_ticket" => result.fetch("launch_ticket"),
-                "attempt_id" => result.fetch("attempt_id"), "assignment_id" => result.fetch("assignment_id"),
-                "generation" => result.fetch("generation"), "journal_commit" => result.fetch("journal_commit")}
-              begin
-                wire.write(stream.fetch(:socket), permission, deadline: wire.deadline(1))
-              rescue StandardError
-                # Durable permission cannot be undone or retransmitted after write loss.
-                nil
-              ensure
-                stream[:issued] = true
-                stream.fetch(:condition).broadcast
+              fresh = !result.fetch(:replayed)
+              result = result.fetch(:data)
+              if fresh && operation == "reserve_attempt"
+                @observations[result.fetch("attempt_id")] = {launcher: peer, launcher_handle: reservation_handle, deadline: wire.deadline(30), ticket: result.fetch("launch_ticket"), assignment_id: result.fetch("assignment_id")}
+                reservation_handle = nil
               end
+              # No release in mutation replay. A crash here retains issued uncertainty.
+              if fresh && released
+                stream = @streams.fetch(result.fetch("attempt_id"))
+                permission = {"operation" => "release", "launch_ticket" => result.fetch("launch_ticket"),
+                  "attempt_id" => result.fetch("attempt_id"), "assignment_id" => result.fetch("assignment_id"),
+                  "generation" => result.fetch("generation"), "journal_commit" => result.fetch("journal_commit")}
+                begin
+                  wire.write(stream.fetch(:socket), permission, deadline: wire.deadline(1))
+                rescue StandardError
+                  # Durable permission cannot be undone or retransmitted after write loss.
+                  nil
+                ensure
+                  stream[:issued] = true
+                  stream.fetch(:condition).broadcast
+                end
+              end
+              reap_terminal_observations(journal, params.fetch("assignment_id"))
+              materialize_definition(result, map, journal) if operation == "register_assignment"
+              {data: result, replayed: !fresh}
+            ensure
+              reservation_handle&.close
             end
-            reap_terminal_observations(journal, params.fetch("assignment_id"))
-            materialize_definition(result, map, journal) if operation == "register_assignment"
-            {data: result, replayed: !fresh}
           end
           end
         end
@@ -564,7 +574,9 @@ module Ace
             end
             observation = @observations[params.fetch("attempt_id")]
             expired = !%w[issued failed].include?(state["phase"]) && state["handshake_deadline"] && Time.iso8601(state.fetch("handshake_deadline")) <= Time.now.utc
-            if !TERMINAL.include?(state["phase"]) && (!observation || !launcher_live?(observation) || expired)
+            child_exited = observation && observation[:child_handle] &&
+              observation[:child] == state.dig("process_binding", "process_identity") && @kernel.exited?(observation.fetch(:child_handle))
+            if !TERMINAL.include?(state["phase"]) && (!observation || !launcher_live?(observation) || expired || child_exited)
               projection.merge!("phase" => "uncertain", "required_action" => "supervisor_inspect_exact_child_and_release_uncertainty")
             end
             projection.merge("journal_commit" => journal.ref_value)
