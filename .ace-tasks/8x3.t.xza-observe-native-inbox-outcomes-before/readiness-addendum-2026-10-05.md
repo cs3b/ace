@@ -27,3 +27,7 @@ Current `ace-herdr/lib/ace/herdr/molecules/native_queue_executor.rb:56-87` submi
 xz9.0 owns generic protected authority transport and receiver work. xza.0 owns the consumer-driven observation schema, Codex submission/observation and shared signer-to-consumer integration, dependent on xz9.0 and xza.3. xza.1 owns Pi provider identity/instrumentation and consumes xza.0. xza.2 owns separate native supersession proofs after both providers. gad.8/gad.b own actual installation/UID/endpoint/key/signing evidence; R2/R3 remain downstream acceptance. This addendum does not choose a new endpoint design or complete any dependency.
 
 Next readiness work must resolve the missing actual-runtime and protected-path evidence while respecting the recorded execution limits. The previously blocked launcher probes remain excluded; their unknown filter trigger is not investigated or reassigned by this audit.
+
+## Documentation review
+
+Root independently reviewed author commits `0f9ed6d64` and `af957a45c` against the retained endpoint JSON and evidence README: **APPROVE for evidence reconciliation only**. The busy state, distinct equal-text client IDs, completed observation, discarded-reply result and exact deletion acknowledgement match the retained artifact. No probe was rerun and no runtime readiness approval is implied. Historical review and draft/needs_review metadata remain unchanged. Integrated as `b7eaade79` and `01e1b70c8`.
