@@ -93,3 +93,12 @@ stopgap. Those are acceptance obligations, not proof already supplied or vague
 specification blockers. No native probes, host changes, Yama/auth changes or
 filter retries are authorized by this document. 09j's recorded restriction stays
 in force. Existing xz9.0/xz9.2 consumer delivery remains separately owned.
+
+## Pre-child provisioning ordering amendment
+
+See [provisioning-scope-lineage-amendment.md](provisioning-scope-lineage-amendment.md)
+for the normative candidate replacing full-binding-before-layout ordering:
+immutable parent, native and genuine-child stages, pre-child whole-parent close,
+and unknown-origin refusal. Existing success criteria remain required; no task
+status or acceptance claim changes. Independent review is required before this
+amendment becomes the implementation contract.
