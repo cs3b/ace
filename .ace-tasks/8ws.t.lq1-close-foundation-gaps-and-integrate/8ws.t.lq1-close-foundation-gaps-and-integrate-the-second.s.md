@@ -327,3 +327,8 @@ No gems published or actual Lab deployment performed in this checkpoint.
 ## IBL closure — 2026-10-05
 
 - [x] 8ws.t.ibl: persisted bulk-update values and mixed-path counts verified; independent source APPROVE, targeted 16/60, docs all 214/584 and default fast suite with explicit timeout 300 passed. Durable evidence remains with archived IBL. Old runner duplicate-report attribution limitation is explicitly retained; bt0 is still in progress and will reverify the combined tree.
+
+## Exact suite evidence delivered — 2026-10-05
+
+- [x] 8x4.t.bt0: exact invocation-bound completion/results integrated after independent APPROVE. Whole combined suite passed with explicit --timeout 300 (11205 passed, 24 skipped, 34232 assertions); root reconciled all 51 distinct entry receipts, including duplicate Lab entries. Controlled later focused test did not replace captured results. Historical lq8/IBL attribution limitations remain documented, not rewritten.
+- [ ] Continue 09j installed acceptance, then 9c2 and full xz9; unresolved native proof/access limitations remain. This source checkpoint does not complete the new Lab or authorize publication of mixed qkb workflows.
