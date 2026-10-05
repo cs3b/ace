@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Register canonical execution-scope binding, seal and empty-observation events with an immutable exact-lineage reader. Missing, changed or corrupt generation/proof identities refuse; live scope verification and terminal handlers remain separate owners.
+
 - Submit immutable private canonical worker results and fetch one purpose-authorized artifact through the existing authority Client, with retained services status discovery and exact download descriptor validation. Full-service startup remains guarded.
 
 - Validate fixed service receiver principals and private placement before authority startup, refusing ambiguous roles, overlapping ownership and inaccessible endpoints.
