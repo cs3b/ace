@@ -24,3 +24,9 @@ Record source SHA, exact commands, real UIDs, protected roots/ownership, approve
 - Generic handler fixture validates v1 preserved worker caller_uid/unix transport/staging import. Real lab_setup_project handler migration and usage/tests remain gad.b acceptance; current local-only handler is not a positive fixture.
 
 Every authenticated API role includes wrong-project/wrong-role/unknown mutation ID and exact-versus-conflicting mutation replay integration. Context/inbox consumer tests preserve accepted recovery expected_registration/exact proof replay at event lock and real cross-user byte transfer, not shared receipt paths.
+
+## Composition amendment verification mapping
+
+- xz9.0 SC2 / deployment unit and real filesystem/socket integration: missing or unknown composition refuses; `services` deployment through the launch-only entrypoint and `launch` deployment through the full-service entrypoint refuse before startup. Assert no listener socket, new journal ref or accepted event is created. 09j owns the common Deployment enum and Server entrypoint validation; Lab owns full-service composition completeness.
+- xz9.0 SC2 / deployment integration: two authority IDs owning one project, or two configured owners sharing an endpoint, refuse before startup. Assert no additional listener or journal ref is created; an existing valid listener/ref remains unchanged. Real second-start lifetime ownership tests preserve the same outcome.
+- xz9.0 SC1 / policy integration: exact fixed qjx grant admits the harmless fixture without a proposal prerequisite. Proposal references require the qjz canonical producer/resolver; absent producer, YAML imitation and prefix-only references refuse before claim/effect. This preserves qjz ownership without adding a reverse or cyclic dependency.
