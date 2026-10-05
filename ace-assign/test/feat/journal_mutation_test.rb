@@ -255,3 +255,54 @@ module Ace
     end
   end
 end
+
+module Ace
+  module Assign
+    class JournalMutationTest
+      def test_transport_replay_metadata_comes_from_acceptance_even_after_callback_loses_cas
+        with_journal do |journal, repo|
+          lost = false
+          original = journal.method(:update_ref_cas)
+          journal.define_singleton_method(:update_ref_cas) do |new_commit, old|
+            unless lost
+              lost = true
+              competing, error, status = Open3.capture3("git", "-c", "user.name=competitor",
+                "-c", "user.email=competitor@localhost", "commit-tree", "#{new_commit}^{tree}",
+                "-p", old, "-m", "competing canonical acceptance", chdir: repo, stdin_data: "")
+              raise error unless status.success?
+              _out, error, status = Open3.capture3("git", "update-ref", ref, competing.strip, old,
+                chdir: repo, stdin_data: "")
+              raise error unless status.success?
+              next false
+            end
+            original.call(new_commit, old)
+          end
+          callbacks = 0
+          reply = journal.mutate(assignment_id: "assignment-1", attempt_id: "attempt-1", mutation_id: "reservation",
+            operation: "reserve_attempt", parameters_digest: "a" * 64, expected_generation: 0,
+            with_replay: true) do
+            callbacks += 1
+            {events: [], data: {"attempt_id" => "attempt-1", "launch_ticket" => "ticket"}}
+          end
+          assert_equal 1, callbacks, "the losing proposal callback ran"
+          assert_equal true, reply.fetch(:replayed), "a callback is not proof that this caller accepted the reservation"
+          assert_equal journal.ref_value, reply.fetch(:data).fetch("journal_commit")
+          assert_equal 1, journal.read_events("assignment-1").count { |event| event["type"] == "authority_mutation" }
+          canonical = journal.mutate(assignment_id: "assignment-1", attempt_id: "attempt-1", mutation_id: "reservation",
+            operation: "reserve_attempt", parameters_digest: "a" * 64, expected_generation: 0) { flunk "replay yielded" }
+          assert_equal canonical, reply.fetch(:data), "metadata does not alter canonical result"
+        end
+      end
+
+      def test_new_canonical_acceptance_reports_not_replayed
+        with_journal do |journal, _repo|
+          reply = journal.mutate(assignment_id: "assignment-1", attempt_id: "attempt-1", mutation_id: "reservation",
+            operation: "reserve_attempt", parameters_digest: "a" * 64, expected_generation: 0,
+            with_replay: true) { {events: [], data: {"launch_ticket" => "ticket"}} }
+          assert_equal false, reply.fetch(:replayed)
+          assert_equal journal.ref_value, reply.fetch(:data).fetch("journal_commit")
+        end
+      end
+    end
+  end
+end
