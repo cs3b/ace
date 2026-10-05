@@ -186,7 +186,8 @@ assuming ordinary one-request dispatch supports it.
 The report object is exactly `{server_identity, mount_namespace_identity,
 resource_identities, mount_projections}`. Resource and namespace objects use the
 schemas above; server_identity must equal the challenged exact server.
-resource_identities has 1..64 entries. mount_projections has one entry per native
+resource_identities has 0..64 entries; zero is valid only for the exact empty
+worker-visible resource set allowed above. mount_projections has one entry per native
 resource view, exactly `{host_path, view_path, mount_id, mount_root, mountpoint,
 read_only, source_device, source_inode, filesystem_type}`. Paths are canonical
 absolute strings <=4096 bytes, integers are nonnegative (mount_id positive),
