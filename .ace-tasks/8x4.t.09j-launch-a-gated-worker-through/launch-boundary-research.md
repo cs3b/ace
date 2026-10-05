@@ -43,5 +43,32 @@ This supersedes the earlier absence of a retained cross-UID probe above. It
 selects the native ACL transport; saved-machine SSH is unchosen. It proves no
 actual gate/release, authority qjl transaction, restart ACL reapplication, lost
 reply safety, macOS support, or installed Lab deployment. The existing inherited
-parent-control-pipe wording needs an explicit remote-native bootstrap channel
-decision in independent review; native socket access alone cannot supply it.
+parent-control-pipe wording was unresolved at that probe; the subsequent Selected
+native gate contract supersedes it with an authority-connected socket gate.
+
+## Native gate primitives executed in isolated Docker
+
+`evidence/native-gate-primitives.json` retains three actual Herdr v0.9.3 cases:
+EOF before release exits with empty payload counter; exact release increments
+once, followed by pane.close and pidfd exit; pane.close while gated exits without
+another counter increment. The root-owned compiled C fixture set non-dumpable,
+connected from UID13001 to authority-owned socket UID13003 and compared kernel
+peer PID with launcher UID13002 native process_info. Authority operations were
+fixture root process orchestration (listener process UID0, socket owner UID13003),
+not an actual UID13003 receiver or product qjl integration. No host credentials/socket
+mount or user's Herdr/TUI was used. Disposable fixture root installed principals;
+launcher calls never switched UID. Scratch fixture sources remain in the owned
+worktree .ace-local/gate-probe and are not product implementation.
+
+The Docker kernel reports Yama=0. We did not modify host sysctls. Thus this probe
+cannot attest hostile-worker isolation. Selected protected deployment requires
+Yama=2 and capability bounds plus installer-pinned server birth; same UID alone
+cannot establish trusted server or bootstrap readiness. Exact stream credentials
+prove process identity, not executable trust. Kernel documentation supports the
+selected deployment policy; an actual enforced-policy adversarial fixture is
+required before protected acceptance.
+
+Sources: [Yama kernel documentation](https://www.kernel.org/doc/html/latest/admin-guide/LSM/Yama.html),
+[Unix peer credentials](https://man7.org/linux/man-pages/man7/unix.7.html),
+[non-dumpable process protection](https://www.man7.org/linux/man-pages/man2/PR_SET_DUMPABLE.2const.html),
+[pidfd exact exit observation](https://man7.org/linux/man-pages/man2/pidfd_open.2.html).

@@ -1,0 +1,7 @@
+#include <sys/socket.h>
+#include <sys/un.h>
+#include <sys/prctl.h>
+#include <unistd.h>
+#include <string.h>
+#include <fcntl.h>
+int main(){prctl(PR_SET_DUMPABLE,0);int s=socket(AF_UNIX,SOCK_STREAM,0);struct sockaddr_un a={.sun_family=AF_UNIX};strcpy(a.sun_path,"/tmp/gate.sock");if(connect(s,(void*)&a,sizeof(a)))return 20;write(s,"READY\n",6);char b[8]={0};int n=read(s,b,8);if(n!=8||memcmp(b,"RELEASE\n",8))return 21;int f=open("/tmp/payload-count",O_WRONLY|O_CREAT|O_APPEND,0600);write(f,"1\n",2);close(f);execl("/bin/sleep","sleep","30",NULL);return 22;}

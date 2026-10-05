@@ -1,0 +1,66 @@
+{
+  "scope": "native gate primitives only; no hostile-worker trust or qjl acceptance",
+  "cases": [
+    {
+      "case": "eof",
+      "peer_uid": 13001,
+      "peer_pid": 4204,
+      "birth": "379541933",
+      "native_matches": [
+        "w2:p2"
+      ],
+      "ready": "READY\n",
+      "payload_before": "",
+      "pidfd_exit": true
+    },
+    {
+      "case": "release",
+      "peer_uid": 13001,
+      "peer_pid": 4215,
+      "birth": "379541939",
+      "native_matches": [
+        "w2:p3"
+      ],
+      "ready": "READY\n",
+      "payload_before": "",
+      "payload_after": "1\n",
+      "close_reply": {
+        "peer_pid": 4175,
+        "peer_uid": 13001,
+        "reply": {
+          "id": "fixture",
+          "result": {
+            "type": "ok"
+          }
+        }
+      },
+      "pidfd_exit": true
+    },
+    {
+      "case": "native_close",
+      "peer_uid": 13001,
+      "peer_pid": 4228,
+      "birth": "379541978",
+      "native_matches": [
+        "w2:p4"
+      ],
+      "ready": "READY\n",
+      "payload_before": "1\n",
+      "close_reply": {
+        "peer_pid": 4175,
+        "peer_uid": 13001,
+        "reply": {
+          "id": "fixture",
+          "result": {
+            "type": "ok"
+          }
+        }
+      },
+      "pidfd_exit": true
+    }
+  ],
+  "fixture_authority_process_uid": 0,
+  "authority_socket_owner_uid": 13003,
+  "yama_ptrace_scope": 0,
+  "protected_acceptance": false
+}
