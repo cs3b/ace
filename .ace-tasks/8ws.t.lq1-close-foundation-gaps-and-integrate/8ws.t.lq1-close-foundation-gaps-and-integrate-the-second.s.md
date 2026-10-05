@@ -223,3 +223,20 @@ acceptance; no source test result closes those gates.
 - [ ] `xz9.0`: composed authority/endcap implementation continues against explicit developing dependency snapshots, with final acceptance deferred until all dependency repairs converge.
 
 After corrected qjz source joins recovery/HITL, proceed to qk0, then full qkb, R2, R3, qkc/gad.2. Final integrated source release still requires Captain interactive OTP and subsequent exact installed-graph/real-Lab verification.
+
+### Current convergence and steering gap — 2026-10-05
+
+- [ ] `qjz`: repaired d20cd8 source and normative specification independently
+  approved with zero findings; final full Assign gate underway. Installed SC3
+  controlled sixteen-hour restart/one-receipt proof is still missing and owned
+  by qjz, so source acceptance will not alone close the task.
+- [ ] `09j`: full frozen5549 Assign passed884/3927 with two existing skips;
+  independent source review still rejects missing pidfd preflight/reservation
+  ordering and exited-child status. Fixed-container specification and actual
+  native API-shape reproduction passed; positive Yama2 installed gate remains.
+- [ ] `xz9.2`: new real draft owns protected prompt/stop required by qk0.
+  Existing exact child exit does not prove absence of all descendant writers.
+  Native submission/termination proof must pass readiness before implementation.
+  qk0 and the amended xz9 parent return to draft/needs_review; already-reviewed
+  service/launch source work continues. Dependency:09j + xz9.0 → xz9.2 → qk0,
+  with no reverse edge to qk0 or qkb.

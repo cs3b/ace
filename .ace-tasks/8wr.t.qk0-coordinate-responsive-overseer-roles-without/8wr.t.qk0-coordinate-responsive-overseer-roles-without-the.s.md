@@ -1,16 +1,16 @@
 ---
 id: 8wr.t.qk0
-status: pending
+status: draft
 priority: high
 created_at: "2026-09-28 17:42:14"
 estimate: TBD
-dependencies: [8wq.t.k86, 8wr.t.qjl, 8wr.t.qjx, 8wr.t.qjy, 8wq.t.1w5, 8wm.t.vs2, 8wr.t.qjz]
+dependencies: [8wq.t.k86, 8wr.t.qjl, 8wr.t.qjx, 8wr.t.qjy, 8wq.t.1w5, 8wm.t.vs2, 8wr.t.qjz, 8x3.t.xz9.2]
 tags: [lab-readiness]
 bundle:
   presets: [project]
   files: [ace-overseer/lib/ace/overseer/molecules/lab_client.rb, ace-overseer/lib/ace/overseer/cli/commands/work_on.rb, ace-overseer/lib/ace/overseer/organisms/status_collector.rb, ace-overseer/handbook/workflow-instructions/overseer.wf.md, ace-assign/handbook/workflow-instructions/assign/drive.wf.md]
   commands: []
-needs_review: false
+needs_review: true
 title: Coordinate responsive overseer roles without the legacy Lab engine
 position: 6o000e
 ---
@@ -68,3 +68,15 @@ Public scenarios: `ux/usage.md`. Record independent review before promotion.
 ### Completion versus integrated acceptance
 
 Task delivery proves the role/workflow/CLI contract in an installed isolated runtime using service executors conforming to qjx and controlled merge fixtures. It does not require later qkb/gad.b/gad.2 completion. The real cross-repository delivery/release proof belongs gad.2 and qkc after all consumers land; that later program gate must not block prerequisite qk0 completion.
+
+### Protected steering prerequisite discovered during implementation planning
+
+`8x3.t.xz9.2` owns protected prompt/stop through the existing canonical Assign
+authority and mapped native driver. qk0 consumes those public owner APIs; it
+does not derive authority from a pane name, raw PID, runtime.send or Ctrl-C.
+Prompt submission is distinct from native consumption. Stop preserves uncertain
+descendant writers and unsettled service effects, and does not authorize prune.
+Protected steering acceptance requires that child; ordinary local mode does not
+substitute for it. This explicit prerequisite returns qk0 to draft/needs_review
+for a narrow independent readiness amendment. The dependency runs from qk0 to
+xz9.2, never back to qk0/qkb from the owner capability.
