@@ -1,6 +1,6 @@
 ---
 id: 8wr.t.qkb.1
-status: draft
+status: pending
 priority: high
 created_at: "2026-09-28 17:44:29"
 estimate: TBD
@@ -11,7 +11,7 @@ bundle:
   presets: [project]
   files: [.ace-tasks/8wr.t.qkb-run-assignment-delivery-workflows-through/8wr.t.qkb-run-assignment-delivery-workflows-through-named-forge.s.md, .ace-tasks/8wr.t.qkb-run-assignment-delivery-workflows-through/0-make-assignment-delivery-evidence-provider/8wr.t.qkb.0-make-assignment-delivery-evidence-provider-neutral.s.md, .ace-tasks/8wr.t.qk0-coordinate-responsive-overseer-roles-without/8wr.t.qk0-coordinate-responsive-overseer-roles-without-the.s.md, .ace-tasks/_archive/8x/v/8wr.t.qjx-route-scoped-role-services-with/8wr.t.qjx-route-scoped-role-services-with-verifiable-execution.s.md, .ace-tasks/8wr.t.qjz-resolve-second-commander-proposals-with/8wr.t.qjz-resolve-second-commander-proposals-with-a-sixteen.s.md, ace-assign/handbook/workflow-instructions/assign/drive.wf.md, ace-assign/handbook/workflow-instructions/assign/prepare.wf.md, .ace-tasks/8wr.t.qkb-run-assignment-delivery-workflows-through/1-align-canonical-delivery-workflows-with/ux/usage.md, .ace-tasks/8x3.t.xz9-execute-scoped-services-across-os/protected-authority-contract.md, .ace-tasks/8x3.t.xz9-execute-scoped-services-across-os/consumer-dependency-map.md]
   commands: []
-needs_review: true
+needs_review: false
 ---
 
 # Align canonical delivery workflows with forge-neutral evidence

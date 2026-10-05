@@ -1,6 +1,6 @@
 ---
 id: 8wr.t.qkc
-status: draft
+status: pending
 priority: high
 created_at: "2026-09-28 17:42:36"
 estimate: TBD
@@ -10,7 +10,7 @@ bundle:
   presets: [project]
   files: [.ace-tasks/_archive/8x/v/8wr.t.qk1-complete-forge-neutral-worktree-review/8wr.t.qk1-complete-forge-neutral-worktree-review-and-task.s.md, .ace-tasks/8wr.t.qkb-run-assignment-delivery-workflows-through/8wr.t.qkb-run-assignment-delivery-workflows-through-named-forge.s.md, .ace-tasks/_archive/8w/y/8wk.t.l1e-forge-neutral-git-core-with/8wk.t.l1e-forge-neutral-git-core-with-github-and.s.md, .ace-tasks/8wr.t.qjl-persist-assignment-attempts-and-exact/8wr.t.qjl-persist-assignment-attempts-and-exact-execution.s.md, .ace-tasks/8wr.t.qkc-prove-the-complete-forge-neutral/ux/usage.md, .ace-tasks/8x0.t.ig3-unify-review-loop-ownership-and/8x0.t.ig3-unify-review-loop-ownership-and-effective-policy.s.md, .ace-tasks/8x0.t.ig4-bound-review-convergence-and-expose/8x0.t.ig4-bound-review-convergence-and-expose-escalation.s.md, .ace-tasks/8x3.t.xz9-execute-scoped-services-across-os/protected-authority-contract.md, .ace-tasks/8x3.t.xza-observe-native-inbox-outcomes-before/observation-authority-contract.md, .ace-tasks/8x3.t.xz9-execute-scoped-services-across-os/consumer-dependency-map.md]
   commands: []
-needs_review: true
+needs_review: false
 position: 6o000i
 ---
 
