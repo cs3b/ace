@@ -93,17 +93,17 @@ module Ace
             # Admission also runs outside mutate: an exact mutation replay
             # skips its callback and cannot bypass the authenticated ticket.
             service_policy!.visible!(project: map.fetch("project_id"), uid: map.fetch("worker_uid")) unless request.fetch("operation") == "complete_service"
-            if request.fetch("operation") == "request_service" && (existing = journal.service_request(params.fetch("request_id")))
-              service_executor!(peer, role, existing)
-              service_replay_binding!(existing, params, map)
-              return {data: service_projection(existing), replayed: true}
+            retained = request.fetch("operation") == "request_service" && journal.service_request(params.fetch("request_id"))
+            if retained
+              service_executor!(peer, role, retained)
+              service_replay_binding!(retained, params, map)
             end
-            if request.fetch("operation") != "request_service"
+            if !retained && request.fetch("operation") != "request_service"
               record = journal.service_request(params.fetch("request_id"))
               service_executor!(peer, role, record)
               service_ticket!(record, params, map, peer)
               completion_binding!(record, params, admitted) if request.fetch("operation") == "complete_service"
-            else
+            elsif !retained
               origin = active_origin(attempt_events(journal, params), params)
               worker_or_launcher!(params.fetch("worker_process_binding"), :worker, map, origin)
               service_receiver!(peer, role, map, params.fetch("service_id"))
@@ -113,7 +113,14 @@ module Ace
               parameters_digest: Atoms::EvidenceDigest.digest(params), expected_generation: params.fetch("expected_generation"),
               with_replay: true) do |events, _commit, _generation|
               if request.fetch("operation") == "request_service"
-                service_claim_plan(journal, events, params, map, peer, role, admitted)
+                existing = journal.service_request(params.fetch("request_id"))
+                if existing
+                  service_executor!(peer, role, existing)
+                  service_replay_binding!(existing, params, map)
+                  {data: service_projection(existing).merge("claim" => "retained")}
+                else
+                  service_claim_plan(journal, events, params, map, peer, role, admitted)
+                end
               elsif request.fetch("operation") == "begin_dispatch"
                 service_begin_plan(journal, events, params, map, peer, role, admitted)
               else
@@ -122,6 +129,14 @@ module Ace
             end
             if request.fetch("operation") == "begin_dispatch" && result.fetch(:replayed)
               result = result.merge(data: result.fetch(:data).merge("invocation" => "already_started"))
+            end
+            if request.fetch("operation") == "request_service"
+              # Acceptance metadata belongs to this exact mutation, while
+              # retained service state may have advanced since acceptance.
+              current = journal.service_request(params.fetch("request_id"))
+              data = service_projection(current).merge(result.fetch(:data).slice("generation", "journal_commit"))
+              data["claim"] = retained || result.fetch(:replayed) || result.dig(:data, "claim") == "retained" ? "retained" : "created"
+              result = result.merge(data: data)
             end
             result
           end
@@ -176,14 +191,14 @@ module Ace
             unless existing.slice(*SERVICE_IDENTITY) == binding.slice(*SERVICE_IDENTITY)
               raise AttemptErrors::Conflict, "service request immutable identity differs"
             end
-            return {data: service_projection(existing)}
+            return {data: service_projection(existing).merge("claim" => "retained")}
           end
           ticket = SecureRandom.hex(16)
           record = binding.merge("dispatch_ticket_id" => ticket,
             "claim_binding" => Atoms::EvidenceDigest.digest(binding.merge("dispatch_ticket_id" => ticket)),
             "claim_generation" => 1, "dispatch_phase" => "issued", "state" => "uncertain",
             "claimed_at" => Time.now.utc.iso8601(9))
-          {data: service_projection(record), service_inputs: {record.fetch("request_id") => input_bytes}, service_updates: [{request_id: record.fetch("request_id"),
+          {data: service_projection(record).merge("claim" => "created"), service_inputs: {record.fetch("request_id") => input_bytes}, service_updates: [{request_id: record.fetch("request_id"),
             expected: nil, replacement: record, event_type: "service_claim"}]}
         end
 
