@@ -1,0 +1,224 @@
+Started with run options --seed 60038
+
+Ace::Docs::Atoms::TypeInferrerTest
+  test_root_readme_defaults_to_root_readme_without_pattern        PASS (0.00s)
+  test_pattern_type_beats_readme_basename                         PASS (0.00s)
+  test_package_readme_defaults_to_readme_without_pattern          PASS (0.00s)
+
+Ace::Docs::Atoms::ReadmeMetadataInferrerTest
+  test_non_readme_returns_nil                                     PASS (0.00s)
+  test_infer_metadata_from_readme_heading                         PASS (0.00s)
+  test_infer_falls_back_when_no_heading                           PASS (0.00s)
+
+Ace::Docs::Atoms::FrontmatterFreeMatcherTest
+  test_non_matching_file_returns_false                            PASS (0.00s)
+  test_match_with_default_readme_pattern                          PASS (0.00s)
+  test_custom_pattern_match                                       PASS (0.00s)
+
+Ace::Docs::Molecules::GitDateResolverTest
+  test_returns_nil_when_git_log_fails                             PASS (0.00s)
+  test_returns_date_when_git_log_succeeds                         PASS (0.00s)
+
+Ace::Docs::Atoms::TimestampParserTest
+  test_parse_date_only_string_returns_date                        PASS (0.00s)
+  test_format_nil_raises_error                                    PASS (0.00s)
+  test_parse_leap_year_date                                       PASS (0.00s)
+  test_parse_invalid_date_raises_error                            PASS (0.00s)
+  test_validate_iso8601_format                                    PASS (0.00s)
+  test_parse_invalid_leap_year_raises_error                       PASS (0.00s)
+  test_parse_partial_iso8601_raises_error                         PASS (0.00s)
+  test_parse_iso8601_at_end_of_day                                PASS (0.00s)
+  test_format_year_boundary                                       PASS (0.00s)
+  test_round_trip_date_only                                       PASS (0.00s)
+  test_format_converts_local_time_to_utc                          PASS (0.00s)
+  test_validate_invalid_format_with_am_pm                         PASS (0.00s)
+  test_parse_time_object_returns_as_is                            PASS (0.00s)
+  test_validate_invalid_format_with_wrong_separator               PASS (0.00s)
+  test_validate_date_only_format                                  PASS (0.00s)
+  test_validate_non_string_returns_false                          PASS (0.00s)
+  test_parse_invalid_month_day_raises_error                       PASS (0.00s)
+  test_format_preserves_utc_timezone                              PASS (0.00s)
+  test_format_invalid_type_raises_error                           PASS (0.00s)
+  test_parse_date_only_with_leading_zeros                         PASS (0.00s)
+  test_parse_iso8601_utc_format                                   PASS (0.00s)
+  test_validate_nil_returns_false                                 PASS (0.00s)
+  test_parse_month_end_31_days                                    PASS (0.00s)
+  test_parse_invalid_format_raises_error                          PASS (0.00s)
+  test_format_time_at_midnight                                    PASS (0.00s)
+  test_reject_invalid_iso8601_formats                             PASS (0.00s)
+  test_validate_empty_string_returns_false                        PASS (0.00s)
+  test_all_parsed_time_objects_are_utc                            PASS (0.00s)
+  test_parse_iso8601_year_boundary                                PASS (0.00s)
+  test_format_time_at_end_of_day                                  PASS (0.00s)
+  test_parse_month_end_30_days                                    PASS (0.00s)
+  test_format_single_digit_components                             PASS (0.00s)
+  test_parse_iso8601_at_midnight                                  PASS (0.00s)
+  test_parse_nil_raises_error                                     PASS (0.00s)
+  test_format_date_object_to_date_only_string                     PASS (0.00s)
+  test_parse_date_object_returns_as_is                            PASS (0.00s)
+  test_round_trip_iso8601                                         PASS (0.00s)
+  test_format_time_to_iso8601                                     PASS (0.00s)
+  test_parse_iso8601_without_z_raises_error                       PASS (0.00s)
+
+Finished in 0.00249s
+50 tests, 106 assertions, 0 failures, 0 errors, 0 skips
+
+Started with run options --seed 55254
+
+Ace::Docs::Molecules::FrontmatterManagerTest
+  test_update_creates_backup_file                                 PASS (0.00s)
+  test_update_documents_returns_count                             PASS (0.01s)
+  test_update_documents_counts_only_successful_updates            PASS (0.01s)
+  test_process_value_other_string_unchanged                       PASS (0.00s)
+  test_update_document_with_date_only_timestamp                   PASS (0.00s)
+  test_update_returns_false_for_nil_path                          PASS (0.00s)
+  test_process_value_today_returns_date_only                      PASS (0.00s)
+  test_update_returns_false_for_nonexistent_file                  PASS (0.00s)
+  test_process_value_date_only_string_unchanged                   PASS (0.00s)
+  test_update_document_with_datetime_timestamp                    PASS (0.00s)
+  test_update_preserves_complex_nested_frontmatter                PASS (0.00s)
+  test_process_value_number_unchanged                             PASS (0.00s)
+  test_process_value_now_returns_datetime                         PASS (0.00s)
+  test_update_document_with_today_special_value                   PASS (0.00s)
+  test_update_document_with_now_special_value                     PASS (0.00s)
+  test_update_preserves_other_frontmatter_fields                  PASS (0.00s)
+
+Ace::Docs::Molecules::ChangeDetectorTest
+  test_generate_git_diff_passes_paths_option                      PASS (0.00s)
+  test_determine_since_with_explicit_date                         PASS (0.00s)
+  test_get_diff_for_document_with_changes                         PASS (0.00s)
+  test_empty_diff_result_for_nil_document_path                    PASS (0.00s)
+  test_legacy_include_renames_false_maps_to_exclude_renames_true  PASS (0.00s)
+  test_generate_git_diff_defaults_exclude_renames_to_false        PASS (0.00s)
+  test_backward_compat_single_subject                             PASS (0.00s)
+  test_determine_since_uses_document_last_updated                 PASS (0.00s)
+  test_save_diff_to_cache                                         PASS (0.00s)
+  test_new_exclude_keys_take_precedence_over_legacy_keys          PASS (0.00s)
+  test_diff_with_exclude_renames_option                           PASS (0.00s)
+  test_legacy_include_renames_true_maps_to_exclude_renames_false  PASS (0.00s)
+  test_format_diff_for_saving_single_document                     PASS (0.00s)
+  test_determine_since_with_string                                PASS (0.00s)
+  test_get_diffs_for_subjects                                     PASS (0.00s)
+  test_generate_git_diff_warns_on_legacy_include_moves_key        PASS (0.00s)
+  test_generate_git_diff_warns_on_legacy_include_renames_key      PASS (0.00s)
+  test_get_diff_for_document_with_no_changes                      PASS (0.00s)
+  test_legacy_include_moves_false_maps_to_exclude_moves_true      PASS (0.00s)
+  test_get_diff_for_documents                                     PASS (0.00s)
+  test_save_diff_to_cache_multi_subject                           PASS (0.00s)
+  test_generate_git_diff_passes_exclude_moves_option              PASS (0.00s)
+  test_format_diff_for_saving_multiple_documents                  PASS (0.00s)
+  test_generate_git_diff_no_warning_for_new_exclude_keys          PASS (0.00s)
+  test_detect_renames                                             PASS (0.00s)
+  test_get_diff_for_document_multi_subject_with_changes           PASS (0.00s)
+  test_get_diff_for_document_multi_subject                        PASS (0.00s)
+  test_generate_git_diff_defaults_exclude_moves_to_false          PASS (0.00s)
+  test_legacy_include_moves_true_maps_to_exclude_moves_false      PASS (0.00s)
+  test_generate_git_diff_passes_exclude_renames_option            PASS (0.00s)
+
+Finished in 0.04388s
+46 tests, 143 assertions, 0 failures, 0 errors, 0 skips
+
+Started with run options --seed 40210
+
+Ace::Docs::Organisms::DocumentRegistryTest
+  test_handles_invalid_yaml_in_config                             PASS (0.01s)
+  test_needing_update                                             PASS (0.00s)
+  test_discover_explicit_documents                                PASS (0.00s)
+  test_ignores_specified_paths                                    PASS (0.00s)
+  test_initialize_with_custom_config                              PASS (0.00s)
+  test_grouped_by_directory                                       PASS (0.01s)
+  test_avoids_duplicate_documents                                 PASS (0.00s)
+  test_by_freshness                                               PASS (0.00s)
+  test_stats                                                      PASS (0.00s)
+  test_default_frontmatter_free_patterns_ignore_nested_fixture_readme PASS (0.00s)
+  test_discover_configured_documents                              PASS (0.00s)
+  test_initialize_with_no_config                                  PASS (0.00s)
+  test_by_type                                                    PASS (0.00s)
+  test_find_by_path                                               PASS (0.00s)
+  test_grouped_by_type                                            PASS (0.00s)
+  test_discovers_frontmatter_free_readme_without_yaml             PASS (0.31s)
+  test_scope_globs_limit_discovery                                PASS (0.00s)
+  test_refresh                                                    PASS (0.01s)
+
+Ace::Docs::Organisms::ValidatorTest
+  test_validate_semantic_invalid_without_issues                   PASS (0.00s)
+  test_validate_semantic_handles_generic_error                    PASS (0.00s)
+  test_validate_semantic_detects_issues                           PASS (0.00s)
+  test_validate_with_both_h1_and_h2_sections                      PASS (0.00s)
+  test_validate_max_lines_rule_within_limit                       PASS (0.00s)
+  test_validate_semantic_only                                     PASS (0.00s)
+  test_validate_document_missing_frontmatter                      PASS (0.00s)
+  test_validate_required_sections                                 PASS (0.00s)
+  test_validate_document_with_valid_document                      PASS (0.00s)
+  test_validate_max_lines_rule                                    PASS (0.00s)
+  test_validate_semantic_handles_llm_error                        PASS (0.00s)
+  test_validate_document_with_no_rules                            PASS (0.00s)
+  test_validate_neither_syntax_nor_semantic                       PASS (0.00s)
+  test_validate_sections_case_insensitive                         PASS (0.00s)
+  test_validate_multiple_errors                                   PASS (0.00s)
+  test_validate_all_required_sections_present                     PASS (0.00s)
+  test_validate_syntax_only                                       PASS (0.00s)
+
+Finished in 0.36659s
+35 tests, 120 assertions, 0 failures, 0 errors, 0 skips
+
+
+# Running tests with run options --seed 47254:
+
+.........
+
+Finished tests in 0.005409s, 1663.8937 tests/s, 5361.4351 assertions/s.
+
+
+9 tests, 29 assertions, 0 failures, 0 errors, 0 skips
+
+
+# Running tests with run options --seed 63294:
+
+........
+
+Finished tests in 0.018855s, 424.2906 tests/s, 848.5813 assertions/s.
+
+
+8 tests, 16 assertions, 0 failures, 0 errors, 0 skips
+
+
+# Running tests with run options --seed 56977:
+
+.............[0;36;49mAnalyzing all managed documents[0m
+[0;36;49mFocus areas: terminology, duplicates, versions, consolidation[0m
+[0;33;49mNo documents found to analyze.[0m
+.....[0;36;49mAnalyzing all managed documents[0m
+[0;36;49mFocus areas: terminology, duplicates, versions, consolidation[0m
+.................................
+
+Finished tests in 0.015897s, 3208.1524 tests/s, 7737.3088 assertions/s.
+
+
+51 tests, 123 assertions, 0 failures, 0 errors, 0 skips
+
+Started with run options --seed 19388
+
+Ace::Docs::Prompts::DocumentAnalysisPromptTest
+  test_build_prompt_multi_subject_saves_multiple_diff_files       PASS (0.01s)
+  test_build_prompt_with_context_files                            PASS (0.00s)
+  test_build_prompt_single_subject_backward_compat                PASS (0.00s)
+  test_build_prompt_filters_empty_diffs                           PASS (0.00s)
+  test_resolve_type_references_skips_entries_when_resolve_fails   PASS (0.00s)
+  test_resolve_type_references_uses_ace_nav_resolve               PASS (0.00s)
+  test_create_context_markdown_multi_subject_scope                PASS (0.00s)
+  test_build_prompt_multi_subject_diff_hash                       PASS (0.00s)
+  test_prompt_selection_for_multi_subject                         PASS (0.00s)
+
+Finished in 0.03885s
+9 tests, 36 assertions, 0 failures, 0 errors, 0 skips
+
+
+# Running tests with run options --seed 19172:
+
+......
+
+Finished tests in 0.019717s, 304.3059 tests/s, 557.8942 assertions/s.
+
+
+6 tests, 11 assertions, 0 failures, 0 errors, 0 skips

@@ -323,3 +323,7 @@ No gems published or actual Lab deployment performed in this checkpoint.
 
 - [x] `9c2` whole specification independently APPROVED at1122ddf7 after closing settlement-only recovery and final authorization seal checks; promoted pending/needs_review false.
 - [ ] `9c2` implementation/installed acceptance remains dependent on unfinished09j; promotion is not a bypass of its native proof or recorded execution limitation.
+
+## IBL closure — 2026-10-05
+
+- [x] 8ws.t.ibl: persisted bulk-update values and mixed-path counts verified; independent source APPROVE, targeted 16/60, docs all 214/584 and default fast suite with explicit timeout 300 passed. Durable evidence remains with archived IBL. Old runner duplicate-report attribution limitation is explicitly retained; bt0 is still in progress and will reverify the combined tree.

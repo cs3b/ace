@@ -1,0 +1,712 @@
+{
+  "source_sha": "1e868bf84a68cc2edffe6023b0702ab742d25980",
+  "command": "bin/ace-test-suite --timeout 300",
+  "exit_code": 0,
+  "receipts": [
+    {
+      "path": ".ace-local/test/reports/assign/8x4cd9/report.json",
+      "summary": {
+        "status": "success",
+        "passed": 806,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "total": 806,
+        "pass_rate": 100.0,
+        "duration": 167.43931,
+        "timestamp": "2026-10-05T09:14:45+01:00"
+      },
+      "assertions": 2960
+    },
+    {
+      "path": ".ace-local/test/reports/b36ts/8x4caq/report.json",
+      "summary": {
+        "status": "success",
+        "passed": 266,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "total": 266,
+        "pass_rate": 100.0,
+        "duration": 0.10504,
+        "timestamp": "2026-10-05T09:11:56+01:00"
+      },
+      "assertions": 997
+    },
+    {
+      "path": ".ace-local/test/reports/bundle/8x4car/report.json",
+      "summary": {
+        "status": "success",
+        "passed": 325,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 1,
+        "total": 326,
+        "pass_rate": 99.69,
+        "duration": 1.54611,
+        "timestamp": "2026-10-05T09:11:58+01:00"
+      },
+      "assertions": 911
+    },
+    {
+      "path": ".ace-local/test/reports/compressor/8x4car/report.json",
+      "summary": {
+        "status": "success",
+        "passed": 125,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "total": 125,
+        "pass_rate": 100.0,
+        "duration": 0.50351,
+        "timestamp": "2026-10-05T09:11:57+01:00"
+      },
+      "assertions": 575
+    },
+    {
+      "path": ".ace-local/test/reports/demo/8x4car/report.json",
+      "summary": {
+        "status": "success",
+        "passed": 221,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "total": 221,
+        "pass_rate": 100.0,
+        "duration": 0.87314,
+        "timestamp": "2026-10-05T09:11:58+01:00"
+      },
+      "assertions": 895
+    },
+    {
+      "path": ".ace-local/test/reports/docs/8x4cas/report.json",
+      "summary": {
+        "status": "success",
+        "passed": 208,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "total": 208,
+        "pass_rate": 100.0,
+        "duration": 1.43401,
+        "timestamp": "2026-10-05T09:11:59+01:00"
+      },
+      "assertions": 573
+    },
+    {
+      "path": ".ace-local/test/reports/git/8x4caw/report.json",
+      "summary": {
+        "status": "success",
+        "passed": 556,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "total": 556,
+        "pass_rate": 100.0,
+        "duration": 3.17762,
+        "timestamp": "2026-10-05T09:12:06+01:00"
+      },
+      "assertions": 1387
+    },
+    {
+      "path": ".ace-local/test/reports/git-commit/8x4cat/report.json",
+      "summary": {
+        "status": "success",
+        "passed": 246,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "total": 246,
+        "pass_rate": 100.0,
+        "duration": 2.72295,
+        "timestamp": "2026-10-05T09:12:01+01:00"
+      },
+      "assertions": 569
+    },
+    {
+      "path": ".ace-local/test/reports/git-forgejo/8x4caw/report.json",
+      "summary": {
+        "status": "success",
+        "passed": 168,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "total": 168,
+        "pass_rate": 100.0,
+        "duration": 0.11995,
+        "timestamp": "2026-10-05T09:12:06+01:00"
+      },
+      "assertions": 751
+    },
+    {
+      "path": ".ace-local/test/reports/git-github/8x4cau/report.json",
+      "summary": {
+        "status": "success",
+        "passed": 92,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "total": 92,
+        "pass_rate": 100.0,
+        "duration": 0.04253,
+        "timestamp": "2026-10-05T09:12:04+01:00"
+      },
+      "assertions": 268
+    },
+    {
+      "path": ".ace-local/test/reports/git-secrets/8x4cau/report.json",
+      "summary": {
+        "status": "success",
+        "passed": 157,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "total": 157,
+        "pass_rate": 100.0,
+        "duration": 6.565864,
+        "timestamp": "2026-10-05T09:12:04+01:00"
+      },
+      "assertions": 396
+    },
+    {
+      "path": ".ace-local/test/reports/git-worktree/8x4cb8/report.json",
+      "summary": {
+        "status": "success",
+        "passed": 500,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 17,
+        "total": 517,
+        "pass_rate": 96.71,
+        "duration": 26.97785,
+        "timestamp": "2026-10-05T09:12:29+01:00"
+      },
+      "assertions": 1111
+    },
+    {
+      "path": ".ace-local/test/reports/handbook/8x4caz/report.json",
+      "summary": {
+        "status": "success",
+        "passed": 62,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "total": 62,
+        "pass_rate": 100.0,
+        "duration": 6.67183,
+        "timestamp": "2026-10-05T09:12:12+01:00"
+      },
+      "assertions": 390
+    },
+    {
+      "path": ".ace-local/test/reports/handbook-integration-claude/8x4cas/report.json",
+      "summary": {
+        "status": "success",
+        "passed": 1,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "total": 1,
+        "pass_rate": 100.0,
+        "duration": 0.0,
+        "timestamp": "2026-10-05T09:11:59+01:00"
+      },
+      "assertions": 2
+    },
+    {
+      "path": ".ace-local/test/reports/handbook-integration-codex/8x4cas/report.json",
+      "summary": {
+        "status": "success",
+        "passed": 1,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "total": 1,
+        "pass_rate": 100.0,
+        "duration": 0.0,
+        "timestamp": "2026-10-05T09:12:00+01:00"
+      },
+      "assertions": 2
+    },
+    {
+      "path": ".ace-local/test/reports/handbook-integration-gemini/8x4cas/report.json",
+      "summary": {
+        "status": "success",
+        "passed": 1,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "total": 1,
+        "pass_rate": 100.0,
+        "duration": 0.0,
+        "timestamp": "2026-10-05T09:12:00+01:00"
+      },
+      "assertions": 2
+    },
+    {
+      "path": ".ace-local/test/reports/handbook-integration-opencode/8x4cat/report.json",
+      "summary": {
+        "status": "success",
+        "passed": 1,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "total": 1,
+        "pass_rate": 100.0,
+        "duration": 0.0,
+        "timestamp": "2026-10-05T09:12:01+01:00"
+      },
+      "assertions": 2
+    },
+    {
+      "path": ".ace-local/test/reports/handbook-integration-pi/8x4cav/report.json",
+      "summary": {
+        "status": "success",
+        "passed": 9,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "total": 9,
+        "pass_rate": 100.0,
+        "duration": 2.682267,
+        "timestamp": "2026-10-05T09:12:05+01:00"
+      },
+      "assertions": 72
+    },
+    {
+      "path": ".ace-local/test/reports/herdr/8x4cb6/report.json",
+      "summary": {
+        "status": "success",
+        "passed": 470,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "total": 470,
+        "pass_rate": 100.0,
+        "duration": 18.733203,
+        "timestamp": "2026-10-05T09:12:26+01:00"
+      },
+      "assertions": 1461
+    },
+    {
+      "path": ".ace-local/test/reports/hitl/8x4cbs/report.json",
+      "summary": {
+        "status": "success",
+        "passed": 195,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "total": 195,
+        "pass_rate": 100.0,
+        "duration": 52.29195,
+        "timestamp": "2026-10-05T09:13:06+01:00"
+      },
+      "assertions": 1088
+    },
+    {
+      "path": ".ace-local/test/reports/hitl-contract/8x4cb2/report.json",
+      "summary": {
+        "status": "success",
+        "passed": 21,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "total": 21,
+        "pass_rate": 100.0,
+        "duration": 0.09377,
+        "timestamp": "2026-10-05T09:12:18+01:00"
+      },
+      "assertions": 128
+    },
+    {
+      "path": ".ace-local/test/reports/hitl-hermes/8x4cbc/report.json",
+      "summary": {
+        "status": "success",
+        "passed": 116,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "total": 116,
+        "pass_rate": 100.0,
+        "duration": 22.37569,
+        "timestamp": "2026-10-05T09:12:37+01:00"
+      },
+      "assertions": 659
+    },
+    {
+      "path": ".ace-local/test/reports/idea/8x4cb1/report.json",
+      "summary": {
+        "status": "success",
+        "passed": 258,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "total": 258,
+        "pass_rate": 100.0,
+        "duration": 0.93724,
+        "timestamp": "2026-10-05T09:12:16+01:00"
+      },
+      "assertions": 697
+    },
+    {
+      "path": ".ace-local/test/reports/lab/8x4cbx/report.json",
+      "summary": {
+        "status": "success",
+        "passed": 198,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 1,
+        "total": 199,
+        "pass_rate": 99.5,
+        "duration": 58.936425,
+        "timestamp": "2026-10-05T09:13:16+01:00"
+      },
+      "assertions": 697
+    },
+    {
+      "path": ".ace-local/test/reports/lint/8x4cau/report.json",
+      "summary": {
+        "status": "success",
+        "passed": 306,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "total": 306,
+        "pass_rate": 100.0,
+        "duration": 1.598381,
+        "timestamp": "2026-10-05T09:12:04+01:00"
+      },
+      "assertions": 912
+    },
+    {
+      "path": ".ace-local/test/reports/llm/8x4car/report.json",
+      "summary": {
+        "status": "success",
+        "passed": 347,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "total": 347,
+        "pass_rate": 100.0,
+        "duration": 0.40665,
+        "timestamp": "2026-10-05T09:11:58+01:00"
+      },
+      "assertions": 868
+    },
+    {
+      "path": ".ace-local/test/reports/llm-providers-cli/8x4cay/report.json",
+      "summary": {
+        "status": "success",
+        "passed": 390,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "total": 390,
+        "pass_rate": 100.0,
+        "duration": 11.993603,
+        "timestamp": "2026-10-05T09:12:11+01:00"
+      },
+      "assertions": 1025
+    },
+    {
+      "path": ".ace-local/test/reports/overseer/8x4cbu/report.json",
+      "summary": {
+        "status": "success",
+        "passed": 252,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "total": 252,
+        "pass_rate": 100.0,
+        "duration": 61.93574,
+        "timestamp": "2026-10-05T09:13:10+01:00"
+      },
+      "assertions": 968
+    },
+    {
+      "path": ".ace-local/test/reports/prompt-prep/8x4cas/report.json",
+      "summary": {
+        "status": "success",
+        "passed": 246,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 1,
+        "total": 247,
+        "pass_rate": 99.6,
+        "duration": 2.454769,
+        "timestamp": "2026-10-05T09:11:59+01:00"
+      },
+      "assertions": 622
+    },
+    {
+      "path": ".ace-local/test/reports/retro/8x4cb1/report.json",
+      "summary": {
+        "status": "success",
+        "passed": 195,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "total": 195,
+        "pass_rate": 100.0,
+        "duration": 0.84144,
+        "timestamp": "2026-10-05T09:12:16+01:00"
+      },
+      "assertions": 496
+    },
+    {
+      "path": ".ace-local/test/reports/review/8x4cbc/report.json",
+      "summary": {
+        "status": "success",
+        "passed": 933,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "total": 933,
+        "pass_rate": 100.0,
+        "duration": 32.06527,
+        "timestamp": "2026-10-05T09:12:36+01:00"
+      },
+      "assertions": 2854
+    },
+    {
+      "path": ".ace-local/test/reports/runtime/8x4cb1/report.json",
+      "summary": {
+        "status": "success",
+        "passed": 173,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "total": 173,
+        "pass_rate": 100.0,
+        "duration": 0.5825,
+        "timestamp": "2026-10-05T09:12:17+01:00"
+      },
+      "assertions": 469
+    },
+    {
+      "path": ".ace-local/test/reports/search/8x4cau/report.json",
+      "summary": {
+        "status": "success",
+        "passed": 99,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "total": 99,
+        "pass_rate": 100.0,
+        "duration": 3.56218,
+        "timestamp": "2026-10-05T09:12:04+01:00"
+      },
+      "assertions": 253
+    },
+    {
+      "path": ".ace-local/test/reports/sim/8x4cau/report.json",
+      "summary": {
+        "status": "success",
+        "passed": 34,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "total": 34,
+        "pass_rate": 100.0,
+        "duration": 0.98193,
+        "timestamp": "2026-10-05T09:12:04+01:00"
+      },
+      "assertions": 161
+    },
+    {
+      "path": ".ace-local/test/reports/support-cli/8x4cax/report.json",
+      "summary": {
+        "status": "success",
+        "passed": 62,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "total": 62,
+        "pass_rate": 100.0,
+        "duration": 0.01435,
+        "timestamp": "2026-10-05T09:12:09+01:00"
+      },
+      "assertions": 220
+    },
+    {
+      "path": ".ace-local/test/reports/support-config/8x4cay/report.json",
+      "summary": {
+        "status": "success",
+        "passed": 252,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "total": 252,
+        "pass_rate": 100.0,
+        "duration": 14.13058,
+        "timestamp": "2026-10-05T09:12:11+01:00"
+      },
+      "assertions": 588
+    },
+    {
+      "path": ".ace-local/test/reports/support-core/8x4cb0/report.json",
+      "summary": {
+        "status": "success",
+        "passed": 177,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "total": 177,
+        "pass_rate": 100.0,
+        "duration": 0.90511,
+        "timestamp": "2026-10-05T09:12:15+01:00"
+      },
+      "assertions": 477
+    },
+    {
+      "path": ".ace-local/test/reports/support-fs/8x4cax/report.json",
+      "summary": {
+        "status": "success",
+        "passed": 71,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "total": 71,
+        "pass_rate": 100.0,
+        "duration": 0.0,
+        "timestamp": "2026-10-05T09:12:08+01:00"
+      },
+      "assertions": 125
+    },
+    {
+      "path": ".ace-local/test/reports/support-items/8x4cat/report.json",
+      "summary": {
+        "status": "success",
+        "passed": 334,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "total": 334,
+        "pass_rate": 100.0,
+        "duration": 4.47592,
+        "timestamp": "2026-10-05T09:12:01+01:00"
+      },
+      "assertions": 615
+    },
+    {
+      "path": ".ace-local/test/reports/support-markdown/8x4cav/report.json",
+      "summary": {
+        "status": "success",
+        "passed": 28,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "total": 28,
+        "pass_rate": 100.0,
+        "duration": 0.0,
+        "timestamp": "2026-10-05T09:12:05+01:00"
+      },
+      "assertions": 120
+    },
+    {
+      "path": ".ace-local/test/reports/support-models/8x4cat/report.json",
+      "summary": {
+        "status": "success",
+        "passed": 206,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "total": 206,
+        "pass_rate": 100.0,
+        "duration": 0.79114,
+        "timestamp": "2026-10-05T09:12:01+01:00"
+      },
+      "assertions": 501
+    },
+    {
+      "path": ".ace-local/test/reports/support-nav/8x4cat/report.json",
+      "summary": {
+        "status": "success",
+        "passed": 132,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "total": 132,
+        "pass_rate": 100.0,
+        "duration": 4.810294,
+        "timestamp": "2026-10-05T09:12:01+01:00"
+      },
+      "assertions": 431
+    },
+    {
+      "path": ".ace-local/test/reports/support-test-helpers/8x4caw/report.json",
+      "summary": {
+        "status": "success",
+        "passed": 104,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 1,
+        "total": 105,
+        "pass_rate": 99.05,
+        "duration": 0.29607,
+        "timestamp": "2026-10-05T09:12:07+01:00"
+      },
+      "assertions": 327
+    },
+    {
+      "path": ".ace-local/test/reports/task/8x4cb5/report.json",
+      "summary": {
+        "status": "success",
+        "passed": 491,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 2,
+        "total": 493,
+        "pass_rate": 99.59,
+        "duration": 14.94315,
+        "timestamp": "2026-10-05T09:12:23+01:00"
+      },
+      "assertions": 1307
+    },
+    {
+      "path": ".ace-local/test/reports/test-runner/8x4caz/report.json",
+      "summary": {
+        "status": "success",
+        "passed": 181,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "total": 181,
+        "pass_rate": 100.0,
+        "duration": 1.30659,
+        "timestamp": "2026-10-05T09:12:13+01:00"
+      },
+      "assertions": 482
+    },
+    {
+      "path": ".ace-local/test/reports/test-runner-e2e/8x4cbf/report.json",
+      "summary": {
+        "status": "success",
+        "passed": 647,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "total": 647,
+        "pass_rate": 100.0,
+        "duration": 22.757537,
+        "timestamp": "2026-10-05T09:12:42+01:00"
+      },
+      "assertions": 2162
+    },
+    {
+      "path": ".ace-local/test/reports/tmux/8x4caz/report.json",
+      "summary": {
+        "status": "success",
+        "passed": 343,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "total": 343,
+        "pass_rate": 100.0,
+        "duration": 4.87575,
+        "timestamp": "2026-10-05T09:12:12+01:00"
+      },
+      "assertions": 909
+    }
+  ]
+}
