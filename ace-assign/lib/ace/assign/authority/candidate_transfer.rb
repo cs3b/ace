@@ -4,6 +4,7 @@ require "digest"
 require "fileutils"
 require "tmpdir"
 require "ace/herdr"
+require_relative "private_directory"
 
 module Ace
   module Assign
@@ -118,21 +119,7 @@ module Ace
         private
 
         def verify_root!
-          cursor = @root
-          loop do
-            stat = File.lstat(cursor)
-            unless stat.directory? && !stat.symlink? && [0, Process.uid].include?(stat.uid) && (stat.mode & 0022).zero?
-              reject!("Candidate root is not protected")
-            end
-            break if cursor == "/"
-            cursor = File.dirname(cursor)
-          end
-          root_stat = File.stat(@root)
-          unless root_stat.uid == Process.uid && (root_stat.mode & 0077).zero?
-            reject!("Candidate root must be owned by this peer and private")
-          end
-        rescue SystemCallError
-          reject!("Candidate root is unavailable")
+          PrivateDirectory.verify!(@root)
         end
 
         def git(repository, deadline, *arguments, limit: 65_536)
