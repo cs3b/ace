@@ -1,0 +1,209 @@
+[
+  {
+    "label": "focused-initial",
+    "source_path": "/Users/mc/Ps/ace/.ace-wt/qkb-neutral-vocabulary/.ace-local/test/reports/handbook/788d988c-b74b-4550-9f48-1cf472d03840",
+    "retained_path": "evidence/neutral-vocabulary/focused-initial/788d988c-b74b-4550-9f48-1cf472d03840",
+    "files": {
+      "summary.json": {
+        "bytes": 266,
+        "sha256": "7786ffb1e0a159ad29612e399914d2d3a46a109f6ccf5770e962ed4c88d25cef"
+      },
+      "report.json": {
+        "bytes": 2833,
+        "sha256": "d39b6cea4f1c8fe084b6d27ee9d0d388ddc4331104d6b3f5e5a07166f1870558"
+      },
+      "raw_output.txt": {
+        "bytes": 3257,
+        "sha256": "e7c5c42bfda7c6b997416c007553fa1b1ab96b09301a78d2c4eb52d34db3d81d"
+      },
+      "raw_stderr.txt": {
+        "bytes": 324,
+        "sha256": "28c62f0c321ae8b9be581e50c699a7cca1bd50df6a7089dea35cef9c207c6ff5"
+      }
+    }
+  },
+  {
+    "label": "assign-catalog",
+    "source_path": "/Users/mc/Ps/ace/.ace-wt/qkb-neutral-vocabulary/.ace-local/test/reports/assign/52e96a91-faa8-4577-a823-1af3e3d9874c",
+    "retained_path": "evidence/neutral-vocabulary/assign-catalog/52e96a91-faa8-4577-a823-1af3e3d9874c",
+    "files": {
+      "summary.json": {
+        "bytes": 268,
+        "sha256": "4e81e706493843b5b674a72003b8868949da090f2a76bf4e44da7fb235407b9b"
+      },
+      "report.json": {
+        "bytes": 3139,
+        "sha256": "a675d64c7bfff1cec172f1ffdfa845f4075e80d94257d0532a3923c2b3b39a19"
+      },
+      "raw_output.txt": {
+        "bytes": 8610,
+        "sha256": "b053f498cd9646eb8914b1dea5e0690088cbf0e47ed7616d879bf457cec6b63e"
+      },
+      "raw_stderr.txt": {
+        "bytes": 324,
+        "sha256": "28c62f0c321ae8b9be581e50c699a7cca1bd50df6a7089dea35cef9c207c6ff5"
+      }
+    }
+  },
+  {
+    "label": "handbook-all",
+    "source_path": "/Users/mc/Ps/ace/.ace-wt/qkb-neutral-vocabulary/.ace-local/test/reports/handbook/9e33c1c7-c468-4d6f-a2b8-dfa88caa02f5",
+    "retained_path": "evidence/neutral-vocabulary/handbook-all/9e33c1c7-c468-4d6f-a2b8-dfa88caa02f5",
+    "files": {
+      "summary.json": {
+        "bytes": 268,
+        "sha256": "cb9e80844287790b99037f58952820f70e944a8ebeb5f7683383cf7853217a86"
+      },
+      "report.json": {
+        "bytes": 3161,
+        "sha256": "78e9d6c4de15a7716acad5906acc8b758718ee6d76472b6bec561260b0771fa6"
+      },
+      "raw_output.txt": {
+        "bytes": 6480,
+        "sha256": "1e409a2023a38123981376264f443adaa1da18edd3ccb56664bcc00222aed834"
+      },
+      "raw_stderr.txt": {
+        "bytes": 976,
+        "sha256": "b64fd87507f5dd9fcb3c4fad0806f33f706b8798f7dddf79526e5aea87b590ab"
+      }
+    }
+  },
+  {
+    "label": "git-all",
+    "source_path": "/Users/mc/Ps/ace/.ace-wt/qkb-neutral-vocabulary/.ace-local/test/reports/git/cc4ce7cd-8794-4c24-8c2e-276dcc0123ec",
+    "retained_path": "evidence/neutral-vocabulary/git-all/cc4ce7cd-8794-4c24-8c2e-276dcc0123ec",
+    "files": {
+      "summary.json": {
+        "bytes": 270,
+        "sha256": "4c4448d53e866438ba09b1f78e042d338003eee5f3c762c76e63d53b3afd4035"
+      },
+      "report.json": {
+        "bytes": 4487,
+        "sha256": "000f37335edc5d8a6e36bb7241536ed32dfc3bde720ebe5880d16609210dee2c"
+      },
+      "raw_output.txt": {
+        "bytes": 35938,
+        "sha256": "e081129224c6d03fb6cbacf069be57c336d4d2ad649ecdd8595f03aac02c6a05"
+      },
+      "raw_stderr.txt": {
+        "bytes": 2217,
+        "sha256": "9d2056fce4e8542850c89febd8a36eb791745c493a1a16177eaa7628cdffd615"
+      }
+    }
+  },
+  {
+    "label": "worktree-all",
+    "source_path": "/Users/mc/Ps/ace/.ace-wt/qkb-neutral-vocabulary/.ace-local/test/reports/git-worktree/e0c2058e-1419-4cb3-9c1c-3b7f2b8083eb",
+    "retained_path": "evidence/neutral-vocabulary/worktree-all/e0c2058e-1419-4cb3-9c1c-3b7f2b8083eb",
+    "files": {
+      "summary.json": {
+        "bytes": 280,
+        "sha256": "a4202a1093f1b9986f7376abae13061749a3a749ad0b4f1939ce07653d05c274"
+      },
+      "report.json": {
+        "bytes": 4461,
+        "sha256": "c09ff54367e5d20248e3ae7a46b6a37d8dd21dbdb5f25b5c9e4df97b38559925"
+      },
+      "raw_output.txt": {
+        "bytes": 130402,
+        "sha256": "8636a4778af5e9a91cd70c81e4922babe191efb4c5fa5a4171ca8d4a8a80866c"
+      },
+      "raw_stderr.txt": {
+        "bytes": 1682,
+        "sha256": "775f8cddefc75cc2fb9323713dfddba44e782de9eccfd3ffae0ce1b9363a75bf"
+      }
+    }
+  },
+  {
+    "label": "review-all",
+    "source_path": "/Users/mc/Ps/ace/.ace-wt/qkb-neutral-vocabulary/.ace-local/test/reports/review/7bb99ac4-9302-4cb3-88fe-e32f7c2a1b2c",
+    "retained_path": "evidence/neutral-vocabulary/review-all/7bb99ac4-9302-4cb3-88fe-e32f7c2a1b2c",
+    "files": {
+      "summary.json": {
+        "bytes": 271,
+        "sha256": "d1f1b54902ecf9b323983708228f4bdb22b412c74a645c9bd7ce5c737d0063d1"
+      },
+      "report.json": {
+        "bytes": 4832,
+        "sha256": "5993b212187fce69ff3eeb2782cdf3bb0b3bc24dfa54e40defb3ba17a2d549bd"
+      },
+      "raw_output.txt": {
+        "bytes": 64771,
+        "sha256": "fbf48887635f4fc67ae0093f6375da94cc48cacbc4255f1de047442e0c1478b7"
+      },
+      "raw_stderr.txt": {
+        "bytes": 6233,
+        "sha256": "5b2ff3bb8e9194446d663884acc79ec390b8d1b64012568d434446758af8ed9f"
+      }
+    }
+  },
+  {
+    "label": "focused-correction",
+    "source_path": "/Users/mc/Ps/ace/.ace-wt/qkb-neutral-vocabulary/.ace-local/test/reports/handbook/89fdf32b-0b85-41d1-8ae6-f886d610ec99",
+    "retained_path": "evidence/neutral-vocabulary/focused-correction/89fdf32b-0b85-41d1-8ae6-f886d610ec99",
+    "files": {
+      "summary.json": {
+        "bytes": 266,
+        "sha256": "b9266fda73bda56ea4a9ce11b12aa424e2efd4523d008e1ee00278b0f408c1ce"
+      },
+      "report.json": {
+        "bytes": 2833,
+        "sha256": "3376bbff7c9ffa423fe2fc0894dd4f2d1d3b4207d4a757b7c362c234ad659100"
+      },
+      "raw_output.txt": {
+        "bytes": 3257,
+        "sha256": "c11b7c08f5a6d1aa35770b2a65562c2b0de4215b6958dd744d802eff76112068"
+      },
+      "raw_stderr.txt": {
+        "bytes": 324,
+        "sha256": "28c62f0c321ae8b9be581e50c699a7cca1bd50df6a7089dea35cef9c207c6ff5"
+      }
+    }
+  },
+  {
+    "label": "reviewer-initial",
+    "source_path": "/Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/.ace-local/test/reports/handbook/1b551cfe-8b01-47d7-baff-1c7186b9b379",
+    "retained_path": "evidence/neutral-vocabulary/reviewer-initial/1b551cfe-8b01-47d7-baff-1c7186b9b379",
+    "files": {
+      "summary.json": {
+        "bytes": 262,
+        "sha256": "d8fde9ff14c80b43b55588eb57994fbb0a3842915fec2bb61e89e6a272dbdfa1"
+      },
+      "report.json": {
+        "bytes": 2724,
+        "sha256": "f0011baf77a4068e757b4781e717a5b2984b3bd47bd2b320a89c8d7a388d7d22"
+      },
+      "raw_output.txt": {
+        "bytes": 297,
+        "sha256": "5b3ecb47c53da915751e9dd36676271602f861b08c453ddbfd65aa22dfd7d851"
+      },
+      "raw_stderr.txt": {
+        "bytes": 320,
+        "sha256": "1942a18d7d426bbeb8c17b8c25dd2b53d63bc997c45e0b623fc9c99fcde6df07"
+      }
+    }
+  },
+  {
+    "label": "reviewer-correction",
+    "source_path": "/Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/.ace-local/test/reports/handbook/ef460be3-45c8-47e0-a2b6-5cafccbe9300",
+    "retained_path": "evidence/neutral-vocabulary/reviewer-correction/ef460be3-45c8-47e0-a2b6-5cafccbe9300",
+    "files": {
+      "summary.json": {
+        "bytes": 262,
+        "sha256": "3f6830818885a919115178cc30f2b7660b2cd3369ddbc9b42e7d4b901a400292"
+      },
+      "report.json": {
+        "bytes": 2724,
+        "sha256": "09b6b222c672c341fb88114d51bd42a23ec6bd445707bb20f4a34f4087d53845"
+      },
+      "raw_output.txt": {
+        "bytes": 297,
+        "sha256": "a68bfbc75442d91c0b090e505364af687a50481ab4a49a60f6d5c9105103a7c4"
+      },
+      "raw_stderr.txt": {
+        "bytes": 320,
+        "sha256": "1942a18d7d426bbeb8c17b8c25dd2b53d63bc997c45e0b623fc9c99fcde6df07"
+      }
+    }
+  }
+]
