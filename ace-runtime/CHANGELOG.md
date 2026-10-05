@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- Ship the immutable native worker gate and protected Linux/socket primitives with exact process birth, pidfd exit, enforced Yama 2, empty capability sets and NoNewPrivs checks.
+
 - Add read-only process ownership observation with PID birth identity, OS ancestry, unknown liveness and shared adapter contract coverage.
 
 ## [0.1.1] - 2026-10-04
