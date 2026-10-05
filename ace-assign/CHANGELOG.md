@@ -15,6 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Retain delivery context across scoped attempts and distinguish a recovered prior effect from a new request with different content or evidence before reporting completion.
 
+### Changed
+- Expose read-only runtime_binding for an active accepted attempt using the existing native/process authority, refusing missing, dead, changed or unrelated owner evidence.
+
 ### Added
 
 - Atomic execution-ref mutation/import primitives with exact reply replay and canonical artifact binding/provenance verification. Intent-only attempts remain reserved until a real process-start fact.

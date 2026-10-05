@@ -21,13 +21,27 @@ module Ace
             @repo_root = repo_root
           end
 
-          def validate_request(work: nil, assignment: nil, attempt:, project:, requester:)
-            with_verified(assignment, attempt, project, requester) { nil }
+          def validate_request(assignment:, attempt:, project:, requester:, caller_pid: nil)
+            with_verified(assignment, attempt, project, requester) do
+              reverse_address(attempt: attempt, caller_pid: caller_pid)
+            end
+          end
+
+          # Read-only owner verification can run inside an already-held
+          # assignment exclusion without reacquiring that exclusion.
+          def reverse_address(attempt:, caller_pid:)
+            unless caller_pid.is_a?(Integer) && caller_pid.positive?
+              raise Lifecycle::BindingError, "kernel requester process identity is unavailable"
+            end
+            binding = coordinator.runtime_binding(attempt_id: attempt, caller_pid: caller_pid)
+            {"schema" => Ref::SCHEMA, "session" => binding.fetch("session"), "pane" => binding.fetch("pane")}
+          rescue Ace::Assign::Error => e
+            raise Lifecycle::BindingError, "native requester authority is unavailable (#{e.message})"
           end
 
           # The liveness scope: the assignment exclusion is HELD across
           # the yielded transition commit.
-          def with_active(work: nil, assignment: nil, attempt:, project: nil, requester: nil)
+          def with_active(assignment:, attempt:, project: nil, requester: nil)
             with_verified(assignment, attempt, project, requester) { yield }
           end
 

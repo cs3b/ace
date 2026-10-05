@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "ace/support/cli"
+require_relative "lifecycle_command"
 
 module Ace
   module Hitl
@@ -8,10 +9,14 @@ module Ace
       module Commands
         class Wait < Ace::Support::Cli::Command
           include Ace::Support::Cli::Base
+          include LifecycleCommand
 
           desc "Wait for a specific HITL event answer (polling default)"
 
-          argument :ref, required: true, desc: "HITL reference (full ID or shortcut)"
+          argument :ref, required: false, desc: "HITL reference (full ID or shortcut)"
+
+          option :request, type: :string, desc: "Exact scoped request id for pane-less authenticated waiting"
+          option :operation, type: :string, desc: "Authorized operation for OTP consumption"
 
           option :"poll-every", type: :integer, desc: "Polling interval in seconds (default: 600)"
           option :timeout, type: :integer, desc: "Max wait time in seconds (default: 14400)"
@@ -23,7 +28,14 @@ module Ace
           option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
           option :debug, type: :boolean, aliases: %w[-d], desc: "Show debug output"
 
-          def call(ref:, **options)
+          def call(ref: nil, **options)
+            if options[:request]
+              raise_lifecycle_error("Choose an event reference or --request, not both") if ref
+              emit(Ace::Hitl::LiveClient.new(boundary: lifecycle_client).wait(
+                request: options[:request], timeout: options[:timeout] || 0, operation: options[:operation]))
+              return
+            end
+            raise_lifecycle_error("An event reference or --request is required") unless ref
             scope = validate_scope(options[:scope])
             poll_every = options[:"poll-every"] || 600
             timeout = options[:timeout] || 14_400
@@ -34,6 +46,13 @@ module Ace
             }
 
             manager = Ace::Hitl::Organisms::HitlManager.new
+            event = manager.show(ref, scope: scope)&.dig(:event)
+            if event && event.metadata["lab_request_id"]
+              emit(Ace::Hitl::LiveClient.new(boundary: lifecycle_client).wait(
+                request: event.metadata.fetch("lab_request_id"), timeout: options[:timeout] || 0,
+                operation: options[:operation]))
+              return
+            end
             result = manager.wait_for_answer(
               ref,
               scope: scope,
@@ -47,25 +66,15 @@ module Ace
               event = result[:event]
               puts "HITL event answered: #{event.id} #{event.title}"
               puts "Answer: #{event.answer}"
-              puts "Lab request: #{event.metadata["lab_request_id"]} (#{result[:lab_state]})" if result[:lab_state]
               resume = event.metadata["resume_instructions"]
               puts "Resume: #{resume}" if resume
-            when :lab_delivered
-              event = result[:event]
-              lab_request_id = event.metadata["lab_request_id"]
-              puts "Lab request delivered: #{event.id} (#{result[:lab_state]})"
-              puts "Lab request: #{lab_request_id}"
-              puts "Consume the answer when ready from the lab relay."
-              if result[:lab_state] == "callback-ok"
-                puts "Effect callback: ok"
-              elsif result[:lab_state] == "callback-escalated"
-                puts "Effect callback: escalated; inspect the lab duty projection"
-              end
             when :timeout
               raise Ace::Support::Cli::Error.new("Timed out waiting for HITL event '#{ref}'")
             else
               raise Ace::Support::Cli::Error.new("HITL event '#{ref}' not found")
             end
+          rescue Lifecycle::Error, Providers::ProviderUnavailableError => e
+            raise_lifecycle_error(e.message)
           end
 
           private

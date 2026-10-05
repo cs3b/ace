@@ -1,0 +1,246 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ace.hitl.managed/v1",
+  "title": "Managed HITL request and delivery metadata",
+  "description": "HITL owns semantics. Structural validity never grants actor/effect authority. OTP bytes and their digest are prohibited. Nested transport and reverse schemas remain distinct.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "request_id",
+    "project",
+    "assignment_id",
+    "attempt_id",
+    "requester",
+    "correlation_id",
+    "kind",
+    "reverse",
+    "request_incarnation"
+  ],
+  "properties": {
+    "schema": {
+      "const": "ace.hitl.managed/v1"
+    },
+    "request_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "project": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "requester": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "correlation_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "assignment_id": {
+      "type": "string",
+      "pattern": "^[0-9a-z][0-9a-z]{4,63}$"
+    },
+    "attempt_id": {
+      "type": "string",
+      "pattern": "^[0-9a-z][0-9a-z]{4,63}$"
+    },
+    "kind": {
+      "enum": [
+        "text",
+        "choice",
+        "confirm",
+        "review",
+        "question",
+        "decision",
+        "verification",
+        "otp"
+      ]
+    },
+    "reverse": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schema",
+            "session",
+            "pane"
+          ],
+          "properties": {
+            "schema": {
+              "const": "ace.hitl.ref/v1"
+            },
+            "session": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9._:-]{1,128}$"
+            },
+            "pane": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9._:-]{1,128}$"
+            }
+          }
+        }
+      ]
+    },
+    "payload_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "message": {
+      "type": "object",
+      "description": "Nested ace.hitl.hermes.message/v1, exact id=correlation_id; runtime codec additionally rejects secret answers and digest mismatch.",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "id",
+        "kind",
+        "sender"
+      ],
+      "properties": {
+        "schema": {
+          "const": "ace.hitl.hermes.message/v1"
+        },
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "question",
+            "answer"
+          ]
+        },
+        "sender": {
+          "type": "string"
+        },
+        "question": {
+          "type": "string",
+          "minLength": 1
+        },
+        "answer": {
+          "type": "string",
+          "minLength": 1
+        },
+        "created_at": {
+          "type": "string"
+        },
+        "received_at": {
+          "type": "string"
+        }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "kind": {
+              "const": "question"
+            }
+          },
+          "required": [
+            "question",
+            "created_at"
+          ],
+          "not": {
+            "anyOf": [
+              {
+                "required": [
+                  "answer"
+                ]
+              },
+              {
+                "required": [
+                  "received_at"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "properties": {
+            "kind": {
+              "const": "answer"
+            }
+          },
+          "required": [
+            "answer",
+            "received_at"
+          ],
+          "not": {
+            "anyOf": [
+              {
+                "required": [
+                  "question"
+                ]
+              },
+              {
+                "required": [
+                  "created_at"
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "effect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "authorization_ref"
+      ],
+      "properties": {
+        "authorization_ref": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+        },
+        "receipt_ref": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+        }
+      }
+    },
+    "request_incarnation": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    }
+  },
+  "if": {
+    "properties": {
+      "kind": {
+        "const": "otp"
+      }
+    }
+  },
+  "then": {
+    "not": {
+      "anyOf": [
+        {
+          "required": [
+            "payload_sha256"
+          ]
+        },
+        {
+          "required": [
+            "effect"
+          ]
+        }
+      ]
+    },
+    "properties": {
+      "message": {
+        "properties": {
+          "kind": {
+            "const": "question"
+          }
+        }
+      }
+    }
+  },
+  "else": {
+    "required": [
+      "payload_sha256"
+    ]
+  }
+}

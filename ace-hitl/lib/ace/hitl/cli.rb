@@ -48,7 +48,7 @@ module Ace
         "ace-hitl list --status pending",
         "ace-hitl show abc123 --content",
         "ace-hitl create \"Which auth strategy?\" --kind decision",
-        "ace-hitl ask \"Proceed with deploy?\" --work W685 --effect-arg /bin/false --effect-cwd /tmp",
+        "ace-hitl ask --question \"Proceed with deploy?\" --assignment assign685 --attempt attempt685 --effect-arg /bin/false --effect-cwd /tmp",
         "ace-hitl update abc123 --answer \"Use JWT with refresh tokens\"",
         "ace-hitl wait abc123 --poll-every 600 --timeout 14400"
       ].freeze

@@ -3,7 +3,12 @@
 The accepted authority contract and family test-plan.md govern implementation.
 Status remains in-progress; no installed or distinct-UID proof is claimed.
 
-## Missing cross-user gated launch boundary
+## Historical missing cross-user gated launch boundary
+
+This section records the implementation-discovered gap before 09j selection.
+The reviewed 09j contract at 58188ef12 supersedes its unresolved transport choice;
+09j implementation and actual protected native/policy acceptance remain required.
+The observations and failed planning receipts below are retained as history.
 
 The authenticated launcher and worker must use distinct OS identities: giving
 the worker the launcher UID would also let it reserve/register attempts.
@@ -51,7 +56,8 @@ does not change unresolved behavioral decisions or count as implementation proof
 | Atomic imported bytes, chained provenance, mutation replay and CAS | EvidenceJournal + JournalMutation | Real Git feature tests; original reply after restart, changed params, rejected callback, immutable blob, binary bytes and traversal |
 | Canonical blob/provenance reads across service/review/recovery | Shared import verifier + existing verifier readers | Corruption through every independent reader; projections deleted/replaced |
 | Root configuration, role/schema and peer authentication | Assign authority transport/config | Pure schema tests plus real socket/filesystem integration; Linux multi-UID/macOS kernel peer smoke separately |
-| Registration, reserve/bind/abort and candidate/review import | Assign authority + coordinator/driver | Real gate crash windows and object closure/symlink/config adversaries; cross-user launch choice above must be resolved |
+| Consume 09j registration/reserve/record/bind/release/abort and driver launch origin | Accepted 09j authority/runtime/driver APIs; xz9.0 endcap integration | Preserve exact admitted child and canonical launch state through the public origin APIs; no reconstructed or manually seeded origin |
+| Candidate/review import and protected service endcap | Assign authority + coordinator/driver and Lab receiver | Object closure/symlink/config adversaries and distinct-user export/review/effect proof after accepted 09j origin |
 | Protected request, dispatch ticket and handler staging/completion | Lab receiver + authority client | Real fixed fixture effect; duplicate/reply loss/revocation; preserved worker caller UID and actual separated accounts |
 | Finish/recover/inbox byte transport | Assign coordinator + fixed inbox client | Current expected_registration/exact proof replay, both stores' crash windows, no private shared paths |
 

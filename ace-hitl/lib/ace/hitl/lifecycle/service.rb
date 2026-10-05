@@ -185,11 +185,24 @@ module Ace
 
         def authenticate!(socket)
           peer_uid, peer_gid = peer_credentials(socket)
-          Peer.for_uid(peer_uid, gid: peer_gid)
+          Peer.for_uid(peer_uid, gid: peer_gid, pid: peer_pid(socket))
         end
 
         def peer_credentials(socket)
           socket.getpeereid
+        end
+
+        # Kernel attribution only. Darwin sys/un.h defines SOL_LOCAL=0,
+        # LOCAL_PEERPID=2; Linux SO_PEERCRED exposes pid/uid/gid. Unsupported
+        # platforms keep nil, so exact requester claims can fail closed.
+        def peer_pid(socket)
+          if RUBY_PLATFORM.include?("darwin")
+            socket.getsockopt(0, 2).int
+          elsif Socket.const_defined?(:SO_PEERCRED)
+            socket.getsockopt(Socket::SOL_SOCKET, Socket::SO_PEERCRED).data.unpack("i!3").first
+          end
+        rescue SystemCallError, IOError, SocketError
+          nil
         end
 
         def store_for(peer)
@@ -221,9 +234,9 @@ module Ace
           when "deliver" then store.deliver(required(params, "id"), answer_reader(params))
           when "consume"
             store.consume(required(params, "id"), timeout: Integer(params["timeout"] || 0),
-              operation: params["operation"])
+              operation: params["operation"], native_delivery: params.fetch("native_delivery", false))
           when "cancel" then store.cancel(required(params, "id"), reason: params["reason"].to_s)
-          when "pending" then store.pending
+          when "pending" then store.pending_page(project: params["project"], after: params["after"])
           when "states" then store.states
           end
         end

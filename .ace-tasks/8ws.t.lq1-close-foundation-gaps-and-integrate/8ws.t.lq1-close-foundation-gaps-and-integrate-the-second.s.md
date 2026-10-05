@@ -174,3 +174,37 @@ This checkpoint records source integration separately from each task's remaining
 - [ ] lab-config:gad.8/.b/.9: existing source retained at `5ded430`; no duplicate setup-project or Pi installer implementation. Complete protected deployment and actual Linux/Incus acceptance after owning ACE producers. Remote receiver authentication is still pending; isolated Docker proofs do not replace it.
 
 Parallel source lanes are vs2 repair, journal repair, and independent 09j readiness review. Next admitted source slices are 09j/protected authority and vs2 → qjz; then recovery/HITL joins qk0 → qkb.1 → R2 → R3 → qkc/gad.2. Keep serial integration at shared Assign/HITL files. Final release preparation waits complete source integration; Captain publishes interactively with OTP, then the exact new graph and real Lab are verified.
+
+### Reviewed HITL source integrated — 2026-10-05
+
+- `vs2` source merged as `0d9590097` after exact `66c91a82d` independent
+  APPROVE; full affected package tests and isolated consumer installation pass.
+  Post-merge Assign runtime binding 4/32 and HITL delivery/pending 12/95 pass.
+  Source no longer relies on labd. Installed Telegram/native/signer and Lab
+  acceptance remain open; `vs2` stays in progress.
+- Next source slice: `qjz`, immutable proposals and 16-hour resolution, consuming
+  accepted HITL/ingress contracts and the sole ace-assign effect journal.
+- `xz9` amended ownership reviewed and promoted at `f7259ab1c`; it consumes
+  `09j` protected launch. `09j` implementation remains active.
+- Journal primitive `e484a8a` was rejected despite a green full package run:
+  reserved finish bypass and Git-filter artifact conversion need correction.
+  Repaired `b458644c0` is under independent review/full verification. No claim
+  of protected endcap delivery follows from the primitive alone.
+
+### Journal integration and next parallel slices — 2026-10-05
+
+The corrected journal primitive is integrated as `749bda001`, independently
+approved at `b458644c0`, with full Assign 845 total / 3661 assertions, two existing
+skips and no failures/errors (`8x4201`). Combined post-merge coordinator, journal
+and HITL runtime binding passed 66/418 (`8x421p`). Four previously verified review
+findings are resolved; primitive delivery does not complete protected services.
+
+Active GPT-6.1 Sol source lanes, each on its own worktree:
+- `09j`: native protected launch and exact fresh/replay creation authority.
+- `xz9.0`: consume that origin in candidate/review/service/finish/inbox endcap.
+- `qjz`: immutable delivered proposals, 16-hour decision and atomic effect claim.
+
+Source joins remain qk0 → complete qkb → R2 → R3 → qkc/gad.2. Native observation
+xza and actual domain installation remain required. Final release preparation
+waits complete source integration, followed by interactive OTP and installed Lab
+acceptance; no source test result closes those gates.

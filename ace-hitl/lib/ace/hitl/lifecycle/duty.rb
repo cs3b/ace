@@ -26,15 +26,14 @@ module Ace
         def pending_entry(value)
           {
             "id" => value["id"],
-            "work" => value["work"],
             "attempt" => value["attempt"],
             "project" => value["project"],
             "harness" => value["harness"],
             "kind" => value["kind"],
-            "state" => "created",
+            "state" => value["state"],
             "requester" => value["requester"],
             "created_at" => value["created_at"],
-            "has_effect" => value["effect"].is_a?(Hash) && Array(value["effect"]["argv"]).any?
+            "has_effect" => value["has_effect"] == true
           }
         end
       end

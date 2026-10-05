@@ -14,9 +14,23 @@ class TelegramTransportTest < AceHermesTestCase
     end
 
     def add(id, secret: false)
-      @requests[id] = {"id" => id, "attempt" => "W651.1", "work" => "W651", "project" => "lab",
+      @requests[id] = {"id" => id, "attempt" => "attempt651", "assignment" => "assign651", "project" => "lab",
                        "requester" => "agent", "kind" => secret ? "otp" : "text",
                        "sensitive" => secret, "question" => "Proceed?", "state" => "created"}
+      envelope = {"schema" => Ace::Hitl::Contract::ManagedEnvelope::SCHEMA, "request_id" => id,
+        "request_incarnation" => "0123456789abcdef",
+        "project" => "lab", "assignment_id" => "assign651", "attempt_id" => "attempt651", "requester" => "agent",
+        "correlation_id" => id, "kind" => secret ? "otp" : "text", "reverse" => nil}
+      envelope["payload_sha256"] = Digest::SHA256.hexdigest("Proceed?") unless secret
+      @requests[id]["envelope"] = envelope
+    end
+
+    def add_envelope(envelope)
+      id = envelope.fetch("request_id")
+      @requests[id] = {"id" => id, "attempt" => envelope["attempt_id"], "assignment" => envelope["assignment_id"],
+        "project" => envelope["project"], "requester" => envelope["requester"], "kind" => envelope["kind"],
+        "sensitive" => envelope["kind"] == "otp", "question" => envelope.dig("message", "question"),
+        "state" => "created", "envelope" => Marshal.load(Marshal.dump(envelope))}
     end
 
     def read(id)
@@ -89,6 +103,41 @@ class TelegramTransportTest < AceHermesTestCase
   def event(text = "yes", **changes)
     {"platform" => "telegram", "chat_id" => "-424242", "chat_type" => "supergroup", "user_id" => "42",
      "message_id" => "101", "reply_to_message_id" => "100", "text" => text}.merge(changes.transform_keys(&:to_s))
+  end
+
+  def shared_request
+    path = Gem::Specification.find_by_name("ace-hitl-contract").full_gem_path
+    value = JSON.parse(File.read(File.join(path, "lib/ace/hitl/contract/examples/managed-request.json")))
+    channels = @registry.channels.map { |channel| channel.merge("projects" => channel["name"] == "lab" ? ["ace"] : ["other"]) }
+    @registry = T::Registry.new({"schema" => "ace.hitl.hermes.channels/v1", "channels" => channels})
+    @relay = relay
+    @boundary.add_envelope(value)
+    value
+  end
+
+  def test_shared_managed_example_is_consumed_without_merging_folder_and_reverse_schemas
+    value = shared_request
+    id = value.fetch("request_id")
+    box.publish(kind: :question, id: id, body: value.dig("message", "question"), sender: "agent", timestamp: QUESTION_TS)
+    assert_equal "submitted", @relay.submit(channel: "lab", request: id, revision: "revision1")["status"]
+    assert_equal ["lab", "Proceed?"], @sent.first
+    assert_equal "delivered", @relay.receive(event("Approved"))["status"]
+    assert_equal [[id, "Approved"]], @boundary.answers
+    assert_equal "ace.hitl.hermes.message/v1", JSON.parse(File.read(File.join(@folders["lab"], "#{id}.json")))["schema"]
+  end
+
+  def test_managed_wrong_version_attempt_and_correlation_refuse_before_transport
+    value = shared_request
+    [->(v) { v["schema"] = "ace.hitl.managed/v99" }, ->(v) { v["attempt_id"] = "other685" },
+     ->(v) { v["correlation_id"] = "other-request" }].each do |change|
+      facts = @boundary.read(value.fetch("request_id"))
+      change.call(facts["envelope"])
+      assert_raises(Ace::Hitl::Hermes::ContractError) do
+        @relay.submit(channel: "lab", request: value.fetch("request_id"), revision: "revision1")
+      end
+      @boundary.add_envelope(value)
+    end
+    assert_empty @sent
   end
 
   def test_submission_ack_is_not_a_read_receipt_and_retries_do_not_resend
@@ -211,6 +260,28 @@ class TelegramTransportTest < AceHermesTestCase
     @relay = relay
     assert_equal "closed", @relay.receive(event)["status"]
     assert_empty @boundary.answers
+  end
+
+  def test_shared_ingress_examples_match_real_unknown_drained_and_unresolved_semantics
+    path = Gem::Specification.find_by_name("ace-hitl-contract").full_gem_path
+    examples = JSON.parse(File.read(File.join(path, "lib/ace/hitl/contract/examples/ingress-checkpoints.json"))).fetch("cases")
+    submit
+    actual = @relay.reconcile(request: "q-1", through: QUESTION_TS)
+    keys = %w[schema status healthy drained]
+    assert_equal examples[0].slice(*keys), actual.slice(*keys)
+    assert_nil actual["checkpoint"]
+    @relay.poll_complete(channel: "lab", started_at: QUESTION_TS, through: QUESTION_TS, continuous: true)
+    actual = @relay.reconcile(request: "q-1", through: QUESTION_TS)
+    assert_equal examples[1].slice(*keys), actual.slice(*keys)
+    assert_equal QUESTION_TS, actual.dig("checkpoint", "through")
+    @journal.synchronize do |state, commit|
+      state["ingress"] << {"request" => "q-1", "revision" => "rev-1", "channel" => "lab",
+        "sequence" => 1, "received_at" => QUESTION_TS, "status" => "unresolved"}
+      commit.call
+    end
+    actual = @relay.reconcile(request: "q-1", through: QUESTION_TS)
+    assert_equal examples[2].slice(*keys), actual.slice(*keys)
+    assert_equal QUESTION_TS, actual["unresolved"].first["received_at"]
   end
 
   def test_reconciliation_requires_real_coverage_and_excludes_untrusted_event_timestamp

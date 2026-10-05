@@ -206,7 +206,13 @@ module Ace
           end
 
           def binding_for(facts)
-            facts.slice("id", "work", "assignment", "attempt", "project", "requester", "kind", "sensitive", "otp")
+            envelope = Ace::Hitl::Contract::ManagedEnvelope.load(facts.fetch("envelope"), expected: {
+              request_id: facts["id"], correlation_id: facts["id"], assignment_id: facts["assignment"],
+              attempt_id: facts["attempt"], project: facts["project"], requester: facts["requester"], kind: facts["kind"]
+            })
+            {"envelope" => envelope, "sensitive" => facts["sensitive"] == true, "otp" => facts["otp"]}
+          rescue KeyError, Ace::Hitl::Contract::InvalidEnvelope => e
+            raise ContractError, "authoritative managed binding is invalid (#{e.message})"
           end
 
           def correlate(state, channel, event, text)

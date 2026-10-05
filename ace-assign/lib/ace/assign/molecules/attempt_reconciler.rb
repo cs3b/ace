@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "json"
+
 module Ace
   module Assign
     module Molecules
@@ -74,6 +76,11 @@ module Ace
         # @return [String, nil] Recorded runtime identity
         def recorded_runtime(attempt)
           start_event(attempt)&.dig("payload", "runtime")
+        end
+
+        def recorded_binding(attempt)
+          binding = start_event(attempt)&.dig("payload", "runtime_binding")
+          JSON.parse(JSON.generate(binding)) if binding.is_a?(Hash)
         end
 
         private

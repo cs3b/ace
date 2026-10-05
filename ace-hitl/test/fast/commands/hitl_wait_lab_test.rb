@@ -1,286 +1,108 @@
 # frozen_string_literal: true
-
 require "test_helper"
-require "json"
+require "support/lifecycle_fixtures"
+require "etc"
+require "timeout"
 
 class HitlWaitLabTest < AceHitlTestCase
+  include LifecycleFixtures
   def setup
     super
-    @public_dir = Dir.mktmpdir("ace-hitl-public")
+    @scratch = Dir.mktmpdir("ace-hitl-ask")
+    @root = File.join(@scratch, "store")
+    @socket = File.join(@scratch, "hitl.sock")
+    @failure = nil
+    test = self
+    @binding = TestBinding.new(reverse: {"schema" => "ace.hitl.ref/v1", "session" => "workspace1", "pane" => "pane1"},
+      on_validate: ->(**) { raise test.failure if test.failure })
+    policy = Ace::Hitl::Lifecycle::GrantsPolicy.new(document: {
+      "hitl" => {"service_uid" => Process.uid, "transport_uids" => [Process.uid]},
+      "authorization" => {"principals" => {Process.uid.to_s => {"projects" => ["ace"]}}}
+    })
+    @service = Ace::Hitl::Lifecycle::Service.new(root: @root, binding: @binding,
+      policy: policy, socket_path: @socket, group: Etc.getgrgid(Process.gid).name)
+    @thread = Thread.new { @service.run }
+    Timeout.timeout(5) { sleep 0.01 until File.socket?(@socket) || !@thread.alive? }
+    @thread.value unless @thread.alive?
+    @client = Ace::Hitl::Lifecycle::Client.new(socket_path: @socket, service_uid: Process.uid)
+    @original_client = Ace::Hitl::Providers::Lab.method(:boundary_client)
+    client = @client
+    Ace::Hitl::Providers::Lab.define_singleton_method(:boundary_client) { |**| client }
   end
 
+  attr_reader :failure
+
   def teardown
-    FileUtils.remove_entry(@public_dir) if @public_dir && File.exist?(@public_dir)
+    Ace::Hitl::Providers::Lab.define_singleton_method(:boundary_client, @original_client)
+    @service&.stop
+    @thread&.join(5)
+    @thread&.kill
+    FileUtils.remove_entry(@scratch)
     super
   end
 
-  # Real ga9 projection schema: lifecycle `state` plus a SEPARATE
-  # `effect_state` field for effect-callback outcomes.
-  def write_projection(request_id, state, effect_state: nil)
-    projection = {"id" => request_id, "work" => "W685", "state" => state}
-    projection["effect_state"] = effect_state unless effect_state.nil?
-    File.write(File.join(@public_dir, "#{request_id}.json"), JSON.dump(projection))
+  def test_create_attributes_requester_to_kernel_peer_pid_and_refuses_unavailable_pid
+    seen = []
+    original = @binding.method(:validate_request)
+    @binding.define_singleton_method(:validate_request) do |**args|
+      seen << args[:caller_pid]
+      raise Ace::Hitl::Lifecycle::BindingError, "kernel peer PID unavailable" unless args[:caller_pid]
+      original.call(**args)
+    end
+    @client.create(**request_args(id: "peer001"))
+    assert_equal [Process.pid], seen
+    @service.define_singleton_method(:peer_pid) { |_| nil }
+    assert_raises(Ace::Hitl::Lifecycle::BindingError) { @client.create(**request_args(id: "peer002")) }
+    refute File.exist?(File.join(@root, "requests", "peer002.json"))
   end
 
-  def with_lab_public_dir(&block)
-    with_env("ACE_HITL_LAB_PUBLIC_DIR" => @public_dir, &block)
+  def test_pane_less_wait_consumes_authenticated_request_without_native_delivery
+    @client.create(**request_args(id: "wait001"))
+    @client.deliver("wait001", "approved")
+    result = run_cli(["wait", "--request", "wait001", "--timeout", "1"])
+    assert_equal 0, result[:exit_code], result[:stderr]
+    value = JSON.parse(result[:stdout])
+    assert_equal "approved", value["answer"]
+    refute_equal true, value["native_delivery"]
+    assert_equal "consumed", @client.read("wait001")["state"]
   end
 
-  def event_metadata(root, id)
-    Ace::Hitl::Organisms::HitlManager.new(root_dir: root).show(id)[:event].metadata
-  end
-
-  def test_wait_surfaces_plain_answer_delivery_for_non_effect_requests
+  def test_managed_event_wait_ignores_forged_local_answer_and_public_folder
+    @client.create(**request_args(id: "wait002"))
     with_hitl_dir do |root|
-      create_hitl_fixture(
-        root,
-        id: "8ppq7w",
-        slug: "lab-callback",
-        status: "pending",
-        extra_frontmatter: {"lab_request_id" => "labreq42", "lab_request_effect" => "none"}
-      )
-      write_projection("labreq42", "answer-delivered")
-
+      create_hitl_fixture(root, id: "8ppq7w", slug: "managed", status: "pending",
+        extra_frontmatter: {"lab_request_id" => "wait002"})
       with_cli_root(root) do
-        with_lab_public_dir do
-          result = run_cli(["wait", "8ppq7w", "--poll-every", "1", "--timeout", "5"])
-
-          assert_equal 0, result[:exit_code], result[:stderr]
-          assert_match(/Lab request delivered: 8ppq7w \(answer-delivered\)/, result[:stdout])
-          assert_match(/Lab request: labreq42/, result[:stdout])
-          assert_match(/Consume the answer when ready from the lab relay\./, result[:stdout])
-          refute_match(/Effect callback/, result[:stdout])
-
-          metadata = event_metadata(root, "8ppq7w")
-          assert_equal "answer-delivered", metadata["lab_request_state"]
-          assert_equal "lab_delivered", metadata["waiter_state"]
-        end
+        result = run_cli(["wait", "8ppq7w", "--timeout", "1"])
+        assert_equal 1, result[:exit_code]
+        assert_match(/timed out|timeout/i, result[:stderr])
+        assert_equal "created", @client.read("wait002")["state"]
+        @client.deliver("wait002", "scoped answer")
+        result = run_cli(["wait", "8ppq7w", "--timeout", "1"])
+        assert_equal 0, result[:exit_code], result[:stderr]
+        assert_equal "scoped answer", JSON.parse(result[:stdout])["answer"]
+        event = Ace::Hitl::Organisms::HitlManager.new(root_dir: root).show("8ppq7w")[:event]
+        assert_empty event.answer.to_s
       end
     end
   end
 
-  def test_wait_effect_request_keeps_waiting_through_pending_callback
-    with_hitl_dir do |root|
-      create_hitl_fixture(
-        root,
-        id: "8ppq7w",
-        slug: "lab-effect-pending",
-        status: "pending",
-        extra_frontmatter: {"lab_request_id" => "labreq42", "lab_request_effect" => "declared"}
-      )
-      write_projection("labreq42", "answer-delivered", effect_state: "callback-pending-with-answer")
-
-      with_cli_root(root) do
-        with_lab_public_dir do
-          result = run_cli(["wait", "8ppq7w", "--poll-every", "1", "--timeout", "1"])
-
-          assert_equal 1, result[:exit_code]
-          assert_match(/Timed out waiting/, result[:stderr])
-
-          metadata = event_metadata(root, "8ppq7w")
-          assert_equal "callback-pending-with-answer", metadata["lab_request_state"]
-          assert_equal "timed_out", metadata["waiter_state"]
-        end
-      end
-    end
+  def test_missing_request_and_ambiguous_reference_do_not_fall_back
+    result = run_cli(["wait", "--request", "absent", "--timeout", "1"])
+    assert_equal 1, result[:exit_code]
+    result = run_cli(["wait", "8ppq7w", "--request", "wait003"])
+    assert_equal 1, result[:exit_code]
+    assert_match(/not both/, result[:stderr])
   end
 
-  def test_wait_effect_request_surfaces_callback_ok_not_answer_delivery
+  def test_local_manager_refuses_managed_wait_and_unscoped_resume
     with_hitl_dir do |root|
-      create_hitl_fixture(
-        root,
-        id: "8ppq7w",
-        slug: "lab-effect-ok",
-        status: "pending",
-        extra_frontmatter: {"lab_request_id" => "labreq42", "lab_request_effect" => "declared"}
-      )
-      write_projection("labreq42", "answer-delivered", effect_state: "callback-ok")
-
+      create_hitl_fixture(root, id: "8ppq7w", slug: "managed", status: "pending",
+        extra_frontmatter: {"lab_request_id" => "wait004"})
       with_cli_root(root) do
-        with_lab_public_dir do
-          result = run_cli(["wait", "8ppq7w", "--poll-every", "1", "--timeout", "5"])
-
-          assert_equal 0, result[:exit_code], result[:stderr]
-          assert_match(/Lab request delivered: 8ppq7w \(callback-ok\)/, result[:stdout])
-          assert_match(/Effect callback: ok/, result[:stdout])
-
-          metadata = event_metadata(root, "8ppq7w")
-          assert_equal "callback-ok", metadata["lab_request_state"]
-          assert_equal "lab_delivered", metadata["waiter_state"]
-        end
-      end
-    end
-  end
-
-  def test_wait_effect_request_surfaces_callback_escalation_with_hint
-    with_hitl_dir do |root|
-      create_hitl_fixture(
-        root,
-        id: "8ppq7w",
-        slug: "lab-effect-escalated",
-        status: "pending",
-        extra_frontmatter: {"lab_request_id" => "labreq42", "lab_request_effect" => "declared"}
-      )
-      write_projection("labreq42", "answer-delivered", effect_state: "callback-escalated")
-
-      with_cli_root(root) do
-        with_lab_public_dir do
-          result = run_cli(["wait", "8ppq7w", "--poll-every", "1", "--timeout", "5"])
-
-          assert_equal 0, result[:exit_code], result[:stderr]
-          assert_match(/Lab request delivered: 8ppq7w \(callback-escalated\)/, result[:stdout])
-          assert_match(/Effect callback: escalated; inspect the lab duty projection/, result[:stdout])
-          assert_match(/Consume the answer when ready from the lab relay\./, result[:stdout])
-
-          metadata = event_metadata(root, "8ppq7w")
-          assert_equal "callback-escalated", metadata["lab_request_state"]
-        end
-      end
-    end
-  end
-
-  def test_wait_effect_request_answered_event_still_holds_for_outcome
-    with_hitl_dir do |root|
-      create_hitl_fixture(
-        root,
-        id: "8ppq7w",
-        slug: "lab-effect-answered",
-        status: "answered",
-        answer: "Ship it",
-        extra_frontmatter: {"lab_request_id" => "labreq42", "lab_request_effect" => "declared"}
-      )
-      write_projection("labreq42", "answer-delivered", effect_state: "callback-pending-with-answer")
-
-      with_cli_root(root) do
-        with_lab_public_dir do
-          result = run_cli(["wait", "8ppq7w", "--poll-every", "1", "--timeout", "1"])
-
-          assert_equal 1, result[:exit_code]
-          assert_match(/Timed out waiting/, result[:stderr])
-        end
-      end
-    end
-  end
-
-  def test_wait_answered_effect_request_reports_effect_outcome
-    with_hitl_dir do |root|
-      create_hitl_fixture(
-        root,
-        id: "8ppq7w",
-        slug: "lab-effect-answered",
-        status: "answered",
-        answer: "Ship it",
-        extra_frontmatter: {
-          "lab_request_id" => "labreq42",
-          "lab_request_state" => "answer-delivered",
-          "lab_request_effect" => "declared"
-        }
-      )
-      write_projection("labreq42", "answer-delivered", effect_state: "callback-ok")
-
-      with_cli_root(root) do
-        with_lab_public_dir do
-          result = run_cli(["wait", "8ppq7w", "--poll-every", "1", "--timeout", "5"])
-
-          assert_equal 0, result[:exit_code], result[:stderr]
-          assert_match(/HITL event answered: 8ppq7w/, result[:stdout])
-          assert_match(/Ship it/, result[:stdout])
-          # The reported state must be the effect outcome, never plain
-          # answer-delivered while an effect outcome exists.
-          assert_match(/Lab request: labreq42 \(callback-ok\)/, result[:stdout])
-        end
-      end
-    end
-  end
-
-  def test_wait_answered_includes_lab_state_when_projected
-    with_hitl_dir do |root|
-      create_hitl_fixture(
-        root,
-        id: "8ppq7w",
-        slug: "lab-answered",
-        status: "answered",
-        answer: "Ship it",
-        extra_frontmatter: {
-          "lab_request_id" => "labreq42",
-          "lab_request_state" => "answer-delivered",
-          "lab_request_effect" => "none"
-        }
-      )
-      write_projection("labreq42", "answer-delivered")
-
-      with_cli_root(root) do
-        with_lab_public_dir do
-          result = run_cli(["wait", "8ppq7w", "--poll-every", "1", "--timeout", "5"])
-
-          assert_equal 0, result[:exit_code], result[:stderr]
-          assert_match(/HITL event answered: 8ppq7w/, result[:stdout])
-          assert_match(/Ship it/, result[:stdout])
-          assert_match(/Lab request: labreq42 \(answer-delivered\)/, result[:stdout])
-        end
-      end
-    end
-  end
-
-  def test_wait_without_lab_id_ignores_projection
-    with_hitl_dir do |root|
-      create_hitl_fixture(root, id: "8ppq7w", slug: "plain-pending", status: "pending")
-      write_projection("unrelated", "answer-delivered", effect_state: "callback-ok")
-
-      with_cli_root(root) do
-        with_lab_public_dir do
-          result = run_cli(["wait", "8ppq7w", "--poll-every", "1", "--timeout", "1"])
-
-          assert_equal 1, result[:exit_code]
-          assert_match(/Timed out waiting/, result[:stderr])
-        end
-      end
-    end
-  end
-
-  def test_wait_times_out_with_non_terminal_lab_state
-    with_hitl_dir do |root|
-      create_hitl_fixture(
-        root,
-        id: "8ppq7w",
-        slug: "lab-pending",
-        status: "pending",
-        extra_frontmatter: {"lab_request_id" => "labreq42", "lab_request_effect" => "none"}
-      )
-      write_projection("labreq42", "created")
-
-      with_cli_root(root) do
-        with_lab_public_dir do
-          result = run_cli(["wait", "8ppq7w", "--poll-every", "1", "--timeout", "1"])
-
-          assert_equal 1, result[:exit_code]
-          assert_match(/Timed out waiting/, result[:stderr])
-
-          metadata = event_metadata(root, "8ppq7w")
-          assert_equal "created", metadata["lab_request_state"]
-          assert_equal "timed_out", metadata["waiter_state"]
-        end
-      end
-    end
-  end
-
-  def test_wait_missing_projection_keeps_waiting_until_timeout
-    with_hitl_dir do |root|
-      create_hitl_fixture(
-        root,
-        id: "8ppq7w",
-        slug: "no-projection",
-        status: "pending",
-        extra_frontmatter: {"lab_request_id" => "labreq42"}
-      )
-
-      with_cli_root(root) do
-        with_lab_public_dir do
-          result = run_cli(["wait", "8ppq7w", "--poll-every", "1", "--timeout", "1"])
-
-          assert_equal 1, result[:exit_code]
-          assert_match(/Timed out waiting/, result[:stderr])
-        end
+        manager = Ace::Hitl::Organisms::HitlManager.new(root_dir: root)
+        assert_raises(Ace::Hitl::Lifecycle::StateError) { manager.wait_for_answer("8ppq7w") }
+        assert_equal :managed_request, manager.dispatch_resume("8ppq7w")[:status]
       end
     end
   end

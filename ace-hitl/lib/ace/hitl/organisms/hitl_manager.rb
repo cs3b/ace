@@ -8,7 +8,6 @@ require_relative "../molecules/hitl_config_loader"
 require_relative "../molecules/hitl_scanner"
 require_relative "../molecules/hitl_loader"
 require_relative "../molecules/hitl_creator"
-require_relative "../molecules/lab_projection_observer"
 require_relative "../molecules/hitl_answer_editor"
 require_relative "../molecules/resume_dispatcher"
 require_relative "../molecules/worktree_scope_resolver"
@@ -122,7 +121,7 @@ module Ace
           loader.load(current_path, id: event.id, special_folder: current_special)
         end
 
-        def wait_for_answer(ref, scope: nil, poll_every: 600, timeout: 14_400, waiter: {}, now_proc: nil, sleeper: nil, lab_observer: nil)
+        def wait_for_answer(ref, scope: nil, poll_every: 600, timeout: 14_400, waiter: {}, now_proc: nil, sleeper: nil)
           poll_every = normalize_poll_seconds(poll_every)
           timeout = normalize_timeout_seconds(timeout)
           now_proc ||= -> { Time.now.utc }
@@ -138,6 +137,10 @@ module Ace
             return {status: :not_found} unless current
 
             event = current[:event]
+            if event.metadata["lab_request_id"]
+              raise Lifecycle::StateError, "managed requests require authenticated scoped wait"
+            end
+
             now = now_proc.call
             refresh_waiter_lease(
               event,
@@ -149,20 +152,7 @@ module Ace
               scope: scope
             )
 
-            observer = lab_observer_for(lab_observer)
-            lab_snapshot = observe_lab_state(event, observer: observer, scope: scope)
-            lab_state = observer.effective_state(lab_snapshot)
-
-            # An effect-declaring request keeps waiting until the callback
-            # verdict (callback-ok / callback-escalated) is visible; answer
-            # delivery alone never ends the wait. When the projection is
-            # unreadable there is nothing to hold on, so the wait falls
-            # back to the event/lifecycle behavior (timeout stays the
-            # backstop).
-            hold_for_effect = effect_declared?(event) && lab_snapshot &&
-              !observer.terminal?(lab_snapshot, effect_declared: true)
-
-            if event.answered? && !hold_for_effect
+            if event.answered?
               update(event.id,
                 set: {
                   "waiter_state" => "answered",
@@ -171,25 +161,12 @@ module Ace
                 scope: scope
               )
               refreshed = show(event.id, scope: scope)&.dig(:event) || event
-              return {status: :answered, event: refreshed, lab_state: lab_state}
-            end
-
-            if observer.terminal?(lab_snapshot, effect_declared: effect_declared?(event))
-              update(
-                event.id,
-                set: {
-                  "waiter_state" => "lab_delivered",
-                  "waiter_last_seen_at" => now.iso8601,
-                  "lab_request_state" => lab_state
-                },
-                scope: scope
-              )
-              return {status: :lab_delivered, event: event, lab_state: lab_state}
+              return {status: :answered, event: refreshed}
             end
 
             if now >= deadline
               update(event.id, set: {"waiter_state" => "timed_out"}, scope: scope)
-              return {status: :timeout, event: event, lab_state: lab_state}
+              return {status: :timeout, event: event}
             end
 
             sleep_seconds = [poll_every, (deadline - now).ceil].min
@@ -202,6 +179,8 @@ module Ace
           return {status: :not_found} unless current
 
           event = current[:event]
+          return {status: :managed_request, event: event} if event.metadata["lab_request_id"]
+
           answer = event.answer.to_s
           return {status: :no_answer, event: event} if answer.strip.empty?
 
@@ -242,26 +221,6 @@ module Ace
         end
 
         private
-
-        def lab_observer_for(lab_observer)
-          lab_observer || Molecules::LabProjectionObserver.new
-        end
-
-        def effect_declared?(event)
-          event.metadata["lab_request_effect"] == "declared"
-        end
-
-        def observe_lab_state(event, observer:, scope:)
-          request_id = event.metadata["lab_request_id"]
-          return nil if request_id.nil? || request_id.to_s.strip.empty?
-
-          snapshot = observer.snapshot_for(request_id)
-          state = observer.effective_state(snapshot)
-          if state && state != event.metadata["lab_request_state"]
-            update(event.id, set: {"lab_request_state" => state}, scope: scope)
-          end
-          snapshot
-        end
 
         def load_config
           Molecules::HitlConfigLoader.load

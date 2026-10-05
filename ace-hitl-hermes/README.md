@@ -7,8 +7,8 @@ the transport:
 - a **message** is a file `<id>.json` in the channel folder;
 - the **address** is `<machine>/<folder>/<id>`;
 - **delivery** is push — the consuming side picks the validated file up
-  and takes it to its target (labd pushes answers to the asking agent,
-  hermes surfaces questions to the Captain);
+  and takes it to its target (the explicit HITL live client queues ordinary
+  answers to the exact native owner; Hermes surfaces questions to the Captain);
 - **ACK** is the deletion of the file after delivery.
 
 The Captain's answer is a file `<folder>/<id>.json` with the fields
@@ -85,3 +85,11 @@ See [configuration, single polling owner and recovery](docs/usage.md).
 ace-test atoms      # fast unit tests
 ace-test            # the whole package suite
 ```
+
+The installed `serve` actor also publishes newly created scoped requests from
+authenticated `pending(project:)` into its registered folder channel before
+submitting questions. Ask needs no manual post or hidden Lab watcher. Projects
+without a registered authorized channel remain pending. Folder identity/body
+conflicts refuse publication; repeated runs do not send the same submitted
+question again. This actor remains the sole Telegram polling owner described
+above. Actual installed Telegram acceptance is a separate deployment gate.
