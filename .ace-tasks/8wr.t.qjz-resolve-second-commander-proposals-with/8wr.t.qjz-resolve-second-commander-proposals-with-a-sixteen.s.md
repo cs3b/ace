@@ -10,7 +10,7 @@ bundle:
   presets: [project]
   files: [ace-hitl/lib/ace/hitl/lifecycle/store.rb, ace-hitl/lib/ace/hitl/lifecycle/effects.rb, ace-hitl/lib/ace/hitl/lifecycle/kinds.rb, ace-overseer/handbook/workflow-instructions/overseer.wf.md]
   commands: []
-needs_review: true
+needs_review: false
 title: Resolve second-commander proposals with a sixteen-hour veto window
 position: 6o000c
 ---
