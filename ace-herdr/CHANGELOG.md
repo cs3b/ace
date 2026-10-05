@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Pin managed delivery to the accepted original native target under the event lock and reject secret-bearing payloads even without a nested message.
 
 ### Changed
+- Bind protected control to the canonical per-attempt server/socket identity while retaining the fixed native executable view selected by installation verification.
 - Validate and preserve the shared managed delivery envelope at Inbox enqueue, rejecting mismatched scope/digest/correlation and changed replay metadata.
 
 ### Added

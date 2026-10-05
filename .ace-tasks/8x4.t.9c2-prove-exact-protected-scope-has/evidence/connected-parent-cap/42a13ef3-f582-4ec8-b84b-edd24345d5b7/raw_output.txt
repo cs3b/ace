@@ -1,0 +1,106 @@
+Started with run options --seed 38148
+
+Ace::Runtime::Atoms::SendContractTest
+  test_blank_command_counts_as_no_command                         PASS (0.00s)
+  test_items_must_be_single_key_hashes                            PASS (0.00s)
+  test_only_message_and_key_kinds_are_accepted                    PASS (0.00s)
+  test_agent_aware_enter_matching_is_case_insensitive             PASS (0.00s)
+  test_string_and_symbol_item_keys_are_equivalent                 PASS (0.00s)
+  test_agent_aware_keys_between_messages_rejected                 PASS (0.00s)
+  test_agent_aware_command_becomes_single_prompt                  PASS (0.00s)
+  test_agent_aware_command_with_messages_rejected                 PASS (0.00s)
+  test_empty_send_is_rejected_for_both_profiles                   PASS (0.00s)
+  test_agent_aware_messages_with_non_enter_key_rejected           PASS (0.00s)
+  test_plain_pane_command_yields_single_submission_shape          PASS (0.00s)
+  test_agent_aware_command_with_non_enter_key_rejected            PASS (0.00s)
+  test_agent_aware_keys_only_is_accepted                          PASS (0.00s)
+  test_item_values_are_validated                                  PASS (0.00s)
+  test_agent_aware_multiple_enters_rejected                       PASS (0.00s)
+  test_convenience_request_shapes                                 PASS (0.00s)
+  test_agent_aware_single_trailing_enter_is_dropped_and_reported  PASS (0.00s)
+  test_agent_aware_messages_concatenate_into_one_prompt           PASS (0.00s)
+  test_command_requires_key_only_items                            PASS (0.00s)
+  test_plain_pane_preserves_order                                 PASS (0.00s)
+  test_agent_aware_command_with_single_trailing_enter_is_dropped_and_reported PASS (0.00s)
+  test_unknown_profile_is_a_usage_error                           PASS (0.00s)
+
+Ace::Runtime::Atoms::DetectorTest
+  test_tmux_env_detects_tmux                                      PASS (0.00s)
+  test_ace_tmux_session_detects_tmux                              PASS (0.00s)
+  test_blank_tmux_values_do_not_detect                            PASS (0.00s)
+  test_herdr_requires_session_and_pane                            PASS (0.00s)
+  test_detection_is_side_effect_free                              PASS (0.00s)
+  test_both_live_detects_tmux                                     PASS (0.00s)
+  test_neither_runtime_returns_nil_without_exception              PASS (0.00s)
+
+Ace::Runtime::Atoms::NameSanitizerTest
+  test_unsafe_characters_collapse_to_dashes                       PASS (0.00s)
+  test_custom_fallback_is_sanitized_too                           PASS (0.00s)
+  test_deterministic_normalization                                PASS (0.00s)
+  test_module_level_delegate                                      PASS (0.00s)
+  test_leading_and_trailing_dashes_are_stripped                   PASS (0.00s)
+  test_empty_name_falls_back                                      PASS (0.00s)
+  test_safe_names_pass_through                                    PASS (0.00s)
+
+Finished in 0.00233s
+36 tests, 95 assertions, 0 failures, 0 errors, 0 skips
+
+
+# Running tests with run options --seed 21123:
+
+.........................................................................................
+
+Finished tests in 0.124937s, 712.3590 tests/s, 3249.6378 assertions/s.
+
+
+89 tests, 406 assertions, 0 failures, 0 errors, 0 skips
+
+
+# Running tests with run options --seed 3:
+
+...........
+
+Finished tests in 0.013623s, 807.4580 tests/s, 1761.7265 assertions/s.
+
+
+11 tests, 24 assertions, 0 failures, 0 errors, 0 skips
+
+
+# Running tests with run options --seed 14515:
+
+.............
+
+Finished tests in 0.003379s, 3847.2928 tests/s, 13909.4431 assertions/s.
+
+
+13 tests, 47 assertions, 0 failures, 0 errors, 0 skips
+
+
+# Running tests with run options --seed 25302:
+
+..................................................................................
+
+Finished tests in 0.334217s, 245.3496 tests/s, 685.1836 assertions/s.
+
+
+82 tests, 229 assertions, 0 failures, 0 errors, 0 skips
+
+Started with run options --seed 19819
+
+NativeArtifactTest
+  test_built_gem_ships_exact_native_source_and_executable_build_inputs PASS (0.04s)
+
+NetworkInstallationArtifactsTest
+  test_complete_closed_verifier_uses_real_graph_bytes_and_holds_all_source_artifacts PASS (0.01s)
+  test_eof_after_size_inspection_is_a_typed_content_refusal_and_closes_handles PASS (0.00s)
+  test_read_length_digest_kind_symlink_and_writable_modes_refuse  PASS (0.00s)
+  test_actual_content_descriptors_are_held_until_complete_validation_and_closed_afterwards PASS (0.00s)
+  test_unique_graph_count_and_aggregate_bytes_limits_and_consistent_sharing PASS (0.10s)
+  test_writable_or_symlink_ancestor_refuses                       PASS (0.00s)
+  test_path_replacement_and_content_or_ancestor_mutation_refuse_while_pinned PASS (0.00s)
+
+ProcessOwnershipTest
+  test_dead_owner_with_live_writing_descendant_is_unknown_and_preserves_files PASS (0.04s)
+
+Finished in 0.19999s
+9 tests, 65 assertions, 0 failures, 0 errors, 0 skips

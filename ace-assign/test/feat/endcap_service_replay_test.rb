@@ -26,8 +26,8 @@ module Ace
           deployment.define_singleton_method(:mapping) { |_| map }
           launch = Object.new
           launch.define_singleton_method(:with_assignment) { |**_, &block| block.call(journal, {}) }
-          # Controlled scope-owner seam; installed scope proof is covered by
-          # the connected owner/observer tests, not this service policy fixture.
+          # Controlled scope-owner seam. Scope proof behavior is covered by
+          # connected owner/observer source tests; installed proof remains separate.
           launch.define_singleton_method(:scope_open_for_effect!) { |**_| true }
           kernel = Object.new
           kernel.define_singleton_method(:live!) { |_| true }

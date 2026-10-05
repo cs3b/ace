@@ -1,0 +1,621 @@
+Started with run options --seed 977
+
+AssignmentRecoveryTest
+  test_registered_live_and_archived_records_fail_closed_when_replaced PASS (7.80s)
+  test_superseded_requeues_same_event_but_does_not_restart_or_succeed_attempt PASS (3.18s)
+  test_invalid_or_absent_proofs_preserve_uncertainty              PASS (2.54s)
+  test_managed_runtime_owner_is_produced_by_adapter_and_reobserved_after_restart PASS (4.79s)
+  test_consumed_after_supervisor_restart_settles_once_without_business_effect_success PASS (3.83s)
+  test_public_inbox_consumer_uses_existing_signed_proof_and_redacts_output PASS (1.67s)
+  test_replacement_after_registration_check_cannot_settle_another_attempt PASS (1.29s)
+  test_missing_record_and_stale_target_stay_uncertain_and_never_resend PASS (1.58s)
+  test_compaction_with_same_binding_does_not_reregister_or_replay_payload PASS (2.03s)
+  test_crash_after_transport_receipt_before_consumer_journal_is_recoverable PASS (1.76s)
+  test_rotation_with_unresolved_event_refuses_new_key_and_accepts_retained_pair PASS (1.82s)
+
+Finished in 32.28926s
+11 tests, 135 assertions, 0 failures, 0 errors, 0 skips
+
+Started with run options --seed 8943
+
+Ace::Assign::AtomicServiceMutationTest
+  test_repeated_dispatch_plan_only_reports_retained_state_without_fresh_permission PASS (2.98s)
+  test_rejected_staging_cannot_leak_into_later_append             PASS (1.93s)
+  test_record_projection_corruption_cannot_claim_canonical_terminal_truth PASS (1.65s)
+  test_ephemeral_original_input_is_bounded_immutable_and_never_persisted PASS (2.57s)
+  test_deleted_import_cannot_be_replaced_by_workspace_evidence_on_terminal_read PASS (1.71s)
+  test_pending_import_record_event_and_reply_share_one_commit_with_exact_bytes PASS (2.57s)
+  test_lost_cas_rechecks_owner_policy_before_any_partial_acceptance PASS (1.87s)
+  test_raw_blob_plan_cannot_bypass_service_owner_and_cross_attempt_update_is_refused PASS (1.27s)
+  test_completion_plan_imports_exact_executor_truth_without_new_origin_permission PASS (6.13s)
+  test_lower_protected_fresh_write_without_original_input_refuses_before_policy_or_origin PASS (0.91s)
+
+Finished in 23.59827s
+10 tests, 131 assertions, 0 failures, 0 errors, 0 skips
+
+Started with run options --seed 59659
+
+Ace::Assign::ProtectedDeploymentTest
+  test_slot_ownership_and_worker_principals_are_unique_across_mappings PASS (0.00s)
+  test_inbox_context_is_fixed_project_selection_without_native_repinnning PASS (0.00s)
+  test_inbox_context_rejects_unknown_fields_bad_roles_native_selection_and_artifacts PASS (0.00s)
+  test_inbox_effective_acl_mask_cannot_hide_foreign_write_or_private_read PASS (0.00s)
+  test_unknown_fields_loader_environment_and_changed_groups_are_rejected PASS (0.00s)
+  test_inbox_context_filesystem_refusal_preserves_private_directory_and_never_runs_client PASS (0.01s)
+  test_duplicate_endpoint_and_project_owner_are_refused_before_server_construction PASS (0.00s)
+  test_installed_native_workspace_is_required_and_canonical       PASS (0.00s)
+  test_inbox_context_roots_cannot_alias_worker_receiver_authority_or_sibling_state PASS (0.00s)
+  test_obsolete_pid_pinned_map_and_incomplete_scope_are_refused   PASS (0.00s)
+  test_fixed_mapping_and_source_composition_match                 PASS (0.00s)
+
+Finished in 0.01751s
+11 tests, 48 assertions, 0 failures, 0 errors, 0 skips
+
+Started with run options --seed 24490
+
+Ace::Assign::ProtectedLaunchLifecycleTest
+  test_driver_never_repeats_creation_after_lost_response_and_reservation_replay PASS (6.62s)
+  test_uncertainty_retains_exact_handles_until_completed_shutdown PASS (7.09s)
+  test_bind_precedes_single_durable_release_and_replay_never_resends PASS (11.91s)
+  test_launcher_pidfd_refusal_cannot_commit_or_wedge_reservation  PASS (5.30s)
+  test_definition_change_requires_all_scopes_terminal             PASS (13.48s)
+  test_uncertain_recovery_without_retained_handle_cannot_infer_exit PASS (9.34s)
+  test_oversized_and_deep_scope_or_oversized_result_refuse_before_commit PASS (1.99s)
+  test_exact_child_exit_projects_uncertainty_without_releasing_ownership PASS (8.88s)
+  test_public_termination_uses_retained_exit_without_native_close_or_repinnning PASS (8.07s)
+  test_lost_release_frame_remains_issued_and_exact_exit_cannot_fabricate_no_execution PASS (15.56s)
+  test_launcher_loss_closes_admission_and_established_gate_never_reconnects PASS (6.84s)
+  test_child_only_abort_cannot_authorize_another_reservation      PASS (8.22s)
+  test_worker_cannot_mutate_origin_and_changed_child_cannot_bind  PASS (7.22s)
+  test_pre_release_exact_child_exit_is_required_for_abort         PASS (6.87s)
+  test_competing_reservation_acceptance_replays_and_closes_local_handle PASS (2.67s)
+  test_reservation_replay_and_plan_refusal_open_no_additional_handles PASS (5.79s)
+  test_reservation_replay_and_overlap_never_create_another_intent PASS (6.77s)
+  test_child_exit_closes_exact_handles_but_does_not_release_parent_reservation PASS (8.17s)
+  test_inconclusive_abort_can_resolve_only_with_exact_retained_exit_and_no_issuance PASS (10.37s)
+  test_driver_losing_cas_to_same_id_acceptance_never_creates_native_child PASS (2.49s)
+  test_shared_assignment_context_uses_canonical_registration_and_one_mutex PASS (1.13s)
+
+Finished in 154.78554s
+21 tests, 163 assertions, 0 failures, 0 errors, 0 skips
+
+Started with run options --seed 581
+
+Ace::Assign::LaunchScopeAdmissionTest
+  test_private_admission_is_not_a_public_launch_operation         PASS (0.00s)
+  test_only_fresh_canonical_winner_starts_and_replay_keeps_original_reply PASS (3.99s)
+  test_parent_only_proof_guarded_abort_and_durable_release_are_all_required_for_reuse PASS (9.11s)
+  test_lost_manager_reply_and_authority_restart_never_retry_start PASS (2.88s)
+  test_seal_commits_before_stop_and_requires_fresh_close_to_record_proof PASS (5.96s)
+  test_duplicate_otherwise_valid_scope_failure_is_rejected_without_mutation PASS (4.51s)
+  test_unavailable_boundary_refuses_before_canonical_admission_and_start PASS (2.18s)
+  test_lost_stop_reply_keeps_seal_and_original_reply_without_retry PASS (4.04s)
+  test_restart_replays_guarded_abort_and_finishes_missing_private_release PASS (9.53s)
+  test_fresh_close_resumes_lost_stop_without_replaying_original_io PASS (5.44s)
+
+Finished in 47.64474s
+10 tests, 84 assertions, 0 failures, 0 errors, 0 skips
+
+Started with run options --seed 4559
+
+Ace::Assign::LaunchScopeParentCapTest
+  test_production_parent_observer_driver_abort_release_and_next_reservation PASS (28.38s)
+
+Finished in 28.37908s
+1 tests, 19 assertions, 0 failures, 0 errors, 0 skips
+
+Started with run options --seed 38988
+
+Ace::Assign::ProtectedDeploymentTest
+  test_slot_ownership_and_worker_principals_are_unique_across_mappings PASS (0.00s)
+  test_inbox_effective_acl_mask_cannot_hide_foreign_write_or_private_read PASS (0.00s)
+  test_installed_native_workspace_is_required_and_canonical       PASS (0.00s)
+  test_inbox_context_roots_cannot_alias_worker_receiver_authority_or_sibling_state PASS (0.00s)
+  test_unknown_fields_loader_environment_and_changed_groups_are_rejected PASS (0.00s)
+  test_inbox_context_is_fixed_project_selection_without_native_repinnning PASS (0.00s)
+  test_duplicate_endpoint_and_project_owner_are_refused_before_server_construction PASS (0.00s)
+  test_fixed_mapping_and_source_composition_match                 PASS (0.00s)
+  test_inbox_context_filesystem_refusal_preserves_private_directory_and_never_runs_client PASS (0.01s)
+  test_obsolete_pid_pinned_map_and_incomplete_scope_are_refused   PASS (0.00s)
+  test_inbox_context_rejects_unknown_fields_bad_roles_native_selection_and_artifacts PASS (0.00s)
+
+Ace::Assign::ProtectedPosixAclTest
+  test_matching_groups_are_masked_and_do_not_fall_through_to_other PASS (0.00s)
+  test_mode_only_executor_cannot_use_authority_group_access       PASS (0.00s)
+  test_named_uid_precedes_group_and_other_and_is_masked           PASS (0.00s)
+  test_malformed_access_acl_refuses_instead_of_mode_fallback      PASS (0.00s)
+
+Finished in 0.01700s
+15 tests, 65 assertions, 0 failures, 0 errors, 0 skips
+
+Started with run options --seed 46961
+
+Ace::Assign::ProtectedPublicLaunchTest
+  test_public_authority_commands_are_registered                   PASS (0.00s)
+  test_dry_run_only_preflights_without_definition_read_or_mutation PASS (0.00s)
+
+Finished in 0.00070s
+2 tests, 14 assertions, 0 failures, 0 errors, 0 skips
+
+Started with run options --seed 64698
+
+Ace::Assign::ProtectedReceiverMappingTest
+  test_existing_receiver_endpoint_must_be_owned_socket_and_inspectable PASS (0.00s)
+  test_receiver_identity_fields_and_paths_refuse_before_listener  PASS (0.00s)
+  test_real_private_directory_and_absent_receiver_socket_are_admitted PASS (0.00s)
+  test_receiver_endpoint_and_staging_isolation                    PASS (0.00s)
+  test_writable_or_substituted_receiver_roots_refuse_before_listener_creation PASS (0.00s)
+  test_launch_optional_but_services_requires_fixed_nonempty_receivers PASS (0.00s)
+  test_authority_access_does_not_admit_executor_inaccessible_ancestor PASS (0.00s)
+
+Ace::Assign::ProtectedDeploymentTest
+  test_fixed_mapping_and_source_composition_match                 PASS (0.00s)
+  test_unknown_fields_loader_environment_and_changed_groups_are_rejected PASS (0.00s)
+  test_inbox_context_rejects_unknown_fields_bad_roles_native_selection_and_artifacts PASS (0.00s)
+  test_inbox_context_is_fixed_project_selection_without_native_repinnning PASS (0.00s)
+  test_inbox_effective_acl_mask_cannot_hide_foreign_write_or_private_read PASS (0.00s)
+  test_duplicate_endpoint_and_project_owner_are_refused_before_server_construction PASS (0.00s)
+  test_slot_ownership_and_worker_principals_are_unique_across_mappings PASS (0.00s)
+  test_inbox_context_roots_cannot_alias_worker_receiver_authority_or_sibling_state PASS (0.00s)
+  test_inbox_context_filesystem_refusal_preserves_private_directory_and_never_runs_client PASS (0.01s)
+  test_installed_native_workspace_is_required_and_canonical       PASS (0.00s)
+  test_obsolete_pid_pinned_map_and_incomplete_scope_are_refused   PASS (0.00s)
+
+Finished in 0.02111s
+18 tests, 85 assertions, 0 failures, 0 errors, 0 skips
+
+Started with run options --seed 41619
+
+Ace::Assign::ProtectedAuthorityServerTest
+  test_shutdown_keeps_owner_until_blocked_handler_finishes        PASS (0.27s)
+
+Finished in 0.27323s
+1 tests, 5 assertions, 0 failures, 0 errors, 0 skips
+
+Started with run options --seed 60826
+
+Ace::Assign::ProtectedTransferServerTest
+  test_extra_bytes_refuse_before_mutation_and_remove_spool        PASS (0.01s)
+  test_malformed_transfer_schema_is_invalid_input_before_handler_or_spool PASS (0.01s)
+  test_exact_origin_refusal_precedes_spool_and_body_read          PASS (0.01s)
+  test_exact_upload_and_download_use_fixed_source_framing         PASS (0.01s)
+  test_inbox_proof_source_handler_preserves_two_part_boundaries   PASS (0.01s)
+
+Finished in 0.06239s
+5 tests, 29 assertions, 0 failures, 0 errors, 0 skips
+
+Started with run options --seed 626
+
+CampaignReceiptTest
+  test_resolved_finding_relocation_keeps_historical_authority_and_campaign_accepted PASS (49.87s)
+  test_independent_approval_proof_binds_report_actors_and_verdict PASS (41.83s)
+  test_campaign_consumption_uses_existing_authority_and_does_not_advance_candidate PASS (33.24s)
+  test_historical_review_proof_retains_authority_without_certifying_live_checks PASS (35.58s)
+  test_non_test_receipt_cannot_supply_tests_evidence              PASS (36.84s)
+  test_stale_snapshot_and_attribution_cannot_bypass_receipt_checks PASS (33.40s)
+  test_read_only_check_evidence_recovers_from_journal_and_rejects_unknown_digest PASS (29.31s)
+  test_worker_authored_passed_check_cannot_become_accepted_execution_authority PASS (27.85s)
+  test_superseded_campaign_result_is_rejected_by_the_receipt_owner PASS (32.85s)
+  test_consumer_rejects_saved_acceptance_when_independent_approval_authority_is_lost PASS (34.27s)
+
+Finished in 355.03983s
+10 tests, 67 assertions, 0 failures, 0 errors, 0 skips
+
+Started with run options --seed 44455
+
+Ace::Assign::CandidateTransferTest
+  test_materialization_refuses_external_symlink_and_wrong_tree_and_cleans_only_own_directory PASS (0.68s)
+  test_incremental_bundle_cannot_borrow_objects_from_uploader_or_ambient_repository PASS (0.31s)
+  test_materialization_accepts_internal_symlink_and_refuses_cycle PASS (0.82s)
+  test_materializes_exact_bytes_in_peer_private_checkout_without_git_metadata PASS (0.40s)
+  test_root_symlink_or_shared_write_permissions_are_refused       PASS (0.11s)
+  test_admits_self_contained_exact_candidate_and_exports_verified_bundle PASS (0.44s)
+  test_refuses_size_digest_and_unadvertised_head_without_retained_objects PASS (0.32s)
+  test_ambient_git_config_and_hooks_do_not_execute_or_redefine_candidate PASS (0.32s)
+
+Finished in 3.40198s
+8 tests, 102 assertions, 0 failures, 0 errors, 0 skips
+
+Started with run options --seed 12724
+
+Ace::Assign::CanonicalReceiptReaderTest
+  test_missing_canonical_import_never_falls_back_to_correct_workspace_on_historical_read PASS (1.01s)
+  test_changed_candidate_cannot_rebind_prior_canonical_review_on_historical_read PASS (0.91s)
+  test_new_receipt_reads_canonical_bytes_despite_replaced_workspace_projection PASS (1.01s)
+
+Finished in 2.93189s
+3 tests, 17 assertions, 0 failures, 0 errors, 0 skips
+
+Started with run options --seed 37545
+
+CliContractTest
+  test_cli_help_lists_core_commands                               PASS (0.00s)
+  test_cli_lifecycle_contract_with_json_status                    PASS (0.24s)
+
+Finished in 0.24004s
+2 tests, 67 assertions, 0 failures, 0 errors, 0 skips
+
+Started with run options --seed 6496
+
+Ace::Assign::AtomicServiceMutationTest
+  test_repeated_dispatch_plan_only_reports_retained_state_without_fresh_permission PASS (2.72s)
+  test_lost_cas_rechecks_owner_policy_before_any_partial_acceptance PASS (1.77s)
+  test_raw_blob_plan_cannot_bypass_service_owner_and_cross_attempt_update_is_refused PASS (1.22s)
+  test_completion_generation_mode_cannot_bypass_other_mutation_admission PASS (2.80s)
+  test_completion_cas_loss_revalidates_exact_executor_before_importing_any_bytes PASS (5.23s)
+  test_deleted_import_cannot_be_replaced_by_workspace_evidence_on_terminal_read PASS (1.84s)
+  test_retained_request_refuses_live_same_uid_sibling_of_recorded_native_worker PASS (1.15s)
+  test_authorization_read_revalidates_body_and_policy_without_mutation_or_permissionERROR (1.49s)
+Minitest::UnexpectedError:         NoMethodError: undefined method 'scope_open_for_effect!' for #<Object:0x00000001250b90c0>
+            lib/ace/assign/authority/endcap_services.rb:150:in 'block in Ace::Assign::Authority::Endcap#service_authorization'
+            test/feat/endcap_service_replay_test.rb:28:in 'block (2 levels) in with_review_replay'
+            lib/ace/assign/authority/endcap_services.rb:141:in 'Ace::Assign::Authority::Endcap#service_authorization'
+            lib/ace/assign/authority/endcap_services.rb:170:in 'Ace::Assign::Authority::Endcap#dispatch_service'
+            lib/ace/assign/authority/endcap.rb:74:in 'Ace::Assign::Authority::Endcap#dispatch'
+            test/feat/endcap_service_replay_test.rb:65:in 'block (2 levels) in Ace::Assign::AtomicServiceMutationTest#test_authorization_read_revalidates_body_and_policy_without_mutation_or_permission'
+            <internal:numeric>:257:in 'Integer#times'
+            test/feat/endcap_service_replay_test.rb:64:in 'block in Ace::Assign::AtomicServiceMutationTest#test_authorization_read_revalidates_body_and_policy_without_mutation_or_permission'
+            test/feat/endcap_service_replay_test.rb:40:in 'block in Ace::Assign::AtomicServiceMutationTest#with_review_replay'
+            test/feat/atomic_service_mutation_test.rb:41:in 'block in Ace::Assign::AtomicServiceMutationTest#fixture'
+            test/test_helper.rb:36:in 'AceAssignTestCase#with_temp_cache'
+            test/feat/atomic_service_mutation_test.rb:19:in 'Ace::Assign::AtomicServiceMutationTest#fixture'
+            test/feat/endcap_service_replay_test.rb:9:in 'Ace::Assign::AtomicServiceMutationTest#with_review_replay'
+            test/feat/endcap_service_replay_test.rb:45:in 'Ace::Assign::AtomicServiceMutationTest#test_authorization_read_revalidates_body_and_policy_without_mutation_or_permission'
+
+  test_exact_claim_replay_keeps_original_acceptance_metadata_beside_current_terminal_truth PASS (3.23s)
+  test_completion_plan_imports_exact_executor_truth_without_new_origin_permission PASS (5.73s)
+  test_lower_protected_fresh_write_without_original_input_refuses_before_policy_or_origin PASS (0.90s)
+  test_new_mutation_for_exact_existing_request_retains_truth_without_another_claim PASS (2.87s)
+  test_status_projects_current_owner_generation_for_begin_without_changing_original_replay PASS (5.57s)
+  test_pending_import_record_event_and_reply_share_one_commit_with_exact_bytes PASS (2.42s)
+  test_interleaved_completion_records_truth_without_revoked_or_absent_status_grants PASS (8.27s)
+  test_ephemeral_original_input_is_bounded_immutable_and_never_persisted PASS (2.36s)
+  test_rejected_staging_cannot_leak_into_later_append             PASS (1.71s)
+  test_executor_status_refuses_absent_and_revoked_current_visibility PASS (1.51s)
+  test_review_exact_request_replay_keeps_acceptance_metadata      PASS (1.79s)
+  test_review_conflicting_mutation_id_is_rejected_on_request_replay PASS (1.52s)
+  test_record_projection_corruption_cannot_claim_canonical_terminal_truth PASS (1.53s)
+
+Finished in 57.64189s
+21 tests, 211 assertions, 0 failures, 1 errors, 0 skips
+
+Started with run options --seed 45565
+
+DeliveryCoordinatorTest
+  test_recovered_ready_does_not_substitute_different_explicit_evidence PASS (16.69s)
+  test_new_scoped_attempt_cannot_repeat_unknown_create            PASS (4.74s)
+  test_lost_ready_and_update_reconcile_exact_outcome_without_second_write PASS (18.34s)
+  test_later_scoped_steps_reuse_assignment_pr_and_keep_operation_attribution PASS (31.51s)
+  test_recovered_update_cannot_complete_different_requested_content PASS (11.50s)
+  test_crash_after_provider_apply_before_result_journal_recovers  PASS (4.10s)
+  test_merge_consumes_exact_existing_service_receipt_and_never_dispatches_worker_merge PASS (26.05s)
+  test_changed_server_identity_never_retargets                    PASS (3.62s)
+  test_exact_draft_review_ready_matrix_and_journal_head_separation PASS (79.22s)
+  test_worker_boundary_cannot_write_authoritative_delivery_events PASS (0.86s)
+  test_recovering_create_does_not_claim_later_ready_step_completed PASS (18.56s)
+  test_recovered_create_cannot_complete_different_requested_body_or_known_draft PASS (7.41s)
+  test_lost_create_and_crash_before_result_reconcile_without_second_write PASS (3.52s)
+  test_fresh_status_is_read_only_and_does_not_freeze_selection    PASS (4.51s)
+  test_remote_review_retains_red_ci_without_vetoing_ready         PASS (12.72s)
+  test_zero_and_multiple_reconciliation_remain_unresolved         PASS (2.99s)
+  test_changed_candidate_and_missing_merge_authority_block_before_write PASS (11.19s)
+  test_missing_or_forged_evidence_cannot_make_ready               PASS (4.36s)
+
+Finished in 261.88887s
+18 tests, 323 assertions, 0 failures, 0 errors, 0 skips
+
+Started with run options --seed 60777
+
+Ace::Assign::EndcapInboxesTest
+  test_signed_consumed_import_replay_fetch_and_corruption_after_native_stop PASS (11.53s)
+  test_changed_same_id_and_uncontextual_registration_cannot_adopt_old_proof PASS (12.33s)
+  test_source_owned_settlement_shares_provenance_without_fabricated_public_peer PASS (14.82s)
+  test_retained_proof_after_seal_requires_current_context_role_and_exact_launcher PASS (12.99s)
+  test_herdr_accepted_before_qjl_failure_replays_exact_signed_proof PASS (6.04s)
+  test_unregistered_retained_event_cannot_disappear_from_settlement_inventory PASS (5.46s)
+  test_signed_foreign_workspace_and_original_child_mismatch_refuse_before_import PASS (20.05s)
+  test_source_owned_empty_inbox_set_is_verified_without_native_or_public_peer PASS (2.58s)
+  test_settlement_checks_every_live_and_archive_copy              PASS (8.32s)
+  test_wrong_registration_role_context_signature_and_body_refuse_without_import PASS (5.51s)
+  test_superseded_claim_history_is_retained_but_not_used_to_settle_a_new_claim PASS (15.61s)
+
+Finished in 115.24419s
+11 tests, 68 assertions, 0 failures, 0 errors, 0 skips
+
+Started with run options --seed 38392
+
+Ace::Assign::EndcapResultsTest
+  test_corrupt_blob_and_private_record_never_fall_back_to_workspace_or_cached_replyERROR (0.13s)
+Minitest::UnexpectedError:         KeyError: key not found: "execution_scope"
+            lib/ace/assign/authority/launch_lifecycle.rb:375:in 'Hash#fetch'
+            lib/ace/assign/authority/launch_lifecycle.rb:375:in 'Ace::Assign::Authority::LaunchLifecycle#with_slot'
+            lib/ace/assign/authority/launch_lifecycle.rb:367:in 'Ace::Assign::Authority::LaunchLifecycle#with_exclusion'
+            lib/ace/assign/authority/launch_lifecycle.rb:115:in 'Ace::Assign::Authority::LaunchLifecycle#dispatch'
+            lib/ace/assign/authority/router.rb:23:in 'Ace::Assign::Authority::Router#dispatch'
+            test/feat/endcap_results_test.rb:134:in 'Ace::Assign::EndcapResultsTest#call'
+            test/feat/endcap_results_test.rb:90:in 'block in Ace::Assign::EndcapResultsTest#fixture'
+            /Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/3.4.0/tmpdir.rb:105:in 'Dir.mktmpdir'
+            test/feat/endcap_results_test.rb:45:in 'Ace::Assign::EndcapResultsTest#fixture'
+            test/feat/endcap_results_test.rb:414:in 'Ace::Assign::EndcapResultsTest#test_corrupt_blob_and_private_record_never_fall_back_to_workspace_or_cached_reply'
+
+  test_retained_review_fetch_exact_reviewer_purpose_and_terminal_result_permissionsERROR (0.13s)
+Minitest::UnexpectedError:         KeyError: key not found: "execution_scope"
+            lib/ace/assign/authority/launch_lifecycle.rb:375:in 'Hash#fetch'
+            lib/ace/assign/authority/launch_lifecycle.rb:375:in 'Ace::Assign::Authority::LaunchLifecycle#with_slot'
+            lib/ace/assign/authority/launch_lifecycle.rb:367:in 'Ace::Assign::Authority::LaunchLifecycle#with_exclusion'
+            lib/ace/assign/authority/launch_lifecycle.rb:115:in 'Ace::Assign::Authority::LaunchLifecycle#dispatch'
+            lib/ace/assign/authority/router.rb:23:in 'Ace::Assign::Authority::Router#dispatch'
+            test/feat/endcap_results_test.rb:134:in 'Ace::Assign::EndcapResultsTest#call'
+            test/feat/endcap_results_test.rb:90:in 'block in Ace::Assign::EndcapResultsTest#fixture'
+            /Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/3.4.0/tmpdir.rb:105:in 'Dir.mktmpdir'
+            test/feat/endcap_results_test.rb:45:in 'Ace::Assign::EndcapResultsTest#fixture'
+            test/feat/endcap_results_test.rb:485:in 'Ace::Assign::EndcapResultsTest#test_retained_review_fetch_exact_reviewer_purpose_and_terminal_result_permissions'
+
+  test_source_authorization_roles_reassignment_visibility_and_wrong_purposesERROR (0.12s)
+Minitest::UnexpectedError:         KeyError: key not found: "execution_scope"
+            lib/ace/assign/authority/launch_lifecycle.rb:375:in 'Hash#fetch'
+            lib/ace/assign/authority/launch_lifecycle.rb:375:in 'Ace::Assign::Authority::LaunchLifecycle#with_slot'
+            lib/ace/assign/authority/launch_lifecycle.rb:367:in 'Ace::Assign::Authority::LaunchLifecycle#with_exclusion'
+            lib/ace/assign/authority/launch_lifecycle.rb:115:in 'Ace::Assign::Authority::LaunchLifecycle#dispatch'
+            lib/ace/assign/authority/router.rb:23:in 'Ace::Assign::Authority::Router#dispatch'
+            test/feat/endcap_results_test.rb:134:in 'Ace::Assign::EndcapResultsTest#call'
+            test/feat/endcap_results_test.rb:90:in 'block in Ace::Assign::EndcapResultsTest#fixture'
+            /Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/3.4.0/tmpdir.rb:105:in 'Dir.mktmpdir'
+            test/feat/endcap_results_test.rb:45:in 'Ace::Assign::EndcapResultsTest#fixture'
+            test/feat/endcap_results_test.rb:232:in 'Ace::Assign::EndcapResultsTest#test_source_authorization_roles_reassignment_visibility_and_wrong_purposes'
+
+  test_real_client_server_submit_lost_reply_exit_restart_status_and_exact_fetchERROR (0.13s)
+Minitest::UnexpectedError:         KeyError: key not found: "execution_scope"
+            lib/ace/assign/authority/launch_lifecycle.rb:375:in 'Hash#fetch'
+            lib/ace/assign/authority/launch_lifecycle.rb:375:in 'Ace::Assign::Authority::LaunchLifecycle#with_slot'
+            lib/ace/assign/authority/launch_lifecycle.rb:367:in 'Ace::Assign::Authority::LaunchLifecycle#with_exclusion'
+            lib/ace/assign/authority/launch_lifecycle.rb:115:in 'Ace::Assign::Authority::LaunchLifecycle#dispatch'
+            lib/ace/assign/authority/router.rb:23:in 'Ace::Assign::Authority::Router#dispatch'
+            test/feat/endcap_results_test.rb:134:in 'Ace::Assign::EndcapResultsTest#call'
+            test/feat/endcap_results_test.rb:90:in 'block in Ace::Assign::EndcapResultsTest#fixture'
+            /Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/3.4.0/tmpdir.rb:105:in 'Dir.mktmpdir'
+            test/feat/endcap_results_test.rb:45:in 'Ace::Assign::EndcapResultsTest#fixture'
+            test/feat/endcap_results_test.rb:323:in 'Ace::Assign::EndcapResultsTest#test_real_client_server_submit_lost_reply_exit_restart_status_and_exact_fetch'
+
+  test_recorded_executor_fetches_only_own_canonical_terminal_service_evidenceERROR (0.13s)
+Minitest::UnexpectedError:         KeyError: key not found: "execution_scope"
+            lib/ace/assign/authority/launch_lifecycle.rb:375:in 'Hash#fetch'
+            lib/ace/assign/authority/launch_lifecycle.rb:375:in 'Ace::Assign::Authority::LaunchLifecycle#with_slot'
+            lib/ace/assign/authority/launch_lifecycle.rb:367:in 'Ace::Assign::Authority::LaunchLifecycle#with_exclusion'
+            lib/ace/assign/authority/launch_lifecycle.rb:115:in 'Ace::Assign::Authority::LaunchLifecycle#dispatch'
+            lib/ace/assign/authority/router.rb:23:in 'Ace::Assign::Authority::Router#dispatch'
+            test/feat/endcap_results_test.rb:134:in 'Ace::Assign::EndcapResultsTest#call'
+            test/feat/endcap_results_test.rb:90:in 'block in Ace::Assign::EndcapResultsTest#fixture'
+            /Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/3.4.0/tmpdir.rb:105:in 'Dir.mktmpdir'
+            test/feat/endcap_results_test.rb:45:in 'Ace::Assign::EndcapResultsTest#fixture'
+            test/feat/endcap_results_test.rb:522:in 'Ace::Assign::EndcapResultsTest#test_recorded_executor_fetches_only_own_canonical_terminal_service_evidence'
+
+  test_canonical_absence_is_null_and_selectors_schema_and_executor_fail_closedERROR (0.12s)
+Minitest::UnexpectedError:         KeyError: key not found: "execution_scope"
+            lib/ace/assign/authority/launch_lifecycle.rb:375:in 'Hash#fetch'
+            lib/ace/assign/authority/launch_lifecycle.rb:375:in 'Ace::Assign::Authority::LaunchLifecycle#with_slot'
+            lib/ace/assign/authority/launch_lifecycle.rb:367:in 'Ace::Assign::Authority::LaunchLifecycle#with_exclusion'
+            lib/ace/assign/authority/launch_lifecycle.rb:115:in 'Ace::Assign::Authority::LaunchLifecycle#dispatch'
+            lib/ace/assign/authority/router.rb:23:in 'Ace::Assign::Authority::Router#dispatch'
+            test/feat/endcap_results_test.rb:134:in 'Ace::Assign::EndcapResultsTest#call'
+            test/feat/endcap_results_test.rb:90:in 'block in Ace::Assign::EndcapResultsTest#fixture'
+            /Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/3.4.0/tmpdir.rb:105:in 'Dir.mktmpdir'
+            test/feat/endcap_results_test.rb:45:in 'Ace::Assign::EndcapResultsTest#fixture'
+            test/feat/endcap_results_test.rb:221:in 'Ace::Assign::EndcapResultsTest#test_canonical_absence_is_null_and_selectors_schema_and_executor_fail_closed'
+
+  test_result_private_record_and_ordered_blobs_commit_once_with_distinct_digestsERROR (0.14s)
+Minitest::UnexpectedError:         KeyError: key not found: "execution_scope"
+            lib/ace/assign/authority/launch_lifecycle.rb:375:in 'Hash#fetch'
+            lib/ace/assign/authority/launch_lifecycle.rb:375:in 'Ace::Assign::Authority::LaunchLifecycle#with_slot'
+            lib/ace/assign/authority/launch_lifecycle.rb:367:in 'Ace::Assign::Authority::LaunchLifecycle#with_exclusion'
+            lib/ace/assign/authority/launch_lifecycle.rb:115:in 'Ace::Assign::Authority::LaunchLifecycle#dispatch'
+            lib/ace/assign/authority/router.rb:23:in 'Ace::Assign::Authority::Router#dispatch'
+            test/feat/endcap_results_test.rb:134:in 'Ace::Assign::EndcapResultsTest#call'
+            test/feat/endcap_results_test.rb:90:in 'block in Ace::Assign::EndcapResultsTest#fixture'
+            /Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/3.4.0/tmpdir.rb:105:in 'Dir.mktmpdir'
+            test/feat/endcap_results_test.rb:45:in 'Ace::Assign::EndcapResultsTest#fixture'
+            test/feat/endcap_results_test.rb:168:in 'Ace::Assign::EndcapResultsTest#test_result_private_record_and_ordered_blobs_commit_once_with_distinct_digests'
+
+  test_services_read_body_and_mutation_metadata_refuse_without_canonical_changeERROR (0.13s)
+Minitest::UnexpectedError:         KeyError: key not found: "execution_scope"
+            lib/ace/assign/authority/launch_lifecycle.rb:375:in 'Hash#fetch'
+            lib/ace/assign/authority/launch_lifecycle.rb:375:in 'Ace::Assign::Authority::LaunchLifecycle#with_slot'
+            lib/ace/assign/authority/launch_lifecycle.rb:367:in 'Ace::Assign::Authority::LaunchLifecycle#with_exclusion'
+            lib/ace/assign/authority/launch_lifecycle.rb:115:in 'Ace::Assign::Authority::LaunchLifecycle#dispatch'
+            lib/ace/assign/authority/router.rb:23:in 'Ace::Assign::Authority::Router#dispatch'
+            test/feat/endcap_results_test.rb:134:in 'Ace::Assign::EndcapResultsTest#call'
+            test/feat/endcap_results_test.rb:90:in 'block in Ace::Assign::EndcapResultsTest#fixture'
+            /Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/3.4.0/tmpdir.rb:105:in 'Dir.mktmpdir'
+            test/feat/endcap_results_test.rb:45:in 'Ace::Assign::EndcapResultsTest#fixture'
+            test/feat/endcap_results_test.rb:572:in 'Ace::Assign::EndcapResultsTest#test_services_read_body_and_mutation_metadata_refuse_without_canonical_change'
+
+  test_failed_empty_result_survives_restart_exit_discovery_and_same_head_correctionERROR (0.13s)
+Minitest::UnexpectedError:         KeyError: key not found: "execution_scope"
+            lib/ace/assign/authority/launch_lifecycle.rb:375:in 'Hash#fetch'
+            lib/ace/assign/authority/launch_lifecycle.rb:375:in 'Ace::Assign::Authority::LaunchLifecycle#with_slot'
+            lib/ace/assign/authority/launch_lifecycle.rb:367:in 'Ace::Assign::Authority::LaunchLifecycle#with_exclusion'
+            lib/ace/assign/authority/launch_lifecycle.rb:115:in 'Ace::Assign::Authority::LaunchLifecycle#dispatch'
+            lib/ace/assign/authority/router.rb:23:in 'Ace::Assign::Authority::Router#dispatch'
+            test/feat/endcap_results_test.rb:134:in 'Ace::Assign::EndcapResultsTest#call'
+            test/feat/endcap_results_test.rb:90:in 'block in Ace::Assign::EndcapResultsTest#fixture'
+            /Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/3.4.0/tmpdir.rb:105:in 'Dir.mktmpdir'
+            test/feat/endcap_results_test.rb:45:in 'Ace::Assign::EndcapResultsTest#fixture'
+            test/feat/endcap_results_test.rb:199:in 'Ace::Assign::EndcapResultsTest#test_failed_empty_result_survives_restart_exit_discovery_and_same_head_correction'
+
+  test_bad_receipt_producer_digest_artifact_order_and_stale_candidate_do_not_change_refERROR (0.13s)
+Minitest::UnexpectedError:         KeyError: key not found: "execution_scope"
+            lib/ace/assign/authority/launch_lifecycle.rb:375:in 'Hash#fetch'
+            lib/ace/assign/authority/launch_lifecycle.rb:375:in 'Ace::Assign::Authority::LaunchLifecycle#with_slot'
+            lib/ace/assign/authority/launch_lifecycle.rb:367:in 'Ace::Assign::Authority::LaunchLifecycle#with_exclusion'
+            lib/ace/assign/authority/launch_lifecycle.rb:115:in 'Ace::Assign::Authority::LaunchLifecycle#dispatch'
+            lib/ace/assign/authority/router.rb:23:in 'Ace::Assign::Authority::Router#dispatch'
+            test/feat/endcap_results_test.rb:134:in 'Ace::Assign::EndcapResultsTest#call'
+            test/feat/endcap_results_test.rb:90:in 'block in Ace::Assign::EndcapResultsTest#fixture'
+            /Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/3.4.0/tmpdir.rb:105:in 'Dir.mktmpdir'
+            test/feat/endcap_results_test.rb:45:in 'Ace::Assign::EndcapResultsTest#fixture'
+            test/feat/endcap_results_test.rb:269:in 'Ace::Assign::EndcapResultsTest#test_bad_receipt_producer_digest_artifact_order_and_stale_candidate_do_not_change_ref'
+
+  test_pre_cas_failure_leaves_no_result_and_cas_retry_revalidates_generationERROR (0.13s)
+Minitest::UnexpectedError:         KeyError: key not found: "execution_scope"
+            lib/ace/assign/authority/launch_lifecycle.rb:375:in 'Hash#fetch'
+            lib/ace/assign/authority/launch_lifecycle.rb:375:in 'Ace::Assign::Authority::LaunchLifecycle#with_slot'
+            lib/ace/assign/authority/launch_lifecycle.rb:367:in 'Ace::Assign::Authority::LaunchLifecycle#with_exclusion'
+            lib/ace/assign/authority/launch_lifecycle.rb:115:in 'Ace::Assign::Authority::LaunchLifecycle#dispatch'
+            lib/ace/assign/authority/router.rb:23:in 'Ace::Assign::Authority::Router#dispatch'
+            test/feat/endcap_results_test.rb:134:in 'Ace::Assign::EndcapResultsTest#call'
+            test/feat/endcap_results_test.rb:90:in 'block in Ace::Assign::EndcapResultsTest#fixture'
+            /Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/3.4.0/tmpdir.rb:105:in 'Dir.mktmpdir'
+            test/feat/endcap_results_test.rb:45:in 'Ace::Assign::EndcapResultsTest#fixture'
+            test/feat/endcap_results_test.rb:447:in 'Ace::Assign::EndcapResultsTest#test_pre_cas_failure_leaves_no_result_and_cas_retry_revalidates_generation'
+
+  test_real_client_refuses_missing_mismatched_extra_part_and_open_descriptor_before_bytesERROR (0.13s)
+Minitest::UnexpectedError:         KeyError: key not found: "execution_scope"
+            lib/ace/assign/authority/launch_lifecycle.rb:375:in 'Hash#fetch'
+            lib/ace/assign/authority/launch_lifecycle.rb:375:in 'Ace::Assign::Authority::LaunchLifecycle#with_slot'
+            lib/ace/assign/authority/launch_lifecycle.rb:367:in 'Ace::Assign::Authority::LaunchLifecycle#with_exclusion'
+            lib/ace/assign/authority/launch_lifecycle.rb:115:in 'Ace::Assign::Authority::LaunchLifecycle#dispatch'
+            lib/ace/assign/authority/router.rb:23:in 'Ace::Assign::Authority::Router#dispatch'
+            test/feat/endcap_results_test.rb:134:in 'Ace::Assign::EndcapResultsTest#call'
+            test/feat/endcap_results_test.rb:90:in 'block in Ace::Assign::EndcapResultsTest#fixture'
+            /Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/3.4.0/tmpdir.rb:105:in 'Dir.mktmpdir'
+            test/feat/endcap_results_test.rb:45:in 'Ace::Assign::EndcapResultsTest#fixture'
+            test/feat/endcap_results_test.rb:368:in 'Ace::Assign::EndcapResultsTest#test_real_client_refuses_missing_mismatched_extra_part_and_open_descriptor_before_bytes'
+
+  test_campaign_result_and_review_refuse_before_local_campaign_manager_lookupERROR (0.20s)
+Minitest::UnexpectedError:         KeyError: key not found: "execution_scope"
+            lib/ace/assign/authority/launch_lifecycle.rb:375:in 'Hash#fetch'
+            lib/ace/assign/authority/launch_lifecycle.rb:375:in 'Ace::Assign::Authority::LaunchLifecycle#with_slot'
+            lib/ace/assign/authority/launch_lifecycle.rb:367:in 'Ace::Assign::Authority::LaunchLifecycle#with_exclusion'
+            lib/ace/assign/authority/launch_lifecycle.rb:115:in 'Ace::Assign::Authority::LaunchLifecycle#dispatch'
+            lib/ace/assign/authority/router.rb:23:in 'Ace::Assign::Authority::Router#dispatch'
+            test/feat/endcap_results_test.rb:134:in 'Ace::Assign::EndcapResultsTest#call'
+            test/feat/endcap_results_test.rb:90:in 'block in Ace::Assign::EndcapResultsTest#fixture'
+            /Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/3.4.0/tmpdir.rb:105:in 'Dir.mktmpdir'
+            test/feat/endcap_results_test.rb:45:in 'Ace::Assign::EndcapResultsTest#fixture'
+            test/feat/endcap_results_test.rb:608:in 'Ace::Assign::EndcapResultsTest#test_campaign_result_and_review_refuse_before_local_campaign_manager_lookup'
+
+
+Finished in 1.75353s
+13 tests, 39 assertions, 0 failures, 13 errors, 0 skips
+
+Started with run options --seed 24361
+
+Ace::Assign::EndcapReviewPlanTest
+  test_historical_approval_rechecks_imported_bytes_and_exact_candidate PASS (2.11s)
+  test_pending_review_bytes_and_receipt_verify_without_workspace_and_accept_in_one_cas PASS (1.20s)
+  test_forged_reviewer_actor_failed_check_changed_candidate_and_bad_receipt_digest_never_mutate PASS (0.81s)
+
+Finished in 4.11932s
+3 tests, 33 assertions, 0 failures, 0 errors, 0 skips
+
+Started with run options --seed 6711
+
+Ace::Assign::AtomicServiceMutationTest
+  test_review_conflicting_mutation_id_is_rejected_on_request_replay PASS (1.80s)
+  test_repeated_dispatch_plan_only_reports_retained_state_without_fresh_permission PASS (3.29s)
+  test_executor_status_refuses_absent_and_revoked_current_visibility PASS (1.85s)
+  test_review_exact_request_replay_keeps_acceptance_metadata      PASS (1.98s)
+  test_lost_cas_rechecks_owner_policy_before_any_partial_acceptance PASS (2.16s)
+  test_authorization_read_revalidates_body_and_policy_without_mutation_or_permissionERROR (1.83s)
+Minitest::UnexpectedError:         NoMethodError: undefined method 'scope_open_for_effect!' for #<Object:0x00000001215db430>
+            lib/ace/assign/authority/endcap_services.rb:150:in 'block in Ace::Assign::Authority::Endcap#service_authorization'
+            test/feat/endcap_service_replay_test.rb:28:in 'block (2 levels) in with_review_replay'
+            lib/ace/assign/authority/endcap_services.rb:141:in 'Ace::Assign::Authority::Endcap#service_authorization'
+            lib/ace/assign/authority/endcap_services.rb:170:in 'Ace::Assign::Authority::Endcap#dispatch_service'
+            lib/ace/assign/authority/endcap.rb:74:in 'Ace::Assign::Authority::Endcap#dispatch'
+            test/feat/endcap_service_replay_test.rb:65:in 'block (2 levels) in Ace::Assign::AtomicServiceMutationTest#test_authorization_read_revalidates_body_and_policy_without_mutation_or_permission'
+            <internal:numeric>:257:in 'Integer#times'
+            test/feat/endcap_service_replay_test.rb:64:in 'block in Ace::Assign::AtomicServiceMutationTest#test_authorization_read_revalidates_body_and_policy_without_mutation_or_permission'
+            test/feat/endcap_service_replay_test.rb:40:in 'block in Ace::Assign::AtomicServiceMutationTest#with_review_replay'
+            test/feat/atomic_service_mutation_test.rb:41:in 'block in Ace::Assign::AtomicServiceMutationTest#fixture'
+            test/test_helper.rb:36:in 'AceAssignTestCase#with_temp_cache'
+            test/feat/atomic_service_mutation_test.rb:19:in 'Ace::Assign::AtomicServiceMutationTest#fixture'
+            test/feat/endcap_service_replay_test.rb:9:in 'Ace::Assign::AtomicServiceMutationTest#with_review_replay'
+            test/feat/endcap_service_replay_test.rb:45:in 'Ace::Assign::AtomicServiceMutationTest#test_authorization_read_revalidates_body_and_policy_without_mutation_or_permission'
+
+  test_new_mutation_for_exact_existing_request_retains_truth_without_another_claim PASS (3.58s)
+  test_status_projects_current_owner_generation_for_begin_without_changing_original_replay PASS (6.60s)
+  test_exact_claim_replay_keeps_original_acceptance_metadata_beside_current_terminal_truth PASS (3.61s)
+  test_rejected_staging_cannot_leak_into_later_append             PASS (1.92s)
+  test_pending_import_record_event_and_reply_share_one_commit_with_exact_bytes PASS (2.73s)
+  test_ephemeral_original_input_is_bounded_immutable_and_never_persisted PASS (2.51s)
+  test_completion_plan_imports_exact_executor_truth_without_new_origin_permission PASS (6.38s)
+  test_retained_request_refuses_live_same_uid_sibling_of_recorded_native_worker PASS (1.21s)
+  test_record_projection_corruption_cannot_claim_canonical_terminal_truth PASS (1.65s)
+  test_lower_protected_fresh_write_without_original_input_refuses_before_policy_or_origin PASS (1.12s)
+  test_deleted_import_cannot_be_replaced_by_workspace_evidence_on_terminal_read PASS (2.03s)
+  test_raw_blob_plan_cannot_bypass_service_owner_and_cross_attempt_update_is_refused PASS (1.36s)
+
+Finished in 47.62664s
+18 tests, 182 assertions, 0 failures, 1 errors, 0 skips
+
+Started with run options --seed 28744
+
+Ace::Assign::EvidenceTransferTest
+  test_refuses_leaf_ancestor_symlinks_and_hardlinks               PASS (0.00s)
+  test_collects_exact_private_bytes_without_changing_handler_paths PASS (0.00s)
+  test_fifo_is_refused_without_waiting_for_an_unrelated_writer    PASS (0.01s)
+  test_refuses_shared_writable_leaf_and_oversized_file_count_or_aggregate PASS (0.01s)
+  test_refuses_changed_bytes_traversal_absolute_paths_and_extra_fields PASS (0.00s)
+
+Finished in 0.02007s
+5 tests, 20 assertions, 0 failures, 0 errors, 0 skips
+
+Started with run options --seed 25435
+
+Ace::Assign::JournalMutationTest
+  test_import_bytes_provenance_and_mutation_reply_commit_together PASS (0.95s)
+  test_canonical_import_verifies_exact_peer_binding_and_ignores_projections PASS (1.49s)
+  test_import_preserves_exact_bytes_under_line_conversion_and_clean_filters PASS (2.86s)
+  test_canonical_blob_corruption_refuses_instead_of_trusting_cached_evidence PASS (0.97s)
+  test_refused_transaction_does_not_admit_artifacts_or_reply      PASS (0.51s)
+  test_immutable_import_paths_and_traversal_are_rejected          PASS (1.18s)
+  test_transport_replay_metadata_comes_from_acceptance_even_after_callback_loses_cas PASS (0.92s)
+  test_intent_without_bound_process_remains_reserved_with_original_actor PASS (1.00s)
+  test_original_reply_commit_survives_later_mutations_and_changed_input_refuses PASS (1.79s)
+  test_candidate_bundle_is_immutable_canonical_bytes_without_widening_service_record_paths PASS (1.11s)
+  test_new_canonical_acceptance_reports_not_replayed              PASS (0.45s)
+  test_failed_staging_cannot_leak_rejected_events_or_blobs_to_other_writers PASS (3.85s)
+  test_every_writer_discards_abandoned_disposable_transaction_files PASS (2.88s)
+
+Finished in 19.95925s
+13 tests, 164 assertions, 0 failures, 0 errors, 0 skips
+
+Started with run options --seed 13405
+
+Ace::Assign::ReceiptTransferTest
+  test_forbidden_or_duplicate_artifact_identity_and_invalid_receipt_are_refused PASS (0.01s)
+  test_receipt_first_identity_and_sixteen_ordered_binary_artifacts PASS (0.00s)
+  test_missing_duplicate_reordered_and_unbound_parts_are_refused  PASS (0.01s)
+
+Finished in 0.01369s
+3 tests, 11 assertions, 0 failures, 0 errors, 0 skips
+
+Started with run options --seed 41976
+
+RuntimeBindingConsumerTest
+  test_missing_accepted_native_binding_is_never_an_environment_fallback PASS (0.69s)
+  test_native_thread_change_and_dead_owner_remain_refusal         PASS (1.23s)
+  test_same_uid_unrelated_process_cannot_claim_another_native_attempt PASS (1.24s)
+  test_public_read_uses_accepted_history_and_preserves_ref_and_cache PASS (2.22s)
+
+Finished in 5.37199s
+4 tests, 32 assertions, 0 failures, 0 errors, 0 skips
+
+Started with run options --seed 25754
+
+Ace::Assign::TransferCodecTest
+  test_exact_multi_part_binary_upload_is_admitted_only_after_write_eof_and_spool_is_removed PASS (0.00s)
+  test_inbox_proof_requires_exact_two_nonempty_parts_without_capacity_tradeoff PASS (0.00s)
+  test_fixed_purpose_limits_and_descriptor_shape_refuse_before_spool PASS (0.00s)
+  test_missing_eof_hits_shared_deadline_without_mutation_or_retained_spool PASS (0.05s)
+  test_short_extra_and_changed_payload_never_invoke_consumer_or_leave_spool PASS (0.00s)
+  test_receipt_purpose_preserves_all_sixteen_artifacts_and_separate_full_capacity PASS (0.00s)
+  test_inbox_proof_preserves_order_and_refuses_reorder_extra_short_and_missing_eof PASS (0.06s)
+  test_consumer_failure_removes_only_new_spool_and_preserves_existing_private_files PASS (0.00s)
+  test_export_uses_exact_binary_bytes_and_refuses_mismatched_descriptor PASS (0.00s)
+  test_service_input_is_exactly_one_nonempty_bounded_source_part  PASS (0.00s)
+  test_receipt_purpose_limits_do_not_widen_generic_artifacts_or_trade_evidence_for_receipt_capacity PASS (0.00s)
+
+Finished in 0.12219s
+11 tests, 65 assertions, 0 failures, 0 errors, 0 skips

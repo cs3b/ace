@@ -1,0 +1,99 @@
+Started with run options --seed 141
+
+Ace::Assign::AtomicServiceMutationTest
+  test_pending_import_record_event_and_reply_share_one_commit_with_exact_bytes PASS (3.18s)
+  test_retained_request_refuses_live_same_uid_sibling_of_recorded_native_worker PASS (1.38s)
+  test_status_projects_current_owner_generation_for_begin_without_changing_original_replay PASS (6.83s)
+  test_review_exact_request_replay_keeps_acceptance_metadata      PASS (1.81s)
+  test_interleaved_completion_records_truth_without_revoked_or_absent_status_grants PASS (9.41s)
+  test_deleted_import_cannot_be_replaced_by_workspace_evidence_on_terminal_read PASS (1.79s)
+  test_completion_plan_imports_exact_executor_truth_without_new_origin_permission PASS (6.28s)
+  test_lost_cas_rechecks_owner_policy_before_any_partial_acceptance PASS (2.33s)
+  test_rejected_staging_cannot_leak_into_later_append             PASS (2.46s)
+  test_ephemeral_original_input_is_bounded_immutable_and_never_persisted PASS (3.24s)
+  test_review_conflicting_mutation_id_is_rejected_on_request_replay PASS (1.85s)
+  test_raw_blob_plan_cannot_bypass_service_owner_and_cross_attempt_update_is_refused PASS (1.62s)
+  test_executor_status_refuses_absent_and_revoked_current_visibility PASS (1.87s)
+  test_lower_protected_fresh_write_without_original_input_refuses_before_policy_or_origin PASS (1.17s)
+  test_authorization_read_refuses_closed_scope_before_fresh_policy FAIL (1.47s)
+        [Ace::Assign::AttemptErrors::EvidenceUnavailable] exception expected, not
+        Class: <ArgumentError>
+        Message: <"structured service input transfer is missing">
+        ---Backtrace---
+        /Users/mc/Ps/ace/.ace-wt/scope-local-implementation/ace-assign/lib/ace/assign/authority/endcap_services.rb:139:in 'Ace::Assign::Authority::Endcap#service_authorization'
+        /Users/mc/Ps/ace/.ace-wt/scope-local-implementation/ace-assign/lib/ace/assign/authority/endcap_services.rb:170:in 'Ace::Assign::Authority::Endcap#dispatch_service'
+        /Users/mc/Ps/ace/.ace-wt/scope-local-implementation/ace-assign/lib/ace/assign/authority/endcap.rb:74:in 'Ace::Assign::Authority::Endcap#dispatch'
+        /Users/mc/Ps/ace/.ace-wt/scope-local-implementation/ace-assign/test/feat/endcap_service_replay_test.rb:99:in 'block (2 levels) in Ace::Assign::AtomicServiceMutationTest#test_authorization_read_refuses_closed_scope_before_fresh_policy'
+        ---------------
+        /Users/mc/Ps/ace/.ace-wt/scope-local-implementation/ace-assign/test/feat/endcap_service_replay_test.rb:99:in 'block in Ace::Assign::AtomicServiceMutationTest#test_authorization_read_refuses_closed_scope_before_fresh_policy'
+        /Users/mc/Ps/ace/.ace-wt/scope-local-implementation/ace-assign/test/feat/endcap_service_replay_test.rb:43:in 'block in Ace::Assign::AtomicServiceMutationTest#with_review_replay'
+        /Users/mc/Ps/ace/.ace-wt/scope-local-implementation/ace-assign/test/feat/atomic_service_mutation_test.rb:41:in 'block in Ace::Assign::AtomicServiceMutationTest#fixture'
+        /Users/mc/Ps/ace/.ace-wt/scope-local-implementation/ace-assign/test/test_helper.rb:36:in 'AceAssignTestCase#with_temp_cache'
+        /Users/mc/Ps/ace/.ace-wt/scope-local-implementation/ace-assign/test/feat/atomic_service_mutation_test.rb:19:in 'Ace::Assign::AtomicServiceMutationTest#fixture'
+        /Users/mc/Ps/ace/.ace-wt/scope-local-implementation/ace-assign/test/feat/endcap_service_replay_test.rb:9:in 'Ace::Assign::AtomicServiceMutationTest#with_review_replay'
+        /Users/mc/Ps/ace/.ace-wt/scope-local-implementation/ace-assign/test/feat/endcap_service_replay_test.rb:88:in 'Ace::Assign::AtomicServiceMutationTest#test_authorization_read_refuses_closed_scope_before_fresh_policy'
+
+  test_authorization_read_revalidates_body_and_policy_without_mutation_or_permission PASS (3.02s)
+  test_record_projection_corruption_cannot_claim_canonical_terminal_truth PASS (2.00s)
+  test_new_mutation_for_exact_existing_request_retains_truth_without_another_claim PASS (3.58s)
+  test_completion_cas_loss_revalidates_exact_executor_before_importing_any_bytes PASS (6.17s)
+  test_completion_generation_mode_cannot_bypass_other_mutation_admission PASS (3.18s)
+  test_exact_claim_replay_keeps_original_acceptance_metadata_beside_current_terminal_truth PASS (3.58s)
+  test_repeated_dispatch_plan_only_reports_retained_state_without_fresh_permission PASS (3.03s)
+
+Ace::Assign::EndcapResultsTest
+  test_source_authorization_roles_reassignment_visibility_and_wrong_purposes PASS (54.77s)
+  test_retained_review_fetch_exact_reviewer_purpose_and_terminal_result_permissions PASS (59.70s)
+  test_recorded_executor_fetches_only_own_canonical_terminal_service_evidence PASS (29.57s)
+  test_pre_cas_failure_leaves_no_result_and_cas_retry_revalidates_generation PASS (20.07s)
+  test_services_read_body_and_mutation_metadata_refuse_without_canonical_change PASS (15.53s)
+  test_bad_receipt_producer_digest_artifact_order_and_stale_candidate_do_not_change_ref PASS (31.91s)
+  test_failed_empty_result_survives_restart_exit_discovery_and_same_head_correction PASS (32.86s)
+  test_canonical_absence_is_null_and_selectors_schema_and_executor_fail_closed PASS (10.31s)
+  test_corrupt_blob_and_private_record_never_fall_back_to_workspace_or_cached_reply PASS (30.30s)
+  test_real_client_server_submit_lost_reply_exit_restart_status_and_exact_fetch FAIL (16.98s)
+        [Ace::Assign::AttemptErrors::EvidenceUnavailable] exception expected, not
+        Class: <Ace::Runtime::RuntimeUnavailableError>
+        Message: <"protected socket deadline expired">
+        ---Backtrace---
+        /Users/mc/Ps/ace/.ace-wt/scope-local-implementation/ace-runtime/lib/ace/runtime/molecules/protected_socket.rb:63:in 'block in Ace::Runtime::Molecules::ProtectedSocket.read'
+        <internal:kernel>:168:in 'Kernel#loop'
+        /Users/mc/Ps/ace/.ace-wt/scope-local-implementation/ace-runtime/lib/ace/runtime/molecules/protected_socket.rb:61:in 'Ace::Runtime::Molecules::ProtectedSocket.read'
+        /Users/mc/Ps/ace/.ace-wt/scope-local-implementation/ace-assign/lib/ace/assign/authority/client.rb:57:in 'block in Ace::Assign::Authority::Client#call'
+        /Users/mc/Ps/ace/.ace-wt/scope-local-implementation/ace-runtime/lib/ace/runtime/molecules/protected_socket.rb:46:in 'Ace::Runtime::Molecules::ProtectedSocket.connect'
+        /Users/mc/Ps/ace/.ace-wt/scope-local-implementation/ace-assign/lib/ace/assign/authority/client.rb:41:in 'Ace::Assign::Authority::Client#call'
+        /Users/mc/Ps/ace/.ace-wt/scope-local-implementation/ace-assign/test/feat/endcap_results_test.rb:341:in 'block (2 levels) in Ace::Assign::EndcapResultsTest#test_real_client_server_submit_lost_reply_exit_restart_status_and_exact_fetch'
+        ---------------
+        /Users/mc/Ps/ace/.ace-wt/scope-local-implementation/ace-assign/test/feat/endcap_results_test.rb:340:in 'block in Ace::Assign::EndcapResultsTest#test_real_client_server_submit_lost_reply_exit_restart_status_and_exact_fetch'
+        /Users/mc/Ps/ace/.ace-wt/scope-local-implementation/ace-assign/test/feat/endcap_results_test.rb:108:in 'block in Ace::Assign::EndcapResultsTest#fixture'
+        /Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/3.4.0/tmpdir.rb:105:in 'Dir.mktmpdir'
+        /Users/mc/Ps/ace/.ace-wt/scope-local-implementation/ace-assign/test/feat/endcap_results_test.rb:46:in 'Ace::Assign::EndcapResultsTest#fixture'
+        /Users/mc/Ps/ace/.ace-wt/scope-local-implementation/ace-assign/test/feat/endcap_results_test.rb:327:in 'Ace::Assign::EndcapResultsTest#test_real_client_server_submit_lost_reply_exit_restart_status_and_exact_fetch'
+
+  test_result_private_record_and_ordered_blobs_commit_once_with_distinct_digests PASS (42.78s)
+  test_campaign_result_and_review_refuse_before_local_campaign_manager_lookup PASS (22.34s)
+  test_real_client_refuses_missing_mismatched_extra_part_and_open_descriptor_before_bytes FAIL (23.17s)
+        [Ace::Assign::AttemptErrors::EvidenceUnavailable] exception expected, not
+        Class: <Ace::Runtime::RuntimeUnavailableError>
+        Message: <"protected socket deadline expired">
+        ---Backtrace---
+        /Users/mc/Ps/ace/.ace-wt/scope-local-implementation/ace-runtime/lib/ace/runtime/molecules/protected_socket.rb:63:in 'block in Ace::Runtime::Molecules::ProtectedSocket.read'
+        <internal:kernel>:168:in 'Kernel#loop'
+        /Users/mc/Ps/ace/.ace-wt/scope-local-implementation/ace-runtime/lib/ace/runtime/molecules/protected_socket.rb:61:in 'Ace::Runtime::Molecules::ProtectedSocket.read'
+        /Users/mc/Ps/ace/.ace-wt/scope-local-implementation/ace-assign/lib/ace/assign/authority/client.rb:57:in 'block in Ace::Assign::Authority::Client#call'
+        /Users/mc/Ps/ace/.ace-wt/scope-local-implementation/ace-runtime/lib/ace/runtime/molecules/protected_socket.rb:46:in 'Ace::Runtime::Molecules::ProtectedSocket.connect'
+        /Users/mc/Ps/ace/.ace-wt/scope-local-implementation/ace-assign/lib/ace/assign/authority/client.rb:41:in 'Ace::Assign::Authority::Client#call'
+        /Users/mc/Ps/ace/.ace-wt/scope-local-implementation/ace-assign/test/feat/endcap_results_test.rb:321:in 'Ace::Assign::EndcapResultsTest#client_fetch'
+        /Users/mc/Ps/ace/.ace-wt/scope-local-implementation/ace-assign/test/feat/endcap_results_test.rb:400:in 'block (3 levels) in Ace::Assign::EndcapResultsTest#test_real_client_refuses_missing_mismatched_extra_part_and_open_descriptor_before_bytes'
+        ---------------
+        /Users/mc/Ps/ace/.ace-wt/scope-local-implementation/ace-assign/test/feat/endcap_results_test.rb:400:in 'block (2 levels) in Ace::Assign::EndcapResultsTest#test_real_client_refuses_missing_mismatched_extra_part_and_open_descriptor_before_bytes'
+        /Users/mc/Ps/ace/.ace-wt/scope-local-implementation/ace-assign/test/feat/endcap_results_test.rb:398:in 'Array#each'
+        /Users/mc/Ps/ace/.ace-wt/scope-local-implementation/ace-assign/test/feat/endcap_results_test.rb:398:in 'block in Ace::Assign::EndcapResultsTest#test_real_client_refuses_missing_mismatched_extra_part_and_open_descriptor_before_bytes'
+        /Users/mc/Ps/ace/.ace-wt/scope-local-implementation/ace-assign/test/feat/endcap_results_test.rb:108:in 'block in Ace::Assign::EndcapResultsTest#fixture'
+        /Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/3.4.0/tmpdir.rb:105:in 'Dir.mktmpdir'
+        /Users/mc/Ps/ace/.ace-wt/scope-local-implementation/ace-assign/test/feat/endcap_results_test.rb:46:in 'Ace::Assign::EndcapResultsTest#fixture'
+        /Users/mc/Ps/ace/.ace-wt/scope-local-implementation/ace-assign/test/feat/endcap_results_test.rb:372:in 'Ace::Assign::EndcapResultsTest#test_real_client_refuses_missing_mismatched_extra_part_and_open_descriptor_before_bytes'
+
+
+Finished in 461.53696s
+35 tests, 409 assertions, 3 failures, 0 errors, 0 skips

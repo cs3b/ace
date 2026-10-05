@@ -1,0 +1,27 @@
+# Test ERROR: test_absent_native_binding_does_not_erase_canonical_admission
+
+**Status:** ERROR
+
+## Error Message
+
+Minitest::UnexpectedError:         Ace::Assign::AttemptErrors::EvidenceUnavailable: scope stage references another parent
+lib/ace/assign/molecules/execution_scope_lineage.rb:323:in 'Ace::Assign::Molecules::ExecutionScopeLineage#unavailable!'
+lib/ace/assign/molecules/execution_scope_lineage.rb:148:in 'Ace::Assign::Molecules::ExecutionScopeLineage#stage_reference!'
+lib/ace/assign/molecules/execution_scope_lineage.rb:155:in 'Ace::Assign::Molecules::ExecutionScopeLineage#accept_admission!'
+lib/ace/assign/molecules/execution_scope_lineage.rb:55:in 'block in Ace::Assign::Molecules::ExecutionScopeLineage#initialize'
+lib/ace/assign/molecules/execution_scope_lineage.rb:51:in 'Array#each'
+lib/ace/assign/molecules/execution_scope_lineage.rb:51:in 'Ace::Assign::Molecules::ExecutionScopeLineage#initialize'
+test/fast/authority/execution_scope_observation_test.rb:63:in 'Class#new'
+test/fast/authority/execution_scope_observation_test.rb:63:in 'Ace::Assign::ExecutionScopeObservationTest#lineage'
+test/fast/authority/execution_scope_observation_test.rb:73:in 'Ace::Assign::ExecutionScopeObservationTest#seal_parent'
+test/fast/authority/execution_scope_observation_test.rb:108:in 'Ace::Assign::ExecutionScopeObservationTest#test_absent_native_binding_does_not_erase_canonical_admission'
+Finished in 0.02382s
+24 tests, 108 assertions, 0 failures, 1 errors, 0 skips
+
+## Related stderr
+
+```
+/Users/mc/Ps/ace/.ace-wt/scope-local-implementation/ace-support-test-helpers/lib/ace/test_support/performance_helpers.rb:3: warning: benchmark was loaded from the standard library, but will no longer be part of the default gems starting from Ruby 4.0.0.
+You can add benchmark to your Gemfile or gemspec to silence this warning.
+
+```

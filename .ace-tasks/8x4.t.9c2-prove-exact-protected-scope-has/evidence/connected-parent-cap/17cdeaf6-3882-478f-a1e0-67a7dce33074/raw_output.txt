@@ -1,0 +1,175 @@
+Started with run options --seed 16705
+
+Ace::Assign::EndcapResultsTest
+  test_corrupt_blob_and_private_record_never_fall_back_to_workspace_or_cached_replyERROR (0.35s)
+Minitest::UnexpectedError:         KeyError: key not found: "execution_scope"
+            lib/ace/assign/authority/launch_lifecycle.rb:375:in 'Hash#fetch'
+            lib/ace/assign/authority/launch_lifecycle.rb:375:in 'Ace::Assign::Authority::LaunchLifecycle#with_slot'
+            lib/ace/assign/authority/launch_lifecycle.rb:367:in 'Ace::Assign::Authority::LaunchLifecycle#with_exclusion'
+            lib/ace/assign/authority/launch_lifecycle.rb:115:in 'Ace::Assign::Authority::LaunchLifecycle#dispatch'
+            lib/ace/assign/authority/router.rb:23:in 'Ace::Assign::Authority::Router#dispatch'
+            test/feat/endcap_results_test.rb:134:in 'Ace::Assign::EndcapResultsTest#call'
+            test/feat/endcap_results_test.rb:90:in 'block in Ace::Assign::EndcapResultsTest#fixture'
+            /Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/3.4.0/tmpdir.rb:105:in 'Dir.mktmpdir'
+            test/feat/endcap_results_test.rb:45:in 'Ace::Assign::EndcapResultsTest#fixture'
+            test/feat/endcap_results_test.rb:414:in 'Ace::Assign::EndcapResultsTest#test_corrupt_blob_and_private_record_never_fall_back_to_workspace_or_cached_reply'
+
+  test_real_client_refuses_missing_mismatched_extra_part_and_open_descriptor_before_bytesERROR (0.13s)
+Minitest::UnexpectedError:         KeyError: key not found: "execution_scope"
+            lib/ace/assign/authority/launch_lifecycle.rb:375:in 'Hash#fetch'
+            lib/ace/assign/authority/launch_lifecycle.rb:375:in 'Ace::Assign::Authority::LaunchLifecycle#with_slot'
+            lib/ace/assign/authority/launch_lifecycle.rb:367:in 'Ace::Assign::Authority::LaunchLifecycle#with_exclusion'
+            lib/ace/assign/authority/launch_lifecycle.rb:115:in 'Ace::Assign::Authority::LaunchLifecycle#dispatch'
+            lib/ace/assign/authority/router.rb:23:in 'Ace::Assign::Authority::Router#dispatch'
+            test/feat/endcap_results_test.rb:134:in 'Ace::Assign::EndcapResultsTest#call'
+            test/feat/endcap_results_test.rb:90:in 'block in Ace::Assign::EndcapResultsTest#fixture'
+            /Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/3.4.0/tmpdir.rb:105:in 'Dir.mktmpdir'
+            test/feat/endcap_results_test.rb:45:in 'Ace::Assign::EndcapResultsTest#fixture'
+            test/feat/endcap_results_test.rb:368:in 'Ace::Assign::EndcapResultsTest#test_real_client_refuses_missing_mismatched_extra_part_and_open_descriptor_before_bytes'
+
+  test_pre_cas_failure_leaves_no_result_and_cas_retry_revalidates_generationERROR (0.15s)
+Minitest::UnexpectedError:         KeyError: key not found: "execution_scope"
+            lib/ace/assign/authority/launch_lifecycle.rb:375:in 'Hash#fetch'
+            lib/ace/assign/authority/launch_lifecycle.rb:375:in 'Ace::Assign::Authority::LaunchLifecycle#with_slot'
+            lib/ace/assign/authority/launch_lifecycle.rb:367:in 'Ace::Assign::Authority::LaunchLifecycle#with_exclusion'
+            lib/ace/assign/authority/launch_lifecycle.rb:115:in 'Ace::Assign::Authority::LaunchLifecycle#dispatch'
+            lib/ace/assign/authority/router.rb:23:in 'Ace::Assign::Authority::Router#dispatch'
+            test/feat/endcap_results_test.rb:134:in 'Ace::Assign::EndcapResultsTest#call'
+            test/feat/endcap_results_test.rb:90:in 'block in Ace::Assign::EndcapResultsTest#fixture'
+            /Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/3.4.0/tmpdir.rb:105:in 'Dir.mktmpdir'
+            test/feat/endcap_results_test.rb:45:in 'Ace::Assign::EndcapResultsTest#fixture'
+            test/feat/endcap_results_test.rb:447:in 'Ace::Assign::EndcapResultsTest#test_pre_cas_failure_leaves_no_result_and_cas_retry_revalidates_generation'
+
+  test_result_private_record_and_ordered_blobs_commit_once_with_distinct_digestsERROR (0.13s)
+Minitest::UnexpectedError:         KeyError: key not found: "execution_scope"
+            lib/ace/assign/authority/launch_lifecycle.rb:375:in 'Hash#fetch'
+            lib/ace/assign/authority/launch_lifecycle.rb:375:in 'Ace::Assign::Authority::LaunchLifecycle#with_slot'
+            lib/ace/assign/authority/launch_lifecycle.rb:367:in 'Ace::Assign::Authority::LaunchLifecycle#with_exclusion'
+            lib/ace/assign/authority/launch_lifecycle.rb:115:in 'Ace::Assign::Authority::LaunchLifecycle#dispatch'
+            lib/ace/assign/authority/router.rb:23:in 'Ace::Assign::Authority::Router#dispatch'
+            test/feat/endcap_results_test.rb:134:in 'Ace::Assign::EndcapResultsTest#call'
+            test/feat/endcap_results_test.rb:90:in 'block in Ace::Assign::EndcapResultsTest#fixture'
+            /Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/3.4.0/tmpdir.rb:105:in 'Dir.mktmpdir'
+            test/feat/endcap_results_test.rb:45:in 'Ace::Assign::EndcapResultsTest#fixture'
+            test/feat/endcap_results_test.rb:168:in 'Ace::Assign::EndcapResultsTest#test_result_private_record_and_ordered_blobs_commit_once_with_distinct_digests'
+
+  test_canonical_absence_is_null_and_selectors_schema_and_executor_fail_closedERROR (0.13s)
+Minitest::UnexpectedError:         KeyError: key not found: "execution_scope"
+            lib/ace/assign/authority/launch_lifecycle.rb:375:in 'Hash#fetch'
+            lib/ace/assign/authority/launch_lifecycle.rb:375:in 'Ace::Assign::Authority::LaunchLifecycle#with_slot'
+            lib/ace/assign/authority/launch_lifecycle.rb:367:in 'Ace::Assign::Authority::LaunchLifecycle#with_exclusion'
+            lib/ace/assign/authority/launch_lifecycle.rb:115:in 'Ace::Assign::Authority::LaunchLifecycle#dispatch'
+            lib/ace/assign/authority/router.rb:23:in 'Ace::Assign::Authority::Router#dispatch'
+            test/feat/endcap_results_test.rb:134:in 'Ace::Assign::EndcapResultsTest#call'
+            test/feat/endcap_results_test.rb:90:in 'block in Ace::Assign::EndcapResultsTest#fixture'
+            /Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/3.4.0/tmpdir.rb:105:in 'Dir.mktmpdir'
+            test/feat/endcap_results_test.rb:45:in 'Ace::Assign::EndcapResultsTest#fixture'
+            test/feat/endcap_results_test.rb:221:in 'Ace::Assign::EndcapResultsTest#test_canonical_absence_is_null_and_selectors_schema_and_executor_fail_closed'
+
+  test_failed_empty_result_survives_restart_exit_discovery_and_same_head_correctionERROR (0.15s)
+Minitest::UnexpectedError:         KeyError: key not found: "execution_scope"
+            lib/ace/assign/authority/launch_lifecycle.rb:375:in 'Hash#fetch'
+            lib/ace/assign/authority/launch_lifecycle.rb:375:in 'Ace::Assign::Authority::LaunchLifecycle#with_slot'
+            lib/ace/assign/authority/launch_lifecycle.rb:367:in 'Ace::Assign::Authority::LaunchLifecycle#with_exclusion'
+            lib/ace/assign/authority/launch_lifecycle.rb:115:in 'Ace::Assign::Authority::LaunchLifecycle#dispatch'
+            lib/ace/assign/authority/router.rb:23:in 'Ace::Assign::Authority::Router#dispatch'
+            test/feat/endcap_results_test.rb:134:in 'Ace::Assign::EndcapResultsTest#call'
+            test/feat/endcap_results_test.rb:90:in 'block in Ace::Assign::EndcapResultsTest#fixture'
+            /Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/3.4.0/tmpdir.rb:105:in 'Dir.mktmpdir'
+            test/feat/endcap_results_test.rb:45:in 'Ace::Assign::EndcapResultsTest#fixture'
+            test/feat/endcap_results_test.rb:199:in 'Ace::Assign::EndcapResultsTest#test_failed_empty_result_survives_restart_exit_discovery_and_same_head_correction'
+
+  test_source_authorization_roles_reassignment_visibility_and_wrong_purposesERROR (0.13s)
+Minitest::UnexpectedError:         KeyError: key not found: "execution_scope"
+            lib/ace/assign/authority/launch_lifecycle.rb:375:in 'Hash#fetch'
+            lib/ace/assign/authority/launch_lifecycle.rb:375:in 'Ace::Assign::Authority::LaunchLifecycle#with_slot'
+            lib/ace/assign/authority/launch_lifecycle.rb:367:in 'Ace::Assign::Authority::LaunchLifecycle#with_exclusion'
+            lib/ace/assign/authority/launch_lifecycle.rb:115:in 'Ace::Assign::Authority::LaunchLifecycle#dispatch'
+            lib/ace/assign/authority/router.rb:23:in 'Ace::Assign::Authority::Router#dispatch'
+            test/feat/endcap_results_test.rb:134:in 'Ace::Assign::EndcapResultsTest#call'
+            test/feat/endcap_results_test.rb:90:in 'block in Ace::Assign::EndcapResultsTest#fixture'
+            /Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/3.4.0/tmpdir.rb:105:in 'Dir.mktmpdir'
+            test/feat/endcap_results_test.rb:45:in 'Ace::Assign::EndcapResultsTest#fixture'
+            test/feat/endcap_results_test.rb:232:in 'Ace::Assign::EndcapResultsTest#test_source_authorization_roles_reassignment_visibility_and_wrong_purposes'
+
+  test_retained_review_fetch_exact_reviewer_purpose_and_terminal_result_permissionsERROR (0.13s)
+Minitest::UnexpectedError:         KeyError: key not found: "execution_scope"
+            lib/ace/assign/authority/launch_lifecycle.rb:375:in 'Hash#fetch'
+            lib/ace/assign/authority/launch_lifecycle.rb:375:in 'Ace::Assign::Authority::LaunchLifecycle#with_slot'
+            lib/ace/assign/authority/launch_lifecycle.rb:367:in 'Ace::Assign::Authority::LaunchLifecycle#with_exclusion'
+            lib/ace/assign/authority/launch_lifecycle.rb:115:in 'Ace::Assign::Authority::LaunchLifecycle#dispatch'
+            lib/ace/assign/authority/router.rb:23:in 'Ace::Assign::Authority::Router#dispatch'
+            test/feat/endcap_results_test.rb:134:in 'Ace::Assign::EndcapResultsTest#call'
+            test/feat/endcap_results_test.rb:90:in 'block in Ace::Assign::EndcapResultsTest#fixture'
+            /Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/3.4.0/tmpdir.rb:105:in 'Dir.mktmpdir'
+            test/feat/endcap_results_test.rb:45:in 'Ace::Assign::EndcapResultsTest#fixture'
+            test/feat/endcap_results_test.rb:485:in 'Ace::Assign::EndcapResultsTest#test_retained_review_fetch_exact_reviewer_purpose_and_terminal_result_permissions'
+
+  test_recorded_executor_fetches_only_own_canonical_terminal_service_evidenceERROR (0.13s)
+Minitest::UnexpectedError:         KeyError: key not found: "execution_scope"
+            lib/ace/assign/authority/launch_lifecycle.rb:375:in 'Hash#fetch'
+            lib/ace/assign/authority/launch_lifecycle.rb:375:in 'Ace::Assign::Authority::LaunchLifecycle#with_slot'
+            lib/ace/assign/authority/launch_lifecycle.rb:367:in 'Ace::Assign::Authority::LaunchLifecycle#with_exclusion'
+            lib/ace/assign/authority/launch_lifecycle.rb:115:in 'Ace::Assign::Authority::LaunchLifecycle#dispatch'
+            lib/ace/assign/authority/router.rb:23:in 'Ace::Assign::Authority::Router#dispatch'
+            test/feat/endcap_results_test.rb:134:in 'Ace::Assign::EndcapResultsTest#call'
+            test/feat/endcap_results_test.rb:90:in 'block in Ace::Assign::EndcapResultsTest#fixture'
+            /Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/3.4.0/tmpdir.rb:105:in 'Dir.mktmpdir'
+            test/feat/endcap_results_test.rb:45:in 'Ace::Assign::EndcapResultsTest#fixture'
+            test/feat/endcap_results_test.rb:522:in 'Ace::Assign::EndcapResultsTest#test_recorded_executor_fetches_only_own_canonical_terminal_service_evidence'
+
+  test_bad_receipt_producer_digest_artifact_order_and_stale_candidate_do_not_change_refERROR (0.12s)
+Minitest::UnexpectedError:         KeyError: key not found: "execution_scope"
+            lib/ace/assign/authority/launch_lifecycle.rb:375:in 'Hash#fetch'
+            lib/ace/assign/authority/launch_lifecycle.rb:375:in 'Ace::Assign::Authority::LaunchLifecycle#with_slot'
+            lib/ace/assign/authority/launch_lifecycle.rb:367:in 'Ace::Assign::Authority::LaunchLifecycle#with_exclusion'
+            lib/ace/assign/authority/launch_lifecycle.rb:115:in 'Ace::Assign::Authority::LaunchLifecycle#dispatch'
+            lib/ace/assign/authority/router.rb:23:in 'Ace::Assign::Authority::Router#dispatch'
+            test/feat/endcap_results_test.rb:134:in 'Ace::Assign::EndcapResultsTest#call'
+            test/feat/endcap_results_test.rb:90:in 'block in Ace::Assign::EndcapResultsTest#fixture'
+            /Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/3.4.0/tmpdir.rb:105:in 'Dir.mktmpdir'
+            test/feat/endcap_results_test.rb:45:in 'Ace::Assign::EndcapResultsTest#fixture'
+            test/feat/endcap_results_test.rb:269:in 'Ace::Assign::EndcapResultsTest#test_bad_receipt_producer_digest_artifact_order_and_stale_candidate_do_not_change_ref'
+
+  test_services_read_body_and_mutation_metadata_refuse_without_canonical_changeERROR (0.13s)
+Minitest::UnexpectedError:         KeyError: key not found: "execution_scope"
+            lib/ace/assign/authority/launch_lifecycle.rb:375:in 'Hash#fetch'
+            lib/ace/assign/authority/launch_lifecycle.rb:375:in 'Ace::Assign::Authority::LaunchLifecycle#with_slot'
+            lib/ace/assign/authority/launch_lifecycle.rb:367:in 'Ace::Assign::Authority::LaunchLifecycle#with_exclusion'
+            lib/ace/assign/authority/launch_lifecycle.rb:115:in 'Ace::Assign::Authority::LaunchLifecycle#dispatch'
+            lib/ace/assign/authority/router.rb:23:in 'Ace::Assign::Authority::Router#dispatch'
+            test/feat/endcap_results_test.rb:134:in 'Ace::Assign::EndcapResultsTest#call'
+            test/feat/endcap_results_test.rb:90:in 'block in Ace::Assign::EndcapResultsTest#fixture'
+            /Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/3.4.0/tmpdir.rb:105:in 'Dir.mktmpdir'
+            test/feat/endcap_results_test.rb:45:in 'Ace::Assign::EndcapResultsTest#fixture'
+            test/feat/endcap_results_test.rb:572:in 'Ace::Assign::EndcapResultsTest#test_services_read_body_and_mutation_metadata_refuse_without_canonical_change'
+
+  test_real_client_server_submit_lost_reply_exit_restart_status_and_exact_fetchERROR (0.13s)
+Minitest::UnexpectedError:         KeyError: key not found: "execution_scope"
+            lib/ace/assign/authority/launch_lifecycle.rb:375:in 'Hash#fetch'
+            lib/ace/assign/authority/launch_lifecycle.rb:375:in 'Ace::Assign::Authority::LaunchLifecycle#with_slot'
+            lib/ace/assign/authority/launch_lifecycle.rb:367:in 'Ace::Assign::Authority::LaunchLifecycle#with_exclusion'
+            lib/ace/assign/authority/launch_lifecycle.rb:115:in 'Ace::Assign::Authority::LaunchLifecycle#dispatch'
+            lib/ace/assign/authority/router.rb:23:in 'Ace::Assign::Authority::Router#dispatch'
+            test/feat/endcap_results_test.rb:134:in 'Ace::Assign::EndcapResultsTest#call'
+            test/feat/endcap_results_test.rb:90:in 'block in Ace::Assign::EndcapResultsTest#fixture'
+            /Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/3.4.0/tmpdir.rb:105:in 'Dir.mktmpdir'
+            test/feat/endcap_results_test.rb:45:in 'Ace::Assign::EndcapResultsTest#fixture'
+            test/feat/endcap_results_test.rb:323:in 'Ace::Assign::EndcapResultsTest#test_real_client_server_submit_lost_reply_exit_restart_status_and_exact_fetch'
+
+  test_campaign_result_and_review_refuse_before_local_campaign_manager_lookupERROR (0.20s)
+Minitest::UnexpectedError:         KeyError: key not found: "execution_scope"
+            lib/ace/assign/authority/launch_lifecycle.rb:375:in 'Hash#fetch'
+            lib/ace/assign/authority/launch_lifecycle.rb:375:in 'Ace::Assign::Authority::LaunchLifecycle#with_slot'
+            lib/ace/assign/authority/launch_lifecycle.rb:367:in 'Ace::Assign::Authority::LaunchLifecycle#with_exclusion'
+            lib/ace/assign/authority/launch_lifecycle.rb:115:in 'Ace::Assign::Authority::LaunchLifecycle#dispatch'
+            lib/ace/assign/authority/router.rb:23:in 'Ace::Assign::Authority::Router#dispatch'
+            test/feat/endcap_results_test.rb:134:in 'Ace::Assign::EndcapResultsTest#call'
+            test/feat/endcap_results_test.rb:90:in 'block in Ace::Assign::EndcapResultsTest#fixture'
+            /Users/mc/.local/share/mise/installs/ruby/3.4.8/lib/ruby/3.4.0/tmpdir.rb:105:in 'Dir.mktmpdir'
+            test/feat/endcap_results_test.rb:45:in 'Ace::Assign::EndcapResultsTest#fixture'
+            test/feat/endcap_results_test.rb:608:in 'Ace::Assign::EndcapResultsTest#test_campaign_result_and_review_refuse_before_local_campaign_manager_lookup'
+
+
+Finished in 2.01441s
+13 tests, 39 assertions, 0 failures, 13 errors, 0 skips

@@ -1,0 +1,122 @@
+[
+  {
+    "package": "assign",
+    "receipt": "89307753-cec6-48e9-bd5a-07a0e1690acc",
+    "source": ".ace-local/test/reports/assign/89307753-cec6-48e9-bd5a-07a0e1690acc",
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/89307753-cec6-48e9-bd5a-07a0e1690acc"
+  },
+  {
+    "package": "assign",
+    "receipt": "ab606734-7f95-49f8-af5c-705a84bfebe2",
+    "source": ".ace-local/test/reports/assign/ab606734-7f95-49f8-af5c-705a84bfebe2",
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/ab606734-7f95-49f8-af5c-705a84bfebe2"
+  },
+  {
+    "package": "assign",
+    "receipt": "e0d9d93d-5135-4026-8b47-e0251d01da48",
+    "source": ".ace-local/test/reports/assign/e0d9d93d-5135-4026-8b47-e0251d01da48",
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/e0d9d93d-5135-4026-8b47-e0251d01da48"
+  },
+  {
+    "package": "assign",
+    "receipt": "17cdeaf6-3882-478f-a1e0-67a7dce33074",
+    "source": ".ace-local/test/reports/assign/17cdeaf6-3882-478f-a1e0-67a7dce33074",
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/17cdeaf6-3882-478f-a1e0-67a7dce33074"
+  },
+  {
+    "package": "assign",
+    "receipt": "6fa4e350-93fd-4b4c-8189-9271614c7f95",
+    "source": ".ace-local/test/reports/assign/6fa4e350-93fd-4b4c-8189-9271614c7f95",
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/6fa4e350-93fd-4b4c-8189-9271614c7f95"
+  },
+  {
+    "package": "assign",
+    "receipt": "55ba5ceb-baac-4ebd-a682-7fcb48854c52",
+    "source": ".ace-local/test/reports/assign/55ba5ceb-baac-4ebd-a682-7fcb48854c52",
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/55ba5ceb-baac-4ebd-a682-7fcb48854c52"
+  },
+  {
+    "package": "runtime",
+    "receipt": "42a13ef3-f582-4ec8-b84b-edd24345d5b7",
+    "source": ".ace-local/test/reports/runtime/42a13ef3-f582-4ec8-b84b-edd24345d5b7",
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/42a13ef3-f582-4ec8-b84b-edd24345d5b7"
+  },
+  {
+    "package": "herdr",
+    "receipt": "c9d1a9b4-3019-417e-9d1d-14c33813f118",
+    "source": ".ace-local/test/reports/herdr/c9d1a9b4-3019-417e-9d1d-14c33813f118",
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/c9d1a9b4-3019-417e-9d1d-14c33813f118"
+  },
+  {
+    "package": "assign",
+    "receipt": "25b69fae-47af-41b8-842a-b5a5163f6b31",
+    "source": ".ace-local/test/reports/assign/25b69fae-47af-41b8-842a-b5a5163f6b31",
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/25b69fae-47af-41b8-842a-b5a5163f6b31"
+  },
+  {
+    "package": "assign",
+    "receipt": "6635dc3b-1afb-4267-9b90-50635a948ae1",
+    "source": ".ace-local/test/reports/assign/6635dc3b-1afb-4267-9b90-50635a948ae1",
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/6635dc3b-1afb-4267-9b90-50635a948ae1",
+    "purpose": "prior failed/timeout/not-executed receipt retained without pass claim"
+  },
+  {
+    "package": "assign",
+    "receipt": "4b588547-e31a-45fd-b0ad-26f0842c7128",
+    "source": ".ace-local/test/reports/assign/4b588547-e31a-45fd-b0ad-26f0842c7128",
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/4b588547-e31a-45fd-b0ad-26f0842c7128",
+    "purpose": "prior failed/timeout/not-executed receipt retained without pass claim"
+  },
+  {
+    "package": "assign",
+    "receipt": "4ae2b82d-d4b6-4ab1-b3aa-2bb98b890664",
+    "source": ".ace-local/test/reports/assign/4ae2b82d-d4b6-4ab1-b3aa-2bb98b890664",
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/4ae2b82d-d4b6-4ab1-b3aa-2bb98b890664",
+    "purpose": "prior failed/timeout/not-executed receipt retained without pass claim"
+  },
+  {
+    "package": "assign",
+    "receipt": "2663acad-f609-4642-8511-f7396754f7fb",
+    "source": ".ace-local/test/reports/assign/2663acad-f609-4642-8511-f7396754f7fb",
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/2663acad-f609-4642-8511-f7396754f7fb",
+    "purpose": "prior failed/timeout/not-executed receipt retained without pass claim"
+  },
+  {
+    "package": "assign",
+    "receipt": "f83405b4-a0a6-423b-8449-55c81f4d70a0",
+    "source": ".ace-local/test/reports/assign/f83405b4-a0a6-423b-8449-55c81f4d70a0",
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/f83405b4-a0a6-423b-8449-55c81f4d70a0",
+    "purpose": "prior failed/timeout/not-executed receipt retained without pass claim"
+  },
+  {
+    "package": "assign",
+    "receipt": "58addb05-60f9-48f6-a35a-927fab19b986",
+    "source": ".ace-local/test/reports/assign/58addb05-60f9-48f6-a35a-927fab19b986",
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/58addb05-60f9-48f6-a35a-927fab19b986",
+    "purpose": "prior failed/timeout/not-executed receipt retained without pass claim"
+  },
+  {
+    "package": "assign",
+    "receipt": "f19067b6-2d43-412e-8170-08ff3ea955a5",
+    "source": ".ace-local/test/reports/assign/f19067b6-2d43-412e-8170-08ff3ea955a5",
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/f19067b6-2d43-412e-8170-08ff3ea955a5",
+    "product_candidate": "918cb516c",
+    "purpose": "exact three failed-case replacement, PASS3/31"
+  },
+  {
+    "package": "assign",
+    "receipt": "94a2e723-cf00-498a-a95b-dcf509257f2c",
+    "source": "/Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/.ace-local/test/reports/assign/94a2e723-cf00-498a-a95b-dcf509257f2c",
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/94a2e723-cf00-498a-a95b-dcf509257f2c",
+    "product_candidate": "8a9b7cc26",
+    "purpose": "independent three-file35/411 withtwo known five-second client failures"
+  },
+  {
+    "package": "assign",
+    "receipt": "e212c317-ed1f-4719-8141-aa0171d4e119",
+    "source": "/Users/mc/Ps/ace/.ace-wt/review-9c2-runtime/.ace-local/test/reports/assign/e212c317-ed1f-4719-8141-aa0171d4e119",
+    "retained": ".ace-tasks/8x4.t.9c2-prove-exact-protected-scope-has/evidence/connected-parent-cap/e212c317-ed1f-4719-8141-aa0171d4e119",
+    "product_candidate": "918cb516c",
+    "purpose": "independent exactthree-case PASS3/31; final bounded APPROVE"
+  }
+]
