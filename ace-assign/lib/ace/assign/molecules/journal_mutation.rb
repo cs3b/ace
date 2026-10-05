@@ -26,9 +26,6 @@ module Ace
               ensure_checkout!
               old = ref_value if old.nil?
               sync_checkout(old)
-              # Failed CAS/import attempts leave only disposable quarantine.
-              # Remove unreachable files before rebuilding from canonical ref.
-              git!("-C", checkout_dir, "clean", "-fd", "--", "execution", "evidence/imports")
               replay = mutation_result(mutation_id)
               if replay
                 unless replay["operation"] == operation && replay["parameters_digest"] == parameters_digest &&

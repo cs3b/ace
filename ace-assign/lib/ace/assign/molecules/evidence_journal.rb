@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "digest"
-require "digest"
 require "fileutils"
 require "json"
 require "open3"
@@ -633,6 +632,11 @@ input:#{Regexp.escape(current["input_digest"])} outcome:(\S+)( no-effect:(\S+))?
             lock.flock(File::LOCK_EX)
             begin
               yield
+            rescue StandardError
+              # No rejected writer may leave staged or untracked transaction
+              # data for the next writer to admit. This checkout is disposable.
+              sync_checkout(ref_value) if File.exist?(File.join(checkout_dir, ".git"))
+              raise
             ensure
               lock.flock(File::LOCK_UN)
             end
@@ -679,6 +683,9 @@ input:#{Regexp.escape(current["input_digest"])} outcome:(\S+)( no-effect:(\S+))?
           return if target.nil?
 
           git!("-C", checkout_dir, "reset", "--hard", target)
+          # All writers use this boundary, including CAS retries. Only the
+          # journal's disposable namespaces are cleaned, never the candidate.
+          git!("-C", checkout_dir, "clean", "-fd", "--", "execution", "evidence")
         rescue AttemptErrors::EvidenceUnavailable
           # Stale, broken, or unregistered worktree: rebuild from scratch.
           FileUtils.rm_rf(checkout_dir)

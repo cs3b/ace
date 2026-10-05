@@ -8,7 +8,8 @@ module Ace
   module Assign
     class JournalMutationTest < AceAssignTestCase
       def with_journal
-        with_temp_cache do |root|
+        with_temp_cache do |cache|
+          root = Dir.mktmpdir("journal-", cache)
           repo = File.join(root, "repo")
           FileUtils.mkdir_p(repo)
           git(repo, "init", "-b", "main")
@@ -87,6 +88,80 @@ module Ace
             end
           end
           assert_equal first["journal_commit"], journal.ref_value
+        end
+      end
+
+      def test_failed_staging_cannot_leak_rejected_events_or_blobs_to_other_writers
+        %i[append record service].each do |writer|
+          with_journal do |journal, repo|
+            # A real index lock makes git-add fail after the mutation files exist.
+            journal.append(assignment_id: "seed", attempt_id: "seed", events: [
+              Models::EvidenceEvent.build(type: "intent", attempt_id: "seed", payload: {})])
+            checkout = File.join(journal.checkout_root, "journal")
+            index = git(checkout, "rev-parse", "--git-path", "index.lock")
+            index = File.expand_path(index, checkout)
+            original_write = journal.method(:write_event_files)
+            inject = true
+            journal.define_singleton_method(:write_event_files) do |assignment, events|
+              result = original_write.call(assignment, events)
+              if inject
+                File.write(index, "locked")
+                inject = false
+              end
+              result
+            end
+            before = journal.ref_value
+            assert_raises(AttemptErrors::EvidenceUnavailable) { mutate(journal) { plan } }
+            assert_equal before, journal.ref_value
+            FileUtils.rm_f(index)
+            event = Models::EvidenceEvent.build(type: "intent", attempt_id: "attempt-1", payload: {})
+            case writer
+            when :append
+              journal.append(assignment_id: "assignment-1", attempt_id: "attempt-1", events: [event])
+            when :record
+              journal.record(assignment_id: "assignment-1", attempt_id: "attempt-1", type: "intent", payload: {})
+            when :service
+              journal.claim_service_request({"request_id" => "request-clean", "assignment_id" => "assignment-1",
+                "attempt_id" => "attempt-1", "input_digest" => "b" * 64}, guard: -> { nil })
+            end
+            refute journal.read_events("assignment-1").any? { |e| %w[evidence_import authority_mutation].include?(e["type"]) }
+            assert_nil journal.mutation_result("mutation-1")
+            assert_raises(AttemptErrors::EvidenceUnavailable) { journal.blob("evidence/imports/fixture-1") }
+            assert_empty git(checkout, "status", "--porcelain")
+          end
+        end
+      end
+
+      def test_every_writer_discards_abandoned_disposable_transaction_files
+        %i[append record service mutate].each do |writer|
+          with_journal do |journal, repo|
+            journal.append(assignment_id: "seed", attempt_id: "seed", events: [
+              Models::EvidenceEvent.build(type: "intent", attempt_id: "seed", payload: {})])
+            checkout = File.join(journal.checkout_root, "journal")
+            rejected = Models::EvidenceEvent.build(type: "authority_mutation", attempt_id: "attempt-1",
+              payload: {"mutation_id" => "rejected"})
+            journal.send(:write_event_files, "assignment-1", [rejected])
+            path = File.join(checkout, "evidence/imports/abandoned")
+            FileUtils.mkdir_p(File.dirname(path))
+            File.write(path, "rejected bytes")
+            candidate = git(repo, "rev-parse", "HEAD")
+            case writer
+            when :append
+              journal.append(assignment_id: "assignment-1", attempt_id: "attempt-1", events: [
+                Models::EvidenceEvent.build(type: "intent", attempt_id: "attempt-1", payload: {})])
+            when :record
+              journal.record(assignment_id: "assignment-1", attempt_id: "attempt-1", type: "intent", payload: {})
+            when :service
+              journal.claim_service_request({"request_id" => "request-clean", "assignment_id" => "assignment-1",
+                "attempt_id" => "attempt-1", "input_digest" => "b" * 64}, guard: -> { nil })
+            when :mutate
+              mutate(journal) { plan }
+            end
+            refute journal.read_events("assignment-1").any? { |e| e.dig("payload", "mutation_id") == "rejected" }
+            refute File.exist?(path)
+            assert_empty git(checkout, "status", "--porcelain")
+            assert_equal candidate, git(repo, "rev-parse", "HEAD")
+          end
         end
       end
 

@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Clean failed evidence transactions at every shared journal writer boundary; preserve unbound launch reservations and report explicit recovery evidence requirements.
+
 - Retain delivery context across scoped attempts and distinguish a recovered prior effect from a new request with different content or evidence before reporting completion.
 
 ### Added
