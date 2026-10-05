@@ -20,10 +20,16 @@ under .agents/skills and pruned both old projections; no harness-native projecti
 was generated. Other named task/overseer sources had no old PR names to migrate.
 Git-worktree cleanup wording now uses selected-forge evidence.
 
-ace-handbook's delivery workflow now consumes the existing qjl journal and
-neutral operations. It retains current executed tests and independent review,
+ace-handbook's delivery workflow explicitly separates ordinary standalone local
+task/inline implementation from managed attempt-bound delivery. Standalone uses
+existing local tools and only explicitly authorized neutral remote primitives;
+it cannot satisfy managed/protected acceptance or bypass an unavailable service.
+Managed delivery consumes the existing qjl journal and neutral operations.
+Both retain current executed tests and independent review,
 candidate_head distinct from journal_commit, advisory CI and honest uncertainty.
-Version preparation is optional and does not publish. No source checkpoint marks
+Requested version preparation precedes final evidence/merge; a post-merge
+preparation is a separate follow-up candidate needing its own evidence.
+Preparation does not publish. No source checkpoint marks
 unfinished installed criteria done. ace-review uses neutral PR reads and retains
 the exact forge selection throughout actual campaign rounds.
 
