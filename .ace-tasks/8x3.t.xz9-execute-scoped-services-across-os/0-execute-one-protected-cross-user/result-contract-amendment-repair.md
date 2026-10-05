@@ -46,3 +46,15 @@ unreviewed tasks stay draft; no code/tests/probes or promotion occurred.
 Validation of round-2 repair: bin/ace-task doctor scanned 781 tasks, 463 existing
 warnings (same baseline count as main before two new records; missing-title
 increment removed). git diff --check passes. No runtime tests executed.
+
+
+## Round-3 behavioral approval and narrow metadata repair
+
+Independent review approved xz9.3 behavior at frozen7073c81bc, with a subsequent
+verified scheduler-metadata qualification: an in-progress 09j dependency cannot
+be satisfied by accepted source prose. bin/ace-task update xz9.3 --remove
+dependencies=8x4.t.09j removes that false whole-task completion gate. The exact
+accepted f91b02889 source prerequisite/review evidence is retained; full xz9.0
+still depends on 09j completion. No result API semantics changed. Child remains
+draft / needs_review until root-reviewed promotion. The final review report is
+retained in result-contract-independent-review-340b.md including all prior rounds.
