@@ -2,6 +2,7 @@
 
 require "json"
 require "digest"
+require "fileutils"
 require "ace/assign/authority/client"
 require "ace/assign/authority/candidate_transfer"
 require "ace/assign/authority/evidence_transfer"
@@ -70,6 +71,7 @@ module Ace
           materialized = Ace::Assign::Authority::CandidateTransfer.new(root: @receiver.fetch("staging_root")).materialize(
             bytes: exported.parts.first, sha256: exported.data.fetch("sha256"), size: exported.data.fetch("bytes"),
             head: binding.fetch("head"), tree: exported.data.fetch("tree"), root: @receiver.fetch("staging_root"))
+          staging_identity = File.lstat(materialized.fetch("directory"))
           begin_params = binding.merge("claim_binding" => claim.data.fetch("claim_binding"), "expected_generation" => claim.data.fetch("generation"))
           started = @client.call("begin_dispatch", begin_params, mutation_id: Digest::SHA256.hexdigest("begin:#{mutation_id}"), upload_parts: [bytes], purpose: :service_input)
           return projection(started.data) unless !started.replayed && started.data["invocation"] == "permitted"
@@ -107,12 +109,32 @@ module Ace
           completion = @client.call("complete_service", binding.merge("claim_binding" => claim.data.fetch("claim_binding"),
             "receipt_sha256" => Digest::SHA256.hexdigest(receipt_bytes)),
             mutation_id: Digest::SHA256.hexdigest("complete:#{mutation_id}"), upload_parts: [receipt_bytes] + artifacts, purpose: :receipt_artifacts)
+          unless completion.data["request_id"] == request_id && %w[succeeded failed].include?(completion.data["state"])
+            return uncertain(request_id)
+          end
+          cleanup_staging(materialized.fetch("directory"), staging_identity)
           projection(completion.data)
-        rescue Ace::Assign::Error, Ace::Lab::InvalidConfigurationError, SecurityError, ArgumentError, KeyError, SystemCallError
+        rescue Ace::Assign::Error, Ace::Runtime::RuntimeUnavailableError, Ace::Lab::InvalidConfigurationError,
+          SecurityError, ArgumentError, KeyError, SystemCallError
           contacted ? uncertain(request_id) : {"request_id" => request_id, "state" => "refused", "code" => "invalid_receiver_admission"}
         end
 
         private
+
+        def cleanup_staging(directory, identity)
+          root = File.expand_path(@receiver.fetch("staging_root"))
+          Ace::Assign::Authority::PrivateDirectory.verify!(root)
+          current = File.lstat(directory)
+          return unless File.dirname(directory) == root && File.basename(directory).start_with?("candidate-") &&
+            current.directory? && current.uid == Process.uid && current.dev == identity.dev && current.ino == identity.ino
+          # Only this invocation's privately materialized directory is removed,
+          # after the authority durably accepted its exact terminal receipt.
+          FileUtils.remove_entry_secure(directory)
+        rescue Ace::Assign::Error, SystemCallError
+          # A cleanup failure cannot change already-confirmed canonical truth.
+          # Never fall back to cleaning the staging root or another directory.
+          nil
+        end
 
         def projection(data)
           data.slice("request_id", "state", "dispatch_phase", "claim", "generation", "journal_commit")

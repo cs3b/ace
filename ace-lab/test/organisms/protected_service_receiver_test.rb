@@ -9,7 +9,7 @@ require "open3"
 class ProtectedServiceReceiverTest < Minitest::Test
   # These are orchestration classifications, not simulated protected origin
   # acceptance. Actual peer/native checks remain in the installed proof.
-  def fixture(client, staging: nil, handler: nil)
+  def fixture(client, staging: nil, handler: nil, native_failure: false)
     worker = {"uid" => Process.uid + 1, "gid" => 500, "groups" => []}
     map = {"project_id" => "fixture", "worker_uid" => worker["uid"], "worker_gid" => 500,
       "worker_groups" => [], "authority_id" => "authority"}
@@ -20,7 +20,7 @@ class ProtectedServiceReceiverTest < Minitest::Test
     deployment.define_singleton_method(:mapping) { |_| map }
     deployment.define_singleton_method(:project) { |_| project }
     kernel = Object.new
-    kernel.define_singleton_method(:live!) { |_| true }
+    kernel.define_singleton_method(:live!) { |_| raise Ace::Runtime::RuntimeUnavailableError, "fixture identity changed" if native_failure; true }
     kernel.define_singleton_method(:capture) { |_| {"uid" => Process.uid, "gid" => Process.gid, "groups" => []} }
     unless handler
       handler = Object.new
@@ -64,7 +64,7 @@ class ProtectedServiceReceiverTest < Minitest::Test
         if (scenario == :lost_begin && name == "begin_dispatch") ||
             (scenario == :lost_authorization && name == "service_authorization") ||
             (scenario == :lost_completion && name == "complete_service")
-          raise Ace::Assign::AttemptErrors::EvidenceUnavailable, "fixture lost reply"
+          raise Ace::Runtime::RuntimeUnavailableError, "fixture lost reply"
         end
         data = case name
         when "request_service"
@@ -99,23 +99,27 @@ class ProtectedServiceReceiverTest < Minitest::Test
       result = Ace::Lab::Molecules::GrantResolver.stub(:trusted_document, document) do
         receiver.execute(submission: submission, peer: peer, input_bytes: bytes, mutation_id: "fixture-mutation")
       end
-      return [result, calls, Dir.glob(File.join(root, "**", "proof.txt"))]
+      return [result, calls, Dir.glob(File.join(root, "**", "proof.txt")),
+        Dir.glob(File.join(root, "candidate-*")), File.directory?(repo)]
     end
   end
 
   def test_fresh_permission_and_final_read_transfer_real_candidate_handler_evidence
-    result, calls, proofs = run_real_candidate
+    result, calls, proofs, candidates, repository_retained = run_real_candidate
     assert_equal "succeeded", result.fetch("state")
     assert_equal %w[request_service export_candidate begin_dispatch service_authorization complete_service], calls
-    assert_equal 1, proofs.length
+    assert_empty proofs
+    assert_empty candidates
+    assert repository_retained, "must not clean unrelated staging entries"
   end
 
   def test_lost_begin_or_final_authorization_and_changed_operation_never_invoke_handler
     %i[lost_begin lost_authorization changed_operation].each do |scenario|
-      result, calls, proofs = run_real_candidate(scenario: scenario)
+      result, calls, proofs, candidates = run_real_candidate(scenario: scenario)
       assert_equal "uncertain", result.fetch("state"), scenario
       refute_includes calls, "complete_service", scenario
       assert_empty proofs, scenario
+      assert_equal 1, candidates.length, "uncertain candidate must remain for recovery"
     end
   end
 
@@ -142,9 +146,34 @@ class ProtectedServiceReceiverTest < Minitest::Test
 
   def test_lost_claim_reply_retains_uncertainty_without_invocation
     client = Object.new
-    client.define_singleton_method(:call) { |*_, **_| raise Ace::Assign::AttemptErrors::EvidenceUnavailable, "fixture reply loss" }
+    client.define_singleton_method(:call) { |*_, **_| raise Ace::Runtime::RuntimeUnavailableError, "fixture reply loss" }
     receiver, request, peer, bytes = fixture(client)
     assert_equal "uncertain", receiver.execute(submission: request, peer: peer, input_bytes: bytes, mutation_id: "request-mutation").fetch("state")
+  end
+
+  def test_native_identity_failure_before_contact_refuses_without_client_call
+    client = Object.new
+    client.define_singleton_method(:call) { |*_, **_| raise "must not contact" }
+    receiver, request, peer, bytes = fixture(client, native_failure: true)
+    result = receiver.execute(submission: request, peer: peer, input_bytes: bytes, mutation_id: "request-mutation")
+    assert_equal "refused", result.fetch("state")
+  end
+
+  def test_cleanup_refuses_replaced_invocation_directory_and_preserves_other_entries
+    Dir.mktmpdir("ace-receiver-cleanup-", Etc.getpwuid(Process.uid).dir) do |root|
+      File.chmod(0o700, root)
+      directory = File.join(root, "candidate-owned")
+      Dir.mkdir(directory, 0o700)
+      identity = File.lstat(directory)
+      retained = File.join(root, "candidate-retained")
+      File.rename(directory, retained)
+      Dir.mkdir(directory, 0o700)
+      File.write(File.join(directory, "other-invocation"), "retain")
+      receiver, = fixture(Object.new, staging: root)
+      receiver.send(:cleanup_staging, directory, identity)
+      assert File.directory?(retained)
+      assert_equal "retain", File.read(File.join(directory, "other-invocation"))
+    end
   end
 
   def test_malformed_peer_or_original_body_refuses_before_authority_contact
