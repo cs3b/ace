@@ -58,7 +58,7 @@ bytes (normal receipt first; ordered declared artifact bytes follow). Success
 returns result_id, original/upload/normalized digests, ordered canonical artifact
 references, verdict, generation and journal_commit. It leaves the attempt active.
 After worker exit and positive execution-scope no-writer proof from prerequisite
-9c2 (currently draft; positive finish is blocked until delivered), the exact
+9c2 (whole specification approved/pending; positive finish requires its actual source and installed proof), the exact
 launcher or mapped supervisor sends operation finish, mutation_id finish-1,
 params `{mapping_id, assignment_id, attempt_id, expected_generation,
 candidate_generation, head, result_id}` without a body. Success returns terminal
@@ -91,3 +91,42 @@ if a disposable local cache still contains an earlier successful response.
 
 Full usage will be completed during child implementation. This draft does not
 claim full service composition startup or installed cross-user acceptance.
+
+## Recover one exact attempt
+
+Mapped launcher/supervisor persists mutation recovery-1 and sends recover with
+{mapping_id, assignment_id, attempt_id, expected_generation}, no body. The owner
+returns the exact attempt's canonical decision/state; it does not resume siblings.
+reconcile-required retains ownership even when the original child vanished.
+Retry recovery-1 unchanged for its original reply; use status and a fresh mutation
+for a later observation. Read-only status never starts, stops or manufactures proof.
+
+## Register and reconcile one inbox
+
+The exact live worker calls bind_inbox with mutation inbox-bind-1 and
+{mapping_id, assignment_id, attempt_id, expected_generation, event_id,
+inbox_context_id}. The installed context selects the fixed Herdr client/key/root.
+The owner returns registration; changing context/key/registration conflicts.
+A fresh bind after scope seal refuses. No Inbox path/key is caller input.
+
+Mapped supervisor calls reconcile_inbox, mutation inbox-proof-1, with
+{mapping_id, assignment_id, attempt_id, expected_generation, event_id,
+inbox_context_id, expected_registration, receipt_sha256, signature_sha256,
+transfer}. Send exactly signed receipt JSON then detached signature, each <=16 KiB,
+using fixed inbox_proof framing. Herdr verifies signed bytes/native observation;
+the authority imports both bytes/provenance and records its consumer acceptance.
+The response contains canonical receipt_ref/signature_ref, never local paths.
+If Herdr accepted before authority crash, retry exact proof to repair qjl; never
+repeat delivery. Wrong key/stale claim/corrupt retained proof refuses and holds
+ownership. Superseded queued transport is not business-effect/no-writer proof.
+
+## Close scope before finish
+
+Launcher/supervisor first calls 9c2 close_execution_scope with a persisted
+mutation ID and exact mapping/assignment/attempt/current expected_generation.
+First close seals and may return running. A later fresh close records positive
+proof; replay of the first ID retains its original running result. Observe is
+read-only. Finish uses result_id only after positive closure and every independent
+service/inbox settlement; local closure alone cannot settle remote effects.
+Terminal commit precedes exact slot release, and historical finish replay after
+reuse never operates on the replacement scope.

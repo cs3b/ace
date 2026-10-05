@@ -97,10 +97,10 @@ Wire envelope: `{version: 1, operation: NAME, mutation_id: ID, project_id: ID, p
 | export_candidate / assigned reviewer or ticket executor | attempt_id, candidate_generation, head and reviewer assignment or request ticket; read-only bounded bytes and descriptor as above. |
 | assign_review / mapped launcher | attempt_id, candidate_generation, head, reviewer_uid and reviewer_process_binding; reviewer must be mapped project reviewer and differ from worker/author UID, exact observed execution binding required; journal reviewer assignment before artifact acceptance; changed head/generation invalidates assignment. |
 | accept_review / assigned independent reviewer | attempt_id, candidate_generation, head, existing review receipt bytes and bounded executed-check/review artifact bytes/digests, expected generation; validates current qjl ReceiptVerifier rules, executed checks, independent actor/UID, role/runtime execution identity and exact exported candidate. Imports reviewed artifacts and accepted receipt in one commit. Uploaded worker review is unauthorized. Response accepted receipt digest/journal_commit. |
-| finish / owning worker submits business evidence; mapped launcher/supervisor admits terminalization | attempt_id, expected generation, current normal finish receipt bytes/artifacts; peer-attributed receipt acceptance retains existing role/review checks. Terminalization uses current coordinator finish/lifecycle locks and refuses unproven pending effect/inbox/process cleanup. Worker cannot assert other actor or select force cleanup. |
-| recover / mapped supervisor | assignment_id/attempt_id, expected generation; owner reconstructs current canonical qjl and uses current Reconciler exact runtime/process_birth facts and inbox consumer state. Returns existing recovery decision/adoption/uncertain disposition; no inferred process-start, fabricated child identity or local cache fallback. |
-| bind_inbox / active owning attempt actor through authority | attempt_id, event_id, registered inbox_context_id; owner invokes current coordinator bind_inbox using peer-resolved identity and the fixed context, records canonical event/attempt/digest/key registration. No caller-selected Inbox object/path. |
-| reconcile_inbox / mapped signer/supervisor | attempt_id, event_id, inbox_context_id, exact signed receipt bytes, detached signature bytes, expected registration; owner materializes these bytes privately, invokes current coordinator reconcile_inbox with fixed Inbox client and peer-resolved trusted identity, preserving expected_registration verification under Herdr event lock and exact accepted proof replay. Signature path is owner-created, never a signer/worker filesystem path. Response canonical Herdr state and qjl consumer evidence reference. |
+| finish / exact launcher or mapped supervisor | Closed result_id-only schema, terminal CAS and retained replay in the result/finish amendment below; no worker terminalization or receipt re-upload. |
+| recover / exact launcher or mapped supervisor | Closed attempt-scoped recovery schema and canonical owner routing in remaining-consumer-contract.md; no assignment-wide implicit resume. |
+| bind_inbox / active exact worker | Closed mapping/context/event/generation schema in remaining-consumer-contract.md; owner resolves fixed Inbox and records immutable registration. |
+| reconcile_inbox / mapped supervisor | Closed signed receipt/signature transfer and canonical import in remaining-consumer-contract.md; Herdr retains signature/event authority. |
 | attempt/service status and evidence fetch / owning worker, assigned reviewer or mapped supervisor/executor | fixed project/attempt/request/evidence ID plus required role binding; visibility filtered by current project grant and purpose. Worker gets sanitized public projections; raw review/observation artifacts only to allowed peers. |
 
 All current protected driver start/receipt acceptance/finish/recover and evidence consumers route through this API. reserve/process_start separation is a required source refactor of current start, whose intent and process_start are emitted together. Ordinary local standalone assignment behavior is a separate explicit operating mode; it never acts as a protected assignment fallback.
@@ -461,30 +461,33 @@ accepted by existing Inbox/Herdr and recorded canonically; pending/missing or
 unverifiable inbox binding blocks admission. An attempt with no service requests
 or inbox bindings needs no invented empty proof.
 
-Worker may submit while alive, then exits. Before terminal admission the
-existing LaunchLifecycle owner supplies its exact recorded origin/child birth
-and pidfd observations, but these prove only original-child state, not the
-absence of all descendant or externally spawned writers. Genuine upstream draft
-8x4.t.9c2 owns the missing trustworthy exact execution-scope no-writer capability,
-extracted from xz9.2. It depends on 09j, never on xz9.0 or xz9.2; both children
-consume it. The native containment mechanism and installer topology are not yet
-selected. Current 09j source, an empty process group/subtree or pane disappearance
-do not satisfy it; accessible native/external spawner creation must be prevented
-or exhaustively bound into the same exact scope before emptiness is meaningful.
+Worker may submit while alive, then exits. The accepted 9c2 scope-owner
+contract replaces the earlier unselected-mechanism assumption: attempt-specific
+worker Herdr server and retained systemd parent slice, irreversible canonical
+seal, exact incarnation, recursive no-writer proof and release-before-reuse.
+Its whole specification was independently APPROVED at 1122ddf7be3d90a7339a87209c665a8f1d3eab19;
+9c2 is pending / needs_review false. Its implementation and installed proof are
+not delivered, and unfinished 09j remains its dependency. Original-child pidfd,
+pane absence, empty process group or caller boolean never substitutes for that
+scope proof. Finish consumes the exact canonical scope_binding_event_id,
+scope_generation, scope_sealed and proof_id lineage under existing lifecycle/CAS
+exclusion. It does not call close, stop or fabricate a proof as a query side effect.
+The launcher/supervisor first uses 9c2 close_execution_scope; first close seals,
+a later fresh close records closure after real positive observation. observe is
+read-only and old close replay cannot upgrade running to closed_no_writers.
 
-Until 9c2's independently reviewed contract and implemented proof are available,
-finish must refuse evidence_unavailable, preserve ownership and remain incomplete.
-Result submission and authorized fetch are independently implementable; positive
-terminal finish acceptance is blocked, never simulated by a trusted boolean or
-mock no-writer response. Once selected, finish consumes that owner's exact scope,
-native origin, incarnation, closed-to-new-writers state and independently observed
-no-writer evidence under the same exclusive lifecycle/CAS boundary. No worker,
-caller timestamp, service outcome or original PID absence supplies that proof.
-Finish does not kill the worker or run an effect. Restart must reestablish the
-same scope proof or refuse; missing handles/unsupported/unreadable proof requires
-existing recovery inspection, never guessed absence or abort's pre-execution proof
-for an issued launch. Each CAS retry revalidates proof against exact current
-scope/origin and no fresh claim is admitted while the boundary is held.
+Fresh finish revalidates the full current scope binding, original native/child
+origin, manager/boot/unit incarnation, retained parent and proof against the
+canonical chain on every CAS retry, plus independent effect/inbox settlement.
+Missing/replaced/unsupported/unreadable scope or unimplemented owner yields
+evidence_unavailable and retains ownership. Restart reconstructs through 9c2,
+never cache/guessed absence or abort's pre-execution proof for issued work.
+Terminal CAS precedes 9c2 release-before-reuse; a crash after terminal commit
+leaves the retained slot closed until its exact owner releases it. Historical
+finish replay verifies retained proof/result/terminal lineage even after slot
+reuse, never stops/releases the replacement scope or demands an old worker live.
+Full positive finish acceptance still requires real 9c2 source and permitted
+installed no-writer acceptance. Result/fetch delivery does not provide it.
 
 One durable existing journal CAS includes normal receipt_accepted with the
 normalized worker receipt, the legal succeeded/failed transition and finish
@@ -550,3 +553,12 @@ reviewer, executor/wrong launcher/current revocation denial. Test generated
 multipart download descriptor equals canonical descriptor and malformed/missing/
 mismatched data.transfer never exposes bytes or private fields. Zero-artifact
 status and fresh/replay sanitized reply remain bounded and leak-free.
+
+## Remaining consumer readiness amendment — specification only
+
+[remaining-consumer-contract.md](remaining-consumer-contract.md) is normative for
+recover/bind_inbox/reconcile_inbox framing, context resolution, canonical import,
+replay, seal ordering and source ownership. It supersedes the earlier shorthand
+rows without changing retained historical independent verdicts. xz9.0 remains
+draft/needs_review pending independent whole-consumer review; no source or
+installed acceptance follows from this amendment.
