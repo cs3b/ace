@@ -1,7 +1,7 @@
-# Canonical result API — draft usage
+# Canonical result API — source usage
 
 These are executable Ruby examples against the existing public
-Ace::Assign::Authority::Client.call surface after this draft is implemented.
+Ace::Assign::Authority::Client.call surface in this source slice. Full-service startup remains guarded.
 Run under the already configured mapped OS principal. Installed deployment
 selects mapping/project/socket/scratch; callers supply no authority paths.
 No new CLI is proposed. Existing attempt finish/evidence command routing remains

@@ -125,6 +125,21 @@ module Ace
           socket&.close
         end
       end
+      def test_malformed_transfer_schema_is_invalid_input_before_handler_or_spool
+        with_server do |path, handler, root|
+          socket = UNIXSocket.new(path)
+          request(socket, "upload", "transfer" => {"invalid" => true})
+          socket.shutdown(Socket::SHUT_WR)
+          reply = WIRE.read(socket, deadline: WIRE.deadline(2))
+          assert_equal "invalid_input", reply.dig("error", "code")
+          refute reply.key?("data")
+          assert_empty handler.calls
+          assert_empty Dir.children(File.join(root, "transfers"))
+        ensure
+          socket&.close
+        end
+      end
+
     end
   end
 end

@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Submit immutable private canonical worker results and fetch one purpose-authorized artifact through the existing authority Client, with retained services status discovery and exact download descriptor validation. Full-service startup remains guarded.
+
 - Validate fixed service receiver principals and private placement before authority startup, refusing ambiguous roles, overlapping ownership and inaccessible endpoints.
 
 - Add the public protected assignment authority and gated launch driver with canonical reservation, exact binding, one durable release, replay refusal and conservative crash recovery.

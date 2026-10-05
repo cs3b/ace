@@ -291,9 +291,9 @@ module Ace
           end
         end
 
-        def service_request(request_id)
+        def service_request(request_id, commit: ref_value)
           validate_request_id!(request_id)
-          value = ref_value
+          value = commit
           return nil unless value
           out, stderr, status = git("show", "#{value}:#{service_request_path(request_id)}")
           if status.success?

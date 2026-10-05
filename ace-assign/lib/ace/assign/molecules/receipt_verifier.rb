@@ -42,6 +42,18 @@ module Ace
         # @return [Models::ExecutionReceipt] Normalized receipt with digest
         # @raise [AttemptErrors::ReceiptRejected] on any validation failure
         def verify!(data, attempt:, identity:, live_head:, repo_root:)
+          verify_receipt!(data, attempt: attempt, live_head: live_head, repo_root: repo_root) do
+            verify_authority(data, identity)
+          end
+        end
+
+        # Submission validates evidence without granting terminal acceptance.
+        # The authenticated owner separately checks the exact worker attribution.
+        def verify_result!(data, attempt:, live_head:, repo_root:)
+          verify_receipt!(data, attempt: attempt, live_head: live_head, repo_root: repo_root)
+        end
+
+        def verify_receipt!(data, attempt:, live_head:, repo_root:)
           reject_unless(data.is_a?(Hash), "receipt must be a JSON object")
 
           if Models::ExecutionReceipt.forbidden_field?(data)
@@ -57,7 +69,7 @@ module Ace
 
           verify_binding(data, attempt)
           verify_producer(data)
-          verify_authority(data, identity)
+          yield if block_given?
           verify_head(data, live_head)
           verify_artifacts(data, repo_root) if data["verdict"] == "succeeded"
           verify_checks(data)
@@ -69,6 +81,8 @@ module Ace
 
           receipt
         end
+        private :verify_receipt!
+
         # Recheck the source artifacts/checks of an already accepted receipt.
         # Local historical reads (recorded at a past head) validate acceptance from
         # the append-only journal without re-hashing artifacts: the review

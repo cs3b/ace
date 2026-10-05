@@ -35,6 +35,11 @@ module Ace
           @changed = ConditionVariable.new
         end
 
+        def attach_result_owner(owner)
+          raise ArgumentError, "result status owner already attached" if @result_owner
+          @result_owner = owner
+        end
+
         def dispatch(request:, peer:, role:)
           operation, params = request.values_at("operation", "params")
           if operation == "launch_preflight"
@@ -60,7 +65,14 @@ module Ace
             return {data: inspect_launch(params, peer: peer, role: role), replayed: false}
           end
           if operation == "attempt_status"
-            strict!(params, %w[mapping_id assignment_id attempt_id])
+            keys = %w[mapping_id assignment_id attempt_id]
+            keys += ["result_candidate_generation"] if @result_owner
+            strict!(params, keys)
+            if @result_owner
+              raise ArgumentError, "status mutation ID must be null" unless request.fetch("mutation_id").nil?
+              selector = params.fetch("result_candidate_generation")
+              generation!(selector, allow_nil: true)
+            end
             return {data: status(params, peer: peer, role: role), replayed: false}
           end
           unless role == :launcher || (role == :supervisor && operation == "abort_launch")
@@ -562,7 +574,8 @@ module Ace
           token!(params.fetch("assignment_id")); token!(params.fetch("attempt_id"))
           journal = journal_for(map)
           @mutex.synchronize do
-            events = journal.read_events(params.fetch("assignment_id"))
+            commit = journal.ref_value
+            events = journal.read_events(params.fetch("assignment_id"), commit: commit)
             state = states(events)[params.fetch("attempt_id")]
             raise AttemptErrors::NotFound, "launch not found" unless state && state["mapping_id"] == params["mapping_id"]
             if role == :launcher && !@kernel.same?(state.fetch("launcher_identity"), peer)
@@ -579,7 +592,12 @@ module Ace
             if !TERMINAL.include?(state["phase"]) && (!observation || !launcher_live?(observation) || expired || child_exited)
               projection.merge!("phase" => "uncertain", "required_action" => "supervisor_inspect_exact_child_and_release_uncertainty")
             end
-            projection.merge("journal_commit" => journal.ref_value)
+            if @result_owner
+              chain = events.select { |event| event["attempt_id"] == params.fetch("attempt_id") }
+              projection.merge!(@result_owner.result_status(journal: journal, events: chain, params: params,
+                map: map, peer: peer, role: role, commit: commit))
+            end
+            projection.merge("journal_commit" => commit)
           end
         end
 

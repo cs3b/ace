@@ -13,6 +13,7 @@ module Ace
         def initialize(authority_id:, lifecycle:, deployment: Deployment.load,
           kernel: Ace::Runtime::Molecules::ProtectedLinux.new, composition: "launch")
           @authority_id, @lifecycle, @deployment, @kernel = authority_id, lifecycle, deployment, kernel
+          @composition = composition
           deployment.verify_composition!(authority_id, composition: composition)
           @service = deployment.authority(authority_id)
           @mutex = Mutex.new
@@ -124,6 +125,9 @@ module Ace
             end
           end
           raise AttemptErrors::UnauthorizedIdentity, "unmapped kernel peer" unless role
+          if @composition == "services" && %w[attempt_status evidence_fetch].include?(request["operation"])
+            bodyless_read!(socket, deadline)
+          end
           if request["operation"] == "gate_ready"
             raise AttemptErrors::UnauthorizedIdentity, "gate readiness requires worker peer" unless role == :worker
             @lifecycle.gate_ready(request: request, peer: peer, socket: socket, deadline: deadline)
@@ -161,7 +165,7 @@ module Ace
               codec.send(socket, parts: parts, descriptor: descriptor, purpose: binding.fetch(:purpose), deadline: deadline)
             end
           end
-        rescue ArgumentError, KeyError
+        rescue ArgumentError, KeyError, AttemptErrors::MalformedTransfer
           refusal(socket, "invalid_input")
         rescue AttemptErrors::UnauthorizedIdentity
           refusal(socket, "unauthorized")
@@ -176,6 +180,19 @@ module Ace
           @mutex.synchronize do
             @connections.delete(socket)
             @transfers -= 1 if admitted_transfer
+          end
+        end
+
+        # These closed read operations have no request body. Half-close proves
+        # framing completion before status or artifact data can be exposed.
+        def bodyless_read!(socket, deadline)
+          loop do
+            remaining = deadline - Process.clock_gettime(Process::CLOCK_MONOTONIC)
+            raise ArgumentError, "read request framing is incomplete" unless remaining.positive? && IO.select([socket], nil, nil, remaining)
+            bytes = socket.read_nonblock(1, exception: false)
+            next if bytes == :wait_readable
+            raise ArgumentError, "unexpected read request body" unless bytes.nil?
+            return
           end
         end
 

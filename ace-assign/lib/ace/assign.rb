@@ -101,6 +101,9 @@ module Ace
         end
       end
 
+      # Byte framing failed before any business receipt could be admitted.
+      class MalformedTransfer < ReceiptRejected; end
+
       # Recovery settled a prior effect, but did not perform this request.
       class CurrentEffectRequired < ReceiptRejected
         def initialize(operation:, recovered_operation:)
