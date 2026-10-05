@@ -31,6 +31,11 @@ module Ace
         assert_equal @document["operations"]["fixture"]["executor_uid"], prepared.fetch(:binding).fetch("executor_uid")
         assert_match(/\A[0-9a-f]{64}\z/, prepared.fetch(:policy_digest))
         assert_equal File.realpath("/usr/bin/true"), prepared.fetch(:operation).fetch("argv").first
+        assert_raises(FrozenError) { prepared.fetch(:input).fetch("target")["resource"] = "changed" }
+        assert_raises(FrozenError) { prepared.fetch(:binding).fetch("target")["resource"].replace("changed") }
+        assert_raises(FrozenError) { prepared.fetch(:operation).fetch("argv") << "changed" }
+        @binding.fetch("target")["resource"] = "caller mutation"
+        assert_equal "fixture", prepared.fetch(:binding).fetch("target").fetch("resource")
       end
 
       def test_hostile_digest_or_target_assertion_is_refused_before_policy
