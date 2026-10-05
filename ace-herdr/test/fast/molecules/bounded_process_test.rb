@@ -95,6 +95,7 @@ module Ace
             assert_match(/post-launch/, error.message)
           end
           refute child_waiter.alive?, "cleanup must reap the exact spawned child"
+          assert_cleanup_termination(child_waiter.value)
           assert_owned_child_absent(child_waiter.pid)
         ensure
           # Only an unreaped handle retained from this invocation is eligible
@@ -137,6 +138,17 @@ module Ace
             end
           end
           assert_empty probes, "invalid identity must not probe a process"
+        end
+
+        def test_normal_exit_cannot_satisfy_cleanup_termination_proof
+          _, status = Open3.capture2("/bin/sh", "-c", "exit 0")
+          assert_predicate status, :success?
+          assert_raises(Minitest::Assertion) { assert_cleanup_termination(status) }
+        end
+
+        def assert_cleanup_termination(status)
+          assert_predicate status, :signaled?, "cleanup must terminate the child rather than await natural exit"
+          assert_equal Signal.list.fetch("KILL"), status.termsig
         end
 
         def assert_owned_child_absent(pid)
