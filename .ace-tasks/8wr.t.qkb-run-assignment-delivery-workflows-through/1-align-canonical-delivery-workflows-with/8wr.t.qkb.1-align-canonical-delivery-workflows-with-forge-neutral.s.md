@@ -1,17 +1,17 @@
 ---
 id: 8wr.t.qkb.1
-status: pending
+status: draft
 priority: high
 created_at: "2026-09-28 17:44:29"
 estimate: TBD
-dependencies: [8wr.t.qkb.0, 8wr.t.qk0, 8wr.t.qjx, 8wr.t.qjz]
+dependencies: [8wr.t.qkb.0, 8wr.t.qk0, 8wr.t.qjx, 8wr.t.qjz, 8x3.t.xz9]
 tags: [lab-readiness]
 parent: 8wr.t.qkb
 bundle:
   presets: [project]
-  files: [.ace-tasks/8wr.t.qkb-run-assignment-delivery-workflows-through/8wr.t.qkb-run-assignment-delivery-workflows-through-named-forge.s.md, .ace-tasks/8wr.t.qkb-run-assignment-delivery-workflows-through/0-make-assignment-delivery-evidence-provider/8wr.t.qkb.0-make-assignment-delivery-evidence-provider-neutral.s.md, .ace-tasks/8wr.t.qk0-coordinate-responsive-overseer-roles-without/8wr.t.qk0-coordinate-responsive-overseer-roles-without-the.s.md, .ace-tasks/_archive/8x/v/8wr.t.qjx-route-scoped-role-services-with/8wr.t.qjx-route-scoped-role-services-with-verifiable-execution.s.md, .ace-tasks/8wr.t.qjz-resolve-second-commander-proposals-with/8wr.t.qjz-resolve-second-commander-proposals-with-a-sixteen.s.md, ace-assign/handbook/workflow-instructions/assign/drive.wf.md, ace-assign/handbook/workflow-instructions/assign/prepare.wf.md, .ace-tasks/8wr.t.qkb-run-assignment-delivery-workflows-through/1-align-canonical-delivery-workflows-with/ux/usage.md]
+  files: [.ace-tasks/8wr.t.qkb-run-assignment-delivery-workflows-through/8wr.t.qkb-run-assignment-delivery-workflows-through-named-forge.s.md, .ace-tasks/8wr.t.qkb-run-assignment-delivery-workflows-through/0-make-assignment-delivery-evidence-provider/8wr.t.qkb.0-make-assignment-delivery-evidence-provider-neutral.s.md, .ace-tasks/8wr.t.qk0-coordinate-responsive-overseer-roles-without/8wr.t.qk0-coordinate-responsive-overseer-roles-without-the.s.md, .ace-tasks/_archive/8x/v/8wr.t.qjx-route-scoped-role-services-with/8wr.t.qjx-route-scoped-role-services-with-verifiable-execution.s.md, .ace-tasks/8wr.t.qjz-resolve-second-commander-proposals-with/8wr.t.qjz-resolve-second-commander-proposals-with-a-sixteen.s.md, ace-assign/handbook/workflow-instructions/assign/drive.wf.md, ace-assign/handbook/workflow-instructions/assign/prepare.wf.md, .ace-tasks/8wr.t.qkb-run-assignment-delivery-workflows-through/1-align-canonical-delivery-workflows-with/ux/usage.md, .ace-tasks/8x3.t.xz9-execute-scoped-services-across-os/protected-authority-contract.md, .ace-tasks/8x3.t.xz9-execute-scoped-services-across-os/consumer-dependency-map.md]
   commands: []
-needs_review: false
+needs_review: true
 ---
 
 # Align canonical delivery workflows with forge-neutral evidence
@@ -48,3 +48,11 @@ Single end-to-end adoption slice; advisory size: large. Depends on qkb.0, qk0, q
 ## Atomic delivery constraint
 
 qkb.0 and qkb.1 are reviewed as separate observable scopes but integrate in one coherent delivery. The final neutral workflow entrypoints, all catalog consumers and removal of old GitHub-specific names ship together; no intermediate installed release exposes mixed vocabularies or compatibility aliases.
+
+## Protected service adoption — reviewed producer boundary
+
+The protected cross-user workflow consumes xz9 through the existing ace-assign/ace-lab public clients: deployment-mapped authority, authenticated launcher reservation/binding, exact candidate transfer and independent review, worker request to the configured receiver, executor materialization and canonical imported receipt. Local standalone mode remains explicit; a caller-local journal or same-UID fixture cannot satisfy the protected path. No workflow tells a worker to write authority refs, traverse another user's private roots, pass arbitrary evidence paths or assume a service credential proves authorization.
+
+xz9 owns mechanisms, schemas and verifier changes; this child owns the concrete canonical workflow/catalog/role handoff adoption and installed source resolution. It must not invent alternative wire methods or another journal. An unavailable authority, stale candidate/generation, unauthorized peer, lost dispatch reply or untrusted completion evidence yields the producer's blocker/uncertain state with its canonical reference. Resume queries existing state; it never repeats an uncertain effect to obtain a receipt.
+
+Add acceptance scenario SC7: use the installed canonical workflow with distinct fixture launcher/worker/reviewer/authority/executor accounts and real public receiver/client APIs. Trace one exact approved candidate to one harmless protected effect and canonical receipt, then prove worker-local forged success, stale candidate, authority loss and duplicate request cannot authorize another effect. Retain actual peer UIDs, candidate generation/head and journal/import references with secrets omitted. This source/installed fixture depends on accepted xz9; real domain installation remains lab-config:gad.8/gad.b and final qkc/gad.2. Native signed settlement remains xza/qkc scope, so qkb.1 does not acquire an xza prerequisite. R2/R3 remain downstream and the qkb.0/.1 atomic vocabulary release constraint is unchanged.

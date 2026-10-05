@@ -1,16 +1,16 @@
 ---
 id: 8wr.t.qkc
-status: pending
+status: draft
 priority: high
 created_at: "2026-09-28 17:42:36"
 estimate: TBD
-dependencies: [8wr.t.qk1, 8wr.t.qkb, 8x0.t.ig4]
+dependencies: [8wr.t.qk1, 8wr.t.qkb, 8x0.t.ig4, 8x3.t.xz9, 8x3.t.xza]
 tags: [lab-readiness]
 bundle:
   presets: [project]
-  files: [.ace-tasks/_archive/8x/v/8wr.t.qk1-complete-forge-neutral-worktree-review/8wr.t.qk1-complete-forge-neutral-worktree-review-and-task.s.md, .ace-tasks/8wr.t.qkb-run-assignment-delivery-workflows-through/8wr.t.qkb-run-assignment-delivery-workflows-through-named-forge.s.md, .ace-tasks/_archive/8w/y/8wk.t.l1e-forge-neutral-git-core-with/8wk.t.l1e-forge-neutral-git-core-with-github-and.s.md, .ace-tasks/8wr.t.qjl-persist-assignment-attempts-and-exact/8wr.t.qjl-persist-assignment-attempts-and-exact-execution.s.md, .ace-tasks/8wr.t.qkc-prove-the-complete-forge-neutral/ux/usage.md, .ace-tasks/8x0.t.ig3-unify-review-loop-ownership-and/8x0.t.ig3-unify-review-loop-ownership-and-effective-policy.s.md, .ace-tasks/8x0.t.ig4-bound-review-convergence-and-expose/8x0.t.ig4-bound-review-convergence-and-expose-escalation.s.md]
+  files: [.ace-tasks/_archive/8x/v/8wr.t.qk1-complete-forge-neutral-worktree-review/8wr.t.qk1-complete-forge-neutral-worktree-review-and-task.s.md, .ace-tasks/8wr.t.qkb-run-assignment-delivery-workflows-through/8wr.t.qkb-run-assignment-delivery-workflows-through-named-forge.s.md, .ace-tasks/_archive/8w/y/8wk.t.l1e-forge-neutral-git-core-with/8wk.t.l1e-forge-neutral-git-core-with-github-and.s.md, .ace-tasks/8wr.t.qjl-persist-assignment-attempts-and-exact/8wr.t.qjl-persist-assignment-attempts-and-exact-execution.s.md, .ace-tasks/8wr.t.qkc-prove-the-complete-forge-neutral/ux/usage.md, .ace-tasks/8x0.t.ig3-unify-review-loop-ownership-and/8x0.t.ig3-unify-review-loop-ownership-and-effective-policy.s.md, .ace-tasks/8x0.t.ig4-bound-review-convergence-and-expose/8x0.t.ig4-bound-review-convergence-and-expose-escalation.s.md, .ace-tasks/8x3.t.xz9-execute-scoped-services-across-os/protected-authority-contract.md, .ace-tasks/8x3.t.xza-observe-native-inbox-outcomes-before/observation-authority-contract.md, .ace-tasks/8x3.t.xz9-execute-scoped-services-across-os/consumer-dependency-map.md]
   commands: []
-needs_review: false
+needs_review: true
 position: 6o000i
 ---
 
@@ -65,3 +65,14 @@ All required rows executed and verified, coupling inventory fully classified, ex
 R1 (8x0.t.ig2) is delivered storage/evidence foundation, not proof of caps or escalation. Required input now includes accepted R2 (8x0.t.ig3) and R3 (8x0.t.ig4) receipts for the installed review workflow. Verify effective policy/session/worktree binding, restart without duplicate repair, discovery/delivery round limits, infra retry accounting and escalation with retained history on the exact installed manifest. Missing limits or an unbounded review is a failed required row. Cross-repo lab-config:gad.2 consumes this proof; experimental ig5 does not gate acceptance. No dependency from qkb/qk0 to R3 is introduced.
 
 - [ ] Final review-policy row binds R2/R3 revisions and executes cap/escalation/restart negative scenarios before full Lab acceptance.
+
+## Protected execution and native settlement acceptance
+
+Required input also includes accepted xz9 and xza source receipts on the exact installed manifest. Add required rows for protected cross-user execution and for actual native Codex and Pi inbox outcomes. Use xz9's real authenticated launcher/worker/reviewer/authority/executor route, approved immutable candidate and canonical imported receipt; worker-local success JSON, mutable refs, same-UID stubs and direct journal injection are negative controls, never acceptance evidence. Run duplicate/lost-response/restart and no-effect-versus-uncertain cases; retain actor UIDs, candidate generation/head, claim/import references and observed effect count.
+
+For each native runtime, execute the actual deployed producer, bound endpoint, observer and signer through consumed/superseded reconciliation. Retain exact event/digest/native-session/attempt/OS-birth correlation and trusted observation references. Exercise busy queues, duplicate/equal-text messages, lost replies, runtime restart and cancellation/dequeue races. Empty queue, elapsed time, generic enqueue acknowledgement or a direct app-server capability fixture cannot stand in for signed trustworthy consumption/nonexecution. Missing supported correlation is a failed required row, not a permitted skip.
+
+Cross-repository prerequisites are explicit evidence references: lab-config:8wl.t.gad.8 proves exact authority accounts, protected paths/topology, runtime endpoints and signer-key installation on this manifest; lab-config:8wl.t.gad.b proves migrated scoped domain handlers and actual signed settlement using the same authority. Record their IDs, tested revisions, receipts and matching deployment manifest in acceptance/matrix.md. qkc consumes these installation/operation proofs, not gad.2 completion; lab-config:gad.2 consumes qkc afterward, preventing a cycle. Keep R2/R3 mandatory and ig5 outside the gate. No live installed proof is claimed by this specification amendment.
+
+- [ ] Protected execution row binds xz9 source, actual peer identities and gad.8/gad.b installation/handler receipts to the installed manifest.
+- [ ] Both native settlement rows bind xza source and real producer/observer/signer evidence, including race and restart negatives.

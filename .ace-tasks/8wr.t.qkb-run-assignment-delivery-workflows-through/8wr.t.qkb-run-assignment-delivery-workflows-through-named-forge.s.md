@@ -4,13 +4,13 @@ status: in-progress
 priority: high
 created_at: "2026-09-28 17:42:35"
 estimate: TBD
-dependencies: [8wr.t.qk1, 8wr.t.qjl, 8x2.t.z78, 8wr.t.qk0, 8wr.t.qjx, 8wr.t.qjz, 8x3.t.vfw]
+dependencies: [8wr.t.qk1, 8wr.t.qjl, 8x2.t.z78, 8wr.t.qk0, 8wr.t.qjx, 8wr.t.qjz, 8x3.t.vfw, 8x3.t.xz9]
 tags: [lab-readiness]
 bundle:
   presets: [project]
-  files: [.ace-tasks/_archive/8x/v/8wr.t.qk1-complete-forge-neutral-worktree-review/8wr.t.qk1-complete-forge-neutral-worktree-review-and-task.s.md, .ace-tasks/8wr.t.qjl-persist-assignment-attempts-and-exact/8wr.t.qjl-persist-assignment-attempts-and-exact-execution.s.md, .ace-tasks/8wr.t.qjz-resolve-second-commander-proposals-with/8wr.t.qjz-resolve-second-commander-proposals-with-a-sixteen.s.md, ace-assign/.ace-defaults/assign/catalog/recipes/implement-with-pr.recipe.yml, ace-assign/.ace-defaults/assign/presets/work-on-task.yml, .ace-tasks/8wr.t.qkb-run-assignment-delivery-workflows-through/ux/usage.md, .ace-tasks/_archive/8x/v/8x2.t.z78-complete-forgejo-delivery-capabilities-with/8x2.t.z78-complete-forgejo-delivery-capabilities-with-verifiable.s.md, .ace-tasks/_archive/8x/v/8x2.t.z78-complete-forgejo-delivery-capabilities-with/ux/usage.md, .ace-tasks/_archive/8x/v/8x3.t.vfw-verify-forgejo-create-provenance-and/8x3.t.vfw-verify-forgejo-create-provenance-and-uncertain-outcomes.s.md]
+  files: [.ace-tasks/_archive/8x/v/8wr.t.qk1-complete-forge-neutral-worktree-review/8wr.t.qk1-complete-forge-neutral-worktree-review-and-task.s.md, .ace-tasks/8wr.t.qjl-persist-assignment-attempts-and-exact/8wr.t.qjl-persist-assignment-attempts-and-exact-execution.s.md, .ace-tasks/8wr.t.qjz-resolve-second-commander-proposals-with/8wr.t.qjz-resolve-second-commander-proposals-with-a-sixteen.s.md, ace-assign/.ace-defaults/assign/catalog/recipes/implement-with-pr.recipe.yml, ace-assign/.ace-defaults/assign/presets/work-on-task.yml, .ace-tasks/8wr.t.qkb-run-assignment-delivery-workflows-through/ux/usage.md, .ace-tasks/_archive/8x/v/8x2.t.z78-complete-forgejo-delivery-capabilities-with/8x2.t.z78-complete-forgejo-delivery-capabilities-with-verifiable.s.md, .ace-tasks/_archive/8x/v/8x2.t.z78-complete-forgejo-delivery-capabilities-with/ux/usage.md, .ace-tasks/_archive/8x/v/8x3.t.vfw-verify-forgejo-create-provenance-and/8x3.t.vfw-verify-forgejo-create-provenance-and-uncertain-outcomes.s.md, .ace-tasks/8x3.t.xz9-execute-scoped-services-across-os/protected-authority-contract.md, .ace-tasks/8x3.t.xz9-execute-scoped-services-across-os/consumer-dependency-map.md]
   commands: []
-needs_review: false
+needs_review: true
 position: 6o000f
 ---
 
@@ -56,3 +56,7 @@ The parent dependency list projects the completion gates of both children, so th
 ## Post-delivery repair gate — 2026-10-04
 
 The added prerequisite tasks repair observed producer defects, not a change to this consumer's behavior. Development may use the delivered API in parallel, but acceptance/integration waits for the named repairs and reruns the affected consumer cases after rebase. No local bypass or duplicate validation substitutes for fixing the owning producer. Pending means the specification is ready, not that its prerequisites are already complete.
+
+## Protected consumer prerequisite
+
+qkb.1 adopts xz9's authenticated authority/receiver mode, including installed distinct-account workflow proof; parent dependencies reflect xz9. qkb.0 retains its existing provider-neutral implementation prerequisites and does not wait for downstream R2/R3 or domain installation. xz9 owns protected mechanisms; qkb.1 owns workflow adoption; qkc/gad.2 own final domain acceptance. Both qkb children still ship one coherent workflow vocabulary. This amendment returns qkb.1 to draft for independent review while current qkb.0 implementation continues.

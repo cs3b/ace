@@ -24,3 +24,7 @@ Expected: consume that authorization without creating another proposal; enforce 
 ## Missing or mismatched authorization
 Input: a publication request with no valid authority, or only merge authority.
 Expected: create the exact qjz proposal; confirmed delivery starts its 16-hour window. Do not execute before resolution, and do not weaken technical gates after it resolves.
+
+## Protected role handoff
+
+Load the final installed delivery workflow outside the checkout with a deployment-mapped protected assignment. A launcher reserves/binds the worker; an independent reviewer materializes and checks the exact candidate; the worker requests the fixed service through the public client. Expected: receiver/executor operate under their mapped UIDs and the returned status references canonical qjl evidence. A forged worker-local receipt or unavailable authority blocks, with no local fallback or repeated uncertain effect.

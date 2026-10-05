@@ -1,6 +1,6 @@
 # Protected assignment authority contract — readiness decision, 2026-10-05
 
-This is a proposed public contract, not delivered functionality. Keep the family draft for independent readiness review. qjl remains the only attempt/effect journal. The protected repository below is the deployment of that journal, not a second ledger synchronized from worker refs.
+This public contract passed independent readiness review at 0626be045; it is not delivered functionality. See readiness-review-2026-10-05.md for source implementation and installed acceptance boundaries. qjl remains the only attempt/effect journal. The protected repository below is the deployment of that journal, not a second ledger synchronized from worker refs.
 
 ## Mutation owner and installation contract
 
@@ -38,13 +38,13 @@ The authority stores no secret material. Evidence is retained in qjl for the exi
 
 ## Research basis and review gate
 
-Inspected ServiceRequestService, ServiceExecutor, AttemptCoordinator, EvidenceJournal, HITL Lifecycle::Service/Peer and y23 Inbox. qjx claims/settles caller-locally; qjl's refs are authoritative only if repository ownership is protected. HITL already uses kernel peer credentials, but is not a service receiver/assignment authority. Herdr owns event lock/signed event transition; assign bind_inbox/reconcile_inbox owns consumer journal recording. No new direct event-journal writes are proposed. Recovery repair dab0dbeea was inspected as adjacent proposed source only, not imported or treated as accepted evidence.
+Inspected ServiceRequestService, ServiceExecutor, AttemptCoordinator, EvidenceJournal, HITL Lifecycle::Service/Peer and y23 Inbox. qjx claims/settles caller-locally; qjl's refs are authoritative only if repository ownership is protected. HITL already uses kernel peer credentials, but is not a service receiver/assignment authority. Herdr owns event lock/signed event transition; assign bind_inbox/reconcile_inbox owns consumer journal recording. No new direct event-journal writes are proposed. Recovery repair dab0dbeea is independently accepted and integrated on main; implementers consume its exact process-birth and expected-registration semantics.
 
 Primary source: [Ruby BasicSocket implementation](https://docs.ruby-lang.org/en/master/BasicSocket.html#method-i-getpeereid). Linux/macOS implementation branches are source evidence, not executed multi-user acceptance. Independent reviewer must assess the receiver-to-authority delegation, candidate import isolation, assignment origin, and whether the first slice closes these boundaries without hidden prerequisite work. No runtime acceptance was executed in this specification pass.
 
 ## Independent review repair — authoritative API details
 
-The following details resolve findings 1–4 of independent review bc9e08017. They supersede the earlier shorthand where ownership/transport was incomplete. All changes remain draft, with fresh independent review required. The first real fixture slice xz9.0 owns these source contracts and their end-to-end integration; xz9.1 owns resilience proof and boundary failure handling. Lab installation/domain proof is downstream and does not become a prerequisite of generic source implementation.
+The following details resolve findings 1–4 of independent review bc9e08017. They supersede the earlier shorthand where ownership/transport was incomplete. Fresh independent review accepted these changes at 0626be045 before child and parent promotion. The first real fixture slice xz9.0 owns these source contracts and their end-to-end integration; xz9.1 owns resilience proof and boundary failure handling. Lab installation/domain proof is downstream and does not become a prerequisite of generic source implementation.
 
 ### Private candidate transfer and execution access
 
