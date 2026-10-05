@@ -72,6 +72,40 @@ module Ace
           true
         end
 
+        def service_status(_request, params, map, peer, role)
+          @launch.with_assignment(params: params, map: map) do |journal, _registration|
+            protected_journal!(journal)
+            record = journal.service_request(params.fetch("request_id"))
+            unless record && record["assignment_id"] == params["assignment_id"] && record["attempt_id"] == params["attempt_id"] &&
+                record["project_id"] == map["project_id"] && record["candidate_head"] == params["head"] &&
+                record["candidate_generation"] == params["candidate_generation"]
+              raise AttemptErrors::UnauthorizedIdentity, "service status binding differs"
+            end
+            events = attempt_events(journal, params)
+            @kernel.live!(peer)
+            if role == :executor
+              service_executor!(peer, role, record)
+            else
+              service_policy!.visible!(project: map.fetch("project_id"), uid: peer.fetch("uid"))
+              authorized = case role
+              when :worker
+                peer["uid"] == record["caller_uid"] && @kernel.descendant?(peer, record.fetch("worker_process_binding"))
+              when :reviewer
+                review = assigned_review(events)
+                review && review["reviewer_uid"] == peer["uid"] && review["head"] == params["head"] &&
+                  review["candidate_generation"] == params["candidate_generation"] && @kernel.descendant?(peer, review.fetch("reviewer_process_binding"))
+              when :supervisor
+                @deployment.project(map.fetch("project_id")).fetch("supervisor_uids").include?(peer["uid"])
+              else
+                false
+              end
+              raise AttemptErrors::UnauthorizedIdentity, "service status purpose differs" unless authorized
+            end
+            {data: service_projection(record).merge("generation" => journal.authority_generation(events),
+              "journal_commit" => journal.ref_value), replayed: false}
+          end
+        end
+
         def service_authorization(request, params, map, peer, role, transfer)
           authorize_service_transfer!(request, params, map, peer, role)
           raise ArgumentError, "structured service input transfer is missing" unless transfer && transfer.count == 1

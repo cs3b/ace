@@ -11,6 +11,15 @@ module Ace
       module JournalMutation
         ID = /\A[a-zA-Z0-9][a-zA-Z0-9_.-]{0,127}\z/
 
+        # Shared canonical projection used by admission and protected status.
+        # Callers hold the same owner exclusion when projecting current events.
+        def authority_generation(events)
+          unless Models::EvidenceEvent.chain_valid?(events)
+            raise AttemptErrors::EvidenceUnavailable, "Attempt event chain is corrupt"
+          end
+          events.count { |event| event["type"] == "authority_mutation" }
+        end
+
         # The block runs against the current ref on every CAS attempt. It
         # returns events [{type:, payload:}], immutable blobs, and public data.
         # Only the authority calls this internal journal API; wire requests
@@ -36,10 +45,7 @@ module Ace
                 return with_replay ? {data: result, replayed: true} : result
               end
               current = read_events(assignment_id).select { |event| event["attempt_id"] == attempt_id }
-              unless Models::EvidenceEvent.chain_valid?(current)
-                raise AttemptErrors::EvidenceUnavailable, "Attempt event chain is corrupt"
-              end
-              generation = current.count { |event| event["type"] == "authority_mutation" }
+              generation = authority_generation(current)
               unless expected_generation == generation
                 raise AttemptErrors::Conflict, "Authority registration generation changed"
               end

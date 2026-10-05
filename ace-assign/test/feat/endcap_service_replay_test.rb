@@ -80,6 +80,38 @@ module Ace
         end
       end
 
+      def test_status_projects_current_owner_generation_for_begin_without_changing_original_replay
+        with_review_replay do |endcap, request, upload, claim, journal|
+          original = Marshal.load(Marshal.dump(request))
+          request["mutation_id"] = "second-endcap-mutation"
+          request["params"]["expected_generation"] = 2
+          endcap.dispatch(request: request, peer: {"uid" => Process.uid}, role: :executor, transfer: upload)
+          record = journal.service_request("request-2")
+          params = request.fetch("params").slice("mapping_id", "assignment_id", "attempt_id", "candidate_generation", "head", "request_id")
+          status = request.merge("operation" => "service_status", "mutation_id" => nil, "params" => params)
+          projected = endcap.dispatch(request: status, peer: {"uid" => Process.uid}, role: :executor)
+          assert_equal 3, projected.dig(:data, "generation")
+          refute projected.fetch(:data).key?("invocation")
+          begin_params = params.merge("claim_binding" => record.fetch("claim_binding"), "expected_generation" => 2,
+            "transfer" => request.dig("params", "transfer"))
+          begin_request = request.merge("operation" => "begin_dispatch", "mutation_id" => "begin-after-status", "params" => begin_params)
+          assert_raises(AttemptErrors::Conflict) { endcap.dispatch(request: begin_request, peer: {"uid" => Process.uid}, role: :executor, transfer: upload) }
+          endcap.define_singleton_method(:active_origin) { |*| {"launch_ticket" => record["launch_ticket"], "reservation_generation" => record["reservation_generation"], "process_binding" => {"process_identity" => record["worker_process_binding"]}} }
+          endcap.define_singleton_method(:candidate) { |*| {"head" => params["head"], "candidate_generation" => params["candidate_generation"]} }
+          endcap.define_singleton_method(:approved_review!) { |*| true }
+          endcap.define_singleton_method(:service_receiver!) { |*| true }
+          endcap.instance_variable_get(:@service_policy).define_singleton_method(:prepare!) { |*args, **kwargs| {} }
+          begin_params["expected_generation"] = projected.dig(:data, "generation")
+          started = endcap.dispatch(request: begin_request, peer: {"uid" => Process.uid}, role: :executor, transfer: upload)
+          assert_equal "permitted", started.dig(:data, "invocation")
+          assert_equal 4, started.dig(:data, "generation")
+          after = endcap.dispatch(request: status, peer: {"uid" => Process.uid}, role: :executor)
+          assert_equal 4, after.dig(:data, "generation")
+          replay = endcap.dispatch(request: original, peer: {"uid" => Process.uid}, role: :executor, transfer: upload)
+          assert_equal claim.fetch(:data).slice("generation", "journal_commit"), replay.fetch(:data).slice("generation", "journal_commit")
+        end
+      end
+
       def test_review_exact_request_replay_keeps_acceptance_metadata
         with_review_replay do |endcap, request, upload, claim|
           reply = endcap.dispatch(request: request, peer: {"uid" => Process.uid}, role: :executor, transfer: upload)
