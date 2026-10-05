@@ -1,0 +1,22 @@
+Started with run options --seed 16032
+
+SystemdScopeManagerTest
+  test_native_command_refuses_unsupported_platform_before_spawning PASS (0.00s)
+  test_lost_job_outcome_is_not_retried_or_turned_into_success     PASS (0.00s)
+  test_only_fixed_start_stop_targets_are_available_without_caller_arguments PASS (0.00s)
+  test_wrong_duplicate_missing_or_unknown_property_response_refuses PASS (0.00s)
+  test_observation_requires_both_exact_loaded_units_and_installed_placement PASS (0.00s)
+  test_nonfixed_or_shared_manager_targets_are_rejected_without_io PASS (0.00s)
+
+CgroupObservationTest
+  test_denied_read_and_closed_descriptor_refuse                   PASS (0.00s)
+  test_membership_is_exact_subtree_with_birth_rechecked           PASS (0.00s)
+  test_paths_cannot_select_root_foreign_mount_or_traversal        PASS (0.00s)
+  test_path_replacement_before_or_during_read_refuses_even_if_old_object_is_empty PASS (0.00s)
+  test_population_comes_from_pinned_parent_events_and_does_not_imply_authority_proof PASS (0.00s)
+  test_restart_reopens_only_identical_mount_and_object            PASS (0.00s)
+  test_nonunified_and_namespace_relative_mounts_refuse            PASS (0.00s)
+  test_missing_population_duplicate_and_malformed_values_never_become_empty PASS (0.00s)
+
+Finished in 0.00592s
+14 tests, 90 assertions, 0 failures, 0 errors, 0 skips

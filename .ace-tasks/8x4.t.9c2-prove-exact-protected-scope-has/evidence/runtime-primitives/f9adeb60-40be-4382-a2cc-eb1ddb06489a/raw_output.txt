@@ -1,0 +1,10 @@
+Started with run options --seed 39699
+
+IndependentManagerBoundaryTest
+  test_timeout_kills_and_reaps_only_owned_child                   PASS (0.06s)
+  test_nonzero_is_unavailable_and_reaped                          PASS (0.04s)
+  test_success_drains_both_channels_and_reaps                     PASS (0.06s)
+  test_combined_output_bound_is_enforced_and_reaped               PASS (0.04s)
+
+Finished in 0.20883s
+4 tests, 29 assertions, 0 failures, 0 errors, 0 skips
