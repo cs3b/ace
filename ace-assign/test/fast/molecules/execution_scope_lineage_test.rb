@@ -2,6 +2,7 @@
 
 require_relative "../../test_helper"
 require "ace/assign/molecules/execution_scope_lineage"
+require_relative "../../support/execution_scope_observation_fixtures"
 
 module Ace
   module Assign
@@ -18,6 +19,8 @@ module Ace
         @binding = {"project_id" => "project", "assignment_id" => "assignment", "attempt_id" => "attempt",
           "mapping_id" => "mapping", "slot_id" => "slot", "reservation_generation" => 1, "scope_generation" => 2,
           "deployment_digest" => "a" * 64, "boot_id" => BOOT, "slice_invocation_id" => "b" * 32,
+          "network_installation_selection" => ExecutionScopeObservationFixtures::NETWORK_SELECTION,
+          "network_namespace_identity" => {"device" => 7, "inode" => 88},
           "resource_mount_namespace_identity" => {"device" => 4, "inode" => 1111},
           "service_invocation_id" => "c" * 32, "cgroup_identity" => {"path" => "/sys/fs/cgroup/ace-slot.slice",
             "mount_id" => 44, "filesystem_type" => "cgroup2", "device" => 27, "inode" => 111},
@@ -57,7 +60,12 @@ module Ace
 
       def native
         parent = @events.find { |e| e["type"] == "scope_bound" }
-        append("scope_native_bound", @native.merge("scope_generation" => 2, "scope_binding_event_id" => parent.fetch("digest")))
+        admission = @events.find { |event| event.dig("payload", "operation") == "scope_service_admission" }
+        admission ||= append("authority_mutation", {"operation" => "scope_service_admission", "data" => @binding.slice("project_id", "assignment_id", "attempt_id", "mapping_id").merge(
+          "scope_generation" => 2, "scope_binding_event_id" => parent.fetch("digest"), "generation" => 2,
+          "native_admission" => "issued_uncertain", "network_installation" => ExecutionScopeObservationFixtures::NETWORK_OUTPUT)})
+        append("scope_native_bound", @native.merge("scope_generation" => 2, "scope_binding_event_id" => parent.fetch("digest"),
+          "network_namespace_identity" => @binding.fetch("network_namespace_identity"), "network_admission_event_id" => admission.fetch("digest")))
       end
 
       def child

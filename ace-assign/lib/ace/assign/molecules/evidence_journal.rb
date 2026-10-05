@@ -360,8 +360,8 @@ module Ace
           false
         end
 
-        def service_request_records
-          value = ref_value
+        def service_request_records(commit: ref_value)
+          value = commit
           return [] unless value
           paths, stderr, status = git("ls-tree", "-r", "--name-only", value, "--", "execution/requests/")
           raise AttemptErrors::EvidenceUnavailable, "Cannot read service request index: #{stderr}" unless status.success?
@@ -419,8 +419,8 @@ module Ace
         # ref itself (works even when the local assignment cache is gone).
         #
         # @return [Array<String>] Assignment IDs with journal evidence
-        def assignment_ids
-          value = ref_value
+        def assignment_ids(commit: ref_value)
+          value = commit
           return [] if value.nil?
 
           paths, stderr, status = git("ls-tree", "-d", "--name-only", value, "--", "execution/")

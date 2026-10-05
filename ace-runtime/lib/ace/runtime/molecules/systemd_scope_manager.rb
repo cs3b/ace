@@ -35,6 +35,8 @@ module Ace
 
         UNIT_STATE_SIGNATURES = {"Id" => "s", "LoadState" => "s", "ActiveState" => "s", "SubState" => "s", "Job" => "(uo)"}.freeze
         MOUNT_SIGNATURES = {"Where" => "s"}.freeze
+        ACTIVATION_UNIT_SIGNATURES = UNIT_STATE_SIGNATURES.merge("InvocationID" => "s", "ControlGroup" => "s").freeze
+        ACTIVATION_SERVICE_SIGNATURES = {"MainPID" => "u", "ControlPID" => "u", "Slice" => "s"}.freeze
 
         class Command
           LIMIT = 65_536
@@ -144,6 +146,18 @@ module Ace
           operate("start", @slice_unit)
         end
 
+        def inspect_activation
+          inspect_units
+          slice = typed_properties(unit: @slice_unit, interface: "Unit", signatures: ACTIVATION_UNIT_SIGNATURES)
+          service = typed_properties(unit: @service_unit, interface: "Unit", signatures: ACTIVATION_UNIT_SIGNATURES)
+          service.merge!(typed_properties(unit: @service_unit, interface: "Service", signatures: ACTIVATION_SERVICE_SIGNATURES))
+          unless slice.fetch("Id") == @slice_unit && service.fetch("Id") == @service_unit &&
+              slice.fetch("LoadState") == "loaded" && service.fetch("LoadState") == "loaded" && service.fetch("Slice") == @slice_unit
+            raise RuntimeUnavailableError, "fixed activation escaped its parent slice"
+          end
+          {"slice" => slice, "service" => service}
+        end
+
         def inspect_profile
           # `show` loads installed metadata before typed reads; it starts no unit.
           inspect_units
@@ -182,8 +196,8 @@ module Ace
               %w[Unit Service Mount].include?(interface) && (interface == "Unit" || interface == "Service" && unit == @service_unit || interface == "Mount" && @prerequisite_units.to_a.include?(unit) && unit.end_with?(".mount")) && signatures.is_a?(Hash) &&
               signatures.all? { |key, value|
                 allowed = case interface
-                when "Unit" then UNIT_GRAPH_SIGNATURES.merge(UNIT_STATE_SIGNATURES)
-                when "Service" then SERVICE_EXEC_SIGNATURES
+                when "Unit" then UNIT_GRAPH_SIGNATURES.merge(ACTIVATION_UNIT_SIGNATURES)
+                when "Service" then SERVICE_EXEC_SIGNATURES.merge(ACTIVATION_SERVICE_SIGNATURES)
                 when "Mount" then MOUNT_SIGNATURES
                 end
                 allowed[key] == value
@@ -215,7 +229,7 @@ module Ace
         end
 
         def start_service
-          operate("start", @service_unit)
+          operate("start", @service_unit, timeout: 45)
         end
 
         def stop_slice
@@ -278,8 +292,8 @@ module Ace
           end
         end
 
-        def operate(verb, unit)
-          @command.call([SYSTEMCTL, "--system", "--no-pager", "--no-ask-password", verb, "--", unit], timeout: 30)
+        def operate(verb, unit, timeout: 30)
+          @command.call([SYSTEMCTL, "--system", "--no-pager", "--no-ask-password", verb, "--", unit], timeout: timeout)
           true
         end
 

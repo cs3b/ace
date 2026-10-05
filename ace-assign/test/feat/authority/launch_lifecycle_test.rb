@@ -2,6 +2,7 @@
 require_relative "../../test_helper"
 require "ace/assign/authority/launch_lifecycle"
 require "ace/assign/authority/launch_driver"
+require_relative "../../support/execution_scope_observation_fixtures"
 
 module Ace
   module Assign
@@ -14,7 +15,7 @@ module Ace
         def initialize; @dead = []; @handles = []; end
         def capture(pid)
           {"pid" => pid, "uid" => pid == Process.pid ? 13002 : 13001, "gid" => pid == Process.pid ? 13002 : 13001,
-            "groups" => [pid == Process.pid ? 13002 : 13001], "started_at" => "linux:boot:#{pid}", "host" => "fixture",
+            "groups" => [pid == Process.pid ? 13002 : 13001], "started_at" => "linux:#{ExecutionScopeObservationFixtures::BOOT}:#{pid}", "host" => "fixture",
             "parent_pid" => pid.between?(91, 99) ? 90 : 1}
         end
         def live!(identity)
@@ -24,6 +25,45 @@ module Ace
         def pin(identity); live!(identity); handle = Handle.new(identity, false); @handles << handle; handle; end
         def exited?(handle, **); dead.include?(handle.identity.fetch("pid")); end
         def same?(left, right); left == right; end
+      end
+
+      # Controlled fixed native-owner stages; no installed/native readiness is
+      # established by this 09j lifecycle fixture.
+      class ScopeObserver
+        def initialize(map, journal, kernel)
+          @map, @journal, @kernel = map, journal, kernel
+        end
+        def retire_released_parent!(_lineages); true; end
+        def activate_parent!(context)
+          context.merge("slot_id" => "slot", "deployment_digest" => Digest::SHA256.hexdigest(JSON.generate(canonical(@map))),
+            "boot_id" => ExecutionScopeObservationFixtures::BOOT, "slice_invocation_id" => "b" * 32,
+            "resource_mount_namespace_identity" => {"device" => 4, "inode" => 11}, "resource_identities" => [],
+            "network_namespace_identity" => {"device" => 7, "inode" => 88}, "network_installation_selection" => ExecutionScopeObservationFixtures::NETWORK_SELECTION,
+            "cgroup_identity" => {"path" => "/sys/fs/cgroup/ace-slot.slice", "mount_id" => 4, "filesystem_type" => "cgroup2", "device" => 5, "inode" => 6})
+        end
+        def observe(_lineage); {"populated" => 0}; end
+        def native_admission_ready!(lineage)
+          @lineage = lineage
+          ExecutionScopeObservationFixtures::NETWORK_OUTPUT
+        end
+        def start_admitted_service!
+          events = @journal.read_events("assignment").select { |event| event["attempt_id"] == @lineage.binding.fetch("attempt_id") }
+          admission = events.find { |event| event.dig("payload", "operation") == "scope_service_admission" }
+          payload = {"scope_generation" => 2, "scope_binding_event_id" => @lineage.binding_event.fetch("digest"),
+            "service_invocation_id" => "c" * 32, "server_identity" => @kernel.capture(90), "socket_identity" => [1, 2, 13001], "workspace_id" => "w1",
+            "mount_namespace_identity" => {"device" => 4, "inode" => 22}, "resource_observer_identity" => @kernel.capture(92), "resource_identities" => [],
+            "network_namespace_identity" => {"device" => 7, "inode" => 88}, "network_admission_event_id" => admission.fetch("digest")}
+          @journal.mutate(assignment_id: "assignment", attempt_id: @lineage.binding.fetch("attempt_id"),
+            mutation_id: "native-#{@lineage.binding.fetch('attempt_id')}", operation: "scope_native_binding", parameters_digest: "a" * 64,
+            expected_generation: @journal.authority_generation(events)) { {events: [{type: "scope_native_bound", payload: payload}], blobs: {}, data: {}} }
+        end
+        def canonical(value)
+          case value
+          when Hash then value.keys.sort.to_h { |key| [key, canonical(value[key])] }
+          when Array then value.map { |item| canonical(item) }
+          else value
+          end
+        end
       end
 
       def with_authority
@@ -38,13 +78,15 @@ module Ace
           @kernel = Kernel.new
           @peer = @kernel.capture(Process.pid)
           @map = {"project_id" => "project", "authority_id" => "authority", "worker_uid" => 13001, "worker_gid" => 13001,
-            "worker_groups" => [13001], "bootstrap" => "/usr/libexec/ace-worker-gate", "bootstrap_sha256" => "a" * 64, "worker_cwd" => "/home/worker", "worker_actor" => "worker", "native" => {"workspace_id" => "w1", "server_identity" => @kernel.capture(90), "socket_identity" => [1, 2, 13001]}}
+            "execution_scope" => {"slot_id" => "slot", "service_unit" => "ace-slot.service", "network_namespace_path" => "/run/netns/slot"},
+            "worker_groups" => [13001], "bootstrap" => "/usr/libexec/ace-worker-gate", "bootstrap_sha256" => "a" * 64, "worker_cwd" => "/home/worker", "worker_actor" => "worker", "native" => {"workspace_id" => "w1"}}
           deployment = Object.new
           mapping = @map
           deployment.define_singleton_method(:mapping) { |_id| mapping }
+          deployment.define_singleton_method(:authority) { |_id| {"state_root" => File.join(cache, "authority-state")} }
           deployment.define_singleton_method(:project) { |_id| {"assignment_root" => File.join(cache, "assignments")} }
           @journal = Molecules::EvidenceJournal.new(repo_root: repo, checkout_root: File.join(cache, "checkout"))
-          @authority = Authority::LaunchLifecycle.new(deployment: deployment, kernel: @kernel, journals: {"project" => @journal})
+          @authority = Authority::LaunchLifecycle.new(deployment: deployment, kernel: @kernel, journals: {"project" => @journal}, scope_observer_factory: ->(_id) { ScopeObserver.new(@map, @journal, @kernel) })
           bytes = JSON.generate("session_id" => "assignment", "name" => "test", "created_at" => "2026-10-05T00:00:00Z",
             "source_config" => "job.yaml", "task_id" => "09j", "project_id" => "project")
           registered = call("register_assignment", {"definition_bytes" => bytes,
@@ -67,11 +109,16 @@ module Ace
         child = @kernel.capture(pid)
         {"runtime" => "herdr", "session" => "w1", "pane" => "w1:p2", "terminal_id" => "3",
           "process_identity" => child, "shell_identity" => child, "native_origin" => {"workspace" => "w1", "tab" => "w1:t2",
-            "pane" => "w1:p2", "command" => ["/usr/libexec/ace-worker-gate", "mapping", @ticket], "cwd" => "/home/worker", "server_identity" => @map.dig("native", "server_identity"), "socket_identity" => [1, 2, 13001]}}
+            "pane" => "w1:p2", "command" => ["/usr/libexec/ace-worker-gate", "mapping", @ticket], "cwd" => "/home/worker", "server_identity" => @kernel.capture(90), "socket_identity" => [1, 2, 13001]}}
       end
 
       def params(state, child = binding)
-        state.slice("attempt_id", "launch_ticket").merge("process_binding" => child, "expected_generation" => state.fetch("generation"))
+        generation = if state["phase"] == "reserved"
+          call("inspect_launch", state.slice("attempt_id"), id: nil).dig(:data, "generation")
+        else
+          state.fetch("generation")
+        end
+        state.slice("attempt_id", "launch_ticket").merge("process_binding" => child, "expected_generation" => generation)
       end
 
       def test_launcher_pidfd_refusal_cannot_commit_or_wedge_reservation
@@ -233,9 +280,9 @@ module Ace
         end
       end
 
-      def test_completed_launch_cycles_do_not_retain_pidfds
+      def test_child_exit_closes_exact_handles_but_does_not_release_parent_reservation
         with_authority do
-          3.times do |index|
+          1.times do |index|
             state = call("reserve_attempt", @reserve_params, id: "reserve-#{index}").fetch(:data)
             child = binding(91 + index)
             state = call("record_launch", params(state, child), id: "record-#{index}").fetch(:data)
@@ -247,7 +294,8 @@ module Ace
             assert_equal "failed", result.fetch("phase")
             assert @kernel.handles.all?(&:closed), "completed cycle cannot retain previous exact handles"
           end
-          assert_equal 6, @kernel.handles.size
+          assert_equal 2, @kernel.handles.size
+          assert_raises(AttemptErrors::Conflict) { call("reserve_attempt", @reserve_params, id: "next-cycle") }
         end
       end
 
@@ -352,8 +400,7 @@ module Ace
           assert_equal "failed", state.fetch("phase")
           assert_equal "failed", @journal.derived_attempts("assignment").first.state
           assert @kernel.handles.all?(&:closed)
-          replacement = call("reserve_attempt", @reserve_params, id: "replacement").fetch(:data)
-          assert_equal "reserved", replacement.fetch("phase")
+          assert_raises(AttemptErrors::Conflict) { call("reserve_attempt", @reserve_params, id: "replacement") }
         end
       end
 
@@ -499,14 +546,13 @@ module Ace
           "failure_digest" => Digest::SHA256.hexdigest(evidence)), id: id).fetch(:data)
       end
 
-      def test_positive_abort_allows_a_new_reservation_for_the_same_scope
+      def test_child_only_abort_cannot_authorize_another_reservation
         with_authority do
           state = call("reserve_attempt", @reserve_params, id: "reserve").fetch(:data)
           state = call("record_launch", params(state), id: "record").fetch(:data)
           assert_equal "failed", abort_child(state).fetch("phase")
-          replacement = call("reserve_attempt", @reserve_params, id: "new-reserve").fetch(:data)
-          refute_equal state.fetch("attempt_id"), replacement.fetch("attempt_id")
-          assert_equal %w[failed reserved], @journal.derived_attempts("assignment").map(&:state).sort
+          assert_raises(AttemptErrors::Conflict) { call("reserve_attempt", @reserve_params, id: "new-reserve") }
+          assert_equal ["failed"], @journal.derived_attempts("assignment").map(&:state)
         end
       end
 
@@ -514,18 +560,20 @@ module Ace
         with_authority do
           state = call("reserve_attempt", @reserve_params, id: "reserve").fetch(:data)
           state = call("record_launch", params(state), id: "record").fetch(:data)
+          pending_bytes = JSON.generate(JSON.parse(registered_bytes).merge("name" => "pending definition"))
+          assert_raises(AttemptErrors::Conflict) do
+            call("register_assignment", {"definition_bytes" => pending_bytes, "definition_digest" => Digest::SHA256.hexdigest(pending_bytes),
+              "expected_generation" => 1}, id: "pending-register")
+          end
           abort_child(state)
           changed = JSON.parse(registered_bytes).merge("name" => "changed definition")
           bytes = JSON.generate(changed)
           registration = call("register_assignment", {"definition_bytes" => bytes,
             "definition_digest" => Digest::SHA256.hexdigest(bytes), "expected_generation" => 1}, id: "changed-register").fetch(:data)
           assert_equal 2, registration.fetch("definition_generation")
-          call("reserve_attempt", @reserve_params.merge("scope" => "020", "expected_generation" => 2), id: "other-scope")
-          newer_bytes = JSON.generate(changed.merge("name" => "must not change while another scope is reserved"))
           old_commit = @journal.ref_value
           assert_raises(AttemptErrors::Conflict) do
-            call("register_assignment", {"definition_bytes" => newer_bytes,
-              "definition_digest" => Digest::SHA256.hexdigest(newer_bytes), "expected_generation" => 2}, id: "blocked-register")
+            call("reserve_attempt", @reserve_params.merge("scope" => "020", "expected_generation" => 2), id: "other-scope")
           end
           assert_equal old_commit, @journal.ref_value
         end

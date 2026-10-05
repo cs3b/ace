@@ -5,6 +5,18 @@ require "ace/runtime/molecules/linux_mount_info"
 
 class LinuxMountInfoTest < AceRuntimeTestCase
   MountInfo = Ace::Runtime::Molecules::LinuxMountInfo
+
+  def test_bound_nsfs_roots_are_typed_namespace_objects_not_storage_paths
+    table = MountInfo.new("40 1 0:4 net:[4026533001] /run/netns/slot rw - nsfs nsfs rw\n")
+    assert_equal "nsfs", table.by_id(40).fetch("filesystem_type")
+    assert_equal "net:[4026533001]", table.by_id(40).fetch("root")
+    assert_raises(Ace::Runtime::RuntimeUnavailableError) { table.filesystem_path(table.by_id(40), "/run/netns/slot") }
+    ["net:[0]", "net:[1]/escape", "unknown:[1]", "relative"].each do |root|
+      assert_raises(Ace::Runtime::RuntimeUnavailableError) { MountInfo.new("40 1 0:4 #{root} /run/netns/slot rw - nsfs nsfs rw\n") }
+    end
+    assert_raises(Ace::Runtime::RuntimeUnavailableError) { MountInfo.new("40 1 0:4 net:[1] /run/netns/slot rw - ext4 /dev/sda1 rw\n") }
+  end
+
   Unavailable = Ace::Runtime::RuntimeUnavailableError
 
   def table

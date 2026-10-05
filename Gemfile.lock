@@ -14,6 +14,7 @@ PATH
       ace-support-nav (~> 0.28)
       ace-task (~> 0.37)
       ace-tmux (~> 0.18)
+      json (>= 2.20, < 3)
 
 PATH
   remote: ace-b36ts

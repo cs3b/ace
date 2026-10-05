@@ -16,7 +16,7 @@ class SystemdScopeManagerTest < AceRuntimeTestCase
     def call(argv, timeout:)
       @calls << [argv, timeout]
       raise failure if failure
-      return typed_response if argv.include?("get-property")
+      return typed_response.respond_to?(:call) ? typed_response.call(argv) : typed_response if argv.include?("get-property")
       return "" unless argv.include?("show")
       unit = argv.last
       values = {"Id" => unit, "LoadState" => "loaded", "ActiveState" => "active", "SubState" => "running",
@@ -66,8 +66,28 @@ class SystemdScopeManagerTest < AceRuntimeTestCase
     expected = [["start", "ace-worker.slice"], ["start", "ace-worker.service"],
       ["stop", "ace-worker.service"], ["stop", "ace-worker.slice"]]
     assert_equal expected, @command.calls.map { |argv, _| [argv[4], argv.last] }
-    assert @command.calls.all? { |_, timeout| timeout == 30 }
+    assert_equal [30, 45, 30, 30], @command.calls.map(&:last)
     assert_raises(ArgumentError) { @manager.stop_service("unrelated.service") }
+  end
+
+  def test_activation_has_typed_control_pid_and_pending_job_without_slice_service_fields
+    @command.typed_response = lambda do |argv|
+      unit = argv[8].end_with?("_2eservice") ? "ace-worker.service" : "ace-worker.slice"
+      interface = argv[9]
+      signatures = interface.end_with?(".Service") ? Manager::ACTIVATION_SERVICE_SIGNATURES : Manager::ACTIVATION_UNIT_SIGNATURES
+      values = {"Id" => unit, "LoadState" => "loaded", "ActiveState" => "activating", "SubState" => "start-post",
+        "Job" => [17, "/org/freedesktop/systemd1/job/17"], "InvocationID" => "a" * 32,
+        "ControlGroup" => "/ace-worker.slice/ace-worker.service", "MainPID" => 99, "ControlPID" => 100, "Slice" => "ace-worker.slice"}
+      signatures.map { |key, signature| JSON.generate("type" => signature, "data" => values.fetch(key)) }.join("\n") + "\n"
+    end
+    observed = @manager.inspect_activation
+    assert_equal 100, observed.fetch("service").fetch("ControlPID")
+    assert_equal 99, observed.fetch("service").fetch("MainPID")
+    assert_equal [17, "/org/freedesktop/systemd1/job/17"], observed.fetch("service").fetch("Job")
+    refute observed.fetch("slice").key?("ControlPID")
+    calls = @command.calls.select { |argv, _| argv.include?("get-property") }
+    assert_equal 3, calls.size
+    refute_includes calls.first.first, "ControlPID"
   end
 
   def test_lost_job_outcome_is_not_retried_or_turned_into_success

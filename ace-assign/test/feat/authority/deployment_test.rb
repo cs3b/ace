@@ -7,7 +7,7 @@ module Ace
   module Assign
     class ProtectedDeploymentTest < AceAssignTestCase
       def data
-        {"schema" => "ace.assign.authorities/v1", "authorities" => {"authority" => {"uid" => 13003,
+        {"schema" => "ace.assign.authorities/v2", "authorities" => {"authority" => {"uid" => 13003,
           "gid" => 13003, "groups" => [13003], "socket_path" => "/run/ace-authority/control.sock",
           "state_root" => "/var/lib/ace-authority", "composition" => "launch"}},
          "projects" => {"project" => {"journal_repository" => "/var/lib/ace-journal", "evidence_git_ref" => "refs/ace/execution",
@@ -21,10 +21,15 @@ module Ace
            "worker_uid" => 13001, "worker_gid" => 13001, "worker_groups" => [13001], "worker_actor" => "worker",
            "worker_cwd" => "/home/worker", "worker_argv" => ["/usr/bin/true"], "worker_env" => {"PATH" => "/usr/bin:/bin"},
            "bootstrap" => "/usr/libexec/ace-worker-gate", "bootstrap_sha256" => "a" * 64,
-           "native" => {"workspace_id" => "w1", "socket_path" => "/run/herdr/control.sock", "socket_identity" => [1, 2, 13001],
-             "executable" => "/usr/bin/herdr", "version" => "0.9.3", "server_identity" => {"pid" => 90,
-               "uid" => 13001, "gid" => 13001, "groups" => [13001], "parent_pid" => 1,
-               "started_at" => "linux:0123-abcd:199", "host" => "fixture"}}}}}
+           "execution_scope" => {"backend" => "linux_systemd_cgroup_v2", "slot_id" => "slot",
+             "slice_unit" => "ace-slot.slice", "service_unit" => "ace-slot.service",
+             "unit_manifest_sha256" => "c" * 64, "boundary_manifest_sha256" => "d" * 64,
+             "root_directory" => "/var/lib/ace-slot/root", "runtime_directory" => "/run/ace-slot",
+             "network_namespace_path" => "/run/netns/ace-slot"},
+           "native" => {"workspace_id" => "w1", "socket_path" => "/run/herdr/control.sock",
+             "executable" => "/usr/bin/herdr", "version" => "0.9.3", "protocol" => 22,
+             "executable_sha256" => "e" * 64}}}}
+
       end
 
       def inbox_data
@@ -42,6 +47,28 @@ module Ace
           "pi_queue_client" => "/usr/libexec/ace-pi-identity", "pi_queue_client_sha256" => "b" * 64,
           "supervisor_uids" => [13005]}}
         value
+      end
+
+      def test_obsolete_pid_pinned_map_and_incomplete_scope_are_refused
+        value = data
+        value["schema"] = "ace.assign.authorities/v1"
+        assert_raises(ArgumentError) { Authority::Deployment.new(value) }
+        value = data
+        value["launch_mappings"]["mapping"]["native"]["server_identity"] = {"pid" => 90}
+        assert_raises(ArgumentError) { Authority::Deployment.new(value) }
+        value = data
+        value["launch_mappings"]["mapping"]["execution_scope"].delete("boundary_manifest_sha256")
+        assert_raises(ArgumentError) { Authority::Deployment.new(value) }
+      end
+
+      def test_slot_ownership_and_worker_principals_are_unique_across_mappings
+        value = data
+        value["launch_mappings"]["another"] = JSON.parse(JSON.generate(value["launch_mappings"]["mapping"]))
+        assert_raises(ArgumentError) { Authority::Deployment.new(value) }
+        scope = value["launch_mappings"]["another"]["execution_scope"]
+        scope.merge!("slot_id" => "another", "slice_unit" => "ace-another.slice", "service_unit" => "ace-another.service",
+          "root_directory" => "/var/lib/ace-another/root", "runtime_directory" => "/run/ace-another")
+        assert_raises(ArgumentError) { Authority::Deployment.new(value) }
       end
 
       def test_inbox_context_is_fixed_project_selection_without_native_repinnning

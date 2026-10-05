@@ -26,8 +26,11 @@ module Ace
               unavailable!("kernel mount table is malformed")
             end
             root, mountpoint = fields.values_at(3, 4).map { |value| decode(value) }
-            unless [root, mountpoint].all? { |path| path.start_with?("/") && File.expand_path(path) == path } &&
-                fields[separator + 1].match?(/\A[a-zA-Z0-9_.-]+\z/)
+            filesystem = fields[separator + 1]
+            root_valid = root.start_with?("/") && File.expand_path(root) == root
+            root_valid ||= filesystem == "nsfs" && root.match?(/\A(?:net|mnt|user|pid|uts|ipc|cgroup|time):\[[1-9][0-9]*\]\z/)
+            unless root_valid && mountpoint.start_with?("/") && File.expand_path(mountpoint) == mountpoint &&
+                filesystem.match?(/\A[a-zA-Z0-9_.-]+\z/)
               unavailable!("kernel mount paths/filesystem are malformed")
             end
             {"mount_id" => Integer(fields[0], 10), "parent_id" => Integer(fields[1], 10),
@@ -48,6 +51,7 @@ module Ace
         end
 
         def filesystem_path(record, path)
+          unavailable!("namespace object has no ordinary backing filesystem path") unless record.fetch("filesystem_type") != "nsfs" && record.fetch("root").start_with?("/")
           prefix = record.fetch("mountpoint")
           unless path.is_a?(String) && File.expand_path(path) == path &&
               (path == prefix || prefix == "/" && path.start_with?("/") || path.start_with?(prefix + "/"))
