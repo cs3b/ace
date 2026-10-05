@@ -1,0 +1,87 @@
+---
+id: 8wq.t.1w5
+status: done
+priority: medium
+created_at: "2026-09-27 01:15:43"
+estimate: TBD
+dependencies: [8wr.t.qjl, 8wq.t.k86, 8wm.t.y23]
+tags: [session, resilience]
+position: 6o000b
+bundle:
+  presets: [project]
+  files: [ace-assign/lib/ace/assign/molecules/fork_session_launcher.rb, ace-herdr/lib/ace/herdr/organisms/tidy.rb, ace-overseer/lib/ace/overseer/organisms/status_collector.rb, .ace-tasks/_archive/8w/y/8wm.t.y23-ace-herdr-migrate-generic-queue/8wm.t.y23-ace-herdr-migrate-generic-queue-and-delivery.s.md, ace-herdr/lib/ace/herdr/organisms/inbox.rb, ace-herdr/docs/usage.md, .ace-tasks/_archive/8w/y/8wq.t.1w5-session-resilience/ux/usage.md]
+  commands: []
+needs_review: false
+title: Resume attributable agent work after process or session failure
+---
+
+## Acceptance ownership — Captain decision 2026-10-05
+
+This ACE task owns the implemented package behavior and executed source/package tests. **Lab installation and system acceptance are owned once by lab-config:8wl.t.gad.2, checklist row `1w5-recovery`**, not by this task. The original installed requirements are preserved in history/before-centralized-lab-acceptance-2026-10-05.md and mapped into that central checklist. Closing this source task does not claim those probes were executed or the Lab is ready. Defects discovered by gad.2 return to the owning package as tracked fixes.
+
+This explicit Captain scope split supersedes the earlier blocked-on-Lab status and historical implementation-report instructions to keep this task open solely for installed acceptance. Product behavior and refusal requirements are unchanged. Independent scope review precedes source closure.
+
+
+# Resume attributable agent work after process or session failure
+
+## Behavioral Specification
+
+### User Experience
+
+After compaction, terminal loss or agent death, the supervisor explains what remains active and resumes from accepted assignment state without duplicated work.
+
+### Expected Behavior
+
+- Recovery loads task goal, assignment checkpoint, latest attempt identity, pending HITL and unresolved effects. Old pane IDs are hints, not authority; compare the live process/session identity before adoption.
+- A surviving valid process is adopted, not relaunched. A dead process produces a failed/stopped/uncertain attempt according to its evidence; the overseer explicitly decides whether to start a new attempt. Routine authorized recovery does not require a fresh Captain permission.
+- Pi compaction/reload must preserve or restore the delivery/wake bindings exactly once. An external process being dead is distinct from a live idle agent; /loop cannot resurrect it.
+- Positive termination checks include descendants that could still write into the worktree. Stop/close leaves checkpoint, worktree and commits intact. Unknown liveness preserves resources and reports uncertainty.
+- Do not replay accepted external effects during resume. Reconcile them through their receipts; pending HITL remains tied to exact proposal/attempt and is deliberately rebound only with audited recovery evidence.
+- Core process-tree defects in native Herdr must be reproduced and fixed in the owning runtime if found; Lab cutover remains blocked in gad.2 until installed regression proves no orphan writers. Do not hide defects with repeated broad kills.
+
+### Interface Contract
+
+`ace-assign resume --assignment ID [--dry-run]` reports adopt/restart-required/reconcile-required and accepts a restart only through a new attributable attempt. `ace-assign inbox-reconcile --attempt ID --event ID --receipt FILE` consumes the existing Herdr receipt JSON plus detached FILE.sig through the same configured verifier and appends only verified observation references to the attempt journal; it never resends or settles a business effect. `ace-overseer status --format json` includes liveness, last verified observation and recovery reason; stale/unreadable is unknown, never green.
+
+Runtime owner observation is a public `Ace::Runtime` adapter operation: `process_binding(pane:, caller_pid:)` returns a string-keyed object containing `runtime`, exact native `session` and `pane`, `shell_identity`, and `process_identity`. Process identities bind OS PID, UID, start time and host; no command-line arguments are recorded. Herdr also binds durable `terminal_id`, agent kind and immutable native session identity. The owner is the caller's verified OS ancestor below the native retained shell, corroborated against native foreground evidence where available. A retained shell alone, dead/reused owner PID, reused pane/native session, unreadable OS/native evidence or non-native execution returns `nil` (unknown). Native adapter failures preserve `Ace::Runtime` typed errors. This read-only observation grants no actor identity, service privilege, HITL authorization or business-effect authority.
+
+Managed drivers invoke attempt start inside the runtime-owned agent. `ExecutionIdentityResolver` obtains the adapter binding at that execution boundary; `process_start` journals the verified binding. Resume re-observes the exact native binding and OS birth identities before adoption. Service executors may additionally supply a verified `process_pid`; absent native/service owner proof, recovery remains unknown. Inbox proof consumption delegates existing Herdr signature verification and records bounded proof/native observation references in the existing attempt journal; the public Herdr reconcile vocabulary remains unchanged.
+
+### Success Criteria and Verification Plan
+
+- [x] SC1: Deterministic recovery/adoption decisions, exact process/session birth identity, stale binding rejection and receipt-based no-replay reconciliation are implemented and tested.
+- [x] SC2: Independent source review APPROVE at dab0dbeea; implementation-report.md and independent-review-2026-10-05.md retain Assign 803/3120 and signed recovery 11/135. Real native descendant/compaction/failure drills belong exclusively to gad.2.
+- [x] SC3: Accepted recovery source merged at 3dda44055 and included in published ace-assign 0.64.0; worktree/checkpoint preservation and uncertainty contracts remain unchanged.
+
+### Scope and Ownership
+
+Owner: **ace-assign and ace-overseer**. Consumers and boundaries are named above. Code layout belongs to JIT planning. This record owns source delivery. Deployment execution and Lab acceptance belong to lab-config:8wl.t.gad.2.
+
+### Vertical Slice Decomposition
+
+Single end-to-end capability slice; size: large. Prerequisites: `8wr.t.qjl`, `8wq.t.k86`, `8wm.t.y23`. Canonical cross-repository program: lab-config:`8wl.t.gad`. External acceptance gates are explicit references, not unresolved local dependency IDs.
+
+### Decisions and Defaults
+
+No unresolved product choice is delegated to the implementer. Unknown identity/authority is an error, never permission or success. Executed tests plus independent current-head review gate delivery; CI is advisory. Spec readiness is not proof of installed behavior.
+
+### Provenance and Invalidated Assumptions
+
+Replaces title-only 1w5; historical missing 1cc reference is not a second task. Tidy 1w0 is existing functionality, not proof of native process-tree termination.
+
+Earlier text is retained in `history/pre-lab-spec-review.md` as non-normative history. The approved 2026-09-28 specification supersedes conflicting earlier requirements. The source implementation has retained independent review; the 2026-10-05 acceptance ownership amendment is reviewed separately.
+
+### Usage and Review Evidence
+
+Public scenarios: `ux/usage.md`. Record independent review before promotion.
+
+## Signed inbox consumer contract — 2026-10-04
+
+Consume delivered ACE 8wm.t.y23 as implemented, without another journal. An uncertain inbox result can advance only from a verified signed receipt binding event_id, attempt_id, claim_generation, payload_sha256, full native binding and observer/native observation reference. `consumed` maps to completed; `superseded` requeues the same event after trusted non-consumption evidence and may supply a verified replacement target. Superseded is not delivery/business success or a generic dead state. No receipt, stale-generation or mismatched proof, unknown liveness or elapsed time leaves uncertainty visible and prohibits automatic resend/relaunch of the uncertain effect.
+
+The trusted supervisor/observer verifies actual native Codex/Pi consumption or non-consumption before signing. A requester cannot mint its own acceptance. lab-config:gad.8 owns installation of the protected signer process, private key and configured public verification key; gad.b owns the domain operation. Preserve the per-event key fingerprint and existing verifier checks. Rotation cannot make an old event trusted under a new key: retain the matching trusted verifier/signing context for unresolved old events or postpone rotation. Never weaken verification to unblock recovery. Persist non-secret observation/proof references in the existing ace-assign attempt journal, not OTPs or raw private keys. Delivery consumption does not itself authorize or prove a business effect.
+
+- [x] Source consumer acceptance (retained implementation and independent-review receipts): consumed and superseded with correct signature/binding; wrong signer/key/digest/generation/native target; replay; missing proof; supervisor restart and key rotation with unresolved old event. Valid consumption settles once; supersession permits only the explicit verified retry; all invalid or absent proofs stay uncertain.
+Central acceptance reference: lab-config:8wl.t.gad.2 `1w5-recovery` requires actual requester and trusted signer OS users and native Codex/Pi observation supplied by gad.8/.b, not only scripted subprocess proof. Its unchecked checklist is the sole installed acceptance tracker.
+
+Process birth evidence is platform exact: Linux boot ID plus process start ticks, Darwin libproc microsecond birth; whole-second ps timestamps are insufficient. Capture and ancestry revalidation fail closed when exact facts change or are unavailable. Registered inbox records, including archive fallback, must match the journal event/attempt/digest/key and any signed settlement generation/full binding; substituted records remain unknown.

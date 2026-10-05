@@ -12,17 +12,10 @@ bundle:
   presets: [project]
   files: [.ace-bin/ace-rubygems-publish, ace-hitl/lib/ace/hitl/lifecycle/kinds.rb, ace-hitl/lib/ace/hitl/lifecycle/effects.rb]
   commands: []
-title: Deliver scoped HITL publication workflow and verification fixtures
+title: Prove release publication through scoped HITL and the tested publisher
 ---
 
-## Central Lab acceptance — Captain decision 2026-10-05
-
-Lab installation and execution of the shared system test belong to **lab-config:8wl.t.gad.2**, checklist row `scoped-publication`. Installed scenario descriptions below define its referenced obligations, not a second deployment/run owned by this task. This source task must deliver its own implementation, automated package/integration verification and review; missing source behavior cannot be moved to the Lab test or marked done. Any reference below requiring whole installed Lab acceptance before source completion is superseded by this ownership split. Cross-repository acceptance records exact producer versions/source receipts, failures and retest evidence once in gad.2.
-
-This task retains any package-level matrix/scenario/automation deliverables. Its actual deployed end-to-end run is a row in gad.2; that row is not an entry dependency which requires gad.2 to have already succeeded.
-
-
-# Deliver scoped HITL publication workflow and verification fixtures
+# Prove release publication through scoped HITL and the tested publisher
 
 ## Behavioral Specification
 
@@ -37,7 +30,7 @@ An authorized release reaches the tested publisher through the correct role, req
 - Invoke the tested .ace-bin publisher through the scoped service. Classify publisher result: success, OTP-required/rejected/expired, non-OTP failure or uncertain submission. Only OTP-required/rejected/expired causes an OTP ask; deterministic non-OTP failure stops.
 - OTP is ephemeral to the exact requesting executor, absent from argv/logs/Git/persistent events; overseer sees request status only. On uncertainty inspect RubyGems artifact/version evidence before any retry.
 - Success receipt identifies artifact digest, version, target registry, accepted authorization and actual publisher result. Merge evidence does not imply a release has happened.
-- Central installed-service gate: gad.2 uses gad.b publisher executor implementation and installed receipt before executing its real pilot row. This source workflow does not depend on gad.2 completion; its fake-publisher evidence is an input to that later run.
+- External installed-service gate: lab-config:gad.b must provide publisher executor receipt before the real pilot; this task does not depend on gad.2 or gad.3, avoiding an acceptance cycle.
 
 ### Interface Contract
 
@@ -46,8 +39,8 @@ Existing tested publisher remains the publication entrypoint. `ace-hitl ask --ki
 ### Success Criteria and Verification Plan
 
 - [ ] SC1: Fake publisher: direct success, OTP needed, rejected/expired OTP, non-OTP failure, uncertain result and duplicate delivery; no secret in emitted artifacts.
-- [ ] SC2: Deliver the publication workflow and runnable pilot scenario contract: named artifact/version/head, scoped authority, protected OTP, classified uncertainty and exact receipt. The actual authorized installed release is the sole gad.2 `scoped-publication` row, not this task's completion gate.
-- [ ] SC3: Run affected `ace-test ace-hitl all` and release workflow fixture tests; retain exact-source independent review. gad.2 records the later real pilot receipt against this source/scenario version.
+- [ ] SC2: One authorized real release through installed executor with no old lab CLI/broker; verify registry artifact digest/version and exact attempt receipt.
+- [ ] SC3: Run affected `ace-test ace-hitl all` and release workflow fixture tests; record executed evidence, independent review and real pilot receipt separately.
 
 ### Scope and Ownership
 

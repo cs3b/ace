@@ -14,18 +14,11 @@ needs_review: false
 position: 6o000i
 ---
 
-## Central Lab acceptance — Captain decision 2026-10-05
-
-Lab installation and execution of the shared system test belong to **lab-config:8wl.t.gad.2**, checklist row `forge-matrix`. Installed scenario descriptions below define its referenced obligations, not a second deployment/run owned by this task. This source task must deliver its own implementation, automated package/integration verification and review; missing source behavior cannot be moved to the Lab test or marked done. Any reference below requiring whole installed Lab acceptance before source completion is superseded by this ownership split. Cross-repository acceptance records exact producer versions/source receipts, failures and retest evidence once in gad.2.
-
-This task retains any package-level matrix/scenario/automation deliverables. Its actual deployed end-to-end run is a row in gad.2; that row is not an entry dependency which requires gad.2 to have already succeeded.
-
-
-# Provide executable forge-neutral delivery acceptance scenarios
+# Prove the complete forge-neutral delivery acceptance matrix
 
 ## Outcome and ownership
 
-Maintainers receive executable scenario assets and a matrix covering local-only Git, GitHub, default Forgejo and another named Forgejo, with deterministic integration evidence and a classified source coupling inventory. This task delivers and reviews those assets locally. lab-config gad.2 owns their deployed execution and final installed matrix receipt; lab-overseer l2d.8 consumes that receipt without another run.
+Maintainers receive one executable acceptance matrix proving the delivered core/providers and all migrated consumers work across local-only Git, GitHub, default Forgejo and another named Forgejo. It identifies exact code/package versions, executed scenarios and independent review. lab-overseer l2d.8 verifies this receipt; it does not own or rerun this matrix. lab-config gad uses the accepted receipt as one condition for the next full Lab test.
 
 ## Inputs and public artifact contract
 
@@ -54,24 +47,24 @@ Inventory source, config, package dependencies, commands, URLs and active handbo
 
 1. Run each modified package through `ace-test PACKAGE all` and the monorepo `ace-test-suite`, preserving actual reports and exact head.
 2. Run deterministic integration cases against real temporary Git and controlled provider IO, including all failure paths and unknown outcomes.
-3. Deliver runnable installed scenario assets specifying exact package inputs, disposable endpoint scope, outcome collection and remote receipt verification. Execute them only as part of lab-config gad.2; its rows retain installed evidence. Test-only credentials stay scoped/out of artifacts.
-4. Obtain independent review of exact source/scenario assets, executed deterministic checks and classified coupling inventory. Unexecuted installed rows stay explicitly open in gad.2, not reported as passed here.
+3. Install the exact delivered packages into a clean isolated environment and execute the required real-provider success paths on explicitly scoped disposable endpoints, then verify fetched receipts against remote state. Test-only credentials stay scoped/out of artifacts.
+4. Obtain independent review of exact tested changes and the completed row/coupling inventory. Compare task IDs/versions/SHAs across receipts; contradictions are failures, not documentation cleanup.
 5. Re-run only impacted rows after fixes and reconcile the final set to one coherent delivered version combination. Record retained valid evidence explicitly; never mix stale review heads into a newer delivery claim.
 
 No endpoint availability or authority means an unexecuted row, not a pass. Preserve evidence and report the exact missing endpoint/scope. No blanket disabled test, package test stub or report exit 0 can replace the row. Re-reading/revalidating unchanged evidence is idempotent. A changed head invalidates affected evidence and requires rerun/review.
 
 ## Completion and boundaries
 
-Source completion requires executable assets for every required row, executed deterministic integration/failure checks, fully classified coupling inventory and independent source/scenario review. The one installed completion requirement—every deployed row executed against an exact manifest with independent verdict—is owned by gad.2 and consumed by l2d.8. No live matrix pass is required or claimed to close this source task. Single verification slice, advisory size: large. No production release, uncontrolled cleanup, service redesign, new task engine or bypass of authorization. Tests cannot send privileged production operations under the guise of fixture setup. No unresolved product questions; live infrastructure prerequisites are explicit execution inputs.
+All required rows executed and verified, coupling inventory fully classified, exact installed versions/SHAs retained and independent verdict present. The receipt identifies acceptance for lab-overseer l2d.8 and lab-config gad, with no implication that the full Lab system test already passed. Single verification slice, advisory size: large. No production release, uncontrolled cleanup, service redesign, new task engine or bypass of authorization. Tests cannot send privileged production operations under the guise of fixture setup. No unresolved product questions; live infrastructure prerequisites are explicit execution inputs.
 
 ## Carried endpoint proof — uj0 closure, 2026-10-02
-Central gad.2 `forge-matrix` obligation: On the actual Lab installation, record installed fj version and sanitized per-subcommand capabilities, then run a read-only explicitly named-server/repository query from a different checkout and confirm returned identity. Record exact package versions and endpoint identity in the matrix. uj0 delivered repository binding and tested the upstream fj v0.6.0 binary; its current-Lab smoke half lacked evidence. The Captain closed that implementation on 2026-10-02; this already-required named-Forgejo acceptance row owns the remaining installed endpoint proof. No access means unexecuted, never pass.
+- [ ] On the actual Lab installation, record installed fj version and sanitized per-subcommand capabilities, then run a read-only explicitly named-server/repository query from a different checkout and confirm returned identity. Record exact package versions and endpoint identity in the matrix. uj0 delivered repository binding and tested the upstream fj v0.6.0 binary; its current-Lab smoke half lacked evidence. The Captain closed that implementation on 2026-10-02; this already-required named-Forgejo acceptance row owns the remaining installed endpoint proof. No access means unexecuted, never pass.
 
 ## Review-program final gate — 2026-10-04
 
 R1 (8x0.t.ig2) is delivered storage/evidence foundation, not proof of caps or escalation. Required input now includes accepted R2 (8x0.t.ig3) and R3 (8x0.t.ig4) receipts for the installed review workflow. Verify effective policy/session/worktree binding, restart without duplicate repair, discovery/delivery round limits, infra retry accounting and escalation with retained history on the exact installed manifest. Missing limits or an unbounded review is a failed required row. Cross-repo lab-config:gad.2 consumes this proof; experimental ig5 does not gate acceptance. No dependency from qkb/qk0 to R3 is introduced.
 
-Central gad.2 `REVIEW` obligation: Final review-policy row binds R2/R3 revisions and executes cap/escalation/restart negative scenarios before full Lab acceptance.
+- [ ] Final review-policy row binds R2/R3 revisions and executes cap/escalation/restart negative scenarios before full Lab acceptance.
 
 ## Protected execution and native settlement acceptance
 
@@ -79,15 +72,7 @@ Required input also includes accepted xz9 and xza source receipts on the exact i
 
 For each native runtime, execute the actual deployed producer, bound endpoint, observer and signer through consumed/superseded reconciliation. Retain exact event/digest/native-session/attempt/OS-birth correlation and trusted observation references. Exercise busy queues, duplicate/equal-text messages, lost replies, runtime restart and cancellation/dequeue races. Empty queue, elapsed time, generic enqueue acknowledgement or a direct app-server capability fixture cannot stand in for signed trustworthy consumption/nonexecution. Missing supported correlation is a failed required row, not a permitted skip.
 
-Cross-repository prerequisites are explicit evidence references: lab-config:8wl.t.gad.8 proves exact authority accounts, protected paths/topology, runtime endpoints and signer-key installation on this manifest; lab-config:8wl.t.gad.b proves migrated scoped domain handlers and actual signed settlement using the same authority. Record their IDs, tested revisions, receipts and matching deployment manifest in acceptance/matrix.md. qkc supplies source scenario assets; lab-config:gad.2 executes them and records installation/operation proofs once. qkc source completion is an input; its installed outcomes are outputs of gad.2, never a circular prerequisite. Keep R2/R3 mandatory and ig5 outside the gate. No live installed proof is claimed by this specification amendment.
+Cross-repository prerequisites are explicit evidence references: lab-config:8wl.t.gad.8 proves exact authority accounts, protected paths/topology, runtime endpoints and signer-key installation on this manifest; lab-config:8wl.t.gad.b proves migrated scoped domain handlers and actual signed settlement using the same authority. Record their IDs, tested revisions, receipts and matching deployment manifest in acceptance/matrix.md. qkc consumes these installation/operation proofs, not gad.2 completion; lab-config:gad.2 consumes qkc afterward, preventing a cycle. Keep R2/R3 mandatory and ig5 outside the gate. No live installed proof is claimed by this specification amendment.
 
-Central gad.2 `forge-matrix` obligation: Protected execution row binds xz9 source, actual peer identities and gad.8/gad.b installation/handler receipts to the installed manifest.
-Central gad.2 `forge-matrix` obligation: Both native settlement rows bind xza source and real producer/observer/signer evidence, including race and restart negatives.
-
-## Source completion checklist
-
-- [ ] Executable scenario assets cover all required positive, negative and uncertainty rows with explicit provider applicability.
-- [ ] Deterministic real-Git/controlled-provider integration and failure tests executed; affected package checks retained.
-- [ ] Coupling inventory classified and source defects resolved by their owners.
-- [ ] Independent source/scenario review accepts exact revisions and evidence contract.
-- [ ] Hand off runnable assets and required manifest/endpoint inputs to gad.2; deployed result checkboxes exist only there.
+- [ ] Protected execution row binds xz9 source, actual peer identities and gad.8/gad.b installation/handler receipts to the installed manifest.
+- [ ] Both native settlement rows bind xza source and real producer/observer/signer evidence, including race and restart negatives.

@@ -14,6 +14,13 @@ bundle:
 needs_review: false
 ---
 
+## Central Lab acceptance — Captain decision 2026-10-05
+
+Lab installation and execution of the shared system test belong to **lab-config:8wl.t.gad.2**, checklist row `qkb-delivery`. Installed scenario descriptions below define its referenced obligations, not a second deployment/run owned by this task. This source task must deliver its own implementation, automated package/integration verification and review; missing source behavior cannot be moved to the Lab test or marked done. Any reference below requiring whole installed Lab acceptance before source completion is superseded by this ownership split. Cross-repository acceptance records exact producer versions/source receipts, failures and retest evidence once in gad.2.
+
+The remaining qk0/xz9-dependent workflow/role adoption remains blocked source work. qkb.0 source completion does not supply that adoption. Atomic published vocabulary remains required; central installed acceptance checks the final deployment.
+
+
 ## Status reconciliation — 2026-10-05
 
 **Bounded vocabulary delivered; blocked on consumer integration.** Accepted f29c72e3 source and neutral-vocabulary-source-checkpoint.md document neutral PR workflows, consumers and normal skill projection. The coordinated release is now published. Remaining qk0 charter, xz9 SC7 adoption, configured merge executor, fresh installed workflow resolution and complete delivery/authorization matrix are still open. Publication does not prove ambient registrations resolve to the new sources. Resume after dependent contracts and installed deployment are available.

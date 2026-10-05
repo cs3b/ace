@@ -1,6 +1,6 @@
 ---
 id: 8wr.t.qkb.0
-status: done
+status: blocked
 priority: high
 created_at: "2026-09-28 17:44:29"
 estimate: TBD
@@ -14,11 +14,9 @@ bundle:
 needs_review: false
 ---
 
-## Acceptance ownership — Captain decision 2026-10-05
+## Status reconciliation — 2026-10-05
 
-This task owns source implementation and executed package/integration tests. **lab-config:8wl.t.gad.2, row `qkb-delivery`, owns Lab installation and shared system acceptance.** Original requirements are preserved in history/before-centralized-lab-acceptance-2026-10-05.md; no unexecuted installed scenario is marked passed. This decision supersedes older status prose keeping the source task open solely for installed proof.
-
-Final independent-review-2026-10-05.md accepts d14e5afc source with Assign 829/3469 and independent 18/323; integrated at 855092590. Its final receipt supersedes earlier implementation-evidence pending prose. The coherent neutral vocabulary was published in the coordinated release. Actual protected workflow/role adoption remains qkb.1 implementation; fresh installed atomic vocabulary and executor trace belong to gad.2. Atomic release semantics are unchanged; no mixed vocabulary is newly authorized.
+**Source delivered; blocked on protected delivery acceptance.** Neutral assignment delivery was integrated at 855092590, with final independent approval and Assign 829/3469 in independent-review-2026-10-05.md. That final record supersedes implementation-evidence prose which still calls source review/tests pending. Coordinated release versions are now published. Remaining shared protected service/workflow acceptance and installed atomic vocabulary verification depend on qkb.1, qk0/xz9 and installed executors; no whole-task completion is claimed.
 
 
 # Make assignment delivery evidence provider neutral
@@ -63,13 +61,3 @@ ACE 8x2.t.z78 owns the actual missing Forgejo fork/draft/ready/atomic expected-h
 ## Post-delivery repair gate — 2026-10-04
 
 The added prerequisite tasks repair observed producer defects, not a change to this consumer's behavior. Development may use the delivered API in parallel, but acceptance/integration waits for the named repairs and reruns the affected consumer cases after rebase. No local bypass or duplicate validation substitutes for fixing the owning producer. Pending means the specification is ready, not that its prerequisites are already complete.
-
-## Source acceptance map — 2026-10-05
-
-- [x] SC1: Controlled provider/real Git task-to-ready traces cover GitHub, default/named Forgejo and fork/canonical provenance.
-- [x] SC2: Local-only and invalid/provenance selection refusal before writes.
-- [x] SC3: Exact-head movement invalidates stale test/review approval.
-- [x] SC4: Uncertain creation/merge reconciliation preserves one effect across attempts.
-- [x] SC5: Forged, missing-review and wrong-head evidence cannot complete delivery.
-
-Evidence: final independent-review-2026-10-05.md. Lab deployment and its verification are tracked only at lab-config:8wl.t.gad.2 `qkb-delivery`; qkb.1 still owns missing source adoption.

@@ -14,9 +14,16 @@ needs_review: false
 position: 6o000f
 ---
 
+## Central Lab acceptance — Captain decision 2026-10-05
+
+Lab installation and execution of the shared system test belong to **lab-config:8wl.t.gad.2**, checklist row `qkb-delivery`. Installed scenario descriptions below define its referenced obligations, not a second deployment/run owned by this task. This source task must deliver its own implementation, automated package/integration verification and review; missing source behavior cannot be moved to the Lab test or marked done. Any reference below requiring whole installed Lab acceptance before source completion is superseded by this ownership split. Cross-repository acceptance records exact producer versions/source receipts, failures and retest evidence once in gad.2.
+
+The remaining qk0/xz9-dependent workflow/role adoption remains blocked source work. qkb.0 source completion does not supply that adoption. Atomic published vocabulary remains required; central installed acceptance checks the final deployment.
+
+
 ## Status reconciliation — 2026-10-05
 
-**Blocked on downstream protected delivery integration.** Both children have accepted bounded source checkpoints and coordinated published vocabulary. Whole delivery still requires qk0 role/charter adoption, xz9 protected service integration and installed executor/resolution/authorization evidence. Published gems do not close these requirements. Keep the parent and children blocked until the named dependent scope is available, then resume the specific remaining contract rather than reimplementing accepted source.
+**Blocked on downstream protected delivery integration.** Both children have accepted bounded source checkpoints and coordinated published vocabulary. Whole delivery still requires qk0 role/charter adoption, xz9 protected service integration and installed executor/resolution/authorization evidence. Published gems do not close these requirements. qkb.0 source is done after the Captain's ownership split. Keep this parent and qkb.1 blocked only on unfinished source adoption; installed checks are owned by gad.2. Resume the specific remaining source contract rather than reimplementing accepted source.
 
 
 # Run assignment delivery workflows through named forge providers

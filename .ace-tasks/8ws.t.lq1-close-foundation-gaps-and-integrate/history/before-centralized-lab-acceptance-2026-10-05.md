@@ -1,0 +1,461 @@
+---
+id: 8ws.t.lq1
+status: in-progress
+priority: high
+created_at: "2026-09-29 14:28:56"
+estimate: large
+dependencies: [8wr.t.uj0, 8wr.t.t8j, 8wq.t.k86.1, 8wq.t.k86.2, 8wr.t.qjx, 8wm.t.y23, 8wr.t.qk1.1, 8wr.t.qk1.2]
+tags: [lab-readiness, umbrella]
+title: Close foundation gaps and integrate the second ACE Lab wave
+needs_review: false
+bundle:
+  presets: [project]
+  files: [AGENTS.md, .ace-tasks/_archive/8x/v/8wr.t.uj0-bind-forgejo-provider-commands-to/8wr.t.uj0-bind-forgejo-provider-commands-to-the-selected.s.md, .ace-tasks/_archive/8x/v/8wr.t.t8j-enforce-prune-safety-workflow-contract/8wr.t.t8j-enforce-prune-safety-workflow-contract-in-overseer.s.md, .ace-tasks/8ws.t.lq1-close-foundation-gaps-and-integrate/evidence/release-proof-2026-09-29.md, .ace-tasks/8ws.t.lq1-close-foundation-gaps-and-integrate/evidence/install-observations.json, .ace-tasks/8ws.t.lq1-close-foundation-gaps-and-integrate/release-preparation-2026-10-05.md]
+  commands: []
+position: 6o000l
+---
+
+# Close foundation gaps and integrate the second ACE Lab wave
+
+## Purpose and tracking contract
+This is the ACE integration tracker replacing the planning role of the loose lab-wave-2-2026-09-29.md. The historical audit moved to .ace-local/lab-readiness/lab-wave-2-2026-09-29.md; it is temporary context, not a second backlog. The cross-repository master remains lab-config 8wl.t.gad.
+
+This task owns sequencing and acceptance receipts, not duplicate implementations. Existing tasks stay at their canonical IDs; new uncovered outcomes are actual children. Check a task checkbox only after its owning record is done and linked evidence establishes the listed result. Reopen this checklist item if receipt is invalidated; do not silently expand a historical done task. `bin/ace-task show 8ws.t.lq1 --content` displays the checklist; updates are explicit, not automatic synchronization.
+
+Current handoff: the Captain published all 16 prepared gems on 2026-10-05; registry versions and SHA-256 hashes match the prepared artifacts. TS-MONO-001 run 8x4m8d9 has exact-version PASS/SAFE for 49 packages, but full pipeline ERROR because the verifier provider returned server_overloaded before a verdict. Full installation acceptance remains open; see publication-verification-2026-10-05.md. Remaining local producer/consumer implementation and final Lab gates stay open as listed in release-preparation-2026-10-05.md. Earlier dated sections retain review history; they are not the current dispatch state. The tracker remains open until the full integration and Lab gates are met.
+
+## First wave — delivered scopes
+- [x] ACE 8wq.t.1w2 — hermetic test infrastructure, main PR344; tp0 consumer fixes also delivered, with later runner source loading fix 96c445b8a. This does not close new fixture defects.
+- [x] ACE 8wq.t.k86.0 — shared runtime contract, PR343; adapters remain separate below.
+- [x] ACE 8wr.t.qjl — durable attempts/execution evidence, PR346; not yet complete dependent services/recovery.
+- [x] ACE 8wq.t.1w4 — stable topology/identity, PR341; not domain privileged execution.
+- [x] ACE 8wr.t.qjy — live Pi wake, PR345; not recovery of dead processes or once-only business effects.
+- [x] ACE 8wr.t.qk1.0 — neutral worktree/provider foundation, PR347; not every consumer or full Forgejo delivery.
+- [x] ACE 8wj.t.ocz — installed workflow packaging/probe, PR342; actual prune enforcement belongs to t8j.
+
+Historical source audit: dbb9bde1e; current spec inspection: e45679c1e. Completed scope evidence lives with the original task records. Status/PR identity alone must not establish later broader guarantees.
+
+## Foundation closure — do this before resuming the feature wave
+- [x] ACE 8wr.t.uj0 — selected-repository Forgejo calls and authoritative cleanup evidence; accepted code + actual supported fj surface + tests + independent verdict.
+- [x] ACE 8wr.t.t8j — force-proof preservation/no-writer checks on actual prune paths; destructive boundary tests + independent verdict.
+- [x] ACE 8ws.t.lq1.0 — correctly classified long CLI execution; verified cause, no false timeout or replay of uncertain effects.
+- [x] ACE 8ws.t.lq1.1 — coherent published dependency graph and completed TS-MONO-001 verdict for exact intended versions.
+
+Foundation group accepted on 2026-10-02 by the Captain. Source receipts: uj0 f823c6572/f30f5bf7f/54ea07be4 plus task review/test records; t8j PR #352 (38c6515cb); lq1.0 PR #351 (1e5d6ac46); lq1.1 PR #353 (8bc108f21) with final installed acceptance 4ab68e8eb. uj0's current-Lab fj smoke proof was not present in its receipt: retain it explicitly as a required qkc endpoint row, not as a performed check.
+
+Release acceptance: [2026-10-01 final receipt](evidence/installation-acceptance-2026-10-01.md), [machine receipt](evidence/installation-acceptance.json) and [frozen manifest](evidence/installation-manifest.json) supersede the historical partial September proof. TS-MONO-001 run 8x0f3w4: PASS 4/4, SAFE, 20 exact manifest package versions, zero findings, both install modes and consumer dependency edges verified. This is the frozen tested graph, not proof that every later release or Lab installation is current. No installation rerun was performed in this status update.
+
+## Second feature wave — existing task owners, no duplicate scopes
+- [x] ACE 8wq.t.k86.1 — tmux adapter satisfies runtime contract.
+- [x] ACE 8wq.t.k86.2 — Herdr adapter satisfies runtime contract.
+- [x] ACE 8wr.t.qjx — scoped service request/receipt seam consumes qjl/1w4.
+- [x] ACE 8wm.t.y23 — durable inbox once-or-uncertain semantics consume qjl.
+- [x] ACE 8wr.t.qk1.1 — review consumers use named providers.
+- [x] ACE 8wr.t.qk1.2 — task issue consumers use named providers.
+
+All six are done with code in main. Their historical receipts remain with their owners; [the reconciliation record](evidence/program-reconciliation-2026-10-04.md) links revisions and limits. This is not proof of one frozen installed Lab. k86.3, service deployment and HITL/recovery still need integration.
+
+## Repair lane — tracked separately, not hidden blockers
+- [x] ACE 8ws.t.ibk — fixture-owned evidence, attribution/sentinel/stale-state proof and independent delivery receipt verified; closed and archived after source reconciliation.
+- [ ] ACE 8ws.t.ibl — GC fixture repair delivered in 7c043ebd2; remaining bulk persistence/mixed-input proof stays here.
+- [ ] ACE 8ws.t.lq8 — bounded observation repair delivered in a656b47de; controlled contention and independent criterion closure still required.
+- [x] ACE 8wr.t.v3k — duplicate of delivered tp0/e7986bff4, reconciled as skipped; current fixture explicitly disables remote comments.
+
+These items do not globally block unrelated coding. This tracker can finish only when each required receipt is accepted or its owning task has an explicitly reviewed disposition; an unresolved red test is never hidden as green.
+
+## Later gates — references, not additional acceptance scope here
+k86.1 + .2 precede k86.3; full k86 plus qjl/y23 precedes 1w5. qjx precedes 34i then y24; 34i/y23/y24/qjy precede vs2. qk1 completion precedes qkb.0; qkb.1 waits qk0/qjx/qjz. 8x2.t.z78 owns required Forgejo fork/draft/ready/atomic expected-head capabilities before qkb.0 acceptance; uj0 does not supply them. Existing refusals remain visible. qkc/vs3 remain later, with vs3 also requiring lab-config gad.b executors and actual release authority.
+
+lab-config 8wl.t.gad owns installed topology/services/Pi/roles and artifact manifest (gad.b/.8/.9/.5/.a, nfe), installed acceptance with legacy disabled (gad.2), removal/retest (gad.3), cold start (gad.4). No new Lab deployment task is duplicated here.
+
+## Acceptance / verification
+- [ ] All foundation and feature checklist task receipts are accepted; repair lane has explicit reviewed disposition.
+- [ ] Producer/consumer integration has been verified on the combined source; per-branch reports alone do not close this gate.
+- [ ] Each released/installed claim cites exact evidence and version; public registry availability, resolved graph, E2E verdict and Lab deployment remain distinct.
+- [ ] `bin/ace-task show/list/doctor` resolve owners/dependencies; no new cycles/dangling IDs. Historical doctor errors are reported separately.
+
+One large tracking/acceptance task with two new outcome children and references to existing owners. No product CLI/API change in this tracker, so no ux/usage.md is needed here. Specification review of this reconciliation is recorded with the task. The umbrella remains in-progress until the six feature outcomes, integration receipts and repair dispositions are complete; two done children alone cannot close it. Task checklists are the durable planning surface; local audit logs remain temporary.
+
+## Historical status reconciliation — 2026-10-02 (superseded scheduling)
+- Corrected uj0 and archived t8j metadata from in-progress to done using ace-task update, following Captain closure and stored delivery evidence.
+- lq1.0/.1 were already done, but their split archived directories were invisible to ace-task show. Reunited those existing records and evidence with this active parent; no duplicate tasks or history removal.
+- Restored this tracker bundle's t8j path.
+- Repair lane needs evidence reconciliation before dispatching duplicate fixes: main already contains docs fixture fix 7c043ebd2 and cleanup test fix a656b47de. ibl/lq8 remain open until their acceptance is mapped to those deliveries; this update does not claim fresh test runs or close them.
+- Next integration order: k86.2 before y23 (shared Herdr changes), qk1.1 before qk1.2 where provider edits overlap; k86.1 and qjx independently. ibk fixture isolation remains a verification concern for qjx/y23, not a reason to stop writing all six scopes.
+
+## Earlier wave plan — 2026-10-04 (superseded by the post-delivery checklist below)
+
+- [ ] Runtime: hym repair and k86.3 consumer development can proceed in parallel; merge/accept hym first, then k86.3 → k86 → 1w5.
+- [ ] HITL: 34i → y24 → vs2 → qjz; vs2/recovery consume y23 signed proof, not generic settled/dead.
+- [ ] Provider: z78 → qkb.0; qkb.0/.1 ship atomically after qk0/qjx/qjz prerequisites.
+- [ ] Domain (lab-config): gad.8, gad.9 and first executable gad.b service may proceed against delivered qjx/1w4/y23; expand by available ACE contracts.
+- [ ] Reliability: ibk implementation; ibl and lq8 only remaining explicit verification above. These do not globally block unrelated coding.
+- [x] R1 8x0.t.ig2 — durable campaign/evidence foundation, delivered; no claim of R2/R3 limits.
+- [ ] R2 8x0.t.ig3 — after qkb and R1; one stage owner, effective policy and session binding.
+- [ ] R3 8x0.t.ig4 — after R2; bounded rounds/retries and explicit escalation.
+- [ ] qkc and lab-config:gad.2 require R3 plus exact installed manifest, real users/runtime restart/uncertain effects and independent acceptance with legacy disabled. Then gad.3 removal → gad.4 cold start. ig5 is experimental and not a gate.
+
+There is no single current blocker of every lane. The final join is qk0 → completed qkb → R2 → R3 → qkc/gad.2. Authorization by sixteen-hour silence applies only to a precisely presented and delivered qjz proposal; it never replaces receipt, scope, test, reviewer or OTP requirements. vs3 additionally needs the installed publication executor and specific release authorization.
+
+## Next series — post-delivery code review, 2026-10-04
+
+The authoritative review/evidence map is [wave-3-review-2026-10-04.md](wave-3-review-2026-10-04.md). Independent code review found gaps not exercised by the green default suite. Historical done scopes stay intact; new repairs have real task IDs.
+
+- [x] hym: pointer-only provenance and public materialization error translation landed.
+- [x] 34i: scoped authenticated HITL IPC source landed; installed multi-UID proof still required by domain acceptance. vft/vfv own newly identified defects.
+- [x] z78: API-based fork/draft/ready/atomic merge landed, with retained disposable Forgejo 8.0.3 evidence. vfw owns create provenance/uncertainty repair; live response-loss gap remains explicit.
+- [x] ibk: accepted fixture-isolation source/receipts reconciled, status done and archived.
+- [x] k86.3: finish acyclic adapter installation, retained writable pane proof and actual live Herdr scenarios. k86 is done; 1w5 is now dependency-ready.
+- [x] ACE 8x3.t.vft: preserve the original HITL listener on rejected/failed startup; first independent repair lane.
+- [x] ACE 8x3.t.vfv: enforce the challenge expiry at actual OTP handoff; independent repair lane in the same package (coordinate integration with vft).
+- [x] ACE 8x3.t.vfw: prove full Forgejo create provenance and retain uncertainty after accepted mutation; independent provider lane.
+- [ ] lab-config:gad.8: prepare/install topology and trusted boundary; listener acceptance waits vft and real-user proof. Domain signer/authorization is not supplied by code existence.
+- [ ] lab-config:gad.9: installed Pi wake extension proof; independent of the new HITL/Forgejo repairs.
+- [ ] lab-config:gad.b: begin its existing setup-project service slice; integrate after gad.8 identity/grants, expand by available contracts. OTP/publisher acceptance waits vfv and exact release authority.
+- [ ] y24: optional development alongside vft/vfv; accept only after both repairs. qkb.0: optional development alongside vfw; accept only after vfw and ship atomically with qkb.1.
+- [ ] l2d.3/.4/.5: reconcile already-delivered consumer evidence; no duplicate implementation. ibl/lq8 remaining verification and 3zi/4gy hygiene remain separate, not global Lab blockers.
+
+Recommended initial dispatch is the three repairs plus k86.3 closure and the three domain scopes above. Parallel development is not permission for parallel mutation of one primary checkout: use isolated worktrees, one owner per changed file, and serially merge shared HITL/installer/assign changes. Integrate vft/vfv before y24; vfw before qkb.0 acceptance; k86.3 before 1w5. qkb.0/.1 keep one installed vocabulary. Later join is 1w5 + vs2/qjz → qk0 → completed qkb → R2 → R3 → qkc/gad.2. ig5 remains optional.
+
+## Next implementation wave — after publication, 2026-10-04
+
+All ten prepared gems were published by the Captain and confirmed present by the publisher dry-run. Release versions and executed source/installed tests are recorded in [release preparation](release-preparation-2026-10-04.md). TS-MONO-001 for this release is still running; publication alone is not installed-Lab acceptance.
+
+- [ ] ACE 8wq.t.1w5 — implement attributable recovery with existing signed receipt semantics. All recorded prerequisites are done.
+- [ ] ACE 8wm.t.y24 — implement correlated Hermes/Telegram delivery; vft/vfv are done.
+- [ ] ACE 8wr.t.qkb.0 — implement forge-neutral assignment delivery; vfw is done. Coordinate shared ace-assign changes with 1w5; merge recovery first where overlap exists, then rebase and verify delivery. Keep new installed workflow vocabulary atomic with qkb.1; no standalone mixed-vocabulary publication.
+- [ ] lab-config:gad.8/gad.b — continue protected topology/grants/storage and same-UID setup-project acceptance. Retain existing signing keys and refuse rotation; no new rotation API is required for this slice. Bind a trusted attempt credential lease through the sanitized handler environment, then test the public CLI against disposable/authenticated Forgejo. Local-remote fixtures do not establish this result.
+- [ ] lab-config:gad.9 — execute remaining installed Linux/Incus and real Pi acceptance where the Lab environment is available. Source/SDK verification does not close this gate.
+
+Specification-first gaps, not ready implementation dispatch: define the cross-user receiving executor ownership and evidence-sink authority (qjx provides the Unix client, not a reusable receiver); define native consumption observation provenance before automatic signed settlement. These remain explicit gad.8/gad.b integration obligations until fresh ACE mechanism tasks are reviewed. Do not reopen completed qjx/y23 or infer consumption from disappearance/time.
+
+Next join: y24 → vs2 → qjz; together with 1w5 → qk0 → qkb.1 and atomic qkb delivery → R2 (ig3) → R3 (ig4) → qkc/gad.2. Pilot ig5 is not a gate. No single task blocks all parallel source work.
+
+## Wave 4 dispatch and explicit remaining mechanisms — 2026-10-04
+
+- [ ] 1w5: dispatched to gpt-6.1-sol on codex/wave4-recovery.
+- [ ] y24: dispatched to gpt-6.1-sol on codex/wave4-hermes.
+- [ ] qkb.0: dispatched to gpt-6.1-sol after postpublication verification, on its own new delivery worktree. Recovery integrates before overlapping delivery changes.
+- [ ] ACE 8x3.t.xz9: real draft for authenticated cross-user service receiving and protected receipt authority. Complete technical readiness review before implementation; gad.8/.b install and consume it.
+- [ ] ACE 8x3.t.xza: real draft for native consumption/non-consumption observation provenance. Complete provider evidence review before implementation; gad.b signs and reconciles, gad.8 protects keys.
+
+These two drafts replace hidden mechanism work in the domain blocker notes. They do not reopen completed qjx/y23. Current blockers/questions are written in their specs and usage scenarios.
+
+Postpublication TS-MONO-001 run 8x3xqd0: normal and full-index installation exit 0, 49/49 exact versions (all ten wave gems), six consumer installs exit 0; classifier SAFE. Final acceptance FAIL and wrapper PARTIAL 3/4: stale consumer requirement predicate insists on ~>0.2 for consumers whose reviewed source/published requirements are ~>0.3/~>0.4. Preserve this failed acceptance; repair source-aware expected edges and rerun before claiming the final proof green.
+
+Integration checkpoint: y1q source edge fix dd97ee1ef reviewed independently (APPROVE,83focused+5adversarial tests) and merged to main b87c763e8. Author executed full packages62+652tests. Canonical installation replay remains open; original PARTIAL preserved. Native runtime inspection generated Codex0.159.3 protocol schema and recorded potential clientUserMessageId→thread userMessage.clientId correlation under xza; actual native validation still required.
+
+## Installation proof and implementation checkpoint — 2026-10-05
+
+- [x] ACE 8x3.t.y1q: canonical TS-MONO-001 replay `8x3ydnj` passed all four cases; the host finalizer passed with no findings. Normal/full-index installs, all 49 exact manifest versions and six frozen consumer dependency edges passed. [Retained evidence](../_archive/8x/v/8x3.t.y1q-verify-current-consumer-provider-edges/evidence/installation-acceptance-2026-10-05.md). The original PARTIAL remains preserved. This closes installation propagation for the published wave, not installed Lab acceptance.
+- [ ] y24: candidate `1d016f20d` rejected by independent review. Three reproduced defects: lost retention falsely restores old coverage, transient polling failure permanently prevents new healthy coverage, and interrupted OTP ingress wedges replay. Author is repairing all three before fresh independent review and integration.
+- [ ] 1w5 and qkb.0: implementation continues in separate GPT-6.1 Sol worktrees. Managed process ownership and service-backed merge authority must be tested end to end; recovery integrates before overlapping assignment delivery changes.
+
+The downstream join and real-user/native Lab acceptance gates above remain open.
+
+Hermes source checkpoint: independent review APPROVE for `a5429f416`, all previous P1 reproductions and additional restart/epoch tests pass. Merged to main `08c64b6a5`; y24 retains actual Telegram/Lab gates. `vs2` source implementation dispatched to GPT-6.1 Sol in a new isolated worktree from this integration, consuming the existing dependency-leaf contract and pending recovery public inbox API.
+
+Recovery review checkpoint: clean candidate `ded081ca6` submitted to independent GPT-6.1 Sol review. Full affected suites and fast monorepo suite passed before final attribution hardening; final runtime and focused signed recovery checks passed afterward. Review explicitly checks precise OS birth, native owner binding and journal-attributed live/archive inbox records. No integration or installed Lab acceptance is claimed yet. `vs2` is now in-progress against integrated Hermes source.
+
+Recovery source integrated to main `3dda44055` after independent APPROVE for `dab0dbeea`, full assignment suite 803/3120 (two existing skips), and post-merge signed recovery 11/135. `1w5` stays in-progress until its actual installed Herdr/Pi and domain acceptance gates pass. `vs2` consumes this source; delivery is being rebased in a separate integration worktree while its immutable original candidate receives independent review.
+
+
+## Current execution checkpoint — 2026-10-05, supersedes earlier dispatch state
+
+This checkpoint records source integration separately from each task's remaining acceptance. Unchecked task items remain open intentionally; source commits do not close installed gates.
+
+- [ ] ACE 8wq.t.1w5: accepted recovery source integrated `3dda44055`; actual installed multi-user/native recovery remains open.
+- [ ] ACE 8wm.t.y24: accepted Hermes source integrated `08c64b6a5`, installed default-gem fixture repair `673eb0f08`; actual Telegram/Lab gates remain open.
+- [ ] ACE 8wr.t.qkb.0: corrected provider delivery source integrated `855092590`, independent review/evidence `d1a36427d`. Final Assign 829/3469 and independent delivery 18/323 passed; qkb.0/.1 retain atomic installed vocabulary and publication gate. No gem publication of this source occurred.
+- [ ] ACE 8wm.t.vs2: candidate `5afccf58` rejected. Repair lane owns native incarnation replacement race, transient transport failure killing polling, implicit superseded retry, and direct managed-payload secret filtering. Independent regression receipts HITL `8x40wo` and Hermes `8x40wp` prove the failures; repaired source requires fresh independent review.
+- [ ] ACE 8x4.t.09j: real prerequisite now owns the authenticated native launch/gate, ahead of xz9.0. Draft contract and native primitive evidence integrated `bb7af23f1`; independent readiness review pending. Isolated kernel-peer/gate/termination proof is not protected Lab acceptance. Required Linux process-injection policy is not yet installed or accepted.
+- [ ] ACE 8x3.t.xz9.0: primitive source `793a21c2` rejected for failed-write leakage into a later transaction and incoherent reserved-attempt recovery. Separate repair lane; accepted canonical journal must not free uncertain ownership from absent process-start evidence. Full authority/service integration remains necessary after 09j.
+- [ ] ACE 8x3.t.xza: Codex private-endpoint correlation evidence retained; native production observation, Pi provenance and positive cancellation/death outcomes remain explicit owner tasks. No disappearance/time-based settlement.
+- [ ] lab-config:gad.8/.b/.9: existing source retained at `5ded430`; no duplicate setup-project or Pi installer implementation. Complete protected deployment and actual Linux/Incus acceptance after owning ACE producers. Remote receiver authentication is still pending; isolated Docker proofs do not replace it.
+
+Parallel source lanes are vs2 repair, journal repair, and independent 09j readiness review. Next admitted source slices are 09j/protected authority and vs2 → qjz; then recovery/HITL joins qk0 → qkb.1 → R2 → R3 → qkc/gad.2. Keep serial integration at shared Assign/HITL files. Final release preparation waits complete source integration; Captain publishes interactively with OTP, then the exact new graph and real Lab are verified.
+
+### Reviewed HITL source integrated — 2026-10-05
+
+- `vs2` source merged as `0d9590097` after exact `66c91a82d` independent
+  APPROVE; full affected package tests and isolated consumer installation pass.
+  Post-merge Assign runtime binding 4/32 and HITL delivery/pending 12/95 pass.
+  Source no longer relies on labd. Installed Telegram/native/signer and Lab
+  acceptance remain open; `vs2` stays in progress.
+- Next source slice: `qjz`, immutable proposals and 16-hour resolution, consuming
+  accepted HITL/ingress contracts and the sole ace-assign effect journal.
+- `xz9` amended ownership reviewed and promoted at `f7259ab1c`; it consumes
+  `09j` protected launch. `09j` implementation remains active.
+- Journal primitive `e484a8a` was rejected despite a green full package run:
+  reserved finish bypass and Git-filter artifact conversion need correction.
+  Repaired `b458644c0` is under independent review/full verification. No claim
+  of protected endcap delivery follows from the primitive alone.
+
+### Journal integration and next parallel slices — 2026-10-05
+
+The corrected journal primitive is integrated as `749bda001`, independently
+approved at `b458644c0`, with full Assign 845 total / 3661 assertions, two existing
+skips and no failures/errors (`8x4201`). Combined post-merge coordinator, journal
+and HITL runtime binding passed 66/418 (`8x421p`). Four previously verified review
+findings are resolved; primitive delivery does not complete protected services.
+
+Active GPT-6.1 Sol source lanes, each on its own worktree:
+- `09j`: native protected launch and exact fresh/replay creation authority.
+- `xz9.0`: consume that origin in candidate/review/service/finish/inbox endcap.
+- `qjz`: immutable delivered proposals, 16-hour decision and atomic effect claim.
+
+Source joins remain qk0 → complete qkb → R2 → R3 → qkc/gad.2. Native observation
+xza and actual domain installation remain required. Final release preparation
+waits complete source integration, followed by interactive OTP and installed Lab
+acceptance; no source test result closes those gates.
+
+### Test verdict integrity follow-up — 2026-10-05
+
+- [x] ACE `8x4.t.2jj`: reject incomplete test executions in aggregate verdicts. New draft owns the false-green sequential-target result observed in qjz receipt `8x42fq`: passed fast counts were retained but the later 300s timeout did not make summary success false. Review, implement and independently verify before trusting aggregate delivery checks. This is separate from product timing/performance and does not supersede existing test isolation work.
+
+09j preflight review also reproduced and resolved terminal-scope ownership after positive abort; durable evidence is in `../8x4.t.09j-launch-a-gated-worker-through/source-preflight-review-2026-10-05.md`. That focused result does not close 09j or authorize installed Lab acceptance.
+
+### Current integration checkpoint — 2026-10-05
+
+- [x] `8x4.t.2jj`: source merged `069af128d`; independent review accepted `de2f41903` after two reporting corrections. Author/root/reviewer full package evidence converges at 258 tests/987 assertions; root post-merge `8x43gf` passed. Incomplete execution can no longer produce a green aggregate.
+- [ ] `qjz`: first independent source review rejected `a2cdb5804` with four reproduced findings (veto ordering, transport UID delegation, watch resilience, creation recovery); isolated repairs in progress. Full baseline Assign 849/3693 with two skips does not override this rejection.
+- [ ] `09j`: source candidate `f2a6affd` in independent review; protected endpoint shutdown ownership repair independently verified. Linux Yama0 refusal is negative policy evidence, not installed Lab acceptance.
+- [ ] `xz9.0`: composed authority/endcap implementation continues against explicit developing dependency snapshots, with final acceptance deferred until all dependency repairs converge.
+
+After corrected qjz source joins recovery/HITL, proceed to qk0, then full qkb, R2, R3, qkc/gad.2. Final integrated source release still requires Captain interactive OTP and subsequent exact installed-graph/real-Lab verification.
+
+### Current convergence and steering gap — 2026-10-05
+
+- [ ] `qjz`: repaired d20cd8 source and normative specification independently
+  approved with zero findings; full Assign849/3693 passed and source merged
+  as3d2ffcdd4, post-merge HITL23/161 and Overseer7/20 passed. Installed SC3
+  controlled sixteen-hour restart/one-receipt proof is still missing and owned
+  by qjz, so source acceptance will not alone close the task.
+- [ ] `09j`: full frozen5549 Assign passed884/3927 with two existing skips;
+  independent source review still rejects missing pidfd preflight/reservation
+  ordering and exited-child status. Fixed-container specification and actual
+  native API-shape reproduction passed; positive Yama2 installed gate remains.
+- [ ] `xz9.2`: new real draft owns protected prompt/stop required by qk0.
+  Existing exact child exit does not prove absence of all descendant writers.
+  Native submission/termination proof must pass readiness before implementation.
+  qk0 and the amended xz9 parent return to draft/needs_review; already-reviewed
+  service/launch source work continues. Dependency:09j + xz9.0 → xz9.2 → qk0,
+  with no reverse edge to qk0 or qkb.
+
+
+## Current execution checklist — 2026-10-05, after qjz source integration
+
+- [x] `qjz` source/spec d20cd8 independently accepted; merged `3d2ffcdd4`, integrated source evidence `4f869451f`. Task remains open for installed SC3.
+- [x] `8x4.t.5qv`: local Assign identity now derives from the actual kernel process account. Independent source review approved b73a64b404; combined full Assign 894 tests/3978 assertions (two skips) and HITL 230/1337 (one skip) passed. Integrated `19e6887f8`, root post-merge real Unix peer/ownership test 1/7 passed `8x46uo`; task done and archived. Earlier installed SC3 failure `8x45o5` remains a failure; the rebuilt installed scenario is a separate gate.
+- [x] `8x4.t.6yk`: paired native reference contract integrated `26cc8f982` after independent review and canonical JSON-file repair. Full package gates and combined focused checks passed; root post-merge Ref/ManagedEnvelope 21/128 passed `8x47xp`. Genuine `$N`/`%N` addresses preserve native identity; installed qjz SC3 remains separate.
+- [x] `qjz` SC3: controlled installed scenario passed author `8x4820` and independent `8x486t`, each 1/18,552; 38 behavior checks, one actual effect and canonical receipt, real process restarts, simulated 16h policy clock. Independent APPROVE; integrated `cceee96d2`. SC1–5 accepted and task closed; live Telegram/multiUID/final Lab remain separate. Prior failed runs remain failed.
+- [ ] `09j`: latest source repairs independently approved; combined Assign total888/3961 with two existing skips passed `8x45dm`. Author and root independent clean hardware-accelerated Linux/Yama2 launch and failure cases passed; Runtime175/485 and Herdr463/1521 all gates passed. Source merged `0d1090b83`, post-merge2/14 passed. Task remains open for the explicit remaining native restart/crash-window matrix, independently from actual Lab acceptance.
+- [ ] `xz9.0`: narrow service CAS replay repair `c5c7f5d9b` independently accepted after two reproduced findings; 14/157 regressions pass. Read-only authorization delta 4674d821a..946921433 independently approved with 30/229 targeted checks. Status-generation delta 37a7b91af rejected for bypassing current executor project visibility; repair must preserve separate late outcome completion without widening status access. Complete receiver/composition, mapping review, combined dependency integration and installed cross-user proof remain open.
+- [x] `xz9.0` receiver mapping source checkpoint: independently approved ACL/traversal repair integrated `050be8b9f`; full combined Assign 905 tests/4032 assertions (two skips), post-merge 15/71 passed. This is not installed receiver acceptance.
+- [x] `xz9.0` status/completion and retained-worker ownership source repair: frozen `ef76e05a9`, independently approved 34/386. Integrated with reviewed service orchestration in main `f91b02889`. This closes the source checkpoint only; full composition and installed acceptance remain open.
+- [ ] `xz9.2`: protected prompt/stop remains draft pending complete scope/writer proof and native contract readiness. It precedes qk0; no child-exit or empty-subtree shortcut is accepted.
+- [ ] After protected runtime/service/steering and HITL gates: qk0 → complete atomic qkb → R2 ig3 → R3 ig4 → qkc/gad.2, followed by legacy removal and cold-start acceptance in lab-config.
+
+Domain installation gad.8/.b/.9 and actual Lab remain separate required work. Pilot ig5 is optional. Final gem publication still belongs to the Captain's interactive OTP step after source integration; prior published-gem proof does not cover this new source closure.
+
+Further 09j launcher probes were interrupted by automatic review; the exact
+trigger was not identified. The prepared additional probes and independent
+expanded guest rerun remain unexecuted and must not be retried through another
+agent. See 09j `execution-limitation-2026-10-05.md`; unaffected source work and
+ordinary tests continue.
+
+Supporting tool defects `8x4.t.412` (review session isolation) and `8x4.t.5h5` (active Git operation preservation) remain drafts with explicit current procedures; they do not block unrelated implementation. Use unique review directories and native Git continuation for active merges.
+
+## Latest integrated checkpoint — 2026-10-05
+
+- [x] Service Endcap, canonical evidence transfer, policy composition and receiver source integrated `f91b02889`; independent combined APPROVE plus final receiver repair APPROVE. Full Assign 960/4474 (two skips), Lab 199/697 (one skip), combined default suite 11201 passed / 24 skipped / zero failures. Main tree equals reviewed candidate a0bbeb2ee.
+- [x] `8x4.t.8n0`: ordinary Herdr readiness fixture repaired, independently reviewed and integrated. Full Herdr 472/1610 and final exact test 10/57 passed. No product timeout changes; earlier failed suite remains retained.
+- [ ] `xz9.0` remains draft/needs_review for the closed result/evidence/finish contract amendment. Accepted source does not enable partial full-service startup. Next: independently review that amendment, then implement against the existing canonical owners. Recovery/inbox/public receiver composition and installed multi-user acceptance remain required.
+- [ ] `09j` remains open for its remaining native matrix; source integration is not whole-task acceptance. The recorded automatic-review limitation still applies.
+
+Historical unchecked sections above retain prior review states; this latest checklist and task metadata describe current progress. No gems were published in this checkpoint.
+
+
+## Open program proof owners — result contract correction
+
+- [ ] 8x4.t.9c2: select and independently verify the exact protected execution
+  scope no-writer capability, including accessible native/external spawners and
+  restart identity. It depends on 09j; xz9.0 finish and xz9.2 stop consume it.
+  This draft is real upstream work, not proof already supplied by 09j. Positive
+  finish/stopped remains incomplete while its mechanism is unresolved.
+- [ ] 8x0.t.ig3 (R2): close protected CampaignManager authority integration using
+  xz9.0 canonical provenance before R2/R3/final qkc policy acceptance. Material
+  amendment reopens ig3 to draft / needs_review, preserving historical reviews.
+- [ ] Re-review the corrected result/evidence/finish amendment after rejected
+  candidate 340b; xz9.0 remains draft / needs_review. Full-service composition
+  guard, outstanding 09j installed crash/restart matrix and native filter
+  limitation remain intact; no deployment/protected probe is claimed here.
+
+- [ ] xz9.3: independent canonical submit_result/evidence_fetch source/public
+  consumer slice, extracted from xz9.0, depends 09j/accepted source only. Draft
+  awaits review before implementation; xz9.0 consumes it for terminal integration.
+
+### Result slice readiness decision
+
+- [x] `xz9.3` behavioral specification independently APPROVED; scheduler dependency corrected to the actual accepted source prerequisite. Promoted pending/needs_review false; next executable source slice is result submission, authorized discovery and artifact fetch.
+- [ ] `xz9.3` implementation and source acceptance.
+- [ ] `9c2` scope-owner mechanism/proof remains draft; xz9.0 finish and xz9.2 stop consume it.
+- [ ] `ig3` protected campaign authority contract requires its own readiness review; mandatory R2/R3 acceptance remains.
+
+### R2 protected contract readiness
+
+- [x] `ig3`: independent readiness APPROVE62a24a0c closes managed child receipt admission, separate actor/model provenance and CampaignStore-before-journal locking; pending/needs_review false.
+- [ ] `ig3` implementation remains dependency-blocked on completed campaign-free xz9.0 and qkb; full R2/R3 is still required before final qkc/gad.2.
+
+### Canonical result source integration — 2026-10-05
+
+- [x] `xz9.3`: independently APPROVED source e4e4e135 integrated 9b2046c18699943c9b416b03eaee7dd75d7b7cb8; full Assign 972 passed/two skipped, independent17/224 passed; defaultfast targets 11202 passed/24 skipped with --timeout300. The unchanged120-second invocation timed out Assign; passing package duration137.22s. Evidence retained in child.
+- [x] `9c2`: endpoint-generation/ACL technical proposal independently reviewed and integrated6ec9ff8b5. This is draft specification progress only.
+- [ ] `9c2`: finish usable protected-resource/writer boundary and remaining readiness questions, then independent whole-task review and permitted implementation/installed proof.
+- [ ] Complete `xz9.0` finish/recovery/inbox and full composition after its actual dependencies; `09j` remaining native matrix and execution limitation remain open.
+- [ ] `qk0` → atomic complete `qkb` → `ig3`/R2 → `ig4`/R3 → `qkc` and installed Lab gates remain required.
+
+No gems published or actual Lab deployment performed in this checkpoint.
+
+- [ ] `8x4.t.bt0`: restore exact suite invocation attribution; verified mutable-latest race during lq8 misreported full package counts using a concurrent focused report. Separate runner task; exact unique lq8 receipts remain evidence, no false aggregate acceptance.
+
+- [x] `lq8`: controlled owned-child lifecycle evidence and independent c2f43APPROVE integrated 9786027ec1f91d36df9733ac7e4648500ef3ce3c; full401/1053, independent25/86 passed. Rootverified48savedreporthashes in51-entrysuite,11203passes24skips; threezero-selectedentries retainno-report limitation. Historicalorphan scheduler cause remainsqualified. `bt0` owns mutablelatest reporting defect, not a hidden reopening oflq8.
+
+- [x] `9c2` whole specification independently APPROVED at1122ddf7 after closing settlement-only recovery and final authorization seal checks; promoted pending/needs_review false.
+- [ ] `9c2` implementation/installed acceptance remains dependent on unfinished09j; promotion is not a bypass of its native proof or recorded execution limitation.
+
+## IBL closure — 2026-10-05
+
+- [x] 8ws.t.ibl: persisted bulk-update values and mixed-path counts verified; independent source APPROVE, targeted 16/60, docs all 214/584 and default fast suite with explicit timeout 300 passed. Durable evidence remains with archived IBL. Old runner duplicate-report attribution limitation is explicitly retained; bt0 is still in progress and will reverify the combined tree.
+
+## Exact suite evidence delivered — 2026-10-05
+
+- [x] 8x4.t.bt0: exact invocation-bound completion/results integrated after independent APPROVE. Whole combined suite passed with explicit --timeout 300 (11205 passed, 24 skipped, 34232 assertions); root reconciled all 51 distinct entry receipts, including duplicate Lab entries. Controlled later focused test did not replace captured results. Historical lq8/IBL attribution limitations remain documented, not rewritten.
+- [ ] Continue 09j installed acceptance, then 9c2 and full xz9; unresolved native proof/access limitations remain. This source checkpoint does not complete the new Lab or authorize publication of mixed qkb workflows.
+
+## Protected consumer readiness — 2026-10-05
+
+- [x] xz9.0 remaining finish/recover/inbox contract independently APPROVED at baa96cbe51; existing attempt-local CAS, canonical receipt/signature provenance and 9c2 cleanup/release ownership preserved. Specification pending; unfinished 09j/9c2 still gate implementation.
+- [ ] xz9.2 remains draft: select exact native prompt method/acknowledgement/error contract and bounded payload framing, then independent review. Current launch/terminate operations do not supply that proof.
+
+## Current delivery sequence — local source, publication, Lab (2026-10-05)
+
+The Captain's local-first instruction supersedes earlier scheduling prose that
+requires unfinished installed acceptance before downstream source implementation.
+Declared dependencies remain whole-task acceptance dependencies; they are not
+removed, marked done or bypassed by a scheduler status change. A source checkpoint
+allows the next source scope only after its required producer contracts are
+integrated at an exact revision, relevant `bin/ace-test` package suites and
+`bin/ace-test-suite` have executed successfully on the combined source, and an
+independent reviewer has approved that exact candidate. Record revision, commands,
+invocation-bound receipts and verdict in the existing task. Any subsequent
+producer change requires affected consumer verification and fresh review.
+Installed criteria remain open and their owning task cannot close until all of
+its criteria pass. Unsupported or unproved protected execution continues to
+refuse; no same-UID/mock fixture substitutes for real native/multi-UID evidence.
+This sequencing decision authorizes no Lab SSH, protected probe, VM experiment,
+filter retry, native permission bypass or deployment.
+
+The existing tasks remain the only implementation and acceptance owners. Earlier
+“continue 09j installed acceptance, then 9c2” and “unfinished installed criteria
+gate implementation” dispatch statements are superseded by this phase decision.
+
+- [ ] Local producer: 9c2 implementation against integrated reviewed 09j source;
+  execute affected package suites and default fast suite, independently review,
+  integrate and retain the exact source checkpoint. 09j installed matrix stays open.
+- [ ] Local service consumers: xz9.0 finish/recovery/inbox/full composition after
+  the 9c2 source checkpoint and accepted xz9.3; then xz9.1 resilience. Preserve
+  composition refusal and no-writer/service settlement/inbox terminal checks.
+- [ ] Local steering: resolve xz9.2 terminal-versus-PID guarantee, independently
+  review its complete specification, then implement and accept source. This
+  unanswered decision is not waived by local-first ordering.
+- [ ] Local downstream: qk0 consumes accepted protected steering/service source;
+  complete qkb.0 and qkb.1 adoption together, then ig3/R2 and ig4/R3 against
+  integrated reviewed producer checkpoints. Each existing owner keeps its full
+  behavioral criteria and later installed acceptance; no duplicate umbrella work.
+- [ ] Release gate: combined producer/consumer source tests executed and exact
+  candidate independently approved; coherent versions/dependency graph, package
+  contents and canonical workflow projection prepared and checked locally.
+  qkb.0/.1 vocabulary and consumer removal ship atomically. No mixed vocabulary
+  publication. Publish gems through the existing release workflow with Captain
+  OTP only after local integration; retain exact public versions/manifest.
+- [ ] After publication: execute installed graph/consumer resolution acceptance
+  for the frozen versions, then remaining generic 09j matrix, 9c2 native/resource
+  proof, xz9.0/.1/.2 distinct-account scenarios and qkb.1 SC7. Publication alone
+  completes none of these task criteria.
+- [ ] Later Lab: lab-config 8wl.t.gad.8/.9/.b/.5/.a install topology/services/
+  runtime/roles and frozen artifacts; ACE qkc and lab-config gad.2 execute final
+  real-user, native restart, uncertain-effect and R2/R3 acceptance with legacy
+  disabled. gad.3 removal/retest precedes gad.4 cold start; vs3 still requires
+  its installed publisher and exact release authority. Existing task receipts
+  must establish every result before this tracker closes.
+
+This amendment changes sequencing only. No task status, dependency, acceptance
+checkbox, product behavior or completed evidence is changed; no tests or probes
+are claimed as newly executed by this specification edit.
+
+## Local 9c2 runtime checkpoint — 2026-10-05
+
+- [x] Runtime observation/fixedmanager primitives23bf5ed50 integrated after independentAPPROVE and runtimeall189/575; combinedsource27887208b suite51entries11219passed24skipped34322assertions explicit300. OriginalMainPID-slice fixture gap and corrective review retained in9c2 task.
+- [ ] 9c2 canonical generations, actualmanifest/readiness, scopeclosure/reuse and sealedservice settlement implementation continue; no whole-task or installed proof is claimed by the primitive checkpoint.
+
+## Local lineage and inbox checkpoints — 2026-10-05
+
+- [x] 9c2 immutable parent/native/child reader integrated after independent review;
+  canonical reservation generation and original launch ticket verified.
+- [x] xz9.0 bounded signed-proof framing, fixed context validation and protected
+  inbox factory integrated after independent reviews. No global endpoint fallback.
+- [x] Combined source verification: Assign all 987 passed / 2 skipped; Herdr all
+  476 passed; exact revision 37c486928 default fast suite with explicit 300-second
+  limit: 11234 passed / 24 skipped, zero failures/errors. Immutable evidence is in
+  9c2 staged-lineage-verification.md and xz9.0 inbox-source-checkpoints.md.
+- [ ] 9c2 complete owner/readiness/closure/reuse and xz9.0 canonical handlers remain
+  in progress. Runtime installation review findings and service-created resource
+  stage clarification were resolved in the checkpoint below; connected lifecycle
+  implementation remains open.
+- [ ] Coherent downstream integration and release preparation still precede
+  Captain interactive publication; installed graph and Lab acceptance follow.
+
+## Local installation and retained inbox checkpoint — 2026-10-05
+
+- [x] Integrate reviewed runtime installation checks, including read-only bind projection and private mutable mount refusal; retain all corrective review rounds in 9c2.
+- [x] Review and bundle the service-created resource stage and deadlock-safe private readiness exchange contract.
+- [x] Integrate exact-registration retained inbox verification; retain independent review and combined source receipts in xz9.0.
+- [x] Verify exact source `0786c817ae1d426ed2d8639d56450a55016a7083`: default suite 51 entries, 11,252 passed, 24 skipped, zero failures/errors.
+- [ ] Connect actual 9c2 owner lifecycle and xz9.0 canonical inbox handlers, including no-create retained locks; complete independent review and integration before coherent release preparation.
+- [ ] Publish the prepared integrated versions through Captain's interactive OTP script, then verify the installed graph and execute remaining Lab acceptance.
+
+## Current local integration — 2026-10-05
+
+- [x] xz9.0 canonical inbox reconciliation and shared settlement integrated at
+  881cc43868 after independent review of 943444/07ee62443. Full Assign 1003 passed
+  (2 skipped) and Herdr 476 passed. Composed fast-suite coverage: 11252 passed,
+  24 skipped; original Assign 120-second suite timeout and successful isolated retry
+  are both retained in xz9.0/endcap-inbox-verification.md.
+- [x] 9c2 never-native-admitted parent binding, seal/closure, guarded abort and canonical reservation release/reuse source is accepted and integrated. The complete native/network admission and original/candidate maintenance consumers remain open; see connected-parent-cap-verification.md in 9c2.
+- [ ] xz9.0 scope-guarded registration, finish/recover and complete composition remain
+  open. A reconciliation/settlement helper does not make protected startup complete.
+- [ ] Integrate remaining coherent source and dependency floors before gem preparation;
+  Captain interactive publication precedes installed graph and actual Lab tests.
+
+- [x] ACE 8x4.t.i6i: fix ignored explicit suite configuration, independently review and verify. Combined source e546a7618 passed all 51 configured fast-suite entries with a 300-second per-entry ceiling: 11252 passed, 24 skipped, zero failures/errors. Original timeout histories remain retained; this is local source verification, not publication or Lab acceptance.
+
+- [x] ACE 9c2 network installation/maintenance contract accepted at 2d4959ee7 after independent review; domain gad.8/gad.b adoption owns installer implementation and installed proof. Parent-only cleanup is distinct from evidence-gated native admission; historical release verification preserves original artifacts.
+- [x] 9c2 generic protected network evidence verifier integrated at `77fd6c51b` after independent APPROVE, including strict JSON dependency and two reviewed schema responsibility clarifications. Runtime all 235/833 and independent focused 28/174 passed; configured fast suite with a 300-second ceiling: 11273 passed / 24 skipped / 34612 assertions, all 51 entries passed. Initial 120-second timeout and Lab fixture failure remain retained. This verifies authenticated content, not actual installed network enforcement.
+- [x] ACE `8x4.t.jdx`: independent diagnosis and fixture-only repair `47f5eca70` synchronize handler request input before response. Lab all 199/697 passed, 1 skip; independent corrected-blob review approved. Original failure and controlled reproduction retained in the archived task.
+- [ ] Connect accepted network verification to namespace pinning, native admission/stage joins and complete original/candidate maintenance interfaces, then verify the domain installer after publication. Generic verifier acceptance is not positive runtime readiness or whole 9c2 completion.
+- [x] `qkb.1` bounded neutral-vocabulary source slice integrated at `f52816116`; evidence retained at `272811869`. Accepted source `f29c72e3` removes old packaged PR workflows/skills, migrates named consumers and retains explicit standalone delivery separately from managed protection. Independent correction review APPROVE (2/42); author correction checks 38/327 passed. Historical initial-source suite: 11273 passed, 24 skipped, 34610 assertions; it is not relabeled as the corrected revision. Nine retained receipts (36 files) match their original bytes and hashes. Full protected role adoption (`qk0`/`xz9`), fresh installed resolution and qkb SC7 remain open; ambient user registration of old installed sources is not modified.
+- [x] Prepare the coherent 16-package candidate and verified direct/minimum dependencies after final source integration and tests. This source release does not complete 9c2/xz9/qkb or installed acceptance; their missing handlers, positive native admission, historical maintenance and domain installation requirements remain open.
+
+## Prepared bounded source release — 2026-10-05
+
+- [x] Integrate accepted neutral workflow source and never-native-admitted parent lifecycle, with all corrective reviews and failed-run history retained. The full producer/consumer task contracts stay open.
+- [x] Prepare the coordinated 16-package release on `5a0c9e05b`: explicit dependency floors, independently approved metadata, exact-source suite 51/51 entries, 11280 passed / 24 skipped / 34658 assertions, zero errors.
+- [x] Build 16 fresh artifacts in eight dependency waves and verify all 1110 packaged source files, versions and runtime dependency declarations. Retain the 49-record installation manifest and historical provenance. See release-preparation-2026-10-05.md and evidence/local-release-2026-10-05/.
+- [x] Captain interactive publication of this exact prepared queue: 16 published, eight waves, 19.8 seconds per operator report; all 16 registry versions and artifact SHA-256 hashes independently confirmed. See evidence/publication-2026-10-05/registry-verification.json.
+- [ ] New-release installed graph and consumer acceptance: both install modes and exact-version/consumer checks passed in run 8x4m8d9, but independent verifier failed on external model capacity. Reconcile and rerun the full documented scenario after capacity is available; retain original failed evidence. Host finalizer also rejects Symbol-bearing failed pipeline YAML (diagnostic limitation; not grounds to turn ERROR into PASS). Remaining native/domain Lab acceptance follows separately. Neither publication nor partial install evidence closes 9c2/xz9/qkb/R2/R3.
+
+
+## Current queue reconciliation — 2026-10-05
+
+See status-reconciliation-2026-10-05.md for source-versus-installed evidence, explicit blockers and the next local scope. Root queue now has two in-progress records (this integration tracker and 9c2); five blocked scopes retain their missing acceptance requirements. Three done records are archived and duplicate 3r3 is skipped in favor of i6i. No underlying task is marked done based on publication alone.

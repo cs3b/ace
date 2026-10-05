@@ -1,4 +1,6 @@
-# Acceptance matrix — usage contract
+# Acceptance scenario assets — usage contract
+
+qkc delivers reviewed runnable scenarios, deterministic integration evidence and the source coupling inventory. lab-config:8wl.t.gad.2 `forge-matrix` executes all installed scenarios below, records the exact installed matrix once, and supplies the receipt consumed by lab-overseer:l2d.8. These examples describe central run behavior; they do not require a separate deployed qkc run before gad.2.
 
 ## Run deterministic verification
 `ace-test ace-git-worktree all`
@@ -21,4 +23,4 @@ Install the exact R2/R3 versions from the candidate manifest. Exercise completed
 
 ## Installed protected/native matrix
 
-Supply exact xz9/xza package/source receipts and lab-config:gad.8/gad.b deployment evidence to the existing acceptance matrix. Execute real distinct-account service and native Codex/Pi producer/observer/signer rows. Expected: correlated canonical receipts and manifest match; missing endpoint, same-UID-only fixture, queue acknowledgement without consumption, or uncertain cancellation leaves the row failed/unexecuted. gad.2 consumes this completed matrix later.
+Supply exact xz9/xza package/source receipts and lab-config:gad.8/gad.b deployment evidence to the existing acceptance matrix. Execute real distinct-account service and native Codex/Pi producer/observer/signer rows. Expected: correlated canonical receipts and manifest match; missing endpoint, same-UID-only fixture, queue acknowledgement without consumption, or uncertain cancellation leaves the row failed/unexecuted. qkc supplies the reviewed runnable scenario; gad.2 executes it and records the installed matrix. l2d.8 consumes that gad.2 receipt without a second run.
