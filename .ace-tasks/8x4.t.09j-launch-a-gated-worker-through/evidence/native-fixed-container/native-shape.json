@@ -1,0 +1,194 @@
+{
+  "scope": "real Herdr0.9.3 API shape only; test bootstrap; Yama0 is not protected acceptance",
+  "worker_uid": 13001,
+  "launcher_uid": 13002,
+  "server_pid": 15,
+  "ping": {
+    "peer_pid": 15,
+    "peer_uid": 13001,
+    "reply": {
+      "id": "fixture",
+      "result": {
+        "type": "pong",
+        "version": "0.9.3",
+        "protocol": 22,
+        "capabilities": {
+          "live_handoff": true,
+          "detached_server_daemon": false,
+          "endpoint_protocol_generation": 1,
+          "surface_interest": true,
+          "health_check": true,
+          "ssh_agent_registration": true
+        }
+      }
+    }
+  },
+  "installed_container": "w1",
+  "active_other_container": "w2",
+  "preflight": {
+    "peer_pid": 15,
+    "peer_uid": 13001,
+    "reply": {
+      "id": "fixture",
+      "result": {
+        "type": "workspace_info",
+        "workspace": {
+          "workspace_id": "w1",
+          "number": 1,
+          "label": "~",
+          "focused": false,
+          "pane_count": 1,
+          "tab_count": 1,
+          "active_tab_id": "w1:t1",
+          "agent_status": "unknown"
+        }
+      }
+    }
+  },
+  "baseline": [
+    {
+      "pid": 39,
+      "uid": 13001,
+      "exe": "/usr/bin/dash",
+      "birth_ticks": "380334685"
+    },
+    {
+      "pid": 43,
+      "uid": 13001,
+      "exe": "/usr/bin/dash",
+      "birth_ticks": "380334687"
+    }
+  ],
+  "original_layout": {
+    "peer_pid": 15,
+    "peer_uid": 13001,
+    "reply": {
+      "id": "fixture",
+      "result": {
+        "type": "layout_apply",
+        "layout": {
+          "workspace_id": "w1",
+          "tab_id": "w1:t2",
+          "zoomed": false,
+          "focused_pane_id": "w1:p2",
+          "root": {
+            "type": "pane",
+            "pane_id": "w1:p2",
+            "cwd": "/home/ace-worker",
+            "command": [
+              "/usr/libexec/ace-native-test-bootstrap",
+              "mapping",
+              "ticket"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "created_child_delta": [
+    {
+      "pid": 51,
+      "uid": 13001,
+      "exe": "/usr/libexec/ace-native-test-bootstrap",
+      "birth_ticks": "380334691"
+    }
+  ],
+  "exact_child": {
+    "peer_pid": 15,
+    "peer_uid": 13001,
+    "reply": {
+      "id": "fixture",
+      "result": {
+        "type": "pane_process_info",
+        "process_info": {
+          "pane_id": "w1:p2",
+          "shell_pid": 51,
+          "foreground_process_group_id": 51,
+          "foreground_processes": [
+            {
+              "pid": 51,
+              "name": "ace-native-test",
+              "argv": [
+                "/usr/libexec/ace-native-test-bootstrap",
+                "mapping",
+                "ticket"
+              ],
+              "cmdline": "/usr/libexec/ace-native-test-bootstrap mapping ticket",
+              "cwd": "/home/ace-worker"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "close": {
+    "peer_pid": 15,
+    "peer_uid": 13001,
+    "reply": {
+      "id": "fixture",
+      "result": {
+        "type": "ok"
+      }
+    }
+  },
+  "after_gate_close": [
+    {
+      "pid": 39,
+      "uid": 13001,
+      "exe": "/usr/bin/dash",
+      "birth_ticks": "380334685"
+    },
+    {
+      "pid": 43,
+      "uid": 13001,
+      "exe": "/usr/bin/dash",
+      "birth_ticks": "380334687"
+    }
+  ],
+  "close_container": {
+    "peer_pid": 15,
+    "peer_uid": 13001,
+    "reply": {
+      "id": "fixture",
+      "result": {
+        "type": "ok"
+      }
+    }
+  },
+  "closed_container_preflight": {
+    "peer_pid": 15,
+    "peer_uid": 13001,
+    "reply": {
+      "id": "fixture",
+      "error": {
+        "code": "workspace_not_found",
+        "message": "workspace w1 not found"
+      }
+    }
+  },
+  "missing_container_reply": {
+    "peer_pid": 15,
+    "peer_uid": 13001,
+    "reply": {
+      "id": "fixture",
+      "error": {
+        "code": "workspace_not_found",
+        "message": "workspace w1 not found"
+      }
+    }
+  },
+  "missing_container_child_delta": [],
+  "lost_reply": {
+    "reply": "deliberately unread"
+  },
+  "lost_reply_child_delta": [
+    {
+      "pid": 75,
+      "uid": 13001,
+      "exe": "/usr/libexec/ace-native-test-bootstrap",
+      "birth_ticks": "380334713"
+    }
+  ],
+  "bootstrap_start_count": 2,
+  "verdict": "passed"
+}

@@ -1,0 +1,2 @@
+FROM ruby:3.4.8-slim-bookworm
+RUN apt-get update && apt-get install -y --no-install-recommends qemu-system-arm linux-image-arm64 initramfs-tools e2fsprogs gcc pkg-config libjson-c-dev libjson-c5 binutils git python3 acl procps util-linux libcap2-bin ca-certificates && rm -rf /var/lib/apt/lists/*

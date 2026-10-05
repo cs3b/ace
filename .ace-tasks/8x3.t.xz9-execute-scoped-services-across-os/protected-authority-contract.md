@@ -142,7 +142,13 @@ Receiver handler stdin v1 is `{version: 1, request: CANONICAL_QJX_BINDING, input
 ## Launch-origin creation provenance clarification — 2026-10-05
 
 09j admits only a new non-restored layout from the pinned authenticated Herdr
-server. The original layout.apply response supplies fresh workspace/tab/pane;
+server. The root-installed canonical workspace ID is only a container on that exact
+server birth/socket generation. Protected launch never calls workspace.create
+(which starts an ungated shell in Herdr0.9.3), never selects a current/label/alias
+container and never adopts its existing processes. layout.apply must create only
+one explicit-bootstrap fresh tab/pane/child; missing/stale container refuses
+without fallback. The original layout.apply response supplies the configured
+workspace plus fresh tab/pane;
 terminal and child PID are queried only for that exact pane on the same server,
 then bound to independently observed kernel birth/UID/lineage and pidfd. Native
 non-reuse/no-respawn guarantees are required, not inferred from a label or argv.

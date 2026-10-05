@@ -72,6 +72,7 @@ module Ace
           token!(params.fetch("assignment_id"))
           generation!(params.fetch("expected_generation"), allow_nil: operation == "register_assignment")
           map = @deployment.mapping(params.fetch("mapping_id"))
+          bounded_scope!(params.fetch("scope")) if operation == "reserve_attempt"
           @kernel.live!(peer)
           journal = journal_for(map)
           digest = Digest::SHA256.hexdigest(JSON.generate(canonical(params)))
@@ -87,48 +88,59 @@ module Ace
                 @changed.wait(@mutex, [remaining, 0.1].min)
               end
             end
-            fresh = false
-            released = false
-            result = journal.mutate(assignment_id: params.fetch("assignment_id"), attempt_id: attempt_id,
-              mutation_id: request.fetch("mutation_id"), operation: operation, parameters_digest: digest,
-              expected_generation: operation == "reserve_attempt" ? 0 : (params.fetch("expected_generation") || 0), with_replay: true) do |events, commit, generation|
-              fresh = true
-              plan = case operation
-              when "register_assignment" then register(params, map, journal, commit, generation)
-              when "reserve_attempt" then reserve(params, map, journal, commit, generation, peer, attempt_id)
-              when "record_launch" then record(params, map, events, peer)
-              when "bind_process" then bind(params, map, events, peer)
-              when "release_launch"
-                released = true
-                release(params, map, events, peer)
-              when "abort_launch" then abort(params, map, events, peer, supervisor: role == :supervisor)
+            reservation_handle = nil
+            begin
+              fresh = false
+              released = false
+              result = journal.mutate(assignment_id: params.fetch("assignment_id"), attempt_id: attempt_id,
+                mutation_id: request.fetch("mutation_id"), operation: operation, parameters_digest: digest,
+                expected_generation: operation == "reserve_attempt" ? 0 : (params.fetch("expected_generation") || 0), with_replay: true) do |events, commit, generation|
+                fresh = true
+                plan = case operation
+                when "register_assignment" then register(params, map, journal, commit, generation)
+                when "reserve_attempt" then reserve(params, map, journal, commit, generation, peer, attempt_id)
+                when "record_launch" then record(params, map, events, peer)
+                when "bind_process" then bind(params, map, events, peer)
+                when "release_launch"
+                  released = true
+                  release(params, map, events, peer)
+                when "abort_launch" then abort(params, map, events, peer, supervisor: role == :supervisor)
+                end
+                bounded_reply!(plan.fetch(:data), generation + 1)
+                # Validate the complete plan before opening a handle, but acquire
+                # it before returning any events for staging/CAS. Reuse across
+                # retries; a competing accepted replay never owns this handle.
+                reservation_handle ||= @kernel.pin(peer) if operation == "reserve_attempt"
+                plan
               end
-              plan
-            end
-            fresh = !result.fetch(:replayed)
-            result = result.fetch(:data)
-            if fresh && operation == "reserve_attempt"
-              @observations[result.fetch("attempt_id")] = {launcher: peer, launcher_handle: @kernel.pin(peer), deadline: wire.deadline(30), ticket: result.fetch("launch_ticket"), assignment_id: result.fetch("assignment_id")}
-            end
-            # No release in mutation replay. A crash here retains issued uncertainty.
-            if fresh && released
-              stream = @streams.fetch(result.fetch("attempt_id"))
-              permission = {"operation" => "release", "launch_ticket" => result.fetch("launch_ticket"),
-                "attempt_id" => result.fetch("attempt_id"), "assignment_id" => result.fetch("assignment_id"),
-                "generation" => result.fetch("generation"), "journal_commit" => result.fetch("journal_commit")}
-              begin
-                wire.write(stream.fetch(:socket), permission, deadline: wire.deadline(1))
-              rescue StandardError
-                # Durable permission cannot be undone or retransmitted after write loss.
-                nil
-              ensure
-                stream[:issued] = true
-                stream.fetch(:condition).broadcast
+              fresh = !result.fetch(:replayed)
+              result = result.fetch(:data)
+              if fresh && operation == "reserve_attempt"
+                @observations[result.fetch("attempt_id")] = {launcher: peer, launcher_handle: reservation_handle, deadline: wire.deadline(30), ticket: result.fetch("launch_ticket"), assignment_id: result.fetch("assignment_id")}
+                reservation_handle = nil
               end
+              # No release in mutation replay. A crash here retains issued uncertainty.
+              if fresh && released
+                stream = @streams.fetch(result.fetch("attempt_id"))
+                permission = {"operation" => "release", "launch_ticket" => result.fetch("launch_ticket"),
+                  "attempt_id" => result.fetch("attempt_id"), "assignment_id" => result.fetch("assignment_id"),
+                  "generation" => result.fetch("generation"), "journal_commit" => result.fetch("journal_commit")}
+                begin
+                  wire.write(stream.fetch(:socket), permission, deadline: wire.deadline(1))
+                rescue StandardError
+                  # Durable permission cannot be undone or retransmitted after write loss.
+                  nil
+                ensure
+                  stream[:issued] = true
+                  stream.fetch(:condition).broadcast
+                end
+              end
+              reap_terminal_observations(journal, params.fetch("assignment_id"))
+              materialize_definition(result, map, journal) if operation == "register_assignment"
+              {data: result, replayed: !fresh}
+            ensure
+              reservation_handle&.close
             end
-            reap_terminal_observations(journal, params.fetch("assignment_id"))
-            materialize_definition(result, map, journal) if operation == "register_assignment"
-            {data: result, replayed: !fresh}
           end
           end
         end
@@ -228,6 +240,19 @@ module Ace
         end
 
         private
+
+        def bounded_scope!(scope)
+          unless scope.is_a?(String) && scope.bytesize.between?(1, 128) && scope.split(".", -1).length <= 16
+            raise ArgumentError, "assignment scope exceeds protected launch bounds"
+          end
+          Atoms::AssignmentScope.canonicalize(scope)
+        end
+
+        def bounded_reply!(data, generation)
+          envelope = {"status" => "ok", "data" => data.merge("generation" => generation, "journal_commit" => "0" * 64),
+            "transport" => {"replayed" => false}}
+          raise ArgumentError, "accepted launch reply exceeds transport bounds" if JSON.generate(envelope).bytesize + 1 > 16_384
+        end
 
         def close_observation(observation)
           %i[launcher_handle child_handle].each do |key|
@@ -408,7 +433,12 @@ module Ace
           unless evidence.is_a?(String) && evidence.bytesize <= 16_384 && Digest::SHA256.hexdigest(evidence) == params["failure_digest"]
             raise ArgumentError, "invalid bounded failure evidence"
           end
-          positive = %w[recorded bound].include?(state["phase"]) && observation[:child_handle] &&
+          issued = events.any? do |event|
+            event["type"] == "authority_mutation" && event.dig("payload", "operation") == "release_launch"
+          end
+          positive = %w[recorded bound uncertain].include?(state["phase"]) && !issued &&
+            state["execution"] != "potentially_executed" && observation[:child_handle] && observation[:child] &&
+            state.dig("process_binding", "process_identity") == observation[:child] &&
             @kernel.exited?(observation.fetch(:child_handle))
           target = positive ? "failed" : "uncertain"
           proof = if positive
@@ -417,7 +447,15 @@ module Ace
               "release" => "not_issued", "yama" => 2, "capability_sets" => "empty", "no_new_privs" => 1}
           end
           evidence_ref = "evidence/imports/launch-failure-#{state.fetch('attempt_id')}-#{params.fetch('failure_digest')}"
-          {events: [{type: "transition", payload: {"from" => %w[bound issued].include?(state["phase"]) ? "running" : "reserved", "to" => target, "reason" => positive ? "protected_gate_exited_before_release" : "protected_launch_requires_positive_termination_proof"}}],
+          reason = positive ? "protected_gate_exited_before_release" : "protected_launch_requires_positive_termination_proof"
+          lifecycle_event = if positive && state["phase"] == "uncertain"
+            {type: "reconciliation", payload: {"resolution" => "failed", "reason" => reason,
+              "failure_digest" => params.fetch("failure_digest"), "abort_observation" => proof}}
+          else
+            {type: "transition", payload: {"from" => state["phase"] == "uncertain" ? "uncertain" :
+              (%w[bound issued].include?(state["phase"]) ? "running" : "reserved"), "to" => target, "reason" => reason}}
+          end
+          {events: [lifecycle_event],
             blobs: {evidence_ref => evidence}, data: state.merge("phase" => target, "failure_digest" => params.fetch("failure_digest"),
               "failure_ref" => evidence_ref, "abort_observation" => proof,
               "required_action" => positive ? nil : "supervisor_inspect_exact_child_and_release_uncertainty")}
@@ -456,6 +494,7 @@ module Ace
               identity["groups"] == map["worker_groups"] && identity["parent_pid"] == server["pid"] &&
               binding.dig("native_origin", "server_identity") == server &&
               binding.dig("native_origin", "socket_identity") == map.dig("native", "socket_identity") &&
+              binding.dig("native_origin", "workspace") == map.dig("native", "workspace_id") &&
               binding.dig("native_origin", "workspace") == binding["session"] && binding.dig("native_origin", "pane") == binding["pane"]
             raise AttemptErrors::UnauthorizedIdentity, "original native child lineage differs"
           end
@@ -499,14 +538,22 @@ module Ace
               raise AttemptErrors::UnauthorizedIdentity, "launch belongs to another launcher incarnation"
             end
             identity = state.fetch("process_binding") { raise AttemptErrors::EvidenceUnavailable, "no recorded original child; inspection cannot infer absence" }.fetch("process_identity")
+            observation = @observations[params.fetch("attempt_id")]
+            if observation && observation[:child_handle] && observation[:child] == identity && @kernel.exited?(observation.fetch(:child_handle))
+              return state.merge("journal_commit" => journal.ref_value,
+                "termination_observation" => {"status" => "exited", "process_identity" => identity},
+                "required_action" => "request_abort_using_retained_exact_exit_proof")
+            end
             @kernel.live!(map.dig("native", "server_identity"))
             @kernel.live!(identity)
-            unless @observations.key?(params.fetch("attempt_id"))
+            unless observation
               child_handle = @kernel.pin(identity)
               @observations[params.fetch("attempt_id")] = {child: identity, child_handle: child_handle,
                 launcher: state.fetch("launcher_identity"), launcher_handle: nil, deadline: 0}
             end
-            state.merge("journal_commit" => journal.ref_value, "required_action" => "close_original_native_child_then_request_abort")
+            state.merge("journal_commit" => journal.ref_value,
+              "termination_observation" => {"status" => "alive", "process_identity" => identity},
+              "required_action" => "close_original_native_child_then_request_abort")
           end
         end
 
@@ -527,7 +574,9 @@ module Ace
             end
             observation = @observations[params.fetch("attempt_id")]
             expired = !%w[issued failed].include?(state["phase"]) && state["handshake_deadline"] && Time.iso8601(state.fetch("handshake_deadline")) <= Time.now.utc
-            if !TERMINAL.include?(state["phase"]) && (!observation || !launcher_live?(observation) || expired)
+            child_exited = observation && observation[:child_handle] &&
+              observation[:child] == state.dig("process_binding", "process_identity") && @kernel.exited?(observation.fetch(:child_handle))
+            if !TERMINAL.include?(state["phase"]) && (!observation || !launcher_live?(observation) || expired || child_exited)
               projection.merge!("phase" => "uncertain", "required_action" => "supervisor_inspect_exact_child_and_release_uncertainty")
             end
             projection.merge("journal_commit" => journal.ref_value)

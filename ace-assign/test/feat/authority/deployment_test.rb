@@ -21,7 +21,7 @@ module Ace
            "worker_uid" => 13001, "worker_gid" => 13001, "worker_groups" => [13001], "worker_actor" => "worker",
            "worker_cwd" => "/home/worker", "worker_argv" => ["/usr/bin/true"], "worker_env" => {"PATH" => "/usr/bin:/bin"},
            "bootstrap" => "/usr/libexec/ace-worker-gate", "bootstrap_sha256" => "a" * 64,
-           "native" => {"socket_path" => "/run/herdr/control.sock", "socket_identity" => [1, 2, 13001],
+           "native" => {"workspace_id" => "w1", "socket_path" => "/run/herdr/control.sock", "socket_identity" => [1, 2, 13001],
              "executable" => "/usr/bin/herdr", "version" => "0.9.3", "server_identity" => {"pid" => 90,
                "uid" => 13001, "gid" => 13001, "groups" => [13001], "parent_pid" => 1,
                "started_at" => "linux:0123-abcd:199", "host" => "fixture"}}}}}
@@ -45,6 +45,14 @@ module Ace
         owners["authorities"]["second"] = owners["authorities"].fetch("authority").merge("socket_path" => "/run/second/control.sock")
         owners["launch_mappings"]["second"] = owners["launch_mappings"].fetch("mapping").merge("authority_id" => "second")
         assert_raises(ArgumentError) { Authority::Deployment.new(owners) }
+      end
+
+      def test_installed_native_workspace_is_required_and_canonical
+        [nil, "current", "w0", "w01", "w1:t1", "w" + "1" * 10].each do |workspace|
+          value = data
+          value["launch_mappings"]["mapping"]["native"]["workspace_id"] = workspace
+          assert_raises(ArgumentError) { Authority::Deployment.new(value) }
+        end
       end
 
       def test_unknown_fields_loader_environment_and_changed_groups_are_rejected

@@ -118,8 +118,11 @@ module Ace
           end
           %w[worker_cwd bootstrap].each { |key| path!(mapping.fetch(key)) }
           native = mapping.fetch("native")
-          strict!(native, %w[socket_path socket_identity executable version server_identity])
+          strict!(native, %w[socket_path socket_identity executable version server_identity workspace_id])
           %w[socket_path executable].each { |key| path!(native.fetch(key)) }
+          unless native["workspace_id"].is_a?(String) && native["workspace_id"].match?(/\Aw[1-9][0-9]{0,8}\z/)
+            raise ArgumentError, "invalid installed native workspace ID"
+          end
           identity = native.fetch("server_identity")
           strict!(identity, %w[pid uid gid groups started_at host parent_pid])
           principal!(identity, "uid", "gid", "groups")

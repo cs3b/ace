@@ -1,0 +1,5 @@
+FROM ace-09j-installed-final:local
+COPY herdr /usr/local/bin/herdr
+COPY payload.c guest-probe.py host-kernel.json /opt/ace-fixture/
+COPY guest-init /sbin/ace-fixture-init
+RUN mkdir -p /usr/libexec && setpriv --bounding-set=-all --no-new-privs --reuid=65534 --regid=65534 --clear-groups /usr/local/bundle/gems/ace-runtime-0.1.1/native/build-worker-gate /tmp/ace-worker-gate && install -o root -g root -m 0755 /tmp/ace-worker-gate /usr/libexec/ace-worker-gate && cc -O2 /opt/ace-fixture/payload.c -o /usr/libexec/ace-fixture-payload && chmod 755 /usr/local/bin/herdr /sbin/ace-fixture-init /usr/libexec/ace-fixture-payload

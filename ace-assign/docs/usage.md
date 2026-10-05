@@ -484,3 +484,10 @@ effect remains unperformed until explicitly retried. Explicit readiness referenc
 must match the recovered intent; omitting them during retry retains and revalidates
 its original references. Merge always consumes the exact named qjx service request,
 its candidate/target binding and verified receipt, never an older PR result.
+
+
+## Protected cross-user native launch
+
+The fixed installed authority exposes `ace-assign authority serve`, `launch`,
+`status` and `terminate`. See [protected authority](protected-authority.md) for
+OS policy, native artifact installation, canonical launch stages and safe replay.

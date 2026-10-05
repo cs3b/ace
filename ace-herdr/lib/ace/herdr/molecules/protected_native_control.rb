@@ -54,7 +54,13 @@ module Ace
               ping.dig("capabilities", "endpoint_protocol_generation") == 1
             raise Ace::Runtime::RuntimeUnavailableError, "installed native protocol is unsupported"
           end
+          workspace = request("workspace.get", {"workspace_id" => @mapping.fetch("native").fetch("workspace_id")}).fetch("workspace")
+          unless workspace["workspace_id"] == @mapping.fetch("native").fetch("workspace_id")
+            raise Ace::Runtime::RuntimeUnavailableError, "installed native workspace differs"
+          end
           true
+        rescue KeyError, TypeError
+          raise Ace::Runtime::RuntimeUnavailableError, "installed native workspace is unavailable"
         end
 
         def create(mapping_id:, ticket:)
@@ -62,8 +68,7 @@ module Ace
           raise Ace::Runtime::RuntimeUnavailableError, "native creation is never repeated" if @origin
           # Mark attempted BEFORE any remote write: a lost reply cannot respawn.
           @origin = {"state" => "uncertain"}
-          created = request("workspace.create", {"cwd" => @mapping.fetch("worker_cwd"), "focus" => false})
-          workspace = created.fetch("workspace").fetch("workspace_id")
+          workspace = @mapping.fetch("native").fetch("workspace_id")
           command = [@mapping.fetch("bootstrap"), mapping_id, ticket]
           layout = request("layout.apply", {"workspace_id" => workspace, "focus" => false,
             "root" => {"type" => "pane", "cwd" => @mapping.fetch("worker_cwd"),
@@ -86,7 +91,8 @@ module Ace
         end
 
         def observe(origin)
-          unless origin["server_identity"] == @mapping.fetch("native").fetch("server_identity") &&
+          unless origin["workspace"] == @mapping.fetch("native").fetch("workspace_id") &&
+              origin["server_identity"] == @mapping.fetch("native").fetch("server_identity") &&
               origin["socket_identity"] == @mapping.fetch("native").fetch("socket_identity")
             raise Ace::Runtime::RuntimeUnavailableError, "native creation server changed"
           end
