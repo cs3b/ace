@@ -332,3 +332,8 @@ No gems published or actual Lab deployment performed in this checkpoint.
 
 - [x] 8x4.t.bt0: exact invocation-bound completion/results integrated after independent APPROVE. Whole combined suite passed with explicit --timeout 300 (11205 passed, 24 skipped, 34232 assertions); root reconciled all 51 distinct entry receipts, including duplicate Lab entries. Controlled later focused test did not replace captured results. Historical lq8/IBL attribution limitations remain documented, not rewritten.
 - [ ] Continue 09j installed acceptance, then 9c2 and full xz9; unresolved native proof/access limitations remain. This source checkpoint does not complete the new Lab or authorize publication of mixed qkb workflows.
+
+## Protected consumer readiness — 2026-10-05
+
+- [x] xz9.0 remaining finish/recover/inbox contract independently APPROVED at baa96cbe51; existing attempt-local CAS, canonical receipt/signature provenance and 9c2 cleanup/release ownership preserved. Specification pending; unfinished 09j/9c2 still gate implementation.
+- [ ] xz9.2 remains draft: select exact native prompt method/acknowledgement/error contract and bounded payload framing, then independent review. Current launch/terminate operations do not supply that proof.
