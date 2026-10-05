@@ -21,3 +21,7 @@ Independent Sol 6.1 review `review-8x435i` rejected candidate `b2cf8b06a` with t
 The review also mentioned reverse-only task document changes because the original subject compared the older branch directly against newer main. Those are not branch deletions and must not be applied during integration. Subsequent review uses the verified common ancestor as its base.
 
 Final repaired full package run `bin/ace-test ace-test-runner all --timeout 120`: receipt `8x43d1`, 258 tests, 987 assertions, zero failures/errors/skips, exit 0. Timeout remains the existing 120 seconds. Independent re-review is required before integration.
+
+## Accepted integration
+
+Independent Sol 6.1 re-review `review-8x43di` found no issues and independently ran full package receipt `8x43eh`: 258 tests, 987 assertions, no failures/errors/skips. Accepted source `de2f41903` merged into main as `069af128d70110a649d9806eefc3ee00036afb6f`. Root post-merge full package receipt `8x43gf` again passed 258/987 with exit 0 (33.04s). Earlier in-progress statements above describe historical checkpoints; source acceptance is now complete. Gem versioning/publication remains part of the final integrated release batch and is not claimed by this source task.
