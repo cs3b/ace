@@ -52,6 +52,11 @@ module Ace
         launch["payload"]["data"]["launch_ticket"] = "forged"
         assert_raises(AttemptErrors::InvalidState) { @endcap.send(:active_origin, [launch], @params) }
       end
+
+      def test_full_service_handler_refuses_local_evidence_composition
+        journal = Struct.new(:evidence_mode).new(:local)
+        assert_raises(ArgumentError) { @endcap.send(:protected_journal!, journal) }
+      end
     end
   end
 end

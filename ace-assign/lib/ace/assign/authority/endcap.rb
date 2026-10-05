@@ -4,6 +4,8 @@ require "json"
 require "digest"
 require "securerandom"
 require_relative "candidate_transfer"
+require_relative "receipt_transfer"
+require_relative "../molecules/canonical_evidence"
 
 module Ace
   module Assign
@@ -11,15 +13,17 @@ module Ace
       # Business admission shares the launch origin, lifecycle exclusion and
       # journal CAS. Network transfer is completed outside those locks.
       class Endcap
-        OPERATIONS = %w[submit_candidate export_candidate assign_review].freeze
+        OPERATIONS = %w[submit_candidate export_candidate assign_review accept_review].freeze
         TRANSFER_OPERATIONS = {
           "submit_candidate" => {direction: :upload, purpose: :candidate, roles: %i[worker launcher]},
-          "export_candidate" => {direction: :download, purpose: :candidate, roles: %i[reviewer executor]}
+          "export_candidate" => {direction: :download, purpose: :candidate, roles: %i[reviewer executor]},
+          "accept_review" => {direction: :upload, purpose: :receipt_artifacts, roles: [:reviewer]}
         }.freeze
         PARAMETERS = {
           "submit_candidate" => %w[mapping_id assignment_id attempt_id expected_generation candidate_generation head transfer],
           "export_candidate" => %w[mapping_id assignment_id attempt_id candidate_generation head purpose_id],
-          "assign_review" => %w[mapping_id assignment_id attempt_id expected_generation candidate_generation head reviewer_uid reviewer_process_binding]
+          "assign_review" => %w[mapping_id assignment_id attempt_id expected_generation candidate_generation head reviewer_uid reviewer_process_binding],
+          "accept_review" => %w[mapping_id assignment_id attempt_id expected_generation candidate_generation head purpose_id receipt_sha256 transfer]
         }.freeze
 
         def initialize(deployment:, launch:, kernel: Ace::Runtime::Molecules::ProtectedLinux.new)
@@ -29,6 +33,7 @@ module Ace
         def authorize_transfer!(request:, peer:, role:)
           params, map = validate_request(request)
           @launch.with_assignment(params: params, map: map) do |journal, _registration|
+            protected_journal!(journal)
             events = attempt_events(journal, params)
             origin = active_origin(events, params)
             if request.fetch("operation") == "submit_candidate"
@@ -52,8 +57,13 @@ module Ace
             project = @deployment.project(map.fetch("project_id"))
             admitted = CandidateTransfer.new(root: project.fetch("candidate_root")).admit(
               bytes: bytes, sha256: descriptor.fetch("sha256"), size: descriptor.fetch("bytes"), head: params.fetch("head"))
+          elsif request.fetch("operation") == "accept_review"
+            authorize_transfer!(request: request, peer: peer, role: role)
+            admitted = ReceiptTransfer.decode(input: transfer, receipt_sha256: params.fetch("receipt_sha256"),
+              artifact_field: "artifacts", reference_key: "path")
           end
           @launch.with_assignment(params: params, map: map) do |journal, _registration|
+            protected_journal!(journal)
             events = attempt_events(journal, params)
             origin = active_origin(events, params)
             if request.fetch("operation") == "export_candidate"
@@ -67,8 +77,12 @@ module Ace
             end
             # Journal replay skips its callback. Authenticate the caller here
             # as well as on every fresh/CAS-retried mutation below.
-            worker_or_launcher!(peer, role, map, origin,
-              launcher_only: request.fetch("operation") == "assign_review")
+            if request.fetch("operation") == "accept_review"
+              export_admission!(journal, events, params, map, origin, peer, role)
+            else
+              worker_or_launcher!(peer, role, map, origin,
+                launcher_only: request.fetch("operation") == "assign_review")
+            end
             journal.mutate(assignment_id: params.fetch("assignment_id"), attempt_id: params.fetch("attempt_id"),
               mutation_id: request.fetch("mutation_id"), operation: request.fetch("operation"),
               parameters_digest: Atoms::EvidenceDigest.digest(params), expected_generation: params.fetch("expected_generation"),
@@ -96,13 +110,24 @@ module Ace
                 end
                 @kernel.live!(reviewer)
                 {data: current.slice("head", "candidate_generation").merge(
-                  "review_id" => SecureRandom.hex(16), "reviewer_uid" => uid, "reviewer_process_binding" => reviewer)}
+                  "review_id" => SecureRandom.hex(16), "reviewer_uid" => uid, "reviewer_actor" => "uid-#{uid}",
+                  "reviewer_process_binding" => reviewer)}
+              when "accept_review"
+                current = export_admission!(journal, events, params, map, origin, peer, role)
+                review = assigned_review(events)
+                accept_review_plan(journal, events, params, map, current, review, admitted)
               end
             end
           end
         end
 
         private
+
+        def protected_journal!(journal)
+          unless journal.evidence_mode == :protected
+            raise ArgumentError, "full-service Endcap requires canonical protected evidence composition"
+          end
+        end
 
         def validate_request(request)
           operation = request.fetch("operation")
@@ -135,6 +160,7 @@ module Ace
           origin = @launch.origin(events, assignment_id: params.fetch("assignment_id"), attempt_id: params.fetch("attempt_id"),
             mapping_id: params.fetch("mapping_id"))
           raise AttemptErrors::InvalidState, "exact bound launch is required" unless %w[bound issued].include?(origin["phase"])
+          @kernel.live!(origin.fetch("process_binding").fetch("process_identity"))
           origin
         end
 
@@ -172,8 +198,7 @@ module Ace
           current = exact_candidate!(candidate(events), params)
           @kernel.live!(peer)
           if role == :reviewer
-            assignment = events.reverse.find { |event| event["type"] == "authority_mutation" && event.dig("payload", "operation") == "assign_review" }
-            assignment = assignment&.dig("payload", "data")
+            assignment = assigned_review(events)
             unless assignment && assignment["review_id"] == params["purpose_id"] && assignment["head"] == current["head"] &&
                 assignment["candidate_generation"] == current["candidate_generation"] && assignment["reviewer_uid"] == peer["uid"] &&
                 @kernel.descendant?(peer, assignment.fetch("reviewer_process_binding"))
@@ -190,6 +215,55 @@ module Ace
             raise AttemptErrors::UnauthorizedIdentity, "candidate export purpose is unauthorized"
           end
           current
+        end
+
+        def assigned_review(events)
+          events.reverse.find { |event| event["type"] == "authority_mutation" && event.dig("payload", "operation") == "assign_review" }&.dig("payload", "data")
+        end
+
+        def accept_review_plan(journal, events, params, map, current, review, admitted)
+          receipt = admitted.fetch(:receipt)
+          unless receipt["operation"] == "review" && receipt["verdict"] == "succeeded" &&
+              receipt["producer"] == {"actor" => map.fetch("worker_actor"), "role" => "worker", "runtime" => "herdr"} &&
+              receipt.dig("review", "reviewer", "actor") == review.fetch("reviewer_actor")
+            raise AttemptErrors::ReceiptRejected, "review attribution must match authenticated candidate and reviewer"
+          end
+          original = Models::ExecutionReceipt.from_h(receipt)
+          unless original.digest == Atoms::EvidenceDigest.digest(original.digest_payload)
+            raise AttemptErrors::ReceiptRejected, "uploaded review receipt digest differs"
+          end
+          context = {kind: "review", project_id: map.fetch("project_id"), assignment_id: params.fetch("assignment_id"),
+            attempt_id: params.fetch("attempt_id"), peer_uid: review.fetch("reviewer_uid"),
+            binding: review.slice("review_id", "head", "candidate_generation", "reviewer_uid", "reviewer_process_binding"),
+            request_id_or_event_id: review.fetch("review_id"), generation: current.fetch("candidate_generation")}
+          canonical = Molecules::CanonicalEvidence.new(journal: journal)
+          plan = canonical.import_plan(**context, artifacts: admitted.fetch(:artifacts),
+            admitted_after_event_digest: events.last.fetch("digest"))
+          original_refs = receipt.fetch("artifacts")
+          normalized = JSON.parse(JSON.generate(receipt)).except("digest", "recorded_at")
+          normalized["artifacts"] = plan.fetch(:references).map { |reference| {"path" => reference.fetch("ref"), "sha256" => reference.fetch("sha256")} }
+          if normalized["campaign"]
+            index = original_refs.index(normalized.fetch("campaign").fetch("result"))
+            raise AttemptErrors::ReceiptRejected, "campaign result must name an uploaded artifact" unless index
+            normalized["campaign"]["result"] = normalized.fetch("artifacts").fetch(index)
+          end
+          pending = journal.send(:chain_mutation_events, params.fetch("attempt_id"), events.last.fetch("digest"), plan.fetch(:events))
+          reader = lambda do |_data, artifact|
+            canonical.read_pending({"ref" => artifact.fetch("path"), "sha256" => artifact.fetch("sha256")},
+              **context, current_events: events, pending_events: pending, blobs: plan.fetch(:blobs), commit: journal.ref_value)
+          end
+          intent = events.find { |event| event["type"] == "intent" }
+          attempt = journal.send(:build_attempt, params.fetch("assignment_id"), params.fetch("attempt_id"),
+            intent.fetch("payload"), events, "running")
+          identity = Molecules::ExecutionIdentityResolver::Identity.new(actor: "protected-authority", role: "service", runtime: "unix")
+          verified = Molecules::ReceiptVerifier.new(artifact_reader: reader).verify!(normalized,
+            attempt: attempt, identity: identity, live_head: current.fetch("head"), repo_root: journal.repo_root)
+          plan.merge(data: {"head" => current.fetch("head"), "candidate_generation" => current.fetch("candidate_generation"),
+            "review_id" => review.fetch("review_id"), "reviewer_uid" => review.fetch("reviewer_uid"),
+            "review_binding" => context.fetch(:binding), "review_receipt" => verified.to_h,
+            "receipt_digest" => verified.digest, "uploaded_receipt_sha256" => admitted.fetch(:receipt_sha256)})
+        rescue KeyError
+          raise AttemptErrors::ReceiptRejected, "review receipt binding is incomplete"
         end
       end
     end
