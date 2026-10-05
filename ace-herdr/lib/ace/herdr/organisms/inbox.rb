@@ -56,9 +56,22 @@ module Ace
           ids.select do |event|
             raise ValidationError, "retained inbox event id is invalid" unless EVENT.match?(event)
             Molecules::DeliveryRecordStore.with_lock(deliveries_dir, event, create: false) do
-              record = Molecules::DeliveryRecordStore.load(deliveries_dir, event)
-              raise ValidationError, "retained inbox event is unavailable" unless record&.inbox
-              record.inbox.fetch("attempt_id") == attempt
+              paths = [Molecules::DeliveryRecordStore.path_for(deliveries_dir, event),
+                Molecules::DeliveryRecordStore.path_for(Molecules::DeliveryRecordStore.archive_dir(deliveries_dir), event)]
+              copies = paths.filter_map do |path|
+                next unless File.exist?(path)
+                record = Models::DeliveryRecord.from_json(File.read(path))
+                unless record.event_id == event && record.inbox && record.inbox.fetch("attempt_id").is_a?(String)
+                  raise ValidationError, "retained inbox event is unavailable"
+                end
+                record.to_h
+              end
+              # Identical retained copies describe one event. Never let live
+              # precedence hide a corrupt or conflicting archived copy.
+              if copies.empty? || copies.uniq.length != 1
+                raise ValidationError, "retained inbox copies conflict"
+              end
+              copies.first.fetch("inbox").fetch("attempt_id") == attempt
             end
           end
         rescue SystemCallError, JSON::ParserError, ArgumentError, KeyError

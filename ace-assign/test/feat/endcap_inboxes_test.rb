@@ -319,6 +319,31 @@ module Ace
         end
       end
 
+      def test_settlement_checks_every_live_and_archive_copy
+        fixture do
+          reconcile
+          store = Ace::Herdr::Molecules::DeliveryRecordStore
+          dir = @context.fetch("deliveries_dir")
+          archived = store.path_for(store.archive_dir(dir), "event")
+          FileUtils.mkdir_p(File.dirname(archived))
+          original = File.read(store.path_for(dir, "event"))
+          File.write(archived, "corrupt")
+          assert_raises(AttemptErrors::EvidenceUnavailable) { settlement }
+          %w[attempt_id claim_generation].each do |field|
+            copy = JSON.parse(original)
+            copy.fetch("inbox")[field] = field == "attempt_id" ? "other-attempt" : copy.fetch("inbox").fetch(field) + 1
+            File.write(archived, JSON.generate(copy))
+            assert_raises(AttemptErrors::EvidenceUnavailable) { settlement }
+          end
+          File.write(archived, JSON.pretty_generate(JSON.parse(original)))
+          assert settlement
+          lock = store.lock_path(dir, "event")
+          File.unlink(lock)
+          assert_raises(AttemptErrors::EvidenceUnavailable) { settlement }
+          refute File.exist?(lock)
+        end
+      end
+
       def test_herdr_accepted_before_qjl_failure_replays_exact_signed_proof
         fixture do
           original = @journal.method(:mutate)
