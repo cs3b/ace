@@ -5,6 +5,7 @@ require "ace/docs/molecules/frontmatter_manager"
 require "ace/docs/models/document"
 require "tempfile"
 require "fileutils"
+require "yaml"
 
 module Ace
   module Docs
@@ -254,6 +255,28 @@ module Ace
           count = FrontmatterManager.update_documents([doc1, doc2], {"last-updated" => "2025-11-01"})
 
           assert_equal 2, count
+          [doc1_path, doc2_path].each do |path|
+            frontmatter = YAML.safe_load(File.read(path).split("---", 3)[1], permitted_classes: [Date])
+            assert_equal "2025-11-01", frontmatter.dig("ace-docs", "last-updated")
+          end
+        end
+
+        def test_update_documents_counts_only_successful_updates
+          doc_path = create_test_document("---\nupdate:\n  last-updated: 2025-10-31\n---\n\n# Valid Doc")
+          missing_path = File.join(@test_dir, "missing.md")
+          documents = [
+            Models::Document.new(path: missing_path),
+            Models::Document.new(path: doc_path),
+            Models::Document.new(path: nil)
+          ]
+
+          GC.start
+          count = FrontmatterManager.update_documents(documents, {"last-updated" => "2025-11-01"})
+
+          assert_equal 1, count
+          frontmatter = YAML.safe_load(File.read(doc_path).split("---", 3)[1], permitted_classes: [Date])
+          assert_equal "2025-11-01", frontmatter.dig("ace-docs", "last-updated")
+          refute File.exist?(missing_path)
         end
 
         private
