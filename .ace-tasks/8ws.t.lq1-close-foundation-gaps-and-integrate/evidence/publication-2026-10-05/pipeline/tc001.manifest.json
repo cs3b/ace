@@ -1,0 +1,14 @@
+{
+  "tc_id": "TC-001",
+  "title": "Goal 1 — Discover ACE Gems",
+  "declared_artifacts": [
+    "results/tc/01",
+    "results/tc/01/gem-count.txt",
+    "results/tc/01/gem-list.txt",
+    "results/tc/01/manifest-package-count.txt",
+    "results/tc/01/path-check.txt",
+    "results/tc/01/release-manifest.json"
+  ],
+  "optional_artifacts": [],
+  "goal_format": "standalone"
+}

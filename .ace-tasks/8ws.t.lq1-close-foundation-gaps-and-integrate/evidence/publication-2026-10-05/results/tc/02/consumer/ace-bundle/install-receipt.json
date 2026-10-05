@@ -1,0 +1,59 @@
+{
+  "kind": "activated-receipt",
+  "packages": {
+    "ace-support-cli": {
+      "version": "0.6.9",
+      "path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/consumer/ace-bundle/.bundle/ruby/3.4.0/gems/ace-support-cli-0.6.9",
+      "required": true,
+      "entry": "ace/support/cli"
+    },
+    "ace-support-fs": {
+      "version": "0.3.4",
+      "path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/consumer/ace-bundle/.bundle/ruby/3.4.0/gems/ace-support-fs-0.3.4",
+      "required": true,
+      "entry": "ace/support/fs"
+    },
+    "ace-support-config": {
+      "version": "0.18.2",
+      "path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/consumer/ace-bundle/.bundle/ruby/3.4.0/gems/ace-support-config-0.18.2",
+      "required": true,
+      "entry": "ace/support/config"
+    },
+    "ace-support-core": {
+      "version": "0.32.0",
+      "path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/consumer/ace-bundle/.bundle/ruby/3.4.0/gems/ace-support-core-0.32.0",
+      "required": true,
+      "entry": "ace/core"
+    },
+    "ace-compressor": {
+      "version": "0.25.5",
+      "path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/consumer/ace-bundle/.bundle/ruby/3.4.0/gems/ace-compressor-0.25.5",
+      "required": true,
+      "entry": "ace/compressor"
+    },
+    "ace-git": {
+      "version": "0.29.0",
+      "path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/consumer/ace-bundle/.bundle/ruby/3.4.0/gems/ace-git-0.29.0",
+      "required": true,
+      "entry": "ace/git"
+    },
+    "ace-git-github": {
+      "version": "0.4.0",
+      "path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/consumer/ace-bundle/.bundle/ruby/3.4.0/gems/ace-git-github-0.4.0",
+      "required": true,
+      "entry": "ace/git/github"
+    },
+    "ace-support-nav": {
+      "version": "0.28.7",
+      "path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/consumer/ace-bundle/.bundle/ruby/3.4.0/gems/ace-support-nav-0.28.7",
+      "required": true,
+      "entry": "ace/support/nav"
+    },
+    "ace-bundle": {
+      "version": "0.44.2",
+      "path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/consumer/ace-bundle/.bundle/ruby/3.4.0/gems/ace-bundle-0.44.2",
+      "required": true,
+      "entry": "ace/bundle"
+    }
+  }
+}

@@ -1,0 +1,2 @@
+/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-support-test-helpers-0.14.7/lib/ace/test_support/performance_helpers.rb:3: warning: benchmark was loaded from the standard library, but will no longer be part of the default gems starting from Ruby 4.0.0.
+You can add benchmark to your Gemfile or gemspec to silence this warning.

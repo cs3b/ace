@@ -1,0 +1,7 @@
+{
+  "phase": "runner",
+  "provider": "role:e2e-runner",
+  "cli_args": null,
+  "timeout": 1800,
+  "recorded_at": "2026-10-05T14:49:34Z"
+}

@@ -1,0 +1,31 @@
+---
+run-id: 8x4m8d9-monorepo-e2e-ts001
+test-id: TS-MONO-001
+package: ace-monorepo-e2e
+agent: ace-test-e2e
+started: '2026-10-05T14:49:34Z'
+completed: '2026-10-05T14:59:59Z'
+duration: 626s
+status: error
+score: 0.0
+verdict: fail
+tcs-passed: 0
+tcs-failed: 0
+tcs-total: 0
+results:
+  passed: 0
+  failed: 0
+  total: 0
+failed: []
+failed_test_cases: []
+failure_category: infrastructure-error
+failure_phase: verifier
+uncertain_execution: true
+execution_evidence:
+  :outcome: :nonzero_exit
+  :invocation_id: iYZVobQG
+  :provider_name: Codex
+  :deadline_seconds: 1800
+  :elapsed_seconds: 4.560934999957681
+  :exit_status: 1
+  :execution_began: true

@@ -1,0 +1,69 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    ace-b36ts (0.14.11)
+      ace-support-cli (~> 0.6)
+      ace-support-config (~> 0.18)
+      ace-support-core (~> 0.31)
+    ace-git (0.29.0)
+      ace-support-cli (~> 0.6)
+      ace-support-config (~> 0.18)
+      ace-support-core (~> 0.31)
+    ace-git-forgejo (0.6.1)
+      ace-git (~> 0.26)
+      faraday (~> 2.14)
+      faraday-retry (~> 2.4)
+    ace-git-github (0.4.0)
+      ace-git (~> 0.26)
+    ace-support-cli (0.6.9)
+    ace-support-config (0.18.2)
+      ace-support-fs (~> 0.3)
+    ace-support-core (0.32.0)
+      ace-support-cli (~> 0.6)
+      ace-support-config (~> 0.18)
+      ace-support-fs (~> 0.3)
+    ace-support-fs (0.3.4)
+    ace-support-items (0.15.13)
+      ace-b36ts (~> 0.14)
+      ace-support-core (~> 0.31)
+    ace-support-markdown (0.3.6)
+      kramdown (~> 2.5)
+      kramdown-parser-gfm (~> 1.1)
+    ace-task (0.39.1)
+      ace-b36ts (~> 0.14)
+      ace-git (~> 0.27)
+      ace-git-forgejo (~> 0.5)
+      ace-git-github (~> 0.4)
+      ace-support-cli (~> 0.6)
+      ace-support-core (~> 0.31)
+      ace-support-fs (~> 0.3)
+      ace-support-items (~> 0.15)
+      ace-support-markdown (~> 0.3)
+    faraday (2.14.4)
+      faraday-net_http (>= 2.0, < 3.5)
+      json
+      logger
+    faraday-net_http (3.4.4)
+      net-http (~> 0.5)
+    faraday-retry (2.4.0)
+      faraday (~> 2.0)
+    json (3.0.2)
+    kramdown (2.5.2)
+      rexml (>= 3.4.4)
+    kramdown-parser-gfm (1.1.0)
+      kramdown (~> 2.0)
+    logger (1.7.0)
+    net-http (0.9.1)
+      uri (>= 0.11.1)
+    rexml (3.4.4)
+    uri (1.1.1)
+
+PLATFORMS
+  arm64-darwin-25
+  ruby
+
+DEPENDENCIES
+  ace-task (= 0.39.1)
+
+BUNDLED WITH
+   2.6.9

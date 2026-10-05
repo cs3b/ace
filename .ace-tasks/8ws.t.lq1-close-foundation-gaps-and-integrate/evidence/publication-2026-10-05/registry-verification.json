@@ -1,0 +1,165 @@
+{
+  "checked_at": "2026-10-05T14:50:15.349104+00:00",
+  "packages": [
+    {
+      "name": "ace-runtime",
+      "version": "0.2.0",
+      "url": "https://rubygems.org/api/v2/rubygems/ace-runtime/versions/0.2.0.json",
+      "expected_sha256": "4ced58c215dab80057a9b16d101a5fe1650a5ec8f68717816d2b857a31840a21",
+      "registry_sha256": "4ced58c215dab80057a9b16d101a5fe1650a5ec8f68717816d2b857a31840a21",
+      "match": true,
+      "registry_version": "0.2.0",
+      "version_matches": true
+    },
+    {
+      "name": "ace-hitl-contract",
+      "version": "0.2.0",
+      "url": "https://rubygems.org/api/v2/rubygems/ace-hitl-contract/versions/0.2.0.json",
+      "expected_sha256": "7d93c3ac48c8780a9c4092e10a456cff3458997ffe5c88c7768eef4cd4e4edec",
+      "registry_sha256": "7d93c3ac48c8780a9c4092e10a456cff3458997ffe5c88c7768eef4cd4e4edec",
+      "match": true,
+      "registry_version": "0.2.0",
+      "version_matches": true
+    },
+    {
+      "name": "ace-herdr",
+      "version": "0.4.0",
+      "url": "https://rubygems.org/api/v2/rubygems/ace-herdr/versions/0.4.0.json",
+      "expected_sha256": "2ce9b671cdd6294b444e0b1b3d717cd337aadcb167862d29b0caffc84a30c34b",
+      "registry_sha256": "2ce9b671cdd6294b444e0b1b3d717cd337aadcb167862d29b0caffc84a30c34b",
+      "match": true,
+      "registry_version": "0.4.0",
+      "version_matches": true
+    },
+    {
+      "name": "ace-tmux",
+      "version": "0.19.0",
+      "url": "https://rubygems.org/api/v2/rubygems/ace-tmux/versions/0.19.0.json",
+      "expected_sha256": "53309f9c3ebfdb94cbcf46441afc025a9c9465612721a7cc4663d98d67e5ca44",
+      "registry_sha256": "53309f9c3ebfdb94cbcf46441afc025a9c9465612721a7cc4663d98d67e5ca44",
+      "match": true,
+      "registry_version": "0.19.0",
+      "version_matches": true
+    },
+    {
+      "name": "ace-assign",
+      "version": "0.64.0",
+      "url": "https://rubygems.org/api/v2/rubygems/ace-assign/versions/0.64.0.json",
+      "expected_sha256": "0c1eb7362d59e220c60bfd7060d51fc22e720469b9b4bd619690cd6387dcc9eb",
+      "registry_sha256": "0c1eb7362d59e220c60bfd7060d51fc22e720469b9b4bd619690cd6387dcc9eb",
+      "match": true,
+      "registry_version": "0.64.0",
+      "version_matches": true
+    },
+    {
+      "name": "ace-hitl",
+      "version": "0.12.0",
+      "url": "https://rubygems.org/api/v2/rubygems/ace-hitl/versions/0.12.0.json",
+      "expected_sha256": "4985b6582de5142e6e8f6f9fa27f656b6032f6321b1d369ade6d335ac1ddd5be",
+      "registry_sha256": "4985b6582de5142e6e8f6f9fa27f656b6032f6321b1d369ade6d335ac1ddd5be",
+      "match": true,
+      "registry_version": "0.12.0",
+      "version_matches": true
+    },
+    {
+      "name": "ace-hitl-hermes",
+      "version": "0.2.0",
+      "url": "https://rubygems.org/api/v2/rubygems/ace-hitl-hermes/versions/0.2.0.json",
+      "expected_sha256": "e2ffd6fd0f4cfa32d9885098d8ae2d223289372abc1e616be2dfe1d9bc289c1f",
+      "registry_sha256": "e2ffd6fd0f4cfa32d9885098d8ae2d223289372abc1e616be2dfe1d9bc289c1f",
+      "match": true,
+      "registry_version": "0.2.0",
+      "version_matches": true
+    },
+    {
+      "name": "ace-lab",
+      "version": "0.4.0",
+      "url": "https://rubygems.org/api/v2/rubygems/ace-lab/versions/0.4.0.json",
+      "expected_sha256": "e61be72de4f72e4d48e130a9f31694dc22a10e24586bf53b9e905113f030602b",
+      "registry_sha256": "e61be72de4f72e4d48e130a9f31694dc22a10e24586bf53b9e905113f030602b",
+      "match": true,
+      "registry_version": "0.4.0",
+      "version_matches": true
+    },
+    {
+      "name": "ace-git",
+      "version": "0.29.0",
+      "url": "https://rubygems.org/api/v2/rubygems/ace-git/versions/0.29.0.json",
+      "expected_sha256": "f60768efaccc56472cdda1c33893a4fc30b0d2968c103a1d5e4c0b7dfea5907a",
+      "registry_sha256": "f60768efaccc56472cdda1c33893a4fc30b0d2968c103a1d5e4c0b7dfea5907a",
+      "match": true,
+      "registry_version": "0.29.0",
+      "version_matches": true
+    },
+    {
+      "name": "ace-handbook",
+      "version": "0.34.0",
+      "url": "https://rubygems.org/api/v2/rubygems/ace-handbook/versions/0.34.0.json",
+      "expected_sha256": "7810ed36f050af9d5e20f2ac2fd1cf3c35cc00faa3f5487e552d53d1f4f58e02",
+      "registry_sha256": "7810ed36f050af9d5e20f2ac2fd1cf3c35cc00faa3f5487e552d53d1f4f58e02",
+      "match": true,
+      "registry_version": "0.34.0",
+      "version_matches": true
+    },
+    {
+      "name": "ace-git-worktree",
+      "version": "0.26.0",
+      "url": "https://rubygems.org/api/v2/rubygems/ace-git-worktree/versions/0.26.0.json",
+      "expected_sha256": "155fea268c7a6eadeafb6c544450f466929a03317f3302fac072025f15cd33cb",
+      "registry_sha256": "155fea268c7a6eadeafb6c544450f466929a03317f3302fac072025f15cd33cb",
+      "match": true,
+      "registry_version": "0.26.0",
+      "version_matches": true
+    },
+    {
+      "name": "ace-review",
+      "version": "0.59.0",
+      "url": "https://rubygems.org/api/v2/rubygems/ace-review/versions/0.59.0.json",
+      "expected_sha256": "7108305bfa20f867dccedc6fe098ef73f597d447f4f98c60820402839a72ac27",
+      "registry_sha256": "7108305bfa20f867dccedc6fe098ef73f597d447f4f98c60820402839a72ac27",
+      "match": true,
+      "registry_version": "0.59.0",
+      "version_matches": true
+    },
+    {
+      "name": "ace-overseer",
+      "version": "0.20.0",
+      "url": "https://rubygems.org/api/v2/rubygems/ace-overseer/versions/0.20.0.json",
+      "expected_sha256": "47d4a9ed9a3b9cd941651d8161daef78b3d732c30cde373665696005c6a81383",
+      "registry_sha256": "47d4a9ed9a3b9cd941651d8161daef78b3d732c30cde373665696005c6a81383",
+      "match": true,
+      "registry_version": "0.20.0",
+      "version_matches": true
+    },
+    {
+      "name": "ace-test-runner",
+      "version": "0.28.0",
+      "url": "https://rubygems.org/api/v2/rubygems/ace-test-runner/versions/0.28.0.json",
+      "expected_sha256": "a9b1a0735d6108ac3b47b8fc5493e30664198430875db4a5046531e7cd7a2a71",
+      "registry_sha256": "a9b1a0735d6108ac3b47b8fc5493e30664198430875db4a5046531e7cd7a2a71",
+      "match": true,
+      "registry_version": "0.28.0",
+      "version_matches": true
+    },
+    {
+      "name": "ace-test-runner-e2e",
+      "version": "0.43.0",
+      "url": "https://rubygems.org/api/v2/rubygems/ace-test-runner-e2e/versions/0.43.0.json",
+      "expected_sha256": "cacbc6013634b7eb304ee30755fb1824a26d62f85944d09851bf9bb3c364fd4c",
+      "registry_sha256": "cacbc6013634b7eb304ee30755fb1824a26d62f85944d09851bf9bb3c364fd4c",
+      "match": true,
+      "registry_version": "0.43.0",
+      "version_matches": true
+    },
+    {
+      "name": "ace-demo",
+      "version": "0.26.2",
+      "url": "https://rubygems.org/api/v2/rubygems/ace-demo/versions/0.26.2.json",
+      "expected_sha256": "5a6a99ab990fd82e2500d95ca03d9d552d8a6c3a95eca6abe01da5d2b26b8fc5",
+      "registry_sha256": "5a6a99ab990fd82e2500d95ca03d9d552d8a6c3a95eca6abe01da5d2b26b8fc5",
+      "match": true,
+      "registry_version": "0.26.2",
+      "version_matches": true
+    }
+  ]
+}

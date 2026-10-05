@@ -1,0 +1,22 @@
+Fetching source index from https://rubygems.org/
+Resolving dependencies...
+Fetching ace-support-cli 0.6.9
+Fetching ace-support-fs 0.3.4
+Installing ace-support-cli 0.6.9
+Installing ace-support-fs 0.3.4
+Fetching ace-support-config 0.18.2
+Installing ace-support-config 0.18.2
+Fetching ace-support-core 0.32.0
+Installing ace-support-core 0.32.0
+Fetching ace-compressor 0.25.5
+Fetching ace-git 0.29.0
+Fetching ace-support-nav 0.28.7
+Installing ace-compressor 0.25.5
+Installing ace-git 0.29.0
+Installing ace-support-nav 0.28.7
+Fetching ace-git-github 0.4.0
+Installing ace-git-github 0.4.0
+Fetching ace-bundle 0.44.2
+Installing ace-bundle 0.44.2
+Bundle complete! 1 Gemfile dependency, 10 gems now installed.
+Bundled gems are installed into `./results/tc/03/consumer/ace-bundle/.bundle`

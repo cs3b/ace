@@ -1,0 +1,62 @@
+Fetching gem metadata from https://rubygems.org/...........
+Resolving dependencies...
+Fetching ace-support-cli 0.6.9
+Fetching ace-support-fs 0.3.4
+Fetching uri 1.1.1
+Fetching json 3.0.2
+Fetching logger 1.7.0
+Fetching public_suffix 7.0.5
+Fetching rexml 3.4.4
+Installing ace-support-fs 0.3.4
+Fetching ace-support-config 0.18.2
+Installing uri 1.1.1
+Fetching net-http 0.9.1
+Installing json 3.0.2 with native extensions
+Installing logger 1.7.0
+Installing public_suffix 7.0.5
+Fetching addressable 2.9.0
+Installing rexml 3.4.4
+Fetching kramdown 2.5.2
+Installing ace-support-cli 0.6.9
+Installing ace-support-config 0.18.2
+Fetching ace-support-core 0.32.0
+Installing net-http 0.9.1
+Fetching faraday-net_http 3.4.4
+Installing addressable 2.9.0
+Installing kramdown 2.5.2
+Installing ace-support-core 0.32.0
+Fetching ace-b36ts 0.14.11
+Fetching ace-compressor 0.25.5
+Fetching ace-git 0.29.0
+Fetching ace-support-nav 0.28.7
+Installing faraday-net_http 3.4.4
+Installing ace-compressor 0.25.5
+Fetching kramdown-parser-gfm 1.1.0
+Installing ace-git 0.29.0
+Fetching ace-git-github 0.4.0
+Installing ace-support-nav 0.28.7
+Installing ace-b36ts 0.14.11
+Fetching ace-support-items 0.15.13
+Installing kramdown-parser-gfm 1.1.0
+Fetching ace-support-markdown 0.3.6
+Installing ace-git-github 0.4.0
+Fetching ace-bundle 0.44.2
+Installing ace-support-items 0.15.13
+Installing ace-support-markdown 0.3.6
+Installing ace-bundle 0.44.2
+Fetching faraday 2.14.4
+Installing faraday 2.14.4
+Fetching faraday-retry 2.4.0
+Installing faraday-retry 2.4.0
+Fetching ace-git-forgejo 0.6.1
+Fetching ace-support-models 0.12.4
+Installing ace-git-forgejo 0.6.1
+Fetching ace-task 0.39.1
+Installing ace-support-models 0.12.4
+Fetching ace-llm 0.42.0
+Installing ace-task 0.39.1
+Installing ace-llm 0.42.0
+Fetching ace-review 0.59.0
+Installing ace-review 0.59.0
+Bundle complete! 1 Gemfile dependency, 30 gems now installed.
+Bundled gems are installed into `./results/tc/02/consumer/ace-review/.bundle`

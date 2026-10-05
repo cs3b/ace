@@ -1,0 +1,16 @@
+{
+  "tc_id": "TC-004",
+  "title": "Goal 4 — Classify Installation Result and Verify Exact Versions",
+  "declared_artifacts": [
+    "results/tc/01/gem-count.txt",
+    "results/tc/01/release-manifest.json",
+    "results/tc/02/install.exit",
+    "results/tc/03/fullindex.exit",
+    "results/tc/04",
+    "results/tc/04/classification.txt",
+    "results/tc/04/exact-version-acceptance.json",
+    "results/tc/04/proof.md"
+  ],
+  "optional_artifacts": [],
+  "goal_format": "standalone"
+}

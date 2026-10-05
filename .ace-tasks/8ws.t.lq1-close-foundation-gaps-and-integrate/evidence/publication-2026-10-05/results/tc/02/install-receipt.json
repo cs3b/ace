@@ -1,0 +1,299 @@
+{
+  "kind": "activated-receipt",
+  "packages": {
+    "ace-support-cli": {
+      "version": "0.6.9",
+      "path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-support-cli-0.6.9",
+      "required": true,
+      "entry": "ace/support/cli"
+    },
+    "ace-support-fs": {
+      "version": "0.3.4",
+      "path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-support-fs-0.3.4",
+      "required": true,
+      "entry": "ace/support/fs"
+    },
+    "ace-support-config": {
+      "version": "0.18.2",
+      "path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-support-config-0.18.2",
+      "required": true,
+      "entry": "ace/support/config"
+    },
+    "ace-support-core": {
+      "version": "0.32.0",
+      "path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-support-core-0.32.0",
+      "required": true,
+      "entry": "ace/core"
+    },
+    "ace-b36ts": {
+      "version": "0.14.11",
+      "path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-b36ts-0.14.11",
+      "required": true,
+      "entry": "ace/b36ts"
+    },
+    "ace-git": {
+      "version": "0.29.0",
+      "path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-git-0.29.0",
+      "required": true,
+      "entry": "ace/git"
+    },
+    "ace-hitl-contract": {
+      "version": "0.2.0",
+      "path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-hitl-contract-0.2.0",
+      "required": true,
+      "entry": "ace/hitl/contract"
+    },
+    "ace-runtime": {
+      "version": "0.2.0",
+      "path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-runtime-0.2.0",
+      "required": true,
+      "entry": "ace/runtime"
+    },
+    "ace-herdr": {
+      "version": "0.4.0",
+      "path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-herdr-0.4.0",
+      "required": true,
+      "entry": "ace/herdr"
+    },
+    "ace-support-models": {
+      "version": "0.12.4",
+      "path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-support-models-0.12.4",
+      "required": true,
+      "entry": "ace/support/models"
+    },
+    "ace-llm": {
+      "version": "0.42.0",
+      "path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-llm-0.42.0",
+      "required": true,
+      "entry": "ace/llm"
+    },
+    "ace-llm-providers-cli": {
+      "version": "0.36.1",
+      "path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-llm-providers-cli-0.36.1",
+      "required": true,
+      "entry": "ace/llm/providers/cli"
+    },
+    "ace-compressor": {
+      "version": "0.25.5",
+      "path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-compressor-0.25.5",
+      "required": true,
+      "entry": "ace/compressor"
+    },
+    "ace-git-github": {
+      "version": "0.4.0",
+      "path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-git-github-0.4.0",
+      "required": true,
+      "entry": "ace/git/github"
+    },
+    "ace-support-nav": {
+      "version": "0.28.7",
+      "path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-support-nav-0.28.7",
+      "required": true,
+      "entry": "ace/support/nav"
+    },
+    "ace-bundle": {
+      "version": "0.44.2",
+      "path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-bundle-0.44.2",
+      "required": true,
+      "entry": "ace/bundle"
+    },
+    "ace-git-forgejo": {
+      "version": "0.6.1",
+      "path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-git-forgejo-0.6.1",
+      "required": true,
+      "entry": "ace/git/forgejo"
+    },
+    "ace-support-items": {
+      "version": "0.15.13",
+      "path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-support-items-0.15.13",
+      "required": true,
+      "entry": "ace/support/items"
+    },
+    "ace-support-markdown": {
+      "version": "0.3.6",
+      "path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-support-markdown-0.3.6",
+      "required": true,
+      "entry": "ace/support/markdown"
+    },
+    "ace-task": {
+      "version": "0.39.1",
+      "path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-task-0.39.1",
+      "required": true,
+      "entry": "ace/task"
+    },
+    "ace-review": {
+      "version": "0.59.0",
+      "path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-review-0.59.0",
+      "required": true,
+      "entry": "ace/review"
+    },
+    "ace-tmux": {
+      "version": "0.19.0",
+      "path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-tmux-0.19.0",
+      "required": true,
+      "entry": "ace/tmux"
+    },
+    "ace-assign": {
+      "version": "0.64.0",
+      "path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-assign-0.64.0",
+      "required": true,
+      "entry": "ace/assign"
+    },
+    "ace-demo": {
+      "version": "0.26.2",
+      "path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-demo-0.26.2",
+      "required": true,
+      "entry": "ace/demo"
+    },
+    "ace-docs": {
+      "version": "0.34.5",
+      "path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-docs-0.34.5",
+      "required": true,
+      "entry": "ace/docs"
+    },
+    "ace-git-commit": {
+      "version": "0.26.6",
+      "path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-git-commit-0.26.6",
+      "required": true,
+      "entry": "ace/git_commit"
+    },
+    "ace-git-secrets": {
+      "version": "0.15.11",
+      "path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-git-secrets-0.15.11",
+      "required": true,
+      "entry": "ace/git/secrets"
+    },
+    "ace-git-worktree": {
+      "version": "0.26.0",
+      "path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-git-worktree-0.26.0",
+      "required": true,
+      "entry": "ace/git/worktree"
+    },
+    "ace-handbook": {
+      "version": "0.34.0",
+      "path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-handbook-0.34.0",
+      "required": true,
+      "entry": "ace/handbook"
+    },
+    "ace-handbook-integration-claude": {
+      "version": "0.3.12",
+      "path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-handbook-integration-claude-0.3.12",
+      "required": true,
+      "entry": "ace/handbook/integration/claude"
+    },
+    "ace-handbook-integration-codex": {
+      "version": "0.3.12",
+      "path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-handbook-integration-codex-0.3.12",
+      "required": true,
+      "entry": "ace/handbook/integration/codex"
+    },
+    "ace-handbook-integration-gemini": {
+      "version": "0.3.11",
+      "path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-handbook-integration-gemini-0.3.11",
+      "required": true,
+      "entry": "ace/handbook/integration/gemini"
+    },
+    "ace-handbook-integration-opencode": {
+      "version": "0.3.11",
+      "path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-handbook-integration-opencode-0.3.11",
+      "required": true,
+      "entry": "ace/handbook/integration/opencode"
+    },
+    "ace-handbook-integration-pi": {
+      "version": "0.5.0",
+      "path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-handbook-integration-pi-0.5.0",
+      "required": true,
+      "entry": "ace/handbook/integration/pi"
+    },
+    "ace-hitl": {
+      "version": "0.12.0",
+      "path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-hitl-0.12.0",
+      "required": true,
+      "entry": "ace/hitl"
+    },
+    "ace-hitl-hermes": {
+      "version": "0.2.0",
+      "path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-hitl-hermes-0.2.0",
+      "required": true,
+      "entry": "ace/hitl/hermes"
+    },
+    "ace-idea": {
+      "version": "0.21.6",
+      "path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-idea-0.21.6",
+      "required": true,
+      "entry": "ace/idea"
+    },
+    "ace-lab": {
+      "version": "0.4.0",
+      "path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-lab-0.4.0",
+      "required": true,
+      "entry": "ace/lab"
+    },
+    "ace-lint": {
+      "version": "0.30.10",
+      "path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-lint-0.30.10",
+      "required": true,
+      "entry": "ace/lint"
+    },
+    "ace-overseer": {
+      "version": "0.20.0",
+      "path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-overseer-0.20.0",
+      "required": true,
+      "entry": "ace/overseer"
+    },
+    "ace-prompt-prep": {
+      "version": "0.25.10",
+      "path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-prompt-prep-0.25.10",
+      "required": true,
+      "entry": "ace/prompt_prep"
+    },
+    "ace-retro": {
+      "version": "0.18.8",
+      "path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-retro-0.18.8",
+      "required": true,
+      "entry": "ace/retro"
+    },
+    "ace-search": {
+      "version": "0.26.6",
+      "path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-search-0.26.6",
+      "required": true,
+      "entry": "ace/search"
+    },
+    "ace-sim": {
+      "version": "0.15.8",
+      "path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-sim-0.15.8",
+      "required": true,
+      "entry": "ace/sim"
+    },
+    "ace-support-mac-clipboard": {
+      "version": "0.3.5",
+      "path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-support-mac-clipboard-0.3.5",
+      "required": true,
+      "entry": "ace/support/mac_clipboard"
+    },
+    "ace-support-test-helpers": {
+      "version": "0.14.7",
+      "path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-support-test-helpers-0.14.7",
+      "required": true,
+      "entry": "ace/test_support"
+    },
+    "ace-test": {
+      "version": "0.7.4",
+      "path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-test-0.7.4",
+      "required": true,
+      "entry": "ace/test"
+    },
+    "ace-test-runner": {
+      "version": "0.28.0",
+      "path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-test-runner-0.28.0",
+      "required": true,
+      "entry": "ace/test_runner"
+    },
+    "ace-test-runner-e2e": {
+      "version": "0.43.0",
+      "path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-test-runner-e2e-0.43.0",
+      "required": true,
+      "entry": "ace/test/end_to_end_runner"
+    }
+  }
+}

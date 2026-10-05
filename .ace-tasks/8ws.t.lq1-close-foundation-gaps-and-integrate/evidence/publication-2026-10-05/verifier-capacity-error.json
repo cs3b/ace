@@ -1,0 +1,20 @@
+{
+  "session": "/Users/mc/.codex/sessions/2026/10/05/rollout-2026-10-05T15-59-55-01a10c94-1b77-7f43-b1c3-8a4411d0875b.jsonl",
+  "event": {
+    "timestamp": "2026-10-05T14:59:59.496Z",
+    "ordinal": 11,
+    "type": "event_msg",
+    "payload": {
+      "type": "task_complete",
+      "turn_id": "01a10c94-1ce1-7e21-81a8-95d58783bad1",
+      "last_agent_message": null,
+      "error": {
+        "message": "Selected model is at capacity. Please try a different model.",
+        "codex_error_info": "server_overloaded"
+      },
+      "started_at": 1791212395,
+      "completed_at": 1791212399,
+      "duration_ms": 3746
+    }
+  }
+}

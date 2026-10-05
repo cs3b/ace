@@ -1,0 +1,18 @@
+proof_ruby_root="${ACE_E2E_SANDBOX_RUBY_ROOT:?}"
+proof_bundle() {
+  proof_case="$1"; shift
+  env -i HOME="$HOME" PATH="$proof_ruby_root/bin:$PATH" \
+    PROJECT_ROOT_PATH="$PWD" \
+    BUNDLE_GEMFILE="$PWD/Gemfile" \
+    BUNDLE_APP_CONFIG="$proof_case/.bundle" \
+    BUNDLE_PATH="$proof_case/.bundle" \
+    BUNDLE_USER_HOME="$proof_case/bundler-home" \
+    BUNDLE_USER_CACHE="$proof_case/bundler-cache" \
+    BUNDLE_USER_CONFIG="$proof_case/bundler-config" \
+    BUNDLE_DISABLE_SHARED_GEMS=true \
+    BUNDLE_WITHOUT="" \
+    GEM_HOME="$proof_case/.gem" \
+    GEM_PATH="$proof_case/.gem" \
+    "$proof_ruby_root/bin/ruby" "$proof_ruby_root/bin/bundle" "$@"
+}
+proof_bundle results/tc/02 install

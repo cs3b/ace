@@ -1,0 +1,1 @@
+SUCCESS: bundle install --full-index completed.

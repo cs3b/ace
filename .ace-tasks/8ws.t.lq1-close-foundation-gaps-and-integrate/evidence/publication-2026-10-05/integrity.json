@@ -1,0 +1,712 @@
+[
+  {
+    "path": "installation-acceptance.json",
+    "sha256": "3eed4b1f659e92bdc5f0bdf4380df0dcf826eba52b19d23cfb914de24f0d31bc",
+    "bytes": 49958
+  },
+  {
+    "path": "pipeline/.ace-e2e-setup-state.json",
+    "sha256": "2fb629b02f7c0d6be571d4d19e566f329d8dd7c0079784bf7dcd1b5939569a57",
+    "bytes": 4121
+  },
+  {
+    "path": "pipeline/.host-pipeline-failed.json",
+    "sha256": "c9de1e3cf85b628789983cd5bfb4a25ac6d2df56e50b31472f2a3a735ae491d9",
+    "bytes": 434
+  },
+  {
+    "path": "pipeline/artifact-snapshot.initial.json",
+    "sha256": "8f29049027929177d3e3368006a604d3e9901bcd8fce46700fdda99f89d0b565",
+    "bytes": 10917
+  },
+  {
+    "path": "pipeline/artifact-snapshot.json",
+    "sha256": "53a6cbf08ae9d8297c585229862a090a139aee7344508555db4dfd76744a6b17",
+    "bytes": 10993
+  },
+  {
+    "path": "pipeline/experience.r.md",
+    "sha256": "dd056e1a4e2aacb817a1d36c6f1ce8358d0011cc6130a3abb92b70c3a1607745",
+    "bytes": 690
+  },
+  {
+    "path": "pipeline/metadata.yml",
+    "sha256": "054c7796819168414f016c7fbdb781d0eca0edec1ec3363354e55b0ca2f2c2de",
+    "bytes": 637
+  },
+  {
+    "path": "pipeline/report.md",
+    "sha256": "04d0e91a339da5d6d4daad50b0fb5111390e985731301fa86b108faa08486dba",
+    "bytes": 774
+  },
+  {
+    "path": "pipeline/runner-repair.command.json",
+    "sha256": "d93dd159119aa5ae480e79241f9e8109a87b823a52080274f59a4910d453ef70",
+    "bytes": 143
+  },
+  {
+    "path": "pipeline/runner.command.json",
+    "sha256": "2a7a2d0c7ead6853aa09e1ebb58d9cce754a23d84e2c88382ac4ccc110d38b6f",
+    "bytes": 136
+  },
+  {
+    "path": "pipeline/summary.r.md",
+    "sha256": "92acf5352fad91d5e6d7d05d4670831b9d59966ae079ebee8cf3a091c86fc598",
+    "bytes": 966
+  },
+  {
+    "path": "pipeline/tc001.manifest.json",
+    "sha256": "8af56015424bb25e77fa1165dc874d794f90d60e3377f37f02d1fbe2fb421800",
+    "bytes": 372
+  },
+  {
+    "path": "pipeline/tc002.manifest.json",
+    "sha256": "97ba327ce7f78eae490ce395923f38508ba86e07e7c308a9d01290703b48a67f",
+    "bytes": 1503
+  },
+  {
+    "path": "pipeline/tc003.manifest.json",
+    "sha256": "e934600216344d445be556a964408e7bcba9a413eff4c65dc4a9e4de93cf06bb",
+    "bytes": 1515
+  },
+  {
+    "path": "pipeline/tc004.manifest.json",
+    "sha256": "b06d6c9ac4e555a7f74e22897ae469621a453913a36ab9ce6ac137deac1a0d26",
+    "bytes": 482
+  },
+  {
+    "path": "pipeline/verifier.command.json",
+    "sha256": "bebbefdff50b23b4ef9fd50c840a42c7a0866c4c3addc9271e7b8930336740b6",
+    "bytes": 140
+  },
+  {
+    "path": "registry-verification.json",
+    "sha256": "ff28034f40efbdab691f84bf9554bc1ed0404b4c958be8d652bc4ecb3209e9ea",
+    "bytes": 6924
+  },
+  {
+    "path": "results/tc/01/gem-count.txt",
+    "sha256": "6169555d9248be7e184f52250129b0d66c9932af74f4ac7bc716c20013fca362",
+    "bytes": 3
+  },
+  {
+    "path": "results/tc/01/gem-list.txt",
+    "sha256": "5c9bd94d5da8df4c08745de12c2352d64b252fabaf4ba59928492c5b9ed2595a",
+    "bytes": 767
+  },
+  {
+    "path": "results/tc/01/manifest-package-count.txt",
+    "sha256": "6169555d9248be7e184f52250129b0d66c9932af74f4ac7bc716c20013fca362",
+    "bytes": 3
+  },
+  {
+    "path": "results/tc/01/path-check.txt",
+    "sha256": "afd9537a98c7c88995fa75f18684097521e200f9854584a0480a065ca1aaa2b2",
+    "bytes": 26
+  },
+  {
+    "path": "results/tc/01/release-manifest.json",
+    "sha256": "851babb5c3bd0cb76959db015960ed5d4b48e216f500ec6e75f5fd230287189f",
+    "bytes": 15330
+  },
+  {
+    "path": "results/tc/02/Gemfile.lock",
+    "sha256": "97869e85022a61bba17b71de6fdfae20767156d0190f023527aee32258e37ec3",
+    "bytes": 10509
+  },
+  {
+    "path": "results/tc/02/bundle-list.exit",
+    "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "bytes": 2
+  },
+  {
+    "path": "results/tc/02/bundle-list.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "path": "results/tc/02/bundle-list.stdout",
+    "sha256": "29b3ca88d7613a373e4ee422c3b244f30dbb9a6c1130f2847c9144622bcc0c6d",
+    "bytes": 2058
+  },
+  {
+    "path": "results/tc/02/bundler-config",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "path": "results/tc/02/consumer/ace-bundle/Gemfile",
+    "sha256": "32e43795696d5cca006c0b1689610ce9233b91c255a0171a184c454df177ec59",
+    "bytes": 58
+  },
+  {
+    "path": "results/tc/02/consumer/ace-bundle/Gemfile.lock",
+    "sha256": "a7da01864a6a1cc623a4fa673c2f26349ac7315e40c1095023ece52e874c1db2",
+    "bytes": 1111
+  },
+  {
+    "path": "results/tc/02/consumer/ace-bundle/gemfile.exit",
+    "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "bytes": 2
+  },
+  {
+    "path": "results/tc/02/consumer/ace-bundle/gemfile.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "path": "results/tc/02/consumer/ace-bundle/gemfile.stdout",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "path": "results/tc/02/consumer/ace-bundle/install-receipt.exit",
+    "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "bytes": 2
+  },
+  {
+    "path": "results/tc/02/consumer/ace-bundle/install-receipt.json",
+    "sha256": "75c37025550f022f1f07fa5e93e2b5fc96c3e1fa6fc9d854129c87c2220ad261",
+    "bytes": 2505
+  },
+  {
+    "path": "results/tc/02/consumer/ace-bundle/install-receipt.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "path": "results/tc/02/consumer/ace-bundle/install-receipt.stdout",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "path": "results/tc/02/consumer/ace-bundle/install.exit",
+    "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "bytes": 2
+  },
+  {
+    "path": "results/tc/02/consumer/ace-bundle/install.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "path": "results/tc/02/consumer/ace-bundle/install.stdout",
+    "sha256": "26fe1cc04d31cfa11bff58ac41b3ebdb7df5cbb64569abbd8c5b6aa2c10d3ea3",
+    "bytes": 781
+  },
+  {
+    "path": "results/tc/02/consumer/ace-review/Gemfile",
+    "sha256": "612b03978e8b21a748f8f4484ae186d21f3c6d9ad1bb07c19871aea3992d24ad",
+    "bytes": 58
+  },
+  {
+    "path": "results/tc/02/consumer/ace-review/Gemfile.lock",
+    "sha256": "f760534056d5e855d64f9ab3d01730e4de70fbb416ebd4690623a2f621e37dc9",
+    "bytes": 3123
+  },
+  {
+    "path": "results/tc/02/consumer/ace-review/gemfile.exit",
+    "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "bytes": 2
+  },
+  {
+    "path": "results/tc/02/consumer/ace-review/gemfile.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "path": "results/tc/02/consumer/ace-review/gemfile.stdout",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "path": "results/tc/02/consumer/ace-review/install-receipt.exit",
+    "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "bytes": 2
+  },
+  {
+    "path": "results/tc/02/consumer/ace-review/install-receipt.json",
+    "sha256": "5062ad71e4d01aa67cf7f081b55bb56efb198e6fe78b9ff575fdc041cb1b17f5",
+    "bytes": 4681
+  },
+  {
+    "path": "results/tc/02/consumer/ace-review/install-receipt.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "path": "results/tc/02/consumer/ace-review/install-receipt.stdout",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "path": "results/tc/02/consumer/ace-review/install.exit",
+    "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "bytes": 2
+  },
+  {
+    "path": "results/tc/02/consumer/ace-review/install.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "path": "results/tc/02/consumer/ace-review/install.stdout",
+    "sha256": "026ed6d5b6662958f13d71a72d45b6f813dc3c16d023a135241541e90fc2f5a3",
+    "bytes": 1945
+  },
+  {
+    "path": "results/tc/02/consumer/ace-task/Gemfile",
+    "sha256": "00aefbe6f1be34e96644532db3b176a84456738a00f19cab08878e89b4f56551",
+    "bytes": 56
+  },
+  {
+    "path": "results/tc/02/consumer/ace-task/Gemfile.lock",
+    "sha256": "7114e96c3142829425643d3e7ea52b54f02c0bbf01e0479c8202be5f4defe97b",
+    "bytes": 1661
+  },
+  {
+    "path": "results/tc/02/consumer/ace-task/gemfile.exit",
+    "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "bytes": 2
+  },
+  {
+    "path": "results/tc/02/consumer/ace-task/gemfile.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "path": "results/tc/02/consumer/ace-task/gemfile.stdout",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "path": "results/tc/02/consumer/ace-task/install-receipt.exit",
+    "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "bytes": 2
+  },
+  {
+    "path": "results/tc/02/consumer/ace-task/install-receipt.json",
+    "sha256": "6da9b3507ec28f9a0522908d66f3641bd536b72d13c41edfb5316d33705c683e",
+    "bytes": 3039
+  },
+  {
+    "path": "results/tc/02/consumer/ace-task/install-receipt.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "path": "results/tc/02/consumer/ace-task/install-receipt.stdout",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "path": "results/tc/02/consumer/ace-task/install.exit",
+    "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "bytes": 2
+  },
+  {
+    "path": "results/tc/02/consumer/ace-task/install.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "path": "results/tc/02/consumer/ace-task/install.stdout",
+    "sha256": "a85f129ab96bc51037820bd3203bb367ddb0350eed1bd402134117417b47926a",
+    "bytes": 1463
+  },
+  {
+    "path": "results/tc/02/install-command.txt",
+    "sha256": "e4ba0d0df5858a6ccc0d34fb5b0a94c50931ec693bfa0e66a5eb202c4852ea3d",
+    "bytes": 692
+  },
+  {
+    "path": "results/tc/02/install-receipt.exit",
+    "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "bytes": 2
+  },
+  {
+    "path": "results/tc/02/install-receipt.json",
+    "sha256": "9c1f0c06cb11b70dc403c29874e3c133d20cc703b6d37a5eb01b990429f1beb1",
+    "bytes": 12619
+  },
+  {
+    "path": "results/tc/02/install-receipt.stderr",
+    "sha256": "23e5c5ca68364284cff7a3e36be8a4af7a11c1369529da99b50b6c8b43fd9d77",
+    "bytes": 385
+  },
+  {
+    "path": "results/tc/02/install-receipt.stdout",
+    "sha256": "1d6749f198d06d33b715583d972018b4625a22947c471801675109ea81fcc69d",
+    "bytes": 113
+  },
+  {
+    "path": "results/tc/02/install-summary.txt",
+    "sha256": "c49f7952e56b304bb79c385f458d66a74349d06937cd9407e0207f986e744440",
+    "bytes": 82
+  },
+  {
+    "path": "results/tc/02/install.exit",
+    "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "bytes": 2
+  },
+  {
+    "path": "results/tc/02/install.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "path": "results/tc/02/install.stdout",
+    "sha256": "df34f0994d025f8cc705738e5ab392e8f0077e9aa4083fc86877e232d14d4f08",
+    "bytes": 5425
+  },
+  {
+    "path": "results/tc/02/installed-ace-gems.txt",
+    "sha256": "7805831f88b38de8ed2d75d610c7d3f83f021f1c09e2d7688c84efe46a61888e",
+    "bytes": 1396
+  },
+  {
+    "path": "results/tc/02/lockfile-receipt.exit",
+    "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "bytes": 2
+  },
+  {
+    "path": "results/tc/02/lockfile-receipt.json",
+    "sha256": "554d49e1d42f14dcb4134c4371bd583f73a8fd9ad8104e7315cacc62c0a27671",
+    "bytes": 1684
+  },
+  {
+    "path": "results/tc/02/lockfile-receipt.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "path": "results/tc/02/lockfile-receipt.stdout",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "path": "results/tc/03/Gemfile.lock",
+    "sha256": "97869e85022a61bba17b71de6fdfae20767156d0190f023527aee32258e37ec3",
+    "bytes": 10509
+  },
+  {
+    "path": "results/tc/03/bundle-list.exit",
+    "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "bytes": 2
+  },
+  {
+    "path": "results/tc/03/bundle-list.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "path": "results/tc/03/bundle-list.stdout",
+    "sha256": "29b3ca88d7613a373e4ee422c3b244f30dbb9a6c1130f2847c9144622bcc0c6d",
+    "bytes": 2058
+  },
+  {
+    "path": "results/tc/03/bundler-config",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "path": "results/tc/03/consumer/ace-bundle/Gemfile",
+    "sha256": "32e43795696d5cca006c0b1689610ce9233b91c255a0171a184c454df177ec59",
+    "bytes": 58
+  },
+  {
+    "path": "results/tc/03/consumer/ace-bundle/Gemfile.lock",
+    "sha256": "a7da01864a6a1cc623a4fa673c2f26349ac7315e40c1095023ece52e874c1db2",
+    "bytes": 1111
+  },
+  {
+    "path": "results/tc/03/consumer/ace-bundle/gemfile.exit",
+    "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "bytes": 2
+  },
+  {
+    "path": "results/tc/03/consumer/ace-bundle/gemfile.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "path": "results/tc/03/consumer/ace-bundle/gemfile.stdout",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "path": "results/tc/03/consumer/ace-bundle/install-receipt.exit",
+    "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "bytes": 2
+  },
+  {
+    "path": "results/tc/03/consumer/ace-bundle/install-receipt.json",
+    "sha256": "a323274a0d4c8de863b71d26336438d0eddc641fe515f6499d557085615de90f",
+    "bytes": 2505
+  },
+  {
+    "path": "results/tc/03/consumer/ace-bundle/install-receipt.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "path": "results/tc/03/consumer/ace-bundle/install-receipt.stdout",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "path": "results/tc/03/consumer/ace-bundle/install.exit",
+    "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "bytes": 2
+  },
+  {
+    "path": "results/tc/03/consumer/ace-bundle/install.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "path": "results/tc/03/consumer/ace-bundle/install.stdout",
+    "sha256": "ba66673a1b5558f8da97fbe5cd106d77fbab6b1f4b3cb5d7ea354a2028ec6545",
+    "bytes": 779
+  },
+  {
+    "path": "results/tc/03/consumer/ace-review/Gemfile",
+    "sha256": "612b03978e8b21a748f8f4484ae186d21f3c6d9ad1bb07c19871aea3992d24ad",
+    "bytes": 58
+  },
+  {
+    "path": "results/tc/03/consumer/ace-review/Gemfile.lock",
+    "sha256": "f760534056d5e855d64f9ab3d01730e4de70fbb416ebd4690623a2f621e37dc9",
+    "bytes": 3123
+  },
+  {
+    "path": "results/tc/03/consumer/ace-review/gemfile.exit",
+    "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "bytes": 2
+  },
+  {
+    "path": "results/tc/03/consumer/ace-review/gemfile.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "path": "results/tc/03/consumer/ace-review/gemfile.stdout",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "path": "results/tc/03/consumer/ace-review/install-receipt.exit",
+    "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "bytes": 2
+  },
+  {
+    "path": "results/tc/03/consumer/ace-review/install-receipt.json",
+    "sha256": "dd923fcce2c0757498316b200d09592ef1c220d4937dabd0ea5104688a130140",
+    "bytes": 4681
+  },
+  {
+    "path": "results/tc/03/consumer/ace-review/install-receipt.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "path": "results/tc/03/consumer/ace-review/install-receipt.stdout",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "path": "results/tc/03/consumer/ace-review/install.exit",
+    "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "bytes": 2
+  },
+  {
+    "path": "results/tc/03/consumer/ace-review/install.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "path": "results/tc/03/consumer/ace-review/install.stdout",
+    "sha256": "bc8eb48aa71ef621fe4c12fb7c735321935df0cebc67066de8d1e0f4867424a7",
+    "bytes": 1934
+  },
+  {
+    "path": "results/tc/03/consumer/ace-task/Gemfile",
+    "sha256": "00aefbe6f1be34e96644532db3b176a84456738a00f19cab08878e89b4f56551",
+    "bytes": 56
+  },
+  {
+    "path": "results/tc/03/consumer/ace-task/Gemfile.lock",
+    "sha256": "7114e96c3142829425643d3e7ea52b54f02c0bbf01e0479c8202be5f4defe97b",
+    "bytes": 1661
+  },
+  {
+    "path": "results/tc/03/consumer/ace-task/gemfile.exit",
+    "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "bytes": 2
+  },
+  {
+    "path": "results/tc/03/consumer/ace-task/gemfile.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "path": "results/tc/03/consumer/ace-task/gemfile.stdout",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "path": "results/tc/03/consumer/ace-task/install-receipt.exit",
+    "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "bytes": 2
+  },
+  {
+    "path": "results/tc/03/consumer/ace-task/install-receipt.json",
+    "sha256": "56762c204b0d78e7454b35a6c8e59561723b043cfa27a80f388634e80d31d567",
+    "bytes": 3039
+  },
+  {
+    "path": "results/tc/03/consumer/ace-task/install-receipt.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "path": "results/tc/03/consumer/ace-task/install-receipt.stdout",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "path": "results/tc/03/consumer/ace-task/install.exit",
+    "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "bytes": 2
+  },
+  {
+    "path": "results/tc/03/consumer/ace-task/install.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "path": "results/tc/03/consumer/ace-task/install.stdout",
+    "sha256": "78b140523a0bc1e5adee71f347f5d7dfebec1ffa8bd82c262538c583a3fbe7a8",
+    "bytes": 1452
+  },
+  {
+    "path": "results/tc/03/fullindex.exit",
+    "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "bytes": 2
+  },
+  {
+    "path": "results/tc/03/fullindex.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "path": "results/tc/03/fullindex.stdout",
+    "sha256": "e2a1c31415d64d0ce1dbada1f8a7e2d6a55385ab4a1374d91c98fd3fe3ebc8f6",
+    "bytes": 5416
+  },
+  {
+    "path": "results/tc/03/install-command.txt",
+    "sha256": "59bc855cd0e466ef9d261e00d8a059bfb34bcd2f29440ac34f5605cd80d3ffef",
+    "bytes": 705
+  },
+  {
+    "path": "results/tc/03/install-receipt.exit",
+    "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "bytes": 2
+  },
+  {
+    "path": "results/tc/03/install-receipt.json",
+    "sha256": "a513f89412c8173609552fb0c770d128dd69d8cf8f5ccdda46c4e13fb03a1e8c",
+    "bytes": 12619
+  },
+  {
+    "path": "results/tc/03/install-receipt.stderr",
+    "sha256": "322827cf5925c174f06730e423f0d8d4dfd17439b8586da38a659a00cd4ffdeb",
+    "bytes": 385
+  },
+  {
+    "path": "results/tc/03/install-receipt.stdout",
+    "sha256": "90a1b6dbbad1b1d8eb461eb8d9c426657d087090da59b9c3b6256b7ed6f90265",
+    "bytes": 113
+  },
+  {
+    "path": "results/tc/03/install-summary.txt",
+    "sha256": "0716a328b19a16e2ceefdb00aee9f3fda3a44c6843faba1bff29e0653108b70a",
+    "bytes": 48
+  },
+  {
+    "path": "results/tc/03/installed-ace-gems.txt",
+    "sha256": "7805831f88b38de8ed2d75d610c7d3f83f021f1c09e2d7688c84efe46a61888e",
+    "bytes": 1396
+  },
+  {
+    "path": "results/tc/03/lockfile-receipt.exit",
+    "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "bytes": 2
+  },
+  {
+    "path": "results/tc/03/lockfile-receipt.json",
+    "sha256": "d5aabf765518469ca3ae2c47088010170542c6c6280ed1f3706273855d3f178e",
+    "bytes": 1684
+  },
+  {
+    "path": "results/tc/03/lockfile-receipt.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "path": "results/tc/03/lockfile-receipt.stdout",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "path": "results/tc/04/classification.txt",
+    "sha256": "1403fc6d9e7632aee030824d150ec9a7ce348063f83a4af87a032b1d68987e3d",
+    "bytes": 5
+  },
+  {
+    "path": "results/tc/04/exact-version-acceptance.json",
+    "sha256": "dc569aa651af7b32f2b03cf2c91c755f25e9693e19a2be7f73c955c9b8febf2d",
+    "bytes": 48730
+  },
+  {
+    "path": "results/tc/04/proof.md",
+    "sha256": "288c4adf947b9005fff17683f4cf0c6b88fb2166ef96d7b35abdc6da4c9a196b",
+    "bytes": 1007
+  },
+  {
+    "path": "results/tc/04/ruby-version.exit",
+    "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "bytes": 2
+  },
+  {
+    "path": "results/tc/04/ruby-version.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "path": "results/tc/04/ruby-version.stdout",
+    "sha256": "5cabab09559a545b02bb2d9f077db42a2a58f8271d881ed3fec9e7d739d3f100",
+    "bytes": 68
+  },
+  {
+    "path": "results/tc/04/verify.exit",
+    "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "bytes": 2
+  },
+  {
+    "path": "results/tc/04/verify.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "path": "results/tc/04/verify.stdout",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "path": "verifier-capacity-error.json",
+    "sha256": "41c088325a0d500d1029309adb69dd42186cc4d7bb4585c91cedf174f8ea2d08",
+    "bytes": 628
+  }
+]

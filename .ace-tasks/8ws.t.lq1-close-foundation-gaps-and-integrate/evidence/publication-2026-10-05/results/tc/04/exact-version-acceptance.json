@@ -1,0 +1,1355 @@
+{
+  "schema_version": 1,
+  "kind": "exact-version-acceptance",
+  "manifest": {
+    "path": "results/tc/01/release-manifest.json",
+    "source_sha": "5a0c9e05b00fe429dc59f36445ec43507fbefae4",
+    "package_count": 49
+  },
+  "modes": {
+    "normal": {
+      "dir": "results/tc/02",
+      "exit": 0,
+      "packages": {
+        "ace-assign": {
+          "manifest_version": "0.64.0",
+          "lockfile_version": "0.64.0",
+          "lockfile_versions": [
+            "0.64.0"
+          ],
+          "activated_version": "0.64.0",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-assign-0.64.0",
+          "required": true,
+          "supersedes": [
+            "0.63.0",
+            "0.63.1"
+          ],
+          "findings": []
+        },
+        "ace-b36ts": {
+          "manifest_version": "0.14.11",
+          "lockfile_version": "0.14.11",
+          "lockfile_versions": [
+            "0.14.11"
+          ],
+          "activated_version": "0.14.11",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-b36ts-0.14.11",
+          "required": true,
+          "supersedes": [],
+          "findings": []
+        },
+        "ace-bundle": {
+          "manifest_version": "0.44.2",
+          "lockfile_version": "0.44.2",
+          "lockfile_versions": [
+            "0.44.2"
+          ],
+          "activated_version": "0.44.2",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-bundle-0.44.2",
+          "required": true,
+          "supersedes": [
+            "0.44.1"
+          ],
+          "findings": []
+        },
+        "ace-compressor": {
+          "manifest_version": "0.25.5",
+          "lockfile_version": "0.25.5",
+          "lockfile_versions": [
+            "0.25.5"
+          ],
+          "activated_version": "0.25.5",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-compressor-0.25.5",
+          "required": true,
+          "supersedes": [],
+          "findings": []
+        },
+        "ace-demo": {
+          "manifest_version": "0.26.2",
+          "lockfile_version": "0.26.2",
+          "lockfile_versions": [
+            "0.26.2"
+          ],
+          "activated_version": "0.26.2",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-demo-0.26.2",
+          "required": true,
+          "supersedes": [
+            "0.26.0",
+            "0.26.1"
+          ],
+          "findings": []
+        },
+        "ace-docs": {
+          "manifest_version": "0.34.5",
+          "lockfile_version": "0.34.5",
+          "lockfile_versions": [
+            "0.34.5"
+          ],
+          "activated_version": "0.34.5",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-docs-0.34.5",
+          "required": true,
+          "supersedes": [],
+          "findings": []
+        },
+        "ace-git": {
+          "manifest_version": "0.29.0",
+          "lockfile_version": "0.29.0",
+          "lockfile_versions": [
+            "0.29.0"
+          ],
+          "activated_version": "0.29.0",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-git-0.29.0",
+          "required": true,
+          "supersedes": [
+            "0.28.0",
+            "0.28.1"
+          ],
+          "findings": []
+        },
+        "ace-git-commit": {
+          "manifest_version": "0.26.6",
+          "lockfile_version": "0.26.6",
+          "lockfile_versions": [
+            "0.26.6"
+          ],
+          "activated_version": "0.26.6",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-git-commit-0.26.6",
+          "required": true,
+          "supersedes": [],
+          "findings": []
+        },
+        "ace-git-forgejo": {
+          "manifest_version": "0.6.1",
+          "lockfile_version": "0.6.1",
+          "lockfile_versions": [
+            "0.6.1"
+          ],
+          "activated_version": "0.6.1",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-git-forgejo-0.6.1",
+          "required": true,
+          "supersedes": [
+            "0.6.0"
+          ],
+          "findings": []
+        },
+        "ace-git-github": {
+          "manifest_version": "0.4.0",
+          "lockfile_version": "0.4.0",
+          "lockfile_versions": [
+            "0.4.0"
+          ],
+          "activated_version": "0.4.0",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-git-github-0.4.0",
+          "required": true,
+          "supersedes": [
+            "0.1.2"
+          ],
+          "findings": []
+        },
+        "ace-git-secrets": {
+          "manifest_version": "0.15.11",
+          "lockfile_version": "0.15.11",
+          "lockfile_versions": [
+            "0.15.11"
+          ],
+          "activated_version": "0.15.11",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-git-secrets-0.15.11",
+          "required": true,
+          "supersedes": [],
+          "findings": []
+        },
+        "ace-git-worktree": {
+          "manifest_version": "0.26.0",
+          "lockfile_version": "0.26.0",
+          "lockfile_versions": [
+            "0.26.0"
+          ],
+          "activated_version": "0.26.0",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-git-worktree-0.26.0",
+          "required": true,
+          "supersedes": [
+            "0.25.0",
+            "0.25.1"
+          ],
+          "findings": []
+        },
+        "ace-handbook": {
+          "manifest_version": "0.34.0",
+          "lockfile_version": "0.34.0",
+          "lockfile_versions": [
+            "0.34.0"
+          ],
+          "activated_version": "0.34.0",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-handbook-0.34.0",
+          "required": true,
+          "supersedes": [
+            "0.33.0"
+          ],
+          "findings": []
+        },
+        "ace-handbook-integration-claude": {
+          "manifest_version": "0.3.12",
+          "lockfile_version": "0.3.12",
+          "lockfile_versions": [
+            "0.3.12"
+          ],
+          "activated_version": "0.3.12",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-handbook-integration-claude-0.3.12",
+          "required": true,
+          "supersedes": [],
+          "findings": []
+        },
+        "ace-handbook-integration-codex": {
+          "manifest_version": "0.3.12",
+          "lockfile_version": "0.3.12",
+          "lockfile_versions": [
+            "0.3.12"
+          ],
+          "activated_version": "0.3.12",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-handbook-integration-codex-0.3.12",
+          "required": true,
+          "supersedes": [],
+          "findings": []
+        },
+        "ace-handbook-integration-gemini": {
+          "manifest_version": "0.3.11",
+          "lockfile_version": "0.3.11",
+          "lockfile_versions": [
+            "0.3.11"
+          ],
+          "activated_version": "0.3.11",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-handbook-integration-gemini-0.3.11",
+          "required": true,
+          "supersedes": [],
+          "findings": []
+        },
+        "ace-handbook-integration-opencode": {
+          "manifest_version": "0.3.11",
+          "lockfile_version": "0.3.11",
+          "lockfile_versions": [
+            "0.3.11"
+          ],
+          "activated_version": "0.3.11",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-handbook-integration-opencode-0.3.11",
+          "required": true,
+          "supersedes": [],
+          "findings": []
+        },
+        "ace-handbook-integration-pi": {
+          "manifest_version": "0.5.0",
+          "lockfile_version": "0.5.0",
+          "lockfile_versions": [
+            "0.5.0"
+          ],
+          "activated_version": "0.5.0",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-handbook-integration-pi-0.5.0",
+          "required": true,
+          "supersedes": [],
+          "findings": []
+        },
+        "ace-herdr": {
+          "manifest_version": "0.4.0",
+          "lockfile_version": "0.4.0",
+          "lockfile_versions": [
+            "0.4.0"
+          ],
+          "activated_version": "0.4.0",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-herdr-0.4.0",
+          "required": true,
+          "supersedes": [
+            "0.3.1",
+            "0.3.2"
+          ],
+          "findings": []
+        },
+        "ace-hitl": {
+          "manifest_version": "0.12.0",
+          "lockfile_version": "0.12.0",
+          "lockfile_versions": [
+            "0.12.0"
+          ],
+          "activated_version": "0.12.0",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-hitl-0.12.0",
+          "required": true,
+          "supersedes": [
+            "0.11.0",
+            "0.11.1"
+          ],
+          "findings": []
+        },
+        "ace-hitl-contract": {
+          "manifest_version": "0.2.0",
+          "lockfile_version": "0.2.0",
+          "lockfile_versions": [
+            "0.2.0"
+          ],
+          "activated_version": "0.2.0",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-hitl-contract-0.2.0",
+          "required": true,
+          "supersedes": [
+            "0.1.0"
+          ],
+          "findings": []
+        },
+        "ace-hitl-hermes": {
+          "manifest_version": "0.2.0",
+          "lockfile_version": "0.2.0",
+          "lockfile_versions": [
+            "0.2.0"
+          ],
+          "activated_version": "0.2.0",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-hitl-hermes-0.2.0",
+          "required": true,
+          "supersedes": [
+            "0.1.0"
+          ],
+          "findings": []
+        },
+        "ace-idea": {
+          "manifest_version": "0.21.6",
+          "lockfile_version": "0.21.6",
+          "lockfile_versions": [
+            "0.21.6"
+          ],
+          "activated_version": "0.21.6",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-idea-0.21.6",
+          "required": true,
+          "supersedes": [],
+          "findings": []
+        },
+        "ace-lab": {
+          "manifest_version": "0.4.0",
+          "lockfile_version": "0.4.0",
+          "lockfile_versions": [
+            "0.4.0"
+          ],
+          "activated_version": "0.4.0",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-lab-0.4.0",
+          "required": true,
+          "supersedes": [
+            "0.3.1"
+          ],
+          "findings": []
+        },
+        "ace-lint": {
+          "manifest_version": "0.30.10",
+          "lockfile_version": "0.30.10",
+          "lockfile_versions": [
+            "0.30.10"
+          ],
+          "activated_version": "0.30.10",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-lint-0.30.10",
+          "required": true,
+          "supersedes": [],
+          "findings": []
+        },
+        "ace-llm": {
+          "manifest_version": "0.42.0",
+          "lockfile_version": "0.42.0",
+          "lockfile_versions": [
+            "0.42.0"
+          ],
+          "activated_version": "0.42.0",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-llm-0.42.0",
+          "required": true,
+          "supersedes": [
+            "0.41.1"
+          ],
+          "findings": []
+        },
+        "ace-llm-providers-cli": {
+          "manifest_version": "0.36.1",
+          "lockfile_version": "0.36.1",
+          "lockfile_versions": [
+            "0.36.1"
+          ],
+          "activated_version": "0.36.1",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-llm-providers-cli-0.36.1",
+          "required": true,
+          "supersedes": [
+            "0.35.2"
+          ],
+          "findings": []
+        },
+        "ace-overseer": {
+          "manifest_version": "0.20.0",
+          "lockfile_version": "0.20.0",
+          "lockfile_versions": [
+            "0.20.0"
+          ],
+          "activated_version": "0.20.0",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-overseer-0.20.0",
+          "required": true,
+          "supersedes": [
+            "0.19.0",
+            "0.19.1"
+          ],
+          "findings": []
+        },
+        "ace-prompt-prep": {
+          "manifest_version": "0.25.10",
+          "lockfile_version": "0.25.10",
+          "lockfile_versions": [
+            "0.25.10"
+          ],
+          "activated_version": "0.25.10",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-prompt-prep-0.25.10",
+          "required": true,
+          "supersedes": [],
+          "findings": []
+        },
+        "ace-retro": {
+          "manifest_version": "0.18.8",
+          "lockfile_version": "0.18.8",
+          "lockfile_versions": [
+            "0.18.8"
+          ],
+          "activated_version": "0.18.8",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-retro-0.18.8",
+          "required": true,
+          "supersedes": [],
+          "findings": []
+        },
+        "ace-review": {
+          "manifest_version": "0.59.0",
+          "lockfile_version": "0.59.0",
+          "lockfile_versions": [
+            "0.59.0"
+          ],
+          "activated_version": "0.59.0",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-review-0.59.0",
+          "required": true,
+          "supersedes": [
+            "0.56.0",
+            "0.58.1"
+          ],
+          "findings": []
+        },
+        "ace-runtime": {
+          "manifest_version": "0.2.0",
+          "lockfile_version": "0.2.0",
+          "lockfile_versions": [
+            "0.2.0"
+          ],
+          "activated_version": "0.2.0",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-runtime-0.2.0",
+          "required": true,
+          "supersedes": [
+            "0.1.1"
+          ],
+          "findings": []
+        },
+        "ace-search": {
+          "manifest_version": "0.26.6",
+          "lockfile_version": "0.26.6",
+          "lockfile_versions": [
+            "0.26.6"
+          ],
+          "activated_version": "0.26.6",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-search-0.26.6",
+          "required": true,
+          "supersedes": [],
+          "findings": []
+        },
+        "ace-sim": {
+          "manifest_version": "0.15.8",
+          "lockfile_version": "0.15.8",
+          "lockfile_versions": [
+            "0.15.8"
+          ],
+          "activated_version": "0.15.8",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-sim-0.15.8",
+          "required": true,
+          "supersedes": [],
+          "findings": []
+        },
+        "ace-support-cli": {
+          "manifest_version": "0.6.9",
+          "lockfile_version": "0.6.9",
+          "lockfile_versions": [
+            "0.6.9"
+          ],
+          "activated_version": "0.6.9",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-support-cli-0.6.9",
+          "required": true,
+          "supersedes": [
+            "0.6.8"
+          ],
+          "findings": []
+        },
+        "ace-support-config": {
+          "manifest_version": "0.18.2",
+          "lockfile_version": "0.18.2",
+          "lockfile_versions": [
+            "0.18.2"
+          ],
+          "activated_version": "0.18.2",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-support-config-0.18.2",
+          "required": true,
+          "supersedes": [],
+          "findings": []
+        },
+        "ace-support-core": {
+          "manifest_version": "0.32.0",
+          "lockfile_version": "0.32.0",
+          "lockfile_versions": [
+            "0.32.0"
+          ],
+          "activated_version": "0.32.0",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-support-core-0.32.0",
+          "required": true,
+          "supersedes": [],
+          "findings": []
+        },
+        "ace-support-fs": {
+          "manifest_version": "0.3.4",
+          "lockfile_version": "0.3.4",
+          "lockfile_versions": [
+            "0.3.4"
+          ],
+          "activated_version": "0.3.4",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-support-fs-0.3.4",
+          "required": true,
+          "supersedes": [],
+          "findings": []
+        },
+        "ace-support-items": {
+          "manifest_version": "0.15.13",
+          "lockfile_version": "0.15.13",
+          "lockfile_versions": [
+            "0.15.13"
+          ],
+          "activated_version": "0.15.13",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-support-items-0.15.13",
+          "required": true,
+          "supersedes": [],
+          "findings": []
+        },
+        "ace-support-mac-clipboard": {
+          "manifest_version": "0.3.5",
+          "lockfile_version": "0.3.5",
+          "lockfile_versions": [
+            "0.3.5"
+          ],
+          "activated_version": "0.3.5",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-support-mac-clipboard-0.3.5",
+          "required": true,
+          "supersedes": [],
+          "findings": []
+        },
+        "ace-support-markdown": {
+          "manifest_version": "0.3.6",
+          "lockfile_version": "0.3.6",
+          "lockfile_versions": [
+            "0.3.6"
+          ],
+          "activated_version": "0.3.6",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-support-markdown-0.3.6",
+          "required": true,
+          "supersedes": [],
+          "findings": []
+        },
+        "ace-support-models": {
+          "manifest_version": "0.12.4",
+          "lockfile_version": "0.12.4",
+          "lockfile_versions": [
+            "0.12.4"
+          ],
+          "activated_version": "0.12.4",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-support-models-0.12.4",
+          "required": true,
+          "supersedes": [],
+          "findings": []
+        },
+        "ace-support-nav": {
+          "manifest_version": "0.28.7",
+          "lockfile_version": "0.28.7",
+          "lockfile_versions": [
+            "0.28.7"
+          ],
+          "activated_version": "0.28.7",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-support-nav-0.28.7",
+          "required": true,
+          "supersedes": [],
+          "findings": []
+        },
+        "ace-support-test-helpers": {
+          "manifest_version": "0.14.7",
+          "lockfile_version": "0.14.7",
+          "lockfile_versions": [
+            "0.14.7"
+          ],
+          "activated_version": "0.14.7",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-support-test-helpers-0.14.7",
+          "required": true,
+          "supersedes": [
+            "0.14.6"
+          ],
+          "findings": []
+        },
+        "ace-task": {
+          "manifest_version": "0.39.1",
+          "lockfile_version": "0.39.1",
+          "lockfile_versions": [
+            "0.39.1"
+          ],
+          "activated_version": "0.39.1",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-task-0.39.1",
+          "required": true,
+          "supersedes": [
+            "0.38.0"
+          ],
+          "findings": []
+        },
+        "ace-test": {
+          "manifest_version": "0.7.4",
+          "lockfile_version": "0.7.4",
+          "lockfile_versions": [
+            "0.7.4"
+          ],
+          "activated_version": "0.7.4",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-test-0.7.4",
+          "required": true,
+          "supersedes": [],
+          "findings": []
+        },
+        "ace-test-runner": {
+          "manifest_version": "0.28.0",
+          "lockfile_version": "0.28.0",
+          "lockfile_versions": [
+            "0.28.0"
+          ],
+          "activated_version": "0.28.0",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-test-runner-0.28.0",
+          "required": true,
+          "supersedes": [
+            "0.27.0",
+            "0.27.1"
+          ],
+          "findings": []
+        },
+        "ace-test-runner-e2e": {
+          "manifest_version": "0.43.0",
+          "lockfile_version": "0.43.0",
+          "lockfile_versions": [
+            "0.43.0"
+          ],
+          "activated_version": "0.43.0",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-test-runner-e2e-0.43.0",
+          "required": true,
+          "supersedes": [
+            "0.40.6",
+            "0.42.0"
+          ],
+          "findings": []
+        },
+        "ace-tmux": {
+          "manifest_version": "0.19.0",
+          "lockfile_version": "0.19.0",
+          "lockfile_versions": [
+            "0.19.0"
+          ],
+          "activated_version": "0.19.0",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/02/.bundle/ruby/3.4.0/gems/ace-tmux-0.19.0",
+          "required": true,
+          "supersedes": [
+            "0.18.0"
+          ],
+          "findings": []
+        }
+      },
+      "findings": []
+    },
+    "full_index": {
+      "dir": "results/tc/03",
+      "exit": 0,
+      "packages": {
+        "ace-assign": {
+          "manifest_version": "0.64.0",
+          "lockfile_version": "0.64.0",
+          "lockfile_versions": [
+            "0.64.0"
+          ],
+          "activated_version": "0.64.0",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/03/.bundle/ruby/3.4.0/gems/ace-assign-0.64.0",
+          "required": true,
+          "supersedes": [
+            "0.63.0",
+            "0.63.1"
+          ],
+          "findings": []
+        },
+        "ace-b36ts": {
+          "manifest_version": "0.14.11",
+          "lockfile_version": "0.14.11",
+          "lockfile_versions": [
+            "0.14.11"
+          ],
+          "activated_version": "0.14.11",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/03/.bundle/ruby/3.4.0/gems/ace-b36ts-0.14.11",
+          "required": true,
+          "supersedes": [],
+          "findings": []
+        },
+        "ace-bundle": {
+          "manifest_version": "0.44.2",
+          "lockfile_version": "0.44.2",
+          "lockfile_versions": [
+            "0.44.2"
+          ],
+          "activated_version": "0.44.2",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/03/.bundle/ruby/3.4.0/gems/ace-bundle-0.44.2",
+          "required": true,
+          "supersedes": [
+            "0.44.1"
+          ],
+          "findings": []
+        },
+        "ace-compressor": {
+          "manifest_version": "0.25.5",
+          "lockfile_version": "0.25.5",
+          "lockfile_versions": [
+            "0.25.5"
+          ],
+          "activated_version": "0.25.5",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/03/.bundle/ruby/3.4.0/gems/ace-compressor-0.25.5",
+          "required": true,
+          "supersedes": [],
+          "findings": []
+        },
+        "ace-demo": {
+          "manifest_version": "0.26.2",
+          "lockfile_version": "0.26.2",
+          "lockfile_versions": [
+            "0.26.2"
+          ],
+          "activated_version": "0.26.2",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/03/.bundle/ruby/3.4.0/gems/ace-demo-0.26.2",
+          "required": true,
+          "supersedes": [
+            "0.26.0",
+            "0.26.1"
+          ],
+          "findings": []
+        },
+        "ace-docs": {
+          "manifest_version": "0.34.5",
+          "lockfile_version": "0.34.5",
+          "lockfile_versions": [
+            "0.34.5"
+          ],
+          "activated_version": "0.34.5",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/03/.bundle/ruby/3.4.0/gems/ace-docs-0.34.5",
+          "required": true,
+          "supersedes": [],
+          "findings": []
+        },
+        "ace-git": {
+          "manifest_version": "0.29.0",
+          "lockfile_version": "0.29.0",
+          "lockfile_versions": [
+            "0.29.0"
+          ],
+          "activated_version": "0.29.0",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/03/.bundle/ruby/3.4.0/gems/ace-git-0.29.0",
+          "required": true,
+          "supersedes": [
+            "0.28.0",
+            "0.28.1"
+          ],
+          "findings": []
+        },
+        "ace-git-commit": {
+          "manifest_version": "0.26.6",
+          "lockfile_version": "0.26.6",
+          "lockfile_versions": [
+            "0.26.6"
+          ],
+          "activated_version": "0.26.6",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/03/.bundle/ruby/3.4.0/gems/ace-git-commit-0.26.6",
+          "required": true,
+          "supersedes": [],
+          "findings": []
+        },
+        "ace-git-forgejo": {
+          "manifest_version": "0.6.1",
+          "lockfile_version": "0.6.1",
+          "lockfile_versions": [
+            "0.6.1"
+          ],
+          "activated_version": "0.6.1",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/03/.bundle/ruby/3.4.0/gems/ace-git-forgejo-0.6.1",
+          "required": true,
+          "supersedes": [
+            "0.6.0"
+          ],
+          "findings": []
+        },
+        "ace-git-github": {
+          "manifest_version": "0.4.0",
+          "lockfile_version": "0.4.0",
+          "lockfile_versions": [
+            "0.4.0"
+          ],
+          "activated_version": "0.4.0",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/03/.bundle/ruby/3.4.0/gems/ace-git-github-0.4.0",
+          "required": true,
+          "supersedes": [
+            "0.1.2"
+          ],
+          "findings": []
+        },
+        "ace-git-secrets": {
+          "manifest_version": "0.15.11",
+          "lockfile_version": "0.15.11",
+          "lockfile_versions": [
+            "0.15.11"
+          ],
+          "activated_version": "0.15.11",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/03/.bundle/ruby/3.4.0/gems/ace-git-secrets-0.15.11",
+          "required": true,
+          "supersedes": [],
+          "findings": []
+        },
+        "ace-git-worktree": {
+          "manifest_version": "0.26.0",
+          "lockfile_version": "0.26.0",
+          "lockfile_versions": [
+            "0.26.0"
+          ],
+          "activated_version": "0.26.0",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/03/.bundle/ruby/3.4.0/gems/ace-git-worktree-0.26.0",
+          "required": true,
+          "supersedes": [
+            "0.25.0",
+            "0.25.1"
+          ],
+          "findings": []
+        },
+        "ace-handbook": {
+          "manifest_version": "0.34.0",
+          "lockfile_version": "0.34.0",
+          "lockfile_versions": [
+            "0.34.0"
+          ],
+          "activated_version": "0.34.0",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/03/.bundle/ruby/3.4.0/gems/ace-handbook-0.34.0",
+          "required": true,
+          "supersedes": [
+            "0.33.0"
+          ],
+          "findings": []
+        },
+        "ace-handbook-integration-claude": {
+          "manifest_version": "0.3.12",
+          "lockfile_version": "0.3.12",
+          "lockfile_versions": [
+            "0.3.12"
+          ],
+          "activated_version": "0.3.12",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/03/.bundle/ruby/3.4.0/gems/ace-handbook-integration-claude-0.3.12",
+          "required": true,
+          "supersedes": [],
+          "findings": []
+        },
+        "ace-handbook-integration-codex": {
+          "manifest_version": "0.3.12",
+          "lockfile_version": "0.3.12",
+          "lockfile_versions": [
+            "0.3.12"
+          ],
+          "activated_version": "0.3.12",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/03/.bundle/ruby/3.4.0/gems/ace-handbook-integration-codex-0.3.12",
+          "required": true,
+          "supersedes": [],
+          "findings": []
+        },
+        "ace-handbook-integration-gemini": {
+          "manifest_version": "0.3.11",
+          "lockfile_version": "0.3.11",
+          "lockfile_versions": [
+            "0.3.11"
+          ],
+          "activated_version": "0.3.11",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/03/.bundle/ruby/3.4.0/gems/ace-handbook-integration-gemini-0.3.11",
+          "required": true,
+          "supersedes": [],
+          "findings": []
+        },
+        "ace-handbook-integration-opencode": {
+          "manifest_version": "0.3.11",
+          "lockfile_version": "0.3.11",
+          "lockfile_versions": [
+            "0.3.11"
+          ],
+          "activated_version": "0.3.11",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/03/.bundle/ruby/3.4.0/gems/ace-handbook-integration-opencode-0.3.11",
+          "required": true,
+          "supersedes": [],
+          "findings": []
+        },
+        "ace-handbook-integration-pi": {
+          "manifest_version": "0.5.0",
+          "lockfile_version": "0.5.0",
+          "lockfile_versions": [
+            "0.5.0"
+          ],
+          "activated_version": "0.5.0",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/03/.bundle/ruby/3.4.0/gems/ace-handbook-integration-pi-0.5.0",
+          "required": true,
+          "supersedes": [],
+          "findings": []
+        },
+        "ace-herdr": {
+          "manifest_version": "0.4.0",
+          "lockfile_version": "0.4.0",
+          "lockfile_versions": [
+            "0.4.0"
+          ],
+          "activated_version": "0.4.0",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/03/.bundle/ruby/3.4.0/gems/ace-herdr-0.4.0",
+          "required": true,
+          "supersedes": [
+            "0.3.1",
+            "0.3.2"
+          ],
+          "findings": []
+        },
+        "ace-hitl": {
+          "manifest_version": "0.12.0",
+          "lockfile_version": "0.12.0",
+          "lockfile_versions": [
+            "0.12.0"
+          ],
+          "activated_version": "0.12.0",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/03/.bundle/ruby/3.4.0/gems/ace-hitl-0.12.0",
+          "required": true,
+          "supersedes": [
+            "0.11.0",
+            "0.11.1"
+          ],
+          "findings": []
+        },
+        "ace-hitl-contract": {
+          "manifest_version": "0.2.0",
+          "lockfile_version": "0.2.0",
+          "lockfile_versions": [
+            "0.2.0"
+          ],
+          "activated_version": "0.2.0",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/03/.bundle/ruby/3.4.0/gems/ace-hitl-contract-0.2.0",
+          "required": true,
+          "supersedes": [
+            "0.1.0"
+          ],
+          "findings": []
+        },
+        "ace-hitl-hermes": {
+          "manifest_version": "0.2.0",
+          "lockfile_version": "0.2.0",
+          "lockfile_versions": [
+            "0.2.0"
+          ],
+          "activated_version": "0.2.0",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/03/.bundle/ruby/3.4.0/gems/ace-hitl-hermes-0.2.0",
+          "required": true,
+          "supersedes": [
+            "0.1.0"
+          ],
+          "findings": []
+        },
+        "ace-idea": {
+          "manifest_version": "0.21.6",
+          "lockfile_version": "0.21.6",
+          "lockfile_versions": [
+            "0.21.6"
+          ],
+          "activated_version": "0.21.6",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/03/.bundle/ruby/3.4.0/gems/ace-idea-0.21.6",
+          "required": true,
+          "supersedes": [],
+          "findings": []
+        },
+        "ace-lab": {
+          "manifest_version": "0.4.0",
+          "lockfile_version": "0.4.0",
+          "lockfile_versions": [
+            "0.4.0"
+          ],
+          "activated_version": "0.4.0",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/03/.bundle/ruby/3.4.0/gems/ace-lab-0.4.0",
+          "required": true,
+          "supersedes": [
+            "0.3.1"
+          ],
+          "findings": []
+        },
+        "ace-lint": {
+          "manifest_version": "0.30.10",
+          "lockfile_version": "0.30.10",
+          "lockfile_versions": [
+            "0.30.10"
+          ],
+          "activated_version": "0.30.10",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/03/.bundle/ruby/3.4.0/gems/ace-lint-0.30.10",
+          "required": true,
+          "supersedes": [],
+          "findings": []
+        },
+        "ace-llm": {
+          "manifest_version": "0.42.0",
+          "lockfile_version": "0.42.0",
+          "lockfile_versions": [
+            "0.42.0"
+          ],
+          "activated_version": "0.42.0",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/03/.bundle/ruby/3.4.0/gems/ace-llm-0.42.0",
+          "required": true,
+          "supersedes": [
+            "0.41.1"
+          ],
+          "findings": []
+        },
+        "ace-llm-providers-cli": {
+          "manifest_version": "0.36.1",
+          "lockfile_version": "0.36.1",
+          "lockfile_versions": [
+            "0.36.1"
+          ],
+          "activated_version": "0.36.1",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/03/.bundle/ruby/3.4.0/gems/ace-llm-providers-cli-0.36.1",
+          "required": true,
+          "supersedes": [
+            "0.35.2"
+          ],
+          "findings": []
+        },
+        "ace-overseer": {
+          "manifest_version": "0.20.0",
+          "lockfile_version": "0.20.0",
+          "lockfile_versions": [
+            "0.20.0"
+          ],
+          "activated_version": "0.20.0",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/03/.bundle/ruby/3.4.0/gems/ace-overseer-0.20.0",
+          "required": true,
+          "supersedes": [
+            "0.19.0",
+            "0.19.1"
+          ],
+          "findings": []
+        },
+        "ace-prompt-prep": {
+          "manifest_version": "0.25.10",
+          "lockfile_version": "0.25.10",
+          "lockfile_versions": [
+            "0.25.10"
+          ],
+          "activated_version": "0.25.10",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/03/.bundle/ruby/3.4.0/gems/ace-prompt-prep-0.25.10",
+          "required": true,
+          "supersedes": [],
+          "findings": []
+        },
+        "ace-retro": {
+          "manifest_version": "0.18.8",
+          "lockfile_version": "0.18.8",
+          "lockfile_versions": [
+            "0.18.8"
+          ],
+          "activated_version": "0.18.8",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/03/.bundle/ruby/3.4.0/gems/ace-retro-0.18.8",
+          "required": true,
+          "supersedes": [],
+          "findings": []
+        },
+        "ace-review": {
+          "manifest_version": "0.59.0",
+          "lockfile_version": "0.59.0",
+          "lockfile_versions": [
+            "0.59.0"
+          ],
+          "activated_version": "0.59.0",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/03/.bundle/ruby/3.4.0/gems/ace-review-0.59.0",
+          "required": true,
+          "supersedes": [
+            "0.56.0",
+            "0.58.1"
+          ],
+          "findings": []
+        },
+        "ace-runtime": {
+          "manifest_version": "0.2.0",
+          "lockfile_version": "0.2.0",
+          "lockfile_versions": [
+            "0.2.0"
+          ],
+          "activated_version": "0.2.0",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/03/.bundle/ruby/3.4.0/gems/ace-runtime-0.2.0",
+          "required": true,
+          "supersedes": [
+            "0.1.1"
+          ],
+          "findings": []
+        },
+        "ace-search": {
+          "manifest_version": "0.26.6",
+          "lockfile_version": "0.26.6",
+          "lockfile_versions": [
+            "0.26.6"
+          ],
+          "activated_version": "0.26.6",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/03/.bundle/ruby/3.4.0/gems/ace-search-0.26.6",
+          "required": true,
+          "supersedes": [],
+          "findings": []
+        },
+        "ace-sim": {
+          "manifest_version": "0.15.8",
+          "lockfile_version": "0.15.8",
+          "lockfile_versions": [
+            "0.15.8"
+          ],
+          "activated_version": "0.15.8",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/03/.bundle/ruby/3.4.0/gems/ace-sim-0.15.8",
+          "required": true,
+          "supersedes": [],
+          "findings": []
+        },
+        "ace-support-cli": {
+          "manifest_version": "0.6.9",
+          "lockfile_version": "0.6.9",
+          "lockfile_versions": [
+            "0.6.9"
+          ],
+          "activated_version": "0.6.9",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/03/.bundle/ruby/3.4.0/gems/ace-support-cli-0.6.9",
+          "required": true,
+          "supersedes": [
+            "0.6.8"
+          ],
+          "findings": []
+        },
+        "ace-support-config": {
+          "manifest_version": "0.18.2",
+          "lockfile_version": "0.18.2",
+          "lockfile_versions": [
+            "0.18.2"
+          ],
+          "activated_version": "0.18.2",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/03/.bundle/ruby/3.4.0/gems/ace-support-config-0.18.2",
+          "required": true,
+          "supersedes": [],
+          "findings": []
+        },
+        "ace-support-core": {
+          "manifest_version": "0.32.0",
+          "lockfile_version": "0.32.0",
+          "lockfile_versions": [
+            "0.32.0"
+          ],
+          "activated_version": "0.32.0",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/03/.bundle/ruby/3.4.0/gems/ace-support-core-0.32.0",
+          "required": true,
+          "supersedes": [],
+          "findings": []
+        },
+        "ace-support-fs": {
+          "manifest_version": "0.3.4",
+          "lockfile_version": "0.3.4",
+          "lockfile_versions": [
+            "0.3.4"
+          ],
+          "activated_version": "0.3.4",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/03/.bundle/ruby/3.4.0/gems/ace-support-fs-0.3.4",
+          "required": true,
+          "supersedes": [],
+          "findings": []
+        },
+        "ace-support-items": {
+          "manifest_version": "0.15.13",
+          "lockfile_version": "0.15.13",
+          "lockfile_versions": [
+            "0.15.13"
+          ],
+          "activated_version": "0.15.13",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/03/.bundle/ruby/3.4.0/gems/ace-support-items-0.15.13",
+          "required": true,
+          "supersedes": [],
+          "findings": []
+        },
+        "ace-support-mac-clipboard": {
+          "manifest_version": "0.3.5",
+          "lockfile_version": "0.3.5",
+          "lockfile_versions": [
+            "0.3.5"
+          ],
+          "activated_version": "0.3.5",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/03/.bundle/ruby/3.4.0/gems/ace-support-mac-clipboard-0.3.5",
+          "required": true,
+          "supersedes": [],
+          "findings": []
+        },
+        "ace-support-markdown": {
+          "manifest_version": "0.3.6",
+          "lockfile_version": "0.3.6",
+          "lockfile_versions": [
+            "0.3.6"
+          ],
+          "activated_version": "0.3.6",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/03/.bundle/ruby/3.4.0/gems/ace-support-markdown-0.3.6",
+          "required": true,
+          "supersedes": [],
+          "findings": []
+        },
+        "ace-support-models": {
+          "manifest_version": "0.12.4",
+          "lockfile_version": "0.12.4",
+          "lockfile_versions": [
+            "0.12.4"
+          ],
+          "activated_version": "0.12.4",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/03/.bundle/ruby/3.4.0/gems/ace-support-models-0.12.4",
+          "required": true,
+          "supersedes": [],
+          "findings": []
+        },
+        "ace-support-nav": {
+          "manifest_version": "0.28.7",
+          "lockfile_version": "0.28.7",
+          "lockfile_versions": [
+            "0.28.7"
+          ],
+          "activated_version": "0.28.7",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/03/.bundle/ruby/3.4.0/gems/ace-support-nav-0.28.7",
+          "required": true,
+          "supersedes": [],
+          "findings": []
+        },
+        "ace-support-test-helpers": {
+          "manifest_version": "0.14.7",
+          "lockfile_version": "0.14.7",
+          "lockfile_versions": [
+            "0.14.7"
+          ],
+          "activated_version": "0.14.7",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/03/.bundle/ruby/3.4.0/gems/ace-support-test-helpers-0.14.7",
+          "required": true,
+          "supersedes": [
+            "0.14.6"
+          ],
+          "findings": []
+        },
+        "ace-task": {
+          "manifest_version": "0.39.1",
+          "lockfile_version": "0.39.1",
+          "lockfile_versions": [
+            "0.39.1"
+          ],
+          "activated_version": "0.39.1",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/03/.bundle/ruby/3.4.0/gems/ace-task-0.39.1",
+          "required": true,
+          "supersedes": [
+            "0.38.0"
+          ],
+          "findings": []
+        },
+        "ace-test": {
+          "manifest_version": "0.7.4",
+          "lockfile_version": "0.7.4",
+          "lockfile_versions": [
+            "0.7.4"
+          ],
+          "activated_version": "0.7.4",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/03/.bundle/ruby/3.4.0/gems/ace-test-0.7.4",
+          "required": true,
+          "supersedes": [],
+          "findings": []
+        },
+        "ace-test-runner": {
+          "manifest_version": "0.28.0",
+          "lockfile_version": "0.28.0",
+          "lockfile_versions": [
+            "0.28.0"
+          ],
+          "activated_version": "0.28.0",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/03/.bundle/ruby/3.4.0/gems/ace-test-runner-0.28.0",
+          "required": true,
+          "supersedes": [
+            "0.27.0",
+            "0.27.1"
+          ],
+          "findings": []
+        },
+        "ace-test-runner-e2e": {
+          "manifest_version": "0.43.0",
+          "lockfile_version": "0.43.0",
+          "lockfile_versions": [
+            "0.43.0"
+          ],
+          "activated_version": "0.43.0",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/03/.bundle/ruby/3.4.0/gems/ace-test-runner-e2e-0.43.0",
+          "required": true,
+          "supersedes": [
+            "0.40.6",
+            "0.42.0"
+          ],
+          "findings": []
+        },
+        "ace-tmux": {
+          "manifest_version": "0.19.0",
+          "lockfile_version": "0.19.0",
+          "lockfile_versions": [
+            "0.19.0"
+          ],
+          "activated_version": "0.19.0",
+          "activated_path": "/Users/mc/Ps/ace/.ace-local/test-e2e/8x4m8d9-monorepo-e2e-ts001/results/tc/03/.bundle/ruby/3.4.0/gems/ace-tmux-0.19.0",
+          "required": true,
+          "supersedes": [
+            "0.18.0"
+          ],
+          "findings": []
+        }
+      },
+      "findings": []
+    }
+  },
+  "consumer_edges": {
+    "normal": {
+      "ace-bundle": {
+        "root": "results/tc/02/consumer/ace-bundle",
+        "ok": true,
+        "findings": []
+      },
+      "ace-review": {
+        "root": "results/tc/02/consumer/ace-review",
+        "ok": true,
+        "findings": []
+      },
+      "ace-task": {
+        "root": "results/tc/02/consumer/ace-task",
+        "ok": true,
+        "findings": []
+      }
+    },
+    "full_index": {
+      "ace-bundle": {
+        "root": "results/tc/03/consumer/ace-bundle",
+        "ok": true,
+        "findings": []
+      },
+      "ace-review": {
+        "root": "results/tc/03/consumer/ace-review",
+        "ok": true,
+        "findings": []
+      },
+      "ace-task": {
+        "root": "results/tc/03/consumer/ace-task",
+        "ok": true,
+        "findings": []
+      }
+    }
+  },
+  "acceptance": "pass",
+  "findings": []
+}

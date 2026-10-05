@@ -1,0 +1,7 @@
+{
+  "phase": "verifier",
+  "provider": "role:e2e-verifier",
+  "cli_args": null,
+  "timeout": 1800,
+  "recorded_at": "2026-10-05T14:59:55Z"
+}

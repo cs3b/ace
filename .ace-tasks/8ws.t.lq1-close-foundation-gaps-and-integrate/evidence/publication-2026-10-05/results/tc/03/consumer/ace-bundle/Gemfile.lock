@@ -1,0 +1,45 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    ace-bundle (0.44.2)
+      ace-compressor (~> 0.25)
+      ace-git (~> 0.24)
+      ace-git-github (~> 0.2)
+      ace-support-cli (~> 0.6)
+      ace-support-config (~> 0.18)
+      ace-support-core (~> 0.32)
+      ace-support-fs (~> 0.3)
+      ace-support-nav (~> 0.28)
+    ace-compressor (0.25.5)
+      ace-support-cli (~> 0.6)
+      ace-support-config (~> 0.18)
+      ace-support-core (~> 0.31)
+    ace-git (0.29.0)
+      ace-support-cli (~> 0.6)
+      ace-support-config (~> 0.18)
+      ace-support-core (~> 0.31)
+    ace-git-github (0.4.0)
+      ace-git (~> 0.26)
+    ace-support-cli (0.6.9)
+    ace-support-config (0.18.2)
+      ace-support-fs (~> 0.3)
+    ace-support-core (0.32.0)
+      ace-support-cli (~> 0.6)
+      ace-support-config (~> 0.18)
+      ace-support-fs (~> 0.3)
+    ace-support-fs (0.3.4)
+    ace-support-nav (0.28.7)
+      ace-support-cli (~> 0.6)
+      ace-support-config (~> 0.18)
+      ace-support-core (~> 0.31)
+      ace-support-fs (~> 0.3)
+
+PLATFORMS
+  arm64-darwin-25
+  ruby
+
+DEPENDENCIES
+  ace-bundle (= 0.44.2)
+
+BUNDLED WITH
+   2.6.9
