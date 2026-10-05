@@ -9,14 +9,14 @@ module Ace
       # The living overseer invokes the deterministic policy evaluator.
       # No timers, effect retries or executor live in this process.
       class ProposalTick
-        def initialize(runner: Open3, binary: "/usr/local/bin/ace-hitl", config: ENV["ACE_HITL_HERMES_CONFIG"])
-          @runner, @binary, @config = runner, binary, config
+        def initialize(runner: Open3, binary: "/usr/local/bin/ace-hitl", socket: ENV["ACE_HITL_SOCKET"], project: ENV["ACE_HITL_PROJECT"])
+          @runner, @binary, @socket, @project = runner, binary, socket, project
         end
 
         def call
-          return [] if @config.to_s.empty?
-          out, _err, status = @runner.capture3({"ACE_HITL_HERMES_CONFIG" => @config},
-            @binary, "proposal", "resolve-due")
+          return [] if @socket.to_s.empty? || @project.to_s.empty?
+          out, _err, status = @runner.capture3({"ACE_HITL_SOCKET" => @socket},
+            @binary, "proposal", "resolve-due", "--project", @project)
           raise Error, "Proposal resolution unavailable; deadlines deferred" unless status.success?
           JSON.parse(out)
         rescue JSON::ParserError, SystemCallError

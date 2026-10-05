@@ -241,6 +241,7 @@ module Ace
               received_at: required(params, "received_at"), sequence: required(params, "sequence"))
           when "proposal-reconcile"
             store.proposal_reconcile(required(params, "id"), checkpoint: required(params, "checkpoint"))
+          when "proposal-wake" then store.proposal_wake(project: required(params, "project"), after: params["after"])
           when "proposal-due" then store.proposal_due(after: params["after"])
           when "proposal-history" then store.proposal_history(project: required(params, "project"),
             query: params.fetch("query", ""), after: params["after"])

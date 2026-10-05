@@ -8,6 +8,7 @@ class ProposalCliTest < AceHitlTestCase
     calls = []
     boundary.define_singleton_method(:proposal_create) { |**args| calls << args; {"proposal_id" => "p1", "state" => "awaiting-delivery"} }
     boundary.define_singleton_method(:proposal_show) { |id, **| calls << id; {"proposal_id" => id, "history" => []} }
+    boundary.define_singleton_method(:proposal_wake) { |**args| calls << args; {"items" => [{"status" => "queued-for-transport"}], "next" => nil} }
     boundary.define_singleton_method(:proposal_revise) { |id, **args| calls << [id, args]; {"proposal_id" => id, "revision" => 2} }
     klass = Ace::Hitl::Providers::Lab
     original = klass.method(:boundary_client)
@@ -22,7 +23,7 @@ class ProposalCliTest < AceHitlTestCase
       file = File.join(dir, "proposal.json")
       File.write(file, '{"operation":"deploy"}')
       with_boundary do |calls|
-        result = run_cli(["proposal", "create", "--assignment", "a1", "--attempt", "t1", "--project", "ace", "--file", file])
+        result = run_cli(["proposal", "create", "proposal-aaaaaaaaaaaaaaaaaaaaaaaa", "--assignment", "a1", "--attempt", "t1", "--project", "ace", "--file", file])
         assert_equal 0, result[:exit_code], result[:stderr]
         assert_equal "awaiting-delivery", JSON.parse(result[:stdout])["state"]
         assert_equal "a1", calls.last[:assignment]
@@ -32,6 +33,10 @@ class ProposalCliTest < AceHitlTestCase
         result = run_cli(["proposal", "revise", "p1", "--file", file])
         assert_equal 0, result[:exit_code]
         assert_equal 2, JSON.parse(result[:stdout])["revision"]
+        result = run_cli(["proposal", "resolve-due", "--project", "ace"])
+        assert_equal 0, result[:exit_code]
+        assert_equal "queued-for-transport", JSON.parse(result[:stdout]).first["status"]
+        assert_equal "ace", calls.last[:project]
       end
     end
   end

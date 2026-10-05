@@ -11,7 +11,7 @@ module Ace
         PROPOSAL_REFERENCE = /\Aproposal-[0-9a-f]{24}-r[1-9][0-9]*\z/
         PROPOSAL_BINDING = %w[operation project_id assignment_id attempt_id input_digest target candidate_head caller_uid].freeze
 
-        PROPOSAL_IMMUTABLE = (PROPOSAL_BINDING + %w[schema proposal_id revision revision_id request_id requester content_digest created_at authorization context options recommendation rationale prerequisites]).freeze
+        PROPOSAL_IMMUTABLE = (PROPOSAL_BINDING + %w[schema proposal_id revision revision_id request_id requester content_digest created_at authorization context options recommendation rationale prerequisites lifecycle_request]).freeze
 
         def proposal_history(id)
           assignment_ids.flat_map do |assignment|
@@ -50,6 +50,10 @@ module Ace
                 record = current.reverse.find do |event|
                   event["type"] == "proposal_state" && event.dig("payload", "record", "proposal_id") == id
                 end&.dig("payload", "record")
+                global = proposal_record(id)
+                if global && (global["assignment_id"] != assignment_id || global["attempt_id"] != attempt_id)
+                  raise AttemptErrors::ReceiptRejected, "Proposal identity belongs to another assignment or attempt"
+                end
                 updated = policy.call(record)
                 return record if updated == record
                 unless updated.is_a?(Hash) && updated["proposal_id"] == id &&

@@ -353,7 +353,7 @@ required; a cursor is not proof of delivery or native consumption.
 
 ## Immutable second-commander proposals
 
-`ace-hitl proposal create --assignment ID --attempt ID --project ID --file proposal.json`
+`ace-hitl proposal create proposal-0123456789abcdef01234567 --assignment ID --attempt ID --project ID --file proposal.json`
 returns immutable proposal/revision/request IDs in awaiting-delivery state. The sole Hermes
 polling actor publishes the full precise proposal and records confirmed submission before
 HITL persists delivered_at and a deadline exactly sixteen hours later. Failed or uncertain
@@ -379,12 +379,30 @@ new request with a fresh full window after acknowledgement. An unresolved claime
 must be reconciled before revision; known successful or proven no-effect settlement can be
 followed by a new revision. Interrupted revision creation can retry the exact same file.
 
-Set ACE_HITL_HERMES_CONFIG to the deployed Hermes runtime configuration. The living overseer
-calls `ace-hitl proposal resolve-due` on start/status/watch ticks. It enters
-`ace-hitl-hermes ingress reconcile --request ID --through DEADLINE --format json` outside
-HITL locks. Hermes holds its ingress lock across checkpoint and the HITL decision transition,
-so already received replies cannot be skipped. Unknown health/backlog defers resolution.
-Production `--now` is rejected; controlled tests inject a trusted fixture clock.
+Set ACE_HITL_SOCKET and ACE_HITL_PROJECT for the living overseer. It calls
+`ace-hitl proposal resolve-due --project PROJECT` on start/status/watch ticks.
+The authenticated proposer queues an idempotent reconciliation wake in the
+canonical Assign proposal; the command returns `queued-for-transport`, never an
+approval claim. The existing installed Hermes `serve` loop polls Telegram under
+its own configured transport UID and reconciles queued deadlines after polling.
+No proposer subprocess opens transport configuration or impersonates transport.
+Hermes holds its ingress lock across checkpoint and HITL decision transition;
+unknown health/backlog defers resolution. Failed ticks remain visible while
+watch/status continues. Production `--now` is rejected.
+
+Creation requires an explicit stable ID (`proposal-` followed by 24 lowercase
+hex digits). Persist that ID before invocation and retry the exact same ID,
+assignment, attempt, caller and document after failure or a lost reply. Changed
+binding/content is refused. Assign commits the immutable prepared lifecycle
+request first; exact retry or the transport pending scan materializes it after
+restart. No pending lifecycle orphan exists before canonical commit. Concurrent
+materialization creates once and preserves current delivered/answered state.
+
+Unresolved earlier same-request ingress blocks later approval delivery. Exact
+reply sequence/content/time deduplication uses canonical decision history;
+unseen lower sequence is applied, and changed duplicate content is refused.
+History grows in the existing canonical event chain, while public responses use
+bounded pages. Hermes metadata never stores message bodies.
 
 The immutable authorization reference is the revision ID, passed to `ace-lab service request`.
 Assign atomically checks the canonical proposal under its sole journal claim lock/CAS;

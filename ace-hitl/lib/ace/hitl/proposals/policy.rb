@@ -74,10 +74,15 @@ module Ace
             "deadline" => (timestamp(delivered_at) + WINDOW).iso8601)
         end
 
-        def reply(record, answer:, received_at:, sequence:, claimed:)
+        def reply(record, answer:, received_at:, sequence:, claimed:, applied: nil)
           timestamp(received_at)
           raise Lifecycle::StateError, "proposal reply has no admitted ingress" unless sequence.is_a?(Integer) && sequence.positive?
-          return record if record["last_sequence"] && sequence <= record["last_sequence"]
+          digest = Digest::SHA256.hexdigest(JSON.generate([sequence, received_at, answer]))
+          applied ||= record if record["reply_sequence"] == sequence
+          if applied
+            raise Lifecycle::StateError, "duplicate ingress sequence changed content" unless applied["reply_digest"] == digest
+            return record
+          end
           return record if %w[superseded denied].include?(record["state"])
           raise Lifecycle::StateError, "proposal has no acknowledged delivery" unless record["delivered_at"]
           text!(answer, "answer")
@@ -91,7 +96,8 @@ module Ace
           elsif APPROVED.include?(record["state"]) && verb.downcase == "approve"
             decision = record["state"]
           end
-          result = record.merge("state" => decision, "last_sequence" => sequence,
+          result = record.merge("state" => decision, "last_sequence" => [record.fetch("last_sequence", 0), sequence].max,
+            "reply_sequence" => sequence, "reply_digest" => digest,
             "captain_answer" => answer, "received_at" => received_at)
           result.delete("captain_rationale")
           result["captain_rationale"] = rationale if rationale && !rationale.strip.empty?

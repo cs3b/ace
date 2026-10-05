@@ -47,6 +47,10 @@ module Ace
           request("proposal-reconcile", {"id" => id, "checkpoint" => checkpoint})
         end
 
+        def proposal_wake(project:, after: nil)
+          request("proposal-wake", {"project" => project, "after" => after}.compact)
+        end
+
         def proposal_due(after: nil)
           request("proposal-due", {"after" => after}.compact)
         end

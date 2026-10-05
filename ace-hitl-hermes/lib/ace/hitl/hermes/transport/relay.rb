@@ -113,7 +113,7 @@ module Ace
                       commit.call
                       text.clear unless text.frozen?
                     else
-                      deliver_reply(existing, duplicate, text, channel, commit)
+                      deliver_reply(existing, duplicate, text, channel, commit, state)
                     end
                   else
                     deliver_instruction(duplicate, text, channel, commit)
@@ -130,7 +130,7 @@ module Ace
               state["ingress"] << item
               commit.call # write no answer, no digest, before any delivery
               if record
-                deliver_reply(record, item, text, channel, commit)
+                deliver_reply(record, item, text, channel, commit, state)
               else
                 deliver_instruction(item, text, channel, commit)
               end
@@ -255,7 +255,14 @@ module Ace
             records.first["request"]
           end
 
-          def deliver_reply(record, item, text, channel, commit)
+          def deliver_reply(record, item, text, channel, commit, state)
+            if proposal?(record) && state["ingress"].any? { |earlier|
+                earlier["request"] == item["request"] && earlier["revision"] == item["revision"] &&
+                  earlier["sequence"] < item["sequence"] && !TERMINAL.include?(earlier["status"]) }
+              item["status"] = "unresolved"
+              commit.call
+              return
+            end
             # Durable terminal history in ace-hitl defeats late replies even
             # after transport tombstones expire. Hermes never runs the effect.
             if record["sensitive"] && record["secret_delivery"] == "unavailable"

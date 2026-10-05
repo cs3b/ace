@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Recover stable-ID proposal creation from canonical prepared requests, retain exact reply deduplication across retry ordering, and queue proposer reconciliation wakes for the existing transport actor.
+
 ### Added
 - Resolve immutable second-commander proposals through confirmed-delivery sixteen-hour policy and canonical Assign authorization.
 

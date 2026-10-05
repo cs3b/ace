@@ -102,6 +102,14 @@ module Ace
         # error, never permission.
         def create(id:, attempt:, plan:, question:, ace_hitl_id:, project: "ace", harness: "lab-admin",
           assignment:, kind: "text", options: [], effect: nil, otp: nil)
+          value = prepare_request(id: id, attempt: attempt, plan: plan, question: question,
+            ace_hitl_id: ace_hitl_id, project: project, harness: harness, assignment: assignment,
+            kind: kind, options: options, effect: effect, otp: otp)
+          persist_request(value)
+        end
+
+        def prepare_request(id:, attempt:, plan:, question:, ace_hitl_id:, project: "ace", harness: "lab-admin",
+          assignment:, kind: "text", options: [], effect: nil, otp: nil)
           requester = @identity.username
           request_id = safe_id(id)
           validate_binding_ids!(assignment, attempt)
@@ -168,6 +176,13 @@ module Ace
           end
           value["envelope"] = managed_envelope!(envelope)
 
+          value
+        end
+        private :prepare_request
+
+        def persist_request(value)
+          request_id = value.fetch("id")
+          attempt = value.fetch("attempt")
           request_path = requests_dir.join("#{request_id}.json")
           raise StateError, "HITL request already exists" if request_path.exist?
 
@@ -190,6 +205,8 @@ module Ace
             "requested" => true
           }
         end
+
+        private :persist_request
 
         # Non-secret request facts for the requester of record (or the
         # transport). Never carries answer content.
@@ -437,6 +454,7 @@ module Ace
         def each_pending(project: nil, after: nil)
           return enum_for(__method__, project: project, after: after) unless block_given?
           require_transport!("pending")
+          recover_proposal_projections(project: project)
           ids = (requests_dir.glob("*.json") + public_dir.glob("*.json")).map { |path| path.basename(".json").to_s }.uniq.sort
           ids.each do |id|
             next if after && id <= after

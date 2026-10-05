@@ -15,7 +15,7 @@ module Ace
         MAX_FRAME_BYTES = 64 * 1024
         DEFAULT_DEADLINE_SECONDS = 10.0
         OPERATIONS = %w[create read deliver consume cancel pending states ping
-          proposal-create proposal-show proposal-revise proposal-ack proposal-reply proposal-reconcile proposal-due proposal-history].freeze
+          proposal-create proposal-show proposal-revise proposal-ack proposal-reply proposal-reconcile proposal-due proposal-history proposal-wake].freeze
 
         # Wire failures map to the transport error; classified lifecycle
         # failures pass through under their own names.

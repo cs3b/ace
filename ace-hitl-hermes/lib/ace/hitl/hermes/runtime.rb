@@ -72,6 +72,7 @@ module Ace
                 raise if once
                 sleep 1
               end
+              reconcile_proposals
               break if once
             end
           end
@@ -117,6 +118,22 @@ module Ace
           end
         rescue Ace::Hitl::Contract::InvalidEnvelope, KeyError, ArgumentError => e
           raise ContractError, "managed pending publication binding is invalid (#{e.class})"
+        end
+
+        def reconcile_proposals
+          after = nil
+          loop do
+            page = @lifecycle.proposal_due(after: after)
+            page.fetch("items").each do |proposal|
+              @relay.reconcile(request: proposal.fetch("request_id"), through: proposal.fetch("deadline"))
+            end
+            cursor = page.fetch("next")
+            break unless cursor
+            raise ContractError, "proposal deadline cursor did not advance" unless cursor.is_a?(String) && (!after || cursor > after)
+            after = cursor
+          end
+        rescue Ace::Hitl::Lifecycle::Error, ContractError => e
+          warn "ace-hitl-hermes: proposal reconciliation unavailable (#{e.class}); deadlines deferred"
         end
 
         def telegram

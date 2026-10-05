@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Block later proposal approval behind unresolved earlier ingress and reconcile canonical proposer wakes after the existing transport poll loop establishes coverage.
+
 ### Added
 - Resolve immutable second-commander proposals through confirmed-delivery sixteen-hour policy and canonical Assign authorization.
 

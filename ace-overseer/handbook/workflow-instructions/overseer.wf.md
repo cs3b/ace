@@ -164,11 +164,13 @@ candidate:
 
 ### Second-commander proposal policy ticks
 
-With ACE_HITL_HERMES_CONFIG configured, the living overseer invokes
-`ace-hitl proposal resolve-due` at startup and each watch/status tick, including restart
-after a missed deadline. The installed HITL/Hermes commands own policy/reconciliation;
+With ACE_HITL_SOCKET and ACE_HITL_PROJECT configured, the living overseer invokes
+`ace-hitl proposal resolve-due --project PROJECT` at startup and each watch/status tick, including restart
+after a missed deadline. The authenticated HITL boundary queues a canonical wake;
+the existing Hermes transport actor polls and reconciles under its own UID.
+The installed HITL/Hermes commands own policy/reconciliation;
 overseer does not claim effects, shorten the sixteen-hour window, or replay elapsed ticks.
-A failed tick is visible and defers authorization. The decision role reviews relevant prior
+A failed tick is visible, defers authorization, and keeps watch/status running. The decision role reviews relevant prior
 `ace-hitl proposal history --project ID --query TEXT`, creates exact proposals, and inspects
 `proposal show` deadline/decision/Assign outcome. Do not mark technical or installed gates
 passed from a proposal's authorization state.

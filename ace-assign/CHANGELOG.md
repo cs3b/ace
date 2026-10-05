@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Enforce global proposal identity ownership and immutable prepared lifecycle projection in the sole canonical proposal journal.
+
 ### Added
 - Resolve immutable second-commander proposals through confirmed-delivery sixteen-hour policy and canonical Assign authorization.
 

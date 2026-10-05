@@ -6,10 +6,17 @@ module Ace
   module Hitl
     module Lifecycle
       module Proposals
-        def proposal_create(assignment:, attempt:, project:, document:)
+        def proposal_create(id:, assignment:, attempt:, project:, document:)
           require_proposer!(project)
           content = Ace::Hitl::Proposals::Policy.document(document)
-          id = "proposal-#{SecureRandom.hex(12)}"
+          unless id.is_a?(String) && id.match?(/\Aproposal-[0-9a-f]{24}\z/)
+            raise StateError, "create requires a stable proposal ID"
+          end
+          existing = proposal_journal.proposal_record(id)
+          if existing && existing.values_at("assignment_id", "attempt_id", "project_id", "requester", "caller_uid", "content_digest") !=
+              [assignment, attempt, project, @identity.username, @identity.uid, Digest::SHA256.hexdigest(JSON.generate(content))]
+            raise StateError, "proposal retry changed immutable content or caller"
+          end
           proposal_revision(id, 1, assignment: assignment, attempt: attempt, project: project, content: content)
         end
 
@@ -67,7 +74,10 @@ module Ace
           proposal_transition(record) do |current|
             # Claims and this transition share one canonical ref lock/CAS.
             claimed = proposal_journal.proposal_claims(current["revision_id"]).any?
-            Ace::Hitl::Proposals::Policy.reply(current, answer: answer, received_at: received_at,
+            applied = proposal_journal.proposal_history(current["proposal_id"]).find do |entry|
+              entry["revision_id"] == current["revision_id"] && entry["reply_sequence"] == sequence
+            end
+            Ace::Hitl::Proposals::Policy.reply(current, applied: applied, answer: answer, received_at: received_at,
               sequence: sequence, claimed: claimed)
           end
         end
@@ -80,12 +90,27 @@ module Ace
           end
         end
 
+        def proposal_wake(project:, after: nil)
+          raise StateError, "invalid proposal wake project" unless project.is_a?(String) && Kinds::SAFE_LABEL.match?(project)
+          require_proposer!(project)
+          records = proposal_journal.proposals.sort_by { |record| record["proposal_id"] }.select do |record|
+            record["project_id"] == project && (!after || record["proposal_id"] > after) &&
+              record["state"] == "awaiting-decision" && record["deadline"] <= proposal_now
+          end
+          selected = records.first(8)
+          items = selected.map do |record|
+            proposal_transition(record) { |current| current["reconcile_requested_at"] ? current : current.merge("reconcile_requested_at" => proposal_now) }
+            {"proposal_id" => record["proposal_id"], "status" => "queued-for-transport"}
+          end
+          {"items" => items, "next" => records.length > 8 ? selected.last["proposal_id"] : nil}
+        end
+
         def proposal_due(after: nil)
           require_transport!("proposal deadlines")
           records = proposal_journal.proposals.sort_by { |record| record["proposal_id"] }.select do |record|
             (!after || record["proposal_id"] > after) &&
               @policy.transport?(@identity, project: record["project_id"]) &&
-              record["state"] == "awaiting-decision" && record["deadline"] <= proposal_now
+              record["state"] == "awaiting-decision" && record["deadline"] <= proposal_now && record["reconcile_requested_at"]
           end
           selected = records.first(8)
           {"items" => selected.map { |record| record.slice("proposal_id", "request_id", "deadline") },
@@ -161,29 +186,56 @@ module Ace
         def proposal_revision(id, revision, assignment:, attempt:, project:, content:)
           request = "#{id}-r#{revision}"
           question = "Proposal #{request}: #{JSON.generate(content)}"
-          if request_path(request).exist?
-            existing = load_request(request)
-            unless existing.values_at("assignment", "attempt", "project", "requester", "kind", "question") ==
-                [assignment, attempt, project, @identity.username, "proposal", question]
-              raise StateError, "existing proposal revision has different immutable content"
-            end
-          else
-            create(id: request, assignment: assignment, attempt: attempt, project: project, kind: "proposal",
-              plan: "second commander exact proposal", question: question, ace_hitl_id: id)
-          end
-          @binding.with_active(assignment: assignment, attempt: attempt, project: project, requester: @identity.username) do
+          record = @binding.with_active(assignment: assignment, attempt: attempt, project: project, requester: @identity.username) do
             proposal_journal.change_proposal(id, assignment_id: assignment, attempt_id: attempt) do |previous|
+              if previous && previous["revision"] == revision
+                unless previous.values_at("assignment_id", "attempt_id", "project_id", "requester", "caller_uid", "content_digest") ==
+                    [assignment, attempt, project, @identity.username, @identity.uid, Digest::SHA256.hexdigest(JSON.generate(content))]
+                  raise StateError, "proposal retry changed immutable content or caller"
+                end
+                next previous
+              end
               unless (revision == 1 && previous.nil?) ||
                   (previous && previous["revision"] == revision - 1 && previous["state"] == "superseded")
                 raise StateError, "proposal revision changed concurrently"
               end
+              projection = prepare_request(id: request, assignment: assignment, attempt: attempt, project: project,
+                kind: "proposal", plan: "second commander exact proposal", question: question, ace_hitl_id: id)
               content.merge("schema" => "ace.hitl.proposal/v1", "proposal_id" => id, "revision" => revision,
                 "revision_id" => request, "request_id" => request, "assignment_id" => assignment,
                 "attempt_id" => attempt, "project_id" => project, "requester" => @identity.username,
                 "caller_uid" => @identity.uid, "content_digest" => Digest::SHA256.hexdigest(JSON.generate(content)),
                 "state" => "awaiting-delivery", "created_at" => proposal_now,
-                "authorization" => request)
+                "authorization" => request, "lifecycle_request" => projection)
             end
+          end
+          project_proposal_request(record)
+          record
+        end
+
+        def project_proposal_request(record)
+          value = record.fetch("lifecycle_request")
+          if request_path(value.fetch("id")).exist?
+            unless load_request(value.fetch("id")) == value
+              raise StateError, "canonical proposal projection differs from lifecycle request"
+            end
+            initialize_projection!(value)
+          else
+            begin
+              persist_request(value)
+            rescue StateError => e
+              raise unless e.message == "HITL request already exists" && load_request(value.fetch("id")) == value
+              initialize_projection!(value)
+            end
+          end
+        end
+
+        def recover_proposal_projections(project:)
+          return unless @binding.respond_to?(:proposal_journal)
+          proposal_journal.proposals.each do |record|
+            next if project && record["project_id"] != project
+            next unless @policy.transport?(@identity, project: record["project_id"])
+            project_proposal_request(record)
           end
         end
       end

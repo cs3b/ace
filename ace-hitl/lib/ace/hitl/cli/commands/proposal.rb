@@ -29,7 +29,8 @@ module Ace
             result = case operation
             when "create"
               %i[assignment attempt project].each { |key| raise_lifecycle_error("--#{key} required") if options[key].to_s.empty? }
-              lifecycle_client.proposal_create(assignment: options[:assignment], attempt: options[:attempt],
+              raise_lifecycle_error("stable proposal ID required") if id.to_s.empty?
+              lifecycle_client.proposal_create(id: id, assignment: options[:assignment], attempt: options[:attempt],
                 project: options[:project], document: load_document(options[:file]))
             when "show"
               raise_lifecycle_error("proposal ID required") if id.to_s.empty?
@@ -38,8 +39,8 @@ module Ace
               raise_lifecycle_error("proposal ID required") if id.to_s.empty?
               lifecycle_client.proposal_revise(id, document: load_document(options[:file]))
             when "resolve-due"
-              Proposals::Evaluator.new(boundary: lifecycle_client,
-                config: ENV["ACE_HITL_HERMES_CONFIG"]).call
+              raise_lifecycle_error("--project required") if options[:project].to_s.empty?
+              Proposals::Evaluator.new(boundary: lifecycle_client, project: options[:project]).call
             when "history"
               raise_lifecycle_error("--project required") if options[:project].to_s.empty?
               lifecycle_client.proposal_history(project: options[:project], query: options[:query] || "", after: options[:after])

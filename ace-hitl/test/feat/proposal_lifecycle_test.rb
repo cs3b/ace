@@ -61,7 +61,7 @@ class ProposalLifecycleTest < AceHitlTestCase
   end
 
   def create
-    @store.proposal_create(assignment: "assign500", attempt: "attempt500", project: "ace", document: content)
+    @store.proposal_create(id: "proposal-#{SecureRandom.hex(12)}", assignment: "assign500", attempt: "attempt500", project: "ace", document: content)
   end
 
   def acknowledge(record)
@@ -92,6 +92,98 @@ class ProposalLifecycleTest < AceHitlTestCase
     assert_raises(Ace::Assign::AttemptErrors::ReceiptRejected) do
       @journal.change_proposal("proposal-#{'c' * 24}", assignment_id: "assign500", attempt_id: "attempt500") do
         record.merge("proposal_id" => "proposal-#{'c' * 24}", "state" => "approved-explicitly")
+      end
+    end
+  end
+
+  def test_unseen_lower_reply_veto_applies_and_changed_duplicate_is_refused
+    record = acknowledge(create)
+    @store.proposal_reply(record["request_id"], answer: "approve", received_at: @now.iso8601, sequence: 2)
+    @store.proposal_reply(record["request_id"], answer: "veto", received_at: @now.iso8601, sequence: 1)
+    assert_equal "denied", @journal.proposal_record(record["proposal_id"])["state"]
+    before = @journal.ref_value
+    @store.proposal_reply(record["request_id"], answer: "veto", received_at: @now.iso8601, sequence: 1)
+    assert_equal before, @journal.ref_value
+    assert_raises(Ace::Hitl::Lifecycle::StateError) do
+      @store.proposal_reply(record["request_id"], answer: "approve", received_at: @now.iso8601, sequence: 1)
+    end
+    assert_raises(Ace::Assign::AttemptErrors::ReceiptRejected) { @journal.claim_service_request(binding(record)) }
+  end
+
+  def test_initial_creation_failure_and_uncertain_commit_recover_exact_identity
+    id = "proposal-#{SecureRandom.hex(12)}"
+    args = {id: id, assignment: "assign500", attempt: "attempt500", project: "ace", document: content}
+    original = @journal.method(:change_proposal)
+    @journal.define_singleton_method(:change_proposal) { |*a, **k, &b| raise Ace::Assign::AttemptErrors::EvidenceUnavailable, "before commit" }
+    assert_raises(Ace::Assign::AttemptErrors::EvidenceUnavailable) { @store.proposal_create(**args) }
+    assert_empty Dir.glob(File.join(@dir, "hitl/requests/*.json"))
+    @journal.define_singleton_method(:change_proposal) do |*a, **k, &b|
+      original.call(*a, **k, &b)
+      raise Ace::Assign::AttemptErrors::EvidenceUnavailable, "lost canonical reply"
+    end
+    assert_raises(Ace::Assign::AttemptErrors::EvidenceUnavailable) { @store.proposal_create(**args) }
+    assert @journal.proposal_record(id)
+    assert_empty Dir.glob(File.join(@dir, "hitl/requests/*.json"))
+    @journal.define_singleton_method(:change_proposal, original)
+    # The transport's existing pending producer restores the durable prepared
+    # projection after restart, without impersonating the original proposer.
+    assert_equal ["#{id}-r1"], @store.pending.map { |entry| entry["id"] }
+    record = @store.proposal_create(**args)
+    incarnation = record.dig("lifecycle_request", "incarnation")
+    armed = acknowledge(record)
+    before = @journal.ref_value
+    retried = @store.proposal_create(**args)
+    assert_equal before, @journal.ref_value
+    assert_equal armed["deadline"], retried["deadline"]
+    assert_equal incarnation, @store.read(record["request_id"]).dig("envelope", "request_incarnation")
+    assert_raises(Ace::Hitl::Lifecycle::StateError) { @store.proposal_create(**args.merge(document: content("access"))) }
+    assert_raises(Ace::Hitl::Lifecycle::StateError) { @store.proposal_create(**args.merge(assignment: "different")) }
+    assert_raises(Ace::Hitl::Lifecycle::StateError) { @store.proposal_create(**args.merge(attempt: "different")) }
+    assert_raises(Ace::Assign::AttemptErrors::ReceiptRejected) do
+      @journal.change_proposal(id, assignment_id: "different", attempt_id: "different") { |entry| record }
+    end
+    assert_equal 1, Dir.glob(File.join(@dir, "hitl/requests/*.json")).size
+  end
+
+  def test_concurrent_materializers_preserve_existing_public_lifecycle_state
+    record = create
+    path = @store.send(:public_path, record["request_id"])
+    current = JSON.parse(File.read(path)).merge("state" => "answer-delivered")
+    Ace::Hitl::Lifecycle::AtomicJson.call(path, current, mode: 0o440, ownership_strategy: RecordingOwnership.new)
+    threads = 2.times.map { Thread.new { @store.send(:project_proposal_request, record) } }
+    Timeout.timeout(10) { threads.each(&:value) }
+    assert_equal current, JSON.parse(File.read(path))
+    File.unlink(@store.send(:request_path, record["request_id"]))
+    threads = 2.times.map { Thread.new { @store.send(:project_proposal_request, record) } }
+    Timeout.timeout(10) { threads.each(&:value) }
+    assert_equal current, JSON.parse(File.read(path))
+    assert_equal record["lifecycle_request"], JSON.parse(File.read(@store.send(:request_path, record["request_id"])))
+  end
+
+  def test_retrying_veto_blocks_later_approval_without_storing_message_bodies
+    with_transport do |boundary, actor|
+      record = boundary.proposal_create(id: "proposal-#{SecureRandom.hex(12)}", assignment: "assign500", attempt: "attempt500", project: "ace", document: content)
+      actor.serve(once: true)
+      transport = actor.relay.instance_variable_get(:@lifecycle)
+      original = transport.method(:proposal_reply)
+      first = true
+      transport.define_singleton_method(:proposal_reply) do |request, **params|
+        if first && params[:answer] == "veto"
+          first = false
+          raise Ace::Hitl::Lifecycle::TransportError, "injected transient reply"
+        end
+        original.call(request, **params)
+      end
+      assert_equal "unresolved", actor.relay.receive(event("veto"))["status"]
+      assert_equal "unresolved", actor.relay.receive(event("approve").merge("message_id" => "102"))["status"]
+      assert_equal "awaiting-decision", @journal.proposal_record(record["proposal_id"])["state"]
+      assert_raises(Ace::Assign::AttemptErrors::ReceiptRejected) { @journal.claim_service_request(binding(record)) }
+      assert_equal "delivered", actor.relay.receive(event("veto"))["status"]
+      actor.relay.receive(event("approve").merge("message_id" => "102"))
+      assert_equal "denied", @journal.proposal_record(record["proposal_id"])["state"]
+      assert_raises(Ace::Assign::AttemptErrors::ReceiptRejected) { @journal.claim_service_request(binding(record)) }
+      actor.journal.synchronize do |state, _|
+        state["ingress"].each { |item| refute item.keys.any? { |key| %w[text answer body digest].include?(key) } }
       end
     end
   end
@@ -136,12 +228,12 @@ class ProposalLifecycleTest < AceHitlTestCase
     worker = Ace::Hitl::Lifecycle::Store.new(root: File.join(@dir, "hitl"), binding: @binding,
       identity: TestIdentity.new, policy: policy, proposal_clock: -> { @now })
     assert_raises(Ace::Hitl::Lifecycle::PermissionError) do
-      worker.proposal_create(assignment: "assign500", attempt: "attempt500", project: "ace", document: content)
+      worker.proposal_create(id: "proposal-#{SecureRandom.hex(12)}", assignment: "assign500", attempt: "attempt500", project: "ace", document: content)
     end
     assert_raises(Ace::Hitl::Lifecycle::PermissionError) { worker.proposal_revise(record["proposal_id"], document: content) }
     library = Ace::Hitl::Lifecycle::Store.new(root: File.join(@dir, "hitl"), binding: @binding, identity: TestIdentity.new)
     assert_raises(Ace::Hitl::Lifecycle::PermissionError) do
-      library.proposal_create(assignment: "assign500", attempt: "attempt500", project: "ace", document: content)
+      library.proposal_create(id: "proposal-#{SecureRandom.hex(12)}", assignment: "assign500", attempt: "attempt500", project: "ace", document: content)
     end
     assert_raises(Ace::Hitl::Lifecycle::PermissionError) do
       worker.proposal_acknowledge(record["request_id"], submitted_at: @now.iso8601)
@@ -252,6 +344,7 @@ class ProposalLifecycleTest < AceHitlTestCase
     transport.define_singleton_method(:call) { |channel, _| {"success" => true, "chat_id" => channel["chat_id"], "message_id" => "100"} }
     actor = Ace::Hitl::Hermes::Runtime.new(config, clock: -> { @now })
     actor.instance_variable_set(:@config_path_for_test, config)
+    actor.instance_variable_set(:@service_for_test, service)
     actor.define_singleton_method(:telegram) { transport }
     yield boundary, actor
   ensure
@@ -265,13 +358,44 @@ class ProposalLifecycleTest < AceHitlTestCase
      "message_id" => "101", "reply_to_message_id" => "100", "text" => answer}
   end
 
+  def test_separate_proposer_boundary_only_wakes_existing_transport_actor
+    transport_uid = Process.uid + 1000
+    policy = Ace::Hitl::Lifecycle::GrantsPolicy.new(document: {
+      "hitl" => {"proposal_uids" => [Process.uid], "transport_uids" => [transport_uid]},
+      "authorization" => {"principals" => {Process.uid.to_s => {"projects" => ["ace"]},
+        transport_uid.to_s => {"projects" => ["ace"]}}}})
+    with_transport(policy: policy) do |boundary, actor|
+      # Real socket authenticates the proposer. Distinct transport Peer models
+      # service role dispatch; actual cross-UID installation remains acceptance.
+      peer = Ace::Hitl::Lifecycle::Peer.new(uid: transport_uid, gid: Process.gid, username: "fixture-transport")
+      transport_store = actor.instance_variable_get(:@service_for_test).send(:store_for, peer)
+      actor.instance_variable_set(:@lifecycle, transport_store)
+      actor.relay.instance_variable_set(:@lifecycle, transport_store)
+      record = boundary.proposal_create(id: "proposal-#{SecureRandom.hex(12)}", assignment: "assign500", attempt: "attempt500", project: "ace", document: content)
+      actor.serve(once: true)
+      armed = boundary.proposal_show(record["proposal_id"])
+      @now += 16 * 3600
+      assert_raises(Ace::Hitl::Lifecycle::PermissionError) { boundary.proposal_due }
+      assert_raises(Ace::Hitl::Lifecycle::PermissionError) { boundary.proposal_reconcile(record["request_id"], checkpoint: checkpoint(armed)) }
+      assert_equal "queued-for-transport", Ace::Hitl::Proposals::Evaluator.new(boundary: boundary, project: "ace").call.first["status"]
+      before = @journal.ref_value
+      Ace::Hitl::Proposals::Evaluator.new(boundary: boundary, project: "ace").call
+      assert_equal before, @journal.ref_value, "duplicate wake is idempotent"
+      assert_equal "awaiting-decision", @journal.proposal_record(record["proposal_id"])["state"]
+      actor.serve(once: true)
+      assert_equal "approved-by-silence", boundary.proposal_show(record["proposal_id"])["decision_state"]
+      assert_raises(Ace::Hitl::Lifecycle::PermissionError) { boundary.proposal_wake(project: "other") }
+      assert_raises(Ace::Hitl::Lifecycle::PermissionError) { transport_store.proposal_wake(project: "ace") }
+    end
+  end
+
   def test_kernel_peer_cannot_create_across_installed_decision_project_scope
     policy = Ace::Hitl::Lifecycle::GrantsPolicy.new(document: {
       "hitl" => {"proposal_uids" => [Process.uid], "transport_uids" => []},
       "authorization" => {"principals" => {Process.uid.to_s => {"projects" => ["other"]}}}})
     with_transport(policy: policy) do |boundary, _actor|
       assert_raises(Ace::Hitl::Lifecycle::PermissionError) do
-        boundary.proposal_create(assignment: "assign500", attempt: "attempt500", project: "ace", document: content)
+        boundary.proposal_create(id: "proposal-#{SecureRandom.hex(12)}", assignment: "assign500", attempt: "attempt500", project: "ace", document: content)
       end
       assert_empty @journal.proposals
     end
@@ -279,7 +403,7 @@ class ProposalLifecycleTest < AceHitlTestCase
 
   def test_real_socket_producer_ack_restart_and_deadline_reconciliation
     with_transport do |boundary, actor|
-      record = boundary.proposal_create(assignment: "assign500", attempt: "attempt500", project: "ace", document: content)
+      record = boundary.proposal_create(id: "proposal-#{SecureRandom.hex(12)}", assignment: "assign500", attempt: "attempt500", project: "ace", document: content)
       assert_equal "awaiting-delivery", record["state"]
       actor.serve(once: true) # producer creates folder question itself; no manual injection
       armed = boundary.proposal_show(record["proposal_id"])
@@ -287,12 +411,10 @@ class ProposalLifecycleTest < AceHitlTestCase
       assert_equal "2026-10-05T17:00:00Z", armed["deadline"]
       @now += 16 * 3600
       actor.serve(once: true) # resume, drain actual polling seam before issuing checkpoint
-      runner = Object.new
-      runner.define_singleton_method(:capture3) { |binary, *args| Open3.capture3(RbConfig.ruby, binary, *args) }
-      results = Ace::Hitl::Proposals::Evaluator.new(boundary: boundary,
-        config: actor.instance_variable_get(:@config_path_for_test), runner: runner,
-        binary: File.expand_path("../../../bin/ace-hitl-hermes", __dir__)).call
-      assert_equal "approved-by-silence", results.first["status"]
+      results = Ace::Hitl::Proposals::Evaluator.new(boundary: boundary, project: "ace").call
+      assert_equal "queued-for-transport", results.first["status"]
+      actor.serve(once: true)
+      assert_equal "approved-by-silence", boundary.proposal_show(record["proposal_id"])["decision_state"]
       before = @journal.ref_value
       actor.relay.reconcile(request: record["request_id"], through: armed["deadline"])
       assert_equal before, @journal.ref_value, "duplicate wake must not replay ticks"
@@ -301,7 +423,7 @@ class ProposalLifecycleTest < AceHitlTestCase
 
   def test_ingress_vs_deadline_and_claim_races_complete_without_deadlock
     with_transport do |boundary, actor|
-      record = boundary.proposal_create(assignment: "assign500", attempt: "attempt500", project: "ace", document: content)
+      record = boundary.proposal_create(id: "proposal-#{SecureRandom.hex(12)}", assignment: "assign500", attempt: "attempt500", project: "ace", document: content)
       actor.serve(once: true)
       armed = boundary.proposal_show(record["proposal_id"])
       @now += 16 * 3600
@@ -318,7 +440,7 @@ class ProposalLifecycleTest < AceHitlTestCase
 
   def test_failed_and_uncertain_transport_submission_never_arms_deadline
     with_transport do |boundary, actor|
-      record = boundary.proposal_create(assignment: "assign500", attempt: "attempt500", project: "ace", document: content)
+      record = boundary.proposal_create(id: "proposal-#{SecureRandom.hex(12)}", assignment: "assign500", attempt: "attempt500", project: "ace", document: content)
       transport = actor.send(:telegram)
       transport.define_singleton_method(:call) { |*| raise Ace::Hitl::Hermes::Transport::SubmitFailed }
       actor.serve(once: true)

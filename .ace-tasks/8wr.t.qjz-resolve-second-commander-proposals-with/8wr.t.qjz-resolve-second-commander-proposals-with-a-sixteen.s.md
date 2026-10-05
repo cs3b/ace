@@ -10,7 +10,7 @@ bundle:
   presets: [project]
   files: [ace-hitl/lib/ace/hitl/lifecycle/store.rb, ace-hitl/lib/ace/hitl/lifecycle/effects.rb, ace-hitl/lib/ace/hitl/lifecycle/kinds.rb, ace-overseer/handbook/workflow-instructions/overseer.wf.md]
   commands: []
-needs_review: false
+needs_review: true
 title: Resolve second-commander proposals with a sixteen-hour veto window
 position: 6o000c
 ---
@@ -37,7 +37,7 @@ Second commander proposes a precise action with context/options/recommendation. 
 
 ### Interface Contract
 
-`ace-hitl proposal create --assignment ID --attempt ID --project ID --file PROPOSAL`; `ace-hitl proposal show ID --format json`; `ace-hitl proposal resolve-due [--now UTC]` (clock override limited to test fixtures, production uses trusted clock); `ace-hitl proposal revise ID --file PROPOSAL`. Telegram Reply performs approve/veto/clarify with exact revision correlation. Creation returns proposal/revision/request IDs, delivery state and deadline only after acknowledgement. Executor consumes the resulting immutable authorization through ace-lab service request.
+`ace-hitl proposal create PROPOSAL_ID --assignment ID --attempt ID --project ID --file PROPOSAL`; `ace-hitl proposal show ID --format json`; `ace-hitl proposal resolve-due --project ID [--now UTC]` (clock override limited to test fixtures, production uses trusted clock); `ace-hitl proposal revise ID --file PROPOSAL`. Telegram Reply performs approve/veto/clarify with exact revision correlation. Creation returns proposal/revision/request IDs, delivery state and deadline only after acknowledgement. Executor consumes the resulting immutable authorization through ace-lab service request.
 
 ### Success Criteria and Verification Plan
 
@@ -66,3 +66,23 @@ Earlier text is retained in `history/pre-lab-spec-review.md` as non-normative hi
 ### Usage and Review Evidence
 
 Public scenarios: `ux/usage.md`. Record independent review before promotion.
+
+### Review repair public contract clarification
+
+Initial creation requires caller-persisted stable `proposal-[0-9a-f]{24}` identity.
+Retry accepts only exact caller, assignment, attempt, project and content binding.
+Canonical Assign evidence commits an immutable prepared lifecycle request before
+projection; exact retry and the existing authenticated transport pending scan
+recover crashes and uncertain commits without blind deletion or orphan requests.
+
+`resolve-due --project` is an authenticated proposer wake, returning
+`queued-for-transport`. The existing Hermes runtime loop under its actual
+transport principal performs reconciliation only after post-poll coverage proof.
+Wake is idempotent and never carries approval authority. Proposer role does not
+inherit transport admission; no new daemon, executor or journal is introduced.
+Transient tick failure preserves watch/status and future retries.
+
+Earlier unresolved same-request ingress blocks later approval; canonical history
+deduplicates exact sequence/content/time and rejects changed duplicate evidence.
+An unseen lower sequence is not a duplicate. Hermes metadata excludes raw bodies.
+These public changes require independent readiness/source review before acceptance.
