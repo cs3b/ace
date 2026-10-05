@@ -31,3 +31,21 @@ Review must establish actual socket access, external-spawner restrictions and
 what prevents later repopulation before accepting scope-exit evidence. Killing
 all processes of a shared worker UID would also affect unrelated attempts and
 is not an acceptable implicit substitute for exact scope ownership.
+
+## Executed native-spawner evidence
+
+The independently replayed 09j installed HVF fixture now supplies concrete
+evidence for part of that constraint. In the
+[retained independent proof](../../8x4.t.09j-launch-a-gated-worker-through/evidence/installed-independent-hvf/proof.json),
+`worker_native_gate_mimic` records a worker-UID client connecting directly to
+the real Herdr socket and creating another native child with `layout.apply`.
+The probe uses the genuine installed gate and the original launch ticket; the
+new PID differs from the canonical child. The authority correctly grants it
+no permission and the payload count remains unchanged.
+
+This proves accessible out-of-attempt native process creation in the current
+fixture, not an escaped arbitrary writer or a cgroup exploit. The latter were
+not tested. Therefore an eventual cgroup-based proof must also close or account
+for this creation path; merely collecting descendants of the original child
+cannot establish complete scope ownership. The accepted 09j exact-child
+contract and its safe refusal remain unchanged.

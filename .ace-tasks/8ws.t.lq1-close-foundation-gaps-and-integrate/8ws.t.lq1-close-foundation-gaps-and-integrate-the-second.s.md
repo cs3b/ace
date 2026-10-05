@@ -246,13 +246,22 @@ After corrected qjz source joins recovery/HITL, proceed to qk0, then full qkb, R
 ## Current execution checklist — 2026-10-05, after qjz source integration
 
 - [x] `qjz` source/spec d20cd8 independently accepted; merged `3d2ffcdd4`, integrated source evidence `4f869451f`. Task remains open for installed SC3.
-- [ ] `8x4.t.5qv`: repair local Assign identity from login/environment to the actual kernel process account. Readiness approved, tracked separately, implementation active. Actual installed SC3 failed `8x45o5` on this mismatch; do not relabel that run successful.
-- [ ] `qjz` SC3: rebuild exact integrated gems after accepted 5qv, then rerun the maintained isolated installed proposal scenario. This controlled proof is separate from actual Lab/Telegram acceptance.
-- [ ] `09j`: latest source repairs independently approved; combined Assign total888/3961 with two existing skips passed `8x45dm`. Author's uninstrumented isolated hardware-accelerated Linux/Yama2 launch and failure cases passed. Independent clean guest rerun, remaining full affected package gates, evidence review and source integration remain required.
-- [ ] `xz9.0`: narrow service CAS replay repair `c5c7f5d9b` independently accepted after two reproduced findings; 14/157 regressions pass. Complete receiver/composition, explicit canonical authorization seam review, combined dependency integration and installed cross-user proof remain open.
+- [x] `8x4.t.5qv`: local Assign identity now derives from the actual kernel process account. Independent source review approved b73a64b404; combined full Assign 894 tests/3978 assertions (two skips) and HITL 230/1337 (one skip) passed. Integrated `19e6887f8`, root post-merge real Unix peer/ownership test 1/7 passed `8x46uo`; task done and archived. Earlier installed SC3 failure `8x45o5` remains a failure; the rebuilt installed scenario is a separate gate.
+- [ ] `8x4.t.6yk`: paired native reverse-reference source `2b802201c` reviewed; one confirmed finding remains: serialized JSON-file references normalize padding instead of refusing noncanonical wire input. Repair and re-review precede integration. Rebuilt installed SC3 `8x46wb` confirms the correct kernel actor after 5qv but rejects genuine tmux `$0`/`%0` at the old shared HITL reference validator. Preserve exact native IDs and authoritative binding.
+- [ ] `qjz` SC3: rebuild exact integrated gems after accepted 6yk, then rerun the maintained isolated installed proposal scenario. Failed runs `8x45o5` and `8x46wb` remain failed. This controlled proof is separate from actual Lab/Telegram acceptance.
+- [ ] `09j`: latest source repairs independently approved; combined Assign total888/3961 with two existing skips passed `8x45dm`. Author and root independent clean hardware-accelerated Linux/Yama2 launch and failure cases passed; Runtime175/485 and Herdr463/1521 all gates passed. Source merged `0d1090b83`, post-merge2/14 passed. Task remains open for the explicit remaining native restart/crash-window matrix, independently from actual Lab acceptance.
+- [ ] `xz9.0`: narrow service CAS replay repair `c5c7f5d9b` independently accepted after two reproduced findings; 14/157 regressions pass. Read-only authorization delta 4674d821a..946921433 independently approved with 30/229 targeted checks. Status-generation delta 37a7b91af rejected for bypassing current executor project visibility; repair must preserve separate late outcome completion without widening status access. Complete receiver/composition, mapping review, combined dependency integration and installed cross-user proof remain open.
+- [x] `xz9.0` receiver mapping source checkpoint: independently approved ACL/traversal repair integrated `050be8b9f`; full combined Assign 905 tests/4032 assertions (two skips), post-merge 15/71 passed. This is not installed receiver acceptance.
+- [ ] `xz9.0` status/completion and retained-worker ownership repair: frozen `ef76e05a9`, 34/386 focused checks passed `8x47jc`; combined independent review is in progress. Receiver orchestration remains a separate unfinished slice.
 - [ ] `xz9.2`: protected prompt/stop remains draft pending complete scope/writer proof and native contract readiness. It precedes qk0; no child-exit or empty-subtree shortcut is accepted.
 - [ ] After protected runtime/service/steering and HITL gates: qk0 → complete atomic qkb → R2 ig3 → R3 ig4 → qkc/gad.2, followed by legacy removal and cold-start acceptance in lab-config.
 
 Domain installation gad.8/.b/.9 and actual Lab remain separate required work. Pilot ig5 is optional. Final gem publication still belongs to the Captain's interactive OTP step after source integration; prior published-gem proof does not cover this new source closure.
+
+Further 09j launcher probes were interrupted by automatic review; the exact
+trigger was not identified. The prepared additional probes and independent
+expanded guest rerun remain unexecuted and must not be retried through another
+agent. See 09j `execution-limitation-2026-10-05.md`; unaffected source work and
+ordinary tests continue.
 
 Supporting tool defects `8x4.t.412` (review session isolation) and `8x4.t.5h5` (active Git operation preservation) remain drafts with explicit current procedures; they do not block unrelated implementation. Use unique review directories and native Git continuation for active merges.

@@ -4,7 +4,7 @@ status: in-progress
 priority: high
 created_at: "2026-09-28 17:42:13"
 estimate: TBD
-dependencies: [8wm.t.vs2, 8wr.t.qjx, 8wr.t.qjy]
+dependencies: [8wm.t.vs2, 8wr.t.qjx, 8wr.t.qjy, 8x4.t.5qv, 8x4.t.6yk]
 tags: [lab-readiness]
 bundle:
   presets: [project]

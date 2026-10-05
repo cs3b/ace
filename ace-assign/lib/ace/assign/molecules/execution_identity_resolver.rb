@@ -13,7 +13,7 @@ module Ace
       # Actor identity is derived from the execution boundary, never granted
       # by command flags or receipt claims. Two adapters ship:
       # - `local` — the interactive operator is the coordinator; identity
-      #   comes from the OS login boundary.
+      #   comes from the kernel process account (equal real/effective UID).
       # - `service` — a trusted service executor supplies a structured
       #   identity through a configured environment variable; the executor
       #   owns OS/process enforcement.
@@ -58,20 +58,39 @@ module Ace
         private
 
         def from_local_boundary
-          actor = Etc.getlogin || ENV["USER"] || ENV["LOGNAME"]
-          if actor.nil? || actor.strip.empty?
-            raise AttemptErrors::UnauthorizedIdentity, "No OS login identity available at the execution boundary"
+          uid, euid = Process.uid, Process.euid
+          unless uid == euid
+            raise AttemptErrors::UnauthorizedIdentity, "Local execution requires equal real and effective UIDs"
           end
 
+          account = local_account(euid)
+          verify_local_credentials!(uid, euid)
           binding = native_process_binding
+          verify_local_credentials!(uid, euid)
           Identity.new(
-            actor: actor.strip,
+            actor: account.name,
             role: "coordinator",
             runtime: "local:#{Socket.gethostname}",
             adapter: "local",
             process_pid: binding&.dig("process_identity", "pid"),
             runtime_binding: binding
           )
+        end
+
+        def local_account(euid)
+          account = Etc.getpwuid(euid)
+          unless account && account.uid == euid && account.name.is_a?(String) && !account.name.strip.empty?
+            raise AttemptErrors::UnauthorizedIdentity, "No valid kernel process account for effective UID #{euid}"
+          end
+          account
+        rescue ArgumentError, SystemCallError
+          raise AttemptErrors::UnauthorizedIdentity, "Cannot resolve kernel process account for effective UID #{euid}"
+        end
+
+        def verify_local_credentials!(uid, euid)
+          unless Process.uid == uid && Process.euid == euid
+            raise AttemptErrors::UnauthorizedIdentity, "Local execution credentials changed during identity resolution"
+          end
         end
 
         def from_service_env

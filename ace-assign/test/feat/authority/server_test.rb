@@ -13,6 +13,7 @@ module Ace
             "launcher_gid" => 13002, "launcher_groups" => [13002]}
           deployment = Object.new
           deployment.define_singleton_method(:verify_composition!) { |*args, **options| true }
+          deployment.define_singleton_method(:verify_receiver_paths!) { |_id| true }
           deployment.define_singleton_method(:authority) { |_id| service }
           deployment.define_singleton_method(:verify!) { |*args, **options| map }
           kernel = Object.new
