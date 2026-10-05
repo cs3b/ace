@@ -22,8 +22,14 @@ module Ace
         APPROVED_VERDICT = "approved"
 
         # @param identity_resolver [ExecutionIdentityResolver] Trust boundary
-        def initialize(identity_resolver: nil)
+        # @param artifact_reader [#call, nil] Source-owned canonical byte
+        #   reader for protected composition; nil selects explicit local files
+        def initialize(identity_resolver: nil, artifact_reader: nil)
           @identity_resolver = identity_resolver || ExecutionIdentityResolver.new
+          unless artifact_reader.nil? || artifact_reader.respond_to?(:call)
+            raise ArgumentError, "artifact reader must be a source-owned callable"
+          end
+          @artifact_reader = artifact_reader
         end
 
         # Validate a submitted receipt against an attempt.
@@ -64,17 +70,19 @@ module Ace
           receipt
         end
         # Recheck the source artifacts/checks of an already accepted receipt.
-        # Historical reads (recorded at a past head) validate acceptance from
+        # Local historical reads (recorded at a past head) validate acceptance from
         # the append-only journal without re-hashing artifacts: the review
         # lifecycle legitimately archives and annotates finding files after
         # collection, and `.ace-local` working files are disposable, so their
         # current existence proves nothing about an accepted past receipt.
-        # Current-head reads keep full artifact re-verification.
+        # Current-head reads keep full artifact re-verification. Protected
+        # readers always reverify imported bytes, including historical reads.
         def verify_accepted_evidence!(data, live_head:, repo_root:, historical: false)
           verify_head(data, live_head)
-          verify_artifacts(data, repo_root) unless historical
+          verify_artifacts(data, repo_root) if @artifact_reader || !historical
           verify_checks(data)
           verify_review(data)
+          verify_campaign(data, repo_root: repo_root, live_head: live_head) if @artifact_reader
         end
 
         # @param operation [String] Receipt operation
@@ -147,17 +155,7 @@ module Ace
             recorded = artifact["sha256"].to_s
             reject("artifact missing path or sha256") if path.empty? || recorded.empty?
 
-            expanded = begin
-              File.expand_path(path, File.realpath(repo_root))
-            rescue Errno::ENOENT, Errno::EACCES
-              nil
-            end
-            reject("artifact file not found: #{path}") if expanded.nil? || !File.exist?(expanded)
-
-            resolved = safe_resolve(repo_root, path)
-            reject("artifact path escapes project root: #{path}") if resolved.nil?
-
-            actual = Digest::SHA256.hexdigest(File.read(resolved))
+            actual = Digest::SHA256.hexdigest(artifact_bytes(data, artifact, repo_root))
             reject("artifact digest mismatch for #{path}") unless actual == recorded
           end
         end
@@ -225,9 +223,7 @@ module Ace
           unless Array(data["artifacts"]).include?(reference)
             reject("campaign result must be included in verified receipt artifacts")
           end
-          resolved = safe_resolve(repo_root, reference["path"].to_s)
-          reject("campaign result path escapes repository or is missing") unless resolved
-          result = JSON.parse(File.read(resolved))
+          result = JSON.parse(artifact_bytes(data, reference, repo_root))
           reject_unless(result.is_a?(Hash), "campaign result must be an object")
           require "ace/review"
           current = Ace::Review::Organisms::CampaignManager.new(repo_root: repo_root).status(campaign["id"])
@@ -245,6 +241,26 @@ module Ace
           end
         rescue JSON::ParserError, ArgumentError, TypeError, KeyError => e
           reject("invalid campaign result: #{e.message}")
+        end
+
+        # Protected composition injects the canonical imported-byte owner.
+        # Its failure never falls through to the disposable workspace copy.
+        def artifact_bytes(data, artifact, repo_root)
+          if @artifact_reader
+            bytes = @artifact_reader.call(data, artifact)
+            reject("canonical artifact reader did not return bytes") unless bytes.is_a?(String)
+            return bytes.b
+          end
+          path = artifact["path"].to_s
+          expanded = begin
+            File.expand_path(path, File.realpath(repo_root))
+          rescue Errno::ENOENT, Errno::EACCES
+            nil
+          end
+          reject("artifact file not found: #{path}") if expanded.nil? || !File.exist?(expanded)
+          resolved = safe_resolve(repo_root, path)
+          reject("artifact path escapes project root: #{path}") if resolved.nil?
+          File.read(resolved)
         end
 
         # Resolve a project-relative artifact path to its real location,
