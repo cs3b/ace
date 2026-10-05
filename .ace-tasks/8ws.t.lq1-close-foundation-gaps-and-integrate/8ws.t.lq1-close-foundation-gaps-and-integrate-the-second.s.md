@@ -398,3 +398,19 @@ are claimed as newly executed by this specification edit.
 
 - [x] Runtime observation/fixedmanager primitives23bf5ed50 integrated after independentAPPROVE and runtimeall189/575; combinedsource27887208b suite51entries11219passed24skipped34322assertions explicit300. OriginalMainPID-slice fixture gap and corrective review retained in9c2 task.
 - [ ] 9c2 canonical generations, actualmanifest/readiness, scopeclosure/reuse and sealedservice settlement implementation continue; no whole-task or installed proof is claimed by the primitive checkpoint.
+
+## Local lineage and inbox checkpoints — 2026-10-05
+
+- [x] 9c2 immutable parent/native/child reader integrated after independent review;
+  canonical reservation generation and original launch ticket verified.
+- [x] xz9.0 bounded signed-proof framing, fixed context validation and protected
+  inbox factory integrated after independent reviews. No global endpoint fallback.
+- [x] Combined source verification: Assign all 987 passed / 2 skipped; Herdr all
+  476 passed; exact revision 37c486928 default fast suite with explicit 300-second
+  limit: 11234 passed / 24 skipped, zero failures/errors. Immutable evidence is in
+  9c2 staged-lineage-verification.md and xz9.0 inbox-source-checkpoints.md.
+- [ ] 9c2 complete owner/readiness/closure/reuse and xz9.0 canonical handlers remain
+  in progress. Runtime installation review findings and service-created resource
+  stage clarification must be resolved before their source integration.
+- [ ] Coherent downstream integration and release preparation still precede
+  Captain interactive publication; installed graph and Lab acceptance follow.

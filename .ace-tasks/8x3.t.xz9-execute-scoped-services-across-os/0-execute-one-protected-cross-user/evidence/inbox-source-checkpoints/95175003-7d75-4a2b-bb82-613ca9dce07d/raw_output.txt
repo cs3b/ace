@@ -1,0 +1,24 @@
+Started with run options --seed 41798
+
+Ace::Assign::ProtectedDeploymentTest
+  test_installed_native_workspace_is_required_and_canonical       PASS (0.00s)
+  test_inbox_context_rejects_unknown_fields_bad_roles_native_selection_and_artifacts PASS (0.00s)
+  test_inbox_context_is_fixed_project_selection_without_native_repinnning PASS (0.00s)
+  test_duplicate_endpoint_and_project_owner_are_refused_before_server_construction PASS (0.00s)
+  test_unknown_fields_loader_environment_and_changed_groups_are_rejected PASS (0.00s)
+  test_inbox_effective_acl_mask_cannot_hide_foreign_write_or_private_read PASS (0.00s)
+  test_inbox_context_filesystem_refusal_preserves_private_directory_and_never_runs_client PASS (0.01s)
+  test_inbox_context_roots_cannot_alias_worker_receiver_authority_or_sibling_state PASS (0.00s)
+  test_fixed_mapping_and_source_composition_match                 PASS (0.00s)
+
+Ace::Assign::ProtectedReceiverMappingTest
+  test_real_private_directory_and_absent_receiver_socket_are_admitted PASS (0.00s)
+  test_authority_access_does_not_admit_executor_inaccessible_ancestor PASS (0.00s)
+  test_receiver_identity_fields_and_paths_refuse_before_listener  PASS (0.00s)
+  test_receiver_endpoint_and_staging_isolation                    PASS (0.00s)
+  test_launch_optional_but_services_requires_fixed_nonempty_receivers PASS (0.00s)
+  test_existing_receiver_endpoint_must_be_owned_socket_and_inspectable PASS (0.00s)
+  test_writable_or_substituted_receiver_roots_refuse_before_listener_creation PASS (0.00s)
+
+Finished in 0.02086s
+16 tests, 80 assertions, 0 failures, 0 errors, 0 skips

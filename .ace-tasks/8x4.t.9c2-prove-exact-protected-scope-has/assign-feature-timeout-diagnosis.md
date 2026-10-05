@@ -1,0 +1,22 @@
+# Assign feature verification timeout — bounded diagnosis
+
+Failure preserved: author `.ace-wt/xz9-inbox-consumers/.ace-local/test/reports/assign/dbaac9b4-7b9e-4522-bccb-72e681dc49ab/`, success false/exit 1, 806 fast tests / 2960 assertions pass, overall duration 433.542328s and feature target execution timed out after 300 seconds. No failure assertion/test ID is reported. Root combined run was independently active; no other process was signaled or inspected invasively.
+
+## Failure Analysis Report
+
+Category: **test-infrastructure**. Confidence: **high for insufficient whole-target budget**, no claimed individual hang diagnosis.
+
+Evidence:
+- `.ace/test/runner.yml` defines feat as feat_tests plus opt-in edge; all expands fast then feat. Feature tests are collected into a target batch.
+- `ace-test-runner/lib/ace/test_runner/molecules/test_executor.rb:45–54` applies Timeout.timeout around the whole Open3.capture3 command, not each test. stdout is assigned only after capture3 returns. On Timeout::Error it records a timeout and non-success synthetic status, losing the unfinished batch's buffered output. Thus zero recorded feature completions is not evidence no test ran.
+- Open3 stream-closed reader errors after that interruption are a capture cleanup symptom; they do not identify an inbox framing bug or test assertion. Current failed immutable receipt explicitly records timeout, not a business failure.
+- Preserved successful whole Assign receipt `.ace-wt/codex-canonical-result-8x3/.ace-local/test/reports/assign/8x4b77/` has **974 total, 972 passed, two skipped, total 1239.340172s**, timestamp 2026-10-05 08:28:01 +01:00. Its raw output records feature batch **166 / 1721, Finished in 1103.86840s**, plus edge two explicit skips. This same test family already exceeded 300s by more than threefold before the tiny inbox framing checkpoint. This historical receipt is not a receipt for current 0b53/combined source; feature membership and environment may differ. It proves budget inadequacy against prior executed work, not current correctness or identical runtime. Current worktree HEAD is later than the receipt and is not used as its exact source identity.
+- Concrete costly tests in that successful raw output include DeliveryCoordinatorTest.test_exact_draft_review_ready_matrix_and_journal_head_separation (73.45s), CampaignReceiptTest.test_resolved_finding_relocation_keeps_historical_authority_and_campaign_accepted (50.52s), multiple campaign cases ~30–42s, and EndcapResultsTest authorization case (40.74s). These are actual completed controlled Git/journal cases, not indefinitely waiting native tests. Endcap results focused earlier receipt 8x4aen passed 11 tests in 206.36354s by itself.
+
+Primary fix target: author's verification invocation/configuration budget for the full Assign feature target. Primary candidate: its explicit --timeout 300, not inbox TransferCodec or its tests. Updated root facts: root session 79748 invoked `bin/ace-test ace-assign all` WITHOUT --timeout; actual TestConfiguration/TestExecutor default is nil, so its current feature subprocess remains running and no root 300s failure is expected. Preserve the author's failed receipt and let the root's existing combined all gate finish; do not duplicate feat or fast. Root may assess a bounded stop only if its own process exceeds roughly 1800s without completion. Historical 1104s is context, not current progress/completion proof. No broad rerun performed here.
+
+Do-not-touch: product framing assertions, canonical journal/service evidence requirements, protected/native/VM/privilege/security probes, installed fixtures, unrelated files, other agents' processes. Existing focused framing **16 / 94 PASS** is independent evidence already recorded; it cannot replace the incomplete package gate.
+
+Disconfirming check: if final adequately budgeted target fails an actual assertion, hangs beyond the historical envelope, or exposes one reproducible stalled case, reclassify using that exact receipt/test. Per-file/verbose controlled ordinary-source diagnostic should then identify the specific case; do not infer a hang from buffered timeout output alone.
+
+No implementation/test fix was applied. No new test was necessary to prove the already-executed historical target duration and current timeout ownership. No all/suite/native rerun, auth/network/VM probe, delegation or process kill occurred. Loaded as-test-fix and its required analysis workflow; this report is analysis-only under the assigned read-only scope.
