@@ -65,6 +65,14 @@ module Ace
               factory.verify_reconciliation(event: "event", receipt: receipt, signed_bytes: bytes,
                 signature: signature, expected_registration: registration.merge("payload_sha256" => "a" * 64))
             end
+            lock = Molecules::DeliveryRecordStore.lock_path(root, "event")
+            File.unlink(lock)
+            assert_raises(ValidationError) { factory.retained_status(event: "event") }
+            assert_raises(ValidationError) do
+              factory.verify_reconciliation(event: "event", receipt: receipt, signed_bytes: bytes,
+                signature: signature, expected_registration: registration)
+            end
+            refute File.exist?(lock)
           end
         end
 

@@ -154,6 +154,18 @@ module Ace
           end
         end
 
+        # Protected canonical reads only use an already registered event's lock.
+        # Missing retention is unavailable evidence, never query-time repair.
+        def retained_status(event:)
+          validate_id!(event, "event")
+          with_event(event, create_lock: false) do |record|
+            raise ValidationError, "unknown inbox event: #{event}" unless record&.inbox
+            public_record(record)
+          end
+        rescue SystemCallError
+          raise ValidationError, "retained inbox lock is unavailable"
+        end
+
         def deliver(event:)
           validate_id!(event, "event")
           with_event(event) do |record|
@@ -254,13 +266,15 @@ module Ace
           end
           reconcile_record(event: event, receipt: receipt, signed_bytes: signed_bytes,
             signature: signature, expected_registration: expected_registration, settle: false)
+        rescue SystemCallError
+          raise ValidationError, "retained inbox lock is unavailable"
         end
 
         private
 
         def reconcile_record(event:, receipt:, signed_bytes:, signature:, expected_registration:, settle:)
           validate_id!(event, "event")
-          with_event(event) do |record|
+          with_event(event, create_lock: settle) do |record|
             raise ValidationError, "unknown inbox event: #{event}" unless record&.inbox
             # The consumer's accepted registration must match under the same
             # event lock that verifies and settles the signed observation.
@@ -386,8 +400,8 @@ module Ace
           nil
         end
 
-        def with_event(event)
-          Molecules::DeliveryRecordStore.with_lock(@deliveries_dir, event) do
+        def with_event(event, create_lock: true)
+          Molecules::DeliveryRecordStore.with_lock(@deliveries_dir, event, create: create_lock) do
             record = Molecules::DeliveryRecordStore.load(@deliveries_dir, event)
             if record
               Ace::Hitl::Providers::Ref.new(session: record.session, pane: record.pane, canonical: true)

@@ -324,6 +324,14 @@ module Ace
               request_id_or_event_id: id, generation: review.fetch("candidate_generation")}
             verify_retained_review!(journal, events, params, map, current, review, ctx, commit)
             [ctx, review.fetch("review_receipt").fetch("artifacts")]
+          when "inbox"
+            registrations = events.select { |entry| entry["type"] == "inbox_binding" && entry.dig("payload", "event_id") == id }
+            raise AttemptErrors::NotFound, "inbox purpose not found" if registrations.empty?
+            raise AttemptErrors::EvidenceUnavailable, "inbox registration differs" unless registrations.one?
+            selected = params.merge("event_id" => id, "inbox_context_id" => registrations.first.dig("payload", "inbox_context_id"))
+            retained = verified_inbox(journal, events, selected, map, peer, role, commit)
+            raise AttemptErrors::EvidenceUnavailable, "canonical inbox proof missing" unless retained
+            [inbox_context(retained.fetch("binding")), %w[receipt_ref signature_ref].map { |key| retained.fetch(key).slice("sha256").merge("path" => retained.fetch(key).fetch("ref")) }]
           when "service"
             record = journal.service_request(id, commit: commit)
             raise AttemptErrors::NotFound, "service purpose not found" unless record
