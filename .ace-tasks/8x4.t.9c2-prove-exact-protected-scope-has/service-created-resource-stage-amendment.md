@@ -145,6 +145,94 @@ After commit, replay reads the immutable canonical native event; the departed ho
 and its old proc namespace need not still be live. This readiness snapshot never
 replaces later boundary revalidation or whole-parent closure.
 
+## Closed readiness exchange and activation ordering
+
+Use the existing v1 Authority Server envelope and socket only. Add two fixed
+source-owned private operations, `scope_readiness_challenge` and
+`scope_readiness_report`; both require `mutation_id: null`. They are not public
+worker operations. Before ordinary role dispatch, Server recognizes only these
+operation names and applies the fixed mapping's same-User readiness admission:
+live exact authenticated kernel peer equals the current system manager
+ExecStartPost ControlPID, exact original service InvocationID, same recorded
+parent membership and verified ExecStartPostEx installed command/configuration.
+No caller role, PID, UID, path, executable or process binding is accepted. The
+internal readiness role may dispatch only this exchange, never other owner APIs.
+An absent/pending/replaced ControlPID or ambiguous fixed hook refuses.
+
+Challenge params are exactly `{mapping_id}`. Existing project_id must select that
+mapping. The existing scope owner resolves its single canonically bound, unsealed,
+currently activating parent/attempt for this mapping; no caller chooses attempt.
+Successful data is exactly `{challenge, assignment_id, attempt_id,
+scope_generation, scope_binding_event_id, service_invocation_id, server_identity,
+boundary_manifest_sha256, deadline_ms}`. Challenge is 64 lowercase random hex
+characters, single-use and bound to this authenticated connection, peer birth,
+parent event and activation incarnation. IDs/digests/process identity retain the
+existing canonical bounds; deadline_ms is a positive remaining duration <=10000.
+The hook's immutable local manifest must match that digest. No filesystem paths
+or manifest edits arrive over the exchange.
+
+Report params are exactly `{mapping_id, challenge, scope_generation,
+scope_binding_event_id, service_invocation_id, observation_sha256, transfer}`.
+Selectors must equal the connection's outstanding challenge. The source-owned
+transfer purpose `scope_boundary_observation` uses the existing strict Transfer
+codec with exactly one nonempty UTF-8 JSON part <=64 KiB; recomputed raw SHA256
+must equal observation_sha256. Existing 16 KiB control-header/response bounds
+apply. No extra part, trailing byte, missing write-EOF, duplicate JSON key,
+unknown field or numeric coercion is accepted. The required construction
+uses one connection for both frames and a report-body half-close after the second
+frame; separate connections or reusable session tokens are forbidden. Server must explicitly implement this private two-frame branch rather than
+assuming ordinary one-request dispatch supports it.
+
+The report object is exactly `{server_identity, mount_namespace_identity,
+resource_identities, mount_projections}`. Resource and namespace objects use the
+schemas above; server_identity must equal the challenged exact server.
+resource_identities has 1..64 entries. mount_projections has one entry per native
+resource view, exactly `{host_path, view_path, mount_id, mount_root, mountpoint,
+read_only, source_device, source_inode, filesystem_type}`. Paths are canonical
+absolute strings <=4096 bytes, integers are nonnegative (mount_id positive),
+read_only is boolean, filesystem_type is nonempty ASCII <=64 bytes. Each entry
+must match that resource and fixed manifest's intended backing subtree, mount
+flags and server-namespace mount topology. No caller-supplied topology bypasses
+host-object join. Arrays/encoded total size are hard bounds; oversized valid
+profiles refuse installation rather than truncate proof. Source-selected maximum
+10 seconds covers challenge, observation, upload and acknowledgement; normal
+StartUnit timeout must exceed this plus its existing bounded startup/readiness
+budget. No timeout retry starts a second service or repeats layout.
+
+Successful report acknowledgement data is exactly `{accepted: true,
+scope_generation, scope_binding_event_id, service_invocation_id,
+observation_sha256}` with `replayed: false` in existing transport. It means pending
+observation received/validated, never native binding, worker release or positive
+closure. Existing errors apply: malformed/bounds invalid_input; wrong peer or
+mapping unauthorized; stale/sealed/conflicting challenge conflict; inaccessible
+objects, missing origin or incomplete observation evidence_unavailable. Errors
+contain fixed sanitized reasons, no filesystem/process dumps. Challenge/report
+never writes a canonical mutation reply and mutation replay is inapplicable;
+duplicate frame/challenge use conflicts and cannot yield a second observation.
+
+Ordering is mandatory: (1) owner records canonical parent and admits one exact
+activation under lifecycle exclusion, marking that activation pending; (2) owner
+releases assignment/qjl/owner locks before blocking StartUnit; (3) Server callback
+revalidates canonical parent/seal and exact manager peer/incarnation, validates
+report and acknowledges pending input without waiting for StartUnit completion
+or acquiring a lock held by its waiter; (4) hook receives matching acknowledgement
+and exits success; (5) StartUnit completes; (6) owner reacquires exclusion/CAS,
+rechecks unchanged parent/seal, completed activation, server/native endpoint and
+full boundary, then commits the immutable native event. Callback performs no
+native/journal commit. The scope owner's pending activation and bounded report
+are transient coordination inputs to this one lifecycle, not independent durable
+authority. Seal may win at any point: no native commit/release; admitted activation
+is cleanup work until stopped/settled, and close cannot assert empty while it or
+its fixed cleanup remains pending.
+
+Hook must exit nonzero on lost/error/mismatched acknowledgement or deadline.
+Owner must not accept completed activation without its matching validated report.
+Connection loss, lost acknowledgement, owner restart or crash before canonical
+native commit discards pending report/challenge and leaves the exact bound parent
+held; no callback replay/restart creates native provenance. Cleanup can close
+that known parent through the approved pre-release path. After canonical commit,
+only the immutable journal event replays, never this ephemeral exchange.
+
 ## Closure, cleanup and reuse
 
 Before native binding, closure still seals the exact recorded retained parent,
