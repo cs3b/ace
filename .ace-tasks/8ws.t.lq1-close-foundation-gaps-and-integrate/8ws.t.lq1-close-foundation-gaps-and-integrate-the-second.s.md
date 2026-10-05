@@ -440,3 +440,6 @@ are claimed as newly executed by this specification edit.
   Captain interactive publication precedes installed graph and actual Lab tests.
 
 - [x] ACE 8x4.t.i6i: fix ignored explicit suite configuration, independently review and verify. Combined source e546a7618 passed all 51 configured fast-suite entries with a 300-second per-entry ceiling: 11252 passed, 24 skipped, zero failures/errors. Original timeout histories remain retained; this is local source verification, not publication or Lab acceptance.
+
+- [x] ACE 9c2 network installation/maintenance contract accepted at 2d4959ee7 after independent review; domain gad.8/gad.b adoption owns installer implementation and installed proof. Parent-only cleanup is distinct from evidence-gated native admission; historical release verification preserves original artifacts.
+- [ ] Implement the accepted generic network verifier and connect admission/maintenance interfaces, then verify the domain installer after publication. Specification acceptance is not positive runtime readiness.
