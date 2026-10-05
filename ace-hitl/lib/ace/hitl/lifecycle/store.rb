@@ -13,6 +13,7 @@ require_relative "binding"
 require_relative "effects"
 require_relative "otp_vault"
 require_relative "protocol"
+require_relative "proposals"
 
 module Ace
   module Hitl
@@ -35,6 +36,7 @@ module Ace
       #   with_active scope (the assignment exclusion), so stale, ended
       #   or replaced attempts cannot acquire new authority.
       class Store
+        include Proposals
         MAX_ANSWER = 4096
         # IO#read(limit) is byte-oriented, so the character limit is
         # enforced on a decoded string with this separate byte bound
@@ -77,7 +79,7 @@ module Ace
 
         def initialize(root:, binding:, policy: AccessPolicy.new,
           identity: Identity, ownership: AtomicJson::DEFAULT_OWNERSHIP,
-          poll_seconds: CONSUME_POLL_SECONDS, vault: :file)
+          poll_seconds: CONSUME_POLL_SECONDS, vault: :file, proposal_clock: -> { Time.now.utc })
           raise ArgumentError, "a binding policy is required (fail closed without one)" unless binding
           raise ArgumentError, "an access policy is required (fail closed without one)" unless policy
 
@@ -88,6 +90,7 @@ module Ace
           @ownership = ownership
           @poll_seconds = poll_seconds
           @vault = vault == :file ? OtpVault::FileVault : vault
+          @proposal_clock = proposal_clock
         end
 
         # ---- requester side ------------------------------------------------
@@ -108,7 +111,7 @@ module Ace
           plan = plan.to_s.strip
           question = question.to_s.strip
           if plan.empty? || plan.length > MAX_PLAN_QUESTION ||
-              question.empty? || question.length > MAX_PLAN_QUESTION
+              question.empty? || question.bytesize > (kind == "proposal" ? 4096 : MAX_PLAN_QUESTION)
             raise StateError, "plan and question must contain 1-#{MAX_PLAN_QUESTION} characters"
           end
           options = Array(options).map(&:strip)
@@ -121,6 +124,8 @@ module Ace
           unless Kinds.valid?(kind)
             raise StateError, "unknown HITL kind: #{kind}"
           end
+          raise StateError, "proposal effects belong to ace-assign" if kind == "proposal" && effect
+          require_proposer!(project) if kind == "proposal"
           if Kinds.secret?(kind)
             unless options.empty?
               raise StateError, "OTP requests must not offer choices"
@@ -200,7 +205,7 @@ module Ace
           end
           value = load_request(request_id)
           gate_read_access!(value)
-          {
+          facts = {
             "id" => request_id,
             "assignment" => value["assignment"],
             "attempt" => value["attempt"],
@@ -218,6 +223,8 @@ module Ace
             "effect_receipt_ref" => effect_receipt_ref(value),
             "effect" => value["effect_state"]
           }
+          facts["proposal"] = proposal_for_request!(request_id) if value["kind"] == "proposal"
+          facts
         end
 
         # Consumes the answer for one requester-owned request. Without a
@@ -243,6 +250,7 @@ module Ace
 
           value = load_request(request_id)
           requester_gate!(value)
+          raise StateError, "proposal authorization is consumed by the scoped Assign service claim" if value["kind"] == "proposal"
           verify_native_consumer!(value) if native_delivery
           verify_operation!(value, operation)
           deadline = timeout.positive? ? Time.now.to_i + timeout : nil
@@ -321,6 +329,7 @@ module Ace
           locked_value = nil
           with_request_lock(request_id) do
             value = load_request(request_id)
+            raise StateError, "proposal decisions use revise or authenticated Captain veto" if value["kind"] == "proposal"
             # Ownership is re-checked against the LOCKED record: an
             # unlocked check would race a concurrent recreate of the id
             # (review 8wq2zttu on PR#336).
@@ -362,6 +371,7 @@ module Ace
           end
           value = load_request(request_id)
           require_transport!("deliver", value)
+          raise StateError, "proposal reply requires authenticated ingress evidence" if value["kind"] == "proposal"
           if value["sensitive"] == true && !Kinds.secret?(value["kind"].to_s)
             raise StateError, "secret HITL answers are forbidden"
           end

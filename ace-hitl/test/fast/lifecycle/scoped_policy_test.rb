@@ -9,6 +9,18 @@ require "fileutils"
 # document, matched against the kernel-verified peer uid; an
 # unverifiable document authorizes NOTHING.
 class ScopedPolicyTest < AceHitlTestCase
+  def test_second_commander_is_an_explicit_project_scoped_principal
+    document = grants_document
+    policy = Ace::Hitl::Lifecycle::GrantsPolicy.new(document: document)
+    refute policy.proposal?(stub_peer(4211), project: "ace"), "transport alone must not admit proposals"
+    document["hitl"]["proposal_uids"] = [4211]
+    assert policy.proposal?(stub_peer(4211), project: "ace")
+    refute policy.proposal?(stub_peer(4211), project: "other")
+    refute policy.proposal?(stub_peer(4212), project: "other")
+    document["authorization"]["principals"].delete("4211")
+    refute policy.proposal?(stub_peer(4211), project: "ace")
+    refute Ace::Hitl::Lifecycle::AccessPolicy.new.proposal?(stub_peer(4211), project: "ace")
+  end
   def grants_document
     {
       "hitl" => {"service_uid" => 4210, "transport_uids" => [4211, 4212]},

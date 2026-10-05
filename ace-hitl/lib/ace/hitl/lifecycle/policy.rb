@@ -102,6 +102,9 @@ module Ace
       # the contract. The default denies everything — direct-library use
       # gets requester-only semantics and no transport authority.
       class AccessPolicy
+        def proposal?(_peer, project:)
+          false
+        end
         # @return [Boolean] true when the peer may deliver answers and
         #   observe pending/states for the given project
         def transport?(_peer, project: nil)
@@ -141,6 +144,15 @@ module Ace
         def service_uid
           uid = hitl_facts["service_uid"]
           uid.is_a?(Integer) ? uid : nil
+        end
+
+        # Decision admission is explicitly installed, never inferred from
+        # an ordinary requester or transport grant.
+        def proposal?(peer, project:)
+          uids = hitl_facts["proposal_uids"]
+          projects = authorized_projects(peer.uid)
+          uids.is_a?(Array) && uids.include?(peer.uid) && projects &&
+            (projects.empty? || projects.include?(project.to_s))
         end
 
         private

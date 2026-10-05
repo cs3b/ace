@@ -12,9 +12,10 @@ module Ace
         NAME = /\A[a-z][a-z0-9-]{0,63}\z/
         ID = /\A[a-zA-Z0-9][a-zA-Z0-9_.-]{0,127}\z/
 
-        def initialize(document)
+        def initialize(document, proposal_resolver = nil)
           @operations = document.fetch("operations", {})
           @authorizations = document.fetch("authorizations", {})
+          @proposal_resolver = proposal_resolver
           unless @operations.is_a?(Hash) && @authorizations.is_a?(Hash)
             raise Ace::Lab::InvalidConfigurationError, "trusted service policy must contain mappings"
           end
@@ -80,6 +81,14 @@ module Ace
 
         def authorize!(reference, binding)
           raise ArgumentError, "invalid authorization reference" unless reference.to_s.match?(ID)
+          if reference.start_with?("proposal-")
+            raise SecurityError, "canonical proposal authority is unavailable" unless @proposal_resolver
+            begin
+              return @proposal_resolver.call(reference, binding)
+            rescue Ace::Assign::Error
+              raise SecurityError, "canonical proposal does not authorize this exact effect"
+            end
+          end
           decision = @authorizations[reference]
           raise SecurityError, "authorization reference is unresolved" unless decision.is_a?(Hash)
           required = %w[operation project_id assignment_id attempt_id input_digest target candidate_head caller_uid]

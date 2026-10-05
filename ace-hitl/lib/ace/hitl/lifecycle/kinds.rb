@@ -10,7 +10,7 @@ module Ace
       module Kinds
         ALL = %w[
           text choice confirm secret review
-          question decision verification otp
+          question decision verification otp proposal
         ].freeze
         SECRET = %w[otp].freeze
 

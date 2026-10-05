@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "json"
+require_relative "../../molecules/proposal_tick"
 
 module Ace
   module Overseer
@@ -18,14 +19,16 @@ module Ace
           option :runtime, default: "tmux", desc: "Runtime (tmux, lab)"
           option :project, desc: "Filter Lab status by project"
 
-          def initialize(collector: nil, config: nil, lab_client: nil)
+          def initialize(collector: nil, config: nil, lab_client: nil, proposal_tick: nil)
             super()
             @collector = collector || Organisms::StatusCollector.new
             @config = config
             @lab_client = lab_client || Molecules::LabClient.new
+            @proposal_tick = proposal_tick || Molecules::ProposalTick.new
           end
 
           def call(format:, runtime: "tmux", project: nil, **options)
+            @proposal_tick.call
             if runtime == "lab"
               if options[:watch]
                 raise Ace::Support::Cli::Error, "Lab watch runs in the project Herdr status pane; omit --watch"
@@ -77,6 +80,7 @@ module Ace
 
             loop do
               sleep_interruptible(refresh_interval)
+              @proposal_tick.call
 
               elapsed = Time.now - last_full_collect
               if elapsed >= git_refresh_interval

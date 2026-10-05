@@ -23,6 +23,38 @@ module Ace
       class Client
         attr_reader :socket_path, :service_uid
 
+        def proposal_create(**params)
+          request("proposal-create", params)
+        end
+
+        def proposal_show(id, history_after: 0)
+          request("proposal-show", {"id" => id, "history_after" => history_after})
+        end
+
+        def proposal_revise(id, document:)
+          request("proposal-revise", {"id" => id, "document" => document})
+        end
+
+        def proposal_acknowledge(id, submitted_at:)
+          request("proposal-ack", {"id" => id, "submitted_at" => submitted_at})
+        end
+
+        def proposal_reply(id, **params)
+          request("proposal-reply", {"id" => id}.merge(params))
+        end
+
+        def proposal_reconcile(id, checkpoint:)
+          request("proposal-reconcile", {"id" => id, "checkpoint" => checkpoint})
+        end
+
+        def proposal_due(after: nil)
+          request("proposal-due", {"after" => after}.compact)
+        end
+
+        def proposal_history(project:, query: "", after: nil)
+          request("proposal-history", {"project" => project, "query" => query, "after" => after}.compact)
+        end
+
         def initialize(socket_path:, service_uid:, deadline_seconds: Protocol::DEFAULT_DEADLINE_SECONDS)
           @socket_path = socket_path.to_s
           @service_uid = Integer(service_uid)

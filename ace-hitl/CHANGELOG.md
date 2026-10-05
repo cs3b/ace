@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Resolve immutable second-commander proposals through confirmed-delivery sixteen-hour policy and canonical Assign authorization.
+
 ### Fixed
 - Bound pending IPC pages by encoded frame size while retaining all native recovery claims and project authorization; Ruby callers traverse keyset pages.
 - Preserve the accepted native incarnation through answer consumption and require explicit signed-supersession retry before another submission.

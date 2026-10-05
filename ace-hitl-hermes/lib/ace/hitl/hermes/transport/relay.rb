@@ -45,6 +45,7 @@ module Ace
                   raise ContractError, "request correlation binding cannot change"
                 end
                 if previous["status"] == "submitted"
+                  acknowledge_proposal(previous)
                   box = @box_factory.call(entry)
                   question = box.poll.messages.find { |m| m.id == request && m.question? }
                   box.ack(request) if question && question.body == facts["question"]
@@ -74,6 +75,7 @@ module Ace
                 record.merge!("status" => "submitted", "message_id" => ack["message_id"].to_s,
                   "submitted_at" => now)
                 commit.call
+                acknowledge_proposal(record)
                 box.ack(request)
               rescue SubmitFailed
                 record["status"] = "failed"
@@ -179,12 +181,18 @@ module Ace
                 item["request"] == request && item["revision"] == record["revision"] && item["received_at"] <= through
               end
               unresolved = relevant.reject { |item| TERMINAL.include?(item["status"]) }.map { |i| public_ingress(i) }
-              {"schema" => "ace.hitl.hermes.ingress-checkpoint/v1", "request" => request,
+              checkpoint = {"schema" => "ace.hitl.hermes.ingress-checkpoint/v1", "request" => request,
                "revision" => record["revision"], "channel" => record["channel"],
                "status" => healthy ? "healthy" : "unknown", "healthy" => !!healthy,
                "drained" => !!healthy && unresolved.empty?,
                "checkpoint" => healthy ? {"through" => through, "sequence" => state["sequence"]} : nil,
                "unresolved" => unresolved}
+              if proposal?(record)
+                # Same ingress lock as receive; no received reply can land
+                # between this checkpoint and the HITL decision transition.
+                checkpoint["proposal"] = @lifecycle.proposal_reconcile(request, checkpoint: checkpoint)
+              end
+              checkpoint
             end
           end
 
@@ -196,6 +204,15 @@ module Ace
           end
 
           private
+
+          def proposal?(record)
+            record.dig("binding", "envelope", "kind") == "proposal"
+          end
+
+          def acknowledge_proposal(record)
+            return unless proposal?(record)
+            @lifecycle.proposal_acknowledge(record["request"], submitted_at: record.fetch("submitted_at"))
+          end
 
           def now
             @clock.call.utc.iso8601
@@ -268,6 +285,13 @@ module Ace
               return
             end
             answer = text.sub(/\A\/hitl-reply(?:@\w+)?\s+\S+\s+/i, "")
+            if proposal?(record)
+              @lifecycle.proposal_reply(record["request"], answer: answer,
+                received_at: item["received_at"], sequence: item["sequence"])
+              item["status"] = "delivered"
+              commit.call
+              return
+            end
             if !record["sensitive"]
               box = @box_factory.call(channel)
               existing = box.poll.messages.find { |m| m.id == record["request"] && m.answer? }

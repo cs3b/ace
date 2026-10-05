@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Resolve immutable second-commander proposals through confirmed-delivery sixteen-hour policy and canonical Assign authorization.
+
 ### Fixed
 
 - Refuse finish receipts for unbound reservations before terminal acceptance, and preserve exact canonical import bytes across Git filters and CRLF conversion.

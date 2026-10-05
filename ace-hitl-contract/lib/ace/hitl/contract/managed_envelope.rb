@@ -21,7 +21,7 @@ module Ace
         TOKEN = /\A[A-Za-z0-9][A-Za-z0-9._:-]{0,127}\z/
         COMPACT = /\A[0-9a-z][0-9a-z]{4,63}\z/
         DIGEST = /\A[0-9a-f]{64}\z/
-        KINDS = %w[text choice confirm review question decision verification otp].freeze
+        KINDS = %w[text choice confirm review question decision verification otp proposal].freeze
         MESSAGE_SCHEMA = "ace.hitl.hermes.message/v1"
 
         def self.inbox_event_id(value)

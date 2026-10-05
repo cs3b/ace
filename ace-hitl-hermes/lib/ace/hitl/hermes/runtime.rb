@@ -10,7 +10,8 @@ module Ace
       class Runtime
         attr_reader :registry, :journal, :relay, :config
 
-        def initialize(path)
+        def initialize(path, clock: -> { Time.now.utc })
+          @clock = clock
           @config = JSON.parse(File.read(path))
           unless @config.is_a?(Hash) && @config["schema"] == "ace.hitl.hermes.runtime/v1"
             raise ContractError, "runtime configuration requires runtime/v1"
@@ -21,7 +22,7 @@ module Ace
             socket_path: @config.fetch("hitl_socket"), service_uid: @config.fetch("hitl_service_uid")
           )
           @relay = Transport::Relay.new(registry: @registry, journal: @journal, lifecycle: @lifecycle,
-            sender: ->(channel, question) { telegram.call(channel, question) })
+            sender: ->(channel, question) { telegram.call(channel, question) }, clock: @clock)
         rescue JSON::ParserError, KeyError, SystemCallError, ArgumentError
           raise ContractError, "runtime configuration is unavailable or malformed"
         end
@@ -29,7 +30,8 @@ module Ace
         def serve(once: false)
           verify_polling_owner!
           @journal.actor do
-            poller = Transport::Poller.new(relay: @relay, telegram: telegram, journal: @journal, registry: @registry)
+            poller = Transport::Poller.new(relay: @relay, telegram: telegram, journal: @journal,
+              registry: @registry, clock: @clock)
             # Establish the new coverage epoch before issuing questions, so
             # a startup submission is never stamped before its coverage begins.
             begin
@@ -57,7 +59,7 @@ module Ace
                   next unless message.question?
                   begin
                     facts = @lifecycle.read(message.id)
-                    revision = facts.fetch("attempt")
+                    revision = facts["proposal"] ? facts.fetch("proposal").fetch("revision_id") : facts.fetch("attempt")
                     @relay.submit(channel: channel["name"], request: message.id, revision: revision)
                   rescue StandardError
                     # Pending folder + visible delivery status are retained.
