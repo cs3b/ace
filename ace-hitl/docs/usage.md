@@ -19,7 +19,7 @@ Runtime store default: `.ace-local/hitl/` (legacy `.ace-hitl/` is no longer used
 
 ## Testing
 
-`ace-hitl` is currently a **fast-only** package in the ACE testing model.
+`ace-hitl` includes isolated fast tests and deterministic scoped integration tests.
 
 - Deterministic coverage lives under `test/fast/`.
 - This package does not introduce `test/feat/` or `test/e2e/` in this migration.
@@ -102,47 +102,60 @@ ace-hitl update abc123 --move-to next
 ace-hitl update abc123 --answer "close the assignment" --resume
 ```
 
-## Ask (Provider adapter with effect callback)
-
-`ace-hitl ask` dispatches through the provider adapter registry
-(`--provider`, default: `ACE_HITL_PROVIDER` env, then `lab`). ONE
-operation: it creates the local HITL event, forwards the question through
-the provider transport bound to the event via `--ace-hitl-id`, and prints
-both ids. Effect declarations are validated client-side (exact bounds)
-and passed through verbatim into the native relay request store.
+## Ask and scoped live client
 
 ```bash
-ace-hitl ask "Proceed with deploy?" \
-  --work W685 \
-  --effect-arg /usr/bin/notify-send "{answer}" \
-  --effect-cwd /tmp
+ace-hitl ask --question "Proceed with deploy?" \
+  --assignment assign685 --attempt attempt685 --project ace \
+  --effect-arg /usr/bin/notify-send --effect-arg "{answer}" --effect-cwd /tmp
 ```
 
-- `--attempt` defaults to `LAB_ATTEMPT_ID`; `--project` to `ace`;
-  `--harness` to `lab-admin`; `--plan` to `ace-hitl ask`.
-- Reverse address (fail closed): the asker's herdr session + pane are
-  read from `HERDR_SESSION` / `HERDR_PANE` and persisted on the event as
-  `ref_session` / `ref_pane` with `ref_schema: ace.hitl.ref/v1` and
-  `provider: lab`. Absent or invalid values abort the ask before any
-  event is created or transport is called — an ask must always know
-  where its answer can be delivered.
-- Effect flags: `--effect-match` (regex, <= 200 chars, must compile),
-  `--effect-arg` (repeatable, 1..16 x 1..512 chars after the lab's
-  strip-then-bounds check; whitespace-only elements fail fast, valid
-  values pass through verbatim; `{answer}` substituted lab-side),
-  `--effect-cwd` (absolute, must exist), `--effect-timeout-s` (1..600).
-- Whether an effect was declared is recorded on the event as
-  `lab_request_effect: declared|none` so `wait` can apply the right
-  terminal semantics.
-- The answer is always relayed unchanged; consumption stays on the
-  operator side via `ace-hitl consume`.
-- If the transport send fails after the local event was created, the
-  error surfaces the event id as an orphan (created but never bound to a
-  relay request); inspect it with `ace-hitl show <id>` and delete or
-  re-ask as needed.
-- `deliver(ref, answer)` — pushing the answer back to the asker's pane —
-  is declared by the adapter interface; provider `lab` reports it as
-  unsupported until the ace-herdr push-delivery integration lands.
+Assignment and attempt are required compact managed IDs. The coordinator verifies
+an active owner and its exact native reverse binding, using the kernel peer PID
+and Runtime's existing process ancestry/birth authority. Missing peer PID or
+native evidence refuses an exact-owner claim. Darwin uses LOCAL_PEERPID; Linux
+uses SO_PEERCRED. UID equality alone never selects another attempt. There is no
+Work binding, Lab daemon socket or environment-derived reverse target.
+
+An agent explicitly hosts its watcher in its own process:
+
+```ruby
+client = Ace::Hitl::LiveClient.new(root: checkout_root)
+watcher = client.watch(request: request_id) { |delivery| handle_queue_result(delivery) }
+watcher.value
+client.status(request: request_id)
+```
+
+`deliver` consumes an authorized ordinary answer, enqueues one incarnation-bound
+Herdr event, registers its digest/key with Assign, and attempts exact native
+submission. Repeated calls reuse the same event and never resubmit an uncertain
+intent. A stopped watcher leaves the request/native intent visible in
+`pending --project ace`; it never chooses a new pane or launches a replacement
+watcher. The configured Hermes transport publishes created requests for its
+explicitly registered project channels and owns their Telegram polling.
+
+Queue acceptance (`delivered`) and wake are transport facts. Business effects
+run once through the scoped service under the requester's declaration; their
+separate receipt reference cannot be inferred from native delivery. Actual
+consumption requires the existing trusted supervisor/observer signing context:
+
+```ruby
+client.reconcile(request: request_id, receipt_path: signed_receipt_path)
+# Explicit retry only after verified supersession/non-consumption:
+client.reconcile(request: request_id, receipt_path: signed_receipt_path, retry_delivery: true)
+```
+
+Herdr verifies the signature, exact event/attempt/digest/generation/native binding
+and accepted registration under the event lock. Assign journals the verified
+observation. Missing authority or signer, wrong key, changed target and stale
+proof stay refused/unknown. No elapsed-time rule establishes success or retries.
+Keep the original trusted verification/signing context for unresolved events or
+defer key rotation; a replacement fingerprint cannot rebind an existing event.
+
+The shared versioned envelope is semantically owned by HITL and packaged in
+`ace-hitl-contract` to preserve the acyclic HITL → Assign → Herdr → contract
+graph. Its nested Hermes message and reverse reference are distinct schemas.
+OTP answers and their hashes are excluded from the envelope and native delivery.
 
 ## Scoped Store Boundary (spec 8wq.t.34i)
 
@@ -204,7 +217,7 @@ root is `ACE_HITL_OVERSEER_CHANNEL_ROOT` (default
 Managed binding (the default authority):
 
 ```bash
-ace-hitl ask "Choose the next scope" \
+ace-hitl ask --question "Choose the next scope" \
   --assignment 8x3abc --attempt a1b2c3 --project ace
 ```
 
@@ -213,11 +226,8 @@ identity, verified through the ace-assign coordinator under the
 assignment exclusion: a stale, ended, replaced, or uncertain attempt
 cannot acquire authority, and the exclusion is HELD across every
 consume/deliver transition so an attempt cannot end between the
-liveness check and the commit. `--work W... --attempt A-...` remains
-the legacy binding until the provider=lab integration (vs2) switches
-consumers; the two authorities are mutually exclusive and
-`--attempt` is always required (environment variables are never
-attempt identity).
+liveness check and the commit. Assignment and attempt identity are always explicit;
+there is no legacy Work-only contract.
 
 Transport side:
 
@@ -285,25 +295,24 @@ ace-hitl wait abc123 --poll-every 600 --timeout 14400
 ace-hitl wait abc123 --scope current
 ```
 
-When the event carries a Lab request (`lab_request_id`), wait also observes
-the Lab public projection instead of hanging blind. Both projection fields
-are observed: the lifecycle `state` (created / answer-delivered / consumed /
-cancelled) and the separate `effect_state` (callback-pending-with-answer /
-callback-ok / callback-escalated). Terminal semantics are effect-aware:
+Managed event waits resolve `lab_request_id` and consume through authenticated
+IPC. They never read folder projections or persist returned answers into the
+local event. Explicit pane-less scripts can wait without any local event:
 
-- Requests without a declared effect terminate on lifecycle states
-  (`answer-delivered`, `consumed`, `cancelled`).
-- Effect-declaring requests keep waiting until the callback verdict
-  (`callback-ok` or `callback-escalated`) appears — they never end
-  silently at answer delivery; `callback-escalated` output points at
-  the lab duty projection for the escalation.
-- The event's `lab_request_state` records the effective state, so it
-  never claims plain `answer-delivered` while an effect outcome exists.
+```bash
+ace-hitl wait --request hitl001 --timeout 30
+ace-hitl wait --request otp001 --operation gem-push
+```
 
-Relay consumption stays on the operator side via `ace-hitl consume`.
-`wait` is the pane-less script path: agents with a herdr pane ask
-through the provider adapter and receive answers delivered back to
-their pane.
+The default managed wait is indefinite; a positive timeout bounds only this
+call. It never expires the request. OTP consumption requires the authorized
+operation and returns its bytes only over protected IPC. Local event polling
+remains available for ordinary unbound local events. Managed events cannot use
+`update --resume` to launch unscoped session/shell delivery.
+
+Installed acceptance still requires real registered Telegram ingress, native
+owner observation and trusted signer/OS-user evidence in Lab. Controlled local
+transport and synthetic native observations do not satisfy those gates.
 
 ## Lifecycle Event Names
 

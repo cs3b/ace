@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Consume the shared managed binding envelope and publish newly created authenticated pending requests through explicitly registered project channels in the existing single Telegram polling actor.
+
 ### Added
 
 - Installable correlated Telegram transport, explicit Captain/group registry, authenticated HITL IPC and guarded Hermes plugin assets.

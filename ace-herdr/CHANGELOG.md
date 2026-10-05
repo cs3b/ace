@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Validate and preserve the shared managed delivery envelope at Inbox enqueue, rejecting mismatched scope/digest/correlation and changed replay metadata.
+
 ### Added
 
 - Expose verified native process/session ownership and allow identical signed inbox proof re-verification after settlement without duplicate transitions.

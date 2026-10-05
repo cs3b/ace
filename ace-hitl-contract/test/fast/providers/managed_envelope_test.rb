@@ -8,7 +8,7 @@ class ManagedEnvelopeTest < AceHitlContractTestCase
 
   def test_packaged_shared_examples_are_valid
     directory = File.expand_path("../../../lib/ace/hitl/contract/examples", __dir__)
-    paths = Dir[File.join(directory, "*.json")]
+    paths = Dir[File.join(directory, "managed-*.json")]
     assert_equal 3, paths.length
     paths.each { |path| assert_kind_of Hash, Envelope.load(File.read(path)) }
   end

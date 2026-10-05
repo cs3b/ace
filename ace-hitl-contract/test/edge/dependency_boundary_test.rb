@@ -44,6 +44,9 @@ class DependencyBoundaryTest < AceHitlContractTestCase
       %w[ace-runtime ace-tmux ace-herdr ace-hitl-contract].each { |name| assert_includes seen, name }
       refute_includes seen, "ace-hitl", "#{consumer} pulled privileged HITL authority into its install"
     end
+    hitl_dependencies = Set.new
+    visit.call("ace-hitl", [], hitl_dependencies)
+    %w[ace-assign ace-herdr ace-hitl-contract].each { |name| assert_includes hitl_dependencies, name }
     assert_empty specs.fetch("ace-hitl-contract").runtime_dependencies
     assert_includes specs.fetch("ace-hitl").runtime_dependencies.map(&:name), "ace-assign"
   end

@@ -96,6 +96,47 @@ module Ace
           @inbox.reconcile(event: @event, receipt: receipt, signed_bytes: bytes, signature: signature)
         end
 
+        def managed_example
+          path = Gem::Specification.find_by_name("ace-hitl-contract").full_gem_path
+          JSON.parse(File.read(File.join(path, "lib/ace/hitl/contract/examples/managed-answer.json")))
+        end
+
+        def test_managed_shared_example_crosses_inbox_without_changing_scope
+          value = managed_example
+          @ref = value.fetch("reverse")
+          @executor.pane["workspace_id"] = @ref["session"]
+          @executor.pane["pane_id"] = @ref["pane"]
+          @event = Ace::Hitl::Contract::ManagedEnvelope.inbox_event_id(value)
+          record = @inbox.enqueue(event: @event, attempt: value.fetch("attempt_id"), ref: @ref,
+            payload: value.dig("message", "answer"), managed_envelope: value)
+          assert_equal value, record["managed_envelope"]
+          assert_equal record, @inbox.enqueue(event: @event, attempt: value.fetch("attempt_id"), ref: @ref,
+            payload: value.dig("message", "answer"), managed_envelope: value)
+          changed = Marshal.load(Marshal.dump(value))
+          changed["requester"] = "other-owner"
+          assert_raises(ValidationError) do
+            @inbox.enqueue(event: @event, attempt: value.fetch("attempt_id"), ref: @ref,
+              payload: value.dig("message", "answer"), managed_envelope: changed)
+          end
+        end
+
+        def test_managed_inbox_refuses_wrong_version_attempt_digest_correlation_and_secret
+          value = managed_example
+          [->(v) { v["schema"] = "ace.hitl.managed/v99" },
+           ->(v) { v["attempt_id"] = "other685" },
+           ->(v) { v["payload_sha256"] = "f" * 64 },
+           ->(v) { v["message"]["id"] = "other-request" },
+           ->(v) { v["message"]["answer"] = "otp=123456" }].each do |change|
+            candidate = Marshal.load(Marshal.dump(value))
+            change.call(candidate)
+            assert_raises(ValidationError) do
+              @inbox.enqueue(event: @event, attempt: value.fetch("attempt_id"), ref: value.fetch("reverse"),
+                payload: value.dig("message", "answer"), managed_envelope: candidate)
+            end
+          end
+          assert_empty Dir.children(@dir)
+        end
+
         def test_idempotent_enqueue_and_digest_conflict
           first = enqueue
           assert_equal "queued", first["state"]

@@ -41,6 +41,21 @@ class HitlWaitLabTest < AceHitlTestCase
     super
   end
 
+  def test_create_attributes_requester_to_kernel_peer_pid_and_refuses_unavailable_pid
+    seen = []
+    original = @binding.method(:validate_request)
+    @binding.define_singleton_method(:validate_request) do |**args|
+      seen << args[:caller_pid]
+      raise Ace::Hitl::Lifecycle::BindingError, "kernel peer PID unavailable" unless args[:caller_pid]
+      original.call(**args)
+    end
+    @client.create(**request_args(id: "peer001"))
+    assert_equal [Process.pid], seen
+    @service.define_singleton_method(:peer_pid) { |_| nil }
+    assert_raises(Ace::Hitl::Lifecycle::BindingError) { @client.create(**request_args(id: "peer002")) }
+    refute File.exist?(File.join(@root, "requests", "peer002.json"))
+  end
+
   def test_pane_less_wait_consumes_authenticated_request_without_native_delivery
     @client.create(**request_args(id: "wait001"))
     @client.deliver("wait001", "approved")

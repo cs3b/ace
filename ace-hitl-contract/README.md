@@ -27,3 +27,9 @@ contain neither answer bytes nor their digest; folder answers and callback
 effects are prohibited for that kind. A non-secret OTP question remains valid.
 Effect references identify authorization and result evidence; structural
 validation never grants authority or proves business success.
+
+`examples/ingress-checkpoints.json` publishes separate y24 ingress observation
+examples: healthy/drained permits only a coverage-backed absence claim; healthy
+with unresolved ingress is not drained; unknown has no usable checkpoint. These
+transport observations are not native consumption or business effect receipts.
+The ingress `received_at` belongs to its accepted transport ingress item.

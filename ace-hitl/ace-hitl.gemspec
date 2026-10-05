@@ -51,4 +51,5 @@ Gem::Specification.new do |spec|
   # dependency exists or may be added (consumers share the leaf
   # ace-hitl-contract provider protocol instead).
   spec.add_dependency "ace-assign", "~> 0.63.1"
+  spec.add_dependency "ace-herdr", "~> 0.3.2"
 end

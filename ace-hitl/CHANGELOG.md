@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Replace daemon/Work bindings with the managed assignment envelope and kernel-attributed exact native reverse owner. Add explicit in-process delivery/watch, authenticated pane-less wait, visible pending recovery, and existing signed Inbox reconciliation; keep native transport and business effect receipts separate.
+
 ## [0.11.1] - 2026-10-04
 
 ### Fixed

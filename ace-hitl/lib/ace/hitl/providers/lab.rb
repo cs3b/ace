@@ -78,8 +78,8 @@ module Ace
           )
         end
 
-        # Local event + relay request in ONE operation. The ref is
-        # REQUIRED and must be validated by the caller before this call.
+        # Local event + scoped request in ONE operation. The authenticated
+        # managed binding supplies the verified reverse; callers cannot choose it.
         def ask(question:, attempt:, assignment:, title: nil,
           kind: "text", otp: nil, project: DEFAULT_PROJECT, harness: DEFAULT_HARNESS,
           plan: DEFAULT_PLAN, effect: {})

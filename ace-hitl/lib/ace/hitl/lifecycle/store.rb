@@ -93,8 +93,7 @@ module Ace
 
         # Create one request bound to the exact live attempt of the
         # CALLING identity. Managed requests bind by assignment
-        # (--assignment/--attempt/--project); the legacy lab path binds
-        # by Work (kept until vs2 switches consumers). EVERY request
+        # (--assignment/--attempt/--project). EVERY request
         # validates its binding — unknown identity/authority is an
         # error, never permission.
         def create(id:, attempt:, plan:, question:, ace_hitl_id:, project: "ace", harness: "lab-admin",
