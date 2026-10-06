@@ -58,7 +58,8 @@ module Ace
       end
 
       def with_owner
-        with_temp_cache do |cache|
+        with_temp_cache do |parent|
+          Dir.mktmpdir("owner-", parent) do |cache|
           repo = File.join(cache, "repo")
           FileUtils.mkdir_p(repo)
           _out, err, status = Open3.capture3("git", "init", "-b", "main", repo)
@@ -95,6 +96,7 @@ module Ace
           yield
         ensure
           @owner&.close
+          end
         end
       end
 
@@ -212,6 +214,72 @@ module Ace
           end
           assert_nil @owner.instance_variable_get(:@native_issuers).fetch(key)[:challenge]
           assert_equal 0, @observer.starts
+        end
+      end
+
+      def test_private_upload_faults_never_publish_native_binding
+        %i[challenge duplicate_json invalid_utf8 truncated extra_bytes no_eof oversized sealed].each do |fault|
+          with_owner do
+            started, resume = Queue.new, Queue.new
+            original = @observer.method(:start_admitted_service!)
+            @observer.define_singleton_method(:start_admitted_service!) do
+              original.call
+              started << true
+              resume.pop
+            end
+            @observer.define_singleton_method(:readiness_peer!) { |_lineage, _peer| {"pid" => 90} }
+            issuer = Thread.new do
+              admit
+            rescue StandardError => error
+              error
+            end
+            Timeout.timeout(15) { started.pop }
+            left, right = UNIXSocket.pair
+            wire = Ace::Runtime::Molecules::ProtectedSocket
+            scratch = Dir.mktmpdir("ace-callback-", Etc.getpwuid(Process.uid).dir)
+            File.chmod(0700, scratch)
+            codec = Authority::TransferCodec.new(root: scratch)
+            handler = Thread.new do
+              @owner.native_readiness!(mapping_id: "mapping", peer: @peer, socket: left, codec: codec, deadline: wire.deadline(10))
+            rescue StandardError => error
+              error
+            ensure
+              left.close
+            end
+            challenge = wire.read(right, deadline: wire.deadline(10), limit: 16_384)
+            bytes = case fault
+              when :duplicate_json then '{"version":1,"version":2}'
+              when :invalid_utf8 then "\xff".b
+              else '{}'
+              end
+            descriptor = codec.descriptor([bytes], purpose: :scope_boundary_observation)
+            if fault == :oversized
+              descriptor["bytes"] = descriptor["parts"].first["bytes"] = 65_537
+            end
+            close_scope("seal-upload", 3) if fault == :sealed
+            before = @journal.ref_value
+            wire.write(right, {"version" => 1, "challenge_id" => fault == :challenge ? "f" * 64 : challenge.fetch("challenge_id"),
+              "transfer" => descriptor}, deadline: wire.deadline(10))
+            unless %i[challenge oversized].include?(fault)
+              right.write(fault == :truncated ? bytes.byteslice(0, bytes.bytesize - 1) : bytes)
+              right.write("extra") if fault == :extra_bytes
+            end
+            right.shutdown(Socket::SHUT_WR) unless fault == :no_eof
+            error = Timeout.timeout(15) { handler.value }
+            assert_kind_of StandardError, error, fault
+            assert_equal before, @journal.ref_value, fault
+            refute @journal.read_events("assignment").any? { |event| event["type"] == "scope_native_bound" }, fault
+            resume << true
+            Timeout.timeout(15) { issuer.value }
+            assert_empty @owner.instance_variable_get(:@native_issuers), fault
+          ensure
+            resume << true if issuer&.alive?
+            right&.close
+            handler&.join(1)
+            issuer&.join(1)
+            left&.close unless left&.closed?
+            FileUtils.remove_entry(scratch) if scratch && File.exist?(scratch)
+          end
         end
       end
 
