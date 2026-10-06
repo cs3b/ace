@@ -2,6 +2,7 @@
 
 require_relative "../test_helper"
 require "ace/runtime/molecules/execution_unit_installation"
+require "ace/runtime/molecules/readiness_configuration"
 
 class ExecutionUnitInstallationTest < AceRuntimeTestCase
   Installation = Ace::Runtime::Molecules::ExecutionUnitInstallation
@@ -77,13 +78,36 @@ class ExecutionUnitInstallationTest < AceRuntimeTestCase
     paths = {"slice_fragment" => "/etc/systemd/system/ace-slot.slice",
       "service_fragment" => "/etc/systemd/system/ace-slot.service", "native_executable" => "/usr/bin/herdr",
       "native_configuration" => "/etc/ace/herdr.json", "readiness_executable" => "/usr/libexec/ace-scope-ready",
-      "bootstrap" => "/usr/libexec/ace-worker-gate", "worker_executable" => "/usr/bin/codex"}
+      "bootstrap" => "/usr/libexec/ace-worker-gate", "worker_executable" => "/usr/bin/codex",
+      "readiness_configuration" => "/etc/ace/execution-slots/slot/readiness.json",
+      "boundary_manifest" => "/etc/ace/execution-slots/slot/boundary-manifest.json",
+      "runtime_dependency" => "/usr/bin/ruby"}
     @artifacts = paths.map do |role, path|
       host = %w[slice_fragment service_fragment].include?(role) ? path : @scope.fetch("root_directory") + path
       bytes = "immutable #{role} bytes"
       @files.bytes[host] = bytes
       {"role" => role, "host_path" => host, "view_path" => path, "sha256" => Digest::SHA256.hexdigest(bytes)}
     end
+    boundary = {"schema" => "ace.execution-boundary-manifest/v1", "slot_id" => "slot", "network_installation" => {},
+      "resources" => [{"host_path" => "/var/lib/ace-slot", "view_path" => "/host-private", "stage" => "parent",
+        "worker_visible" => false, "read_only" => true},
+        {"host_path" => "/run/ace-slot", "view_path" => "/run/ace-slot", "stage" => "native", "worker_visible" => true, "read_only" => false}]}
+    boundary_artifact = @artifacts.find { |artifact| artifact["role"] == "boundary_manifest" }
+    @files.bytes[boundary_artifact.fetch("host_path")] = JSON.generate(boundary)
+    boundary_artifact["sha256"] = Digest::SHA256.hexdigest(@files.bytes.fetch(boundary_artifact.fetch("host_path")))
+    @scope["boundary_manifest_sha256"] = boundary_artifact.fetch("sha256")
+    readiness = {"schema" => Ace::Runtime::Molecules::ReadinessConfiguration::SCHEMA,
+      "slot_id" => "slot", "mapping_id" => "map", "project_id" => "project",
+      "authority" => {"uid" => 13000, "gid" => 13000, "groups" => [], "socket_path" => "/run/authority/socket"},
+      "worker" => {"uid" => 13001, "gid" => 13001, "groups" => []},
+      "native" => {"executable" => "/usr/bin/herdr", "socket_path" => "/run/ace-slot/socket", "version" => "0.9.3",
+        "protocol" => 22, "workspace_id" => "w1", "executable_sha256" => "a" * 64},
+      "boundary_manifest" => {"path" => paths.fetch("boundary_manifest"), "sha256" => @scope.fetch("boundary_manifest_sha256")},
+      "runtime" => {"interpreter_path" => "/usr/bin/ruby", "load_paths" => ["/usr/lib/ruby"],
+        "dependencies" => [{"path" => "/usr/bin/ruby", "sha256" => "a" * 64, "bytes" => 1}]}}
+    config_artifact = @artifacts.find { |a| a["role"] == "readiness_configuration" }
+    @files.bytes[config_artifact.fetch("host_path")] = JSON.generate(readiness)
+    config_artifact["sha256"] = Digest::SHA256.hexdigest(@files.bytes.fetch(config_artifact.fetch("host_path")))
     @native = {"executable" => paths.fetch("native_executable"),
       "executable_sha256" => @artifacts.find { |a| a["role"] == "native_executable" }.fetch("sha256")}
     @profiles = {"ace-slot.slice" => graph("ace-slot.slice", "ace.slice"), "ace.slice" => graph("ace.slice", "-.slice"),
@@ -102,11 +126,11 @@ class ExecutionUnitInstallationTest < AceRuntimeTestCase
       "User" => "13001", "Group" => "13001", "Slice" => @scope.fetch("slice_unit"),
       "RootDirectory" => @scope.fetch("root_directory"), "NetworkNamespacePath" => @scope.fetch("network_namespace_path"),
       "WantsMountsFor" => [@scope.fetch("root_directory")], "RequiresMountsFor" => ["/run/ace-slot"],
-      "RuntimeDirectory" => ["ace-slot"], "After" => ["ace-slot.slice", "-.mount", "run.mount", "systemd-journald.socket"],
+      "ReadOnlyPaths" => ["/dev/shm"], "RuntimeDirectory" => ["ace-slot"], "After" => ["ace-slot.slice", "-.mount", "run.mount", "systemd-journald.socket"],
       "Environment" => ["HERDR_CONFIG_PATH=#{paths.fetch('native_configuration')}"],
       "RestrictAddressFamilies" => [true, %w[AF_INET AF_INET6 AF_UNIX]],
       "ExecStartEx" => [command(paths.fetch("native_executable"), args: ["server"])],
-      "ExecStartPostEx" => [command(paths.fetch("readiness_executable"), args: ["slot"])])
+      "ExecStartPostEx" => [command("/usr/bin/ruby", args: ["--disable=gems,rubyopt", paths.fetch("readiness_executable"), "slot"])])
     @profiles["-.mount"] = {"Id" => "-.mount", "LoadState" => "loaded", "ActiveState" => "active", "SubState" => "mounted", "Job" => [0, "/"], "Where" => "/"}
     @profiles["run.mount"] = {"Id" => "run.mount", "LoadState" => "loaded", "ActiveState" => "active", "SubState" => "mounted", "Job" => [0, "/"], "Where" => "/run"}
     @profiles["systemd-journald.socket"] = {"Id" => "systemd-journald.socket", "LoadState" => "loaded", "ActiveState" => "active", "SubState" => "listening", "Job" => [0, "/"]}
@@ -119,6 +143,39 @@ class ExecutionUnitInstallationTest < AceRuntimeTestCase
     @manager = Manager.new(slice_unit: @scope.fetch("slice_unit"), service_unit: @scope.fetch("service_unit"), command: @command)
     @installation = Installation.new(scope: @scope, native: @native, bootstrap: paths.fetch("bootstrap"),
       worker_executable: paths.fetch("worker_executable"), worker_uid: 13001, worker_gid: 13001, files: @files)
+  end
+
+  def test_fixed_implicit_profile_refuses_private_tmp_ipc_writes_and_api_storage_aliases
+    {"PrivateTmp" => true, "ProtectKernelTunables" => false, "DevicePolicy" => "auto",
+      "DeviceAllow" => [["/dev/sda", "rw"]], "ReadOnlyPaths" => [],
+      "BindPaths" => [["/host/storage", "/dev/storage", false, 0]],
+      "ReadWritePaths" => ["/dev/shm"]}.each do |key, value|
+      original = @profiles["ace-slot.service"].fetch(key)
+      @profiles["ace-slot.service"][key] = value
+      @manifest["properties"]["service"][key] = value
+      save_manifest
+      assert_raises(Unavailable, key) { @installation.verify!(manager: @manager) }
+      @profiles["ace-slot.service"][key] = original
+      @manifest["properties"]["service"][key] = original
+    end
+    save_manifest
+    assert @installation.verify!(manager: @manager)
+  end
+
+  def test_writable_tmp_requires_complete_original_backing_inventory
+    @profiles["ace-slot.service"]["ReadWritePaths"] = ["/tmp"]
+    @manifest["properties"]["service"]["ReadWritePaths"] = ["/tmp"]
+    save_manifest
+    assert_raises(Unavailable) { @installation.verify!(manager: @manager) }
+    artifact = @artifacts.find { |entry| entry["role"] == "boundary_manifest" }
+    boundary = JSON.parse(@files.bytes.fetch(artifact.fetch("host_path")))
+    boundary["resources"] << {"host_path" => @scope.fetch("root_directory") + "/tmp", "view_path" => "/tmp",
+      "stage" => "parent", "worker_visible" => true, "read_only" => false}
+    bytes = JSON.generate(boundary)
+    @files.bytes[artifact.fetch("host_path")] = bytes
+    artifact["sha256"] = @scope["boundary_manifest_sha256"] = Digest::SHA256.hexdigest(bytes)
+    save_manifest
+    assert @installation.verify!(manager: @manager)
   end
 
   def save_manifest

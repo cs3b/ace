@@ -8,15 +8,15 @@ module Ace
         "namespace_identity" => {"device" => 7, "inode" => 88}, "profile_sha256" => "c" * 64,
         "policy_export_sha256" => "c" * 64, "report_sha256" => "c" * 64, "installer_artifact_sha256" => "c" * 64}.freeze
       class Files
-        attr_accessor :namespace, :resource, :manifest, :outside_alias, :outside_acl, :outside_worker, :network
+        attr_accessor :native_resource, :native_present, :namespace, :resource, :manifest, :outside_alias, :outside_acl, :outside_worker, :network
         def initialize
           @network = {"device" => 7, "inode" => 88}
           @namespace = {"device" => 4, "inode" => 77}
           @resource = {"device" => 8, "inode" => 99, "uid" => 13001, "gid" => 13001, "filesystem_type" => "ext4", "mount_id" => 23}
           @manifest = {"schema" => Authority::ExecutionScopeObservation::BOUNDARY_SCHEMA, "slot_id" => "slot", "network_installation" => NETWORK_SELECTION, "resources" => [
-            {"host_path" => "/private", "view_path" => "/host-private", "stage" => "parent"},
-            {"host_path" => "/private/scratch", "view_path" => "/scratch", "stage" => "parent"},
-            {"host_path" => "/run/slot/native", "view_path" => "/run/slot/native", "stage" => "native"}]}
+            {"host_path" => "/private", "view_path" => "/host-private", "stage" => "parent", "worker_visible" => false, "read_only" => true},
+            {"host_path" => "/private/scratch", "view_path" => "/scratch", "stage" => "parent", "worker_visible" => true, "read_only" => false},
+            {"host_path" => "/run/slot/native", "view_path" => "/run/slot/native", "stage" => "native", "worker_visible" => true, "read_only" => false}]}
         end
         def boot_id; BOOT; end
         def namespace_identity; namespace.dup; end
@@ -26,7 +26,9 @@ module Ace
         end
         def resource_identity(path)
           return resource.merge("uid" => 0, "gid" => 0, "inode" => 98) if path == "/private"
-          raise "native object read before service creation" unless path == "/private/scratch"
+          return native_resource.dup if path == "/run/slot/native" && native_resource
+          raise Errno::ENOENT, "native object not created" if path == "/run/slot/native"
+          raise "unknown backing resource" unless path == "/private/scratch"
           resource.dup
         end
         def resource_boundary_policy(path)
@@ -40,16 +42,19 @@ module Ace
           raise Ace::Runtime::RuntimeUnavailableError, "outside UID writer" if outside_worker
           true
         end
+        def resource_topology(path, mount_id:); {"major_minor" => "8:1", "filesystem_path" => path}; end
+        def resource_present?(_path); !!native_present; end
         def boundary_manifest(_scope); manifest; end
       end
       class Manager
-        attr_accessor :slice, :service, :lost_start
+        attr_accessor :profile, :slice, :service, :lost_start
         attr_reader :starts, :service_starts, :slice_stops
         def initialize
           @starts, @service_starts, @slice_stops = 0, 0, 0
           @slice = {"Id" => "ace-slot.slice", "ActiveState" => "inactive", "SubState" => "dead", "InvocationID" => "", "ControlGroup" => "", "Job" => [0, "/"]}
           @service = {"Id" => "ace-slot.service", "ActiveState" => "inactive", "SubState" => "dead", "InvocationID" => "", "MainPID" => 0, "ControlPID" => 0, "Job" => [0, "/"]}
         end
+        def inspect_profile; profile; end
         def inspect_activation; JSON.parse(JSON.generate("slice" => slice, "service" => service)); end
         def start_slice
           @starts += 1

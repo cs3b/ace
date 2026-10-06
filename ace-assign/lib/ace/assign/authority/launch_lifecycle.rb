@@ -40,6 +40,7 @@ module Ace
           @mutex = mutex
           @observations = {}
           @streams = {}
+          @native_issuers = {}
           @slot_exclusions = {}
           @scope_observers = {}
           @scope_observer_factory = scope_observer_factory || ->(mapping_id) {
@@ -118,7 +119,8 @@ module Ace
           @kernel.live!(peer)
           journal = journal_for(map)
           digest = Digest::SHA256.hexdigest(JSON.generate(canonical(params)))
-          with_exclusion(params, map, journal) do
+          native_start = nil
+          outcome = with_exclusion(params, map, journal) do
           if operation == "reserve_attempt"
             existing = @mutex.synchronize { journal.mutation_result(request.fetch("mutation_id")) }
             unless existing
@@ -204,7 +206,8 @@ module Ace
                 "mutation_id" => "scope-admission-#{Digest::SHA256.hexdigest(response.dig(:data, 'attempt_id'))[0, 48]}",
                 "expected_generation" => parent.dig(:data, "generation"))
               digest = Digest::SHA256.hexdigest(JSON.generate(canonical(admission.reject { |key, _| key == "mutation_id" })))
-              admit_native_service_held!(admission, map, journal, peer, role, digest)
+              admitted = admit_native_service_held!(admission, map, journal, peer, role, digest)
+              native_start = [admission, admitted] unless admitted.fetch(:replayed)
             rescue Ace::Runtime::RuntimeUnavailableError, AttemptErrors::EvidenceUnavailable
               # Reservation is already canonical. A failed/lost parent job is
               # held for exact inspection; replay must not activate it again.
@@ -217,6 +220,15 @@ module Ace
           end
           response
           end
+          if native_start
+            begin
+              complete_native_start!(native_start.first, map, journal, peer, role, native_start.last)
+            rescue Ace::Runtime::RuntimeUnavailableError, AttemptErrors::EvidenceUnavailable
+              # Canonical admission remains uncertain; original reserve reply is immutable.
+              nil
+            end
+          end
+          outcome
         end
 
         def gate_ready(request:, peer:, socket:, deadline:)

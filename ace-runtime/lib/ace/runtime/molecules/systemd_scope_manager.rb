@@ -23,13 +23,13 @@ module Ace
             PropagatesStopTo StopPropagatedFrom JoinsNamespaceOf RequiresMountsFor WantsMountsFor].to_h { |key| [key, "as"] }
         }.freeze
         SERVICE_EXEC_SIGNATURES = {
-          **%w[Type User Group Restart KillMode ProtectSystem RootDirectory RootImage NetworkNamespacePath Slice StandardOutput StandardError WorkingDirectory RuntimeDirectoryPreserve].to_h { |key| [key, "s"] },
+          **%w[Type User Group Restart KillMode ProtectSystem RootDirectory RootImage NetworkNamespacePath Slice StandardOutput StandardError WorkingDirectory RuntimeDirectoryPreserve DevicePolicy].to_h { |key| [key, "s"] },
           **%w[SupplementaryGroups ReadWritePaths ReadOnlyPaths Environment PassEnvironment UnsetEnvironment Sockets InaccessiblePaths ExtensionDirectories RuntimeDirectory].to_h { |key| [key, "as"] },
-          **%w[SendSIGKILL Delegate ProtectControlGroups NoNewPrivileges PrivateIPC PrivateDevices DynamicUser RootEphemeral MountAPIVFS].to_h { |key| [key, "b"] },
+          **%w[SendSIGKILL Delegate ProtectControlGroups NoNewPrivileges PrivateIPC PrivateDevices DynamicUser RootEphemeral MountAPIVFS PrivateTmp ProtectKernelTunables].to_h { |key| [key, "b"] },
           **%w[CapabilityBoundingSet AmbientCapabilities RestrictNamespaces].to_h { |key| [key, "t"] },
           "RuntimeDirectoryMode" => "u", "UMask" => "u", "RootImageOptions" => "a(ss)", "TemporaryFileSystem" => "a(ss)", "MountImages" => "a(ssba(ss))",
           "ExtensionImages" => "a(sba(ss))", "EnvironmentFiles" => "a(sb)", "RestartForceExitStatus" => "(aiai)", "RestrictAddressFamilies" => "(bas)",
-          "BindPaths" => "a(ssbt)", "BindReadOnlyPaths" => "a(ssbt)",
+          "DeviceAllow" => "a(ss)", "BindPaths" => "a(ssbt)", "BindReadOnlyPaths" => "a(ssbt)",
           **%w[ExecConditionEx ExecStartPreEx ExecStartEx ExecStartPostEx ExecReloadEx ExecStopEx ExecStopPostEx].to_h { |key| [key, "a(sasasttttuii)"] }
         }.freeze
 

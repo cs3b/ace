@@ -34,6 +34,9 @@ module Ace
                   stop_after_commit = true
                   payload = {"scope_generation" => binding.fetch("scope_generation"), "scope_binding_event_id" => lineage.binding_event.fetch("digest")}
                   {events: [{type: "scope_sealed", payload: payload}], blobs: {}, data: projection}
+                elsif @native_issuers.key?(native_issuer_key(params, map))
+                  # A live issuer may still start after this inactive snapshot.
+                  {events: [], blobs: {}, data: projection}
                 elsif lineage.proof_event
                   scope_observer_for(params.fetch("mapping_id")).verify_closed!(lineage)
                   {events: [], blobs: {}, data: projection.merge("state" => "closed_no_writers", "proof_id" => lineage.proof_id, "required_action" => nil)}

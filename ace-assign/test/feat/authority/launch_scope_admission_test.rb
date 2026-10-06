@@ -29,13 +29,19 @@ module Ace
           @starts += 1
           raise Ace::Runtime::RuntimeUnavailableError, "StartUnit reply lost" if lost_reply
         end
+        def complete_native_readiness!(_lineage, report)
+          raise AttemptErrors::EvidenceUnavailable, "completed start lacks private report" unless report
+          report
+        end
         def sealed_service_stop_required?(lineage)
           raise "unsealed stop" unless lineage.sealed?
           !!stop_required
         end
         def stop_sealed_service!
           raise "authority mutex held during StopUnit" if owner.mutex.owned?
-          raise "seal missing before StopUnit" unless journal.read_events("assignment").any? { |event| event["type"] == "scope_sealed" }
+          raise "admission or seal missing before StopUnit" unless journal.read_events("assignment").any? do |event|
+            event["type"] == "scope_sealed" || event.dig("payload", "operation") == "scope_service_admission"
+          end
           @stops += 1
           raise Ace::Runtime::RuntimeUnavailableError, "StopUnit reply lost" if lost_reply
         end
@@ -114,10 +120,11 @@ module Ace
 
       def test_only_fresh_canonical_winner_starts_and_replay_keeps_original_reply
         with_owner do
+          assert_raises(AttemptErrors::EvidenceUnavailable) { admit }
           fresh = admit
           assert_equal "issued_uncertain", fresh.dig(:data, "native_admission")
           assert_equal 3, fresh.dig(:data, "generation")
-          refute fresh.fetch(:replayed)
+          assert fresh.fetch(:replayed)
           replay = admit
           assert replay.fetch(:replayed)
           assert_equal fresh.fetch(:data), replay.fetch(:data)
@@ -144,6 +151,53 @@ module Ace
           assert_equal "issued_uncertain", replay.dig(:data, "native_admission")
           assert_equal old, @journal.ref_value
           assert_equal 1, @observer.starts
+        end
+      end
+
+      def test_delayed_admitted_issuer_cannot_start_after_seal_or_publish_early_proof
+        with_owner do
+          admitted, resume = Queue.new, Queue.new
+          original = @owner.method(:complete_native_start!)
+          @owner.define_singleton_method(:complete_native_start!) do |*arguments|
+            admitted << true
+            resume.pop
+            original.call(*arguments)
+          end
+          issuer = Thread.new { admit }
+          Timeout.timeout(15) { admitted.pop }
+          seal = close_scope("seal-delayed", 3)
+          assert_equal "running", seal.dig(:data, "state")
+          attempted_proof = close_scope("pending-proof", 4)
+          assert_equal "running", attempted_proof.dig(:data, "state")
+          assert_nil attempted_proof.dig(:data, "proof_id")
+          refute @journal.read_events("assignment").any? { |event| event["type"] == "scope_closed_no_writers" }
+          assert_equal 0, @observer.starts
+          resume << true
+          Timeout.timeout(15) { issuer.value }
+          assert_equal 0, @observer.starts
+          proof = close_scope("settled-proof", 5)
+          assert_equal "closed_no_writers", proof.dig(:data, "state")
+        ensure
+          resume << true if issuer&.alive?
+          issuer&.join(1)
+        end
+      end
+
+      def test_private_callback_cannot_select_same_attempt_id_from_another_project
+        with_owner do
+          params = @params.dup
+          other_map = @map.merge("project_id" => "other-project")
+          key = @owner.send(:native_issuer_key, params, @map)
+          other_key = @owner.send(:native_issuer_key, params, other_map)
+          refute_equal key, other_key
+          @owner.instance_variable_get(:@native_issuers)[key] = {params: params, report: nil}
+          @owner.instance_variable_get(:@journals)["other-project"] = @journal
+          @owner.instance_variable_get(:@deployment).define_singleton_method(:mapping) { |_id| other_map }
+          assert_raises(AttemptErrors::EvidenceUnavailable) do
+            @owner.native_readiness!(mapping_id: "mapping", peer: @peer, socket: nil, codec: nil, deadline: 0)
+          end
+          assert_nil @owner.instance_variable_get(:@native_issuers).fetch(key)[:challenge]
+          assert_equal 0, @observer.starts
         end
       end
 

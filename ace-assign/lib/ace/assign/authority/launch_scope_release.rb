@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+require_relative "../molecules/terminal_scope_receipt"
 
 module Ace
   module Assign
@@ -401,7 +402,8 @@ module Ace
                 mutation_id: params.fetch("mutation_id"), operation: "scope_reservation_release", parameters_digest: digest,
                 expected_generation: params.fetch("expected_generation"), with_replay: true) do |events, commit, _generation|
                 lineage = scope_close_owner!(params, map, events, peer, role)
-                terminal = guarded_scope_abort_receipt!(events, lineage, journal, commit)
+                native_issuer_pending!(params, map)
+                terminal = terminal_scope_receipt!(events, lineage, journal, commit)
                 scope_observer_for(params.fetch("mapping_id")).verify_closed!(lineage)
                 scope_settlement_complete!(journal: journal, events: events, params: params, map: map, commit: commit)
                 if events.any? { |event| event["type"] == "authority_mutation" && event.dig("payload", "operation") == "scope_reservation_release" }
@@ -488,6 +490,15 @@ module Ace
           end
         end
 
+        def terminal_scope_receipt!(events, lineage, journal, commit, deployment: @deployment)
+          if events.any? { |event| event["type"] == "authority_mutation" && event.dig("payload", "operation") == "abort_launch" }
+            return guarded_scope_abort_receipt!(events, lineage, journal, commit)
+          end
+          reservation = events.find { |event| event["type"] == "authority_mutation" && event.dig("payload", "operation") == "reserve_attempt" }
+          mapping = deployment.mapping(reservation.fetch("payload").fetch("data").fetch("mapping_id"))
+          Molecules::TerminalScopeReceipt.verify!(events: events, lineage: lineage, journal: journal, commit: commit, mapping: mapping)
+        end
+
         def guarded_scope_abort_receipt!(events, lineage, journal, commit)
           aborts = events.select { |event| event["type"] == "authority_mutation" && event.dig("payload", "operation") == "abort_launch" }
           terminal = aborts.last
@@ -526,7 +537,7 @@ module Ace
           releases = events.select { |event| event["type"] == "authority_mutation" && event.dig("payload", "operation") == "scope_reservation_release" }
           return false if releases.empty?
           raise AttemptErrors::EvidenceUnavailable, "canonical reservation release is repeated" unless releases.size == 1
-          terminal = guarded_scope_abort_receipt!(events, lineage, journal, commit)
+          terminal = terminal_scope_receipt!(events, lineage, journal, commit)
           data = releases.first.dig("payload", "data")
           expected = {"assignment_id" => lineage.binding.fetch("assignment_id"), "attempt_id" => lineage.binding.fetch("attempt_id"),
             "mapping_id" => lineage.binding.fetch("mapping_id"), "scope_generation" => lineage.binding.fetch("scope_generation"),

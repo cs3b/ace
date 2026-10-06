@@ -4,6 +4,7 @@ require "json"
 require "digest"
 require "etc"
 require_relative "systemd_scope_manager"
+require_relative "readiness_configuration"
 
 module Ace
   module Runtime
@@ -14,14 +15,15 @@ module Ace
       class ExecutionUnitInstallation
         SCHEMA = "ace.execution-unit-manifest/v1"
         ROLES = %w[slice_fragment service_fragment unit_dropin native_executable native_configuration
-          readiness_executable bootstrap worker_executable runtime_dependency].freeze
+          readiness_executable readiness_configuration boundary_manifest bootstrap worker_executable runtime_dependency].freeze
         REQUIRED_ROLES = %w[slice_fragment service_fragment native_executable native_configuration
-          readiness_executable bootstrap worker_executable].freeze
+          readiness_executable readiness_configuration boundary_manifest bootstrap worker_executable].freeze
         SERVICE_REQUIRED = {"Type" => "exec", "Restart" => "no", "RestartForceExitStatus" => [[], []],
           "KillMode" => "control-group", "SendSIGKILL" => true, "Delegate" => false,
           "ProtectControlGroups" => true, "NoNewPrivileges" => true, "CapabilityBoundingSet" => 0,
           "AmbientCapabilities" => 0, "RestrictNamespaces" => 0, "PrivateIPC" => true,
-          "PrivateDevices" => true, "ProtectSystem" => "strict", "DynamicUser" => false,
+          "PrivateDevices" => true, "PrivateTmp" => false, "MountAPIVFS" => true, "ProtectKernelTunables" => true,
+          "DevicePolicy" => "closed", "DeviceAllow" => [], "ProtectSystem" => "strict", "DynamicUser" => false,
           "EnvironmentFiles" => [], "PassEnvironment" => [], "UnsetEnvironment" => [],
           "StandardOutput" => "journal", "StandardError" => "journal", "RuntimeDirectoryPreserve" => "no",
           "RuntimeDirectoryMode" => 0o700, "UMask" => 0o077, "RootImage" => "", "RootImageOptions" => [], "RootEphemeral" => false, "ExtensionDirectories" => [],
@@ -131,14 +133,14 @@ module Ace
         private
 
         def verify_artifacts!(artifacts)
-          unless artifacts.is_a?(Array) && artifacts.size.between?(7, 512) &&
+          unless artifacts.is_a?(Array) && artifacts.size.between?(9, 512) &&
               artifacts.all? { |a| a.is_a?(Hash) && a.keys.sort == %w[host_path role sha256 view_path] } &&
               artifacts.map { |a| a["host_path"] }.uniq.size == artifacts.size
             raise RuntimeUnavailableError, "installed unit artifact declarations differ"
           end
           roles = artifacts.group_by { |a| a.fetch("role") }
           unless REQUIRED_ROLES.all? { |role| roles.key?(role) } && (roles.keys - ROLES).empty? &&
-              %w[slice_fragment service_fragment native_executable native_configuration readiness_executable bootstrap worker_executable].all? { |role| roles[role].size == 1 }
+              %w[slice_fragment service_fragment native_executable native_configuration readiness_executable readiness_configuration boundary_manifest bootstrap worker_executable].all? { |role| roles[role].size == 1 }
             raise RuntimeUnavailableError, "installed unit artifacts are incomplete or ambiguous"
           end
           artifacts.each do |artifact|
@@ -148,9 +150,12 @@ module Ace
             end
           end
           expected = {"native_executable" => @native.fetch("executable"), "bootstrap" => @bootstrap,
-            "worker_executable" => @worker_executable}
+            "worker_executable" => @worker_executable,
+            "readiness_configuration" => "/etc/ace/execution-slots/#{@scope.fetch('slot_id')}/readiness.json",
+            "boundary_manifest" => "/etc/ace/execution-slots/#{@scope.fetch('slot_id')}/boundary-manifest.json"}
           unless expected.all? { |role, path| roles.fetch(role).first.fetch("view_path") == path } &&
-              roles.fetch("native_executable").first.fetch("sha256") == @native.fetch("executable_sha256")
+              roles.fetch("native_executable").first.fetch("sha256") == @native.fetch("executable_sha256") &&
+              roles.fetch("boundary_manifest").first.fetch("sha256") == @scope.fetch("boundary_manifest_sha256")
             raise RuntimeUnavailableError, "installed executable declarations differ from deployment"
           end
           roles
@@ -199,9 +204,17 @@ module Ace
             raise RuntimeUnavailableError, "execution unit lacks the required retained isolation profile"
           end
           verify_command!(service.fetch("ExecStartEx"), artifacts.fetch("native_executable").first.fetch("view_path"))
-          verify_command!(service.fetch("ExecStartPostEx"), artifacts.fetch("readiness_executable").first.fetch("view_path"))
+          config_artifact = artifacts.fetch("readiness_configuration").first
+          config = ReadinessConfiguration.decode(@files.read(config_artifact.fetch("host_path"), limit: 65_536),
+            slot: @scope.fetch("slot_id"))
+          interpreter = config.data.dig("runtime", "interpreter_path")
+          unless artifacts.fetch("runtime_dependency", []).any? { |artifact| artifact.fetch("view_path") == interpreter }
+            raise RuntimeUnavailableError, "readiness interpreter is not installed"
+          end
+          verify_command!(service.fetch("ExecStartPostEx"), interpreter)
           unless service.fetch("ExecStartEx").first[1] == [@native.fetch("executable"), "server"] &&
-              service.fetch("ExecStartPostEx").first[1] == [artifacts.fetch("readiness_executable").first.fetch("view_path"), @scope.fetch("slot_id")]
+              service.fetch("ExecStartPostEx").first[1] == [interpreter, "--disable=gems,rubyopt",
+                artifacts.fetch("readiness_executable").first.fetch("view_path"), @scope.fetch("slot_id")]
             raise RuntimeUnavailableError, "unit commands differ from the fixed native/readiness protocol"
           end
           environment = service.fetch("Environment")
@@ -212,6 +225,7 @@ module Ace
             raise RuntimeUnavailableError, "native configuration is not the exact immutable input"
           end
           verify_artifact_projection!(service, artifacts)
+          verify_boundary_topology!(service, artifacts)
         end
 
         def verify_graph!(slice, service, ancestors, prerequisites)
@@ -276,6 +290,71 @@ module Ace
               unless artifact.fetch("host_path") == host
                 raise RuntimeUnavailableError, "hashed artifact is shadowed by another effective unit mount"
               end
+            end
+          end
+        end
+
+        def verify_boundary_topology!(service, artifacts)
+          artifact = artifacts.fetch("boundary_manifest").first
+          bytes = @files.read(artifact.fetch("host_path"), limit: 65_536).dup.force_encoding(Encoding::UTF_8)
+          raise RuntimeUnavailableError, "boundary content is not UTF-8" unless bytes.valid_encoding?
+          boundary = JSON.parse(bytes, create_additions: false, max_nesting: 8, allow_duplicate_key: false, allow_comments: false)
+          unless boundary.is_a?(Hash) && boundary.keys.sort == %w[network_installation resources schema slot_id] &&
+              boundary["schema"] == "ace.execution-boundary-manifest/v1" && boundary["slot_id"] == @scope.fetch("slot_id") &&
+              boundary["resources"].is_a?(Array) && boundary["resources"].size.between?(1, 64)
+            raise RuntimeUnavailableError, "boundary lifecycle topology differs"
+          end
+          entries = boundary.fetch("resources")
+          entries.each do |entry|
+            unless entry.is_a?(Hash) && entry.keys.sort == %w[host_path read_only stage view_path worker_visible] &&
+                path?(entry["host_path"]) && path?(entry["view_path"]) && %w[parent native].include?(entry["stage"]) &&
+                [true, false].include?(entry["worker_visible"]) && [true, false].include?(entry["read_only"]) &&
+                (entry["worker_visible"] || entry["stage"] == "parent" && entry["read_only"])
+              raise RuntimeUnavailableError, "boundary resource declaration differs"
+            end
+          end
+          unless entries.map { |entry| entry.values_at("host_path", "view_path") }.uniq.size == entries.size
+            raise RuntimeUnavailableError, "boundary resource projections repeat"
+          end
+          projections = service.fetch("BindPaths").map { |mount| [mount[0], mount[1], false] } +
+            service.fetch("BindReadOnlyPaths").map { |mount| [mount[0], mount[1], true] }
+          api_roots = %w[/dev /proc /sys]
+          if projections.any? { |_host, view, _| api_roots.any? { |root| overlaps?(root, view) } }
+            raise RuntimeUnavailableError, "API namespace has an unsupported storage alias"
+          end
+          readonly_paths = service.fetch("ReadOnlyPaths")
+          unless readonly_paths.all? { |path| path?(path) } &&
+              readonly_paths.any? { |path| covers?(path, "/dev/shm") } &&
+              !service.fetch("ReadWritePaths").any? { |path| !path?(path) || overlaps?(path, "/dev/shm") }
+            raise RuntimeUnavailableError, "file-backed IPC is not positively read-only"
+          end
+          runtime = @scope.fetch("runtime_directory")
+          projections << [runtime, runtime, false]
+          service.fetch("ReadWritePaths").each do |view|
+            unless path?(view)
+              raise RuntimeUnavailableError, "writable path directive is not exact"
+            end
+            projection = projections.select { |mount| covers?(mount[1], view) }.max_by { |mount| mount[1].length }
+            host = projection ? File.join(projection[0], view.delete_prefix(projection[1]).delete_prefix("/")) :
+              @scope.fetch("root_directory") + view
+            projections << [host, view, false]
+          end
+          projections.each do |host, view, readonly|
+            next if readonly && artifacts.values.flatten.any? { |entry| entry["host_path"] == host && entry["view_path"] == view }
+            unless entries.any? { |entry| entry.values_at("host_path", "view_path", "worker_visible", "read_only") == [host, view, true, readonly] }
+              raise RuntimeUnavailableError, "effective projection is omitted from boundary inventory"
+            end
+          end
+          entries.each do |entry|
+            view = entry.fetch("view_path")
+            accessible = projections.any? { |host, target, _readonly| covers?(target, view) &&
+              File.expand_path(File.join(host, view.delete_prefix(target).delete_prefix("/"))) == entry.fetch("host_path") } ||
+              entry.fetch("host_path") == @scope.fetch("root_directory") + view
+            if entry.fetch("worker_visible") != accessible
+              raise RuntimeUnavailableError, "boundary visibility is not proven by installed topology"
+            end
+            if entry.fetch("stage") == "native" && !covers?(runtime, entry.fetch("host_path"))
+              raise RuntimeUnavailableError, "service-created resource has no fixed creation directive"
             end
           end
         end
