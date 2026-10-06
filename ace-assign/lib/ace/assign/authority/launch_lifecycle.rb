@@ -229,6 +229,8 @@ module Ace
             end
           end
           outcome
+        ensure
+          settle_native_issuer!(native_start.first, map) if native_start
         end
 
         def gate_ready(request:, peer:, socket:, deadline:)

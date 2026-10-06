@@ -183,6 +183,20 @@ module Ace
         end
       end
 
+      def test_owner_exit_after_admission_before_scheduling_does_not_leave_unreachable_issuer
+        with_owner do
+          original = @owner.method(:with_exclusion)
+          @owner.define_singleton_method(:with_exclusion) do |*arguments, &block|
+            original.call(*arguments, &block)
+            raise IOError, "controlled exclusion return lost"
+          end
+          assert_raises(IOError) { admit }
+          assert_empty @owner.instance_variable_get(:@native_issuers)
+          assert_equal 0, @observer.starts
+          assert_equal 1, @journal.read_events("assignment").count { |event| event.dig("payload", "operation") == "scope_service_admission" }
+        end
+      end
+
       def test_private_callback_cannot_select_same_attempt_id_from_another_project
         with_owner do
           params = @params.dup

@@ -24,6 +24,8 @@ module Ace
           end
           complete_native_start!(params, map, journal, peer, role, result) unless result.fetch(:replayed)
           result
+        ensure
+          settle_native_issuer!(params, map) if map
         end
 
         # Private transport owner. Exact manager hook attribution precedes
@@ -116,7 +118,7 @@ module Ace
             unless result.fetch(:replayed)
               @mutex.synchronize do
                 raise AttemptErrors::Conflict, "native issuer already active" if @native_issuers.key?(native_issuer_key(params, map))
-                @native_issuers[native_issuer_key(params, map)] = {params: params.dup.freeze, report: nil}
+                @native_issuers[native_issuer_key(params, map)] = {params: params.dup.freeze, report: nil, owner: Thread.current}
               end
             end
             result
@@ -155,7 +157,7 @@ module Ace
           observer.stop_sealed_service! if issue
           raise
         ensure
-          @mutex.synchronize { @native_issuers.delete(native_issuer_key(params, map)) } if attempt_id
+          settle_native_issuer!(params, map) if attempt_id
         end
 
         def commit_ready_native!(params, map, journal, events, lineage, payload)
@@ -180,6 +182,14 @@ module Ace
 
         def native_issuer_key(params, map)
           [map.fetch("project_id"), params.fetch("mapping_id"), params.fetch("assignment_id"), params.fetch("attempt_id")].freeze
+        end
+
+        def settle_native_issuer!(params, map)
+          @mutex.synchronize do
+            key = native_issuer_key(params, map)
+            pending = @native_issuers[key]
+            @native_issuers.delete(key) if pending && pending[:owner].equal?(Thread.current)
+          end
         end
 
         def native_issuer_pending!(params, map)
