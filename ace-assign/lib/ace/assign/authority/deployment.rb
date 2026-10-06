@@ -7,6 +7,7 @@ require "openssl"
 require_relative "private_directory"
 require_relative "posix_acl"
 require "ace/runtime/molecules/protected_socket"
+require "ace/runtime/molecules/protected_artifact_set"
 require "ace/runtime/molecules/protected_linux"
 require "ace/runtime/molecules/execution_unit_installation"
 
@@ -16,13 +17,37 @@ module Ace
       class Deployment
         PATH = "/etc/ace/assignment-authorities.json"
         TOKEN = /\A[a-zA-Z0-9][a-zA-Z0-9_.-]{0,127}\z/
-        attr_reader :data
+        attr_reader :data, :artifact_reference
 
         def self.load
           wire = Ace::Runtime::Molecules::ProtectedSocket
           wire.root_path!(PATH)
           raise ArgumentError, "deployment map is oversized" if File.size(PATH) > 65_536
           new(JSON.parse(File.read(PATH)))
+        end
+
+        # Trusted installer source call only; this is not a transport selector.
+        # Authentication establishes fixed descriptor bytes, not installed readiness.
+        def self.load_artifact(reference)
+          unless reference.is_a?(Hash) && reference.keys.sort == %w[bytes path sha256] &&
+              reference["path"].is_a?(String) && reference["path"].start_with?("/") &&
+              !reference["path"].include?("\0") && File.expand_path(reference["path"]) == reference["path"] &&
+              reference["sha256"].is_a?(String) && reference["sha256"].match?(/\A[0-9a-f]{64}\z/) &&
+              reference["bytes"].is_a?(Integer) && reference["bytes"].between?(1, 65_536)
+            raise ArgumentError, "invalid protected deployment artifact reference"
+          end
+          selected = reference.transform_values { |value| value.is_a?(String) ? value.dup.freeze : value }.freeze
+          Ace::Runtime::Molecules::ProtectedArtifactSet.new.with do |artifacts|
+            bytes = artifacts.read!(selected).dup.force_encoding(Encoding::UTF_8)
+            raise ArgumentError, "deployment artifact is not UTF-8" unless bytes.valid_encoding?
+            value = JSON.parse(bytes, create_additions: false, max_nesting: 32,
+              allow_duplicate_key: false, allow_comments: false)
+            deployment = new(value)
+            deployment.send(:freeze_data!, deployment.data)
+            deployment.instance_variable_set(:@artifact_reference, selected)
+            artifacts.verify_unchanged!
+            deployment.freeze
+          end
         end
 
         def initialize(data)
@@ -400,6 +425,51 @@ module Ace
               raise ArgumentError, "protected execution slot roots overlap"
             end
           end
+        end
+
+        # Original ownership cannot be recycled or hidden by a staged descriptor.
+        def maintenance_inventory(candidate)
+          unless candidate.is_a?(Deployment) && artifact_reference && candidate.artifact_reference && frozen? && candidate.frozen?
+            raise AttemptErrors::EvidenceUnavailable, "maintenance requires authenticated immutable original and candidate descriptors"
+          end
+          originals = data.fetch("launch_mappings")
+          proposed = candidate.data.fetch("launch_mappings")
+          originals.each do |id, map|
+            next unless proposed.key?(id)
+            unless maintenance_association(map) == candidate.maintenance_association(proposed.fetch(id))
+              raise ArgumentError, "existing maintenance mapping was reassociated: #{id}"
+            end
+          end
+          entries = originals.map { |id, map| [id, self, map] } +
+            proposed.reject { |id, _| originals.key?(id) }.map { |id, map| [id, candidate, map] }
+          all = originals.map { |id, map| [id, self, map] } + proposed.map { |id, map| [id, candidate, map] }
+          all.combination(2).each do |left, right|
+            l_id, l_owner, l_map = left
+            r_id, r_owner, r_map = right
+            l_scope, r_scope = l_map.fetch("execution_scope"), r_map.fetch("execution_scope")
+            shared = %w[slot_id slice_unit service_unit network_namespace_path].any? { |key| l_scope.fetch(key) == r_scope.fetch(key) }
+            shared ||= l_scope.values_at("root_directory", "runtime_directory").product(
+              r_scope.values_at("root_directory", "runtime_directory")).any? { |a, b| paths_overlap?(a, b) }
+            if shared && (l_id != r_id || l_owner.maintenance_association(l_map) != r_owner.maintenance_association(r_map))
+              raise ArgumentError, "physical execution slot has conflicting maintenance ownership"
+            end
+          end
+          entries.sort_by(&:first).map { |entry| entry.freeze }.freeze
+        end
+
+        def maintenance_association(map)
+          fixed = project(map.fetch("project_id"))
+          [map.fetch("project_id"), fixed.values_at("journal_repository", "evidence_git_ref", "evidence_checkout_root"),
+            authority(map.fetch("authority_id")).fetch("state_root"),
+            map.fetch("execution_scope").values_at("slot_id", "slice_unit", "service_unit", "network_namespace_path")]
+        end
+
+        def freeze_data!(value)
+          case value
+          when Hash then value.each { |key, item| key.freeze; freeze_data!(item) }
+          when Array then value.each { |item| freeze_data!(item) }
+          end
+          value.freeze
         end
 
         def strict!(value, keys)

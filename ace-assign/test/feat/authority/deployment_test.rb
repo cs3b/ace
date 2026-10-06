@@ -2,10 +2,244 @@
 require_relative "../../test_helper"
 require "ace/assign/authority/deployment"
 require "ace/assign/authority/server"
+require "timeout"
 
 module Ace
   module Assign
     class ProtectedDeploymentTest < AceAssignTestCase
+      class DescriptorArtifacts
+        attr_reader :checked
+        def initialize(bytes); @bytes = bytes; end
+        def with; yield self; end
+        def read!(reference)
+          unless Digest::SHA256.hexdigest(@bytes) == reference.fetch("sha256") && @bytes.bytesize == reference.fetch("bytes")
+            raise Ace::Runtime::RuntimeUnavailableError, "content mismatch"
+          end
+          @bytes
+        end
+        def verify_unchanged!; @checked = true; end
+      end
+
+      def authenticated_descriptor(value, bytes: JSON.generate(value))
+        artifacts = DescriptorArtifacts.new(bytes)
+        reference = {"path" => "/etc/ace/descriptors/#{Digest::SHA256.hexdigest(bytes)}.json",
+          "sha256" => Digest::SHA256.hexdigest(bytes), "bytes" => bytes.bytesize}
+        result = Ace::Runtime::Molecules::ProtectedArtifactSet.stub(:new, artifacts) do
+          Authority::Deployment.load_artifact(reference)
+        end
+        assert artifacts.checked
+        assert result.frozen?
+        assert result.data.frozen?
+        result
+      end
+
+      def test_descriptor_artifact_is_strict_bounded_and_immutable
+        descriptor = authenticated_descriptor(data)
+        assert_raises(FrozenError) { descriptor.mapping("mapping")["project_id"] = "changed" }
+        assert_raises(FrozenError) { descriptor.artifact_reference["path"].replace("/tmp/new") }
+        assert_raises(JSON::ParserError) do
+          authenticated_descriptor(data, bytes: '{"schema":"a","schema":"b"}')
+        end
+        assert_raises(ArgumentError) do
+          Authority::Deployment.load_artifact({"path" => "/etc/ace/../bad", "bytes" => 1, "sha256" => "a" * 64})
+        end
+        assert_raises(ArgumentError) do
+          Authority::Deployment.load_artifact({"path" => "/etc/ace/bad", "bytes" => 65_537, "sha256" => "a" * 64})
+        end
+        assert_raises(AttemptErrors::EvidenceUnavailable) do
+          Authority::Deployment.new(data).maintenance_inventory(descriptor)
+        end
+      end
+
+      def test_maintenance_inventory_preserves_original_and_rejects_reassociation
+        original = authenticated_descriptor(data)
+        value = data
+        value["launch_mappings"]["mapping"]["bootstrap_sha256"] = "f" * 64
+        candidate = authenticated_descriptor(value)
+        inventory = original.maintenance_inventory(candidate)
+        assert_same original, inventory.first[1]
+        assert_equal "a" * 64, inventory.first[2].fetch("bootstrap_sha256")
+        [->(v) { v["projects"]["project"]["journal_repository"] = "/var/lib/replaced" },
+         ->(v) { v["authorities"]["authority"]["state_root"] = "/var/lib/replaced" },
+         ->(v) { v["launch_mappings"]["mapping"]["execution_scope"]["slot_id"] = "replacement" }].each do |change|
+          value = data
+          change.call(value)
+          assert_raises(ArgumentError) { original.maintenance_inventory(authenticated_descriptor(value)) }
+        end
+      end
+
+      def replacement_descriptor
+        value = data
+        value["launch_mappings"]["new"] = value["launch_mappings"].delete("mapping")
+        value["launch_mappings"]["new"]["execution_scope"].merge!("slot_id" => "new",
+          "slice_unit" => "ace-new.slice", "service_unit" => "ace-new.service",
+          "network_namespace_path" => "/run/netns/ace-new", "root_directory" => "/var/lib/ace-new/root",
+          "runtime_directory" => "/run/ace-new")
+        authenticated_descriptor(value)
+      end
+
+      def test_removed_original_is_retained_and_same_physical_slot_cannot_be_recycled
+        original = authenticated_descriptor(data)
+        inventory = original.maintenance_inventory(replacement_descriptor)
+        assert_equal %w[mapping new], inventory.map(&:first)
+        assert_same original, inventory.first[1]
+        value = data
+        value["launch_mappings"]["new"] = value["launch_mappings"].delete("mapping")
+        assert_raises(ArgumentError) { original.maintenance_inventory(authenticated_descriptor(value)) }
+      end
+
+      class MaintenanceJournal
+        attr_accessor :commit
+        attr_reader :repo_root, :ref, :checkout_root, :reads
+        def initialize(project)
+          @repo_root, @ref, @checkout_root = project.values_at("journal_repository", "evidence_git_ref", "evidence_checkout_root")
+          @commit, @reads = "a" * 40, 0
+        end
+        def ref_value; commit; end
+        def verify_commit!(value); raise "wrong commit" unless value == commit; true; end
+        def assignment_ids(commit:); @reads += 1; []; end
+      end
+
+      class OrderedSlotLock
+        def initialize(root, order); @root, @order = root, order; end
+        def slot_key(slot); "execution-slot:#{slot}"; end
+        def with_exclusive(key)
+          @order << [:enter, @root, key]
+          yield
+        ensure
+          @order << [:leave, @root, key]
+        end
+      end
+
+      def test_maintenance_context_union_snapshot_lifetime_and_fail_closed_eligibility
+        original = authenticated_descriptor(data)
+        candidate = replacement_descriptor
+        order = []
+        journal = MaintenanceJournal.new(original.project("project"))
+        owner = Authority::LaunchLifecycle.new(deployment: original, journals: {"project" => journal})
+        owner.define_singleton_method(:verify_maintenance_root!) { |*| true }
+        owner.define_singleton_method(:maintenance_journal_for) { |*| journal }
+        factory = ->(root:) { OrderedSlotLock.new(root, order) }
+        retained = nil
+        Molecules::LifecycleExclusion.stub :new, factory do
+          assert_raises(ArgumentError) { owner.with_execution_slots(mapping_ids: ["new"], candidate_deployment: candidate) {} }
+          owner.with_execution_slots(mapping_ids: %w[new mapping], candidate_deployment: candidate) do |contexts|
+            assert contexts.frozen?
+            assert_raises(AttemptErrors::Conflict) do
+              owner.with_execution_slots(mapping_ids: ["mapping"], candidate_deployment: original) {}
+            end
+            assert_equal %w[mapping new], contexts.map { |c| c.fetch(:mapping_id) }
+            assert_equal 1, journal.reads
+            contexts.each do |context|
+              assert context.frozen?
+              assert context.fetch(:commit).frozen?
+              error = assert_raises(AttemptErrors::EvidenceUnavailable) { owner.slot_reusable!(**context) }
+              assert_match(/complete original authentication/, error.message)
+              assert_raises(AttemptErrors::EvidenceUnavailable) { owner.retire_released_parent!(**context) }
+            end
+            retained = contexts.first
+            journal.commit = "b" * 40
+            assert_raises(AttemptErrors::Conflict) { owner.slot_reusable!(**retained) }
+            journal.commit = "a" * 40
+          end
+        end
+        assert_equal [[:enter, "/var/lib/ace-authority/execution-slot-exclusion", "execution-slot:new"],
+          [:enter, "/var/lib/ace-authority/execution-slot-exclusion", "execution-slot:slot"],
+          [:leave, "/var/lib/ace-authority/execution-slot-exclusion", "execution-slot:slot"],
+          [:leave, "/var/lib/ace-authority/execution-slot-exclusion", "execution-slot:new"]], order
+        assert_raises(AttemptErrors::EvidenceUnavailable) { owner.slot_reusable!(**retained) }
+      end
+
+      def test_removed_and_added_same_project_ids_use_distinct_fixed_roots_and_lexical_locks
+        original_data = data
+        original_data["authorities"]["authority"]["state_root"] = "/var/lib/z-original"
+        original = authenticated_descriptor(original_data)
+        value = JSON.parse(JSON.generate(replacement_descriptor.data))
+        value["authorities"]["authority"]["state_root"] = "/var/lib/a-candidate"
+        value["projects"]["project"]["journal_repository"] = "/var/lib/new-journal"
+        value["projects"]["project"]["evidence_checkout_root"] = "/var/lib/new-checkout"
+        candidate = authenticated_descriptor(value)
+        original_journal = MaintenanceJournal.new(original.project("project"))
+        candidate_journal = MaintenanceJournal.new(candidate.project("project"))
+        owner = Authority::LaunchLifecycle.new(deployment: original, journals: {"project" => original_journal})
+        owner.define_singleton_method(:verify_maintenance_root!) { |*| true }
+        owner.define_singleton_method(:maintenance_journal_for) do |selected, _map|
+          selected.equal?(original) ? original_journal : candidate_journal
+        end
+        order = []
+        Molecules::LifecycleExclusion.stub :new, ->(root:) { OrderedSlotLock.new(root, order) } do
+          owner.with_execution_slots(mapping_ids: %w[mapping new], candidate_deployment: candidate) do |contexts|
+            assert_equal [original_journal, candidate_journal], contexts.map { |context| context.fetch(:journal) }
+            assert_equal [1, 1], [original_journal.reads, candidate_journal.reads]
+          end
+        end
+        assert_equal ["/var/lib/a-candidate/execution-slot-exclusion", "/var/lib/z-original/execution-slot-exclusion"],
+          order.select { |row| row.first == :enter }.map { |row| row[1] }
+      end
+
+      def test_real_maintenance_snapshot_and_normal_admission_lock_contention
+        with_temp_cache do |root|
+          repo = File.join(root, "journal")
+          FileUtils.mkdir_p(repo)
+          git_fixture(repo, "init", "-b", "main")
+          git_fixture(repo, "-c", "user.name=test", "-c", "user.email=test@localhost", "commit", "--allow-empty", "-m", "base")
+          commit = git_fixture(repo, "rev-parse", "HEAD").strip
+          ref = "refs/ace/execution"
+          git_fixture(repo, "update-ref", ref, commit)
+          value = data
+          value["authorities"]["authority"]["state_root"] = File.join(root, "state")
+          value["projects"]["project"].merge!("journal_repository" => repo,
+            "evidence_checkout_root" => File.join(root, "checkout"))
+          deployment = authenticated_descriptor(value)
+          maintenance = Authority::LaunchLifecycle.new(deployment: deployment)
+          maintenance.define_singleton_method(:verify_maintenance_root!) { |*| true }
+          normal = Authority::LaunchLifecycle.new(deployment: deployment)
+          started, admitted = Queue.new, Queue.new
+          thread = nil
+          maintenance.with_execution_slots(mapping_ids: ["mapping"], candidate_deployment: deployment) do |contexts|
+            assert_equal commit, contexts.first.fetch(:commit)
+            thread = Thread.new do
+              started << true
+              normal.send(:with_slot, deployment.mapping("mapping")) { admitted << true }
+            end
+            started.pop
+            assert_raises(Timeout::Error) { Timeout.timeout(0.1) { admitted.pop } }
+            git_fixture(repo, "-c", "user.name=test", "-c", "user.email=test@localhost", "commit", "--allow-empty", "-m", "new")
+            changed = git_fixture(repo, "rev-parse", "HEAD").strip
+            git_fixture(repo, "update-ref", ref, changed)
+            assert_raises(AttemptErrors::Conflict) { maintenance.slot_reusable!(**contexts.first) }
+          end
+          assert Timeout.timeout(2) { admitted.pop }
+          thread.join
+          git_fixture(repo, "update-ref", "-d", ref)
+          yielded = false
+          assert_raises(AttemptErrors::EvidenceUnavailable) do
+            maintenance.with_execution_slots(mapping_ids: ["mapping"], candidate_deployment: deployment) { yielded = true }
+          end
+          refute yielded
+        ensure
+          thread&.kill if thread&.alive?
+          thread&.join
+        end
+      end
+
+      def git_fixture(repo, *arguments)
+        output, error, status = Open3.capture3("git", "-C", repo, *arguments)
+        assert status.success?, error
+        output
+      end
+
+      def test_descriptor_loader_rejects_invalid_utf8_and_changed_digest
+        bad = "\xff".b
+        assert_raises(ArgumentError) { authenticated_descriptor(data, bytes: bad) }
+        bytes = JSON.generate(data)
+        artifacts = DescriptorArtifacts.new(bytes)
+        reference = {"path" => "/etc/ace/fixed.json", "sha256" => "f" * 64, "bytes" => bytes.bytesize}
+        Ace::Runtime::Molecules::ProtectedArtifactSet.stub :new, artifacts do
+          assert_raises(Ace::Runtime::RuntimeUnavailableError) { Authority::Deployment.load_artifact(reference) }
+        end
+      end
+
       def data
         {"schema" => "ace.assign.authorities/v2", "authorities" => {"authority" => {"uid" => 13003,
           "gid" => 13003, "groups" => [13003], "socket_path" => "/run/ace-authority/control.sock",

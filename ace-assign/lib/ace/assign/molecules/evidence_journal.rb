@@ -70,6 +70,18 @@ module Ace
           nil
         end
 
+        # Read-only verification for a fixed immutable maintenance snapshot.
+        def verify_commit!(commit)
+          unless commit.is_a?(String) && commit.match?(/\A[0-9a-f]{40}\z/)
+            raise AttemptErrors::EvidenceUnavailable, "canonical journal commit is invalid"
+          end
+          kind, error, status = git("cat-file", "-t", commit)
+          unless status.success? && kind == "commit"
+            raise AttemptErrors::EvidenceUnavailable, "canonical journal commit is unavailable: #{error}"
+          end
+          true
+        end
+
         # Append accepted events to the journal under lock + CAS.
         #
         # @param assignment_id [String] Assignment ID (journal path segment)
