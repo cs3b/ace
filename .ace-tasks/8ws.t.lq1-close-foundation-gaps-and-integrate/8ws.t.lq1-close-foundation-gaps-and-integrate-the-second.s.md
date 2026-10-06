@@ -63,7 +63,7 @@ qkb -> R2 -> R3 -> qkc source assets -> central gad.2 run remains the final depe
 
 ## Current publication and propagation
 
-Local wave 2026-10-06: n0n/5h5/412 are delivered; a bounded9c2 inventory checkpoint is integrated while9c2 remains open. Five new gem artifacts are prepared, not published. See local-wave-2026-10-06.md and its exact test/artifact receipts. The prior16-gem history below remains unchanged.
+Local wave 2026-10-06: n0n/5h5/412 are delivered; a bounded 9c2 inventory checkpoint is integrated while 9c2 remains open. Five new gem artifacts are prepared, not published. See local-wave-2026-10-06.md and its exact test/artifact receipts. The prior 16-gem history below remains unchanged.
 
 - [x] Reviewed release source 5a0c9e05b, exact suite 11280 passed / 24 skipped, 51 entries, independent APPROVE.
 - [x] Build 16 fresh archives and verify all 1110 payload files; prepare eight dependency waves.
