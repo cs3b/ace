@@ -8,6 +8,8 @@ require "open3"
 require "digest"
 require "uri"
 require "json"
+require "securerandom"
+require "tempfile"
 require "ace/support/fs"
 require "ace/b36ts"
 require "ace/bundle/atoms/bundle_normalizer"
@@ -45,8 +47,12 @@ module Ace
           return config_result unless config_result[:success]
 
           # Step 2: Create session directory early (needed for ace-bundle)
-          cache_dir = create_cache_directory
-          session_dir = create_session_directory(options, cache_dir)
+          begin
+            cache_dir = options.session_dir ? nil : create_cache_directory
+            session_dir = create_session_directory(options, cache_dir)
+          rescue SystemCallError, IOError, ArgumentError => e
+            return {success: false, error: "Cannot allocate review session: #{e.message}. Choose a fresh writable session directory."}
+          end
 
           # Step 3: Extract content
           content_result = extract_review_content(config_result[:config], options)
@@ -1337,6 +1343,7 @@ module Ace
 
             # Build response with comment info if applicable
             response = build_success_response(result, release_path, comment_result)
+            response[:session_dir] = session_dir
 
             # Extract feedback after successful single model review (if enabled)
             feedback_result = maybe_extract_single_model_feedback(
@@ -1576,18 +1583,40 @@ module Ace
 
         def create_session_directory(options, cache_dir)
           if options.session_dir
-            FileUtils.mkdir_p(options.session_dir)
-            return options.session_dir
+            session_dir = options.session_dir
+            FileUtils.mkdir_p(File.dirname(session_dir))
+            begin
+              Dir.mkdir(session_dir)
+            rescue Errno::EEXIST
+              stat = File.lstat(session_dir)
+              unless stat.directory? && Dir.empty?(session_dir)
+                raise ArgumentError, "Session directory already occupied or invalid: #{session_dir}"
+              end
+            end
+            claim_session_directory(session_dir)
+            return session_dir
           end
 
-          # Use cache directory (cache-first approach)
-          compact_id = Ace::B36ts.encode(Time.now)
+          basename = "review-#{Ace::B36ts.encode(Time.now)}"
+          session_dir = File.join(cache_dir, basename)
+          100.times do
+            begin
+              Dir.mkdir(session_dir)
+              claim_session_directory(session_dir)
+              return session_dir
+            rescue Errno::EEXIST
+              session_dir = File.join(cache_dir, "#{basename}-#{SecureRandom.hex(8)}")
+            end
+          end
+          raise IOError, "Session allocation collisions exhausted in #{cache_dir}"
+        end
 
-          # All reviews use the same naming pattern
-          session_dir = File.join(cache_dir, "review-#{compact_id}")
-
-          FileUtils.mkdir_p(session_dir)
-          session_dir
+        def claim_session_directory(session_dir)
+          # Permanent exclusive claim across automatic and explicit callers:
+          # a crash must not make a session reusable.
+          File.open(File.join(session_dir, ".review-session-claim"), File::WRONLY | File::CREAT | File::EXCL, 0o600) do |file|
+            file.write("#{Process.pid}\n")
+          end
         end
 
         def create_cache_directory
@@ -1610,14 +1639,27 @@ module Ace
           release_filename = "review-report-#{model_slug}-#{compact_id}.md"
           release_path = File.join(release_base_path, release_filename)
 
-          # Copy review file if it exists
           review_file = File.join(session_dir, "review.md")
-          if File.exist?(review_file)
-            FileUtils.cp(review_file, release_path)
-            return release_path
-          end
+          return nil unless File.file?(review_file)
 
-          nil
+          # Publish only a complete private copy. link is atomic and refuses
+          # an existing destination, unlike rename/cp; staging shares the FS.
+          Tempfile.create([".review-export-", ".tmp"], release_base_path) do |stage|
+            stage.binmode
+            File.open(review_file, "rb") { |input| IO.copy_stream(input, stage) }
+            stage.flush
+            stage.close
+            100.times do
+              begin
+                File.link(stage.path, release_path)
+                return release_path
+              rescue Errno::EEXIST
+                release_path = File.join(release_base_path,
+                  "review-report-#{model_slug}-#{compact_id}-#{SecureRandom.hex(8)}.md")
+              end
+            end
+            raise IOError, "Release allocation collisions exhausted in #{release_base_path}"
+          end
         end
 
         def create_metadata(review_data)

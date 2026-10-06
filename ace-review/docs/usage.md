@@ -65,7 +65,36 @@ ace-review [OPTIONS]
 | `--no-feedback` | Skip feedback extraction |
 | `--feedback-model` | Model for feedback extraction |
 | `--save-session` | Save session files (default: true) |
-| `--session-dir` | Custom session directory |
+| `--session-dir` | Fresh session directory; existing empty directories may be claimed once |
+
+### Concurrent reviews and exact session selection
+
+Each new review claims its own session before writing prompts or metadata. Automatic
+sessions use `.ace-local/review/sessions/review-<id>` with an opaque suffix when a
+name collides. Successful execution prints both the exported report and the actual
+session directory. Same-clock reviews preserve separate reports and feedback.
+
+```bash
+bin/ace-review --preset code-valid --subject diff:BASE..HEAD --auto-execute
+# Output includes: Session directory: /project/.ace-local/review/sessions/review-<id>
+bin/ace-review-feedback list --session /project/.ace-local/review/sessions/review-<id>
+# Output contains only this session's findings.
+```
+
+For manual feedback creation, pass the exact reported session path to
+`bin/ace-review-feedback create --session PATH`. Single-model `review.md` and
+multi-model reports are discovered within that directory. Published findings are
+immutable; start a fresh review when findings already exist.
+
+An explicit path must be absent or an unclaimed empty directory. A permanent claim
+remains after success, failure or interruption. Reusing a claimed or nonempty path,
+a regular file, or a symlink fails before reviewer execution and preserves existing
+contents. Choose a fresh writable path after an allocation refusal:
+
+```bash
+bin/ace-review --preset code-valid --subject diff:BASE..HEAD --session-dir .ace-local/review/source-round-2
+# Output includes: Review session prepared: .ace-local/review/source-round-2
+```
 
 ### Informational
 

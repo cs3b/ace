@@ -68,6 +68,16 @@ class FeedbackCreateCommandTest < AceReviewTest
   # File Discovery Tests
   # ============================================================================
 
+  def test_exact_session_finds_single_model_report_without_neighbor_reports
+    own_report = File.join(@session_dir, "review.md")
+    File.write(own_report, "own sentinel")
+    sibling = File.join(File.dirname(@session_dir), "review-neighbor")
+    Dir.mkdir(sibling)
+    File.write(File.join(sibling, "review.md"), "neighbor sentinel")
+    command = Ace::Review::CLI::Commands::FeedbackSubcommands::Create.new
+    assert_equal [own_report], command.send(:find_review_reports, @session_dir)
+  end
+
   def test_create_finds_review_report_files
     create_test_review_reports
 
