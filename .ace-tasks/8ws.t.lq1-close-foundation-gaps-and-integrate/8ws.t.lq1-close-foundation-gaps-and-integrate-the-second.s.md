@@ -50,7 +50,7 @@ The five newly separated source closures (y24/vs2/1w5/09j/qkb.0) use the retaine
 ## Remaining local source path
 
 - [ ] 9c2 — actual readiness/admission, post-native closure, complete original/candidate maintenance and terminal consumers; bounded pre-native abort/release is already delivered.
-- [ ] xz9 — scoped service composition and remaining handlers. Captain selected original-attempt-terminal submission for xz9.2 on 2026-10-07; its guarded native implementation and remaining readiness review are still required.
+- [ ] xz9 — scoped service composition and remaining handlers. Captain selected original-attempt-terminal submission for xz9.2 on 2026-10-07; its corrected specification passed independent review and is pending. The native guard (N1) and ACE consumer (N2) are explicit undelivered phases; dependencies remain unchanged.
 - [ ] xza — native observation/signing producer implementation under its reviewed contract.
 - [ ] qk0 — role/charter source integration; draft readiness remains explicit.
 - [ ] qkb.1 / qkb — complete qk0/xz9-dependent workflow/role adoption; accepted neutral vocabulary is retained.

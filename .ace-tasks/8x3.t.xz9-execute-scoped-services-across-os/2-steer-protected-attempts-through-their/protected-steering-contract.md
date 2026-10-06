@@ -1,8 +1,8 @@
-# Protected steering consumer amendment — specification candidate
+# Protected steering consumer contract
 
-xz9.2 remains draft / needs_review true. Whole 9c2 specification approval
-1122ddf7be3d90a7339a87209c665a8f1d3eab19 supplies the selected scope mechanism;
-implementation/native proof and unfinished 09j remain prerequisites. Existing
+Captain selected original-attempt-terminal submission on 2026-10-07.
+The accepted 9c2 specification supplies the scope mechanism; 9c2 source is still
+required, while 09j source is delivered. Native installed proof belongs to gad.2. Existing
 xz9.0 composition and independent service/inbox settlement remain dependencies.
 
 Use version-1 Authority framing and existing mapped exact live launcher or
@@ -13,13 +13,28 @@ attempt_id, expected_generation}; nonnull strict mutation_id, no transfer.
 expected_generation and reply generation use existing attempt-local
 authority_generation from canonical events/status, not assignment-wide, candidate,
 inbox claim or scope generation.
-Prompt's desired params add text (nonblank UTF-8 <=16 KiB) but its native method/
-acknowledgement and bounded transfer framing remain the concrete review question
-in the task; no positive prompt implementation readiness is claimed. The total
-16 KiB control header cannot contain a full 16 KiB prompt plus envelope: final
-prompt framing must use a fixed bounded body or lower the exact text bound in
-that review, never silently widen Server limits. This question includes transport
-framing and canonical driver observation, not permission to invoke a generic CLI.
+Prompt uses the same exact four control params as stop, a required mutation_id,
+and one version-1 TransferCodec `prompt_text` part. Limits are 16,384 total bytes,
+one part, and 16,384 bytes per part; the normal 16,384-byte control-header limit
+is unchanged. The part must be nonblank valid UTF-8. Its declared length and
+SHA-256 must match actual bytes. Raw text is absent from params, journal, replies
+and logs; the owner binds its digest/length with caller/action/attempt/original
+generation in canonical mutation identity. Upload EOF is a write-half-close so
+the same connection can return its bounded reply. The body is ephemeral and any
+private transfer spool is removed on all completion/failure paths. No recovery
+can reconstruct a prompt from the journal or resend an issued mutation.
+
+The native method is the guarded extension of existing `agent.prompt` without
+`wait`: exact terminal UUID plus text and expected_origin as defined by the
+normative guarded design. Capability absence is a preissuance refusal. The
+mapped driver uses the pinned authenticated server and captured original actor;
+only full text-plus-Enter acknowledgement for that origin admits `submitted`.
+Definite preadmission zero-byte errors are refusals. Partial writes, unknown
+errors, mismatched/lost acknowledgement and postadmission death remain uncertain.
+Native error strings cannot supply retry authority. Existing authority replies
+retain canonical mutation identity, generation, journal commit and attributable
+evidence; they never echo text. Same mutation retry reauthenticates and returns
+its retained outcome without another native request.
 
 Stop delegates scope sealing/termination exclusively to 9c2 close_execution_scope;
 it does not duplicate pane.close/kill or manufacture no-writer proof. Serialize
@@ -60,13 +75,8 @@ malformed schema invalid_input, wrong peer unauthorized, absent attempt missing,
 stale generation/binding conflict, corrupt/missing proof evidence_unavailable.
 Unsupported scope capability refuses, not a synthetic stopped outcome.
 
-Prompt research evidence: HerdrExecutor.agent_prompt executes agent prompt CLI;
-RuntimeAdapter.send chooses agent_prompt only after an agent probe and otherwise
-pane_run/send_text. ProtectedNativeControl supplies authenticated pinned protocol
-request/create/observe/terminate but no typed protected prompt. Generic request
-is not a closed prompt contract. Selecting it without actual native method/
-params/ack/error evidence would invent required behavior. This existing task must
-resolve that source/protocol question before readiness approval. Keep issuance
-before one native write, no raw prompt journal/log persistence, no replay send,
-no automatic resend on busy/stall/lost reply and submission != consumption.
-xza retains consumption ownership and qk0 retains user-facing CLI ownership.
+The existing unguarded CLI and RuntimeAdapter send paths are not protected
+prompt handlers. N1 in the canonical task owns the native extension across all
+existing native layers; N2 owns ACE integration against its frozen reviewed
+revision. xza retains consumption ownership and qk0 retains user-facing CLI
+ownership. Source readiness is distinct from implementation and gad.2 acceptance.

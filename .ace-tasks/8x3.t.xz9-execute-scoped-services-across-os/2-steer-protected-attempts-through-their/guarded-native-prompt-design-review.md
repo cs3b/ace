@@ -1,5 +1,10 @@
 # Guarded native prompt design review
 
+Historical verdicts below retain their original dates. Current readiness is
+APPROVE in readiness-review-2026-10-07.md after Captain selected terminal
+submission and the exact producer/consumer contracts were independently reviewed.
+Missing implementation no longer blocks specification promotion.
+
 Reviewed 2026-10-05: scratch `guarded-native-prompt-design.md`, durable xz9.2 task and pinned native source research, and current Runtime SendContract. Design/spec-decision review only; no source change, status change, test, native execution or installed acceptance.
 
 ## Verdict and recommendation

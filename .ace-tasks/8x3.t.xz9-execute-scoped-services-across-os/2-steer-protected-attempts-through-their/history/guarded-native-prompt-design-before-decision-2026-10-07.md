@@ -1,10 +1,8 @@
-# Guarded existing native prompt: normative source contract
+# Non-normative historical design before Captain decision
 
-Selected by Captain on 2026-10-07 for original-attempt-terminal submission.
-This is the N1 producer contract owned by xz9.2; it is not delivered code or
-installed proof. Retained research is based on Herdr v0.9.3. The historical
-pre-decision proposal is preserved in history/. Source implementation and
-independent review are required; native/multi-UID acceptance belongs to gad.2.
+# Guarded existing native prompt: source-owned design candidate
+
+2026-10-05. Reversible scratch design, no product implementation, native execution/tests/probes/remote mutation or delegation. Source base is upstream Herdr v0.9.3; exact source copies are `herdr-source/prompt-research/`. This candidate is not readiness approval or installed proof.
 
 ## Selected mechanism and its exact limit
 
@@ -12,15 +10,7 @@ Extend existing agent.prompt with a required guard for the ACE protected invocat
 
 This can prevent native app target replacement from redirecting the prompt: a replacement gets a new runtime/actor/child incarnation, and an already pinned old-runtime request can only write the original PTY or fail. It does not establish that the agent consumed the prompt, that every PTY reader is the original child, or that a kernel process cannot exit after admission. That distinction is material, not an implementation detail.
 
-**Selected admission boundary:** native effect admission is the actor's guarded
-first-write transition. Replacement/revocation before admission yields zero
-prompt/focus bytes; child exit or closure after admitted partial submission
-returns uncertain without retry. Asynchronous death does not revoke already
-admitted input. This contract does not promise exclusive receipt by a provider
-PID or atomic kernel-exit plus TTY-write behavior. Descendants sharing the
-original PTY may receive bytes. The target remains the original attempt terminal,
-with spawn-established original child provenance; terminal UUID alone is not
-a substitute for that provenance.
+**Review decision required:** define native effect admission at the actor's guarded first-write boundary. Replacement/revocation before admission must yield zero prompt bytes; original-child exit or closure after admitted partial submission gives uncertain and no retry. Asynchronous death after admission does not retroactively revoke already-admitted input. If xz9.2 instead requires a guarantee that the original process is live and exclusively receives every byte through the delayed Enter, this PTY mechanism cannot meet it: Linux exposes no atomic pidfd-liveness + TTY write + exclusive-reader operation, and the original child can exit while descendants retain the slave. A durable signed provider-directed delivery protocol in the existing observer/harness owner would be a different requirement; do not disguise it as a small native prompt patch. This design does not weaken the original PID/birth binding to terminal_id.
 
 ## Source evidence establishing owner boundaries
 
@@ -37,11 +27,11 @@ a substitute for that provenance.
 
 ## Closed protected request and origin representation
 
-The existing method extension payload is `{target, text, expected_origin}` with wait omitted. For protected requests target is one canonical terminal UUID, resolved by **exact ID-only lookup**, not a UUID→pane/name fallback. AgentPrompt's old unguarded product can stay upstream if upstream supports other users, but ACE protected driver must never omit expected_origin or fall back. Pre1.0 ACE has no compatibility branch.
+Proposed existing method payload is `{target, text, expected_origin}` with wait omitted. For protected requests target is one canonical terminal UUID, resolved by **exact ID-only lookup**, not a UUID→pane/name fallback. AgentPrompt's old unguarded product can stay upstream if upstream supports other users, but ACE protected driver must never omit expected_origin or fall back. Pre1.0 ACE has no compatibility branch.
 
-`expected_origin` exactly `{terminal_id, runtime_incarnation, child:{pid,uid,gid,groups,parent_pid,started_at,host}}`. Linux-only initially; child uses the existing ACE ProtectedLinux identity: positive PID/parent PID, nonnegative integer UID/GID, sorted unique nonnegative supplementary groups, `started_at` equal to `linux:<boot UUID>:<proc stat start-time ticks>`, and exact nonempty kernel hostname. Terminal and runtime incarnation are canonical UUIDs; unknown fields/types refuse. runtime_incarnation is source-owned unique per spawned actor, never reused on respawn/restoration/handoff. Native captures the same identity from its owned child; ACE compares every field with canonical 09j origin rather than introducing a second identity dialect. Original child is the owned child returned from the exact runtime spawn, not a current foreground descendant or arbitrary same-UID agent. UID/group/native lineage checks remain ACE's canonical origin policy; native owner establishes its own PID/birth provenance and verifies requested values against it.
+`expected_origin` exactly `{terminal_id, runtime_incarnation, child:{boot_id,pid,start_time_ticks,uid,gid,parent_pid}}`. Linux-only initially; bounded IDs/numbers and closed schema. runtime_incarnation is source-owned unique per spawned actor, never reused on respawn/restoration/handoff. Boot/start-time names match ACE's actual ProtectedLinux representation at final implementation rather than invent a second identity dialect. Original child is the owned child returned from the exact runtime spawn, not a current foreground descendant or arbitrary same-UID agent. UID/group/native lineage checks remain ACE's canonical origin policy; native owner establishes its own PID/birth provenance and verifies requested values against it.
 
-Native origin projection is a read-only extension of existing pane/process response: immutable runtime_incarnation and original child fields, plus guarded_prompt capability. ACE compares it to existing09j canonical binding under authenticated pinned-server identity; the caller cannot select a different child. Capability unknown/missing refuses before durable issuance. The full ACK must privately include the same origin and native submission outcome; public Assign response retains only its specified mutation identity/evidence reference. Server epoch need not duplicate the existing09j pinned peer/birth+socket identity; native runtime token resets on server restart and ACE separately enforces generation.
+Native origin projection is a read-only extension of existing pane/process response: immutable runtime_incarnation and original child fields, plus guarded_prompt capability. ACE compares it to existing09j canonical binding under authenticated pinned-server identity; the caller cannot select a different child. Capability unknown/missing refuses before durable issuance. The full ACK can privately include the same origin and native submission outcome; public Assign response retains only its specified mutation identity/evidence reference. Server epoch need not duplicate the existing09j pinned peer/birth+socket identity; native runtime token resets on server restart and ACE separately enforces generation.
 
 At synchronous native spawn, before starting child.wait: read original child identity, open pidfd for that PID, re-read identity and compare, retain pidfd/identity in immutable runtime origin shared with actor. Because child is still owned and not yet reaped by this parent's waiter, PID reuse cannot substitute an unrelated reaped child during capture; inability to establish exact identity fails guarded capability. Gated09j child cannot execute payload before ACE bind/release and supplies actual birth. Generic native startup that exits too soon simply lacks positive guarded capability. No synthetic token replaces kernel birth. After spawn, preserve immutable origin; exec that preserves PID/start-time is same incarnation, a new spawned child always gets a new token. Handoff/import/restoration cannot fabricate provenance from serialized PID; unsupported or unverified transfer refuses guarded prompt. 9c2 forbids old-generation restoration; explicitly retain guarded unsupported behavior for those native paths until proper handle provenance exists.
 
@@ -54,18 +44,15 @@ At synchronous native spawn, before starting child.wait: read original child ide
 5. Existing actor serializes text and delayed Enter with user-input data; terminal protocol responses remain allowed as existing behavior. Close/shutdown can interrupt submission and records indeterminate if partial input; handoff must refuse/wait while guarded submission active and never migrate a partially submitted command. Do not serialize arbitrary outside app state with a new global controller. Child.wait completion should mark this actor origin no longer accepting guarded input immediately, not wait for delayed PaneDied handling, but pidfd remains authoritative for checks.
 6. Successful submission ack occurs after existing full text and Enter write completion, names the captured original origin, and is only `submitted`. ACK loss → canonical uncertain. No native request id dedup is assumed. A canonical identical retry reports existing record and never sends another native command.
 
-The actor admission plus immutable owned FD provides atomic protection against *native runtime retargeting*. It does not promise lock-based serialization with asynchronous kernel death or changing PTY foreground reader. Those stronger properties are outside Captain's selected guarantee; pidfd checks must never be described as atomic recipient delivery.
+The actor admission plus immutable owned FD provides atomic protection against *native runtime retargeting*. It does not promise lock-based serialization with asynchronous kernel death or changing PTY foreground reader. If review requires those stronger properties, reject this candidate rather than calling pidfd checks atomic.
 
 ### Descendant/replacement reader in the same PTY
 
 The native backend `src_pty_backend_unix.rs:34–37` spawns a child on the PTY slave. Descendants can inherit that slave/session, and the actor's original master at `src_pane.rs:2687–2696` remains the same object while those processes use it. Retaining master FD and original child pidfd cannot prove that only the original child reads queued input. The existing foreground-agent check `src_app_agents.rs:427` inspects current agent-kind processes; it does not retain a unique provider/harness process-birth token as queue ownership. Another foreground agent of the same kind in the same PTY can pass it. No9c2 rule examined freezes that process topology: it requires descendants/native creation to remain in scope, not forbids them.
 
-Native pane/runtime replacement before actor admission must refuse. A different
-descendant/foreground reader on the same original PTY is outside any exclusive
-reader guarantee: Captain selected terminal submission, not provider-PID receipt.
-The guard still preserves original spawned-child incarnation and live-handle
-checks at admission; it never substitutes a fresh child or native runtime. No
-foreground-PID preflight/recheck may be represented as atomic exclusive delivery.
+Thus two scenarios must not be conflated: replacing the native pane/runtime before actor admission is fully addressable with guarded runtime+child origin and pinned actor; a different descendant/new foreground reader on the **same original PTY** can still receive bytes, even without native runtime replacement. Child exit after admission is ordinary uncertainty. Foreground-reader replacement before admission is a separate unsupported guarantee if 'exact original target' requires the original provider PID/birth rather than the original launched attempt terminal. Current xz9.2 calls for exact original target and replaced targets refuse before dispatch, without explicitly limiting replacement to native runtime attachment. Independent review must resolve that wording with the actual contract owner. Do not silently reinterpret it as terminal-only safety. A foreground PID read/recheck does not solve it atomically: tcsetpgrp/process exit/readers are kernel-controlled outside app exclusion.
+
+If exact original **process recipient** is mandatory, a pidfd-backed queue guard still falls short and source implementation must remain blocked; introduce a real upstream prerequisite/task for the existing native/harness owner with a provider-aware bound delivery endpoint, or specify an enforced runtime restriction whose actual code prevents competing PTY readers. No such endpoint/restriction is currently delivered in pinned source. Source tests can prove originalactor FD and preadmission mismatch handling but cannot manufacture exclusive-reader truth. If original **attempt-terminal submission** with postadmission uncertainty is the requirement, this design is a concrete reviewable native upstream prerequisite for xz9.2; it still requires canonical09j PID/birth and never replaces those with UUID only. Either decision belongs in independently accepted specification before implementation.
 
 ## Typed outcomes required inside existing native owner
 
@@ -79,14 +66,6 @@ Upstream existing schema/response/agents handler, terminal target resolver, nati
 
 Tests to implement after readiness: pure schema rejects unknown/omitted guard and wait; app mismatch rejects before focus/queue; runtime replacement between app capture/queue and actor admission cannot redirect; oldactor/newruntime samepane and samePIDdifferentbirth refuse; actor queued guard mismatch/dead pidfd before firstwrite yields zero; partialtext then exit/error no Enter and uncertain; fulltext+Enter produces exact-origin submitted; app/pane shutdown and handoff timing yields truthful typed result; queuefull distinct definite refusal; stale restored/imported origins refuse; ack lost canonical exactretry sends once; frame/body limits16KiB UTF8/controlescaping; no raw text journal/logs. Real native tests ultimately must prove actual process birth capture, pidfd semantics and FD ownership; unexecuted test design is no installed evidence. Tests here are designed only, not run.
 
-## Delivery gate
+## Why no tiny patch is attached
 
-N1 covers a coherent native source change across the existing schema/handler,
-resolver, spawn-origin owner, TerminalRuntime and actual PTY actor, with executed
-producer tests, independent review and an exact build/install selection. An
-app-only terminal-ID patch does not satisfy it. N2 consumes that frozen reviewed
-protocol and supplies canonical issuance/replay/uncertainty and stop integration.
-No implementation must pre-exist for specification readiness. Actual supported
-native process/FD and installed distinct-user evidence remain required in gad.2;
-controlled tests are not substitutes. No blocked probe is authorized by this
-source contract.
+A terminal-ID schema/handler patch alone would conceal missing original-child provenance and queued-write guard. Current native code has no immutable birth/pidfd passed to actor, and postadmission kernel death semantics need explicit independent contract acceptance. A coherent implementation spans the existing native ownership layers above; no product implementation is authorized by readiness merely from this scratch design. The next concrete review is whether admission-bound exact incarnation plus pinned original FD meets xz9.2's submission contract. If yes, amend guarded protocol, then implement and independently review upstream source candidate. If the requirement is uninterrupted live exclusive original-process reception, that exact stronger requirement remains blocked on a different existing-harness delivery primitive; this design must not be promoted as sufficient.

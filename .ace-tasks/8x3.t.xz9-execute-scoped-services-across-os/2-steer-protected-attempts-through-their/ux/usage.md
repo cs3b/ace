@@ -2,9 +2,9 @@
 
 ## Send direction once
 
-Desired API pending the explicit native acknowledgement/body framing question:
-the qk0 consumer calls `prompt_attempt(mapping_id, assignment_id, attempt_id,
-expected_generation, mutation_id, text)` with a persisted mutation ID and bounded
+Specified API (implementation remains to be delivered):
+the qk0 consumer calls `prompt_attempt` with control params `{mapping_id, assignment_id, attempt_id,
+expected_generation}`, a required `mutation_id`, and one `prompt_text` transfer part with a persisted mutation ID and bounded
 text. The owner derives the original target and authorizes the existing mapped
 driver. An acknowledgement returns `submitted`, not consumed. Repeating the
 exact call returns its canonical result without another send. Changed text with
@@ -44,7 +44,7 @@ its original uncertain reply. Slot release follows terminal commit and verified
 release-before-reuse. Native pane closure or descendant absence alone cannot
 settle independent service/inbox truth.
 
-The target guarantee is now decided; positive prompt implementation still needs
-the reviewed guarded native method/ack/error and body framing contract. The generic CLI
+The target, guarded native method and bounded body framing are specified.
+Positive prompt implementation still needs the N1 native guard and N2 ACE consumer. The generic CLI
 send and ProtectedNativeControl.request are source research, not selected public
 protected prompt handlers. No blocked probes are authorized by these examples.

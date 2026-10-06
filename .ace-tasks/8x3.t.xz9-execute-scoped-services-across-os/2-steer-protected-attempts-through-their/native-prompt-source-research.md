@@ -56,3 +56,20 @@ Read as-search-research SKILL and bin/ace-bundle wfi://search/research. A bin/ac
 ## Integration note
 
 This is retained source research, not a selected implementation or readiness approval. Root independently read pinned AgentPromptParams and resolve_agent_target: only target/text/wait are accepted, and target resolves public pane or agent name without expected terminal identity. The concrete unresolved guard is recorded in xz9.2. Temporary source copies remain under .ace-local; reproducible upstream paths use https://raw.githubusercontent.com/herdrdev/herdr/v0.9.3/ followed by the source paths listed above.
+
+## Current upstream check and decision resolution — 2026-10-07
+
+Independent reviewer `/root/wave_412` performed read-only source lookup at
+Herdr master `3d9d2b18dab139ba226ebc5a1c9a9f2c9c3ee4df`. The
+[prompt schema](https://github.com/herdrdev/herdr/blob/3d9d2b18dab139ba226ebc5a1c9a9f2c9c3ee4df/src/api/schema/agents.rs)
+still accepts target/text/wait, the
+[resolver](https://github.com/herdrdev/herdr/blob/3d9d2b18dab139ba226ebc5a1c9a9f2c9c3ee4df/src/app/terminal_targets.rs)
+still selects pane/name, and the
+[PTY submission](https://github.com/herdrdev/herdr/blob/3d9d2b18dab139ba226ebc5a1c9a9f2c9c3ee4df/src/pty/actor/unix.rs)
+has no expected-origin guard. No runtime was fetched or executed.
+
+Captain selected original-attempt-terminal submission on 2026-10-07. The
+canonical task and normative guarded contract supersede this historical report's
+pending semantic-choice/readiness language. Missing native implementation is
+explicit N1 work within xz9.2, followed by N2 ACE integration; it is not evidence
+that the selected specification itself is undecided.
