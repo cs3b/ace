@@ -20,10 +20,12 @@ module Ace
         attr_reader :data, :artifact_reference
 
         def self.load
-          wire = Ace::Runtime::Molecules::ProtectedSocket
-          wire.root_path!(PATH)
-          raise ArgumentError, "deployment map is oversized" if File.size(PATH) > 65_536
-          new(JSON.parse(File.read(PATH)))
+          Ace::Runtime::Molecules::ProtectedArtifactSet.new.with do |artifacts|
+            bytes, reference = artifacts.read_path!(PATH, limit: 65_536)
+            deployment = from_verified_bytes(bytes, reference)
+            artifacts.verify_unchanged!
+            deployment
+          end
         end
 
         # Trusted installer source call only; this is not a transport selector.
@@ -38,17 +40,24 @@ module Ace
           end
           selected = reference.transform_values { |value| value.is_a?(String) ? value.dup.freeze : value }.freeze
           Ace::Runtime::Molecules::ProtectedArtifactSet.new.with do |artifacts|
-            bytes = artifacts.read!(selected).dup.force_encoding(Encoding::UTF_8)
-            raise ArgumentError, "deployment artifact is not UTF-8" unless bytes.valid_encoding?
-            value = JSON.parse(bytes, create_additions: false, max_nesting: 32,
-              allow_duplicate_key: false, allow_comments: false)
-            deployment = new(value)
-            deployment.send(:freeze_data!, deployment.data)
-            deployment.instance_variable_set(:@artifact_reference, selected)
+            deployment = from_verified_bytes(artifacts.read!(selected), selected)
             artifacts.verify_unchanged!
-            deployment.freeze
+            deployment
           end
         end
+
+        def self.from_verified_bytes(raw, reference)
+          bytes = raw.dup.force_encoding(Encoding::UTF_8)
+          raise ArgumentError, "deployment artifact is not UTF-8" unless bytes.valid_encoding?
+          raise ArgumentError, "deployment artifact exceeds bounds" unless bytes.bytesize.between?(1, 65_536)
+          value = JSON.parse(bytes, create_additions: false, max_nesting: 32,
+            allow_duplicate_key: false, allow_comments: false)
+          deployment = new(value)
+          deployment.send(:freeze_data!, deployment.data)
+          deployment.instance_variable_set(:@artifact_reference, reference)
+          deployment.freeze
+        end
+        private_class_method :from_verified_bytes
 
         def initialize(data)
           unless data.is_a?(Hash) && data["schema"] == "ace.assign.authorities/v2" &&

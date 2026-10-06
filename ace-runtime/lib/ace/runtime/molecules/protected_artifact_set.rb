@@ -89,6 +89,40 @@ module Ace
           bytes
         end
 
+        # Fixed installer entrypoints have no caller-supplied digest. Derive the
+        # reference from the same protected descriptor whose bytes are retained.
+        def read_path!(path, limit: LIMIT)
+          raise ArgumentError, "invalid artifact byte limit" unless limit.is_a?(Integer) && limit.between?(1, LIMIT)
+          raise ArgumentError, "invalid fixed artifact path" unless path.is_a?(String) &&
+            path.start_with?("/") && !path.include?("\0") && File.expand_path(path) == path
+          if @references.key?(path)
+            reference = @references.fetch(path)
+            raise RuntimeUnavailableError, "fixed artifact exceeds bounds" if reference.fetch("bytes") > limit
+            return [@contents.fetch(path), reference].freeze
+          end
+          @protection.root_path!(path)
+          ancestors(path).reverse_each { |ancestor| pin!(ancestor, directory: true) }
+          handle = pin!(path, directory: false)
+          size = handle.stat.size
+          unless size.between?(1, limit) && @references.size < COUNT_LIMIT && @total + size <= TOTAL_LIMIT
+            raise RuntimeUnavailableError, "fixed artifact exceeds bounds"
+          end
+          bytes = handle.read(size + 1)
+          unless bytes.is_a?(String) && bytes.bytesize == size
+            raise RuntimeUnavailableError, "fixed artifact length changed"
+          end
+          reference = {"path" => path.dup.freeze, "sha256" => Digest::SHA256.hexdigest(bytes).freeze,
+            "bytes" => size}.freeze
+          if @references.key?(path)
+            raise RuntimeUnavailableError, "fixed artifact references conflict" unless @references.fetch(path) == reference
+          else
+            @references[path] = reference
+            @contents[path] = bytes.freeze
+            @total += size
+          end
+          [@contents.fetch(path), reference].freeze
+        end
+
         def verify_unchanged!
           @handles.each do |path, entry|
             handle = entry.fetch(:handle)
