@@ -50,7 +50,7 @@ The five newly separated source closures (y24/vs2/1w5/09j/qkb.0) use the retaine
 ## Remaining local source path
 
 - [ ] 9c2 — actual readiness/admission, post-native closure, complete original/candidate maintenance and terminal consumers; bounded pre-native abort/release is already delivered.
-- [ ] xz9 — scoped service composition and remaining handlers; resolve xz9.2 terminal-bound versus exact-provider-PID guarantee before claiming that contract ready.
+- [ ] xz9 — scoped service composition and remaining handlers. Captain selected original-attempt-terminal submission for xz9.2 on 2026-10-07; its guarded native implementation and remaining readiness review are still required.
 - [ ] xza — native observation/signing producer implementation under its reviewed contract.
 - [ ] qk0 — role/charter source integration; draft readiness remains explicit.
 - [ ] qkb.1 / qkb — complete qk0/xz9-dependent workflow/role adoption; accepted neutral vocabulary is retained.
@@ -64,6 +64,17 @@ qkb -> R2 -> R3 -> qkc source assets -> central gad.2 run remains the final depe
 ## Current publication and propagation
 
 Local wave 2026-10-06: n0n/5h5/412 are delivered; a bounded 9c2 inventory checkpoint is integrated while 9c2 remains open. Five new gem artifacts are prepared, not published. See local-wave-2026-10-06.md and its exact test/artifact receipts. The prior 16-gem history below remains unchanged.
+
+2026-10-07 local continuation: xz9.2 target semantics are recorded in ACE
+`d6dc84cab`; centralized installed ownership is clarified in `d74d2bbb8` after
+independent review by `/root/wave_412`. lab-config `f0296844704f762784f40cf642a046f837fe42a4`
+delivers the setup-project protected receiver handler envelope/staging adapter,
+reviewed against the actual ACE producer/transfer owner. Root independently ran
+`python3 -m unittest tests.test_setup_project_service tests.test_setup_project_install`
+there: 18 tests passed in 12.137 seconds. Its existing gad.b receipt retains scope,
+review and other checks; gad.b remains open. No receiver activation or installed
+acceptance is claimed. 9c2 readiness and history source work continues in isolated
+worktrees; unintegrated work is not a release artifact or completed task.
 
 - [x] Reviewed release source 5a0c9e05b, exact suite 11280 passed / 24 skipped, 51 entries, independent APPROVE.
 - [x] Build 16 fresh archives and verify all 1110 payload files; prepare eight dependency waves.
