@@ -43,6 +43,18 @@ module Ace
                 reconciliations.all? { |event| event.dig("payload", "claim_generation").is_a?(Integer) && event.dig("payload", "claim_generation").between?(0, proof.fetch("claim_generation")) }
               raise AttemptErrors::EvidenceUnavailable, "historical inbox settlement incomplete"
             end
+            # The retained store owner increments claims on delivery; reconcile
+            # accepts only its current claim and replay appends no proof event.
+            unless reconciliations.each_cons(2).all? { |left, right| left.dig("payload", "claim_generation") < right.dig("payload", "claim_generation") }
+              raise AttemptErrors::EvidenceUnavailable, "historical inbox claim order differs"
+            end
+            replies = events.select { |event| event["type"] == "authority_mutation" &&
+              event.dig("payload", "operation") == "reconcile_inbox" && event.dig("payload", "data", "event_id") == payload.fetch("event_id") }
+            unless replies.all? { |reply| reconciliations.any? { |record|
+              projection = record.fetch("payload").slice("event_id", "attempt_id", "inbox_context_id", "registration", "state", "receipt_ref", "signature_ref")
+              reply.fetch("payload").fetch("data").slice(*projection.keys) == projection } }
+              raise AttemptErrors::EvidenceUnavailable, "historical inbox private reply differs"
+            end
             reconciliations.each do |reconciliation|
               proof = reconciliation.fetch("payload")
               unless proof.keys.sort == Endcap::INBOX_PAYLOAD_FIELDS.sort && proof["version"] == 1 &&
@@ -105,7 +117,7 @@ module Ace
           unknown = events.select { |event| event["type"] == "inbox_reconciliation" }.map { |event| event.dig("payload", "event_id") } - identities
           raise AttemptErrors::EvidenceUnavailable, "historical inbox proof lacks registration" unless unknown.empty?
           true
-        rescue KeyError, TypeError, ArgumentError, JSON::ParserError, OpenSSL::PKey::PKeyError
+        rescue KeyError, TypeError, ArgumentError, NoMethodError, JSON::ParserError, OpenSSL::PKey::PKeyError
           raise AttemptErrors::EvidenceUnavailable, "historical inbox evidence is unverifiable"
         end
       end

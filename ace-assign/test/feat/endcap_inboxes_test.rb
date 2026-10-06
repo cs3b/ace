@@ -28,6 +28,24 @@ module Ace
         def bytes(index: 0); parts.fetch(index); end
       end
 
+      def test_historical_malformed_canonical_shapes_refuse_with_typed_unavailability
+        journal = Object.new
+        journal.define_singleton_method(:evidence_mode) { :protected }
+        context = {"native_mapping_id" => "mapping"}
+        deployment = Object.new
+        deployment.define_singleton_method(:inbox_context) { |*| context }
+        verifier = Authority::HistoricalInboxEvidence.new(journal: journal, deployment: deployment, history: Object.new)
+        params = {"mapping_id" => "mapping", "assignment_id" => "assignment", "attempt_id" => "attempt"}
+        registration = {"event_id" => "event", "attempt_id" => "attempt", "payload_sha256" => "a" * 64, "receipt_key_sha256" => "b" * 64}
+        payloads = [nil, "scalar", {"attempt_id" => "attempt", "event_id" => "event", "inbox_context_id" => "context", "registration" => registration}]
+        payloads.each do |payload|
+          event = {"type" => "inbox_binding", "payload" => payload}
+          assert_raises(AttemptErrors::EvidenceUnavailable) do
+            verifier.verify!(events: [event], params: params, map: {"project_id" => "project"}, commit: "a" * 40)
+          end
+        end
+      end
+
       def fixture(child: false, inbox: true)
         Dir.mktmpdir do |root|
           repo = File.join(root, "repo"); FileUtils.mkdir_p(repo)
@@ -272,10 +290,28 @@ module Ace
           end
           assert @owner.historical_inbox_settlement_complete!(journal: @journal, events: events,
             params: @params, map: @map, commit: @journal.ref_value, deployment: @deployment, history: history)
+          bogus_reply = {"type" => "authority_mutation", "payload" => {"operation" => "reconcile_inbox",
+            "data" => {"event_id" => "event", "state" => "completed"}}}
+          assert_raises(AttemptErrors::EvidenceUnavailable) do
+            Authority::HistoricalInboxEvidence.new(journal: @journal, deployment: @deployment, history: history).verify!(
+              events: events + [bogus_reply], params: @params, map: @map, commit: @journal.ref_value)
+          end
+          reordered = events.dup
+          zero = JSON.parse(JSON.generate(historical))
+          zero["payload"]["claim_generation"] = 0
+          reordered.insert(reordered.index(historical) + 1, zero)
+          assert_raises(AttemptErrors::EvidenceUnavailable) do
+            Authority::HistoricalInboxEvidence.new(journal: @journal, deployment: @deployment, history: history).verify!(
+              events: reordered, params: @params, map: @map, commit: @journal.ref_value)
+          end
           # Earlier superseded claim evidence stays part of authenticated
           # history; the final consumed claim cannot conceal its corruption.
           historical_ref = historical.dig("payload", "receipt_ref", "ref")
-          mutate("fixture_corrupt_history", "corrupt-claim-one", 7, {data: {}, blobs: {historical_ref => "corrupt"}, events: []})
+          checkout = File.join(@journal.checkout_root, "journal")
+          File.binwrite(File.join(checkout, historical_ref), "corrupt")
+          git_in(checkout, "add", "-A")
+          git_in(checkout, "commit", "-m", "fixture corrupt retained claim evidence")
+          git_in(@journal.repo_root, "update-ref", @journal.ref, git_in(checkout, "rev-parse", "HEAD").strip)
           assert_raises(AttemptErrors::EvidenceUnavailable) do
             @owner.historical_inbox_settlement_complete!(journal: @journal, events: events,
               params: @params, map: @map, commit: @journal.ref_value, deployment: @deployment, history: history)
