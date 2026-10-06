@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Concurrent review starts exclusively claim isolated sessions, refuse occupied explicit paths, and preserve report and feedback provenance. Single-model execution reports its exact session path; feedback creation discovers its `review.md`. Release exports publish complete copies without replacing equal-clock reports.
+
 ## [0.59.0] - 2026-10-05
 
 ### Changed

@@ -240,6 +240,7 @@ module Ace
             # Display review saved/prepared message
             if result[:output_file]
               puts "✓ Review saved: #{result[:output_file]}"
+              puts "  Session directory: #{result[:session_dir]}" if result[:session_dir]
             elsif result[:session_dir]
               puts "✓ Review session prepared: #{result[:session_dir]}"
               if result[:budget]

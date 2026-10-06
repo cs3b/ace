@@ -99,6 +99,7 @@ module Ace
             # @return [Array<String>] List of report file paths
             def find_review_reports(session_dir)
               patterns = [
+                File.join(session_dir, "review.md"),
                 File.join(session_dir, "review-report-*.md"),
                 File.join(session_dir, "review-*.md")
               ]
