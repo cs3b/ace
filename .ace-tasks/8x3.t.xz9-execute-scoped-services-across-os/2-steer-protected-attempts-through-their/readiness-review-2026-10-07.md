@@ -29,3 +29,15 @@ lab-config gad.2. No runtime, root, installed-edge or remote probe was performed
 Verification: task show and doctor plus bundle path existence and diff checks.
 The task bundle includes both selected producer design and independent review;
 public scenarios distinguish source fixtures from installed acceptance.
+
+## Source-identity correction
+
+N1 author found and root independently verified `src/terminal/id.rs:15–24`
+at actual v0.9.3 source commit `7b116c05bfda646af39d2524c54e70c751f57ee8`
+(annotated tag object `7eaf574ba6362c36c3d8fe89f411bb7d5bb34660`).
+TerminalId::alloc emits `term_` plus lowercase hexadecimal micros/counter,
+not a UUID. Normative references now preserve that exact opaque native ID;
+only the new runtime-incarnation field is a UUID. No change to native terminal
+identity allocation, no pane/name fallback and no weaker original-actor binding
+is authorized. This corrects the reviewed document's representation error;
+Captain's selected behavior and implementation scope are unchanged.

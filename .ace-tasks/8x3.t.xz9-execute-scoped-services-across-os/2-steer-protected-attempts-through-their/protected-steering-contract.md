@@ -25,7 +25,7 @@ private transfer spool is removed on all completion/failure paths. No recovery
 can reconstruct a prompt from the journal or resend an issued mutation.
 
 The native method is the guarded extension of existing `agent.prompt` without
-`wait`: exact terminal UUID plus text and expected_origin as defined by the
+`wait`: exact opaque native terminal ID plus text and expected_origin as defined by the
 normative guarded design. Capability absence is a preissuance refusal. The
 mapped driver uses the pinned authenticated server and captured original actor;
 only full text-plus-Enter acknowledgement for that origin admits `submitted`.
