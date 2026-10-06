@@ -289,6 +289,72 @@ class TaskManagerTest < AceTaskTestCase
     assert_equal "_archive", reloaded_parent.special_folder
   end
 
+  def test_terminal_child_update_preserves_unresolved_siblings_and_evidence
+    %w[blocked pending draft in-progress].each do |status|
+      manager = Ace::Task::Organisms::TaskManager.new(root_dir: File.join(@tmpdir, status))
+      parent = manager.create("Parent #{status}", status: "in-progress")
+      child = manager.create_subtask(parent.id, "First")
+      sibling = manager.create_subtask(parent.id, "Unresolved", status: status)
+      evidence = File.join(sibling.path, "evidence.txt")
+      File.write(evidence, "unresolved proof")
+      before = File.read(sibling.file_path)
+
+      updated = manager.update(child.id, set: {"status" => "done"})
+
+      assert_equal "done", updated.status
+      assert_equal parent.path, manager.show(parent.id).path
+      assert_equal "in-progress", manager.show(parent.id).status
+      assert_equal before, File.read(sibling.file_path)
+      assert_equal "unresolved proof", File.read(evidence)
+      refute_equal "_archive", updated.special_folder
+    end
+  end
+
+  def test_terminal_child_update_archives_complete_family_and_returns_current_child
+    parent = @manager.create("Parent")
+    child = @manager.create_subtask(parent.id, "Final child")
+    @manager.create_subtask(parent.id, "Skipped", status: "skipped")
+    @manager.create_subtask(parent.id, "Cancelled", status: "cancelled")
+
+    updated = @manager.update(child.id, set: {"status" => "done"})
+
+    assert_equal child.id, updated.id
+    assert_equal "done", updated.status
+    assert_equal "_archive", updated.special_folder
+    assert File.exist?(updated.file_path)
+    assert_equal updated.path, @manager.show(child.id).path
+    assert_equal "done", @manager.show(parent.id).status
+    archived_path = updated.path
+    assert_equal archived_path, @manager.update(child.id, set: {"status" => "done"}).path
+  end
+
+  def test_explicit_parent_archive_refuses_unfinished_descendants_before_fields_change
+    parent = @manager.create("Parent")
+    child = @manager.create_subtask(parent.id, "Complete child", status: "done")
+    grandchild = @manager.create_subtask(child.id, "Blocked grandchild", status: "blocked")
+    before = File.read(parent.file_path)
+
+    updated = @manager.update(parent.id, set: {"status" => "done", "priority" => "high"}, move_to: "archive")
+
+    assert_equal parent.path, updated.path
+    assert_equal before, File.read(parent.file_path)
+    assert_equal "blocked", @manager.show(grandchild.id).status
+    assert_match(/resolve blocked or unfinished subtasks/, @manager.last_update_note)
+  end
+
+  def test_terminal_child_does_not_archive_unresolved_grandchild
+    parent = @manager.create("Parent")
+    child = @manager.create_subtask(parent.id, "First")
+    sibling = @manager.create_subtask(parent.id, "Sibling", status: "done")
+    @manager.create_subtask(sibling.id, "Grandchild", status: "blocked")
+
+    updated = @manager.update(child.id, set: {"status" => "done"})
+
+    assert_equal child.path, updated.path
+    assert_equal "pending", @manager.show(parent.id).status
+    refute_equal "_archive", @manager.show(parent.id).special_folder
+  end
+
   # --- create_subtask ---
 
   def test_create_subtask_allocates_char
@@ -735,7 +801,7 @@ class TaskManagerTest < AceTaskTestCase
     adapter = fake_issue_adapter { |task:, **_| captured << [task.id, task.metadata["issue_sync_pending"]] }
     @manager.stub(:issue_adapter, adapter) do
       parent = @manager.create("Parent")
-      child = @manager.create_subtask(parent.id, "Linked child", remote_issue: issue_identity(9))
+      child = @manager.create_subtask(parent.id, "Linked child", status: "done", remote_issue: issue_identity(9))
       @manager.update(parent.id, move_to: "archive")
       # The relocated child's sync observes the durable pending flag written
       # before the move; verified sync then clears it.
@@ -762,8 +828,8 @@ class TaskManagerTest < AceTaskTestCase
     adapter = fake_issue_adapter { |task:, **_| captured << [task.id, task.metadata["issue_sync_pending"]] }
     @manager.stub(:issue_adapter, adapter) do
       parent = @manager.create("Parent")
-      child = @manager.create_subtask(parent.id, "Child")
-      grandchild = @manager.create_subtask(child.id, "Grandchild", remote_issue: issue_identity(9))
+      child = @manager.create_subtask(parent.id, "Child", status: "done")
+      grandchild = @manager.create_subtask(child.id, "Grandchild", status: "done", remote_issue: issue_identity(9))
       @manager.update(parent.id, move_to: "archive")
       # The linked grandchild beneath the unlinked child is flagged and synced.
       assert_includes captured, [grandchild.id, true]

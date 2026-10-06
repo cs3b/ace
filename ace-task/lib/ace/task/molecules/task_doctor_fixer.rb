@@ -8,6 +8,7 @@ require_relative "../atoms/task_id_formatter"
 require_relative "../atoms/task_validation_rules"
 require_relative "../atoms/task_frontmatter_defaults"
 require_relative "task_scanner"
+require_relative "task_family_completion"
 
 module Ace
   module Task
@@ -218,7 +219,9 @@ module Ace
         end
 
         def fix_archive_status(file_path)
-          update_frontmatter_field(file_path, "status", "done", "Updated status to 'done' (in _archive/)")
+          log_fix(file_path, "Skipped status repair: archive location does not prove task completion")
+          @skipped_count += 1
+          false
         end
 
         def fix_maybe_terminal(file_path)
@@ -456,6 +459,16 @@ module Ace
             description = "Moved parent task to _archive/ (all subtasks terminal)"
           end
 
+          source_spec = find_primary_spec(source_dir)
+          source_frontmatter, = Ace::Support::Items::Atoms::FrontmatterParser.parse(File.read(source_spec))
+          unless TaskFamilyCompletion.new(@root_dir).descendants_terminal?(
+            source_dir, id: source_frontmatter["id"]
+          )
+            log_fix(source_dir, "Skipped archive move: descendants are not all terminal")
+            @skipped_count += 1
+            return false
+          end
+
           if @dry_run
             log_fix(source_dir, "Would #{description.downcase}")
             @fixed_count += 1
@@ -493,16 +506,7 @@ module Ace
         end
 
         def all_siblings_terminal?(parent_dir, parent_id)
-          scanner = TaskScanner.new(@root_dir)
-          subtasks = scanner.scan_subtasks(parent_dir, parent_id: parent_id)
-          return false if subtasks.empty?
-
-          subtasks.all? do |scan_result|
-            content = File.read(scan_result.file_path)
-            frontmatter, _body = Ace::Support::Items::Atoms::FrontmatterParser.parse(content)
-            status = frontmatter.is_a?(Hash) ? frontmatter["status"] : nil
-            Atoms::TaskValidationRules.terminal_status?(status.to_s.downcase)
-          end
+          TaskFamilyCompletion.new(@root_dir).complete?(parent_dir, id: parent_id)
         end
       end
     end
