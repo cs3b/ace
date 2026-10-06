@@ -162,6 +162,30 @@ module Ace
         end
       end
 
+      def test_historical_consumption_uses_original_public_key_and_canonical_prefix_without_native_discovery
+        fixture(child: true) do
+          reconcile
+          commit = @journal.ref_value
+          prefix = events
+          original_key = @key.public_key
+          fingerprint = @registration.fetch("receipt_key_sha256")
+          history = Object.new
+          history.define_singleton_method(:public_key!) do |sha256:|
+            raise AttemptErrors::EvidenceUnavailable, "missing original key" unless sha256 == fingerprint
+            original_key
+          end
+          File.write(@context.fetch("receipt_public_key"), OpenSSL::PKey::RSA.new(1024).public_to_pem)
+          @deployment.define_singleton_method(:verify_inbox_context!) { |*| raise "history must not inspect current key/native paths" }
+          assert @owner.historical_inbox_settlement_complete!(journal: @journal, events: prefix,
+            params: @params, map: @map, commit: commit, deployment: @deployment, history: history)
+          history.define_singleton_method(:public_key!) { |sha256:| OpenSSL::PKey::RSA.new(1024).public_key }
+          assert_raises(AttemptErrors::EvidenceUnavailable) do
+            @owner.historical_inbox_settlement_complete!(journal: @journal, events: prefix,
+              params: @params, map: @map, commit: commit, deployment: @deployment, history: history)
+          end
+        end
+      end
+
       def test_wrong_registration_role_context_signature_and_body_refuse_without_import
         fixture do
           assert_raises(AttemptErrors::Conflict) { reconcile(params: @params.merge("expected_registration" => @registration.merge("payload_sha256" => "a" * 64))) }
@@ -239,6 +263,23 @@ module Ace
             reconcile(params: old_params, parts: [old_bytes, old_signature])
           end
           assert_equal second.fetch(:data), reconcile(id: "claim-two").fetch(:data)
+          original_key = @key.public_key
+          fingerprint = @registration.fetch("receipt_key_sha256")
+          history = Object.new
+          history.define_singleton_method(:public_key!) do |sha256:|
+            raise AttemptErrors::EvidenceUnavailable unless sha256 == fingerprint
+            original_key
+          end
+          assert @owner.historical_inbox_settlement_complete!(journal: @journal, events: events,
+            params: @params, map: @map, commit: @journal.ref_value, deployment: @deployment, history: history)
+          # Earlier superseded claim evidence stays part of authenticated
+          # history; the final consumed claim cannot conceal its corruption.
+          historical_ref = historical.dig("payload", "receipt_ref", "ref")
+          mutate("fixture_corrupt_history", "corrupt-claim-one", 7, {data: {}, blobs: {historical_ref => "corrupt"}, events: []})
+          assert_raises(AttemptErrors::EvidenceUnavailable) do
+            @owner.historical_inbox_settlement_complete!(journal: @journal, events: events,
+              params: @params, map: @map, commit: @journal.ref_value, deployment: @deployment, history: history)
+          end
         end
       end
 

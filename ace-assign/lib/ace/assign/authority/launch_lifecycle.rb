@@ -6,6 +6,7 @@ require "time"
 require "fileutils"
 require "open3"
 require_relative "deployment"
+require_relative "deployment_history"
 require_relative "../molecules/execution_scope_lineage"
 require_relative "execution_scope_observation"
 
@@ -27,8 +28,13 @@ module Ace
         TERMINAL = %w[succeeded failed stopped].freeze
 
         attr_reader :mutex, :journals, :exclusions
-        def initialize(deployment:, kernel: Ace::Runtime::Molecules::ProtectedLinux.new, journals: nil, mutex: Mutex.new, exclusions: {}, scope_observer_factory: nil)
+        def initialize(deployment:, kernel: Ace::Runtime::Molecules::ProtectedLinux.new, journals: nil, mutex: Mutex.new, exclusions: {}, scope_observer_factory: nil, deployment_history: nil)
           @deployment, @kernel = deployment, kernel
+          if deployment_history && (!deployment_history.is_a?(DeploymentHistory) ||
+              !deployment_history.selects?(deployment))
+            raise ArgumentError, "protected history transaction does not select installed descriptor"
+          end
+          @deployment_history = deployment_history
           @journals = journals || {}
           @exclusions = exclusions
           @mutex = mutex
@@ -311,6 +317,15 @@ module Ace
 
         private
 
+        def protected_descriptor_sha256!
+          reference = @deployment.artifact_reference
+          unless reference.is_a?(Hash) && reference["sha256"].is_a?(String) &&
+              Molecules::ExecutionScopeLineage::DIGEST.match?(reference["sha256"])
+            raise AttemptErrors::EvidenceUnavailable, "selected deployment has no protected whole-descriptor provenance"
+          end
+          reference.fetch("sha256")
+        end
+
         def scope_observer_for(mapping_id)
           @scope_observers[mapping_id] ||= @scope_observer_factory.call(mapping_id)
         end
@@ -479,6 +494,7 @@ module Ace
             "launcher_identity" => peer, "launch_ticket" => ticket}
           provisioning = {"slot_id" => map.fetch("execution_scope").fetch("slot_id"),
             "deployment_digest" => Digest::SHA256.hexdigest(JSON.generate(canonical(map))),
+            "descriptor_sha256" => protected_descriptor_sha256!,
             "reservation_generation" => generation + 1}
           {events: [{type: "intent", payload: payload}, {type: "scope_provisioning", payload: provisioning}], blobs: {}, data: payload.merge(
             "attempt_id" => attempt_id, "phase" => "reserved", "mapping_id" => params.fetch("mapping_id"),
@@ -486,6 +502,17 @@ module Ace
         end
 
         def ensure_slot_available!(map, journal, commit: journal.ref_value)
+          if @deployment_history
+            protected = maintenance_journal_for(@deployment, map)
+            unless protected.ref_value == commit
+              raise AttemptErrors::Conflict, "historical admission canonical ref changed"
+            end
+            return with_maintenance_inbox_inventory(@deployment_history.candidate) do
+              maintenance_slot_lineages!(nil, protected, commit, selected_context: [@deployment, map])
+              raise AttemptErrors::Conflict, "historical admission canonical ref changed" unless protected.ref_value == commit
+              true
+            end
+          end
           slot = map.fetch("execution_scope").fetch("slot_id")
           journal.assignment_ids(commit: commit).each do |assignment_id|
             journal.read_events(assignment_id, commit: commit).group_by { |event| event.fetch("attempt_id") }.each do |attempt_id, chain|
@@ -503,10 +530,14 @@ module Ace
                 raise AttemptErrors::EvidenceUnavailable, "canonical slot provisioning identity is incomplete"
               end
               owner = provisioning.first.fetch("payload")
-              unless owner.is_a?(Hash) && owner.keys.sort == %w[deployment_digest reservation_generation slot_id] &&
+              unless owner.is_a?(Hash) && owner.keys.sort == %w[deployment_digest descriptor_sha256 reservation_generation slot_id] &&
                   owner["reservation_generation"] == reservation.fetch("reservation_generation") &&
+                  owner["descriptor_sha256"].is_a?(String) && Molecules::ExecutionScopeLineage::DIGEST.match?(owner["descriptor_sha256"]) &&
                   owner["deployment_digest"].is_a?(String) && Molecules::ExecutionScopeLineage::DIGEST.match?(owner["deployment_digest"])
                 raise AttemptErrors::EvidenceUnavailable, "canonical slot provisioning identity differs"
+              end
+              unless owner.fetch("descriptor_sha256") == protected_descriptor_sha256!
+                raise AttemptErrors::EvidenceUnavailable, "historical descriptor requires authenticated maintenance before normal slot reuse"
               end
               prior_map = @deployment.mapping(reservation.fetch("mapping_id"))
               unless prior_map.fetch("execution_scope").fetch("slot_id") == owner.fetch("slot_id") &&

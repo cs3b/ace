@@ -6,6 +6,7 @@ require "time"
 require "securerandom"
 require "openssl"
 require "ace/hitl/contract"
+require_relative "../molecules/inbox_receipt_authentication"
 
 module Ace
   module Herdr
@@ -49,32 +50,109 @@ module Ace
         # Unreadable unattributable records cannot be treated as another attempt.
         def self.retained_events(deliveries_dir:, attempt:)
           raise ValidationError, "invalid attempt id" unless attempt.is_a?(String) && EVENT.match?(attempt)
-          ids = [deliveries_dir, Molecules::DeliveryRecordStore.archive_dir(deliveries_dir)].flat_map do |dir|
-            next [] unless Dir.exist?(dir)
-            Dir.children(dir).filter_map { |name| name.delete_suffix(".json") if name.end_with?(".json") }
-          end.uniq
-          ids.select do |event|
-            raise ValidationError, "retained inbox event id is invalid" unless EVENT.match?(event)
-            Molecules::DeliveryRecordStore.with_lock(deliveries_dir, event, create: false) do
-              paths = [Molecules::DeliveryRecordStore.path_for(deliveries_dir, event),
-                Molecules::DeliveryRecordStore.path_for(Molecules::DeliveryRecordStore.archive_dir(deliveries_dir), event)]
-              copies = paths.filter_map do |path|
-                next unless File.exist?(path)
-                record = Models::DeliveryRecord.from_json(File.read(path))
-                unless record.event_id == event && record.inbox && record.inbox.fetch("attempt_id").is_a?(String)
-                  raise ValidationError, "retained inbox event is unavailable"
-                end
-                record.to_h
-              end
-              # Identical retained copies describe one event. Never let live
-              # precedence hide a corrupt or conflicting archived copy.
-              if copies.empty? || copies.uniq.length != 1
-                raise ValidationError, "retained inbox copies conflict"
-              end
-              copies.first.fetch("inbox").fetch("attempt_id") == attempt
+          retained_records(deliveries_dir: deliveries_dir).filter_map do |record|
+            record.event_id if record.inbox.fetch("attempt_id") == attempt
+          end
+        end
+
+        # The same existing per-event locks remain held through the consumer's
+        # complete validation and retirement transaction, not just enumeration.
+        def self.with_retained_records(deliveries_dir:, &block)
+          stat = File.lstat(deliveries_dir)
+          raise ValidationError, "retained inbox directory is unsafe" unless stat.directory? && !stat.symlink?
+          # An empty retained store needs the coordination lock too. Creating
+          # only this lock never creates a missing context or a delivery record.
+          Molecules::DeliveryRecordStore.with_inventory_lock(deliveries_dir, exclusive: true, create: true, prepare_directory: false) do
+            with_retained_records_held(deliveries_dir: deliveries_dir, &block)
+          end
+        rescue SystemCallError
+          raise ValidationError, "retained inbox inventory is unavailable"
+        end
+
+        def self.with_retained_records_held(deliveries_dir:, &block)
+          raise ArgumentError, "retained inbox block is required" unless block
+          roots = [deliveries_dir, Molecules::DeliveryRecordStore.archive_dir(deliveries_dir)]
+          names = lambda do
+            roots.flat_map do |dir|
+              next [] if dir != deliveries_dir && !File.exist?(dir) && !File.symlink?(dir)
+              stat = File.lstat(dir)
+              raise ValidationError, "retained inbox directory is unsafe" unless stat.directory? && !stat.symlink?
+              Dir.children(dir).filter_map { |name| name.delete_suffix(".json") if name.end_with?(".json") }
+            end.uniq.sort
+          end
+          ids = names.call
+          raise ValidationError, "retained inbox inventory exceeds bounds" if ids.size > 100_000
+          held = Thread.current[:ace_herdr_retained_inventory_locks] ||= {}
+          raise ValidationError, "retained inbox inventory already held" if held.key?(deliveries_dir)
+          raise ValidationError, "retained inbox event id is invalid" unless ids.all? { |event| EVENT.match?(event) }
+          Molecules::DeliveryRecordStore.with_locks(deliveries_dir, ids, create: false) do
+            raise ValidationError, "retained inbox inventory changed" unless names.call == ids
+            held[deliveries_dir] = ids.freeze
+            begin
+              result = block.call(retained_records(deliveries_dir: deliveries_dir))
+              raise ValidationError, "retained inbox inventory changed" unless names.call == ids
+              result
+            ensure
+              held.delete(deliveries_dir)
             end
           end
-        rescue SystemCallError, JSON::ParserError, ArgumentError, KeyError
+        rescue SystemCallError, JSON::ParserError, ArgumentError, KeyError, TypeError
+          raise ValidationError, "retained inbox inventory is unavailable"
+        end
+        private_class_method :with_retained_records_held
+
+        # Exhaustive live and archived inventory: no attempt filter may hide an
+        # unknown record, and live precedence cannot hide conflicting copies.
+        def self.retained_records(deliveries_dir:)
+          directories = [deliveries_dir, Molecules::DeliveryRecordStore.archive_dir(deliveries_dir)]
+          inventory = lambda do
+            directories.flat_map do |dir|
+              next [] if dir != deliveries_dir && !File.exist?(dir) && !File.symlink?(dir)
+              stat = File.lstat(dir)
+              raise ValidationError, "retained inbox directory is unsafe" unless stat.directory? && !stat.symlink?
+              Dir.children(dir).filter_map { |name| name.delete_suffix(".json") if name.end_with?(".json") }
+            end.uniq.sort
+          end
+          ids = inventory.call
+          raise ValidationError, "retained inbox inventory exceeds bounds" if ids.size > 100_000
+          records = ids.map do |event|
+            raise ValidationError, "retained inbox event id is invalid" unless EVENT.match?(event)
+            read_record = lambda do
+              copies = directories.filter_map do |dir|
+                path = Molecules::DeliveryRecordStore.path_for(dir, event)
+                next unless File.exist?(path) || File.symlink?(path)
+                before = File.lstat(path)
+                raise ValidationError, "retained inbox record is unsafe" unless before.file? && !before.symlink? && before.size.between?(1, 1_048_576)
+                File.open(path, File::RDONLY | File::NOFOLLOW | File::NONBLOCK) do |handle|
+                  snapshot = ->(stat) { [stat.dev, stat.ino, stat.size, stat.mtime, stat.ctime] }
+                  raise ValidationError, "retained inbox record changed" unless snapshot.call(before) == snapshot.call(handle.stat)
+                  bytes = handle.read(before.size + 1)
+                  raise ValidationError, "retained inbox record changed" unless bytes.bytesize == before.size &&
+                    snapshot.call(before) == snapshot.call(handle.stat) && snapshot.call(before) == snapshot.call(File.lstat(path))
+                  value = JSON.parse(bytes.dup.force_encoding(Encoding::UTF_8), create_additions: false,
+                    max_nesting: 32, allow_duplicate_key: false, allow_comments: false)
+                  record = Models::DeliveryRecord.from_h(value)
+                  unless record.event_id == event && record.inbox && record.inbox.fetch("attempt_id").is_a?(String) &&
+                      EVENT.match?(record.inbox.fetch("attempt_id"))
+                    raise ValidationError, "retained inbox event is unavailable"
+                  end
+                  record
+                end
+              end
+              if copies.empty? || copies.map(&:to_h).uniq.length != 1
+                raise ValidationError, "retained inbox copies conflict"
+              end
+              copies.first
+            end
+            if Thread.current[:ace_herdr_retained_inventory_locks]&.dig(deliveries_dir)&.include?(event)
+              read_record.call
+            else
+              Molecules::DeliveryRecordStore.with_lock(deliveries_dir, event, create: false, &read_record)
+            end
+          end
+          raise ValidationError, "retained inbox inventory changed" unless inventory.call == ids
+          records.freeze
+        rescue SystemCallError, JSON::ParserError, ArgumentError, KeyError, TypeError
           raise ValidationError, "retained inbox inventory is unavailable"
         end
 
@@ -398,39 +476,13 @@ module Ace
         end
 
         def signature_refusal(record, receipt, signed_bytes, signature)
-          return "trusted receipt public key is unavailable" unless @receipt_public_key
-          unless record.inbox["receipt_key_sha256"] == key_fingerprint
-            return "trusted receipt public key differs from the enqueued event"
-          end
-          return "receipt signature is missing" unless signed_bytes.is_a?(String) && signature.is_a?(String)
-          return "signed receipt content differs from parsed receipt" unless JSON.parse(signed_bytes) == receipt
-          return "receipt signature is invalid" unless @receipt_public_key.verify(
-            OpenSSL::Digest::SHA256.new, signature, signed_bytes)
-
-          nil
-        rescue JSON::ParserError, OpenSSL::PKey::PKeyError
-          "receipt signature is invalid"
+          Molecules::InboxReceiptAuthentication.signature_refusal(key: @receipt_public_key,
+            key_sha256: record.inbox["receipt_key_sha256"], receipt: receipt,
+            signed_bytes: signed_bytes, signature: signature)
         end
 
-        # The receipt is an explicit operator or supervisor attestation of a
-        # native outcome. Native queue submission alone cannot prove consumption
-        # or nonconsumption; an absent or incomplete attestation is never retried.
         def proof_refusal(receipt)
-          return "invalid reconciliation outcome" unless %w[consumed superseded].include?(receipt["outcome"])
-          observer = receipt["observer"]
-          unless observer.is_a?(Hash) && %w[operator supervisor].include?(observer["role"]) &&
-              observer["id"].is_a?(String) && !observer["id"].strip.empty?
-            return "receipt requires an identified operator or supervisor"
-          end
-          evidence = receipt["evidence"]
-          kinds = receipt["outcome"] == "consumed" ? %w[consumed_acknowledged] :
-            %w[queue_evicted queue_expired thread_replaced]
-          unless evidence.is_a?(Hash) && kinds.include?(evidence["kind"]) &&
-              evidence["native_reference"].is_a?(String) && !evidence["native_reference"].strip.empty? &&
-              evidence["observation"].is_a?(String) && !evidence["observation"].strip.empty?
-            return "receipt requires a native outcome observation and reference"
-          end
-          nil
+          Molecules::InboxReceiptAuthentication.proof_refusal(receipt)
         end
 
         def with_event(event, create_lock: true)

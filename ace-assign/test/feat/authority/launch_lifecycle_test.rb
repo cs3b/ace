@@ -81,6 +81,7 @@ module Ace
             "execution_scope" => {"slot_id" => "slot", "service_unit" => "ace-slot.service", "network_namespace_path" => "/run/netns/slot"},
             "worker_groups" => [13001], "bootstrap" => "/usr/libexec/ace-worker-gate", "bootstrap_sha256" => "a" * 64, "worker_cwd" => "/home/worker", "worker_actor" => "worker", "native" => {"workspace_id" => "w1"}}
           deployment = Object.new
+          deployment.define_singleton_method(:artifact_reference) { {"sha256" => "d" * 64} }
           mapping = @map
           deployment.define_singleton_method(:mapping) { |_id| mapping }
           deployment.define_singleton_method(:authority) { |_id| {"state_root" => File.join(cache, "authority-state")} }

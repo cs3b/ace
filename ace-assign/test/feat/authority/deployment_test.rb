@@ -1,8 +1,10 @@
 # frozen_string_literal: true
 require_relative "../../test_helper"
 require "ace/assign/authority/deployment"
+require "ace/assign/authority/deployment_history"
 require "ace/assign/authority/server"
 require "timeout"
+require_relative "../../support/execution_scope_observation_fixtures"
 
 module Ace
   module Assign
@@ -18,6 +20,261 @@ module Ace
           @bytes
         end
         def verify_unchanged!; @checked = true; end
+      end
+
+      class FixtureProtection
+        def root_path!(_path); true; end
+        def verify!(_path, handle, directory:)
+          raise "unexpected fixture type" unless directory ? handle.stat.directory? : handle.stat.file?
+        end
+      end
+
+      class MaintenanceKernel
+        Handle = Struct.new(:identity) { def close; end }
+        def capture(pid)
+          {"pid" => pid, "uid" => 13002, "gid" => 13002, "groups" => [13002],
+            "started_at" => "linux:#{ExecutionScopeObservationFixtures::BOOT}:#{pid}", "host" => "fixture", "parent_pid" => 1}
+        end
+        def live!(_identity); true; end
+        def pin(identity); Handle.new(identity); end
+        def same?(left, right); left == right; end
+      end
+
+      class MaintenanceScopeOwner
+        attr_reader :retirements, :checks
+        def initialize(map)
+          @map, @retirements, @checks = map, 0, 0
+        end
+        def activate_parent!(context)
+          canonical = lambda do |value|
+            case value
+            when Hash then value.keys.sort.to_h { |key| [key, canonical.call(value[key])] }
+            when Array then value.map { |item| canonical.call(item) }
+            else value
+            end
+          end
+          context.merge("slot_id" => @map.fetch("execution_scope").fetch("slot_id"),
+            "deployment_digest" => Digest::SHA256.hexdigest(JSON.generate(canonical.call(@map))),
+            "boot_id" => ExecutionScopeObservationFixtures::BOOT, "slice_invocation_id" => "b" * 32,
+            "resource_mount_namespace_identity" => {"device" => 4, "inode" => 11}, "resource_identities" => [],
+            "network_namespace_identity" => {"device" => 7, "inode" => 88},
+            "network_installation_selection" => ExecutionScopeObservationFixtures::NETWORK_SELECTION,
+            "cgroup_identity" => {"path" => "/sys/fs/cgroup/#{@map.fetch('execution_scope').fetch('slice_unit')}", "mount_id" => 4,
+              "filesystem_type" => "cgroup2", "device" => 5, "inode" => @map.fetch("worker_uid")})
+        end
+        def observe(_lineage); {"populated" => 0}; end
+        def native_admission_ready!(_lineage)
+          raise AttemptErrors::EvidenceUnavailable, "controlled fixture stops before native admission"
+        end
+        def stop_sealed_service!; true; end
+        def sealed_service_stop_required?(_lineage); false; end
+        def closed_observation_for_proof!(lineage, events:)
+          lineage.binding.slice("scope_generation", "boot_id", "slice_invocation_id", "cgroup_identity").merge(
+            "scope_binding_event_id" => lineage.binding_event.fetch("digest"), "seal_event_id" => lineage.seal_event.fetch("digest"), "populated" => 0)
+        end
+        def verify_closed!(lineage)
+          raise AttemptErrors::EvidenceUnavailable, "missing canonical closed proof" unless lineage.proof_id
+          lineage.require_positive!(scope_generation: lineage.binding.fetch("scope_generation"),
+            scope_binding_event_id: lineage.binding_event.fetch("digest"), seal_event_id: lineage.seal_event.fetch("digest"), proof_id: lineage.proof_id)
+          true
+        end
+        def verify_maintenance_closed!(lineages)
+          @checks += 1
+          lineages.each { |lineage| verify_closed!(lineage) }
+          true
+        end
+        def retire_released_parent!(lineages)
+          verify_maintenance_closed!(lineages)
+          @retirements += 1
+          {"state" => "retired"}
+        end
+      end
+
+      def test_original_release_maintenance_candidate_publication_and_fresh_normal_reservation
+        Dir.mktmpdir do |root|
+          root = File.realpath(root)
+          value = data
+          untouched = JSON.parse(JSON.generate(value.fetch("launch_mappings").fetch("mapping")))
+          untouched.merge!("worker_uid" => 13006, "worker_gid" => 13006, "worker_groups" => [13006], "worker_actor" => "untouched-worker")
+          untouched.fetch("execution_scope").merge!("slot_id" => "untouched", "slice_unit" => "ace-untouched.slice",
+            "service_unit" => "ace-untouched.service", "root_directory" => "/var/lib/ace-untouched/root",
+            "runtime_directory" => "/run/ace-untouched", "network_namespace_path" => "/run/netns/ace-untouched")
+          untouched.fetch("native").merge!("workspace_id" => "w2", "socket_path" => "/run/herdr-untouched/control.sock")
+          value.fetch("launch_mappings")["untouched"] = untouched
+          value.dig("projects", "project", "worker_uids") << 13006
+          value.dig("projects", "project", "peer_credentials")["13006"] = {"gid" => 13006, "groups" => [13006], "scratch_root" => "/var/lib/ace-untouched-worker"}
+          value["authorities"]["authority"]["state_root"] = File.join(root, "state")
+          project = value["projects"]["project"]
+          %w[journal_repository evidence_checkout_root assignment_root candidate_root].each do |field|
+            project[field] = File.join(root, field)
+            FileUtils.mkdir_p(project[field], mode: 0o700)
+          end
+          FileUtils.mkdir_p(value["authorities"]["authority"]["state_root"], mode: 0o700)
+          repo = project.fetch("journal_repository")
+          _out, error, status = Open3.capture3("git", "init", "-b", "main", repo)
+          assert status.success?, error
+          _out, error, status = Open3.capture3("git", "-C", repo, "-c", "user.name=test", "-c", "user.email=test@fixture.invalid", "commit", "--allow-empty", "-m", "fixture")
+          assert status.success?, error
+          ref = lambda do |name, bytes|
+            path = File.join(root, name); File.binwrite(path, bytes)
+            {"path" => path, "sha256" => Digest::SHA256.hexdigest(bytes), "bytes" => bytes.bytesize}
+          end
+          original_ref = ref.call("original.json", JSON.generate(value))
+          changed = JSON.parse(JSON.generate(value))
+          changed["launch_mappings"]["mapping"]["worker_actor"] = "rotated-worker"
+          candidate_ref = ref.call("candidate.json", JSON.generate(changed))
+          manifest_ref = ref.call("history.json", JSON.generate("schema" => "ace.assign.deployment-history/v1",
+            "original_descriptor" => original_ref, "candidate_descriptor" => candidate_ref,
+            "descriptors" => [original_ref, candidate_ref], "public_keys" => []))
+          published = File.join(root, "published.json")
+          File.binwrite(published, File.binread(original_ref.fetch("path")))
+          selections = {Authority::Deployment::PATH => published, Authority::DeploymentHistory::PATH => manifest_ref.fetch("path")}
+          factory = lambda do
+            reader = Ace::Runtime::Molecules::ProtectedArtifactSet.allocate
+            reader.send(:initialize, protection: FixtureProtection.new)
+            held_read = reader.method(:read_path!)
+            reader.define_singleton_method(:read_path!) do |path, limit:|
+              bytes, selected = held_read.call(selections.fetch(path), limit: limit)
+              [bytes, selected.merge("path" => path.dup.freeze).freeze]
+            end
+            reader
+          end
+          history, original = Ace::Runtime::Molecules::ProtectedArtifactSet.stub(:new, factory) do
+            [Authority::DeploymentHistory.load, Authority::Deployment.load]
+          end
+          candidate = history.candidate
+          assert_equal Authority::Deployment::PATH, original.artifact_reference.fetch("path")
+          refute_equal original.artifact_reference.fetch("path"), history.original.artifact_reference.fetch("path")
+          kernel = MaintenanceKernel.new
+          peer = kernel.capture(Process.pid)
+          journal = Molecules::EvidenceJournal.new(repo_root: repo, ref: project.fetch("evidence_git_ref"), checkout_root: project.fetch("evidence_checkout_root"),
+            mode: :protected, evidence_reader: ->(*) { raise "no service evidence expected" }, service_authorizer: ->(*) { raise "no service mutation expected" })
+          observer = MaintenanceScopeOwner.new(original.mapping("mapping"))
+          untouched_observer = MaintenanceScopeOwner.new(original.mapping("untouched"))
+          observers = {"mapping" => observer, "untouched" => untouched_observer}
+          owner = Authority::LaunchLifecycle.new(deployment: original, deployment_history: history, kernel: kernel,
+            journals: {"project" => journal}, scope_observer_factory: ->(id) { observers.fetch(id) })
+          dispatch = lambda do |authority, operation, params, mutation|
+            authority.dispatch(request: {"version" => 1, "operation" => operation, "mutation_id" => mutation,
+              "project_id" => "project", "params" => params.merge("mapping_id" => params.fetch("mapping_id", "mapping"), "assignment_id" => params.fetch("assignment_id", "assignment"))}, peer: peer, role: :launcher)
+          end
+          bytes = JSON.generate("session_id" => "assignment", "name" => "fixture", "created_at" => "2026-10-05T00:00:00Z",
+            "source_config" => "job.yaml", "task_id" => "09j", "project_id" => "project")
+          registered = dispatch.call(owner, "register_assignment", {"definition_bytes" => bytes, "definition_digest" => Digest::SHA256.hexdigest(bytes), "expected_generation" => 0}, "register").fetch(:data)
+          reserve = {"scope" => "010", "worker_uid" => 13001, "runtime" => "herdr", "base_head" => "a" * 40,
+            "launcher_process_binding" => peer, "expected_generation" => registered.fetch("definition_generation")}
+          state = dispatch.call(owner, "reserve_attempt", reserve, "reserve-old").fetch(:data)
+          generation = -> { journal.authority_generation(journal.read_events("assignment").select { |event| event["attempt_id"] == state.fetch("attempt_id") }) }
+          close_params = state.slice("attempt_id").merge("mapping_id" => "mapping", "assignment_id" => "assignment")
+          owner.close_execution_scope!(params: close_params.merge("mutation_id" => "seal", "expected_generation" => generation.call), peer: peer, role: :launcher)
+          closed = owner.close_execution_scope!(params: close_params.merge("mutation_id" => "proof", "expected_generation" => generation.call), peer: peer, role: :launcher)
+          events = journal.read_events("assignment").select { |event| event["attempt_id"] == state.fetch("attempt_id") }
+          lineage = Molecules::ExecutionScopeLineage.new(events: events, project_id: "project", assignment_id: "assignment", attempt_id: state.fetch("attempt_id"), mapping_id: "mapping")
+          failure = JSON.generate("kind" => "protected_scope_before_release", "scope_generation" => lineage.binding.fetch("scope_generation"),
+            "scope_binding_event_id" => lineage.binding_event.fetch("digest"), "seal_event_id" => lineage.seal_event.fetch("digest"), "proof_id" => closed.dig(:data, "proof_id"))
+          dispatch.call(owner, "abort_launch", state.slice("attempt_id", "launch_ticket").merge("expected_generation" => generation.call,
+            "failure_evidence" => failure, "failure_digest" => Digest::SHA256.hexdigest(failure)), "abort-old")
+          assert journal.read_events("assignment").any? { |event| event.dig("payload", "operation") == "scope_reservation_release" }
+          other_bytes = JSON.generate(JSON.parse(bytes).merge("session_id" => "assignment-b"))
+          other_registered = dispatch.call(owner, "register_assignment", {"mapping_id" => "untouched", "assignment_id" => "assignment-b",
+            "definition_bytes" => other_bytes, "definition_digest" => Digest::SHA256.hexdigest(other_bytes), "expected_generation" => 0}, "register-untouched")
+          active = dispatch.call(owner, "reserve_attempt", reserve.merge("mapping_id" => "untouched", "assignment_id" => "assignment-b", "scope" => "020", "worker_uid" => 13006,
+            "expected_generation" => other_registered.dig(:data, "definition_generation")), "reserve-untouched")
+          assert_equal "reserved", active.dig(:data, "phase")
+          owner.define_singleton_method(:verify_maintenance_root!) { |*| true }
+          prior_retirements = observer.retirements
+          # One selected unreleased root prevents every retirement. An active
+          # untouched slot is attributable and does not block slot A alone.
+          owner.with_execution_slots(mapping_ids: %w[mapping untouched], candidate_deployment: candidate) do |contexts|
+            assert_raises(AttemptErrors::EvidenceUnavailable) { owner.retire_released_parent!(**contexts.first) }
+            assert_equal prior_retirements, observer.retirements
+          end
+          owner.with_execution_slots(mapping_ids: ["mapping"], candidate_deployment: candidate) do |contexts|
+            assert owner.slot_reusable!(**contexts.first)
+            assert_equal "retired", owner.retire_released_parent!(**contexts.first).fetch("state")
+          end
+          assert_equal prior_retirements + 1, observer.retirements
+          File.binwrite(published, File.binread(candidate_ref.fetch("path")))
+          fresh_history, published_candidate = Ace::Runtime::Molecules::ProtectedArtifactSet.stub(:new, factory) do
+            [Authority::DeploymentHistory.load, Authority::Deployment.load]
+          end
+          assert_equal Authority::Deployment::PATH, published_candidate.artifact_reference.fetch("path")
+          assert_equal candidate_ref.fetch("sha256"), published_candidate.artifact_reference.fetch("sha256")
+          fresh_observer = MaintenanceScopeOwner.new(published_candidate.mapping("mapping"))
+          fresh = Authority::LaunchLifecycle.new(deployment: published_candidate, deployment_history: fresh_history, kernel: kernel,
+            journals: {"project" => journal}, scope_observer_factory: ->(_) { fresh_observer })
+          # Publication selects the immutable candidate; old canonical proofs
+          # remain byte-identical and a genuinely eligible slot can be reused.
+          before = journal.read_events("assignment")
+          result = dispatch.call(fresh, "reserve_attempt", reserve, "reserve-new")
+          assert_equal "reserved", result.dig(:data, "phase")
+          old_events = journal.read_events("assignment").select { |event| event["attempt_id"] == state.fetch("attempt_id") }
+          assert_equal before.select { |event| event["attempt_id"] == state.fetch("attempt_id") }, old_events
+          provisioning = journal.read_events("assignment").find { |event| event["type"] == "scope_provisioning" && event["attempt_id"] == result.dig(:data, "attempt_id") }
+          assert_equal candidate_ref.fetch("sha256"), provisioning.dig("payload", "descriptor_sha256")
+        ensure
+          owner&.close
+          fresh&.close
+        end
+      end
+
+      def test_history_selects_exact_retained_descriptor_and_original_public_key
+        Dir.mktmpdir do |root|
+          root = File.realpath(root)
+          reference = lambda do |name, bytes|
+            path = File.join(root, name)
+            File.binwrite(path, bytes)
+            {"path" => path, "sha256" => Digest::SHA256.hexdigest(bytes), "bytes" => bytes.bytesize}
+          end
+          original_ref = reference.call("original.json", JSON.generate(data))
+          proposed = data
+          proposed["launch_mappings"]["mapping"]["worker_actor"] = "replacement"
+          candidate_ref = reference.call("candidate.json", JSON.generate(proposed))
+          key = OpenSSL::PKey::RSA.new(2048)
+          key_ref = reference.call("old-public.pem", key.public_key.to_pem)
+          fingerprint = Digest::SHA256.hexdigest(key.public_key.to_der)
+          manifest = {"schema" => "ace.assign.deployment-history/v1", "original_descriptor" => original_ref,
+            "candidate_descriptor" => candidate_ref, "descriptors" => [original_ref, candidate_ref],
+            "public_keys" => [{"ref" => key_ref, "public_key_sha256" => fingerprint}]}
+          factory = -> { Ace::Runtime::Molecules::ProtectedArtifactSet.allocate.tap do |reader|
+            reader.send(:initialize, protection: FixtureProtection.new)
+          end }
+          manifest_ref = reference.call("history.json", JSON.generate(manifest))
+          Ace::Runtime::Molecules::ProtectedArtifactSet.stub(:new, factory) do
+            history = Authority::DeploymentHistory.load_artifact(manifest_ref)
+            assert history.frozen?
+            assert_equal "worker", history.original.mapping("mapping").fetch("worker_actor")
+            assert_equal "replacement", history.candidate.mapping("mapping").fetch("worker_actor")
+            assert_same history.original, history.descriptor!(sha256: original_ref.fetch("sha256"))
+            assert_equal key.public_key.to_der, history.public_key!(sha256: fingerprint).to_der
+            assert_raises(AttemptErrors::EvidenceUnavailable) { history.public_key!(sha256: "f" * 64) }
+            manifest["descriptors"] << original_ref
+            duplicate_ref = reference.call("duplicate-history.json", JSON.generate(manifest))
+            assert_raises(ArgumentError) { Authority::DeploymentHistory.load_artifact(duplicate_ref) }
+            manifest["descriptors"].pop
+            private_ref = reference.call("private.pem", key.to_pem)
+            manifest["public_keys"].first["ref"] = private_ref
+            private_manifest = reference.call("private-history.json", JSON.generate(manifest))
+            assert_raises(ArgumentError) { Authority::DeploymentHistory.load_artifact(private_manifest) }
+            File.binwrite(key_ref.fetch("path"), key.to_pem)
+            assert_raises(Ace::Runtime::RuntimeUnavailableError) { Authority::DeploymentHistory.load_artifact(manifest_ref) }
+          end
+        end
+      end
+
+      def test_fixed_deployment_load_retains_same_held_byte_provenance
+        artifacts = DescriptorArtifacts.new(JSON.generate(data))
+        artifacts.define_singleton_method(:read_path!) do |path, limit:|
+          raise "wrong bound" unless limit == 65_536
+          [@bytes, {"path" => path, "sha256" => Digest::SHA256.hexdigest(@bytes), "bytes" => @bytes.bytesize}.freeze]
+        end
+        Ace::Runtime::Molecules::ProtectedArtifactSet.stub(:new, artifacts) do
+          loaded = Authority::Deployment.load
+          assert loaded.frozen?
+          assert_equal Authority::Deployment::PATH, loaded.artifact_reference.fetch("path")
+          assert_equal Digest::SHA256.hexdigest(JSON.generate(data)), loaded.artifact_reference.fetch("sha256")
+          assert artifacts.checked
+        end
       end
 
       def authenticated_descriptor(value, bytes: JSON.generate(value))

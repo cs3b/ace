@@ -41,6 +41,12 @@ module Ace
 
         # @return [String] path the record was written to
         def save(record, deliveries_dir)
+          with_inventory_lock(deliveries_dir, exclusive: false, create: true) do
+            save_held(record, deliveries_dir)
+          end
+        end
+
+        def save_held(record, deliveries_dir)
           FileUtils.mkdir_p(deliveries_dir)
           path = path_for(deliveries_dir, record.event_id)
           tmp = "#{path}.tmp.#{Process.pid}"
@@ -57,15 +63,53 @@ module Ace
         # Hold the exclusive per-event lock while delivering; concurrent
         # callers block until the winner finishes, then observe its record.
         def with_lock(deliveries_dir, event_id, create: true)
-          FileUtils.mkdir_p(deliveries_dir) if create
-          flags = create ? "a" : File::RDWR | File::NOFOLLOW
-          File.open(lock_path(deliveries_dir, event_id), flags) do |lock|
-            lock.flock(File::LOCK_EX)
+          with_locks(deliveries_dir, [event_id], create: create) { yield }
+        end
+
+        def with_locks(deliveries_dir, event_ids, create: false)
+          with_inventory_lock(deliveries_dir, exclusive: false, create: create) do
+            with_event_locks_held(deliveries_dir, event_ids, create: create) { yield }
+          end
+        end
+
+        # Global inventory always precedes event locks. Normal creators/writers
+        # share it; maintenance exclusively holds it through its entire mutation
+        # boundary. Reentrancy never upgrades a writer's shared lock.
+        def with_inventory_lock(deliveries_dir, exclusive:, create: false, prepare_directory: true)
+          held = Thread.current[:ace_herdr_delivery_inventory_locks] ||= {}
+          if (existing = held[deliveries_dir])
+            raise ArgumentError, "delivery inventory lock cannot be upgraded" if exclusive && existing != :exclusive
+            return yield
+          end
+          FileUtils.mkdir_p(deliveries_dir) if create && prepare_directory
+          flags = File::RDWR | File::NOFOLLOW | (create ? File::CREAT : 0)
+          File.open(File.join(deliveries_dir, ".inventory.lock"), flags, 0o600) do |lock|
+            raise ArgumentError, "delivery inventory lock is not a regular file" unless lock.stat.file?
+            lock.flock(exclusive ? File::LOCK_EX : File::LOCK_SH)
+            held[deliveries_dir] = exclusive ? :exclusive : :shared
             begin
-              return yield
+              yield
             ensure
+              held.delete(deliveries_dir)
               lock.flock(File::LOCK_UN)
             end
+          end
+        end
+
+        def with_event_locks_held(deliveries_dir, event_ids, create: false)
+          FileUtils.mkdir_p(deliveries_dir) if create
+          flags = create ? "a" : File::RDWR | File::NOFOLLOW
+          handles = []
+          event_ids.sort.each do |event_id|
+            lock = File.open(lock_path(deliveries_dir, event_id), flags)
+            handles << lock
+            lock.flock(File::LOCK_EX)
+          end
+          yield
+        ensure
+          handles&.reverse_each do |lock|
+            lock.flock(File::LOCK_UN)
+            lock.close
           end
         end
 
@@ -116,6 +160,12 @@ module Ace
         # archived event just reports its archive path.
         # @return [String] the archive path the record lives at
         def archive(deliveries_dir, event_id)
+          with_inventory_lock(deliveries_dir, exclusive: false, create: true) do
+            archive_held(deliveries_dir, event_id)
+          end
+        end
+
+        def archive_held(deliveries_dir, event_id)
           dest = File.join(archive_dir(deliveries_dir), "#{event_id}.json")
           return dest if !File.exist?(path_for(deliveries_dir, event_id)) && File.exist?(dest)
 
@@ -148,6 +198,7 @@ module Ace
         rescue JSON::ParserError, ArgumentError
           nil
         end
+        private_class_method :save_held, :archive_held, :with_event_locks_held
       end
     end
   end

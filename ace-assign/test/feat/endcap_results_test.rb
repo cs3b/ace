@@ -71,6 +71,7 @@ module Ace
           end
           map, project, service = @map, @project, @service
           @deployment = Object.new
+          @deployment.define_singleton_method(:artifact_reference) { {"sha256" => "d" * 64} }
           @deployment.define_singleton_method(:mapping) { |_id| map }
           @deployment.define_singleton_method(:project) { |_id| project }
           @deployment.define_singleton_method(:authority) { |_id| service }

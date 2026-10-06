@@ -54,7 +54,9 @@ module Ace
           policy = Molecules::ProtectedServicePolicy.new(proposal_resolver: ->(project, reference, binding) {
             journals.fetch(project).proposal_authorize!(reference, binding)
           })
-          launch = Ace::Assign::Authority::LaunchLifecycle.new(deployment: @deployment, kernel: @kernel, journals: journals)
+          history = Ace::Assign::Authority::DeploymentHistory.load
+          launch = Ace::Assign::Authority::LaunchLifecycle.new(deployment: @deployment, deployment_history: history,
+            kernel: @kernel, journals: journals)
           endcap = Ace::Assign::Authority::Endcap.new(deployment: @deployment, launch: launch, kernel: @kernel, service_policy: policy)
           router = Ace::Assign::Authority::Router.new(launch: launch, handlers: [endcap])
           Ace::Assign::Authority::Server.new(authority_id: @authority_id, deployment: @deployment, kernel: @kernel,

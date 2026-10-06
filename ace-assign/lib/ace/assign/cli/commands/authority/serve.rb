@@ -12,7 +12,8 @@ module Ace
             option :authority, required: true, desc: "Installed authority ID"
             def call(**options)
               deployment = Ace::Assign::Authority::Deployment.load
-              launch = Ace::Assign::Authority::LaunchLifecycle.new(deployment: deployment)
+              history = Ace::Assign::Authority::DeploymentHistory.load
+              launch = Ace::Assign::Authority::LaunchLifecycle.new(deployment: deployment, deployment_history: history)
               router = Ace::Assign::Authority::Router.new(launch: launch)
               server = Ace::Assign::Authority::Server.new(authority_id: options.fetch(:authority), deployment: deployment, lifecycle: router)
               signals = %w[INT TERM].to_h { |signal| [signal, Signal.trap(signal) { server.request_stop }] }

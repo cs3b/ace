@@ -201,6 +201,32 @@ module Ace
           end
         end
 
+        def test_empty_retained_inventory_holds_coordination_without_creating_missing_context
+          Inbox.with_retained_records(deliveries_dir: @dir) do |records|
+            assert_empty records
+            assert_empty Inbox.retained_records(deliveries_dir: @dir)
+          end
+          assert_equal [".inventory.lock"], Dir.children(@dir)
+          missing = File.join(@dir, "missing")
+          assert_raises(ValidationError) { Inbox.with_retained_records(deliveries_dir: missing) {} }
+          refute File.exist?(missing)
+        end
+
+        def test_exhaustive_retention_refuses_symlink_and_conflicting_archive_copy
+          enqueue
+          archive = Molecules::DeliveryRecordStore.archive_dir(@dir)
+          FileUtils.mkdir_p(archive)
+          live = Molecules::DeliveryRecordStore.path_for(@dir, @event)
+          archived = Molecules::DeliveryRecordStore.path_for(archive, @event)
+          File.symlink(live, archived)
+          assert_raises(ValidationError) { Inbox.retained_records(deliveries_dir: @dir) }
+          File.unlink(archived)
+          value = JSON.parse(File.read(live))
+          value["state"] = "completed"
+          File.write(archived, JSON.generate(value))
+          assert_raises(ValidationError) { Inbox.retained_records(deliveries_dir: @dir) }
+        end
+
         def test_expected_original_target_refuses_initial_drift_and_duplicate_conflicts
           origin = original_target
           @executor.pane["agent_session"]["value"] = "9999abcd-0000-4000-8000-000000000009"
