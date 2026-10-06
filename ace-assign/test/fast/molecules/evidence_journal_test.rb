@@ -10,6 +10,18 @@ module Ace
     class EvidenceJournalTest < AceAssignTestCase
       REF = "refs/ace/execution"
 
+      def test_fixed_snapshot_requires_an_actual_readable_commit_object
+        with_temp_cache do |cache_dir|
+          repo = File.join(cache_dir, "repo")
+          commit = init_repo(repo)
+          journal = Molecules::EvidenceJournal.new(repo_root: repo, ref: REF, checkout_root: File.join(cache_dir, "co"))
+          assert journal.verify_commit!(commit)
+          assert_raises(AttemptErrors::EvidenceUnavailable) { journal.verify_commit!(nil) }
+          assert_raises(AttemptErrors::EvidenceUnavailable) { journal.verify_commit!(git(repo, "rev-parse", "HEAD^{tree}").strip) }
+          assert_raises(AttemptErrors::EvidenceUnavailable) { journal.verify_commit!("f" * 40) }
+        end
+      end
+
       def with_temp_cache_dir
         dir = nil
         with_temp_cache { |cache_dir| dir = cache_dir }

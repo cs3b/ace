@@ -370,12 +370,12 @@ module Ace
         # Slot ownership spans assignment chains and survives authority restart
         # in the existing canonical journal. The file lock only serializes a
         # fresh read/CAS or bounded manager action; its contents convey no facts.
-        def with_slot(map)
-          service = @deployment.authority(map.fetch("authority_id"))
+        def with_slot(map, deployment: @deployment)
+          service = deployment.authority(map.fetch("authority_id"))
           scope = map.fetch("execution_scope")
-          exclusion = @slot_exclusions[map.fetch("authority_id")] ||= Molecules::LifecycleExclusion.new(
+          exclusion = @slot_exclusions[service.fetch("state_root")] ||= Molecules::LifecycleExclusion.new(
             root: File.join(service.fetch("state_root"), "execution-slot-exclusion"))
-          key = [object_id, map.fetch("authority_id"), scope.fetch("slot_id")]
+          key = [object_id, service.fetch("state_root"), exclusion.slot_key(scope.fetch("slot_id"))]
           held = Thread.current[:ace_assign_scope_exclusions] ||= {}
           raise AttemptErrors::Conflict, "execution slot exclusion cannot be entered recursively" if held[key]
           exclusion.with_exclusive(exclusion.slot_key(scope.fetch("slot_id"))) do
