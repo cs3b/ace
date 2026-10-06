@@ -28,6 +28,10 @@ module Ace
         # @return [Boolean] True if successful
         def execute(options)
           validate_repository!
+          operation = Molecules::GitOperationDetector.new(@git).detect
+          if operation
+            raise GitError, "Cannot commit during active #{operation.first}. Finish with #{operation.last}."
+          end
 
           if options.debug
             puts "Debug: Commit options:"
