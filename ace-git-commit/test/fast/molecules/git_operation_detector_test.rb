@@ -16,6 +16,19 @@ class GitOperationDetectorTest < TestCase
     git.verify
   end
 
+  def test_git_resolved_path_preserves_leading_and_trailing_whitespace
+    git = Minitest::Mock.new
+    path = " metadata /rebase-merge "
+    git.expect :execute, "#{path}\n", ["rev-parse", "--git-path", "rebase-merge"]
+    inspected = []
+    File.stub :stat, ->(actual) { inspected << actual; Object.new } do
+      assert_equal ["rebase", "git rebase --continue"],
+        Ace::GitCommit::Molecules::GitOperationDetector.new(git).detect
+    end
+    assert_equal [path], inspected
+    git.verify
+  end
+
   def test_precedence_and_git_am_guidance
     [false, true].each do |applying|
       git = Minitest::Mock.new
