@@ -13,6 +13,7 @@ class OperationStateSafetyTest < TestCase
   def with_repo
     Dir.mktmpdir("ace-operation-") do |dir|
       @repo = dir
+      @git_env = {}
       git("init", "-b", "main")
       git("config", "user.name", "Test")
       git("config", "user.email", "test@example.invalid")
@@ -44,6 +45,33 @@ class OperationStateSafetyTest < TestCase
       git("commit", "-m", "merge")
       assert_equal [main, side], git("rev-list", "--parents", "-n", "1", "HEAD").split.drop(1)
       assert_equal "resolved\n", File.read(File.join(@repo, "shared.txt"))
+      assert_equal "side\n", git("show", "HEAD:side.txt")
+    end
+  end
+
+  def test_whitespace_prefixed_git_dir_preserves_merge_and_native_completion
+    with_repo do
+      FileUtils.mv(File.join(@repo, ".git"), File.join(@repo, " metadata"))
+      @git_env = {"GIT_DIR" => " metadata"}
+      git("checkout", "-b", "side")
+      write("shared.txt", "side\n")
+      write("side.txt", "side\n")
+      git("add", "shared.txt", "side.txt")
+      git("commit", "-m", "side")
+      side = git("rev-parse", "HEAD").strip
+      git("checkout", "main")
+      write("shared.txt", "main\n")
+      git("add", "shared.txt")
+      git("commit", "-m", "main")
+      main = git("rev-parse", "HEAD").strip
+      git("merge", "side", success: false)
+      refused("merge", ["shared.txt", "--quiet"])
+      write("shared.txt", "resolved\n")
+      git("add", "shared.txt")
+      refused("merge", ["shared.txt", "--quiet"])
+      git("commit", "-m", "merge")
+      assert_equal [main, side], git("rev-list", "--parents", "-n", "1", "HEAD").split.drop(1)
+      assert_equal "resolved\n", git("show", "HEAD:shared.txt")
       assert_equal "side\n", git("show", "HEAD:side.txt")
     end
   end
@@ -157,18 +185,19 @@ class OperationStateSafetyTest < TestCase
   end
 
   def git(*args, success: true)
-    output, error, status = Open3.capture3({"GIT_EDITOR" => "true", "GIT_SEQUENCE_EDITOR" => "true"}, "git", *args, chdir: @repo)
+    env = {"GIT_EDITOR" => "true", "GIT_SEQUENCE_EDITOR" => "true"}.merge(@git_env)
+    output, error, status = Open3.capture3(env, "git", *args, chdir: @repo)
     assert_equal success, status.success?, "git #{args.join(" ")}: #{output}#{error}"
     output
   end
 
   def cli(args)
-    output, error, status = Open3.capture3(BIN, *args, "-m", "test commit", chdir: @repo)
+    output, error, status = Open3.capture3(@git_env, BIN, *args, "-m", "test commit", chdir: @repo)
     [output + error, status]
   end
 
   def snapshot
-    metadata = git("rev-parse", "--absolute-git-dir").strip
+    metadata = git("rev-parse", "--absolute-git-dir").delete_suffix("\n")
     # Exclude read-only status cache timestamps; compare actual index and operation contents.
     files = Dir.glob(File.join(metadata, "**", "*"), File::FNM_DOTMATCH).select { |p| File.file?(p) }
     metadata_content = files.to_h { |p| [p.delete_prefix(metadata), File.binread(p)] }

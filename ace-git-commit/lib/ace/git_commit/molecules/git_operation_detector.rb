@@ -20,7 +20,7 @@ module Ace
 
         def detect
           MARKERS.each do |marker, operation|
-            path = @git.execute("rev-parse", "--git-path", marker).strip
+            path = @git.execute("rev-parse", "--git-path", marker).delete_suffix("\n")
             raise GitError, "Git returned an empty metadata path for #{marker}" if path.empty?
             next unless present?(path)
 

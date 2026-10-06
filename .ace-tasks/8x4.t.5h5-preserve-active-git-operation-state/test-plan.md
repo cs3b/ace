@@ -19,3 +19,9 @@ Independent spec readiness: root APPROVE, 2026-10-06. Per-worktree Git-resolved 
 Executed package verification: `bin/ace-test ace-git-commit all`: 267 tests, 943 assertions, zero failures/errors. Final report `.ace-local/test/reports/git-commit/4d9b2121-5da8-4df8-bcb8-35484b4b5df3/`. Six real CLI feature tests verify merge mode matrix plus unresolved/resolved preservation, linked cherry-pick/rebase isolation, native revert/git-am continuation, sequencer markers, ordinary scoped/staged-only behavior. Targeted initial detector/orchestrator tests: 22 tests, 62 assertions passed.
 
 Lint passed six files with warnings (existing changelog formatting/link references and seven new test style warnings, repaired before final tests). `git diff --check` clean. Independent implementation review and root integration remain outstanding; task stays progress.
+
+## Whitespace metadata path correction — independent review follow-up
+
+External source review verified that `.strip` could remove valid leading spaces from Git-resolved metadata paths and bypass merge detection. The detector now removes only Git's terminating newline with `delete_suffix("\n")`. A unit regression preserves leading and trailing path whitespace. A real CLI regression uses relative `GIT_DIR=' metadata'`, checks unchanged unresolved and resolved merge state after scoped quiet refusal, and completes the native merge with both parents and resolved files intact.
+
+Executed `bin/ace-test ace-git-commit all`: 269 tests, 995 assertions, zero failures/errors. Report `.ace-local/test/reports/git-commit/576b9ef5-3a8a-4a73-815a-8035726a6ed8/`. Initial regression setup staged the relocated metadata directory accidentally; setup now stages only the intended ordinary files. No task status changes, publication, or native/Lab tests were performed. Independent review of this corrective commit remains with root.
