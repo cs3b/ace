@@ -27,3 +27,15 @@ If original provider-process receipt is selected instead, this patch is insuffic
 - Review frozen upstream source and ACE consumer integration independently, then execute required actual native and installed distinct-user acceptance under authorized gates. Designed tests and source inspection are not executed or installed proof.
 
 No new research branch, native probe or alternate controller is needed to reach this design verdict. xz9.2 remains draft until the semantic decision and missing upstream source prerequisite are closed.
+
+## Decision clarification review — 2026-10-07
+
+Captain explicitly selected original-attempt-terminal submission. Independent
+reviewer `/root/wave_412` approved the corresponding canonical specification diff:
+immutable original terminal/runtime and spawned-child incarnation at guarded
+first write; preadmission replacement refuses with zero bytes; no retargeting;
+postadmission death or uncertain writes retain uncertainty without resend;
+complete text-plus-Enter acknowledgement means submitted, not consumed.
+Descendant readers of the same PTY are explicitly outside any exclusive-recipient
+guarantee. The native guard remains absent and draft/needs_review remains set.
+This approves decision fidelity only, not source, full readiness or installation.

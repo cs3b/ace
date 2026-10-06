@@ -10,6 +10,15 @@ driver. An acknowledgement returns `submitted`, not consumed. Repeating the
 exact call returns its canonical result without another send. Changed text with
 the same identity is refused.
 
+Captain's 2026-10-07 choice defines the recipient as the immutable original
+attempt terminal/runtime, not an exclusive provider-process reader. Replacement
+before guarded first-write admission refuses without prompt or focus bytes.
+After admission, original-child death or partial/unknown writes return
+`uncertain`; the captured actor never retargets or resends. Complete text plus
+Enter acknowledged for that origin permits `submitted`, even though another
+descendant may read the same original PTY. The required native guard remains
+undelivered; these are acceptance scenarios, not currently available behavior.
+
 ## Stop while a descendant or service effect remains uncertain
 
 `stop_attempt(mapping_id, assignment_id, attempt_id, expected_generation,
@@ -35,7 +44,7 @@ its original uncertain reply. Slot release follows terminal commit and verified
 release-before-reuse. Native pane closure or descendant absence alone cannot
 settle independent service/inbox truth.
 
-Positive prompt acceptance remains unspecified until the existing task closes
-the pinned native method/ack/error and body framing question. The generic CLI
+The target guarantee is now decided; positive prompt implementation still needs
+the reviewed guarded native method/ack/error and body framing contract. The generic CLI
 send and ProtectedNativeControl.request are source research, not selected public
 protected prompt handlers. No blocked probes are authorized by these examples.
