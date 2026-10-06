@@ -3,7 +3,7 @@ id: 8wr.t.qk0
 status: draft
 priority: high
 created_at: "2026-09-28 17:42:14"
-estimate: large
+estimate: TBD
 dependencies: [8wq.t.k86, 8wr.t.qjl, 8wr.t.qjx, 8wr.t.qjy, 8wq.t.1w5, 8wm.t.vs2, 8wr.t.qjz, 8x3.t.xz9.2]
 tags: [lab-readiness]
 bundle:
@@ -39,7 +39,7 @@ Kapitan can talk continuously to a project or Lab overseer, inspect progress and
 
 ### Success Criteria and Verification Plan
 
-- [ ] SC1: Controlled source integration exercises brief -> delegated assignment -> status/chat steering -> independent review -> scoped merge -> accepted cleanup through the runtime and protected Assign APIs, without LabClient or lab binary/socket. Exercise real coordinator/consumer composition with deterministic external boundaries; fixture success does not prove installed native behavior.
+- [ ] SC1: Installed brief -> delegated assignment -> status/chat steering -> independent review -> scoped merge -> accepted cleanup on Herdr without lab binary/socket.
 - [ ] SC2: Failure cases: requester dead, unavailable service, changed head, unknown liveness, reviewer=author, late scope change, all slots busy; status remains accurate and conversation responsive.
 - [ ] SC3: Run `ace-test ace-overseer all` and relevant assignment/runtime suites; fresh consumer loads canonical role workflows and cannot reach old LabClient.
 
@@ -49,7 +49,7 @@ Owner: **ace-overseer**. Consumers/boundaries are named above. Code layout belon
 
 ### Vertical Slice Decomposition
 
-Single end-to-end capability slice; size: large. Prerequisites: `8wq.t.k86`, `8wr.t.qjl`, `8wr.t.qjx`, `8wr.t.qjy`, `8wq.t.1w5`, `8wm.t.vs2`, `8wr.t.qjz`, `8x3.t.xz9.2`. Canonical cross-repository program: lab-config:`8wl.t.gad`. External gates are explicit references, not unresolved local dependency IDs.
+Single end-to-end capability slice; size: large. Prerequisites: `8wq.t.k86`, `8wr.t.qjl`, `8wr.t.qjx`, `8wr.t.qjy`, `8wq.t.1w5`, `8wm.t.vs2`, `8wr.t.qjz`. Canonical cross-repository program: lab-config:`8wl.t.gad`. External gates are explicit references, not unresolved local dependency IDs.
 
 ### Decisions and Defaults
 
@@ -67,7 +67,7 @@ Public scenarios: `ux/usage.md`. Record independent review before promotion.
 
 ### Completion versus integrated acceptance
 
-Task delivery proves implemented role/workflow/CLI composition, executed deterministic integration checks with qjx-conforming service fixtures and controlled merge boundaries, plus independent source review. The sole installed acceptance owner is lab-config:`8wl.t.gad.2`, checklist `qkb-delivery / WORKFLOW`, with `9c2-scope / SCOPE` for surviving-writer proof. That row already requires responsive coordinator, live runtime, Captain steering, exact accepted SHA and cleanup. It remains unchecked until actual installation and exercise. qkc owns executable acceptance scenarios; gad.2 executes them against the installed system. Neither qkb/gad.b/gad.2 completion nor missing installed evidence blocks this source deliverable; unfinished prerequisite source APIs still do.
+Task delivery proves the role/workflow/CLI contract in an installed isolated runtime using service executors conforming to qjx and controlled merge fixtures. It does not require later qkb/gad.b/gad.2 completion. The real cross-repository delivery/release proof belongs gad.2 and qkc after all consumers land; that later program gate must not block prerequisite qk0 completion.
 
 ### Protected steering prerequisite discovered during implementation planning
 
@@ -80,7 +80,3 @@ Protected steering acceptance requires that child; ordinary local mode does not
 substitute for it. This explicit prerequisite returns qk0 to draft/needs_review
 for a narrow independent readiness amendment. The dependency runs from qk0 to
 xz9.2, never back to qk0/qkb from the owner capability.
-
-### Readiness amendment — 2026-10-07
-
-The Captain selected the original-attempt-terminal guarantee in xz9.2. A prompt acknowledgment means `submitted` to the captured, unchanged terminal/runtime with its original spawn guard; it never means agent consumption. Replacement before admission has zero effect. Lost acknowledgment, partial write or uncertain completion remains visible and is not automatically resent. Stop requests consume the canonical owner API and require exact whole-scope writer proof plus service/inbox settlement before reporting stopped; otherwise report uncertain and retain the worktree. This amendment remains draft/needs_review until independent readiness review; it does not declare xz9.2 implemented. Historical installed wording is preserved in `history/before-central-acceptance-amendment-2026-10-07.md`.
