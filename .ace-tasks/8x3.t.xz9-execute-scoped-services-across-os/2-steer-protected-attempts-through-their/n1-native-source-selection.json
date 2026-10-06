@@ -1,0 +1,16 @@
+{
+  "source_url": "https://github.com/herdrdev/herdr.git",
+  "upstream_tag": "v0.9.3",
+  "annotated_tag_object": "7eaf574ba6362c36c3d8fe89f411bb7d5bb34660",
+  "baseline_commit": "7b116c05bfda646af39d2524c54e70c751f57ee8",
+  "candidate_source_commit": "96f14b6d8b8b7c712bf6d1f381c789fabdfe2050",
+  "candidate_source_tree": "e6c6be1422da8f922045992681e119d72e0b81c2",
+  "patch": "n1-native-producer.patch",
+  "patch_sha256": "6478a65a19276e952906211276b23b1e3579073a9c465efa65f636191f137eb2",
+  "cargo_lock_sha256": "bb3ab17351af496a2cc316a11c81a97f90959cd37c3d5625f2f8028c0133ffca",
+  "rust_toolchain_file_sha256": "0d9298c075817aba62477d23dcda3534cd836b5d5cf1960bd2de54df675ceffd",
+  "rust": "1.96.1",
+  "zig": "0.16.0",
+  "selection_status": "proposal_only_not_installed",
+  "producer_scope": "N1 source only; N2 and actual selected build/install integration outstanding"
+}
