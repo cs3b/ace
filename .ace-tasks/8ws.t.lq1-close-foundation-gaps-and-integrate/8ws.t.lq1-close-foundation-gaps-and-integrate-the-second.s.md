@@ -76,6 +76,12 @@ review and other checks; gad.b remains open. No receiver activation or installed
 acceptance is claimed. 9c2 readiness and history source work continues in isolated
 worktrees; unintegrated work is not a release artifact or completed task.
 
+lab-config `18089194e529568fbc994bef32b3714c714660ee` separately repairs
+portable host-command selection in isolated installer fixtures. Independent root
+review and nine focused tests passed (8.120 seconds); the author executed the
+expanded 89-test set successfully. This fixes the two previous macOS fixture
+failures and does not change production installation or execute Incus.
+
 - [x] Reviewed release source 5a0c9e05b, exact suite 11280 passed / 24 skipped, 51 entries, independent APPROVE.
 - [x] Build 16 fresh archives and verify all 1110 payload files; prepare eight dependency waves.
 - [x] Captain published all 16; independently verified registry versions and archive SHA-256 hashes.
