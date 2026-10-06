@@ -498,3 +498,25 @@ its candidate/target binding and verified receipt, never an older PR result.
 The fixed installed authority exposes `ace-assign authority serve`, `launch`,
 `status` and `terminate`. See [protected authority](protected-authority.md) for
 OS policy, native artifact installation, canonical launch stages and safe replay.
+
+## Source-owned installation maintenance inventory
+
+The trusted installation owner loads exact protected content references for the
+original and staged candidate descriptor using `Authority::Deployment.load_artifact`.
+This Ruby-only source interface validates immutable authenticated descriptor bytes;
+it does not establish installed network or native readiness and is not exposed
+through worker transport or a CLI selector.
+
+`LaunchLifecycle#with_execution_slots(mapping_ids:, candidate_deployment:)` holds
+the same slot exclusions as normal admission while yielding frozen fixed
+mapping/journal/commit contexts. Changed, added and removed mappings cannot be
+omitted. Removed mappings retain their original journal selection; new mappings
+use the staged selection. Existing mappings and physical slots cannot be recycled
+to hide history. Ref changes, unreadable roots and conflicting aliases refuse.
+
+Full `slot_reusable!` maintenance eligibility and parent retirement remain
+unavailable until complete historical authentication and actual current inventory
+verification are connected. The inventory block grants neither policy publication
+nor positive maintenance readiness. Finish/stop wiring and installed acceptance
+remain separate unfinished 9c2 requirements. Existing normal admission and guarded
+abort/release behavior retain their current checks.
