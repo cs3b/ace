@@ -1,7 +1,7 @@
 PATH
   remote: ace-assign
   specs:
-    ace-assign (0.64.0)
+    ace-assign (0.65.0)
       ace-b36ts (~> 0.14)
       ace-git (~> 0.29)
       ace-herdr (~> 0.4)
@@ -79,7 +79,7 @@ PATH
 PATH
   remote: ace-git-commit
   specs:
-    ace-git-commit (0.26.6)
+    ace-git-commit (0.26.7)
       ace-git (~> 0.23)
       ace-llm (~> 0.39)
       ace-support-cli (~> 0.6)
@@ -303,7 +303,7 @@ PATH
 PATH
   remote: ace-review
   specs:
-    ace-review (0.59.0)
+    ace-review (0.59.1)
       ace-b36ts (~> 0.14)
       ace-bundle (~> 0.44)
       ace-compressor (~> 0.25)
@@ -373,7 +373,7 @@ PATH
 PATH
   remote: ace-support-items
   specs:
-    ace-support-items (0.15.13)
+    ace-support-items (0.15.14)
       ace-b36ts (~> 0.14)
       ace-support-core (~> 0.31)
 
@@ -418,7 +418,7 @@ PATH
 PATH
   remote: ace-task
   specs:
-    ace-task (0.39.1)
+    ace-task (0.39.2)
       ace-b36ts (~> 0.14)
       ace-git (~> 0.27)
       ace-git-forgejo (~> 0.5)

@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.65.0] - 2026-10-06
+
 ### Added
 
 - Source-only protected original/candidate deployment inventory and shared execution-slot exclusions with immutable journal snapshots; full maintenance eligibility and retirement remain unavailable until historical authentication and current inventory verification are connected.

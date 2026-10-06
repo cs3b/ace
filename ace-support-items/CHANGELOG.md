@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.14] - 2026-10-06
+
+### Fixed
+
+- Treat done, skipped and cancelled as terminal folder states; blocked work no longer counts as completed.
+
 
 ## [0.15.13] - 2026-09-02
 

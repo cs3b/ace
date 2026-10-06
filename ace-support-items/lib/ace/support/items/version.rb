@@ -3,7 +3,7 @@
 module Ace
   module Support
     module Items
-      VERSION = "0.15.13"
+      VERSION = "0.15.14"
     end
   end
 end

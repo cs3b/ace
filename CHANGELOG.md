@@ -7,6 +7,11 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+- **ace-review v0.59.1**: Isolate concurrent review sessions and atomically publish reports without replacing prior findings.
+- **ace-task v0.39.2**: Preserve unresolved child work during family archival and return the moved child reliably.
+- **ace-support-items v0.15.14**: Exclude blocked work from terminal folder completion.
+- **ace-git-commit v0.26.7**: Refuse active native Git operations before commit preparation, preserving exact metadata path bytes.
+
 - **ace-assign v0.63.1**: Preserve prepared runtime shells after commands exit and install both terminal adapters through an acyclic dependency graph.
 - **ace-demo v0.26.1**: Install the reviewed Herdr adapter alongside tmux for standalone runtime selection.
 - **ace-git-forgejo v0.6.1**: Bind create receipts to the complete requested source and destination; preserve unknown outcomes after accepted mutations.
@@ -32,6 +37,8 @@ All notable changes to this project will be documented in this file.
 - **ace-git-forgejo v0.1.1**: Aligned the Forgejo provider with the real `fj` v0.6.0 CLI per independent PR #26 review: strip Unicode bidi isolate/pop-directional marks (U+2066–U+2069 and friends) that real minimal-style output wraps around dynamic fields so PR/issue/repo views parse and URL evidence stays clean, drop the nonexistent `fj pr search --limit` flag (client-side cap after newest-first sort), and probe CLI presence with `fj version` instead of the rejected `fj --version`, keeping classified `ProviderCliMissingError` semantics. Captured real `fj` outputs as test fixtures.
 
 ### Added
+
+- **ace-assign v0.65.0**: Pin original/candidate deployment inventory and shared slot exclusions to immutable journal snapshots. Complete maintenance eligibility and native readiness remain unfinished.
 
 - **ace-hitl-contract v0.1.0**: Single shared provider vocabulary without assignment or privileged lifecycle dependencies.
 

@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.39.2] - 2026-10-06
+
+### Fixed
+
+- Keep unresolved descendants from completing or archiving task families, return children correctly after legitimate archival, and prevent doctor from inferring completion from archive location.
+
 ## [0.39.1] - 2026-10-04
 
 ### Fixed

@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.26.7] - 2026-10-06
+
 ### Fixed
 
 - Refuse commit preparation during active native Git operations before changing the index, including scoped, staged-only, split and dry-run modes; preserve operation state and report native continuation guidance.
