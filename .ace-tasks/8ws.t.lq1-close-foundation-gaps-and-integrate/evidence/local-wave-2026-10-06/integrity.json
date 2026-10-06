@@ -1,0 +1,130 @@
+[
+  {
+    "path": "main-assign-focused/summary.json",
+    "source": "/Users/mc/Ps/ace/.ace-local/test/reports/assign/c7563e0b-a7de-41c9-a723-e94577fe2a9f/summary.json",
+    "sha256": "1d3153390e4b41a1e9eb4b61ea82cefa8ae0fd50b741b9fa259b3d5bc068f017"
+  },
+  {
+    "path": "main-assign-focused/report.json",
+    "source": "/Users/mc/Ps/ace/.ace-local/test/reports/assign/c7563e0b-a7de-41c9-a723-e94577fe2a9f/report.json",
+    "sha256": "5d184247e358d85c95aa445948bb01e31ce9a52141791ef63dd3b5d49bed01f7"
+  },
+  {
+    "path": "main-review-focused/summary.json",
+    "source": "/Users/mc/Ps/ace/.ace-local/test/reports/review/e0c3b1c5-53b9-4928-8ee6-1b12edb290bd/summary.json",
+    "sha256": "3f31e03f89f2b76593098f1cb6c0a9bdf21abe74e7169b9a4a6bdf09130a6896"
+  },
+  {
+    "path": "main-review-focused/report.json",
+    "source": "/Users/mc/Ps/ace/.ace-local/test/reports/review/e0c3b1c5-53b9-4928-8ee6-1b12edb290bd/report.json",
+    "sha256": "15b711acd03e028b659ca8b9aa7c8afa047bd5b571fe92ae085d54d80d53c174"
+  },
+  {
+    "path": "main-task-focused/summary.json",
+    "source": "/Users/mc/Ps/ace/.ace-local/test/reports/task/6efe7648-cd38-4148-b4ef-2dd1ece9ee1f/summary.json",
+    "sha256": "e0f3ecaed8b7362917486852f732a98a84fa2f4b45169b495d95faf2fc0c8089"
+  },
+  {
+    "path": "main-task-focused/report.json",
+    "source": "/Users/mc/Ps/ace/.ace-local/test/reports/task/6efe7648-cd38-4148-b4ef-2dd1ece9ee1f/report.json",
+    "sha256": "c18dfc8d4009ee3859d9229045cb0b671be9f0dab376d020d3ce546d9b7e1cf4"
+  },
+  {
+    "path": "suite-assign/summary.json",
+    "source": "/Users/mc/Ps/ace/.ace-local/test/reports/assign/20076aa7-0d52-4b9d-a8e4-ed49139c461a/summary.json",
+    "sha256": "c07ab9ab7cdabe0d4d324acb1e2cab31be053d1a6bd837a634612010f2b7870a"
+  },
+  {
+    "path": "suite-assign/report.json",
+    "source": "/Users/mc/Ps/ace/.ace-local/test/reports/assign/20076aa7-0d52-4b9d-a8e4-ed49139c461a/report.json",
+    "sha256": "d1a03710cf2cb5703171e9cacde879f4fb7d394a05ffb331f957568c8b1491d9"
+  },
+  {
+    "path": "suite-review/summary.json",
+    "source": "/Users/mc/Ps/ace/.ace-local/test/reports/review/3f724fc8-973b-4c2f-9329-aadcab39104e/summary.json",
+    "sha256": "a68a1af6c4645c2675d2d6d336400dc9983d3450c87297922c1aa8d8381c894b"
+  },
+  {
+    "path": "suite-review/report.json",
+    "source": "/Users/mc/Ps/ace/.ace-local/test/reports/review/3f724fc8-973b-4c2f-9329-aadcab39104e/report.json",
+    "sha256": "906b7d7b14f29f88e9ae1d028dc886b8c4dfaddeb2e0706aa924fa06e225e4e4"
+  },
+  {
+    "path": "suite-task/summary.json",
+    "source": "/Users/mc/Ps/ace/.ace-local/test/reports/task/41f06fb5-5671-483c-ac8c-b0af4383bd84/summary.json",
+    "sha256": "8b15cd079efec299f3e43ec0f5bd26b2ed7167a5a6514b93f75a253332d3326c"
+  },
+  {
+    "path": "suite-task/report.json",
+    "source": "/Users/mc/Ps/ace/.ace-local/test/reports/task/41f06fb5-5671-483c-ac8c-b0af4383bd84/report.json",
+    "sha256": "89c7fbef908a5e8f1081148f94988e3d4a47093771a95d46958f4b4a47bab9a3"
+  },
+  {
+    "path": "suite-git-commit/summary.json",
+    "source": "/Users/mc/Ps/ace/.ace-local/test/reports/git-commit/8ce222bb-860f-4b06-a726-61ed50c10c0c/summary.json",
+    "sha256": "4811c0611115d17f74e717f2b1dcf8beca244f0155757829ab848a9d3611bd28"
+  },
+  {
+    "path": "suite-git-commit/report.json",
+    "source": "/Users/mc/Ps/ace/.ace-local/test/reports/git-commit/8ce222bb-860f-4b06-a726-61ed50c10c0c/report.json",
+    "sha256": "016e4ebd84a7595da7ea4d86382c1b2501fa5343df0e97185e348423d1744ddd"
+  },
+  {
+    "path": "suite-support-items/summary.json",
+    "source": "/Users/mc/Ps/ace/.ace-local/test/reports/support-items/bb51a4c0-7910-4c96-b502-41243c5b415a/summary.json",
+    "sha256": "2b4e580407ce63611798f396ac69795c37a6930b678c713db0e05fbe4f356b95"
+  },
+  {
+    "path": "suite-support-items/report.json",
+    "source": "/Users/mc/Ps/ace/.ace-local/test/reports/support-items/bb51a4c0-7910-4c96-b502-41243c5b415a/report.json",
+    "sha256": "34abd47344173231c91a638a2b699cab552a82f95977932e7eb89a59c944bbde"
+  },
+  {
+    "path": "author-git-commit-all/summary.json",
+    "source": "/Users/mc/Ps/ace/.ace-wt/codex-wave-5h5/.ace-local/test/reports/git-commit/576b9ef5-3a8a-4a73-815a-8035726a6ed8/summary.json",
+    "sha256": "cb52bf16d4b20c655a8970f5d03695d8dbb936e782d998ba4f0d2029895eff24"
+  },
+  {
+    "path": "author-git-commit-all/report.json",
+    "source": "/Users/mc/Ps/ace/.ace-wt/codex-wave-5h5/.ace-local/test/reports/git-commit/576b9ef5-3a8a-4a73-815a-8035726a6ed8/report.json",
+    "sha256": "139c1ea3fe609fa2a18b7b41f19a7527025ca6a9c24d8ee4f75c3c9977c4119e"
+  },
+  {
+    "path": "author-review-all/summary.json",
+    "source": "/Users/mc/Ps/ace/.ace-wt/codex-wave-412/.ace-local/test/reports/review/6a896500-d22d-43a5-bbe2-4c702839c48e/summary.json",
+    "sha256": "d86c0963b23cc63e9246f90093f404d73a8d1420e5d76024cd804c1a81e4c064"
+  },
+  {
+    "path": "author-review-all/report.json",
+    "source": "/Users/mc/Ps/ace/.ace-wt/codex-wave-412/.ace-local/test/reports/review/6a896500-d22d-43a5-bbe2-4c702839c48e/report.json",
+    "sha256": "671301dc30f0c8f9db97482dcef4907393b2ae35a4f1dbad179c4c2a05bdbc88"
+  },
+  {
+    "path": "author-task-all/summary.json",
+    "source": "/Users/mc/Ps/ace-wave-n0n/.ace-local/test/reports/task/84281f07-c1b9-4252-a35c-06ac268ba476/summary.json",
+    "sha256": "9defafeefac8ed39da91908d2bc1d8aa90defce48263a202058945ce3e2bd56a"
+  },
+  {
+    "path": "author-task-all/report.json",
+    "source": "/Users/mc/Ps/ace-wave-n0n/.ace-local/test/reports/task/84281f07-c1b9-4252-a35c-06ac268ba476/report.json",
+    "sha256": "d024410c2e46f3f9623fd4c302acb7ddfd0605df95fdfdad6d38b99bd3d75ca4"
+  },
+  {
+    "path": "author-support-items-all/summary.json",
+    "source": "/Users/mc/Ps/ace-wave-n0n/.ace-local/test/reports/support-items/8e712b7a-7248-4013-88e5-c1ad5a61815e/summary.json",
+    "sha256": "d6312411873552c38736b85a4d4971917858fcebec22528c5b90f7cde13c4102"
+  },
+  {
+    "path": "author-support-items-all/report.json",
+    "source": "/Users/mc/Ps/ace-wave-n0n/.ace-local/test/reports/support-items/8e712b7a-7248-4013-88e5-c1ad5a61815e/report.json",
+    "sha256": "060b0ca88e27b6b5bf62e4eea7ff940f0496122cfaba777f869cd3a4c15c24a1"
+  },
+  {
+    "path": "artifacts.json",
+    "sha256": "15866c1f6595d4491b74502a05de141e257b601b310ecaafa351837bda55c94c"
+  },
+  {
+    "path": "pending-queue.yml",
+    "sha256": "c0ecda5fc1ddae4de7d8c2196a56737718523cfcfed40be9159a05d7a2e9b675"
+  }
+]

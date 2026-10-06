@@ -40,6 +40,9 @@ Captain approved this ownership split on 2026-10-05. Earlier chronological check
 - [x] 1w5 — attributable recovery source; actual native recovery drill is gad.2 `1w5-recovery`.
 - [x] 09j — gated launch source; outstanding installed matrix and unchanged execution restrictions are gad.2 `09j-launch`.
 - [x] qkb.0 — provider-neutral assignment delivery source; deployed trace is gad.2 `qkb-delivery`.
+- [x] n0n — unresolved descendants no longer complete/archive parents; doctor and returned child identity repaired.
+- [x] 5h5 — scoped commits refuse active native Git operations, including whitespace-prefixed metadata paths.
+- [x] 412 — concurrent review sessions and exported reports retain separate ownership and exact-path feedback.
 - [x] ig2 / R1 — durable review campaign foundation; not R2/R3 policy or bounds.
 
 The five newly separated source closures (y24/vs2/1w5/09j/qkb.0) use the retained independent source verdicts and test receipts in their records, plus the independent acceptance-ownership review. They do not claim the transferred installed rows passed.
@@ -59,6 +62,8 @@ The five newly separated source closures (y24/vs2/1w5/09j/qkb.0) use the retaine
 qkb -> R2 -> R3 -> qkc source assets -> central gad.2 run remains the final dependency join. ig5 is an optional pilot, not a Lab gate. Hygiene work outside this path does not imply Lab acceptance. After any producer contract change, rerun affected consumer checks on the combined source before integration/release; an older isolated producer receipt is insufficient. No work is dispatched by this bookkeeping change.
 
 ## Current publication and propagation
+
+Local wave 2026-10-06: n0n/5h5/412 are delivered; a bounded9c2 inventory checkpoint is integrated while9c2 remains open. Five new gem artifacts are prepared, not published. See local-wave-2026-10-06.md and its exact test/artifact receipts. The prior16-gem history below remains unchanged.
 
 - [x] Reviewed release source 5a0c9e05b, exact suite 11280 passed / 24 skipped, 51 entries, independent APPROVE.
 - [x] Build 16 fresh archives and verify all 1110 payload files; prepare eight dependency waves.

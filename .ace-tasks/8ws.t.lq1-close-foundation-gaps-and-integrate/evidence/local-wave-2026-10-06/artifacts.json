@@ -1,0 +1,1869 @@
+{
+  "source_commit": "4dbfa03399c01982665f3544ba27009a16dc374a",
+  "artifacts": [
+    {
+      "name": "ace-support-items",
+      "version": "0.15.14",
+      "path": "ace-support-items/ace-support-items-0.15.14.gem",
+      "sha256": "3ff51dd26fc73ac4f5ef7bb6cc7d66fccfd22ee2b658a5328ab76a83f48adb74",
+      "files": [
+        {
+          "path": "CHANGELOG.md",
+          "sha256": "e23ef8d4cac1c79bf8bd3e898687bdb57941bcf625e247a179771fabffabb33e"
+        },
+        {
+          "path": "README.md",
+          "sha256": "a3d73d372f2fb73ef9f156b1be8f4e25e9419253bd93f53e88726adcfa494c71"
+        },
+        {
+          "path": "Rakefile",
+          "sha256": "da2e0801c846e196ee1d7807005d6852ecefc18a3fb0b0ca2e3a563c23bee981"
+        },
+        {
+          "path": "lib/ace/support/items.rb",
+          "sha256": "bdce69f0ddcc631c82f52b44eb427453f33ba4fc4f5bc362fa8c4b501d0972b6"
+        },
+        {
+          "path": "lib/ace/support/items/atoms/ansi_colors.rb",
+          "sha256": "e5310e43a522c8ff18751d00af7ac7c84fe587af857201a4fb61c4f212aa5da3"
+        },
+        {
+          "path": "lib/ace/support/items/atoms/date_partition_path.rb",
+          "sha256": "6d58453c943c3a0653e2247547b14690b82c8772d5dc90822e21ddc36d4ae161"
+        },
+        {
+          "path": "lib/ace/support/items/atoms/field_argument_parser.rb",
+          "sha256": "4c9880de938e20f9b591e940ea0c15f5e9efe155d65a2919c1f4d5864aad6a6a"
+        },
+        {
+          "path": "lib/ace/support/items/atoms/filter_parser.rb",
+          "sha256": "f2095ebcfb81d39a63e3ac2a37e125ff0d43fcf7ed73f4f674fbeb3750b659cc"
+        },
+        {
+          "path": "lib/ace/support/items/atoms/folder_completion_detector.rb",
+          "sha256": "e4aa40429e7b83bc4e2bf39b23890635e7e9c34447774b9c2b923a6d96eb17cd"
+        },
+        {
+          "path": "lib/ace/support/items/atoms/frontmatter_parser.rb",
+          "sha256": "1a9ff6fc64b2e494769f6ec13901acb04aab774c0452a3769ba86dcbb0a66b81"
+        },
+        {
+          "path": "lib/ace/support/items/atoms/frontmatter_serializer.rb",
+          "sha256": "08e3f2d9cadad4e90c30ed1289c812f932781f025a01f87494ffa50665aeaab7"
+        },
+        {
+          "path": "lib/ace/support/items/atoms/item_id_formatter.rb",
+          "sha256": "4aae6066c1ed69dd3bcad50c219fc04320fc8fcf7c5ceb93ac8b549bc73f6712"
+        },
+        {
+          "path": "lib/ace/support/items/atoms/item_id_parser.rb",
+          "sha256": "16d1e53b6b9c39d6d6f5a109fd6eb07af31d85b2d047ef713344be9601c29568"
+        },
+        {
+          "path": "lib/ace/support/items/atoms/item_statistics.rb",
+          "sha256": "4071e51ce5abec857191353a97e2a0eec79d397434143b0160c9fa1c90aa73e8"
+        },
+        {
+          "path": "lib/ace/support/items/atoms/position_generator.rb",
+          "sha256": "21af552c7a6bb31c25866dbace62920691245d9ad15013690f527ac9fb70a464"
+        },
+        {
+          "path": "lib/ace/support/items/atoms/relative_time_formatter.rb",
+          "sha256": "1ae92c629ee92a54a44506415873b4fd7407e0550c6e74dc742ef77aa45d55b4"
+        },
+        {
+          "path": "lib/ace/support/items/atoms/slug_sanitizer.rb",
+          "sha256": "ce6b4ba3fbf278065bf898dfc8c9398ff171add85a85c8e149cb5db8c9cc9082"
+        },
+        {
+          "path": "lib/ace/support/items/atoms/sort_score_calculator.rb",
+          "sha256": "645afc71850ee58c6bd083c1eeff3e78b9cfe8014f3e096181c3f7dee53d96ac"
+        },
+        {
+          "path": "lib/ace/support/items/atoms/special_folder_detector.rb",
+          "sha256": "f5d09b1141485e4a5b4af707209f3c2b5133bfb67ace78934fc6045fe6f4e4a3"
+        },
+        {
+          "path": "lib/ace/support/items/atoms/stats_line_formatter.rb",
+          "sha256": "da61772f610302ee74f09f6db440d245ceeeba64fec78d49339d951ee4ecef5d"
+        },
+        {
+          "path": "lib/ace/support/items/atoms/title_extractor.rb",
+          "sha256": "614334825fc8b18f007a01c2ecd545558ea889fb5ae468094af1f960a2e3da45"
+        },
+        {
+          "path": "lib/ace/support/items/models/item_id.rb",
+          "sha256": "5bd05f8481bac6375cd19f03bb6196fca0e320e45697d419ffb9f67e6615a44e"
+        },
+        {
+          "path": "lib/ace/support/items/models/loaded_document.rb",
+          "sha256": "d504731847c9440d8ab9e0c5bc1e162215b177dd2b19fd672435442d6ffa66b5"
+        },
+        {
+          "path": "lib/ace/support/items/models/scan_result.rb",
+          "sha256": "2acd3851134856b90c85fcb162f84b9129f7caf39c04b48d55a4f498ed041fe4"
+        },
+        {
+          "path": "lib/ace/support/items/molecules/base_formatter.rb",
+          "sha256": "2d4e830b08e789fae3ced8ac199913fc7b45aaabc4dfd522db73314b23d551f5"
+        },
+        {
+          "path": "lib/ace/support/items/molecules/directory_scanner.rb",
+          "sha256": "1bf3db670c7a9c05c315b4b193b2a1325b0237368cd8b8501b9c66695322e6ff"
+        },
+        {
+          "path": "lib/ace/support/items/molecules/document_loader.rb",
+          "sha256": "455e5637d92aecdd6c30719f9a64511bc1ffdc9cbf1fcdc6ab9ed5f20bc29c56"
+        },
+        {
+          "path": "lib/ace/support/items/molecules/field_updater.rb",
+          "sha256": "b0f1d1e76c205959e9a723993b7c641fffca0f45462694229c23153da30bcda3"
+        },
+        {
+          "path": "lib/ace/support/items/molecules/filter_applier.rb",
+          "sha256": "2b7d682a3211f4a2fc85e24d47fc314a303e71b92949deaea8a8224cbba2142a"
+        },
+        {
+          "path": "lib/ace/support/items/molecules/folder_mover.rb",
+          "sha256": "e68f2263cb0abcefde9c27e68b84d72a5cdb0050a72884fb69ebf1c34e654ce8"
+        },
+        {
+          "path": "lib/ace/support/items/molecules/git_committer.rb",
+          "sha256": "b684e1c36292350e4ffbaeecaa886bfb9b0e61b891bc64c3130386e4af7ed857"
+        },
+        {
+          "path": "lib/ace/support/items/molecules/item_sorter.rb",
+          "sha256": "a77e6a71bd899f2e645de8b7b7c8f62cf3e7f50828a081b79046c19a2d19ba94"
+        },
+        {
+          "path": "lib/ace/support/items/molecules/llm_slug_generator.rb",
+          "sha256": "8b92aa531a55ed4988e1d3c43cc7239265dbd3727e40ba9325568809492dffc5"
+        },
+        {
+          "path": "lib/ace/support/items/molecules/shortcut_resolver.rb",
+          "sha256": "9d5fe7f062db966c14097a1565584fb91e5c699f4e1bb9c1735dffc223105b34"
+        },
+        {
+          "path": "lib/ace/support/items/molecules/smart_sorter.rb",
+          "sha256": "b940a1d101e9197234f3a83a73160db4b806e5e63fc754cdc010f3ea29eea4c5"
+        },
+        {
+          "path": "lib/ace/support/items/molecules/status_categorizer.rb",
+          "sha256": "1a1d4d51c2e9787473db841d6d0efd4151d6bad8a18f5d021a14e996bbbf0805"
+        },
+        {
+          "path": "lib/ace/support/items/version.rb",
+          "sha256": "807f5d4e6e78d8c28817e026c61d32d776e4def1c63813af4c9d8eee0cede131"
+        }
+      ]
+    },
+    {
+      "name": "ace-git-commit",
+      "version": "0.26.7",
+      "path": "ace-git-commit/ace-git-commit-0.26.7.gem",
+      "sha256": "02313e8407b945cfeca5224499fa6d3a9faf05f7c7194972982ec78e063daf46",
+      "files": [
+        {
+          "path": ".ace-defaults/git/commit.yml",
+          "sha256": "f9b3be878170e6b315296162573fbcf4fc21ecc9a6afdd180f30c388aae8af9a"
+        },
+        {
+          "path": ".ace-defaults/nav/protocols/guide-sources/ace-git-commit.yml",
+          "sha256": "53cf3e1e6f76169eee6bc9b1c94bb90ead607a20820422b315563be42eeb510d"
+        },
+        {
+          "path": ".ace-defaults/nav/protocols/prompt-sources/ace-git-commit.yml",
+          "sha256": "2dce73673131c8bd705b5bf42363bcd8c83671285840c8b4aa7cc7d797d68dd5"
+        },
+        {
+          "path": ".ace-defaults/nav/protocols/skill-sources/ace-git-commit.yml",
+          "sha256": "4321bba1ef21183499b505420d23fc90c9f9c1cc6f26c028771ff85dc52a41b6"
+        },
+        {
+          "path": ".ace-defaults/nav/protocols/wfi-sources/ace-git-commit.yml",
+          "sha256": "e723558d206ebecfbc3b700ee2c79a9be9a8b023d748be42521c8821aed5d380"
+        },
+        {
+          "path": "CHANGELOG.md",
+          "sha256": "743229cc1b74342fe21af846e4fb3b978965448e573cedeb2de4740919a0bbb5"
+        },
+        {
+          "path": "COMPARISON.md",
+          "sha256": "abccbe1460aa9c06d9a44e1fbe649e52238c59e164144a4d3a1d169ac1772da9"
+        },
+        {
+          "path": "LICENSE",
+          "sha256": "3de856bc8cb0e3dc2317703d0dd6d78cf26f2269b841a5eabff1ed7ded252ff2"
+        },
+        {
+          "path": "README.md",
+          "sha256": "a322008a66ffd6fd843477823bdc25883bcb81288c397a744863d8e43585a2a9"
+        },
+        {
+          "path": "Rakefile",
+          "sha256": "77a3dc1341c6a55c9df84598f718902ce48921bf405b4ab45851efc6afcb6448"
+        },
+        {
+          "path": "exe/ace-git-commit",
+          "sha256": "b3845b6e1966205ec750eb705f4ba9bd8182578923c722cf00d6dff5f52872ba"
+        },
+        {
+          "path": "handbook/guides/version-control-system-message.g.md",
+          "sha256": "242cb0831a097d9e9b75516dc2f4e8ad42411472f8a4ddd994e39033514a3d0b"
+        },
+        {
+          "path": "handbook/prompts/git-commit.md",
+          "sha256": "111b6a0af68034aab0db3b87e1c996d702121f8911add82ade06ffe24fd5a5cd"
+        },
+        {
+          "path": "handbook/prompts/git-commit.system.md",
+          "sha256": "86304ba9a9d6d10431bfc5a0a3379576143eb0a35fbdadf983cc50b6c7860c44"
+        },
+        {
+          "path": "handbook/skills/as-git-commit/SKILL.md",
+          "sha256": "ac022d07311fc6ac8d8bf7b854300474c93484651ee734cabf174ad35468698f"
+        },
+        {
+          "path": "handbook/workflow-instructions/git/commit.wf.md",
+          "sha256": "9ba9f7a6701813e74e0d71f9e27e84773fcbdcc606e0f758fb6dd60b78ec2004"
+        },
+        {
+          "path": "lib/ace/git_commit.rb",
+          "sha256": "b0eacb79c514c077c07d53f856ef2e8b0350d6225d6196d3dd79e45e55142d1b"
+        },
+        {
+          "path": "lib/ace/git_commit/atoms/git_executor.rb",
+          "sha256": "ab9f33b0b934ebf29818bf3296fd351ec15054d6de63aad6b811d11f5111d249"
+        },
+        {
+          "path": "lib/ace/git_commit/atoms/gitignore_checker.rb",
+          "sha256": "8ec8260a90f879789c86b70a966dbb010aed6be96a138dd0c691e7a51edd173a"
+        },
+        {
+          "path": "lib/ace/git_commit/cli.rb",
+          "sha256": "00f449977db664e384407b6f2c942c4c38a4de8295e1f22afecf92cb6f743dff"
+        },
+        {
+          "path": "lib/ace/git_commit/cli/commands/commit.rb",
+          "sha256": "43939ffac7774ad1d16e2ee4e1fe4fef3afb5e8bcb6727e92750093a77ed7dcf"
+        },
+        {
+          "path": "lib/ace/git_commit/models/commit_group.rb",
+          "sha256": "d24d844eb77067308aa8c01095b1d2764eb69b65191e8abecd6c3987184f7b3e"
+        },
+        {
+          "path": "lib/ace/git_commit/models/commit_options.rb",
+          "sha256": "5c5fada773220898332182e53d08d4acd3decf358866af026b71491c19a15e60"
+        },
+        {
+          "path": "lib/ace/git_commit/models/split_commit_result.rb",
+          "sha256": "2c7791cb595ad7fa1fa8aea35847580f31dc202f3dbeaf10672ff7be0b20d610"
+        },
+        {
+          "path": "lib/ace/git_commit/models/stage_result.rb",
+          "sha256": "4eb155a4653c89e897ed8b67a2d30b934c7d56d58521b6344e803cc99b746120"
+        },
+        {
+          "path": "lib/ace/git_commit/molecules/commit_grouper.rb",
+          "sha256": "d8eb7e1f6f5d01eeee09ba22ff16ce6b0e0a575e99ad6b93f0977e89df78b3fd"
+        },
+        {
+          "path": "lib/ace/git_commit/molecules/commit_summarizer.rb",
+          "sha256": "ae4863f608b20ea9440a035a5946cf59374ad2be199d8ffebe0553157647fbfc"
+        },
+        {
+          "path": "lib/ace/git_commit/molecules/diff_analyzer.rb",
+          "sha256": "70516d8a8b5e3ab48bbb9ad5aebaa66ca7e7fd4632ba7495d0242e56e1809a3b"
+        },
+        {
+          "path": "lib/ace/git_commit/molecules/file_stager.rb",
+          "sha256": "244da3f51cbfe9c16824dfa506fd4a9c9715f040c63f2440bed3f8052b41a00c"
+        },
+        {
+          "path": "lib/ace/git_commit/molecules/git_operation_detector.rb",
+          "sha256": "a356bb1fb13ca4533276c9610410c086c22d5f7476ea892cd9d723c0ef2b6da9"
+        },
+        {
+          "path": "lib/ace/git_commit/molecules/message_generator.rb",
+          "sha256": "5ae8dcae831b6413d1f3ee6b48540fd437bfab63bcf6891ee8bb0cda849984ea"
+        },
+        {
+          "path": "lib/ace/git_commit/molecules/path_resolver.rb",
+          "sha256": "59980897f056f12cdd0e68311a0c12e8f9b5efaac185f73e331d4c9788c2b376"
+        },
+        {
+          "path": "lib/ace/git_commit/molecules/split_commit_executor.rb",
+          "sha256": "cb2f5b28ce40d897d83ac4940f1e9b1dbd02f93e944ea37c1edaf94dcb808dc8"
+        },
+        {
+          "path": "lib/ace/git_commit/organisms/commit_orchestrator.rb",
+          "sha256": "d280786dcdc142ad1a65ddbb8750cf7009d38a8d9c1f0deec23d428b9f7af303"
+        },
+        {
+          "path": "lib/ace/git_commit/version.rb",
+          "sha256": "0233863b64e1c74e9b9894e6c8337a92e9321ee951591bd770f44149a02748d1"
+        }
+      ]
+    },
+    {
+      "name": "ace-task",
+      "version": "0.39.2",
+      "path": "ace-task/ace-task-0.39.2.gem",
+      "sha256": "7dec976a39edc01d8c734b9bd945e028aa86c1f3933d7aae4e244eb96efc3ac1",
+      "files": [
+        {
+          "path": ".ace-defaults/nav/protocols/skill-sources/ace-task.yml",
+          "sha256": "3316d6a27210d2d1fdae04b108126da38c3f3bae15623dbbc48e5ab773c1c73f"
+        },
+        {
+          "path": ".ace-defaults/nav/protocols/wfi-sources/ace-task.yml",
+          "sha256": "5736a479af89858617767be837cb65f17ecc35946fe61402c9eda5ab1278b6bd"
+        },
+        {
+          "path": ".ace-defaults/task/config.yml",
+          "sha256": "f0885dfcdafb0270fac2c1094fa2897bc562057dbf9d6e0ca627f0501e0f0d98"
+        },
+        {
+          "path": "CHANGELOG.md",
+          "sha256": "43569f7d9a34bd304ac325fb3d86b8b2f8e299f58e1a2559d0965f022838dfbf"
+        },
+        {
+          "path": "README.md",
+          "sha256": "410db4aae0645259c681cd953d45eaa0806eb37fa2691bf0bb8e66747d5a71e2"
+        },
+        {
+          "path": "Rakefile",
+          "sha256": "a7425f87f7344a2b3a38a47471656106b4a53eab9e3888bf8a551a8b3ecb3532"
+        },
+        {
+          "path": "exe/ace-task",
+          "sha256": "fe3866c40e370336787bd7032a1f3804437d7e1b6b7986e7165cc9f6d67ff344"
+        },
+        {
+          "path": "handbook/guides/task-definition.g.md",
+          "sha256": "e2611335ea4539f25b7bdde847279a045d44a2e7996ebedd18e57b18c46b4fe4"
+        },
+        {
+          "path": "handbook/skills/as-bug-analyze/SKILL.md",
+          "sha256": "a066e1f48ff4ff4c1b9c986e7f6e841d5c14d10e5b57b8d407bc64c6efb7bd8a"
+        },
+        {
+          "path": "handbook/skills/as-bug-fix/SKILL.md",
+          "sha256": "70a10ddda0078112a3842c2beaec027cc0df551b6d642b2f7c5f0134044a170d"
+        },
+        {
+          "path": "handbook/skills/as-task-document-unplanned/SKILL.md",
+          "sha256": "5418096dcf1ff0ad7095a3af92884af6b62548331f13157b7f0b51ef32b06cea"
+        },
+        {
+          "path": "handbook/skills/as-task-draft/SKILL.md",
+          "sha256": "9aacd9a78bf6252aad8b9c9c271018b94f471b3c01a7ca1adb053602385b7a74"
+        },
+        {
+          "path": "handbook/skills/as-task-finder/SKILL.md",
+          "sha256": "765cb4bf54df034042650e0ed0f4cd8ee57d132c166cc48dd849d726c029fe31"
+        },
+        {
+          "path": "handbook/skills/as-task-plan/SKILL.md",
+          "sha256": "4797f6e82bb40623e85a2e69a58c37bc271fcd8ac16ea708bd2a74e0158c9ca1"
+        },
+        {
+          "path": "handbook/skills/as-task-review-questions/SKILL.md",
+          "sha256": "7320102b939e6f9dc8f7ab11cb98fcdb979681eab20ae4aabd14f23085611651"
+        },
+        {
+          "path": "handbook/skills/as-task-review/SKILL.md",
+          "sha256": "dd4fc7359b315f134faa6509a31d691d429936071e9127749994c58d895ca6e2"
+        },
+        {
+          "path": "handbook/skills/as-task-update/SKILL.md",
+          "sha256": "1dce84bc8d10bb2ba84590553cc4f110b0f4793b2f60a09caee8b52048b69f8d"
+        },
+        {
+          "path": "handbook/skills/as-task-work/SKILL.md",
+          "sha256": "1c178cea6c6d66ad02c4801a747057cbf1e57e637d7d942462f9758c326fca72"
+        },
+        {
+          "path": "handbook/templates/task/draft.template.md",
+          "sha256": "427fe6b854cb7f68b9a435b3d1e4f46df094f7af6e2c4babe551c39bf2ccfc3c"
+        },
+        {
+          "path": "handbook/templates/task/file-modification-checklist.template.md",
+          "sha256": "04b46459901d7d80c9b4b96723200e8485ff8068fa4d4e8a6563ee1d5e6ab4b3"
+        },
+        {
+          "path": "handbook/templates/task/technical-approach.template.md",
+          "sha256": "2690e8748dd6615434d2f5353756cdf27f84ebf6188d8441814171ba5d6a033e"
+        },
+        {
+          "path": "handbook/workflow-instructions/bug/analyze.wf.md",
+          "sha256": "9cbb306a58a4ecbac33ce4e9886532ff541ae7ef51aba8ddc2f12afb70ec8af5"
+        },
+        {
+          "path": "handbook/workflow-instructions/bug/fix.wf.md",
+          "sha256": "a38142ba0f72fb5ab37ca72cdb513e6e70f94cc1722f0b293c01bd31faae9a98"
+        },
+        {
+          "path": "handbook/workflow-instructions/task/document-unplanned.wf.md",
+          "sha256": "c10a6d045efe9e2c14bcb9ecfc1a77222adfec752436799ce3873796651a1368"
+        },
+        {
+          "path": "handbook/workflow-instructions/task/draft.wf.md",
+          "sha256": "c35bc6b0dec22c04acd4b0de75201120e470f237c998806385e26102f8cd0e28"
+        },
+        {
+          "path": "handbook/workflow-instructions/task/finder.wf.md",
+          "sha256": "cc71930cd183e248d281687b00c2cd6bef9274655b4315baa472c4b95025e9b1"
+        },
+        {
+          "path": "handbook/workflow-instructions/task/plan.wf.md",
+          "sha256": "c3e79bace1b9d4ddc8f2dc505f665b7fc6b365ce65d8ca783076274055b405c4"
+        },
+        {
+          "path": "handbook/workflow-instructions/task/review-plan.wf.md",
+          "sha256": "9de7fd62238103fbb961e122949677b4e412bd47ff0583fe0f4aece888a57b73"
+        },
+        {
+          "path": "handbook/workflow-instructions/task/review-questions.wf.md",
+          "sha256": "08e987f5cfe4da9491f79e082adc58dd09691bad8b4718b00affb1c02612d328"
+        },
+        {
+          "path": "handbook/workflow-instructions/task/review-work.wf.md",
+          "sha256": "851c10b455182d137b58f436f8762d504d61eaf282dbff63af5cb8f35ce5db36"
+        },
+        {
+          "path": "handbook/workflow-instructions/task/review.wf.md",
+          "sha256": "d5b33e6f5fa9df07f49c53c329f114bc137e358200036ff34f56b13f31968594"
+        },
+        {
+          "path": "handbook/workflow-instructions/task/update.wf.md",
+          "sha256": "25313aaec9320994dc47cd46ffa6f1b6b4af86abcd3f7ea3d836552883de1739"
+        },
+        {
+          "path": "handbook/workflow-instructions/task/work.wf.md",
+          "sha256": "72e003c6ca4e2fa1615cc0cb9dac7e8f974540e4c9856acf125feb884c565e8d"
+        },
+        {
+          "path": "lib/ace/task.rb",
+          "sha256": "9cdfd1101567fccbe8c8b71f35c3623b2f8189f851a52cb1edaf7f97d18333a5"
+        },
+        {
+          "path": "lib/ace/task/atoms/task_file_pattern.rb",
+          "sha256": "80444dd5eeb60e83c6a5a6afa5b20507e84087448f39fb4f6655bcdc8e303d93"
+        },
+        {
+          "path": "lib/ace/task/atoms/task_frontmatter_defaults.rb",
+          "sha256": "88fea8c950eb0783b0cc18c99b14516b40e04410f97faee1bea3d65672d335e3"
+        },
+        {
+          "path": "lib/ace/task/atoms/task_id_formatter.rb",
+          "sha256": "e30c6eb10b99d2f5919e05761d2ede8037c1e3639e1de5c4e482b7f3fbb75d97"
+        },
+        {
+          "path": "lib/ace/task/atoms/task_validation_rules.rb",
+          "sha256": "b7b0e9bba1e5cba7aac7a8a649140eea4db998fe1d975e539d53007f4356a186"
+        },
+        {
+          "path": "lib/ace/task/cli.rb",
+          "sha256": "92474d927fc6ef31cb816e3b7afc9a00c171708d4fa5d3e8ea9ab80b658da671"
+        },
+        {
+          "path": "lib/ace/task/cli/commands/create.rb",
+          "sha256": "5486fe2c281970ffef7472438706af8f85ee0b6d51e60803a0af0d2cbc566dba"
+        },
+        {
+          "path": "lib/ace/task/cli/commands/doctor.rb",
+          "sha256": "607b67cab49a816f94068c8359a1fa3982c08649e2ea7f339b7ebcbe43adf680"
+        },
+        {
+          "path": "lib/ace/task/cli/commands/issue_link.rb",
+          "sha256": "00976cc42fc2d5ce9bf74216e9791c983b0623aaeb51b1f641f24b55042d0428"
+        },
+        {
+          "path": "lib/ace/task/cli/commands/issue_sync.rb",
+          "sha256": "59cd63070afe512782724f66775b0046f24eef577e8a2e6a8336a5e47dbff66f"
+        },
+        {
+          "path": "lib/ace/task/cli/commands/list.rb",
+          "sha256": "c58815db8dc69c9411f65b87c0a355fd9e561e79744d3af0b8bf39c1a852baf3"
+        },
+        {
+          "path": "lib/ace/task/cli/commands/plan.rb",
+          "sha256": "87b01b64e3ee8ec399f77671d96b7aa333f89bd230dcb220a112f56bb7402f52"
+        },
+        {
+          "path": "lib/ace/task/cli/commands/show.rb",
+          "sha256": "c324a8048de98bed968ce69c0588f8f73c1641229a2942bd509d82febd2e521d"
+        },
+        {
+          "path": "lib/ace/task/cli/commands/status.rb",
+          "sha256": "eb534d181ad4a75dd6769512aaf90dfcb49221db3234c4e63b8bf3c0de08af8b"
+        },
+        {
+          "path": "lib/ace/task/cli/commands/update.rb",
+          "sha256": "ed8616404dedd1d064b06a893088b61daa65b5590c56ca0425feabc1eb0251a8"
+        },
+        {
+          "path": "lib/ace/task/models/task.rb",
+          "sha256": "0a1f0d56aad8240b9753ab7bafda5a8d90553239242a5f70793d9680b7ef8b81"
+        },
+        {
+          "path": "lib/ace/task/molecules/dependency_aware_smart_sorter.rb",
+          "sha256": "5ea7f31bddcb3b93ace84aad68a33ed47308587f5c6b91eba3397965741d75ea"
+        },
+        {
+          "path": "lib/ace/task/molecules/issue_link.rb",
+          "sha256": "6c9f5d69dcda5cf62179cfe9fb5436c7ea3d20bf342fba1aad520e54e8729502"
+        },
+        {
+          "path": "lib/ace/task/molecules/issue_sync_adapter.rb",
+          "sha256": "aea8832507616b30899be76e957a89305256fcd31d7dda4e10a9e0f81e14ccfd"
+        },
+        {
+          "path": "lib/ace/task/molecules/path_utils.rb",
+          "sha256": "eff2d796ebf2c7bae7b7f49ef299ac9dfb19d1256f50266b36454666c66d6ab9"
+        },
+        {
+          "path": "lib/ace/task/molecules/subtask_creator.rb",
+          "sha256": "31006eb6271bb613b7c5455e9d7fe0f1376f3daa976b35ae8020a6c3ecd5c365"
+        },
+        {
+          "path": "lib/ace/task/molecules/task_config_loader.rb",
+          "sha256": "8574a9c1866ac9fef2754adde42f7f2e42cb60ae98c92f1235ee13096eb66039"
+        },
+        {
+          "path": "lib/ace/task/molecules/task_creator.rb",
+          "sha256": "1d58b3bee880fb9c60bffb2e842bbbc04927be94372682c36a94f5ce18808cb9"
+        },
+        {
+          "path": "lib/ace/task/molecules/task_display_formatter.rb",
+          "sha256": "43e184d0ac91bfab8b5389f33908cfe190287d946c208e48141c2b89536b55f4"
+        },
+        {
+          "path": "lib/ace/task/molecules/task_doctor_fixer.rb",
+          "sha256": "a468848786ae542a396cf52302ffa7e12d510e870839668fff344baecd4157fe"
+        },
+        {
+          "path": "lib/ace/task/molecules/task_doctor_reporter.rb",
+          "sha256": "bd367806fbce3bfe2e961eb8694ed6a3cdf257fe6f85c82da142287193459949"
+        },
+        {
+          "path": "lib/ace/task/molecules/task_family_completion.rb",
+          "sha256": "93438946f3ef79a613d2fab227b7c5d5063204c7aa6cfdd2fc54f958aec4d278"
+        },
+        {
+          "path": "lib/ace/task/molecules/task_frontmatter_validator.rb",
+          "sha256": "6ec985eb2c49c1191a63a1f5dd045e0431a84e212695e4dc9f5fa26223bc5744"
+        },
+        {
+          "path": "lib/ace/task/molecules/task_loader.rb",
+          "sha256": "2daff93685d59dac2728e5088906868f981af50a7594a0843ece1cf5eea0fc7f"
+        },
+        {
+          "path": "lib/ace/task/molecules/task_plan_cache.rb",
+          "sha256": "ef4eeb0468dda81a40e70d10352b1f9808aa763db0cbfc06bef8378c475e51f9"
+        },
+        {
+          "path": "lib/ace/task/molecules/task_plan_generator.rb",
+          "sha256": "04c6d90de53d7890a99ccbb44ef33f41e9064e811b669a3c72936cb59ad1eccc"
+        },
+        {
+          "path": "lib/ace/task/molecules/task_plan_prompt_builder.rb",
+          "sha256": "edc07828b8acbad8a7d55f7886e6836cd7605674ba8bc65b6027c6fc9f1ce069"
+        },
+        {
+          "path": "lib/ace/task/molecules/task_reparenter.rb",
+          "sha256": "b843613525175ac16389e013a4ed09012235ce655f991b3a8991e8524dc42810"
+        },
+        {
+          "path": "lib/ace/task/molecules/task_resolver.rb",
+          "sha256": "bc0c6e1dce53538771a3e87a78272a7f5d69057cf749d1e00548d0aad878b90e"
+        },
+        {
+          "path": "lib/ace/task/molecules/task_scanner.rb",
+          "sha256": "afd195a6820cf0edf7d8c4afb4635afa09a211e00f7afdd20ff3204a45515690"
+        },
+        {
+          "path": "lib/ace/task/molecules/task_structure_validator.rb",
+          "sha256": "c2cff89f5709db8419647c79902cdb07dc3deadb454aabeb5e0df2efc7e6d3b3"
+        },
+        {
+          "path": "lib/ace/task/organisms/task_doctor.rb",
+          "sha256": "c4d6446ccd6f5e041dba1fc0b4c1acd7e79a787bb8eeb4fd363c7cf4ad36eb20"
+        },
+        {
+          "path": "lib/ace/task/organisms/task_manager.rb",
+          "sha256": "e110cdf7d344e2e67710b8c8aa238d36fbd14c8e7cfbcae16a972f006ba46594"
+        },
+        {
+          "path": "lib/ace/task/version.rb",
+          "sha256": "37a72254fb15ac78072e31e4d6173b05c6a83bf4bfc69f5a6f57a4b8f75f3754"
+        }
+      ]
+    },
+    {
+      "name": "ace-review",
+      "version": "0.59.1",
+      "path": "ace-review/ace-review-0.59.1.gem",
+      "sha256": "afdde3698b38bcff6422f7750f3e582468139c4a5ede8e92fc01740d77479ea5",
+      "files": [
+        {
+          "path": ".ace-defaults/nav/protocols/guide-sources/ace-review.yml",
+          "sha256": "eb7d11568fbe07ecea419cd2bb6cef450d3493d2f45632c88b2c3ea656ccb66d"
+        },
+        {
+          "path": ".ace-defaults/nav/protocols/prompt-sources/ace-review.yml",
+          "sha256": "cdd5e2859c6dc7ad525d34eed63123c3bf7e85b633684b87cafd50431887f2a0"
+        },
+        {
+          "path": ".ace-defaults/nav/protocols/skill-sources/ace-review.yml",
+          "sha256": "3930f904ba2bf810990c53cf033aff736fadabd68771767dd1ebf1d1ad02cefc"
+        },
+        {
+          "path": ".ace-defaults/nav/protocols/tmpl-sources/ace-review.yml",
+          "sha256": "7c679027c9c70fe0a2a929c3098ca3a99323d65da19323633578eb137724f225"
+        },
+        {
+          "path": ".ace-defaults/nav/protocols/wfi-sources/ace-review.yml",
+          "sha256": "55b5af89392f974e46839b027661e276bd9502b66c4468df3374d687734817db"
+        },
+        {
+          "path": ".ace-defaults/review/config.yml",
+          "sha256": "4ed45e6a070e98762474ca88059b67b651441041318d3af6265c9b3a1c6e58aa"
+        },
+        {
+          "path": ".ace-defaults/review/presets/code-fit.yml",
+          "sha256": "226fcfb31ad388d7c01d55ea9f7e15f98f0f220afa3b9b9ea4cae4257725433f"
+        },
+        {
+          "path": ".ace-defaults/review/presets/code-shine.yml",
+          "sha256": "769f9fb27012209035d255e1bbbfc5f7186044ef2c00e8a480c540e364ea22ee"
+        },
+        {
+          "path": ".ace-defaults/review/presets/code-valid.yml",
+          "sha256": "06dba7451b7b8d515d5a07f37c869138a0c58f3948f65e730098987623b9dffd"
+        },
+        {
+          "path": ".ace-defaults/review/presets/docs.yml",
+          "sha256": "bc5a9beef1ea945c1c3c8e8d5dd29cce4a88810a2339383f22160a2c44df01f4"
+        },
+        {
+          "path": ".ace-defaults/review/presets/integration.yml",
+          "sha256": "5f58f0e7094bc7654680d0e5aeb2624bbfd117950336b92f63afbd2c5df50cca"
+        },
+        {
+          "path": ".ace-defaults/review/presets/spec.yml",
+          "sha256": "ae1fb0ce82b5569b0b124bcec277501a5242deaa4458eaa63b498cdf0889e698"
+        },
+        {
+          "path": "CHANGELOG.md",
+          "sha256": "4314f1ea177456e13dbdf0282688ad0db2703c97a850422b6d401246ac8d912d"
+        },
+        {
+          "path": "LICENSE",
+          "sha256": "4395433eb2e1d44cbb68d7453fee5d2ddf04aa2d2d7400ed15c42d6d9500cbd8"
+        },
+        {
+          "path": "README.md",
+          "sha256": "0c95a05be34ce02f0935d1be0f3499fd601e13b1cf0451ee470d2a0e9a2374ee"
+        },
+        {
+          "path": "Rakefile",
+          "sha256": "77a3dc1341c6a55c9df84598f718902ce48921bf405b4ab45851efc6afcb6448"
+        },
+        {
+          "path": "docs/campaigns.md",
+          "sha256": "874e7df59e77d97cc0d937e1ff980206933ee6b81881e5dbb1bec4ec38a844e3"
+        },
+        {
+          "path": "docs/demo/ace-review-getting-started.gif",
+          "sha256": "e3244a6e6f929e5a5a6fa6c5f5abf4296336251e332cbe49abd4f7f023b66a81"
+        },
+        {
+          "path": "docs/demo/ace-review-getting-started.tape.yml",
+          "sha256": "38f8dc16c3faea1b099d1e58089c8df2ddf1aa30739f4158ab6e8301b08e9539"
+        },
+        {
+          "path": "docs/feedback-workflow.md",
+          "sha256": "38af90b9ef9ddf5e497ef4a3aa5cf585796db4c84557bb9ca4c13e97b809f01a"
+        },
+        {
+          "path": "docs/getting-started.md",
+          "sha256": "649157e9f0765ca4c1c6eef3cd0aa7a5112f7eedd7943f1691657e2fec28c25d"
+        },
+        {
+          "path": "docs/handbook.md",
+          "sha256": "5e06678f6510593bbc667505a3af1842afb333270e49bbc1aa70e661c3ab2dc9"
+        },
+        {
+          "path": "docs/usage.md",
+          "sha256": "ce8daaa8785cc5eba6765b59edb4ac9fc66e9bc8a28726c3c7f135d747fa4294"
+        },
+        {
+          "path": "exe/ace-review",
+          "sha256": "b639ef146e7a41229916dc6d54fce533cccfff1d3567c98764b098b84b4ad8d6"
+        },
+        {
+          "path": "exe/ace-review-feedback",
+          "sha256": "e4e4261b11aaa83a9dc097777b1d7d537e5f2f255894565c72a4c943df15650d"
+        },
+        {
+          "path": "handbook/guides/code-review-process.g.md",
+          "sha256": "49cf1797f45743b052df2f76d07e5e290f6def517258dd35d90d191b8cf8157e"
+        },
+        {
+          "path": "handbook/prompts/base/sections.md",
+          "sha256": "933ad498023624e0751b5313be2f5b6717f28c3b4592722b259d0b33e3ff9abd"
+        },
+        {
+          "path": "handbook/prompts/base/system.md",
+          "sha256": "3aac2935cdfcdd0cbe0175c5cac3b891235c2a4864fb7bb5867bea47d0066b9f"
+        },
+        {
+          "path": "handbook/prompts/focus/architecture/atom.md",
+          "sha256": "c11e67312a689b8b435cc2ff40954e0bb38c8b21ab78f76c58bc4e0e01f01fab"
+        },
+        {
+          "path": "handbook/prompts/focus/architecture/reflection.md",
+          "sha256": "379325f1d6f0ba38dee2b05cec5d5d993d864d192dd10e1bf180212936778b71"
+        },
+        {
+          "path": "handbook/prompts/focus/frameworks/rails.md",
+          "sha256": "7132bb04e44badfccfa54f8c723809f2264eadfa00935ea77f1b091cc7e3a75d"
+        },
+        {
+          "path": "handbook/prompts/focus/frameworks/vue-firebase.md",
+          "sha256": "95d99b092872f2ab2cb0026541e52e64a2f003e60ca72c34bdb7fedc58da4940"
+        },
+        {
+          "path": "handbook/prompts/focus/languages/ruby.md",
+          "sha256": "ea72f6d156a29ac6a3c303a6e54af2587adb7962f3a84ea07bea8e2cad9e862e"
+        },
+        {
+          "path": "handbook/prompts/focus/phase/correctness.md",
+          "sha256": "b2fa634d85981418dba00078cdff11141f883fc4173b0d64cd7e655f2000e66c"
+        },
+        {
+          "path": "handbook/prompts/focus/phase/integration.md",
+          "sha256": "bf6c9f31837e338d46b3a5ac5909321906f339395fcfe9961e7cdc6977c219aa"
+        },
+        {
+          "path": "handbook/prompts/focus/phase/polish.md",
+          "sha256": "701599cf4fd48f3e7dc28be795db103b922b09c767bde5fe2e7842bfee4ea64a"
+        },
+        {
+          "path": "handbook/prompts/focus/phase/quality.md",
+          "sha256": "b00769e0acb6644cf9430d4463d55a912566df17f82138fc6428513ed1690970"
+        },
+        {
+          "path": "handbook/prompts/focus/quality/performance.md",
+          "sha256": "981cf852aba4ce920c311d374e2bb0e1aa9e03d613a628e5c6657d9bc6741838"
+        },
+        {
+          "path": "handbook/prompts/focus/quality/security.md",
+          "sha256": "12b3e11d767f9900641d720f30739d7612abf5b29645490279082886ece2cf4d"
+        },
+        {
+          "path": "handbook/prompts/focus/scope/docs.md",
+          "sha256": "d85f8d02833a17027e9e6ba01c2047059516c27e5af80cc7eac66c30f0a49f11"
+        },
+        {
+          "path": "handbook/prompts/focus/scope/spec.md",
+          "sha256": "c62c7440ef9f316c20ae866d62e365a0b1a80f6abdc791af6472c074f2c6cab4"
+        },
+        {
+          "path": "handbook/prompts/focus/scope/tests.md",
+          "sha256": "0afb5ce01e30b85742c9111ab5dd1c52129571489feff2a3059432448ad1999f"
+        },
+        {
+          "path": "handbook/prompts/format/compact.md",
+          "sha256": "87258be59e32b9352ff356a314f06adf62965b1a867c2d909dcc1b880e756ecd"
+        },
+        {
+          "path": "handbook/prompts/format/detailed.md",
+          "sha256": "621d371b030f302dafaec5d32ca9e8be1823bd53a5eaf7299db527f9d11ae74d"
+        },
+        {
+          "path": "handbook/prompts/format/standard.md",
+          "sha256": "0aeb4c753c315bb9f1e05c68990102378055dd5f5a03e3c3ad8056e55dc5cb26"
+        },
+        {
+          "path": "handbook/prompts/guidelines/icons.md",
+          "sha256": "434babbe90a00acd4a9e1a410d079ac81cbc45669e8313beef02523769c84b4c"
+        },
+        {
+          "path": "handbook/prompts/guidelines/tone.md",
+          "sha256": "9f3b6c348e841adc9a054be8d6739187dd1fbe4920567246d2a452f1239be5c8"
+        },
+        {
+          "path": "handbook/prompts/synthesis-review-reports.system.md",
+          "sha256": "a00d37440c6966abd2a0d2752b210accc7e1c69983bcff8a46f40cf30b554c3f"
+        },
+        {
+          "path": "handbook/prompts/synthesize-feedback.system.md",
+          "sha256": "a856dfb5d853154f427017e855db1752160bec86ce5faf248ff77ad5a4fdfe3c"
+        },
+        {
+          "path": "handbook/skills/as-review-apply-feedback/SKILL.md",
+          "sha256": "fd231019ed74779c5d8f8f25486778bb44cc7809b41f8a83adbf07885c3b2aea"
+        },
+        {
+          "path": "handbook/skills/as-review-package/SKILL.md",
+          "sha256": "c7e3ee3dd6b36ca8e18b6689c86da3dd285c8df1d37f32b79ab5ca927a3cfc9f"
+        },
+        {
+          "path": "handbook/skills/as-review-pr/SKILL.md",
+          "sha256": "11e6f2ae9f106277285c9ddc699bbdf6d2b1625d0385ff7ace04340a7c4d63e7"
+        },
+        {
+          "path": "handbook/skills/as-review-run/SKILL.md",
+          "sha256": "1e196abc610847cdec5f1498e9f3249235e622eef8c14960de34dcce8e398b86"
+        },
+        {
+          "path": "handbook/skills/as-review-verify-feedback/SKILL.md",
+          "sha256": "c77d5295f02bc1934b8bc7e6103e8a1b73f92e80df97bced93b77efb24d51526"
+        },
+        {
+          "path": "handbook/templates/review-tasks/task-review-summary.template.md",
+          "sha256": "2f7bbde28a208a512b3acffc91ce485607118fa52d711c3d06a0971ecb00b52b"
+        },
+        {
+          "path": "handbook/workflow-instructions/review/apply-feedback.wf.md",
+          "sha256": "d236f79a9078b0453c93165e6de68e7e650f8c0c3db1d1420fc16424349ddf75"
+        },
+        {
+          "path": "handbook/workflow-instructions/review/package.wf.md",
+          "sha256": "efbec18fb9dbef9371b6ece5207dfebb99de935b1b6f6cd98c6d0acc8e738f0a"
+        },
+        {
+          "path": "handbook/workflow-instructions/review/pr.wf.md",
+          "sha256": "01f836e5757a6511363ecc942087a1bb8001576cc336226b696492eea5e3df63"
+        },
+        {
+          "path": "handbook/workflow-instructions/review/run.wf.md",
+          "sha256": "c8c4d80eaff88a634d01c48a1277deea629cc14f16312fffed82ccf13e38b0d6"
+        },
+        {
+          "path": "handbook/workflow-instructions/review/verify-feedback.wf.md",
+          "sha256": "2c82f5c1ab2369d791951ea4fe1f4dcac59ef42d06cf4b695c26eaa45cb8f159"
+        },
+        {
+          "path": "lib/ace/review.rb",
+          "sha256": "c6a08f7847af86f8a5e928a8c074739f24556395f8f8788eae01d3affb3c1f1b"
+        },
+        {
+          "path": "lib/ace/review/atoms/campaign_contract.rb",
+          "sha256": "bbdb9aac241519b6af32709ce171b24932f3131565af016e8179b8b242d2896b"
+        },
+        {
+          "path": "lib/ace/review/atoms/campaign_projection.rb",
+          "sha256": "f1943a3010a55b694efa9654da5e846685bcc6dac90ed9293941b73d5711d4f2"
+        },
+        {
+          "path": "lib/ace/review/atoms/context_limit_resolver.rb",
+          "sha256": "d10982c13cbdc167e53697f60e8e8318338620af0078d42ec717a95d064a2d02"
+        },
+        {
+          "path": "lib/ace/review/atoms/diff_boundary_finder.rb",
+          "sha256": "64d3c159137d8c5f0a9216da9c110a2bbca70b76e30fc981209f8cc7b5e56a47"
+        },
+        {
+          "path": "lib/ace/review/atoms/feedback_id_generator.rb",
+          "sha256": "80c7062bf893035287ff30160452f4a3889ce8d9ebc1428dc2f846f599ab76eb"
+        },
+        {
+          "path": "lib/ace/review/atoms/feedback_slug_generator.rb",
+          "sha256": "feb0b90186e9da84f5fea762fe6cab4d107f80c3ad616085c7549ffbf8034765"
+        },
+        {
+          "path": "lib/ace/review/atoms/feedback_state_validator.rb",
+          "sha256": "80099f9af5da9397208f193e4814a88fc28ab2b50eae3d23630d715069569a65"
+        },
+        {
+          "path": "lib/ace/review/atoms/pr_comment_formatter.rb",
+          "sha256": "6e1068153830842fe650acc08938b5a46b4d202270e71dae1804d67f38c65322"
+        },
+        {
+          "path": "lib/ace/review/atoms/preset_validator.rb",
+          "sha256": "cd1824f9610bb6eff460fce6435818bb2c76d82c05307a4ee5515b7c9d8e5f3f"
+        },
+        {
+          "path": "lib/ace/review/atoms/priority_filter.rb",
+          "sha256": "064879a8c9bd06aa40eca2c5f73d2d9afcf7cb6d1289c1d24e34808826d4df70"
+        },
+        {
+          "path": "lib/ace/review/atoms/prompt_budget.rb",
+          "sha256": "feaa43e6b15c5f5104d95fe0fba6b9af6cb911c0bda8a4fc10fbaab784b2ad18"
+        },
+        {
+          "path": "lib/ace/review/atoms/slug_generator.rb",
+          "sha256": "a16bd683b1a98dbcf9e33cb494950e31a2bc5dc6dce2a41b6fbfc21f49b33b76"
+        },
+        {
+          "path": "lib/ace/review/atoms/token_estimator.rb",
+          "sha256": "895849816abb59cc6292114390ec09ed6d616854a51e97b191120c97be945f64"
+        },
+        {
+          "path": "lib/ace/review/cli.rb",
+          "sha256": "9b889170d8d07c72dc0ea7a82fdda7580289bd13ce39a381095c22629bc0ea5c"
+        },
+        {
+          "path": "lib/ace/review/cli/campaign_cli.rb",
+          "sha256": "f355d6347cecddfb77cd0334750be63db2ca5ff70cd4a50a6805993e71ccffb7"
+        },
+        {
+          "path": "lib/ace/review/cli/commands/campaign/base.rb",
+          "sha256": "2cd0136a8b1381581dff16ffea65beeb2cb1be4dbd5cd97e431acf3c388faa0f"
+        },
+        {
+          "path": "lib/ace/review/cli/commands/campaign/finish.rb",
+          "sha256": "f9325b25a8537384a924c6cb447b0d769b69ba73efdea88d71dc0c34e771b9e0"
+        },
+        {
+          "path": "lib/ace/review/cli/commands/campaign/record_round.rb",
+          "sha256": "3e0e3645390182fa4b46e66070c37105bf785ae9de7a72c7a808a9b1a01f5b81"
+        },
+        {
+          "path": "lib/ace/review/cli/commands/campaign/start.rb",
+          "sha256": "2f02a7c30969f38a307e7103bdbbca90356fd40b379864cc0d93e2f2238ae7b6"
+        },
+        {
+          "path": "lib/ace/review/cli/commands/campaign/status.rb",
+          "sha256": "28b72097386863eb71241ce70a3aceae6d2f66acfda4de5a312578d4ccdcb7ea"
+        },
+        {
+          "path": "lib/ace/review/cli/commands/feedback.rb",
+          "sha256": "db0c6a1ca66f633f9540a6fb0581ebdeb98da953df4ce6995160baaf18edb9c7"
+        },
+        {
+          "path": "lib/ace/review/cli/commands/feedback/create.rb",
+          "sha256": "711f841224545d90a4d786fc3de92d206cddf3f724acb582757521bf41767bc5"
+        },
+        {
+          "path": "lib/ace/review/cli/commands/feedback/list.rb",
+          "sha256": "b90b91c95504947a6f22b6c5eac4cae1a8776ce8608f060b598b8d8b6cf0dfcf"
+        },
+        {
+          "path": "lib/ace/review/cli/commands/feedback/resolve.rb",
+          "sha256": "5dcd7dc32fb2c4d51ec9a7dc9ac8371ce7e78780dcb93ae88fe442faf6e4e402"
+        },
+        {
+          "path": "lib/ace/review/cli/commands/feedback/session_discovery.rb",
+          "sha256": "26fdbf330b3514a69ee2e49107c31cbfbcd7e2f20acf250728ec46def23b2f21"
+        },
+        {
+          "path": "lib/ace/review/cli/commands/feedback/show.rb",
+          "sha256": "8fa73cc8629e390bbdbb131f2b3c112c56e76180c0fdf8d8cc214f550ee65855"
+        },
+        {
+          "path": "lib/ace/review/cli/commands/feedback/skip.rb",
+          "sha256": "8de46315d08a6ab3bbb15b06302f48e9f278c778577cc032aecb0cd08d8a52e2"
+        },
+        {
+          "path": "lib/ace/review/cli/commands/feedback/verify.rb",
+          "sha256": "2ece94e340fabfd271c106eac9bf31355f67f4fd727ae5918d427fd16495d213"
+        },
+        {
+          "path": "lib/ace/review/cli/commands/review.rb",
+          "sha256": "d29bed012eb5f57db0a27e63c2ca323102142f487339ce3ac305ed6e4acb49c0"
+        },
+        {
+          "path": "lib/ace/review/cli/feedback_cli.rb",
+          "sha256": "5db4c20e984027fce227ff13bc4246e2afaeb58c6ece8ab415a8e1fd9840afc3"
+        },
+        {
+          "path": "lib/ace/review/errors.rb",
+          "sha256": "41c4ab320c37647ade9b50e16482a3c60b1489740c8769bf50eeb81266d47a50"
+        },
+        {
+          "path": "lib/ace/review/models/feedback_item.rb",
+          "sha256": "c29a6faab232e910116ffde8826f9fbcf187c634ff1beaf6d8f56ba34c134f44"
+        },
+        {
+          "path": "lib/ace/review/models/review_options.rb",
+          "sha256": "0b2f4b7f0f2e41c1e67c09758983f99d4bcc410ff2c5d92dcaf32eaaba35c938"
+        },
+        {
+          "path": "lib/ace/review/models/reviewer.rb",
+          "sha256": "bdef71119928c52aa3cab79b46be3b5049d04090473e05f938a4928746fe7756"
+        },
+        {
+          "path": "lib/ace/review/molecules/campaign_evidence.rb",
+          "sha256": "1b77679e111f2b8e2a762e40ffe72ee52f37f792526ab2730a7864914342020e"
+        },
+        {
+          "path": "lib/ace/review/molecules/campaign_execution_evidence.rb",
+          "sha256": "d900bae6fda99dc2ea36893097842f8703d2989a0e2694daf1a54d72afdeb0a6"
+        },
+        {
+          "path": "lib/ace/review/molecules/campaign_store.rb",
+          "sha256": "068d1cd58e9dae9da43527f8e9129c9275f96eb54ae88aaac874c909d7d9a85e"
+        },
+        {
+          "path": "lib/ace/review/molecules/context_composer.rb",
+          "sha256": "d102876db2fd633a867724511f63060f05e5b45d5f0113de0bd90ae14e0d0293"
+        },
+        {
+          "path": "lib/ace/review/molecules/delta_resolver.rb",
+          "sha256": "6343b40dc66b05e0f039147832fd44c70e31d23a854dc86a804077b3b3f2b52b"
+        },
+        {
+          "path": "lib/ace/review/molecules/diff_scope.rb",
+          "sha256": "5f042c6bd25a09b99748e207c9de001d6128fa18c2f1ffa698d2e90d32b3ca21"
+        },
+        {
+          "path": "lib/ace/review/molecules/exempt_paths.rb",
+          "sha256": "a34a87f73cb2d9f9914581d6cdb14d9792c45a1f8d036696cfdbced7207293bd"
+        },
+        {
+          "path": "lib/ace/review/molecules/feedback_directory_manager.rb",
+          "sha256": "2fe794198ba1e317a26df56eaa01ca091d917f9788568f14fe888c1e0cbb18a0"
+        },
+        {
+          "path": "lib/ace/review/molecules/feedback_file_reader.rb",
+          "sha256": "8a4e2ad7550d11f13a9d20309d974a608e2f90a8526281e58e2eabf1f0ce7881"
+        },
+        {
+          "path": "lib/ace/review/molecules/feedback_file_writer.rb",
+          "sha256": "31b6bbeaf955691d624ee588c39d72fc674e40669f673c7d3181100356ce1276"
+        },
+        {
+          "path": "lib/ace/review/molecules/feedback_synthesizer.rb",
+          "sha256": "9e45138a076fa2b31fa4ab86190a0f7518db137b30874bc38c253bfbf7790cdf"
+        },
+        {
+          "path": "lib/ace/review/molecules/goals_brief.rb",
+          "sha256": "77ce67ed04b37695eab3a81943e0a6f261cf4c1a3aea7626d6d9f33181e6e7e2"
+        },
+        {
+          "path": "lib/ace/review/molecules/llm_executor.rb",
+          "sha256": "ce64a3e7784d36eac6fa54f210436fcaca168f6277b451b8eededae5b64177f4"
+        },
+        {
+          "path": "lib/ace/review/molecules/multi_model_executor.rb",
+          "sha256": "2995e2038b762d98a5d876dc7be3dc86c907c1d946528e8ba503e9d1da9ee50b"
+        },
+        {
+          "path": "lib/ace/review/molecules/nav_prompt_resolver.rb",
+          "sha256": "74ddde36384336853a34b1361d21b47b705daf1f6324912ccc8df54c9cc51794"
+        },
+        {
+          "path": "lib/ace/review/molecules/pr_provider.rb",
+          "sha256": "b414a5dc87a1b5d069bac6572c4efc1136a0eade14515c48ccf0fc38ef5bb6fd"
+        },
+        {
+          "path": "lib/ace/review/molecules/pr_task_spec_resolver.rb",
+          "sha256": "8b55a7e48f74626b9098f0925a4e9e013b1946c6d171d234141331a27f94b4d1"
+        },
+        {
+          "path": "lib/ace/review/molecules/preset_manager.rb",
+          "sha256": "d5cc65f64dd86762041c2091ea3ae820668cf1d43773e15dd1b0ce019c7fbea6"
+        },
+        {
+          "path": "lib/ace/review/molecules/prompt_composer.rb",
+          "sha256": "617fd51f2041bff615be186cb59ae954a077e7888fa8122e8975fc5d2c397b05"
+        },
+        {
+          "path": "lib/ace/review/molecules/prompt_resolver.rb",
+          "sha256": "7fd38efc541ff4632ab17e137d8a8ddab6cb2c3eba8c8b2650e09fd028759784"
+        },
+        {
+          "path": "lib/ace/review/molecules/review_evidence.rb",
+          "sha256": "157724254e730653cb4fd36ac2a00176bde62bf85ae24dbc7e81fa72eb2e657c"
+        },
+        {
+          "path": "lib/ace/review/molecules/subject_extractor.rb",
+          "sha256": "0ca4cba727c335bb456b889b0996d77a475333e70855c1641554effb3bf6de36"
+        },
+        {
+          "path": "lib/ace/review/molecules/subject_filter.rb",
+          "sha256": "ea81593cf6e128388ca9f42dc826960661baf0e73dac984ebcf091c56c067115"
+        },
+        {
+          "path": "lib/ace/review/molecules/task_report_saver.rb",
+          "sha256": "cb7aa4937fe291515f9dedde2f236e53fee9ac6fffd2e4f887f4ba3f40bf0b97"
+        },
+        {
+          "path": "lib/ace/review/molecules/task_resolver.rb",
+          "sha256": "19d757d6c847278bc1728784fed91f8e0e05d25e29d47190d9105cb0b1b9197f"
+        },
+        {
+          "path": "lib/ace/review/organisms/campaign_manager.rb",
+          "sha256": "3c6907f5e1980b566892a7604f5b644420c03a65cf6165f24e2141a7b455ba90"
+        },
+        {
+          "path": "lib/ace/review/organisms/feedback_manager.rb",
+          "sha256": "128b7534dfd4edd1255ae4b2a06d9557c867eda4ec7e74e43facf6b1841fdf4f"
+        },
+        {
+          "path": "lib/ace/review/organisms/review_manager.rb",
+          "sha256": "f96854847ebf8d95b777e47c980a98a8817cc8d407591c9d00e1a53806443055"
+        },
+        {
+          "path": "lib/ace/review/version.rb",
+          "sha256": "1c492c49accfed243459bc881c15bdbd827ff0ffd6b35694c359795f77803033"
+        }
+      ]
+    },
+    {
+      "name": "ace-assign",
+      "version": "0.65.0",
+      "path": "ace-assign/ace-assign-0.65.0.gem",
+      "sha256": "e5a50d93d43cf99cdf83a7bd117d2793638845e6f6d351d1cd23fd96db112056",
+      "files": [
+        {
+          "path": ".ace-defaults/assign/catalog/composition-rules.yml",
+          "sha256": "6d0ce40b9046317103f1b6ca9c21aaefd81abc7415a850c98c5fe59e03d5be1f"
+        },
+        {
+          "path": ".ace-defaults/assign/catalog/recipes/batch-tasks.recipe.yml",
+          "sha256": "bb4cebad88af75761c3823bf7ea3f4201bc41048c2c35e1e3a5c8cb49c731754"
+        },
+        {
+          "path": ".ace-defaults/assign/catalog/recipes/documentation.recipe.yml",
+          "sha256": "856449f132dbf2f2b8da2eaeb932c5340f83a33b49b7d0b8b19417874f2210e2"
+        },
+        {
+          "path": ".ace-defaults/assign/catalog/recipes/fix-and-review.recipe.yml",
+          "sha256": "1759b23e3450cc1c1ba8e7b4330ca85082a8eadb8bf498f01dc7f6bce975a550"
+        },
+        {
+          "path": ".ace-defaults/assign/catalog/recipes/implement-simple.recipe.yml",
+          "sha256": "358036aeac9e89c74eab2675945ce1b114cccb4d6f1e95b62d2901161d2a20a8"
+        },
+        {
+          "path": ".ace-defaults/assign/catalog/recipes/implement-with-pr.recipe.yml",
+          "sha256": "8a68f5327d85c0f452663d9d0d4f549843742587db310594ea5c3c7ef4245398"
+        },
+        {
+          "path": ".ace-defaults/assign/catalog/recipes/release-only.recipe.yml",
+          "sha256": "ba384eeb9ceb5d46d8ee06fedfbc4a661d764bf27d55481c5718c3c3f9d000b6"
+        },
+        {
+          "path": ".ace-defaults/assign/catalog/steps/apply-feedback.step.yml",
+          "sha256": "ee083b30fb777f079a3fc584c4e7613f2f2d9631fc942fde99efae039db841dc"
+        },
+        {
+          "path": ".ace-defaults/assign/catalog/steps/commit.step.yml",
+          "sha256": "3b887a98711dc204872c7a78230d1297d45a668c41760804605e849776ee496f"
+        },
+        {
+          "path": ".ace-defaults/assign/catalog/steps/create-pr.step.yml",
+          "sha256": "015e6564fd6f77591e1e8c02081a3f6bb4812947f772f9f1cb9ef3c56178868d"
+        },
+        {
+          "path": ".ace-defaults/assign/catalog/steps/create-retro.step.yml",
+          "sha256": "e2bfc3827e158aabea9f0a809eee63e51643bb5b4cfb9b69cbeda3153c0a0ba7"
+        },
+        {
+          "path": ".ace-defaults/assign/catalog/steps/fix-tests.step.yml",
+          "sha256": "c38674e9fc4264a781d4fd7f5b67c7870e460c2f5d3ddc2c01e55efdfce834e6"
+        },
+        {
+          "path": ".ace-defaults/assign/catalog/steps/lint.step.yml",
+          "sha256": "7216ad8e2899fff34ebeddd5da6270597c58fca6199dec430e793b29a1b85396"
+        },
+        {
+          "path": ".ace-defaults/assign/catalog/steps/mark-pr-ready.step.yml",
+          "sha256": "863c1990576caf18cb012eca8c447a378dd698fed0cab1aabb9baed646538c26"
+        },
+        {
+          "path": ".ace-defaults/assign/catalog/steps/mark-task-done.step.yml",
+          "sha256": "9f8d840e431f7c2c0df3be618273aeb3682f31f8dc8678e698d75c5983a4c6ac"
+        },
+        {
+          "path": ".ace-defaults/assign/catalog/steps/onboard-base.step.yml",
+          "sha256": "77bd9695f77304ce4b30a42e75c428ecb41f9661681123f710bbcb8d8707e3df"
+        },
+        {
+          "path": ".ace-defaults/assign/catalog/steps/onboard.step.yml",
+          "sha256": "d5639ae1aebcc23cd4d8cc2bb759b06e9ce6c2e915374b32108b7cb9d258269c"
+        },
+        {
+          "path": ".ace-defaults/assign/catalog/steps/plan-task.step.yml",
+          "sha256": "e62fa1ce10d49345c121c352fb6cabc668c5ecf2f12b8d0b8b876f7e52360cc7"
+        },
+        {
+          "path": ".ace-defaults/assign/catalog/steps/pre-commit-review.step.yml",
+          "sha256": "dbb25675237418ee917bf40f8d0b5da9b98bbe3aa5f63f2b81d457bb7c691922"
+        },
+        {
+          "path": ".ace-defaults/assign/catalog/steps/push-to-remote.step.yml",
+          "sha256": "9aed9e74114192f2d4f768a834190ab93f1c6ef506765838ad8944c39128fec3"
+        },
+        {
+          "path": ".ace-defaults/assign/catalog/steps/rebase-with-main.step.yml",
+          "sha256": "7dd343f70c59a3c334a12d1a37d68fff0bff5bc9737816e54ea91448bc0678ab"
+        },
+        {
+          "path": ".ace-defaults/assign/catalog/steps/record-demo.step.yml",
+          "sha256": "55ee94a558c07eb4500f613e90ea297faf23b82b473ab0747d4a0103ca1c0aab"
+        },
+        {
+          "path": ".ace-defaults/assign/catalog/steps/reflect-and-refactor.step.yml",
+          "sha256": "7133c68eba9fd2f7d8b91c5f49050aa3e6896828462c1fe66c973327fa56db84"
+        },
+        {
+          "path": ".ace-defaults/assign/catalog/steps/release-minor.step.yml",
+          "sha256": "86286cce6260e26f3fc9467957ce25e65b2f0a3075679d2a9d429e0c592cf485"
+        },
+        {
+          "path": ".ace-defaults/assign/catalog/steps/release.step.yml",
+          "sha256": "46730628f3dca20c0da8ba6d20c85f684afa983e83dbcbbb7a9a5726b2ad3ae6"
+        },
+        {
+          "path": ".ace-defaults/assign/catalog/steps/reorganize-commits.step.yml",
+          "sha256": "5bb146bbd48db5626862f27286a869cf7c9b3443b74818a0a2fc107b3c0ae0ad"
+        },
+        {
+          "path": ".ace-defaults/assign/catalog/steps/research.step.yml",
+          "sha256": "c885810b9b1eac06ed122e8160cfc4934811551d1cb0f8553837da1d9bc57c84"
+        },
+        {
+          "path": ".ace-defaults/assign/catalog/steps/review-pr.step.yml",
+          "sha256": "77883d1c8b26825ea892524b02f64ce10a74bd7d488050c10b91828322efe05b"
+        },
+        {
+          "path": ".ace-defaults/assign/catalog/steps/security-audit.step.yml",
+          "sha256": "3053be840b010a4f6dae69c9f9e667f64cc3d1aade3ca3f335bd1be311f2a03a"
+        },
+        {
+          "path": ".ace-defaults/assign/catalog/steps/split-subtree-root.step.yml",
+          "sha256": "db78d583881d4cead745745be948a056ac22afc44f806e0d3f62376ed8d6842b"
+        },
+        {
+          "path": ".ace-defaults/assign/catalog/steps/squash-changelog.step.yml",
+          "sha256": "3130ffc859ffc1b3477fc2b434f9edfb7eb386b1957cd01c0179ac1c67543873"
+        },
+        {
+          "path": ".ace-defaults/assign/catalog/steps/task-load.step.yml",
+          "sha256": "d35764268e3307a203eb3f9e834eedcf2ff6f1829c31d5948ba8e277521b0181"
+        },
+        {
+          "path": ".ace-defaults/assign/catalog/steps/update-docs.step.yml",
+          "sha256": "59780b2c361eb00680abfad62ae276f591a6fc6e42839be7120d2801988b7681"
+        },
+        {
+          "path": ".ace-defaults/assign/catalog/steps/update-pr-desc.step.yml",
+          "sha256": "49aa983e001bd27d34c7d0bdb2dbccf32a2eed15553d0c8307e161543a9e908d"
+        },
+        {
+          "path": ".ace-defaults/assign/catalog/steps/verify-test-suite.step.yml",
+          "sha256": "7e0be75db56065232461c6c6cad2dc1c1b6aa6e1ffea3b0b1f1c34953c2d269a"
+        },
+        {
+          "path": ".ace-defaults/assign/catalog/steps/verify-test.step.yml",
+          "sha256": "b6cd2b89c05483e8ea1e7db45393bf5cc260fa537c65b62f827e1def1ff9ae25"
+        },
+        {
+          "path": ".ace-defaults/assign/catalog/steps/work-on-task.step.yml",
+          "sha256": "8cc143e0429c7dd49ba371155ce6137cc6c0023c4a7aa8a7009e9ceca5329b25"
+        },
+        {
+          "path": ".ace-defaults/assign/config.yml",
+          "sha256": "5b951a7517c515583befbfb0746feaaf1ba50df199ee46a63b62ce0b18b97305"
+        },
+        {
+          "path": ".ace-defaults/assign/presets/fix-bug.yml",
+          "sha256": "2158a24649b5260a971fac5202cb5568f9fd7ac827294e042fb5cbe4b26d0044"
+        },
+        {
+          "path": ".ace-defaults/assign/presets/quick-implement.yml",
+          "sha256": "f7a8b6ff5777373b0130393c4f58544fbbf6a1c7e1e216663e6080d53b8b7639"
+        },
+        {
+          "path": ".ace-defaults/assign/presets/release-only.yml",
+          "sha256": "490e19a2352ee7e6b0ba7f9b065d0afd1242c2fc82b2a304f9aa33f71c4f3d3d"
+        },
+        {
+          "path": ".ace-defaults/assign/presets/work-on-docs.yml",
+          "sha256": "d21e58f8f3caca9f694c0a126645c31f650fd9e165d9d4a1736653b55d5d2d0d"
+        },
+        {
+          "path": ".ace-defaults/assign/presets/work-on-task-ace-development.yml",
+          "sha256": "0430a047c62df36ddc0060374e43656b998a8bc1ab69ef554ec9eee3aac59f38"
+        },
+        {
+          "path": ".ace-defaults/assign/presets/work-on-task-auto-merge.yml",
+          "sha256": "f7de52af0c2a6cb8362c8d582b2cbd73d1b56943d0a6417989e4294342aba92a"
+        },
+        {
+          "path": ".ace-defaults/assign/presets/work-on-task-in-place.yml",
+          "sha256": "87b91e240fe5eb778f9dd0915d048e4a488e49e5624f7e135c74d0aacc690de6"
+        },
+        {
+          "path": ".ace-defaults/assign/presets/work-on-task.yml",
+          "sha256": "b223d871ce37d292ca8f46a7c92de548393b9d3cdd169ee05f0450b4be45b22f"
+        },
+        {
+          "path": ".ace-defaults/nav/protocols/skill-sources/ace-assign.yml",
+          "sha256": "83d582669d8e4279bed27558f95f52edb585b4771a9458f4cc6bd19a9ad56410"
+        },
+        {
+          "path": ".ace-defaults/nav/protocols/wfi-sources/ace-assign.yml",
+          "sha256": "aa3d54510fce04350fcc9c6fd0278214543e0b1c6c84222e3be542233f1e0e06"
+        },
+        {
+          "path": "CHANGELOG.md",
+          "sha256": "1c26a530d3f406bc4cc12dba63b0c73ceef395462c82e022c548fbd78f66375f"
+        },
+        {
+          "path": "README.md",
+          "sha256": "4387404fe7f182250b119de35fae73889eec637b71724c63a043ea9593bbfd66"
+        },
+        {
+          "path": "Rakefile",
+          "sha256": "1a16a0393d61b58a7c43ae86c173b14efd76b703f966aef5a1968e5f81652aea"
+        },
+        {
+          "path": "docs/demo/canonical-skill-source.gif",
+          "sha256": "7e13e92711f80c66957b66c80424a4ed477c03c79d977229bce8312bef84b675"
+        },
+        {
+          "path": "docs/demo/canonical-skill-source.tape.yml",
+          "sha256": "5f561f57e9b9126b7ada9c3f82a471e55f16f53a3bd8c9dd7fdd3b44f4df836d"
+        },
+        {
+          "path": "docs/demo/fork-provider.cast",
+          "sha256": "9893441ef7c4517712ad4d1e5512b964e183aa4ebf0027b42e00a5792f034df6"
+        },
+        {
+          "path": "docs/demo/fork-provider.gif",
+          "sha256": "9e9a55cbd9bbef76d0b9dae356da19fd08072c80117909068e84369c9213e60d"
+        },
+        {
+          "path": "docs/demo/fork-provider.recording.json",
+          "sha256": "b90cb9f0aaf16b035ac79fb63d8c066a9a61b65d29d80776521c2ebb1b48c71c"
+        },
+        {
+          "path": "docs/demo/fork-provider.tape.yml",
+          "sha256": "d803f9154636041f92a765cbd5fd8dd17d203f48251bdbff4ae62f7d1abc3455"
+        },
+        {
+          "path": "docs/exit-codes.md",
+          "sha256": "ab55a38e708478bddbe2e487399584e5607f26a6b11f5382ec5ffc3f27823d89"
+        },
+        {
+          "path": "docs/getting-started.md",
+          "sha256": "531923ce7f78128851f725b6ad04ad69b66a32a0f3346d0857a927aebd261ed4"
+        },
+        {
+          "path": "docs/handbook.md",
+          "sha256": "1e141370b782cb2ef72dc47714603299f4ead1e1291c214ce1311bada8c31650"
+        },
+        {
+          "path": "docs/protected-authority.md",
+          "sha256": "d92d28309fb41ecb5bab491b94110827589bc8da468890221cc5b1b65065fd43"
+        },
+        {
+          "path": "docs/usage.md",
+          "sha256": "0fc7451d96ae428235cbc7902335137dd10fa8ae7f314b3886d950edb0326038"
+        },
+        {
+          "path": "exe/ace-assign",
+          "sha256": "e1f7e0a6a0738ccc484b227e908bc90fc12d228fb3e4b42f935c394e95ff3359"
+        },
+        {
+          "path": "handbook/guides/fork-context.g.md",
+          "sha256": "7c00101e06c1d694bab2e9abbdd2c32c825f80a5b797f8748a35cf7b566817bf"
+        },
+        {
+          "path": "handbook/skills/as-assign-add-task/SKILL.md",
+          "sha256": "48835f5990c3ae488781d7310601f0072ee1b8f328acab38e2692382a41d06b9"
+        },
+        {
+          "path": "handbook/skills/as-assign-compose/SKILL.md",
+          "sha256": "0cdbb925810594e581919d7676e302fffe2af3870261c000ad3b32348fa65233"
+        },
+        {
+          "path": "handbook/skills/as-assign-create/SKILL.md",
+          "sha256": "17461e8b6ba0c2af73d56e1bd326d322b3918a12429480dd6b079fd3040ea86b"
+        },
+        {
+          "path": "handbook/skills/as-assign-drive/SKILL.md",
+          "sha256": "b1ee76a6be6e22a87a99f3a17413510588e7294351af133de75cc516acc3ece6"
+        },
+        {
+          "path": "handbook/skills/as-assign-prepare/SKILL.md",
+          "sha256": "fa89750875c373b80e4f42e2e3818a18b5090cc57a36d1a77eed6aec785dafff"
+        },
+        {
+          "path": "handbook/skills/as-assign-recover-fork/SKILL.md",
+          "sha256": "a49b450f67d7e807583a78dc4db8b4a1a63b414cd5c32de9024af744103b2cad"
+        },
+        {
+          "path": "handbook/skills/as-assign-run-in-batches/SKILL.md",
+          "sha256": "4677b522a68669ef571c3b51a0f3973b58a1ec2ea13b20738c6b35265e412bf5"
+        },
+        {
+          "path": "handbook/skills/as-assign-start/SKILL.md",
+          "sha256": "232ddcfbb8145ff5b216a07c3efceb62a3bb732154ad29743f58999327361a27"
+        },
+        {
+          "path": "handbook/skills/as-create-retro-internal/SKILL.md",
+          "sha256": "d51ecbb083204b531822c001aa2e7fecc17a021fc6e1d33a967c8f3364d33686"
+        },
+        {
+          "path": "handbook/skills/as-mark-task-done-internal/SKILL.md",
+          "sha256": "96785f9405fb0dfdf6aac0bbce11d1ea394f4eaec6e9a446c8e6de8146fd1a19"
+        },
+        {
+          "path": "handbook/skills/as-reflect-and-refactor-internal/SKILL.md",
+          "sha256": "68ffefb11a10f5429f629ec0c26a0132bb3ff479dbeff149235030bc9ccd5d78"
+        },
+        {
+          "path": "handbook/skills/as-task-load-internal/SKILL.md",
+          "sha256": "b65c38b2ead3480828780dd5031ca8a6b458f7da4d7bf7f92fffadbe8a156607"
+        },
+        {
+          "path": "handbook/workflow-instructions/assign/add-task.wf.md",
+          "sha256": "ce0ba9f87d235b14bd92050e8e807de6c0ecd4ba5b89b51b0966570c3363a25a"
+        },
+        {
+          "path": "handbook/workflow-instructions/assign/compose.wf.md",
+          "sha256": "7051234ec958fd38d8e3519843c7f3592912671d55e66c26a2546cbc5e885354"
+        },
+        {
+          "path": "handbook/workflow-instructions/assign/create-retro-internal.wf.md",
+          "sha256": "b39b237ac3c4364586bf1f4e3203b226c974dde89b47194262a6639974ffbbc8"
+        },
+        {
+          "path": "handbook/workflow-instructions/assign/create.wf.md",
+          "sha256": "ab54e0bad025d95c93fc35dabb9358583d0dfdaaa988eebfd5a3d90d9674a93d"
+        },
+        {
+          "path": "handbook/workflow-instructions/assign/drive.wf.md",
+          "sha256": "31cb0e966cff3e3c5d10e70abead50ec4094d0627b90a0412986e44ebd4be49d"
+        },
+        {
+          "path": "handbook/workflow-instructions/assign/mark-task-done-internal.wf.md",
+          "sha256": "011b67ac4fb1b0f3400f4fe533a12d457b9e206fa686540a5a3a3173df041f25"
+        },
+        {
+          "path": "handbook/workflow-instructions/assign/prepare.wf.md",
+          "sha256": "eb3590fa1ef0f5ee075c3712f97019402e5f85495bc4d56cd64f31096e34dc44"
+        },
+        {
+          "path": "handbook/workflow-instructions/assign/recover-fork.wf.md",
+          "sha256": "a2e4f50db46afc4feb058dc52f0965d0a5a03de2cc3a96c41bdb9f98d0eb1ec5"
+        },
+        {
+          "path": "handbook/workflow-instructions/assign/reflect-and-refactor-internal.wf.md",
+          "sha256": "9ef6efee63d082a329423e3081cdaf51d0a811695cd7325459b986354d901993"
+        },
+        {
+          "path": "handbook/workflow-instructions/assign/run-in-batches.wf.md",
+          "sha256": "080ca118ec1e0be3d26022ddc8b07b5db4e115b6c70978482e9c560e27c4d244"
+        },
+        {
+          "path": "handbook/workflow-instructions/assign/start.wf.md",
+          "sha256": "fdf200c0e437361ce52945c11ec9e1f69375c4e01a3ceddd8e09d68139f63844"
+        },
+        {
+          "path": "handbook/workflow-instructions/assign/task-load-internal.wf.md",
+          "sha256": "5f2a9f99ba79eebf2a3a79c6b1311721028a48e4de5efe20440d262b6c4fc459"
+        },
+        {
+          "path": "handbook/workflow-instructions/assign/verify-test-suite.wf.md",
+          "sha256": "b3213b56216272b1d8123cefce1448baf22667947b13dc91d762067f8387e2b1"
+        },
+        {
+          "path": "lib/ace/assign.rb",
+          "sha256": "c84764e2cc62553c961a31fb86e2999a4e311a19612b44fdbc20b11531afd466"
+        },
+        {
+          "path": "lib/ace/assign/atoms/assign_frontmatter_parser.rb",
+          "sha256": "20fc24fff589aed8a8240d5b1a16716e2b4dca4c7d1c7eb15a2eb98ad876d8de"
+        },
+        {
+          "path": "lib/ace/assign/atoms/assignment_scope.rb",
+          "sha256": "a6341edd0f8dc5d2b014d2c5bacc0fd2e88c47545e75bf200cb3533f064c236f"
+        },
+        {
+          "path": "lib/ace/assign/atoms/attempt_state_machine.rb",
+          "sha256": "2863b57ccbffd1badccf2c5d414bc4ab31d52333619ffee3886eee490524a3d7"
+        },
+        {
+          "path": "lib/ace/assign/atoms/catalog_loader.rb",
+          "sha256": "aceb9a6a212e2bb054da6443a169f9e22feabe04cdf669c5261cf3175e40ead5"
+        },
+        {
+          "path": "lib/ace/assign/atoms/composition_rules.rb",
+          "sha256": "b8b3915cb71856dd8a45b325bb29cd704b88ba4f383cde1cad9eaab95877a1e8"
+        },
+        {
+          "path": "lib/ace/assign/atoms/delivery_parameters.rb",
+          "sha256": "45aea95737a1b171051186c526d9a685248ee707eb5601e2e36b92cb6372a2df"
+        },
+        {
+          "path": "lib/ace/assign/atoms/evidence_digest.rb",
+          "sha256": "c2834f2de916bea0f2a140cc8a467e887f25b4a6cd8d85b4b461d8250bb408fa"
+        },
+        {
+          "path": "lib/ace/assign/atoms/number_generator.rb",
+          "sha256": "d43f14b3365c93c614ec90ae166ea9f494806187868b2ef4855cb6e7a9524600"
+        },
+        {
+          "path": "lib/ace/assign/atoms/preset_expander.rb",
+          "sha256": "43b60a356d8e71762943188ad7d08b4514d3051822cc192ff5ac67cd8c2208af"
+        },
+        {
+          "path": "lib/ace/assign/atoms/preset_loader.rb",
+          "sha256": "5d522b17051e039b09771bdd08f6245c86cac78ed62cb2fd4423ccd6d997f242"
+        },
+        {
+          "path": "lib/ace/assign/atoms/preset_step_resolver.rb",
+          "sha256": "f8fa1e38c7ea4f21515e0c65f14224d5b69a134b3186e9255718b18c9462478a"
+        },
+        {
+          "path": "lib/ace/assign/atoms/step_file_parser.rb",
+          "sha256": "ba31e885a4e1be24208abb517d9d0cd1f600bc84ca9c35f83bb9e4388fe60bd1"
+        },
+        {
+          "path": "lib/ace/assign/atoms/step_numbering.rb",
+          "sha256": "a872d5fc9a6bd5bf2649776df7c79d0a8f8a4c6dcf5cc2b046a2590219e7398d"
+        },
+        {
+          "path": "lib/ace/assign/atoms/step_sorter.rb",
+          "sha256": "e4033bfaf0c13c45854311d3b93099e4b2faf7158eb8c265b423fedc7d0a20f7"
+        },
+        {
+          "path": "lib/ace/assign/atoms/tree_formatter.rb",
+          "sha256": "f15fb6cc32c44df6461c034ab7f5fd49280155c47ba9320dd24d061218303da3"
+        },
+        {
+          "path": "lib/ace/assign/authority/candidate_transfer.rb",
+          "sha256": "d23df7beb3530b24f8fb2f7d9165629e2fb61e1a0e5b58af0532f64c8fd081b9"
+        },
+        {
+          "path": "lib/ace/assign/authority/client.rb",
+          "sha256": "2cfc882dfb4c83d3eb17012ea7e62e47fd3d5ca86b47d50ada22fcf3001096db"
+        },
+        {
+          "path": "lib/ace/assign/authority/deployment.rb",
+          "sha256": "3c8718c326199bde809102ffcdec6b7d60c1e56a8b491ed614f0f6492b2f4483"
+        },
+        {
+          "path": "lib/ace/assign/authority/endcap.rb",
+          "sha256": "bbbb8164dd2ceb96ecc14c7b5973e1152a695e70e02c07636bd855365012661f"
+        },
+        {
+          "path": "lib/ace/assign/authority/endcap_inboxes.rb",
+          "sha256": "6fa04021bbc7455380534c9c1b87a2f0524c6fea5d0c429f17614d79f598e84b"
+        },
+        {
+          "path": "lib/ace/assign/authority/endcap_results.rb",
+          "sha256": "e62a290ef7393a8de7e0746cff19a2c634b29b4247916db1937e858abb0a4823"
+        },
+        {
+          "path": "lib/ace/assign/authority/endcap_services.rb",
+          "sha256": "1c01412b031e8bb57464d5f335b39d543ef694bbe04afccbadd793be66deb33b"
+        },
+        {
+          "path": "lib/ace/assign/authority/evidence_transfer.rb",
+          "sha256": "cf374d60da47d1105c93e2605c68ba6682bb4e2385b444d9361303134d7d29f2"
+        },
+        {
+          "path": "lib/ace/assign/authority/execution_scope_observation.rb",
+          "sha256": "99d6bba36f1eb3ec0af6ea50bd763b1380348e55383ea1892030c7a60869ccae"
+        },
+        {
+          "path": "lib/ace/assign/authority/launch_driver.rb",
+          "sha256": "0c58c2c0f5648e422dc869340a803aaf7c6445eb9f16bf9aaa181bb0f55822fe"
+        },
+        {
+          "path": "lib/ace/assign/authority/launch_lifecycle.rb",
+          "sha256": "1e1f9b7af554920f3babc227e62f30ed3c163486646f056d443e437e73ec6d31"
+        },
+        {
+          "path": "lib/ace/assign/authority/launch_scope_abort.rb",
+          "sha256": "d889ddca923ce8a487016003429dc79eed69938add336a4d9dbb027972d11dbc"
+        },
+        {
+          "path": "lib/ace/assign/authority/launch_scope_admission.rb",
+          "sha256": "0362e53a832cd7fe443d184047204780940b019868911d48082b6e968e807671"
+        },
+        {
+          "path": "lib/ace/assign/authority/launch_scope_close.rb",
+          "sha256": "6a4ca5cae2ab3e253bea579821e8078d7e91ad8197103dc9472c1d2d66096472"
+        },
+        {
+          "path": "lib/ace/assign/authority/launch_scope_parent.rb",
+          "sha256": "3f670c8ce08b011fda83d0bf5a430fbe40902672eb33105d38541abcf290b925"
+        },
+        {
+          "path": "lib/ace/assign/authority/launch_scope_release.rb",
+          "sha256": "759367085f4face34aa9ca724a4df99d7801c320acd37c56679af4c1c6890f49"
+        },
+        {
+          "path": "lib/ace/assign/authority/posix_acl.rb",
+          "sha256": "02104e5c8003367bf269193516f9bcb9d36d4066720abf5054dcd10793f8515f"
+        },
+        {
+          "path": "lib/ace/assign/authority/private_directory.rb",
+          "sha256": "a1da331314f41070bc40090f21be205410bdffcadb1c8a6aca3e4465a924bc97"
+        },
+        {
+          "path": "lib/ace/assign/authority/receipt_transfer.rb",
+          "sha256": "31b4d40b28f173aa9b75b72de0846b8035896b925d12aa009b216b9647d107cb"
+        },
+        {
+          "path": "lib/ace/assign/authority/router.rb",
+          "sha256": "03f3c304061e57877b2d5bc610fbfafa45e4685c910105fbb28d855b331f464f"
+        },
+        {
+          "path": "lib/ace/assign/authority/server.rb",
+          "sha256": "bd2f115ab07dc9e7108462a6c54857012f78f2fe4c2ca7f0073f88e61ae0dee6"
+        },
+        {
+          "path": "lib/ace/assign/authority/service_evidence.rb",
+          "sha256": "66e27be6a4ab0053dd545d06722647827f858a13170b9e191f5e5a13b0925a58"
+        },
+        {
+          "path": "lib/ace/assign/authority/transfer_codec.rb",
+          "sha256": "b1801391aa9bfa821d5718d6d8a8eb5665c094db163708d8614485b5e3958255"
+        },
+        {
+          "path": "lib/ace/assign/cli.rb",
+          "sha256": "49ed840780add773a81301f41d1483482dba505dd8d681a00f4f68c0f239cfc3"
+        },
+        {
+          "path": "lib/ace/assign/cli/commands/add.rb",
+          "sha256": "b7bb113143863de67fd1f0b4de7141bdf70c9b2e445607dae17e2fef37015765"
+        },
+        {
+          "path": "lib/ace/assign/cli/commands/assignment_target.rb",
+          "sha256": "4a5a35a87e2e07021c2caeacc38d36512548b8b551f3b6e8c4b0dc9c542a6601"
+        },
+        {
+          "path": "lib/ace/assign/cli/commands/attempt/base.rb",
+          "sha256": "64268a6a891140600a47c475ebc1b39509b582d501d17af371439743b4a95522"
+        },
+        {
+          "path": "lib/ace/assign/cli/commands/attempt/evidence.rb",
+          "sha256": "852a2623817633d737ce5f0ccd9f219bdd357c5b1072b4f20b5ac7a3e3397ad8"
+        },
+        {
+          "path": "lib/ace/assign/cli/commands/attempt/finish.rb",
+          "sha256": "140e15eb1545edcb65ede10dfbf66fa8f456e922b786af43d7507d4850b4bec8"
+        },
+        {
+          "path": "lib/ace/assign/cli/commands/attempt/reconcile.rb",
+          "sha256": "48f4d4c7932eb6aef4b0bf2514639aaeea446c7300135cd8b8955f86b74a39ac"
+        },
+        {
+          "path": "lib/ace/assign/cli/commands/attempt/start.rb",
+          "sha256": "f08a0ad3b4788746d957ae03731b113fb6898d62c74ee3b9230486c576e00c4f"
+        },
+        {
+          "path": "lib/ace/assign/cli/commands/attempt/status.rb",
+          "sha256": "ea36a66e7691dd1f4ec4f10c288f8b1fdd7f213a0c4c429c1da340f7e4093aaf"
+        },
+        {
+          "path": "lib/ace/assign/cli/commands/authority/launch.rb",
+          "sha256": "8f09601f9315d67d5e8a30d50be5dbb474db705608534da1417b5aec3295999b"
+        },
+        {
+          "path": "lib/ace/assign/cli/commands/authority/serve.rb",
+          "sha256": "72e563b0f7f74db9eda9a1b71eb4e58b455ff058005e3ba939294ee85e62c4af"
+        },
+        {
+          "path": "lib/ace/assign/cli/commands/authority/status.rb",
+          "sha256": "3386b767cfc7c58d51eea83bb780db6676eb835eabec5cbb494b43a0fd53b1bf"
+        },
+        {
+          "path": "lib/ace/assign/cli/commands/authority/terminate.rb",
+          "sha256": "b1fad0ab523353be834fadf73410cae3a8cde944044488c2bb2469e030e166c0"
+        },
+        {
+          "path": "lib/ace/assign/cli/commands/create.rb",
+          "sha256": "b4f9ca20f2b681521b80705b0bc93ba2218c0420485e8cf24dbcf4c6e8d8afa1"
+        },
+        {
+          "path": "lib/ace/assign/cli/commands/delivery.rb",
+          "sha256": "364174f7cbaebcfa6d7590f8352d6ae4d035b0e67f74909ffd49f743731bc5ed"
+        },
+        {
+          "path": "lib/ace/assign/cli/commands/fail.rb",
+          "sha256": "54638f6307b55f8e506d10a04d43ed2a7e90e9e84154028d8ab93dec7b86c457"
+        },
+        {
+          "path": "lib/ace/assign/cli/commands/finish.rb",
+          "sha256": "26a263f1f0f4512fd95c606e2b550cbc97b50c777670be899d0be9f7dd9f0b12"
+        },
+        {
+          "path": "lib/ace/assign/cli/commands/fork_run.rb",
+          "sha256": "a03651acda4c55e3d107a1546a569bdc592f2ab7034e3b2f60e6a70dcd2337c6"
+        },
+        {
+          "path": "lib/ace/assign/cli/commands/fork_session.rb",
+          "sha256": "167db56cb05512a150fe275d2808621a5daca4c07fdcf989bb644472332ab003"
+        },
+        {
+          "path": "lib/ace/assign/cli/commands/inbox_reconcile.rb",
+          "sha256": "2e9e63e4ec020997bcfd6c84610d8718ecf986906a17e622a1934f48d4269254"
+        },
+        {
+          "path": "lib/ace/assign/cli/commands/list.rb",
+          "sha256": "627c5152a8eeaf306a2f01f99c66861b5007f95332e6560d4845c19f5d40b546"
+        },
+        {
+          "path": "lib/ace/assign/cli/commands/resume.rb",
+          "sha256": "1f390aa46a1efd890116efb937960cc3e49d319d07af38125d55a3746faec7a0"
+        },
+        {
+          "path": "lib/ace/assign/cli/commands/retry_cmd.rb",
+          "sha256": "deaa85dea917e3474028055dcf75163e5c8cb970ec56cee6221a8eb6f9fa8c43"
+        },
+        {
+          "path": "lib/ace/assign/cli/commands/select.rb",
+          "sha256": "82ec8ce23e1b048c88e9de2aca8c1ee57d8a49d418a5f2d2b3b40363213bc1c1"
+        },
+        {
+          "path": "lib/ace/assign/cli/commands/start.rb",
+          "sha256": "95a6b2f448268737cd3617ac74f180fb19138f18c5327471c36dbd715665977d"
+        },
+        {
+          "path": "lib/ace/assign/cli/commands/status.rb",
+          "sha256": "002cb14000bea841dc091297cdaf4bca825a17d9ae28fe0eb7dde41cad13e625"
+        },
+        {
+          "path": "lib/ace/assign/cli/commands/step.rb",
+          "sha256": "9e2745ee50a6389644f53c65760a75c6727c8f326b42f46a720361e6c136cc5f"
+        },
+        {
+          "path": "lib/ace/assign/models/assignment.rb",
+          "sha256": "24013eeff6e4e340895c4bb214a91f7c00cd56c50236c7620e52719b41e5390b"
+        },
+        {
+          "path": "lib/ace/assign/models/assignment_info.rb",
+          "sha256": "af23e88c2fc175e68d7f66dae96a5fbb9748136c55d86b08574d8bb64153c9c4"
+        },
+        {
+          "path": "lib/ace/assign/models/attempt.rb",
+          "sha256": "570d442971f835a7c715c1e5e6136c831b6b74530b3d2b26136618168e3e1125"
+        },
+        {
+          "path": "lib/ace/assign/models/attempt_binding.rb",
+          "sha256": "fcdbc9ae41db13bd68d38c2c641348f443943d7756f05ee0288c0eec82f8b067"
+        },
+        {
+          "path": "lib/ace/assign/models/evidence_event.rb",
+          "sha256": "77237021408b24f23dbd7dd7f8e3715b74ebf24b2db546645b0ae7d5b1f39695"
+        },
+        {
+          "path": "lib/ace/assign/models/execution_receipt.rb",
+          "sha256": "fbc5bfcaaa34f6e38d52a39bee85b09e58b27ce047440068b60fbd927590ad40"
+        },
+        {
+          "path": "lib/ace/assign/models/queue_state.rb",
+          "sha256": "f2a8830efcd5235efb00d52cc8c74b7e318f521fc94735427a28944618bf0213"
+        },
+        {
+          "path": "lib/ace/assign/models/step.rb",
+          "sha256": "69af78e88ce911364d79571b231137dc61489bdfa280a01b3e441f4a4a2f1cfb"
+        },
+        {
+          "path": "lib/ace/assign/molecules/assignment_discoverer.rb",
+          "sha256": "77ae27b2fa6c753bc656eb561a92e124ff91ad1aa8f387816b81dbefaee14f50"
+        },
+        {
+          "path": "lib/ace/assign/molecules/assignment_manager.rb",
+          "sha256": "2f3da1c28fe2dc6715f95c6841b6c30e32c806f053901cefbb8dcc197b52c743"
+        },
+        {
+          "path": "lib/ace/assign/molecules/attempt_reconciler.rb",
+          "sha256": "153329e18dc596c236bfaddf3dcf6038e8b0df885d3e93a1e574cc25c4ee7d02"
+        },
+        {
+          "path": "lib/ace/assign/molecules/attempt_store.rb",
+          "sha256": "78bf9d42fe4e93d8190afeecb2045923a8f3a7eaaef45dd1776cb67e77a6aad5"
+        },
+        {
+          "path": "lib/ace/assign/molecules/canonical_evidence.rb",
+          "sha256": "bad272ea5354b916f0ceed0a8d63a2c6a61d9597bfe72b73a08f6857a388ac64"
+        },
+        {
+          "path": "lib/ace/assign/molecules/evidence_calculator.rb",
+          "sha256": "284f4c3db6427866c1f7a2869a0fcb21de77bed9c7bcc66de92d3ebfceecb2be"
+        },
+        {
+          "path": "lib/ace/assign/molecules/evidence_journal.rb",
+          "sha256": "6ea47bbb0b1af23d5ab3f6535de76608119c6aa5682480569dc1830e5eeba42c"
+        },
+        {
+          "path": "lib/ace/assign/molecules/execution_identity_resolver.rb",
+          "sha256": "2dd38b6e1f9b35fd80b3d25403b03dc66cf5d1d5f05648ae17c51269256d422b"
+        },
+        {
+          "path": "lib/ace/assign/molecules/execution_scope_lineage.rb",
+          "sha256": "b8c3ff619d918b99f2325df939e51740c00debead4358717ca5c97bf0df3bac3"
+        },
+        {
+          "path": "lib/ace/assign/molecules/fork_session_launcher.rb",
+          "sha256": "39958af6297e5839bbf1e50259698c6342677778ce025ba5deb9ca346277ec77"
+        },
+        {
+          "path": "lib/ace/assign/molecules/journal_mutation.rb",
+          "sha256": "dc687bce80a9b86c9e08659971e9e9fff655621ec76a067a4bc47e537c150f26"
+        },
+        {
+          "path": "lib/ace/assign/molecules/lifecycle_exclusion.rb",
+          "sha256": "5c4fd59b5cbe866807e69de1a6f2c82c8f59c8e7293e7509233a89218004835e"
+        },
+        {
+          "path": "lib/ace/assign/molecules/preset_inferrer.rb",
+          "sha256": "4e6bb69891404fbfea5d0b191a20037358b65a444de0751233ab1371b0112f08"
+        },
+        {
+          "path": "lib/ace/assign/molecules/proposal_journal.rb",
+          "sha256": "d8d0832f14be4f40f5e75bd66fd5c44bfb8dcbd1eda8f9dfba990ceb8aaa0a33"
+        },
+        {
+          "path": "lib/ace/assign/molecules/queue_scanner.rb",
+          "sha256": "4e08488b796c6d4501340ae8f1fd992c04963c7b790f10a0e4bc0476134a7df0"
+        },
+        {
+          "path": "lib/ace/assign/molecules/receipt_verifier.rb",
+          "sha256": "54cd45c4770a7c1a7abb256f6ccf22d8c9af657db27ce416a8f6a870131f52ce"
+        },
+        {
+          "path": "lib/ace/assign/molecules/runtime_control_surface_runner.rb",
+          "sha256": "21ceede1ef3459d8a6e0b76faa0df0dc763e9d3da48ee3f49bcbc83e0b26558c"
+        },
+        {
+          "path": "lib/ace/assign/molecules/skill_assign_source_resolver.rb",
+          "sha256": "2106a00f5d3efd444b9cc08bf8721221929b29cc5eede2a1d3661d32bb888e47"
+        },
+        {
+          "path": "lib/ace/assign/molecules/step_renumberer.rb",
+          "sha256": "5ba719d1cfa91d34e004466cf026c62a64ccf000f2aa8b81914067ea606408ce"
+        },
+        {
+          "path": "lib/ace/assign/molecules/step_writer.rb",
+          "sha256": "f2fc1736425bfe5a1b50d5f3dbb39eb30ada09af3b0649f2b2ab93fc8417a9fa"
+        },
+        {
+          "path": "lib/ace/assign/organisms/assignment_executor.rb",
+          "sha256": "46314557f763f74c788c38dc2a6d6f2e7401e0b82b731b3ad6ad4ec06ce03dbc"
+        },
+        {
+          "path": "lib/ace/assign/organisms/attempt_coordinator.rb",
+          "sha256": "52215ac44c5053ac8d3a02c4f7dd463d1622bf067334da174eebcaa6df92f31c"
+        },
+        {
+          "path": "lib/ace/assign/organisms/delivery_coordinator.rb",
+          "sha256": "aa187e4fc1fba33a5b2a3c551c131bd8eef5bfa57c5d0f18cd32ca2b59151e96"
+        },
+        {
+          "path": "lib/ace/assign/organisms/task_assignment_creator.rb",
+          "sha256": "98bb5c8d7ed76520be49af43c9d41da5d748da08a5a2013ce9bb8cf8d8b252d8"
+        },
+        {
+          "path": "lib/ace/assign/version.rb",
+          "sha256": "ae4c958a0714ce0f0994bc238e5679bfac0df2d2854d7a0da38fb401e83553f8"
+        }
+      ]
+    }
+  ]
+}
