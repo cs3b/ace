@@ -21,9 +21,17 @@ class FolderCompletionDetectorTest < AceSupportItemsTestCase
   def test_all_terminal_with_mixed_terminal_statuses
     write_spec(@tmpdir, "task-a.s.md", status: "done")
     write_spec(@tmpdir, "task-b.s.md", status: "skipped")
-    write_spec(@tmpdir, "task-c.s.md", status: "blocked")
+    write_spec(@tmpdir, "task-c.s.md", status: "cancelled")
 
     assert Ace::Support::Items::Atoms::FolderCompletionDetector.all_terminal?(@tmpdir)
+  end
+
+  def test_unresolved_statuses_prevent_completion
+    %w[blocked draft pending in-progress].each do |status|
+      write_spec(@tmpdir, "task-a.s.md", status: "done")
+      write_spec(@tmpdir, "task-b.s.md", status: status)
+      refute Ace::Support::Items::Atoms::FolderCompletionDetector.all_terminal?(@tmpdir), status
+    end
   end
 
   def test_not_terminal_when_one_pending

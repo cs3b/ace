@@ -7,10 +7,10 @@ module Ace
     module Items
       module Atoms
         # Detects whether all spec files in a folder have terminal status.
-        # Used by orchestrator auto-archive: when all subtasks are done/skipped/blocked,
+        # Used by orchestrator auto-archive: when all subtasks are done/skipped/cancelled,
         # the parent can be auto-archived.
         class FolderCompletionDetector
-          TERMINAL_STATUSES = %w[done skipped blocked].freeze
+          TERMINAL_STATUSES = %w[done skipped cancelled].freeze
 
           # Check if all spec files in a directory have terminal status.
           #

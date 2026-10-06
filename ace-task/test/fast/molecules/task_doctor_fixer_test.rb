@@ -254,6 +254,42 @@ class TaskDoctorFixerTest < AceTaskTestCase
     end
   end
 
+  def test_doctor_never_completes_nonterminal_archived_records
+    [false, true].each do |dry_run|
+      with_tasks_dir do |root|
+        %w[blocked draft pending in-progress].each_with_index do |status, index|
+          dir = create_task_fixture(root, id: "8pp.t.ab#{index}", slug: "unfinished", status: status,
+            special_folder: "_archive")
+          file = Dir.glob(File.join(dir, "*.s.md")).first
+          before = File.read(file)
+          fixer = Fixer.new(dry_run: dry_run, root_dir: root)
+          refute fixer.fix_issue(message: "Task in _archive/ but status is '#{status}'", location: file)
+          assert_equal before, File.read(file)
+          assert_equal 1, fixer.skipped_count
+        end
+      end
+    end
+  end
+
+  def test_doctor_skips_parent_archive_with_unresolved_descendants
+    [false, true].each do |dry_run|
+      with_tasks_dir do |root|
+        manager = Ace::Task::Organisms::TaskManager.new(root_dir: root)
+        parent = manager.create("Parent", status: "done")
+        child = manager.create_subtask(parent.id, "Child", status: "done")
+        blocked = manager.create_subtask(child.id, "Grandchild", status: "blocked")
+        before = File.read(blocked.file_path)
+        [parent.file_path, child.file_path].each do |file|
+          fixer = Fixer.new(dry_run: dry_run, root_dir: root)
+          refute fixer.fix_issue(message: "Task with terminal status 'done' not in _archive/", location: file)
+          assert_equal 1, fixer.skipped_count
+          assert Dir.exist?(parent.path)
+          assert_equal before, File.read(blocked.file_path)
+        end
+      end
+    end
+  end
+
   private
 
   def create_task_spec(root, id, slug, content)

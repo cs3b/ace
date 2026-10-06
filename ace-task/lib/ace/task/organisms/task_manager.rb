@@ -9,6 +9,7 @@ require_relative "../molecules/task_resolver"
 require_relative "../molecules/task_loader"
 require_relative "../molecules/task_creator"
 require_relative "../molecules/subtask_creator"
+require_relative "../molecules/task_family_completion"
 require_relative "../molecules/task_reparenter"
 require_relative "../molecules/issue_link"
 require_relative "../atoms/task_validation_rules"
@@ -190,6 +191,13 @@ module Ace
             special_folder: scan_result.special_folder)
           return nil unless task
 
+          if Ace::Support::Items::Atoms::SpecialFolderDetector.normalize(move_to) == "_archive" &&
+              !task.subtask? && !family_completion.descendants_terminal?(task.path, id: task.id)
+            @last_update_note = "Task #{task.id} was not archived because descendants are not all terminal; " \
+              "resolve blocked or unfinished subtasks before archiving. No requested fields were changed."
+            return task
+          end
+
           # Apply field updates if any
           has_field_updates = [set, add, remove].any? { |h| h && !h.empty? }
           reject_issue_metadata_update!(set, add, remove)
@@ -258,11 +266,11 @@ module Ace
           # Auto-archive hook: if a subtask status was set to terminal,
           # check if all siblings are terminal and auto-move parent to archive
           if set && set.key?("status")
-            check_auto_archive(task, set["status"], loader)
+            check_auto_archive(task, set["status"])
           end
 
           # Reload and return updated task
-          updated_task = loader.load(current_path, id: current_id, special_folder: current_special)
+          updated_task = show(current_id)
           if sync_needed_after_update?(task, updated_task, set: set, add: add, remove: remove, move_to: move_to)
             sync_failed_definitively = false
             with_issue_identity_lock(linked_issue(updated_task) || {}) do
@@ -847,23 +855,21 @@ module Ace
 
         # Auto-archive: if a subtask reaches terminal status and all siblings
         # in the parent directory are also terminal, move the parent to archive.
-        def check_auto_archive(task, new_status, loader)
-          terminal = Ace::Support::Items::Atoms::FolderCompletionDetector::TERMINAL_STATUSES
-          return unless terminal.include?(new_status.to_s.downcase)
+        def check_auto_archive(task, new_status)
+          return unless Atoms::TaskValidationRules.terminal_status?(new_status.to_s.downcase)
+          return unless task.subtask?
 
-          # Only applies to subtasks (task dir is nested inside a parent dir)
-          parent_dir = File.dirname(task.path)
-          return if File.expand_path(parent_dir) == File.expand_path(@root_dir)
+          current = show(task.id)
+          return unless current && current.special_folder != "_archive"
 
-          # Check if all specs in the parent dir (recursive for subtask subdirs) are terminal
-          return unless Ace::Support::Items::Atoms::FolderCompletionDetector.all_terminal?(
-            parent_dir, recursive: true
-          )
-
-          parent = load_parent_from_directory(parent_dir, loader)
-          return unless parent
+          parent = show(current.parent_id)
+          return unless parent && family_completion.complete?(parent.path, id: parent.id)
 
           archive_parent_via_update(parent)
+        end
+
+        def family_completion
+          Molecules::TaskFamilyCompletion.new(@root_dir)
         end
 
         def parse_archive_date(task)
@@ -897,10 +903,7 @@ module Ace
             }
           end
 
-          parent_with_subtasks = loader.load(parent.path, id: parent.id, special_folder: parent.special_folder)
-          subtasks = parent_with_subtasks&.subtasks || []
-          all_terminal = subtasks.any? &&
-            subtasks.all? { |st| Atoms::TaskValidationRules.terminal_status?(st.status.to_s.downcase) }
+          all_terminal = family_completion.complete?(parent.path, id: parent.id)
 
           unless all_terminal
             @last_update_note = "Subtask #{task.id} was not archived because sibling subtasks are not all terminal."
@@ -939,16 +942,6 @@ module Ace
           end
 
           archived_parent
-        end
-
-        def load_parent_from_directory(parent_dir, loader)
-          parent_id = File.basename(parent_dir).split("-", 2).first
-          return nil unless parent_id
-
-          parent_special = Ace::Support::Items::Atoms::SpecialFolderDetector.detect_in_path(
-            parent_dir, root: @root_dir
-          )
-          loader.load(parent_dir, id: parent_id, special_folder: parent_special)
         end
 
         # Value accessor for FilterApplier
