@@ -43,6 +43,9 @@ class CommitOrchestratorTest < TestCase
 
   def test_returns_true_when_no_changes
     @mock_git.expect :in_repository?, true
+    Ace::GitCommit::Molecules::GitOperationDetector::MARKERS.each_key do |marker|
+      @mock_git.expect :execute, "/nonexistent-ace-operation/#{marker}", ["rev-parse", "--git-path", marker]
+    end
     @mock_file_stager.expect :stage_all, true
     @mock_git.expect :has_staged_changes?, false
 
@@ -55,6 +58,9 @@ class CommitOrchestratorTest < TestCase
 
   def test_no_change_output_omits_staging_messages
     @mock_git.expect :in_repository?, true
+    Ace::GitCommit::Molecules::GitOperationDetector::MARKERS.each_key do |marker|
+      @mock_git.expect :execute, "/nonexistent-ace-operation/#{marker}", ["rev-parse", "--git-path", marker]
+    end
     @mock_file_stager.expect :stage_all, true
     @mock_git.expect :has_staged_changes?, false
 
@@ -76,6 +82,9 @@ class CommitOrchestratorTest < TestCase
 
   def test_commits_with_direct_message
     @mock_git.expect :in_repository?, true
+    Ace::GitCommit::Molecules::GitOperationDetector::MARKERS.each_key do |marker|
+      @mock_git.expect :execute, "/nonexistent-ace-operation/#{marker}", ["rev-parse", "--git-path", marker]
+    end
     @mock_file_stager.expect :stage_all, true  # Now returns boolean
     @mock_git.expect :has_staged_changes?, true
     expect_single_group(["file.rb"])
@@ -99,6 +108,9 @@ class CommitOrchestratorTest < TestCase
 
   def test_stages_specific_files
     @mock_git.expect :in_repository?, true
+    Ace::GitCommit::Molecules::GitOperationDetector::MARKERS.each_key do |marker|
+      @mock_git.expect :execute, "/nonexistent-ace-operation/#{marker}", ["rev-parse", "--git-path", marker]
+    end
 
     # Add path_resolver mock for single file (no glob)
     mock_path_resolver = Minitest::Mock.new
@@ -140,6 +152,9 @@ class CommitOrchestratorTest < TestCase
 
   def test_stages_all_changes
     @mock_git.expect :in_repository?, true
+    Ace::GitCommit::Molecules::GitOperationDetector::MARKERS.each_key do |marker|
+      @mock_git.expect :execute, "/nonexistent-ace-operation/#{marker}", ["rev-parse", "--git-path", marker]
+    end
     @mock_file_stager.expect :stage_all, true  # Now returns boolean
     @mock_git.expect :has_staged_changes?, true
     expect_single_group(["file1.rb", "file2.rb"])
@@ -168,6 +183,9 @@ class CommitOrchestratorTest < TestCase
 
   def test_dry_run_does_not_commit
     @mock_git.expect :in_repository?, true
+    Ace::GitCommit::Molecules::GitOperationDetector::MARKERS.each_key do |marker|
+      @mock_git.expect :execute, "/nonexistent-ace-operation/#{marker}", ["rev-parse", "--git-path", marker]
+    end
     @mock_file_stager.expect :stage_all, true  # Now returns boolean
     @mock_git.expect :has_staged_changes?, true
     expect_single_group(["test.txt"])
@@ -198,6 +216,9 @@ class CommitOrchestratorTest < TestCase
 
   def test_handles_commit_failure_gracefully
     @mock_git.expect :in_repository?, true
+    Ace::GitCommit::Molecules::GitOperationDetector::MARKERS.each_key do |marker|
+      @mock_git.expect :execute, "/nonexistent-ace-operation/#{marker}", ["rev-parse", "--git-path", marker]
+    end
     @mock_file_stager.expect :stage_all, true  # Now returns boolean
     @mock_git.expect :has_staged_changes?, true
     expect_single_group(["file.rb"])
@@ -220,6 +241,9 @@ class CommitOrchestratorTest < TestCase
 
   def test_generates_message_with_llm_when_intention_provided
     @mock_git.expect :in_repository?, true
+    Ace::GitCommit::Molecules::GitOperationDetector::MARKERS.each_key do |marker|
+      @mock_git.expect :execute, "/nonexistent-ace-operation/#{marker}", ["rev-parse", "--git-path", marker]
+    end
     @mock_file_stager.expect :stage_all, true  # Now returns boolean
     @mock_git.expect :has_staged_changes?, true
     @mock_diff_analyzer.expect :get_staged_diff, "diff content"
@@ -257,6 +281,9 @@ class CommitOrchestratorTest < TestCase
 
   def test_explicit_message_bypasses_message_generator
     @mock_git.expect :in_repository?, true
+    Ace::GitCommit::Molecules::GitOperationDetector::MARKERS.each_key do |marker|
+      @mock_git.expect :execute, "/nonexistent-ace-operation/#{marker}", ["rev-parse", "--git-path", marker]
+    end
     @mock_file_stager.expect :stage_all, true
     @mock_git.expect :has_staged_changes?, true
     expect_single_group(["file.rb"])
@@ -279,6 +306,9 @@ class CommitOrchestratorTest < TestCase
 
   def test_dry_run_llm_failure_includes_setup_guidance
     @mock_git.expect :in_repository?, true
+    Ace::GitCommit::Molecules::GitOperationDetector::MARKERS.each_key do |marker|
+      @mock_git.expect :execute, "/nonexistent-ace-operation/#{marker}", ["rev-parse", "--git-path", marker]
+    end
     @mock_file_stager.expect :stage_all, true
     @mock_git.expect :has_staged_changes?, true
     @mock_diff_analyzer.expect :get_staged_diff, "diff content"
@@ -306,6 +336,9 @@ class CommitOrchestratorTest < TestCase
 
   def test_split_commit_executes_split_executor
     @mock_git.expect :in_repository?, true
+    Ace::GitCommit::Molecules::GitOperationDetector::MARKERS.each_key do |marker|
+      @mock_git.expect :execute, "/nonexistent-ace-operation/#{marker}", ["rev-parse", "--git-path", marker]
+    end
     @mock_file_stager.expect :stage_all, true
     @mock_git.expect :has_staged_changes?, true
     @mock_file_stager.expect :staged_files, ["a.md", "b.md"]
@@ -346,6 +379,9 @@ class CommitOrchestratorTest < TestCase
 
   def test_no_split_ignores_split_executor
     @mock_git.expect :in_repository?, true
+    Ace::GitCommit::Molecules::GitOperationDetector::MARKERS.each_key do |marker|
+      @mock_git.expect :execute, "/nonexistent-ace-operation/#{marker}", ["rev-parse", "--git-path", marker]
+    end
     @mock_file_stager.expect :stage_all, true
     @mock_git.expect :has_staged_changes?, true
     @mock_file_stager.expect :staged_files, ["a.md", "b.md"]
@@ -391,6 +427,9 @@ class CommitOrchestratorTest < TestCase
   # Integration tests for path validation and glob patterns
   def test_early_path_validation_rejects_invalid_paths
     @mock_git.expect :in_repository?, true
+    Ace::GitCommit::Molecules::GitOperationDetector::MARKERS.each_key do |marker|
+      @mock_git.expect :execute, "/nonexistent-ace-operation/#{marker}", ["rev-parse", "--git-path", marker]
+    end
 
     # Add path_resolver mock
     mock_path_resolver = Minitest::Mock.new
@@ -428,6 +467,9 @@ class CommitOrchestratorTest < TestCase
 
   def test_glob_pattern_staging_with_resolved_files
     @mock_git.expect :in_repository?, true
+    Ace::GitCommit::Molecules::GitOperationDetector::MARKERS.each_key do |marker|
+      @mock_git.expect :execute, "/nonexistent-ace-operation/#{marker}", ["rev-parse", "--git-path", marker]
+    end
 
     # Add path_resolver mock
     mock_path_resolver = Minitest::Mock.new
@@ -470,6 +512,9 @@ class CommitOrchestratorTest < TestCase
 
   def test_multiple_paths_uses_path_restricted_staging
     @mock_git.expect :in_repository?, true
+    Ace::GitCommit::Molecules::GitOperationDetector::MARKERS.each_key do |marker|
+      @mock_git.expect :execute, "/nonexistent-ace-operation/#{marker}", ["rev-parse", "--git-path", marker]
+    end
 
     # Add path_resolver mock
     mock_path_resolver = Minitest::Mock.new
@@ -514,6 +559,9 @@ class CommitOrchestratorTest < TestCase
 
   def test_empty_glob_pattern_results_shows_helpful_message
     @mock_git.expect :in_repository?, true
+    Ace::GitCommit::Molecules::GitOperationDetector::MARKERS.each_key do |marker|
+      @mock_git.expect :execute, "/nonexistent-ace-operation/#{marker}", ["rev-parse", "--git-path", marker]
+    end
 
     # Add path_resolver mock
     mock_path_resolver = Minitest::Mock.new
@@ -549,6 +597,9 @@ class CommitOrchestratorTest < TestCase
 
   def test_simple_glob_pattern_shows_recursive_hint
     @mock_git.expect :in_repository?, true
+    Ace::GitCommit::Molecules::GitOperationDetector::MARKERS.each_key do |marker|
+      @mock_git.expect :execute, "/nonexistent-ace-operation/#{marker}", ["rev-parse", "--git-path", marker]
+    end
 
     # Add path_resolver mock
     mock_path_resolver = Minitest::Mock.new
@@ -582,6 +633,40 @@ class CommitOrchestratorTest < TestCase
 
     @mock_git.verify
     mock_path_resolver.verify
+  end
+
+  def test_operation_guard_precedes_every_preparation_mode
+    variants = [{files: ["a.rb"]}, {}, {only_staged: true}, {no_split: true},
+      {dry_run: true}, {quiet: true}, {debug: true}, {message: nil}]
+    variants.each do |variant|
+      git = Minitest::Mock.new
+      git.expect :in_repository?, true
+      orchestrator = Ace::GitCommit::Organisms::CommitOrchestrator.new({})
+      orchestrator.instance_variable_set(:@git, git)
+      [:file_stager, :message_generator, :split_commit_executor, :path_resolver].each do |boundary|
+        orchestrator.instance_variable_set(:"@#{boundary}", Minitest::Mock.new)
+      end
+      detector = Minitest::Mock.new
+      detector.expect :detect, ["merge", "git commit"]
+      Ace::GitCommit::Molecules::GitOperationDetector.stub :new, ->(executor) { assert_equal git.object_id, executor.object_id; detector } do
+        error = assert_raises(Ace::GitCommit::GitError) do
+          orchestrator.execute(create_options(message: "test", **variant))
+        end
+        assert_match(/active merge.*git commit/, error.message)
+      end
+      git.verify
+      detector.verify
+    end
+  end
+
+  def test_inspection_failure_stops_preparation
+    @mock_git.expect :in_repository?, true
+    detector = Object.new
+    detector.define_singleton_method(:detect) { raise Ace::GitCommit::GitError, "Cannot inspect Git operation state" }
+    Ace::GitCommit::Molecules::GitOperationDetector.stub :new, detector do
+      assert_raises(Ace::GitCommit::GitError) { @orchestrator.execute(create_options(message: "test")) }
+    end
+    @mock_git.verify
   end
 
   private

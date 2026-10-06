@@ -178,3 +178,17 @@ Use `--no-split` for the initial setup snapshot when setup changes span multiple
 ```bash
 ace-git-commit --help
 ```
+
+## Active Git operations
+
+Commit preparation refuses active merges, rebases, cherry-picks, reverts,
+`git am`, and sequencer operations before staging or generating a message.
+The refusal also applies to `--only-staged`, split commits and `--dry-run`,
+and remains visible with `--quiet`. It preserves the index and native operation
+metadata so Git can finish the operation.
+
+After resolving and staging a merge, complete it using `git commit`. For other
+operations follow the reported native command, such as `git rebase --continue`
+or `git cherry-pick --continue`. An unspecific sequencer asks you to run
+`git status` and follow its guidance. If metadata cannot be inspected, fix the
+reported access or Git error and inspect `git status` before retrying.

@@ -7,7 +7,7 @@ Expected: nonzero refusal identifying an active merge, no index or metadata muta
 
 ## Sequenced operation
 
-During an active cherry-pick or rebase, invoke `bin/ace-git-commit --all`.
+During an active cherry-pick or rebase, invoke `bin/ace-git-commit`.
 Expected: nonzero refusal before staging or message generation. Existing native `git cherry-pick --continue` or `git rebase --continue` remains usable after required resolutions.
 
 ## Ordinary scoped commit
