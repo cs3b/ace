@@ -62,3 +62,11 @@ Full qk0.2.0 acceptance additionally requires genuine controlled receiver/listen
 ## Independent readiness verdict
 
 Root independently APPROVE exact1e2daf762 on2026-10-07 after reviewing official v257 inherited-FD protocol, strict response shape, fixed root-policy pin ownership and required directRuby Assembly producer. This approves implementation of this amended contract; no source/installed/full-task acceptance is implied.
+
+## Exact trusted constructor and closure budget precision
+
+The generic fixed observer constructor is `ProtectedCleanupOwnerIdentity.new(unit:, entry:, interpreter:, closure:, load_paths:, manager:, kernel:, artifacts:)`, supplied only by the accepted installed composition, never wire input. Entry/interpreter are closed `{path,sha256,bytes}` references; `closure` supplies the other immutable references (excludes these two), includes the exact manager FragmentPath unit file, and all paths are absolute canonical with unique identities. Load paths are literal, canonical, at most16 and each covers held closure files. Direct argv is derived as `[interpreter.path, '--disable=gems,rubyopt,did_you_mean,error_highlight,syntax_suggest', '-I', load_paths.join(':'), entry.path]`. Unsupported/multiple/Pre/Post/Reload/Stop execution commands and drop-ins refuse.
+
+Actual executable interpreter bytes require the already supported trusted per-instance artifact budgets:32MiB/file,256MiBtotal,4096 total references. Shared defaults1MiB/16MiB/256 remain unchanged. This explicit static source budget cannot be selected by a request. Each observation has one absolute<=5s deadline across all six typed manager/property/pidfd reads and no renewed budget; expired/unconfirmed facts do not produce a binding. The held proof projection is deeply copied/frozen and closes the root lifetime FD after independent admission observation; actual execute separately reauthenticates the accepted original binding.
+
+The source observer is not the delivered Assembly root entry, nor canonical begin_dispatch/result inspection. Same Assembly must still publish the executable immutable interpreter copy (current r4 copy is non-executable), actual complete load closure and audited direct same-process entry/unit before end-to-end acceptance.
