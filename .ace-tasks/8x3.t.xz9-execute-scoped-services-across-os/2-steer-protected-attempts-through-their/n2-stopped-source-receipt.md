@@ -32,3 +32,13 @@ Root and wave_5h5 independently approved the normative stopped contract before s
 Prompt/native submission, immutable retry/status, foreground original actor channel, lifetime drain and proof-owned local stop/release are delivered source checkpoints. Submitted guarantees full text plus Enter to the unchanged original attempt terminal, not consumption or an exclusive provider PID.
 
 Protected assignment inventory/restart enumeration remains absent; known-attempt attempt_status is not enumeration or a complete authorized mapping/slot-capacity inventory. qk0 must consume the reviewed fixed launch-ready contract under explicitly provisioned mapped launcher-role credentials, retain its exact child and use actual protected steering APIs; its topology alone cannot authorize mappings or prove capacity. These consumers and deployment/installation proofs are not delivered by this checkpoint. xz9.1 production no-effect challenge/fresh target-and-writer inspection remains open; unsuccessful/unverifiable service work cannot be declared settled or stopped by weakening proof. Task metadata remains in progress.
+
+## Independent final integration verdict — 2026-10-07
+
+Root independently reviewed frozen candidate `39bc58e377e95defe12b0dd7e63e70b351a48392`: **APPROVE** the source stopped/state/status/release and original foreground lifetime checkpoint. Integrated without conflicts as `8f3276901` atop main `3e9471291`; no unrelated implementation changes.
+
+Executed on the merged integration tree:
+- `bin/ace-test ace-assign test/fast/molecules/canonical_attempt_state_test.rb test/fast/atoms/attempt_state_machine_test.rb test/feat/authority/launch_control_channel_test.rb --timeout 180`: **23 tests / 153 assertions PASS**, receipt `6ce7f04e-4ec7-4d49-a827-0d121e1b73d2`.
+- `bin/ace-test ace-assign test/feat/authority/historical_rotation_test.rb:468 --timeout 180`: **1 / 24 PASS**, 38.07s, `04305151-9454-442f-ba88-395971caee1f`. This is the genuine original CLI terminal/unreleased then released exit scenario, with actual Client status deadline unchanged.
+
+The full stopped/history/rotation producer receipt `879d32f1` remains applicable to the same frozen runtime source. No installed test, unfiltered suite or complete task closure is claimed. Remaining N1 selected startup/build composition, qk0 consumers and xz9.1 no-effect production stay with their existing owners.
