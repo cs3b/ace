@@ -146,6 +146,14 @@ ace-review --list-prompts
 
 Manage feedback items extracted from reviews.
 
+Extraction requires an explicit `findings` array in the synthesis response.
+A missing array, duplicate JSON key, or finding without a nonempty textual title
+and description fails the entire extraction; valid findings are not published
+as a partial replacement. For example, `{"findings":[{"title":"","finding":"Bug"}]}`
+is an extraction failure, while `{"findings":[]}` is a completed empty extraction.
+Neither a provider's successful exit nor empty extraction is an approval verdict.
+
+
 ### Subcommands
 
 | Command | Description |
