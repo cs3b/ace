@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 require_relative "../../test_helper"
 require_relative "../../support/endcap_result_owner_fixture"
+require_relative "../../support/execution_boot_baseline_owner_fixture"
 require "ace/assign/authority/deployment_history"
 require "ace/herdr/organisms/inbox"
 
@@ -10,6 +11,7 @@ module Ace
     # filesystem installation checks and native observation are controlled seams.
     class HistoricalRotationTest < AceAssignTestCase
       include EndcapResultOwnerFixture
+      include ExecutionBootBaselineOwnerFixture
 
       class Protection
         def root_path!(_); true; end
@@ -57,18 +59,8 @@ module Ace
         private_methods = methods.keys.select { |name| Authority::Deployment.private_method_defined?(name) }
         methods.each { |name, body| Authority::Deployment.define_method(name, body) }
         private_methods.each { |name| Authority::Deployment.send(:private, name) }
-        baseline_factory = lambda do
-          artifacts = Ace::Runtime::Molecules::ProtectedArtifactSet.allocate
-          artifacts.send(:initialize, protection: Protection.new)
-          read = artifacts.method(:read_path!)
-          test = self
-          artifacts.define_singleton_method(:read_path!) do |path, limit:|
-            read.call(path == "/etc/ace/execution-slots/slot/boot-baseline-selection.json" ? test.instance_variable_get(:@boot_pointer) : path, limit: limit)
-          end
-          reader = Ace::Runtime::Molecules::ExecutionBootBaseline.allocate
-          reader.send(:initialize, artifacts: artifacts)
-          reader
-        end
+        baseline_factory = -> { fixture_boot_baseline_reader(protection: Protection.new,
+          pointers: {"/etc/ace/execution-slots/slot/boot-baseline-selection.json" => @boot_pointer}) }
         Ace::Runtime::Molecules::ExecutionBootBaseline.stub(:new, baseline_factory) { fixture { yield } }
       ensure
         originals&.each { |name, body| Authority::Deployment.define_method(name, body) }
@@ -147,15 +139,8 @@ module Ace
         installer = artifact("original-installer", "controlled original installer bytes")
         @network_selection = ExecutionScopeObservationFixtures::NETWORK_SELECTION.merge("installer_artifact" => installer)
         @network_installation = ExecutionScopeObservationFixtures::NETWORK_OUTPUT.merge("installer_artifact_sha256" => installer.fetch("sha256"))
-        @boot_ref = artifact("original-boot.json", JSON.generate(
-          "schema" => "ace.execution-boot-baseline/v1", "slot_id" => "slot", "boot_id" => ExecutionScopeObservationFixtures::BOOT,
-          "deployment_digest" => Digest::SHA256.hexdigest(JSON.generate(Authority::LaunchLifecycle.allocate.send(:canonical, @map))),
-          "host_ipc_namespace_identity" => {"device" => 4, "inode" => 900},
-          "original_host_context" => {"pid" => 1, "uid" => 0, "gid" => 0, "started_at" => "linux:#{ExecutionScopeObservationFixtures::BOOT}:1"},
-          "producer_artifact" => installer))
-        candidate_boot = JSON.parse(File.binread(@boot_ref.fetch("path")))
-        candidate_boot["deployment_digest"] = Digest::SHA256.hexdigest(JSON.generate(Authority::LaunchLifecycle.allocate.send(:canonical, @history.candidate.mapping("mapping"))))
-        @candidate_boot_ref = artifact("candidate-boot.json", JSON.generate(candidate_boot))
+        @boot_ref = retained_boot_baseline_artifact(root: @root, name: "original-boot.json", map: @map, installer: installer)
+        @candidate_boot_ref = retained_boot_baseline_artifact(root: @root, name: "candidate-boot.json", map: @history.candidate.mapping("mapping"), installer: installer)
         @boot_pointer = artifact("boot-pointer.json", JSON.generate("schema" => "ace.execution-boot-selection/v1", "slot_id" => "slot", "baseline" => @boot_ref)).fetch("path")
         owner = nil
         @journal = Molecules::EvidenceJournal.new(repo_root: repo, ref: @journal.ref, checkout_root: @journal.checkout_root,

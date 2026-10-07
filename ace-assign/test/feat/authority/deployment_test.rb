@@ -2,6 +2,7 @@
 require_relative "../../test_helper"
 require "ace/assign/authority/deployment"
 require "ace/assign/authority/deployment_history"
+require_relative "../../support/execution_boot_baseline_owner_fixture"
 require "ace/assign/authority/server"
 require "timeout"
 require_relative "../../support/execution_scope_observation_fixtures"
@@ -40,10 +41,13 @@ module Ace
         def same?(left, right); left == right; end
       end
 
+      include ExecutionBootBaselineOwnerFixture
+
       class MaintenanceScopeOwner
         attr_reader :retirements, :checks
-        def initialize(map)
+        def initialize(map, boot_baseline_selection:, network_selection:)
           @map, @retirements, @checks = map, 0, 0
+          @boot_baseline_selection, @network_selection = boot_baseline_selection, network_selection
         end
         def activate_parent!(context)
           canonical = lambda do |value|
@@ -58,7 +62,7 @@ module Ace
             "boot_id" => ExecutionScopeObservationFixtures::BOOT, "slice_invocation_id" => "b" * 32,
             "resource_mount_namespace_identity" => {"device" => 4, "inode" => 11}, "resource_identities" => [],
             "network_namespace_identity" => {"device" => 7, "inode" => 88},
-            "network_installation_selection" => ExecutionScopeObservationFixtures::NETWORK_SELECTION,
+            "boot_baseline_selection" => @boot_baseline_selection, "network_installation_selection" => @network_selection,
             "cgroup_identity" => {"path" => "/sys/fs/cgroup/#{@map.fetch('execution_scope').fetch('slice_unit')}", "mount_id" => 4,
               "filesystem_type" => "cgroup2", "device" => 5, "inode" => @map.fetch("worker_uid")})
         end
@@ -149,69 +153,79 @@ module Ace
           peer = kernel.capture(Process.pid)
           journal = Molecules::EvidenceJournal.new(repo_root: repo, ref: project.fetch("evidence_git_ref"), checkout_root: project.fetch("evidence_checkout_root"),
             mode: :protected, evidence_reader: ->(*) { raise "no service evidence expected" }, service_authorizer: ->(*) { raise "no service mutation expected" })
-          observer = MaintenanceScopeOwner.new(original.mapping("mapping"))
-          untouched_observer = MaintenanceScopeOwner.new(original.mapping("untouched"))
-          observers = {"mapping" => observer, "untouched" => untouched_observer}
-          owner = Authority::LaunchLifecycle.new(deployment: original, deployment_history: history, kernel: kernel,
-            journals: {"project" => journal}, scope_observer_factory: ->(id) { observers.fetch(id) })
-          dispatch = lambda do |authority, operation, params, mutation|
-            authority.dispatch(request: {"version" => 1, "operation" => operation, "mutation_id" => mutation,
-              "project_id" => "project", "params" => params.merge("mapping_id" => params.fetch("mapping_id", "mapping"), "assignment_id" => params.fetch("assignment_id", "assignment"))}, peer: peer, role: :launcher)
+          installer = ref.call("original-installer", "controlled retained installer")
+          network = ExecutionScopeObservationFixtures::NETWORK_SELECTION.merge("installer_artifact" => installer)
+          scope_for = lambda do |map, name|
+            proof = retained_boot_baseline_artifact(root: root, name: name, map: map, installer: installer)
+            MaintenanceScopeOwner.new(map, boot_baseline_selection: proof, network_selection: network)
           end
-          bytes = JSON.generate("session_id" => "assignment", "name" => "fixture", "created_at" => "2026-10-05T00:00:00Z",
-            "source_config" => "job.yaml", "task_id" => "09j", "project_id" => "project")
-          registered = dispatch.call(owner, "register_assignment", {"definition_bytes" => bytes, "definition_digest" => Digest::SHA256.hexdigest(bytes), "expected_generation" => 0}, "register").fetch(:data)
-          reserve = {"scope" => "010", "worker_uid" => 13001, "runtime" => "herdr", "base_head" => "a" * 40,
-            "launcher_process_binding" => peer, "expected_generation" => registered.fetch("definition_generation")}
-          state = dispatch.call(owner, "reserve_attempt", reserve, "reserve-old").fetch(:data)
-          generation = -> { journal.authority_generation(journal.read_events("assignment").select { |event| event["attempt_id"] == state.fetch("attempt_id") }) }
-          close_params = state.slice("attempt_id").merge("mapping_id" => "mapping", "assignment_id" => "assignment")
-          owner.close_execution_scope!(params: close_params.merge("mutation_id" => "seal", "expected_generation" => generation.call), peer: peer, role: :launcher)
-          closed = owner.close_execution_scope!(params: close_params.merge("mutation_id" => "proof", "expected_generation" => generation.call), peer: peer, role: :launcher)
-          events = journal.read_events("assignment").select { |event| event["attempt_id"] == state.fetch("attempt_id") }
-          lineage = Molecules::ExecutionScopeLineage.new(events: events, project_id: "project", assignment_id: "assignment", attempt_id: state.fetch("attempt_id"), mapping_id: "mapping")
-          failure = JSON.generate("kind" => "protected_scope_before_release", "scope_generation" => lineage.binding.fetch("scope_generation"),
-            "scope_binding_event_id" => lineage.binding_event.fetch("digest"), "seal_event_id" => lineage.seal_event.fetch("digest"), "proof_id" => closed.dig(:data, "proof_id"))
-          dispatch.call(owner, "abort_launch", state.slice("attempt_id", "launch_ticket").merge("expected_generation" => generation.call,
-            "failure_evidence" => failure, "failure_digest" => Digest::SHA256.hexdigest(failure)), "abort-old")
-          assert journal.read_events("assignment").any? { |event| event.dig("payload", "operation") == "scope_reservation_release" }
-          other_bytes = JSON.generate(JSON.parse(bytes).merge("session_id" => "assignment-b"))
-          other_registered = dispatch.call(owner, "register_assignment", {"mapping_id" => "untouched", "assignment_id" => "assignment-b",
-            "definition_bytes" => other_bytes, "definition_digest" => Digest::SHA256.hexdigest(other_bytes), "expected_generation" => 0}, "register-untouched")
-          active = dispatch.call(owner, "reserve_attempt", reserve.merge("mapping_id" => "untouched", "assignment_id" => "assignment-b", "scope" => "020", "worker_uid" => 13006,
-            "expected_generation" => other_registered.dig(:data, "definition_generation")), "reserve-untouched")
-          assert_equal "reserved", active.dig(:data, "phase")
-          owner.define_singleton_method(:verify_maintenance_root!) { |*| true }
-          prior_retirements = observer.retirements
-          # One selected unreleased root prevents every retirement. An active
-          # untouched slot is attributable and does not block slot A alone.
-          owner.with_execution_slots(mapping_ids: %w[mapping untouched], candidate_deployment: candidate) do |contexts|
-            assert_raises(AttemptErrors::EvidenceUnavailable) { owner.retire_released_parent!(**contexts.first) }
-            assert_equal prior_retirements, observer.retirements
+          owner = fresh = nil
+          boot_factory = -> { fixture_boot_baseline_reader(protection: FixtureProtection.new) }
+          Ace::Runtime::Molecules::ExecutionBootBaseline.stub(:new, boot_factory) do
+            observer = scope_for.call(original.mapping("mapping"), "original-boot.json")
+            untouched_observer = scope_for.call(original.mapping("untouched"), "untouched-boot.json")
+            observers = {"mapping" => observer, "untouched" => untouched_observer}
+            owner = Authority::LaunchLifecycle.new(deployment: original, deployment_history: history, kernel: kernel,
+              journals: {"project" => journal}, scope_observer_factory: ->(id) { observers.fetch(id) })
+            dispatch = lambda do |authority, operation, params, mutation|
+              authority.dispatch(request: {"version" => 1, "operation" => operation, "mutation_id" => mutation,
+                "project_id" => "project", "params" => params.merge("mapping_id" => params.fetch("mapping_id", "mapping"), "assignment_id" => params.fetch("assignment_id", "assignment"))}, peer: peer, role: :launcher)
+            end
+            bytes = JSON.generate("session_id" => "assignment", "name" => "fixture", "created_at" => "2026-10-05T00:00:00Z",
+              "source_config" => "job.yaml", "task_id" => "09j", "project_id" => "project")
+            registered = dispatch.call(owner, "register_assignment", {"definition_bytes" => bytes, "definition_digest" => Digest::SHA256.hexdigest(bytes), "expected_generation" => 0}, "register").fetch(:data)
+            reserve = {"scope" => "010", "worker_uid" => 13001, "runtime" => "herdr", "base_head" => "a" * 40,
+              "launcher_process_binding" => peer, "expected_generation" => registered.fetch("definition_generation")}
+            state = dispatch.call(owner, "reserve_attempt", reserve, "reserve-old").fetch(:data)
+            generation = -> { journal.authority_generation(journal.read_events("assignment").select { |event| event["attempt_id"] == state.fetch("attempt_id") }) }
+            close_params = state.slice("attempt_id").merge("mapping_id" => "mapping", "assignment_id" => "assignment")
+            owner.close_execution_scope!(params: close_params.merge("mutation_id" => "seal", "expected_generation" => generation.call), peer: peer, role: :launcher)
+            closed = owner.close_execution_scope!(params: close_params.merge("mutation_id" => "proof", "expected_generation" => generation.call), peer: peer, role: :launcher)
+            events = journal.read_events("assignment").select { |event| event["attempt_id"] == state.fetch("attempt_id") }
+            lineage = Molecules::ExecutionScopeLineage.new(events: events, project_id: "project", assignment_id: "assignment", attempt_id: state.fetch("attempt_id"), mapping_id: "mapping")
+            failure = JSON.generate("kind" => "protected_scope_before_release", "scope_generation" => lineage.binding.fetch("scope_generation"),
+              "scope_binding_event_id" => lineage.binding_event.fetch("digest"), "seal_event_id" => lineage.seal_event.fetch("digest"), "proof_id" => closed.dig(:data, "proof_id"))
+            dispatch.call(owner, "abort_launch", state.slice("attempt_id", "launch_ticket").merge("expected_generation" => generation.call,
+              "failure_evidence" => failure, "failure_digest" => Digest::SHA256.hexdigest(failure)), "abort-old")
+            assert journal.read_events("assignment").any? { |event| event.dig("payload", "operation") == "scope_reservation_release" }
+            other_bytes = JSON.generate(JSON.parse(bytes).merge("session_id" => "assignment-b"))
+            other_registered = dispatch.call(owner, "register_assignment", {"mapping_id" => "untouched", "assignment_id" => "assignment-b",
+              "definition_bytes" => other_bytes, "definition_digest" => Digest::SHA256.hexdigest(other_bytes), "expected_generation" => 0}, "register-untouched")
+            active = dispatch.call(owner, "reserve_attempt", reserve.merge("mapping_id" => "untouched", "assignment_id" => "assignment-b", "scope" => "020", "worker_uid" => 13006,
+              "expected_generation" => other_registered.dig(:data, "definition_generation")), "reserve-untouched")
+            assert_equal "reserved", active.dig(:data, "phase")
+            owner.define_singleton_method(:verify_maintenance_root!) { |*| true }
+            prior_retirements = observer.retirements
+            # One selected unreleased root prevents every retirement. An active
+            # untouched slot is attributable and does not block slot A alone.
+            owner.with_execution_slots(mapping_ids: %w[mapping untouched], candidate_deployment: candidate) do |contexts|
+              assert_raises(AttemptErrors::EvidenceUnavailable) { owner.retire_released_parent!(**contexts.first) }
+              assert_equal prior_retirements, observer.retirements
+            end
+            owner.with_execution_slots(mapping_ids: ["mapping"], candidate_deployment: candidate) do |contexts|
+              assert owner.slot_reusable!(**contexts.first)
+              assert_equal "retired", owner.retire_released_parent!(**contexts.first).fetch("state")
+            end
+            assert_equal prior_retirements + 1, observer.retirements
+            File.binwrite(published, File.binread(candidate_ref.fetch("path")))
+            fresh_history, published_candidate = Ace::Runtime::Molecules::ProtectedArtifactSet.stub(:new, factory) do
+              [Authority::DeploymentHistory.load, Authority::Deployment.load]
+            end
+            assert_equal Authority::Deployment::PATH, published_candidate.artifact_reference.fetch("path")
+            assert_equal candidate_ref.fetch("sha256"), published_candidate.artifact_reference.fetch("sha256")
+            fresh_observer = scope_for.call(published_candidate.mapping("mapping"), "candidate-boot.json")
+            fresh = Authority::LaunchLifecycle.new(deployment: published_candidate, deployment_history: fresh_history, kernel: kernel,
+              journals: {"project" => journal}, scope_observer_factory: ->(_) { fresh_observer })
+            # Publication selects the immutable candidate; old canonical proofs
+            # remain byte-identical and a genuinely eligible slot can be reused.
+            before = journal.read_events("assignment")
+            result = dispatch.call(fresh, "reserve_attempt", reserve, "reserve-new")
+            assert_equal "reserved", result.dig(:data, "phase")
+            old_events = journal.read_events("assignment").select { |event| event["attempt_id"] == state.fetch("attempt_id") }
+            assert_equal before.select { |event| event["attempt_id"] == state.fetch("attempt_id") }, old_events
+            provisioning = journal.read_events("assignment").find { |event| event["type"] == "scope_provisioning" && event["attempt_id"] == result.dig(:data, "attempt_id") }
+            assert_equal candidate_ref.fetch("sha256"), provisioning.dig("payload", "descriptor_sha256")
           end
-          owner.with_execution_slots(mapping_ids: ["mapping"], candidate_deployment: candidate) do |contexts|
-            assert owner.slot_reusable!(**contexts.first)
-            assert_equal "retired", owner.retire_released_parent!(**contexts.first).fetch("state")
-          end
-          assert_equal prior_retirements + 1, observer.retirements
-          File.binwrite(published, File.binread(candidate_ref.fetch("path")))
-          fresh_history, published_candidate = Ace::Runtime::Molecules::ProtectedArtifactSet.stub(:new, factory) do
-            [Authority::DeploymentHistory.load, Authority::Deployment.load]
-          end
-          assert_equal Authority::Deployment::PATH, published_candidate.artifact_reference.fetch("path")
-          assert_equal candidate_ref.fetch("sha256"), published_candidate.artifact_reference.fetch("sha256")
-          fresh_observer = MaintenanceScopeOwner.new(published_candidate.mapping("mapping"))
-          fresh = Authority::LaunchLifecycle.new(deployment: published_candidate, deployment_history: fresh_history, kernel: kernel,
-            journals: {"project" => journal}, scope_observer_factory: ->(_) { fresh_observer })
-          # Publication selects the immutable candidate; old canonical proofs
-          # remain byte-identical and a genuinely eligible slot can be reused.
-          before = journal.read_events("assignment")
-          result = dispatch.call(fresh, "reserve_attempt", reserve, "reserve-new")
-          assert_equal "reserved", result.dig(:data, "phase")
-          old_events = journal.read_events("assignment").select { |event| event["attempt_id"] == state.fetch("attempt_id") }
-          assert_equal before.select { |event| event["attempt_id"] == state.fetch("attempt_id") }, old_events
-          provisioning = journal.read_events("assignment").find { |event| event["type"] == "scope_provisioning" && event["attempt_id"] == result.dig(:data, "attempt_id") }
-          assert_equal candidate_ref.fetch("sha256"), provisioning.dig("payload", "descriptor_sha256")
         ensure
           owner&.close
           fresh&.close
