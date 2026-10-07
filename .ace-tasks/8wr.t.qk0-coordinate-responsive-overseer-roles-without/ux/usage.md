@@ -2,6 +2,12 @@
 
 Target interfaces, not claims of implementation.
 
+## Restart discovery and concurrent progress
+
+Run `ace-overseer status --project ace --format json` after restarting the overseer without its local assignment cache. Expected: registered assignments and original attempt references are discovered through the authorized Assign inventory. Accepted task IDs and scope references are shown; unavailable detailed status remains unknown. Empty inventory is reported only after a successful complete owner response.
+
+If the journal advances between inventory pages, continue at the selected revision. Each later attempt-status observation carries its own revision; the output does not claim all observations are an atomic snapshot. An unavailable retained revision discards the incomplete enumeration and requires a fresh read. Revoked access, an oversized record or an unreachable authority is an explicit error, never an empty queue or a labd/private-directory fallback. The precise proposed API and failure scenarios are in `../protected-inventory-contract.md`; they require independent readiness review.
+
 ## Scenario 1: Start scoped work
 
 ```text

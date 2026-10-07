@@ -152,6 +152,31 @@ module Ace
         end
       end
 
+      def test_late_native_completion_is_retained_without_replacing_public_uncertainty
+        with_journal do |journal|
+          issue(journal)
+          public_reply = finalize(journal, outcome: "uncertain")
+          intent = journal.prompt_intent("public-prompt")
+          evidence = {"outcome" => "submitted", "origin" => origin, "submission" => "submitted"}
+          observe = -> do
+            journal.observe_prompt_completion(mutation_id: "public-prompt", intent_event_id: intent.fetch("digest"),
+              binding_digest: intent.dig("payload", "binding_digest"), evidence: evidence) do
+              {"binding_digest" => "b" * 64, "origin" => origin}
+            end
+          end
+          observed = observe.call
+          assert_equal "submitted", observed.dig(:data, "outcome")
+          assert observe.call.fetch(:replayed)
+          assert_equal public_reply.fetch(:data), finalize(journal).fetch(:data)
+          assert_equal 1, journal.read_events("assignment").count { |event| event["type"] == "prompt_completion_observed" }
+          assert_equal "uncertain", journal.mutation_result("public-prompt").dig("data", "outcome")
+          assert_raises(ArgumentError) do
+            journal.mutate(assignment_id: "assignment", attempt_id: "attempt", mutation_id: "prompt-observe.other",
+              operation: "fixture", parameters_digest: "a" * 64, expected_generation: 4) { {data: {}} }
+          end
+        end
+      end
+
       def test_fixed_completion_mode_cannot_authorize_unrelated_operation_or_missing_issue
         with_journal do |journal|
           selector = {"binding_digest" => "b" * 64, "intent_event_id" => "c" * 64}

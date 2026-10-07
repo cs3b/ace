@@ -34,7 +34,7 @@ module Ace
                   stop_after_commit = true
                   payload = {"scope_generation" => binding.fetch("scope_generation"), "scope_binding_event_id" => lineage.binding_event.fetch("digest")}
                   {events: [{type: "scope_sealed", payload: payload}], blobs: {}, data: projection}
-                elsif @native_issuers.key?(native_issuer_key(params, map))
+                elsif @native_issuers.key?(native_issuer_key(params, map)) || pending_prompt_issuers?(events, journal, _commit)
                   # A live issuer may still start after this inactive snapshot.
                   {events: [], blobs: {}, data: projection}
                 elsif lineage.proof_event
@@ -86,7 +86,9 @@ module Ace
               return projection unless lineage.binding
               begin
                 observation = scope_observer_for(params.fetch("mapping_id")).observe(lineage)
-                if lineage.proof_event
+                if pending_prompt_issuers?(events, journal, commit)
+                  projection.merge("required_action" => "drain_original_prompt_issuer")
+                elsif lineage.proof_event
                   scope_observer_for(params.fetch("mapping_id")).verify_closed!(lineage)
                   projection.merge("state" => "closed_no_writers", "proof_id" => lineage.proof_id, "required_action" => nil)
                 elsif lineage.sealed? && observation.fetch("populated").zero?

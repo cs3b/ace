@@ -467,6 +467,9 @@ module Ace
                 expected_generation: params.fetch("expected_generation"), with_replay: true) do |events, commit, _generation|
                 lineage = scope_close_owner!(params, map, events, peer, role)
                 native_issuer_pending!(params, map)
+                if pending_prompt_issuers?(events, journal, commit)
+                  raise AttemptErrors::EvidenceUnavailable, "Original prompt issuer has unresolved native writes"
+                end
                 terminal = terminal_scope_receipt!(events, lineage, journal, commit)
                 scope_observer_for(params.fetch("mapping_id")).verify_closed!(lineage)
                 scope_settlement_complete!(journal: journal, events: events, params: params, map: map, commit: commit)

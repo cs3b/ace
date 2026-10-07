@@ -5,6 +5,8 @@ require "securerandom"
 require "time"
 require "fileutils"
 require "open3"
+require "ace/herdr/molecules/guarded_native_origin"
+require_relative "launch_control_channel"
 require_relative "deployment"
 require_relative "deployment_history"
 require_relative "../molecules/execution_scope_lineage"
@@ -19,12 +21,13 @@ module Ace
         MUTATIONS = {
           "register_assignment" => %w[mapping_id assignment_id definition_bytes definition_digest expected_generation],
           "reserve_attempt" => %w[mapping_id assignment_id scope worker_uid runtime base_head launcher_process_binding expected_generation],
-          "record_launch" => %w[mapping_id assignment_id attempt_id launch_ticket process_binding expected_generation],
+          "record_launch" => %w[mapping_id assignment_id attempt_id launch_ticket process_binding guarded_origin expected_generation],
           "bind_process" => %w[mapping_id assignment_id attempt_id launch_ticket process_binding expected_generation],
           "release_launch" => %w[mapping_id assignment_id attempt_id launch_ticket process_binding expected_generation],
           "abort_launch" => %w[mapping_id assignment_id attempt_id launch_ticket failure_evidence failure_digest expected_generation]
         }.freeze
-        OPERATIONS = (MUTATIONS.keys + %w[launch_preflight registration_status attempt_status inspect_launch observe_execution_scope close_execution_scope]).freeze
+        TRANSFER_OPERATIONS = {"prompt_attempt" => {direction: :upload, purpose: :prompt_text, roles: %i[launcher supervisor]}}.freeze
+        OPERATIONS = (MUTATIONS.keys + %w[prompt_attempt prompt_status launch_prompt_intent launch_prompt_completion launch_preflight registration_status attempt_status inspect_launch observe_execution_scope close_execution_scope]).freeze
         TERMINAL = %w[succeeded failed stopped].freeze
 
         attr_reader :mutex, :journals, :exclusions
@@ -41,6 +44,7 @@ module Ace
           @observations = {}
           @streams = {}
           @native_issuers = {}
+          @control_channels = {}
           @slot_exclusions = {}
           @scope_observers = {}
           @scope_observer_factory = scope_observer_factory || ->(mapping_id) {
@@ -63,8 +67,12 @@ module Ace
             mapping_id: params.fetch("mapping_id")).require_launch_bound!
         end
 
-        def dispatch(request:, peer:, role:)
+        def dispatch(request:, peer:, role:, transfer: nil)
           operation, params = request.values_at("operation", "params")
+          return prompt_attempt!(request: request, peer: peer, role: role, transfer: transfer) if operation == "prompt_attempt"
+          return prompt_status!(request: request, peer: peer, role: role) if operation == "prompt_status"
+          return launch_prompt_intent!(request: request, peer: peer, role: role) if operation == "launch_prompt_intent"
+          return launch_prompt_completion!(request: request, peer: peer, role: role) if operation == "launch_prompt_completion"
           if operation == "observe_execution_scope"
             raise ArgumentError, "scope observation mutation ID must be null" unless request.fetch("mutation_id").nil?
             return {data: observe_execution_scope!(params: params, peer: peer, role: role), replayed: false}
@@ -326,6 +334,8 @@ module Ace
           @mutex.synchronize do
             @observations.each_value { |observation| close_observation(observation) }
             @observations.clear
+            @control_channels.each_value(&:close)
+            @control_channels.clear
           end
         end
 
@@ -592,6 +602,8 @@ module Ace
           raise AttemptErrors::Conflict, "launch cannot record another child" unless state["phase"] == "reserved"
           binding = validate_binding!(params.fetch("process_binding"), map, mapping_id: params.fetch("mapping_id"), launch_ticket: params.fetch("launch_ticket"), assignment_id: params.fetch("assignment_id"), attempt_id: params.fetch("attempt_id"), events: events)
           child = binding.fetch("process_identity")
+          guard = Ace::Herdr::Molecules::GuardedNativeOrigin.verify!(params.fetch("guarded_origin"),
+            terminal_id: binding.fetch("terminal_id"), child: child)
           @kernel.live!(child)
           if observation[:child_handle]
             unless @kernel.same?(observation.fetch(:child), child)
@@ -601,7 +613,7 @@ module Ace
             observation[:child_handle] = @kernel.pin(child)
             observation[:child] = child
           end
-          {events: [], blobs: {}, data: state.merge("phase" => "recorded", "process_binding" => binding)}
+          {events: [], blobs: {}, data: state.merge("phase" => "recorded", "process_binding" => binding, "guarded_origin" => guard)}
         end
 
         def bind(params, map, events, peer)
@@ -874,3 +886,5 @@ require_relative "launch_scope_admission"
 require_relative "launch_scope_close"
 require_relative "launch_scope_release"
 require_relative "launch_scope_parent"
+
+require_relative "launch_steering"

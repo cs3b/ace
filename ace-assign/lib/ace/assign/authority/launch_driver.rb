@@ -4,6 +4,7 @@ require "json"
 require "securerandom"
 require "ace/herdr/molecules/protected_native_control"
 require_relative "client"
+require_relative "launch_control_channel"
 
 module Ace
   module Assign
@@ -50,12 +51,18 @@ module Ace
           @native ||= Ace::Herdr::Molecules::ProtectedNativeControl.new(mapping: fixed, kernel: @kernel)
           binding = @native.create(mapping_id: @mapping_id, ticket: state.fetch("launch_ticket"))
           child_handle = @kernel.pin(binding.fetch("process_identity"))
-          recorded = @client.call("record_launch", lifecycle_params(state, binding), mutation_id: "#{mutation_id}-record").data
+          guarded = @native.guarded_binding!(binding)
+          unless guarded.reject { |key, _| key == "guarded_origin" } == binding
+            raise AttemptErrors::EvidenceUnavailable, "original native capture changed launch binding"
+          end
+          recorded = @client.call("record_launch", lifecycle_params(state, binding).merge("guarded_origin" => guarded.fetch("guarded_origin")), mutation_id: "#{mutation_id}-record").data
           bound = @client.call("bind_process", lifecycle_params(recorded, binding), mutation_id: "#{mutation_id}-bind").data
           # Exact original child is reobserved after canonical bind, before release.
           @native.observe(binding.fetch("native_origin").merge("process_binding" => binding))
           @kernel.live!(binding.fetch("process_identity"))
           issued = @client.call("release_launch", lifecycle_params(bound, binding), mutation_id: "#{mutation_id}-release").data
+          @issued_state = issued
+          @steering_binding = binding.merge("guarded_origin" => recorded.fetch("guarded_origin"))
           issued
         rescue StandardError
           # Response loss or partial creation never retries native creation.
@@ -66,6 +73,40 @@ module Ace
             "phase" => "uncertain", "required_action" => "inspect_exact_native_child_and_canonical_release_state")
         ensure
           child_handle&.close
+        end
+
+        # The same original launcher remains foreground. A transient channel
+        # failure reconnects this process and never repeats native issuance.
+        def serve_control!(state:)
+          unless state.equal?(@issued_state) && state["phase"] == "issued" && @steering_binding
+            raise AttemptErrors::EvidenceUnavailable, "Only the fresh original launcher may retain control"
+          end
+          @seen_prompt_intents ||= {}
+          @prompt_issuance_refs ||= {}
+          @reported_prompt_completions ||= {}
+          announced = false
+          until @control_cancelled
+            begin
+              report_retained_prompt_completions!(state)
+              @client.with_launch_control(state: state) do |socket, codec, ready|
+                unless announced
+                  yield({"version" => 1, "type" => "launch_ready", "mapping_id" => @mapping_id,
+                    "assignment_id" => state.fetch("assignment_id"), "attempt_id" => state.fetch("attempt_id"),
+                    "generation" => ready.fetch("generation"), "journal_commit" => ready.fetch("journal_commit"),
+                    "original_binding_digest" => ready.fetch("original_binding_digest")})
+                  announced = true
+                end
+                original_prompt_loop(socket, codec, state, ready)
+              end
+            rescue Ace::Runtime::RuntimeUnavailableError, AttemptErrors::EvidenceUnavailable, IOError, SystemCallError
+              # EOF does not prove the actor drained or justify a second send.
+              sleep(0.25) unless @control_cancelled
+            end
+          end
+        end
+
+        def request_control_cancel
+          @control_cancelled = true
         end
 
         def terminate(state:, binding:, evidence:, mutation_id: SecureRandom.hex(16))
@@ -83,6 +124,69 @@ module Ace
         end
 
         private
+
+        def report_retained_prompt_completions!(state)
+          @seen_prompt_intents.each do |id, evidence|
+            next if @reported_prompt_completions[id]
+            next unless %w[submitted not_issued].include?(evidence["outcome"])
+            reference = @prompt_issuance_refs.fetch(id)
+            accepted = @client.call("launch_prompt_completion", state.slice("assignment_id", "attempt_id").merge(reference).merge(
+              "guarded_evidence" => evidence), mutation_id: nil, timeout: 30).data
+            unless accepted.keys.sort == %w[intent_event_id journal_commit outcome] && accepted["intent_event_id"] == id && accepted["outcome"] == evidence.fetch("outcome") &&
+                accepted["journal_commit"].is_a?(String) && accepted["journal_commit"].match?(/\A(?:[0-9a-f]{40}|[0-9a-f]{64})\z/)
+              raise AttemptErrors::EvidenceUnavailable, "Retained native completion acknowledgement differs"
+            end
+            @reported_prompt_completions[id] = accepted.fetch("journal_commit")
+          end
+        end
+        def original_prompt_loop(socket, codec, state, ready)
+          wire = Ace::Runtime::Molecules::ProtectedSocket
+          until @control_cancelled
+            deadline = wire.deadline(30)
+            frame = wire.read(socket, deadline: deadline, limit: 16_384)
+            if frame.is_a?(Hash) && frame.keys.sort == %w[nonce type version] && frame["type"] == "launch_control_idle" &&
+                frame["version"].is_a?(Integer) && frame["version"] == 1 && frame["nonce"].is_a?(String) && frame["nonce"].match?(/\A[0-9a-f]{32}\z/)
+              wire.write(socket, frame.merge("type" => "launch_control_idle_ack"), deadline: deadline, limit: 16_384)
+              next
+            end
+            LaunchControlChannel.validate_prompt!(frame)
+            unless frame["attempt_id"] == state.fetch("attempt_id") && frame["original_binding_digest"] == ready.fetch("original_binding_digest")
+              raise AttemptErrors::EvidenceUnavailable, "Private prompt does not join original launcher"
+            end
+            evidence = codec.receive_launch_prompt(socket, descriptor: frame.fetch("text_descriptor"),
+              transfer_id: frame.fetch("transfer_id"), deadline: deadline) do |input|
+              expected = @client.call("launch_prompt_intent", state.slice("assignment_id", "attempt_id").merge(
+                frame.slice("mutation_id", "intent_event_id", "journal_commit")), mutation_id: nil).data
+              binding = expected.fetch("binding")
+              Ace::Herdr::Molecules::GuardedNativeOrigin.verify!(expected.fetch("origin"),
+                terminal_id: @steering_binding.fetch("terminal_id"), child: @steering_binding.fetch("process_identity"))
+              unless expected["intent_event_id"] == frame["intent_event_id"] && expected["origin"] == @steering_binding.fetch("guarded_origin") &&
+                  binding.is_a?(Hash) && binding["text_bytes"].is_a?(Integer) &&
+                  binding.values_at("mapping_id", "assignment_id", "attempt_id", "mutation_id") ==
+                    [@mapping_id, state.fetch("assignment_id"), state.fetch("attempt_id"), frame.fetch("mutation_id")] &&
+                  binding["original_binding_digest"] == frame["original_binding_digest"] && binding["text_bytes"] == input.bytes.bytesize &&
+                  binding["text_sha256"] == Digest::SHA256.hexdigest(input.bytes)
+                raise AttemptErrors::EvidenceUnavailable, "Private prompt immutable intent differs"
+              end
+              id = frame.fetch("intent_event_id")
+              @prompt_issuance_refs[id] = frame.slice("mutation_id", "intent_event_id", "original_binding_digest")
+              if @seen_prompt_intents.key?(id)
+                @seen_prompt_intents.fetch(id)
+              else
+                @seen_prompt_intents[id] = {"outcome" => "uncertain", "origin" => @steering_binding.fetch("guarded_origin")}
+                @native.prompt_preflight!(@steering_binding)
+                @seen_prompt_intents[id] = @native.prompt(binding: @steering_binding, text: input.bytes)
+              end
+            end
+            result = frame.slice("mutation_id", "intent_event_id", "original_binding_digest").merge("version" => 1,
+              "type" => "prompt_dispatch_outcome", "guarded_evidence" => evidence)
+            wire.write(socket, result, deadline: deadline, limit: 16_384)
+            recorded = wire.read(socket, deadline: deadline, limit: 16_384)
+            LaunchControlChannel.validate_recorded!(recorded, frame, evidence)
+            @reported_prompt_completions[frame.fetch("intent_event_id")] = recorded.fetch("journal_commit") if %w[submitted not_issued].include?(evidence.fetch("outcome"))
+          end
+        end
+
         def close_before_native_release(state, mutation_id)
           unless state["scope_binding_event_id"]
             return state.merge("required_action" => "inspect_exact_scope")
