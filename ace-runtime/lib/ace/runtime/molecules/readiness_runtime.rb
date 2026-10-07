@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 require_relative "protected_artifact_set"
+require "rbconfig"
 
 module Ace
   module Runtime
@@ -55,7 +56,18 @@ module Ace
             raise RuntimeUnavailableError, "readiness require selection differs"
           end
           bases = feature.start_with?("/") ? [feature] : @runtime.fetch("load_paths").map { |path| File.join(path, feature) }
-          selected = bases.flat_map { |path| [path, path + ".rb", path + ".so"] }.find { |path| @references.key?(path) }
+          extension = "." + RbConfig::CONFIG.fetch("DLEXT")
+          candidates = bases.flat_map do |path|
+            # Ruby maps explicit .so/.o requests to its own platform extension.
+            if path.end_with?(".so", ".o")
+              [path.sub(/\.(?:so|o)\z/, extension)]
+            elsif path.end_with?(".rb", extension)
+              [path]
+            else
+              [path, path + ".rb", path + extension]
+            end
+          end
+          selected = candidates.find { |path| @references.key?(path) }
           raise RuntimeUnavailableError, "readiness require is outside protected closure" unless selected
           selected
         end

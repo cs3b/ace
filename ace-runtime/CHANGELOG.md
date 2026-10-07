@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- Resolve guarded Ruby native-extension requests using the selected interpreter platform extension, including explicit `.so`/`.o` aliases, while authenticating only exact declared files.
+
 - Reject duplicate JSON keys, invalid UTF-8, comments and excessive nesting in protected socket frames while preserving exact byte boundaries between successive frames.
 
 - Authenticate the boot-selected private devpts backing and exact instance-local ptmx node before API exemption; shared host views refuse even when read-only. Verify the explicit unit projections and pinned contained ptmx link/node observations.
