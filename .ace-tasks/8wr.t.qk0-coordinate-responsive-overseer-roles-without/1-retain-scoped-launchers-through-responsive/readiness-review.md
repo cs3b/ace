@@ -29,3 +29,9 @@ Required controlled acceptance additions: prepare a managed definition with an e
 The stable public launch-input/invocation and reconciliation contract above still needs completion and independent whole-child review. This precision alone does not promote the child.
 
 Independent scoped review, wave_5h5 (2026-10-07): APPROVE the registration/project clarification, corrected steering usage and added bundle context. Reviewed the actual AssignmentLauncher → TaskAssignmentCreator → AssignmentExecutor project flow and LaunchDriver registration-before-reservation ordering. No additional finding; no new API, implementation acceptance or task promotion. Root integration base is `0d34bdc1a`; `ace-task show 8wr.t.qk0.1` retains draft and `git diff --check` passes.
+
+## Whole-child follow-through after retained-input review
+
+The independently reviewed `launch-input-proposal.md` now specifies immutable pre-effect inputs and read-only recovery; `ux/usage.md` shows the recovery form. It does not yet resolve how fresh `work-on` chooses the exact prepared numeric subtree scope. Actual `AssignmentScope` accepts step numbers only (for example `010` or `010.01`), not an implicit whole-assignment token; `TaskAssignmentCreator` can create several top-level steps, and its returned `current` is merely the first queue step. Do not silently bind only the first step while promising whole-task execution, or invent an `all` scope. Resolve this through the existing preset/queue and protected admission contracts before promotion, with a concrete multi-step acceptance case.
+
+Also make the required pre-effect request identity compatible with `--quiet`: suppressed progress cannot suppress the durable request reference needed for reconciliation. These are source/CLI specification decisions to resolve autonomously against existing owners, not requests for another Captain approval and not installed-only checks. Whole-child readiness remains outstanding.

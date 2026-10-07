@@ -28,3 +28,8 @@ Task remains inprogress, SC1–SC6 remain unchecked. Source gaps are not moved t
 ## Follow-up controlled source evidence
 
 The originally identified local concurrency/endpoint/late-completion evidence gaps above are now covered by controlled-service-boundary-source-receipt.md (PASS2/22 actual first claim race + second listener) and service-policy-refusal-source-receipt.md (PASS1/17 actual late completion + fresh effect denial + listener survives). The latter also repairs an actual Server SecurityError classification defect exposed by the genuine policy. Original rows remain as audit history; they no longer describe missing controlled tests after these follow-ups. Whole criteria remain unchecked pending exact independent checkpoint reviews, program/domain source obligations and centralized installed matrix.
+## Independent follow-up integration
+
+Root reviewed frozen `fde561ab8fa8a729402d5445823133a2edb614dc`, cherry-picked as `a08e02ea4`. Scoped APPROVE: immutable execute mutation identity, recovery producer composition guard and reconstruction evidence; no whole-SC acceptance.
+
+Executed on the combined integration tree: exact receiver mutation regression PASS1/4, receipt `22975afb-cb12-475e-9e0d-cd520d20b74b`; composition plus reconstructed recovery PASS4/42, receipt `7f075ef9-3612-40c3-a828-f44c51fc3cc0`. The first invocation included other filenames, but its line selector filtered the run to the mutation method; only 1/4 is attributed to that receipt. The separate unfiltered two-file run supplies the other evidence. No native or installed verification.

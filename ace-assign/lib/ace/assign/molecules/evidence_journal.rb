@@ -113,9 +113,18 @@ module Ace
         # Operation-scoped batch of the same provenance proof. No retained
         # cache: every call authenticates the entire fixed first-parent history.
         def event_commits!(assignment_id:, event_digests:, commit:)
-          unless event_digests.is_a?(Array) && event_digests.size.between?(1, HISTORY_LIMIT) &&
-              event_digests.uniq.size == event_digests.size &&
-              event_digests.all? { |digest| digest.is_a?(String) && digest.match?(/\A[0-9a-f]{64}\z/) }
+          event_commits_for_assignments!(selectors: {assignment_id => event_digests}, commit: commit).fetch(assignment_id)
+        end
+
+        # One immutable walk for an operation selecting several assignments.
+        # Every selected assignment retains its complete chain and exact raw
+        # blob proof; the result is returned, never cached on this owner.
+        def event_commits_for_assignments!(selectors:, commit:)
+          unless selectors.is_a?(Hash) && !selectors.empty? && selectors.size <= HISTORY_LIMIT &&
+              selectors.keys.all? { |id| id.is_a?(String) && id.match?(JournalMutation::ID) } &&
+              selectors.values.all? { |digests| digests.is_a?(Array) && !digests.empty? &&
+                digests.uniq.size == digests.size && digests.all? { |digest| digest.is_a?(String) && digest.match?(/\A[0-9a-f]{64}\z/) } } &&
+              selectors.values.sum(&:size) <= HISTORY_LIMIT
             raise AttemptErrors::EvidenceUnavailable, "historical event selectors are invalid"
           end
           verify_commit!(commit)
@@ -127,38 +136,28 @@ module Ace
               nodes.each_cons(2).all? { |left, right| left[1] == right[0] } && nodes.last.size == 1
             raise AttemptErrors::EvidenceUnavailable, "canonical history topology is unsupported or incomplete: #{error}"
           end
-          selectors = event_digests.to_h { |digest| [digest, {retained: nil, blob: nil, absent: false, introduction: nil}] }
+          states = selectors.to_h do |id, digests|
+            [id, digests.to_h { |digest| [digest, {retained: nil, blob: nil, absent: false, introduction: nil}] }]
+          end
           nodes.each do |node|
-            events = read_events(assignment_id, commit: node.first)
-            unless events.group_by { |event| event.fetch("attempt_id") }.values.all? { |chain| Models::EvidenceEvent.chain_valid?(chain) }
-              raise AttemptErrors::EvidenceUnavailable, "historical canonical event chain is corrupt"
-            end
-            matches = events.select { |event| selectors.key?(event["digest"]) }.group_by { |event| event.fetch("digest") }
-            present = []
-            selectors.each do |digest, state|
-              selected = matches.fetch(digest, [])
-              raise AttemptErrors::EvidenceUnavailable, "historical event selector is ambiguous" if selected.size > 1
-              if selected.empty?
-                state[:absent] = true
-                next
+            snapshots, files = read_event_snapshots!(states.keys, commit: node.first)
+            states.each do |assignment_id, selected_states|
+              events = snapshots.fetch(assignment_id)
+              unless events.group_by { |event| event.fetch("attempt_id") }.values.all? { |chain| Models::EvidenceEvent.chain_valid?(chain) }
+                raise AttemptErrors::EvidenceUnavailable, "historical canonical event chain is corrupt"
               end
-              event = selected.first
-              if state[:absent] || (state[:retained] && state[:retained] != event)
-                raise AttemptErrors::EvidenceUnavailable, "historical event disappeared or changed"
-              end
-              present << [state, event, "#{node.first}:execution/#{assignment_id}/events/#{event_filename(event)}"]
-            end
-            # Keep argv bounded independently of the closed selector-set bound.
-            present.each_slice(64) do |batch|
-              output, blob_error, blob_status = git("rev-parse", *batch.map(&:last))
-              blobs = output.lines.map(&:strip)
-              unless blob_status.success? && blobs.size == batch.size &&
-                  blobs.all? { |blob| blob.match?(/\A[0-9a-f]{40}\z/) }
-                raise AttemptErrors::EvidenceUnavailable, "historical event bytes are unavailable: #{blob_error}"
-              end
-              batch.zip(blobs).each do |(state, event, _path), blob|
-                if state[:blob] && state[:blob] != blob
-                  raise AttemptErrors::EvidenceUnavailable, "historical canonical event bytes changed"
+              matches = events.select { |event| selected_states.key?(event["digest"]) }.group_by { |event| event.fetch("digest") }
+              selected_states.each do |digest, state|
+                selected = matches.fetch(digest, [])
+                raise AttemptErrors::EvidenceUnavailable, "historical event selector is ambiguous" if selected.size > 1
+                if selected.empty?
+                  state[:absent] = true
+                  next
+                end
+                event = selected.first
+                blob = files.fetch(assignment_id).fetch(event_filename(event))
+                if state[:absent] || (state[:retained] && state[:retained] != event) || (state[:blob] && state[:blob] != blob)
+                  raise AttemptErrors::EvidenceUnavailable, "historical event disappeared or changed"
                 end
                 state[:blob] ||= blob
                 state[:retained] ||= event
@@ -166,10 +165,12 @@ module Ace
               end
             end
           end
-          unless selectors.values.all? { |state| state[:introduction] }
+          unless states.values.all? { |selected_states| selected_states.values.all? { |state| state[:introduction] } }
             raise AttemptErrors::EvidenceUnavailable, "historical canonical event is unavailable"
           end
-          selectors.to_h { |digest, state| [digest.dup.freeze, state.fetch(:introduction).dup.freeze] }.freeze
+          states.to_h do |id, selected_states|
+            [id.dup.freeze, selected_states.to_h { |digest, state| [digest.dup.freeze, state.fetch(:introduction).dup.freeze] }.freeze]
+          end.freeze
         rescue KeyError, TypeError, ArgumentError, NoMethodError
           raise AttemptErrors::EvidenceUnavailable, "historical canonical event selectors are unverifiable"
         end
@@ -236,35 +237,54 @@ module Ace
         # @param assignment_id [String] Assignment ID
         # @return [Array<Hash>] Parsed events in journal order
         def read_events(assignment_id, commit: ref_value)
-          value = commit
-          return [] if value.nil?
+          return [] if commit.nil?
+          read_event_snapshots!([assignment_id], commit: commit).first.fetch(assignment_id)
+        end
 
-          paths, stderr, status = git("ls-tree", "-r", "-l", value, "--",
-            "execution/#{assignment_id}/events/")
-          raise AttemptErrors::EvidenceUnavailable, "Cannot read journal events: #{stderr}" unless status.success?
-          entries = paths.lines.filter_map do |line|
-            metadata, path = line.chomp.split("\t", 2)
-            next unless path&.end_with?(".json")
-            _mode, kind, oid, size = metadata.split
-            unless kind == "blob" && oid&.match?(/\A[0-9a-f]{40}\z/) &&
-                size&.match?(/\A(?:0|[1-9][0-9]*)\z/)
-              raise AttemptErrors::EvidenceUnavailable, "canonical event blob selection is invalid"
+        # Bounded argv/blob batches from the same immutable tree. Preserve the
+        # actual file OIDs alongside parsed chains for introduction proofs.
+        def read_event_snapshots!(assignment_ids, commit:)
+          unless assignment_ids.is_a?(Array) && !assignment_ids.empty? && assignment_ids.size <= HISTORY_LIMIT &&
+              assignment_ids.uniq.size == assignment_ids.size && assignment_ids.all? { |id| id.is_a?(String) && id.match?(JournalMutation::ID) }
+            raise AttemptErrors::EvidenceUnavailable, "canonical assignment selectors are invalid"
+          end
+          events = assignment_ids.to_h { |id| [id, []] }
+          files = assignment_ids.to_h { |id| [id, {}] }
+          entries = []
+          assignment_ids.each_slice(64) do |ids|
+            paths, stderr, status = git("ls-tree", "-r", "-l", commit, "--", *ids.map { |id| "execution/#{id}/events/" })
+            raise AttemptErrors::EvidenceUnavailable, "Cannot read journal events: #{stderr}" unless status.success?
+            paths.lines.each do |line|
+              metadata, path = line.chomp.split("\t", 2)
+              next unless path&.end_with?(".json")
+              _mode, kind, oid, size = metadata.split
+              id = path.split("/")[1]
+              unless events.key?(id) && path.start_with?("execution/#{id}/events/") && kind == "blob" &&
+                  oid&.match?(/\A[0-9a-f]{40}\z/) && size&.match?(/\A(?:0|[1-9][0-9]*)\z/)
+                raise AttemptErrors::EvidenceUnavailable, "canonical event blob selection is invalid"
+              end
+              name = path.delete_prefix("execution/#{id}/events/")
+              raise AttemptErrors::EvidenceUnavailable, "canonical event file is ambiguous" if files.fetch(id).key?(name)
+              files.fetch(id)[name] = oid
+              entries << [oid, size.to_i, id]
             end
-            [oid, size.to_i]
           end
           batches = []
           entries.each do |entry|
             batches << [] if batches.empty? || batches.last.size == 64 ||
-              (!batches.last.empty? && batches.last.sum(&:last) + entry.last > EVENT_BATCH_BYTES)
+              (!batches.last.empty? && batches.last.sum { |item| item[1] } + entry[1] > EVENT_BATCH_BYTES)
             batches.last << entry
           end
-          events = batches.flat_map do |batch|
-            decode_event_blobs!(batch, read_event_blobs!(batch)).map { |content| JSON.parse(content) }
+          batches.each do |batch|
+            selected = batch.map { |oid, size, _id| [oid, size] }
+            contents = decode_event_blobs!(selected, read_event_blobs!(selected))
+            batch.zip(contents).each { |(_oid, _size, id), content| events.fetch(id) << JSON.parse(content) }
           end
-          order_by_chain(events)
-        rescue JSON::ParserError => e
-          raise AttemptErrors::EvidenceUnavailable, "Corrupt journal event for #{assignment_id}: #{e.message}"
+          [events.transform_values { |chain| order_by_chain(chain) }, files]
+        rescue JSON::ParserError
+          raise AttemptErrors::EvidenceUnavailable, "Corrupt canonical journal event"
         end
+        private :read_event_snapshots!
 
         # Accepted receipt payloads recorded for an assignment.
         #

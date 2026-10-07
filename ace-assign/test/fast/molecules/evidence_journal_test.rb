@@ -93,6 +93,56 @@ module Ace
         end
       end
 
+      def test_multi_assignment_introductions_share_one_walk_and_recheck_each_chain_and_raw_blob
+        with_temp_cache do |cache_dir|
+          repo = File.join(cache_dir, "repo")
+          init_repo(repo)
+          journal = Molecules::EvidenceJournal.new(repo_root: repo, ref: REF, checkout_root: File.join(cache_dir, "co"))
+          first = build_event(type: "intent", attempt_id: "attempt-a", payload: {"scope" => "one"})
+          second = build_event(type: "intent", attempt_id: "attempt-b", payload: {"scope" => "two"})
+          a_commit = journal.append(assignment_id: "assignment-a", attempt_id: "attempt-a", events: [first])
+          b_commit = journal.append(assignment_id: "assignment-b", attempt_id: "attempt-b", events: [second])
+          selectors = {"assignment-a" => [first.fetch("digest")], "assignment-b" => [second.fetch("digest")]}
+          scans = 0
+          native_git = journal.method(:git)
+          journal.define_singleton_method(:git) do |*args|
+            scans += 1 if args.first == "rev-list"
+            native_git.call(*args)
+          end
+          expected = {"assignment-a" => {first.fetch("digest") => a_commit}, "assignment-b" => {second.fetch("digest") => b_commit}}
+          actual = journal.event_commits_for_assignments!(selectors: selectors, commit: b_commit)
+          assert_equal expected, actual
+          assert_equal 1, scans
+          assert actual.frozen?
+          assert actual.values.all?(&:frozen?)
+          assert_equal expected, journal.event_commits_for_assignments!(selectors: selectors, commit: b_commit)
+          assert_equal 2, scans # A new operation reauthenticates, with no retained cache.
+          a_tree = git(repo, "rev-parse", "#{a_commit}^{tree}").strip
+          b_tree = git(repo, "rev-parse", "#{b_commit}^{tree}").strip
+          absent = git(repo, "commit-tree", a_tree, "-p", b_commit, "-m", "remove second assignment").strip
+          reappeared = git(repo, "commit-tree", b_tree, "-p", absent, "-m", "reintroduce second assignment").strip
+          [absent, reappeared].each do |commit|
+            assert_raises(AttemptErrors::EvidenceUnavailable) { journal.event_commits_for_assignments!(selectors: selectors, commit: commit) }
+          end
+          checkout = File.join(cache_dir, "co", "journal")
+          path = Dir.glob(File.join(checkout, "execution", "assignment-b", "events", "*.json")).fetch(0)
+          original_bytes = File.binread(path)
+          File.write(path, JSON.generate(second))
+          git(checkout, "add", "-A")
+          git(checkout, "commit", "-m", "change only second raw serialization")
+          changed = git(checkout, "rev-parse", "HEAD").strip
+          assert_raises(AttemptErrors::EvidenceUnavailable) { journal.event_commits_for_assignments!(selectors: selectors, commit: changed) }
+          File.write(path, original_bytes)
+          corrupt = second.merge("digest" => "f" * 64)
+          File.write(path, JSON.generate(corrupt))
+          git(checkout, "add", "-A")
+          git(checkout, "commit", "-m", "corrupt second complete chain")
+          corrupt_commit = git(checkout, "rev-parse", "HEAD").strip
+          assert_raises(AttemptErrors::EvidenceUnavailable) { journal.event_commits_for_assignments!(selectors: selectors, commit: corrupt_commit) }
+          assert_equal expected, journal.event_commits_for_assignments!(selectors: selectors, commit: b_commit)
+        end
+      end
+
       def test_fixed_snapshot_requires_an_actual_readable_commit_object
         with_temp_cache do |cache_dir|
           repo = File.join(cache_dir, "repo")
