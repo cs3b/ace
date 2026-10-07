@@ -274,13 +274,14 @@ module Ace
           finish_prompt_outcome!(params, map, intent, result.fetch("guarded_evidence"), completion_ack: true)
         end
 
-        # Accepted input lives outside the worker unit. Only the actual closed
-        # native completion joined to its immutable issue, or accepted original
-        # actor input drainage, removes the writer blocker. Drainage never
+        # An issued actor lives outside the worker unit and must be inhibited
+        # for its full lifetime, even with no prompt rows or only known ACKs.
+        # Accepted original actor input drainage removes the writer blocker. It never
         # changes an unknown prompt outcome. Channel absence, caller exit and
         # an empty worker cgroup cannot remove this blocker.
         def pending_prompt_issuers?(events, journal, commit)
           return false if accepted_input_inhibition?(events, journal, commit)
+          return true if issued_input_actor?(events)
           events.select { |event| event["type"] == "prompt_issued" }.any? do |issued|
             external_id = issued.fetch("payload").fetch("external_mutation_id")
             intent = journal.prompt_intent(external_id, commit: commit)
@@ -296,6 +297,16 @@ module Ace
           end
         rescue KeyError, TypeError, ArgumentError
           raise AttemptErrors::EvidenceUnavailable, "Prompt issuer history is malformed"
+        end
+
+        def issued_input_actor?(events)
+          releases = events.select { |event| event["type"] == "authority_mutation" && event.dig("payload", "operation") == "release_launch" }
+          return false if releases.empty?
+          unless Models::EvidenceEvent.chain_valid?(events) && releases.one? &&
+              releases.first.dig("payload", "data").is_a?(Hash) && releases.first.dig("payload", "data", "phase") == "issued"
+            raise AttemptErrors::EvidenceUnavailable, "Original outside-unit actor issuance differs"
+          end
+          true
         end
 
         def authenticated_prompt_completions!(events, intent, original, journal)
