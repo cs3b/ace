@@ -36,3 +36,7 @@ Large vertical slice; source-owned root invocation/result is its independently o
 ## Accepted root entry provenance amendment
 
 [root-entry-provenance-amendment-candidate.md](root-entry-provenance-amendment-candidate.md) is the reviewed normative replacement for executable-identity composition: trusted Type=exec direct immutable entry/load closure, actual manager GetUnitByPIDFD over held inheritedFD, strict root observer policy. Generic ProtectedLinux is unchanged. Current Python→Ruby bounded root wrappers do not satisfy this producer. Task remains in progress; source SCs stay unchecked until executed joined evidence and independent source review.
+
+## Physical inspection producer amendment under review
+
+[physical-inspection-owner-amendment-candidate.md](physical-inspection-owner-amendment-candidate.md) pins original retained workspace resource identity, same-Installer pre-effect capture and normalized preservation producer, fixed sink derivation and held canonical target accessor. Production boundary preparation currently lacks an exact parent workspace-cwd resource; old deployments without it refuse. This candidate is independently reviewed before implementation; no existing acceptance or SC is implied.
