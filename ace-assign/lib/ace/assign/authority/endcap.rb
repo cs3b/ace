@@ -14,7 +14,7 @@ module Ace
       # Business admission shares the launch origin, lifecycle exclusion and
       # journal CAS. Network transfer is completed outside those locks.
       class Endcap
-        OPERATIONS = %w[submit_candidate export_candidate assign_review accept_review request_service begin_dispatch complete_service claim_service_settlement complete_no_effect service_authorization service_status submit_result evidence_fetch reconcile_inbox].freeze
+        OPERATIONS = %w[submit_candidate export_candidate assign_review cancel_review accept_review request_service begin_dispatch complete_service claim_service_settlement complete_no_effect service_authorization service_status submit_result evidence_fetch reconcile_inbox].freeze
         TRANSFER_OPERATIONS = {
           "reconcile_inbox" => {direction: :upload, purpose: :inbox_proof, roles: %i[launcher supervisor]},
           "submit_result" => {direction: :upload, purpose: :receipt_artifacts, roles: [:worker]},
@@ -35,6 +35,7 @@ module Ace
           "submit_candidate" => %w[mapping_id assignment_id attempt_id expected_generation candidate_generation head transfer],
           "export_candidate" => %w[mapping_id assignment_id attempt_id candidate_generation head purpose_id],
           "assign_review" => %w[mapping_id assignment_id attempt_id expected_generation candidate_generation head reviewer_uid reviewer_process_binding],
+          "cancel_review" => %w[mapping_id assignment_id attempt_id head candidate_generation review_event_id expected_generation],
           "accept_review" => %w[mapping_id assignment_id attempt_id expected_generation candidate_generation head purpose_id receipt_sha256 transfer],
           "request_service" => %w[mapping_id assignment_id attempt_id expected_generation candidate_generation head request_id operation input_digest target authorization service_id worker_process_binding transfer],
           "begin_dispatch" => %w[mapping_id assignment_id attempt_id expected_generation candidate_generation head request_id claim_binding transfer],
@@ -81,6 +82,7 @@ module Ace
           return dispatch_inbox(request: request, peer: peer, role: role, transfer: transfer) if request.fetch("operation") == "reconcile_inbox"
           return dispatch_result(request: request, peer: peer, role: role, transfer: transfer) if %w[submit_result evidence_fetch].include?(request.fetch("operation"))
           params, map = validate_request(request)
+          return cancel_review(request, params, map, peer, role, transfer) if request.fetch("operation") == "cancel_review"
           return dispatch_service_settlement(request, params, map, peer, role, transfer) if %w[claim_service_settlement complete_no_effect].include?(request.fetch("operation"))
           return service_status(request, params, map, peer, role) if request.fetch("operation") == "service_status"
           return dispatch_service(request, params, map, peer, role, transfer) if %w[request_service begin_dispatch complete_service service_authorization].include?(request.fetch("operation"))
@@ -119,7 +121,7 @@ module Ace
               worker_or_launcher!(peer, role, map, origin,
                 launcher_only: request.fetch("operation") == "assign_review")
             end
-            journal.mutate(assignment_id: params.fetch("assignment_id"), attempt_id: params.fetch("attempt_id"),
+            result = journal.mutate(assignment_id: params.fetch("assignment_id"), attempt_id: params.fetch("attempt_id"),
               mutation_id: request.fetch("mutation_id"), operation: request.fetch("operation"),
               parameters_digest: Atoms::EvidenceDigest.digest(params), expected_generation: params.fetch("expected_generation"),
               with_replay: true) do |events, _commit, _generation|
@@ -137,6 +139,7 @@ module Ace
               when "assign_review"
                 worker_or_launcher!(peer, role, map, origin, launcher_only: true)
                 current = exact_candidate!(candidate(events), params)
+                raise AttemptErrors::Conflict, "candidate review reservation is active" if active_review_event(events, current)
                 reviewer = params.fetch("reviewer_process_binding")
                 uid = params.fetch("reviewer_uid")
                 project = @deployment.project(map.fetch("project_id"))
@@ -153,6 +156,11 @@ module Ace
                 review = assigned_review(events)
                 accept_review_plan(journal, events, params, map, current, review, admitted)
               end
+            end
+            if request.fetch("operation") == "assign_review"
+              review_event_reply(journal, result, request, params, "assignment_event_id")
+            else
+              result
             end
           end
         end
@@ -237,7 +245,7 @@ module Ace
           current = exact_candidate!(candidate(events), params)
           @kernel.live!(peer)
           if role == :reviewer
-            assignment = assigned_review(events)
+            assignment = active_review_event(events, current)&.dig("payload", "data")
             unless assignment && assignment["review_id"] == params["purpose_id"] && assignment["head"] == current["head"] &&
                 assignment["candidate_generation"] == current["candidate_generation"] && assignment["reviewer_uid"] == peer["uid"] &&
                 @kernel.descendant?(peer, assignment.fetch("reviewer_process_binding"))
@@ -266,7 +274,7 @@ module Ace
         def approved_review!(journal, events, params, map, current)
           accepted = events.reverse.find { |event| event["type"] == "authority_mutation" &&
             event.dig("payload", "operation") == "accept_review" }&.dig("payload", "data")
-          review = assigned_review(events)
+          review = active_review_event(events, current)&.dig("payload", "data")
           unless accepted && review && accepted["head"] == current["head"] &&
               accepted["candidate_generation"] == current["candidate_generation"] &&
               accepted["review_id"] == review["review_id"] && accepted["reviewer_uid"] == review["reviewer_uid"] &&
@@ -356,3 +364,5 @@ require_relative "endcap_inboxes"
 
 require_relative "endcap_contexts"
 require_relative "endcap_prepared_work"
+
+require_relative "endcap_reviews"
