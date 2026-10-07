@@ -131,4 +131,50 @@ class ProtectedArtifactSetTest < AceRuntimeTestCase
     end
   end
 
+  def test_default_count_refuses_257th_unique_artifact_but_trusted_budget_accepts_it
+    with_artifacts do |directory|
+      paths = Array.new(Set::COUNT_LIMIT + 1) do |index|
+        path = File.join(directory, index.to_s)
+        File.write(path, "x")
+        path
+      end
+      Set.new(protection: ControlledProtection.new).with do |set|
+        paths.first(Set::COUNT_LIMIT).each { |path| set.read_path!(path) }
+        assert_raises(Unavailable) { set.read_path!(paths.last) }
+        assert_raises(Unavailable) { set.read!(reference(paths.last)) }
+        assert_equal "x", set.read!(reference(paths.first))
+      end
+      Set.new(protection: ControlledProtection.new, count_limit: paths.size).with do |set|
+        paths.each { |path| set.read!(reference(path)) }
+        assert_equal "x", set.read_path!(paths.last).first
+        assert set.verify_unchanged!
+      end
+    end
+  end
+
+  def test_custom_count_is_shared_by_both_read_paths_and_repeated_reads_do_not_spend_it
+    with_artifacts do |directory|
+      first, second, third = %w[first second third].map do |name|
+        path = File.join(directory, name)
+        File.write(path, name)
+        path
+      end
+      Set.new(protection: ControlledProtection.new, count_limit: 2).with do |set|
+        bytes, selected = set.read_path!(first)
+        assert_same bytes, set.read!(selected)
+        assert_equal "second", set.read!(reference(second))
+        assert_raises(Unavailable) { set.read!(reference(third)) }
+        assert_raises(Unavailable) { set.read_path!(third) }
+        assert_equal "second", set.read_path!(second).first
+        assert set.verify_unchanged!
+      end
+    end
+  end
+
+  def test_invalid_trusted_count_budgets_refuse_at_construction
+    [nil, false, true, 0, -1, 1.0, "2"].each do |count|
+      assert_raises(ArgumentError) { Set.new(protection: ControlledProtection.new, count_limit: count) }
+    end
+  end
+
 end
