@@ -352,6 +352,21 @@ module Ace
           data.fetch("launch_mappings").fetch(id)
         end
 
+        # Canonical mapping identity shared by scope evidence and the trusted
+        # provisioning owner. Resolves only this descriptor's exact mapping ID.
+        def mapping_digest(id)
+          Digest::SHA256.hexdigest(JSON.generate(canonical_mapping_value(mapping(id)))).freeze
+        end
+
+        def canonical_mapping_value(value)
+          case value
+          when Hash then value.sort.to_h.transform_values { |item| canonical_mapping_value(item) }
+          when Array then value.map { |item| canonical_mapping_value(item) }
+          else value
+          end
+        end
+        private :canonical_mapping_value
+
         def validate_mapping!(id, mapping)
           required = %w[project_id authority_id launcher_uid launcher_gid launcher_groups worker_uid worker_gid
             worker_groups worker_actor worker_cwd worker_argv worker_env bootstrap bootstrap_sha256 native execution_scope]
