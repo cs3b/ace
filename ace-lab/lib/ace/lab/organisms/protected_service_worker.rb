@@ -16,8 +16,13 @@ module Ace
           @closing = false
         end
 
-        def start(submission:, peer:, input_bytes:, mutation_id:, on_claim:)
+        def start(submission:, peer:, input_bytes:, mutation_id:, on_claim:, deadline: nil)
           raise ArgumentError, "receiver acceptance callback unavailable" unless on_claim.respond_to?(:call)
+          now = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+          deadline ||= now + 5
+          unless deadline.is_a?(Numeric) && deadline.finite? && deadline > now && deadline <= now + 5
+            raise ArgumentError, "receiver acceptance deadline is invalid"
+          end
           # Hold independent copies before returning to the socket handler.
           submission = copy(submission)
           peer = copy(peer)
@@ -27,8 +32,10 @@ module Ace
             raise Ace::Assign::AttemptErrors::Conflict, "receiver capacity unavailable" if @closing || @worker&.alive?
 
             @worker = Thread.new do
+              remaining = deadline - Process.clock_gettime(Process::CLOCK_MONOTONIC)
+              next({"state" => "uncertain"}) unless remaining.positive?
               @receiver.execute(submission: submission, peer: peer, input_bytes: input_bytes,
-                mutation_id: mutation_id, claim_timeout: 5,
+                mutation_id: mutation_id, claim_timeout: [remaining, 5].min,
                 on_claim: lambda do |identity|
                   begin
                     on_claim.call(identity)

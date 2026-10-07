@@ -124,7 +124,7 @@ module Ace
           cleanup_staging(materialized.fetch("directory"), staging_identity)
           projection(completion.data)
         rescue Ace::Assign::Error, Ace::Runtime::RuntimeUnavailableError, Ace::Lab::InvalidConfigurationError,
-          SecurityError, ArgumentError, KeyError, SystemCallError
+          SecurityError, ArgumentError, KeyError, SystemCallError, Timeout::Error
           contacted ? uncertain(request_id) : {"request_id" => request_id, "state" => "refused", "code" => "invalid_receiver_admission"}
         end
 

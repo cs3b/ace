@@ -156,4 +156,25 @@ class ProtectedServiceBoundaryTest < Minitest::Test
       assert worker.join(5), "controlled owned worker must terminate" if worker
     end
   end
+
+  def test_owned_claim_transport_timeout_keeps_uncertainty_without_acceptance
+    fixture do
+      submission, bytes = prepared_submission
+      original = start_service_server
+      timed = Object.new
+      timed.define_singleton_method(:call) do |name, params, **options|
+        raise Timeout::Error, "controlled transfer deadline" if name == "request_service"
+        original.call(name, params, **options)
+      end
+      invocations = Queue.new
+      owner = Ace::Lab::Organisms::ProtectedServiceWorker.new(receiver: receiver(timed, controlled_handler(invocations)))
+      before = @journal.ref_value
+      worker = owner.start(submission: submission, peer: @worker, input_bytes: bytes,
+        mutation_id: "expired-claim", on_claim: ->(*) { flunk "no accepted canonical reply exists" })
+      assert_equal "uncertain", Timeout.timeout(30) { worker.value }.fetch("state")
+      assert_equal before, @journal.ref_value
+      assert_equal 0, invocations.size
+      assert owner.close(timeout: 1)
+    end
+  end
 end
