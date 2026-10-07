@@ -82,7 +82,7 @@ module Ace
           unless peer.values_at("uid", "gid", "groups") == @map.values_at("worker_uid", "worker_gid", "worker_groups")
             raise SecurityError, "receiver worker peer differs"
           end
-          guarded = Ingress.new(socket)
+          guarded = Ace::Runtime::Molecules::ProtectedSocket::Ingress.new(socket)
           request = @wire.read(guarded, deadline: deadline, limit: LIMIT)
           strict_request!(request)
           codec = Ace::Assign::Authority::TransferCodec.new(root: @selection.fetch("staging_root"))
@@ -158,27 +158,6 @@ module Ace
           nil
         end
 
-        # The same wrapper guards both JSON and binary input/EOF, so ancillary
-        # descriptors cannot be hidden in a later transfer read.
-        class Ingress
-          def initialize(socket)
-            @socket = socket
-          end
-
-          def to_io
-            @socket
-          end
-
-          def read_nonblock(length, exception: false)
-            result = @socket.recvmsg_nonblock(length, 0, 4096, scm_rights: true, exception: exception)
-            return result if result == :wait_readable
-            return nil if result.nil?
-            bytes, _, flags, *controls = result
-            controls.each { |control| control.unix_rights&.each(&:close) if control.cmsg_is?(Socket::SOL_SOCKET, Socket::SCM_RIGHTS) }
-            raise SecurityError, "receiver ancillary input is forbidden" unless controls.empty? && (flags & Socket::MSG_CTRUNC).zero?
-            bytes.empty? ? nil : bytes
-          end
-        end
       end
     end
   end

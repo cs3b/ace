@@ -116,4 +116,31 @@ class ProtectedCleanupOwnerClientTest < Minitest::Test
       end
     end
   end
+
+  def test_ancillary_descriptor_in_identity_or_later_result_body_refuses
+    %i[identity execute].each do |kind|
+      server = lambda do |socket, root|
+        Wire.read(socket, deadline: Wire.deadline(5))
+        assert_equal "", socket.read
+        File.open(File.join(root, "sender-file"), "w+") do |held|
+          if kind == :identity
+            bytes = JSON.generate("schema" => Client::SCHEMA, "kind" => "identity", "operation_owner_binding" => binding) + "\n"
+          else
+            bytes = "bounded result"
+            ref = {"path" => "/var/lib/lab/results/request.json", "bytes" => bytes.bytesize, "sha256" => Digest::SHA256.hexdigest(bytes)}
+            Wire.write(socket, {"schema" => Client::SCHEMA, "kind" => "result", "request_id" => "request",
+              "input_digest" => execute_request.fetch("input_digest"), "receipt_ref" => ref}, deadline: Wire.deadline(5))
+          end
+          socket.sendmsg(bytes, 0, nil, Socket::AncillaryData.unix_rights(held))
+          refute held.closed?, "rejecting received rights must not close sender ownership"
+        end
+        socket.close
+      end
+      exchange(server: server) do |client|
+        assert_raises(SecurityError) do
+          kind == :identity ? client.identity! : client.execute!(request: execute_request, operation_owner_binding: binding)
+        end
+      end
+    end
+  end
 end

@@ -7,6 +7,22 @@ module Ace
     module Molecules
       module ProtectedSocket
         LIMIT = 65_536
+        # Fixed protocols that forbid descriptors use this for every control,
+        # binary-body and EOF read; rights never bypass a later framing check.
+        class Ingress
+          def initialize(socket) = @socket = socket
+          def to_io = @socket
+
+          def read_nonblock(length, exception: false)
+            result = @socket.recvmsg_nonblock(length, 0, 4096, scm_rights: true, exception: exception)
+            return result if result == :wait_readable
+            return nil if result.nil?
+            bytes, _, flags, *controls = result
+            controls.each { |control| control.unix_rights&.each(&:close) if control.cmsg_is?(Socket::SOL_SOCKET, Socket::SCM_RIGHTS) }
+            raise SecurityError, "protected ancillary input is forbidden" unless controls.empty? && (flags & Socket::MSG_CTRUNC).zero?
+            bytes.empty? ? nil : bytes
+          end
+        end
         module_function
 
         def root_path!(path, directory: false, owner: 0)

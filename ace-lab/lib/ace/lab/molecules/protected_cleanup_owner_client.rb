@@ -26,8 +26,9 @@ module Ace
           connect(deadline) do |socket, binding|
             @wire.write(socket, {"schema" => SCHEMA, "kind" => "identity"}, deadline: deadline, limit: LIMIT)
             socket.shutdown(Socket::SHUT_WR)
-            reply = @wire.read(socket, deadline: deadline, limit: LIMIT)
-            eof!(socket, deadline)
+            guarded = Ace::Runtime::Molecules::ProtectedSocket::Ingress.new(socket)
+            reply = @wire.read(guarded, deadline: deadline, limit: LIMIT)
+            eof!(guarded, deadline)
             unless reply.is_a?(Hash) && reply.keys.sort == %w[kind operation_owner_binding schema] &&
                 reply["schema"] == SCHEMA && reply["kind"] == "identity" &&
                 digest(reply["operation_owner_binding"]) == digest(binding)
@@ -59,7 +60,8 @@ module Ace
               "operation_owner_binding_digest" => digest(observed))
             @wire.write(socket, frame, deadline: admission_deadline, limit: 65_536)
             socket.shutdown(Socket::SHUT_WR)
-            reply = @wire.read(socket, deadline: deadline, limit: LIMIT)
+            guarded = Ace::Runtime::Molecules::ProtectedSocket::Ingress.new(socket)
+            reply = @wire.read(guarded, deadline: deadline, limit: LIMIT)
             unless reply.is_a?(Hash) && reply.keys.sort == %w[input_digest kind receipt_ref request_id schema] &&
                 reply.values_at("schema", "kind", "request_id", "input_digest") ==
                   [SCHEMA, "result", request.fetch("request_id"), request.fetch("input_digest")]
@@ -69,7 +71,7 @@ module Ace
             Atoms::ProtectedWorkspacePruneInput.reference!(ref)
             descriptor = {"version" => 1, "bytes" => ref.fetch("bytes"), "sha256" => ref.fetch("sha256"),
               "parts" => [ref.slice("bytes", "sha256")]}
-            @codec.receive(socket, descriptor: descriptor, purpose: :artifacts, deadline: deadline) do |received|
+            @codec.receive(guarded, descriptor: descriptor, purpose: :artifacts, deadline: deadline) do |received|
               Atoms::ProtectedWorkspacePruneInput.freeze_value(ref)
               {receipt_ref: ref, bytes: received.bytes.freeze}.freeze
             end
