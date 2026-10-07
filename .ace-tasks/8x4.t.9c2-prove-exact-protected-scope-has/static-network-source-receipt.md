@@ -15,3 +15,9 @@ Executed direct source selections (controlled temporary files and existing expli
 Intermediate initial selector11/79 `68109abf`, Runtime36/215 `99ee0df7`, graph follow-up36/217 `e69974a2` and Observer18/79 `6ab9de46` /19/87 `f1b318a5` all passed. No failed source test hidden; no default/unfiltered suite claim. Documentation and CHANGELOG were added after final source verification. Independent exact frozen source verdict/integration is pending.
 
 Required following source: Lab immutable effective graph producer, eligible all-root retirement→atomic current pointer publication, coldboot original/candidate refresh and selected Startup composition. This generic checkpoint does not fabricate first-install journals, installer policy evidence or an installed enforcement result.
+
+## Independent source review and integration
+
+Root reviewed frozen author `abaf2531f3caf46a5f21e406e07c3651e3783988`: APPROVE for this generic source slice. The closed static contract, held pointer and artifact authentication, input snapshot, immutable returned references, original-history separation and resource-only shape consumers agree with the approved amendment. No blocking finding. Integrated as `d10deab65`.
+
+Root independently executed the same selected Runtime files on the integration tree: **37 tests / 226 assertions, zero failures/errors/skips**, 213.36ms, report `7b3e5506-2a14-4fed-be02-2870f878bf25`. Author's affected Assign and genuine readiness/terminal receipts above remain applicable to the unchanged source. This is not whole-task or installed acceptance; Lab producer and final composed verification remain open.
