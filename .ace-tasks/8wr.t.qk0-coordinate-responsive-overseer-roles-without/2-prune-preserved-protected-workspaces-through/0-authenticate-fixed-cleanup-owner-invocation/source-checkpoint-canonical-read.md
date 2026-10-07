@@ -28,3 +28,7 @@ Independent readiness is retained in `root-canonical-read-source-contract-candid
 ## Remaining actual producer/consumer work
 
 Actual fixed root listener must combine positive installed receiver authentication, self observation and original canonical request/started dispatch before invoking the fixed Installer cleanup phase once; replacement may only inspect/recover. Lab same-Assembly direct interpreter/entry/full closure/unit and clean original startup environment producer remain undelivered. Manager environment observations after startup cannot prove a clean original load. Root effect, immutable result publication, operation-specific inspection and full recovery composition remain required; imported SDK result bytes alone are not physical-cleanup proof.
+
+## Private-root review successor
+
+Independent root review of `13cb79d6e` found leaf-only private-root validation insufficient. Existing `Authority::PrivateDirectory.verify!` now validates every ancestor before creating the private view and again before private writes; retained leaf identity must still match. Refusal becomes typed snapshot unavailable. Controlled writable/symlink ancestor negatives assert no private files created. Final affected target: **12 tests / 212 assertions / 0 failures/errors**, **13.4 s**, report `eb893911-3f2b-4496-b8f2-df56e1108288`. This supersedes leaf-only source acceptance; prior receipts remain historical evidence. Independent successor verdict pending.

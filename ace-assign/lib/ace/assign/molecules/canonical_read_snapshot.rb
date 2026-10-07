@@ -5,6 +5,7 @@ require "fileutils"
 require "tmpdir"
 require "ace/herdr/molecules/bounded_process"
 require_relative "evidence_journal"
+require_relative "../authority/private_directory"
 
 module Ace
   module Assign
@@ -46,11 +47,14 @@ module Ace
 
         def with_snapshot(deadline:)
           validate_deadline!(deadline)
+          verify_private_root!
           private_stat = directory!(@private_root)
           unless private_stat.uid == Process.uid && (private_stat.mode & 0o7777) == 0o700
             refuse!("private_storage_unprotected")
           end
           Dir.mktmpdir("canonical-read-", @private_root) do |view|
+            verify_private_root!
+            refuse!("private_storage_unprotected") unless directory_identity(File.lstat(@private_root)) == directory_identity(private_stat)
             @view, @deadline = view, deadline
             @held, @directories, @inventory, @inventory_files, @metadata_files = [], [], [], [], []
             @bytes, @entries = 0, 0
@@ -147,6 +151,12 @@ module Ace
 
         def identity(stat)
           [stat.dev, stat.ino, stat.mode, stat.uid, stat.gid, stat.size, stat.mtime, stat.ctime]
+        end
+
+        def verify_private_root!
+          Authority::PrivateDirectory.verify!(@private_root)
+        rescue AttemptErrors::ReceiptRejected
+          refuse!("private_storage_unprotected")
         end
 
         def directory_identity(stat)

@@ -64,6 +64,32 @@ module Ace
         end
       end
 
+      def test_private_symlink_and_writable_ancestors_refuse_before_writes
+        fixture do |snapshot, _writer, _repo, private_root, _event, _commit|
+          parent = File.dirname(private_root)
+          File.chmod(0o777, parent)
+          begin
+            assert_raises(Snapshot::Unavailable) { snapshot.with(deadline: deadline) { flunk "writable ancestry admitted" } }
+            assert_empty Dir.children(private_root)
+          ensure
+            File.chmod(0o700, parent)
+          end
+        end
+        fixture do |snapshot, _writer, _repo, private_root, _event, _commit|
+          parent = File.dirname(private_root)
+          moved = "#{parent}-moved"
+          File.rename(parent, moved)
+          File.symlink(moved, parent)
+          begin
+            assert_raises(Snapshot::Unavailable) { snapshot.with(deadline: deadline) { flunk "symlink ancestry admitted" } }
+            assert_empty Dir.children(File.join(moved, "private"))
+          ensure
+            File.unlink(parent)
+            File.rename(moved, parent)
+          end
+        end
+      end
+
       def test_actual_immutable_owner_reads_use_private_view_and_source_config_is_not_executed
         fixture do |snapshot, writer, repo, private_root, event, commit|
           File.binwrite(File.join(repo, ".git", "config"), "[include]\npath=/unavailable/foreign-config\n[core]\nfsmonitor=never-run-this\n")
