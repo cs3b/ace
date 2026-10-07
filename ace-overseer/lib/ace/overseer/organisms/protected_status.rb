@@ -2,6 +2,7 @@
 
 require "ace/lab"
 require "ace/assign/authority/client"
+require_relative "../molecules/protected_selection"
 
 module Ace
   module Overseer
@@ -13,8 +14,7 @@ module Ace
         ROW_KEYS = %w[assignment_id task_id definition_digest definition_generation prepared_bundle_ref prepared_bundle_bytes prepared_bundle_sha256 selection_sha256 attempt_id scope reservation_generation generation canonical_state original_binding_digest terminal_event_id reservation_release_event_id].sort.freeze
 
         def initialize(topology: nil, deployment_loader: nil, client_factory: nil)
-          @topology = topology || Ace::Lab::Organisms::TopologyService.from_config
-          @deployment_loader = deployment_loader || -> { Ace::Assign::Authority::Deployment.load }
+          @selection = Molecules::ProtectedSelection.new(topology: topology, deployment_loader: deployment_loader)
           @client_factory = client_factory || ->(id, deployment) { Ace::Assign::Authority::Client.new(mapping_id: id, deployment: deployment) }
         end
 
@@ -62,23 +62,7 @@ module Ace
         private
 
         def selection!(project, agent)
-          token!(project)
-          token!(agent) if agent
-          topology = @topology.agents(project: project)
-          raise Error, "Protected topology unavailable (#{topology.error_code})" unless topology.ok?
-          deployment = @deployment_loader.call
-          pool = deployment.data.fetch("launch_mappings").select { |_id, map| map.fetch("project_id") == project }.keys.sort
-          raise Error, "Protected project has no provisioned mappings" if pool.empty?
-          visible = topology.data.fetch("agents")
-          unless visible.is_a?(Array) && visible.all? { |entry| entry.is_a?(Hash) && entry["project"] == project && pool.include?(entry["id"]) } &&
-              visible.map { |entry| entry.fetch("id") }.uniq.size == visible.size
-            raise Error, "Public agent visibility differs from protected project mappings"
-          end
-          ids = visible.map { |entry| entry.fetch("id") }.sort
-          if agent && !ids.include?(agent)
-            raise Error, "Requested protected agent is not visible in this project"
-          end
-          [deployment, pool, ids]
+          @selection.call(project: project, agent: agent)
         end
 
         def inventory(client, project:, mapping_id:, commit: nil)

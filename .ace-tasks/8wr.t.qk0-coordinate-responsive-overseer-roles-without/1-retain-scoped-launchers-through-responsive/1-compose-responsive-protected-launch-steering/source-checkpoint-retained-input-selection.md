@@ -1,0 +1,13 @@
+# Retained input and shared selection checkpoint
+
+Base: faa4a221291486b395a129ca56bfb3ec97682e8f. Independent review pending.
+
+`LaunchRequest` implements the reviewed closed v1 document and sibling bundle contract. Exact definition bytes (32KiB), escaped request bytes (128KiB), bundle bytes (64MiB), mutation length116, derived filenames and original task/project/assignment/scope association are checked before exclusive private publication. PreparedWork/CandidateTransfer perform actual retained Git admission and compare the exact resulting definition, rather than importing a caller path or rebuilding its graph. Each file is fsynced; the private directory is fsynced before publication returns. Existing names refuse, including a surviving request whose bundle disappeared. A fault can leave only an unselected orphan; it never overwrites/reconstructs the invocation.
+
+Held regular/no-follow/nonblocking reads enforce current peer ownership/private modes, byte bounds and unchanged device/inode/metadata. Recovery loads the closed retained document independently of bundle availability, distinguishing unavailable/mismatched local inputs without reconstructing, uploading or launching anything. This object conveys no authority. Public launch/recovery commands, canonical original reservation matching and mandatory user identity output remain the next composition slice.
+
+`ProtectedSelection` is the existing ProtectedStatus visibility/project/mapping selection extracted for shared launch/status use. Installed Deployment defines provisioned capacity, public topology only narrows visible IDs, and explicit selection must be visible in that exact project. No credential/admission grant is inferred. ProtectedStatus delegates to this owner without changing its canonical inventory paging.
+
+Inspected permitted evidence: LaunchRequest5/38 PASS6.28s, receipt94dc8867-b7a7-4a6b-a718-a645dc375384 (actual local Git/PreparedWork admission, private filesystem retention, collision, missing/corrupt body, typed/duplicate document refusal, symlink/mode refusal and injected publication failure); ProtectedStatus4/23 PASS, receiptd7c95bd8-01bd-43d9-bc7c-c61c66ee0d7e (all topology/deployment/Client boundaries injected). Earlier request runs4/32 and4/34 passed; final5/38 includes the interrupted publication and no-reconstruction regressions.
+
+No native/installed/process-identity/provider probes were run. Original loaded-CLI child spawning is not implemented here. Its reviewed single-thread/no-held-lock fork condition remains mandatory. Proposal resolver retains its separate5s execution and existing bounded cleanup budgets; this checkpoint changes neither budget.
