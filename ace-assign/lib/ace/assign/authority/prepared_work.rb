@@ -193,16 +193,24 @@ module Ace
 
         def yaml!(bytes)
           ast = Psych.parse_stream(bytes)
-          visit = lambda do |node|
+          scanner = Psych::ScalarScanner.new(Psych::ClassLoader::Restricted.new([], []))
+          pending = [[ast, 0]]
+          until pending.empty?
+            node, depth = pending.pop
+            invalid!("YAML nesting exceeds 32") if depth > 32
             invalid!("YAML alias") if node.is_a?(Psych::Nodes::Alias)
             if node.is_a?(Psych::Nodes::Mapping)
               keys = node.children.each_slice(2).map(&:first)
-              invalid!("YAML mapping keys") unless keys.all? { |key| key.is_a?(Psych::Nodes::Scalar) }
-              invalid!("duplicate YAML key") unless keys.map(&:value).uniq.size == keys.size
+              decoded = keys.map do |key|
+                invalid!("YAML mapping keys") unless key.is_a?(Psych::Nodes::Scalar) && [nil, "tag:yaml.org,2002:str"].include?(key.tag)
+                value = key.plain && key.tag.nil? ? scanner.tokenize(key.value) : key.value
+                invalid!("YAML mapping keys must be strings") unless value.is_a?(String)
+                value
+              end
+              invalid!("duplicate YAML key") unless decoded.uniq.size == decoded.size
             end
-            (node.children || []).each { |child| visit.call(child) }
+            (node.children || []).each { |child| pending << [child, depth + 1] }
           end
-          visit.call(ast)
           YAML.safe_load(bytes, permitted_classes: [Time, Date], aliases: false)
         end
 
