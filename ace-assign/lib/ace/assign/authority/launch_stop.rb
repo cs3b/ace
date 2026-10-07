@@ -113,10 +113,10 @@ module Ace
         # recovery actions. Missing/corrupt evidence and auth failures propagate.
         def authenticated_stop_pending_action(error)
           return "reconcile_inbox" if error.is_a?(AttemptErrors::InboxContextPending)
-          if AttemptErrors.const_defined?(:ServiceSettlementPending, false) && error.is_a?(AttemptErrors::ServiceSettlementPending)
+          if error.is_a?(AttemptErrors::ServiceSettlementPending)
             return "settle_services"
           end
-          if AttemptErrors.const_defined?(:InboxSettlementPending, false) && error.is_a?(AttemptErrors::InboxSettlementPending)
+          if error.is_a?(AttemptErrors::InboxSettlementPending)
             return "reconcile_inbox"
           end
           nil
