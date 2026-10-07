@@ -57,7 +57,8 @@ module Ace
           end
           bytes = input_bytes.dup.freeze
           mutation_id = mutation_id.dup.freeze
-          input = @inputs.input_binding(bytes, expected_digest: params.fetch("input_digest"), expected_target: params.fetch("target"))
+          input = @inputs.input_binding(bytes, expected_digest: params.fetch("input_digest"),
+            expected_target: params.fetch("target"), operation: params.fetch("operation"))
           contacted = true
           claim = @client.call("request_service", params, mutation_id: mutation_id, upload_parts: [bytes], purpose: :service_input)
           unless !claim.replayed && claim.data["claim"] == "created"

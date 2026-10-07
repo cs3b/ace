@@ -1,0 +1,9 @@
+# Prune input source checkpoint — incomplete task
+
+Root implementation started from reviewed contract 9365f2360. JIT plan is temporary under `.ace-local/task/8wr.t.qk0.2.0/8x6crs-plan.md`. Its missing external-owner question is resolved by actual `/Users/mc/Ps/lab-config/lab_herdr_native.rb` (Installer) and `lab_native_bootstrap.rb` (Assembly, Entry, Startup, Owner); wave_412 owns concurrent domain edits. No second Installer is introduced.
+
+The new bounded, strict input validator is selected only for prune-preserved-workspace by the maintained receiver and authority policy. It checks structural nested selections/references and retains immutable decoded data. It does not authenticate canonical ownership, prove preservation or grant privilege. Runtime dispatch, root identity, listener, receipt/provenance and inspection remain unimplemented; all task success criteria remain unchecked.
+
+Executed source tests: initial parser run `1e9478a9-c414-4c50-99b0-6c48f600fbc3` exposed duplicate-key handling and custom-Hash frozen-write behavior. Replaced custom Hash with existing JSON parser flags; successor `18583d8b-e62a-4572-b668-83c0b50487cc` passed 6/40. Named policy integration successor `e16a627b-099c-4c36-9026-41f22cf1bf13` passed 7/43.
+
+Combined new/receiver run `62597f65-df0e-4e38-8b92-2d7d4031903e`: 17 tests/80 assertions, two ordinary receiver failures (success becomes uncertain; lost-completion never reaches completion). Independent unchanged main5b856e663 receiver run `00ea5ee5-25a4-40a6-925c-5c4fce72b27d`: identical two failures, 10/37. This establishes a current baseline failure, not its root cause or a green ordinary-service acceptance. No privileged/native probes. Independent source review required before integration.
