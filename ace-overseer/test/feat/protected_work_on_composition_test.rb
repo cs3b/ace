@@ -113,7 +113,7 @@ class ProtectedWorkOnCompositionTest < AceOverseerTestCase
       client.define_singleton_method(:call) do |operation, params, **options|
         started = Process.clock_gettime(Process::CLOCK_MONOTONIC)
         if operation == "register_assignment"
-          raise "registration consumer did not select its existing admission budget" unless options[:timeout] == Ace::Assign::Authority::CandidateTransfer::DEADLINE
+          raise "registration consumer did not select its existing admission budget" unless options[:timeout].is_a?(Numeric) && options[:timeout].positive? && options[:timeout] <= Ace::Assign::Authority::LaunchDriver::LAUNCH_DEADLINE
         end
         result = actual_call.call(operation, params, **options)
         recorded << result.data if operation == "record_launch"
@@ -144,7 +144,11 @@ class ProtectedWorkOnCompositionTest < AceOverseerTestCase
       File.write(spec, "---\nid: 8wr.t.abc\ntitle: Composed public input\nstatus: pending\nneeds_review: false\ndependencies: []\n---\nReviewed public task instructions.\n")
       tasks = Ace::Task::Organisms::TaskManager.new(root_dir: task_root, config: {})
       cache = File.join(@root, "managed")
-      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache)
+      # The selected source catalog is the real checkout, independent of whether
+      # ace-test was invoked from its root or the ace-overseer package directory.
+      catalog = Ace::Assign::Molecules::SkillAssignSourceResolver.new(project_root: File.expand_path("../../..", __dir__),
+        skill_paths: [], workflow_paths: [])
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache, skill_source_resolver: catalog)
       executor.assignment_manager.define_singleton_method(:generate_assignment_id) { "assignment" }
       topology = Object.new
       topology.define_singleton_method(:agents) do |project:|
