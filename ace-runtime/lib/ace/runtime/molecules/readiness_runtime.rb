@@ -21,9 +21,11 @@ module Ace
             ProtectedSocket.root_path!(path, directory: true)
           end
           load_paths.replace(@runtime.fetch("load_paths"))
+          @initialized_builtins ||= BUILTINS.select { |feature| features.include?(feature) }.freeze
           owner = self
           guard = Module.new do
             define_method(:require) do |feature|
+              return false if owner.builtin_loaded?(feature)
               path = owner.resolve!(feature)
               owner.verify_file!(path)
               super(path)
@@ -49,6 +51,13 @@ module Ace
             verify_file!(feature)
           end
           true
+        end
+
+        def builtin_loaded?(feature)
+          return false unless feature.is_a?(String) && @initialized_builtins
+          @initialized_builtins.any? do |builtin|
+            feature == builtin || feature == builtin.sub(/\.(?:rb|so)\z/, "")
+          end
         end
 
         def resolve!(feature)

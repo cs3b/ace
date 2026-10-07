@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- Preserve Ruby already-loaded builtin require no-ops only for the allowlisted startup features verified at first guard activation; later activation cannot grow that authority.
+
 - Resolve guarded Ruby native-extension requests using the selected interpreter platform extension, including explicit `.so`/`.o` aliases, while authenticating only exact declared files.
 
 - Reject duplicate JSON keys, invalid UTF-8, comments and excessive nesting in protected socket frames while preserving exact byte boundaries between successive frames.

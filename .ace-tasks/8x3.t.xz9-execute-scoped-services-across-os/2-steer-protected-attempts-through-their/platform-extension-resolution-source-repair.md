@@ -20,3 +20,11 @@ Verification/review checkpoint:
 - This commit is the narrow generic source fix only. Lab operational publication/ordinary-role entry caller, static network source join and installed acceptance remain open.
 
 Root integrated author `531269efe4bf9488aa0badc8edd5866505e5c86a` as `3ae6f4edb` on base `10e915e42`. Independent executed `bin/ace-test ace-runtime molecules test/molecules/readiness_runtime_test.rb --timeout 60`: PASS4/26, receipt `ed87321f-9d08-4ce6-b05f-bbb945b07a1e`. Scoped verdict APPROVE, not whole startup acceptance. Subsequent actual CLI composition passed this resolution boundary and found a separate already-initialized builtin handling gap; that follow-up must not be represented as delivered by this patch.
+Follow-up existing builtin no-op contract (parent scoped readiness APPROVE): actual CLI64731 after DLEXT repair refused `thread`, already initialized startup feature `thread.rb`. Capture only existing allowlisted features present in successful first activation; freeze owned spelling. Exact spelling/extensionless bare alias returns false without evaluation. Slash/relative/absolute/alternate suffix and never-initialized features use exact protected resolver. Repeat activation cannot add builtin authority. Bare builtin alias collision follows Ruby already-loaded no-op; absolute protected file remains ordinary. No $LOADED_FEATURES mutation or new builtin names.
+Pure coverage stubs only Kernel.prepend and protected directory boundary during activation; actual classification/capture owner runs, no native initialization.
+
+Builtin source checkpoint:
+- Pure actual captured guard7/51 PASS2ed785b7-3196-45a2-862d-dbeafecd55b7; no delegated evaluation for initialized thread, absent fiber refuses, selected file verifies.
+- Parent independent source APPROVE current delta, including exact spelling, no suffix/slash exemption, collision and first-activation authority frozen across reactivation.
+- Actual Lab55353 FAIL1/21.922s: ordinary CLI rendered help successfully after builtin resolution, then protected artifact verification detected mutation. Domain fixture diagnoses input/output ancestry next; this is not a positive composition receipt.
+- New Runtime owner only recognizes no-op existing initialized builtins. No new feature names, extension initialization, LOADED_FEATURES mutation or undeclared code permission.

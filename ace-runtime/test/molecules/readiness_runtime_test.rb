@@ -54,6 +54,57 @@ class ReadinessRuntimeTest < AceRuntimeTestCase
     end
   end
 
+  def activate_without_kernel_patch(runtime, features)
+    guard = nil
+    Ace::Runtime::Molecules::ProtectedSocket.stub(:root_path!, nil) do
+      Kernel.stub(:prepend, ->(selected) { guard = selected }) { runtime.activate!(features: features, load_paths: []) }
+    end
+    guard
+  end
+
+  def test_only_initially_verified_builtin_spelling_or_bare_alias_is_a_noop
+    runtime = owner
+    refute runtime.builtin_loaded?("thread")
+    activate_without_kernel_patch(runtime, ["thread.rb"])
+    assert runtime.builtin_loaded?("thread")
+    assert runtime.builtin_loaded?("thread.rb")
+    ["thread.so", "./thread", "../thread", "/fixed/lib/thread.rb", "fiber", nil].each do |feature|
+      refute runtime.builtin_loaded?(feature)
+    end
+    # Re-activation verifies later files but cannot grow initialized authority.
+    activate_without_kernel_patch(runtime, ["thread.rb", "fiber.so"])
+    refute runtime.builtin_loaded?("fiber")
+    assert_empty @reader.seen
+  end
+
+  def test_actual_guard_returns_false_without_delegation_for_initialized_builtin
+    runtime = owner
+    guard = activate_without_kernel_patch(runtime, ["thread.rb"])
+    calls = []
+    controlled = Class.new do
+      define_method(:require) { |feature| calls << feature; true }
+    end
+    controlled.prepend(guard)
+    receiver = controlled.new
+    assert_equal false, receiver.send(:require, "thread")
+    assert_equal false, receiver.send(:require, "thread.rb")
+    assert_empty calls
+    assert_raises(Ace::Runtime::RuntimeUnavailableError) { receiver.send(:require, "fiber") }
+    assert_empty calls
+    assert receiver.send(:require, "json")
+    assert_equal ["/fixed/lib/json.rb"], calls
+    assert_equal ["/fixed/lib/json.rb"], @reader.seen
+  end
+
+  def test_bare_builtin_collision_does_not_exempt_an_absolute_declared_file
+    runtime = Runtime.new(configuration: {"runtime" => {"load_paths" => ["/fixed/lib"],
+      "dependencies" => [{"path" => "/fixed/lib/thread.rb", "sha256" => "b" * 64, "bytes" => 1}]}}, artifacts: Reader.new([]))
+    activate_without_kernel_patch(runtime, ["thread.rb"])
+    assert runtime.builtin_loaded?("thread")
+    refute runtime.builtin_loaded?("/fixed/lib/thread.rb")
+    assert_equal "/fixed/lib/thread.rb", runtime.resolve!("/fixed/lib/thread.rb")
+  end
+
   def test_undeclared_home_gem_or_relative_load_never_authorizes_code
     runtime = owner
     ["/home/worker/.gem/json.rb", "./json.rb", "../../writable/json", "unlisted"].each do |feature|
