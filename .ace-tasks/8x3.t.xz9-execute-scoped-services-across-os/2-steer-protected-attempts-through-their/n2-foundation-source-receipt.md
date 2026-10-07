@@ -13,3 +13,15 @@ Tests use controlled native/kernel/manager boundaries, actual immutable Git/CAS 
 ## Strict shared wire follow-up
 
 ProtectedSocket.read now rejects raw duplicate keys at any nesting, invalid UTF-8, comments and excessive nesting, preserving exact held frame bytes and subsequent frame boundaries. Controlled raw UNIXSocket tests PASS5/12 (96ef8d05-aec6-4913-b01d-962b866f31f3); private codec regression PASS15/98 (5c73d88e-d184-4f6a-b617-190d9e5675b1); native decoder selection PASS9/50 (0616afc8-ded1-4703-b9a9-922f5f292fd1). Generic reader repair requires separate independent review.
+
+## Combined source verification and review repair
+
+Combined candidate `f646a5e2b` joins this foundation and xza.3's additive context-admission core onto main `40567aa51`. Executed source verification:
+
+- Runtime protected socket: 5 tests/12 assertions, PASS `046fc6dc-f90e-4e50-ad1d-c6d0eceee16a`.
+- Herdr context owner/server, guard/native control, source/builder: 49 tests/246 assertions, PASS `687ecdfe-4cab-4eae-b1c4-7ec4b8049578`.
+- Assign transfer codec, prompt intent, journal mutation, completion generation and maintained launch lifecycle: 80 tests/734 assertions, PASS `81322657-e200-44a4-b73b-29ba6a87c9eb`.
+
+Independent Sol 6.1 review session `review-8x62zx` requested two verified repairs. Commit `c6d3198d2` clamps the sender's complete body/marker sequence to one absolute deadline and validates received native/journal origins with the closed schema before accepting positive evidence. Numeric equality does not permit floating-point process identity fields. Regression verification: Assign 24 tests/175 assertions PASS `e4c34138-78a5-4892-a26e-e2db6be02808`; Herdr 10 tests/60 assertions PASS `42565851-b86e-47bb-9c99-e871fda44fdd`. Both review findings (`8x632cy9`, `8x632cya`) are resolved with those receipts.
+
+These results cover additive source foundations only. Actual protected steering/channel integration, context effect completion and installed acceptance remain open; no task completion or release readiness is inferred.
