@@ -16,6 +16,16 @@ bundle:
 
 # Delegate exact candidate review through the original launcher
 
+## Review findings to resolve
+
+Independent review in `readiness-review.md` requires three technical repairs before promotion:
+
+- [ ] Pin the post-request assignment generation and define concurrent-generation refusal/recovery.
+- [ ] Define canonical pending-delegation supersession after proven reviewer death.
+- [ ] Enforce the same reservation and replacement rules on direct and delegated assign_review calls.
+
+These require autonomous contract repair, not new Captain policy decisions. Keep draft/needs_review until the repaired contract passes independent review.
+
 ## Observable behavior
 
 An actually provisioned independent reviewer requests one exact canonical candidate through the retained original launcher's authenticated channel, executes the maintained review engine against exported immutable candidate bytes and submits its actual receipt through Endcap. Changed input, lost acknowledgment, stale candidate or replaced original never creates another review assignment or accepted approval automatically. Existing assign_review/accept_review remain the only review assignment/acceptance owners; project role instructions do not grant credentials.
