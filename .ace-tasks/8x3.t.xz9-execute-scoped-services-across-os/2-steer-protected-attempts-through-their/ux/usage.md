@@ -7,7 +7,9 @@ the qk0 consumer calls `prompt_attempt` with control params `{mapping_id, assign
 expected_generation}`, a required `mutation_id`, and one `prompt_text` transfer part with a persisted mutation ID and bounded
 text. The owner derives the original target and authorizes the existing mapped
 driver. An acknowledgement returns `submitted`, not consumed. Repeating the
-exact call returns its canonical result without another send. Changed text with
+exact call returns its immutable finalized result without another send. If that
+result is uncertain, a separate authenticated prompt_status query may show later
+accepted completion evidence; retry itself never silently upgrades the reply. Changed text with
 the same identity is refused.
 
 Captain's 2026-10-07 choice defines the recipient as the immutable original
@@ -16,8 +18,9 @@ before guarded first-write admission refuses without prompt or focus bytes.
 After admission, original-child death or partial/unknown writes return
 `uncertain`; the captured actor never retargets or resends. Complete text plus
 Enter acknowledged for that origin permits `submitted`, even though another
-descendant may read the same original PTY. The required native guard remains
-undelivered; these are acceptance scenarios, not currently available behavior.
+descendant may read the same original PTY. The native guarded producer source is packaged at the selected reviewed revision;
+public N2 steering, retained driver and lost-ACK drain composition remain to be
+delivered. These are acceptance scenarios, not currently available public APIs.
 
 ## Stop while a descendant or service effect remains uncertain
 
@@ -45,6 +48,27 @@ release-before-reuse. Native pane closure or descendant absence alone cannot
 settle independent service/inbox truth.
 
 The target, guarded native method and bounded body framing are specified.
-Positive prompt implementation still needs the N1 native guard and N2 ACE consumer. The generic CLI
+Positive prompt implementation still needs the N2 ACE consumer against reviewed N1 source. The generic CLI
 send and ProtectedNativeControl.request are source research, not selected public
 protected prompt handlers. No blocked probes are authorized by these examples.
+
+
+## Retained mapped launch ownership
+
+N2's existing `authority launch` emits and flushes one bounded launch-ready JSON
+frame after actual accepted release, then the same foreground original mapped
+launcher stays alive in its source-owned control loop. Dry-run and rejected or
+replayed launch without original ownership do not attach as the old launcher.
+This lifecycle is specified, not implemented by current CLI. qk0's provisioned
+launcher-role instance runs the exact installed mapping credentials and owns
+that foreground child/readiness stream; arbitrary Captain processes do not gain
+that principal. Existing blocking LabClient capture3 cannot consume this stream.
+
+A transient control-channel loss leaves the original driver alive and exposes
+disconnected/uncertain status. Reconnect authenticates the same kernel incarnation
+and never resends issued prompt text. Cancellation first inhibits dispatch and
+uses canonical stop/reconciliation; killing a child or shared native unit is not
+proof of stopping an attempt. Lost native ACK requires authentic native drain or
+trusted complete affected-scope maintenance recovery. Unrelated work is preserved.
+Task source acceptance waits that actual producer/recovery path, not an endless
+refusal presented as successful implementation.
