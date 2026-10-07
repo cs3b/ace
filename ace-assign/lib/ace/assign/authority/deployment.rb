@@ -366,8 +366,22 @@ module Ace
         def validate_mapping!(id, mapping)
           required = %w[project_id authority_id launcher_uid launcher_gid launcher_groups worker_uid worker_gid
             worker_groups worker_actor worker_cwd worker_entry worker_env bootstrap bootstrap_sha256 native execution_scope task_context_entry]
-          unless mapping.is_a?(Hash) && mapping.keys.sort == required.sort
+          workspace = %w[workspace_repository_id workspace_cleanup_config]
+          unless mapping.is_a?(Hash) && [required.sort, (required + workspace).sort].include?(mapping.keys.sort)
             raise ArgumentError, "launch mapping fields differ: #{id}"
+          end
+          if mapping.key?("workspace_repository_id")
+            repository = mapping.fetch("workspace_repository_id")
+            unless repository.is_a?(String) && TOKEN.match?(repository)
+              raise ArgumentError, "workspace repository identity is invalid"
+            end
+            reference = mapping.fetch("workspace_cleanup_config")
+            strict!(reference, %w[path sha256 bytes])
+            path!(reference.fetch("path"))
+            unless reference.fetch("path").bytesize <= 4096 && reference.fetch("path").encoding == Encoding::UTF_8 && reference.fetch("path").valid_encoding? &&
+                digest?(reference.fetch("sha256")) && reference.fetch("bytes").is_a?(Integer) && reference.fetch("bytes").between?(1, 65_536)
+              raise ArgumentError, "workspace cleanup configuration reference is invalid"
+            end
           end
           TaskContextEntry.validate!(mapping.fetch("task_context_entry"))
           Ace::Runtime::Molecules::ProtectedWorkerEntry.validate!(mapping.fetch("worker_entry"))

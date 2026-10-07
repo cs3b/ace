@@ -153,15 +153,21 @@ module Ace
           end
           original = @deployment_history.descriptor!(sha256: descriptor_sha256)
           map = original.mapping(lineage.binding.fetch("mapping_id"))
+          repository = map.fetch("workspace_repository_id")
+          cleanup_config = map.fetch("workspace_cleanup_config")
           cwd = map.fetch("worker_cwd")
           context_owner = contexts.fetch(mapping_id).first.fetch(1)
           observer_owner = context_owner.artifact_reference.fetch("sha256") == descriptor_sha256 ? context_owner : original
-          resource = maintenance_scope_observer_for(observer_owner, lineage.binding.fetch("mapping_id")).maintenance_workspace_resource!(lineage)
+          observer = maintenance_scope_observer_for(observer_owner, lineage.binding.fetch("mapping_id"))
+          resource = observer.maintenance_workspace_resource!(lineage)
+          declarations = observer.maintenance_parent_resource_declarations!(lineage)
           result = immutable_maintenance_projection(lineage.binding.slice("project_id", "mapping_id", "assignment_id", "attempt_id").merge(
             "descriptor_sha256" => descriptor_sha256, "journal_commit" => commit,
             "binding_event_digest" => binding_event_digest, "release_event_digest" => release_event_digest,
             "proof_event_digest" => lineage.proof_event.fetch("digest"), "worker_cwd" => cwd,
-            "workspace_resource" => resource, "original_mapping_digest" => original.mapping_digest(lineage.binding.fetch("mapping_id"))))
+            "workspace_resource" => resource, "workspace_repository_id" => repository, "workspace_cleanup_config" => cleanup_config,
+            "parent_resource_declarations" => declarations, "resource_identities" => lineage.binding.fetch("resource_identities"),
+            "original_mapping_digest" => original.mapping_digest(lineage.binding.fetch("mapping_id"))))
           contexts.each_value do |_entry, context|
             require_maintenance_context!(context.fetch(:mapping_id), context.fetch(:journal), context.fetch(:commit))
           end

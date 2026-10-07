@@ -74,6 +74,11 @@ module Ace
           raise AttemptErrors::EvidenceUnavailable, "controlled original workspace unavailable" unless selected.one? && selected.first.fetch("inode").positive?
           selected.first
         end
+        def maintenance_parent_resource_declarations!(lineage)
+          lineage.binding.fetch("resource_identities").map do |entry|
+            entry.slice("host_path", "view_path").merge("stage" => "parent", "worker_visible" => true, "read_only" => false)
+          end
+        end
         def observe(_lineage); {"populated" => 0}; end
         def native_admission_ready!(_lineage)
           raise AttemptErrors::EvidenceUnavailable, "controlled fixture stops before native admission"
@@ -106,6 +111,8 @@ module Ace
         Dir.mktmpdir do |root|
           root = File.realpath(root)
           value = data
+          value.fetch("launch_mappings").fetch("mapping").merge!("workspace_repository_id" => "repo",
+            "workspace_cleanup_config" => {"path" => "/fixed/cleanup-config.json", "sha256" => "a" * 64, "bytes" => 100})
           untouched = JSON.parse(JSON.generate(value.fetch("launch_mappings").fetch("mapping")))
           untouched.merge!("worker_uid" => 13006, "worker_gid" => 13006, "worker_groups" => [13006], "worker_actor" => "untouched-worker")
           untouched.fetch("execution_scope").merge!("slot_id" => "untouched", "slice_unit" => "ace-untouched.slice",
@@ -134,6 +141,8 @@ module Ace
           original_ref = ref.call("original.json", JSON.generate(value))
           changed = JSON.parse(JSON.generate(value))
           changed["launch_mappings"]["mapping"]["worker_actor"] = "rotated-worker"
+          changed.fetch("launch_mappings").fetch("mapping").merge!("workspace_repository_id" => "successor-repo",
+            "workspace_cleanup_config" => {"path" => "/fixed/successor-config.json", "sha256" => "b" * 64, "bytes" => 200})
           candidate_ref = ref.call("candidate.json", JSON.generate(changed))
           manifest_ref = ref.call("history.json", JSON.generate("schema" => "ace.assign.deployment-history/v1",
             "original_descriptor" => original_ref, "candidate_descriptor" => candidate_ref,
@@ -256,7 +265,16 @@ module Ace
               assert_equal observer.resources.first, target.fetch("workspace_resource")
               assert_equal original.mapping_digest("mapping"), target.fetch("original_mapping_digest")
               assert_equal lineage.proof_event.fetch("digest"), target.fetch("proof_event_digest")
-              assert_equal %w[assignment_id attempt_id binding_event_digest descriptor_sha256 journal_commit mapping_id original_mapping_digest project_id proof_event_digest release_event_digest worker_cwd workspace_resource], target.keys.sort
+              assert_equal "repo", target.fetch("workspace_repository_id")
+              assert_equal original.mapping("mapping").fetch("workspace_cleanup_config"), target.fetch("workspace_cleanup_config")
+              refute_equal candidate.mapping("mapping").fetch("workspace_repository_id"), target.fetch("workspace_repository_id")
+              refute_equal candidate.mapping("mapping").fetch("workspace_cleanup_config"), target.fetch("workspace_cleanup_config")
+              assert_equal observer.resources, target.fetch("resource_identities")
+              assert_equal [{"host_path" => original.mapping("mapping").fetch("worker_cwd"), "view_path" => "/workspace",
+                "stage" => "parent", "worker_visible" => true, "read_only" => false}], target.fetch("parent_resource_declarations")
+              assert_equal %w[assignment_id attempt_id binding_event_digest descriptor_sha256 journal_commit mapping_id original_mapping_digest parent_resource_declarations project_id proof_event_digest release_event_digest resource_identities worker_cwd workspace_cleanup_config workspace_repository_id workspace_resource], target.keys.sort
+              assert_raises(FrozenError) { target.fetch("workspace_cleanup_config")["path"].replace("/wrong") }
+              assert_raises(FrozenError) { target.fetch("parent_resource_declarations").first["read_only"] = true }
               assert_raises(FrozenError) { target.fetch("workspace_resource")["inode"] = 0 }
               assert_raises(FrozenError) { target.fetch("worker_cwd").replace("/replaced") }
               [:assignment_id, :attempt_id, :binding_event_digest, :release_event_digest, :descriptor_sha256].each do |selector|
@@ -694,6 +712,25 @@ module Ace
           value = data
           value.fetch("launch_mappings").fetch("mapping").fetch("task_context_entry").fetch(key)[field] = bad
           assert_raises(ArgumentError) { Authority::Deployment.new(value) }
+        end
+      end
+
+      def test_workspace_repository_pair_is_optional_atomic_closed_and_bounded
+        assert Authority::Deployment.new(data)
+        value = data
+        map = value.fetch("launch_mappings").fetch("mapping")
+        map.merge!("workspace_repository_id" => "repo", "workspace_cleanup_config" => {
+          "path" => "/fixed/cleanup.json", "sha256" => "a" * 64, "bytes" => 65_536})
+        assert Authority::Deployment.new(value)
+        invalid = [->(m) { m.delete("workspace_repository_id") }, ->(m) { m.delete("workspace_cleanup_config") },
+          ->(m) { m["workspace_repository_id"] = nil }, ->(m) { m["workspace_cleanup_config"] = nil },
+          ->(m) { m["workspace_cleanup_config"]["bytes"] = 65_537 }, ->(m) { m["workspace_cleanup_config"]["bytes"] = 1.0 },
+          ->(m) { m["workspace_cleanup_config"]["path"] = "/fixed/../cleanup" },
+          ->(m) { m["workspace_cleanup_config"]["extra"] = true }, ->(m) { m["workspace_repository_id"] = "bad/id" }]
+        invalid.each do |change|
+          broken = JSON.parse(JSON.generate(value))
+          change.call(broken.fetch("launch_mappings").fetch("mapping"))
+          assert_raises(ArgumentError, KeyError, TypeError) { Authority::Deployment.new(broken) }
         end
       end
 

@@ -549,6 +549,23 @@ module Ace
           unavailable!("workspace original boundary is unavailable")
         end
 
+        def maintenance_parent_resource_declarations!(lineage)
+          declarations = @files.boundary_manifest(@scope).fetch("resources").select { |entry| entry.fetch("stage") == "parent" }.map do |entry|
+            entry.slice("host_path", "view_path", "stage", "worker_visible", "read_only")
+          end
+          identities = lineage.binding.fetch("resource_identities")
+          selectors = declarations.map { |entry| entry.values_at("host_path", "view_path") }
+          bound = identities.map { |entry| entry.values_at("host_path", "view_path") }
+          unless selectors.uniq == selectors && bound.uniq == bound && selectors.sort == bound.sort &&
+              declarations.all? { |entry| entry.keys.sort == %w[host_path read_only stage view_path worker_visible] } &&
+              identities.all? { |entry| entry.keys.sort == Molecules::ExecutionScopeLineage::RESOURCE_FIELDS.sort }
+            unavailable!("original parent declarations differ from bound identities")
+          end
+          declarations
+        rescue KeyError, TypeError, ArgumentError, Ace::Runtime::RuntimeUnavailableError
+          unavailable!("original parent resource declarations are unavailable")
+        end
+
         private
 
         def boot_baseline!(binding)

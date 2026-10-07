@@ -146,6 +146,29 @@ module Ace
         assert_raises(Ace::Runtime::RuntimeUnavailableError) { @observer.maintenance_workspace_resource!(original) }
       end
 
+      def test_original_parent_projection_is_complete_and_joins_bound_identities
+        binding = @observer.activate_parent!(@context)
+        append("scope_bound", binding)
+        original = lineage
+        expected = @files.manifest.fetch("resources").select { |entry| entry.fetch("stage") == "parent" }.map do |entry|
+          entry.slice("host_path", "view_path", "stage", "worker_visible", "read_only")
+        end
+        assert_equal expected, @observer.maintenance_parent_resource_declarations!(original)
+        resources = @files.manifest.fetch("resources")
+        first = resources.find { |entry| entry.fetch("stage") == "parent" }
+        resources << first.dup
+        assert_raises(Ace::Runtime::RuntimeUnavailableError) { @observer.maintenance_parent_resource_declarations!(original) }
+        resources.pop
+        removed = resources.delete(first)
+        assert_raises(Ace::Runtime::RuntimeUnavailableError) { @observer.maintenance_parent_resource_declarations!(original) }
+        resources << removed
+        changed = JSON.parse(JSON.generate(binding))
+        changed.fetch("resource_identities").first["extra"] = 1
+        @events.pop
+        append("scope_bound", changed)
+        assert_raises(Ace::Assign::AttemptErrors::EvidenceUnavailable) { @observer.maintenance_parent_resource_declarations!(lineage) }
+      end
+
       def setup
         super
         @files, @manager, @cgroups = Files.new, Manager.new, Cgroups.new
