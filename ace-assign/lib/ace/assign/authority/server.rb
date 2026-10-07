@@ -204,7 +204,7 @@ module Ace
           end
         rescue ArgumentError, KeyError, AttemptErrors::MalformedTransfer
           refusal(socket, "invalid_input")
-        rescue AttemptErrors::UnauthorizedIdentity
+        rescue AttemptErrors::UnauthorizedIdentity, SecurityError
           refusal(socket, "unauthorized")
         rescue AttemptErrors::Conflict
           refusal(socket, "conflict")

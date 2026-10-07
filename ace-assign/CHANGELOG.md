@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Expose a deeply immutable original executor settlement context through the existing authenticated service status owner, binding the fixed receiver/mapping and accepted current challenge while retaining canonical receipt verification.
+
+### Fixed
+
+- Return the existing bounded unauthorized refusal for service policy SecurityError instead of leaking a failed handler thread through authority listener shutdown. Late original completion remains valid after lease expiry; fresh effects remain denied.
 - Add the fixed original executor no-effect challenge and atomic completion APIs, authenticating accepted failure/challenge provenance and closed fresh inspection artifacts before failed-settled. Domain-specific target/handler/writer inspection remains a gad.b prerequisite.
 - Add proof-owned protected stop with authenticated running/uncertain-to-stopped events, exhaustive service and Inbox settlement joins, immutable replay and original historical release/reuse verification. Retain the original foreground Driver until same-snapshot authenticated terminal and reservation-release evidence agree.
 
