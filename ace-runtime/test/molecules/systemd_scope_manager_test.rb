@@ -9,12 +9,15 @@ class SystemdScopeManagerTest < AceRuntimeTestCase
 
   class Command
     attr_reader :calls
-    attr_accessor :transform, :failure, :typed_response
+    attr_accessor :transform, :failure, :typed_response, :method_response
+    attr_reader :pidfd
     def initialize
       @calls = []
     end
-    def call(argv, timeout:)
+    def call(argv, timeout:, pidfd: nil)
       @calls << [argv, timeout]
+      @pidfd = pidfd
+      return method_response if argv.include?("GetUnitByPIDFD")
       raise failure if failure
       return typed_response.respond_to?(:call) ? typed_response.call(argv) : typed_response if argv.include?("get-property")
       return "" unless argv.include?("show")
@@ -76,11 +79,12 @@ class SystemdScopeManagerTest < AceRuntimeTestCase
       interface = argv[9]
       signatures = interface.end_with?(".Service") ? Manager::ACTIVATION_SERVICE_SIGNATURES : Manager::ACTIVATION_UNIT_SIGNATURES
       values = {"Id" => unit, "LoadState" => "loaded", "ActiveState" => "activating", "SubState" => "start-post",
-        "Job" => [17, "/org/freedesktop/systemd1/job/17"], "InvocationID" => "a" * 32,
+        "Job" => [17, "/org/freedesktop/systemd1/job/17"], "InvocationID" => [170] * 16,
         "ControlGroup" => "/ace-worker.slice/ace-worker.service", "MainPID" => 99, "ControlPID" => 100, "Slice" => "ace-worker.slice"}
       signatures.map { |key, signature| JSON.generate("type" => signature, "data" => values.fetch(key)) }.join("\n") + "\n"
     end
     observed = @manager.inspect_activation
+    assert_equal "a" * 32, observed.fetch("service").fetch("InvocationID")
     assert_equal 100, observed.fetch("service").fetch("ControlPID")
     assert_equal 99, observed.fetch("service").fetch("MainPID")
     assert_equal [17, "/org/freedesktop/systemd1/job/17"], observed.fetch("service").fetch("Job")
@@ -189,4 +193,75 @@ class SystemdScopeManagerTest < AceRuntimeTestCase
   ensure
     command.send(:remove_const, :RUBY_PLATFORM) if command&.const_defined?(:RUBY_PLATFORM, false)
   end
+  def test_actual_typed_invocation_refuses_nonbyte_shape_and_duplicate_json
+    [[1] * 15, [1] * 17, [1.0] * 16, [-1] * 16, [256] * 16, "a" * 32].each do |value|
+      @command.typed_response = JSON.generate("type" => "ay", "data" => value) + "\n"
+      assert_raises(Unavailable) do
+        @manager.typed_properties(unit: "ace-worker.service", interface: "Unit", signatures: {"InvocationID" => "ay"})
+      end
+    end
+    @command.typed_response = '{"type":"ay","type":"ay","data":' + JSON.generate([1] * 16) + '}'
+    assert_raises(Unavailable) do
+      @manager.typed_properties(unit: "ace-worker.service", interface: "Unit", signatures: {"InvocationID" => "ay"})
+    end
+  end
+
+  def test_pidfd_method_requires_exact_fixed_unit_and_original_held_descriptor
+    require "tempfile"
+    Tempfile.create("manager-held-fd") do |held|
+      data = ["/org/freedesktop/systemd1/unit/ace_2dworker_2eservice", "ace-worker.service", [170] * 16]
+      @command.method_response = JSON.generate("type" => "osay", "data" => data)
+      assert_equal({"unit" => "ace-worker.service", "invocation_id" => "a" * 32}, @manager.unit_for_pidfd(handle: held))
+      assert_same held, @command.pidfd
+      assert_equal [Manager::PIDFD_ARGV, 5], @command.calls.last
+      command = Manager::Command.new
+      assert_equal({3 => held}, command.send(:inherited_descriptor_options, Manager::PIDFD_ARGV, held))
+      assert_raises(ArgumentError) { command.send(:inherited_descriptor_options, Manager::PIDFD_ARGV, nil) }
+      assert_raises(ArgumentError) { command.send(:inherited_descriptor_options, [Manager::BUSCTL, "other"], held) }
+      refute held.closed?
+      [["/foreign", data[1], data[2]], [data[0], "foreign.service", data[2]],
+       [data[0], data[1], [0] * 16], [data[0], data[1], [1.0] * 16], data + [1]].each do |bad|
+        @command.method_response = JSON.generate("type" => "osay", "data" => bad)
+        assert_raises(Unavailable) { @manager.unit_for_pidfd(handle: held) }
+      end
+      @command.method_response = JSON.generate("type" => "osas", "data" => data)
+      assert_raises(Unavailable) { @manager.unit_for_pidfd(handle: held) }
+      held.close
+      assert_raises(ArgumentError) { @manager.unit_for_pidfd(handle: held) }
+    end
+  end
+
+  def test_native_command_passes_only_actual_held_io_into_fixed_child_fd_three
+    require "tempfile"
+    reached = Class.new(StandardError)
+    command = Manager::Command
+    command.const_set(:RUBY_PLATFORM, "linux-controlled-boundary")
+    Tempfile.create("held-manager-lifetime") do |held|
+      spawn = lambda do |environment, *args, **options|
+        assert_equal Manager::PIDFD_ARGV, args
+        assert_equal({"PATH" => "/usr/bin:/bin", "LANG" => "C", "LC_ALL" => "C"}, environment)
+        assert_same held, options.fetch(3)
+        assert_equal true, options.fetch(:close_others)
+        assert_equal true, options.fetch(:unsetenv_others)
+        assert_equal File::NULL, options.fetch(:in)
+        refute held.closed?
+        raise reached
+      end
+      File.stub(:directory?, true) do
+        Ace::Runtime::Molecules::ProtectedSocket.stub(:root_path!, true) do
+          File.stub(:executable?, true) do
+            File.stub(:stat, Struct.new(:mode).new(0o755)) do
+              Process.stub(:spawn, spawn) do
+                assert_raises(reached) { command.new.call(Manager::PIDFD_ARGV, timeout: 5, pidfd: held) }
+              end
+            end
+          end
+        end
+      end
+      refute held.closed?
+    end
+  ensure
+    command.send(:remove_const, :RUBY_PLATFORM) if command&.const_defined?(:RUBY_PLATFORM, false)
+  end
+
 end

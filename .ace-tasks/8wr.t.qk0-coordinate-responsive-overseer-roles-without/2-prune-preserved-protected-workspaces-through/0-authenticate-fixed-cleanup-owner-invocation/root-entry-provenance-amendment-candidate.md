@@ -58,3 +58,7 @@ This is a trusted-manager execution-start plus immutable audited-source guarante
 Use injected typed manager/kernel observations and real protected held-byte artifact fixtures only; no live root/native/installed/process-identity probes. Positive: exact direct Type=exec original entry/start/lifetime/socket/profile and held closure. Refusals: Type=simple or wrapper/multiple command; wrong entry/interpreter or changed dependency bytes; failed/absent start; wrong pidfd→unit/invocation association; malformed InvocationID byte type/length; changed MainPID/InvocationID before or after capture; same PID different boot/birth; foreign socket PID/UID/GID; groups/caps/NoNewPrivs mismatch; changed selected immutable entry; unreadable proc fact; reused binding from old root birth. Source review must verify no-self-exec and complete load closure in actual emitted Lab role. No test seam returns unconditional true for image identity.
 
 Full qk0.2.0 acceptance additionally requires genuine controlled receiver/listener→canonical begin_dispatch→same fixed original Installer entry→imported result/inspection, with actual Lab producer integration. This amendment does not mark any SC or task done.
+
+## Independent readiness verdict
+
+Root independently APPROVE exact1e2daf762 on2026-10-07 after reviewing official v257 inherited-FD protocol, strict response shape, fixed root-policy pin ownership and required directRuby Assembly producer. This approves implementation of this amended contract; no source/installed/full-task acceptance is implied.
