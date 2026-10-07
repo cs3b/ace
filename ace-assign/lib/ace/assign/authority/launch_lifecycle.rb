@@ -27,7 +27,7 @@ module Ace
           "abort_launch" => %w[mapping_id assignment_id attempt_id launch_ticket failure_evidence failure_digest expected_generation]
         }.freeze
         TRANSFER_OPERATIONS = {"prompt_attempt" => {direction: :upload, purpose: :prompt_text, roles: %i[launcher supervisor]}}.freeze
-        OPERATIONS = (MUTATIONS.keys + %w[prompt_attempt launch_prompt_intent launch_prompt_completion launch_preflight registration_status attempt_status inspect_launch observe_execution_scope close_execution_scope]).freeze
+        OPERATIONS = (MUTATIONS.keys + %w[prompt_attempt prompt_status launch_prompt_intent launch_prompt_completion launch_preflight registration_status attempt_status inspect_launch observe_execution_scope close_execution_scope]).freeze
         TERMINAL = %w[succeeded failed stopped].freeze
 
         attr_reader :mutex, :journals, :exclusions
@@ -70,6 +70,7 @@ module Ace
         def dispatch(request:, peer:, role:, transfer: nil)
           operation, params = request.values_at("operation", "params")
           return prompt_attempt!(request: request, peer: peer, role: role, transfer: transfer) if operation == "prompt_attempt"
+          return prompt_status!(request: request, peer: peer, role: role) if operation == "prompt_status"
           return launch_prompt_intent!(request: request, peer: peer, role: role) if operation == "launch_prompt_intent"
           return launch_prompt_completion!(request: request, peer: peer, role: role) if operation == "launch_prompt_completion"
           if operation == "observe_execution_scope"

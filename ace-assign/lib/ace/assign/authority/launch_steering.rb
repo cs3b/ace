@@ -165,6 +165,46 @@ module Ace
           {data: accepted.merge("intent_event_id" => intent.fetch("digest")), replayed: false}
         end
 
+        def prompt_status!(request:, peer:, role:)
+          params = request.fetch("params")
+          strict!(params, %w[mapping_id assignment_id attempt_id mutation_id])
+          %w[assignment_id attempt_id mutation_id].each { |key| token!(params.fetch(key)) }
+          raise ArgumentError, "Prompt status requires null public mutation ID" unless request.fetch("mutation_id").nil?
+          map = steering_principal!(params, peer, role)
+          journal = journal_for(map)
+          @mutex.synchronize do
+            commit = journal.ref_value
+            intent = journal.prompt_intent(params.fetch("mutation_id"), commit: commit)
+            raise AttemptErrors::NotFound, "Prompt mutation is missing" unless intent
+            binding = intent.fetch("payload").fetch("binding")
+            unless binding.slice("mapping_id", "assignment_id", "attempt_id") == params.slice("mapping_id", "assignment_id", "attempt_id") &&
+                binding.fetch("project_id") == map.fetch("project_id")
+              raise AttemptErrors::Conflict, "Prompt mutation belongs to another attempt"
+            end
+            unless binding.fetch("caller") == peer.slice("uid", "gid", "groups").merge("role" => role.to_s)
+              raise AttemptErrors::UnauthorizedIdentity, "Prompt mutation belongs to another principal"
+            end
+            events = journal.read_events(params.fetch("assignment_id"), commit: commit).select { |event| event["attempt_id"] == params.fetch("attempt_id") }
+            state = origin(events, **params.slice("assignment_id", "attempt_id", "mapping_id").transform_keys(&:to_sym))
+            original = original_prompt_record!(events, state, params: params)
+            unless binding.fetch("original_binding_digest") == original.fetch("binding_digest")
+              raise AttemptErrors::EvidenceUnavailable, "Prompt original guarded record differs"
+            end
+            reply = journal.mutation_result(params.fetch("mutation_id"), commit: commit)
+            if reply && (reply["operation"] != "prompt_attempt" || reply["parameters_digest"] != intent.dig("payload", "binding_digest") ||
+                reply["assignment_id"] != params["assignment_id"] || reply["attempt_id"] != params["attempt_id"])
+              raise AttemptErrors::EvidenceUnavailable, "Prompt immutable reply differs"
+            end
+            completed = authenticated_prompt_completions!(events, intent, original, journal).last
+            {data: {"attempt_id" => params.fetch("attempt_id"), "mutation_id" => params.fetch("mutation_id"),
+              "outcome" => completed ? completed.dig("payload", "evidence", "outcome") : "uncertain",
+              "intent_event_id" => intent.fetch("digest"), "outcome_event_id" => completed&.fetch("digest"),
+              "generation" => journal.authority_generation(events), "journal_commit" => commit}, replayed: false}
+          end
+        rescue KeyError, TypeError
+          raise AttemptErrors::EvidenceUnavailable, "Prompt status evidence is malformed"
+        end
+
         private
 
         def steering_key(params, map)
@@ -247,8 +287,16 @@ module Ace
             unless binding.fetch("original_binding_digest") == original.fetch("binding_digest")
               raise AttemptErrors::EvidenceUnavailable, "Prompt issuer original binding differs"
             end
-            completed = events.select { |event| %w[prompt_outcome prompt_completion_observed].include?(event["type"]) &&
-              event.dig("payload", "intent_event_id") == intent.fetch("digest") }.any? do |event|
+            authenticated_prompt_completions!(events, intent, original, journal).empty?
+          end
+        rescue KeyError, TypeError, ArgumentError
+          raise AttemptErrors::EvidenceUnavailable, "Prompt issuer history is malformed"
+        end
+
+        def authenticated_prompt_completions!(events, intent, original, journal)
+          external_id = intent.fetch("payload").fetch("external_mutation_id")
+          events.select { |event| %w[prompt_outcome prompt_completion_observed].include?(event["type"]) &&
+            event.dig("payload", "intent_event_id") == intent.fetch("digest") }.select do |event|
               payload = event.fetch("payload")
               evidence = payload.fetch("evidence")
               journal.send(:validate_prompt_evidence!, evidence, original.fetch("origin"))
@@ -262,11 +310,9 @@ module Ace
                 raise AttemptErrors::EvidenceUnavailable, "Prompt native completion acceptance differs"
               end
               %w[submitted not_issued].include?(evidence.fetch("outcome"))
-            end
-            !completed
           end
         rescue KeyError, TypeError, ArgumentError
-          raise AttemptErrors::EvidenceUnavailable, "Prompt issuer history is malformed"
+          raise AttemptErrors::EvidenceUnavailable, "Prompt completion history is malformed"
         end
 
         # Authentication binds the whole accepted original record, including
