@@ -65,3 +65,7 @@ the whole file. There are no live test sessions.
 No native, installed, protected-process, provider, mount, systemd or Linux probe
 was run. Runtime/kernel/filesystem admission boundaries are controlled fixtures;
 actual file reads, Git, framing, journals, producers and maintained consumers run.
+
+## Independent integration review
+
+wave_n0n approved exact author6344b518c after source review of registration, original raw bundle selection, CLI/framing, prepared scope and producer/consumer inventory. Root integrated as b16db3a96 after cleanup input cross-package fixes; merged historical_rotation preserves both migrations. Root executed actual prepared-registration target on that joined tree: 3 tests/49 assertions PASS6.93s, receipt `e80d4260-ca2d-410b-b2fb-717a08b40f46`. Joined Lab input/recovery also passed9/74. This approval remains registration only; original prepared fetch/worker/queue/context consumption is not delivered by this checkpoint.
