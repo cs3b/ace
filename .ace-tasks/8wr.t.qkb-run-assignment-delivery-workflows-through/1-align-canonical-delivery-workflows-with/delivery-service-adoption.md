@@ -16,7 +16,20 @@ service receipt, exact assignment/attempt/project/head/PR resource and observed 
 PR, then appends a delivery result to the same qjl evidence ref. No transport journal,
 new grant dialect or credential-derived authorization is introduced.
 
-Required installed gates for qkb.1 and lab-config gad.b adoption:
+## Source completion and central installed acceptance
+
+The Captain's centralized acceptance decision assigns actual Lab installation and
+execution to `lab-config:8wl.t.gad.2`, row `qkb-delivery`, with domain installation
+owned by `gad.b`. The following installed scenarios are that row's obligations,
+not additional deployment prerequisites for closing qkb.1 source work.
+
+qkb.1 must first deliver the actual maintained producer/consumer composition,
+workflow/catalog/role adoption, controlled integration tests covering its success
+and refusal paths, and independent source review. Fixtures cannot replace missing
+production behavior. Local package installation/resolution checks remain source
+packaging evidence; they do not establish cross-user Lab acceptance.
+
+Required installed scenarios referenced by `gad.2:qkb-delivery`:
 
 - Install the actual configured integrator/executor merge handler and exact operation
   grants; source fixtures or injected handlers cannot establish this acceptance.
@@ -26,5 +39,6 @@ Required installed gates for qkb.1 and lab-config gad.b adoption:
   preserve uncertainty without blind retry. Red CI alone does not reject integration.
 - Prove all new wfi/skill entrypoints resolve outside ACE and old names fail; ship all
   consumer/catalog/projection updates in the same release as their removal.
-- Keep publication separately authorized and retain task in progress until these
-  executed gates and independent exact-head review pass.
+- Keep publication separately authorized. Retain the central installed checklist
+  as open until these executed scenarios and independent exact-head review pass;
+  close qkb.1 only after its implementation, source tests and review are accepted.

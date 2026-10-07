@@ -23,7 +23,7 @@ The remaining qk0/xz9-dependent workflow/role adoption remains blocked source wo
 
 ## Status reconciliation — 2026-10-05
 
-**Bounded vocabulary delivered; blocked on consumer integration.** Accepted f29c72e3 source and neutral-vocabulary-source-checkpoint.md document neutral PR workflows, consumers and normal skill projection. The coordinated release is now published. Remaining qk0 charter, xz9 SC7 adoption, configured merge executor, fresh installed workflow resolution and complete delivery/authorization matrix are still open. Publication does not prove ambient registrations resolve to the new sources. Resume after dependent contracts and installed deployment are available.
+**Bounded vocabulary delivered; blocked on consumer integration.** Accepted f29c72e3 source and neutral-vocabulary-source-checkpoint.md document neutral PR workflows, consumers and normal skill projection. The coordinated release is now published. Remaining source work includes qk0 charter, xz9 SC7 adoption, merge executor composition, fresh package workflow resolution and controlled delivery/authorization scenarios. Installation of the configured executor and the actual cross-user delivery matrix remain open centrally in gad.2. Publication does not prove ambient registrations resolve to the new sources. Resume source work after the dependent source contracts are delivered. Actual Lab deployment and its execution remain in `gad.2:qkb-delivery`; they do not block source implementation or closure.
 
 
 # Align canonical delivery workflows with forge-neutral evidence
