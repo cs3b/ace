@@ -49,6 +49,10 @@ module Ace
           authenticate_inventory_registration!(journal, assignment, original_events, registration, params.fetch("mapping_id"), map, reservation_commit, introductions)
           registered = original_events.find { |event| event["type"] == "authority_mutation" && event.dig("payload", "operation") == "register_assignment" && event.dig("payload", "data") == registration }
           registration_commit = introductions.fetch(registered.fetch("digest"))
+          TaskContextEntry.validate!(registration.fetch("task_context_entry"))
+          unless registration.fetch("task_context_entry") == map.fetch("task_context_entry")
+            raise AttemptErrors::EvidenceUnavailable, "original prepared task context entry differs"
+          end
           prepared = registration.fetch("prepared_work")
           unless prepared.fetch("scope") == state.fetch("scope") && prepared.fetch("task_id") == state.fetch("task_id")
             raise AttemptErrors::EvidenceUnavailable, "original prepared selection differs"

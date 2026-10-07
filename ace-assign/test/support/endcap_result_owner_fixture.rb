@@ -54,7 +54,7 @@ module Ace
           @supervisor = @kernel.capture(83).merge("uid" => 13004, "gid" => 13004, "groups" => [13004])
           @executor = @kernel.capture(84).merge("uid" => 13005, "gid" => 13005, "groups" => [13005])
           @service = @kernel.capture(Process.pid).merge("socket_path" => File.join(root, "authority.sock"), "state_root" => root)
-          @map = {"project_id" => "project", "authority_id" => "authority", "worker_uid" => 13001,
+          @map = {"task_context_entry" => {"manifest" => {"path" => "/fixture/assign-entry.json", "bytes" => 100, "sha256" => "1" * 64}, "wrapper" => {"path" => "/fixture/assign-entry.py", "bytes" => 200, "sha256" => "2" * 64}}, "project_id" => "project", "authority_id" => "authority", "worker_uid" => 13001,
             "worker_gid" => 13001, "worker_groups" => [13001], "worker_actor" => "worker",
             "launcher_uid" => 13002, "launcher_gid" => 13002, "launcher_groups" => [13002],
             "bootstrap" => "/fixture/gate", "bootstrap_sha256" => "a" * 64, "worker_cwd" => "/fixture/worker",

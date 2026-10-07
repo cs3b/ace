@@ -118,6 +118,8 @@ module Ace
         fixture do
           issue_original
           original = prepared_fetch.fetch(:data).fetch("descriptor")
+          assert_equal @worker, original.fetch("original_worker_identity")
+          assert_equal @map.fetch("task_context_entry"), original.fetch("task_context_entry")
           assert_operator original.fetch("bytes"), :>, 64 * 1024
           start_server
           before = @journal.ref_value
@@ -148,6 +150,8 @@ module Ace
               when :purpose then result[:data]["descriptor"]["purpose"] = "different-purpose"
               when :ref then result[:data]["descriptor"]["ref"] = "execution/prepared/other.bundle"
               when :digest then result[:data]["descriptor"]["sha256"] = "f" * 64
+              when :identity then result[:data]["descriptor"]["original_worker_identity"]["started_at"] = "reused-worker"
+              when :entry then result[:data]["descriptor"]["task_context_entry"]["wrapper"]["bytes"] = 0
               when :open then result[:data]["descriptor"]["private"] = "must not escape"
               when :extra then result[:transfer_parts] << "extra"
               when :replay then result[:replayed] = true
@@ -164,7 +168,7 @@ module Ace
           end
           @client.define_singleton_method(:transfer_codec) { codec }
           before = @journal.ref_value
-          %i[selector purpose ref digest open extra replay].each do |bad|
+          %i[selector purpose ref digest identity entry open extra replay].each do |bad|
             corruption = bad
             assert_raises(AttemptErrors::EvidenceUnavailable) { client_fetch }
             assert_equal 0, receives, "#{bad} must refuse before transferred bytes"
@@ -233,6 +237,7 @@ module Ace
           original = @deployment
           value = JSON.parse(JSON.generate(original.data))
           value.fetch("launch_mappings").fetch("mapping")["worker_cwd"] = "/different/current/worker"
+          value.fetch("launch_mappings").fetch("mapping").fetch("task_context_entry").fetch("wrapper")["sha256"] = "9" * 64
           current_ref = protected_artifact("current-descriptor.json", JSON.generate(value))
           current = with_artifact_protection { Authority::Deployment.load_artifact(current_ref) }
           history_ref = protected_artifact("history.json", JSON.generate("schema" => "ace.assign.deployment-history/v1",
