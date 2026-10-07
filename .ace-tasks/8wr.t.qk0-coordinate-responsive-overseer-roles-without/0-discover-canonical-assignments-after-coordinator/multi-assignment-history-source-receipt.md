@@ -11,3 +11,9 @@ The still-uncommitted actual inventory consumer uses this result for exact accep
 Failed evidence preserved: invalid oversized registration fixture `37c577b4-62a2-41a7-865d-68aef37fd859`; derived definition-ID fixture `ef1103c4-9381-48f8-9ddb-4dcf39711af4`; actual 180s timeouts `a06d22b1-c3c0-45c4-a4dc-4049a5e3fd91`, `0c279897-af13-45bf-800b-e653a62b6acc`, `5f6f4334-b1c2-4a3d-8570-10717b7be28a`. Timeout cleanup required terminating only each owned test child; none is a success. No timeout increase or product validation weakening.
 
 Root reviewed the operation-local batching direction and WIP source with no weakening found. Exact frozen commit independent verdict remains required before integration. All checks are selected controlled source tests with ordinary temporary Git; no native/installed probes and no unfiltered-suite claim. `git diff --check` passed.
+
+## Independent integration verdict
+
+Root reviewed frozen `4a0ce9479036991aacafd0c35e0794f166c90cbb`, integrated as `6a5f15147` on main base `afe6e2433`. APPROVE the shared reader slice: complete per-assignment chains, immutable prefix walk and exact raw blob proofs remain required. A changelog append conflict was resolved retaining both entries; source was unchanged.
+
+Independent executed `bin/ace-test ace-assign fast test/fast/molecules/evidence_journal_test.rb --timeout 180`: PASS20/90, zero failures/errors, 16.09s, receipt `751b4bec-c17f-4582-b981-265625bca95d`. Inventory/Overseer integration and completed-work latency still require their own evidence; no qk0.0 completion claim.
