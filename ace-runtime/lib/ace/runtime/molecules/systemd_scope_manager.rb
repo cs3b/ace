@@ -148,11 +148,11 @@ module Ace
 
         # The root identity owner supplies its already policy-checked pinned
         # lifetime. A wire descriptor number never selects this capability.
-        def unit_for_pidfd(handle:)
+        def unit_for_pidfd(handle:, timeout: 5)
           unless handle.is_a?(IO) && !handle.closed?
             raise ArgumentError, "manager identity requires a held process lifetime"
           end
-          bytes = @command.call(PIDFD_ARGV, timeout: 5, pidfd: handle)
+          bytes = @command.call(PIDFD_ARGV, timeout: bounded_timeout(timeout), pidfd: handle)
           value = strict_typed_json(bytes)
           data = value["data"]
           unless value.keys.sort == %w[data type] && value["type"] == "osay" &&
@@ -244,7 +244,7 @@ module Ace
 
         # Typed reads only, against the existing system manager. Property sets
         # and unit identities are owner-selected, never request-controlled.
-        def typed_properties(unit:, interface:, signatures:)
+        def typed_properties(unit:, interface:, signatures:, timeout: 5)
           unless [@slice_unit, @service_unit, *@slice_ancestors, *@prerequisite_units.to_a].include?(unit) &&
               %w[Unit Service Mount].include?(interface) && (interface == "Unit" || interface == "Service" && unit == @service_unit || interface == "Mount" && @prerequisite_units.to_a.include?(unit) && unit.end_with?(".mount")) && signatures.is_a?(Hash) &&
               signatures.all? { |key, value|
@@ -260,7 +260,7 @@ module Ace
           object = unit_object(unit)
           bytes = @command.call([BUSCTL, "--system", "--no-pager", "--json=short", "--auto-start=no",
             "--allow-interactive-authorization=no", "get-property", "org.freedesktop.systemd1", object,
-            "org.freedesktop.systemd1.#{interface}", *signatures.keys], timeout: 5)
+            "org.freedesktop.systemd1.#{interface}", *signatures.keys], timeout: bounded_timeout(timeout))
           unless bytes.is_a?(String) && bytes.bytesize.between?(1, Command::LIMIT)
             raise RuntimeUnavailableError, "typed manager properties are unavailable"
           end
@@ -304,6 +304,13 @@ module Ace
             value.merge!(typed_properties(unit: unit, interface: "Mount", signatures: MOUNT_SIGNATURES)) if unit.end_with?(".mount")
             [unit, value]
           end
+        end
+
+        def bounded_timeout(value)
+          unless value.is_a?(Numeric) && value.finite? && value.positive? && value <= 5
+            raise ArgumentError, "manager observation deadline exceeds its fixed budget"
+          end
+          value
         end
 
         def unit_object(unit)

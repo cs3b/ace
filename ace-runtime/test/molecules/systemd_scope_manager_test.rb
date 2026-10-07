@@ -264,4 +264,22 @@ class SystemdScopeManagerTest < AceRuntimeTestCase
     command.send(:remove_const, :RUBY_PLATFORM) if command&.const_defined?(:RUBY_PLATFORM, false)
   end
 
+  def test_manager_observation_timeout_cannot_renew_or_exceed_five_seconds
+    require "tempfile"
+    Tempfile.create("fixed-lifetime-budget") do |held|
+      [0, -1, 6, Float::NAN, Float::INFINITY].each do |timeout|
+        assert_raises(ArgumentError) { @manager.unit_for_pidfd(handle: held, timeout: timeout) }
+        assert_raises(ArgumentError) do
+          @manager.typed_properties(unit: "ace-worker.service", interface: "Unit",
+            signatures: {"InvocationID" => "ay"}, timeout: timeout)
+        end
+      end
+      assert_empty @command.calls
+      @command.method_response = JSON.generate("type" => "osay", "data" =>
+        ["/org/freedesktop/systemd1/unit/ace_2dworker_2eservice", "ace-worker.service", [170] * 16])
+      @manager.unit_for_pidfd(handle: held, timeout: 0.4)
+      assert_equal 0.4, @command.calls.last.last
+    end
+  end
+
 end
