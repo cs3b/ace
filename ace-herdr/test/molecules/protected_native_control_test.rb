@@ -131,6 +131,25 @@ class ProtectedNativeControlTest < Minitest::Test
     end
   end
 
+  def test_float_identity_acknowledgements_never_prove_submission_or_drain
+    native, binding = prompt_native
+    %w[pid parent_pid uid gid groups].each do |field|
+      native.response = lambda do |origin|
+        child = origin.fetch("child").dup
+        child[field] = field == "groups" ? child.fetch(field).map(&:to_f) : child.fetch(field).to_f
+        received = origin.merge("child" => child)
+        result = if native.calls.last.first == "agent.prompt"
+          {"type" => "agent_prompted", "agent" => {}, "origin" => received, "submission" => "submitted"}
+        else
+          {"type" => "terminal_input_drained", "origin" => received, "input_state" => "inhibited", "pending_input" => 0}
+        end
+        {"id" => "test", "result" => result}
+      end
+      assert_equal "uncertain", native.prompt(binding: binding, text: "private").fetch("outcome"), field
+      assert_equal "unconfirmed", native.inhibit_input(binding: binding).fetch("outcome"), field
+    end
+  end
+
   def test_actual_drain_wire_shape_preserves_original_guard_without_child_reobservation
     native, binding = prompt_native
     native.response = ->(origin) { {"id" => "test", "result" => {"type" => "terminal_input_drained", "origin" => origin, "input_state" => "inhibited", "pending_input" => 0}} }

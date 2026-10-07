@@ -83,6 +83,7 @@ module Ace
           result = frame["result"]
           if frame.keys.sort == %w[id result] && result.is_a?(Hash) && result.keys.sort == %w[agent origin submission type] &&
               result["type"] == "agent_prompted" && result["submission"] == "submitted" && result["origin"] == origin && result["agent"].is_a?(Hash)
+            GuardedNativeOrigin.verify!(result.fetch("origin"), terminal_id: origin.fetch("terminal_id"), child: origin.fetch("child"))
             return {"outcome" => "submitted", "submission" => "submitted", "origin" => origin}
           end
           error = frame["error"]
@@ -111,6 +112,7 @@ module Ace
           if frame.keys.sort == %w[id result] && result.is_a?(Hash) && result.keys.sort == %w[input_state origin pending_input type] &&
               result["type"] == "terminal_input_drained" && result["origin"] == origin && result["input_state"] == "inhibited" &&
               result["pending_input"].is_a?(Integer) && result["pending_input"].zero?
+            GuardedNativeOrigin.verify!(result.fetch("origin"), terminal_id: origin.fetch("terminal_id"), child: origin.fetch("child"))
             return {"outcome" => "inhibited", "origin" => origin, "input_state" => "inhibited", "pending_input" => 0}
           end
           error = frame["error"]

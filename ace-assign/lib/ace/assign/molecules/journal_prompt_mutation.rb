@@ -83,6 +83,7 @@ module Ace
             raise AttemptErrors::EvidenceUnavailable, "Prompt outcome original guard differs"
           end
           Ace::Herdr::Molecules::GuardedNativeOrigin.verify!(original, terminal_id: original.fetch("terminal_id"), child: original.fetch("child"))
+          Ace::Herdr::Molecules::GuardedNativeOrigin.verify!(evidence.fetch("origin"), terminal_id: original.fetch("terminal_id"), child: original.fetch("child"))
           case evidence["outcome"]
           when "submitted"
             valid = evidence.keys.sort == %w[origin outcome submission] && evidence["submission"] == "submitted"

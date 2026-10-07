@@ -140,6 +140,13 @@ module Ace
             next if evidence.nil?
             assert_raises(AttemptErrors::EvidenceUnavailable) { finalize(journal, evidence: evidence) }
           end
+          %w[pid parent_pid uid gid groups].each do |field|
+            received = origin
+            received["child"][field] = field == "groups" ? received["child"][field].map(&:to_f) : received["child"][field].to_f
+            assert_raises(AttemptErrors::EvidenceUnavailable) do
+              finalize(journal, evidence: {"outcome" => "submitted", "origin" => received, "submission" => "submitted"})
+            end
+          end
           assert_nil journal.mutation_result("public-prompt")
           assert_equal 2, journal.read_events("assignment").length
         end
