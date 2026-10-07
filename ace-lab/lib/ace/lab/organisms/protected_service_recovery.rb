@@ -114,7 +114,8 @@ module Ace
               challenge["claim_binding"] != execution["claim_binding"])
             raise SecurityError, "canonical recovery challenge differs"
           end
-          input = @inputs.input_binding(bytes, expected_digest: request.fetch("input_digest"), expected_target: request.fetch("target"))
+          input = @inputs.input_binding(bytes, expected_digest: request.fetch("input_digest"),
+            expected_target: request.fetch("target"), operation: request.fetch("operation"))
           [data, immutable(context), input]
         end
 

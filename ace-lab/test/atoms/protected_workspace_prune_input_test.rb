@@ -3,6 +3,7 @@
 require_relative "../test_helper"
 require "ace/lab/atoms/protected_workspace_prune_input"
 require "ace/lab/molecules/protected_service_policy"
+require "ace/lab/organisms/protected_service_receiver"
 
 class ProtectedWorkspacePruneInputTest < Minitest::Test
   INPUT = Ace::Lab::Atoms::ProtectedWorkspacePruneInput
@@ -114,5 +115,34 @@ class ProtectedWorkspacePruneInputTest < Minitest::Test
       expected_digest: Ace::Lab::Atoms::ServiceInput.digest(valid), expected_target: Ace::Lab::Atoms::ServiceInput.target(valid))
     assert_equal valid, admitted.fetch(:input)
     assert admitted.frozen?
+  end
+
+  def test_actual_recovery_status_rejects_duplicate_input_matching_canonical_digest
+    input = request
+    params = {"assignment_id" => "maintenance-assignment", "attempt_id" => "maintenance-attempt",
+      "request_id" => "cleanup", "head" => "a" * 40, "candidate_generation" => 1}
+    record = Ace::Assign::Molecules::EvidenceJournal::TERMINAL_BINDING_FIELDS.to_h { |key| [key, "fixture"] }
+    record.merge!(params.slice("assignment_id", "attempt_id", "request_id"),
+      "project_id" => "maintenance", "executor_uid" => 13005, "transport" => "unix",
+      "candidate_head" => params.fetch("head"), "operation" => "prune-preserved-workspace",
+      "input_digest" => Ace::Lab::Atoms::ServiceInput.digest(input), "target" => Ace::Lab::Atoms::ServiceInput.target(input))
+    execution = {"mapping_id" => "maintenance", "candidate_generation" => 1, "claim_binding" => "b" * 64,
+      "dispatch_phase" => "dispatch_started", "head" => params.fetch("head")}
+    data = {"state" => "uncertain", "request_id" => "cleanup", "service_id" => "executor",
+      "settlement_context" => {"version" => 1, "request" => record, "execution" => execution, "challenge" => nil}}
+    client = Object.new
+    client.define_singleton_method(:call) do |operation, selected|
+      raise "unexpected authority operation" unless operation == "service_status" && selected == params
+      Ace::Assign::Authority::Client::Reply.new(data: data, replayed: false)
+    end
+    receiver = Ace::Lab::Organisms::ProtectedServiceReceiver.allocate
+    {client: client, mapping_id: "maintenance", service_id: "executor", map: {"project_id" => "maintenance"},
+     receiver: {"executor_uid" => 13005}, inputs: Ace::Lab::Molecules::ProtectedServicePolicy.new(proposal_resolver: ->(*) { flunk })}.each do |key, value|
+      receiver.instance_variable_set("@#{key}", value)
+    end
+    bytes = JSON.generate(input)
+    assert_equal input, receiver.send(:recovery_status!, params, bytes).last.fetch(:input)
+    duplicate = bytes.sub('"schema":', '"sch\u0065ma":"duplicate","schema":')
+    assert_raises(ArgumentError) { receiver.send(:recovery_status!, params, duplicate) }
   end
 end

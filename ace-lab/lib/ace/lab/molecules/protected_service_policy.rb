@@ -17,7 +17,7 @@ module Ace
           @document_loader = document_loader || -> { GrantResolver.trusted_document(Ace::Lab.authorization_path) }
         end
 
-        def input_binding(bytes, expected_digest:, expected_target:, operation: nil)
+        def input_binding(bytes, expected_digest:, expected_target:, operation:)
           unless bytes.is_a?(String) && bytes.bytesize.between?(1, Atoms::ServiceInput::MAX_BYTES)
             raise ArgumentError, "structured service input exceeds its fixed limit"
           end
