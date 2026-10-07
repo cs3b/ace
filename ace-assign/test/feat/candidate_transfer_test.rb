@@ -144,6 +144,69 @@ module Ace
         end
       end
 
+      def test_review_snapshot_preserves_full_original_objects_and_independent_encodings
+        with_fixture do |transfer, root, source, _head, _bytes|
+          File.write(File.join(source, "text.rb"), "puts 'original'\n")
+          File.symlink("README", File.join(source, "link"))
+          binary_path = "zażółć".b
+          File.binwrite(File.join(source.b, binary_path), "invalid-\xff".b)
+          git(source, "add", ".")
+          git(source, "-c", "user.name=test", "-c", "user.email=test@example.invalid", "commit", "-m", "snapshot")
+          head = git(source, "rev-parse", "HEAD").strip
+          tree = git(source, "rev-parse", "HEAD^{tree}").strip
+          bundle = File.join(root, "snapshot.bundle")
+          git(source, "bundle", "create", bundle, "--all")
+          bytes = File.binread(bundle)
+          File.write(File.join(source, "text.rb"), "changed live uploader")
+          scratch = File.join(root, "review-scratch")
+          FileUtils.mkdir_p(scratch, mode: 0700)
+          binding = {bytes: bytes, size: bytes.bytesize, sha256: Digest::SHA256.hexdigest(bytes), head: head, root: scratch}
+          assert_raises(AttemptErrors::ReceiptRejected) { transfer.review_snapshot(**binding, tree: "0" * 40) }
+          assert_empty Dir.children(scratch)
+          result = transfer.review_snapshot(**binding, tree: tree)
+          assert result.fetch("subject").frozen?
+          snapshot = JSON.parse(result.fetch("subject"))
+          assert_equal [head, tree], snapshot.values_at("head", "tree")
+          entries = snapshot.fetch("files")
+          assert_equal 4, entries.size
+          decode = ->(value) { value.fetch("encoding") == "base64" ? value.fetch("bytes").unpack1("m0") : value.fetch("bytes").b }
+          indexed = entries.to_h { |entry| [decode.call(entry.fetch("path")), entry] }
+          assert_equal "candidate\x00\n".b, decode.call(indexed.fetch("README").fetch("content"))
+          assert_equal "puts 'original'\n", decode.call(indexed.fetch("text.rb").fetch("content"))
+          assert_equal "utf-8", indexed.fetch("text.rb").dig("content", "encoding")
+          assert_equal "120000", indexed.fetch("link").fetch("mode")
+          assert_equal "README", decode.call(indexed.fetch("link").fetch("content"))
+          assert_equal "utf-8", indexed.fetch(binary_path).dig("path", "encoding")
+          assert_equal "base64", indexed.fetch(binary_path).dig("content", "encoding")
+          assert_equal "invalid-\xff".b, decode.call(indexed.fetch(binary_path).fetch("content"))
+          entries.each { |entry| assert_match(/\A[0-9a-f]{40}\z/, entry.fetch("oid")) }
+          File.write(File.join(result.fetch("directory"), "text.rb"), "changed scratch")
+          assert_equal "puts 'original'\n", decode.call(JSON.parse(result.fetch("subject")).fetch("files").find { |e| e.dig("path", "bytes") == "text.rb" }.fetch("content"))
+        end
+      end
+
+      def test_review_snapshot_bounds_complete_json_expansion_and_preserves_peer_scratch
+        with_fixture do |transfer, root, source, _head, _bytes|
+          File.binwrite(File.join(source, "escaped"), "\x01" * (11 * 1024 * 1024))
+          git(source, "add", "escaped")
+          git(source, "-c", "user.name=test", "-c", "user.email=test@example.invalid", "commit", "-m", "escaped")
+          head = git(source, "rev-parse", "HEAD").strip
+          tree = git(source, "rev-parse", "HEAD^{tree}").strip
+          bundle = File.join(root, "escaped.bundle")
+          git(source, "bundle", "create", bundle, "--all")
+          bytes = File.binread(bundle)
+          scratch = File.join(root, "review-scratch")
+          FileUtils.mkdir_p(scratch, mode: 0700)
+          File.write(File.join(scratch, "preserved"), "owned elsewhere")
+          error = assert_raises(AttemptErrors::ReceiptRejected) do
+            transfer.review_snapshot(bytes: bytes, size: bytes.bytesize, sha256: Digest::SHA256.hexdigest(bytes), head: head, tree: tree, root: scratch)
+          end
+          assert_includes error.message, "snapshot is oversized"
+          assert_equal ["preserved"], Dir.children(scratch)
+          assert_empty Dir.children(File.join(root, "authority"))
+        end
+      end
+
       def test_materialization_accepts_internal_symlink_and_refuses_cycle
         with_fixture do |transfer, root, source, _head, _bytes|
           scratch = File.join(root, "peer-scratch")

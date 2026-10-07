@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "digest"
+require "json"
 require "fileutils"
 require "tmpdir"
 require "ace/herdr"
@@ -70,7 +71,7 @@ module Ace
             destination = Dir.mktmpdir("candidate-", root)
             File.chmod(0700, destination)
             begin
-              entries = git(repository, deadline, "ls-tree", "-r", "-z", head, limit: MAX_BYTES).split("\0")
+              entries = git(repository, deadline, "ls-tree", "-r", "-z", head, limit: MAX_BYTES).b.split("\0")
               total = 0
               links = []
               entries.each do |entry|
@@ -98,6 +99,7 @@ module Ace
                   File.open(target, File::WRONLY | File::CREAT | File::EXCL | File::NOFOLLOW,
                     mode == "100755" ? 0700 : 0600) { |file| file.write(content) }
                 end
+                yield(path.freeze, mode.freeze, oid.freeze, content.freeze) if block_given?
               end
               links.each { |target, content| File.symlink(content, target) }
               links.each do |target, _content|
@@ -116,11 +118,28 @@ module Ace
           reject!("Candidate filesystem materialization is unverifiable")
         end
 
+        # Full immutable review input comes from the same admitted Git objects
+        # used for materialization, never a second read of the scratch checkout.
+        def review_snapshot(bytes:, sha256:, size:, head:, tree:, root:)
+          subject = JSON.generate("schema" => "ace.candidate-review-snapshot/v1", "head" => head, "tree" => tree)
+            .delete_suffix("}") + ',"files":['
+          first = true
+          result = materialize(bytes: bytes, sha256: sha256, size: size, head: head, tree: tree, root: root) do |path, mode, oid, content|
+            entry = JSON.generate("path" => review_bytes(path), "mode" => mode, "oid" => oid, "content" => review_bytes(content))
+            separator = first ? "" : ","
+            reject!("Complete candidate review snapshot is oversized") if subject.bytesize + separator.bytesize + entry.bytesize + 2 > MAX_BYTES
+            subject << separator << entry
+            first = false
+          end
+          subject << "]}"
+          result.merge("subject" => subject.freeze)
+        end
+
         # Prepared instructions have a narrower tree contract than candidates:
         # no executable entries or symlinks, and bounded UTF-8 files. Read only
         # verified Git objects; never run checkout filters or reopen uploader paths.
         def prepared_files(repository:, deadline:, head:)
-          entries = git(repository, deadline, "ls-tree", "-r", "-z", head, limit: MAX_BYTES).split("\0")
+          entries = git(repository, deadline, "ls-tree", "-r", "-z", head, limit: MAX_BYTES).b.split("\0")
           reject!("Prepared file inventory is oversized") unless entries.size.between?(4, 4096)
           total = 0
           files = entries.to_h do |entry|
@@ -141,6 +160,15 @@ module Ace
         end
 
         private
+
+        def review_bytes(bytes)
+          text = bytes.dup.force_encoding(Encoding::UTF_8)
+          if text.valid_encoding? && !text.include?("\0")
+            {"encoding" => "utf-8", "bytes" => text}
+          else
+            {"encoding" => "base64", "bytes" => [bytes].pack("m0")}
+          end
+        end
 
         def verify_root!
           PrivateDirectory.verify!(@root)
