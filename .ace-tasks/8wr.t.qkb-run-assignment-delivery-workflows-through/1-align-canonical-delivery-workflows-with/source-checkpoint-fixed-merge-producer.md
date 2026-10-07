@@ -17,3 +17,13 @@ No native/root/installed/process identity/network probes, package publication or
 Root found no production defect in 2ee45b7a6 but held acceptance for missing required negatives. Test-only successor executes actual owner refusals for wrong PR number/head/head repository/refs, absent or invalid method, oversized envelope/input and ambiguous configured defaults before mutation; a lost actual Forgejo mutation reply produces uncertainty with one mutation and no artifact/retry. Fully inspected file: 11 / 229 PASS, 21.13ms, `git/12003932-05be-4bd5-b8a6-c116f00fa068/`. After tightening method cases to recompute their accepted input digest (so invalid method reaches its own validator), exact selected method additionally passed 1 / 12, 4.53ms, `git/4458bb5a-87d8-4967-8d3d-57fda9604a17/`.
 
 Preserved successor failure `git/6a86cbfc-3b23-489e-9ea9-c59352fb9684/`: wrong PR-number case actually refused earlier in maintained Forgejo identity validation as ProviderIdentityMismatchError; the assertion had expected ProviderExpectedHeadConflictError. It now expects the precise owner refusal, retaining zero mutation/evidence assertions. Existing producer and real receiver bytes are unchanged by this successor; no composed rerun was needed.
+
+Independent reviewer `audit_runtime_delivery_status` approved producer through
+`238b05341` after the required negative coverage was added; no production defect
+remained. Integrated main through `55c6186f9`. Main package-directory verification
+passed 11 tests / 229 assertions (`09646d30-0abc-4c07-a461-5fdfb7e7ddab`).
+The preceding root-directory invocation `5404c070` failed to load `test_helper`
+and executed zero tests; it is excluded. Report inspection showed the wrong cwd;
+the corrected invocation uses the package directory and the same checkout binstub.
+No source or timeout was changed to obtain that result. Protected worker delivery
+consumption and complete qkb.1 acceptance remain open.
