@@ -32,3 +32,7 @@ The exact mutually exclusive identity/execute/inspect frames, selected prepared 
 - [ ] SC4: Read-only operation-specific inspection consumes actual existing settlement challenge and proves completed/untouched or truthful partial uncertainty without reexecuting effects. Independent exact source review and permitted executed tests precede activation; no live root/native/provisioning probe.
 
 Large vertical slice; source-owned root invocation/result is its independently observable outcome. Physical Git preservation/removal behavior belongs sibling qk0.2.1, not a hidden promise here. Usage: ux/usage.md. Readiness review is recorded in the parent; implementation criteria remain unchecked.
+
+## Accepted root entry provenance amendment
+
+[root-entry-provenance-amendment-candidate.md](root-entry-provenance-amendment-candidate.md) is the reviewed normative replacement for executable-identity composition: trusted Type=exec direct immutable entry/load closure, actual manager GetUnitByPIDFD over held inheritedFD, strict root observer policy. Generic ProtectedLinux is unchanged. Current Python→Ruby bounded root wrappers do not satisfy this producer. Task remains in progress; source SCs stay unchecked until executed joined evidence and independent source review.

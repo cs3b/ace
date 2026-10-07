@@ -1,0 +1,64 @@
+# Root entry execution provenance — explicit B amendment candidate
+
+Parent contract requires independent original root role identity. A distinct positive, zero-cap authority cannot assume that `/proc/<rootPID>/exe` is readable under the existing Linux/Yama boundary. Manager argv is configuration, not a measurement of the currently executed image. No generic ProtectedLinux fallback, extra authority capability, root sidecar or caller hash can satisfy that missing read.
+
+Root authorized this candidate for exact independent review, not implementation or acceptance. Proposed replacement proof is the existing trusted system-manager execution-start owner joined to a held immutable accepted-release entry/load closure and kernel lifetime facts. Historical records retain that literal original binding; no current entry or unit selection rewrites it. The original parent phrase `executable identity` must be interpreted through this explicit source contract only after review approval.
+
+## Installed immutable producer
+
+Lab's existing accepted-source Assembly owns the new fixed workspace-cleanup-owner role entry and its complete interpreter/Gemfile/load dependency closure. Same original Installer adds the cleanup-only phase. No second publisher, receiver-as-root exception or arbitrary command broker appears. wave412 owns Lab source/provisioning; these are required new source joins, not already delivered units.
+
+Actual r4 root-role source currently runs a Python original owner with a bounded Ruby child (`launch_prepared_role`/`launch_bootstrap_role`); ordinary roles instead exec Ruby. Neither is the proposed same-MainPID direct root listener. They cannot be relabeled as this proof. The same Assembly must add a direct immutable Ruby cleanup-listener entry, literal selected-snapshot load paths/interpreter/full closure and fixed unit starting that entry directly. wave412 verified this distinction by source review; no workspace-cleanup role/unit is delivered yet.
+
+The exact root-owned installed unit is fixed by protected accepted-release configuration and starts `Type=exec`, one direct ExecStart argv containing the selected protected interpreter and generated no-argument entry with the already supported fixed runtime arguments. No shell, env lookup, PATH executable discovery, wrapper, extra ExecStart/ExecStartPre/ExecStartPost, dynamic entry selection, caller argv or replacement process is permitted. Exact argv and typed manager properties must equal that selected installation. Neither textual unit output nor manager argv alone measures a current image.
+
+Before source activation, Assembly verifies the complete accepted entry/interpreter/load closure using the existing protected held-byte artifact owner and seals the immutable references. Directory ownership alone is insufficient. Authority holds/verifies the same references and exact entry SHA/length; all selected runtime files and fixed configuration are authenticated. Any missing or writable/replaced closure file refuses. Unit selection cannot reference caller-owned scripts/configuration. No dependency or artifact-budget defaults change.
+
+## Manager execution-start and kernel joins
+
+The source-owned narrow reader uses the existing typed manager property owner, not a second bus parser/controller. Required facts: exact configured unit; Type=exec; active running state; a single direct ExecStart execution record matching installed argv; successful execution-start record; exact positive MainPID and no alternate ControlPID; InvocationID as the actual D-Bus `ay` containing exactly 16 Integer bytes (0..255), normalized once to exactly 32 lowercase hex characters. Unsupported/ambiguous execution records or manager response refuse.
+
+It independently captures the selected MainPID's Linux boot/birth/start identity and strict root credential/capability projection, pins that exact kernel lifetime, and joins actual SO_PEERCRED PID/UID/GID. Required profile stays UID/GID0, groups[0], NoNewPrivs1, permitted/effective/bounding mask2, inheritable/ambient0. A root credential without exact manager/lifetime/entry join grants nothing. Ordinary ProtectedLinux capture/pin rules remain unchanged.
+
+The retained kernel lifetime must be joined to the exact manager unit/invocation through the manager’s `GetUnitByPIDFD(h)` operation using that actual held pidfd, then compared with the selected unit and its typed InvocationID. This is an existing unprivileged system-manager operation, not a claimed timestamp conversion. No invented monotonic-clock/tick tolerance is permitted. Its returned closed `(o,s,ay)` tuple must identify the same fixed unit and exact 16-byte invocation. Read manager/lifetime/credentials before and after held closure reads and socket peer capture; recheck the same MainPID/InvocationID/boot/birth/profile and immutable references. Restart, replacement, foreign unit, extra privilege, malformed or unavailable facts refuse. The original pinned lifetime must remain live for execute admission.
+
+## Exact existing-client FD transport
+
+The narrow existing manager owner gains `unit_for_pidfd(handle:)`, with its handle supplied only by the fixed root observer’s policy-enforcing pin operation, never a wire number. The root observer uses the same low-level `pidfd_open` lifetime facility but must not call generic `ProtectedLinux#pin`/`capture`, which correctly reject root mask2. If that low-level descriptor opening is extracted for reuse, both generic and root owner entrypoints must independently enforce their own closed credential/capability policy and unchanged birth around acquisition. Generic all-zero policy is neither configurable nor relaxed. The fixed existing `/usr/bin/busctl` client is invoked directly with `--system --no-pager --json=short --auto-start=no --allow-interactive-authorization=no --timeout=5 call org.freedesktop.systemd1 /org/freedesktop/systemd1 org.freedesktop.systemd1.Manager GetUnitByPIDFD h 3`. Existing `Command` accepts one source-private optional `pidfd:` only for that exact argv; it maps child FD3 to the still-held IO using `Process.spawn(..., 3 => handle, close_others: true)`. Parent lifetime owner keeps the original IO open and pinned through subprocess completion and both manager rechecks. No descriptor-number lookup/reopen, global close-on-exec mutation, path through proc, caller-selected method or arbitrary FD map is accepted.
+
+Ruby's supported explicit FD redirection exempts only the selected FD from `close_others`; it duplicates the same open file description into the child. Systemd v257 busctl explicitly parses `h` as an inherited FD, checks it is in the actual passed descriptor set, and appends that FD via libsystemd. Thus the decimal3 is meaningful only together with this explicit inheritance, not an arbitrary parent's FD number. The existing client's output/error bounds, fixed environment, root-protected executable checks, monotonic deadline, child termination and reaping stay intact. No new D-Bus library, parser, sidecar or authority privilege is needed.
+
+Response is strict existing JSON decoding with exact keys `{type,data}`, type `osay`, data an Array of exactly3 entries: fixed expected object path, fixed expected unit name, and exactly16 Integer bytes0..255. Nonzero invocation is normalized to32 lowercasehex and must equal the separately authenticated selected unit property. Unexpected method signature, extra values, zeroID, scalar/floatbyte, foreign unit or object path, dead/closed handle and timeout refuse. The selected root unit must be admitted by the existing owner's fixed-unit constructor selection; no external unit argument expands the allowlist.
+
+Controlled tests use an injected command/spawn owner and ordinary held temp FD to prove exact FD3 mapping/lifetime/cleanup and fixed argv; no actual pidfd/systemd/root process probe. Typed tests cover the strict `osay` response and `ay` property, replacement between joins and unchanged generic capability policy.
+
+Primary transport sources: [systemd v257 busctl.c](https://raw.githubusercontent.com/systemd/systemd/v257/src/busctl/busctl.c), `message_append_cmdline` UNIX_FD branch (lines1568–1583) validates inherited descriptor membership before libsystemd append; `run` calls the normal parser/client without blanket inherited FD closure. [Ruby3.4 Process documentation](https://docs.ruby-lang.org/en/3.4/Process.html#module-Process-label-File+Descriptor+Inheritance) defines explicit FD redirection and `close_others` exemption.
+
+## Verified primary-source defect and join
+
+The current `SystemdScopeManager::ACTIVATION_UNIT_SIGNATURES` incorrectly declares InvocationID as `s`. Systemd v257’s actual unit vtable declares `ay`; systemctl text formatting is not the D-Bus type. Correct the existing typed owner and its direct consumers/tests within this task scope, with exact 16-byte validation and one canonical normalization, rather than introducing a root-specific decoder accepting the wrong type.
+
+Primary sources read on 2026-10-07:
+
+- [systemd v257 dbus-unit.c](https://raw.githubusercontent.com/systemd/systemd/v257/src/core/dbus-unit.c), `SD_BUS_PROPERTY("InvocationID", "ay", bus_property_get_id128, ...)`.
+- [systemd v257 dbus-manager.c](https://raw.githubusercontent.com/systemd/systemd/v257/src/core/dbus-manager.c), `GetUnitByPIDFD` accepts `h`, returns object-path/unit-name/InvocationID `ay`, and is marked `SD_BUS_VTABLE_UNPRIVILEGED`.
+
+These establish the actual schema and manager capability, not delivered ACE transport or execution-image measurement. No runtime source change or native probe has been performed.
+
+The resulting closed operation_owner_binding retains the already reviewed unit,invocation_id,process_binding,entry_sha256 fields. Entry SHA is the literal held installation reference, not a claimed current `/proc/exe` measurement. The independent authority produces it before begin_dispatch CAS; receiver's identical value is only a selector and must match that actual observation. At root execute, the current original invocation independently verifies that exact accepted dispatch binding before any maintenance locks/effects. Replacement root birth only inspects retained evidence.
+
+## No-self-replacement lifecycle obligation
+
+The authenticated immutable entry must retain its initial main process for the entire listener lifetime. It never execs, reexecs, daemonizes, changes PID/credentials/capabilities, delegates its socket to another process, replaces loaded code, or accepts executable/load configuration from requests. Root worker effects run only through the separately reviewed fixed cleanup phase and safe Git owner in bounded children; those children never become MainPID or serve identity/execute/inspect. No dynamic plugin/provider evaluation enters this role. Every queue, completion and listener shutdown remains owned by that original process.
+
+This is a trusted-manager execution-start plus immutable audited-source guarantee, not independent observation of arbitrary current process image. An entry that can self-replace or a system-manager execution-start record that cannot be authenticated makes this composition unavailable; never fall back to an argv assertion or root self-report.
+
+## Required controlled evidence
+
+Use injected typed manager/kernel observations and real protected held-byte artifact fixtures only; no live root/native/installed/process-identity probes. Positive: exact direct Type=exec original entry/start/lifetime/socket/profile and held closure. Refusals: Type=simple or wrapper/multiple command; wrong entry/interpreter or changed dependency bytes; failed/absent start; wrong pidfd→unit/invocation association; malformed InvocationID byte type/length; changed MainPID/InvocationID before or after capture; same PID different boot/birth; foreign socket PID/UID/GID; groups/caps/NoNewPrivs mismatch; changed selected immutable entry; unreadable proc fact; reused binding from old root birth. Source review must verify no-self-exec and complete load closure in actual emitted Lab role. No test seam returns unconditional true for image identity.
+
+Full qk0.2.0 acceptance additionally requires genuine controlled receiver/listener→canonical begin_dispatch→same fixed original Installer entry→imported result/inspection, with actual Lab producer integration. This amendment does not mark any SC or task done.
+
+## Independent readiness verdict
+
+Root independently APPROVE exact1e2daf762 on2026-10-07 after reviewing official v257 inherited-FD protocol, strict response shape, fixed root-policy pin ownership and required directRuby Assembly producer. This approves implementation of this amended contract; no source/installed/full-task acceptance is implied.
