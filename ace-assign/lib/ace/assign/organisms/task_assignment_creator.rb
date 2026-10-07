@@ -21,7 +21,7 @@ module Ace
           @executor = executor || AssignmentExecutor.new
         end
 
-        def call(task_refs:, preset_name: DEFAULT_PRESET, primary_task_ref: nil, delivery_parameters: nil)
+        def call(task_refs:, preset_name: DEFAULT_PRESET, primary_task_ref: nil, delivery_parameters: nil, project_id: nil)
           requested_refs = normalize_requested_refs(task_refs)
           raise Ace::Support::Cli::Error, "--task requires at least one task reference" if requested_refs.empty?
 
@@ -58,7 +58,9 @@ module Ace
             steps: steps, delivery: delivery
           )
 
-          result = @executor.start(job_path, task_id: primary_ref)
+          start_options = {task_id: primary_ref}
+          start_options[:project_id] = project_id unless project_id.nil?
+          result = @executor.start(job_path, **start_options)
           result.merge(
             skipped_terminal: skipped_terminal,
             primary_ref: primary_ref,

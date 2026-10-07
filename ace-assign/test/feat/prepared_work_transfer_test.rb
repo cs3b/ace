@@ -82,14 +82,18 @@ module Ace
           manager.define_singleton_method(:show) { |_| Struct.new(:status).new("pending") }
           executor = Organisms::AssignmentExecutor.new(cache_base: root)
           creator = Organisms::TaskAssignmentCreator.new(task_manager: manager, executor: executor)
-          result = Ace::Assign.stub(:cache_dir, root) { creator.call(task_refs: [task_id, "8wr.t.qk0.1"]) }
+          result = Ace::Assign.stub(:cache_dir, root) do
+            creator.call(task_refs: [task_id, "8wr.t.qk0.1"], project_id: "ace")
+          end
           assignment = result.fetch(:assignment)
+          assert_equal "ace", assignment.project_id
+          assert_equal "ace", executor.assignment_manager.load(assignment.id).project_id
           job_bytes = File.binread(result.fetch(:job_path))
           job = YAML.safe_load(job_bytes, permitted_classes: [Time, Date])
           selected = job.fetch("steps").select { |step| step["context"] == "fork" && step["taskref"] == task_id }
           assert_equal 1, selected.length
           scope = selected.first.fetch("number")
-          files = {"definition.json" => JSON.generate(assignment.to_h.merge("project_id" => "ace", "task_id" => task_id)), "job.yaml" => job_bytes,
+          files = {"definition.json" => JSON.generate(assignment.to_h), "job.yaml" => job_bytes,
             "context/#{task_id}/spec.md" => "---\nid: #{task_id}\nstatus: pending\nneeds_review: false\ndependencies: []\n---\nReviewed.\n",
             "context/#{task_id}/bundle.txt" => "Exact reviewed task instructions.\n"}
           steps = Dir.children(assignment.steps_dir).filter_map do |filename|
