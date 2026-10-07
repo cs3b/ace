@@ -72,3 +72,8 @@ proof of stopping an attempt. Lost native ACK requires authentic native drain or
 trusted complete affected-scope maintenance recovery. Unrelated work is preserved.
 Task source acceptance waits that actual producer/recovery path, not an endless
 refusal presented as successful implementation.
+
+
+## Settlement evidence source checkpoint
+
+The existing Endcap owner can now return complete immutable authenticated service and Inbox settlement evidence at one canonical prefix, including original historical descriptor/key evidence after publication rotation. A verified pending service or signed queued Inbox is distinguished from missing or corrupt evidence; pending work cannot hide another corrupt item. These internal evidence projections do not themselves stop an attempt or change a public reply. Public stopped composition is a separate checkpoint. Fresh challenge-bound no-effect issuance and settlement-only recovery remain unfinished xz9.1/9c2 work, so the projection fixture's injected retained challenge is not a delivered failure recovery API. Installed acceptance remains downstream.

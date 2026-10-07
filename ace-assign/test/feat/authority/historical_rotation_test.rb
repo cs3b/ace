@@ -434,6 +434,20 @@ module Ace
           accept_terminal_and_release
           original_attempt = @attempt
           original_events = current_events
+          original_deployment = @deployment
+          original_map = @map
+          original_commit = @journal.ref_value
+          settlement_params = {"mapping_id" => "mapping", "assignment_id" => "assignment", "attempt_id" => original_attempt}
+          service_evidence = @endcap.service_settlement_evidence!(journal: @journal, events: original_events,
+            params: settlement_params, map: original_map, commit: original_commit)
+          inbox_evidence = @endcap.historical_inbox_settlement_evidence!(journal: @journal, events: original_events,
+            params: settlement_params, map: original_map, commit: original_commit, deployment: original_deployment, history: @history)
+          assert_equal 1, service_evidence.fetch("services").size
+          assert_equal 1, inbox_evidence.fetch("inboxes").size
+          reconciliation = original_events.find { |event| event["type"] == "inbox_reconciliation" }
+          assert_equal reconciliation.fetch("digest"), inbox_evidence.fetch("inboxes").first.fetch("reconciliation_event_digest")
+          assert_equal reconciliation.dig("payload", "receipt_ref"), inbox_evidence.fetch("inboxes").first.fetch("receipt_ref")
+          assert_raises(FrozenError) { inbox_evidence.fetch("inboxes").first.fetch("signature_ref")["ref"].replace("changed") }
           assert_equal @boot_ref, original_events.find { |event| event["type"] == "scope_bound" }.dig("payload", "boot_baseline_selection")
           # Retained historical authentication must not rediscover current boot.
           File.binwrite(@boot_pointer, "invalid current boot pointer")
@@ -453,6 +467,8 @@ module Ace
           @map = @deployment.mapping("mapping")
           refresh_candidate_boot!
           restart
+          assert_equal inbox_evidence, @endcap.historical_inbox_settlement_evidence!(journal: @journal, events: original_events,
+            params: settlement_params, map: original_map, commit: original_commit, deployment: original_deployment, history: @history)
           state = call("reserve_attempt", {"scope" => "010", "worker_uid" => 13001, "runtime" => "herdr", "base_head" => @head,
             "launcher_process_binding" => @launcher, "expected_generation" => 1}, id: "rotated-reserve", peer: @launcher, role: :launcher).fetch(:data)
           refute_equal original_attempt, state.fetch("attempt_id")

@@ -12,7 +12,18 @@ module Ace
         # exclusion; the immutable commit is the current CAS input, never a
         # caller-selected alternate evidence ref.
         def service_settlement_complete!(journal:, events:, params:, map:, commit:)
+          service_settlement_evidence!(journal: journal, events: events, params: params, map: map, commit: commit)
+          true
+        end
+
+        def service_settlement_evidence!(journal:, events:, params:, map:, commit:)
           protected_journal!(journal)
+          journal.verify_commit!(commit)
+          retained = journal.read_events(params.fetch("assignment_id"), commit: commit)
+            .select { |event| event["attempt_id"] == params.fetch("attempt_id") }
+          unless retained == events && Models::EvidenceEvent.chain_valid?(events)
+            raise AttemptErrors::EvidenceUnavailable, "service settlement requires exact canonical commit"
+          end
           references = events.select { |event| %w[service_claim service_transition].include?(event["type"]) }
             .map { |event| event.fetch("payload").fetch("request_id") }.uniq.sort
           records = journal.service_request_records(commit: commit).select do |record|
@@ -21,17 +32,45 @@ module Ace
           unless records.map { |record| record.fetch("request_id") }.uniq.sort == references
             raise AttemptErrors::EvidenceUnavailable, "canonical service request set is incomplete"
           end
-          records.each do |record|
-            unless record["project_id"] == map.fetch("project_id") && record["mapping_id"] == params.fetch("mapping_id") &&
-                %w[succeeded failed-settled].include?(record["state"])
+          pending = false
+          projected = records.sort_by { |record| record.fetch("request_id") }.map do |record|
+            unless record["project_id"] == map.fetch("project_id") && record["mapping_id"] == params.fetch("mapping_id")
               raise AttemptErrors::EvidenceUnavailable, "canonical service request is not settled for this scope"
             end
             # This existing reader verifies the accepted record digest and all
             # imported terminal/no-effect evidence against this exact commit.
-            journal.service_request(record.fetch("request_id"), commit: commit)
+            verified = journal.service_request(record.fetch("request_id"), commit: commit)
+            unless verified == record && %w[accepted uncertain rejected succeeded failed failed-settled].include?(verified.fetch("state"))
+              raise AttemptErrors::EvidenceUnavailable, "canonical service record differs"
+            end
+            unless %w[succeeded failed-settled].include?(verified.fetch("state"))
+              pending = true
+              next
+            end
+            transition = events.reverse.find { |event| %w[service_claim service_transition].include?(event["type"]) &&
+              event.dig("payload", "request_id") == record.fetch("request_id") }
+            receipt = verified.fetch("receipt")
+            unless transition && transition["type"] == "service_transition" &&
+                transition.dig("payload", "state") == verified.fetch("state") &&
+                transition.dig("payload", "record_digest") == Atoms::EvidenceDigest.digest(verified) &&
+                transition.dig("payload", "receipt_digest") == Atoms::EvidenceDigest.digest(receipt)
+              raise AttemptErrors::EvidenceUnavailable, "accepted service terminal transition differs"
+            end
+            {"request_id" => verified.fetch("request_id"), "state" => verified.fetch("state"),
+              "event_digest" => transition.fetch("digest"), "record_digest" => transition.dig("payload", "record_digest"),
+              "receipt_digest" => transition.dig("payload", "receipt_digest"),
+              "evidence_refs" => receipt.fetch("evidence").sort_by { |ref| ref.values_at("ref", "sha256") }}
           end
-          true
-        rescue KeyError, TypeError, ArgumentError, AttemptErrors::ReceiptRejected
+          projected.compact!
+          unless projected.empty?
+            journal.event_commits!(assignment_id: params.fetch("assignment_id"),
+              event_digests: projected.map { |row| row.fetch("event_digest") }, commit: commit)
+          end
+          if pending
+            raise AttemptErrors::ServiceSettlementPending, "authenticated canonical service requests remain unsettled"
+          end
+          settlement_immutable({"commit" => commit, "services" => projected})
+        rescue KeyError, TypeError, ArgumentError, NoMethodError, AttemptErrors::ReceiptRejected
           raise AttemptErrors::EvidenceUnavailable, "canonical service settlement is unverifiable"
         end
 
@@ -73,6 +112,15 @@ module Ace
         end
 
         private
+
+        def settlement_immutable(value)
+          case value
+          when Hash then value.each_with_object({}) { |(key, item), result| result[key.dup.freeze] = settlement_immutable(item) }.freeze
+          when Array then value.map { |item| settlement_immutable(item) }.freeze
+          when String then value.dup.freeze
+          else value.freeze
+          end
+        end
 
         def authorize_service_transfer!(request, params, map, peer, role)
           service_policy!
