@@ -5,6 +5,7 @@ require "securerandom"
 require "time"
 require "fileutils"
 require "open3"
+require "ace/herdr/molecules/guarded_native_origin"
 require_relative "deployment"
 require_relative "deployment_history"
 require_relative "../molecules/execution_scope_lineage"
@@ -19,7 +20,7 @@ module Ace
         MUTATIONS = {
           "register_assignment" => %w[mapping_id assignment_id definition_bytes definition_digest expected_generation],
           "reserve_attempt" => %w[mapping_id assignment_id scope worker_uid runtime base_head launcher_process_binding expected_generation],
-          "record_launch" => %w[mapping_id assignment_id attempt_id launch_ticket process_binding expected_generation],
+          "record_launch" => %w[mapping_id assignment_id attempt_id launch_ticket process_binding guarded_origin expected_generation],
           "bind_process" => %w[mapping_id assignment_id attempt_id launch_ticket process_binding expected_generation],
           "release_launch" => %w[mapping_id assignment_id attempt_id launch_ticket process_binding expected_generation],
           "abort_launch" => %w[mapping_id assignment_id attempt_id launch_ticket failure_evidence failure_digest expected_generation]
@@ -587,6 +588,8 @@ module Ace
           raise AttemptErrors::Conflict, "launch cannot record another child" unless state["phase"] == "reserved"
           binding = validate_binding!(params.fetch("process_binding"), map, mapping_id: params.fetch("mapping_id"), launch_ticket: params.fetch("launch_ticket"), assignment_id: params.fetch("assignment_id"), attempt_id: params.fetch("attempt_id"), events: events)
           child = binding.fetch("process_identity")
+          guard = Ace::Herdr::Molecules::GuardedNativeOrigin.verify!(params.fetch("guarded_origin"),
+            terminal_id: binding.fetch("terminal_id"), child: child)
           @kernel.live!(child)
           if observation[:child_handle]
             unless @kernel.same?(observation.fetch(:child), child)
@@ -596,7 +599,7 @@ module Ace
             observation[:child_handle] = @kernel.pin(child)
             observation[:child] = child
           end
-          {events: [], blobs: {}, data: state.merge("phase" => "recorded", "process_binding" => binding)}
+          {events: [], blobs: {}, data: state.merge("phase" => "recorded", "process_binding" => binding, "guarded_origin" => guard)}
         end
 
         def bind(params, map, events, peer)
@@ -869,3 +872,5 @@ require_relative "launch_scope_admission"
 require_relative "launch_scope_close"
 require_relative "launch_scope_release"
 require_relative "launch_scope_parent"
+
+require_relative "launch_steering"

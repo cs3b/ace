@@ -92,12 +92,13 @@ module Ace
             "launcher_process_binding" => @launcher, "expected_generation" => 1}, id: "reserve", peer: @launcher, role: :launcher).fetch(:data)
           @attempt = state.fetch("attempt_id")
           state = state.merge("generation" => generation)
-          @binding = {"runtime" => "herdr", "session" => "w1", "pane" => "p1", "terminal_id" => "terminal",
+          @binding = {"runtime" => "herdr", "session" => "w1", "pane" => "p1", "terminal_id" => "term_ab",
             "process_identity" => @worker, "shell_identity" => @worker,
             "native_origin" => {"workspace" => "w1", "tab" => "t1", "pane" => "p1",
               "command" => ["/fixture/gate", "mapping", state.fetch("launch_ticket")], "cwd" => "/fixture/worker",
               "server_identity" => @kernel.capture(90), "socket_identity" => [1, 2, 13001]}}
           state = call("record_launch", {"launch_ticket" => state.fetch("launch_ticket"), "process_binding" => @binding,
+            "guarded_origin" => {"terminal_id" => @binding.fetch("terminal_id"), "runtime_incarnation" => ExecutionScopeObservationFixtures::BOOT, "child" => @worker},
             "expected_generation" => state.fetch("generation")}, id: "record", peer: @launcher, role: :launcher).fetch(:data)
           call("bind_process", {"launch_ticket" => state.fetch("launch_ticket"), "process_binding" => @binding,
             "expected_generation" => state.fetch("generation")}, id: "bind", peer: @launcher, role: :launcher)
