@@ -3,6 +3,7 @@
 require_relative "../test_helper"
 require_relative "../../../ace-assign/test/support/endcap_result_owner_fixture"
 require_relative "../../../ace-assign/test/support/original_launch_driver_owner_fixture"
+require_relative "../../../ace-assign/test/support/execution_boot_baseline_owner_fixture"
 require "ace/assign/authority/server"
 require "ace/assign/authority/client"
 require "ace/overseer/organisms/protected_work_on"
@@ -12,6 +13,14 @@ require "stringio"
 class ProtectedWorkOnCompositionTest < AceOverseerTestCase
   include Ace::Assign::EndcapResultOwnerFixture
   include Ace::Assign::OriginalLaunchDriverOwnerFixture
+  include Ace::Assign::ExecutionBootBaselineOwnerFixture
+
+  class ArtifactProtection
+    def root_path!(_); true; end
+    def verify!(_, handle, directory:)
+      raise "wrong retained fixture artifact type" unless directory ? handle.stat.directory? : handle.stat.file?
+    end
+  end
 
   # Only the excluded OS fork/wait boundary is replaced. The fixed loaded CLI,
   # argv, retained input reads, driver, wire/channel and canonical join are real.
@@ -23,6 +32,7 @@ class ProtectedWorkOnCompositionTest < AceOverseerTestCase
       def write(bytes); @string << bytes; bytes.bytesize; end
       def flush; on_flush&.call; self; end
       def read_nonblock(limit, exception: false)
+        return :wait_readable if @position == string.bytesize && !@closed
         return nil if @position == string.bytesize
         chunk = string.byteslice(@position, limit)
         @position += chunk.bytesize
@@ -32,10 +42,17 @@ class ProtectedWorkOnCompositionTest < AceOverseerTestCase
       def closed? = @closed
       def readable? = @position < string.bytesize
     end
+    class RoutedOutput
+      def initialize(default); @default = default; end
+      def target = Thread.current.thread_variable_get(:composed_stdout) || @default
+      def write(bytes) = target.write(bytes)
+      def flush = target.flush
+      def tty? = false
+    end
     attr_accessor :on_ready
     attr_reader :argv, :code, :frame, :failure
-    def initialize(driver:, output:, identity:)
-      @driver, @output, @identity = driver, output, identity
+    def initialize(driver:, output:, identity:, asynchronous: false)
+      @driver, @output, @identity, @asynchronous = driver, output, identity, asynchronous
     end
     def supported? = true
     def pipe
@@ -62,6 +79,21 @@ class ProtectedWorkOnCompositionTest < AceOverseerTestCase
     def fork_loaded(argv:, reader:, writer:)
       raise "mandatory identity was not flushed" unless @output.flushed&.include?("launch_inputs_retained")
       @argv = argv
+      if @asynchronous
+        @previous_output = $stdout
+        $stdout = RoutedOutput.new(@previous_output)
+        @child_thread = Thread.new do
+          Thread.current.thread_variable_set(:composed_stdout, writer)
+          begin
+            @code = Ace::Assign::CLI.start(argv)
+          rescue StandardError => error
+            @failure, @code = [error.class.name, error.message], 1
+          ensure
+            reader.close
+          end
+        end
+        return @identity.fetch("pid")
+      end
       previous = $stdout
       $stdout = writer
       begin
@@ -71,11 +103,23 @@ class ProtectedWorkOnCompositionTest < AceOverseerTestCase
       end
       @identity.fetch("pid")
     ensure
-      $stdout = previous
+      $stdout = previous unless @asynchronous
     end
-    def readable?(reader, _timeout) = reader.readable?
+    def readable?(reader, timeout)
+      deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + timeout
+      until reader.readable? || reader.closed?
+        return false unless @asynchronous && Process.clock_gettime(Process::CLOCK_MONOTONIC) < deadline
+        sleep 0.001
+      end
+      true
+    end
     def wait(pid)
       raise "different original child" unless pid == @identity.fetch("pid")
+      if @asynchronous
+        return nil if @child_thread.alive?
+        @child_thread.value
+        $stdout = @previous_output
+      end
       [pid, Struct.new(:exitstatus).new(code)]
     end
   end
@@ -91,14 +135,53 @@ class ProtectedWorkOnCompositionTest < AceOverseerTestCase
     @project.fetch("peer_credentials")[@launcher.fetch("uid").to_s] =
       @launcher.slice("gid", "groups").merge("scratch_root" => @root)
     deployment, map, service = @deployment, @map, @service
+    digest_owner = Ace::Assign::Authority::Deployment.allocate
+    digest_owner.define_singleton_method(:mapping) { |_| map }
+    deployment.define_singleton_method(:mapping_digest) { |id| digest_owner.mapping_digest(id) }
     deployment.define_singleton_method(:data) { {"launch_mappings" => {"mapping" => map}} }
-    deployment.define_singleton_method(:authority) { |_| service.merge("composition" => "launch") }
+    deployment.define_singleton_method(:authority) { |_| service.merge("composition" => "services") }
+    deployment.define_singleton_method(:verify_composition!) do |id, composition:|
+      raise "wrong attached full-service owner composition" unless id == "authority" && composition == "services"
+      true
+    end
+    installer_path = File.join(@root, "controlled-installer")
+    File.binwrite(installer_path, "controlled installed OS producer")
+    installer = {"path" => installer_path, "bytes" => File.size(installer_path),
+      "sha256" => Digest::SHA256.file(installer_path).hexdigest}
+    @original_network_selection = Ace::Assign::ExecutionScopeObservationFixtures::NETWORK_SELECTION.merge("installer_artifact" => installer)
+    @original_boot_selection = retained_boot_baseline_artifact(root: @root, name: "original-boot.json", map: @map, installer: installer)
+  end
+
+  def restart
+    super
+    @launch.instance_variable_set(:@scope_observer_factory, ->(_id) {
+      Ace::Assign::ExecutionScopeNativeOwnerFixture.new(@map, @journal, @kernel, owner: @launch,
+        network_selection: @original_network_selection, boot_baseline_selection: @original_boot_selection,
+        network_installation: Ace::Assign::ExecutionScopeObservationFixtures::NETWORK_OUTPUT.merge(
+          "installer_artifact_sha256" => @original_network_selection.fetch("installer_artifact").fetch("sha256")))
+    })
+  end
+
+  def fixture(**options, &block)
+    super(**options) do
+      factory = -> { fixture_boot_baseline_reader(protection: ArtifactProtection.new) }
+      Ace::Runtime::Molecules::ExecutionBootBaseline.stub(:new, factory) { block.call }
+    end
   end
 
   def start_public_server(lose_prompt_reply: false)
     @kernel.peer_identity = @launcher
+    original_dispatch = @router.method(:dispatch)
+    diagnostics = @status_owner_errors = []
+    @router.define_singleton_method(:dispatch) do |**options|
+      original_dispatch.call(**options)
+    rescue StandardError => error
+      diagnostics << [options.dig(:request, "operation"), error.class.name, error.message,
+        error.cause&.message, error.cause&.backtrace&.first]
+      raise
+    end
     @server = Ace::Assign::Authority::Server.new(authority_id: "authority", lifecycle: @router,
-      deployment: @deployment, kernel: @kernel, composition: "launch")
+      deployment: @deployment, kernel: @kernel, composition: "services")
     wire = Object.new
     wire.define_singleton_method(:root_path!) { |*_, **_| true }
     %i[socket_identity read write deadline].each do |name|
@@ -137,12 +220,25 @@ class ProtectedWorkOnCompositionTest < AceOverseerTestCase
     exercise_public_composition(steering: true, lose_prompt_reply: true)
   end
 
-  def exercise_public_composition(steering: false, lose_prompt_reply: false)
+  def test_public_stop_terminal_without_release_retains_original_child_then_authenticated_release_exits
+    exercise_public_composition(steering: true, terminal: true)
+  end
+
+  def fixture_output(value, asynchronous:)
+    if asynchronous
+      Thread.current.thread_variable_set(:composed_stdout, value)
+    else
+      $stdout = value
+    end
+  end
+
+  def exercise_public_composition(steering: false, lose_prompt_reply: false, terminal: false)
     fixture(prepare_attempt: false) do
       assert_empty @journal.read_events("assignment")
       client_kernel = start_public_server(lose_prompt_reply: lose_prompt_reply)
       client = Ace::Assign::Authority::Client.new(mapping_id: "mapping", deployment: @deployment, kernel: client_kernel)
       recorded = Queue.new
+      observed_statuses = Queue.new
       calls = []
       actual_call = client.method(:call)
       client.define_singleton_method(:call) do |operation, params, **options|
@@ -152,6 +248,7 @@ class ProtectedWorkOnCompositionTest < AceOverseerTestCase
         end
         result = actual_call.call(operation, params, **options)
         recorded << result.data if operation == "record_launch"
+        observed_statuses << result.data if operation == "attempt_status"
         calls << [operation, "ok", Process.clock_gettime(Process::CLOCK_MONOTONIC) - started]
         result
       rescue StandardError => error
@@ -194,7 +291,7 @@ class ProtectedWorkOnCompositionTest < AceOverseerTestCase
       status = Ace::Overseer::Organisms::ProtectedStatus.new(topology: topology, deployment_loader: loader,
         client_factory: ->(*) { client })
       output = Output.new
-      process = LoadedProcess.new(driver: driver, output: output, identity: @launcher)
+      process = LoadedProcess.new(driver: driver, output: output, identity: @launcher, asynchronous: terminal)
       child_kernel = Object.new
       original_launcher = @launcher
       child_kernel.define_singleton_method(:capture) do |pid|
@@ -204,7 +301,7 @@ class ProtectedWorkOnCompositionTest < AceOverseerTestCase
       child = Ace::Overseer::Molecules::OriginalLaunchChild.new(process: process, kernel: child_kernel,
         threads: -> { [Thread.current] }, quiescent: -> { true }, clock: -> { Process.clock_gettime(Process::CLOCK_MONOTONIC) })
       coordinator = Ace::Overseer::Organisms::ProtectedWorkOn.new(selection: selection, status: status,
-        task_manager: tasks, request_root: File.join(@root, "retained"), pause: -> {},
+        task_manager: tasks, request_root: File.join(@root, "retained"), pause: (terminal ? nil : -> {}),
         driver_factory: ->(*) { driver }, child_factory: -> { child },
         builder_factory: ->(root) { Ace::Assign::Organisms::PreparedWorkBuilder.new(export_root: root,
           task_manager: tasks, executor: executor, bundle_loader: Ace::Bundle::Organisms::BundleLoader.new(base_dir: @root)) })
@@ -220,43 +317,80 @@ class ProtectedWorkOnCompositionTest < AceOverseerTestCase
               target = {project: "project", agent: "mapping", assignment: ready.fetch("assignment_id"),
                 attempt: ready.fetch("attempt_id"), mutation: "public-steer", expected_generation: ready.fetch("generation")}
               prompt = Ace::Overseer::CLI::Commands::Prompt.new(steering: protected_steering, input: StringIO.new("exact public steering\n"))
-              original_output = $stdout
-              $stdout = StringIO.new
+              original_output = terminal ? Thread.current.thread_variable_get(:composed_stdout) : $stdout
+              fixture_output(StringIO.new, asynchronous: terminal)
               if lose_prompt_reply
                 assert_raises(Ace::Support::Cli::Error) { prompt.call(**target, stdin: true) }
                 assert @prompt_reply_lost, "actual public reply fault was not reached"
                 first = @journal.mutation_result("public-steer").fetch("data").merge("journal_commit" => @journal.mutation_result("public-steer").fetch("journal_commit"))
-                $stdout = StringIO.new
+                fixture_output(StringIO.new, asynchronous: terminal)
                 prompt.call(**target.reject { |key, _| key == :expected_generation }, status: true)
-                assert_equal "submitted", JSON.parse($stdout.string).fetch("outcome")
+                assert_equal "submitted", JSON.parse(terminal ? Thread.current.thread_variable_get(:composed_stdout).string : $stdout.string).fetch("outcome")
               else
                 prompt.call(**target, stdin: true)
-                first = JSON.parse($stdout.string)
+                first = JSON.parse(terminal ? Thread.current.thread_variable_get(:composed_stdout).string : $stdout.string)
               end
               assert_equal "submitted", first.fetch("outcome")
               assert_equal 1, native.prompt_calls.length
-              $stdout = StringIO.new
+              fixture_output(StringIO.new, asynchronous: terminal)
               error = assert_raises(Ace::Support::Cli::Error) { prompt.call(**target, stdin: true) }
               assert_match(/bounded UTF-8/, error.message)
-              $stdout = StringIO.new
+              fixture_output(StringIO.new, asynchronous: terminal)
               replay = Ace::Overseer::CLI::Commands::Prompt.new(steering: protected_steering, input: StringIO.new("exact public steering\n"))
               replay.call(**target, stdin: true)
-              assert_equal first, JSON.parse($stdout.string)
+              assert_equal first, JSON.parse(terminal ? Thread.current.thread_variable_get(:composed_stdout).string : $stdout.string)
               assert_equal 1, native.prompt_calls.length
-              $stdout = StringIO.new
+              fixture_output(StringIO.new, asynchronous: terminal)
               replay.call(**target.reject { |key, _| key == :expected_generation }, status: true)
-              assert_equal "submitted", JSON.parse($stdout.string).fetch("outcome")
+              assert_equal "submitted", JSON.parse(terminal ? Thread.current.thread_variable_get(:composed_stdout).string : $stdout.string).fetch("outcome")
               assert_equal 1, native.prompt_calls.length
               row = status.collect(project: "project", agent: "mapping").fetch("agents").first.fetch("inventory").fetch("items").find { |item| item["attempt_id"] == target.fetch(:attempt) }
               stop = Ace::Overseer::CLI::Commands::Stop.new(steering: protected_steering)
-              $stdout = StringIO.new
+              fixture_output(StringIO.new, asynchronous: terminal)
               stop.call(**target.merge(mutation: "public-stop", expected_generation: row.fetch("generation")))
-              stopped = JSON.parse($stdout.string)
+              stopped = JSON.parse(terminal ? Thread.current.thread_variable_get(:composed_stdout).string : $stdout.string)
               assert_equal "uncertain", stopped.fetch("state")
               assert_nil status.collect(project: "project", agent: "mapping").fetch("agents").first.fetch("inventory").fetch("items").find { |item| item["attempt_id"] == target.fetch(:attempt) }.fetch("reservation_release_event_id")
+              if terminal
+                exact_row = lambda do
+                  status.collect(project: "project", agent: "mapping").fetch("agents").first.fetch("inventory").fetch("items").find { |item| item["attempt_id"] == target.fetch(:attempt) }
+                end
+                fixture_output(StringIO.new, asynchronous: true)
+                stop.call(**target.merge(mutation: "public-stop-proof", expected_generation: exact_row.call.fetch("generation")))
+                assert JSON.parse(Thread.current.thread_variable_get(:composed_stdout).string).fetch("proof_id")
+                fixture_output(StringIO.new, asynchronous: true)
+                stop.call(**target.merge(mutation: "public-stop-terminal", expected_generation: exact_row.call.fetch("generation")))
+                assert_equal "stopped", JSON.parse(Thread.current.thread_variable_get(:composed_stdout).string).fetch("state")
+                @launch.instance_variable_get(:@control_channels).values.each(&:close)
+                unreleased = Timeout.timeout(30) do
+                  loop do
+                    observed = observed_statuses.pop
+                    break observed if observed["state"] == "stopped" && observed["reservation_release_event_id"].nil?
+                  end
+                end
+                assert unreleased.fetch("terminal_event_id")
+                assert process.instance_variable_get(:@child_thread).alive?, "terminal without release cannot end original driver"
+                refute driver.instance_variable_get(:@control_cancelled), "terminal observation cannot locally cancel original control"
+                current = exact_row.call
+                assert_nil current.fetch("reservation_release_event_id")
+                released = @launch.release_scope_reservation!(params: {"mapping_id" => "mapping", "assignment_id" => target.fetch(:assignment),
+                  "attempt_id" => target.fetch(:attempt), "mutation_id" => "public-original-release", "expected_generation" => current.fetch("generation")},
+                  peer: @launcher, role: :launcher)
+                assert_equal "released", released.fetch(:data).fetch("reservation")
+                release_status = Timeout.timeout(30) do
+                  loop do
+                    observed = observed_statuses.pop
+                    break observed if observed["reservation_release_event_id"]
+                  end
+                end
+                assert_equal unreleased.fetch("terminal_event_id"), release_status.fetch("terminal_event_id")
+                assert_equal ready.fetch("original_binding_digest"), release_status.fetch("original_binding_digest")
+              end
+            rescue StandardError => error
+              raise Ace::Support::Cli::Error, "#{error.message}; status owner=#{@status_owner_errors.uniq.inspect}; controlled operations=#{calls.inspect}; native_count=#{(native.prompt_calls || []).length}"
             ensure
-              $stdout = original_output if original_output
-              driver.request_control_cancel
+              fixture_output(original_output, asynchronous: terminal)
+              driver.request_control_cancel unless terminal && release_status
             end
           end
           process.instance_variable_set(:@steering_thread, steering_thread)
