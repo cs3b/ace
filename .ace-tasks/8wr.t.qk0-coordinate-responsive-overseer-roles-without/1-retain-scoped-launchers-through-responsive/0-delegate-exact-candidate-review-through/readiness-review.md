@@ -20,3 +20,7 @@ The child has a distinct observable outcome, consumers, interface proposal, boun
 ## Repair review — 2026-10-07
 
 Root authored repair 55ac1ab1e74055b3575c0057806c799ceec44f98 received independent wave_n0n scoped APPROVE. Assignment pins the accepted request generation; intervening mutations refuse without a new generation mode. Explicit canonical cancellation revokes authority, does not claim process death, and permits a deliberate fresh request. Direct/delegated assignments and export/accept/approval consumers share the same reservation check. These address the three findings above at contract level; original finding text remains historical. This is not whole-family readiness or source delivery: qk0.1.0 and its parent remain draft pending complete readiness review of the expanded cancellation interface.
+
+## Final whole-child readiness verdict
+
+Independent wave_n0n APPROVE exactd99ffab325deed07998646856b1f60919a47c218 after reading all four documents. Closed the final contradiction between namespace admission and cancelled historical replay: active reservation is required for fresh CAS only; accepted exact historical replies cannot reactivate authority. Behavioral result, consumers, CLI modes, canonical generation/cancellation ownership, race/recovery paths, bounds and concrete SC verification map are ready. Promoted qk0.1.0 to pending/needs_review false via ace-task and verified show. Source success criteria remain unchecked. Parent qk0.1 is not promoted by this child verdict.
