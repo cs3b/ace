@@ -20,8 +20,8 @@ module Ace
           if operation == "register_assignment" && (!upload_parts || purpose != :candidate || download)
             raise ArgumentError, "prepared registration requires fixed candidate upload"
           end
-          if operation == "evidence_fetch" && (!download || purpose != :artifacts || upload_parts)
-            raise ArgumentError, "evidence fetch requires fixed artifacts download"
+          if operation == "evidence_fetch" && (!download || purpose != (params["kind"] == "prepared_work" ? :candidate : :artifacts) || upload_parts)
+            raise ArgumentError, "evidence fetch requires source-fixed kind download"
           end
           if operation == "submit_result" && (!upload_parts || purpose != :receipt_artifacts || download)
             raise ArgumentError, "result submission requires fixed receipt upload"
@@ -50,7 +50,7 @@ module Ace
             wire.write(socket, {"version" => 1, "operation" => operation,
               "mutation_id" => mutation_id, "project_id" => @map.fetch("project_id"),
               "params" => parameters.merge("mapping_id" => mapping_id)}, deadline: deadline, limit: upload_parts || download ? 16_384 : wire::LIMIT)
-            if %w[assignment_inventory evidence_fetch observe_execution_scope close_execution_scope stop_attempt prompt_status launch_input_inhibit_selection launch_input_inhibit_completion launch_prompt_intent launch_prompt_completion claim_service_settlement].include?(operation) || (operation == "attempt_status" && params.key?("result_candidate_generation"))
+            if %w[cancel_review assignment_inventory evidence_fetch observe_execution_scope close_execution_scope stop_attempt prompt_status launch_input_inhibit_selection launch_input_inhibit_completion launch_prompt_intent launch_prompt_completion claim_service_settlement].include?(operation) || (operation == "attempt_status" && params.key?("result_candidate_generation"))
               socket.shutdown(Socket::SHUT_WR)
             end
             if upload_parts
@@ -67,7 +67,12 @@ module Ace
             unless transport.is_a?(Hash) && transport.keys == ["replayed"] && [true, false].include?(transport["replayed"])
               raise AttemptErrors::EvidenceUnavailable, "authority replay metadata is unavailable"
             end
-            validate_evidence_download!(result.fetch("data"), params) if operation == "evidence_fetch"
+            if operation == "evidence_fetch"
+              if params["kind"] == "prepared_work" && transport.fetch("replayed")
+                raise AttemptErrors::EvidenceUnavailable, "prepared fetch cannot replay a mutation"
+              end
+              validate_evidence_download!(result.fetch("data"), params)
+            end
             parts = if download
               codec.receive(socket, descriptor: result.fetch("data").fetch("transfer"), purpose: purpose, deadline: deadline) do |input|
                 Array.new(input.count) { |index| input.bytes(index: index) }
@@ -118,6 +123,10 @@ module Ace
 
         def validate_evidence_download!(data, params)
           descriptor, transfer = data.values_at("descriptor", "transfer")
+          if params["kind"] == "prepared_work"
+            validate_prepared_download!(data, params)
+            return
+          end
           unless data.keys.sort == %w[descriptor generation journal_commit transfer] &&
               Molecules::CanonicalEvidence.valid_descriptor?(descriptor) &&
               descriptor["project_id"] == @map.fetch("project_id") &&
@@ -140,6 +149,31 @@ module Ace
             raise AttemptErrors::UnauthorizedIdentity, "transfer scratch principal differs"
           end
           TransferCodec.new(root: installed.fetch("scratch_root"))
+        end
+
+        def validate_prepared_download!(data, params)
+          descriptor, transfer = data.values_at("descriptor", "transfer")
+          fields = %w[version kind purpose artifact project_id mapping_id assignment_id attempt_id task_id scope definition_digest selection_sha256 prepared_head prepared_tree manifest_bytes manifest_sha256 registration_generation registration_commit original_binding_digest ref bytes sha256].sort
+          valid = data.keys.sort == %w[descriptor generation journal_commit transfer] && descriptor.is_a?(Hash) && descriptor.keys.sort == fields &&
+            descriptor["version"].is_a?(Integer) && descriptor["version"] == 1 &&
+            params.values_at("kind", "purpose_id", "artifact_id") == %w[prepared_work original_prepared_work prepared_bundle] &&
+            descriptor.values_at("kind", "purpose", "artifact") == %w[prepared_work original_prepared_work prepared_bundle] &&
+            descriptor["project_id"] == @map.fetch("project_id") && descriptor["mapping_id"] == mapping_id &&
+            %w[assignment_id attempt_id].all? { |key| descriptor[key] == params[key] } &&
+            descriptor["task_id"].is_a?(String) && descriptor["task_id"].match?(Deployment::TOKEN) &&
+            descriptor["scope"].is_a?(String) && descriptor["scope"].bytesize.between?(1, 128) && descriptor["scope"].match?(/\A[0-9]+(?:\.[0-9]+)*\z/) &&
+            %w[definition_digest selection_sha256 manifest_sha256 original_binding_digest sha256].all? { |key| descriptor[key].is_a?(String) && descriptor[key].match?(/\A[0-9a-f]{64}\z/) } &&
+            %w[prepared_head prepared_tree].all? { |key| descriptor[key].is_a?(String) && descriptor[key].match?(/\A[0-9a-f]{40}\z/) } &&
+            descriptor["manifest_bytes"].is_a?(Integer) && descriptor["manifest_bytes"].between?(1, 32_768) &&
+            descriptor["registration_generation"].is_a?(Integer) && descriptor["registration_generation"].positive? &&
+            descriptor["bytes"].is_a?(Integer) && descriptor["bytes"].between?(1, TransferCodec::LIMITS.fetch(:candidate).first) &&
+            descriptor["registration_commit"].is_a?(String) && descriptor["registration_commit"].match?(/\A(?:[0-9a-f]{40}|[0-9a-f]{64})\z/) &&
+            descriptor["ref"] == "execution/prepared/#{params.fetch('assignment_id')}-#{descriptor['sha256']}.bundle" &&
+            data["generation"].is_a?(Integer) && data["generation"].positive? &&
+            data["journal_commit"].is_a?(String) && data["journal_commit"].match?(/\A(?:[0-9a-f]{40}|[0-9a-f]{64})\z/) &&
+            transfer.is_a?(Hash) && transfer.keys.sort == %w[bytes parts sha256 version] && transfer["version"].is_a?(Integer) && transfer["version"] == 1 &&
+            transfer.values_at("bytes", "sha256") == descriptor.values_at("bytes", "sha256") && transfer["parts"] == [descriptor.slice("bytes", "sha256")]
+          raise AttemptErrors::EvidenceUnavailable, "original prepared download descriptor differs" unless valid
         end
       end
     end

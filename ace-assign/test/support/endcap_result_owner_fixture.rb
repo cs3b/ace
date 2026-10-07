@@ -136,7 +136,8 @@ module Ace
         request["params"]["attempt_id"] ||= @attempt unless %w[register_assignment reserve_attempt].include?(operation)
         if operation == "register_assignment"
           FileUtils.mkdir_p(@project.fetch("candidate_root"), mode: 0700)
-          fixture = PreparedRegistrationFixture.build(root: @root, definition: JSON.parse(params.fetch("definition_bytes")), scope: "010")
+          fixture = PreparedRegistrationFixture.build(root: @root, definition: JSON.parse(params.fetch("definition_bytes")), scope: "010",
+            context_text: @prepared_context_text || "Exact fixture context.\n")
           @prepared_registration = fixture
           fixture.with_input(root: @root) do |input, descriptor|
             @router.dispatch(request: request.merge("params" => fixture.header(expected_generation: params.fetch("expected_generation")).merge("mapping_id" => "mapping", "assignment_id" => "assignment", "transfer" => descriptor)), peer: peer, role: role, transfer: input)

@@ -43,6 +43,10 @@ Existing qk0 work-on/status/prompt/stop/review forms and exact ready-frame, role
 - [ ] SC2: Dead requester, absent/foreign/oversized/late ready, replaced original, transport loss, unknown acknowledgment, overlapping UID privilege, busy slots/panes, changed scope/head, local prepared-bundle loss/corruption, changed task/dependency/step input after selection and reviewer=author remain accurate with no second launch/resend.
 - [ ] SC3: Stalled/noisy/malformed HITL resolver reaches deadline while status/instructions remain usable; coalesced wakes and approve/veto/clarify/supersession preserve existing owner semantics. Fresh consumer loads all canonical charters; executed permitted deterministic suites + independent review gate source delivery.
 
+### Decomposition
+
+Child qk0.1.0 delivers exact candidate independent review through original Driver delegation and maintained Endcap acceptance, a distinct observable missing source capability. This parent delivers the remaining responsive launch/prompt/stop/role/proposal composition and consumes that child. Both remain draft until child and whole contracts independently converge; no hidden review broker or acceptance owner.
+
 ### Scope and Ownership
 
 Owner ace-overseer, maintained Assign/Runtime/HITL producers reused. Advisory size large. Physical protected workspace prune is sibling qk0.2, not implied by pane closure. Actual account/runtime/startup and installed responsiveness remain gad.2/gad.8/gad.b/gad.9; unfinished producer source is not waived by a fixture.
