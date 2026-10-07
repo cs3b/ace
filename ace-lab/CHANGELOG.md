@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Snapshot the original protected effect mutation ID across IO and require the no-effect challenge producer in full-service composition. Verify receiver and authority reconstruction after accepted recovery acknowledgement loss.
 - Run protected handlers through the shared bounded subprocess owner with separate 16KiB stdout/8KiB stderr caps and owned cleanup. Stream EOF does not imply child exit; timeout or unconfirmed reaping never produces a receipt or domain absence proof. Receiver recovery and domain inspection remain required source work.
 
 ### Added
