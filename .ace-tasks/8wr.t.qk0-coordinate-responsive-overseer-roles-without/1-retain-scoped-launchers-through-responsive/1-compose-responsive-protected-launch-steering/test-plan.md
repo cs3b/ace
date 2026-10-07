@@ -14,3 +14,13 @@ Only inspected named controlled selections are authorized. Generated plan broad 
 | Full source flow independent review + exact merge | High | Overseer feature | Actual managed builder→retention→CLI→journal→worker→steering→review/receipt; injected OS/native/installed boundaries |
 
 Fixture boundary inventory must be inspected before each dispatch. All failures, scope mistakes and terminal receipts remain attributable. qk0.3 public builder composition is root-owned and its selected worker publication is wave_412-owned; reuse delivered interfaces.
+
+## Current observable composition result
+
+`protected_work_on_composition_test.rb` must begin with an empty actual authority journal, then run actual TaskManager → default TaskAssignmentCreator/AssignmentExecutor/PreparedWorkBuilder and BundleLoader → public WorkOn retained files → OriginalLaunchChild fixed argv → actual registered Assign CLI/LaunchDriver → Client/Server/TransferCodec and original control channel → ProtectedStatus exact original canonical readiness. The maintained fixture's `prepare_attempt: false` omits its prebuilt attempt; public production owners perform every registration/reservation/record/bind/release effect.
+
+Only installed Deployment/protected directory admission, topology, kernel identity, native request responses, scope/network observations, OS fork/wait/thread/clock and provider lifetime are injected. The process adapter executes the loaded CLI in-process and ends its local control loop after its actual authenticated readiness is flushed; the parent consumes those exact bytes. No fabricated ready frame, inventory row or canonical terminal/release proof is permitted. Real native creation/OS fork remain excluded. Readiness must match retained definition/bundle/selection/scope/base/original reserve, while local exit must leave canonical terminal/release fields unset.
+
+Performance repair responsibility: every held sidecar and bundle read remains enforced. A LaunchRequest instance may reuse only its last complete exact admitted tuple/content proof; tuple/body changes and a new owner must use actual PreparedWork admission. Focused invalidation tests precede original-seed public verification within unchanged60s. The prior integration timeout is retained as failed evidence.
+
+Skills Applied: Loaded and executed `as-task-work` (`wfi://task/work`) and `as-test-plan` (`wfi://test/plan`) on resume. These workflows shape the actual composition responsibility and explicitly excluded boundary inventory; broad generated suite commands remain unauthorized.

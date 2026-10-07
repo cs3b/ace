@@ -38,7 +38,7 @@ module Ace
         output.strip
       end
 
-      def fixture
+      def fixture(prepare_attempt: true)
         Dir.mktmpdir("ace-results-", Etc.getpwuid(Process.uid).dir) do |root|
           @root = root
           File.chmod(0700, root)
@@ -85,6 +85,10 @@ module Ace
             evidence_reader: ->(*) { raise "unused service reader" }, service_authorizer: ->(*) { raise "unused service policy" })
           configure_result_owner_fixture if respond_to?(:configure_result_owner_fixture)
           restart
+          unless prepare_attempt
+            yield
+            next
+          end
           bytes = JSON.generate("session_id" => "assignment", "name" => "result fixture", "created_at" => "2026-10-05T00:00:00Z",
             "source_config" => "job.yaml", "task_id" => "task", "project_id" => "project")
           call("register_assignment", {"definition_bytes" => bytes, "definition_digest" => Digest::SHA256.hexdigest(bytes),

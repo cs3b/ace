@@ -44,6 +44,11 @@ definition sidecar and original prepared Git bundle, then prints their paths and
 hashes before any child. Missing/corrupt input or changed code HEAD refuses.
 The living coordinator retains and observes the same original child through
 readiness/uncertainty without a lifetime timeout, replacement or cancellation.
+Managed registration uses the existing 30-second artifact admission budget.
+The original child still has one 30-second total readiness deadline; it does
+not receive another deadline after registration. Late readiness preserves the
+same original child as uncertain, without a retry or replacement.
+
 Use independent status/steering while it remains foreground. Reap is local
 observation, never canonical terminal/release or physical cleanup permission.
 Recovery reports absent/mismatched local inputs separately from original canonical

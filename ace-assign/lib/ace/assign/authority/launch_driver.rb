@@ -44,7 +44,8 @@ module Ace
             @client.call("register_assignment", {"assignment_id" => assignment_id,
               "definition_digest" => digest, "prepared_head" => prepared.fetch("prepared_head"), "prepared_tree" => prepared.fetch("prepared_tree"),
               "manifest_sha256" => prepared.fetch("manifest_sha256"), "expected_generation" => registration.fetch("generation", 0)},
-              mutation_id: "#{mutation_id}-register", upload_parts: [prepared_bundle], purpose: :candidate).data
+              mutation_id: "#{mutation_id}-register", upload_parts: [prepared_bundle], purpose: :candidate,
+              timeout: CandidateTransfer::DEADLINE).data
           end
           reserved = @client.call("reserve_attempt", {"assignment_id" => assignment_id, "scope" => scope,
             "worker_uid" => @map.fetch("worker_uid"), "runtime" => "herdr", "base_head" => base_head,

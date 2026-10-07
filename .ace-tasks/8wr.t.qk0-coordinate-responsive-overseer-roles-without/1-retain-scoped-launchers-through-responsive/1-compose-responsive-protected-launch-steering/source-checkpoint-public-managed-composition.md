@@ -1,0 +1,21 @@
+# Maintained public managed launch composition
+
+Independent source review pending. This checkpoint supplies the previously missing maintained public launch/recovery composition; it does not close qk0.1.1 or attest native/installed execution.
+
+The feature test starts an empty actual journal using the existing result-owner fixture's optional `prepare_attempt: false` setup. Production public owners then perform actual TaskManager → default TaskAssignmentCreator/AssignmentExecutor/PreparedWorkBuilder/BundleLoader → retained request/definition/bundle publication and mandatory flushed identity → OriginalLaunchChild fixed argv → registered Assign CLI → LaunchDriver/Client/Server/TransferCodec → actual registration/reservation/native record/bind/release and original control channel → exact ProtectedStatus readiness join. No ready frame, inventory row or registration result is fabricated.
+
+The controlled process adapter replaces OS fork/wait and executes that loaded fixed CLI in-process. It models child error isolation and exposes the exact CLI stdout readiness bytes. Its excluded lifetime ends only after the actual authenticated readiness write is flushed. Installed Deployment/directory admission, topology, kernel identities, native request responses and scope/network observations are injected. The parent's injected monotonic clock delegates to actual elapsed monotonic time, retaining the original30s total readiness bound. Real public Client/Server wire framing and canonical journal effects remain exercised. Local exit is explicitly shown with canonical terminal/release still absent; no cleanup grant follows.
+
+After launch, the same test changes the task instructions and removes the local bundle, then invokes actual public read-only recovery. It returns the exact original reservation and unavailable local bundle, leaves the journal ref unchanged and performs only one original native creation. The exact canonical bundle bytes match the retained original publication.
+
+## Concrete composition defect and repair
+
+Initial actual composition failed (`04d9bde7`,1error/5assertions/15.80s). The diagnostic successor retained child uncertainty and attributed the failure to actual Client register_assignment5.02998s timeout after successful preflight/status (`f4fec3c4`,1failed/7assertions/15.65s). These are failed evidence, not acceptance.
+
+Source audit found CandidateTransfer admission and Server registration envelope/body/reply already bounded30s, while the fixed LaunchDriver producer omitted an explicit timeout and therefore selected the generic Client5s default. Root approved the exact correction before implementation: that one registration call now selects CandidateTransfer::DEADLINE30. No generic Client/default/Server cap changes, retry, parent readiness refresh or larger installed budget exists. The controlled real Client seam refuses if the fixed producer omits the exact existing budget.
+
+A subsequent run completed all actual registration/reservation/record/bind/release operations but failed before readiness (`f4e88868`,1failed/7assertions/19.18s): its injected lifetime callback had cancelled local control during Git's empty stdout flush. The fixture callback now waits for the actual complete launch_ready write. The original assertion remained intact. The fixture also binds the injected child capture to the exact original launcher identity instead of the generic worker fixture identity. Neither repair changes production control semantics.
+
+Final inspected feature selection passed1 test/30 assertions/15.70s, receipt `3033ced0-d1dd-41c0-8b3c-eab57bbdc225`, unchanged60s test bound and original30s readiness. Existing default fixture setup is checked separately by the named original prepared-fetch test1/15/13.42s, receipt `8290dc5e-8d36-4bb2-ae00-43f7a974f4eb`. No broad/native/root/systemd/installed/provider probe was dispatched.
+
+Remaining SC1 obligations are scoped worker consumption, responsive prompt/status/stop, authenticated released terminal exit, independent review/merge composition and complete legacy LabClient removal. SC2/SC3 whole-child audit also remains required. These obligations stay source work rather than being moved into gad.2.
