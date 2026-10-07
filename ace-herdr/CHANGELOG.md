@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Select the exact native original-actor input inhibition/drain source, with monotonic admission/write exclusion, bounded closed replies and controlled race coverage. Installed effectiveness and N2 consumer integration remain separate acceptance gates.
+
 ## [0.4.0] - 2026-10-05
 
 ### Fixed

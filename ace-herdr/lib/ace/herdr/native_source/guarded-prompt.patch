@@ -1,38 +1,42 @@
-From 96f14b6d8b8b7c712bf6d1f381c789fabdfe2050 Mon Sep 17 00:00:00 2001
+From 70ee59844bccaec63e00140787bc95ff0d705ca6 Mon Sep 17 00:00:00 2001
 From: Miguel <mc@cs3b.com>
 Date: Wed, 7 Oct 2026 00:43:20 +0100
-Subject: [PATCH] feat: guard original-terminal prompt submissions
+Subject: [PATCH] feat: guard and permanently drain original-terminal input
 
 ---
- docs/next/api/herdr-api.schema.json           | 219 +++++++
- .../src/content/docs/agent-automation.mdx     |  11 +
- src/api/schema/agents.rs                      |  27 +
- src/api/schema/panes.rs                       |   4 +
- src/api/schema/response.rs                    |  19 +
- src/api/schema/tests.rs                       |   3 +
- src/api/server.rs                             |   1 +
- src/api/wait.rs                               |   9 +-
- src/app/api/agents.rs                         | 125 +++-
- src/app/api/panes.rs                          |   6 +
- src/app/terminal_targets.rs                   |  55 ++
- src/cli/agent.rs                              |   1 +
- src/pane.rs                                   |  41 ++
- src/platform/guarded_prompt.rs                | 519 +++++++++++++++
- src/platform/linux.rs                         |   3 +
- src/platform/linux/guarded_origin.rs          |  87 +++
- src/platform/mod.rs                           |  12 +
- src/pty/actor/unix.rs                         | 593 +++++++++++++++++-
- src/pty/backend/unix.rs                       |   5 +
- src/terminal/runtime.rs                       |  20 +
- 20 files changed, 1733 insertions(+), 27 deletions(-)
+ docs/next/api/herdr-api.schema.json           |  338 ++++++
+ .../src/content/docs/agent-automation.mdx     |   23 +
+ src/api/mod.rs                                |    1 +
+ src/api/schema.rs                             |    2 +
+ src/api/schema/agents.rs                      |   39 +
+ src/api/schema/panes.rs                       |    6 +
+ src/api/schema/response.rs                    |   59 +
+ src/api/schema/tests.rs                       |   58 +
+ src/api/server.rs                             |   19 +
+ src/api/wait.rs                               |    9 +-
+ src/app/api.rs                                |    6 +
+ src/app/api/agents.rs                         |  201 +++-
+ src/app/api/panes.rs                          |   14 +
+ src/app/terminal_targets.rs                   |   55 +
+ src/cli/agent.rs                              |    1 +
+ src/pane.rs                                   |   66 ++
+ src/platform/guarded_prompt.rs                |  531 +++++++++
+ src/platform/linux.rs                         |    3 +
+ src/platform/linux/guarded_origin.rs          |   87 ++
+ src/platform/mod.rs                           |   12 +
+ src/pty/actor/unix.rs                         | 1052 ++++++++++++++++-
+ src/pty/backend/unix.rs                       |    5 +
+ src/server/headless.rs                        |    5 +-
+ src/terminal/runtime.rs                       |   35 +
+ 24 files changed, 2561 insertions(+), 66 deletions(-)
  create mode 100644 src/platform/guarded_prompt.rs
  create mode 100644 src/platform/linux/guarded_origin.rs
 
 diff --git a/docs/next/api/herdr-api.schema.json b/docs/next/api/herdr-api.schema.json
-index e2553f75ff9a24fea89781773a46d68ba6ea3314..84f2e0b84e87d73edf21b3c3edb37da774863934 100644
+index e2553f7..022c899 100644
 --- a/docs/next/api/herdr-api.schema.json
 +++ b/docs/next/api/herdr-api.schema.json
-@@ -1226,10 +1226,62 @@
+@@ -1226,10 +1226,113 @@
        "title": "EventEnvelope",
        "type": "object"
      },
@@ -77,6 +81,57 @@ index e2553f75ff9a24fea89781773a46d68ba6ea3314..84f2e0b84e87d73edf21b3c3edb37da7
 +      "title": "GuardedPromptErrorResponse",
 +      "type": "object"
 +    },
++    "input_drain_error_response": {
++      "$defs": {
++        "InputDrainCode": {
++          "enum": [
++            "invalid_params",
++            "guard_mismatch",
++            "origin_unavailable",
++            "input_drain_unavailable"
++          ],
++          "type": "string"
++        },
++        "InputDrainErrorBody": {
++          "additionalProperties": false,
++          "properties": {
++            "code": {
++              "$ref": "#/schemas/input_drain_error_response/$defs/InputDrainCode"
++            },
++            "phase": {
++              "$ref": "#/schemas/input_drain_error_response/$defs/InputDrainPhase"
++            }
++          },
++          "required": [
++            "code",
++            "phase"
++          ],
++          "type": "object"
++        },
++        "InputDrainPhase": {
++          "enum": [
++            "unconfirmed"
++          ],
++          "type": "string"
++        }
++      },
++      "$schema": "https://json-schema.org/draft/2020-12/schema",
++      "additionalProperties": false,
++      "properties": {
++        "error": {
++          "$ref": "#/schemas/input_drain_error_response/$defs/InputDrainErrorBody"
++        },
++        "id": {
++          "type": "string"
++        }
++      },
++      "required": [
++        "id",
++        "error"
++      ],
++      "title": "InputDrainErrorResponse",
++      "type": "object"
++    },
      "request": {
        "$defs": {
          "AgentPromptParams": {
@@ -95,7 +150,7 @@ index e2553f75ff9a24fea89781773a46d68ba6ea3314..84f2e0b84e87d73edf21b3c3edb37da7
              "target": {
                "type": "string"
              },
-@@ -2151,6 +2203,75 @@
+@@ -2151,6 +2254,75 @@
            ],
            "type": "object"
          },
@@ -171,7 +226,53 @@ index e2553f75ff9a24fea89781773a46d68ba6ea3314..84f2e0b84e87d73edf21b3c3edb37da7
          "IntegrationInstallParams": {
            "properties": {
              "target": {
-@@ -7485,6 +7606,75 @@
+@@ -4357,6 +4529,22 @@
+           ],
+           "type": "object"
+         },
++        "TerminalInhibitInputParams": {
++          "additionalProperties": false,
++          "properties": {
++            "expected_origin": {
++              "$ref": "#/schemas/request/$defs/GuardedPromptOrigin"
++            },
++            "target": {
++              "type": "string"
++            }
++          },
++          "required": [
++            "target",
++            "expected_origin"
++          ],
++          "type": "object"
++        },
+         "ToastHerdrPosition": {
+           "enum": [
+             "top-left",
+@@ -5417,6 +5605,22 @@
+           ],
+           "type": "object"
+         },
++        {
++          "properties": {
++            "method": {
++              "const": "terminal.inhibit_input",
++              "type": "string"
++            },
++            "params": {
++              "$ref": "#/schemas/request/$defs/TerminalInhibitInputParams"
++            }
++          },
++          "required": [
++            "method",
++            "params"
++          ],
++          "type": "object"
++        },
+         {
+           "properties": {
+             "method": {
+@@ -7485,6 +7689,81 @@
            ],
            "type": "string"
          },
@@ -244,13 +345,22 @@ index e2553f75ff9a24fea89781773a46d68ba6ea3314..84f2e0b84e87d73edf21b3c3edb37da7
 +          ],
 +          "type": "object"
 +        },
++        "InputState": {
++          "enum": [
++            "inhibited"
++          ],
++          "type": "string"
++        },
          "InstalledPluginInfo": {
            "properties": {
              "actions": {
-@@ -8275,6 +8465,19 @@
+@@ -8275,6 +8554,22 @@
                },
                "type": "array"
              },
++            "guarded_input_drain": {
++              "type": "boolean"
++            },
 +            "guarded_prompt": {
 +              "type": "boolean"
 +            },
@@ -267,7 +377,7 @@ index e2553f75ff9a24fea89781773a46d68ba6ea3314..84f2e0b84e87d73edf21b3c3edb37da7
              "pane_id": {
                "type": "string"
              },
-@@ -9481,6 +9684,22 @@
+@@ -9481,6 +9776,22 @@
                  "agent": {
                    "$ref": "#/schemas/success_response/$defs/AgentInfo"
                  },
@@ -290,8 +400,42 @@ index e2553f75ff9a24fea89781773a46d68ba6ea3314..84f2e0b84e87d73edf21b3c3edb37da7
                  "type": {
                    "const": "agent_prompted",
                    "type": "string"
+@@ -9492,6 +9803,33 @@
+               ],
+               "type": "object"
+             },
++            {
++              "properties": {
++                "input_state": {
++                  "$ref": "#/schemas/success_response/$defs/InputState"
++                },
++                "origin": {
++                  "$ref": "#/schemas/success_response/$defs/GuardedPromptOrigin"
++                },
++                "pending_input": {
++                  "format": "uint8",
++                  "maximum": 255,
++                  "minimum": 0,
++                  "type": "integer"
++                },
++                "type": {
++                  "const": "terminal_input_drained",
++                  "type": "string"
++                }
++              },
++              "required": [
++                "type",
++                "origin",
++                "input_state",
++                "pending_input"
++              ],
++              "type": "object"
++            },
+             {
+               "properties": {
+                 "agents": {
 diff --git a/docs/next/website/src/content/docs/agent-automation.mdx b/docs/next/website/src/content/docs/agent-automation.mdx
-index def306fabcaa7a99d4d00804bd89d51a0f61fca7..748d7456411b0ae7a047d7e63bcd4158ba1fd3cf 100644
+index def306f..1f60426 100644
 --- a/docs/next/website/src/content/docs/agent-automation.mdx
 +++ b/docs/next/website/src/content/docs/agent-automation.mdx
 @@ -81,6 +81,17 @@ Startup readiness, restoring an idle conversation, and switching agent conversat
@@ -312,8 +456,49 @@ index def306fabcaa7a99d4d00804bd89d51a0f61fca7..748d7456411b0ae7a047d7e63bcd4158
  `pane wait-output` does not interpret agent lifecycle. It polls the selected terminal snapshot and searches it immediately, so text that was already present can match. The default source name is `recent`; matching treats that source as unwrapped recent output from the latest 80 rendered terminal rows. `--lines` changes that row limit, and `--regex` uses Rust regular-expression syntax and matches one line at a time.
  
  At the CLI, both `pane read` and `agent read` print terminal text directly. The default is UTF-8 text with ANSI escapes stripped; use `--format ansi` or `--ansi` to preserve terminal escapes where the source exposes them. The `detection` source is always plain text. For recent sources, `--lines N` selects the last N rendered terminal rows before optional unwrapping; without it, reads default to 80 rows. For `visible` and `detection`, omitting `--lines` returns the full snapshot, while specifying it keeps the last N newline-delimited lines. The socket API returns the text at `.result.read.text`.
+@@ -125,3 +136,15 @@ herdr pane wait-output w1:p3 --regex "passed|failed" --timeout 120000
+ ```
+ 
+ See the [CLI reference](/docs/cli-reference/) for the complete command and option list. Shell completions expose the same command tree interactively.
++
++### Inhibit and drain original terminal input
++
++An actor advertising `guarded_input_drain: true` accepts `terminal.inhibit_input` with only
++`target` and `expected_origin`, using the same opaque terminal ID and captured origin as guarded prompts.
++The original child may have exited; a replacement, imported, or released actor cannot satisfy this request.
++The operation permanently inhibits that actor's input. Its `terminal_input_drained` reply returns the
++exact origin, `input_state: "inhibited"`, and `pending_input: 0` only after received generic input,
++guarded submissions, terminal replies, and pending input controls have been canceled or settled.
++Queued handoff or resume cannot reopen the gate. A lost reply can be retried for the exact same actor.
++Errors carry only a fixed code and `phase: "unconfirmed"`; channel loss leaves input inhibited without
++claiming drain. This proves no further PTY input from this actor, not child exit or external scope cleanup.
+diff --git a/src/api/mod.rs b/src/api/mod.rs
+index 86f90da..39638a0 100644
+--- a/src/api/mod.rs
++++ b/src/api/mod.rs
+@@ -51,6 +51,7 @@ pub(crate) fn request_changes_ui(request: &Request) -> bool {
+             | Method::AgentFocus(_)
+             | Method::AgentStart(_)
+             | Method::AgentPrompt(_)
++            | Method::TerminalInhibitInput(_)
+             | Method::AgentSendKeys(_)
+             | Method::PaneSplit(_)
+             | Method::PaneSwap(_)
+diff --git a/src/api/schema.rs b/src/api/schema.rs
+index 439ed33..d7ea332 100644
+--- a/src/api/schema.rs
++++ b/src/api/schema.rs
+@@ -137,6 +137,8 @@ pub enum Method {
+     AgentStart(AgentStartParams),
+     #[serde(rename = "agent.prompt")]
+     AgentPrompt(AgentPromptParams),
++    #[serde(rename = "terminal.inhibit_input")]
++    TerminalInhibitInput(TerminalInhibitInputParams),
+     #[serde(rename = "agent.wait")]
+     AgentWait(AgentWaitParams),
+     #[serde(rename = "pane.split")]
 diff --git a/src/api/schema/agents.rs b/src/api/schema/agents.rs
-index 48450c30c6531b7b9d8fc6d130eaf1ee35ec12fb..9202bca790c45ad8c82eac116f4961f208cb60b4 100644
+index 48450c3..a5c3007 100644
 --- a/src/api/schema/agents.rs
 +++ b/src/api/schema/agents.rs
 @@ -176,13 +176,40 @@ pub struct AgentStartParams {
@@ -357,11 +542,27 @@ index 48450c30c6531b7b9d8fc6d130eaf1ee35ec12fb..9202bca790c45ad8c82eac116f4961f2
  #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
  pub struct AgentInfo {
      pub terminal_id: String,
+@@ -235,3 +262,15 @@ pub struct AgentSessionInfo {
+     pub kind: crate::agent_resume::AgentSessionRefKind,
+     pub value: String,
+ }
++
++#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
++#[serde(deny_unknown_fields)]
++pub struct TerminalInhibitInputParams {
++    pub target: String,
++    pub expected_origin: crate::platform::guarded_prompt::GuardedPromptOrigin,
++}
++impl TerminalInhibitInputParams {
++    pub(crate) fn valid(&self) -> bool {
++        self.expected_origin.valid() && self.target == self.expected_origin.terminal_id
++    }
++}
 diff --git a/src/api/schema/panes.rs b/src/api/schema/panes.rs
-index 9dbe0221dbbb8fb92fc6506bea7ed2efeaf728ea..929ffe6727c5e61b6464f6f8066b2d027bf14008 100644
+index 9dbe022..a758547 100644
 --- a/src/api/schema/panes.rs
 +++ b/src/api/schema/panes.rs
-@@ -492,6 +492,10 @@ pub struct PaneScrollInfo {
+@@ -492,6 +492,12 @@ pub struct PaneScrollInfo {
  
  #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
  pub struct PaneProcessInfo {
@@ -369,14 +570,16 @@ index 9dbe0221dbbb8fb92fc6506bea7ed2efeaf728ea..929ffe6727c5e61b6464f6f8066b2d02
 +    pub guarded_prompt_origin: Option<crate::platform::guarded_prompt::GuardedPromptOrigin>,
 +    #[serde(default, skip_serializing_if = "super::is_false")]
 +    pub guarded_prompt: bool,
++    #[serde(default, skip_serializing_if = "super::is_false")]
++    pub guarded_input_drain: bool,
      pub pane_id: String,
      #[serde(default, skip_serializing_if = "Option::is_none")]
      pub shell_pid: Option<u32>,
 diff --git a/src/api/schema/response.rs b/src/api/schema/response.rs
-index e92e49524757b5c80d59700ff3fc9d22754ff625..8afd1e430b015ab3d0a0734c8ac45628aecba359 100644
+index e92e495..13fd15c 100644
 --- a/src/api/schema/response.rs
 +++ b/src/api/schema/response.rs
-@@ -103,6 +103,10 @@ pub enum ResponseResult {
+@@ -103,6 +103,15 @@ pub enum ResponseResult {
      },
      AgentPrompted {
          agent: AgentInfo,
@@ -384,10 +587,15 @@ index e92e49524757b5c80d59700ff3fc9d22754ff625..8afd1e430b015ab3d0a0734c8ac45628
 +        origin: Option<crate::platform::guarded_prompt::GuardedPromptOrigin>,
 +        #[serde(default, skip_serializing_if = "Option::is_none")]
 +        submission: Option<String>,
++    },
++    TerminalInputDrained {
++        origin: crate::platform::guarded_prompt::GuardedPromptOrigin,
++        input_state: InputState,
++        pending_input: u8,
      },
      AgentList {
          agents: Vec<AgentInfo>,
-@@ -299,3 +303,18 @@ pub struct AgentManifestInfo {
+@@ -299,3 +308,53 @@ pub struct AgentManifestInfo {
      #[serde(default, skip_serializing_if = "Option::is_none")]
      pub warning: Option<String>,
  }
@@ -406,19 +614,55 @@ index e92e49524757b5c80d59700ff3fc9d22754ff625..8afd1e430b015ab3d0a0734c8ac45628
 +    pub message: String,
 +    pub phase: String,
 +}
++
++#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
++#[serde(rename_all = "snake_case")]
++pub enum InputState {
++    Inhibited,
++}
++#[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
++#[serde(deny_unknown_fields)]
++pub enum InputDrainCode {
++    #[serde(rename = "invalid_params")]
++    InvalidParams,
++    #[serde(rename = "guard_mismatch")]
++    GuardMismatch,
++    #[serde(rename = "origin_unavailable")]
++    OriginUnavailable,
++    #[serde(rename = "input_drain_unavailable")]
++    Unavailable,
++}
++#[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
++#[serde(deny_unknown_fields)]
++pub struct InputDrainErrorBody {
++    pub code: InputDrainCode,
++    pub phase: InputDrainPhase,
++}
++#[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
++#[serde(rename_all = "snake_case")]
++pub enum InputDrainPhase {
++    Unconfirmed,
++}
++#[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
++#[serde(deny_unknown_fields)]
++pub struct InputDrainErrorResponse {
++    pub id: String,
++    pub error: InputDrainErrorBody,
++}
 diff --git a/src/api/schema/tests.rs b/src/api/schema/tests.rs
-index 3b43133b10eb3828c6be874d892ce159f4b877d5..ffbb5e3af35e4f701493c13254c60c315e4002d5 100644
+index 3b43133..2199451 100644
 --- a/src/api/schema/tests.rs
 +++ b/src/api/schema/tests.rs
-@@ -39,6 +39,7 @@ fn protocol_schema_document() -> serde_json::Value {
+@@ -39,6 +39,8 @@ fn protocol_schema_document() -> serde_json::Value {
              "request": protocol_schema_entry::<Request>("request"),
              "success_response": protocol_schema_entry::<SuccessResponse>("success_response"),
              "error_response": protocol_schema_entry::<ErrorResponse>("error_response"),
++            "input_drain_error_response": protocol_schema_entry::<InputDrainErrorResponse>("input_drain_error_response"),
 +            "guarded_prompt_error_response": protocol_schema_entry::<GuardedPromptErrorResponse>("guarded_prompt_error_response"),
              "event": protocol_schema_entry::<EventEnvelope>("event"),
              "subscription_event": protocol_schema_entry::<SubscriptionEventEnvelope>("subscription_event"),
          },
-@@ -113,6 +114,7 @@ fn agent_start_and_prompt_requests_round_trip() {
+@@ -113,6 +115,7 @@ fn agent_start_and_prompt_requests_round_trip() {
      let prompt = Request {
          id: "prompt".into(),
          method: Method::AgentPrompt(AgentPromptParams {
@@ -426,7 +670,7 @@ index 3b43133b10eb3828c6be874d892ce159f4b877d5..ffbb5e3af35e4f701493c13254c60c31
              target: "reviewer".into(),
              text: "review this".into(),
              wait: None,
-@@ -128,6 +130,7 @@ fn agent_start_and_prompt_requests_round_trip() {
+@@ -128,6 +131,7 @@ fn agent_start_and_prompt_requests_round_trip() {
      let prompt_and_wait = Request {
          id: "prompt-and-wait".into(),
          method: Method::AgentPrompt(AgentPromptParams {
@@ -434,11 +678,101 @@ index 3b43133b10eb3828c6be874d892ce159f4b877d5..ffbb5e3af35e4f701493c13254c60c31
              target: "reviewer".into(),
              text: "review this".into(),
              wait: Some(AgentPromptWaitOptions {
+@@ -1459,3 +1463,57 @@ fn pane_link_resolve_round_trips() {
+         result
+     );
+ }
++
++#[test]
++fn input_drain_pure_tests_closed_wire_and_exact_origin() {
++    let origin = serde_json::json!({
++        "terminal_id": "term_ab", "runtime_incarnation": "12345678-1234-1234-1234-123456789abc",
++        "child": {"pid": 12, "uid": 42, "gid": 42, "groups": [42], "parent_pid": 11,
++                  "started_at": "linux:12345678-1234-1234-1234-123456789abc:123", "host": "fixture"}
++    });
++    let request = serde_json::json!({"target": "term_ab", "expected_origin": origin});
++    let params: TerminalInhibitInputParams =
++        serde_json::from_value(request.clone()).expect("closed request");
++    assert!(params.valid());
++    let mut changed = request.clone();
++    changed["target"] = serde_json::json!("pane_ab");
++    assert!(
++        !serde_json::from_value::<TerminalInhibitInputParams>(changed)
++            .expect("typed alias")
++            .valid()
++    );
++    let mut changed = request.clone();
++    changed["text"] = serde_json::json!("unrelated");
++    assert!(serde_json::from_value::<TerminalInhibitInputParams>(changed).is_err());
++    let mut changed = request;
++    changed["expected_origin"]["child"]["pid"] = serde_json::json!(12.0);
++    assert!(serde_json::from_value::<TerminalInhibitInputParams>(changed).is_err());
++    let response = ResponseResult::TerminalInputDrained {
++        origin: params.expected_origin,
++        input_state: InputState::Inhibited,
++        pending_input: 0,
++    };
++    assert_eq!(
++        serde_json::to_value(response).expect("reply"),
++        serde_json::json!({
++            "type": "terminal_input_drained", "origin": origin, "input_state": "inhibited", "pending_input": 0
++        })
++    );
++    for code in [
++        InputDrainCode::InvalidParams,
++        InputDrainCode::GuardMismatch,
++        InputDrainCode::OriginUnavailable,
++        InputDrainCode::Unavailable,
++    ] {
++        let reply = InputDrainErrorResponse {
++            id: "request".into(),
++            error: InputDrainErrorBody {
++                code,
++                phase: InputDrainPhase::Unconfirmed,
++            },
++        };
++        let encoded = serde_json::to_value(reply).expect("bounded refusal");
++        assert_eq!(encoded["error"]["phase"], "unconfirmed");
++        assert_eq!(encoded["error"].as_object().expect("closed error").len(), 2);
++    }
++}
 diff --git a/src/api/server.rs b/src/api/server.rs
-index dbd7d3b6b165b6e94b4f7d906a6820d2eb8ba940..77e8b6e77c6afc6d9ad09af1c1fad37a77e4cec1 100644
+index dbd7d3b..5f698c0 100644
 --- a/src/api/server.rs
 +++ b/src/api/server.rs
-@@ -1083,6 +1083,7 @@ fn caller_timeout_dispatch_uses_timeout_error() {
+@@ -331,6 +331,23 @@ fn handle_connection_with_stop(
+             } else {
+                 String::new()
+             };
++            #[derive(serde::Deserialize)]
++            struct InvalidMethod {
++                method: String,
++            }
++            if serde_json::from_str::<InvalidMethod>(line)
++                .is_ok_and(|request| request.method == "terminal.inhibit_input")
++            {
++                let response = crate::api::schema::InputDrainErrorResponse {
++                    id,
++                    error: crate::api::schema::InputDrainErrorBody {
++                        code: crate::api::schema::InputDrainCode::InvalidParams,
++                        phase: crate::api::schema::InputDrainPhase::Unconfirmed,
++                    },
++                };
++                write_json_line_allow_disconnect(&mut stream, &response)?;
++                return Ok(());
++            }
+             let response =
+                 retired_pane_graphics_method_error(line, &id).unwrap_or_else(|| ErrorResponse {
+                     id,
+@@ -610,6 +627,7 @@ pub(crate) fn api_method_name(method: &Method) -> &'static str {
+         Method::AgentFocus(_) => "agent.focus",
+         Method::AgentStart(_) => "agent.start",
+         Method::AgentPrompt(_) => "agent.prompt",
++        Method::TerminalInhibitInput(_) => "terminal.inhibit_input",
+         Method::AgentWait(_) => "agent.wait",
+         Method::PaneSplit(_) => "pane.split",
+         Method::PaneSwap(_) => "pane.swap",
+@@ -1083,6 +1101,7 @@ fn caller_timeout_dispatch_uses_timeout_error() {
          Request {
              id: "prompt-timeout".into(),
              method: Method::AgentPrompt(crate::api::schema::AgentPromptParams {
@@ -447,7 +781,7 @@ index dbd7d3b6b165b6e94b4f7d906a6820d2eb8ba940..77e8b6e77c6afc6d9ad09af1c1fad37a
                  text: "review this".into(),
                  wait: None,
 diff --git a/src/api/wait.rs b/src/api/wait.rs
-index 541779f8329ec7f88735ee66b74d9207ec75e641..9d366d21a2fc4c3ffda5f7394123334d0ecc7ea8 100644
+index 541779f..9d366d2 100644
 --- a/src/api/wait.rs
 +++ b/src/api/wait.rs
 @@ -182,6 +182,9 @@ pub(super) fn prompt_agent(
@@ -473,8 +807,25 @@ index 541779f8329ec7f88735ee66b74d9207ec75e641..9d366d21a2fc4c3ffda5f7394123334d
      })
      .map_err(std::io::Error::other)
  }
+diff --git a/src/app/api.rs b/src/app/api.rs
+index 20ca9d0..54132f2 100644
+--- a/src/app/api.rs
++++ b/src/app/api.rs
+@@ -1087,6 +1087,12 @@ impl App {
+                 return self.handle_agent_view_clear(request.id, params);
+             }
+             Method::AgentStart(params) => return self.handle_agent_start(request.id, params),
++            Method::TerminalInhibitInput(_) => {
++                return agents::input_drain_error(
++                    request.id,
++                    crate::platform::guarded_prompt::InputDrainError::Unavailable,
++                );
++            }
+             Method::AgentPrompt(_) => {
+                 return responses::encode_error(
+                     request.id,
 diff --git a/src/app/api/agents.rs b/src/app/api/agents.rs
-index 9289ae02f4ff15a63131af954f945d85c83a4dae..f3d10219bb72894ae101b831cb18c0e45f7c9ab3 100644
+index 9289ae0..a86df5c 100644
 --- a/src/app/api/agents.rs
 +++ b/src/app/api/agents.rs
 @@ -7,6 +7,7 @@ use crate::api::schema::{
@@ -485,7 +836,14 @@ index 9289ae02f4ff15a63131af954f945d85c83a4dae..f3d10219bb72894ae101b831cb18c0e4
  
  use super::responses::{encode_error, encode_error_body, encode_success};
  
-@@ -87,11 +88,43 @@ impl App {
+@@ -84,14 +85,50 @@ impl App {
+         request: crate::api::schema::Request,
+         respond_to: std::sync::mpsc::Sender<String>,
+     ) -> bool {
++        if let crate::api::schema::Method::TerminalInhibitInput(params) = request.method.clone() {
++            self.defer_input_inhibit(request.id, params, respond_to);
++            return true;
++        }
          let crate::api::schema::Method::AgentPrompt(params) = request.method else {
              return false;
          };
@@ -530,10 +888,58 @@ index 9289ae02f4ff15a63131af954f945d85c83a4dae..f3d10219bb72894ae101b831cb18c0e4
                          Ok(Err(err)) if err.kind() == std::io::ErrorKind::TimedOut => {
                              encode_error(id, "timeout", err.to_string())
                          }
-@@ -108,6 +141,77 @@ impl App {
+@@ -108,6 +145,125 @@ impl App {
          true
      }
  
++    fn defer_input_inhibit(
++        &mut self,
++        id: String,
++        params: crate::api::schema::TerminalInhibitInputParams,
++        respond_to: std::sync::mpsc::Sender<String>,
++    ) {
++        use crate::platform::guarded_prompt::InputDrainError;
++        let selected = (|| {
++            if !params.valid() {
++                return Err(InputDrainError::GuardMismatch);
++            }
++            let resolved = self
++                .resolve_guarded_agent_target(&params.target)
++                .map_err(|_| InputDrainError::OriginUnavailable)?;
++            let runtime = self
++                .lookup_runtime_sender(resolved.ws_idx, resolved.pane_id)
++                .ok_or(InputDrainError::OriginUnavailable)?;
++            if runtime.captured_input_origin(&params.target).as_ref()
++                != Some(&params.expected_origin)
++            {
++                return Err(InputDrainError::GuardMismatch);
++            }
++            runtime.inhibit_input(&params.expected_origin)
++        })();
++        match selected {
++            Ok(completion) => {
++                std::thread::spawn(move || {
++                    let response = match completion.recv_timeout(Duration::from_secs(5)) {
++                        Ok(Ok(())) => encode_success(
++                            id,
++                            ResponseResult::TerminalInputDrained {
++                                origin: params.expected_origin,
++                                input_state: crate::api::schema::InputState::Inhibited,
++                                pending_input: 0,
++                            },
++                        ),
++                        Ok(Err(error)) => input_drain_error(id, error),
++                        Err(_) => input_drain_error(id, InputDrainError::Unavailable),
++                    };
++                    let _ = respond_to.send(response);
++                });
++            }
++            Err(error) => {
++                let _ = respond_to.send(input_drain_error(id, error));
++            }
++        }
++    }
++
 +    fn queue_guarded_agent_prompt(
 +        &mut self,
 +        id: String,
@@ -608,7 +1014,7 @@ index 9289ae02f4ff15a63131af954f945d85c83a4dae..f3d10219bb72894ae101b831cb18c0e4
      fn queue_agent_prompt(
          &mut self,
          id: String,
-@@ -457,6 +561,7 @@ mod tests {
+@@ -457,6 +613,7 @@ mod tests {
              &mut app,
              "req",
              AgentPromptParams {
@@ -616,7 +1022,7 @@ index 9289ae02f4ff15a63131af954f945d85c83a4dae..f3d10219bb72894ae101b831cb18c0e4
                  target: "reviewer".into(),
                  text: "A != B".into(),
                  wait: None,
-@@ -557,6 +662,7 @@ mod tests {
+@@ -557,6 +714,7 @@ mod tests {
              &mut app,
              "req",
              AgentPromptParams {
@@ -624,7 +1030,7 @@ index 9289ae02f4ff15a63131af954f945d85c83a4dae..f3d10219bb72894ae101b831cb18c0e4
                  target: public_pane_id,
                  text: "A != B".into(),
                  wait: None,
-@@ -586,6 +692,7 @@ mod tests {
+@@ -586,6 +744,7 @@ mod tests {
              &mut app,
              "req-raw",
              AgentPromptParams {
@@ -632,7 +1038,7 @@ index 9289ae02f4ff15a63131af954f945d85c83a4dae..f3d10219bb72894ae101b831cb18c0e4
                  target: "reviewer".into(),
                  text: "A != B".into(),
                  wait: None,
-@@ -601,6 +708,7 @@ mod tests {
+@@ -601,6 +760,7 @@ mod tests {
              &mut app,
              "req-label",
              AgentPromptParams {
@@ -640,7 +1046,7 @@ index 9289ae02f4ff15a63131af954f945d85c83a4dae..f3d10219bb72894ae101b831cb18c0e4
                  target: "opencode".into(),
                  text: "wrong target".into(),
                  wait: None,
-@@ -628,6 +736,7 @@ mod tests {
+@@ -628,6 +788,7 @@ mod tests {
              &mut app,
              "req",
              AgentPromptParams {
@@ -648,7 +1054,7 @@ index 9289ae02f4ff15a63131af954f945d85c83a4dae..f3d10219bb72894ae101b831cb18c0e4
                  target: "reviewer".into(),
                  text: "unrelated prompt".into(),
                  wait: None,
-@@ -668,6 +777,7 @@ mod tests {
+@@ -668,6 +829,7 @@ mod tests {
              &mut app,
              "req",
              AgentPromptParams {
@@ -656,7 +1062,7 @@ index 9289ae02f4ff15a63131af954f945d85c83a4dae..f3d10219bb72894ae101b831cb18c0e4
                  target: "reviewer".into(),
                  text: "A != B".into(),
                  wait: None,
-@@ -747,6 +857,7 @@ mod tests {
+@@ -747,6 +909,7 @@ mod tests {
              &mut app,
              "req-pending",
              AgentPromptParams {
@@ -664,7 +1070,7 @@ index 9289ae02f4ff15a63131af954f945d85c83a4dae..f3d10219bb72894ae101b831cb18c0e4
                  target: "reviewer".into(),
                  text: "A != B".into(),
                  wait: None,
-@@ -821,3 +932,15 @@ mod tests {
+@@ -821,3 +984,39 @@ mod tests {
          }
      }
  }
@@ -680,11 +1086,35 @@ index 9289ae02f4ff15a63131af954f945d85c83a4dae..f3d10219bb72894ae101b831cb18c0e4
 +    })
 +    .to_string()
 +}
++
++pub(super) fn input_drain_error(
++    id: String,
++    error: crate::platform::guarded_prompt::InputDrainError,
++) -> String {
++    serde_json::json!(crate::api::schema::InputDrainErrorResponse {
++        id,
++        error: crate::api::schema::InputDrainErrorBody {
++            code: match error {
++                crate::platform::guarded_prompt::InputDrainError::GuardMismatch => {
++                    crate::api::schema::InputDrainCode::GuardMismatch
++                }
++                crate::platform::guarded_prompt::InputDrainError::OriginUnavailable => {
++                    crate::api::schema::InputDrainCode::OriginUnavailable
++                }
++                crate::platform::guarded_prompt::InputDrainError::Unavailable => {
++                    crate::api::schema::InputDrainCode::Unavailable
++                }
++            },
++            phase: crate::api::schema::InputDrainPhase::Unconfirmed,
++        },
++    })
++    .to_string()
++}
 diff --git a/src/app/api/panes.rs b/src/app/api/panes.rs
-index e4e03e71b48f96754bf0559b6e6ecf546437ab65..bc955a76953b90527a9169191b048fed989e8c7b 100644
+index e4e03e7..461c49f 100644
 --- a/src/app/api/panes.rs
 +++ b/src/app/api/panes.rs
-@@ -550,10 +550,16 @@ impl App {
+@@ -550,10 +550,24 @@ impl App {
              })
              .unwrap_or_default();
  
@@ -697,12 +1127,20 @@ index e4e03e71b48f96754bf0559b6e6ecf546437ab65..bc955a76953b90527a9169191b048fed
              ResponseResult::PaneProcessInfo {
                  process_info: PaneProcessInfo {
 +                    guarded_prompt: guarded_prompt_origin.is_some(),
++                    guarded_input_drain: runtime
++                        .captured_input_origin(
++                            self.state.workspaces[ws_idx]
++                                .terminal_id(pane_id)
++                                .map(|id| id.as_str())
++                                .unwrap_or(""),
++                        )
++                        .is_some(),
 +                    guarded_prompt_origin,
                      pane_id: public_pane_id,
                      shell_pid,
                      foreground_process_group_id,
 diff --git a/src/app/terminal_targets.rs b/src/app/terminal_targets.rs
-index bbaaaf7dd52798812823c027800c2e2319636076..658eeaaa3f138dcfa443c8406c1753259ac3e517 100644
+index bbaaaf7..658eeaa 100644
 --- a/src/app/terminal_targets.rs
 +++ b/src/app/terminal_targets.rs
 @@ -29,7 +29,25 @@ pub(crate) enum TerminalTargetError {
@@ -773,7 +1211,7 @@ index bbaaaf7dd52798812823c027800c2e2319636076..658eeaaa3f138dcfa443c8406c175325
 +    }
 +}
 diff --git a/src/cli/agent.rs b/src/cli/agent.rs
-index 09043460d474293e8f45da2511d96f7ff0ef2a42..5a941b716073de75e947bc194212e90a7bf23efb 100644
+index 0904346..5a941b7 100644
 --- a/src/cli/agent.rs
 +++ b/src/cli/agent.rs
 @@ -838,6 +838,7 @@ fn agent_prompt(args: &[String]) -> std::io::Result<i32> {
@@ -785,7 +1223,7 @@ index 09043460d474293e8f45da2511d96f7ff0ef2a42..5a941b716073de75e947bc194212e90a
              text: text.clone(),
              wait: wait.then_some(AgentPromptWaitOptions {
 diff --git a/src/pane.rs b/src/pane.rs
-index 8fd8e3961c9fa4088c4d2bcf3bf01df0407c7c48..085210f3d817a06827faef48f098bd86f6fb2895 100644
+index 8fd8e39..7b296da 100644
 --- a/src/pane.rs
 +++ b/src/pane.rs
 @@ -2494,6 +2494,7 @@ impl PaneRuntime {
@@ -834,7 +1272,7 @@ index 8fd8e3961c9fa4088c4d2bcf3bf01df0407c7c48..085210f3d817a06827faef48f098bd86
                  #[cfg(windows)]
                  master: spawned.master,
                  initially_quiesced: false,
-@@ -3520,6 +3531,36 @@ impl PaneRuntime {
+@@ -3520,6 +3531,61 @@ impl PaneRuntime {
          self.io.try_send_bytes(bytes)
      }
  
@@ -850,6 +1288,31 @@ index 8fd8e3961c9fa4088c4d2bcf3bf01df0407c7c48..085210f3d817a06827faef48f098bd86
 +        None
 +    }
 +
++    pub(crate) fn captured_input_origin(
++        &self,
++        terminal_id: &str,
++    ) -> Option<crate::platform::guarded_prompt::GuardedPromptOrigin> {
++        #[cfg(unix)]
++        if let PaneRuntimeIo::Actor(actor) = &self.io {
++            return actor.captured_input_origin(terminal_id);
++        }
++        let _ = terminal_id;
++        None
++    }
++    pub(crate) fn inhibit_input(
++        &self,
++        expected: &crate::platform::guarded_prompt::GuardedPromptOrigin,
++    ) -> Result<
++        std::sync::mpsc::Receiver<Result<(), crate::platform::guarded_prompt::InputDrainError>>,
++        crate::platform::guarded_prompt::InputDrainError,
++    > {
++        #[cfg(unix)]
++        if let PaneRuntimeIo::Actor(actor) = &self.io {
++            return actor.inhibit_input(expected);
++        }
++        let _ = expected;
++        Err(crate::platform::guarded_prompt::InputDrainError::OriginUnavailable)
++    }
 +    pub(crate) fn queue_guarded_submission(
 +        &self,
 +        text: Bytes,
@@ -873,10 +1336,10 @@ index 8fd8e3961c9fa4088c4d2bcf3bf01df0407c7c48..085210f3d817a06827faef48f098bd86
          text: Bytes,
 diff --git a/src/platform/guarded_prompt.rs b/src/platform/guarded_prompt.rs
 new file mode 100644
-index 0000000000000000000000000000000000000000..7e6d3e94d05c5629abb1a9914c182072e5cae08a
+index 0000000..d8c2848
 --- /dev/null
 +++ b/src/platform/guarded_prompt.rs
-@@ -0,0 +1,519 @@
+@@ -0,0 +1,531 @@
 +//! Shared guarded-submission values and pure write-admission state.
 +//! Kernel origin capture stays in the Linux platform owner.
 +
@@ -998,6 +1461,11 @@ index 0000000000000000000000000000000000000000..7e6d3e94d05c5629abb1a9914c182072
 +            runtime_incarnation: self.runtime_incarnation.clone(),
 +            child: self.child.clone(),
 +        }
++    }
++    pub(crate) fn matches_captured(&self, expected: &GuardedPromptOrigin) -> bool {
++        expected.valid()
++            && expected.runtime_incarnation == self.runtime_incarnation
++            && expected.child == self.child
 +    }
 +    pub(crate) fn check(&self, expected: &GuardedPromptOrigin) -> Result<(), GuardedPromptError> {
 +        if !expected.valid()
@@ -1396,8 +1864,15 @@ index 0000000000000000000000000000000000000000..7e6d3e94d05c5629abb1a9914c182072
 +        );
 +    }
 +}
++
++#[derive(Debug, Clone, Copy, PartialEq, Eq)]
++pub(crate) enum InputDrainError {
++    GuardMismatch,
++    OriginUnavailable,
++    Unavailable,
++}
 diff --git a/src/platform/linux.rs b/src/platform/linux.rs
-index c73584e53844b9684d0e1b907a020818de8da57c..9edf05ba685bb97d6856af58bf36ad340da9daf5 100644
+index c73584e..9edf05b 100644
 --- a/src/platform/linux.rs
 +++ b/src/platform/linux.rs
 @@ -26,6 +26,9 @@ pub(crate) use super::unix_common::{
@@ -1412,7 +1887,7 @@ index c73584e53844b9684d0e1b907a020818de8da57c..9edf05ba685bb97d6856af58bf36ad34
  
 diff --git a/src/platform/linux/guarded_origin.rs b/src/platform/linux/guarded_origin.rs
 new file mode 100644
-index 0000000000000000000000000000000000000000..2a44e8f5d1e614b62af584086617b2f915b074b8
+index 0000000..2a44e8f
 --- /dev/null
 +++ b/src/platform/linux/guarded_origin.rs
 @@ -0,0 +1,87 @@
@@ -1504,7 +1979,7 @@ index 0000000000000000000000000000000000000000..2a44e8f5d1e614b62af584086617b2f9
 +    }))
 +}
 diff --git a/src/platform/mod.rs b/src/platform/mod.rs
-index 927cd32b48e4bf13aefc86187fb3915fcf5ef24c..0ea23d525bf02677f5836c826b4c229c25a99541 100644
+index 927cd32..0ea23d5 100644
 --- a/src/platform/mod.rs
 +++ b/src/platform/mod.rs
 @@ -3,6 +3,8 @@
@@ -1531,7 +2006,7 @@ index 927cd32b48e4bf13aefc86187fb3915fcf5ef24c..0ea23d525bf02677f5836c826b4c229c
 +    ))
 +}
 diff --git a/src/pty/actor/unix.rs b/src/pty/actor/unix.rs
-index 4d57dd161ba72ac292ca19357cb1070dd168c788..75f1acffd7a7030b9438006a71b5a6d63051c3f4 100644
+index 4d57dd1..7740265 100644
 --- a/src/pty/actor/unix.rs
 +++ b/src/pty/actor/unix.rs
 @@ -10,6 +10,9 @@ use bytes::Bytes;
@@ -1539,7 +2014,7 @@ index 4d57dd161ba72ac292ca19357cb1070dd168c788..75f1acffd7a7030b9438006a71b5a6d6
  use tracing::{debug, warn};
  
 +use crate::platform::guarded_prompt::{
-+    GuardedChildOrigin, GuardedPromptError, GuardedPromptOrigin, GuardedWriteState,
++    GuardedChildOrigin, GuardedPromptError, GuardedPromptOrigin, GuardedWriteState, InputDrainError,
 +};
  use crate::pty::fd;
  
@@ -1567,7 +2042,15 @@ index 4d57dd161ba72ac292ca19357cb1070dd168c788..75f1acffd7a7030b9438006a71b5a6d6
      SubmitUserInput {
          text: Bytes,
          enter: Bytes,
-@@ -98,14 +110,109 @@ pub(crate) struct PtyIoActorHandle {
+@@ -87,6 +99,7 @@ enum PtyIoControlCommand {
+     ForegroundProcessGroup(std_mpsc::Sender<Option<u32>>),
+     RollbackHandoff(std_mpsc::Sender<std::io::Result<()>>),
+     ReleaseAfterCommit(std_mpsc::Sender<std::io::Result<()>>),
++    InhibitInput(std_mpsc::Sender<Result<(), InputDrainError>>),
+     Shutdown,
+ }
+ 
+@@ -98,46 +111,195 @@ pub(crate) struct PtyIoActorHandle {
      user_writes: Arc<Mutex<UserWriteGate>>,
      controls: Arc<Mutex<SharedPtyControls>>,
      response_order: Arc<Mutex<()>>,
@@ -1578,9 +2061,21 @@ index 4d57dd161ba72ac292ca19357cb1070dd168c788..75f1acffd7a7030b9438006a71b5a6d6
  struct UserWriteGate {
      accepting: bool,
 +    guarded_pending: usize,
++    scope_inhibited: bool,
 +}
 +
 +impl UserWriteGate {
++    fn inhibit(&mut self) {
++        self.scope_inhibited = true;
++        self.accepting = false;
++    }
++    fn reopen(&mut self) -> bool {
++        if self.scope_inhibited {
++            return false;
++        }
++        self.accepting = true;
++        true
++    }
 +    fn admit_guarded(&mut self) -> Result<(), GuardedPromptError> {
 +        if !self.accepting {
 +            return Err(GuardedPromptError::OriginUnavailable);
@@ -1640,9 +2135,74 @@ index 4d57dd161ba72ac292ca19357cb1070dd168c788..75f1acffd7a7030b9438006a71b5a6d6
 +        mpsc::error::TrySendError::Closed(_) => GuardedPromptError::OriginUnavailable,
 +    })?;
 +    Ok(result)
++}
++
++fn queue_plain_input(
++    data_tx: &mpsc::Sender<PtyIoDataCommand>,
++    gate: &Arc<Mutex<UserWriteGate>>,
++    bytes: Bytes,
++) -> Result<(), mpsc::error::TrySendError<Bytes>> {
++    let gate = gate.lock().unwrap_or_else(|p| p.into_inner());
++    if !gate.accepting {
++        return Err(mpsc::error::TrySendError::Closed(bytes));
++    }
++    data_tx
++        .try_send(PtyIoDataCommand::WriteUserInput(bytes))
++        .map_err(|error| match error {
++            mpsc::error::TrySendError::Full(PtyIoDataCommand::WriteUserInput(bytes)) => {
++                mpsc::error::TrySendError::Full(bytes)
++            }
++            mpsc::error::TrySendError::Closed(PtyIoDataCommand::WriteUserInput(bytes)) => {
++                mpsc::error::TrySendError::Closed(bytes)
++            }
++            _ => unreachable!("plain input queue returned another command"),
++        })
++}
++
++fn queue_input_inhibit(
++    origin: Option<&GuardedChildOrigin>,
++    expected: &GuardedPromptOrigin,
++    gate: &Arc<Mutex<UserWriteGate>>,
++    controls: &std_mpsc::Sender<PtyIoControlCommand>,
++) -> Result<std_mpsc::Receiver<Result<(), InputDrainError>>, InputDrainError> {
++    let origin = origin.ok_or(InputDrainError::OriginUnavailable)?;
++    if !origin.matches_captured(expected) {
++        return Err(InputDrainError::GuardMismatch);
++    }
++    let (reply, result) = std_mpsc::channel();
++    {
++        let mut gate = gate.lock().unwrap_or_else(|p| p.into_inner());
++        if !gate.accepting && !gate.scope_inhibited {
++            return Err(InputDrainError::OriginUnavailable);
++        }
++        gate.inhibit();
++        controls
++            .send(PtyIoControlCommand::InhibitInput(reply))
++            .map_err(|_| InputDrainError::Unavailable)?;
++    }
++    Ok(result)
  }
  
  impl PtyIoActorHandle {
++    pub(crate) fn captured_input_origin(&self, terminal_id: &str) -> Option<GuardedPromptOrigin> {
++        self.origin
++            .as_ref()
++            .map(|origin| origin.projection(terminal_id))
++    }
++    pub(crate) fn inhibit_input(
++        &self,
++        expected: &GuardedPromptOrigin,
++    ) -> Result<std_mpsc::Receiver<Result<(), InputDrainError>>, InputDrainError> {
++        let result = queue_input_inhibit(
++            self.origin.as_deref(),
++            expected,
++            &self.user_writes,
++            &self.control_tx,
++        )?;
++        self.wake_actor();
++        Ok(result)
++    }
++
 +    pub(crate) fn guarded_origin(&self, terminal_id: &str) -> Option<GuardedPromptOrigin> {
 +        let origin = self.origin.as_ref()?;
 +        let expected = origin.projection(terminal_id);
@@ -1677,7 +2237,76 @@ index 4d57dd161ba72ac292ca19357cb1070dd168c788..75f1acffd7a7030b9438006a71b5a6d6
      pub(crate) fn try_write_user_input(
          &self,
          bytes: Bytes,
-@@ -249,13 +356,7 @@ impl PtyIoActorHandle {
+     ) -> Result<(), mpsc::error::TrySendError<Bytes>> {
+-        let user_writes = self
+-            .user_writes
+-            .lock()
+-            .unwrap_or_else(|poisoned| poisoned.into_inner());
+-        if !user_writes.accepting {
+-            return Err(mpsc::error::TrySendError::Closed(bytes));
+-        }
+-        match self
+-            .data_tx
+-            .try_send(PtyIoDataCommand::WriteUserInput(bytes))
+-        {
+-            Ok(()) => {
+-                self.wake_actor();
+-                Ok(())
+-            }
+-            Err(mpsc::error::TrySendError::Full(command)) => {
+-                let PtyIoDataCommand::WriteUserInput(bytes) = command else {
+-                    unreachable!("queued write returned another command")
+-                };
+-                Err(mpsc::error::TrySendError::Full(bytes))
+-            }
+-            Err(mpsc::error::TrySendError::Closed(command)) => {
+-                let PtyIoDataCommand::WriteUserInput(bytes) = command else {
+-                    unreachable!("queued write returned another command")
+-                };
+-                Err(mpsc::error::TrySendError::Closed(bytes))
+-            }
++        let result = queue_plain_input(&self.data_tx, &self.user_writes, bytes);
++        if result.is_ok() {
++            self.wake_actor();
+         }
++        result
+     }
+ 
+     pub(crate) fn queue_user_input_submission(
+@@ -181,6 +343,10 @@ impl PtyIoActorHandle {
+             .response_order
+             .lock()
+             .unwrap_or_else(|poisoned| poisoned.into_inner());
++        let gate = self.user_writes.lock().unwrap_or_else(|p| p.into_inner());
++        if gate.scope_inhibited {
++            return;
++        }
+         let Some(bytes) = response() else {
+             return;
+         };
+@@ -202,6 +368,10 @@ impl PtyIoActorHandle {
+         cell_height_px: u32,
+         terminal_responses: Vec<Bytes>,
+     ) {
++        let gate = self.user_writes.lock().unwrap_or_else(|p| p.into_inner());
++        if gate.scope_inhibited {
++            return;
++        }
+         {
+             let mut controls = self
+                 .controls
+@@ -227,6 +397,10 @@ impl PtyIoActorHandle {
+         cell_width_px: u32,
+         cell_height_px: u32,
+     ) {
++        let gate = self.user_writes.lock().unwrap_or_else(|p| p.into_inner());
++        if gate.scope_inhibited {
++            return;
++        }
+         {
+             let mut controls = self
+                 .controls
+@@ -249,19 +423,13 @@ impl PtyIoActorHandle {
                  .user_writes
                  .lock()
                  .unwrap_or_else(|poisoned| poisoned.into_inner());
@@ -1692,15 +2321,32 @@ index 4d57dd161ba72ac292ca19357cb1070dd168c788..75f1acffd7a7030b9438006a71b5a6d6
              if self
                  .control_tx
                  .send(PtyIoControlCommand::BeginHandoff(reply_tx))
-@@ -390,6 +491,7 @@ impl PtyIoActor {
+                 .is_err()
+             {
+-                user_writes.accepting = true;
++                user_writes.reopen();
+                 return Err(std::io::Error::new(
+                     std::io::ErrorKind::BrokenPipe,
+                     "pty actor closed",
+@@ -325,7 +493,7 @@ impl PtyIoActorHandle {
+                 .user_writes
+                 .lock()
+                 .unwrap_or_else(|poisoned| poisoned.into_inner());
+-            user_writes.accepting = true;
++            user_writes.reopen();
+         }
+         result
+     }
+@@ -390,6 +558,8 @@ impl PtyIoActor {
          let wake_pipe = fd::create_wake_pipe()?;
          let user_writes = Arc::new(Mutex::new(UserWriteGate {
              accepting: !config.initially_quiesced,
 +            guarded_pending: 0,
++            scope_inhibited: false,
          }));
          let controls = Arc::new(Mutex::new(SharedPtyControls::default()));
          let response_order = Arc::new(Mutex::new(()));
-@@ -397,13 +499,16 @@ impl PtyIoActor {
+@@ -397,13 +567,16 @@ impl PtyIoActor {
              data_tx,
              control_tx,
              wake: wake_pipe.writer,
@@ -1718,7 +2364,7 @@ index 4d57dd161ba72ac292ca19357cb1070dd168c788..75f1acffd7a7030b9438006a71b5a6d6
              file: std::fs::File::from(config.master_fd),
              data_rx,
              control_rx,
-@@ -440,9 +545,11 @@ impl PtyIoActor {
+@@ -440,9 +613,11 @@ impl PtyIoActor {
      }
  }
  
@@ -1732,7 +2378,7 @@ index 4d57dd161ba72ac292ca19357cb1070dd168c788..75f1acffd7a7030b9438006a71b5a6d6
      data_rx: mpsc::Receiver<PtyIoDataCommand>,
      control_rx: std_mpsc::Receiver<PtyIoControlCommand>,
      state: ActorState,
-@@ -450,7 +557,7 @@ struct PtyIoActorRunner {
+@@ -450,7 +625,7 @@ struct PtyIoActorRunner {
      current_write_offset: usize,
      active_submission: Option<ActiveSubmission>,
      pending_handoff: Option<std_mpsc::Sender<std::io::Result<()>>>,
@@ -1741,7 +2387,7 @@ index 4d57dd161ba72ac292ca19357cb1070dd168c788..75f1acffd7a7030b9438006a71b5a6d6
      controls: Arc<Mutex<SharedPtyControls>>,
      response_order: Arc<Mutex<()>>,
      on_read: ReadCallback,
-@@ -458,11 +565,44 @@ struct PtyIoActorRunner {
+@@ -458,11 +633,44 @@ struct PtyIoActorRunner {
      poll_observer: Option<std_mpsc::Sender<()>>,
  }
  
@@ -1787,7 +2433,7 @@ index 4d57dd161ba72ac292ca19357cb1070dd168c788..75f1acffd7a7030b9438006a71b5a6d6
  }
  
  #[derive(Debug, PartialEq, Eq)]
-@@ -483,7 +623,7 @@ enum SubmissionPhase {
+@@ -483,7 +691,7 @@ enum SubmissionPhase {
      WritingEnter,
  }
  
@@ -1796,7 +2442,17 @@ index 4d57dd161ba72ac292ca19357cb1070dd168c788..75f1acffd7a7030b9438006a71b5a6d6
      fn enqueue_write(&mut self, bytes: Bytes) {
          if !bytes.is_empty() {
              self.pending_writes.push_back(PendingWrite {
-@@ -641,6 +781,39 @@ impl PtyIoActorRunner {
+@@ -635,12 +843,49 @@ impl PtyIoActorRunner {
+     }
+ 
+     fn handle_data_command(&mut self, command: PtyIoDataCommand) -> bool {
++        if self.input_inhibited() {
++            Self::refuse_input(command);
++            return false;
++        }
+         match command {
+             PtyIoDataCommand::WriteUserInput(bytes) => {
+                 if self.state == ActorState::Running {
                      self.enqueue_write(bytes);
                  }
              }
@@ -1836,7 +2492,7 @@ index 4d57dd161ba72ac292ca19357cb1070dd168c788..75f1acffd7a7030b9438006a71b5a6d6
              PtyIoDataCommand::SubmitUserInput {
                  text,
                  enter,
-@@ -658,7 +831,8 @@ impl PtyIoActorRunner {
+@@ -658,7 +903,8 @@ impl PtyIoActorRunner {
                          enter,
                          delay,
                          phase,
@@ -1846,7 +2502,140 @@ index 4d57dd161ba72ac292ca19357cb1070dd168c788..75f1acffd7a7030b9438006a71b5a6d6
                      });
                  } else {
                      let _ = reply.send(Err(std::io::Error::new(
-@@ -871,7 +1045,7 @@ impl PtyIoActorRunner {
+@@ -671,13 +917,61 @@ impl PtyIoActorRunner {
+         false
+     }
+ 
++    fn input_inhibited(&self) -> bool {
++        self.user_writes
++            .lock()
++            .unwrap_or_else(|p| p.into_inner())
++            .scope_inhibited
++    }
++    fn refuse_input(command: PtyIoDataCommand) {
++        match command {
++            PtyIoDataCommand::SubmitUserInput { reply, .. } => {
++                let _ = reply.send(Err(input_submission_closed_error()));
++            }
++            PtyIoDataCommand::GuardedSubmit { reply, .. } => {
++                let _ = reply.send(Err(GuardedPromptError::OriginUnavailable));
++            }
++            PtyIoDataCommand::WriteUserInput(_) => {}
++        }
++    }
++    fn drain_inhibited_input(&mut self) -> Result<(), InputDrainError> {
++        if self.state == ActorState::Released || !self.input_inhibited() {
++            return Err(InputDrainError::Unavailable);
++        }
++        {
++            let mut controls = self.controls.lock().unwrap_or_else(|p| p.into_inner());
++            controls.terminal_responses.clear();
++            controls.resize = None;
++            controls.nudge = None;
++        }
++        self.pending_writes.clear();
++        self.current_write_offset = 0;
++        self.fail_active_submission(input_submission_closed_error());
++        while let Ok(command) = self.data_rx.try_recv() {
++            Self::refuse_input(command);
++        }
++        if let Some(reply) = self.pending_handoff.take() {
++            let _ = reply.send(Err(input_submission_closed_error()));
++        }
++        let gate = self.user_writes.lock().unwrap_or_else(|p| p.into_inner());
++        if gate.scope_inhibited && !gate.accepting && gate.guarded_pending == 0 {
++            Ok(())
++        } else {
++            Err(InputDrainError::Unavailable)
++        }
++    }
+     fn handle_control_command(&mut self, command: PtyIoControlCommand) -> bool {
+         match command {
++            PtyIoControlCommand::InhibitInput(reply) => {
++                let result = self.drain_inhibited_input();
++                let _ = reply.send(result);
++            }
+             PtyIoControlCommand::BeginHandoff(reply) => {
+                 self.defer_or_begin_handoff(reply);
+             }
+             PtyIoControlCommand::DuplicateForHandoff(reply) => {
+-                let result = if self.state == ActorState::Quiesced {
++                let gate = self.user_writes.lock().unwrap_or_else(|p| p.into_inner());
++                let result = if self.state == ActorState::Quiesced && !gate.scope_inhibited {
+                     fd::duplicate_cloexec_fd(self.file.as_raw_fd())
+                 } else {
+                     Err(std::io::Error::other(
+@@ -693,7 +987,7 @@ impl PtyIoActorRunner {
+             }
+             PtyIoControlCommand::RollbackHandoff(reply) => {
+                 self.pending_handoff.take();
+-                let result = if self.state == ActorState::Released {
++                let result = if self.state == ActorState::Released || self.input_inhibited() {
+                     Err(std::io::Error::new(
+                         std::io::ErrorKind::BrokenPipe,
+                         "PTY actor was released before handoff rollback",
+@@ -716,6 +1010,10 @@ impl PtyIoActorRunner {
+     }
+ 
+     fn defer_or_begin_handoff(&mut self, reply: std_mpsc::Sender<std::io::Result<()>>) {
++        if self.input_inhibited() {
++            let _ = reply.send(Err(input_submission_closed_error()));
++            return;
++        }
+         if self.active_submission.is_none() {
+             self.drain_pre_quiesce_commands();
+         }
+@@ -728,6 +1026,9 @@ impl PtyIoActorRunner {
+     }
+ 
+     fn begin_handoff(&mut self) -> std::io::Result<()> {
++        if self.input_inhibited() {
++            return Err(input_submission_closed_error());
++        }
+         self.drain_pre_quiesce_commands();
+         if self.active_submission.is_some() {
+             return Err(std::io::Error::new(
+@@ -800,7 +1101,7 @@ impl PtyIoActorRunner {
+                 std::mem::take(&mut controls.terminal_responses),
+             )
+         };
+-        if self.state == ActorState::Released {
++        if self.state == ActorState::Released || self.input_inhibited() {
+             return;
+         }
+         if let Some(request) = resize {
+@@ -829,11 +1130,16 @@ impl PtyIoActorRunner {
+                     .lock()
+                     .unwrap_or_else(|poisoned| poisoned.into_inner());
+                 let result = (self.on_read)(&buf[..n]);
+-                self.controls
+-                    .lock()
+-                    .unwrap_or_else(|poisoned| poisoned.into_inner())
+-                    .terminal_responses
+-                    .extend(result.terminal_responses);
++                {
++                    let gate = self.user_writes.lock().unwrap_or_else(|p| p.into_inner());
++                    if !gate.scope_inhibited {
++                        self.controls
++                            .lock()
++                            .unwrap_or_else(|p| p.into_inner())
++                            .terminal_responses
++                            .extend(result.terminal_responses);
++                    }
++                }
+                 drop(_order);
+                 let terminal_responses = std::mem::take(
+                     &mut self
+@@ -849,7 +1155,7 @@ impl PtyIoActorRunner {
+     }
+ 
+     fn enqueue_terminal_responses(&mut self, terminal_responses: Vec<Bytes>) {
+-        if self.state == ActorState::Released {
++        if self.state == ActorState::Released || self.input_inhibited() {
+             return;
+         }
+         for bytes in terminal_responses {
+@@ -871,7 +1177,7 @@ impl PtyIoActorRunner {
                      return;
                  };
                  debug_assert!(matches!(submission.phase, SubmissionPhase::WritingEnter));
@@ -1855,7 +2644,7 @@ index 4d57dd161ba72ac292ca19357cb1070dd168c788..75f1acffd7a7030b9438006a71b5a6d6
              }
          }
      }
-@@ -889,7 +1063,7 @@ impl PtyIoActorRunner {
+@@ -889,7 +1195,7 @@ impl PtyIoActorRunner {
              let enter = enter.clone();
              if enter.is_empty() {
                  let submission = self.active_submission.take().unwrap();
@@ -1864,7 +2653,7 @@ index 4d57dd161ba72ac292ca19357cb1070dd168c788..75f1acffd7a7030b9438006a71b5a6d6
              } else {
                  self.active_submission.as_mut().unwrap().phase = SubmissionPhase::WritingEnter;
                  self.enqueue_submission_write(enter, SubmissionBoundary::Enter);
-@@ -912,9 +1086,25 @@ impl PtyIoActorRunner {
+@@ -912,9 +1218,25 @@ impl PtyIoActorRunner {
              .min(ACTOR_IDLE_POLL_MS as u128) as i32
      }
  
@@ -1891,7 +2680,7 @@ index 4d57dd161ba72ac292ca19357cb1070dd168c788..75f1acffd7a7030b9438006a71b5a6d6
          }
      }
  
-@@ -922,16 +1112,54 @@ impl PtyIoActorRunner {
+@@ -922,16 +1244,60 @@ impl PtyIoActorRunner {
          self.data_rx.close();
          self.fail_active_submission(input_submission_closed_error());
          while let Some(command) = self.data_rx.blocking_recv() {
@@ -1913,6 +2702,12 @@ index 4d57dd161ba72ac292ca19357cb1070dd168c788..75f1acffd7a7030b9438006a71b5a6d6
          while let Some(write) = self.pending_writes.front() {
 +            let gate = Arc::clone(&self.user_writes);
 +            let gate = gate.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
++            if gate.scope_inhibited {
++                drop(gate);
++                self.drain_inhibited_input()
++                    .map_err(|_| input_submission_closed_error())?;
++                return Ok(None);
++            }
              let chunk = &write.bytes[self.current_write_offset..];
 -            match self.file.write(chunk) {
 +            let result = if let Some(guard) = self
@@ -1949,7 +2744,7 @@ index 4d57dd161ba72ac292ca19357cb1070dd168c788..75f1acffd7a7030b9438006a71b5a6d6
                  Ok(0) => {
                      return Err(std::io::Error::new(
                          std::io::ErrorKind::WriteZero,
-@@ -949,8 +1177,14 @@ impl PtyIoActorRunner {
+@@ -949,8 +1315,14 @@ impl PtyIoActorRunner {
                          }
                      }
                  }
@@ -1966,7 +2761,7 @@ index 4d57dd161ba72ac292ca19357cb1070dd168c788..75f1acffd7a7030b9438006a71b5a6d6
                  Err(err) => {
                      warn!(pane = self.pane_id, err = %err, "PTY actor write failed");
                      self.pending_writes.clear();
-@@ -1067,6 +1301,7 @@ mod tests {
+@@ -1067,6 +1439,7 @@ mod tests {
          let owned = unsafe { OwnedFd::from_raw_fd(actor_socket.into_raw_fd()) };
          let (read_tx, read_rx) = std_mpsc::channel();
          let config = PtyIoActorConfig {
@@ -1974,7 +2769,7 @@ index 4d57dd161ba72ac292ca19357cb1070dd168c788..75f1acffd7a7030b9438006a71b5a6d6
              pane_id: 1,
              master_fd: owned,
              initially_quiesced,
-@@ -1097,6 +1332,11 @@ mod tests {
+@@ -1097,6 +1470,12 @@ mod tests {
          let (_control_tx, control_rx) = std_mpsc::channel();
          let wake_pipe = fd::create_wake_pipe().expect("wake pipe");
          let runner = PtyIoActorRunner {
@@ -1982,11 +2777,12 @@ index 4d57dd161ba72ac292ca19357cb1070dd168c788..75f1acffd7a7030b9438006a71b5a6d6
 +            user_writes: Arc::new(Mutex::new(UserWriteGate {
 +                accepting: true,
 +                guarded_pending: 0,
++                scope_inhibited: false,
 +            })),
              pane_id: 1,
              file: std::fs::File::from(owned),
              data_rx,
-@@ -1320,6 +1560,7 @@ mod tests {
+@@ -1320,6 +1699,7 @@ mod tests {
          let handle_slot = Arc::new(Mutex::new(None::<PtyIoActorHandle>));
          let (attempt_tx, attempt_rx) = std_mpsc::channel();
          let config = PtyIoActorConfig {
@@ -1994,7 +2790,7 @@ index 4d57dd161ba72ac292ca19357cb1070dd168c788..75f1acffd7a7030b9438006a71b5a6d6
              pane_id: 1,
              master_fd: owned,
              initially_quiesced: false,
-@@ -1412,6 +1653,7 @@ mod tests {
+@@ -1412,6 +1792,7 @@ mod tests {
          let owned = unsafe { OwnedFd::from_raw_fd(actor_socket.into_raw_fd()) };
          let (read_tx, read_rx) = std_mpsc::channel();
          let handle = PtyIoActor::spawn(PtyIoActorConfig {
@@ -2002,7 +2798,7 @@ index 4d57dd161ba72ac292ca19357cb1070dd168c788..75f1acffd7a7030b9438006a71b5a6d6
              pane_id: 1,
              master_fd: owned,
              initially_quiesced: false,
-@@ -1612,10 +1854,14 @@ mod tests {
+@@ -1612,10 +1993,15 @@ mod tests {
          let controls = Arc::new(Mutex::new(SharedPtyControls::default()));
          let (wake, _wake_read_fd) = test_wake_pair();
          let handle = PtyIoActorHandle {
@@ -2014,11 +2810,12 @@ index 4d57dd161ba72ac292ca19357cb1070dd168c788..75f1acffd7a7030b9438006a71b5a6d6
 +            user_writes: Arc::new(Mutex::new(UserWriteGate {
 +                accepting: true,
 +                guarded_pending: 0,
++                scope_inhibited: false,
 +            })),
              controls: Arc::clone(&controls),
              response_order: Arc::new(Mutex::new(())),
          };
-@@ -1668,6 +1914,11 @@ mod tests {
+@@ -1668,6 +2054,12 @@ mod tests {
          let light = Arc::new(AtomicBool::new(false));
          let query_light = Arc::clone(&light);
          let runner = PtyIoActorRunner {
@@ -2026,11 +2823,12 @@ index 4d57dd161ba72ac292ca19357cb1070dd168c788..75f1acffd7a7030b9438006a71b5a6d6
 +            user_writes: Arc::new(Mutex::new(UserWriteGate {
 +                accepting: true,
 +                guarded_pending: 0,
++                scope_inhibited: false,
 +            })),
              pane_id: 1,
              file: std::fs::File::from(owned),
              data_rx,
-@@ -1691,10 +1942,14 @@ mod tests {
+@@ -1691,10 +2083,15 @@ mod tests {
              poll_observer: None,
          };
          let handle = PtyIoActorHandle {
@@ -2042,11 +2840,12 @@ index 4d57dd161ba72ac292ca19357cb1070dd168c788..75f1acffd7a7030b9438006a71b5a6d6
 +            user_writes: Arc::new(Mutex::new(UserWriteGate {
 +                accepting: true,
 +                guarded_pending: 0,
++                scope_inhibited: false,
 +            })),
              controls,
              response_order,
          };
-@@ -1760,10 +2015,14 @@ mod tests {
+@@ -1760,10 +2157,15 @@ mod tests {
              .expect("fill data queue");
          let (wake, _wake_read_fd) = test_wake_pair();
          let handle = PtyIoActorHandle {
@@ -2058,11 +2857,12 @@ index 4d57dd161ba72ac292ca19357cb1070dd168c788..75f1acffd7a7030b9438006a71b5a6d6
 +            user_writes: Arc::new(Mutex::new(UserWriteGate {
 +                accepting: true,
 +                guarded_pending: 0,
++                scope_inhibited: false,
 +            })),
              controls: Arc::new(Mutex::new(SharedPtyControls::default())),
              response_order: Arc::new(Mutex::new(())),
          };
-@@ -1801,6 +2060,11 @@ mod tests {
+@@ -1801,6 +2203,12 @@ mod tests {
              )))
              .expect("queued write");
          let mut runner = PtyIoActorRunner {
@@ -2070,11 +2870,12 @@ index 4d57dd161ba72ac292ca19357cb1070dd168c788..75f1acffd7a7030b9438006a71b5a6d6
 +            user_writes: Arc::new(Mutex::new(UserWriteGate {
 +                accepting: true,
 +                guarded_pending: 0,
++                scope_inhibited: false,
 +            })),
              pane_id: 1,
              file: std::fs::File::from(unsafe { OwnedFd::from_raw_fd(actor_socket.into_raw_fd()) }),
              data_rx,
-@@ -1840,3 +2104,282 @@ mod tests {
+@@ -1840,3 +2248,521 @@ mod tests {
          assert!(read_rx.recv_timeout(Duration::from_millis(150)).is_err());
      }
  }
@@ -2091,6 +2892,7 @@ index 4d57dd161ba72ac292ca19357cb1070dd168c788..75f1acffd7a7030b9438006a71b5a6d6
 +        let gate = Arc::new(Mutex::new(UserWriteGate {
 +            accepting: true,
 +            guarded_pending: 0,
++            scope_inhibited: false,
 +        }));
 +        gate.lock()
 +            .expect("fixture gate")
@@ -2122,6 +2924,7 @@ index 4d57dd161ba72ac292ca19357cb1070dd168c788..75f1acffd7a7030b9438006a71b5a6d6
 +        let gate = Arc::new(Mutex::new(UserWriteGate {
 +            accepting: true,
 +            guarded_pending: 0,
++            scope_inhibited: false,
 +        }));
 +        let mut permits = Vec::new();
 +        for _ in 0..2 {
@@ -2161,6 +2964,7 @@ index 4d57dd161ba72ac292ca19357cb1070dd168c788..75f1acffd7a7030b9438006a71b5a6d6
 +    struct MemoryWriter {
 +        bytes: Vec<u8>,
 +        stop_after: Option<usize>,
++        pause: Option<(std_mpsc::Sender<()>, std_mpsc::Receiver<()>)>,
 +    }
 +    impl AsRawFd for MemoryWriter {
 +        fn as_raw_fd(&self) -> std::os::fd::RawFd {
@@ -2174,6 +2978,12 @@ index 4d57dd161ba72ac292ca19357cb1070dd168c788..75f1acffd7a7030b9438006a71b5a6d6
 +    }
 +    impl Write for MemoryWriter {
 +        fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
++            if let Some((started, resume)) = self.pause.take() {
++                started.send(()).expect("write started");
++                resume
++                    .recv_timeout(Duration::from_secs(2))
++                    .expect("controlled resume");
++            }
 +            let available = self.stop_after.map_or(bytes.len(), |limit| {
 +                limit.saturating_sub(self.bytes.len()).min(bytes.len())
 +            });
@@ -2218,6 +3028,7 @@ index 4d57dd161ba72ac292ca19357cb1070dd168c788..75f1acffd7a7030b9438006a71b5a6d6
 +                user_writes: Arc::new(Mutex::new(UserWriteGate {
 +                    accepting: true,
 +                    guarded_pending: 0,
++                    scope_inhibited: false,
 +                })),
 +                file: MemoryWriter::default(),
 +                data_rx,
@@ -2356,9 +3167,238 @@ index 4d57dd161ba72ac292ca19357cb1070dd168c788..75f1acffd7a7030b9438006a71b5a6d6
 +        assert!(runner.file.bytes.is_empty());
 +        assert!(runner.pending_writes.is_empty());
 +    }
++    fn inhibit(
++        runner: &mut PtyIoActorRunner<MemoryWriter, NoNativeDescriptor>,
++        expected: &GuardedPromptOrigin,
++    ) -> Result<(), InputDrainError> {
++        let (control, received) = std_mpsc::channel();
++        let reply = queue_input_inhibit(
++            runner.origin.as_deref(),
++            expected,
++            &runner.user_writes,
++            &control,
++        )?;
++        runner.handle_control_command(received.recv().expect("barrier"));
++        reply.recv().expect("drain completion")
++    }
++    #[test]
++    fn input_drain_pure_tests_queued_generic_and_guarded_are_canceled_before_ack() {
++        let (mut runner, tx, _, expected) = controlled_runner();
++        queue_plain_input(&tx, &runner.user_writes, Bytes::from_static(b"plain"))
++            .expect("plain queued");
++        assert_eq!(inhibit(&mut runner, &expected), Ok(()));
++        assert!(runner.data_rx.try_recv().is_err());
++        assert!(runner.file.bytes.is_empty());
++        assert!(queue_plain_input(&tx, &runner.user_writes, Bytes::from_static(b"late")).is_err());
++        let (mut runner, tx, _, expected) = controlled_runner();
++        let prior = queue(&runner, &tx, expected.clone()).expect("guarded queued");
++        assert_eq!(inhibit(&mut runner, &expected), Ok(()));
++        assert_eq!(
++            prior.recv().expect("canceled"),
++            Err(GuardedPromptError::OriginUnavailable)
++        );
++        assert_eq!(runner.user_writes.lock().expect("gate").guarded_pending, 0);
++        assert!(queue(&runner, &tx, expected).is_err());
++        assert!(runner.file.bytes.is_empty());
++    }
++    #[test]
++    fn input_drain_pure_tests_terminal_response_queues_are_empty_before_and_after_ack() {
++        let (mut runner, _, _, expected) = controlled_runner();
++        runner
++            .controls
++            .lock()
++            .expect("controls")
++            .terminal_responses
++            .push(Bytes::from_static(b"queued-response"));
++        runner.enqueue_terminal_responses(vec![Bytes::from_static(b"pending-response")]);
++        assert_eq!(inhibit(&mut runner, &expected), Ok(()));
++        assert!(runner
++            .controls
++            .lock()
++            .expect("controls")
++            .terminal_responses
++            .is_empty());
++        assert!(runner.pending_writes.is_empty());
++        runner.enqueue_terminal_responses(vec![Bytes::from_static(b"late-response")]);
++        runner.apply_pending_controls();
++        runner.flush_pending_writes_once().expect("inhibited flush");
++        assert!(runner.pending_writes.is_empty());
++        assert!(runner.file.bytes.is_empty());
++    }
++    #[test]
++    fn input_drain_pure_tests_partial_guarded_write_stays_uncertain_and_suppresses_enter() {
++        let (mut runner, tx, _, expected) = controlled_runner();
++        let prior = queue(&runner, &tx, expected.clone()).expect("queued");
++        let command = runner.data_rx.try_recv().expect("command");
++        runner.handle_data_command(command);
++        runner.file.stop_after = Some(2);
++        runner.flush_pending_writes_once().expect("partial");
++        assert_eq!(inhibit(&mut runner, &expected), Ok(()));
++        assert_eq!(
++            prior.recv().expect("canceled"),
++            Err(GuardedPromptError::SubmissionUncertain)
++        );
++        runner.file.stop_after = None;
++        runner.schedule_submission_enter();
++        runner.flush_pending_writes_once().expect("inhibited");
++        assert_eq!(runner.file.bytes, b"fo");
++    }
++    #[test]
++    fn input_drain_pure_tests_lost_ack_repeat_and_exited_same_actor_are_positive() {
++        let (mut runner, _, live, expected) = controlled_runner();
++        live.0.store(false, Ordering::Release);
++        runner.origin.as_ref().expect("origin").mark_exited();
++        let (control, received) = std_mpsc::channel();
++        let lost = queue_input_inhibit(
++            runner.origin.as_deref(),
++            &expected,
++            &runner.user_writes,
++            &control,
++        )
++        .expect("first");
++        drop(lost);
++        runner.handle_control_command(received.recv().expect("barrier"));
++        assert_eq!(inhibit(&mut runner, &expected), Ok(()));
++        assert!(!runner.user_writes.lock().expect("gate").reopen());
++    }
++    #[test]
++    fn input_drain_pure_tests_wrong_imported_replaced_or_released_actor_never_grants() {
++        let (mut runner, _, _, expected) = controlled_runner();
++        let mut other = expected.clone();
++        other.runtime_incarnation = "00000000-0000-4000-8000-000000000009".into();
++        assert_eq!(
++            inhibit(&mut runner, &other),
++            Err(InputDrainError::GuardMismatch)
++        );
++        assert!(runner.user_writes.lock().expect("gate").accepting);
++        runner.origin = None;
++        assert_eq!(
++            inhibit(&mut runner, &expected),
++            Err(InputDrainError::OriginUnavailable)
++        );
++        let (mut runner, _, _, expected) = controlled_runner();
++        runner.state = ActorState::Released;
++        assert_eq!(
++            inhibit(&mut runner, &expected),
++            Err(InputDrainError::Unavailable)
++        );
++    }
++    #[test]
++    fn input_drain_pure_tests_control_loss_is_inhibited_unconfirmed() {
++        let (runner, _, _, expected) = controlled_runner();
++        let (control, received) = std_mpsc::channel();
++        drop(received);
++        assert!(matches!(
++            queue_input_inhibit(
++                runner.origin.as_deref(),
++                &expected,
++                &runner.user_writes,
++                &control
++            ),
++            Err(InputDrainError::Unavailable)
++        ));
++        let mut gate = runner.user_writes.lock().expect("gate");
++        assert!(gate.scope_inhibited);
++        assert!(!gate.accepting);
++        assert!(!gate.reopen());
++    }
++    #[test]
++    fn input_drain_pure_tests_prequeued_handoff_rollback_cannot_reopen_or_transfer() {
++        let (mut runner, _, _, expected) = controlled_runner();
++        let (control, received) = std_mpsc::channel();
++        runner.control_rx = received;
++        let (rollback, rollback_result) = std_mpsc::channel();
++        let (handoff, handoff_result) = std_mpsc::channel();
++        let (duplicate, duplicate_result) = std_mpsc::channel();
++        control
++            .send(PtyIoControlCommand::RollbackHandoff(rollback))
++            .expect("queued rollback");
++        control
++            .send(PtyIoControlCommand::BeginHandoff(handoff))
++            .expect("queued handoff");
++        control
++            .send(PtyIoControlCommand::DuplicateForHandoff(duplicate))
++            .expect("queued duplicate");
++        let drained = queue_input_inhibit(
++            runner.origin.as_deref(),
++            &expected,
++            &runner.user_writes,
++            &control,
++        )
++        .expect("inhibit admission");
++        runner.state = ActorState::Quiesced;
++        assert!(!runner.drain_control_commands());
++        assert!(rollback_result.recv().expect("rollback refusal").is_err());
++        assert!(handoff_result.recv().expect("handoff refusal").is_err());
++        assert!(duplicate_result.recv().expect("dup refusal").is_err()); // descriptor sentinel would panic on a syscall
++        assert_eq!(drained.recv().expect("drain completion"), Ok(()));
++        assert!(!runner.user_writes.lock().expect("gate").accepting);
++        assert_eq!(inhibit(&mut runner, &expected), Ok(()));
++    }
++    #[test]
++    fn input_drain_pure_tests_paused_enqueue_cannot_append_after_drain_ack() {
++        let (mut runner, tx, _, expected) = controlled_runner();
++        let gate = Arc::clone(&runner.user_writes);
++        let (ready, start) = std_mpsc::channel();
++        let sender = std::thread::spawn(move || {
++            start
++                .recv_timeout(Duration::from_secs(2))
++                .expect("resume enqueue");
++            queue_plain_input(&tx, &gate, Bytes::from_static(b"delayed"))
++        });
++        assert_eq!(inhibit(&mut runner, &expected), Ok(()));
++        ready.send(()).expect("resume sender");
++        assert!(matches!(
++            sender.join().expect("sender"),
++            Err(mpsc::error::TrySendError::Closed(_))
++        ));
++        assert!(runner.data_rx.try_recv().is_err());
++        assert!(runner.file.bytes.is_empty());
++    }
++    #[test]
++    fn input_drain_pure_tests_paused_inflight_write_finishes_before_inhibit_and_no_later_write() {
++        let (mut runner, _, _, expected) = controlled_runner();
++        runner.enqueue_write(Bytes::from_static(b"first"));
++        let (started, observed) = std_mpsc::channel();
++        let (resume, proceed) = std_mpsc::channel();
++        runner.file.pause = Some((started, proceed));
++        let gate = Arc::clone(&runner.user_writes);
++        let origin = Arc::clone(runner.origin.as_ref().expect("origin"));
++        let (control, received) = std_mpsc::channel();
++        let worker = std::thread::spawn(move || {
++            runner.flush_pending_writes_once().expect("inflight write");
++            runner.handle_control_command(
++                received
++                    .recv_timeout(Duration::from_secs(2))
++                    .expect("barrier"),
++            );
++            runner.enqueue_write(Bytes::from_static(b"late"));
++            runner.flush_pending_writes_once().expect("late suppressed");
++            runner
++        });
++        observed
++            .recv_timeout(Duration::from_secs(2))
++            .expect("write paused");
++        let (attempted, attempting) = std_mpsc::channel();
++        let inhibitor = std::thread::spawn(move || {
++            attempted.send(()).expect("attempt inhibit");
++            queue_input_inhibit(Some(&origin), &expected, &gate, &control)
++                .expect("inhibit")
++                .recv_timeout(Duration::from_secs(2))
++                .expect("ack")
++        });
++        attempting
++            .recv_timeout(Duration::from_secs(2))
++            .expect("inhibit pending");
++        resume.send(()).expect("finish prior write");
++        assert_eq!(inhibitor.join().expect("inhibitor"), Ok(()));
++        let runner = worker.join().expect("worker");
++        assert_eq!(runner.file.bytes, b"first");
++        assert!(runner.pending_writes.is_empty());
++    }
 +}
 diff --git a/src/pty/backend/unix.rs b/src/pty/backend/unix.rs
-index 5871004a3d38f67d7af683f0d18131c8e6870904..d0c291645dfb038a19edf9fb8c25192bc5d1d7ec 100644
+index 5871004..d0c2916 100644
 --- a/src/pty/backend/unix.rs
 +++ b/src/pty/backend/unix.rs
 @@ -7,6 +7,7 @@ use crate::pty::fd;
@@ -2385,11 +3425,27 @@ index 5871004a3d38f67d7af683f0d18131c8e6870904..d0c291645dfb038a19edf9fb8c25192b
      })
  }
  
+diff --git a/src/server/headless.rs b/src/server/headless.rs
+index 18869e0..9bb0328 100644
+--- a/src/server/headless.rs
++++ b/src/server/headless.rs
+@@ -2957,7 +2957,10 @@ impl HeadlessServer {
+             return changed;
+         }
+         let alt_screen_read_spec = self.alt_screen_read_spec(&msg.request);
+-        if matches!(&msg.request.method, api::schema::Method::AgentPrompt(_)) {
++        if matches!(
++            &msg.request.method,
++            api::schema::Method::AgentPrompt(_) | api::schema::Method::TerminalInhibitInput(_)
++        ) {
+             let deferred_changed = self
+                 .app
+                 .handle_deferred_agent_api_request(msg.request, msg.respond_to);
 diff --git a/src/terminal/runtime.rs b/src/terminal/runtime.rs
-index 9171340906a6e964749d424653f860886d88b294..ebac7a2bc137ae0a6a0a8b8751069cf2593636a5 100644
+index 9171340..a971ef6 100644
 --- a/src/terminal/runtime.rs
 +++ b/src/terminal/runtime.rs
-@@ -478,6 +478,26 @@ impl TerminalRuntime {
+@@ -478,6 +478,41 @@ impl TerminalRuntime {
          self.0.try_send_bytes(bytes)
      }
  
@@ -2398,6 +3454,21 @@ index 9171340906a6e964749d424653f860886d88b294..ebac7a2bc137ae0a6a0a8b8751069cf2
 +        terminal_id: &str,
 +    ) -> Option<crate::platform::guarded_prompt::GuardedPromptOrigin> {
 +        self.0.guarded_prompt_origin(terminal_id)
++    }
++    pub(crate) fn captured_input_origin(
++        &self,
++        terminal_id: &str,
++    ) -> Option<crate::platform::guarded_prompt::GuardedPromptOrigin> {
++        self.0.captured_input_origin(terminal_id)
++    }
++    pub(crate) fn inhibit_input(
++        &self,
++        expected: &crate::platform::guarded_prompt::GuardedPromptOrigin,
++    ) -> Result<
++        std::sync::mpsc::Receiver<Result<(), crate::platform::guarded_prompt::InputDrainError>>,
++        crate::platform::guarded_prompt::InputDrainError,
++    > {
++        self.0.inhibit_input(expected)
 +    }
 +    pub(crate) fn queue_guarded_submission(
 +        &self,
@@ -2416,6 +3487,3 @@ index 9171340906a6e964749d424653f860886d88b294..ebac7a2bc137ae0a6a0a8b8751069cf2
      pub fn queue_user_input_submission(
          &self,
          text: Bytes,
--- 
-2.54.0 (Apple Git-157)
-
