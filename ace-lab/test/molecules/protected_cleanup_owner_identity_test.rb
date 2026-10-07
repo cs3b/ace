@@ -45,7 +45,10 @@ class ProtectedCleanupOwnerIdentityTest < Minitest::Test
         "ExecStartEx" => [[refs[1].fetch("path"), [refs[1].fetch("path"), Owner::DISABLE, "-I", root, refs[0].fetch("path")],
           [], 1, 1, 0, 0, 77, 0, 0]])
       unit, service = @unit, @service
+      service.merge!("Environment" => Owner::ENVIRONMENT.dup, "EnvironmentFiles" => [], "PassEnvironment" => [],
+        "UnsetEnvironment" => [], "PAMName" => "")
       @manager = Object.new
+      @manager.define_singleton_method(:manager_environment) { |**_| [] }
       @manager.define_singleton_method(:typed_properties) { |interface:, **_| interface == "Unit" ? unit.dup : service.dup }
       @manager.define_singleton_method(:unit_for_pidfd) do |handle:, **_|
         raise "original IO unexpectedly closed" if handle.closed?
@@ -250,6 +253,36 @@ class ProtectedCleanupOwnerIdentityTest < Minitest::Test
     end
   end
 
+  def test_effective_startup_environment_is_closed_even_when_unit_masks_unsafe_manager_values
+    %w[LD_PRELOAD RUBYOPT GEM_HOME BUNDLE_GEMFILE HOME CODEX_HOME HERDR_CONFIG_PATH SHELL TMPDIR].each do |key|
+      fixture do
+        @manager.define_singleton_method(:manager_environment) { |**_| ["#{key}=unsafe"] }
+        assert_raises(Unavailable) { @owner.observe!(socket: Object.new) }
+      end
+    end
+    fixture do
+      @manager.define_singleton_method(:manager_environment) { |**_| ["PATH=/different", "LANGUAGE=pl", "LC_TIME=C"] }
+      assert_equal "cleanup.service", @owner.observe!(socket: Object.new).fetch("unit")
+    end
+    {"Environment" => ["PATH=/usr/bin:/bin", "LANG=C", "LC_ALL=C", "HOME=/other"],
+      "EnvironmentFiles" => [["/foreign", false]], "PassEnvironment" => ["HOME"],
+      "UnsetEnvironment" => ["LD_PRELOAD"], "PAMName" => "login"}.each do |key, value|
+      fixture do
+        @service[key] = value
+        assert_raises(Unavailable) { @owner.observe_self! }
+      end
+    end
+    fixture do
+      calls = 0
+      @manager.define_singleton_method(:manager_environment) do |**_|
+        calls += 1
+        ["LANG=#{calls}"]
+      end
+      assert_raises(Unavailable) { @owner.observe!(socket: Object.new) }
+      assert @handle.closed?
+    end
+  end
+
   def test_all_manager_reads_share_one_absolute_deadline_without_renewal
     fixture do
       clock = 100.0
@@ -260,6 +293,11 @@ class ProtectedCleanupOwnerIdentityTest < Minitest::Test
         clock += 0.4
         interface == "Unit" ? unit.dup : service.dup
       end
+      @manager.define_singleton_method(:manager_environment) do |timeout:|
+        calls << timeout
+        clock += 0.4
+        []
+      end
       @manager.define_singleton_method(:unit_for_pidfd) do |handle:, timeout:|
         raise "lost original lifetime" if handle.closed?
         calls << timeout
@@ -269,7 +307,7 @@ class ProtectedCleanupOwnerIdentityTest < Minitest::Test
       Process.stub(:clock_gettime, ->(*) { clock }) do
         assert_equal "cleanup.service", @owner.observe!(socket: Object.new, deadline: 200).fetch("unit")
       end
-      assert_equal 6, calls.size
+      assert_equal 8, calls.size
       calls.each_with_index { |timeout, index| assert_in_delta 5 - index * 0.4, timeout, 0.0001 }
       assert @handle.closed?
     end
@@ -280,10 +318,11 @@ class ProtectedCleanupOwnerIdentityTest < Minitest::Test
         clock += 3
         interface == "Unit" ? unit.dup : service.dup
       end
+      @kernel.define_singleton_method(:pin) { |_| raise "expired startup observation reached pidfd acquisition" }
       Process.stub(:clock_gettime, ->(*) { clock }) do
         assert_raises(Unavailable) { @owner.observe!(socket: Object.new, deadline: 105) }
       end
-      assert @handle.closed?
+      refute @handle.closed?, "an unacquired controlled handle remains owned by the fixture"
     end
   end
 

@@ -155,6 +155,11 @@ class SystemdScopeManagerTest < AceRuntimeTestCase
     assert_equal ["/org/freedesktop/systemd1", "org.freedesktop.systemd1.Manager", "Environment"], argv.last(3)
     assert_equal 5, timeout
     assert_includes argv, "--allow-interactive-authorization=no"
+    assert_equal ["PATH=/usr/bin", "LC_ALL="], @manager.manager_environment(timeout: 1.25)
+    assert_equal 1.25, @command.calls.last.last
+    before = @command.calls.size
+    assert_raises(Unavailable) { @manager.manager_environment(timeout: 0) }
+    assert_equal before, @command.calls.size
     [JSON.generate("type" => "s", "data" => "PATH=/usr/bin"), JSON.generate("type" => "as", "data" => ["PATH=a", "PATH=b"]),
       JSON.generate("type" => "as", "data" => ["PATH"]), JSON.generate("type" => "as", "data" => ["PATH=a\0b"]),
       JSON.generate("type" => "as", "data" => Array.new(257) { |index| "KEY_#{index}=value" }),

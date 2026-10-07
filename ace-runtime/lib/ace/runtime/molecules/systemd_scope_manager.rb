@@ -205,10 +205,10 @@ module Ace
             "manager_environment" => manager_environment, "prerequisites" => inspect_prerequisites(service)}
         end
 
-        def manager_environment
+        def manager_environment(timeout: 5)
           bytes = @command.call([BUSCTL, "--system", "--no-pager", "--json=short", "--auto-start=no",
             "--allow-interactive-authorization=no", "get-property", "org.freedesktop.systemd1",
-            "/org/freedesktop/systemd1", "org.freedesktop.systemd1.Manager", "Environment"], timeout: 5)
+            "/org/freedesktop/systemd1", "org.freedesktop.systemd1.Manager", "Environment"], timeout: bounded_timeout(timeout))
           unless bytes.is_a?(String) && bytes.bytesize.between?(1, 65_536) && bytes.lines.size == 1
             raise RuntimeUnavailableError, "effective manager environment is unavailable"
           end

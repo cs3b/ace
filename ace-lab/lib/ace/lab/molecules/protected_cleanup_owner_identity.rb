@@ -18,7 +18,12 @@ module Ace
         UNIT_FIELDS = {"Id" => "s", "LoadState" => "s", "ActiveState" => "s", "SubState" => "s",
           "InvocationID" => "ay", "FragmentPath" => "s", "DropInPaths" => "as"}.freeze
         EMPTY_COMMANDS = %w[ExecConditionEx ExecStartPreEx ExecStartPostEx ExecReloadEx ExecStopEx ExecStopPostEx].freeze
-        SERVICE_FIELDS = {**EMPTY_COMMANDS.to_h { |key| [key, "a(sasasttttuii)"] }, "Type" => "s", "MainPID" => "u", "ControlPID" => "u", "ExecStartEx" => "a(sasasttttuii)"}.freeze
+        ENVIRONMENT = %w[PATH=/usr/bin:/bin LANG=C LC_ALL=C HOME=/root].freeze
+        MANAGER_ENVIRONMENT = %w[PATH LANG LANGUAGE LC_ALL LC_CTYPE LC_NUMERIC LC_TIME LC_COLLATE LC_MONETARY
+          LC_MESSAGES LC_PAPER LC_NAME LC_ADDRESS LC_TELEPHONE LC_MEASUREMENT LC_IDENTIFICATION].freeze
+        ENVIRONMENT_FIELDS = {"Environment" => "as", "EnvironmentFiles" => "a(sb)", "PassEnvironment" => "as",
+          "UnsetEnvironment" => "as", "PAMName" => "s"}.freeze
+        SERVICE_FIELDS = {**ENVIRONMENT_FIELDS, **EMPTY_COMMANDS.to_h { |key| [key, "a(sasasttttuii)"] }, "Type" => "s", "MainPID" => "u", "ControlPID" => "u", "ExecStartEx" => "a(sasasttttuii)"}.freeze
 
         class Kernel
           def initialize(identity: Runtime::ProcessIdentity.new, pidfd_open: nil)
@@ -177,6 +182,12 @@ module Ace
         def snapshot(deadline)
           unit = @manager.typed_properties(unit: @unit, interface: "Unit", signatures: UNIT_FIELDS, timeout: remaining(deadline))
           service = @manager.typed_properties(unit: @unit, interface: "Service", signatures: SERVICE_FIELDS, timeout: remaining(deadline))
+          environment = @manager.manager_environment(timeout: remaining(deadline))
+          unless environment.is_a?(Array) && environment.all? { |entry| entry.is_a?(String) && MANAGER_ENVIRONMENT.include?(entry.split("=", 2).first) } &&
+              service.fetch("Environment").sort == ENVIRONMENT.sort &&
+              %w[EnvironmentFiles PassEnvironment UnsetEnvironment].all? { |key| service.fetch(key) == [] } && service.fetch("PAMName") == ""
+            raise Unavailable, "cleanup original startup environment differs"
+          end
           start = service.fetch("ExecStartEx")
           unless unit.values_at("Id", "LoadState", "ActiveState", "SubState", "DropInPaths") == [@unit, "loaded", "active", "running", []] &&
               unit.fetch("InvocationID").match?(/\A[0-9a-f]{32}\z/) && unit.fetch("InvocationID") != "0" * 32 &&
@@ -186,7 +197,7 @@ module Ace
               start[0][3].positive? && start[0][7] == service.fetch("MainPID") && start[0][8..9] == [0, 0]
             raise Unavailable, "cleanup unit execution-start configuration differs"
           end
-          unit.merge(service)
+          unit.merge(service).merge("EffectiveManagerEnvironment" => environment)
         rescue KeyError, NoMethodError, TypeError
           raise Unavailable, "cleanup unit execution facts are unavailable"
         end
