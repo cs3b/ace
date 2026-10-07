@@ -64,6 +64,24 @@ module Ace
         event
       end
 
+      def test_stop_owned_proof_accepts_only_its_uncertain_reply_shape
+        prior = @events[0...-1]
+        data = {"attempt_id" => "attempt", "generation" => prior.count { |event| event["type"] == "authority_mutation" } + 1,
+          "state" => "uncertain", "proof_id" => @selection.fetch("closed_proof_event_id"), "required_action" => "reconcile_scope"}
+        [nil, ["state", "closed_no_writers"], ["required_action", "settle_services"], ["proof_id", "f" * 64],
+          ["generation", 4.0], ["generation", 999]].each do |invalid|
+          @events = prior.dup
+          value = invalid ? data.merge(invalid[0] => invalid[1]) : data
+          append("authority_mutation", {"operation" => "stop_attempt", "assignment_id" => "assignment", "attempt_id" => "attempt", "data" => value})
+          accept(plan)
+          if invalid
+            assert_raises(AttemptErrors::EvidenceUnavailable) { Molecules::CanonicalAttemptState.derive(@events) }
+          else
+            assert_equal "stopped", Molecules::CanonicalAttemptState.derive(@events)
+          end
+        end
+      end
+
       def test_pure_coordinator_and_journal_project_running_and_uncertain_stopped_without_generic_bypass
         [false, true].each do |uncertain|
           original = @events.dup

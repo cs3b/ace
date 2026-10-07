@@ -116,7 +116,15 @@ module Ace
           proof = prefix.find { |entry| entry["digest"] == payload.fetch("closed_proof_event_id") }
           accepted_proof = proof && prefix.find { |entry| entry["type"] == "authority_mutation" && entry["previous_digest"] == proof["digest"] &&
             %w[close_execution_scope stop_attempt].include?(entry.dig("payload", "operation")) &&
-            entry.dig("payload", "data", "proof_id") == proof["digest"] && entry.dig("payload", "data", "state") == "closed_no_writers" }
+            entry.dig("payload", "data", "proof_id") == proof["digest"] &&
+            (entry.dig("payload", "operation") == "close_execution_scope" ?
+              entry.dig("payload", "data", "state") == "closed_no_writers" :
+              entry.dig("payload", "data").is_a?(Hash) && entry.dig("payload", "data").keys.sort == %w[attempt_id generation proof_id required_action state] &&
+                entry.dig("payload", "data", "attempt_id") == payload.fetch("attempt_id") &&
+                entry.dig("payload", "data", "generation").is_a?(Integer) &&
+                entry.dig("payload", "data", "generation") == prefix.take_while { |item| item["digest"] != entry["digest"] }.count { |item| item["type"] == "authority_mutation" } + 1 &&
+                entry.dig("payload", "data", "state") == "uncertain" &&
+                entry.dig("payload", "data", "required_action") == "reconcile_scope") }
           unless accepted_seal && (accepted_proof || event["previous_digest"] == proof&.fetch("digest"))
             unavailable!("Stopped canonical seal or proof has no accepted owner")
           end
