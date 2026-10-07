@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Authenticate complete immutable event inventories before ownership filtering, rejecting removed assignments/attempts/events, rewritten bytes and duplicate event digests while preserving valid interleaved appends.
+
 - Expose a deeply immutable original executor settlement context through the existing authenticated service status owner, binding the fixed receiver/mapping and accepted current challenge while retaining canonical receipt verification.
 - Batch immutable event-introduction proofs across selected assignments in one complete first-parent traversal, preserving each original chain and exact event-file bytes without a retained cache.
 

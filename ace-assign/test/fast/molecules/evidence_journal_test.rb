@@ -143,6 +143,58 @@ module Ace
         end
       end
 
+      def test_complete_inventory_authenticates_interleaved_attempts_and_refuses_omissions_and_duplicate_files
+        with_temp_cache do |cache_dir|
+          repo = File.join(cache_dir, "repo")
+          base = init_repo(repo)
+          journal = Molecules::EvidenceJournal.new(repo_root: repo, ref: REF, checkout_root: File.join(cache_dir, "co"))
+          assert_equal({}, journal.canonical_event_inventory!(commit: base).fetch("events"))
+          first = build_event(type: "intent", attempt_id: "one", payload: {})
+          introduction = journal.append(assignment_id: "alpha", attempt_id: "one", events: [first])
+          other = build_event(type: "intent", attempt_id: "two", payload: {})
+          journal.append(assignment_id: "alpha", attempt_id: "two", events: [other])
+          following = build_event(type: "process_start", attempt_id: "one", payload: {"pid" => 123}, previous_digest: first.fetch("digest"))
+          journal.append(assignment_id: "alpha", attempt_id: "one", events: [following])
+          foreign = build_event(type: "intent", attempt_id: "foreign", payload: {})
+          tip = journal.append(assignment_id: "beta", attempt_id: "foreign", events: [foreign])
+          inventory = journal.canonical_event_inventory!(commit: tip)
+          assert_equal %w[alpha beta], inventory.fetch("events").keys.sort
+          assert_equal introduction, inventory.fetch("introductions").fetch("alpha").fetch(first.fetch("digest"))
+          assert inventory.frozen?
+          assert inventory.fetch("events").fetch("alpha").all?(&:frozen?)
+          checkout = File.join(cache_dir, "co", "journal")
+          paths = Dir.glob(File.join(checkout, "execution", "*", "events", "*.json"))
+          paths.each do |path|
+            git(checkout, "checkout", "--detach", tip)
+            FileUtils.rm_f(path)
+            git(checkout, "add", "-A")
+            git(checkout, "commit", "-m", "remove retained event")
+            omitted = git(checkout, "rev-parse", "HEAD").strip
+            assert_raises(AttemptErrors::EvidenceUnavailable) { journal.canonical_event_inventory!(commit: omitted) }
+          end
+          git(checkout, "checkout", "--detach", tip)
+          FileUtils.rm_rf(File.join(checkout, "execution", "beta"))
+          git(checkout, "add", "-A")
+          git(checkout, "commit", "-m", "remove complete assignment")
+          assert_raises(AttemptErrors::EvidenceUnavailable) { journal.canonical_event_inventory!(commit: git(checkout, "rev-parse", "HEAD").strip) }
+          git(checkout, "checkout", "--detach", tip)
+          path = Dir.glob(File.join(checkout, "execution", "beta", "events", "*.json")).fetch(0)
+          FileUtils.cp(path, File.join(File.dirname(path), "duplicate.json"))
+          git(checkout, "add", "-A")
+          git(checkout, "commit", "-m", "duplicate valid event blob")
+          assert_raises(AttemptErrors::EvidenceUnavailable) { journal.canonical_event_inventory!(commit: git(checkout, "rev-parse", "HEAD").strip) }
+          git(checkout, "checkout", "--detach", tip)
+          File.write(path, JSON.generate(foreign))
+          git(checkout, "add", "-A")
+          git(checkout, "commit", "-m", "rewrite valid foreign event serialization")
+          changed = git(checkout, "rev-parse", "HEAD").strip
+          assert_raises(AttemptErrors::EvidenceUnavailable) { journal.canonical_event_inventory!(commit: changed) }
+          # Existing selective proof still authenticates only its selected assignment.
+          assert_equal introduction, journal.event_commit!(assignment_id: "alpha", event_digest: first.fetch("digest"), commit: changed)
+          assert_equal inventory, journal.canonical_event_inventory!(commit: tip)
+        end
+      end
+
       def test_fixed_snapshot_requires_an_actual_readable_commit_object
         with_temp_cache do |cache_dir|
           repo = File.join(cache_dir, "repo")
