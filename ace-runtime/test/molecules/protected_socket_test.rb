@@ -40,4 +40,25 @@ class ProtectedSocketTest < AceRuntimeTestCase
       assert_raises(Ace::Runtime::RuntimeUnavailableError) { WIRE.read(right, deadline: WIRE.deadline) }
     end
   end
+  def test_raw_duplicate_keys_invalid_utf8_comments_and_excessive_nesting_refuse
+    frames = ["{\"operation\":\"safe\",\"operation\":\"other\"}\n",
+      "{\"origin\":{\"pid\":1,\"pid\":2}}\n", "{\"text\":\"\xff\"}\n".b,
+      "{/*comment*/\"operation\":\"safe\"}\n", "[" * 33 + "0" + "]" * 33 + "\n"]
+    frames.each do |frame|
+      with_pair do |left, right|
+        left.write(frame)
+        assert_raises(Ace::Runtime::RuntimeUnavailableError) { WIRE.read(right, deadline: WIRE.deadline) }
+      end
+    end
+  end
+
+  def test_utf8_frame_size_and_following_frame_remain_exact
+    with_pair do |left, right|
+      first = "{\"text\":\"żółć\"}\n"
+      left.write(first + "{\"next\":true}\n")
+      assert_equal({data: {"text" => "żółć"}, bytesize: first.bytesize}, WIRE.read(right, deadline: WIRE.deadline, with_size: true))
+      assert_equal({"next" => true}, WIRE.read(right, deadline: WIRE.deadline))
+    end
+  end
+
 end

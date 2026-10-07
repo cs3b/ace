@@ -19,12 +19,102 @@ module Ace
 
       def with_upload(payload, eof: true)
         reader, writer = UNIXSocket.pair
-        writer.write(payload)
-        writer.shutdown(Socket::SHUT_WR) if eof
-        yield reader
+        sender = Thread.new do
+          writer.write(payload)
+          writer.shutdown(Socket::SHUT_WR) if eof
+        end
+        result = yield reader
+        sender.value
+        result
       ensure
         reader&.close
         writer&.close
+        sender&.join
+      end
+
+      def test_private_prompt_frames_support_two_dispatches_and_ack_without_half_close
+        with_codec do |codec, root|
+          reader, writer = UNIXSocket.pair
+          parts = ["first\nEnter", "second\x00prompt"]
+          sender = Thread.new do
+            parts.each_with_index do |body, index|
+              codec.send_launch_prompt(writer, bytes: body, descriptor: codec.descriptor([body], purpose: :prompt_text),
+                transfer_id: index.to_s.rjust(32, "0"), deadline: deadline)
+              assert_equal({"ack" => index}, Ace::Runtime::Molecules::ProtectedSocket.read(writer, deadline: deadline))
+            end
+          end
+          parts.each_with_index do |body, index|
+            accepted = codec.receive_launch_prompt(reader, descriptor: codec.descriptor([body], purpose: :prompt_text),
+              transfer_id: index.to_s.rjust(32, "0"), deadline: deadline) { |input| input.bytes }
+            assert_equal body, accepted
+            Ace::Runtime::Molecules::ProtectedSocket.write(reader, {"ack" => index}, deadline: deadline)
+          end
+          sender.value
+          assert_empty Dir.children(root)
+        ensure
+          reader&.close
+          writer&.close
+          sender&.join
+        end
+      end
+
+      def test_chunked_and_coalesced_private_body_preserve_next_control_frame
+        with_codec do |codec, root|
+          body = "chunked prompt"
+          id = "a" * 32
+          marker = JSON.generate({"type" => "launch_prompt_end", "transfer_id" => id}) + "\n"
+          [1, body.bytesize + marker.bytesize].each do |chunk_size|
+            reader, writer = UNIXSocket.pair
+            sender = Thread.new do
+              (body + marker + '{"next":true}' + "\n").bytes.each_slice(chunk_size) { |chunk| writer.write(chunk.pack("C*")) }
+            end
+            assert_equal body, codec.receive_launch_prompt(reader, descriptor: codec.descriptor([body], purpose: :prompt_text),
+              transfer_id: id, deadline: deadline) { |input| input.bytes }
+            assert_equal({"next" => true}, Ace::Runtime::Molecules::ProtectedSocket.read(reader, deadline: deadline))
+            sender.value
+            reader.close
+            writer.close
+          end
+          assert_empty Dir.children(root)
+        end
+      end
+
+      def test_private_prompt_boundary_refuses_extra_bytes_wrong_marker_and_early_eof_before_consumer
+        with_codec do |codec, root|
+          body, id = "accepted", "a" * 32
+          descriptor = codec.descriptor([body], purpose: :prompt_text)
+          marker = JSON.generate({"type" => "launch_prompt_end", "transfer_id" => id}) + "\n"
+          [body, body + "extra" + marker, body + marker.sub(id, "b" * 32), body + " " + marker,
+            body + "x" * 16_385 + "\n"].each do |payload|
+            with_upload(payload) do |socket|
+              assert_raises(AttemptErrors::ReceiptRejected, Ace::Runtime::RuntimeUnavailableError) do
+                codec.receive_launch_prompt(socket, descriptor: descriptor, transfer_id: id, deadline: deadline) { flunk "invalid prompt issued" }
+              end
+            end
+            assert_empty Dir.children(root)
+          end
+          assert_raises(AttemptErrors::ReceiptRejected) { codec.descriptor([""], purpose: :prompt_text) }
+          assert_raises(AttemptErrors::ReceiptRejected) { codec.descriptor(["x" * 16_385], purpose: :prompt_text) }
+          assert_raises(AttemptErrors::ReceiptRejected) { codec.descriptor(["a", "b"], purpose: :prompt_text) }
+        end
+      end
+
+      def test_private_body_and_marker_share_the_same_clamped_absolute_deadline
+        with_codec do |codec, root|
+          body, id = "accepted", "a" * 32
+          payload = body + JSON.generate({"type" => "launch_prompt_end", "transfer_id" => id}) + "\n"
+          with_upload(payload) do |socket|
+            calls = 0
+            clock = ->(*) { calls += 1; calls <= 3 ? 0 : 31 }
+            Process.stub(:clock_gettime, clock) do
+              assert_raises(Ace::Runtime::RuntimeUnavailableError) do
+                codec.receive_launch_prompt(socket, descriptor: codec.descriptor([body], purpose: :prompt_text),
+                  transfer_id: id, deadline: 100) { flunk "marker gained extra budget" }
+              end
+            end
+          end
+          assert_empty Dir.children(root)
+        end
       end
 
       def test_exact_multi_part_binary_upload_is_admitted_only_after_write_eof_and_spool_is_removed

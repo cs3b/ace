@@ -2,6 +2,7 @@
 require "ace/runtime/molecules/protected_linux"
 require "ace/runtime/molecules/protected_socket"
 require "securerandom"
+require_relative "guarded_native_origin"
 
 module Ace
   module Herdr
@@ -26,6 +27,111 @@ module Ace
         end
 
         def request(method, params = {})
+          result = exchange(method, params)
+          unless result["result"].is_a?(Hash) && !result.key?("error")
+            raise Ace::Runtime::RuntimeUnavailableError, "native control response is invalid"
+          end
+          result.fetch("result")
+        end
+
+        # Admission calls this before committing the durable prompt intent.
+        # Neither this method nor replay is permission to issue native input.
+        def prompt_preflight!(binding)
+          raise Ace::Runtime::RuntimeUnavailableError, "canonical original binding is unavailable" unless binding.is_a?(Hash)
+          original = binding.reject { |key, _| key == "guarded_origin" }
+          fresh = guarded_binding!(original)
+          unless fresh.fetch("guarded_origin") == guarded_origin!(binding)
+            raise Ace::Runtime::RuntimeUnavailableError, "canonical original guarded actor changed"
+          end
+          fresh.fetch("guarded_origin")
+        end
+
+        # Explicit N2 capture keeps existing original scope binding bytes
+        # unchanged. The launch owner persists this separately in its canonical
+        # record data before issuing any steering permission.
+        def guarded_binding!(binding)
+          raise Ace::Runtime::RuntimeUnavailableError, "canonical original binding is unavailable" unless binding.is_a?(Hash)
+          original = binding.reject { |key, _| key == "guarded_origin" }
+          observed = observe(original.fetch("native_origin").merge("process_binding" => original))
+          info = request("pane.process_info", {"pane_id" => original.fetch("pane")}).fetch("process_info")
+          unless info["pane_id"] == original.fetch("pane") && info["shell_pid"] == observed.dig("process_identity", "pid") &&
+              info["guarded_prompt"] == true && info["guarded_input_drain"] == true
+            raise Ace::Runtime::RuntimeUnavailableError, "native original guarded capability is unavailable"
+          end
+          observed.merge("guarded_origin" => GuardedNativeOrigin.verify!(info.fetch("guarded_prompt_origin"),
+            terminal_id: observed.fetch("terminal_id"), child: observed.fetch("process_identity")))
+        rescue KeyError, TypeError
+          raise Ace::Runtime::RuntimeUnavailableError, "canonical original guarded actor is unavailable"
+        end
+
+        # Only an already accepted canonical issue permit invokes this method.
+        # Unknown/lost transport results remain uncertain even if a local error
+        # occurred before some observed write; native phase is the only refusal
+        # evidence. Never return native agent/message fields or prompt bytes.
+        def prompt(binding:, text:)
+          body = text.dup.force_encoding(Encoding::UTF_8) if text.is_a?(String)
+          unless body && body.valid_encoding? && body.bytesize.between?(1, 16_384) && !body.match?(/\A[[:space:]]*\z/)
+            raise ArgumentError, "prompt text must be bounded nonblank UTF-8"
+          end
+          origin = guarded_origin!(binding)
+          submit_prompt(origin, body)
+        end
+
+        def submit_prompt(origin, body)
+          frame = exchange("agent.prompt", {"target" => origin.fetch("terminal_id"), "text" => body, "expected_origin" => origin},
+            write_limit: 131_072, read_limit: 16_384)
+          result = frame["result"]
+          if frame.keys.sort == %w[id result] && result.is_a?(Hash) && result.keys.sort == %w[agent origin submission type] &&
+              result["type"] == "agent_prompted" && result["submission"] == "submitted" && result["origin"] == origin && result["agent"].is_a?(Hash)
+            return {"outcome" => "submitted", "submission" => "submitted", "origin" => origin}
+          end
+          error = frame["error"]
+          codes = %w[guard_mismatch origin_unavailable origin_exited agent_blocked agent_not_ready target_missing submission_busy]
+          if frame.keys.sort == %w[error id] && error.is_a?(Hash) && error.keys.sort == %w[code message phase] &&
+              error["phase"] == "not_issued" && codes.include?(error["code"]) && error["message"].is_a?(String)
+            return {"outcome" => "not_issued", "phase" => "not_issued", "code" => error.fetch("code"), "origin" => origin}
+          end
+          {"outcome" => "uncertain", "origin" => origin}
+        rescue Ace::Runtime::RuntimeUnavailableError, IOError, SystemCallError
+          {"outcome" => "uncertain", "origin" => origin}
+        end
+
+        # Input drain authenticates the captured actor even after its original
+        # child exited. Reobserving a live child here would destroy that proof.
+        # Actor/server replacement or missing completion remains unconfirmed.
+        def inhibit_input(binding:)
+          origin = guarded_origin!(binding)
+          drain_input(origin)
+        end
+
+        def drain_input(origin)
+          frame = exchange("terminal.inhibit_input", {"target" => origin.fetch("terminal_id"), "expected_origin" => origin},
+            write_limit: 16_384, read_limit: 16_384)
+          result = frame["result"]
+          if frame.keys.sort == %w[id result] && result.is_a?(Hash) && result.keys.sort == %w[input_state origin pending_input type] &&
+              result["type"] == "terminal_input_drained" && result["origin"] == origin && result["input_state"] == "inhibited" &&
+              result["pending_input"].is_a?(Integer) && result["pending_input"].zero?
+            return {"outcome" => "inhibited", "origin" => origin, "input_state" => "inhibited", "pending_input" => 0}
+          end
+          error = frame["error"]
+          if frame.keys.sort == %w[error id] && error.is_a?(Hash) && error.keys.sort == %w[code phase] &&
+              error["phase"] == "unconfirmed" && %w[invalid_params guard_mismatch origin_unavailable input_drain_unavailable].include?(error["code"])
+            return {"outcome" => "unconfirmed", "origin" => origin, "code" => error.fetch("code"), "phase" => "unconfirmed"}
+          end
+          {"outcome" => "unconfirmed", "origin" => origin}
+        rescue Ace::Runtime::RuntimeUnavailableError, IOError, SystemCallError
+          {"outcome" => "unconfirmed", "origin" => origin}
+        end
+
+        def guarded_origin!(binding)
+          raise Ace::Runtime::RuntimeUnavailableError, "canonical original guarded binding is unavailable" unless binding.is_a?(Hash)
+          GuardedNativeOrigin.verify!(binding.fetch("guarded_origin"), terminal_id: binding.fetch("terminal_id"),
+            child: binding.fetch("process_identity"))
+        rescue KeyError, TypeError
+          raise Ace::Runtime::RuntimeUnavailableError, "canonical original guarded binding is unavailable"
+        end
+
+        def exchange(method, params = {}, write_limit: wire::LIMIT, read_limit: wire::LIMIT)
           verify!
           native = @mapping.fetch("native")
           wire.connect(native.fetch("socket_path")) do |socket|
@@ -35,13 +141,13 @@ module Ace
             end
             id = SecureRandom.hex(12)
             deadline = wire.deadline
-            wire.write(socket, {"id" => id, "method" => method, "params" => params}, deadline: deadline)
-            result = wire.read(socket, deadline: deadline)
-            unless result.is_a?(Hash) && result["id"] == id && result["result"].is_a?(Hash) && !result.key?("error")
+            wire.write(socket, {"id" => id, "method" => method, "params" => params}, deadline: deadline, limit: write_limit)
+            result = wire.read(socket, deadline: deadline, limit: read_limit)
+            unless result.is_a?(Hash) && result["id"] == id
               raise Ace::Runtime::RuntimeUnavailableError, "native control response is invalid"
             end
             verify!
-            result.fetch("result")
+            result
           end
         rescue SystemCallError, IOError
           raise Ace::Runtime::RuntimeUnavailableError, "native control outcome is unavailable"
@@ -125,6 +231,7 @@ module Ace
         end
 
         private
+        private :exchange, :submit_prompt, :drain_input
         def wire
           Ace::Runtime::Molecules::ProtectedSocket
         end

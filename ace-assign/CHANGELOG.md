@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Add canonical prompt issuance and authenticated immutable completion primitives with journal-wide retry identity enforcement, plus bounded private prompt framing. Public steering and retained launcher composition remain in progress.
+
+### Added
+
 - Authenticate the fixed private readiness hook, original protected configuration and boot/network proofs, complete descriptor-pinned server resource/API views, and canonical native admission. Track pending original service issuance across unlocked callbacks and refuse closure while issuance remains unresolved.
 - Join actual accepted terminal receipts to sealed admitted/post-native empty-scope proof and reservation release, refusing replaced activation, pending jobs, recreated native resources and outside worker writers. Domain boot-refresh provisioning and installed acceptance remain separate outstanding obligations.
 

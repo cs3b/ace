@@ -69,7 +69,10 @@ module Ace
             raise RuntimeUnavailableError, "protected socket frame is oversized" if buffer.bytesize > limit
             break if chunk == "\n"
           end
-          value = JSON.parse(buffer)
+          buffer.force_encoding(Encoding::UTF_8)
+          raise RuntimeUnavailableError, "protected socket frame is malformed" unless buffer.valid_encoding?
+          value = JSON.parse(buffer, create_additions: false, max_nesting: 32,
+            allow_duplicate_key: false, allow_comments: false)
           with_size ? {data: value, bytesize: buffer.bytesize} : value
         rescue JSON::ParserError
           raise RuntimeUnavailableError, "protected socket frame is malformed"

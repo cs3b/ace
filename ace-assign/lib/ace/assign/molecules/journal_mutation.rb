@@ -2,6 +2,7 @@
 
 require "json"
 require "digest"
+require_relative "journal_prompt_mutation"
 
 module Ace
   module Assign
@@ -9,6 +10,7 @@ module Ace
       # Protected authority mutations share the execution ref's lock and CAS.
       # Replies live in chained attempt events, rather than an RPC ledger.
       module JournalMutation
+        include JournalPromptMutation
         ID = /\A[a-zA-Z0-9][a-zA-Z0-9_.-]{0,127}\z/
 
         # Shared canonical projection used by admission and protected status.
@@ -29,10 +31,24 @@ module Ace
         # returns events [{type:, payload:}], immutable blobs, and public data.
         # Only the authority calls this internal journal API; wire requests
         # cannot select blob paths, event types, or accepted response data.
-        def mutate(assignment_id:, attempt_id:, mutation_id:, operation:, parameters_digest:, expected_generation:, with_replay: false, generation_mode: :expected)
+        def mutate(assignment_id:, attempt_id:, mutation_id:, operation:, parameters_digest:, expected_generation:, with_replay: false, generation_mode: :expected, prompt_binding: nil, prompt_completion: nil)
           unless (generation_mode == :expected && expected_generation.is_a?(Integer) && expected_generation >= 0) ||
-              (generation_mode == :recorded_completion && operation == "complete_service" && expected_generation.nil?)
+              (generation_mode == :recorded_completion && operation == "complete_service" && expected_generation.nil?) ||
+              (generation_mode == :prompt_completion && operation == "prompt_attempt" && expected_generation.nil? && prompt_completion.is_a?(Hash))
             raise ArgumentError, "invalid fixed mutation generation mode"
+          end
+          if prompt_completion && generation_mode != :prompt_completion
+            raise ArgumentError, "prompt completion selector requires its fixed mode"
+          end
+          if operation == "prompt_issue"
+            validate_prompt_binding!(prompt_binding)
+            digest = Digest::SHA256.hexdigest(JSON.generate(canonical_prompt_value(prompt_binding)))
+            unless parameters_digest == digest && mutation_id == "prompt-issue.#{digest}" &&
+                assignment_id == prompt_binding.fetch("assignment_id") && attempt_id == prompt_binding.fetch("attempt_id")
+              raise ArgumentError, "prompt phase does not match source binding"
+            end
+          elsif prompt_binding
+            raise ArgumentError, "prompt binding is only accepted by its fixed issue phase"
           end
           [assignment_id, attempt_id, mutation_id].each { |id| validate_mutation_id!(id) }
           unless parameters_digest.is_a?(String) && parameters_digest.match?(/\A[0-9a-f]{64}\z/)
@@ -44,7 +60,15 @@ module Ace
               ensure_checkout!
               old = ref_value if old.nil?
               sync_checkout(old)
-              replay = mutation_result(mutation_id)
+              if prompt_binding
+                verify_prompt_external_namespace!(prompt_binding.fetch("mutation_id"), parameters_digest,
+                  assignment_id: assignment_id, attempt_id: attempt_id, commit: old)
+              end
+              verify_prompt_completion!(prompt_completion, mutation_id: mutation_id, digest: parameters_digest,
+                assignment_id: assignment_id, attempt_id: attempt_id, commit: old) if prompt_completion
+              verify_prompt_mutation_namespace!(mutation_id: mutation_id, operation: operation, parameters_digest: parameters_digest,
+                assignment_id: assignment_id, attempt_id: attempt_id, prompt_completion: prompt_completion, commit: old)
+              replay = mutation_result(mutation_id, commit: old)
               if replay
                 unless replay["operation"] == operation && replay["parameters_digest"] == parameters_digest &&
                     replay["assignment_id"] == assignment_id && replay["attempt_id"] == attempt_id
@@ -53,9 +77,9 @@ module Ace
                 result = replay.fetch("data").merge("journal_commit" => replay.fetch("journal_commit"))
                 return with_replay ? {data: result, replayed: true} : result
               end
-              current = read_events(assignment_id).select { |event| event["attempt_id"] == attempt_id }
+              current = read_events(assignment_id, commit: old).select { |event| event["attempt_id"] == attempt_id }
               generation = authority_generation(current)
-              unless generation_mode == :recorded_completion || expected_generation == generation
+              unless %i[recorded_completion prompt_completion].include?(generation_mode) || expected_generation == generation
                 raise AttemptErrors::Conflict, "Authority registration generation changed"
               end
               plan = yield(current, old, generation)
@@ -91,10 +115,10 @@ module Ace
           end
         end
 
-        def mutation_result(mutation_id)
+        def mutation_result(mutation_id, commit: ref_value)
           validate_mutation_id!(mutation_id)
-          assignment_ids.each do |assignment_id|
-            events = read_events(assignment_id)
+          assignment_ids(commit: commit).each do |assignment_id|
+            events = read_events(assignment_id, commit: commit)
             events.group_by { |event| event["attempt_id"] }.each_value do |chain|
               unless Models::EvidenceEvent.chain_valid?(chain)
                 raise AttemptErrors::EvidenceUnavailable, "Authority mutation event chain is corrupt"
@@ -106,9 +130,9 @@ module Ace
             next unless event
 
             path = "execution/#{assignment_id}/events/#{event_filename(event)}"
-            commit = git!("log", "--diff-filter=A", "-1", "--format=%H", ref_value, "--", path).first
-            raise AttemptErrors::EvidenceUnavailable, "Mutation acceptance commit is missing" if commit.empty?
-            return event.fetch("payload").merge("journal_commit" => commit)
+            acceptance_commit = git!("log", "--diff-filter=A", "-1", "--format=%H", commit, "--", path).first
+            raise AttemptErrors::EvidenceUnavailable, "Mutation acceptance commit is missing" if acceptance_commit.empty?
+            return event.fetch("payload").merge("journal_commit" => acceptance_commit)
           end
           nil
         end
