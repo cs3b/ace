@@ -238,6 +238,13 @@ positive integer supplied by trusted code, never copied from an artifact or
 request. Existing `file_limit:` and `total_limit:` budgets still apply. Mixed
 `read!`/`read_path!` calls share the count; repeating a retained reference spends
 no additional entry, and the first new artifact beyond the limit refuses.
+Trusted source installers can use `with_readonly_handle!(reference)` inside an
+active `ProtectedArtifactSet#with` callback to hand off the authenticated retained
+regular file. It yields a read-only duplicate without reopening the selected
+pathname, verifies the held set before and after the callback, and closes the
+duplicate on success or error. No descriptor or maintenance authority survives
+the callback. Existing reference/budget/root protection rules still apply.
+
 Network evidence verifiers retain their default budgets. Held descriptors also
 require sufficient process file-descriptor capacity in the installer environment.
 The profile's 256-entry bound counts its four outer collections only; nested
