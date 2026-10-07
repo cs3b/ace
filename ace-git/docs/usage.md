@@ -289,6 +289,15 @@ Note: `test/**/*` and `spec/**/*` are NOT excluded by default - test changes are
 
 ## Provider Packages
 
+`ace-git service merge` is the fixed protected receiver handler. It accepts no
+options; the receiver supplies its claimed JSON envelope on stdin and its
+private materialized candidate directory as the working directory. The handler
+checks the exact input digest, executor, candidate and forge provenance, calls
+the selected neutral merge once, and emits the existing bounded evidence
+response only after verifying the merged PR and commit. An unverified or lost
+outcome emits no success and never retries. This command does not authorize a
+merge or replace the protected worker's canonical receipt acceptance.
+
 `ace-git` is forge-neutral. It defines the server registry (`Ace::Git::ServerRegistry`),
 the provider contract (`Ace::Git::Providers::Base`), and normalized evidence types;
 provider packages own all forge CLI behavior:

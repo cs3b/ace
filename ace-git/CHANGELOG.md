@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Fixed receiver-side `service merge` validates the claimed candidate/input, uses the selected neutral provider once, and publishes bounded evidence only for a verified exact-head merged outcome.
+
 ## [0.29.0] - 2026-10-05
 
 ### Removed

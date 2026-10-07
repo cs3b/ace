@@ -7,6 +7,7 @@ require_relative "cli/commands/diff"
 require_relative "cli/commands/status"
 require_relative "cli/commands/branch"
 require_relative "cli/commands/pr"
+require_relative "cli/commands/service_merge"
 
 module Ace
   module Git
@@ -52,7 +53,8 @@ module Ace
         ["diff", "Show filtered git diff output"],
         ["status", "Show repository status and PR context"],
         ["branch", "Show current branch information"],
-        ["pr", "Forge-neutral pull request lifecycle: show, create, update, ready, merge"]
+        ["pr", "Forge-neutral pull request lifecycle: show, create, update, ready, merge"],
+        ["service merge", "Fixed receiver-owned exact-head merge envelope"]
       ].freeze
 
       HELP_EXAMPLES = [
@@ -70,6 +72,7 @@ module Ace
       register "pr update", Commands::Pr::Update.new
       register "pr ready", Commands::Pr::Ready.new
       register "pr merge", Commands::Pr::Merge.new
+      register "service merge", Commands::ServiceMerge.new
 
       version_cmd = Ace::Support::Cli::VersionCommand.build(
         gem_name: "ace-git",
