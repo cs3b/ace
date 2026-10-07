@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Add the source-owned inbox context admission/rotation core with durable grants, authenticated signer replacement/rollback attestations, protected key readback and bounded fixed transport. Protected Assign/CLI migration and positive orphan reclamation remain required before full context acceptance.
 - Select the exact native original-actor input inhibition/drain source, with monotonic admission/write exclusion, bounded closed replies and controlled race coverage. Installed effectiveness and N2 consumer integration remain separate acceptance gates.
 
 ## [0.4.0] - 2026-10-05
