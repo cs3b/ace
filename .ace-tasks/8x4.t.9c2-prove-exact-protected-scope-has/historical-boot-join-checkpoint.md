@@ -1,5 +1,11 @@
 # Historical original boot proof source checkpoint
 
+## Main integration — 2026-10-07
+
+Independent reviewer wave_5h5 approved exact source checkpoint tip `1b27911ea98c3ab1dda6a1e44ec686ecde84f427` and true-merge tree `e79a5dc9491375084f56848e4b13373a9bdf2150`. Main merge `5f5de65998493d345e657839c9155f8dea797863` has that exact tree and preserves main's N1 native source/builder and public mapping digest API. Both origin/main and fg/main accepted the merge.
+
+Post-merge controlled checks passed on that revision: `bin/ace-test ace-assign test/feat/authority/deployment_mapping_digest_test.rb test/feat/authority/deployment_test.rb --timeout 180` — 23 tests, 184 assertions, receipt `ca256eef-2b24-4d6d-8dca-195c936bcf16`; `bin/ace-test ace-runtime test/molecules/protected_artifact_set_test.rb test/molecules/kernel_view_topology_test.rb --timeout 60` — 18 tests, 86 assertions, receipt `c34802a1-ec05-40a8-a679-4f8685a4e55a`. No full-suite, installed or native execution claim. The Lab producer join and whole-task completion remain open. Installer retirement still needs an existing-owner accessor for authenticated retained original boot proofs; fresh-pointer lookup is not accepted for that operation.
+
 This isolated checkpoint consumes the canonical required `scope_bound.boot_baseline_selection` through the existing Runtime pure original-ref verifier. Expected slot, original boot, original mapping digest and exact original network installer artifact come from the authenticated release-prefix binding. Runtime refusal and malformed original shape become `EvidenceUnavailable`. No current pointer/current boot substitution, migration or historical terminal fabrication exists.
 
 Controlled actual retained-file consumer negatives passed 2 tests / 10 assertions in 7.45ms, receipt d0552711-6376-43bc-a339-209499d583a7. They cover valid original with no current pointer, valid-but-wrong original map/boot/slot/installer, missing/malformed original selection, missing/replaced original proof and replaced original installer. Initial fixture failures a198ed3c and 6e4383ff correctly exposed a symlink ancestor in the test cache pathname; the fixture now uses its realpath. Product protection was not weakened.
