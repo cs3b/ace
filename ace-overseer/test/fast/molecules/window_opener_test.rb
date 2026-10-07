@@ -94,6 +94,19 @@ class WindowOpenerTest < AceOverseerTestCase
     Ace::Runtime.reset_registry!
   end
 
+  def test_explicit_runtime_overrides_config_without_changing_authority
+    Ace::Runtime.reset_registry!
+    configured, selected = FakeRuntime.new, FakeRuntime.new
+    Ace::Runtime.register(:configuredtest, -> { configured })
+    Ace::Runtime.register(:selectedtest, -> { selected })
+    opener = Ace::Overseer::Molecules::WindowOpener.new(config: {"runtime" => "configuredtest"}, env: {})
+    opener.open(worktree_path: "/wt/task.230", runtime: "selectedtest")
+    assert_empty configured.calls
+    assert_equal 1, selected.calls.size
+  ensure
+    Ace::Runtime.reset_registry!
+  end
+
   def test_unknown_configured_runtime_fails_closed
     Ace::Runtime.reset_registry!
 

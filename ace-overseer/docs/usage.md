@@ -23,22 +23,31 @@ ace-docs:
 
 ## `ace-overseer work-on`
 
-Create or reuse task worktrees, open tmux windows, and prepare assignments.
+Without `--project`, create/reuse local worktrees and prepare assignments.
+With `--project`, prepare exactly one reviewed leaf and retain its original
+foreground protected launcher; no local fallback occurs on protected refusal.
 
-Invocation: `ace-overseer work-on --task <task-ref>`.
+- `--task`, `-t`: local repeatable/comma-separated task refs; protected mode requires one leaf.
+- `--preset`, `-p`: local assignment preset; forbidden in protected mode.
+- `--runtime`: terminal backend `auto`, `tmux` or `herdr`; overrides existing config. Protected tmux refuses before allocation.
+- `--project`: explicit protected project ID.
+- `--agent`: exact visible protected mapping ID, requiring project. Automatic selection is ordered and advances only after attributable readonly preflight denial.
+- `--mutation`: stable invocation ID; otherwise generated once and printed before effects.
+- `--base-head`: optional explicit reviewed code HEAD; must match the captured source HEAD, which is rechecked after preparation and before fork.
+- `--dependency-report`: repeatable `task:assignment:step` identities for selected dependency reports; omission is an explicit empty selection.
+- `--recover-request FILE`: readonly original canonical attribution from retained inputs; rejects all launch/mode overrides.
+- `--quiet`, `-q`: suppress nonessential output; retained input identity and original child observation remain visible.
+- `--debug`, `-d`, `--help`, `-h`: diagnostics/help.
 
-Options:
-
-- `--task`, `-t` (required for tmux): task reference(s); repeatable and comma-separated values supported
-- `--preset`, `-p`: assignment preset name
-- `--runtime`: `tmux` (default) or `lab`
-- `--work`: existing Lab Work ID; required with `--runtime lab`
-- `--agent`: configured Lab agent ID; required with `--runtime lab`
-- `--quiet`, `-q`: suppress non-essential output
-- `--debug`, `-d`: show debug output
-- `--help`, `-h`: show help
-
-Internally, `work-on` now routes assignment creation through `ace-assign create --task ...`, so direct `ace-assign` and `ace-overseer` task flows use the same preset expansion behavior.
+Fresh protected start exclusively publishes private request JSON, derived exact
+definition sidecar and original prepared Git bundle, then prints their paths and
+hashes before any child. Missing/corrupt input or changed code HEAD refuses.
+The living coordinator retains and observes the same original child through
+readiness/uncertainty without a lifetime timeout, replacement or cancellation.
+Use independent status/steering while it remains foreground. Reap is local
+observation, never canonical terminal/release or physical cleanup permission.
+Recovery reports absent/mismatched local inputs separately from original canonical
+reservation attribution, without upload, reconstruction or retry.
 
 ## `ace-overseer status`
 
@@ -50,8 +59,8 @@ Options:
 
 - `--format`: output format (`table`, `json`)
 - `--watch`, `-w`: auto-refresh dashboard
-- `--runtime`: `tmux` (default) or `lab`
-- `--project`: filter Lab Works by project
+- `--runtime`: local backend selection; protected inventory is runtime-independent
+- `--project`: select protected canonical assignment inventory for this explicit project
 - `--quiet`, `-q`: suppress non-essential output
 - `--debug`, `-d`: show debug output
 - `--help`, `-h`: show help
@@ -139,33 +148,26 @@ YAML
 ace-overseer prune task.230 --preservation .ace-local/prune/destinations.yml --dry-run
 ```
 
-## Lab Runtime
+## Protected execution and review
 
-Lab commands are available only where `/usr/local/bin/lab` is installed. ACE
-does not read Lab credentials and does not call Podman or Herdr directly.
+The existing Assign authority and installed mapping grant admit execution. Public
+topology supplies visible IDs only. Runtime names and charter selection cannot
+change OS credentials, grants or reviewer identity.
 
-- `ace-overseer projects`: list registered Lab projects.
-- `ace-overseer agents`: list registered Lab agents and concurrency limits.
-- `ace-overseer prepare --runtime lab --project PROJECT --source KIND:ID --work WORK --planner AGENT --title TITLE`: create a reviewed Work and its isolated worktree.
-- `ace-overseer work-on --runtime lab --work WORK --agent AGENT`: reserve the agent, create or reuse its Herdr workspace, and dispatch it.
-- `ace-overseer status --runtime lab [--project PROJECT] [--format table|json]`: show Lab Work state. Failed proposal ticks defer resolution and report a diagnostic on stderr while status remains available. Object JSON also includes `proposal_resolution.status: "deferred"`; legacy array JSON keeps its schema and uses the stderr diagnostic. Continuous status lives in each project Herdr session, so `--watch` is intentionally rejected for Lab.
-- `ace-overseer prompt --work WORK --file PATH`: forward prompt text from a file to the Work pane. Piped stdin is also supported; prompt text is never passed as a process argument.
+```bash
+ace-overseer work-on --task TASK --project ace --agent builder --runtime herdr
+ace-overseer status --project ace --agent builder --format json
+ace-overseer work-on --recover-request .ace-local/overseer/launch-requests/INVOCATION.json
+```
+
+Retain the printed input paths/hashes and original mapping/invocation. Missing
+readiness, lost output, child exit or pane state never authorize replacement or
+physical cleanup. Recovery is strictly read-only. Protected physical cleanup
+requires its designated preservation/no-writer owner.
+
 - `ace-overseer review --project PROJECT --agent AGENT --assignment A --attempt T --head HEAD --candidate-generation N --expected-generation G --mutation REQUEST --accept-mutation ACCEPT`: request independent review of the exact canonical candidate and submit its executed receipt. Run under the installed reviewer principal. `accepted` means the authority accepted that receipt; `uncertain` requires explicit status inspection.
 - `ace-overseer review --status --project PROJECT --agent AGENT --assignment A --attempt T --mutation REQUEST`: inspect the original request without rerunning review or uploading anything.
 - `ace-overseer review --cancel --project PROJECT --agent AGENT --assignment A --attempt T --head HEAD --candidate-generation N --review-event EVENT --expected-generation G --mutation CANCEL`: revoke the exact reservation using its status-provided event. Cancellation does not terminate the old reviewer. After cancellation, start a new review explicitly with new mutation IDs and the observed generation.
-- `ace-overseer stop --work WORK`: stop the assigned process without destroying Work state.
-- `ace-overseer prune WORK... --runtime lab --dry-run`: classify each Work -- documented terminal state, no in-flight work, and preservation data (`repo`/`head`/`branch`) provable in the hosted repository. Apply with `--yes` re-verifies state immediately before delegating each destruction to `lab work destroy WORK --confirm`; blocked Works are never destroyed and the run exits nonzero. The raw Lab CLI cannot make the state check and the destruction atomic, so this adapter reports the path unsupported and preserves the Work; only a Lab surface with an atomic guarded destroy delegates.
-
-Example:
-
-```bash
-ace-overseer prepare --runtime lab --project nervus \
-  --source nervus-thread:67611c0b-f44c-4ac4-ae4e-55773b175617 \
-  --work W321 --planner admin-agy --title "Reviewed task title"
-ace-overseer work-on --runtime lab --work W321 --agent builder-codex
-ace-overseer prompt --work W321 --file .ace-local/prompts/W321.md
-ace-overseer status --runtime lab --project nervus --format json
-```
 
 ## Public Verification Paths
 

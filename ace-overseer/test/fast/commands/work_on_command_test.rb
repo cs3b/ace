@@ -4,18 +4,6 @@ require "tmpdir"
 require_relative "../../test_helper"
 
 class WorkOnCommandTest < AceOverseerTestCase
-  class FakeLabClient
-    attr_reader :calls
-
-    def initialize
-      @calls = []
-    end
-
-    def call(*arguments, **options)
-      @calls << {arguments: arguments, options: options}
-      "dispatched"
-    end
-  end
   class FakeWorkOnOrchestrator
     attr_reader :calls
 
@@ -25,8 +13,8 @@ class WorkOnCommandTest < AceOverseerTestCase
       @calls = []
     end
 
-    def call(task_ref:, cli_preset:, task_refs: nil, on_progress: nil)
-      @calls << {task_ref: task_ref, task_refs: task_refs, cli_preset: cli_preset}
+    def call(task_ref:, cli_preset:, task_refs: nil, on_progress: nil, runtime: nil)
+      @calls << {task_ref: task_ref, task_refs: task_refs, cli_preset: cli_preset, runtime: runtime}
       raise @error if @error
 
       @result
@@ -45,39 +33,12 @@ class WorkOnCommandTest < AceOverseerTestCase
     assert_empty orchestrator.calls
   end
 
-  def test_lab_runtime_dispatches_existing_work_without_repo_guard
-    lab_client = FakeLabClient.new
-    command = Ace::Overseer::CLI::Commands::WorkOn.new(
-      orchestrator: FakeWorkOnOrchestrator.new,
-      lab_client: lab_client
-    )
-
-    Dir.mktmpdir("overseer-lab-no-repo") do |dir|
-      Dir.chdir(dir) do
-        command.call(runtime: "lab", work: "W321", agent: "builder-codex", quiet: true)
-      end
-    end
-
-    assert_equal %w[work dispatch W321 --agent builder-codex], lab_client.calls.first[:arguments]
-  end
-
-  def test_lab_runtime_rejects_tmux_task_options
-    lab_client = FakeLabClient.new
-    command = Ace::Overseer::CLI::Commands::WorkOn.new(
-      orchestrator: FakeWorkOnOrchestrator.new,
-      lab_client: lab_client
-    )
-
-    task_error = assert_raises(Ace::Support::Cli::Error) do
-      command.call(runtime: "lab", work: "W321", agent: "builder-codex", task: ["230"])
-    end
-    preset_error = assert_raises(Ace::Support::Cli::Error) do
-      command.call(runtime: "lab", work: "W321", agent: "builder-codex", preset: "fix-bug")
-    end
-
-    assert_equal "--task and --preset are not supported with Lab runtime", task_error.message
-    assert_equal "--task and --preset are not supported with Lab runtime", preset_error.message
-    assert_empty lab_client.calls
+  def test_removed_lab_runtime_and_work_id_refuse_without_local_dispatch
+    orchestrator = FakeWorkOnOrchestrator.new
+    command = Ace::Overseer::CLI::Commands::WorkOn.new(orchestrator: orchestrator, config: {"runtime" => "auto"})
+    assert_raises(Ace::Support::Cli::Error) { command.call(runtime: "lab", task: "task") }
+    assert_raises(Ace::Support::Cli::Error) { command.call(work: "old-work", task: "task") }
+    assert_empty orchestrator.calls
   end
 
   def test_passes_task_and_preset_to_orchestrator

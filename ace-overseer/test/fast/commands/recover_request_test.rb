@@ -10,7 +10,7 @@ class RecoverRequestCommandTest < AceOverseerTestCase
     recovery.define_singleton_method(:call) { |path:| requests << path; {"request_path" => path, "attribution" => "unattributed"} }
     forbidden = Object.new
     forbidden.define_singleton_method(:call) { |**| raise "launch must not run" }
-    Ace::Overseer::CLI::Commands::WorkOn.new(orchestrator: forbidden, lab_client: forbidden, recovery: recovery)
+    Ace::Overseer::CLI::Commands::WorkOn.new(orchestrator: forbidden, protected_work_on: forbidden, recovery: recovery)
   end
 
   def test_recovery_identity_is_mandatory_even_quiet

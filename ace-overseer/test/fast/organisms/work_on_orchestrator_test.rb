@@ -291,59 +291,60 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
       assert_equal "quick-implement", result[:preset]
     end
 
-    def test_passes_window_preset_from_overseer_config
-      Dir.mktmpdir("task.235") do |worktree|
-        opener = FakeWindowOpener.new
-        orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
-          task_loader: FakeTaskManager.new("235" => {metadata: {}}),
-          worktree_provisioner: FakeWorktreeProvisioner.new(
-            {worktree_path: worktree, branch: "235-feature", created: true}
-          ),
-          window_opener: opener,
-          assignment_launcher: FakeAssignmentLauncher.new,
-          config: {
-            "default_assign_preset" => "work-on-task",
-            "window_presets" => {
-              "work-on-task" => "work-on-task"
-            }
-          },
-          assignment_detector: ->(_path) {}
-        )
+  end
 
-        orchestrator.call(task_ref: "235", cli_preset: "work-on-task")
+  def test_passes_window_preset_from_overseer_config
+    Dir.mktmpdir("task.235") do |worktree|
+      opener = FakeWindowOpener.new
+      orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
+        task_loader: FakeTaskManager.new("235" => {metadata: {}}),
+        worktree_provisioner: FakeWorktreeProvisioner.new(
+          {worktree_path: worktree, branch: "235-feature", created: true}
+        ),
+        window_opener: opener,
+        assignment_launcher: FakeAssignmentLauncher.new,
+        config: {
+          "default_assign_preset" => "work-on-task",
+          "window_presets" => {
+            "work-on-task" => "work-on-task"
+          }
+        },
+        assignment_detector: ->(_path) {}
+      )
 
-        assert_equal 1, opener.calls.length
-        assert_equal(
-          {worktree_path: worktree, preset: "work-on-task"},
-          opener.calls.first
-        )
-      end
+      orchestrator.call(task_ref: "235", cli_preset: "work-on-task", runtime: "tmux")
+
+      assert_equal 1, opener.calls.length
+      assert_equal(
+        {worktree_path: worktree, preset: "work-on-task", runtime: "tmux"},
+        opener.calls.first
+      )
     end
+  end
 
-    def test_passes_no_window_preset_when_mapping_missing
-      Dir.mktmpdir("task.236") do |worktree|
-        opener = FakeWindowOpener.new
-        orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
-          task_loader: FakeTaskManager.new("236" => {metadata: {}}),
-          worktree_provisioner: FakeWorktreeProvisioner.new(
-            {worktree_path: worktree, branch: "236-feature", created: true}
-          ),
-          window_opener: opener,
-          assignment_launcher: FakeAssignmentLauncher.new,
-          config: {
-            "default_assign_preset" => "work-on-task",
-            "window_presets" => {
-              "other-preset" => "work-on-task"
-            }
-          },
-          assignment_detector: ->(_path) {}
-        )
+  def test_passes_no_window_preset_when_mapping_missing
+    Dir.mktmpdir("task.236") do |worktree|
+      opener = FakeWindowOpener.new
+      orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
+        task_loader: FakeTaskManager.new("236" => {metadata: {}}),
+        worktree_provisioner: FakeWorktreeProvisioner.new(
+          {worktree_path: worktree, branch: "236-feature", created: true}
+        ),
+        window_opener: opener,
+        assignment_launcher: FakeAssignmentLauncher.new,
+        config: {
+          "default_assign_preset" => "work-on-task",
+          "window_presets" => {
+            "other-preset" => "work-on-task"
+          }
+        },
+        assignment_detector: ->(_path) {}
+      )
 
-        orchestrator.call(task_ref: "236")
+      orchestrator.call(task_ref: "236")
 
-        assert_equal 1, opener.calls.length
-        assert_equal({worktree_path: worktree, preset: nil}, opener.calls.first)
-      end
+      assert_equal 1, opener.calls.length
+      assert_equal({worktree_path: worktree, preset: nil}, opener.calls.first)
     end
   end
 

@@ -14,6 +14,7 @@ module Ace
       class OriginalLaunchChild
         LIMIT = 16_384
         DEADLINE = 30
+        DRAIN_LIMIT = 65_536
         READY_FIELDS = %w[assignment_id attempt_id generation journal_commit mapping_id original_binding_digest type version].sort.freeze
         class ProcessBoundary
           def supported? = Process.respond_to?(:fork)
@@ -123,9 +124,12 @@ module Ace
         # this exact owned child is observation, never canonical release proof.
         def observe
           return self unless pid && state != "exited"
-          if state == "ready" && @process.readable?(@reader, 0)
-            extra = @reader.read_nonblock(1, exception: false)
-            uncertain!("Original child emitted output after readiness") if extra.is_a?(String) && !extra.empty?
+          if %w[ready uncertain].include?(state) && @process.readable?(@reader, 0)
+            # Discard at most one bounded chunk per observation, including
+            # uncertain children. Never retain arbitrary output or let an
+            # ignored stdout pipe deadlock the same original foreground owner.
+            extra = @reader.read_nonblock(DRAIN_LIMIT, exception: false)
+            uncertain!("Original child emitted output outside readiness") if extra.is_a?(String) && !extra.empty?
           end
           result = @process.wait(pid)
           if result

@@ -15,9 +15,9 @@ module Ace
           @env = env
         end
 
-        def open(worktree_path:, preset: nil)
+        def open(worktree_path:, preset: nil, runtime: nil)
           name = Ace::Runtime.sanitize_name(File.basename(worktree_path.to_s))
-          adapter.ensure_window(
+          selected_adapter(runtime).ensure_window(
             name: name,
             root: File.expand_path(worktree_path.to_s),
             preset: preset
@@ -30,6 +30,13 @@ module Ace
         private
 
         attr_reader :config, :env
+
+        def selected_adapter(runtime)
+          return adapter if runtime.nil? || @runtime
+          Ace::Runtime::Molecules::RuntimeSelector.new(
+            config: {runtime: Atoms::RuntimeSetting.normalize(runtime)}, env: env
+          ).resolve
+        end
 
         def adapter
           @adapter ||= @runtime || Ace::Runtime::Molecules::RuntimeSelector.new(

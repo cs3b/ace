@@ -20,7 +20,7 @@ module Ace
       PROGRAM_NAME = "ace-overseer"
 
       REGISTERED_COMMANDS = [
-        ["work-on", "Work on a task in isolated worktree"],
+        ["work-on", "Start local task work or one retained protected launch"],
         ["status", "Show status of task worktrees"],
         ["prune", "Remove stale task worktrees"],
         ["projects", "List configured Lab projects"],

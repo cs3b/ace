@@ -18,7 +18,7 @@ module Ace
           @lifecycle_exclusion = lifecycle_exclusion
         end
 
-        def call(task_ref:, task_refs: nil, cli_preset: nil, on_progress: nil)
+        def call(task_ref:, task_refs: nil, cli_preset: nil, on_progress: nil, runtime: nil)
           progress = on_progress || ->(_msg) {}
 
           requested_refs = normalize_requested_refs(task_ref, task_refs)
@@ -68,10 +68,9 @@ module Ace
             end
 
             progress.call("Opening terminal window...")
-            @window_opener.open(
-              worktree_path: worktree[:worktree_path],
-              preset: window_preset
-            )
+            window_options = {worktree_path: worktree[:worktree_path], preset: window_preset}
+            window_options[:runtime] = runtime if runtime
+            @window_opener.open(**window_options)
 
             progress.call("Checking assignment status...")
             existing = if @assignment_detector

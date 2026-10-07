@@ -36,7 +36,9 @@ ace-overseer work-on --task <task-ref>
 - Repeatable/comma-separated refs fan out into the same batch: `ace-overseer work-on --task 230 --task 231,232`
 - Optional preset: `ace-overseer work-on --task <task-ref> --preset <preset-name>`
 - After launch, switch to the tmux window and run `/ace-assign-drive`.
-- Lab runtime variant (reserved agent + Herdr workspace): `ace-overseer work-on --runtime lab --work <work-id> --agent <agent-id>` -- `--task`/`--preset` are not supported with the Lab runtime.
+- Protected reviewed leaf: `ace-overseer work-on --task TASK --project PROJECT --agent MAPPING --runtime herdr`.
+- Retain the mandatory printed request/definition/bundle identity even under quiet mode. The original foreground owner remains alive through uncertainty; use independent status/steering invocations, never replace it on a missing reply.
+- Readonly recovery: `ace-overseer work-on --recover-request FILE`; no reconstruction, upload or launch.
 
 Never improvise worktree provisioning by hand when `work-on` exists; ad-hoc
 worktrees bypass the assignment lifecycle that `status` and `prune` rely on.
@@ -48,8 +50,7 @@ ace-overseer status                     # table dashboard
 ace-overseer status --format json       # machine-readable snapshot
 ```
 
-Lab runtime: `ace-overseer status --runtime lab [--project <project>]` (no
-`--watch`; continuous status lives in each project Herdr session).
+Protected canonical snapshot: `ace-overseer status --project PROJECT --agent MAPPING --format json` (no `--watch`).
 
 #### Status truth (non-negotiable executed check)
 
@@ -78,7 +79,7 @@ ace-overseer prune --yes
 ```
 
 - Targeted: `ace-overseer prune <task-ref|folder>...` or `ace-overseer prune --assignment <assignment-id>`
-- Lab runtime: `ace-overseer prune <work-id>... --runtime lab --dry-run`, rerun with `--yes` to delegate each destruction to Lab. The raw Lab CLI cannot make the no-writer check and the destruction atomic, so it is classified unsupported and preserved; only a Lab surface with an atomic guarded destroy delegates.
+- Protected physical cleanup belongs to its designated canonical cleanup owner. Local prune, readiness, pane closure and child reap never substitute for its preservation/no-writer proof.
 
 #### Prune safety (non-negotiable executed check)
 
@@ -130,9 +131,9 @@ candidate:
    ace-overseer status --format json
    ```
 
-   For assignment-backed candidates also check `ace-assign status`; for Lab
-   runtime candidates check `ace-overseer status --runtime lab`. A running
-   assignment, an active or uncertain attempt, an in-flight Lab work, or any
+   For assignment-backed candidates also check `ace-assign status`; for protected
+   work check `ace-overseer status --project PROJECT --agent MAPPING`. A running
+   assignment, an active or uncertain attempt, unreleased protected work, or any
    unaccounted writer blocks the prune. Missing or unreadable lifecycle
    state counts as an active writer -- preserve. `ace-overseer prune`
    enforces this itself: apply holds a durable exclusion shared with every
@@ -153,12 +154,12 @@ candidate:
 
 | Contract     | Claim | Executed proof |
 |--------------|-------|----------------|
-| Prune safety | "The work is preserved and nothing is actively writing" | `git merge-base --is-ancestor <work-head> <base>` (rc=0), or a verified declared destination (--preservation) with tree/artifact or exact content-transition equivalence; plus the executed no-writer reconciliation (overseer/assignment/Lab status, terminal attempts, durable prune/start exclusion) |
+| Prune safety | "The work is preserved and nothing is actively writing" | `git merge-base --is-ancestor <work-head> <base>` (rc=0), or a verified declared destination (--preservation) with tree/artifact or exact content-transition equivalence; plus the executed no-writer reconciliation (overseer/assignment canonical status, terminal attempts, durable prune/start exclusion) |
 | Status truth | "The task is blocked on the owner" | An executable non-secret check run in this session; stale tasks closed/corrected in the same change |
 
 ## Success Criteria
 
-- Work starts only through `ace-overseer work-on` (or the Lab-runtime equivalent), never through ad-hoc manual worktree provisioning.
+- Work starts only through `ace-overseer work-on` (with explicit project for protected work), never through ad-hoc manual worktree provisioning.
 - Every status review re-verified pending owner-blocked tasks with an executed check and corrected stale state in the same change.
 - Every pruned worktree/branch had an executed preservation proof (ancestor containment, or a verified destination with tree/artifact or exact content-transition equivalence) and an executed no-active-writer check; candidates without complete proof were reported as blocked, not removed; `--force` and `--yes` never bypassed a safety block.
 

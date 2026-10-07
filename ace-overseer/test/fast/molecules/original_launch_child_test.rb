@@ -191,6 +191,20 @@ class OriginalLaunchChildTest < AceOverseerTestCase
     assert_equal 1, boundary.calls.size
   end
 
+  def test_uncertain_original_stdout_is_discarded_in_bounded_observation_chunks
+    value, boundary = child("bad\n")
+    start(value).await_ready(status: @status)
+    limits = []
+    stream = Object.new
+    stream.define_singleton_method(:read_nonblock) { |limit, **| limits << limit; "discarded output" }
+    value.instance_variable_set(:@reader, stream)
+    2.times { value.observe }
+    assert_equal [65_536, 65_536], limits
+    assert_equal "uncertain", value.state
+    assert_equal 123, value.pid
+    assert_equal 1, boundary.calls.size
+  end
+
   def test_timeout_eof_and_birth_change_retain_original_handle
     value, boundary = child
     boundary.readable = false

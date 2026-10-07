@@ -20,9 +20,9 @@
 
 Starting task work means creating a worktree, opening a terminal window, and preparing an assignment - three manual steps before you even begin coding. ace-overseer collapses that into a single command, tracks what is running where, and cleans up finished worktrees so nothing lingers. You can jump straight to a focused worktree any time with a single invocation.
 
-On a configured Lab machine, the same CLI can prepare and dispatch the Lab's
-system-owned `Work` objects. The default remains the existing tmux runtime;
-using Lab always requires an explicit `--runtime lab` or a Lab-only command.
+Explicit `--project` selects provisioned protected Assign execution. Omitting it
+preserves ordinary local worktree/assignment mode. Runtime selects a terminal
+backend; it cannot select credentials or execution authority.
 
 ## How It Works
 
@@ -46,21 +46,21 @@ ace-overseer work-on --task 8q4 --preset work-on-task
 ace-overseer status --watch
 ```
 
-**Operate Lab workers** - prepare a reviewed Work, dispatch it to a configured
-agent, and inspect it without teaching ACE how to manage containers or Herdr:
+**Start protected work** - prepare one reviewed leaf under the explicit project,
+retain exact inputs, and keep its original foreground launcher:
 
 ```bash
-ace-overseer prepare --runtime lab --project nervus \
-  --source lab-plan:oauth-callback --work W142 \
-  --planner admin-agy --title "OAuth callback validation"
-ace-overseer work-on --runtime lab --work W142 --agent builder-codex
-ace-overseer status --runtime lab --project nervus
+ace-overseer work-on --task TASK --project ace --agent builder --runtime herdr
+ace-overseer status --project ace --agent builder --format json
+ace-overseer work-on --recover-request .ace-local/overseer/launch-requests/INVOCATION.json
 ```
 
-Lab owns worktrees, credentials, Podman, and Herdr. Overseer decides what to
-run and delegates only through the absolute `/usr/local/bin/lab` boundary.
-Use `ace-overseer prune WORK... --runtime lab --dry-run` to preview exact Work
-destruction, then repeat with `--yes` to delegate it to Lab.
+The start command prints and flushes retained request, definition and bundle
+identity even under `--quiet`. It observes the same original child through
+uncertainty; use independent status/steering invocations while that foreground
+owner remains alive. Recovery is read-only and never rebuilds inputs or relaunches.
+Domain installation supplies credentials and fixed entries; ACE's existing
+Assign authority owns admission, execution evidence and progress.
 
 **Clean up finished work** - [`ace-overseer prune`](docs/usage.md#ace-overseer-prune) removes completed worktrees safely. It checks three conditions before removing: assignment completed, task marked done, and git working tree clean. Use `--dry-run` to preview what would be pruned, `--force` for worktrees that fail safety checks, or `--assignment` to prune a single stale assignment.
 

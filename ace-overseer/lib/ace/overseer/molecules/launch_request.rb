@@ -82,6 +82,19 @@ module Ace
           bytes.freeze
         end
 
+        def identity(document)
+          validate!(document)
+          path = File.join(@root, document.fetch("mutation_id") + ".json")
+          bytes = held_read(path, MAX_REQUEST)
+          raise Error, "Retained request changed before identity output" unless bytes == JSON.generate(document)
+          reference = JSON.parse(document.fetch("definition_bytes")).fetch("prepared_work")
+          document.slice("project_id", "mapping_id", "assignment_id", "task_id", "scope", "base_head", "mutation_id", "definition_sha256").merge(
+            "type" => "launch_inputs_retained", "request_path" => path, "request_sha256" => Digest::SHA256.hexdigest(bytes),
+            "definition_path" => definition_path(document), "prepared_bundle" => document.fetch("prepared_bundle"),
+            "prepared_bundle_path" => File.join(@root, document.fetch("prepared_bundle").fetch("filename")),
+            "selection_sha256" => reference.fetch("selection_sha256"))
+        end
+
         def definition_path(document)
           validate!(document)
           File.join(@root, document.fetch("mutation_id") + ".definition.json")
