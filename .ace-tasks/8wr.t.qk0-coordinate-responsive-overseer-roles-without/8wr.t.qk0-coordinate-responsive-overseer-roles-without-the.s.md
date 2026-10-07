@@ -8,7 +8,7 @@ dependencies: [8wq.t.k86, 8wr.t.qjl, 8wr.t.qjx, 8wr.t.qjy, 8wq.t.1w5, 8wm.t.vs2,
 tags: [lab-readiness]
 bundle:
   presets: [project]
-  files: [ace-overseer/lib/ace/overseer/molecules/lab_client.rb, ace-overseer/lib/ace/overseer/cli/commands/work_on.rb, ace-overseer/lib/ace/overseer/organisms/status_collector.rb, ace-overseer/handbook/workflow-instructions/overseer.wf.md, ace-assign/handbook/workflow-instructions/assign/drive.wf.md, .ace-tasks/8wr.t.qk0-coordinate-responsive-overseer-roles-without/protected-inventory-contract.md, .ace-tasks/8wr.t.qk0-coordinate-responsive-overseer-roles-without/coordinator-source-contract.md, .ace-tasks/8wr.t.qk0-coordinate-responsive-overseer-roles-without/coordinator-admission-draft.md]
+  files: [ace-overseer/lib/ace/overseer/molecules/lab_client.rb, ace-overseer/lib/ace/overseer/cli/commands/work_on.rb, ace-overseer/lib/ace/overseer/organisms/status_collector.rb, ace-overseer/handbook/workflow-instructions/overseer.wf.md, ace-assign/handbook/workflow-instructions/assign/drive.wf.md, .ace-tasks/8wr.t.qk0-coordinate-responsive-overseer-roles-without/protected-inventory-contract.md, .ace-tasks/8wr.t.qk0-coordinate-responsive-overseer-roles-without/coordinator-source-contract.md, .ace-tasks/8wr.t.qk0-coordinate-responsive-overseer-roles-without/coordinator-admission-draft.md, .ace-tasks/8wr.t.qk0-coordinate-responsive-overseer-roles-without/3-deliver-authenticated-prepared-work-to/8wr.t.qk0.3-deliver-authenticated-prepared-work-to-scoped-workers.s.md]
   commands: []
 needs_review: true
 title: Coordinate responsive overseer roles without the legacy Lab engine
@@ -49,13 +49,15 @@ Owner: **ace-overseer**. Consumers/boundaries are named above. Code layout belon
 
 ### Vertical Slice Decomposition
 
-The parent retains the complete original coordinator capability and acceptance criteria. Three real observable children separate independently deliverable outcomes without dropping protected cleanup:
+The parent retains the complete original coordinator capability and acceptance criteria. Four real observable children separate independently deliverable outcomes without dropping protected cleanup:
 
 - `8wr.t.qk0.0`: canonical assignment/restart status from actual authority to overseer consumer; medium. Exact inventory lifecycle delta has scoped root approval, but child readiness/implementation is still separate.
-- `8wr.t.qk0.1`: actual original foreground launcher with responsive role steering, bounded proposal resolution and generic charters; large. Depends on discovery and existing protected steering owners.
+- `8wr.t.qk0.1`: actual original foreground launcher with responsive role steering, bounded proposal resolution and generic charters; large. Depends on qk0.0 discovery, qk0.3 prepared input handoff and existing protected steering owners.
 - `8wr.t.qk0.2`: preserved protected workspace physical cleanup through its actual authorized owner; large. Slice/devpts retirement and display/cache cleanup do not satisfy it. Draft pending exact source-owner/request/exclusion composition; no installed-only transfer or extra hidden task.
 
-All three children require their own complete readiness review. Parent remains draft/needs_review until all children are reviewed; delivery remains incomplete until all original outcomes pass executed tests and independent review. Existing prerequisites remain `8wq.t.k86`, `8wr.t.qjl`, `8wr.t.qjx`, `8wr.t.qjy`, `8wq.t.1w5`, `8wm.t.vs2`, `8wr.t.qjz`, `8x3.t.xz9.2`. Canonical cross-repository program: lab-config:`8wl.t.gad`. No backedge from a source producer to this coordinator.
+- `8wr.t.qk0.3`: actual prepared leaf artifact admission through existing binary transfer/canonical registration to original gate descriptor, fixed worker adapter and scoped queue/context consumers; large. Depends on xz9.2, never qk0.1/qk0.0.
+
+All four children require their own complete readiness review. Parent remains draft/needs_review until all children are reviewed; delivery remains incomplete until all original outcomes pass executed tests and independent review. Existing prerequisites remain `8wq.t.k86`, `8wr.t.qjl`, `8wr.t.qjx`, `8wr.t.qjy`, `8wq.t.1w5`, `8wm.t.vs2`, `8wr.t.qjz`, `8x3.t.xz9.2`. Canonical cross-repository program: lab-config:`8wl.t.gad`. No backedge from a source producer to this coordinator.
 
 ### Current source contract repair
 
@@ -127,3 +129,16 @@ Independent scoped review (wave_5h5, 2026-10-07): APPROVE this amendment and usa
 ### Protected status and restart discovery — draft amendment
 
 `protected-inventory-contract.md` defines the missing owner enumeration and the overseer consumer within SC1/SC2: authorized discovery from a single retained canonical revision, bounded continuation, accepted task/scope associations, and explicit unknown/unavailable status. Inventory is not liveness or permission to mutate. Review this amendment independently before promotion; the earlier scoped foreground-launch approval does not cover it. No dependency is added to xz9.2.
+
+## Prepared worker handoff decomposition correction (2026-10-07)
+
+The actual native gate accepts assignment/attempt identity but does not convey numeric scope or a prepared job/step selection to its fixed worker. This missing source behavior is now real draft child **qk0.3**, delivering accepted prepared selection through the existing canonical compact definition/release refs plus existing bounded artifact transfer/canonical blobs to a fixed worker adapter. qk0.1 depends on qk0.3 and qk0.0; qk0.3 depends on xz9.2, never on qk0.1 or qk0.0. Existing child history and qk0.2 prune ownership remain unchanged.
+
+- [ ] qk0.3: Exact reviewed leaf artifact/subtree/context authentication and actual worker consumption, including changed-input refusal, a closed progress projection and unchanged existing payload caps.
+- [ ] qk0.1: Whole coordinator consumer readiness after qk0.0 inventory and qk0.3 handoff; mandatory pre-effect identity survives quiet output.
+
+The default preset's global onboarding/delivery steps do not become the protected task subtree. Exact task-child execution feeds the separately owned qkb.1 downstream delivery. No missing source implementation is transferred to gad.2 installed acceptance. The new child and amended whole-child contract remain draft for independent readiness review.
+
+### Prepared input readiness repair — pending independent root review
+
+The initial qk0.3 draft failed independent readiness review: actual default prepared inputs exceed inline 32KiB definition capacity; gate/worker/queue capability ownership was unspecified; status rewrites conflicted with raw initial hashes; task:// dependency context remained mutable. These findings persist in qk0.3 with executed read-only size evidence. Its revised draft uses existing TransferCodec/CandidateTransfer and registration JournalMutation blobs, compact retained references, an explicit readonly FD/adapter join, immutable captured instructional context and existing scoped queue progress. qk0.1 retains exact original bundle bytes before effects and consumes that join. No new ledger/cap increase/backcompat/installed probe or producer backedge; all four children stay draft and require independent readiness decisions.

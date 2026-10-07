@@ -1,0 +1,9 @@
+# Exact protected worker inputs — draft usage
+
+For a reviewed leaf, `ace-overseer work-on --task REF --project PROJECT --agent ID --runtime herdr` prepares the actual task fork root (e.g. 010.01). Before authority/child effects it reports the immutable request path/digest, prepared bundle path/bytes/SHA256 and selection_sha256, including under --quiet. Graph text is in a verified complete bundle under the existing 64MiB transfer bound; its compact registered definition stays below 32KiB. The original worker receives authenticated readonly descriptor input and drives only assignment@010.01, using captured reviewed task/dependency context. Input admitted is not agent consumption or completion; 000/global delivery remain outside the subtree.
+
+An expanding parent, multiple task roots, missing context or oversized bundle refuses before registration. Supply one exact reviewed leaf/subtask; there is no first-current-step or all-scope fallback. Corrupt or missing retained bundle blocks fresh launch. Recovery from the request is read-only and reports local bundle availability separately from canonical attempt attribution; it never rebuilds/uploads current files or starts a replacement.
+
+StepWriter status/timestamp/report progress is permitted within the accepted subtree. Changed instructions, taskrefs, control frontmatter, subtree membership or later-step substitution refuse before consumption. Task:// reads use the captured reviewed text, so changing a live task/dependency specification does not supply new instructions. Protected add/retry/renumber/fork-run refuses; any new work needs fresh reviewed preparation/invocation after canonical settlement. Lost original release return remains uncertain and is never resent. Ordinary local driving remains separate.
+
+This is a source contract draft; descriptor/runtime boundaries are injected during controlled verification. Only gad.2 owns installed acceptance.
