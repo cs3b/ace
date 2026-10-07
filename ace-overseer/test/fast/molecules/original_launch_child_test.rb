@@ -168,6 +168,29 @@ class OriginalLaunchChildTest < AceOverseerTestCase
     assert_equal 1, boundary.calls.size
   end
 
+  def test_late_readable_frame_is_not_joined_after_original_deadline
+    now = 0
+    value, boundary = child(clock: -> { now })
+    boundary.define_singleton_method(:readable?) { |*_args| now = 30; true }
+    start(value).await_ready(status: @status)
+    assert_equal "uncertain", value.state
+    assert_equal 123, value.pid
+    assert_empty @joins
+    assert_equal 1, boundary.calls.size
+  end
+
+  def test_slow_canonical_join_cannot_admit_ready_after_original_deadline
+    now = 0
+    value, boundary = child(clock: -> { now })
+    canonical = @canonical_row
+    @status.define_singleton_method(:join_ready!) { |**_args| now = 30; {"item" => canonical} }
+    start(value).await_ready(status: @status)
+    assert_equal "uncertain", value.state
+    assert_nil value.ready
+    assert_equal 123, value.pid
+    assert_equal 1, boundary.calls.size
+  end
+
   def test_timeout_eof_and_birth_change_retain_original_handle
     value, boundary = child
     boundary.readable = false

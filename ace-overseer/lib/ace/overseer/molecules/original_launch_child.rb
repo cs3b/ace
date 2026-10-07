@@ -92,6 +92,7 @@ module Ace
             chunk = @reader.read_nonblock(LIMIT + 1 - bytes.bytesize, exception: false)
             next if chunk == :wait_readable
             return uncertain!("Original child ended before readiness") if chunk.nil?
+            return uncertain!("Original child readiness timed out after receipt") unless @clock.call < @readiness_deadline
             bytes << chunk
             return uncertain!("Original child readiness exceeds bound") if bytes.bytesize > LIMIT
             next unless bytes.include?("\n")
@@ -104,8 +105,10 @@ module Ace
                 @kernel.capture(pid) == identity
               raise Error, "Original child readiness differs from original selection"
             end
+            return uncertain!("Original child readiness timed out before canonical join") unless @clock.call < @readiness_deadline
             canonical = status.join_ready!(project: @request.fetch("project_id"), agent: @request.fetch("mapping_id"), ready: ready)
             Organisms::LaunchRecovery.verify_original!(request: @request, row: canonical.fetch("item"))
+            return uncertain!("Original child readiness timed out during canonical join") unless @clock.call < @readiness_deadline
             raise Error, "Original child birth changed during readiness join" unless @kernel.capture(pid) == identity
             ready.each_value(&:freeze)
             @ready = ready.freeze
