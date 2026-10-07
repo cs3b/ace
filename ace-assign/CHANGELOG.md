@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Fetch exact original prepared inputs through authenticated worker and descendant admission on the existing Endcap transport, binding immutable registration provenance and fixed candidate limits without changing ordinary evidence artifact bounds.
+
 - Expose authorized canonical assignment inventory at one retained revision, authenticating original registration, terminal/release and rotated descriptor provenance before bounded metadata pagination.
 
 - Authenticate complete immutable event inventories before ownership filtering, rejecting removed assignments/attempts/events, rewritten bytes and duplicate event digests while preserving valid interleaved appends.

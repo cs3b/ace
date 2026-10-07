@@ -4,7 +4,7 @@ module Ace
   module Assign
     module Authority
       class LaunchLifecycle
-        def transfer_binding(operation) = TRANSFER_OPERATIONS[operation]
+        def transfer_binding(request) = TRANSFER_OPERATIONS[request.fetch("operation")]
 
         def authorize_transfer!(request:, peer:, role:)
           if request["operation"] == "register_assignment"

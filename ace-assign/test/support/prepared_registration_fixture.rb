@@ -24,7 +24,7 @@ module Ace
         end
       end
 
-      def self.build(root:, definition:, scope:)
+      def self.build(root:, definition:, scope:, context_text: "Exact fixture context.\n")
         definition = definition.reject { |key, _| key == "prepared_work" }
         directory = Dir.mktmpdir("prepared-fixture-tree-", root); File.chmod(0700, directory)
         task = definition.fetch("task_id")
@@ -32,7 +32,7 @@ module Ace
         files = {"definition.json" => JSON.generate(definition), "job.yaml" => YAML.dump({"steps" => [{"number" => scope, "context" => "fork", "taskref" => task}]}),
           step_path => YAML.dump({"name" => "execute", "status" => "pending", "context" => "fork", "taskref" => task}) + "---\nExact fixture work.\n",
           "context/#{task}/spec.md" => YAML.dump({"id" => task, "status" => "pending", "needs_review" => false, "dependencies" => []}) + "---\nReviewed fixture task.\n",
-          "context/#{task}/bundle.txt" => "Exact fixture context.\n"}
+          "context/#{task}/bundle.txt" => context_text}
         record = ->(path) { {"filename" => path, "bytes" => files.fetch(path).bytesize, "sha256" => Digest::SHA256.hexdigest(files.fetch(path))} }
         manifest = {"version" => 1, "assignment_id" => definition.fetch("session_id"), "project_id" => definition.fetch("project_id"), "task_id" => task, "scope" => scope,
           "job" => record.call("job.yaml"), "steps" => [record.call(step_path).merge("number" => scope, "filename" => File.basename(step_path))],
