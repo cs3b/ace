@@ -121,12 +121,12 @@ module Ace
 
         private
 
-        def cleanup_staging(directory, identity)
+        def cleanup_staging(directory, identity, prefix: "candidate-")
           quarantine = nil
           root = File.expand_path(@receiver.fetch("staging_root"))
           Ace::Assign::Authority::PrivateDirectory.verify!(root)
           current = File.lstat(directory)
-          return unless File.dirname(directory) == root && File.basename(directory).start_with?("candidate-") &&
+          return unless File.dirname(directory) == root && File.basename(directory).start_with?(prefix) &&
             current.directory? && current.uid == Process.uid && current.dev == identity.dev && current.ino == identity.ino
           # Capture the pathname atomically before checking the object we will
           # delete. A concurrent replacement at the original name must survive.
@@ -175,3 +175,5 @@ module Ace
     end
   end
 end
+
+require_relative "protected_service_recovery"

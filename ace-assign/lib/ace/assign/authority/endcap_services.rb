@@ -175,7 +175,7 @@ module Ace
             @kernel.live!(peer)
             service_policy!.visible!(project: map.fetch("project_id"), uid: peer.fetch("uid"))
             if role == :executor
-              service_executor!(peer, role, record)
+              record = service_settlement_record!(journal, params, map, peer, role)
             else
               authorized = case role
               when :worker
@@ -191,8 +191,11 @@ module Ace
               end
               raise AttemptErrors::UnauthorizedIdentity, "service status purpose differs" unless authorized
             end
-            {data: service_projection(record).merge("generation" => journal.authority_generation(events),
-              "journal_commit" => journal.ref_value), replayed: false}
+            commit = journal.ref_value
+            data = service_projection(record).merge("generation" => journal.authority_generation(events),
+              "journal_commit" => commit)
+            data["settlement_context"] = ServiceEvidence.new(journal: journal).settlement_context(record, commit: commit) if role == :executor
+            {data: data, replayed: false}
           end
         end
 

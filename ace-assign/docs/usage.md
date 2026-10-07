@@ -555,6 +555,8 @@ and independent review.
 
 ### Protected sealed-service no-effect settlement
 
+For the fixed original executor, `service_status` includes a closed immutable `settlement_context` containing the authenticated original request, execution binding and accepted current challenge (or null). Full original mapping/project/receiver credentials are checked before this private context is exposed. Ordinary status roles retain their existing projection. Terminal status still authenticates the imported original receipt through the canonical reader.
+
 The fixed original executor uses `claim_service_settlement` against the sealed original request. The authority records an acyclic challenge selecting the latest canonical uncertain/failed outcome. `complete_no_effect` uploads the exact original receipt and bounded inspection artifact through the existing private transfer. It authenticates the accepted challenge, original dispatch binding and imported artifact before atomically reaching `failed-settled`. Exact retries retain their first reply and do not invoke a new effect. A later genuine failure needs a fresh challenge; missing/orphan/stale challenges and changed input refuse.
 
 This generic authority path attributes the closed inspection report to the recorded executor. Actual operation-specific target absence, handler termination and surviving-writer inspection are an open gad.b producer obligation; a closed scope or timeout does not prove no effect. The current protected ingress atomically accepts a request and executor claim, so an absent canonical request cannot be converted into a requested-but-unclaimed settlement record.

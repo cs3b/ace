@@ -285,4 +285,10 @@ reads; it never provisions.
 
 ### Protected handler cleanup boundary
 
-Handlers retain the fixed closed environment and 30-second execution deadline, with 16KiB stdout and 8KiB stderr caps. Owned cleanup adds at most one second of confirmed reaping; unresolved cleanup remains uncertain and cannot return a service receipt. It cannot establish an arbitrary domain target or surviving writer is absent. Receiver recovery and the gad.b operation-specific fresh inspector are still required source work; installed verification is centralized in gad.2.
+Handlers retain the fixed closed environment and 30-second execution deadline, with 16KiB stdout and 8KiB stderr caps. Owned cleanup adds at most one second of confirmed reaping; unresolved cleanup remains uncertain and cannot return a service receipt. It cannot establish an arbitrary domain target or surviving writer is absent. The gad.b operation-specific fresh inspector remains required source work; installed verification is centralized in gad.2.
+
+### Selected receiver no-effect recovery
+
+The existing protected receiver exposes `recover_no_effect(binding:, input_bytes:, mutation_id:, expected_generation:)`. Supply the original assignment/attempt/candidate/head/request binding, original structured input, stable mutation ID and unchanged original positive authority generation. The receiver snapshots those inputs, authenticates canonical status and input before any settled return, and adopts an already accepted current challenge without claiming again. A needed claim uses the supplied generation unchanged. Lost acknowledgements remain uncertain; status retry never repeats the original effect.
+
+Trusted operation configuration must provide a distinct fixed `no_effect_argv` for the original project/service/executor. Inspection may proceed after the effect lease expires, but it never renews effect permission or selects normal effect argv. The selected inspector must produce operation-specific original target/handler/writer observations and existing strict challenge-bound artifacts; only the authority's canonical import can establish `failed-settled`. This source API and controlled composition do not deliver the outstanding gad.b inspector or installed acceptance.

@@ -22,6 +22,33 @@ module Ace
           @canonical = Molecules::CanonicalEvidence.new(journal: journal)
         end
 
+        # Executor-only projection from the same authenticated original record;
+        # selectors never come from the receiver or a caller-supplied target.
+        def settlement_context(record, commit: @journal.ref_value)
+          context(record, pending: {commit: commit})
+          selected = nil
+          if %w[no_effect_challenge challenge_generation challenge_event_digest].any? { |key| record.key?(key) }
+            challenge = challenge!(record, pending: {commit: commit}, current: false)
+            latest_failure = @journal.read_events(record.fetch("assignment_id"), commit: commit).reverse.find do |event|
+              event["attempt_id"] == record.fetch("attempt_id") &&
+                %w[service_claim service_transition].include?(event["type"]) &&
+                event.dig("payload", "request_id") == record.fetch("request_id") &&
+                %w[uncertain failed].include?(event.dig("payload", "state"))
+            end
+            if latest_failure && latest_failure.fetch("digest") == challenge.dig("payload", "failure_event_digest")
+              selected = challenge.fetch("payload").slice("request_id", "input_digest", "claim_binding",
+                "no_effect_challenge", "challenge_generation", "failure_event_digest", "failure_generation")
+                .merge("challenge_event_digest" => challenge.fetch("digest"))
+            end
+          end
+          value = {"version" => 1, "request" => record.slice(*Molecules::EvidenceJournal::TERMINAL_BINDING_FIELDS),
+            "execution" => record.slice("mapping_id", "candidate_generation", "claim_binding", "dispatch_phase")
+              .merge("head" => record.fetch("candidate_head")), "challenge" => selected}
+          freeze_projection(JSON.parse(JSON.generate(value)))
+        rescue KeyError, TypeError
+          raise AttemptErrors::EvidenceUnavailable, "original service settlement context is incomplete"
+        end
+
         def context(record, no_effect: false, pending: nil)
           binding = FIELDS.to_h { |key| [key, record.fetch(key)] }
           unless %w[claim_binding policy_digest].all? { |key| binding[key].is_a?(String) && binding[key].match?(/\A[0-9a-f]{64}\z/) } &&
@@ -174,6 +201,14 @@ module Ace
             inspection!(bytes, record, challenge)
           end
           bytes
+        end
+
+        private
+
+        def freeze_projection(value)
+          value.each_value { |child| freeze_projection(child) } if value.is_a?(Hash)
+          value.each { |child| freeze_projection(child) } if value.is_a?(Array)
+          value.freeze
         end
       end
     end
