@@ -46,6 +46,7 @@ module Ace
           deployment.define_singleton_method(:verify_receiver_paths!) { |_id| true }
           deployment.define_singleton_method(:authority) { |_id| service }
           deployment.define_singleton_method(:verify!) { |*args, **options| map }
+          deployment.define_singleton_method(:project) { |_| {"inbox_contexts" => {}} }
           kernel = Object.new
           kernel.define_singleton_method(:supported!) { true }
           kernel.define_singleton_method(:capture) { |_pid| service.slice("uid", "gid", "groups") }

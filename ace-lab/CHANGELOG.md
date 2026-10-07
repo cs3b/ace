@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Compose the fixed read-only Inbox context completion owner with existing Endcap services over the same protected canonical journals and deployment history. Installed context provisioning remains separate.
+
 ## [0.4.0] - 2026-10-05
 
 ### Added

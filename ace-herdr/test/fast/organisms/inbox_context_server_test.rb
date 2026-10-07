@@ -35,6 +35,21 @@ class InboxContextServerTest < Minitest::Test
     exchange(JSON.generate({"version" => 1, "context_id" => "ctx", "operation" => operation, "params" => params}) + "\n", identity)
   end
 
+  def test_actual_binary_proof_frame_reconciles_only_after_complete_eof
+    prepare_reconciliation
+    frame = {"version" => 1, "context_id" => "ctx", "operation" => "reconcile_context",
+      "params" => {"effect_binding" => @effect_binding, "proof_sizes" => [@signed_bytes.bytesize, @signature.bytesize]}}
+    bytes = JSON.generate(frame) + "\n" + @signed_bytes + @signature
+    assert_equal "context_blocked", exchange(bytes + "extra").dig("error", "code")
+    assert_equal "delivered", @source_inbox.retained_status(event: "event1").fetch("state")
+    assert_equal "context_blocked", exchange(bytes.byteslice(0...-1)).dig("error", "code")
+    assert_equal "delivered", @source_inbox.retained_status(event: "event1").fetch("state")
+    result = exchange(bytes).fetch("result")
+    assert_equal "completed", result.fetch("state")
+    assert_equal @effect_binding, result.fetch("effect_binding")
+    assert_raises(ERROR) { @owner.end_context_operation(operation_id: @effect_binding.fetch("operation_id"), peer: @normal) }
+  end
+
   def test_actual_socket_framing_uses_kernel_peer_and_retains_grant_after_response_disconnect
     params = {"context_id" => "ctx", "purpose" => "enqueue", "event_id" => "event1", "process_binding" => @normal}
     first = request("begin_context_operation", params).fetch("result")

@@ -6,6 +6,54 @@ require_relative "../../support/inbox_context_owner_fixture"
 class InboxContextOwnerTest < Minitest::Test
   include InboxContextOwnerFixture
 
+  class CountedInbox < Ace::Herdr::Organisms::Inbox
+    class << self
+      attr_accessor :effects
+    end
+    def reconcile(**arguments)
+      self.class.effects += 1
+      super
+    end
+  end
+
+  def test_real_signed_context_effect_replay_keeps_pending_until_actual_canonical_query
+    CountedInbox.effects = 0
+    prepare_reconciliation(CountedInbox)
+    snapshot = @owner.snapshot_context(operation_id: @effect_binding.fetch("operation_id"), key_generation: 1,
+      event_id: "event1", peer: @normal)
+    assert_equal "delivered", snapshot.dig("record", "state")
+    refute_includes JSON.generate(snapshot), "controlled secret message"
+    refute snapshot.fetch("record").key?("receipt")
+    arguments = {effect_binding: @effect_binding, signed_bytes: @signed_bytes, signature: @signature, peer: @normal}
+    accepted = @owner.reconcile_context(**arguments)
+    assert_equal "completed", accepted.fetch("state")
+    assert_equal 1, CountedInbox.effects
+    assert accepted.frozen?
+    assert_raises(ERROR) { @owner.end_context_operation(operation_id: @effect_binding.fetch("operation_id"), peer: @normal) }
+    assert_raises(ERROR) { begin_rotation }
+    restart
+    assert_equal "unknown", begin_operation("reconcile").fetch("state")
+    assert_equal accepted, @owner.reconcile_context(**arguments)
+    assert_equal 1, CountedInbox.effects
+    assert_raises(ERROR) do
+      @owner.confirm_context_completion(effect_binding: @effect_binding, reconciliation_digest: "a" * 64, peer: @normal)
+    end
+    assert_raises(ERROR) { @owner.end_context_operation(operation_id: @effect_binding.fetch("operation_id"), peer: @normal) }
+    assert_raises(ERROR) { @owner.reconcile_context(**arguments.merge(effect_binding: @effect_binding.merge("mutation_id" => "other"))) }
+    assert_raises(ERROR) { @owner.reconcile_context(**arguments.merge(signed_bytes: @signed_bytes + " ")) }
+    assert_equal 1, CountedInbox.effects
+  end
+
+  def test_retained_effect_cannot_be_marked_idle_without_canonical_completion
+    prepare_reconciliation
+    @owner.reconcile_context(effect_binding: @effect_binding, signed_bytes: @signed_bytes, signature: @signature, peer: @normal)
+    @store.transaction { |state| state.fetch("operations").fetch(@effect_binding.fetch("operation_id"))["in_flight"] = 0 }
+    restart
+    assert_raises(ERROR) { @owner.status(peer: @normal) }
+    assert_raises(ERROR) { @owner.end_context_operation(operation_id: @effect_binding.fetch("operation_id"), peer: @normal) }
+    assert_raises(ERROR) { begin_rotation }
+  end
+
   def test_lost_begin_ack_returns_same_exact_admission_before_and_after_restart
     first = begin_operation
     assert_equal first, begin_operation
@@ -193,7 +241,7 @@ class InboxContextOwnerTest < Minitest::Test
     @store.transaction do |state|
       Owner::OPERATION_LIMIT.times do |i|
         state.fetch("operations")[i.to_s(16).rjust(32, "0")] = {"peer" => @normal, "purpose" => "enqueue",
-          "event_id" => "event-#{i}", "key_generation" => 1, "in_flight" => 0}
+          "event_id" => "event-#{i}", "key_generation" => 1, "in_flight" => 0, "effect_binding" => nil, "completion" => nil}
       end
     end
     assert_raises(ERROR) { begin_operation }

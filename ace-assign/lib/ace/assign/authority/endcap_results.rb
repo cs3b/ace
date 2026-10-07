@@ -101,6 +101,11 @@ module Ace
 
         def authorize_result_transfer!(request:, peer:, role:)
           params, map = result_request(request)
+          with_inbox_read_contexts(params, map) { authorize_admitted_result_transfer!(request: request, peer: peer, role: role) }
+        end
+
+        def authorize_admitted_result_transfer!(request:, peer:, role:)
+          params, map = result_request(request)
           @launch.with_assignment(params: params, map: map) do |journal, _|
             protected_journal!(journal)
             commit = journal.ref_value
@@ -116,6 +121,11 @@ module Ace
         end
 
         def dispatch_result(request:, peer:, role:, transfer: nil)
+          params, map = result_request(request)
+          with_inbox_read_contexts(params, map) { dispatch_admitted_result(request: request, peer: peer, role: role, transfer: transfer) }
+        end
+
+        def dispatch_admitted_result(request:, peer:, role:, transfer: nil)
           params, map = result_request(request)
           admitted = if request.fetch("operation") == "submit_result"
             authorize_result_transfer!(request: request, peer: peer, role: role)

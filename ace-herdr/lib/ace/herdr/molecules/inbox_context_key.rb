@@ -15,7 +15,11 @@ module Ace
           @context_id, @key_path, @config_path, @artifacts = context_id, public_key_path, config_path, artifacts
         end
 
-        def snapshot
+        def snapshot = selected.fetch(:snapshot)
+
+        # The fresh verifier key and its metadata come from the same held pair.
+        # Rotation never leaves an Inbox collaborator pinned to an obsolete key.
+        def selected
           @artifacts.with do |reader|
             key_bytes, key_ref = reader.read_path!(@key_path, limit: LIMIT)
             config_bytes, config_ref = reader.read_path!(@config_path, limit: LIMIT)
@@ -28,9 +32,10 @@ module Ace
             end
             key = public_key!(key_bytes)
             reader.verify_unchanged!
-            {"key_generation" => config.fetch("key_generation"),
+            snapshot = {"key_generation" => config.fetch("key_generation"),
               "fingerprint" => Digest::SHA256.hexdigest(key.public_to_der),
               "public_key_sha256" => key_ref.fetch("sha256"), "config_sha256" => config_ref.fetch("sha256")}
+            {snapshot: snapshot.freeze, key: key.freeze}.freeze
           end
         rescue Ace::Runtime::RuntimeUnavailableError, OpenSSL::PKey::PKeyError, KeyError
           raise ValidationError, "installed context key evidence is unavailable"

@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Route protected Inbox snapshot/reconciliation through the selected context owner and authenticate effect completion from the original signed canonical journal reply. Add the fixed query-only context-owner role; maintenance admission and orphan reclamation remain in progress.
 - Add canonical prompt issuance and authenticated immutable completion primitives with journal-wide retry identity enforcement, plus bounded private prompt framing. Public steering and retained launcher composition remain in progress.
 
 ### Added

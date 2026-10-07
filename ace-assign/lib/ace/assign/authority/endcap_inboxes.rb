@@ -1,4 +1,6 @@
 # frozen_string_literal: true
+require_relative "historical_inbox_evidence"
+require_relative "original_inbox_selection"
 
 require "ace/herdr/organisms/protected_inbox"
 require_relative "../molecules/execution_scope_lineage"
@@ -120,9 +122,7 @@ module Ace
             assignment_id: params.fetch("assignment_id"), attempt_id: params.fetch("attempt_id"),
             mapping_id: context.fetch("native_mapping_id"))
           raise AttemptErrors::EvidenceUnavailable, "canonical original native stage missing" unless lineage.native_event
-          native_map = @deployment.mapping(context.fetch("native_mapping_id"))
-          box = Ace::Herdr::Organisms::ProtectedInbox.build(context: context, mapping: native_map,
-            native: lineage.native_event.fetch("payload"), kernel: @kernel)
+          box = admitted_inbox_session!(params)
           current = box.retained_status(event: params.fetch("event_id"))
           unless current.slice(*INBOX_REGISTRATION_FIELDS) == registered.fetch("registration")
             raise AttemptErrors::EvidenceUnavailable, "current inbox differs from canonical registration"
@@ -160,6 +160,13 @@ module Ace
 
         def authorize_inbox_transfer!(request:, peer:, role:)
           params, map = inbox_request(request)
+          with_inbox_context(params, map, mutation_id: request.fetch("mutation_id")) do
+            authorize_admitted_inbox_transfer!(request: request, peer: peer, role: role)
+          end
+        end
+
+        def authorize_admitted_inbox_transfer!(request:, peer:, role:)
+          params, map = inbox_request(request)
           @launch.with_assignment(params: params, map: map) do |journal, _|
             protected_journal!(journal)
             inbox_selection(attempt_events(journal, params), params, map, peer, role)
@@ -168,6 +175,26 @@ module Ace
         end
 
         def dispatch_inbox(request:, peer:, role:, transfer:)
+          params, map = inbox_request(request)
+          with_inbox_context(params, map, mutation_id: request.fetch("mutation_id")) do |session|
+            result = dispatch_admitted_inbox(request: request, peer: peer, role: role, transfer: transfer)
+            if session.effect_binding
+              # The qjl transaction and all lifecycle exclusions have returned.
+              # Completion is verified by its fixed read-only authority endpoint.
+              journal = @launch.journals.fetch(map.fetch("project_id"))
+              commit = journal.ref_value
+              record = journal.read_events(params.fetch("assignment_id"), commit: commit).find { |event|
+                event["type"] == "inbox_reconciliation" && event.dig("payload", "event_id") == params.fetch("event_id") &&
+                  event.dig("payload", "binding", "receipt_sha256") == params.fetch("receipt_sha256") &&
+                  event.dig("payload", "binding", "signature_sha256") == params.fetch("signature_sha256") }
+              raise AttemptErrors::EvidenceUnavailable, "accepted context reconciliation missing" unless record
+              session.confirm!(reconciliation_digest: record.fetch("digest"))
+            end
+            result
+          end
+        end
+
+        def dispatch_admitted_inbox(request:, peer:, role:, transfer:)
           params, map = inbox_request(request)
           authorize_inbox_transfer!(request: request, peer: peer, role: role)
           unless transfer && transfer.count == 2
@@ -207,7 +234,12 @@ module Ace
               inbox_native_lineage!(box.retained_status(event: params.fetch("event_id")), lineage, receipt: receipt)
               accepted = box.reconcile(event: params.fetch("event_id"), receipt: receipt, signed_bytes: bytes,
                 signature: signature, expected_registration: registration)
-              raise AttemptErrors::EvidenceUnavailable, "signed inbox proof refused" if accepted["reconciliation_refusal"]
+              verified = box.verify_reconciliation(event: params.fetch("event_id"), receipt: receipt, signed_bytes: bytes,
+                signature: signature, expected_registration: registration)
+              unless !accepted["reconciliation_refusal"] && !verified["reconciliation_refusal"] &&
+                  accepted.values_at("state", "claim_generation", "binding") == verified.values_at("state", "claim_generation", "binding")
+                raise AttemptErrors::EvidenceUnavailable, "signed inbox proof refused"
+              end
               binding = inbox_binding(params, map, peer, role, registration, lineage, accepted)
               plan = Molecules::CanonicalEvidence.new(journal: journal).import_plan(**inbox_context(binding),
                 admitted_after_event_digest: fresh.last.fetch("digest"), artifacts: [bytes, signature])
@@ -218,7 +250,7 @@ module Ace
                 "inbox_context_id" => params.fetch("inbox_context_id"), "registration" => registration,
                 "state" => accepted.fetch("state"), "claim_generation" => accepted.fetch("claim_generation"),
                 "binding" => binding, "receipt_ref" => refs[0], "signature_ref" => refs[1]}
-              {data: inbox_projection(payload), blobs: plan.fetch(:blobs), events: plan.fetch(:events) +
+              {data: inbox_projection(payload).merge("context_operation" => box.effect_binding), blobs: plan.fetch(:blobs), events: plan.fetch(:events) +
                 [{type: "inbox_reconciliation", payload: payload}]}
             end
             final_commit = journal.ref_value
@@ -306,8 +338,12 @@ module Ace
           end
           receipt = JSON.parse(raw.first)
           inbox_native_lineage!(observed, lineage, receipt: receipt)
-          verified = box.verify_reconciliation(event: params.fetch("event_id"), receipt: receipt,
-            signed_bytes: raw.first, signature: raw.last, expected_registration: registration)
+          raise AttemptErrors::EvidenceUnavailable, "original inbox history owner is unavailable" unless @deployment_history
+          original, original_map = OriginalInboxSelection.new(history: @deployment_history, authority_id: map.fetch("authority_id"))
+            .load!(events: events, params: params, map: map, journal: journal, commit: commit)
+          authenticated = HistoricalInboxEvidence.new(journal: journal, deployment: original, history: @deployment_history)
+            .verify_selected!(events: events, params: params, map: original_map, commit: commit, reconciliation_digest: current.fetch("digest"))
+          verified = authenticated.fetch("reconciliation").fetch("payload")
           signed_state = receipt["outcome"] == "consumed" ? "completed" : "queued"
           if verified["reconciliation_refusal"] || verified["state"] != payload["state"] || payload["state"] != signed_state
             raise AttemptErrors::EvidenceUnavailable, "canonical inbox signature or settlement differs"

@@ -11,6 +11,10 @@ module Ace
       class InboxContextServer
         FIELDS = {
           "status" => [],
+          "snapshot_context" => %w[event_id key_generation operation_id],
+          "reconcile_context" => %w[effect_binding proof_sizes],
+          "verify_context_reconciliation" => %w[event_id expected_registration key_generation operation_id proof_sizes],
+          "confirm_context_completion" => %w[effect_binding reconciliation_digest],
           "begin_context_operation" => %w[context_id event_id process_binding purpose],
           "end_context_operation" => %w[operation_id],
           "begin_rotation" => %w[context_id expected_key_generation],
@@ -29,7 +33,6 @@ module Ace
           deadline = Molecules::InboxContextWire.deadline
           peer = @kernel.peer(socket)
           request = Molecules::InboxContextWire.read(socket, deadline: deadline)
-          Molecules::InboxContextWire.require_eof!(socket, deadline: deadline)
           unless request.is_a?(Hash) && request.keys.sort == %w[context_id operation params version] &&
               request["version"].is_a?(Integer) && request["version"] == 1 && request["context_id"] == @context_id &&
               FIELDS.key?(request["operation"]) && request["params"].is_a?(Hash) &&
@@ -37,6 +40,11 @@ module Ace
             raise ValidationError, "context request fields differ"
           end
           options = request.fetch("params").transform_keys(&:to_sym)
+          if %w[reconcile_context verify_context_reconciliation].include?(request.fetch("operation"))
+            bytes, signature = Molecules::InboxContextWire.read_proof(socket, sizes: options.delete(:proof_sizes), deadline: deadline)
+            options.merge!(signed_bytes: bytes, signature: signature)
+          end
+          Molecules::InboxContextWire.require_eof!(socket, deadline: deadline)
           result = @owner.public_send(request.fetch("operation"), **options, peer: peer)
           Molecules::InboxContextWire.write(socket, {"version" => 1, "context_id" => @context_id, "result" => result}, deadline: deadline)
         rescue ValidationError, Ace::Runtime::RuntimeUnavailableError

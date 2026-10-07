@@ -2,6 +2,7 @@
 require_relative "../../test_helper"
 require_relative "../../support/endcap_result_owner_fixture"
 require_relative "../../support/execution_boot_baseline_owner_fixture"
+require_relative "../../support/protected_inbox_context_pipeline_fixture"
 require "ace/assign/authority/deployment_history"
 require "ace/herdr/organisms/inbox"
 
@@ -11,6 +12,7 @@ module Ace
     # filesystem installation checks and native observation are controlled seams.
     class HistoricalRotationTest < AceAssignTestCase
       include EndcapResultOwnerFixture
+      include ProtectedInboxContextPipelineFixture
       include ExecutionBootBaselineOwnerFixture
 
       class Protection
@@ -63,6 +65,7 @@ module Ace
           pointers: {"/etc/ace/execution-slots/slot/boot-baseline-selection.json" => @boot_pointer}) }
         Ace::Runtime::Molecules::ExecutionBootBaseline.stub(:new, baseline_factory) { fixture { yield } }
       ensure
+        stop_context_pipeline
         originals&.each { |name, body| Authority::Deployment.define_method(name, body) }
         private_methods&.each { |name| Authority::Deployment.send(:private, name) }
         @launch&.close
@@ -93,17 +96,23 @@ module Ace
 
       def configure_result_owner_fixture
         repo = @journal.repo_root
+        @socket_root = File.realpath(Dir.mktmpdir("inbox-h-", "/tmp"))
+        @context_clients = {}
+        @authority_peer = @kernel.capture(Process.pid)
+        @context_peer = @kernel.capture(23007).merge("uid" => 13007, "gid" => 13007, "groups" => [13007])
+        @service = @service.merge("socket_path" => File.join(@socket_root, "query.sock"))
         @service = @service.merge("state_root" => File.join(@root, "authority-state"))
         Dir.mkdir(@service.fetch("state_root"), 0700)
-        @key = OpenSSL::PKey::RSA.new(1024)
+        @key = OpenSSL::PKey::RSA.new(2048)
         key_ref = artifact("original-public.pem", @key.public_to_pem)
-        @next_key = OpenSSL::PKey::RSA.new(1024)
+        @next_key = OpenSSL::PKey::RSA.new(2048)
         next_key_ref = artifact("candidate-public.pem", @next_key.public_to_pem)
         @published_key = File.join(@root, "current-public.pem")
         File.binwrite(@published_key, @key.public_to_pem)
         deliveries = File.join(@root, "deliveries")
         Dir.mkdir(deliveries, 0700)
         @context = {"deliveries_dir" => deliveries, "receipt_public_key" => @published_key,
+          "control_socket_path" => File.join(@socket_root, "context.sock"), "owner_credentials" => {"uid" => 13007, "gid" => 13007, "groups" => [13007]},
           "native_mapping_id" => "mapping", "supervisor_uids" => [13004],
           "pi_queue_client" => "/fixture/pi", "pi_queue_client_sha256" => "a" * 64}
         @map = @map.merge("worker_argv" => ["/usr/bin/true"], "worker_env" => {"PATH" => "/usr/bin"},
@@ -157,7 +166,8 @@ module Ace
             @scope ||= Scope.new(@map, @journal, @kernel, owner: @launch, network_selection: @network_selection,
               boot_baseline_selection: @boot_ref, network_installation: @network_installation) })
         @launch.define_singleton_method(:verify_maintenance_root!) { |*| true }
-        @endcap = Authority::Endcap.new(deployment: @deployment, launch: @launch, kernel: @kernel, service_policy: @policy)
+        @endcap = Authority::Endcap.new(deployment: @deployment, launch: @launch, kernel: @kernel,
+          service_policy: @policy, inbox_context_clients: @context_clients, deployment_history: @history)
         @router = Authority::Router.new(launch: @launch, handlers: [@endcap])
       end
 
@@ -251,6 +261,8 @@ module Ace
         bytes = JSON.generate(receipt)
         signature = @key.sign(OpenSSL::Digest::SHA256.new, bytes)
         parts = [bytes, signature]
+        start_context_pipeline(@root, context_id: "inbox", installed: true)
+        @router = Authority::Router.new(launch: @launch, handlers: [@endcap, @query_owner])
         params = {"event_id" => "event", "inbox_context_id" => "inbox", "expected_registration" => registration, "expected_generation" => generation,
           "receipt_sha256" => Digest::SHA256.hexdigest(bytes), "signature_sha256" => Digest::SHA256.hexdigest(signature),
           "transfer" => Authority::TransferCodec.new(root: @root).descriptor(parts, purpose: :inbox_proof)}

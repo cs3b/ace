@@ -176,24 +176,13 @@ module Ace
           unless Process.uid == service.fetch("uid")
             raise Ace::Runtime::RuntimeUnavailableError, "inbox resolver must run as its installed authority"
           end
-          PrivateDirectory.verify!(context.fetch("deliveries_dir"))
-          verify_inbox_acl!(context.fetch("deliveries_dir"), private_leaf: true)
-          key_path = context.fetch("receipt_public_key")
-          client_path = context.fetch("pi_queue_client")
-          [key_path, client_path].each do |path|
-            Ace::Runtime::Molecules::ProtectedSocket.root_path!(path)
-            verify_inbox_acl!(path)
-            unless File.file?(path) && !File.symlink?(path) && File.readable?(path)
-              raise Ace::Runtime::RuntimeUnavailableError, "installed inbox artifact is unavailable"
-            end
-          end
-          unless File.executable?(client_path) && Digest::SHA256.file(client_path).hexdigest == context.fetch("pi_queue_client_sha256")
-            raise Ace::Runtime::RuntimeUnavailableError, "installed inbox identity client differs"
-          end
-          raise Ace::Runtime::RuntimeUnavailableError, "installed inbox public key is oversized" if File.size(key_path) > 16_384
-          key = OpenSSL::PKey.read(File.binread(key_path))
-          unless key.is_a?(OpenSSL::PKey::RSA) && !key.private?
-            raise Ace::Runtime::RuntimeUnavailableError, "installed inbox key must be public-only RSA"
+          credentials = context.fetch("owner_credentials")
+          path = context.fetch("control_socket_path")
+          wire = Ace::Runtime::Molecules::ProtectedSocket
+          wire.root_path!(File.dirname(path), directory: true, owner: credentials.fetch("uid"))
+          identity = wire.socket_identity(path)
+          unless identity.last == credentials.fetch("uid")
+            raise Ace::Runtime::RuntimeUnavailableError, "installed context owner endpoint differs"
           end
           context
         rescue AttemptErrors::ReceiptRejected, OpenSSL::PKey::PKeyError, SystemCallError
@@ -237,8 +226,12 @@ module Ace
               raise ArgumentError, "invalid installed inbox context map"
             end
             contexts.each_value do |context|
-              strict!(context, %w[deliveries_dir receipt_public_key native_mapping_id pi_queue_client pi_queue_client_sha256 supervisor_uids])
-              %w[deliveries_dir receipt_public_key pi_queue_client].each { |key| path!(context.fetch(key)) }
+              strict!(context, %w[control_socket_path deliveries_dir owner_credentials receipt_public_key native_mapping_id pi_queue_client pi_queue_client_sha256 supervisor_uids])
+              credentials = context.fetch("owner_credentials")
+              strict!(credentials, %w[gid groups uid])
+              principal!(credentials, "uid", "gid", "groups")
+              raise ArgumentError, "context owner group count exceeds bounds" if credentials.fetch("groups").size > 64
+              %w[control_socket_path deliveries_dir receipt_public_key pi_queue_client].each { |key| path!(context.fetch(key)) }
               unless context["pi_queue_client_sha256"].is_a?(String) && context["pi_queue_client_sha256"].match?(/\A[0-9a-f]{64}\z/)
                 raise ArgumentError, "invalid installed Pi identity client digest"
               end

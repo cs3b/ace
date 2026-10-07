@@ -111,6 +111,19 @@ module Ace
           unless map["authority_id"] == @authority_id && map["project_id"] == request["project_id"]
             raise AttemptErrors::UnauthorizedIdentity, "mapping belongs to another authority or project"
           end
+          project = @deployment.project(map.fetch("project_id"))
+          owner_contexts = project.fetch("inbox_contexts", {}).select do |_id, context|
+            context.fetch("native_mapping_id") == params.fetch("mapping_id") &&
+              context.fetch("owner_credentials").values_at("uid", "gid", "groups") == peer.values_at("uid", "gid", "groups")
+          end
+          context_query = request["operation"] == "inbox_context_completion"
+          if context_query || !owner_contexts.empty?
+            unless context_query && @composition == "services" && request["mutation_id"].nil? &&
+                owner_contexts.key?(params.fetch("inbox_context_id")) && frame.fetch(:bytesize) <= 16_384
+              raise AttemptErrors::UnauthorizedIdentity, "context owner is exclusive to its completion query"
+            end
+            role = :context_owner
+          end
           if request["operation"] == "native_readiness"
             unless @composition == "launch" && request["mutation_id"].nil? && params.keys == ["mapping_id"] &&
                 frame.fetch(:bytesize) <= 16_384
@@ -127,7 +140,7 @@ module Ace
               codec: transfer_codec, deadline: wire.deadline(10))
             return
           end
-          role = if principal?(peer, map, "launcher_uid", "launcher_gid", "launcher_groups")
+          role ||= if principal?(peer, map, "launcher_uid", "launcher_gid", "launcher_groups")
             :launcher
           elsif principal?(peer, map, "worker_uid", "worker_gid", "worker_groups")
             :worker
@@ -143,7 +156,7 @@ module Ace
           end
           raise AttemptErrors::UnauthorizedIdentity, "unmapped kernel peer" unless role
           if %w[observe_execution_scope close_execution_scope].include?(request["operation"]) ||
-              @composition == "services" && %w[attempt_status evidence_fetch].include?(request["operation"])
+              @composition == "services" && %w[attempt_status evidence_fetch inbox_context_completion].include?(request["operation"])
             bodyless_read!(socket, deadline)
           end
           if request["operation"] == "gate_ready"

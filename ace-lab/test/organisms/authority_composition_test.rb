@@ -19,6 +19,7 @@ class AuthorityCompositionTest < Minitest::Test
     end
     history, launch, endcap, router, server = Array.new(5) { Object.new }
     selected = nil
+    selected_router = nil
     load_count = 0
     factory = lambda do |**arguments|
       selected = arguments
@@ -27,7 +28,7 @@ class AuthorityCompositionTest < Minitest::Test
     Ace::Assign::Authority::DeploymentHistory.stub(:load, -> { load_count += 1; history }) do
       Ace::Assign::Authority::LaunchLifecycle.stub(:new, factory) do
         Ace::Assign::Authority::Endcap.stub(:new, endcap) do
-          Ace::Assign::Authority::Router.stub(:new, router) do
+          Ace::Assign::Authority::Router.stub(:new, ->(**arguments) { selected_router = arguments; router }) do
             Ace::Assign::Authority::Server.stub(:new, server) do
               assert_same server, Ace::Lab::Organisms::AuthorityComposition.new(authority_id: "services", deployment: deployment, kernel: Object.new).build
             end
@@ -39,6 +40,9 @@ class AuthorityCompositionTest < Minitest::Test
     assert_same history, selected.fetch(:deployment_history)
     assert_same deployment, selected.fetch(:deployment)
     assert_equal :protected, selected.fetch(:journals).fetch("project").evidence_mode
+    assert_equal 2, selected_router.fetch(:handlers).size
+    assert_same endcap, selected_router.fetch(:handlers).first
+    assert_instance_of Ace::Assign::Authority::InboxContextCompletion, selected_router.fetch(:handlers).last
   ensure
     if original_operations
       Ace::Assign::Authority::Endcap.send(:remove_const, :OPERATIONS)
