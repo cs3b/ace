@@ -35,13 +35,18 @@ module Ace
 
         UNIT_STATE_SIGNATURES = {"Id" => "s", "LoadState" => "s", "ActiveState" => "s", "SubState" => "s", "Job" => "(uo)"}.freeze
         MOUNT_SIGNATURES = {"Where" => "s"}.freeze
-        ACTIVATION_UNIT_SIGNATURES = UNIT_STATE_SIGNATURES.merge("InvocationID" => "s", "ControlGroup" => "s").freeze
+        ACTIVATION_UNIT_SIGNATURES = UNIT_STATE_SIGNATURES.merge("InvocationID" => "ay", "ControlGroup" => "s").freeze
         ACTIVATION_SERVICE_SIGNATURES = {"MainPID" => "u", "ControlPID" => "u", "Slice" => "s"}.freeze
+
+        PIDFD_ARGV = [BUSCTL, "--system", "--no-pager", "--json=short", "--auto-start=no",
+          "--allow-interactive-authorization=no", "--timeout=5", "call", "org.freedesktop.systemd1",
+          "/org/freedesktop/systemd1", "org.freedesktop.systemd1.Manager", "GetUnitByPIDFD", "h", "3"].freeze
 
         class Command
           LIMIT = 65_536
 
-          def call(argv, timeout:)
+          def call(argv, timeout:, pidfd: nil)
+            inherited = inherited_descriptor_options(argv, pidfd)
             unless RUBY_PLATFORM.include?("linux") && File.directory?("/run/systemd/system")
               raise RuntimeUnavailableError, "execution scope requires the Linux system systemd manager"
             end
@@ -56,7 +61,7 @@ module Ace
             output_reader, output_writer = IO.pipe
             error_reader, error_writer = IO.pipe
             pid = Process.spawn({"PATH" => "/usr/bin:/bin", "LANG" => "C", "LC_ALL" => "C"}, *argv,
-              in: File::NULL, out: output_writer, err: error_writer, unsetenv_others: true, close_others: true)
+              in: File::NULL, out: output_writer, err: error_writer, unsetenv_others: true, close_others: true, **inherited)
             output_writer.close
             error_writer.close
             deadline = ProtectedSocket.deadline(timeout)
@@ -112,6 +117,15 @@ module Ace
               end
             end
           end
+          private
+
+          def inherited_descriptor_options(argv, pidfd)
+            return {} unless pidfd || argv == PIDFD_ARGV
+            unless argv == PIDFD_ARGV && pidfd.is_a?(IO) && !pidfd.closed? && pidfd.fileno >= 3
+              raise ArgumentError, "pidfd transport requires the fixed manager method and held IO"
+            end
+            {3 => pidfd}
+          end
         end
 
         def initialize(slice_unit:, service_unit:, command: Command.new)
@@ -130,6 +144,25 @@ module Ace
             @slice_ancestors << parent
             break if parent == "-.slice"
           end
+        end
+
+        # The root identity owner supplies its already policy-checked pinned
+        # lifetime. A wire descriptor number never selects this capability.
+        def unit_for_pidfd(handle:, timeout: 5)
+          unless handle.is_a?(IO) && !handle.closed?
+            raise ArgumentError, "manager identity requires a held process lifetime"
+          end
+          bytes = @command.call(PIDFD_ARGV, timeout: bounded_timeout(timeout), pidfd: handle)
+          value = strict_typed_json(bytes)
+          data = value["data"]
+          unless value.keys.sort == %w[data type] && value["type"] == "osay" &&
+              data.is_a?(Array) && data.size == 3 && data[0] == unit_object(@service_unit) &&
+              data[1] == @service_unit && invocation_bytes?(data[2]) && data[2].any?(&:positive?)
+            raise RuntimeUnavailableError, "manager lifetime belongs to another unit or invocation"
+          end
+          {"unit" => @service_unit, "invocation_id" => data[2].pack("C*").unpack1("H*")}.freeze
+        rescue JSON::ParserError, KeyError, TypeError
+          raise RuntimeUnavailableError, "typed manager lifetime response is malformed"
         end
 
         def inspect_units
@@ -211,7 +244,7 @@ module Ace
 
         # Typed reads only, against the existing system manager. Property sets
         # and unit identities are owner-selected, never request-controlled.
-        def typed_properties(unit:, interface:, signatures:)
+        def typed_properties(unit:, interface:, signatures:, timeout: 5)
           unless [@slice_unit, @service_unit, *@slice_ancestors, *@prerequisite_units.to_a].include?(unit) &&
               %w[Unit Service Mount].include?(interface) && (interface == "Unit" || interface == "Service" && unit == @service_unit || interface == "Mount" && @prerequisite_units.to_a.include?(unit) && unit.end_with?(".mount")) && signatures.is_a?(Hash) &&
               signatures.all? { |key, value|
@@ -224,12 +257,10 @@ module Ace
               } && !signatures.empty?
             raise ArgumentError, "typed inspection requires fixed unit properties"
           end
-          object = "/org/freedesktop/systemd1/unit/" + unit.bytes.map { |byte|
-            ((byte >= 65 && byte <= 90) || (byte >= 97 && byte <= 122) || (byte >= 48 && byte <= 57)) ? byte.chr : "_%02x" % byte
-          }.join
+          object = unit_object(unit)
           bytes = @command.call([BUSCTL, "--system", "--no-pager", "--json=short", "--auto-start=no",
             "--allow-interactive-authorization=no", "get-property", "org.freedesktop.systemd1", object,
-            "org.freedesktop.systemd1.#{interface}", *signatures.keys], timeout: 5)
+            "org.freedesktop.systemd1.#{interface}", *signatures.keys], timeout: bounded_timeout(timeout))
           unless bytes.is_a?(String) && bytes.bytesize.between?(1, Command::LIMIT)
             raise RuntimeUnavailableError, "typed manager properties are unavailable"
           end
@@ -238,11 +269,11 @@ module Ace
             raise RuntimeUnavailableError, "typed manager property set is incomplete"
           end
           signatures.to_a.zip(lines).to_h do |(key, signature), line|
-            value = JSON.parse(line)
+            value = strict_typed_json(line)
             unless value.is_a?(Hash) && value.keys.sort == %w[data type] && value["type"] == signature && typed_value?(signature, value["data"])
               raise RuntimeUnavailableError, "typed manager property signature differs"
             end
-            [key, value.fetch("data")]
+            [key, key == "InvocationID" ? value.fetch("data").pack("C*").unpack1("H*") : value.fetch("data")]
           end
         rescue JSON::ParserError, KeyError
           raise RuntimeUnavailableError, "typed manager properties are malformed"
@@ -275,12 +306,41 @@ module Ace
           end
         end
 
+        def bounded_timeout(value)
+          unless value.is_a?(Numeric) && value.finite? && value.positive? && value <= 5
+            raise ArgumentError, "manager observation deadline exceeds its fixed budget"
+          end
+          value
+        end
+
+        def unit_object(unit)
+          "/org/freedesktop/systemd1/unit/" + unit.bytes.map { |byte|
+            ((byte >= 65 && byte <= 90) || (byte >= 97 && byte <= 122) || (byte >= 48 && byte <= 57)) ? byte.chr : "_%02x" % byte
+          }.join
+        end
+
+        def strict_typed_json(bytes)
+          unless bytes.is_a?(String) && bytes.bytesize.between?(1, Command::LIMIT) &&
+              bytes.dup.force_encoding(Encoding::UTF_8).valid_encoding?
+            raise RuntimeUnavailableError, "typed manager response is unavailable"
+          end
+          value = JSON.parse(bytes, create_additions: false, max_nesting: 32,
+            allow_duplicate_key: false, allow_comments: false)
+          raise RuntimeUnavailableError, "typed manager response is malformed" unless value.is_a?(Hash)
+          value
+        end
+
+        def invocation_bytes?(value)
+          value.is_a?(Array) && value.size == 16 && value.all? { |byte| byte.is_a?(Integer) && byte.between?(0, 255) }
+        end
+
         def typed_value?(signature, value)
           string = ->(item) { item.is_a?(String) && !item.include?("\0") }
           unsigned = ->(item, bits) { item.is_a?(Integer) && item >= 0 && item < (1 << bits) }
           signed = ->(item) { item.is_a?(Integer) && item >= -(1 << 31) && item < (1 << 31) }
           strings = ->(items) { items.is_a?(Array) && items.all? { |item| string.call(item) } }
           case signature
+          when "ay" then invocation_bytes?(value)
           when "s" then string.call(value)
           when "(uo)" then value.is_a?(Array) && value.size == 2 && unsigned.call(value.first, 32) && string.call(value.last) && value.last.start_with?("/")
           when "a(ss)"

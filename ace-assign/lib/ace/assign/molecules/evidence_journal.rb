@@ -761,6 +761,14 @@ module Ace
             end
             mutable = %w[state receipt reason claimed_at failed_at dispatch_phase no_effect_challenge
               challenge_generation challenge_event_digest completion_digest no_effect_completion_digest]
+            # Only this authenticated fresh dispatch may introduce the fixed
+            # root collaborator identity. It is immutable on every later update.
+            if @mode == :protected && pending && pending[:operation] == "begin_dispatch" &&
+                existing["operation"] == "prune-preserved-workspace" && existing["dispatch_phase"] == "issued" &&
+                replacement["dispatch_phase"] == "dispatch_started" && !existing.key?("operation_owner_binding") &&
+                replacement.key?("operation_owner_binding")
+              mutable << "operation_owner_binding"
+            end
             unless existing.except(*mutable) == replacement.except(*mutable)
               raise AttemptErrors::Conflict, "Service request #{request_id} changed immutable binding"
             end

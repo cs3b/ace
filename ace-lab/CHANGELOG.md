@@ -14,6 +14,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Add fixed cleanup-owner identity and execution exchanges that authenticate the original peer on each connection and verify bounded result bytes; actual cleanup entry and receipt admission remain required.
+
+- Authenticate a fixed cleanup root owner through held accepted entry/load bytes, its typed manager invocation and the original pinned kernel lifetime. The root profile is separate from ordinary all-zero capability admission; actual installed cleanup entry and dispatch composition remain required.
+
+- Admit fixed protected service requests through a bounded receiver listener and worker client. Retain the original five-second claim budget and listener lifetime exclusion until admitted work finishes; canonical replay never launches another handler.
+
 - Recover selected protected services through authenticated original canonical status, accepted no-effect challenges and existing receipt import, preserving original immutable inputs and lost-ACK retry identity. Select only fixed no-effect inspection argv; domain-specific inspection remains a gad.b source prerequisite.
 - Compose the fixed read-only Inbox context completion owner with existing Endcap services over the same protected canonical journals and deployment history. Installed context provisioning remains separate.
 

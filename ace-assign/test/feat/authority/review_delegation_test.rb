@@ -110,6 +110,40 @@ module Ace
         end
       end
 
+      def test_cancellation_revokes_accepted_approval_without_erasing_evidence
+        fixture do
+          assigned, = assign_direct
+          event = review_event
+          artifact = "independent review report"
+          receipt = {"assignment_id" => "assignment", "attempt_id" => @attempt, "project_id" => "project",
+            "scope" => "010", "operation" => "review", "head" => @head, "verdict" => "succeeded",
+            "producer" => {"actor" => "worker", "role" => "worker", "runtime" => "herdr"},
+            "artifacts" => [{"path" => "review-report", "sha256" => Digest::SHA256.hexdigest(artifact)}],
+            "checks" => [{"name" => "controlled-review", "verdict" => "passed"}],
+            "review" => {"head" => @head, "verdict" => "approved",
+              "reviewer" => {"actor" => assigned.dig(:data, "reviewer_actor")}}}
+          params, input, = upload(parts: [artifact], receipt: receipt)
+          params["purpose_id"] = assigned.dig(:data, "review_id")
+          accepted = call("accept_review", params, id: "accept", peer: @reviewer, role: :reviewer, transfer: input)
+          selectors = {"assignment_id" => "assignment", "attempt_id" => @attempt}
+          current = {"head" => @head, "candidate_generation" => 1}
+          read = -> { @endcap.send(:approved_review!, @journal, @journal.read_events("assignment"), selectors, @map, current) }
+          assert_equal assigned.dig(:data, "review_id"), read.call.fetch("review_id")
+          accepted_commit = accepted.dig(:data, "journal_commit")
+          history = @journal.read_events("assignment", commit: accepted_commit)
+          call("cancel_review", cancellation(event), id: "cancel-approved", peer: @launcher, role: :launcher)
+          assert_raises(AttemptErrors::ReceiptRejected) { read.call }
+          before = @journal.ref_value
+          assert_raises(AttemptErrors::UnauthorizedIdentity) do
+            call("accept_review", params, id: "accept", peer: @reviewer, role: :reviewer, transfer: input)
+          end
+          assert_equal before, @journal.ref_value
+          assert_equal history, @journal.read_events("assignment", commit: accepted_commit)
+          reference = accepted.dig(:data, "review_receipt", "artifacts").first
+          assert_equal artifact, @journal.blob(reference.fetch("path"))
+        end
+      end
+
       def test_actual_client_server_cancellation_uses_bodyless_canonical_reply
         fixture do
           @kernel.peer_identity = @launcher

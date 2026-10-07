@@ -13,6 +13,8 @@ module Ace
         PROMPT_FIELDS = %w[attempt_id intent_event_id journal_commit mutation_id original_binding_digest text_descriptor transfer_id type version].freeze
         OUTCOME_FIELDS = %w[guarded_evidence intent_event_id mutation_id original_binding_digest type version].freeze
         RECORDED_FIELDS = %w[intent_event_id journal_commit mutation_id original_binding_digest outcome type version].freeze
+        REVIEW_FIELDS = %w[attempt_id journal_commit mutation_id original_binding_digest request_event_id type version].freeze
+        REVIEW_ASSIGNED_FIELDS = %w[assignment_event_id journal_commit mutation_id original_binding_digest request_event_id type version].freeze
         INHIBIT_FIELDS = %w[attempt_id journal_commit original_binding_digest seal_event_id type version].freeze
         INHIBIT_OUTCOME_FIELDS = %w[guarded_evidence original_binding_digest seal_event_id type version].freeze
         INHIBIT_RECORDED_FIELDS = %w[journal_commit original_binding_digest seal_event_id type version].freeze
@@ -82,7 +84,15 @@ module Ace
 
         def dispatch_prompt(frame:, bytes:, deadline:, reservation:)
           validate_prompt!(frame)
-          pending = Pending.new(frame: frame, bytes: bytes, deadline: deadline, finished: false)
+          dispatch_pending(Pending.new(frame: frame, bytes: bytes, deadline: deadline, finished: false), reservation)
+        end
+
+        def dispatch_review(frame:, deadline:, reservation:)
+          self.class.validate_review!(frame)
+          dispatch_pending(Pending.new(frame: frame, deadline: deadline, finished: false), reservation)
+        end
+
+        def dispatch_pending(pending, reservation)
           @mutex.synchronize do
             raise AttemptErrors::EvidenceUnavailable, "Original launcher control channel is unavailable" if @closed
             raise AttemptErrors::EvidenceUnavailable, "Original launcher dispatch capacity is not held" unless reservation && @reservation.equal?(reservation)
@@ -90,7 +100,7 @@ module Ace
             @pending = pending
             @changed.broadcast
             until pending.finished
-              remaining = deadline - Process.clock_gettime(Process::CLOCK_MONOTONIC)
+              remaining = pending.deadline - Process.clock_gettime(Process::CLOCK_MONOTONIC)
               raise AttemptErrors::EvidenceUnavailable, "Original launcher dispatch outcome is uncertain" unless remaining.positive?
               @changed.wait(@mutex, remaining)
             end
@@ -98,6 +108,8 @@ module Ace
           raise pending.error if pending.error
           pending.result
         end
+
+        private :dispatch_pending
 
         # Only the existing Server connection handler calls serve. No slot,
         # assignment, journal or channel mutex is held over a socket wait or
@@ -116,6 +128,15 @@ module Ace
             end
             begin
               wire.write(@socket, pending.frame, deadline: pending.deadline, limit: 16_384)
+              if pending.frame.fetch("type") == "launch_review_delegate"
+                result = wire.read(@socket, deadline: pending.deadline, limit: 16_384)
+                self.class.validate_review_assigned!(result, pending.frame)
+                # This transport correlation is not assignment acceptance.
+                # The canonical request owner must authenticate the returned
+                # event/commit before recording the public response.
+                complete(pending, result: result)
+                next
+              end
               if pending.frame.fetch("type") == "launch_input_inhibit"
                 result = wire.read(@socket, deadline: pending.deadline, limit: 16_384)
                 self.class.validate_inhibit_outcome!(result, pending.frame)
@@ -177,6 +198,28 @@ module Ace
 
         def closed?
           @mutex.synchronize { @closed }
+        end
+
+        def self.validate_review!(frame)
+          unless frame.is_a?(Hash) && frame.keys.sort == REVIEW_FIELDS &&
+              frame["version"].is_a?(Integer) && frame["version"] == 1 && frame["type"] == "launch_review_delegate" &&
+              %w[attempt_id mutation_id].all? { |key| frame[key].is_a?(String) && frame[key].match?(Molecules::JournalMutation::ID) } &&
+              %w[request_event_id original_binding_digest].all? { |key| frame[key].is_a?(String) && frame[key].match?(/\A[0-9a-f]{64}\z/) } &&
+              frame["journal_commit"].is_a?(String) && frame["journal_commit"].match?(/\A(?:[0-9a-f]{40}|[0-9a-f]{64})\z/)
+            raise AttemptErrors::EvidenceUnavailable, "Private review delegation differs"
+          end
+          true
+        end
+
+        def self.validate_review_assigned!(result, frame)
+          unless result.is_a?(Hash) && result.keys.sort == REVIEW_ASSIGNED_FIELDS &&
+              result["version"].is_a?(Integer) && result["version"] == 1 && result["type"] == "launch_review_assigned" &&
+              %w[mutation_id request_event_id original_binding_digest].all? { |key| result[key] == frame.fetch(key) } &&
+              result["assignment_event_id"].is_a?(String) && result["assignment_event_id"].match?(/\A[0-9a-f]{64}\z/) &&
+              result["journal_commit"].is_a?(String) && result["journal_commit"].match?(/\A(?:[0-9a-f]{40}|[0-9a-f]{64})\z/)
+            raise AttemptErrors::EvidenceUnavailable, "Private review assignment does not join original request"
+          end
+          true
         end
 
         def self.validate_prompt!(frame)

@@ -29,7 +29,7 @@ module Ace
           "abort_launch" => %w[mapping_id assignment_id attempt_id launch_ticket failure_evidence failure_digest expected_generation]
         }.freeze
         TRANSFER_OPERATIONS = {"register_assignment" => {direction: :upload, purpose: :candidate, roles: [:launcher]}, "prompt_attempt" => {direction: :upload, purpose: :prompt_text, roles: %i[launcher supervisor]}}.freeze
-        OPERATIONS = (MUTATIONS.keys + %w[assignment_inventory stop_attempt prompt_attempt prompt_status launch_input_inhibit_selection launch_input_inhibit_completion launch_prompt_intent launch_prompt_completion launch_preflight registration_status attempt_status inspect_launch observe_execution_scope close_execution_scope]).freeze
+        OPERATIONS = (MUTATIONS.keys + %w[assignment_inventory stop_attempt prompt_attempt prompt_status launch_review_intent launch_input_inhibit_selection launch_input_inhibit_completion launch_prompt_intent launch_prompt_completion launch_preflight registration_status attempt_status inspect_launch observe_execution_scope close_execution_scope]).freeze
         TERMINAL = %w[succeeded failed stopped].freeze
 
         attr_reader :mutex, :journals, :exclusions
@@ -77,6 +77,7 @@ module Ace
           return prompt_status!(request: request, peer: peer, role: role) if operation == "prompt_status"
           return launch_input_inhibit_selection!(request: request, peer: peer, role: role) if operation == "launch_input_inhibit_selection"
           return launch_input_inhibit_completion!(request: request, peer: peer, role: role) if operation == "launch_input_inhibit_completion"
+          return launch_review_intent!(request: request, peer: peer, role: role) if operation == "launch_review_intent"
           return launch_prompt_intent!(request: request, peer: peer, role: role) if operation == "launch_prompt_intent"
           return launch_prompt_completion!(request: request, peer: peer, role: role) if operation == "launch_prompt_completion"
           if operation == "observe_execution_scope"
@@ -958,3 +959,5 @@ require_relative "launch_input_inhibition"
 require_relative "launch_stop"
 require_relative "assignment_inventory"
 require_relative "launch_prepared_work"
+
+require_relative "launch_review"

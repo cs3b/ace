@@ -5,3 +5,5 @@ An installed maintenance worker submits the exact prune request through its prov
 If root/receiver connection is lost, query the same request ID. The original root birth may finish its one admitted invocation; a new birth inspects immutable result evidence and never adopts/replays deletion. Actual no-effect/settlement challenge identifies recovery; EOF alone leaves uncertainty.
 
 Wrong peer, input, root entry/profile or phase refuses. No caller executable, path-to-delete, root UID option, ambient sudo or passed descriptor is supported. Exact closed frames and output limits are in ../../protected-prune-source-candidate.md. This is proposed source capability, not an installed command.
+
+The root cleanup entry is admitted through the [accepted provenance amendment](../root-entry-provenance-amendment-candidate.md). Manager configuration alone is not current-image evidence. Missing direct immutable entry, original root lifetime, typed invocation or protected closure refuses; no ordinary receiver privilege or fallback is added.
