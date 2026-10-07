@@ -42,9 +42,9 @@ class NativeSourceTest < Minitest::Test
   end
 
   def test_packaged_selection_pins_the_exact_reviewed_source_and_patch
-    assert_equal "96f14b6d8b8b7c712bf6d1f381c789fabdfe2050", @source.selection.fetch("source_commit")
+    assert_equal "7a2e78b4e92d2b694bd8a06c1ef4943915c399b2", @source.selection.fetch("source_commit")
     assert_equal "7b116c05bfda646af39d2524c54e70c751f57ee8", @source.selection.fetch("baseline_commit")
-    assert_equal "6478a65a19276e952906211276b23b1e3579073a9c465efa65f636191f137eb2", @source.selection.fetch("patch_sha256")
+    assert_equal "92971473f75c116181dc73de138d91f532e1cb62220c13eace2eb5cfd05fa811", @source.selection.fetch("patch_sha256")
     assert_equal @source.selection.fetch("patch_sha256"), Digest::SHA256.file(@source.patch_path).hexdigest
     refute_includes @source.selection_path, ".ace-tasks"
     assert_raises(FrozenError) { @source.selection["committer"]["name"] = "replacement" }

@@ -49,8 +49,8 @@ The five newly separated source closures (y24/vs2/1w5/09j/qkb.0) use the retaine
 
 ## Remaining local source path
 
-- [ ] 9c2 — actual readiness/admission, post-native closure, complete original/candidate maintenance and terminal consumers; bounded pre-native abort/release is already delivered.
-- [ ] xz9 — scoped service composition and remaining handlers. Captain selected original-attempt-terminal submission for xz9.2 on 2026-10-07; its corrected specification passed independent review and is pending. The native guard (N1) and ACE consumer (N2) are explicit undelivered phases; dependencies remain unchanged.
+- [ ] 9c2 — reviewed generic readiness/history/maintenance checkpoint is integrated (`5f5de6599`); original maintenance boot-evidence export is integrated (`a4df327f8`). Actual Lab producer/installer composition and remaining terminal consumers keep this task open. Bounded pre-native abort/release was already delivered.
+- [ ] xz9 — scoped service composition and remaining handlers. Captain selected original-attempt-terminal submission for xz9.2; that child is in progress. Native guard (N1), exact source packaging, and original-actor input drain are integrated through `d803c5344`; ACE foreground control, durable prompt/stop composition and acceptance (N2) remain open. See the child's `native-input-drain-source-verification.md` for reviewed source and executed test receipts. No native build, installation or consumption proof is implied; dependencies remain unchanged.
 - [ ] xza — native observation/signing producer implementation under its reviewed contract.
 - [ ] qk0 — role/charter source integration; draft readiness remains explicit.
 - [ ] qkb.1 / qkb — complete qk0/xz9-dependent workflow/role adoption; accepted neutral vocabulary is retained.
@@ -63,7 +63,9 @@ qkb -> R2 -> R3 -> qkc source assets -> central gad.2 run remains the final depe
 
 ## Current publication and propagation
 
-Local wave 2026-10-06: n0n/5h5/412 are delivered; a bounded 9c2 inventory checkpoint is integrated while 9c2 remains open. Five new gem artifacts are prepared, not published. See local-wave-2026-10-06.md and its exact test/artifact receipts. The prior 16-gem history below remains unchanged.
+Local wave 2026-10-06: n0n/5h5/412 are delivered; a bounded 9c2 inventory checkpoint was integrated while 9c2 remained open. Five gem artifacts were prepared then, not published. That queue predates the subsequent source changes and is historical, not the current publication candidate. Prepare and verify a coherent release from the final integrated revision before the Captain's interactive OTP publication. See local-wave-2026-10-06.md and its exact historical receipts. The prior 16-gem history below remains unchanged.
+
+The 2026-10-07 checkpoint/queue corrections received independent scoped APPROVE from wave_412. They change neither completion metadata nor installed acceptance. `ace-task show` retains this umbrella as in-progress; diff validation passes.
 
 2026-10-07 local continuation: xz9.2 target semantics are recorded in ACE
 `d6dc84cab`; centralized installed ownership is clarified in `d74d2bbb8` after
