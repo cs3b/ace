@@ -156,8 +156,8 @@ module Ace
         def verify_unchanged!
           @handles.each do |path, entry|
             handle = entry.fetch(:handle)
-            unless snapshot(handle.stat) == entry.fetch(:snapshot) &&
-                snapshot(File.lstat(path)) == entry.fetch(:snapshot)
+            unless snapshot(handle.stat, directory: entry.fetch(:directory)) == entry.fetch(:snapshot) &&
+                snapshot(File.lstat(path), directory: entry.fetch(:directory)) == entry.fetch(:snapshot)
               raise RuntimeUnavailableError, "network artifact changed during verification"
             end
             @protection.verify!(path, handle, directory: entry.fetch(:directory))
@@ -190,10 +190,10 @@ module Ace
           begin
             handle.close_on_exec = true
             @protection.verify!(path, handle, directory: directory)
-            unless snapshot(stat) == snapshot(handle.stat) && snapshot(File.lstat(path)) == snapshot(handle.stat)
+            unless snapshot(stat, directory: directory) == snapshot(handle.stat, directory: directory) && snapshot(File.lstat(path), directory: directory) == snapshot(handle.stat, directory: directory)
               raise RuntimeUnavailableError, "network artifact changed while opening"
             end
-            @handles[path] = {handle: handle, directory: directory, snapshot: snapshot(handle.stat)}
+            @handles[path] = {handle: handle, directory: directory, snapshot: snapshot(handle.stat, directory: directory)}
             handle
           rescue Exception
             handle.close
@@ -201,8 +201,9 @@ module Ace
           end
         end
 
-        def snapshot(stat)
-          [stat.dev, stat.ino, stat.uid, stat.gid, stat.mode, stat.size, stat.mtime, stat.ctime]
+        def snapshot(stat, directory:)
+          identity = [stat.dev, stat.ino, stat.uid, stat.gid, stat.mode]
+          directory ? identity : identity + [stat.size, stat.mtime, stat.ctime]
         end
       end
     end

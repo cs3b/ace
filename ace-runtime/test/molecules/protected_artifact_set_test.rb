@@ -240,4 +240,56 @@ class ProtectedArtifactSetTest < AceRuntimeTestCase
     end
   end
 
+  def test_unrelated_sibling_publication_does_not_change_held_directory_identity
+    with_artifacts do |directory|
+      path = File.join(directory, "selected")
+      File.binwrite(path, "accepted")
+      Set.new(protection: ControlledProtection.new).with do |set|
+        assert_equal "accepted", set.read!(reference(path))
+        sibling = File.join(directory, "unrelated")
+        File.binwrite(sibling, "other publication")
+        assert set.verify_unchanged!
+        File.unlink(sibling)
+        assert set.verify_unchanged!
+      end
+    end
+  end
+
+  def test_held_directory_replacement_or_mode_change_refuses
+    [:replacement, :mode].each do |mutation|
+      with_artifacts do |directory|
+        parent = File.join(directory, "parent")
+        Dir.mkdir(parent)
+        path = File.join(parent, "selected")
+        File.binwrite(path, "accepted")
+        Set.new(protection: ControlledProtection.new).with do |set|
+          set.read!(reference(path))
+          if mutation == :replacement
+            File.rename(parent, parent + ".original")
+            Dir.mkdir(parent)
+            File.binwrite(path, "accepted")
+          else
+            File.chmod(0o700, parent)
+          end
+          assert_raises(Unavailable) { set.verify_unchanged! }
+        end
+      end
+    end
+  end
+
+  def test_selected_regular_file_content_change_or_replacement_refuses
+    [:content, :replacement].each do |mutation|
+      with_artifacts do |directory|
+        path = File.join(directory, "selected")
+        File.binwrite(path, "accepted")
+        Set.new(protection: ControlledProtection.new).with do |set|
+          set.read!(reference(path))
+          File.rename(path, path + ".original") if mutation == :replacement
+          File.binwrite(path, "changed!")
+          assert_raises(Unavailable) { set.verify_unchanged! }
+        end
+      end
+    end
+  end
+
 end
