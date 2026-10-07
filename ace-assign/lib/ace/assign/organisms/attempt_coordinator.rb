@@ -5,6 +5,7 @@ require "json"
 require "open3"
 require "pathname"
 require "ace/herdr"
+require_relative "../molecules/canonical_attempt_state"
 
 module Ace
   module Assign
@@ -45,6 +46,16 @@ module Ace
         end
 
         attr_reader :store
+
+        # Pure producer plan. The protected lifecycle authenticates the original
+        # proof and both exhaustive owner projections anew at each CAS prefix.
+        # No caller receipt, cache state, native wait or store mutation enters it.
+        def self.stopped_transition_plan(events:, selection:, service_evidence:, inbox_evidence:, commit:)
+          Atoms::AttemptStateMachine.proof_stopped_transition!(Molecules::CanonicalAttemptState.derive(events))
+          payload = Molecules::CanonicalAttemptState.stopped_payload!(events: events, selection: selection,
+            service_evidence: service_evidence, inbox_evidence: inbox_evidence, commit: commit)
+          {events: [{type: "attempt_stopped", payload: payload}], blobs: {}}
+        end
 
         # Read-only exact native reverse binding from accepted history. A PID
         # supplied by a trusted boundary must be kernel-derived; no command

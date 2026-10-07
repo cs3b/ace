@@ -10,6 +10,7 @@ require_relative "launch_control_channel"
 require_relative "deployment"
 require_relative "deployment_history"
 require_relative "../molecules/execution_scope_lineage"
+require_relative "../molecules/canonical_attempt_state"
 require_relative "execution_scope_observation"
 
 module Ace
@@ -27,7 +28,7 @@ module Ace
           "abort_launch" => %w[mapping_id assignment_id attempt_id launch_ticket failure_evidence failure_digest expected_generation]
         }.freeze
         TRANSFER_OPERATIONS = {"prompt_attempt" => {direction: :upload, purpose: :prompt_text, roles: %i[launcher supervisor]}}.freeze
-        OPERATIONS = (MUTATIONS.keys + %w[prompt_attempt prompt_status launch_input_inhibit_selection launch_input_inhibit_completion launch_prompt_intent launch_prompt_completion launch_preflight registration_status attempt_status inspect_launch observe_execution_scope close_execution_scope]).freeze
+        OPERATIONS = (MUTATIONS.keys + %w[stop_attempt prompt_attempt prompt_status launch_input_inhibit_selection launch_input_inhibit_completion launch_prompt_intent launch_prompt_completion launch_preflight registration_status attempt_status inspect_launch observe_execution_scope close_execution_scope]).freeze
         TERMINAL = %w[succeeded failed stopped].freeze
 
         attr_reader :mutex, :journals, :exclusions
@@ -69,6 +70,7 @@ module Ace
 
         def dispatch(request:, peer:, role:, transfer: nil)
           operation, params = request.values_at("operation", "params")
+          return stop_attempt!(request: request, peer: peer, role: role) if operation == "stop_attempt"
           return prompt_attempt!(request: request, peer: peer, role: role, transfer: transfer) if operation == "prompt_attempt"
           return prompt_status!(request: request, peer: peer, role: role) if operation == "prompt_status"
           return launch_input_inhibit_selection!(request: request, peer: peer, role: role) if operation == "launch_input_inhibit_selection"
@@ -822,31 +824,47 @@ module Ace
           map = @deployment.mapping(params.fetch("mapping_id"))
           token!(params.fetch("assignment_id")); token!(params.fetch("attempt_id"))
           journal = journal_for(map)
-          @mutex.synchronize do
-            commit = journal.ref_value
-            events = journal.read_events(params.fetch("assignment_id"), commit: commit)
-            state = states(events)[params.fetch("attempt_id")]
-            raise AttemptErrors::NotFound, "launch not found" unless state && state["mapping_id"] == params["mapping_id"]
-            if role == :launcher && !@kernel.same?(state.fetch("launcher_identity"), peer)
-              raise AttemptErrors::UnauthorizedIdentity, "launch belongs to another launcher incarnation"
-            end
-            projection = state.slice("assignment_id", "attempt_id", "phase", "scope", "launch_ticket", "reservation_generation", "generation", "execution", "required_action", "handshake_deadline")
-            if %i[launcher supervisor].include?(role)
-              projection.merge!(state.slice("process_binding", "launcher_identity", "mapping_id"))
-            end
-            observation = @observations[params.fetch("attempt_id")]
-            expired = !%w[issued failed].include?(state["phase"]) && state["handshake_deadline"] && Time.iso8601(state.fetch("handshake_deadline")) <= Time.now.utc
-            child_exited = observation && observation[:child_handle] &&
-              observation[:child] == state.dig("process_binding", "process_identity") && @kernel.exited?(observation.fetch(:child_handle))
-            if !TERMINAL.include?(state["phase"]) && (!observation || !launcher_live?(observation) || expired || child_exited)
-              projection.merge!("phase" => "uncertain", "required_action" => "supervisor_inspect_exact_child_and_release_uncertainty")
-            end
-            if @result_owner
+          with_containment_exclusion(params, map, journal) do
+            @mutex.synchronize do
+              commit = journal.ref_value
+              events = journal.read_events(params.fetch("assignment_id"), commit: commit)
+              state = states(events)[params.fetch("attempt_id")]
+              raise AttemptErrors::NotFound, "launch not found" unless state && state["mapping_id"] == params["mapping_id"]
+              if role == :launcher && !@kernel.same?(state.fetch("launcher_identity"), peer)
+                raise AttemptErrors::UnauthorizedIdentity, "launch belongs to another launcher incarnation"
+              end
               chain = events.select { |event| event["attempt_id"] == params.fetch("attempt_id") }
-              projection.merge!(@result_owner.result_status(journal: journal, events: chain, params: params,
-                map: map, peer: peer, role: role, commit: commit))
+              projection = state.slice("assignment_id", "attempt_id", "phase", "scope", "launch_ticket", "reservation_generation", "generation", "execution", "required_action", "handshake_deadline")
+              projection.merge!("state" => journal.canonical_attempt_state(chain), "generation" => journal.authority_generation(chain))
+              if %i[launcher supervisor].include?(role)
+                projection.merge!(state.slice("process_binding", "launcher_identity", "mapping_id"))
+                original = original_prompt_record!(chain, state, params: params) if chain.any? { |event| event["type"] == "authority_mutation" && event.dig("payload", "operation") == "record_launch" }
+                projection.merge!("original_binding_digest" => original&.fetch("binding_digest"), "terminal_event_id" => nil, "reservation_release_event_id" => nil)
+                if TERMINAL.include?(projection.fetch("state"))
+                  lineage = Molecules::ExecutionScopeLineage.new(events: chain, project_id: map.fetch("project_id"),
+                    assignment_id: params.fetch("assignment_id"), attempt_id: params.fetch("attempt_id"), mapping_id: params.fetch("mapping_id"))
+                  released = scope_reservation_released?(chain, lineage, journal, commit)
+                  if released
+                    release = chain.find { |event| event["type"] == "authority_mutation" && event.dig("payload", "operation") == "scope_reservation_release" }
+                    projection.merge!("terminal_event_id" => release.dig("payload", "data", "terminal_event_id"), "reservation_release_event_id" => release.fetch("digest"))
+                  else
+                    projection["terminal_event_id"] = terminal_scope_receipt!(chain, lineage, journal, commit).fetch("digest")
+                  end
+                end
+              end
+              observation = @observations[params.fetch("attempt_id")]
+              expired = !%w[issued failed].include?(state["phase"]) && state["handshake_deadline"] && Time.iso8601(state.fetch("handshake_deadline")) <= Time.now.utc
+              child_exited = observation && observation[:child_handle] &&
+                observation[:child] == state.dig("process_binding", "process_identity") && @kernel.exited?(observation.fetch(:child_handle))
+              if !TERMINAL.include?(state["phase"]) && (!observation || !launcher_live?(observation) || expired || child_exited)
+                projection.merge!("phase" => "uncertain", "required_action" => "supervisor_inspect_exact_child_and_release_uncertainty")
+              end
+              if @result_owner
+                projection.merge!(@result_owner.result_status(journal: journal, events: chain, params: params,
+                  map: map, peer: peer, role: role, commit: commit))
+              end
+              projection.merge("journal_commit" => commit)
             end
-            projection.merge("journal_commit" => commit)
           end
         end
 
@@ -854,16 +872,9 @@ module Ace
           events.group_by { |event| event["attempt_id"] }.values.any? { |chain| chain.any? { |event| event["type"] == "intent" } && !terminal_events?(chain) }
         end
         def terminal_events?(events)
-          latest = events.reverse.filter_map do |event|
-            case event["type"]
-            when "process_start" then "running"
-            when "transition" then event.dig("payload", "to")
-            when "receipt_accepted" then event.dig("payload", "receipt", "verdict")
-            when "reconciliation" then event.dig("payload", "resolution")
-            end
-          end.first
-          TERMINAL.include?(latest)
+          TERMINAL.include?(Molecules::CanonicalAttemptState.derive(events))
         end
+
         def strict!(value, keys)
           raise ArgumentError, "authority fields differ" unless value.is_a?(Hash) && value.keys.sort == keys.sort
         end
@@ -898,3 +909,5 @@ require_relative "launch_scope_parent"
 
 require_relative "launch_steering"
 require_relative "launch_input_inhibition"
+
+require_relative "launch_stop"

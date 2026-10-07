@@ -59,6 +59,14 @@ module Ace
           TRANSITIONS.fetch(from.to_s, [])
         end
 
+        # Source-owned cessation, invoked only after original no-writers and
+        # exhaustive independent settlement proof. This does not broaden the
+        # ordinary uncertain receipt-reconciliation transition table.
+        def self.proof_stopped_transition!(state)
+          return "stopped" if %w[running uncertain].include?(state.to_s)
+          raise AttemptErrors::InvalidTransition, "Proof-linked stop requires an active bound attempt"
+        end
+
         # Validate a transition.
         #
         # @param from [String] Current state

@@ -5,12 +5,15 @@ require_relative "../../support/execution_boot_baseline_owner_fixture"
 require_relative "../../support/protected_inbox_context_pipeline_fixture"
 require "ace/assign/authority/deployment_history"
 require "ace/herdr/organisms/inbox"
+require "ace/assign/cli/commands/authority/launch"
+require_relative "../../support/original_launch_driver_owner_fixture"
 
 module Ace
   module Assign
     # Canonical owners and protected held-byte loaders are real. Installed UID,
     # filesystem installation checks and native observation are controlled seams.
     class HistoricalRotationTest < AceAssignTestCase
+      include OriginalLaunchDriverOwnerFixture
       include EndcapResultOwnerFixture
       include ProtectedInboxContextPipelineFixture
       include ExecutionBootBaselineOwnerFixture
@@ -96,7 +99,7 @@ module Ace
 
       def configure_result_owner_fixture
         repo = @journal.repo_root
-        @socket_root = File.realpath(Dir.mktmpdir("inbox-h-", "/tmp"))
+        @socket_root = File.realpath(Dir.mktmpdir("inbox-h-", @foreground_socket_root ? Etc.getpwuid(Process.uid).dir : "/tmp"))
         @context_clients = {}
         @authority_peer = @kernel.capture(Process.pid)
         @context_peer = @kernel.capture(23007).merge("uid" => 13007, "gid" => 13007, "groups" => [13007])
@@ -422,6 +425,186 @@ module Ace
           end
           assert_match(/pending context effect/, failure.message)
           assert_equal 1, @context_owner.status(peer: @authority_peer).fetch("active_operations")
+        end
+      end
+
+      def stop_terminal_and_release(uncertain: false)
+        params = {"mapping_id" => "mapping", "assignment_id" => "assignment", "attempt_id" => @attempt}
+        if uncertain
+          coordinator = Organisms::AttemptCoordinator.new(cache_base: File.join(@root, "stopped-cache"), repo_root: @journal.repo_root,
+            journal: @journal, lifecycle_exclusion: @launch.send(:exclusion_for, @map, @journal))
+          observer = Object.new
+          observer.define_singleton_method(:observe) { |_| {"liveness" => "unknown", "reason" => "controlled interrupted native observation"} }
+          coordinator.send(:reconciler).instance_variable_set(:@observer, observer)
+          assert_equal "uncertain", coordinator.reconcile(attempt_id: @attempt).state
+        end
+        expected_state = uncertain ? "uncertain" : "running"
+        assert_equal expected_state, @journal.canonical_attempt_state(current_events)
+        first_params = params.merge("expected_generation" => generation)
+        first = call("stop_attempt", first_params, id: "public-stop-seal", peer: @supervisor, role: :supervisor)
+        assert_equal "uncertain", first.dig(:data, "state")
+        assert_equal expected_state, @journal.canonical_attempt_state(current_events)
+        proof = call("stop_attempt", params.merge("expected_generation" => generation), id: "public-stop-proof", peer: @supervisor, role: :supervisor)
+        assert proof.dig(:data, "proof_id")
+        final_params = params.merge("expected_generation" => generation)
+        stopped = call("stop_attempt", final_params, id: "public-stop-terminal", peer: @supervisor, role: :supervisor)
+        assert_equal "stopped", stopped.dig(:data, "state")
+        assert_nil stopped.dig(:data, "required_action")
+        assert_equal "stopped", @journal.canonical_attempt_state(current_events)
+        terminal = current_events.find { |event| event["type"] == "attempt_stopped" }
+        assert_equal current_events.select { |event| event["type"] == "service_transition" && event.dig("payload", "state") == "succeeded" }.map { |event| event.fetch("digest") }.sort,
+          terminal.dig("payload", "service_settlement_event_digests")
+        assert_equal current_events.select { |event| event["type"] == "inbox_reconciliation" && event.dig("payload", "state") == "completed" }.map { |event| event.fetch("digest") }.sort,
+          terminal.dig("payload", "inbox_settlement_event_digests")
+        prior = @journal.ref_value
+        restarted_peer = @supervisor.merge("pid" => 98, "started_at" => "linux:#{ExecutionScopeObservationFixtures::BOOT}:98")
+        assert_equal stopped.fetch(:data), call("stop_attempt", final_params, id: "public-stop-terminal", peer: restarted_peer, role: :supervisor).fetch(:data)
+        assert_equal prior, @journal.ref_value
+        assert_equal first.fetch(:data), call("stop_attempt", first_params, id: "public-stop-seal", peer: @supervisor, role: :supervisor).fetch(:data)
+        release = @launch.release_scope_reservation!(params: params.merge("mutation_id" => "stopped-release", "expected_generation" => generation), peer: @launcher, role: :launcher)
+        assert_equal terminal.fetch("digest"), release.dig(:data, "terminal_event_id")
+      end
+
+      def test_actual_original_foreground_cli_exits_only_after_authenticated_stopped_release
+        @foreground_socket_root = true
+        with_installed_boundaries do
+          # Free the fixture seed through its actual imported receipt owner.
+          accept_terminal_and_release
+          original_assignment = @journal.mutation_result("register").fetch("data")
+          definition = @journal.blob(original_assignment.fetch("definition_ref"))
+          native = OriginalGuardedNative.new(mapping: @map.merge("native" => @map.fetch("native").merge(
+            "server_identity" => @kernel.capture(90), "socket_identity" => [1, 2, 13001])), kernel: @kernel)
+          server_kernel = StreamKernel.new(@kernel, me: @service, peer: @launcher)
+          client_kernel = StreamKernel.new(@kernel, me: @launcher, peer: @service)
+          server = Authority::Server.new(authority_id: "authority", lifecycle: @router, deployment: @deployment,
+            composition: "services", kernel: server_kernel)
+          listener = Thread.new { server.serve }
+          limit = WIRE.deadline(3)
+          until File.socket?(@service.fetch("socket_path"))
+            raise "Source listener unavailable" unless listener.alive? && Process.clock_gettime(Process::CLOCK_MONOTONIC) < limit
+            sleep(0.01)
+          end
+          @deployment.project("project").fetch("peer_credentials").each_value do |credential|
+            FileUtils.mkdir_p(credential.fetch("scratch_root"), mode: 0700)
+            File.chmod(0700, credential.fetch("scratch_root"))
+          end
+          client = Authority::Client.new(mapping_id: "mapping", deployment: @deployment, kernel: client_kernel)
+          recorded, statuses, ready = Queue.new, Queue.new, Queue.new
+          status_durations = []
+          original_call = client.method(:call)
+          client.define_singleton_method(:call) do |operation, params, **options|
+            status_started = Process.clock_gettime(Process::CLOCK_MONOTONIC) if operation == "attempt_status"
+            result = original_call.call(operation, params, **options)
+            status_durations << Process.clock_gettime(Process::CLOCK_MONOTONIC) - status_started if status_started
+            recorded << result.data if operation == "record_launch"
+            statuses << result.data if operation == "attempt_status"
+            result
+          end
+          gate_socket, worker_socket = UNIXSocket.pair
+          gate = Thread.new do
+            state = recorded.pop
+            @launch.gate_ready(request: {"params" => {"mapping_id" => "mapping", "launch_ticket" => state.fetch("launch_ticket")}},
+              peer: @worker, socket: gate_socket, deadline: WIRE.deadline(30))
+          end
+          driver = Authority::LaunchDriver.new(mapping_id: "mapping", deployment: @deployment, kernel: client_kernel, client: client, native: native)
+          command = CLI::Commands::Authority::Launch.new
+          command.define_singleton_method(:build_driver) { |_| driver }
+          definition_path = File.join(@root, "foreground-definition.json")
+          File.binwrite(definition_path, definition)
+          output = StringIO.new
+          output.define_singleton_method(:write) do |line|
+            count = super(line)
+            ready << JSON.parse(line)
+            count
+          end
+          previous_stdout = $stdout
+          $stdout = output
+          foreground = Thread.new do
+            command.call(mapping: "mapping", assignment: "assignment", definition: definition_path,
+              step: "010", base_head: @head, mutation: "foreground-stop-owner")
+          rescue StandardError => error
+            ready << error
+            raise
+          end
+          frame = Timeout.timeout(45) { ready.pop }
+          raise frame if frame.is_a?(Exception)
+          @attempt = frame.fetch("attempt_id")
+          assert_equal "launch_ready", frame.fetch("type")
+          assert_equal "ready", WIRE.read(worker_socket, deadline: WIRE.deadline(5)).dig("data", "phase")
+          assert_equal "release", WIRE.read(worker_socket, deadline: WIRE.deadline(5)).fetch("operation")
+          params = {"mapping_id" => "mapping", "assignment_id" => "assignment", "attempt_id" => @attempt}
+          first = client.call("stop_attempt", params.merge("expected_generation" => generation), mutation_id: "foreground-stop-seal", timeout: 90)
+          assert_equal "uncertain", first.data.fetch("state")
+          proof = client.call("stop_attempt", params.merge("expected_generation" => generation), mutation_id: "foreground-stop-proof", timeout: 90)
+          assert proof.data.fetch("proof_id")
+          stopped = client.call("stop_attempt", params.merge("expected_generation" => generation), mutation_id: "foreground-stop-terminal", timeout: 90)
+          assert_equal "stopped", stopped.data.fetch("state")
+          @launch.instance_variable_get(:@control_channels).values.each(&:close)
+          unreleased = Timeout.timeout(45) do
+            loop do
+              status = statuses.pop
+              break status if status["state"] == "stopped" && status["reservation_release_event_id"].nil?
+            end
+          end
+          assert_equal frame.fetch("original_binding_digest"), unreleased.fetch("original_binding_digest")
+          assert unreleased.fetch("terminal_event_id")
+          assert foreground.alive?, "terminal without release cannot terminate original driver"
+          released = @launch.release_scope_reservation!(params: params.merge("mutation_id" => "foreground-release", "expected_generation" => generation),
+            peer: @launcher, role: :launcher)
+          foreground.join(45)
+          refute foreground.alive?, "authenticated status under its unchanged 30s deadline must release foreground driver"
+          assert_nil foreground.value
+          refute_empty status_durations
+          assert status_durations.all? { |elapsed| elapsed < 30 }, status_durations.inspect
+          assert_equal 1, output.string.lines.length
+          assert_equal 1, native.drain_calls.length
+          assert_nil native.prompt_calls
+          observed_release = Timeout.timeout(2) do
+            loop do
+              status = statuses.pop
+              break status if status["reservation_release_event_id"]
+            end
+          end
+          assert_equal released.dig(:data, "terminal_event_id"), observed_release.fetch("terminal_event_id")
+          assert_equal "stopped", observed_release.fetch("state")
+        ensure
+          $stdout = previous_stdout if previous_stdout
+          driver&.request_control_cancel
+          foreground&.join(3)
+          server&.stop
+          listener&.join(3)
+          gate_socket&.close
+          worker_socket&.close
+          gate&.kill if gate&.alive?
+        end
+      end
+
+      def test_actual_settled_canonical_uncertain_stop_releases_and_retains_original_history_after_rotation
+        with_installed_boundaries do
+          settle_service
+          settle_inbox
+          stop_terminal_and_release(uncertain: true)
+          original_events = current_events
+          original_attempt = @attempt
+          File.binwrite(@boot_pointer, "invalid current boot pointer")
+          store = Ace::Herdr::Molecules::DeliveryRecordStore
+          store.with_lock(@context.fetch("deliveries_dir"), "event") { store.archive(@context.fetch("deliveries_dir"), "event") }
+          @launch.with_execution_slots(mapping_ids: ["mapping"], candidate_deployment: @history.candidate) do |contexts|
+            assert @launch.slot_reusable!(**contexts.first)
+            assert_equal "retired", @launch.retire_released_parent!(**contexts.first).fetch("state")
+          end
+          File.binwrite(@published, File.binread(@candidate_ref.fetch("path")))
+          File.binwrite(@published_key, @next_key.public_to_pem)
+          @launch.close
+          @deployment, @history = load_fixed
+          @map = @deployment.mapping("mapping")
+          refresh_candidate_boot!
+          restart
+          state = call("reserve_attempt", {"scope" => "010", "worker_uid" => 13001, "runtime" => "herdr", "base_head" => @head,
+            "launcher_process_binding" => @launcher, "expected_generation" => 1}, id: "stopped-rotated-reserve", peer: @launcher, role: :launcher).fetch(:data)
+          refute_equal original_attempt, state.fetch("attempt_id")
+          assert_equal "reserved", state.fetch("phase")
+          assert_equal original_events, @journal.read_events("assignment").select { |event| event["attempt_id"] == original_attempt }
         end
       end
 

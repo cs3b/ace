@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+require_relative "canonical_attempt_state"
 
 require "json"
 
@@ -33,6 +34,10 @@ module Ace
         # @param attempt [Models::Attempt] Running attempt
         # @return [Symbol] :stopped, :live, or :uncertain
         def classify(attempt)
+          events = events_for(attempt)
+          if events.any? { |event| event["type"] == "attempt_stopped" } && CanonicalAttemptState.derive(events) == "stopped"
+            return :stopped
+          end
           return :live if process_live?(attempt)
           :uncertain
         end

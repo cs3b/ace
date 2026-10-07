@@ -6,10 +6,12 @@ require "ace/assign/authority/server"
 require "ace/assign/cli/commands/authority/launch"
 require_relative "../../support/execution_scope_observation_fixtures"
 require_relative "../../support/execution_scope_native_owner_fixture"
+require_relative "../../support/original_launch_driver_owner_fixture"
 
 module Ace
   module Assign
     class ProtectedLaunchLifecycleTest < AceAssignTestCase
+      include OriginalLaunchDriverOwnerFixture
       WIRE = Ace::Runtime::Molecules::ProtectedSocket
       class Kernel
         Handle = Struct.new(:identity, :closed) { def close; self.closed = true; end }
@@ -596,55 +598,6 @@ module Ace
         @journal.blob(registration.fetch("definition_ref"))
       end
 
-      class StreamKernel
-        def initialize(kernel, me:, peer:)
-          @kernel, @me, @peer = kernel, me, peer
-        end
-        def supported!; true; end
-        def capture(pid); pid == Process.pid ? @me : @kernel.capture(pid); end
-        def peer(_socket); @peer; end
-        def method_missing(name, *args, **options, &block); @kernel.public_send(name, *args, **options, &block); end
-        def respond_to_missing?(name, include_private = false); @kernel.respond_to?(name, include_private) || super; end
-      end
-
-      class OriginalGuardedNative < Ace::Herdr::Molecules::ProtectedNativeControl
-        attr_reader :prompt_calls, :drain_calls
-        attr_accessor :before_prompt_ack, :before_drain_ack, :drop_prompt_ack, :unconfirmed_drains
-        def exchange(method, params = {}, **limits)
-          if method == "terminal.inhibit_input"
-            (@drain_calls ||= []) << params
-            before_drain_ack&.call
-            if (unconfirmed_drains || 0).positive?
-              self.unconfirmed_drains -= 1
-              return {"id" => "native-fixture", "error" => {"code" => "input_drain_unavailable", "phase" => "unconfirmed"}}
-            end
-            return {"id" => "native-fixture", "result" => {"type" => "terminal_input_drained", "origin" => params.fetch("expected_origin"),
-              "input_state" => "inhibited", "pending_input" => 0}}
-          end
-          raise "Unexpected native effect" unless method == "agent.prompt"
-          (@prompt_calls ||= []) << params
-          before_prompt_ack&.call
-          raise Ace::Runtime::RuntimeUnavailableError, "controlled native ACK loss" if drop_prompt_ack
-          {"id" => "native-fixture", "result" => {"type" => "agent_prompted", "agent" => {"status" => "ready"},
-            "origin" => params.fetch("expected_origin"), "submission" => "submitted"}}
-        end
-        private :exchange
-
-        def request(method, params = {})
-          case method
-          when "ping" then {"version" => "0.9.3", "protocol" => 22, "capabilities" => {"endpoint_protocol_generation" => 1}}
-          when "workspace.get" then {"workspace" => {"workspace_id" => "w1"}}
-          when "layout.apply" then {"layout" => {"workspace_id" => "w1", "tab_id" => "w1:t2", "root" => {
-            "type" => "pane", "pane_id" => "w1:p2", "command" => params.fetch("root").fetch("command"), "cwd" => @mapping.fetch("worker_cwd")}}}
-          when "pane.get" then {"pane" => {"workspace_id" => "w1", "tab_id" => "w1:t2", "pane_id" => "w1:p2", "terminal_id" => "term_ab"}}
-          when "pane.process_info" then {"process_info" => {"pane_id" => "w1:p2", "shell_pid" => 91,
-            "guarded_prompt" => true, "guarded_input_drain" => true, "guarded_prompt_origin" => {
-              "terminal_id" => "term_ab", "runtime_incarnation" => ExecutionScopeObservationFixtures::BOOT, "child" => @kernel.capture(91)}}}
-          else raise "Unexpected source native request"
-          end
-        end
-      end
-
       def test_actual_launch_driver_remains_valid_and_explicit_native_guard_capture_preserves_scope_binding
         exercise_actual_launch_owner
       end
@@ -655,6 +608,10 @@ module Ace
 
       def test_issued_actor_without_prompt_rows_requires_positive_lifetime_input_inhibition
         exercise_actual_launch_owner(input_drain: :no_prompt)
+      end
+
+      def test_public_stop_owns_containment_without_changing_running_state_or_replaying_native_input
+        exercise_actual_launch_owner(input_drain: :stop_no_prompt)
       end
 
       def test_original_driver_reports_lost_drain_ack_after_child_exit_without_second_native_effect
@@ -686,6 +643,7 @@ module Ace
           deployment = Object.new
           map = @map
           deployment.define_singleton_method(:mapping) { |_id| map }
+          deployment.define_singleton_method(:authority) { |_| {"composition" => "launch"} }
           deployment.define_singleton_method(:verify!) { |*_args, **_kwargs| map }
           launch = Authority::LaunchDriver.new(mapping_id: "mapping", deployment: deployment, kernel: @kernel, client: client, native: native)
           issued_for_cli = Queue.new
@@ -810,8 +768,8 @@ module Ace
         assert_equal authenticated.fetch("binding_digest"), ready_frame.fetch("original_binding_digest")
         original_generation = ready_frame.fetch("generation")
         if input_drain
-          if input_drain == :no_prompt
-            exercise_no_prompt_input_drain(client, native, state, original_generation)
+          if %i[no_prompt stop_no_prompt].include?(input_drain)
+            exercise_no_prompt_input_drain(client, native, state, original_generation, operation: input_drain == :stop_no_prompt ? "stop_attempt" : "close_execution_scope")
           elsif input_drain == :lost_ack
             exercise_lost_input_drain_ack(client, native, state, original_generation)
           else
@@ -1049,11 +1007,11 @@ module Ace
         assert_equal 2, native.drain_calls.length
       end
 
-      def exercise_no_prompt_input_drain(client, native, state, generation)
+      def exercise_no_prompt_input_drain(client, native, state, generation, operation: "close_execution_scope")
         selected = state.slice("assignment_id", "attempt_id")
         native.unconfirmed_drains = 1
-        first = client.call("close_execution_scope", selected.merge("expected_generation" => generation), mutation_id: "no-prompt-unconfirmed-drain", timeout: 30)
-        assert_equal "running", first.data.fetch("state")
+        first = client.call(operation, selected.merge("expected_generation" => generation), mutation_id: "no-prompt-unconfirmed-drain", timeout: 30)
+        assert_equal operation == "stop_attempt" ? "uncertain" : "running", first.data.fetch("state")
         assert_equal 1, native.drain_calls.length
         assert_nil native.prompt_calls
         events = @journal.read_events("assignment")
@@ -1065,17 +1023,19 @@ module Ace
           sleep(0.01)
         end
         current = @journal.authority_generation(@journal.read_events("assignment").select { |event| event["attempt_id"] == state.fetch("attempt_id") })
-        second = client.call("close_execution_scope", selected.merge("expected_generation" => current), mutation_id: "no-prompt-positive-drain", timeout: 30)
-        assert_equal "running", second.data.fetch("state")
+        second = client.call(operation, selected.merge("expected_generation" => current), mutation_id: "no-prompt-positive-drain", timeout: 30)
+        assert_equal operation == "stop_attempt" ? "uncertain" : "running", second.data.fetch("state")
         events = @journal.read_events("assignment")
         assert_equal 1, events.count { |event| event["type"] == "input_inhibited" }
         refute events.any? { |event| event["type"] == "scope_closed_no_writers" }
         assert_equal 2, native.drain_calls.length
         assert_nil native.prompt_calls
         current = @journal.authority_generation(events.select { |event| event["attempt_id"] == state.fetch("attempt_id") })
-        proof = client.call("close_execution_scope", selected.merge("expected_generation" => current), mutation_id: "no-prompt-proof-after-drain", timeout: 30)
-        assert_equal "closed_no_writers", proof.data.fetch("state")
-        replay = client.call("close_execution_scope", selected.merge("expected_generation" => generation), mutation_id: "no-prompt-unconfirmed-drain", timeout: 30)
+        proof = client.call(operation, selected.merge("expected_generation" => current), mutation_id: "no-prompt-proof-after-drain", timeout: 30)
+        assert_equal operation == "stop_attempt" ? "uncertain" : "closed_no_writers", proof.data.fetch("state")
+        assert proof.data.fetch("proof_id")
+        assert_equal "running", @journal.canonical_attempt_state(@journal.read_events(state.fetch("assignment_id")).select { |event| event["attempt_id"] == state.fetch("attempt_id") }) if operation == "stop_attempt"
+        replay = client.call(operation, selected.merge("expected_generation" => generation), mutation_id: "no-prompt-unconfirmed-drain", timeout: 30)
         assert_equal first.data, replay.data
         assert_equal 2, native.drain_calls.length
         assert_nil native.prompt_calls
