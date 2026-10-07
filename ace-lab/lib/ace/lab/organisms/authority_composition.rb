@@ -4,6 +4,7 @@ require "ace/assign/authority/server"
 require "ace/assign/authority/router"
 require "ace/assign/authority/launch_lifecycle"
 require "ace/assign/authority/endcap"
+require "ace/assign/authority/inbox_context_completion"
 require_relative "../molecules/protected_service_policy"
 
 module Ace
@@ -57,8 +58,11 @@ module Ace
           history = Ace::Assign::Authority::DeploymentHistory.load
           launch = Ace::Assign::Authority::LaunchLifecycle.new(deployment: @deployment, deployment_history: history,
             kernel: @kernel, journals: journals)
-          endcap = Ace::Assign::Authority::Endcap.new(deployment: @deployment, launch: launch, kernel: @kernel, service_policy: policy)
-          router = Ace::Assign::Authority::Router.new(launch: launch, handlers: [endcap])
+          endcap = Ace::Assign::Authority::Endcap.new(deployment: @deployment, launch: launch, kernel: @kernel,
+            service_policy: policy, deployment_history: history)
+          completion = Ace::Assign::Authority::InboxContextCompletion.new(deployment: @deployment, history: history,
+            authority_id: @authority_id, journals: journals, kernel: @kernel)
+          router = Ace::Assign::Authority::Router.new(launch: launch, handlers: [endcap, completion])
           Ace::Assign::Authority::Server.new(authority_id: @authority_id, deployment: @deployment, kernel: @kernel,
             lifecycle: router, composition: "services")
         end

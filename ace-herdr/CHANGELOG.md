@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Retain pending Inbox effects durably until the fixed authority authenticates their exact canonical completion. Add bounded binary proof exchange and protected snapshot/reconciliation endpoints; exceptions and lost acknowledgements continue to block end/rotation.
 - Add the source-owned inbox context admission/rotation core with durable grants, authenticated signer replacement/rollback attestations, protected key readback and bounded fixed transport. Protected Assign/CLI migration and positive orphan reclamation remain required before full context acceptance.
 - Select the exact native original-actor input inhibition/drain source, with monotonic admission/write exclusion, bounded closed replies and controlled race coverage. Installed effectiveness and N2 consumer integration remain separate acceptance gates.
 - Add explicit original native guard capture, closed guarded prompt decoding and exact-actor input inhibition decoding without changing existing launch binding bytes.

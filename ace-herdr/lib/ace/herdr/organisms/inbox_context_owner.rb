@@ -5,12 +5,14 @@ require "ace/runtime/molecules/protected_linux"
 require_relative "../molecules/inbox_context_store"
 require_relative "../molecules/inbox_context_key"
 require_relative "inbox"
+require_relative "inbox_context_effects"
 
 module Ace
   module Herdr
     module Organisms
       # The existing inbox owner grants admission; this metadata never contains delivery outcomes.
       class InboxContextOwner
+        include InboxContextEffects
         TOKEN = /\A[A-Za-z0-9][A-Za-z0-9._-]{0,127}\z/
         DIGEST = /\A[0-9a-f]{64}\z/
         ID = /\A[0-9a-f]{32}\z/
@@ -20,9 +22,13 @@ module Ace
         OPERATION_LIMIT = 256
 
         def initialize(context_id:, deliveries_dir:, grants:, store:, keys:,
-          kernel: Ace::Runtime::Molecules::ProtectedLinux.new)
+          kernel: Ace::Runtime::Molecules::ProtectedLinux.new, inbox: nil, completion: nil)
           token!(context_id)
           @context_id, @deliveries_dir, @store, @keys, @kernel = context_id, deliveries_dir, store, keys, kernel
+          if inbox && (!inbox.is_a?(Inbox) || inbox.context_root != deliveries_dir)
+            raise ValidationError, "context Inbox selection differs"
+          end
+          @inbox, @completion, @effect_issuers = inbox, completion, {}
           @grants = JSON.parse(JSON.generate(grants))
           validate_grants!
         end
@@ -73,7 +79,8 @@ module Ace
             raise ValidationError, "context admission count exceeds bounds" if state.fetch("operations").size >= OPERATION_LIMIT
             id = SecureRandom.hex(16)
             state.fetch("operations")[id] = {"peer" => copy(peer), "purpose" => purpose, "event_id" => event_id,
-              "key_generation" => state.fetch("key").fetch("key_generation"), "in_flight" => 0}
+              "key_generation" => state.fetch("key").fetch("key_generation"), "in_flight" => 0,
+              "effect_binding" => nil, "completion" => nil}
             operation_projection(state, id, state.fetch("operations").fetch(id))
           end
         end
@@ -372,12 +379,31 @@ module Ace
           raise ValidationError, "context admission map exceeds bounds" unless operations.is_a?(Hash) && operations.size <= OPERATION_LIMIT
           operations.each do |id, operation|
             id!(id)
-            strict!(operation, %w[event_id in_flight key_generation peer purpose])
+            strict!(operation, %w[completion effect_binding event_id in_flight key_generation peer purpose])
             peer!(operation.fetch("peer"))
             token!(operation.fetch("event_id"))
             unless PURPOSES.include?(operation["purpose"]) && [0, 1].include?(operation["in_flight"]) &&
                 operation["in_flight"].is_a?(Integer) && operation["key_generation"] == state.fetch("key").fetch("key_generation")
               raise ValidationError, "context admission metadata differs"
+            end
+            if operation["effect_binding"]
+              effect = Molecules::InboxContextEffectBinding.verify!(operation.fetch("effect_binding"))
+              unless effect.values_at("operation_id", "key_generation", "event_id", "inbox_context_id") ==
+                  [id, operation.fetch("key_generation"), operation.fetch("event_id"), @context_id] && operation.fetch("purpose") == "reconcile"
+                raise ValidationError, "context retained effect binding differs"
+              end
+              unless operation["completion"] || operation.fetch("in_flight") == 1
+                raise ValidationError, "context retained effect lacks canonical completion"
+              end
+            end
+            if operation["completion"]
+              strict!(operation.fetch("completion"), %w[commit reconciliation_digest reply_digest])
+              completion = operation.fetch("completion")
+              unless operation["effect_binding"] && operation.fetch("in_flight").zero? &&
+                  completion["commit"].is_a?(String) && completion["commit"].match?(/\A[0-9a-f]{40}\z/) &&
+                  %w[reconciliation_digest reply_digest].all? { |key| completion[key].is_a?(String) && DIGEST.match?(completion[key]) }
+                raise ValidationError, "context retained canonical completion differs"
+              end
             end
           end
           if (rotation = state["rotation"])

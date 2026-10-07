@@ -176,6 +176,17 @@ module Ace
           target.transform_values { |value| value.dup.freeze }.freeze
         end
 
+        def context_root = @deliveries_dir.dup.freeze
+
+        # Fixed source construction preserves the existing native/store owners;
+        # the verified context key is refreshed at admitted operation entry.
+        def with_receipt_public_key(key)
+          unless key.is_a?(OpenSSL::PKey::RSA) && !key.private?
+            raise ValidationError, "inbox requires a public receipt verifier"
+          end
+          self.class.new(executor: @executor, native: @native, deliveries_dir: @deliveries_dir, receipt_public_key: key)
+        end
+
         def enqueue(event:, attempt:, ref:, payload:, managed_envelope: nil, expected_target: nil)
           validate_id!(event, "event")
           validate_id!(attempt, "attempt")
