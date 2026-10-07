@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+- Expose selected staged boundary topology validation for installer source composition while retaining mandatory live authority socket verification for installed units.
+
 ### Fixed
 
 - Return the protected task-context callback result only after unchanged artifact verification, preserving Bundle responses and raw context text while refusing post-callback mutation.

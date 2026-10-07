@@ -148,6 +148,13 @@ module Ace
           raise RuntimeUnavailableError, "installed execution units cannot be verified"
         end
 
+        # Source validity only. The caller owns selected staged bytes; this
+        # neither observes a live authority nor grants installed readiness.
+        def validate_staged_boundary_topology!(service:, artifacts:, authority:)
+          validate_boundary_topology!(service, artifacts, authority: authority)
+          true
+        end
+
         private
 
         def verify_artifacts!(artifacts)
@@ -329,6 +336,11 @@ module Ace
         end
 
         def verify_boundary_topology!(service, artifacts, authority:)
+          validate_staged_boundary_topology!(service: service, artifacts: artifacts, authority: authority)
+          @files.authority_socket!(authority)
+        end
+
+        def validate_boundary_topology!(service, artifacts, authority:)
           artifact = artifacts.fetch("boundary_manifest").first
           bytes = @files.read(artifact.fetch("host_path"), limit: 65_536).dup.force_encoding(Encoding::UTF_8)
           raise RuntimeUnavailableError, "boundary content is not UTF-8" unless bytes.valid_encoding?
@@ -359,7 +371,6 @@ module Ace
           unless socket_mounts == [socket_projection]
             raise RuntimeUnavailableError, "authority socket has no unique exact readonly projection"
           end
-          @files.authority_socket!(authority)
           devpts = "/run/ace/execution-slots/#{@scope.fetch('slot_id')}/devpts"
           device_projections = [[devpts, "/dev/pts", false], [devpts + "/ptmx", "/dev/pts/ptmx", true]]
           unless projections.select { |_host, view, _| overlaps?(view, "/dev/pts") } == device_projections

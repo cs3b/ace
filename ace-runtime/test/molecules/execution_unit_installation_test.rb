@@ -164,6 +164,33 @@ class ExecutionUnitInstallationTest < AceRuntimeTestCase
   end
 
 
+  def test_staged_boundary_validation_does_not_replace_installed_socket_identity
+    socket_calls = []
+    @files.define_singleton_method(:authority_socket!) do |authority|
+      socket_calls << authority
+      raise Unavailable, "controlled missing original authority socket"
+    end
+    authority = {"socket_path" => "/run/authority/socket", "uid" => 13000}
+    roles = @artifacts.group_by { |artifact| artifact.fetch("role") }
+    assert_equal true, @installation.validate_staged_boundary_topology!(service: @manifest.fetch("properties").fetch("service"), artifacts: roles, authority: authority)
+    assert_empty socket_calls
+    error = assert_raises(Unavailable) { @installation.verify!(manager: @manager) }
+    assert_equal "controlled missing original authority socket", error.message
+    assert_equal 1, socket_calls.size
+    assert_equal authority.fetch("socket_path"), socket_calls.first.fetch("socket_path")
+  end
+
+  def test_staged_boundary_validation_reuses_current_projection_refusals
+    socket_calls = []
+    @files.define_singleton_method(:authority_socket!) { |*| socket_calls << true; raise "unexpected live socket access" }
+    authority = {"socket_path" => "/run/authority/socket", "uid" => 13000}
+    roles = @artifacts.group_by { |artifact| artifact.fetch("role") }
+    service = JSON.parse(JSON.generate(@manifest.fetch("properties").fetch("service")))
+    service.fetch("BindPaths") << ["/foreign/host", "/foreign/view", false, 0]
+    assert_raises(Unavailable) { @installation.validate_staged_boundary_topology!(service: service, artifacts: roles, authority: authority) }
+    assert_empty socket_calls
+  end
+
   def test_worker_entry_requires_exact_wrapper_and_unique_runtime_dependency_bytes
     assert @installation.verify!(manager: @manager)
     %w[wrapper interpreter].each do |key|
