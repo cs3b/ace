@@ -551,3 +551,10 @@ still must deliver trusted cold-start/boot refresh and activation inhibition.
 These source interfaces and controlled tests do not establish installed native,
 network or boot acceptance, and task 9c2 remains in progress through integration
 and independent review.
+
+
+### Protected sealed-service no-effect settlement
+
+The fixed original executor uses `claim_service_settlement` against the sealed original request. The authority records an acyclic challenge selecting the latest canonical uncertain/failed outcome. `complete_no_effect` uploads the exact original receipt and bounded inspection artifact through the existing private transfer. It authenticates the accepted challenge, original dispatch binding and imported artifact before atomically reaching `failed-settled`. Exact retries retain their first reply and do not invoke a new effect. A later genuine failure needs a fresh challenge; missing/orphan/stale challenges and changed input refuse.
+
+This generic authority path attributes the closed inspection report to the recorded executor. Actual operation-specific target absence, handler termination and surviving-writer inspection are an open gad.b producer obligation; a closed scope or timeout does not prove no effect. The current protected ingress atomically accepts a request and executor claim, so an absent canonical request cannot be converted into a requested-but-unclaimed settlement record.

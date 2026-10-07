@@ -161,7 +161,7 @@ module Ace
             @lifecycle.serve_launch_control!(request: request, peer: peer, socket: socket, codec: transfer_codec, deadline: deadline)
             return
           end
-          if %w[observe_execution_scope close_execution_scope prompt_status launch_input_inhibit_selection launch_input_inhibit_completion launch_prompt_intent launch_prompt_completion].include?(request["operation"]) ||
+          if %w[observe_execution_scope close_execution_scope prompt_status launch_input_inhibit_selection launch_input_inhibit_completion launch_prompt_intent launch_prompt_completion claim_service_settlement].include?(request["operation"]) ||
               @composition == "services" && %w[attempt_status evidence_fetch inbox_context_completion].include?(request["operation"])
             bodyless_read!(socket, deadline)
           end

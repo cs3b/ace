@@ -14,7 +14,7 @@ module Ace
       # Business admission shares the launch origin, lifecycle exclusion and
       # journal CAS. Network transfer is completed outside those locks.
       class Endcap
-        OPERATIONS = %w[submit_candidate export_candidate assign_review accept_review request_service begin_dispatch complete_service service_authorization service_status submit_result evidence_fetch reconcile_inbox].freeze
+        OPERATIONS = %w[submit_candidate export_candidate assign_review accept_review request_service begin_dispatch complete_service claim_service_settlement complete_no_effect service_authorization service_status submit_result evidence_fetch reconcile_inbox].freeze
         TRANSFER_OPERATIONS = {
           "reconcile_inbox" => {direction: :upload, purpose: :inbox_proof, roles: %i[launcher supervisor]},
           "submit_result" => {direction: :upload, purpose: :receipt_artifacts, roles: [:worker]},
@@ -25,7 +25,8 @@ module Ace
           "request_service" => {direction: :upload, purpose: :service_input, roles: [:executor]},
           "begin_dispatch" => {direction: :upload, purpose: :service_input, roles: [:executor]},
           "service_authorization" => {direction: :upload, purpose: :service_input, roles: [:executor]},
-          "complete_service" => {direction: :upload, purpose: :receipt_artifacts, roles: [:executor]}
+          "complete_service" => {direction: :upload, purpose: :receipt_artifacts, roles: [:executor]},
+          "complete_no_effect" => {direction: :upload, purpose: :receipt_artifacts, roles: [:executor]}
         }.freeze
         PARAMETERS = {
           "reconcile_inbox" => %w[mapping_id assignment_id attempt_id expected_generation event_id inbox_context_id expected_registration receipt_sha256 signature_sha256 transfer],
@@ -39,7 +40,9 @@ module Ace
           "begin_dispatch" => %w[mapping_id assignment_id attempt_id expected_generation candidate_generation head request_id claim_binding transfer],
           "service_status" => %w[mapping_id assignment_id attempt_id candidate_generation head request_id],
           "service_authorization" => %w[mapping_id assignment_id attempt_id candidate_generation head request_id claim_binding input_digest transfer],
-          "complete_service" => %w[mapping_id assignment_id attempt_id candidate_generation head request_id claim_binding receipt_sha256 transfer]
+          "complete_service" => %w[mapping_id assignment_id attempt_id candidate_generation head request_id claim_binding receipt_sha256 transfer],
+          "claim_service_settlement" => %w[mapping_id assignment_id attempt_id candidate_generation head request_id expected_generation],
+          "complete_no_effect" => %w[mapping_id assignment_id attempt_id candidate_generation head request_id claim_binding reconciliation_challenge receipt_sha256 transfer]
         }.freeze
 
         def initialize(deployment:, launch:, kernel: Ace::Runtime::Molecules::ProtectedLinux.new, service_policy: nil, inbox_context_clients: nil, deployment_history: nil)
@@ -53,6 +56,7 @@ module Ace
           return authorize_inbox_transfer!(request: request, peer: peer, role: role) if request.fetch("operation") == "reconcile_inbox"
           return authorize_result_transfer!(request: request, peer: peer, role: role) if %w[submit_result evidence_fetch].include?(request.fetch("operation"))
           params, map = validate_request(request)
+          return authorize_service_settlement!(request, params, map, peer, role) if request.fetch("operation") == "complete_no_effect"
           return authorize_service_transfer!(request, params, map, peer, role) if %w[request_service begin_dispatch complete_service service_authorization].include?(request.fetch("operation"))
           @launch.with_assignment(params: params, map: map) do |journal, _registration|
             protected_journal!(journal)
@@ -72,6 +76,7 @@ module Ace
           return dispatch_inbox(request: request, peer: peer, role: role, transfer: transfer) if request.fetch("operation") == "reconcile_inbox"
           return dispatch_result(request: request, peer: peer, role: role, transfer: transfer) if %w[submit_result evidence_fetch].include?(request.fetch("operation"))
           params, map = validate_request(request)
+          return dispatch_service_settlement(request, params, map, peer, role, transfer) if %w[claim_service_settlement complete_no_effect].include?(request.fetch("operation"))
           return service_status(request, params, map, peer, role) if request.fetch("operation") == "service_status"
           return dispatch_service(request, params, map, peer, role, transfer) if %w[request_service begin_dispatch complete_service service_authorization].include?(request.fetch("operation"))
           admitted = nil
@@ -338,6 +343,7 @@ module Ace
 end
 
 require_relative "endcap_services"
+require_relative "endcap_service_settlement"
 
 require_relative "endcap_results"
 

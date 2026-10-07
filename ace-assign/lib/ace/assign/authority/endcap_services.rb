@@ -43,6 +43,9 @@ module Ace
             unless verified == record && %w[accepted uncertain rejected succeeded failed failed-settled].include?(verified.fetch("state"))
               raise AttemptErrors::EvidenceUnavailable, "canonical service record differs"
             end
+            if %w[no_effect_challenge challenge_generation challenge_event_digest].any? { |key| verified.key?(key) }
+              ServiceEvidence.new(journal: journal).challenge!(verified, pending: {commit: commit}, current: false)
+            end
             unless %w[succeeded failed-settled].include?(verified.fetch("state"))
               pending = true
               next
@@ -78,6 +81,14 @@ module Ace
         # service writers. It never reacquires lifecycle/authority locks.
         def authorize_service_update!(journal:, existing:, replacement:, pending:)
           protected_journal!(journal)
+          if existing && %w[no_effect_challenge challenge_generation challenge_event_digest].any? { |key| existing[key] != replacement[key] }
+            unless pending && pending[:operation] == "claim_service_settlement" &&
+                existing["state"] == replacement["state"] && existing["receipt"] == replacement["receipt"] &&
+                existing["dispatch_phase"] == replacement["dispatch_phase"]
+              raise AttemptErrors::InvalidState, "no-effect challenge requires its fixed source owner"
+            end
+            ServiceEvidence.new(journal: journal).challenge!(replacement, pending: pending)
+          end
           initial = existing.nil? && %w[accepted uncertain].include?(replacement["state"])
           begin_dispatch = existing && existing["dispatch_phase"] == "issued" && replacement["dispatch_phase"] == "dispatch_started"
           if existing && existing["dispatch_phase"] != replacement["dispatch_phase"] && !begin_dispatch
@@ -156,6 +167,9 @@ module Ace
                 record["project_id"] == map["project_id"] && record["candidate_head"] == params["head"] &&
                 record["candidate_generation"] == params["candidate_generation"]
               raise AttemptErrors::UnauthorizedIdentity, "service status binding differs"
+            end
+            if %w[no_effect_challenge challenge_generation challenge_event_digest].any? { |key| record.key?(key) }
+              ServiceEvidence.new(journal: journal).challenge!(record, current: false)
             end
             events = attempt_events(journal, params)
             @kernel.live!(peer)

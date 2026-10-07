@@ -35,7 +35,7 @@ module Ace
         # cannot select blob paths, event types, or accepted response data.
         def mutate(assignment_id:, attempt_id:, mutation_id:, operation:, parameters_digest:, expected_generation:, with_replay: false, generation_mode: :expected, prompt_binding: nil, prompt_completion: nil, prompt_observation: nil, input_inhibition: nil)
           unless (generation_mode == :expected && expected_generation.is_a?(Integer) && expected_generation >= 0) ||
-              (generation_mode == :recorded_completion && operation == "complete_service" && expected_generation.nil?) ||
+              (generation_mode == :recorded_completion && %w[complete_service complete_no_effect].include?(operation) && expected_generation.nil?) ||
               (generation_mode == :prompt_completion && operation == "prompt_attempt" && expected_generation.nil? && prompt_completion.is_a?(Hash)) ||
               (generation_mode == :prompt_observation && operation == "prompt_observation" && expected_generation.nil? && prompt_observation.is_a?(Hash)) ||
               (generation_mode == :input_inhibition && operation == "input_inhibition_observation" && expected_generation.nil? && input_inhibition.is_a?(Hash))
@@ -106,7 +106,7 @@ module Ace
               blobs = plan.fetch(:blobs, {})
               events = chain_mutation_events(attempt_id, current.last&.fetch("digest"), plan.fetch(:events, []))
               updates = prepare_service_updates(plan.fetch(:service_updates, []), assignment_id: assignment_id,
-                attempt_id: attempt_id, pending: {current_events: current, pending_events: events, blobs: blobs, commit: old,
+                attempt_id: attempt_id, pending: {current_events: current, pending_events: events, blobs: blobs, commit: old, operation: operation,
                   service_inputs: service_input_context(plan)})
               events.concat(chain_mutation_events(attempt_id, events.last&.fetch("digest") || current.last&.fetch("digest"),
                 updates.map { |prepared| prepared.fetch(:event) }))

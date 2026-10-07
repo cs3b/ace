@@ -111,7 +111,7 @@ module Ace
         end
       end
 
-      def test_settlement_projection_pending_is_authenticated_and_failed_settled_import_is_verified
+      def test_settlement_projection_pending_is_authenticated_and_injected_challenge_refuses
         fixture(mapping_id: "map") do |journal, importer, _context, binding, _repo|
           owner = Authority::Endcap.new(deployment: Object.new, launch: Object.new)
           params = binding.slice("mapping_id", "assignment_id", "attempt_id")
@@ -123,24 +123,17 @@ module Ace
             error = assert_raises(AttemptErrors::EvidenceUnavailable) { query.call }
             refute_kind_of AttemptErrors::ServiceSettlementPending, error
           end
-          # Retained challenge is an injected prerequisite: production challenge
-          # issuance is a separate xz9.1 obligation, not supplied by projection.
+          # Actual failed-settled coverage now uses the public challenge/import
+          # producer in authority/service_settlement_test.rb. A shape-only
+          # fixture selector no longer grants settlement evidence authority.
           current = journal.service_request("request-1")
           challenged = current.merge("no_effect_challenge" => "fixture-challenge", "challenge_generation" => 1,
             "challenge_event_digest" => journal.read_events("assignment-1").last.fetch("digest"))
-          mutate(journal, "challenge-prerequisite", 1) { {data: {}, service_updates: [
-            {request_id: "request-1", expected: current, replacement: challenged, event_type: "service_transition"}]} }
-          binding = challenged.except("state")
-          context = Authority::ServiceEvidence.new(journal: journal).context(binding, no_effect: true)
-          plan = completion(journal, importer, context, binding, failed: true)
-          mutate(journal, "failed-complete", 2) { plan }
-          projection = query.call
-          assert_equal "failed-settled", projection.fetch("services").first.fetch("state")
-          assert_equal plan.fetch(:references), projection.fetch("services").first.fetch("evidence_refs")
-          journal.stub(:blob, "corrupt") do
-            error = assert_raises(AttemptErrors::EvidenceUnavailable) { query.call }
-            refute_kind_of AttemptErrors::ServiceSettlementPending, error
+          error = assert_raises(AttemptErrors::EvidenceUnavailable) do
+            Authority::ServiceEvidence.new(journal: journal).context(challenged, no_effect: true)
           end
+          refute_kind_of AttemptErrors::ServiceSettlementPending, error
+          assert_raises(AttemptErrors::ServiceSettlementPending) { query.call }
           empty_params = params.merge("attempt_id" => "empty-attempt")
           assert_equal [], owner.service_settlement_evidence!(journal: journal, events: [], params: empty_params,
             map: {"project_id" => "fixture"}, commit: journal.ref_value).fetch("services")

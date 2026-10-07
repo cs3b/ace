@@ -606,7 +606,7 @@ module Ace
         def prepare_service_update(request_id:, expected:, replacement:, event_type:, guard: nil, pending: nil)
           validate_request_id!(request_id)
           unless replacement.is_a?(Hash) && replacement["request_id"] == request_id &&
-              %w[service_claim service_transition].include?(event_type) &&
+              %w[service_claim service_transition service_challenge].include?(event_type) &&
               %w[accepted uncertain rejected succeeded failed failed-settled].include?(replacement["state"])
             raise ArgumentError, "invalid service update plan"
           end
@@ -634,17 +634,20 @@ module Ace
               raise_authorization_conflict!(conflict) if conflict
             end
           else
-            unless event_type == "service_transition"
+            challenge_update = event_type == "service_challenge" && pending && pending[:operation] == "claim_service_settlement" &&
+              existing["state"] == replacement["state"] && existing["receipt"] == replacement["receipt"] &&
+              %w[uncertain failed].include?(existing["state"])
+            unless event_type == "service_transition" || challenge_update
               raise AttemptErrors::InvalidState, "Existing service request needs a transition"
             end
             terminal = %w[succeeded failed rejected failed-settled].include?(existing["state"])
             settlement = replacement["state"] == "failed-settled" &&
               (existing["state"] == "failed" || (existing["state"] == "rejected" && existing["consumed"] != false))
-            if terminal && !settlement
+            if terminal && !settlement && !challenge_update
               raise AttemptErrors::InvalidState, "Service request #{request_id} is terminal"
             end
             mutable = %w[state receipt reason claimed_at failed_at dispatch_phase no_effect_challenge
-              challenge_generation challenge_event_digest completion_digest]
+              challenge_generation challenge_event_digest completion_digest no_effect_completion_digest]
             unless existing.except(*mutable) == replacement.except(*mutable)
               raise AttemptErrors::Conflict, "Service request #{request_id} changed immutable binding"
             end
@@ -692,7 +695,7 @@ module Ace
             raise AttemptErrors::EvidenceUnavailable, "Canonical service event chain is unverifiable"
           end
           event = events.reverse.find do |entry|
-            %w[service_claim service_transition].include?(entry["type"]) && entry.dig("payload", "request_id") == record["request_id"]
+            %w[service_claim service_transition service_challenge].include?(entry["type"]) && entry.dig("payload", "request_id") == record["request_id"]
           end
           unless event && event.dig("payload", "record_digest") == Atoms::EvidenceDigest.digest(record)
             raise AttemptErrors::EvidenceUnavailable, "Canonical service record does not match accepted event"

@@ -30,7 +30,19 @@ request identity; current policy revocation, lease expiry, dead worker or candid
 advance cannot prohibit recording outcome truth. Corrupt/missing canonical input
 or lineage refuses; no request is created after seal. Revalidate on every CAS retry.
 
-Current protected ingress authenticates the receiver submission and atomically creates the canonical request with its executor ticket in request_service. There is no accepted protected requested-but-unclaimed record. An unaccepted receiver-local submission is not canonical ownership. claim_service_settlement returns missing for an absent request; a record without authentic original protected executor/ticket/claim provenance refuses evidence_unavailable. It never fabricates a settlement_only identity from local-mode records or admits a new request after seal. The previous preclaim construction assumption is retained verbatim under history/sealed-service-settlement-before-atomic-ingress-2026-10-07.md and is superseded here.
+For requested-but-unclaimed work, positively inspect the complete canonical
+request chain under seal: no executor claim, issued invocation, dispatch_started
+or effect-admission outcome exists, and sealed admission rejects every new effect
+route. Canonical phase absence is evidence only under these enforced guards,
+not a caller statement. Atomically bind the request to the installed executor,
+allocate its identity ticket/claim_binding through the existing digest owner,
+set state uncertain and dispatch_phase settlement_only, and issue the challenge.
+This claim reserves no new effect grant, consumes no fresh invocation authority
+and is never convertible to issued/dispatch_started. Its policy_digest is the
+existing canonical digest owner's digest of {kind: settlement_only,
+request_binding: <full immutable canonical request identity>, seal_event_id};
+claim_binding hashes that immutable binding plus the owner-generated ticket ID
+as for existing claims. These identify recovery provenance, not effect policy.
 
 For an already claimed request, retain executor/ticket/claim_binding/policy_digest
 and its actual dispatch_phase. Never replace an issued/dispatch_started claim with
@@ -58,8 +70,8 @@ All refusals preserve effect consumption/uncertainty and terminal ownership.
 
 ## Existing no-effect completion gate
 
-The exact original claimed identity allows the existing complete_no_effect owner gate
-to operate; challenge issuance does not itself reach failed-settled. Wire that existing semantic
+The settlement-only identity allows the existing complete_no_effect owner gate
+to operate; it does not itself reach failed-settled. Wire that existing semantic
 gate into the protected Authority boundary as part of 9c2 (it is not claimed to
 exist in today's Endcap operation list). Exact params are {mapping_id,
 assignment_id, attempt_id, request_id, claim_binding, head, candidate_generation,
@@ -73,9 +85,12 @@ challenge-bound structured attestation; admitted-after challenge/current failure
 lineage; immutable imported bytes and provenance; transition to failed-settled
 atomically under current recorded-completion CAS. The owner resolves generation
 on each retry, revalidates current challenge and never uses local paths/mtime or
-caller booleans as evidence. Settlement retains its attributable original executor, claim binding and challenge, satisfying the normal no-effect reader.
+caller booleans as evidence. Unclaimed settlement therefore still has attributable
+executor, claim binding and challenge, satisfying the normal no-effect reader.
 The executor freshly verifies actual target, handler/process termination and
-absence of surviving effect writers. Canonical phase history alone does not waive fresh target evidence. If actual no-effect cannot be established, keep
+absence of surviving effect writers. For settlement_only it additionally names
+the canonical never-dispatched phase; canonical no-dispatch history alone does
+not waive fresh target evidence. If actual no-effect cannot be established, keep
 uncertain/failed and hold terminality; record real observed success/failure through
 the existing completion owner where appropriate.
 
@@ -109,7 +124,7 @@ must not repeat begin or invoke after an authorization refusal/lost reply.
 
 | State at seal / reply loss | Recovery |
 | --- | --- |
-| Receiver-local submission, no accepted canonical claim | No canonical ownership exists; settlement refuses missing and creates no request/ticket/challenge. |
+| Requested, no claim | claim_service_settlement creates only recovery identity/challenge; fresh complete_no_effect evidence settles. |
 | Claimed issued, no begin | Preserve claim; obtain fresh challenge and positive no-effect evidence; no new begin. |
 | begin_dispatch committed or reply lost | dispatch_started is uncertain even if receiver believes it did not invoke; preserve claim and require fresh target/termination/no-writer evidence. |
 | Final read denied/lost | Receiver invokes nothing from that attempt; canonical/target uncertainty still requires challenge-bound fresh evidence, not guessed cancellation. |
@@ -121,5 +136,3 @@ failed-settled with independently verified evidence before finish/stop terminal
 CAS. Scope closed_no_writers remains local proof only. No duplicate ledger,
 receiver controller or privileged broker is introduced. This repair defines new
 required wiring/guards in the existing generic owner, not completed behavior.
-
-The concrete acyclic challenge/structured inspection schema and shared reader checks are normative in [no-effect-producer-source-contract.md](../8x3.t.xz9-execute-scoped-services-across-os/1-preserve-authoritative-receipts-through-boundary/no-effect-producer-source-contract.md). Domain fresh inspection remains an explicit gad.b producer prerequisite; generic authority verification does not itself inspect remote targets.

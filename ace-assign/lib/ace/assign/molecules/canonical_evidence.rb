@@ -132,6 +132,9 @@ module Ace
             expected.all? { |key, value| descriptor[key] == value }
           before = events.take_while { |entry| entry["digest"] != event["digest"] }
           unavailable! unless before.any? { |entry| entry["digest"] == descriptor["admitted_after_event_digest"] }
+          if kind == "service" && binding["no_effect_challenge"]
+            unavailable! unless descriptor["admitted_after_event_digest"] == binding.fetch("challenge_event_digest")
+          end
           Time.iso8601(descriptor.fetch("admitted_at"))
           bytes = yield(reference.fetch("ref"))
           unavailable! unless bytes.is_a?(String) && bytes.bytesize <= MAX_ARTIFACT_BYTES && bytes.bytesize == descriptor["bytes"] &&

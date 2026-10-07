@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Add the fixed original executor no-effect challenge and atomic completion APIs, authenticating accepted failure/challenge provenance and closed fresh inspection artifacts before failed-settled. Domain-specific target/handler/writer inspection remains a gad.b prerequisite.
+
 - Expose exhaustive immutable authenticated service and Inbox settlement evidence through the existing Endcap owners, retaining original historical descriptor/key proofs and distinguishing fully verified pending work from unavailable evidence. Public stopped delivery and no-effect challenge issuance remain separate work.
 
 - Require authenticated lifetime input inhibition for every issued outside-unit actor before no-writers proof, including attempts with no prompt submissions.
