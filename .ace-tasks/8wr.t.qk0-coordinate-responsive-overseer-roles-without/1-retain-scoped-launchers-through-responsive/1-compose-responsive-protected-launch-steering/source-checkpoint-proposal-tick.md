@@ -1,5 +1,7 @@
 # Bounded proposal wake source checkpoint
 
+Independent root source review APPROVE (2026-10-07), author commit faa4a221291486b395a129ca56bfb3ec97682e8f. Reviewed fixed bounded runner call, existing declared Herdr dependency, original caller-only marker release, deferred errors, controlled 8/31 evidence and safe-fork design condition. Integration cherry-pick 2d00aa929. The explicit budget is five seconds of execution plus bounded one-second cleanup, not a five-second total-wall guarantee. Retained input publication and child ownership implementation remain open.
+
 Pending independent source review; this implements only qk0.1.1 proposal wake ownership and deferred status, not protected launch/steering/whole child.
 
 ProposalTick now calls maintained Herdr BoundedProcess with structured fixed policy argv, execution deadline5s, stdout/stderr caps65,536 each and owned group cleanup. A process-local mutex/active tuple coalesces concurrent wakes for the same binary/socket/project; no pending mutation, outcome, grant or persistent timer is stored. Only the acquired caller clears its marker. Failure/truncated/non-array/malformed output defers visibly; subsequent explicit wake remains possible, without retrying inside the tick. Existing HITL evaluator/transport/policy owns all decisions and acknowledged-delivery semantics.
