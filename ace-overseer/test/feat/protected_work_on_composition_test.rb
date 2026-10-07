@@ -95,7 +95,7 @@ class ProtectedWorkOnCompositionTest < AceOverseerTestCase
     deployment.define_singleton_method(:authority) { |_| service.merge("composition" => "launch") }
   end
 
-  def start_public_server
+  def start_public_server(lose_prompt_reply: false)
     @kernel.peer_identity = @launcher
     @server = Ace::Assign::Authority::Server.new(authority_id: "authority", lifecycle: @router,
       deployment: @deployment, kernel: @kernel, composition: "launch")
@@ -103,6 +103,21 @@ class ProtectedWorkOnCompositionTest < AceOverseerTestCase
     wire.define_singleton_method(:root_path!) { |*_, **_| true }
     %i[socket_identity read write deadline].each do |name|
       wire.define_singleton_method(name) { |*args, **options| WIRE.public_send(name, *args, **options) }
+    end
+    if lose_prompt_reply
+      owner = self
+      wire.define_singleton_method(:write) do |socket, response, **options|
+        if response["status"] == "ok" && response.dig("data", "mutation_id") == "public-steer" &&
+            response.dig("data", "outcome") == "submitted" && !owner.instance_variable_get(:@prompt_reply_lost)
+          accepted = owner.instance_variable_get(:@journal).mutation_result("public-steer")
+          raise "reply fault preceded canonical prompt acceptance" unless accepted.dig("data", "outcome") == "submitted"
+          owner.instance_variable_set(:@prompt_reply_lost, true)
+          socket.write('{"status":"ok","data":')
+          socket.close
+        else
+          WIRE.write(socket, response, **options)
+        end
+      end
     end
     @server.define_singleton_method(:wire) { wire }
     @owner = Thread.new { @server.serve }
@@ -118,10 +133,14 @@ class ProtectedWorkOnCompositionTest < AceOverseerTestCase
     exercise_public_composition(steering: true)
   end
 
-  def exercise_public_composition(steering: false)
+  def test_public_prompt_reply_loss_status_and_explicit_replay_never_resend_native_input
+    exercise_public_composition(steering: true, lose_prompt_reply: true)
+  end
+
+  def exercise_public_composition(steering: false, lose_prompt_reply: false)
     fixture(prepare_attempt: false) do
       assert_empty @journal.read_events("assignment")
-      client_kernel = start_public_server
+      client_kernel = start_public_server(lose_prompt_reply: lose_prompt_reply)
       client = Ace::Assign::Authority::Client.new(mapping_id: "mapping", deployment: @deployment, kernel: client_kernel)
       recorded = Queue.new
       calls = []
@@ -203,8 +222,17 @@ class ProtectedWorkOnCompositionTest < AceOverseerTestCase
               prompt = Ace::Overseer::CLI::Commands::Prompt.new(steering: protected_steering, input: StringIO.new("exact public steering\n"))
               original_output = $stdout
               $stdout = StringIO.new
-              prompt.call(**target, stdin: true)
-              first = JSON.parse($stdout.string)
+              if lose_prompt_reply
+                assert_raises(Ace::Support::Cli::Error) { prompt.call(**target, stdin: true) }
+                assert @prompt_reply_lost, "actual public reply fault was not reached"
+                first = @journal.mutation_result("public-steer").fetch("data").merge("journal_commit" => @journal.mutation_result("public-steer").fetch("journal_commit"))
+                $stdout = StringIO.new
+                prompt.call(**target.reject { |key, _| key == :expected_generation }, status: true)
+                assert_equal "submitted", JSON.parse($stdout.string).fetch("outcome")
+              else
+                prompt.call(**target, stdin: true)
+                first = JSON.parse($stdout.string)
+              end
               assert_equal "submitted", first.fetch("outcome")
               assert_equal 1, native.prompt_calls.length
               $stdout = StringIO.new
