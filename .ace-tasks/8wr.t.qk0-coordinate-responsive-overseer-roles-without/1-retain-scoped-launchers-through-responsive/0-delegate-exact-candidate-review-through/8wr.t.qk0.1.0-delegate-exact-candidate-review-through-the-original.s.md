@@ -1,6 +1,6 @@
 ---
 id: 8wr.t.qk0.1.0
-status: in-progress
+status: done
 priority: high
 created_at: "2026-10-07 08:29:34"
 estimate: large
@@ -36,9 +36,9 @@ review-delegation-contract.md and ux/usage.md define this proposed fixed consume
 
 ## Success criteria / verification
 
-- [ ] SC1: Real controlled Client/Server→durable request→original Driver→actual assign_review→export_candidate→maintained ReviewManager with injected provider→ExecutionReceipt/CanonicalEvidence→accept_review accepts exactly the candidate head/generation and independently mapped reviewer. No forged success fixtures or live provider/native/root probe.
-- [ ] SC2: No channel/busy/sealed/stale/unauthorized preflight causes zero accepted request/delegation; two concurrent requests cannot silently overwrite an in-flight assigned reviewer; stopped original, foreign birth, author=reviewer, replaced candidate and transferred wrong report refuse before approval.
-- [ ] SC3: Loss before/after canonical assignment and before/after receipt import preserves original mutation/purpose; same public retry only observes original request, never launches another review engine. Status exposes actual canonical assigned/accepted facts and immutable first response without reclassifying unknown as approval. Same-principal restart can observe, not impersonate original reviewer.
-- [ ] SC4: Fixed frame/schema/ID/receipt/report bounds, trailing-body/type/duplicate refusal and no locks across socket/provider wait pass. Existing exact-head review and ordinary local review remain valid. Executed scoped ACE tests and independent verdict gate source integration.
+- [x] SC1: Real controlled Client/Server→durable request→original Driver→actual assign_review→export_candidate→maintained ReviewManager with injected provider→ExecutionReceipt/CanonicalEvidence→accept_review accepts exactly the candidate head/generation and independently mapped reviewer. No forged success fixtures or live provider/native/root probe.
+- [x] SC2: No channel/busy/sealed/stale/unauthorized preflight causes zero accepted request/delegation; two concurrent requests cannot silently overwrite an in-flight assigned reviewer; stopped original, foreign birth, author=reviewer, replaced candidate and transferred wrong report refuse before approval.
+- [x] SC3: Loss before/after canonical assignment and before/after receipt import preserves original mutation/purpose; same public retry only observes original request, never launches another review engine. Status exposes actual canonical assigned/accepted facts and immutable first response without reclassifying unknown as approval. Same-principal restart can observe, not impersonate original reviewer.
+- [x] SC4: Fixed frame/schema/ID/receipt/report bounds, trailing-body/type/duplicate refusal and no locks across socket/provider wait pass. Existing exact-head review and ordinary local review remain valid. Executed scoped ACE tests and independent verdict gate source integration.
 
 Large distinct observable source outcome. Specification accepted after independent review; no implementation/installed acceptance implied. Parent qk0.1 remains a separate readiness decision.

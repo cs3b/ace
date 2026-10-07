@@ -16,45 +16,17 @@ parent: 8wr.t.qk0
 
 # Retain scoped launchers through responsive role steering
 
-## Behavioral Specification
+## Program outcome
 
-### User Experience
+The Captain can continue issuing instructions while an original protected launcher executes reviewed work, receives attributable steering and completes independent exact-candidate review. This parent is a pure umbrella: all implementation and verification now belong to the following real children.
 
-The Captain continues talking while a provisioned project-overseer delegates reviewed work to its original protected launcher, inspects canonical progress and requests prompt/stop. Missing capability escalates visibly through Lab coordinator and second commander using the existing proposal policy.
+## Progress checklist
 
-### Expected Behavior
+- [x] `8wr.t.qk0.1.0` — original-launcher independent review, actual canonical acceptance and refusal/recovery verification.
+- [ ] `8wr.t.qk0.1.1` — responsive prepared launch, retained recovery identity, prompt/stop/status, roles and bounded proposal resolution; consumes qk0.1.0 and qk0.3.
 
-- Deliver the three canonical generic role charters named in `../coordinator-source-contract.md`; domain consumers adopt them. Captain remains human decision owner. Selecting a charter is not OS authorization; ordinary or supervisor-only overseer cannot acquire another UID/native socket through config.
-- Fresh protected work retains/reports the qk0.3 compact definition/selection and exclusive exact prepared bundle before any authority mutation or child start; consumes its registration/release and original-association `evidence_fetch`/adapter API rather than reconstructing current inputs. No inherited prepared-input FD is required or accepted as the capability. Missing local bundle blocks fresh launch; read-only recovery reports local artifact availability separately from canonical attribution.
-- Actual mapped launcher-role credentials retain the maintained foreground CLI child and exact bounded ready-frame/canonical binding. No detach, replacement PID or automatic prompt resend. Missing readiness/lost reply preserves original identity for owner reconciliation.
-- Consume delivered prompt_attempt, prompt_status and stop_attempt. Submitted means full text + Enter to the unchanged original attempt terminal, not consumption/exclusive provider PID. Unknown outcome stays unknown after writer drain; terminal/release is required for accepted child exit/display cleanup.
-- Respect authoritative installed slot capacity and four actual panes per tab. Literal explicit agent never substitutes; automatic order advances only after attributable zero-effect refusal. Protected mode uses Herdr; unsupported protected tmux refuses before allocation, ordinary local tmux remains valid.
-- New Captain scope revises task/proposal and requests safe owner stop of conflict; old uncertainty remains attributable/occupies capacity. Independent review and exact merge ownership remain separate from green CI and stopped execution.
-- Bounded five-second/65,536-byte proposal tick defers on failure and never grants permission/retries effects. Coalesce wakes; implementation/tests/reviews run delegated without blocking subsequent instructions. Preserve acknowledged-delivery sixteen-hour HITL policy and visible delivery/callback failures.
-- Remove LabClient, lab binary/Work-ID interfaces and runtime=lab. No compatibility forwarding path. Existing local task/assignment mode remains valid without pretending it is protected multi-user admission.
+## Completion and ownership
 
-### Interface Contract
+Both children must satisfy their own reviewed source criteria and independent executed-test gates. There is no additional hidden parent implementation. Parent completion cannot imply installed Lab acceptance: deployment/native/runtime proofs remain centralized in lab-config:gad.2.
 
-Existing qk0 work-on/status/prompt/stop/review forms and exact ready-frame, role/credential and proposal contracts are in the sibling source contract and `ux/usage.md`. Nonzero failures distinguish unavailable capability, policy refusal and evidence uncertainty. No public role selection supplies a principal. The original child remains alive through transient channel failure and exits only after owner-authenticated original terminal/release or visible local cancellation that does not claim release.
-
-### Success Criteria and Verification Plan
-
-- [ ] SC1: Controlled actual overseer → maintained original CLI/Driver → real authority composition exercises actual reviewed leaf preparation and qk0.3 artifact admission/scoped worker consumption, pre-effect identity under --quiet, readiness, responsive steering, immutable prompt replay/status, stop, released terminal exit, independent review and exact merge receipt. No LabClient/native probe.
-- [ ] SC2: Dead requester, absent/foreign/oversized/late ready, replaced original, transport loss, unknown acknowledgment, overlapping UID privilege, busy slots/panes, changed scope/head, local prepared-bundle loss/corruption, changed task/dependency/step input after selection and reviewer=author remain accurate with no second launch/resend.
-- [ ] SC3: Stalled/noisy/malformed HITL resolver reaches deadline while status/instructions remain usable; coalesced wakes and approve/veto/clarify/supersession preserve existing owner semantics. Fresh consumer loads all canonical charters; executed permitted deterministic suites + independent review gate source delivery.
-
-### Decomposition
-
-Child qk0.1.0 delivers exact candidate independent review through original Driver delegation and maintained Endcap acceptance, a distinct observable missing source capability. This parent delivers the remaining responsive launch/prompt/stop/role/proposal composition and consumes that child. The child has independently reviewed source integration; remaining child fault/concurrency verification is tracked in its own criteria. This parent has independent design readiness approval; its source execution still depends on qk0.3. No hidden review broker or acceptance owner.
-
-### Scope and Ownership
-
-Owner ace-overseer, maintained Assign/Runtime/HITL producers reused. Advisory size large. Physical protected workspace prune is sibling qk0.2, not implied by pane closure. Actual account/runtime/startup and installed responsiveness remain gad.2/gad.8/gad.b/gad.9; unfinished producer source is not waived by a fixture.
-
-### Usage and Review Evidence
-
-`ux/usage.md`. Whole-child design readiness is approved in readiness-review.md. Source implementation and acceptance remain outstanding; delivered child source does not mark this parent done.
-
-### Prepared handoff review repair
-
-Independent 2026-10-07 review found the original qk0.3 inline-size, unspecified capability/consumer, progress hash and mutable task-context gaps. The revised child owns those exact source producer/consumer repairs. This child consumes them and preserves retained-input/read-only recovery and unchanged-terminal submitted semantics; neither artifact retention nor worker input admission is reported as consumption, task completion or installed acceptance. Independent design review now approves this consumer contract; qk0.3 source delivery remains an explicit dependency.
+The full original responsive behavior and SC1–SC3 from commit90d94b043 moved unchanged to qk0.1.1. Shared CLI-selection, launch-input and usage contracts remain here as bundled stable context. Historical design reviews remain in readiness-review.md. Independent structural review approves this transfer; qk0.1.1 depends on sibling .0 plus the prior external prerequisites, never this parent.
