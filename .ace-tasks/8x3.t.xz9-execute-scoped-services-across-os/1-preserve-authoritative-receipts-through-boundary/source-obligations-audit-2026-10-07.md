@@ -24,3 +24,7 @@ Executed follow-up:
 - `bin/ace-test ace-lab organisms test/organisms/protected_service_recovery_test.rb --timeout 180`: PASS1/29 `6f76d600-47c6-4791-a7bf-79625a6e323d`. Actual canonical receipt remains; reconstructs listener/receiver after accepted lost ACK.
 
 Task remains inprogress, SC1–SC6 remain unchecked. Source gaps are not moved to installed acceptance. Existing gad.2 09j-launch/RESTRICTED and9c2-scope/SCOPE responsibility and prior execution restrictions are unchanged. Gad.b owns domain inspector/caller source; wave412 is sole Lab writer. Generic source follow-ups may independently cover the remaining controlled concurrency/listener/late-completion cases without native probes.
+
+## Follow-up controlled source evidence
+
+The originally identified local concurrency/endpoint/late-completion evidence gaps above are now covered by controlled-service-boundary-source-receipt.md (PASS2/22 actual first claim race + second listener) and service-policy-refusal-source-receipt.md (PASS1/17 actual late completion + fresh effect denial + listener survives). The latter also repairs an actual Server SecurityError classification defect exposed by the genuine policy. Original rows remain as audit history; they no longer describe missing controlled tests after these follow-ups. Whole criteria remain unchecked pending exact independent checkpoint reviews, program/domain source obligations and centralized installed matrix.
