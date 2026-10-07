@@ -1,6 +1,6 @@
 # Bundle discovery and original task-context source checkpoint
 
-This checkpoint adds the cycle-free Bundle → Runtime + Herdr bridge and Assign fixed read-only principal/selection commands. It does not deliver Lab publication or installed/native/provider acceptance. Independent source review is pending.
+This checkpoint adds the cycle-free Bundle → Runtime + Herdr bridge and Assign fixed read-only principal/selection commands. It does not deliver Lab publication or installed/native/provider acceptance. Root independently APPROVED exact bbcdcb95a1851c87c6dddb2921d036ae9bcc830c after reading the shared held owner, fixed process/FD selector handoff, raw direct/files/base/sections routing, Assign classification/selection/text and controlled tests. No actionable finding. Approval is scoped to this source checkpoint; actual Lab publication remains pending.
 
 The shared Runtime owner reads the fixed `/etc/ace/task-context-entry.json` closed ref-only projection. Genuine absence permits ordinary mode only when `/etc/ace/assignment-authorities.json`, `/etc/ace/assignment-deployment-history.json`, and `/usr/local/lib/lab/herdr.installation.json` are all absent. Any installed presence or unreadable selection refuses; the reader does not parse a roster or Lab installation document.
 
