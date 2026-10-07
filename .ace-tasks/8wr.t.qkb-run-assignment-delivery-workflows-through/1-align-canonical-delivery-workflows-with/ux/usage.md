@@ -28,3 +28,7 @@ Expected: create the exact qjz proposal; confirmed delivery starts its 16-hour w
 ## Protected role handoff
 
 Load the final installed delivery workflow outside the checkout with a deployment-mapped protected assignment. A launcher reserves/binds the worker; an independent reviewer materializes and checks the exact candidate; the worker requests the fixed service through the public client. Expected: receiver/executor operate under their mapped UIDs and the returned status references canonical qjl evidence. A forged worker-local receipt or unavailable authority blocks, with no local fallback or repeated uncertain effect.
+
+## Fixed authorized merge executor
+
+The installed operation entry runs `ace-git service merge` with the receiver-owned envelope on stdin. Its input is `{target:{resource:PR_URL,artifact_digest:null},delivery:{forge_server:NAME,forge_default:false,pr_provenance:{mode:fork,head_repository_url:HEAD_REPO,head_ref:HEAD_REF,base_repository_url:BASE_REPO,base_ref:BASE_REF}},method:squash}`. The receiver's canonical candidate SHA and executor join remain authoritative. Expected: one exact neutral merge and an existing-format executor response referencing its fixed staged evidence artifact. A wrong head/PR/provenance/method refuses before mutation; lost/uncertain remote outcome creates no terminal success and never triggers a retry. This entry is not available as an unprivileged worker fallback.

@@ -1,6 +1,6 @@
 ---
 id: 8wr.t.qkb.1
-status: blocked
+status: draft
 priority: high
 created_at: "2026-09-28 17:44:29"
 estimate: TBD
@@ -11,7 +11,7 @@ bundle:
   presets: [project]
   files: [.ace-tasks/8wr.t.qkb-run-assignment-delivery-workflows-through/8wr.t.qkb-run-assignment-delivery-workflows-through-named-forge.s.md, .ace-tasks/8wr.t.qkb-run-assignment-delivery-workflows-through/0-make-assignment-delivery-evidence-provider/8wr.t.qkb.0-make-assignment-delivery-evidence-provider-neutral.s.md, .ace-tasks/8wr.t.qk0-coordinate-responsive-overseer-roles-without/8wr.t.qk0-coordinate-responsive-overseer-roles-without-the.s.md, .ace-tasks/_archive/8x/v/8wr.t.qjx-route-scoped-role-services-with/8wr.t.qjx-route-scoped-role-services-with-verifiable-execution.s.md, .ace-tasks/_archive/8x/v/8wr.t.qjz-resolve-second-commander-proposals-with/8wr.t.qjz-resolve-second-commander-proposals-with-a-sixteen.s.md, ace-assign/handbook/workflow-instructions/assign/drive.wf.md, ace-assign/handbook/workflow-instructions/assign/prepare.wf.md, .ace-tasks/8wr.t.qkb-run-assignment-delivery-workflows-through/1-align-canonical-delivery-workflows-with/ux/usage.md, .ace-tasks/8x3.t.xz9-execute-scoped-services-across-os/protected-authority-contract.md, .ace-tasks/8x3.t.xz9-execute-scoped-services-across-os/consumer-dependency-map.md, .ace-tasks/8wr.t.qkb-run-assignment-delivery-workflows-through/1-align-canonical-delivery-workflows-with/neutral-vocabulary-verification.md, .ace-tasks/8wr.t.qkb-run-assignment-delivery-workflows-through/1-align-canonical-delivery-workflows-with/neutral-vocabulary-source-review-round2.md, .ace-tasks/8wr.t.qkb-run-assignment-delivery-workflows-through/1-align-canonical-delivery-workflows-with/neutral-vocabulary-source-inventory.md]
   commands: []
-needs_review: false
+needs_review: true
 ---
 
 ## Central Lab acceptance — Captain decision 2026-10-05
@@ -68,3 +68,7 @@ The protected cross-user workflow consumes xz9 through the existing ace-assign/a
 xz9 owns mechanisms, schemas and verifier changes; this child owns the concrete canonical workflow/catalog/role handoff adoption and installed source resolution. It must not invent alternative wire methods or another journal. An unavailable authority, stale candidate/generation, unauthorized peer, lost dispatch reply or untrusted completion evidence yields the producer's blocker/uncertain state with its canonical reference. Resume queries existing state; it never repeats an uncertain effect to obtain a receipt.
 
 Add acceptance scenario SC7: use the installed canonical workflow with distinct fixture launcher/worker/reviewer/authority/executor accounts and real public receiver/client APIs. Trace one exact approved candidate to one harmless protected effect and canonical receipt, then prove worker-local forged success, stale candidate, authority loss and duplicate request cannot authorize another effect. Retain actual peer UIDs, candidate generation/head and journal/import references with secrets omitted. This source/installed fixture depends on accepted xz9; real domain installation remains lab-config:gad.8/gad.b and final qkc/gad.2. Native signed settlement remains xza/qkc scope, so qkb.1 does not acquire an xza prerequisite. R2/R3 remain downstream and the qkb.0/.1 atomic vocabulary release constraint is unchanged.
+
+## Merge producer interface precision — pending review
+
+The fixed protected producer input, selected forge/PR/provenance/head/method checks, existing receiver response and uncertainty behavior are specified in delivery-service-adoption.md, section “Fixed merge producer”. This completes the previously unspecified configured executor interface without adding authority, journal or native evidence claims. Original worker protected delivery consumption remains part of this task and cannot use a caller-local receipt/journal fallback.
