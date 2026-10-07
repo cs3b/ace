@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Admit fixed protected service requests through a bounded receiver listener and worker client. Retain the original five-second claim budget and listener lifetime exclusion until admitted work finishes; canonical replay never launches another handler.
+
 - Recover selected protected services through authenticated original canonical status, accepted no-effect challenges and existing receipt import, preserving original immutable inputs and lost-ACK retry identity. Select only fixed no-effect inspection argv; domain-specific inspection remains a gad.b source prerequisite.
 - Compose the fixed read-only Inbox context completion owner with existing Endcap services over the same protected canonical journals and deployment history. Installed context provisioning remains separate.
 
