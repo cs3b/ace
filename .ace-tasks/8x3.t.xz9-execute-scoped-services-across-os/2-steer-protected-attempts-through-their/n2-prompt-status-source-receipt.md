@@ -7,3 +7,8 @@ Executed source selection: `bin/ace-test ace-assign test/feat/authority/launch_l
 Existing journal prompt regression `bin/ace-test ace-assign test/feat/prompt_intent_test.rb --timeout 180` passed 9 tests / 82 assertions, zero failures/errors, 19.41 seconds (`d6a898a6-5767-43b6-824a-ba25f6a0c3c7`). `git diff --check` passed.
 
 Independent root source/test review approved this scoped patch conditional on the final passing selection and unchanged reviewed source. Full stop, stopped terminal projection, drain/release/history composition and whole xz9.2 completion remain open. No default or full package suite claim.
+# Combined integration review
+
+Root independently approves exact source `ba9ceaa32712bc0c65bf6e713b06c89d300a3314`, including current stable-principal ownership, fixed canonical snapshot, shared authenticated outcome selection, immutable original reply and Client/Server EOF handling. No remaining scoped finding.
+
+Applied to main `a8601a188` as `e65216359`; combined-tree command `bin/ace-test ace-assign test/feat/authority/launch_lifecycle_test.rb:140 --timeout 180` passed 1 test / 17 assertions, zero failures/errors (18.39s), receipt `8fb11f82-5dd1-4c1e-b1d1-b91df403df66`. This controlled source test includes actual Git and Client/Server socket composition with injected OS boundaries. No installed acceptance or whole xz9.2 completion is claimed.
