@@ -49,6 +49,9 @@ module Ace
         end
 
         def validate_review_namespace!(request)
+          if request["mutation_id"].is_a?(String) && request["mutation_id"].start_with?("review-reply.")
+            raise ArgumentError, "reserved review reply namespace"
+          end
           if request["mutation_id"].is_a?(String) && request["mutation_id"].start_with?("review-delegate.") &&
               request["operation"] != "assign_review"
             raise ArgumentError, "reserved review delegation namespace"

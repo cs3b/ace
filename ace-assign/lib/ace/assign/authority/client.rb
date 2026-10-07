@@ -51,7 +51,7 @@ module Ace
             wire.write(socket, {"version" => 1, "operation" => operation,
               "mutation_id" => mutation_id, "project_id" => @map.fetch("project_id"),
               "params" => parameters.merge("mapping_id" => mapping_id)}, deadline: deadline, limit: upload_parts || download ? 16_384 : wire::LIMIT)
-            if %w[launch_review_intent cancel_review assignment_inventory evidence_fetch observe_execution_scope close_execution_scope stop_attempt prompt_status launch_input_inhibit_selection launch_input_inhibit_completion launch_prompt_intent launch_prompt_completion claim_service_settlement].include?(operation) || (operation == "attempt_status" && params.key?("result_candidate_generation"))
+            if %w[request_review review_status launch_review_intent cancel_review assignment_inventory evidence_fetch observe_execution_scope close_execution_scope stop_attempt prompt_status launch_input_inhibit_selection launch_input_inhibit_completion launch_prompt_intent launch_prompt_completion claim_service_settlement].include?(operation) || (operation == "attempt_status" && params.key?("result_candidate_generation"))
               socket.shutdown(Socket::SHUT_WR)
             end
             if upload_parts

@@ -4,6 +4,27 @@ module Ace
   module Assign
     module Authority
       class LaunchLifecycle
+        # Called by Endcap only while holding the existing assignment/slot
+        # exclusion and shared authority mutex. Returned channel capacity is
+        # released after the caller leaves those locks and waits on the stream.
+        def reserve_review_dispatch!(events:, params:, map:)
+          state = origin(events, **params.slice("mapping_id", "assignment_id", "attempt_id").transform_keys(&:to_sym))
+          unless state["phase"] == "issued" && !terminal_events?(events)
+            raise AttemptErrors::Conflict, "review delegation requires an issued original launcher"
+          end
+          scope_open_for_effect!(events: events, params: params, map: map)
+          original = original_prompt_record!(events, state, params: params)
+          @kernel.live!(state.fetch("launcher_identity"))
+          channel = @control_channels[steering_key(params, map)]
+          raise AttemptErrors::EvidenceUnavailable, "original review channel is unavailable" unless channel
+          [channel, channel.reserve_dispatch!, original]
+        end
+
+        def review_original_reference!(events:, params:)
+          state = origin(events, **params.slice("mapping_id", "assignment_id", "attempt_id").transform_keys(&:to_sym))
+          original_prompt_record!(events, state, params: params)
+        end
+
         # Read-only original-launcher projection at the exact request commit.
         # Permission to assign still belongs to Endcap's fresh/replay checks.
         def launch_review_intent!(request:, peer:, role:)

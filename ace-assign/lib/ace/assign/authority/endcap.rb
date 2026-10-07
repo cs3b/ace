@@ -14,7 +14,7 @@ module Ace
       # Business admission shares the launch origin, lifecycle exclusion and
       # journal CAS. Network transfer is completed outside those locks.
       class Endcap
-        OPERATIONS = %w[submit_candidate export_candidate assign_review cancel_review accept_review request_service begin_dispatch complete_service claim_service_settlement complete_no_effect service_authorization service_status submit_result evidence_fetch reconcile_inbox].freeze
+        OPERATIONS = %w[submit_candidate export_candidate request_review review_status assign_review cancel_review accept_review request_service begin_dispatch complete_service claim_service_settlement complete_no_effect service_authorization service_status submit_result evidence_fetch reconcile_inbox].freeze
         TRANSFER_OPERATIONS = {
           "reconcile_inbox" => {direction: :upload, purpose: :inbox_proof, roles: %i[launcher supervisor]},
           "submit_result" => {direction: :upload, purpose: :receipt_artifacts, roles: [:worker]},
@@ -34,6 +34,7 @@ module Ace
           "evidence_fetch" => %w[mapping_id assignment_id attempt_id kind purpose_id artifact_id],
           "submit_candidate" => %w[mapping_id assignment_id attempt_id expected_generation candidate_generation head transfer],
           "export_candidate" => %w[mapping_id assignment_id attempt_id candidate_generation head purpose_id],
+          "request_review" => %w[mapping_id assignment_id attempt_id expected_generation candidate_generation head],
           "assign_review" => %w[mapping_id assignment_id attempt_id expected_generation candidate_generation head reviewer_uid reviewer_process_binding],
           "cancel_review" => %w[mapping_id assignment_id attempt_id head candidate_generation review_event_id expected_generation],
           "accept_review" => %w[mapping_id assignment_id attempt_id expected_generation candidate_generation head purpose_id receipt_sha256 transfer],
@@ -81,7 +82,9 @@ module Ace
           end
           return dispatch_inbox(request: request, peer: peer, role: role, transfer: transfer) if request.fetch("operation") == "reconcile_inbox"
           return dispatch_result(request: request, peer: peer, role: role, transfer: transfer) if %w[submit_result evidence_fetch].include?(request.fetch("operation"))
+          return review_status(request, peer, role, transfer) if request.fetch("operation") == "review_status"
           params, map = validate_request(request)
+          return request_review(request, params, map, peer, role, transfer) if request.fetch("operation") == "request_review"
           return cancel_review(request, params, map, peer, role, transfer) if request.fetch("operation") == "cancel_review"
           return dispatch_service_settlement(request, params, map, peer, role, transfer) if %w[claim_service_settlement complete_no_effect].include?(request.fetch("operation"))
           return service_status(request, params, map, peer, role) if request.fetch("operation") == "service_status"
@@ -375,3 +378,5 @@ require_relative "endcap_contexts"
 require_relative "endcap_prepared_work"
 
 require_relative "endcap_reviews"
+
+require_relative "endcap_review_requests"
