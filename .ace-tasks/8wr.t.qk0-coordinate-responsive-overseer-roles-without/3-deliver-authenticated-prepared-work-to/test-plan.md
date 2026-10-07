@@ -1,13 +1,13 @@
 # Test responsibility map: qk0.3
 
-Initial planning baseline main3883a681e/own cd677f3c6, approved spec, 2026-10-07. That initial plan had no executed tests. Captain has since authorized implementation against audited integrated N2/qk0.0 source contracts; whole upstream closure remains separate. Artifact foundation passed independent review and was integrated. Registration source verification is recorded in [source-checkpoint-registration.md](source-checkpoint-registration.md); implementation remains in progress. The 12 groups below are behavioral responsibilities, not written-test counts.
+Initial planning baseline main3883a681e/own cd677f3c6, approved spec, 2026-10-07. That initial plan had no executed tests. Captain has since authorized implementation against audited integrated N2/qk0.0 source contracts; whole upstream closure remains separate. Artifact foundation passed independent review and was integrated. Registration source verification is recorded in [source-checkpoint-registration.md](source-checkpoint-registration.md); prepared fetch verification is recorded separately in [source-checkpoint-fetch.md](source-checkpoint-fetch.md); implementation remains in progress. The 12 groups below are behavioral responsibilities, not written-test counts.
 
 | Behavior | Risk | Layer | File/owner | Source of truth |
 |---|---|---|---|---|
 | Exact manifest/canonical digest/template/progress projection; all closed bounds and +1 | High | fast pure | ace-assign/test/fast/authority/prepared_work_test.rb (new) | SC2,SC4 |
 | Actual default leaf/subtask preparation, context closure and >32KiB artifact; invalid roots/dependencies | High | controlled filesystem/Git | ace-assign/test/feat/prepared_work_transfer_test.rb; actual TaskAssignmentCreator/AssignmentExecutor | SC1,SC2 |
 | Register exact input blob+definition same commit; replay/loss/conflict/inventory fields | High | controlled Git authority/transport | ace-assign/test/feat/authority/prepared_registration_test.rb, launch_lifecycle_test.rb and historical_rotation_test.rb; ace-overseer protected_status_test.rb consumer | SC1,SC3,SC4 |
-| Prepared fetch peer/birth/issued/original commit; wrong roles/selectors/corrupt artifact | High | controlled transport | ace-assign/test/feat/authority/prepared_work_fetch_test.rb (new) | SC1–SC3 |
+| Prepared fetch peer/birth/issued/original commit; wrong roles/selectors/corrupt artifact | High | controlled transport | ace-assign/test/feat/prepared_work_fetch_test.rb | SC1–SC3 |
 | Both endpoints candidate limits; ordinary artifacts/receipt limits unchanged; partial EOF/header | High | controlled transport | ace-assign/test/feat/authority/transfer_server_test.rb + transfer_codec_test.rb | SC2,SC4 |
 | Original-self worker entry, issue-before-permission and fetch-before-effects, no FD requirement | High | controlled composition | ace-assign/test/feat/authority/prepared_worker_test.rb (new) | SC1,SC3 |
 | Private queue owner/root/atomic collision/crash cleanup/missing after effects/duplicate or descendant entry | High | controlled files+injected identity | prepared_worker_test.rb | SC2,SC3 |

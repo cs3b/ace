@@ -23,10 +23,14 @@ module Ace
           handler.dispatch(**options)
         end
 
-        def transfer_binding(operation)
+        def transfer_binding(request)
+          operation = request.fetch("operation")
           handler = @routes.fetch(operation) { raise ArgumentError, "unknown authority operation" }
           return nil unless handler.class.const_defined?(:TRANSFER_OPERATIONS, false)
           binding = handler.class::TRANSFER_OPERATIONS[operation]
+          if operation == "evidence_fetch" && request.dig("params", "kind") == "prepared_work"
+            binding = {direction: :download, purpose: :candidate, roles: [:worker]}
+          end
           return nil unless binding
           unless binding.is_a?(Hash) && binding.keys.sort == %i[direction purpose roles] &&
               %i[upload download].include?(binding[:direction]) && TransferCodec::LIMITS.key?(binding[:purpose]) &&

@@ -53,6 +53,7 @@ module Ace
         end
 
         def authorize_transfer!(request:, peer:, role:)
+          return dispatch_prepared_fetch(request: request, peer: peer, role: role, body: false) if prepared_fetch?(request)
           return authorize_inbox_transfer!(request: request, peer: peer, role: role) if request.fetch("operation") == "reconcile_inbox"
           return authorize_result_transfer!(request: request, peer: peer, role: role) if %w[submit_result evidence_fetch].include?(request.fetch("operation"))
           params, map = validate_request(request)
@@ -73,6 +74,10 @@ module Ace
         end
 
         def dispatch(request:, peer:, role:, transfer: nil)
+          if prepared_fetch?(request)
+            raise ArgumentError, "prepared fetch forbids upload" unless transfer.nil?
+            return dispatch_prepared_fetch(request: request, peer: peer, role: role)
+          end
           return dispatch_inbox(request: request, peer: peer, role: role, transfer: transfer) if request.fetch("operation") == "reconcile_inbox"
           return dispatch_result(request: request, peer: peer, role: role, transfer: transfer) if %w[submit_result evidence_fetch].include?(request.fetch("operation"))
           params, map = validate_request(request)
@@ -350,3 +355,4 @@ require_relative "endcap_results"
 require_relative "endcap_inboxes"
 
 require_relative "endcap_contexts"
+require_relative "endcap_prepared_work"

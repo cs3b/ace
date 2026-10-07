@@ -2,6 +2,7 @@
 
 require "json"
 require "digest"
+require "ace/herdr/molecules/bounded_process"
 require_relative "journal_prompt_mutation"
 require_relative "journal_input_inhibition"
 
@@ -181,6 +182,28 @@ module Ace
             chdir: repo_root, stdin_data: "")
           raise AttemptErrors::EvidenceUnavailable, "Canonical evidence blob is missing" unless status.success?
           out.b
+        end
+
+        # Prepared inputs use the same immutable Git owner, with a bounded
+        # capture before any bytes can reach a worker transport.
+        def bounded_blob(path, commit:, max_bytes:)
+          validate_blob_path!(path)
+          unless commit.is_a?(String) && commit.match?(/\A[0-9a-f]{40}(?:[0-9a-f]{24})?\z/) &&
+              max_bytes.is_a?(Integer) && max_bytes.between?(1, 64 * 1024 * 1024)
+            raise AttemptErrors::EvidenceUnavailable, "Canonical prepared blob selector differs"
+          end
+          environment = ENV.keys.to_h { |key| [key, nil] }
+          environment.merge!("GIT_CONFIG_NOSYSTEM" => "1", "GIT_CONFIG_GLOBAL" => "/dev/null",
+            "GIT_TERMINAL_PROMPT" => "0", "GIT_NO_REPLACE_OBJECTS" => "1", "PATH" => "/usr/bin:/bin", "LC_ALL" => "C")
+          result = Herdr::Molecules::BoundedProcess.call([environment, "/usr/bin/git", "-C", repo_root,
+            "-c", "core.hooksPath=/dev/null", "cat-file", "blob", "#{commit}:#{path}"],
+            stdin_data: "", timeout_s: 30, output_limit: max_bytes)
+          unless result.status.success? && !result.oversized
+            raise AttemptErrors::EvidenceUnavailable, "Canonical prepared blob is missing or oversized"
+          end
+          result.stdout.b
+        rescue Timeout::Error, Herdr::Molecules::BoundedProcess::PostLaunchError, SystemCallError, IOError
+          raise AttemptErrors::EvidenceUnavailable, "Canonical prepared blob read is unavailable"
         end
 
         private
