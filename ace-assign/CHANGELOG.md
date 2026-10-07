@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Add proof-owned protected stop with authenticated running/uncertain-to-stopped events, exhaustive service and Inbox settlement joins, immutable replay and original historical release/reuse verification. Retain the original foreground Driver until same-snapshot authenticated terminal and reservation-release evidence agree.
+
 - Expose exhaustive immutable authenticated service and Inbox settlement evidence through the existing Endcap owners, retaining original historical descriptor/key proofs and distinguishing fully verified pending work from unavailable evidence. Public stopped delivery and no-effect challenge issuance remain separate work.
 
 - Require authenticated lifetime input inhibition for every issued outside-unit actor before no-writers proof, including attempts with no prompt submissions.

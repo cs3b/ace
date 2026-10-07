@@ -5,12 +5,15 @@ require_relative "../../support/execution_boot_baseline_owner_fixture"
 require_relative "../../support/protected_inbox_context_pipeline_fixture"
 require "ace/assign/authority/deployment_history"
 require "ace/herdr/organisms/inbox"
+require "ace/assign/cli/commands/authority/launch"
+require_relative "../../support/original_launch_driver_owner_fixture"
 
 module Ace
   module Assign
     # Canonical owners and protected held-byte loaders are real. Installed UID,
     # filesystem installation checks and native observation are controlled seams.
     class HistoricalRotationTest < AceAssignTestCase
+      include OriginalLaunchDriverOwnerFixture
       include EndcapResultOwnerFixture
       include ProtectedInboxContextPipelineFixture
       include ExecutionBootBaselineOwnerFixture
@@ -96,7 +99,7 @@ module Ace
 
       def configure_result_owner_fixture
         repo = @journal.repo_root
-        @socket_root = File.realpath(Dir.mktmpdir("inbox-h-", "/tmp"))
+        @socket_root = File.realpath(Dir.mktmpdir("inbox-h-", @foreground_socket_root ? Etc.getpwuid(Process.uid).dir : "/tmp"))
         @context_clients = {}
         @authority_peer = @kernel.capture(Process.pid)
         @context_peer = @kernel.capture(23007).merge("uid" => 13007, "gid" => 13007, "groups" => [13007])
@@ -460,6 +463,120 @@ module Ace
         assert_equal first.fetch(:data), call("stop_attempt", first_params, id: "public-stop-seal", peer: @supervisor, role: :supervisor).fetch(:data)
         release = @launch.release_scope_reservation!(params: params.merge("mutation_id" => "stopped-release", "expected_generation" => generation), peer: @launcher, role: :launcher)
         assert_equal terminal.fetch("digest"), release.dig(:data, "terminal_event_id")
+      end
+
+      def test_actual_original_foreground_cli_exits_only_after_authenticated_stopped_release
+        @foreground_socket_root = true
+        with_installed_boundaries do
+          # Free the fixture seed through its actual imported receipt owner.
+          accept_terminal_and_release
+          original_assignment = @journal.mutation_result("register").fetch("data")
+          definition = @journal.blob(original_assignment.fetch("definition_ref"))
+          native = OriginalGuardedNative.new(mapping: @map.merge("native" => @map.fetch("native").merge(
+            "server_identity" => @kernel.capture(90), "socket_identity" => [1, 2, 13001])), kernel: @kernel)
+          server_kernel = StreamKernel.new(@kernel, me: @service, peer: @launcher)
+          client_kernel = StreamKernel.new(@kernel, me: @launcher, peer: @service)
+          server = Authority::Server.new(authority_id: "authority", lifecycle: @router, deployment: @deployment,
+            composition: "services", kernel: server_kernel)
+          listener = Thread.new { server.serve }
+          limit = WIRE.deadline(3)
+          until File.socket?(@service.fetch("socket_path"))
+            raise "Source listener unavailable" unless listener.alive? && Process.clock_gettime(Process::CLOCK_MONOTONIC) < limit
+            sleep(0.01)
+          end
+          @deployment.project("project").fetch("peer_credentials").each_value do |credential|
+            FileUtils.mkdir_p(credential.fetch("scratch_root"), mode: 0700)
+            File.chmod(0700, credential.fetch("scratch_root"))
+          end
+          client = Authority::Client.new(mapping_id: "mapping", deployment: @deployment, kernel: client_kernel)
+          recorded, statuses, ready = Queue.new, Queue.new, Queue.new
+          status_durations = []
+          original_call = client.method(:call)
+          client.define_singleton_method(:call) do |operation, params, **options|
+            status_started = Process.clock_gettime(Process::CLOCK_MONOTONIC) if operation == "attempt_status"
+            result = original_call.call(operation, params, **options)
+            status_durations << Process.clock_gettime(Process::CLOCK_MONOTONIC) - status_started if status_started
+            recorded << result.data if operation == "record_launch"
+            statuses << result.data if operation == "attempt_status"
+            result
+          end
+          gate_socket, worker_socket = UNIXSocket.pair
+          gate = Thread.new do
+            state = recorded.pop
+            @launch.gate_ready(request: {"params" => {"mapping_id" => "mapping", "launch_ticket" => state.fetch("launch_ticket")}},
+              peer: @worker, socket: gate_socket, deadline: WIRE.deadline(30))
+          end
+          driver = Authority::LaunchDriver.new(mapping_id: "mapping", deployment: @deployment, kernel: client_kernel, client: client, native: native)
+          command = CLI::Commands::Authority::Launch.new
+          command.define_singleton_method(:build_driver) { |_| driver }
+          definition_path = File.join(@root, "foreground-definition.json")
+          File.binwrite(definition_path, definition)
+          output = StringIO.new
+          output.define_singleton_method(:write) do |line|
+            count = super(line)
+            ready << JSON.parse(line)
+            count
+          end
+          previous_stdout = $stdout
+          $stdout = output
+          foreground = Thread.new do
+            command.call(mapping: "mapping", assignment: "assignment", definition: definition_path,
+              step: "010", base_head: @head, mutation: "foreground-stop-owner")
+          rescue StandardError => error
+            ready << error
+            raise
+          end
+          frame = Timeout.timeout(45) { ready.pop }
+          raise frame if frame.is_a?(Exception)
+          @attempt = frame.fetch("attempt_id")
+          assert_equal "launch_ready", frame.fetch("type")
+          assert_equal "ready", WIRE.read(worker_socket, deadline: WIRE.deadline(5)).dig("data", "phase")
+          assert_equal "release", WIRE.read(worker_socket, deadline: WIRE.deadline(5)).fetch("operation")
+          params = {"mapping_id" => "mapping", "assignment_id" => "assignment", "attempt_id" => @attempt}
+          first = client.call("stop_attempt", params.merge("expected_generation" => generation), mutation_id: "foreground-stop-seal", timeout: 90)
+          assert_equal "uncertain", first.data.fetch("state")
+          proof = client.call("stop_attempt", params.merge("expected_generation" => generation), mutation_id: "foreground-stop-proof", timeout: 90)
+          assert proof.data.fetch("proof_id")
+          stopped = client.call("stop_attempt", params.merge("expected_generation" => generation), mutation_id: "foreground-stop-terminal", timeout: 90)
+          assert_equal "stopped", stopped.data.fetch("state")
+          @launch.instance_variable_get(:@control_channels).values.each(&:close)
+          unreleased = Timeout.timeout(45) do
+            loop do
+              status = statuses.pop
+              break status if status["state"] == "stopped" && status["reservation_release_event_id"].nil?
+            end
+          end
+          assert_equal frame.fetch("original_binding_digest"), unreleased.fetch("original_binding_digest")
+          assert unreleased.fetch("terminal_event_id")
+          assert foreground.alive?, "terminal without release cannot terminate original driver"
+          released = @launch.release_scope_reservation!(params: params.merge("mutation_id" => "foreground-release", "expected_generation" => generation),
+            peer: @launcher, role: :launcher)
+          foreground.join(45)
+          refute foreground.alive?, "authenticated status under its unchanged 30s deadline must release foreground driver"
+          assert_nil foreground.value
+          refute_empty status_durations
+          assert status_durations.all? { |elapsed| elapsed < 30 }, status_durations.inspect
+          assert_equal 1, output.string.lines.length
+          assert_equal 1, native.drain_calls.length
+          assert_nil native.prompt_calls
+          observed_release = Timeout.timeout(2) do
+            loop do
+              status = statuses.pop
+              break status if status["reservation_release_event_id"]
+            end
+          end
+          assert_equal released.dig(:data, "terminal_event_id"), observed_release.fetch("terminal_event_id")
+          assert_equal "stopped", observed_release.fetch("state")
+        ensure
+          $stdout = previous_stdout if previous_stdout
+          driver&.request_control_cancel
+          foreground&.join(3)
+          server&.stop
+          listener&.join(3)
+          gate_socket&.close
+          worker_socket&.close
+          gate&.kill if gate&.alive?
+        end
       end
 
       def test_actual_settled_canonical_uncertain_stop_releases_and_retains_original_history_after_rotation

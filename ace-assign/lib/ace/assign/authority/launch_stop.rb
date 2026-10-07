@@ -6,8 +6,9 @@ module Ace
   module Assign
     module Authority
       class LaunchLifecycle
-        # The stop mutation owns its seal and immutable reply. Native/manager
-        # work happens only after that CAS and all canonical exclusions end.
+        # The stop mutation owns its seal and immutable reply. Input inhibition
+        # waits outside exclusions; manager stop runs after CAS outside @mutex,
+        # retaining the existing containment slot guard.
         def stop_attempt!(request:, peer:, role:)
           params = request.fetch("params")
           strict!(params, %w[mapping_id assignment_id attempt_id expected_generation])
