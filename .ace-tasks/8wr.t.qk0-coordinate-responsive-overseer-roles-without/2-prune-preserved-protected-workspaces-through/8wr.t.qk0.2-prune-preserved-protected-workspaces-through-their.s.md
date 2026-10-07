@@ -16,6 +16,10 @@ parent: 8wr.t.qk0
 
 # Prune preserved protected workspaces through their owner
 
+## Open source-contract review findings
+
+Independent review of candidate `969f793ef` requires revision before readiness: define requester isolation against the actual complete installer inventory/global inhibition; reconcile the synchronous receiver with operation deadlines; identify the owner clearing inhibition after canonical completion; and close nested input/receipt bounds plus Git capture/removal ordering. Evidence and exact findings are in `readiness-review.md`. These are source design joins under active author investigation, not requests for a new Captain policy decision. Status remains draft with needs_review true.
+
 ## Behavioral Specification
 
 ### User Experience
