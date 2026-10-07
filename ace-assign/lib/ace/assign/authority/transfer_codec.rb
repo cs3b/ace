@@ -70,6 +70,7 @@ module Ace
         end
 
         def send_launch_prompt(socket, bytes:, descriptor:, transfer_id:, deadline:)
+          deadline = [deadline, Process.clock_gettime(Process::CLOCK_MONOTONIC) + 30].min
           marker = launch_prompt_marker(transfer_id)
           send(socket, parts: [bytes], descriptor: descriptor, purpose: :prompt_text, deadline: deadline)
           Ace::Runtime::Molecules::ProtectedSocket.write(socket, marker, deadline: deadline, limit: 16_384)

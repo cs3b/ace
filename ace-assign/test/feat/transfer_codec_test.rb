@@ -117,6 +117,33 @@ module Ace
         end
       end
 
+      def test_private_sender_marker_cannot_extend_body_deadline
+        with_codec do |codec, _root|
+          reader, writer = UNIXSocket.pair
+          body = "accepted"
+          descriptor = codec.descriptor([body], purpose: :prompt_text)
+          now = 0
+          original_write = writer.method(:write_nonblock)
+          write = lambda do |*args, **kwargs|
+            result = original_write.call(*args, **kwargs)
+            now = 31
+            result
+          end
+          Process.stub(:clock_gettime, ->(*) { now }) do
+            writer.stub(:write_nonblock, write) do
+              assert_raises(Ace::Runtime::RuntimeUnavailableError) do
+                codec.send_launch_prompt(writer, bytes: body, descriptor: descriptor, transfer_id: "a" * 32, deadline: 100)
+              end
+            end
+          end
+          assert_equal body, reader.read_nonblock(body.bytesize)
+          assert_equal :wait_readable, reader.read_nonblock(1, exception: false)
+        ensure
+          reader&.close
+          writer&.close
+        end
+      end
+
       def test_exact_multi_part_binary_upload_is_admitted_only_after_write_eof_and_spool_is_removed
         with_codec do |codec, root|
           parts = ["one\x00\n".b, "two\r\n".b]
