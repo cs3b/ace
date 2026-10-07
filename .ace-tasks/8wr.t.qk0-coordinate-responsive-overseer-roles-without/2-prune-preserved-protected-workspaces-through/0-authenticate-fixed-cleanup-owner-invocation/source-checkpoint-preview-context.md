@@ -1,0 +1,9 @@
+# Canonical preview context — bounded source checkpoint
+
+This slice implements only the accepted read-only Endcap context selection, actual Client/Server EOF route, and installed named prune receiver policy. Original canonical worker identity and forwarded live descendant are checked independently of actual receiver credentials. Candidate head/generation and all attempt facts come from one internally pinned commit; a ref advance before response refuses. No review/service claim, dispatch, physical preview, preservation, root invocation or Installer success is implied.
+
+Executed controlled actual Client/Server/Router and Git fixture: **1/20 PASS**, `0da28b4d-4582-451f-9844-512e11b35620`,9.52s. Includes candidate/original binding, zero journal/service effects, wrong forwarded worker, wrong actual receiver, forbidden mutation, trailing-body refusal and real Git ref drift. Installed OS/kernel boundary observations are injected. Real ProtectedServicePolicy full inspected file: **7/40 PASS**, `c58c483e-c5ee-4931-8561-93272285e9f9`; summary0ms is not timing proof. It checks selected named prune operation/service/executor, hidden visibility, same-UID and missing operation; a throwing proposal resolver is never called.
+
+Retained failures: `509dacde-bd56-4d7b-b121-040babe169a3` exposed the missing Client half-close entry for the new EOF operation, repaired without increasing5s. Intermediate drift fixture `3141b3d4-a9ff-49ed-a060-6eefb8b314a8` called a private journal Git helper, repaired to existing test-owned Git runner; no production auth bypass. Prior positive1/15 `35fe897d-95db-4999-9cfb-dabe11b77802` predates drift coverage.
+
+Fixed root preview transport, actual Receiver public dry-run, SAME Installer physical inventory and complete preview-result/apply CLI consumption remain next source work. Lab files remain exclusively wave412. No native/root/systemd/installed probes or task/SC closure. Independent source review required before integration.
