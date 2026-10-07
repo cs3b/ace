@@ -47,7 +47,7 @@ module Ace
             wire.write(socket, {"version" => 1, "operation" => operation,
               "mutation_id" => mutation_id, "project_id" => @map.fetch("project_id"),
               "params" => parameters.merge("mapping_id" => mapping_id)}, deadline: deadline, limit: upload_parts || download ? 16_384 : wire::LIMIT)
-            if %w[evidence_fetch observe_execution_scope close_execution_scope].include?(operation) || (operation == "attempt_status" && params.key?("result_candidate_generation"))
+            if %w[evidence_fetch observe_execution_scope close_execution_scope launch_prompt_intent launch_prompt_completion].include?(operation) || (operation == "attempt_status" && params.key?("result_candidate_generation"))
               socket.shutdown(Socket::SHUT_WR)
             end
             if upload_parts
@@ -74,7 +74,43 @@ module Ace
         rescue SystemCallError, IOError
           raise AttemptErrors::EvidenceUnavailable, "protected authority connection unavailable; no local fallback"
         end
+        # Fixed original-launcher stream. Public calls retain their existing
+        # complete-upload EOF contract; no caller-selected framing flag exists.
+        def with_launch_control(state:)
+          @deployment.verify!(mapping_id, kernel: @kernel)
+          wire = Ace::Runtime::Molecules::ProtectedSocket
+          path = @service.fetch("socket_path")
+          before = wire.socket_identity(path)
+          raise Ace::Runtime::RuntimeUnavailableError, "Authority endpoint owner differs" unless before.last == @service.fetch("uid")
+          deadline = wire.deadline(30)
+          wire.connect(path, deadline: deadline) do |socket|
+            peer = @kernel.peer(socket)
+            unless peer.values_at("uid", "gid", "groups") == @service.values_at("uid", "gid", "groups") && wire.socket_identity(path) == before
+              raise AttemptErrors::UnauthorizedIdentity, "Authority stream peer changed"
+            end
+            wire.write(socket, {"version" => 1, "operation" => "launch_control", "mutation_id" => nil,
+              "project_id" => @map.fetch("project_id"), "params" => state.slice("assignment_id", "attempt_id").merge("mapping_id" => mapping_id)},
+              deadline: deadline, limit: 16_384)
+            ready = wire.read(socket, deadline: deadline, limit: 16_384)
+            validate_launch_control_ready!(ready, state)
+            yield socket, transfer_codec, ready
+          end
+        rescue IOError, SystemCallError
+          raise AttemptErrors::EvidenceUnavailable, "Original launch control connection is unavailable"
+        end
+
         private
+
+        def validate_launch_control_ready!(ready, state)
+          unless ready.is_a?(Hash) && ready.keys.sort == %w[attempt_id generation journal_commit original_binding_digest type version] &&
+              ready["version"].is_a?(Integer) && ready["version"] == 1 && ready["type"] == "launch_control_ready" &&
+              ready["attempt_id"] == state.fetch("attempt_id") && ready["generation"].is_a?(Integer) && ready["generation"].positive? &&
+              ready["journal_commit"].is_a?(String) && ready["journal_commit"].match?(/\A(?:[0-9a-f]{40}|[0-9a-f]{64})\z/) &&
+              ready["original_binding_digest"].is_a?(String) && ready["original_binding_digest"].match?(/\A[0-9a-f]{64}\z/)
+            raise AttemptErrors::EvidenceUnavailable, "Original launch control admission is unavailable"
+          end
+          true
+        end
 
         def validate_evidence_download!(data, params)
           descriptor, transfer = data.values_at("descriptor", "transfer")

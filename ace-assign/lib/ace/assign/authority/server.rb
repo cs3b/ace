@@ -102,7 +102,7 @@ module Ace
           frame = wire.read(socket, deadline: [deadline, wire.deadline(5)].min, with_size: true)
           request = frame.fetch(:data)
           unless request.is_a?(Hash) && request.keys.sort == %w[mutation_id operation params project_id version] &&
-              request["version"] == 1 && request["operation"].is_a?(String) && request["params"].is_a?(Hash)
+              request["version"].is_a?(Integer) && request["version"] == 1 && request["operation"].is_a?(String) && request["params"].is_a?(Hash)
             raise ArgumentError, "invalid authority envelope"
           end
           deadline = wire.deadline(90) if %w[reserve_attempt close_execution_scope].include?(request.fetch("operation"))
@@ -142,7 +142,13 @@ module Ace
             end
           end
           raise AttemptErrors::UnauthorizedIdentity, "unmapped kernel peer" unless role
-          if %w[observe_execution_scope close_execution_scope].include?(request["operation"]) ||
+          if request["operation"] == "launch_control"
+            raise AttemptErrors::UnauthorizedIdentity, "Private launcher control requires launcher peer" unless role == :launcher
+            raise ArgumentError, "Private launcher header is oversized" unless frame.fetch(:bytesize) <= 16_384
+            @lifecycle.serve_launch_control!(request: request, peer: peer, socket: socket, codec: transfer_codec, deadline: deadline)
+            return
+          end
+          if %w[observe_execution_scope close_execution_scope launch_prompt_intent launch_prompt_completion].include?(request["operation"]) ||
               @composition == "services" && %w[attempt_status evidence_fetch].include?(request["operation"])
             bodyless_read!(socket, deadline)
           end

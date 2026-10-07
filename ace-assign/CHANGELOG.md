@@ -9,9 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Retain the original mapped launcher in the foreground, authenticate bounded prompt transfers and native submission outcomes, preserve immutable public replies across reconnects, and block no-writers proof or release while canonical prompt issuance remains unresolved.
+
 - Capture and retain the exact original native guard in canonical launch record data, with whole-record authentication for steering, while preserving execution-scope process binding bytes.
 
-- Add canonical prompt issuance and authenticated immutable completion primitives with journal-wide retry identity enforcement, plus bounded private prompt framing. Public steering and retained launcher composition remain in progress.
+- Add canonical prompt issuance and authenticated immutable completion primitives with journal-wide retry identity enforcement, plus bounded private prompt framing. Public stop composition remains in progress.
 
 ### Added
 

@@ -45,6 +45,10 @@ module Ace
           @launch.close
         end
 
+        def serve_launch_control!(**options)
+          @launch.serve_launch_control!(**options)
+        end
+
         def gate_ready(**options)
           @launch.gate_ready(**options)
         end
