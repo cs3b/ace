@@ -55,7 +55,7 @@ The parent retains the complete original coordinator capability and acceptance c
 - `8wr.t.qk0.1`: actual original foreground launcher with responsive role steering, bounded proposal resolution and generic charters; large. Depends on qk0.0 discovery, qk0.3 prepared input handoff and existing protected steering owners.
 - `8wr.t.qk0.2`: preserved protected workspace physical cleanup through its actual authorized owner; large. Slice/devpts retirement and display/cache cleanup do not satisfy it. Draft pending exact source-owner/request/exclusion composition; no installed-only transfer or extra hidden task.
 
-- `8wr.t.qk0.3`: actual prepared leaf artifact admission through existing binary transfer/canonical registration to original gate descriptor, fixed worker adapter and scoped queue/context consumers; large. Depends on xz9.2, never qk0.1/qk0.0.
+- `8wr.t.qk0.3`: actual prepared leaf artifact admission through existing binary transfer/canonical registration to original gate descriptor, fixed worker adapter and scoped queue/context consumers; large. Depends on qk0.0 inventory and xz9.2, never qk0.1.
 
 All four children require their own complete readiness review. Parent remains draft/needs_review until all children are reviewed; delivery remains incomplete until all original outcomes pass executed tests and independent review. Existing prerequisites remain `8wq.t.k86`, `8wr.t.qjl`, `8wr.t.qjx`, `8wr.t.qjy`, `8wq.t.1w5`, `8wm.t.vs2`, `8wr.t.qjz`, `8x3.t.xz9.2`. Canonical cross-repository program: lab-config:`8wl.t.gad`. No backedge from a source producer to this coordinator.
 
@@ -132,7 +132,7 @@ Independent scoped review (wave_5h5, 2026-10-07): APPROVE this amendment and usa
 
 ## Prepared worker handoff decomposition correction (2026-10-07)
 
-The actual native gate accepts assignment/attempt identity but does not convey numeric scope or a prepared job/step selection to its fixed worker. This missing source behavior is now real draft child **qk0.3**, delivering accepted prepared selection through the existing canonical compact definition/release refs plus existing bounded artifact transfer/canonical blobs to a fixed worker adapter. qk0.1 depends on qk0.3 and qk0.0; qk0.3 depends on xz9.2, never on qk0.1 or qk0.0. Existing child history and qk0.2 prune ownership remain unchanged.
+The actual native gate accepts assignment/attempt identity but does not convey numeric scope or a prepared job/step selection to its fixed worker. This missing source behavior is now real draft child **qk0.3**, delivering accepted prepared selection through the existing canonical compact definition/release refs plus existing bounded artifact transfer/canonical blobs to a fixed worker adapter. qk0.1 depends on qk0.3 and qk0.0; qk0.3 depends on qk0.0 inventory and xz9.2, never on qk0.1; qk0.0 remains independent with no backedge. Existing child history and qk0.2 prune ownership remain unchanged.
 
 - [ ] qk0.3: Exact reviewed leaf artifact/subtree/context authentication and actual worker consumption, including changed-input refusal, a closed progress projection and unchanged existing payload caps.
 - [ ] qk0.1: Whole coordinator consumer readiness after qk0.0 inventory and qk0.3 handoff; mandatory pre-effect identity survives quiet output.
