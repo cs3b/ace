@@ -1,0 +1,37 @@
+# Protected launch inputs and restart — draft for independent review
+
+This proposes the remaining qk0.1 launch contract. It is not approved readiness, a new task, or implemented behavior. It uses Assign's existing definition, registration, reservation and original foreground launcher; canonical execution facts remain exclusively in Assign.
+
+## Fresh work and retained input
+
+Fresh `ace-overseer work-on --task TASK --project PROJECT [--agent AGENT]` prepares one managed assignment using the existing task/preset owners. The selected project is explicit in that definition. Draft/unreviewed task input refuses before launch. The launcher receives the exact prepared definition bytes, assignment ID, subtree scope, resolved base commit and stable invocation ID. It must not regenerate timestamps, IDs, definition bytes or base revision during the same invocation.
+
+Before starting a foreground child or sending any authority mutation, retain these inputs in a private immutable request document under `.ace-local/overseer/launch-requests/` and emit its path and digest with the selected project/mapping/assignment/invocation. If retaining or reporting the input fails, do not start the child. This document contains inputs only: no attempt state, occupancy, approval, completion, credentials or authority endpoint override. It is not an execution journal and cannot grant permission. Existing trusted Deployment and actual process credentials still select authority and authenticate every operation.
+
+The version-1 document has exactly `version`, `project_id`, `mapping_id`, `assignment_id`, `task_id`, `scope`, `base_head`, `mutation_id`, `definition_bytes`, `definition_sha256`. Preserve definition bytes as a JSON string, bounded by the existing 32,768-byte definition limit. The complete serialized request is bounded to 131,072 bytes, including JSON escaping; reject oversize before publication or parse. IDs/scope/head follow their existing Assign validators; version is Integer 1. Invocation IDs satisfy the existing mutation alphabet but are limited to 119 bytes, leaving room for the driver's longest `-register` suffix within JournalMutation's 128-byte limit. Definition digest and parsed managed assignment/task/project must agree with these fields. No unknown keys or caller-supplied trusted flags are accepted. Publication is exclusive: an existing request is never overwritten. The filename derives from the invocation ID, not task text or a caller pathname.
+
+The original parent retains its actual foreground child handle and validates the ready frame through qk0.0's pinned canonical join. Printing retained inputs is not readiness. Ready requires the exact expected project, mapping and assignment, authenticated generation and original binding at the child's retained commit. A malformed/late/missing ready response remains uncertain and does not launch an alternative.
+
+## Selection and authority changes
+
+Before retaining inputs, automatic selection considers authorized mappings in stable ID order and may advance only after a positively attributable pre-registration refusal. An explicit mapping never substitutes. Once the request names a mapping and a child may have started, no automatic change of mapping, assignment, invocation or definition is allowed. Accepted registration followed by reservation conflict remains visible under that original mapping. Inventory may be used to avoid an observed busy candidate, but it cannot reserve capacity or prove a lost operation absent.
+
+## Recovery is an observation
+
+`ace-overseer work-on --recover-request FILE` reads this exact retained input and performs authorized canonical discovery only. It rejects task/project/agent/runtime overrides and never starts a child, registers, reserves, sends a prompt, or claims another launcher's process identity. Invalid format/digest/definition association refuses before authority access. The document's path does not grant trust; the actual caller must have current authority access to the exact project/mapping.
+
+Report absent registration, registration-only, and the actual attributable attempt states separately. Missing canonical history or unavailable authority means unknown, not safe-to-launch. Multiple attempts are listed explicitly; never select the newest as the recovered result. qk0.1 extends the existing closed inventory row with `reservation_mutation_id` and `base_head`: null for registration-only, otherwise copied from the authenticated original accepted `reserve_attempt` event and its original reservation binding. No new RPC or ledger is introduced. Both producer and consumer row contracts/tests change together in this slice, after qk0.0 integration.
+
+An original-invocation match requires `reservation_mutation_id == mutation_id + "-reserve"` plus the exact project/mapping/assignment/task, original definition digest, scope and base head from the retained input. A conflicting same-ID association refuses; no match is reported as no attributable reservation at the pinned snapshot, not proof that nothing can still arrive. A registration matching the definition alone does not prove the original invocation registered it: the existing driver may legitimately reuse a previously registered identical definition. Report that distinction rather than inventing a registration event.
+
+An operator may issue a separate explicit fresh work request, which obtains its own input document and is subject to the existing canonical task/slot admission and recovery rules. Recovery never manufactures that request. If the input document is lost, ordinary canonical status still discovers assignments; it cannot reconstruct unknown original invocation inputs or permission to recreate the original child. The document's own digest detects internal mismatch, not authenticity of an unregistered request rewritten by its owner. Attribution comes only from matching canonical acceptance; internally consistent input with no canonical match stays unattributed and never becomes launch permission.
+
+## Required source verification
+
+Exercise real task preparation and canonical owners with controlled runtime boundaries: selected project differs from ambient project; invalid reviewed input causes no launch; request write/output failure occurs before child creation; captured launcher arguments match retained bytes/IDs; accepted registration then reservation conflict never switches mappings; loss before readiness followed by recovery performs zero mutations and zero child starts; changed/tampered request refuses; canonical discovery remains available after local request loss; multiple attempts are not silently conflated. Preserve original birth checks and existing ready-frame negative cases. Actual installed execution remains gad.2.
+
+Independent review must validate the observable CLI, exact original-invocation attribution against existing canonical events, and ordinary local-mode separation before this proposal can become a readiness contract. qk0.1 remains draft until that review converges.
+
+## Scoped independent review
+
+On 2026-10-07, wave_5h5 independently reread the final proposal and approved the input retention and read-only recovery contract, including the 119-byte invocation budget and canonical attribution limits. This approves a proposed sub-contract only. Whole-child readiness, producer/consumer integration and implementation remain outstanding; qk0.1 stays draft with needs_review true.
