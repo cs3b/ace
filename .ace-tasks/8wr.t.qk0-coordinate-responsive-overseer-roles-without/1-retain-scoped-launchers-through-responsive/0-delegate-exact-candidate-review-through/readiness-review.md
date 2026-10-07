@@ -15,3 +15,8 @@ These are technical contract gaps for autonomous repair and another independent 
 ## Readiness result
 
 The child has a distinct observable outcome, consumers, interface proposal, bounded transfers, success criteria and usage scenarios. Decision completeness, recovery semantics and concurrency coverage do not yet pass. Reviewed children: 1; promoted: 0. Parent promotion deferred. Existing cleanup implementation and prepared-input work can continue independently.
+
+
+## Repair review — 2026-10-07
+
+Root authored repair 55ac1ab1e74055b3575c0057806c799ceec44f98 received independent wave_n0n scoped APPROVE. Assignment pins the accepted request generation; intervening mutations refuse without a new generation mode. Explicit canonical cancellation revokes authority, does not claim process death, and permits a deliberate fresh request. Direct/delegated assignments and export/accept/approval consumers share the same reservation check. These address the three findings above at contract level; original finding text remains historical. This is not whole-family readiness or source delivery: qk0.1.0 and its parent remain draft pending complete readiness review of the expanded cancellation interface.
