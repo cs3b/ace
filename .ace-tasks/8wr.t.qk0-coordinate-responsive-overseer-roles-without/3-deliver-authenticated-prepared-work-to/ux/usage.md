@@ -9,3 +9,5 @@ StepWriter status/timestamp/report progress is permitted within the accepted sub
 This is a source contract draft; authenticated fetch/runtime boundaries are injected during controlled verification. Only gad.2 owns installed acceptance.
 
 The previous all-descendant descriptor assumption was rejected by Pi source evidence. The fixed adapter and tool consumers use the same sole exact original-input read purpose, not a descriptor fallback or local task lookup. Codex/Pi remain actual source-composition and centralized installed acceptance targets.
+
+Captured instructions contain a closed selector template; the random attempt ID is bound only after release from the authenticated original capability. Accepted instruction bytes remain unchanged. Worker queue progress lives at the fixed per-attempt prepared-queues subtree under its verified installed scratch_root, with explicit manager cache_base; the authority assignment_root is never worker storage. Existing matching progress is retained; collision, partial or substituted queues refuse.
