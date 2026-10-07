@@ -11,3 +11,9 @@ Executed checkout source tests, with controlled temporary Git only:
 - Pending raw-Git consumer regression PASS 1/39, `c6efa232-2995-4e47-b869-4798627850ab`: a valid-chain registration rewritten to a foreign mapping is rejected rather than filtered into false empty inventory. Previous failing reproduction `bf90c957-78a1-409a-97aa-c8399dde17b0` remains retained.
 
 No installed/native/root/systemd/PTY probes or unfiltered suite ran. Complete consumer lifecycle/rotation evidence remains separate work.
+
+## Independent integration review
+
+Root APPROVE the additive owner at author revision `43f581c8311201ea5606203ba911943a7eda6d17`, integrated as `170a6ed84`. Independently read full history traversal, per-attempt prefix/unchanged raw file checks, introduction derivation, immutable projection and pre-order duplicate-digest refusal plus actual regression assertions. No outstanding finding in this slice. Only CHANGELOG insertion conflicted on integration; retained both distinct entries and removed the duplicate old batch entry. No source/test change during verification.
+
+Combined integration checkout command `bin/ace-test ace-assign ace-assign/test/fast/molecules/evidence_journal_test.rb --timeout 180`: **PASS 21 tests/104 assertions**, zero failures/errors, 20.92s. Receipt `e49f2e80-cb45-446a-a217-d3beedf01e93`. Verification began after source/test cherry-pick application while the documentation-only CHANGELOG conflict was being resolved; final executable bytes are identical to tested bytes. No native/installed probes or whole qk0.0 completion claim. Inventory producer/consumer remains independently open.
