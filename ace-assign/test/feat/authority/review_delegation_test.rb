@@ -30,6 +30,7 @@ module Ace
         fixture do
           first, params = assign_direct
           event = review_event
+          assert_equal event.fetch("digest"), first.dig(:data, "assignment_event_id")
           before = @journal.ref_value
           assert_raises(AttemptErrors::Conflict) { assign_direct(id: "silent-replacement") }
           assert_equal before, @journal.ref_value
@@ -86,9 +87,31 @@ module Ace
         end
       end
 
-      def test_actual_client_server_cancellation_uses_bodyless_canonical_reply
+      def test_accepted_cancellation_replays_after_candidate_advances_without_revoking_new_review
         fixture do
           assign_direct
+          params = cancellation(review_event)
+          accepted = call("cancel_review", params, id: "cancel", peer: @launcher, role: :launcher)
+          candidate(2)
+          replacement, = assign_direct(id: "replacement", number: 2)
+          before = @journal.ref_value
+          replay = call("cancel_review", params, id: "cancel", peer: @launcher, role: :launcher)
+          assert replay.fetch(:replayed)
+          assert_equal accepted.fetch(:data), replay.fetch(:data)
+          assert_equal before, @journal.ref_value
+          assert_raises(AttemptErrors::Conflict) do
+            call("cancel_review", params.merge("expected_generation" => generation),
+              id: "fresh-old-cancel", peer: @launcher, role: :launcher)
+          end
+          events = @journal.read_events("assignment").select { |entry| entry["attempt_id"] == @attempt }
+          assert_equal replacement.dig(:data, "assignment_event_id"),
+            @endcap.send(:active_review_event, events, {"head" => @head, "candidate_generation" => 2}).fetch("digest")
+          assert_equal before, @journal.ref_value
+        end
+      end
+
+      def test_actual_client_server_cancellation_uses_bodyless_canonical_reply
+        fixture do
           @kernel.peer_identity = @launcher
           @server = Authority::Server.new(authority_id: "authority", lifecycle: @router,
             deployment: @deployment, kernel: @kernel, composition: "services")
@@ -104,7 +127,13 @@ module Ace
           kernel = Kernel.new
           kernel.peer_identity = @service.slice("uid", "gid", "groups")
           client = Authority::Client.new(mapping_id: "mapping", deployment: @deployment, kernel: kernel)
-          params = cancellation(review_event).merge("assignment_id" => "assignment", "attempt_id" => @attempt)
+          assignment = client.call("assign_review", {"assignment_id" => "assignment", "attempt_id" => @attempt,
+            "head" => @head, "candidate_generation" => 1, "expected_generation" => generation,
+            "reviewer_uid" => @reviewer.fetch("uid"), "reviewer_process_binding" => @reviewer},
+            mutation_id: "wire-assign", timeout: 30)
+          params = {"head" => @head, "candidate_generation" => 1,
+            "review_event_id" => assignment.data.fetch("assignment_event_id"), "expected_generation" => generation,
+            "assignment_id" => "assignment", "attempt_id" => @attempt}
           reply = client.call("cancel_review", params, mutation_id: "wire-cancel", timeout: 30)
           assert_equal "cancelled", reply.data.fetch("state")
           assert_match(/\A[0-9a-f]{64}\z/, reply.data.fetch("cancellation_event_id"))

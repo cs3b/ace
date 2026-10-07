@@ -121,7 +121,7 @@ module Ace
               worker_or_launcher!(peer, role, map, origin,
                 launcher_only: request.fetch("operation") == "assign_review")
             end
-            journal.mutate(assignment_id: params.fetch("assignment_id"), attempt_id: params.fetch("attempt_id"),
+            result = journal.mutate(assignment_id: params.fetch("assignment_id"), attempt_id: params.fetch("attempt_id"),
               mutation_id: request.fetch("mutation_id"), operation: request.fetch("operation"),
               parameters_digest: Atoms::EvidenceDigest.digest(params), expected_generation: params.fetch("expected_generation"),
               with_replay: true) do |events, _commit, _generation|
@@ -156,6 +156,11 @@ module Ace
                 review = assigned_review(events)
                 accept_review_plan(journal, events, params, map, current, review, admitted)
               end
+            end
+            if request.fetch("operation") == "assign_review"
+              review_event_reply(journal, result, request, params, "assignment_event_id")
+            else
+              result
             end
           end
         end

@@ -35,7 +35,8 @@ module Ace
               mutation_id: request.fetch("mutation_id"), operation: "cancel_review",
               parameters_digest: Atoms::EvidenceDigest.digest(params), expected_generation: params.fetch("expected_generation"),
               with_replay: true) do |current_events, _commit, _generation|
-              current = authenticate_direct_review_cancellation!(current_events, params, map, peer, role)
+              authenticate_direct_review_cancellation!(current_events, params, map, peer, role)
+              current = exact_candidate!(candidate(current_events), params)
               reservation = active_review_event(current_events, current)
               unless reservation && reservation.fetch("digest") == params.fetch("review_event_id")
                 raise AttemptErrors::Conflict, "review reservation is no longer active"
@@ -44,28 +45,32 @@ module Ace
                 "review_event_id" => reservation.fetch("digest"),
                 "review_id" => reservation.dig("payload", "data", "review_id"), "state" => "cancelled")}
             end
-            accepted = journal.read_events(params.fetch("assignment_id"), commit: result.fetch(:data).fetch("journal_commit")).find do |event|
-              event["attempt_id"] == params.fetch("attempt_id") && event["type"] == "authority_mutation" &&
-                event.dig("payload", "operation") == "cancel_review" && event.dig("payload", "mutation_id") == request.fetch("mutation_id")
-            end
-            raise AttemptErrors::EvidenceUnavailable, "accepted cancellation is unavailable" unless accepted
-            result.merge(data: result.fetch(:data).merge("cancellation_event_id" => accepted.fetch("digest")))
+            review_event_reply(journal, result, request, params, "cancellation_event_id")
           end
+        end
+
+        def review_event_reply(journal, result, request, params, field)
+          accepted = journal.read_events(params.fetch("assignment_id"), commit: result.fetch(:data).fetch("journal_commit")).find do |event|
+            event["attempt_id"] == params.fetch("attempt_id") && event["type"] == "authority_mutation" &&
+              event.dig("payload", "operation") == request.fetch("operation") &&
+              event.dig("payload", "mutation_id") == request.fetch("mutation_id")
+          end
+          raise AttemptErrors::EvidenceUnavailable, "accepted review event is unavailable" unless accepted
+          result.merge(data: result.fetch(:data).merge(field => accepted.fetch("digest")))
         end
 
         def authenticate_direct_review_cancellation!(events, params, map, peer, role)
           origin = active_origin(events, params)
           @kernel.live!(peer)
           worker_or_launcher!(peer, role, map, origin, launcher_only: true)
-          current = exact_candidate!(candidate(events), params)
           original = events.find { |event| event["digest"] == params.fetch("review_event_id") }
           unless original && original["type"] == "authority_mutation" &&
               original.dig("payload", "operation") == "assign_review" &&
-              original.dig("payload", "data", "head") == current.fetch("head") &&
-              original.dig("payload", "data", "candidate_generation") == current.fetch("candidate_generation")
+              original.dig("payload", "data", "head") == params.fetch("head") &&
+              original.dig("payload", "data", "candidate_generation") == params.fetch("candidate_generation")
             raise AttemptErrors::UnauthorizedIdentity, "review cancellation requires the exact assignment"
           end
-          current
+          original
         end
       end
     end
