@@ -8,7 +8,7 @@ dependencies: [8wq.t.k86, 8wr.t.qjl, 8wr.t.qjx, 8wr.t.qjy, 8wq.t.1w5, 8wm.t.vs2,
 tags: [lab-readiness]
 bundle:
   presets: [project]
-  files: [ace-overseer/lib/ace/overseer/molecules/lab_client.rb, ace-overseer/lib/ace/overseer/cli/commands/work_on.rb, ace-overseer/lib/ace/overseer/organisms/status_collector.rb, ace-overseer/handbook/workflow-instructions/overseer.wf.md, ace-assign/handbook/workflow-instructions/assign/drive.wf.md]
+  files: [ace-overseer/lib/ace/overseer/molecules/lab_client.rb, ace-overseer/lib/ace/overseer/cli/commands/work_on.rb, ace-overseer/lib/ace/overseer/organisms/status_collector.rb, ace-overseer/handbook/workflow-instructions/overseer.wf.md, ace-assign/handbook/workflow-instructions/assign/drive.wf.md, .ace-tasks/8wr.t.qk0-coordinate-responsive-overseer-roles-without/protected-inventory-contract.md]
   commands: []
 needs_review: true
 title: Coordinate responsive overseer roles without the legacy Lab engine
@@ -96,3 +96,7 @@ qk0 retains child wait/cancel ownership after readiness and keeps the conversati
 SC1/SC2 include controlled consumer composition for valid readiness, each refusal above, retained child exit, transport reconnect without prompt replay, and cancellation with an unresolved native outcome. The producer/consumer contract must be checked against xz9.2's final source interface before promotion. This amendment adds no delivered capability and leaves `draft`, `needs_review: true` unchanged.
 
 Independent scoped review (wave_5h5, 2026-10-07): APPROVE this amendment and usage. The original Assign binding remains the authority; child ownership, uncertainty, and dependency direction are explicit. Before snapshots are byte-identical to the previous committed spec and usage. `ace-task show` confirms unchanged draft metadata; diff validation passes. This is not whole-task readiness or implementation acceptance.
+
+### Protected status and restart discovery — draft amendment
+
+`protected-inventory-contract.md` defines the missing owner enumeration and the overseer consumer within SC1/SC2: authorized discovery from a single retained canonical revision, bounded continuation, accepted task/scope associations, and explicit unknown/unavailable status. Inventory is not liveness or permission to mutate. Review this amendment independently before promotion; the earlier scoped foreground-launch approval does not cover it. No dependency is added to xz9.2.
