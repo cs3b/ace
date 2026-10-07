@@ -114,6 +114,10 @@ module Ace
         end
       end
 
+      # Complete maintenance exclusions are busy or their admission deadline expired.
+      class MaintenanceBusy < EvidenceUnavailable
+      end
+
       # One canonical inventory row cannot fit the fixed protocol frame.
       class BoundedResultUnavailable < EvidenceUnavailable
       end

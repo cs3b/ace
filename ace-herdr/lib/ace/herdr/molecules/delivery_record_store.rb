@@ -11,6 +11,8 @@ module Ace
       # yields a torn record and the answer stays re-deliverable. A per-event
       # flock serializes concurrent deliveries of the same event.
       module DeliveryRecordStore
+        class LockUnavailable < StandardError; end
+
         module_function
 
         # @return [Models::DeliveryRecord, nil] the record, falling back to
@@ -66,16 +68,17 @@ module Ace
           with_locks(deliveries_dir, [event_id], create: create) { yield }
         end
 
-        def with_locks(deliveries_dir, event_ids, create: false)
-          with_inventory_lock(deliveries_dir, exclusive: false, create: create) do
-            with_event_locks_held(deliveries_dir, event_ids, create: create) { yield }
+        def with_locks(deliveries_dir, event_ids, create: false, deadline: nil)
+          with_inventory_lock(deliveries_dir, exclusive: false, create: create, deadline: deadline) do
+            with_event_locks_held(deliveries_dir, event_ids, create: create, deadline: deadline) { yield }
           end
         end
 
         # Global inventory always precedes event locks. Normal creators/writers
         # share it; maintenance exclusively holds it through its entire mutation
         # boundary. Reentrancy never upgrades a writer's shared lock.
-        def with_inventory_lock(deliveries_dir, exclusive:, create: false, prepare_directory: true)
+        def with_inventory_lock(deliveries_dir, exclusive:, create: false, prepare_directory: true, deadline: nil)
+          admission_deadline!(deadline) unless deadline.nil?
           held = Thread.current[:ace_herdr_delivery_inventory_locks] ||= {}
           if (existing = held[deliveries_dir])
             raise ArgumentError, "delivery inventory lock cannot be upgraded" if exclusive && existing != :exclusive
@@ -83,9 +86,10 @@ module Ace
           end
           FileUtils.mkdir_p(deliveries_dir) if create && prepare_directory
           flags = File::RDWR | File::NOFOLLOW | (create ? File::CREAT : 0)
+          flags |= File::NONBLOCK unless deadline.nil?
           File.open(File.join(deliveries_dir, ".inventory.lock"), flags, 0o600) do |lock|
             raise ArgumentError, "delivery inventory lock is not a regular file" unless lock.stat.file?
-            lock.flock(exclusive ? File::LOCK_EX : File::LOCK_SH)
+            acquire_lock!(lock, exclusive ? File::LOCK_EX : File::LOCK_SH, deadline)
             held[deliveries_dir] = exclusive ? :exclusive : :shared
             begin
               yield
@@ -96,20 +100,40 @@ module Ace
           end
         end
 
-        def with_event_locks_held(deliveries_dir, event_ids, create: false)
+        def with_event_locks_held(deliveries_dir, event_ids, create: false, deadline: nil)
           FileUtils.mkdir_p(deliveries_dir) if create
           flags = create ? "a" : File::RDWR | File::NOFOLLOW
+          flags = File::WRONLY | File::APPEND | File::CREAT | File::NOFOLLOW if deadline && create
+          flags |= File::NONBLOCK unless deadline.nil?
           handles = []
           event_ids.sort.each do |event_id|
             lock = File.open(lock_path(deliveries_dir, event_id), flags)
             handles << lock
-            lock.flock(File::LOCK_EX)
+            raise ArgumentError, "delivery event lock is not a regular file" unless lock.stat.file?
+            acquire_lock!(lock, File::LOCK_EX, deadline)
           end
           yield
         ensure
           handles&.reverse_each do |lock|
             lock.flock(File::LOCK_UN)
             lock.close
+          end
+        end
+
+        def acquire_lock!(lock, mode, deadline)
+          admission_deadline!(deadline) unless deadline.nil?
+          unless lock.flock(mode | (deadline ? File::LOCK_NB : 0))
+            raise LockUnavailable, "delivery exclusion is busy"
+          end
+          admission_deadline!(deadline) unless deadline.nil?
+        end
+
+        def admission_deadline!(deadline)
+          unless (deadline.is_a?(Integer) || deadline.is_a?(Float)) && deadline.finite?
+            raise ArgumentError, "delivery deadline must be finite"
+          end
+          if Process.clock_gettime(Process::CLOCK_MONOTONIC) >= deadline
+            raise LockUnavailable, "delivery admission deadline expired"
           end
         end
 

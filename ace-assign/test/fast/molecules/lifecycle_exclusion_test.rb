@@ -15,6 +15,31 @@ class LifecycleExclusionTest < AceAssignTestCase
     FileUtils.rm_rf(@tmp)
   end
 
+  def test_bounded_exclusive_refuses_contention_and_releases_partial_inventory
+    deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + 5
+    held = Queue.new
+    release = Queue.new
+    holder = Thread.new do
+      @exclusion.with_exclusive("slot:b") { held << true; release.pop(timeout: 5) }
+    end
+    assert held.pop(timeout: 2)
+    assert_raises(Ace::Assign::AttemptErrors::MaintenanceBusy) do
+      @exclusion.with_exclusive("slot:a", deadline: deadline) do
+        @exclusion.with_exclusive("slot:b", deadline: deadline) { flunk "busy inventory entered" }
+      end
+    end
+    @exclusion.with_exclusive("slot:a", deadline: deadline) { assert true }
+    [false, Float::INFINITY, "5"].each do |invalid|
+      assert_raises(ArgumentError) { @exclusion.with_exclusive("slot:a", deadline: invalid) {} }
+    end
+    assert_raises(Ace::Assign::AttemptErrors::MaintenanceBusy) do
+      @exclusion.with_exclusive("slot:a", deadline: 0) {}
+    end
+  ensure
+    release << true if release
+    holder&.value
+  end
+
   def test_assignment_and_worktree_keys_are_stable_and_canonical
     assert_equal "assignment:abc12", @exclusion.assignment_key("abc12")
 

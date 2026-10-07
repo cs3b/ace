@@ -57,19 +57,19 @@ module Ace
 
         # The same existing per-event locks remain held through the consumer's
         # complete validation and retirement transaction, not just enumeration.
-        def self.with_retained_records(deliveries_dir:, &block)
+        def self.with_retained_records(deliveries_dir:, deadline: nil, &block)
           stat = File.lstat(deliveries_dir)
           raise ValidationError, "retained inbox directory is unsafe" unless stat.directory? && !stat.symlink?
           # An empty retained store needs the coordination lock too. Creating
           # only this lock never creates a missing context or a delivery record.
-          Molecules::DeliveryRecordStore.with_inventory_lock(deliveries_dir, exclusive: true, create: true, prepare_directory: false) do
-            with_retained_records_held(deliveries_dir: deliveries_dir, &block)
+          Molecules::DeliveryRecordStore.with_inventory_lock(deliveries_dir, exclusive: true, create: true, prepare_directory: false, deadline: deadline) do
+            with_retained_records_held(deliveries_dir: deliveries_dir, deadline: deadline, &block)
           end
         rescue SystemCallError
           raise ValidationError, "retained inbox inventory is unavailable"
         end
 
-        def self.with_retained_records_held(deliveries_dir:, &block)
+        def self.with_retained_records_held(deliveries_dir:, deadline: nil, &block)
           raise ArgumentError, "retained inbox block is required" unless block
           roots = [deliveries_dir, Molecules::DeliveryRecordStore.archive_dir(deliveries_dir)]
           names = lambda do
@@ -85,7 +85,7 @@ module Ace
           held = Thread.current[:ace_herdr_retained_inventory_locks] ||= {}
           raise ValidationError, "retained inbox inventory already held" if held.key?(deliveries_dir)
           raise ValidationError, "retained inbox event id is invalid" unless ids.all? { |event| EVENT.match?(event) }
-          Molecules::DeliveryRecordStore.with_locks(deliveries_dir, ids, create: false) do
+          Molecules::DeliveryRecordStore.with_locks(deliveries_dir, ids, create: false, deadline: deadline) do
             raise ValidationError, "retained inbox inventory changed" unless names.call == ids
             held[deliveries_dir] = ids.freeze
             begin

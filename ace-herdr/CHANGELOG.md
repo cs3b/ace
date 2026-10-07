@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Allow maintenance preview to refuse contended slot, authority and retained Inbox exclusions within its original deadline, releasing partially acquired locks.
+
 ### Fixed
 
 - Bound subprocess cleanup to one additional second after execution timeout, retain the unreaped original child through owned signalling, and transfer only unconfirmed cleanup to an eventual reaper. Generic successful calls preserve their no-group-signal behavior; protected handlers may select nonreaping termination observation before owned group cleanup. Native effectiveness remains unverified here.

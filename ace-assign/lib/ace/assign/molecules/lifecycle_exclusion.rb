@@ -79,12 +79,17 @@ module Ace
         #
         # @param key [String] Identity key
         # @yield Required block executed under exclusive exclusion
-        def with_exclusive(key)
+        def with_exclusive(key, deadline: nil)
           raise ArgumentError, "exclusion key is required" if key.to_s.empty?
 
-          lock = open_lock(key)
-          lock.flock(File::LOCK_EX)
+          maintenance_deadline!(deadline) unless deadline.nil?
+          lock = open_lock(key, nonblock: !deadline.nil?)
           begin
+            mode = File::LOCK_EX | (deadline ? File::LOCK_NB : 0)
+            unless lock.flock(mode)
+              raise AttemptErrors::MaintenanceBusy, "maintenance exclusion is busy"
+            end
+            maintenance_deadline!(deadline) unless deadline.nil?
             yield
           ensure
             lock.flock(File::LOCK_UN)
@@ -173,9 +178,25 @@ module Ace
 
         attr_reader :root
 
-        def open_lock(key)
+        def open_lock(key, nonblock: false)
           FileUtils.mkdir_p(root)
-          File.open(lock_path(key), File::RDWR | File::CREAT)
+          flags = File::RDWR | File::CREAT
+          flags |= File::NONBLOCK | File::NOFOLLOW if nonblock
+          file = File.open(lock_path(key), flags)
+          unless file.stat.file?
+            file.close
+            raise AttemptErrors::MaintenanceBusy, "maintenance exclusion is not a regular file"
+          end
+          file
+        end
+
+        def maintenance_deadline!(deadline)
+          unless (deadline.is_a?(Integer) || deadline.is_a?(Float)) && deadline.finite?
+            raise ArgumentError, "maintenance deadline must be finite"
+          end
+          if Process.clock_gettime(Process::CLOCK_MONOTONIC) >= deadline
+            raise AttemptErrors::MaintenanceBusy, "maintenance admission deadline expired"
+          end
         end
 
         def lock_path(key)

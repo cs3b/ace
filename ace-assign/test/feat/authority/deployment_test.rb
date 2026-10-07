@@ -594,9 +594,24 @@ module Ace
           maintenance = Authority::LaunchLifecycle.new(deployment: deployment)
           maintenance.define_singleton_method(:verify_maintenance_root!) { |*| true }
           normal = Authority::LaunchLifecycle.new(deployment: deployment)
+          normal.define_singleton_method(:verify_maintenance_root!) { |*| true }
           started, admitted = Queue.new, Queue.new
           thread = nil
-          maintenance.with_execution_slots(mapping_ids: ["mapping"], candidate_deployment: deployment) do |contexts|
+          deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + 20
+          mutex = maintenance.instance_variable_get(:@mutex)
+          mutex.lock
+          begin
+            assert_raises(AttemptErrors::MaintenanceBusy) do
+              maintenance.with_execution_slots(mapping_ids: ["mapping"], candidate_deployment: deployment, deadline: deadline) { flunk "busy mutex entered" }
+            end
+          ensure
+            mutex.unlock
+          end
+          assert_empty Thread.current[:ace_assign_scope_exclusions]
+          maintenance.with_execution_slots(mapping_ids: ["mapping"], candidate_deployment: deployment, deadline: deadline) do |contexts|
+            assert_raises(AttemptErrors::MaintenanceBusy) do
+              normal.with_execution_slots(mapping_ids: ["mapping"], candidate_deployment: deployment, deadline: deadline) { flunk "busy slot entered" }
+            end
             assert_equal commit, contexts.first.fetch(:commit)
             thread = Thread.new do
               started << true

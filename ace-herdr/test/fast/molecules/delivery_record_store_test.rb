@@ -17,6 +17,34 @@ module Ace
           FileUtils.rm_rf(@dir)
         end
 
+        def test_bounded_inventory_and_event_locks_refuse_contention_without_leaks
+          deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + 5
+          DeliveryRecordStore.with_inventory_lock(@dir, exclusive: true, create: true) {}
+          File.write(DeliveryRecordStore.lock_path(@dir, "a"), "")
+          File.write(DeliveryRecordStore.lock_path(@dir, "b"), "")
+          File.open(File.join(@dir, ".inventory.lock"), File::RDWR) do |held|
+            held.flock(File::LOCK_EX)
+            assert_raises(DeliveryRecordStore::LockUnavailable) do
+              DeliveryRecordStore.with_inventory_lock(@dir, exclusive: true, deadline: deadline) { flunk "busy entered" }
+            end
+          end
+          File.open(DeliveryRecordStore.lock_path(@dir, "b"), File::RDWR) do |held|
+            held.flock(File::LOCK_EX)
+            assert_raises(DeliveryRecordStore::LockUnavailable) do
+              DeliveryRecordStore.with_locks(@dir, %w[a b], deadline: deadline) { flunk "busy entered" }
+            end
+            DeliveryRecordStore.with_locks(@dir, ["a"], deadline: deadline) { assert true }
+          end
+          DeliveryRecordStore.with_locks(@dir, %w[a b], deadline: deadline) { assert true }
+          assert_raises(DeliveryRecordStore::LockUnavailable) do
+            DeliveryRecordStore.with_inventory_lock(@dir, exclusive: true, deadline: 0) {}
+          end
+          assert_raises(ArgumentError) do
+            DeliveryRecordStore.with_inventory_lock(@dir, exclusive: true, deadline: false) {}
+          end
+          assert_empty Thread.current[:ace_herdr_delivery_inventory_locks]
+        end
+
         def test_save_and_load_roundtrip
           DeliveryRecordStore.save(@record, @dir)
 

@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Allow maintenance preview to refuse contended slot, authority and retained Inbox exclusions within its original deadline, releasing partially acquired locks.
+
 ### Added
 
 - Export original opaque workspace cleanup configuration and complete authenticated parent resource declarations during held maintenance transactions.

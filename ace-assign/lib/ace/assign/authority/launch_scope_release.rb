@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 require_relative "../molecules/terminal_scope_receipt"
 require "ace/runtime/molecules/execution_boot_baseline"
+require "ace/herdr/molecules/delivery_record_store"
 
 module Ace
   module Assign
@@ -9,7 +10,8 @@ module Ace
         # Source-only maintenance entry. Transport stop/drain/inhibition belongs
         # to the trusted installer; this method supplies the exact same locks
         # and canonical owner query, without a live endpoint or another ledger.
-        def with_execution_slots(mapping_ids:, candidate_deployment:, &block)
+        def with_execution_slots(mapping_ids:, candidate_deployment:, deadline: nil, &block)
+          maintenance_deadline!(deadline) unless deadline.nil?
           if Thread.current[:ace_assign_maintenance_contexts]&.key?(object_id)
             raise AttemptErrors::Conflict, "maintenance inventory cannot be entered recursively"
           end
@@ -49,9 +51,9 @@ module Ace
           enter = lambda do |offset|
             if offset < locks.size
               _id, owner, map = locks.fetch(offset)
-              with_slot(map, deployment: owner) { enter.call(offset + 1) }
+              with_slot(map, deployment: owner, deadline: deadline) { enter.call(offset + 1) }
             else
-              @mutex.synchronize do
+              with_maintenance_mutex(deadline) do
                 active = Thread.current[:ace_assign_maintenance_contexts] ||= {}
                 raise AttemptErrors::Conflict, "maintenance inventory cannot be entered recursively" if active[object_id]
                 snapshots = {}
@@ -77,7 +79,10 @@ module Ace
                 end.freeze
                 active[object_id] = selected.zip(contexts).to_h { |entry, context| [context.fetch(:mapping_id), [entry, context]] }
                 begin
-                  with_maintenance_inbox_inventory(candidate_deployment) { block.call(contexts) }
+                  with_maintenance_inbox_inventory(candidate_deployment, deadline: deadline) do
+                    maintenance_deadline!(deadline) unless deadline.nil?
+                    block.call(contexts)
+                  end
                 ensure
                   active.delete(object_id)
                 end
@@ -233,7 +238,7 @@ module Ace
 
         private
 
-        def with_maintenance_inbox_inventory(candidate)
+        def with_maintenance_inbox_inventory(candidate, deadline: nil)
           unless @deployment_history && @deployment_history.selects?(candidate, selection: :candidate)
             # No history grant is silently synthesized for arbitrary descriptors.
             return yield
@@ -247,9 +252,34 @@ module Ace
           roots.each { |root| verify_maintenance_inbox_root!(root) }
           enter = lambda do |offset|
             return yield if offset == roots.size
-            Ace::Herdr::Organisms::Inbox.with_retained_records(deliveries_dir: roots.fetch(offset)) { enter.call(offset + 1) }
+            Ace::Herdr::Organisms::Inbox.with_retained_records(deliveries_dir: roots.fetch(offset), deadline: deadline) { enter.call(offset + 1) }
           end
           enter.call(0)
+        rescue Ace::Herdr::Molecules::DeliveryRecordStore::LockUnavailable
+          raise AttemptErrors::MaintenanceBusy, "maintenance retained Inbox exclusion is busy"
+        end
+
+        def with_maintenance_mutex(deadline)
+          return @mutex.synchronize { yield } if deadline.nil?
+          maintenance_deadline!(deadline)
+          unless @mutex.try_lock
+            raise AttemptErrors::MaintenanceBusy, "maintenance authority is busy"
+          end
+          begin
+            maintenance_deadline!(deadline)
+            yield
+          ensure
+            @mutex.unlock
+          end
+        end
+
+        def maintenance_deadline!(deadline)
+          unless (deadline.is_a?(Integer) || deadline.is_a?(Float)) && deadline.finite?
+            raise ArgumentError, "maintenance deadline must be finite"
+          end
+          if Process.clock_gettime(Process::CLOCK_MONOTONIC) >= deadline
+            raise AttemptErrors::MaintenanceBusy, "maintenance admission deadline expired"
+          end
         end
 
         def verify_maintenance_inbox_root!(root)

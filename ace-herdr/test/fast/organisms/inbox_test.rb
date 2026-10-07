@@ -201,6 +201,23 @@ module Ace
           end
         end
 
+        def test_bounded_retained_inventory_refuses_busy_event_and_unwinds_inventory
+          enqueue
+          deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + 5
+          path = Molecules::DeliveryRecordStore.lock_path(@dir, @event)
+          File.open(path, File::RDWR | File::CREAT, 0o600) do |held|
+            held.flock(File::LOCK_EX)
+            assert_raises(Molecules::DeliveryRecordStore::LockUnavailable) do
+              Inbox.with_retained_records(deliveries_dir: @dir, deadline: deadline) { flunk "busy event entered" }
+            end
+          end
+          Inbox.with_retained_records(deliveries_dir: @dir, deadline: deadline) do |records|
+            assert_equal [@event], records.map(&:event_id)
+          end
+          assert_empty Thread.current[:ace_herdr_delivery_inventory_locks]
+          assert_empty Thread.current[:ace_herdr_retained_inventory_locks]
+        end
+
         def test_empty_retained_inventory_holds_coordination_without_creating_missing_context
           Inbox.with_retained_records(deliveries_dir: @dir) do |records|
             assert_empty records
