@@ -39,9 +39,3 @@ Expected: Stop delegates to the canonical protected owner. `stopped` requires it
 ## Verification ownership
 
 These are source acceptance scenarios with controlled external boundaries. The actual installed runtime, OS-user separation, Captain conversation and complete delivery run are tracked once in lab-config:gad.2 `qkb-delivery / WORKFLOW`; source fixtures do not check that installed row.
-
-## Scenario 5: Retain the original protected launcher
-
-Starting scoped work runs through the configured launcher-role overseer account. The overseer reads one bounded `launch_ready` line, validates the mapping/assignment/attempt against the original accepted Assign binding, and retains ownership of that foreground child. The Captain can continue the conversation while work runs.
-
-Missing or invalid readiness remains a visible launch/recovery problem, never a successful start. A control reconnect uses the same original child and does not resend prior prompts. A replacement process cannot attach as that launcher. Child exit or cancellation preserves uncertain work until the canonical owner confirms the relevant input and execution scopes are settled; neither EOF nor worker-unit termination permits pruning. Controlled source tests exercise these cases; actual service accounts/startup remain in gad.2.
