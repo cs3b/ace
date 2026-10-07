@@ -79,7 +79,7 @@ module Ace
       end
 
       def test_actual_job_refuses_typed_key_collisions_and_deep_nesting
-        ["true: first\nTRUE: second\n", "1: first\n01: second\n", "!!int 1: value\n", "steps: " + "[" * 100 + "x" + "]" * 100 + "\n"].each do |job|
+        ["true: first\nTRUE: second\n", "1: first\n01: second\n", "!!int 1: value\n", "---\nsteps: []\n---\nsteps: changed\n", "value: .nan\n", "steps: " + "[" * 100 + "x" + "]" * 100 + "\n"].each do |job|
           files = fixture; replace_captured(files, "job.yaml", job)
           error = assert_raises(ArgumentError) { Authority::PreparedWork.new(files: files) }
           assert_match "prepared_input_invalid", error.message
