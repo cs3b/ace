@@ -10,3 +10,5 @@ Executed source checks on the unchanged implementation before the value-free err
 These are selected controlled source checks using ordinary temporary Git; no installed/native probes or full-suite claim. `git diff --check` passed.
 
 Root independently reviewed the exact shared verifier refactor and definition selection, and approved this scoped checkpoint based on the source and executed receipts. Error wording was then made value-free as requested, without runtime behavior changes. qk0.0 remains in progress; its inventory/actual coordinator consumer is still being implemented.
+
+Root verified frozen `9ea0389e5` and integrated it as `7e2952f31`; no source conflicts. Executed `bin/ace-test ace-assign feat test/feat/authority/launch_lifecycle_test.rb:1153 --timeout 180` on the integrated revision: **1 test / 7 assertions**, zero failures/errors, 2.11s, receipt `71250b58-35aa-4c04-abb9-d2e66c0fc855`. The actual accepted-definition replacement regression confirms the older selected definition is retained while the current definition advances. No obsolete `verify_prompt_prefix!` callers remain in ace-assign.
