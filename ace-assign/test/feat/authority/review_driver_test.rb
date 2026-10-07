@@ -65,6 +65,51 @@ module Ace
         end
       end
 
+      def test_actual_original_control_loop_routes_review_without_native_or_prompt_body
+        fixture do
+          client = @driver.instance_variable_get(:@client)
+          original_call = client.method(:call)
+          driver = @driver
+          client.define_singleton_method(:call) do |operation, params, **options|
+            reply = original_call.call(operation, params, **options)
+            driver.request_control_cancel if operation == "assign_review"
+            reply
+          end
+          owner = Thread.new { @driver.send(:original_prompt_loop, @left, Object.new, @state, @ready) }
+          WIRE.write(@right, @frame, deadline: WIRE.deadline(2))
+          reply = WIRE.read(@right, deadline: WIRE.deadline(2))
+          assert_equal "launch_review_assigned", reply.fetch("type")
+          assert_equal @accepted.fetch("assignment_event_id"), reply.fetch("assignment_event_id")
+          assert owner.join(3)
+          assert_nil owner.value
+          assert_equal %w[launch_review_intent assign_review], @calls.map(&:first)
+        ensure
+          @driver.request_control_cancel
+          @right.close unless @right.closed?
+          owner&.join(3)
+        end
+      end
+
+      def test_inhibited_original_control_loop_refuses_review_before_authority_call
+        fixture do
+          @driver.instance_variable_set(:@input_inhibited, true)
+          owner = Thread.new do
+            @driver.send(:original_prompt_loop, @left, Object.new, @state, @ready)
+          rescue AttemptErrors::EvidenceUnavailable => error
+            error
+          end
+          WIRE.write(@right, @frame, deadline: WIRE.deadline(2))
+          assert owner.join(3)
+          assert_instance_of AttemptErrors::EvidenceUnavailable, owner.value
+          assert_empty @calls
+          assert_nil IO.select([@right], nil, nil, 0)
+        ensure
+          @driver.request_control_cancel
+          @right.close unless @right.closed?
+          owner&.join(3)
+        end
+      end
+
       def test_foreign_frame_or_canonical_intent_refuses_before_assignment
         fixture do
           @frame["attempt_id"] = "foreign"
@@ -75,6 +120,21 @@ module Ace
           assert_raises(AttemptErrors::EvidenceUnavailable) { invoke }
           assert_equal ["launch_review_intent"], @calls.map(&:first)
           assert_nil IO.select([@right], nil, nil, 0)
+        end
+      end
+
+      def test_accepted_reply_preserves_integer_types_including_nested_process_birth
+        fixture do
+          original = Marshal.load(Marshal.dump(@accepted))
+          [->(value) { value["candidate_generation"] = 2.0 },
+            ->(value) { value["reviewer_uid"] = 13003.0 },
+            ->(value) { value["reviewer_process_binding"]["pid"] = 123.0 },
+            ->(value) { value["reviewer_process_binding"]["groups"] = [13003.0] }].each do |mutate|
+            @accepted = Marshal.load(Marshal.dump(original))
+            mutate.call(@accepted)
+            assert_raises(AttemptErrors::EvidenceUnavailable) { invoke }
+            assert_nil IO.select([@right], nil, nil, 0)
+          end
         end
       end
 

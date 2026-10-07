@@ -257,11 +257,15 @@ module Ace
           accepted = @client.call("assign_review", params, mutation_id: "review-delegate.#{frame.fetch('request_event_id')}",
             timeout: review_exchange_remaining!(deadline)).data
           unless accepted.is_a?(Hash) &&
+              %w[candidate_generation reviewer_uid].all? { |key| accepted[key].is_a?(Integer) } &&
               %w[head candidate_generation reviewer_uid reviewer_process_binding].all? { |key| accepted[key] == params.fetch(key) } &&
               accepted["generation"].is_a?(Integer) && accepted["generation"] == params.fetch("expected_generation") + 1 &&
               accepted["review_id"].is_a?(String) && accepted["review_id"].match?(/\A[0-9a-f]{32}\z/)
             raise AttemptErrors::EvidenceUnavailable, "Original review assignment reply differs"
           end
+          identity = accepted.fetch("reviewer_process_binding")
+          boot = params.fetch("reviewer_process_binding").fetch("started_at").split(":", -1)[1]
+          Molecules::ExecutionScopeLineage.validate_process_identity!(identity, boot_id: boot)
           result = frame.slice("mutation_id", "request_event_id", "original_binding_digest").merge(
             accepted.slice("assignment_event_id", "journal_commit"), "version" => 1, "type" => "launch_review_assigned")
           LaunchControlChannel.validate_review_assigned!(result, frame)
