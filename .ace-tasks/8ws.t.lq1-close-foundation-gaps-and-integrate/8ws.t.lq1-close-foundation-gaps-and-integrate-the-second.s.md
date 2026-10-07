@@ -23,25 +23,34 @@ This ACE integration tracker owns source sequencing and release evidence. **lab-
 
 Captain approved this ownership split on 2026-10-05. Earlier chronological checkpoints and their original claims are preserved in history/before-centralized-lab-acceptance-2026-10-05.md. The source and acceptance receipts linked there remain unchanged; the checklist below is the current dispatch view. No installation success is inferred from task completion.
 
-## Current handoff — paused at Captain request, 2026-10-07
+## Current handoff — resumed at Captain request, 2026-10-07
 
-Implementation remains paused. This inventory is a source-state snapshot, not
-permission to resume or a replacement for the remaining program checklist.
-ACE main/origin/fg were verified at `36199d599` before the process-only correction.
+Captain explicitly resumed implementation and delegated work after the process
+correction `e0f1e9170`. The immediate acceptance target is the maintained public
+work-on → authority → original-child path and cleanup recovery, alongside the
+original-entry → Installer composition. Review and integration of retained
+candidates precede opening further implementation scope. Installed acceptance
+remains solely in gad.2; no native or installed probes are authorized here.
 
 | Scope / owner | Current location and evidence | Remaining action before acceptance |
 |---|---|---|
 | qk0.1.1 original launcher and roles / ace-overseer | On main: original-input/readiness repairs through `02353637f`; three canonical role workflows `36199d599`, independent review and packaging 2 tests / 20 assertions. | Public composition and domain charter adoption remain open. |
-| qk0.1.1 public work-on / ace-overseer | Worktree commit `35ab4a44d`; controlled checks 40 tests / 210 assertions; not on main. | Independent review, integration and actual maintained producer → authority → original-child composition; remaining steering and legacy removal. |
+| qk0.1.1 public work-on / ace-overseer | Independent bounded source APPROVE for `35ab4a44d`; integrated as `a67cf0bb2`. The integrated seed-14369 timeout (`9ff05b7c`) led to measured repeated immutable bundle admissions. Independently reviewed repair `38d65a425` is integrated as `f89b3d7d1`; same-seed integrated file now passes 9 tests / 58 assertions in 17.78 seconds (`65fcbad2`), unchanged 60-second limit. | Actual maintained producer → authority → original-child composition, remaining steering and legacy removal; its real registration deadline failure is under diagnosis. |
 | qk0.2 listener / ace-lab | Author `793738c97` + `faaccba00`; copied to integration branch as `5449d0327` + `bdaebf005`, not main. Exact seed 41237 passed 6 tests / 99 assertions. Earlier intermittent failures remain unresolved in its receipt. | Final integration verdict and main synchronization; this does not complete physical cleanup. |
 | qk0.2 inspection recovery / ace-assign + ace-lab | Uncommitted source in cleanup worktree; findings retained in `b80201115`. Canonical imported pair verified, public recovery status exceeded its 5-second default. | Review proposed consumer budget against existing contract, complete diagnostics and source acceptance. No 30-second change is approved or implemented. |
-| Staged unit validation / ace-runtime | Four-path uncommitted change in worker-independent-review worktree; focused checks 1/7 and 1/3. | Independent review and integration; preserve mandatory installed socket verification. |
+| Staged unit validation / ace-runtime | Independent APPROVE; author `0a867d7b6`, cherry-picked locally as `3532db238`. Integrated focused checks 2 tests / 10 assertions passed (`14caa7d5`). | Synchronize remotes with reviewed integration; domain composer acceptance remains open. Mandatory installed socket verification is preserved. |
 | qk0.3 + gad.b composer / lab-config | Committed bootstrap `fa7ed56`; composer remains uncommitted. Metadata test passes; existing unrelated WIP is preserved. | Materialized unit validation, first-slot publication, maintained original-entry → Installer test and partial-publication/retry checks; same Installer physical cleanup producer. |
 
-- [ ] On explicit resume, resolve the existing review/integration queue before new implementation scope.
+- [ ] Resolve the existing review/integration queue before new implementation scope; resumed with independent review, cleanup recovery and domain composition owners.
 - [ ] Close the actual source producer/consumer path; partial receipts above do not close parent tasks.
 - [ ] Continue qkb.1 → R2 → R3 → qkc/vs3 source deliverables, then prepare one coherent release candidate.
 - [ ] Captain publishes with OTP; actual installation/system acceptance remains solely lab-config:gad.2.
+
+The resumed bounded integration received independent source APPROVE from
+`audit_runtime_delivery_status` for public work-on and staged-unit validation.
+Root separately reviewed the exact admission-proof repair: fresh held bytes and
+definition checks remain mandatory, and only the last successful exact proof is
+reused within one owner. These approvals and focused tests do not close qk0.
 
 ## Delivered source and foundation
 
