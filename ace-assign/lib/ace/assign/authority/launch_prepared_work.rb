@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+require_relative "../atoms/evidence_digest"
 
 module Ace
   module Assign
@@ -6,6 +7,18 @@ module Ace
       class LaunchLifecycle
         # One authenticated immutable prefix; never the latest registration.
         def original_prepared_registration!(journal:, params:, commit:)
+          original_prepared_registration_for_phase!(journal: journal, params: params, commit: commit, phase: :issued) do |map, state|
+            yield(map, state) if block_given?
+          end
+        end
+
+        private
+
+        def original_bound_prepared_registration!(journal:, params:, commit:)
+          original_prepared_registration_for_phase!(journal: journal, params: params, commit: commit, phase: :bound)
+        end
+
+        def original_prepared_registration_for_phase!(journal:, params:, commit:, phase:)
           inventory = journal.canonical_event_inventory!(commit: commit)
           raise AttemptErrors::EvidenceUnavailable, "prepared canonical snapshot differs" unless inventory.fetch("commit") == commit
           assignment = params.fetch("assignment_id")
@@ -15,9 +28,14 @@ module Ace
           reserves = chain.select { |event| event["type"] == "authority_mutation" && event.dig("payload", "operation") == "reserve_attempt" }
           releases = chain.select { |event| event["type"] == "authority_mutation" && event.dig("payload", "operation") == "release_launch" }
           provisioning = chain.select { |event| event["type"] == "scope_provisioning" }
-          unless reserves.one? && releases.one? && provisioning.one? && releases.first.dig("payload", "data", "phase") == "issued" &&
+          admitted_phase = if phase == :issued
+            releases.one? && releases.first.dig("payload", "data", "phase") == "issued"
+          else
+            releases.empty? && state.fetch("phase") == "bound"
+          end
+          unless reserves.one? && admitted_phase && provisioning.one? &&
               !terminal_events?(chain) && !chain.any? { |event| %w[scope_sealed input_inhibited attempt_stopped].include?(event["type"]) }
-            raise AttemptErrors::EvidenceUnavailable, "original prepared attempt is not issued and open"
+            raise AttemptErrors::EvidenceUnavailable, "original prepared attempt is not #{phase} and open"
           end
           identity = provisioning.first.fetch("payload")
           sha = identity.fetch("descriptor_sha256")
@@ -63,11 +81,37 @@ module Ace
               Digest::SHA256.hexdigest(bytes) == registration.fetch("definition_digest") && JSON.parse(bytes).fetch("prepared_work") == prepared
             raise AttemptErrors::EvidenceUnavailable, "original prepared definition differs"
           end
-          immutable_maintenance_projection(registration: registration, registration_commit: registration_commit, state: state, map: map, events: chain,
+          projection = immutable_maintenance_projection(registration: registration, registration_commit: registration_commit, state: state, map: map, events: chain,
             original_worker_scratch_root: original_project.fetch("peer_credentials").fetch(map.fetch("worker_uid").to_s).fetch("scratch_root"),
             original_binding_digest: original.fetch("binding_digest"), commit: commit)
+          pin = compact_prepared_input(projection)
+          if phase == :issued
+            unless Atoms::EvidenceDigest.digest(releases.first.dig("payload", "data", "prepared_input")) == Atoms::EvidenceDigest.digest(pin)
+              raise AttemptErrors::EvidenceUnavailable, "accepted prepared release differs"
+            end
+          else
+            bundle = journal.bounded_blob(registration.fetch("prepared_bundle_ref"), commit: registration_commit, max_bytes: CandidateTransfer::MAX_BYTES)
+            unless bundle.is_a?(String) && bundle.bytesize == registration.fetch("prepared_bundle_bytes") &&
+                bundle.bytesize.between?(1, CandidateTransfer::MAX_BYTES) && Digest::SHA256.hexdigest(bundle) == registration.fetch("prepared_bundle_sha256")
+              raise AttemptErrors::EvidenceUnavailable, "original prepared bundle differs"
+            end
+          end
+          projection
         rescue KeyError, TypeError, NoMethodError, JSON::ParserError
           raise AttemptErrors::EvidenceUnavailable, "original prepared registration is unavailable"
+        end
+
+        def compact_prepared_input(projection)
+          registration = projection.fetch(:registration)
+          immutable_maintenance_projection(
+            "registration_generation" => registration.fetch("generation"),
+            "registration_commit" => projection.fetch(:registration_commit),
+            "definition_digest" => registration.fetch("definition_digest"),
+            "original_binding_digest" => projection.fetch(:original_binding_digest),
+            "prepared_work" => registration.fetch("prepared_work"),
+            "bundle_ref" => registration.fetch("prepared_bundle_ref"),
+            "bundle_bytes" => registration.fetch("prepared_bundle_bytes"),
+            "bundle_sha256" => registration.fetch("prepared_bundle_sha256"))
         end
       end
     end

@@ -75,6 +75,7 @@ require_relative "cli/commands/authority/launch"
 require_relative "cli/commands/authority/status"
 require_relative "cli/commands/authority/terminate"
 require_relative "cli/commands/authority/worker"
+require_relative "cli/commands/authority/task_context"
 require_relative "cli/commands/attempt/base"
 require_relative "cli/commands/attempt/start"
 require_relative "cli/commands/attempt/status"
@@ -97,6 +98,8 @@ module Ace
         ["authority launch", "Launch one mapped native gated worker"],
         ["authority status", "Inspect protected launch ownership"],
         ["authority terminate", "Terminate the original native gated child"],
+        ["authority worker", "Consume original authenticated prepared work"],
+        ["authority task-context", "Read captured original task context through the fixed entry"],
         ["delivery", "Execute or reconcile attempt-bound forge delivery"],
         ["status", "Show assignment status"],
         ["step", "Show step instructions"],
@@ -166,6 +169,7 @@ register "authority launch", wrap_command(Commands::Authority::Launch)
 register "authority status", wrap_command(Commands::Authority::Status)
 register "authority terminate", wrap_command(Commands::Authority::Terminate)
 register "authority worker", wrap_command(Commands::Authority::Worker)
+register "authority task-context", wrap_command(Commands::Authority::TaskContext)
       register "create", wrap_command(Commands::Create)
       register "delivery", wrap_command(Commands::Delivery)
       register "status", wrap_command(Commands::Status)

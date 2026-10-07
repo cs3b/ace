@@ -55,11 +55,31 @@ mandatory; an empty capability set alone does not stop same-UID injection.
 
 The bootstrap sets non-dumpable before connecting, requires enforced Yama
 `ptrace_scope=2`, requires empty Inh/Prm/Eff/Bnd/Amb capability sets and NoNewPrivs=1, verifies
-worker IDs/groups and exact pinned server birth/parent, authenticates authority
+worker IDs/groups and its retained actual kernel parent birth, authenticates authority
 SO_PEERCRED and protected socket ancestry, and waits at most 30 seconds on one
 stream. It never reconnects or executes after pre-release EOF, malformed input
 or timeout. A committed release whose response is lost remains potentially
 executed; public inspection must retain ownership rather than resend release.
+
+The gate accepts only the maintained `ace.assign.authorities/v2` mapping. It
+captures its actual parent PID and kernel boot/start-tick birth before reading
+the map, checks that same birth before and after parent credentials, and repeats
+the check before authority admission and immediately before exec. The canonical
+`gate_ready` authority owner associates the actual gate peer and its parent with
+the original recorded child/server; the map supplies no `server_identity`.
+Changed parent birth, reparenting, inaccessible credentials or changed policy
+refuses. The fixed payload is exactly `[ABSOLUTE_ACCEPTED_ACE_ASSIGN, "authority",
+"worker"]`.
+
+Release is one compact JSON record containing the original ticket/assignment/
+attempt/generation/commit plus `prepared_input`. That closed object pins the
+original registration generation/commit, definition and original binding digest,
+prepared-work reference and exact journal bundle reference/length/SHA256. The
+authority verifies the original bundle before durable issue; subsequent prepared
+fetch authenticates the accepted release pin before returning body bytes. The
+gate validates the closed fields, digests and unchanged bounds before exec. It
+does not receive inline work or propagate an input FD to providers. The worker
+uses the existing authenticated original prepared fetch after release.
 
 An ordinary Docker kernel with Yama=0 can verify compilation and fail-closed
 policy rejection. It cannot demonstrate protected launch acceptance. A real
