@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- Return the protected task-context callback result only after unchanged artifact verification, preserving Bundle responses and raw context text while refusing post-callback mutation.
+
 - Decode systemd InvocationID from its actual typed 16-byte D-Bus array, retaining canonical hexadecimal observations. Strictly verify the fixed manager pidfd-to-unit response and explicitly inherit only the held lifetime descriptor for that method.
 
 - Preserve Ruby already-loaded builtin require no-ops only for the allowlisted startup features verified at first guard activation; later activation cannot grow that authority.

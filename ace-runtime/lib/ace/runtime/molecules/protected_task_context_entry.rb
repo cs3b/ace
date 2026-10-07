@@ -42,8 +42,9 @@ module Ace
             refuse!("discovery schema") unless projection.fetch("schema") == SCHEMA
             pin = pin!(projection.fetch("task_context_entry"))
             held.verify_unchanged!
-            yield pin
+            result = yield pin
             held.verify_unchanged!
+            result
           ensure
             @held = nil
           end
@@ -79,8 +80,9 @@ module Ace
             stat = interpreter.stat
             refuse!("selected interpreter is not executable") unless stat.file? && stat.executable? && (stat.mode & 0o6000).zero?
             @held.verify_unchanged!
-            yield Entry.new(pin: pin, manifest: immutable(manifest), body: body, interpreter: interpreter).freeze
+            result = yield Entry.new(pin: pin, manifest: immutable(manifest), body: body, interpreter: interpreter).freeze
             @held.verify_unchanged!
+            result
           end
         rescue KeyError, TypeError, NoMethodError, ArgumentError, IOError, SystemCallError, EncodingError
           refuse!("selected protected entry is unavailable")

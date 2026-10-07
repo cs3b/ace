@@ -3,6 +3,7 @@ require_relative "../test_helper"
 require "ace/bundle/molecules/protected_task_context"
 require "tmpdir"
 require "fcntl"
+require "fileutils"
 
 class ProtectedTaskContextTest < AceTestCase
   Bridge = Ace::Bundle::Molecules::ProtectedTaskContext
@@ -77,6 +78,71 @@ class ProtectedTaskContextTest < AceTestCase
       assert_equal "task-context", calls.last.first[6]
       assert_equal ["--task", "task"], calls.last.first.last(2)
       assert calls.flat_map { |_, options| options.fetch(:descriptor_mapping).values }.all?(&:closed?)
+    end
+  end
+
+  def test_actual_runtime_entry_returns_bundle_text_only_after_unchanged_verification
+    artifact_root = File.expand_path(".ace-local/protected-entry-fixtures", Dir.pwd)
+    FileUtils.mkdir_p(artifact_root)
+    [false, true].each do |mutate|
+      Dir.mktmpdir("actual-bundle-entry-", artifact_root) do |root|
+        artifact = lambda do |name, bytes, mode = 0o644|
+          path = File.join(root, name)
+          File.binwrite(path, bytes)
+          File.chmod(mode, path)
+          {"path" => path, "bytes" => bytes.bytesize, "sha256" => Digest::SHA256.hexdigest(bytes)}
+        end
+        wrapper = artifact.call("wrapper.py", "# actual held selected body\n")
+        interpreter = artifact.call("python", "controlled never executed interpreter", 0o755)
+        bootstrap = %w[original_source owner preparation].to_h { |key| [key, artifact.call("#{key}.json", "held selected metadata")] }
+        bootstrap["startup_entries"] = {"ace-assign" => artifact.call("assign.rb", "held selected assign")}
+        manifest = {"schema" => EntryOwner::MANIFEST_SCHEMA, "role" => EntryOwner::ROLE,
+          "wrapper" => wrapper, "interpreter" => interpreter, "bootstrap" => bootstrap}
+        selected = {"manifest" => artifact.call("manifest.json", JSON.generate(manifest)), "wrapper" => wrapper}
+        projection = artifact.call("projection.json", JSON.generate("schema" => EntryOwner::SCHEMA, "task_context_entry" => selected)).fetch("path")
+        protection = Object.new
+        protection.define_singleton_method(:root_path!) { |_| }
+        protection.define_singleton_method(:verify!) do |_, handle, directory:|
+          raise "controlled artifact kind differs" unless directory ? handle.stat.directory? : handle.stat.file?
+        end
+        artifacts = Class.new do
+          define_method(:initialize) do
+            @held = Ace::Runtime::Molecules::ProtectedArtifactSet.new(protection: protection,
+              file_limit: EntryOwner::FILE_LIMIT, total_limit: EntryOwner::TOTAL_LIMIT, count_limit: EntryOwner::COUNT_LIMIT)
+          end
+          define_method(:with) { |&block| @held.with { block.call(self) } }
+          define_method(:read_path!) { |path, **options| raise "unexpected projection" unless path == EntryOwner::PATH; @held.read_path!(projection, **options) }
+          define_method(:read!) { |reference| @held.read!(reference) }
+          define_method(:verify_unchanged!) { @held.verify_unchanged! }
+          define_method(:with_readonly_handle!) { |reference, &block| @held.with_readonly_handle!(reference, &block) }
+        end
+        owner = EntryOwner.new(artifacts_factory: -> { artifacts.new }, stat: ->(path) { raise "unexpected presence" unless path == EntryOwner::PATH; File.lstat(projection) })
+        association = {"mapping_id" => "mapping", "assignment_id" => "assignment", "attempt_id" => "attempt", "scope" => "010", "definition_digest" => "a" * 64, "selection_sha256" => "b" * 64}
+        text = "Exact captured text.\n"
+        frames = [{"schema" => "ace.assign.task-context-principal/v1", "uid" => Process.uid, "protected_worker" => true},
+          association.merge("schema" => "ace.assign.task-context-selection/v1", "task_context_entry" => selected),
+          association.merge("schema" => "ace.assign.prepared-task-context/v1", "task_id" => "task", "text" => text)]
+        handles = []
+        test = self
+        runner = Object.new
+        runner.define_singleton_method(:call) do |_, **options|
+          test.assert_equal "# actual held selected body\n", options.fetch(:stdin_data)
+          test.assert_equal selected.fetch("manifest"), JSON.parse(options.fetch(:descriptor_mapping).fetch(5).read)
+          handles.concat(options.fetch(:descriptor_mapping).values)
+          frame = frames.shift
+          File.binwrite(wrapper.fetch("path"), "changed after original response") if mutate && frames.empty?
+          Ace::Herdr::Molecules::BoundedProcess::Result.new(JSON.generate(frame) + "\n", "", Status.new(true), false)
+        end
+        bridge = Bridge.new(entry_owner: owner, runner: runner, env: {})
+        options = {mapping: "mapping", assignment: "assignment@010", attempt: "attempt"}
+        if mutate
+          assert_raises(Ace::Bundle::Error) { bridge.load("task://task", options: options) }
+        else
+          assert_equal text, bridge.load("task://task", options: options)
+        end
+        assert_empty frames
+        assert handles.all?(&:closed?)
+      end
     end
   end
 

@@ -102,6 +102,19 @@ class ProtectedTaskContextEntryTest < AceRuntimeTestCase
     end
   end
 
+  def test_verified_callbacks_return_the_original_result_including_nil_and_false
+    fixture do |owner, _, _, _|
+      [Object.new, nil, false].each do |expected|
+        actual = owner.with do |pin|
+          entry_result = owner.with_entry(pin) { expected }
+          assert_same expected, entry_result
+          entry_result
+        end
+        assert_same expected, actual
+      end
+    end
+  end
+
   def test_duplicate_projection_and_tampered_interpreter_refuse_without_handoff
     fixture do |owner, _, _, projection|
       bytes = File.binread(projection)
