@@ -1,6 +1,6 @@
 ---
 id: 8wr.t.qk0.0
-status: draft
+status: pending
 priority: high
 created_at: "2026-10-07 05:30:19"
 estimate: medium
@@ -10,7 +10,7 @@ bundle:
   presets: [project]
   files: [.ace-tasks/8wr.t.qk0-coordinate-responsive-overseer-roles-without/protected-inventory-contract.md, .ace-tasks/8wr.t.qk0-coordinate-responsive-overseer-roles-without/coordinator-source-contract.md, ace-assign/lib/ace/assign/authority/deployment.rb, ace-assign/lib/ace/assign/authority/launch_lifecycle.rb, ace-assign/lib/ace/assign/authority/server.rb, ace-assign/lib/ace/assign/authority/client.rb, ace-assign/lib/ace/assign/molecules/evidence_journal.rb, ace-overseer/lib/ace/overseer/organisms/status_collector.rb, ace-lab/lib/ace/lab/atoms/public_projection.rb]
   commands: []
-needs_review: true
+needs_review: false
 parent: 8wr.t.qk0
 ---
 
@@ -47,3 +47,5 @@ Producer ace-assign; consumer ace-overseer; existing ace-lab visibility/protecte
 ### Usage and Review Evidence
 
 `ux/usage.md`; sibling inventory contract's earlier flat-row approval remains scoped. Root independently approved the proposed lifecycle-field delta on 2026-10-07; the exact child/consumer composition still needs readiness verdict. Draft and needs_review stay unchanged until that verdict.
+
+Independent readiness review, root (2026-10-07): **APPROVE qk0.0 only** at specification checkpoint `946e6df7eb2389452d8d9ab52d8e1c044977f872`, after reading this complete child, usage and exact inventory generation/lifecycle contract. One actual authority→overseer status consumer, fixed pinned owner, frame/continuation/restart/refusal coverage and parent→child ready join are complete. Child promotion is authorized; parent qk0 and siblings remain draft. Executed tests and independent source review still gate implementation delivery; no source/installed result is claimed.
