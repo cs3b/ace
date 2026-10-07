@@ -13,3 +13,5 @@ Disconfirming check: if the targeted positive still returns uncertain with this 
 ## Fix verification
 
 Applied only the exact fixture-handler runner seam. Targeted two original failures: bin/ace-test ace-lab ace-lab/test/organisms/protected_service_receiver_test.rb:128 ace-lab/test/organisms/protected_service_receiver_test.rb:147 --timeout 90, 2 tests/12 assertions PASS1.15s, receipt8a7d7028-2aa4-43ce-aa72-72c587ee897e. Inspected full file: bin/ace-test ace-lab ace-lab/test/organisms/protected_service_receiver_test.rb --timeout 90, 10 tests/46 assertions PASS3.35s, receiptc0de9db3-bdfe-4064-8840-12d33b7fd272. Both sessions terminal0. Earlier two baseline failures are now explained and resolved for orchestration coverage, not reclassified as native cleanup success.
+
+Independent wave_n0n scoped APPROVE exact6a0b55b3f970a17658cff6b2335f475f855deb92: only exact configured fixture argv receives the boundary override, production cleanup request remains asserted, actual candidate/shell/evidence retained. No native guarantee relaxed. Root doctor:790tasks/32folders, zero errors, unchanged464historical warnings; diff check passed.
