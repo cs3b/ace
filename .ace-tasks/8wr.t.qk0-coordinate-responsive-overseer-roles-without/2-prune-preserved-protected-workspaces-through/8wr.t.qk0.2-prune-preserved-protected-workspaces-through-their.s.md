@@ -1,6 +1,6 @@
 ---
 id: 8wr.t.qk0.2
-status: draft
+status: pending
 priority: high
 created_at: "2026-10-07 05:30:26"
 estimate: large
@@ -10,15 +10,15 @@ bundle:
   presets: [project]
   files: [.ace-tasks/8wr.t.qk0-coordinate-responsive-overseer-roles-without/coordinator-source-contract.md, ace-overseer/lib/ace/overseer/organisms/prune_orchestrator.rb, ace-overseer/lib/ace/overseer/molecules/prune_safety_checker.rb, ace-overseer/lib/ace/overseer/molecules/git_preservation_checker.rb, ace-assign/lib/ace/assign/molecules/lifecycle_exclusion.rb, ace-assign/lib/ace/assign/authority/launch_scope_release.rb, ace-assign/lib/ace/assign/authority/deployment_history.rb, ace-lab/lib/ace/lab/organisms/authority_composition.rb]
   commands: []
-needs_review: true
+needs_review: false
 parent: 8wr.t.qk0
 ---
 
 # Prune preserved protected workspaces through their owner
 
-## Open source-contract review findings
+## Reviewed source contract
 
-Independent review of candidate `969f793ef` requires revision before readiness: define requester isolation against the actual complete installer inventory/global inhibition; reconcile the synchronous receiver with operation deadlines; identify the owner clearing inhibition after canonical completion; and close nested input/receipt bounds plus Git capture/removal ordering. Evidence and exact findings are in `readiness-review.md`. These are source design joins under active author investigation, not requests for a new Captain policy decision. Status remains draft with needs_review true.
+Independent root review accepts the final contract through `10ccd6e74`: completed publication and disjoint requester, fixed original-owner invocation, bounded receiver/result transport, private preservation with immutable canonical observation, constrained Git execution and gated internal single force are explicit. Historical findings and their resolutions remain in `readiness-review.md`. This is specification readiness only; all implementation success criteria remain open.
 
 ## Behavioral Specification
 
@@ -38,7 +38,7 @@ After accepted work is preserved and its original execution is terminal/released
 
 Protected preview uses `ace-overseer prune --project PROJECT --agent MAPPING --assignment ID --attempt ATTEMPT --request FILE --dry-run`. FILE is the closed source-owned request described in `protected-prune-source-candidate.md`, including the separate maintenance attempt, exact completed successor publication and preservation destinations. CLI selectors must equal the target document. Apply uses the same selectors/FILE plus `--yes --mutation ID --expected-generation GENERATION`; these identities belong to the separate maintenance service request. `--status --request FILE --mutation ID` reads the exact original service outcome without removal. Unknown/ambiguous input, changed preview and partial publication refuse; no protected failure falls back to local prune. Existing no-project local syntax remains separate.
 
-The fixed `prune-preserved-workspace` host-maintenance operation is proposed through existing structured service request/status/receiver transport. Its existing Lab installer owner verifies completed successor publication before reacquiring exact maintenance exclusions and removing only the obsolete original workspace. No physical-prune executor is delivered yet. The exact proposed composition and recovery receipt are retained in `protected-prune-source-candidate.md` for independent review before this child leaves draft.
+The fixed `prune-preserved-workspace` host-maintenance operation is specified through existing structured service request/status/receiver transport. Its existing Lab installer owner verifies completed successor publication before reacquiring exact maintenance exclusions and removing only the obsolete original workspace. No physical-prune executor is delivered yet. The exact proposed composition and recovery receipt are retained in `protected-prune-source-candidate.md` as the reviewed implementation contract.
 
 ### Success Criteria and Verification Plan
 
@@ -49,10 +49,10 @@ The fixed `prune-preserved-workspace` host-maintenance operation is proposed thr
 
 ### Scope, Readiness and Ownership
 
-This task is the umbrella for real draft children: qk0.2.0 delivers authenticated fixed original-Installer invocation/receiver lifetime/result and recovery; qk0.2.1 consumes it to preserve and physically remove obsolete linked workspaces. Each has explicit source context, usage, failure cases and executed controlled verification obligations. No child or parent is promoted by this decomposition. Exact B contract is now cohesive in protected-prune-source-candidate.md; prior findings remain in readiness-review.md.
+This task is the umbrella for real children: qk0.2.0 delivers authenticated fixed original-Installer invocation/receiver lifetime/result and recovery; qk0.2.1 consumes it to preserve and physically remove obsolete linked workspaces. Each has explicit source context, usage, failure cases and executed controlled verification obligations. Readiness is distinct from delivery; neither child has delivered this behavior yet. Exact B contract is now cohesive in protected-prune-source-candidate.md; prior findings remain in readiness-review.md.
 
-Generic prune consumer ace-overseer, canonical protected eligibility/lifecycle ace-assign, executed Git preservation/removal existing Git/Overseer owner; actual service principal/domain operation provisioning gad.b. Advisory size large. There is no existing protected workspace-cleanup producer in installer: its slice/devpts retirement is not file deletion. This draft intentionally records the actual remaining goal and owner decision. qk0 umbrella remains incomplete until this child has an exact reviewed viable interface and delivered controlled end-to-end source outcome.
+Generic prune consumer ace-overseer, canonical protected eligibility/lifecycle ace-assign, executed Git preservation/removal existing Git/Overseer owner; actual service principal/domain operation provisioning gad.b. Advisory size large. There is no existing protected workspace-cleanup producer in installer: its slice/devpts retirement is not file deletion. This specification records the actual remaining goal and owner decision. qk0 umbrella remains incomplete until this child has an exact reviewed viable interface and delivered controlled end-to-end source outcome.
 
 ### Usage
 
-`ux/usage.md`. Spec-only; no permission/taskstatus/source promotion is implied by this decomposition.
+`ux/usage.md`. Specification readiness does not grant runtime privilege or establish source delivery.

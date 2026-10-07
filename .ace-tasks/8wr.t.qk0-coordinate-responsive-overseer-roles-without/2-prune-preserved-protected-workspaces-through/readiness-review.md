@@ -1,5 +1,9 @@
 # Protected prune readiness review
 
+## Current independent verdict — 10ccd6e74
+
+Root approves specification readiness for both children and their parent after reviewing the complete contract, child success criteria, bounded transport, actual ownership constraints and ordinary Git semantics. Final wording aligns children with bounded root-result import and private archive inspection; no authority status path pretends to read private archives. Single internal force follows every preservation/quiescence gate; public force never bypasses them. Root independently executed the actual ordinary Git target: 2 tests, 40 assertions, zero errors/failures (713.41ms), receipt `6d851c7c-2cfd-4822-8597-ce9671422224`. This proves Git mechanics only, not privileged implementation or installed acceptance. All source success criteria remain unchecked. Promotion proceeds children first; qk0 remains incomplete.
+
 ## Current verdict on revision 3082cde90
 
 Root accepts the explicit two-child decomposition and the correction of frame, transfer-budget and inhibition contradictions for continued drafting. **Readiness still requires changes**: ground privileged Git execution against untrusted configuration/hooks and exact common-directory/output ownership; establish how the nonroot authority authenticates root evidence without access to private archives or weakening confidentiality; derive the root capability profile from those actual operations. Historical completed evidence must remain a statement about its recorded observation, not an undocumented obligation to re-read up to 256 MiB on every status call. Both children and parent remain draft with needs_review true; no privileged capability is approved for deployment. These source findings have been sent to the author for correction.
