@@ -224,6 +224,10 @@ class ProtectedWorkOnCompositionTest < AceOverseerTestCase
     exercise_public_composition(steering: true, terminal: true)
   end
 
+  def test_public_prompt_replay_rejects_changed_text_and_original_generation_without_effect
+    exercise_public_composition(steering: true, negative_replay: true)
+  end
+
   def fixture_output(value, asynchronous:)
     if asynchronous
       Thread.current.thread_variable_set(:composed_stdout, value)
@@ -232,7 +236,7 @@ class ProtectedWorkOnCompositionTest < AceOverseerTestCase
     end
   end
 
-  def exercise_public_composition(steering: false, lose_prompt_reply: false, terminal: false)
+  def exercise_public_composition(steering: false, lose_prompt_reply: false, terminal: false, negative_replay: false)
     fixture(prepare_attempt: false) do
       assert_empty @journal.read_events("assignment")
       client_kernel = start_public_server(lose_prompt_reply: lose_prompt_reply)
@@ -340,6 +344,22 @@ class ProtectedWorkOnCompositionTest < AceOverseerTestCase
               replay.call(**target, stdin: true)
               assert_equal first, JSON.parse(terminal ? Thread.current.thread_variable_get(:composed_stdout).string : $stdout.string)
               assert_equal 1, native.prompt_calls.length
+              if negative_replay
+                before = @journal.ref_value
+                changed_text = Ace::Overseer::CLI::Commands::Prompt.new(steering: protected_steering, input: StringIO.new("changed public steering\n"))
+                fixture_output(StringIO.new, asynchronous: terminal)
+                assert_raises(Ace::Support::Cli::Error) { changed_text.call(**target, stdin: true) }
+                assert_equal before, @journal.ref_value
+                assert_equal 1, native.prompt_calls.length
+                changed_generation = Ace::Overseer::CLI::Commands::Prompt.new(steering: protected_steering, input: StringIO.new("exact public steering\n"))
+                fixture_output(StringIO.new, asynchronous: terminal)
+                assert_raises(Ace::Support::Cli::Error) do
+                  changed_generation.call(**target.merge(expected_generation: target.fetch(:expected_generation) + 1), stdin: true)
+                end
+                assert_equal before, @journal.ref_value
+                assert_equal 1, native.prompt_calls.length
+                assert_equal "submitted", @journal.mutation_result("public-steer").dig("data", "outcome")
+              end
               fixture_output(StringIO.new, asynchronous: terminal)
               replay.call(**target.reject { |key, _| key == :expected_generation }, status: true)
               assert_equal "submitted", JSON.parse(terminal ? Thread.current.thread_variable_get(:composed_stdout).string : $stdout.string).fetch("outcome")
