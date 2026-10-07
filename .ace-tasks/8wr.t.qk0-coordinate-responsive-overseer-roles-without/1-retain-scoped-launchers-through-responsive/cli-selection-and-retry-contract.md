@@ -1,6 +1,6 @@
 # CLI selection and steering retries — readiness amendment
 
-This proposed amendment resolves the target and prompt/stop identity findings in `readiness-review.md`; independent review is required before promotion. It reuses current Assign operation owners and introduces no execution ledger.
+This reviewed contract resolves the target and prompt/stop identity findings in `readiness-review.md`; independent whole-child design approval is now recorded there. It reuses current Assign operation owners and introduces no execution ledger.
 
 ## Mode and exact target
 
@@ -30,4 +30,4 @@ Example stop: `ace-overseer stop --project ace --agent builder --assignment A --
 
 SC2 must exercise CLI loss after accepted mutation, same-input retry, changed-generation/text refusal, read-only lookup with zero native writes, exact selection among multiple attempts, explicit mode selection, and protected resolution failure without local fallback. Launcher `work-on` invocation/assignment identity must likewise be concrete before whole qk0.1 readiness; this steering amendment alone does not claim that additional contract has been reviewed.
 
-Also verify that an otherwise authorized different principal cannot replay prompt/stop or read another principal's prompt status. Independent scoped review by wave_5h5 approved the direction on 2026-10-07 and identified this original-principal precision from the actual steering/stop owners; it is incorporated above. Whole qk0.1 remains draft.
+Also verify that an otherwise authorized different principal cannot replay prompt/stop or read another principal's prompt status. Independent scoped review by wave_5h5 approved the direction on 2026-10-07 and identified this original-principal precision from the actual steering/stop owners; it is incorporated above. The later whole-child design review approves qk0.1 readiness; actual implementation and qk0.3 delivery remain outstanding.

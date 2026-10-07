@@ -1,5 +1,7 @@
 # Protected launch inputs and restart — draft for independent review
 
+Current status: this retained launch-input contract is included in the independent whole-child design approval recorded in `readiness-review.md`; qk0.1 is pending with needs_review false. Earlier draft/pending-review statements below describe historical review stages, not the current status. Source implementation and the explicit qk0.3 delivery dependency remain open.
+
 This proposes the remaining qk0.1 launch contract. It is not approved readiness, a new task, or implemented behavior. It uses Assign's existing definition, registration, reservation and original foreground launcher; canonical execution facts remain exclusively in Assign.
 
 ## Fresh work and retained input
