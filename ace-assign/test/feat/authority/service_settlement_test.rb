@@ -209,7 +209,7 @@ module Ace
             {"schema" => "ace.protected-workspace-prune-preview-result/v1", "kind" => "preview",
               "intent_digest" => Ace::Assign::Atoms::EvidenceDigest.digest(intent), "publication" => intent.fetch("publication"),
               "maintenance" => intent.fetch("maintenance"), "maintenance_context" => context.fetch("maintenance_context"),
-              "target" => target_result, "preservation" => preservation, "inventory_sha256" => "c" * 64,
+              "target" => target_result, "preservation" => preservation, "inventory_sha256" => preservation.fetch("manifest_sha256"),
               "file_count" => 0, "total_bytes" => 0}
           end
           public_result = begin

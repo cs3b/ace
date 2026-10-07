@@ -128,7 +128,8 @@ module Ace
           closed_cleanup!(preservation, %w[head branch destinations manifest_sha256 inventory_sha256 file_count total_bytes private_manifest_sha256 archives_sha256])
           unless preservation["file_count"].is_a?(Integer) && preservation["file_count"].between?(0, 4096) &&
               preservation["total_bytes"].is_a?(Integer) && preservation["total_bytes"].between?(0, 256 * 1024 * 1024) &&
-              %w[manifest_sha256 inventory_sha256 private_manifest_sha256 archives_sha256].all? { |key| cleanup_sha?(preservation[key]) }
+              %w[manifest_sha256 inventory_sha256 private_manifest_sha256 archives_sha256].all? { |key| cleanup_sha?(preservation[key]) } &&
+              preservation.values_at("manifest_sha256", "inventory_sha256", "private_manifest_sha256").uniq.one?
             raise AttemptErrors::ReceiptRejected, "cleanup preservation observation differs"
           end
           input = receipt.slice("maintenance", "target", "publication").merge("schema" => "ace.protected-workspace-prune/v1",

@@ -65,13 +65,19 @@ class ProtectedPruneTest < AceOverseerTestCase
         "intent_digest" => digest.digest(intent), "maintenance" => intent.fetch("maintenance"),
         "publication" => intent.fetch("publication"), "maintenance_context" => context,
         "target" => intent.fetch("target").merge("artifact_digest" => digest.digest("target" => intent.fetch("target"), "preservation" => preservation)),
-        "preservation" => preservation, "inventory_sha256" => "6" * 64, "file_count" => 0, "total_bytes" => 0}
+        "preservation" => preservation, "inventory_sha256" => preservation.fetch("manifest_sha256"), "file_count" => 0, "total_bytes" => 0}
       File.write(path, JSON.generate(result))
       apply = args.merge(dry_run: false, yes: true, mutation: "prune-001", authorization: "approval-001", expected_generation: 7)
       assert_raises(Ace::Support::Cli::Error) { command.call(**apply.merge(yes: false)) }
       assert_raises(Ace::Support::Cli::Error) { command.call(**apply.merge(authorization: nil)) }
       assert_raises(Ace::Support::Cli::Error) { command.call(**apply.merge(expected_generation: 7.0)) }
       assert_empty submissions
+      result["inventory_sha256"] = "6" * 64
+      File.write(path, JSON.generate(result))
+      assert_raises(Ace::Support::Cli::Error) { command.call(**apply) }
+      assert_empty submissions
+      result["inventory_sha256"] = preservation.fetch("manifest_sha256")
+      File.write(path, JSON.generate(result))
       command.call(**apply)
       assert_equal 1, submissions.size
       submitted = submissions.first

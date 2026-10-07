@@ -29,8 +29,8 @@ class ProtectedCleanupDispatchTest < Minitest::Test
       "input_digest" => submission.fetch("input_digest"), **input.slice("maintenance", "target", "publication"),
       "canonical_snapshots" => [{"mapping_id" => "mapping", "journal_commit" => "a" * 40,
         "binding_event_digest" => "b" * 64, "release_event_digest" => "c" * 64, "proof_event_digest" => "d" * 64}],
-      "preservation" => input.fetch("preservation").merge("inventory_sha256" => "e" * 64,
-        "file_count" => 0, "total_bytes" => 0, "private_manifest_sha256" => "f" * 64, "archives_sha256" => "0" * 64),
+      "preservation" => input.fetch("preservation").merge("inventory_sha256" => input.fetch("preservation").fetch("manifest_sha256"),
+        "file_count" => 0, "total_bytes" => 0, "private_manifest_sha256" => input.fetch("preservation").fetch("manifest_sha256"), "archives_sha256" => "0" * 64),
       "removal" => {"original" => object, "captured" => object.dup, "outcome" => "removed", "fence_digest" => "1" * 64}}
   end
 
@@ -523,6 +523,16 @@ class ProtectedCleanupDispatchTest < Minitest::Test
         cleanup_completion(client, submission, claim, malformed_bytes, result_path)
       end
       assert_equal before, @journal.ref_value
+      %w[inventory_sha256 private_manifest_sha256].each do |field|
+        inconsistent = operation_receipt(submission, bytes)
+        inconsistent.fetch("preservation")[field] = "9" * 64
+        inconsistent_bytes = JSON.generate(inconsistent)
+        File.write(result_path, inconsistent_bytes)
+        assert_raises(Ace::Assign::AttemptErrors::EvidenceUnavailable) do
+          cleanup_completion(client, submission, claim, inconsistent_bytes, result_path)
+        end
+        assert_equal before, @journal.ref_value, "inconsistent preservation digests cannot enter canonical completion"
+      end
       File.write(result_path, operation)
       completed = cleanup_completion(client, submission, claim, operation, result_path)
       assert_equal "succeeded", completed.data.fetch("state")

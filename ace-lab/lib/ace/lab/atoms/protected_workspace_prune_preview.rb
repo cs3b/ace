@@ -71,6 +71,7 @@ module Ace
           input = {"schema" => "ace.protected-workspace-prune/v1"}.merge(value.slice("maintenance", "target", "publication", "preservation"))
           Input.parse(JSON.generate(input))
           Input.digest!(value.fetch("inventory_sha256"))
+          Input.reject! unless value["inventory_sha256"] == value.dig("preservation", "manifest_sha256")
           Input.reject! unless value["file_count"].is_a?(Integer) && value["file_count"].between?(0, 4096) &&
             value["total_bytes"].is_a?(Integer) && value["total_bytes"].between?(0, 256 * 1024 * 1024)
           Input.reject! unless value.dig("preservation", "destinations") == intent["destinations"] &&
