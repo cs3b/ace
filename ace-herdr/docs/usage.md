@@ -408,3 +408,9 @@ The supplying verification owner keeps the handle scoped and authenticates the
 selected inode; the runner does not confer authority or authenticate arbitrary
 files. Actual installed privilege-transition/PAM preservation is a separate
 installed acceptance check, not established by controlled file/child tests.
+
+### Bounded subprocess cleanup
+
+`BoundedProcess.call` retains capped stdout/stderr and uses an execution deadline plus at most one additional second of cleanup. `stderr_limit:` defaults to `output_limit:`. Unconfirmed cleanup raises `PostLaunchError` and transfers only the still-owned original child to an eventual reaper; no success or absence proof follows. Generic successful calls do not newly signal process groups.
+
+The fixed protected handler selects `cleanup_group: true`: stream EOF alone never triggers termination. Nonreaping observation must establish the original leader exited before its group is signalled and the leader reaped. Loss of original child ownership refuses further signalling. Controlled source checks cover ownership/IO boundaries; installed native/descendant effectiveness belongs to gad.2.

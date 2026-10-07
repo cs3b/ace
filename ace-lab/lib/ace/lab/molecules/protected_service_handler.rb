@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "json"
-require "open3"
+require "ace/herdr/molecules/bounded_process"
 require "timeout"
 require "ace/assign/authority/private_directory"
 
@@ -19,33 +19,12 @@ module Ace
             raise SecurityError, "handler executor differs"
           end
           root = Ace::Assign::Authority::PrivateDirectory.verify!(candidate_root)
-          out = nil
-          Open3.popen3({"PATH" => "/usr/bin:/bin", "LANG" => "C.UTF-8", "HOME" => root},
-            *operation.fetch("argv"), chdir: root, pgroup: true, unsetenv_others: true) do |stdin, stdout, stderr, waiter|
-            readers = []
-            begin
-              Timeout.timeout(30) do
-                readers = [Thread.new { bounded(stdout, MAX_STDOUT) }, Thread.new { bounded(stderr, MAX_STDERR) }]
-                stdin.write(JSON.generate(envelope))
-                stdin.close
-                output, errors = readers.map(&:value)
-                unless output && errors && waiter.value.success?
-                  return nil
-                end
-                out = output
-              end
-            rescue Timeout::Error, IOError, SystemCallError
-              return nil
-            ensure
-              stdin.close unless stdin.closed?
-              # This group is created and owned by this receiver. Termination
-              # is cleanup, never proof that an arbitrary handler left no effect.
-              Process.kill("KILL", -waiter.pid) rescue nil
-              waiter.value
-              [stdout, stderr].each { |io| io.close unless io.closed? }
-              readers.each(&:join)
-            end
-          end
+          result = Ace::Herdr::Molecules::BoundedProcess.call(operation.fetch("argv"),
+            stdin_data: JSON.generate(envelope), timeout_s: 30,
+            output_limit: MAX_STDOUT, stderr_limit: MAX_STDERR, cleanup_group: true,
+            environment: {"PATH" => "/usr/bin:/bin", "LANG" => "C.UTF-8", "HOME" => root}, chdir: root)
+          return nil if result.oversized || !result.status.success?
+          out = result.stdout
           response = JSON.parse(out)
           request = envelope.fetch("request")
           unless response.is_a?(Hash) && response.keys.sort == %w[evidence input_digest outcome request_id] &&
@@ -54,19 +33,9 @@ module Ace
             return nil
           end
           response
-        rescue JSON::ParserError
+        rescue JSON::ParserError, Timeout::Error, Ace::Herdr::Molecules::BoundedProcess::PostLaunchError,
+          IOError, SystemCallError
           nil
-        end
-
-        private
-
-        def bounded(io, limit)
-          bytes = io.read(limit + 1).to_s
-          bytes.bytesize <= limit ? bytes : nil
-        rescue IOError, SystemCallError
-          nil
-        ensure
-          io.close unless io.closed?
         end
       end
     end

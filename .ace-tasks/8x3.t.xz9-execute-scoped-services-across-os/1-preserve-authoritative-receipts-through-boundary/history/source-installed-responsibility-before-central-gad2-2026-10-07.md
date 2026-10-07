@@ -43,11 +43,11 @@ Unit checks cover exact immutable binding, peer-role allowlist, bounded schema a
 - Race duplicate requests and terminalization with claim; crash after claim, after effect and before/after durable completion; inspect one protected journal chain.
 - Real descendant attempts delayed write after timeout; verify no write and no live descendant; stale/active socket contention verifies inode/lock ownership.
 
-Run source `bin/ace-test` for affected package/layer and `bin/ace-test-suite` default fast verification after implementation, with independent exact-source review. Record installed native/multi-user acceptance from the family matrix only in the centralized gad.2 execution task. Unit fixtures are sanitized protocol examples sourced from the genuine drill; fabricated examples cannot satisfy positive native criteria.
+Run source `bin/ace-test` for affected package/layer and `bin/ace-test-suite` default fast verification after implementation, plus recorded installed native/multi-user acceptance from the family test plan. Unit fixtures are sanitized protocol examples sourced from the genuine drill; fabricated examples cannot satisfy positive native criteria.
 
 ## Readiness questions
 
-Independent readiness review APPROVED this scope at 0626be045; see ../readiness-review-2026-10-05.md. Promoted to pending; source implementation remains required. Installed execution is centralized in gad.2 as specified below.
+Independent readiness review APPROVED this scope at 0626be045; see ../readiness-review-2026-10-05.md. Promoted to pending; implementation and installed acceptance remain required.
 
 ## Independent readiness repair ownership
 
@@ -69,8 +69,8 @@ integrated at an exact revision, relevant `bin/ace-test` package suites and
 independent reviewer has approved that exact candidate. Record revision, commands,
 invocation-bound receipts and verdict in the existing task. Any subsequent
 producer change requires affected consumer verification and fresh review.
-Installed criteria remain open in lab-config gad.2; they do not duplicate this
-source task completion gate. Missing implementation remains with its source owner. Unsupported or unproved protected execution continues to
+Installed criteria remain open and their owning task cannot close until all of
+its criteria pass. Unsupported or unproved protected execution continues to
 refuse; no same-UID/mock fixture substitutes for real native/multi-UID evidence.
 This sequencing decision authorizes no Lab SSH, protected probe, VM experiment,
 filter retry, native permission bypass or deployment.
@@ -79,11 +79,3 @@ The integrated and independently approved xz9.0 source checkpoint may enable
 this slice's boundary-failure source implementation before xz9.0 installed
 acceptance finishes. Reverify combined authority/receipt/restart/duplicate/no-effect
 cases; all genuine descendant, native and multi-user acceptance stays required.
-
-## Central installed execution and remaining source ownership (2026-10-07)
-
-The Captain-approved division uses Lab gad.2's existing **09j-launch / RESTRICTED** row for the complete protected service/receiver installed matrix and **9c2-scope / SCOPE** for related closure observations. See lab-config `.ace-tasks/8wl.t.gad-hitl-program-master-plan-how/2-hitl-e2e-na-prawdziwej-infrastrukturze/8wl.t.gad.2-hitl-e2e-na-prawdziwej-infrastrukturze.s.md`. Source tasks close on implemented applicable source behavior, executed controlled checks and independent exact-source review; installed effectiveness stays open in gad.2. The earlier wording is retained in history/source-installed-responsibility-before-central-gad2-2026-10-07.md. SC1–SC6 and the installed matrix remain unchanged. This does not authorize native/protected probes or deployment.
-
-SC5 requires actual source producers: ACE must compose selected receiver recovery with the existing canonical challenge/import/settlement owner, and gad.b must implement operation-specific original target, handler and surviving effect-writer inspection. Timeout, handler exit, process-group cleanup and cgroup closure cannot establish arbitrary domain effect absence. The generic no-effect checkpoint does not deliver that domain inspector. SC3's handler cleanup must remain bounded even when termination/reaping cannot be confirmed; that uncertainty never becomes no-effect evidence.
-
-Current source context additionally includes ace-lab/lib/ace/lab/organisms/protected_service_receiver.rb, ace-lab/lib/ace/lab/molecules/protected_service_handler.rb, their controlled tests, ace-herdr/lib/ace/herdr/molecules/bounded_process.rb, no-effect-producer-source-contract.md and no-effect-producer-source-receipt.md. Task remains in progress; no success criterion is marked complete by this responsibility correction.

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Run protected handlers through the shared bounded subprocess owner with separate 16KiB stdout/8KiB stderr caps and owned cleanup. Stream EOF does not imply child exit; timeout or unconfirmed reaping never produces a receipt or domain absence proof. Receiver recovery and domain inspection remain required source work.
+
 ### Added
 
 - Compose the fixed read-only Inbox context completion owner with existing Endcap services over the same protected canonical journals and deployment history. Installed context provisioning remains separate.
