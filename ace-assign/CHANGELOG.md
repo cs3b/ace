@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Require explicit canonical cancellation before replacing a direct review assignment; revoked purposes cannot export candidates or authorize future approval use, while original replies remain historical evidence.
+- Retain the original task-context entry pin across registration replay and prepared fetch, and return a strictly validated original worker identity for fixed adapter activation.
 
 - Fetch exact original prepared inputs through authenticated worker and descendant admission on the existing Endcap transport, binding immutable registration provenance and fixed candidate limits without changing ordinary evidence artifact bounds.
 - Pin fresh execution scopes to the authenticated current network selection and refuse active pointer advance; boundary readiness accepts only static network intent, preserving original literal historical proofs.

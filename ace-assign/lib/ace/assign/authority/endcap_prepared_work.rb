@@ -45,6 +45,8 @@ module Ace
           descriptor = reference.slice("task_id", "scope", "selection_sha256", "prepared_head", "prepared_tree", "manifest_bytes", "manifest_sha256").merge(
             params.slice("mapping_id", "assignment_id", "attempt_id"), "version" => 1, "kind" => "prepared_work", "purpose" => "original_prepared_work", "artifact" => "prepared_bundle",
             "project_id" => original_map.fetch("project_id"), "definition_digest" => registration.fetch("definition_digest"),
+            "task_context_entry" => registration.fetch("task_context_entry"),
+            "original_worker_identity" => selected.fetch(:state).fetch("process_binding").fetch("process_identity"),
             "registration_generation" => registration.fetch("generation"), "registration_commit" => selected.fetch(:registration_commit),
             "original_binding_digest" => selected.fetch(:original_binding_digest), "ref" => registration.fetch("prepared_bundle_ref"), "bytes" => bytes.bytesize,
             "sha256" => registration.fetch("prepared_bundle_sha256"))

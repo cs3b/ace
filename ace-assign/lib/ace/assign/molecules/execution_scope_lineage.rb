@@ -22,6 +22,20 @@ module Ace
         INVOCATION = /\A[0-9a-f]{32}\z/
         BOOT = /\A[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\z/
 
+        def self.validate_process_identity!(value, boot_id:)
+          unless boot_id.is_a?(String) && BOOT.match?(boot_id) && value.is_a?(Hash) && value.keys.sort == PROCESS_FIELDS.sort
+            raise AttemptErrors::EvidenceUnavailable, "scope process identity fields differ"
+          end
+          groups = value["groups"]
+          unless %w[pid uid gid parent_pid].all? { |key| value[key].is_a?(Integer) && value[key].positive? } &&
+              groups.is_a?(Array) && groups.all? { |id| id.is_a?(Integer) && id.positive? } && groups == groups.sort.uniq &&
+              value["started_at"].is_a?(String) && value["started_at"].match?(/\Alinux:#{Regexp.escape(boot_id)}:[0-9]+\z/) &&
+              value["host"].is_a?(String) && !value["host"].empty?
+            raise AttemptErrors::EvidenceUnavailable, "scope process birth/credentials are malformed"
+          end
+          value
+        end
+
         def self.validate_network_selection!(selection)
           unless selection.is_a?(Hash) && selection.keys.sort == %w[installer_artifact policy_export profile report]
             raise AttemptErrors::EvidenceUnavailable, "network installation selection is not closed"
@@ -308,14 +322,7 @@ module Ace
         end
 
         def process!(value, boot_id)
-          exact_fields!(value, PROCESS_FIELDS)
-          groups = value["groups"]
-          unless %w[pid uid gid parent_pid].all? { |key| positive_integer?(value[key]) } &&
-              groups.is_a?(Array) && groups.all? { |id| positive_integer?(id) } && groups == groups.sort.uniq &&
-              value["started_at"].is_a?(String) && value["started_at"].match?(/\Alinux:#{Regexp.escape(boot_id)}:[0-9]+\z/) &&
-              value["host"].is_a?(String) && !value["host"].empty?
-            unavailable!("scope process birth/credentials are malformed")
-          end
+          self.class.validate_process_identity!(value, boot_id: boot_id)
         end
 
         def exact_fields!(value, keys)

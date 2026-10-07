@@ -42,7 +42,7 @@ module Ace
             "prepared_tree" => tree, "manifest_sha256" => work.manifest_sha256, "expected_generation" => 0, "transfer" => descriptor}
           peer = {"pid" => 123, "uid" => 1001, "gid" => 1001, "groups" => [1001]}
           kernel = Object.new; kernel.define_singleton_method(:live!) { |_identity| true }
-          mapping = {"project_id" => "ace", "authority_id" => "authority", "launcher_uid" => 1001, "launcher_gid" => 1001, "launcher_groups" => [1001], "execution_scope" => {"slot_id" => "slot"}}
+          mapping = {"task_context_entry" => {"manifest" => {"path" => "/fixture/assign-entry.json", "bytes" => 100, "sha256" => "1" * 64}, "wrapper" => {"path" => "/fixture/assign-entry.py", "bytes" => 200, "sha256" => "2" * 64}}, "project_id" => "ace", "authority_id" => "authority", "launcher_uid" => 1001, "launcher_gid" => 1001, "launcher_groups" => [1001], "execution_scope" => {"slot_id" => "slot"}}
           deployment = Object.new; deployment.define_singleton_method(:mapping) { |_id| mapping }
           deployment.define_singleton_method(:project) { |_id| {"candidate_root" => quarantine, "assignment_root" => File.join(root, "definitions")} }
           deployment.define_singleton_method(:authority) { |_id| {"state_root" => File.join(root, "authority-state")} }
@@ -94,6 +94,25 @@ module Ace
           assert_raises(AttemptErrors::MalformedTransfer) { dispatch(authority, params, peer, nil) }
           assert_raises(AttemptErrors::UnauthorizedIdentity) { dispatch(authority, params, peer.merge("uid" => 2002), input) }
           assert_equal original, journal.ref_value
+        end
+      end
+
+      def test_original_entry_pin_cannot_change_on_replay_or_same_definition_registration
+        with_registration do |authority, journal, params, peer, input, _bundle, _definition, deployment|
+          mapping = deployment.mapping("mapping")
+          original_pin = Marshal.load(Marshal.dump(mapping.fetch("task_context_entry")))
+          accepted = dispatch(authority, params, peer, input)
+          assert_equal original_pin, accepted.fetch(:data).fetch("task_context_entry")
+          commit = journal.ref_value
+          mapping.fetch("task_context_entry").fetch("wrapper")["sha256"] = "3" * 64
+          assert_raises(AttemptErrors::Conflict) { dispatch(authority, params, peer, input) }
+          assert_raises(AttemptErrors::Conflict) do
+            dispatch(authority, params.merge("expected_generation" => accepted.fetch(:data).fetch("generation")), peer, input, mutation: "different-entry")
+          end
+          assert_equal commit, journal.ref_value
+          mapping.delete("task_context_entry")
+          assert_raises(KeyError) { dispatch(authority, params, peer, input, mutation: "missing-entry") }
+          assert_equal commit, journal.ref_value
         end
       end
 

@@ -6,6 +6,7 @@ require "rbconfig"
 require "openssl"
 require_relative "private_directory"
 require_relative "posix_acl"
+require_relative "task_context_entry"
 require "ace/runtime/molecules/protected_socket"
 require "ace/runtime/molecules/protected_artifact_set"
 require "ace/runtime/molecules/protected_linux"
@@ -363,10 +364,11 @@ module Ace
 
         def validate_mapping!(id, mapping)
           required = %w[project_id authority_id launcher_uid launcher_gid launcher_groups worker_uid worker_gid
-            worker_groups worker_actor worker_cwd worker_argv worker_env bootstrap bootstrap_sha256 native execution_scope]
+            worker_groups worker_actor worker_cwd worker_argv worker_env bootstrap bootstrap_sha256 native execution_scope task_context_entry]
           unless mapping.is_a?(Hash) && mapping.keys.sort == required.sort
             raise ArgumentError, "launch mapping fields differ: #{id}"
           end
+          TaskContextEntry.validate!(mapping.fetch("task_context_entry"))
           service = authority(mapping.fetch("authority_id"))
           fixed_project = project(mapping.fetch("project_id"))
           %w[launcher worker].each do |role|

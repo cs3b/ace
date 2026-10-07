@@ -136,6 +136,7 @@ module Ace
           prepared = if operation == "register_assignment"
             authorize_transfer!(request: request, peer: peer, role: role)
             admitted = admit_prepared_registration!(params, map, transfer)
+            digest = Digest::SHA256.hexdigest(JSON.generate(canonical(params.merge("task_context_entry" => admitted.fetch(:task_context_entry)))))
             params = params.merge("definition_bytes" => admitted.fetch(:definition_bytes))
             admitted
           end
@@ -494,6 +495,7 @@ module Ace
         end
 
         def admit_prepared_registration!(params, map, transfer)
+          entry = TaskContextEntry.validate!(map.fetch("task_context_entry"))
           raise AttemptErrors::MalformedTransfer, "Prepared registration transfer unavailable" unless transfer && transfer.count == 1
           descriptor = params.fetch("transfer")
           bytes = transfer.bytes
@@ -507,7 +509,8 @@ module Ace
           unless Digest::SHA256.hexdigest(definition_bytes) == params.fetch("definition_digest")
             raise ArgumentError, "prepared_input_mismatch: derived definition digest"
           end
-          {work: work, bytes: bytes.freeze, definition_bytes: definition_bytes}.freeze
+          {work: work, bytes: bytes.freeze, definition_bytes: definition_bytes,
+            task_context_entry: immutable_maintenance_projection(entry)}.freeze
         end
 
         def register(params, map, journal, commit, generation, prepared:)
@@ -526,6 +529,10 @@ module Ace
           assignment = Models::Assignment.from_h(value)
           raise ArgumentError, "definition is not managed" unless assignment.managed?
           previous = definition(journal, params.fetch("assignment_id"), commit: commit)
+          if previous && previous["definition_digest"] == params["definition_digest"] &&
+              previous["task_context_entry"] != prepared.fetch(:task_context_entry)
+            raise AttemptErrors::Conflict, "same prepared definition cannot replace original task context entry"
+          end
           if previous && previous["definition_digest"] != params["definition_digest"] && active_events?(journal.read_events(params.fetch("assignment_id")))
             raise AttemptErrors::Conflict, "active assignment definition cannot change"
           end
@@ -538,6 +545,7 @@ module Ace
           bundle_sha = Digest::SHA256.hexdigest(bundle)
           bundle_path = "execution/prepared/#{params.fetch('assignment_id')}-#{bundle_sha}.bundle"
           {events: [], blobs: {path => bytes, bundle_path => bundle}, data: {"prepared_work" => value.fetch("prepared_work"),
+            "task_context_entry" => prepared.fetch(:task_context_entry),
             "prepared_bundle_ref" => bundle_path, "prepared_bundle_bytes" => bundle.bytesize, "prepared_bundle_sha256" => bundle_sha,
             "selection_sha256" => prepared.fetch(:work).selection_sha256, "assignment_id" => params.fetch("assignment_id"),
             "project_id" => map.fetch("project_id"), "mapping_id" => params.fetch("mapping_id"),

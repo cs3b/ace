@@ -590,7 +590,7 @@ module Ace
            "worker_uids" => [13001], "service_executor_uids" => [], "supervisor_uids" => [],
            "peer_credentials" => {"13001" => {"gid" => 13001, "groups" => [13001], "scratch_root" => "/var/lib/ace-worker"},
              "13002" => {"gid" => 13002, "groups" => [13002], "scratch_root" => "/var/lib/ace-launcher"}}}},
-         "launch_mappings" => {"mapping" => {"project_id" => "project", "authority_id" => "authority",
+         "launch_mappings" => {"mapping" => {"task_context_entry" => {"manifest" => {"path" => "/fixture/assign-entry.json", "bytes" => 100, "sha256" => "1" * 64}, "wrapper" => {"path" => "/fixture/assign-entry.py", "bytes" => 200, "sha256" => "2" * 64}}, "project_id" => "project", "authority_id" => "authority",
            "launcher_uid" => 13002, "launcher_gid" => 13002, "launcher_groups" => [13002],
            "worker_uid" => 13001, "worker_gid" => 13001, "worker_groups" => [13001], "worker_actor" => "worker",
            "worker_cwd" => "/home/worker", "worker_argv" => ["/usr/bin/true"], "worker_env" => {"PATH" => "/usr/bin:/bin"},
@@ -634,6 +634,25 @@ module Ace
         value = data
         value["launch_mappings"]["mapping"]["execution_scope"].delete("boundary_manifest_sha256")
         assert_raises(ArgumentError) { Authority::Deployment.new(value) }
+      end
+
+      def test_task_context_entry_is_mandatory_closed_and_bounded
+        assert Authority::Deployment.new(data)
+        [nil, {}, {"manifest" => {}}].each do |entry|
+          value = data
+          value.fetch("launch_mappings").fetch("mapping")["task_context_entry"] = entry
+          assert_raises(ArgumentError) { Authority::Deployment.new(value) }
+        end
+        value = data
+        value.fetch("launch_mappings").fetch("mapping").delete("task_context_entry")
+        assert_raises(ArgumentError) { Authority::Deployment.new(value) }
+        [["manifest", "bytes", 65_537], ["wrapper", "bytes", 33_554_433],
+          ["wrapper", "bytes", 0], ["manifest", "sha256", "A" * 64],
+          ["wrapper", "path", "/fixture/../entry.py"], ["wrapper", "extra", true]].each do |key, field, bad|
+          value = data
+          value.fetch("launch_mappings").fetch("mapping").fetch("task_context_entry").fetch(key)[field] = bad
+          assert_raises(ArgumentError) { Authority::Deployment.new(value) }
+        end
       end
 
       def test_slot_ownership_and_worker_principals_are_unique_across_mappings

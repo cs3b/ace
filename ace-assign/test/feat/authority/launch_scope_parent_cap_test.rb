@@ -30,7 +30,7 @@ module Ace
           assert status.success?, err
           journal = Molecules::EvidenceJournal.new(repo_root: repo, checkout_root: File.join(cache, "checkout"))
           kernel = Kernel.new
-          map = {"project_id" => "project", "authority_id" => "authority", "worker_uid" => 13001, "launcher_uid" => 13002,
+          map = {"task_context_entry" => {"manifest" => {"path" => "/fixture/assign-entry.json", "bytes" => 100, "sha256" => "1" * 64}, "wrapper" => {"path" => "/fixture/assign-entry.py", "bytes" => 200, "sha256" => "2" * 64}}, "project_id" => "project", "authority_id" => "authority", "worker_uid" => 13001, "launcher_uid" => 13002,
             "worker_actor" => "worker", "execution_scope" => {"slot_id" => "slot", "slice_unit" => "ace-slot.slice",
               "service_unit" => "ace-slot.service", "runtime_directory" => "/run/slot/native", "network_namespace_path" => "/run/netns/slot"}}
           deployment = Object.new
@@ -44,6 +44,7 @@ module Ace
           cgroups = ExecutionScopeObservationFixtures::Cgroups.new
           observer = Authority::ExecutionScopeObservation.new(mapping_id: "mapping", deployment: deployment, kernel: kernel,
             manager: manager, files: files, cgroups: cgroups,
+            network_selection: ExecutionScopeObservationFixtures::NetworkSelection.new,
             boot_evidence: ExecutionScopeObservationFixtures::BootEvidence.new)
           owner = Authority::LaunchLifecycle.new(deployment: deployment, kernel: kernel, journals: {"project" => journal},
             scope_observer_factory: ->(_id) { observer })

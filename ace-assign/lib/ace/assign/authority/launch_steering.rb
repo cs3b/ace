@@ -11,6 +11,7 @@ module Ace
             params = request.fetch("params")
             strict!(params, MUTATIONS.fetch("register_assignment"))
             map = @deployment.mapping(params.fetch("mapping_id"))
+            TaskContextEntry.validate!(map.fetch("task_context_entry"))
             unless role == :launcher && peer.values_at("uid", "gid", "groups") == map.values_at("launcher_uid", "launcher_gid", "launcher_groups")
               raise AttemptErrors::UnauthorizedIdentity, "prepared registration requires mapped launcher"
             end
