@@ -27,6 +27,13 @@ module Ace
           super(*args, **kwargs)
           @retirements = 0
         end
+        def activate_parent!(context)
+          binding = super
+          selected = Ace::Runtime::Molecules::ExecutionBootBaseline.new.select!(expected:
+            binding.slice("slot_id", "boot_id", "deployment_digest").merge(
+              "installer_artifact" => binding.fetch("network_installation_selection").fetch("installer_artifact")))
+          binding.merge("boot_baseline_selection" => selected.fetch("selection"))
+        end
         def verify_maintenance_closed!(lineages)
           lineages.each { |lineage| verify_closed!(lineage) }
           true
@@ -50,7 +57,19 @@ module Ace
         private_methods = methods.keys.select { |name| Authority::Deployment.private_method_defined?(name) }
         methods.each { |name, body| Authority::Deployment.define_method(name, body) }
         private_methods.each { |name| Authority::Deployment.send(:private, name) }
-        fixture { yield }
+        baseline_factory = lambda do
+          artifacts = Ace::Runtime::Molecules::ProtectedArtifactSet.allocate
+          artifacts.send(:initialize, protection: Protection.new)
+          read = artifacts.method(:read_path!)
+          test = self
+          artifacts.define_singleton_method(:read_path!) do |path, limit:|
+            read.call(path == "/etc/ace/execution-slots/slot/boot-baseline-selection.json" ? test.instance_variable_get(:@boot_pointer) : path, limit: limit)
+          end
+          reader = Ace::Runtime::Molecules::ExecutionBootBaseline.allocate
+          reader.send(:initialize, artifacts: artifacts)
+          reader
+        end
+        Ace::Runtime::Molecules::ExecutionBootBaseline.stub(:new, baseline_factory) { fixture { yield } }
       ensure
         originals&.each { |name, body| Authority::Deployment.define_method(name, body) }
         private_methods&.each { |name| Authority::Deployment.send(:private, name) }
@@ -86,6 +105,8 @@ module Ace
         Dir.mkdir(@service.fetch("state_root"), 0700)
         @key = OpenSSL::PKey::RSA.new(1024)
         key_ref = artifact("original-public.pem", @key.public_to_pem)
+        @next_key = OpenSSL::PKey::RSA.new(1024)
+        next_key_ref = artifact("candidate-public.pem", @next_key.public_to_pem)
         @published_key = File.join(@root, "current-public.pem")
         File.binwrite(@published_key, @key.public_to_pem)
         deliveries = File.join(@root, "deliveries")
@@ -116,12 +137,26 @@ module Ace
         @manifest_ref = artifact("history.json", JSON.generate("schema" => "ace.assign.deployment-history/v1",
           "original_descriptor" => @original_ref, "candidate_descriptor" => @candidate_ref,
           "descriptors" => [@original_ref, @candidate_ref], "public_keys" => [{"ref" => key_ref,
-            "public_key_sha256" => Digest::SHA256.hexdigest(@key.public_key.to_der)}]))
+            "public_key_sha256" => Digest::SHA256.hexdigest(@key.public_key.to_der)},
+            {"ref" => next_key_ref, "public_key_sha256" => Digest::SHA256.hexdigest(@next_key.public_key.to_der)}]))
         @published = File.join(@root, "published.json")
         File.binwrite(@published, File.binread(@original_ref.fetch("path")))
         @fixed_selections = {Authority::Deployment::PATH => @published, Authority::DeploymentHistory::PATH => @manifest_ref.fetch("path")}
         @deployment, @history = load_fixed
         @map = @deployment.mapping("mapping")
+        installer = artifact("original-installer", "controlled original installer bytes")
+        @network_selection = ExecutionScopeObservationFixtures::NETWORK_SELECTION.merge("installer_artifact" => installer)
+        @network_installation = ExecutionScopeObservationFixtures::NETWORK_OUTPUT.merge("installer_artifact_sha256" => installer.fetch("sha256"))
+        @boot_ref = artifact("original-boot.json", JSON.generate(
+          "schema" => "ace.execution-boot-baseline/v1", "slot_id" => "slot", "boot_id" => ExecutionScopeObservationFixtures::BOOT,
+          "deployment_digest" => Digest::SHA256.hexdigest(JSON.generate(Authority::LaunchLifecycle.allocate.send(:canonical, @map))),
+          "host_ipc_namespace_identity" => {"device" => 4, "inode" => 900},
+          "original_host_context" => {"pid" => 1, "uid" => 0, "gid" => 0, "started_at" => "linux:#{ExecutionScopeObservationFixtures::BOOT}:1"},
+          "producer_artifact" => installer))
+        candidate_boot = JSON.parse(File.binread(@boot_ref.fetch("path")))
+        candidate_boot["deployment_digest"] = Digest::SHA256.hexdigest(JSON.generate(Authority::LaunchLifecycle.allocate.send(:canonical, @history.candidate.mapping("mapping"))))
+        @candidate_boot_ref = artifact("candidate-boot.json", JSON.generate(candidate_boot))
+        @boot_pointer = artifact("boot-pointer.json", JSON.generate("schema" => "ace.execution-boot-selection/v1", "slot_id" => "slot", "baseline" => @boot_ref)).fetch("path")
         owner = nil
         @journal = Molecules::EvidenceJournal.new(repo_root: repo, ref: @journal.ref, checkout_root: @journal.checkout_root,
           mode: :protected, evidence_reader: ->(*args) { owner.call(*args) },
@@ -134,10 +169,36 @@ module Ace
         @scope = nil
         @launch = Authority::LaunchLifecycle.new(deployment: @deployment, deployment_history: @history,
           kernel: @kernel, journals: {"project" => @journal}, scope_observer_factory: ->(_) {
-            @scope ||= Scope.new(@map, @journal, @kernel, owner: @launch) })
+            @scope ||= Scope.new(@map, @journal, @kernel, owner: @launch, network_selection: @network_selection,
+              boot_baseline_selection: @boot_ref, network_installation: @network_installation) })
         @launch.define_singleton_method(:verify_maintenance_root!) { |*| true }
         @endcap = Authority::Endcap.new(deployment: @deployment, launch: @launch, kernel: @kernel, service_policy: @policy)
         @router = Authority::Router.new(launch: @launch, handlers: [@endcap])
+      end
+
+      def refresh_candidate_boot!
+        File.binwrite(@boot_pointer, JSON.generate("schema" => "ace.execution-boot-selection/v1", "slot_id" => "slot", "baseline" => @candidate_boot_ref))
+        expected = {"slot_id" => "slot", "boot_id" => ExecutionScopeObservationFixtures::BOOT,
+          "deployment_digest" => Digest::SHA256.hexdigest(JSON.generate(Authority::LaunchLifecycle.allocate.send(:canonical, @map))),
+          "installer_artifact" => @network_selection.fetch("installer_artifact")}
+        assert_equal @candidate_boot_ref, Ace::Runtime::Molecules::ExecutionBootBaseline.new.select!(expected: expected).fetch("selection")
+        @boot_ref = @candidate_boot_ref
+      end
+
+      def test_candidate_boot_refresh_selects_actual_published_candidate_mapping
+        with_installed_boundaries do
+          original = @boot_ref
+          File.binwrite(@published, File.binread(@candidate_ref.fetch("path")))
+          @deployment, @history = load_fixed
+          @map = @deployment.mapping("mapping")
+          expected = {"slot_id" => "slot", "boot_id" => ExecutionScopeObservationFixtures::BOOT,
+            "deployment_digest" => Digest::SHA256.hexdigest(JSON.generate(Authority::LaunchLifecycle.allocate.send(:canonical, @map))),
+            "installer_artifact" => @network_selection.fetch("installer_artifact")}
+          assert_raises(Ace::Runtime::RuntimeUnavailableError) { Ace::Runtime::Molecules::ExecutionBootBaseline.new.select!(expected: expected) }
+          refresh_candidate_boot!
+          refute_equal original, @boot_ref
+          assert_equal @candidate_ref.fetch("sha256"), @deployment.artifact_reference.fetch("sha256")
+        end
       end
 
       def current_events
@@ -242,6 +303,9 @@ module Ace
           accept_terminal_and_release
           original_attempt = @attempt
           original_events = current_events
+          assert_equal @boot_ref, original_events.find { |event| event["type"] == "scope_bound" }.dig("payload", "boot_baseline_selection")
+          # Retained historical authentication must not rediscover current boot.
+          File.binwrite(@boot_pointer, "invalid current boot pointer")
           # Archive is actual retained store ownership, not a synthetic absence.
           store = Ace::Herdr::Molecules::DeliveryRecordStore
           store.with_lock(@context.fetch("deliveries_dir"), "event") { store.archive(@context.fetch("deliveries_dir"), "event") }
@@ -252,10 +316,11 @@ module Ace
           end
           assert_equal before + 1, @scope.retirements
           File.binwrite(@published, File.binread(@candidate_ref.fetch("path")))
-          File.binwrite(@published_key, OpenSSL::PKey::RSA.new(1024).public_to_pem)
+          File.binwrite(@published_key, @next_key.public_to_pem)
           @launch.close
           @deployment, @history = load_fixed
           @map = @deployment.mapping("mapping")
+          refresh_candidate_boot!
           restart
           state = call("reserve_attempt", {"scope" => "010", "worker_uid" => 13001, "runtime" => "herdr", "base_head" => @head,
             "launcher_process_binding" => @launcher, "expected_generation" => 1}, id: "rotated-reserve", peer: @launcher, role: :launcher).fetch(:data)

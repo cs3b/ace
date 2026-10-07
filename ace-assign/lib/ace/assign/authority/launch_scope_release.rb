@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 require_relative "../molecules/terminal_scope_receipt"
+require "ace/runtime/molecules/execution_boot_baseline"
 
 module Ace
   module Assign
@@ -272,6 +273,15 @@ module Ace
           end
         end
 
+        def verify_historical_boot_baseline!(binding)
+          Ace::Runtime::Molecules::ExecutionBootBaseline.new.verify!(
+            selection: binding.fetch("boot_baseline_selection"),
+            expected: binding.slice("slot_id", "boot_id", "deployment_digest").merge(
+              "installer_artifact" => binding.fetch("network_installation_selection").fetch("installer_artifact")))
+        rescue Ace::Runtime::RuntimeUnavailableError, KeyError, TypeError, NoMethodError
+          raise AttemptErrors::EvidenceUnavailable, "historical original boot proof unavailable"
+        end
+
         def maintenance_released_lineage!(journal, commit, assignment_id, attempt_id, events, original, map)
           releases = events.select { |event| event["type"] == "authority_mutation" && event.dig("payload", "operation") == "scope_reservation_release" }
           raise AttemptErrors::EvidenceUnavailable, "maintenance reservation lacks unique release" unless releases.one?
@@ -287,6 +297,7 @@ module Ace
           unless lineage.binding && lineage.seal_event && lineage.proof_id
             raise AttemptErrors::EvidenceUnavailable, "historical released parent lacks canonical closed proof"
           end
+          verify_historical_boot_baseline!(lineage.binding)
           lineage.require_positive!(scope_generation: lineage.binding.fetch("scope_generation"),
             scope_binding_event_id: lineage.binding_event.fetch("digest"), seal_event_id: lineage.seal_event.fetch("digest"), proof_id: lineage.proof_id)
           terminal = if prefix.any? { |event| event["type"] == "receipt_accepted" }
