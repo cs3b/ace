@@ -24,6 +24,23 @@ module Ace
           proposal_resolver: ->(*) { raise Ace::Assign::AttemptErrors::UnauthorizedIdentity, "canonical producer unavailable" })
       end
 
+      def test_preview_selects_only_installed_prune_receiver_without_proposal_authorization
+        operation = @document.fetch("operations").delete("fixture")
+        @document.fetch("operations")["prune-preserved-workspace"] = operation
+        uid = @binding.fetch("caller_uid")
+        selected = operation.fetch("executor_uid")
+        arguments = {project: "fixture", uid: uid, service_id: "executor", executor_uid: selected}
+        assert @policy.workspace_prune_receiver!(**arguments)
+        assert_raises(SecurityError) { @policy.workspace_prune_receiver!(**arguments.merge(service_id: "other")) }
+        assert_raises(SecurityError) { @policy.workspace_prune_receiver!(**arguments.merge(executor_uid: selected + 1)) }
+        assert_raises(SecurityError) { @policy.workspace_prune_receiver!(**arguments.merge(project: "hidden")) }
+        operation["executor_uid"] = uid
+        assert_raises(SecurityError) { @policy.workspace_prune_receiver!(**arguments.merge(executor_uid: uid)) }
+        operation["executor_uid"] = selected
+        @document.fetch("operations")["fixture"] = @document.fetch("operations").delete("prune-preserved-workspace")
+        assert_raises(SecurityError) { @policy.workspace_prune_receiver!(**arguments) }
+      end
+
       def test_existing_input_and_policy_owners_compute_exact_bound_request_without_executing_handler
         prepared = @policy.prepare!(@binding, input_bytes: @bytes)
         assert_equal @input, prepared.fetch(:input)

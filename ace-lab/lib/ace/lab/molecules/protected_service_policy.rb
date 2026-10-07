@@ -84,6 +84,18 @@ module Ace
             operation_digest: Ace::Assign::Atoms::EvidenceDigest.digest(operation))
         end
 
+        # Read-only selection of the installed named cleanup receiver; no
+        # proposal authorization or effect capability is minted by preview.
+        def workspace_prune_receiver!(project:, uid:, service_id:, executor_uid:)
+          document = visible_document!(project: project, uid: uid)
+          policy = ServicePolicy.new(document, ->(*) { raise SecurityError, "preview cannot resolve proposal grants" })
+          operation = policy.operation!("prune-preserved-workspace", project: project, service_id: service_id)
+          unless operation.fetch("executor_uid") == executor_uid && executor_uid.is_a?(Integer) && executor_uid.positive? && executor_uid != uid
+            raise SecurityError, "preview receiver differs from the installed cleanup operation"
+          end
+          true
+        end
+
         def visible!(project:, uid:)
           visible_document!(project: project, uid: uid)
           true
