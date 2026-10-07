@@ -28,3 +28,5 @@ Builtin source checkpoint:
 - Parent independent source APPROVE current delta, including exact spelling, no suffix/slash exemption, collision and first-activation authority frozen across reactivation.
 - Actual Lab55353 FAIL1/21.922s: ordinary CLI rendered help successfully after builtin resolution, then protected artifact verification detected mutation. Domain fixture diagnoses input/output ancestry next; this is not a positive composition receipt.
 - New Runtime owner only recognizes no-op existing initialized builtins. No new feature names, extension initialization, LOADED_FEATURES mutation or undeclared code permission.
+
+Root independently executed the final builtin source on the combined integration tree: PASS7/51, receipt `0c4a6ba9-f931-4af4-a15a-b8c966b42733`, same package target above. Author `2d1fc243b8c79bfc4ec9d9d8b573c887908cfbd8` integrated as `c46e84dc0`; the only cherry-pick conflict was this append-only receipt, resolved retaining both review histories. No source changes after that test. Scoped APPROVE; actual full startup still outstanding.
