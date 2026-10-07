@@ -33,12 +33,16 @@ module Ace
         # @raise [Timeout::Error] when the child outlives the deadline (killed)
         # @raise [SystemCallError] spawn failures only (child never launched)
         # @raise [PostLaunchError] SystemCallError while the child was live
-        def call(argv, stdin_data: "", timeout_s:, output_limit: 65_536, environment: nil)
+        def call(argv, stdin_data: "", timeout_s:, output_limit: 65_536, environment: nil, chdir: nil)
           if environment && (!environment.is_a?(Hash) || !environment.all? { |key, value| key.is_a?(String) && value.is_a?(String) })
             raise ArgumentError, "bounded process environment must be explicit strings"
           end
+          if chdir && (!chdir.is_a?(String) || !chdir.start_with?("/"))
+            raise ArgumentError, "bounded process working directory must be absolute"
+          end
           command = environment ? [environment, *argv] : argv
           options = {pgroup: true}
+          options[:chdir] = chdir if chdir
           options[:unsetenv_others] = true if environment
           Open3.popen3(*command, **options) do |stdin, stdout, stderr, waiter|
             begin

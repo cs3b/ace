@@ -375,3 +375,18 @@ Exit `0` means success (including an explicit empty `list` result or a satisfied
 An identical signed reconciliation receipt may be verified again after a consumed/superseded settlement, without another transition. This lets an assignment consumer recover a crash before journaling its verified observation reference. Re-verification preserves the original pinned key, complete binding and generation checks; a later claim's generation rejects the old proof. It never resubmits the payload. Runtime recovery additionally exposes the read-only `process_binding(pane:, caller_pid:)` adapter operation, which requires OS ancestry under the native shell, a matching foreground owner and immutable agent-session identity.
 
 Recovery consumers with a separately accepted journal registration pass `expected_registration:` to `Inbox#reconcile`. The exact `event_id`, `attempt_id`, `payload_sha256` and `receipt_key_sha256` map is checked inside the event lock before signature verification or settlement. A prior `status` call alone does not establish this precondition. A mismatch raises `ValidationError` without settling the event.
+
+## Packaged guarded native source
+
+`ace-herdr native-source selection` describes the source selection and patch shipped by this gem. These assets live under `lib/ace/herdr/native_source`; installed consumers do not need task directories. This source retains native version 0.9.3 and protocol 22; its exact source commit and patch digest identify the guarded producer. No upstream release or publication is implied.
+
+An explicit nonroot build owner can run:
+
+```sh
+ace-herdr native-source build --source /absolute/clean/local/herdr-checkout --output /absolute/new/artifact-directory --target x86_64-unknown-linux-musl
+ace-herdr native-source verify --artifact /absolute/artifact-directory
+```
+
+The build requires a matching native Linux host (x86_64 or aarch64), the selected Rust and Zig versions, and a native `musl-gcc` toolchain already provisioned by the build owner. Cross builds are unsupported. The output must be new. The builder reproduces the exact baseline plus shipped patch in an isolated checkout, checks the commit/tree/lock/toolchain bytes, pins resolved Rust/Zig/linker paths, invokes the locked release build, and records observed executable/tool digests. It never runs the resulting Herdr binary, changes global tool defaults, contacts a running Herdr server, or publishes an artifact. Locked dependency fetching by Cargo may require network access. Failed builds retain their output claim; a partial directory does not verify.
+
+Verification checks bounded strict provenance against this gem's source selection and the observed ELF bytes/architecture. It provides byte provenance, not deployment authorization. The trusted Lab deployment owner separately selects the gem, source selection, artifact and receipt digests before installing the fixed Lab binary. Protected runtime replacement must also use the canonical maintenance admission/release owner. That operational installer join remains required source work; these commands alone do not activate the producer or complete installed acceptance.

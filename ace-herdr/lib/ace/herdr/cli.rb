@@ -15,6 +15,7 @@ require_relative "cli/commands/capture"
 require_relative "cli/commands/workspace"
 require_relative "cli/commands/tab"
 require_relative "cli/commands/list_presets"
+require_relative "cli/commands/native_source"
 
 module Ace
   module Herdr
@@ -29,6 +30,7 @@ module Ace
         ["deliver", "Push an answer to an agent pane (ace-hitl delivery contract)"],
         ["inbox", "Durable agent message queue and reconciliation"],
         ["dispatch", "Start an agent in one command: tab + agent + prompt"],
+        ["native-source", "Describe, build, or verify the packaged guarded native source"],
         ["list", "List live panes, tabs, or workspaces as one JSON line"],
         ["send", "Send a command, raw text, or named keys to a pane"],
         ["capture", "Print recent pane output as raw text"],
@@ -69,6 +71,7 @@ module Ace
       register "deliver", CLI::Commands::Deliver.new
       register "inbox", CLI::Commands::Inbox.new
       register "dispatch", CLI::Commands::Dispatch.new
+      register "native-source", CLI::Commands::NativeSource.new
       register "list", CLI::Commands::List.new
       register "send", CLI::Commands::Send.new
       register "capture", CLI::Commands::Capture.new

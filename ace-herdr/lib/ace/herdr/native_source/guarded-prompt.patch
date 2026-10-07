@@ -1,0 +1,2421 @@
+From 96f14b6d8b8b7c712bf6d1f381c789fabdfe2050 Mon Sep 17 00:00:00 2001
+From: Miguel <mc@cs3b.com>
+Date: Wed, 7 Oct 2026 00:43:20 +0100
+Subject: [PATCH] feat: guard original-terminal prompt submissions
+
+---
+ docs/next/api/herdr-api.schema.json           | 219 +++++++
+ .../src/content/docs/agent-automation.mdx     |  11 +
+ src/api/schema/agents.rs                      |  27 +
+ src/api/schema/panes.rs                       |   4 +
+ src/api/schema/response.rs                    |  19 +
+ src/api/schema/tests.rs                       |   3 +
+ src/api/server.rs                             |   1 +
+ src/api/wait.rs                               |   9 +-
+ src/app/api/agents.rs                         | 125 +++-
+ src/app/api/panes.rs                          |   6 +
+ src/app/terminal_targets.rs                   |  55 ++
+ src/cli/agent.rs                              |   1 +
+ src/pane.rs                                   |  41 ++
+ src/platform/guarded_prompt.rs                | 519 +++++++++++++++
+ src/platform/linux.rs                         |   3 +
+ src/platform/linux/guarded_origin.rs          |  87 +++
+ src/platform/mod.rs                           |  12 +
+ src/pty/actor/unix.rs                         | 593 +++++++++++++++++-
+ src/pty/backend/unix.rs                       |   5 +
+ src/terminal/runtime.rs                       |  20 +
+ 20 files changed, 1733 insertions(+), 27 deletions(-)
+ create mode 100644 src/platform/guarded_prompt.rs
+ create mode 100644 src/platform/linux/guarded_origin.rs
+
+diff --git a/docs/next/api/herdr-api.schema.json b/docs/next/api/herdr-api.schema.json
+index e2553f75ff9a24fea89781773a46d68ba6ea3314..84f2e0b84e87d73edf21b3c3edb37da774863934 100644
+--- a/docs/next/api/herdr-api.schema.json
++++ b/docs/next/api/herdr-api.schema.json
+@@ -1226,10 +1226,62 @@
+       "title": "EventEnvelope",
+       "type": "object"
+     },
++    "guarded_prompt_error_response": {
++      "$defs": {
++        "GuardedPromptErrorBody": {
++          "additionalProperties": false,
++          "properties": {
++            "code": {
++              "type": "string"
++            },
++            "message": {
++              "type": "string"
++            },
++            "phase": {
++              "type": "string"
++            }
++          },
++          "required": [
++            "code",
++            "message",
++            "phase"
++          ],
++          "type": "object"
++        }
++      },
++      "$schema": "https://json-schema.org/draft/2020-12/schema",
++      "additionalProperties": false,
++      "description": "Closed guarded error envelope; phase is never inferred from a generic error.",
++      "properties": {
++        "error": {
++          "$ref": "#/schemas/guarded_prompt_error_response/$defs/GuardedPromptErrorBody"
++        },
++        "id": {
++          "type": "string"
++        }
++      },
++      "required": [
++        "id",
++        "error"
++      ],
++      "title": "GuardedPromptErrorResponse",
++      "type": "object"
++    },
+     "request": {
+       "$defs": {
+         "AgentPromptParams": {
++          "additionalProperties": false,
+           "properties": {
++            "expected_origin": {
++              "anyOf": [
++                {
++                  "$ref": "#/schemas/request/$defs/GuardedPromptOrigin"
++                },
++                {
++                  "type": "null"
++                }
++              ]
++            },
+             "target": {
+               "type": "string"
+             },
+@@ -2151,6 +2203,75 @@
+           ],
+           "type": "object"
+         },
++        "GuardedChildIdentity": {
++          "additionalProperties": false,
++          "properties": {
++            "gid": {
++              "format": "uint32",
++              "minimum": 0,
++              "type": "integer"
++            },
++            "groups": {
++              "items": {
++                "format": "uint32",
++                "minimum": 0,
++                "type": "integer"
++              },
++              "type": "array"
++            },
++            "host": {
++              "type": "string"
++            },
++            "parent_pid": {
++              "format": "uint32",
++              "minimum": 0,
++              "type": "integer"
++            },
++            "pid": {
++              "format": "uint32",
++              "minimum": 0,
++              "type": "integer"
++            },
++            "started_at": {
++              "type": "string"
++            },
++            "uid": {
++              "format": "uint32",
++              "minimum": 0,
++              "type": "integer"
++            }
++          },
++          "required": [
++            "pid",
++            "uid",
++            "gid",
++            "groups",
++            "parent_pid",
++            "started_at",
++            "host"
++          ],
++          "type": "object"
++        },
++        "GuardedPromptOrigin": {
++          "additionalProperties": false,
++          "properties": {
++            "child": {
++              "$ref": "#/schemas/request/$defs/GuardedChildIdentity"
++            },
++            "runtime_incarnation": {
++              "type": "string"
++            },
++            "terminal_id": {
++              "type": "string"
++            }
++          },
++          "required": [
++            "terminal_id",
++            "runtime_incarnation",
++            "child"
++          ],
++          "type": "object"
++        },
+         "IntegrationInstallParams": {
+           "properties": {
+             "target": {
+@@ -7485,6 +7606,75 @@
+           ],
+           "type": "string"
+         },
++        "GuardedChildIdentity": {
++          "additionalProperties": false,
++          "properties": {
++            "gid": {
++              "format": "uint32",
++              "minimum": 0,
++              "type": "integer"
++            },
++            "groups": {
++              "items": {
++                "format": "uint32",
++                "minimum": 0,
++                "type": "integer"
++              },
++              "type": "array"
++            },
++            "host": {
++              "type": "string"
++            },
++            "parent_pid": {
++              "format": "uint32",
++              "minimum": 0,
++              "type": "integer"
++            },
++            "pid": {
++              "format": "uint32",
++              "minimum": 0,
++              "type": "integer"
++            },
++            "started_at": {
++              "type": "string"
++            },
++            "uid": {
++              "format": "uint32",
++              "minimum": 0,
++              "type": "integer"
++            }
++          },
++          "required": [
++            "pid",
++            "uid",
++            "gid",
++            "groups",
++            "parent_pid",
++            "started_at",
++            "host"
++          ],
++          "type": "object"
++        },
++        "GuardedPromptOrigin": {
++          "additionalProperties": false,
++          "properties": {
++            "child": {
++              "$ref": "#/schemas/success_response/$defs/GuardedChildIdentity"
++            },
++            "runtime_incarnation": {
++              "type": "string"
++            },
++            "terminal_id": {
++              "type": "string"
++            }
++          },
++          "required": [
++            "terminal_id",
++            "runtime_incarnation",
++            "child"
++          ],
++          "type": "object"
++        },
+         "InstalledPluginInfo": {
+           "properties": {
+             "actions": {
+@@ -8275,6 +8465,19 @@
+               },
+               "type": "array"
+             },
++            "guarded_prompt": {
++              "type": "boolean"
++            },
++            "guarded_prompt_origin": {
++              "anyOf": [
++                {
++                  "$ref": "#/schemas/success_response/$defs/GuardedPromptOrigin"
++                },
++                {
++                  "type": "null"
++                }
++              ]
++            },
+             "pane_id": {
+               "type": "string"
+             },
+@@ -9481,6 +9684,22 @@
+                 "agent": {
+                   "$ref": "#/schemas/success_response/$defs/AgentInfo"
+                 },
++                "origin": {
++                  "anyOf": [
++                    {
++                      "$ref": "#/schemas/success_response/$defs/GuardedPromptOrigin"
++                    },
++                    {
++                      "type": "null"
++                    }
++                  ]
++                },
++                "submission": {
++                  "type": [
++                    "string",
++                    "null"
++                  ]
++                },
+                 "type": {
+                   "const": "agent_prompted",
+                   "type": "string"
+diff --git a/docs/next/website/src/content/docs/agent-automation.mdx b/docs/next/website/src/content/docs/agent-automation.mdx
+index def306fabcaa7a99d4d00804bd89d51a0f61fca7..748d7456411b0ae7a047d7e63bcd4158ba1fd3cf 100644
+--- a/docs/next/website/src/content/docs/agent-automation.mdx
++++ b/docs/next/website/src/content/docs/agent-automation.mdx
+@@ -81,6 +81,17 @@ Startup readiness, restoring an idle conversation, and switching agent conversat
+ 
+ A timeout or `agent_prompt_stalled` does not prove that no input was sent. Read the agent before retrying to avoid submitting the same prompt twice. IDs and agent names are scoped to one server; selecting another machine in the TUI does not retarget CLI commands running in an existing pane.
+ 
++### Guarded original-terminal submission (API)
++
++An integration that requires an original spawn must use a source build supporting guarded prompts and require `guarded_prompt: true` plus `guarded_prompt_origin` from `pane.process-info`. This capability is available only for an attached Linux terminal whose original child was captured with a live pidfd. Imported or handed-off terminals and unsupported capture do not advertise it. Select and authenticate the intended server/build before reading its capability; an older server's ordinary prompt acknowledgment is not guarded evidence.
++
++Call `agent.prompt` with `target` equal to that exact opaque `terminal_id`, `text`, and the complete `expected_origin` object unchanged. The object contains `terminal_id`, `runtime_incarnation`, and `child` (`pid`, `uid`, `gid`, `groups`, `parent_pid`, `started_at`, `host`). Unknown fields, aliases, malformed identities, `wait`, blank text, and text above 16384 UTF-8 bytes are refused. Guarded calls do not use pane names or agent labels.
++
++The original child and runtime must still match when admitted and immediately before each focus/text/Enter write to the captured PTY. A complete acknowledgment contains `submission: "submitted"` and the exact `origin`; it proves ordered terminal submission, not agent consumption. Refusals report `error.phase: "not_issued"` when no guarded input was written. Partial writes, write errors, or uncertain completion report `"issued_or_unknown"`. A lost acknowledgment is also uncertain. Never automatically resend an uncertain prompt. The same original terminal may deliver to its foreground descendant; this protocol does not authenticate which descendant consumed the text.
++
++Queued guarded submissions prevent PTY handoff until completed or refused. Replacement or original-child exit before the first write has no focus/text effect. Exit after partial input suppresses further text/Enter and remains uncertain. Protected stop and whole-scope writer/settlement proofs belong to the external canonical owner; guarded prompt acknowledgment does not authorize cleanup.
++
++
+ `pane wait-output` does not interpret agent lifecycle. It polls the selected terminal snapshot and searches it immediately, so text that was already present can match. The default source name is `recent`; matching treats that source as unwrapped recent output from the latest 80 rendered terminal rows. `--lines` changes that row limit, and `--regex` uses Rust regular-expression syntax and matches one line at a time.
+ 
+ At the CLI, both `pane read` and `agent read` print terminal text directly. The default is UTF-8 text with ANSI escapes stripped; use `--format ansi` or `--ansi` to preserve terminal escapes where the source exposes them. The `detection` source is always plain text. For recent sources, `--lines N` selects the last N rendered terminal rows before optional unwrapping; without it, reads default to 80 rows. For `visible` and `detection`, omitting `--lines` returns the full snapshot, while specifying it keeps the last N newline-delimited lines. The socket API returns the text at `.result.read.text`.
+diff --git a/src/api/schema/agents.rs b/src/api/schema/agents.rs
+index 48450c30c6531b7b9d8fc6d130eaf1ee35ec12fb..9202bca790c45ad8c82eac116f4961f208cb60b4 100644
+--- a/src/api/schema/agents.rs
++++ b/src/api/schema/agents.rs
+@@ -176,13 +176,40 @@ pub struct AgentStartParams {
+ }
+ 
+ #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
++#[serde(deny_unknown_fields)]
+ pub struct AgentPromptParams {
+     pub target: String,
+     pub text: String,
+     #[serde(default, skip_serializing_if = "Option::is_none")]
++    pub expected_origin: Option<crate::platform::guarded_prompt::GuardedPromptOrigin>,
++    #[serde(default, skip_serializing_if = "Option::is_none")]
+     pub wait: Option<AgentPromptWaitOptions>,
+ }
+ 
++impl AgentPromptParams {
++    pub(crate) fn validate_guarded(
++        &self,
++    ) -> Result<
++        &crate::platform::guarded_prompt::GuardedPromptOrigin,
++        crate::platform::guarded_prompt::GuardedPromptError,
++    > {
++        use crate::platform::guarded_prompt::GuardedPromptError;
++        let expected = self
++            .expected_origin
++            .as_ref()
++            .ok_or(GuardedPromptError::GuardMismatch)?;
++        if self.wait.is_some()
++            || !expected.valid()
++            || expected.terminal_id != self.target
++            || self.text.trim().is_empty()
++            || self.text.len() > 16_384
++        {
++            return Err(GuardedPromptError::GuardMismatch);
++        }
++        Ok(expected)
++    }
++}
++
+ #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
+ pub struct AgentInfo {
+     pub terminal_id: String,
+diff --git a/src/api/schema/panes.rs b/src/api/schema/panes.rs
+index 9dbe0221dbbb8fb92fc6506bea7ed2efeaf728ea..929ffe6727c5e61b6464f6f8066b2d027bf14008 100644
+--- a/src/api/schema/panes.rs
++++ b/src/api/schema/panes.rs
+@@ -492,6 +492,10 @@ pub struct PaneScrollInfo {
+ 
+ #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
+ pub struct PaneProcessInfo {
++    #[serde(default, skip_serializing_if = "Option::is_none")]
++    pub guarded_prompt_origin: Option<crate::platform::guarded_prompt::GuardedPromptOrigin>,
++    #[serde(default, skip_serializing_if = "super::is_false")]
++    pub guarded_prompt: bool,
+     pub pane_id: String,
+     #[serde(default, skip_serializing_if = "Option::is_none")]
+     pub shell_pid: Option<u32>,
+diff --git a/src/api/schema/response.rs b/src/api/schema/response.rs
+index e92e49524757b5c80d59700ff3fc9d22754ff625..8afd1e430b015ab3d0a0734c8ac45628aecba359 100644
+--- a/src/api/schema/response.rs
++++ b/src/api/schema/response.rs
+@@ -103,6 +103,10 @@ pub enum ResponseResult {
+     },
+     AgentPrompted {
+         agent: AgentInfo,
++        #[serde(default, skip_serializing_if = "Option::is_none")]
++        origin: Option<crate::platform::guarded_prompt::GuardedPromptOrigin>,
++        #[serde(default, skip_serializing_if = "Option::is_none")]
++        submission: Option<String>,
+     },
+     AgentList {
+         agents: Vec<AgentInfo>,
+@@ -299,3 +303,18 @@ pub struct AgentManifestInfo {
+     #[serde(default, skip_serializing_if = "Option::is_none")]
+     pub warning: Option<String>,
+ }
++
++/// Closed guarded error envelope; phase is never inferred from a generic error.
++#[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
++#[serde(deny_unknown_fields)]
++pub struct GuardedPromptErrorResponse {
++    pub id: String,
++    pub error: GuardedPromptErrorBody,
++}
++#[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema)]
++#[serde(deny_unknown_fields)]
++pub struct GuardedPromptErrorBody {
++    pub code: String,
++    pub message: String,
++    pub phase: String,
++}
+diff --git a/src/api/schema/tests.rs b/src/api/schema/tests.rs
+index 3b43133b10eb3828c6be874d892ce159f4b877d5..ffbb5e3af35e4f701493c13254c60c315e4002d5 100644
+--- a/src/api/schema/tests.rs
++++ b/src/api/schema/tests.rs
+@@ -39,6 +39,7 @@ fn protocol_schema_document() -> serde_json::Value {
+             "request": protocol_schema_entry::<Request>("request"),
+             "success_response": protocol_schema_entry::<SuccessResponse>("success_response"),
+             "error_response": protocol_schema_entry::<ErrorResponse>("error_response"),
++            "guarded_prompt_error_response": protocol_schema_entry::<GuardedPromptErrorResponse>("guarded_prompt_error_response"),
+             "event": protocol_schema_entry::<EventEnvelope>("event"),
+             "subscription_event": protocol_schema_entry::<SubscriptionEventEnvelope>("subscription_event"),
+         },
+@@ -113,6 +114,7 @@ fn agent_start_and_prompt_requests_round_trip() {
+     let prompt = Request {
+         id: "prompt".into(),
+         method: Method::AgentPrompt(AgentPromptParams {
++            expected_origin: None,
+             target: "reviewer".into(),
+             text: "review this".into(),
+             wait: None,
+@@ -128,6 +130,7 @@ fn agent_start_and_prompt_requests_round_trip() {
+     let prompt_and_wait = Request {
+         id: "prompt-and-wait".into(),
+         method: Method::AgentPrompt(AgentPromptParams {
++            expected_origin: None,
+             target: "reviewer".into(),
+             text: "review this".into(),
+             wait: Some(AgentPromptWaitOptions {
+diff --git a/src/api/server.rs b/src/api/server.rs
+index dbd7d3b6b165b6e94b4f7d906a6820d2eb8ba940..77e8b6e77c6afc6d9ad09af1c1fad37a77e4cec1 100644
+--- a/src/api/server.rs
++++ b/src/api/server.rs
+@@ -1083,6 +1083,7 @@ fn caller_timeout_dispatch_uses_timeout_error() {
+         Request {
+             id: "prompt-timeout".into(),
+             method: Method::AgentPrompt(crate::api::schema::AgentPromptParams {
++                expected_origin: None,
+                 target: "reviewer".into(),
+                 text: "review this".into(),
+                 wait: None,
+diff --git a/src/api/wait.rs b/src/api/wait.rs
+index 541779f8329ec7f88735ee66b74d9207ec75e641..9d366d21a2fc4c3ffda5f7394123334d0ecc7ea8 100644
+--- a/src/api/wait.rs
++++ b/src/api/wait.rs
+@@ -182,6 +182,9 @@ pub(super) fn prompt_agent(
+     event_hub: &EventHub,
+     running: &Arc<AtomicBool>,
+ ) -> std::io::Result<Option<String>> {
++    if params.expected_origin.is_some() && params.validate_guarded().is_err() {
++        return Ok(Some(serde_json::json!({"id": request_id, "error": {"code": "guard_mismatch", "phase": "not_issued", "message": "invalid guarded prompt"}}).to_string()));
++    }
+     let Some(wait) = params.wait.clone() else {
+         return Ok(Some(dispatch_to_app_with_timeout(
+             Request {
+@@ -334,7 +337,11 @@ fn agent_prompt_success(
+ ) -> std::io::Result<String> {
+     serde_json::to_string(&SuccessResponse {
+         id: request_id,
+-        result: ResponseResult::AgentPrompted { agent },
++        result: ResponseResult::AgentPrompted {
++            agent,
++            origin: None,
++            submission: None,
++        },
+     })
+     .map_err(std::io::Error::other)
+ }
+diff --git a/src/app/api/agents.rs b/src/app/api/agents.rs
+index 9289ae02f4ff15a63131af954f945d85c83a4dae..f3d10219bb72894ae101b831cb18c0e45f7c9ab3 100644
+--- a/src/app/api/agents.rs
++++ b/src/app/api/agents.rs
+@@ -7,6 +7,7 @@ use crate::api::schema::{
+     PaneReadResult, ResponseResult,
+ };
+ use crate::app::App;
++use crate::platform::guarded_prompt::{GuardedPromptError, GuardedPromptOrigin};
+ 
+ use super::responses::{encode_error, encode_error_body, encode_success};
+ 
+@@ -87,11 +88,43 @@ impl App {
+         let crate::api::schema::Method::AgentPrompt(params) = request.method else {
+             return false;
+         };
++        if params.expected_origin.is_some() {
++            match self.queue_guarded_agent_prompt(request.id, params) {
++                Ok((id, agent, origin, completion)) => {
++                    std::thread::spawn(move || {
++                        let response = match completion.recv() {
++                            Ok(Ok(())) => encode_success(
++                                id,
++                                ResponseResult::AgentPrompted {
++                                    agent,
++                                    origin: Some(origin),
++                                    submission: Some("submitted".to_owned()),
++                                },
++                            ),
++                            Ok(Err(error)) => guarded_error(id, error),
++                            Err(_) => guarded_error(id, GuardedPromptError::SubmissionUncertain),
++                        };
++                        let _ = respond_to.send(response);
++                    });
++                }
++                Err(response) => {
++                    let _ = respond_to.send(response);
++                }
++            }
++            return true;
++        }
+         match self.queue_agent_prompt(request.id, params) {
+             Ok((id, agent, completion)) => {
+                 std::thread::spawn(move || {
+                     let response = match completion.recv() {
+-                        Ok(Ok(())) => encode_success(id, ResponseResult::AgentPrompted { agent }),
++                        Ok(Ok(())) => encode_success(
++                            id,
++                            ResponseResult::AgentPrompted {
++                                agent,
++                                origin: None,
++                                submission: None,
++                            },
++                        ),
+                         Ok(Err(err)) if err.kind() == std::io::ErrorKind::TimedOut => {
+                             encode_error(id, "timeout", err.to_string())
+                         }
+@@ -108,6 +141,77 @@ impl App {
+         true
+     }
+ 
++    fn queue_guarded_agent_prompt(
++        &mut self,
++        id: String,
++        params: AgentPromptParams,
++    ) -> Result<
++        (
++            String,
++            crate::api::schema::AgentInfo,
++            GuardedPromptOrigin,
++            std::sync::mpsc::Receiver<Result<(), GuardedPromptError>>,
++        ),
++        String,
++    > {
++        let expected = params
++            .validate_guarded()
++            .map_err(|error| guarded_error(id.clone(), error))?;
++        // The guarded branch never uses public pane/name or generic resolver fallback.
++        let resolved = self
++            .resolve_guarded_agent_target(&params.target)
++            .map_err(|_| guarded_error(id.clone(), GuardedPromptError::TargetMissing))?;
++        let terminal = self
++            .state
++            .terminals
++            .get(params.target.as_str())
++            .ok_or_else(|| guarded_error(id.clone(), GuardedPromptError::TargetMissing))?;
++        if terminal.state == crate::detect::AgentState::Blocked {
++            return Err(guarded_error(id, GuardedPromptError::AgentBlocked));
++        }
++        let expected_agent = terminal
++            .effective_known_agent()
++            .ok_or_else(|| guarded_error(id.clone(), GuardedPromptError::AgentNotReady))?;
++        if terminal.managed_agent_launch_pending() {
++            return Err(guarded_error(id, GuardedPromptError::AgentNotReady));
++        }
++        let runtime = self
++            .lookup_runtime_sender(resolved.ws_idx, resolved.pane_id)
++            .ok_or_else(|| guarded_error(id.clone(), GuardedPromptError::OriginUnavailable))?;
++        let actual = runtime
++            .guarded_prompt_origin(&params.target)
++            .ok_or_else(|| guarded_error(id.clone(), GuardedPromptError::OriginUnavailable))?;
++        if actual != *expected {
++            return Err(guarded_error(id, GuardedPromptError::GuardMismatch));
++        }
++        if !super::super::agents::runtime_hosts_agent(runtime, expected_agent) {
++            return Err(guarded_error(id, GuardedPromptError::AgentNotReady));
++        }
++        let (mut text, enter) =
++            crate::app::api_helpers::encode_api_submission_parts(runtime, &params.text);
++        if enter.is_empty() || text.is_empty() {
++            return Err(guarded_error(id, GuardedPromptError::OriginUnavailable));
++        }
++        if expected_agent == crate::detect::Agent::GithubCopilot {
++            let mut focus = crate::ghostty::encode_focus(crate::ghostty::FocusEvent::Gained)
++                .map_err(|_| guarded_error(id.clone(), GuardedPromptError::OriginUnavailable))?;
++            focus.append(&mut text);
++            text = focus;
++        }
++        let agent = self
++            .agent_info(resolved.ws_idx, resolved.pane_id)
++            .ok_or_else(|| guarded_error(id.clone(), GuardedPromptError::AgentNotReady))?;
++        let completion = runtime
++            .queue_guarded_submission(
++                Bytes::from(text),
++                Bytes::from(enter),
++                AGENT_PROMPT_SUBMIT_DELAY,
++                expected.clone(),
++            )
++            .map_err(|error| guarded_error(id.clone(), error))?;
++        Ok((id, agent, expected.clone(), completion))
++    }
++
+     fn queue_agent_prompt(
+         &mut self,
+         id: String,
+@@ -457,6 +561,7 @@ mod tests {
+             &mut app,
+             "req",
+             AgentPromptParams {
++                expected_origin: None,
+                 target: "reviewer".into(),
+                 text: "A != B".into(),
+                 wait: None,
+@@ -557,6 +662,7 @@ mod tests {
+             &mut app,
+             "req",
+             AgentPromptParams {
++                expected_origin: None,
+                 target: public_pane_id,
+                 text: "A != B".into(),
+                 wait: None,
+@@ -586,6 +692,7 @@ mod tests {
+             &mut app,
+             "req-raw",
+             AgentPromptParams {
++                expected_origin: None,
+                 target: "reviewer".into(),
+                 text: "A != B".into(),
+                 wait: None,
+@@ -601,6 +708,7 @@ mod tests {
+             &mut app,
+             "req-label",
+             AgentPromptParams {
++                expected_origin: None,
+                 target: "opencode".into(),
+                 text: "wrong target".into(),
+                 wait: None,
+@@ -628,6 +736,7 @@ mod tests {
+             &mut app,
+             "req",
+             AgentPromptParams {
++                expected_origin: None,
+                 target: "reviewer".into(),
+                 text: "unrelated prompt".into(),
+                 wait: None,
+@@ -668,6 +777,7 @@ mod tests {
+             &mut app,
+             "req",
+             AgentPromptParams {
++                expected_origin: None,
+                 target: "reviewer".into(),
+                 text: "A != B".into(),
+                 wait: None,
+@@ -747,6 +857,7 @@ mod tests {
+             &mut app,
+             "req-pending",
+             AgentPromptParams {
++                expected_origin: None,
+                 target: "reviewer".into(),
+                 text: "A != B".into(),
+                 wait: None,
+@@ -821,3 +932,15 @@ mod tests {
+         }
+     }
+ }
++
++fn guarded_error(id: String, error: GuardedPromptError) -> String {
++    serde_json::json!(crate::api::schema::GuardedPromptErrorResponse {
++        id,
++        error: crate::api::schema::GuardedPromptErrorBody {
++            code: error.code().to_owned(),
++            message: "guarded prompt did not complete".to_owned(),
++            phase: error.phase().to_owned(),
++        },
++    })
++    .to_string()
++}
+diff --git a/src/app/api/panes.rs b/src/app/api/panes.rs
+index e4e03e71b48f96754bf0559b6e6ecf546437ab65..bc955a76953b90527a9169191b048fed989e8c7b 100644
+--- a/src/app/api/panes.rs
++++ b/src/app/api/panes.rs
+@@ -550,10 +550,16 @@ impl App {
+             })
+             .unwrap_or_default();
+ 
++        let guarded_prompt_origin = self.state.workspaces[ws_idx]
++            .terminal_id(pane_id)
++            .and_then(|id| runtime.guarded_prompt_origin(id.as_str()));
++
+         encode_success(
+             id,
+             ResponseResult::PaneProcessInfo {
+                 process_info: PaneProcessInfo {
++                    guarded_prompt: guarded_prompt_origin.is_some(),
++                    guarded_prompt_origin,
+                     pane_id: public_pane_id,
+                     shell_pid,
+                     foreground_process_group_id,
+diff --git a/src/app/terminal_targets.rs b/src/app/terminal_targets.rs
+index bbaaaf7dd52798812823c027800c2e2319636076..658eeaaa3f138dcfa443c8406c1753259ac3e517 100644
+--- a/src/app/terminal_targets.rs
++++ b/src/app/terminal_targets.rs
+@@ -29,7 +29,25 @@ pub(crate) enum TerminalTargetError {
+     },
+ }
+ 
++fn guarded_terminal_matches(target: &str, terminals: Vec<TerminalTarget>) -> Vec<TerminalTarget> {
++    terminals
++        .into_iter()
++        .filter(|candidate| candidate.terminal_id == target)
++        .collect()
++}
++
+ impl App {
++    pub(crate) fn resolve_guarded_agent_target(
++        &self,
++        target: &str,
++    ) -> Result<TerminalTarget, TerminalTargetError> {
++        let matches = guarded_terminal_matches(target, self.terminal_targets());
++        self.single_terminal_match(target, matches)?
++            .ok_or_else(|| TerminalTargetError::NotFound {
++                target: target.to_owned(),
++            })
++    }
++
+     pub(crate) fn resolve_terminal_target(
+         &self,
+         target: &str,
+@@ -327,3 +345,40 @@ mod tests {
+         }
+     }
+ }
++
++#[cfg(test)]
++mod guarded_prompt_pure_tests {
++    use super::*;
++    fn target(id: &str) -> TerminalTarget {
++        TerminalTarget {
++            ws_idx: 0,
++            tab_idx: 0,
++            pane_id: crate::layout::PaneId::from_raw(1),
++            terminal_id: id.into(),
++        }
++    }
++    #[test]
++    fn guarded_app_selection_accepts_only_exact_terminal_id_never_pane_or_label() {
++        let terminals = vec![target("term_aa11"), target("term_bb22")];
++        assert_eq!(
++            guarded_terminal_matches("term_aa11", terminals.clone()),
++            vec![target("term_aa11")]
++        );
++        for alias in [
++            "pane:1",
++            "1",
++            "codex",
++            "TERM_AA11",
++            "term_AA11",
++            "term_aa11 ",
++        ] {
++            assert!(guarded_terminal_matches(alias, terminals.clone()).is_empty());
++        }
++        assert!(guarded_terminal_matches("term_aa11", vec![target("term_bb22")]).is_empty());
++        assert_eq!(
++            guarded_terminal_matches("term_aa11", vec![target("term_aa11"), target("term_aa11")])
++                .len(),
++            2
++        );
++    }
++}
+diff --git a/src/cli/agent.rs b/src/cli/agent.rs
+index 09043460d474293e8f45da2511d96f7ff0ef2a42..5a941b716073de75e947bc194212e90a7bf23efb 100644
+--- a/src/cli/agent.rs
++++ b/src/cli/agent.rs
+@@ -838,6 +838,7 @@ fn agent_prompt(args: &[String]) -> std::io::Result<i32> {
+     let response = super::send_request(&Request {
+         id: "cli:agent:prompt".into(),
+         method: Method::AgentPrompt(AgentPromptParams {
++            expected_origin: None,
+             target: target.clone(),
+             text: text.clone(),
+             wait: wait.then_some(AgentPromptWaitOptions {
+diff --git a/src/pane.rs b/src/pane.rs
+index 8fd8e3961c9fa4088c4d2bcf3bf01df0407c7c48..085210f3d817a06827faef48f098bd86f6fb2895 100644
+--- a/src/pane.rs
++++ b/src/pane.rs
+@@ -2494,6 +2494,7 @@ impl PaneRuntime {
+             });
+             PaneRuntimeIo::Actor(PtyIoActor::spawn(PtyIoActorConfig {
+                 pane_id: pane_id.raw(),
++                origin: None,
+                 master_fd,
+                 initially_quiesced: true,
+                 on_read,
+@@ -2581,6 +2582,8 @@ impl PaneRuntime {
+         let spawned = crate::pty::backend::spawn_with_portable_pty(rows, cols, cmd)
+             .inspect_err(|err| error!(pane = pane_id.raw(), err = %err, "{spawn_error_message}"))?;
+ 
++        #[cfg(unix)]
++        let guarded_origin = spawned.origin.clone();
+         // --- Child watcher task ---
+         let child_pid = Arc::new(AtomicU32::new(0));
+         let reported_cwd = Arc::new(Mutex::new(None));
+@@ -2594,6 +2597,8 @@ impl PaneRuntime {
+             let child_wait_completed = child_wait_completed.clone();
+             let events = events.clone();
+             let rt = tokio::runtime::Handle::current();
++            #[cfg(unix)]
++            let guarded_origin = guarded_origin.clone();
+             let mut child = spawned.child;
+             if let Some(pid) = child.process_id() {
+                 child_pid.store(pid, Ordering::Release);
+@@ -2612,6 +2617,10 @@ impl PaneRuntime {
+                         crate::platform::ChildExitReason::WaitFailed
+                     }
+                 };
++                #[cfg(unix)]
++                if let Some(origin) = guarded_origin {
++                    origin.mark_exited();
++                }
+                 child_wait_completed.store(true, Ordering::Release);
+                 // Use blocking send — PaneDied is critical, must not be dropped
+                 if let Err(e) = rt.block_on(events.send(AppEvent::PaneDied {
+@@ -2688,6 +2697,8 @@ impl PaneRuntime {
+                 pane_id: pane_id.raw(),
+                 #[cfg(unix)]
+                 master_fd: spawned.master_fd,
++                #[cfg(unix)]
++                origin: guarded_origin,
+                 #[cfg(windows)]
+                 master: spawned.master,
+                 initially_quiesced: false,
+@@ -3520,6 +3531,36 @@ impl PaneRuntime {
+         self.io.try_send_bytes(bytes)
+     }
+ 
++    pub(crate) fn guarded_prompt_origin(
++        &self,
++        terminal_id: &str,
++    ) -> Option<crate::platform::guarded_prompt::GuardedPromptOrigin> {
++        #[cfg(unix)]
++        if let PaneRuntimeIo::Actor(actor) = &self.io {
++            return actor.guarded_origin(terminal_id);
++        }
++        let _ = terminal_id;
++        None
++    }
++
++    pub(crate) fn queue_guarded_submission(
++        &self,
++        text: Bytes,
++        enter: Bytes,
++        delay: std::time::Duration,
++        expected: crate::platform::guarded_prompt::GuardedPromptOrigin,
++    ) -> Result<
++        std::sync::mpsc::Receiver<Result<(), crate::platform::guarded_prompt::GuardedPromptError>>,
++        crate::platform::guarded_prompt::GuardedPromptError,
++    > {
++        #[cfg(unix)]
++        if let PaneRuntimeIo::Actor(actor) = &self.io {
++            return actor.queue_guarded_submission(text, enter, delay, expected);
++        }
++        let _ = (text, enter, delay, expected);
++        Err(crate::platform::guarded_prompt::GuardedPromptError::OriginUnavailable)
++    }
++
+     pub fn queue_user_input_submission(
+         &self,
+         text: Bytes,
+diff --git a/src/platform/guarded_prompt.rs b/src/platform/guarded_prompt.rs
+new file mode 100644
+index 0000000000000000000000000000000000000000..7e6d3e94d05c5629abb1a9914c182072e5cae08a
+--- /dev/null
++++ b/src/platform/guarded_prompt.rs
+@@ -0,0 +1,519 @@
++//! Shared guarded-submission values and pure write-admission state.
++//! Kernel origin capture stays in the Linux platform owner.
++
++use serde::{Deserialize, Serialize};
++use std::sync::{
++    atomic::{AtomicBool, Ordering},
++    Arc,
++};
++
++#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
++#[serde(deny_unknown_fields)]
++pub struct GuardedChildIdentity {
++    pub pid: u32,
++    pub uid: u32,
++    pub gid: u32,
++    pub groups: Vec<u32>,
++    pub parent_pid: u32,
++    pub started_at: String,
++    pub host: String,
++}
++
++#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
++#[serde(deny_unknown_fields)]
++pub struct GuardedPromptOrigin {
++    pub terminal_id: String,
++    pub runtime_incarnation: String,
++    pub child: GuardedChildIdentity,
++}
++
++pub(crate) fn canonical_uuid(value: &str) -> bool {
++    value.len() == 36
++        && value.bytes().enumerate().all(|(i, b)| {
++            if [8, 13, 18, 23].contains(&i) {
++                b == b'-'
++            } else {
++                b.is_ascii_digit() || (b'a'..=b'f').contains(&b)
++            }
++        })
++}
++
++impl GuardedPromptOrigin {
++    pub(crate) fn valid(&self) -> bool {
++        let child = &self.child;
++        let mut birth = child.started_at.split(':');
++        let valid_birth = birth.next() == Some("linux")
++            && birth.next().is_some_and(canonical_uuid)
++            && birth.next().is_some_and(|ticks| {
++                !ticks.is_empty()
++                    && ticks.bytes().all(|b| b.is_ascii_digit())
++                    && ticks.parse::<u64>().is_ok_and(|n| n > 0)
++            })
++            && birth.next().is_none();
++        self.terminal_id.strip_prefix("term_").is_some_and(|id| {
++            (2..=48).contains(&id.len())
++                && id
++                    .bytes()
++                    .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
++        }) && canonical_uuid(&self.runtime_incarnation)
++            && child.pid > 0
++            && child.parent_pid > 0
++            && child.groups.len() <= 256
++            && child.groups.windows(2).all(|pair| pair[0] < pair[1])
++            && valid_birth
++            && !child.host.is_empty()
++            && child.host.len() <= 255
++            && !child.host.chars().any(char::is_control)
++    }
++}
++
++#[derive(Debug, Clone, Copy, PartialEq, Eq)]
++pub(crate) enum GuardedPromptError {
++    GuardMismatch,
++    OriginUnavailable,
++    OriginExited,
++    AgentBlocked,
++    AgentNotReady,
++    TargetMissing,
++    SubmissionBusy,
++    SubmissionUncertain,
++}
++
++impl GuardedPromptError {
++    pub(crate) fn code(self) -> &'static str {
++        match self {
++            Self::GuardMismatch => "guard_mismatch",
++            Self::OriginUnavailable => "origin_unavailable",
++            Self::OriginExited => "origin_exited",
++            Self::AgentBlocked => "agent_blocked",
++            Self::AgentNotReady => "agent_not_ready",
++            Self::TargetMissing => "target_missing",
++            Self::SubmissionBusy => "submission_busy",
++            Self::SubmissionUncertain => "submission_uncertain",
++        }
++    }
++    pub(crate) fn phase(self) -> &'static str {
++        if self == Self::SubmissionUncertain {
++            "issued_or_unknown"
++        } else {
++            "not_issued"
++        }
++    }
++}
++
++pub(crate) trait OriginLiveness: Send + Sync {
++    fn is_live(&self) -> std::io::Result<bool>;
++}
++
++pub(crate) struct GuardedChildOrigin {
++    pub(crate) runtime_incarnation: String,
++    pub(crate) child: GuardedChildIdentity,
++    pub(crate) exited: AtomicBool,
++    pub(crate) handle: Arc<dyn OriginLiveness>,
++}
++
++impl GuardedChildOrigin {
++    pub(crate) fn projection(&self, terminal_id: &str) -> GuardedPromptOrigin {
++        GuardedPromptOrigin {
++            terminal_id: terminal_id.to_owned(),
++            runtime_incarnation: self.runtime_incarnation.clone(),
++            child: self.child.clone(),
++        }
++    }
++    pub(crate) fn check(&self, expected: &GuardedPromptOrigin) -> Result<(), GuardedPromptError> {
++        if !expected.valid()
++            || expected.runtime_incarnation != self.runtime_incarnation
++            || expected.child != self.child
++        {
++            return Err(GuardedPromptError::GuardMismatch);
++        }
++        if self.exited.load(Ordering::Acquire) {
++            return Err(GuardedPromptError::OriginExited);
++        }
++        match self.handle.is_live() {
++            Ok(true) => Ok(()),
++            Ok(false) => Err(GuardedPromptError::OriginExited),
++            Err(_) => Err(GuardedPromptError::OriginUnavailable),
++        }
++    }
++    pub(crate) fn mark_exited(&self) {
++        self.exited.store(true, Ordering::Release);
++    }
++}
++
++/// Once a guarded write has been attempted, every failure is indeterminate.
++/// This does not claim atomicity between kernel exit and the subsequent write.
++#[derive(Default)]
++pub(crate) struct GuardedWriteState {
++    attempted: bool,
++    written: bool,
++}
++impl GuardedWriteState {
++    pub(crate) fn before_write(
++        &mut self,
++        admission: Result<(), GuardedPromptError>,
++    ) -> Result<(), GuardedPromptError> {
++        admission.map_err(|error| self.failure(error))?;
++        self.attempted = true;
++        Ok(())
++    }
++    pub(crate) fn write(
++        &mut self,
++        admission: Result<(), GuardedPromptError>,
++        write: impl FnOnce() -> std::io::Result<usize>,
++    ) -> Result<Option<usize>, GuardedPromptError> {
++        self.before_write(admission)?;
++        match write() {
++            Ok(0) => Err(GuardedPromptError::SubmissionUncertain),
++            Ok(bytes) => {
++                self.written(bytes);
++                Ok(Some(bytes))
++            }
++            Err(error)
++                if matches!(
++                    error.kind(),
++                    std::io::ErrorKind::WouldBlock | std::io::ErrorKind::Interrupted
++                ) =>
++            {
++                self.deferred();
++                Ok(None)
++            }
++            Err(_) => Err(GuardedPromptError::SubmissionUncertain),
++        }
++    }
++    pub(crate) fn written(&mut self, bytes: usize) {
++        self.written |= bytes > 0;
++    }
++    pub(crate) fn deferred(&mut self) {
++        self.attempted = self.written;
++    }
++    pub(crate) fn failure(&self, error: GuardedPromptError) -> GuardedPromptError {
++        if self.attempted {
++            GuardedPromptError::SubmissionUncertain
++        } else {
++            error
++        }
++    }
++}
++
++pub(crate) fn parse_linux_child_identity(
++    pid: u32,
++    status: &str,
++    stat: &str,
++    boot: &str,
++    host: &str,
++) -> std::io::Result<GuardedChildIdentity> {
++    let invalid = || std::io::Error::other("invalid child origin");
++    if !canonical_uuid(boot) || host.is_empty() || host.len() > 255 {
++        return Err(invalid());
++    }
++    let (prefix, fields) = stat.rsplit_once(") ").ok_or_else(invalid)?;
++    if prefix
++        .split_once(" (")
++        .and_then(|(n, _)| n.parse::<u32>().ok())
++        != Some(pid)
++    {
++        return Err(invalid());
++    }
++    let stat_fields: Vec<_> = fields.split_whitespace().collect();
++    if stat_fields.len() < 20 || matches!(stat_fields[0], "Z" | "X" | "x") {
++        return Err(invalid());
++    }
++    let ticks = stat_fields[19].parse::<u64>().map_err(|_| invalid())?;
++    let parent_pid = stat_fields[1].parse::<u32>().map_err(|_| invalid())?;
++    let mut uid = None;
++    let mut gid = None;
++    let mut groups = None;
++    let mut ppid = None;
++    for line in status.lines() {
++        let Some((key, raw)) = line.split_once(':') else {
++            continue;
++        };
++        if matches!(key, "Uid" | "Gid" | "Groups" | "PPid") {
++            let values: Vec<u32> = raw
++                .split_whitespace()
++                .map(str::parse)
++                .collect::<Result<_, _>>()
++                .map_err(|_| invalid())?;
++            match key {
++                "Uid" | "Gid" => {
++                    if values.len() != 4 || values.iter().any(|v| *v != values[0]) {
++                        return Err(invalid());
++                    }
++                    let cell = if key == "Uid" { &mut uid } else { &mut gid };
++                    if cell.replace(values[0]).is_some() {
++                        return Err(invalid());
++                    }
++                }
++                "Groups" => {
++                    if groups.is_some() || values.len() > 256 {
++                        return Err(invalid());
++                    }
++                    let mut values = values;
++                    values.sort_unstable();
++                    values.dedup();
++                    groups = Some(values);
++                }
++                "PPid" => {
++                    if values.len() != 1 || ppid.replace(values[0]).is_some() {
++                        return Err(invalid());
++                    }
++                }
++                _ => {}
++            }
++        }
++    }
++    if pid == 0 || parent_pid == 0 || ppid != Some(parent_pid) || ticks == 0 {
++        return Err(invalid());
++    }
++    Ok(GuardedChildIdentity {
++        pid,
++        uid: uid.ok_or_else(invalid)?,
++        gid: gid.ok_or_else(invalid)?,
++        groups: groups.ok_or_else(invalid)?,
++        parent_pid,
++        started_at: format!("linux:{boot}:{ticks}"),
++        host: host.to_owned(),
++    })
++}
++
++#[cfg(test)]
++mod guarded_prompt_pure_tests {
++    use super::*;
++    use std::sync::atomic::AtomicBool;
++
++    struct ControlledLive(AtomicBool);
++    impl OriginLiveness for ControlledLive {
++        fn is_live(&self) -> std::io::Result<bool> {
++            Ok(self.0.load(Ordering::Acquire))
++        }
++    }
++    fn fixture() -> (Arc<ControlledLive>, GuardedChildOrigin, GuardedPromptOrigin) {
++        let live = Arc::new(ControlledLive(AtomicBool::new(true)));
++        let origin = GuardedChildOrigin {
++            runtime_incarnation: "00000000-0000-4000-8000-000000000001".into(),
++            child: GuardedChildIdentity {
++                pid: 123,
++                uid: 1000,
++                gid: 1000,
++                groups: vec![1000],
++                parent_pid: 99,
++                started_at: "linux:00000000-0000-4000-8000-000000000002:12345".into(),
++                host: "source-fixture".into(),
++            },
++            exited: AtomicBool::new(false),
++            handle: live.clone(),
++        };
++        let expected = origin.projection("term_aa11");
++        (live, origin, expected)
++    }
++
++    #[test]
++    fn guarded_request_closes_shape_body_bound_and_missing_guard() {
++        let (_, _, expected) = fixture();
++        let value = serde_json::json!({"target": expected.terminal_id, "text": "direction", "expected_origin": expected});
++        let mut params: crate::api::schema::AgentPromptParams =
++            serde_json::from_value(value.clone()).unwrap();
++        assert!(params.validate_guarded().is_ok());
++        params.text = "é".repeat(8192);
++        assert!(params.validate_guarded().is_ok());
++        params.text.push('x');
++        assert!(params.validate_guarded().is_err());
++        params.text = " \n\t".into();
++        assert!(params.validate_guarded().is_err());
++        params.text = "direction".into();
++        params.expected_origin = None;
++        assert!(params.validate_guarded().is_err());
++        let mut extra = value.clone();
++        extra["pid"] = serde_json::json!(123);
++        assert!(serde_json::from_value::<crate::api::schema::AgentPromptParams>(extra).is_err());
++        let mut wait = value;
++        wait["wait"] = serde_json::json!({"until":[], "timeout_ms":1000});
++        let params: crate::api::schema::AgentPromptParams = serde_json::from_value(wait).unwrap();
++        assert!(params.validate_guarded().is_err());
++    }
++
++    #[test]
++    fn static_linux_origin_parser_checks_birth_status_and_groups() {
++        let stat = "123 (command ) with spaces) S 99 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 12345";
++        let status = "Uid: 1000 1000 1000 1000\nGid: 1000 1000 1000 1000\nGroups: 2 1\nPPid: 99\n";
++        let boot = "00000000-0000-4000-8000-000000000002";
++        let actual = parse_linux_child_identity(123, status, stat, boot, "source-fixture").unwrap();
++        assert_eq!(actual.groups, vec![1, 2]);
++        assert_eq!(actual.started_at, format!("linux:{boot}:12345"));
++        assert!(parse_linux_child_identity(124, status, stat, boot, "source-fixture").is_err());
++        assert!(parse_linux_child_identity(
++            123,
++            &status.replace("PPid: 99", "PPid: 98"),
++            stat,
++            boot,
++            "source-fixture"
++        )
++        .is_err());
++        assert!(parse_linux_child_identity(
++            123,
++            &status.replace("Uid: 1000", "Uid: 999"),
++            stat,
++            boot,
++            "source-fixture"
++        )
++        .is_err());
++        assert!(parse_linux_child_identity(
++            123,
++            status,
++            &stat.replace(") S", ") Z"),
++            boot,
++            "source-fixture"
++        )
++        .is_err());
++    }
++
++    #[test]
++    fn closed_origin_rejects_unknown_fields_and_wrong_types() {
++        let (_, _, expected) = fixture();
++        let mut value = serde_json::to_value(&expected).unwrap();
++        assert_eq!(
++            serde_json::from_value::<GuardedPromptOrigin>(value.clone()).unwrap(),
++            expected
++        );
++        value["child"]["pid"] = serde_json::json!(true);
++        assert!(serde_json::from_value::<GuardedPromptOrigin>(value).is_err());
++        let mut value = serde_json::to_value(&expected).unwrap();
++        value["child"]["unknown"] = serde_json::json!(1);
++        assert!(serde_json::from_value::<GuardedPromptOrigin>(value).is_err());
++        let mut value = serde_json::to_value(&expected).unwrap();
++        value["unknown"] = serde_json::json!(1);
++        assert!(serde_json::from_value::<GuardedPromptOrigin>(value).is_err());
++    }
++    #[test]
++    fn rejects_aliases_unsorted_groups_and_malformed_birth() {
++        let (_, _, original) = fixture();
++        for id in ["pane:1", "name", "term_AA", "term_a", "term_", "term_a/1"] {
++            let mut expected = original.clone();
++            expected.terminal_id = id.into();
++            assert!(!expected.valid());
++        }
++        let mut expected = original.clone();
++        expected.child.groups = vec![2, 1];
++        assert!(!expected.valid());
++        expected.child.groups = vec![1, 1];
++        assert!(!expected.valid());
++        expected = original.clone();
++        expected.child.started_at = "linux:bad:1".into();
++        assert!(!expected.valid());
++    }
++    #[test]
++    fn runtime_replacement_and_same_pid_different_birth_refuse() {
++        let (_, origin, original) = fixture();
++        let mut expected = original.clone();
++        expected.runtime_incarnation = "00000000-0000-4000-8000-000000000003".into();
++        assert_eq!(
++            origin.check(&expected),
++            Err(GuardedPromptError::GuardMismatch)
++        );
++        expected = original;
++        expected.child.started_at.push('9');
++        assert_eq!(
++            origin.check(&expected),
++            Err(GuardedPromptError::GuardMismatch)
++        );
++    }
++    #[test]
++    fn dead_before_first_write_has_no_focus_or_prompt_bytes() {
++        let (live, origin, expected) = fixture();
++        live.0.store(false, Ordering::Release);
++        let mut output = vec![];
++        let mut state = GuardedWriteState::default();
++        assert_eq!(
++            state.write(origin.check(&expected), || {
++                output.extend_from_slice(b"focus+text");
++                Ok(10)
++            }),
++            Err(GuardedPromptError::OriginExited)
++        );
++        assert!(output.is_empty());
++        assert_eq!(
++            state.failure(GuardedPromptError::OriginUnavailable).phase(),
++            "not_issued"
++        );
++    }
++    #[test]
++    fn full_text_and_enter_complete_with_live_origin() {
++        let (_, origin, expected) = fixture();
++        let mut output = vec![];
++        let mut state = GuardedWriteState::default();
++        for part in [b"focus+text".as_slice(), b"\r"] {
++            assert_eq!(
++                state.write(origin.check(&expected), || {
++                    output.extend_from_slice(part);
++                    Ok(part.len())
++                }),
++                Ok(Some(part.len()))
++            );
++        }
++        assert_eq!(output, b"focus+text\r");
++    }
++    #[test]
++    fn partial_text_then_exit_never_writes_enter_and_is_uncertain() {
++        let (live, origin, expected) = fixture();
++        let mut output = vec![];
++        let mut state = GuardedWriteState::default();
++        assert_eq!(
++            state.write(origin.check(&expected), || {
++                output.extend_from_slice(b"te");
++                Ok(2)
++            }),
++            Ok(Some(2))
++        );
++        live.0.store(false, Ordering::Release);
++        assert_eq!(
++            state.write(origin.check(&expected), || {
++                output.extend_from_slice(b"\r");
++                Ok(1)
++            }),
++            Err(GuardedPromptError::SubmissionUncertain)
++        );
++        assert_eq!(output, b"te");
++    }
++    #[test]
++    fn would_block_without_bytes_allows_truthful_later_zero_byte_refusal() {
++        let (live, origin, expected) = fixture();
++        let mut state = GuardedWriteState::default();
++        assert_eq!(
++            state.write(origin.check(&expected), || Err(
++                std::io::ErrorKind::WouldBlock.into()
++            )),
++            Ok(None)
++        );
++        live.0.store(false, Ordering::Release);
++        assert_eq!(
++            state.write(origin.check(&expected), || panic!(
++                "dead origin must not write"
++            )),
++            Err(GuardedPromptError::OriginExited)
++        );
++    }
++    #[test]
++    fn write_error_after_admission_is_uncertain_and_never_retries() {
++        let (_, origin, expected) = fixture();
++        let mut state = GuardedWriteState::default();
++        let mut calls = 0;
++        assert_eq!(
++            state.write(origin.check(&expected), || {
++                calls += 1;
++                Err(std::io::ErrorKind::BrokenPipe.into())
++            }),
++            Err(GuardedPromptError::SubmissionUncertain)
++        );
++        assert_eq!(calls, 1);
++    }
++    #[test]
++    fn waiter_exit_invalidates_origin_without_delayed_app_event() {
++        let (_, origin, expected) = fixture();
++        origin.mark_exited();
++        assert_eq!(
++            origin.check(&expected),
++            Err(GuardedPromptError::OriginExited)
++        );
++    }
++}
+diff --git a/src/platform/linux.rs b/src/platform/linux.rs
+index c73584e53844b9684d0e1b907a020818de8da57c..9edf05ba685bb97d6856af58bf36ad340da9daf5 100644
+--- a/src/platform/linux.rs
++++ b/src/platform/linux.rs
+@@ -26,6 +26,9 @@ pub(crate) use super::unix_common::{
+ #[cfg(test)]
+ mod config_file_tests;
+ 
++mod guarded_origin;
++pub(crate) use guarded_origin::capture_guarded_child;
++
+ mod shutdown;
+ pub(crate) use shutdown::monitor_host_shutdown;
+ 
+diff --git a/src/platform/linux/guarded_origin.rs b/src/platform/linux/guarded_origin.rs
+new file mode 100644
+index 0000000000000000000000000000000000000000..2a44e8f5d1e614b62af584086617b2f915b074b8
+--- /dev/null
++++ b/src/platform/linux/guarded_origin.rs
+@@ -0,0 +1,87 @@
++//! Spawn-established Linux origin. Never reconstruct a handle from restored PID data.
++use crate::platform::guarded_prompt::{
++    parse_linux_child_identity, GuardedChildIdentity, GuardedChildOrigin, OriginLiveness,
++};
++use std::{
++    io::{self, Read},
++    os::fd::{AsRawFd, FromRawFd, OwnedFd},
++    sync::{atomic::AtomicBool, Arc},
++};
++
++struct LinuxChildHandle(OwnedFd);
++impl OriginLiveness for LinuxChildHandle {
++    fn is_live(&self) -> io::Result<bool> {
++        let mut item = libc::pollfd {
++            fd: self.0.as_raw_fd(),
++            events: libc::POLLIN,
++            revents: 0,
++        };
++        let result = unsafe { libc::poll(&mut item, 1, 0) };
++        if result < 0 {
++            return Err(io::Error::last_os_error());
++        }
++        Ok(result == 0 && item.revents == 0)
++    }
++}
++
++fn bounded_read(path: &str, limit: usize) -> io::Result<String> {
++    let mut bytes = Vec::new();
++    std::fs::File::open(path)?
++        .take((limit + 1) as u64)
++        .read_to_end(&mut bytes)?;
++    if bytes.len() > limit {
++        return Err(io::Error::other("origin data exceeds bounds"));
++    }
++    String::from_utf8(bytes).map_err(|_| io::Error::other("origin data is not UTF-8"))
++}
++
++fn identity(pid: u32) -> io::Result<GuardedChildIdentity> {
++    let status = bounded_read(&format!("/proc/{pid}/status"), 65_536)?;
++    let stat = bounded_read(&format!("/proc/{pid}/stat"), 4096)?;
++    let boot = bounded_read("/proc/sys/kernel/random/boot_id", 64)?;
++    let mut hostname = [0u8; 256];
++    if unsafe { libc::gethostname(hostname.as_mut_ptr().cast(), hostname.len()) } != 0 {
++        return Err(io::Error::last_os_error());
++    }
++    let end = hostname
++        .iter()
++        .position(|b| *b == 0)
++        .ok_or_else(|| io::Error::other("hostname exceeds bounds"))?;
++    let host = std::str::from_utf8(&hostname[..end])
++        .map_err(|_| io::Error::other("hostname is not UTF-8"))?;
++    parse_linux_child_identity(pid, &status, &stat, boot.trim(), host)
++}
++
++fn runtime_incarnation() -> io::Result<String> {
++    let mut bytes = [0u8; 16];
++    std::fs::File::open("/dev/urandom")?.read_exact(&mut bytes)?;
++    bytes[6] = (bytes[6] & 0x0f) | 0x40;
++    bytes[8] = (bytes[8] & 0x3f) | 0x80;
++    let hex: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
++    Ok(format!(
++        "{}-{}-{}-{}-{}",
++        &hex[..8],
++        &hex[8..12],
++        &hex[12..16],
++        &hex[16..20],
++        &hex[20..]
++    ))
++}
++
++pub(crate) fn capture_guarded_child(pid: u32) -> io::Result<Arc<GuardedChildOrigin>> {
++    let before = identity(pid)?;
++    let raw = unsafe { libc::syscall(libc::SYS_pidfd_open, pid as libc::pid_t, 0) };
++    if raw < 0 {
++        return Err(io::Error::last_os_error());
++    }
++    let handle = LinuxChildHandle(unsafe { OwnedFd::from_raw_fd(raw as i32) });
++    if identity(pid)? != before || !handle.is_live()? {
++        return Err(io::Error::other("child origin changed during capture"));
++    }
++    Ok(Arc::new(GuardedChildOrigin {
++        child: before,
++        runtime_incarnation: runtime_incarnation()?,
++        exited: AtomicBool::new(false),
++        handle: Arc::new(handle),
++    }))
++}
+diff --git a/src/platform/mod.rs b/src/platform/mod.rs
+index 927cd32b48e4bf13aefc86187fb3915fcf5ef24c..0ea23d525bf02677f5836c826b4c229c25a99541 100644
+--- a/src/platform/mod.rs
++++ b/src/platform/mod.rs
+@@ -3,6 +3,8 @@
+ //! Centralizes OS-dependent behavior behind a clean boundary so core
+ //! modules don't scatter `#[cfg]` branches through product logic.
+ 
++pub(crate) mod guarded_prompt;
++
+ #[cfg(unix)]
+ pub(crate) mod ssh_agent;
+ 
+@@ -727,3 +729,13 @@ pub(crate) fn shared_ssh_control_path(
+         "interactive SSH recovery requires Unix OpenSSH multiplexing",
+     ))
+ }
++
++#[cfg(not(target_os = "linux"))]
++pub(crate) fn capture_guarded_child(
++    _pid: u32,
++) -> std::io::Result<std::sync::Arc<guarded_prompt::GuardedChildOrigin>> {
++    Err(std::io::Error::new(
++        std::io::ErrorKind::Unsupported,
++        "guarded child origin requires Linux",
++    ))
++}
+diff --git a/src/pty/actor/unix.rs b/src/pty/actor/unix.rs
+index 4d57dd161ba72ac292ca19357cb1070dd168c788..75f1acffd7a7030b9438006a71b5a6d63051c3f4 100644
+--- a/src/pty/actor/unix.rs
++++ b/src/pty/actor/unix.rs
+@@ -10,6 +10,9 @@ use bytes::Bytes;
+ use tokio::sync::mpsc::{self, error::TryRecvError as DataTryRecvError};
+ use tracing::{debug, warn};
+ 
++use crate::platform::guarded_prompt::{
++    GuardedChildOrigin, GuardedPromptError, GuardedPromptOrigin, GuardedWriteState,
++};
+ use crate::pty::fd;
+ 
+ // Actor handle methods must call wake_actor() after queuing work. The idle
+@@ -66,6 +69,7 @@ struct SharedPtyControls {
+ pub(crate) struct PtyIoActorConfig {
+     pub pane_id: u32,
+     pub master_fd: OwnedFd,
++    pub origin: Option<Arc<GuardedChildOrigin>>,
+     pub initially_quiesced: bool,
+     pub on_read: ReadCallback,
+     pub on_reader_exit: Option<ReaderExitCallback>,
+@@ -73,6 +77,14 @@ pub(crate) struct PtyIoActorConfig {
+ 
+ enum PtyIoDataCommand {
+     WriteUserInput(Bytes),
++    GuardedSubmit {
++        text: Bytes,
++        enter: Bytes,
++        delay: Duration,
++        expected: GuardedPromptOrigin,
++        admission: GuardedAdmission,
++        reply: std_mpsc::Sender<Result<(), GuardedPromptError>>,
++    },
+     SubmitUserInput {
+         text: Bytes,
+         enter: Bytes,
+@@ -98,14 +110,109 @@ pub(crate) struct PtyIoActorHandle {
+     user_writes: Arc<Mutex<UserWriteGate>>,
+     controls: Arc<Mutex<SharedPtyControls>>,
+     response_order: Arc<Mutex<()>>,
++    origin: Option<Arc<GuardedChildOrigin>>,
+ }
+ 
+ #[derive(Debug)]
+ struct UserWriteGate {
+     accepting: bool,
++    guarded_pending: usize,
++}
++
++impl UserWriteGate {
++    fn admit_guarded(&mut self) -> Result<(), GuardedPromptError> {
++        if !self.accepting {
++            return Err(GuardedPromptError::OriginUnavailable);
++        }
++        self.guarded_pending += 1;
++        Ok(())
++    }
++
++    fn close_for_handoff(&mut self) -> std::io::Result<()> {
++        if !self.accepting || self.guarded_pending > 0 {
++            return Err(std::io::Error::new(std::io::ErrorKind::WouldBlock,
++                "PTY handoff is unavailable while admission is closed or guarded submission is pending"));
++        }
++        self.accepting = false;
++        Ok(())
++    }
++}
++
++struct GuardedAdmission(Arc<Mutex<UserWriteGate>>);
++impl Drop for GuardedAdmission {
++    fn drop(&mut self) {
++        let mut gate = self
++            .0
++            .lock()
++            .unwrap_or_else(|poisoned| poisoned.into_inner());
++        gate.guarded_pending = gate.guarded_pending.saturating_sub(1);
++    }
++}
++
++fn queue_guarded_command(
++    data_tx: &mpsc::Sender<PtyIoDataCommand>,
++    user_writes: &Arc<Mutex<UserWriteGate>>,
++    text: Bytes,
++    enter: Bytes,
++    delay: Duration,
++    expected: GuardedPromptOrigin,
++) -> Result<std_mpsc::Receiver<Result<(), GuardedPromptError>>, GuardedPromptError> {
++    let mut gate = user_writes
++        .lock()
++        .unwrap_or_else(|poisoned| poisoned.into_inner());
++    // Admission and handoff share this gate. Failed sends drop their permit
++    // only after releasing this lock.
++    gate.admit_guarded()?;
++    let (reply, result) = std_mpsc::channel();
++    let command = PtyIoDataCommand::GuardedSubmit {
++        text,
++        enter,
++        delay,
++        expected,
++        admission: GuardedAdmission(Arc::clone(user_writes)),
++        reply,
++    };
++    let queued = data_tx.try_send(command);
++    drop(gate);
++    queued.map_err(|error| match error {
++        mpsc::error::TrySendError::Full(_) => GuardedPromptError::SubmissionBusy,
++        mpsc::error::TrySendError::Closed(_) => GuardedPromptError::OriginUnavailable,
++    })?;
++    Ok(result)
+ }
+ 
+ impl PtyIoActorHandle {
++    pub(crate) fn guarded_origin(&self, terminal_id: &str) -> Option<GuardedPromptOrigin> {
++        let origin = self.origin.as_ref()?;
++        let expected = origin.projection(terminal_id);
++        origin.check(&expected).ok()?;
++        Some(expected)
++    }
++
++    pub(crate) fn queue_guarded_submission(
++        &self,
++        text: Bytes,
++        enter: Bytes,
++        delay: Duration,
++        expected: GuardedPromptOrigin,
++    ) -> Result<std_mpsc::Receiver<Result<(), GuardedPromptError>>, GuardedPromptError> {
++        let origin = self
++            .origin
++            .as_ref()
++            .ok_or(GuardedPromptError::OriginUnavailable)?;
++        origin.check(&expected)?;
++        let result = queue_guarded_command(
++            &self.data_tx,
++            &self.user_writes,
++            text,
++            enter,
++            delay,
++            expected,
++        )?;
++        self.wake_actor();
++        Ok(result)
++    }
++
+     pub(crate) fn try_write_user_input(
+         &self,
+         bytes: Bytes,
+@@ -249,13 +356,7 @@ impl PtyIoActorHandle {
+                 .user_writes
+                 .lock()
+                 .unwrap_or_else(|poisoned| poisoned.into_inner());
+-            if !user_writes.accepting {
+-                return Err(std::io::Error::new(
+-                    std::io::ErrorKind::WouldBlock,
+-                    "PTY handoff is already in progress",
+-                ));
+-            }
+-            user_writes.accepting = false;
++            user_writes.close_for_handoff()?;
+             if self
+                 .control_tx
+                 .send(PtyIoControlCommand::BeginHandoff(reply_tx))
+@@ -390,6 +491,7 @@ impl PtyIoActor {
+         let wake_pipe = fd::create_wake_pipe()?;
+         let user_writes = Arc::new(Mutex::new(UserWriteGate {
+             accepting: !config.initially_quiesced,
++            guarded_pending: 0,
+         }));
+         let controls = Arc::new(Mutex::new(SharedPtyControls::default()));
+         let response_order = Arc::new(Mutex::new(()));
+@@ -397,13 +499,16 @@ impl PtyIoActor {
+             data_tx,
+             control_tx,
+             wake: wake_pipe.writer,
+-            user_writes,
++            user_writes: Arc::clone(&user_writes),
++            origin: config.origin.clone(),
+             controls: Arc::clone(&controls),
+             response_order: Arc::clone(&response_order),
+         };
+ 
+         let mut runner = PtyIoActorRunner {
+             pane_id: config.pane_id,
++            origin: config.origin,
++            user_writes,
+             file: std::fs::File::from(config.master_fd),
+             data_rx,
+             control_rx,
+@@ -440,9 +545,11 @@ impl PtyIoActor {
+     }
+ }
+ 
+-struct PtyIoActorRunner {
++struct PtyIoActorRunner<F = std::fs::File, W = OwnedFd> {
+     pane_id: u32,
+-    file: std::fs::File,
++    origin: Option<Arc<GuardedChildOrigin>>,
++    user_writes: Arc<Mutex<UserWriteGate>>,
++    file: F,
+     data_rx: mpsc::Receiver<PtyIoDataCommand>,
+     control_rx: std_mpsc::Receiver<PtyIoControlCommand>,
+     state: ActorState,
+@@ -450,7 +557,7 @@ struct PtyIoActorRunner {
+     current_write_offset: usize,
+     active_submission: Option<ActiveSubmission>,
+     pending_handoff: Option<std_mpsc::Sender<std::io::Result<()>>>,
+-    wake_read_fd: OwnedFd,
++    wake_read_fd: W,
+     controls: Arc<Mutex<SharedPtyControls>>,
+     response_order: Arc<Mutex<()>>,
+     on_read: ReadCallback,
+@@ -458,11 +565,44 @@ struct PtyIoActorRunner {
+     poll_observer: Option<std_mpsc::Sender<()>>,
+ }
+ 
++enum SubmissionReply {
++    Plain(std_mpsc::Sender<std::io::Result<()>>),
++    Guarded(std_mpsc::Sender<Result<(), GuardedPromptError>>),
++}
++impl SubmissionReply {
++    fn success(self) {
++        match self {
++            Self::Plain(reply) => {
++                let _ = reply.send(Ok(()));
++            }
++            Self::Guarded(reply) => {
++                let _ = reply.send(Ok(()));
++            }
++        }
++    }
++    fn failure(self, error: std::io::Error, guarded: GuardedPromptError) {
++        match self {
++            Self::Plain(reply) => {
++                let _ = reply.send(Err(error));
++            }
++            Self::Guarded(reply) => {
++                let _ = reply.send(Err(guarded));
++            }
++        }
++    }
++}
++struct GuardedSubmission {
++    expected: GuardedPromptOrigin,
++    writes: GuardedWriteState,
++    _admission: GuardedAdmission,
++}
++
+ struct ActiveSubmission {
++    guard: Option<GuardedSubmission>,
+     enter: Bytes,
+     delay: Duration,
+     phase: SubmissionPhase,
+-    reply: std_mpsc::Sender<std::io::Result<()>>,
++    reply: SubmissionReply,
+ }
+ 
+ #[derive(Debug, PartialEq, Eq)]
+@@ -483,7 +623,7 @@ enum SubmissionPhase {
+     WritingEnter,
+ }
+ 
+-impl PtyIoActorRunner {
++impl<F: Read + Write + AsRawFd, W: AsRawFd> PtyIoActorRunner<F, W> {
+     fn enqueue_write(&mut self, bytes: Bytes) {
+         if !bytes.is_empty() {
+             self.pending_writes.push_back(PendingWrite {
+@@ -641,6 +781,39 @@ impl PtyIoActorRunner {
+                     self.enqueue_write(bytes);
+                 }
+             }
++            PtyIoDataCommand::GuardedSubmit {
++                text,
++                enter,
++                delay,
++                expected,
++                admission,
++                reply,
++            } => {
++                let result = if self.state != ActorState::Running {
++                    Err(GuardedPromptError::OriginUnavailable)
++                } else {
++                    self.origin
++                        .as_ref()
++                        .ok_or(GuardedPromptError::OriginUnavailable)
++                        .and_then(|origin| origin.check(&expected))
++                };
++                if let Err(error) = result {
++                    let _ = reply.send(Err(error));
++                } else {
++                    self.enqueue_submission_write(text, SubmissionBoundary::Text);
++                    self.active_submission = Some(ActiveSubmission {
++                        enter,
++                        delay,
++                        phase: SubmissionPhase::WritingText,
++                        reply: SubmissionReply::Guarded(reply),
++                        guard: Some(GuardedSubmission {
++                            expected,
++                            writes: GuardedWriteState::default(),
++                            _admission: admission,
++                        }),
++                    });
++                }
++            }
+             PtyIoDataCommand::SubmitUserInput {
+                 text,
+                 enter,
+@@ -658,7 +831,8 @@ impl PtyIoActorRunner {
+                         enter,
+                         delay,
+                         phase,
+-                        reply,
++                        reply: SubmissionReply::Plain(reply),
++                        guard: None,
+                     });
+                 } else {
+                     let _ = reply.send(Err(std::io::Error::new(
+@@ -871,7 +1045,7 @@ impl PtyIoActorRunner {
+                     return;
+                 };
+                 debug_assert!(matches!(submission.phase, SubmissionPhase::WritingEnter));
+-                let _ = submission.reply.send(Ok(()));
++                submission.reply.success();
+             }
+         }
+     }
+@@ -889,7 +1063,7 @@ impl PtyIoActorRunner {
+             let enter = enter.clone();
+             if enter.is_empty() {
+                 let submission = self.active_submission.take().unwrap();
+-                let _ = submission.reply.send(Ok(()));
++                submission.reply.success();
+             } else {
+                 self.active_submission.as_mut().unwrap().phase = SubmissionPhase::WritingEnter;
+                 self.enqueue_submission_write(enter, SubmissionBoundary::Enter);
+@@ -912,9 +1086,25 @@ impl PtyIoActorRunner {
+             .min(ACTOR_IDLE_POLL_MS as u128) as i32
+     }
+ 
++    fn fail_guarded_submission(&mut self, error: GuardedPromptError) {
++        self.pending_writes.retain(|write| write.boundary.is_none());
++        self.current_write_offset = 0;
++        if let Some(submission) = self.active_submission.take() {
++            submission
++                .reply
++                .failure(std::io::Error::other("guarded submission failed"), error);
++        }
++    }
++
+     fn fail_active_submission(&mut self, err: std::io::Error) {
+         if let Some(submission) = self.active_submission.take() {
+-            let _ = submission.reply.send(Err(err));
++            let guarded = submission
++                .guard
++                .as_ref()
++                .map_or(GuardedPromptError::SubmissionUncertain, |guard| {
++                    guard.writes.failure(GuardedPromptError::OriginUnavailable)
++                });
++            submission.reply.failure(err, guarded);
+         }
+     }
+ 
+@@ -922,16 +1112,54 @@ impl PtyIoActorRunner {
+         self.data_rx.close();
+         self.fail_active_submission(input_submission_closed_error());
+         while let Some(command) = self.data_rx.blocking_recv() {
+-            if let PtyIoDataCommand::SubmitUserInput { reply, .. } = command {
+-                let _ = reply.send(Err(input_submission_closed_error()));
++            match command {
++                PtyIoDataCommand::SubmitUserInput { reply, .. } => {
++                    let _ = reply.send(Err(input_submission_closed_error()));
++                }
++                PtyIoDataCommand::GuardedSubmit { reply, .. } => {
++                    let _ = reply.send(Err(GuardedPromptError::OriginUnavailable));
++                }
++                _ => {}
+             }
+         }
+     }
+ 
+     fn flush_pending_writes_once(&mut self) -> std::io::Result<Option<SubmissionBoundary>> {
+         while let Some(write) = self.pending_writes.front() {
++            let gate = Arc::clone(&self.user_writes);
++            let gate = gate.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+             let chunk = &write.bytes[self.current_write_offset..];
+-            match self.file.write(chunk) {
++            let result = if let Some(guard) = self
++                .active_submission
++                .as_mut()
++                .filter(|_| write.boundary.is_some())
++                .and_then(|submission| submission.guard.as_mut())
++            {
++                let admission = if !gate.accepting || self.state != ActorState::Running {
++                    Err(GuardedPromptError::OriginUnavailable)
++                } else {
++                    self.origin
++                        .as_ref()
++                        .ok_or(GuardedPromptError::OriginUnavailable)
++                        .and_then(|origin| origin.check(&guard.expected))
++                };
++                match guard.writes.write(admission, || self.file.write(chunk)) {
++                    Ok(Some(bytes)) => Ok(bytes),
++                    Ok(None) => {
++                        drop(gate);
++                        return Ok(None);
++                    }
++                    Err(error) => {
++                        drop(gate);
++                        self.fail_guarded_submission(error);
++                        return Ok(None);
++                    }
++                }
++            } else {
++                self.file.write(chunk)
++            };
++            drop(gate);
++            match result {
+                 Ok(0) => {
+                     return Err(std::io::Error::new(
+                         std::io::ErrorKind::WriteZero,
+@@ -949,8 +1177,14 @@ impl PtyIoActorRunner {
+                         }
+                     }
+                 }
+-                Err(err) if err.kind() == std::io::ErrorKind::WouldBlock => return Ok(None),
+-                Err(err) if err.kind() == std::io::ErrorKind::Interrupted => return Ok(None),
++                Err(err)
++                    if matches!(
++                        err.kind(),
++                        std::io::ErrorKind::WouldBlock | std::io::ErrorKind::Interrupted
++                    ) =>
++                {
++                    return Ok(None);
++                }
+                 Err(err) => {
+                     warn!(pane = self.pane_id, err = %err, "PTY actor write failed");
+                     self.pending_writes.clear();
+@@ -1067,6 +1301,7 @@ mod tests {
+         let owned = unsafe { OwnedFd::from_raw_fd(actor_socket.into_raw_fd()) };
+         let (read_tx, read_rx) = std_mpsc::channel();
+         let config = PtyIoActorConfig {
++            origin: None,
+             pane_id: 1,
+             master_fd: owned,
+             initially_quiesced,
+@@ -1097,6 +1332,11 @@ mod tests {
+         let (_control_tx, control_rx) = std_mpsc::channel();
+         let wake_pipe = fd::create_wake_pipe().expect("wake pipe");
+         let runner = PtyIoActorRunner {
++            origin: None,
++            user_writes: Arc::new(Mutex::new(UserWriteGate {
++                accepting: true,
++                guarded_pending: 0,
++            })),
+             pane_id: 1,
+             file: std::fs::File::from(owned),
+             data_rx,
+@@ -1320,6 +1560,7 @@ mod tests {
+         let handle_slot = Arc::new(Mutex::new(None::<PtyIoActorHandle>));
+         let (attempt_tx, attempt_rx) = std_mpsc::channel();
+         let config = PtyIoActorConfig {
++            origin: None,
+             pane_id: 1,
+             master_fd: owned,
+             initially_quiesced: false,
+@@ -1412,6 +1653,7 @@ mod tests {
+         let owned = unsafe { OwnedFd::from_raw_fd(actor_socket.into_raw_fd()) };
+         let (read_tx, read_rx) = std_mpsc::channel();
+         let handle = PtyIoActor::spawn(PtyIoActorConfig {
++            origin: None,
+             pane_id: 1,
+             master_fd: owned,
+             initially_quiesced: false,
+@@ -1612,10 +1854,14 @@ mod tests {
+         let controls = Arc::new(Mutex::new(SharedPtyControls::default()));
+         let (wake, _wake_read_fd) = test_wake_pair();
+         let handle = PtyIoActorHandle {
++            origin: None,
+             data_tx,
+             control_tx,
+             wake,
+-            user_writes: Arc::new(Mutex::new(UserWriteGate { accepting: true })),
++            user_writes: Arc::new(Mutex::new(UserWriteGate {
++                accepting: true,
++                guarded_pending: 0,
++            })),
+             controls: Arc::clone(&controls),
+             response_order: Arc::new(Mutex::new(())),
+         };
+@@ -1668,6 +1914,11 @@ mod tests {
+         let light = Arc::new(AtomicBool::new(false));
+         let query_light = Arc::clone(&light);
+         let runner = PtyIoActorRunner {
++            origin: None,
++            user_writes: Arc::new(Mutex::new(UserWriteGate {
++                accepting: true,
++                guarded_pending: 0,
++            })),
+             pane_id: 1,
+             file: std::fs::File::from(owned),
+             data_rx,
+@@ -1691,10 +1942,14 @@ mod tests {
+             poll_observer: None,
+         };
+         let handle = PtyIoActorHandle {
++            origin: None,
+             data_tx,
+             control_tx,
+             wake: wake_pipe.writer,
+-            user_writes: Arc::new(Mutex::new(UserWriteGate { accepting: true })),
++            user_writes: Arc::new(Mutex::new(UserWriteGate {
++                accepting: true,
++                guarded_pending: 0,
++            })),
+             controls,
+             response_order,
+         };
+@@ -1760,10 +2015,14 @@ mod tests {
+             .expect("fill data queue");
+         let (wake, _wake_read_fd) = test_wake_pair();
+         let handle = PtyIoActorHandle {
++            origin: None,
+             data_tx,
+             control_tx,
+             wake,
+-            user_writes: Arc::new(Mutex::new(UserWriteGate { accepting: true })),
++            user_writes: Arc::new(Mutex::new(UserWriteGate {
++                accepting: true,
++                guarded_pending: 0,
++            })),
+             controls: Arc::new(Mutex::new(SharedPtyControls::default())),
+             response_order: Arc::new(Mutex::new(())),
+         };
+@@ -1801,6 +2060,11 @@ mod tests {
+             )))
+             .expect("queued write");
+         let mut runner = PtyIoActorRunner {
++            origin: None,
++            user_writes: Arc::new(Mutex::new(UserWriteGate {
++                accepting: true,
++                guarded_pending: 0,
++            })),
+             pane_id: 1,
+             file: std::fs::File::from(unsafe { OwnedFd::from_raw_fd(actor_socket.into_raw_fd()) }),
+             data_rx,
+@@ -1840,3 +2104,282 @@ mod tests {
+         assert!(read_rx.recv_timeout(Duration::from_millis(150)).is_err());
+     }
+ }
++
++#[cfg(test)]
++mod guarded_prompt_pure_tests {
++    use super::*;
++    use crate::platform::guarded_prompt::{GuardedChildIdentity, OriginLiveness};
++    use std::sync::atomic::{AtomicBool, Ordering};
++    use std::sync::{Arc, Mutex};
++
++    #[test]
++    fn queued_guard_blocks_handoff_until_completion_or_failed_send_drops_permit() {
++        let gate = Arc::new(Mutex::new(UserWriteGate {
++            accepting: true,
++            guarded_pending: 0,
++        }));
++        gate.lock()
++            .expect("fixture gate")
++            .admit_guarded()
++            .expect("admission");
++        let permit = GuardedAdmission(Arc::clone(&gate));
++        assert_eq!(
++            gate.lock()
++                .expect("fixture gate")
++                .close_for_handoff()
++                .expect_err("pending guard")
++                .kind(),
++            std::io::ErrorKind::WouldBlock
++        );
++        assert!(gate.lock().expect("fixture gate").accepting);
++        drop(permit);
++        gate.lock()
++            .expect("fixture gate")
++            .close_for_handoff()
++            .expect("released guard");
++        assert_eq!(
++            gate.lock().expect("fixture gate").admit_guarded(),
++            Err(GuardedPromptError::OriginUnavailable)
++        );
++    }
++
++    #[test]
++    fn every_queued_guard_retains_its_own_handoff_permit() {
++        let gate = Arc::new(Mutex::new(UserWriteGate {
++            accepting: true,
++            guarded_pending: 0,
++        }));
++        let mut permits = Vec::new();
++        for _ in 0..2 {
++            gate.lock()
++                .expect("fixture gate")
++                .admit_guarded()
++                .expect("admission");
++            permits.push(GuardedAdmission(Arc::clone(&gate)));
++        }
++        permits.pop();
++        assert_eq!(gate.lock().expect("fixture gate").guarded_pending, 1);
++        assert!(gate
++            .lock()
++            .expect("fixture gate")
++            .close_for_handoff()
++            .is_err());
++        drop(permits);
++        assert!(gate
++            .lock()
++            .expect("fixture gate")
++            .close_for_handoff()
++            .is_ok());
++    }
++    struct ControlledLive(AtomicBool);
++    impl OriginLiveness for ControlledLive {
++        fn is_live(&self) -> std::io::Result<bool> {
++            Ok(self.0.load(Ordering::Acquire))
++        }
++    }
++    struct NoNativeDescriptor;
++    impl AsRawFd for NoNativeDescriptor {
++        fn as_raw_fd(&self) -> std::os::fd::RawFd {
++            panic!("pure actor test must not invoke native readiness")
++        }
++    }
++    #[derive(Default)]
++    struct MemoryWriter {
++        bytes: Vec<u8>,
++        stop_after: Option<usize>,
++    }
++    impl AsRawFd for MemoryWriter {
++        fn as_raw_fd(&self) -> std::os::fd::RawFd {
++            panic!("pure actor test must not invoke native PTY operations")
++        }
++    }
++    impl Read for MemoryWriter {
++        fn read(&mut self, _: &mut [u8]) -> std::io::Result<usize> {
++            panic!("pure submission test must not read native output")
++        }
++    }
++    impl Write for MemoryWriter {
++        fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
++            let available = self.stop_after.map_or(bytes.len(), |limit| {
++                limit.saturating_sub(self.bytes.len()).min(bytes.len())
++            });
++            if available == 0 {
++                return Err(std::io::ErrorKind::WouldBlock.into());
++            }
++            self.bytes.extend_from_slice(&bytes[..available]);
++            Ok(available)
++        }
++        fn flush(&mut self) -> std::io::Result<()> {
++            Ok(())
++        }
++    }
++    fn controlled_runner() -> (
++        PtyIoActorRunner<MemoryWriter, NoNativeDescriptor>,
++        mpsc::Sender<PtyIoDataCommand>,
++        Arc<ControlledLive>,
++        GuardedPromptOrigin,
++    ) {
++        let live = Arc::new(ControlledLive(AtomicBool::new(true)));
++        let origin = Arc::new(GuardedChildOrigin {
++            runtime_incarnation: "00000000-0000-4000-8000-000000000001".into(),
++            child: GuardedChildIdentity {
++                pid: 123,
++                uid: 1000,
++                gid: 1000,
++                groups: vec![1000],
++                parent_pid: 99,
++                started_at: "linux:00000000-0000-4000-8000-000000000002:12345".into(),
++                host: "source-fixture".into(),
++            },
++            exited: AtomicBool::new(false),
++            handle: live.clone(),
++        });
++        let expected = origin.projection("term_aa11");
++        let (tx, data_rx) = mpsc::channel(1);
++        let (_, control_rx) = std_mpsc::channel();
++        (
++            PtyIoActorRunner {
++                pane_id: 1,
++                origin: Some(origin),
++                user_writes: Arc::new(Mutex::new(UserWriteGate {
++                    accepting: true,
++                    guarded_pending: 0,
++                })),
++                file: MemoryWriter::default(),
++                data_rx,
++                control_rx,
++                state: ActorState::Running,
++                pending_writes: VecDeque::new(),
++                current_write_offset: 0,
++                active_submission: None,
++                pending_handoff: None,
++                wake_read_fd: NoNativeDescriptor,
++                controls: Arc::new(Mutex::new(SharedPtyControls::default())),
++                response_order: Arc::new(Mutex::new(())),
++                on_read: Box::new(|_| panic!("pure actor test must not read")),
++                on_reader_exit: None,
++                poll_observer: None,
++            },
++            tx,
++            live,
++            expected,
++        )
++    }
++    fn queue(
++        runner: &PtyIoActorRunner<MemoryWriter, NoNativeDescriptor>,
++        tx: &mpsc::Sender<PtyIoDataCommand>,
++        expected: GuardedPromptOrigin,
++    ) -> Result<std_mpsc::Receiver<Result<(), GuardedPromptError>>, GuardedPromptError> {
++        queue_guarded_command(
++            tx,
++            &runner.user_writes,
++            Bytes::from_static(b"focus+text"),
++            Bytes::from_static(b"\r"),
++            Duration::ZERO,
++            expected,
++        )
++    }
++    #[test]
++    fn actual_actor_queued_origin_exit_writes_no_focus_or_text() {
++        let (mut runner, tx, live, expected) = controlled_runner();
++        let reply = queue(&runner, &tx, expected).expect("queued");
++        live.0.store(false, Ordering::Release);
++        let command = runner.data_rx.try_recv().expect("command");
++        assert!(!runner.handle_data_command(command));
++        assert_eq!(
++            reply.try_recv().expect("refused"),
++            Err(GuardedPromptError::OriginExited)
++        );
++        assert!(runner.file.bytes.is_empty());
++        assert!(runner.pending_writes.is_empty());
++    }
++    #[test]
++    fn actual_actor_partial_text_exit_suppresses_enter_and_reports_uncertain() {
++        let (mut runner, tx, live, expected) = controlled_runner();
++        let reply = queue(&runner, &tx, expected).expect("queued");
++        let command = runner.data_rx.try_recv().expect("command");
++        runner.handle_data_command(command);
++        runner.file.stop_after = Some(2);
++        assert_eq!(
++            runner
++                .flush_pending_writes_once()
++                .expect("controlled write"),
++            None
++        );
++        live.0.store(false, Ordering::Release);
++        runner.file.stop_after = None;
++        assert_eq!(
++            runner
++                .flush_pending_writes_once()
++                .expect("controlled refusal"),
++            None
++        );
++        runner.schedule_submission_enter();
++        assert_eq!(runner.file.bytes, b"fo");
++        assert_eq!(
++            reply.try_recv().expect("uncertain"),
++            Err(GuardedPromptError::SubmissionUncertain)
++        );
++        assert!(runner.active_submission.is_none());
++    }
++    #[test]
++    fn actual_actor_full_text_then_enter_acknowledges_once() {
++        let (mut runner, tx, _, expected) = controlled_runner();
++        let reply = queue(&runner, &tx, expected).expect("queued");
++        let command = runner.data_rx.try_recv().expect("command");
++        runner.handle_data_command(command);
++        assert!(reply.try_recv().is_err());
++        let boundary = runner
++            .flush_pending_writes_once()
++            .expect("text write")
++            .expect("text boundary");
++        runner.complete_submission_boundary(boundary);
++        assert!(reply.try_recv().is_err());
++        runner.schedule_submission_enter();
++        let boundary = runner
++            .flush_pending_writes_once()
++            .expect("enter write")
++            .expect("enter boundary");
++        runner.complete_submission_boundary(boundary);
++        assert_eq!(reply.try_recv().expect("ack"), Ok(()));
++        assert!(reply.try_recv().is_err());
++        assert_eq!(runner.file.bytes, b"focus+text\r");
++        assert_eq!(runner.user_writes.lock().expect("gate").guarded_pending, 0);
++    }
++    #[test]
++    fn actual_queue_full_and_closed_are_distinct_zero_effect_refusals() {
++        let (mut runner, tx, _, expected) = controlled_runner();
++        let _reply = queue(&runner, &tx, expected.clone()).expect("queued");
++        assert!(matches!(
++            queue(&runner, &tx, expected.clone()),
++            Err(GuardedPromptError::SubmissionBusy)
++        ));
++        assert_eq!(runner.user_writes.lock().expect("gate").guarded_pending, 1);
++        runner.close_input_queue();
++        assert!(matches!(
++            queue(&runner, &tx, expected),
++            Err(GuardedPromptError::OriginUnavailable)
++        ));
++        assert_eq!(runner.user_writes.lock().expect("gate").guarded_pending, 0);
++        assert!(runner.file.bytes.is_empty());
++    }
++    #[test]
++    fn actual_actor_queued_runtime_replacement_refuses_without_focus() {
++        let (mut runner, tx, live, expected) = controlled_runner();
++        let reply = queue(&runner, &tx, expected.clone()).expect("queued");
++        runner.origin = Some(Arc::new(GuardedChildOrigin {
++            runtime_incarnation: "00000000-0000-4000-8000-000000000003".into(),
++            child: expected.child,
++            exited: AtomicBool::new(false),
++            handle: live,
++        }));
++        let command = runner.data_rx.try_recv().expect("command");
++        runner.handle_data_command(command);
++        assert_eq!(
++            reply.try_recv().expect("replacement refused"),
++            Err(GuardedPromptError::GuardMismatch)
++        );
++        assert!(runner.file.bytes.is_empty());
++        assert!(runner.pending_writes.is_empty());
++    }
++}
+diff --git a/src/pty/backend/unix.rs b/src/pty/backend/unix.rs
+index 5871004a3d38f67d7af683f0d18131c8e6870904..d0c291645dfb038a19edf9fb8c25192bc5d1d7ec 100644
+--- a/src/pty/backend/unix.rs
++++ b/src/pty/backend/unix.rs
+@@ -7,6 +7,7 @@ use crate::pty::fd;
+ pub(crate) struct SpawnedPty {
+     pub master_fd: OwnedFd,
+     pub child: Box<dyn Child + Send + Sync>,
++    pub origin: Option<std::sync::Arc<crate::platform::guarded_prompt::GuardedChildOrigin>>,
+ }
+ 
+ pub(crate) fn spawn_with_portable_pty(
+@@ -33,11 +34,15 @@ pub(crate) fn spawn_with_portable_pty(
+         .slave
+         .spawn_command(cmd)
+         .map_err(|err| std::io::Error::other(err.to_string()))?;
++    let origin = child
++        .process_id()
++        .and_then(|pid| crate::platform::capture_guarded_child(pid).ok());
+     drop(pair);
+ 
+     Ok(SpawnedPty {
+         master_fd: actor_fd,
+         child,
++        origin,
+     })
+ }
+ 
+diff --git a/src/terminal/runtime.rs b/src/terminal/runtime.rs
+index 9171340906a6e964749d424653f860886d88b294..ebac7a2bc137ae0a6a0a8b8751069cf2593636a5 100644
+--- a/src/terminal/runtime.rs
++++ b/src/terminal/runtime.rs
+@@ -478,6 +478,26 @@ impl TerminalRuntime {
+         self.0.try_send_bytes(bytes)
+     }
+ 
++    pub(crate) fn guarded_prompt_origin(
++        &self,
++        terminal_id: &str,
++    ) -> Option<crate::platform::guarded_prompt::GuardedPromptOrigin> {
++        self.0.guarded_prompt_origin(terminal_id)
++    }
++    pub(crate) fn queue_guarded_submission(
++        &self,
++        text: Bytes,
++        enter: Bytes,
++        delay: std::time::Duration,
++        expected: crate::platform::guarded_prompt::GuardedPromptOrigin,
++    ) -> Result<
++        std::sync::mpsc::Receiver<Result<(), crate::platform::guarded_prompt::GuardedPromptError>>,
++        crate::platform::guarded_prompt::GuardedPromptError,
++    > {
++        self.0
++            .queue_guarded_submission(text, enter, delay, expected)
++    }
++
+     pub fn queue_user_input_submission(
+         &self,
+         text: Bytes,
+-- 
+2.54.0 (Apple Git-157)
+
