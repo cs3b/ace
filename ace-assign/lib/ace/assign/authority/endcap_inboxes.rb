@@ -4,7 +4,6 @@ require_relative "original_inbox_selection"
 
 require "ace/herdr/organisms/protected_inbox"
 require_relative "../molecules/execution_scope_lineage"
-require_relative "historical_inbox_evidence"
 
 module Ace
   module Assign
@@ -19,6 +18,12 @@ module Ace
         INBOX_REF_FIELDS = %w[artifact_id ref sha256 bytes].freeze
 
         def historical_inbox_settlement_complete!(journal:, events:, params:, map:, commit:, deployment:, history:)
+          historical_inbox_settlement_evidence!(journal: journal, events: events, params: params, map: map,
+            commit: commit, deployment: deployment, history: history)
+          true
+        end
+
+        def historical_inbox_settlement_evidence!(journal:, events:, params:, map:, commit:, deployment:, history:)
           protected_journal!(journal)
           retained = journal.read_events(params.fetch("assignment_id"), commit: commit)
             .select { |event| event["attempt_id"] == params.fetch("attempt_id") }
@@ -26,13 +31,19 @@ module Ace
             raise AttemptErrors::EvidenceUnavailable, "historical inbox requires exact release prefix"
           end
           HistoricalInboxEvidence.new(journal: journal, deployment: deployment, history: history)
-            .verify!(events: events, params: params, map: map, commit: commit)
+            .settlement_evidence!(events: events, params: params, map: map, commit: commit)
         end
 
         # Shared source-owned predicate for existing scope abort/reuse/finish.
         # The caller holds lifecycle exclusion; this is never a wire operation.
         def inbox_settlement_complete!(journal:, events:, params:, map:, commit:)
+          inbox_settlement_evidence!(journal: journal, events: events, params: params, map: map, commit: commit)
+          true
+        end
+
+        def inbox_settlement_evidence!(journal:, events:, params:, map:, commit:)
           protected_journal!(journal)
+          journal.verify_commit!(commit)
           retained = journal.read_events(params.fetch("assignment_id"), commit: commit)
             .select { |event| event["attempt_id"] == params.fetch("attempt_id") }
           unless retained == events && Models::EvidenceEvent.chain_valid?(events)
@@ -50,15 +61,31 @@ module Ace
               raise AttemptErrors::EvidenceUnavailable, "registered or unattributable inbox retention differs"
             end
           end
-          registrations.each do |event|
+          pending = false
+          projected = registrations.map do |event|
             selected = params.merge("event_id" => event.dig("payload", "event_id"), "inbox_context_id" => event.dig("payload", "inbox_context_id"))
             box, registration, lineage = inbox_environment(events, selected, map)
-            proof = verified_inbox_record(journal, events, selected, map, commit, box: box, registration: registration, lineage: lineage)
-            unless proof && proof["state"] == "completed"
+            authenticated = verified_inbox_selection(journal, events, selected, map, commit,
+              box: box, registration: registration, lineage: lineage)
+            proof = authenticated && authenticated.fetch("reconciliation").fetch("payload")
+            unless proof && %w[completed queued].include?(proof["state"])
               raise AttemptErrors::EvidenceUnavailable, "current inbox settlement is incomplete"
             end
+            if proof["state"] == "queued"
+              pending = true
+              next
+            end
+            {"inbox_context_id" => proof.fetch("inbox_context_id"), "event_id" => proof.fetch("event_id"),
+              "claim_generation" => proof.fetch("claim_generation"),
+              "reconciliation_event_digest" => authenticated.fetch("reconciliation").fetch("digest"),
+              "reply_event_digest" => authenticated.fetch("reply").fetch("digest"),
+              "receipt_ref" => proof.fetch("receipt_ref"), "signature_ref" => proof.fetch("signature_ref")}
           end
-          true
+          if pending
+            raise AttemptErrors::InboxSettlementPending, "authenticated current inbox claims remain queued"
+          end
+          settlement_immutable({"commit" => commit,
+            "inboxes" => projected.sort_by { |row| row.values_at("inbox_context_id", "event_id") }})
         rescue KeyError, TypeError, ArgumentError, Ace::Herdr::Error, Ace::Runtime::RuntimeUnavailableError
           raise AttemptErrors::EvidenceUnavailable, "canonical inbox settlement is unverifiable"
         end
@@ -292,6 +319,12 @@ module Ace
         end
 
         def verified_inbox_record(journal, events, params, map, commit, box:, registration:, lineage:)
+          selected = verified_inbox_selection(journal, events, params, map, commit,
+            box: box, registration: registration, lineage: lineage)
+          selected && selected.fetch("reconciliation").fetch("payload")
+        end
+
+        def verified_inbox_selection(journal, events, params, map, commit, box:, registration:, lineage:)
           records = events.select { |event| event["type"] == "inbox_reconciliation" && event.dig("payload", "event_id") == params.fetch("event_id") }
           replies = events.select { |event| event["type"] == "authority_mutation" &&
             event.dig("payload", "operation") == "reconcile_inbox" && event.dig("payload", "data", "event_id") == params.fetch("event_id") }
@@ -352,7 +385,7 @@ module Ace
               event.fetch("payload").fetch("data").slice(*inbox_projection(payload).keys) == inbox_projection(payload) }
             raise AttemptErrors::EvidenceUnavailable, "canonical inbox owner reply missing"
           end
-          payload
+          authenticated
         rescue KeyError, TypeError, ArgumentError, JSON::ParserError, Ace::Herdr::Error
           raise AttemptErrors::EvidenceUnavailable, "canonical inbox evidence is unverifiable"
         end

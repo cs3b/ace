@@ -114,6 +114,14 @@ module Ace
         end
       end
 
+      # Exhaustively authenticated service inventory remains unsettled.
+      class ServiceSettlementPending < EvidenceUnavailable
+      end
+
+      # Exhaustively authenticated current Inbox claims remain queued.
+      class InboxSettlementPending < EvidenceUnavailable
+      end
+
       # Positively admitted original Inbox work remains pending, not corrupt.
       class InboxContextPending < EvidenceUnavailable
       end
