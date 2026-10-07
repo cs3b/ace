@@ -15,7 +15,7 @@ module Ace
       # metadata only.
       module EvidenceEvent
         TYPES = %w[
-          intent process_start receipt_accepted transition
+          intent process_start receipt_accepted transition attempt_stopped
           candidate_invalidated reconciliation
           service_claim service_transition recovery_observation inbox_binding inbox_reconciliation delivery
           authority_mutation evidence_import proposal_state result_submitted prompt_issued prompt_outcome prompt_completion_observed input_inhibited

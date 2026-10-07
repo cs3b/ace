@@ -425,6 +425,72 @@ module Ace
         end
       end
 
+      def stop_terminal_and_release(uncertain: false)
+        params = {"mapping_id" => "mapping", "assignment_id" => "assignment", "attempt_id" => @attempt}
+        if uncertain
+          coordinator = Organisms::AttemptCoordinator.new(cache_base: File.join(@root, "stopped-cache"), repo_root: @journal.repo_root,
+            journal: @journal, lifecycle_exclusion: @launch.send(:exclusion_for, @map, @journal))
+          observer = Object.new
+          observer.define_singleton_method(:observe) { |_| {"liveness" => "unknown", "reason" => "controlled interrupted native observation"} }
+          coordinator.send(:reconciler).instance_variable_set(:@observer, observer)
+          assert_equal "uncertain", coordinator.reconcile(attempt_id: @attempt).state
+        end
+        expected_state = uncertain ? "uncertain" : "running"
+        assert_equal expected_state, @journal.canonical_attempt_state(current_events)
+        first_params = params.merge("expected_generation" => generation)
+        first = call("stop_attempt", first_params, id: "public-stop-seal", peer: @supervisor, role: :supervisor)
+        assert_equal "uncertain", first.dig(:data, "state")
+        assert_equal expected_state, @journal.canonical_attempt_state(current_events)
+        proof = call("stop_attempt", params.merge("expected_generation" => generation), id: "public-stop-proof", peer: @supervisor, role: :supervisor)
+        assert proof.dig(:data, "proof_id")
+        final_params = params.merge("expected_generation" => generation)
+        stopped = call("stop_attempt", final_params, id: "public-stop-terminal", peer: @supervisor, role: :supervisor)
+        assert_equal "stopped", stopped.dig(:data, "state")
+        assert_nil stopped.dig(:data, "required_action")
+        assert_equal "stopped", @journal.canonical_attempt_state(current_events)
+        terminal = current_events.find { |event| event["type"] == "attempt_stopped" }
+        assert_equal current_events.select { |event| event["type"] == "service_transition" && event.dig("payload", "state") == "succeeded" }.map { |event| event.fetch("digest") }.sort,
+          terminal.dig("payload", "service_settlement_event_digests")
+        assert_equal current_events.select { |event| event["type"] == "inbox_reconciliation" && event.dig("payload", "state") == "completed" }.map { |event| event.fetch("digest") }.sort,
+          terminal.dig("payload", "inbox_settlement_event_digests")
+        prior = @journal.ref_value
+        restarted_peer = @supervisor.merge("pid" => 98, "started_at" => "linux:#{ExecutionScopeObservationFixtures::BOOT}:98")
+        assert_equal stopped.fetch(:data), call("stop_attempt", final_params, id: "public-stop-terminal", peer: restarted_peer, role: :supervisor).fetch(:data)
+        assert_equal prior, @journal.ref_value
+        assert_equal first.fetch(:data), call("stop_attempt", first_params, id: "public-stop-seal", peer: @supervisor, role: :supervisor).fetch(:data)
+        release = @launch.release_scope_reservation!(params: params.merge("mutation_id" => "stopped-release", "expected_generation" => generation), peer: @launcher, role: :launcher)
+        assert_equal terminal.fetch("digest"), release.dig(:data, "terminal_event_id")
+      end
+
+      def test_actual_settled_canonical_uncertain_stop_releases_and_retains_original_history_after_rotation
+        with_installed_boundaries do
+          settle_service
+          settle_inbox
+          stop_terminal_and_release(uncertain: true)
+          original_events = current_events
+          original_attempt = @attempt
+          File.binwrite(@boot_pointer, "invalid current boot pointer")
+          store = Ace::Herdr::Molecules::DeliveryRecordStore
+          store.with_lock(@context.fetch("deliveries_dir"), "event") { store.archive(@context.fetch("deliveries_dir"), "event") }
+          @launch.with_execution_slots(mapping_ids: ["mapping"], candidate_deployment: @history.candidate) do |contexts|
+            assert @launch.slot_reusable!(**contexts.first)
+            assert_equal "retired", @launch.retire_released_parent!(**contexts.first).fetch("state")
+          end
+          File.binwrite(@published, File.binread(@candidate_ref.fetch("path")))
+          File.binwrite(@published_key, @next_key.public_to_pem)
+          @launch.close
+          @deployment, @history = load_fixed
+          @map = @deployment.mapping("mapping")
+          refresh_candidate_boot!
+          restart
+          state = call("reserve_attempt", {"scope" => "010", "worker_uid" => 13001, "runtime" => "herdr", "base_head" => @head,
+            "launcher_process_binding" => @launcher, "expected_generation" => 1}, id: "stopped-rotated-reserve", peer: @launcher, role: :launcher).fetch(:data)
+          refute_equal original_attempt, state.fetch("attempt_id")
+          assert_equal "reserved", state.fetch("phase")
+          assert_equal original_events, @journal.read_events("assignment").select { |event| event["attempt_id"] == original_attempt }
+        end
+      end
+
       def test_actual_terminal_service_inbox_original_history_retirement_and_rotated_normal_reuse
         with_installed_boundaries do
           assert @deployment.frozen?

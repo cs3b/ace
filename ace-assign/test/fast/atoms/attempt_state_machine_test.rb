@@ -13,6 +13,17 @@ module Ace
         assert_equal %w[succeeded failed], machine.next_states("uncertain")
       end
 
+      def test_proof_owned_stop_accepts_uncertainty_without_widening_generic_reconciliation
+        machine = Atoms::AttemptStateMachine
+        assert_equal "stopped", machine.proof_stopped_transition!("running")
+        assert_equal "stopped", machine.proof_stopped_transition!("uncertain")
+        refute machine.can_transition?("uncertain", "stopped")
+        assert_equal %w[succeeded failed], machine.next_states("uncertain")
+        %w[reserved succeeded failed stopped unknown].each do |state|
+          assert_raises(AttemptErrors::InvalidTransition) { machine.proof_stopped_transition!(state) }
+        end
+      end
+
       def test_terminal_states_accept_no_transitions
         machine = Atoms::AttemptStateMachine
 
