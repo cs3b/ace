@@ -13,6 +13,8 @@ module Ace
 
           argument :step, required: false, desc: "Step number to finish (active assignment only)"
           option :message, aliases: ["-m"], desc: "Report content: string, file path, or pipe stdin"
+          option :mapping, desc: "Installed protected launch mapping ID"
+          option :attempt, desc: "Original protected attempt ID"
           option :assignment, desc: "Target specific assignment ID"
           option :quiet, aliases: ["-q"], type: :boolean, default: false, desc: "Suppress non-essential output"
           option :debug, aliases: ["-d"], type: :boolean, default: false, desc: "Show debug output"
@@ -24,7 +26,7 @@ module Ace
 
             target = resolve_assignment_target(options)
             executor = build_executor_for_target(target)
-            report_content = resolve_report_content(options)
+            report_content = resolve_report_content(options, protected: !target.prepared_input.nil?)
             result = executor.finish_step(
               report_content: report_content,
               step_number: step,
@@ -72,8 +74,27 @@ module Ace
 
           private
 
-          def resolve_report_content(options)
+          def resolve_report_content(options, protected: false)
             message = options[:message]&.strip
+            if protected
+              limit = Ace::Assign::Authority::PreparedWork::MAX_TEXT
+              if message && !message.empty? && File.exist?(message)
+                return File.open(message, File::RDONLY | File::NOFOLLOW | File::NONBLOCK) do |file|
+                  before = file.stat
+                  raise Error, "Report input must be a bounded regular file" unless before.file? && before.size.between?(1, limit)
+                  bytes = file.read(limit + 1)
+                  after = file.stat
+                  unless bytes.bytesize == before.size && [before.dev, before.ino, before.size, before.mtime, before.ctime] ==
+                      [after.dev, after.ino, after.size, after.mtime, after.ctime]
+                    raise Error, "Report input changed"
+                  end
+                  bytes
+                end
+              end
+              bytes = message && !message.empty? ? message : $stdin.read(limit + 1)
+              raise Error, "Report input exceeds captured text bound" unless bytes && bytes.bytesize.between?(1, limit)
+              return bytes
+            end
             return File.read(message) if message && !message.empty? && File.exist?(message)
             return message if message && !message.empty?
 

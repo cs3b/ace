@@ -12,6 +12,8 @@ module Ace
           desc "Mark current step as failed"
 
           option :message, aliases: ["-m"], required: true, desc: "Error message"
+          option :mapping, desc: "Installed protected launch mapping ID"
+          option :attempt, desc: "Original protected attempt ID"
           option :assignment, desc: "Target specific assignment ID"
           option :quiet, aliases: ["-q"], type: :boolean, default: false, desc: "Suppress non-essential output"
           option :debug, aliases: ["-d"], type: :boolean, default: false, desc: "Show debug output"
@@ -28,6 +30,10 @@ module Ace
               puts "Step #{failed.number} (#{failed.name}) marked as failed"
               puts "Updated: #{File.basename(failed.file_path)}"
               puts "Error: #{message}"
+              if target.prepared_input
+                puts "Further work requires a reviewed new prepared version and attempt."
+                return
+              end
               puts
               puts "Options:"
               puts "- ace-assign add \"fix-step\" to add a fix step"

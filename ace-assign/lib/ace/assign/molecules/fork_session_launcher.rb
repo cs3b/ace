@@ -85,14 +85,22 @@ module Ace
         end
 
         def launch_provider_session(assignment_id:, fork_root:, provider:, cli_args: nil, timeout: nil, cache_dir: nil,
-          last_message_file: nil, session_meta_file: nil)
+          last_message_file: nil, session_meta_file: nil, prepared_input: nil)
           ensure_not_same_scoped_refork!(assignment_id: assignment_id, fork_root: fork_root)
           resolved_provider = provider || config.dig("execution", "provider") || DEFAULT_PROVIDER
           resolved_timeout = timeout || config.dig("execution", "timeout") || DEFAULT_TIMEOUT
           scoped_assignment = "#{assignment_id}@#{fork_root}"
-          prompt = "/as-assign-drive #{scoped_assignment}"
+          if prepared_input && prepared_input.descriptor.values_at("assignment_id", "scope") != [assignment_id, fork_root]
+            raise Error, "Prepared provider scope differs"
+          end
+          prompt = prepared_input ? prepared_input.drive_prompt : "/as-assign-drive #{scoped_assignment}"
           last_msg_file = last_message_file || build_last_message_file(cache_dir, fork_root)
           scope_env = self.class.fork_scope_env(assignment_id: assignment_id, fork_root: fork_root)
+          if prepared_input
+            scope_env = scope_env.merge("ACE_ASSIGN_LAUNCH_MAPPING" => prepared_input.descriptor.fetch("mapping_id"),
+              "ACE_ASSIGN_ASSIGNMENT_ID" => assignment_id, "ACE_ASSIGN_ATTEMPT_ID" => prepared_input.descriptor.fetch("attempt_id"),
+              "ACE_ASSIGN_TASK_CONTEXT_ENTRY" => JSON.generate(prepared_input.descriptor.fetch("task_context_entry").fetch("manifest")))
+          end
 
           result = query_interface.query(
             resolved_provider,
@@ -110,7 +118,8 @@ module Ace
             File.write(last_msg_file, result[:text]) if existing.empty?
           end
 
-          write_session_metadata(last_msg_file, result, prompt: prompt, session_meta_file: session_meta_file)
+          write_session_metadata(last_msg_file, result, prompt: prompt, session_meta_file: session_meta_file,
+            discover_session: prepared_input.nil?)
 
           result
         rescue Ace::LLM::Error => e
@@ -220,12 +229,12 @@ module Ace
           File.write(session_meta_file, meta.to_yaml) unless meta.empty?
         end
 
-        def write_session_metadata(last_msg_file, result, prompt:, session_meta_file: nil)
+        def write_session_metadata(last_msg_file, result, prompt:, session_meta_file: nil, discover_session: true)
           return unless last_msg_file
 
           session_id = result.dig(:metadata, :session_id)
 
-          if session_id.nil? || session_id.to_s.strip.empty?
+          if discover_session && (session_id.nil? || session_id.to_s.strip.empty?)
             detected = detect_provider_session(result[:provider], prompt)
             session_id = detected&.dig(:session_id)
           end

@@ -55,8 +55,8 @@ require_relative "organisms/attempt_coordinator"
 
 # Commands
 require_relative "cli/commands/delivery"
-require_relative "cli/commands/create"
 require_relative "cli/commands/assignment_target"
+require_relative "cli/commands/create"
 require_relative "cli/commands/status"
 require_relative "cli/commands/resume"
 require_relative "cli/commands/inbox_reconcile"
@@ -74,6 +74,7 @@ require_relative "cli/commands/authority/serve"
 require_relative "cli/commands/authority/launch"
 require_relative "cli/commands/authority/status"
 require_relative "cli/commands/authority/terminate"
+require_relative "cli/commands/authority/worker"
 require_relative "cli/commands/attempt/base"
 require_relative "cli/commands/attempt/start"
 require_relative "cli/commands/attempt/status"
@@ -164,6 +165,7 @@ module Ace
 register "authority launch", wrap_command(Commands::Authority::Launch)
 register "authority status", wrap_command(Commands::Authority::Status)
 register "authority terminate", wrap_command(Commands::Authority::Terminate)
+register "authority worker", wrap_command(Commands::Authority::Worker)
       register "create", wrap_command(Commands::Create)
       register "delivery", wrap_command(Commands::Delivery)
       register "status", wrap_command(Commands::Status)

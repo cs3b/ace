@@ -53,18 +53,41 @@ module Ace
           end.compact
         end
 
+        # Source-authenticated callers retain exact step/report bytes through
+        # validation and parsing. No pathname reopen chooses executable work.
+        def scan_captured(steps:, assignment:, reports:)
+          parsed = Atoms::StepSorter.sort(steps.keys).map do |filename|
+            path = File.join(assignment.steps_dir, filename)
+            info = Atoms::StepFileParser.parse_filename(filename)
+            report_name = Atoms::StepFileParser.generate_report_filename(info.fetch(:number), info.fetch(:name))
+            report = reports[report_name]
+            report = Atoms::StepFileParser.parse(report).fetch(:body).strip if report
+            parse_step_content(path, steps.fetch(filename), report)
+          end
+          Models::QueueState.new(steps: parsed, assignment: assignment)
+        end
+
         private
 
         def parse_step_file(file_path)
           content = File.read(file_path)
+          filename_info = Atoms::StepFileParser.parse_filename(File.basename(file_path))
+          report = load_report(file_path, filename_info[:number], filename_info[:name])
+          parse_step_content(file_path, content, report)
+        rescue ArgumentError => e
+          warn "Invalid step file #{file_path}: #{e.message}"
+          nil
+        rescue => e
+          warn "Failed to parse step file #{file_path}: #{e.message}" if Ace::Assign.debug?
+          nil
+        end
+
+        def parse_step_content(file_path, content, report)
           parsed = Atoms::StepFileParser.parse(content)
           fields = Atoms::StepFileParser.extract_fields(parsed)
 
           # Extract number and name from filename
           filename_info = Atoms::StepFileParser.parse_filename(File.basename(file_path))
-
-          # Load report from separate file if it exists
-          report = load_report(file_path, filename_info[:number], filename_info[:name])
 
           Models::Step.new(
             number: filename_info[:number],
@@ -93,14 +116,6 @@ module Ace
             stall_reason: fields[:stall_reason],
             file_path: file_path
           )
-        rescue ArgumentError => e
-          # ArgumentError indicates invalid data (e.g., invalid context value)
-          # Surface these errors visibly to help users fix configuration
-          warn "Invalid step file #{file_path}: #{e.message}"
-          nil
-        rescue => e
-          warn "Failed to parse step file #{file_path}: #{e.message}" if Ace::Assign.debug?
-          nil
         end
 
         # Load report from the reports/ directory

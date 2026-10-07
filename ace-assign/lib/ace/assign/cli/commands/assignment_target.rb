@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+require_relative "../../authority/protected_assignment_context"
 
 module Ace
   module Assign
@@ -11,10 +12,15 @@ module Ace
         # - <assignment-id>@<step-number>
         module AssignmentTarget
           DEFAULT_TARGET_ENV = "ACE_ASSIGN_DEFAULT_TARGET"
-          Target = Struct.new(:assignment_id, :scope, keyword_init: true)
+          Target = Struct.new(:assignment_id, :scope, :prepared_input, keyword_init: true)
           View = Struct.new(:assignment, :state, :scoped_state, :active_steps, :next_step, :focus_step, :scope_root, keyword_init: true)
 
           private
+
+          def refuse_protected_graph_mutation!(options)
+            context = @protected_assignment_context ||= Ace::Assign::Authority::ProtectedAssignmentContext.load
+            context.refuse_graph_mutation!(options: options)
+          end
 
           def resolve_assignment_target(options)
             assignment_raw = options[:assignment]
@@ -29,7 +35,13 @@ module Ace
                 "does not match #{DEFAULT_TARGET_ENV}=#{target_identity(env_target)}"
             end
 
-            explicit_target || env_target || Target.new(assignment_id: nil, scope: nil)
+            target = explicit_target || env_target || Target.new(assignment_id: nil, scope: nil)
+            context = @protected_assignment_context ||= Ace::Assign::Authority::ProtectedAssignmentContext.load
+            target.prepared_input = context.resolve(options: options, assignment_id: target.assignment_id, scope: target.scope)
+            if target.prepared_input && ![Status, Step, Start, Finish, Fail, Resume].any? { |command| is_a?(command) }
+              raise AttemptErrors::EvidenceUnavailable, "protected queue command requires a reviewed new prepared version and attempt"
+            end
+            target
           end
 
           def parse_assignment_target(raw)
@@ -63,6 +75,7 @@ module Ace
           end
 
           def build_executor_for_target(target)
+            return Ace::Assign::Authority::PreparedExecutor.new(target.prepared_input) if target.prepared_input
             return Organisms::AssignmentExecutor.new unless target.assignment_id
 
             manager = Molecules::AssignmentManager.new

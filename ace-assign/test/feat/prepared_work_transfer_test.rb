@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 require_relative "../test_helper"
 require "ace/assign/authority/prepared_work"
+require "ace/assign/authority/prepared_queue"
 require "open3"
 
 module Ace
@@ -53,7 +54,8 @@ module Ace
       end
 
       def test_actual_default_leaf_producer_job_and_materialized_selected_steps_are_admitted
-        with_temp_cache do |root|
+        Dir.mktmpdir("prepared-default-", Etc.getpwuid(Process.uid).dir) do |root|
+          File.chmod(0700, root)
           task_id = "8wr.t.qk0.3"
           manager = Object.new
           manager.define_singleton_method(:show) { |_| Struct.new(:status).new("pending") }
@@ -66,7 +68,7 @@ module Ace
           selected = job.fetch("steps").select { |step| step["context"] == "fork" && step["taskref"] == task_id }
           assert_equal 1, selected.length
           scope = selected.first.fetch("number")
-          files = {"definition.json" => JSON.generate({"session_id" => assignment.id, "project_id" => "ace", "task_id" => task_id}), "job.yaml" => job_bytes,
+          files = {"definition.json" => JSON.generate(assignment.to_h.merge("project_id" => "ace", "task_id" => task_id)), "job.yaml" => job_bytes,
             "context/#{task_id}/spec.md" => "---\nid: #{task_id}\nstatus: pending\nneeds_review: false\ndependencies: []\n---\nReviewed.\n",
             "context/#{task_id}/bundle.txt" => "Exact reviewed task instructions.\n"}
           steps = Dir.children(assignment.steps_dir).filter_map do |filename|
@@ -85,6 +87,23 @@ module Ace
           assert_equal job_bytes, work.files.fetch("job.yaml").b
           assert_operator steps.length, :>, 1
           assert_equal scope, work.manifest.fetch("scope")
+          descriptor = work.reference(head: "a" * 40, tree: "b" * 40).merge("assignment_id" => assignment.id,
+            "mapping_id" => "mapping", "attempt_id" => "launch-original", "original_worker_scratch_root" => root)
+          File.chmod(0700, root)
+          queue = Authority::PreparedQueue.new(work: work, descriptor: descriptor)
+          assert_equal scope, queue.activate_original!.number
+          queue.with_executor do |selected_executor|
+            state = selected_executor.status.fetch(:state)
+            assert_equal steps.map(&:first), state.steps.map(&:number)
+            assert_equal scope, state.current.number
+            assert_equal job_bytes, File.binread(File.join(queue.directory, "job.yaml"))
+            started = selected_executor.start_step(fork_root: scope).fetch(:started)
+            assert started.number.start_with?(scope + ".")
+            assert_equal :active, started.status
+            selected_executor.fail("Selected child failed.", fork_root: scope)
+            assert_equal :failed, selected_executor.status.fetch(:state).find_by_number(started.number).status
+          end
+          assert_raises(AttemptErrors::EvidenceUnavailable) { queue.activate_original! }
         end
       end
     end

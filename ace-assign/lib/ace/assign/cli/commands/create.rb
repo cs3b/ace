@@ -8,6 +8,7 @@ module Ace
         # Create a new workflow assignment from YAML or preset-backed task refs
         class Create < Ace::Support::Cli::Command
           include Ace::Support::Cli::Base
+          include AssignmentTarget
 
           desc "Create a new workflow assignment"
 
@@ -20,6 +21,7 @@ module Ace
           option :debug, aliases: ["-d"], type: :boolean, default: false, desc: "Show debug output"
 
           def call(yaml: nil, task: nil, preset: nil, **options)
+            refuse_protected_graph_mutation!(options)
             validate_modes!(yaml, task, preset)
             raise Ace::Support::Cli::Error, "--delivery-parameters requires --task" if yaml && options[:delivery_parameters]
 

@@ -33,7 +33,8 @@ module Ace
           before = wire.socket_identity(path)
           raise Ace::Runtime::RuntimeUnavailableError, "authority endpoint owner differs" unless before.last == @service.fetch("uid")
           raise ArgumentError, "cannot upload and download on one request" if upload_parts && download
-          codec = transfer_codec if upload_parts || download
+          prepared_download = operation == "evidence_fetch" && params["kind"] == "prepared_work"
+          codec = transfer_codec if upload_parts || download && !prepared_download
           descriptor = codec.descriptor(upload_parts, purpose: purpose) if upload_parts
           parameters = upload_parts ? params.merge("transfer" => descriptor) : params
           cap = %w[reserve_attempt close_execution_scope stop_attempt].include?(operation) ? 90 : 30
@@ -75,6 +76,7 @@ module Ace
               validate_evidence_download!(result.fetch("data"), params)
             end
             parts = if download
+              codec = prepared_transfer_codec(result.fetch("data").fetch("descriptor")) if prepared_download
               codec.receive(socket, descriptor: result.fetch("data").fetch("transfer"), purpose: purpose, deadline: deadline) do |input|
                 Array.new(input.count) { |index| input.bytes(index: index) }
               end
@@ -154,7 +156,7 @@ module Ace
 
         def validate_prepared_download!(data, params)
           descriptor, transfer = data.values_at("descriptor", "transfer")
-          fields = %w[version kind purpose artifact project_id mapping_id assignment_id attempt_id task_id scope definition_digest selection_sha256 prepared_head prepared_tree manifest_bytes manifest_sha256 registration_generation registration_commit original_binding_digest ref bytes sha256 task_context_entry original_worker_identity].sort
+          fields = %w[version kind purpose artifact project_id mapping_id assignment_id attempt_id task_id scope definition_digest selection_sha256 prepared_head prepared_tree manifest_bytes manifest_sha256 registration_generation registration_commit original_binding_digest ref bytes sha256 task_context_entry original_worker_identity original_worker_scratch_root].sort
           valid = data.keys.sort == %w[descriptor generation journal_commit transfer] && descriptor.is_a?(Hash) && descriptor.keys.sort == fields &&
             descriptor["version"].is_a?(Integer) && descriptor["version"] == 1 &&
             params.values_at("kind", "purpose_id", "artifact_id") == %w[prepared_work original_prepared_work prepared_bundle] &&
@@ -180,8 +182,22 @@ module Ace
           birth = identity.is_a?(Hash) && identity["started_at"]
           boot = birth.is_a?(String) && birth.split(":", -1)[1]
           Molecules::ExecutionScopeLineage.validate_process_identity!(identity, boot_id: boot)
+          root = descriptor.fetch("original_worker_scratch_root")
+          unless root.is_a?(String) && root.valid_encoding? && root.bytesize.between?(2, 4096) &&
+              root.start_with?("/") && !root.include?("\0") && File.expand_path(root) == root
+            raise AttemptErrors::EvidenceUnavailable, "original prepared scratch root differs"
+          end
         rescue ArgumentError, KeyError
           raise AttemptErrors::EvidenceUnavailable, "original prepared download descriptor differs"
+        end
+
+        def prepared_transfer_codec(descriptor)
+          peer = @kernel.capture(Process.pid)
+          original = descriptor.fetch("original_worker_identity")
+          unless peer.values_at("uid", "gid", "groups") == original.values_at("uid", "gid", "groups")
+            raise AttemptErrors::UnauthorizedIdentity, "original prepared scratch principal differs"
+          end
+          TransferCodec.new(root: descriptor.fetch("original_worker_scratch_root"))
         end
       end
     end

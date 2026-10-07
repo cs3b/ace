@@ -11,6 +11,10 @@ module Ace
       # Handles creation of new step files and updating existing ones,
       # including appending reports and updating frontmatter.
       class StepWriter
+        PRIVATE_MAX_BYTES = 1024 * 1024
+        def initialize(private_files: false)
+          @private_files = private_files
+        end
         # Create a new step file
         #
         # @param steps_dir [String] Path to steps directory
@@ -101,6 +105,8 @@ module Ace
 
           # Extract number and name from filename for report file
           filename_info = Atoms::StepFileParser.parse_filename(File.basename(file_path))
+          encoded_report = report_bytes(filename_info[:number], filename_info[:name], report_content)
+          validate_private_bytes!(encoded_report)
 
           # Update frontmatter only (status + completed_at)
           new_frontmatter = parsed[:frontmatter].merge({
@@ -119,7 +125,7 @@ module Ace
           )
           report_path = File.join(reports_dir, report_filename)
 
-          write_report(report_path, filename_info[:number], filename_info[:name], report_content)
+          write_report(report_path, filename_info[:number], filename_info[:name], report_content, encoded: encoded_report)
 
           file_path
         end
@@ -204,8 +210,15 @@ module Ace
         # Write content atomically using temp file + rename pattern.
         # Prevents partial writes if process crashes mid-write.
         def atomic_write(path, content)
+          validate_private_bytes!(content)
           temp_path = "#{path}.tmp.#{Process.pid}"
-          File.write(temp_path, content)
+          if @private_files
+            File.open(temp_path, File::WRONLY | File::CREAT | File::EXCL | File::NOFOLLOW, 0600) do |file|
+              file.write(content); file.flush; file.fsync
+            end
+          else
+            File.write(temp_path, content)
+          end
           File.rename(temp_path, path)
         end
 
@@ -230,15 +243,24 @@ module Ace
         # @param number [String] Step number
         # @param name [String] Step name
         # @param content [String] Report content
-        def write_report(report_path, number, name, content)
+        def write_report(report_path, number, name, content, encoded: nil)
+          atomic_write(report_path, encoded || report_bytes(number, name, content))
+        end
+
+        def report_bytes(number, name, content)
           frontmatter = {
             "step" => number,
             "name" => name,
             "completed_at" => Time.now.utc.iso8601
           }
           yaml = frontmatter.to_yaml
-          report_content = "#{yaml}---\n\n#{content}\n"
-          atomic_write(report_path, report_content)
+          "#{yaml}---\n\n#{content}\n"
+        end
+
+        def validate_private_bytes!(content)
+          if @private_files && (!content.is_a?(String) || !content.bytesize.between?(1, PRIVATE_MAX_BYTES))
+            raise ArgumentError, "private queue output exceeds captured text bound"
+          end
         end
       end
     end

@@ -13,6 +13,7 @@ module Ace
         #   ace-assign select --clear
         class Select < Ace::Support::Cli::Command
           include Ace::Support::Cli::Base
+          include AssignmentTarget
 
           desc "Select an assignment as the current active assignment"
 
@@ -22,6 +23,7 @@ module Ace
           option :debug, aliases: ["-d"], type: :boolean, default: false, desc: "Show debug output"
 
           def call(id: nil, **options)
+            refuse_protected_graph_mutation!(options)
             manager = Molecules::AssignmentManager.new
 
             if options[:clear]
