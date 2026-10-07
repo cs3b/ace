@@ -193,6 +193,7 @@ module Ace
 
         def yaml!(bytes)
           ast = Psych.parse_stream(bytes)
+          invalid!("YAML requires one document") unless ast.children.size == 1
           scanner = Psych::ScalarScanner.new(Psych::ClassLoader::Restricted.new([], []))
           pending = [[ast, 0]]
           until pending.empty?
@@ -211,7 +212,24 @@ module Ace
             end
             (node.children || []).each { |child| pending << [child, depth + 1] }
           end
-          YAML.safe_load(bytes, permitted_classes: [Time, Date], aliases: false)
+          value = YAML.safe_load(bytes, permitted_classes: [Time, Date], aliases: false)
+          values = [value]
+          until values.empty?
+            item = values.pop
+            case item
+            when Hash
+              invalid!("YAML mapping keys must be strings") unless item.keys.all? { |key| key.is_a?(String) }
+              values.concat(item.values)
+            when Array then values.concat(item)
+            when String
+              invalid!("YAML string encoding") unless item.valid_encoding? && !item.include?("\0")
+            when Float then invalid!("YAML nonfinite number") unless item.finite?
+            when Integer, TrueClass, FalseClass, NilClass, Time, Date
+              # Managed files retain StepFileParser's standard timestamp types.
+            else invalid!("unsupported YAML value")
+            end
+          end
+          value
         end
 
         def parse_json(bytes)
