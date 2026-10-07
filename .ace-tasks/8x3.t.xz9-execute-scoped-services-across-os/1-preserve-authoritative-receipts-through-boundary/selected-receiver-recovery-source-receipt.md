@@ -15,3 +15,9 @@ Executed in codex/xza-3-context-admission, base merge41217ac0b:
 Root review findings addressed: private status uses complete original settlement identity including mapping/fixed receiver; receiver checks canonical service_id before terminal short-circuit; original bytes/mutation copied and frozen across IO. Shared canonical reader verifies accepted receipt/artifact before settled return. No terminal state string shortcut and no effect argv fallback.
 
 Scope remains xz9.1 inprogress, SC1–6 not closed. Gad.b must implement and compose operation-specific original target/handler/surviving-writer inspection and caller recovery scheduling as SOURCE. Gad.2 owns centralized installed validation (existing09j-launch/RESTRICTED and9c2-scope/SCOPE rows). No native/root/systemd/installed/protected/descendant probes, no whole suite claim, no version/publication/prepared-gem changes. Existing bounded cleanup integration receipt is preserved.
+
+## Independent integration review
+
+Root reviewed the frozen candidate `28c2544d08e4a940b3548ee01448a68e7dc6208a`, integrated as `09791f72e` on main base `6c438ea5f`. Verdict: APPROVE this selected-receiver recovery source slice. Original mapping, executor and service checks precede the settled shortcut; immutable caller inputs survive IO; existing canonical receipt authentication remains the authority. No inspection fallback executes normal effect argv.
+
+Independent executed verification on that combined tree: `bin/ace-test ace-lab organisms test/organisms/protected_service_recovery_test.rb --timeout 180`, PASS 1 test / 28 assertions / zero failures and errors, receipt `556ab8a2-d154-4962-8f8f-6cfde249fd39`. This is controlled source composition, not installed/domain-inspector or whole-task acceptance. The runner summary's 0.0ms is not an elapsed-time measurement.
