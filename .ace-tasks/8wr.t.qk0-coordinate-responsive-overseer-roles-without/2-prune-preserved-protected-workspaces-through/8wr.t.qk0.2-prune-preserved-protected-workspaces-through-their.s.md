@@ -49,6 +49,8 @@ The fixed `prune-preserved-workspace` host-maintenance operation is proposed thr
 
 ### Scope, Readiness and Ownership
 
+This task is the umbrella for real draft children: qk0.2.0 delivers authenticated fixed original-Installer invocation/receiver lifetime/result and recovery; qk0.2.1 consumes it to preserve and physically remove obsolete linked workspaces. Each has explicit source context, usage, failure cases and executed controlled verification obligations. No child or parent is promoted by this decomposition. Exact B contract is now cohesive in protected-prune-source-candidate.md; prior findings remain in readiness-review.md.
+
 Generic prune consumer ace-overseer, canonical protected eligibility/lifecycle ace-assign, executed Git preservation/removal existing Git/Overseer owner; actual service principal/domain operation provisioning gad.b. Advisory size large. There is no existing protected workspace-cleanup producer in installer: its slice/devpts retirement is not file deletion. This draft intentionally records the actual remaining goal and owner decision. qk0 umbrella remains incomplete until this child has an exact reviewed viable interface and delivered controlled end-to-end source outcome.
 
 ### Usage
